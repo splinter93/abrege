@@ -1,0 +1,33 @@
+.app-header {
+  width: 100%;
+  padding: 1rem 2rem;
+  border-bottom: 1px solid var(--border-color);
+  background-color: var(--bg-main);
+}
+
+.logo-link {
+  text-decoration: none;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: filter var(--transition-speed);
+  filter: brightness(0.8);
+}
+
+.logo span {
+  background: linear-gradient(to bottom right, var(--accent-hover), var(--accent-primary));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.logo:hover {
+  filter: brightness(0.9);
+} 

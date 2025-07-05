@@ -1,0 +1,74 @@
+.create-summary-form {
+  background-color: var(--bg-surface);
+  border-radius: var(--border-radius);
+  padding: 0.75rem;
+  border: 1px solid var(--border-color);
+  transition: border-color var(--transition-speed);
+}
+
+.create-summary-form:focus-within {
+  border-color: var(--accent-primary);
+}
+
+.form-content {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.url-input {
+  flex-grow: 1;
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  font-size: 1rem;
+  outline: none;
+  padding: 0.5rem;
+}
+
+.url-input::placeholder {
+  color: var(--text-secondary);
+}
+
+.form-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.content-type-select {
+  background-color: #2a2a2a;
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 0.6rem 1rem;
+  font-family: 'Inter', sans-serif;
+  cursor: pointer;
+  outline: none;
+  transition: border-color var(--transition-speed), color var(--transition-speed);
+}
+
+.content-type-select:hover {
+    border-color: #555;
+    color: var(--text-primary);
+}
+
+.submit-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 1.5rem;
+  border-radius: var(--border-radius);
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  transition: background-color var(--transition-speed), filter var(--transition-speed);
+  font-family: 'Inter', sans-serif;
+  background-color: var(--accent-primary);
+  color: var(--text-primary);
+  filter: brightness(0.8);
+}
+
+.submit-button:hover {
+  filter: brightness(0.9);
+} 

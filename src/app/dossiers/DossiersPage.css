@@ -1,0 +1,42 @@
+/* src/pages/DossiersPage.css */
+
+.dossiers-page-layout {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.page-content {
+  flex-grow: 1;
+  padding: 0 var(--main-content-padding);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.page-title-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 2rem;
+  padding-bottom: 1.5rem;
+  color: var(--text-primary);
+  flex-shrink: 0;
+}
+
+.page-title-header h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.page-title-header svg {
+  color: var(--accent-primary);
+}
+
+/* Amélioration pour les onglets */
+.classeur-tab {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+} 
