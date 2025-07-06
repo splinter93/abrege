@@ -63,7 +63,8 @@ export async function PATCH(req: NextRequest, { params }: any): Promise<Response
     // Générer le HTML sécurisé (champ html_content)
     const window = new JSDOM('').window as unknown as Window;
     const turndownService = new TurndownService();
-    const html_content = (DOMPurify as any).default(window).sanitize(turndownService.turndown(newContent), { ALLOWED_ATTR: ['style', 'class', 'align'] });
+    const purify = (DOMPurify as any)(window);
+    const html_content = purify.sanitize(turndownService.turndown(newContent), { ALLOWED_ATTR: ['style', 'class', 'align'] });
     // Sauvegarder
     const { data: updated, error: updateError } = await supabase
       .from('articles')
