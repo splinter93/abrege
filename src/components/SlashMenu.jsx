@@ -43,7 +43,7 @@ const SlashMenu = ({ open, search, setSearch, onSelect, anchorRef, lang = 'fr' }
     <div
       className="slash-menu"
       style={{
-        position: 'absolute',
+        position: 'fixed',
         left: anchorRef.current?.left ?? 0,
         top: anchorRef.current?.top ?? 0,
         zIndex: 100,
@@ -63,6 +63,9 @@ const SlashMenu = ({ open, search, setSearch, onSelect, anchorRef, lang = 'fr' }
         value={search}
         onChange={e => setSearch(e.target.value)}
         placeholder={lang === 'fr' ? 'Rechercher une commande...' : 'Search a command...'}
+        onBlur={() => {
+          if (typeof anchorRef.current?.closeMenu === 'function') anchorRef.current.closeMenu();
+        }}
         style={{
           width: '100%',
           border: 'none',

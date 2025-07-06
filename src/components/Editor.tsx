@@ -735,7 +735,7 @@ const Editor: React.FC<EditorProps> = ({ initialTitle, initialContent = '', head
           <div className="editor-modal-overlay fullscreen">
             <div className="editor-container" onMouseDown={(e: React.MouseEvent) => e.stopPropagation()} ref={editorWrapperRef}>
               {/* === TOPBAR (barre d'outils supérieure) === */}
-              <div className="editor-topbar" style={{ position: 'relative', display: 'flex', alignItems: 'center', width: '100%', minHeight: 56 }}>
+              <div className="editor-topbar" style={{ display: 'flex', alignItems: 'center', width: '100%', minHeight: 56 }}>
                 <div style={{ display: 'flex', alignItems: 'center', height: '100%', gap: '0.1rem', fontSize: '1.5rem', fontWeight: 600, color: 'var(--text-primary)', cursor: 'pointer', filter: 'brightness(0.8)', zIndex: 2 }}>
                   <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <defs>
@@ -843,7 +843,7 @@ const Editor: React.FC<EditorProps> = ({ initialTitle, initialContent = '', head
                     key={editorKey}
                     onKeyDown={e => {
                       if (e.key === '/' && editor) {
-                        // Calculer la position du caret dans la fenêtre
+                        // Calculer la position du caret dans la fenêtre (viewport)
                         const selection = window.getSelection();
                         if (selection && selection.rangeCount > 0) {
                           const range = selection.getRangeAt(0).cloneRange();

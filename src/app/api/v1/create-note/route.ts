@@ -64,7 +64,7 @@ export async function POST(req: Request): Promise<Response> {
       const DOMPurify = createDOMPurify(window as any);
       sanitizedHtmlContent = DOMPurify.sanitize(html_content, { ALLOWED_ATTR: ['style', 'class', 'align'] });
     } else {
-      // Conversion automatique markdown → HTML avec markdown-it
+      // Conversion automatique markdown → HTML avec markdown-it (support natif des tableaux GFM)
       const md = new MarkdownIt({ html: true, linkify: true, breaks: true });
       const html = md.render(markdown_content);
       const window = new JSDOM('').window;

@@ -36,6 +36,24 @@ const EditorSlashMenu = forwardRef<EditorSlashMenuHandle, EditorSlashMenuProps>(
       closeMenu();
     };
 
+    React.useEffect(() => {
+      if (!slashOpen) return;
+      // Fermer au clic extérieur
+      const handleClick = (e: MouseEvent) => {
+        setSlashOpen(false);
+      };
+      document.addEventListener('mousedown', handleClick);
+      return () => document.removeEventListener('mousedown', handleClick);
+    }, [slashOpen]);
+
+    React.useEffect(() => {
+      if (!slashOpen) return;
+      // Fermer si le champ de recherche ne commence plus par '/'
+      if (slashSearch && !slashSearch.startsWith('/')) {
+        setSlashOpen(false);
+      }
+    }, [slashSearch, slashOpen]);
+
     return (
       <SlashMenu
         open={slashOpen}
