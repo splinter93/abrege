@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 import { JSDOM } from 'jsdom';
-import DOMPurify from 'dompurify';
+import createDOMPurify from 'dompurify';
 import { markdownContentSchema } from '@/utils/markdownValidation';
 import type { Article } from '@/types/supabase';
 import MarkdownIt from 'markdown-it';
@@ -60,14 +60,16 @@ export async function POST(req: Request): Promise<Response> {
     // Sanitization du HTML reçu (si fourni), sinon conversion automatique depuis markdown_content
     let sanitizedHtmlContent = '';
     if (html_content && html_content.trim()) {
-      const window = new JSDOM('').window as unknown as Window;
-      sanitizedHtmlContent = (DOMPurify as any).default(window).sanitize(html_content, { ALLOWED_ATTR: ['style', 'class', 'align'] });
+      const window = new JSDOM('').window;
+      const DOMPurify = createDOMPurify(window as any);
+      sanitizedHtmlContent = DOMPurify.sanitize(html_content, { ALLOWED_ATTR: ['style', 'class', 'align'] });
     } else {
       // Conversion automatique markdown → HTML avec markdown-it
       const md = new MarkdownIt({ html: true, linkify: true, breaks: true });
       const html = md.render(markdown_content);
-      const window = new JSDOM('').window as unknown as Window;
-      sanitizedHtmlContent = (DOMPurify as any).default(window).sanitize(html, { ALLOWED_ATTR: ['style', 'class', 'align'] });
+      const window = new JSDOM('').window;
+      const DOMPurify = createDOMPurify(window as any);
+      sanitizedHtmlContent = DOMPurify.sanitize(html, { ALLOWED_ATTR: ['style', 'class', 'align'] });
     }
 
     const insertData = {
