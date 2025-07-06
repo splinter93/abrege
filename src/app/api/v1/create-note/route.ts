@@ -1,0 +1,99 @@
+import { createClient } from '@supabase/supabase-js';
+import { z } from 'zod';
+import { JSDOM } from 'jsdom';
+import DOMPurify from 'dompurify';
+import { markdownContentSchema } from '../../../../utils/markdownValidation';
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+// Types explicites pour le payload et la réponse
+export type CreateNotePayload = {
+  classeur_id: string;
+  title: string;
+  content: string; // markdown natif (source de vérité)
+  html_content: string; // HTML filtré/sécurisé
+  source_type: string;
+  source_url: string;
+};
+
+export type CreateNoteResponse =
+  | { success: true; note: any }
+  | { error: string; details?: string[] };
+
+export async function POST(req: Request): Promise<Response> {
+  try {
+    const body: CreateNotePayload = await req.json();
+    // Validation stricte avec Zod (adaptée au nouveau schéma)
+    const schema = z.object({
+      classeur_id: z.string().min(1, 'classeur_id requis'),
+      title: z.string().min(1, 'title requis'),
+      content: z.string().min(1, 'content requis'),
+      html_content: z.string().min(1, 'html_content requis'),
+      source_type: z.string().min(1, 'source_type requis'),
+      source_url: z.string().min(1, 'source_url requis'),
+    });
+    const parseResult = schema.safeParse(body);
+    if (!parseResult.success) {
+      return new Response(
+        JSON.stringify({ error: 'Payload invalide', details: parseResult.error.errors.map(e => e.message) }),
+        { status: 422 }
+      );
+    }
+    const { classeur_id, title, content, html_content, source_type, source_url } = parseResult.data;
+
+    // Validation markdown LLM-ready
+    try {
+      markdownContentSchema.parse(content);
+    } catch (e: any) {
+      const msg = (e && typeof e === 'object' && 'errors' in e && Array.isArray(e.errors)) ? e.errors[0]?.message : (e && typeof e === 'object' && 'message' in e ? e.message : String(e));
+      console.warn('Tentative d\'injection markdown rejetée:', msg);
+      return new Response(
+        JSON.stringify({ error: 'content non autorisé', details: [msg] }),
+        { status: 422 }
+      );
+    }
+
+    // Sanitization du HTML reçu
+    const window = new JSDOM('').window as unknown as Window;
+    const sanitizedHtmlContent = (DOMPurify as any).default(window).sanitize(html_content, { ALLOWED_ATTR: ['style', 'class', 'align'] });
+
+    const insertData = {
+      classeur_id,
+      source_type,
+      source_url,
+      source_title: title,
+      content, // markdown natif (source de vérité)
+      html_content: sanitizedHtmlContent, // HTML filtré/sécurisé
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+
+    const { data, error } = await supabase
+      .from('articles')
+      .insert([insertData])
+      .select()
+      .single();
+
+    if (error) {
+      return new Response(JSON.stringify({ error: error.message }), { status: 500 });
+    }
+    return new Response(JSON.stringify({ success: true, note: data }), { status: 201 });
+  } catch (err: any) {
+    return new Response(JSON.stringify({ error: err.message }), { status: 500 });
+  }
+}
+
+/**
+ * Endpoint: POST /api/v1/create-note
+ * Payload attendu : { classeur_id: string, title: string, content: string, html_content: string, source_type: string, source_url: string }
+ * - Valide le payload avec Zod (tous champs obligatoires)
+ * - Valide le markdown avec markdownContentSchema (LLM-Ready)
+ * - Sanitize le HTML reçu (html_content)
+ * - Insère la note dans Supabase (schéma: content, html_content)
+ * - Réponses :
+ *   - 201 : { success: true, note }
+ *   - 422 : { error: 'Payload invalide' | 'content non autorisé', details }
+ *   - 500 : { error: string }
+ */ 

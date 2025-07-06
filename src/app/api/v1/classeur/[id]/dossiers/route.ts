@@ -1,13 +1,17 @@
 import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-export async function GET(req, { params }) {
+export type GetClasseurDossiersResponse =
+  | { dossiers: any[] }
+  | { error: string; details?: string[] };
+
+export async function GET(req: Request, context: { params: { id: string } }): Promise<Response> {
   try {
-    const { id } = params;
+    const { id } = context.params;
     const schema = z.object({ id: z.string().min(1, 'classeur_id requis') });
     const parseResult = schema.safeParse({ id });
     if (!parseResult.success) {
@@ -25,7 +29,18 @@ export async function GET(req, { params }) {
       return new Response(JSON.stringify({ error: error.message }), { status: 500 });
     }
     return new Response(JSON.stringify({ dossiers: data }), { status: 200 });
-  } catch (err) {
+  } catch (err: any) {
     return new Response(JSON.stringify({ error: err.message }), { status: 500 });
   }
-} 
+}
+
+/**
+ * Endpoint: GET /api/v1/classeur/[id]/dossiers
+ * Paramètre attendu : { id: string }
+ * - Valide le paramètre id avec Zod
+ * - Retourne la liste des dossiers du classeur (table folders)
+ * - Réponses :
+ *   - 200 : { dossiers }
+ *   - 422 : { error: 'Paramètre classeur_id invalide', details }
+ *   - 500 : { error: string }
+ */ 

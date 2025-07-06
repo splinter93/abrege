@@ -1,15 +1,27 @@
 import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
-import { markdownContentSchema } from '../../../utils/markdownValidation';
+import { markdownContentSchema } from '../../../../utils/markdownValidation';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-export async function POST(req) {
+// Types explicites pour le payload et la réponse
+export type WriteNotePayload = {
+  noteId: string;
+  title: string;
+  content: string;
+  titleAlign?: string;
+};
+
+export type WriteNoteResponse =
+  | { success: true; note: any }
+  | { error: string; details?: string[] };
+
+export async function POST(req: Request): Promise<Response> {
   try {
-    const body = await req.json();
-    // Validation stricte avec Zod
+    const body: WriteNotePayload = await req.json();
+    // Validation stricte avec Zod (factorisée)
     const schema = z.object({
       noteId: z.string().min(1, 'noteId requis'),
       title: z.string().min(1, 'title requis'),
@@ -28,7 +40,7 @@ export async function POST(req) {
     // Validation markdown LLM-ready
     try {
       markdownContentSchema.parse(content);
-    } catch (e) {
+    } catch (e: any) {
       const msg = (e && typeof e === 'object' && 'errors' in e && Array.isArray(e.errors)) ? e.errors[0]?.message : (e && typeof e === 'object' && 'message' in e ? e.message : String(e));
       console.warn('Tentative d\'injection markdown rejetée:', msg);
       return new Response(
@@ -64,7 +76,20 @@ export async function POST(req) {
       return new Response(JSON.stringify({ error: updateError.message }), { status: 500 });
     }
     return new Response(JSON.stringify({ success: true, note: updated }), { status: 200 });
-  } catch (err) {
+  } catch (err: any) {
     return new Response(JSON.stringify({ error: err.message }), { status: 500 });
   }
-} 
+}
+
+/**
+ * Endpoint: POST /api/v1/write-note
+ * Payload attendu : { noteId: string, title: string, content: string, titleAlign?: string }
+ * - Valide le payload avec Zod (noteId, title, content obligatoires)
+ * - Valide le markdown avec markdownContentSchema (LLM-Ready)
+ * - Met à jour la note dans Supabase
+ * - Réponses :
+ *   - 200 : { success: true, note }
+ *   - 404 : { error: 'Note non trouvée.' }
+ *   - 422 : { error: 'Payload invalide' | 'content non autorisé', details }
+ *   - 500 : { error: string }
+ */ 

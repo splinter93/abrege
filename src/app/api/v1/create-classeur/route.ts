@@ -1,13 +1,22 @@
 import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-export async function POST(req) {
+export type CreateClasseurPayload = {
+  name: string;
+  icon?: string;
+  color?: string;
+};
+export type CreateClasseurResponse =
+  | { success: true; classeur: any }
+  | { error: string; details?: string[] };
+
+export async function POST(req: Request): Promise<Response> {
   try {
-    const body = await req.json();
+    const body: CreateClasseurPayload = await req.json();
     // Validation stricte avec Zod
     const schema = z.object({
       name: z.string().min(1, 'name requis'),
@@ -37,7 +46,18 @@ export async function POST(req) {
       return new Response(JSON.stringify({ error: error.message }), { status: 500 });
     }
     return new Response(JSON.stringify({ success: true, classeur: data }), { status: 201 });
-  } catch (err) {
+  } catch (err: any) {
     return new Response(JSON.stringify({ error: err.message }), { status: 500 });
   }
-} 
+}
+
+/**
+ * Endpoint: POST /api/v1/create-classeur
+ * Payload attendu : { name: string, icon?: string, color?: string }
+ * - Valide le payload avec Zod (name obligatoire)
+ * - Crée un classeur dans Supabase (table classeurs)
+ * - Réponses :
+ *   - 201 : { success: true, classeur }
+ *   - 422 : { error: 'Payload invalide', details }
+ *   - 500 : { error: string }
+ */ 

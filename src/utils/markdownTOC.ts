@@ -96,4 +96,8 @@ export function appendToSection(markdown: string, section: string, text: string)
   const before = lines.slice(0, insertLine).join('\n');
   const after = lines.slice(insertLine).join('\n');
   return before + '\n' + text + (after ? '\n' + after : '');
-} 
+}
+
+// Ajout d'un commentaire pour indiquer la nécessité d'un .d.ts si le problème persiste
+// Si TS ne résout pas les types, créer src/utils/markdownTOC.d.ts
+// declare module './markdownTOC'; 

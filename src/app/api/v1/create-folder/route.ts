@@ -1,13 +1,22 @@
 import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-export async function POST(req) {
+export type CreateFolderPayload = {
+  classeur_id: string;
+  name: string;
+  parent_id?: string | null;
+};
+export type CreateFolderResponse =
+  | { success: true; folder: any }
+  | { error: string; details?: string[] };
+
+export async function POST(req: Request): Promise<Response> {
   try {
-    const body = await req.json();
+    const body: CreateFolderPayload = await req.json();
     // Validation stricte avec Zod
     const schema = z.object({
       classeur_id: z.string().min(1, 'classeur_id requis'),
@@ -37,7 +46,18 @@ export async function POST(req) {
       return new Response(JSON.stringify({ error: error.message }), { status: 500 });
     }
     return new Response(JSON.stringify({ success: true, folder: data }), { status: 201 });
-  } catch (err) {
+  } catch (err: any) {
     return new Response(JSON.stringify({ error: err.message }), { status: 500 });
   }
-} 
+}
+
+/**
+ * Endpoint: POST /api/v1/create-folder
+ * Payload attendu : { classeur_id: string, name: string, parent_id?: string | null }
+ * - Valide le payload avec Zod (classeur_id et name obligatoires)
+ * - Crée un dossier dans Supabase (table folders)
+ * - Réponses :
+ *   - 201 : { success: true, folder }
+ *   - 422 : { error: 'Payload invalide', details }
+ *   - 500 : { error: string }
+ */ 

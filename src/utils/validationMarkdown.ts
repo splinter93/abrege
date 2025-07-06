@@ -14,12 +14,7 @@ export const markdownContentSchema = z.string()
     return !anyOtherTags.test(contentWithoutAllowed);
   }, 'Seules les balises d\'alignement <div align="center|left|right"> sont autorisées dans markdown_content. Tout autre HTML est interdit.');
 
-export type MarkdownExamples = {
-  valid: string[];
-  invalid: string[];
-};
-
-export const markdownExamples: MarkdownExamples = {
+export const markdownExamples = {
   valid: [
     '# Mon Titre\nCeci est du markdown pur.',
     '# Titre\n<div align="center">\nCe texte est centré.\n</div>',
