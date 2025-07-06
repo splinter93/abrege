@@ -15,7 +15,7 @@ describe('extractTOCWithSlugs', () => {
   it('extrait les titres et slugs uniques', () => {
     const md = `# Intro\n## Section\n## Section\n### Sub\n# Outro`;
     const toc = extractTOCWithSlugs(md);
-    expect(toc.map(t => t.slug)).toEqual(['intro', 'section', 'section-1', 'sub', 'outro']);
+    expect(toc.map((t: any) => t.slug)).toEqual(['intro', 'section', 'section-1', 'sub', 'outro']);
     expect(toc[1].title).toBe('Section');
     expect(toc[2].slug).toBe('section-1');
   });

@@ -50,7 +50,6 @@ import EditorFooter from './EditorFooter';
 import type { Heading } from '../types/editor';
 import EditorSlashMenu from './EditorSlashMenu';
 import EditorToolbar from './EditorToolbar';
-// @ts-ignore
 import TurndownService from 'turndown';
 
 const HEADER_IMAGES = [
@@ -167,24 +166,31 @@ function TitleTextarea({
   );
 }
 
+interface SavePayload {
+  title: string;
+  markdown_content: string;
+  html_content: string;
+  headerImage?: string | null;
+  titleAlign?: string;
+}
+
 interface EditorProps {
   initialTitle: string;
   initialContent?: string;
   headerImage?: string;
   onClose?: () => void;
-  onSave?: (...args: any[]) => void;
+  onSave?: (data: SavePayload) => void;
   initialTitleAlign?: string;
 }
 
-// Helper debounce (à placer après les imports)
-function debounce<T extends (...args: any[]) => any>(
-  func: T,
+function debounce(
+  func: (title: string, content: string, align: string) => void,
   wait: number
-): (...args: Parameters<T>) => void {
+): (title: string, content: string, align: string) => void {
   let timeout: NodeJS.Timeout;
-  return (...args: Parameters<T>) => {
+  return (title: string, content: string, align: string) => {
     clearTimeout(timeout);
-    timeout = setTimeout(() => func(...args), wait);
+    timeout = setTimeout(() => func(title, content, align), wait);
   };
 }
 
@@ -495,8 +501,9 @@ const Editor: React.FC<EditorProps> = ({ initialTitle, initialContent = '', head
     }
   }, [editor]);
 
-  const updateWordCount = useCallback((event: any) => {
-    const ed = event && event.editor ? event.editor : (editor || (window as any).__tiptapEditor);
+  interface EditorEvent { editor: typeof editor }
+  const updateWordCount = useCallback((event?: EditorEvent) => {
+    const ed = event && event.editor ? event.editor : editor;
     if (!ed) return;
     const text = ed.getText();
     const count = text.trim().split(/\s+/).filter((w: string) => w.length > 0).length;
@@ -507,8 +514,8 @@ const Editor: React.FC<EditorProps> = ({ initialTitle, initialContent = '', head
   useEffect(() => {
     if (editor) {
       // Update on any transaction (input, paste, undo, etc.)
-      const transactionHandler = (event: any) => updateWordCount(event);
-      const selectionHandler = (event: any) => updateWordCount(event);
+      const transactionHandler = (event?: EditorEvent) => updateWordCount(event);
+      const selectionHandler = (event?: EditorEvent) => updateWordCount(event);
       editor.on('transaction', transactionHandler);
       editor.on('selectionUpdate', selectionHandler);
       // Initial count
@@ -528,7 +535,7 @@ const Editor: React.FC<EditorProps> = ({ initialTitle, initialContent = '', head
 
   useEffect(() => {
     if (isTitleFocused && titleInputRef.current) {
-      const input = titleInputRef.current as any;
+      const input = titleInputRef.current as HTMLTextAreaElement | null;
       if (input && typeof input.focus === 'function') {
         input.focus();
         // Place cursor at the end of the input
@@ -543,7 +550,7 @@ const Editor: React.FC<EditorProps> = ({ initialTitle, initialContent = '', head
   useEffect(() => {
     if (isTitleFocused && titleInputRef.current) {
       // Scroll automatique à droite
-      const input = titleInputRef.current as any;
+      const input = titleInputRef.current as HTMLTextAreaElement | null;
       if (input && typeof input.scrollLeft !== 'undefined' && typeof input.scrollWidth !== 'undefined') {
         input.scrollLeft = input.scrollWidth;
       }
