@@ -11,7 +11,7 @@ export type GetDossierNotesResponse =
   | { notes: Article[] }
   | { error: string; details?: string[] };
 
-export async function GET(req: NextRequest, { params }: { params: { id: string } }): Promise<Response> {
+export async function GET(req: NextRequest, { params }: any): Promise<Response> {
   try {
     const { id } = params;
     const schema = z.object({ id: z.string().min(1, 'dossier_id requis') });
