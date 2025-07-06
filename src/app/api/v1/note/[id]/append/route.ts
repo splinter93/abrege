@@ -7,6 +7,7 @@ import { appendToSection } from '@/utils/markdownTOC';
 import { markdownContentSchema } from '@/utils/markdownValidation';
 import type { Article } from '@/types/supabase';
 import type { NextRequest } from 'next/server';
+import MarkdownIt from 'markdown-it';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -62,9 +63,9 @@ export async function PATCH(req: NextRequest, { params }: any): Promise<Response
     const newContent = appendToSection(note.markdown_content || '', '', body.text);
     // Générer le HTML sécurisé (champ html_content)
     const window = new JSDOM('').window as unknown as Window;
-    const turndownService = new TurndownService();
+    const md = new MarkdownIt();
     const purify = (DOMPurify as any)(window);
-    const html_content = purify.sanitize(turndownService.turndown(newContent), { ALLOWED_ATTR: ['style', 'class', 'align'] });
+    const html_content = purify.sanitize(md.render(newContent), { ALLOWED_ATTR: ['style', 'class', 'align'] });
     // Sauvegarder
     const { data: updated, error: updateError } = await supabase
       .from('articles')
