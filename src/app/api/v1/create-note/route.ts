@@ -68,7 +68,7 @@ export async function POST(req: Request): Promise<Response> {
       source_type,
       source_url,
       source_title: title,
-      content: markdown_content, // markdown natif (source de vérité)
+      markdown_content, // correspond à la colonne Supabase
       html_content: sanitizedHtmlContent, // HTML filtré/sécurisé (peut être vide)
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
