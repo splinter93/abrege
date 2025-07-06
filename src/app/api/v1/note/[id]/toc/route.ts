@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 import { extractTOCWithSlugs, TOCItemWithSlug } from '@/utils/markdownTOC';
+import type { NextRequest } from 'next/server';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -10,7 +11,7 @@ export type GetNoteTOCResponse =
   | { toc: TOCItemWithSlug[] }
   | { error: string; details?: string[] };
 
-export async function GET(req: Request, context: { params: { id: string } }): Promise<Response> {
+export async function GET(req: NextRequest, context: { params: { id: string } }): Promise<Response> {
   try {
     const { id } = context.params;
     const schema = z.object({ id: z.string().min(1, 'note_id requis') });

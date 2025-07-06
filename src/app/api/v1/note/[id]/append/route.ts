@@ -6,6 +6,7 @@ import DOMPurify from 'dompurify';
 import { appendToSection } from '@/utils/markdownTOC';
 import { markdownContentSchema } from '@/utils/markdownValidation';
 import type { Article } from '@/types/supabase';
+import type { NextRequest } from 'next/server';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -17,7 +18,7 @@ export type AppendNoteResponse =
   | { note: Article }
   | { error: string; details?: string[] };
 
-export async function PATCH(req: Request, context: { params: { id: string } }): Promise<Response> {
+export async function PATCH(req: NextRequest, context: { params: { id: string } }): Promise<Response> {
   try {
     const { id } = context.params;
     const paramSchema = z.object({ id: z.string().min(1, 'note_id requis') });
