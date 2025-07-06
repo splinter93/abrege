@@ -21,13 +21,7 @@ import TableCell from '@tiptap/extension-table-cell';
 import TableHeader from '@tiptap/extension-table-header';
 import { Markdown } from 'tiptap-markdown';
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight';
-import { createLowlight } from 'lowlight';
-import javascript from 'highlight.js/lib/languages/javascript';
-import typescript from 'highlight.js/lib/languages/typescript';
-import css from 'highlight.js/lib/languages/css';
-import html from 'highlight.js/lib/languages/xml'; // xml pour html
-import python from 'highlight.js/lib/languages/python';
-import bash from 'highlight.js/lib/languages/bash';
+import lowlight from '../utils/lowlightInstance';
 import { 
   FiBold, FiItalic, FiUnderline, FiList, FiAlignLeft, 
   FiAlignCenter, FiAlignRight, FiX, FiCode, FiLink,
@@ -58,19 +52,6 @@ import EditorSlashMenu from './EditorSlashMenu';
 import EditorToolbar from './EditorToolbar';
 // @ts-ignore
 import TurndownService from 'turndown';
-
-const lowlight = createLowlight({
-  javascript,
-  js: javascript,
-  typescript,
-  ts: typescript,
-  css,
-  html,
-  python,
-  py: python,
-  bash,
-  sh: bash,
-});
 
 const HEADER_IMAGES = [
   'https://images.unsplash.com/photo-1454982523318-4b6396f39d3a?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
@@ -343,9 +324,11 @@ const Editor: React.FC<EditorProps> = ({ initialTitle, initialContent = '', head
       CustomHeading.configure({ levels: [1, 2, 3] }),
       TaskList,
       TaskItem.configure({ nested: true }),
-      CodeBlockWithCopy.configure({
-        lowlight,
-      }),
+      ...(typeof window !== 'undefined' ? [
+        CodeBlockWithCopy.configure({
+          lowlight,
+        })
+      ] : []),
       Placeholder.configure({
         placeholder: 'Écrivez quelque chose d\'incroyable...',
       }),
