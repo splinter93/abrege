@@ -58,16 +58,16 @@ export async function PATCH(req: NextRequest, { params }: any): Promise<Response
     if (error || !note) {
       return new Response(JSON.stringify({ error: error?.message || 'Note non trouvée.' }), { status: 404 });
     }
-    // Concaténer le markdown (nouveau schéma : content)
-    const newContent = appendToSection(note.content || '', '', body.text);
-    // Générer le HTML sécurisé (nouveau schéma : html_content)
+    // Concaténer le markdown (nouveau schéma : markdown_content)
+    const newContent = appendToSection(note.markdown_content || '', '', body.text);
+    // Générer le HTML sécurisé (champ html_content)
     const window = new JSDOM('').window as unknown as Window;
     const turndownService = new TurndownService();
     const html_content = (DOMPurify as any).default(window).sanitize(turndownService.turndown(newContent), { ALLOWED_ATTR: ['style', 'class', 'align'] });
     // Sauvegarder
     const { data: updated, error: updateError } = await supabase
       .from('articles')
-      .update({ content: newContent, html_content, updated_at: new Date().toISOString() })
+      .update({ markdown_content: newContent, html_content, updated_at: new Date().toISOString() })
       .eq('id', id)
       .select()
       .single();
@@ -86,7 +86,7 @@ export async function PATCH(req: NextRequest, { params }: any): Promise<Response
  * Payload attendu : { text: string }
  * - Valide le paramètre id et le payload avec Zod
  * - Valide le markdown avec markdownContentSchema (LLM-Ready)
- * - Concatène le markdown (champ content)
+ * - Concatène le markdown (champ markdown_content)
  * - Génère le HTML sécurisé (champ html_content)
  * - Met à jour la note dans Supabase
  * - Réponses :

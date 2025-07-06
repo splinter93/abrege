@@ -63,7 +63,7 @@ export async function PATCH(req: NextRequest, { params }: any): Promise<Response
     if (error || !note) {
       return new Response(JSON.stringify({ error: error?.message || 'Note non trouvée.' }), { status: 404 });
     }
-    const markdown = note.content || '';
+    const markdown = note.markdown_content || '';
     const toc = extractTOCWithSlugs(markdown);
     // Trouver la section par titre exact ou slug
     const sectionIdx = toc.findIndex(t => t.title === body.section || t.slug === body.section);
@@ -79,7 +79,7 @@ export async function PATCH(req: NextRequest, { params }: any): Promise<Response
     // Sauvegarder
     const { data: updated, error: updateError } = await supabase
       .from('articles')
-      .update({ content: newContent, html_content, updated_at: new Date().toISOString() })
+      .update({ markdown_content: newContent, html_content, updated_at: new Date().toISOString() })
       .eq('id', id)
       .select()
       .single();
