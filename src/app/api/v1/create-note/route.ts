@@ -13,7 +13,7 @@ const supabase = createClient(supabaseUrl, supabaseAnonKey);
 export type CreateNotePayload = {
   classeur_id: string;
   title: string;
-  content: string; // markdown natif (source de vérité)
+  markdown_content: string; // markdown natif (source de vérité)
   html_content?: string; // HTML filtré/sécurisé (optionnel)
   source_type: string;
   source_url: string;
@@ -30,7 +30,7 @@ export async function POST(req: Request): Promise<Response> {
     const schema = z.object({
       classeur_id: z.string().min(1, 'classeur_id requis'),
       title: z.string().min(1, 'title requis'),
-      content: z.string().min(1, 'content requis'),
+      markdown_content: z.string().min(1, 'markdown_content requis'),
       html_content: z.string().optional(),
       source_type: z.string().min(1, 'source_type requis'),
       source_url: z.string().min(1, 'source_url requis'),
@@ -42,16 +42,16 @@ export async function POST(req: Request): Promise<Response> {
         { status: 422 }
       );
     }
-    const { classeur_id, title, content, html_content, source_type, source_url } = parseResult.data;
+    const { classeur_id, title, markdown_content, html_content, source_type, source_url } = parseResult.data;
 
     // Validation markdown LLM-ready
     try {
-      markdownContentSchema.parse(content);
+      markdownContentSchema.parse(markdown_content);
     } catch (e: any) {
       const msg = (e && typeof e === 'object' && 'errors' in e && Array.isArray(e.errors)) ? e.errors[0]?.message : (e && typeof e === 'object' && 'message' in e ? e.message : String(e));
       console.warn('Tentative d\'injection markdown rejetée:', msg);
       return new Response(
-        JSON.stringify({ error: 'content non autorisé', details: [msg] }),
+        JSON.stringify({ error: 'markdown_content non autorisé', details: [msg] }),
         { status: 422 }
       );
     }
@@ -68,7 +68,7 @@ export async function POST(req: Request): Promise<Response> {
       source_type,
       source_url,
       source_title: title,
-      content, // markdown natif (source de vérité)
+      content: markdown_content, // markdown natif (source de vérité)
       html_content: sanitizedHtmlContent, // HTML filtré/sécurisé (peut être vide)
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
@@ -91,13 +91,13 @@ export async function POST(req: Request): Promise<Response> {
 
 /**
  * Endpoint: POST /api/v1/create-note
- * Payload attendu : { classeur_id: string, title: string, content: string, html_content: string, source_type: string, source_url: string }
+ * Payload attendu : { classeur_id: string, title: string, markdown_content: string, html_content: string, source_type: string, source_url: string }
  * - Valide le payload avec Zod (tous champs obligatoires)
  * - Valide le markdown avec markdownContentSchema (LLM-Ready)
  * - Sanitize le HTML reçu (html_content)
  * - Insère la note dans Supabase (schéma: content, html_content)
  * - Réponses :
  *   - 201 : { success: true, note }
- *   - 422 : { error: 'Payload invalide' | 'content non autorisé', details }
+ *   - 422 : { error: 'Payload invalide' | 'markdown_content non autorisé', details }
  *   - 500 : { error: string }
  */ 
