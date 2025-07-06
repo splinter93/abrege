@@ -20,9 +20,9 @@ export type AppendToSectionResponse =
   | { note: Article }
   | { error: string; details?: string[] };
 
-export async function PATCH(req: NextRequest, context: { params: { id: string } }): Promise<Response> {
+export async function PATCH(req: NextRequest, { params }: { params: { id: string } }): Promise<Response> {
+  const { id } = params;
   try {
-    const { id } = context.params;
     const paramSchema = z.object({ id: z.string().min(1, 'note_id requis') });
     const body: AppendToSectionPayload = await req.json();
     const bodySchema = z.object({

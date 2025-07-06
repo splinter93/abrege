@@ -12,9 +12,9 @@ export type GetNoteResponse =
   | { note: Article }
   | { error: string; details?: string[] };
 
-export async function GET(req: NextRequest, context: { params: { id: string } }): Promise<Response> {
+export async function GET(req: NextRequest, { params }: { params: { id: string } }): Promise<Response> {
   try {
-    const { id } = context.params;
+    const { id } = params;
     const schema = z.object({ id: z.string().min(1, 'note_id requis') });
     const parseResult = schema.safeParse({ id });
     if (!parseResult.success) {
