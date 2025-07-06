@@ -2,7 +2,8 @@ import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 import { JSDOM } from 'jsdom';
 import DOMPurify from 'dompurify';
-import { markdownContentSchema } from '../../../../utils/markdownValidation';
+import { markdownContentSchema } from '@/utils/markdownValidation';
+import type { Article } from '@/types/supabase';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -19,7 +20,7 @@ export type CreateNotePayload = {
 };
 
 export type CreateNoteResponse =
-  | { success: true; note: any }
+  | { success: true; note: Article }
   | { error: string; details?: string[] };
 
 export async function POST(req: Request): Promise<Response> {

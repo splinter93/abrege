@@ -1,12 +1,13 @@
 import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
+import type { Article } from '@/types/supabase';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 export type GetDossierNotesResponse =
-  | { notes: any[] }
+  | { notes: Article[] }
   | { error: string; details?: string[] };
 
 export async function GET(req: Request, context: { params: { id: string } }): Promise<Response> {

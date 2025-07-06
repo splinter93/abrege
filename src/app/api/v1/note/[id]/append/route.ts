@@ -5,6 +5,7 @@ import { JSDOM } from 'jsdom';
 import DOMPurify from 'dompurify';
 import { appendToSection } from '@/utils/markdownTOC';
 import { markdownContentSchema } from '@/utils/markdownValidation';
+import type { Article } from '@/types/supabase';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -13,7 +14,7 @@ const supabase = createClient(supabaseUrl, supabaseAnonKey);
 // Types explicites pour le payload et la réponse
 export type AppendNotePayload = { text: string };
 export type AppendNoteResponse =
-  | { note: any }
+  | { note: Article }
   | { error: string; details?: string[] };
 
 export async function PATCH(req: Request, context: { params: { id: string } }): Promise<Response> {

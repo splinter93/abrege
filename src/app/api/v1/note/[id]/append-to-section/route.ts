@@ -3,8 +3,9 @@ import { z } from 'zod';
 import TurndownService from 'turndown';
 import { JSDOM } from 'jsdom';
 import DOMPurify from 'dompurify';
-import { slugify, extractTOCWithSlugs, appendToSection } from '@/utils/markdownTOC';
+import { extractTOCWithSlugs, appendToSection } from '@/utils/markdownTOC';
 import { markdownContentSchema } from '@/utils/markdownValidation';
+import type { Article } from '@/types/supabase';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -15,7 +16,7 @@ export type AppendToSectionPayload = {
   text: string;
 };
 export type AppendToSectionResponse =
-  | { note: any }
+  | { note: Article }
   | { error: string; details?: string[] };
 
 export async function PATCH(req: Request, context: { params: { id: string } }): Promise<Response> {

@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
+import type { Folder } from '@/types/supabase';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -11,7 +12,7 @@ export type CreateFolderPayload = {
   parent_id?: string | null;
 };
 export type CreateFolderResponse =
-  | { success: true; folder: any }
+  | { success: true; folder: Folder }
   | { error: string; details?: string[] };
 
 export async function POST(req: Request): Promise<Response> {

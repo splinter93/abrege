@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
+import type { Classeur } from '@/types/supabase';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -11,7 +12,7 @@ export type CreateClasseurPayload = {
   color?: string;
 };
 export type CreateClasseurResponse =
-  | { success: true; classeur: any }
+  | { success: true; classeur: Classeur }
   | { error: string; details?: string[] };
 
 export async function POST(req: Request): Promise<Response> {
