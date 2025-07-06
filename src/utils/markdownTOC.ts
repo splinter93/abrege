@@ -80,6 +80,10 @@ export function extractTOCWithSlugs(markdown: string): TOCItemWithSlug[] {
  * Retourne le nouveau markdown (ou lève une erreur si section non trouvée)
  */
 export function appendToSection(markdown: string, section: string, text: string): string {
+  if (!section) {
+    // Ajout à la fin du markdown si aucune section n'est précisée
+    return (markdown ? markdown + '\n' : '') + text;
+  }
   const toc = extractTOCWithSlugs(markdown);
   const sectionIdx = toc.findIndex(t => t.title === section || t.slug === section);
   if (sectionIdx === -1) throw new Error('Section non trouvée (titre ou slug inconnu)');

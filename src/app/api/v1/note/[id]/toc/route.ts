@@ -24,13 +24,13 @@ export async function GET(req: NextRequest, { params }: any): Promise<Response> 
     }
     const { data: note, error } = await supabase
       .from('articles')
-      .select('content')
+      .select('markdown_content')
       .eq('id', id)
       .single();
     if (error || !note) {
       return new Response(JSON.stringify({ error: error?.message || 'Note non trouvée.' }), { status: 404 });
     }
-    const toc = extractTOCWithSlugs(note.content || '');
+    const toc = extractTOCWithSlugs(note.markdown_content || '');
     return new Response(JSON.stringify({ toc }), { status: 200 });
   } catch (err: any) {
     return new Response(JSON.stringify({ error: err.message }), { status: 500 });
