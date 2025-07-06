@@ -14,7 +14,7 @@ export type CreateNotePayload = {
   classeur_id: string;
   title: string;
   content: string; // markdown natif (source de vérité)
-  html_content: string; // HTML filtré/sécurisé
+  html_content?: string; // HTML filtré/sécurisé (optionnel)
   source_type: string;
   source_url: string;
 };
@@ -31,7 +31,7 @@ export async function POST(req: Request): Promise<Response> {
       classeur_id: z.string().min(1, 'classeur_id requis'),
       title: z.string().min(1, 'title requis'),
       content: z.string().min(1, 'content requis'),
-      html_content: z.string().min(1, 'html_content requis'),
+      html_content: z.string().optional(),
       source_type: z.string().min(1, 'source_type requis'),
       source_url: z.string().min(1, 'source_url requis'),
     });
@@ -56,9 +56,12 @@ export async function POST(req: Request): Promise<Response> {
       );
     }
 
-    // Sanitization du HTML reçu
-    const window = new JSDOM('').window as unknown as Window;
-    const sanitizedHtmlContent = (DOMPurify as any).default(window).sanitize(html_content, { ALLOWED_ATTR: ['style', 'class', 'align'] });
+    // Sanitization du HTML reçu (si fourni)
+    let sanitizedHtmlContent = '';
+    if (html_content) {
+      const window = new JSDOM('').window as unknown as Window;
+      sanitizedHtmlContent = (DOMPurify as any).default(window).sanitize(html_content, { ALLOWED_ATTR: ['style', 'class', 'align'] });
+    }
 
     const insertData = {
       classeur_id,
@@ -66,7 +69,7 @@ export async function POST(req: Request): Promise<Response> {
       source_url,
       source_title: title,
       content, // markdown natif (source de vérité)
-      html_content: sanitizedHtmlContent, // HTML filtré/sécurisé
+      html_content: sanitizedHtmlContent, // HTML filtré/sécurisé (peut être vide)
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };
