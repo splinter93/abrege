@@ -81,8 +81,9 @@ export function extractTOCWithSlugs(markdown: string): TOCItemWithSlug[] {
  */
 export function appendToSection(markdown: string, section: string, text: string): string {
   if (!section) {
-    // Ajout à la fin du markdown si aucune section n'est précisée
-    return (markdown ? markdown + '\n' : '') + text;
+    // Ajout à la fin du markdown avec saut de ligne pour séparer proprement
+    const trimmed = markdown.trimEnd();
+    return (trimmed ? trimmed + '\n\n' : '') + text.trimStart();
   }
   const toc = extractTOCWithSlugs(markdown);
   const sectionIdx = toc.findIndex(t => t.title === section || t.slug === section);
