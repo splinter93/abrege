@@ -32,7 +32,7 @@ const EditorSlashMenu = forwardRef<EditorSlashMenuHandle, EditorSlashMenuProps>(
 
     // Fonction pour insérer un bloc
     const handleSelect = (cmd: any) => {
-      onInsert(cmd.type, cmd.data);
+      onInsert(cmd);
       closeMenu();
     };
 

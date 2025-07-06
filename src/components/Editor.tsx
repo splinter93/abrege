@@ -267,11 +267,9 @@ const Editor: React.FC<EditorProps> = ({ initialTitle, initialContent = '', head
   // Police par défaut
   const defaultFont = 'Noto Sans, sans-serif';
   let selectedFontObj = FONT_OPTIONS.find(f => f.key === selectedFont);
-  // Sécurité : si la clé n'est pas reconnue, on force 'noto'
+  // Si aucune police sélectionnée ou police inconnue, on force Noto Sans
   if (!selectedFontObj) {
-    console.warn('[Editor] Police inconnue, fallback sur Noto Sans:', selectedFont);
     selectedFontObj = { key: 'noto', label: 'Noto Sans', value: defaultFont };
-    if (selectedFont !== 'noto') setSelectedFont('noto');
   }
 
   useEffect(() => {
@@ -620,12 +618,9 @@ const Editor: React.FC<EditorProps> = ({ initialTitle, initialContent = '', head
 
   useEffect(() => {
     if (rootRef.current) {
+      // Si aucune police sélectionnée ou police inconnue, on applique Noto Sans
       const fontObj = FONT_OPTIONS.find(f => f.key === selectedFont) || { value: defaultFont };
-      if (!FONT_OPTIONS.find(f => f.key === selectedFont)) {
-        rootRef.current.style.setProperty('--editor-font-family', defaultFont);
-      } else {
-        rootRef.current.style.setProperty('--editor-font-family', fontObj.value);
-      }
+      rootRef.current.style.setProperty('--editor-font-family', fontObj.value);
     }
   }, [selectedFont]);
 
@@ -757,18 +752,11 @@ const Editor: React.FC<EditorProps> = ({ initialTitle, initialContent = '', head
                 {/* === TOOLBAR PRINCIPALE === */}
                 <EditorToolbar editor={editor} setImageMenuOpen={setImageMenuOpen} />
                 {/* Actions à droite (fermer, preview, etc.) à intégrer ensuite */}
-                <div className="editor-topbar-actions" style={{ marginLeft: 'auto', zIndex: 2, display: 'flex', alignItems: 'center', gap: 8 }}>
+                <div className="editor-topbar-actions" style={{ marginLeft: 'auto', zIndex: 2, display: 'flex', alignItems: 'center', gap: 8, height: 40 }}>
                   <Tooltip text="Aperçu"><button className="editor-action-button big-action preview-action"><MdRemoveRedEye size={20} /></button></Tooltip>
                   <Tooltip text="Plus d'actions"><button className="editor-action-button big-action kebab-action"><FiMoreVertical size={20} /></button></Tooltip>
+                  <Tooltip text="Fermer la note"><button className="editor-action-button big-action close-action" style={{ width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={closeNote}><MdClose size={22} /></button></Tooltip>
                 </div>
-                {/* === BOUTON FERMER ACCESSIBLE === */}
-                <button
-                  style={{ position: 'absolute', top: 16, right: 16, width: 24, height: 24, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'none', border: 'none', borderRadius: 6, cursor: 'pointer', zIndex: 10 }}
-                  aria-label="Fermer la note"
-                  onClick={closeNote}
-                >
-                  <MdClose size={22} />
-                </button>
               </div>
               {/* === FIN TOPBAR === */}
               {/* === ZONE PRINCIPALE D'ÉDITION === */}
@@ -809,7 +797,7 @@ const Editor: React.FC<EditorProps> = ({ initialTitle, initialContent = '', head
                   </button>
                 )}
                 {/* === TITRE DIRECTEMENT === */}
-                <div style={{ width: '1000px', margin: '28px auto 0 auto', padding: '0 24px', boxSizing: 'border-box' }}>
+                <div style={{ width: '1000px', margin: '28px auto 0 auto', padding: '0 24px', boxSizing: 'border-box', paddingBottom: '0.8rem' }}>
                   <textarea
                     ref={titleTextareaRef}
                     className="editor-title"
@@ -876,12 +864,28 @@ const Editor: React.FC<EditorProps> = ({ initialTitle, initialContent = '', head
                 {/* === SLASH MENU === */}
                 <EditorSlashMenu
                   ref={slashMenuRef}
-                  onInsert={(type, data) => {
-                    // Callback d'insertion à adapter selon la logique de l'éditeur
-                    // Exemple :
-                    // if (type === 'heading') editor?.chain().focus().toggleHeading({ level: data.level }).run();
-                    // ...
+                  onInsert={(cmd: any) => {
+                    if (!editor) return;
+                    const { from } = editor.state.selection;
+                    const lineStart = editor.state.doc.resolve(from).start();
+                    const textBefore = editor.state.doc.textBetween(lineStart, from, '\0', '\0');
+                    const slashIndex = textBefore.lastIndexOf('/');
+                    if (slashIndex !== -1) {
+                      editor.commands.command(({ tr, state }) => {
+                        tr.delete(lineStart + slashIndex, from);
+                        return true;
+                      });
+                    }
+                    if (cmd && cmd.id === 'image') {
+                      editor.chain().focus().setImage({ src: '' }).run();
+                      setTimeout(() => setImageMenuOpen(true), 0);
+                      return;
+                    }
+                    if (cmd && typeof cmd.action === 'function') {
+                      cmd.action(editor);
+                    }
                   }}
+                  lang={lang}
                 />
               </div>
               {/* ... autres sous-blocs à migrer ensuite ... */}
