@@ -313,6 +313,9 @@ export default function HomePage() {
           margin-left: auto;
           margin-right: auto;
         }
+        .app-header, .header-content, .logo-link, .logo, .logout-btn {
+          display: none !important;
+        }
       `}</style>
     </div>
   );

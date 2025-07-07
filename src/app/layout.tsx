@@ -39,7 +39,7 @@ export default function RootLayout({
           <div className="app-layout">
             {/* <Sidebar /> */}
             <div className="app-main-content">
-              <Header />
+              {/* <Header /> */}
               {children}
             </div>
           </div>

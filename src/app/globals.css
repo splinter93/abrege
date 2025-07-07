@@ -118,3 +118,89 @@ body {
 .auth-container-glass .supabase-auth-ui_ui-divider {
   margin: 1.5em 0 !important;
 }
+
+.auth-title {
+  font-family: 'Inter', 'Noto Sans', sans-serif !important;
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: #ff6a00;
+  text-align: center;
+  margin-bottom: 8px;
+  letter-spacing: 0.01em;
+}
+.auth-subtitle {
+  color: #b3a9a0;
+  font-size: 1.13rem;
+  font-weight: 400;
+  margin-bottom: 28px;
+  margin-top: 0;
+  text-align: center;
+  line-height: 1.5;
+}
+.auth-form-wrapper {
+  width: 100%;
+  max-width: 340px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.auth-form-wrapper label {
+  color: #b3a9a0;
+  font-size: 1rem;
+  font-weight: 500;
+  margin-bottom: 6px;
+  margin-top: 18px;
+  text-align: left;
+}
+.auth-form-wrapper input[type="email"],
+.auth-form-wrapper input[type="password"] {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 8px;
+  border: 1.5px solid rgba(255,255,255,0.10);
+  background: rgba(30, 30, 36, 0.18);
+  color: #fff;
+  font-size: 1.08rem;
+  margin-bottom: 18px;
+  font-family: 'Inter', 'Noto Sans', sans-serif;
+}
+.auth-form-wrapper input[type="email"]:focus,
+.auth-form-wrapper input[type="password"]:focus {
+  border-color: #ff6a00;
+  outline: none;
+  background: rgba(30, 30, 36, 0.28);
+}
+.auth-form-wrapper .sbui-auth-link, .auth-form-wrapper .sbui-auth-text, .auth-form-wrapper .sbui-auth-message, .auth-form-wrapper .sbui-auth-label {
+  font-size: 0.92rem !important;
+  color: #b3a9a0 !important;
+  text-align: center !important;
+  margin-top: 8px !important;
+  margin-bottom: 0 !important;
+  letter-spacing: 0.01em;
+  display: block;
+}
+.auth-form-wrapper button[type="submit"],
+.auth-form-wrapper .sbui-btn,
+.auth-form-wrapper .sbui-btn-primary {
+  display: block !important;
+  margin: 2px auto 0 auto !important;
+  width: 100% !important;
+  max-width: 180px;
+  font-size: 1.01rem !important;
+  font-weight: 500 !important;
+  border-radius: 8px !important;
+  padding: 10px 0 !important;
+  background: #18181c !important;
+  color: #ff6a00 !important;
+  border: 1.5px solid #ff6a00 !important;
+  box-shadow: none !important;
+  text-align: center !important;
+  transition: background 0.18s, color 0.18s, border-color 0.18s;
+}
+.auth-form-wrapper button[type="submit"]:hover,
+.auth-form-wrapper .sbui-btn-primary:hover {
+  background: #ff6a00 !important;
+  color: #fff !important;
+  border-color: #ff6a00 !important;
+}
