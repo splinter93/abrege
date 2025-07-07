@@ -49,7 +49,7 @@ export const moveArticle = (articleId: string, targetFolderId: string): Promise<
 
 // Divers
 export const updateItemPositions = (items: any[]): Promise<any> => sbUpdateItemPositions(items);
-export const renameItem = (id: string, newName: string): Promise<any> => sbRenameItem(id, newName);
+export const renameItem = (id: string, type: 'folder' | 'file', newName: string): Promise<any> => sbRenameItem(id, type, newName);
 export const moveItem = (id: string, newParentId: string): Promise<any> => sbMoveItem(id, newParentId);
 
 const api = {

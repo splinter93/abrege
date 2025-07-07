@@ -194,7 +194,9 @@
   height: 64px !important;
   flex-shrink: 0;
   margin-bottom: 0;
-  filter: drop-shadow(0 2px 8px rgba(255,106,0,0.10));
+  filter: none !important;
+  box-shadow: none !important;
+  background: none !important;
 }
 
 .item-name,
@@ -294,7 +296,9 @@
   width: 24px !important;
   height: 24px !important;
   flex-shrink: 0;
-  filter: drop-shadow(0 2px 8px rgba(255,106,0,0.10));
+  filter: none !important;
+  box-shadow: none !important;
+  background: none !important;
 }
 
 .list-item-type-col,
@@ -509,4 +513,10 @@
 /* Optionnel : si tu veux forcer un gradient sur tous les SVG folders/files, tu peux cibler le path principal : */
 .list-item svg path:first-of-type, .grid-item svg path:first-of-type, .file-item svg path:first-of-type {
   fill: url(#fileGradient), linear-gradient(90deg, #ff6a00 0%, #ffb347 100%);
+}
+
+.file-item svg {
+  filter: none !important;
+  box-shadow: none !important;
+  background: none !important;
 } 
