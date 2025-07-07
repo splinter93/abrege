@@ -10,6 +10,7 @@ export type CreateClasseurPayload = {
   name: string;
   icon?: string;
   color?: string;
+  position: number;
 };
 export type CreateClasseurResponse =
   | { success: true; classeur: Classeur }
@@ -23,6 +24,7 @@ export async function POST(req: Request): Promise<Response> {
       name: z.string().min(1, 'name requis'),
       icon: z.string().optional(),
       color: z.string().optional(),
+      position: z.number().int().nonnegative(),
     });
     const parseResult = schema.safeParse(body);
     if (!parseResult.success) {
@@ -31,11 +33,12 @@ export async function POST(req: Request): Promise<Response> {
         { status: 422 }
       );
     }
-    const { name, icon, color } = parseResult.data;
+    const { name, icon, color, position } = parseResult.data;
     const insertData = {
       name,
       icon: icon || 'Folder',
       color: color || '#e55a2c',
+      position,
       created_at: new Date().toISOString(),
     };
     const { data, error } = await supabase
@@ -54,8 +57,8 @@ export async function POST(req: Request): Promise<Response> {
 
 /**
  * Endpoint: POST /api/v1/create-classeur
- * Payload attendu : { name: string, icon?: string, color?: string }
- * - Valide le payload avec Zod (name obligatoire)
+ * Payload attendu : { name: string, icon?: string, color?: string, position: number }
+ * - Valide le payload avec Zod (name et position obligatoires)
  * - Crée un classeur dans Supabase (table classeurs)
  * - Réponses :
  *   - 201 : { success: true, classeur }

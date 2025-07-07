@@ -59,7 +59,7 @@ const getFileType = (item) => {
 };
 
 // --- Merged Item Component ---
-const Item = ({ item, viewMode, onRename, isRenaming, onStartRename, onCancelRename }) => {
+const Item = ({ item, viewMode, onRename, isRenaming, onStartRename, onCancelRename, onDoubleClick }) => {
   const [name, setName] = useState(item.name || item.source_title);
   const inputRef = useRef(null);
   const nameContainerRef = useRef(null);
@@ -107,6 +107,7 @@ const Item = ({ item, viewMode, onRename, isRenaming, onStartRename, onCancelRen
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 10 }}
       transition={{ duration: 0.2 }}
+      onDoubleClick={onDoubleClick}
     >
       {displayedName}
     </motion.span>
@@ -154,7 +155,7 @@ const Item = ({ item, viewMode, onRename, isRenaming, onStartRename, onCancelRen
   );
 };
 
-const SortableItem = ({ id, item, viewMode, onRename, isRenaming, onStartRename, onCancelRename, onContextMenu, onClick }) => {
+const SortableItem = ({ id, item, viewMode, onRename, isRenaming, onStartRename, onCancelRename, onContextMenu, onClick, onDoubleClick }) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id, data: { item } });
 
   const style = {
@@ -172,6 +173,7 @@ const SortableItem = ({ id, item, viewMode, onRename, isRenaming, onStartRename,
       {...listeners}
       onContextMenu={onContextMenu}
       onClick={onClick}
+      onDoubleClick={onDoubleClick}
       className="motion-item-wrapper"
       title={item.name || item.source_title}
     >
@@ -182,12 +184,13 @@ const SortableItem = ({ id, item, viewMode, onRename, isRenaming, onStartRename,
         isRenaming={isRenaming}
         onStartRename={onStartRename}
         onCancelRename={onCancelRename}
+        onDoubleClick={onDoubleClick}
       />
     </div>
   );
 };
 
-const SortableList = ({ items, viewMode, onRename, renamingItemId, onStartRename, onCancelRename, handleContextMenu, handleItemClick }) => {
+const SortableList = ({ items, viewMode, onRename, renamingItemId, onStartRename, onCancelRename, handleContextMenu, handleItemClick, handleItemDoubleClick }) => {
   return (
     <div className={`dnd-container ${viewMode === 'grid' ? 'grid-view' : 'list-container'}`}>
       {items.map(item => (
@@ -202,6 +205,7 @@ const SortableList = ({ items, viewMode, onRename, renamingItemId, onStartRename
           onCancelRename={onCancelRename}
           onContextMenu={(e) => handleContextMenu(e, item)}
           onClick={() => handleItemClick(item)}
+          onDoubleClick={() => handleItemDoubleClick(item)}
         />
       ))}
     </div>
@@ -385,7 +389,8 @@ const FolderManager = ({ classeurId, classeurName, classeurIcon }) => {
   const handleItemClick = (item) => {
     if (renamingItemId === item.id) return;
     if (item.type === 'folder') {
-      handleFolderOpen(item);
+      // Ne rien faire sur clic simple dossier (UX macOS)
+      return;
     } else {
       if (item.source_type === 'markdown') {
         router.push(`/note/${item.id}`);
@@ -426,6 +431,19 @@ const FolderManager = ({ classeurId, classeurName, classeurIcon }) => {
       setRenamingItemId(newNote.id);
     } catch (error) {
       console.error('Failed to create note:', error);
+    }
+  };
+
+  const handleItemDoubleClick = (item) => {
+    console.log('Double click', item);
+    if (item.type === 'folder') {
+      handleFolderOpen(item);
+    } else {
+      if (item.source_type === 'markdown') {
+        router.push(`/note/${item.id}`);
+      } else {
+        router.push(`/summary/${item.id}`);
+      }
     }
   };
 
@@ -489,6 +507,7 @@ const FolderManager = ({ classeurId, classeurName, classeurIcon }) => {
                   onCancelRename={handleCancelRename}
                   handleContextMenu={handleContextMenu}
                   handleItemClick={handleItemClick}
+                  handleItemDoubleClick={handleItemDoubleClick}
                 />
               </SortableContext>
             </div>
@@ -509,6 +528,7 @@ const FolderManager = ({ classeurId, classeurName, classeurIcon }) => {
                   onCancelRename={handleCancelRename}
                   handleContextMenu={handleContextMenu}
                   handleItemClick={handleItemClick}
+                  handleItemDoubleClick={handleItemDoubleClick}
                 />
               </SortableContext>
             </div>
@@ -526,6 +546,7 @@ const FolderManager = ({ classeurId, classeurName, classeurIcon }) => {
                 onRename={() => {}} 
                 onStartRename={() => {}} 
                 onCancelRename={() => {}}
+                onDoubleClick={() => {}}
               />
             </div>
           ) : null}
