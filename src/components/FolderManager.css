@@ -1,20 +1,23 @@
 .folder-manager-container {
   padding: 0;
   background-color: var(--bg-main);
-  height: 100%;
   color: var(--text-primary);
-  display: flex;
-  flex-direction: column;
   overflow: hidden;
 }
 
 .folder-manager-header {
   display: flex;
+  align-items: flex-start;
   justify-content: space-between;
-  align-items: center;
-  padding: 0.75rem 0;
-  margin-bottom: 1rem;
-  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+.folder-manager-header .view-controls {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 0;
 }
 
 .breadcrumbs {
@@ -86,8 +89,31 @@
 }
 
 .folder-manager-content {
-  overflow: hidden;
-  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  height: auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.item-group-container {
+  display: flex;
+  flex-direction: column;
+  flex: 0 0 auto;
+  min-height: 0;
+}
+
+.dnd-container {
+  display: flex;
+  flex-direction: column;
+  flex: 0 0 auto;
+  min-height: 0;
+}
+
+.grid-view, .list-container {
+  flex: 0 0 auto;
+  min-height: 0;
 }
 
 .item-section + .item-section {
@@ -116,9 +142,16 @@
   max-width: 1202px;
 }
 
-.motion-item-wrapper {
-  position: relative;
-  height: 144px;
+.motion-item-wrapper, .list-item, .grid-item, .file-item {
+  transition: transform 0.22s cubic-bezier(.4,1.2,.4,1), box-shadow 0.18s;
+  padding-top: 6px !important;
+  padding-bottom: 6px !important;
+}
+.motion-item-wrapper.drag-over, .motion-item-wrapper.dragged {
+  box-shadow: 0 8px 32px 0 rgba(255,106,0,0.18), 0 2px 12px 0 rgba(31, 38, 135, 0.10);
+  z-index: 10;
+  border-radius: 14px;
+  transition: box-shadow 0.18s, transform 0.22s cubic-bezier(.4,1.2,.4,1);
 }
 
 .grid-item {
@@ -139,6 +172,9 @@
   background-color: var(--bg-surface);
   outline: 2px dashed transparent;
   outline-offset: 0px;
+  background: none !important;
+  box-shadow: none !important;
+  border: none !important;
 }
 
 .grid-item:hover {
@@ -158,11 +194,14 @@
   height: 64px !important;
   flex-shrink: 0;
   margin-bottom: 0;
+  filter: drop-shadow(0 2px 8px rgba(255,106,0,0.10));
 }
 
-.item-name {
+.item-name,
+.list-item-name-col .item-name,
+.grid-item .item-name {
+  color: #b3a9a0 !important;
   font-size: var(--font-size-sm);
-  color: var(--text-primary);
   text-align: center;
   overflow-wrap: break-word;
   word-break: break-word;
@@ -183,7 +222,7 @@
   font-family: inherit;
   font-size: var(--font-size-sm);
   line-height: 1.4;
-  color: var(--text-primary);
+  color: #b3a9a0 !important;
   background-color: var(--bg-surface-hover);
   border: 1px solid var(--accent-primary);
   border-radius: var(--border-radius-sm);
@@ -219,6 +258,9 @@
   width: 100%;
   cursor: pointer;
   transition: background-color 0.15s ease-in-out;
+  background: none !important;
+  box-shadow: none !important;
+  border: none !important;
 }
 
 .list-item:hover {
@@ -252,6 +294,7 @@
   width: 24px !important;
   height: 24px !important;
   flex-shrink: 0;
+  filter: drop-shadow(0 2px 8px rgba(255,106,0,0.10));
 }
 
 .list-item-type-col,
@@ -368,29 +411,102 @@
     }
 }
 
-.item-group-container {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-}
-
 .item-group-title {
     font-size: 0.875rem;
     font-weight: 500;
     color: var(--text-secondary);
-    padding: 16px var(--main-content-padding) 8px;
+    padding: 0;
     margin: 0;
     text-transform: uppercase;
     letter-spacing: 0.05em;
+    margin-bottom: 2px;
+    margin-top: 20px !important;
 }
 
 .item-group-separator {
-    width: calc(100% - (2 * var(--main-content-padding)));
+    margin: 2px 0 !important;
     height: 1px;
-    background-color: var(--border-color);
-    margin: 16px auto;
+    background: linear-gradient(90deg, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.04) 100%);
+    border: none;
+    border-radius: 1px;
 }
 
 .motion-item-wrapper.drag-over {
   z-index: 10;
+}
+
+.folder-manager-root {
+  background: rgba(30, 30, 36, 0.32); /* légère transparence pour l'effet glass */
+  border-radius: 18px;
+  box-shadow: 0 4px 24px 0 rgba(31, 38, 135, 0.10);
+  border: 1.5px solid rgba(255,255,255,0.10);
+  padding: 32px 2vw;
+  margin-bottom: 32px;
+  min-height: 320px;
+  width: 100%;
+  max-width: 98vw;
+  margin-left: auto;
+  margin-right: auto;
+  gap: 24px;
+  backdrop-filter: blur(12px) saturate(140%);
+  -webkit-backdrop-filter: blur(12px) saturate(140%);
+}
+
+.classeur-header-glass {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0;
+  margin-bottom: 0;
+  background: none;
+  border: none;
+  box-shadow: none;
+  border-radius: 0;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  width: fit-content;
+}
+
+.classeur-header-icon {
+  display: flex;
+  align-items: center;
+  margin-top: 2px;
+}
+
+.classeur-header-icon svg {
+  width: 22px !important;
+  height: 22px !important;
+  display: block;
+}
+
+.classeur-header-title {
+  color: #fff;
+  font-size: 2.1rem;
+  font-weight: 700;
+  margin: 0;
+  letter-spacing: 0.01em;
+  text-align: left;
+}
+
+.classeur-header-glass h2.classeur-header-title {
+  font-size: 1.35rem;
+  font-weight: 700;
+  margin: 0;
+  letter-spacing: 0.01em;
+  text-align: left;
+  padding-bottom: 18px;
+}
+
+.folder-manager-root, .folder-manager-root * {
+  font-family: 'Noto Sans', sans-serif !important;
+  color: #b3a9a0 !important;
+}
+
+.classeur-header-title, .classeur-header-glass h2.classeur-header-title {
+  color: #fff !important;
+}
+
+/* Optionnel : si tu veux forcer un gradient sur tous les SVG folders/files, tu peux cibler le path principal : */
+.list-item svg path:first-of-type, .grid-item svg path:first-of-type, .file-item svg path:first-of-type {
+  fill: url(#fileGradient), linear-gradient(90deg, #ff6a00 0%, #ffb347 100%);
 } 
