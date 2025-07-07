@@ -120,40 +120,21 @@ const ClasseurTabs = ({
   const activeClasseur = activeId ? classeurs.find(c => c.id === activeId) : null;
 
   return (
-    <div className="classeur-tabs-container" onClick={closeContextMenu}>
-      <DndContext
-        sensors={sensors}
-        collisionDetection={closestCenter}
-        onDragStart={handleDragStart}
-        onDragEnd={handleDragEnd}
-      >
-        <SortableContext items={classeurs.map(c => c.id)} strategy={horizontalListSortingStrategy}>
-          <nav className="classeur-tabs">
-            {classeurs.map((classeur) => (
-              <SortableTab
-                key={classeur.id}
-                classeur={classeur}
-                isActive={classeur.id === activeClasseurId}
-                onSelectClasseur={onSelectClasseur}
-                onContextMenu={handleContextMenu}
-              />
-            ))}
-          </nav>
-        </SortableContext>
-        <DragOverlay>
-          {activeClasseur ? (
-            <div className="motion-tab-wrapper dragged">
-              <button className="classeur-tab active">
-                <DynamicIcon name={activeClasseur.icon} color="#e55a2c" size={16} />
-                <span>{activeClasseur.name}</span>
-              </button>
-            </div>
-          ) : null}
-        </DragOverlay>
-      </DndContext>
-      
-      <button className="add-classeur-btn" onClick={onCreateClasseur}>+</button>
-
+    <div className="classeur-tabs-glass-wrapper">
+      <div className="classeur-tabs-btn-list">
+        {classeurs.map((classeur) => (
+          <button
+            key={classeur.id}
+            className={`classeur-btn-glass${classeur.id === activeClasseurId ? ' active' : ''}`}
+            onClick={() => onSelectClasseur(classeur.id)}
+            onContextMenu={(e) => handleContextMenu(e, classeur)}
+          >
+            <DynamicIcon name={classeur.icon} color={classeur.id === activeClasseurId ? '#ff6a00' : classeur.color} size={20} />
+            <span>{classeur.name}</span>
+          </button>
+        ))}
+        <button className="add-classeur-btn-glass" onClick={onCreateClasseur}>+</button>
+      </div>
       {isColorPickerVisible && contextMenu.item && (
         <ColorPalette
           style={{ top: contextMenu.y + 10, left: contextMenu.x }}
@@ -161,7 +142,6 @@ const ClasseurTabs = ({
           onClose={() => setColorPickerVisible(false)}
         />
       )}
-      
       <ContextMenu
         visible={contextMenu.visible}
         x={contextMenu.x}

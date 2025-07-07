@@ -237,9 +237,9 @@ export const moveItem = async (id: string, newParentId: string): Promise<any> =>
   return true;
 };
 
-export const renameItem = async (id: string, newName: string): Promise<any> => {
-  const tableName = id.startsWith('F') ? 'folders' : 'articles';
-  const nameColumn = tableName === 'folders' ? 'name' : 'source_title';
+export const renameItem = async (id: string, type: 'folder' | 'file', newName: string): Promise<any> => {
+  const tableName = type === 'folder' ? 'folders' : 'articles';
+  const nameColumn = type === 'folder' ? 'name' : 'source_title';
 
   const { data, error } = await supabase
     .from(tableName)

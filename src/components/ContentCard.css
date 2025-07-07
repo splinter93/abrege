@@ -1,11 +1,13 @@
 /* Styles for ContentCard component */
 
 .content-card {
-  background-color: var(--bg-surface);
-  border: 1px solid var(--border-color);
+  background: rgba(30, 30, 36, 0.38); /* Plus transparent */
+  backdrop-filter: blur(10px) saturate(140%);
+  -webkit-backdrop-filter: blur(10px) saturate(140%);
+  border: 1.5px solid rgba(255,255,255,0.10);
   border-radius: var(--border-radius);
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-  transition: transform var(--transition-speed);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.13);
+  transition: transform var(--transition-speed), box-shadow 0.2s, border-color 0.2s, background 0.2s;
   padding: 0;
   overflow: hidden;
   display: flex;
@@ -13,7 +15,10 @@
 }
 
 .content-card:hover {
-  transform: translateY(-4px);
+  transform: translateY(-4px) scale(1.025);
+  background: rgba(30, 30, 36, 0.48);
+  border-color: #ff6a00;
+  box-shadow: 0 8px 24px 0 rgba(255,106,0,0.10);
 }
 
 .card-image-container {

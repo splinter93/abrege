@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import './ContextMenu.css';
 
 export interface ContextMenuItem {
@@ -44,11 +45,13 @@ const ContextMenu: React.FC<ContextMenuProps> = ({ x, y, visible, items, onClose
     onClose();
   };
 
-  return (
+  // Décalage vertical pour placer le menu au-dessus du curseur
+  const OFFSET_Y = 12;
+  return createPortal(
     <div
       ref={menuRef}
       className="context-menu"
-      style={{ top: `${y}px`, left: `${x}px` }}
+      style={{ top: `${y - OFFSET_Y}px`, left: `${x}px` }}
     >
       <ul className="context-menu-list">
         {items.map((item, index) => {
@@ -64,7 +67,8 @@ const ContextMenu: React.FC<ContextMenuProps> = ({ x, y, visible, items, onClose
           );
         })}
       </ul>
-    </div>
+    </div>,
+    document.body
   );
 };
 

@@ -1,67 +1,81 @@
 .classeur-tabs-container {
   display: flex;
   align-items: center;
-  padding: 0 var(--main-content-padding);
-  border-bottom: 1px solid var(--border-color);
-  background-color: var(--bg-main);
-  flex-shrink: 0;
+  padding: 0 32px;
+  border-bottom: none;
+  background: transparent;
+  backdrop-filter: blur(10px) saturate(140%);
+  -webkit-backdrop-filter: blur(10px) saturate(140%);
+  border-radius: 18px 18px 0 0;
+  box-shadow: 0 4px 24px 0 rgba(31, 38, 135, 0.10);
+  margin-bottom: 0;
+  z-index: 2;
+  position: relative;
 }
 
 .classeur-tabs {
   display: flex;
   align-items: flex-end;
-  gap: 4px;
-  overflow-x: auto; /* Pour gérer de nombreux onglets */
+  gap: 8px;
+  overflow-x: auto;
+  padding: 8px 0 0 0;
 }
 
 .classeur-tab {
-  padding: 12px 18px;
-  border: 1px solid transparent;
+  padding: 13px 22px;
+  border: 1.5px solid rgba(255,255,255,0.10);
   border-bottom: none;
-  border-radius: 8px 8px 0 0;
-  background-color: var(--bg-surface);
-  color: var(--text-primary);
+  border-radius: 12px 12px 0 0;
+  background: rgba(30, 30, 36, 0.32);
+  color: #fff;
   cursor: pointer;
-  font-size: 0.9rem;
+  font-size: 1.04rem;
   font-weight: 600;
   white-space: nowrap;
-  transition: background-color 0.2s, color 0.2s;
+  transition: background 0.18s, color 0.18s, border-color 0.18s, box-shadow 0.18s;
   position: relative;
   bottom: -1px;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.7rem;
+  box-shadow: 0 2px 12px 0 rgba(31, 38, 135, 0.08);
+  backdrop-filter: blur(8px) saturate(120%);
+  -webkit-backdrop-filter: blur(8px) saturate(120%);
+  font-family: 'Noto Sans', sans-serif !important;
 }
 
 .classeur-tab:hover {
-  background-color: var(--bg-surface-hover);
-  color: var(--text-primary);
+  background: rgba(255,255,255,0.10);
+  color: rgba(255,255,255,0.72);
+  border: 1px solid rgba(255,255,255,0.38);
+  box-shadow: 0 4px 18px 0 rgba(255,255,255,0.08);
 }
 
 .classeur-tab.active {
-  background-color: var(--bg-main);
-  color: var(--accent-primary);
-  border-color: var(--border-color);
-  filter: brightness(0.85); /* Assombrit de 15% au total */
+  background: rgba(255,255,255,0.10);
+  color: rgba(255,255,255,0.72);
+  border: 1px solid rgba(255,255,255,0.38);
+  filter: brightness(1.01);
+  z-index: 3;
+  backdrop-filter: blur(8px) saturate(140%);
+  -webkit-backdrop-filter: blur(8px) saturate(140%);
+  box-shadow: 0 4px 18px 0 rgba(255,255,255,0.08);
 }
 
-.add-classeur-btn {
-  margin-left: 4px;
-  padding: 6px 18px;
-  border: none;
-  background-color: transparent;
-  color: var(--text-secondary);
-  border-radius: var(--border-radius-md);
-  cursor: pointer;
-  font-size: 1.4rem;
-  font-weight: 500;
-  transition: all 0.2s;
+.add-classeur-btn, .add-classeur-btn-glass {
+  background: rgba(255,255,255,0.10);
+  color: rgba(255,255,255,0.72);
+  border: 1px solid rgba(255,255,255,0.38);
+  box-shadow: 0 2px 8px 0 rgba(255,255,255,0.08);
+  transition: background 0.18s, color 0.18s, box-shadow 0.18s, border-color 0.18s;
+  font-family: 'Noto Sans', sans-serif !important;
 }
 
-.add-classeur-btn:hover {
-  background-color: var(--accent-primary);
-  color: white;
-  border-color: var(--accent-primary);
+.add-classeur-btn:hover, .add-classeur-btn-glass:hover {
+  background: rgba(255,255,255,0.10);
+  color: rgba(255,255,255,0.72);
+  border: 1px solid rgba(255,255,255,0.38);
+  box-shadow: 0 4px 18px 0 rgba(255,255,255,0.08);
 }
 
 .motion-tab-wrapper {
@@ -69,7 +83,113 @@
 }
 
 .motion-tab-wrapper.dragged {
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-  border-radius: var(--border-radius-md);
+  box-shadow: 0 5px 15px rgba(255,106,0,0.18);
+  border-radius: 12px;
   cursor: grabbing;
+}
+
+.classeur-tabs-glass-wrapper {
+  width: 100%;
+  background: transparent;
+  backdrop-filter: blur(10px) saturate(140%);
+  -webkit-backdrop-filter: blur(10px) saturate(140%);
+  border-radius: 22px 22px 0 0;
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.13);
+  padding: 18px 0 0 0;
+  margin-bottom: 0;
+  z-index: 5;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.classeur-tabs-btn-list {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  padding: 0 24px 8px 34px;
+  width: 100%;
+  z-index: 2;
+}
+
+.classeur-btn-glass {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 26px;
+  background: rgba(30, 30, 36, 0.32);
+  border: 1.5px solid rgba(255,255,255,0.10);
+  border-radius: 14px;
+  color: #fff;
+  font-size: 1.08rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 2px 12px 0 rgba(31, 38, 135, 0.08);
+  backdrop-filter: blur(8px) saturate(120%);
+  -webkit-backdrop-filter: blur(8px) saturate(120%);
+  transition: background 0.18s, color 0.18s, border-color 0.18s, box-shadow 0.18s;
+  font-family: 'Noto Sans', sans-serif !important;
+}
+.classeur-btn-glass:hover {
+  background: rgba(255,255,255,0.10);
+  color: rgba(255,255,255,0.72);
+  border: 1px solid rgba(255,255,255,0.38);
+  box-shadow: 0 4px 18px 0 rgba(255,255,255,0.08);
+}
+.classeur-btn-glass.active {
+  background: rgba(255,255,255,0.10);
+  color: rgba(255,255,255,0.72);
+  border: 1px solid rgba(255,255,255,0.38);
+  filter: brightness(1.01);
+  z-index: 3;
+  backdrop-filter: blur(8px) saturate(140%);
+  -webkit-backdrop-filter: blur(8px) saturate(140%);
+  box-shadow: 0 4px 18px 0 rgba(255,255,255,0.08);
+}
+.add-classeur-btn-glass {
+  margin-left: 2px;
+  padding: 7px 12px;
+  border: 1.5px solid rgba(255,255,255,0.10);
+  background: rgba(30, 30, 36, 0.32);
+  color: #ff6a00;
+  border-radius: 14px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 700;
+  box-shadow: 0 2px 12px 0 rgba(31, 38, 135, 0.08);
+  backdrop-filter: blur(8px) saturate(120%);
+  -webkit-backdrop-filter: blur(8px) saturate(120%);
+  transition: background 0.18s, color 0.18s, box-shadow 0.18s, border-color 0.18s;
+  font-family: 'Noto Sans', sans-serif !important;
+}
+.add-classeur-btn-glass:hover {
+  background: #ff6a00;
+  color: #fff;
+  border-color: #ff6a00;
+  box-shadow: 0 4px 18px 0 rgba(255,106,0,0.13);
+}
+
+.classeur-tab svg,
+.classeur-btn-glass svg {
+  background: rgba(30, 30, 36, 0.32);
+  border-radius: 8px;
+  backdrop-filter: blur(6px) saturate(120%);
+  -webkit-backdrop-filter: blur(6px) saturate(120%);
+  padding: 4px;
+  transition: background 0.18s, box-shadow 0.18s;
+}
+
+.classeur-tab:hover svg,
+.classeur-btn-glass:hover svg {
+  background: rgba(40, 40, 50, 0.44);
+  box-shadow: 0 2px 8px 0 rgba(255,106,0,0.10);
+}
+
+.classeur-tab.active svg,
+.classeur-btn-glass.active svg {
+  color: rgba(255,255,255,0.72) !important;
+  stroke: rgba(255,255,255,0.72) !important;
+  fill: none !important;
 } 

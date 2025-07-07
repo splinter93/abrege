@@ -4,13 +4,14 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { FolderPlus, Grid, List, ArrowLeft, Pencil } from 'lucide-react';
 import './FolderManager.css';
-import { getFolders, getArticles, getFolderById, updateItemPositions, renameItem, createFolder, createArticle, moveItem } from '../services/supabase';
+import { getFolders, getArticles, getFolderById, updateItemPositions, renameItem, createFolder, createArticle, moveItem, deleteFolder, deleteArticle } from '../services/supabase';
 // import { useToast } from '../contexts/ToastContext';
 import ContextMenu from './ContextMenu';
 // DnD Kit imports
 import { DndContext, closestCenter, PointerSensor, KeyboardSensor, useSensor, useSensors, DragOverlay } from '@dnd-kit/core';
 import { SortableContext, arrayMove, useSortable, rectSortingStrategy, verticalListSortingStrategy, sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import DynamicIcon from './DynamicIcon';
 
 // --- Icônes ---
 const FolderIcon = () => (
@@ -207,7 +208,7 @@ const SortableList = ({ items, viewMode, onRename, renamingItemId, onStartRename
   );
 };
 
-const FolderManager = ({ classeurId }) => {
+const FolderManager = ({ classeurId, classeurName, classeurIcon }) => {
   const [folders, setFolders] = useState([]);
   const [files, setFiles] = useState([]);
   const [viewMode, setViewMode] = useState('grid');
@@ -362,10 +363,22 @@ const FolderManager = ({ classeurId }) => {
     }
   };
 
-  const handleDelete = () => {
-    if (window.confirm(`Are you sure you want to delete ${contextMenu.item.name}?`)) {
-      // TODO: Call API to delete
-      console.log(`Deleting ${contextMenu.item.id}`);
+  const handleDelete = async () => {
+    if (!contextMenu.item) return;
+    if (window.confirm(`Supprimer définitivement « ${contextMenu.item.name || contextMenu.item.source_title} » ?`)) {
+      try {
+        if (contextMenu.item.type === 'folder') {
+          await deleteFolder(contextMenu.item.id);
+          setFolders(folders.filter(f => f.id !== contextMenu.item.id));
+        } else {
+          await deleteArticle(contextMenu.item.id);
+          setFiles(files.filter(f => f.id !== contextMenu.item.id));
+        }
+        closeContextMenu();
+      } catch (error) {
+        alert('Erreur lors de la suppression.');
+        console.error(error);
+      }
     }
   };
   
@@ -383,17 +396,15 @@ const FolderManager = ({ classeurId }) => {
   };
 
   const handleCreateFolder = async () => {
-    const newName = prompt('Nom du nouveau dossier :', 'Nouveau dossier');
-    if (!newName || newName.trim() === '') return;
-
     try {
       const newFolder = await createFolder({
-        name: newName.trim(),
+        name: 'Nouveau dossier',
         classeurId: classeurId,
         parentId: currentFolderId,
         position: folders.length,
       });
       setFolders(prev => [...prev, { ...newFolder, type: 'folder' }]);
+      setRenamingItemId(newFolder.id);
     } catch (error) {
       console.error('Failed to create folder:', error);
     }
@@ -402,16 +413,17 @@ const FolderManager = ({ classeurId }) => {
   const handleCreateNote = async () => {
     try {
       const newNote = await createArticle({
-        sourceTitle: '',
+        sourceTitle: 'Nouvelle note',
         sourceType: 'markdown',
-        content: '',
+        markdown_content: '',
+        html_content: '',
         classeurId: classeurId,
         folderId: currentFolderId,
         position: files.length,
         source_url: `/note/${crypto.randomUUID()}`
       });
       setFiles(prev => [...prev, { ...newNote, type: 'file' }]);
-      router.push(`/note/${newNote.id}`);
+      setRenamingItemId(newNote.id);
     } catch (error) {
       console.error('Failed to create note:', error);
     }
@@ -425,14 +437,10 @@ const FolderManager = ({ classeurId }) => {
   const activeItem = activeId ? allItems.find(i => i.id === activeId) : null;
 
   return (
-    <div className="folder-manager-container" onContextMenu={(e) => e.preventDefault()} onClick={closeContextMenu}>
-      <header className="folder-manager-header">
-        <div className="breadcrumbs">
-          {currentFolderId && (
-            <button onClick={handleBack} className="control-btn" title="Retour">
-              <ArrowLeft size={20} />
-            </button>
-          )}
+    <div className="folder-manager-root folder-manager-container" onContextMenu={(e) => e.preventDefault()} onClick={closeContextMenu}>
+      <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', width: '100%'}}>
+        <div className="classeur-header-glass">
+          <h2 className="classeur-header-title">{classeurName}</h2>
         </div>
         <div className="view-controls">
           <button onClick={handleCreateNote} className="control-btn" title="Nouvelle note">
@@ -447,6 +455,15 @@ const FolderManager = ({ classeurId }) => {
           <button onClick={() => setViewMode('grid')} className={`control-btn ${viewMode === 'grid' ? 'active' : ''}`} title="Vue grille">
             <Grid size={20} />
           </button>
+        </div>
+      </div>
+      <header className="folder-manager-header">
+        <div className="breadcrumbs">
+          {currentFolderId && (
+            <button onClick={handleBack} className="control-btn" title="Retour">
+              <ArrowLeft size={20} />
+            </button>
+          )}
         </div>
       </header>
 
@@ -499,17 +516,19 @@ const FolderManager = ({ classeurId }) => {
 
         </div>
         
-        <DragOverlay>
-            {activeItem ? (
+        <DragOverlay adjustScale={false}>
+          {activeItem ? (
+            <div className="motion-item-wrapper dragged">
               <Item 
-                  item={activeItem} 
-                  viewMode={viewMode}
-                  isRenaming={false} 
-                  onRename={() => {}} 
-                  onStartRename={() => {}} 
-                  onCancelRename={() => {}}
+                item={activeItem} 
+                viewMode={viewMode}
+                isRenaming={false} 
+                onRename={() => {}} 
+                onStartRename={() => {}} 
+                onCancelRename={() => {}}
               />
-            ) : null}
+            </div>
+          ) : null}
         </DragOverlay>
       </DndContext>
       

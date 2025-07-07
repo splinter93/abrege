@@ -118,8 +118,9 @@ export default function HomePage() {
           z-index: 0;
           top: 0; left: 0; right: 0; bottom: 0;
           pointer-events: none;
-          background: radial-gradient(ellipse at 60% 0%, rgba(255,106,0,0.18) 0%, rgba(24,23,28,0.85) 60%),
-                      linear-gradient(120deg, rgba(24,23,28,0.95) 60%, rgba(255,106,0,0.10) 100%);
+          background:
+            radial-gradient(ellipse at 80% 0%, rgba(255,106,0,0.22) 0%, rgba(24,23,28,0.92) 60%),
+            linear-gradient(120deg, #18181c 70%, #ff6a00 120%);
           backdrop-filter: blur(12px) saturate(140%);
           -webkit-backdrop-filter: blur(12px) saturate(140%);
         }

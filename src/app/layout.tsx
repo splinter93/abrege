@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 // import type { ReactNode } from "react";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import Sidebar from '../components/Sidebar';
+// import Sidebar from '../components/Sidebar';
 import Header from '../components/Header';
 import '../styles/design-system.css';
 import '../styles/editor.css';
@@ -37,7 +37,7 @@ export default function RootLayout({
         <AuthProvider>
           <Toaster position="top-right" />
           <div className="app-layout">
-            <Sidebar />
+            {/* <Sidebar /> */}
             <div className="app-main-content">
               <Header />
               {children}

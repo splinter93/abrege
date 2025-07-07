@@ -19,8 +19,12 @@ export function AuthProvider({ children }) {
 
   if (!session) {
     return (
-      <div className="auth-container">
-        <Auth supabaseClient={supabase} appearance={{ theme: ThemeSupa }} theme="dark" />
+      <div className="auth-bg-gradient">
+        <div className="auth-container-glass">
+          <h1>Connexion à Abrège</h1>
+          <div className="auth-subtitle">Accédez à votre espace collaboratif, vos notes et agents IA.<br/>Connexion sécurisée via Supabase.</div>
+          <Auth supabaseClient={supabase} appearance={{ theme: ThemeSupa }} theme="dark" />
+        </div>
       </div>
     );
   }

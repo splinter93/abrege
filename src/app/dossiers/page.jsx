@@ -141,11 +141,7 @@ const DossiersPage = () => {
       <div className="page-content">
         {activeClasseur ? (
           <>
-            <header className="page-title-header">
-              <DynamicIcon name={activeClasseur.icon} size={32} />
-              <h1>{activeClasseur.name}</h1>
-            </header>
-            <FolderManager key={activeClasseurId} classeurId={activeClasseurId} />
+            <FolderManager key={activeClasseurId} classeurId={activeClasseurId} classeurName={activeClasseur.name} classeurIcon={activeClasseur.icon} />
           </>
         ) : (
           <div className="empty-state">

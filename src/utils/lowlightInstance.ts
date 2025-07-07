@@ -11,7 +11,7 @@ if (!lowlight) {
 }
 if (typeof lowlight.highlight !== 'function') {
   throw new Error('[lowlightInstance] lowlight manque la méthode highlight()');
-}
+  }
 
 console.log('[DEBUG] lowlight keys:', Object.keys(lowlight));
 

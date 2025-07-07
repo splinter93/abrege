@@ -1,18 +1,32 @@
 .app-header {
   width: 100%;
-  padding: 1rem 2rem;
-  border-bottom: 1px solid var(--border-color);
-  background-color: var(--bg-main);
+  padding: 1rem 0 1rem 0;
+  border-bottom: 1px solid transparent;
+  background: rgba(30, 30, 36, 0.18);
+  backdrop-filter: blur(10px) saturate(140%);
+  -webkit-backdrop-filter: blur(10px) saturate(140%);
+  box-shadow: 0 2px 12px 0 rgba(31, 38, 135, 0.07);
+  position: relative;
+  z-index: 10;
+}
+
+.header-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin: 0;
 }
 
 .logo-link {
   text-decoration: none;
+  margin-left: 1.5rem;
 }
 
 .logo {
   display: flex;
   align-items: center;
-  gap: 0;
+  gap: 0.7rem;
   font-size: 1.5rem;
   font-weight: 600;
   color: var(--text-primary);
@@ -26,8 +40,30 @@
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
+  text-transform: lowercase;
 }
 
 .logo:hover {
   filter: brightness(0.9);
+}
+
+.logout-btn {
+  background: none;
+  border: none;
+  color: #b3a9a0;
+  font-weight: 400;
+  font-size: 1.05rem;
+  cursor: pointer;
+  margin-right: 1.5rem;
+  padding: 0;
+  border-radius: 0;
+  box-shadow: none;
+  transition: color 0.2s;
+  filter: none;
+  font-family: 'Noto Sans', sans-serif !important;
+}
+.logout-btn:hover {
+  color: #fff;
+  text-decoration: underline;
+  background: none;
 } 
