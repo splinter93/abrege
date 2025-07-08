@@ -16,10 +16,11 @@
   top: 0; left: 0; right: 0; bottom: 0;
   pointer-events: none;
   background:
-    linear-gradient(120deg, #050505 0%, #101014 80%, #101014 100%),
-    radial-gradient(ellipse at 92% 105%, rgba(255,140,0,0.10) 0%, rgba(16,16,20,0.0) 55%);
-  backdrop-filter: blur(7px) saturate(110%);
-  -webkit-backdrop-filter: blur(7px) saturate(110%);
+    linear-gradient(120deg, #23242a 0%, #2d2e38 80%, #23242a 100%),
+    radial-gradient(ellipse at 85% 110%, rgba(255,140,0,0.10) 0%, rgba(40,40,48,0.0) 60%),
+    radial-gradient(ellipse at 10% 0%, rgba(255,140,0,0.04) 0%, rgba(40,40,48,0.0) 60%);
+  backdrop-filter: blur(10px) saturate(120%);
+  -webkit-backdrop-filter: blur(10px) saturate(120%);
 }
 
 .dossiers-page-layout > * {

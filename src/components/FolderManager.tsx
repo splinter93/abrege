@@ -109,12 +109,12 @@ const FolderManager: React.FC<FolderManagerProps> = ({ classeurId, classeurName,
     <div
       className="folder-manager-root folder-manager-container"
       style={{
-        background: 'rgba(30,30,40,0.22)',
-        border: '1px solid rgba(255,255,255,0.10)',
+        background: 'rgba(30,30,40,0.38)',
+        border: '1px solid rgba(255,255,255,0.13)',
         borderRadius: 24,
         boxShadow: '0 8px 32px rgba(0,0,0,0.18)',
-        backdropFilter: 'blur(16px)',
-        WebkitBackdropFilter: 'blur(16px)',
+        backdropFilter: 'blur(22px)',
+        WebkitBackdropFilter: 'blur(22px)',
         padding: '12px 0 0 0',
         margin: '5px 0 0 0',
         maxWidth: '100vw',
@@ -146,7 +146,8 @@ const FolderManager: React.FC<FolderManagerProps> = ({ classeurId, classeurName,
           lineHeight: 1.2,
           flex: 1,
           textAlign: 'left',
-          textShadow: '0 1px 8px rgba(0,0,0,0.10)'
+          textShadow: '0 1px 8px rgba(0,0,0,0.10)',
+          fontFamily: 'Noto Sans, Inter, Arial, sans-serif',
         }}>{classeurName}</h2>
         <div style={{ marginLeft: 32 }}>
           <FolderToolbar
@@ -170,7 +171,7 @@ const FolderManager: React.FC<FolderManagerProps> = ({ classeurId, classeurName,
         error={error}
         onFolderOpen={handleFolderOpen}
         onFileOpen={handleFileOpen}
-        renamingItemId={renamingItemId}
+                  renamingItemId={renamingItemId}
         onRenameFile={(id, newName) => submitRename(id, newName)}
         onRenameFolder={(id, newName) => submitRename(id, newName)}
         onCancelRename={cancelRename}
@@ -185,15 +186,15 @@ const FolderManager: React.FC<FolderManagerProps> = ({ classeurId, classeurName,
             }}
             onCreateFile={handleCreateAndRenameFile}
             onToggleView={setViewMode}
-            viewMode={viewMode}
+                  viewMode={viewMode}
           />
         }
         onDropItem={handleDropItem}
       />
       <FolderContextMenu
-        x={contextMenu.x}
-        y={contextMenu.y}
-        visible={contextMenu.visible}
+          x={contextMenu.x}
+          y={contextMenu.y}
+          visible={contextMenu.visible}
         item={contextMenu.item}
         onOpen={handleOpen}
         onRename={handleRename}

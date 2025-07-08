@@ -11,8 +11,8 @@ export const FolderIcon: React.FC<{ size?: number; className?: string }> = ({ si
   >
     <path
       d="M3 7a2 2 0 0 1 2-2h4l2 3h8a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"
-      fill="#E65100"
-      stroke="#E65100"
+      fill="#b34700"
+      stroke="#b34700"
       strokeWidth="1.5"
       strokeLinejoin="round"
     />
