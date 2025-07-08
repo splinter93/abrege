@@ -20,10 +20,6 @@
 }
 
 .editor-container {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
   z-index: 1200;
   overflow-y: auto;
   background: #141418;
@@ -36,12 +32,6 @@
   backdrop-filter: none;
   display: flex;
   flex-direction: column;
-  animation: slideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-@keyframes slideIn {
-  from { transform: translateY(30px) scale(0.98); opacity: 0; }
-  to { transform: translateY(0) scale(1); opacity: 1; }
 }
 
 .editor-header {
@@ -995,8 +985,10 @@
   align-items: center;
   justify-content: space-between;
   padding: 0rem 1.2rem;
-  border-bottom: 1px solid var(--border-subtle);
-  background: var(--surface-1);
+  border-bottom: 1.5px solid rgba(18, 18, 22, 0.55);
+  background: rgba(24, 24, 28, 0.97);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
   gap: 1.2rem;
   min-height: 30px;
   position: sticky;

@@ -723,7 +723,7 @@ const Editor: React.FC<EditorProps> = ({ initialTitle, initialContent = '', head
   }
 
   return (
-    <div className="editor-root" ref={rootRef} style={{ width: '100%', height: '100%', overflowY: 'auto' }}>
+    <div className="editor-root" ref={rootRef} style={{ width: '100%', height: '100%' }}>
       {/* Affichage de la date de sauvegarde si disponible */}
       {lastSaved && (
         <div style={{ position: 'absolute', top: 8, right: 24, fontSize: 12, color: 'var(--text-secondary)' }}>
@@ -733,7 +733,15 @@ const Editor: React.FC<EditorProps> = ({ initialTitle, initialContent = '', head
       <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'flex-start', width: '100%', height: '100%' }}>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div className="editor-modal-overlay fullscreen">
-            <div className="editor-container" onMouseDown={(e: React.MouseEvent) => e.stopPropagation()} ref={editorWrapperRef}>
+            <motion.div
+              className="editor-container"
+              onMouseDown={(e) => e.stopPropagation()}
+              ref={editorWrapperRef}
+              initial={{ opacity: 0, scale: 0.96 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.98 }}
+              transition={{ duration: 0.38, ease: [0.16, 1, 0.3, 1] }}
+            >
               {/* === TOPBAR (barre d'outils supérieure) === */}
               <div className="editor-topbar" style={{ display: 'flex', alignItems: 'center', width: '100%', minHeight: 56 }}>
                 <div style={{ display: 'flex', alignItems: 'center', height: '100%', gap: '0.1rem', fontSize: '1.5rem', fontWeight: 600, color: 'var(--text-primary)', cursor: 'pointer', filter: 'brightness(0.8)', zIndex: 2 }}>
@@ -889,7 +897,7 @@ const Editor: React.FC<EditorProps> = ({ initialTitle, initialContent = '', head
                 />
               </div>
               {/* ... autres sous-blocs à migrer ensuite ... */}
-            </div>
+            </motion.div>
           </div>
         </div>
       </div>
