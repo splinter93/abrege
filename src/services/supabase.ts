@@ -89,15 +89,15 @@ export const deleteFolder = async (folderId: string): Promise<any> => {
   return true;
 };
 
-export const getFolders = async (classeurId: string): Promise<any[]> => {
+export const getFolders = async (classeurId: string, parentId?: string): Promise<any[]> => {
   if (!classeurId) throw new Error('Classeur ID is required to get folders');
-
-  const query = supabase
+  let query = supabase
     .from('folders')
     .select('*')
-    .eq('classeur_id', classeurId)
-    .order('position');
-
+    .eq('classeur_id', classeurId);
+  if (parentId) query = query.eq('parent_id', parentId);
+  else query = query.is('parent_id', null);
+  query = query.order('position');
   const { data: selectData, error } = await query;
   if (error) throw error;
   return selectData;
@@ -180,15 +180,15 @@ export const deleteArticle = async (articleId: string): Promise<any> => {
   return true;
 };
 
-export const getArticles = async (folderId: string): Promise<any[]> => {
-  if (!folderId) throw new Error('Classeur ID is required to get articles');
-
-  const query = supabase
+export const getArticles = async (classeurId: string, folderId?: string): Promise<any[]> => {
+  if (!classeurId) throw new Error('Classeur ID is required to get articles');
+  let query = supabase
     .from('articles')
     .select('*')
-    .eq('classeur_id', folderId)
-    .order('position');
-
+    .eq('classeur_id', classeurId);
+  if (folderId) query = query.eq('folder_id', folderId);
+  else query = query.is('folder_id', null);
+  query = query.order('position');
   const { data: selectData, error } = await query;
   if (error) throw error;
   return selectData;

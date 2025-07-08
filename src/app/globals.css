@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
+  --background: transparent;
   --foreground: #171717;
 }
 
@@ -20,24 +20,15 @@
 }
 
 body {
-  background: var(--background);
+  background: #0a0a0a;
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
 
 .auth-bg-gradient {
-  min-height: 100vh;
-  width: 100vw;
-  position: fixed;
-  top: 0; left: 0;
-  z-index: 1000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: radial-gradient(ellipse at 60% 0%, rgba(255,106,0,0.18) 0%, rgba(24,23,28,0.85) 60%),
-              linear-gradient(120deg, rgba(24,23,28,0.95) 60%, rgba(255,106,0,0.10) 100%);
-  backdrop-filter: blur(12px) saturate(140%);
-  -webkit-backdrop-filter: blur(12px) saturate(140%);
+  background: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
 .auth-container-glass {
   background: rgba(30, 30, 36, 0.38);

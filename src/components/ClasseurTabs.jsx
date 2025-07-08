@@ -1,5 +1,5 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import DynamicIcon from './DynamicIcon';
 import ContextMenu from './ContextMenu';
@@ -32,6 +32,12 @@ const SortableTab = ({ classeur, isActive, onSelectClasseur, onContextMenu }) =>
   );
 };
 
+const EMOJI_CHOICES = ['📁', '📄', '📚', '🗂️', '📝', '📒', '📦', '🧩', '📜', '📂'];
+
+const ALL_EMOJIS = [
+  ...'😀😁😂🤣😃😄😅😆😉😊😋😎😍😘🥰😗😙😚🙂🤗🤩🤔🤨😐😑😶🙄😏😣😥😮🤐😯😪😫😴😌😛😜😝🤤😒😓😔😕🙃🤑😲☹️🙁😖😞😟😤😢😭😦😧😨😩🤯😬😰😱🥵🥶😳🤪😵😡😠🤬😷🤒🤕🤢🤮🤧😇🥳🥺🤠🤡🤥🤫🤭🧐🤓😈👿👹👺💀👻👽🤖💩😺😸😹😻😼😽🙀😿😾🐶🐱🐭🐹🐰🦊🐻🐼🐨🐯🦁🐮🐷🐽🐸🐵🙈🙉🙊🐒🐔🐧🐦🐤🐣🐥🦆🦅🦉🦇🐺🐗🐴🦄🐝🐛🦋🐌🐞🐜🦟🦗🕷️🕸️🐢🐍🦎🦂🦀🦞🦐🦑🐙🦑🦐🦞🦀🦋🐌🐛🐜🐝🦗🕷️🦂🦟🦠🐢🐍🦎🦖🦕🐙🦑🦐🦞🦀🐡🐠🐟🐬🐳🐋🦈🐊🐅🐆🦓🦍🦧🐘🦛🦏🐪🐫🦒🦘🦥🦦🦨🦡🐁🐀🐇🐿️🦔🐾🐉🐲🌵🎄🌲🌳🌴🌱🌿☘️🍀🎍🎋🍃🍂🍁🍄🌾💐🌷🌹🥀🌺🌸🌼🌻🌞🌝🌛🌜🌚🌕🌖🌗🌘🌑🌒🌓🌔🌙🌎🌍🌏💫⭐🌟✨⚡☄️💥🔥🌪️🌈☀️🌤️⛅🌥️🌦️🌧️🌨️🌩️🌪️🌫️🌬️🌀🌈🌂☂️☔⛱️⚽🏀🏈⚾🥎🎾🏐🏉🥏🎱🏓🏸🥅🏒🏑🏏⛳🏹🎣🥊🥋🎽⛸️🥌🛷⛷️🏂🏋️🤼🤸⛹️🤺🤾🏌️🏇🧘🏄🏊🤽🚣🧗🚵🚴🏆🥇🥈🥉🏅🎖️🏵️🎗️🎫🎟️🎪🤹🎭🎨🎬🎤🎧🎼🎹🥁🎷🎺🎸🎻🎲🎯🎳🎮🎰🎲🧩🧸🪁🪀🪅🪆🪐🪁🪀🪅🪆🪐🪁🪀🪅🪆🪐'.split('')
+];
+
 const ClasseurTabs = ({
   classeurs,
   setClasseurs,
@@ -46,11 +52,27 @@ const ClasseurTabs = ({
   const [contextMenu, setContextMenu] = useState({ visible: false, x: 0, y: 0, item: null });
   const [isColorPickerVisible, setColorPickerVisible] = useState(false);
   const [activeId, setActiveId] = useState(null);
+  const [emojiPicker, setEmojiPicker] = useState({ visible: false, classeur: null });
+  const emojiPickerRef = useRef();
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
+
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (emojiPickerRef.current && !emojiPickerRef.current.contains(event.target)) {
+        setEmojiPicker({ ...emojiPicker, visible: false });
+      }
+    }
+    if (emojiPicker.visible) {
+      document.addEventListener('mousedown', handleClickOutside);
+    } else {
+      document.removeEventListener('mousedown', handleClickOutside);
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [emojiPicker]);
 
   const handleContextMenu = (e, classeur) => {
     e.preventDefault();
@@ -122,17 +144,37 @@ const ClasseurTabs = ({
   return (
     <div className="classeur-tabs-glass-wrapper">
       <div className="classeur-tabs-btn-list">
-        {classeurs.map((classeur) => (
-          <button
-            key={classeur.id}
-            className={`classeur-btn-glass${classeur.id === activeClasseurId ? ' active' : ''}`}
-            onClick={() => onSelectClasseur(classeur.id)}
-            onContextMenu={(e) => handleContextMenu(e, classeur)}
-          >
-            <DynamicIcon name={classeur.icon} color={classeur.id === activeClasseurId ? '#ff6a00' : classeur.color} size={20} />
-            <span>{classeur.name}</span>
-          </button>
-        ))}
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+          <SortableContext items={classeurs.map(c => c.id)} strategy={horizontalListSortingStrategy}>
+            {classeurs.map((classeur) => (
+              <div key={classeur.id} style={{ display: 'inline-block' }}>
+                <button
+                  className={`classeur-btn-glass${classeur.id === activeClasseurId ? ' active' : ''}`}
+                  onClick={() => onSelectClasseur(classeur.id)}
+                  onContextMenu={(e) => handleContextMenu(e, classeur)}
+                  style={{ fontFamily: 'Inter, Noto Sans, Arial, sans-serif' }}
+                  {...useSortable({ id: classeur.id }).attributes}
+                  {...useSortable({ id: classeur.id }).listeners}
+                  ref={useSortable({ id: classeur.id }).setNodeRef}
+                >
+                  <span
+                    style={{ fontSize: 18, marginRight: 6, verticalAlign: 'middle', cursor: 'pointer', display: 'inline-block' }}
+                    onClick={e => {
+                      e.stopPropagation();
+                      setEmojiPicker({ visible: true, classeur });
+                    }}
+                    tabIndex={0}
+                    role="button"
+                    aria-label="Changer l'emoji"
+                  >
+                    {classeur.icon === 'FileText' ? '📄' : (classeur.icon && EMOJI_CHOICES.includes(classeur.icon) ? classeur.icon : '📁')}
+                  </span>
+                  <span style={{ fontFamily: 'inherit' }}>{classeur.name}</span>
+                </button>
+              </div>
+            ))}
+          </SortableContext>
+        </DndContext>
         <button className="add-classeur-btn-glass" onClick={onCreateClasseur}>+</button>
       </div>
       {isColorPickerVisible && contextMenu.item && (
@@ -149,6 +191,72 @@ const ClasseurTabs = ({
         items={contextMenuItems}
         onClose={closeContextMenu}
       />
+      {emojiPicker.visible && emojiPicker.classeur && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100vw',
+            height: '100vh',
+            background: 'rgba(20,20,30,0.72)',
+            zIndex: 4000,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+          onClick={() => setEmojiPicker({ ...emojiPicker, visible: false })}
+        >
+          <div
+            style={{
+              background: 'rgba(30,30,40,1)',
+              border: '1.5px solid rgba(255,255,255,0.13)',
+              borderRadius: 18,
+              boxShadow: '0 8px 48px rgba(0,0,0,0.22)',
+              padding: 32,
+              maxWidth: 520,
+              maxHeight: '70vh',
+              overflowY: 'auto',
+              display: 'grid',
+              gridTemplateColumns: 'repeat(8, 1fr)',
+              gap: 12,
+              position: 'relative',
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            <button
+              style={{
+                position: 'absolute',
+                top: 8,
+                right: 12,
+                background: 'none',
+                border: 'none',
+                color: '#fff',
+                fontSize: 22,
+                cursor: 'pointer',
+                zIndex: 2,
+              }}
+              onClick={() => setEmojiPicker({ ...emojiPicker, visible: false })}
+              aria-label="Fermer"
+            >
+              ×
+            </button>
+            {ALL_EMOJIS.map(emoji => (
+              <button
+                key={emoji}
+                style={{ fontSize: 26, background: 'none', border: 'none', cursor: 'pointer', padding: 2, borderRadius: 7, transition: 'background 0.15s' }}
+                onClick={() => {
+                  onUpdateClasseur(emojiPicker.classeur.id, { icon: emoji });
+                  setEmojiPicker({ ...emojiPicker, visible: false });
+                }}
+                aria-label={`Choisir ${emoji}`}
+              >
+                {emoji}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
