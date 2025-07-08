@@ -170,6 +170,8 @@ export function useFolderManagerState(classeurId: string, parentFolderId?: strin
     }
   }, [classeurId, currentFolderId, folders.length]);
 
+  const DEFAULT_HEADER_IMAGE = 'https://images.unsplash.com/photo-1443890484047-5eaa67d1d630?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D';
+
   const createFile = useCallback(async (name: string): Promise<FileArticle | undefined> => {
     try {
       const newFile = await apiCreateFile({
@@ -178,6 +180,7 @@ export function useFolderManagerState(classeurId: string, parentFolderId?: strin
         folder_id: currentFolderId,
         position: files.length,
         source_type: 'markdown',
+        header_image: DEFAULT_HEADER_IMAGE,
       });
       setFiles(files => [...files, newFile]);
       return newFile;
