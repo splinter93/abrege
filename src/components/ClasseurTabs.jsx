@@ -26,7 +26,7 @@ function SortableTab({ classeur, isActive, onSelectClasseur, onContextMenu, list
         display: 'inline-block',
         opacity: isDragging && !isOverlay ? 0.4 : 1,
         zIndex: isDragging ? 10 : 'auto',
-        filter: isOverlay ? 'drop-shadow(0 2px 12px #e55a2c44)' : undefined,
+        filter: isOverlay ? 'drop-shadow(0 2px 12px rgba(255,255,255,0.27))' : undefined,
         transform: sortableTransform ? CSS.Transform.toString(sortableTransform) : (isOverlay ? 'scale(1.08)' : undefined),
         transition: sortableTransition || 'opacity 0.18s, filter 0.18s, transform 0.18s',
       }}

@@ -75,8 +75,9 @@
 }
 
 .control-btn:hover {
-  color: var(--text-primary);
-  background-color: var(--bg-surface-hover);
+  background-color: rgba(255,255,255,0.4) !important;
+  color: #fff !important;
+  box-shadow: 0 8px 20px 0 rgba(255,255,255,0.2) !important;
 }
 
 .control-btn.active {

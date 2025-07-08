@@ -6,14 +6,14 @@ import { useDragAndDrop } from './useDragAndDrop';
 interface FileListProps {
   files: FileArticle[];
   onDoubleClick: (file: FileArticle) => void;
-  onStartRename: (file: FileArticle) => void;
-  onRename: (id: string, newName: string) => void;
+  onStartRenameClick: (file: FileArticle) => void;
+  onRename: (id: string, newName: string, type: 'folder' | 'file') => void;
   onCancelRename: () => void;
   renamingFileId: string | null;
   onReorderFile: (files: FileArticle[]) => void;
 }
 
-const FileList: React.FC<FileListProps> = ({ files, onDoubleClick, onStartRename, onRename, onCancelRename, renamingFileId, onReorderFile }) => {
+const FileList: React.FC<FileListProps> = ({ files, onDoubleClick, onStartRenameClick, onRename, onCancelRename, renamingFileId, onReorderFile }) => {
   const { sensors, handleDragEnd, SortableContext, strategy } = useDragAndDrop<FileArticle>({
     items: files,
     onReorder: onReorderFile,
@@ -28,9 +28,9 @@ const FileList: React.FC<FileListProps> = ({ files, onDoubleClick, onStartRename
             <FileItem
               file={file}
               isRenaming={renamingFileId === file.id}
-              onDoubleClick={onDoubleClick}
-              onStartRename={onStartRename}
-              onRename={onRename}
+              onOpen={onDoubleClick}
+              onStartRenameClick={onStartRenameClick}
+              onRename={(newName, type) => onRename(file.id, newName, type)}
               onCancelRename={onCancelRename}
             />
           </div>
