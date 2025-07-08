@@ -8,7 +8,8 @@ import {
   deleteFolder as apiDeleteFolder,
   deleteArticle as apiDeleteFile,
   renameItem as apiRenameItem,
-  updateItemPositions
+  updateItemPositions,
+  moveItemUniversal
 } from '../services/supabase';
 
 // Types pour le renommage
@@ -200,16 +201,17 @@ export function useFolderManagerState(classeurId: string, parentFolderId?: strin
 
   // --- IMBRICATION DnD ---
   const moveItem = useCallback(async (id: string, newParentId: string, type: 'folder' | 'file') => {
+    console.log('[DND] useFolderManagerState moveItem', { id, newParentId, type });
     try {
+      await moveItemUniversal(id, newParentId, type);
       if (type === 'folder') {
-        await import('../services/supabase').then(mod => mod.moveItem(id, newParentId));
-        setFolders(folders => folders.map(f => f.id === id ? { ...f, parent_id: newParentId } : f));
+        setFolders(currentFolders => currentFolders.filter(f => f.id !== id));
       } else {
-        await import('../services/supabase').then(mod => mod.updateArticle(id, { folderId: newParentId }));
-        setFiles(files => files.map(f => f.id === id ? { ...f, folder_id: newParentId } : f));
+        setFiles(currentFiles => currentFiles.filter(f => f.id !== id));
       }
     } catch (err) {
-      setError('Erreur lors du déplacement.');
+      console.error("Erreur lors du déplacement de l'élément:", err);
+      setError('Erreur lors du déplacement de l\'élément.');
     }
   }, []);
 

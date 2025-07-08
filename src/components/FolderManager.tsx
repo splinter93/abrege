@@ -33,6 +33,7 @@ const FolderManager: React.FC<FolderManagerProps> = ({ classeurId, classeurName,
     createFile,
     deleteFolder,
     deleteFile,
+    moveItem,
   } = useFolderManagerState(classeurId, parentFolderId);
 
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
@@ -90,6 +91,16 @@ const FolderManager: React.FC<FolderManagerProps> = ({ classeurId, classeurName,
     if (newFile && newFile.id) {
       startRename(newFile.id, 'file');
     }
+  };
+
+  // Handler d'imbrication DnD
+  const handleDropItem = (itemId: string, itemType: 'folder' | 'file', targetFolderId: string) => {
+    console.log('[DND] FolderManager handleDropItem', { itemId, itemType, targetFolderId });
+    if (itemType === 'folder' && itemId === targetFolderId) {
+      console.warn('Action empêchée : un dossier ne peut pas être imbriqué dans lui-même.');
+      return;
+    }
+    moveItem(itemId, targetFolderId, itemType);
   };
 
   console.log('folders:', folders, 'files:', files);
@@ -177,6 +188,7 @@ const FolderManager: React.FC<FolderManagerProps> = ({ classeurId, classeurName,
             viewMode={viewMode}
           />
         }
+        onDropItem={handleDropItem}
       />
       <FolderContextMenu
         x={contextMenu.x}

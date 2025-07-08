@@ -111,10 +111,14 @@ const FolderManagerDossier: React.FC<FolderManagerDossierProps> = ({ classeurId,
     </svg>
   );
 
-  // Handler drop d'imbrication
+  // Handler final pour le drop, défini ici.
   const handleDropItem = (itemId: string, itemType: 'folder' | 'file', targetFolderId: string) => {
-    if (!itemId || !itemType || !targetFolderId) return;
-    if (itemId === targetFolderId && itemType === 'folder') return; // pas d'auto-imbrication
+    console.log('[DND] FolderManagerDossier handleDropItem', { itemId, itemType, targetFolderId });
+    // Empêche un dossier d'être déposé sur lui-même
+    if (itemType === 'folder' && itemId === targetFolderId) {
+      console.warn('Action empêchée : un dossier ne peut pas être imbriqué dans lui-même.');
+      return;
+    }
     moveItem(itemId, targetFolderId, itemType);
   };
 

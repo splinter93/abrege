@@ -37,6 +37,7 @@ const FolderContent: React.FC<FolderContentProps> = ({
   emptyMessage,
   onDropItem,
 }) => {
+  console.log('[DND] FolderContent render onDropItem', typeof onDropItem, onDropItem);
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[240px] text-muted-foreground">
@@ -79,7 +80,12 @@ const FolderContent: React.FC<FolderContentProps> = ({
             onRename={newName => onRenameFolder && onRenameFolder(folder.id, newName)}
             onCancelRename={onCancelRename}
             onContextMenu={onContextMenuItem}
-            onDropItem={(itemId, itemType) => onDropItem && onDropItem(itemId, itemType, folder.id)}
+            onDropItem={(itemId, itemType) => {
+              console.log('[DND] FolderContent transmit', { itemId, itemType, folderId: folder.id });
+              if (onDropItem) {
+                onDropItem(itemId, itemType, folder.id);
+              }
+            }}
           />
         ))}
       </div>

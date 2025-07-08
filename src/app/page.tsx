@@ -119,10 +119,11 @@ export default function HomePage() {
           top: 0; left: 0; right: 0; bottom: 0;
           pointer-events: none;
           background:
-            radial-gradient(ellipse at 80% 0%, rgba(255,106,0,0.22) 0%, rgba(24,23,28,0.92) 60%),
-            linear-gradient(120deg, #18181c 70%, #ff6a00 120%);
-          backdrop-filter: blur(12px) saturate(140%);
-          -webkit-backdrop-filter: blur(12px) saturate(140%);
+            linear-gradient(135deg, #18181c 0%, #23232a 60%, #ff6a00 120%);
+          /* Halo orange subtil en bas à droite */
+          box-shadow: 0 80vh 120px 80px rgba(255,106,0,0.10) inset;
+          backdrop-filter: blur(14px) saturate(140%);
+          -webkit-backdrop-filter: blur(14px) saturate(140%);
         }
         .main-content, .input-section, .notes-section {
           position: relative;

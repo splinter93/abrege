@@ -72,6 +72,7 @@ const FileItem: React.FC<FileItemProps> = ({ file, onOpen, isRenaming, onRename,
       onDragStart={e => {
         e.dataTransfer.setData('itemId', file.id);
         e.dataTransfer.setData('itemType', 'file');
+        e.dataTransfer.effectAllowed = 'move';
       }}
     >
       <FileIcon size={64} className="mb-1" />

@@ -68,19 +68,27 @@ const FolderItem: React.FC<FolderItemProps> = ({ folder, onOpen, isRenaming, onR
       role="button"
       aria-label={folder.name}
       onContextMenu={e => { if (onContextMenu) { e.preventDefault(); onContextMenu(e, folder); } }}
-      onDragOver={e => { e.preventDefault(); }}
-      onDrop={e => {
-        e.preventDefault();
-        const itemId = e.dataTransfer.getData('itemId');
-        const itemType = e.dataTransfer.getData('itemType') as 'folder' | 'file';
-        if (itemId && itemType && onDropItem) {
-          onDropItem(itemId, itemType);
-        }
-      }}
       draggable={!isRenaming}
       onDragStart={e => {
         e.dataTransfer.setData('itemId', folder.id);
         e.dataTransfer.setData('itemType', 'folder');
+        e.dataTransfer.effectAllowed = 'move';
+      }}
+      onDragOver={e => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+      }}
+      onDrop={e => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (onDropItem) {
+          const itemId = e.dataTransfer.getData('itemId');
+          const itemType = e.dataTransfer.getData('itemType') as 'folder' | 'file';
+          console.log('[DND] FolderItem onDrop', { itemId, itemType, targetFolderId: folder.id });
+          if (itemId && itemType) {
+            onDropItem(itemId, itemType);
+          }
+        }
       }}
     >
       <FolderIcon size={64} className="mb-1" />

@@ -225,7 +225,9 @@ export const updateItemPositions = async (items: any[]): Promise<any> => {
 export const moveItem = async (id: string, newParentId: string): Promise<any> => {
   if (!id) throw new Error('Item ID is required for moving items.');
 
-  const { error } = await supabase.rpc('move_item', {
+  console.log('moveItem: Calling Supabase RPC with:', { p_item_id: id, p_target_folder_id: newParentId });
+  
+  const { data, error } = await supabase.rpc('move_item', {
     p_item_id: id,
     p_target_folder_id: newParentId,
   });
@@ -234,6 +236,8 @@ export const moveItem = async (id: string, newParentId: string): Promise<any> =>
     console.error("Error from move_item RPC:", error);
     throw error;
   }
+
+  console.log('moveItem: Success, response:', data);
   return true;
 };
 
@@ -262,4 +266,42 @@ export const updateClasseurPositions = async (classeurs: any[]): Promise<any> =>
 
   if (error) throw error;
   return true;
+};
+
+/**
+ * Déplace un dossier ou un fichier dans un autre dossier.
+ * @param id ID de l'item à déplacer
+ * @param newParentId ID du dossier cible (null pour racine)
+ * @param type 'folder' ou 'file'
+ */
+export const moveItemUniversal = async (
+  id: string,
+  newParentId: string | null,
+  type: 'folder' | 'file'
+): Promise<any> => {
+  console.log('[DND] moveItemUniversal', { id, newParentId, type });
+  if (!id) throw new Error('Item ID is required for moving items.');
+  if (!type) throw new Error('Type is required (folder/file)');
+
+  if (type === 'folder') {
+    // On met à jour parent_id dans la table folders
+    const { data, error } = await supabase
+      .from('folders')
+      .update({ parent_id: newParentId })
+      .eq('id', id)
+      .select()
+      .single();
+    if (error) throw error;
+    return data;
+  } else {
+    // On met à jour folder_id dans la table articles
+    const { data, error } = await supabase
+      .from('articles')
+      .update({ folder_id: newParentId })
+      .eq('id', id)
+      .select()
+      .single();
+    if (error) throw error;
+    return data;
+  }
 }; 
