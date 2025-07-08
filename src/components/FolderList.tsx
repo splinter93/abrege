@@ -5,15 +5,15 @@ import { useDragAndDrop } from './useDragAndDrop';
 
 interface FolderListProps {
   folders: Folder[];
-  onDoubleClick: (folder: Folder) => void;
-  onStartRename: (folder: Folder) => void;
-  onRename: (id: string, newName: string) => void;
+  onOpen: (folder: Folder) => void;
+  onStartRenameClick: (folder: Folder) => void;
+  onRename: (id: string, newName: string, type: 'folder' | 'file') => void;
   onCancelRename: () => void;
   renamingFolderId: string | null;
   onReorder: (folders: Folder[]) => void;
 }
 
-const FolderList: React.FC<FolderListProps> = ({ folders, onDoubleClick, onStartRename, onRename, onCancelRename, renamingFolderId, onReorder }) => {
+const FolderList: React.FC<FolderListProps> = ({ folders, onOpen, onStartRenameClick, onRename, onCancelRename, renamingFolderId, onReorder }) => {
   const { sensors, handleDragEnd, SortableContext, strategy } = useDragAndDrop<Folder>({
     items: folders,
     onReorder,
@@ -28,9 +28,9 @@ const FolderList: React.FC<FolderListProps> = ({ folders, onDoubleClick, onStart
             <FolderItem
               folder={folder}
               isRenaming={renamingFolderId === folder.id}
-              onDoubleClick={onDoubleClick}
-              onStartRename={onStartRename}
-              onRename={onRename}
+              onOpen={onOpen}
+              onStartRenameClick={onStartRenameClick}
+              onRename={(newName, type) => onRename(folder.id, newName, type)}
               onCancelRename={onCancelRename}
             />
           </div>
