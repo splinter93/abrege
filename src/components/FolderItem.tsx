@@ -81,8 +81,7 @@ const FolderItem: React.FC<FolderItemProps> = ({ folder, onOpen, isRenaming, onR
           setIsDraggable(!isRenaming);
         }
       }}
-      onDoubleClick={() => {
-        console.log('[DEBUG] FolderItem onDoubleClick - lastWasRightClick:', lastWasRightClick.current);
+      onClick={() => {
         if (!isRenaming && !lastWasRightClick.current) {
           onOpen(folder);
         }

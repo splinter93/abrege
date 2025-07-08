@@ -1216,7 +1216,7 @@ const Editor = ({ initialTitle, initialContent = '', headerImage: initialHeaderI
                             </div>
                           )}
                           {/* Title field above the editor content */}
-                          <div className="editor-title-section" style={{ width: '100%', maxWidth: 1000, margin: '0 auto', padding: '2.5rem 3rem 0.1rem 3rem', display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                          <div className="editor-title-section" style={{ width: '100%', maxWidth: 750, margin: '0 auto', padding: '2.5rem 3rem 0.1rem 3rem', display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
                             <TitleTextarea
                               value={title}
                               onChange={handleTitleChange}
@@ -1273,10 +1273,12 @@ const Editor = ({ initialTitle, initialContent = '', headerImage: initialHeaderI
                     {/* TOC à droite, flottante */}
                     {headings.length > 0 && (
                       <div style={{
-                        position: 'absolute',
-                        top: headerImage ? '320px' : '56px',
-                        right: '16px',
+                        position: 'sticky',
+                        top: '3.5rem', // décale la TOC juste sous la topbar, à hauteur du titre
+                        right: 0,
                         zIndex: 21,
+                        alignSelf: 'flex-start',
+                        marginLeft: 32,
                       }}>
                         <TableOfContents headings={headings} currentId={currentId} containerRef={tocContainerRef} />
                       </div>

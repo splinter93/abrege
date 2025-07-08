@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Editor from '../../../components/Editor';
 import { getArticleById, updateArticle, createArticle } from '../../../services/supabase';
+import { AnimatePresence, motion } from 'framer-motion';
 
 export default function NoteEditorPage() {
   const params = useParams();
@@ -24,7 +25,7 @@ export default function NoteEditorPage() {
       if (noteId === 'new') {
         setTitle('');
         setInitialContent('');
-        setHeaderImage(null);
+        setHeaderImage('https://images.unsplash.com/photo-1443890484047-5eaa67d1d630?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D');
         setTitleAlign('left');
         setLoading(false);
         return;
@@ -88,14 +89,19 @@ export default function NoteEditorPage() {
   };
 
   if (loading) {
-    return (
-      <div className="note-editor-loading">
-        <span>Chargement...</span>
-      </div>
-    );
+    return null;
   }
 
   return (
+    <AnimatePresence mode="wait">
+      <motion.div
+        key={noteId}
+        initial={{ opacity: 0, scale: 0.96 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.98 }}
+        transition={{ duration: 0.38, ease: [0.16, 1, 0.3, 1] }}
+        style={{ minHeight: '100vh', width: '100vw', position: 'fixed', top: 0, left: 0, zIndex: 1000, background: 'none' }}
+      >
     <Editor
       key={noteId}
       initialTitle={title}
@@ -105,5 +111,7 @@ export default function NoteEditorPage() {
       onClose={handleClose}
       onSave={handleSave}
     />
+      </motion.div>
+    </AnimatePresence>
   );
 } 

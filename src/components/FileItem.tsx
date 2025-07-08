@@ -77,8 +77,7 @@ const FileItem: React.FC<FileItemProps> = ({ file, onOpen, isRenaming, onRename,
           setIsDraggable(!isRenaming);
         }
       }}
-      onDoubleClick={() => {
-        console.log('[DEBUG] FileItem onDoubleClick - lastWasRightClick:', lastWasRightClick.current);
+      onClick={() => {
         if (!isRenaming && !lastWasRightClick.current) {
           onOpen(file);
         }
