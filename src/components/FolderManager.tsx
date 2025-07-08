@@ -1,12 +1,11 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useFolderManagerState } from './useFolderManagerState';
 import FolderToolbar, { ViewMode } from './FolderToolbar';
 import FolderContent from './FolderContent';
-import FolderContextMenu from './FolderContextMenu';
-import { useContextMenu } from './useContextMenu';
 import { useRouter } from 'next/navigation';
 import { Folder, FileArticle } from './types';
+import SimpleContextMenu from './SimpleContextMenu';
 
 interface FolderManagerProps {
   classeurId: string;
@@ -38,8 +37,8 @@ const FolderManager: React.FC<FolderManagerProps> = ({ classeurId, classeurName,
 
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [activeId, setActiveId] = useState<string | null>(null);
-  const contextMenu = useContextMenu();
   const router = useRouter();
+  const [contextMenuState, setContextMenuState] = useState<{ visible: boolean; x: number; y: number; item: any }>({ visible: false, x: 0, y: 0, item: null });
 
   // Handlers pour FolderContent
   const handleItemClick = (item: any) => {
@@ -51,27 +50,37 @@ const FolderManager: React.FC<FolderManagerProps> = ({ classeurId, classeurName,
   // Handler pour clic droit sur dossier/fichier
   const handleContextMenuItem = (e: React.MouseEvent, item: any) => {
     e.preventDefault();
-    contextMenu.openContextMenu(e, item);
+    console.log('[DEBUG] handleContextMenuItem', { x: e.clientX, y: e.clientY, item });
+    setContextMenuState({ visible: true, x: e.clientX, y: e.clientY, item });
   };
+
+  // Handler pour déclencher le renommage inline au clic sur le nom
+  const handleStartRenameFolderClick = useCallback((folder: Folder) => {
+    startRename(folder.id, 'folder');
+  }, [startRename]);
+
+  const handleStartRenameFileClick = useCallback((file: FileArticle) => {
+    startRename(file.id, 'file');
+  }, [startRename]);
 
   // Handlers pour le menu contextuel
   const handleOpen = () => {
-    if (!contextMenu.item) return;
-    if (contextMenu.item.type === 'folder') goToFolder(contextMenu.item.id);
-    else handleFileOpen(contextMenu.item);
-    contextMenu.closeContextMenu();
+    if (!contextMenuState.item) return;
+    if (contextMenuState.item.type === 'folder') goToFolder(contextMenuState.item.id);
+    else handleFileOpen(contextMenuState.item);
+    closeContextMenu();
   };
   const handleRename = () => {
-    if (contextMenu.item) startRename(contextMenu.item.id, contextMenu.item.type);
-    contextMenu.closeContextMenu();
+    if (contextMenuState.item) startRename(contextMenuState.item.id, contextMenuState.item.type);
+    closeContextMenu();
   };
   const handleDelete = () => {
-    if (!contextMenu.item) return;
-    if (window.confirm(`Supprimer définitivement « ${contextMenu.item.name || contextMenu.item.source_title} » ?`)) {
-      if ('name' in contextMenu.item) deleteFolder(contextMenu.item.id);
-      else deleteFile(contextMenu.item.id);
-      contextMenu.closeContextMenu();
+    if (!contextMenuState.item) return;
+    if (window.confirm(`Supprimer définitivement « ${contextMenuState.item.name || contextMenuState.item.source_title} » ?`)) {
+      if ('name' in contextMenuState.item) deleteFolder(contextMenuState.item.id);
+      else deleteFile(contextMenuState.item.id);
     }
+    closeContextMenu();
   };
 
   // Handler d'ouverture de dossier
@@ -103,8 +112,12 @@ const FolderManager: React.FC<FolderManagerProps> = ({ classeurId, classeurName,
     moveItem(itemId, targetFolderId, itemType);
   };
 
+  const closeContextMenu = () => setContextMenuState(cm => ({ ...cm, visible: false }));
+
   console.log('folders:', folders, 'files:', files);
 
+  // Ajout debug avant le return
+  console.log('[DEBUG] SimpleContextMenu props', contextMenuState);
   return (
     <div
       className="folder-manager-root folder-manager-container"
@@ -124,7 +137,6 @@ const FolderManager: React.FC<FolderManagerProps> = ({ classeurId, classeurName,
         flexDirection: 'column',
         position: 'relative',
       }}
-      onContextMenu={e => e.preventDefault()}
     >
       {/* Header classeur modernisé */}
       <div style={{
@@ -172,10 +184,12 @@ const FolderManager: React.FC<FolderManagerProps> = ({ classeurId, classeurName,
         onFolderOpen={handleFolderOpen}
         onFileOpen={handleFileOpen}
                   renamingItemId={renamingItemId}
-        onRenameFile={(id, newName) => submitRename(id, newName)}
-        onRenameFolder={(id, newName) => submitRename(id, newName)}
+        onRenameFile={(id, newName, type) => submitRename(id, newName, type)}
+        onRenameFolder={(id, newName, type) => submitRename(id, newName, type)}
         onCancelRename={cancelRename}
         onContextMenuItem={handleContextMenuItem}
+        onStartRenameFolderClick={handleStartRenameFolderClick}
+        onStartRenameFileClick={handleStartRenameFileClick}
         toolbar={
           <FolderToolbar
             onCreateFolder={async () => {
@@ -191,15 +205,16 @@ const FolderManager: React.FC<FolderManagerProps> = ({ classeurId, classeurName,
         }
         onDropItem={handleDropItem}
       />
-      <FolderContextMenu
-          x={contextMenu.x}
-          y={contextMenu.y}
-          visible={contextMenu.visible}
-        item={contextMenu.item}
-        onOpen={handleOpen}
-        onRename={handleRename}
-        onDelete={handleDelete}
-        onClose={contextMenu.closeContextMenu}
+      <SimpleContextMenu
+        x={contextMenuState.x}
+        y={contextMenuState.y}
+        visible={contextMenuState.visible}
+        options={[
+          { label: 'Ouvrir', onClick: handleOpen },
+          { label: 'Renommer', onClick: handleRename },
+          { label: 'Supprimer', onClick: handleDelete },
+        ]}
+        onClose={closeContextMenu}
       />
     </div>
   );

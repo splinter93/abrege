@@ -19,27 +19,25 @@ const SortableList: React.FC<SortableListProps> = ({ items, viewMode, onRename, 
   return (
     <div className={viewMode === 'grid' ? 'grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-4 p-2' : 'flex flex-col'}>
       {items.map((item: Folder | FileArticle) => (
-        item.type === 'folder' ? (
+        (item as any).type === 'folder' ? (
           <FolderItem
             key={item.id}
-            folder={item}
+            folder={item as Folder}
+            onOpen={() => handleItemClick(item)}
             isRenaming={item.id === renamingItemId}
-            onDoubleClick={() => onStartRename(item)}
-            onStartRename={onStartRename}
-            onRename={onRename}
+            onRename={newName => onRename(item.id, 'folder', newName)}
             onCancelRename={onCancelRename}
-            viewMode={viewMode}
+            onContextMenu={(e, folder) => handleContextMenu(e, folder)}
           />
         ) : (
           <FileItem
             key={item.id}
-            file={item}
+            file={item as FileArticle}
+            onOpen={() => handleItemClick(item)}
             isRenaming={item.id === renamingItemId}
-            onDoubleClick={() => onStartRename(item)}
-            onStartRename={onStartRename}
-            onRename={onRename}
+            onRename={newName => onRename(item.id, 'file', newName)}
             onCancelRename={onCancelRename}
-            viewMode={viewMode}
+            onContextMenu={(e, file) => handleContextMenu(e, file)}
           />
         )
       ))}

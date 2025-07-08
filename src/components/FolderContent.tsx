@@ -12,12 +12,14 @@ interface FolderContentProps {
   onFolderOpen: (folder: any) => void;
   onFileOpen: (file: any) => void;
   renamingItemId?: string | null;
-  onRenameFile?: (id: string, newName: string) => void;
-  onRenameFolder?: (id: string, newName: string) => void;
+  onRenameFile?: (id: string, newName: string, type: 'folder' | 'file') => void;
+  onRenameFolder?: (id: string, newName: string, type: 'folder' | 'file') => void;
   onCancelRename?: () => void;
   onContextMenuItem?: (e: React.MouseEvent, item: any) => void;
   emptyMessage?: React.ReactNode;
   onDropItem?: (itemId: string, itemType: 'folder' | 'file', targetFolderId: string) => void;
+  onStartRenameFolderClick?: (folder: any) => void;
+  onStartRenameFileClick?: (file: any) => void;
 }
 
 const FolderContent: React.FC<FolderContentProps> = ({
@@ -36,6 +38,8 @@ const FolderContent: React.FC<FolderContentProps> = ({
   onContextMenuItem,
   emptyMessage,
   onDropItem,
+  onStartRenameFolderClick,
+  onStartRenameFileClick,
 }) => {
   console.log('[DND] FolderContent render onDropItem', typeof onDropItem, onDropItem);
   if (loading) {
@@ -77,7 +81,7 @@ const FolderContent: React.FC<FolderContentProps> = ({
             folder={folder}
             onOpen={onFolderOpen}
             isRenaming={renamingItemId === folder.id}
-            onRename={newName => onRenameFolder && onRenameFolder(folder.id, newName)}
+            onRename={(newName, type) => onRenameFolder && onRenameFolder(folder.id, newName, type)}
             onCancelRename={onCancelRename}
             onContextMenu={onContextMenuItem}
             onDropItem={(itemId, itemType) => {
@@ -86,6 +90,7 @@ const FolderContent: React.FC<FolderContentProps> = ({
                 onDropItem(itemId, itemType, folder.id);
               }
             }}
+            onStartRenameClick={onStartRenameFolderClick}
           />
         ))}
       </div>
@@ -99,9 +104,10 @@ const FolderContent: React.FC<FolderContentProps> = ({
             file={file}
             onOpen={onFileOpen}
             isRenaming={renamingItemId === file.id}
-            onRename={newName => onRenameFile && onRenameFile(file.id, newName)}
+            onRename={(newName, type) => onRenameFile && onRenameFile(file.id, newName, type)}
             onCancelRename={onCancelRename}
             onContextMenu={onContextMenuItem}
+            onStartRenameClick={onStartRenameFileClick}
           />
         ))}
       </div>

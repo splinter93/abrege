@@ -16,9 +16,9 @@
   top: 0; left: 0; right: 0; bottom: 0;
   pointer-events: none;
   background:
-    linear-gradient(120deg, #23242a 0%, #2d2e38 80%, #23242a 100%),
-    radial-gradient(ellipse at 85% 110%, rgba(255,140,0,0.10) 0%, rgba(40,40,48,0.0) 60%),
-    radial-gradient(ellipse at 10% 0%, rgba(255,140,0,0.04) 0%, rgba(40,40,48,0.0) 60%);
+    linear-gradient(120deg, #18191b 0%, #23242a 80%, #18191b 100%),
+    radial-gradient(ellipse at 85% 110%, rgba(255,140,0,0.08) 0%, rgba(32,32,36,0.0) 60%),
+    radial-gradient(ellipse at 10% 0%, rgba(255,140,0,0.03) 0%, rgba(32,32,36,0.0) 60%);
   backdrop-filter: blur(10px) saturate(120%);
   -webkit-backdrop-filter: blur(10px) saturate(120%);
 }
@@ -65,4 +65,23 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
+}
+
+.folder-square-container, .file-square-container {
+  transition: box-shadow 0.18s, transform 0.18s, background 0.18s;
+}
+.folder-square-container:hover, .file-square-container:hover {
+  background: rgba(255,255,255,0.055);
+  box-shadow: 0 0 0 3px rgba(255,140,0,0.13), 0 6px 24px 0 rgba(255,140,0,0.10), 0 2px 12px 0 rgba(31, 38, 135, 0.10);
+  transform: translateY(-4px) scale(1.025);
+  border: 1.5px solid rgba(255,140,0,0.16);
+  cursor: pointer;
+}
+
+.folder-square-container.drag-over {
+  background: rgba(255,140,0,0.10);
+  box-shadow: 0 0 0 5px rgba(255,140,0,0.18), 0 8px 32px 0 rgba(255,140,0,0.18), 0 2px 12px 0 rgba(31, 38, 135, 0.10);
+  border: 2px solid rgba(255,140,0,0.22);
+  transition: box-shadow 0.18s, background 0.18s, border 0.18s;
+  z-index: 2;
 } 

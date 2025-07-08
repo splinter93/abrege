@@ -6,15 +6,19 @@ interface FolderItemProps {
   folder: Folder;
   onOpen: (folder: Folder) => void;
   isRenaming?: boolean;
-  onRename?: (newName: string) => void;
+  onRename?: (newName: string, type: 'folder' | 'file') => void;
   onCancelRename?: () => void;
   onContextMenu?: (e: React.MouseEvent, folder: Folder) => void;
   onDropItem?: (itemId: string, itemType: 'folder' | 'file') => void;
+  onStartRenameClick?: (folder: Folder) => void;
 }
 
-const FolderItem: React.FC<FolderItemProps> = ({ folder, onOpen, isRenaming, onRename, onCancelRename, onContextMenu, onDropItem }) => {
+const FolderItem: React.FC<FolderItemProps> = ({ folder, onOpen, isRenaming, onRename, onCancelRename, onContextMenu, onDropItem, onStartRenameClick }) => {
   const [inputValue, setInputValue] = React.useState(folder.name);
   const inputRef = React.useRef<HTMLInputElement>(null);
+  const [isDragOver, setIsDragOver] = React.useState(false);
+  const [isDraggable, setIsDraggable] = React.useState(false);
+  const lastWasRightClick = React.useRef(false);
 
   React.useEffect(() => {
     if (isRenaming) {
@@ -26,7 +30,7 @@ const FolderItem: React.FC<FolderItemProps> = ({ folder, onOpen, isRenaming, onR
   const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && onRename) {
       if (inputValue.trim() && inputValue !== folder.name) {
-        onRename(inputValue.trim());
+        onRename(inputValue.trim(), 'folder');
       } else if (onCancelRename) {
         onCancelRename();
       }
@@ -37,7 +41,7 @@ const FolderItem: React.FC<FolderItemProps> = ({ folder, onOpen, isRenaming, onR
 
   const handleInputBlur = () => {
     if (onRename && inputValue.trim() && inputValue !== folder.name) {
-      onRename(inputValue.trim());
+      onRename(inputValue.trim(), 'folder');
     } else if (onCancelRename) {
       onCancelRename();
     }
@@ -45,31 +49,65 @@ const FolderItem: React.FC<FolderItemProps> = ({ folder, onOpen, isRenaming, onR
 
   return (
     <div
-      className="folder-square-container"
+      className={`folder-square-container${isDragOver ? ' drag-over' : ''}`}
       style={{
         width: 168,
         height: 132,
-        background: 'rgba(255,255,255,0.025)',
-        border: '1px solid rgba(255,255,255,0.06)',
+        background: isDragOver ? 'rgba(255,140,0,0.10)' : 'rgba(255,255,255,0.025)',
+        border: isDragOver ? '2px solid rgba(255,140,0,0.22)' : '1px solid rgba(255,255,255,0.06)',
         borderRadius: 16,
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+        boxShadow: isDragOver
+          ? '0 0 0 1.2px rgba(255,140,0,0.18), 0 8px 32px 0 rgba(255,140,0,0.13), 0 2px 12px 0 rgba(31, 38, 135, 0.08)'
+          : '0 2px 8px rgba(0,0,0,0.08)',
         cursor: isRenaming ? 'text' : 'pointer',
         userSelect: 'none',
-        transition: 'box-shadow 0.15s',
+        transition: 'box-shadow 0.18s, background 0.18s, border 0.18s',
         backdropFilter: 'blur(8px)',
         WebkitBackdropFilter: 'blur(8px)',
+        zIndex: isDragOver ? 2 : undefined,
       }}
-      onDoubleClick={() => !isRenaming && onOpen(folder)}
+      onMouseDown={e => {
+        console.log('[DEBUG] FolderItem onMouseDown - button:', e.button, 'isRenaming:', isRenaming);
+        if (e.button === 2) {
+          e.preventDefault();
+          lastWasRightClick.current = true;
+          setIsDraggable(false);
+        } else {
+          lastWasRightClick.current = false;
+          setIsDraggable(!isRenaming);
+        }
+      }}
+      onDoubleClick={() => {
+        console.log('[DEBUG] FolderItem onDoubleClick - lastWasRightClick:', lastWasRightClick.current);
+        if (!isRenaming && !lastWasRightClick.current) {
+          onOpen(folder);
+        }
+        lastWasRightClick.current = false;
+      }}
+      onContextMenu={e => {
+        console.log('[DEBUG] FolderItem onContextMenu');
+        e.preventDefault();
+        if (onContextMenu) {
+          onContextMenu(e, folder);
+        }
+        setIsDraggable(!isRenaming);
+        lastWasRightClick.current = false;
+      }}
       tabIndex={0}
       role="button"
       aria-label={folder.name}
-      onContextMenu={e => { if (onContextMenu) { e.preventDefault(); onContextMenu(e, folder); } }}
-      draggable={!isRenaming}
+      draggable={isDraggable}
       onDragStart={e => {
+        console.log('[DEBUG] FolderItem onDragStart - nativeEvent.button:', e.nativeEvent.button);
+        if (e.nativeEvent.button !== 0) {
+          e.preventDefault();
+          console.log('[DEBUG] FolderItem onDragStart - prevented due to non-left click');
+          return;
+        }
         e.dataTransfer.setData('itemId', folder.id);
         e.dataTransfer.setData('itemType', 'folder');
         e.dataTransfer.effectAllowed = 'move';
@@ -77,10 +115,15 @@ const FolderItem: React.FC<FolderItemProps> = ({ folder, onOpen, isRenaming, onR
       onDragOver={e => {
         e.preventDefault();
         e.dataTransfer.dropEffect = 'move';
+        setIsDragOver(true);
+      }}
+      onDragLeave={e => {
+        setIsDragOver(false);
       }}
       onDrop={e => {
         e.preventDefault();
         e.stopPropagation();
+        setIsDragOver(false);
         if (onDropItem) {
           const itemId = e.dataTransfer.getData('itemId');
           const itemType = e.dataTransfer.getData('itemType') as 'folder' | 'file';
@@ -119,7 +162,15 @@ const FolderItem: React.FC<FolderItemProps> = ({ folder, onOpen, isRenaming, onR
           onClick={e => e.stopPropagation()}
         />
       ) : (
-        <span style={{ fontWeight: 500, fontSize: 15, color: '#fff', textAlign: 'center', marginTop: 2, maxWidth: 140, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', textShadow: '0 1px 4px rgba(0,0,0,0.18)' }}>{folder.name}</span>
+        <span
+          style={{ fontWeight: 500, fontSize: 15, color: '#fff', textAlign: 'center', marginTop: 2, maxWidth: 140, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', textShadow: '0 1px 4px rgba(0,0,0,0.18)' }}
+          onClick={e => {
+            if (onStartRenameClick) {
+              e.stopPropagation();
+              onStartRenameClick(folder);
+            }
+          }}
+        >{folder.name}</span>
       )}
     </div>
   );

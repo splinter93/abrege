@@ -27,7 +27,7 @@ interface UseFolderManagerState {
   renamingItemId: string | null;
   renamingType: RenamingType;
   startRename: (id: string, type: 'folder' | 'file') => void;
-  submitRename: (id: string, newName: string) => Promise<void>;
+  submitRename: (id: string, newName: string, type: 'folder' | 'file') => Promise<void>;
   cancelRename: () => void;
 
   // DnD
@@ -60,6 +60,11 @@ export function useFolderManagerState(classeurId: string, parentFolderId?: strin
   // --- RENOMMAGE ---
   const [renamingItemId, setRenamingItemId] = useState<string | null>(null);
   const [renamingType, setRenamingType] = useState<RenamingType>(null);
+
+  // Debugging Renaming State Changes
+  useEffect(() => {
+    console.log('[DEBUG] Renaming State Changed - renamingItemId:', renamingItemId, 'renamingType:', renamingType);
+  }, [renamingItemId, renamingType]);
 
   // --- CHARGEMENT INITIAL ---
   useEffect(() => {
@@ -98,25 +103,30 @@ export function useFolderManagerState(classeurId: string, parentFolderId?: strin
 
   // --- RENOMMAGE ---
   const startRename = useCallback((id: string, type: 'folder' | 'file') => {
+    console.log('[DEBUG] startRename called - id:', id, 'type:', type);
     setRenamingItemId(id);
     setRenamingType(type);
   }, []);
 
-  const submitRename = useCallback(async (id: string, newName: string) => {
-    if (!renamingType) return;
+  const submitRename = useCallback(async (id: string, newName: string, type: 'folder' | 'file') => {
+    console.log('[DEBUG] submitRename entry - id:', id, 'newName:', newName, 'current type (passed as arg):', type);
     try {
-      await apiRenameItem(id, renamingType, newName);
-      if (renamingType === 'folder') {
+      await apiRenameItem(id, type, newName);
+      console.log('[DEBUG] apiRenameItem successful.');
+      if (type === 'folder') {
         setFolders(folders => folders.map(f => f.id === id ? { ...f, name: newName } : f));
       } else {
         setFiles(files => files.map(f => f.id === id ? { ...f, source_title: newName } : f));
       }
+    } catch (err) {
+      console.error('[DEBUG] Erreur lors du renommage:', err);
+      setError('Erreur lors du renommage.');
+    } finally {
       setRenamingItemId(null);
       setRenamingType(null);
-    } catch (err) {
-      setError('Erreur lors du renommage.');
+      console.log('[DEBUG] Renaming state reset.');
     }
-  }, [renamingType]);
+  }, [setFolders, setFiles]);
 
   const cancelRename = useCallback(() => {
     setRenamingItemId(null);

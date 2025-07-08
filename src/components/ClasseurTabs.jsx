@@ -2,7 +2,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import DynamicIcon from './DynamicIcon';
-import ContextMenu from './ContextMenu';
+import SimpleContextMenu from './SimpleContextMenu';
 import ColorPalette from './ColorPalette';
 import './ClasseurTabs.css';
 
@@ -11,32 +11,47 @@ import { DndContext, PointerSensor, KeyboardSensor, useSensor, useSensors, close
 import { arrayMove, SortableContext, useSortable, horizontalListSortingStrategy, sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 
-const SortableTab = ({ classeur, isActive, onSelectClasseur, onContextMenu }) => {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: classeur.id });
-  const accentColor = '#e55a2c';
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition: transition || 'transform 250ms ease',
-    zIndex: isDragging ? 10 : 'auto',
-    opacity: isDragging ? 0.4 : 1,
-  };
-
-  return (
-    <div ref={setNodeRef} style={style} className="motion-tab-wrapper">
-      <button {...attributes} {...listeners} className={`classeur-tab ${isActive ? 'active' : ''}`} onClick={() => onSelectClasseur(classeur.id)} onContextMenu={(e) => onContextMenu(e, classeur)}>
-        <DynamicIcon name={classeur.icon} color={isActive ? accentColor : classeur.color} size={16} />
-        <span>{classeur.name}</span>
-      </button>
-    </div>
-  );
-};
-
 const EMOJI_CHOICES = ['📁', '📄', '📚', '🗂️', '📝', '📒', '📦', '🧩', '📜', '📂'];
 
 const ALL_EMOJIS = [
-  ...'😀😁😂🤣😃😄😅😆😉😊😋😎😍😘🥰😗😙😚🙂🤗🤩🤔🤨😐😑😶🙄😏😣😥😮🤐😯😪😫😴😌😛😜😝🤤😒😓😔😕🙃🤑😲☹️🙁😖😞😟😤😢😭😦😧😨😩🤯😬😰😱🥵🥶😳🤪😵😡😠🤬😷🤒🤕🤢🤮🤧😇🥳🥺🤠🤡🤥🤫🤭🧐🤓😈👿👹👺💀👻👽🤖💩😺😸😹😻😼😽🙀😿😾🐶🐱🐭🐹🐰🦊🐻🐼🐨🐯🦁🐮🐷🐽🐸🐵🙈🙉🙊🐒🐔🐧🐦🐤🐣🐥🦆🦅🦉🦇🐺🐗🐴🦄🐝🐛🦋🐌🐞🐜🦟🦗🕷️🕸️🐢🐍🦎🦂🦀🦞🦐🦑🐙🦑🦐🦞🦀🦋🐌🐛🐜🐝🦗🕷️🦂🦟🦠🐢🐍🦎🦖🦕🐙🦑🦐🦞🦀🐡🐠🐟🐬🐳🐋🦈🐊🐅🐆🦓🦍🦧🐘🦛🦏🐪🐫🦒🦘🦥🦦🦨🦡🐁🐀🐇🐿️🦔🐾🐉🐲🌵🎄🌲🌳🌴🌱🌿☘️🍀🎍🎋🍃🍂🍁🍄🌾💐🌷🌹🥀🌺🌸🌼🌻🌞🌝🌛🌜🌚🌕🌖🌗🌘🌑🌒🌓🌔🌙🌎🌍🌏💫⭐🌟✨⚡☄️💥🔥🌪️🌈☀️🌤️⛅🌥️🌦️🌧️🌨️🌩️🌪️🌫️🌬️🌀🌈🌂☂️☔⛱️⚽🏀🏈⚾🥎🎾🏐🏉🥏🎱🏓🏸🥅🏒🏑🏏⛳🏹🎣🥊🥋🎽⛸️🥌🛷⛷️🏂🏋️🤼🤸⛹️🤺🤾🏌️🏇🧘🏄🏊🤽🚣🧗🚵🚴🏆🥇🥈🥉🏅🎖️🏵️🎗️🎫🎟️🎪🤹🎭🎨🎬🎤🎧🎼🎹🥁🎷🎺🎸🎻🎲🎯🎳🎮🎰🎲🧩🧸🪁🪀🪅🪆🪐🪁🪀🪅🪆🪐🪁🪀🪅🪆🪐'.split('')
+  ...'😀😁😂🤣😃😄😅😆😉😊😋😎😍😘🥰😗😙😚🙂🤗🤩🤔🤨😐😑😶🙄😏😣😥😮🤐😯😪😫😴😌😛😜😝🤤😒😓😔😕🙃🤑😲☹️🙁😖😞😟😤😢😭😦😧😨😩🤯😬😰😱🥵🥶😳🤪😵😡😠🤬😷🤒🤕🤢🤮🤧😇🥳🥺🤠🤡🤥🤫🤭🧐🤓😈👿👹👺💀👻👽🤖💩😺😸😹😻😼😽🙀😿😾🐶🐱🐭🐹🐰🦊🐻🐼🐨🐯🦁🐮🐷🐽🐸🐵🙈🙉🙊🐒🐔🐧🐦🐤🐣🐥🦆🦅🦉🦇🐺🐗🐴🦄🐝🐛🦋🐌🐞🐜🦟🦗🕷️🕸️🐢🐍🦎🦂🦀🦞🦐🦑🐙🦑🦐🦞🦀🦋🐌🐛🐜🐝🦗🕷️🦂🦟🦠🐢🐍🦎🦖🦕🐙🦑🦐🦞🦀🐡🐠🐟🐬🐳🐋🦈🐊🐅🐆🦓🦍🦧🐘🦛🦏🐪🐫🦒🦘🦥🦦🦨🦡🐁🐀🐇🐿️🦔🐾🐉🐲🌵🎄🌲🌳🌴🌱🌿☘️🍀🎍🎋🍃🍂🍁🍄🌾💐🌷🌹🥀🌺🌸🌼🌻🌞🌝🌛🌜🌚🌕🌖🌗🌘🌑🌒🌓🌔🌙🌎🌍🌏💫⭐🌟✨⚡☄️💥🔥🌪️🌈☀️🌤️⛅🌥️🌦️🌧️🌨️🌩️��️🌫️🌬️🌀🌈🌂☂️☔⛱️⚽🏈⚾🥎🎾🏐🏉🥏🎱🏓🏸🥅🏒🏑🏏⛳🏹🎣🥊🥋🎽⛸️🥌🛷⛷️🏂🏋️🤼🤸⛹️🤺🤾🏌️🏇🧘🏄🏊🤽🚣🧗🚵🚴🏆🥇🥈🥉🏅🎖️🏵️🎗️🎫🎟️🎪🤹🎭🎨🎬🎤🎧🎼🎹🥁🎷🎺🎸🎻🎲🎯🎳🎮🎰🎲🧩🧸🪁🪀🪅🪆🪐🪁🪀🪅🪆🪐🪁🪀🪅🪆🪐'.split('')
 ];
+
+function SortableTab({ classeur, isActive, onSelectClasseur, onContextMenu, listeners, attributes, setNodeRef, isDragging, isOverlay, sortableTransform, sortableTransition }) {
+  const accentColor = '#e55a2c';
+  return (
+    <div
+      ref={setNodeRef}
+      style={{
+        display: 'inline-block',
+        opacity: isDragging && !isOverlay ? 0.4 : 1,
+        zIndex: isDragging ? 10 : 'auto',
+        filter: isOverlay ? 'drop-shadow(0 2px 12px #e55a2c44)' : undefined,
+        transform: sortableTransform ? CSS.Transform.toString(sortableTransform) : (isOverlay ? 'scale(1.08)' : undefined),
+        transition: sortableTransition || 'opacity 0.18s, filter 0.18s, transform 0.18s',
+      }}
+      {...attributes}
+      {...listeners}
+    >
+      <button
+        className={`classeur-btn-glass${isActive ? ' active' : ''}`}
+        onClick={() => onSelectClasseur(classeur.id)}
+        onContextMenu={e => onContextMenu(e, classeur)}
+        style={{ fontFamily: 'Inter, Noto Sans, Arial, sans-serif' }}
+      >
+        <span
+          style={{ fontSize: 18, marginRight: 6, verticalAlign: 'middle', cursor: 'pointer', display: 'inline-block' }}
+          tabIndex={0}
+          role="button"
+          aria-label="Changer l'emoji"
+        >
+          {classeur.icon === 'FileText' ? '📄' : (classeur.icon && EMOJI_CHOICES.includes(classeur.icon) ? classeur.icon : '📁')}
+        </span>
+        <span style={{ fontFamily: 'inherit' }}>{classeur.name}</span>
+      </button>
+    </div>
+  );
+}
 
 const ClasseurTabs = ({
   classeurs,
@@ -56,8 +71,7 @@ const ClasseurTabs = ({
   const emojiPickerRef = useRef();
 
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
-    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
   );
 
   useEffect(() => {
@@ -78,102 +92,93 @@ const ClasseurTabs = ({
     e.preventDefault();
     setContextMenu({ visible: true, x: e.clientX, y: e.clientY, item: classeur });
   };
-
-  const closeContextMenu = () => {
-    setContextMenu({ ...contextMenu, visible: false });
-  };
-  
+  const closeContextMenu = () => setContextMenu({ ...contextMenu, visible: false });
   const handleRename = () => {
     if (contextMenu.item) {
-        const newName = prompt('Nouveau nom du classeur :', contextMenu.item.name);
-        if (newName && newName.trim() !== '') {
-            onRenameClasseur(contextMenu.item.id, newName.trim());
-        }
+      const newName = prompt('Nouveau nom du classeur :', contextMenu.item.name);
+      if (newName && newName.trim() !== '') {
+        onRenameClasseur(contextMenu.item.id, newName.trim());
+      }
     }
     closeContextMenu();
   };
-
   const handleDelete = () => {
     if (contextMenu.item) {
-        if (window.confirm(`Voulez-vous vraiment supprimer le classeur "${contextMenu.item.name}" et tout son contenu ?`)) {
-            onDeleteClasseur(contextMenu.item.id);
-        }
+      if (window.confirm(`Voulez-vous vraiment supprimer le classeur "${contextMenu.item.name}" et tout son contenu ?`)) {
+        onDeleteClasseur(contextMenu.item.id);
+      }
     }
     closeContextMenu();
   };
-
   const openColorPicker = () => {
     setColorPickerVisible(true);
     setContextMenu({ ...contextMenu, visible: false });
   };
-  
   const handleSelectColor = (color) => {
     if (contextMenu.item) {
-        onUpdateClasseur(contextMenu.item.id, { color });
+      onUpdateClasseur(contextMenu.item.id, { color });
     }
     setColorPickerVisible(false);
   };
 
+  // DnD Kit reorder logic
+  const [draggedClasseur, setDraggedClasseur] = useState(null);
   const handleDragStart = (event) => {
-    setActiveId(event.active.id);
+    const id = event.active.id;
+    const found = classeurs.find(c => c.id === id);
+    setDraggedClasseur(found || null);
+    setActiveId(id);
   };
-
   const handleDragEnd = (event) => {
     setActiveId(null);
+    setDraggedClasseur(null);
     const { active, over } = event;
-    if (active.id !== over.id) {
+    if (active && over && active.id !== over.id) {
       const oldIndex = classeurs.findIndex((c) => c.id === active.id);
       const newIndex = classeurs.findIndex((c) => c.id === over.id);
       const reorderedClasseurs = arrayMove(classeurs, oldIndex, newIndex);
-      
-      setClasseurs(reorderedClasseurs); // Optimistic update
-      
+      setClasseurs(reorderedClasseurs);
       const positionsToUpdate = reorderedClasseurs.map((c, index) => ({ id: c.id, position: index }));
       onUpdateClasseurPositions(positionsToUpdate);
     }
   };
-
-  const contextMenuItems = [
-    { label: 'Renommer', action: handleRename },
-    { label: 'Changer la couleur', action: openColorPicker },
-    { label: 'Supprimer', action: handleDelete },
-  ];
-
-  const activeClasseur = activeId ? classeurs.find(c => c.id === activeId) : null;
 
   return (
     <div className="classeur-tabs-glass-wrapper">
       <div className="classeur-tabs-btn-list">
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
           <SortableContext items={classeurs.map(c => c.id)} strategy={horizontalListSortingStrategy}>
-            {classeurs.map((classeur) => (
-              <div key={classeur.id} style={{ display: 'inline-block' }}>
-                <button
-                  className={`classeur-btn-glass${classeur.id === activeClasseurId ? ' active' : ''}`}
-                  onClick={() => onSelectClasseur(classeur.id)}
-                  onContextMenu={(e) => handleContextMenu(e, classeur)}
-                  style={{ fontFamily: 'Inter, Noto Sans, Arial, sans-serif' }}
-                  {...useSortable({ id: classeur.id }).attributes}
-                  {...useSortable({ id: classeur.id }).listeners}
-                  ref={useSortable({ id: classeur.id }).setNodeRef}
-                >
-                  <span
-                    style={{ fontSize: 18, marginRight: 6, verticalAlign: 'middle', cursor: 'pointer', display: 'inline-block' }}
-                    onClick={e => {
-                      e.stopPropagation();
-                      setEmojiPicker({ visible: true, classeur });
-                    }}
-                    tabIndex={0}
-                    role="button"
-                    aria-label="Changer l'emoji"
-                  >
-                    {classeur.icon === 'FileText' ? '📄' : (classeur.icon && EMOJI_CHOICES.includes(classeur.icon) ? classeur.icon : '📁')}
-                  </span>
-                  <span style={{ fontFamily: 'inherit' }}>{classeur.name}</span>
-                </button>
-              </div>
-            ))}
+            {classeurs.map((classeur) => {
+              const sortable = useSortable({ id: classeur.id });
+              return (
+                <SortableTab
+                  key={classeur.id}
+                  classeur={classeur}
+                  isActive={classeur.id === activeClasseurId}
+                  onSelectClasseur={onSelectClasseur}
+                  onContextMenu={handleContextMenu}
+                  listeners={sortable.listeners}
+                  attributes={sortable.attributes}
+                  setNodeRef={sortable.setNodeRef}
+                  isDragging={activeId === classeur.id}
+                  sortableTransform={sortable.transform}
+                  sortableTransition={sortable.transition}
+                />
+              );
+            })}
           </SortableContext>
+          <DragOverlay>
+            {draggedClasseur ? (
+              <SortableTab
+                classeur={draggedClasseur}
+                isActive={draggedClasseur.id === activeClasseurId}
+                onSelectClasseur={onSelectClasseur}
+                onContextMenu={handleContextMenu}
+                isDragging={true}
+                isOverlay={true}
+              />
+            ) : null}
+          </DragOverlay>
         </DndContext>
         <button className="add-classeur-btn-glass" onClick={onCreateClasseur}>+</button>
       </div>
@@ -184,11 +189,15 @@ const ClasseurTabs = ({
           onClose={() => setColorPickerVisible(false)}
         />
       )}
-      <ContextMenu
+      <SimpleContextMenu
         visible={contextMenu.visible}
         x={contextMenu.x}
         y={contextMenu.y}
-        items={contextMenuItems}
+        options={[
+          { label: 'Renommer', onClick: handleRename },
+          { label: 'Changer la couleur', onClick: openColorPicker },
+          { label: 'Supprimer', onClick: handleDelete },
+        ]}
         onClose={closeContextMenu}
       />
       {emojiPicker.visible && emojiPicker.classeur && (

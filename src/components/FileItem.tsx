@@ -6,14 +6,17 @@ interface FileItemProps {
   file: FileArticle;
   onOpen: (file: FileArticle) => void;
   isRenaming?: boolean;
-  onRename?: (newName: string) => void;
+  onRename?: (newName: string, type: 'folder' | 'file') => void;
   onCancelRename?: () => void;
   onContextMenu?: (e: React.MouseEvent, file: FileArticle) => void;
+  onStartRenameClick?: (file: FileArticle) => void;
 }
 
-const FileItem: React.FC<FileItemProps> = ({ file, onOpen, isRenaming, onRename, onCancelRename, onContextMenu }) => {
+const FileItem: React.FC<FileItemProps> = ({ file, onOpen, isRenaming, onRename, onCancelRename, onContextMenu, onStartRenameClick }) => {
   const [inputValue, setInputValue] = React.useState(file.source_title);
   const inputRef = React.useRef<HTMLInputElement>(null);
+  const [isDraggable, setIsDraggable] = React.useState(false);
+  const lastWasRightClick = React.useRef(false);
 
   React.useEffect(() => {
     if (isRenaming) {
@@ -25,7 +28,7 @@ const FileItem: React.FC<FileItemProps> = ({ file, onOpen, isRenaming, onRename,
   const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && onRename) {
       if (inputValue.trim() && inputValue !== file.source_title) {
-        onRename(inputValue.trim());
+        onRename(inputValue.trim(), 'file');
       } else if (onCancelRename) {
         onCancelRename();
       }
@@ -36,7 +39,7 @@ const FileItem: React.FC<FileItemProps> = ({ file, onOpen, isRenaming, onRename,
 
   const handleInputBlur = () => {
     if (onRename && inputValue.trim() && inputValue !== file.source_title) {
-      onRename(inputValue.trim());
+      onRename(inputValue.trim(), 'file');
     } else if (onCancelRename) {
       onCancelRename();
     }
@@ -63,13 +66,44 @@ const FileItem: React.FC<FileItemProps> = ({ file, onOpen, isRenaming, onRename,
         backdropFilter: 'blur(8px)',
         WebkitBackdropFilter: 'blur(8px)',
       }}
-      onDoubleClick={() => !isRenaming && onOpen(file)}
+      onMouseDown={e => {
+        console.log('[DEBUG] FileItem onMouseDown - button:', e.button, 'isRenaming:', isRenaming);
+        if (e.button === 2) {
+          e.preventDefault();
+          lastWasRightClick.current = true;
+          setIsDraggable(false);
+        } else {
+          lastWasRightClick.current = false;
+          setIsDraggable(!isRenaming);
+        }
+      }}
+      onDoubleClick={() => {
+        console.log('[DEBUG] FileItem onDoubleClick - lastWasRightClick:', lastWasRightClick.current);
+        if (!isRenaming && !lastWasRightClick.current) {
+          onOpen(file);
+        }
+        lastWasRightClick.current = false;
+      }}
       tabIndex={0}
       role="button"
       aria-label={file.source_title}
-      onContextMenu={e => { if (onContextMenu) { e.preventDefault(); onContextMenu(e, file); } }}
-      draggable={!isRenaming}
+      onContextMenu={e => {
+        console.log('[DEBUG] FileItem onContextMenu');
+        if (onContextMenu) {
+          e.preventDefault();
+          onContextMenu(e, file);
+        }
+        setIsDraggable(!isRenaming);
+        lastWasRightClick.current = false;
+      }}
+      draggable={isDraggable}
       onDragStart={e => {
+        console.log('[DEBUG] FileItem onDragStart - nativeEvent.button:', e.nativeEvent.button);
+        if (e.nativeEvent.button !== 0) {
+          e.preventDefault();
+          console.log('[DEBUG] FileItem onDragStart - prevented due to non-left click');
+          return;
+        }
         e.dataTransfer.setData('itemId', file.id);
         e.dataTransfer.setData('itemType', 'file');
         e.dataTransfer.effectAllowed = 'move';
@@ -103,7 +137,15 @@ const FileItem: React.FC<FileItemProps> = ({ file, onOpen, isRenaming, onRename,
           onClick={e => e.stopPropagation()}
         />
       ) : (
-        <span style={{ fontWeight: 500, fontSize: 15, color: '#fff', textAlign: 'center', marginTop: 2, maxWidth: 140, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', textShadow: '0 1px 4px rgba(0,0,0,0.18)' }}>{file.source_title}</span>
+        <span
+          style={{ fontWeight: 500, fontSize: 15, color: '#fff', textAlign: 'center', marginTop: 2, maxWidth: 140, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', textShadow: '0 1px 4px rgba(0,0,0,0.18)' }}
+          onClick={e => {
+            if (onStartRenameClick) {
+              e.stopPropagation();
+              onStartRenameClick(file);
+            }
+          }}
+        >{file.source_title}</span>
       )}
     </div>
   );
