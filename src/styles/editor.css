@@ -395,17 +395,8 @@
 }
 
 .editor-content blockquote::before {
-  content: "“";
-  position: absolute;
-  top: 0.5rem;
-  left: 1rem;
-  font-size: 3rem;
-  line-height: 1;
-  color: var(--accent-primary);
-  opacity: 0.8;
-  filter: brightness(1.2);
-  font-family: serif;
-  z-index: 1;
+  display: none !important;
+  content: none !important;
 }
 
 .editor-content blockquote p {
@@ -476,9 +467,10 @@
    ========================================================================== */
 .ProseMirror .tableWrapper {
   margin: 1.5rem 0;
-  border-radius: 12px;
+  border-radius: 10px;
   overflow: hidden;
   border: 1px solid var(--border-subtle);
+  box-shadow: 0 2px 12px 0 rgba(0,0,0,0.06);
 }
 
 .ProseMirror table {
@@ -1132,4 +1124,357 @@ body, .editor-topbar, .editor-title-wrapper, .editor-title-span, .editor-title-i
 .html-preview table p,
 .editor-table p {
   margin: 0;
+}
+
+/* ==========================================================================
+   TABLES MODERNES (éditeur, résumé, preview)
+   ========================================================================== */
+.editor-content table,
+.summary-content table,
+.html-preview table,
+.editor-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin: 2.5rem 0 2.5rem 0;
+  background: var(--surface-2);
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 4px 32px 0 rgba(0,0,0,0.10), 0 1.5px 0 0 var(--border-subtle);
+  font-size: 1.08rem;
+  transition: box-shadow 0.18s;
+  border: none !important;
+}
+
+.editor-content table thead th,
+.summary-content table thead th,
+.html-preview table thead th,
+.editor-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: linear-gradient(90deg, var(--surface-3) 80%, var(--surface-2) 100%);
+  color: var(--accent-primary);
+  font-weight: 700;
+  text-align: center;
+  padding: 1.15rem 1.5rem;
+  border-bottom: 2.5px solid var(--border-color);
+  letter-spacing: 0.01em;
+  font-size: 1.13rem;
+  box-shadow: 0 2px 0 0 var(--border-subtle);
+}
+
+.editor-content table tbody tr,
+.summary-content table tbody tr,
+.html-preview table tbody tr,
+.editor-table tbody tr {
+  transition: background 0.13s;
+}
+
+.editor-content table tbody tr:nth-child(even),
+.summary-content table tbody tr:nth-child(even),
+.html-preview table tbody tr:nth-child(even),
+.editor-table tbody tr:nth-child(even) {
+  background: color-mix(in srgb, var(--surface-1) 90%, var(--surface-2) 10%);
+}
+
+.editor-content table tbody tr:hover,
+.summary-content table tbody tr:hover,
+.html-preview table tbody tr:hover,
+.editor-table tbody tr:hover {
+  background: var(--surface-hover);
+}
+
+.editor-content td,
+.summary-content td,
+.html-preview td,
+.editor-table td {
+  color: var(--text-1);
+  background: none;
+  font-size: 1.05rem;
+  text-align: left;
+  padding: 1.05rem 1.5rem;
+  border-bottom: 1.5px solid var(--border-subtle);
+  vertical-align: middle;
+  transition: background 0.13s;
+}
+
+.editor-content tr:last-child td,
+.summary-content tr:last-child td,
+.html-preview tr:last-child td,
+.editor-table tr:last-child td {
+  border-bottom: none;
+}
+
+.editor-content th:first-child,
+.summary-content th:first-child,
+.html-preview th:first-child,
+.editor-table th:first-child {
+  border-top-left-radius: 18px;
+}
+.editor-content th:last-child,
+.summary-content th:last-child,
+.html-preview th:last-child,
+.editor-table th:last-child {
+  border-top-right-radius: 18px;
+}
+.editor-content tr:last-child td:first-child,
+.summary-content tr:last-child td:first-child,
+.html-preview tr:last-child td:first-child,
+.editor-table tr:last-child td:first-child {
+  border-bottom-left-radius: 18px;
+}
+.editor-content tr:last-child td:last-child,
+.summary-content tr:last-child td:last-child,
+.html-preview tr:last-child td:last-child,
+.editor-table tr:last-child td:last-child {
+  border-bottom-right-radius: 18px;
+}
+
+.editor-content table p,
+.summary-content table p,
+.html-preview table p,
+.editor-table p {
+  margin: 0;
+}
+
+/* PATCH TABLES FLAT & LIGHT */
+.editor-content table,
+.summary-content table,
+.html-preview table,
+.editor-table {
+  background: var(--surface-1);
+  border-radius: 14px;
+  box-shadow: 0 2px 12px 0 rgba(0,0,0,0.06);
+  border: none;
+}
+
+.editor-content table thead th,
+.summary-content table thead th,
+.html-preview table thead th,
+.editor-table thead th {
+  background: linear-gradient(90deg, var(--surface-2) 80%, var(--surface-1) 100%);
+  color: var(--accent-primary);
+  border-bottom: 1.5px solid var(--border-subtle);
+}
+
+.editor-content table tbody tr:nth-child(even),
+.summary-content table tbody tr:nth-child(even),
+.html-preview table tbody tr:nth-child(even),
+.editor-table tbody tr:nth-child(even) {
+  background: color-mix(in srgb, var(--surface-2) 85%, var(--surface-1) 15%);
+}
+
+.editor-content table {
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+/* ===== TABLES MARKDOWN MODERNES (éditeur) ===== */
+.ProseMirror .tableWrapper {
+  margin: 0;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--border-subtle);
+  background: var(--surface-2);
+  box-shadow: none;
+  padding: 0 !important;
+}
+
+.ProseMirror table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  background: none;
+  font-size: 1.07rem;
+  table-layout: fixed;
+  padding: 0 !important;
+}
+
+.ProseMirror th,
+.ProseMirror td {
+  width: auto;
+  min-width: 0;
+  max-width: none;
+}
+
+.ProseMirror th {
+  background: linear-gradient(90deg, var(--surface-3) 80%, var(--surface-2) 100%);
+  color: var(--accent-primary);
+  font-weight: 700;
+  text-align: left;
+  padding: 1.15rem 1.5rem;
+  border-bottom: 1.5px solid var(--border-subtle);
+  border-right: 1px solid var(--border-subtle);
+  font-size: 1.11rem;
+  letter-spacing: 0.01em;
+}
+.ProseMirror th:last-child {
+  border-right: none;
+}
+
+.ProseMirror td {
+  color: var(--text-1);
+  background: var(--surface-1);
+  font-size: 1.04rem;
+  text-align: left;
+  padding: 1.05rem 1.5rem;
+  border-bottom: 1px solid var(--border-subtle);
+  border-right: 1px solid var(--border-subtle);
+  vertical-align: middle;
+  transition: background 0.13s;
+}
+.ProseMirror td:last-child {
+  border-right: none;
+}
+
+.ProseMirror tr:last-child td {
+  border-bottom: none;
+}
+
+.ProseMirror th:first-child {
+  border-top-left-radius: 0;
+}
+.ProseMirror th:last-child {
+  border-top-right-radius: 0;
+}
+.ProseMirror tr:last-child td:first-child {
+  border-bottom-left-radius: 12px;
+}
+.ProseMirror tr:last-child td:last-child {
+  border-bottom-right-radius: 12px;
+}
+
+.ProseMirror table p {
+  margin: 0;
+}
+
+/* === PATCH: Supprime l'espace au-dessus des tableaux (p vide, ProseMirror) === */
+.editor-content .ProseMirror > p:empty + .tableWrapper,
+.editor-content .ProseMirror > p:empty + table {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+}
+.editor-content .ProseMirror > p:empty {
+  margin-bottom: 0 !important;
+  padding-bottom: 0 !important;
+  min-height: 0 !important;
+  height: 0 !important;
+}
+
+/* === TABLEAUX ULTRA-MINIMALISTES (éditeur) === */
+.ProseMirror .tableWrapper {
+  margin: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+  border-radius: 0 !important;
+  background: none !important;
+  box-shadow: none !important;
+  overflow: visible !important;
+}
+.ProseMirror table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  border-spacing: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  background: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  table-layout: fixed !important;
+}
+.ProseMirror th,
+.ProseMirror td {
+  border: none !important;
+  border-bottom: 1px solid var(--border-subtle) !important;
+  border-right: 1px solid var(--border-subtle) !important;
+  background: none !important;
+  color: var(--text-1) !important;
+  font-weight: 400 !important;
+  text-align: left !important;
+  padding: 0.65em 0.9em !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  font-size: 1rem !important;
+  box-shadow: none !important;
+}
+.ProseMirror th {
+  font-weight: 600 !important;
+}
+.ProseMirror th:last-child,
+.ProseMirror td:last-child {
+  border-right: none !important;
+}
+.ProseMirror tr:last-child td,
+.ProseMirror tr:last-child th {
+  border-bottom: none !important;
+}
+.ProseMirror table p {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* === PATCH: Bordure extérieure + radius sur les tableaux éditeur === */
+.ProseMirror .tableWrapper {
+  border: 1px solid var(--border-subtle) !important;
+  border-radius: 10px !important;
+  overflow: hidden !important;
+  background: none !important;
+}
+.ProseMirror table {
+  border-radius: 10px !important;
+  border: none !important;
+  overflow: hidden !important;
+}
+
+/* === PATCH: Couleurs propres pour tableaux éditeur (entête + alternance lignes) === */
+.ProseMirror th {
+  background: var(--surface-2) !important;
+  color: var(--accent-primary) !important;
+  font-weight: 600 !important;
+}
+.ProseMirror td {
+  background: none !important;
+  color: var(--text-1) !important;
+}
+.ProseMirror tbody tr:nth-child(odd) td {
+  background: var(--surface-2) !important;
+}
+.ProseMirror tbody tr:nth-child(even) td {
+  background: var(--surface-1) !important;
+}
+
+/* === PATCH: Gris clairs pour alternance lignes tbody (plus de noir) === */
+.ProseMirror tbody tr:nth-child(odd) td {
+  background: var(--surface-2) !important;
+}
+.ProseMirror tbody tr:nth-child(even) td {
+  background: var(--surface-1) !important;
+}
+
+/* === PATCH: Blockquotes centrés === */
+.editor-content blockquote {
+  text-align: center !important;
+}
+
+/* === PATCH: Blockquotes en gras === */
+.editor-content blockquote {
+  font-weight: 600 !important;
+}
+
+/* === PATCH: Entête de tableau centré === */
+.ProseMirror th {
+  text-align: center !important;
+}
+
+/* === PATCH: Tout le texte des tableaux centré === */
+.ProseMirror th,
+.ProseMirror td {
+  text-align: center !important;
+}
+
+/* === PATCH: Couleur normale pour le texte des blockquotes === */
+.editor-content blockquote {
+  color: var(--text-1) !important;
 }
