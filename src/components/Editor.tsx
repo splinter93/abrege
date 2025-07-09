@@ -743,6 +743,19 @@ const Editor: React.FC<EditorProps> = ({ initialTitle, initialContent = '', head
   useEffect(() => {
     if (editor && markdownContent) {
       editor.commands.setContent(markdownContent, false);
+      // Forcer extraction des headings après setContent
+      setTimeout(() => {
+        const headingsArr: Heading[] = [];
+        editor.state.doc.descendants((node, pos) => {
+          if (node.type.name === 'heading') {
+            const level = node.attrs.level;
+            const text = node.textContent;
+            const id = slugify(`${text}-${level}-${pos}`, { lower: true, strict: true });
+            headingsArr.push({ id, text, level });
+          }
+        });
+        setHeadings(headingsArr);
+      }, 0);
     }
   }, [editor, markdownContent]);
 
@@ -888,9 +901,8 @@ const Editor: React.FC<EditorProps> = ({ initialTitle, initialContent = '', head
                 {headings.length > 0 && (
                   <div style={{
                     position: 'fixed',
-                    top: '44%',
+                    top: 395,
                     right: 24,
-                    transform: 'translateY(-45%)',
                     zIndex: 9999,
                     maxHeight: '80vh',
                     overflowY: 'auto'
