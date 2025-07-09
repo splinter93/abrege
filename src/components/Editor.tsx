@@ -51,6 +51,7 @@ import type { Heading } from '../types/editor';
 import EditorSlashMenu from './EditorSlashMenu';
 import EditorToolbar from './EditorToolbar';
 import TurndownService from 'turndown';
+import '../styles/markdown.css';
 
 const HEADER_IMAGES = [
   'https://images.unsplash.com/photo-1454982523318-4b6396f39d3a?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
@@ -95,20 +96,6 @@ function TitleTextarea({
   placeholder,
   style
 }: TitleTextareaProps) {
-  const handleInput = (e: React.FormEvent<HTMLTextAreaElement>) => {
-    const el = e.currentTarget;
-    el.style.height = 'auto';
-    el.style.height = el.scrollHeight + 'px';
-  };
-
-  useEffect(() => {
-    if (inputRef?.current) {
-      const el = inputRef.current;
-      el.style.height = 'auto';
-      el.style.height = el.scrollHeight + 'px';
-    }
-  }, [value, inputRef]);
-
   return (
     <textarea
       ref={inputRef}
@@ -122,43 +109,32 @@ function TitleTextarea({
           inputRef?.current?.blur();
         }
       }}
-      onInput={e => {
-        const ta = e.currentTarget;
-        ta.style.height = '1.2em';
-        ta.style.height = Math.min(ta.scrollHeight, 5.2 * 16) + 'px';
-        // Limite à 4 lignes
-        const lines = ta.value.split('\n');
-        if (lines.length > 4) {
-          ta.value = lines.slice(0, 4).join('\n');
-          ta.setSelectionRange(ta.value.length, ta.value.length);
-        }
-      }}
       className="editor-title-input"
       rows={1}
       wrap="soft"
       placeholder={placeholder}
       disabled={disabled}
       style={{
-        ...style,
-        resize: 'vertical',
-        width: '100%',
-        minHeight: '38px',
-        maxHeight: '160px',
-        fontSize: 28,
+        width: '750px',
+        height: '45px',
+        minHeight: '45px',
+        maxHeight: '45px',
+        padding: 0,
+        margin: 0,
+        fontSize: '2.25rem',
         fontWeight: 700,
-        lineHeight: 1.2,
+        lineHeight: 1.1,
         background: 'transparent',
         border: 'none',
         outline: 'none',
-        padding: '16px 0 0 0',
-        margin: 0,
         color: 'var(--text-primary)',
-        fontFamily: 'inherit',
+        fontFamily: 'Noto Sans, sans-serif',
         overflow: 'hidden',
         boxSizing: 'border-box',
-        whiteSpace: 'normal', // ✅ autorise le wrapping
+        whiteSpace: 'normal',
         wordBreak: 'break-word',
-        transition: 'height 0.1s ease'
+        resize: 'none',
+        textAlign: 'center'
       }}
       spellCheck={true}
       autoFocus
@@ -197,6 +173,17 @@ function debounce(
 const turndownService = new TurndownService();
 const convertHtmlToMarkdown = (html: string) => turndownService.turndown(html);
 
+// Ajoute ce helper pour parser un tableau markdown GFM
+function parseGfmTable(markdown: string): string[][] | null {
+  // Détecte un tableau GFM
+  const lines = markdown.trim().split('\n');
+  if (lines.length < 2) return null;
+  if (!/^\|.*\|$/.test(lines[0])) return null;
+  if (!/^\|[-:| ]+\|$/.test(lines[1])) return null;
+  const rows = lines.filter(l => /^\|.*\|$/.test(l));
+  return rows.map(row => row.slice(1, -1).split('|').map(cell => cell.trim()));
+}
+
 const Editor: React.FC<EditorProps> = ({ initialTitle, initialContent = '', headerImage: initialHeaderImage, onClose, onSave, initialTitleAlign = 'left' }) => {
   const [title, setTitle] = useState(initialTitle);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
@@ -207,7 +194,7 @@ const Editor: React.FC<EditorProps> = ({ initialTitle, initialContent = '', head
   const blurTimeoutRef = useRef(null);
   const editorWrapperRef = useRef(null);
   const wordCountTimeoutRef = useRef(null);
-  const titleInputRef = useRef<HTMLTextAreaElement>(null);
+  const titleInputRef = useRef<HTMLInputElement>(null);
   const noteNumberRef = useRef(1);
   const getDefaultTitle = () => `Nouvelle note`;
   const [headerImage, setHeaderImage] = useState(initialHeaderImage || null);
@@ -401,6 +388,48 @@ const Editor: React.FC<EditorProps> = ({ initialTitle, initialContent = '', head
           }
         }
       },
+      handlePaste(view, event, slice) {
+        const text = event.clipboardData?.getData('text/plain');
+        if (text) {
+          const table = parseGfmTable(text);
+          if (table && table.length >= 2 && editor) {
+            // Enlève la ligne de séparation
+            const header = table[0];
+            const body = table.slice(2);
+            const rows = body.length;
+            const cols = header.length;
+            // Insère le tableau
+            editor.chain().focus().insertTable({ rows: Math.max(rows, 1), cols, withHeaderRow: true }).run();
+            // Remplit les cellules
+            setTimeout(() => {
+              // Sélectionne toutes les cellules du tableau
+              const tableNode = editor.view.dom.querySelector('table');
+              if (!tableNode) return;
+              const cellNodes = tableNode.querySelectorAll('td, th');
+              let cellIndex = 0;
+              // Remplit l'en-tête
+              for (let c = 0; c < cols; c++) {
+                if (cellNodes[cellIndex]) {
+                  editor.chain().focus().setNodeSelection(editor.view.posAtDOM(cellNodes[cellIndex], 0)).insertContent(header[c]).run();
+                  cellIndex++;
+                }
+              }
+              // Remplit le corps
+              for (let r = 0; r < rows; r++) {
+                for (let c = 0; c < cols; c++) {
+                  if (cellNodes[cellIndex]) {
+                    const value = body[r]?.[c] || '';
+                    editor.chain().focus().setNodeSelection(editor.view.posAtDOM(cellNodes[cellIndex], 0)).insertContent(value).run();
+                    cellIndex++;
+                  }
+                }
+              }
+            }, 10);
+            return true;
+          }
+        }
+        return false;
+      },
     },
     onCreate: ({ editor }) => {
       try {
@@ -533,7 +562,7 @@ const Editor: React.FC<EditorProps> = ({ initialTitle, initialContent = '', head
 
   useEffect(() => {
     if (isTitleFocused && titleInputRef.current) {
-      const input = titleInputRef.current as HTMLTextAreaElement | null;
+      const input = titleInputRef.current as HTMLInputElement | null;
       if (input && typeof input.focus === 'function') {
         input.focus();
         // Place cursor at the end of the input
@@ -548,7 +577,7 @@ const Editor: React.FC<EditorProps> = ({ initialTitle, initialContent = '', head
   useEffect(() => {
     if (isTitleFocused && titleInputRef.current) {
       // Scroll automatique à droite
-      const input = titleInputRef.current as HTMLTextAreaElement | null;
+      const input = titleInputRef.current as HTMLInputElement | null;
       if (input && typeof input.scrollLeft !== 'undefined' && typeof input.scrollWidth !== 'undefined') {
         input.scrollLeft = input.scrollWidth;
       }
@@ -558,10 +587,9 @@ const Editor: React.FC<EditorProps> = ({ initialTitle, initialContent = '', head
   useEffect(() => {
     const ta = titleTextareaRef.current;
     if (ta) {
-      ta.style.height = '1.2em';
-      ta.style.height = Math.min(ta.scrollHeight, 5.2 * 16) + 'px'; // max 4 lignes (5.2em)
+      ta.style.height = '45px';
     }
-  }, [title]);
+  }, []);
 
   useEffect(() => {
     if (isContentLoaded) handleSave(title, editor?.getHTML() || '', titleAlign);
@@ -805,38 +833,31 @@ const Editor: React.FC<EditorProps> = ({ initialTitle, initialContent = '', head
                   </button>
                 )}
                 {/* === TITRE DIRECTEMENT === */}
-                <div style={{ width: '1000px', margin: '28px auto 0 auto', padding: '0 24px', boxSizing: 'border-box', paddingBottom: '0.8rem' }}>
+                <div style={{ width: '100%', display: 'flex', justifyContent: 'center', margin: '20px 0 25px 0', padding: '0 24px', boxSizing: 'border-box' }}>
                   <textarea
-                    ref={titleTextareaRef}
+                    ref={titleInputRef as any}
                     className="editor-title"
-                    style={{
-                      display: 'block',
-                      fontSize: '2.25rem',
-                      fontWeight: 700,
-                      lineHeight: 1.2,
-                      minHeight: '1.2em',
-                      maxHeight: '5.2em',
-                      width: '100%',
-                      border: 'none',
-                      background: 'none',
-                      outline: 'none',
-                      textAlign: 'center',
-                      resize: 'none',
-                      overflow: 'hidden',
-                      boxSizing: 'border-box',
-                      color: 'var(--text-1)',
-                    }}
                     value={title}
                     onChange={handleTitleChange}
                     onBlur={handleTitleBlur}
                     onFocus={() => setIsTitleFocused(true)}
                     placeholder="Titre de la note..."
                     rows={1}
+                    wrap="soft"
+                    style={{
+                      resize: 'none',
+                      height: '45px',
+                      minHeight: '45px',
+                      maxHeight: '45px',
+                      overflow: 'hidden'
+                    }}
+                    autoComplete="off"
+                    spellCheck={true}
                   />
                 </div>
                 {/* === ZONE MARKDOWN DIRECTEMENT EN DESSOUS === */}
                 <div
-                  className="editor-content"
+                  className="editor-content markdown-body"
                   style={{
                     width: '1000px',
                     margin: '0 auto',
@@ -865,8 +886,23 @@ const Editor: React.FC<EditorProps> = ({ initialTitle, initialContent = '', head
                 </div>
                 {/* === TOC FIXE À DROITE === */}
                 {headings.length > 0 && (
-                  <div style={{ position: 'absolute', top: headerImageUrl ? 236 : 36, right: 0, zIndex: 21 }}>
-                    <TableOfContents headings={headings} currentId={currentId} pinned={false} onPin={() => {}} onClose={() => {}} containerRef={rootRef} />
+                  <div style={{
+                    position: 'fixed',
+                    top: '50%',
+                    right: 24,
+                    transform: 'translateY(-50%)',
+                    zIndex: 9999,
+                    maxHeight: '80vh',
+                    overflowY: 'auto'
+                  }}>
+                    <TableOfContents 
+                      headings={headings} 
+                      currentId={currentId} 
+                      pinned={false} 
+                      onPin={() => {}} 
+                      onClose={() => {}} 
+                      containerRef={rootRef} 
+                    />
                   </div>
                 )}
                 {/* === SLASH MENU === */}
