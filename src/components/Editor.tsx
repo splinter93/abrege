@@ -888,9 +888,9 @@ const Editor: React.FC<EditorProps> = ({ initialTitle, initialContent = '', head
                 {headings.length > 0 && (
                   <div style={{
                     position: 'fixed',
-                    top: '50%',
+                    top: '44%',
                     right: 24,
-                    transform: 'translateY(-50%)',
+                    transform: 'translateY(-45%)',
                     zIndex: 9999,
                     maxHeight: '80vh',
                     overflowY: 'auto'

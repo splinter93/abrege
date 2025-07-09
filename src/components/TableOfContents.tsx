@@ -30,8 +30,8 @@ export default function TableOfContents({ headings = [], currentId, pinned = fal
   const isCollapsed = !hovered;
 
   const tocContainerStyle: React.CSSProperties = {
-    width: 300,
-    background: isCollapsed ? 'none' : 'var(--surface-1)',
+    width: isCollapsed ? 32 : 300,
+    background: isCollapsed ? 'transparent' : 'var(--surface-1)',
     border: isCollapsed ? 'none' : '1.5px solid var(--border-subtle)',
     borderRadius: 16,
     color: '#a3a3a3',
@@ -41,14 +41,15 @@ export default function TableOfContents({ headings = [], currentId, pinned = fal
     flexDirection: 'column',
     alignItems: 'flex-start',
     gap: 0,
-    padding: isCollapsed ? '14px 0' : '14px 18px',
+    padding: isCollapsed ? '0' : '14px 18px',
     boxShadow: isCollapsed ? 'none' : '0 2px 12px rgba(0,0,0,0.06)',
     maxHeight: '80vh',
     transition: 'all 0.32s cubic-bezier(0.2, 0.8, 0.4, 1)',
-    transform: isCollapsed ? 'translateX(calc(100% - 42px))' : 'none',
+    transform: isCollapsed ? 'translateX(0)' : 'none',
     backdropFilter: isCollapsed ? 'none' : 'blur(8px)',
     WebkitBackdropFilter: isCollapsed ? 'none' : 'blur(8px)',
     pointerEvents: 'all',
+    minWidth: isCollapsed ? 32 : 300,
   };
   const tocItemStyles: Record<number, React.CSSProperties> = {
     1: {
@@ -129,10 +130,10 @@ export default function TableOfContents({ headings = [], currentId, pinned = fal
         {isCollapsed ? (
           headings.map((h, idx) => {
             if (h.level === 2) {
-              return <div key={h.id || `toc-bar-${idx}`} style={{ height: 3, width: 24, background: '#fff', borderRadius: 2, margin: '12px 0', marginLeft: 'auto', marginRight: 10, opacity: 0.8 }} />;
+              return <div key={h.id || `toc-bar-${idx}`} style={{ height: 3, width: 24, background: '#D4D4D4', borderRadius: 6, margin: '12px 0', marginLeft: 'auto', marginRight: 10, opacity: 0.8 }} />;
             }
             if (h.level === 3) {
-              return <div key={h.id || `toc-bar-${idx}`} style={{ height: 3, width: 12, background: '#fff', borderRadius: 2, margin: '12px 0', marginLeft: 'auto', marginRight: 10, opacity: 0.8 }} />;
+              return <div key={h.id || `toc-bar-${idx}`} style={{ height: 3, width: 12, background: '#D4D4D4', borderRadius: 6, margin: '12px 0', marginLeft: 'auto', marginRight: 10, opacity: 0.8 }} />;
             }
             return <div key={h.id || `toc-bar-${idx}`} style={{ height: 12, margin: '12px 0' }} />;
           })
