@@ -1,6 +1,7 @@
 import React from 'react';
 import FolderItem from './FolderItem';
 import FileItem from './FileItem';
+import { AnimatePresence, motion } from 'framer-motion';
 
 interface FolderContentProps {
   classeurName: string;
@@ -98,18 +99,28 @@ const FolderContent: React.FC<FolderContentProps> = ({
       <div style={{ borderTop: '1.5px solid rgba(255,255,255,0.10)', width: '60%', margin: '60px 0 40px 0' }}></div>
       {/* Grille fichiers rapprochée */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 gap-y-8" style={{justifyItems:'center', width: '100%', marginTop: 25 }}>
-        {files.map(file => (
-          <FileItem
-            key={file.id}
-            file={file}
-            onOpen={onFileOpen}
-            isRenaming={renamingItemId === file.id}
-            onRename={(newName, type) => onRenameFile && onRenameFile(file.id, newName, type)}
-            onCancelRename={onCancelRename}
-            onContextMenu={onContextMenuItem}
-            onStartRenameClick={onStartRenameFileClick}
-          />
-        ))}
+        <AnimatePresence initial={false}>
+          {files.map(file => (
+            <motion.div
+              key={file.id}
+              initial={{ opacity: 0, scale: 0.92 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.92 }}
+              transition={{ duration: 0.38, ease: 'easeOut' }}
+              style={{ width: 168, height: 132 }}
+            >
+              <FileItem
+                file={file}
+                onOpen={onFileOpen}
+                isRenaming={renamingItemId === file.id}
+                onRename={(newName, type) => onRenameFile && onRenameFile(file.id, newName, type)}
+                onCancelRename={onCancelRename}
+                onContextMenu={onContextMenuItem}
+                onStartRenameClick={onStartRenameFileClick}
+              />
+            </motion.div>
+          ))}
+        </AnimatePresence>
       </div>
     </div>
   );

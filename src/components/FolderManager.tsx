@@ -50,7 +50,6 @@ const FolderManager: React.FC<FolderManagerProps> = ({ classeurId, classeurName,
   // Handler pour clic droit sur dossier/fichier
   const handleContextMenuItem = (e: React.MouseEvent, item: any) => {
     e.preventDefault();
-    console.log('[DEBUG] handleContextMenuItem', { x: e.clientX, y: e.clientY, item });
     setContextMenuState({ visible: true, x: e.clientX, y: e.clientY, item });
   };
 
@@ -104,7 +103,6 @@ const FolderManager: React.FC<FolderManagerProps> = ({ classeurId, classeurName,
 
   // Handler d'imbrication DnD
   const handleDropItem = (itemId: string, itemType: 'folder' | 'file', targetFolderId: string) => {
-    console.log('[DND] FolderManager handleDropItem', { itemId, itemType, targetFolderId });
     if (itemType === 'folder' && itemId === targetFolderId) {
       console.warn('Action empêchée : un dossier ne peut pas être imbriqué dans lui-même.');
       return;
@@ -114,10 +112,6 @@ const FolderManager: React.FC<FolderManagerProps> = ({ classeurId, classeurName,
 
   const closeContextMenu = () => setContextMenuState(cm => ({ ...cm, visible: false }));
 
-  console.log('folders:', folders, 'files:', files);
-
-  // Ajout debug avant le return
-  console.log('[DEBUG] SimpleContextMenu props', contextMenuState);
   return (
     <div
       className="folder-manager-root folder-manager-container"

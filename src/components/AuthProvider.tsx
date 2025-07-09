@@ -1,11 +1,16 @@
-'use client';
-import { useState, useEffect } from 'react';
-import { supabase } from '../supabaseClient';
-import { Auth } from '@supabase/auth-ui-react';
-import { ThemeSupa } from '@supabase/auth-ui-shared';
+"use client";
+import { useState, useEffect, ReactNode } from "react";
+import { supabase } from "../supabaseClient";
+import { Auth } from "@supabase/auth-ui-react";
+import { ThemeSupa } from "@supabase/auth-ui-shared";
+import type { Session } from "@supabase/supabase-js";
 
-export function AuthProvider({ children }) {
-  const [session, setSession] = useState(null);
+interface AuthProviderProps {
+  children: ReactNode;
+}
+
+export function AuthProvider({ children }: AuthProviderProps) {
+  const [session, setSession] = useState<Session | null>(null);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -19,9 +24,23 @@ export function AuthProvider({ children }) {
 
   if (!session) {
     return (
-      <div className="auth-bg-gradient">
+      <div
+        className="auth-bg-gradient"
+        style={{
+          minHeight: '100vh',
+          minWidth: '100vw',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          zIndex: 1000,
+          background: 'none',
+        }}
+      >
         <div className="auth-container-glass">
-          <div className="auth-logo" style={{ display: 'flex', justifyContent: 'center', marginBottom: 10 }}>
+          <div className="auth-logo" style={{ display: "flex", justifyContent: "center", marginBottom: 10 }}>
             <svg width="44" height="44" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
               <defs>
                 <linearGradient id="logoGradient" x1="0" y1="0" x2="1" y2="1">
@@ -40,5 +59,5 @@ export function AuthProvider({ children }) {
       </div>
     );
   }
-  return children;
+  return <>{children}</>;
 } 

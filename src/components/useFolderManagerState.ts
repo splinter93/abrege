@@ -11,6 +11,7 @@ import {
   updateItemPositions,
   moveItemUniversal
 } from '../services/supabase';
+import { supabase } from '../supabaseClient';
 
 // Types pour le renommage
 export type RenamingType = 'folder' | 'file' | null;
@@ -61,11 +62,6 @@ export function useFolderManagerState(classeurId: string, parentFolderId?: strin
   const [renamingItemId, setRenamingItemId] = useState<string | null>(null);
   const [renamingType, setRenamingType] = useState<RenamingType>(null);
 
-  // Debugging Renaming State Changes
-  useEffect(() => {
-    console.log('[DEBUG] Renaming State Changed - renamingItemId:', renamingItemId, 'renamingType:', renamingType);
-  }, [renamingItemId, renamingType]);
-
   // --- CHARGEMENT INITIAL ---
   useEffect(() => {
     setLoading(true);
@@ -89,6 +85,41 @@ export function useFolderManagerState(classeurId: string, parentFolderId?: strin
     fetchData();
   }, [classeurId, parentFolderId]);
 
+  // --- SYNCHRO TEMPS RÉEL (Supabase Realtime) ---
+  useEffect(() => {
+    // Abonnement à la table "articles" (notes)
+    const channel = supabase
+      .channel('realtime:articles')
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'articles' },
+        (payload) => {
+          // Vérifie que la note concerne le bon classeur/dossier
+          if (
+            payload.new.classeur_id === classeurId &&
+            ((parentFolderId && payload.new.folder_id === parentFolderId) || (!parentFolderId && !payload.new.folder_id))
+          ) {
+            setFiles((files) => {
+              // Évite les doublons si la note existe déjà
+              if (files.some(f => f.id === payload.new.id)) return files;
+              const newFile: FileArticle = {
+                id: payload.new.id,
+                source_title: payload.new.source_title,
+                source_type: payload.new.source_type,
+                updated_at: payload.new.updated_at,
+              };
+              return [...files, newFile];
+            });
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [classeurId, parentFolderId]);
+
   // --- NAVIGATION ---
   const goToFolder = useCallback((id: string) => {
     setCurrentFolderId(id);
@@ -103,28 +134,23 @@ export function useFolderManagerState(classeurId: string, parentFolderId?: strin
 
   // --- RENOMMAGE ---
   const startRename = useCallback((id: string, type: 'folder' | 'file') => {
-    console.log('[DEBUG] startRename called - id:', id, 'type:', type);
     setRenamingItemId(id);
     setRenamingType(type);
   }, []);
 
   const submitRename = useCallback(async (id: string, newName: string, type: 'folder' | 'file') => {
-    console.log('[DEBUG] submitRename entry - id:', id, 'newName:', newName, 'current type (passed as arg):', type);
     try {
       await apiRenameItem(id, type, newName);
-      console.log('[DEBUG] apiRenameItem successful.');
       if (type === 'folder') {
         setFolders(folders => folders.map(f => f.id === id ? { ...f, name: newName } : f));
       } else {
         setFiles(files => files.map(f => f.id === id ? { ...f, source_title: newName } : f));
       }
     } catch (err) {
-      console.error('[DEBUG] Erreur lors du renommage:', err);
       setError('Erreur lors du renommage.');
     } finally {
       setRenamingItemId(null);
       setRenamingType(null);
-      console.log('[DEBUG] Renaming state reset.');
     }
   }, [setFolders, setFiles]);
 
@@ -214,7 +240,6 @@ export function useFolderManagerState(classeurId: string, parentFolderId?: strin
 
   // --- IMBRICATION DnD ---
   const moveItem = useCallback(async (id: string, newParentId: string, type: 'folder' | 'file') => {
-    console.log('[DND] useFolderManagerState moveItem', { id, newParentId, type });
     try {
       await moveItemUniversal(id, newParentId, type);
       if (type === 'folder') {
@@ -223,7 +248,6 @@ export function useFolderManagerState(classeurId: string, parentFolderId?: strin
         setFiles(currentFiles => currentFiles.filter(f => f.id !== id));
       }
     } catch (err) {
-      console.error("Erreur lors du déplacement de l'élément:", err);
       setError('Erreur lors du déplacement de l\'élément.');
     }
   }, []);

@@ -1,18 +1,17 @@
-'use client';
-import React, { useState, useEffect } from 'react';
-import FolderManager from '../../components/FolderManager';
-import ClasseurTabs from '../../components/ClasseurTabs';
-import DynamicIcon from '../../components/DynamicIcon';
-import { getClasseurs, createClasseur, updateClasseur, deleteClasseur, updateClasseurPositions } from '../../services/supabase';
-import { toast } from 'react-hot-toast';
-// import { useToast } from '../../contexts/ToastContext';
-import './DossiersPage.css';
+"use client";
+import React, { useState, useEffect } from "react";
+import FolderManager from "../../components/FolderManager";
+import ClasseurTabs, { Classeur } from "../../components/ClasseurTabs";
+import DynamicIcon from "../../components/DynamicIcon";
+import { getClasseurs, createClasseur, updateClasseur, deleteClasseur, updateClasseurPositions } from "../../services/supabase";
+import { toast } from "react-hot-toast";
+import "./DossiersPage.css";
 
-const DossiersPage = () => {
-  const [classeurs, setClasseurs] = useState([]);
-  const [activeClasseurId, setActiveClasseurId] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+const DossiersPage: React.FC = () => {
+  const [classeurs, setClasseurs] = useState<Classeur[]>([]);
+  const [activeClasseurId, setActiveClasseurId] = useState<string | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchClasseurs = async () => {
@@ -21,17 +20,15 @@ const DossiersPage = () => {
         const fetchedClasseurs = await getClasseurs();
         setClasseurs(fetchedClasseurs);
         if (fetchedClasseurs.length > 0) {
-          // Si un ID est dans le localStorage, on l'utilise, sinon on prend le premier
-          const lastActiveId = localStorage.getItem('activeClasseurId');
-          const activeId = fetchedClasseurs.find(c => c.id === lastActiveId) 
-            ? lastActiveId 
+          const lastActiveId = localStorage.getItem("activeClasseurId");
+          const activeId = fetchedClasseurs.find((c: Classeur) => c.id === lastActiveId)
+            ? lastActiveId
             : fetchedClasseurs[0].id;
           setActiveClasseurId(activeId);
         }
         setError(null);
-        // Ajout du log
-        console.log('DossiersPage - classeurs:', fetchedClasseurs);
-      } catch (err) {
+        console.log("DossiersPage - classeurs:", fetchedClasseurs);
+      } catch (err: any) {
         console.error("Erreur lors de la récupération des classeurs:", err);
         setError("Impossible de charger les classeurs. Veuillez rafraîchir la page.");
       } finally {
@@ -42,80 +39,77 @@ const DossiersPage = () => {
   }, []);
 
   useEffect(() => {
-    console.log('DossiersPage - activeClasseurId:', activeClasseurId);
+    console.log("DossiersPage - activeClasseurId:", activeClasseurId);
   }, [activeClasseurId]);
 
-  const handleSelectClasseur = (id) => {
+  const handleSelectClasseur = (id: string) => {
     setActiveClasseurId(id);
-    localStorage.setItem('activeClasseurId', id);
+    localStorage.setItem("activeClasseurId", id);
   };
 
   const handleCreateClasseur = async () => {
     const newName = prompt("Entrez le nom du nouveau classeur :");
-    if (newName && newName.trim() !== '') {
+    if (newName && newName.trim() !== "") {
       try {
         setError(null);
         const newClasseurData = {
           name: newName.trim(),
           position: classeurs.length,
-          icon: 'FileText',
-          color: '#808080',
+          icon: "FileText",
+          color: "#808080",
         };
         const newClasseur = await createClasseur(newClasseurData);
         setClasseurs([...classeurs, newClasseur]);
         handleSelectClasseur(newClasseur.id);
-      } catch (err) {
+      } catch (err: any) {
         console.error("Erreur technique lors de la création du classeur:", err);
         setError(`Erreur technique : ${err.message}`);
       }
     }
   };
 
-  const handleUpdateClasseur = async (id, updates) => {
+  const handleUpdateClasseur = async (id: string, updates: Partial<Classeur>) => {
     try {
       const updatedClasseur = await updateClasseur(id, updates);
-      setClasseurs(classeurs.map(c => (c.id === id ? updatedClasseur : c)));
+      setClasseurs(classeurs.map((c) => (c.id === id ? updatedClasseur : c)));
       if (updates.name) {
-        toast.success('Classeur mis à jour avec succès.');
+        toast.success("Classeur mis à jour avec succès.");
       }
     } catch (error) {
       console.error("Erreur lors de la mise à jour:", error);
     }
   };
 
-  const handleDeleteClasseur = async (id) => {
+  const handleDeleteClasseur = async (id: string) => {
     try {
       await deleteClasseur(id);
-      const newClasseurs = classeurs.filter(c => c.id !== id);
+      const newClasseurs = classeurs.filter((c) => c.id !== id);
       setClasseurs(newClasseurs);
-
-      // Si le classeur supprimé était l'actif, on passe au premier de la liste
       if (activeClasseurId === id) {
         const newActiveId = newClasseurs.length > 0 ? newClasseurs[0].id : null;
         setActiveClasseurId(newActiveId);
         if (newActiveId) {
-          localStorage.setItem('activeClasseurId', newActiveId);
+          localStorage.setItem("activeClasseurId", newActiveId);
         } else {
-          localStorage.removeItem('activeClasseurId');
+          localStorage.removeItem("activeClasseurId");
         }
       }
-      toast.success('Classeur supprimé avec succès.');
+      toast.success("Classeur supprimé avec succès.");
     } catch (error) {
       console.error("Erreur lors de la suppression:", error);
     }
   };
 
-  const handleUpdateClasseurPositions = async (updatedClasseurs) => {
+  const handleUpdateClasseurPositions = async (updatedClasseurs: { id: string; position: number }[]) => {
     try {
-      // L'état est déjà mis à jour localement, on envoie juste à l'API
       await updateClasseurPositions(updatedClasseurs);
-      toast.success('Ordre des classeurs sauvegardé.');
+      toast.success("Ordre des classeurs sauvegardé.");
     } catch (error) {
       console.error("Erreur lors de la sauvegarde de l'ordre:", error);
     }
   };
 
-  const activeClasseur = classeurs.find(c => c.id === activeClasseurId);
+  const activeClasseur = classeurs.find((c) => c.id === activeClasseurId);
 
   if (loading) {
     return <div>Chargement...</div>;
@@ -127,7 +121,7 @@ const DossiersPage = () => {
 
   return (
     <div className="dossiers-page-layout">
-      <ClasseurTabs 
+      <ClasseurTabs
         classeurs={classeurs}
         setClasseurs={setClasseurs}
         activeClasseurId={activeClasseurId}
@@ -141,7 +135,12 @@ const DossiersPage = () => {
       <div className="page-content">
         {activeClasseur ? (
           <>
-            <FolderManager key={activeClasseurId} classeurId={activeClasseurId} classeurName={activeClasseur.name} classeurIcon={activeClasseur.icon} />
+            <FolderManager
+              key={activeClasseurId ?? undefined}
+              classeurId={activeClasseurId as string}
+              classeurName={activeClasseur.name}
+              classeurIcon={activeClasseur.icon}
+            />
           </>
         ) : (
           <div className="empty-state">

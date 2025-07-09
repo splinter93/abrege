@@ -140,148 +140,10 @@
 }
 
 /* --- Markdown Elements Styling --- */
+/* .summary-content a, .summary-content a:hover, .summary-content ul, .summary-content ol, .summary-content li, .summary-content strong, .summary-content em, .summary-content hr, .summary-content code, .summary-content pre, .summary-content pre code, .summary-content blockquote, .summary-content .quote-text, .summary-content blockquote::after, .summary-content blockquote:hover::after, .summary-content p, .summary-content table { ... } */
+/* Tout ce bloc est supprimé pour laisser la main à markdown.css */
 
-.summary-content a {
-  color: var(--accent-hover);
-  text-decoration: none;
-  filter: brightness(0.8);
-  transition: filter var(--transition-speed);
-  vertical-align: baseline;
-  font-size: 1.1875rem;
-}
-
-.summary-content a:hover {
-  filter: brightness(0.9);
-  text-decoration: underline;
-}
-
-.summary-content ul,
-.summary-content ol {
-  padding-left: 2rem;
-  margin: 1.5rem 0;
-}
-
-.summary-content li {
-  margin-bottom: 0.75rem;
-}
-
-.summary-content strong {
-  font-weight: 700;
-  color: var(--text-primary);
-}
-
-.summary-content em {
-  font-style: italic;
-  color: #c9c3bd; /* Slightly different warm white */
-}
-
-.summary-content hr {
-  border: 0;
-  border-top: 1px solid var(--border-color);
-  margin: 2.5rem 0;
-}
-
-/* Inline code */
-.summary-content code {
-  background-color: #2a2a2a;
-  padding: 0.2em 0.4em;
-  margin: 0;
-  font-size: 85%;
-  border-radius: 6px;
-  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
-}
-
-/* Code blocks */
-.summary-content pre {
-  background-color: #161616;
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius);
-  padding: 1.5rem;
-  overflow-x: auto;
-  font-size: 0.9rem;
-  margin: 1.5rem 0;
-}
-
-.summary-content pre code {
-  background: none;
-  padding: 0;
-  font-size: inherit;
-  color: inherit;
-}
-
-/* --- End Markdown Elements --- */
-
-/* MODERN QUOTE BLOCK FOR ALL BLOCKQUOTES */
-.summary-content blockquote {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  background: linear-gradient(120deg, #191b1f 80%, #23242a 100%);
-  border-left: 4px solid var(--accent-primary);
-  border-radius: 16px;
-  padding: 1.1em 1.1em 1.1em 1.3em;
-  margin: 2.2rem 0;
-  color: var(--text-secondary);
-  font-style: italic;
-  box-shadow: 0 4px 24px 0 rgba(0,0,0,0.10), 0 1.5px 6px 0 rgba(0,0,0,0.08);
-  position: relative;
-  transition: box-shadow 0.25s, transform 0.25s;
-  min-height: 2.8em;
-}
-
-.summary-content .quote-text {
-  flex: 1 1 auto;
-  font-size: 1.18rem;
-  line-height: 1.7;
-  color: #f3f3f3;
-  word-break: break-word;
-  font-family: 'Noto Sans', 'Inter', Arial, sans-serif;
-  font-style: italic;
-  letter-spacing: 0.01em;
-  padding-right: 2.8em;
-  margin: 0;
-  display: block;
-  width: 100%;
-}
-
-.summary-content blockquote::after {
-  content: url('data:image/svg+xml;utf8,<svg width="28" height="28" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8 14c0-4 2-6 6-6v4c-2 0-2 2-2 2h2v6H8v-6zm10 0c0-4 2-6 6-6v4c-2 0-2 2-2 2h2v6h-6v-6z" fill="%23e55a2c"/></svg>');
-  background: rgba(30,32,38,0.55);
-  background-repeat: no-repeat;
-  background-position: center;
-  background-size: 1.7em 1.7em;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 2.3em;
-  height: 2.3em;
-  margin-left: -2.1em;
-  margin-right: 0.2em;
-  border-radius: 50%;
-  box-shadow: 0 2px 12px 0 rgba(0,0,0,0.10);
-  backdrop-filter: blur(4px);
-  opacity: 0.92;
-  align-self: center;
-}
-
-.summary-content blockquote:hover::after {
-  box-shadow: 0 0 0 2px var(--accent-hover), 0 2px 12px 0 rgba(0,0,0,0.13);
-  filter: brightness(1.15) drop-shadow(0 0 8px var(--accent-primary));
-}
-
-@media (max-width: 600px) {
-  .summary-content blockquote {
-    flex-direction: column;
-    gap: 0.5rem;
-    padding: 1em;
-  }
-  .summary-content blockquote::after {
-    margin-left: 0;
-    margin-top: 0.5rem;
-    align-self: flex-end;
-  }
-}
+/* === FIN PATCH === */
 
 .takeaway-title.clickable {
   cursor: pointer;
@@ -350,4 +212,10 @@
 .video-control-button:hover {
   background-color: #2a2a2a;
   color: var(--text-primary);
+} 
+
+.summary-content table {
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
 } 

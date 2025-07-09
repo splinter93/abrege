@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 
 interface EditorTitleProps {
   value: string;
@@ -8,7 +8,6 @@ interface EditorTitleProps {
   inputRef?: React.RefObject<HTMLTextAreaElement | null>;
   disabled?: boolean;
   placeholder?: string;
-  style?: React.CSSProperties;
 }
 
 const EditorTitle: React.FC<EditorTitleProps> = ({
@@ -18,23 +17,8 @@ const EditorTitle: React.FC<EditorTitleProps> = ({
   onFocus,
   inputRef,
   disabled,
-  placeholder,
-  style
+  placeholder
 }) => {
-  const handleInput = (e: React.FormEvent<HTMLTextAreaElement>) => {
-    const el = e.currentTarget;
-    el.style.height = 'auto';
-    el.style.height = el.scrollHeight + 'px';
-  };
-
-  useEffect(() => {
-    if (inputRef?.current) {
-      const el = inputRef.current;
-      el.style.height = 'auto';
-      el.style.height = el.scrollHeight + 'px';
-    }
-  }, [value, inputRef]);
-
   return (
     <textarea
       ref={inputRef}
@@ -48,33 +32,11 @@ const EditorTitle: React.FC<EditorTitleProps> = ({
           inputRef?.current?.blur();
         }
       }}
-      onInput={handleInput}
       className="editor-title-input"
       rows={1}
       wrap="soft"
       placeholder={placeholder}
       disabled={disabled}
-      style={{
-        ...style,
-        resize: 'none',
-        width: '100%',
-        minHeight: '38px',
-        fontSize: 28,
-        fontWeight: 700,
-        lineHeight: 1.2,
-        background: 'transparent',
-        border: 'none',
-        outline: 'none',
-        padding: 0,
-        margin: 0,
-        color: 'var(--text-primary)',
-        fontFamily: 'inherit',
-        overflow: 'hidden',
-        boxSizing: 'border-box',
-        whiteSpace: 'normal',
-        wordBreak: 'break-word',
-        transition: 'height 0.1s ease'
-      }}
       spellCheck={true}
       autoFocus
     />

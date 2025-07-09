@@ -1,14 +1,37 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { SLASH_COMMANDS } from './slashCommands';
 
-const SlashMenu = ({ open, search, setSearch, onSelect, anchorRef, lang = 'fr' }) => {
-  const [selectedIndex, setSelectedIndex] = useState(0);
-  const inputRef = useRef(null);
+interface SlashCommand {
+  id: string;
+  alias: Record<string, string>;
+  label: Record<string, string>;
+  description: Record<string, string>;
+  preview?: string;
+  [key: string]: any;
+}
 
-  // Filtrage dynamique selon la langue
-  const filtered = SLASH_COMMANDS.filter(cmd =>
-    cmd.alias[lang].toLowerCase().includes(search.toLowerCase()) ||
-    cmd.label[lang].toLowerCase().includes(search.toLowerCase())
+interface AnchorRef {
+  current: { left: number; top: number; closeMenu?: () => void } | null;
+}
+
+interface SlashMenuProps {
+  open: boolean;
+  search: string;
+  setSearch: (s: string) => void;
+  onSelect: (cmd: SlashCommand) => void;
+  anchorRef: AnchorRef;
+  lang?: string;
+}
+
+const SlashMenu: React.FC<SlashMenuProps> = ({ open, search, setSearch, onSelect, anchorRef, lang = 'fr' }) => {
+  const [selectedIndex, setSelectedIndex] = useState(0);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const langKey = (lang ?? 'fr') as 'fr' | 'en';
+
+  const filtered = SLASH_COMMANDS.filter((cmd: SlashCommand) =>
+    cmd.alias[langKey].toLowerCase().includes(search.toLowerCase()) ||
+    cmd.label[langKey].toLowerCase().includes(search.toLowerCase())
   );
 
   useEffect(() => {
@@ -19,8 +42,7 @@ const SlashMenu = ({ open, search, setSearch, onSelect, anchorRef, lang = 'fr' }
     if (open && inputRef.current) inputRef.current.focus();
   }, [open]);
 
-  // Navigation clavier
-  const handleKeyDown = (e) => {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     if (!open) return;
     if (e.key === 'ArrowDown') {
       setSelectedIndex(i => Math.min(i + 1, filtered.length - 1));
@@ -100,10 +122,10 @@ const SlashMenu = ({ open, search, setSearch, onSelect, anchorRef, lang = 'fr' }
           >
             <div style={{ flex: 1 }}>
               <div style={{ fontWeight: 600, fontSize: 15 }}>
-                <span style={{ color: 'var(--accent-primary)', marginRight: 8 }}>{cmd.alias[lang]}</span>
-                {cmd.label[lang]}
+                <span style={{ color: 'var(--accent-primary)', marginRight: 8 }}>{cmd.alias[langKey]}</span>
+                {cmd.label[langKey]}
               </div>
-              <div style={{ color: 'var(--text-secondary)', fontSize: 13 }}>{cmd.description[lang]}</div>
+              <div style={{ color: 'var(--text-secondary)', fontSize: 13 }}>{cmd.description[langKey]}</div>
             </div>
             {cmd.preview && (
               <div

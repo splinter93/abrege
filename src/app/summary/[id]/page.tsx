@@ -6,8 +6,27 @@ import { toast } from 'react-hot-toast';
 import './SummaryPage.css';
 import { motion } from 'framer-motion';
 import { MdRefresh } from 'react-icons/md';
+import '../../styles/markdown.css';
 
-const mockSummary = {
+interface SummaryContentItem {
+  type: 'paragraph' | 'takeaway' | 'list' | 'quote' | 'code';
+  value?: string;
+  title?: string;
+  videoUrl?: string;
+  items?: string[];
+}
+
+interface Summary {
+  id: number;
+  title: string;
+  source: string;
+  sourceUrl: string;
+  category: string;
+  publicationDate: string;
+  content: SummaryContentItem[];
+}
+
+const mockSummary: Summary = {
   id: 1,
   title: 'La Seconde Guerre mondiale',
   source: 'Cours de M. Dupont',
@@ -41,12 +60,12 @@ const HEADER_IMAGES = [
   'https://images.unsplash.com/photo-1426604966848-d7adac402bff?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
 ];
 
-function getRandomImage(current) {
+function getRandomImage(current: string) {
   const others = HEADER_IMAGES.filter(url => url !== current);
   return others[Math.floor(Math.random() * others.length)];
 }
 
-const YouTubePlayer = ({ videoUrl }) => {
+const YouTubePlayer: React.FC<{ videoUrl: string }> = ({ videoUrl }) => {
   if (!videoUrl) return null;
   const url = new URL(videoUrl);
   const videoId = url.hostname === 'youtu.be' ? url.pathname.slice(1) : url.searchParams.get('v');
@@ -56,7 +75,7 @@ const YouTubePlayer = ({ videoUrl }) => {
     <div className="video-player-container">
       <iframe
         src={embedUrl}
-        frameBorder="0"
+        frameBorder={0}
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
         allowFullScreen
         title="Embedded YouTube Video"
@@ -65,7 +84,7 @@ const YouTubePlayer = ({ videoUrl }) => {
   );
 };
 
-const HeroCoverImage = ({ currentImage }) => {
+const HeroCoverImage: React.FC<{ currentImage: string }> = ({ currentImage }) => {
   return (
     <div style={{ position: 'relative', width: '100vw', left: '50%', right: '50%', marginLeft: '-50vw', marginRight: '-50vw', overflow: 'hidden', zIndex: 2 }}>
       <motion.img
@@ -84,29 +103,28 @@ const HeroCoverImage = ({ currentImage }) => {
 };
 
 export default function SummaryPage() {
-  // Next.js: useParams de next/navigation
   const params = useParams();
-  const id = params?.id;
-  const [activeTakeawayIndex, setActiveTakeawayIndex] = useState(null);
-  const [isPlayerExpanded, setIsPlayerExpanded] = useState(false);
-  const [isPocasting, setIsPocasting] = useState(false);
-  const [audioUrl, setAudioUrl] = useState(null);
-  const [coverImage, setCoverImage] = useState(() => HEADER_IMAGES[Math.floor(Math.random() * HEADER_IMAGES.length)]);
-  const summary = mockSummary;
+  const id = params?.id as string;
+  const [activeTakeawayIndex, setActiveTakeawayIndex] = useState<number | null>(null);
+  const [isPlayerExpanded, setIsPlayerExpanded] = useState<boolean>(false);
+  const [isPocasting, setIsPocasting] = useState<boolean>(false);
+  const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const [coverImage, setCoverImage] = useState<string>(() => HEADER_IMAGES[Math.floor(Math.random() * HEADER_IMAGES.length)]);
+  const summary: Summary = mockSummary;
 
-  const convertContentToMarkdown = (content) => {
+  const convertContentToMarkdown = (content: SummaryContentItem[]): string => {
     return content.map(item => {
       switch (item.type) {
         case 'takeaway':
           return `## ${item.title}`;
         case 'paragraph':
-          return item.value.replace(/<[^>]*>/g, '');
+          return item.value?.replace(/<[^>]*>/g, '') ?? '';
         case 'list':
-          return item.items.map(li => `* ${li.replace(/<[^>]*>/g, '')}`).join('\n');
+          return item.items?.map(li => `* ${li.replace(/<[^>]*>/g, '')}`).join('\n') ?? '';
         case 'quote':
           return `> ${item.value}`;
         case 'code':
-          return "```\n" + item.value + "\n```";
+          return "```\n" + (item.value ?? '') + "\n```";
         default:
           return '';
       }
@@ -155,7 +173,7 @@ export default function SummaryPage() {
     };
   }, [audioUrl]);
 
-  const handleTakeawayClick = (index, videoUrl) => {
+  const handleTakeawayClick = (index: number, videoUrl?: string) => {
     if (videoUrl) {
       const isOpeningNewVideo = activeTakeawayIndex !== index;
       setActiveTakeawayIndex(prev => prev === index ? null : index);
@@ -178,7 +196,7 @@ export default function SummaryPage() {
   return (
     <div className="summary-page-container">
       <HeroCoverImage currentImage={coverImage} />
-      <article className="summary-article">
+      <article className="summary-article markdown-body">
         <button className="hero-image-change-btn" onClick={handleChangeCover} style={{position:'absolute',top:0,right:0,margin:'12px 18px'}}>
           <MdRefresh size={20} style={{marginRight:6}} />
           Changer l'image
@@ -213,15 +231,15 @@ export default function SummaryPage() {
           {summary.content.map((item, index) => {
             switch (item.type) {
               case 'paragraph':
-                return <p key={index} dangerouslySetInnerHTML={{ __html: item.value }} />;
+                return <p key={index} dangerouslySetInnerHTML={{ __html: item.value ?? '' }} />;
               case 'quote':
                 return (
                   <blockquote key={index}>
-                    <span className="quote-text" dangerouslySetInnerHTML={{ __html: item.value }} />
+                    <span className="quote-text" dangerouslySetInnerHTML={{ __html: item.value ?? '' }} />
                   </blockquote>
                 );
               case 'list':
-                return <ul key={index}>{item.items.map((li, i) => <li key={i} dangerouslySetInnerHTML={{ __html: li }} />)}</ul>;
+                return <ul key={index}>{item.items?.map((li, i) => <li key={i} dangerouslySetInnerHTML={{ __html: li }} />)}</ul>;
               case 'code':
                 return <pre key={index}><code>{item.value}</code></pre>;
               case 'takeaway':
@@ -235,7 +253,7 @@ export default function SummaryPage() {
                     </h2>
                     {activeTakeawayIndex === index && (
                       <div className={`video-player-wrapper ${isPlayerExpanded ? 'expanded' : ''}`}>
-                        <YouTubePlayer videoUrl={item.videoUrl} />
+                        <YouTubePlayer videoUrl={item.videoUrl ?? ''} />
                         <div className="video-controls">
                            <button onClick={() => setIsPlayerExpanded(!isPlayerExpanded)} className="video-control-button" title={isPlayerExpanded ? 'Réduire' : 'Agrandir'}>
                              {isPlayerExpanded ? (

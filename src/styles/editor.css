@@ -383,41 +383,6 @@
   color: var(--text-2);
 }
 
-.editor-content blockquote {
-  margin: 1.5rem 0;
-  padding: 1.5rem 2rem;
-  background: var(--surface-1);
-  border-left: 4px solid var(--border-subtle);
-  border-radius: var(--border-radius-md);
-  position: relative;
-  overflow: hidden;
-  transition: background var(--transition-speed), border-color var(--transition-speed);
-}
-
-.editor-content blockquote::before {
-  display: none !important;
-  content: none !important;
-}
-
-.editor-content blockquote p {
-  margin: 0;
-  line-height: 1.6;
-  position: relative;
-  z-index: 2;
-  color: var(--text-2);
-  font-style: italic;
-  padding-left: 1rem;
-}
-
-.editor-content blockquote p + p {
-  margin-top: 0.75rem;
-}
-
-.editor-content blockquote:hover {
-  background: var(--surface-2);
-  border-color: var(--accent-hover);
-}
-
 .editor-content pre {
   background: var(--surface-2);
   padding: 1.5rem;
@@ -1030,30 +995,75 @@ body, .editor-topbar, .editor-title-wrapper, .editor-title-span, .editor-title-i
   font-family: 'Noto Sans', sans-serif;
 }
 
-.editor-title-input {
-  max-width: 750px !important;
-  width: 100%;
+/* Suppression de tous les anciens styles du titre */
+.editor-title,
+.editor-title-input,
+.editor-title-span {
+  width: 750px !important;
+  height: 45px !important;
+  min-height: 45px !important;
+  max-height: 45px !important;
+  padding: 0 !important;
+  margin: 0 auto !important;
+  display: block !important;
+  line-height: 1.1 !important;
+  resize: none !important;
+  overflow: hidden !important;
   font-size: 2.25rem !important;
   font-weight: 700 !important;
-  line-height: 1.3 !important;
-  letter-spacing: -0.02em !important;
+  text-align: center !important;
+  border: none !important;
+  background: none !important;
+  outline: none !important;
   color: var(--text-1) !important;
-  margin: 0.1rem 0 0rem !important;
-  padding-bottom: 0.1rem !important;
-  font-family: inherit;
-  background: transparent;
-  border: none;
-  outline: none;
-  resize: none;
-  overflow: hidden;
-  box-sizing: border-box;
-  white-space: normal;
-  word-break: break-word;
-  transition: height 0.1s ease;
-  display: block;
-  margin-left: auto;
-  margin-right: auto;
-  padding: 0.5rem 1rem;
+  font-family: 'Noto Sans', sans-serif !important;
+  box-sizing: border-box !important;
+  white-space: normal !important;
+  word-break: break-word !important;
+  transition: none !important;
+}
+
+/* Suppression de tous les effets de focus et hover */
+.editor-title:focus,
+.editor-title-input:focus,
+.editor-title-span:focus,
+.editor-title:hover,
+.editor-title-input:hover,
+.editor-title-span:hover {
+  height: 45px !important;
+  min-height: 45px !important;
+  max-height: 45px !important;
+  transform: none !important;
+  resize: none !important;
+}
+
+/* Nettoyage des wrappers */
+.editor-title-wrapper,
+.editor-title-section {
+  padding: 0 !important;
+  margin: 0 !important;
+  min-height: 0 !important;
+  height: auto !important;
+  transform: none !important;
+}
+
+/* Espacement avec le contenu */
+.ProseMirror p:first-child,
+.markdown-body p:first-child {
+  margin-top: 0 !important;
+}
+
+.ProseMirror.editor-content {
+  padding-top: 0 !important;
+}
+
+/* Suppression des styles qui pourraient interférer */
+.editor-title-wrapper,
+.editor-title-section {
+  padding: 0 !important;
+  margin: 0 !important;
+  min-height: 0 !important;
+  height: auto !important;
 }
 
 /* === Font family dynamic variable === */
@@ -1069,6 +1079,17 @@ body, .editor-topbar, .editor-title-wrapper, .editor-title-span, .editor-title-i
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+}
+
+/* Réduction de l’épaisseur verticale du container du titre dans l’éditeur */
+.editor-title-wrapper,
+.editor-title-section {
+  padding-top: 0.2rem !important;
+  padding-bottom: 0 !important;
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+  min-height: 0 !important;
+  height: auto !important;
 }
 
 /* ==========================================================================
@@ -1454,27 +1475,165 @@ body, .editor-topbar, .editor-title-wrapper, .editor-title-span, .editor-title-i
 }
 
 /* === PATCH: Blockquotes centrés === */
+/*
 .editor-content blockquote {
   text-align: center !important;
 }
+*/
 
 /* === PATCH: Blockquotes en gras === */
+/*
 .editor-content blockquote {
   font-weight: 600 !important;
 }
+*/
 
 /* === PATCH: Entête de tableau centré === */
+/*
 .ProseMirror th {
   text-align: center !important;
+  color: #fff !important;
+  font-weight: 600 !important;
+  background: var(--surface-2) !important;
+  border-bottom: 1.5px solid var(--border-subtle) !important;
+  font-size: 1.11rem !important;
+  letter-spacing: 0.01em !important;
+  padding: 1.15rem 1.5rem !important;
 }
+*/
 
 /* === PATCH: Tout le texte des tableaux centré === */
+/*
 .ProseMirror th,
 .ProseMirror td {
   text-align: center !important;
 }
+*/
 
 /* === PATCH: Couleur normale pour le texte des blockquotes === */
+/*
 .editor-content blockquote {
   color: var(--text-1) !important;
+}
+*/
+
+/* Nettoyage : police et couleur centralisées dans markdown.css */
+.editor-content,
+.editor-content-wrapper,
+.editor-title-input,
+.editor-title-span,
+.editor-root {
+  font-family: inherit !important;
+  color: inherit !important;
+}
+
+.editor-title {
+  min-height: 1.1em !important;
+  max-height: 2.5em !important;
+  height: 2.5em !important;
+  padding-top: 0.1em !important;
+  padding-bottom: 0.1em !important;
+  line-height: 1.05 !important;
+  margin-bottom: 0 !important;
+  resize: none !important;
+  overflow: hidden !important;
+}
+
+.editor-title {
+  margin-bottom: 0 !important;
+}
+.ProseMirror p:first-child,
+.markdown-body p:first-child {
+  margin-top: 0 !important;
+}
+
+.editor-title,
+.editor-title-input {
+  min-height: 1em !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  line-height: 1.1 !important;
+  resize: none !important;
+  overflow: hidden !important;
+}
+
+.ProseMirror.editor-content {
+  padding-top: 0 !important;
+}
+
+/* Styles stricts pour le textarea du titre */
+.editor-title,
+.editor-title-input,
+.editor-title-span,
+textarea.editor-title,
+textarea.editor-title-input {
+  width: 750px !important;
+  height: 45px !important;
+  min-height: 45px !important;
+  max-height: 45px !important;
+  padding: 0 !important;
+  margin: 0 auto !important;
+  display: block !important;
+  line-height: 1.1 !important;
+  resize: none !important;
+  overflow: hidden !important;
+  font-size: 2.25rem !important;
+  font-weight: 700 !important;
+  text-align: center !important;
+  border: none !important;
+  background: none !important;
+  outline: none !important;
+  color: var(--text-1) !important;
+  font-family: 'Noto Sans', sans-serif !important;
+  box-sizing: border-box !important;
+  white-space: normal !important;
+  word-break: break-word !important;
+  transition: none !important;
+  -webkit-resize: none !important;
+  -moz-resize: none !important;
+  resize: none !important;
+}
+
+/* Désactiver absolument tout redimensionnement */
+.editor-title,
+.editor-title-input,
+.editor-title-span,
+textarea.editor-title,
+textarea.editor-title-input,
+.editor-title:hover,
+.editor-title:focus,
+.editor-title:active,
+.editor-title-input:hover,
+.editor-title-input:focus,
+.editor-title-input:active,
+.editor-title-span:hover,
+.editor-title-span:focus,
+.editor-title-span:active {
+  resize: none !important;
+  -webkit-resize: none !important;
+  -moz-resize: none !important;
+  height: 45px !important;
+  min-height: 45px !important;
+  max-height: 45px !important;
+  transform: none !important;
+}
+
+/* Nettoyage des wrappers */
+.editor-title-wrapper,
+.editor-title-section {
+  padding: 0 !important;
+  margin: 0 !important;
+  min-height: 0 !important;
+  height: auto !important;
+  transform: none !important;
+}
+
+/* Espacement avec le contenu */
+.ProseMirror p:first-child,
+.markdown-body p:first-child {
+  margin-top: 0 !important;
+}
+
+.ProseMirror.editor-content {
+  padding-top: 0 !important;
 }

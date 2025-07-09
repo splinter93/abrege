@@ -1,4 +1,5 @@
 import React from 'react';
+import Link from 'next/link';
 import './FoldersPanel.css';
 
 const PlusIcon = () => (
@@ -40,9 +41,9 @@ const FoldersPanel: React.FC<FoldersPanelProps> = ({ isOpen }) => {
                     <ul className="folders-list">
                         {folders.map(folder => (
                             <li key={folder.id}>
-                                <a href={`/dossiers/${folder.id}`} className="folder-item">
+                                <Link href={`/dossiers/${folder.id}`} className="folder-item">
                                     {folder.name}
-                                </a>
+                                </Link>
                             </li>
                         ))}
                     </ul>

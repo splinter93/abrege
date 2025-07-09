@@ -1,22 +1,27 @@
 'use client';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, FormEvent, ChangeEvent } from 'react';
 import './CreateSummaryForm.css';
 import { sendPayloadToSynesia } from '../actions/synesia';
 import { getClasseurs } from '../services/supabase';
 import { toast } from 'react-hot-toast';
 
-const CreateSummaryForm = () => {
-  const [url, setUrl] = useState('');
-  const [contentType, setContentType] = useState('YouTube');
-  const [classeurs, setClasseurs] = useState([]);
-  const [selectedClasseur, setSelectedClasseur] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+interface Classeur {
+  id: string;
+  name: string;
+  [key: string]: any;
+}
+
+const CreateSummaryForm: React.FC = () => {
+  const [url, setUrl] = useState<string>('');
+  const [contentType, setContentType] = useState<string>('YouTube');
+  const [classeurs, setClasseurs] = useState<Classeur[]>([]);
+  const [selectedClasseur, setSelectedClasseur] = useState<string>('');
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   useEffect(() => {
     const fetchClasseurs = async () => {
       const fetchedClasseurs = await getClasseurs();
       setClasseurs(fetchedClasseurs);
-      // Sélectionner le premier classeur par défaut
       if (fetchedClasseurs.length > 0) {
         setSelectedClasseur(fetchedClasseurs[0].id);
       }
@@ -24,12 +29,11 @@ const CreateSummaryForm = () => {
     fetchClasseurs();
   }, []);
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!url || !selectedClasseur || isLoading) return;
 
     setIsLoading(true);
-    
     const payload = {
       url: url,
       type: contentType,
@@ -60,7 +64,7 @@ const CreateSummaryForm = () => {
             className="url-input"
             placeholder="Collez une URL (YouTube, article, podcast...)"
             value={url}
-            onChange={(e) => setUrl(e.target.value)}
+            onChange={(e: ChangeEvent<HTMLInputElement>) => setUrl(e.target.value)}
             disabled={isLoading}
             required
           />
@@ -68,7 +72,7 @@ const CreateSummaryForm = () => {
             <select
               className="content-type-select"
               value={selectedClasseur}
-              onChange={(e) => setSelectedClasseur(e.target.value)}
+              onChange={(e: ChangeEvent<HTMLSelectElement>) => setSelectedClasseur(e.target.value)}
               disabled={isLoading || classeurs.length === 0}
               required
             >
@@ -82,7 +86,7 @@ const CreateSummaryForm = () => {
             <select
               className="content-type-select"
               value={contentType}
-              onChange={(e) => setContentType(e.target.value)}
+              onChange={(e: ChangeEvent<HTMLSelectElement>) => setContentType(e.target.value)}
               disabled={isLoading}
             >
               <option>YouTube</option>
@@ -100,4 +104,4 @@ const CreateSummaryForm = () => {
   );
 };
 
-export default CreateSummaryForm;
+export default CreateSummaryForm; 

@@ -4,21 +4,22 @@ import { useParams, useRouter } from 'next/navigation';
 import Editor from '../../../components/Editor';
 import { getArticleById, updateArticle, createArticle } from '../../../services/supabase';
 import { AnimatePresence, motion } from 'framer-motion';
+import type { Article } from '../../../types/supabase';
 
 export default function NoteEditorPage() {
   const params = useParams();
   const router = useRouter();
-  const id = params?.id;
+  const id = params?.id as string;
 
-  const [initialContent, setInitialContent] = useState('');
-  const [title, setTitle] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [noteId, setNoteId] = useState(id);
-  const [classeurId, setClasseurId] = useState(null);
-  const saveTimer = useRef(null);
-  const hasUnsavedChanges = useRef(false);
-  const [headerImage, setHeaderImage] = useState(null);
-  const [titleAlign, setTitleAlign] = useState('left');
+  const [initialContent, setInitialContent] = useState<string>('');
+  const [title, setTitle] = useState<string>('');
+  const [loading, setLoading] = useState<boolean>(true);
+  const [noteId, setNoteId] = useState<string>(id);
+  const [classeurId, setClasseurId] = useState<string | null>(null);
+  const saveTimer = useRef<NodeJS.Timeout | null>(null);
+  const hasUnsavedChanges = useRef<boolean>(false);
+  const [headerImage, setHeaderImage] = useState<string | null>(null);
+  const [titleAlign, setTitleAlign] = useState<string>('left');
 
   useEffect(() => {
     const fetchNote = async () => {
@@ -32,12 +33,12 @@ export default function NoteEditorPage() {
       }
       try {
         setLoading(true);
-        const note = await getArticleById(noteId);
+        const note: Article = await getArticleById(noteId);
         setTitle(note.source_title || '');
-        const htmlContent = note.html_content || '';
-        setInitialContent(htmlContent);
+        const markdownContent = note.markdown_content || '';
+        setInitialContent(markdownContent);
         setClasseurId(note.classeur_id);
-        setHeaderImage(note.headerImage || note.header_image || null);
+        setHeaderImage(note.header_image || null);
         setTitleAlign(note.title_align || 'left');
       } catch (err) {
         console.error('Failed to load note:', err);
@@ -48,7 +49,19 @@ export default function NoteEditorPage() {
     fetchNote();
   }, [noteId]);
 
-  const handleSave = ({ title, markdown_content, html_content, headerImage, titleAlign: newAlign }) => {
+  useEffect(() => {
+    setTimeout(() => {
+      window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+    }, 0);
+  }, [noteId]);
+
+  const handleSave = ({ title, markdown_content, html_content, headerImage, titleAlign: newAlign }: {
+    title: string;
+    markdown_content: string;
+    html_content: string;
+    headerImage?: string | null;
+    titleAlign?: string;
+  }) => {
     if (saveTimer.current) clearTimeout(saveTimer.current);
     hasUnsavedChanges.current = true;
     saveTimer.current = setTimeout(async () => {
@@ -66,7 +79,7 @@ export default function NoteEditorPage() {
             console.error('Classeur ID is missing. Cannot create a new note.');
             return;
           }
-          const newNote = await createArticle(dataToSave);
+          const newNote: Article = await createArticle(dataToSave);
           if (newNote) {
             setNoteId(newNote.id);
             router.replace(`/note/${newNote.id}`);
@@ -106,7 +119,7 @@ export default function NoteEditorPage() {
       key={noteId}
       initialTitle={title}
       initialContent={initialContent}
-      headerImage={headerImage}
+      headerImage={headerImage ?? undefined}
       initialTitleAlign={titleAlign}
       onClose={handleClose}
       onSave={handleSave}

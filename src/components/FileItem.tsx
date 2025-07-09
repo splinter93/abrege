@@ -1,6 +1,7 @@
 import React from 'react';
 import { FileArticle } from './types';
 import { FileIcon } from './CustomIcons';
+import { motion } from 'framer-motion';
 
 interface FileItemProps {
   file: FileArticle;
@@ -47,7 +48,10 @@ const FileItem: React.FC<FileItemProps> = ({ file, onOpen, isRenaming, onRename,
 
   const info = file.updated_at ? new Date(file.updated_at).toLocaleDateString() : file.source_type;
   return (
-    <div
+    <motion.div
+      initial={{ opacity: 0, scale: 0.92 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.38, ease: 'easeOut' }}
       className="file-square-container"
       style={{
         width: 168,
@@ -96,11 +100,10 @@ const FileItem: React.FC<FileItemProps> = ({ file, onOpen, isRenaming, onRename,
         lastWasRightClick.current = false;
       }}
       draggable={isDraggable}
-      onDragStart={e => {
-        console.log('[DEBUG] FileItem onDragStart - nativeEvent.button:', e.nativeEvent.button);
-        if (e.nativeEvent.button !== 0) {
+      onDragStart={(e: React.DragEvent<HTMLDivElement>) => {
+        // On ne gère que le clic gauche pour le drag
+        if (e.button !== 0) {
           e.preventDefault();
-          console.log('[DEBUG] FileItem onDragStart - prevented due to non-left click');
           return;
         }
         e.dataTransfer.setData('itemId', file.id);
@@ -146,7 +149,7 @@ const FileItem: React.FC<FileItemProps> = ({ file, onOpen, isRenaming, onRename,
           }}
         >{file.source_title}</span>
       )}
-    </div>
+    </motion.div>
   );
 };
 

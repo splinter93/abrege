@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 
-const SearchBar = () => {
-  const [query, setQuery] = useState('');
+const SearchBar: React.FC = () => {
+  const [query, setQuery] = useState<string>('');
 
-  const handleChange = (event) => {
+  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setQuery(event.target.value);
   };
 
@@ -22,4 +22,4 @@ const SearchBar = () => {
   );
 };
 
-export default SearchBar;
+export default SearchBar; 

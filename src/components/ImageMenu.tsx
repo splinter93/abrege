@@ -3,26 +3,32 @@ import React, { useRef, useState, useEffect } from 'react';
 const TABS = [
   { id: 'upload', label: 'Charger' },
   { id: 'url', label: 'Intégrer un lien' },
-  { id: 'ai', label: 'Générer avec l\'IA' },
+  { id: 'ai', label: "Générer avec l'IA" },
 ];
 
-const ImageMenu = ({ open, onClose, onInsertImage }) => {
-  const [tab, setTab] = useState('upload');
-  const [file, setFile] = useState(null);
+interface ImageMenuProps {
+  open: boolean;
+  onClose: () => void;
+  onInsertImage: (src: string) => void;
+}
+
+const ImageMenu: React.FC<ImageMenuProps> = ({ open, onClose, onInsertImage }) => {
+  const [tab, setTab] = useState<'upload' | 'url' | 'ai'>('upload');
+  const [file, setFile] = useState<File | null>(null);
   const [url, setUrl] = useState('');
   const [prompt, setPrompt] = useState('');
   const [loading, setLoading] = useState(false);
-  const fileInputRef = useRef();
-  const modalRef = useRef();
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const modalRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (!open) return;
-    const handleClick = (e) => {
-      if (modalRef.current && !modalRef.current.contains(e.target)) {
+    const handleClick = (e: MouseEvent) => {
+      if (modalRef.current && !modalRef.current.contains(e.target as Node)) {
         onClose();
       }
     };
-    const handleEsc = (e) => {
+    const handleEsc = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         e.stopPropagation();
         onClose();
@@ -38,19 +44,20 @@ const ImageMenu = ({ open, onClose, onInsertImage }) => {
 
   if (!open) return null;
 
-  const handleFileChange = (e) => {
-    const f = e.target.files[0];
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files && e.target.files[0];
     if (f) setFile(f);
   };
 
   const handleUpload = async () => {
     if (!file) return;
-    // Mock upload: convert to base64 (à remplacer par upload réel)
     const reader = new FileReader();
     reader.onload = (e) => {
-      onInsertImage(e.target.result);
-      setFile(null);
-      onClose();
+      if (e.target && typeof e.target.result === 'string') {
+        onInsertImage(e.target.result);
+        setFile(null);
+        onClose();
+      }
     };
     reader.readAsDataURL(file);
   };
@@ -65,7 +72,6 @@ const ImageMenu = ({ open, onClose, onInsertImage }) => {
   const handleAIGenerate = async () => {
     if (!prompt) return;
     setLoading(true);
-    // Mock IA: image random
     setTimeout(() => {
       onInsertImage('https://source.unsplash.com/400x200/?' + encodeURIComponent(prompt));
       setPrompt('');
@@ -79,14 +85,14 @@ const ImageMenu = ({ open, onClose, onInsertImage }) => {
       <div className="image-menu-modal" ref={modalRef} onMouseDown={e => e.stopPropagation()}>
         <div className="image-menu-tabs">
           {TABS.map(t => (
-            <button key={t.id} className={tab === t.id ? 'active' : ''} onClick={() => setTab(t.id)}>{t.label}</button>
+            <button key={t.id} className={tab === t.id ? 'active' : ''} onClick={() => setTab(t.id as 'upload' | 'url' | 'ai')}>{t.label}</button>
           ))}
         </div>
         <div className="image-menu-content">
           {tab === 'upload' && (
             <div className="image-menu-upload">
               <input type="file" accept="image/*" ref={fileInputRef} style={{ display: 'none' }} onChange={handleFileChange} />
-              <button className="image-menu-upload-btn" onClick={() => fileInputRef.current.click()}>
+              <button className="image-menu-upload-btn" onClick={() => fileInputRef.current && fileInputRef.current.click()}>
                 {file ? file.name : 'Charger un fichier'}
               </button>
               {file && <button className="image-menu-insert-btn" onClick={handleUpload}>Insérer</button>}

@@ -50,21 +50,18 @@ const Sidebar: React.FC<SidebarProps> = ({ onToggleFoldersPanel = () => {} }) =>
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const handleChevronMouseEnter = () => {
-    // Démarre le timer de 250ms
     hoverTimeoutRef.current = setTimeout(() => {
       onToggleFoldersPanel(true);
     }, 250);
   };
 
   const handleChevronMouseLeave = () => {
-    // Annule le timer si la souris quitte avant les 200ms
     if (hoverTimeoutRef.current) {
       clearTimeout(hoverTimeoutRef.current);
       hoverTimeoutRef.current = null;
     }
   };
 
-  // Nettoyage du timeout au démontage du composant
   useEffect(() => {
     return () => {
       if (hoverTimeoutRef.current) {
