@@ -1078,3 +1078,58 @@ body, .editor-topbar, .editor-title-wrapper, .editor-title-span, .editor-title-i
   flex-direction: column;
   align-items: flex-start;
 }
+
+/* ==========================================================================
+   HTML TABLES (hors ProseMirror)
+   ========================================================================== */
+.editor-content table,
+.summary-content table,
+.html-preview table,
+.editor-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  margin: 1.5rem 0;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--border-subtle);
+}
+
+.editor-content th,
+.summary-content th,
+.html-preview th,
+.editor-table th {
+  color: var(--text-1);
+  font-weight: 600;
+  background: var(--surface-2);
+  border-bottom: 2px solid var(--border-color);
+  font-size: 1.1rem;
+  text-align: center;
+  padding: 1rem 1.25rem;
+}
+
+.editor-content td,
+.summary-content td,
+.html-preview td,
+.editor-table td {
+  color: var(--text-2);
+  background: var(--surface-1);
+  font-size: 0.95rem;
+  text-align: center;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.editor-content tr:last-child td,
+.summary-content tr:last-child td,
+.html-preview tr:last-child td,
+.editor-table tr:last-child td {
+  border-bottom: none;
+}
+
+.editor-content table p,
+.summary-content table p,
+.html-preview table p,
+.editor-table p {
+  margin: 0;
+}

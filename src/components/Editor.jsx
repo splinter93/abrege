@@ -225,14 +225,8 @@ const Editor = ({ initialTitle, initialContent = '', headerImage: initialHeaderI
 
   useEffect(() => {
     if (initialContent) {
-      let markdown = initialContent;
-      if (/<[a-z][\s\S]*>/i.test(initialContent)) {
-        markdown = turndownService.turndown(initialContent);
-        console.log('[Editor] Markdown généré via Turndown:', markdown);
-      } else {
-        console.log('[Editor] Contenu déjà en markdown:', markdown);
-      }
-      setMarkdownContent(markdown);
+      // initialContent doit être markdown_content uniquement
+      setMarkdownContent(initialContent);
     }
   }, [initialContent]);
 
