@@ -2,6 +2,7 @@ import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 import { markdownContentSchema } from '@/utils/markdownValidation';
 import type { Article } from '@/types/supabase';
+import { createMarkdownIt } from '@/utils/markdownItConfig';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -60,21 +61,11 @@ export async function POST(req: Request): Promise<Response> {
       return new Response(JSON.stringify({ error: 'Note non trouvée.' }), { status: 404 });
     }
 
-    // Générer le HTML sécurisé à partir du markdown_content
-    const { JSDOM } = await import('jsdom');
-    const createDOMPurify = (await import('dompurify')).default;
-    const MarkdownIt = (await import('markdown-it')).default;
-    const md = new MarkdownIt({ html: true, linkify: true, breaks: true });
-    const html = md.render(markdown_content);
-    const window = new JSDOM('').window;
-    const DOMPurify = createDOMPurify(window as any);
-    const html_content = DOMPurify.sanitize(html, { ALLOWED_ATTR: ['style', 'class', 'align'] });
-
-    // Mettre à jour la note
+    // Mettre à jour la note (ne plus générer html_content)
     const updates = {
       source_title: title,
       markdown_content,
-      html_content,
+      // html_content supprimé
       title_align: titleAlign || 'left',
       updated_at: new Date().toISOString(),
     };

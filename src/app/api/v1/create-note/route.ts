@@ -5,6 +5,7 @@ import createDOMPurify from 'dompurify';
 import { markdownContentSchema } from '@/utils/markdownValidation';
 import type { Article } from '@/types/supabase';
 import MarkdownIt from 'markdown-it';
+import { createMarkdownIt } from '@/utils/markdownItConfig';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -60,16 +61,11 @@ export async function POST(req: Request): Promise<Response> {
     // Sanitization du HTML reçu (si fourni), sinon conversion automatique depuis markdown_content
     let sanitizedHtmlContent = '';
     if (html_content && html_content.trim()) {
-      const window = new JSDOM('').window;
-      const DOMPurify = createDOMPurify(window as any);
-      sanitizedHtmlContent = DOMPurify.sanitize(html_content, { ALLOWED_ATTR: ['style', 'class', 'align'] });
+      // On ignore le html_content fourni
+      sanitizedHtmlContent = '';
     } else {
-      // Conversion automatique markdown → HTML avec markdown-it (support natif des tableaux GFM)
-      const md = new MarkdownIt({ html: true, linkify: true, breaks: true });
-      const html = md.render(markdown_content);
-      const window = new JSDOM('').window;
-      const DOMPurify = createDOMPurify(window as any);
-      sanitizedHtmlContent = DOMPurify.sanitize(html, { ALLOWED_ATTR: ['style', 'class', 'align'] });
+      // On ne génère plus de HTML côté backend
+      sanitizedHtmlContent = '';
     }
 
     const insertData = {
@@ -78,7 +74,7 @@ export async function POST(req: Request): Promise<Response> {
       source_url,
       source_title: title,
       markdown_content, // correspond à la colonne Supabase
-      html_content: sanitizedHtmlContent, // HTML filtré/sécurisé (peut être vide)
+      // html_content supprimé
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };
