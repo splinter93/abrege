@@ -5,6 +5,7 @@ import Editor from '../../../components/Editor';
 import { getArticleById, updateArticle, createArticle } from '../../../services/supabase';
 import { AnimatePresence, motion } from 'framer-motion';
 import type { Article } from '../../../types/supabase';
+import { supabase } from '../../../supabaseClient';
 
 export default function NoteEditorPage() {
   const params = useParams();
@@ -53,6 +54,34 @@ export default function NoteEditorPage() {
     setTimeout(() => {
       window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
     }, 0);
+  }, [noteId]);
+
+  useEffect(() => {
+    if (!noteId || noteId === 'new') return;
+    // Subscribe to realtime updates for this note
+    const channel = supabase
+      .channel('realtime-note-' + noteId)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'articles',
+          filter: 'id=eq.' + noteId,
+        },
+        (payload) => {
+          const newContent = payload.new?.markdown_content;
+          if (typeof newContent === 'string') {
+            setInitialContent(newContent);
+            // Optionnel : afficher un toast ou indicateur "synced"
+            // Optionnel : bloquer la sauvegarde auto pendant le refresh
+          }
+        }
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [noteId]);
 
   const handleSave = ({ title, markdown_content, html_content, headerImage, titleAlign: newAlign }: {
