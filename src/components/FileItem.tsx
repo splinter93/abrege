@@ -48,57 +48,7 @@ const FileItem: React.FC<FileItemProps> = ({ file, onOpen, isRenaming, onRename,
 
   const info = file.updated_at ? new Date(file.updated_at).toLocaleDateString() : file.source_type;
   return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.92 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 0.38, ease: 'easeOut' }}
-      className="file-square-container"
-      style={{
-        width: 168,
-        height: 132,
-        background: 'rgba(255,255,255,0.025)',
-        border: '1px solid rgba(255,255,255,0.06)',
-        borderRadius: 16,
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-        cursor: isRenaming ? 'text' : 'pointer',
-        userSelect: 'none',
-        transition: 'box-shadow 0.15s',
-        backdropFilter: 'blur(8px)',
-        WebkitBackdropFilter: 'blur(8px)',
-      }}
-      onMouseDown={e => {
-        console.log('[DEBUG] FileItem onMouseDown - button:', e.button, 'isRenaming:', isRenaming);
-        if (e.button === 2) {
-          e.preventDefault();
-          lastWasRightClick.current = true;
-          setIsDraggable(false);
-        } else {
-          lastWasRightClick.current = false;
-          setIsDraggable(!isRenaming);
-        }
-      }}
-      onClick={() => {
-        if (!isRenaming && !lastWasRightClick.current) {
-          onOpen(file);
-        }
-        lastWasRightClick.current = false;
-      }}
-      tabIndex={0}
-      role="button"
-      aria-label={file.source_title}
-      onContextMenu={e => {
-        console.log('[DEBUG] FileItem onContextMenu');
-        if (onContextMenu) {
-          e.preventDefault();
-          onContextMenu(e, file);
-        }
-        setIsDraggable(!isRenaming);
-        lastWasRightClick.current = false;
-      }}
+    <div
       draggable={isDraggable}
       onDragStart={(e: React.DragEvent<HTMLDivElement>) => {
         // On ne gère que le clic gauche pour le drag
@@ -111,46 +61,99 @@ const FileItem: React.FC<FileItemProps> = ({ file, onOpen, isRenaming, onRename,
         e.dataTransfer.effectAllowed = 'move';
       }}
     >
-      <FileIcon size={64} className="mb-1" />
-      {isRenaming ? (
-        <input
-          ref={inputRef}
-          value={inputValue}
-          onChange={e => setInputValue(e.target.value)}
-          onKeyDown={handleInputKeyDown}
-          onBlur={handleInputBlur}
-          style={{
-            fontWeight: 500,
-            fontSize: 15,
-            color: '#fff',
-            textAlign: 'center',
-            marginTop: 2,
-            maxWidth: 140,
-            background: 'rgba(0,0,0,0.18)',
-            border: '1px solid rgba(255,255,255,0.10)',
-            borderRadius: 6,
-            outline: 'none',
-            padding: '2px 8px',
-            boxShadow: '0 1px 4px rgba(0,0,0,0.10)',
-            textShadow: '0 1px 4px rgba(0,0,0,0.18)',
-          }}
-          autoFocus
-          spellCheck={false}
-          onClick={e => e.stopPropagation()}
-        />
-      ) : (
-        <span
-          style={{ fontWeight: 500, fontSize: 15, color: '#fff', textAlign: 'center', marginTop: 2, maxWidth: 140, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', textShadow: '0 1px 4px rgba(0,0,0,0.18)' }}
-          onClick={e => {
-            if (onStartRenameClick) {
-              e.stopPropagation();
-              onStartRenameClick(file);
-            }
-          }}
-        >{file.source_title}</span>
-      )}
-    </motion.div>
+      <motion.div
+        initial={{ opacity: 0, scale: 0.92 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.38, ease: 'easeOut' }}
+        className="file-square-container"
+        style={{
+          width: 168,
+          height: 132,
+          background: 'rgba(255,255,255,0.025)',
+          border: '1px solid rgba(255,255,255,0.06)',
+          borderRadius: 16,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+          cursor: isRenaming ? 'text' : 'pointer',
+          userSelect: 'none',
+          transition: 'box-shadow 0.15s',
+          backdropFilter: 'blur(8px)',
+          WebkitBackdropFilter: 'blur(8px)',
+        }}
+        onMouseDown={e => {
+          console.log('[DEBUG] FileItem onMouseDown - button:', e.button, 'isRenaming:', isRenaming);
+          if (e.button === 2) {
+            e.preventDefault();
+            lastWasRightClick.current = true;
+            setIsDraggable(false);
+          } else {
+            lastWasRightClick.current = false;
+            setIsDraggable(!isRenaming);
+          }
+        }}
+        onClick={() => {
+          if (!isRenaming && !lastWasRightClick.current) {
+            onOpen(file);
+          }
+          lastWasRightClick.current = false;
+        }}
+        tabIndex={0}
+        role="button"
+        aria-label={file.source_title}
+        onContextMenu={e => {
+          console.log('[DEBUG] FileItem onContextMenu');
+          if (onContextMenu) {
+            e.preventDefault();
+            onContextMenu(e, file);
+          }
+          setIsDraggable(!isRenaming);
+          lastWasRightClick.current = false;
+        }}
+      >
+        <FileIcon size={64} className="mb-1" />
+        {isRenaming ? (
+          <input
+            ref={inputRef}
+            value={inputValue}
+            onChange={e => setInputValue(e.target.value)}
+            onKeyDown={handleInputKeyDown}
+            onBlur={handleInputBlur}
+            style={{
+              fontWeight: 500,
+              fontSize: 15,
+              color: '#fff',
+              textAlign: 'center',
+              marginTop: 2,
+              maxWidth: 140,
+              background: 'rgba(0,0,0,0.18)',
+              border: '1px solid rgba(255,255,255,0.10)',
+              borderRadius: 6,
+              outline: 'none',
+              padding: '2px 8px',
+              boxShadow: '0 1px 4px rgba(0,0,0,0.10)',
+              textShadow: '0 1px 4px rgba(0,0,0,0.18)',
+            }}
+            autoFocus
+            spellCheck={false}
+            onClick={e => e.stopPropagation()}
+          />
+        ) : (
+          <span
+            style={{ fontWeight: 500, fontSize: 15, color: '#fff', textAlign: 'center', marginTop: 2, maxWidth: 140, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', textShadow: '0 1px 4px rgba(0,0,0,0.18)' }}
+            onClick={e => {
+              if (onStartRenameClick) {
+                e.stopPropagation();
+                onStartRenameClick(file);
+              }
+            }}
+          >{file.source_title}</span>
+        )}
+      </motion.div>
+    </div>
   );
 };
 
-export default FileItem; 
+export default FileItem;
