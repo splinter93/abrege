@@ -51,7 +51,7 @@ import type { Heading } from '../types/editor';
 import EditorSlashMenu from './EditorSlashMenu';
 import EditorToolbar from './EditorToolbar';
 import TurndownService from 'turndown';
-import '@/styles/markdown_style.css';
+import '@/styles/markdown.css';
 
 const HEADER_IMAGES = [
   'https://images.unsplash.com/photo-1454982523318-4b6396f39d3a?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
