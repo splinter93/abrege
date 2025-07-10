@@ -6,7 +6,7 @@ import { toast } from 'react-hot-toast';
 import './SummaryPage.css';
 import { motion } from 'framer-motion';
 import { MdRefresh } from 'react-icons/md';
-import '../../styles/markdown.css';
+import '../../styles/markdown_style.css';
 
 interface SummaryContentItem {
   type: 'paragraph' | 'takeaway' | 'list' | 'quote' | 'code';
