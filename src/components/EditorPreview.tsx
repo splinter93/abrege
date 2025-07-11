@@ -6,9 +6,11 @@ interface EditorPreviewProps {
   htmlContent: string;
   headerImage?: string | null;
   titleAlign?: 'left' | 'center' | 'right';
+  wideMode?: boolean;
 }
 
-const EditorPreview: React.FC<EditorPreviewProps> = ({ title, htmlContent, headerImage, titleAlign = 'left' }) => {
+const EditorPreview: React.FC<EditorPreviewProps> = ({ title, htmlContent, headerImage, titleAlign = 'left', wideMode = false }) => {
+  const contentWidth = wideMode ? 1200 : 1000;
   return (
     <div style={{ width: '100vw', minHeight: '100vh', background: 'var(--bg-main)', paddingBottom: 64 }}>
       {headerImage && (
@@ -29,7 +31,7 @@ const EditorPreview: React.FC<EditorPreviewProps> = ({ title, htmlContent, heade
           margin: 0,
           padding: 0,
           textAlign: titleAlign,
-          maxWidth: 1200,
+          maxWidth: contentWidth,
           width: '100%',
           lineHeight: 1.1,
           fontFamily: 'Noto Sans, Inter, Arial, sans-serif',
@@ -38,7 +40,7 @@ const EditorPreview: React.FC<EditorPreviewProps> = ({ title, htmlContent, heade
       <div
         className="markdown-body"
         style={{
-          maxWidth: 1200,
+          maxWidth: contentWidth,
           margin: '0 auto',
           background: 'none',
           padding: '0 0 64px 0',

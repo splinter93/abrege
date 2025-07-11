@@ -24,6 +24,7 @@ export default function NoteEditorPage() {
   const [titleAlign, setTitleAlign] = useState<string>('left');
   const [isPreview, setIsPreview] = useState(false);
   const [htmlContent, setHtmlContent] = useState<string>('');
+  const [wideMode, setWideMode] = useState(false);
 
   useEffect(() => {
     const fetchNote = async () => {
@@ -156,6 +157,7 @@ export default function NoteEditorPage() {
             htmlContent={htmlContent}
             headerImage={headerImage ?? undefined}
             titleAlign={titleAlign as 'left' | 'center' | 'right'}
+            wideMode={wideMode}
           />
         ) : (
           <Editor
@@ -167,6 +169,8 @@ export default function NoteEditorPage() {
             onClose={handleClose}
             onSave={handleSave}
             onTogglePreview={() => setIsPreview(true)}
+            wideMode={wideMode}
+            setWideMode={setWideMode}
           />
         )}
         {/* Bouton pour quitter le mode preview */}
