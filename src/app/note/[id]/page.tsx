@@ -7,6 +7,8 @@ import { getArticleById, updateArticle, createArticle } from '../../../services/
 import { AnimatePresence, motion } from 'framer-motion';
 import type { Article } from '../../../types/supabase';
 import { supabase } from '../../../supabaseClient';
+import { FiMoreHorizontal } from 'react-icons/fi';
+import { MdClose } from 'react-icons/md';
 
 export default function NoteEditorPage() {
   const params = useParams();
@@ -24,7 +26,6 @@ export default function NoteEditorPage() {
   const [titleAlign, setTitleAlign] = useState<string>('left');
   const [isPreview, setIsPreview] = useState(false);
   const [htmlContent, setHtmlContent] = useState<string>('');
-  const [wideMode, setWideMode] = useState(false);
 
   useEffect(() => {
     const fetchNote = async () => {
@@ -157,7 +158,6 @@ export default function NoteEditorPage() {
             htmlContent={htmlContent}
             headerImage={headerImage ?? undefined}
             titleAlign={titleAlign as 'left' | 'center' | 'right'}
-            wideMode={wideMode}
           />
         ) : (
           <Editor
@@ -169,18 +169,25 @@ export default function NoteEditorPage() {
             onClose={handleClose}
             onSave={handleSave}
             onTogglePreview={() => setIsPreview(true)}
-            wideMode={wideMode}
-            setWideMode={setWideMode}
           />
         )}
         {/* Bouton pour quitter le mode preview */}
         {isPreview && (
-          <button
-            onClick={() => setIsPreview(false)}
-            style={{ position: 'fixed', top: 24, right: 32, zIndex: 2000, background: 'rgba(30,30,36,0.92)', color: '#fff', border: 'none', borderRadius: 8, padding: '10px 18px', fontSize: 16, fontWeight: 600, cursor: 'pointer', boxShadow: '0 2px 12px 0 rgba(0,0,0,0.10)' }}
-          >
-            Quitter le mode Preview
-          </button>
+          <div style={{ position: 'fixed', top: 24, right: 32, zIndex: 2000, display: 'flex', alignItems: 'center', gap: 10 }}>
+            <button
+              style={{ background: 'rgba(30,30,36,0.92)', color: '#fff', border: 'none', borderRadius: 8, padding: 10, fontSize: 20, cursor: 'pointer', boxShadow: '0 2px 12px 0 rgba(0,0,0,0.10)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+              aria-label="Options preview"
+            >
+              <FiMoreHorizontal size={22} />
+            </button>
+            <button
+              onClick={() => setIsPreview(false)}
+              style={{ background: 'rgba(30,30,36,0.92)', color: '#fff', border: 'none', borderRadius: 8, padding: 10, fontSize: 20, cursor: 'pointer', boxShadow: '0 2px 12px 0 rgba(0,0,0,0.10)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+              aria-label="Quitter le mode Preview"
+            >
+              <MdClose size={22} />
+            </button>
+          </div>
         )}
       </motion.div>
     </AnimatePresence>
