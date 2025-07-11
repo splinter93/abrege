@@ -302,7 +302,9 @@
 }
 /* Alignement horizontal des cases à cocher sur la marge des listes à puce */
 .markdown-body li > input[type='checkbox'] {
-  margin-left: -3em;
+  margin-left: 0;
+  margin-right: 0.7em;
+  vertical-align: middle;
 } 
 
 /* === PATCH: Blockquotes sobres, couleur warm gray, pas de gras ni italique, taille normale === */
@@ -410,4 +412,13 @@
 .markdown-body pre,
 .markdown-body code {
   font-size: 0.85em !important;
+} 
+
+.markdown-body ul {
+  list-style-type: disc;
+  list-style-position: inside;
+}
+.markdown-body ol {
+  list-style-type: decimal;
+  list-style-position: inside;
 } 
