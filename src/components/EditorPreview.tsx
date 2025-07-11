@@ -21,6 +21,9 @@ const EditorPreview: React.FC<EditorPreviewProps> = ({ title, htmlContent, heade
     }));
   }, [markdownContent]);
 
+  // Calculer la hauteur du header image pour placer la TOC juste en dessous
+  const headerHeight = headerImage ? 320 : 0;
+
   return (
     <div style={{ width: '100vw', minHeight: '100vh', background: 'var(--bg-main)', paddingBottom: 64, overflowY: 'auto', height: '100vh' }}>
       {headerImage && (
@@ -33,6 +36,10 @@ const EditorPreview: React.FC<EditorPreviewProps> = ({ title, htmlContent, heade
           />
         </div>
       )}
+      {/* TOC collée à droite */}
+      <div style={{ position: 'fixed', top: headerHeight + 32, right: 0, zIndex: 100, minWidth: 32, maxWidth: 300, padding: '24px 18px 24px 0', boxSizing: 'border-box' }}>
+        <TableOfContents headings={tocHeadings} />
+      </div>
       <div style={{ width: '100%', display: 'flex', flexDirection: 'row', justifyContent: 'center', alignItems: 'flex-start', margin: '0 auto', marginBottom: 32, gap: 32 }}>
         <div style={{ maxWidth: 750, width: 750 }}>
           <h1 style={{
@@ -63,9 +70,6 @@ const EditorPreview: React.FC<EditorPreviewProps> = ({ title, htmlContent, heade
             }}
             dangerouslySetInnerHTML={{ __html: htmlContent }}
           />
-        </div>
-        <div style={{ minWidth: 32, maxWidth: 300, flex: '0 0 auto', marginLeft: 16 }}>
-          <TableOfContents headings={tocHeadings} />
         </div>
       </div>
     </div>
