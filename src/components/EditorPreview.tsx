@@ -10,7 +10,7 @@ interface EditorPreviewProps {
 
 const EditorPreview: React.FC<EditorPreviewProps> = ({ title, htmlContent, headerImage, titleAlign = 'left' }) => {
   return (
-    <div style={{ width: '100vw', minHeight: '100vh', background: 'var(--bg-main)', paddingBottom: 64 }}>
+    <div style={{ width: '100vw', minHeight: '100vh', background: 'var(--bg-main)', paddingBottom: 64, overflowY: 'auto', height: '100vh' }}>
       {headerImage && (
         <div style={{ width: '100%', maxHeight: 320, overflow: 'hidden', marginBottom: 32 }}>
           <img
