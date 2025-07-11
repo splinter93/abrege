@@ -134,12 +134,12 @@ const FolderManagerDossier: React.FC<FolderManagerDossierProps> = ({ classeurId,
     <div
       className="folder-manager-root folder-manager-container"
       style={{
-        background: 'rgba(30,30,40,0.22)',
-        border: '1px solid rgba(255,255,255,0.10)',
+        background: 'rgba(30,30,40,0.38)',
+        border: '1px solid rgba(255,255,255,0.13)',
         borderRadius: 24,
         boxShadow: '0 8px 32px rgba(0,0,0,0.18)',
-        backdropFilter: 'blur(16px)',
-        WebkitBackdropFilter: 'blur(16px)',
+        backdropFilter: 'blur(22px)',
+        WebkitBackdropFilter: 'blur(22px)',
         padding: '12px 0 0 0',
         margin: '5px 0 0 0',
         maxWidth: '100vw',
