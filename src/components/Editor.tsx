@@ -159,8 +159,6 @@ interface EditorProps {
   onSave?: (data: SavePayload) => void;
   initialTitleAlign?: string;
   onTogglePreview?: () => void;
-  wideMode?: boolean;
-  setWideMode?: (v: boolean) => void;
 }
 
 function debounce(
@@ -190,7 +188,7 @@ function parseGfmTable(markdown: string): string[][] | null {
 
 const AUTOSAVE_IDLE_MS = 1500;
 
-const Editor: React.FC<EditorProps> = ({ initialTitle, initialContent = '', headerImage: initialHeaderImage, onClose, onSave, initialTitleAlign = 'left', onTogglePreview, wideMode = false, setWideMode }) => {
+const Editor: React.FC<EditorProps> = ({ initialTitle, initialContent = '', headerImage: initialHeaderImage, onClose, onSave, initialTitleAlign = 'left', onTogglePreview }) => {
   const [title, setTitle] = useState(initialTitle);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [wordCount, setWordCount] = useState('0 mot');
@@ -246,6 +244,7 @@ const Editor: React.FC<EditorProps> = ({ initialTitle, initialContent = '', head
   const [lastSavedHtml, setLastSavedHtml] = useState('');
   const [isUserEditing, setIsUserEditing] = useState(false);
   const idleTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const [wideMode, setWideMode] = useState(false);
   const [a4Mode, setA4Mode] = useState(true); // true = A4, false = Creative
   const [autosaveOn, setAutosaveOn] = useState(true);
   const [slashLang, setSlashLang] = useState<'fr' | 'en'>('en');
@@ -485,13 +484,22 @@ const Editor: React.FC<EditorProps> = ({ initialTitle, initialContent = '', head
   }, []);
 
   // Nouvelle fonction pour gérer la sauvegarde + toast + dirty state
-  const handleSaveWithToast = useCallback((newTitle: string, htmlContent: string, align: string, markdownContent: string, htmlContentForDirty: string) => {
+  const handleSaveWithToast = useCallback((newTitle: string, htmlContent: string, align: string, _markdownContent: string, htmlContentForDirty: string) => {
     if (!onSave || !editor) return;
+    // Correction : toujours extraire le markdown natif à la volée
+    const markdownContent = (editor.storage as any).markdown?.getMarkdown?.() || '';
     if (!isReadyToSave && !markdownContent.trim()) {
       console.warn('[Editor] handleSave bloqué : markdown vide au premier montage');
       return;
     }
     try {
+      console.log('[DEBUG][Editor] Sauvegarde envoyée:', {
+        title: newTitle,
+        markdown_content: markdownContent,
+        html_content: htmlContent,
+        headerImage,
+        titleAlign: align,
+      });
       onSave({
         title: newTitle,
         markdown_content: markdownContent,
@@ -882,7 +890,7 @@ const Editor: React.FC<EditorProps> = ({ initialTitle, initialContent = '', head
                     position={kebabMenuPos}
                     onClose={() => setKebabMenuOpen(false)}
                     wideMode={wideMode}
-                    setWideMode={setWideMode || (() => {})}
+                    setWideMode={setWideMode}
                     a4Mode={a4Mode}
                     setA4Mode={setA4Mode}
                     autosaveOn={autosaveOn}
