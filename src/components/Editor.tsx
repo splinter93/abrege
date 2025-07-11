@@ -158,6 +158,7 @@ interface EditorProps {
   onClose?: () => void;
   onSave?: (data: SavePayload) => void;
   initialTitleAlign?: string;
+  onTogglePreview?: () => void;
 }
 
 function debounce(
@@ -187,7 +188,7 @@ function parseGfmTable(markdown: string): string[][] | null {
 
 const AUTOSAVE_IDLE_MS = 1500;
 
-const Editor: React.FC<EditorProps> = ({ initialTitle, initialContent = '', headerImage: initialHeaderImage, onClose, onSave, initialTitleAlign = 'left' }) => {
+const Editor: React.FC<EditorProps> = ({ initialTitle, initialContent = '', headerImage: initialHeaderImage, onClose, onSave, initialTitleAlign = 'left', onTogglePreview }) => {
   const [title, setTitle] = useState(initialTitle);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [wordCount, setWordCount] = useState('0 mot');
@@ -857,7 +858,11 @@ const Editor: React.FC<EditorProps> = ({ initialTitle, initialContent = '', head
                 <EditorToolbar editor={editor} setImageMenuOpen={setImageMenuOpen} />
                 {/* Actions à droite (fermer, preview, etc.) à intégrer ensuite */}
                 <div className="editor-topbar-actions" style={{ marginLeft: 'auto', zIndex: 2, display: 'flex', alignItems: 'center', gap: 8, height: 40 }}>
-                  <Tooltip text="Aperçu"><button className="editor-action-button big-action preview-action"><MdRemoveRedEye size={20} /></button></Tooltip>
+                  <Tooltip text="Aperçu">
+                    <button className="editor-action-button big-action preview-action" onClick={onTogglePreview}>
+                      <MdRemoveRedEye size={20} />
+                    </button>
+                  </Tooltip>
                   <Tooltip text="Plus d'actions">
                     <button
                       className="editor-action-button big-action kebab-action"

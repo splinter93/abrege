@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Editor from '../../../components/Editor';
+import EditorPreview from '../../../components/EditorPreview';
 import { getArticleById, updateArticle, createArticle } from '../../../services/supabase';
 import { AnimatePresence, motion } from 'framer-motion';
 import type { Article } from '../../../types/supabase';
@@ -21,6 +22,8 @@ export default function NoteEditorPage() {
   const hasUnsavedChanges = useRef<boolean>(false);
   const [headerImage, setHeaderImage] = useState<string | null>(null);
   const [titleAlign, setTitleAlign] = useState<string>('left');
+  const [isPreview, setIsPreview] = useState(false);
+  const [htmlContent, setHtmlContent] = useState<string>('');
 
   useEffect(() => {
     const fetchNote = async () => {
@@ -29,6 +32,7 @@ export default function NoteEditorPage() {
         setInitialContent('');
         setHeaderImage('https://images.unsplash.com/photo-1443890484047-5eaa67d1d630?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D');
         setTitleAlign('left');
+        setHtmlContent('');
         setLoading(false);
         return;
       }
@@ -41,6 +45,7 @@ export default function NoteEditorPage() {
         setClasseurId(note.classeur_id);
         setHeaderImage(note.header_image || null);
         setTitleAlign(note.title_align || 'left');
+        setHtmlContent(note.html_content || '');
       } catch (err) {
         console.error('Failed to load note:', err);
       } finally {
@@ -93,6 +98,7 @@ export default function NoteEditorPage() {
   }) => {
     if (saveTimer.current) clearTimeout(saveTimer.current);
     hasUnsavedChanges.current = true;
+    setHtmlContent(html_content || '');
     saveTimer.current = setTimeout(async () => {
       try {
         const dataToSave = {
@@ -137,22 +143,41 @@ export default function NoteEditorPage() {
   return (
     <AnimatePresence mode="wait">
       <motion.div
-        key={noteId}
+        key={noteId + (isPreview ? '-preview' : '-edit')}
         initial={{ opacity: 0, scale: 0.96 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.98 }}
         transition={{ duration: 0.38, ease: [0.16, 1, 0.3, 1] }}
         style={{ minHeight: '100vh', width: '100vw', position: 'fixed', top: 0, left: 0, zIndex: 1000, background: 'none' }}
       >
-    <Editor
-      key={noteId}
-      initialTitle={title}
-      initialContent={initialContent}
-      headerImage={headerImage ?? undefined}
-      initialTitleAlign={titleAlign}
-      onClose={handleClose}
-      onSave={handleSave}
-    />
+        {isPreview ? (
+          <EditorPreview
+            title={title}
+            htmlContent={htmlContent}
+            headerImage={headerImage ?? undefined}
+            titleAlign={titleAlign as 'left' | 'center' | 'right'}
+          />
+        ) : (
+          <Editor
+            key={noteId}
+            initialTitle={title}
+            initialContent={initialContent}
+            headerImage={headerImage ?? undefined}
+            initialTitleAlign={titleAlign}
+            onClose={handleClose}
+            onSave={handleSave}
+            onTogglePreview={() => setIsPreview(true)}
+          />
+        )}
+        {/* Bouton pour quitter le mode preview */}
+        {isPreview && (
+          <button
+            onClick={() => setIsPreview(false)}
+            style={{ position: 'fixed', top: 24, right: 32, zIndex: 2000, background: 'rgba(30,30,36,0.92)', color: '#fff', border: 'none', borderRadius: 8, padding: '10px 18px', fontSize: 16, fontWeight: 600, cursor: 'pointer', boxShadow: '0 2px 12px 0 rgba(0,0,0,0.10)' }}
+          >
+            Quitter le mode Preview
+          </button>
+        )}
       </motion.div>
     </AnimatePresence>
   );
