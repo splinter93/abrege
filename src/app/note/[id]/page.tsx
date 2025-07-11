@@ -173,7 +173,7 @@ export default function NoteEditorPage() {
         )}
         {/* Bouton pour quitter le mode preview */}
         {isPreview && (
-          <div style={{ position: 'fixed', top: 24, right: 32, zIndex: 2000, display: 'flex', alignItems: 'center', gap: 0, background: 'rgba(255,255,255,0.10)', borderRadius: 18, boxShadow: '0 2px 12px 0 rgba(0,0,0,0.10)', backdropFilter: 'blur(18px)', WebkitBackdropFilter: 'blur(18px)', padding: '4px 2px' }}>
+          <div style={{ position: 'fixed', top: 24, right: 32, zIndex: 2000, display: 'flex', alignItems: 'center', gap: 0, background: 'rgba(255,255,255,0.07)', borderRadius: 18, boxShadow: '0 2px 12px 0 rgba(0,0,0,0.10)', backdropFilter: 'blur(18px)', WebkitBackdropFilter: 'blur(18px)', padding: '2px 2px' }}>
             <button
               style={{ background: 'none', color: '#fff', border: 'none', borderRadius: 14, padding: 10, fontSize: 20, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background 0.18s, color 0.18s' }}
               aria-label="Options preview"
