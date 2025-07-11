@@ -54,6 +54,7 @@ const EditorPreview: React.FC<EditorPreviewProps> = ({ title, htmlContent, heade
             lineHeight: 1.1,
             fontFamily: 'Noto Sans, Inter, Arial, sans-serif',
           }}>{title}</h1>
+          <div style={{ height: 18 }} />
           <div
             className="markdown-body"
             style={{
