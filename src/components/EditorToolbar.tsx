@@ -26,9 +26,9 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor, setImageMenuOpen 
         <Tooltip text="Justifier"><button className="toolbar-button" onClick={() => editor.chain().focus().setTextAlign('justify').run()} aria-label="Justifier"><FiAlignJustify size={18} /></button></Tooltip>
       </div>
       <div className="toolbar-group">
-        <Tooltip text="Titre 1 (H1)"><button className="toolbar-button" onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()} aria-label="Titre 1 (H1)">H1</button></Tooltip>
-        <Tooltip text="Titre 2 (H2)"><button className="toolbar-button" onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()} aria-label="Titre 2 (H2)">H2</button></Tooltip>
-        <Tooltip text="Titre 3 (H3)"><button className="toolbar-button" onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()} aria-label="Titre 3 (H3)">H3</button></Tooltip>
+        <Tooltip text="Titre 1 (H1)"><button className={`toolbar-button${editor.isActive && editor.isActive('heading', { level: 1 }) ? ' active' : ''}`} onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()} aria-label="Titre 1 (H1)">H1</button></Tooltip>
+        <Tooltip text="Titre 2 (H2)"><button className={`toolbar-button${editor.isActive && editor.isActive('heading', { level: 2 }) ? ' active' : ''}`} onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()} aria-label="Titre 2 (H2)">H2</button></Tooltip>
+        <Tooltip text="Titre 3 (H3)"><button className={`toolbar-button${editor.isActive && editor.isActive('heading', { level: 3 }) ? ' active' : ''}`} onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()} aria-label="Titre 3 (H3)">H3</button></Tooltip>
       </div>
       <div className="toolbar-group">
         <Tooltip text="Liste à puces"><button className="toolbar-button" onClick={() => editor.chain().focus().toggleBulletList().run()} aria-label="Liste à puces"><FiList size={18} /></button></Tooltip>
