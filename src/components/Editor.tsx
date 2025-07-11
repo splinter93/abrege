@@ -184,6 +184,8 @@ function parseGfmTable(markdown: string): string[][] | null {
   return rows.map(row => row.slice(1, -1).split('|').map(cell => cell.trim()));
 }
 
+const AUTOSAVE_IDLE_MS = 1500;
+
 const Editor: React.FC<EditorProps> = ({ initialTitle, initialContent = '', headerImage: initialHeaderImage, onClose, onSave, initialTitleAlign = 'left' }) => {
   const [title, setTitle] = useState(initialTitle);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
@@ -236,6 +238,10 @@ const Editor: React.FC<EditorProps> = ({ initialTitle, initialContent = '', head
   const [isReadyToSave, setIsReadyToSave] = useState(false);
   const hydratedOnce = useRef(false);
   const [editorKey, setEditorKey] = useState(0);
+  const [lastSavedMarkdown, setLastSavedMarkdown] = useState('');
+  const [lastSavedHtml, setLastSavedHtml] = useState('');
+  const [isUserEditing, setIsUserEditing] = useState(false);
+  const idleTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Style commun pour les boutons header image
   const headerBtnStyle: React.CSSProperties = {
@@ -273,7 +279,7 @@ const Editor: React.FC<EditorProps> = ({ initialTitle, initialContent = '', head
 
   useEffect(() => {
     if (headerImage !== undefined) {
-      handleSave(title, editor?.getHTML() || '', titleAlign);
+      handleSaveWithToast(title, editor?.getHTML() || '', titleAlign, markdownContent, editor?.getHTML() || '');
     }
     // eslint-disable-next-line
   }, [headerImage]);
@@ -471,22 +477,14 @@ const Editor: React.FC<EditorProps> = ({ initialTitle, initialContent = '', head
     setTimeout(() => setShowSavedToast(false), 1500);
   }, []);
 
-  const handleSave = useCallback((newTitle: string, _content: string, align = titleAlign) => {
+  // Nouvelle fonction pour gérer la sauvegarde + toast + dirty state
+  const handleSaveWithToast = useCallback((newTitle: string, htmlContent: string, align: string, markdownContent: string, htmlContentForDirty: string) => {
     if (!onSave || !editor) return;
-    const markdownContent = (editor.storage as any).markdown.getMarkdown();
     if (!isReadyToSave && !markdownContent.trim()) {
       console.warn('[Editor] handleSave bloqué : markdown vide au premier montage');
       return;
     }
     try {
-      const htmlContent = editor.getHTML();
-      console.log('[Editor] handleSave appelé. markdownContent:', markdownContent, 'htmlContent:', htmlContent);
-      if (!markdownContent.trim()) {
-        console.warn('[Editor] Markdown généré vide');
-      }
-      if (!htmlContent.trim()) {
-        console.warn('[Editor] HTML généré vide');
-      }
       onSave({
         title: newTitle,
         markdown_content: markdownContent,
@@ -495,32 +493,59 @@ const Editor: React.FC<EditorProps> = ({ initialTitle, initialContent = '', head
         titleAlign: align,
       });
       setLastSaved(new Date());
+      setLastSavedMarkdown(markdownContent);
+      setLastSavedHtml(htmlContentForDirty);
       triggerSavedToast();
     } catch (error) {
       console.error('[Editor] Erreur lors de la sauvegarde :', error);
       onSave({
         title: newTitle,
         markdown_content: '',
-        html_content: editor.getHTML(),
+        html_content: htmlContent,
         headerImage,
         titleAlign: align,
       });
     }
-  }, [onSave, editor, headerImage, titleAlign, triggerSavedToast, isReadyToSave]);
+  }, [onSave, editor, headerImage, triggerSavedToast, isReadyToSave]);
 
-  const debouncedSave = useCallback(
-    debounce((title: string, content: string, align: string) => {
-      handleSave(title, content, align);
-    }, 500),
-    [handleSave]
-  );
-
+  // === Nouvelle logique d'autosave idle ===
+  // Détecte l'édition utilisateur et déclenche la sauvegarde après inactivité
   useEffect(() => {
-    if (isReadyToSave && isHydrated && isContentLoaded && editor) {
-      console.log('[Editor] Auto-save déclenchée. markdownContent:', markdownContent);
-      debouncedSave(title, editor.getHTML() || '', titleAlign);
+    if (!editor) return;
+    // Handler appelé à chaque update de l'éditeur (input, paste, etc.)
+    const onUserEdit = () => {
+      setIsUserEditing(true);
+      if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+      idleTimerRef.current = setTimeout(() => {
+        setIsUserEditing(false);
+        // Dirty check
+        const markdownContent = (editor.storage as any).markdown.getMarkdown();
+        const htmlContent = editor.getHTML();
+        if (
+          markdownContent.trim() !== lastSavedMarkdown.trim() ||
+          htmlContent.trim() !== lastSavedHtml.trim()
+        ) {
+          // Save only if content changed
+          handleSaveWithToast(title, htmlContent, titleAlign, markdownContent, htmlContent);
+        }
+      }, AUTOSAVE_IDLE_MS);
+    };
+    editor.on('update', onUserEdit);
+    return () => {
+      editor.off('update', onUserEdit);
+      if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+    };
+  }, [editor, title, titleAlign, lastSavedMarkdown, lastSavedHtml]);
+
+  // Initial save on mount (si contenu initial)
+  useEffect(() => {
+    if (editor && isContentLoaded) {
+      const markdownContent = (editor.storage as any).markdown.getMarkdown();
+      const htmlContent = editor.getHTML();
+      setLastSavedMarkdown(markdownContent);
+      setLastSavedHtml(htmlContent);
     }
-  }, [title, contentVersion, isReadyToSave, isHydrated, isContentLoaded, editor, titleAlign, debouncedSave]);
+  }, [editor, isContentLoaded]);
 
   useEffect(() => {
     if (editor) {
@@ -592,17 +617,17 @@ const Editor: React.FC<EditorProps> = ({ initialTitle, initialContent = '', head
   }, []);
 
   useEffect(() => {
-    if (isContentLoaded) handleSave(title, editor?.getHTML() || '', titleAlign);
+    if (isContentLoaded) handleSaveWithToast(title, editor?.getHTML() || '', titleAlign, markdownContent, editor?.getHTML() || '');
     // eslint-disable-next-line
   }, [title]);
 
   useEffect(() => {
-    if (isContentLoaded) handleSave(title, editor?.getHTML() || '', titleAlign);
+    if (isContentLoaded) handleSaveWithToast(title, editor?.getHTML() || '', titleAlign, markdownContent, editor?.getHTML() || '');
     // eslint-disable-next-line
   }, [headerImageUrl]);
 
   useEffect(() => {
-    if (isContentLoaded) handleSave(title, editor?.getHTML() || '', titleAlign);
+    if (isContentLoaded) handleSaveWithToast(title, editor?.getHTML() || '', titleAlign, markdownContent, editor?.getHTML() || '');
     // eslint-disable-next-line
   }, [contentVersion]);
 
@@ -610,12 +635,12 @@ const Editor: React.FC<EditorProps> = ({ initialTitle, initialContent = '', head
     const onKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
         e.preventDefault();
-        handleSave(title, editor?.getHTML() || '', titleAlign);
+        handleSaveWithToast(title, editor?.getHTML() || '', titleAlign, markdownContent, editor?.getHTML() || '');
       }
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [title, editor, titleAlign, handleSave]);
+  }, [title, editor, titleAlign, handleSaveWithToast, markdownContent]);
 
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setTitle(e.target.value);
@@ -737,10 +762,6 @@ const Editor: React.FC<EditorProps> = ({ initialTitle, initialContent = '', head
   }, [closeNote]);
 
   useEffect(() => {
-    setEditorKey(k => k + 1);
-  }, [markdownContent]);
-
-  useEffect(() => {
     if (editor && markdownContent) {
       editor.commands.setContent(markdownContent, false);
       // Forcer extraction des headings après setContent
@@ -803,7 +824,7 @@ const Editor: React.FC<EditorProps> = ({ initialTitle, initialContent = '', head
                 {/* Actions à droite (fermer, preview, etc.) à intégrer ensuite */}
                 <div className="editor-topbar-actions" style={{ marginLeft: 'auto', zIndex: 2, display: 'flex', alignItems: 'center', gap: 8, height: 40 }}>
                   <Tooltip text="Aperçu"><button className="editor-action-button big-action preview-action"><MdRemoveRedEye size={20} /></button></Tooltip>
-                  <Tooltip text="Plus d'actions"><button className="editor-action-button big-action kebab-action"><FiMoreVertical size={20} /></button></Tooltip>
+                  <Tooltip text="Plus d'actions"><button className="editor-action-button big-action kebab-action"><FiMoreHorizontal size={20} /></button></Tooltip>
                   <Tooltip text="Fermer la note"><button className="editor-action-button big-action close-action" style={{ width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={closeNote}><MdClose size={22} /></button></Tooltip>
                 </div>
               </div>
