@@ -85,8 +85,8 @@ const FileItem: React.FC<FileItemProps> = ({ file, onOpen, isRenaming, onRename,
         }}
         onMouseEnter={e => {
           e.currentTarget.style.background = 'rgba(255,255,255,0.07)';
-          e.currentTarget.style.border = '1.5px solid var(--accent-primary)';
-          e.currentTarget.style.boxShadow = '0 4px 18px rgba(255,106,0,0.13), 0 2px 8px rgba(0,0,0,0.08)';
+          e.currentTarget.style.border = '1.5px solid rgba(255,255,255,0.18)';
+          e.currentTarget.style.boxShadow = '0 4px 18px rgba(0,0,0,0.13), 0 2px 8px rgba(0,0,0,0.08)';
         }}
         onMouseLeave={e => {
           e.currentTarget.style.background = 'rgba(255,255,255,0.025)';
