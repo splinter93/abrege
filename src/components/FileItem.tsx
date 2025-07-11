@@ -79,9 +79,19 @@ const FileItem: React.FC<FileItemProps> = ({ file, onOpen, isRenaming, onRename,
           boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
           cursor: isRenaming ? 'text' : 'pointer',
           userSelect: 'none',
-          transition: 'box-shadow 0.15s',
+          transition: 'box-shadow 0.15s, background 0.18s, border 0.18s',
           backdropFilter: 'blur(8px)',
           WebkitBackdropFilter: 'blur(8px)',
+        }}
+        onMouseEnter={e => {
+          e.currentTarget.style.background = 'rgba(255,255,255,0.07)';
+          e.currentTarget.style.border = '1.5px solid var(--accent-primary)';
+          e.currentTarget.style.boxShadow = '0 4px 18px rgba(255,106,0,0.13), 0 2px 8px rgba(0,0,0,0.08)';
+        }}
+        onMouseLeave={e => {
+          e.currentTarget.style.background = 'rgba(255,255,255,0.025)';
+          e.currentTarget.style.border = '1px solid rgba(255,255,255,0.06)';
+          e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.08)';
         }}
         onMouseDown={e => {
           console.log('[DEBUG] FileItem onMouseDown - button:', e.button, 'isRenaming:', isRenaming);

@@ -70,6 +70,20 @@ const FolderItem: React.FC<FolderItemProps> = ({ folder, onOpen, isRenaming, onR
         WebkitBackdropFilter: 'blur(8px)',
         zIndex: isDragOver ? 2 : undefined,
       }}
+      onMouseEnter={e => {
+        if (!isDragOver) {
+          e.currentTarget.style.background = 'rgba(255,255,255,0.07)';
+          e.currentTarget.style.border = '1.5px solid var(--accent-primary)';
+          e.currentTarget.style.boxShadow = '0 4px 18px rgba(255,106,0,0.13), 0 2px 8px rgba(0,0,0,0.08)';
+        }
+      }}
+      onMouseLeave={e => {
+        if (!isDragOver) {
+          e.currentTarget.style.background = 'rgba(255,255,255,0.025)';
+          e.currentTarget.style.border = '1px solid rgba(255,255,255,0.06)';
+          e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.08)';
+        }
+      }}
       onMouseDown={e => {
         console.log('[DEBUG] FolderItem onMouseDown - button:', e.button, 'isRenaming:', isRenaming);
         if (e.button === 2) {
