@@ -43,7 +43,7 @@ const EditorPreview: React.FC<EditorPreviewProps> = ({ title, htmlContent, heade
       <div style={{ width: '100%', display: 'flex', flexDirection: 'row', justifyContent: 'center', alignItems: 'flex-start', margin: '0 auto', marginBottom: 32, gap: 32 }}>
         <div style={{ maxWidth: 750, width: 750 }}>
           <h1 style={{
-            fontSize: '2.5rem',
+            fontSize: '2.25rem',
             fontWeight: 700,
             color: 'var(--text-primary)',
             margin: 0,
