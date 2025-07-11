@@ -68,13 +68,22 @@ const SlashMenu: React.FC<SlashMenuProps> = ({ open, search, setSearch, onSelect
         position: 'fixed',
         left: anchorRef.current?.left ?? 0,
         top: anchorRef.current?.top ?? 0,
-        zIndex: 100,
+        zIndex: 99999,
         minWidth: 320,
-        background: 'var(--surface-1)',
-        borderRadius: 10,
-        boxShadow: '0 8px 32px rgba(0,0,0,0.18)',
+        maxWidth: 420,
+        background: 'rgba(28,28,32,0.82)',
+        backdropFilter: 'blur(16px)',
+        WebkitBackdropFilter: 'blur(16px)',
+        borderRadius: 14,
+        boxShadow: '0 8px 32px 0 rgba(0,0,0,0.16)',
         padding: 0,
-        border: '1px solid var(--border-color)',
+        border: '1px solid #4446',
+        fontFamily: 'Noto Sans, Inter, Arial, sans-serif',
+        fontSize: 15,
+        transition: 'opacity 0.18s, transform 0.18s',
+        opacity: 1,
+        transform: 'scale(1)',
+        overflow: 'hidden',
       }}
       tabIndex={-1}
       onKeyDown={handleKeyDown}
@@ -93,15 +102,20 @@ const SlashMenu: React.FC<SlashMenuProps> = ({ open, search, setSearch, onSelect
           border: 'none',
           outline: 'none',
           background: 'transparent',
-          color: 'var(--text-primary)',
+          color: 'var(--accent-primary, #2994ff)',
           fontSize: 16,
-          padding: '12px 16px',
-          borderBottom: '1px solid var(--border-color)',
+          padding: '16px 20px 14px 20px',
+          borderBottom: '1px solid #4446',
+          borderRadius: '14px 14px 0 0',
+          fontWeight: 600,
+          letterSpacing: 0.01,
+          transition: 'background 0.15s, color 0.15s',
+          fontFamily: 'Noto Sans, Inter, Arial, sans-serif',
         }}
       />
-      <div className="slash-menu-list" style={{ maxHeight: 320, overflowY: 'auto' }}>
+      <div className="slash-menu-list" style={{ maxHeight: 340, overflowY: 'auto', padding: '6px 0', scrollbarWidth: 'thin', scrollbarColor: '#4446 #18181c' }}>
         {filtered.length === 0 && (
-          <div style={{ padding: 16, color: 'var(--text-secondary)' }}>
+          <div style={{ padding: 18, color: 'var(--text-secondary)', textAlign: 'center', fontSize: 15 }}>
             {lang === 'fr' ? 'Aucune commande trouvée.' : 'No command found.'}
           </div>
         )}
@@ -112,25 +126,31 @@ const SlashMenu: React.FC<SlashMenuProps> = ({ open, search, setSearch, onSelect
             style={{
               display: 'flex',
               alignItems: 'center',
-              padding: '12px 16px',
-              background: i === selectedIndex ? 'var(--bg-surface-hover)' : 'transparent',
+              padding: '13px 22px',
+              background: i === selectedIndex ? 'rgba(255,255,255,0.07)' : 'transparent',
               cursor: 'pointer',
-              borderLeft: i === selectedIndex ? '3px solid var(--accent-primary)' : '3px solid transparent',
+              borderLeft: 'none',
+              borderRadius: 8,
+              margin: '2px 8px',
+              color: i === selectedIndex ? 'var(--accent-primary)' : 'var(--text-primary)',
+              fontWeight: i === selectedIndex ? 700 : 500,
+              transition: 'background 0.13s, color 0.13s',
             }}
             onMouseEnter={() => setSelectedIndex(i)}
             onClick={() => onSelect(cmd)}
+            onMouseDown={e => e.preventDefault()}
           >
             <div style={{ flex: 1 }}>
-              <div style={{ fontWeight: 600, fontSize: 15 }}>
-                <span style={{ color: 'var(--accent-primary)', marginRight: 8 }}>{cmd.alias[langKey]}</span>
+              <div style={{ fontWeight: 700, fontSize: 15, display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ color: 'var(--accent-primary)', marginRight: 8, fontWeight: 700 }}>{cmd.alias[langKey]}</span>
                 {cmd.label[langKey]}
               </div>
-              <div style={{ color: 'var(--text-secondary)', fontSize: 13 }}>{cmd.description[langKey]}</div>
+              <div style={{ color: 'var(--text-secondary)', fontSize: 13, marginTop: 2 }}>{cmd.description[langKey]}</div>
             </div>
             {cmd.preview && (
               <div
                 className="slash-menu-preview"
-                style={{ marginLeft: 16, minWidth: 60, color: 'var(--text-secondary)' }}
+                style={{ marginLeft: 18, minWidth: 60, color: 'var(--text-secondary)', opacity: 0.85, fontSize: 14 }}
                 dangerouslySetInnerHTML={{ __html: cmd.preview }}
               />
             )}

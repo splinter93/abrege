@@ -972,13 +972,11 @@ const Editor: React.FC<EditorProps> = ({ initialTitle, initialContent = '', head
                           let rect = range.getBoundingClientRect();
                           // Si le caret est sur une ligne vide, rect peut être (0,0,0,0)
                           if (rect.left === 0 && rect.top === 0 && rect.width === 0 && rect.height === 0) {
-                            // Essayer de trouver le parent block du caret
                             let node = selection.anchorNode;
                             while (node && node.nodeType !== 1) node = node.parentNode;
                             if (node && (node as HTMLElement).getBoundingClientRect) {
                               rect = (node as HTMLElement).getBoundingClientRect();
                             } else {
-                              // Fallback : placer le menu au centre du container markdown
                               const container = document.querySelector('.editor-content.markdown-body');
                               if (container && container.getBoundingClientRect) {
                                 const cRect = container.getBoundingClientRect();
@@ -986,7 +984,13 @@ const Editor: React.FC<EditorProps> = ({ initialTitle, initialContent = '', head
                               }
                             }
                           }
-                          const anchor = { left: rect.left, top: rect.bottom };
+                          // Calcul dynamique : si le menu serait coupé en bas, place-le au-dessus du caret
+                          const menuHeight = 380;
+                          let anchorTop = rect.bottom;
+                          if (rect.bottom + menuHeight > window.innerHeight - 24) {
+                            anchorTop = rect.top - menuHeight - 8;
+                          }
+                          const anchor = { left: rect.left, top: anchorTop };
                           slashMenuRef.current?.openMenu(anchor);
                         }
                       }
