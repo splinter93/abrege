@@ -8,6 +8,7 @@ interface EditorTitleProps {
   inputRef?: React.RefObject<HTMLTextAreaElement | null>;
   disabled?: boolean;
   placeholder?: string;
+  style?: React.CSSProperties;
 }
 
 const EditorTitle: React.FC<EditorTitleProps> = ({
@@ -17,7 +18,8 @@ const EditorTitle: React.FC<EditorTitleProps> = ({
   onFocus,
   inputRef,
   disabled,
-  placeholder
+  placeholder,
+  style
 }) => {
   return (
     <textarea
@@ -39,6 +41,29 @@ const EditorTitle: React.FC<EditorTitleProps> = ({
       disabled={disabled}
       spellCheck={true}
       autoFocus
+      style={{
+        width: style?.width || '750px',
+        height: '45px',
+        minHeight: '45px',
+        maxHeight: '45px',
+        padding: 0,
+        margin: 0,
+        fontSize: '2.25rem',
+        fontWeight: 700,
+        lineHeight: 1.1,
+        background: 'transparent',
+        border: 'none',
+        outline: 'none',
+        color: 'var(--text-primary)',
+        fontFamily: 'Noto Sans, sans-serif',
+        overflow: 'hidden',
+        boxSizing: 'border-box',
+        whiteSpace: 'normal',
+        wordBreak: 'break-word',
+        resize: 'none',
+        textAlign: 'center',
+        ...style,
+      }}
     />
   );
 };

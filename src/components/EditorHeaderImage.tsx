@@ -103,16 +103,17 @@ const EditorHeaderImage: React.FC<EditorHeaderImageProps> = ({
       <div style={{ position: 'absolute', inset: 0, background: `rgba(24,24,24,${0.08 + 0.14 * headerOverlayLevel})`, pointerEvents: 'none', transition: 'background 0.2s' }} />
       <div style={{
         position: 'absolute',
-        top: 8,
+        top: '50%',
         right: 8,
+        transform: 'translateY(-50%)',
         display: 'flex',
         flexDirection: 'column',
-        gap: 6,
+        gap: 14,
         zIndex: 20,
         alignItems: 'flex-end',
         background: 'rgba(255,255,255,0.10)',
         borderRadius: 18,
-        padding: '8px 2px',
+        padding: '18px 2px',
         boxShadow: '0 2px 12px 0 rgba(0,0,0,0.10)',
         backdropFilter: 'blur(18px)',
         WebkitBackdropFilter: 'blur(18px)'

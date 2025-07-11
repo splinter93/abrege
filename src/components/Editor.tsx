@@ -959,6 +959,23 @@ const Editor: React.FC<EditorProps> = ({ initialTitle, initialContent = '', head
                     height: 'auto',
                     boxSizing: 'border-box',
                   }}
+                  onDrop={async (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (!editor) return;
+                    const files = Array.from(e.dataTransfer.files);
+                    const imageFile = files.find(f => f.type.startsWith('image/'));
+                    if (imageFile) {
+                      const reader = new FileReader();
+                      reader.onload = (ev) => {
+                        if (typeof ev.target?.result === 'string') {
+                          editor.chain().focus().setImage({ src: ev.target.result }).run();
+                        }
+                      };
+                      reader.readAsDataURL(imageFile);
+                    }
+                  }}
+                  onDragOver={e => { e.preventDefault(); }}
                 >
                   <EditorContent
                     editor={editor}
