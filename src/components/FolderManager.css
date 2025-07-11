@@ -62,8 +62,8 @@
 }
 
 .control-btn {
-  background-color: transparent;
-  border: none;
+  background: rgba(255,255,255,0.06);
+  border: 1.5px solid rgba(255,255,255,0.18);
   color: var(--text-secondary);
   padding: 6px;
   border-radius: var(--border-radius-md);
@@ -71,13 +71,30 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s ease-in-out;
+  transition: 
+    background 0.22s cubic-bezier(.4,1.2,.4,1),
+    color 0.18s,
+    box-shadow 0.22s cubic-bezier(.4,1.2,.4,1),
+    transform 0.18s cubic-bezier(.4,1.2,.4,1),
+    outline 0.18s, border-color 0.18s;
+  box-shadow: 0 2px 8px 0 rgba(255,255,255,0.08);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
 }
 
-.control-btn:hover {
-  background-color: rgba(255,255,255,0.4) !important;
-  color: #fff !important;
-  box-shadow: 0 8px 20px 0 rgba(255,255,255,0.2) !important;
+.control-btn:hover, .control-btn:focus-visible {
+  background: rgba(255,255,255,0.13);
+  color: #fff;
+  box-shadow: 0 8px 24px 0 rgba(255,255,255,0.18), 0 1.5px 8px 0 rgba(31,38,135,0.10);
+  transform: scale(1.08) translateY(-2px);
+  outline: 2px solid var(--accent-primary-faded);
+  outline-offset: 2px;
+}
+
+.control-btn:active {
+  transform: scale(0.97);
+  background: rgba(255,255,255,0.16);
+  box-shadow: 0 2px 8px 0 rgba(255,255,255,0.10);
 }
 
 .control-btn.active {
@@ -512,7 +529,6 @@
 
 .folder-manager-root, .folder-manager-root * {
   font-family: 'Noto Sans', sans-serif !important;
-  color: #b3a9a0 !important;
 }
 
 .classeur-header-title, .classeur-header-glass h2.classeur-header-title {

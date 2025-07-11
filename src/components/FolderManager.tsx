@@ -6,6 +6,7 @@ import FolderContent from './FolderContent';
 import { useRouter } from 'next/navigation';
 import { Folder, FileArticle } from './types';
 import SimpleContextMenu from './SimpleContextMenu';
+import './FolderManager.css';
 
 interface FolderManagerProps {
   classeurId: string;
