@@ -119,13 +119,13 @@ export default function HomePage() {
           top: 0; left: 0; right: 0; bottom: 0;
           pointer-events: none;
           background:
-            linear-gradient(120deg, #18181c 0%, #23233a 40%, #2d225a 70%, #ff6a00 130%),
-            radial-gradient(ellipse at 80% 90%, rgba(255,106,0,0.13) 0%, transparent 70%),
-            radial-gradient(ellipse at 20% 10%, rgba(80,120,255,0.10) 0%, transparent 70%);
+            linear-gradient(120deg, #131318 0%, #181824 40%, #23233a 70%, #2d225a 100%, #18181c 130%),
+            radial-gradient(ellipse at 80% 90%, rgba(255,106,0,0.08) 0%, transparent 70%),
+            radial-gradient(ellipse at 20% 10%, rgba(80,120,255,0.06) 0%, transparent 70%);
           /* Halo orange subtil en bas à droite, halo bleu en haut à gauche */
-          box-shadow: 0 80vh 120px 80px rgba(255,106,0,0.10) inset;
-          backdrop-filter: blur(18px) saturate(160%);
-          -webkit-backdrop-filter: blur(18px) saturate(160%);
+          box-shadow: 0 80vh 120px 80px rgba(255,106,0,0.07) inset;
+          backdrop-filter: blur(20px) saturate(120%) brightness(0.85);
+          -webkit-backdrop-filter: blur(20px) saturate(120%) brightness(0.85);
         }
         .main-content, .input-section, .notes-section {
           position: relative;
