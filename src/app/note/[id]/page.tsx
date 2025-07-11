@@ -158,6 +158,7 @@ export default function NoteEditorPage() {
             htmlContent={htmlContent}
             headerImage={headerImage ?? undefined}
             titleAlign={titleAlign as 'left' | 'center' | 'right'}
+            markdownContent={initialContent}
           />
         ) : (
           <Editor
