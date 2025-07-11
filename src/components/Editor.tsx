@@ -52,6 +52,7 @@ import EditorSlashMenu from './EditorSlashMenu';
 import EditorToolbar from './EditorToolbar';
 import TurndownService from 'turndown';
 import '@/styles/markdown.css';
+import EditorKebabMenu from './EditorKebabMenu';
 
 const HEADER_IMAGES = [
   'https://images.unsplash.com/photo-1454982523318-4b6396f39d3a?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
@@ -214,9 +215,9 @@ const Editor: React.FC<EditorProps> = ({ initialTitle, initialContent = '', head
   const [selectedFont, setSelectedFont] = useState(FONT_OPTIONS[2].key);
   const fontButtonRef = useRef(null);
   const [fontMenuPos, setFontMenuPos] = useState({ top: 0, left: 0 });
-  const kebabButtonRef = useRef(null);
+  const kebabButtonRef = useRef<HTMLButtonElement>(null);
   const [kebabMenuOpen, setKebabMenuOpen] = useState(false);
-  const [kebabMenuPos, setKebabMenuPos] = useState({ top: 0, left: 0 });
+  const [kebabMenuPos, setKebabMenuPos] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
   const [kebabHoverIdx, setKebabHoverIdx] = useState(-1);
   const [fontHoverIdx, setFontHoverIdx] = useState(-1);
   const [headings, setHeadings] = useState<Heading[]>([]);
@@ -242,6 +243,10 @@ const Editor: React.FC<EditorProps> = ({ initialTitle, initialContent = '', head
   const [lastSavedHtml, setLastSavedHtml] = useState('');
   const [isUserEditing, setIsUserEditing] = useState(false);
   const idleTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const [wideMode, setWideMode] = useState(false);
+  const [a4Mode, setA4Mode] = useState(true); // true = A4, false = Creative
+  const [autosaveOn, setAutosaveOn] = useState(true);
+  const [slashLang, setSlashLang] = useState<'fr' | 'en'>('en');
 
   // Style commun pour les boutons header image
   const headerBtnStyle: React.CSSProperties = {
@@ -780,6 +785,35 @@ const Editor: React.FC<EditorProps> = ({ initialTitle, initialContent = '', head
     }
   }, [editor, markdownContent]);
 
+  // Fermer le menu kebab au clic extérieur ou ESC
+  useEffect(() => {
+    if (!kebabMenuOpen) return;
+    const handleClick = (e: MouseEvent) => {
+      if (
+        kebabButtonRef.current &&
+        !kebabButtonRef.current.contains(e.target as Node)
+      ) {
+        setKebabMenuOpen(false);
+      }
+    };
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setKebabMenuOpen(false);
+    };
+    document.addEventListener('mousedown', handleClick);
+    document.addEventListener('keydown', handleEsc);
+    return () => {
+      document.removeEventListener('mousedown', handleClick);
+      document.removeEventListener('keydown', handleEsc);
+    };
+  }, [kebabMenuOpen]);
+
+  // Ouvre le menu sous le bouton kebab (aligné à droite du bouton)
+  const handleKebabClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    setKebabMenuPos({ top: rect.bottom + 6, left: rect.right - 210 }); // 210 = largeur min du menu
+    setKebabMenuOpen((open) => !open);
+  };
+
   if (!editor) {
     return null;
   }
@@ -824,8 +858,32 @@ const Editor: React.FC<EditorProps> = ({ initialTitle, initialContent = '', head
                 {/* Actions à droite (fermer, preview, etc.) à intégrer ensuite */}
                 <div className="editor-topbar-actions" style={{ marginLeft: 'auto', zIndex: 2, display: 'flex', alignItems: 'center', gap: 8, height: 40 }}>
                   <Tooltip text="Aperçu"><button className="editor-action-button big-action preview-action"><MdRemoveRedEye size={20} /></button></Tooltip>
-                  <Tooltip text="Plus d'actions"><button className="editor-action-button big-action kebab-action"><FiMoreHorizontal size={20} /></button></Tooltip>
+                  <Tooltip text="Plus d'actions">
+                    <button
+                      className="editor-action-button big-action kebab-action"
+                      ref={kebabButtonRef}
+                      onClick={handleKebabClick}
+                      aria-label="Plus d'actions"
+                      style={{ position: 'relative' }}
+                    >
+                      <FiMoreHorizontal size={20} />
+                    </button>
+                  </Tooltip>
                   <Tooltip text="Fermer la note"><button className="editor-action-button big-action close-action" style={{ width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={closeNote}><MdClose size={22} /></button></Tooltip>
+                  {/* === MENU CONTEXTUEL KEBAB === */}
+                  <EditorKebabMenu
+                    open={kebabMenuOpen}
+                    position={kebabMenuPos}
+                    onClose={() => setKebabMenuOpen(false)}
+                    wideMode={wideMode}
+                    setWideMode={setWideMode}
+                    a4Mode={a4Mode}
+                    setA4Mode={setA4Mode}
+                    autosaveOn={autosaveOn}
+                    setAutosaveOn={setAutosaveOn}
+                    slashLang={slashLang}
+                    setSlashLang={setSlashLang}
+                  />
                 </div>
               </div>
               {/* === FIN TOPBAR === */}
@@ -883,7 +941,8 @@ const Editor: React.FC<EditorProps> = ({ initialTitle, initialContent = '', head
                       height: '45px',
                       minHeight: '45px',
                       maxHeight: '45px',
-                      overflow: 'hidden'
+                      overflow: 'hidden',
+                      width: wideMode ? '1200px' : '1000px',
                     }}
                     autoComplete="off"
                     spellCheck={true}
@@ -893,7 +952,7 @@ const Editor: React.FC<EditorProps> = ({ initialTitle, initialContent = '', head
                 <div
                   className="editor-content markdown-body"
                   style={{
-                    width: '1000px',
+                    width: wideMode ? '1200px' : '1000px',
                     margin: '0 auto',
                     padding: 0,
                     minHeight: '100vh',
@@ -910,7 +969,23 @@ const Editor: React.FC<EditorProps> = ({ initialTitle, initialContent = '', head
                         const selection = window.getSelection();
                         if (selection && selection.rangeCount > 0) {
                           const range = selection.getRangeAt(0).cloneRange();
-                          const rect = range.getBoundingClientRect();
+                          let rect = range.getBoundingClientRect();
+                          // Si le caret est sur une ligne vide, rect peut être (0,0,0,0)
+                          if (rect.left === 0 && rect.top === 0 && rect.width === 0 && rect.height === 0) {
+                            // Essayer de trouver le parent block du caret
+                            let node = selection.anchorNode;
+                            while (node && node.nodeType !== 1) node = node.parentNode;
+                            if (node && (node as HTMLElement).getBoundingClientRect) {
+                              rect = (node as HTMLElement).getBoundingClientRect();
+                            } else {
+                              // Fallback : placer le menu au centre du container markdown
+                              const container = document.querySelector('.editor-content.markdown-body');
+                              if (container && container.getBoundingClientRect) {
+                                const cRect = container.getBoundingClientRect();
+                                rect = { left: cRect.left + cRect.width/2 - 160, top: cRect.top + 32, right: 0, bottom: 0, width: 0, height: 0, x: 0, y: 0, toJSON: () => {} };
+                              }
+                            }
+                          }
                           const anchor = { left: rect.left, top: rect.bottom };
                           slashMenuRef.current?.openMenu(anchor);
                         }
@@ -962,7 +1037,7 @@ const Editor: React.FC<EditorProps> = ({ initialTitle, initialContent = '', head
                       cmd.action(editor);
                     }
                   }}
-                  lang={lang}
+                  lang={slashLang}
                 />
               </div>
               {/* ... autres sous-blocs à migrer ensuite ... */}
@@ -998,6 +1073,52 @@ const Editor: React.FC<EditorProps> = ({ initialTitle, initialContent = '', head
       )}
     </div>
   );
+}
+
+// Styles pour le menu contextuel kebab
+const menuItemStyle: React.CSSProperties = {
+  width: '100%',
+  background: 'none',
+  border: 'none',
+  outline: 'none',
+  textAlign: 'left',
+  fontSize: 15,
+  color: 'var(--text-primary, #e5e7eb)',
+  padding: '9px 20px 9px 20px',
+  cursor: 'pointer',
+  display: 'flex',
+  alignItems: 'center',
+  gap: 8,
+  borderRadius: 8,
+  transition: 'background 0.15s, color 0.15s',
+};
+const menuDividerStyle: React.CSSProperties = {
+  height: 1,
+  background: '#4446',
+  margin: '7px 0',
+  width: '90%',
+  alignSelf: 'center',
+  borderRadius: 1,
+};
+
+// Ajoute un style global pour le hover du menu kebab
+if (typeof window !== 'undefined') {
+  const styleId = 'kebab-menu-hover-style';
+  if (!document.getElementById(styleId)) {
+    const style = document.createElement('style');
+    style.id = styleId;
+    style.innerHTML = `
+      .kebab-menu-popover button:hover {
+        background: rgba(255,255,255,0.07) !important;
+        color: #fff !important;
+        transition: background 0.18s, color 0.18s;
+      }
+      .kebab-menu-popover button:active {
+        background: rgba(255,255,255,0.13) !important;
+      }
+    `;
+    document.head.appendChild(style);
+  }
 }
 
 export default Editor; 

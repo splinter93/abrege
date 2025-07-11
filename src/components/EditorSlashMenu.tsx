@@ -19,6 +19,7 @@ const EditorSlashMenu = forwardRef<EditorSlashMenuHandle, EditorSlashMenuProps>(
     // Fonction pour ouvrir le menu à une position donnée
     const openMenu = (anchor: { left: number; top: number }) => {
       slashAnchorRef.current = anchor;
+      setSlashSearch('');
       setSlashOpen(true);
     };
 
