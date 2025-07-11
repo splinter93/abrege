@@ -6,11 +6,9 @@ interface EditorPreviewProps {
   htmlContent: string;
   headerImage?: string | null;
   titleAlign?: 'left' | 'center' | 'right';
-  wideMode?: boolean;
 }
 
-const EditorPreview: React.FC<EditorPreviewProps> = ({ title, htmlContent, headerImage, titleAlign = 'left', wideMode = false }) => {
-  const contentWidth = wideMode ? 1200 : 1000;
+const EditorPreview: React.FC<EditorPreviewProps> = ({ title, htmlContent, headerImage, titleAlign = 'left' }) => {
   return (
     <div style={{ width: '100vw', minHeight: '100vh', background: 'var(--bg-main)', paddingBottom: 64 }}>
       {headerImage && (
@@ -23,7 +21,7 @@ const EditorPreview: React.FC<EditorPreviewProps> = ({ title, htmlContent, heade
           />
         </div>
       )}
-      <div style={{ width: '100%', display: 'flex', justifyContent: titleAlign === 'center' ? 'center' : titleAlign === 'right' ? 'flex-end' : 'flex-start', margin: '0 auto', marginBottom: 32 }}>
+      <div style={{ width: '100%', display: 'flex', justifyContent: 'center', margin: '0 auto', marginBottom: 32 }}>
         <h1 style={{
           fontSize: '2.5rem',
           fontWeight: 700,
@@ -31,8 +29,8 @@ const EditorPreview: React.FC<EditorPreviewProps> = ({ title, htmlContent, heade
           margin: 0,
           padding: 0,
           textAlign: titleAlign,
-          maxWidth: contentWidth,
-          width: '100%',
+          maxWidth: 750,
+          width: 750,
           lineHeight: 1.1,
           fontFamily: 'Noto Sans, Inter, Arial, sans-serif',
         }}>{title}</h1>
@@ -40,7 +38,8 @@ const EditorPreview: React.FC<EditorPreviewProps> = ({ title, htmlContent, heade
       <div
         className="markdown-body"
         style={{
-          maxWidth: contentWidth,
+          maxWidth: 750,
+          width: 750,
           margin: '0 auto',
           background: 'none',
           padding: '0 0 64px 0',
