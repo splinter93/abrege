@@ -22,16 +22,16 @@ const EditorPreview: React.FC<EditorPreviewProps> = ({ title, htmlContent, heade
   }, [markdownContent]);
 
   // Calculer la hauteur du header image pour placer la TOC juste en dessous
-  const headerHeight = headerImage ? 320 : 0;
+  const headerHeight = headerImage ? 300 : 0;
 
   return (
     <div style={{ width: '100vw', minHeight: '100vh', background: 'var(--bg-main)', paddingBottom: 64, overflowY: 'auto', height: '100vh' }}>
       {headerImage && (
-        <div style={{ width: '100%', maxHeight: 320, overflow: 'hidden', marginBottom: 32 }}>
+        <div style={{ width: '100%', maxHeight: 300, overflow: 'hidden', marginBottom: 32 }}>
           <img
             src={headerImage}
             alt="Header"
-            style={{ width: '100%', objectFit: 'cover', maxHeight: 320, borderRadius: 0 }}
+            style={{ width: '100%', objectFit: 'cover', maxHeight: 300, borderRadius: 0 }}
             draggable={false}
           />
         </div>
