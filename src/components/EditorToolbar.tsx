@@ -13,7 +13,7 @@ interface EditorToolbarProps {
 const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor, setImageMenuOpen }) => {
   if (!editor) return null;
   return (
-    <div className="editor-toolbar-center" style={{ position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%, -50%)', zIndex: 1, display: 'flex', alignItems: 'center' }}>
+    <div className="editor-toolbar" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%' }}>
       <div className="toolbar-group">
         <Tooltip text="Gras (Ctrl+B)"><button className="toolbar-button" onClick={() => editor.chain().focus().toggleBold().run()} aria-label="Gras"><FiBold size={18} /></button></Tooltip>
         <Tooltip text="Italique (Ctrl+I)"><button className="toolbar-button" onClick={() => editor.chain().focus().toggleItalic().run()} aria-label="Italique"><FiItalic size={18} /></button></Tooltip>

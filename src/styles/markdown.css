@@ -142,6 +142,7 @@
   background: var(--surface-2);
   color: var(--accent-primary);
   font-weight: 600;
+  font-size: 1.18rem;
 }
 .markdown-body th:last-child,
 .markdown-body td:last-child {
@@ -410,4 +411,8 @@
 .markdown-body pre,
 .markdown-body code {
   font-size: 0.85em !important;
+} 
+
+.markdown-body ol {
+  padding-left: 1.25em !important;
 } 

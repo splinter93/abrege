@@ -1,0 +1,31 @@
+/* Styles dédiés au footer de l’éditeur */
+
+.editor-footer {
+  width: 100%;
+  max-width: 750px;
+  margin: 32px auto 0 auto;
+  color: var(--text-3);
+  font-size: 15px;
+  text-align: right;
+  padding-top: 18px;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 2.5rem;
+  border-top: 1px solid var(--border-subtle);
+  background: none;
+}
+
+.editor-footer-stats {
+  display: flex;
+  gap: 1.2rem;
+  align-items: center;
+  color: var(--text-3);
+  font-size: 15px;
+}
+
+.editor-footer-time {
+  color: var(--text-3);
+  font-size: 15px;
+  margin-left: 1.2rem;
+} 

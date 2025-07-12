@@ -6,8 +6,11 @@ import "./globals.css";
 import Header from '../components/Header';
 import '../styles/design-system.css';
 import '../styles/editor.css';
+import '../components/editor/editor-header.css';
 import { AuthProvider } from '../components/AuthProvider';
 import { Toaster } from 'react-hot-toast';
+import { usePathname } from 'next/navigation';
+import AppMainContent from '../components/AppMainContent';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -29,6 +32,8 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const pathname = typeof window !== 'undefined' ? window.location.pathname : '';
+  const isEditorPage = pathname.startsWith('/note/');
   return (
     <html lang="en">
       <body
@@ -38,10 +43,9 @@ export default function RootLayout({
           <Toaster position="top-right" />
           <div className="app-layout">
             {/* <Sidebar /> */}
-            <div className="app-main-content">
-              <Header />
+            <AppMainContent>
               {children}
-            </div>
+            </AppMainContent>
           </div>
         </AuthProvider>
       </body>

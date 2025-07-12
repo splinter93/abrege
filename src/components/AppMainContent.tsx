@@ -1,0 +1,14 @@
+'use client';
+import { usePathname } from 'next/navigation';
+import Header from './Header';
+
+export default function AppMainContent({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  const isEditorPage = pathname.startsWith('/note/');
+  return (
+    <div className="app-main-content">
+      {!isEditorPage && <Header />}
+      {children}
+    </div>
+  );
+} 

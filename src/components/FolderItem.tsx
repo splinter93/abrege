@@ -115,14 +115,13 @@ const FolderItem: React.FC<FolderItemProps> = ({ folder, onOpen, isRenaming, onR
       aria-label={folder.name}
       draggable={isDraggable}
       onDragStart={e => {
-        console.log('[DEBUG] FolderItem onDragStart - nativeEvent.button:', e.nativeEvent.button);
         if (e.nativeEvent.button !== 0) {
           e.preventDefault();
-          console.log('[DEBUG] FolderItem onDragStart - prevented due to non-left click');
           return;
         }
         e.dataTransfer.setData('itemId', folder.id);
         e.dataTransfer.setData('itemType', 'folder');
+        e.dataTransfer.setData('application/json', JSON.stringify({ id: folder.id, type: 'folder' }));
         e.dataTransfer.effectAllowed = 'move';
       }}
       onDragOver={e => {
@@ -137,6 +136,10 @@ const FolderItem: React.FC<FolderItemProps> = ({ folder, onOpen, isRenaming, onR
         e.preventDefault();
         e.stopPropagation();
         setIsDragOver(false);
+        try {
+          const data = JSON.parse(e.dataTransfer.getData('application/json'));
+          if (data && data.target === 'tab') return; // Ignore drop venant d’un tab
+        } catch {}
         if (onDropItem) {
           const itemId = e.dataTransfer.getData('itemId');
           const itemType = e.dataTransfer.getData('itemType') as 'folder' | 'file';

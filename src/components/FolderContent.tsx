@@ -86,6 +86,12 @@ const FolderContent: React.FC<FolderContentProps> = ({
             onCancelRename={onCancelRename}
             onContextMenu={onContextMenuItem}
             onDropItem={(itemId, itemType) => {
+              // Ne traiter le drop que si l’item ET la cible existent dans la vue locale
+              const isFolder = itemType === 'folder';
+              const isFile = itemType === 'file';
+              const itemExists = (isFolder && folders.some(f => f.id === itemId)) || (isFile && files.some(f => f.id === itemId));
+              const targetExists = folders.some(f => f.id === folder.id);
+              if (!itemExists || !targetExists) return;
               console.log('[DND] FolderContent transmit', { itemId, itemType, folderId: folder.id });
               if (onDropItem) {
                 onDropItem(itemId, itemType, folder.id);

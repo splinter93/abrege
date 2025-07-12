@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import { Folder, FileArticle } from './types';
 import SimpleContextMenu from './SimpleContextMenu';
 import './FolderManager.css';
+import { updateFolder, updateArticle } from '../services/supabase';
 
 interface FolderManagerProps {
   classeurId: string;
@@ -19,6 +20,7 @@ const FolderManager: React.FC<FolderManagerProps> = ({ classeurId, classeurName,
   // State local pour le dossier courant
   const [currentFolderId, setCurrentFolderId] = useState<string | undefined>(parentFolderId);
   const [folderPath, setFolderPath] = useState<Folder[]>([]);
+  const [refreshKey, setRefreshKey] = useState(0);
   const {
     folders,
     files,
@@ -34,12 +36,14 @@ const FolderManager: React.FC<FolderManagerProps> = ({ classeurId, classeurName,
     deleteFolder,
     deleteFile,
     moveItem,
-  } = useFolderManagerState(classeurId, currentFolderId);
+  } = useFolderManagerState(classeurId, currentFolderId, refreshKey);
 
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [activeId, setActiveId] = useState<string | null>(null);
   const router = useRouter();
   const [contextMenuState, setContextMenuState] = useState<{ visible: boolean; x: number; y: number; item: any }>({ visible: false, x: 0, y: 0, item: null });
+  // State pour feedback visuel du drop sur la racine
+  const [isRootDropActive, setIsRootDropActive] = useState(false);
 
   // Handlers pour FolderContent
   const handleItemClick = (item: any) => {
@@ -120,8 +124,81 @@ const FolderManager: React.FC<FolderManagerProps> = ({ classeurId, classeurName,
     setFolderPath([]);
   };
 
+  // Handler drop sur la racine
+  const handleRootDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsRootDropActive(true);
+  };
+  const handleRootDragLeave = () => {
+    setIsRootDropActive(false);
+  };
+  const handleRootDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsRootDropActive(false);
+    try {
+      const data = JSON.parse(e.dataTransfer.getData('application/json'));
+      if (data && data.id && data.type) {
+        moveItem(data.id, null, data.type);
+        // Si on déplace le dossier courant, revenir à la racine
+        if (data.type === 'folder' && data.id === currentFolderId) {
+          setCurrentFolderId(undefined);
+          setFolderPath([]);
+        }
+      }
+    } catch (err) {
+      // ignore
+    }
+  };
+
+  // Handler drop sur un tab de classeur (autre ou courant)
+  React.useEffect(() => {
+    const handler = async (e: any) => {
+      const { classeurId, itemId, itemType } = e.detail || {};
+      if (!classeurId || !itemId || !itemType) return;
+      if (classeurId === classeurId) {
+        // Si on drop sur le tab du classeur courant, ramener à la racine
+        moveItem(itemId, null, itemType);
+      } else {
+        // Sinon, changer de classeur ET ramener à la racine
+        if (itemType === 'folder') {
+          try {
+            const res = await updateFolder(itemId, { classeur_id: classeurId, parent_id: null });
+            console.log('[DnD] updateFolder', { itemId, classeurId, res });
+          } catch (err) {
+            console.error('[DnD] updateFolder ERROR', err);
+          }
+        } else {
+          try {
+            const res = await updateArticle(itemId, { classeur_id: classeurId, folder_id: null });
+            console.log('[DnD] updateArticle', { itemId, classeurId, res });
+          } catch (err) {
+            console.error('[DnD] updateArticle ERROR', err);
+          }
+        }
+        // Rafraîchir la vue du classeur courant pour que l’item disparaisse
+        setRefreshKey(k => k + 1);
+      }
+    };
+    window.addEventListener('drop-to-classeur', handler as any);
+    return () => window.removeEventListener('drop-to-classeur', handler as any);
+  }, [classeurId, moveItem]);
+
+  // (refreshCurrentView supprimé, remplacé par refreshKey)
+
   // Breadcrumb local basé sur folderPath
   const breadcrumb = folderPath;
+
+  // Raccourci clavier : Escape ramène à la racine du classeur actif
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setCurrentFolderId(undefined);
+        setFolderPath([]);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   return (
     <div

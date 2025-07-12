@@ -2,7 +2,7 @@ export const SLASH_COMMANDS = [
   {
     id: 'h1',
     label: { fr: 'T1', en: 'H1' },
-    alias: { fr: '/t1', en: '/h1' },
+    alias: { fr: ['/t1'], en: ['/h1', '/heading1', '/title1'] },
     description: { fr: 'Titre principal', en: 'Main heading' },
     action: (editor) => editor.chain().focus().toggleHeading({ level: 1 }).run(),
     preview: '<h1 style="font-size:1.5em;">H1</h1>',
@@ -10,7 +10,7 @@ export const SLASH_COMMANDS = [
   {
     id: 'h2',
     label: { fr: 'T2', en: 'H2' },
-    alias: { fr: '/t2', en: '/h2' },
+    alias: { fr: ['/t2'], en: ['/h2', '/heading2', '/title2'] },
     description: { fr: 'Titre secondaire', en: 'Secondary heading' },
     action: (editor) => editor.chain().focus().toggleHeading({ level: 2 }).run(),
     preview: '<h2 style="font-size:1.2em;">H2</h2>',
@@ -18,7 +18,7 @@ export const SLASH_COMMANDS = [
   {
     id: 'h3',
     label: { fr: 'T3', en: 'H3' },
-    alias: { fr: '/t3', en: '/h3' },
+    alias: { fr: ['/t3'], en: ['/h3', '/heading3', '/title3'] },
     description: { fr: 'Titre tertiaire', en: 'Tertiary heading' },
     action: (editor) => editor.chain().focus().toggleHeading({ level: 3 }).run(),
     preview: '<h3 style="font-size:1em;">H3</h3>',

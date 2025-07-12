@@ -46,10 +46,10 @@ interface UseFolderManagerState {
   deleteFile: (id: string) => Promise<void>;
 
   // Imbrication DnD
-  moveItem: (id: string, newParentId: string, type: 'folder' | 'file') => Promise<void>;
+  moveItem: (id: string, newParentId: string | null, type: 'folder' | 'file') => Promise<void>;
 }
 
-export function useFolderManagerState(classeurId: string, parentFolderId?: string): UseFolderManagerState {
+export function useFolderManagerState(classeurId: string, parentFolderId?: string, refreshKey?: number): UseFolderManagerState {
   // --- ÉTAT PRINCIPAL ---
   const [folders, setFolders] = useState<Folder[]>([]);
   const [files, setFiles] = useState<FileArticle[]>([]);
@@ -83,7 +83,7 @@ export function useFolderManagerState(classeurId: string, parentFolderId?: strin
       }
     };
     fetchData();
-  }, [classeurId, parentFolderId]);
+  }, [classeurId, parentFolderId, refreshKey]);
 
   // --- SYNCHRO TEMPS RÉEL (Supabase Realtime) ---
   useEffect(() => {
@@ -118,7 +118,7 @@ export function useFolderManagerState(classeurId: string, parentFolderId?: strin
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [classeurId, parentFolderId]);
+  }, [classeurId, parentFolderId, refreshKey]);
 
   // --- NAVIGATION ---
   const goToFolder = useCallback((id: string) => {
@@ -239,18 +239,20 @@ export function useFolderManagerState(classeurId: string, parentFolderId?: strin
   }, []);
 
   // --- IMBRICATION DnD ---
-  const moveItem = useCallback(async (id: string, newParentId: string, type: 'folder' | 'file') => {
+  const moveItem = useCallback(async (id: string, newParentId: string | null, type: 'folder' | 'file') => {
     try {
       await moveItemUniversal(id, newParentId, type);
-      if (type === 'folder') {
-        setFolders(currentFolders => currentFolders.filter(f => f.id !== id));
-      } else {
-        setFiles(currentFiles => currentFiles.filter(f => f.id !== id));
-      }
+      // Rafraîchir les dossiers/fichiers
+      const [fetchedFolders, fetchedFiles] = await Promise.all([
+        getFolders(classeurId, parentFolderId),
+        getArticles(classeurId, parentFolderId)
+      ]);
+      setFolders(fetchedFolders.sort((a, b) => (a.position || 0) - (b.position || 0)));
+      setFiles(fetchedFiles.sort((a, b) => (a.position || 0) - (b.position || 0)));
     } catch (err) {
       setError('Erreur lors du déplacement de l\'élément.');
     }
-  }, []);
+  }, [classeurId, parentFolderId]);
 
   // --- EXPORT ---
   return {

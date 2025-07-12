@@ -47,9 +47,11 @@ interface SortableTabProps {
   isOverlay?: boolean;
   sortableTransform?: any;
   sortableTransition?: any;
+  onDropToClasseur?: (classeurId: string, itemId: string, itemType: 'folder' | 'file') => void;
 }
 
-function SortableTab({ classeur, isActive, onSelectClasseur, onContextMenu, listeners, attributes, setNodeRef, isDragging, isOverlay, sortableTransform, sortableTransition }: SortableTabProps) {
+function SortableTab({ classeur, isActive, onSelectClasseur, onContextMenu, listeners, attributes, setNodeRef, isDragging, isOverlay, sortableTransform, sortableTransition, onDropToClasseur }: SortableTabProps) {
+  const [isDropActive, setIsDropActive] = useState(false);
   return (
     <div
       ref={setNodeRef}
@@ -63,12 +65,34 @@ function SortableTab({ classeur, isActive, onSelectClasseur, onContextMenu, list
       }}
       {...attributes}
       {...listeners}
+      onDragOver={e => {
+        e.preventDefault();
+        setIsDropActive(true);
+        window.__isTabDropActive = true;
+      }}
+      onDragLeave={e => {
+        setIsDropActive(false);
+        window.__isTabDropActive = false;
+      }}
+      onDrop={e => {
+        setIsDropActive(false);
+        window.__isTabDropActive = false;
+        e.stopPropagation();
+        try {
+          const data = JSON.parse(e.dataTransfer.getData('application/json'));
+          if (data && data.id && data.type && onDropToClasseur) {
+            onDropToClasseur(classeur.id, data.id, data.type);
+          }
+          // Ajoute target: 'tab' dans le payload pour signaler le contexte
+          e.dataTransfer.setData('application/json', JSON.stringify({ ...data, target: 'tab' }));
+        } catch (err) {}
+      }}
     >
       <button
         className={`classeur-btn-glass${isActive ? " active" : ""}`}
         onClick={() => onSelectClasseur(classeur.id)}
         onContextMenu={e => onContextMenu(e, classeur)}
-        style={{ fontFamily: "Inter, Noto Sans, Arial, sans-serif" }}
+        style={{ fontFamily: "Inter, Noto Sans, Arial, sans-serif", background: isDropActive ? 'rgba(255,140,0,0.13)' : undefined, borderColor: isDropActive ? 'var(--accent-primary)' : undefined }}
       >
         <span
           style={{ fontSize: 18, marginRight: 6, verticalAlign: "middle", cursor: "pointer", display: "inline-block" }}
@@ -190,6 +214,13 @@ const ClasseurTabs: React.FC<ClasseurTabsProps> = ({
     }
   };
 
+  // Handler drop natif sur un tab
+  const handleDropToClasseur = (classeurId: string, itemId: string, itemType: 'folder' | 'file') => {
+    // TODO: appeler la mutation pour ramener à la racine du classeur (si classeur courant)
+    // (À compléter dans FolderManager ou via callback prop)
+    window.dispatchEvent(new CustomEvent('drop-to-classeur', { detail: { classeurId, itemId, itemType } }));
+  };
+
   return (
     <div className="classeur-tabs-glass-wrapper">
       <div className="classeur-tabs-btn-list">
@@ -201,15 +232,11 @@ const ClasseurTabs: React.FC<ClasseurTabsProps> = ({
                 <SortableTab
                   key={classeur.id}
                   classeur={classeur}
-                  isActive={classeur.id === activeClasseurId}
+                  isActive={activeClasseurId === classeur.id}
                   onSelectClasseur={onSelectClasseur}
                   onContextMenu={handleContextMenu}
-                  listeners={sortable.listeners}
-                  attributes={sortable.attributes}
-                  setNodeRef={sortable.setNodeRef}
-                  isDragging={activeId === classeur.id}
-                  sortableTransform={sortable.transform}
-                  sortableTransition={sortable.transition}
+                  {...sortable}
+                  onDropToClasseur={handleDropToClasseur}
                 />
               );
             })}
@@ -320,5 +347,7 @@ const ClasseurTabs: React.FC<ClasseurTabsProps> = ({
     </div>
   );
 };
+
+declare global { interface Window { __isTabDropActive?: boolean } }
 
 export default ClasseurTabs; 

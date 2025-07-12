@@ -58,6 +58,7 @@ const FileItem: React.FC<FileItemProps> = ({ file, onOpen, isRenaming, onRename,
         }
         e.dataTransfer.setData('itemId', file.id);
         e.dataTransfer.setData('itemType', 'file');
+        e.dataTransfer.setData('application/json', JSON.stringify({ id: file.id, type: 'file' }));
         e.dataTransfer.effectAllowed = 'move';
       }}
     >

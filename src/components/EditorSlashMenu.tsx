@@ -1,8 +1,19 @@
 import React, { useState, useRef, useImperativeHandle, forwardRef } from 'react';
 import SlashMenu from './SlashMenu';
+import './editor/editor-slash-menu.css';
+// import type { SlashCommand } from './SlashMenu';
+type SlashCommand = {
+  id: string;
+  alias: Record<string, string>;
+  label: Record<string, string>;
+  description: Record<string, string>;
+  preview?: string;
+  action?: (editor: any) => void;
+  [key: string]: any;
+};
 
 export interface EditorSlashMenuProps {
-  onInsert: (type: string, data?: any) => void;
+  onInsert: (cmd: SlashCommand) => void;
   lang?: string;
 }
 
