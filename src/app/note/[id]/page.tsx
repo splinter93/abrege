@@ -363,7 +363,6 @@ export default function NoteEditorPage() {
     <div style={{
       minHeight: '100vh',
       width: '100vw',
-      background: '#18181c',
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center'

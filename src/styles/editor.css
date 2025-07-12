@@ -22,7 +22,7 @@
 .editor-container {
   z-index: 1200;
   overflow-y: auto;
-  background: #101014 !important; /* Darker, premium background */
+  background: #0b0b10 !important;
   width: 94%;
   height: 94vh;
   max-width: 1400px;
@@ -214,7 +214,7 @@
   flex: 1;
   overflow-y: auto;
   padding: 0;
-  background: #181820 !important; /* Slightly lighter than container for subtle contrast */
+  background: #15151b !important;
   display: flex;
   flex-direction: row;
   align-items: flex-start;
