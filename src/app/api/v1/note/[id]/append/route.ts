@@ -14,7 +14,7 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 // Types explicites pour le payload et la réponse
-export type AppendNotePayload = { text: string };
+export type AppendNotePayload = { text: string; position?: 'start' | 'end' };
 export type AppendNoteResponse =
   | { note: Article }
   | { error: string; details?: string[] };
@@ -24,7 +24,7 @@ export async function PATCH(req: NextRequest, { params }: any): Promise<Response
   try {
     const paramSchema = z.object({ id: z.string().min(1, 'note_id requis') });
     const body: AppendNotePayload = await req.json();
-    const bodySchema = z.object({ text: z.string().min(1, 'text (markdown) requis') });
+    const bodySchema = z.object({ text: z.string().min(1, 'text (markdown) requis'), position: z.enum(['start', 'end']).optional() });
     const paramResult = paramSchema.safeParse({ id });
     const bodyResult = bodySchema.safeParse(body);
     if (!paramResult.success) {
@@ -60,7 +60,7 @@ export async function PATCH(req: NextRequest, { params }: any): Promise<Response
       return new Response(JSON.stringify({ error: error?.message || 'Note non trouvée.' }), { status: 404 });
     }
     // Concaténer le markdown (nouveau schéma : markdown_content)
-    const newContent = appendToSection(note.markdown_content || '', '', body.text);
+    const newContent = appendToSection(note.markdown_content || '', '', body.text, body.position || 'end');
     // Générer le HTML sécurisé (champ html_content)
     const window = new JSDOM('').window as unknown as Window;
     const md = new MarkdownIt();

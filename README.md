@@ -42,7 +42,7 @@ Voici les principaux endpoints REST disponibles sous `/api/v1/` :
 | Endpoint                | Méthode | Description                |
 |-------------------------|---------|----------------------------|
 | /api/v1/create-note     | POST    | Créer une note (markdown)  |
-| /api/v1/write-note      | POST    | Mettre à jour une note     |
+| /api/v1/erase-note      | POST    | Mettre à jour une note     |
 | /api/v1/create-folder   | POST    | Créer un dossier           |
 | /api/v1/create-classeur | POST    | Créer un classeur          |
 
@@ -88,7 +88,7 @@ curl -X POST http://localhost:3000/api/v1/create-note \
 
 ### 2. Mettre à jour une note
 
-- **Endpoint** : `/api/v1/write-note`
+- **Endpoint** : `/api/v1/erase-note`
 - **Méthode** : POST
 - **Payload attendu** :
 ```json
@@ -101,7 +101,7 @@ curl -X POST http://localhost:3000/api/v1/create-note \
 ```
 - **Exemple cURL** :
 ```bash
-curl -X POST http://localhost:3000/api/v1/write-note \
+curl -X POST http://localhost:3000/api/v1/erase-note \
   -H "Content-Type: application/json" \
   -d '{
     "noteId": "123",
@@ -493,7 +493,7 @@ paths:
         '201': { description: Note créée }
         '422': { description: Erreur de validation }
         '500': { description: Erreur serveur }
-  /api/v1/write-note:
+  /api/v1/erase-note:
     post:
       tags: [Notes]
       summary: Mettre à jour une note

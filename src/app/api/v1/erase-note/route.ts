@@ -85,7 +85,7 @@ export async function POST(req: Request): Promise<Response> {
 }
 
 /**
- * Endpoint: POST /api/v1/write-note
+ * Endpoint: POST /api/v1/erase-note
  * Payload attendu : { noteId: string, title: string, markdown_content: string, titleAlign?: string }
  * - Valide le payload avec Zod (noteId, title, markdown_content obligatoires)
  * - Valide le markdown avec markdownContentSchema (LLM-Ready)

@@ -76,31 +76,48 @@ export function extractTOCWithSlugs(markdown: string): TOCItemWithSlug[] {
 }
 
 /**
- * Ajoute du markdown à la fin d'une section (ciblée par titre ou slug)
+ * Ajoute du markdown à la fin ou au début d'une section (ciblée par titre ou slug)
  * Retourne le nouveau markdown (ou lève une erreur si section non trouvée)
+ * position: 'start' | 'end' (default: 'end')
  */
-export function appendToSection(markdown: string, section: string, text: string): string {
+export function appendToSection(markdown: string, section: string, text: string, position: 'start' | 'end' = 'end'): string {
   if (!section) {
-    // Ajout à la fin du markdown avec saut de ligne pour séparer proprement
-    const trimmed = markdown.trimEnd();
-    return (trimmed ? trimmed + '\n\n' : '') + text.trimStart();
+    // Ajout global (début ou fin de la note)
+    const trimmed = markdown.trim();
+    if (position === 'start') {
+      return text.trimEnd() + (trimmed ? '\n\n' + trimmed : '');
+    } else {
+      return (trimmed ? trimmed + '\n\n' : '') + text.trimStart();
+    }
   }
   const toc = extractTOCWithSlugs(markdown);
   const sectionIdx = toc.findIndex(t => t.title === section || t.slug === section);
   if (sectionIdx === -1) throw new Error('Section non trouvée (titre ou slug inconnu)');
   const target = toc[sectionIdx];
   const lines = markdown.split('\n');
-  let insertLine = lines.length;
+  let sectionStart = target.line - 1;
+  let sectionEnd = lines.length;
   for (let i = target.line; i < lines.length; i++) {
     const match = lines[i].match(/^(#{1,6})\s+(.+)/);
     if (match && match[1].length <= target.level) {
-      insertLine = i;
+      sectionEnd = i;
       break;
     }
   }
-  const before = lines.slice(0, insertLine).join('\n');
-  const after = lines.slice(insertLine).join('\n');
-  return before + '\n' + text + (after ? '\n' + after : '');
+  if (position === 'start') {
+    // Insérer juste après le titre de la section
+    const before = lines.slice(0, sectionStart + 1).join('\n');
+    const after = lines.slice(sectionStart + 1, sectionEnd).join('\n');
+    const rest = lines.slice(sectionEnd).join('\n');
+    return (
+      before + '\n' + text.trimEnd() + (after ? '\n' + after : '') + (rest ? '\n' + rest : '')
+    );
+  } else {
+    // Insérer à la fin de la section (comportement actuel)
+    const before = lines.slice(0, sectionEnd).join('\n');
+    const after = lines.slice(sectionEnd).join('\n');
+    return before + '\n' + text + (after ? '\n' + after : '');
+  }
 }
 
 // Ajout d'un commentaire pour indiquer la nécessité d'un .d.ts si le problème persiste

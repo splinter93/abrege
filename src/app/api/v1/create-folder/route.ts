@@ -52,6 +52,27 @@ export async function POST(req: Request): Promise<Response> {
   }
 }
 
+export async function DELETE(req: Request): Promise<Response> {
+  const body = await req.json();
+  const schema = z.object({ id: z.string().min(1, 'folder_id requis') });
+  const parseResult = schema.safeParse(body);
+  if (!parseResult.success) {
+    return new Response(
+      JSON.stringify({ error: 'Paramètre folder_id invalide', details: parseResult.error.errors.map(e => e.message) }),
+      { status: 422 }
+    );
+  }
+  const { id } = parseResult.data;
+  const { error } = await supabase
+    .from('folders')
+    .delete()
+    .eq('id', id);
+  if (error) {
+    return new Response(JSON.stringify({ error: error.message }), { status: 500 });
+  }
+  return new Response(JSON.stringify({ success: true }), { status: 200 });
+}
+
 /**
  * Endpoint: POST /api/v1/create-folder
  * Payload attendu : { classeur_id: string, name: string, parent_id?: string | null }
