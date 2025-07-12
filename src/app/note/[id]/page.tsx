@@ -28,6 +28,7 @@ import Table from '@tiptap/extension-table';
 import TableRow from '@tiptap/extension-table-row';
 import TableCell from '@tiptap/extension-table-cell';
 import TableHeader from '@tiptap/extension-table-header';
+import Underline from '@tiptap/extension-underline';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/supabaseClient';
 type SlashCommand = {
@@ -100,6 +101,7 @@ export default function NoteEditorPage() {
       TableRow,
       TableCell,
       TableHeader,
+      Underline,
     ],
     content: '',
     immediatelyRender: false,
@@ -169,9 +171,9 @@ export default function NoteEditorPage() {
     if (!editor || !noteId) return;
     const channel = supabase.channel('realtime-article-' + noteId)
       .on('postgres_changes', {
-        event: 'UPDATE',
-        schema: 'public',
-        table: 'articles',
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'articles',
         filter: `id=eq.${noteId}`
       }, async (payload) => {
         // Recharge la note depuis la base
@@ -494,13 +496,13 @@ export default function NoteEditorPage() {
       </header>
       {/* Mode preview : EditorPreview */}
       {showPreview ? (
-        <EditorPreview
-          title={title}
-          htmlContent={htmlContent}
+          <EditorPreview
+            title={title}
+            htmlContent={htmlContent}
           markdownContent={markdownContent}
           headerImage={headerImageUrl}
-        />
-      ) : (
+          />
+        ) : (
         <>
           {/* Header image premium */}
           {headerImageUrl ? (
@@ -513,13 +515,13 @@ export default function NoteEditorPage() {
             />
           ) : (
             <div>
-              <button
+            <button
                 title="Ajouter une image d’en-tête"
                 style={{ position: 'fixed', top: 64, right: 0, background: 'none', border: 'none', color: 'var(--text-2)', fontSize: 20, cursor: 'pointer', padding: '10px 18px 10px 8px', borderRadius: 8, zIndex: 1200, transition: 'background 0.18s, color 0.18s' }}
                 onClick={() => setHeaderImageUrl('https://images.unsplash.com/photo-1454982523318-4b6396f39d3a?q=80&w=2070&auto=format&fit=crop')}
-              >
+            >
                 <FiImage size={20} />
-              </button>
+            </button>
             </div>
           )}
           {/* Titre premium éditable */}
@@ -535,7 +537,7 @@ export default function NoteEditorPage() {
                 fontSize: '2.25rem',
                 fontWeight: 700,
                 fontFamily: 'Noto Sans, Inter, Arial, sans-serif',
-                color: 'var(--text-1)',
+                color: '#D4D4D4',
                 background: 'none',
                 border: 'none',
                 outline: 'none',
