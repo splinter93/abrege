@@ -6,7 +6,6 @@ import EditorToolbar from '../../../components/EditorToolbar';
 import { FiMoreVertical, FiEye, FiX, FiImage } from 'react-icons/fi';
 import EditorKebabMenu from '../../../components/EditorKebabMenu';
 import React from 'react';
-import '../../../components/editor/editor-header.css';
 import EditorHeaderImage from '../../../components/EditorHeaderImage';
 import TableOfContents from '../../../components/TableOfContents';
 import { EditorContent } from '@tiptap/react';
@@ -30,6 +29,7 @@ import TableRow from '@tiptap/extension-table-row';
 import TableCell from '@tiptap/extension-table-cell';
 import TableHeader from '@tiptap/extension-table-header';
 import { useRouter } from 'next/navigation';
+import { supabase } from '@/supabaseClient';
 type SlashCommand = {
   id: string;
   alias: Record<string, string>;
@@ -84,6 +84,7 @@ const Logo = () => {
 };
 
 export default function NoteEditorPage() {
+  const router = useRouter();
   const editor = useEditor({
     extensions: [
       StarterKit,
@@ -162,6 +163,30 @@ export default function NoteEditorPage() {
         setLoading(false);
       });
   }, [editor, noteId, hasInitialized]);
+
+  // Realtime : recharge la note en direct si modifiée ailleurs
+  React.useEffect(() => {
+    if (!editor || !noteId) return;
+    const channel = supabase.channel('realtime-article-' + noteId)
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'articles',
+        filter: `id=eq.${noteId}`
+      }, async (payload) => {
+        // Recharge la note depuis la base
+        const note = await getArticleById(noteId);
+        if (note) {
+          setTitle(note.source_title || '');
+          setHeaderImageUrl(note.header_image || null);
+          editor.commands.setContent(note.markdown_content || '');
+        }
+      })
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [editor, noteId]);
 
   // Fonction utilitaire pour extraire les headings du doc Tiptap
   function getHeadingsFromEditor(editorInstance: typeof editor): Heading[] {
@@ -268,6 +293,21 @@ export default function NoteEditorPage() {
     };
   }, [editor, title, handleSave]);
 
+  // Autosave sur modification du titre ou de l'image (en plus du texte)
+  React.useEffect(() => {
+    if (!editor) return;
+    let timeout: NodeJS.Timeout | null = null;
+    if (title || headerImageUrl) {
+      if (timeout) clearTimeout(timeout);
+      timeout = setTimeout(() => {
+        handleSave(title, editor.getText());
+      }, 1000);
+    }
+    return () => {
+      if (timeout) clearTimeout(timeout);
+    };
+  }, [title, headerImageUrl, editor]);
+
   // Sauvegarde automatique du header image
   React.useEffect(() => {
     if (!editor || !hasInitialized) return;
@@ -353,6 +393,47 @@ export default function NoteEditorPage() {
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [editor]);
 
+  // Active le bouton Escape pour retourner aux dossiers
+  React.useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        router.push('/dossiers');
+      }
+    };
+    window.addEventListener('keydown', handleEscape);
+    return () => window.removeEventListener('keydown', handleEscape);
+  }, [router]);
+
+  // Fonction dédiée pour recharger la note depuis le serveur
+  const reloadNoteFromServer = React.useCallback(async () => {
+    if (!editor || !noteId) return;
+    const note = await getArticleById(noteId);
+    if (note) {
+      setTitle(note.source_title || '');
+      setHeaderImageUrl(note.header_image || null);
+      editor.commands.setContent(note.markdown_content || '');
+    }
+  }, [editor, noteId]);
+
+  // --- RELOAD PREMIUM ---
+  // Recharge la note à chaque retour de focus ou de visibilité (anti-conflit Realtime)
+  // Pour désactiver, commenter ce bloc ou mettre ENABLE_AUTO_RELOAD_ON_FOCUS à false
+  const ENABLE_AUTO_RELOAD_ON_FOCUS = true;
+  React.useEffect(() => {
+    if (!ENABLE_AUTO_RELOAD_ON_FOCUS) return;
+    const handleReload = () => {
+      reloadNoteFromServer();
+    };
+    window.addEventListener('focus', handleReload);
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') handleReload();
+    });
+    return () => {
+      window.removeEventListener('focus', handleReload);
+      document.removeEventListener('visibilitychange', handleReload);
+    };
+  }, [reloadNoteFromServer]);
+
   if (loading) {
     return <div style={{ color: '#aaa', fontSize: 18, padding: 48, textAlign: 'center' }}>Chargement…</div>;
   }
@@ -400,7 +481,12 @@ export default function NoteEditorPage() {
           >
             <FiEye size={17} />
           </button>
-          <button className="editor-header-kebab" title="Menu" style={{ background: 'none', border: 'none', color: 'var(--text-2)', fontSize: 20, cursor: 'pointer', padding: '0.5rem', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}>⋯</button>
+          <button
+            className="editor-header-kebab"
+            title="Menu"
+            style={{ background: 'none', border: 'none', color: 'var(--text-2)', fontSize: 20, cursor: 'pointer', padding: '0.5rem', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}
+            onClick={() => setKebabOpen(true)}
+          >⋯</button>
           <button className="editor-header-close" title="Fermer" style={{ background: 'none', border: 'none', color: 'var(--text-2)', fontSize: 17, cursor: 'pointer', padding: '0.5rem', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}>
             <FiX size={17} />
           </button>
@@ -544,6 +630,20 @@ export default function NoteEditorPage() {
           </footer>
         </>
       )}
+      {/* Ajoute le menu contextuel kebab pour les options premium (dont le switch de langue) */}
+      <EditorKebabMenu
+        open={kebabOpen}
+        position={{ top: 60, left: window.innerWidth - 260 }}
+        onClose={() => setKebabOpen(false)}
+        wideMode={wideMode}
+        setWideMode={setWideMode}
+        a4Mode={a4Mode}
+        setA4Mode={setA4Mode}
+        autosaveOn={autosaveOn}
+        setAutosaveOn={setAutosaveOn}
+        slashLang={slashLang}
+        setSlashLang={setSlashLang}
+      />
     </div>
   );
 } 
