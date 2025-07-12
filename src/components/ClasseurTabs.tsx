@@ -20,7 +20,6 @@ import {
   SortableContext,
   useSortable,
   horizontalListSortingStrategy,
-  sortableKeyboardCoordinates,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
@@ -51,7 +50,6 @@ interface SortableTabProps {
 }
 
 function SortableTab({ classeur, isActive, onSelectClasseur, onContextMenu, listeners, attributes, setNodeRef, isDragging, isOverlay, sortableTransform, sortableTransition }: SortableTabProps) {
-  const accentColor = "#e55a2c";
   return (
     <div
       ref={setNodeRef}
@@ -78,7 +76,7 @@ function SortableTab({ classeur, isActive, onSelectClasseur, onContextMenu, list
           role="button"
           aria-label="Changer l'emoji"
         >
-          {classeur.icon === "FileText" ? "📄" : classeur.icon && EMOJI_CHOICES.includes(classeur.icon) ? classeur.icon : "📁"}
+          {classeur.icon === "FileText" ? "📄" : classeur.icon ? classeur.icon : "📁"}
         </span>
         <span style={{ fontFamily: "inherit" }}>{classeur.name}</span>
       </button>
@@ -109,6 +107,9 @@ const ClasseurTabs: React.FC<ClasseurTabsProps> = ({
   onUpdateClasseur,
   onUpdateClasseurPositions,
 }) => {
+  React.useEffect(() => {
+    console.debug('DnD Ready');
+  }, []);
   const [contextMenu, setContextMenu] = useState<{ visible: boolean; x: number; y: number; item: Classeur | null }>({ visible: false, x: 0, y: 0, item: null });
   const [isColorPickerVisible, setColorPickerVisible] = useState(false);
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -169,6 +170,7 @@ const ClasseurTabs: React.FC<ClasseurTabsProps> = ({
   // DnD Kit reorder logic
   const [draggedClasseur, setDraggedClasseur] = useState<Classeur | null>(null);
   const handleDragStart = (event: DragStartEvent) => {
+    console.debug('Drag start', event);
     const id = event.active.id as string;
     const found = classeurs.find((c) => c.id === id) || null;
     setDraggedClasseur(found);

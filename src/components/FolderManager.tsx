@@ -16,10 +16,12 @@ interface FolderManagerProps {
 }
 
 const FolderManager: React.FC<FolderManagerProps> = ({ classeurId, classeurName, parentFolderId }) => {
+  // State local pour le dossier courant
+  const [currentFolderId, setCurrentFolderId] = useState<string | undefined>(parentFolderId);
+  const [folderPath, setFolderPath] = useState<Folder[]>([]);
   const {
     folders,
     files,
-    currentFolderId,
     loading,
     error,
     renamingItemId,
@@ -27,14 +29,12 @@ const FolderManager: React.FC<FolderManagerProps> = ({ classeurId, classeurName,
     startRename,
     submitRename,
     cancelRename,
-    goToFolder,
-    goBack,
     createFolder,
     createFile,
     deleteFolder,
     deleteFile,
     moveItem,
-  } = useFolderManagerState(classeurId, parentFolderId);
+  } = useFolderManagerState(classeurId, currentFolderId);
 
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -43,7 +43,7 @@ const FolderManager: React.FC<FolderManagerProps> = ({ classeurId, classeurName,
 
   // Handlers pour FolderContent
   const handleItemClick = (item: any) => {
-    if (item.type === 'folder') goToFolder(item.id);
+    if (item.type === 'folder') handleFolderOpen(item);
     else handleFileOpen(item);
   };
   const handleItemDoubleClick = handleItemClick;
@@ -66,7 +66,7 @@ const FolderManager: React.FC<FolderManagerProps> = ({ classeurId, classeurName,
   // Handlers pour le menu contextuel
   const handleOpen = () => {
     if (!contextMenuState.item) return;
-    if (contextMenuState.item.type === 'folder') goToFolder(contextMenuState.item.id);
+    if (contextMenuState.item.type === 'folder') handleFolderOpen(contextMenuState.item);
     else handleFileOpen(contextMenuState.item);
     closeContextMenu();
   };
@@ -83,12 +83,13 @@ const FolderManager: React.FC<FolderManagerProps> = ({ classeurId, classeurName,
     closeContextMenu();
   };
 
-  // Handler d'ouverture de dossier
+  // Handler d'ouverture de dossier (met à jour le state local)
   const handleFolderOpen = (folder: Folder) => {
-    router.push(`/classeur/${classeurId}/dossier/${folder.id}`);
+    setCurrentFolderId(folder.id);
+    setFolderPath(prev => [...prev, folder]);
   };
 
-  // Handler d'ouverture de fichier
+  // Handler d'ouverture de fichier (conserve router.push pour les notes)
   const handleFileOpen = (file: FileArticle) => {
     router.push(`/note/${file.id}`);
   };
@@ -113,6 +114,15 @@ const FolderManager: React.FC<FolderManagerProps> = ({ classeurId, classeurName,
 
   const closeContextMenu = () => setContextMenuState(cm => ({ ...cm, visible: false }));
 
+  // Handler retour (remonte d'un niveau)
+  const handleGoBack = () => {
+    setCurrentFolderId(undefined);
+    setFolderPath([]);
+  };
+
+  // Breadcrumb local basé sur folderPath
+  const breadcrumb = folderPath;
+
   return (
     <div
       className="folder-manager-root folder-manager-container"
@@ -133,7 +143,7 @@ const FolderManager: React.FC<FolderManagerProps> = ({ classeurId, classeurName,
         position: 'relative',
       }}
     >
-      {/* Header classeur modernisé */}
+      {/* Header classeur/dossier modernisé */}
       <div style={{
         display: 'flex',
         alignItems: 'center',
@@ -144,18 +154,68 @@ const FolderManager: React.FC<FolderManagerProps> = ({ classeurId, classeurName,
         padding: '0 32px 8px 32px',
         minHeight: 64,
       }}>
-        <h2 style={{
-          fontSize: 20,
-          fontWeight: 700,
-          letterSpacing: 0.2,
-          color: '#fff',
-          margin: 0,
-          lineHeight: 1.2,
+        {/* Bouton retour si dans un sous-dossier */}
+        {currentFolderId && (
+          <button onClick={handleGoBack} style={{ fontSize: 22, marginRight: 18, background: 'none', border: 'none', color: '#fff', cursor: 'pointer' }} aria-label="Retour">←</button>
+        )}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
           flex: 1,
-          textAlign: 'left',
-          textShadow: '0 1px 8px rgba(0,0,0,0.10)',
-          fontFamily: 'Noto Sans, Inter, Arial, sans-serif',
-        }}>{classeurName}</h2>
+          minWidth: 0,
+        }}>
+          <span style={{
+            fontSize: 20,
+            fontWeight: 700,
+            letterSpacing: 0.2,
+            color: '#fff',
+            margin: 0,
+            lineHeight: 1.2,
+            textAlign: 'left',
+            textShadow: '0 1px 8px rgba(0,0,0,0.10)',
+            fontFamily: 'Noto Sans, Inter, Arial, sans-serif',
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            display: 'flex',
+            alignItems: 'center',
+          }}>
+            {classeurName}
+            {breadcrumb.length > 0 && (
+              <span style={{ color: 'var(--text-2)', fontWeight: 500, fontSize: 18, margin: '0 8px', userSelect: 'none' }}>/</span>
+            )}
+          </span>
+          {/* Breadcrumb dynamique */}
+          {breadcrumb.length > 0 && (
+            <span style={{ color: 'var(--text-2)', fontWeight: 500, fontSize: 18, display: 'flex', alignItems: 'center', gap: 0 }}>
+              {breadcrumb.map((folder, idx) => (
+                <span key={folder.id} style={{ display: 'flex', alignItems: 'center' }}>
+                  <span
+                    style={{
+                      cursor: idx < breadcrumb.length - 1 ? 'pointer' : 'default',
+                      textDecoration: idx < breadcrumb.length - 1 ? 'underline dotted' : 'none',
+                      opacity: idx < breadcrumb.length - 1 ? 0.85 : 1,
+                      marginRight: 4,
+                      maxWidth: 180,
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                    }}
+                    onClick={() => {
+                      if (idx < breadcrumb.length - 1) {
+                        setCurrentFolderId(folder.id);
+                        setFolderPath(breadcrumb.slice(0, idx + 1));
+                      }
+                    }}
+                  >
+                    {folder.name}
+                  </span>
+                  {idx < breadcrumb.length - 1 && <span style={{ margin: '0 2px', color: 'var(--text-2)' }}>/</span>}
+                </span>
+              ))}
+            </span>
+          )}
+        </div>
         <div style={{ marginLeft: 32 }}>
           <FolderToolbar
             onCreateFolder={async () => {
@@ -171,14 +231,14 @@ const FolderManager: React.FC<FolderManagerProps> = ({ classeurId, classeurName,
         </div>
       </div>
       <FolderContent
-        classeurName={classeurName}
+        classeurName={(currentFolderId && folders.find(f => f.id === currentFolderId)?.name) ? folders.find(f => f.id === currentFolderId)?.name! : classeurName || ''}
         folders={folders}
         files={files}
         loading={loading}
         error={error}
         onFolderOpen={handleFolderOpen}
         onFileOpen={handleFileOpen}
-                  renamingItemId={renamingItemId}
+        renamingItemId={renamingItemId}
         onRenameFile={(id, newName, type) => submitRename(id, newName, type)}
         onRenameFolder={(id, newName, type) => submitRename(id, newName, type)}
         onCancelRename={cancelRename}
@@ -195,7 +255,7 @@ const FolderManager: React.FC<FolderManagerProps> = ({ classeurId, classeurName,
             }}
             onCreateFile={handleCreateAndRenameFile}
             onToggleView={setViewMode}
-                  viewMode={viewMode}
+            viewMode={viewMode}
           />
         }
         onDropItem={handleDropItem}

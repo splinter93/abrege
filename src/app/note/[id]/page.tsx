@@ -93,7 +93,7 @@ export default function NoteEditorPage() {
 
   const handleSave = ({ title, markdown_content, html_content, headerImage, titleAlign: newAlign }: {
     title: string;
-    markdown_content: string;
+    markdown_content: string; // doit être le markdown natif
     html_content: string;
     headerImage?: string | null;
     titleAlign?: string;
@@ -103,10 +103,11 @@ export default function NoteEditorPage() {
     setHtmlContent(html_content || '');
     saveTimer.current = setTimeout(async () => {
       try {
+        // Correction : markdown_content doit être le markdown natif, pas le HTML
         const dataToSave = {
           source_title: title || 'Nouvelle note',
-          markdown_content,
-          html_content,
+          markdown_content, // markdown natif, transmis tel quel
+          html_content,     // HTML généré
           classeur_id: classeurId,
           header_image: headerImage,
           title_align: newAlign || titleAlign || 'left',
@@ -161,14 +162,14 @@ export default function NoteEditorPage() {
             markdownContent={initialContent}
           />
         ) : (
-          <Editor
-            key={noteId}
-            initialTitle={title}
-            initialContent={initialContent}
-            headerImage={headerImage ?? undefined}
-            initialTitleAlign={titleAlign}
-            onClose={handleClose}
-            onSave={handleSave}
+    <Editor
+      key={noteId}
+      initialTitle={title}
+      initialContent={initialContent}
+      headerImage={headerImage ?? undefined}
+      initialTitleAlign={titleAlign}
+      onClose={handleClose}
+      onSave={handleSave}
             onTogglePreview={() => setIsPreview(true)}
           />
         )}
