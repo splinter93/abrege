@@ -41,9 +41,10 @@ export default function TableOfContents({ headings = [], currentId, pinned = fal
     flexDirection: 'column',
     alignItems: 'flex-start',
     gap: 0,
-    padding: isCollapsed ? '0' : '14px 18px',
+    padding: isCollapsed ? '0' : '14px 18px 14px 18px',
+    paddingRight: isCollapsed ? 0 : 12, // Ajoute un léger padding à droite uniquement déployé
     boxShadow: isCollapsed ? 'none' : '0 2px 12px rgba(0,0,0,0.06)',
-    maxHeight: '80vh',
+    maxHeight: isCollapsed ? undefined : '56vh',
     transition: 'all 0.32s cubic-bezier(0.2, 0.8, 0.4, 1)',
     transform: isCollapsed ? 'translateX(0)' : 'none',
     backdropFilter: isCollapsed ? 'none' : 'blur(8px)',

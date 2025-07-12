@@ -511,7 +511,7 @@ export default function NoteEditorPage() {
             </div>
           </div>
           {/* TOC premium à droite */}
-          <div style={{ position: 'fixed', top: 385, right: 0, zIndex: 1002, minWidth: 32, maxWidth: 300, padding: '0 18px 0 0', boxSizing: 'border-box' }}>
+          <div style={{ position: 'fixed', top: 385, right: 10, zIndex: 1002, minWidth: 32, maxWidth: 300, padding: '0 8px 0 0', boxSizing: 'border-box' }}>
             <TableOfContents headings={tocHeadings} containerRef={editorContainerRef} />
           </div>
           {/* Le reste de la page éditeur ici... */}
