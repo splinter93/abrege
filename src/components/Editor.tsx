@@ -1,8 +1,8 @@
 'use client';
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
-import { Extension } from '@tiptap/core';
-import { Plugin, PluginKey } from 'prosemirror-state';
+import { Node as TiptapNode, Extension } from '@tiptap/core';
+import { Plugin, Transaction, EditorState } from 'prosemirror-state';
 import { Decoration, DecorationSet } from 'prosemirror-view';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
@@ -318,6 +318,99 @@ const Editor: React.FC<EditorProps> = ({ initialTitle, initialContent = '', head
     breaks: true,
   });
 
+  // NodeView custom pour les vidéos
+  const VideoEmbed = TiptapNode.create({
+    name: 'videoEmbed',
+    group: 'block',
+    atom: true,
+    parseHTML() {
+      return [
+        {
+          tag: 'div.video-embed',
+        },
+      ];
+    },
+    renderHTML({ HTMLAttributes }) {
+      return ['div', { class: 'video-embed' }];
+    },
+    addNodeView() {
+      return ({ node }) => {
+        // Extraction robuste de l’URL
+        let url = node.textContent?.trim() || node.attrs.url || node.attrs.href || '';
+        let embedUrl = '';
+        let type = '';
+        // YouTube
+        // Accepte : youtube.com/watch?v=ID, youtu.be/ID, avec ou sans paramètres
+        const ytMatch = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([\w-]{11})/);
+        if (ytMatch) {
+          const videoId = ytMatch[1];
+          embedUrl = `https://www.youtube.com/embed/${videoId}`;
+          type = 'youtube';
+        }
+        // Vimeo
+        const vimeoMatch = url.match(/vimeo\.com\/(\d+)/);
+        if (!type && vimeoMatch) {
+          const videoId = vimeoMatch[1];
+          embedUrl = `https://player.vimeo.com/video/${videoId}`;
+          type = 'vimeo';
+        }
+        const dom = document.createElement('div');
+        dom.className = 'video-embed';
+        dom.style.position = 'relative';
+        dom.style.paddingBottom = '56.25%';
+        dom.style.height = '0';
+        dom.style.overflow = 'hidden';
+        dom.style.background = 'var(--surface-2)';
+        dom.style.borderRadius = '12px';
+        dom.style.margin = '1.5rem 0';
+        if (type && embedUrl) {
+          const iframe = document.createElement('iframe');
+          iframe.src = embedUrl;
+          iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
+          iframe.allowFullscreen = true;
+          iframe.frameBorder = '0';
+          iframe.style.position = 'absolute';
+          iframe.style.top = '0';
+          iframe.style.left = '0';
+          iframe.style.width = '100%';
+          iframe.style.height = '100%';
+          dom.appendChild(iframe);
+        } else {
+          dom.innerHTML = `<div style='color:var(--text-3);padding:2rem;text-align:center;'>Lien vidéo non reconnu<br><span style='font-size:0.95em;'>${url}</span></div>`;
+        }
+        return { dom };
+      };
+    },
+  });
+
+  // Extension pour auto-embed les liens YouTube/Vimeo markdown
+  const AutoEmbedVideo = Extension.create({
+    name: 'autoEmbedVideo',
+    addProseMirrorPlugins() {
+      return [
+        new Plugin({
+          appendTransaction: (transactions: readonly Transaction[], oldState: EditorState, newState: EditorState) => {
+            let tr = newState.tr;
+            let modified = false;
+            newState.doc.descendants((node: any, pos: number) => {
+              if (node.type.name === 'link' && node.attrs.href) {
+                const url = node.attrs.href;
+                const ytMatch = url.match(/(?:https?:\/\/(?:www\.|m\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/)([\w-]{11}))/);
+                const vimeoMatch = url.match(/https?:\/\/(?:www\.)?vimeo\.com\/(\d+)/);
+                if (ytMatch || vimeoMatch) {
+                  // Remplace le node link par un node videoEmbed
+                  tr = tr.replaceWith(pos, pos + node.nodeSize, newState.schema.nodes.videoEmbed.create({}, newState.schema.text(url)));
+                  modified = true;
+                }
+              }
+            });
+            return modified ? tr : null;
+          },
+        })
+      ];
+    },
+  });
+
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -377,6 +470,8 @@ const Editor: React.FC<EditorProps> = ({ initialTitle, initialContent = '', head
         linkify: true,
         breaks: true,
       }),
+      VideoEmbed,
+      AutoEmbedVideo,
     ],
     content: markdownContent,
     onUpdate: ({ editor }) => {
@@ -403,6 +498,7 @@ const Editor: React.FC<EditorProps> = ({ initialTitle, initialContent = '', head
       handlePaste(view, event, slice) {
         const text = event.clipboardData?.getData('text/plain');
         if (text) {
+          // 1. Détection tableau markdown (déjà existant)
           const table = parseGfmTable(text);
           if (table && table.length >= 2 && editor) {
             // Enlève la ligne de séparation
@@ -437,6 +533,25 @@ const Editor: React.FC<EditorProps> = ({ initialTitle, initialContent = '', head
                 }
               }
             }, 10);
+            return true;
+          }
+          // 2. Détection lien YouTube/Vimeo
+          const youtubeRegex = /(?:https?:\/\/(?:www\.|m\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/)([\w-]{11}))(?:[&?][^\s]*)?/g;
+          const vimeoRegex = /https?:\/\/(?:www\.)?vimeo\.com\/(\d+)/g;
+          let replaced = false;
+          let newText = text;
+          // YouTube
+          newText = newText.replace(youtubeRegex, (match, videoId) => {
+            replaced = true;
+            return `\n<div class=\"video-embed\">${match}</div>\n`;
+          });
+          // Vimeo
+          newText = newText.replace(vimeoRegex, (match, videoId) => {
+            replaced = true;
+            return `\n<div class=\"video-embed\">${match}</div>\n`;
+          });
+          if (replaced && editor) {
+            editor.commands.insertContent(newText);
             return true;
           }
         }
@@ -776,9 +891,11 @@ const Editor: React.FC<EditorProps> = ({ initialTitle, initialContent = '', head
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [closeNote]);
 
+  // Hydrate le contenu markdown UNE SEULE FOIS au montage (ou changement de note)
   useEffect(() => {
-    if (editor && markdownContent) {
+    if (editor && markdownContent && !hydratedOnce.current) {
       editor.commands.setContent(markdownContent, false);
+      hydratedOnce.current = true;
       // Forcer extraction des headings après setContent
       setTimeout(() => {
         const headingsArr: Heading[] = [];
@@ -939,7 +1056,7 @@ const Editor: React.FC<EditorProps> = ({ initialTitle, initialContent = '', head
                   </button>
                 )}
                 {/* === TITRE DIRECTEMENT === */}
-                <div style={{ width: '100%', display: 'flex', justifyContent: 'center', margin: '20px 0 25px 0', padding: '0 24px', boxSizing: 'border-box' }}>
+                <div style={{ width: '100%', display: 'flex', justifyContent: 'center', padding: 0, boxSizing: 'border-box', margin: '20px 0 25px 0' }}>
                   <textarea
                     ref={titleInputRef as any}
                     className="editor-title"
@@ -951,12 +1068,13 @@ const Editor: React.FC<EditorProps> = ({ initialTitle, initialContent = '', head
                     rows={1}
                     wrap="soft"
                     style={{
+                      width: '750px',
+                      margin: 0,
                       resize: 'none',
                       height: '45px',
                       minHeight: '45px',
                       maxHeight: '45px',
                       overflow: 'hidden',
-                      width: wideMode ? '1200px' : '1000px',
                     }}
                     autoComplete="off"
                     spellCheck={true}
@@ -964,69 +1082,54 @@ const Editor: React.FC<EditorProps> = ({ initialTitle, initialContent = '', head
                 </div>
                 {/* === ZONE MARKDOWN DIRECTEMENT EN DESSOUS === */}
                 <div
-                  className="editor-content markdown-body"
                   style={{
-                    width: wideMode ? '1200px' : '1000px',
-                    margin: '0 auto',
+                    width: '100%',
+                    display: 'flex',
+                    justifyContent: 'center',
                     padding: 0,
+                    boxSizing: 'border-box',
                     minHeight: '100vh',
                     height: 'auto',
-                    boxSizing: 'border-box',
                   }}
-                  onDrop={async (e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    if (!editor) return;
-                    const files = Array.from(e.dataTransfer.files);
-                    const imageFile = files.find(f => f.type.startsWith('image/'));
-                    if (imageFile) {
-                      const reader = new FileReader();
-                      reader.onload = (ev) => {
-                        if (typeof ev.target?.result === 'string') {
-                          editor.chain().focus().setImage({ src: ev.target.result }).run();
-                        }
-                      };
-                      reader.readAsDataURL(imageFile);
-                    }
-                  }}
-                  onDragOver={e => { e.preventDefault(); }}
                 >
-                  <EditorContent
-                    editor={editor}
-                    key={editorKey}
-                    onKeyDown={e => {
-                      if (e.key === '/' && editor) {
-                        // Calculer la position du caret dans la fenêtre (viewport)
-                        const selection = window.getSelection();
-                        if (selection && selection.rangeCount > 0) {
-                          const range = selection.getRangeAt(0).cloneRange();
-                          let rect = range.getBoundingClientRect();
-                          // Si le caret est sur une ligne vide, rect peut être (0,0,0,0)
-                          if (rect.left === 0 && rect.top === 0 && rect.width === 0 && rect.height === 0) {
-                            let node = selection.anchorNode;
-                            while (node && node.nodeType !== 1) node = node.parentNode;
-                            if (node && (node as HTMLElement).getBoundingClientRect) {
-                              rect = (node as HTMLElement).getBoundingClientRect();
-                            } else {
-                              const container = document.querySelector('.editor-content.markdown-body');
-                              if (container && container.getBoundingClientRect) {
-                                const cRect = container.getBoundingClientRect();
-                                rect = { left: cRect.left + cRect.width/2 - 160, top: cRect.top + 32, right: 0, bottom: 0, width: 0, height: 0, x: 0, y: 0, toJSON: () => {} };
+                  <div style={{ width: '750px', margin: 0, display: 'block', textAlign: 'left' }}>
+                    <EditorContent
+                      editor={editor}
+                      key={editorKey}
+                      onKeyDown={e => {
+                        if (e.key === '/' && editor) {
+                          // Calculer la position du caret dans la fenêtre (viewport)
+                          const selection = window.getSelection();
+                          if (selection && selection.rangeCount > 0) {
+                            const range = selection.getRangeAt(0).cloneRange();
+                            let rect = range.getBoundingClientRect();
+                            // Si le caret est sur une ligne vide, rect peut être (0,0,0,0)
+                            if (rect.left === 0 && rect.top === 0 && rect.width === 0 && rect.height === 0) {
+                              let node = selection.anchorNode;
+                              while (node && node.nodeType !== 1) node = node.parentNode;
+                              if (node && (node as HTMLElement).getBoundingClientRect) {
+                                rect = (node as HTMLElement).getBoundingClientRect();
+                              } else {
+                                const container = document.querySelector('.editor-content.markdown-body');
+                                if (container && container.getBoundingClientRect) {
+                                  const cRect = container.getBoundingClientRect();
+                                  rect = { left: cRect.left + cRect.width/2 - 160, top: cRect.top + 32, right: 0, bottom: 0, width: 0, height: 0, x: 0, y: 0, toJSON: () => {} };
+                                }
                               }
                             }
+                            // Calcul dynamique : si le menu serait coupé en bas, place-le au-dessus du caret
+                            const menuHeight = 380;
+                            let anchorTop = rect.bottom;
+                            if (rect.bottom + menuHeight > window.innerHeight - 24) {
+                              anchorTop = rect.top - menuHeight - 8;
+                            }
+                            const anchor = { left: rect.left, top: anchorTop };
+                            slashMenuRef.current?.openMenu(anchor);
                           }
-                          // Calcul dynamique : si le menu serait coupé en bas, place-le au-dessus du caret
-                          const menuHeight = 380;
-                          let anchorTop = rect.bottom;
-                          if (rect.bottom + menuHeight > window.innerHeight - 24) {
-                            anchorTop = rect.top - menuHeight - 8;
-                          }
-                          const anchor = { left: rect.left, top: anchorTop };
-                          slashMenuRef.current?.openMenu(anchor);
                         }
-                      }
-                    }}
-                  />
+                      }}
+                    />
+                  </div>
                 </div>
                 {/* === TOC FIXE À DROITE === */}
                 {headings.length > 0 && (

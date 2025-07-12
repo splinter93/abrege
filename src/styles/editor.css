@@ -1589,9 +1589,6 @@ textarea.editor-title-input {
   white-space: normal !important;
   word-break: break-word !important;
   transition: none !important;
-  -webkit-resize: none !important;
-  -moz-resize: none !important;
-  resize: none !important;
 }
 
 /* Désactiver absolument tout redimensionnement */
@@ -1636,4 +1633,96 @@ textarea.editor-title-input,
 
 .ProseMirror.editor-content {
   padding-top: 0 !important;
+}
+
+/* Centrage horizontal du textarea titre et de la zone texte, mais texte à gauche */
+.editor-title,
+.editor-title-input,
+.editor-title-span,
+textarea.editor-title,
+textarea.editor-title-input {
+  text-align: left !important;
+  display: block !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+/* BLOC FINAL ÉPURÉ POUR LA ZONE TEXTE DE L’ÉDITEUR */
+.editor-content,
+.markdown-body {
+  width: 750px;
+  margin: 0 auto;
+  display: block;
+}
+
+.editor-image {
+  width: 100%;
+  height: auto;
+  max-width: 700px;
+  display: block;
+  margin: 0 auto;
+  background: var(--surface-2);
+  border-radius: 10px;
+  box-shadow: 0 2px 12px 0 rgba(0,0,0,0.06);
+  transition: filter 0.18s, box-shadow 0.18s;
+  object-fit: contain;
+}
+
+.editor-image:hover {
+  filter: brightness(0.97) saturate(1.08);
+  box-shadow: 0 4px 24px 0 rgba(0,0,0,0.10);
+}
+
+.editor-content pre,
+.editor-content pre code {
+  color: #FF6A00 !important;
+  /* Optionnel : tu peux ajuster la teinte ici pour matcher la palette */
+}
+
+.editor-content th {
+  font-size: 1.2rem;
+}
+
+.editor-title,
+.editor-title-input {
+  text-align: left !important;
+}
+
+/* Épure l’alignement du titre : tout à gauche, aucune autre règle de text-align */
+.editor-title,
+.editor-title-input,
+.editor-title-span,
+textarea.editor-title,
+textarea.editor-title-input {
+  text-align: left !important;
+}
+
+/* BLOC FINAL ÉPURÉ POUR LE TITRE DE L’ÉDITEUR */
+.editor-title,
+.editor-title-input,
+.editor-title-span,
+textarea.editor-title,
+textarea.editor-title-input {
+  width: 750px;
+  height: 45px;
+  min-height: 45px;
+  max-height: 45px;
+  margin: 0 auto;
+  display: block;
+  padding: 0;
+  font-size: 2.25rem;
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--text-1);
+  font-family: 'Noto Sans', sans-serif;
+  background: none;
+  border: none;
+  outline: none;
+  box-sizing: border-box;
+  white-space: normal;
+  word-break: break-word;
+  overflow: hidden;
+  resize: none;
+  text-align: left;
+  transition: none;
 }
