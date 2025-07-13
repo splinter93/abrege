@@ -6,6 +6,12 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
+// =============================
+// [TEMP] USER_ID HARDCODED FOR DEV/LLM
+// TODO: Remove this and extract user_id from API key or session when auth is implemented!
+const USER_ID = "93119431-1df3-461c-9354-43e08854db1d";
+// =============================
+
 export type CreateClasseurPayload = {
   name: string;
   emoji?: string;
@@ -35,11 +41,12 @@ export async function POST(req: Request): Promise<Response> {
     }
     const { name, emoji, color, position } = parseResult.data;
     const insertData = {
+      user_id: USER_ID, // [TEMP] Injected automatically for all classeurs (remove when auth is ready)
       name,
-      emoji: emoji || '📁',
-      color: color || '#e55a2c',
-      position,
+      emoji: emoji || null,
+      color: color || null,
       created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
     };
     const { data, error } = await supabase
       .from('classeurs')

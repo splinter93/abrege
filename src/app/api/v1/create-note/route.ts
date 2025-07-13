@@ -25,6 +25,12 @@ export type CreateNoteResponse =
   | { success: true; note: Article }
   | { error: string; details?: string[] };
 
+// =============================
+// [TEMP] USER_ID HARDCODED FOR DEV/LLM
+// TODO: Remove this and extract user_id from API key or session when auth is implemented!
+const USER_ID = "93119431-1df3-461c-9354-43e08854db1d";
+// =============================
+
 export async function POST(req: Request): Promise<Response> {
   try {
     const body: CreateNotePayload = await req.json();
@@ -34,8 +40,8 @@ export async function POST(req: Request): Promise<Response> {
       title: z.string().min(1, 'title requis'),
       markdown_content: z.string().min(1, 'markdown_content requis'),
       header_image: z.string().url('header_image doit être une URL valide').optional(),
-      source_type: z.string().min(1, 'source_type requis'),
-      source_url: z.string().min(1, 'source_url requis'),
+      source_type: z.string().min(1, 'source_type requis').optional(),
+      source_url: z.string().min(1, 'source_url requis').optional(),
     });
     const parseResult = schema.safeParse(body);
     if (!parseResult.success) {
@@ -61,9 +67,10 @@ export async function POST(req: Request): Promise<Response> {
     // Suppression de toute logique liée à html_content (obsolète)
 
     const insertData = {
+      user_id: USER_ID, // [TEMP] Injected automatically for all notes (remove when auth is ready)
       classeur_id,
-      source_type,
-      source_url,
+      source_type: source_type || null,
+      source_url: source_url || null,
       source_title: title,
       markdown_content, // correspond à la colonne Supabase
       header_image: header_image || null,
