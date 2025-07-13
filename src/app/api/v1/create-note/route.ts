@@ -28,7 +28,7 @@ export type CreateNoteResponse =
 // =============================
 // [TEMP] USER_ID HARDCODED FOR DEV/LLM
 // TODO: Remove this and extract user_id from API key or session when auth is implemented!
-const USER_ID = "93119431-1df3-461c-9354-43e08854db1d";
+const USER_ID = "3223651c-5580-4471-affb-b3f4456bd729";
 // =============================
 
 export async function POST(req: Request): Promise<Response> {
