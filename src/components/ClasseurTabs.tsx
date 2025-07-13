@@ -31,7 +31,7 @@ const ALL_EMOJIS =
 export interface Classeur {
   id: string;
   name: string;
-  icon?: string;
+  emoji?: string;
   color?: string;
 }
 
@@ -100,7 +100,7 @@ function SortableTab({ classeur, isActive, onSelectClasseur, onContextMenu, list
           role="button"
           aria-label="Changer l'emoji"
         >
-          {classeur.icon === "FileText" ? "📄" : classeur.icon ? classeur.icon : "📁"}
+          {classeur.emoji && classeur.emoji.trim() !== "" ? classeur.emoji : "📁"}
         </span>
         <span style={{ fontFamily: "inherit" }}>{classeur.name}</span>
       </button>
@@ -332,7 +332,7 @@ const ClasseurTabs: React.FC<ClasseurTabsProps> = ({
                 style={{ fontSize: 26, background: "none", border: "none", cursor: "pointer", padding: 2, borderRadius: 7, transition: "background 0.15s" }}
                 onClick={() => {
                   if (emojiPicker.classeur) {
-                    onUpdateClasseur(emojiPicker.classeur.id, { icon: emoji });
+                    onUpdateClasseur(emojiPicker.classeur.id, { emoji });
                     setEmojiPicker({ ...emojiPicker, visible: false });
                   }
                 }}
