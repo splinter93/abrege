@@ -15,8 +15,6 @@ const USER_ID = "93119431-1df3-461c-9354-43e08854db1d";
 export type CreateClasseurPayload = {
   name: string;
   emoji?: string;
-  color?: string;
-  position: number;
 };
 export type CreateClasseurResponse =
   | { success: true; classeur: Classeur }
@@ -29,7 +27,6 @@ export async function POST(req: Request): Promise<Response> {
     const schema = z.object({
       name: z.string().min(1, 'name requis'),
       emoji: z.string().optional(),
-      position: z.number().optional(),
     });
     const parseResult = schema.safeParse(body);
     if (!parseResult.success) {
@@ -38,7 +35,7 @@ export async function POST(req: Request): Promise<Response> {
         { status: 422 }
       );
     }
-    const { name, emoji, position } = parseResult.data;
+    const { name, emoji } = parseResult.data;
     const insertData = {
       user_id: USER_ID, // [TEMP] Injected automatically for all classeurs (remove when auth is ready)
       name,
@@ -82,8 +79,8 @@ export async function DELETE(req: Request): Promise<Response> {
 
 /**
  * Endpoint: POST /api/v1/create-classeur
- * Payload attendu : { name: string, emoji?: string, color?: string, position: number }
- * - Valide le payload avec Zod (name et position obligatoires)
+ * Payload attendu : { name: string, emoji?: string }
+ * - Valide le payload avec Zod (name obligatoire)
  * - Crée un classeur dans Supabase (table classeurs)
  * - Réponses :
  *   - 201 : { success: true, classeur }
