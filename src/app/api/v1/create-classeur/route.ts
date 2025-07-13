@@ -29,8 +29,7 @@ export async function POST(req: Request): Promise<Response> {
     const schema = z.object({
       name: z.string().min(1, 'name requis'),
       emoji: z.string().optional(),
-      color: z.string().optional(),
-      position: z.number().int().nonnegative(),
+      position: z.number().optional(),
     });
     const parseResult = schema.safeParse(body);
     if (!parseResult.success) {
@@ -39,14 +38,12 @@ export async function POST(req: Request): Promise<Response> {
         { status: 422 }
       );
     }
-    const { name, emoji, color, position } = parseResult.data;
+    const { name, emoji, position } = parseResult.data;
     const insertData = {
       user_id: USER_ID, // [TEMP] Injected automatically for all classeurs (remove when auth is ready)
       name,
       emoji: emoji || null,
-      color: color || null,
       created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
     };
     const { data, error } = await supabase
       .from('classeurs')
