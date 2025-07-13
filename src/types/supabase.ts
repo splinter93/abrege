@@ -25,7 +25,7 @@ export type Article = {
 export type Classeur = {
   color: string | null;
   created_at: string | null;
-  icon: string | null;
+  emoji: string | null;
   id: string;
   name: string;
   position: number;

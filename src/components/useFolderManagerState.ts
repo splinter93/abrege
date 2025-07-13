@@ -115,8 +115,22 @@ export function useFolderManagerState(classeurId: string, parentFolderId?: strin
       )
       .subscribe();
 
+    // Abonnement à la table "folders" (dossiers)
+    const folderChannel = supabase
+      .channel('realtime:folders')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'folders' },
+        (payload) => {
+          // Rafraîchir la liste des dossiers à chaque changement
+          getFolders(classeurId, parentFolderId).then(setFolders);
+        }
+      )
+      .subscribe();
+
     return () => {
       supabase.removeChannel(channel);
+      supabase.removeChannel(folderChannel);
     };
   }, [classeurId, parentFolderId, refreshKey]);
 

@@ -4,6 +4,7 @@ import FolderManager from "../../components/FolderManager";
 import ClasseurTabs, { Classeur } from "../../components/ClasseurTabs";
 import DynamicIcon from "../../components/DynamicIcon";
 import { getClasseurs, createClasseur, updateClasseur, deleteClasseur, updateClasseurPositions } from "../../services/supabase";
+import { supabase } from "../../supabaseClient";
 import { toast } from "react-hot-toast";
 import "./DossiersPage.css";
 
@@ -36,6 +37,18 @@ const DossiersPage: React.FC = () => {
       }
     };
     fetchClasseurs();
+
+    // Abonnement Realtime à la table 'classeurs'
+    const classeurChannel = supabase
+      .channel('realtime:classeurs')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'classeurs' }, (payload: any) => {
+        // Rafraîchir la liste des classeurs à chaque changement
+        fetchClasseurs();
+      })
+      .subscribe();
+    return () => {
+      supabase.removeChannel(classeurChannel);
+    };
   }, []);
 
   useEffect(() => {
@@ -55,7 +68,7 @@ const DossiersPage: React.FC = () => {
         const newClasseurData = {
           name: newName.trim(),
           position: classeurs.length,
-          icon: "FileText",
+          emoji: "FileText",
           color: "#808080",
         };
         const newClasseur = await createClasseur(newClasseurData);
@@ -133,15 +146,13 @@ const DossiersPage: React.FC = () => {
         onUpdateClasseurPositions={handleUpdateClasseurPositions}
       />
       <div className="page-content">
-        {activeClasseur ? (
-          <>
-            <FolderManager
-              key={activeClasseurId ?? undefined}
-              classeurId={activeClasseurId as string}
-              classeurName={activeClasseur.name}
-              classeurIcon={activeClasseur.emoji}
-            />
-          </>
+        {activeClasseur && activeClasseur.id && activeClasseur.name ? (
+          <FolderManager
+            key={activeClasseurId ?? undefined}
+            classeurId={activeClasseur.id}
+            classeurName={activeClasseur.name}
+            classeurIcon={activeClasseur.emoji}
+          />
         ) : (
           <div className="empty-state">
             <h2>Aucun classeur trouvé.</h2>
