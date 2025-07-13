@@ -139,7 +139,7 @@ const DossiersPage: React.FC = () => {
               key={activeClasseurId ?? undefined}
               classeurId={activeClasseurId as string}
               classeurName={activeClasseur.name}
-              classeurIcon={activeClasseur.icon}
+              classeurIcon={activeClasseur.emoji}
             />
           </>
         ) : (
