@@ -44,7 +44,6 @@ export async function POST(req: Request): Promise<Response> {
       parent_id: parent_id || null,
       classeur_id,
       created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
     };
     const { data, error } = await supabase
       .from('folders')
