@@ -31,6 +31,15 @@ export type CreateNoteResponse =
 const USER_ID = "3223651c-5580-4471-affb-b3f4456bd729";
 // =============================
 
+// Supprime le H1 en début de markdown (si présent)
+function removeLeadingH1(markdown: string): string {
+  const lines = markdown.split('\n');
+  if (lines[0] && /^#\s+/.test(lines[0].trim())) {
+    return lines.slice(1).join('\n').replace(/^\n+/, '');
+  }
+  return markdown;
+}
+
 export async function POST(req: Request): Promise<Response> {
   try {
     const body: CreateNotePayload = await req.json();
@@ -52,9 +61,11 @@ export async function POST(req: Request): Promise<Response> {
     }
     const { classeur_id, title, markdown_content, header_image, source_type, source_url } = parseResult.data;
 
+    // Nettoyage : supprime le H1 en début de markdown (LLM-friendly)
+    const cleaned_markdown_content = removeLeadingH1(markdown_content);
     // Validation markdown LLM-ready
     try {
-      markdownContentSchema.parse(markdown_content);
+      markdownContentSchema.parse(cleaned_markdown_content);
     } catch (e: any) {
       const msg = (e && typeof e === 'object' && 'errors' in e && Array.isArray(e.errors)) ? e.errors[0]?.message : (e && typeof e === 'object' && 'message' in e ? e.message : String(e));
       console.warn('Tentative d\'injection markdown rejetée:', msg);
@@ -72,7 +83,7 @@ export async function POST(req: Request): Promise<Response> {
       source_type: source_type || null,
       source_url: source_url || null,
       source_title: title,
-      markdown_content, // correspond à la colonne Supabase
+      markdown_content: cleaned_markdown_content, // correspond à la colonne Supabase
       header_image: header_image || null,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
