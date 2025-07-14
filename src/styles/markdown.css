@@ -416,3 +416,73 @@
 .markdown-body ol {
   padding-left: 1.25em !important;
 } 
+
+/* === FIX: Alignement et wrapping propre des checkbox Markdown sur plusieurs lignes === */
+.markdown-body li > input[type='checkbox'] {
+  /* On retire le margin-left négatif pour éviter les bugs de flex */
+  margin-left: 0;
+}
+
+.markdown-body li:has(> input[type='checkbox']) {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6em;
+}
+
+.markdown-body li:has(> input[type='checkbox']) > input[type='checkbox'] {
+  margin-top: 0.18em; /* Optionnel, ajuste verticalement la checkbox */
+}
+
+.markdown-body li:has(> input[type='checkbox']) {
+  /* Pour que le texte wrappe proprement à côté de la checkbox */
+  white-space: normal;
+  word-break: break-word;
+} 
+
+/* === FIX: Alignement et wrapping des checkbox dans l'éditeur Tiptap/ProseMirror === */
+.task-list-item,
+li[data-type="taskItem"] {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6em;
+}
+
+.task-list-item label,
+li[data-type="taskItem"] > label {
+  display: flex;
+  align-items: flex-start;
+  width: 100%;
+  gap: 0.6em;
+}
+
+.task-list-item .task-list-content,
+li[data-type="taskItem"] .task-list-content {
+  flex: 1 1 auto;
+  min-width: 0;
+  word-break: break-word;
+  white-space: pre-line;
+} 
+
+/* === FIX: Alignement et wrapping des checkbox markdown avec structure <li><label><input><span></span></label><div><p>...</p></div></li> === */
+li[data-type="taskItem"] {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.7em;
+}
+
+li[data-type="taskItem"] > label {
+  margin-top: 0.18em; /* Optionnel, ajuste verticalement la checkbox */
+  flex-shrink: 0;
+}
+
+li[data-type="taskItem"] > div {
+  flex: 1 1 auto;
+  min-width: 0;
+  word-break: break-word;
+  white-space: pre-line;
+  display: block;
+}
+
+li[data-type="taskItem"] > div p {
+  margin: 0;
+} 

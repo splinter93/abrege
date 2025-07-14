@@ -1751,3 +1751,33 @@ textarea.editor-title-input {
   text-align: left;
   transition: none;
 }
+
+/* === FIX: Wrapping propre du texte des checkbox dans l'éditeur === */
+.editor-content ul[data-type="taskList"] li > div {
+  display: block !important;
+  align-items: initial !important;
+  line-height: 1.7;
+  flex: 1;
+  min-width: 0;
+  word-break: break-word;
+  white-space: pre-line;
+  padding: 0.05rem 0;
+}
+
+.editor-content ul[data-type="taskList"] li > div p {
+  display: block !important;
+  align-items: initial !important;
+  margin: 0;
+  word-break: break-word;
+  white-space: pre-line;
+}
+
+/* === FIX: Checkbox toujours alignée en haut, même si le texte wrappe === */
+.editor-content ul[data-type="taskList"] li {
+  align-items: flex-start !important;
+}
+
+/* === FIX: Ajuste verticalement la checkbox pour l'aligner avec la première ligne === */
+.editor-content ul[data-type="taskList"] li > label {
+  margin-top: 0.18em;
+}

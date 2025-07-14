@@ -12,20 +12,13 @@ export type GetClasseursResponse =
 
 export async function GET(req: Request): Promise<Response> {
   try {
-    const { searchParams } = new URL(req.url);
-    const user_id = searchParams.get('user_id');
-    const schema = z.object({ user_id: z.string().min(1, 'user_id requis') });
-    const parseResult = schema.safeParse({ user_id });
-    if (!parseResult.success) {
-      return new Response(
-        JSON.stringify({ error: 'Paramètre user_id invalide', details: parseResult.error.errors.map(e => e.message) }),
-        { status: 422 }
-      );
-    }
+    // [TEMP] USER_ID HARDCODED FOR DEV/LLM
+    // TODO: Remove this and extract user_id from API key or session when auth is implemented!
+    const USER_ID = "3223651c-5580-4471-affb-b3f4456bd729";
     const { data, error } = await supabase
       .from('classeurs')
       .select('*')
-      .eq('user_id', user_id)
+      .eq('user_id', USER_ID)
       .order('position');
     if (error) {
       return new Response(JSON.stringify({ error: error.message }), { status: 500 });
