@@ -147,12 +147,12 @@ const DossiersPage: React.FC = () => {
       />
       <div className="page-content">
         {activeClasseur && activeClasseur.id && activeClasseur.name ? (
-          <FolderManager
-            key={activeClasseurId ?? undefined}
+            <FolderManager
+              key={activeClasseurId ?? undefined}
             classeurId={activeClasseur.id}
-            classeurName={activeClasseur.name}
+              classeurName={activeClasseur.name}
             classeurIcon={activeClasseur.emoji}
-          />
+            />
         ) : (
           <div className="empty-state">
             <h2>Aucun classeur trouvé.</h2>

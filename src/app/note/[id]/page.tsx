@@ -31,6 +31,7 @@ import TableHeader from '@tiptap/extension-table-header';
 import Underline from '@tiptap/extension-underline';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/supabaseClient';
+import CustomImage from '@/extensions/CustomImage';
 type SlashCommand = {
   id: string;
   alias: Record<string, string>;
@@ -89,6 +90,7 @@ export default function NoteEditorPage() {
   const editor = useEditor({
     extensions: [
       StarterKit,
+      CustomImage, // Ajouté pour support image markdown
       Markdown.configure({
         html: true,
         tightLists: true,

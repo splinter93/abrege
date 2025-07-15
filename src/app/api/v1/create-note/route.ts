@@ -17,8 +17,9 @@ export type CreateNotePayload = {
   title: string;
   markdown_content: string; // markdown natif (source de vérité)
   header_image?: string; // URL de l'image de couverture (optionnel)
-  source_type: string;
-  source_url: string;
+  folder_id?: string | null; // ID du dossier cible (optionnel)
+  source_type?: string;
+  source_url?: string;
 };
 
 export type CreateNoteResponse =
@@ -49,6 +50,7 @@ export async function POST(req: Request): Promise<Response> {
       title: z.string().min(1, 'title requis'),
       markdown_content: z.string().min(1, 'markdown_content requis'),
       header_image: z.string().url('header_image doit être une URL valide').optional(),
+      folder_id: z.string().nullable().optional(),
       source_type: z.string().min(1, 'source_type requis').optional(),
       source_url: z.string().min(1, 'source_url requis').optional(),
     });
@@ -59,7 +61,7 @@ export async function POST(req: Request): Promise<Response> {
         { status: 422 }
       );
     }
-    const { classeur_id, title, markdown_content, header_image, source_type, source_url } = parseResult.data;
+    const { classeur_id, title, markdown_content, header_image, folder_id, source_type, source_url } = parseResult.data;
 
     // Nettoyage : supprime le H1 en début de markdown (LLM-friendly)
     const cleaned_markdown_content = removeLeadingH1(markdown_content);
@@ -80,6 +82,7 @@ export async function POST(req: Request): Promise<Response> {
     const insertData = {
       user_id: USER_ID, // [TEMP] Injected automatically for all notes (remove when auth is ready)
       classeur_id,
+      folder_id: folder_id || null,
       source_type: source_type || null,
       source_url: source_url || null,
       source_title: title,

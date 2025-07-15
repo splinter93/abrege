@@ -33,7 +33,11 @@ export default function useEditorSave({ onSave, editor, headerImage, titleAlign 
     if (onSave && editor) {
       setIsSaving(true);
       const html_content = editor.getHTML();
-      const markdown_content = editor.storage.markdown.getMarkdown();
+      let markdown_content = editor.storage.markdown.getMarkdown();
+      // Patch : retire les backslash devant les titres après une image
+      markdown_content = markdown_content.replace(/\\(#+ )/g, '$1');
+      // Patch : ajoute un saut de ligne après chaque image si le suivant est un titre
+      markdown_content = markdown_content.replace(/(\!\[.*?\]\(.*?\))\s*(#+ )/g, '$1\n\n$2');
       onSave({ title: newTitle, markdown_content, html_content, headerImage, titleAlign: align });
       setLastSaved(new Date());
       setIsSaving(false);

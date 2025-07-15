@@ -87,7 +87,7 @@ export function appendToSection(markdown: string, section: string, text: string,
     if (position === 'start') {
       return text.trimEnd() + (trimmed ? '\n\n' + trimmed : '');
     } else {
-      return (trimmed ? trimmed + '\n\n' : '') + text.trimStart();
+    return (trimmed ? trimmed + '\n\n' : '') + text.trimStart();
     }
   }
   const toc = extractTOCWithSlugs(markdown);
@@ -116,7 +116,7 @@ export function appendToSection(markdown: string, section: string, text: string,
     // Insérer à la fin de la section (comportement actuel)
     const before = lines.slice(0, sectionEnd).join('\n');
     const after = lines.slice(sectionEnd).join('\n');
-    return before + '\n' + text + (after ? '\n' + after : '');
+  return before + '\n' + text + (after ? '\n' + after : '');
   }
 }
 

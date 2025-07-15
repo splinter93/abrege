@@ -305,3 +305,25 @@ export const moveItemUniversal = async (
     return data;
   }
 }; 
+
+// --- Realtime Universal Subscription ---
+/**
+ * S'abonne à tous les changements (insert, update, delete) sur articles, folders, classeurs.
+ * @param onEvent Callback appelé à chaque event (payload: { table, eventType, new, old })
+ */
+export function subscribeToAllChanges(onEvent: (payload: any) => void) {
+  // Articles (notes)
+  supabase.channel('articles-all')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'articles' }, payload => {
+      onEvent({ table: 'articles', eventType: payload.eventType, new: payload.new, old: payload.old });
+    })
+    // Folders (dossiers)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'folders' }, payload => {
+      onEvent({ table: 'folders', eventType: payload.eventType, new: payload.new, old: payload.old });
+    })
+    // Classeurs (notebooks)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'classeurs' }, payload => {
+      onEvent({ table: 'classeurs', eventType: payload.eventType, new: payload.new, old: payload.old });
+    })
+    .subscribe();
+} 
