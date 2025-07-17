@@ -73,15 +73,30 @@ export async function GET(req: NextRequest, { params }: any): Promise<Response> 
     if (foldersError) {
       return new Response(JSON.stringify({ error: foldersError.message }), { status: 500 });
     }
-    // Récupérer toutes les notes du classeur
+    // Récupérer toutes les notes du classeur (racine + dossiers)
     const folderIds = (folders || []).map(f => f.id);
-    const { data: notes, error: notesError } = await supabase
+    let notes: Note[] = [];
+    let notesError = null;
+
+    // Notes à la racine
+    const { data: rootNotes, error: rootNotesError } = await supabase
       .from('articles')
       .select('id, source_title, header_image, created_at, folder_id, classeur_id')
-      .or([
-        `classeur_id.eq.${id},folder_id.is.null`,
-        folderIds.length > 0 ? `folder_id.in.(${folderIds.join(',')})` : '',
-      ].filter(Boolean).join(','));
+      .eq('classeur_id', id)
+      .is('folder_id', null);
+    if (rootNotesError) notesError = rootNotesError;
+    else if (rootNotes) notes = notes.concat(rootNotes);
+
+    // Notes dans les dossiers
+    if (folderIds.length > 0) {
+      const { data: folderNotes, error: folderNotesError } = await supabase
+        .from('articles')
+        .select('id, source_title, header_image, created_at, folder_id, classeur_id')
+        .eq('classeur_id', id)
+        .in('folder_id', folderIds);
+      if (folderNotesError) notesError = folderNotesError;
+      else if (folderNotes) notes = notes.concat(folderNotes);
+    }
     if (notesError) {
       return new Response(JSON.stringify({ error: notesError.message }), { status: 500 });
     }
