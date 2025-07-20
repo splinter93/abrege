@@ -12,6 +12,7 @@ const supabase = createClient(supabaseUrl, supabaseAnonKey);
  * PATCH /api/v1/note/{ref}/add-to-section
  * Ajoute du contenu à une section spécifique d'une note
  * Body: { section: string, text: string, position?: number }
+ * ou: { section_title: string, text: string, position?: number }
  * Réponse : { note: { id, markdown_content, ... } }
  */
 export async function PATCH(req: NextRequest, { params }: any): Promise<Response> {
@@ -20,12 +21,13 @@ export async function PATCH(req: NextRequest, { params }: any): Promise<Response
     const body = await req.json();
     
     const schema = z.object({
-      section: z.string().min(1, 'section requis'),
+      section: z.string().min(1, 'section requis').optional(),
+      section_title: z.string().min(1, 'section_title requis').optional(),
       text: z.string().min(1, 'text requis'),
       position: z.number().optional()
     });
     
-    const parseResult = schema.safeParse({ ...body });
+    const parseResult = schema.safeParse(body);
     if (!parseResult.success) {
       return new Response(
         JSON.stringify({ error: 'Payload invalide', details: parseResult.error.errors.map(e => e.message) }),
@@ -33,7 +35,16 @@ export async function PATCH(req: NextRequest, { params }: any): Promise<Response
       );
     }
     
-    const { section, text, position } = parseResult.data;
+    const { section, section_title, text, position } = parseResult.data;
+    
+    // Utiliser section ou section_title (priorité à section)
+    const targetSection = section || section_title;
+    if (!targetSection) {
+      return new Response(
+        JSON.stringify({ error: 'section ou section_title requis' }),
+        { status: 422 }
+      );
+    }
     
     // [TEMP] USER_ID HARDCODED FOR DEV/LLM
     const USER_ID = "3223651c-5580-4471-affb-b3f4456bd729";
@@ -53,22 +64,22 @@ export async function PATCH(req: NextRequest, { params }: any): Promise<Response
     // Debug: afficher les sections disponibles
     const toc = extractTOCWithSlugs(note.markdown_content || '');
     console.log(`🔍 Sections disponibles:`, toc.map(t => ({ title: t.title, slug: t.slug })));
-    console.log(`🔍 Section recherchée: "${section}"`);
+    console.log(`🔍 Section recherchée: "${targetSection}"`);
     
     // Vérifier si la section existe
-    const sectionIdx = toc.findIndex(t => t.title === section || t.slug === section);
+    const sectionIdx = toc.findIndex(t => t.title === targetSection || t.slug === targetSection);
     if (sectionIdx === -1) {
       const availableSections = toc.map(t => `"${t.title}" (slug: "${t.slug}")`).join(', ');
       return new Response(
         JSON.stringify({ 
-          error: `Section "${section}" non trouvée. Sections disponibles: ${availableSections}` 
+          error: `Section "${targetSection}" non trouvée. Sections disponibles: ${availableSections}` 
         }), 
         { status: 404 }
       );
     }
     
     // Insérer le contenu dans la section
-    const newContent = appendToSection(note.markdown_content || '', section, text, position !== undefined ? 'start' : 'end');
+    const newContent = appendToSection(note.markdown_content || '', targetSection, text, position !== undefined ? 'start' : 'end');
     
     // Mettre à jour la note
     const { data: updatedNote, error } = await supabase
@@ -86,7 +97,7 @@ export async function PATCH(req: NextRequest, { params }: any): Promise<Response
       return new Response(JSON.stringify({ error: error.message }), { status: 500 });
     }
     
-    console.log(`✅ Contenu ajouté à la section "${section}"`);
+    console.log(`✅ Contenu ajouté à la section "${targetSection}"`);
     return new Response(JSON.stringify({ note: updatedNote }), { status: 200 });
   } catch (err: any) {
     console.error('❌ Erreur générale:', err);
