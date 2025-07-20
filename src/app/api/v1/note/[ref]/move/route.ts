@@ -26,7 +26,7 @@ export async function PATCH(req: NextRequest, { params }: any): Promise<Response
       target_folder_id: z.string().nullable().optional(),
       position: z.number().int().nonnegative().optional(),
     });
-    const paramResult = paramSchema.safeParse({ ref });
+    const paramSchema = z.object({ ref: z.string().min(1, 'note_ref requis') });    const paramResult = paramSchema.safeParse({ ref });
     const bodyResult = bodySchema.safeParse(body);
     if (!paramResult.success) {
       return new Response(
