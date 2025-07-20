@@ -6,11 +6,11 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 interface PreviewPageProps {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 export default async function PreviewPage({ params }: PreviewPageProps) {
-  const { id } = params;
+  const { id } = await params;
   
   // Récupérer la note
   const { data: note, error } = await supabase
