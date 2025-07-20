@@ -15,8 +15,9 @@ export type GetNoteResponse =
 
 export async function GET(req: NextRequest, { params }: any): Promise<Response> {
   try {
-    const {} = params;
-    const parseResult = schema.safeParse({});
+    const { ref } = params;
+    const schema = z.object({ ref: z.string().min(1, 'note_ref requis') });
+    const parseResult = schema.safeParse({ ref });
     if (!parseResult.success) {
       return new Response(
         JSON.stringify({ error: 'Paramètre note_ref invalide', details: parseResult.error.errors.map(e => e.message) }),
@@ -43,27 +44,32 @@ export async function GET(req: NextRequest, { params }: any): Promise<Response> 
 }
 
 export async function DELETE(req: Request, { params }: any): Promise<Response> {
-  const schema = z.object({ ref: z.string().min(1, 'note_ref requis') });
-  const parseResult = schema.safeParse({});
-  if (!parseResult.success) {
-    return new Response(
-      JSON.stringify({ error: 'Paramètre note_ref invalide', details: parseResult.error.errors.map(e => e.message) }),
-      { status: 422 }
-    );
+  try {
+    const { ref } = params;
+    const schema = z.object({ ref: z.string().min(1, 'note_ref requis') });
+    const parseResult = schema.safeParse({ ref });
+    if (!parseResult.success) {
+      return new Response(
+        JSON.stringify({ error: 'Paramètre note_ref invalide', details: parseResult.error.errors.map(e => e.message) }),
+        { status: 422 }
+      );
+    }
+    
+    // [TEMP] USER_ID HARDCODED FOR DEV/LLM
+    const USER_ID = "3223651c-5580-4471-affb-b3f4456bd729";
+    const noteId = await resolveNoteRef(ref, USER_ID);
+    
+    const { error } = await supabase
+      .from('articles')
+      .delete()
+      .eq('id', noteId);
+    if (error) {
+      return new Response(JSON.stringify({ error: error.message }), { status: 500 });
+    }
+    return new Response(JSON.stringify({ success: true }), { status: 200 });
+  } catch (err: any) {
+    return new Response(JSON.stringify({ error: err.message }), { status: 500 });
   }
-  
-  // [TEMP] USER_ID HARDCODED FOR DEV/LLM
-  const USER_ID = "3223651c-5580-4471-affb-b3f4456bd729";
-  const noteId = await resolveNoteRef(ref, USER_ID);
-  
-  const { error } = await supabase
-    .from('articles')
-    .delete()
-    .eq('id', noteId);
-  if (error) {
-    return new Response(JSON.stringify({ error: error.message }), { status: 500 });
-  }
-  return new Response(JSON.stringify({ success: true }), { status: 200 });
 }
 
 /**
