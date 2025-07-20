@@ -43,6 +43,62 @@ export async function GET(req: NextRequest, { params }: any): Promise<Response> 
   }
 }
 
+export async function PUT(req: NextRequest, { params }: any): Promise<Response> {
+  try {
+    const { ref } = await params;
+    const body = await req.json();
+    
+    const schema = z.object({ 
+      ref: z.string().min(1, 'note_ref requis'),
+      header_image: z.string().url('header_image doit être une URL valide').optional(),
+      title: z.string().min(1, 'title requis').optional(),
+      markdown_content: z.string().optional()
+    });
+    
+    const parseResult = schema.safeParse({ ref, ...body });
+    if (!parseResult.success) {
+      return new Response(
+        JSON.stringify({ error: 'Payload invalide', details: parseResult.error.errors.map(e => e.message) }),
+        { status: 422 }
+      );
+    }
+    
+    // [TEMP] USER_ID HARDCODED FOR DEV/LLM
+    const USER_ID = "3223651c-5580-4471-affb-b3f4456bd729";
+    const noteId = await resolveNoteRef(ref, USER_ID);
+    
+    // Préparer les données à mettre à jour
+    const updateData: any = {
+      updated_at: new Date().toISOString()
+    };
+    
+    if (body.header_image !== undefined) {
+      updateData.header_image = body.header_image;
+    }
+    if (body.title !== undefined) {
+      updateData.title = body.title;
+    }
+    if (body.markdown_content !== undefined) {
+      updateData.markdown_content = body.markdown_content;
+    }
+    
+    const { data: updatedNote, error } = await supabase
+      .from('articles')
+      .update(updateData)
+      .eq('id', noteId)
+      .select()
+      .single();
+    
+    if (error) {
+      return new Response(JSON.stringify({ error: error.message }), { status: 500 });
+    }
+    
+    return new Response(JSON.stringify({ note: updatedNote }), { status: 200 });
+  } catch (err: any) {
+    return new Response(JSON.stringify({ error: err.message }), { status: 500 });
+  }
+}
+
 export async function DELETE(req: Request, { params }: any): Promise<Response> {
   try {
     const { ref } = await params;
