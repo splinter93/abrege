@@ -2,8 +2,10 @@
 
 import React from 'react';
 import Link from 'next/link';
+import { useLanguageContext } from '../contexts/LanguageContext';
 
 const Header: React.FC<{ onLogout?: () => void }> = ({ onLogout }) => {
+  const { t } = useLanguageContext();
   return (
     <header style={{
       width: '100%',
@@ -58,7 +60,7 @@ const Header: React.FC<{ onLogout?: () => void }> = ({ onLogout }) => {
         onMouseOver={e => (e.currentTarget.style.color = '#fff')}
         onMouseOut={e => (e.currentTarget.style.color = '#b3a9a0')}
       >
-        Se déconnecter
+        {t('nav.logout')}
       </button>
     </header>
   );

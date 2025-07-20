@@ -1001,12 +1001,13 @@ textarea.editor-title-input,
 .editor-title,
 .editor-title-input,
 .editor-title-span {
-  width: 750px !important;
+  width: 780px !important;
   height: 45px !important;
   min-height: 45px !important;
   max-height: 45px !important;
   padding: 0 !important;
-  margin: 0 auto !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
   display: block !important;
   line-height: 1.1 !important;
   resize: none !important;
@@ -1543,7 +1544,7 @@ textarea.editor-title-input,
 
 /* === TEXTAREA DU TITRE === */
 .editor-title {
-  width: 750px;
+  width: 780px;
   min-height: 45px;
   max-height: 200px;
   height: auto;
@@ -1592,13 +1593,13 @@ textarea.editor-title-input,
 .editor-title-span,
 textarea.editor-title,
 textarea.editor-title-input {
-  width: 750px !important;
+  width: 780px !important;
   height: 45px !important;
   min-height: 45px !important;
   max-height: 45px !important;
   margin: 0 auto !important;
   display: block !important;
-  padding: 2.5rem 0 1.5rem 0 !important;
+  padding: 1.2rem 0 1.5rem 0 !important;
   font-size: 2.25rem !important;
   font-weight: 700 !important;
   line-height: 1.1 !important;
@@ -1728,7 +1729,7 @@ textarea.editor-title-input {
 .editor-title-span,
 textarea.editor-title,
 textarea.editor-title-input {
-  width: 750px;
+  width: 780px;
   height: 45px;
   min-height: 45px;
   max-height: 45px;

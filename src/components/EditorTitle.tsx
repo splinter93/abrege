@@ -47,7 +47,7 @@ const EditorTitle: React.FC<EditorTitleProps> = ({
         minHeight: '45px',
         maxHeight: '45px',
         padding: 0,
-        margin: 0,
+        margin: '20px 0 0 0', // Réduit le margin-top à 20px
         fontSize: '2.25rem',
         fontWeight: 700,
         lineHeight: 1.1,

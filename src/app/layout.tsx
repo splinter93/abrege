@@ -8,6 +8,7 @@ import '../styles/design-system.css';
 import '../styles/editor.css';
 import '../components/editor/editor-header.css';
 import { AuthProvider } from '../components/AuthProvider';
+import { LanguageProvider } from '../contexts/LanguageContext';
 import { Toaster } from 'react-hot-toast';
 import { usePathname } from 'next/navigation';
 import AppMainContent from '../components/AppMainContent';
@@ -39,15 +40,17 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <AuthProvider>
-          <Toaster position="top-right" />
-          <div className="app-layout">
-            {/* <Sidebar /> */}
-            <AppMainContent>
-              {children}
-            </AppMainContent>
-          </div>
-        </AuthProvider>
+        <LanguageProvider>
+          <AuthProvider>
+            <Toaster position="top-right" />
+            <div className="app-layout">
+              {/* <Sidebar /> */}
+              <AppMainContent>
+                {children}
+              </AppMainContent>
+            </div>
+          </AuthProvider>
+        </LanguageProvider>
       </body>
     </html>
   );

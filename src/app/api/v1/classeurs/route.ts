@@ -13,8 +13,9 @@ export type GetClasseursResponse =
 export async function GET(req: Request): Promise<Response> {
   try {
     // [TEMP] USER_ID HARDCODED FOR DEV/LLM
-    // TODO: Remove this and extract user_id from API key or session when auth is implemented!
+    // TODO: Extract user_id from API key when auth is implemented!
     const USER_ID = "3223651c-5580-4471-affb-b3f4456bd729";
+    
     const { data, error } = await supabase
       .from('classeurs')
       .select('*')
@@ -31,11 +32,10 @@ export async function GET(req: Request): Promise<Response> {
 
 /**
  * Endpoint: GET /api/v1/classeurs
- * Query param attendu : user_id: string
- * - Valide le paramètre user_id avec Zod
- * - Retourne la liste des classeurs de l'utilisateur (table classeurs)
- * - Réponses :
+ * Retourne la liste des classeurs de l'utilisateur authentifié
+ * - En phase de test : utilise le USER_ID hardcodé
+ * - En production : extrait l'user_id de l'API key
+ * Réponses :
  *   - 200 : { classeurs }
- *   - 422 : { error: 'Paramètre user_id invalide', details }
  *   - 500 : { error: string }
  */ 

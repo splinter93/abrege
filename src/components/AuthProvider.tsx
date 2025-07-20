@@ -4,6 +4,7 @@ import { supabase } from "../supabaseClient";
 import { Auth } from "@supabase/auth-ui-react";
 import { ThemeSupa } from "@supabase/auth-ui-shared";
 import type { Session } from "@supabase/supabase-js";
+import { useLanguageContext } from "../contexts/LanguageContext";
 
 interface AuthProviderProps {
   children: ReactNode;
@@ -11,6 +12,7 @@ interface AuthProviderProps {
 
 export function AuthProvider({ children }: AuthProviderProps) {
   const [session, setSession] = useState<Session | null>(null);
+  const { t } = useLanguageContext();
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -52,8 +54,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
               <path d="M11.33 4.67L4.67 11.33M4.67 7.33v4h4" stroke="var(--bg-main)" strokeWidth="1.67" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
           </div>
-          <h1 className="auth-title">Welcome Home.</h1>
-          <div className="auth-subtitle">Connect to access your Abrège Workspace</div>
+          <h1 className="auth-title">{t('auth.welcome.title')}</h1>
+          <div className="auth-subtitle">{t('auth.welcome.subtitle')}</div>
           <Auth supabaseClient={supabase} appearance={{ theme: ThemeSupa }} theme="dark" />
         </div>
       </div>
