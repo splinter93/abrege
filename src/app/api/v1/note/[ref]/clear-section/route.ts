@@ -19,11 +19,10 @@ export async function PATCH(req: NextRequest, { params }: any): Promise<Response
     const body = await req.json();
     
     const schema = z.object({
-      ref: z.string().min(1, 'note_ref requis'),
       section: z.string().min(1, 'section requis')
     });
     
-    const parseResult = schema.safeParse({ ref, ...body });
+    const parseResult = schema.safeParse({ ...body });
     if (!parseResult.success) {
       return new Response(
         JSON.stringify({ error: 'Payload invalide', details: parseResult.error.errors.map(e => e.message) }),
