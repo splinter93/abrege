@@ -284,7 +284,7 @@ export const moveItemUniversal = async (
   if (!type) throw new Error('Type is required (folder/file)');
 
   if (type === 'folder') {
-    // On met à jour parent_id dans la table folders
+    // On met à jour parent_id dans la table folders (pas d'updated_at dans cette table)
     const { data, error } = await supabase
       .from('folders')
       .update({ parent_id: newParentId })
@@ -294,10 +294,13 @@ export const moveItemUniversal = async (
     if (error) throw error;
     return data;
   } else {
-    // On met à jour folder_id dans la table articles
+    // On met à jour folder_id dans la table articles (avec updated_at)
     const { data, error } = await supabase
       .from('articles')
-      .update({ folder_id: newParentId })
+      .update({ 
+        folder_id: newParentId,
+        updated_at: new Date().toISOString()
+      })
       .eq('id', id)
       .select()
       .single();
