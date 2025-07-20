@@ -15,9 +15,8 @@ const supabase = createClient(supabaseUrl, supabaseAnonKey);
  */
 export async function GET(req: NextRequest, { params }: any): Promise<Response> {
   try {
-    const { ref } = params;
-    const schema = z.object({ ref: z.string().min(1, 'note_ref requis') });
-    const parseResult = schema.safeParse({ ref });
+    const {} = params;
+    const parseResult = schema.safeParse({});
     if (!parseResult.success) {
       return new Response(
         JSON.stringify({ error: 'Paramètre note_ref invalide', details: parseResult.error.errors.map(e => e.message) }),

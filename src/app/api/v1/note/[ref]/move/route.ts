@@ -20,7 +20,6 @@ export type MoveNoteResponse =
 export async function PATCH(req: NextRequest, { params }: any): Promise<Response> {
   const { ref } = params;
   try {
-    const paramSchema = z.object({ ref: z.string().min(1, 'note_ref requis') });
     const body: MoveNotePayload = await req.json();
     const bodySchema = z.object({
       target_classeur_id: z.string().optional(),

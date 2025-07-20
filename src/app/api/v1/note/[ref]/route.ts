@@ -15,9 +15,8 @@ export type GetNoteResponse =
 
 export async function GET(req: NextRequest, { params }: any): Promise<Response> {
   try {
-    const { ref } = params;
-    const schema = z.object({ ref: z.string().min(1, 'note_ref requis') });
-    const parseResult = schema.safeParse({ ref });
+    const {} = params;
+    const parseResult = schema.safeParse({});
     if (!parseResult.success) {
       return new Response(
         JSON.stringify({ error: 'Paramètre note_ref invalide', details: parseResult.error.errors.map(e => e.message) }),
@@ -44,9 +43,8 @@ export async function GET(req: NextRequest, { params }: any): Promise<Response> 
 }
 
 export async function DELETE(req: Request, { params }: any): Promise<Response> {
-  const { ref } = params;
   const schema = z.object({ ref: z.string().min(1, 'note_ref requis') });
-  const parseResult = schema.safeParse({ ref });
+  const parseResult = schema.safeParse({});
   if (!parseResult.success) {
     return new Response(
       JSON.stringify({ error: 'Paramètre note_ref invalide', details: parseResult.error.errors.map(e => e.message) }),
