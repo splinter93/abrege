@@ -75,6 +75,12 @@ curl -H "Authorization: Bearer YOUR_TOKEN" \
   https://api.abrege.com/api/v1/note/ma-premiere-note/table-of-contents
 ```
 
+### **Lister les notebooks**
+```bash
+curl -H "Authorization: Bearer YOUR_TOKEN" \
+  https://api.abrege.com/api/v1/notebooks
+```
+
 ## 📱 **Intégration JavaScript**
 
 ### **Configuration**
@@ -154,6 +160,19 @@ async function addContent(noteId) {
   
   const { note } = await response.json();
   return note;
+}
+```
+
+### **Lister les notebooks**
+```javascript
+async function listNotebooks() {
+  const response = await fetch(`${API_BASE}/notebooks`, {
+    method: 'GET',
+    headers
+  });
+  
+  const { notebooks } = await response.json();
+  return notebooks;
 }
 ```
 

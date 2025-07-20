@@ -387,6 +387,36 @@ PUT /api/v1/notebook/{ref}
 DELETE /api/v1/notebook/{ref}
 ```
 
+### **Lister les notebooks**
+
+```http
+GET /api/v1/notebooks
+```
+
+**Réponse :**
+```json
+{
+  "notebooks": [
+    {
+      "id": "6ba7b810-9dad-11d1-80b4-00c04fd430c8",
+      "slug": "classeur-de-travail",
+      "name": "Classeur de Travail",
+      "emoji": "📚",
+      "color": "#3b82f6",
+      "position": 0,
+      "created_at": "2024-01-15T10:30:00Z",
+      "updated_at": "2024-01-15T10:30:00Z"
+    }
+  ]
+}
+```
+
+**Exemple :**
+```bash
+curl -H "Authorization: Bearer YOUR_TOKEN" \
+  https://api.abrege.com/api/v1/notebooks
+```
+
 ## 🔧 **Utilitaires**
 
 ### **Générer un slug**

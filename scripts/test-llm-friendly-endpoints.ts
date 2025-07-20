@@ -126,6 +126,11 @@ async function runTests() {
       description: 'Récupérer un dossier par slug'
     },
     {
+      endpoint: '/notebooks',
+      method: 'GET',
+      description: 'Lister tous les notebooks'
+    },
+    {
       endpoint: '/notebook/classeur-de-travail',
       method: 'GET',
       description: 'Récupérer un classeur par slug'

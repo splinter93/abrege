@@ -590,6 +590,39 @@ paths:
                     type: string
                     example: "mon-titre-avec-caracteres-speciaux-eac"
 
+  /notebooks:
+    get:
+      summary: Lister les notebooks
+      description: Récupère la liste des notebooks (classeurs) de l'utilisateur
+      responses:
+        '200':
+          description: Liste des notebooks récupérée avec succès
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  notebooks:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Notebook'
+                example:
+                  notebooks:
+                    - id: "6ba7b810-9dad-11d1-80b4-00c04fd430c8"
+                      slug: "classeur-de-travail"
+                      name: "Classeur de Travail"
+                      emoji: "📚"
+                      color: "#3b82f6"
+                      position: 0
+                      created_at: "2024-01-15T10:30:00Z"
+                      updated_at: "2024-01-15T10:30:00Z"
+        '500':
+          description: Erreur serveur
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
 components:
   securitySchemes:
     BearerAuth:
