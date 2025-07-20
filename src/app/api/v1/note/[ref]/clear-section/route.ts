@@ -2,7 +2,7 @@ import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 import type { NextRequest } from 'next/server';
 import { resolveNoteRef } from '@/middleware/resourceResolver';
-import { appendToSection, extractTOCWithSlugs } from '@/utils/markdownTOC';
+import { clearSection, extractTOCWithSlugs } from '@/utils/markdownTOC';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -23,7 +23,7 @@ export async function PATCH(req: NextRequest, { params }: any): Promise<Response
       section: z.string().min(1, 'section requis')
     });
     
-    const parseResult = schema.safeParse({ ...body });
+    const parseResult = schema.safeParse(body);
     if (!parseResult.success) {
       return new Response(
         JSON.stringify({ error: 'Payload invalide', details: parseResult.error.errors.map(e => e.message) }),
@@ -65,8 +65,8 @@ export async function PATCH(req: NextRequest, { params }: any): Promise<Response
       );
     }
     
-    // Effacer le contenu de la section (remplacer par une chaîne vide)
-    const newContent = appendToSection(note.markdown_content || '', section, '', 'start');
+    // Effacer le contenu de la section
+    const newContent = clearSection(note.markdown_content || '', section);
     
     // Mettre à jour la note
     const { data: updatedNote, error } = await supabase
