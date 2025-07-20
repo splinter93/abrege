@@ -9,6 +9,8 @@
     "lint": "next lint",
     "migrate-slugs": "tsx src/scripts/migrateSlugs.ts",
     "add-slug-columns": "tsx src/scripts/addSlugColumns.ts",
+    "verify-database": "tsx src/scripts/verifyDatabase.ts",
+    "setup-complete": "tsx src/scripts/setupComplete.ts",
     "test-slugs": "tsx src/scripts/testSlugMigration.ts",
     "test-endpoints": "tsx src/scripts/testSlugEndpoints.ts",
     "test-llm-friendly": "tsx scripts/test-llm-friendly-endpoints.ts",
