@@ -8,7 +8,7 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 export async function GET(req: NextRequest, { params }: any): Promise<Response> {
-  const { ref } = params;
+  const { ref } = await params;
   try {
     // Validation de la ref
     const schema = z.object({ ref: z.string().min(1, 'classeur_ref requis') });

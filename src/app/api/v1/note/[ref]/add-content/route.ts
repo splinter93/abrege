@@ -9,17 +9,18 @@ const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 /**
  * PATCH /api/v1/note/{ref}/add-content
- * Ajoute du contenu à la fin d'une note (append-only)
+ * Ajoute du contenu à la fin d'une note
+ * Body: { text: string, position?: 'start' | 'end' }
  * Réponse : { note: { id, markdown_content, ... } }
  */
 export async function PATCH(req: NextRequest, { params }: any): Promise<Response> {
   try {
-    const { ref } = params;
+    const { ref } = await params;
     const body = await req.json();
     
     const schema = z.object({
       text: z.string().min(1, 'text requis'),
-      position: z.number().optional()
+      position: z.enum(['start', 'end']).optional().default('end')
     });
     
     const parseResult = schema.safeParse({ ...body });
@@ -49,9 +50,9 @@ export async function PATCH(req: NextRequest, { params }: any): Promise<Response
     
     // Ajouter le contenu
     const currentContent = note.markdown_content || '';
-    const newContent = position !== undefined 
-      ? currentContent.slice(0, position) + text + currentContent.slice(position)
-      : currentContent + '\n' + text;
+    const newContent = position === 'start' 
+      ? `${text}\n\n${currentContent}`
+      : `${currentContent}\n\n${text}`;
     
     // Mettre à jour la note
     const { data: updatedNote, error } = await supabase

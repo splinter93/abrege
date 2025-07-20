@@ -16,7 +16,7 @@ const supabase = createClient(supabaseUrl, supabaseAnonKey);
  */
 export async function PATCH(req: NextRequest, { params }: any): Promise<Response> {
   try {
-    const { ref } = params;
+    const { ref } = await params;
     const body = await req.json();
     
     const schema = z.object({

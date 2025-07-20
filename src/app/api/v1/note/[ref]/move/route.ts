@@ -18,7 +18,7 @@ export type MoveNoteResponse =
   | { error: string; details?: string[] };
 
 export async function PATCH(req: NextRequest, { params }: any): Promise<Response> {
-  const { ref } = params;
+  const { ref } = await params;
   try {
     const body: MoveNotePayload = await req.json();
     const bodySchema = z.object({

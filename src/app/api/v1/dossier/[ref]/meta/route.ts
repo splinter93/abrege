@@ -15,7 +15,7 @@ const supabase = createClient(supabaseUrl, supabaseAnonKey);
  * Réponse : { id, name, parent_id, classeur_id }
  */
 export async function PATCH(req: NextRequest, { params }: any): Promise<Response> {
-  const { ref } = params;
+  const { ref } = await params;
   // Validation de la ref
   const refSchema = z.string().min(1, 'dossier_ref requis');
   const refResult = refSchema.safeParse(ref);

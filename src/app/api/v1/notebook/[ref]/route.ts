@@ -14,7 +14,7 @@ const supabase = createClient(supabaseUrl, supabaseAnonKey);
  */
 export async function GET(req: NextRequest, { params }: any): Promise<Response> {
   try {
-    const { ref } = params;
+    const { ref } = await params;
     const schema = z.object({ ref: z.string().min(1, 'notebook_ref requis') });
     const parseResult = schema.safeParse({ ref });
     if (!parseResult.success) {
@@ -49,7 +49,7 @@ export async function GET(req: NextRequest, { params }: any): Promise<Response> 
  */
 export async function PUT(req: NextRequest, { params }: any): Promise<Response> {
   try {
-    const { ref } = params;
+    const { ref } = await params;
     const body = await req.json();
     
     const schema = z.object({
@@ -114,7 +114,7 @@ export async function PUT(req: NextRequest, { params }: any): Promise<Response> 
  * Réponse : { success: true }
  */
 export async function DELETE(req: NextRequest, { params }: any): Promise<Response> {
-  const { ref } = params;
+  const { ref } = await params;
   const refSchema = z.string().min(1, 'notebook_ref requis');
   const refResult = refSchema.safeParse(ref);
   if (!refResult.success) {

@@ -13,8 +13,9 @@ const supabase = createClient(supabaseUrl, supabaseAnonKey);
  * Réponse : { note: { id, source_title, header_image, created_at, updated_at, ... } }
  */
 export async function GET(req: NextRequest, { params }: any): Promise<Response> {
-    const schema = z.object({ ref: z.string().min(1, 'note_ref requis') });  try {
-    const { ref } = params;
+  try {
+    const { ref } = await params;
+    const schema = z.object({ ref: z.string().min(1, 'note_ref requis') });
     const parseResult = schema.safeParse({ ref });
     if (!parseResult.success) {
       return new Response(
@@ -48,10 +49,11 @@ export async function GET(req: NextRequest, { params }: any): Promise<Response> 
  */
 export async function PATCH(req: NextRequest, { params }: any): Promise<Response> {
   try {
-    const { ref } = params;
+    const { ref } = await params;
     const body = await req.json();
     
-    const schema = z.object({      ref: z.string().min(1, 'note_ref requis'),
+    const schema = z.object({
+      ref: z.string().min(1, 'note_ref requis'),
       source_title: z.string().optional(),
       header_image: z.string().optional()
     });

@@ -18,7 +18,7 @@ export type UpdateClasseurMetaResponse =
   | { error: string; details?: string[] };
 
 export async function PATCH(req: NextRequest, { params }: any): Promise<Response> {
-  const { ref } = params;
+  const { ref } = await params;
   try {
     const paramSchema = z.object({ ref: z.string().min(1, 'classeur_ref requis') });
     const body: UpdateClasseurMetaPayload = await req.json();

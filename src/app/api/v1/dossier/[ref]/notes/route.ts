@@ -14,7 +14,7 @@ export type GetDossierNotesResponse =
 
 export async function GET(req: NextRequest, { params }: any): Promise<Response> {
   try {
-    const { ref } = params;
+    const { ref } = await params;
     const schema = z.object({ ref: z.string().min(1, 'dossier_ref requis') });
     const parseResult = schema.safeParse({ ref });
     if (!parseResult.success) {

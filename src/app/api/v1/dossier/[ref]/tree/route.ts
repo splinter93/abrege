@@ -47,7 +47,7 @@ function buildFolderTree(folders: Folder[], notes: Note[], parentId: string): Ar
 }
 
 export async function GET(req: NextRequest, { params }: any): Promise<Response> {
-  const { ref } = params;
+  const { ref } = await params;
   try {
     // Validation de la ref
     const schema = z.object({ ref: z.string().min(1, 'dossier_ref requis') });

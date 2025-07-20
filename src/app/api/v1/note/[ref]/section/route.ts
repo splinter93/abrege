@@ -32,7 +32,7 @@ function extractSectionContent(markdown: string, section: string): string {
 
 export async function GET(req: NextRequest, { params }: any): Promise<Response> {
   try {
-    const { ref } = params;
+    const { ref } = await params;
     const { searchParams } = new URL(req.url);
     const section = searchParams.get('section');
     const schema = z.object({ ref: z.string().min(1, 'note_ref requis'), section: z.string().min(1, 'section requise') });

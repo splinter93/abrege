@@ -15,7 +15,7 @@ export type MoveDossierPayload = {
 };
 
 export async function PATCH(req: NextRequest, { params }: any): Promise<Response> {
-  const { ref } = params;
+  const { ref } = await params;
   try {
     const paramSchema = z.object({ ref: z.string().min(1, 'dossier_ref requis') });
     const body: MoveDossierPayload = await req.json();
