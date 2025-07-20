@@ -1,4 +1,4 @@
-# API Documentation - Abrège
+# API Documentation - Abrège (LLM-Friendly)
 
 ## 📋 **Vue d'ensemble**
 
@@ -65,7 +65,7 @@ curl -H "Authorization: Bearer YOUR_TOKEN" \
 ### **Créer une note**
 
 ```http
-POST /api/v1/create-note
+POST /api/v1/note/create
 ```
 
 **Corps :**
@@ -122,23 +122,39 @@ DELETE /api/v1/note/{ref}
 }
 ```
 
-### **Ajouter du contenu (append-only)**
+### **Écraser complètement une note**
 
 ```http
-PATCH /api/v1/note/{ref}/append
+POST /api/v1/note/overwrite
 ```
 
 **Corps :**
 ```json
 {
-  "text": "\n## Nouveau contenu ajouté"
+  "note_id": "123e4567-e89b-12d3-a456-426614174000",
+  "source_title": "Nouveau titre",
+  "markdown_content": "# Contenu complètement remplacé"
+}
+```
+
+### **Ajouter du contenu**
+
+```http
+PATCH /api/v1/note/{ref}/add-content
+```
+
+**Corps :**
+```json
+{
+  "text": "\n## Nouveau contenu ajouté",
+  "position": 150
 }
 ```
 
 ### **Ajouter à une section spécifique**
 
 ```http
-PATCH /api/v1/note/{ref}/append-to-section
+PATCH /api/v1/note/{ref}/add-to-section
 ```
 
 **Corps :**
@@ -149,10 +165,23 @@ PATCH /api/v1/note/{ref}/append-to-section
 }
 ```
 
+### **Effacer une section**
+
+```http
+PATCH /api/v1/note/{ref}/clear-section
+```
+
+**Corps :**
+```json
+{
+  "section": "introduction"
+}
+```
+
 ### **Récupérer la table des matières**
 
 ```http
-GET /api/v1/note/{ref}/toc
+GET /api/v1/note/{ref}/table-of-contents
 ```
 
 **Réponse :**
@@ -177,18 +206,81 @@ GET /api/v1/note/{ref}/toc
 }
 ```
 
-## 📁 **Dossiers**
-
-### **Récupérer un dossier**
+### **Récupérer les informations de base**
 
 ```http
-GET /api/v1/dossier/{ref}
+GET /api/v1/note/{ref}/information
 ```
 
 **Réponse :**
 ```json
 {
-  "dossier": {
+  "note": {
+    "id": "123e4567-e89b-12d3-a456-426614174000",
+    "source_title": "Ma note",
+    "header_image": "https://example.com/image.jpg",
+    "created_at": "2024-01-15T10:30:00Z",
+    "updated_at": "2024-01-15T10:30:00Z",
+    "folder_id": "550e8400-e29b-41d4-a716-446655440000",
+    "classeur_id": "6ba7b810-9dad-11d1-80b4-00c04fd430c8",
+    "slug": "ma-note"
+  }
+}
+```
+
+### **Mettre à jour les informations**
+
+```http
+PATCH /api/v1/note/{ref}/information
+```
+
+**Corps :**
+```json
+{
+  "source_title": "Nouveau titre",
+  "header_image": "https://example.com/new-image.jpg"
+}
+```
+
+### **Récupérer les statistiques**
+
+```http
+GET /api/v1/note/{ref}/statistics
+```
+
+**Réponse :**
+```json
+{
+  "id": "123e4567-e89b-12d3-a456-426614174000",
+  "title": "Ma note",
+  "header_image": "https://example.com/image.jpg",
+  "created_at": "2024-01-15T10:30:00Z",
+  "updated_at": "2024-01-15T10:30:00Z",
+  "word_count": 150,
+  "char_count": 2500,
+  "section_count": 5,
+  "toc": [
+    {
+      "title": "Introduction",
+      "slug": "introduction",
+      "level": 1
+    }
+  ]
+}
+```
+
+## 📁 **Dossiers (Folders)**
+
+### **Récupérer un dossier**
+
+```http
+GET /api/v1/folder/{ref}
+```
+
+**Réponse :**
+```json
+{
+  "folder": {
     "id": "550e8400-e29b-41d4-a716-446655440000",
     "slug": "mon-dossier-important",
     "name": "Mon dossier important",
@@ -204,7 +296,7 @@ GET /api/v1/dossier/{ref}
 ### **Créer un dossier**
 
 ```http
-POST /api/v1/create-folder
+POST /api/v1/folder/create
 ```
 
 **Corps :**
@@ -212,14 +304,14 @@ POST /api/v1/create-folder
 {
   "name": "Nouveau dossier",
   "classeur_id": "6ba7b810-9dad-11d1-80b4-00c04fd430c8",
-  "parent_id": null
+  "parent_id": "550e8400-e29b-41d4-a716-446655440000"
 }
 ```
 
 ### **Mettre à jour un dossier**
 
 ```http
-PUT /api/v1/dossier/{ref}
+PUT /api/v1/folder/{ref}
 ```
 
 **Corps :**
@@ -232,48 +324,26 @@ PUT /api/v1/dossier/{ref}
 ### **Supprimer un dossier**
 
 ```http
-DELETE /api/v1/dossier/{ref}
+DELETE /api/v1/folder/{ref}
 ```
 
-### **Lister les notes d'un dossier**
-
-```http
-GET /api/v1/dossier/{ref}/notes
-```
-
-**Réponse :**
-```json
-{
-  "notes": [
-    {
-      "id": "123e4567-e89b-12d3-a456-426614174000",
-      "slug": "ma-premiere-note",
-      "source_title": "Ma première note",
-      "markdown_content": "# Contenu...",
-      "position": 0
-    }
-  ]
-}
-```
-
-## 📚 **Classeurs**
+## 📚 **Classeurs (Notebooks)**
 
 ### **Récupérer un classeur**
 
 ```http
-GET /api/v1/classeur/{ref}
+GET /api/v1/notebook/{ref}
 ```
 
 **Réponse :**
 ```json
 {
-  "classeur": {
+  "notebook": {
     "id": "6ba7b810-9dad-11d1-80b4-00c04fd430c8",
     "slug": "classeur-de-travail",
     "name": "Classeur de travail",
-    "user_id": "user-uuid",
-    "icon": "Folder",
-    "color": "#e55a2c",
+    "emoji": "📚",
+    "color": "#3b82f6",
     "created_at": "2024-01-15T10:30:00Z",
     "updated_at": "2024-01-15T10:30:00Z",
     "position": 0
@@ -284,50 +354,40 @@ GET /api/v1/classeur/{ref}
 ### **Créer un classeur**
 
 ```http
-POST /api/v1/create-classeur
+POST /api/v1/notebook/create
 ```
 
 **Corps :**
 ```json
 {
   "name": "Nouveau classeur",
-  "icon": "Folder",
-  "color": "#e55a2c"
+  "emoji": "📚",
+  "color": "#3b82f6"
 }
 ```
 
-### **Lister tous les classeurs**
+### **Mettre à jour un classeur**
 
 ```http
-GET /api/v1/classeurs?user_id={user_id}
+PUT /api/v1/notebook/{ref}
 ```
 
-**Paramètres :**
-- `user_id` (string, requis) : ID de l'utilisateur
-
-**Réponse :**
+**Corps :**
 ```json
 {
-  "classeurs": [
-    {
-      "id": "6ba7b810-9dad-11d1-80b4-00c04fd430c8",
-      "slug": "classeur-de-travail",
-      "name": "Classeur de travail",
-      "icon": "Folder",
-      "color": "#e55a2c",
-      "position": 0
-    }
-  ]
+  "name": "Nom modifié",
+  "emoji": "📖",
+  "color": "#ef4444"
 }
 ```
 
-### **Lister les dossiers d'un classeur**
+### **Supprimer un classeur**
 
 ```http
-GET /api/v1/classeur/{ref}/dossiers
+DELETE /api/v1/notebook/{ref}
 ```
 
-## 🔧 **Génération de slugs**
+## 🔧 **Utilitaires**
 
 ### **Générer un slug**
 
@@ -339,14 +399,10 @@ POST /api/v1/slug/generate
 ```json
 {
   "title": "Mon titre avec caractères spéciaux: éàç!",
-  "type": "note"
+  "type": "note",
+  "userId": "3223651c-5580-4471-affb-b3f4456bd729"
 }
 ```
-
-**Types supportés :**
-- `note` : Pour les articles
-- `folder` : Pour les dossiers
-- `classeur` : Pour les classeurs
 
 **Réponse :**
 ```json
@@ -355,46 +411,28 @@ POST /api/v1/slug/generate
 }
 ```
 
-## 📊 **Codes de réponse**
+## 🎯 **Exemples d'utilisation pour LLMs**
 
-| Code | Description |
-|------|-------------|
-| `200` | Succès |
-| `201` | Ressource créée |
-| `400` | Requête invalide |
-| `401` | Non authentifié |
-| `404` | Ressource non trouvée |
-| `422` | Erreur de validation |
-| `500` | Erreur serveur |
-
-## 🔍 **Exemples d'utilisation**
-
-### **Pour les LLMs**
+### **Créer une note avec slug automatique**
 
 ```javascript
-// 1. Générer un slug pour une nouvelle note
+// 1. Générer le slug
 const slugResponse = await fetch('/api/v1/slug/generate', {
   method: 'POST',
-  headers: {
-    'Authorization': 'Bearer YOUR_TOKEN',
-    'Content-Type': 'application/json'
-  },
+  headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({
     title: 'Guide complet de React',
-    type: 'note'
+    type: 'note',
+    userId: '3223651c-5580-4471-affb-b3f4456bd729'
   })
 });
 
 const { slug } = await slugResponse.json();
-// slug = "guide-complet-de-react"
 
-// 2. Créer la note avec le slug généré
-const noteResponse = await fetch('/api/v1/create-note', {
+// 2. Créer la note
+const noteResponse = await fetch('/api/v1/note/create', {
   method: 'POST',
-  headers: {
-    'Authorization': 'Bearer YOUR_TOKEN',
-    'Content-Type': 'application/json'
-  },
+  headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({
     source_title: 'Guide complet de React',
     markdown_content: '# React\n\nGuide complet...',
@@ -403,101 +441,71 @@ const noteResponse = await fetch('/api/v1/create-note', {
 });
 
 const { note } = await noteResponse.json();
-// note.slug = "guide-complet-de-react"
+console.log('Note créée:', note.slug); // "guide-complet-de-react"
 ```
 
-### **Pour le partage d'URLs**
+### **Ajouter du contenu à une section**
 
 ```javascript
-// URL partageable
-const shareableUrl = `https://mon-app.com/note/guide-complet-de-react`;
-
-// Accéder à la note partagée
-const note = await fetch('/api/v1/note/guide-complet-de-react', {
-  headers: {
-    'Authorization': 'Bearer YOUR_TOKEN'
-  }
-});
-```
-
-### **Workflow complet**
-
-```javascript
-// 1. Créer un classeur
-const classeurResponse = await fetch('/api/v1/create-classeur', {
-  method: 'POST',
-  headers: {
-    'Authorization': 'Bearer YOUR_TOKEN',
-    'Content-Type': 'application/json'
-  },
-  body: JSON.stringify({
-    name: 'Mon projet',
-    icon: 'Folder',
-    color: '#e55a2c'
-  })
-});
-
-const { classeur } = await classeurResponse.json();
-
-// 2. Créer un dossier dans le classeur
-const dossierResponse = await fetch('/api/v1/create-folder', {
-  method: 'POST',
-  headers: {
-    'Authorization': 'Bearer YOUR_TOKEN',
-    'Content-Type': 'application/json'
-  },
-  body: JSON.stringify({
-    name: 'Notes importantes',
-    classeur_id: classeur.id
-  })
-});
-
-const { dossier } = await dossierResponse.json();
-
-// 3. Créer une note dans le dossier
-const noteResponse = await fetch('/api/v1/create-note', {
-  method: 'POST',
-  headers: {
-    'Authorization': 'Bearer YOUR_TOKEN',
-    'Content-Type': 'application/json'
-  },
-  body: JSON.stringify({
-    source_title: 'Ma première note',
-    markdown_content: '# Bienvenue\n\nContenu de la note...',
-    folder_id: dossier.id
-  })
-});
-
-const { note } = await noteResponse.json();
-
-// 4. Ajouter du contenu à la note
-await fetch(`/api/v1/note/${note.id}/append`, {
+await fetch('/api/v1/note/guide-complet-de-react/add-to-section', {
   method: 'PATCH',
-  headers: {
-    'Authorization': 'Bearer YOUR_TOKEN',
-    'Content-Type': 'application/json'
-  },
+  headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({
-    text: '\n## Nouvelle section\n\nContenu ajouté...'
+    section: 'introduction',
+    text: '\nCe guide couvre tous les aspects de React.'
   })
 });
 ```
 
-## 🔒 **Sécurité et validation**
+### **Récupérer les statistiques d'une note**
 
-- **Authentification** : Tous les endpoints nécessitent un token Supabase valide
-- **Validation** : Tous les paramètres sont validés avec Zod
-- **Unicité** : Les slugs sont uniques par utilisateur et par type
-- **Sanitisation** : Les caractères spéciaux sont gérés automatiquement
-- **Rétrocompatibilité** : Les IDs continuent de fonctionner
+```javascript
+const statsResponse = await fetch('/api/v1/note/guide-complet-de-react/statistics');
+const stats = await statsResponse.json();
+console.log(`Mots: ${stats.word_count}, Caractères: ${stats.char_count}, Sections: ${stats.section_count}`);
+```
+
+## 🔄 **Migration des données existantes**
+
+### **Scripts disponibles**
+
+```bash
+# Vérifier les colonnes slug
+npm run add-slug-columns
+
+# Migrer les données existantes
+npm run migrate-slugs
+
+# Tester la génération de slugs
+npm run test-slugs
+
+# Tester les endpoints
+npm run test-endpoints
+```
+
+## 🚀 **Avantages pour les LLMs**
+
+### **✅ Actions claires et directes**
+- `add-content` au lieu de `append`
+- `add-to-section` au lieu de `append-to-section`
+- `overwrite` au lieu de `erase`
+- `clear-section` au lieu de `erase-section`
+
+### **✅ Ressources explicites**
+- `folder` au lieu de `dossier`
+- `notebook` au lieu de `classeur`
+- `table-of-contents` au lieu de `toc`
+- `information` au lieu de `meta`
+- `statistics` au lieu de `metadata`
+
+### **✅ Structure cohérente**
+- `/api/v1/note/create` (pas `/api/v1/create-note`)
+- `/api/v1/folder/create` (pas `/api/v1/create-folder`)
+- `/api/v1/notebook/create` (pas `/api/v1/create-classeur`)
 
 ## 📞 **Support**
 
-Pour toute question ou problème :
-- **Documentation** : Consultez cette documentation
-- **Tests** : Utilisez les scripts de test fournis
-- **Logs** : Vérifiez les logs de votre plateforme de déploiement
-
----
-
-**Abrège API** - Documentation v1.0 
+- **Documentation** : `API-DOCUMENTATION.md`
+- **Migration** : `MIGRATION-GUIDE.md`
+- **Tests** : `npm run test-endpoints`
+- **Logs** : Vérifier les logs de déploiement 

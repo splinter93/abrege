@@ -93,7 +93,7 @@ npm run test:coverage
 - `GET /api/v1/note/[ref]` - Récupérer une note (ID ou slug)
 - `PUT /api/v1/note/[ref]` - Mettre à jour une note
 - `DELETE /api/v1/note/[ref]` - Supprimer une note
-- `POST /api/v1/create-note` - Créer une note avec slug automatique
+- `POST /api/v1/note/create` - Créer une note avec slug automatique
 
 ### **Dossiers**
 - `GET /api/v1/dossier/[ref]` - Récupérer un dossier
@@ -144,7 +144,7 @@ const { slug } = await response.json();
 // slug = "guide-complet-de-react"
 
 // Créer la note
-const noteResponse = await fetch('/api/v1/create-note', {
+const noteResponse = await fetch('/api/v1/note/create', {
   method: 'POST',
   body: JSON.stringify({
     source_title: 'Guide complet de React',

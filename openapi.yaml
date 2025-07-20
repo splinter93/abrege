@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
-  title: Abrège API
-  description: API pour la gestion de notes, dossiers et classeurs avec support des slugs
+  title: Abrège API - LLM-Friendly
+  description: API pour la gestion de notes, dossiers et classeurs avec support des slugs et noms LLM-friendly
   version: 1.0.0
   contact:
     name: Support Abrège
@@ -90,37 +90,50 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SuccessResponse'
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Note supprimée"
         '404':
           description: Note non trouvée
 
-  /note/{ref}/append:
-    patch:
-      summary: Ajouter du contenu à une note
-      description: Ajoute du contenu markdown à la fin d'une note (append-only)
-      parameters:
-        - name: ref
-          in: path
-          required: true
-          description: ID ou slug de la note
-          schema:
-            type: string
+  /note/create:
+    post:
+      summary: Créer une note
+      description: Crée une nouvelle note avec génération automatique de slug
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              type: object
-              required:
-                - text
-              properties:
-                text:
-                  type: string
-                  description: Contenu markdown à ajouter
-                  example: "\n## Nouvelle section\n\nContenu ajouté..."
+              $ref: '#/components/schemas/NoteCreate'
+      responses:
+        '201':
+          description: Note créée avec succès
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NoteResponse'
+        '422':
+          description: Erreur de validation
+
+  /note/overwrite:
+    post:
+      summary: Écraser complètement une note
+      description: Met à jour complètement une note (remplace tout le contenu)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NoteOverwrite'
       responses:
         '200':
-          description: Contenu ajouté avec succès
+          description: Note mise à jour avec succès
           content:
             application/json:
               schema:
@@ -130,10 +143,10 @@ paths:
         '422':
           description: Erreur de validation
 
-  /note/{ref}/append-to-section:
+  /note/{ref}/add-content:
     patch:
-      summary: Ajouter du contenu à une section
-      description: Ajoute du contenu markdown à une section spécifique d'une note
+      summary: Ajouter du contenu à une note
+      description: Ajoute du contenu à la fin d'une note (append-only)
       parameters:
         - name: ref
           in: path
@@ -147,31 +160,104 @@ paths:
           application/json:
             schema:
               type: object
-              required:
-                - section
-                - text
               properties:
-                section:
-                  type: string
-                  description: Titre exact ou slug de la section
-                  example: "introduction"
                 text:
                   type: string
-                  description: Contenu markdown à ajouter
-                  example: "\nNouveau contenu dans la section"
+                  description: Texte à ajouter
+                  example: "\n## Nouveau contenu ajouté"
+                position:
+                  type: integer
+                  description: Position d'insertion (optionnel)
+                  example: 150
+              required:
+                - text
       responses:
         '200':
           description: Contenu ajouté avec succès
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NoteResponse'
+        '404':
+          description: Note non trouvée
+
+  /note/{ref}/add-to-section:
+    patch:
+      summary: Ajouter du contenu à une section
+      description: Ajoute du contenu à une section spécifique d'une note
+      parameters:
+        - name: ref
+          in: path
+          required: true
+          description: ID ou slug de la note
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                section:
+                  type: string
+                  description: Nom ou slug de la section
+                  example: "introduction"
+                text:
+                  type: string
+                  description: Texte à ajouter
+                  example: "\nNouveau contenu dans la section"
+                position:
+                  type: integer
+                  description: Position d'insertion (optionnel)
+              required:
+                - section
+                - text
+      responses:
+        '200':
+          description: Contenu ajouté à la section avec succès
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/NoteResponse'
         '404':
           description: Note ou section non trouvée
-        '422':
-          description: Erreur de validation
 
-  /note/{ref}/toc:
+  /note/{ref}/clear-section:
+    patch:
+      summary: Effacer une section
+      description: Efface le contenu d'une section spécifique d'une note
+      parameters:
+        - name: ref
+          in: path
+          required: true
+          description: ID ou slug de la note
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                section:
+                  type: string
+                  description: Nom ou slug de la section
+                  example: "introduction"
+              required:
+                - section
+      responses:
+        '200':
+          description: Section effacée avec succès
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NoteResponse'
+        '404':
+          description: Note ou section non trouvée
+
+  /note/{ref}/table-of-contents:
     get:
       summary: Récupérer la table des matières
       description: Récupère la table des matières d'une note
@@ -197,27 +283,85 @@ paths:
         '404':
           description: Note non trouvée
 
-  /create-note:
-    post:
-      summary: Créer une note
-      description: Crée une nouvelle note avec génération automatique de slug
+  /note/{ref}/information:
+    get:
+      summary: Récupérer les informations de base
+      description: Récupère les informations de base d'une note
+      parameters:
+        - name: ref
+          in: path
+          required: true
+          description: ID ou slug de la note
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Informations récupérées avec succès
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  note:
+                    $ref: '#/components/schemas/NoteInfo'
+        '404':
+          description: Note non trouvée
+    
+    patch:
+      summary: Mettre à jour les informations
+      description: Met à jour les informations de base d'une note
+      parameters:
+        - name: ref
+          in: path
+          required: true
+          description: ID ou slug de la note
+          schema:
+            type: string
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/NoteCreate'
+              type: object
+              properties:
+                source_title:
+                  type: string
+                  description: Nouveau titre
+                header_image:
+                  type: string
+                  description: Nouvelle image d'en-tête
       responses:
-        '201':
-          description: Note créée avec succès
+        '200':
+          description: Informations mises à jour avec succès
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/NoteResponse'
-        '422':
-          description: Erreur de validation
+        '404':
+          description: Note non trouvée
 
-  /dossier/{ref}:
+  /note/{ref}/statistics:
+    get:
+      summary: Récupérer les statistiques
+      description: Récupère les statistiques détaillées d'une note
+      parameters:
+        - name: ref
+          in: path
+          required: true
+          description: ID ou slug de la note
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Statistiques récupérées avec succès
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NoteStatistics'
+        '404':
+          description: Note non trouvée
+
+  /folder/{ref}:
     get:
       summary: Récupérer un dossier
       description: Récupère un dossier par ID ou slug
@@ -234,7 +378,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DossierResponse'
+                $ref: '#/components/schemas/FolderResponse'
         '404':
           description: Dossier non trouvé
     
@@ -253,14 +397,21 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/DossierUpdate'
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: Nouveau nom du dossier
+                  example: "Nouveau nom"
+              required:
+                - name
       responses:
         '200':
           description: Dossier mis à jour avec succès
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DossierResponse'
+                $ref: '#/components/schemas/FolderResponse'
         '404':
           description: Dossier non trouvé
     
@@ -280,57 +431,35 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SuccessResponse'
-        '404':
-          description: Dossier non trouvé
-
-  /dossier/{ref}/notes:
-    get:
-      summary: Lister les notes d'un dossier
-      description: Récupère toutes les notes d'un dossier
-      parameters:
-        - name: ref
-          in: path
-          required: true
-          description: ID ou slug du dossier
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Notes récupérées avec succès
-          content:
-            application/json:
-              schema:
                 type: object
                 properties:
-                  notes:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/Note'
+                  success:
+                    type: boolean
+                    example: true
         '404':
           description: Dossier non trouvé
 
-  /create-folder:
+  /folder/create:
     post:
       summary: Créer un dossier
-      description: Crée un nouveau dossier
+      description: Crée un nouveau dossier avec génération automatique de slug
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/DossierCreate'
+              $ref: '#/components/schemas/FolderCreate'
       responses:
         '201':
           description: Dossier créé avec succès
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DossierResponse'
+                $ref: '#/components/schemas/FolderResponse'
         '422':
           description: Erreur de validation
 
-  /classeur/{ref}:
+  /notebook/{ref}:
     get:
       summary: Récupérer un classeur
       description: Récupère un classeur par ID ou slug
@@ -347,14 +476,39 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ClasseurResponse'
+                $ref: '#/components/schemas/NotebookResponse'
         '404':
           description: Classeur non trouvé
-
-  /classeur/{ref}/dossiers:
-    get:
-      summary: Lister les dossiers d'un classeur
-      description: Récupère tous les dossiers d'un classeur
+    
+    put:
+      summary: Mettre à jour un classeur
+      description: Met à jour un classeur par ID ou slug
+      parameters:
+        - name: ref
+          in: path
+          required: true
+          description: ID ou slug du classeur
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NotebookUpdate'
+      responses:
+        '200':
+          description: Classeur mis à jour avec succès
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotebookResponse'
+        '404':
+          description: Classeur non trouvé
+    
+    delete:
+      summary: Supprimer un classeur
+      description: Supprime un classeur par ID ou slug
       parameters:
         - name: ref
           in: path
@@ -364,62 +518,35 @@ paths:
             type: string
       responses:
         '200':
-          description: Dossiers récupérés avec succès
+          description: Classeur supprimé avec succès
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  dossiers:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/Dossier'
+                  success:
+                    type: boolean
+                    example: true
         '404':
           description: Classeur non trouvé
 
-  /create-classeur:
+  /notebook/create:
     post:
       summary: Créer un classeur
-      description: Crée un nouveau classeur
+      description: Crée un nouveau classeur avec génération automatique de slug
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ClasseurCreate'
+              $ref: '#/components/schemas/NotebookCreate'
       responses:
         '201':
           description: Classeur créé avec succès
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ClasseurResponse'
-        '422':
-          description: Erreur de validation
-
-  /classeurs:
-    get:
-      summary: Lister tous les classeurs
-      description: Récupère tous les classeurs d'un utilisateur
-      parameters:
-        - name: user_id
-          in: query
-          required: true
-          description: ID de l'utilisateur
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Classeurs récupérés avec succès
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  classeurs:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/Classeur'
+                $ref: '#/components/schemas/NotebookResponse'
         '422':
           description: Erreur de validation
 
@@ -433,9 +560,6 @@ paths:
           application/json:
             schema:
               type: object
-              required:
-                - title
-                - type
               properties:
                 title:
                   type: string
@@ -446,6 +570,14 @@ paths:
                   enum: [note, folder, classeur]
                   description: Type de ressource
                   example: "note"
+                userId:
+                  type: string
+                  description: ID de l'utilisateur
+                  example: "3223651c-5580-4471-affb-b3f4456bd729"
+              required:
+                - title
+                - type
+                - userId
       responses:
         '200':
           description: Slug généré avec succès
@@ -456,10 +588,7 @@ paths:
                 properties:
                   slug:
                     type: string
-                    description: Slug généré
                     example: "mon-titre-avec-caracteres-speciaux-eac"
-        '422':
-          description: Erreur de validation
 
 components:
   securitySchemes:
@@ -469,246 +598,286 @@ components:
       bearerFormat: JWT
 
   schemas:
-    Note:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-          example: "123e4567-e89b-12d3-a456-426614174000"
-        slug:
-          type: string
-          example: "ma-premiere-note"
-        source_title:
-          type: string
-          example: "Ma première note"
-        markdown_content:
-          type: string
-          example: "# Contenu markdown"
-        html_content:
-          type: string
-          example: "<h1>Contenu HTML</h1>"
-        folder_id:
-          type: string
-          format: uuid
-          example: "550e8400-e29b-41d4-a716-446655440000"
-        classeur_id:
-          type: string
-          format: uuid
-          example: "6ba7b810-9dad-11d1-80b4-00c04fd430c8"
-        created_at:
-          type: string
-          format: date-time
-          example: "2024-01-15T10:30:00Z"
-        updated_at:
-          type: string
-          format: date-time
-          example: "2024-01-15T10:30:00Z"
-        position:
-          type: integer
-          example: 0
-
     NoteResponse:
       type: object
       properties:
         note:
-          $ref: '#/components/schemas/Note'
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+            slug:
+              type: string
+            source_title:
+              type: string
+            markdown_content:
+              type: string
+            html_content:
+              type: string
+            header_image:
+              type: string
+              nullable: true
+            folder_id:
+              type: string
+              format: uuid
+              nullable: true
+            classeur_id:
+              type: string
+              format: uuid
+              nullable: true
+            created_at:
+              type: string
+              format: date-time
+            updated_at:
+              type: string
+              format: date-time
+            position:
+              type: integer
 
     NoteCreate:
       type: object
-      required:
-        - source_title
-        - markdown_content
-        - folder_id
       properties:
         source_title:
           type: string
           description: Titre de la note
-          example: "Nouvelle note"
         markdown_content:
           type: string
           description: Contenu markdown de la note
-          example: "# Contenu de la note"
+        header_image:
+          type: string
+          description: URL de l'image d'en-tête
         folder_id:
           type: string
           format: uuid
           description: ID du dossier parent
-          example: "550e8400-e29b-41d4-a716-446655440000"
+        classeur_id:
+          type: string
+          format: uuid
+          description: ID du classeur parent
+      required:
+        - source_title
+        - markdown_content
 
     NoteUpdate:
       type: object
       properties:
         source_title:
           type: string
-          description: Nouveau titre de la note
-          example: "Titre modifié"
+          description: Nouveau titre
         markdown_content:
           type: string
           description: Nouveau contenu markdown
-          example: "# Contenu modifié"
+        header_image:
+          type: string
+          description: Nouvelle image d'en-tête
+      required:
+        - source_title
+        - markdown_content
 
-    Dossier:
+    NoteOverwrite:
+      type: object
+      properties:
+        note_id:
+          type: string
+          format: uuid
+          description: ID de la note à écraser
+        source_title:
+          type: string
+          description: Nouveau titre
+        markdown_content:
+          type: string
+          description: Nouveau contenu markdown
+        header_image:
+          type: string
+          description: Nouvelle image d'en-tête
+      required:
+        - note_id
+        - source_title
+        - markdown_content
+
+    NoteInfo:
       type: object
       properties:
         id:
           type: string
           format: uuid
-          example: "550e8400-e29b-41d4-a716-446655440000"
-        slug:
+        source_title:
           type: string
-          example: "mon-dossier-important"
-        name:
+        header_image:
           type: string
-          example: "Mon dossier important"
-        classeur_id:
-          type: string
-          format: uuid
-          example: "6ba7b810-9dad-11d1-80b4-00c04fd430c8"
-        parent_id:
-          type: string
-          format: uuid
           nullable: true
-          example: null
         created_at:
           type: string
           format: date-time
-          example: "2024-01-15T10:30:00Z"
         updated_at:
           type: string
           format: date-time
-          example: "2024-01-15T10:30:00Z"
-        position:
-          type: integer
-          example: 0
-
-    DossierResponse:
-      type: object
-      properties:
-        dossier:
-          $ref: '#/components/schemas/Dossier'
-
-    DossierCreate:
-      type: object
-      required:
-        - name
-        - classeur_id
-      properties:
-        name:
-          type: string
-          description: Nom du dossier
-          example: "Nouveau dossier"
-        classeur_id:
-          type: string
-          format: uuid
-          description: ID du classeur parent
-          example: "6ba7b810-9dad-11d1-80b4-00c04fd430c8"
-        parent_id:
+        folder_id:
           type: string
           format: uuid
           nullable: true
-          description: ID du dossier parent (optionnel)
-          example: null
-
-    DossierUpdate:
-      type: object
-      properties:
-        name:
+        classeur_id:
           type: string
-          description: Nouveau nom du dossier
-          example: "Nom modifié"
+          format: uuid
+          nullable: true
+        slug:
+          type: string
 
-    Classeur:
+    NoteStatistics:
       type: object
       properties:
         id:
           type: string
           format: uuid
-          example: "6ba7b810-9dad-11d1-80b4-00c04fd430c8"
-        slug:
+        title:
           type: string
-          example: "classeur-de-travail"
-        name:
+        header_image:
           type: string
-          example: "Classeur de travail"
-        user_id:
-          type: string
-          format: uuid
-          example: "user-uuid"
-        icon:
-          type: string
-          example: "Folder"
-        color:
-          type: string
-          example: "#e55a2c"
+          nullable: true
         created_at:
           type: string
           format: date-time
-          example: "2024-01-15T10:30:00Z"
         updated_at:
           type: string
           format: date-time
-          example: "2024-01-15T10:30:00Z"
-        position:
+        word_count:
           type: integer
-          example: 0
-
-    ClasseurResponse:
-      type: object
-      properties:
-        classeur:
-          $ref: '#/components/schemas/Classeur'
-
-    ClasseurCreate:
-      type: object
-      required:
-        - name
-      properties:
-        name:
-          type: string
-          description: Nom du classeur
-          example: "Nouveau classeur"
-        icon:
-          type: string
-          description: Icône du classeur
-          example: "Folder"
-        color:
-          type: string
-          description: Couleur du classeur
-          example: "#e55a2c"
+          description: Nombre de mots
+        char_count:
+          type: integer
+          description: Nombre de caractères
+        section_count:
+          type: integer
+          description: Nombre de sections
+        toc:
+          type: array
+          items:
+            $ref: '#/components/schemas/TOCItem'
 
     TOCItem:
       type: object
       properties:
         level:
           type: integer
-          description: Niveau du titre (1=H1, 2=H2...)
-          example: 1
+          description: Niveau du titre (1-6)
         title:
           type: string
-          description: Texte du titre
-          example: "Introduction"
+          description: Titre de la section
         slug:
           type: string
-          description: Identifiant unique de la section
-          example: "introduction"
+          description: Slug de la section
         line:
           type: integer
-          description: Numéro de ligne dans le markdown
-          example: 1
+          description: Numéro de ligne (1-based)
         start:
           type: integer
-          description: Index de début du titre dans la ligne
-          example: 3
+          description: Position de début dans la ligne
 
-    SuccessResponse:
+    FolderResponse:
       type: object
       properties:
-        success:
-          type: boolean
-          example: true
-        message:
+        folder:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+            slug:
+              type: string
+            name:
+              type: string
+            classeur_id:
+              type: string
+              format: uuid
+            parent_id:
+              type: string
+              format: uuid
+              nullable: true
+            created_at:
+              type: string
+              format: date-time
+            updated_at:
+              type: string
+              format: date-time
+            position:
+              type: integer
+
+    FolderCreate:
+      type: object
+      properties:
+        name:
           type: string
-          example: "Opération réussie"
+          description: Nom du dossier
+        classeur_id:
+          type: string
+          format: uuid
+          description: ID du classeur parent
+        parent_id:
+          type: string
+          format: uuid
+          description: ID du dossier parent (optionnel)
+      required:
+        - name
+        - classeur_id
+
+    NotebookResponse:
+      type: object
+      properties:
+        notebook:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+            slug:
+              type: string
+            name:
+              type: string
+            emoji:
+              type: string
+              nullable: true
+            color:
+              type: string
+              nullable: true
+            created_at:
+              type: string
+              format: date-time
+            updated_at:
+              type: string
+              format: date-time
+            position:
+              type: integer
+
+    NotebookCreate:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Nom du classeur
+        emoji:
+          type: string
+          description: Emoji du classeur
+        color:
+          type: string
+          description: Couleur du classeur
+      required:
+        - name
+
+    NotebookUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Nouveau nom
+        emoji:
+          type: string
+          description: Nouvel emoji
+        color:
+          type: string
+          description: Nouvelle couleur
+      required:
+        - name
 
     Error:
       type: object
@@ -716,20 +885,8 @@ components:
         error:
           type: string
           description: Message d'erreur
-          example: "Ressource non trouvée"
         details:
           type: array
           items:
             type: string
-          description: Détails de l'erreur (optionnel)
-          example: ["Champ requis manquant"]
-
-tags:
-  - name: Notes
-    description: Opérations sur les notes/articles
-  - name: Dossiers
-    description: Opérations sur les dossiers
-  - name: Classeurs
-    description: Opérations sur les classeurs
-  - name: Utilitaires
-    description: Endpoints utilitaires (génération de slugs, etc.) 
+          description: Détails de l'erreur (optionnel) 

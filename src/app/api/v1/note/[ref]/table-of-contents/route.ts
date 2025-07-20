@@ -8,6 +8,11 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
+/**
+ * GET /api/v1/note/{ref}/table-of-contents
+ * Récupère la table des matières d'une note
+ * Réponse : { toc: [{ level, title, slug, line, start }] }
+ */
 export async function GET(req: NextRequest, { params }: any): Promise<Response> {
   try {
     const { ref } = params;
@@ -37,16 +42,4 @@ export async function GET(req: NextRequest, { params }: any): Promise<Response> 
   } catch (err: any) {
     return new Response(JSON.stringify({ error: err.message }), { status: 500 });
   }
-}
-
-/**
- * Endpoint: GET /api/v1/note/[id]/toc
- * Paramètre attendu : { id: string }
- * - Valide le paramètre id avec Zod
- * - Retourne la table des matières (TOC) extraite du markdown (champ content)
- * - Réponses :
- *   - 200 : { toc }
- *   - 404 : { error: 'Note non trouvée.' }
- *   - 422 : { error: 'Paramètre note_id invalide', details }
- *   - 500 : { error: string }
- */ 
+} 

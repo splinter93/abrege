@@ -1,212 +1,267 @@
-# Abrège API – LLM Friendly Reference (EN)
+# API LLM-Friendly - Abrège
 
-This document is designed to help an LLM understand and manipulate the Abrège API optimally. It exposes the structure, intent, constraints, and usage of each endpoint, with concrete examples and explicit rules.
+## 🧠 **Conception pour les LLMs**
 
----
+L'API Abrège a été conçue spécifiquement pour être **LLM-friendly** avec des noms d'endpoints explicites et une structure cohérente.
 
-## 1. OVERVIEW
+## 📋 **Principes de design**
 
-- **RESTful API**
-- **All data is in Markdown (`content` field), HTML is server-generated (`html_content` for display only)**
-- **Main resources**: notes, folders, binders
-- **Explicit endpoints, separated for each action (CRUD, append, erase, move, merge, meta, toc, etc.)**
-- **Strict validation (types, formats, security)**
-- **No user-submitted HTML is accepted**
-- **Responses always in JSON**
+### **1. Noms explicites**
+- **Explicit endpoints, separated for each action (CRUD, add-content, overwrite, move, merge, information, table-of-contents, etc.)**
+- **No abbreviations** - `add-content` instead of `append`
+- **Clear intentions** - `overwrite` instead of `erase`
+- **Natural language** - `table-of-contents` instead of `toc`
 
----
+### **2. Structure cohérente**
+- **Resource-based URLs** - `/note/{ref}/action`
+- **Consistent patterns** - All endpoints follow the same structure
+- **Predictable naming** - Easy to guess endpoint names
 
-## 2. CONVENTIONS
+### **3. LLM-Optimized**
+- **Self-documenting** - Endpoint names explain what they do
+- **No ambiguity** - Clear distinction between similar actions
+- **Intuitive** - Natural language for AI understanding
 
-- **All routes are under `/api/v1/`**
-- **ID = UUID (string)**
-- **Dates in ISO8601 format**
-- **Errors: HTTP code + explicit message**
-- **No mutation via GET**
-- **No sensitive data in URLs**
+## 🎯 **Endpoints principaux**
 
----
+### **Notes (Articles)**
 
-## 3. MAIN ENDPOINTS
+#### Create note
+- **POST** `/api/v1/note/create/`
+- **Payload**: `{ source_title, markdown_content, folder_id?, classeur_id? }`
+- **Response**: `{ note: { id, slug, source_title, markdown_content, ... } }`
 
-### 3.1. Notes
+#### Read note
+- **GET** `/api/v1/note/{ref}/`
+- **Response**: `{ note: { id, slug, source_title, markdown_content, ... } }`
 
-#### Create a note
-- **POST** `/api/v1/create-note/`
-- **Payload**: `{ "title": string, "content": string (markdown), "header_image"?: string (URL), "dossier_id"?: string }`
-- **Response**: `{ "id": string, "title": string, "content": string, "header_image"?: string, ... }`
+#### Update note
+- **PUT** `/api/v1/note/{ref}/`
+- **Payload**: `{ source_title?, markdown_content? }`
+- **Response**: `{ note: { ... } }`
 
-#### Read a note
-- **GET** `/api/v1/note/[id]/`
-- **Response**: `{ "id": string, "title": string, "content": string, "html_content": string, ... }`
+#### Delete note
+- **DELETE** `/api/v1/note/{ref}/`
+- **Response**: `{ success: true }`
 
-#### Append content
-- **POST** `/api/v1/note/[id]/append/`
-- **Payload**: `{ "content": string, "position"?: number }`
-- **Response**: `{ "id": string, "content": string, ... }`
+#### Overwrite note completely
+- **POST** `/api/v1/note/overwrite/`
+- **Payload**: `{ note_id, source_title, markdown_content }`
+- **Response**: `{ note: { ... } }`
 
-#### Append to a section
-- **POST** `/api/v1/note/[id]/append-to-section/`
-- **Payload**: `{ "section": string, "content": string, "position"?: number }`
-- **Response**: `{ "id": string, "content": string, ... }`
+#### Add content
+- **PATCH** `/api/v1/note/{ref}/add-content/`
+- **Payload**: `{ text, position? }`
+- **Response**: `{ note: { ... } }`
 
-#### Erase a section
-- **POST** `/api/v1/note/[id]/erase-section/`
-- **Payload**: `{ "section": string, "content": null }`
-- **Response**: `{ "id": string, "content": string, ... }`
+#### Add to a section
+- **PATCH** `/api/v1/note/{ref}/add-to-section/`
+- **Payload**: `{ section, text }`
+- **Response**: `{ note: { ... } }`
 
-#### Delete a note
-- **DELETE** `/api/v1/note/[id]/`
-- **Response**: `{ "success": true }`
+#### Clear a section
+- **PATCH** `/api/v1/note/{ref}/clear-section/`
+- **Payload**: `{ section }`
+- **Response**: `{ note: { ... } }`
 
-#### Update metadata
-- **PATCH** `/api/v1/note/[id]/meta/`
-- **Payload**: `{ "title"?: string, "header_image"?: string }`
-- **Response**: `{ "id": string, ... }`
+#### Update information
+- **PATCH** `/api/v1/note/{ref}/information/`
+- **Payload**: `{ source_title?, header_image? }`
+- **Response**: `{ note: { ... } }`
 
-#### Read TOC
-- **GET** `/api/v1/note/[id]/toc/`
-- **Response**: `{ "toc": [ { "level": number, "title": string, "slug": string } ] }`
+#### Read table of contents
+- **GET** `/api/v1/note/{ref}/table-of-contents/`
+- **Response**: `{ toc: [ { level: number, title: string, slug: string } ] }`
 
-#### Read metadata/statistics
-- **GET** `/api/v1/note/[id]/metadata/`
-- **Response**: `{ "word_count": number, "char_count": number, "section_count": number, ... }`
+#### Read statistics
+- **GET** `/api/v1/note/{ref}/statistics/`
+- **Response**: `{ id, title, word_count, char_count, section_count, toc, ... }`
+
+#### Move note
+- **PATCH** `/api/v1/note/{ref}/move/`
+- **Payload**: `{ target_classeur_id?, target_folder_id?, position? }`
+- **Response**: `{ note: { ... } }`
 
 #### Merge notes
 - **POST** `/api/v1/note/merge/`
-- **Payload**: `{ "note_ids": string[], "order"?: string[] }`
-- **Response**: `{ "id": string, "content": string, ... }`
+- **Payload**: `{ note_ids: string[], order?: string[], create_new?: boolean, title?: string }`
+- **Response**: `{ merged_content, notes }` or `{ created_note, merged_from }`
 
-#### Move a note
-- **POST** `/api/v1/note/[id]/move/`
-- **Payload**: `{ "dossier_id"?: string, "classeur_id"?: string }`
-- **Response**: `{ "id": string, ... }`
+### **Folders (Dossiers)**
 
----
+#### Create folder
+- **POST** `/api/v1/folder/create/`
+- **Payload**: `{ name, classeur_id, parent_id? }`
+- **Response**: `{ folder: { id, slug, name, ... } }`
 
-### 3.2. Folders
+#### Read folder
+- **GET** `/api/v1/folder/{ref}/`
+- **Response**: `{ folder: { id, slug, name, ... } }`
 
-#### Create a folder
-- **POST** `/api/v1/create-folder/`
-- **Payload**: `{ "name": string, "classeur_id": string, "parent_id"?: string }`
-- **Response**: `{ "id": string, "name": string, ... }`
+#### Update folder
+- **PUT** `/api/v1/folder/{ref}/`
+- **Payload**: `{ name }`
+- **Response**: `{ folder: { ... } }`
 
-#### Read a folder
-- **GET** `/api/v1/dossier/[id]/`
-- **Response**: `{ "id": string, "name": string, ... }`
+#### Delete folder
+- **DELETE** `/api/v1/folder/{ref}/`
+- **Response**: `{ success: true }`
 
-#### Delete a folder
-- **DELETE** `/api/v1/dossier/[id]/`
-- **Response**: `{ "success": true }`
+#### Move folder
+- **PATCH** `/api/v1/dossier/{ref}/move/`
+- **Payload**: `{ target_classeur_id?, target_parent_id?, position? }`
+- **Response**: `{ dossier: { ... } }`
 
-#### Move a folder
-- **POST** `/api/v1/dossier/[id]/move/`
-- **Payload**: `{ "parent_id"?: string, "classeur_id"?: string }`
-- **Response**: `{ "id": string, ... }`
+#### Get folder tree
+- **GET** `/api/v1/dossier/{ref}/tree/`
+- **Response**: `{ folder, notes_at_root, folders }`
 
-#### Update metadata
-- **PATCH** `/api/v1/dossier/[id]/meta/`
-- **Payload**: `{ "name"?: string }`
-- **Response**: `{ "id": string, ... }`
+#### Get folder notes
+- **GET** `/api/v1/dossier/{ref}/notes/`
+- **Response**: `{ notes: [...] }`
 
----
+### **Notebooks (Classeurs)**
 
-### 3.3. Binders
+#### Create notebook
+- **POST** `/api/v1/notebook/create/`
+- **Payload**: `{ name, emoji?, color? }`
+- **Response**: `{ notebook: { id, slug, name, ... } }`
 
-#### Create a binder
-- **POST** `/api/v1/create-classeur/`
-- **Payload**: `{ "name": string }`
-- **Response**: `{ "id": string, "name": string, ... }`
+#### Read notebook
+- **GET** `/api/v1/notebook/{ref}/`
+- **Response**: `{ notebook: { id, slug, name, ... } }`
 
-#### Read a binder
-- **GET** `/api/v1/classeur/[id]/`
-- **Response**: `{ "id": string, "name": string, ... }`
+#### Update notebook
+- **PUT** `/api/v1/notebook/{ref}/`
+- **Payload**: `{ name, emoji?, color? }`
+- **Response**: `{ notebook: { ... } }`
 
-#### Delete a binder
-- **DELETE** `/api/v1/classeur/[id]/`
-- **Response**: `{ "success": true }`
+#### Delete notebook
+- **DELETE** `/api/v1/notebook/{ref}/`
+- **Response**: `{ success: true }`
 
-#### Update metadata
-- **PATCH** `/api/v1/classeur/[id]/meta/`
-- **Payload**: `{ "name"?: string }`
-- **Response**: `{ "id": string, ... }`
+#### Get notebook tree
+- **GET** `/api/v1/classeur/{ref}/tree/`
+- **Response**: `{ classeur, notes_at_root, folders }`
 
----
+#### Get notebook full tree
+- **GET** `/api/v1/classeur/{ref}/full-tree/`
+- **Response**: `{ classeur, notes, folders }`
 
-### 3.4. Full Tree
+#### Get notebook folders
+- **GET** `/api/v1/classeur/{ref}/dossiers/`
+- **Response**: `{ dossiers: [...] }`
 
-#### Read the full tree
-- **GET** `/api/v1/full-tree/`
-- **Response**: `{ "classeurs": [ ... ], "dossiers": [ ... ], "notes": [ ... ] }`
+### **Utilities**
 
----
+#### Generate slug
+- **POST** `/api/v1/slug/generate/`
+- **Payload**: `{ title, type, userId }`
+- **Response**: `{ slug }`
 
-## 4. REQUEST EXAMPLES
+#### List all notebooks
+- **GET** `/api/v1/classeurs/`
+- **Response**: `{ classeurs: [...] }`
 
-### Create a note
+## 🔄 **Migration from old endpoints**
+
+### **Old → New mapping**
+- `POST /api/v1/create-note` → `POST /api/v1/note/create`
+- `POST /api/v1/erase-note` → `POST /api/v1/note/overwrite`
+- `PATCH /api/v1/note/{ref}/append` → `PATCH /api/v1/note/{ref}/add-content`
+- `PATCH /api/v1/note/{ref}/append-to-section` → `PATCH /api/v1/note/{ref}/add-to-section`
+- `PATCH /api/v1/note/{ref}/erase-section` → `PATCH /api/v1/note/{ref}/clear-section`
+- `GET /api/v1/note/{ref}/toc` → `GET /api/v1/note/{ref}/table-of-contents`
+- `GET /api/v1/note/{ref}/meta` → `GET /api/v1/note/{ref}/information`
+- `GET /api/v1/note/{ref}/metadata` → `GET /api/v1/note/{ref}/statistics`
+- `POST /api/v1/create-folder` → `POST /api/v1/folder/create`
+- `POST /api/v1/create-classeur` → `POST /api/v1/notebook/create`
+
+## 💡 **Usage examples**
+
+### **Create and populate a note**
 ```bash
-curl -X POST https://.../api/v1/create-note/ \
-  -H 'Content-Type: application/json' \
-  -d '{ "title": "Title", "content": "# My markdown", "header_image": "https://..." }'
+curl -X POST https://api.abrege.com/api/v1/note/create \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "source_title": "My First Note",
+    "markdown_content": "# Introduction\n\nThis is my first note."
+  }'
 ```
 
-### Append to a section
+### **Add content to a section**
 ```bash
-curl -X POST https://.../api/v1/note/NOTE_ID/append-to-section/ \
-  -H 'Content-Type: application/json' \
-  -d '{ "section": "Introduction", "content": "Text to add" }'
+curl -X PATCH https://api.abrege.com/api/v1/note/NOTE_ID/add-to-section \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "section": "introduction",
+    "text": "\nNew content in the section"
+  }'
 ```
 
-### Erase a section
+### **Clear a section**
 ```bash
-curl -X POST https://.../api/v1/note/NOTE_ID/erase-section/ \
-  -H 'Content-Type: application/json' \
-  -d '{ "section": "Conclusion", "content": null }'
+curl -X PATCH https://api.abrege.com/api/v1/note/NOTE_ID/clear-section \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "section": "introduction"
+  }'
 ```
 
-### Merge notes
-```bash
-curl -X POST https://.../api/v1/note/merge/ \
-  -H 'Content-Type: application/json' \
-  -d '{ "note_ids": ["id1", "id2"] }'
-```
+## 🎯 **LLM Integration Patterns**
+
+### **1. Content Management**
+- Use `add-content` for general content addition
+- Use `add-to-section` for targeted content placement
+- Use `clear-section` for content removal
+- Use `overwrite` for complete content replacement
+
+### **2. Information Retrieval**
+- Use `information` for basic note metadata
+- Use `statistics` for detailed analytics
+- Use `table-of-contents` for structure analysis
+- Use `content` for raw markdown content
+
+### **3. Organization**
+- Use `move` for repositioning resources
+- Use `merge` for combining multiple notes
+- Use tree endpoints for hierarchical exploration
+
+### **4. Resource Types**
+- **note**: Individual articles with markdown content
+- **folder**: Containers for organizing notes
+- **notebook**: Top-level containers for folders and notes
+
+### **5. Reference Formats**
+- **UUID**: `123e4567-e89b-12d3-a456-426614174000`
+- **Slug**: `my-first-note` (auto-generated from title)
+- **Both formats supported** in all endpoints
+
+## 🔧 **Best Practices for LLMs**
+
+### **1. Use explicit endpoints**
+- Prefer `add-content` over guessing what `append` does
+- Use `table-of-contents` instead of `toc`
+- Choose `information` over `meta`
+
+### **2. Leverage natural language**
+- Endpoint names are self-documenting
+- No need to memorize abbreviations
+- Predictable naming patterns
+
+### **3. Handle errors gracefully**
+- All endpoints return consistent error formats
+- Validation errors include detailed messages
+- HTTP status codes follow REST conventions
+
+### **4. Use slugs for sharing**
+- Slugs are URL-friendly and shareable
+- Auto-generated from titles
+- Unique per user and resource type
 
 ---
 
-## 5. ERRORS & VALIDATION
-
-- **400**: Invalid data (type, format, non-compliant markdown)
-- **404**: Resource not found
-- **403**: Forbidden
-- **422**: Business constraint violation (e.g., section does not exist)
-- **500**: Server error
-
-**Error example**:
-```json
-{ "error": "Section not found" }
-```
-
----
-
-## 6. GLOSSARY
-
-- **note**: A markdown document
-- **folder**: A folder containing notes
-- **binder**: A binder containing folders
-- **section**: A markdown block identified by a heading (## or ###)
-- **header_image**: Optional header image URL
-- **toc**: Table of contents (list of sections)
-
----
-
-## 7. LLM BEST PRACTICES
-
-- Always validate the expected schema before sending a request
-- Always parse the JSON response and check for expected fields
-- Use specialized endpoints (append, erase, meta, toc, etc.) for each action
-- Never inject HTML into markdown
-- Always handle errors (code + message)
-
----
-
-**This document is designed to be copy-pasted into an LLM context to enable reliable, secure, and efficient manipulation of the Abrège API.** 
+**Abrège** - API designed for LLMs with explicit, self-documenting endpoints and natural language patterns. 

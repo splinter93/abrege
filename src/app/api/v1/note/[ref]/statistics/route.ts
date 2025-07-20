@@ -8,20 +8,11 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-export type NoteMetadataResponse =
-  | {
-      id: string;
-      title: string;
-      header_image?: string | null;
-      created_at: string;
-      updated_at: string;
-      word_count: number;
-      char_count: number;
-      section_count: number;
-      toc: { title: string; slug: string; level: number }[];
-    }
-  | { error: string; details?: string[] };
-
+/**
+ * GET /api/v1/note/{ref}/statistics
+ * Récupère les statistiques détaillées d'une note
+ * Réponse : { id, title, word_count, char_count, section_count, toc, ... }
+ */
 export async function GET(req: NextRequest, { params }: any): Promise<Response> {
   try {
     const { ref } = params;
@@ -68,16 +59,4 @@ export async function GET(req: NextRequest, { params }: any): Promise<Response> 
   } catch (err: any) {
     return new Response(JSON.stringify({ error: err.message }), { status: 500 });
   }
-}
-
-/**
- * Endpoint: GET /api/v1/note/[ref]/metadata
- * Paramètre attendu : { ref: string } (ID ou slug)
- * - Résout la référence (ID ou slug) vers l'ID réel
- * - Retourne les métadonnées de la note (titre, image, dates, stats, TOC)
- * - Réponses :
- *   - 200 : { id, title, header_image, created_at, updated_at, word_count, char_count, section_count, toc }
- *   - 404 : { error: 'Note non trouvée.' }
- *   - 422 : { error: 'Paramètre note_ref invalide', details }
- *   - 500 : { error: string }
- */ 
+} 
