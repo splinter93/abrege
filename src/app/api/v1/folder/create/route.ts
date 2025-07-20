@@ -16,7 +16,8 @@ export async function POST(req: Request): Promise<Response> {
     const body = await req.json();
     const schema = z.object({
       name: z.string().min(1, 'name requis'),
-      classeur_id: z.string().min(1, 'classeur_id requis'),
+      notebook_id: z.string().min(1, 'notebook_id requis'),
+      classeur_id: z.string().optional(), // Rétrocompatibilité
       parent_id: z.string().nullable().optional(),
     });
     
@@ -28,7 +29,17 @@ export async function POST(req: Request): Promise<Response> {
       );
     }
     
-    const { name, classeur_id, parent_id } = parseResult.data;
+    const { name, notebook_id, classeur_id, parent_id } = parseResult.data;
+    
+    // Déterminer le notebook_id final (priorité à notebook_id, puis classeur_id)
+    const finalNotebookId = notebook_id || classeur_id;
+    
+    if (!finalNotebookId) {
+      return new Response(
+        JSON.stringify({ error: 'notebook_id requis - spécifiez un notebook pour créer un dossier' }), 
+        { status: 400 }
+      );
+    }
     
     // [TEMP] USER_ID HARDCODED FOR DEV/LLM
     const USER_ID = "3223651c-5580-4471-affb-b3f4456bd729";
@@ -36,12 +47,36 @@ export async function POST(req: Request): Promise<Response> {
     // Générer le slug
     const slug = await SlugGenerator.generateSlug(name, 'folder', USER_ID);
     
+    // Résolution slug → ID pour notebook_id
+    let finalNotebookIdResolved = finalNotebookId;
+    const isNotebookSlug = !finalNotebookId.includes('-') && finalNotebookId.length < 36;
+    
+    if (isNotebookSlug) {
+      console.log(`🔍 Résolution slug notebook: ${finalNotebookId}`);
+      const { data: notebook, error: notebookError } = await supabase
+        .from('classeurs')
+        .select('id')
+        .eq('slug', finalNotebookId)
+        .eq('user_id', USER_ID)
+        .single();
+      
+      if (notebookError || !notebook) {
+        return new Response(
+          JSON.stringify({ error: `Notebook avec slug '${finalNotebookId}' non trouvé` }), 
+          { status: 404 }
+        );
+      }
+      
+      finalNotebookIdResolved = notebook.id;
+      console.log(`✅ Notebook résolu: ${finalNotebookId} → ${finalNotebookIdResolved}`);
+    }
+    
     // Créer le dossier
     const { data: folder, error } = await supabase
       .from('folders')
       .insert({
         name,
-        classeur_id,
+        classeur_id: finalNotebookIdResolved,
         parent_id: parent_id || null,
         user_id: USER_ID,
         slug,
