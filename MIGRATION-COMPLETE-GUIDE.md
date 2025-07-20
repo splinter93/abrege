@@ -140,7 +140,7 @@ npm run test-endpoints
 ### **Gestion**
 - `PUT /api/v1/note/[ref]` - Mettre à jour une note
 - `DELETE /api/v1/note/[ref]` - Supprimer une note
-- `POST /api/v1/note/[ref]/move` - Déplacer une note
+- `PATCH /api/v1/note/[ref]/move` - Déplacer une note
 - `POST /api/v1/folder/[ref]/move` - Déplacer un dossier
 
 ## 🧪 **TESTS MANUELS**

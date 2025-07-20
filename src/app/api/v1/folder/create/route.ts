@@ -17,7 +17,7 @@ export async function POST(req: Request): Promise<Response> {
     const schema = z.object({
       name: z.string().min(1, 'name requis'),
       classeur_id: z.string().min(1, 'classeur_id requis'),
-      parent_id: z.string().optional(),
+      parent_id: z.string().nullable().optional(),
     });
     
     const parseResult = schema.safeParse(body);

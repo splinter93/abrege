@@ -90,7 +90,7 @@ async function testCreateEndpoints() {
   // Test création de dossier
   await testEndpoint('POST', '/folder/create', {
     name: 'Test Folder LLM-Friendly',
-    parent_id: null
+    classeur_id: '0ea859bd-9567-4b0e-98aa-7021fa4fd34a' // ID du classeur "Notes"
   }, 'Créer un nouveau dossier');
 
   // Test création de notebook

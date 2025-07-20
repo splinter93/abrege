@@ -1,14 +1,14 @@
-# API Documentation - Abrège (LLM-Friendly)
+# API Abrège - Documentation Complète
 
 ## 📋 **Vue d'ensemble**
 
-L'API Abrège permet la gestion complète de notes, dossiers et classeurs avec support des slugs pour une meilleure intégration avec les LLMs et le partage d'URLs.
+L'API Abrège permet la gestion complète de notes, dossiers et classeurs avec support des slugs pour une meilleure intégration avec les LLMs.
 
 **Base URL :** `https://votre-domaine.com/api/v1`
 
 ## 🔐 **Authentification**
 
-Tous les endpoints nécessitent une authentification via Supabase. Incluez votre token dans les headers :
+Tous les endpoints nécessitent une authentification via Supabase :
 
 ```bash
 Authorization: Bearer YOUR_SUPABASE_TOKEN
@@ -21,6 +21,8 @@ Authorization: Bearer YOUR_SUPABASE_TOKEN
 | **Notes** | `123e4567-e89b-12d3-a456-426614174000` | `ma-premiere-note` | Articles markdown |
 | **Dossiers** | `550e8400-e29b-41d4-a716-446655440000` | `mon-dossier-important` | Conteneurs de notes |
 | **Classeurs** | `6ba7b810-9dad-11d1-80b4-00c04fd430c8` | `classeur-de-travail` | Conteneurs de dossiers |
+
+---
 
 ## 📝 **Notes (Articles)**
 
@@ -42,8 +44,8 @@ POST /api/v1/note/create
 ```
 
 **Champs :**
-- `source_title` (string, requis) : Titre de la note
-- `markdown_content` (string, requis) : Contenu markdown
+- `source_title` (string, **requis**) : Titre de la note
+- `markdown_content` (string, **requis**) : Contenu markdown
 - `header_image` (string, optionnel) : URL de l'image d'en-tête
 - `folder_id` (string, optionnel) : ID du dossier (hérite automatiquement du classeur_id)
 - `classeur_id` (string, optionnel) : ID du classeur (si pas de folder_id)
@@ -92,17 +94,6 @@ GET /api/v1/note/{ref}
 }
 ```
 
-**Exemples :**
-```bash
-# Par ID
-curl -H "Authorization: Bearer YOUR_TOKEN" \
-  https://api.abrege.com/api/v1/note/123e4567-e89b-12d3-a456-426614174000
-
-# Par slug
-curl -H "Authorization: Bearer YOUR_TOKEN" \
-  https://api.abrege.com/api/v1/note/ma-premiere-note
-```
-
 ### **Supprimer une note**
 
 ```http
@@ -132,7 +123,7 @@ PATCH /api/v1/note/{ref}/add-content
 ```
 
 **Champs :**
-- `text` (string, requis) : Contenu à ajouter
+- `text` (string, **requis**) : Contenu à ajouter
 - `position` (number, optionnel) : Position d'insertion
 
 ### **Ajouter à une section spécifique**
@@ -254,38 +245,12 @@ PATCH /api/v1/note/{ref}/move
 }
 ```
 
-**Options :**
+**Champs :**
 - `target_classeur_id` (string, optionnel) : ID du classeur de destination
 - `target_folder_id` (string | null, optionnel) : ID du dossier de destination (null = racine)
 - `position` (number, optionnel) : Position dans la liste
 
-**Exemples :**
-```bash
-# Déplacer vers un classeur
-curl -X PATCH https://api.abrege.com/api/v1/note/ma-note/move \
-  -H "Authorization: Bearer YOUR_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "target_classeur_id": "6ba7b810-9dad-11d1-80b4-00c04fd430c8"
-  }'
-
-# Déplacer vers un dossier
-curl -X PATCH https://api.abrege.com/api/v1/note/ma-note/move \
-  -H "Authorization: Bearer YOUR_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "target_folder_id": "550e8400-e29b-41d4-a716-446655440000"
-  }'
-
-# Placer à la racine d'un classeur
-curl -X PATCH https://api.abrege.com/api/v1/note/ma-note/move \
-  -H "Authorization: Bearer YOUR_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "target_classeur_id": "6ba7b810-9dad-11d1-80b4-00c04fd430c8",
-    "target_folder_id": null
-  }'
-```
+---
 
 ## 📁 **Dossiers (Folders)**
 
@@ -305,9 +270,25 @@ POST /api/v1/folder/create
 ```
 
 **Champs :**
-- `name` (string, requis) : Nom du dossier
-- `classeur_id` (string, requis) : ID du classeur parent
+- `name` (string, **requis**) : Nom du dossier
+- `classeur_id` (string, **requis**) : ID du classeur parent
 - `parent_id` (string | null, optionnel) : ID du dossier parent (pour sous-dossiers)
+
+**Réponse :**
+```json
+{
+  "folder": {
+    "id": "new-folder-id",
+    "slug": "nouveau-dossier",
+    "name": "Nouveau dossier",
+    "classeur_id": "6ba7b810-9dad-11d1-80b4-00c04fd430c8",
+    "parent_id": "550e8400-e29b-41d4-a716-446655440000",
+    "created_at": "2024-01-15T10:30:00Z",
+    "updated_at": "2024-01-15T10:30:00Z",
+    "position": 0
+  }
+}
+```
 
 ### **Récupérer un dossier**
 
@@ -349,6 +330,8 @@ PUT /api/v1/folder/{ref}
 ```http
 DELETE /api/v1/folder/{ref}
 ```
+
+---
 
 ## 📚 **Classeurs (Notebooks)**
 
@@ -392,9 +375,25 @@ POST /api/v1/notebook/create
 ```
 
 **Champs :**
-- `name` (string, requis) : Nom du classeur
+- `name` (string, **requis**) : Nom du classeur
 - `emoji` (string, optionnel) : Emoji du classeur
 - `color` (string, optionnel) : Couleur du classeur
+
+**Réponse :**
+```json
+{
+  "notebook": {
+    "id": "new-notebook-id",
+    "slug": "nouveau-classeur",
+    "name": "Nouveau classeur",
+    "emoji": "📚",
+    "color": "#3b82f6",
+    "created_at": "2024-01-15T10:30:00Z",
+    "updated_at": "2024-01-15T10:30:00Z",
+    "position": 0
+  }
+}
+```
 
 ### **Récupérer un notebook**
 
@@ -481,6 +480,8 @@ PUT /api/v1/notebook/{ref}
 DELETE /api/v1/notebook/{ref}
 ```
 
+---
+
 ## 🔧 **Points importants**
 
 ### **Héritage automatique du classeur_id**
@@ -502,6 +503,8 @@ DELETE /api/v1/notebook/{ref}
 - `404` : Ressource non trouvée
 - `422` : Erreur de validation
 - `500` : Erreur serveur
+
+---
 
 ## 🚀 **Exemples d'utilisation**
 
@@ -539,4 +542,64 @@ curl -X PATCH https://api.abrege.com/api/v1/note/ma-note/add-content \
   -d '{
     "text": "\n## Nouveau contenu\n\nAjouté via l'API !"
   }'
-``` 
+```
+
+### **Cas d'usage typiques**
+
+**Créer une note directement dans un classeur :**
+```bash
+curl -X POST https://api.abrege.com/api/v1/note/create \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "source_title": "Note à la racine",
+    "markdown_content": "# Contenu",
+    "classeur_id": "ID_DU_CLASSEUR"
+  }'
+```
+
+**Déplacer une note vers un autre dossier :**
+```bash
+curl -X PATCH https://api.abrege.com/api/v1/note/ma-note/move \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "target_folder_id": "ID_DU_DOSSIER_DESTINATION"
+  }'
+```
+
+**Récupérer les statistiques d'une note :**
+```bash
+curl -H "Authorization: Bearer YOUR_TOKEN" \
+  https://api.abrege.com/api/v1/note/ma-note/statistics
+```
+
+---
+
+## 📋 **Résumé des endpoints**
+
+### **Notes**
+- `POST /api/v1/note/create` - Créer une note
+- `GET /api/v1/note/{ref}` - Récupérer une note
+- `DELETE /api/v1/note/{ref}` - Supprimer une note
+- `PATCH /api/v1/note/{ref}/add-content` - Ajouter du contenu
+- `PATCH /api/v1/note/{ref}/add-to-section` - Ajouter à une section
+- `PATCH /api/v1/note/{ref}/clear-section` - Effacer une section
+- `GET /api/v1/note/{ref}/table-of-contents` - Table des matières
+- `GET /api/v1/note/{ref}/information` - Informations de base
+- `GET /api/v1/note/{ref}/statistics` - Statistiques
+- `PATCH /api/v1/note/{ref}/move` - Déplacer une note
+
+### **Dossiers**
+- `POST /api/v1/folder/create` - Créer un dossier
+- `GET /api/v1/folder/{ref}` - Récupérer un dossier
+- `PUT /api/v1/folder/{ref}` - Mettre à jour un dossier
+- `DELETE /api/v1/folder/{ref}` - Supprimer un dossier
+
+### **Classeurs**
+- `GET /api/v1/notebooks` - Lister tous les notebooks
+- `POST /api/v1/notebook/create` - Créer un notebook
+- `GET /api/v1/notebook/{ref}` - Récupérer un notebook
+- `GET /api/v1/classeur/{ref}/full-tree` - Contenu complet d'un notebook
+- `PUT /api/v1/notebook/{ref}` - Mettre à jour un notebook
+- `DELETE /api/v1/notebook/{ref}` - Supprimer un notebook 
