@@ -13,8 +13,8 @@ export type GetNoteContentResponse =
 
 export async function GET(req: NextRequest, { params }: any): Promise<Response> {
   try {
-    const {} = params;
-    const parseResult = schema.safeParse({});
+    const schema = z.object({ ref: z.string().min(1, 'note_ref requis') });    const { ref } = params;
+    const parseResult = schema.safeParse({ ref });
     if (!parseResult.success) {
       return new Response(
         JSON.stringify({ error: 'Paramètre note_ref invalide', details: parseResult.error.errors.map(e => e.message) }),
