@@ -6,6 +6,7 @@ import { markdownContentSchema } from '@/utils/markdownValidation';
 import type { Article } from '@/types/supabase';
 import MarkdownIt from 'markdown-it';
 import { createMarkdownIt } from '@/utils/markdownItConfig';
+import { SlugGenerator } from '@/utils/slugGenerator';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -77,6 +78,9 @@ export async function POST(req: Request): Promise<Response> {
       );
     }
 
+    // Générer un slug unique pour la note
+    const slug = await SlugGenerator.generateSlug(title, 'note', USER_ID);
+
     // Suppression de toute logique liée à html_content (obsolète)
 
     const insertData = {
@@ -86,6 +90,7 @@ export async function POST(req: Request): Promise<Response> {
       source_type: source_type || null,
       source_url: source_url || null,
       source_title: title,
+      slug, // Nouveau champ slug
       markdown_content: cleaned_markdown_content, // correspond à la colonne Supabase
       header_image: header_image || null,
       created_at: new Date().toISOString(),
@@ -109,11 +114,11 @@ export async function POST(req: Request): Promise<Response> {
 
 /**
  * Endpoint: POST /api/v1/create-note
- * Payload attendu : { classeur_id: string, title: string, markdown_content: string, html_content: string, source_type: string, source_url: string }
- * - Valide le payload avec Zod (tous champs obligatoires)
+ * Payload attendu : { classeur_id: string, title: string, markdown_content: string, header_image?: string, folder_id?: string, source_type?: string, source_url?: string }
+ * - Valide le payload avec Zod
  * - Valide le markdown avec markdownContentSchema (LLM-Ready)
- * - Sanitize le HTML reçu (html_content)
- * - Insère la note dans Supabase (schéma: content, html_content)
+ * - Génère un slug unique basé sur le titre
+ * - Insère la note dans Supabase avec le slug
  * - Réponses :
  *   - 201 : { success: true, note }
  *   - 422 : { error: 'Payload invalide' | 'markdown_content non autorisé', details }

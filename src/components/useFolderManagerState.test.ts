@@ -3,8 +3,23 @@ import { vi } from 'vitest';
 import { useFolderManagerState } from './useFolderManagerState';
 import * as supabase from '../services/supabase';
 
+// Mock Supabase client complet
 vi.mock('../supabaseClient', () => ({
-  supabase: {}
+  supabase: {
+    channel: vi.fn(() => ({
+      on: vi.fn(() => ({
+        subscribe: vi.fn()
+      }))
+    })),
+    removeChannel: vi.fn(),
+    from: vi.fn(() => ({
+      select: vi.fn(() => ({
+        eq: vi.fn(() => ({
+          eq: vi.fn(() => Promise.resolve({ data: [] }))
+        }))
+      }))
+    }))
+  }
 }));
 
 const initialFolders = [
@@ -63,7 +78,7 @@ describe('useFolderManagerState', () => {
     await waitFor(() => result.current.folders.length === 2);
     await act(async () => {
       await result.current.startRename('f1', 'folder');
-      await result.current.submitRename('f1', 'Renommé');
+      await result.current.submitRename('f1', 'Renommé', 'folder');
     });
     await waitFor(() => {
       const folder = result.current.folders.find(f => f.id === 'f1');
@@ -76,7 +91,7 @@ describe('useFolderManagerState', () => {
     await waitFor(() => result.current.folders.length === 2);
     await act(async () => {
       await result.current.startRename('notfound', 'folder');
-      await result.current.submitRename('notfound', 'Test');
+      await result.current.submitRename('notfound', 'Test', 'folder');
     });
     await waitFor(() => {
       expect(result.current.folders.find(f => f.id === 'notfound')).toBeUndefined();

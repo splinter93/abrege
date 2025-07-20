@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 import type { Folder } from '@/types/supabase';
+import { SlugGenerator } from '@/utils/slugGenerator';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -38,9 +39,14 @@ export async function POST(req: Request): Promise<Response> {
       );
     }
     const { classeur_id, name, parent_id } = parseResult.data;
+    
+    // Générer un slug unique pour le dossier
+    const slug = await SlugGenerator.generateSlug(name, 'folder', USER_ID);
+    
     const insertData = {
       user_id: USER_ID, // [TEMP] Injected automatically for all folders (remove when auth is ready)
       name,
+      slug, // Nouveau champ slug
       parent_id: parent_id || null,
       classeur_id,
       created_at: new Date().toISOString(),
@@ -84,7 +90,8 @@ export async function DELETE(req: Request): Promise<Response> {
  * Endpoint: POST /api/v1/create-folder
  * Payload attendu : { classeur_id: string, name: string, parent_id?: string | null }
  * - Valide le payload avec Zod (classeur_id et name obligatoires)
- * - Crée un dossier dans Supabase (table folders)
+ * - Génère un slug unique basé sur le nom
+ * - Crée un dossier dans Supabase avec le slug
  * - Réponses :
  *   - 201 : { success: true, folder }
  *   - 422 : { error: 'Payload invalide', details }

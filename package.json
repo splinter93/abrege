@@ -6,7 +6,14 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "migrate-slugs": "tsx src/scripts/migrateSlugs.ts",
+    "add-slug-columns": "tsx src/scripts/addSlugColumns.ts",
+    "test-slugs": "tsx src/scripts/testSlugMigration.ts",
+    "test-endpoints": "tsx src/scripts/testSlugEndpoints.ts",
+    "test": "vitest",
+    "test:watch": "vitest --watch",
+    "test:coverage": "vitest --coverage"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
@@ -66,9 +73,11 @@
     "@types/react": "^19.1.8",
     "@types/react-dom": "^19",
     "@types/turndown": "^5.0.5",
+    "dotenv": "^17.2.0",
     "eslint": "^9",
     "eslint-config-next": "15.3.4",
     "tailwindcss": "^4",
+    "tsx": "^4.20.3",
     "typescript": "^5.8.3",
     "vitest": "^3.2.4"
   }

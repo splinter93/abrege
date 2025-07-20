@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 import type { Classeur } from '@/types/supabase';
+import { SlugGenerator } from '@/utils/slugGenerator';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -36,9 +37,14 @@ export async function POST(req: Request): Promise<Response> {
       );
     }
     const { name, emoji } = parseResult.data;
+    
+    // Générer un slug unique pour le classeur
+    const slug = await SlugGenerator.generateSlug(name, 'classeur', USER_ID);
+    
     const insertData = {
       user_id: USER_ID, // [TEMP] Injected automatically for all classeurs (remove when auth is ready)
       name,
+      slug, // Nouveau champ slug
       emoji: emoji || null,
       created_at: new Date().toISOString(),
     };
@@ -81,7 +87,8 @@ export async function DELETE(req: Request): Promise<Response> {
  * Endpoint: POST /api/v1/create-classeur
  * Payload attendu : { name: string, emoji?: string }
  * - Valide le payload avec Zod (name obligatoire)
- * - Crée un classeur dans Supabase (table classeurs)
+ * - Génère un slug unique basé sur le nom
+ * - Crée un classeur dans Supabase avec le slug
  * - Réponses :
  *   - 201 : { success: true, classeur }
  *   - 422 : { error: 'Payload invalide', details }

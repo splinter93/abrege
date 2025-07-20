@@ -1,3 +1,4 @@
+import { describe, it, expect, vi } from 'vitest';
 import { markdownContentSchema, markdownExamples } from './markdownValidation';
 
 describe('markdownContentSchema', () => {
@@ -14,7 +15,7 @@ describe('markdownContentSchema', () => {
   });
 
   it('log un avertissement sur rejet', () => {
-    const spy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    const spy = vi.spyOn(console, 'warn').mockImplementation(() => {});
     try {
       expect(() => {
         try {
