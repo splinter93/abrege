@@ -2,7 +2,7 @@ import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 import type { NextRequest } from 'next/server';
 import { resolveNoteRef } from '@/middleware/resourceResolver';
-import { appendToSection } from '@/utils/markdownTOC';
+import { appendToSection, extractTOCWithSlugs } from '@/utils/markdownTOC';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -11,6 +11,7 @@ const supabase = createClient(supabaseUrl, supabaseAnonKey);
 /**
  * PATCH /api/v1/note/{ref}/add-to-section
  * Ajoute du contenu à une section spécifique d'une note
+ * Body: { section: string, text: string, position?: number }
  * Réponse : { note: { id, markdown_content, ... } }
  */
 export async function PATCH(req: NextRequest, { params }: any): Promise<Response> {
@@ -49,6 +50,23 @@ export async function PATCH(req: NextRequest, { params }: any): Promise<Response
       return new Response(JSON.stringify({ error: 'Note non trouvée.' }), { status: 404 });
     }
     
+    // Debug: afficher les sections disponibles
+    const toc = extractTOCWithSlugs(note.markdown_content || '');
+    console.log(`🔍 Sections disponibles:`, toc.map(t => ({ title: t.title, slug: t.slug })));
+    console.log(`🔍 Section recherchée: "${section}"`);
+    
+    // Vérifier si la section existe
+    const sectionIdx = toc.findIndex(t => t.title === section || t.slug === section);
+    if (sectionIdx === -1) {
+      const availableSections = toc.map(t => `"${t.title}" (slug: "${t.slug}")`).join(', ');
+      return new Response(
+        JSON.stringify({ 
+          error: `Section "${section}" non trouvée. Sections disponibles: ${availableSections}` 
+        }), 
+        { status: 404 }
+      );
+    }
+    
     // Insérer le contenu dans la section
     const newContent = appendToSection(note.markdown_content || '', section, text, position !== undefined ? 'start' : 'end');
     
@@ -64,11 +82,14 @@ export async function PATCH(req: NextRequest, { params }: any): Promise<Response
       .single();
     
     if (error) {
+      console.error('❌ Erreur mise à jour note:', error);
       return new Response(JSON.stringify({ error: error.message }), { status: 500 });
     }
     
+    console.log(`✅ Contenu ajouté à la section "${section}"`);
     return new Response(JSON.stringify({ note: updatedNote }), { status: 200 });
   } catch (err: any) {
+    console.error('❌ Erreur générale:', err);
     return new Response(JSON.stringify({ error: err.message }), { status: 500 });
   }
 } 
