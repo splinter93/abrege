@@ -13,7 +13,7 @@ export type GetNotebooksResponse =
 /**
  * GET /api/v1/notebooks
  * Récupère la liste des notebooks (classeurs) de l'utilisateur
- * Réponse : { notebooks: [{ id, name, emoji, color, slug, ... }] }
+ * Réponse : { notebooks: [{ id, name, emoji, slug, ... }] }
  */
 export async function GET(req: Request): Promise<Response> {
   try {
@@ -41,6 +41,6 @@ export async function GET(req: Request): Promise<Response> {
  * - En phase de test : utilise le USER_ID hardcodé
  * - En production : extrait l'user_id de l'API key
  * Réponses :
- *   - 200 : { notebooks: [{ id, name, emoji, color, slug, position, created_at, updated_at }] }
+ *   - 200 : { notebooks: [{ id, name, emoji, slug, position, created_at, updated_at }] }
  *   - 500 : { error: string }
  */ 

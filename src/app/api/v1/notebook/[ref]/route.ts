@@ -10,7 +10,7 @@ const supabase = createClient(supabaseUrl, supabaseAnonKey);
 /**
  * GET /api/v1/notebook/{ref}
  * Récupère un classeur par ID ou slug
- * Réponse : { notebook: { id, name, emoji, color, ... } }
+ * Réponse : { notebook: { id, name, emoji, ... } }
  */
 export async function GET(req: NextRequest, { params }: any): Promise<Response> {
   try {
@@ -45,7 +45,7 @@ export async function GET(req: NextRequest, { params }: any): Promise<Response> 
 /**
  * PUT /api/v1/notebook/{ref}
  * Met à jour un classeur par ID ou slug
- * Réponse : { notebook: { id, name, emoji, color, ... } }
+ * Réponse : { notebook: { id, name, emoji, ... } }
  */
 export async function PUT(req: NextRequest, { params }: any): Promise<Response> {
   try {
@@ -55,8 +55,7 @@ export async function PUT(req: NextRequest, { params }: any): Promise<Response> 
     const schema = z.object({
       ref: z.string().min(1, 'notebook_ref requis'),
       name: z.string().min(1, 'name requis'),
-      emoji: z.string().optional(),
-      color: z.string().optional()
+      emoji: z.string().optional()
     });
     
     const parseResult = schema.safeParse({ ref, ...body });
@@ -67,7 +66,7 @@ export async function PUT(req: NextRequest, { params }: any): Promise<Response> 
       );
     }
     
-    const { name, emoji, color } = parseResult.data;
+    const { name, emoji } = parseResult.data;
     
     // [TEMP] USER_ID HARDCODED FOR DEV/LLM
     const USER_ID = "3223651c-5580-4471-affb-b3f4456bd729";
@@ -91,7 +90,7 @@ export async function PUT(req: NextRequest, { params }: any): Promise<Response> 
       .update({
         name,
         emoji: emoji || null,
-        color: color || null,
+
         updated_at: new Date().toISOString()
       })
       .eq('id', classeurId)

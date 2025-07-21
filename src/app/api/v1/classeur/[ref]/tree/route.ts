@@ -27,7 +27,7 @@ export async function GET(req: NextRequest, { params }: any): Promise<Response> 
     // Récupérer le classeur
     const { data: classeur, error: classeurError } = await supabase
       .from('classeurs')
-      .select('id, name, emoji, color')
+      .select('id, name, emoji')
       .eq('id', classeurId)
       .single();
     if (classeurError || !classeur) {

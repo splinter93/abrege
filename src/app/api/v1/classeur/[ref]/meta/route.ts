@@ -11,7 +11,6 @@ const supabase = createClient(supabaseUrl, supabaseAnonKey);
 export type UpdateClasseurMetaPayload = {
   name?: string;
   emoji?: string;
-  color?: string;
 };
 export type UpdateClasseurMetaResponse =
   | { classeur: Classeur }
@@ -25,7 +24,6 @@ export async function PATCH(req: NextRequest, { params }: any): Promise<Response
     const bodySchema = z.object({
       name: z.string().optional(),
       emoji: z.string().optional(),
-      color: z.string().optional(),
     });
     const paramResult = paramSchema.safeParse({ ref });
     const bodyResult = bodySchema.safeParse(body);
@@ -41,7 +39,7 @@ export async function PATCH(req: NextRequest, { params }: any): Promise<Response
         { status: 422 }
       );
     }
-    if (!body.name && !body.emoji && !body.color) {
+    if (!body.name && !body.emoji) {
       return new Response(
         JSON.stringify({ error: 'Aucun champ à mettre à jour.' }),
         { status: 422 }
@@ -55,7 +53,7 @@ export async function PATCH(req: NextRequest, { params }: any): Promise<Response
     const updates: any = {};
     if (body.name) updates.name = body.name;
     if (body.emoji) updates.emoji = body.emoji;
-    if (body.color) updates.color = body.color;
+
     updates.updated_at = new Date().toISOString();
     const { data: updated, error } = await supabase
       .from('classeurs')
@@ -74,9 +72,9 @@ export async function PATCH(req: NextRequest, { params }: any): Promise<Response
 
 /**
  * Endpoint: PATCH /api/v1/classeur/[ref]/meta
- * Payload attendu : { name?: string, emoji?: string, color?: string }
+ * Payload attendu : { name?: string, emoji?: string }
  * - Résout la référence (ID ou slug) vers l'ID réel
- * - Met à jour uniquement le nom, l'emoji ou la couleur du classeur
+ * - Met à jour uniquement le nom ou l'emoji du classeur
  * - Tous les champs sont optionnels, au moins un doit être fourni
  * - Réponses :
  *   - 200 : { classeur }

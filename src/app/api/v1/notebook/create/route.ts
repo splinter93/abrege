@@ -17,7 +17,6 @@ export async function POST(req: Request): Promise<Response> {
     const schema = z.object({
       name: z.string().min(1, 'name requis'),
       emoji: z.string().optional(),
-      color: z.string().optional(),
     });
     
     const parseResult = schema.safeParse(body);
@@ -28,7 +27,7 @@ export async function POST(req: Request): Promise<Response> {
       );
     }
     
-    const { name, emoji, color } = parseResult.data;
+    const { name, emoji } = parseResult.data;
     
     // [TEMP] USER_ID HARDCODED FOR DEV/LLM
     const USER_ID = "3223651c-5580-4471-affb-b3f4456bd729";
@@ -42,7 +41,7 @@ export async function POST(req: Request): Promise<Response> {
       .insert({
         name,
         emoji: emoji || null,
-        color: color || null,
+
         user_id: USER_ID,
         slug,
         position: 0

@@ -85,7 +85,7 @@ async function runTests() {
       body: {
         name: 'Test Notebook LLM-Friendly',
         emoji: '📚',
-        color: '#3b82f6'
+  
       },
       description: 'Créer un classeur avec le nouveau nom'
     },
@@ -183,7 +183,7 @@ async function runTests() {
       body: {
         name: 'Classeur mis à jour via LLM-friendly endpoint',
         emoji: '📖',
-        color: '#ef4444'
+  
       },
       description: 'Mettre à jour un classeur'
     },
