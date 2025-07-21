@@ -52,8 +52,7 @@ export async function PATCH(req: NextRequest, { params }: any): Promise<Response
       .from('folders')
       .update(updates)
       .eq('id', folderId)
-      .select()
-      .single();
+      .select();
     if (error) {
       return new Response(JSON.stringify({ error: error.message }), { status: 500 });
     }
