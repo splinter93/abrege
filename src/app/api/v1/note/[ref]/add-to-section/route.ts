@@ -23,7 +23,7 @@ export async function PATCH(req: NextRequest, { params }: any): Promise<Response
     const schema = z.object({
       section: z.string().min(1, 'section requis').optional(),
       section_title: z.string().min(1, 'section_title requis').optional(),
-      text: z.string().min(1, 'text requis'),
+      text: z.string(), // Permet les chaînes vides
       position: z.number().optional()
     });
     
