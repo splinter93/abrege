@@ -32,6 +32,7 @@ import Underline from '@tiptap/extension-underline';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/supabaseClient';
 import CustomImage from '@/extensions/CustomImage';
+import MarkdownPasteHandler from '@/extensions/MarkdownPasteHandler';
 type SlashCommand = {
   id: string;
   alias: Record<string, string>;
@@ -104,6 +105,7 @@ export default function NoteEditorPage() {
       TableCell,
       TableHeader,
       Underline,
+      MarkdownPasteHandler,
     ],
     content: '',
     immediatelyRender: false,
