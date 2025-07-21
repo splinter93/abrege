@@ -3,6 +3,7 @@ import { z } from 'zod';
 import type { Article } from '@/types/supabase';
 import type { NextRequest } from 'next/server';
 import { resolveNoteRef } from '@/middleware/resourceResolver';
+import { SlugGenerator } from '@/utils/slugGenerator';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -51,7 +52,7 @@ export async function PUT(req: NextRequest, { params }: any): Promise<Response> 
     const schema = z.object({ 
       ref: z.string().min(1, 'note_ref requis'),
       header_image: z.string().url('header_image doit être une URL valide').optional(),
-      title: z.string().min(1, 'title requis').optional(),
+      source_title: z.string().min(1, 'source_title requis').optional(),
       markdown_content: z.string().optional()
     });
     
@@ -75,8 +76,11 @@ export async function PUT(req: NextRequest, { params }: any): Promise<Response> 
     if (body.header_image !== undefined) {
       updateData.header_image = body.header_image;
     }
-    if (body.title !== undefined) {
-      updateData.title = body.title;
+    if (body.source_title !== undefined) {
+      updateData.source_title = body.source_title;
+      // Si le titre change, mettre à jour le slug automatiquement
+      const newSlug = await SlugGenerator.generateSlug(body.source_title, 'note', USER_ID, noteId);
+      updateData.slug = newSlug;
     }
     if (body.markdown_content !== undefined) {
       updateData.markdown_content = body.markdown_content;

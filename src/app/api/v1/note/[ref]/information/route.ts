@@ -2,6 +2,7 @@ import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 import type { NextRequest } from 'next/server';
 import { resolveNoteRef } from '@/middleware/resourceResolver';
+import { SlugGenerator } from '@/utils/slugGenerator';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -53,12 +54,11 @@ export async function PATCH(req: NextRequest, { params }: any): Promise<Response
     const body = await req.json();
     
     const schema = z.object({
-      ref: z.string().min(1, 'note_ref requis'),
       source_title: z.string().optional(),
       header_image: z.string().optional()
     });
     
-    const parseResult = schema.safeParse({ ...body });
+    const parseResult = schema.safeParse(body);
     if (!parseResult.success) {
       return new Response(
         JSON.stringify({ error: 'Payload invalide', details: parseResult.error.errors.map(e => e.message) }),
@@ -88,6 +88,12 @@ export async function PATCH(req: NextRequest, { params }: any): Promise<Response
     const updateData: any = { updated_at: new Date().toISOString() };
     if (source_title !== undefined) updateData.source_title = source_title;
     if (header_image !== undefined) updateData.header_image = header_image;
+    
+    // Si le titre change, mettre à jour le slug automatiquement
+    if (source_title !== undefined) {
+      const newSlug = await SlugGenerator.generateSlug(source_title, 'note', USER_ID, noteId);
+      updateData.slug = newSlug;
+    }
     
     const { data: note, error } = await supabase
       .from('articles')
