@@ -54,6 +54,13 @@ export async function GET(req: NextRequest, { params }: any): Promise<Response> 
 export async function POST(req: NextRequest, { params }: any): Promise<Response> {
   try {
     const body = await req.json();
+    console.log('POST /api/v1/note/[ref]/content body:', body);
+    console.log('process.env snapshot (abrégé):', {
+      AWS_ACCESS_KEY_ID: process.env.AWS_ACCESS_KEY_ID,
+      AWS_SECRET_ACCESS_KEY: process.env.AWS_SECRET_ACCESS_KEY ? '***' : undefined,
+      AWS_REGION: process.env.AWS_REGION,
+      AWS_S3_BUCKET: process.env.AWS_S3_BUCKET
+    });
     const schema = z.object({
       fileName: z.string().min(1, 'fileName requis'),
       fileType: z.string().min(1, 'fileType requis'),
@@ -74,6 +81,7 @@ export async function POST(req: NextRequest, { params }: any): Promise<Response>
     const url = await getSignedUrl(s3, command, { expiresIn: 3600 });
     return new Response(JSON.stringify({ url }), { status: 200 });
   } catch (err: any) {
+    console.error('POST /api/v1/note/[ref]/content error:', err);
     return new Response(JSON.stringify({ error: err.message }), { status: 500 });
   }
 }
