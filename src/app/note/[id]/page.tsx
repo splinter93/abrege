@@ -32,7 +32,6 @@ import Underline from '@tiptap/extension-underline';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/supabaseClient';
 import CustomImage from '@/extensions/CustomImage';
-import MarkdownPasteHandler from '@/extensions/MarkdownPasteHandler';
 type SlashCommand = {
   id: string;
   alias: Record<string, string>;
@@ -105,7 +104,6 @@ export default function NoteEditorPage() {
       TableCell,
       TableHeader,
       Underline,
-      MarkdownPasteHandler,
     ],
     content: '',
     immediatelyRender: false,
@@ -439,6 +437,32 @@ export default function NoteEditorPage() {
       document.removeEventListener('visibilitychange', handleReload);
     };
   }, [reloadNoteFromServer]);
+
+  React.useEffect(() => {
+    if (!editor) return;
+    const handlePaste = (event: ClipboardEvent) => {
+      const text = event.clipboardData?.getData('text/plain');
+      if (!text) return;
+      const markdownPatterns = [
+        /^#+\s+/m, /^\*\s+/m, /^-\s+/m, /^\d+\.\s+/m, /^\>\s+/m,
+        /\*\*.*\*\*/m, /\*.*\*/m, /`.*`/m, /\[.*\]\(.*\)/m, /!\[.*\]\(.*\)/m,
+        /^\|.*\|$/m, /^```/m,
+      ];
+      const isMarkdown = markdownPatterns.some(pattern => pattern.test(text));
+      if (isMarkdown) {
+        event.preventDefault();
+        const commands: any = editor.commands;
+        if (typeof commands.setMarkdown === 'function') {
+          commands.setMarkdown(text);
+        } else {
+          editor.commands.setContent(text);
+        }
+      }
+    };
+    const dom = editor.view.dom;
+    dom.addEventListener('paste', handlePaste);
+    return () => dom.removeEventListener('paste', handlePaste);
+  }, [editor]);
 
   if (loading) {
     return <div style={{ color: '#aaa', fontSize: 18, padding: 48, textAlign: 'center' }}>Chargement…</div>;

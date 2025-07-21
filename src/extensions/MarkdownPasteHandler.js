@@ -1,5 +1,6 @@
 import { Extension } from '@tiptap/core';
 import { Plugin, PluginKey } from '@tiptap/pm/state';
+import { createMarkdownIt } from '@/utils/markdownItConfig';
 
 const MarkdownPasteHandler = Extension.create({
   name: 'markdownPasteHandler',
@@ -33,16 +34,37 @@ const MarkdownPasteHandler = Extension.create({
             
             if (isMarkdown) {
               try {
-                // Supprimer le contenu sélectionné et insérer le markdown brut
+                // Convertir le markdown en HTML
+                const md = createMarkdownIt();
+                const html = md.render(text);
+                
+                // Supprimer le contenu sélectionné
                 const { from, to } = view.state.selection;
                 const tr = view.state.tr.delete(from, to);
-                tr.insertText(text, from);
+                
+                // Insérer le HTML converti en utilisant insertContent
+                // On va utiliser une approche différente : insérer le HTML directement
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = html;
+                
+                // Créer un fragment ProseMirror à partir du HTML
+                const fragment = view.domSerializer.serializeFragment(
+                  tempDiv,
+                  { schema: view.state.schema }
+                );
+                
+                tr.replaceWith(from, from, fragment);
                 view.dispatch(tr);
                 
                 return true;
               } catch (error) {
-                console.error('Erreur lors du paste markdown:', error);
-                return false;
+                console.error('Erreur lors de la conversion markdown:', error);
+                // Fallback : insérer le texte brut
+                const { from, to } = view.state.selection;
+                const tr = view.state.tr.delete(from, to);
+                tr.insertText(text, from);
+                view.dispatch(tr);
+                return true;
               }
             }
             
