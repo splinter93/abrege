@@ -298,10 +298,12 @@ export const moveItemUniversal = async (
       .from('folders')
       .update({ parent_id: newParentId })
       .eq('id', id)
-      .select()
-      .single();
+      .select();
     if (error) throw error;
-    return data;
+    if (!data || data.length === 0) {
+      throw new Error(`Folder with ID ${id} not found`);
+    }
+    return data[0];
   } else {
     // On met à jour folder_id dans la table articles (avec updated_at)
     const { data, error } = await supabase
@@ -311,10 +313,12 @@ export const moveItemUniversal = async (
         updated_at: new Date().toISOString()
       })
       .eq('id', id)
-      .select()
-      .single();
+      .select();
     if (error) throw error;
-    return data;
+    if (!data || data.length === 0) {
+      throw new Error(`Article with ID ${id} not found`);
+    }
+    return data[0];
   }
 }; 
 
