@@ -68,9 +68,18 @@ export const createFolder = async (data: any): Promise<any> => {
 };
 
 export const updateFolder = async (folderId: string, updates: any): Promise<any> => {
+  // Filtrer les champs pour ne garder que ceux qui existent dans la table folders
+  // Champs valides : id, user_id, name, parent_id, created_at, position, classeur_id, slug
+  const validFields = ['name', 'parent_id', 'position', 'classeur_id', 'slug'];
+  const filteredUpdates = Object.keys(updates).reduce((acc: any, key) => {
+    if (validFields.includes(key)) {
+      acc[key] = updates[key];
+    }
+  }, {});
+
   const { data: updateData, error } = await supabase
     .from('folders')
-    .update(updates)
+    .update(filteredUpdates)
     .eq('id', folderId)
     .select()
     .single();
