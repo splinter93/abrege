@@ -43,12 +43,11 @@ export async function PATCH(req: NextRequest, { params }: any): Promise<Response
     const USER_ID = "3223651c-5580-4471-affb-b3f4456bd729";
     const folderId = await resolveFolderRef(ref, USER_ID);
     
-    // Mettre à jour le dossier
+    // Mettre à jour le dossier (pas d'updated_at dans la table folders)
     const updates: any = {};
     if ('target_classeur_id' in body) updates.classeur_id = body.target_classeur_id;
     if ('target_parent_id' in body) updates.parent_id = body.target_parent_id || null;
     if ('position' in body) updates.position = body.position;
-    updates.updated_at = new Date().toISOString();
     const { data: updated, error } = await supabase
       .from('folders')
       .update(updates)

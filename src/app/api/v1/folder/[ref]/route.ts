@@ -83,12 +83,11 @@ export async function PUT(req: NextRequest, { params }: any): Promise<Response> 
       return new Response(JSON.stringify({ error: 'Dossier non trouvé.' }), { status: 404 });
     }
     
-    // Mettre à jour le dossier
+    // Mettre à jour le dossier (pas d'updated_at dans la table folders)
     const { data: folder, error } = await supabase
       .from('folders')
       .update({
-        name,
-        updated_at: new Date().toISOString()
+        name
       })
       .eq('id', folderId)
       .select()
