@@ -10,9 +10,11 @@ interface ImageMenuProps {
   open: boolean;
   onClose: () => void;
   onInsertImage: (src: string) => void;
+  noteId: string;
+  userId: string;
 }
 
-const ImageMenu: React.FC<ImageMenuProps> = ({ open, onClose, onInsertImage }) => {
+const ImageMenu: React.FC<ImageMenuProps> = ({ open, onClose, onInsertImage, noteId, userId }) => {
   const [tab, setTab] = useState<'upload' | 'url' | 'ai'>('upload');
   const [file, setFile] = useState<File | null>(null);
   const [url, setUrl] = useState('');
@@ -51,15 +53,34 @@ const ImageMenu: React.FC<ImageMenuProps> = ({ open, onClose, onInsertImage }) =
 
   const handleUpload = async () => {
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      if (e.target && typeof e.target.result === 'string') {
-        onInsertImage(e.target.result);
-        setFile(null);
-        onClose();
-      }
-    };
-    reader.readAsDataURL(file);
+    setLoading(true);
+    try {
+      const fileName = `${userId}/${Date.now()}_${file.name}`;
+      // 1. Demander une URL signée à l'API
+      const res = await fetch(`/api/v1/note/${noteId}/content`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fileName, fileType: file.type }),
+      });
+      if (!res.ok) throw new Error('Erreur lors de la génération de l’URL S3');
+      const { url } = await res.json();
+      // 2. Upload direct sur S3
+      const uploadRes = await fetch(url, {
+        method: 'PUT',
+        headers: { 'Content-Type': file.type },
+        body: file,
+      });
+      if (!uploadRes.ok) throw new Error('Erreur lors de l’upload S3');
+      // 3. Insérer l’URL publique dans l’éditeur
+      const publicUrl = url.split('?')[0];
+      onInsertImage(publicUrl);
+      setFile(null);
+      onClose();
+    } catch (err: any) {
+      alert('Erreur lors de l’upload de l’image : ' + (err.message || err));
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleUrl = () => {

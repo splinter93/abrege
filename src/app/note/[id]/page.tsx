@@ -32,6 +32,7 @@ import Underline from '@tiptap/extension-underline';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/supabaseClient';
 import CustomImage from '@/extensions/CustomImage';
+import { useSession } from '@supabase/auth-helpers-react';
 type SlashCommand = {
   id: string;
   alias: Record<string, string>;
@@ -87,6 +88,8 @@ const Logo = () => {
 
 export default function NoteEditorPage() {
   const router = useRouter();
+  const session = useSession();
+  const userId = session?.user?.id || '';
   const editor = useEditor({
     extensions: [
       StarterKit,
@@ -464,6 +467,38 @@ export default function NoteEditorPage() {
     return () => dom.removeEventListener('paste', handlePaste);
   }, [editor]);
 
+  // Handler drag & drop image dans la zone d'édition
+  const handleEditorDrop = async (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    if (!editor) return;
+    const files = Array.from(e.dataTransfer.files);
+    if (!files.length) return;
+    const imageFile = files.find(f => f.type.startsWith('image/'));
+    if (!imageFile) return;
+    try {
+      const fileName = `${userId}/${Date.now()}_${imageFile.name}`;
+      const res = await fetch(`/api/v1/note/${noteId}/content`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fileName, fileType: imageFile.type }),
+      });
+      if (!res.ok) throw new Error('Erreur lors de la génération de l’URL S3');
+      const { url } = await res.json();
+      const uploadRes = await fetch(url, {
+        method: 'PUT',
+        headers: { 'Content-Type': imageFile.type },
+        body: imageFile,
+      });
+      if (!uploadRes.ok) throw new Error('Erreur lors de l’upload S3');
+      const publicUrl = url.split('?')[0];
+      // Insère l'image dans l'éditeur (markdown ou node image)
+      editor.chain().focus().setImage({ src: publicUrl }).run();
+      toast.success('Image uploadée et insérée !');
+    } catch (err: any) {
+      toast.error('Erreur upload image : ' + (err.message || err));
+    }
+  };
+
   if (loading) {
     return <div style={{ color: '#aaa', fontSize: 18, padding: 48, textAlign: 'center' }}>Chargement…</div>;
   }
@@ -540,6 +575,8 @@ export default function NoteEditorPage() {
               imageMenuOpen={imageMenuOpen}
               onImageMenuOpen={() => setImageMenuOpen(true)}
               onImageMenuClose={() => setImageMenuOpen(false)}
+              noteId={noteId}
+              userId={userId}
             />
           ) : (
             <div>
@@ -603,13 +640,15 @@ export default function NoteEditorPage() {
                 border: 'none',
                 outline: 'none',
                 borderRadius: 10,
-                padding: '18px 0 120px 0', // Ajoute 120px de padding en bas (environ 7 lignes)
+                padding: '18px 0 120px 0',
                 margin: 0,
                 boxSizing: 'border-box',
                 textAlign: 'left',
                 transition: 'box-shadow 0.18s',
                 position: 'relative',
               }}
+              onDrop={handleEditorDrop}
+              onDragOver={e => e.preventDefault()}
             >
               {editor && <EditorContent editor={editor} />}
               {/* SlashMenu premium */}

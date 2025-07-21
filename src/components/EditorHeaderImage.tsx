@@ -11,6 +11,8 @@ interface EditorHeaderImageProps {
   imageMenuOpen: boolean;
   onImageMenuOpen: () => void;
   onImageMenuClose: () => void;
+  noteId: string;
+  userId: string;
 }
 
 const HEADER_IMAGES = [
@@ -38,6 +40,8 @@ const EditorHeaderImage: React.FC<EditorHeaderImageProps> = ({
   imageMenuOpen,
   onImageMenuOpen,
   onImageMenuClose,
+  noteId,
+  userId,
 }) => {
   const [headerOverlayLevel, setHeaderOverlayLevel] = useState(0);
   const [headerBlurLevel, setHeaderBlurLevel] = useState(0);
@@ -168,7 +172,7 @@ const EditorHeaderImage: React.FC<EditorHeaderImageProps> = ({
         </Tooltip>
       </div>
       {/* Menu contextuel pour l'image */}
-      <ImageMenu open={imageMenuOpen} onClose={onImageMenuClose} onInsertImage={onHeaderChange} />
+      <ImageMenu open={imageMenuOpen} onClose={onImageMenuClose} onInsertImage={onHeaderChange} noteId={noteId} userId={userId} />
       {/* Modal ou menu pour les réglages */}
       {imageSettingsOpen && (
         <div className="image-settings-modal">Réglages à implémenter…</div>

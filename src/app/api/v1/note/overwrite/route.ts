@@ -1,6 +1,8 @@
 import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 import { markdownContentSchema } from '@/utils/markdownValidation';
+import { resolveNoteRef } from '@/middleware/resourceResolver';
+import { SlugGenerator } from '@/utils/slugGenerator';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -9,6 +11,7 @@ const supabase = createClient(supabaseUrl, supabaseAnonKey);
 /**
  * POST /api/v1/note/overwrite
  * Met à jour complètement une note (remplace tout le contenu)
+ * Supporte les IDs et les slugs
  * Réponse : { note: { id, source_title, markdown_content, ... } }
  */
 export async function POST(req: Request): Promise<Response> {
@@ -43,17 +46,23 @@ export async function POST(req: Request): Promise<Response> {
       );
     }
     
+    // Résoudre la référence (ID ou slug) vers l'ID réel
+    const resolvedNoteId = await resolveNoteRef(note_id, USER_ID);
+    
     // Vérifier que la note existe
     const { data: existingNote, error: fetchError } = await supabase
       .from('articles')
       .select('id')
-      .eq('id', note_id)
+      .eq('id', resolvedNoteId)
       .eq('user_id', USER_ID)
       .single();
     
     if (fetchError || !existingNote) {
       return new Response(JSON.stringify({ error: 'Note non trouvée.' }), { status: 404 });
     }
+    
+    // Générer un nouveau slug basé sur le nouveau titre
+    const newSlug = await SlugGenerator.generateSlug(source_title, 'note', USER_ID, resolvedNoteId);
     
     // Mettre à jour la note
     const { data: note, error } = await supabase
@@ -62,9 +71,10 @@ export async function POST(req: Request): Promise<Response> {
         source_title,
         markdown_content,
         header_image: header_image || null,
+        slug: newSlug,
         updated_at: new Date().toISOString()
       })
-      .eq('id', note_id)
+      .eq('id', resolvedNoteId)
       .select()
       .single();
     
