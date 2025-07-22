@@ -63,7 +63,14 @@ export default async function Page(props: any) {
             --border-subtle: #404040;
           }
           
-          /* MARKDOWN STYLES */
+          /*
+            ===============================
+            STYLES MARKDOWN UNIFIÉS (CUSTOM)
+            ===============================
+            À appliquer sur tous les containers markdown (éditeur, preview, résumé, etc.)
+            Utiliser la classe racine : .markdown-body
+          */
+
           .markdown-body {
             color: var(--text-1);
             font-family: 'Noto Sans', sans-serif !important;
@@ -73,117 +80,96 @@ export default async function Page(props: any) {
             margin: 0;
             padding: 0;
           }
-          
+
           /* TITRES */
           .markdown-body h1 {
-            font-size: 2.25rem;
+            font-size: 2.2rem;
             font-weight: 700;
-            color: var(--text-primary);
-            margin: 2rem 0 1rem 0;
-            line-height: 1.1;
-            font-family: 'Noto Sans, Inter, Arial, sans-serif';
+            margin: 2.2rem 0 1.2rem;
+            color: var(--accent-primary);
+            letter-spacing: -0.02em;
+            margin-bottom: 0.7em;
+          }
+          .markdown-body h1 + p {
+            margin-top: 0.2em;
           }
           .markdown-body h2 {
-            font-size: 1.875rem;
+            font-size: 1.6rem;
             font-weight: 600;
-            color: var(--text-primary);
-            margin: 1.75rem 0 0.75rem 0;
-            line-height: 1.2;
+            margin: 1.7rem 0 1rem;
+            color: var(--accent-hover);
           }
           .markdown-body h3 {
-            font-size: 1.5rem;
-            font-weight: 600;
-            color: var(--text-primary);
-            margin: 1.5rem 0 0.5rem 0;
-            line-height: 1.3;
-          }
-          .markdown-body h4 {
             font-size: 1.25rem;
             font-weight: 600;
-            color: var(--text-primary);
-            margin: 1.25rem 0 0.5rem 0;
-            line-height: 1.4;
-          }
-          .markdown-body h5 {
-            font-size: 1.125rem;
-            font-weight: 600;
-            color: var(--text-primary);
-            margin: 1rem 0 0.5rem 0;
-            line-height: 1.4;
-          }
-          .markdown-body h6 {
-            font-size: 1rem;
-            font-weight: 600;
-            color: var(--text-primary);
-            margin: 1rem 0 0.5rem 0;
-            line-height: 1.4;
-          }
-          
-          /* PARAGRAPHES */
-          .markdown-body p {
-            margin: 1rem 0;
-            line-height: 1.8;
+            margin: 1.3rem 0 0.8rem;
             color: var(--text-1);
           }
-          
+
+          /* PARAGRAPHES */
+          .markdown-body p {
+            margin: 0 0 1.15rem 0;
+          }
+
           /* LISTES */
+          .markdown-body ul,
+          .markdown-body ol {
+            margin: 0 0 1.1rem 1.5rem;
+            padding: 0;
+          }
+          .markdown-body li {
+            margin-bottom: 0.5rem;
+            padding-left: 0.2rem;
+          }
+
+          /* === INTERLIGNE RÉDUIT POUR LISTES À PUCE === */
           .markdown-body ul,
           .markdown-body ol {
             margin-top: 0.5em;
             margin-bottom: 0.5em;
-            margin-left: 1.5em;
-            padding-left: 0;
+            padding-left: 2em;
           }
           .markdown-body li {
             margin-top: 0.12em;
             margin-bottom: 0.12em;
             line-height: 1.5;
-            padding-left: 0.2rem;
           }
-          
+
           /* LIENS */
           .markdown-body a {
             color: var(--accent-hover);
             text-decoration: none;
             filter: brightness(0.8);
-            transition: filter 0.15s;
+            transition: color 0.18s, filter 0.18s;
           }
           .markdown-body a:hover {
             color: var(--accent-primary);
-            filter: brightness(0.9);
+            filter: brightness(0.95);
+            text-decoration: underline;
           }
-          
-          /* CODE */
+
+          /* CODE INLINE */
           .markdown-body code {
             background: var(--surface-2);
             color: var(--accent-primary);
-            padding: 0.2em 0.4em;
             border-radius: 4px;
-            font-size: 0.9em;
-            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            padding: 0.13em 0.38em;
+            font-size: 0.98em;
+            font-family: 'JetBrains Mono', monospace;
           }
+
+          /* BLOCS CODE */
           .markdown-body pre {
             background: var(--surface-2);
-            padding: 1rem;
-            border-radius: 8px;
-            overflow-x: auto;
-            margin: 1rem 0;
-          }
-          .markdown-body pre code {
-            background: none;
-            padding: 0;
             color: var(--text-1);
+            border-radius: 8px;
+            padding: 1.1em 1.3em;
+            font-size: 0.98em;
+            font-family: 'JetBrains Mono', monospace;
+            overflow-x: auto;
+            margin: 1.5rem 0;
           }
-          
-          /* BLOCKQUOTES */
-          .markdown-body blockquote {
-            border-left: 4px solid var(--accent-primary);
-            padding-left: 1rem;
-            margin: 1rem 0;
-            color: var(--text-2);
-            font-style: italic;
-          }
-          
+
           /* TABLEAUX */
           .markdown-body .tableWrapper {
             border: 1px solid var(--border-subtle);
@@ -237,30 +223,338 @@ export default async function Page(props: any) {
           .markdown-body tbody tr:nth-child(even) td {
             background: var(--surface-1);
           }
-          
-          /* IMAGES */
-          .markdown-body img {
-            max-width: 100%;
-            height: auto;
-            border-radius: 8px;
-            margin: 1rem 0;
+          .markdown-body table p {
+            margin: 0;
+            padding: 0;
           }
-          
-          /* HR */
+
+          /* BLOCKQUOTES */
+          .markdown-body blockquote {
+            border-left: 4px solid var(--border-subtle);
+            background: var(--surface-1);
+            color: var(--text-1);
+            font-weight: 600;
+            text-align: center;
+            padding: 1.1em 2em;
+            margin: 1.5rem 0;
+            border-radius: 8px;
+          }
+          .markdown-body blockquote::before {
+            display: none;
+          }
+
+          /* SÉPARATEUR */
           .markdown-body hr {
             border: none;
             border-top: 1px solid var(--border-subtle);
-            margin: 2rem 0;
+            margin: 1.2rem 0;
           }
-          
-          /* STRONG ET EM */
-          .markdown-body strong {
+
+          /* IMAGES */
+          .markdown-body img {
+            max-width: 100%;
+            border-radius: 8px;
+            margin: 1.2rem 0;
+            display: block;
+          }
+
+          /* SÉLECTION */
+          .markdown-body ::selection {
+            background: rgba(229, 90, 44, 0.13);
+          }
+
+          /* === PATCH: Couleur Warm Gray (#D4D4D4) sur tous les titres, blockquotes, code === */
+          .markdown-body h1,
+          .markdown-body h2,
+          .markdown-body h3,
+          .markdown-body h4,
+          .markdown-body h5,
+          .markdown-body h6 {
+            color: #D4D4D4 !important;
+          }
+          .markdown-body code,
+          .markdown-body pre {
+            color: #D4D4D4 !important;
+          }
+          /* Les en-têtes de tableau (th) gardent leur couleur accentuée */
+          .markdown-body th {
+            color: var(--accent-primary) !important;
+          }
+
+          /* === PATCH: Blockquotes sobres, couleur warm gray, pas de gras ni italique, taille normale === */
+          .markdown-body blockquote {
+            color: #D4D4D4 !important;
+            font-weight: 400 !important;
+            font-style: normal !important;
+            font-size: 1.08rem !important;
+            border-left: 4px solid var(--accent-primary);
+            background: var(--surface-1);
+            text-align: center;
+            padding: 1.1em 2em;
+            margin: 1.5rem 0;
+            border-radius: 8px;
+          }
+
+          /* === STYLE UNIQUE ET PROPRE POUR BLOCKQUOTE === */
+          .markdown-body blockquote {
+            border-left: 4px solid var(--border-subtle);
+            background: var(--surface-1);
+            color: #D4D4D4;
+            font-weight: 400;
+            font-style: normal;
+            font-size: 1.08rem;
+            text-align: center;
+            padding: 2em 2em;
+            margin: 1.5rem 0;
+            border-radius: 8px;
+          }
+
+          .markdown-body blockquote {
+            padding-top: 1em;
+            padding-bottom: 0.1rem;
+            padding-left: 2em;
+            padding-right: 2em;
+          }
+
+          /* === LISTES À COCHER MODERNES === */
+          .markdown-body input[type='checkbox'] {
+            appearance: none;
+            width: 1.15em;
+            height: 1.15em;
+            border: 2px solid var(--border-subtle);
+            border-radius: 5px;
+            background: var(--surface-1);
+            display: inline-block;
+            vertical-align: middle;
+            margin-right: 0.7em;
+            position: relative;
+            transition: border-color 0.18s, background 0.18s;
+            cursor: pointer;
+          }
+          .markdown-body input[type='checkbox']:checked {
+            border-color: var(--accent-primary);
+            background: var(--accent-primary);
+          }
+          .markdown-body input[type='checkbox']:checked::after {
+            content: '';
+            display: block;
+            position: absolute;
+            left: 0.32em;
+            top: 0.08em;
+            width: 0.35em;
+            height: 0.7em;
+            border: solid #fff;
+            border-width: 0 0.18em 0.18em 0;
+            transform: rotate(45deg);
+          }
+          .markdown-body input[type='checkbox']:focus {
+            outline: 2px solid var(--accent-primary);
+            outline-offset: 1px;
+          }
+
+          /* === LISTES MARKDOWN (puces, numérotées, à cocher) === */
+          .markdown-body ul,
+          .markdown-body ol {
+            margin-top: 0.5em;
+            margin-bottom: 0.5em;
+            margin-left: 1.5em;
+            padding-left: 0;
+          }
+          .markdown-body li {
+            margin-top: 0.12em;
+            margin-bottom: 0.12em;
+            line-height: 1.5;
+            padding-left: 0.2rem;
+          }
+          /* Alignement horizontal des cases à cocher sur la marge des listes à puce */
+          .markdown-body li > input[type='checkbox'] {
+            margin-left: -3em;
+          }
+
+          /* === PATCH: Blockquotes sobres, couleur warm gray, pas de gras ni italique, taille normale === */
+          .markdown-body blockquote {
+            color: #D4D4D4 !important;
+            font-weight: 400 !important;
+            font-style: normal !important;
+            font-size: 1.08rem !important;
+            border-left: 4px solid var(--accent-primary);
+            background: var(--surface-1);
+            text-align: center;
+            padding: 1.1em 2em;
+            margin: 1.5rem 0;
+            border-radius: 8px;
+          }
+
+          /* === STYLE UNIQUE ET PROPRE POUR BLOCKQUOTE === */
+          .markdown-body blockquote {
+            border-left: 4px solid var(--border-subtle);
+            background: var(--surface-1);
+            color: #D4D4D4;
+            font-weight: 400;
+            font-style: normal;
+            font-size: 1.08rem;
+            text-align: center;
+            padding: 2em 2em;
+            margin: 1.5rem 0;
+            border-radius: 8px;
+          }
+
+          .markdown-body blockquote {
+            padding-top: 1em;
+            padding-bottom: 0.1rem;
+            padding-left: 2em;
+            padding-right: 2em;
+          }
+
+          /* === LISTES À COCHER MODERNES === */
+          .markdown-body input[type='checkbox'] {
+            appearance: none;
+            width: 1.15em;
+            height: 1.15em;
+            border: 2px solid var(--border-subtle);
+            border-radius: 5px;
+            background: var(--surface-1);
+            display: inline-block;
+            vertical-align: middle;
+            margin-right: 0.7em;
+            position: relative;
+            transition: border-color 0.18s, background 0.18s;
+            cursor: pointer;
+          }
+          .markdown-body input[type='checkbox']:checked {
+            border-color: var(--accent-primary);
+            background: var(--accent-primary);
+          }
+          .markdown-body input[type='checkbox']:checked::after {
+            content: '';
+            display: block;
+            position: absolute;
+            left: 0.32em;
+            top: 0.08em;
+            width: 0.35em;
+            height: 0.7em;
+            border: solid #fff;
+            border-width: 0 0.18em 0.18em 0;
+            transform: rotate(45deg);
+          }
+          .markdown-body input[type='checkbox']:focus {
+            outline: 2px solid var(--accent-primary);
+            outline-offset: 1px;
+          }
+
+          /* === LISTES MARKDOWN (puces, numérotées, à cocher) === */
+          .markdown-body ul,
+          .markdown-body ol {
+            margin-top: 0.5em;
+            margin-bottom: 0.5em;
+            margin-left: 1.5em;
+            padding-left: 0;
+          }
+          .markdown-body li {
+            margin-top: 0.12em;
+            margin-bottom: 0.12em;
+            line-height: 1.5;
+            padding-left: 0.2rem;
+          }
+          /* Alignement horizontal des cases à cocher sur la marge des listes à puce */
+          .markdown-body li > input[type='checkbox'] {
+            margin-left: -2.5em;
+          }
+
+          .markdown-body th {
+            color: #D4D4D4 !important;
+            text-align: center !important;
             font-weight: 600;
-            color: var(--text-primary);
+            background: var(--surface-2);
           }
-          .markdown-body em {
-            font-style: italic;
-            color: var(--text-2);
+
+          .markdown-body th,
+          .markdown-body td {
+            text-align: center !important;
+          }
+
+          .markdown-body pre,
+          .markdown-body code {
+            font-size: 0.85em !important;
+          }
+
+          .markdown-body ol {
+            padding-left: 1.25em !important;
+          }
+
+          /* === FIX: Alignement et wrapping propre des checkbox Markdown sur plusieurs lignes === */
+          .markdown-body li > input[type='checkbox'] {
+            /* On retire le margin-left négatif pour éviter les bugs de flex */
+            margin-left: 0;
+          }
+
+          .markdown-body li:has(> input[type='checkbox']) {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.6em;
+          }
+
+          .markdown-body li:has(> input[type='checkbox']) > input[type='checkbox'] {
+            margin-top: 0.18em; /* Optionnel, ajuste verticalement la checkbox */
+          }
+
+          .markdown-body li:has(> input[type='checkbox']) {
+            /* Pour que le texte wrappe proprement à côté de la checkbox */
+            white-space: normal;
+            word-break: break-word;
+          }
+
+          /* === FIX: Alignement et wrapping des checkbox dans l'éditeur Tiptap/ProseMirror === */
+          .task-list-item,
+          li[data-type="taskItem"] {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.6em;
+          }
+
+          .task-list-item label,
+          li[data-type="taskItem"] > label {
+            display: flex;
+            align-items: flex-start;
+            width: 100%;
+            gap: 0.6em;
+          }
+
+          .task-list-item .task-list-content,
+          li[data-type="taskItem"] .task-list-content {
+            flex: 1 1 auto;
+            min-width: 0;
+            word-break: break-word;
+            white-space: pre-line;
+          }
+
+          /* === FIX: Alignement et wrapping des checkbox markdown avec structure <li><label><input><span></span></label><div><p>...</p></div></li> === */
+          li[data-type="taskItem"] {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.7em;
+          }
+
+          li[data-type="taskItem"] > label {
+            margin-top: 0.18em; /* Optionnel, ajuste verticalement la checkbox */
+            flex-shrink: 0;
+          }
+
+          li[data-type="taskItem"] > div {
+            flex: 1 1 auto;
+            min-width: 0;
+            word-break: break-word;
+            white-space: pre-line;
+            display: block;
+          }
+
+          li[data-type="taskItem"] > div p {
+            margin: 0;
+          }
+
+          /* Ajoute de l'espace sous tous les tableaux markdown pour la lisibilité */
+          table {
+            margin-bottom: 2.5em;
           }
         `
       }} />
