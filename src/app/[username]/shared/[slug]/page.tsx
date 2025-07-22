@@ -48,7 +48,7 @@ export default async function Page(props: any) {
     );
   }
 
-            // Afficher directement le contenu avec le même design que la preview de l'éditeur
+                        // Afficher directement le contenu avec le même design que la preview de l'éditeur
           return (
             <>
               <style dangerouslySetInnerHTML={{
@@ -66,82 +66,62 @@ export default async function Page(props: any) {
                   }
                 `
               }} />
-              <div style={{ 
-                width: '100vw', 
-                minHeight: '100vh', 
-                background: '#1a1a1a', 
-                paddingBottom: 64, 
-                overflowY: 'auto', 
-                height: '100vh' 
-              }}>
-              {/* Header Image */}
-              {note.header_image && (
-                <div style={{ width: '100%', maxHeight: 300, overflow: 'hidden', marginBottom: 32 }}>
-                  <img
-                    src={note.header_image}
-                    alt="Header"
-                    style={{ width: '100%', objectFit: 'cover', maxHeight: 300, borderRadius: 0 }}
-                    draggable={false}
-                  />
-                </div>
-              )}
-
-              {/* Layout principal avec centrage */}
-              <div style={{ 
-                width: '100%', 
-                display: 'flex', 
-                flexDirection: 'row', 
-                justifyContent: 'center', 
-                alignItems: 'flex-start', 
-                margin: '0 auto', 
-                marginBottom: 32, 
-                gap: 32 
-              }}>
-                <div style={{ maxWidth: 750, width: 750 }}>
-                  {/* Titre */}
-                  <h1 className="markdown-body" style={{
-                    margin: 0,
-                    padding: 0,
-                    textAlign: 'left',
-                    maxWidth: 750,
-                    width: 750,
-                    lineHeight: 1.1,
-                  }}>
-                    {note.source_title}
-                  </h1>
-                  
-                  <div style={{ height: 18 }} />
-                  
-                  {/* Contenu HTML */}
-                  <div
-                    className="markdown-body"
-                    style={{
+              <div style={{ width: '100vw', minHeight: '100vh', background: 'var(--bg-main)', paddingBottom: 64, overflowY: 'auto', height: '100vh' }}>
+                {note.header_image && (
+                  <div style={{ width: '100%', maxHeight: 300, overflow: 'hidden', marginBottom: 32 }}>
+                    <img
+                      src={note.header_image}
+                      alt="Header"
+                      style={{ width: '100%', objectFit: 'cover', maxHeight: 300, borderRadius: 0 }}
+                      draggable={false}
+                    />
+                  </div>
+                )}
+                <div style={{ width: '100%', display: 'flex', flexDirection: 'row', justifyContent: 'center', alignItems: 'flex-start', margin: '0 auto', marginBottom: 32, gap: 32 }}>
+                  <div style={{ maxWidth: 750, width: 750 }}>
+                    <h1 style={{
+                      fontSize: '2.25rem',
+                      fontWeight: 700,
+                      color: 'var(--text-primary)',
+                      margin: 0,
+                      padding: 0,
+                      textAlign: 'left',
                       maxWidth: 750,
                       width: 750,
-                      margin: '0 auto',
-                      background: 'none',
-                      padding: '0 0 64px 0',
-                      minHeight: '60vh',
-                      pointerEvents: 'auto',
-                      userSelect: 'text',
-                    }}
-                    dangerouslySetInnerHTML={{ __html: note.html_content || '' }}
-                  />
+                      lineHeight: 1.1,
+                      fontFamily: 'Noto Sans, Inter, Arial, sans-serif',
+                    }}>{note.source_title}</h1>
+                    <div style={{ height: 18 }} />
+                    <div
+                      className="markdown-body"
+                      style={{
+                        maxWidth: 750,
+                        width: 750,
+                        margin: '0 auto',
+                        background: 'none',
+                        padding: '0 0 64px 0',
+                        fontSize: '1.13rem',
+                        color: 'var(--text-primary)',
+                        minHeight: '60vh',
+                        pointerEvents: 'auto',
+                        userSelect: 'text',
+                      }}
+                      dangerouslySetInnerHTML={{ __html: note.html_content || '' }}
+                    />
+                  </div>
+                </div>
+                {/* Footer discret */}
+                <div style={{
+                  position: 'fixed',
+                  bottom: 16,
+                  right: 16,
+                  color: '#b3a9a0',
+                  fontSize: '0.8rem',
+                  opacity: 0.6
+                }}>
+                  Crafted with Scrivia
                 </div>
               </div>
-
-              {/* Footer discret */}
-              <div style={{
-                position: 'fixed',
-                bottom: 16,
-                right: 16,
-                color: '#b3a9a0',
-                fontSize: '0.8rem',
-                opacity: 0.6
-              }}>
-                Crafted with Scrivia
-              </div>
-            </div>
             </>
           );
 } 
