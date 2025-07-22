@@ -2,7 +2,7 @@ import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 import type { NextRequest } from 'next/server';
 import type { Folder } from '@/types/supabase';
-import { resolveFolderRef } from '@/middleware/resourceResolver';
+import { resolveFolderRef, resolveClasseurRef } from '@/middleware/resourceResolver';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -43,10 +43,37 @@ export async function PATCH(req: NextRequest, { params }: any): Promise<Response
     const USER_ID = "3223651c-5580-4471-affb-b3f4456bd729";
     const folderId = await resolveFolderRef(ref, USER_ID);
     
-    // Mettre à jour le dossier (pas d'updated_at dans la table folders)
+    // Résolution des références (slug ou id) pour classeur et parent
+    let resolvedClasseurId: string | undefined = undefined;
+    let resolvedParentId: string | null | undefined = undefined;
+    if ('target_classeur_id' in body && body.target_classeur_id) {
+      try {
+        resolvedClasseurId = await resolveClasseurRef(body.target_classeur_id, USER_ID);
+      } catch (err) {
+        return new Response(
+          JSON.stringify({ error: `Classeur cible '${body.target_classeur_id}' introuvable ou non accessible.` }),
+          { status: 404 }
+        );
+      }
+    }
+    if ('target_parent_id' in body) {
+      if (body.target_parent_id === null) {
+        resolvedParentId = null;
+      } else if (body.target_parent_id) {
+        try {
+          resolvedParentId = await resolveFolderRef(body.target_parent_id, USER_ID);
+        } catch (err) {
+          return new Response(
+            JSON.stringify({ error: `Dossier parent cible '${body.target_parent_id}' introuvable ou non accessible.` }),
+            { status: 404 }
+          );
+        }
+      }
+    }
+    // Construction de l'objet d'update
     const updates: any = {};
-    if ('target_classeur_id' in body) updates.classeur_id = body.target_classeur_id;
-    if ('target_parent_id' in body) updates.parent_id = body.target_parent_id || null;
+    if (resolvedClasseurId !== undefined) updates.classeur_id = resolvedClasseurId;
+    if (resolvedParentId !== undefined) updates.parent_id = resolvedParentId;
     if ('position' in body) updates.position = body.position;
     const { data: updated, error } = await supabase
       .from('folders')
