@@ -17,8 +17,6 @@ export default async function Page(props: any) {
     .eq('username', decodedUsername)
     .single();
 
-
-
   if (userError || !user) {
     return (
       <div style={{ padding: '2rem', textAlign: 'center' }}>
@@ -47,161 +45,161 @@ export default async function Page(props: any) {
     );
   }
 
-                        // Afficher directement le contenu avec le même design que la preview de l'éditeur
-          return (
-            <>
-              <style dangerouslySetInnerHTML={{
-                __html: `
-                  :root {
-                    --bg-main: #1a1a1a;
-                    --text-primary: #ffffff;
-                    --text-1: #ffffff;
-                    --text-2: #b3a9a0;
-                    --text-3: #888888;
-                    --accent-primary: #e55a2c;
-                    --accent-hover: #f97316;
-                    --surface-1: #2a2a2a;
-                    --surface-2: #3a3a3a;
-                    --border-subtle: #404040;
-                  }
-                  
-                  /* MARKDOWN STYLES */
-                  .markdown-body {
-                    color: var(--text-1);
-                    font-family: 'Noto Sans', sans-serif !important;
-                    font-size: 1.08rem;
-                    line-height: 1.8;
-                    background: none;
-                    margin: 0;
-                    padding: 0;
-                  }
-                  
-                  /* LISTES */
-                  .markdown-body ul,
-                  .markdown-body ol {
-                    margin-top: 0.5em;
-                    margin-bottom: 0.5em;
-                    margin-left: 1.5em;
-                    padding-left: 0;
-                  }
-                  .markdown-body li {
-                    margin-top: 0.12em;
-                    margin-bottom: 0.12em;
-                    line-height: 1.5;
-                    padding-left: 0.2rem;
-                  }
-                  
-                  /* TABLEAUX */
-                  .markdown-body .tableWrapper {
-                    border: 1px solid var(--border-subtle);
-                    border-radius: 10px;
-                    overflow: hidden;
-                    background: none;
-                    margin: 1.5rem 0;
-                    padding: 0;
-                  }
-                  .markdown-body table {
-                    width: 100%;
-                    border-collapse: collapse;
-                    border-spacing: 0;
-                    background: none;
-                    border-radius: 10px;
-                    table-layout: fixed;
-                    margin: 0;
-                    padding: 0;
-                  }
-                  .markdown-body th,
-                  .markdown-body td {
-                    border: none;
-                    border-bottom: 1px solid var(--border-subtle);
-                    border-right: 1px solid var(--border-subtle);
-                    background: none;
-                    color: var(--text-1);
-                    font-size: 1rem;
-                    font-weight: 400;
-                    text-align: center;
-                    padding: 0.65em 0.9em;
-                    min-width: 0;
-                    max-width: none;
-                  }
-                  .markdown-body th {
-                    background: var(--surface-2);
-                    color: var(--accent-primary);
-                    font-weight: 600;
-                    font-size: 1.18rem;
-                  }
-                  .markdown-body th:last-child,
-                  .markdown-body td:last-child {
-                    border-right: none;
-                  }
-                  .markdown-body tr:last-child td,
-                  .markdown-body tr:last-child th {
-                    border-bottom: none;
-                  }
-                  .markdown-body tbody tr:nth-child(odd) td {
-                    background: var(--surface-2);
-                  }
-                  .markdown-body tbody tr:nth-child(even) td {
-                    background: var(--surface-1);
-                  }
-                `
-              }} />
-              <div style={{ width: '100vw', minHeight: '100vh', background: '#1a1a1a', paddingBottom: 64, overflowY: 'auto', height: '100vh' }}>
-                {note.header_image && (
-                  <div style={{ width: '100%', maxHeight: 300, overflow: 'hidden', marginBottom: 32 }}>
-                    <img
-                      src={note.header_image}
-                      alt="Header"
-                      style={{ width: '100%', objectFit: 'cover', maxHeight: 300, borderRadius: 0 }}
-                      draggable={false}
-                    />
-                  </div>
-                )}
-                <div style={{ width: '100%', display: 'flex', flexDirection: 'row', justifyContent: 'center', alignItems: 'flex-start', margin: '0 auto', marginBottom: 32, gap: 32 }}>
-                  <div style={{ maxWidth: 750, width: 750 }}>
-                                      <h1 style={{
-                    fontSize: '2.25rem',
-                    fontWeight: 700,
-                    color: 'var(--text-primary)',
-                    margin: 0,
-                    padding: 0,
-                    textAlign: 'left',
-                    maxWidth: 750,
-                    width: 750,
-                    lineHeight: 1.1,
-                    fontFamily: 'Noto Sans, Inter, Arial, sans-serif',
-                  }}>{note.source_title}</h1>
-                    <div style={{ height: 18 }} />
-                    <div
-                      className="markdown-body"
-                      style={{
-                        maxWidth: 750,
-                        width: 750,
-                        margin: '0 auto',
-                        background: 'none',
-                        padding: '0 0 64px 0',
-                        fontSize: '1.13rem',
-                        color: 'var(--text-primary)',
-                        minHeight: '60vh',
-                        pointerEvents: 'auto',
-                        userSelect: 'text',
-                      }}
-                      dangerouslySetInnerHTML={{ __html: note.html_content || '' }}
-                    />
-                  </div>
-                </div>
-                              {/* Footer discret */}
-              <div style={{
-                position: 'fixed',
-                bottom: 16,
-                right: 16,
-                color: '#b3a9a0',
-                fontSize: '0.8rem',
-                opacity: 0.6
-              }}>
-                Crafted with Scrivia
-              </div>
-            </div>
-            </>
-          );
+  // Afficher directement le contenu avec le même design que la preview de l'éditeur
+  return (
+    <>
+      <style dangerouslySetInnerHTML={{
+        __html: `
+          :root {
+            --bg-main: #1a1a1a;
+            --text-primary: #ffffff;
+            --text-1: #ffffff;
+            --text-2: #b3a9a0;
+            --text-3: #888888;
+            --accent-primary: #e55a2c;
+            --accent-hover: #f97316;
+            --surface-1: #2a2a2a;
+            --surface-2: #3a3a3a;
+            --border-subtle: #404040;
+          }
+          
+          /* MARKDOWN STYLES */
+          .markdown-body {
+            color: var(--text-1);
+            font-family: 'Noto Sans', sans-serif !important;
+            font-size: 1.08rem;
+            line-height: 1.8;
+            background: none;
+            margin: 0;
+            padding: 0;
+          }
+          
+          /* LISTES */
+          .markdown-body ul,
+          .markdown-body ol {
+            margin-top: 0.5em;
+            margin-bottom: 0.5em;
+            margin-left: 1.5em;
+            padding-left: 0;
+          }
+          .markdown-body li {
+            margin-top: 0.12em;
+            margin-bottom: 0.12em;
+            line-height: 1.5;
+            padding-left: 0.2rem;
+          }
+          
+          /* TABLEAUX */
+          .markdown-body .tableWrapper {
+            border: 1px solid var(--border-subtle);
+            border-radius: 10px;
+            overflow: hidden;
+            background: none;
+            margin: 1.5rem 0;
+            padding: 0;
+          }
+          .markdown-body table {
+            width: 100%;
+            border-collapse: collapse;
+            border-spacing: 0;
+            background: none;
+            border-radius: 10px;
+            table-layout: fixed;
+            margin: 0;
+            padding: 0;
+          }
+          .markdown-body th,
+          .markdown-body td {
+            border: none;
+            border-bottom: 1px solid var(--border-subtle);
+            border-right: 1px solid var(--border-subtle);
+            background: none;
+            color: var(--text-1);
+            font-size: 1rem;
+            font-weight: 400;
+            text-align: center;
+            padding: 0.65em 0.9em;
+            min-width: 0;
+            max-width: none;
+          }
+          .markdown-body th {
+            background: var(--surface-2);
+            color: var(--accent-primary);
+            font-weight: 600;
+            font-size: 1.18rem;
+          }
+          .markdown-body th:last-child,
+          .markdown-body td:last-child {
+            border-right: none;
+          }
+          .markdown-body tr:last-child td,
+          .markdown-body tr:last-child th {
+            border-bottom: none;
+          }
+          .markdown-body tbody tr:nth-child(odd) td {
+            background: var(--surface-2);
+          }
+          .markdown-body tbody tr:nth-child(even) td {
+            background: var(--surface-1);
+          }
+        `
+      }} />
+      <div style={{ width: '100vw', minHeight: '100vh', background: '#1a1a1a', paddingBottom: 64, overflowY: 'auto', height: '100vh' }}>
+        {note.header_image && (
+          <div style={{ width: '100%', maxHeight: 300, overflow: 'hidden', marginBottom: 32 }}>
+            <img
+              src={note.header_image}
+              alt="Header"
+              style={{ width: '100%', objectFit: 'cover', maxHeight: 300, borderRadius: 0 }}
+              draggable={false}
+            />
+          </div>
+        )}
+        <div style={{ width: '100%', display: 'flex', flexDirection: 'row', justifyContent: 'center', alignItems: 'flex-start', margin: '0 auto', marginBottom: 32, gap: 32 }}>
+          <div style={{ maxWidth: 750, width: 750 }}>
+            <h1 style={{
+              fontSize: '2.25rem',
+              fontWeight: 700,
+              color: 'var(--text-primary)',
+              margin: 0,
+              padding: 0,
+              textAlign: 'left',
+              maxWidth: 750,
+              width: 750,
+              lineHeight: 1.1,
+              fontFamily: 'Noto Sans, Inter, Arial, sans-serif',
+            }}>{note.source_title}</h1>
+            <div style={{ height: 18 }} />
+            <div
+              className="markdown-body"
+              style={{
+                maxWidth: 750,
+                width: 750,
+                margin: '0 auto',
+                background: 'none',
+                padding: '0 0 64px 0',
+                fontSize: '1.13rem',
+                color: 'var(--text-primary)',
+                minHeight: '60vh',
+                pointerEvents: 'auto',
+                userSelect: 'text',
+              }}
+              dangerouslySetInnerHTML={{ __html: note.html_content || '' }}
+            />
+          </div>
+        </div>
+        {/* Footer discret */}
+        <div style={{
+          position: 'fixed',
+          bottom: 16,
+          right: 16,
+          color: '#b3a9a0',
+          fontSize: '0.8rem',
+          opacity: 0.6
+        }}>
+          Crafted with Scrivia
+        </div>
+      </div>
+    </>
+  );
 } 
