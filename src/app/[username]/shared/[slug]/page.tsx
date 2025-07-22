@@ -427,7 +427,7 @@ export default async function Page(props: any) {
           }
         `
       }} />
-      <div style={{ width: '100vw', minHeight: '100vh', background: '#1a1a1a', paddingBottom: 64, overflowY: 'auto', height: '100vh' }}>
+      <div style={{ width: '100vw', minHeight: '100vh', background: '#0a0a0a', paddingBottom: 64, overflowY: 'auto', height: '100vh' }}>
         {note.header_image && (
           <div style={{ width: '100%', maxHeight: 300, overflow: 'hidden', marginBottom: 32 }}>
             <img
