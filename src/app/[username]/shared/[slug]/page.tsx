@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import '@/styles/shared-note.css';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -47,442 +48,61 @@ export default async function Page(props: any) {
 
   // Afficher directement le contenu avec le même design que la preview de l'éditeur
   return (
-    <>
-      <style dangerouslySetInnerHTML={{
-        __html: `
-          :root {
-            --bg-main: #1a1a1a;
-            --text-primary: #ffffff;
-            --text-1: #ffffff;
-            --text-2: #b3a9a0;
-            --text-3: #888888;
-            --accent-primary: #e55a2c;
-            --accent-hover: #f97316;
-            --surface-1: #2a2a2a;
-            --surface-2: #3a3a3a;
-            --border-subtle: #404040;
-          }
-          
-          .markdown-body {
-            color: var(--text-1);
-            font-family: 'Noto Sans', sans-serif !important;
-            font-size: 1.08rem;
-            line-height: 1.8;
-            background: none;
-            margin: 0;
-            padding: 0;
-          }
-
-          /* TITRES */
-          .markdown-body h1 {
-            font-size: 2.2rem;
-            font-weight: 700;
-            margin: 2.2rem 0 1.2rem;
-            color: var(--accent-primary);
-            letter-spacing: -0.02em;
-            margin-bottom: 0.7em;
-          }
-          .markdown-body h1 + p {
-            margin-top: 0.2em;
-          }
-          .markdown-body h2 {
-            font-size: 1.6rem;
-            font-weight: 600;
-            margin: 1.7rem 0 1rem;
-            color: var(--accent-hover);
-          }
-          .markdown-body h3 {
-            font-size: 1.25rem;
-            font-weight: 600;
-            margin: 1.3rem 0 0.8rem;
-            color: var(--text-1);
-          }
-
-          /* PARAGRAPHES */
-          .markdown-body p {
-            margin: 0 0 1.15rem 0;
-          }
-
-          /* LISTES AVEC PUCES */
-          .markdown-body ul {
-            margin: 0 0 1.1rem 1.5rem;
-            padding: 0;
-          }
-          .markdown-body ul li {
-            list-style-type: disc;
-            list-style-position: outside;
-            margin-bottom: 0.5rem;
-            padding-left: 0.2rem;
-          }
-          .markdown-body ul ul li {
-            list-style-type: circle;
-          }
-          .markdown-body ul ul ul li {
-            list-style-type: square;
-          }
-
-          /* LISTES NUMÉROTÉES */
-          .markdown-body ol {
-            margin: 0 0 1.1rem 1.5rem;
-            padding: 0;
-          }
-          .markdown-body ol li {
-            list-style-type: decimal;
-            list-style-position: outside;
-            margin-bottom: 0.5rem;
-            padding-left: 0.2rem;
-          }
-          .markdown-body ol ol li {
-            list-style-type: lower-alpha;
-          }
-          .markdown-body ol ol ol li {
-            list-style-type: lower-roman;
-          }
-
-          /* LIENS */
-          .markdown-body a {
-            color: var(--accent-hover);
-            text-decoration: none;
-            filter: brightness(0.8);
-            transition: color 0.18s, filter 0.18s;
-          }
-          .markdown-body a:hover {
-            color: var(--accent-primary);
-            filter: brightness(0.95);
-            text-decoration: underline;
-          }
-
-          /* CODE INLINE */
-          .markdown-body code {
-            background: var(--surface-2);
-            color: var(--accent-primary);
-            border-radius: 4px;
-            padding: 0.13em 0.38em;
-            font-size: 0.98em;
-            font-family: 'JetBrains Mono', monospace;
-          }
-
-          /* BLOCS CODE */
-          .markdown-body pre {
-            background: var(--surface-2);
-            color: var(--text-1);
-            border-radius: 8px;
-            padding: 1.1em 1.3em;
-            font-size: 0.98em;
-            font-family: 'JetBrains Mono', monospace;
-            overflow-x: auto;
-            margin: 1.5rem 0;
-          }
-
-          /* TABLEAUX */
-          .markdown-body .tableWrapper {
-            border: 1px solid var(--border-subtle);
-            border-radius: 10px;
-            overflow: hidden;
-            background: none;
-            margin: 1.5rem 0;
-            padding: 0;
-          }
-          .markdown-body table {
-            width: 100%;
-            border-collapse: collapse;
-            border-spacing: 0;
-            background: none;
-            border-radius: 10px;
-            table-layout: fixed;
-            margin: 0;
-            padding: 0;
-          }
-          .markdown-body th,
-          .markdown-body td {
-            border: none;
-            border-bottom: 1px solid var(--border-subtle);
-            border-right: 1px solid var(--border-subtle);
-            background: none;
-            color: var(--text-1);
-            font-size: 1rem;
-            font-weight: 400;
-            text-align: center;
-            padding: 0.65em 0.9em;
-            min-width: 0;
-            max-width: none;
-          }
-          .markdown-body th {
-            background: var(--surface-2);
-            color: var(--accent-primary);
-            font-weight: 600;
-            font-size: 1.18rem;
-          }
-          .markdown-body th:last-child,
-          .markdown-body td:last-child {
-            border-right: none;
-          }
-          .markdown-body tr:last-child td,
-          .markdown-body tr:last-child th {
-            border-bottom: none;
-          }
-          .markdown-body tbody tr:nth-child(odd) td {
-            background: var(--surface-2);
-          }
-          .markdown-body tbody tr:nth-child(even) td {
-            background: var(--surface-1);
-          }
-          .markdown-body table p {
-            margin: 0;
-            padding: 0;
-          }
-
-          /* BLOCKQUOTES */
-          .markdown-body blockquote {
-            border-left: 4px solid var(--border-subtle);
-            background: var(--surface-1);
-            color: var(--text-1);
-            font-weight: 600;
-            text-align: center;
-            padding: 1.1em 2em;
-            margin: 1.5rem 0;
-            border-radius: 8px;
-          }
-          .markdown-body blockquote::before {
-            display: none;
-          }
-
-          /* SÉPARATEUR */
-          .markdown-body hr {
-            border: none;
-            border-top: 1px solid var(--border-subtle);
-            margin: 1.2rem 0;
-          }
-
-          /* IMAGES */
-          .markdown-body img {
-            max-width: 100%;
-            border-radius: 8px;
-            margin: 1.2rem 0;
-            display: block;
-          }
-
-          /* SÉLECTION */
-          .markdown-body ::selection {
-            background: rgba(229, 90, 44, 0.13);
-          }
-
-          /* === PATCH: Couleur Warm Gray (#D4D4D4) sur tous les titres, blockquotes, code === */
-          .markdown-body h1,
-          .markdown-body h2,
-          .markdown-body h3,
-          .markdown-body h4,
-          .markdown-body h5,
-          .markdown-body h6 {
-            color: #D4D4D4 !important;
-          }
-          .markdown-body code,
-          .markdown-body pre {
-            color: #D4D4D4 !important;
-          }
-          /* Les en-têtes de tableau (th) gardent leur couleur accentuée */
-          .markdown-body th {
-            color: var(--accent-primary) !important;
-          }
-
-          /* === PATCH: Blockquotes sobres, couleur warm gray, pas de gras ni italique, taille normale === */
-          .markdown-body blockquote {
-            color: #D4D4D4 !important;
-            font-weight: 400 !important;
-            font-style: normal !important;
-            font-size: 1.08rem !important;
-            border-left: 4px solid var(--accent-primary);
-            background: var(--surface-1);
-            text-align: center;
-            padding: 1.1em 2em;
-            margin: 1.5rem 0;
-            border-radius: 8px;
-          }
-
-          /* === LISTES À COCHER MODERNES === */
-          .markdown-body input[type='checkbox'] {
-            appearance: none;
-            width: 1.15em;
-            height: 1.15em;
-            border: 2px solid var(--border-subtle);
-            border-radius: 5px;
-            background: var(--surface-1);
-            display: inline-block;
-            vertical-align: middle;
-            margin-right: 0.7em;
-            position: relative;
-            transition: border-color 0.18s, background 0.18s;
-            cursor: pointer;
-          }
-          .markdown-body input[type='checkbox']:checked {
-            border-color: var(--accent-primary);
-            background: var(--accent-primary);
-          }
-          .markdown-body input[type='checkbox']:checked::after {
-            content: '';
-            display: block;
-            position: absolute;
-            left: 0.32em;
-            top: 0.08em;
-            width: 0.35em;
-            height: 0.7em;
-            border: solid #fff;
-            border-width: 0 0.18em 0.18em 0;
-            transform: rotate(45deg);
-          }
-          .markdown-body input[type='checkbox']:focus {
-            outline: 2px solid var(--accent-primary);
-            outline-offset: 1px;
-          }
-
-          /* === FIX: Styles pour les listes avec checkboxes === */
-          .markdown-body li:has(input[type="checkbox"]) {
-            list-style: none;
-            margin-left: 0;
-            padding-left: 0;
-            display: flex;
-            align-items: flex-start;
-            gap: 0.6em;
-          }
-
-          .markdown-body li:has(input[type="checkbox"]) input[type="checkbox"] {
-            margin-right: 0.5em;
-            margin-left: 0;
-            margin-top: 0.18em;
-            flex-shrink: 0;
-          }
-
-          .markdown-body li:has(input[type="checkbox"]) {
-            white-space: normal;
-            word-break: break-word;
-          }
-
-          /* === FIX: Styles pour les listes normales (avec puces) === */
-          .markdown-body ul li:not(:has(input[type="checkbox"])) {
-            list-style-type: disc;
-            list-style-position: outside;
-            margin-left: 0;
-            padding-left: 0;
-          }
-
-          .markdown-body ol li:not(:has(input[type="checkbox"])) {
-            list-style-type: decimal;
-            list-style-position: outside;
-            margin-left: 0;
-            padding-left: 0;
-          }
-
-          /* === FIX: Alignement et wrapping des checkbox dans l'éditeur Tiptap/ProseMirror === */
-          .task-list-item,
-          li[data-type="taskItem"] {
-            display: flex;
-            align-items: flex-start;
-            gap: 0.6em;
-            list-style: none;
-          }
-
-          .task-list-item label,
-          li[data-type="taskItem"] > label {
-            display: flex;
-            align-items: flex-start;
-            width: 100%;
-            gap: 0.6em;
-          }
-
-          .task-list-item .task-list-content,
-          li[data-type="taskItem"] .task-list-content {
-            flex: 1 1 auto;
-            min-width: 0;
-            word-break: break-word;
-            white-space: pre-line;
-          }
-
-          li[data-type="taskItem"] {
-            display: flex;
-            align-items: flex-start;
-            gap: 0.7em;
-            list-style: none;
-          }
-
-          li[data-type="taskItem"] > label {
-            margin-top: 0.18em;
-            flex-shrink: 0;
-          }
-
-          li[data-type="taskItem"] > div {
-            flex: 1 1 auto;
-            min-width: 0;
-            word-break: break-word;
-            white-space: pre-line;
-            display: block;
-          }
-
-          li[data-type="taskItem"] > div p {
-            margin: 0;
-          }
-
-          /* Ajoute de l'espace sous tous les tableaux markdown pour la lisibilité */
-          table {
-            margin-bottom: 2.5em;
-          }
-        `
-      }} />
-      <div style={{ width: '100vw', minHeight: '100vh', background: '#0a0a0a', paddingBottom: 64, overflowY: 'auto', height: '100vh' }}>
-        {note.header_image && (
-          <div style={{ width: '100%', maxHeight: 300, overflow: 'hidden', marginBottom: 32 }}>
-            <img
-              src={note.header_image}
-              alt="Header"
-              style={{ width: '100%', objectFit: 'cover', maxHeight: 300, borderRadius: 0 }}
-              draggable={false}
-            />
-          </div>
-        )}
-        <div style={{ width: '100%', display: 'flex', flexDirection: 'row', justifyContent: 'center', alignItems: 'flex-start', margin: '0 auto', marginBottom: 32, gap: 32 }}>
-          <div style={{ maxWidth: 750, width: 750 }}>
-            <h1 style={{
-              fontSize: '2.25rem',
-              fontWeight: 700,
-              color: 'var(--text-primary)',
-              margin: 0,
-              padding: 0,
-              textAlign: 'left',
+    <div style={{ width: '100vw', minHeight: '100vh', background: '#0a0a0a', paddingBottom: 64, overflowY: 'auto', height: '100vh' }}>
+      {note.header_image && (
+        <div style={{ width: '100%', maxHeight: 300, overflow: 'hidden', marginBottom: 32 }}>
+          <img
+            src={note.header_image}
+            alt="Header"
+            style={{ width: '100%', objectFit: 'cover', maxHeight: 300, borderRadius: 0 }}
+            draggable={false}
+          />
+        </div>
+      )}
+      <div style={{ width: '100%', display: 'flex', flexDirection: 'row', justifyContent: 'center', alignItems: 'flex-start', margin: '0 auto', marginBottom: 32, gap: 32 }}>
+        <div style={{ maxWidth: 750, width: 750 }}>
+          <h1 style={{
+            fontSize: '2.25rem',
+            fontWeight: 700,
+            color: 'var(--text-primary)',
+            margin: 0,
+            padding: 0,
+            textAlign: 'left',
+            maxWidth: 750,
+            width: 750,
+            lineHeight: 1.1,
+            fontFamily: 'Noto Sans, Inter, Arial, sans-serif',
+          }}>{note.source_title}</h1>
+          <div style={{ height: 18 }} />
+          <div
+            className="markdown-body"
+            style={{
               maxWidth: 750,
               width: 750,
-              lineHeight: 1.1,
-              fontFamily: 'Noto Sans, Inter, Arial, sans-serif',
-            }}>{note.source_title}</h1>
-            <div style={{ height: 18 }} />
-            <div
-              className="markdown-body"
-              style={{
-                maxWidth: 750,
-                width: 750,
-                margin: '0 auto',
-                background: 'none',
-                padding: '0 0 64px 0',
-                fontSize: '1.13rem',
-                color: 'var(--text-primary)',
-                minHeight: '60vh',
-                pointerEvents: 'auto',
-                userSelect: 'text',
-              }}
-              dangerouslySetInnerHTML={{ __html: note.html_content || '' }}
-            />
-          </div>
-        </div>
-        {/* Footer discret */}
-        <div style={{
-          position: 'fixed',
-          bottom: 16,
-          right: 16,
-          color: '#b3a9a0',
-          fontSize: '0.8rem',
-          opacity: 0.6
-        }}>
-          Crafted with Scrivia
+              margin: '0 auto',
+              background: 'none',
+              padding: '0 0 64px 0',
+              fontSize: '1.13rem',
+              color: 'var(--text-primary)',
+              minHeight: '60vh',
+              pointerEvents: 'auto',
+              userSelect: 'text',
+            }}
+            dangerouslySetInnerHTML={{ __html: note.html_content || '' }}
+          />
         </div>
       </div>
-    </>
+      {/* Footer discret */}
+      <div style={{
+        position: 'fixed',
+        bottom: 16,
+        right: 16,
+        color: '#b3a9a0',
+        fontSize: '0.8rem',
+        opacity: 0.6
+      }}>
+        Crafted with Scrivia
+      </div>
+    </div>
   );
 }
