@@ -19,14 +19,25 @@ export async function PATCH(req: NextRequest, { params }: any): Promise<Response
     const { ref } = await params;
     const body = await req.json();
     
+    // Debug: afficher le payload reçu
+    console.log('🔍 clear-section payload reçu:', JSON.stringify(body, null, 2));
+    console.log('🔍 clear-section ref:', ref);
+    
     const schema = z.object({
-      section: z.string().min(1, 'section requis'),
-      section_title: z.string().min(1, 'section_title requis').optional(), // Alias pour compatibilité
-      placeholder: z.string().optional() // Texte de remplacement optionnel
-    });
+      section: z.string().min(1, 'section requis').optional(),
+      section_title: z.string().min(1, 'section_title requis').optional(),
+      placeholder: z.string().optional()
+    }).refine(
+      (data) => data.section || data.section_title,
+      {
+        message: 'section ou section_title requis',
+        path: ['section']
+      }
+    );
     
     const parseResult = schema.safeParse(body);
     if (!parseResult.success) {
+      console.log('❌ clear-section validation échouée:', parseResult.error.errors);
       return new Response(
         JSON.stringify({ error: 'Payload invalide', details: parseResult.error.errors.map(e => e.message) }),
         { status: 422 }
