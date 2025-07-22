@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { FiShare2, FiDownload, FiCheck } from 'react-icons/fi';
+import './editor-kebab-menu.css';
 
 interface EditorKebabMenuProps {
   open: boolean;
@@ -39,6 +40,16 @@ const menuDividerStyle: React.CSSProperties = {
   alignSelf: 'center',
   borderRadius: 1,
 };
+
+function Toggle({ checked, onChange, label }: { checked: boolean, onChange: (v: boolean) => void, label: string }) {
+  return (
+    <label className="kebab-toggle">
+      <input type="checkbox" checked={checked} onChange={e => onChange(e.target.checked)} />
+      <span className="kebab-toggle-slider" />
+      <span className="kebab-toggle-label">{label}</span>
+    </label>
+  );
+}
 
 const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
   open,
@@ -105,68 +116,49 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
         position: 'fixed',
         top: position.top,
         left: position.left,
-        minWidth: 210,
+        minWidth: 260,
         background: 'var(--bg-main, #18181c)',
         border: '1px solid #4446',
         borderRadius: 14,
         boxShadow: '0 6px 32px 0 rgba(0,0,0,0.16)',
         zIndex: 99999,
-        padding: '10px 0',
+        padding: '16px 0 10px 0',
         animation: 'fadeInMenu 0.18s',
         display: 'flex',
         flexDirection: 'column',
-        gap: 2,
+        gap: 0,
       }}
     >
-      <button style={menuItemStyle} onClick={() => { onClose(); /* TODO: implémenter partage */ }}>
-        <FiShare2 style={{ marginRight: 10, opacity: 0.8 }} /> Partager
-      </button>
-      <button style={menuItemStyle} onClick={() => { onClose(); /* TODO: implémenter export */ }}>
-        <FiDownload style={{ marginRight: 10, opacity: 0.8 }} /> Exporter
-      </button>
+      {/* Groupe 1 : Actions */}
+      <div style={{ padding: '0 20px 8px 20px', display: 'flex', flexDirection: 'column', gap: 2 }}>
+        <button style={menuItemStyle} onClick={() => { onClose(); /* TODO: implémenter partage */ }}>
+          <FiShare2 style={{ marginRight: 10, opacity: 0.8 }} /> Partager
+        </button>
+        <button style={menuItemStyle} onClick={() => { onClose(); /* TODO: implémenter export */ }}>
+          <FiDownload style={{ marginRight: 10, opacity: 0.8 }} /> Exporter
+        </button>
+      </div>
       <div style={menuDividerStyle} />
-      <button style={menuItemStyle} onClick={() => setWideMode(!wideMode)}>
-        <span style={{ marginRight: 10 }}>{wideMode ? <FiCheck /> : <span style={{ display: 'inline-block', width: 16 }} />}</span>
-        Mode large
-      </button>
-      <button style={menuItemStyle} onClick={() => setA4Mode(false)}>
-        <span style={{ marginRight: 10 }}>{!a4Mode ? <FiCheck /> : <span style={{ display: 'inline-block', width: 16 }} />}</span>
-        Creative Mode
-      </button>
-      <button style={menuItemStyle} onClick={() => setA4Mode(true)}>
-        <span style={{ marginRight: 10 }}>{a4Mode ? <FiCheck /> : <span style={{ display: 'inline-block', width: 16 }} />}</span>
-        A4 Mode
-      </button>
-      <button style={menuItemStyle} onClick={() => setAutosaveOn(!autosaveOn)}>
-        <span style={{ marginRight: 10 }}>{autosaveOn ? <FiCheck /> : <span style={{ display: 'inline-block', width: 16 }} />}</span>
-        Autosave {autosaveOn ? 'On' : 'Off'}
-      </button>
-      <div style={{ height: 1, background: '#4446', margin: '10px 0 4px 0', width: '90%', alignSelf: 'center', borderRadius: 1 }} />
-      <div style={{ display: 'flex', justifyContent: 'center', gap: 8, padding: '4px 0 2px 0' }}>
-        <button
-          style={{
-            ...menuItemStyle,
-            width: 48,
-            padding: '6px 0',
-            fontWeight: 700,
-            color: slashLang === 'en' ? 'var(--accent-primary, #2994ff)' : 'var(--text-primary, #e5e7eb)',
-            background: slashLang === 'en' ? 'rgba(41,148,255,0.08)' : 'none',
-            border: slashLang === 'en' ? '1.5px solid var(--accent-primary, #2994ff)' : '1.5px solid transparent',
-          }}
-          onClick={() => setSlashLang('en')}
-        >EN</button>
-        <button
-          style={{
-            ...menuItemStyle,
-            width: 48,
-            padding: '6px 0',
-            fontWeight: 700,
-            color: slashLang === 'fr' ? 'var(--accent-primary, #2994ff)' : 'var(--text-primary, #e5e7eb)',
-            background: slashLang === 'fr' ? 'rgba(41,148,255,0.08)' : 'none',
-            border: slashLang === 'fr' ? '1.5px solid var(--accent-primary, #2994ff)' : '1.5px solid transparent',
-          }}
-          onClick={() => setSlashLang('fr')}
-        >FR</button>
+      {/* Groupe 2 : Affichage & options */}
+      <div style={{ padding: '0 20px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <Toggle checked={autosaveOn} onChange={setAutosaveOn} label="Autosave" />
+        <Toggle checked={wideMode} onChange={setWideMode} label="Wide Mode" />
+        <Toggle checked={a4Mode} onChange={v => setA4Mode(!!v)} label="A4 Mode" />
+      </div>
+      <div style={menuDividerStyle} />
+      {/* Groupe 3 : Langue du SlashMenu */}
+      <div style={{ padding: '8px 20px 0 20px', display: 'flex', flexDirection: 'column', gap: 6 }}>
+        <div style={{ fontSize: 13, color: '#aaa', marginBottom: 2 }}>Slash Menu Language</div>
+        <div style={{ display: 'flex', gap: 10 }}>
+          <label className="kebab-radio">
+            <input type="radio" name="slashLang" checked={slashLang === 'en'} onChange={() => setSlashLang('en')} />
+            <span>EN</span>
+          </label>
+          <label className="kebab-radio">
+            <input type="radio" name="slashLang" checked={slashLang === 'fr'} onChange={() => setSlashLang('fr')} />
+            <span>FR</span>
+          </label>
+        </div>
       </div>
     </div>
   );

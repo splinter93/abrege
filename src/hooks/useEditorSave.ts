@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { toast } from 'react-hot-toast';
 import type { NoteData } from '../types/editor';
+import { updateNoteREST } from '../services/api';
 
 export interface UseEditorSaveOptions {
   onSave?: (data: NoteData) => void;
@@ -29,19 +30,22 @@ export default function useEditorSave({ onSave, editor, headerImage, titleAlign 
   /**
    * Fonction de sauvegarde à appeler depuis l'éditeur
    */
-  const handleSave = useCallback((newTitle: string, _content: string, align?: 'left' | 'center' | 'right') => {
+  const handleSave = useCallback(async (newTitle: string, _content: string, align?: 'left' | 'center' | 'right') => {
     if (onSave && editor) {
       setIsSaving(true);
       const html_content = editor.getHTML();
       let markdown_content = editor.storage.markdown.getMarkdown();
-      // Patch : retire les backslash devant les titres après une image
       markdown_content = markdown_content.replace(/\\(#+ )/g, '$1');
-      // Patch : ajoute un saut de ligne après chaque image si le suivant est un titre
       markdown_content = markdown_content.replace(/(\!\[.*?\]\(.*?\))\s*(#+ )/g, '$1\n\n$2');
-      onSave({ title: newTitle, markdown_content, html_content, headerImage, titleAlign: align });
-      setLastSaved(new Date());
-      setIsSaving(false);
-      toast.success('Note sauvegardée !');
+      try {
+        await onSave({ title: newTitle, markdown_content, html_content, headerImage, titleAlign: align });
+        setLastSaved(new Date());
+        toast.success('Note sauvegardée !');
+      } catch (err) {
+        toast.error('Erreur lors de la sauvegarde');
+      } finally {
+        setIsSaving(false);
+      }
     } else {
       toast.error('Erreur : impossible de sauvegarder (éditeur ou callback manquant)');
     }
