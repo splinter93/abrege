@@ -1,9 +1,5 @@
 import React from 'react';
 
-interface SharedNotePageProps {
-  params: { username: string; slug: string };
-}
-
 async function fetchNote(username: string, slug: string) {
   const res = await fetch(
     `https://abrege93.vercel.app/api/v1/public/note/${encodeURIComponent(username)}/${encodeURIComponent(slug)}`,
@@ -14,7 +10,7 @@ async function fetchNote(username: string, slug: string) {
   return data.note || null;
 }
 
-export default async function SharedNotePage({ params }: SharedNotePageProps) {
+export default async function Page({ params }: { params: { username: string; slug: string } }) {
   const { username, slug } = params;
   const note = await fetchNote(username, slug);
 
@@ -99,7 +95,7 @@ export default async function SharedNotePage({ params }: SharedNotePageProps) {
           fontSize: '0.9rem',
         }}
       >
-        <p>Partagé via <a href="https://abrege93.vercel.app/@{username}" style={{ color: '#1a1a1a', textDecoration: 'underline' }}>@{username}</a></p>
+        <p>Partagé via <a href={`https://abrege93.vercel.app/@${username}`} style={{ color: '#1a1a1a', textDecoration: 'underline' }}>@{username}</a></p>
       </div>
     </div>
   );
