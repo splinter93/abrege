@@ -520,9 +520,25 @@ export default function NoteEditorPage() {
   // Handler pour le toggle Published
   const handleTogglePublished = async (value: boolean) => {
     try {
-      await publishNoteREST(noteId, value);
+      const result = await publishNoteREST(noteId, value);
       setPublished(value);
-      toast.success(value ? 'Note publiée !' : 'Note dépubliée.');
+      
+      if (value && result.url) {
+        // Afficher l'URL dans un toast avec possibilité de copier
+        toast.success(
+          <div>
+            <div>Note publiée !</div>
+            <div style={{ marginTop: 8, fontSize: '0.9em', color: '#888' }}>
+              <a href={result.url} target="_blank" rel="noopener noreferrer" style={{ color: '#e55a2c', textDecoration: 'underline' }}>
+                {result.url}
+              </a>
+            </div>
+          </div>,
+          { duration: 5000 }
+        );
+      } else {
+        toast.success(value ? 'Note publiée !' : 'Note dépubliée.');
+      }
     } catch (err: any) {
       toast.error('Erreur lors de la mise à jour du statut de publication.');
     }
