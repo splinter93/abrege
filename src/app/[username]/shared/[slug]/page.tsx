@@ -139,7 +139,7 @@ export default async function Page(props: any) {
                 fontSize: '0.8rem',
                 opacity: 0.6
               }}>
-                Partagé via Abrège
+                Crafted with Scrivia
               </div>
             </div>
             </>
