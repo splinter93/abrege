@@ -1,1159 +1,180 @@
-openapi: "3.1.0"
+openapi: 3.1.0
 info:
-  title: "API Abrège - Documentation Finale Complète"
-  description: "L'API Abrège permet la gestion complète de notes, dossiers et notebooks avec support complet des slugs partout : URLs ET body des requêtes. Conçue pour être LLM-friendly avec des noms d'endpoints explicites."
-  version: "3.0.0"
+  title: Abrège API – Complete & LLM-Friendly Documentation
+  description: |
+    The Abrège API enables full management of notes, folders, and notebooks (classeurs), with universal support for slugs and IDs in both URLs and request bodies. All endpoints are designed to be LLM-friendly, robust, and explicit. Special conventions are documented for moving notes/folders to the root, and for maximum compatibility with AI agents and no-code tools.
+    
+    **Key conventions:**
+    - All resources (notes, folders, notebooks) can be referenced by slug or UUID everywhere (URL and body).
+    - For moving a note/folder to the root, set `target_folder_id` to `null`, `""`, or `"null"` (all are accepted).
+    - Absence of a key means "do not modify this field" (never means root).
+    - All responses are JSON, with clear root properties (`note`, `folder`, `notebook`, etc.).
+    - Security: Bearer token (JWT) required for all endpoints.
+    
+    _FR: Voir les commentaires pour les subtilités REST/LLM._
+  version: 3.0.0
 servers:
-  - url: "https://abrege-splinter93s-projects.vercel.app"
+  - url: https://abrege-splinter93s-projects.vercel.app
 security:
   - bearerAuth: []
 tags:
-  - name: "Notes"
-    description: "Opérations sur les notes"
-  - name: "Dossiers"
-    description: "Opérations sur les dossiers"
-  - name: "Notebooks"
-    description: "Opérations sur les notebooks (classeurs)"
-  - name: "Utilitaires"
-    description: "Endpoints utilitaires"
-paths:
-  /api/v1/note/create:
-    post:
-      summary: "Créer une note"
-      tags: ["Notes"]
-      operationId: "createNote"
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/CreateNotePayload"
-      responses:
-        "201":
-          description: "Note créée avec succès"
-          content:
-            application/json:
-              schema:
-                type: "object"
-                properties:
-                  note:
-                    $ref: "#/components/schemas/Note"
-  /api/v1/note/{ref}:
-    get:
-      summary: "Récupérer une note"
-      tags: ["Notes"]
-      operationId: "getNoteByRef"
-      parameters:
-        - name: "ref"
-          in: "path"
-          required: true
-          description: "ID ou slug de la ressource"
-          schema:
-            type: "string"
-      responses:
-        "200":
-          description: "Note récupérée"
-          content:
-            application/json:
-              schema:
-                type: "object"
-                properties:
-                  note:
-                    $ref: "#/components/schemas/Note"
-    put:
-      summary: "Mettre à jour une note"
-      tags: ["Notes"]
-      operationId: "updateNote"
-      parameters:
-        - name: "ref"
-          in: "path"
-          required: true
-          description: "ID ou slug de la ressource"
-          schema:
-            type: "string"
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: "object"
-              properties:
-                source_title:
-                  type: "string"
-                markdown_content:
-                  type: "string"
-                header_image:
-                  type: "string"
-                  format: "uri"
-      responses:
-        "200":
-          description: "Note mise à jour"
-          content:
-            application/json:
-              schema:
-                type: "object"
-                properties:
-                  note:
-                    $ref: "#/components/schemas/Note"
-    delete:
-      summary: "Supprimer une note"
-      tags: ["Notes"]
-      operationId: "deleteNote"
-      parameters:
-        - name: "ref"
-          in: "path"
-          required: true
-          description: "ID ou slug de la ressource"
-          schema:
-            type: "string"
-      responses:
-        "200":
-          description: "Note supprimée"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/SuccessResponse"
-  /api/v1/note/{ref}/content:
-    get:
-      summary: "Récupérer le contenu d'une note"
-      tags: ["Notes"]
-      operationId: "getNoteContent"
-      parameters:
-        - name: "ref"
-          in: "path"
-          required: true
-          description: "ID ou slug de la ressource"
-          schema:
-            type: "string"
-      responses:
-        "200":
-          description: "Contenu de la note"
-          content:
-            application/json:
-              schema:
-                type: "object"
-                properties:
-                  content:
-                    type: "string"
-    post:
-      summary: "Générer une URL signée S3 pour l'upload de fichier"
-      tags: ["Notes"]
-      operationId: "generatePresignedS3Url"
-      parameters:
-        - name: "ref"
-          in: "path"
-          required: true
-          description: "ID ou slug de la ressource (note)"
-          schema:
-            type: "string"
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: "object"
-              properties:
-                fileName:
-                  type: "string"
-                  description: "Nom du fichier à uploader (chemin complet dans le bucket, ex: userId/monfichier.pdf)"
-                fileType:
-                  type: "string"
-                  description: "Type MIME du fichier (ex: application/pdf, image/png)"
-              required: [fileName, fileType]
-      responses:
-        "200":
-          description: "URL signée générée avec succès"
-          content:
-            application/json:
-              schema:
-                type: "object"
-                properties:
-                  url:
-                    type: "string"
-                    description: "URL signée S3 pour l'upload du fichier via PUT"
-        "422":
-          description: "Paramètres invalides"
-          content:
-            application/json:
-              schema:
-                type: "object"
-                properties:
-                  error:
-                    type: "string"
-                  details:
-                    type: "array"
-                    items:
-                      type: "string"
-        "500":
-          description: "Erreur serveur"
-          content:
-            application/json:
-              schema:
-                type: "object"
-                properties:
-                  error:
-                    type: "string"
-  /api/v1/note/{ref}/add-content:
-    patch:
-      summary: "Ajouter du contenu à une note"
-      tags: ["Notes"]
-      operationId: "addContentToNote"
-      parameters:
-        - name: "ref"
-          in: "path"
-          required: true
-          description: "ID ou slug de la ressource"
-          schema:
-            type: "string"
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: "object"
-              properties:
-                text:
-                  type: "string"
-                position:
-                  type: "string"
-                  enum: ["start", "end"]
-                  default: "end"
-              required: ["text"]
-      responses:
-        "200":
-          description: "Contenu ajouté"
-          content:
-            application/json:
-              schema:
-                type: "object"
-                properties:
-                  note:
-                    $ref: "#/components/schemas/Note"
-  /api/v1/note/{ref}/add-to-section:
-    patch:
-      summary: "Ajouter du contenu à une section"
-      tags: ["Notes"]
-      operationId: "addToSection"
-      parameters:
-        - name: "ref"
-          in: "path"
-          required: true
-          description: "ID ou slug de la ressource"
-          schema:
-            type: "string"
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: "object"
-              properties:
-                section:
-                  type: "string"
-                  description: "Nom ou slug de la section"
-                section_title:
-                  type: "string"
-                  description: "Nom ou slug de la section (alias de section)"
-                text:
-                  type: "string"
-                position:
-                  type: "number"
-                  description: "Position d'insertion (optionnel)"
-              required: ["text"]
-      responses:
-        "200":
-          description: "Contenu ajouté à la section"
-          content:
-            application/json:
-              schema:
-                type: "object"
-                properties:
-                  note:
-                    $ref: "#/components/schemas/Note"
-  /api/v1/note/{ref}/clear-section:
-    patch:
-      summary: "Effacer une section"
-      tags: ["Notes"]
-      operationId: "clearSection"
-      parameters:
-        - name: "ref"
-          in: "path"
-          required: true
-          description: "ID ou slug de la ressource"
-          schema:
-            type: "string"
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: "object"
-              properties:
-                section:
-                  type: "string"
-                  description: "Nom ou slug de la section"
-              required: ["section"]
-      responses:
-        "200":
-          description: "Section effacée"
-          content:
-            application/json:
-              schema:
-                type: "object"
-                properties:
-                  note:
-                    $ref: "#/components/schemas/Note"
-  /api/v1/note/{ref}/table-of-contents:
-    get:
-      summary: "Récupérer la table des matières"
-      tags: ["Notes"]
-      operationId: "getNoteTOC"
-      parameters:
-        - name: "ref"
-          in: "path"
-          required: true
-          description: "ID ou slug de la ressource"
-          schema:
-            type: "string"
-      responses:
-        "200":
-          description: "Table des matières"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/TOCResponse"
-  /api/v1/note/{ref}/information:
-    get:
-      summary: "Récupérer les informations d'une note"
-      tags: ["Notes"]
-      operationId: "getNoteInfo"
-      parameters:
-        - name: "ref"
-          in: "path"
-          required: true
-          description: "ID ou slug de la ressource"
-          schema:
-            type: "string"
-      responses:
-        "200":
-          description: "Informations de la note"
-          content:
-            application/json:
-              schema:
-                type: "object"
-                properties:
-                  note:
-                    $ref: "#/components/schemas/NoteInformation"
-  /api/v1/note/{ref}/statistics:
-    get:
-      summary: "Récupérer les statistiques d'une note"
-      tags: ["Notes"]
-      operationId: "getNoteStats"
-      parameters:
-        - name: "ref"
-          in: "path"
-          required: true
-          description: "ID ou slug de la ressource"
-          schema:
-            type: "string"
-      responses:
-        "200":
-          description: "Statistiques de la note"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/NoteStatistics"
-  /api/v1/note/{ref}/move:
-    patch:
-      summary: "Déplacer une note"
-      tags: ["Notes"]
-      operationId: "moveNote"
-      parameters:
-        - name: "ref"
-          in: "path"
-          required: true
-          description: "ID ou slug de la ressource"
-          schema:
-            type: "string"
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/MoveNotePayload"
-      responses:
-        "200":
-          description: "Note déplacée"
-          content:
-            application/json:
-              schema:
-                type: "object"
-                properties:
-                  note:
-                    $ref: "#/components/schemas/Note"
-  /api/v1/note/merge:
-    post:
-      summary: "Fusionner des notes"
-      tags: ["Notes"]
-      operationId: "mergeNotes"
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/MergeNotesPayload"
-      responses:
-        "200":
-          description: "Réponse de la fusion"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/MergeNotesResponse"
-  /api/v1/note/overwrite:
-    post:
-      summary: "Écraser complètement une note"
-      tags: ["Notes"]
-      operationId: "overwriteNote"
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: "object"
-              properties:
-                note_id:
-                  type: "string"
-                source_title:
-                  type: "string"
-                markdown_content:
-                  type: "string"
-              required: ["note_id", "source_title", "markdown_content"]
-      responses:
-        "200":
-          description: "Note écrasée"
-          content:
-            application/json:
-              schema:
-                type: "object"
-                properties:
-                  note:
-                    $ref: "#/components/schemas/Note"
-  /api/v1/folder/create:
-    post:
-      summary: "Créer un dossier"
-      tags: ["Dossiers"]
-      operationId: "createFolder"
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/CreateFolderPayload"
-      responses:
-        "201":
-          description: "Dossier créé"
-          content:
-            application/json:
-              schema:
-                type: "object"
-                properties:
-                  folder:
-                    $ref: "#/components/schemas/Folder"
-  /api/v1/folder/{ref}:
-    get:
-      summary: "Récupérer un dossier"
-      tags: ["Dossiers"]
-      operationId: "getFolder"
-      parameters:
-        - name: "ref"
-          in: "path"
-          required: true
-          description: "ID ou slug de la ressource"
-          schema:
-            type: "string"
-      responses:
-        "200":
-          description: "Dossier récupéré"
-          content:
-            application/json:
-              schema:
-                type: "object"
-                properties:
-                  folder:
-                    $ref: "#/components/schemas/Folder"
-    put:
-      summary: "Mettre à jour un dossier"
-      tags: ["Dossiers"]
-      operationId: "updateFolder"
-      parameters:
-        - name: "ref"
-          in: "path"
-          required: true
-          description: "ID ou slug de la ressource"
-          schema:
-            type: "string"
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: "object"
-              properties:
-                name:
-                  type: "string"
-              required: ["name"]
-      responses:
-        "200":
-          description: "Dossier mis à jour"
-          content:
-            application/json:
-              schema:
-                type: "object"
-                properties:
-                  folder:
-                    $ref: "#/components/schemas/Folder"
-    delete:
-      summary: "Supprimer un dossier"
-      tags: ["Dossiers"]
-      operationId: "deleteFolder"
-      parameters:
-        - name: "ref"
-          in: "path"
-          required: true
-          description: "ID ou slug de la ressource"
-          schema:
-            type: "string"
-      responses:
-        "200":
-          description: "Dossier supprimé"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/SuccessResponse"
-  /api/v1/dossier/{ref}/move:
-    patch:
-      summary: "Déplacer un dossier"
-      tags: ["Dossiers"]
-      operationId: "moveFolder"
-      parameters:
-        - name: "ref"
-          in: "path"
-          required: true
-          description: "ID ou slug de la ressource"
-          schema:
-            type: "string"
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/MoveFolderPayload"
-      responses:
-        "200":
-          description: "Dossier déplacé"
-          content:
-            application/json:
-              schema:
-                type: "object"
-                properties:
-                  folder:
-                    $ref: "#/components/schemas/Folder"
-  /api/v1/dossier/{ref}/tree:
-    get:
-      summary: "Récupérer l'arbre d'un dossier"
-      tags: ["Dossiers"]
-      operationId: "getFolderTree"
-      parameters:
-        - name: "ref"
-          in: "path"
-          required: true
-          description: "ID ou slug de la ressource"
-          schema:
-            type: "string"
-      responses:
-        "200":
-          description: "Arbre du dossier"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/FolderTreeResponse"
-  /api/v1/dossier/{ref}/meta:
-    get:
-      summary: "Récupérer les métadonnées d'un dossier"
-      tags: ["Dossiers"]
-      operationId: "getFolderMeta"
-      parameters:
-        - name: "ref"
-          in: "path"
-          required: true
-          description: "ID ou slug de la ressource"
-          schema:
-            type: "string"
-      responses:
-        "200":
-          description: "Métadonnées du dossier"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/FolderMeta"
-  /api/v1/notebooks:
-    get:
-      summary: "Lister tous les notebooks"
-      tags: ["Notebooks"]
-      operationId: "listNotebooks"
-      responses:
-        "200":
-          description: "Liste des notebooks"
-          content:
-            application/json:
-              schema:
-                type: "object"
-                properties:
-                  notebooks:
-                    type: "array"
-                    items:
-                      $ref: "#/components/schemas/Notebook"
-  /api/v1/notebook/create:
-    post:
-      summary: "Créer un notebook"
-      tags: ["Notebooks"]
-      operationId: "createNotebook"
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: "object"
-              properties:
-                name:
-                  type: "string"
-                emoji:
-                  type: "string"
-                color:
-                  type: "string"
-              required: ["name"]
-      responses:
-        "201":
-          description: "Notebook créé"
-          content:
-            application/json:
-              schema:
-                type: "object"
-                properties:
-                  notebook:
-                    $ref: "#/components/schemas/Notebook"
-  /api/v1/notebook/{ref}:
-    get:
-      summary: "Récupérer un notebook"
-      tags: ["Notebooks"]
-      operationId: "getNotebook"
-      parameters:
-        - name: "ref"
-          in: "path"
-          required: true
-          description: "ID ou slug de la ressource"
-          schema:
-            type: "string"
-      responses:
-        "200":
-          description: "Notebook récupéré"
-          content:
-            application/json:
-              schema:
-                type: "object"
-                properties:
-                  notebook:
-                    $ref: "#/components/schemas/Notebook"
-    put:
-      summary: "Mettre à jour un notebook"
-      tags: ["Notebooks"]
-      operationId: "updateNotebook"
-      parameters:
-        - name: "ref"
-          in: "path"
-          required: true
-          description: "ID ou slug de la ressource"
-          schema:
-            type: "string"
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: "object"
-              properties:
-                name:
-                  type: "string"
-                emoji:
-                  type: "string"
-                color:
-                  type: "string"
-      responses:
-        "200":
-          description: "Notebook mis à jour"
-          content:
-            application/json:
-              schema:
-                type: "object"
-                properties:
-                  notebook:
-                    $ref: "#/components/schemas/Notebook"
-    delete:
-      summary: "Supprimer un notebook"
-      tags: ["Notebooks"]
-      operationId: "deleteNotebook"
-      parameters:
-        - name: "ref"
-          in: "path"
-          required: true
-          description: "ID ou slug de la ressource"
-          schema:
-            type: "string"
-      responses:
-        "200":
-          description: "Notebook supprimé"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/SuccessResponse"
-  /api/v1/classeur/{ref}/full-tree:
-    get:
-      summary: "Récupérer le contenu complet d'un notebook"
-      tags: ["Notebooks"]
-      operationId: "getNotebookFullTree"
-      parameters:
-        - name: "ref"
-          in: "path"
-          required: true
-          description: "ID ou slug de la ressource"
-          schema:
-            type: "string"
-      responses:
-        "200":
-          description: "Arborescence complète du notebook"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/FullTreeResponse"
-  /api/v1/classeur/{ref}/tree:
-    get:
-      summary: "Récupérer l'arbre d'un notebook"
-      tags: ["Notebooks"]
-      operationId: "getNotebookTree"
-      parameters:
-        - name: "ref"
-          in: "path"
-          required: true
-          description: "ID ou slug de la ressource"
-          schema:
-            type: "string"
-      responses:
-        "200":
-          description: "Arbre du notebook"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/FullTreeResponse"
-  /api/v1/classeur/{ref}/dossiers:
-    get:
-      summary: "Récupérer les dossiers d'un notebook"
-      tags: ["Notebooks"]
-      operationId: "getNotebookFolders"
-      parameters:
-        - name: "ref"
-          in: "path"
-          required: true
-          description: "ID ou slug de la ressource"
-          schema:
-            type: "string"
-      responses:
-        "200":
-          description: "Dossiers du notebook"
-          content:
-            application/json:
-              schema:
-                type: "object"
-                properties:
-                  folders:
-                    type: "array"
-                    items:
-                      $ref: "#/components/schemas/Folder"
-  /api/v1/slug/generate:
-    post:
-      summary: "Générer un slug"
-      tags: ["Utilitaires"]
-      operationId: "generateSlug"
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: "object"
-              properties:
-                title:
-                  type: "string"
-                type:
-                  type: "string"
-                  enum: ["note", "folder", "notebook"]
-                userId:
-                  type: "string"
-              required: ["title", "type", "userId"]
-      responses:
-        "200":
-          description: "Slug généré"
-          content:
-            application/json:
-              schema:
-                type: "object"
-                properties:
-                  slug:
-                    type: "string"
+  - name: Notes
+    description: Operations on notes
+  - name: Dossiers
+    description: Operations on folders
+  - name: Notebooks
+    description: Operations on notebooks (classeurs)
+  - name: Utilitaires
+    description: Utility endpoints
 components:
-  schemas:
-    Note:
-      type: "object"
-      properties:
-        id:
-          type: "string"
-          format: "uuid"
-        slug:
-          type: "string"
-        source_title:
-          type: "string"
-        markdown_content:
-          type: "string"
-        html_content:
-          type: "string"
-        folder_id:
-          type: ["string", "null"]
-          format: "uuid"
-        classeur_id:
-          type: "string"
-          format: "uuid"
-        created_at:
-          type: "string"
-          format: "date-time"
-        updated_at:
-          type: "string"
-          format: "date-time"
-        position:
-          type: "integer"
-    CreateNotePayload:
-      type: "object"
-      properties:
-        source_title:
-          type: "string"
-        markdown_content:
-          type: "string"
-        header_image:
-          type: "string"
-          format: "uri"
-        notebook_id:
-          type: "string"
-          description: "ID ou slug du notebook"
-        folder_id:
-          type: "string"
-          description: "ID ou slug du dossier"
-        classeur_id:
-          type: "string"
-          description: "Legacy support pour notebook_id"
-      required: ["source_title", "markdown_content", "notebook_id"]
-    NoteInformation:
-      type: "object"
-      properties:
-        id:
-          type: "string"
-          format: "uuid"
-        source_title:
-          type: "string"
-        header_image:
-          type: ["string", "null"]
-          format: "uri"
-        created_at:
-          type: "string"
-          format: "date-time"
-        updated_at:
-          type: "string"
-          format: "date-time"
-        folder_id:
-          type: "string"
-          format: "uuid"
-        classeur_id:
-          type: "string"
-          format: "uuid"
-        slug:
-          type: "string"
-    NoteStatistics:
-      type: "object"
-      properties:
-        id:
-          type: "string"
-          format: "uuid"
-        title:
-          type: "string"
-        word_count:
-          type: "integer"
-        char_count:
-          type: "integer"
-        section_count:
-          type: "integer"
-        toc:
-          type: "array"
-          items:
-            type: "object"
-            properties:
-              title:
-                type: "string"
-              slug:
-                type: "string"
-              level:
-                type: "integer"
-    MoveNotePayload:
-      type: "object"
-      properties:
-        target_notebook_id:
-          type: "string"
-          description: "ID ou slug du notebook de destination"
-        target_folder_id:
-          type: "string"
-          description: "ID ou slug du dossier de destination"
-        position:
-          type: "integer"
-    MergeNotesPayload:
-      type: "object"
-      properties:
-        note_ids:
-          type: "array"
-          items:
-            type: "string"
-          description: "IDs ou slugs des notes à fusionner"
-        order:
-          type: "array"
-          items:
-            type: "string"
-        create_new:
-          type: "boolean"
-        title:
-          type: "string"
-        notebook_id:
-          type: "string"
-          description: "ID ou slug du notebook pour la nouvelle note"
-        folder_id:
-          type: "string"
-          description: "ID ou slug du dossier pour la nouvelle note"
-        classeur_id:
-          type: "string"
-          description: "Legacy support pour notebook_id"
-      required: ["note_ids"]
-    MergeNotesResponse:
-      oneOf:
-        - $ref: "#/components/schemas/MergedNoteVirtual"
-        - $ref: "#/components/schemas/MergedNoteCreation"
-    MergedNoteVirtual:
-      type: "object"
-      properties:
-        merged_content:
-          type: "string"
-        notes:
-          type: "array"
-          items:
-            $ref: "#/components/schemas/NoteIdentifier"
-    MergedNoteCreation:
-      type: "object"
-      properties:
-        created_note:
-          $ref: "#/components/schemas/Note"
-        merged_from:
-          type: "array"
-          items:
-            $ref: "#/components/schemas/NoteIdentifier"
-    NoteIdentifier:
-      type: "object"
-      properties:
-        id:
-          type: "string"
-          format: "uuid"
-        title:
-          type: "string"
-    Folder:
-      type: "object"
-      properties:
-        id:
-          type: "string"
-          format: "uuid"
-        slug:
-          type: "string"
-        name:
-          type: "string"
-        classeur_id:
-          type: "string"
-          format: "uuid"
-        parent_id:
-          type: ["string", "null"]
-          format: "uuid"
-        created_at:
-          type: "string"
-          format: "date-time"
-        updated_at:
-          type: "string"
-          format: "date-time"
-        position:
-          type: "integer"
-    CreateFolderPayload:
-      type: "object"
-      properties:
-        name:
-          type: "string"
-        notebook_id:
-          type: "string"
-          description: "ID ou slug du notebook parent"
-        parent_id:
-          type: "string"
-          description: "ID ou slug du dossier parent"
-        classeur_id:
-          type: "string"
-          description: "Legacy support pour notebook_id"
-      required: ["name", "notebook_id"]
-    MoveFolderPayload:
-      type: "object"
-      properties:
-        target_notebook_id:
-          type: "string"
-          description: "ID ou slug du notebook de destination"
-        target_parent_id:
-          type: "string"
-          description: "ID ou slug du dossier parent de destination"
-        position:
-          type: "integer"
-    FolderTreeResponse:
-      type: "object"
-      properties:
-        dossier:
-          $ref: "#/components/schemas/FolderMeta"
-        notes:
-          type: "array"
-          items:
-            $ref: "#/components/schemas/NoteInTree"
-        sous_dossiers:
-          type: "array"
-          items:
-            type: "object"
-          description: "Recursive folder structure"
-    FolderMeta:
-      type: "object"
-      properties:
-        id:
-          type: "string"
-          format: "uuid"
-        name:
-          type: "string"
-        parent_id:
-          type: ["string", "null"]
-          format: "uuid"
-        classeur_id:
-          type: "string"
-          format: "uuid"
-    Notebook:
-      type: "object"
-      properties:
-        id:
-          type: "string"
-          format: "uuid"
-        slug:
-          type: "string"
-        name:
-          type: "string"
-        emoji:
-          type: "string"
-        color:
-          type: "string"
-        created_at:
-          type: "string"
-          format: "date-time"
-        updated_at:
-          type: "string"
-          format: "date-time"
-        position:
-          type: "integer"
-    TOCResponse:
-      type: "object"
-      properties:
-        toc:
-          type: "array"
-          items:
-            type: "object"
-            properties:
-              level:
-                type: "integer"
-              title:
-                type: "string"
-              slug:
-                type: "string"
-              line:
-                type: "integer"
-              start:
-                type: "integer"
-    FullTreeResponse:
-      type: "object"
-      properties:
-        classeur:
-          type: "object"
-          properties:
-            id:
-              type: "string"
-              format: "uuid"
-            name:
-              type: "string"
-            emoji:
-              type: "string"
-            color:
-              type: "string"
-        notes_at_root:
-          type: "array"
-          items:
-            $ref: "#/components/schemas/NoteInTree"
-        folders:
-          type: "array"
-          items:
-            $ref: "#/components/schemas/FolderInTree"
-    NoteInTree:
-      type: "object"
-      properties:
-        id:
-          type: "string"
-          format: "uuid"
-        title:
-          type: "string"
-        header_image:
-          type: ["string", "null"]
-          format: "uri"
-        created_at:
-          type: "string"
-          format: "date-time"
-    FolderInTree:
-      type: "object"
-      properties:
-        id:
-          type: "string"
-          format: "uuid"
-        name:
-          type: "string"
-        notes:
-          type: "array"
-          items:
-            $ref: "#/components/schemas/NoteInTree"
-        children:
-          type: "array"
-          items:
-            type: "object"
-          description: "Recursive folder structure"
-    SuccessResponse:
-      type: "object"
-      properties:
-        success:
-          type: "boolean"
   securitySchemes:
     bearerAuth:
-      type: "http"
-      scheme: "bearer"
-      bearerFormat: "JWT" 
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    Note:
+      type: object
+      properties:
+        id:
+          type: string
+        slug:
+          type: string
+        source_title:
+          type: string
+        markdown_content:
+          type: string
+        html_content:
+          type: string
+        folder_id:
+          type: string
+          nullable: true
+        classeur_id:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        header_image:
+          type: string
+          nullable: true
+    CreateNotePayload:
+      type: object
+      properties:
+        source_title:
+          type: string
+        markdown_content:
+          type: string
+        header_image:
+          type: string
+          nullable: true
+        folder_id:
+          oneOf:
+            - type: string
+            - type: 'null'
+          description: Slug or ID of the folder. Null/""/"null" = root.
+        notebook_id:
+          type: string
+          description: Slug or ID of the notebook (required)
+      required:
+        - source_title
+        - markdown_content
+        - notebook_id
+    MoveNotePayload:
+      type: object
+      properties:
+        target_classeur_id:
+          type: string
+          description: Slug or ID of the target notebook (optional)
+        target_folder_id:
+          oneOf:
+            - type: string
+            - type: 'null'
+          description: |
+            Slug or ID of the target folder. To move to root, set to null, "", or "null" (all accepted, LLM-friendly).
+        position:
+          type: integer
+          description: Optional position in the target folder
+      example:
+        target_classeur_id: "ai"
+        target_folder_id: null
+    Folder:
+      type: object
+      properties:
+        id:
+          type: string
+        slug:
+          type: string
+        name:
+          type: string
+        parent_id:
+          type: string
+          nullable: true
+        classeur_id:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    CreateFolderPayload:
+      type: object
+      properties:
+        name:
+          type: string
+        notebook_id:
+          type: string
+          description: ID or slug of the parent notebook
+        parent_id:
+          type: string
+          description: ID or slug of the parent folder
+        classeur_id:
+          type: string
+          description: Legacy support for notebook_id
+      required: [name, notebook_id]
+    MoveFolderPayload:
+      type: object
+      properties:
+        target_classeur_id:
+          type: string
+          description: Slug or ID of the target notebook (optional)
+        target_parent_id:
+          oneOf:
+            - type: string
+            - type: 'null'
+          description: Slug or ID of the target parent folder. Null/""/"null" = root.
+        position:
+          type: integer
+          description: Optional position in the target folder
+      example:
+        target_classeur_id: "ai"
+        target_parent_id: null
+    Notebook:
+      type: object
+      properties:
+        id:
+          type: string
+        slug:
+          type: string
+        name:
+          type: string
+        emoji:
+          type: string
+        color:
+          type: string
+        user_id:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean 

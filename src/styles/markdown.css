@@ -486,3 +486,8 @@ li[data-type="taskItem"] > div {
 li[data-type="taskItem"] > div p {
   margin: 0;
 } 
+
+/* Ajoute de l'espace sous tous les tableaux markdown pour la lisibilité */
+table {
+  margin-bottom: 2.5em;
+} 

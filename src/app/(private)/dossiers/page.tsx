@@ -9,6 +9,7 @@ import { toast } from "react-hot-toast";
 import "./DossiersPage.css";
 
 const DossiersPage: React.FC = () => {
+  // TOUS les hooks doivent être ici, AVANT tout return conditionnel
   const [classeurs, setClasseurs] = useState<Classeur[]>([]);
   const [activeClasseurId, setActiveClasseurId] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -160,13 +161,9 @@ const DossiersPage: React.FC = () => {
   // Fallback dans le rendu
   const safeClasseurs = Array.isArray(classeurs) ? classeurs : [];
 
-  if (loading) {
-    return <div>Chargement...</div>;
-  }
-
-  if (error) {
-    return <div className="error-message">{error}</div>;
-  }
+  // return conditionnels APRÈS tous les hooks
+  if (loading) return <div>Chargement...</div>;
+  if (error) return <div className="error-message">{error}</div>;
 
   return (
     <div className="dossiers-page-layout">

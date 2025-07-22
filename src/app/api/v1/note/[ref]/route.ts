@@ -53,7 +53,8 @@ export async function PUT(req: NextRequest, { params }: any): Promise<Response> 
       ref: z.string().min(1, 'note_ref requis'),
       header_image: z.string().url('header_image doit être une URL valide').optional(),
       source_title: z.string().min(1, 'source_title requis').optional(),
-      markdown_content: z.string().optional()
+      markdown_content: z.string().optional(),
+      html_content: z.string().optional()
     });
     
     const parseResult = schema.safeParse({ ref, ...body });
@@ -84,6 +85,9 @@ export async function PUT(req: NextRequest, { params }: any): Promise<Response> 
     }
     if (body.markdown_content !== undefined) {
       updateData.markdown_content = body.markdown_content;
+    }
+    if (body.html_content !== undefined) {
+      updateData.html_content = body.html_content;
     }
     
     const { data: updatedNote, error } = await supabase
