@@ -14,24 +14,39 @@ const DossiersPage: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Helper pour sélectionner le premier classeur valide
+  const selectFirstClasseur = (classeurs: Classeur[]) => {
+    if (classeurs.length === 0) {
+      setActiveClasseurId(null);
+      localStorage.removeItem("activeClasseurId");
+    } else {
+      setActiveClasseurId(classeurs[0].id);
+      localStorage.setItem("activeClasseurId", classeurs[0].id);
+    }
+  };
+
   useEffect(() => {
     const fetchClasseurs = async () => {
       try {
         setLoading(true);
         const fetchedClasseurs = await getClasseurs();
         setClasseurs(fetchedClasseurs);
-        if (fetchedClasseurs.length > 0) {
-          const lastActiveId = localStorage.getItem("activeClasseurId");
-          const activeId = fetchedClasseurs.find((c: Classeur) => c.id === lastActiveId)
-            ? lastActiveId
-            : fetchedClasseurs[0].id;
-          setActiveClasseurId(activeId);
+        // Vérifier que l'ID actif existe encore
+        const lastActiveId = localStorage.getItem("activeClasseurId");
+        const activeId = fetchedClasseurs.find((c: Classeur) => c.id === lastActiveId)
+          ? lastActiveId
+          : fetchedClasseurs[0]?.id || null;
+        setActiveClasseurId(activeId);
+        if (activeId) {
+          localStorage.setItem("activeClasseurId", activeId);
+        } else {
+          localStorage.removeItem("activeClasseurId");
         }
         setError(null);
-        console.log("DossiersPage - classeurs:", fetchedClasseurs);
       } catch (err: any) {
         console.error("Erreur lors de la récupération des classeurs:", err);
         setError("Impossible de charger les classeurs. Veuillez rafraîchir la page.");
+        toast.error("Impossible de charger les classeurs.");
       } finally {
         setLoading(false);
       }
@@ -42,7 +57,6 @@ const DossiersPage: React.FC = () => {
     const classeurChannel = supabase
       .channel('realtime:classeurs')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'classeurs' }, (payload: any) => {
-        // Rafraîchir la liste des classeurs à chaque changement
         fetchClasseurs();
       })
       .subscribe();
@@ -52,12 +66,19 @@ const DossiersPage: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    console.log("DossiersPage - activeClasseurId:", activeClasseurId);
-  }, [activeClasseurId]);
+    // Si l'ID actif n'existe plus, sélectionner le premier classeur
+    if (activeClasseurId && !classeurs.find(c => c.id === activeClasseurId)) {
+      selectFirstClasseur(classeurs);
+    }
+  }, [classeurs, activeClasseurId]);
 
   const handleSelectClasseur = (id: string) => {
-    setActiveClasseurId(id);
-    localStorage.setItem("activeClasseurId", id);
+    if (classeurs.find(c => c.id === id)) {
+      setActiveClasseurId(id);
+      localStorage.setItem("activeClasseurId", id);
+    } else {
+      selectFirstClasseur(classeurs);
+    }
   };
 
   const handleCreateClasseur = async () => {
@@ -65,6 +86,7 @@ const DossiersPage: React.FC = () => {
     if (newName && newName.trim() !== "") {
       try {
         setError(null);
+        toast.loading("Création du classeur...");
         const newClasseurData = {
           name: newName.trim(),
           position: classeurs.length,
@@ -72,44 +94,49 @@ const DossiersPage: React.FC = () => {
           color: "#808080",
         };
         const newClasseur = await createClasseur(newClasseurData);
-        setClasseurs([...classeurs, newClasseur]);
-        handleSelectClasseur(newClasseur.id);
+        setClasseurs(prev => [...prev, newClasseur]);
+        setActiveClasseurId(newClasseur.id);
+        localStorage.setItem("activeClasseurId", newClasseur.id);
+        toast.dismiss();
+        toast.success("Classeur créé avec succès.");
       } catch (err: any) {
+        toast.dismiss();
         console.error("Erreur technique lors de la création du classeur:", err);
         setError(`Erreur technique : ${err.message}`);
+        toast.error("Erreur lors de la création du classeur.");
       }
     }
   };
 
   const handleUpdateClasseur = async (id: string, updates: Partial<Classeur>) => {
     try {
+      toast.loading("Mise à jour du classeur...");
       const updatedClasseur = await updateClasseur(id, updates);
       setClasseurs(classeurs.map((c) => (c.id === id ? updatedClasseur : c)));
-      if (updates.name) {
-        toast.success("Classeur mis à jour avec succès.");
-      }
+      toast.dismiss();
+      toast.success("Classeur mis à jour avec succès.");
     } catch (error) {
+      toast.dismiss();
       console.error("Erreur lors de la mise à jour:", error);
+      toast.error("Erreur lors de la mise à jour du classeur.");
     }
   };
 
   const handleDeleteClasseur = async (id: string) => {
     try {
+      toast.loading("Suppression du classeur...");
       await deleteClasseur(id);
       const newClasseurs = classeurs.filter((c) => c.id !== id);
       setClasseurs(newClasseurs);
       if (activeClasseurId === id) {
-        const newActiveId = newClasseurs.length > 0 ? newClasseurs[0].id : null;
-        setActiveClasseurId(newActiveId);
-        if (newActiveId) {
-          localStorage.setItem("activeClasseurId", newActiveId);
-        } else {
-          localStorage.removeItem("activeClasseurId");
-        }
+        selectFirstClasseur(newClasseurs);
       }
+      toast.dismiss();
       toast.success("Classeur supprimé avec succès.");
     } catch (error) {
+      toast.dismiss();
       console.error("Erreur lors de la suppression:", error);
+      toast.error("Erreur lors de la suppression du classeur.");
     }
   };
 
@@ -119,10 +146,11 @@ const DossiersPage: React.FC = () => {
       toast.success("Ordre des classeurs sauvegardé.");
     } catch (error) {
       console.error("Erreur lors de la sauvegarde de l'ordre:", error);
+      toast.error("Erreur lors de la sauvegarde de l'ordre.");
     }
   };
 
-  const activeClasseur = classeurs.find((c) => c.id === activeClasseurId);
+  const activeClasseur = classeurs.find((c) => c.id === activeClasseurId) || null;
 
   if (loading) {
     return <div>Chargement...</div>;
@@ -146,13 +174,13 @@ const DossiersPage: React.FC = () => {
         onUpdateClasseurPositions={handleUpdateClasseurPositions}
       />
       <div className="page-content">
-        {activeClasseur && activeClasseur.id && activeClasseur.name ? (
-            <FolderManager
-              key={activeClasseurId ?? undefined}
+        {activeClasseur ? (
+          <FolderManager
+            key={activeClasseur.id}
             classeurId={activeClasseur.id}
-              classeurName={activeClasseur.name}
+            classeurName={activeClasseur.name}
             classeurIcon={activeClasseur.emoji}
-            />
+          />
         ) : (
           <div className="empty-state">
             <h2>Aucun classeur trouvé.</h2>
