@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 
-export default async function Page({ params }: { params: { username: string; slug: string } }) {
-  const { username, slug } = params;
+export default async function Page(props: any) {
+  const { username, slug } = props.params;
 
   // Appel API publique pour récupérer la note par username et slug
   const res = await fetch(
