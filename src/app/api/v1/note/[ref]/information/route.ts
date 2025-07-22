@@ -89,7 +89,11 @@ export async function PATCH(req: NextRequest, { params }: any): Promise<Response
     if (source_title !== undefined) updateData.source_title = source_title;
     if (header_image !== undefined) updateData.header_image = header_image;
     
-    // Le slug reste stable (approche Medium) - ne pas le régénérer
+    // Si le titre change, mettre à jour le slug automatiquement
+    if (source_title !== undefined) {
+      const newSlug = await SlugGenerator.generateSlug(source_title, 'note', USER_ID, noteId);
+      updateData.slug = newSlug;
+    }
     
     const { data: note, error } = await supabase
       .from('articles')

@@ -61,13 +61,17 @@ export async function POST(req: Request): Promise<Response> {
       return new Response(JSON.stringify({ error: 'Note non trouvée.' }), { status: 404 });
     }
     
-    // Mettre à jour la note (slug reste stable - approche Medium)
+    // Générer un nouveau slug basé sur le nouveau titre
+    const newSlug = await SlugGenerator.generateSlug(source_title, 'note', USER_ID, resolvedNoteId);
+    
+    // Mettre à jour la note
     const { data: note, error } = await supabase
       .from('articles')
       .update({
         source_title,
         markdown_content,
         header_image: header_image || null,
+        slug: newSlug,
         updated_at: new Date().toISOString()
       })
       .eq('id', resolvedNoteId)

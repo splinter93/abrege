@@ -79,7 +79,9 @@ export async function PUT(req: NextRequest, { params }: any): Promise<Response> 
     }
     if (body.source_title !== undefined) {
       updateData.source_title = body.source_title;
-      // Le slug reste stable (approche Medium) - ne pas le régénérer
+      // Si le titre change, mettre à jour le slug automatiquement
+      const newSlug = await SlugGenerator.generateSlug(body.source_title, 'note', USER_ID, noteId);
+      updateData.slug = newSlug;
     }
     if (body.markdown_content !== undefined) {
       updateData.markdown_content = body.markdown_content;

@@ -57,7 +57,8 @@ export async function PATCH(req: Request): Promise<Response> {
       if (userError || !user?.username) {
         return new Response(JSON.stringify({ error: 'Utilisateur ou username introuvable.' }), { status: 500 });
       }
-      url = `https://abrege93.vercel.app/@${user.username}/shared/${updated.slug}`;
+      // Retourner l'URL avec l'ID (stable) au lieu du slug
+      url = `https://abrege93.vercel.app/@${user.username}/shared/id/${noteId}`;
     }
 
     return new Response(JSON.stringify({ success: true, ...(url ? { url } : {}) }), { status: 200 });
