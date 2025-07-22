@@ -2,12 +2,12 @@
 import { useEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import { Markdown } from 'tiptap-markdown';
-import EditorToolbar from '../../../components/EditorToolbar';
+import EditorToolbar from '../../../../components/EditorToolbar';
 import { FiMoreVertical, FiEye, FiX, FiImage } from 'react-icons/fi';
-import EditorKebabMenu from '../../../components/EditorKebabMenu';
+import EditorKebabMenu from '../../../../components/EditorKebabMenu';
 import React from 'react';
-import EditorHeaderImage from '../../../components/EditorHeaderImage';
-import TableOfContents from '../../../components/TableOfContents';
+import EditorHeaderImage from '../../../../components/EditorHeaderImage';
+import TableOfContents from '../../../../components/TableOfContents';
 import { EditorContent } from '@tiptap/react';
 import slugify from 'slugify';
 import type { Heading } from '@/types/editor';
