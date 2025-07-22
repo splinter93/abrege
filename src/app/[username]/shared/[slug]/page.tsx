@@ -50,14 +50,30 @@ export default async function Page(props: any) {
 
             // Afficher directement le contenu avec le même design que la preview de l'éditeur
           return (
-            <div style={{ 
-              width: '100vw', 
-              minHeight: '100vh', 
-              background: '#1a1a1a', 
-              paddingBottom: 64, 
-              overflowY: 'auto', 
-              height: '100vh' 
-            }}>
+            <>
+              <style dangerouslySetInnerHTML={{
+                __html: `
+                  :root {
+                    --bg-main: #1a1a1a;
+                    --text-primary: #ffffff;
+                    --text-1: #ffffff;
+                    --text-2: #b3a9a0;
+                    --accent-primary: #e55a2c;
+                    --accent-hover: #f97316;
+                    --surface-1: #2a2a2a;
+                    --surface-2: #3a3a3a;
+                    --border-subtle: #404040;
+                  }
+                `
+              }} />
+              <div style={{ 
+                width: '100vw', 
+                minHeight: '100vh', 
+                background: '#1a1a1a', 
+                paddingBottom: 64, 
+                overflowY: 'auto', 
+                height: '100vh' 
+              }}>
               {/* Header Image */}
               {note.header_image && (
                 <div style={{ width: '100%', maxHeight: 300, overflow: 'hidden', marginBottom: 32 }}>
@@ -83,17 +99,13 @@ export default async function Page(props: any) {
               }}>
                 <div style={{ maxWidth: 750, width: 750 }}>
                   {/* Titre */}
-                  <h1 style={{
-                    fontSize: '2.25rem',
-                    fontWeight: 700,
-                    color: '#ffffff',
+                  <h1 className="markdown-body" style={{
                     margin: 0,
                     padding: 0,
                     textAlign: 'left',
                     maxWidth: 750,
                     width: 750,
                     lineHeight: 1.1,
-                    fontFamily: 'Noto Sans, Inter, Arial, sans-serif',
                   }}>
                     {note.source_title}
                   </h1>
@@ -109,8 +121,6 @@ export default async function Page(props: any) {
                       margin: '0 auto',
                       background: 'none',
                       padding: '0 0 64px 0',
-                      fontSize: '1.13rem',
-                      color: '#ffffff',
                       minHeight: '60vh',
                       pointerEvents: 'auto',
                       userSelect: 'text',
@@ -132,5 +142,6 @@ export default async function Page(props: any) {
                 Partagé via Abrège
               </div>
             </div>
+            </>
           );
 } 
