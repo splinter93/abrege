@@ -1,19 +1,24 @@
-import React from 'react';
+'use client';
+import React, { useEffect, useState } from 'react';
 
-async function fetchNote(username: string, slug: string) {
-  const res = await fetch(
-    `https://abrege93.vercel.app/api/v1/public/note/${encodeURIComponent(username)}/${encodeURIComponent(slug)}`,
-    { cache: 'no-store' }
-  );
-  if (!res.ok) return null;
-  const data = await res.json();
-  return data.note || null;
-}
-
-export default async function Page({ params }: { params: { username: string; slug: string } }) {
+export default function Page({ params }: { params: { username: string; slug: string } }) {
   const { username, slug } = params;
-  const note = await fetchNote(username, slug);
+  const [note, setNote] = useState<any | null>(null);
+  const [loading, setLoading] = useState(true);
 
+  useEffect(() => {
+    setLoading(true);
+    fetch(`https://abrege93.vercel.app/api/v1/public/note/${encodeURIComponent(username)}/${encodeURIComponent(slug)}`)
+      .then(res => res.ok ? res.json() : null)
+      .then(data => {
+        setNote(data?.note || null);
+        setLoading(false);
+      });
+  }, [username, slug]);
+
+  if (loading) {
+    return <div style={{ padding: '2rem', textAlign: 'center' }}>Chargement…</div>;
+  }
   if (!note) {
     return (
       <div style={{ padding: '2rem', textAlign: 'center' }}>
