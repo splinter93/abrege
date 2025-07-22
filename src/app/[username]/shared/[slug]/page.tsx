@@ -105,12 +105,9 @@ export default async function Page(props: any) {
                         minHeight: '60vh',
                         pointerEvents: 'auto',
                         userSelect: 'text',
-                        whiteSpace: 'pre-wrap',
-                        fontFamily: 'Noto Sans, Inter, Arial, sans-serif',
                       }}
-                    >
-                      {note.markdown_content || note.html_content || ''}
-                    </div>
+                      dangerouslySetInnerHTML={{ __html: note.html_content || '' }}
+                    />
                   </div>
                 </div>
                 {/* Footer discret */}
