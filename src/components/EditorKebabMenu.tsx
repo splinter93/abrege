@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { FiShare2, FiDownload, FiCheck } from 'react-icons/fi';
+import { FiShare2, FiDownload, FiCheck, FiCopy } from 'react-icons/fi';
 import './editor-kebab-menu.css';
 
 interface EditorKebabMenuProps {
@@ -155,14 +155,15 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
           {published && publishedUrl && (
             <button
               style={{
-                ...menuItemStyle,
-                padding: '6px 8px',
-                fontSize: 13,
-                color: '#e55a2c',
                 background: 'none',
-                border: '1px solid #e55a2c',
-                borderRadius: 6,
+                border: 'none',
+                color: '#e55a2c',
                 cursor: 'pointer',
+                padding: '4px',
+                borderRadius: 4,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
                 transition: 'all 0.15s',
               }}
               onClick={async () => {
@@ -171,15 +172,15 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
                   // Feedback visuel temporaire
                   const button = document.activeElement as HTMLButtonElement;
                   if (button) {
-                    const originalText = button.textContent;
-                    button.textContent = 'Copié !';
-                    button.style.background = '#e55a2c';
-                    button.style.color = '#fff';
-                    setTimeout(() => {
-                      button.textContent = originalText;
-                      button.style.background = 'none';
-                      button.style.color = '#e55a2c';
-                    }, 1000);
+                    const icon = button.querySelector('svg');
+                    if (icon) {
+                      icon.style.color = '#fff';
+                      icon.style.transform = 'scale(1.1)';
+                      setTimeout(() => {
+                        icon.style.color = '#e55a2c';
+                        icon.style.transform = 'scale(1)';
+                      }, 1000);
+                    }
                   }
                 } catch (err) {
                   console.error('Erreur copie:', err);
@@ -187,7 +188,7 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
               }}
               title="Copier l'URL de partage"
             >
-              Copier URL
+              <FiCopy size={16} />
             </button>
           )}
         </div>
