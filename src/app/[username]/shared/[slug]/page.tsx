@@ -74,6 +74,58 @@ export default async function Page(props: any) {
             padding: 0;
           }
           
+          /* TITRES */
+          .markdown-body h1 {
+            font-size: 2.25rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin: 2rem 0 1rem 0;
+            line-height: 1.1;
+            font-family: 'Noto Sans, Inter, Arial, sans-serif';
+          }
+          .markdown-body h2 {
+            font-size: 1.875rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 1.75rem 0 0.75rem 0;
+            line-height: 1.2;
+          }
+          .markdown-body h3 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 1.5rem 0 0.5rem 0;
+            line-height: 1.3;
+          }
+          .markdown-body h4 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 1.25rem 0 0.5rem 0;
+            line-height: 1.4;
+          }
+          .markdown-body h5 {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 1rem 0 0.5rem 0;
+            line-height: 1.4;
+          }
+          .markdown-body h6 {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 1rem 0 0.5rem 0;
+            line-height: 1.4;
+          }
+          
+          /* PARAGRAPHES */
+          .markdown-body p {
+            margin: 1rem 0;
+            line-height: 1.8;
+            color: var(--text-1);
+          }
+          
           /* LISTES */
           .markdown-body ul,
           .markdown-body ol {
@@ -87,6 +139,49 @@ export default async function Page(props: any) {
             margin-bottom: 0.12em;
             line-height: 1.5;
             padding-left: 0.2rem;
+          }
+          
+          /* LIENS */
+          .markdown-body a {
+            color: var(--accent-hover);
+            text-decoration: none;
+            filter: brightness(0.8);
+            transition: filter 0.15s;
+          }
+          .markdown-body a:hover {
+            color: var(--accent-primary);
+            filter: brightness(0.9);
+          }
+          
+          /* CODE */
+          .markdown-body code {
+            background: var(--surface-2);
+            color: var(--accent-primary);
+            padding: 0.2em 0.4em;
+            border-radius: 4px;
+            font-size: 0.9em;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+          }
+          .markdown-body pre {
+            background: var(--surface-2);
+            padding: 1rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 1rem 0;
+          }
+          .markdown-body pre code {
+            background: none;
+            padding: 0;
+            color: var(--text-1);
+          }
+          
+          /* BLOCKQUOTES */
+          .markdown-body blockquote {
+            border-left: 4px solid var(--accent-primary);
+            padding-left: 1rem;
+            margin: 1rem 0;
+            color: var(--text-2);
+            font-style: italic;
           }
           
           /* TABLEAUX */
@@ -141,6 +236,31 @@ export default async function Page(props: any) {
           }
           .markdown-body tbody tr:nth-child(even) td {
             background: var(--surface-1);
+          }
+          
+          /* IMAGES */
+          .markdown-body img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            margin: 1rem 0;
+          }
+          
+          /* HR */
+          .markdown-body hr {
+            border: none;
+            border-top: 1px solid var(--border-subtle);
+            margin: 2rem 0;
+          }
+          
+          /* STRONG ET EM */
+          .markdown-body strong {
+            font-weight: 600;
+            color: var(--text-primary);
+          }
+          .markdown-body em {
+            font-style: italic;
+            color: var(--text-2);
           }
         `
       }} />
