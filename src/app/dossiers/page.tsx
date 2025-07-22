@@ -25,11 +25,15 @@ const DossiersPage: React.FC = () => {
     }
   };
 
+  // Helper pour garantir un tableau
+  const ensureArray = (val: any) => Array.isArray(val) ? val : [];
+
   useEffect(() => {
     const fetchClasseurs = async () => {
       try {
         setLoading(true);
-        const fetchedClasseurs = await getClasseurs();
+        let fetchedClasseurs = await getClasseurs();
+        fetchedClasseurs = ensureArray(fetchedClasseurs);
         setClasseurs(fetchedClasseurs);
         // Vérifier que l'ID actif existe encore
         const lastActiveId = localStorage.getItem("activeClasseurId");
@@ -44,6 +48,7 @@ const DossiersPage: React.FC = () => {
         }
         setError(null);
       } catch (err: any) {
+        setClasseurs([]);
         console.error("Erreur lors de la récupération des classeurs:", err);
         setError("Impossible de charger les classeurs. Veuillez rafraîchir la page.");
         toast.error("Impossible de charger les classeurs.");
@@ -152,6 +157,9 @@ const DossiersPage: React.FC = () => {
 
   const activeClasseur = classeurs.find((c) => c.id === activeClasseurId) || null;
 
+  // Fallback dans le rendu
+  const safeClasseurs = Array.isArray(classeurs) ? classeurs : [];
+
   if (loading) {
     return <div>Chargement...</div>;
   }
@@ -163,7 +171,7 @@ const DossiersPage: React.FC = () => {
   return (
     <div className="dossiers-page-layout">
       <ClasseurTabs
-        classeurs={classeurs}
+        classeurs={safeClasseurs}
         setClasseurs={setClasseurs}
         activeClasseurId={activeClasseurId}
         onSelectClasseur={handleSelectClasseur}

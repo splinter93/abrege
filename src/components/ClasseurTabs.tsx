@@ -221,12 +221,15 @@ const ClasseurTabs: React.FC<ClasseurTabsProps> = ({
     window.dispatchEvent(new CustomEvent('drop-to-classeur', { detail: { classeurId, itemId, itemType } }));
   };
 
+  // Robustesse : toujours un tableau pour éviter les erreurs React #310
+  const safeClasseurs = Array.isArray(classeurs) ? classeurs : [];
+
   return (
     <div className="classeur-tabs-glass-wrapper">
       <div className="classeur-tabs-btn-list">
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-          <SortableContext items={classeurs.map((c) => c.id)} strategy={horizontalListSortingStrategy}>
-            {classeurs.map((classeur) => {
+          <SortableContext items={safeClasseurs.map((c) => c.id)} strategy={horizontalListSortingStrategy}>
+            {safeClasseurs.map((classeur) => {
               const sortable = useSortable({ id: classeur.id });
               return (
                 <SortableTab
