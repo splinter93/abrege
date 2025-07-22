@@ -2,7 +2,7 @@ import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 import type { NextRequest } from 'next/server';
 import type { Article } from '@/types/supabase';
-import { resolveNoteRef } from '@/middleware/resourceResolver';
+import { resolveNoteRef, resolveClasseurRef, resolveFolderRef } from '@/middleware/resourceResolver';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -45,10 +45,50 @@ export async function PATCH(req: NextRequest, { params }: any): Promise<Response
     const USER_ID = "3223651c-5580-4471-affb-b3f4456bd729";
     const noteId = await resolveNoteRef(ref, USER_ID);
     
-    // Mettre à jour la note
+    // Résoudre les références de destination vers les vrais UUIDs
+    let targetClasseurId: string | undefined;
+    let targetFolderId: string | null | undefined;
+    
+    if (body.target_classeur_id) {
+      targetClasseurId = await resolveClasseurRef(body.target_classeur_id, USER_ID);
+      
+      // Vérifier que le classeur existe
+      const { data: classeur, error: classeurError } = await supabase
+        .from('classeurs')
+        .select('id')
+        .eq('id', targetClasseurId)
+        .eq('user_id', USER_ID)
+        .single();
+      
+      if (classeurError || !classeur) {
+        return new Response(JSON.stringify({ error: `Classeur de destination "${body.target_classeur_id}" non trouvé.` }), { status: 404 });
+      }
+    }
+    
+    if (body.target_folder_id !== undefined) {
+      if (body.target_folder_id === null) {
+        targetFolderId = null;
+      } else {
+        targetFolderId = await resolveFolderRef(body.target_folder_id, USER_ID);
+        
+        // Vérifier que le dossier existe
+        const { data: folder, error: folderError } = await supabase
+          .from('folders')
+          .select('id')
+          .eq('id', targetFolderId)
+          .eq('user_id', USER_ID)
+          .single();
+        
+        if (folderError || !folder) {
+          return new Response(JSON.stringify({ error: `Dossier de destination "${body.target_folder_id}" non trouvé.` }), { status: 404 });
+        }
+      }
+    }
+    
+    // Mettre à jour la note avec les UUIDs résolus
     const updates: any = {};
-    if ('target_classeur_id' in body) updates.classeur_id = body.target_classeur_id;
-    if ('target_folder_id' in body) updates.folder_id = body.target_folder_id || null;
+    if (targetClasseurId !== undefined) updates.classeur_id = targetClasseurId;
+    if (targetFolderId !== undefined) updates.folder_id = targetFolderId;
     if ('position' in body) updates.position = body.position;
     updates.updated_at = new Date().toISOString();
     const { data: updated, error } = await supabase
