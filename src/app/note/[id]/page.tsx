@@ -12,7 +12,7 @@ import { EditorContent } from '@tiptap/react';
 import slugify from 'slugify';
 import type { Heading } from '@/types/editor';
 import { useParams } from 'next/navigation';
-import { updateArticle } from '@/services/api';
+import { updateNoteREST } from '@/services/api';
 import { getArticleById } from '@/services/supabase';
 import useEditorSave from '@/hooks/useEditorSave';
 import toast from 'react-hot-toast';
@@ -33,6 +33,7 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '@/supabaseClient';
 import CustomImage from '@/extensions/CustomImage';
 import { useSession } from '@supabase/auth-helpers-react';
+import { publishNoteREST } from '@/services/api';
 type SlashCommand = {
   id: string;
   alias: Record<string, string>;
@@ -129,6 +130,7 @@ export default function NoteEditorPage() {
   const [hasInitialized, setHasInitialized] = React.useState(false);
   const params = useParams();
   const noteId = typeof params?.id === 'string' ? params.id : Array.isArray(params?.id) ? params.id[0] : '';
+  const [published, setPublished] = React.useState(false);
 
   // Hook de sauvegarde premium
   const { isSaving, handleSave } = useEditorSave({
@@ -137,11 +139,11 @@ export default function NoteEditorPage() {
     onSave: async ({ title, markdown_content, html_content, headerImage }) => {
       if (!noteId) return;
       try {
-        await updateArticle(noteId, {
-          sourceTitle: title,
-          markdownContent: markdown_content,
-          htmlContent: html_content,
-          headerImage,
+        await updateNoteREST(noteId, {
+          source_title: title,
+          markdown_content,
+          html_content,
+          header_image: headerImage,
         });
         setLastSaved(new Date());
       } catch (err) {
@@ -160,6 +162,7 @@ export default function NoteEditorPage() {
         if (note) {
           setTitle(note.source_title || '');
           setHeaderImageUrl(note.header_image || null);
+          setPublished(!!note.isPublished);
           editor.commands.setContent(note.markdown_content || '');
         }
         setHasInitialized(true);
@@ -186,6 +189,7 @@ export default function NoteEditorPage() {
         if (note) {
           setTitle(note.source_title || '');
           setHeaderImageUrl(note.header_image || null);
+          setPublished(!!note.isPublished);
           editor.commands.setContent(note.markdown_content || '');
         }
       })
@@ -250,7 +254,7 @@ export default function NoteEditorPage() {
 
   // Autosave à chaque modif (debounce 1s)
   React.useEffect(() => {
-    if (!editor) return;
+    if (!editor || !autosaveOn) return;
     let timeout: NodeJS.Timeout | null = null;
     let savingToastId: string | undefined;
     const triggerSave = () => {
@@ -278,17 +282,29 @@ export default function NoteEditorPage() {
         }
       );
       timeout = setTimeout(() => {
-        handleSave(title, editor.getText());
-        // Ferme le toast "sauvegarde en cours" après la sauvegarde (succès ou erreur)
+        handleSave(title, '');
         toast.dismiss('autosave-toast');
       }, 1000);
     };
     editor.on('transaction', triggerSave);
+
+    // --- PATCH : Sauvegarde immédiate avant de quitter l’onglet ---
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        if (timeout) {
+          clearTimeout(timeout);
+        }
+        handleSave(title, '');
+        toast.dismiss('autosave-toast');
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
     // Ajoute le raccourci clavier Cmd+S / Ctrl+S pour sauvegarde manuelle
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 's') {
         e.preventDefault();
-        handleSave(title, editor.getText());
+        handleSave(title, '');
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -297,8 +313,9 @@ export default function NoteEditorPage() {
       if (timeout) clearTimeout(timeout);
       toast.dismiss('autosave-toast');
       window.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [editor, title, handleSave]);
+  }, [editor, title, handleSave, autosaveOn]);
 
   // Autosave sur modification du titre ou de l'image (en plus du texte)
   React.useEffect(() => {
@@ -418,6 +435,7 @@ export default function NoteEditorPage() {
     if (note) {
       setTitle(note.source_title || '');
       setHeaderImageUrl(note.header_image || null);
+      setPublished(!!note.isPublished);
       editor.commands.setContent(note.markdown_content || '');
     }
   }, [editor, noteId]);
@@ -496,6 +514,17 @@ export default function NoteEditorPage() {
       toast.success('Image uploadée et insérée !');
     } catch (err: any) {
       toast.error('Erreur upload image : ' + (err.message || err));
+    }
+  };
+
+  // Handler pour le toggle Published
+  const handleTogglePublished = async (value: boolean) => {
+    try {
+      await publishNoteREST(noteId, value);
+      setPublished(value);
+      toast.success(value ? 'Note publiée !' : 'Note dépubliée.');
+    } catch (err: any) {
+      toast.error('Erreur lors de la mise à jour du statut de publication.');
     }
   };
 
@@ -712,6 +741,8 @@ export default function NoteEditorPage() {
         setAutosaveOn={setAutosaveOn}
         slashLang={slashLang}
         setSlashLang={setSlashLang}
+        published={published}
+        setPublished={handleTogglePublished}
       />
     </div>
   );

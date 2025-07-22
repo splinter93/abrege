@@ -52,6 +52,193 @@ export const updateItemPositions = (items: any[]): Promise<any> => sbUpdateItemP
 export const renameItem = (id: string, type: 'folder' | 'file', newName: string): Promise<any> => sbRenameItem(id, type, newName);
 export const moveItem = (id: string, newParentId: string): Promise<any> => sbMoveItem(id, newParentId);
 
+// --- NOUVELLES FONCTIONS REST LLM-FRIENDLY ---
+
+// Création de note via l'API REST
+const createNoteREST = async (payload: Record<string, any>) => {
+  const res = await fetch('/api/v1/note/create', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) throw new Error('Erreur création note: ' + (await res.text()));
+  const data = await res.json();
+  return data.note;
+};
+
+// Création de dossier via l'API REST
+const createFolderREST = async (payload: Record<string, any>) => {
+  const res = await fetch('/api/v1/folder/create', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) throw new Error('Erreur création dossier: ' + (await res.text()));
+  const data = await res.json();
+  return data.folder;
+};
+
+// Création de classeur via l'API REST
+const createNotebookREST = async (payload: Record<string, any>) => {
+  const res = await fetch('/api/v1/notebook/create', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) throw new Error('Erreur création classeur: ' + (await res.text()));
+  const data = await res.json();
+  return data.notebook;
+};
+
+// Mise à jour de note via l'API REST
+const updateNoteREST = async (ref: string, payload: Record<string, any>) => {
+  const res = await fetch(`/api/v1/note/${ref}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) throw new Error('Erreur update note: ' + (await res.text()));
+  const data = await res.json();
+  return data.note;
+};
+
+// Mise à jour de dossier via l'API REST
+const updateFolderREST = async (ref: string, payload: Record<string, any>) => {
+  const res = await fetch(`/api/v1/folder/${ref}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) throw new Error('Erreur update dossier: ' + (await res.text()));
+  const data = await res.json();
+  return data.folder;
+};
+
+// Mise à jour de classeur via l'API REST
+const updateNotebookREST = async (ref: string, payload: Record<string, any>) => {
+  const res = await fetch(`/api/v1/notebook/${ref}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) throw new Error('Erreur update classeur: ' + (await res.text()));
+  const data = await res.json();
+  return data.notebook;
+};
+
+// Renommage universel via l'API REST (note, folder, classeur)
+const renameItemREST = async (ref: string, type: 'note' | 'folder' | 'classeur', newName: string) => {
+  let endpoint = '';
+  let payload: Record<string, any> = {};
+  switch (type) {
+    case 'note':
+      endpoint = `/api/v1/note/${ref}`;
+      payload = { source_title: newName };
+      break;
+    case 'folder':
+      endpoint = `/api/v1/folder/${ref}`;
+      payload = { name: newName };
+      break;
+    case 'classeur':
+      endpoint = `/api/v1/notebook/${ref}`;
+      payload = { name: newName };
+      break;
+    default:
+      throw new Error('Type non supporté pour renameItemREST');
+  }
+  const res = await fetch(endpoint, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) throw new Error('Erreur renommage: ' + (await res.text()));
+  const data = await res.json();
+  if (type === 'note') return data.note;
+  if (type === 'folder') return data.folder;
+  if (type === 'classeur') return data.notebook;
+};
+
+// Déplacement de note via l'API REST
+const moveNoteREST = async (ref: string, payload: Record<string, any>) => {
+  const res = await fetch(`/api/v1/note/${ref}/move`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) throw new Error('Erreur move note: ' + (await res.text()));
+  const data = await res.json();
+  return data.note;
+};
+
+// Déplacement de dossier via l'API REST
+const moveFolderREST = async (ref: string, payload: Record<string, any>) => {
+  const res = await fetch(`/api/v1/dossier/${ref}/move`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) throw new Error('Erreur move dossier: ' + (await res.text()));
+  const data = await res.json();
+  return data.folder;
+};
+
+// Suppression de note via l'API REST
+const deleteNoteREST = async (ref: string) => {
+  const res = await fetch(`/api/v1/note/${ref}`, {
+    method: 'DELETE',
+  });
+  if (!res.ok) throw new Error('Erreur suppression note: ' + (await res.text()));
+  const data = await res.json();
+  return data.success;
+};
+
+// Suppression de dossier via l'API REST
+const deleteFolderREST = async (ref: string) => {
+  const res = await fetch(`/api/v1/folder/${ref}`, {
+    method: 'DELETE',
+  });
+  if (!res.ok) throw new Error('Erreur suppression dossier: ' + (await res.text()));
+  const data = await res.json();
+  return data.success;
+};
+
+// Suppression de classeur via l'API REST
+const deleteNotebookREST = async (ref: string) => {
+  const res = await fetch(`/api/v1/notebook/${ref}`, {
+    method: 'DELETE',
+  });
+  if (!res.ok) throw new Error('Erreur suppression classeur: ' + (await res.text()));
+  const data = await res.json();
+  return data.success;
+};
+
+// Publication/dépublication d'une note via l'API REST
+const publishNoteREST = async (ref: string, isPublished: boolean) => {
+  const res = await fetch('/api/v1/note/publish', {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ref, isPublished }),
+  });
+  if (!res.ok) throw new Error('Erreur publication note: ' + (await res.text()));
+  return await res.json();
+};
+
+export {
+  createNoteREST,
+  createFolderREST,
+  createNotebookREST,
+  updateNoteREST,
+  updateFolderREST,
+  updateNotebookREST,
+  renameItemREST,
+  moveNoteREST,
+  moveFolderREST,
+  deleteNoteREST,
+  deleteFolderREST,
+  deleteNotebookREST,
+  publishNoteREST
+};
+
 const api = {
   getClasseurs,
   createClasseur,

@@ -14,6 +14,8 @@ interface EditorKebabMenuProps {
   setAutosaveOn: (v: boolean) => void;
   slashLang: 'fr' | 'en';
   setSlashLang: (lang: 'fr' | 'en') => void;
+  published: boolean;
+  setPublished: (v: boolean) => void;
 }
 
 const menuItemStyle: React.CSSProperties = {
@@ -63,6 +65,8 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
   setAutosaveOn,
   slashLang,
   setSlashLang,
+  published,
+  setPublished,
 }) => {
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -144,6 +148,7 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
         <Toggle checked={autosaveOn} onChange={setAutosaveOn} label="Autosave" />
         <Toggle checked={wideMode} onChange={setWideMode} label="Wide Mode" />
         <Toggle checked={a4Mode} onChange={v => setA4Mode(!!v)} label="A4 Mode" />
+        <Toggle checked={published} onChange={setPublished} label="Published" />
       </div>
       <div style={menuDividerStyle} />
       {/* Groupe 3 : Langue du SlashMenu */}
