@@ -8,6 +8,7 @@ import { Folder, FileArticle } from './types';
 import SimpleContextMenu from './SimpleContextMenu';
 import './FolderManager.css';
 import { updateFolder, updateArticle } from '../services/supabase';
+import { toast } from 'react-hot-toast';
 
 interface FolderManagerProps {
   classeurId: string;
@@ -44,6 +45,8 @@ const FolderManager: React.FC<FolderManagerProps> = ({ classeurId, classeurName,
   const [contextMenuState, setContextMenuState] = useState<{ visible: boolean; x: number; y: number; item: any }>({ visible: false, x: 0, y: 0, item: null });
   // State pour feedback visuel du drop sur la racine
   const [isRootDropActive, setIsRootDropActive] = useState(false);
+
+  const refreshNow = useCallback(() => setRefreshKey(k => k + 1), []);
 
   // Handlers pour FolderContent
   const handleItemClick = (item: any) => {
@@ -155,23 +158,37 @@ const FolderManager: React.FC<FolderManagerProps> = ({ classeurId, classeurName,
     const handler = async (e: any) => {
       const { classeurId, itemId, itemType } = e.detail || {};
       if (!classeurId || !itemId || !itemType) return;
+      toast.loading('Déplacement en cours...');
       if (classeurId === classeurId) {
         // Si on drop sur le tab du classeur courant, ramener à la racine
-        moveItem(itemId, null, itemType);
+        await moveItem(itemId, null, itemType);
+        refreshNow();
+        toast.dismiss();
+        toast.success('Déplacement terminé !');
       } else {
         // Sinon, changer de classeur ET ramener à la racine
         if (itemType === 'folder') {
           try {
             const res = await updateFolder(itemId, { classeur_id: classeurId, parent_id: null });
             console.log('[DnD] updateFolder', { itemId, classeurId, res });
+            refreshNow();
+            toast.dismiss();
+            toast.success('Déplacement terminé !');
           } catch (err) {
+            toast.dismiss();
+            toast.error('Erreur lors du déplacement du dossier.');
             console.error('[DnD] updateFolder ERROR', err);
           }
         } else {
           try {
             const res = await updateArticle(itemId, { classeur_id: classeurId, folder_id: null });
             console.log('[DnD] updateArticle', { itemId, classeurId, res });
+            refreshNow();
+            toast.dismiss();
+            toast.success('Déplacement terminé !');
           } catch (err) {
+            toast.dismiss();
+            toast.error('Erreur lors du déplacement de la note.');
             console.error('[DnD] updateArticle ERROR', err);
           }
         }
@@ -181,12 +198,16 @@ const FolderManager: React.FC<FolderManagerProps> = ({ classeurId, classeurName,
     };
     window.addEventListener('drop-to-classeur', handler as any);
     return () => window.removeEventListener('drop-to-classeur', handler as any);
-  }, [classeurId, moveItem]);
+  }, [classeurId, moveItem, refreshNow]);
 
   // (refreshCurrentView supprimé, remplacé par refreshKey)
 
   // Breadcrumb local basé sur folderPath
   const breadcrumb = folderPath;
+
+  // Robustesse : toujours un tableau pour éviter les erreurs React #310
+  const safeFolders = Array.isArray(folders) ? folders : [];
+  const safeFiles = Array.isArray(files) ? files : [];
 
   // Raccourci clavier : Escape ramène à la racine du classeur actif
   React.useEffect(() => {
@@ -308,9 +329,9 @@ const FolderManager: React.FC<FolderManagerProps> = ({ classeurId, classeurName,
         </div>
       </div>
       <FolderContent
-        classeurName={(currentFolderId && folders.find(f => f.id === currentFolderId)?.name) ? folders.find(f => f.id === currentFolderId)?.name! : classeurName || ''}
-        folders={folders}
-        files={files}
+        classeurName={(currentFolderId && safeFolders.find(f => f.id === currentFolderId)?.name) ? safeFolders.find(f => f.id === currentFolderId)?.name! : classeurName || ''}
+        folders={safeFolders}
+        files={safeFiles}
         loading={loading}
         error={error}
         onFolderOpen={handleFolderOpen}

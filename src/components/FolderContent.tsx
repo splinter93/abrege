@@ -43,6 +43,9 @@ const FolderContent: React.FC<FolderContentProps> = ({
   onStartRenameFileClick,
 }) => {
   console.log('[DND] FolderContent render onDropItem', typeof onDropItem, onDropItem);
+  // Robustesse : toujours un tableau pour éviter les erreurs React #310
+  const safeFolders = Array.isArray(folders) ? folders : [];
+  const safeFiles = Array.isArray(files) ? files : [];
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[240px] text-muted-foreground">
@@ -59,7 +62,7 @@ const FolderContent: React.FC<FolderContentProps> = ({
       </div>
     );
   }
-  if (folders.length === 0 && files.length === 0) {
+  if (safeFolders.length === 0 && safeFiles.length === 0) {
     return (
       emptyMessage ? (
         emptyMessage
@@ -76,7 +79,7 @@ const FolderContent: React.FC<FolderContentProps> = ({
     <div style={{ width: '100%', maxWidth: 1400, margin: '32px auto 0 auto', padding: '0 32px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
       {/* Grille dossiers */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 gap-y-8" style={{justifyItems:'center', width: '100%'}}>
-        {folders.map(folder => (
+        {safeFolders.map(folder => (
           <FolderItem
             key={folder.id}
             folder={folder}
@@ -89,8 +92,8 @@ const FolderContent: React.FC<FolderContentProps> = ({
               // Ne traiter le drop que si l’item ET la cible existent dans la vue locale
               const isFolder = itemType === 'folder';
               const isFile = itemType === 'file';
-              const itemExists = (isFolder && folders.some(f => f.id === itemId)) || (isFile && files.some(f => f.id === itemId));
-              const targetExists = folders.some(f => f.id === folder.id);
+              const itemExists = (isFolder && safeFolders.some(f => f.id === itemId)) || (isFile && safeFiles.some(f => f.id === itemId));
+              const targetExists = safeFolders.some(f => f.id === folder.id);
               if (!itemExists || !targetExists) return;
               console.log('[DND] FolderContent transmit', { itemId, itemType, folderId: folder.id });
               if (onDropItem) {
@@ -106,7 +109,7 @@ const FolderContent: React.FC<FolderContentProps> = ({
       {/* Grille fichiers rapprochée */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 gap-y-8" style={{justifyItems:'center', width: '100%', marginTop: 25 }}>
         <AnimatePresence initial={false}>
-          {files.map(file => (
+          {safeFiles.map(file => (
             <motion.div
               key={file.id}
               initial={{ opacity: 0, scale: 0.92 }}
