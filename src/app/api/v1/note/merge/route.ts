@@ -52,15 +52,31 @@ export async function POST(req: NextRequest): Promise<Response> {
         { status: 422 }
       );
     }
+    // [TEMP] USER_ID HARDCODED FOR DEV/LLM
+    const USER_ID = "3223651c-5580-4471-affb-b3f4456bd729";
+    // Résoudre tous les note_ids (slug ou id)
+    const resolvedNoteIds: string[] = [];
+    for (const ref of note_ids) {
+      try {
+        // eslint-disable-next-line no-await-in-loop
+        const id = await (await import('@/middleware/resourceResolver')).resolveNoteRef(ref, USER_ID);
+        resolvedNoteIds.push(id);
+      } catch {
+        return new Response(
+          JSON.stringify({ error: `Note introuvable ou non accessible : ${ref}` }),
+          { status: 404 }
+        );
+      }
+    }
     // Récupérer toutes les notes
     const { data: notes, error } = await supabase
       .from('articles')
       .select('id, source_title, markdown_content')
-      .in('id', note_ids);
+      .in('id', resolvedNoteIds);
     if (error) {
       return new Response(JSON.stringify({ error: error.message }), { status: 500 });
     }
-    if (!notes || notes.length < note_ids.length) {
+    if (!notes || notes.length < resolvedNoteIds.length) {
       return new Response(
         JSON.stringify({ error: 'Certaines notes sont introuvables.' }),
         { status: 404 }
@@ -69,9 +85,12 @@ export async function POST(req: NextRequest): Promise<Response> {
     // Ordonner les notes selon order[] si fourni, sinon note_ids
     let orderedNotes = notes;
     if (order && order.length === note_ids.length) {
-      orderedNotes = order.map(id => notes.find(n => n.id === id)).filter(Boolean) as typeof notes;
+      orderedNotes = order.map(ref => {
+        const idx = note_ids.indexOf(ref);
+        return notes.find(n => n.id === resolvedNoteIds[idx]);
+      }).filter(Boolean) as typeof notes;
     } else {
-      orderedNotes = note_ids.map(id => notes.find(n => n.id === id)).filter(Boolean) as typeof notes;
+      orderedNotes = note_ids.map((ref, i) => notes.find(n => n.id === resolvedNoteIds[i])).filter(Boolean) as typeof notes;
     }
     // Concaténer les contenus avec deux sauts de ligne
     const merged_content = orderedNotes.map(n => n.markdown_content?.trim() || '').join('\n\n');
