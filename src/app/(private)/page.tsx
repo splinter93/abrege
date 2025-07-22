@@ -1,9 +1,9 @@
 'use client';
 
 import React from 'react';
-import ContentCard from '../components/ContentCard';
-import { useLanguageContext } from '../contexts/LanguageContext';
-import './globals.css';
+import ContentCard from '../../components/ContentCard';
+import { useLanguageContext } from '../../contexts/LanguageContext';
+import '../globals.css';
 
 const mockNotes = [
   {

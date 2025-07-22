@@ -1,10 +1,10 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import FolderManager from "../../components/FolderManager";
-import ClasseurTabs, { Classeur } from "../../components/ClasseurTabs";
-import DynamicIcon from "../../components/DynamicIcon";
-import { getClasseurs, createClasseur, updateClasseur, deleteClasseur, updateClasseurPositions } from "../../services/supabase";
-import { supabase } from "../../supabaseClient";
+import FolderManager from "../../../components/FolderManager";
+import ClasseurTabs, { Classeur } from "../../../components/ClasseurTabs";
+import DynamicIcon from "../../../components/DynamicIcon";
+import { getClasseurs, createClasseur, updateClasseur, deleteClasseur, updateClasseurPositions } from "../../../services/supabase";
+import { supabase } from "../../../supabaseClient";
 import { toast } from "react-hot-toast";
 import "./DossiersPage.css";
 

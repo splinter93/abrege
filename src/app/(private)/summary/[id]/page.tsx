@@ -1,7 +1,7 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
-import { sendPayloadToSynesia } from '../../../actions/synesia';
+import { sendPayloadToSynesia } from '../../../../actions/synesia';
 import { toast } from 'react-hot-toast';
 import './SummaryPage.css';
 import { motion } from 'framer-motion';
