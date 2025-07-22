@@ -6,7 +6,7 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 export default async function Page(props: any) {
-  const { username, slug } = props.params;
+  const { username, slug } = await props.params;
 
   // Chercher l'utilisateur par username
   const { data: user, error: userError } = await supabase
