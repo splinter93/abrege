@@ -19,6 +19,12 @@ export async function PATCH(req: NextRequest, { params }: any): Promise<Response
   try {
     const paramSchema = z.object({ ref: z.string().min(1, 'dossier_ref requis') });
     const body: MoveDossierPayload = await req.json();
+
+    // --- Correction alias LLM/legacy ---
+    if ('target_notebook_id' in body && !('target_classeur_id' in body)) {
+      body.target_classeur_id = String(body.target_notebook_id);
+    }
+
     const bodySchema = z.object({
       target_classeur_id: z.string().optional(),
       target_parent_id: z.string().nullable().optional(),
@@ -75,15 +81,22 @@ export async function PATCH(req: NextRequest, { params }: any): Promise<Response
     if (resolvedClasseurId !== undefined) updates.classeur_id = resolvedClasseurId;
     if (resolvedParentId !== undefined) updates.parent_id = resolvedParentId;
     if ('position' in body) updates.position = body.position;
+    if (Object.keys(updates).length === 0) {
+      return new Response(JSON.stringify({ error: 'Aucun champ à mettre à jour.' }), { status: 400 });
+    }
     const { data: updated, error } = await supabase
       .from('folders')
       .update(updates)
       .eq('id', folderId)
-      .select();
+      .select()
+      .single();
     if (error) {
       return new Response(JSON.stringify({ error: error.message }), { status: 500 });
     }
-    return new Response(JSON.stringify({ dossier: updated }), { status: 200 });
+    if (!updated) {
+      return new Response(JSON.stringify({ error: 'Aucun dossier mis à jour (slug/id incorrect ?)' }), { status: 404 });
+    }
+    return new Response(JSON.stringify({ folder: updated }), { status: 200 });
   } catch (err: any) {
     return new Response(JSON.stringify({ error: err.message }), { status: 500 });
   }
