@@ -34,6 +34,7 @@ export async function POST(req: NextRequest): Promise<Response> {
       title: z.string().min(1).optional(),
       classeur_id: z.string().optional(),
       folder_id: z.string().optional(),
+      notebook_id: z.string().optional(), // alias LLM-friendly
     });
     const parseResult = schema.safeParse(body);
     if (!parseResult.success) {
@@ -42,7 +43,15 @@ export async function POST(req: NextRequest): Promise<Response> {
         { status: 422 }
       );
     }
-    const { note_ids, order, create_new, title, classeur_id, folder_id } = parseResult.data;
+    const { note_ids, order, create_new, title, classeur_id, folder_id, notebook_id } = parseResult.data;
+    // Si create_new, notebook/classeur est obligatoire
+    let finalClasseurId = classeur_id || notebook_id;
+    if (create_new && !finalClasseurId) {
+      return new Response(
+        JSON.stringify({ error: 'classeur_id (ou notebook_id) obligatoire pour créer une note fusionnée.' }),
+        { status: 422 }
+      );
+    }
     // Récupérer toutes les notes
     const { data: notes, error } = await supabase
       .from('articles')
@@ -75,7 +84,7 @@ export async function POST(req: NextRequest): Promise<Response> {
         markdown_content: merged_content,
         html_content: '', // à générer côté front ou via un service si besoin
         folder_id: folder_id || null,
-        classeur_id: classeur_id || null,
+        classeur_id: finalClasseurId,
       };
       // Optionnel : générer le html_content ici si tu as une fonction utilitaire
       const { data: inserted, error: insertError } = await supabase
