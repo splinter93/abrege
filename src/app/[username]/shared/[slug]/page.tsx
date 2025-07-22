@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import '@/styles/markdown.css';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -47,78 +48,89 @@ export default async function Page(props: any) {
     );
   }
 
-  // Afficher directement le contenu (pas de redirection)
-  return (
-    <div style={{ 
-      maxWidth: '800px', 
-      margin: '0 auto', 
-      padding: '2rem',
-      fontFamily: 'system-ui, -apple-system, sans-serif',
-      lineHeight: 1.6,
-      color: '#333'
-    }}>
-      {/* Header Image */}
-      {note.header_image && (
-        <img 
-          src={note.header_image} 
-          alt="Header"
-          style={{ 
-            width: '100%', 
-            height: '300px', 
-            objectFit: 'cover', 
-            borderRadius: '12px',
-            marginBottom: '2rem'
-          }}
-        />
-      )}
-      
-      {/* Titre */}
-      <h1 style={{ 
-        fontSize: '2.5rem', 
-        fontWeight: '700', 
-        marginBottom: '1rem',
-        color: '#1a1a1a'
-      }}>
-        {note.source_title}
-      </h1>
-      
-      {/* Métadonnées */}
-      <div style={{ 
-        color: '#666', 
-        fontSize: '0.9rem', 
-        marginBottom: '2rem',
-        borderBottom: '1px solid #eee',
-        paddingBottom: '1rem'
-      }}>
-        <span>Créé le {new Date(note.created_at).toLocaleDateString('fr-FR')}</span>
-        {note.updated_at !== note.created_at && (
-          <span style={{ marginLeft: '1rem' }}>
-            • Modifié le {new Date(note.updated_at).toLocaleDateString('fr-FR')}
-          </span>
-        )}
-      </div>
-      
-      {/* Contenu HTML */}
-      <div 
-        className="markdown-body"
-        dangerouslySetInnerHTML={{ __html: note.html_content || '' }}
-        style={{
-          fontSize: '1.1rem',
-          lineHeight: 1.7
-        }}
-      />
-      
-      {/* Footer */}
-      <div style={{ 
-        marginTop: '3rem', 
-        paddingTop: '2rem', 
-        borderTop: '1px solid #eee',
-        textAlign: 'center',
-        color: '#666',
-        fontSize: '0.9rem'
-      }}>
-        <p>Partagé via Abrège</p>
-      </div>
-    </div>
-  );
+            // Afficher directement le contenu avec le même design que la preview de l'éditeur
+          return (
+            <div style={{ 
+              width: '100vw', 
+              minHeight: '100vh', 
+              background: '#1a1a1a', 
+              paddingBottom: 64, 
+              overflowY: 'auto', 
+              height: '100vh' 
+            }}>
+              {/* Header Image */}
+              {note.header_image && (
+                <div style={{ width: '100%', maxHeight: 300, overflow: 'hidden', marginBottom: 32 }}>
+                  <img
+                    src={note.header_image}
+                    alt="Header"
+                    style={{ width: '100%', objectFit: 'cover', maxHeight: 300, borderRadius: 0 }}
+                    draggable={false}
+                  />
+                </div>
+              )}
+
+              {/* Layout principal avec centrage */}
+              <div style={{ 
+                width: '100%', 
+                display: 'flex', 
+                flexDirection: 'row', 
+                justifyContent: 'center', 
+                alignItems: 'flex-start', 
+                margin: '0 auto', 
+                marginBottom: 32, 
+                gap: 32 
+              }}>
+                <div style={{ maxWidth: 750, width: 750 }}>
+                  {/* Titre */}
+                  <h1 style={{
+                    fontSize: '2.25rem',
+                    fontWeight: 700,
+                    color: '#ffffff',
+                    margin: 0,
+                    padding: 0,
+                    textAlign: 'left',
+                    maxWidth: 750,
+                    width: 750,
+                    lineHeight: 1.1,
+                    fontFamily: 'Noto Sans, Inter, Arial, sans-serif',
+                  }}>
+                    {note.source_title}
+                  </h1>
+                  
+                  <div style={{ height: 18 }} />
+                  
+                  {/* Contenu HTML */}
+                  <div
+                    className="markdown-body"
+                    style={{
+                      maxWidth: 750,
+                      width: 750,
+                      margin: '0 auto',
+                      background: 'none',
+                      padding: '0 0 64px 0',
+                      fontSize: '1.13rem',
+                      color: '#ffffff',
+                      minHeight: '60vh',
+                      pointerEvents: 'auto',
+                      userSelect: 'text',
+                    }}
+                    dangerouslySetInnerHTML={{ __html: note.html_content || '' }}
+                  />
+                </div>
+              </div>
+
+              {/* Footer discret */}
+              <div style={{
+                position: 'fixed',
+                bottom: 16,
+                right: 16,
+                color: '#b3a9a0',
+                fontSize: '0.8rem',
+                opacity: 0.6
+              }}>
+                Partagé via Abrège
+              </div>
+            </div>
+          );
 } 
