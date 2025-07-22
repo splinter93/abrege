@@ -12,6 +12,15 @@ import {
   moveItemUniversal
 } from '../services/supabase';
 import { supabase } from '../supabaseClient';
+import {
+  createNoteREST,
+  createFolderREST,
+  renameItemREST,
+  deleteNoteREST,
+  deleteFolderREST,
+  moveNoteREST,
+  moveFolderREST
+} from '../services/api';
 
 // Types pour le renommage
 export type RenamingType = 'folder' | 'file' | null;
@@ -152,9 +161,71 @@ export function useFolderManagerState(classeurId: string, parentFolderId?: strin
     setRenamingType(type);
   }, []);
 
+  // --- CRÉATION / SUPPRESSION ---
+  const createFolder = useCallback(async (name: string): Promise<Folder | undefined> => {
+    try {
+      const newFolder = await createFolderREST({
+        name,
+        notebook_id: classeurId,
+        parent_id: currentFolderId,
+      });
+      setFolders(folders => [...folders, newFolder]);
+      return newFolder;
+    } catch (err) {
+      setError('Erreur lors de la création du dossier.');
+      return undefined;
+    }
+  }, [classeurId, currentFolderId, folders.length]);
+
+  const DEFAULT_HEADER_IMAGE = 'https://images.unsplash.com/photo-1443890484047-5eaa67d1d630?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D';
+
+  const createFile = useCallback(async (name: string): Promise<FileArticle | undefined> => {
+    try {
+      const payload: any = {
+        source_title: name,
+        notebook_id: classeurId,
+        markdown_content: '# ' + name,
+        header_image: DEFAULT_HEADER_IMAGE,
+      };
+      if (currentFolderId) {
+        payload.folder_id = currentFolderId;
+      }
+      console.log('Payload createNoteREST', payload);
+      const newFile = await createNoteREST(payload);
+      setFiles(files => [...files, newFile]);
+      return newFile;
+    } catch (err) {
+      setError('Erreur lors de la création du fichier.');
+      return undefined;
+    }
+  }, [classeurId, currentFolderId, files.length]);
+
+  const deleteFolder = useCallback(async (id: string) => {
+    try {
+      await deleteFolderREST(id);
+      setFolders(folders => folders.filter(f => f.id !== id));
+      if (currentFolderId === id) {
+        setCurrentFolderId(null);
+        setCurrentFolder(null);
+      }
+    } catch (err) {
+      setError('Erreur lors de la suppression du dossier.');
+    }
+  }, [currentFolderId]);
+
+  const deleteFile = useCallback(async (id: string) => {
+    try {
+      await deleteNoteREST(id);
+      setFiles(files => files.filter(f => f.id !== id));
+    } catch (err) {
+      setError('Erreur lors de la suppression du fichier.');
+    }
+  }, []);
+
+  // --- RENOMMAGE ---
   const submitRename = useCallback(async (id: string, newName: string, type: 'folder' | 'file') => {
     try {
-      await apiRenameItem(id, type, newName);
+      await renameItemREST(id, type === 'file' ? 'note' : 'folder', newName);
       if (type === 'folder') {
         setFolders(folders => folders.map(f => f.id === id ? { ...f, name: newName } : f));
       } else {
@@ -192,70 +263,20 @@ export function useFolderManagerState(classeurId: string, parentFolderId?: strin
     }
   }, []);
 
-  // --- CRÉATION / SUPPRESSION ---
-  const createFolder = useCallback(async (name: string): Promise<Folder | undefined> => {
-    try {
-      const newFolder = await apiCreateFolder({
-        name,
-        classeurId,
-        parentId: currentFolderId,
-        position: folders.length,
-        type: 'folder',
-      });
-      setFolders(folders => [...folders, newFolder]);
-      return newFolder;
-    } catch (err) {
-      setError('Erreur lors de la création du dossier.');
-      return undefined;
-    }
-  }, [classeurId, currentFolderId, folders.length]);
-
-  const DEFAULT_HEADER_IMAGE = 'https://images.unsplash.com/photo-1443890484047-5eaa67d1d630?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D';
-
-  const createFile = useCallback(async (name: string): Promise<FileArticle | undefined> => {
-    try {
-      const newFile = await apiCreateFile({
-        source_title: name,
-        classeur_id: classeurId,
-        folder_id: currentFolderId,
-        position: files.length,
-        source_type: 'markdown',
-        header_image: DEFAULT_HEADER_IMAGE,
-      });
-      setFiles(files => [...files, newFile]);
-      return newFile;
-    } catch (err) {
-      setError('Erreur lors de la création du fichier.');
-      return undefined;
-    }
-  }, [classeurId, currentFolderId, files.length]);
-
-  const deleteFolder = useCallback(async (id: string) => {
-    try {
-      await apiDeleteFolder(id);
-      setFolders(folders => folders.filter(f => f.id !== id));
-      if (currentFolderId === id) {
-        setCurrentFolderId(null);
-        setCurrentFolder(null);
-      }
-    } catch (err) {
-      setError('Erreur lors de la suppression du dossier.');
-    }
-  }, [currentFolderId]);
-
-  const deleteFile = useCallback(async (id: string) => {
-    try {
-      await apiDeleteFile(id);
-      setFiles(files => files.filter(f => f.id !== id));
-    } catch (err) {
-      setError('Erreur lors de la suppression du fichier.');
-    }
-  }, []);
-
   // --- IMBRICATION DnD ---
   const moveItem = useCallback(async (id: string, newParentId: string | null, type: 'folder' | 'file') => {
     try {
-      await moveItemUniversal(id, newParentId, type);
+      if (type === 'folder') {
+        await moveFolderREST(id, {
+          target_classeur_id: classeurId,
+          target_parent_id: newParentId,
+        });
+      } else {
+        await moveNoteREST(id, {
+          target_classeur_id: classeurId,
+          target_folder_id: newParentId,
+        });
+      }
       // Rafraîchir les dossiers/fichiers
       const [fetchedFolders, fetchedFiles] = await Promise.all([
         getFolders(classeurId, parentFolderId),
