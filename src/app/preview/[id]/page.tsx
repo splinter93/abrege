@@ -12,18 +12,19 @@ interface PreviewPageProps {
 export default async function PreviewPage({ params }: PreviewPageProps) {
   const { id } = await params;
   
-  // Récupérer la note
+  // Récupérer la note (seulement si publiée)
   const { data: note, error } = await supabase
     .from('articles')
     .select('source_title, html_content, header_image, created_at, updated_at')
     .eq('id', id)
+    .eq('ispublished', true)
     .single();
 
   if (error || !note) {
     return (
       <div style={{ padding: '2rem', textAlign: 'center' }}>
-        <h1>Note non trouvée</h1>
-        <p>Cette note n'existe pas ou n'est pas accessible.</p>
+        <h1>Note non trouvée ou non publiée</h1>
+        <p>Cette note n'existe pas ou n'est pas accessible publiquement.</p>
       </div>
     );
   }
