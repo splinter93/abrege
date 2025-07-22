@@ -50,7 +50,24 @@ export default async function Page(props: any) {
 
                         // Afficher directement le contenu avec le même design que la preview de l'éditeur
           return (
-            <div style={{ width: '100vw', minHeight: '100vh', background: '#1a1a1a', paddingBottom: 64, overflowY: 'auto', height: '100vh' }}>
+            <>
+              <style dangerouslySetInnerHTML={{
+                __html: `
+                  :root {
+                    --bg-main: #1a1a1a;
+                    --text-primary: #ffffff;
+                    --text-1: #ffffff;
+                    --text-2: #b3a9a0;
+                    --text-3: #888888;
+                    --accent-primary: #e55a2c;
+                    --accent-hover: #f97316;
+                    --surface-1: #2a2a2a;
+                    --surface-2: #3a3a3a;
+                    --border-subtle: #404040;
+                  }
+                `
+              }} />
+              <div style={{ width: '100vw', minHeight: '100vh', background: '#1a1a1a', paddingBottom: 64, overflowY: 'auto', height: '100vh' }}>
                 {note.header_image && (
                   <div style={{ width: '100%', maxHeight: 300, overflow: 'hidden', marginBottom: 32 }}>
                     <img
@@ -63,18 +80,18 @@ export default async function Page(props: any) {
                 )}
                 <div style={{ width: '100%', display: 'flex', flexDirection: 'row', justifyContent: 'center', alignItems: 'flex-start', margin: '0 auto', marginBottom: 32, gap: 32 }}>
                   <div style={{ maxWidth: 750, width: 750 }}>
-                    <h1 style={{
-                      fontSize: '2.25rem',
-                      fontWeight: 700,
-                      color: '#ffffff',
-                      margin: 0,
-                      padding: 0,
-                      textAlign: 'left',
-                      maxWidth: 750,
-                      width: 750,
-                      lineHeight: 1.1,
-                      fontFamily: 'Noto Sans, Inter, Arial, sans-serif',
-                    }}>{note.source_title}</h1>
+                                      <h1 style={{
+                    fontSize: '2.25rem',
+                    fontWeight: 700,
+                    color: 'var(--text-primary)',
+                    margin: 0,
+                    padding: 0,
+                    textAlign: 'left',
+                    maxWidth: 750,
+                    width: 750,
+                    lineHeight: 1.1,
+                    fontFamily: 'Noto Sans, Inter, Arial, sans-serif',
+                  }}>{note.source_title}</h1>
                     <div style={{ height: 18 }} />
                     <div
                       className="markdown-body"
@@ -85,7 +102,7 @@ export default async function Page(props: any) {
                         background: 'none',
                         padding: '0 0 64px 0',
                         fontSize: '1.13rem',
-                        color: '#ffffff',
+                        color: 'var(--text-primary)',
                         minHeight: '60vh',
                         pointerEvents: 'auto',
                         userSelect: 'text',
@@ -94,17 +111,18 @@ export default async function Page(props: any) {
                     />
                   </div>
                 </div>
-                {/* Footer discret */}
-                <div style={{
-                  position: 'fixed',
-                  bottom: 16,
-                  right: 16,
-                  color: '#b3a9a0',
-                  fontSize: '0.8rem',
-                  opacity: 0.6
-                }}>
-                  Crafted with Scrivia
-                </div>
+                              {/* Footer discret */}
+              <div style={{
+                position: 'fixed',
+                bottom: 16,
+                right: 16,
+                color: '#b3a9a0',
+                fontSize: '0.8rem',
+                opacity: 0.6
+              }}>
+                Crafted with Scrivia
               </div>
+            </div>
+            </>
           );
 } 
