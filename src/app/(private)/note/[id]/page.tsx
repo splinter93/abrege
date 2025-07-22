@@ -131,6 +131,7 @@ export default function NoteEditorPage() {
   const params = useParams();
   const noteId = typeof params?.id === 'string' ? params.id : Array.isArray(params?.id) ? params.id[0] : '';
   const [published, setPublished] = React.useState(false);
+  const [publishedUrl, setPublishedUrl] = React.useState<string | null>(null);
 
   // Hook de sauvegarde premium
   const { isSaving, handleSave } = useEditorSave({
@@ -163,6 +164,11 @@ export default function NoteEditorPage() {
           setTitle(note.source_title || '');
           setHeaderImageUrl(note.header_image || null);
           setPublished(!!note.isPublished);
+          // Générer l'URL publiée si la note est publiée
+          if (note.isPublished) {
+            const username = 'splinter'; // TODO: récupérer le vrai username
+            setPublishedUrl(`https://abrege93.vercel.app/@${username}/shared/id/${noteId}`);
+          }
           editor.commands.setContent(note.markdown_content || '');
         }
         setHasInitialized(true);
@@ -524,6 +530,7 @@ export default function NoteEditorPage() {
       setPublished(value);
       
       if (value && result.url) {
+        setPublishedUrl(result.url);
         // Afficher l'URL dans un toast avec possibilité de copier
         toast.success(
           <div>
@@ -537,6 +544,7 @@ export default function NoteEditorPage() {
           { duration: 5000 }
         );
       } else {
+        setPublishedUrl(null);
         toast.success(value ? 'Note publiée !' : 'Note dépubliée.');
       }
     } catch (err: any) {
@@ -759,6 +767,7 @@ export default function NoteEditorPage() {
         setSlashLang={setSlashLang}
         published={published}
         setPublished={handleTogglePublished}
+        publishedUrl={publishedUrl || undefined}
       />
     </div>
   );

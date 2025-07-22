@@ -16,6 +16,7 @@ interface EditorKebabMenuProps {
   setSlashLang: (lang: 'fr' | 'en') => void;
   published: boolean;
   setPublished: (v: boolean) => void;
+  publishedUrl?: string;
 }
 
 const menuItemStyle: React.CSSProperties = {
@@ -67,6 +68,7 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
   setSlashLang,
   published,
   setPublished,
+  publishedUrl,
 }) => {
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -148,7 +150,47 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
         <Toggle checked={autosaveOn} onChange={setAutosaveOn} label="Autosave" />
         <Toggle checked={wideMode} onChange={setWideMode} label="Wide Mode" />
         <Toggle checked={a4Mode} onChange={v => setA4Mode(!!v)} label="A4 Mode" />
-        <Toggle checked={published} onChange={setPublished} label="Published" />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <Toggle checked={published} onChange={setPublished} label="Published" />
+          {published && publishedUrl && (
+            <button
+              style={{
+                ...menuItemStyle,
+                padding: '6px 8px',
+                fontSize: 13,
+                color: '#e55a2c',
+                background: 'none',
+                border: '1px solid #e55a2c',
+                borderRadius: 6,
+                cursor: 'pointer',
+                transition: 'all 0.15s',
+              }}
+              onClick={async () => {
+                try {
+                  await navigator.clipboard.writeText(publishedUrl);
+                  // Feedback visuel temporaire
+                  const button = document.activeElement as HTMLButtonElement;
+                  if (button) {
+                    const originalText = button.textContent;
+                    button.textContent = 'Copié !';
+                    button.style.background = '#e55a2c';
+                    button.style.color = '#fff';
+                    setTimeout(() => {
+                      button.textContent = originalText;
+                      button.style.background = 'none';
+                      button.style.color = '#e55a2c';
+                    }, 1000);
+                  }
+                } catch (err) {
+                  console.error('Erreur copie:', err);
+                }
+              }}
+              title="Copier l'URL de partage"
+            >
+              Copier URL
+            </button>
+          )}
+        </div>
       </div>
       <div style={menuDividerStyle} />
       {/* Groupe 3 : Langue du SlashMenu */}
