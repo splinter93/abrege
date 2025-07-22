@@ -84,6 +84,7 @@ export async function PATCH(req: NextRequest, { params }: any): Promise<Response
     if (Object.keys(updates).length === 0) {
       return new Response(JSON.stringify({ error: 'Aucun champ à mettre à jour.' }), { status: 400 });
     }
+    // --- Déplacement du dossier parent ---
     const { data: updated, error } = await supabase
       .from('folders')
       .update(updates)
@@ -95,6 +96,42 @@ export async function PATCH(req: NextRequest, { params }: any): Promise<Response
     }
     if (!updated) {
       return new Response(JSON.stringify({ error: 'Aucun dossier mis à jour (slug/id incorrect ?)' }), { status: 404 });
+    }
+    // --- Déplacement récursif du contenu (sous-dossiers + notes) ---
+    if (resolvedClasseurId !== undefined) {
+      // 1. Récupérer tous les sous-dossiers descendants (récursif)
+      const { data: allFolders, error: fetchFoldersError } = await supabase
+        .from('folders')
+        .select('id, parent_id')
+        .eq('user_id', USER_ID);
+      if (fetchFoldersError) {
+        return new Response(JSON.stringify({ error: 'Erreur lors de la récupération des sous-dossiers.' }), { status: 500 });
+      }
+      // Fonction récursive pour trouver tous les descendants
+      function getDescendantFolderIds(parentId: string, folders: { id: string; parent_id: string | null }[]): string[] {
+        const direct = folders.filter(f => f.parent_id === parentId).map(f => f.id);
+        return direct.concat(direct.flatMap(id => getDescendantFolderIds(id, folders)));
+      }
+      const descendantIds = getDescendantFolderIds(folderId, allFolders || []);
+      const allToUpdate = [folderId, ...descendantIds];
+      // 2. Update classeur_id sur tous les sous-dossiers
+      if (descendantIds.length > 0) {
+        const { error: updateSubfoldersError } = await supabase
+          .from('folders')
+          .update({ classeur_id: resolvedClasseurId })
+          .in('id', descendantIds);
+        if (updateSubfoldersError) {
+          return new Response(JSON.stringify({ error: 'Erreur lors de la mise à jour des sous-dossiers.' }), { status: 500 });
+        }
+      }
+      // 3. Update classeur_id sur toutes les notes de ces dossiers
+      const { error: updateNotesError } = await supabase
+        .from('articles')
+        .update({ classeur_id: resolvedClasseurId })
+        .in('folder_id', allToUpdate);
+      if (updateNotesError) {
+        return new Response(JSON.stringify({ error: 'Erreur lors de la mise à jour des notes du dossier.' }), { status: 500 });
+      }
     }
     return new Response(JSON.stringify({ folder: updated }), { status: 200 });
   } catch (err: any) {
