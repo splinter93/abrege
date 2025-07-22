@@ -1,5 +1,4 @@
 import { createClient } from '@supabase/supabase-js';
-import '@/styles/markdown.css';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -64,6 +63,86 @@ export default async function Page(props: any) {
                     --surface-1: #2a2a2a;
                     --surface-2: #3a3a3a;
                     --border-subtle: #404040;
+                  }
+                  
+                  /* MARKDOWN STYLES */
+                  .markdown-body {
+                    color: var(--text-1);
+                    font-family: 'Noto Sans', sans-serif !important;
+                    font-size: 1.08rem;
+                    line-height: 1.8;
+                    background: none;
+                    margin: 0;
+                    padding: 0;
+                  }
+                  
+                  /* LISTES */
+                  .markdown-body ul,
+                  .markdown-body ol {
+                    margin-top: 0.5em;
+                    margin-bottom: 0.5em;
+                    margin-left: 1.5em;
+                    padding-left: 0;
+                  }
+                  .markdown-body li {
+                    margin-top: 0.12em;
+                    margin-bottom: 0.12em;
+                    line-height: 1.5;
+                    padding-left: 0.2rem;
+                  }
+                  
+                  /* TABLEAUX */
+                  .markdown-body .tableWrapper {
+                    border: 1px solid var(--border-subtle);
+                    border-radius: 10px;
+                    overflow: hidden;
+                    background: none;
+                    margin: 1.5rem 0;
+                    padding: 0;
+                  }
+                  .markdown-body table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    border-spacing: 0;
+                    background: none;
+                    border-radius: 10px;
+                    table-layout: fixed;
+                    margin: 0;
+                    padding: 0;
+                  }
+                  .markdown-body th,
+                  .markdown-body td {
+                    border: none;
+                    border-bottom: 1px solid var(--border-subtle);
+                    border-right: 1px solid var(--border-subtle);
+                    background: none;
+                    color: var(--text-1);
+                    font-size: 1rem;
+                    font-weight: 400;
+                    text-align: center;
+                    padding: 0.65em 0.9em;
+                    min-width: 0;
+                    max-width: none;
+                  }
+                  .markdown-body th {
+                    background: var(--surface-2);
+                    color: var(--accent-primary);
+                    font-weight: 600;
+                    font-size: 1.18rem;
+                  }
+                  .markdown-body th:last-child,
+                  .markdown-body td:last-child {
+                    border-right: none;
+                  }
+                  .markdown-body tr:last-child td,
+                  .markdown-body tr:last-child th {
+                    border-bottom: none;
+                  }
+                  .markdown-body tbody tr:nth-child(odd) td {
+                    background: var(--surface-2);
+                  }
+                  .markdown-body tbody tr:nth-child(even) td {
+                    background: var(--surface-1);
                   }
                 `
               }} />
