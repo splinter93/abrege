@@ -100,6 +100,9 @@ export async function POST(req: NextRequest): Promise<Response> {
       const newTitle = title || `Fusion de ${orderedNotes.length} notes`;
       // [TEMP] USER_ID HARDCODED FOR DEV/LLM
       const USER_ID = "3223651c-5580-4471-affb-b3f4456bd729";
+      // Générer le slug unique pour la note fusionnée
+      const { SlugGenerator } = await import('@/utils/slugGenerator');
+      const newSlug = await SlugGenerator.generateSlug(newTitle, 'note', USER_ID);
       const insertPayload: any = {
         source_title: newTitle,
         markdown_content: merged_content,
@@ -107,6 +110,7 @@ export async function POST(req: NextRequest): Promise<Response> {
         folder_id: folder_id || null,
         classeur_id: finalClasseurId,
         user_id: USER_ID,
+        slug: newSlug,
       };
       // Optionnel : générer le html_content ici si tu as une fonction utilitaire
       const { data: inserted, error: insertError } = await supabase
