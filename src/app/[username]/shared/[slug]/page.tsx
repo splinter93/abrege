@@ -1,8 +1,8 @@
 'use client';
 import React, { useEffect, useState } from 'react';
 
-export default function Page({ params }: { params: { username: string; slug: string } }) {
-  const { username, slug } = params;
+export default function Page(props: any) {
+  const { username, slug } = props.params;
   const [note, setNote] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
 
