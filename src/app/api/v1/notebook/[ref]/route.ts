@@ -75,7 +75,7 @@ export async function PUT(req: NextRequest, { params }: any): Promise<Response> 
     // Vérifier que le classeur existe
     const { data: existingNotebook, error: fetchError } = await supabase
       .from('classeurs')
-      .select('id')
+      .select('id, name')
       .eq('id', classeurId)
       .eq('user_id', USER_ID)
       .single();
@@ -83,16 +83,17 @@ export async function PUT(req: NextRequest, { params }: any): Promise<Response> 
     if (fetchError || !existingNotebook) {
       return new Response(JSON.stringify({ error: 'Classeur non trouvé.' }), { status: 404 });
     }
-    
+    // Générer un nouveau slug si le nom change
+    let updates: any = { name, emoji: emoji || null, updated_at: new Date().toISOString() };
+    if (existingNotebook.name !== name) {
+      const { SlugGenerator } = await import('@/utils/slugGenerator');
+      const newSlug = await SlugGenerator.generateSlug(name, 'classeur', USER_ID, classeurId);
+      updates.slug = newSlug;
+    }
     // Mettre à jour le classeur
     const { data: notebook, error } = await supabase
       .from('classeurs')
-      .update({
-        name,
-        emoji: emoji || null,
-
-        updated_at: new Date().toISOString()
-      })
+      .update(updates)
       .eq('id', classeurId)
       .select()
       .single();

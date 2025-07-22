@@ -84,11 +84,22 @@ export async function PUT(req: NextRequest, { params }: any): Promise<Response> 
     }
     
     // Mettre à jour le dossier (pas d'updated_at dans la table folders)
+    // Générer un nouveau slug si le nom change
+    const { data: oldFolder, error: oldFolderError } = await supabase
+      .from('folders')
+      .select('name')
+      .eq('id', folderId)
+      .single();
+    let updates: any = { name };
+    if (!oldFolderError && oldFolder && oldFolder.name !== name) {
+      // Générer le nouveau slug
+      const { SlugGenerator } = await import('@/utils/slugGenerator');
+      const newSlug = await SlugGenerator.generateSlug(name, 'folder', USER_ID, folderId);
+      updates.slug = newSlug;
+    }
     const { data: folder, error } = await supabase
       .from('folders')
-      .update({
-        name
-      })
+      .update(updates)
       .eq('id', folderId)
       .select()
       .single();

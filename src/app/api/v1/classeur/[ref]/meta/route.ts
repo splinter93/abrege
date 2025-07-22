@@ -54,6 +54,18 @@ export async function PATCH(req: NextRequest, { params }: any): Promise<Response
     if (body.name) updates.name = body.name;
     if (body.emoji) updates.emoji = body.emoji;
 
+    // Récupérer l'ancien nom pour comparer
+    const { data: oldClasseur, error: oldClasseurError } = await supabase
+      .from('classeurs')
+      .select('name')
+      .eq('id', classeurId)
+      .single();
+    if (body.name && !oldClasseurError && oldClasseur && oldClasseur.name !== body.name) {
+      const { SlugGenerator } = await import('@/utils/slugGenerator');
+      const newSlug = await SlugGenerator.generateSlug(body.name, 'classeur', USER_ID, classeurId);
+      updates.slug = newSlug;
+    }
+
     updates.updated_at = new Date().toISOString();
     const { data: updated, error } = await supabase
       .from('classeurs')

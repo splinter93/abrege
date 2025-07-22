@@ -56,10 +56,22 @@ export async function PATCH(req: NextRequest, { params }: any): Promise<Response
   if (folderError || !folder) {
     return new Response(JSON.stringify({ error: folderError?.message || 'Dossier non trouvé.' }), { status: 404 });
   }
-  // Mettre à jour le nom
+  // Mettre à jour le nom et le slug si besoin
+  // Récupérer l'ancien nom pour comparer
+  const { data: oldFolder, error: oldFolderError } = await supabase
+    .from('folders')
+    .select('name')
+    .eq('id', folderId)
+    .single();
+  let updates: any = { name: body.name };
+  if (!oldFolderError && oldFolder && oldFolder.name !== body.name) {
+    const { SlugGenerator } = await import('@/utils/slugGenerator');
+    const newSlug = await SlugGenerator.generateSlug(body.name, 'folder', USER_ID, folderId);
+    updates.slug = newSlug;
+  }
   const { data: updated, error: updateError } = await supabase
     .from('folders')
-    .update({ name: body.name })
+    .update(updates)
     .eq('id', folderId)
     .select('id, name, parent_id, classeur_id')
     .single();
