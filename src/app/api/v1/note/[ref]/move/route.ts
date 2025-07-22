@@ -31,13 +31,13 @@ export async function PATCH(req: NextRequest, { params }: any): Promise<Response
     if (!paramResult.success) {
       return new Response(
         JSON.stringify({ error: 'Paramètre note_ref invalide', details: paramResult.error.errors.map(e => e.message) }),
-        { status: 422 }
+        { status: 422, headers: { 'Content-Type': 'application/json' } }
       );
     }
     if (!bodyResult.success) {
       return new Response(
         JSON.stringify({ error: 'Payload invalide', details: bodyResult.error.errors.map(e => e.message) }),
-        { status: 422 }
+        { status: 422, headers: { 'Content-Type': 'application/json' } }
       );
     }
     
@@ -61,7 +61,7 @@ export async function PATCH(req: NextRequest, { params }: any): Promise<Response
         .single();
       
       if (classeurError || !classeur) {
-        return new Response(JSON.stringify({ error: `Classeur de destination "${body.target_classeur_id}" non trouvé.` }), { status: 404 });
+        return new Response(JSON.stringify({ error: `Classeur de destination "${body.target_classeur_id}" non trouvé.` }), { status: 404, headers: { 'Content-Type': 'application/json' } });
       }
     }
     
@@ -80,7 +80,7 @@ export async function PATCH(req: NextRequest, { params }: any): Promise<Response
           .single();
         
         if (folderError || !folder) {
-          return new Response(JSON.stringify({ error: `Dossier de destination "${body.target_folder_id}" non trouvé.` }), { status: 404 });
+          return new Response(JSON.stringify({ error: `Dossier de destination "${body.target_folder_id}" non trouvé.` }), { status: 404, headers: { 'Content-Type': 'application/json' } });
         }
       }
     }
@@ -98,11 +98,12 @@ export async function PATCH(req: NextRequest, { params }: any): Promise<Response
       .select()
       .single();
     if (error) {
-      return new Response(JSON.stringify({ error: error.message }), { status: 500 });
+      return new Response(JSON.stringify({ error: error.message }), { status: 500, headers: { 'Content-Type': 'application/json' } });
     }
-    return new Response(JSON.stringify({ note: updated }), { status: 200 });
+    return new Response(JSON.stringify({ note: updated }), { status: 200, headers: { 'Content-Type': 'application/json' } });
   } catch (err: any) {
-    return new Response(JSON.stringify({ error: err.message }), { status: 500 });
+    console.error('[moveNote] PATCH error:', err);
+    return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: { 'Content-Type': 'application/json' } });
   }
 }
 
