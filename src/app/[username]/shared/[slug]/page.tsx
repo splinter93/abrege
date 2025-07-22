@@ -21,7 +21,7 @@ export default async function Page(props: any) {
   const data = await res.json();
   const note = data.note;
 
-  if (!note || !note.id || !note.ispublished) {
+  if (!note || !note.id) {
     return (
       <div style={{ padding: '2rem', textAlign: 'center' }}>
         <h1>Note non trouvée ou non publiée</h1>
