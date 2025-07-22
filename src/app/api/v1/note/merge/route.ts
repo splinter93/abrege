@@ -79,12 +79,15 @@ export async function POST(req: NextRequest): Promise<Response> {
     if (create_new) {
       // Créer une nouvelle note fusionnée
       const newTitle = title || `Fusion de ${orderedNotes.length} notes`;
+      // [TEMP] USER_ID HARDCODED FOR DEV/LLM
+      const USER_ID = "3223651c-5580-4471-affb-b3f4456bd729";
       const insertPayload: any = {
         source_title: newTitle,
         markdown_content: merged_content,
         html_content: '', // à générer côté front ou via un service si besoin
         folder_id: folder_id || null,
         classeur_id: finalClasseurId,
+        user_id: USER_ID,
       };
       // Optionnel : générer le html_content ici si tu as une fonction utilitaire
       const { data: inserted, error: insertError } = await supabase
