@@ -63,14 +63,6 @@ export default async function Page(props: any) {
             --border-subtle: #404040;
           }
           
-          /*
-            ===============================
-            STYLES MARKDOWN UNIFIÉS (CUSTOM)
-            ===============================
-            À appliquer sur tous les containers markdown (éditeur, preview, résumé, etc.)
-            Utiliser la classe racine : .markdown-body
-          */
-
           .markdown-body {
             color: var(--text-1);
             font-family: 'Noto Sans', sans-serif !important;
@@ -111,28 +103,40 @@ export default async function Page(props: any) {
             margin: 0 0 1.15rem 0;
           }
 
-          /* LISTES */
-          .markdown-body ul,
+          /* LISTES AVEC PUCES */
+          .markdown-body ul {
+            margin: 0 0 1.1rem 1.5rem;
+            padding: 0;
+          }
+          .markdown-body ul li {
+            list-style-type: disc;
+            list-style-position: outside;
+            margin-bottom: 0.5rem;
+            padding-left: 0.2rem;
+          }
+          .markdown-body ul ul li {
+            list-style-type: circle;
+          }
+          .markdown-body ul ul ul li {
+            list-style-type: square;
+          }
+
+          /* LISTES NUMÉROTÉES */
           .markdown-body ol {
             margin: 0 0 1.1rem 1.5rem;
             padding: 0;
           }
-          .markdown-body li {
+          .markdown-body ol li {
+            list-style-type: decimal;
+            list-style-position: outside;
             margin-bottom: 0.5rem;
             padding-left: 0.2rem;
           }
-
-          /* === INTERLIGNE RÉDUIT POUR LISTES À PUCE === */
-          .markdown-body ul,
-          .markdown-body ol {
-            margin-top: 0.5em;
-            margin-bottom: 0.5em;
-            padding-left: 2em;
+          .markdown-body ol ol li {
+            list-style-type: lower-alpha;
           }
-          .markdown-body li {
-            margin-top: 0.12em;
-            margin-bottom: 0.12em;
-            line-height: 1.5;
+          .markdown-body ol ol ol li {
+            list-style-type: lower-roman;
           }
 
           /* LIENS */
@@ -295,27 +299,6 @@ export default async function Page(props: any) {
             border-radius: 8px;
           }
 
-          /* === STYLE UNIQUE ET PROPRE POUR BLOCKQUOTE === */
-          .markdown-body blockquote {
-            border-left: 4px solid var(--border-subtle);
-            background: var(--surface-1);
-            color: #D4D4D4;
-            font-weight: 400;
-            font-style: normal;
-            font-size: 1.08rem;
-            text-align: center;
-            padding: 2em 2em;
-            margin: 1.5rem 0;
-            border-radius: 8px;
-          }
-
-          .markdown-body blockquote {
-            padding-top: 1em;
-            padding-bottom: 0.1rem;
-            padding-left: 2em;
-            padding-right: 2em;
-          }
-
           /* === LISTES À COCHER MODERNES === */
           .markdown-body input[type='checkbox'] {
             appearance: none;
@@ -352,156 +335,41 @@ export default async function Page(props: any) {
             outline-offset: 1px;
           }
 
-          /* === LISTES MARKDOWN (puces, numérotées, à cocher) === */
-          .markdown-body ul,
-          .markdown-body ol {
-            margin-top: 0.5em;
-            margin-bottom: 0.5em;
-            margin-left: 1.5em;
-            padding-left: 0;
-          }
-          .markdown-body li {
-            margin-top: 0.12em;
-            margin-bottom: 0.12em;
-            line-height: 1.5;
-            padding-left: 0.2rem;
-          }
-          /* Alignement horizontal des cases à cocher sur la marge des listes à puce */
-          .markdown-body li > input[type='checkbox'] {
-            margin-left: -3em;
-          }
-
-          /* === PATCH: Blockquotes sobres, couleur warm gray, pas de gras ni italique, taille normale === */
-          .markdown-body blockquote {
-            color: #D4D4D4 !important;
-            font-weight: 400 !important;
-            font-style: normal !important;
-            font-size: 1.08rem !important;
-            border-left: 4px solid var(--accent-primary);
-            background: var(--surface-1);
-            text-align: center;
-            padding: 1.1em 2em;
-            margin: 1.5rem 0;
-            border-radius: 8px;
-          }
-
-          /* === STYLE UNIQUE ET PROPRE POUR BLOCKQUOTE === */
-          .markdown-body blockquote {
-            border-left: 4px solid var(--border-subtle);
-            background: var(--surface-1);
-            color: #D4D4D4;
-            font-weight: 400;
-            font-style: normal;
-            font-size: 1.08rem;
-            text-align: center;
-            padding: 2em 2em;
-            margin: 1.5rem 0;
-            border-radius: 8px;
-          }
-
-          .markdown-body blockquote {
-            padding-top: 1em;
-            padding-bottom: 0.1rem;
-            padding-left: 2em;
-            padding-right: 2em;
-          }
-
-          /* === LISTES À COCHER MODERNES === */
-          .markdown-body input[type='checkbox'] {
-            appearance: none;
-            width: 1.15em;
-            height: 1.15em;
-            border: 2px solid var(--border-subtle);
-            border-radius: 5px;
-            background: var(--surface-1);
-            display: inline-block;
-            vertical-align: middle;
-            margin-right: 0.7em;
-            position: relative;
-            transition: border-color 0.18s, background 0.18s;
-            cursor: pointer;
-          }
-          .markdown-body input[type='checkbox']:checked {
-            border-color: var(--accent-primary);
-            background: var(--accent-primary);
-          }
-          .markdown-body input[type='checkbox']:checked::after {
-            content: '';
-            display: block;
-            position: absolute;
-            left: 0.32em;
-            top: 0.08em;
-            width: 0.35em;
-            height: 0.7em;
-            border: solid #fff;
-            border-width: 0 0.18em 0.18em 0;
-            transform: rotate(45deg);
-          }
-          .markdown-body input[type='checkbox']:focus {
-            outline: 2px solid var(--accent-primary);
-            outline-offset: 1px;
-          }
-
-          /* === LISTES MARKDOWN (puces, numérotées, à cocher) === */
-          .markdown-body ul,
-          .markdown-body ol {
-            margin-top: 0.5em;
-            margin-bottom: 0.5em;
-            margin-left: 1.5em;
-            padding-left: 0;
-          }
-          .markdown-body li {
-            margin-top: 0.12em;
-            margin-bottom: 0.12em;
-            line-height: 1.5;
-            padding-left: 0.2rem;
-          }
-          /* Alignement horizontal des cases à cocher sur la marge des listes à puce */
-          .markdown-body li > input[type='checkbox'] {
-            margin-left: -2.5em;
-          }
-
-          .markdown-body th {
-            color: #D4D4D4 !important;
-            text-align: center !important;
-            font-weight: 600;
-            background: var(--surface-2);
-          }
-
-          .markdown-body th,
-          .markdown-body td {
-            text-align: center !important;
-          }
-
-          .markdown-body pre,
-          .markdown-body code {
-            font-size: 0.85em !important;
-          }
-
-          .markdown-body ol {
-            padding-left: 1.25em !important;
-          }
-
-          /* === FIX: Alignement et wrapping propre des checkbox Markdown sur plusieurs lignes === */
-          .markdown-body li > input[type='checkbox'] {
-            /* On retire le margin-left négatif pour éviter les bugs de flex */
+          /* === FIX: Styles pour les listes avec checkboxes === */
+          .markdown-body li:has(input[type="checkbox"]) {
+            list-style: none;
             margin-left: 0;
-          }
-
-          .markdown-body li:has(> input[type='checkbox']) {
+            padding-left: 0;
             display: flex;
             align-items: flex-start;
             gap: 0.6em;
           }
 
-          .markdown-body li:has(> input[type='checkbox']) > input[type='checkbox'] {
-            margin-top: 0.18em; /* Optionnel, ajuste verticalement la checkbox */
+          .markdown-body li:has(input[type="checkbox"]) input[type="checkbox"] {
+            margin-right: 0.5em;
+            margin-left: 0;
+            margin-top: 0.18em;
+            flex-shrink: 0;
           }
 
-          .markdown-body li:has(> input[type='checkbox']) {
-            /* Pour que le texte wrappe proprement à côté de la checkbox */
+          .markdown-body li:has(input[type="checkbox"]) {
             white-space: normal;
             word-break: break-word;
+          }
+
+          /* === FIX: Styles pour les listes normales (avec puces) === */
+          .markdown-body ul li:not(:has(input[type="checkbox"])) {
+            list-style-type: disc;
+            list-style-position: outside;
+            margin-left: 0;
+            padding-left: 0;
+          }
+
+          .markdown-body ol li:not(:has(input[type="checkbox"])) {
+            list-style-type: decimal;
+            list-style-position: outside;
+            margin-left: 0;
+            padding-left: 0;
           }
 
           /* === FIX: Alignement et wrapping des checkbox dans l'éditeur Tiptap/ProseMirror === */
@@ -510,6 +378,7 @@ export default async function Page(props: any) {
             display: flex;
             align-items: flex-start;
             gap: 0.6em;
+            list-style: none;
           }
 
           .task-list-item label,
@@ -528,15 +397,15 @@ export default async function Page(props: any) {
             white-space: pre-line;
           }
 
-          /* === FIX: Alignement et wrapping des checkbox markdown avec structure <li><label><input><span></span></label><div><p>...</p></div></li> === */
           li[data-type="taskItem"] {
             display: flex;
             align-items: flex-start;
             gap: 0.7em;
+            list-style: none;
           }
 
           li[data-type="taskItem"] > label {
-            margin-top: 0.18em; /* Optionnel, ajuste verticalement la checkbox */
+            margin-top: 0.18em;
             flex-shrink: 0;
           }
 
@@ -616,4 +485,4 @@ export default async function Page(props: any) {
       </div>
     </>
   );
-} 
+}
