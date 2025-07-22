@@ -34,10 +34,10 @@ export async function PATCH(req: Request): Promise<Response> {
       return new Response(JSON.stringify({ error: 'Note non trouvée.' }), { status: 404 });
     }
 
-    // Mettre à jour isPublished
+    // Mettre à jour ispublished
     const { data: updated, error } = await supabase
       .from('articles')
-      .update({ isPublished })
+      .update({ ispublished: isPublished })
       .eq('id', noteId)
       .eq('user_id', USER_ID)
       .select('slug')

@@ -36,13 +36,13 @@ export async function GET(req: NextRequest, { params }: any): Promise<Response> 
       return new Response(JSON.stringify({ error: 'Utilisateur non trouvé.' }), { status: 404 });
     }
 
-    // Chercher la note par slug et user_id, isPublished = true
+    // Chercher la note par slug et user_id, ispublished = true
     const { data: note, error: noteError } = await supabase
       .from('articles')
       .select('source_title, html_content, header_image, created_at, updated_at')
       .eq('slug', slug)
       .eq('user_id', user.id)
-      .eq('isPublished', true)
+      .eq('ispublished', true)
       .single();
     if (noteError || !note) {
       return new Response(JSON.stringify({ error: 'Note non trouvée ou non publiée.' }), { status: 404 });
