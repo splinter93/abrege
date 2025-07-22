@@ -50,23 +50,7 @@ export default async function Page(props: any) {
 
                         // Afficher directement le contenu avec le même design que la preview de l'éditeur
           return (
-            <>
-              <style dangerouslySetInnerHTML={{
-                __html: `
-                  :root {
-                    --bg-main: #1a1a1a;
-                    --text-primary: #ffffff;
-                    --text-1: #ffffff;
-                    --text-2: #b3a9a0;
-                    --accent-primary: #e55a2c;
-                    --accent-hover: #f97316;
-                    --surface-1: #2a2a2a;
-                    --surface-2: #3a3a3a;
-                    --border-subtle: #404040;
-                  }
-                `
-              }} />
-              <div style={{ width: '100vw', minHeight: '100vh', background: 'var(--bg-main)', paddingBottom: 64, overflowY: 'auto', height: '100vh' }}>
+            <div style={{ width: '100vw', minHeight: '100vh', background: '#1a1a1a', paddingBottom: 64, overflowY: 'auto', height: '100vh' }}>
                 {note.header_image && (
                   <div style={{ width: '100%', maxHeight: 300, overflow: 'hidden', marginBottom: 32 }}>
                     <img
@@ -82,7 +66,7 @@ export default async function Page(props: any) {
                     <h1 style={{
                       fontSize: '2.25rem',
                       fontWeight: 700,
-                      color: 'var(--text-primary)',
+                      color: '#ffffff',
                       margin: 0,
                       padding: 0,
                       textAlign: 'left',
@@ -101,7 +85,7 @@ export default async function Page(props: any) {
                         background: 'none',
                         padding: '0 0 64px 0',
                         fontSize: '1.13rem',
-                        color: 'var(--text-primary)',
+                        color: '#ffffff',
                         minHeight: '60vh',
                         pointerEvents: 'auto',
                         userSelect: 'text',
@@ -122,6 +106,5 @@ export default async function Page(props: any) {
                   Crafted with Scrivia
                 </div>
               </div>
-            </>
           );
 } 
