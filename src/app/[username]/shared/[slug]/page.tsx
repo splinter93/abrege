@@ -8,18 +8,24 @@ const supabase = createClient(supabaseUrl, supabaseAnonKey);
 export default async function Page(props: any) {
   const { username, slug } = await props.params;
 
+  // Décoder l'username (retirer le @ et décoder l'URL)
+  const decodedUsername = decodeURIComponent(username).replace(/^@/, '');
+
   // Chercher l'utilisateur par username
   const { data: user, error: userError } = await supabase
     .from('users')
     .select('id')
-    .eq('username', username)
+    .eq('username', decodedUsername)
     .single();
+
+
 
   if (userError || !user) {
     return (
       <div style={{ padding: '2rem', textAlign: 'center' }}>
         <h1>Utilisateur non trouvé</h1>
         <p>Vérifiez l'URL ou contactez l'auteur.</p>
+        <p>Debug: error = {userError?.message}</p>
       </div>
     );
   }
