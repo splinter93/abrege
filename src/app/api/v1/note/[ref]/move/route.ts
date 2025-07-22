@@ -65,12 +65,15 @@ export async function PATCH(req: NextRequest, { params }: any): Promise<Response
       }
     }
     
+    // --- LOG DEBUG ---
+    console.log('[moveNote] Payload reçu:', JSON.stringify(body));
     if (body.target_folder_id !== undefined) {
-      if (body.target_folder_id === null) {
+      // Si target_folder_id est null, chaîne vide ou 'null', on place la note à la racine
+      if (body.target_folder_id === null || body.target_folder_id === '' || body.target_folder_id === 'null') {
         targetFolderId = null;
+        console.log('[moveNote] Déplacement à la racine (folder_id = null)');
       } else {
         targetFolderId = await resolveFolderRef(body.target_folder_id, USER_ID);
-        
         // Vérifier que le dossier existe
         const { data: folder, error: folderError } = await supabase
           .from('folders')
@@ -78,7 +81,6 @@ export async function PATCH(req: NextRequest, { params }: any): Promise<Response
           .eq('id', targetFolderId)
           .eq('user_id', USER_ID)
           .single();
-        
         if (folderError || !folder) {
           return new Response(JSON.stringify({ error: `Dossier de destination "${body.target_folder_id}" non trouvé.` }), { status: 404, headers: { 'Content-Type': 'application/json' } });
         }
