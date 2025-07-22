@@ -33,7 +33,7 @@ export default async function Page(props: any) {
   // Chercher la note par slug et user_id, ispublished = true
   const { data: note, error: noteError } = await supabase
     .from('articles')
-    .select('source_title, html_content, header_image, created_at, updated_at')
+    .select('source_title, html_content, markdown_content, header_image, created_at, updated_at')
     .eq('slug', slug)
     .eq('user_id', user.id)
     .eq('ispublished', true)
@@ -105,9 +105,12 @@ export default async function Page(props: any) {
                         minHeight: '60vh',
                         pointerEvents: 'auto',
                         userSelect: 'text',
+                        whiteSpace: 'pre-wrap',
+                        fontFamily: 'Noto Sans, Inter, Arial, sans-serif',
                       }}
-                      dangerouslySetInnerHTML={{ __html: note.html_content || '' }}
-                    />
+                    >
+                      {note.markdown_content || note.html_content || ''}
+                    </div>
                   </div>
                 </div>
                 {/* Footer discret */}
