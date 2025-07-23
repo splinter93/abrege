@@ -4,11 +4,10 @@ import '@/styles/markdown.css';
 import { useFileSystemStore } from '@/store/useFileSystemStore';
 import type { FileSystemState } from '@/store/useFileSystemStore';
 import { createMarkdownIt } from '@/utils/markdownItConfig';
+import LogoScrivia from '@/components/LogoScrivia';
 
 const Logo = () => (
-  <div className="editor-header-logo">
-    <span style={{ fontSize: 26, marginRight: 6 }}>🟧</span> abrège
-  </div>
+  <LogoScrivia size={36} color="white" />
 );
 
 /**
@@ -23,7 +22,9 @@ const Logo = () => (
  * - Fallback "Chargement..." si la note n’existe pas
  */
 const Editor: React.FC<{ noteId: string; readonly?: boolean }> = ({ noteId, readonly = true }) => {
-  const note = useFileSystemStore((s: FileSystemState) => s.notes[noteId]);
+  // Sélecteur Zustand stable pour une note par ID
+  const makeSelectNote = (noteId: string) => (s: FileSystemState) => s.notes[noteId];
+  const note = useFileSystemStore(makeSelectNote(noteId));
   const content = note?.content || '';
   const md = useMemo(() => createMarkdownIt(), []);
   const html = useMemo(() => md.render(content), [md, content]);

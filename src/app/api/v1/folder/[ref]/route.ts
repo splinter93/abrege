@@ -144,12 +144,14 @@ export async function DELETE(req: NextRequest, { params }: any): Promise<Respons
     return new Response(JSON.stringify({ error: 'Dossier non trouvé.' }), { status: 404 });
   }
   // Supprimer le dossier
-  const { error: deleteError } = await supabase
+  const { data: deletedFolder, error: deleteError } = await supabase
     .from('folders')
     .delete()
-    .eq('id', folderId);
+    .eq('id', folderId)
+    .select()
+    .single();
   if (deleteError) {
     return new Response(JSON.stringify({ error: deleteError.message }), { status: 500 });
   }
-  return new Response(JSON.stringify({ success: true }), { status: 200 });
+  return new Response(JSON.stringify({ success: true, folder: deletedFolder }), { status: 200 });
 } 

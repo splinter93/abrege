@@ -4,6 +4,7 @@ export interface Folder {
   id: string;
   name: string;
   parent_id?: string;
+  classeur_id?: string; // Ajouté pour filtrage
 }
 
 export interface FileArticle {
@@ -11,6 +12,8 @@ export interface FileArticle {
   source_title: string;
   source_type?: string;
   updated_at?: string;
+  classeur_id?: string; // Ajouté pour filtrage
+  folder_id?: string;   // Ajouté pour navigation
 }
 
 export interface ItemProps {

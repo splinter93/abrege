@@ -143,7 +143,7 @@ const ClasseurTabs: React.FC<ClasseurTabsProps> = ({
   onUpdateClasseurPositions,
 }) => {
   React.useEffect(() => {
-    console.debug('DnD Ready');
+    console.debug('[EFFECT] useEffect triggered in ClasseurTabs (DnD Ready)', {});
   }, []);
   const [contextMenu, setContextMenu] = useState<{ visible: boolean; x: number; y: number; item: Classeur | null }>({ visible: false, x: 0, y: 0, item: null });
   const [isColorPickerVisible, setColorPickerVisible] = useState(false);
@@ -156,6 +156,7 @@ const ClasseurTabs: React.FC<ClasseurTabsProps> = ({
   );
 
   useEffect(() => {
+    console.debug('[EFFECT] useEffect triggered in ClasseurTabs (emojiPicker)', { emojiPicker });
     const handleClickOutside = (event: Event) => {
       if (emojiPickerRef.current && !emojiPickerRef.current.contains(event.target as Node)) {
         setEmojiPicker({ ...emojiPicker, visible: false });

@@ -1,5 +1,9 @@
+"use client";
 import React from 'react';
 import { useFileSystemStore } from '@/store/useFileSystemStore';
+import type { FileSystemState } from '@/store/useFileSystemStore';
+// Sélecteur Zustand typé, stable, conforme à la directive Jean-Claude
+const selectNotes = (s: FileSystemState) => s.notes;
 
 /**
  * LiveNoteList
@@ -10,8 +14,9 @@ import { useFileSystemStore } from '@/store/useFileSystemStore';
  *   <LiveNoteList />
  */
 export default function LiveNoteList() {
-  const notes = useFileSystemStore(s => s.notes);
-  const noteList = Object.values(notes);
+  // Utilisation du sélecteur stable, aucune logique de cache/local state/effect
+  const notesObj = useFileSystemStore(selectNotes);
+  const noteList = React.useMemo(() => Object.values(notesObj), [notesObj]);
   return (
     <div style={{ maxWidth: 420, margin: '32px auto', padding: 24, background: 'rgba(255,255,255,0.04)', borderRadius: 12 }}>
       <h2 style={{ fontWeight: 700, fontSize: 22, marginBottom: 16 }}>Notes (Zustand + WebSocket)</h2>

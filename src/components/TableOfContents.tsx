@@ -131,10 +131,10 @@ export default function TableOfContents({ headings = [], currentId, pinned = fal
         {isCollapsed ? (
           headings.map((h, idx) => {
             if (h.level === 2) {
-              return <div key={h.id || `toc-bar-${idx}`} style={{ height: 3, width: 24, background: '#D4D4D4', borderRadius: 6, margin: '12px 0', marginLeft: 'auto', marginRight: 10, opacity: 0.8 }} />;
+              return <div key={h.id || `toc-bar-${idx}`} style={{ height: 3, width: 24, background: '#fff', borderRadius: 6, margin: '12px 0', marginLeft: 'auto', marginRight: 10, opacity: 0.95 }} />;
             }
             if (h.level === 3) {
-              return <div key={h.id || `toc-bar-${idx}`} style={{ height: 3, width: 12, background: '#D4D4D4', borderRadius: 6, margin: '12px 0', marginLeft: 'auto', marginRight: 10, opacity: 0.8 }} />;
+              return <div key={h.id || `toc-bar-${idx}`} style={{ height: 3, width: 12, background: '#fff', borderRadius: 6, margin: '12px 0', marginLeft: 'auto', marginRight: 10, opacity: 0.95 }} />;
             }
             return <div key={h.id || `toc-bar-${idx}`} style={{ height: 12, margin: '12px 0' }} />;
           })

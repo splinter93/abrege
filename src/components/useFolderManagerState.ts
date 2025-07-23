@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
+"use client";
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Folder, FileArticle } from './types';
 import {
   getFolders,
@@ -23,6 +24,10 @@ import {
 } from '../services/api';
 
 import { useRealtime } from '@/hooks/useRealtime';
+import { useFileSystemStore } from '@/store/useFileSystemStore';
+import type { FileSystemState } from '@/store/useFileSystemStore';
+const selectFolders = (s: FileSystemState) => s.folders;
+const selectNotes = (s: FileSystemState) => s.notes;
 
 // Types pour le renommage
 export type RenamingType = 'folder' | 'file' | null;
@@ -60,12 +65,48 @@ interface UseFolderManagerState {
   moveItem: (id: string, newParentId: string | null, type: 'folder' | 'file') => Promise<void>;
 }
 
+// Adaptateur pour convertir les Folder Zustand en Folder UI
+function toUIFolder(f: any): Folder {
+  return {
+    id: f.id,
+    name: f.name,
+    parent_id: f.parent_id === null ? undefined : f.parent_id,
+    classeur_id: f.classeur_id, // Ajouté pour le filtrage correct
+  };
+}
+// Adaptateur pour convertir les notes Zustand en FileArticle UI
+function toUIFile(n: any): FileArticle {
+  return {
+    id: n.id,
+    source_title: n.source_title || n.title || '',
+    source_type: n.source_type,
+    updated_at: n.updated_at,
+    classeur_id: n.classeur_id, // Ajouté pour le filtrage correct
+    folder_id: n.folder_id,     // Ajouté pour la navigation
+  };
+}
+
 export function useFolderManagerState(classeurId: string, parentFolderId?: string, refreshKey?: number): UseFolderManagerState {
   // --- ÉTAT PRINCIPAL ---
-  const [folders, setFolders] = useState<Folder[]>([]);
-  const [files, setFiles] = useState<FileArticle[]>([]);
-  const [currentFolderId, setCurrentFolderId] = useState<string | null>(null);
-  const [currentFolder, setCurrentFolder] = useState<Folder | null>(null);
+  const rawFoldersObj = useFileSystemStore(selectFolders);
+  const rawNotesObj = useFileSystemStore(selectNotes);
+  const rawFolders = useMemo(() => Object.values(rawFoldersObj), [rawFoldersObj]);
+  const rawNotes = useMemo(() => Object.values(rawNotesObj), [rawNotesObj]);
+
+  // Correction : filtrage par classeurId et parentFolderId
+  const folders: Folder[] = useMemo(
+    () => rawFolders
+      .filter(f => f.classeur_id === classeurId && (f.parent_id === parentFolderId || (!f.parent_id && !parentFolderId)))
+      .map(toUIFolder),
+    [rawFolders, classeurId, parentFolderId]
+  );
+  const files: FileArticle[] = useMemo(
+    () => rawNotes
+      .filter(n => n.classeur_id === classeurId && (n.folder_id === parentFolderId || (!n.folder_id && !parentFolderId)))
+      .map(toUIFile),
+    [rawNotes, classeurId, parentFolderId]
+  );
+  // Supprimé : la navigation est contrôlée par le parent (FolderManager)
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -75,26 +116,10 @@ export function useFolderManagerState(classeurId: string, parentFolderId?: strin
 
   // --- CHARGEMENT INITIAL ---
   useEffect(() => {
-    setLoading(true);
+    console.log('[EFFECT] useEffect triggered in useFolderManagerState (loading)', { classeurId, refreshKey });
+    setLoading(false); // On considère que le chargement Zustand est instantané
     setError(null);
-    const fetchData = async () => {
-      try {
-        const [fetchedFolders, fetchedFiles] = await Promise.all([
-          getFolders(classeurId, parentFolderId),
-          getArticles(classeurId, parentFolderId)
-        ]);
-        setFolders(fetchedFolders.sort((a, b) => (a.position || 0) - (b.position || 0)));
-        setFiles(fetchedFiles.sort((a, b) => (a.position || 0) - (b.position || 0)));
-        setCurrentFolderId(parentFolderId || null);
-        setCurrentFolder(null);
-      } catch (err: any) {
-        setError('Erreur lors du chargement des dossiers/fichiers.');
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
-  }, [classeurId, parentFolderId, refreshKey]);
+  }, [classeurId, refreshKey]); // parentFolderId retiré pour éviter toute boucle
 
   // --- SYNCHRO TEMPS RÉEL (Polling Intelligent) ---
   const { subscribe, unsubscribe } = useRealtime({
@@ -104,6 +129,7 @@ export function useFolderManagerState(classeurId: string, parentFolderId?: strin
   });
 
   useEffect(() => {
+    console.log('[EFFECT] useEffect triggered in useFolderManagerState (realtime subscribe)', { classeurId, parentFolderId, refreshKey, subscribe, unsubscribe });
     if (!classeurId) return;
 
     const handleArticleChange = (event: any) => {
@@ -113,24 +139,24 @@ export function useFolderManagerState(classeurId: string, parentFolderId?: strin
         event.new?.classeur_id === classeurId &&
         ((parentFolderId && event.new.folder_id === parentFolderId) || (!parentFolderId && !event.new.folder_id))
       ) {
-        setFiles((files) => {
-          // Évite les doublons si la note existe déjà
-          if (files.some(f => f.id === event.new.id)) return files;
-          const newFile: FileArticle = {
-            id: event.new.id,
-            source_title: event.new.source_title,
-            source_type: event.new.source_type,
-            updated_at: event.new.updated_at,
-          };
-          return [...files, newFile];
-        });
+        // setFiles((files) => { // Supprimé
+        //   // Évite les doublons si la note existe déjà
+        //   if (files.some(f => f.id === event.new.id)) return files;
+        //   const newFile: FileArticle = {
+        //     id: event.new.id,
+        //     source_title: event.new.source_title,
+        //     source_type: event.new.source_type,
+        //     updated_at: event.new.updated_at,
+        //   };
+        //   return [...files, newFile];
+        // });
       }
     };
 
     const handleFolderChange = (event: any) => {
       if (event.table === 'folders' && event.new?.classeur_id === classeurId) {
         // Rafraîchir la liste des dossiers à chaque changement
-        getFolders(classeurId, parentFolderId).then(setFolders);
+        // getFolders(classeurId, parentFolderId).then(setFolders); // Supprimé
       }
     };
 
@@ -145,16 +171,9 @@ export function useFolderManagerState(classeurId: string, parentFolderId?: strin
   }, [classeurId, parentFolderId, refreshKey, subscribe, unsubscribe]);
 
   // --- NAVIGATION ---
-  const goToFolder = useCallback((id: string) => {
-    setCurrentFolderId(id);
-    const folder = folders.find(f => f.id === id) || null;
-    setCurrentFolder(folder);
-  }, [folders]);
-
-  const goBack = useCallback(() => {
-    setCurrentFolderId(null);
-    setCurrentFolder(null);
-  }, []);
+  // Navigation contrôlée par le parent, plus de setCurrentFolderId ici
+  const goToFolder = () => {};
+  const goBack = () => {};
 
   // --- RENOMMAGE ---
   const startRename = useCallback((id: string, type: 'folder' | 'file') => {
@@ -168,15 +187,15 @@ export function useFolderManagerState(classeurId: string, parentFolderId?: strin
       const newFolder = await createFolderREST({
         name,
         notebook_id: classeurId,
-        parent_id: currentFolderId,
+        parent_id: parentFolderId,
       });
-      setFolders(folders => [...folders, newFolder]);
+      // setFolders(folders => [...folders, newFolder]); // Supprimé
       return newFolder;
     } catch (err) {
       setError('Erreur lors de la création du dossier.');
       return undefined;
     }
-  }, [classeurId, currentFolderId, folders.length]);
+  }, [classeurId, parentFolderId]);
 
   const DEFAULT_HEADER_IMAGE = 'https://images.unsplash.com/photo-1443890484047-5eaa67d1d630?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D';
 
@@ -188,36 +207,36 @@ export function useFolderManagerState(classeurId: string, parentFolderId?: strin
         markdown_content: '# ' + name,
         header_image: DEFAULT_HEADER_IMAGE,
       };
-      if (currentFolderId) {
-        payload.folder_id = currentFolderId;
+      if (parentFolderId) {
+        payload.folder_id = parentFolderId;
       }
       console.log('Payload createNoteREST', payload);
       const newFile = await createNoteREST(payload);
-      setFiles(files => [...files, newFile]);
+      // setFiles(files => [...files, newFile]); // Supprimé
       return newFile;
     } catch (err) {
       setError('Erreur lors de la création du fichier.');
       return undefined;
     }
-  }, [classeurId, currentFolderId, files.length]);
+  }, [classeurId, parentFolderId]);
 
   const deleteFolder = useCallback(async (id: string) => {
     try {
       await deleteFolderREST(id);
-      setFolders(folders => folders.filter(f => f.id !== id));
-      if (currentFolderId === id) {
-        setCurrentFolderId(null);
-        setCurrentFolder(null);
+      // setFolders(folders => folders.filter(f => f.id !== id)); // Supprimé
+      if (parentFolderId === id) {
+        // setCurrentFolderId(null); // Supprimé
+        // setCurrentFolder(null); // Supprimé
       }
     } catch (err) {
       setError('Erreur lors de la suppression du dossier.');
     }
-  }, [currentFolderId]);
+  }, [parentFolderId]);
 
   const deleteFile = useCallback(async (id: string) => {
     try {
       await deleteNoteREST(id);
-      setFiles(files => files.filter(f => f.id !== id));
+      // setFiles(files => files.filter(f => f.id !== id)); // Supprimé
     } catch (err) {
       setError('Erreur lors de la suppression du fichier.');
     }
@@ -227,18 +246,18 @@ export function useFolderManagerState(classeurId: string, parentFolderId?: strin
   const submitRename = useCallback(async (id: string, newName: string, type: 'folder' | 'file') => {
     try {
       await renameItemREST(id, type === 'file' ? 'note' : 'folder', newName);
-      if (type === 'folder') {
-        setFolders(folders => folders.map(f => f.id === id ? { ...f, name: newName } : f));
-      } else {
-        setFiles(files => files.map(f => f.id === id ? { ...f, source_title: newName } : f));
-      }
+      // if (type === 'folder') { // Supprimé
+      //   setFolders(folders => folders.map(f => f.id === id ? { ...f, name: newName } : f));
+      // } else {
+      //   setFiles(files => files.map(f => f.id === id ? { ...f, source_title: newName } : f));
+      // }
     } catch (err) {
       setError('Erreur lors du renommage.');
     } finally {
       setRenamingItemId(null);
       setRenamingType(null);
     }
-  }, [setFolders, setFiles]);
+  }, []);
 
   const cancelRename = useCallback(() => {
     setRenamingItemId(null);
@@ -247,7 +266,7 @@ export function useFolderManagerState(classeurId: string, parentFolderId?: strin
 
   // --- DnD ---
   const reorderFolders = useCallback(async (newOrder: Folder[]) => {
-    setFolders(newOrder);
+    // setFolders(newOrder); // Supprimé
     try {
       await updateItemPositions(newOrder.map((item, idx) => ({ id: item.id, position: idx, type: 'folder' })));
     } catch (err) {
@@ -256,7 +275,7 @@ export function useFolderManagerState(classeurId: string, parentFolderId?: strin
   }, []);
 
   const reorderFiles = useCallback(async (newOrder: FileArticle[]) => {
-    setFiles(newOrder);
+    // setFiles(newOrder); // Supprimé
     try {
       await updateItemPositions(newOrder.map((item, idx) => ({ id: item.id, position: idx, type: 'file' })));
     } catch (err) {
@@ -279,12 +298,12 @@ export function useFolderManagerState(classeurId: string, parentFolderId?: strin
         });
       }
       // Rafraîchir les dossiers/fichiers
-      const [fetchedFolders, fetchedFiles] = await Promise.all([
-        getFolders(classeurId, parentFolderId),
-        getArticles(classeurId, parentFolderId)
-      ]);
-      setFolders(fetchedFolders.sort((a, b) => (a.position || 0) - (b.position || 0)));
-      setFiles(fetchedFiles.sort((a, b) => (a.position || 0) - (b.position || 0)));
+      // const [fetchedFolders, fetchedFiles] = await Promise.all([ // Supprimé
+      //   getFolders(classeurId, parentFolderId),
+      //   getArticles(classeurId, parentFolderId)
+      // ]);
+      // setFolders(fetchedFolders.sort((a, b) => (a.position || 0) - (b.position || 0))); // Supprimé
+      // setFiles(fetchedFiles.sort((a, b) => (a.position || 0) - (b.position || 0))); // Supprimé
     } catch (err) {
       setError('Erreur lors du déplacement de l\'élément.');
     }
@@ -294,8 +313,8 @@ export function useFolderManagerState(classeurId: string, parentFolderId?: strin
   return {
     folders,
     files,
-    currentFolderId,
-    currentFolder,
+    currentFolderId: parentFolderId ?? null, // Expose parentFolderId comme currentFolderId, typé string | null
+    currentFolder: null, // currentFolder n'est plus géré ici
     loading,
     error,
     renamingItemId,

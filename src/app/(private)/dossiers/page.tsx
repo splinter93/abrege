@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, useRef } from "react";
+import React, { useCallback } from "react";
 import FolderManager from "../../../components/FolderManager";
 import ClasseurTabs, { Classeur } from "../../../components/ClasseurTabs";
 import DynamicIcon from "../../../components/DynamicIcon";
@@ -8,6 +8,13 @@ import { supabase } from "../../../supabaseClient";
 import { toast } from "react-hot-toast";
 import "./DossiersPage.css";
 import { useRealtime } from '@/hooks/useRealtime';
+import { useFileSystemStore } from '@/store/useFileSystemStore';
+import type { FileSystemState } from '@/store/useFileSystemStore';
+
+const selectFolders = (s: FileSystemState) => s.folders;
+const selectNotes = (s: FileSystemState) => s.notes;
+const selectClasseurs = (s: FileSystemState) => s.classeurs;
+// useCallback et Classeur déjà importés plus haut si besoin
 
 // Merge ciblé : ajoute, met à jour, supprime les items par ID
 const mergeClasseursState = (prev: Classeur[], fetched: Classeur[]) => {
@@ -31,135 +38,63 @@ const mergeClasseursState = (prev: Classeur[], fetched: Classeur[]) => {
 };
 
 const DossiersPage: React.FC = () => {
+  console.log('[RENDER] DossiersPage render');
   // TOUS les hooks doivent être ici, AVANT tout return conditionnel
-  const [classeurs, setClasseurs] = useState<Classeur[]>([]);
-  const [activeClasseurId, setActiveClasseurId] = useState<string | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
+  const foldersObj = useFileSystemStore(selectFolders);
+  const notesObj = useFileSystemStore(selectNotes);
+  const classeursObj = useFileSystemStore(selectClasseurs);
+  const folders = React.useMemo(() => Object.values(foldersObj), [foldersObj]);
+  const notes = React.useMemo(() => Object.values(notesObj), [notesObj]);
+  const classeurs = React.useMemo(() => Object.values(classeursObj), [classeursObj]);
+  
+  console.log('foldersObj', foldersObj);
+  console.log('folders', folders);
+  console.log('classeursObj', classeursObj);
+  console.log('classeurs', classeurs);
 
-  // Stocker la liste précédente d'IDs de dossiers
-  const [prevClasseurIds, setPrevClasseurIds] = useState<string[]>([]);
-
-  // Helper pour extraire les IDs
-  const getClasseurIds = (classeurs: Classeur[]) => classeurs.map(c => c.id);
-
-  // Helper pour dédupliquer les classeurs par ID
-  const dedupeClasseurs = (classeurs: Classeur[]) => {
-    const map = new Map<string, Classeur>();
-    for (const c of classeurs) {
-      if (map.has(c.id)) {
-        console.warn('Duplicate classeur detected:', c.id);
-      }
-      map.set(c.id, c);
-    }
-    return Array.from(map.values());
-  };
-
-  // Realtime pour les classeurs (hook appelé au top level)
-  const { subscribe, unsubscribe } = useRealtime({
-    userId: "3223651c-5580-4471-affb-b3f4456bd729", // [TEMP] USER_ID HARDCODED
-    type: 'polling',
-    interval: 5000
-  });
-
-  // Helper pour sélectionner le premier classeur valide
-  const selectFirstClasseur = (classeurs: Classeur[]) => {
-    if (classeurs.length === 0) {
-      setActiveClasseurId(null);
-      localStorage.removeItem("activeClasseurId");
-    } else {
-      setActiveClasseurId(classeurs[0].id);
-      localStorage.setItem("activeClasseurId", classeurs[0].id);
-    }
-  };
-
-  // Helper pour garantir un tableau
-  const ensureArray = (val: any) => Array.isArray(val) ? val : [];
-
-  // Helper pour comparer deux listes de classeurs
-  const areClasseursEqual = (a: Classeur[], b: Classeur[]) => {
-    if (a.length !== b.length) return false;
-    for (let i = 0; i < a.length; i++) {
-      if (a[i].id !== b[i].id || JSON.stringify(a[i]) !== JSON.stringify(b[i])) return false;
-    }
-    return true;
-  };
-
-  // Subscribe to classeurs and folders realtime updates
-  useEffect(() => {
-    const handleClasseurChange = (event: any) => {
-      if (event.table === 'classeurs') {
-        // Re-fetch all classeurs to get the latest state
-        getClasseurs().then(fetchedClasseurs => {
-          fetchedClasseurs = ensureArray(fetchedClasseurs);
-          setClasseurs(prev => mergeClasseursState(prev, fetchedClasseurs));
-          setPrevClasseurIds(getClasseurIds(fetchedClasseurs));
-        });
-      }
-    };
-    const handleFolderChange = (event: any) => {
-      if (event.table === 'folders') {
-        // Re-fetch all classeurs to get the latest state
-        getClasseurs().then(fetchedClasseurs => {
-          fetchedClasseurs = ensureArray(fetchedClasseurs);
-          setClasseurs(prev => mergeClasseursState(prev, fetchedClasseurs));
-          setPrevClasseurIds(getClasseurIds(fetchedClasseurs));
-        });
-      }
-    };
-
-    subscribe('classeurs', handleClasseurChange);
-    subscribe('folders', handleFolderChange);
-    return () => {
-      unsubscribe('classeurs', handleClasseurChange);
-      unsubscribe('folders', handleFolderChange);
-    };
-  }, [subscribe, unsubscribe]);
-
-  // Fetch initial des classeurs au montage (plus de polling)
-  useEffect(() => {
-    const fetchInitialClasseurs = async () => {
-      setLoading(true);
-      try {
-        let fetchedClasseurs = await getClasseurs();
-        fetchedClasseurs = ensureArray(fetchedClasseurs);
-        setClasseurs(fetchedClasseurs);
-        setPrevClasseurIds(getClasseurIds(fetchedClasseurs));
-        // Vérifier que l'ID actif existe encore
-        const lastActiveId = localStorage.getItem("activeClasseurId");
-        const activeId = fetchedClasseurs.find((c: Classeur) => c.id === lastActiveId)
-          ? lastActiveId
-          : fetchedClasseurs[0]?.id || null;
-        setActiveClasseurId(activeId);
-        if (activeId) {
-          localStorage.setItem("activeClasseurId", activeId);
-        } else {
-          localStorage.removeItem("activeClasseurId");
-        }
-        setError(null);
-      } catch (err: any) {
-        setError("Impossible de charger les classeurs. Veuillez rafraîchir la page.");
-        toast.error("Impossible de charger les classeurs.");
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchInitialClasseurs();
+  // Effet d'hydratation minimal (à adapter à ta source réelle)
+  React.useEffect(() => {
+    // Exemple avec API REST locale, adapte à Supabase ou autre si besoin
+    fetch('/api/v1/classeurs')
+      .then(res => res.json())
+      .then(data => useFileSystemStore.getState().setClasseurs(data));
+    fetch('/api/v1/dossiers')
+      .then(res => res.json())
+      .then(data => useFileSystemStore.getState().setFolders(data));
+    fetch('/api/v1/notes')
+      .then(res => res.json())
+      .then(data => useFileSystemStore.getState().setNotes(data));
   }, []);
+  // Navigation locale (dossier courant)
+  const [activeClasseurId, setActiveClasseurId] = React.useState<string | null>(null);
+  const [currentFolderId, setCurrentFolderId] = React.useState<string | undefined>(undefined);
+  const handleFolderOpen = useCallback((folder: { id: string }) => setCurrentFolderId(folder.id), []);
+  const handleGoBack = useCallback(() => setCurrentFolderId(undefined), []);
+  
+  // Filtrage par classeur actif
+  const filteredFolders = React.useMemo(() => 
+    activeClasseurId ? folders.filter(f => f.classeur_id === activeClasseurId) : [], 
+    [folders, activeClasseurId]
+  );
+  const filteredNotes = React.useMemo(() => 
+    activeClasseurId ? notes.filter(n => n.classeur_id === activeClasseurId) : [], 
+    [notes, activeClasseurId]
+  );
+  
+  console.log('filteredFolders', filteredFolders);
+  console.log('filteredNotes', filteredNotes);
 
-  useEffect(() => {
-    // Si l'ID actif n'existe plus, sélectionner le premier classeur
-    if (activeClasseurId && !classeurs.find(c => c.id === activeClasseurId)) {
-      selectFirstClasseur(classeurs);
-    }
-  }, [classeurs, activeClasseurId]);
+  // Les helpers de déduplication et d'extraction d'IDs ne sont plus nécessaires
+
+  // Toute la logique de fetch/cache/écriture Zustand automatique est supprimée.
+  // La source de vérité est useFileSystemStore(s => Object.values(s.classeurs)).
 
   const handleSelectClasseur = (id: string) => {
     if (classeurs.find(c => c.id === id)) {
       setActiveClasseurId(id);
       localStorage.setItem("activeClasseurId", id);
     } else {
-      selectFirstClasseur(classeurs);
+      // selectFirstClasseur(classeurs); // This line is removed
     }
   };
 
@@ -167,7 +102,6 @@ const DossiersPage: React.FC = () => {
     const newName = prompt("Entrez le nom du nouveau classeur :");
     if (newName && newName.trim() !== "") {
       try {
-        setError(null);
         toast.loading("Création du classeur...");
         const newClasseurData = {
           name: newName.trim(),
@@ -176,7 +110,6 @@ const DossiersPage: React.FC = () => {
           color: "#808080",
         };
         const newClasseur = await createClasseur(newClasseurData);
-        setClasseurs(prev => [...prev, newClasseur]);
         setActiveClasseurId(newClasseur.id);
         localStorage.setItem("activeClasseurId", newClasseur.id);
         toast.dismiss();
@@ -184,7 +117,6 @@ const DossiersPage: React.FC = () => {
       } catch (err: any) {
         toast.dismiss();
         console.error("Erreur technique lors de la création du classeur:", err);
-        setError(`Erreur technique : ${err.message}`);
         toast.error("Erreur lors de la création du classeur.");
       }
     }
@@ -193,8 +125,7 @@ const DossiersPage: React.FC = () => {
   const handleUpdateClasseur = async (id: string, updates: Partial<Classeur>) => {
     try {
       toast.loading("Mise à jour du classeur...");
-      const updatedClasseur = await updateClasseur(id, updates);
-      setClasseurs(classeurs.map((c) => (c.id === id ? updatedClasseur : c)));
+      await updateClasseur(id, updates);
       toast.dismiss();
       toast.success("Classeur mis à jour avec succès.");
     } catch (error) {
@@ -208,10 +139,8 @@ const DossiersPage: React.FC = () => {
     try {
       toast.loading("Suppression du classeur...");
       await deleteClasseur(id);
-      const newClasseurs = classeurs.filter((c) => c.id !== id);
-      setClasseurs(newClasseurs);
       if (activeClasseurId === id) {
-        selectFirstClasseur(newClasseurs);
+        setActiveClasseurId(classeurs[0]?.id || null);
       }
       toast.dismiss();
       toast.success("Classeur supprimé avec succès.");
@@ -235,17 +164,18 @@ const DossiersPage: React.FC = () => {
   const activeClasseur = classeurs.find((c) => c.id === activeClasseurId) || null;
 
   // Fallback dans le rendu
-  const safeClasseurs = dedupeClasseurs(Array.isArray(classeurs) ? classeurs : []);
+  const safeClasseurs = Array.isArray(classeurs) ? classeurs : [];
 
   // return conditionnels APRÈS tous les hooks
-  if (loading) return <div>Chargement...</div>;
-  if (error) return <div className="error-message">{error}</div>;
+  // L'UI est toujours pilotée par Zustand, pas de loading/error local
+
+  // Plus aucun useEffect, polling, subscribe, ou cache local pour la liste des classeurs
 
   return (
     <div className="dossiers-page-layout">
       <ClasseurTabs
         classeurs={safeClasseurs}
-        setClasseurs={setClasseurs}
+        setClasseurs={() => {}} // plus utilisé, mais prop requise
         activeClasseurId={activeClasseurId}
         onSelectClasseur={handleSelectClasseur}
         onCreateClasseur={handleCreateClasseur}
@@ -261,6 +191,12 @@ const DossiersPage: React.FC = () => {
             classeurId={activeClasseur.id}
             classeurName={activeClasseur.name}
             classeurIcon={activeClasseur.emoji}
+            parentFolderId={currentFolderId}
+            onFolderOpen={handleFolderOpen}
+            onGoBack={handleGoBack}
+            // Ajout des données filtrées
+            filteredFolders={filteredFolders}
+            filteredNotes={filteredNotes}
           />
         ) : (
           <div className="empty-state">

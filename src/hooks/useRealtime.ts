@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { initRealtimeService, subscribeToTable as subscribeToPolling, unsubscribeFromTable as unsubscribeFromPolling, stopRealtimeService } from '@/services/realtimeService';
 import { initWebSocketService, subscribeToTable as subscribeToWebSocket, unsubscribeFromTable as unsubscribeFromWebSocket, stopWebSocketService } from '@/services/websocketService';
+import * as supabaseRealtimeService from '@/services/supabaseRealtimeService';
 // import { initSSEService, subscribeToTable, unsubscribeFromTable, stopSSEService } from '@/services/sseService';
 
 interface RealtimeConfig {
@@ -63,7 +64,16 @@ export function useRealtime(config: RealtimeConfig) {
   const initialized = useRef(false);
   const listeners = useRef<Map<string, (event: ChangeEvent) => void>>(new Map());
 
-  // Handler générique pour tous les events WebSocket
+  const REALTIME_PROVIDER = process.env.NEXT_PUBLIC_REALTIME_PROVIDER || 'websocket';
+  const isSupabase = REALTIME_PROVIDER === 'supabase';
+  const realtimeService = isSupabase ? supabaseRealtimeService : {
+    subscribe: subscribeToWebSocket,
+    unsubscribe: unsubscribeFromWebSocket,
+    send: () => {},
+    stop: stopWebSocketService,
+  };
+
+  // Handler générique pour tous les events WebSocket/Supabase
   useEffect(() => {
     if (config.type !== 'websocket' || !config.onEvent) return;
     const handleRawEvent = (event: { type: string, payload: any, timestamp: number }) => {
@@ -71,8 +81,19 @@ export function useRealtime(config: RealtimeConfig) {
       config.onEvent?.(event);
     };
     // TODO: Affiner le typage de subscribeToWebSocket pour gérer le cas spécifique de la table 'all'
-    subscribeToWebSocket('all', handleRawEvent as unknown as (event: ChangeEvent) => void);
-    return () => unsubscribeFromWebSocket('all', handleRawEvent as unknown as (event: ChangeEvent) => void);
+    if (isSupabase) {
+      supabaseRealtimeService.subscribe('notes' as any, handleRawEvent);
+      supabaseRealtimeService.subscribe('folders' as any, handleRawEvent);
+      supabaseRealtimeService.subscribe('classeurs' as any, handleRawEvent);
+      return () => {
+        supabaseRealtimeService.unsubscribe('notes' as any, handleRawEvent);
+        supabaseRealtimeService.unsubscribe('folders' as any, handleRawEvent);
+        supabaseRealtimeService.unsubscribe('classeurs' as any, handleRawEvent);
+      };
+    } else {
+      subscribeToWebSocket('all', handleRawEvent as unknown as (event: ChangeEvent) => void);
+      return () => unsubscribeFromWebSocket('all', handleRawEvent as unknown as (event: ChangeEvent) => void);
+    }
   }, [config.type, config.token, config.onEvent, config.debug]);
 
   useEffect(() => {
@@ -84,8 +105,12 @@ export function useRealtime(config: RealtimeConfig) {
           initRealtimeService(config.userId);
           break;
         case 'websocket':
-          if (!config.wsUrl || !config.token) throw new Error('wsUrl et token requis pour WebSocket');
-          initWebSocketService(config.wsUrl, config.token, !!config.debug, config.onError);
+          if (isSupabase) {
+            // Pas d'init requis pour supabaseRealtimeService
+          } else {
+            if (!config.wsUrl || !config.token) throw new Error('wsUrl et token requis pour WebSocket');
+            initWebSocketService(config.wsUrl, config.token, !!config.debug, config.onError);
+          }
           break;
         case 'sse':
           // À implémenter si besoin
@@ -107,7 +132,11 @@ export function useRealtime(config: RealtimeConfig) {
             stopRealtimeService();
             break;
           case 'websocket':
-            stopWebSocketService();
+            if (isSupabase) {
+              // Pas de stop pour supabaseRealtimeService
+            } else {
+              stopWebSocketService();
+            }
             break;
           case 'sse':
             // À implémenter si besoin
@@ -127,7 +156,7 @@ export function useRealtime(config: RealtimeConfig) {
   const subscribe = (table: string, callback: (event: ChangeEvent) => void) => {
     listeners.current.set(table, callback);
     if (config.type === 'websocket') {
-      subscribeToWebSocket(table, callback);
+      realtimeService.subscribe(table, callback);
     } else {
       subscribeToPolling(table, callback);
     }
@@ -137,12 +166,12 @@ export function useRealtime(config: RealtimeConfig) {
    * Se désabonner des changements
    */
   const unsubscribe = (table: string, callback: (event: ChangeEvent) => void) => {
+    listeners.current.delete(table);
     if (config.type === 'websocket') {
-      unsubscribeFromWebSocket(table, callback);
+      realtimeService.unsubscribe(table, callback);
     } else {
       unsubscribeFromPolling(table, callback);
     }
-    listeners.current.delete(table);
   };
 
   /**

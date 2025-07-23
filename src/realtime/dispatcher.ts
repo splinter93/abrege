@@ -13,6 +13,7 @@ import { handleEditorEvent } from './editor';
  * Gère aussi les événements editor.* via handleEditorEvent
  */
 export function handleRealtimeEvent(event: { type: string, payload: any, timestamp: number }, debug = false) {
+  console.log('[REALTIME] handleRealtimeEvent', event.type, event.payload);
   const store = useFileSystemStore.getState();
   if (debug) logEventToConsole(event);
   const { type, payload } = event;

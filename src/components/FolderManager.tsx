@@ -1,4 +1,4 @@
-'use client';
+"use client";
 import React, { useState, useCallback } from 'react';
 import { useFolderManagerState } from './useFolderManagerState';
 import FolderToolbar, { ViewMode } from './FolderToolbar';
@@ -10,22 +10,47 @@ import './FolderManager.css';
 import { updateFolder, updateArticle } from '../services/supabase';
 import { toast } from 'react-hot-toast';
 import { moveNoteREST } from '../services/api';
+import type { FileSystemState } from '@/store/useFileSystemStore';
+import { useFileSystemStore } from '@/store/useFileSystemStore';
+const selectFolders = (s: FileSystemState) => s.folders;
+const selectNotes = (s: FileSystemState) => s.notes;
 
 interface FolderManagerProps {
   classeurId: string;
   classeurName: string;
   classeurIcon?: string;
   parentFolderId?: string;
+  onFolderOpen: (folder: any) => void;
+  onGoBack: () => void;
+  // Ajout des données filtrées
+  filteredFolders?: any[];
+  filteredNotes?: any[];
 }
 
-const FolderManager: React.FC<FolderManagerProps> = ({ classeurId, classeurName, parentFolderId }) => {
-  // State local pour le dossier courant
-  const [currentFolderId, setCurrentFolderId] = useState<string | undefined>(parentFolderId);
-  const [folderPath, setFolderPath] = useState<Folder[]>([]);
+const FolderManager: React.FC<FolderManagerProps> = ({ 
+  classeurId, 
+  classeurName, 
+  parentFolderId, 
+  onFolderOpen, 
+  onGoBack,
+  filteredFolders,
+  filteredNotes
+}) => {
+  // Utiliser les données filtrées si fournies, sinon récupérer depuis le store
+  const foldersObj = useFileSystemStore(selectFolders);
+  const notesObj = useFileSystemStore(selectNotes);
+  const folders = React.useMemo(() => 
+    filteredFolders || Object.values(foldersObj), 
+    [filteredFolders, foldersObj]
+  );
+  const notes = React.useMemo(() => 
+    filteredNotes || Object.values(notesObj), 
+    [filteredNotes, notesObj]
+  );
   const [refreshKey, setRefreshKey] = useState(0);
   const {
-    folders,
-    files,
+    folders: localFolders,
+    files: localFiles,
     loading,
     error,
     renamingItemId,
@@ -38,7 +63,7 @@ const FolderManager: React.FC<FolderManagerProps> = ({ classeurId, classeurName,
     deleteFolder,
     deleteFile,
     moveItem,
-  } = useFolderManagerState(classeurId, currentFolderId, refreshKey);
+  } = useFolderManagerState(classeurId, parentFolderId, refreshKey);
 
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -51,7 +76,7 @@ const FolderManager: React.FC<FolderManagerProps> = ({ classeurId, classeurName,
 
   // Handlers pour FolderContent
   const handleItemClick = (item: any) => {
-    if (item.type === 'folder') handleFolderOpen(item);
+    if (item.type === 'folder') {/* handler du parent */}
     else handleFileOpen(item);
   };
   const handleItemDoubleClick = handleItemClick;
@@ -74,7 +99,7 @@ const FolderManager: React.FC<FolderManagerProps> = ({ classeurId, classeurName,
   // Handlers pour le menu contextuel
   const handleOpen = () => {
     if (!contextMenuState.item) return;
-    if (contextMenuState.item.type === 'folder') handleFolderOpen(contextMenuState.item);
+    if (contextMenuState.item.type === 'folder') {/* handler du parent */}
     else handleFileOpen(contextMenuState.item);
     closeContextMenu();
   };
@@ -91,11 +116,8 @@ const FolderManager: React.FC<FolderManagerProps> = ({ classeurId, classeurName,
     closeContextMenu();
   };
 
-  // Handler d'ouverture de dossier (met à jour le state local)
-  const handleFolderOpen = (folder: Folder) => {
-    setCurrentFolderId(folder.id);
-    setFolderPath(prev => [...prev, folder]);
-  };
+  // La navigation doit être gérée par le parent, donc ce handler doit être passé en prop par le parent
+  // const handleFolderOpen = ... (à implémenter dans le parent)
 
   // Handler d'ouverture de fichier (conserve router.push pour les notes)
   const handleFileOpen = (file: FileArticle) => {
@@ -122,11 +144,8 @@ const FolderManager: React.FC<FolderManagerProps> = ({ classeurId, classeurName,
 
   const closeContextMenu = () => setContextMenuState(cm => ({ ...cm, visible: false }));
 
-  // Handler retour (remonte d'un niveau)
-  const handleGoBack = () => {
-    setCurrentFolderId(undefined);
-    setFolderPath([]);
-  };
+  // Idem, le retour doit être géré par le parent
+  // const handleGoBack = ... (à implémenter dans le parent)
 
   // Handler drop sur la racine
   const handleRootDragOver = (e: React.DragEvent) => {
@@ -144,9 +163,9 @@ const FolderManager: React.FC<FolderManagerProps> = ({ classeurId, classeurName,
       if (data && data.id && data.type) {
         moveItem(data.id, null, data.type);
         // Si on déplace le dossier courant, revenir à la racine
-        if (data.type === 'folder' && data.id === currentFolderId) {
-          setCurrentFolderId(undefined);
-          setFolderPath([]);
+        if (data.type === 'folder' && data.id === parentFolderId) {
+          // setCurrentFolderId(undefined); // This line is removed
+          // setFolderPath([]); // This line is removed
         }
       }
     } catch (err) {
@@ -156,6 +175,7 @@ const FolderManager: React.FC<FolderManagerProps> = ({ classeurId, classeurName,
 
   // Handler drop sur un tab de classeur (autre ou courant)
   React.useEffect(() => {
+    console.log('[EFFECT] useEffect triggered in FolderManager (drop-to-classeur)', { classeurId, moveItem, refreshNow, parentFolderId });
     const handler = async (e: any) => {
       const { classeurId: targetClasseurId, itemId, itemType, target } = e.detail || {};
       console.log('[DnD] FolderManager drop-to-classeur event received', { targetClasseurId, itemId, itemType, target, currentClasseurId: classeurId });
@@ -200,23 +220,23 @@ const FolderManager: React.FC<FolderManagerProps> = ({ classeurId, classeurName,
     };
     window.addEventListener('drop-to-classeur', handler as any);
     return () => window.removeEventListener('drop-to-classeur', handler as any);
-  }, [classeurId, moveItem, refreshNow]);
+  }, [classeurId, moveItem, refreshNow, parentFolderId]); // Added parentFolderId to dependencies
 
   // (refreshCurrentView supprimé, remplacé par refreshKey)
 
-  // Breadcrumb local basé sur folderPath
-  const breadcrumb = folderPath;
+  // Breadcrumb local supprimé : navigation pilotée par le parent
 
   // Robustesse : toujours un tableau pour éviter les erreurs React #310
   const safeFolders = Array.isArray(folders) ? folders : [];
-  const safeFiles = Array.isArray(files) ? files : [];
+  const safeFiles = Array.isArray(notes) ? notes : [];
 
   // Raccourci clavier : Escape ramène à la racine du classeur actif
   React.useEffect(() => {
+    console.log('[EFFECT] useEffect triggered in FolderManager (Escape)', {});
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        setCurrentFolderId(undefined);
-        setFolderPath([]);
+        // setCurrentFolderId(undefined); // This line is removed
+        // setFolderPath([]); // This line is removed
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -254,9 +274,9 @@ const FolderManager: React.FC<FolderManagerProps> = ({ classeurId, classeurName,
         padding: '0 32px 8px 32px',
         minHeight: 64,
       }}>
-        {/* Bouton retour si dans un sous-dossier */}
-        {currentFolderId && (
-          <button onClick={handleGoBack} style={{ fontSize: 22, marginRight: 18, background: 'none', border: 'none', color: '#fff', cursor: 'pointer' }} aria-label="Retour">←</button>
+        {/* Le bouton retour doit appeler le handler du parent */}
+        {parentFolderId && (
+          <button onClick={onGoBack} style={{ fontSize: 22, marginRight: 18, background: 'none', border: 'none', color: '#fff', cursor: 'pointer' }} aria-label="Retour">←</button>
         )}
         <div style={{
           display: 'flex',
@@ -281,40 +301,11 @@ const FolderManager: React.FC<FolderManagerProps> = ({ classeurId, classeurName,
             alignItems: 'center',
           }}>
             {classeurName}
-            {breadcrumb.length > 0 && (
-              <span style={{ color: 'var(--text-2)', fontWeight: 500, fontSize: 18, margin: '0 8px', userSelect: 'none' }}>/</span>
-            )}
+            {/* Breadcrumb dynamique */}
+            {/* Breadcrumb local supprimé : navigation pilotée par le parent */}
           </span>
           {/* Breadcrumb dynamique */}
-          {breadcrumb.length > 0 && (
-            <span style={{ color: 'var(--text-2)', fontWeight: 500, fontSize: 18, display: 'flex', alignItems: 'center', gap: 0 }}>
-              {breadcrumb.map((folder, idx) => (
-                <span key={folder.id} style={{ display: 'flex', alignItems: 'center' }}>
-                  <span
-                    style={{
-                      cursor: idx < breadcrumb.length - 1 ? 'pointer' : 'default',
-                      textDecoration: idx < breadcrumb.length - 1 ? 'underline dotted' : 'none',
-                      opacity: idx < breadcrumb.length - 1 ? 0.85 : 1,
-                      marginRight: 4,
-                      maxWidth: 180,
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap',
-                    }}
-                    onClick={() => {
-                      if (idx < breadcrumb.length - 1) {
-                        setCurrentFolderId(folder.id);
-                        setFolderPath(breadcrumb.slice(0, idx + 1));
-                      }
-                    }}
-                  >
-                    {folder.name}
-                  </span>
-                  {idx < breadcrumb.length - 1 && <span style={{ margin: '0 2px', color: 'var(--text-2)' }}>/</span>}
-                </span>
-              ))}
-            </span>
-          )}
+          {/* Breadcrumb local supprimé : navigation pilotée par le parent */}
         </div>
         <div style={{ marginLeft: 32 }}>
           <FolderToolbar
@@ -331,12 +322,12 @@ const FolderManager: React.FC<FolderManagerProps> = ({ classeurId, classeurName,
         </div>
       </div>
       <FolderContent
-        classeurName={(currentFolderId && safeFolders.find(f => f.id === currentFolderId)?.name) ? safeFolders.find(f => f.id === currentFolderId)?.name! : classeurName || ''}
+        classeurName={classeurName || ''}
         folders={safeFolders}
         files={safeFiles}
         loading={loading}
         error={error}
-        onFolderOpen={handleFolderOpen}
+        onFolderOpen={onFolderOpen}
         onFileOpen={handleFileOpen}
         renamingItemId={renamingItemId}
         onRenameFile={(id, newName, type) => submitRename(id, newName, type)}

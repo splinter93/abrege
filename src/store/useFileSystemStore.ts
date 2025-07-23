@@ -33,6 +33,7 @@ export interface FileSystemState {
   notes: Record<string, Note>;
   folders: Record<string, Folder>;
   classeurs: Record<string, Classeur>;
+  activeClasseurId?: string | null;
   // Actions notes
   addNote: (note: Note) => void;
   removeNote: (id: string) => void;
@@ -53,6 +54,11 @@ export interface FileSystemState {
   addClasseur: (classeur: Classeur) => void;
   removeClasseur: (id: string) => void;
   renameClasseur: (id: string, name: string) => void;
+  setActiveClasseurId: (id: string) => void;
+  // Actions globales d'hydratation
+  setFolders: (folders: Folder[]) => void;
+  setClasseurs: (classeurs: Classeur[]) => void;
+  setNotes: (notes: Note[]) => void;
 }
 
 /**
@@ -70,6 +76,7 @@ export const useFileSystemStore = create<FileSystemState>((set: Parameters<State
   notes: {},
   folders: {},
   classeurs: {},
+  activeClasseurId: null,
   // Notes
   addNote: (note: Note) => set(state => ({ notes: { ...state.notes, [note.id]: note } })),
   removeNote: (id: string) => set(state => { const n = { ...state.notes }; delete n[id]; return { notes: n }; }),
@@ -98,4 +105,12 @@ export const useFileSystemStore = create<FileSystemState>((set: Parameters<State
   addClasseur: (classeur: Classeur) => set(state => ({ classeurs: { ...state.classeurs, [classeur.id]: classeur } })),
   removeClasseur: (id: string) => set(state => { const c = { ...state.classeurs }; delete c[id]; return { classeurs: c }; }),
   renameClasseur: (id: string, name: string) => set(state => ({ classeurs: { ...state.classeurs, [id]: { ...state.classeurs[id], name } } })),
+  setActiveClasseurId: (id: string) => {
+    console.log('[ZUSTAND] setActiveClasseurId called', id);
+    set({ activeClasseurId: id });
+  },
+  // Actions globales d'hydratation
+  setFolders: (folders: Folder[]) => set(() => ({ folders: Object.fromEntries(folders.map(f => [f.id, f])) })),
+  setClasseurs: (classeurs: Classeur[]) => set(() => ({ classeurs: Object.fromEntries(classeurs.map(c => [c.id, c])) })),
+  setNotes: (notes: Note[]) => set(() => ({ notes: Object.fromEntries(notes.map(n => [n.id, n])) })),
 })); 
