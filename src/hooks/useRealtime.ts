@@ -70,7 +70,7 @@ export function useRealtime(config: RealtimeConfig) {
       if (config.debug) console.log('[WS EVENT]', event);
       config.onEvent?.(event);
     };
-    // On utilise 'all' comme table générique pour tous les events
+    // TODO: Affiner le typage de subscribeToWebSocket pour gérer le cas spécifique de la table 'all'
     subscribeToWebSocket('all', handleRawEvent as unknown as (event: ChangeEvent) => void);
     return () => unsubscribeFromWebSocket('all', handleRawEvent as unknown as (event: ChangeEvent) => void);
   }, [config.type, config.token, config.onEvent, config.debug]);

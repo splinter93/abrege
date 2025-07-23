@@ -19,7 +19,7 @@ export default function NoteEditorLivePage() {
   const params = useParams();
   const noteId = typeof params?.id === 'string' ? params.id : Array.isArray(params?.id) ? params.id[0] : '';
   // À adapter selon ton backend :
-  const wsUrl = 'wss://localhost:4000/ws'; // ou ton endpoint WebSocket
+  const wsUrl = 'wss://api.abrege.app/ws'; // URL WebSocket de production
   const token = 'demo-token'; // à remplacer par le vrai token utilisateur
   const debug = true;
   const note = useFileSystemStore((s: FileSystemState) => s.notes[noteId]);
