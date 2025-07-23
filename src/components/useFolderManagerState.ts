@@ -139,8 +139,8 @@ export function useFolderManagerState(classeurId: string, parentFolderId?: strin
     subscribe('folders', handleFolderChange);
 
     return () => {
-      unsubscribe('articles');
-      unsubscribe('folders');
+      unsubscribe('articles', handleArticleChange);
+      unsubscribe('folders', handleFolderChange);
     };
   }, [classeurId, parentFolderId, refreshKey, subscribe, unsubscribe]);
 
