@@ -13,7 +13,7 @@ const supabase = createClient(supabaseUrl, supabaseAnonKey);
 const USER_ID = "3223651c-5580-4471-affb-b3f4456bd729";
 
 // URL de base pour les tests
-const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3000';
 
 async function testEndpoint(method: string, endpoint: string, data?: any, description?: string) {
   const url = `${BASE_URL}/api/v1${endpoint}`;

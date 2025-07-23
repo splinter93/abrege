@@ -10,12 +10,12 @@ import { useRealtime } from '@/hooks/useRealtime';
  *
  * À adapter pour tester le flux WebSocket brut dans l'app.
  */
-export default function FileSystemLiveView({ wsUrl, token, debug = false }: { wsUrl: string, token: string, debug?: boolean }) {
+export default function FileSystemLiveView({ token, debug = false }: { token: string, debug?: boolean }) {
   const [notes, setNotes] = useState<{ id: string, title: string }[]>([]);
 
   const { /* subscribe, unsubscribe, ... */ } = useRealtime({
     type: 'websocket',
-    wsUrl,
+    wsUrl: process.env.NEXT_PUBLIC_WS_URL || '',
     token,
     debug,
     onEvent: (event) => {

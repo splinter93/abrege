@@ -34,7 +34,7 @@ class WebSocketService {
   private onError?: (err: any) => void;
 
   constructor(options: WebSocketServiceOptions) {
-    this.url = options.url;
+    this.url = options.url || process.env.NEXT_PUBLIC_WS_URL || '';
     this.token = options.token;
     this.debug = !!options.debug;
     this.onError = options.onError;

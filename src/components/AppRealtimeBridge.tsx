@@ -9,10 +9,10 @@ import { handleRealtimeEvent } from '@/realtime/dispatcher';
  * Utilisation :
  *   <AppRealtimeBridge wsUrl="wss://ton-backend/ws" token={monTokenJWT} debug={true} />
  */
-export default function AppRealtimeBridge({ wsUrl, token, debug = false }: { wsUrl: string, token: string, debug?: boolean }) {
+export default function AppRealtimeBridge({ wsUrl, token, debug = false }: { wsUrl?: string, token: string, debug?: boolean }) {
   useRealtime({
     type: 'websocket',
-    wsUrl,
+    wsUrl: wsUrl || process.env.NEXT_PUBLIC_WS_URL || '',
     token,
     debug,
     onEvent: (event) => handleRealtimeEvent(event, debug)
