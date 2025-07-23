@@ -58,7 +58,7 @@ export function useDiffRealtime(noteId: string, userId: string) {
     subscribe('articles', handleNoteChange);
 
     return () => {
-      unsubscribe('articles');
+      unsubscribe('articles', handleNoteChange);
     };
   }, [noteId, subscribe, unsubscribe]);
 
