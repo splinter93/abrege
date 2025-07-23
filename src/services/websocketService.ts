@@ -14,19 +14,30 @@ interface ChangeEvent {
   timestamp: number;
 }
 
+interface WebSocketServiceOptions {
+  url: string;
+  token: string;
+  debug?: boolean;
+  onError?: (err: any) => void;
+}
+
 class WebSocketService {
   private ws: WebSocket | null = null;
   private reconnectAttempts = 0;
   private maxReconnectAttempts = 5;
   private reconnectDelay = 1000;
-  private listeners: Map<string, Set<(event: ChangeEvent) => void>> = new Map();
+  private listeners: Map<string, Set<(event: any) => void>> = new Map();
   private pingInterval: NodeJS.Timeout | null = null;
   private url: string;
-  private userId: string;
+  private token: string;
+  private debug: boolean;
+  private onError?: (err: any) => void;
 
-  constructor(url: string, userId: string) {
-    this.url = url;
-    this.userId = userId;
+  constructor(options: WebSocketServiceOptions) {
+    this.url = options.url;
+    this.token = options.token;
+    this.debug = !!options.debug;
+    this.onError = options.onError;
   }
 
   /**
@@ -34,10 +45,10 @@ class WebSocketService {
    */
   connect() {
     try {
-      this.ws = new WebSocket(`${this.url}?userId=${this.userId}`);
+      this.ws = new WebSocket(`${this.url}?token=${this.token}`);
       
       this.ws.onopen = () => {
-        console.log('🔌 WebSocket connecté');
+        if (this.debug) console.log('🔌 WebSocket connecté');
         this.reconnectAttempts = 0;
         this.startPing();
       };
@@ -47,22 +58,25 @@ class WebSocketService {
           const message: WebSocketMessage = JSON.parse(event.data);
           this.handleMessage(message);
         } catch (error) {
-          console.error('❌ Erreur parsing message:', error);
+          if (this.debug) console.error('❌ Erreur parsing message:', error);
+          if (this.onError) this.onError(error);
         }
       };
 
       this.ws.onclose = () => {
-        console.log('🔌 WebSocket déconnecté');
+        if (this.debug) console.log('🔌 WebSocket déconnecté');
         this.stopPing();
         this.scheduleReconnect();
       };
 
       this.ws.onerror = (error) => {
-        console.error('❌ Erreur WebSocket:', error);
+        if (this.debug) console.error('❌ Erreur WebSocket:', error);
+        if (this.onError) this.onError(error);
       };
 
     } catch (error) {
-      console.error('❌ Erreur connexion WebSocket:', error);
+      if (this.debug) console.error('❌ Erreur connexion WebSocket:', error);
+      if (this.onError) this.onError(error);
     }
   }
 
@@ -88,7 +102,7 @@ class WebSocketService {
         break;
       
       default:
-        console.warn('⚠️ Message WebSocket inconnu:', message);
+        if (this.debug) console.warn('⚠️ Message WebSocket inconnu:', message);
     }
   }
 
@@ -121,20 +135,20 @@ class WebSocketService {
       this.reconnectAttempts++;
       const delay = this.reconnectDelay * Math.pow(2, this.reconnectAttempts - 1);
       
-      console.log(`🔄 Reconnexion dans ${delay}ms (tentative ${this.reconnectAttempts}/${this.maxReconnectAttempts})`);
+      if (this.debug) console.log(`🔄 Reconnexion dans ${delay}ms (tentative ${this.reconnectAttempts}/${this.maxReconnectAttempts})`);
       
       setTimeout(() => {
         this.connect();
       }, delay);
     } else {
-      console.error('❌ Nombre maximum de tentatives de reconnexion atteint');
+      if (this.debug) console.error('❌ Nombre maximum de tentatives de reconnexion atteint');
     }
   }
 
   /**
-   * S'abonner aux changements d'une table
+   * S'abonner aux changements d'une table ou à tous les events (table === 'all')
    */
-  subscribe(table: string, callback: (event: ChangeEvent) => void) {
+  subscribe(table: string, callback: (event: any) => void) {
     if (!this.listeners.has(table)) {
       this.listeners.set(table, new Set());
     }
@@ -144,7 +158,7 @@ class WebSocketService {
   /**
    * Se désabonner des changements
    */
-  unsubscribe(table: string, callback: (event: ChangeEvent) => void) {
+  unsubscribe(table: string, callback: (event: any) => void) {
     const listeners = this.listeners.get(table);
     if (listeners) {
       listeners.delete(callback);
@@ -157,14 +171,24 @@ class WebSocketService {
   /**
    * Notifier tous les listeners d'une table
    */
-  private notifyListeners(table: string, event: ChangeEvent) {
+  private notifyListeners(table: string, event: any) {
     const listeners = this.listeners.get(table);
     if (listeners) {
       listeners.forEach(callback => {
         try {
           callback(event);
         } catch (error) {
-          console.error('❌ Erreur dans listener:', error);
+          if (this.debug) console.error('❌ Erreur dans listener:', error);
+        }
+      });
+    }
+    // Notifier les listeners génériques (table === 'all')
+    if (table !== 'all' && this.listeners.has('all')) {
+      this.listeners.get('all')!.forEach(callback => {
+        try {
+          callback({ type: `${table}.${event.eventType?.toLowerCase?.() || 'event'}`, payload: event.new || event.data, timestamp: event.timestamp });
+        } catch (error) {
+          if (this.debug) console.error('❌ Erreur dans listener all:', error);
         }
       });
     }
@@ -179,6 +203,8 @@ class WebSocketService {
       this.ws.close();
       this.ws = null;
     }
+    // Nettoyage listeners
+    this.listeners.clear();
   }
 }
 
@@ -188,8 +214,8 @@ let websocketService: WebSocketService | null = null;
 /**
  * Initialiser le service WebSocket
  */
-export function initWebSocketService(wsUrl: string, userId: string) {
-  websocketService = new WebSocketService(wsUrl, userId);
+export function initWebSocketService(wsUrl: string, token: string, debug = false, onError?: (err: any) => void) {
+  websocketService = new WebSocketService({ url: wsUrl, token, debug, onError });
   websocketService.connect();
   return websocketService;
 }

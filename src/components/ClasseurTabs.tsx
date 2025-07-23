@@ -53,16 +53,21 @@ interface SortableTabProps {
 function SortableTab({ classeur, isActive, onSelectClasseur, onContextMenu, onDropToClasseur, isDragging, isOverlay }: SortableTabProps) {
   const [isDropActive, setIsDropActive] = useState(false);
   const sortable = useSortable({ id: classeur.id });
+  const isOverlayMode = !!isOverlay;
   return (
     <div
       ref={sortable.setNodeRef}
       style={{
         display: "inline-block",
-        opacity: (isDragging || sortable.isDragging) && !isOverlay ? 0.4 : 1,
-        zIndex: (isDragging || sortable.isDragging) ? 10 : "auto",
-        filter: isOverlay ? "drop-shadow(0 2px 12px rgba(255,255,255,0.27))" : undefined,
-        transform: sortable.transform ? CSS.Transform.toString(sortable.transform) : isOverlay ? "scale(1.08)" : undefined,
-        transition: sortable.transition || "opacity 0.18s, filter 0.18s, transform 0.18s",
+        opacity: 1,
+        zIndex: isOverlayMode ? 9999 : (isDragging || sortable.isDragging) ? 10 : "auto",
+        pointerEvents: isOverlayMode ? "none" : undefined,
+        boxShadow: isOverlayMode ? "0 4px 24px rgba(0,0,0,0.10)" : undefined,
+        background: "inherit",
+        transform: isOverlayMode
+          ? (sortable.transform ? `${CSS.Transform.toString(sortable.transform)} translateY(-85%)` : "translateY(-85%)")
+          : (sortable.transform ? CSS.Transform.toString(sortable.transform) : undefined),
+        transition: sortable.transition || "transform 0.18s",
       }}
       {...sortable.attributes}
       {...sortable.listeners}

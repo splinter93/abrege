@@ -1,14 +1,22 @@
 import { useEffect, useRef } from 'react';
-import { initRealtimeService, subscribeToTable, unsubscribeFromTable, stopRealtimeService } from '@/services/realtimeService';
-// import { initWebSocketService, subscribeToTable, unsubscribeFromTable, stopWebSocketService } from '@/services/websocketService';
+import { initRealtimeService, subscribeToTable as subscribeToPolling, unsubscribeFromTable as unsubscribeFromPolling, stopRealtimeService } from '@/services/realtimeService';
+import { initWebSocketService, subscribeToTable as subscribeToWebSocket, unsubscribeFromTable as unsubscribeFromWebSocket, stopWebSocketService } from '@/services/websocketService';
 // import { initSSEService, subscribeToTable, unsubscribeFromTable, stopSSEService } from '@/services/sseService';
 
 interface RealtimeConfig {
-  userId: string;
+  userId?: string;
   type: 'polling' | 'websocket' | 'sse';
   interval?: number; // pour polling
   wsUrl?: string; // pour websocket
-  sseUrl?: string; // pour sse
+  token?: string; // pour websocket sécurisé
+  debug?: boolean;
+  onError?: (err: any) => void;
+  /**
+   * Handler générique appelé à chaque événement WebSocket reçu (mode websocket uniquement).
+   * Signature : (event: { type: string, payload: any, timestamp: number }) => void
+   * L'utilisateur peut dispatcher comme il veut dans son UI ou son store.
+   */
+  onEvent?: (event: { type: string, payload: any, timestamp: number }) => void;
 }
 
 interface ChangeEvent {
@@ -20,40 +28,77 @@ interface ChangeEvent {
 }
 
 /**
- * Hook pour remplacer Supabase Realtime
- * Supporte polling, WebSocket et SSE
+ * useRealtime - Hook universel pour le realtime (polling, websocket, sse)
+ *
+ * @param config {RealtimeConfig}
+ *   - type: 'polling' | 'websocket' | 'sse'
+ *   - userId: string (pour polling)
+ *   - wsUrl: string (pour websocket)
+ *   - token: string (pour websocket sécurisé)
+ *   - debug: boolean (logs)
+ *   - onError: (err) => void (callback erreur)
+ *   - onEvent: (event: { type, payload, timestamp }) => void (callback générique WS)
+ *
+ * @returns { subscribe, unsubscribe, subscribeToTables, unsubscribeFromTables }
+ *
+ * Exemple d'utilisation (WebSocket) :
+ *
+ *   const { subscribe, unsubscribe } = useRealtime({
+ *     type: 'websocket',
+ *     wsUrl: 'wss://mon-backend/ws',
+ *     token: monTokenJWT,
+ *     debug: true,
+ *     onEvent: (event) => {
+ *       if (event.type === 'note.created') {
+ *         // Ajoute la note dans le state local
+ *       }
+ *     }
+ *   });
+ *
+ *   useEffect(() => {
+ *     // ...
+ *   }, []);
  */
 export function useRealtime(config: RealtimeConfig) {
   const initialized = useRef(false);
   const listeners = useRef<Map<string, (event: ChangeEvent) => void>>(new Map());
 
-  // Initialiser le service
+  // Handler générique pour tous les events WebSocket
+  useEffect(() => {
+    if (config.type !== 'websocket' || !config.onEvent) return;
+    const handleRawEvent = (event: { type: string, payload: any, timestamp: number }) => {
+      if (config.debug) console.log('[WS EVENT]', event);
+      config.onEvent?.(event);
+    };
+    // On utilise 'all' comme table générique pour tous les events
+    subscribeToWebSocket('all', handleRawEvent);
+    return () => unsubscribeFromWebSocket('all', handleRawEvent);
+  }, [config.type, config.token, config.onEvent, config.debug]);
+
   useEffect(() => {
     if (initialized.current) return;
-
     try {
       switch (config.type) {
         case 'polling':
+          if (!config.userId) throw new Error('userId requis pour le polling');
           initRealtimeService(config.userId);
           break;
         case 'websocket':
-          if (!config.wsUrl) throw new Error('wsUrl requis pour WebSocket');
-          // initWebSocketService(config.wsUrl, config.userId);
+          if (!config.wsUrl || !config.token) throw new Error('wsUrl et token requis pour WebSocket');
+          initWebSocketService(config.wsUrl, config.token, !!config.debug, config.onError);
           break;
         case 'sse':
-          if (!config.sseUrl) throw new Error('sseUrl requis pour SSE');
-          // initSSEService(config.sseUrl, config.userId);
+          // À implémenter si besoin
           break;
         default:
           throw new Error(`Type de realtime non supporté: ${config.type}`);
       }
-      
       initialized.current = true;
-      console.log(`🔄 Service realtime initialisé (${config.type})`);
+      if (config.debug) console.log(`🔄 Service realtime initialisé (${config.type})`);
     } catch (error) {
-      console.error('❌ Erreur initialisation realtime:', error);
+      if (config.debug) console.error('❌ Erreur initialisation realtime:', error);
+      if (config.onError) config.onError(error);
     }
-
     // Cleanup
     return () => {
       try {
@@ -62,39 +107,42 @@ export function useRealtime(config: RealtimeConfig) {
             stopRealtimeService();
             break;
           case 'websocket':
-            // stopWebSocketService();
+            stopWebSocketService();
             break;
           case 'sse':
-            // stopSSEService();
+            // À implémenter si besoin
             break;
         }
         initialized.current = false;
       } catch (error) {
-        console.error('❌ Erreur cleanup realtime:', error);
+        if (config.debug) console.error('❌ Erreur cleanup realtime:', error);
+        if (config.onError) config.onError(error);
       }
     };
-  }, [config.userId, config.type, config.wsUrl, config.sseUrl]);
+  }, [config.type, config.userId, config.wsUrl, config.token, config.debug, config.onError]);
 
   /**
    * S'abonner aux changements d'une table
    */
   const subscribe = (table: string, callback: (event: ChangeEvent) => void) => {
-    // Stocker le listener pour cleanup
     listeners.current.set(table, callback);
-    
-    // S'abonner via le service
-    subscribeToTable(table, callback);
+    if (config.type === 'websocket') {
+      subscribeToWebSocket(table, callback);
+    } else {
+      subscribeToPolling(table, callback);
+    }
   };
 
   /**
    * Se désabonner des changements
    */
-  const unsubscribe = (table: string) => {
-    const callback = listeners.current.get(table);
-    if (callback) {
-      unsubscribeFromTable(table, callback);
-      listeners.current.delete(table);
+  const unsubscribe = (table: string, callback: (event: ChangeEvent) => void) => {
+    if (config.type === 'websocket') {
+      unsubscribeFromWebSocket(table, callback);
+    } else {
+      unsubscribeFromPolling(table, callback);
     }
+    listeners.current.delete(table);
   };
 
   /**
@@ -109,9 +157,9 @@ export function useRealtime(config: RealtimeConfig) {
   /**
    * Se désabonner de plusieurs tables
    */
-  const unsubscribeFromTables = (tables: string[]) => {
+  const unsubscribeFromTables = (tables: string[], callback: (event: ChangeEvent) => void) => {
     tables.forEach(table => {
-      unsubscribe(table);
+      unsubscribe(table, callback);
     });
   };
 
@@ -162,7 +210,7 @@ export function useNoteRealtime(noteId: string, userId: string) {
     subscribe('articles', handleNoteChange);
 
     return () => {
-      unsubscribe('articles');
+      unsubscribe('articles', handleNoteChange);
     };
   }, [noteId, userId, subscribe, unsubscribe]);
 
@@ -232,8 +280,8 @@ export function useFolderRealtime(classeurId: string, userId: string) {
     subscribe('articles', handleArticleChange);
 
     return () => {
-      unsubscribe('folders');
-      unsubscribe('articles');
+      unsubscribe('folders', handleFolderChange);
+      unsubscribe('articles', handleArticleChange);
     };
   }, [classeurId, userId, subscribe, unsubscribe]);
 

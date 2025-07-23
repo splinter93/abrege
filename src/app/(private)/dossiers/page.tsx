@@ -85,64 +85,6 @@ const DossiersPage: React.FC = () => {
     return true;
   };
 
-  // Polling intelligent avec désactivation si onglet inactif
-  useEffect(() => {
-    let intervalId: NodeJS.Timeout | null = null;
-    let stopped = false;
-
-    const poll = async () => {
-      if (document.visibilityState !== 'visible') return;
-      setLoading(true);
-      try {
-        let fetchedClasseurs = await getClasseurs();
-        fetchedClasseurs = ensureArray(fetchedClasseurs);
-        setClasseurs(prev => mergeClasseursState(prev, fetchedClasseurs));
-        setPrevClasseurIds(getClasseurIds(fetchedClasseurs));
-        // Vérifier que l'ID actif existe encore
-        const lastActiveId = localStorage.getItem("activeClasseurId");
-        const activeId = fetchedClasseurs.find((c: Classeur) => c.id === lastActiveId)
-          ? lastActiveId
-          : fetchedClasseurs[0]?.id || null;
-        setActiveClasseurId(activeId);
-        if (activeId) {
-          localStorage.setItem("activeClasseurId", activeId);
-        } else {
-          localStorage.removeItem("activeClasseurId");
-        }
-        setError(null);
-        setLoading(false);
-      } catch (err: any) {
-        setError("Impossible de charger les classeurs. Veuillez rafraîchir la page.");
-        toast.error("Impossible de charger les classeurs.");
-        setLoading(false);
-      }
-    };
-
-    const startPolling = () => {
-      if (intervalId) clearInterval(intervalId);
-      intervalId = setInterval(poll, 12000); // 12s
-    };
-
-    const handleVisibility = () => {
-      if (document.visibilityState === 'visible') {
-        poll();
-        startPolling();
-      } else {
-        if (intervalId) clearInterval(intervalId);
-      }
-    };
-
-    document.addEventListener('visibilitychange', handleVisibility);
-    poll();
-    startPolling();
-
-    return () => {
-      stopped = true;
-      if (intervalId) clearInterval(intervalId);
-      document.removeEventListener('visibilitychange', handleVisibility);
-    };
-  }, []);
-
   // Subscribe to classeurs and folders realtime updates
   useEffect(() => {
     const handleClasseurChange = (event: any) => {
@@ -173,6 +115,37 @@ const DossiersPage: React.FC = () => {
       unsubscribe('folders');
     };
   }, [subscribe, unsubscribe]);
+
+  // Fetch initial des classeurs au montage (plus de polling)
+  useEffect(() => {
+    const fetchInitialClasseurs = async () => {
+      setLoading(true);
+      try {
+        let fetchedClasseurs = await getClasseurs();
+        fetchedClasseurs = ensureArray(fetchedClasseurs);
+        setClasseurs(fetchedClasseurs);
+        setPrevClasseurIds(getClasseurIds(fetchedClasseurs));
+        // Vérifier que l'ID actif existe encore
+        const lastActiveId = localStorage.getItem("activeClasseurId");
+        const activeId = fetchedClasseurs.find((c: Classeur) => c.id === lastActiveId)
+          ? lastActiveId
+          : fetchedClasseurs[0]?.id || null;
+        setActiveClasseurId(activeId);
+        if (activeId) {
+          localStorage.setItem("activeClasseurId", activeId);
+        } else {
+          localStorage.removeItem("activeClasseurId");
+        }
+        setError(null);
+      } catch (err: any) {
+        setError("Impossible de charger les classeurs. Veuillez rafraîchir la page.");
+        toast.error("Impossible de charger les classeurs.");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchInitialClasseurs();
+  }, []);
 
   useEffect(() => {
     // Si l'ID actif n'existe plus, sélectionner le premier classeur
