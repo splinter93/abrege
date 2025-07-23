@@ -38,7 +38,6 @@ const mergeClasseursState = (prev: Classeur[], fetched: Classeur[]) => {
 };
 
 const DossiersPage: React.FC = () => {
-  console.log('[RENDER] DossiersPage render');
   // TOUS les hooks doivent être ici, AVANT tout return conditionnel
   const foldersObj = useFileSystemStore(selectFolders);
   const notesObj = useFileSystemStore(selectNotes);
@@ -47,11 +46,6 @@ const DossiersPage: React.FC = () => {
   const notes = React.useMemo(() => Object.values(notesObj), [notesObj]);
   const classeurs = React.useMemo(() => Object.values(classeursObj), [classeursObj]);
   
-  console.log('foldersObj', foldersObj);
-  console.log('folders', folders);
-  console.log('classeursObj', classeursObj);
-  console.log('classeurs', classeurs);
-
   // Effet d'hydratation minimal (à adapter à ta source réelle)
   React.useEffect(() => {
     // Exemple avec API REST locale, adapte à Supabase ou autre si besoin
@@ -71,19 +65,43 @@ const DossiersPage: React.FC = () => {
   const handleFolderOpen = useCallback((folder: { id: string }) => setCurrentFolderId(folder.id), []);
   const handleGoBack = useCallback(() => setCurrentFolderId(undefined), []);
   
-  // Filtrage par classeur actif
-  const filteredFolders = React.useMemo(() => 
-    activeClasseurId ? folders.filter(f => f.classeur_id === activeClasseurId) : [], 
-    [folders, activeClasseurId]
-  );
-  const filteredNotes = React.useMemo(() => 
-    activeClasseurId ? notes.filter(n => n.classeur_id === activeClasseurId) : [], 
-    [notes, activeClasseurId]
-  );
+  // Filtrage par classeur actif ET navigation imbriquée
+  const filteredFolders = React.useMemo(() => {
+    if (!activeClasseurId) return [];
+    
+    return folders.filter(f => {
+      // Filtre par classeur
+      if (f.classeur_id !== activeClasseurId) return false;
+      
+      // Filtre par parent_id pour navigation imbriquée
+      if (currentFolderId === undefined) {
+        // À la racine : afficher seulement les dossiers sans parent
+        return f.parent_id === null;
+      } else {
+        // Dans un dossier : afficher seulement les sous-dossiers du dossier courant
+        return f.parent_id === currentFolderId;
+      }
+    });
+  }, [folders, activeClasseurId, currentFolderId]);
   
-  console.log('filteredFolders', filteredFolders);
-  console.log('filteredNotes', filteredNotes);
-
+  const filteredNotes = React.useMemo(() => {
+    if (!activeClasseurId) return [];
+    
+    return notes.filter(n => {
+      // Filtre par classeur
+      if (n.classeur_id !== activeClasseurId) return false;
+      
+      // Filtre par folder_id pour navigation imbriquée
+      if (currentFolderId === undefined) {
+        // À la racine : afficher seulement les notes sans dossier
+        return n.folder_id === null;
+      } else {
+        // Dans un dossier : afficher seulement les notes du dossier courant
+        return n.folder_id === currentFolderId;
+      }
+    });
+  }, [notes, activeClasseurId, currentFolderId]);
+  
   // Les helpers de déduplication et d'extraction d'IDs ne sont plus nécessaires
 
   // Toute la logique de fetch/cache/écriture Zustand automatique est supprimée.

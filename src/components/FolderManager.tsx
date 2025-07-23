@@ -10,10 +10,6 @@ import './FolderManager.css';
 import { updateFolder, updateArticle } from '../services/supabase';
 import { toast } from 'react-hot-toast';
 import { moveNoteREST } from '../services/api';
-import type { FileSystemState } from '@/store/useFileSystemStore';
-import { useFileSystemStore } from '@/store/useFileSystemStore';
-const selectFolders = (s: FileSystemState) => s.folders;
-const selectNotes = (s: FileSystemState) => s.notes;
 
 interface FolderManagerProps {
   classeurId: string;
@@ -36,17 +32,10 @@ const FolderManager: React.FC<FolderManagerProps> = ({
   filteredFolders,
   filteredNotes
 }) => {
-  // Utiliser les données filtrées si fournies, sinon récupérer depuis le store
-  const foldersObj = useFileSystemStore(selectFolders);
-  const notesObj = useFileSystemStore(selectNotes);
-  const folders = React.useMemo(() => 
-    filteredFolders || Object.values(foldersObj), 
-    [filteredFolders, foldersObj]
-  );
-  const notes = React.useMemo(() => 
-    filteredNotes || Object.values(notesObj), 
-    [filteredNotes, notesObj]
-  );
+  // Utiliser uniquement les données filtrées passées en props
+  const folders = React.useMemo(() => filteredFolders || [], [filteredFolders]);
+  const notes = React.useMemo(() => filteredNotes || [], [filteredNotes]);
+  
   const [refreshKey, setRefreshKey] = useState(0);
   const {
     folders: localFolders,
@@ -227,6 +216,7 @@ const FolderManager: React.FC<FolderManagerProps> = ({
   // Breadcrumb local supprimé : navigation pilotée par le parent
 
   // Robustesse : toujours un tableau pour éviter les erreurs React #310
+  // Utiliser les données filtrées passées en props
   const safeFolders = Array.isArray(folders) ? folders : [];
   const safeFiles = Array.isArray(notes) ? notes : [];
 
