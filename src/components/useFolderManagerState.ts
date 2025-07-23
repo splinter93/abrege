@@ -22,6 +22,8 @@ import {
   moveFolderREST
 } from '../services/api';
 
+import { useRealtime } from '@/hooks/useRealtime';
+
 // Types pour le renommage
 export type RenamingType = 'folder' | 'file' | null;
 
@@ -94,54 +96,53 @@ export function useFolderManagerState(classeurId: string, parentFolderId?: strin
     fetchData();
   }, [classeurId, parentFolderId, refreshKey]);
 
-  // --- SYNCHRO TEMPS RÉEL (Supabase Realtime) ---
-  useEffect(() => {
-    // Abonnement à la table "articles" (notes)
-    const channel = supabase
-      .channel('realtime:articles')
-      .on(
-        'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'articles' },
-        (payload) => {
-          // Vérifie que la note concerne le bon classeur/dossier
-          if (
-            payload.new.classeur_id === classeurId &&
-            ((parentFolderId && payload.new.folder_id === parentFolderId) || (!parentFolderId && !payload.new.folder_id))
-          ) {
-            setFiles((files) => {
-              // Évite les doublons si la note existe déjà
-              if (files.some(f => f.id === payload.new.id)) return files;
-              const newFile: FileArticle = {
-                id: payload.new.id,
-                source_title: payload.new.source_title,
-                source_type: payload.new.source_type,
-                updated_at: payload.new.updated_at,
-              };
-              return [...files, newFile];
-            });
-          }
-        }
-      )
-      .subscribe();
+  // --- SYNCHRO TEMPS RÉEL (Polling Intelligent) ---
+  const { subscribe, unsubscribe } = useRealtime({
+    userId: "3223651c-5580-4471-affb-b3f4456bd729", // [TEMP] USER_ID HARDCODED
+    type: 'polling',
+    interval: 3000
+  });
 
-    // Abonnement à la table "folders" (dossiers)
-    const folderChannel = supabase
-      .channel('realtime:folders')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'folders' },
-        (payload) => {
-          // Rafraîchir la liste des dossiers à chaque changement
-          getFolders(classeurId, parentFolderId).then(setFolders);
-        }
-      )
-      .subscribe();
+  useEffect(() => {
+    if (!classeurId) return;
+
+    const handleArticleChange = (event: any) => {
+      // Vérifie que la note concerne le bon classeur/dossier
+      if (
+        event.table === 'articles' &&
+        event.new?.classeur_id === classeurId &&
+        ((parentFolderId && event.new.folder_id === parentFolderId) || (!parentFolderId && !event.new.folder_id))
+      ) {
+        setFiles((files) => {
+          // Évite les doublons si la note existe déjà
+          if (files.some(f => f.id === event.new.id)) return files;
+          const newFile: FileArticle = {
+            id: event.new.id,
+            source_title: event.new.source_title,
+            source_type: event.new.source_type,
+            updated_at: event.new.updated_at,
+          };
+          return [...files, newFile];
+        });
+      }
+    };
+
+    const handleFolderChange = (event: any) => {
+      if (event.table === 'folders' && event.new?.classeur_id === classeurId) {
+        // Rafraîchir la liste des dossiers à chaque changement
+        getFolders(classeurId, parentFolderId).then(setFolders);
+      }
+    };
+
+    // S'abonner aux changements
+    subscribe('articles', handleArticleChange);
+    subscribe('folders', handleFolderChange);
 
     return () => {
-      supabase.removeChannel(channel);
-      supabase.removeChannel(folderChannel);
+      unsubscribe('articles');
+      unsubscribe('folders');
     };
-  }, [classeurId, parentFolderId, refreshKey]);
+  }, [classeurId, parentFolderId, refreshKey, subscribe, unsubscribe]);
 
   // --- NAVIGATION ---
   const goToFolder = useCallback((id: string) => {

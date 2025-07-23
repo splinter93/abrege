@@ -7,6 +7,7 @@ import { getClasseurs, createClasseur, updateClasseur, deleteClasseur, updateCla
 import { supabase } from "../../../supabaseClient";
 import { toast } from "react-hot-toast";
 import "./DossiersPage.css";
+import { useRealtime } from '@/hooks/useRealtime';
 
 const DossiersPage: React.FC = () => {
   // TOUS les hooks doivent être ici, AVANT tout return conditionnel
@@ -59,16 +60,27 @@ const DossiersPage: React.FC = () => {
     };
     fetchClasseurs();
 
-    // Abonnement Realtime à la table 'classeurs'
-    const classeurChannel = supabase
-      .channel('realtime:classeurs')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'classeurs' }, (payload: any) => {
-        fetchClasseurs();
-      })
-      .subscribe();
-    return () => {
-      supabase.removeChannel(classeurChannel);
-    };
+    // Realtime pour les classeurs
+    const { subscribe, unsubscribe } = useRealtime({
+      userId: "3223651c-5580-4471-affb-b3f4456bd729", // [TEMP] USER_ID HARDCODED
+      type: 'polling',
+      interval: 5000
+    });
+
+    useEffect(() => {
+      const handleClasseurChange = (event: any) => {
+        if (event.table === 'classeurs') {
+          fetchClasseurs();
+        }
+      };
+
+      subscribe('classeurs', handleClasseurChange);
+
+      return () => {
+        unsubscribe('classeurs');
+      };
+    }, [subscribe, unsubscribe]);
+
   }, []);
 
   useEffect(() => {

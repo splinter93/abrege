@@ -34,6 +34,7 @@ import { supabase } from '@/supabaseClient';
 import CustomImage from '@/extensions/CustomImage';
 import { useSession } from '@supabase/auth-helpers-react';
 import { publishNoteREST } from '@/services/api';
+import { useNoteRealtime } from '@/hooks/useRealtime';
 type SlashCommand = {
   id: string;
   alias: Record<string, string>;
@@ -181,29 +182,7 @@ export default function NoteEditorPage() {
   }, [editor, noteId, hasInitialized]);
 
   // Realtime : recharge la note en direct si modifiée ailleurs
-  React.useEffect(() => {
-    if (!editor || !noteId) return;
-    const channel = supabase.channel('realtime-article-' + noteId)
-      .on('postgres_changes', {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'articles',
-        filter: `id=eq.${noteId}`
-      }, async (payload) => {
-        // Recharge la note depuis la base
-        const note = await getArticleById(noteId);
-        if (note) {
-          setTitle(note.source_title || '');
-          setHeaderImageUrl(note.header_image || null);
-          setPublished(!!note.isPublished);
-          editor.commands.setContent(note.markdown_content || '');
-        }
-      })
-      .subscribe();
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [editor, noteId]);
+  useNoteRealtime(noteId, "3223651c-5580-4471-affb-b3f4456bd729"); // [TEMP] USER_ID HARDCODED
 
   // Fonction utilitaire pour extraire les headings du doc Tiptap
   function getHeadingsFromEditor(editorInstance: typeof editor): Heading[] {
