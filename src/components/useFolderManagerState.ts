@@ -184,14 +184,16 @@ export function useFolderManagerState(classeurId: string, parentFolderId?: strin
   // --- CRÉATION / SUPPRESSION ---
   const createFolder = useCallback(async (name: string): Promise<Folder | undefined> => {
     try {
+      console.log('[UI] 📁 Création dossier, en attente du patch realtime...', { name, classeurId, parentFolderId });
       const newFolder = await createFolderREST({
         name,
         notebook_id: classeurId,
         parent_id: parentFolderId,
       });
-      // setFolders(folders => [...folders, newFolder]); // Supprimé
+      console.log('[UI] ✅ Dossier créé via API, patch realtime attendu...', newFolder);
       return newFolder;
     } catch (err) {
+      console.error('[UI] ❌ Erreur création dossier:', err);
       setError('Erreur lors de la création du dossier.');
       return undefined;
     }
@@ -201,6 +203,7 @@ export function useFolderManagerState(classeurId: string, parentFolderId?: strin
 
   const createFile = useCallback(async (name: string): Promise<FileArticle | undefined> => {
     try {
+      console.log('[UI] 📝 Création note, en attente du patch realtime...', { name, classeurId, parentFolderId });
       const payload: any = {
         source_title: name,
         notebook_id: classeurId,
@@ -212,9 +215,10 @@ export function useFolderManagerState(classeurId: string, parentFolderId?: strin
       }
       console.log('Payload createNoteREST', payload);
       const newFile = await createNoteREST(payload);
-      // setFiles(files => [...files, newFile]); // Supprimé
+      console.log('[UI] ✅ Note créée via API, patch realtime attendu...', newFile);
       return newFile;
     } catch (err) {
+      console.error('[UI] ❌ Erreur création note:', err);
       setError('Erreur lors de la création du fichier.');
       return undefined;
     }
@@ -222,22 +226,26 @@ export function useFolderManagerState(classeurId: string, parentFolderId?: strin
 
   const deleteFolder = useCallback(async (id: string) => {
     try {
+      console.log('[UI] 🗑️ Suppression dossier, en attente du patch realtime...', { id });
       await deleteFolderREST(id);
-      // setFolders(folders => folders.filter(f => f.id !== id)); // Supprimé
+      console.log('[UI] ✅ Dossier supprimé via API, patch realtime attendu...');
       if (parentFolderId === id) {
         // setCurrentFolderId(null); // Supprimé
         // setCurrentFolder(null); // Supprimé
       }
     } catch (err) {
+      console.error('[UI] ❌ Erreur suppression dossier:', err);
       setError('Erreur lors de la suppression du dossier.');
     }
   }, [parentFolderId]);
 
   const deleteFile = useCallback(async (id: string) => {
     try {
+      console.log('[UI] 🗑️ Suppression note, en attente du patch realtime...', { id });
       await deleteNoteREST(id);
-      // setFiles(files => files.filter(f => f.id !== id)); // Supprimé
+      console.log('[UI] ✅ Note supprimée via API, patch realtime attendu...');
     } catch (err) {
+      console.error('[UI] ❌ Erreur suppression note:', err);
       setError('Erreur lors de la suppression du fichier.');
     }
   }, []);
@@ -245,13 +253,11 @@ export function useFolderManagerState(classeurId: string, parentFolderId?: strin
   // --- RENOMMAGE ---
   const submitRename = useCallback(async (id: string, newName: string, type: 'folder' | 'file') => {
     try {
+      console.log('[UI] ✏️ Renommage item, en attente du patch realtime...', { id, newName, type });
       await renameItemREST(id, type === 'file' ? 'note' : 'folder', newName);
-      // if (type === 'folder') { // Supprimé
-      //   setFolders(folders => folders.map(f => f.id === id ? { ...f, name: newName } : f));
-      // } else {
-      //   setFiles(files => files.map(f => f.id === id ? { ...f, source_title: newName } : f));
-      // }
+      console.log('[UI] ✅ Item renommé via API, patch realtime attendu...');
     } catch (err) {
+      console.error('[UI] ❌ Erreur renommage:', err);
       setError('Erreur lors du renommage.');
     } finally {
       setRenamingItemId(null);
@@ -268,8 +274,11 @@ export function useFolderManagerState(classeurId: string, parentFolderId?: strin
   const reorderFolders = useCallback(async (newOrder: Folder[]) => {
     // setFolders(newOrder); // Supprimé
     try {
+      console.log('[UI] 🔄 Réordonnancement dossiers, en attente du patch realtime...', newOrder.length);
       await updateItemPositions(newOrder.map((item, idx) => ({ id: item.id, position: idx, type: 'folder' })));
+      console.log('[UI] ✅ Dossiers réordonnés via API, patch realtime attendu...');
     } catch (err) {
+      console.error('[UI] ❌ Erreur réordonnancement dossiers:', err);
       setError('Erreur lors du réordonnancement des dossiers.');
     }
   }, []);
@@ -277,8 +286,11 @@ export function useFolderManagerState(classeurId: string, parentFolderId?: strin
   const reorderFiles = useCallback(async (newOrder: FileArticle[]) => {
     // setFiles(newOrder); // Supprimé
     try {
+      console.log('[UI] 🔄 Réordonnancement notes, en attente du patch realtime...', newOrder.length);
       await updateItemPositions(newOrder.map((item, idx) => ({ id: item.id, position: idx, type: 'file' })));
+      console.log('[UI] ✅ Notes réordonnées via API, patch realtime attendu...');
     } catch (err) {
+      console.error('[UI] ❌ Erreur réordonnancement notes:', err);
       setError('Erreur lors du réordonnancement des fichiers.');
     }
   }, []);
@@ -286,6 +298,7 @@ export function useFolderManagerState(classeurId: string, parentFolderId?: strin
   // --- IMBRICATION DnD ---
   const moveItem = useCallback(async (id: string, newParentId: string | null, type: 'folder' | 'file') => {
     try {
+      console.log('[UI] 📦 Déplacement item, en attente du patch realtime...', { id, newParentId, type });
       if (type === 'folder') {
         await moveFolderREST(id, {
           target_classeur_id: classeurId,
@@ -297,6 +310,7 @@ export function useFolderManagerState(classeurId: string, parentFolderId?: strin
           target_folder_id: newParentId,
         });
       }
+      console.log('[UI] ✅ Item déplacé via API, patch realtime attendu...');
       // Rafraîchir les dossiers/fichiers
       // const [fetchedFolders, fetchedFiles] = await Promise.all([ // Supprimé
       //   getFolders(classeurId, parentFolderId),
@@ -305,6 +319,7 @@ export function useFolderManagerState(classeurId: string, parentFolderId?: strin
       // setFolders(fetchedFolders.sort((a, b) => (a.position || 0) - (b.position || 0))); // Supprimé
       // setFiles(fetchedFiles.sort((a, b) => (a.position || 0) - (b.position || 0))); // Supprimé
     } catch (err) {
+      console.error('[UI] ❌ Erreur déplacement item:', err);
       setError('Erreur lors du déplacement de l\'élément.');
     }
   }, [classeurId, parentFolderId]);

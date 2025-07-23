@@ -45,6 +45,10 @@ class RealtimeService {
    * Démarrer le polling pour une table spécifique
    */
   startPolling(table: string) {
+    // TEMPORAIREMENT DÉSACTIVÉ - Utilisation du nouveau système realtime
+    console.log(`🚫 Polling désactivé pour ${table} - Utilisation du nouveau système realtime`);
+    return;
+    
     if (!this.config.enabled || this.intervals.has(table)) return;
 
     const interval = setInterval(async () => {

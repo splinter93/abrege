@@ -3,13 +3,14 @@ import React, { useCallback } from "react";
 import FolderManager from "../../../components/FolderManager";
 import ClasseurTabs, { Classeur } from "../../../components/ClasseurTabs";
 import DynamicIcon from "../../../components/DynamicIcon";
-import { getClasseurs, createClasseur, updateClasseur, deleteClasseur, updateClasseurPositions } from "../../../services/supabase";
+import { getClasseurs, createClasseur, updateClasseur, deleteClasseur, updateClasseurPositions, getArticles } from "../../../services/supabase";
 import { supabase } from "../../../supabaseClient";
 import { toast } from "react-hot-toast";
 import "./DossiersPage.css";
 import { useRealtime } from '@/hooks/useRealtime';
 import { useFileSystemStore } from '@/store/useFileSystemStore';
 import type { FileSystemState } from '@/store/useFileSystemStore';
+import { subscribeToNotes, subscribeToDossiers, subscribeToClasseurs, unsubscribeFromAll, startSubscriptionMonitoring } from '@/realtime/dispatcher';
 
 const selectFolders = (s: FileSystemState) => s.folders;
 const selectNotes = (s: FileSystemState) => s.notes;
@@ -46,19 +47,138 @@ const DossiersPage: React.FC = () => {
   const notes = React.useMemo(() => Object.values(notesObj), [notesObj]);
   const classeurs = React.useMemo(() => Object.values(classeursObj), [classeursObj]);
   
-  // Effet d'hydratation minimal (à adapter à ta source réelle)
+  // ===== VÉRIFICATION AUTHENTIFICATION =====
   React.useEffect(() => {
-    // Exemple avec API REST locale, adapte à Supabase ou autre si besoin
-    fetch('/api/v1/classeurs')
-      .then(res => res.json())
-      .then(data => useFileSystemStore.getState().setClasseurs(data));
-    fetch('/api/v1/dossiers')
-      .then(res => res.json())
-      .then(data => useFileSystemStore.getState().setFolders(data));
-    fetch('/api/v1/notes')
-      .then(res => res.json())
-      .then(data => useFileSystemStore.getState().setNotes(data));
+    const checkAuth = async () => {
+      try {
+        const { data: { user }, error } = await supabase.auth.getUser();
+        if (error) {
+          console.error('[DossiersPage] ❌ Erreur authentification:', error);
+        } else if (user) {
+          console.log('[DossiersPage] ✅ Utilisateur authentifié:', user.id);
+        } else {
+          console.log('[DossiersPage] ⚠️ Aucun utilisateur authentifié');
+        }
+      } catch (err) {
+        console.error('[DossiersPage] ❌ Erreur lors de la vérification auth:', err);
+      }
+    };
+    
+    checkAuth();
   }, []);
+  
+  // ===== EFFET D'HYDRATATION INITIALE =====
+  React.useEffect(() => {
+    console.log('[DossiersPage] 🔄 Chargement des données initiales...');
+    
+    const loadInitialData = async () => {
+      try {
+        // Charger les classeurs
+        const classeursData = await getClasseurs();
+        console.log('[DossiersPage] 📚 Classeurs chargés:', classeursData.length);
+        useFileSystemStore.getState().setClasseurs(classeursData);
+        
+        // Charger toutes les notes (articles) de tous les classeurs
+        const { data: notesData, error: notesError } = await supabase
+          .from('articles')
+          .select('*')
+          .order('position');
+        
+        if (!notesError && notesData) {
+          console.log('[DossiersPage] 📝 Notes chargées:', notesData.length);
+          useFileSystemStore.getState().setNotes(notesData);
+        } else {
+          console.error('[DossiersPage] ❌ Erreur lors du chargement des notes:', notesError);
+        }
+        
+        // Charger tous les dossiers
+        const { data: foldersData, error: foldersError } = await supabase
+          .from('folders')
+          .select('*')
+          .order('position');
+        
+        if (!foldersError && foldersData) {
+          console.log('[DossiersPage] 📁 Dossiers chargés:', foldersData.length);
+          useFileSystemStore.getState().setFolders(foldersData);
+        } else {
+          console.error('[DossiersPage] ❌ Erreur lors du chargement des dossiers:', foldersError);
+        }
+        
+        console.log('[DossiersPage] ✅ Données initiales chargées');
+      } catch (error) {
+        console.error('[DossiersPage] ❌ Erreur lors du chargement des données:', error);
+        toast.error('Erreur lors du chargement des données');
+      }
+    };
+    
+    loadInitialData();
+  }, []); // Dépendances vides = exécuté une seule fois au montage
+  
+  // ===== PHASE 3: SOUSCRIPTIONS REALTIME =====
+  React.useEffect(() => {
+    console.log('[DossiersPage] 🔄 Démarrage des souscriptions realtime...');
+    console.log('[DossiersPage] 📊 État actuel - Classeurs:', classeurs.length, 'Notes:', notes.length, 'Dossiers:', folders.length);
+    
+    const setupRealtime = async () => {
+      try {
+        // Vérifier l'authentification d'abord
+        const { data: { user }, error: authError } = await supabase.auth.getUser();
+        
+        if (authError) {
+          console.error('[DossiersPage] ❌ Erreur authentification:', authError);
+          return;
+        }
+        
+        if (!user) {
+          console.log('[DossiersPage] ⚠️ Aucun utilisateur authentifié - souscriptions différées');
+          // Réessayer dans 2 secondes
+          setTimeout(setupRealtime, 2000);
+          return;
+        }
+        
+        console.log('[DossiersPage] ✅ Utilisateur authentifié:', user.id);
+        
+        // Attendre un peu que l'authentification soit stable
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        // S'abonner aux événements realtime
+        console.log('[DossiersPage] 📝 Activation souscription notes...');
+        const notesSubscription = subscribeToNotes();
+        
+        console.log('[DossiersPage] 📁 Activation souscription dossiers...');
+        const dossiersSubscription = subscribeToDossiers();
+        
+        console.log('[DossiersPage] 📚 Activation souscription classeurs...');
+        const classeursSubscription = subscribeToClasseurs();
+        
+        console.log('[DossiersPage] ✅ Souscriptions realtime activées');
+        console.log('[DossiersPage] 📡 Canaux créés:', { notesSubscription, dossiersSubscription, classeursSubscription });
+        
+        // Démarrer le monitoring des souscriptions
+        startSubscriptionMonitoring();
+        
+      } catch (error) {
+        console.error('[DossiersPage] ❌ Erreur lors de l\'activation des souscriptions realtime:', error);
+        // Réessayer dans 3 secondes en cas d'erreur
+        setTimeout(setupRealtime, 3000);
+      }
+    };
+    
+    // Attendre 2 secondes que l'authentification soit établie
+    setTimeout(setupRealtime, 2000);
+    
+    // Nettoyage au démontage
+    return () => {
+      console.log('[DossiersPage] 🛑 Arrêt des souscriptions realtime...');
+      try {
+        unsubscribeFromAll();
+        console.log('[DossiersPage] ✅ Souscriptions realtime désactivées');
+      } catch (error) {
+        console.error('[DossiersPage] ❌ Erreur lors de la désactivation des souscriptions:', error);
+      }
+    };
+  }, []); // Dépendances vides = exécuté une seule fois au montage
+  
   // Navigation locale (dossier courant)
   const [activeClasseurId, setActiveClasseurId] = React.useState<string | null>(null);
   const [currentFolderId, setCurrentFolderId] = React.useState<string | undefined>(undefined);
