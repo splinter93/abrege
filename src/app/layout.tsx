@@ -30,8 +30,13 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body>
-        {children}
+      <body className={`${geistSans.variable} ${geistMono.variable}`}>
+        <LanguageProvider>
+          <AuthProvider>
+            <Toaster position="top-right" />
+            {children}
+          </AuthProvider>
+        </LanguageProvider>
       </body>
     </html>
   );

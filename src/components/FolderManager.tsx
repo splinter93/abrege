@@ -32,14 +32,13 @@ const FolderManager: React.FC<FolderManagerProps> = ({
   filteredFolders,
   filteredNotes
 }) => {
-  // Utiliser uniquement les données filtrées passées en props
+  // Utiliser directement les données filtrées passées en props
   const folders = React.useMemo(() => filteredFolders || [], [filteredFolders]);
   const notes = React.useMemo(() => filteredNotes || [], [filteredNotes]);
   
+  // Optimisation : éviter les appels API redondants
   const [refreshKey, setRefreshKey] = useState(0);
   const {
-    folders: localFolders,
-    files: localFiles,
     loading,
     error,
     renamingItemId,
@@ -217,8 +216,8 @@ const FolderManager: React.FC<FolderManagerProps> = ({
 
   // Robustesse : toujours un tableau pour éviter les erreurs React #310
   // Utiliser les données filtrées passées en props
-  const safeFolders = Array.isArray(folders) ? folders : [];
-  const safeFiles = Array.isArray(notes) ? notes : [];
+  const safeFolders = React.useMemo(() => Array.isArray(folders) ? folders : [], [folders]);
+  const safeFiles = React.useMemo(() => Array.isArray(notes) ? notes : [], [notes]);
 
   // Raccourci clavier : Escape ramène à la racine du classeur actif
   React.useEffect(() => {

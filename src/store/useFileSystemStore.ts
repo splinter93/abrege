@@ -66,7 +66,7 @@ export interface FileSystemState {
   removeClasseur: (id: string) => void;
   updateClasseur: (id: string, patch: Partial<Classeur>) => void;
   renameClasseur: (id: string, name: string) => void;
-  setActiveClasseurId: (id: string) => void;
+  setActiveClasseurId: (id: string | null) => void;
   
   // Actions globales d'hydratation
   setFolders: (folders: Folder[]) => void;
@@ -195,7 +195,7 @@ export const useFileSystemStore = create<FileSystemState>((set: Parameters<State
     } 
   })),
   
-  setActiveClasseurId: (id: string) => {
+  setActiveClasseurId: (id: string | null) => {
     console.log('[ZUSTAND] setActiveClasseurId called', id);
     set({ activeClasseurId: id });
   },

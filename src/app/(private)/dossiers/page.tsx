@@ -43,6 +43,10 @@ const DossiersPage: React.FC = () => {
   const foldersObj = useFileSystemStore(selectFolders);
   const notesObj = useFileSystemStore(selectNotes);
   const classeursObj = useFileSystemStore(selectClasseurs);
+  const activeClasseurId = useFileSystemStore(s => s.activeClasseurId || null);
+  const setActiveClasseurId = useFileSystemStore(s => s.setActiveClasseurId);
+  
+  // Optimisation : éviter les re-calculs inutiles
   const folders = React.useMemo(() => Object.values(foldersObj), [foldersObj]);
   const notes = React.useMemo(() => Object.values(notesObj), [notesObj]);
   const classeurs = React.useMemo(() => Object.values(classeursObj), [classeursObj]);
@@ -105,9 +109,37 @@ const DossiersPage: React.FC = () => {
         }
         
         console.log('[DossiersPage] ✅ Données initiales chargées');
+        
+        // ===== SÉLECTION AUTOMATIQUE DU CLASSEUR =====
+        const selectInitialClasseur = () => {
+          // 1. Essayer de récupérer le dernier classeur sélectionné depuis localStorage
+          const lastActiveClasseurId = localStorage.getItem("activeClasseurId");
+          
+          if (lastActiveClasseurId && classeursData.find(c => c.id === lastActiveClasseurId)) {
+            console.log('[DossiersPage] 🎯 Sélection du dernier classeur utilisé:', lastActiveClasseurId);
+            setActiveClasseurId(lastActiveClasseurId);
+            return;
+          }
+          
+          // 2. Sinon, sélectionner le premier classeur disponible
+          if (classeursData.length > 0) {
+            const firstClasseurId = classeursData[0].id;
+            console.log('[DossiersPage] 🎯 Sélection du premier classeur:', firstClasseurId);
+            setActiveClasseurId(firstClasseurId);
+            localStorage.setItem("activeClasseurId", firstClasseurId);
+            return;
+          }
+          
+          // 3. Aucun classeur disponible
+          console.log('[DossiersPage] ⚠️ Aucun classeur disponible');
+          setActiveClasseurId(null);
+        };
+        
+        // Sélectionner le classeur après le chargement
+        selectInitialClasseur();
+        
       } catch (error) {
-        console.error('[DossiersPage] ❌ Erreur lors du chargement des données:', error);
-        toast.error('Erreur lors du chargement des données');
+        console.error('[DossiersPage] ❌ Erreur lors du chargement des données initiales:', error);
       }
     };
     
@@ -180,7 +212,6 @@ const DossiersPage: React.FC = () => {
   }, []); // Dépendances vides = exécuté une seule fois au montage
   
   // Navigation locale (dossier courant)
-  const [activeClasseurId, setActiveClasseurId] = React.useState<string | null>(null);
   const [currentFolderId, setCurrentFolderId] = React.useState<string | undefined>(undefined);
   const handleFolderOpen = useCallback((folder: { id: string }) => setCurrentFolderId(folder.id), []);
   const handleGoBack = useCallback(() => setCurrentFolderId(undefined), []);
@@ -219,6 +250,12 @@ const DossiersPage: React.FC = () => {
         // Dans un dossier : afficher seulement les notes du dossier courant
         return n.folder_id === currentFolderId;
       }
+    }).sort((a, b) => {
+      // Tri stable par position ou par titre
+      if (a.position !== undefined && b.position !== undefined) {
+        return a.position - b.position;
+      }
+      return a.source_title.localeCompare(b.source_title);
     });
   }, [notes, activeClasseurId, currentFolderId]);
   
