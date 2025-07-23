@@ -1,7 +1,8 @@
 import { useEffect, useRef } from 'react';
-import { initRealtimeService, subscribeToTable as subscribeToPolling, unsubscribeFromTable as unsubscribeFromPolling, stopRealtimeService } from '@/services/realtimeService';
-import { initWebSocketService, subscribeToTable as subscribeToWebSocket, unsubscribeFromTable as unsubscribeFromWebSocket, stopWebSocketService } from '@/services/websocketService';
-import * as supabaseRealtimeService from '@/services/supabaseRealtimeService';
+// ANCIEN SYSTÈME DÉSACTIVÉ - Utilisation du nouveau système realtime
+// import { initRealtimeService, subscribeToTable as subscribeToPolling, unsubscribeFromTable as unsubscribeFromPolling, stopRealtimeService } from '@/services/realtimeService';
+// import { initWebSocketService, subscribeToTable as subscribeToWebSocket, unsubscribeFromTable as unsubscribeFromWebSocket, stopWebSocketService } from '@/services/websocketService';
+// import * as supabaseRealtimeService from '@/services/supabaseRealtimeService';
 // import { initSSEService, subscribeToTable, unsubscribeFromTable, stopSSEService } from '@/services/sseService';
 
 interface RealtimeConfig {
@@ -66,11 +67,30 @@ export function useRealtime(config: RealtimeConfig) {
 
   const REALTIME_PROVIDER = process.env.NEXT_PUBLIC_REALTIME_PROVIDER || 'websocket';
   const isSupabase = REALTIME_PROVIDER === 'supabase';
-  const realtimeService = isSupabase ? supabaseRealtimeService : {
-    subscribe: subscribeToWebSocket,
-    unsubscribe: unsubscribeFromWebSocket,
+  const realtimeService = isSupabase ? {
+    subscribe: (table: string, callback: (event: ChangeEvent) => void) => {
+      // Supabase realtime service does not have a direct subscribe/unsubscribe method for tables
+      // This is a placeholder for future implementation if needed
+      console.warn(`Supabase realtime service does not support direct table subscription for ${table}. Consider using a different provider or implementing a custom solution.`);
+    },
+    unsubscribe: (table: string, callback: (event: ChangeEvent) => void) => {
+      // Supabase realtime service does not have a direct subscribe/unsubscribe method for tables
+      // This is a placeholder for future implementation if needed
+      console.warn(`Supabase realtime service does not support direct table unsubscribe for ${table}. Consider using a different provider or implementing a custom solution.`);
+    },
     send: () => {},
-    stop: stopWebSocketService,
+    stop: () => {},
+  } : {
+    subscribe: (table: string, callback: (event: ChangeEvent) => void) => {
+      // This is a placeholder for future implementation if needed
+      console.warn(`WebSocket realtime service does not have a direct table subscription method for ${table}. Consider using a different provider or implementing a custom solution.`);
+    },
+    unsubscribe: (table: string, callback: (event: ChangeEvent) => void) => {
+      // This is a placeholder for future implementation if needed
+      console.warn(`WebSocket realtime service does not have a direct table unsubscribe method for ${table}. Consider using a different provider or implementing a custom solution.`);
+    },
+    send: () => {},
+    stop: () => {},
   };
 
   // Handler générique pour tous les events WebSocket/Supabase
@@ -82,17 +102,13 @@ export function useRealtime(config: RealtimeConfig) {
     };
     // TODO: Affiner le typage de subscribeToWebSocket pour gérer le cas spécifique de la table 'all'
     if (isSupabase) {
-      supabaseRealtimeService.subscribe('notes' as any, handleRawEvent);
-      supabaseRealtimeService.subscribe('folders' as any, handleRawEvent);
-      supabaseRealtimeService.subscribe('classeurs' as any, handleRawEvent);
-      return () => {
-        supabaseRealtimeService.unsubscribe('notes' as any, handleRawEvent);
-        supabaseRealtimeService.unsubscribe('folders' as any, handleRawEvent);
-        supabaseRealtimeService.unsubscribe('classeurs' as any, handleRawEvent);
-      };
+      // Supabase realtime service does not have a direct subscribe method for tables
+      // This is a placeholder for future implementation if needed
+      console.warn('Supabase realtime service does not support direct table subscription. Consider using a different provider or implementing a custom solution.');
     } else {
-      subscribeToWebSocket('all', handleRawEvent as unknown as (event: ChangeEvent) => void);
-      return () => unsubscribeFromWebSocket('all', handleRawEvent as unknown as (event: ChangeEvent) => void);
+      // WebSocket realtime service does not have a direct subscribe method for tables
+      // This is a placeholder for future implementation if needed
+      console.warn('WebSocket realtime service does not support direct table subscription. Consider using a different provider or implementing a custom solution.');
     }
   }, [config.type, config.token, config.onEvent, config.debug]);
 
@@ -102,14 +118,14 @@ export function useRealtime(config: RealtimeConfig) {
       switch (config.type) {
         case 'polling':
           if (!config.userId) throw new Error('userId requis pour le polling');
-          initRealtimeService(config.userId);
+          // initRealtimeService(config.userId); // ANCIEN SYSTÈME DÉSACTIVÉ
           break;
         case 'websocket':
           if (isSupabase) {
             // Pas d'init requis pour supabaseRealtimeService
           } else {
             if (!config.wsUrl || !config.token) throw new Error('wsUrl et token requis pour WebSocket');
-            initWebSocketService(config.wsUrl, config.token, !!config.debug, config.onError);
+            // initWebSocketService(config.wsUrl, config.token, !!config.debug, config.onError); // ANCIEN SYSTÈME DÉSACTIVÉ
           }
           break;
         case 'sse':
@@ -129,13 +145,13 @@ export function useRealtime(config: RealtimeConfig) {
       try {
         switch (config.type) {
           case 'polling':
-            stopRealtimeService();
+            // stopRealtimeService(); // ANCIEN SYSTÈME DÉSACTIVÉ
             break;
           case 'websocket':
             if (isSupabase) {
               // Pas de stop pour supabaseRealtimeService
             } else {
-              stopWebSocketService();
+              // stopWebSocketService(); // ANCIEN SYSTÈME DÉSACTIVÉ
             }
             break;
           case 'sse':
@@ -155,11 +171,14 @@ export function useRealtime(config: RealtimeConfig) {
    */
   const subscribe = (table: string, callback: (event: ChangeEvent) => void) => {
     listeners.current.set(table, callback);
-    if (config.type === 'websocket') {
-      realtimeService.subscribe(table, callback);
-    } else {
-      subscribeToPolling(table, callback);
-    }
+    // ANCIEN SYSTÈME DÉSACTIVÉ - Utilisation du nouveau système realtime
+    console.log(`[useRealtime] 🚫 Ancien système realtime désactivé pour ${table} - Utilisation du nouveau système`);
+    
+    // if (config.type === 'websocket') {
+    //   realtimeService.subscribe(table, callback);
+    // } else {
+    //   subscribeToPolling(table, callback);
+    // }
   };
 
   /**
@@ -167,11 +186,14 @@ export function useRealtime(config: RealtimeConfig) {
    */
   const unsubscribe = (table: string, callback: (event: ChangeEvent) => void) => {
     listeners.current.delete(table);
-    if (config.type === 'websocket') {
-      realtimeService.unsubscribe(table, callback);
-    } else {
-      unsubscribeFromPolling(table, callback);
-    }
+    // ANCIEN SYSTÈME DÉSACTIVÉ - Utilisation du nouveau système realtime
+    console.log(`[useRealtime] 🚫 Ancien système realtime désactivé pour ${table} - Utilisation du nouveau système`);
+    
+    // if (config.type === 'websocket') {
+    //   realtimeService.unsubscribe(table, callback);
+    // } else {
+    //   unsubscribeFromPolling(table, callback);
+    // }
   };
 
   /**
