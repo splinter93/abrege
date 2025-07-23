@@ -50,21 +50,22 @@ interface SortableTabProps {
   onDropToClasseur?: (classeurId: string, itemId: string, itemType: 'folder' | 'file') => void;
 }
 
-function SortableTab({ classeur, isActive, onSelectClasseur, onContextMenu, listeners, attributes, setNodeRef, isDragging, isOverlay, sortableTransform, sortableTransition, onDropToClasseur }: SortableTabProps) {
+function SortableTab({ classeur, isActive, onSelectClasseur, onContextMenu, onDropToClasseur, isDragging, isOverlay }: SortableTabProps) {
   const [isDropActive, setIsDropActive] = useState(false);
+  const sortable = useSortable({ id: classeur.id });
   return (
     <div
-      ref={setNodeRef}
+      ref={sortable.setNodeRef}
       style={{
         display: "inline-block",
-        opacity: isDragging && !isOverlay ? 0.4 : 1,
-        zIndex: isDragging ? 10 : "auto",
+        opacity: (isDragging || sortable.isDragging) && !isOverlay ? 0.4 : 1,
+        zIndex: (isDragging || sortable.isDragging) ? 10 : "auto",
         filter: isOverlay ? "drop-shadow(0 2px 12px rgba(255,255,255,0.27))" : undefined,
-        transform: sortableTransform ? CSS.Transform.toString(sortableTransform) : isOverlay ? "scale(1.08)" : undefined,
-        transition: sortableTransition || "opacity 0.18s, filter 0.18s, transform 0.18s",
+        transform: sortable.transform ? CSS.Transform.toString(sortable.transform) : isOverlay ? "scale(1.08)" : undefined,
+        transition: sortable.transition || "opacity 0.18s, filter 0.18s, transform 0.18s",
       }}
-      {...attributes}
-      {...listeners}
+      {...sortable.attributes}
+      {...sortable.listeners}
       onDragOver={e => {
         e.preventDefault();
         setIsDropActive(true);
@@ -81,11 +82,16 @@ function SortableTab({ classeur, isActive, onSelectClasseur, onContextMenu, list
         try {
           const data = JSON.parse(e.dataTransfer.getData('application/json'));
           if (data && data.id && data.type && onDropToClasseur) {
+            console.log('[DnD] onDropToClasseur called', { classeurId: classeur.id, itemId: data.id, itemType: data.type });
             onDropToClasseur(classeur.id, data.id, data.type);
+            // Ajoute target: 'tab' dans le payload pour signaler le contexte
+            const eventPayload = { classeurId: classeur.id, itemId: data.id, itemType: data.type, target: 'tab' };
+            console.log('[DnD] Dispatching drop-to-classeur event', eventPayload);
+            window.dispatchEvent(new CustomEvent('drop-to-classeur', { detail: eventPayload }));
           }
-          // Ajoute target: 'tab' dans le payload pour signaler le contexte
-          e.dataTransfer.setData('application/json', JSON.stringify({ ...data, target: 'tab' }));
-        } catch (err) {}
+        } catch (err) {
+          console.error('[DnD] Error in onDrop', err);
+        }
       }}
     >
       <button
@@ -229,20 +235,16 @@ const ClasseurTabs: React.FC<ClasseurTabsProps> = ({
       <div className="classeur-tabs-btn-list">
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
           <SortableContext items={safeClasseurs.map((c) => c.id)} strategy={horizontalListSortingStrategy}>
-            {safeClasseurs.map((classeur) => {
-              const sortable = useSortable({ id: classeur.id });
-              return (
-                <SortableTab
-                  key={classeur.id}
-                  classeur={classeur}
-                  isActive={activeClasseurId === classeur.id}
-                  onSelectClasseur={onSelectClasseur}
-                  onContextMenu={handleContextMenu}
-                  {...sortable}
-                  onDropToClasseur={handleDropToClasseur}
-                />
-              );
-            })}
+            {safeClasseurs.map((classeur) => (
+              <SortableTab
+                key={classeur.id}
+                classeur={classeur}
+                isActive={activeClasseurId === classeur.id}
+                onSelectClasseur={onSelectClasseur}
+                onContextMenu={handleContextMenu}
+                onDropToClasseur={handleDropToClasseur}
+              />
+            ))}
           </SortableContext>
           <DragOverlay>
             {draggedClasseur ? (

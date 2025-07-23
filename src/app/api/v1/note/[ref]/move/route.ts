@@ -75,6 +75,14 @@ export async function PATCH(req: NextRequest, { params }: any): Promise<Response
     if (targetFolderId !== undefined) updates.folder_id = targetFolderId;
     if ('position' in body) updates.position = body.position;
     updates.updated_at = new Date().toISOString();
+    console.log('[moveNote] DEBUG', {
+      ref,
+      noteId,
+      targetClasseurId,
+      targetFolderId,
+      updates,
+      body
+    });
     console.log('[moveNote] Payload:', body);
     console.log('[moveNote] Updates:', updates);
     const { data: updated, error } = await supabase

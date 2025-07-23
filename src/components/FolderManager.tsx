@@ -9,6 +9,7 @@ import SimpleContextMenu from './SimpleContextMenu';
 import './FolderManager.css';
 import { updateFolder, updateArticle } from '../services/supabase';
 import { toast } from 'react-hot-toast';
+import { moveNoteREST } from '../services/api';
 
 interface FolderManagerProps {
   classeurId: string;
@@ -156,10 +157,11 @@ const FolderManager: React.FC<FolderManagerProps> = ({ classeurId, classeurName,
   // Handler drop sur un tab de classeur (autre ou courant)
   React.useEffect(() => {
     const handler = async (e: any) => {
-      const { classeurId, itemId, itemType } = e.detail || {};
-      if (!classeurId || !itemId || !itemType) return;
+      const { classeurId: targetClasseurId, itemId, itemType, target } = e.detail || {};
+      console.log('[DnD] FolderManager drop-to-classeur event received', { targetClasseurId, itemId, itemType, target, currentClasseurId: classeurId });
+      if (!targetClasseurId || !itemId || !itemType) return;
       toast.loading('Déplacement en cours...');
-      if (classeurId === classeurId) {
+      if (targetClasseurId === classeurId) {
         // Si on drop sur le tab du classeur courant, ramener à la racine
         await moveItem(itemId, null, itemType);
         refreshNow();
@@ -169,8 +171,8 @@ const FolderManager: React.FC<FolderManagerProps> = ({ classeurId, classeurName,
         // Sinon, changer de classeur ET ramener à la racine
         if (itemType === 'folder') {
           try {
-            const res = await updateFolder(itemId, { classeur_id: classeurId, parent_id: null });
-            console.log('[DnD] updateFolder', { itemId, classeurId, res });
+            const res = await updateFolder(itemId, { classeur_id: targetClasseurId, parent_id: null });
+            console.log('[DnD] updateFolder', { itemId, targetClasseurId, res });
             refreshNow();
             toast.dismiss();
             toast.success('Déplacement terminé !');
@@ -181,15 +183,15 @@ const FolderManager: React.FC<FolderManagerProps> = ({ classeurId, classeurName,
           }
         } else {
           try {
-            const res = await updateArticle(itemId, { classeur_id: classeurId, folder_id: null });
-            console.log('[DnD] updateArticle', { itemId, classeurId, res });
+            const res = await moveNoteREST(itemId, { target_classeur_id: targetClasseurId, target_folder_id: null });
+            console.log('[DnD] moveNoteREST', { itemId, targetClasseurId, res });
             refreshNow();
             toast.dismiss();
             toast.success('Déplacement terminé !');
           } catch (err) {
             toast.dismiss();
             toast.error('Erreur lors du déplacement de la note.');
-            console.error('[DnD] updateArticle ERROR', err);
+            console.error('[DnD] moveNoteREST ERROR', err);
           }
         }
         // Rafraîchir la vue du classeur courant pour que l’item disparaisse

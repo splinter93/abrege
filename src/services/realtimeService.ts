@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { diffService, type DiffResult } from './diffService';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -17,6 +18,16 @@ interface ChangeEvent {
   new: any;
   old: any;
   timestamp: number;
+  diff?: DiffResult; // Nouveau: diff des changements
+  // Nouveau: support collaboratif
+  collaboratorId?: string;
+  collaboratorName?: string;
+  sessionId?: string;
+  deviceInfo?: {
+    userAgent: string;
+    platform: string;
+    timestamp: number;
+  };
 }
 
 class RealtimeService {
@@ -77,15 +88,19 @@ class RealtimeService {
    */
   private async checkForUpdates(table: string) {
     const lastTimestamp = this.lastTimestamps.get(table);
-    let query = supabase
-      .from(table)
-      .select('*')
-      .eq('user_id', this.config.userId)
-      .order('updated_at', { ascending: false })
-      .limit(10);
+    let query = supabase.from(table).select('*');
 
-    if (lastTimestamp) {
-      query = query.gt('updated_at', lastTimestamp);
+    // Adapter la requête selon la table
+    if (table === 'folders') {
+      query = query.eq('user_id', this.config.userId).order('created_at', { ascending: false }).limit(10);
+      if (lastTimestamp) {
+        query = query.gt('created_at', lastTimestamp);
+      }
+    } else {
+      query = query.eq('user_id', this.config.userId).order('updated_at', { ascending: false }).limit(10);
+      if (lastTimestamp) {
+        query = query.gt('updated_at', lastTimestamp);
+      }
     }
 
     const { data, error } = await query;
@@ -97,17 +112,28 @@ class RealtimeService {
 
     if (data && data.length > 0) {
       // Mettre à jour le timestamp
-      const latestTimestamp = data[0].updated_at;
+      const latestTimestamp = table === 'folders' ? data[0].created_at : data[0].updated_at;
       this.lastTimestamps.set(table, latestTimestamp);
 
-      // Notifier les listeners pour chaque UPDATE
+      // Notifier les listeners pour chaque UPDATE avec diff
       data.forEach(item => {
+        let diff: DiffResult | undefined;
+        
+        // Générer le diff pour les articles
+        if (table === 'articles' && item.markdown_content) {
+          const diffResult = diffService.generateDiff(item.id, item.markdown_content);
+          if (diffResult) {
+            diff = diffResult;
+          }
+        }
+
         this.notifyListeners(table, {
           table,
           eventType: 'UPDATE',
           new: item,
           old: null,
-          timestamp: Date.now()
+          timestamp: Date.now(),
+          diff // Inclure le diff dans l'événement
         });
       });
     }

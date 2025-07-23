@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import FolderManager from "../../../components/FolderManager";
 import ClasseurTabs, { Classeur } from "../../../components/ClasseurTabs";
 import DynamicIcon from "../../../components/DynamicIcon";
@@ -9,12 +9,58 @@ import { toast } from "react-hot-toast";
 import "./DossiersPage.css";
 import { useRealtime } from '@/hooks/useRealtime';
 
+// Merge ciblé : ajoute, met à jour, supprime les items par ID
+const mergeClasseursState = (prev: Classeur[], fetched: Classeur[]) => {
+  const prevMap = new Map(prev.map(c => [c.id, c]));
+  const fetchedMap = new Map(fetched.map(c => [c.id, c]));
+  // Ajouts et updates
+  const merged = fetched.map(c => {
+    const prevItem = prevMap.get(c.id);
+    if (!prevItem) return c; // Ajout
+    if (JSON.stringify(prevItem) !== JSON.stringify(c)) return c; // Update
+    return prevItem; // Inchangé
+  });
+  // Suppressions
+  prev.forEach(c => {
+    if (!fetchedMap.has(c.id)) {
+      // Item supprimé
+      // On ne l'ajoute pas à merged
+    }
+  });
+  return merged;
+};
+
 const DossiersPage: React.FC = () => {
   // TOUS les hooks doivent être ici, AVANT tout return conditionnel
   const [classeurs, setClasseurs] = useState<Classeur[]>([]);
   const [activeClasseurId, setActiveClasseurId] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Stocker la liste précédente d'IDs de dossiers
+  const [prevClasseurIds, setPrevClasseurIds] = useState<string[]>([]);
+
+  // Helper pour extraire les IDs
+  const getClasseurIds = (classeurs: Classeur[]) => classeurs.map(c => c.id);
+
+  // Helper pour dédupliquer les classeurs par ID
+  const dedupeClasseurs = (classeurs: Classeur[]) => {
+    const map = new Map<string, Classeur>();
+    for (const c of classeurs) {
+      if (map.has(c.id)) {
+        console.warn('Duplicate classeur detected:', c.id);
+      }
+      map.set(c.id, c);
+    }
+    return Array.from(map.values());
+  };
+
+  // Realtime pour les classeurs (hook appelé au top level)
+  const { subscribe, unsubscribe } = useRealtime({
+    userId: "3223651c-5580-4471-affb-b3f4456bd729", // [TEMP] USER_ID HARDCODED
+    type: 'polling',
+    interval: 5000
+  });
 
   // Helper pour sélectionner le premier classeur valide
   const selectFirstClasseur = (classeurs: Classeur[]) => {
@@ -30,13 +76,28 @@ const DossiersPage: React.FC = () => {
   // Helper pour garantir un tableau
   const ensureArray = (val: any) => Array.isArray(val) ? val : [];
 
+  // Helper pour comparer deux listes de classeurs
+  const areClasseursEqual = (a: Classeur[], b: Classeur[]) => {
+    if (a.length !== b.length) return false;
+    for (let i = 0; i < a.length; i++) {
+      if (a[i].id !== b[i].id || JSON.stringify(a[i]) !== JSON.stringify(b[i])) return false;
+    }
+    return true;
+  };
+
+  // Polling intelligent avec désactivation si onglet inactif
   useEffect(() => {
-    const fetchClasseurs = async () => {
+    let intervalId: NodeJS.Timeout | null = null;
+    let stopped = false;
+
+    const poll = async () => {
+      if (document.visibilityState !== 'visible') return;
+      setLoading(true);
       try {
-        setLoading(true);
         let fetchedClasseurs = await getClasseurs();
         fetchedClasseurs = ensureArray(fetchedClasseurs);
-        setClasseurs(fetchedClasseurs);
+        setClasseurs(prev => mergeClasseursState(prev, fetchedClasseurs));
+        setPrevClasseurIds(getClasseurIds(fetchedClasseurs));
         // Vérifier que l'ID actif existe encore
         const lastActiveId = localStorage.getItem("activeClasseurId");
         const activeId = fetchedClasseurs.find((c: Classeur) => c.id === lastActiveId)
@@ -49,39 +110,69 @@ const DossiersPage: React.FC = () => {
           localStorage.removeItem("activeClasseurId");
         }
         setError(null);
+        setLoading(false);
       } catch (err: any) {
-        setClasseurs([]);
-        console.error("Erreur lors de la récupération des classeurs:", err);
         setError("Impossible de charger les classeurs. Veuillez rafraîchir la page.");
         toast.error("Impossible de charger les classeurs.");
-      } finally {
         setLoading(false);
       }
     };
-    fetchClasseurs();
 
-    // Realtime pour les classeurs
-    const { subscribe, unsubscribe } = useRealtime({
-      userId: "3223651c-5580-4471-affb-b3f4456bd729", // [TEMP] USER_ID HARDCODED
-      type: 'polling',
-      interval: 5000
-    });
+    const startPolling = () => {
+      if (intervalId) clearInterval(intervalId);
+      intervalId = setInterval(poll, 12000); // 12s
+    };
 
-    useEffect(() => {
-      const handleClasseurChange = (event: any) => {
-        if (event.table === 'classeurs') {
-          fetchClasseurs();
-        }
-      };
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        poll();
+        startPolling();
+      } else {
+        if (intervalId) clearInterval(intervalId);
+      }
+    };
 
-      subscribe('classeurs', handleClasseurChange);
+    document.addEventListener('visibilitychange', handleVisibility);
+    poll();
+    startPolling();
 
-      return () => {
-        unsubscribe('classeurs');
-      };
-    }, [subscribe, unsubscribe]);
-
+    return () => {
+      stopped = true;
+      if (intervalId) clearInterval(intervalId);
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
   }, []);
+
+  // Subscribe to classeurs and folders realtime updates
+  useEffect(() => {
+    const handleClasseurChange = (event: any) => {
+      if (event.table === 'classeurs') {
+        // Re-fetch all classeurs to get the latest state
+        getClasseurs().then(fetchedClasseurs => {
+          fetchedClasseurs = ensureArray(fetchedClasseurs);
+          setClasseurs(prev => mergeClasseursState(prev, fetchedClasseurs));
+          setPrevClasseurIds(getClasseurIds(fetchedClasseurs));
+        });
+      }
+    };
+    const handleFolderChange = (event: any) => {
+      if (event.table === 'folders') {
+        // Re-fetch all classeurs to get the latest state
+        getClasseurs().then(fetchedClasseurs => {
+          fetchedClasseurs = ensureArray(fetchedClasseurs);
+          setClasseurs(prev => mergeClasseursState(prev, fetchedClasseurs));
+          setPrevClasseurIds(getClasseurIds(fetchedClasseurs));
+        });
+      }
+    };
+
+    subscribe('classeurs', handleClasseurChange);
+    subscribe('folders', handleFolderChange);
+    return () => {
+      unsubscribe('classeurs');
+      unsubscribe('folders');
+    };
+  }, [subscribe, unsubscribe]);
 
   useEffect(() => {
     // Si l'ID actif n'existe plus, sélectionner le premier classeur
@@ -171,7 +262,7 @@ const DossiersPage: React.FC = () => {
   const activeClasseur = classeurs.find((c) => c.id === activeClasseurId) || null;
 
   // Fallback dans le rendu
-  const safeClasseurs = Array.isArray(classeurs) ? classeurs : [];
+  const safeClasseurs = dedupeClasseurs(Array.isArray(classeurs) ? classeurs : []);
 
   // return conditionnels APRÈS tous les hooks
   if (loading) return <div>Chargement...</div>;

@@ -35,6 +35,9 @@ import CustomImage from '@/extensions/CustomImage';
 import { useSession } from '@supabase/auth-helpers-react';
 import { publishNoteREST } from '@/services/api';
 import { useNoteRealtime } from '@/hooks/useRealtime';
+import { useDiffRealtime } from '@/hooks/useDiffRealtime';
+import DiffHighlighter from '@/components/DiffHighlighter';
+import EditorDiffOverlay from '@/components/EditorDiffOverlay';
 type SlashCommand = {
   id: string;
   alias: Record<string, string>;
@@ -183,6 +186,9 @@ export default function NoteEditorPage() {
 
   // Realtime : recharge la note en direct si modifiée ailleurs
   useNoteRealtime(noteId, "3223651c-5580-4471-affb-b3f4456bd729"); // [TEMP] USER_ID HARDCODED
+  
+  // Diff en temps réel : affiche les changements détectés
+  const diffState = useDiffRealtime(noteId, "3223651c-5580-4471-affb-b3f4456bd729");
 
   // Fonction utilitaire pour extraire les headings du doc Tiptap
   function getHeadingsFromEditor(editorInstance: typeof editor): Heading[] {
@@ -683,6 +689,13 @@ export default function NoteEditorPage() {
               onDragOver={e => e.preventDefault()}
             >
               {editor && <EditorContent editor={editor} />}
+              
+              {/* Overlay de diff pour surligner les changements dans l'éditeur */}
+              <EditorDiffOverlay
+                changes={diffState.changes}
+                isVisible={diffState.isVisible}
+                editorRef={editorContainerRef}
+              />
               {/* SlashMenu premium */}
               <EditorSlashMenu
                 ref={slashMenuRef}
@@ -747,6 +760,15 @@ export default function NoteEditorPage() {
         published={published}
         setPublished={handleTogglePublished}
         publishedUrl={publishedUrl || undefined}
+      />
+      
+      {/* Diff Highlighter pour afficher les changements en temps réel */}
+      <DiffHighlighter
+        changes={diffState.changes}
+        isVisible={diffState.isVisible}
+        onAnimationComplete={() => {
+          console.log('🎯 Animation diff terminée');
+        }}
       />
     </div>
   );

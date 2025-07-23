@@ -6,6 +6,12 @@ const TABS = [
   { id: 'ai', label: "Générer avec l'IA" },
 ];
 
+// Types d'erreurs
+interface UploadError {
+  code: string;
+  message: string;
+}
+
 interface ImageMenuProps {
   open: boolean;
   onClose: () => void;
@@ -20,6 +26,7 @@ const ImageMenu: React.FC<ImageMenuProps> = ({ open, onClose, onInsertImage, not
   const [url, setUrl] = useState('');
   const [prompt, setPrompt] = useState('');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const modalRef = useRef<HTMLDivElement | null>(null);
 
@@ -44,40 +51,90 @@ const ImageMenu: React.FC<ImageMenuProps> = ({ open, onClose, onInsertImage, not
     };
   }, [open, onClose]);
 
+  // Reset error when tab changes
+  useEffect(() => {
+    setError(null);
+  }, [tab]);
+
   if (!open) return null;
+
+  const validateFile = (file: File): string | null => {
+    // Vérifier la taille (5MB max)
+    const maxSize = 5 * 1024 * 1024;
+    if (file.size > maxSize) {
+      return `Fichier trop volumineux. Taille max: 5MB`;
+    }
+
+    // Vérifier le type
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      return `Type de fichier non supporté. Types autorisés: ${allowedTypes.join(', ')}`;
+    }
+
+    return null;
+  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files && e.target.files[0];
-    if (f) setFile(f);
+    if (f) {
+      const validationError = validateFile(f);
+      if (validationError) {
+        setError(validationError);
+        setFile(null);
+        return;
+      }
+      setFile(f);
+      setError(null);
+    }
   };
 
   const handleUpload = async () => {
     if (!file) return;
+    
     setLoading(true);
+    setError(null);
+    
     try {
+      // Générer une clé unique pour le fichier
       const fileName = `${userId}/${Date.now()}_${file.name}`;
+      
       // 1. Demander une URL signée à l'API
       const res = await fetch(`/api/v1/note/${noteId}/content`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fileName, fileType: file.type }),
+        body: JSON.stringify({ 
+          fileName, 
+          fileType: file.type,
+          fileSize: file.size 
+        }),
       });
-      if (!res.ok) throw new Error('Erreur lors de la génération de l’URL S3');
-      const { url } = await res.json();
+      
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || 'Erreur lors de la génération de l\'URL S3');
+      }
+      
+      const { url, publicUrl } = await res.json();
+      
       // 2. Upload direct sur S3
       const uploadRes = await fetch(url, {
         method: 'PUT',
         headers: { 'Content-Type': file.type },
         body: file,
       });
-      if (!uploadRes.ok) throw new Error('Erreur lors de l’upload S3');
-      // 3. Insérer l’URL publique dans l’éditeur
-      const publicUrl = url.split('?')[0];
+      
+      if (!uploadRes.ok) {
+        throw new Error('Erreur lors de l\'upload S3');
+      }
+      
+      // 3. Insérer l'URL publique dans l'éditeur
       onInsertImage(publicUrl);
       setFile(null);
       onClose();
+      
     } catch (err: any) {
-      alert('Erreur lors de l’upload de l’image : ' + (err.message || err));
+      console.error('Upload error:', err);
+      setError(err.message || 'Erreur lors de l\'upload de l\'image');
     } finally {
       setLoading(false);
     }
@@ -85,9 +142,16 @@ const ImageMenu: React.FC<ImageMenuProps> = ({ open, onClose, onInsertImage, not
 
   const handleUrl = () => {
     if (!url) return;
-    onInsertImage(url);
-    setUrl('');
-    onClose();
+    
+    // Validation basique de l'URL
+    try {
+      new URL(url);
+      onInsertImage(url);
+      setUrl('');
+      onClose();
+    } catch {
+      setError('URL invalide');
+    }
   };
 
   const handleAIGenerate = async () => {
@@ -116,20 +180,42 @@ const ImageMenu: React.FC<ImageMenuProps> = ({ open, onClose, onInsertImage, not
               <button className="image-menu-upload-btn" onClick={() => fileInputRef.current && fileInputRef.current.click()}>
                 {file ? file.name : 'Charger un fichier'}
               </button>
-              {file && <button className="image-menu-insert-btn" onClick={handleUpload}>Insérer</button>}
+              {file && <button className="image-menu-insert-btn" onClick={handleUpload} disabled={loading}>
+                {loading ? 'Upload en cours...' : 'Insérer'}
+              </button>}
               <div className="image-menu-hint">La taille maximale par fichier est de 5 Mo.</div>
+              {error && <div className="image-menu-error">{error}</div>}
             </div>
           )}
+          
           {tab === 'url' && (
             <div className="image-menu-url">
-              <input type="text" placeholder="Coller une URL d'image" value={url} onChange={e => setUrl(e.target.value)} />
-              <button className="image-menu-insert-btn" onClick={handleUrl} disabled={!url}>Insérer</button>
+              <input
+                type="text"
+                placeholder="https://example.com/image.jpg"
+                value={url}
+                onChange={(e) => setUrl(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && handleUrl()}
+              />
+              <button onClick={handleUrl} disabled={!url || loading}>
+                {loading ? 'Chargement...' : 'Insérer'}
+              </button>
+              {error && <div className="image-menu-error">{error}</div>}
             </div>
           )}
+          
           {tab === 'ai' && (
             <div className="image-menu-ai">
-              <input type="text" placeholder="Décris l'image à générer..." value={prompt} onChange={e => setPrompt(e.target.value)} />
-              <button className="image-menu-insert-btn" onClick={handleAIGenerate} disabled={!prompt || loading}>{loading ? 'Génération...' : 'Générer & insérer'}</button>
+              <input
+                type="text"
+                placeholder="Décrivez l'image que vous voulez..."
+                value={prompt}
+                onChange={(e) => setPrompt(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && handleAIGenerate()}
+              />
+              <button onClick={handleAIGenerate} disabled={!prompt || loading}>
+                {loading ? 'Génération...' : 'Générer'}
+              </button>
             </div>
           )}
         </div>

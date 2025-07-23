@@ -2,20 +2,11 @@ import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 import type { NextRequest } from 'next/server';
 import { resolveNoteRef } from '@/middleware/resourceResolver';
-import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
-import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { s3Service } from '@/services/s3Service';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
-const s3 = new S3Client({
-  region: process.env.AWS_REGION,
-  credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
-  },
-});
 
 export type GetNoteContentResponse =
   | { content: string }
@@ -55,16 +46,14 @@ export async function POST(req: NextRequest, { params }: any): Promise<Response>
   try {
     const body = await req.json();
     console.log('POST /api/v1/note/[ref]/content body:', body);
-    console.log('process.env snapshot (abrégé):', {
-      AWS_ACCESS_KEY_ID: process.env.AWS_ACCESS_KEY_ID,
-      AWS_SECRET_ACCESS_KEY: process.env.AWS_SECRET_ACCESS_KEY ? '***' : undefined,
-      AWS_REGION: process.env.AWS_REGION,
-      AWS_S3_BUCKET: process.env.AWS_S3_BUCKET
-    });
+    
+    // Validation des paramètres
     const schema = z.object({
       fileName: z.string().min(1, 'fileName requis'),
       fileType: z.string().min(1, 'fileType requis'),
+      fileSize: z.number().optional(), // Taille en bytes
     });
+    
     const parseResult = schema.safeParse(body);
     if (!parseResult.success) {
       return new Response(
@@ -72,17 +61,61 @@ export async function POST(req: NextRequest, { params }: any): Promise<Response>
         { status: 422 }
       );
     }
-    const { fileName, fileType } = parseResult.data;
-    const command = new PutObjectCommand({
-      Bucket: process.env.AWS_S3_BUCKET!,
-      Key: fileName,
-      ContentType: fileType,
+    
+    const { fileName, fileType, fileSize } = parseResult.data;
+    
+    // Validation de la taille du fichier
+    if (fileSize) {
+      s3Service.validateFileSize(fileSize);
+    }
+    
+    // Validation du type de fichier
+    s3Service.validateFileType(fileType);
+    
+    // Génération de l'URL pré-signée
+    const result = await s3Service.generateUploadUrl({
+      fileName,
+      fileType,
+      allowedTypes: ['image/jpeg', 'image/png', 'image/gif', 'image/webp'],
+      maxSize: 5 * 1024 * 1024, // 5MB
     });
-    const url = await getSignedUrl(s3, command, { expiresIn: 3600 });
-    return new Response(JSON.stringify({ url }), { status: 200 });
+    
+    return new Response(JSON.stringify({ 
+      url: result.url,
+      publicUrl: result.publicUrl,
+      key: result.key 
+    }), { status: 200 });
+    
   } catch (err: any) {
     console.error('POST /api/v1/note/[ref]/content error:', err);
-    return new Response(JSON.stringify({ error: err.message }), { status: 500 });
+    
+    // Gestion d'erreurs spécifiques
+    if (err.message.includes('Configuration S3 invalide')) {
+      return new Response(JSON.stringify({ 
+        error: 'Configuration serveur invalide',
+        code: 'S3_CONFIG_ERROR'
+      }), { status: 500 });
+    }
+    
+    if (err.message.includes('Type de fichier non supporté')) {
+      return new Response(JSON.stringify({ 
+        error: err.message,
+        code: 'INVALID_FILE_TYPE'
+      }), { status: 400 });
+    }
+    
+    if (err.message.includes('Fichier trop volumineux')) {
+      return new Response(JSON.stringify({ 
+        error: err.message,
+        code: 'FILE_TOO_LARGE'
+      }), { status: 400 });
+    }
+    
+    // Erreur générique
+    return new Response(JSON.stringify({ 
+      error: 'Erreur lors de la génération de l\'URL d\'upload',
+      code: 'UPLOAD_ERROR'
+    }), { status: 500 });
   }
 }
 
@@ -96,4 +129,14 @@ export async function POST(req: NextRequest, { params }: any): Promise<Response>
  *   - 404 : { error: 'Note non trouvée.' }
  *   - 422 : { error: 'Paramètre note_ref invalide', details }
  *   - 500 : { error: string }
+ * 
+ * Endpoint: POST /api/v1/note/[ref]/content
+ * Body: { fileName: string, fileType: string, fileSize?: number }
+ * - Génère une URL pré-signée pour l'upload S3
+ * - Valide le type et la taille du fichier
+ * - Réponses :
+ *   - 200 : { url, publicUrl, key }
+ *   - 400 : { error: string, code: string }
+ *   - 422 : { error: 'Paramètres invalides', details }
+ *   - 500 : { error: string, code: string }
  */ 
