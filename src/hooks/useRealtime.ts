@@ -71,8 +71,8 @@ export function useRealtime(config: RealtimeConfig) {
       config.onEvent?.(event);
     };
     // On utilise 'all' comme table générique pour tous les events
-    subscribeToWebSocket('all', handleRawEvent);
-    return () => unsubscribeFromWebSocket('all', handleRawEvent);
+    subscribeToWebSocket('all', handleRawEvent as unknown as (event: ChangeEvent) => void);
+    return () => unsubscribeFromWebSocket('all', handleRawEvent as unknown as (event: ChangeEvent) => void);
   }, [config.type, config.token, config.onEvent, config.debug]);
 
   useEffect(() => {
