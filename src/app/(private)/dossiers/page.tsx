@@ -111,8 +111,8 @@ const DossiersPage: React.FC = () => {
     subscribe('classeurs', handleClasseurChange);
     subscribe('folders', handleFolderChange);
     return () => {
-      unsubscribe('classeurs');
-      unsubscribe('folders');
+      unsubscribe('classeurs', handleClasseurChange);
+      unsubscribe('folders', handleFolderChange);
     };
   }, [subscribe, unsubscribe]);
 
