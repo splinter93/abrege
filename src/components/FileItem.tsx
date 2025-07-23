@@ -154,7 +154,8 @@ const FileItem: React.FC<FileItemProps> = ({ file, onOpen, isRenaming, onRename,
           />
         ) : (
           <span
-            style={{ fontWeight: 500, fontSize: 15, color: '#fff', textAlign: 'center', marginTop: 2, maxWidth: 140, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', textShadow: '0 1px 4px rgba(0,0,0,0.18)' }}
+            className="folder-title-multiline"
+            style={{ textAlign: 'center', marginTop: 2, maxWidth: 140, textShadow: '0 1px 4px rgba(0,0,0,0.18)' }}
             onClick={e => {
               if (onStartRenameClick) {
                 e.stopPropagation();
