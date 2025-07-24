@@ -32,10 +32,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
         <LanguageProvider>
-          <AuthProvider>
-            <Toaster position="top-right" />
-            {children}
-          </AuthProvider>
+          <Toaster position="top-right" />
+          {children}
         </LanguageProvider>
       </body>
     </html>
