@@ -510,3 +510,12 @@ table {
 .markdown-body li {
   color: #D4D4D4 !important;
 } 
+
+.markdown-body ul {
+  list-style-type: disc !important;
+  list-style-position: outside !important;
+}
+.markdown-body ol {
+  list-style-type: decimal !important;
+  list-style-position: outside !important;
+} 
