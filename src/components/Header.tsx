@@ -23,7 +23,7 @@ const Header: React.FC = () => {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'space-between',
-      padding: '9px 32px',
+      padding: '9px 16px', // padding réduit
       background: 'none',
       boxShadow: 'none',
       border: 'none',
