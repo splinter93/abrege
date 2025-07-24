@@ -104,7 +104,7 @@ export default async function Page(props: any) {
           />
         </div>
         {/* TOC sticky tout à droite */}
-        <div style={{ position: 'fixed', top: 380, right: 0, paddingRight: 4, minWidth: 220, maxWidth: 320, zIndex: 20 }}>
+        <div style={{ position: 'fixed', top: 380, right: 0, paddingRight: 0, minWidth: 220, maxWidth: 320, zIndex: 20 }}>
           <PublicTOCClient slug={slug} />
         </div>
       </div>
