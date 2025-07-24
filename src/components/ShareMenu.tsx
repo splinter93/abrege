@@ -91,21 +91,20 @@ export default function ShareMenu({ url, title = "Note Scrivia", description = "
           top: '100%',
           right: 0,
           marginTop: 8,
-          background: '#232325',
-          border: '1px solid #333',
+          background: '#1a1a1c',
+          border: '1px solid #2a2a2c',
           borderRadius: 12,
-          padding: '8px 0',
+          padding: '6px 0',
           minWidth: 200,
-          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)',
           zIndex: 1000,
           backdropFilter: 'blur(10px)'
         }}
       >
-        {shareOptions.map((option) => {
-          if (option.type === 'copy') {
-            return (
+        {shareOptions.map((option, index) => (
+          <div key={option.id}>
+            {option.type === 'copy' ? (
               <button
-                key={option.id}
                 onClick={option.onClick}
                 style={{
                   width: '100%',
@@ -119,7 +118,8 @@ export default function ShareMenu({ url, title = "Note Scrivia", description = "
                   fontSize: '14px',
                   cursor: 'pointer',
                   transition: 'background-color 0.15s ease',
-                  fontFamily: 'Noto Sans, Inter, Arial, sans-serif'
+                  fontFamily: 'Noto Sans, Inter, Arial, sans-serif',
+                  borderRadius: 0
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.backgroundColor = '#2a2a2c';
@@ -131,47 +131,61 @@ export default function ShareMenu({ url, title = "Note Scrivia", description = "
                 {option.icon}
                 {option.label}
               </button>
-            );
-          }
-
-          const ShareButton = option.component;
-          return (
-            <ShareButton
-              key={option.id}
-              url={url}
-              title={title}
-              summary={description}
-              hashtags={['scrivia', 'notes']}
-              beforeOnClick={onClose}
-            >
+            ) : (
+              (() => {
+                const ShareButton = option.component;
+                return (
+                  <ShareButton
+                    url={url}
+                    title={title}
+                    summary={description}
+                    hashtags={['scrivia', 'notes']}
+                    beforeOnClick={onClose}
+                  >
+                <div
+                  style={{
+                    width: '100%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 12,
+                    padding: '12px 16px',
+                    background: 'transparent',
+                    border: 'none',
+                    color: option.color,
+                    fontSize: '14px',
+                    cursor: 'pointer',
+                    transition: 'background-color 0.15s ease',
+                    fontFamily: 'Noto Sans, Inter, Arial, sans-serif',
+                    borderRadius: 0
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = '#2a2a2c';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = 'transparent';
+                  }}
+                >
+                  {option.icon}
+                  {option.label}
+                </div>
+                  </ShareButton>
+                );
+              })()
+            )}
+            
+            {/* Séparateur élégant entre les options (sauf pour la dernière) */}
+            {index < shareOptions.length - 1 && (
               <div
                 style={{
-                  width: '100%',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 12,
-                  padding: '12px 16px',
-                  background: 'transparent',
-                  border: 'none',
-                  color: option.color,
-                  fontSize: '14px',
-                  cursor: 'pointer',
-                  transition: 'background-color 0.15s ease',
-                  fontFamily: 'Noto Sans, Inter, Arial, sans-serif'
+                  height: '1px',
+                  background: 'linear-gradient(90deg, transparent 0%, #2a2a2c 20%, #2a2a2c 80%, transparent 100%)',
+                  margin: '0 16px',
+                  opacity: 0.6
                 }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = '#2a2a2c';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = 'transparent';
-                }}
-              >
-                {option.icon}
-                {option.label}
-              </div>
-            </ShareButton>
-          );
-        })}
+              />
+            )}
+          </div>
+        ))}
       </div>
     </>
   );
