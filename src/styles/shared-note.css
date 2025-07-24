@@ -519,3 +519,12 @@ table {
   list-style-type: decimal !important;
   list-style-position: outside !important;
 } 
+
+@import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&display=swap');
+
+.markdown-body p,
+.markdown-body li,
+.markdown-body ul,
+.markdown-body ol {
+  font-family: 'Open Sans', 'Noto Sans', Arial, sans-serif !important;
+} 
