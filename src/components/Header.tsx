@@ -21,14 +21,14 @@ const Header: React.FC<{ onLogout?: () => void }> = ({ onLogout }) => {
       zIndex: 100
     }}>
       <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
-        <LogoScrivia size={36} color="white" />
+        <LogoScrivia />
       </Link>
       <button
         onClick={onLogout}
         style={{
           background: 'none',
           border: 'none',
-          color: '#b3a9a0',
+          color: '#fff',
           fontWeight: 400,
           fontSize: 16,
           cursor: 'pointer',
@@ -37,15 +37,22 @@ const Header: React.FC<{ onLogout?: () => void }> = ({ onLogout }) => {
           borderRadius: 0,
           boxShadow: 'none',
           fontFamily: 'Noto Sans, sans-serif',
-          transition: 'color 0.2s'
+          transition: 'color 0.2s, text-decoration 0.2s',
+          textDecoration: 'none',
         }}
-        onMouseOver={e => (e.currentTarget.style.color = '#fff')}
-        onMouseOut={e => (e.currentTarget.style.color = '#b3a9a0')}
+        onMouseOver={e => {
+          e.currentTarget.style.color = '#fff';
+          e.currentTarget.style.textDecoration = 'underline';
+        }}
+        onMouseOut={e => {
+          e.currentTarget.style.color = '#fff';
+          e.currentTarget.style.textDecoration = 'none';
+        }}
       >
         {t('nav.logout')}
       </button>
     </header>
   );
-};
+}
 
 export default Header; 

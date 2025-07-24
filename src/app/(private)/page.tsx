@@ -39,6 +39,10 @@ export default function HomePage() {
   const { t } = useLanguageContext();
   return (
     <div className="home-root">
+      {/* Nouveau logo Scrivia */}
+      <div style={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', marginTop: 32 }}>
+        <img src="/logo_scrivia_white.png" alt="Scrivia Logo" style={{ height: 54, marginBottom: 32 }} />
+      </div>
       {/* Sidebar glassmorphism */}
       <div className="sidebar-trigger" />
       <aside className="sidebar-glass">
