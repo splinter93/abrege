@@ -43,7 +43,7 @@ export default async function PreviewPage({ params }: PreviewPageProps) {
       background: '#15151b',
       minHeight: '100vh'
     }}>
-      <div style={{ width: '100%', background: '#2a2a2c' }}>
+      <div style={{ width: '100%', background: '#323236' }}>
         <Header />
       </div>
       {/* Header Image */}
