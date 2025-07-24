@@ -33,7 +33,7 @@ export default function TableOfContents({ headings = [], currentId, pinned = fal
     ? {
         position: 'fixed',
         right: 8,
-        top: 380,
+        top: 383,
         minWidth: 32,
         padding: 0,
         zIndex: 30,
@@ -78,6 +78,9 @@ export default function TableOfContents({ headings = [], currentId, pinned = fal
         pointerEvents: 'all',
         minWidth: 300,
         marginRight: 8,
+        position: 'fixed',
+        right: 8,
+        top: 383,
       };
   const tocItemStyles: Record<number, React.CSSProperties> = {
     1: {
