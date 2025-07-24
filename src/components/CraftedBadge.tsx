@@ -39,7 +39,7 @@ export default function CraftedBadge() {
         e.currentTarget.style.opacity = '0.82';
       }}
     >
-      <FiFeather size={17} style={{ marginRight: 4, color: '#ffb86c', flexShrink: 0 }} />
+      <FiFeather size={17} style={{ marginRight: 2, color: '#D4D4D4', flexShrink: 0 }} />
       Crafted with Scrivia
     </a>
   );
