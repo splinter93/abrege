@@ -23,23 +23,25 @@ export default function CraftedBadge() {
         opacity: 0.82,
         userSelect: 'none',
         textTransform: 'none',
-        transition: 'box-shadow 0.18s, opacity 0.18s',
+        transition: 'opacity 0.18s, color 0.18s',
         display: 'flex',
         alignItems: 'center',
-        gap: 8,
+        gap: 4, // gap réduit
         pointerEvents: 'auto',
         textDecoration: 'none',
       }}
       onMouseOver={e => {
-        e.currentTarget.style.boxShadow = '0 0 16px 2px #ffb86c, 0 2px 8px 0 rgba(44,44,44,0.10)';
         e.currentTarget.style.opacity = '1';
+        const feather = e.currentTarget.querySelector('svg');
+        if (feather) feather.style.color = '#ffb86c';
       }}
       onMouseOut={e => {
-        e.currentTarget.style.boxShadow = '0 2px 8px 0 rgba(44,44,44,0.10)';
         e.currentTarget.style.opacity = '0.82';
+        const feather = e.currentTarget.querySelector('svg');
+        if (feather) feather.style.color = '#D4D4D4';
       }}
     >
-      <FiFeather size={17} style={{ marginRight: 2, color: '#D4D4D4', flexShrink: 0 }} />
+      <FiFeather size={17} style={{ marginRight: 1, color: '#D4D4D4', flexShrink: 0, transition: 'color 0.18s' }} />
       Crafted with Scrivia
     </a>
   );
