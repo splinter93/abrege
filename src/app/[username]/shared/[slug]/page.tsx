@@ -69,7 +69,7 @@ export default async function Page(props: any) {
           />
         </div>
       )}
-      <div style={{ width: '100%', display: 'flex', flexDirection: 'row', justifyContent: 'center', alignItems: 'flex-start', margin: '0 auto', marginBottom: 32, gap: 32 }}>
+      <div style={{ width: '100%', display: 'flex', flexDirection: 'row', justifyContent: 'center', alignItems: 'flex-start', margin: '0 auto', marginBottom: 32, gap: 32, position: 'relative' }}>
         <div style={{ maxWidth: 750, width: 750 }}>
           {/* Titre principal */}
           <h1 style={{
@@ -102,8 +102,8 @@ export default async function Page(props: any) {
             dangerouslySetInnerHTML={{ __html: note.html_content || '' }}
           />
         </div>
-        {/* TOC sticky à droite */}
-        <div style={{ position: 'sticky', top: 32, alignSelf: 'flex-start', minWidth: 220, maxWidth: 320, zIndex: 10 }}>
+        {/* TOC sticky tout à droite */}
+        <div style={{ position: 'fixed', top: 90, right: 0, paddingRight: 32, minWidth: 220, maxWidth: 320, zIndex: 20 }}>
           <PublicTOCClient slug={slug} />
         </div>
       </div>
