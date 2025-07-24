@@ -25,10 +25,7 @@ const Header: React.FC = () => {
   React.useEffect(() => {
     // Cibler le conteneur principal qui englobe titre et contenu
     const mainContainer = document.querySelector('div[style*="maxWidth: 750"][style*="width: 750"]');
-    const contentElements = document.querySelectorAll('.markdown-body');
-    const titleElements = document.querySelectorAll('h1[style*="maxWidth: 750"]');
     
-    // Ajuster le conteneur principal
     if (mainContainer) {
       if (fullWidth) {
         (mainContainer as HTMLElement).style.maxWidth = '1000px';
@@ -40,6 +37,7 @@ const Header: React.FC = () => {
     }
     
     // Ajuster le contenu markdown
+    const contentElements = document.querySelectorAll('.markdown-body');
     contentElements.forEach((element) => {
       if (fullWidth) {
         (element as HTMLElement).style.maxWidth = '1000px';
@@ -50,14 +48,18 @@ const Header: React.FC = () => {
       }
     });
 
-    // Ajuster les titres
+    // Ajuster les titres H1 spécifiquement
+    const titleElements = document.querySelectorAll('h1');
     titleElements.forEach((element) => {
-      if (fullWidth) {
-        (element as HTMLElement).style.maxWidth = '1000px';
-        (element as HTMLElement).style.width = '1000px';
-      } else {
-        (element as HTMLElement).style.maxWidth = '750px';
-        (element as HTMLElement).style.width = '750px';
+      const style = (element as HTMLElement).style;
+      if (style.maxWidth && style.width) {
+        if (fullWidth) {
+          style.maxWidth = '1000px';
+          style.width = '1000px';
+        } else {
+          style.maxWidth = '750px';
+          style.width = '750px';
+        }
       }
     });
   }, [fullWidth]);
