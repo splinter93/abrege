@@ -34,6 +34,7 @@ import { supabase } from '@/supabaseClient';
 import CustomImage from '@/extensions/CustomImage';
 import { useSession } from '@supabase/auth-helpers-react';
 import { publishNoteREST } from '@/services/api';
+import LogoScrivia from '@/components/LogoScrivia';
 type SlashCommand = {
   id: string;
   alias: Record<string, string>;
@@ -50,7 +51,7 @@ const Logo = () => {
     <div
       className="editor-header-logo"
       style={{
-        marginLeft: 18, // décolle du bord gauche
+        marginLeft: 18,
         cursor: 'pointer',
         display: 'flex',
         alignItems: 'center',
@@ -63,26 +64,7 @@ const Logo = () => {
       role="button"
       onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') router.push('/'); }}
     >
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ transform: 'scale(0.95)' }}>
-        <defs>
-          <linearGradient id="logoGradient" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stopColor="var(--accent-hover)" />
-            <stop offset="100%" stopColor="var(--accent-primary)" />
-          </linearGradient>
-        </defs>
-        <rect width="24" height="24" rx="6" fill="url(#logoGradient)" />
-        <path d="M17 7L7 17M7 11v6h6" stroke="var(--bg-main)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-      </svg>
-      <span style={{
-        background: 'linear-gradient(to bottom right, var(--accent-hover), var(--accent-primary))',
-        WebkitBackgroundClip: 'text',
-        backgroundClip: 'text',
-        color: 'transparent',
-        textTransform: 'lowercase',
-        fontWeight: 600,
-        fontSize: 19, // réduit de 5%
-        fontFamily: 'Noto Sans, Inter, Arial, sans-serif'
-      }}>abrège</span>
+      <LogoScrivia />
     </div>
   );
 };

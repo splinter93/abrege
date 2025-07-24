@@ -1,5 +1,6 @@
 import React from 'react';
 import { createClient } from '@supabase/supabase-js';
+import LogoScrivia from '@/components/LogoScrivia';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -23,6 +24,7 @@ export default async function PreviewPage({ params }: PreviewPageProps) {
   if (error || !note) {
     return (
       <div style={{ padding: '2rem', textAlign: 'center' }}>
+        <LogoScrivia />
         <h1>Note non trouvée ou non publiée</h1>
         <p>Cette note n'existe pas ou n'est pas accessible publiquement.</p>
       </div>
@@ -38,6 +40,9 @@ export default async function PreviewPage({ params }: PreviewPageProps) {
       lineHeight: 1.6,
       color: '#333'
     }}>
+      <div style={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', marginTop: 18, marginBottom: 24 }}>
+        <LogoScrivia />
+      </div>
       {/* Header Image */}
       {note.header_image && (
         <img 

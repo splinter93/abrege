@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import '@/styles/shared-note.css';
+import LogoScrivia from '@/components/LogoScrivia';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -21,6 +22,7 @@ export default async function Page(props: any) {
   if (userError || !user) {
     return (
       <div style={{ padding: '2rem', textAlign: 'center' }}>
+        <LogoScrivia />
         <h1>Utilisateur non trouvé</h1>
         <p>Vérifiez l'URL ou contactez l'auteur.</p>
         <p>Debug: error = {userError?.message}</p>
@@ -40,6 +42,7 @@ export default async function Page(props: any) {
   if (noteError || !note) {
     return (
       <div style={{ padding: '2rem', textAlign: 'center' }}>
+        <LogoScrivia />
         <h1>Note non trouvée ou non publiée</h1>
         <p>Vérifiez l'URL ou contactez l'auteur.</p>
       </div>
@@ -49,6 +52,9 @@ export default async function Page(props: any) {
   // Afficher directement le contenu avec le même design que la preview de l'éditeur
   return (
     <div style={{ width: '100vw', minHeight: '100vh', background: '#0a0a0a', paddingBottom: 64, overflowY: 'auto', height: '100vh' }}>
+      <div style={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', marginTop: 18, marginBottom: 24 }}>
+        <LogoScrivia />
+      </div>
       {note.header_image && (
         <div style={{ width: '100%', maxHeight: 300, overflow: 'hidden', marginBottom: 32 }}>
           <img
