@@ -1,6 +1,7 @@
 import React from 'react';
 import { createClient } from '@supabase/supabase-js';
 import LogoScrivia from '@/components/LogoScrivia';
+import Header from '@/components/Header';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -40,9 +41,7 @@ export default async function PreviewPage({ params }: PreviewPageProps) {
       lineHeight: 1.6,
       color: '#333'
     }}>
-      <div style={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', marginTop: 18, marginBottom: 24 }}>
-        <LogoScrivia />
-      </div>
+      <Header />
       {/* Header Image */}
       {note.header_image && (
         <img 
