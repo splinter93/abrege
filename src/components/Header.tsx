@@ -96,30 +96,23 @@ const Header: React.FC = () => {
       <div style={{ display: 'flex', alignItems: 'center', gap: 18, position: 'relative' }}>
         {/* Se connecter (si non connecté) */}
         {!isLoggedIn && (
-          <Link href="/login" style={{
-            color: '#fff',
-            background: 'linear-gradient(135deg, rgba(229,90,44,0.15) 0%, rgba(255,106,0,0.1) 100%)',
-            borderRadius: 8,
-            padding: '8px 16px',
+          <Link href="https://scrivia.app" style={{
+            color: '#e55a2c',
+            background: 'none',
             fontWeight: 500,
             fontSize: 14,
             textDecoration: 'none',
             fontFamily: 'Noto Sans, Inter, Arial, sans-serif',
             letterSpacing: '0.01em',
-            transition: 'all 0.2s ease',
+            transition: 'color 0.2s ease',
             display: 'flex',
             alignItems: 'center',
-            border: '1px solid rgba(229,90,44,0.2)',
           }}
             onMouseOver={e => {
-              e.currentTarget.style.background = 'linear-gradient(135deg, rgba(229,90,44,0.25) 0%, rgba(255,106,0,0.2) 100%)';
-              e.currentTarget.style.border = '1px solid rgba(229,90,44,0.3)';
-              e.currentTarget.style.transform = 'translateY(-1px)';
+              e.currentTarget.style.color = '#ff6a00';
             }}
             onMouseOut={e => {
-              e.currentTarget.style.background = 'linear-gradient(135deg, rgba(229,90,44,0.15) 0%, rgba(255,106,0,0.1) 100%)';
-              e.currentTarget.style.border = '1px solid rgba(229,90,44,0.2)';
-              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.color = '#e55a2c';
             }}
           >
             Se connecter
