@@ -14,6 +14,7 @@ const Header: React.FC = () => {
   const [isShareMenuOpen, setIsShareMenuOpen] = React.useState<boolean>(false);
   const [isKebabMenuOpen, setIsKebabMenuOpen] = React.useState<boolean>(false);
   const [fullWidth, setFullWidth] = React.useState<boolean>(false);
+  const [isFavorite, setIsFavorite] = React.useState<boolean>(false);
 
   React.useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
@@ -143,7 +144,7 @@ const Header: React.FC = () => {
             display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'none', border: 'none', color: '#D4D4D4', width: 36, height: 36, borderRadius: '50%', transition: 'background 0.18s, color 0.18s', boxShadow: 'none', fontFamily: 'Noto Sans, sans-serif', outline: 'none', fontSize: 0, cursor: 'pointer',
           }}
           onMouseOver={e => {
-            e.currentTarget.style.background = 'rgba(229,90,44,0.13)';
+            e.currentTarget.style.background = 'rgba(255,255,255,0.08)';
             e.currentTarget.style.color = '#D4D4D4';
           }}
           onMouseOut={e => {
@@ -166,18 +167,19 @@ const Header: React.FC = () => {
         <button
           title="Ajouter aux favoris"
           style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'none', border: 'none', color: '#D4D4D4', width: 36, height: 36, borderRadius: '50%', transition: 'background 0.18s, color 0.18s', boxShadow: 'none', fontFamily: 'Noto Sans, sans-serif', outline: 'none', fontSize: 0, cursor: 'pointer',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'none', border: 'none', color: isFavorite ? '#FFD600' : '#D4D4D4', width: 36, height: 36, borderRadius: '50%', transition: 'background 0.18s, color 0.18s', boxShadow: 'none', fontFamily: 'Noto Sans, sans-serif', outline: 'none', fontSize: 0, cursor: 'pointer',
           }}
+          onClick={() => setIsFavorite(fav => !fav)}
           onMouseOver={e => {
-            e.currentTarget.style.background = 'rgba(229,90,44,0.13)';
-            e.currentTarget.style.color = '#D4D4D4';
+            e.currentTarget.style.background = 'rgba(255,255,255,0.08)';
+            e.currentTarget.style.color = isFavorite ? '#FFD600' : '#D4D4D4';
           }}
           onMouseOut={e => {
             e.currentTarget.style.background = 'none';
-            e.currentTarget.style.color = '#D4D4D4';
+            e.currentTarget.style.color = isFavorite ? '#FFD600' : '#D4D4D4';
           }}
         >
-          <FiStar size={18} />
+          {isFavorite ? <FiStar size={18} fill="#FFD600" color="#FFD600" /> : <FiStar size={18} />}
         </button>
         {/* Options */}
         <button
@@ -187,7 +189,7 @@ const Header: React.FC = () => {
             display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'none', border: 'none', color: '#D4D4D4', width: 36, height: 36, borderRadius: '50%', transition: 'background 0.18s, color 0.18s', boxShadow: 'none', fontFamily: 'Noto Sans, sans-serif', outline: 'none', fontSize: 0, cursor: 'pointer',
           }}
           onMouseOver={e => {
-            e.currentTarget.style.background = 'rgba(229,90,44,0.13)';
+            e.currentTarget.style.background = 'rgba(255,255,255,0.08)';
             e.currentTarget.style.color = '#D4D4D4';
           }}
           onMouseOut={e => {
