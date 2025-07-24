@@ -26,7 +26,7 @@ const Header: React.FC = () => {
       alignItems: 'center',
       justifyContent: 'space-between',
       padding: '9px 16px', // padding réduit
-      background: '#232325',
+      background: '#1c1c1f',
       boxShadow: 'none',
       border: 'none',
       position: 'relative',
