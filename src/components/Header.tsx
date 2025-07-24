@@ -83,7 +83,7 @@ const Header: React.FC = () => {
       icon: fullWidth ? <FiMinimize2 size={18} /> : <FiMaximize2 size={18} />,
       onClick: () => { 
         setFullWidth(!fullWidth); 
-        setIsKebabMenuOpen(false); 
+        // Ne pas fermer le menu ici
       },
       color: fullWidth ? '#10b981' : '#D4D4D4'
     }
