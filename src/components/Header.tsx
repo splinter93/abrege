@@ -90,10 +90,10 @@ const Header: React.FC = () => {
       position: 'relative',
       zIndex: 100
     }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
-        <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
-          <LogoScrivia />
-        </Link>
+      <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
+        <LogoScrivia />
+      </Link>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 18, position: 'relative' }}>
         {/* Se connecter (si non connecté) */}
         {!isLoggedIn && (
           <Link href="/login" style={{
@@ -125,8 +125,6 @@ const Header: React.FC = () => {
             Se connecter
           </Link>
         )}
-      </div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 18, position: 'relative' }}>
         {/* Partager */}
         <button
           onClick={() => setIsShareMenuOpen(!isShareMenuOpen)}
