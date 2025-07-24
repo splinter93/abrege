@@ -4,7 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { useLanguageContext } from '../contexts/LanguageContext';
 import LogoScrivia from '@/components/LogoScrivia';
-import { FiShare2, FiStar, FiMoreHorizontal, FiMaximize2, FiMinimize2 } from 'react-icons/fi';
+import { FiShare2, FiStar, FiMoreHorizontal, FiMaximize2, FiMinimize2, FiCheck } from 'react-icons/fi';
 import { supabase } from '@/supabaseClient';
 import ShareMenu from './ShareMenu';
 
@@ -169,7 +169,7 @@ const Header: React.FC = () => {
                       width: '100%',
                       display: 'flex',
                       alignItems: 'center',
-                      gap: 12,
+                      justifyContent: 'space-between',
                       padding: '12px 16px',
                       background: 'transparent',
                       border: 'none',
@@ -187,8 +187,11 @@ const Header: React.FC = () => {
                       e.currentTarget.style.backgroundColor = 'transparent';
                     }}
                   >
-                    {option.icon}
-                    {option.label}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                      {option.icon}
+                      {option.label}
+                    </div>
+                    {fullWidth && <FiCheck size={16} color="#10b981" />}
                   </button>
                   
                   {/* Séparateur élégant entre les options (sauf pour la dernière) */}
