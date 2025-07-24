@@ -132,22 +132,34 @@ export default function TableOfContents({ headings = [], currentId, pinned = fal
   };
 
   const handleHeadingClick = (h: Heading) => {
-    if (!containerRef?.current) return;
-    const proseMirrorContainer = containerRef.current.querySelector('.ProseMirror');
-    if (!proseMirrorContainer) return;
-    let el = proseMirrorContainer.querySelector(`#${CSS.escape(h.id)}`);
-    if (!el) {
-      const candidates = Array.from(proseMirrorContainer.querySelectorAll(`h${h.level}`)) as HTMLElement[];
-      const match = candidates.find(node => node.textContent && h.text && node.textContent.trim() === h.text.trim());
-      if (match) {
-        match.setAttribute('id', h.id);
-        el = match;
+    // Cas page publique : scroll sur l'id dans le DOM
+    const el = document.getElementById(h.id);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      el.classList.add('active-flash');
+      setTimeout(() => el.classList.remove('active-flash'), 1400);
+      return;
+    }
+    // Cas éditeur (ProseMirror)
+    if (containerRef?.current) {
+      const proseMirrorContainer = containerRef.current.querySelector('.ProseMirror');
+      if (proseMirrorContainer) {
+        let el = proseMirrorContainer.querySelector(`#${CSS.escape(h.id)}`);
+        if (!el) {
+          const candidates = Array.from(proseMirrorContainer.querySelectorAll(`h${h.level}`)) as HTMLElement[];
+          const match = candidates.find(node => node.textContent && h.text && node.textContent.trim() === h.text.trim());
+          if (match) {
+            match.setAttribute('id', h.id);
+            el = match;
+          }
+        }
+        if (el) {
+          (el as HTMLElement).scrollIntoView({ behavior: 'smooth', block: 'start' });
+          (el as HTMLElement).classList.add('active-flash');
+          setTimeout(() => (el as HTMLElement).classList.remove('active-flash'), 1400);
+        }
       }
     }
-    if (!el) return;
-    (el as HTMLElement).scrollIntoView({ behavior: 'smooth', block: 'start' });
-    (el as HTMLElement).classList.add('active-flash');
-    setTimeout(() => (el as HTMLElement).classList.remove('active-flash'), 1400);
   };
 
   return (
