@@ -116,15 +116,20 @@ const Header: React.FC = () => {
             textDecoration: 'none',
             fontFamily: 'Noto Sans, Inter, Arial, sans-serif',
             letterSpacing: '0.01em',
-            transition: 'color 0.2s ease',
+            transition: 'all 0.2s ease',
             display: 'flex',
             alignItems: 'center',
+            padding: '6px 12px',
+            borderRadius: 6,
+            border: '1px solid #e55a2c',
           }}
             onMouseOver={e => {
               e.currentTarget.style.color = '#ff6a00';
+              e.currentTarget.style.borderColor = '#ff6a00';
             }}
             onMouseOut={e => {
               e.currentTarget.style.color = '#e55a2c';
+              e.currentTarget.style.borderColor = '#e55a2c';
             }}
           >
             Se Connecter
