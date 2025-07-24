@@ -23,8 +23,35 @@ const Header: React.FC = () => {
 
   // Appliquer la largeur pleine au contenu de la page
   React.useEffect(() => {
+    // Cibler le conteneur principal qui englobe titre et contenu
+    const mainContainer = document.querySelector('div[style*="maxWidth: 750"][style*="width: 750"]');
     const contentElements = document.querySelectorAll('.markdown-body');
+    const titleElements = document.querySelectorAll('h1[style*="maxWidth: 750"]');
+    
+    // Ajuster le conteneur principal
+    if (mainContainer) {
+      if (fullWidth) {
+        (mainContainer as HTMLElement).style.maxWidth = '1000px';
+        (mainContainer as HTMLElement).style.width = '1000px';
+      } else {
+        (mainContainer as HTMLElement).style.maxWidth = '750px';
+        (mainContainer as HTMLElement).style.width = '750px';
+      }
+    }
+    
+    // Ajuster le contenu markdown
     contentElements.forEach((element) => {
+      if (fullWidth) {
+        (element as HTMLElement).style.maxWidth = '1000px';
+        (element as HTMLElement).style.width = '1000px';
+      } else {
+        (element as HTMLElement).style.maxWidth = '750px';
+        (element as HTMLElement).style.width = '750px';
+      }
+    });
+
+    // Ajuster les titres
+    titleElements.forEach((element) => {
       if (fullWidth) {
         (element as HTMLElement).style.maxWidth = '1000px';
         (element as HTMLElement).style.width = '1000px';
