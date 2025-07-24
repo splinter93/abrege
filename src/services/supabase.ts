@@ -208,7 +208,7 @@ export const getArticleById = async (articleId: string): Promise<any> => {
 
   const { data: selectData, error } = await supabase
     .from('articles')
-    .select('*')
+    .select('*, public_url')
     .eq('id', articleId)
     .single();
 

@@ -34,20 +34,8 @@ export async function PATCH(req: Request): Promise<Response> {
       return new Response(JSON.stringify({ error: 'Note non trouvée.' }), { status: 404 });
     }
 
-    // Mettre à jour ispublished
-    const { data: updated, error } = await supabase
-      .from('articles')
-      .update({ ispublished: isPublished })
-      .eq('id', noteId)
-      .eq('user_id', USER_ID)
-      .select('slug')
-      .single();
-    if (error || !updated) {
-      return new Response(JSON.stringify({ error: error?.message || 'Erreur lors de la mise à jour.' }), { status: 500 });
-    }
-
-    // Si publié, récupérer le username
-    let url;
+    // Mettre à jour ispublished et public_url
+    let url = null;
     if (isPublished) {
       const { data: user, error: userError } = await supabase
         .from('users')
@@ -57,11 +45,22 @@ export async function PATCH(req: Request): Promise<Response> {
       if (userError || !user?.username) {
         return new Response(JSON.stringify({ error: 'Utilisateur ou username introuvable.' }), { status: 500 });
       }
-      // Retourner l'URL avec l'ID (stable) au lieu du slug
       url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/@${user.username}/shared/id/${noteId}`;
     }
-
-    return new Response(JSON.stringify({ success: true, ...(url ? { url } : {}) }), { status: 200 });
+    const { data: updated, error } = await supabase
+      .from('articles')
+      .update({
+        ispublished: isPublished,
+        public_url: isPublished ? url : null
+      })
+      .eq('id', noteId)
+      .eq('user_id', USER_ID)
+      .select('slug, public_url')
+      .single();
+    if (error || !updated) {
+      return new Response(JSON.stringify({ error: error?.message || 'Erreur lors de la mise à jour.' }), { status: 500 });
+    }
+    return new Response(JSON.stringify({ success: true, url: updated.public_url }), { status: 200 });
   } catch (err: any) {
     return new Response(JSON.stringify({ error: err.message }), { status: 500 });
   }

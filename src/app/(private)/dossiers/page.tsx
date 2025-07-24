@@ -82,6 +82,13 @@ const DossiersPage: React.FC = () => {
         console.log('[DossiersPage] 📚 Classeurs chargés:', classeursData.length);
         useFileSystemStore.getState().setClasseurs(classeursData);
         
+        // Sélectionner immédiatement le premier classeur par défaut
+        if (classeursData.length > 0) {
+          const firstClasseurId = classeursData[0].id;
+          console.log('[DossiersPage] 🎯 Sélection immédiate du premier classeur:', firstClasseurId);
+          useFileSystemStore.getState().setActiveClasseurId(firstClasseurId);
+        }
+        
         // Charger toutes les notes (articles) de tous les classeurs
         const { data: notesData, error: notesError } = await supabase
           .from('articles')
@@ -112,27 +119,17 @@ const DossiersPage: React.FC = () => {
         
         // ===== SÉLECTION AUTOMATIQUE DU CLASSEUR =====
         const selectInitialClasseur = () => {
-          // 1. Essayer de récupérer le dernier classeur sélectionné depuis localStorage
+          // Vérifier si on a un dernier classeur sélectionné dans localStorage
           const lastActiveClasseurId = localStorage.getItem("activeClasseurId");
           
           if (lastActiveClasseurId && classeursData.find(c => c.id === lastActiveClasseurId)) {
-            console.log('[DossiersPage] 🎯 Sélection du dernier classeur utilisé:', lastActiveClasseurId);
+            console.log('[DossiersPage] 🎯 Récupération du dernier classeur utilisé:', lastActiveClasseurId);
             setActiveClasseurId(lastActiveClasseurId);
             return;
           }
           
-          // 2. Sinon, sélectionner le premier classeur disponible
-          if (classeursData.length > 0) {
-            const firstClasseurId = classeursData[0].id;
-            console.log('[DossiersPage] 🎯 Sélection du premier classeur:', firstClasseurId);
-            setActiveClasseurId(firstClasseurId);
-            localStorage.setItem("activeClasseurId", firstClasseurId);
-            return;
-          }
-          
-          // 3. Aucun classeur disponible
-          console.log('[DossiersPage] ⚠️ Aucun classeur disponible');
-          setActiveClasseurId(null);
+          // Sinon, garder le premier classeur déjà sélectionné
+          console.log('[DossiersPage] ✅ Premier classeur déjà sélectionné par défaut');
         };
         
         // Sélectionner le classeur après le chargement

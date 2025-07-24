@@ -51,7 +51,7 @@ export async function PUT(req: NextRequest, { params }: any): Promise<Response> 
     
     const schema = z.object({ 
       ref: z.string().min(1, 'note_ref requis'),
-      header_image: z.string().url('header_image doit être une URL valide').optional(),
+      header_image: z.string().url('header_image doit être une URL valide').optional().nullable(),
       source_title: z.string().min(1, 'source_title requis').optional(),
       markdown_content: z.string().optional(),
       html_content: z.string().optional()

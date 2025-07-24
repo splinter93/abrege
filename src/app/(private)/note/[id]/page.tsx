@@ -131,6 +131,8 @@ export default function NoteEditorPage() {
   const params = useParams();
   const noteId = typeof params?.id === 'string' ? params.id : Array.isArray(params?.id) ? params.id[0] : '';
   const [published, setPublished] = React.useState(false);
+  const [publishedUrl, setPublishedUrl] = React.useState<string | null>(null);
+  const [isPublishing, setIsPublishing] = React.useState(false);
 
   // Hook de sauvegarde premium
   const { isSaving, handleSave } = useEditorSave({
@@ -139,12 +141,16 @@ export default function NoteEditorPage() {
     onSave: async ({ title, markdown_content, html_content, headerImage }) => {
       if (!noteId) return;
       try {
-        await updateNoteREST(noteId, {
+        const payload: any = {
           source_title: title,
           markdown_content,
           html_content,
-          header_image: headerImage,
-        });
+        };
+        // Correction : envoyer header_image même si null
+        if (headerImage !== undefined) {
+          payload.header_image = headerImage;
+        }
+        await updateNoteREST(noteId, payload);
         setLastSaved(new Date());
       } catch (err) {
         // toast error déjà géré dans le hook
@@ -163,6 +169,7 @@ export default function NoteEditorPage() {
           setTitle(note.source_title || '');
           setHeaderImageUrl(note.header_image || null);
           setPublished(!!note.isPublished);
+          setPublishedUrl(note.public_url || null); // <-- utilise la colonne public_url
           editor.commands.setContent(note.markdown_content || '');
         }
         setHasInitialized(true);
@@ -198,6 +205,21 @@ export default function NoteEditorPage() {
       supabase.removeChannel(channel);
     };
   }, [editor, noteId]);
+
+  // Lors du chargement initial ou reload, récupérer l'URL publique si la note est publiée
+  React.useEffect(() => {
+    if (!editor || !noteId || !hasInitialized) return;
+    (async () => {
+      if (published) {
+        try {
+          const res = await publishNoteREST(noteId, true);
+          if (res.url) setPublishedUrl(res.url);
+        } catch {}
+      } else {
+        setPublishedUrl(null);
+      }
+    })();
+  }, [editor, noteId, hasInitialized, published]);
 
   // Fonction utilitaire pour extraire les headings du doc Tiptap
   function getHeadingsFromEditor(editorInstance: typeof editor): Heading[] {
@@ -519,12 +541,20 @@ export default function NoteEditorPage() {
 
   // Handler pour le toggle Published
   const handleTogglePublished = async (value: boolean) => {
+    setIsPublishing(true);
     try {
-      await publishNoteREST(noteId, value);
+      const res = await publishNoteREST(noteId, value);
       setPublished(value);
+      if (value && res.url) {
+        setPublishedUrl(res.url);
+      } else {
+        setPublishedUrl(null);
+      }
       toast.success(value ? 'Note publiée !' : 'Note dépubliée.');
     } catch (err: any) {
       toast.error('Erreur lors de la mise à jour du statut de publication.');
+    } finally {
+      setIsPublishing(false);
     }
   };
 
@@ -742,7 +772,8 @@ export default function NoteEditorPage() {
         slashLang={slashLang}
         setSlashLang={setSlashLang}
         published={published}
-        setPublished={handleTogglePublished}
+        setPublished={isPublishing ? () => {} : handleTogglePublished}
+        publishedUrl={publishedUrl || undefined}
       />
     </div>
   );

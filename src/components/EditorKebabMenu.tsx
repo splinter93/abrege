@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { FiShare2, FiDownload, FiCheck, FiCopy } from 'react-icons/fi';
+import { FiShare2, FiDownload, FiCopy } from 'react-icons/fi';
 import './editor-kebab-menu.css';
 
 interface EditorKebabMenuProps {
@@ -46,9 +46,27 @@ const menuDividerStyle: React.CSSProperties = {
 
 function Toggle({ checked, onChange, label }: { checked: boolean, onChange: (v: boolean) => void, label: string }) {
   return (
-    <label className="kebab-toggle">
-      <input type="checkbox" checked={checked} onChange={e => onChange(e.target.checked)} />
-      <span className="kebab-toggle-slider" />
+    <label className="kebab-toggle" style={{ position: 'relative', userSelect: 'none' }}>
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={e => onChange(e.target.checked)}
+        style={{
+          position: 'absolute',
+          left: 0,
+          top: 0,
+          width: 34,
+          height: 18,
+          opacity: 0,
+          cursor: 'pointer',
+          margin: 0,
+          zIndex: 2,
+        }}
+        tabIndex={0}
+        aria-checked={checked}
+        role="switch"
+      />
+      <span className="kebab-toggle-slider" aria-hidden="true" />
       <span className="kebab-toggle-label">{label}</span>
     </label>
   );
@@ -150,7 +168,7 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
         <Toggle checked={autosaveOn} onChange={setAutosaveOn} label="Autosave" />
         <Toggle checked={wideMode} onChange={setWideMode} label="Wide Mode" />
         <Toggle checked={a4Mode} onChange={v => setA4Mode(!!v)} label="A4 Mode" />
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 2 }}>
           <Toggle checked={published} onChange={setPublished} label="Published" />
           {published && publishedUrl && (
             <button
