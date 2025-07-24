@@ -43,15 +43,15 @@ const Header: React.FC = () => {
           }}
           title="Partager cette page"
           style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'none', border: 'none', color: '#fff', width: 36, height: 36, borderRadius: '50%', transition: 'background 0.18s, color 0.18s', boxShadow: 'none', fontFamily: 'Noto Sans, sans-serif', outline: 'none', fontSize: 0, cursor: 'pointer',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'none', border: 'none', color: '#D4D4D4', width: 36, height: 36, borderRadius: '50%', transition: 'background 0.18s, color 0.18s', boxShadow: 'none', fontFamily: 'Noto Sans, sans-serif', outline: 'none', fontSize: 0, cursor: 'pointer',
           }}
           onMouseOver={e => {
             e.currentTarget.style.background = 'rgba(229,90,44,0.13)';
-            e.currentTarget.style.color = '#e55a2c';
+            e.currentTarget.style.color = '#D4D4D4';
           }}
           onMouseOut={e => {
             e.currentTarget.style.background = 'none';
-            e.currentTarget.style.color = '#fff';
+            e.currentTarget.style.color = '#D4D4D4';
           }}
         >
           <FiShare2 size={18} />
@@ -60,15 +60,15 @@ const Header: React.FC = () => {
         <button
           title="Ajouter aux favoris"
           style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'none', border: 'none', color: '#fff', width: 36, height: 36, borderRadius: '50%', transition: 'background 0.18s, color 0.18s', boxShadow: 'none', fontFamily: 'Noto Sans, sans-serif', outline: 'none', fontSize: 0, cursor: 'pointer',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'none', border: 'none', color: '#D4D4D4', width: 36, height: 36, borderRadius: '50%', transition: 'background 0.18s, color 0.18s', boxShadow: 'none', fontFamily: 'Noto Sans, sans-serif', outline: 'none', fontSize: 0, cursor: 'pointer',
           }}
           onMouseOver={e => {
             e.currentTarget.style.background = 'rgba(229,90,44,0.13)';
-            e.currentTarget.style.color = '#e55a2c';
+            e.currentTarget.style.color = '#D4D4D4';
           }}
           onMouseOut={e => {
             e.currentTarget.style.background = 'none';
-            e.currentTarget.style.color = '#fff';
+            e.currentTarget.style.color = '#D4D4D4';
           }}
         >
           <FiStar size={18} />
@@ -77,15 +77,15 @@ const Header: React.FC = () => {
         <button
           title="Options"
           style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'none', border: 'none', color: '#fff', width: 36, height: 36, borderRadius: '50%', transition: 'background 0.18s, color 0.18s', boxShadow: 'none', fontFamily: 'Noto Sans, sans-serif', outline: 'none', fontSize: 0, cursor: 'pointer',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'none', border: 'none', color: '#D4D4D4', width: 36, height: 36, borderRadius: '50%', transition: 'background 0.18s, color 0.18s', boxShadow: 'none', fontFamily: 'Noto Sans, sans-serif', outline: 'none', fontSize: 0, cursor: 'pointer',
           }}
           onMouseOver={e => {
             e.currentTarget.style.background = 'rgba(229,90,44,0.13)';
-            e.currentTarget.style.color = '#e55a2c';
+            e.currentTarget.style.color = '#D4D4D4';
           }}
           onMouseOut={e => {
             e.currentTarget.style.background = 'none';
-            e.currentTarget.style.color = '#fff';
+            e.currentTarget.style.color = '#D4D4D4';
           }}
         >
           <FiMoreHorizontal size={18} />
