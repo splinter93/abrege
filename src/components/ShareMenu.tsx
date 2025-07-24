@@ -141,33 +141,31 @@ export default function ShareMenu({ url, title = "Note Scrivia", description = "
                     summary={description}
                     hashtags={['scrivia', 'notes']}
                     beforeOnClick={onClose}
+                    style={{
+                      width: '100%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 12,
+                      padding: '12px 16px',
+                      background: 'transparent',
+                      border: 'none',
+                      color: option.color,
+                      fontSize: '14px',
+                      cursor: 'pointer',
+                      transition: 'background-color 0.15s ease',
+                      fontFamily: 'Noto Sans, Inter, Arial, sans-serif',
+                      borderRadius: 0,
+                      textDecoration: 'none'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = '#2a2a2c';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = 'transparent';
+                    }}
                   >
-                <div
-                  style={{
-                    width: '100%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 12,
-                    padding: '12px 16px',
-                    background: 'transparent',
-                    border: 'none',
-                    color: option.color,
-                    fontSize: '14px',
-                    cursor: 'pointer',
-                    transition: 'background-color 0.15s ease',
-                    fontFamily: 'Noto Sans, Inter, Arial, sans-serif',
-                    borderRadius: 0
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = '#2a2a2c';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = 'transparent';
-                  }}
-                >
-                  {option.icon}
-                  {option.label}
-                </div>
+                    {option.icon}
+                    {option.label}
                   </ShareButton>
                 );
               })()
