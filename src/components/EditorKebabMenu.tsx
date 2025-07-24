@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { FiShare2, FiDownload, FiCopy } from 'react-icons/fi';
+import { FiShare2, FiDownload, FiCopy, FiMaximize2, FiMinimize2 } from 'react-icons/fi';
 import './editor-kebab-menu.css';
 
 interface EditorKebabMenuProps {
@@ -17,59 +17,8 @@ interface EditorKebabMenuProps {
   published: boolean;
   setPublished: (v: boolean) => void;
   publishedUrl?: string;
-}
-
-const menuItemStyle: React.CSSProperties = {
-  width: '100%',
-  background: 'none',
-  border: 'none',
-  outline: 'none',
-  textAlign: 'left',
-  fontSize: 15,
-  color: 'var(--text-primary, #e5e7eb)',
-  padding: '9px 20px 9px 20px',
-  cursor: 'pointer',
-  display: 'flex',
-  alignItems: 'center',
-  gap: 8,
-  borderRadius: 8,
-  transition: 'background 0.15s, color 0.15s',
-};
-const menuDividerStyle: React.CSSProperties = {
-  height: 1,
-  background: '#4446',
-  margin: '6px 0',
-  width: '90%',
-  alignSelf: 'center',
-  borderRadius: 1,
-};
-
-function Toggle({ checked, onChange, label }: { checked: boolean, onChange: (v: boolean) => void, label: string }) {
-  return (
-    <label className="kebab-toggle" style={{ position: 'relative', userSelect: 'none' }}>
-      <input
-        type="checkbox"
-        checked={checked}
-        onChange={e => onChange(e.target.checked)}
-        style={{
-          position: 'absolute',
-          left: 0,
-          top: 0,
-          width: 34,
-          height: 18,
-          opacity: 0,
-          cursor: 'pointer',
-          margin: 0,
-          zIndex: 2,
-        }}
-        tabIndex={0}
-        aria-checked={checked}
-        role="switch"
-      />
-      <span className="kebab-toggle-slider" aria-hidden="true" />
-      <span className="kebab-toggle-label">{label}</span>
-    </label>
-  );
+  fullWidth: boolean;
+  setFullWidth: (v: boolean) => void;
 }
 
 const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
@@ -87,6 +36,8 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
   published,
   setPublished,
   publishedUrl,
+  fullWidth,
+  setFullWidth,
 }) => {
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -108,125 +59,169 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
     };
   }, [open, onClose]);
 
-  // Hover style injection (même logique qu'avant)
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const styleId = 'kebab-menu-hover-style';
-      if (!document.getElementById(styleId)) {
-        const style = document.createElement('style');
-        style.id = styleId;
-        style.innerHTML = `
-          .kebab-menu-popover button:hover {
-            background: rgba(255,255,255,0.07) !important;
-            color: #fff !important;
-            transition: background 0.18s, color 0.18s;
-          }
-          .kebab-menu-popover button:active {
-            background: rgba(255,255,255,0.13) !important;
-          }
-        `;
-        document.head.appendChild(style);
-      }
-    }
-  }, []);
-
   if (!open) return null;
 
+  const menuOptions = [
+    {
+      id: 'share',
+      label: 'Partager',
+      icon: <FiShare2 size={18} />,
+      onClick: () => { onClose(); /* TODO: implémenter partage */ },
+      color: '#D4D4D4'
+    },
+    {
+      id: 'export',
+      label: 'Exporter',
+      icon: <FiDownload size={18} />,
+      onClick: () => { onClose(); /* TODO: implémenter export */ },
+      color: '#D4D4D4'
+    },
+    {
+      id: 'fullWidth',
+      label: 'Pleine largeur',
+      icon: fullWidth ? <FiMinimize2 size={18} /> : <FiMaximize2 size={18} />,
+      onClick: () => { 
+        setFullWidth(!fullWidth); 
+        onClose(); 
+      },
+      color: fullWidth ? '#10b981' : '#D4D4D4'
+    },
+    {
+      id: 'autosave',
+      label: 'Autosave',
+      onClick: () => { setAutosaveOn(!autosaveOn); },
+      color: autosaveOn ? '#10b981' : '#D4D4D4',
+      type: 'toggle' as const
+    },
+    {
+      id: 'wideMode',
+      label: 'Wide Mode',
+      onClick: () => { setWideMode(!wideMode); },
+      color: wideMode ? '#10b981' : '#D4D4D4',
+      type: 'toggle' as const
+    },
+    {
+      id: 'a4Mode',
+      label: 'A4 Mode',
+      onClick: () => { setA4Mode(!a4Mode); },
+      color: a4Mode ? '#10b981' : '#D4D4D4',
+      type: 'toggle' as const
+    },
+    {
+      id: 'published',
+      label: 'Published',
+      onClick: () => { setPublished(!published); },
+      color: published ? '#10b981' : '#D4D4D4',
+      type: 'toggle' as const
+    }
+  ];
+
   return (
-    <div
-      ref={menuRef}
-      className="kebab-menu-popover"
-      style={{
-        position: 'fixed',
-        top: position.top,
-        left: position.left,
-        minWidth: 260,
-        background: 'var(--bg-main, #18181c)',
-        border: '1px solid #4446',
-        borderRadius: 14,
-        boxShadow: '0 6px 32px 0 rgba(0,0,0,0.16)',
-        zIndex: 99999,
-        padding: '16px 0 10px 0',
-        animation: 'fadeInMenu 0.18s',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 0,
-      }}
-    >
-      {/* Groupe 1 : Actions */}
-      <div style={{ padding: '0 20px 8px 20px', display: 'flex', flexDirection: 'column', gap: 2 }}>
-        <button style={menuItemStyle} onClick={() => { onClose(); /* TODO: implémenter partage */ }}>
-          <FiShare2 style={{ marginRight: 10, opacity: 0.8 }} /> Partager
-        </button>
-        <button style={menuItemStyle} onClick={() => { onClose(); /* TODO: implémenter export */ }}>
-          <FiDownload style={{ marginRight: 10, opacity: 0.8 }} /> Exporter
-        </button>
+    <>
+      {/* Overlay pour fermer le menu */}
+      <div 
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          zIndex: 999
+        }}
+        onClick={onClose}
+      />
+      
+      {/* Menu kebab */}
+      <div
+        ref={menuRef}
+        style={{
+          position: 'fixed',
+          top: position.top,
+          left: position.left,
+          background: '#1a1a1c',
+          border: '1px solid #2a2a2c',
+          borderRadius: 12,
+          padding: '6px 0',
+          minWidth: 200,
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)',
+          zIndex: 1000,
+          backdropFilter: 'blur(10px)'
+        }}
+      >
+        {menuOptions.map((option, index) => (
+          <div key={option.id}>
+            {option.type === 'toggle' ? (
+              <button
+                onClick={option.onClick}
+                style={{
+                  width: '100%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 12,
+                  padding: '12px 16px',
+                  background: 'transparent',
+                  border: 'none',
+                  color: option.color,
+                  fontSize: '14px',
+                  cursor: 'pointer',
+                  transition: 'background-color 0.15s ease',
+                  fontFamily: 'Noto Sans, Inter, Arial, sans-serif',
+                  borderRadius: 0
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = '#2a2a2c';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = 'transparent';
+                }}
+              >
+                {option.label}
+              </button>
+            ) : (
+              <button
+                onClick={option.onClick}
+                style={{
+                  width: '100%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 12,
+                  padding: '12px 16px',
+                  background: 'transparent',
+                  border: 'none',
+                  color: option.color,
+                  fontSize: '14px',
+                  cursor: 'pointer',
+                  transition: 'background-color 0.15s ease',
+                  fontFamily: 'Noto Sans, Inter, Arial, sans-serif',
+                  borderRadius: 0
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = '#2a2a2c';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = 'transparent';
+                }}
+              >
+                {option.icon}
+                {option.label}
+              </button>
+            )}
+            
+            {/* Séparateur élégant entre les options (sauf pour la dernière) */}
+            {index < menuOptions.length - 1 && (
+              <div
+                style={{
+                  height: '1px',
+                  background: 'linear-gradient(90deg, transparent 0%, #2a2a2c 20%, #2a2a2c 80%, transparent 100%)',
+                  margin: '0 16px',
+                  opacity: 0.6
+                }}
+              />
+            )}
+          </div>
+        ))}
       </div>
-      <div style={menuDividerStyle} />
-      {/* Groupe 2 : Affichage & options */}
-      <div style={{ padding: '0 20px', display: 'flex', flexDirection: 'column', gap: 10 }}>
-        <Toggle checked={autosaveOn} onChange={setAutosaveOn} label="Autosave" />
-        <Toggle checked={wideMode} onChange={setWideMode} label="Wide Mode" />
-        <Toggle checked={a4Mode} onChange={v => setA4Mode(!!v)} label="A4 Mode" />
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 2 }}>
-          <Toggle checked={published} onChange={setPublished} label="Published" />
-          {published && publishedUrl && (
-            <button
-              style={{
-                background: 'none',
-                border: 'none',
-                color: '#e55a2c',
-                cursor: 'pointer',
-                padding: '4px',
-                borderRadius: 4,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                transition: 'all 0.15s',
-              }}
-              onClick={async () => {
-                try {
-                  await navigator.clipboard.writeText(publishedUrl);
-                  // Feedback visuel temporaire
-                  const button = document.activeElement as HTMLButtonElement;
-                  if (button) {
-                    const icon = button.querySelector('svg');
-                    if (icon) {
-                      icon.style.color = '#fff';
-                      icon.style.transform = 'scale(1.1)';
-                      setTimeout(() => {
-                        icon.style.color = '#e55a2c';
-                        icon.style.transform = 'scale(1)';
-                      }, 1000);
-                    }
-                  }
-                } catch (err) {
-                  console.error('Erreur copie:', err);
-                }
-              }}
-              title="Copier l'URL de partage"
-            >
-              <FiCopy size={16} />
-            </button>
-          )}
-        </div>
-      </div>
-      <div style={menuDividerStyle} />
-      {/* Groupe 3 : Langue du SlashMenu */}
-      <div style={{ padding: '8px 20px 0 20px', display: 'flex', flexDirection: 'column', gap: 6 }}>
-        <div style={{ fontSize: 13, color: '#aaa', marginBottom: 2 }}>Slash Menu Language</div>
-        <div style={{ display: 'flex', gap: 10 }}>
-          <label className="kebab-radio">
-            <input type="radio" name="slashLang" checked={slashLang === 'en'} onChange={() => setSlashLang('en')} />
-            <span>EN</span>
-          </label>
-          <label className="kebab-radio">
-            <input type="radio" name="slashLang" checked={slashLang === 'fr'} onChange={() => setSlashLang('fr')} />
-            <span>FR</span>
-          </label>
-        </div>
-      </div>
-    </div>
+    </>
   );
 };
 

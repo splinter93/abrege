@@ -101,6 +101,7 @@ export default function NoteEditorPage() {
   const [wideMode, setWideMode] = React.useState(false);
   const [a4Mode, setA4Mode] = React.useState(false);
   const [autosaveOn, setAutosaveOn] = React.useState(true);
+  const [fullWidth, setFullWidth] = React.useState(false);
   const [slashLang, setSlashLang] = React.useState<'fr' | 'en'>('fr');
   const [title, setTitle] = React.useState('');
   const [tocHeadings, setTocHeadings] = React.useState<Heading[]>([]);
@@ -670,7 +671,7 @@ export default function NoteEditorPage() {
               ref={editorContainerRef}
               style={{
                 width: '100%',
-                maxWidth: 750,
+                maxWidth: fullWidth ? 1000 : 750,
                 minHeight: 220,
                 background: 'none',
                 color: 'var(--text-1)',
@@ -685,7 +686,7 @@ export default function NoteEditorPage() {
                 margin: 0,
                 boxSizing: 'border-box',
                 textAlign: 'left',
-                transition: 'box-shadow 0.18s',
+                transition: 'all 0.3s ease',
                 position: 'relative',
               }}
               onDrop={handleEditorDrop}
@@ -756,6 +757,8 @@ export default function NoteEditorPage() {
         published={published}
         setPublished={isPublishing ? () => {} : handleTogglePublished}
         publishedUrl={publishedUrl || undefined}
+        fullWidth={fullWidth}
+        setFullWidth={setFullWidth}
       />
     </div>
   );
