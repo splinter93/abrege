@@ -58,7 +58,7 @@ export default async function Page(props: any) {
   // Afficher directement le contenu avec le même design que la preview de l'éditeur
   return (
     <div style={{ width: '100vw', minHeight: '100vh', background: '#121217', color: '#D4D4D4', paddingBottom: 64, overflowY: 'auto', height: '100vh' }}>
-      <div style={{ width: '100%', background: '#232325', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+      <div style={{ width: '100%', background: '#2a2a2c', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
         {/* Le Header est déjà injecté par AppMainContent, donc rien à ajouter ici */}
       </div>
       {note.header_image && (

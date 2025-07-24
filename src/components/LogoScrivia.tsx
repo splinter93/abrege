@@ -14,7 +14,7 @@ export default function LogoScrivia() {
         left: 0,
         width: '100%',
         height: '100%',
-        background: 'rgba(0,0,0,0.28)',
+        background: 'rgba(0,0,0,0.18)',
         pointerEvents: 'none',
         borderRadius: 4,
       }} />
