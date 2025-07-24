@@ -14,7 +14,7 @@ const Header: React.FC<{ onLogout?: () => void }> = ({ onLogout }) => {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'space-between',
-      padding: '14px 32px', // padding haut/bas harmonisé
+      padding: '9px 32px', // padding réduit
       background: 'none',
       boxShadow: 'none',
       border: 'none',
