@@ -70,7 +70,7 @@
   padding-left: 1.5em;
   list-style-type: disc;
   list-style-position: outside;
-  font-family: 'Open Sans', 'Noto Sans', Arial, sans-serif;
+  font-family: 'Open Sans', 'Noto Sans', Arial, sans-serif !important;
 }
 
 .markdown-body ol {
