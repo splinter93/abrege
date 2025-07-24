@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&display=swap');
+
 :root {
   --bg-main: #0a0a0a;
   --text-primary: #ffffff;
@@ -59,28 +61,27 @@
   margin: 0 0 1.15rem 0;
 }
 
-/* LISTES */
-.markdown-body ul,
-.markdown-body ol {
-  margin: 0 0 1.1rem 1.5rem;
-  padding: 0;
-}
-.markdown-body li {
-  margin-bottom: 0.5rem;
-  padding-left: 0.2rem;
-}
-
-/* === INTERLIGNE RÉDUIT POUR LISTES À PUCE === */
+/* LISTES MARKDOWN UNIFIÉES */
 .markdown-body ul,
 .markdown-body ol {
   margin-top: 0.5em;
   margin-bottom: 0.5em;
-  padding-left: 2em;
+  margin-left: 0;
+  padding-left: 0;
+  list-style-type: disc;
+  list-style-position: outside;
+  font-family: 'Open Sans', 'Noto Sans', Arial, sans-serif;
 }
+
+.markdown-body ol {
+  list-style-type: decimal;
+}
+
 .markdown-body li {
   margin-top: 0.12em;
   margin-bottom: 0.12em;
   line-height: 1.5;
+  padding-left: 0.2rem;
 }
 
 /* LIENS */
@@ -300,28 +301,7 @@
   outline-offset: 1px;
 }
 
-/* === LISTES MARKDOWN (puces, numérotées, à cocher) === */
-.markdown-body ul,
-.markdown-body ol {
-  margin-top: 0.5em;
-  margin-bottom: 0.5em;
-  margin-left: 0;
-  padding-left: 0.3em;
-  list-style-type: disc;
-  list-style-position: outside;
-  font-family: 'Open Sans', 'Noto Sans', Arial, sans-serif;
-}
 
-.markdown-body ol {
-  list-style-type: decimal;
-}
-
-.markdown-body li {
-  margin-top: 0.12em;
-  margin-bottom: 0.12em;
-  line-height: 1.5;
-  padding-left: 0.2rem;
-}
 /* Alignement horizontal des cases à cocher sur la marge des listes à puce */
 .markdown-body li > input[type='checkbox'] {
   margin-left: -3em;
@@ -398,20 +378,7 @@
   outline-offset: 1px;
 }
 
-/* === LISTES MARKDOWN (puces, numérotées, à cocher) === */
-.markdown-body ul,
-.markdown-body ol {
-  margin-top: 0.5em;
-  margin-bottom: 0.5em;
-  margin-left: 1.5em;
-  padding-left: 1.5em;
-}
-.markdown-body li {
-  margin-top: 0.12em;
-  margin-bottom: 0.12em;
-  line-height: 1.5;
-  padding-left: 0.2rem;
-}
+
 /* Alignement horizontal des cases à cocher sur la marge des listes à puce */
 .markdown-body li > input[type='checkbox'] {
   margin-left: -2.5em;
@@ -434,9 +401,7 @@
   font-size: 0.85em !important;
 }
 
-.markdown-body ol {
-  padding-left: 1.25em !important;
-}
+
 
 /* === FIX: Alignement et wrapping propre des checkbox Markdown sur plusieurs lignes === */
 .markdown-body li > input[type='checkbox'] {
@@ -519,20 +484,4 @@ table {
   color: #D4D4D4 !important;
 } 
 
-.markdown-body ul {
-  list-style-type: disc !important;
-  list-style-position: outside !important;
-}
-.markdown-body ol {
-  list-style-type: decimal !important;
-  list-style-position: outside !important;
-} 
-
-@import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&display=swap');
-
-.markdown-body p,
-.markdown-body li,
-.markdown-body ul,
-.markdown-body ol {
-  font-family: 'Open Sans', 'Noto Sans', Arial, sans-serif !important;
-} 
+ 
