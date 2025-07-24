@@ -32,7 +32,7 @@ export default function TableOfContents({ headings = [], currentId, pinned = fal
   const tocContainerStyle: React.CSSProperties = isCollapsed
     ? {
         position: 'fixed',
-        right: 0,
+        right: 8,
         top: 380,
         minWidth: 32,
         padding: 0,
@@ -77,6 +77,7 @@ export default function TableOfContents({ headings = [], currentId, pinned = fal
         WebkitBackdropFilter: 'blur(8px)',
         pointerEvents: 'all',
         minWidth: 300,
+        marginRight: 8,
       };
   const tocItemStyles: Record<number, React.CSSProperties> = {
     1: {
