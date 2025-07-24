@@ -7,7 +7,7 @@ import { createMarkdownIt } from '@/utils/markdownItConfig';
 import LogoScrivia from '@/components/LogoScrivia';
 
 const Logo = () => (
-  <LogoScrivia size={36} color="white" />
+  <LogoScrivia />
 );
 
 /**
