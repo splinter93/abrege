@@ -6,10 +6,12 @@ import { useLanguageContext } from '../contexts/LanguageContext';
 import LogoScrivia from '@/components/LogoScrivia';
 import { FiShare2, FiStar, FiMoreHorizontal } from 'react-icons/fi';
 import { supabase } from '@/supabaseClient';
+import ShareMenu from './ShareMenu';
 
 const Header: React.FC = () => {
   const { t } = useLanguageContext();
   const [isLoggedIn, setIsLoggedIn] = React.useState<boolean>(false);
+  const [isShareMenuOpen, setIsShareMenuOpen] = React.useState<boolean>(false);
 
   React.useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
@@ -33,14 +35,10 @@ const Header: React.FC = () => {
       <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
         <LogoScrivia />
       </Link>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 18, position: 'relative' }}>
         {/* Partager */}
         <button
-          onClick={() => {
-            if (typeof window !== 'undefined') {
-              navigator.clipboard.writeText(window.location.href);
-            }
-          }}
+          onClick={() => setIsShareMenuOpen(!isShareMenuOpen)}
           title="Partager cette page"
           style={{
             display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'none', border: 'none', color: '#D4D4D4', width: 36, height: 36, borderRadius: '50%', transition: 'background 0.18s, color 0.18s', boxShadow: 'none', fontFamily: 'Noto Sans, sans-serif', outline: 'none', fontSize: 0, cursor: 'pointer',
@@ -56,6 +54,15 @@ const Header: React.FC = () => {
         >
           <FiShare2 size={18} />
         </button>
+        
+        {/* Menu de partage */}
+        <ShareMenu
+          url={typeof window !== 'undefined' ? window.location.href : ''}
+          title="Note Scrivia"
+          description="Découvrez cette note créée avec Scrivia"
+          isOpen={isShareMenuOpen}
+          onClose={() => setIsShareMenuOpen(false)}
+        />
         {/* Favori */}
         <button
           title="Ajouter aux favoris"
