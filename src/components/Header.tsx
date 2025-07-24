@@ -30,9 +30,13 @@ const Header: React.FC = () => {
       if (fullWidth) {
         (mainContainer as HTMLElement).style.maxWidth = '1000px';
         (mainContainer as HTMLElement).style.width = '1000px';
+        // Forcer le centrage en ajoutant margin auto
+        (mainContainer as HTMLElement).style.margin = '0 auto';
       } else {
         (mainContainer as HTMLElement).style.maxWidth = '750px';
         (mainContainer as HTMLElement).style.width = '750px';
+        // Restaurer le centrage
+        (mainContainer as HTMLElement).style.margin = '0 auto';
       }
     }
     
@@ -42,9 +46,13 @@ const Header: React.FC = () => {
       if (fullWidth) {
         (element as HTMLElement).style.maxWidth = '1000px';
         (element as HTMLElement).style.width = '1000px';
+        // Forcer le centrage
+        (element as HTMLElement).style.margin = '0 auto';
       } else {
         (element as HTMLElement).style.maxWidth = '750px';
         (element as HTMLElement).style.width = '750px';
+        // Restaurer le centrage
+        (element as HTMLElement).style.margin = '0 auto';
       }
     });
 
@@ -56,9 +64,13 @@ const Header: React.FC = () => {
         if (fullWidth) {
           style.maxWidth = '1000px';
           style.width = '1000px';
+          // Forcer le centrage
+          style.margin = '0 auto';
         } else {
           style.maxWidth = '750px';
           style.width = '750px';
+          // Restaurer le centrage
+          style.margin = '0 auto';
         }
       }
     });
@@ -115,7 +127,7 @@ const Header: React.FC = () => {
               e.currentTarget.style.color = '#e55a2c';
             }}
           >
-            Se connecter
+            Se Connecter
           </Link>
         )}
         {/* Partager */}
