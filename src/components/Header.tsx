@@ -35,19 +35,19 @@ const Header: React.FC<{ onLogout?: () => void }> = ({ onLogout }) => {
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: 8,
+            justifyContent: 'center',
             background: 'none',
             border: 'none',
             color: '#fff',
-            fontWeight: 500,
-            fontSize: 16,
-            cursor: 'pointer',
-            padding: '6px 14px',
-            borderRadius: 8,
+            width: 36,
+            height: 36,
+            borderRadius: '50%',
             transition: 'background 0.18s, color 0.18s',
             boxShadow: 'none',
             fontFamily: 'Noto Sans, sans-serif',
             outline: 'none',
+            fontSize: 0,
+            cursor: 'pointer',
           }}
           onMouseOver={e => {
             e.currentTarget.style.background = 'rgba(229,90,44,0.13)';
@@ -58,8 +58,7 @@ const Header: React.FC<{ onLogout?: () => void }> = ({ onLogout }) => {
             e.currentTarget.style.color = '#fff';
           }}
         >
-          <FiShare2 size={18} style={{ marginRight: 6 }} />
-          Partager
+          <FiShare2 size={18} />
         </button>
         <button
           onClick={onLogout}

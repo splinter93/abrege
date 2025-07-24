@@ -101,11 +101,23 @@ export default async function Page(props: any) {
       {/* Footer discret */}
       <div style={{
         position: 'fixed',
-        bottom: 16,
-        right: 16,
-        color: '#b3a9a0',
-        fontSize: '0.8rem',
-        opacity: 0.6
+        bottom: 18,
+        right: 18,
+        background: 'linear-gradient(90deg, #ff6a00 0%, #e55a2c 100%)',
+        color: '#fff',
+        fontWeight: 600,
+        fontSize: '1.01rem',
+        borderRadius: 18,
+        padding: '8px 22px',
+        fontFamily: 'Noto Sans, Inter, Arial, sans-serif',
+        boxShadow: '0 2px 12px 0 rgba(255,106,0,0.10)',
+        letterSpacing: '0.01em',
+        userSelect: 'none',
+        opacity: 0.93,
+        border: 'none',
+        zIndex: 1000,
+        pointerEvents: 'none',
+        transition: 'background 0.18s, color 0.18s',
       }}>
         Crafted with Scrivia
       </div>
