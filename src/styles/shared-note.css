@@ -307,7 +307,15 @@
   margin-bottom: 0.5em;
   margin-left: 0;
   padding-left: 0.3em;
+  list-style-type: disc;
+  list-style-position: outside;
+  font-family: 'Open Sans', 'Noto Sans', Arial, sans-serif;
 }
+
+.markdown-body ol {
+  list-style-type: decimal;
+}
+
 .markdown-body li {
   margin-top: 0.12em;
   margin-bottom: 0.12em;
