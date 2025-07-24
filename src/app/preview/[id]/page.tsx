@@ -39,9 +39,13 @@ export default async function PreviewPage({ params }: PreviewPageProps) {
       padding: '2rem',
       fontFamily: 'system-ui, -apple-system, sans-serif',
       lineHeight: 1.6,
-      color: '#333'
+      color: '#D4D4D4',
+      background: '#15151b',
+      minHeight: '100vh'
     }}>
-      <Header />
+      <div style={{ width: '100%', background: '#232325', marginBottom: 24 }}>
+        <Header />
+      </div>
       {/* Header Image */}
       {note.header_image && (
         <img 

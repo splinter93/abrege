@@ -1782,3 +1782,11 @@ textarea.editor-title-input {
 .editor-content ul[data-type="taskList"] li > label {
   margin-top: 0.18em;
 }
+
+.editor-title,
+.editor-title-input,
+.editor-title-span,
+textarea.editor-title,
+textarea.editor-title-input {
+  color: #D4D4D4 !important;
+}
