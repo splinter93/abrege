@@ -61,9 +61,42 @@ const Header: React.FC = () => {
       position: 'relative',
       zIndex: 100
     }}>
-      <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
-        <LogoScrivia />
-      </Link>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
+        <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
+          <LogoScrivia />
+        </Link>
+        {/* Se connecter (si non connecté) */}
+        {!isLoggedIn && (
+          <Link href="/login" style={{
+            color: '#fff',
+            background: 'linear-gradient(135deg, rgba(229,90,44,0.15) 0%, rgba(255,106,0,0.1) 100%)',
+            borderRadius: 8,
+            padding: '8px 16px',
+            fontWeight: 500,
+            fontSize: 14,
+            textDecoration: 'none',
+            fontFamily: 'Noto Sans, Inter, Arial, sans-serif',
+            letterSpacing: '0.01em',
+            transition: 'all 0.2s ease',
+            display: 'flex',
+            alignItems: 'center',
+            border: '1px solid rgba(229,90,44,0.2)',
+          }}
+            onMouseOver={e => {
+              e.currentTarget.style.background = 'linear-gradient(135deg, rgba(229,90,44,0.25) 0%, rgba(255,106,0,0.2) 100%)';
+              e.currentTarget.style.border = '1px solid rgba(229,90,44,0.3)';
+              e.currentTarget.style.transform = 'translateY(-1px)';
+            }}
+            onMouseOut={e => {
+              e.currentTarget.style.background = 'linear-gradient(135deg, rgba(229,90,44,0.15) 0%, rgba(255,106,0,0.1) 100%)';
+              e.currentTarget.style.border = '1px solid rgba(229,90,44,0.2)';
+              e.currentTarget.style.transform = 'translateY(0)';
+            }}
+          >
+            Se connecter
+          </Link>
+        )}
+      </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 18, position: 'relative' }}>
         {/* Partager */}
         <button
@@ -211,35 +244,7 @@ const Header: React.FC = () => {
           </>
         )}
 
-        {/* Se connecter (si non connecté) */}
-        {!isLoggedIn && (
-          <Link href="/login" style={{
-            marginLeft: 12,
-            color: '#fff',
-            background: 'rgba(44,44,44,0.18)',
-            borderRadius: 8,
-            padding: '7px 18px',
-            fontWeight: 500,
-            fontSize: 15,
-            textDecoration: 'none',
-            fontFamily: 'Noto Sans, Inter, Arial, sans-serif',
-            letterSpacing: '0.01em',
-            transition: 'background 0.18s, color 0.18s',
-            display: 'flex', alignItems: 'center',
-          }}
-            onMouseOver={e => {
-              e.currentTarget.style.background = 'rgba(229,90,44,0.13)';
-              e.currentTarget.style.color = '#e55a2c';
-            }}
-            onMouseOut={e => {
-              e.currentTarget.style.background = 'rgba(44,44,44,0.18)';
-              e.currentTarget.style.color = '#fff';
-            }}
-          >
-            <span style={{ fontSize: 17, marginRight: 6, fontWeight: 400 }}>🔐</span>
-            Se connecter
-          </Link>
-        )}
+
       </div>
     </header>
   );
