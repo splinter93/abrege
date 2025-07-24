@@ -4,7 +4,7 @@ import LogoScrivia from '@/components/LogoScrivia';
 import dynamic from 'next/dynamic';
 import { useEffect, useState } from 'react';
 import type { Heading } from '@/types/editor';
-const TableOfContents = dynamic(() => import('@/components/TableOfContents'), { ssr: false });
+import PublicTOCClient from '@/components/PublicTOCClient';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -104,7 +104,7 @@ export default async function Page(props: any) {
         </div>
         {/* TOC sticky à droite */}
         <div style={{ position: 'sticky', top: 32, alignSelf: 'flex-start', minWidth: 220, maxWidth: 320, zIndex: 10 }}>
-          <TOCWrapper slug={slug} />
+          <PublicTOCClient slug={slug} />
         </div>
       </div>
       {/* Footer discret */}
@@ -131,26 +131,4 @@ export default async function Page(props: any) {
       </div>
     </div>
   );
-}
-
-// Wrapper React pour la TOC (client only)
-function TOCWrapper({ slug }: { slug: string }) {
-  const [headings, setHeadings] = useState<Heading[]>([]);
-  useEffect(() => {
-    fetch(`/api/v1/note/${slug}/table-of-contents`)
-      .then(res => res.json())
-      .then(data => {
-        if (data.toc) {
-          setHeadings(
-            data.toc.map((item: any) => ({
-              id: item.slug,
-              text: item.title,
-              level: item.level
-            }))
-          );
-        }
-      });
-  }, [slug]);
-  if (!headings.length) return null;
-  return <TableOfContents headings={headings} />;
 }
