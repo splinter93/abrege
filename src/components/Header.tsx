@@ -132,7 +132,7 @@ const Header: React.FC = () => {
               e.currentTarget.style.borderColor = '#e55a2c';
             }}
           >
-            Se Connecter
+            Connexion
           </Link>
         )}
         {/* Partager */}

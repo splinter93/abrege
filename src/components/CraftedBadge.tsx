@@ -26,7 +26,7 @@ export default function CraftedBadge() {
         transition: 'opacity 0.18s, color 0.18s',
         display: 'flex',
         alignItems: 'center',
-        gap: 4, // gap réduit
+        gap: 5,
         pointerEvents: 'auto',
         textDecoration: 'none',
       }}
