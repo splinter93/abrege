@@ -52,7 +52,7 @@
   border-radius: 4px;
   background: var(--surface-2);
   color: var(--text-2);
-  font-size: 0.875rem;
+  font-size: var(--editor-small-size);
   font-weight: 600;
   transition: all 0.2s ease;
 }
@@ -76,7 +76,7 @@
   padding: 0.5rem 0 1.2rem 0;
   margin: 0;
   margin-right: 1rem;
-  font-size: 1.25rem; /* Default smaller title size */
+  font-size: var(--editor-h3-size); /* Default smaller title size */
   font-weight: 600;
   color: var(--editor-text-color);
   letter-spacing: -0.02em;
@@ -92,7 +92,7 @@
 .editor-title-input:focus {
   outline: none;
   box-shadow: none;
-  font-size: 1.5rem; /* Grow when focused */
+  font-size: var(--editor-xxl-size); /* Grow when focused */
   /* Scale up slightly for effect */
   transform: scale(1.02);
 }
@@ -142,7 +142,7 @@
 
 .editor-content {
   color: var(--editor-text-color);
-  font-size: 1.125rem;
+  font-size: var(--editor-body-size);
   font-weight: 400;
   line-height: 1.8;
   max-width: 750px;
@@ -150,7 +150,7 @@
   padding: 1rem 3rem;
   outline: none;
   min-height: 100px;
-  font-family: var(--editor-font-family, 'Noto Sans', sans-serif);
+  font-family: var(--editor-font-family);
 }
 
 .editor-content:focus {
@@ -160,7 +160,7 @@
 .editor-content .ProseMirror {
   outline: none;
   min-height: 100px;
-  font-family: var(--editor-font-family, 'Noto Sans', sans-serif);
+  font-family: var(--editor-font-family);
   color: var(--editor-text-color);
 }
 
@@ -200,19 +200,19 @@
 }
 
 .editor-content h1 { 
-  font-size: 2.25rem; 
+  font-size: var(--editor-h1-size); 
   margin: 2rem 0 1.25rem;
   color: var(--editor-text-color);
 }
 
 .editor-content h2 { 
-  font-size: 1.75rem; 
+  font-size: var(--editor-h2-size); 
   margin: 1.75rem 0 1rem;
   color: var(--editor-text-color);
 }
 
 .editor-content h3 { 
-  font-size: 1.375rem; 
+  font-size: var(--editor-h3-size); 
   margin: 1.5rem 0 0.875rem;
   color: var(--editor-text-color);
 }
@@ -465,12 +465,12 @@
 
 @media (max-width: 768px) {
   .editor-content {
-    font-size: 1rem;
+    font-size: var(--editor-h5-size);
     padding: 1rem;
   }
-  .editor-content h1 { font-size: 1.875rem; }
-  .editor-content h2 { font-size: 1.5rem; }
-  .editor-content h3 { font-size: 1.25rem; }
+  .editor-content h1 { font-size: var(--editor-h1-size-mobile); }
+  .editor-content h2 { font-size: var(--editor-h2-size-mobile); }
+  .editor-content h3 { font-size: var(--editor-h3-size-mobile); }
 }
 
 .editor-action-button {
@@ -531,7 +531,7 @@
   display: flex;
   gap: 1rem;
   color: var(--text-2);
-  font-size: 0.8rem;
+  font-size: var(--editor-small-size);
 }
 
 .editor-stats span {
@@ -542,7 +542,7 @@
 
 .editor-time {
   color: var(--text-2);
-  font-size: 0.8rem;
+  font-size: var(--editor-small-size);
 }
 
 .editor-content .ProseMirror > *.selected {
@@ -941,14 +941,14 @@ textarea.editor-title-input,
   line-height: 1.1;
   resize: none;
   overflow: visible;
-  font-size: 2.25rem;
+  font-size: var(--editor-title-size);
   font-weight: 700;
   text-align: left;
   border: none;
   background: none;
   outline: none;
   color: var(--editor-text-color);
-  font-family: 'Noto Sans', sans-serif;
+  font-family: var(--editor-font-family);
   box-sizing: border-box;
   white-space: normal;
   word-break: break-word;
@@ -1007,7 +1007,7 @@ textarea.editor-title-input,
   font-weight: 600;
   background: var(--surface-2);
   border-bottom: 2px solid var(--border-color);
-  font-size: 1.1rem;
+  font-size: var(--editor-large-size);
   text-align: center;
   padding: 1rem 1.25rem;
 }
@@ -1018,7 +1018,7 @@ textarea.editor-title-input,
 .editor-table td {
   color: var(--text-2);
   background: var(--surface-1);
-  font-size: 0.95rem;
+  font-size: var(--editor-medium-size);
   text-align: center;
   padding: 1rem 1.25rem;
   border-bottom: 1px solid var(--border-subtle);
@@ -1427,14 +1427,14 @@ textarea.editor-title-input,
   min-height: 45px;
   max-height: 200px;
   height: auto;
-  font-size: 2.25rem;
+  font-size: var(--editor-title-size);
   font-weight: 700;
   line-height: 1.1;
   border: none;
   background: transparent;
   outline: none;
   color: inherit;
-  font-family: inherit;
+  font-family: var(--editor-font-family);
   padding: 0;
   margin: 0;
   resize: none;
@@ -1478,7 +1478,7 @@ textarea.editor-title-input {
   margin: 0 auto;
   display: block;
   padding: 0;
-  font-size: 2.25rem;
+  font-size: var(--editor-title-size);
   font-weight: 700;
   line-height: 1.1;
   color: var(--editor-text-color);
