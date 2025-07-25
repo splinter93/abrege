@@ -25,7 +25,9 @@ export default async function PreviewPage({ params }: PreviewPageProps) {
   if (error || !note) {
     return (
       <div style={{ padding: '2rem', textAlign: 'center' }}>
-        <LogoScrivia />
+        <div style={{ marginLeft: '4px', display: 'inline-block' }}>
+          <LogoScrivia />
+        </div>
         <h1>Note non trouvée ou non publiée</h1>
         <p>Cette note n'existe pas ou n'est pas accessible publiquement.</p>
       </div>

@@ -52,7 +52,6 @@ const Logo = () => {
     <div
       className="editor-header-logo"
       style={{
-        marginLeft: 18,
         cursor: 'pointer',
         display: 'flex',
         alignItems: 'center',

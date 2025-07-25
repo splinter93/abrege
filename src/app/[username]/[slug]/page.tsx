@@ -51,7 +51,9 @@ export default async function Page(props: any) {
   if (userError || !user) {
     return (
       <div style={{ padding: '2rem', textAlign: 'center' }}>
-        <LogoScrivia />
+        <div style={{ marginLeft: '4px', display: 'inline-block' }}>
+          <LogoScrivia />
+        </div>
         <h1>Utilisateur non trouvé</h1>
         <p>Vérifiez l'URL ou contactez l'auteur.</p>
         <p>Debug: error = {userError?.message}</p>
@@ -71,7 +73,9 @@ export default async function Page(props: any) {
   if (noteError || !note) {
     return (
       <div style={{ padding: '2rem', textAlign: 'center' }}>
-        <LogoScrivia />
+        <div style={{ marginLeft: '4px', display: 'inline-block' }}>
+          <LogoScrivia />
+        </div>
         <h1>Note non trouvée ou non publiée</h1>
         <p>Vérifiez l'URL ou contactez l'auteur.</p>
       </div>

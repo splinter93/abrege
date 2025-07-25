@@ -46,6 +46,7 @@
   color: var(--accent-primary);
   letter-spacing: -0.02em;
   gap: 0.7rem;
+  margin-left: 3px;
 }
 
 .editor-header-toolbar {
