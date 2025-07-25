@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import '@/styles/shared-note.css';
+import '@/styles/markdown.css';
 import LogoScrivia from '@/components/LogoScrivia';
 import dynamic from 'next/dynamic';
 import { useEffect, useState } from 'react';
