@@ -1,4 +1,5 @@
 'use client';
+import { useEffect } from 'react';
 import { useEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import { Markdown } from 'tiptap-markdown';
@@ -35,6 +36,7 @@ import CustomImage from '@/extensions/CustomImage';
 import { useSession } from '@supabase/auth-helpers-react';
 import { publishNoteREST } from '@/services/api';
 import LogoScrivia from '@/components/LogoScrivia';
+
 type SlashCommand = {
   id: string;
   alias: Record<string, string>;
@@ -70,6 +72,9 @@ const Logo = () => {
 };
 
 export default function NoteEditorPage() {
+  useEffect(() => {
+    document.title = 'Scrivia - Editor';
+  }, []);
   const router = useRouter();
   const session = useSession();
   const userId = session?.user?.id || '';

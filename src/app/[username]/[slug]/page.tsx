@@ -7,10 +7,33 @@ import type { Heading } from '@/types/editor';
 import PublicTOCClient from '@/components/PublicTOCClient';
 import { FiFeather } from 'react-icons/fi';
 import CraftedBadge from '@/components/CraftedBadge';
+import type { Metadata } from 'next';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+export async function generateMetadata({ params }: { params: any }): Promise<Metadata> {
+  const { username, slug } = params;
+  const decodedUsername = decodeURIComponent(username).replace(/^@/, '');
+  // Chercher l'utilisateur par username
+  const { data: user } = await supabase
+    .from('users')
+    .select('id')
+    .eq('username', decodedUsername)
+    .single();
+  if (!user) return { title: 'Note introuvable – Scrivia' };
+  // Chercher la note par slug et user_id, ispublished = true
+  const { data: note } = await supabase
+    .from('articles')
+    .select('source_title')
+    .eq('slug', slug)
+    .eq('user_id', user.id)
+    .eq('ispublished', true)
+    .single();
+  if (!note) return { title: 'Note introuvable – Scrivia' };
+  return { title: note.source_title + ' – Scrivia' };
+}
 
 export default async function Page(props: any) {
   const { username, slug } = await props.params;

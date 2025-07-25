@@ -1,5 +1,5 @@
 "use client";
-import React, { useCallback } from "react";
+import React, { useCallback, useEffect } from "react";
 import FolderManager from "../../../components/FolderManager";
 import ClasseurTabs, { Classeur } from "../../../components/ClasseurTabs";
 import DynamicIcon from "../../../components/DynamicIcon";
@@ -39,6 +39,9 @@ const mergeClasseursState = (prev: Classeur[], fetched: Classeur[]) => {
 };
 
 const DossiersPage: React.FC = () => {
+  useEffect(() => {
+    document.title = 'Scrivia - Notebooks';
+  }, []);
   // TOUS les hooks doivent être ici, AVANT tout return conditionnel
   const foldersObj = useFileSystemStore(selectFolders);
   const notesObj = useFileSystemStore(selectNotes);
