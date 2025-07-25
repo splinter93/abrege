@@ -113,4 +113,4 @@ export default async function Page(props: any) {
       <CraftedBadge />
     </div>
   );
-}
+} 

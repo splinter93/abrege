@@ -45,7 +45,7 @@ export async function PATCH(req: Request): Promise<Response> {
       if (userError || !user?.username) {
         return new Response(JSON.stringify({ error: 'Utilisateur ou username introuvable.' }), { status: 500 });
       }
-      url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/@${user.username}/shared/id/${noteId}`;
+      url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/@${user.username}/id/${noteId}`;
     }
     const { data: updated, error } = await supabase
       .from('articles')

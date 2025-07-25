@@ -46,5 +46,5 @@ export default async function Page(props: any) {
   }
 
   // Redirige vers l'URL avec le slug actuel (SEO-friendly)
-  redirect(`/@${decodedUsername}/shared/${note.slug}`);
+  redirect(`/@${decodedUsername}/${note.slug}`);
 } 
