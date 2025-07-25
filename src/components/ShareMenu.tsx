@@ -57,6 +57,7 @@ export default function ShareMenu({ url, title = "Note Scrivia", description = "
       icon: <TwitterIcon size={18} round />,
       component: TwitterShareButton,
       color: '#1DA1F2',
+      textColor: '#fff',
       type: 'share' as const
     },
     {
@@ -64,7 +65,7 @@ export default function ShareMenu({ url, title = "Note Scrivia", description = "
       label: 'LinkedIn',
       icon: <LinkedinIcon size={18} round />,
       component: LinkedinShareButton,
-      color: '#0077B5',
+      color: '#1DA1F2',
       type: 'share' as const
     }
   ];
@@ -165,7 +166,7 @@ export default function ShareMenu({ url, title = "Note Scrivia", description = "
                     }}
                   >
                     {option.icon}
-                    {option.label}
+                    <span style={{ color: option.id === 'twitter' ? option.textColor : undefined }}>{option.label}</span>
                   </ShareButton>
                 );
               })()
