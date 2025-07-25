@@ -4,12 +4,13 @@
   ===============================
   À appliquer sur tous les containers markdown (éditeur, preview, résumé, etc.)
   Utiliser la classe racine : .markdown-body
+  HARMONISÉ AVEC LE SYSTÈME TYPOGRAPHIQUE CENTRALISÉ
 */
 
 .markdown-body {
-  color: var(--text-1);
-  font-family: 'Noto Sans', sans-serif !important;
-  font-size: 1.08rem;
+  color: var(--editor-text-color);
+  font-family: var(--editor-font-family);
+  font-size: var(--editor-body-size);
   line-height: 1.8;
   background: none;
   margin: 0;
@@ -18,10 +19,10 @@
 
 /* TITRES */
 .markdown-body h1 {
-  font-size: 2.2rem;
+  font-size: var(--editor-h1-size);
   font-weight: 700;
   margin: 2.2rem 0 1.2rem;
-  color: var(--accent-primary);
+  color: var(--editor-accent-primary);
   letter-spacing: -0.02em;
   margin-bottom: 0.7em;
 }
@@ -29,16 +30,16 @@
   margin-top: 0.2em;
 }
 .markdown-body h2 {
-  font-size: 1.6rem;
+  font-size: var(--editor-h2-size);
   font-weight: 600;
   margin: 1.7rem 0 1rem;
-  color: var(--accent-hover);
+  color: var(--editor-accent-hover);
 }
 .markdown-body h3 {
-  font-size: 1.25rem;
+  font-size: var(--editor-h3-size);
   font-weight: 600;
   margin: 1.3rem 0 0.8rem;
-  color: var(--text-1);
+  color: var(--editor-text-color);
 }
 
 /* PARAGRAPHES */
@@ -72,31 +73,31 @@
 
 /* LIENS */
 .markdown-body a {
-  color: var(--accent-hover);
+  color: var(--editor-accent-hover);
   text-decoration: none;
   filter: brightness(0.8);
   transition: color 0.18s, filter 0.18s;
 }
 .markdown-body a:hover {
-  color: var(--accent-primary);
+  color: var(--editor-accent-primary);
   filter: brightness(0.95);
   text-decoration: underline;
 }
 
 /* CODE INLINE */
 .markdown-body code {
-  background: var(--surface-2);
-  color: var(--accent-primary);
+  background: var(--editor-surface-2);
+  color: var(--editor-accent-primary);
   border-radius: 4px;
   padding: 0.13em 0.38em;
   font-size: 0.98em;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-monospace);
 }
 
 /* BLOCS CODE */
 .markdown-body pre {
-  background: var(--surface-2);
-  color: var(--text-1);
+  background: var(--editor-surface-2);
+  color: var(--editor-text-color);
   border-radius: 8px;
   padding: 1.1em 1.3em;
   font-size: 0.98em;
@@ -107,7 +108,7 @@
 
 /* TABLEAUX */
 .markdown-body .tableWrapper {
-  border: 1px solid var(--border-subtle);
+  border: 1px solid var(--editor-border-subtle);
   border-radius: 10px;
   overflow: hidden;
   background: none;
@@ -127,10 +128,10 @@
 .markdown-body th,
 .markdown-body td {
   border: none;
-  border-bottom: 1px solid var(--border-subtle);
-  border-right: 1px solid var(--border-subtle);
+  border-bottom: 1px solid var(--editor-border-subtle);
+  border-right: 1px solid var(--editor-border-subtle);
   background: none;
-  color: var(--text-1);
+  color: var(--editor-text-color);
   font-size: 1rem;
   font-weight: 400;
   text-align: center;
@@ -139,8 +140,8 @@
   max-width: none;
 }
 .markdown-body th {
-  background: var(--surface-2);
-  color: var(--accent-primary);
+  background: var(--editor-surface-2);
+  color: var(--editor-accent-primary);
   font-weight: 600;
   font-size: 1.18rem;
 }
@@ -153,10 +154,10 @@
   border-bottom: none;
 }
 .markdown-body tbody tr:nth-child(odd) td {
-  background: var(--surface-2);
+  background: var(--editor-surface-2);
 }
 .markdown-body tbody tr:nth-child(even) td {
-  background: var(--surface-1);
+  background: var(--editor-surface-1);
 }
 .markdown-body table p {
   margin: 0;
@@ -165,9 +166,9 @@
 
 /* BLOCKQUOTES */
 .markdown-body blockquote {
-  border-left: 4px solid var(--border-subtle);
-  background: var(--surface-1);
-  color: var(--text-1);
+  border-left: 4px solid var(--editor-border-subtle);
+  background: var(--editor-surface-1);
+  color: var(--editor-text-color);
   font-weight: 600;
   text-align: center;
   padding: 1.1em 2em;
@@ -181,7 +182,7 @@
 /* SÉPARATEUR */
 .markdown-body hr {
   border: none;
-  border-top: 1px solid var(--border-subtle);
+  border-top: 1px solid var(--editor-border-subtle);
   margin: 1.2rem 0; /* réduit le padding/margin vertical */
 }
 
@@ -213,7 +214,7 @@
 }
 /* Les en-têtes de tableau (th) gardent leur couleur accentuée */
 .markdown-body th {
-  color: var(--accent-primary) !important;
+  color: var(--editor-accent-primary) !important;
 } 
 
 /* === PATCH: Blockquotes sobres, couleur warm gray, pas de gras ni italique, taille normale === */
@@ -222,18 +223,18 @@
   font-weight: 400 !important;
   font-style: normal !important;
   font-size: 1.08rem !important;
-  border-left: 4px solid var(--accent-primary);
-  background: var(--surface-1);
+  border-left: 4px solid var(--editor-accent-primary);
+  background: var(--editor-surface-1);
   text-align: center;
   padding: 1.1em 2em;
   margin: 1.5rem 0;
   border-radius: 8px;
-} 
+}
 
 /* === STYLE UNIQUE ET PROPRE POUR BLOCKQUOTE === */
 .markdown-body blockquote {
-  border-left: 4px solid var(--border-subtle);
-  background: var(--surface-1);
+  border-left: 4px solid var(--editor-border-subtle);
+  background: var(--editor-surface-1);
   color: var(--editor-text-color);
   font-weight: 400;
   font-style: normal;
@@ -256,9 +257,9 @@
   appearance: none;
   width: 1.15em;
   height: 1.15em;
-  border: 2px solid var(--border-subtle);
+  border: 2px solid var(--editor-border-subtle);
   border-radius: 5px;
-  background: var(--surface-1);
+  background: var(--editor-surface-1);
   display: inline-block;
   vertical-align: middle;
   margin-right: 0.7em;
@@ -267,8 +268,8 @@
   cursor: pointer;
 }
 .markdown-body input[type='checkbox']:checked {
-  border-color: var(--accent-primary);
-  background: var(--accent-primary);
+  border-color: var(--editor-accent-primary);
+  background: var(--editor-accent-primary);
 }
 .markdown-body input[type='checkbox']:checked::after {
   content: '';
@@ -283,7 +284,7 @@
   transform: rotate(45deg);
 }
 .markdown-body input[type='checkbox']:focus {
-  outline: 2px solid var(--accent-primary);
+  outline: 2px solid var(--editor-accent-primary);
   outline-offset: 1px;
 } 
 
@@ -312,8 +313,8 @@
   font-weight: 400 !important;
   font-style: normal !important;
   font-size: 1.08rem !important;
-  border-left: 4px solid var(--accent-primary);
-  background: var(--surface-1);
+  border-left: 4px solid var(--editor-accent-primary);
+  background: var(--editor-surface-1);
   text-align: center;
   padding: 1.1em 2em;
   margin: 1.5rem 0;
@@ -322,8 +323,8 @@
 
 /* === STYLE UNIQUE ET PROPRE POUR BLOCKQUOTE === */
 .markdown-body blockquote {
-  border-left: 4px solid var(--border-subtle);
-  background: var(--surface-1);
+  border-left: 4px solid var(--editor-border-subtle);
+  background: var(--editor-surface-1);
   color: var(--editor-text-color);
   font-weight: 400;
   font-style: normal;
@@ -346,9 +347,9 @@
   appearance: none;
   width: 1.15em;
   height: 1.15em;
-  border: 2px solid var(--border-subtle);
+  border: 2px solid var(--editor-border-subtle);
   border-radius: 5px;
-  background: var(--surface-1);
+  background: var(--editor-surface-1);
   display: inline-block;
   vertical-align: middle;
   margin-right: 0.7em;
@@ -357,8 +358,8 @@
   cursor: pointer;
 }
 .markdown-body input[type='checkbox']:checked {
-  border-color: var(--accent-primary);
-  background: var(--accent-primary);
+  border-color: var(--editor-accent-primary);
+  background: var(--editor-accent-primary);
 }
 .markdown-body input[type='checkbox']:checked::after {
   content: '';
@@ -373,7 +374,7 @@
   transform: rotate(45deg);
 }
 .markdown-body input[type='checkbox']:focus {
-  outline: 2px solid var(--accent-primary);
+  outline: 2px solid var(--editor-accent-primary);
   outline-offset: 1px;
 } 
 
@@ -400,7 +401,7 @@
   color: var(--editor-text-color) !important;
   text-align: center !important;
   font-weight: 600;
-  background: var(--surface-2);
+  background: var(--editor-surface-2);
 } 
 
 .markdown-body th,
