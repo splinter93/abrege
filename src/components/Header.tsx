@@ -37,8 +37,12 @@ const Header: React.FC = () => {
     if (markdown) {
       if (fullWidth) {
         markdown.style.margin = '0';
+        markdown.style.maxWidth = '1000px';
+        markdown.style.width = '1000px';
       } else {
         markdown.style.margin = '0 auto';
+        markdown.style.maxWidth = '750px';
+        markdown.style.width = '750px';
       }
     }
   }, [fullWidth]);
