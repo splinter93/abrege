@@ -634,7 +634,7 @@ export default function NoteEditorPage() {
                 fontSize: '2.25rem',
                 fontWeight: 700,
                 fontFamily: 'Noto Sans, Inter, Arial, sans-serif',
-                color: '#D4D4D4',
+                color: 'var(--editor-text-color)',
                 background: 'none',
                 border: 'none',
                 outline: 'none',
