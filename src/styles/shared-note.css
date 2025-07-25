@@ -484,4 +484,8 @@ table {
   color: #D4D4D4 !important;
 } 
 
+.smooth-transition {
+  transition: max-width 0.35s cubic-bezier(.4,1.2,.4,1), width 0.35s cubic-bezier(.4,1.2,.4,1), margin 0.35s cubic-bezier(.4,1.2,.4,1);
+} 
+
  

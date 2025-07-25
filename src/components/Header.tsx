@@ -28,6 +28,7 @@ const Header: React.FC = () => {
     const mainContent = document.querySelector('div[data-main-content]') as HTMLElement | null;
     const markdown = mainContent?.querySelector('.markdown-body') as HTMLElement | null;
     if (mainContent) {
+      mainContent.classList.add('smooth-transition');
       mainContent.style.maxWidth = fullWidth ? '1000px' : '750px';
       mainContent.style.width = fullWidth ? '1000px' : '750px';
       mainContent.style.margin = '0 auto';
@@ -35,6 +36,7 @@ const Header: React.FC = () => {
       mainContent.style.alignSelf = 'center';
     }
     if (markdown) {
+      markdown.classList.add('smooth-transition');
       if (fullWidth) {
         markdown.style.margin = '0';
         markdown.style.maxWidth = '1000px';
@@ -44,6 +46,10 @@ const Header: React.FC = () => {
         markdown.style.maxWidth = '750px';
         markdown.style.width = '750px';
       }
+    }
+    const title = mainContent?.querySelector('h1') as HTMLElement | null;
+    if (title) {
+      title.classList.add('smooth-transition');
     }
   }, [fullWidth]);
 
