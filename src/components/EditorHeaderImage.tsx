@@ -105,10 +105,10 @@ const EditorHeaderImage: React.FC<EditorHeaderImageProps> = ({
       />
       {/* Overlay visuel appliqué sur l'image */}
       <div style={{ position: 'absolute', inset: 0, background: `rgba(24,24,24,${0.08 + 0.14 * headerOverlayLevel})`, pointerEvents: 'none', transition: 'background 0.2s' }} />
-      <div style={{
+      <div className="editor-header-image-btns" style={{
         position: 'absolute',
         top: '50%',
-        right: 8,
+        right: 14,
         transform: 'translateY(-50%)',
         display: 'flex',
         flexDirection: 'column',
