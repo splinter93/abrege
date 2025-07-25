@@ -6,12 +6,8 @@ interface EditorKebabMenuProps {
   open: boolean;
   position: { top: number; left: number };
   onClose: () => void;
-  wideMode: boolean;
-  setWideMode: (v: boolean) => void;
   a4Mode: boolean;
   setA4Mode: (v: boolean) => void;
-  autosaveOn: boolean;
-  setAutosaveOn: (v: boolean) => void;
   slashLang: 'fr' | 'en';
   setSlashLang: (lang: 'fr' | 'en') => void;
   published: boolean;
@@ -25,12 +21,8 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
   open,
   position,
   onClose,
-  wideMode,
-  setWideMode,
   a4Mode,
   setA4Mode,
-  autosaveOn,
-  setAutosaveOn,
   slashLang,
   setSlashLang,
   published,
@@ -61,6 +53,24 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
 
   if (!open) return null;
 
+  const handleCopyUrl = () => {
+    if (publishedUrl) {
+      navigator.clipboard.writeText(publishedUrl);
+      // TODO: Ajouter un toast de confirmation
+    }
+  };
+
+  // Icône feuille SVG pour A4 Mode
+  const A4Icon = () => (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M14 2H6C4.9 2 4 2.9 4 4V20C4 21.1 4.9 22 6 22H18C19.1 22 20 21.1 20 20V8L14 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="M14 2V8H20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="M16 13H8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="M16 17H8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="M10 9H9H8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  );
+
   const menuOptions = [
     {
       id: 'share',
@@ -87,32 +97,19 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
       color: fullWidth ? '#10b981' : '#D4D4D4'
     },
     {
-      id: 'autosave',
-      label: 'Autosave',
-      onClick: () => { setAutosaveOn(!autosaveOn); },
-      color: autosaveOn ? '#10b981' : '#D4D4D4',
-      type: 'toggle' as const
-    },
-    {
-      id: 'wideMode',
-      label: 'Wide Mode',
-      onClick: () => { setWideMode(!wideMode); },
-      color: wideMode ? '#10b981' : '#D4D4D4',
-      type: 'toggle' as const
-    },
-    {
       id: 'a4Mode',
       label: 'A4 Mode',
+      icon: <A4Icon />,
       onClick: () => { setA4Mode(!a4Mode); },
-      color: a4Mode ? '#10b981' : '#D4D4D4',
-      type: 'toggle' as const
+      color: a4Mode ? '#10b981' : '#D4D4D4'
     },
     {
       id: 'published',
       label: 'Published',
       onClick: () => { setPublished(!published); },
       color: published ? '#10b981' : '#D4D4D4',
-      type: 'toggle' as const
+      type: 'switch' as const,
+      showCopyButton: published && publishedUrl
     }
   ];
 
@@ -150,33 +147,75 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
       >
         {menuOptions.map((option, index) => (
           <div key={option.id}>
-            {option.type === 'toggle' ? (
-              <button
-                onClick={option.onClick}
-                style={{
-                  width: '100%',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 12,
-                  padding: '12px 16px',
-                  background: 'transparent',
-                  border: 'none',
-                  color: option.color,
-                  fontSize: '14px',
-                  cursor: 'pointer',
-                  transition: 'background-color 0.15s ease',
-                  fontFamily: 'Noto Sans, Inter, Arial, sans-serif',
-                  borderRadius: 0
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = '#2a2a2c';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = 'transparent';
-                }}
-              >
-                {option.label}
-              </button>
+            {option.type === 'switch' ? (
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  {option.icon}
+                  <span style={{ color: option.color, fontSize: '14px', fontFamily: 'Noto Sans, Inter, Arial, sans-serif' }}>
+                    {option.label}
+                  </span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  {/* Switch toggle */}
+                  <button
+                    onClick={option.onClick}
+                    style={{
+                      width: 44,
+                      height: 24,
+                      background: (option.id === 'a4Mode' ? a4Mode : published) ? '#10b981' : '#444',
+                      border: 'none',
+                      borderRadius: 12,
+                      cursor: 'pointer',
+                      position: 'relative',
+                      transition: 'background-color 0.2s ease',
+                      display: 'flex',
+                      alignItems: 'center',
+                      padding: '2px'
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: 20,
+                        height: 20,
+                        background: '#fff',
+                        borderRadius: '50%',
+                        transition: 'transform 0.2s ease',
+                        transform: (option.id === 'a4Mode' ? a4Mode : published) ? 'translateX(20px)' : 'translateX(0px)',
+                        boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                      }}
+                    />
+                  </button>
+                  {/* Bouton copier URL (seulement pour Published) */}
+                  {option.showCopyButton && (
+                    <button
+                      onClick={handleCopyUrl}
+                      style={{
+                        padding: '6px',
+                        background: 'transparent',
+                        border: 'none',
+                        color: '#D4D4D4',
+                        cursor: 'pointer',
+                        borderRadius: 4,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        transition: 'all 0.15s ease'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = '#2a2a2c';
+                        e.currentTarget.style.color = '#10b981';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = 'transparent';
+                        e.currentTarget.style.color = '#D4D4D4';
+                      }}
+                      title="Copier l'URL"
+                    >
+                      <FiCopy size={14} />
+                    </button>
+                  )}
+                </div>
+              </div>
             ) : (
               <button
                 onClick={option.onClick}

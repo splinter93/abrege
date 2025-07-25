@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import { toast } from 'react-hot-toast';
 import type { NoteData } from '../types/editor';
 import { updateNoteREST } from '../services/api';
+import { FiSave } from 'react-icons/fi';
 
 export interface UseEditorSaveOptions {
   onSave?: (data: NoteData) => void;
@@ -16,7 +17,7 @@ export interface UseEditorSaveOptions {
 export interface UseEditorSaveResult {
   isSaving: boolean;
   lastSaved: Date;
-  handleSave: (newTitle: string, _content: string, align?: 'left' | 'center' | 'right') => void;
+  handleSave: (title: string, content: string, align?: 'left' | 'center' | 'right') => Promise<void>;
 }
 
 /**
@@ -40,7 +41,19 @@ export default function useEditorSave({ onSave, editor, headerImage, titleAlign 
       try {
         await onSave({ title: newTitle, markdown_content, html_content, headerImage, titleAlign: align });
         setLastSaved(new Date());
-        toast.success('Note sauvegardée !');
+        toast.success('Saved', {
+          duration: 2000,
+          position: 'bottom-right',
+          style: {
+            background: '#000000',
+            color: '#FFFFFF',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+            borderRadius: 8,
+            padding: '8px 12px',
+            minWidth: 0,
+            fontSize: 13,
+          },
+        });
       } catch (err) {
         toast.error('Erreur lors de la sauvegarde');
       } finally {

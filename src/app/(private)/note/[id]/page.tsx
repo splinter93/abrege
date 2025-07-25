@@ -103,9 +103,7 @@ export default function NoteEditorPage() {
   const [imageMenuOpen, setImageMenuOpen] = React.useState(false);
   const [kebabOpen, setKebabOpen] = React.useState(false);
   const [showPreview, setShowPreview] = React.useState(false);
-  const [wideMode, setWideMode] = React.useState(false);
   const [a4Mode, setA4Mode] = React.useState(false);
-  const [autosaveOn, setAutosaveOn] = React.useState(true);
   const [fullWidth, setFullWidth] = React.useState(false);
   const [slashLang, setSlashLang] = React.useState<'fr' | 'en'>('fr');
   const [title, setTitle] = React.useState('');
@@ -156,7 +154,7 @@ export default function NoteEditorPage() {
         if (note) {
           setTitle(note.source_title || '');
           setHeaderImageUrl(note.header_image || null);
-          setPublished(!!note.isPublished);
+          setPublished(!!note.ispublished);
           setPublishedUrl(note.public_url || null); // <-- utilise la colonne public_url
           editor.commands.setContent(note.markdown_content || '');
         }
@@ -184,7 +182,7 @@ export default function NoteEditorPage() {
         if (note) {
           setTitle(note.source_title || '');
           setHeaderImageUrl(note.header_image || null);
-          setPublished(!!note.isPublished);
+          setPublished(!!note.ispublished);
           editor.commands.setContent(note.markdown_content || '');
         }
       })
@@ -264,48 +262,24 @@ export default function NoteEditorPage() {
 
   // Autosave à chaque modif (debounce 1s)
   React.useEffect(() => {
-    if (!editor || !autosaveOn) return;
+    if (!editor) return;
     let timeout: NodeJS.Timeout | null = null;
     let savingToastId: string | undefined;
     const triggerSave = () => {
       if (timeout) clearTimeout(timeout);
-      // Affiche le toast "sauvegarde en cours" (icône disquette orange)
-      savingToastId = toast(
-        <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <FiSave color="#FFA500" size={18} style={{ marginRight: 4 }} />
-          <span style={{ color: '#FFA500', fontWeight: 500, fontSize: 13 }}>Saving…</span>
-        </span>,
-        {
-          id: 'autosave-toast',
-          duration: 999999, // reste tant que la sauvegarde n'est pas finie
-          position: 'bottom-right',
-          style: {
-            background: 'rgba(30,30,40,0.98)',
-            color: '#FFA500',
-            boxShadow: '0 2px 12px rgba(0,0,0,0.10)',
-            borderRadius: 10,
-            padding: '8px 16px',
-            minWidth: 0,
-            fontSize: 13,
-          },
-          icon: null,
-        }
-      );
       timeout = setTimeout(() => {
         handleSave(title, '');
-        toast.dismiss('autosave-toast');
       }, 1000);
     };
     editor.on('transaction', triggerSave);
 
-    // --- PATCH : Sauvegarde immédiate avant de quitter l’onglet ---
+    // --- PATCH : Sauvegarde immédiate avant de quitter l'onglet ---
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'hidden') {
         if (timeout) {
           clearTimeout(timeout);
         }
         handleSave(title, '');
-        toast.dismiss('autosave-toast');
       }
     };
     document.addEventListener('visibilitychange', handleVisibilityChange);
@@ -321,11 +295,10 @@ export default function NoteEditorPage() {
     return () => {
       editor.off('transaction', triggerSave);
       if (timeout) clearTimeout(timeout);
-      toast.dismiss('autosave-toast');
       window.removeEventListener('keydown', handleKeyDown);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [editor, title, handleSave, autosaveOn]);
+  }, [editor, title, handleSave, isSaving]);
 
   // Autosave sur modification du titre ou de l'image (en plus du texte)
   React.useEffect(() => {
@@ -445,7 +418,7 @@ export default function NoteEditorPage() {
     if (note) {
       setTitle(note.source_title || '');
       setHeaderImageUrl(note.header_image || null);
-      setPublished(!!note.isPublished);
+      setPublished(!!note.ispublished);
       editor.commands.setContent(note.markdown_content || '');
     }
   }, [editor, noteId]);
@@ -567,7 +540,7 @@ export default function NoteEditorPage() {
         left: 0,
         width: '100vw',
         zIndex: 100,
-        background: '#18181c',
+        background: '#141416',
         minHeight: 54,
         display: 'flex',
         alignItems: 'center',
@@ -712,7 +685,7 @@ export default function NoteEditorPage() {
             </div>
           </div>
           {/* TOC premium à droite */}
-          <div style={{ position: 'fixed', top: 385, right: 10, zIndex: 1002, minWidth: 32, maxWidth: 300, padding: '0 8px 0 0', boxSizing: 'border-box' }}>
+          <div style={{ position: 'fixed', top: 385, right: 20, zIndex: 1002, minWidth: 32, maxWidth: 300, padding: '0 8px 0 0', boxSizing: 'border-box' }}>
             <TableOfContents headings={tocHeadings} containerRef={editorContainerRef} />
           </div>
           {/* Le reste de la page éditeur ici... */}
@@ -751,12 +724,8 @@ export default function NoteEditorPage() {
         open={kebabOpen}
         position={{ top: 60, left: window.innerWidth - 260 }}
         onClose={() => setKebabOpen(false)}
-        wideMode={wideMode}
-        setWideMode={setWideMode}
         a4Mode={a4Mode}
         setA4Mode={setA4Mode}
-        autosaveOn={autosaveOn}
-        setAutosaveOn={setAutosaveOn}
         slashLang={slashLang}
         setSlashLang={setSlashLang}
         published={published}

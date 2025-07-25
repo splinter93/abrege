@@ -14,6 +14,7 @@
     "test-slugs": "tsx src/scripts/testSlugMigration.ts",
     "test-endpoints": "tsx src/scripts/testSlugEndpoints.ts",
     "test-llm-friendly": "tsx scripts/test-llm-friendly-endpoints.ts",
+    "migrate-to-notebooks": "tsx scripts/migrate-to-notebooks.ts",
     "test": "vitest",
     "test:watch": "vitest --watch",
     "test:coverage": "vitest --coverage"
