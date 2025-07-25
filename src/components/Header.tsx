@@ -26,12 +26,20 @@ const Header: React.FC = () => {
   React.useEffect(() => {
     // Cibler uniquement le container principal data-main-content
     const mainContent = document.querySelector('div[data-main-content]') as HTMLElement | null;
+    const markdown = mainContent?.querySelector('.markdown-body') as HTMLElement | null;
     if (mainContent) {
       mainContent.style.maxWidth = fullWidth ? '1000px' : '750px';
       mainContent.style.width = fullWidth ? '1000px' : '750px';
       mainContent.style.margin = '0 auto';
       mainContent.style.flexShrink = '0';
       mainContent.style.alignSelf = 'center';
+    }
+    if (markdown) {
+      if (fullWidth) {
+        markdown.style.margin = '0';
+      } else {
+        markdown.style.margin = '0 auto';
+      }
     }
   }, [fullWidth]);
 
