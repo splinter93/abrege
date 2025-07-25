@@ -1,12 +1,11 @@
 'use client';
-import { useEffect } from 'react';
 import { useEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import { Markdown } from 'tiptap-markdown';
 import EditorToolbar from '@/components/EditorToolbar';
 import { FiMoreVertical, FiEye, FiX, FiImage } from 'react-icons/fi';
 import EditorKebabMenu from '@/components/EditorKebabMenu';
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 import EditorHeaderImage from '@/components/EditorHeaderImage';
 import TableOfContents from '@/components/TableOfContents';
 import { EditorContent } from '@tiptap/react';
@@ -519,6 +518,31 @@ export default function NoteEditorPage() {
     }
   };
 
+  // Ajout du ref et du useEffect pour l'auto-resize du titre
+  const titleRef = useRef<HTMLTextAreaElement>(null);
+  
+  const resizeTitle = () => {
+    const ta = titleRef.current;
+    if (ta) {
+      ta.style.height = 'auto';
+      ta.style.height = Math.min(ta.scrollHeight, 6 * 45) + 'px';
+    }
+  };
+  
+  useEffect(() => {
+    resizeTitle();
+  }, [title, fullWidth]);
+  
+  const handleFontChange = (fontName: string) => {
+    // Applique la police au titre
+    const titleElement = titleRef.current;
+    if (titleElement) {
+      titleElement.style.fontFamily = fontName;
+      // Recalcule la hauteur après le changement de police
+      setTimeout(resizeTitle, 0);
+    }
+  };
+
   if (loading) {
     return <div style={{ color: '#aaa', fontSize: 18, padding: 48, textAlign: 'center' }}>Chargement…</div>;
   }
@@ -534,25 +558,11 @@ export default function NoteEditorPage() {
       alignItems: 'center'
     }}>
       {/* Header sticky premium */}
-      <header className="editor-header" style={{
-        position: 'sticky',
-        top: 0,
-        left: 0,
-        width: '100vw',
-        zIndex: 100,
-        background: '#141416',
-        minHeight: 54,
-        display: 'flex',
-        alignItems: 'center',
-        borderBottom: '1px solid var(--border-subtle)',
-        boxSizing: 'border-box',
-        padding: 0,
-        justifyContent: 'space-between'
-      }}>
+      <header className="editor-header">
         <Logo />
         <div style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
           {editor ? (
-            <EditorToolbar editor={editor} setImageMenuOpen={setImageMenuOpen} />
+            <EditorToolbar editor={editor} setImageMenuOpen={setImageMenuOpen} onFontChange={handleFontChange} />
           ) : (
             <div style={{ color: '#888', fontWeight: 500 }}>Chargement…</div>
           )}
@@ -612,13 +622,15 @@ export default function NoteEditorPage() {
           {/* Titre premium éditable */}
           <div style={{ width: '100%', display: 'flex', justifyContent: 'center', marginTop: 16 }}>
             <textarea
+              ref={titleRef}
               value={title}
               onChange={e => setTitle(e.target.value)}
               placeholder="Titre de la note…"
               rows={1}
+              className="editor-title"
               style={{
                 width: '100%',
-                maxWidth: 750,
+                maxWidth: fullWidth ? 1000 : 750,
                 fontSize: '2.25rem',
                 fontWeight: 700,
                 fontFamily: 'Noto Sans, Inter, Arial, sans-serif',
@@ -628,17 +640,19 @@ export default function NoteEditorPage() {
                 outline: 'none',
                 padding: '0 0 8px 0',
                 margin: 0,
-                textAlign: 'left', // aligner le texte à gauche
+                textAlign: 'left',
                 letterSpacing: '-0.02em',
                 transition: 'font-size 0.2s, color 0.2s',
                 resize: 'none',
-                overflow: 'hidden',
+                overflow: 'visible',
                 lineHeight: 1.15,
+                minHeight: '45px',
+                height: 'auto',
               }}
               onInput={e => {
                 const el = e.currentTarget;
                 el.style.height = 'auto';
-                el.style.height = Math.min(el.scrollHeight, 3 * 45) + 'px';
+                el.style.height = Math.min(el.scrollHeight, 6 * 45) + 'px';
               }}
             />
           </div>
