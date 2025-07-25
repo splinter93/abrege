@@ -76,7 +76,8 @@ const Header: React.FC = () => {
       background: '#18181b',
       boxShadow: 'none',
       border: 'none',
-      position: 'relative',
+      position: 'sticky',
+      top: 0,
       zIndex: 100
     }}>
       <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
