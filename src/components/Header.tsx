@@ -24,57 +24,15 @@ const Header: React.FC = () => {
 
   // Appliquer la largeur pleine au contenu de la page
   React.useEffect(() => {
-    // Cibler le conteneur principal qui englobe titre et contenu
-    const mainContainer = document.querySelector('div[style*="maxWidth: 750"][style*="width: 750"]');
-    
-    if (mainContainer) {
-      if (fullWidth) {
-        (mainContainer as HTMLElement).style.maxWidth = '1000px';
-        (mainContainer as HTMLElement).style.width = '1000px';
-        // Forcer le centrage en ajoutant margin auto
-        (mainContainer as HTMLElement).style.margin = '0 auto';
-      } else {
-        (mainContainer as HTMLElement).style.maxWidth = '750px';
-        (mainContainer as HTMLElement).style.width = '750px';
-        // Restaurer le centrage
-        (mainContainer as HTMLElement).style.margin = '0 auto';
-      }
+    // Cibler uniquement le container principal data-main-content
+    const mainContent = document.querySelector('div[data-main-content]') as HTMLElement | null;
+    if (mainContent) {
+      mainContent.style.maxWidth = fullWidth ? '1000px' : '750px';
+      mainContent.style.width = fullWidth ? '1000px' : '750px';
+      mainContent.style.margin = '0 auto';
+      mainContent.style.flexShrink = '0';
+      mainContent.style.alignSelf = 'center';
     }
-    
-    // Ajuster le contenu markdown
-    const contentElements = document.querySelectorAll('.markdown-body');
-    contentElements.forEach((element) => {
-      if (fullWidth) {
-        (element as HTMLElement).style.maxWidth = '1000px';
-        (element as HTMLElement).style.width = '1000px';
-        // Forcer le centrage
-        (element as HTMLElement).style.margin = '0 auto';
-      } else {
-        (element as HTMLElement).style.maxWidth = '750px';
-        (element as HTMLElement).style.width = '750px';
-        // Restaurer le centrage
-        (element as HTMLElement).style.margin = '0 auto';
-      }
-    });
-
-    // Ajuster les titres H1 spécifiquement
-    const titleElements = document.querySelectorAll('h1');
-    titleElements.forEach((element) => {
-      const style = (element as HTMLElement).style;
-      if (style.maxWidth && style.width) {
-        if (fullWidth) {
-          style.maxWidth = '1000px';
-          style.width = '1000px';
-          // Forcer le centrage
-          style.margin = '0 auto';
-        } else {
-          style.maxWidth = '750px';
-          style.width = '750px';
-          // Restaurer le centrage
-          style.margin = '0 auto';
-        }
-      }
-    });
   }, [fullWidth]);
 
   const kebabMenuOptions = [

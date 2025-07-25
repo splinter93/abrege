@@ -72,7 +72,7 @@ export default async function Page(props: any) {
         </div>
       )}
       <div style={{ width: '100%', display: 'flex', flexDirection: 'row', justifyContent: 'center', alignItems: 'flex-start', margin: '0 auto', marginBottom: 32, gap: 32, position: 'relative' }}>
-        <div style={{ maxWidth: 750, width: 750 }}>
+        <div data-main-content style={{ maxWidth: 750, width: 750 }}>
           {/* Titre principal */}
           <h1 style={{
             fontSize: '2.25rem',
