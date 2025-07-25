@@ -219,11 +219,11 @@
 .markdown-body h4,
 .markdown-body h5,
 .markdown-body h6 {
-  color: #D4D4D4 !important;
+  color: var(--editor-text-color);
 }
 .markdown-body code,
 .markdown-body pre {
-  color: #D4D4D4 !important;
+  color: var(--editor-text-color);
 }
 /* Les en-têtes de tableau (th) gardent leur couleur accentuée */
 .markdown-body th {
@@ -232,7 +232,7 @@
 
 /* === PATCH: Blockquotes sobres, couleur warm gray, pas de gras ni italique, taille normale === */
 .markdown-body blockquote {
-  color: #D4D4D4 !important;
+  color: var(--editor-text-color) !important;
   font-weight: 400 !important;
   font-style: normal !important;
   font-size: 1.08rem !important;
@@ -248,7 +248,7 @@
 .markdown-body blockquote {
   border-left: 4px solid var(--border-subtle);
   background: var(--surface-1);
-  color: #D4D4D4;
+  color: var(--editor-text-color);
   font-weight: 400;
   font-style: normal;
   font-size: 1.08rem;
@@ -309,7 +309,7 @@
 
 /* === PATCH: Blockquotes sobres, couleur warm gray, pas de gras ni italique, taille normale === */
 .markdown-body blockquote {
-  color: #D4D4D4 !important;
+  color: var(--editor-text-color) !important;
   font-weight: 400 !important;
   font-style: normal !important;
   font-size: 1.08rem !important;
@@ -325,7 +325,7 @@
 .markdown-body blockquote {
   border-left: 4px solid var(--border-subtle);
   background: var(--surface-1);
-  color: #D4D4D4;
+  color: var(--editor-text-color);
   font-weight: 400;
   font-style: normal;
   font-size: 1.08rem;
@@ -385,7 +385,7 @@
 }
 
 .markdown-body th {
-  color: #D4D4D4 !important;
+  color: var(--editor-text-color) !important;
   text-align: center !important;
   font-weight: 600;
   background: var(--surface-2);
@@ -481,7 +481,7 @@ table {
 .markdown-body,
 .markdown-body p,
 .markdown-body li {
-  color: #D4D4D4 !important;
+  color: var(--editor-text-color) !important;
 } 
 
 .smooth-transition {

@@ -947,7 +947,7 @@ textarea.editor-title-input,
   border: none;
   background: none;
   outline: none;
-  color: #D4D4D4;
+  color: var(--editor-text-color);
   font-family: 'Noto Sans', sans-serif;
   box-sizing: border-box;
   white-space: normal;
@@ -1481,7 +1481,7 @@ textarea.editor-title-input {
   font-size: 2.25rem;
   font-weight: 700;
   line-height: 1.1;
-  color: #D4D4D4;
+  color: var(--editor-text-color);
   background: none;
   border: none;
   outline: none;
@@ -1583,7 +1583,7 @@ textarea.editor-title-input {
   font-size: 2.25rem;
   font-weight: 700;
   line-height: 1.1;
-  color: #D4D4D4;
+  color: var(--editor-text-color);
   font-family: 'Noto Sans', sans-serif;
   background: none;
   border: none;
@@ -1633,5 +1633,5 @@ textarea.editor-title-input {
 .editor-title-span,
 textarea.editor-title,
 textarea.editor-title-input {
-  color: #D4D4D4;
+  color: var(--editor-text-color);
 }

@@ -1,0 +1,45 @@
+/* ==========================================================================
+   FONTS HARMONISÉES - ÉDITEUR
+   ==========================================================================
+   Système centralisé de fonts pour l'éditeur
+   Fonts optimisées pour la lecture longue
+*/
+
+:root {
+  /* Font principale de l'éditeur - Noto Sans par défaut */
+  --editor-font-family: 'Noto Sans', sans-serif;
+  
+  /* Fonts disponibles dans le sélecteur */
+  --font-open-sans: 'Open Sans', sans-serif;
+  --font-eb-garamond: 'EB Garamond', serif;
+  --font-roboto: 'Roboto', sans-serif;
+  --font-lato: 'Lato', sans-serif;
+  --font-source-sans-3: 'Source Sans 3', sans-serif;
+  --font-work-sans: 'Work Sans', sans-serif;
+  --font-cormorant-garamond: 'Cormorant Garamond', serif;
+  
+  /* Fonts système de fallback */
+  --font-system: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+  --font-monospace: 'JetBrains Mono', 'Fira Code', 'Consolas', 'Monaco', monospace;
+}
+
+/* Configuration des fonts Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,300;1,400;1,500;1,600;1,700;1,800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,500;1,700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Work+Sans:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&display=swap');
+
+/* Classes utilitaires pour les fonts */
+.font-open-sans { font-family: var(--font-open-sans); }
+.font-eb-garamond { font-family: var(--font-eb-garamond); }
+.font-roboto { font-family: var(--font-roboto); }
+.font-lato { font-family: var(--font-lato); }
+.font-source-sans-3 { font-family: var(--font-source-sans-3); }
+.font-work-sans { font-family: var(--font-work-sans); }
+.font-cormorant-garamond { font-family: var(--font-cormorant-garamond); }
+.font-monospace { font-family: var(--font-monospace); } 

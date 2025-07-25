@@ -173,10 +173,10 @@ export default function TableOfContents({ headings = [], currentId, pinned = fal
         {isCollapsed ? (
           headings.map((h, idx) => {
             if (h.level === 2) {
-              return <div key={h.id || `toc-bar-${idx}`} style={{ height: 3, width: 24, background: '#fff', borderRadius: 6, margin: '12px 0', marginLeft: 'auto', marginRight: 10, opacity: 0.95 }} />;
+              return <div key={h.id || `toc-bar-${idx}`} style={{ height: 3, width: 24, background: 'var(--editor-text-color)', borderRadius: 6, margin: '12px 0', marginLeft: 'auto', marginRight: 10, opacity: 0.95 }} />;
             }
             if (h.level === 3) {
-              return <div key={h.id || `toc-bar-${idx}`} style={{ height: 3, width: 12, background: '#fff', borderRadius: 6, margin: '12px 0', marginLeft: 'auto', marginRight: 10, opacity: 0.95 }} />;
+              return <div key={h.id || `toc-bar-${idx}`} style={{ height: 3, width: 12, background: 'var(--editor-text-color)', borderRadius: 6, margin: '12px 0', marginLeft: 'auto', marginRight: 10, opacity: 0.95 }} />;
             }
             return <div key={h.id || `toc-bar-${idx}`} style={{ height: 12, margin: '12px 0' }} />;
           })
@@ -185,7 +185,7 @@ export default function TableOfContents({ headings = [], currentId, pinned = fal
             const baseStyle = tocItemStyles[h.level] || tocItemStyles[3];
             let style = { ...baseStyle };
             if (currentId === h.id) {
-              style = { ...style, background: 'none', color: '#fff' };
+              style = { ...style, background: 'none', color: 'var(--editor-text-color)' };
             }
             const isH2 = h.level === 2;
             const prevIsH2 = idx > 0 && headings[idx - 1].level === 2;
@@ -206,15 +206,15 @@ export default function TableOfContents({ headings = [], currentId, pinned = fal
                   title={h.text}
                   onMouseOver={e => {
                     (e.currentTarget as HTMLDivElement).style.background = 'none';
-                    (e.currentTarget as HTMLDivElement).style.color = '#2994ff';
+                    (e.currentTarget as HTMLDivElement).style.color = 'var(--accent-primary)';
                   }}
                   onMouseOut={e => {
                     if (currentId === h.id) {
                       (e.currentTarget as HTMLDivElement).style.background = 'none';
-                      (e.currentTarget as HTMLDivElement).style.color = '#fff';
+                      (e.currentTarget as HTMLDivElement).style.color = 'var(--editor-text-color)';
                     } else {
                       (e.currentTarget as HTMLDivElement).style.background = 'none';
-                      (e.currentTarget as HTMLDivElement).style.color = h.level === 1 ? '#2994ff' : h.level === 2 ? '#a3a3a3' : '#fff';
+                      (e.currentTarget as HTMLDivElement).style.color = 'var(--editor-text-color)';
                     }
                   }}
                 >

@@ -31,10 +31,7 @@
   color: #f7931e;
 }
 
-/* Variable couleur harmonisée pour l'éditeur */
-:root {
-  --editor-text-color: #ff6b35;
-}
+/* Variables de couleur importées depuis colors.css */
 
 /* Classe couleur harmonisée pour l'éditeur */
 .editor-text-color {
