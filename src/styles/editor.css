@@ -1,4 +1,7 @@
-/* Editor styles - v2 */
+/* ==========================================================================
+   STYLES ÉDITEUR - VERSION ÉPURÉE
+   ========================================================================== */
+
 .editor-modal-overlay {
   position: fixed;
   top: 0;
@@ -34,8 +37,6 @@
   flex-direction: column;
 }
 
-/* .editor-header styles moved to editor-header.css */
-
 .editor-header-actions {
   display: flex;
   align-items: center;
@@ -68,7 +69,6 @@
   border-color: var(--accent-primary);
 }
 
-/* Title default small and grow on focus */
 .editor-title-span, .editor-title-input {
   flex-grow: 1;
   border: none;
@@ -76,80 +76,67 @@
   padding: 0.5rem 0 1.2rem 0;
   margin: 0;
   margin-right: 1rem;
-  font-size: var(--editor-h3-size); /* Default smaller title size */
+  font-size: var(--editor-h3-size);
   font-weight: 600;
   color: var(--editor-text-color);
   letter-spacing: -0.02em;
   line-height: 1.2;
   cursor: text;
-  /* Initial transform and smooth transition */
   transform: scale(1);
   transform-origin: left center;
   transition: font-size 0.2s ease, transform 0.2s ease;
-  font-family: var(--editor-font-family, 'Noto Sans', sans-serif);
+  font-family: var(--editor-font-family);
 }
 
 .editor-title-input:focus {
   outline: none;
   box-shadow: none;
-  font-size: var(--editor-xxl-size); /* Grow when focused */
-  /* Scale up slightly for effect */
+  font-size: var(--editor-xxl-size);
   transform: scale(1.02);
 }
 
-/* Hover on span also triggers slight growth */
 .editor-title-span:hover {
-  transform: scale(1.02);
+  transform: scale(1.01);
 }
 
 .editor-title-input::placeholder {
   color: var(--text-3);
-  font-weight: 600;
+  opacity: 0.7;
 }
 
 .editor-close {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0.5rem;
-  border-radius: 6px;
-  background: none;
-  border: none;
+  width: 2rem;
+  height: 2rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: 4px;
+  background: var(--surface-2);
   color: var(--text-2);
-  transition: all 0.2s ease;
   cursor: pointer;
+  transition: all 0.2s ease;
 }
 
 .editor-close:hover {
-  background: var(--surface-hover);
+  background: var(--surface-3);
+  border-color: var(--border-hover);
   color: var(--text-1);
 }
-
-/* .editor-toolbar styles moved to editor-header.css */
-
-/* .toolbar styles moved to editor-header.css */
 
 .editor-content-wrapper {
   flex: 1;
   overflow-y: auto;
-  padding: 0;
-  background: #15151b !important;
-  display: flex;
-  flex-direction: row;
-  align-items: flex-start;
-  font-family: inherit;
+  padding: 2rem 3rem;
+  background: var(--surface-1);
 }
 
 .editor-content {
-  color: var(--editor-text-color);
-  font-size: var(--editor-body-size);
-  font-weight: 400;
-  line-height: 1.8;
   max-width: 750px;
   margin: 0 auto;
-  padding: 1rem 3rem;
-  outline: none;
-  min-height: 100px;
+  font-size: var(--editor-body-size);
+  line-height: 1.8;
+  color: var(--editor-text-color);
   font-family: var(--editor-font-family);
 }
 
@@ -159,72 +146,67 @@
 
 .editor-content .ProseMirror {
   outline: none;
-  min-height: 100px;
-  font-family: var(--editor-font-family);
-  color: var(--editor-text-color);
+  border: none;
+  background: none;
+  padding: 0;
+  margin: 0;
 }
 
 .editor-content .ProseMirror h1,
 .editor-content .ProseMirror h2,
-.editor-content .ProseMirror h3,
-.editor-content .ProseMirror h4,
-.editor-content .ProseMirror h5,
-.editor-content .ProseMirror h6 {
+.editor-content .ProseMirror h3 {
   color: var(--editor-text-color);
+  font-family: var(--editor-font-family);
 }
 
 .editor-content .ProseMirror p.is-editor-empty:first-child::before {
-  color: var(--text-3);
   content: attr(data-placeholder);
   float: left;
-  height: 0;
+  color: var(--text-3);
   pointer-events: none;
-  font-style: italic;
-  opacity: 0.7;
+  height: 0;
 }
 
 .editor-content .ProseMirror p {
-  white-space: pre-wrap;
+  margin: 0 0 1.15rem 0;
+  color: var(--editor-text-color);
 }
 
 .editor-content blockquote p {
-  white-space: pre-wrap;
+  margin: 0;
 }
 
 .editor-content h1, .editor-content h2, .editor-content h3 {
-  font-weight: 700;
-  line-height: 1.3;
-  letter-spacing: -0.02em;
   color: var(--editor-text-color);
-  padding-bottom: 0.5rem;
+  font-family: var(--editor-font-family);
 }
 
 .editor-content h1 { 
-  font-size: var(--editor-h1-size); 
-  margin: 2rem 0 1.25rem;
-  color: var(--editor-text-color);
+  font-size: var(--editor-h1-size);
+  font-weight: 700;
+  margin: 2.2rem 0 1.2rem;
+  letter-spacing: -0.02em;
 }
 
 .editor-content h2 { 
-  font-size: var(--editor-h2-size); 
-  margin: 1.75rem 0 1rem;
-  color: var(--editor-text-color);
+  font-size: var(--editor-h2-size);
+  font-weight: 600;
+  margin: 1.7rem 0 1rem;
 }
 
 .editor-content h3 { 
-  font-size: var(--editor-h3-size); 
-  margin: 1.5rem 0 0.875rem;
-  color: var(--editor-text-color);
+  font-size: var(--editor-h3-size);
+  font-weight: 600;
+  margin: 1.3rem 0 0.8rem;
 }
 
 .editor-content p {
-  margin-bottom: 1.25rem;
+  margin: 0 0 1.15rem 0;
   color: var(--editor-text-color);
 }
 
 .editor-content strong {
   font-weight: 600;
-  color: var(--editor-text-color);
 }
 
 .editor-content em {
@@ -232,149 +214,124 @@
 }
 
 .editor-content a {
-  color: var(--accent-hover);
-  text-decoration: underline;
-  text-underline-offset: 2px;
-  text-decoration-thickness: 1px;
-  text-decoration-color: rgba(var(--accent-hover-rgb), 0.4);
+  color: var(--editor-accent-hover);
+  text-decoration: none;
   filter: brightness(0.8);
-  transition: all 0.2s ease;
-  cursor: pointer;
+  transition: color 0.18s, filter 0.18s;
 }
 
 .editor-content a:hover {
-  color: var(--accent-primary);
-  filter: brightness(0.9);
-  text-decoration-color: var(--accent-primary);
+  color: var(--editor-accent-primary);
+  filter: brightness(0.95);
+  text-decoration: underline;
 }
 
-/* --- GLOBAL LIST RULES --- */
 .editor-content li {
-  padding-left: 0.5rem;
-  margin-bottom: 0.75rem;
+  margin: 0.12em 0;
+  color: var(--editor-text-color);
 }
 
-/* --- TASK LISTS (checkboxes) --- */
 .editor-content ul[data-type="taskList"] li {
   display: flex;
-  align-items: center;
-  margin: 0 0 0.5rem 0;
-  min-height: 2.1rem;
-  line-height: 1.8;
-}
-.editor-content ul[data-type="taskList"] ul[data-type="taskList"] li {
-  min-height: 1.1rem;
-  line-height: 1.1;
-  margin-bottom: 0.05rem;
+  align-items: flex-start;
+  gap: 0.6em;
 }
 
-/* --- NESTED BULLET LISTS (ul ul li) --- */
-/* Place this block at the very end for maximum specificity and override */
+.editor-content ul[data-type="taskList"] ul[data-type="taskList"] li {
+  margin-left: 1.5em;
+}
+
 .editor-content ul ul li {
-  margin-bottom: 0.08rem !important;
-  padding-left: 0.5rem !important;
-  outline: none !important;
-  background: transparent !important;
+  margin-left: 1.5em;
 }
 
 .editor-content ul[data-type="taskList"] li > label {
-  margin-right: 0.75rem;
-  user-select: none;
   display: flex;
-  align-items: center;
-  position: relative;
-  cursor: pointer;
-  padding: 0.1rem 0;
-  height: 1.7rem;
+  align-items: flex-start;
+  width: 100%;
+  gap: 0.6em;
+  margin: 0;
+  padding: 0;
 }
 
 .editor-content ul[data-type="taskList"] li > label input[type="checkbox"] {
-  margin-right: 0.7rem;
-  vertical-align: middle;
+  margin: 0.18em 0.6em 0 0;
+  flex-shrink: 0;
 }
 
 .editor-content ul[data-type="taskList"] li > div {
-  flex: 1;
-  margin: 0;
-  padding: 0.1rem 0;
-  opacity: 1;
-  transition: opacity 0.2s ease;
-  line-height: 1.7;
-  display: flex;
-  align-items: center;
+  flex: 1 1 auto;
+  min-width: 0;
+  word-break: break-word;
+  white-space: pre-line;
 }
 
 .editor-content ul[data-type="taskList"] li > div p {
   margin: 0;
-  display: flex;
-  align-items: center;
 }
 
 .editor-content ul[data-type="taskList"] li[data-checked="true"] > div {
-  opacity: 0.6;
   text-decoration: line-through;
-  color: var(--text-2);
+  opacity: 0.7;
 }
 
 .editor-content pre {
-  background: var(--surface-2);
-  padding: 1.5rem;
-  border-radius: var(--border-radius-md);
+  background: var(--editor-surface-2);
+  color: var(--editor-text-color);
+  border-radius: 8px;
+  padding: 1.1em 1.3em;
+  font-size: 0.98em;
+  font-family: var(--font-monospace);
   overflow-x: auto;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 0.95rem;
-  line-height: 1.6;
   margin: 1.5rem 0;
-  position: relative;
-  transition: background var(--transition-speed);
 }
 
 .editor-content pre:hover {
-  background: var(--surface-1);
+  background: var(--editor-surface-hover);
 }
 
 .editor-content pre code {
-  display: block;
-  white-space: pre;
-  color: var(--text-1);
   background: none;
   padding: 0;
-  border: none;
+  border-radius: 0;
+  font-size: inherit;
+  color: inherit;
 }
 
 .editor-content code {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 0.9em;
-  background: var(--surface-2);
-  padding: 0.25em 0.5em;
+  background: var(--editor-surface-2);
+  color: var(--editor-accent-primary);
   border-radius: 4px;
-  color: var(--accent-primary);
-  border: 1px solid var(--border-subtle);
+  padding: 0.13em 0.38em;
+  font-size: 0.98em;
+  font-family: var(--font-monospace);
 }
 
 .editor-content img {
   max-width: 100%;
   height: auto;
   border-radius: 8px;
-  margin: 1.5rem 0;
+  margin: 1.2rem 0;
   display: block;
 }
 
-/* ==========================================================================
-   TABLES
-   ========================================================================== */
 .ProseMirror .tableWrapper {
   margin: 1.5rem 0;
+  border: 1px solid var(--editor-border-subtle);
   border-radius: 10px;
   overflow: hidden;
-  border: 1px solid var(--border-subtle);
-  box-shadow: 0 2px 12px 0 rgba(0,0,0,0.06);
+  background: none;
 }
 
 .ProseMirror table {
   width: 100%;
   border-collapse: collapse;
+  border-spacing: 0;
+  background: none;
+  border-radius: 10px;
   table-layout: fixed;
+  margin: 0;
+  padding: 0;
 }
 
 .ProseMirror table p {
@@ -383,31 +340,32 @@
 
 .ProseMirror td,
 .ProseMirror th {
-  text-align: center;
-  padding: 1rem 1.25rem;
   border: none;
-  border-bottom: 1px solid var(--border-subtle);
-  position: relative;
-  min-width: 120px;
-  vertical-align: middle;
+  border-bottom: 1px solid var(--editor-border-subtle);
+  border-right: 1px solid var(--editor-border-subtle);
+  background: none;
+  color: var(--editor-text-color);
+  font-size: 1rem;
+  font-weight: 400;
+  text-align: center;
+  padding: 0.65em 0.9em;
+  min-width: 0;
+  max-width: none;
 }
 
 .ProseMirror th {
-  color: var(--text-1);
+  background: var(--editor-surface-2);
+  color: var(--editor-accent-primary);
   font-weight: 600;
-  background: var(--surface-2);
-  border-bottom: 2px solid var(--border-color);
-  font-size: 1.1rem;
+  font-size: 1.18rem;
 }
 
 .ProseMirror th:not(:last-child) {
-  border-right: 1px solid var(--border-color);
+  border-right: 1px solid var(--editor-border-subtle);
 }
 
 .ProseMirror td {
-  color: var(--text-2);
-  background: var(--surface-1);
-  font-size: 0.95rem;
+  background: var(--editor-surface-1);
 }
 
 .ProseMirror tr:last-child td {
@@ -420,53 +378,48 @@
   top: 0;
   bottom: 0;
   width: 4px;
-  background-color: var(--accent-primary);
-  pointer-events: none;
-  cursor: col-resize;
+  background-color: var(--editor-accent-primary);
   opacity: 0;
   transition: opacity 0.2s ease;
+  pointer-events: none;
+  z-index: 20;
 }
 
 .ProseMirror .tableWrapper:hover .column-resize-handle {
-  opacity: 0.3;
+  opacity: 0.5;
 }
 
 .ProseMirror .column-resize-handle:hover,
-.ProseMirror .column-resize-handle.active {
+.ProseMirror .column-resize-handle.dragging {
   opacity: 1;
 }
 
-/* ==========================================================================
-   MISCELLANEOUS
-   ========================================================================== */
-
 .editor-content mark {
-  background-color: rgba(229, 90, 44, 0.2);
-  border-radius: 2px;
-  padding: 0.1em 0.3em;
+  background: var(--editor-accent-subtle);
+  color: var(--editor-accent-primary);
+  padding: 0.1em 0.2em;
+  border-radius: 3px;
 }
 
 .editor-content ::selection {
-  background-color: rgba(229, 90, 44, 0.2);
+  background: rgba(229, 90, 44, 0.13);
 }
 
 .editor-content hr {
   border: none;
-  border-top: 1px solid var(--border-subtle);
-  margin: 2.5rem 0;
+  border-top: 1px solid var(--editor-border-subtle);
+  margin: 1.2rem 0;
 }
 
 .editor-content ul ul,
-.editor-content ol ol,
-.editor-content ul ol,
-.editor-content ol ul {
-  margin: 0.5rem 0;
+.editor-content ol ol {
+  margin-left: 1.5em;
 }
 
 @media (max-width: 768px) {
   .editor-content {
     font-size: var(--editor-h5-size);
-    padding: 1rem;
+    padding: 1rem 1.5rem;
   }
   .editor-content h1 { font-size: var(--editor-h1-size-mobile); }
   .editor-content h2 { font-size: var(--editor-h2-size-mobile); }
@@ -477,17 +430,20 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0.5rem;
-  border-radius: 6px;
-  background: none;
-  border: none;
+  width: 2rem;
+  height: 2rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: 4px;
+  background: var(--surface-2);
   color: var(--text-2);
-  transition: all 0.2s ease;
   cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.875rem;
 }
 
 .editor-action-button:hover {
-  background: var(--surface-hover);
+  background: var(--surface-3);
+  border-color: var(--border-hover);
   color: var(--text-1);
 }
 
@@ -496,39 +452,43 @@
   top: 0;
   left: 0;
   width: 100vw;
-  min-height: 100vh;
-  background: var(--surface-0);
-  padding: 0;
-  border-radius: 0;
+  height: 100vh;
+  background: var(--surface-1);
+  backdrop-filter: none;
+  display: flex;
+  align-items: stretch;
+  justify-content: stretch;
   z-index: 1000;
-  overflow-y: auto;
 }
 
 .editor-modal-overlay.fullscreen .editor-container {
   width: 100%;
-  min-height: 100%;
-  max-width: 100%;
-  max-height: 100%;
-  border-radius: 0;
+  height: 100%;
+  max-width: none;
+  border: none;
   box-shadow: none;
+  filter: none;
+  backdrop-filter: none;
 }
 
 .editor-modal-overlay.fullscreen .editor-content-wrapper {
-  flex-grow: 1;
-  max-height: none;
+  flex: 1;
+  overflow-y: auto;
+  padding: 2rem 3rem;
 }
 
 .editor-footer {
-  padding: 0.5rem 2rem;
-  border-top: 1px solid var(--border-subtle);
-  background: var(--surface-1);
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
+  padding: 1rem 2rem;
+  background: var(--surface-2);
+  border-top: 1px solid var(--border-subtle);
 }
 
 .editor-stats {
   display: flex;
+  align-items: center;
   gap: 1rem;
   color: var(--text-2);
   font-size: var(--editor-small-size);
@@ -537,158 +497,155 @@
 .editor-stats span {
   display: flex;
   align-items: center;
-  gap: 0.25rem;
+  gap: 0.5rem;
 }
 
 .editor-time {
-  color: var(--text-2);
+  color: var(--text-3);
   font-size: var(--editor-small-size);
 }
 
 .editor-content .ProseMirror > *.selected {
-  background-color: rgba(var(--accent-primary-rgb), 0.15);
-  transition: background-color 0.2s ease;
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
 }
 
 .code-copy-button {
   position: absolute;
   top: 0.5rem;
   right: 0.5rem;
-  width: 28px;
-  height: 28px;
-  background: transparent;
-  border: none;
-  border-radius: 4px;
-  color: white;
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: 4px;
+  background: var(--surface-2);
+  color: var(--text-2);
   cursor: pointer;
-  opacity: 0.8;
-  transition: opacity 0.2s ease;
+  transition: all 0.2s ease;
+  opacity: 0;
   z-index: 10;
 }
 
 .code-copy-button:hover {
-  opacity: 1;
+  background: var(--surface-3);
+  border-color: var(--border-hover);
+  color: var(--text-1);
 }
 
 .code-copy-button.copied {
-  background-color: var(--surface-1);
+  background: var(--accent-primary);
+  color: white;
+  border-color: var(--accent-primary);
 }
 
 .code-copy-button.copied svg {
-  animation: checkmark 0.2s ease-in-out;
+  animation: checkmark 0.3s ease;
 }
 
 @keyframes checkmark {
-  0% { transform: scale(0.8); }
+  0% { transform: scale(0); }
   50% { transform: scale(1.2); }
   100% { transform: scale(1); }
 }
 
 .editor-content .ProseMirror > pre.selected {
-  background-color: transparent !important;
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
 }
 
 .editor-content .ProseMirror > pre:focus {
-  outline: none !important;
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
 }
 
-/* Title wrapper container - VERSION FINALE PROPRE */
 .editor-title-wrapper {
   width: 100%;
   max-width: 750px;
   margin: 0 auto;
-  padding: 0;
+  padding: 2.5rem 3rem 0.1rem 3rem;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  min-height: 45px;
-  height: auto;
-  overflow: visible;
 }
 
-/* Suppression de toutes les autres définitions de .editor-title-wrapper */
 .editor-header.title-focused .editor-title-wrapper {
-  transform: none;
+  padding: 2rem 3rem 0.1rem 3rem;
 }
 
-/* Override input focus transform */
 .editor-title-input:focus {
-  transform: none !important;
+  outline: none;
+  box-shadow: none;
 }
 
-/* 🔒 Patch ultra-robuste pour corriger les marges dans les sous-listes */
 .editor-content ul ul:not([data-type="taskList"]) li {
-  margin-bottom: 0.25rem !important;
-  padding-left: 0.5rem !important;
+  margin-left: 1.5em;
 }
 
 .editor-header-image {
+  position: relative;
   width: 100%;
-  max-width: 100%;
-  margin: 0 auto 1.5rem;
-  border-radius: 0;
-  overflow: hidden;
   height: 300px;
-  min-height: 300px;
-  aspect-ratio: unset;
-  box-shadow: 0 2px 24px rgba(0,0,0,0.08);
-  transition: box-shadow 0.18s, filter 0.18s;
+  background: var(--surface-2);
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 2rem;
 }
 
 .editor-header-image img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  display: block;
-  border-radius: 0;
-  transition: filter 0.3s, opacity 0.3s;
+  transition: filter 0.2s ease;
 }
 
 .editor-header-image img:hover {
-  filter: brightness(0.93) saturate(1.08);
+  filter: brightness(0.95);
 }
 
 .header-image {
+  position: relative;
   width: 100%;
   height: 300px;
-  object-fit: cover;
-  display: block;
-  border-radius: 0;
+  background: var(--surface-2);
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 2rem;
 }
 
 .header-image-close-btn {
   position: absolute;
-  top: 8px;
-  right: 8px;
-  background: rgba(30,30,40,0.18);
-  border: none;
-  color: #fff;
-  font-size: 24px;
+  top: 1rem;
+  right: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.5);
+  color: white;
   cursor: pointer;
-  z-index: 10;
-  padding: 4px;
-  line-height: 1;
-  opacity: 0.7;
-  border-radius: 6px;
-  transition: opacity 0.18s, background 0.18s;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(8px);
 }
 
 .header-image-close-btn:hover {
-  opacity: 1;
-  background: rgba(30,30,40,0.38);
+  background: rgba(0, 0, 0, 0.7);
+  border-color: var(--border-hover);
 }
 
 .editor-content ul:not([data-type="taskList"]) {
-  margin: 1.25rem 0 1.25rem 1.5rem;
-  padding-left: 1.5rem;
+  margin: 0.5em 0;
+  padding-left: 1.5em;
 }
 
 .editor-content ol {
-  margin: 1.25rem 0 1.25rem 1.5rem;
-  padding-left: 1.5rem;
+  margin: 0.5em 0;
+  padding-left: 1.5em;
 }
 
 .editor-content ul:not([data-type="taskList"]) {
@@ -703,119 +660,132 @@
   position: fixed;
   top: 50%;
   left: 50%;
-  transform: translate(-50%, -50%) scale(0.98);
+  transform: translate(-50%, -50%);
+  width: 90%;
+  max-width: 500px;
   background: var(--surface-1);
-  border-radius: 20px;
-  box-shadow: 0 12px 48px rgba(0,0,0,0.22);
-  min-width: 400px;
-  max-width: 96vw;
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
   z-index: 2000;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  opacity: 0;
-  animation: imageMenuFadeIn 0.22s cubic-bezier(0.16,1,0.3,1) forwards;
+  animation: imageMenuFadeIn 0.3s ease;
 }
+
 @keyframes imageMenuFadeIn {
   from {
     opacity: 0;
-    transform: translate(-50%, -50%) scale(0.96);
+    transform: translate(-50%, -50%) scale(0.9);
   }
   to {
     opacity: 1;
     transform: translate(-50%, -50%) scale(1);
   }
 }
+
 .image-menu-tabs {
   display: flex;
   border-bottom: 1px solid var(--border-subtle);
   background: var(--surface-2);
-  border-top-left-radius: 20px;
-  border-top-right-radius: 20px;
-  overflow: hidden;
+  border-radius: 12px 12px 0 0;
 }
+
 .image-menu-tabs button {
   flex: 1;
-  padding: 1rem 0;
-  background: none;
+  padding: 1rem;
   border: none;
+  background: none;
   color: var(--text-2);
-  font-size: 1.08rem;
-  font-weight: 600;
   cursor: pointer;
-  transition: color 0.18s, border-color 0.18s;
-  border-bottom: 2px solid transparent;
-  letter-spacing: -0.01em;
+  transition: all 0.2s ease;
+  font-size: 0.875rem;
+  font-weight: 500;
 }
+
+.image-menu-tabs button:hover {
+  background: var(--surface-3);
+  color: var(--text-1);
+}
+
 .image-menu-tabs button.active {
+  background: var(--accent-subtle);
   color: var(--accent-primary);
   border-bottom: 2px solid var(--accent-primary);
-  background: var(--surface-1);
-  font-size: 1.12rem;
 }
+
 .image-menu-content {
-  padding: 2.2rem 2.2rem 1.7rem 2.2rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1.7rem;
+  padding: 2rem;
 }
+
 .image-menu-upload, .image-menu-url, .image-menu-ai {
   display: flex;
   flex-direction: column;
   gap: 1rem;
 }
+
 .image-menu-upload-btn, .image-menu-insert-btn {
   padding: 0.75rem 1.5rem;
-  border-radius: 8px;
-  border: none;
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
   background: var(--surface-2);
   color: var(--text-1);
-  font-size: 1rem;
-  font-weight: 600;
   cursor: pointer;
-  margin-bottom: 0.5rem;
-  transition: background 0.18s, color 0.18s;
+  transition: all 0.2s ease;
+  font-size: 0.875rem;
+  font-weight: 500;
 }
+
 .image-menu-upload-btn:hover, .image-menu-insert-btn:hover {
-  background: var(--accent-primary);
-  color: #fff;
+  background: var(--surface-3);
+  border-color: var(--border-hover);
 }
+
 .image-menu-insert-btn[disabled] {
-  background: var(--surface-2);
-  color: var(--text-3);
+  opacity: 0.5;
   cursor: not-allowed;
 }
+
 .image-menu-hint {
   color: var(--text-3);
-  font-size: 0.95rem;
-  margin-top: -0.5rem;
+  font-size: 0.75rem;
+  margin-top: 0.5rem;
 }
+
 .image-menu-url input, .image-menu-ai input {
-  padding: 0.75rem 1rem;
-  border-radius: 8px;
+  padding: 0.75rem;
   border: 1px solid var(--border-subtle);
-  background: var(--surface-0);
+  border-radius: 6px;
+  background: var(--surface-2);
   color: var(--text-1);
-  font-size: 1rem;
-  margin-bottom: 0.5rem;
+  font-size: 0.875rem;
+  transition: border-color 0.2s ease;
 }
+
+.image-menu-url input:focus, .image-menu-ai input:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+}
+
 .image-menu-close {
   position: absolute;
-  top: 12px;
-  right: 16px;
-  background: none;
-  border: none;
+  top: 1rem;
+  right: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: 4px;
+  background: var(--surface-2);
   color: var(--text-2);
-  font-size: 1.5rem;
   cursor: pointer;
-  z-index: 10;
-  padding: 0.25rem 0.5rem;
-  border-radius: 6px;
-  transition: background 0.18s, color 0.18s;
+  transition: all 0.2s ease;
 }
+
 .image-menu-close:hover {
-  background: var(--surface-hover);
-  color: var(--accent-primary);
+  background: var(--surface-3);
+  border-color: var(--border-hover);
+  color: var(--text-1);
 }
 
 .image-menu-backdrop {
@@ -824,54 +794,52 @@
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba(12, 12, 13, 0.55);
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
   z-index: 1999;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
 .editor-image-wrapper {
-  width: 100%;
-  min-height: 64px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 1.5rem 0;
+  position: relative;
+  display: inline-block;
+  max-width: 100%;
+  margin: 1rem 0;
 }
+
 .editor-image-placeholder {
-  background: var(--surface-2);
-  border: 1.5px dashed var(--border-subtle);
-  border-radius: 12px;
-  min-height: 64px;
-  cursor: pointer;
-  transition: border-color 0.18s, background 0.18s;
   display: flex;
   align-items: center;
   justify-content: center;
   width: 100%;
+  height: 200px;
+  background: var(--surface-2);
+  border: 2px dashed var(--border-subtle);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
+
 .editor-image-placeholder:hover {
-  border-color: var(--accent-primary);
-  background: var(--surface-hover);
+  background: var(--surface-3);
+  border-color: var(--border-hover);
 }
+
 .editor-image-placeholder-inner {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 1rem;
-  color: var(--text-2);
-  font-size: 1.1rem;
-  font-weight: 500;
-  padding: 1.25rem 0.5rem;
-}
-.editor-image-placeholder-inner svg {
+  gap: 0.5rem;
   color: var(--text-3);
-  width: 32px;
-  height: 32px;
 }
+
+.editor-image-placeholder-inner svg {
+  width: 2rem;
+  height: 2rem;
+  opacity: 0.7;
+}
+
 .editor-image-placeholder-inner span {
-  color: var(--text-2);
-  font-size: 1.1rem;
+  font-size: 0.875rem;
   font-weight: 500;
 }
 
@@ -879,93 +847,24 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0rem 1.2rem;
-  border-bottom: 1.5px solid rgba(18, 18, 22, 0.55);
-  background: rgba(24, 24, 28, 0.97);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
-  gap: 1.2rem;
-  min-height: 30px;
-  position: sticky;
-  top: 0;
-  z-index: 1002;
+  padding: 1rem 2rem;
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--border-subtle);
+  gap: 1rem;
 }
-
-/* Suppression de la définition dupliquée */
 
 .editor-toolbar-center {
   display: flex;
   align-items: center;
-  gap: 8px;
-  flex: 1 1 0;
-  min-width: 0;
+  gap: 0.5rem;
+  flex: 1;
   justify-content: center;
 }
 
 .editor-topbar-actions {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-left: auto;
-}
-
-/* Masquer les anciennes barres */
-/* .editor-header, .editor-toolbar, .editor-header-actions, .toolbar-left, .toolbar-right {
-  display: none !important;
-} */
-
-.editor-root {
-  /* Font family géré par JavaScript */
-}
-.editor-title,
-.editor-title-input,
-.editor-title-span,
-textarea.editor-title,
-textarea.editor-title-input,
-.editor-content,
-.editor-content-wrapper {
-  /* Font family géré par JavaScript */
-}
-
-/* Styles de base pour le titre (sans contraintes de hauteur) */
-.editor-title,
-.editor-title-input,
-.editor-title-span {
-  width: 100%;
-  max-width: 750px;
-  min-height: 45px;
-  padding: 0;
-  margin: 0 auto;
-  display: block;
-  line-height: 1.1;
-  resize: none;
-  overflow: visible;
-  font-size: var(--editor-title-size);
-  font-weight: 700;
-  text-align: left;
-  border: none;
-  background: none;
-  outline: none;
-  color: var(--editor-text-color);
-  font-family: var(--editor-font-family);
-  box-sizing: border-box;
-  white-space: normal;
-  word-break: break-word;
-  transition: none;
-}
-
-/* Espacement avec le contenu */
-.ProseMirror p:first-child {
-  margin-top: 0 !important;
-}
-
-.ProseMirror.editor-content {
-  padding-top: 0 !important;
-}
-
-/* === Font family dynamic variable === */
-.editor-root {
-  /* Font family géré par JavaScript */
+  gap: 0.5rem;
 }
 
 .editor-title-section {
@@ -978,254 +877,123 @@ textarea.editor-title-input,
   align-items: flex-start;
 }
 
-/* Réduction de l’épaisseur verticale du container du titre dans l’éditeur */
-/* Suppression des styles contradictoires */
-
-/* ==========================================================================
-   STYLES SPÉCIFIQUES À L'ÉDITEUR
-   ========================================================================== */
-
-.editor-content tr:last-child td,
-.summary-content tr:last-child td,
-.html-preview tr:last-child td,
-.editor-table tr:last-child td {
-  border-bottom: none;
-}
-
-.editor-content th:first-child,
-.summary-content th:first-child,
-.html-preview th:first-child,
-.editor-table th:first-child {
-  border-top-left-radius: 18px;
-}
-.editor-content th:last-child,
-.summary-content th:last-child,
-.html-preview th:last-child,
-.editor-table th:last-child {
-  border-top-right-radius: 18px;
-}
-.editor-content tr:last-child td:first-child,
-.summary-content tr:last-child td:first-child,
-.html-preview tr:last-child td:first-child,
-.editor-table tr:last-child td:first-child {
-  border-bottom-left-radius: 18px;
-}
-.editor-content tr:last-child td:last-child,
-.summary-content tr:last-child td:last-child,
-.html-preview tr:last-child td:last-child,
-.editor-table tr:last-child td:last-child {
+.editor-content tr:last-child td:last-child {
   border-bottom-right-radius: 18px;
 }
 
-
-
-
-
-/* === PATCH: Supprime l'espace au-dessus des tableaux (p vide, ProseMirror) === */
 .editor-content .ProseMirror > p:empty + .tableWrapper,
 .editor-content .ProseMirror > p:empty + table {
-  margin-top: 0 !important;
-  padding-top: 0 !important;
-}
-.editor-content .ProseMirror > p:empty {
-  margin-bottom: 0 !important;
-  padding-bottom: 0 !important;
-  min-height: 0 !important;
-  height: 0 !important;
+  margin-top: 0;
 }
 
-/* === TABLEAUX ULTRA-MINIMALISTES (éditeur) === */
+.editor-content .ProseMirror > p:empty {
+  margin: 0;
+  padding: 0;
+  height: 0;
+  overflow: hidden;
+}
+
 .ProseMirror .tableWrapper {
-  margin: 0 !important;
-  padding: 0 !important;
-  border: none !important;
-  border-radius: 0 !important;
-  background: none !important;
-  box-shadow: none !important;
-  overflow: visible !important;
+  margin: 1.5rem 0;
+  border: 1px solid var(--editor-border-subtle);
+  border-radius: 10px;
+  overflow: hidden;
+  background: none;
 }
+
 .ProseMirror table {
-  width: 100% !important;
-  border-collapse: collapse !important;
-  border-spacing: 0 !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  background: none !important;
-  box-shadow: none !important;
-  border-radius: 0 !important;
-  table-layout: fixed !important;
+  width: 100%;
+  border-collapse: collapse;
+  border-spacing: 0;
+  background: none;
+  border-radius: 10px;
+  table-layout: fixed;
+  margin: 0;
+  padding: 0;
 }
+
 .ProseMirror th,
 .ProseMirror td {
-  border: none !important;
-  border-bottom: 1px solid var(--border-subtle) !important;
-  border-right: 1px solid var(--border-subtle) !important;
-  background: none !important;
-  color: var(--text-1) !important;
-  font-weight: 400 !important;
-  text-align: left !important;
-  padding: 0.65em 0.9em !important;
-  min-width: 0 !important;
-  max-width: none !important;
-  font-size: 1rem !important;
-  box-shadow: none !important;
+  border: none;
+  border-bottom: 1px solid var(--editor-border-subtle);
+  border-right: 1px solid var(--editor-border-subtle);
+  background: none;
+  color: var(--editor-text-color);
+  font-size: 1rem;
+  font-weight: 400;
+  text-align: center;
+  padding: 0.65em 0.9em;
+  min-width: 0;
+  max-width: none;
 }
+
 .ProseMirror th {
-  font-weight: 600 !important;
+  background: var(--editor-surface-2);
+  color: var(--editor-accent-primary);
+  font-weight: 600;
+  font-size: 1.18rem;
 }
+
 .ProseMirror th:last-child,
 .ProseMirror td:last-child {
-  border-right: none !important;
+  border-right: none;
 }
-.ProseMirror tr:last-child td,
-.ProseMirror tr:last-child th {
-  border-bottom: none !important;
+
+.ProseMirror tr:last-child td {
+  border-bottom: none;
 }
+
 .ProseMirror table p {
-  margin: 0 !important;
-  padding: 0 !important;
-}
-
-/* === PATCH: Bordure extérieure + radius sur les tableaux éditeur === */
-.ProseMirror .tableWrapper {
-  border: 1px solid var(--border-subtle) !important;
-  border-radius: 10px !important;
-  overflow: hidden !important;
-  background: none !important;
-}
-.ProseMirror table {
-  border-radius: 10px !important;
-  border: none !important;
-  overflow: hidden !important;
-}
-
-/* === PATCH: Couleurs propres pour tableaux éditeur (entête + alternance lignes) === */
-.ProseMirror th {
-  background: var(--surface-2) !important;
-  color: var(--accent-primary) !important;
-  font-weight: 600 !important;
-}
-.ProseMirror td {
-  background: none !important;
-  color: var(--text-1) !important;
-}
-.ProseMirror tbody tr:nth-child(odd) td {
-  background: var(--surface-2) !important;
-}
-.ProseMirror tbody tr:nth-child(even) td {
-  background: var(--surface-1) !important;
-}
-
-/* === PATCH: Gris clairs pour alternance lignes tbody (plus de noir) === */
-.ProseMirror tbody tr:nth-child(odd) td {
-  background: var(--surface-2) !important;
-}
-.ProseMirror tbody tr:nth-child(even) td {
-  background: var(--surface-1) !important;
-}
-
-/* === PATCH: Blockquotes centrés === */
-/*
-.editor-content blockquote {
-  text-align: center !important;
-}
-*/
-
-/* === PATCH: Blockquotes en gras === */
-/*
-.editor-content blockquote {
-  font-weight: 600 !important;
-}
-*/
-
-/* === PATCH: Entête de tableau centré === */
-/*
-.ProseMirror th {
-  text-align: center !important;
-  color: #fff !important;
-  font-weight: 600 !important;
-  background: var(--surface-2) !important;
-  border-bottom: 1.5px solid var(--border-subtle) !important;
-  font-size: 1.11rem !important;
-  letter-spacing: 0.01em !important;
-  padding: 1.15rem 1.5rem !important;
-}
-*/
-
-/* === PATCH: Tout le texte des tableaux centré === */
-/*
-.ProseMirror th,
-.ProseMirror td {
-  text-align: center !important;
-}
-*/
-
-/* === PATCH: Couleur normale pour le texte des blockquotes === */
-/*
-.editor-content blockquote {
-  color: var(--text-1) !important;
-}
-*/
-
-/* Nettoyage : police et couleur centralisées dans markdown.css */
-.editor-content,
-.editor-content-wrapper,
-.editor-title-input,
-.editor-title-span,
-.editor-root {
-  font-family: inherit !important;
-  color: inherit !important;
-}
-
-/* === WRAPPER DU TITRE === */
-/* Suppression de la définition dupliquée */
-
-/* === TEXTAREA DU TITRE === */
-.editor-title {
-  width: 780px;
-  min-height: 45px;
-  max-height: 200px;
-  height: auto;
-  font-size: var(--editor-title-size);
-  font-weight: 700;
-  line-height: 1.1;
-  border: none;
-  background: transparent;
-  outline: none;
-  color: inherit;
-  font-family: var(--editor-font-family);
-  padding: 0;
   margin: 0;
-  resize: none;
+}
+
+.ProseMirror .tableWrapper {
+  margin: 1.5rem 0;
+  border: 1px solid var(--editor-border-subtle);
+  border-radius: 10px;
   overflow: hidden;
-  white-space: pre-line;
-  word-break: break-word;
-  max-width: 100%;
+  background: none;
 }
 
-.editor-title {
-  margin-bottom: 0 !important;
-}
-.ProseMirror p:first-child {
-  margin-top: 0 !important;
-}
-
-.editor-title,
-.editor-title-input {
-  min-height: 1em !important;
-  padding: 0 !important;
-  margin: 0 !important;
-  line-height: 1.1 !important;
-  resize: none !important;
-  overflow: hidden !important;
+.ProseMirror table {
+  width: 100%;
+  border-collapse: collapse;
+  border-spacing: 0;
+  background: none;
+  border-radius: 10px;
+  table-layout: fixed;
+  margin: 0;
+  padding: 0;
 }
 
-.ProseMirror.editor-content {
-  padding-top: 0 !important;
+.ProseMirror th {
+  background: var(--editor-surface-2);
+  color: var(--editor-accent-primary);
+  font-weight: 600;
+  font-size: 1.18rem;
 }
 
-/* Styles pour textarea du titre (auto-redimensionnable) */
-.editor-title,
+.ProseMirror td {
+  background: var(--editor-surface-1);
+}
+
+.ProseMirror tbody tr:nth-child(odd) td {
+  background: var(--editor-surface-1);
+}
+
+.ProseMirror tbody tr:nth-child(even) td {
+  background: var(--editor-surface-2);
+}
+
+.ProseMirror tbody tr:nth-child(odd) td {
+  background: var(--editor-surface-1);
+}
+
+.ProseMirror tbody tr:nth-child(even) td {
+  background: var(--editor-surface-2);
+}
+
+.editor-content,
 .editor-title-input,
 .editor-title-span,
 textarea.editor-title,
@@ -1252,30 +1020,31 @@ textarea.editor-title-input {
   transition: none;
 }
 
-/* Suppression des styles contradictoires */
+.editor-title {
+  margin-bottom: 0 !important;
+}
 
-/* Espacement avec le contenu */
 .ProseMirror p:first-child {
   margin-top: 0 !important;
+}
+
+.editor-title,
+.editor-title-input {
+  text-align: left !important;
 }
 
 .ProseMirror.editor-content {
   padding-top: 0 !important;
 }
 
-/* Centrage horizontal du textarea titre et de la zone texte, mais texte à gauche */
 .editor-title,
 .editor-title-input,
 .editor-title-span,
 textarea.editor-title,
 textarea.editor-title-input {
   text-align: left !important;
-  display: block !important;
-  margin-left: auto !important;
-  margin-right: auto !important;
 }
 
-/* BLOC FINAL ÉPURÉ POUR LA ZONE TEXTE DE L’ÉDITEUR */
 .editor-content {
   width: 750px;
   margin: 0 auto;
@@ -1303,7 +1072,6 @@ textarea.editor-title-input {
 .editor-content pre,
 .editor-content pre code {
   color: #FF6A00 !important;
-  /* Optionnel : tu peux ajuster la teinte ici pour matcher la palette */
 }
 
 .editor-content th {
@@ -1315,7 +1083,6 @@ textarea.editor-title-input {
   text-align: left !important;
 }
 
-/* Épure l’alignement du titre : tout à gauche, aucune autre règle de text-align */
 .editor-title,
 .editor-title-input,
 .editor-title-span,
@@ -1324,7 +1091,6 @@ textarea.editor-title-input {
   text-align: left !important;
 }
 
-/* BLOC FINAL ÉPURÉ POUR LE TITRE DE L’ÉDITEUR */
 .editor-title,
 .editor-title-input,
 .editor-title-span,
@@ -1336,11 +1102,10 @@ textarea.editor-title-input {
   margin: 0 auto;
   display: block;
   padding: 0;
-  font-size: 2.25rem;
+  font-size: var(--editor-title-size);
   font-weight: 700;
   line-height: 1.1;
   color: var(--editor-text-color);
-  font-family: 'Noto Sans', sans-serif;
   background: none;
   border: none;
   outline: none;
@@ -1353,41 +1118,52 @@ textarea.editor-title-input {
   transition: none;
 }
 
-/* === FIX: Wrapping propre du texte des checkbox dans l'éditeur === */
 .editor-content ul[data-type="taskList"] li > div {
-  display: block !important;
-  align-items: initial !important;
-  line-height: 1.7;
-  flex: 1;
+  flex: 1 1 auto;
   min-width: 0;
   word-break: break-word;
   white-space: pre-line;
-  padding: 0.05rem 0;
+  display: block;
 }
 
 .editor-content ul[data-type="taskList"] li > div p {
-  display: block !important;
-  align-items: initial !important;
   margin: 0;
-  word-break: break-word;
-  white-space: pre-line;
 }
 
-/* === FIX: Checkbox toujours alignée en haut, même si le texte wrappe === */
 .editor-content ul[data-type="taskList"] li {
-  align-items: flex-start !important;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.7em;
 }
 
-/* === FIX: Ajuste verticalement la checkbox pour l'aligner avec la première ligne === */
 .editor-content ul[data-type="taskList"] li > label {
   margin-top: 0.18em;
+  flex-shrink: 0;
 }
 
-/* Couleur finale du titre */
 .editor-title,
 .editor-title-input,
 .editor-title-span,
 textarea.editor-title,
 textarea.editor-title-input {
+  width: 100%;
+  max-width: 750px;
+  min-height: 45px;
+  margin: 0 auto;
+  display: block;
+  padding: 0;
+  font-size: var(--editor-title-size);
+  font-weight: 700;
+  line-height: 1.1;
   color: var(--editor-text-color);
+  background: none;
+  border: none;
+  outline: none;
+  box-sizing: border-box;
+  white-space: normal;
+  word-break: break-word;
+  overflow: visible;
+  resize: none;
+  text-align: left;
+  transition: none;
 }
