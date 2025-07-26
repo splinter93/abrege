@@ -12,15 +12,15 @@ interface EditorHeaderProps {
  */
 const EditorHeader: React.FC<EditorHeaderProps> = ({ headerImageUrl, onHeaderChange, children }) => {
   return (
-    <div className="editor-header" style={{ width: '100%', position: 'relative', marginBottom: 24 }}>
+    <div className="editor-header">
       {headerImageUrl && (
         <img
           src={headerImageUrl}
           alt="Header"
-          style={{ width: '100%', height: 220, objectFit: 'cover', borderRadius: 0 }}
+          className="editor-header-image-img"
         />
       )}
-      <div className="editor-header-toolbar" style={{ position: 'absolute', top: 16, right: 24 }}>
+      <div className="editor-header-toolbar">
         {children}
       </div>
     </div>

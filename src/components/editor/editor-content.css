@@ -1,0 +1,79 @@
+/* ==========================================================================
+   STYLES DU CONTENU DE L'ÉDITEUR - STRUCTURE SEULE
+   ========================================================================== */
+
+.editor-content-wrapper {
+  width: 100%;
+  max-width: 100%;
+  margin: 0 auto;
+  position: relative;
+}
+
+.editor-content {
+  width: 100%;
+  max-width: 100%;
+  min-height: 100vh;
+  background: none;
+  border: none;
+  outline: none;
+  padding: 0;
+  margin: 0;
+  resize: none;
+  overflow: visible;
+}
+
+.editor-content:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+.editor-content .ProseMirror {
+  width: 100%;
+  max-width: 100%;
+  min-height: 100vh;
+  background: none;
+  border: none;
+  outline: none;
+  padding: 0;
+  margin: 0;
+  resize: none;
+  overflow: visible;
+}
+
+/* ==========================================================================
+   PLACEHOLDER ET ÉTATS VIDES
+   ========================================================================== */
+
+.editor-content .ProseMirror p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  color: var(--text-3);
+  pointer-events: none;
+  height: 0;
+}
+
+/* ==========================================================================
+   PROSEMIRROR SPÉCIFIQUE
+   ========================================================================== */
+
+.ProseMirror.editor-content {
+  outline: none;
+}
+
+.ProseMirror p:first-child {
+  margin-top: 0;
+}
+
+/* ==========================================================================
+   RESPONSIVE
+   ========================================================================== */
+
+@media (max-width: 768px) {
+  .editor-content {
+    font-size: var(--editor-body-size-mobile);
+  }
+  
+  .editor-content h1 { font-size: var(--editor-h1-size-mobile); }
+  .editor-content h2 { font-size: var(--editor-h2-size-mobile); }
+  .editor-content h3 { font-size: var(--editor-h3-size-mobile); }
+} 

@@ -95,7 +95,7 @@ const EditorHeaderImage: React.FC<EditorHeaderImageProps> = ({
   if (!headerImageUrl) return null;
 
   return (
-    <div className="editor-header-image" style={{ position: 'relative', width: '100%', height: 220, background: '#f7f7f7', overflow: 'hidden', marginBottom: 16, marginLeft: 0, marginRight: 0, paddingLeft: 0, paddingRight: 0 }}>
+    <div className="editor-header-image">
       <img
         src={headerImageUrl}
         alt="Header"

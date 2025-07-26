@@ -1,0 +1,100 @@
+/* Styles dédiés au titre de l'éditeur */
+
+.editor-title-span, .editor-title-input {
+  flex-grow: 1;
+  border: none;
+  background: none;
+  padding: 0.5rem 0 1.2rem 0;
+  margin: 0;
+  margin-right: 1rem;
+  font-size: var(--editor-h3-size);
+  font-weight: 600;
+  color: var(--editor-text-color);
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  cursor: text;
+  transform: scale(1);
+  transform-origin: left center;
+  transition: font-size 0.2s ease, transform 0.2s ease;
+  font-family: var(--editor-font-family);
+}
+
+.editor-title-input:focus {
+  outline: none;
+  box-shadow: none;
+  font-size: var(--editor-xxl-size);
+  transform: scale(1.02);
+}
+
+.editor-title-span:hover {
+  transform: scale(1.01);
+}
+
+.editor-title-input::placeholder {
+  color: var(--text-3);
+  opacity: 0.7;
+}
+
+.editor-title-wrapper {
+  width: 100%;
+  max-width: 750px;
+  margin: 0 auto;
+  padding: 2.5rem 3rem 0.1rem 3rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.editor-header.title-focused .editor-title-wrapper {
+  padding: 2rem 3rem 0.1rem 3rem;
+}
+
+.editor-title-input:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+.editor-title,
+.editor-title-input,
+.editor-title-span,
+textarea.editor-title,
+textarea.editor-title-input {
+  width: 100%;
+  max-width: 750px;
+  min-height: 45px;
+  margin: 0 auto;
+  display: block;
+  padding: 0;
+  font-size: var(--editor-title-size);
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--editor-text-color);
+  background: none;
+  border: none;
+  outline: none;
+  box-sizing: border-box;
+  white-space: normal;
+  word-break: break-word;
+  overflow: visible;
+  resize: none;
+  text-align: left;
+  transition: none;
+}
+
+.editor-title {
+  margin-bottom: 0 !important;
+  text-align: left !important;
+}
+
+.editor-title,
+.editor-title-input {
+  text-align: left !important;
+}
+
+.editor-title,
+.editor-title-input,
+.editor-title-span,
+textarea.editor-title,
+textarea.editor-title-input {
+  text-align: left !important;
+} 

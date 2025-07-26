@@ -195,4 +195,118 @@
 .toolbar-button.icon-text-style svg {
   width: auto;
   height: auto;
+}
+
+/* Styles supplémentaires pour les actions du header */
+.editor-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.editor-mode-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: 4px;
+  background: var(--surface-2);
+  color: var(--text-2);
+  font-size: var(--editor-small-size);
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.editor-mode-toggle:hover {
+  background: var(--surface-3);
+  border-color: var(--border-hover);
+}
+
+.editor-mode-toggle.active {
+  background: var(--accent-subtle);
+  color: var(--accent-primary);
+  border-color: var(--accent-primary);
+}
+
+.editor-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: 4px;
+  background: var(--surface-2);
+  color: var(--text-2);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.editor-close:hover {
+  background: var(--surface-3);
+  border-color: var(--border-hover);
+  color: var(--text-1);
+}
+
+.editor-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 2rem;
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--border-subtle);
+  gap: 1rem;
+}
+
+.editor-toolbar-center {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1;
+  justify-content: center;
+}
+
+.editor-topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.editor-title-section {
+  width: 100%;
+  max-width: 750px !important;
+  margin: 0 auto;
+  padding: 2.5rem 3rem 0.1rem 3rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
 } 
+
+/* ==========================================================================
+   STYLES DES ACTIONS DE L'ÉDITEUR (FUSIONNÉ DEPUIS editor-actions.css)
+   ========================================================================== */
+
+.editor-action-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: 4px;
+  background: var(--surface-2);
+  color: var(--text-2);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.875rem;
+}
+
+.editor-action-button:hover {
+  background: var(--surface-3);
+  border-color: var(--border-hover);
+  color: var(--text-1);
+}
+
+ 

@@ -1,16 +1,14 @@
-/* Styles dédiés au header image de l’éditeur */
+/* Styles dédiés au header image de l'éditeur */
 
 .editor-header-image {
+  position: relative;
   width: 100%;
-  max-width: 100%;
-  margin: 0 auto 1.5rem;
+  height: 300px;
+  background: var(--surface-2);
   border-radius: 0;
   overflow: hidden;
-  height: 300px;
-  min-height: 300px;
+  margin-bottom: 2rem;
   box-shadow: 0 2px 24px rgba(0,0,0,0.08);
-  position: relative;
-  background: var(--surface-2);
   display: flex;
   align-items: stretch;
   justify-content: center;
@@ -71,7 +69,261 @@
   align-items: center;
   justify-content: center;
 }
+
 .editor-header-image-btn:hover {
   color: var(--accent-primary);
   background: var(--surface-hover);
+}
+
+.editor-header-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: filter 0.2s ease;
+}
+
+.editor-header-image img:hover {
+  filter: brightness(0.95);
+}
+
+.header-image {
+  position: relative;
+  width: 100%;
+  height: 300px;
+  background: var(--surface-2);
+  border-radius: 0;
+  overflow: hidden;
+  margin-bottom: 2rem;
+}
+
+.header-image-close-btn {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.5);
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(8px);
+}
+
+.header-image-close-btn:hover {
+  background: rgba(0, 0, 0, 0.7);
+  border-color: var(--border-hover);
+}
+
+/* ==========================================================================
+   STYLES DU MENU D'IMAGES DE L'ÉDITEUR (FUSIONNÉ DEPUIS editor-image-menu.css)
+   ========================================================================== */
+
+.image-menu-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 90%;
+  max-width: 500px;
+  background: var(--surface-1);
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  z-index: 2000;
+  animation: imageMenuFadeIn 0.3s ease;
+}
+
+@keyframes imageMenuFadeIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+.image-menu-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--surface-2);
+  border-radius: 12px 12px 0 0;
+}
+
+.image-menu-tabs button {
+  flex: 1;
+  padding: 1rem;
+  border: none;
+  background: none;
+  color: var(--text-2);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.image-menu-tabs button:hover {
+  background: var(--surface-3);
+  color: var(--text-1);
+}
+
+.image-menu-tabs button.active {
+  background: var(--accent-subtle);
+  color: var(--accent-primary);
+  border-bottom: 2px solid var(--accent-primary);
+}
+
+.image-menu-content {
+  padding: 2rem;
+}
+
+.image-menu-upload, .image-menu-url, .image-menu-ai {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.image-menu-upload-btn, .image-menu-insert-btn {
+  padding: 0.75rem 1.5rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  background: var(--surface-2);
+  color: var(--text-1);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.image-menu-upload-btn:hover, .image-menu-insert-btn:hover {
+  background: var(--surface-3);
+  border-color: var(--border-hover);
+}
+
+.image-menu-insert-btn[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.image-menu-hint {
+  color: var(--text-3);
+  font-size: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.image-menu-url input, .image-menu-ai input {
+  padding: 0.75rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  background: var(--surface-2);
+  color: var(--text-1);
+  font-size: 0.875rem;
+  transition: border-color 0.2s ease;
+}
+
+.image-menu-url input:focus, .image-menu-ai input:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+}
+
+.image-menu-close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: 4px;
+  background: var(--surface-2);
+  color: var(--text-2);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.image-menu-close:hover {
+  background: var(--surface-3);
+  border-color: var(--border-hover);
+  color: var(--text-1);
+}
+
+.image-menu-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  z-index: 1999;
+}
+
+.editor-image-wrapper {
+  position: relative;
+  display: inline-block;
+  max-width: 100%;
+  margin: 1rem 0;
+}
+
+.editor-image-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 200px;
+  background: var(--surface-2);
+  border: 2px dashed var(--border-subtle);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.editor-image-placeholder:hover {
+  background: var(--surface-3);
+  border-color: var(--border-hover);
+}
+
+.editor-image-placeholder-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--text-3);
+}
+
+.editor-image-placeholder-inner svg {
+  width: 2rem;
+  height: 2rem;
+  opacity: 0.7;
+}
+
+.editor-image-placeholder-inner span {
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.editor-image {
+  width: 100%;
+  height: auto;
+  max-width: 700px;
+  display: block;
+  margin: 0 auto;
+  background: var(--surface-2);
+  border-radius: 10px;
+  box-shadow: 0 2px 12px 0 rgba(0,0,0,0.06);
+  transition: filter 0.18s, box-shadow 0.18s;
+  object-fit: contain;
+}
+
+.editor-image:hover {
+  filter: brightness(0.97) saturate(1.08);
+  box-shadow: 0 4px 24px 0 rgba(0,0,0,0.10);
 } 
