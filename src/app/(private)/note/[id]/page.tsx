@@ -121,7 +121,6 @@ export default function NoteEditorPage() {
   const [publishedUrl, setPublishedUrl] = React.useState<string | null>(null);
   const [isPublishing, setIsPublishing] = React.useState(false);
   const [isInitialLoad, setIsInitialLoad] = React.useState(true);
-  const [realtimeChannel, setRealtimeChannel] = React.useState<any>(null);
   const [lastSavedContent, setLastSavedContent] = React.useState<string>('');
   const [isUpdatingFromRealtime, setIsUpdatingFromRealtime] = React.useState(false);
 
@@ -322,39 +321,14 @@ export default function NoteEditorPage() {
   // --- Gestion centralisée de la visibilité ---
   React.useEffect(() => {
     if (!editor || !noteId) return;
-    let channel: any = null;
     let unsubscribed = false;
 
     // Fonction pour s'abonner au realtime
     const subscribeToNoteRealtime = () => {
-      if (channel) supabase.removeChannel(channel);
-      channel = supabase.channel('realtime-article-' + noteId)
-        .on('postgres_changes', {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'articles',
-          filter: `id=eq.${noteId}`
-        }, async (payload) => {
-
-          // Recharge la note depuis la base
-          setIsUpdatingFromRealtime(true);
-          const note = await getArticleById(noteId);
-                      if (note) {
-            setTitle(note.source_title || '');
-                          setHeaderImageUrl(note.header_image || null);
-            setPublished(!!note.ispublished);
-            editor.commands.setContent(note.markdown_content || '');
-                        setLastSavedContent(note.markdown_content || '');
-          }
-          // Délai pour éviter les boucles infinies
-          setTimeout(() => {
-            setIsUpdatingFromRealtime(false);
-          }, 100);
-        })
-        .subscribe();
-      setRealtimeChannel(channel);
+      // Utiliser l'abonnement Zustand au lieu de l'abonnement direct Supabase
+      // Cela évite les conflits WebSocket et centralise la gestion
       if (process.env.NODE_ENV === 'development') {
-        console.log('[realtime] Canal realtime abonné');
+        console.log('[realtime] Abonnement Zustand activé pour les notes');
       }
     };
 
@@ -377,15 +351,12 @@ export default function NoteEditorPage() {
             console.log('[autosave] Autosave déclenchée par visibilitychange (hidden)');
           }
         }
-        if (channel) {
-          supabase.removeChannel(channel);
-          if (process.env.NODE_ENV === 'development') {
-            console.log('[realtime] Canal realtime désabonné (onglet caché)');
-          }
+        // L'abonnement Zustand reste actif, pas besoin de le désabonner
+        if (process.env.NODE_ENV === 'development') {
+          console.log('[realtime] Abonnement Zustand maintenu (onglet caché)');
         }
       } else if (document.visibilityState === 'visible') {
-        // Refetch la note et réabonne le canal
-
+        // Refetch la note pour s'assurer de la synchronisation
         setIsUpdatingFromRealtime(true);
         const note = await getArticleById(noteId);
                   if (note) {
@@ -398,7 +369,9 @@ export default function NoteEditorPage() {
         setTimeout(() => {
           setIsUpdatingFromRealtime(false);
         }, 100);
-        subscribeToNoteRealtime();
+        if (process.env.NODE_ENV === 'development') {
+          console.log('[realtime] Synchronisation effectuée (onglet visible)');
+        }
       }
     };
 
@@ -424,7 +397,6 @@ export default function NoteEditorPage() {
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('blur', handleWindowBlur);
-      if (channel) supabase.removeChannel(channel);
       // Nettoyer l'abonnement Zustand
       if (notesSubscription) {
         unsubscribeFromAll();
