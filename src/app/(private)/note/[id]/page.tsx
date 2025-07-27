@@ -164,23 +164,31 @@ export default function NoteEditorPage() {
   });
 
   // Fonction dédiée pour sauvegarder l'image d'en-tête
-  const handleHeaderImageSave = async (newHeaderImage: string | null) => {
+  const handleHeaderImageSave = async (newHeaderImage: string | null, newOffset?: number | null) => {
     if (!noteId) return;
     try {
-      // Réinitialiser l'offset à 50.00 pour toute nouvelle image
+      // Logique intelligente pour l'offset :
+      // - Si newOffset est fourni (LLM) → utiliser sa valeur
+      // - Si newOffset est null/undefined → réinitialiser à 50.00
+      const finalOffset = newOffset !== undefined && newOffset !== null ? newOffset : 50.00;
+      
       const payload: Record<string, unknown> = {
         header_image: newHeaderImage,
-        header_image_offset: 50.00,
+        header_image_offset: finalOffset,
       };
       
       if (process.env.NODE_ENV === 'development') {
-        console.log('[header-image] Changement d\'image - réinitialisation de l\'offset à 50.00');
+        if (newOffset !== undefined && newOffset !== null) {
+          console.log(`[header-image] Changement d'image avec offset LLM: ${newOffset}`);
+        } else {
+          console.log('[header-image] Changement d\'image - réinitialisation de l\'offset à 50.00');
+        }
       }
       
       await updateNoteREST(noteId, payload);
       
       // Mettre à jour l'état local pour refléter le changement
-      setHeaderImageOffset(50.00);
+      setHeaderImageOffset(finalOffset);
     } catch (error) {
       console.error('[header-image] Erreur lors de la sauvegarde de l\'image:', error);
     }

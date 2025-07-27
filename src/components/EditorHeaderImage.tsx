@@ -55,6 +55,13 @@ const EditorHeaderImage: React.FC<EditorHeaderImageProps> = ({
   const startOffsetY = useRef(Math.round(headerImageOffset * 100) / 100);
   const currentOffsetRef = useRef(Math.round(headerImageOffset * 100) / 100);
 
+  // Synchroniser l'état local avec la prop headerImageOffset
+  React.useEffect(() => {
+    const newOffset = Math.round(headerImageOffset * 100) / 100;
+    setImageOffsetY(newOffset);
+    currentOffsetRef.current = newOffset;
+  }, [headerImageOffset]);
+
   // Drag logic
   const handleMouseDown = (e: React.MouseEvent) => {
     dragging.current = true;
