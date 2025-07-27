@@ -15,6 +15,7 @@ interface EditorKebabMenuProps {
   publishedUrl?: string;
   fullWidth: boolean;
   setFullWidth: (v: boolean) => void;
+  isPublishing?: boolean;
 }
 
 const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
@@ -28,6 +29,7 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
   publishedUrl,
   fullWidth,
   setFullWidth,
+  isPublishing = false,
 }) => {
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -104,10 +106,16 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
     {
       id: 'published',
       label: 'Published',
-      onClick: () => { setPublished(!published); },
+      onClick: () => { 
+        // Éviter la boucle infinie en désactivant pendant la publication
+        if (!isPublishing) {
+          setPublished(!published); 
+        }
+      },
       color: published ? '#10b981' : '#D4D4D4',
       type: 'switch' as const,
-      showCopyButton: published && publishedUrl
+      showCopyButton: published && publishedUrl,
+      disabled: isPublishing
     }
   ];
 
@@ -157,18 +165,20 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
                   {/* Switch toggle */}
                   <button
                     onClick={option.onClick}
+                    disabled={option.disabled}
                     style={{
                       width: 44,
                       height: 24,
                       background: (option.id === 'a4Mode' ? a4Mode : published) ? '#10b981' : '#444',
                       border: 'none',
                       borderRadius: 12,
-                      cursor: 'pointer',
+                      cursor: option.disabled ? 'not-allowed' : 'pointer',
                       position: 'relative',
                       transition: 'background-color 0.2s ease',
                       display: 'flex',
                       alignItems: 'center',
-                      padding: '2px'
+                      padding: '2px',
+                      opacity: option.disabled ? 0.5 : 1
                     }}
                   >
                     <div

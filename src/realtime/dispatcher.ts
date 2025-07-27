@@ -90,6 +90,10 @@ let notesSubscriptionActive = false;
 let dossiersSubscriptionActive = false;
 let classeursSubscriptionActive = false;
 
+// Système de déduplication pour éviter les boucles infinies
+let lastProcessedEvents = new Map<string, number>();
+const DEDUPLICATION_WINDOW = 1000; // 1 seconde
+
 /**
  * Monitoring des souscriptions realtime
  */
@@ -131,13 +135,32 @@ export function subscribeToNotes() {
       'postgres_changes',
       { event: '*', schema: 'public', table: 'articles' },
       (payload) => {
-        console.log('[REALTIME] 📝 Event note reçu:', payload.eventType, payload);
+        // Déduplication pour éviter les boucles infinies
+        const eventKey = `${payload.eventType}-${(payload.new as any)?.id || (payload.old as any)?.id}-${(payload.new as any)?.updated_at || (payload.old as any)?.updated_at}`;
+        const now = Date.now();
+        const lastProcessed = lastProcessedEvents.get(eventKey);
+        
+        if (lastProcessed && (now - lastProcessed) < DEDUPLICATION_WINDOW) {
+          // Événement déjà traité récemment, ignorer
+          return;
+        }
+        
+        lastProcessedEvents.set(eventKey, now);
+        
+        // Nettoyer les anciens événements (garder seulement les 100 derniers)
+        if (lastProcessedEvents.size > 100) {
+          const oldestAllowed = now - (DEDUPLICATION_WINDOW * 10);
+          for (const [key, timestamp] of lastProcessedEvents.entries()) {
+            if (timestamp < oldestAllowed) {
+              lastProcessedEvents.delete(key);
+            }
+          }
+        }
         
         const store = useFileSystemStore.getState();
         
         switch (payload.eventType) {
           case 'INSERT':
-            console.log('[REALTIME] ✅ Note créée:', payload.new.source_title);
             // Convertir les données Supabase vers le type Note
             const newNote = {
               id: payload.new.id,
@@ -151,11 +174,9 @@ export function subscribeToNotes() {
               ...payload.new // Inclure tous les autres champs
             };
             store.addNote(newNote);
-            console.log('[REALTIME] ✅ Note ajoutée au store Zustand');
             break;
             
           case 'UPDATE':
-            console.log('[REALTIME] 🔄 Note mise à jour:', payload.new.source_title);
             // Convertir les données Supabase vers le type Note
             const updatedNote = {
               id: payload.new.id,
@@ -169,46 +190,23 @@ export function subscribeToNotes() {
               ...payload.new // Inclure tous les autres champs
             };
             store.updateNote(payload.new.id, updatedNote);
-            console.log('[REALTIME] ✅ Note mise à jour dans le store Zustand');
             break;
             
           case 'DELETE':
-            console.log('[REALTIME] 🗑️ Note supprimée:', payload.old.source_title);
             store.removeNote(payload.old.id);
-            console.log('[REALTIME] ✅ Note supprimée du store Zustand');
             break;
         }
       }
     )
     .subscribe((status) => {
-      console.log('[REALTIME] 📝 Statut souscription notes:', status);
       if (status === 'SUBSCRIBED') {
-        console.log('[REALTIME] ✅ Souscription notes activée avec succès');
         notesSubscriptionActive = true;
-      } else if (status === 'CLOSED') {
-        console.log('[REALTIME] ❌ Souscription notes fermée - reconnexion...');
+      } else if (status === 'CLOSED' || status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
         notesSubscriptionActive = false;
-        // Reconnexion automatique après fermeture
+        // Reconnexion automatique après fermeture/erreur/timeout
         setTimeout(() => {
-          console.log('[REALTIME] 🔄 Reconnexion souscription notes...');
-          subscribeToNotes();
-        }, 1000);
-      } else if (status === 'CHANNEL_ERROR') {
-        console.log('[REALTIME] ❌ Erreur souscription notes - reconnexion...');
-        notesSubscriptionActive = false;
-        // Reconnexion automatique après erreur
-        setTimeout(() => {
-          console.log('[REALTIME] 🔄 Reconnexion souscription notes après erreur...');
           subscribeToNotes();
         }, 2000);
-      } else if (status === 'TIMED_OUT') {
-        console.log('[REALTIME] ⏰ Timeout souscription notes - reconnexion...');
-        notesSubscriptionActive = false;
-        // Reconnexion automatique après timeout
-        setTimeout(() => {
-          console.log('[REALTIME] 🔄 Reconnexion souscription notes après timeout...');
-          subscribeToNotes();
-        }, 1000);
       }
     });
     
@@ -228,13 +226,10 @@ export function subscribeToDossiers() {
       'postgres_changes',
       { event: '*', schema: 'public', table: 'folders' },
       (payload) => {
-        console.log('[REALTIME] 📁 Event dossier reçu:', payload.eventType, payload);
-        
         const store = useFileSystemStore.getState();
         
         switch (payload.eventType) {
           case 'INSERT':
-            console.log('[REALTIME] ✅ Dossier créé:', payload.new.name);
             // Convertir les données Supabase vers le type Folder
             const newFolder = {
               id: payload.new.id,
@@ -244,11 +239,9 @@ export function subscribeToDossiers() {
               ...payload.new // Inclure tous les autres champs
             };
             store.addFolder(newFolder);
-            console.log('[REALTIME] ✅ Dossier ajouté au store Zustand');
             break;
             
           case 'UPDATE':
-            console.log('[REALTIME] 🔄 Dossier mis à jour:', payload.new.name);
             // Convertir les données Supabase vers le type Folder
             const updatedFolder = {
               id: payload.new.id,
@@ -258,46 +251,23 @@ export function subscribeToDossiers() {
               ...payload.new // Inclure tous les autres champs
             };
             store.updateFolder(payload.new.id, updatedFolder);
-            console.log('[REALTIME] ✅ Dossier mis à jour dans le store Zustand');
             break;
             
           case 'DELETE':
-            console.log('[REALTIME] 🗑️ Dossier supprimé:', payload.old.name);
             store.removeFolder(payload.old.id);
-            console.log('[REALTIME] ✅ Dossier supprimé du store Zustand');
             break;
         }
       }
     )
     .subscribe((status) => {
-      console.log('[REALTIME] 📁 Statut souscription dossiers:', status);
       if (status === 'SUBSCRIBED') {
-        console.log('[REALTIME] ✅ Souscription dossiers activée avec succès');
         dossiersSubscriptionActive = true;
-      } else if (status === 'CLOSED') {
-        console.log('[REALTIME] ❌ Souscription dossiers fermée - reconnexion...');
+      } else if (status === 'CLOSED' || status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
         dossiersSubscriptionActive = false;
-        // Reconnexion automatique après fermeture
+        // Reconnexion automatique après fermeture/erreur/timeout
         setTimeout(() => {
-          console.log('[REALTIME] 🔄 Reconnexion souscription dossiers...');
-          subscribeToDossiers();
-        }, 1000);
-      } else if (status === 'CHANNEL_ERROR') {
-        console.log('[REALTIME] ❌ Erreur souscription dossiers - reconnexion...');
-        dossiersSubscriptionActive = false;
-        // Reconnexion automatique après erreur
-        setTimeout(() => {
-          console.log('[REALTIME] 🔄 Reconnexion souscription dossiers après erreur...');
           subscribeToDossiers();
         }, 2000);
-      } else if (status === 'TIMED_OUT') {
-        console.log('[REALTIME] ⏰ Timeout souscription dossiers - reconnexion...');
-        dossiersSubscriptionActive = false;
-        // Reconnexion automatique après timeout
-        setTimeout(() => {
-          console.log('[REALTIME] 🔄 Reconnexion souscription dossiers après timeout...');
-          subscribeToDossiers();
-        }, 1000);
       }
     });
     
@@ -317,13 +287,10 @@ export function subscribeToClasseurs() {
       'postgres_changes',
       { event: '*', schema: 'public', table: 'classeurs' },
       (payload) => {
-        console.log('[REALTIME] 📚 Event classeur reçu:', payload.eventType, payload);
-        
         const store = useFileSystemStore.getState();
         
         switch (payload.eventType) {
           case 'INSERT':
-            console.log('[REALTIME] ✅ Classeur créé:', payload.new.name);
             // Convertir les données Supabase vers le type Classeur
             const newClasseur = {
               id: payload.new.id,
@@ -331,11 +298,9 @@ export function subscribeToClasseurs() {
               ...payload.new // Inclure tous les autres champs
             };
             store.addClasseur(newClasseur);
-            console.log('[REALTIME] ✅ Classeur ajouté au store Zustand');
             break;
             
           case 'UPDATE':
-            console.log('[REALTIME] 🔄 Classeur mis à jour:', payload.new.name);
             // Convertir les données Supabase vers le type Classeur
             const updatedClasseur = {
               id: payload.new.id,
@@ -343,46 +308,23 @@ export function subscribeToClasseurs() {
               ...payload.new // Inclure tous les autres champs
             };
             store.updateClasseur(payload.new.id, updatedClasseur);
-            console.log('[REALTIME] ✅ Classeur mis à jour dans le store Zustand');
             break;
             
           case 'DELETE':
-            console.log('[REALTIME] 🗑️ Classeur supprimé:', payload.old.name);
             store.removeClasseur(payload.old.id);
-            console.log('[REALTIME] ✅ Classeur supprimé du store Zustand');
             break;
         }
       }
     )
     .subscribe((status) => {
-      console.log('[REALTIME] 📚 Statut souscription classeurs:', status);
       if (status === 'SUBSCRIBED') {
-        console.log('[REALTIME] ✅ Souscription classeurs activée avec succès');
         classeursSubscriptionActive = true;
-      } else if (status === 'CLOSED') {
-        console.log('[REALTIME] ❌ Souscription classeurs fermée - reconnexion...');
+      } else if (status === 'CLOSED' || status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
         classeursSubscriptionActive = false;
-        // Reconnexion automatique après fermeture
+        // Reconnexion automatique après fermeture/erreur/timeout
         setTimeout(() => {
-          console.log('[REALTIME] 🔄 Reconnexion souscription classeurs...');
-          subscribeToClasseurs();
-        }, 1000);
-      } else if (status === 'CHANNEL_ERROR') {
-        console.log('[REALTIME] ❌ Erreur souscription classeurs - reconnexion...');
-        classeursSubscriptionActive = false;
-        // Reconnexion automatique après erreur
-        setTimeout(() => {
-          console.log('[REALTIME] 🔄 Reconnexion souscription classeurs après erreur...');
           subscribeToClasseurs();
         }, 2000);
-      } else if (status === 'TIMED_OUT') {
-        console.log('[REALTIME] ⏰ Timeout souscription classeurs - reconnexion...');
-        classeursSubscriptionActive = false;
-        // Reconnexion automatique après timeout
-        setTimeout(() => {
-          console.log('[REALTIME] 🔄 Reconnexion souscription classeurs après timeout...');
-          subscribeToClasseurs();
-        }, 1000);
       }
     });
     

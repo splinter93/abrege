@@ -791,10 +791,11 @@ export default function NoteEditorPage() {
         slashLang={slashLang}
         setSlashLang={setSlashLang}
         published={published}
-        setPublished={isPublishing ? () => {} : handleTogglePublished}
+        setPublished={handleTogglePublished}
         publishedUrl={publishedUrl || undefined}
         fullWidth={fullWidth}
         setFullWidth={setFullWidth}
+        isPublishing={isPublishing}
       />
     </div>
   );
