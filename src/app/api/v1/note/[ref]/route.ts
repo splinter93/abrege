@@ -96,13 +96,13 @@ export async function PUT(req: NextRequest, { params }: any): Promise<Response> 
       updateData.html_content = body.html_content;
     }
     
-    const { data: updatedNote, error } = await supabase
+        const { data: updatedNote, error } = await supabase
       .from('articles')
       .update(updateData)
       .eq('id', noteId)
       .select()
       .single();
-    
+
     if (error) {
       return new Response(JSON.stringify({ error: error.message }), { status: 500 });
     }

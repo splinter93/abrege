@@ -92,7 +92,7 @@ const createNotebookREST = async (payload: Record<string, any>) => {
 
 // Mise à jour de note via l'API REST
 const updateNoteREST = async (ref: string, payload: Record<string, any>) => {
-  console.log('[updateNoteREST] Payload envoyé:', payload); // DEBUG
+
   const res = await fetch(`/api/v1/note/${ref}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },

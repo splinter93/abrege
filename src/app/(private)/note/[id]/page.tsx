@@ -117,6 +117,10 @@ export default function NoteEditorPage() {
   const [published, setPublished] = React.useState(false);
   const [publishedUrl, setPublishedUrl] = React.useState<string | null>(null);
   const [isPublishing, setIsPublishing] = React.useState(false);
+  const [isInitialLoad, setIsInitialLoad] = React.useState(true);
+  const [realtimeChannel, setRealtimeChannel] = React.useState<any>(null);
+  const [lastSavedContent, setLastSavedContent] = React.useState<string>('');
+  const [isUpdatingFromRealtime, setIsUpdatingFromRealtime] = React.useState(false);
 
   // Hook de persistance locale - TEMPORAIREMENT DÉSACTIVÉ
   // const {
@@ -143,7 +147,7 @@ export default function NoteEditorPage() {
           markdown_content,
           html_content,
         };
-        // Correction : envoyer header_image même si null
+        // Ne sauvegarder l'image que si elle est explicitement fournie
         if (headerImage !== undefined) {
           payload.header_image = headerImage;
         }
@@ -158,6 +162,20 @@ export default function NoteEditorPage() {
     },
   });
 
+  // Fonction dédiée pour sauvegarder l'image d'en-tête
+  const handleHeaderImageSave = async (newHeaderImage: string | null) => {
+    if (!noteId) return;
+    try {
+
+      const payload: Record<string, unknown> = {
+        header_image: newHeaderImage,
+      };
+      await updateNoteREST(noteId, payload);
+    } catch (error) {
+      console.error('[header-image] Erreur lors de la sauvegarde de l\'image:', error);
+    }
+  };
+
   // Chargement initial de la note (une seule fois)
   React.useEffect(() => {
     if (!editor || !noteId || hasInitialized) return;
@@ -170,6 +188,7 @@ export default function NoteEditorPage() {
     getArticleById(noteId)
       .then((note: Record<string, unknown>) => {
         if (note) {
+
           // Si une version persistée existe, l'utiliser en priorité
           // if (persistedNote) {
           //   setTitle(persistedNote.title);
@@ -191,30 +210,7 @@ export default function NoteEditorPage() {
       });
   }, [editor, noteId, hasInitialized, getHeadingsFromEditor]);
 
-  // Realtime : recharge la note en direct si modifiée ailleurs
-  React.useEffect(() => {
-    if (!editor || !noteId) return;
-    const channel = supabase.channel('realtime-article-' + noteId)
-      .on('postgres_changes', {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'articles',
-        filter: `id=eq.${noteId}`
-      }, async () => {
-        // Recharge la note depuis la base
-        const note = await getArticleById(noteId);
-        if (note) {
-          setTitle(note.source_title || '');
-          setHeaderImageUrl(note.header_image || null);
-          setPublished(!!note.ispublished);
-          editor.commands.setContent(note.markdown_content || '');
-        }
-      })
-      .subscribe();
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [editor, noteId]);
+
 
   // Lors du chargement initial ou reload, récupérer l'URL publique si la note est publiée
   // Récupérer l'URL publiée au chargement initial seulement
@@ -287,68 +283,181 @@ export default function NoteEditorPage() {
     };
   }, [editor]);
 
-  // Autosave à chaque modif (debounce 1s) + Persistance locale
+  // --- Gestion centralisée de la visibilité ---
   React.useEffect(() => {
-    if (!editor) return;
-    let timeout: NodeJS.Timeout | null = null;
+    if (!editor || !noteId) return;
+    let channel: any = null;
+    let unsubscribed = false;
 
-    const triggerSave = () => {
-      if (timeout) clearTimeout(timeout);
-      timeout = setTimeout(() => {
-        handleSave(title, '');
-      }, 1000);
+    // Fonction pour s'abonner au realtime
+    const subscribeToNoteRealtime = () => {
+      if (channel) supabase.removeChannel(channel);
+      channel = supabase.channel('realtime-article-' + noteId)
+        .on('postgres_changes', {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'articles',
+          filter: `id=eq.${noteId}`
+        }, async (payload) => {
+
+          // Recharge la note depuis la base
+          setIsUpdatingFromRealtime(true);
+          const note = await getArticleById(noteId);
+                      if (note) {
+            setTitle(note.source_title || '');
+                          setHeaderImageUrl(note.header_image || null);
+            setPublished(!!note.ispublished);
+            editor.commands.setContent(note.markdown_content || '');
+                        setLastSavedContent(note.markdown_content || '');
+          }
+          // Délai pour éviter les boucles infinies
+          setTimeout(() => {
+            setIsUpdatingFromRealtime(false);
+          }, 100);
+        })
+        .subscribe();
+      setRealtimeChannel(channel);
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[realtime] Canal realtime abonné');
+      }
     };
-    editor.on('transaction', triggerSave);
 
-    // Persistance locale automatique des changements de contenu
-    // const triggerLocalSave = () => {
-    //   const content = editor.storage.markdown.getMarkdown();
-    //   saveNoteLocally(noteId, title, content);
-    // };
-    // editor.on('transaction', triggerLocalSave);
+    subscribeToNoteRealtime();
 
-    // --- PATCH : Sauvegarde immédiate avant de quitter l'onglet ---
-    const handleVisibilityChange = () => {
+    const handleVisibilityChange = async () => {
       if (document.visibilityState === 'hidden') {
-        if (timeout) {
-          clearTimeout(timeout);
+        // Vérifie s'il y a des changements non sauvegardés
+        const currentContent = editor?.storage?.markdown?.getMarkdown() || '';
+        if (currentContent !== lastSavedContent && !isInitialLoad && !isUpdatingFromRealtime) {
+          if (process.env.NODE_ENV === 'development') {
+            console.log('[visibility] Onglet caché, autosave avant désabonnement realtime...');
+          }
+          await handleSave(title, currentContent);
+          setLastSavedContent(currentContent);
+          if (process.env.NODE_ENV === 'development') {
+            console.log('[autosave] Autosave déclenchée par visibilitychange (hidden)');
+          }
         }
-        handleSave(title, '');
+        if (channel) {
+          supabase.removeChannel(channel);
+          if (process.env.NODE_ENV === 'development') {
+            console.log('[realtime] Canal realtime désabonné (onglet caché)');
+          }
+        }
+      } else if (document.visibilityState === 'visible') {
+        // Refetch la note et réabonne le canal
+
+        setIsUpdatingFromRealtime(true);
+        const note = await getArticleById(noteId);
+                  if (note) {
+            setTitle(note.source_title || '');
+                          setHeaderImageUrl(note.header_image || null);
+            setPublished(!!note.ispublished);
+            editor.commands.setContent(note.markdown_content || '');
+            setLastSavedContent(note.markdown_content || '');
+        }
+        setTimeout(() => {
+          setIsUpdatingFromRealtime(false);
+        }, 100);
+        subscribeToNoteRealtime();
       }
     };
+
+    // Mécanisme supplémentaire pour macOS (swipe entre fenêtres)
+    const handleWindowBlur = async () => {
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[window-blur] Fenêtre perd le focus (macOS swipe)...');
+      }
+      // Sauvegarde immédiate quand la fenêtre perd le focus
+      const currentContent = editor?.storage?.markdown?.getMarkdown() || '';
+      if (currentContent !== lastSavedContent && !isInitialLoad && !isUpdatingFromRealtime) {
+        await handleSave(title, currentContent);
+        setLastSavedContent(currentContent);
+        if (process.env.NODE_ENV === 'development') {
+          console.log('[autosave] Autosave déclenchée par window.blur (macOS swipe)');
+        }
+      }
+    };
+
     document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('blur', handleWindowBlur);
 
-    // Ajoute le raccourci clavier Cmd+S / Ctrl+S pour sauvegarde manuelle
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 's') {
-        e.preventDefault();
-        handleSave(title, '');
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
     return () => {
-      editor.off('transaction', triggerSave);
-      // editor.off('transaction', triggerLocalSave);
-      if (timeout) clearTimeout(timeout);
-      window.removeEventListener('keydown', handleKeyDown);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('blur', handleWindowBlur);
+      if (channel) supabase.removeChannel(channel);
+      unsubscribed = true;
     };
-  }, [editor, title, handleSave, isSaving]);
+  }, [editor, noteId, title, isInitialLoad]); // Retiré handleSave et lastSavedContent des dépendances
 
-  // Autosave sur modification du titre ou de l'image (en plus du texte)
+  // --- Flag isInitialLoad pour bloquer autosave au chargement ---
   React.useEffect(() => {
-    if (!editor) return;
-    let timeout: NodeJS.Timeout | null = null;
-    if (title || headerImageUrl) {
-      if (timeout) clearTimeout(timeout);
-      timeout = setTimeout(() => {
-        handleSave(title, editor.getText());
-      }, 1000);
+    if (hasInitialized && isInitialLoad) {
+      setIsInitialLoad(false);
+      // Initialise les refs avec les valeurs actuelles
+      lastSavedTitleRef.current = title;
+      lastSavedContentRef.current = editor?.storage.markdown.getMarkdown() || '';
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[init] Chargement initial terminé, autosave activée');
+      }
     }
-    return () => {
-      if (timeout) clearTimeout(timeout);
+  }, [hasInitialized, isInitialLoad, title, editor]);
+
+  // --- Autosave unifiée (contenu, titre uniquement) ---
+  const autosaveTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
+  const lastSavedTitleRef = React.useRef<string>('');
+  const lastSavedContentRef = React.useRef<string>('');
+  
+  React.useEffect(() => {
+    if (!editor || isInitialLoad) return;
+    
+    const triggerUnifiedSave = () => {
+      if (autosaveTimeoutRef.current) clearTimeout(autosaveTimeoutRef.current);
+      autosaveTimeoutRef.current = setTimeout(async () => {
+        // Éviter l'autosave si on vient de recevoir une mise à jour realtime
+        if (isUpdatingFromRealtime) {
+          if (process.env.NODE_ENV === 'development') {
+            console.log('[autosave] Ignoré car mise à jour realtime en cours');
+          }
+          return;
+        }
+        
+        const currentContent = editor.storage.markdown.getMarkdown();
+        const titleChanged = title !== lastSavedTitleRef.current;
+        const contentChanged = currentContent !== lastSavedContentRef.current;
+        
+        // Ne sauvegarde que si le titre ou le contenu ont changé
+        if (titleChanged || contentChanged) {
+          await handleSave(title, currentContent);
+          
+          // Met à jour les refs après sauvegarde
+          lastSavedTitleRef.current = title;
+          lastSavedContentRef.current = currentContent;
+          setLastSavedContent(currentContent);
+          
+          if (process.env.NODE_ENV === 'development') {
+            const changes = [];
+            if (titleChanged) changes.push('titre');
+            if (contentChanged) changes.push('contenu');
+            console.log(`[autosave] Autosave déclenchée (${changes.join(', ')})`);
+          }
+        }
+      }, 1000);
     };
-  }, [title, headerImageUrl, editor]);
+    
+    // Écoute les transactions de l'éditeur
+    editor.on('transaction', triggerUnifiedSave);
+    
+    // Écoute les changements de titre uniquement
+    if (title !== lastSavedTitleRef.current) {
+      triggerUnifiedSave();
+    }
+    
+    return () => {
+      editor.off('transaction', triggerUnifiedSave);
+      if (autosaveTimeoutRef.current) clearTimeout(autosaveTimeoutRef.current);
+    };
+  }, [editor, title, isInitialLoad, isUpdatingFromRealtime]);
 
   // Persistance locale des changements de titre
   // React.useEffect(() => {
@@ -358,12 +467,7 @@ export default function NoteEditorPage() {
   //   saveNoteLocally(noteId, title, content);
   // }, [title, noteId, hasInitialized, updateNoteTitle, saveNoteLocally, editor]);
 
-  // Sauvegarde automatique du header image
-  React.useEffect(() => {
-    if (!editor || !hasInitialized) return;
-    handleSave(title, editor.getText());
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [headerImageUrl]);
+
 
   // Ajoute des lignes vides à la fin pour garantir au moins 7 lignes éditables (sans boucle infinie)
   React.useEffect(() => {
@@ -647,7 +751,9 @@ export default function NoteEditorPage() {
           {headerImageUrl ? (
             <EditorHeaderImage
               headerImageUrl={headerImageUrl}
-              onHeaderChange={setHeaderImageUrl}
+              onHeaderChange={(newImage) => {
+                handleHeaderImageSave(newImage);
+              }}
               imageMenuOpen={imageMenuOpen}
               onImageMenuOpen={() => setImageMenuOpen(true)}
               onImageMenuClose={() => setImageMenuOpen(false)}
@@ -659,7 +765,10 @@ export default function NoteEditorPage() {
             <button
                 title="Ajouter une image d’en-tête"
                 style={{ position: 'fixed', top: 64, right: 0, background: 'none', border: 'none', color: 'var(--text-2)', fontSize: 20, cursor: 'pointer', padding: '10px 18px 10px 8px', borderRadius: 8, zIndex: 1200, transition: 'background 0.18s, color 0.18s' }}
-                onClick={() => setHeaderImageUrl('https://images.unsplash.com/photo-1454982523318-4b6396f39d3a?q=80&w=2070&auto=format&fit=crop')}
+                onClick={() => {
+                  const newImage = 'https://images.unsplash.com/photo-1454982523318-4b6396f39d3a?q=80&w=2070&auto=format&fit=crop';
+                  handleHeaderImageSave(newImage);
+                }}
             >
                 <FiImage size={20} />
             </button>

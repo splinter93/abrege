@@ -43,7 +43,8 @@ export default function useEditorSave({ onSave, editor, headerImage, titleAlign 
         console.log('[AUTOSAVE] Sauvegarde déclenchée', { newTitle, markdown_content });
       }
       try {
-        await onSave({ title: newTitle, markdown_content, html_content, headerImage, titleAlign: align });
+        // Ne pas inclure headerImage dans l'autosave de texte pour éviter les conflits
+        await onSave({ title: newTitle, markdown_content, html_content, titleAlign: align });
         setLastSaved(new Date());
       } catch (e) {
         toast.error('Erreur lors de la sauvegarde');
@@ -57,7 +58,7 @@ export default function useEditorSave({ onSave, editor, headerImage, titleAlign 
     } else {
       toast.error('Erreur : impossible de sauvegarder (éditeur ou callback manquant)');
     }
-  }, [onSave, editor, headerImage, titleAlign]);
+  }, [onSave, editor, titleAlign]);
 
   return {
     isSaving,
