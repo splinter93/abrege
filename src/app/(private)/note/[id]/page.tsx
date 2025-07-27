@@ -36,12 +36,12 @@ import LogoScrivia from '@/components/LogoScrivia';
 
 type SlashCommand = {
   id: string;
-  alias: Record<string, string>;
+  alias: Record<string, string | string[]>;
   label: Record<string, string>;
   description: Record<string, string>;
   preview?: string;
-  action?: (editor: any) => void;
-  [key: string]: any;
+  action?: (editor: unknown) => void;
+  [key: string]: unknown;
 };
 
 const Logo = () => {
@@ -118,12 +118,15 @@ export default function NoteEditorPage() {
 
   // Hook de sauvegarde premium
   const { isSaving, handleSave } = useEditorSave({
-    editor: (editor as any) ?? undefined,
+    editor: editor ? {
+      getHTML: () => editor.getHTML(),
+      storage: { markdown: { getMarkdown: () => editor.storage.markdown.getMarkdown() } }
+    } : undefined,
     headerImage: headerImageUrl,
     onSave: async ({ title, markdown_content, html_content, headerImage }) => {
       if (!noteId) return;
       try {
-        const payload: any = {
+        const payload: Record<string, unknown> = {
           source_title: title,
           markdown_content,
           html_content,
@@ -146,13 +149,13 @@ export default function NoteEditorPage() {
     setLoading(true);
     setLoadError(null);
     getArticleById(noteId)
-      .then((note: any) => {
+      .then((note: Record<string, unknown>) => {
         if (note) {
-          setTitle(note.source_title || '');
-          setHeaderImageUrl(note.header_image || null);
-          setPublished(!!note.ispublished);
-          setPublishedUrl(note.public_url || null); // <-- utilise la colonne public_url
-          editor.commands.setContent(note.markdown_content || '');
+          setTitle((note.source_title as string) || '');
+          setHeaderImageUrl((note.header_image as string) || null);
+          setPublished(!!(note.ispublished as boolean));
+          setPublishedUrl((note.public_url as string) || null); // <-- utilise la colonne public_url
+          editor.commands.setContent((note.markdown_content as string) || '');
         }
         setHasInitialized(true);
         setLoading(false);
@@ -689,7 +692,7 @@ export default function NoteEditorPage() {
                 onInsert={(cmd: SlashCommand) => {
                   if (!editor) return;
                   if (typeof cmd.action === 'function') {
-                    cmd.action(editor);
+                    cmd.action(editor as unknown);
                   }
                 }}
               />
