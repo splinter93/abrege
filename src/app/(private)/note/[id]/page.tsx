@@ -7,6 +7,7 @@ import { FiEye, FiX, FiImage } from 'react-icons/fi';
 import EditorKebabMenu from '@/components/EditorKebabMenu';
 import React, { useRef, useEffect } from 'react';
 import EditorHeaderImage from '@/components/EditorHeaderImage';
+import NoteHeaderLayout from '@/components/NoteHeaderLayout';
 import TableOfContents from '@/components/TableOfContents';
 import { EditorContent } from '@tiptap/react';
 import slugify from 'slugify';
@@ -102,6 +103,7 @@ export default function NoteEditorPage() {
   const [headerImageOffset, setHeaderImageOffset] = React.useState<number>(50);
   const [headerImageBlur, setHeaderImageBlur] = React.useState<number>(0);
   const [headerImageOverlay, setHeaderImageOverlay] = React.useState<number>(0);
+  const [headerTitleInImage, setHeaderTitleInImage] = React.useState<boolean>(false);
   const [imageMenuOpen, setImageMenuOpen] = React.useState(false);
   const [kebabOpen, setKebabOpen] = React.useState(false);
   const [showPreview, setShowPreview] = React.useState(false);
@@ -235,6 +237,23 @@ export default function NoteEditorPage() {
     }
   };
 
+  // Fonction dédiée pour sauvegarder la position du titre
+  const handleHeaderTitleInImageSave = async (newValue: boolean) => {
+    if (!noteId) return;
+    try {
+      const payload: Record<string, unknown> = {
+        header_title_in_image: newValue,
+      };
+      await updateNoteREST(noteId, payload);
+      setHeaderTitleInImage(newValue);
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[header-image] Toggle titre dans image →', newValue);
+      }
+    } catch (error) {
+      console.error('[header-title-in-image] Erreur lors de la sauvegarde de la position du titre:', error);
+    }
+  };
+
   // Chargement initial de la note (une seule fois)
   React.useEffect(() => {
     if (!editor || !noteId || hasInitialized) return;
@@ -258,8 +277,9 @@ export default function NoteEditorPage() {
           // }
           setHeaderImageUrl((note.header_image as string) || null);
           setHeaderImageOffset((note.header_image_offset as number) ?? 50);
-          setHeaderImageBlur((note.header_image_blur as number) || 0);
-          setHeaderImageOverlay((note.header_image_overlay as number) || 0);
+          setHeaderImageBlur((note.header_image_blur as number) ?? 0);
+          setHeaderImageOverlay((note.header_image_overlay as number) ?? 0);
+          setHeaderTitleInImage((note.header_title_in_image as boolean) ?? false);
           setPublished(!!(note.ispublished as boolean));
           setPublishedUrl((note.public_url as string) || null);
         }
@@ -816,34 +836,39 @@ export default function NoteEditorPage() {
           />
         ) : (
         <>
-          {/* Header image premium */}
-          {headerImageUrl ? (
-            <EditorHeaderImage
-              headerImageUrl={headerImageUrl}
-              headerImageOffset={headerImageOffset}
-              headerImageBlur={headerImageBlur}
-              headerImageOverlay={headerImageOverlay}
-              onHeaderChange={(newImage) => {
-                handleHeaderImageSave(newImage);
-              }}
-              onHeaderOffsetChange={(newOffset) => {
-                handleHeaderImageOffsetSave(newOffset);
-              }}
-              onHeaderBlurChange={(newBlur) => {
-                handleHeaderImageBlurSave(newBlur);
-              }}
-              onHeaderOverlayChange={(newOverlay) => {
-                handleHeaderImageOverlaySave(newOverlay);
-              }}
-              imageMenuOpen={imageMenuOpen}
-              onImageMenuOpen={() => setImageMenuOpen(true)}
-              onImageMenuClose={() => setImageMenuOpen(false)}
-              noteId={noteId}
-              userId={userId}
-            />
-          ) : (
-            <div>
-            <button
+          <div style={{ position: 'relative', width: '100%' }}>
+            {/* Header image premium */}
+            {headerImageUrl ? (
+              <EditorHeaderImage
+                headerImageUrl={headerImageUrl}
+                headerImageOffset={headerImageOffset}
+                headerImageBlur={headerImageBlur}
+                headerImageOverlay={headerImageOverlay}
+                headerTitleInImage={headerTitleInImage}
+                onHeaderChange={(newImage) => {
+                  handleHeaderImageSave(newImage);
+                }}
+                onHeaderOffsetChange={(newOffset) => {
+                  handleHeaderImageOffsetSave(newOffset);
+                }}
+                onHeaderBlurChange={(newBlur) => {
+                  handleHeaderImageBlurSave(newBlur);
+                }}
+                onHeaderOverlayChange={(newOverlay) => {
+                  handleHeaderImageOverlaySave(newOverlay);
+                }}
+                onHeaderTitleInImageChange={(newValue) => {
+                  handleHeaderTitleInImageSave(newValue);
+                }}
+                imageMenuOpen={imageMenuOpen}
+                onImageMenuOpen={() => setImageMenuOpen(true)}
+                onImageMenuClose={() => setImageMenuOpen(false)}
+                noteId={noteId}
+                userId={userId}
+              />
+            ) : (
+              <div>
+              <button
                 title="Ajouter une image d’en-tête"
                 style={{ position: 'fixed', top: 64, right: 0, background: 'none', border: 'none', color: 'var(--text-2)', fontSize: 20, cursor: 'pointer', padding: '10px 18px 10px 8px', borderRadius: 8, zIndex: 1200, transition: 'background 0.18s, color 0.18s' }}
                 onClick={() => {
@@ -853,86 +878,68 @@ export default function NoteEditorPage() {
             >
                 <FiImage size={20} />
             </button>
-            </div>
-          )}
-          {/* Titre premium éditable */}
-          <div style={{ width: '100%', display: 'flex', justifyContent: 'center', marginTop: 16 }}>
-            <textarea
-              ref={titleRef}
-              value={title}
-              onChange={e => setTitle(e.target.value)}
-              placeholder="Titre de la note…"
-              rows={1}
-              className="editor-title"
-              style={{
-                width: '100%',
-                maxWidth: fullWidth ? 1000 : 750,
-                fontSize: '2.25rem',
-                fontWeight: 700,
-                fontFamily: 'Noto Sans, Inter, Arial, sans-serif',
-                color: 'var(--editor-text-color)',
-                background: 'none',
-                border: 'none',
-                outline: 'none',
-                padding: '0 0 8px 0',
-                margin: 0,
-                textAlign: 'left',
-                letterSpacing: '-0.02em',
-                transition: 'font-size 0.2s, color 0.2s',
-                resize: 'none',
-                overflow: 'visible',
-                lineHeight: 1.15,
-                minHeight: '45px',
-                height: 'auto',
-              }}
-              onInput={e => {
-                const el = e.currentTarget;
-                el.style.height = 'auto';
-                el.style.height = Math.min(el.scrollHeight, 6 * 45) + 'px';
-              }}
+              </div>
+            )}
+            {/* Zone de texte premium sous le titre */}
+            <NoteHeaderLayout
+              headerImageUrl={headerImageUrl}
+              showTitleInHeader={headerTitleInImage}
+              fullWidth={fullWidth}
+              title={
+                <textarea
+                  ref={titleRef}
+                  value={title}
+                  onChange={e => setTitle(e.target.value)}
+                  placeholder="Titre de la note…"
+                  rows={1}
+                  onInput={e => {
+                    const el = e.currentTarget;
+                    el.style.height = 'auto';
+                    el.style.height = Math.min(el.scrollHeight, 6 * 45) + 'px';
+                  }}
+                />
+              }
+              content={
+                <div
+                  className="editor-content markdown-body"
+                  ref={editorContainerRef}
+                  style={{
+                    width: '100%',
+                    maxWidth: fullWidth ? 1000 : 750,
+                    minHeight: 220,
+                    background: 'none',
+                    color: 'var(--editor-text-color)',
+                    fontSize: 'var(--editor-body-size)',
+                    fontFamily: 'var(--editor-font-family)',
+                    fontWeight: 400,
+                    lineHeight: 1.8,
+                    border: 'none',
+                    outline: 'none',
+                    borderRadius: 10,
+                    margin: 0,
+                    boxSizing: 'border-box',
+                    textAlign: 'left',
+                    transition: 'all 0.3s ease',
+                    position: 'relative',
+                  }}
+                  onDrop={handleEditorDrop}
+                  onDragOver={e => e.preventDefault()}
+                >
+                  {editor && <EditorContent editor={editor} />}
+                  {/* SlashMenu premium */}
+                  <EditorSlashMenu
+                    ref={slashMenuRef}
+                    lang={slashLang}
+                    onInsert={(cmd: SlashCommand) => {
+                      if (!editor) return;
+                      if (typeof cmd.action === 'function') {
+                        cmd.action(editor as unknown);
+                      }
+                    }}
+                  />
+                </div>
+              }
             />
-          </div>
-          {/* Zone de texte premium sous le titre */}
-          <div style={{ width: '100%', display: 'flex', justifyContent: 'center', marginTop: '0.5px' }}>
-            <div
-              className="editor-content markdown-body"
-              ref={editorContainerRef}
-              style={{
-                width: '100%',
-                maxWidth: fullWidth ? 1000 : 750,
-                minHeight: 220,
-                background: 'none',
-                color: 'var(--text-1)',
-                fontSize: '1.13rem',
-                fontFamily: 'Noto Sans, Inter, Arial, sans-serif',
-                fontWeight: 400,
-                lineHeight: 1.8,
-                border: 'none',
-                outline: 'none',
-                borderRadius: 10,
-                padding: '18px 0 120px 0',
-                margin: 0,
-                boxSizing: 'border-box',
-                textAlign: 'left',
-                transition: 'all 0.3s ease',
-                position: 'relative',
-              }}
-              onDrop={handleEditorDrop}
-              onDragOver={e => e.preventDefault()}
-            >
-              {editor && <EditorContent editor={editor} />}
-              {/* SlashMenu premium */}
-              <EditorSlashMenu
-                ref={slashMenuRef}
-                lang={slashLang}
-                onInsert={(cmd: SlashCommand) => {
-                  if (!editor) return;
-                  if (typeof cmd.action === 'function') {
-                    cmd.action(editor as unknown);
-                  }
-                }}
-              />
-            </div>
           </div>
           {/* TOC premium à droite */}
           <div style={{ position: 'fixed', top: 385, right: 20, zIndex: 1002, minWidth: 32, maxWidth: 300, padding: '0 8px 0 0', boxSizing: 'border-box' }}>

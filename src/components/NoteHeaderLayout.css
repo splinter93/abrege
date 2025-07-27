@@ -1,0 +1,117 @@
+/* Classes de padding pour le layout de la note */
+
+/* Classe de base pour le layout */
+.noteLayout {
+  width: 100%;
+  transition: all 0.2s ease;
+}
+
+/* Conteneur du titre */
+.noteLayout-title {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+/* Conteneur du contenu */
+.noteLayout-content {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+/* États du layout */
+
+/* 1. Pas d'image */
+.noteLayout.noImage .noteLayout-title {
+  padding-top: 48px; /* Augmente l'espacement au-dessus du titre */
+}
+.noteLayout.noImage .noteLayout-content {
+  margin-top: 0px; /* Espacement nul entre le titre et le contenu */
+}
+
+.noteLayout.noImage .noteLayout-content .editor-content {
+  padding-top: 0; /* Supprime le padding-top du conteneur editor */
+}
+
+.noteLayout.noImage .noteLayout-title textarea {
+  padding-bottom: 0; /* Supprime le padding parasite du textarea */
+}
+
+/* 2. Image avec titre intégré */
+.noteLayout.imageWithTitle .noteLayout-title {
+  position: absolute;
+  top: 160px; /* Moitié de la hauteur de l'image (300px) */
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%;
+  padding: 0 20px; /* Ajoute un peu de marge sur les côtés */
+  box-sizing: border-box;
+  text-align: center;
+  z-index: 10;
+}
+
+.noteLayout.imageWithTitle .noteLayout-title textarea {
+  color: white !important; /* Override pour le titre dans l'image */
+  text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  text-align: center;
+}
+.noteLayout.imageWithTitle .noteLayout-content {
+  margin-top: -5px; /* Remonte le contenu de 5px */
+  padding-top: 0px; /* Crée un espace de 10px avant le texte */
+}
+
+.noteLayout.imageWithTitle .noteLayout-content .editor-content {
+  padding-top: 0; /* Supprime le padding-top */
+}
+
+.noteLayout.imageWithTitle .noteLayout-content .markdown-body {
+  padding-top: 0; /* Supprime le padding-top */
+}
+
+/* 3. Image avec titre en dessous */
+.noteLayout.imageOnly .noteLayout-title {
+  padding-top: 5px; /* Espacement minimal de 5px sous l'image */
+  text-align: left;
+}
+.noteLayout.imageOnly .noteLayout-title textarea {
+  padding: 0; /* Supprime tout padding du textarea */
+}
+.noteLayout.imageOnly .noteLayout-content {
+  margin-top: 0px; /* Espacement nul entre le titre et le contenu */
+}
+
+/* Style du titre */
+.noteLayout-title textarea {
+  width: 100%;
+  max-width: var(--editor-max-width, 750px);
+  font-size: var(--editor-title-size);
+  font-weight: 700;
+  font-family: var(--editor-font-family);
+  color: var(--editor-text-color);
+  background: none;
+  border: none;
+  outline: none;
+  padding: 0 0 8px 0;
+  margin: 0;
+  letter-spacing: -0.02em;
+  resize: none;
+  overflow: visible;
+  line-height: 1.15;
+  min-height: 45px;
+  height: auto;
+  transition: all 0.2s ease;
+}
+
+.noteLayout-content .editor-content {
+  padding: 18px 0 120px 0;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .noteLayout-title textarea {
+    font-size: var(--editor-title-size-mobile);
+  }
+} 

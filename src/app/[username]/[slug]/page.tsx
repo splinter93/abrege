@@ -108,7 +108,7 @@ export default async function Page(props: { params: Promise<{ username: string; 
             maxWidth: 750,
             width: 750,
             lineHeight: 1.1,
-            fontFamily: 'Noto Sans, Inter, Arial, sans-serif',
+            fontFamily: 'var(--editor-font-family)',
           }}>{note.source_title}</h1>
           <div style={{ height: 18 }} />
           <div
@@ -119,8 +119,8 @@ export default async function Page(props: { params: Promise<{ username: string; 
               margin: '0 auto',
               background: 'none',
               padding: '0 0 64px 0',
-              fontSize: '1.13rem',
-              color: 'var(--text-primary)',
+              fontSize: 'var(--editor-body-size)',
+              color: 'var(--editor-text-color)',
               minHeight: '60vh',
               pointerEvents: 'auto',
               userSelect: 'text',

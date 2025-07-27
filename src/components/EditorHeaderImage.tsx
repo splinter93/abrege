@@ -10,10 +10,12 @@ interface EditorHeaderImageProps {
   headerImageOffset?: number;
   headerImageBlur?: number;
   headerImageOverlay?: number;
+  headerTitleInImage?: boolean;
   onHeaderChange: (url: string | null) => void;
   onHeaderOffsetChange?: (offset: number) => void;
   onHeaderBlurChange?: (blur: number) => void;
   onHeaderOverlayChange?: (overlay: number) => void;
+  onHeaderTitleInImageChange?: (value: boolean) => void;
   imageMenuOpen: boolean;
   onImageMenuOpen: () => void;
   onImageMenuClose: () => void;
@@ -45,10 +47,12 @@ const EditorHeaderImage: React.FC<EditorHeaderImageProps> = ({
   headerImageOffset = 50,
   headerImageBlur = 0,
   headerImageOverlay = 0,
+  headerTitleInImage = false,
   onHeaderChange,
   onHeaderOffsetChange,
   onHeaderBlurChange,
   onHeaderOverlayChange,
+  onHeaderTitleInImageChange,
   imageMenuOpen,
   onImageMenuClose,
   noteId,
@@ -194,6 +198,23 @@ const EditorHeaderImage: React.FC<EditorHeaderImageProps> = ({
             onMouseOut={e => { e.currentTarget.style.color = 'var(--text-2)'; }}
           >
             <LuCloudFog size={18} />
+          </button>
+        </Tooltip>
+        {/* Toggle titre dans l'image */}
+        <Tooltip text={`Titre ${headerTitleInImage ? 'dans' : 'sous'} l'image`}>
+          <button
+            className="header-image-btn"
+            onClick={() => onHeaderTitleInImageChange && onHeaderTitleInImageChange(!headerTitleInImage)}
+            style={{
+              ...headerBtnStyle,
+              fontFamily: 'Inter, sans-serif',
+              fontWeight: 600,
+              color: headerTitleInImage ? 'var(--accent-primary)' : 'var(--text-2)',
+            }}
+            onMouseOver={e => { e.currentTarget.style.color = 'var(--accent-primary)'; }}
+            onMouseOut={e => { e.currentTarget.style.color = headerTitleInImage ? 'var(--accent-primary)' : 'var(--text-2)'; }}
+          >
+            T
           </button>
         </Tooltip>
         {/* Changer d'image */}

@@ -58,6 +58,7 @@ export async function PUT(req: NextRequest, { params }: any): Promise<Response> 
       header_image_offset: z.number().min(0).max(100).optional(), // Accepte les décimales
       header_image_blur: z.number().int().min(0).max(5).optional(),
       header_image_overlay: z.number().int().min(0).max(5).optional(),
+      header_title_in_image: z.boolean().optional(),
       source_title: z.string().min(1, 'source_title requis').optional(),
       markdown_content: z.string().optional(),
       html_content: z.string().optional()
@@ -104,6 +105,12 @@ export async function PUT(req: NextRequest, { params }: any): Promise<Response> 
       updateData.header_image_overlay = body.header_image_overlay;
       if (process.env.NODE_ENV === 'development') {
         console.log('[API] Mise à jour header_image_overlay:', body.header_image_overlay);
+      }
+    }
+    if (body.header_title_in_image !== undefined) {
+      updateData.header_title_in_image = body.header_title_in_image;
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[API] Mise à jour header_title_in_image:', body.header_title_in_image);
       }
     }
     if (body.source_title !== undefined) {

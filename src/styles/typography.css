@@ -10,8 +10,8 @@
   /* ==========================================================================
      COULEURS HARMONISÉES
      ========================================================================== */
-  --editor-text-color: #EFE9DC;
-  --editor-text-primary: #EFE9DC;    /* Ajouté pour compatibilité */
+  --editor-text-color: #F5F5DC;
+  --editor-text-primary: #F5F5DC;    /* Ajouté pour compatibilité */
   --editor-text-muted: #737373;      /* Ajouté pour FolderContent.css et RecentSection.css */
   --editor-accent-primary: #ff6b35;
   --editor-accent-hover: #f7931e;
