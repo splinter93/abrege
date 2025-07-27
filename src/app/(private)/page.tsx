@@ -3,6 +3,7 @@
 import React from 'react';
 import ContentCard from '../../components/ContentCard';
 import { useLanguageContext } from '../../contexts/LanguageContext';
+import Link from 'next/link';
 import '../globals.css';
 
 const mockNotes = [
@@ -47,10 +48,10 @@ export default function HomePage() {
       <div className="sidebar-trigger" />
       <aside className="sidebar-glass">
         <nav className="sidebar-nav-glass">
-          <a href="/dossiers" className="sidebar-link-glass">
+          <Link href="/dossiers" className="sidebar-link-glass">
             <svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
             <span>{t('nav.folders')}</span>
-          </a>
+          </Link>
           <div className="sidebar-separator" />
           <a href="#" className="sidebar-link-glass">
             <svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/><line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="14" x2="23" y2="14"/><line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="14" x2="4" y2="14"/></svg>

@@ -5,7 +5,7 @@ export interface TooltipProps {
   text: string;
   children: React.ReactNode;
   position?: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 const Tooltip: React.FC<TooltipProps> = ({ text, children, position = 'top', ...props }) => {

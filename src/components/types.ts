@@ -3,7 +3,7 @@
 export interface Folder {
   id: string;
   name: string;
-  parent_id?: string;
+  parent_id?: string | null;
   classeur_id?: string; // Ajouté pour filtrage
 }
 
@@ -13,7 +13,7 @@ export interface FileArticle {
   source_type?: string;
   updated_at?: string;
   classeur_id?: string; // Ajouté pour filtrage
-  folder_id?: string;   // Ajouté pour navigation
+  folder_id?: string | null;   // Ajouté pour navigation
 }
 
 export interface ItemProps {
@@ -49,4 +49,36 @@ export interface SortableListProps {
   handleContextMenu: (e: React.MouseEvent, item: Folder | FileArticle) => void;
   handleItemClick: (item: Folder | FileArticle) => void;
   handleItemDoubleClick: (item: Folder | FileArticle) => void;
+}
+
+// Types pour les événements de drag & drop
+export interface DropEventDetail {
+  classeurId: string;
+  itemId: string;
+  itemType: 'folder' | 'file';
+  target: string;
+}
+
+export interface CustomDropEvent extends CustomEvent {
+  detail: DropEventDetail;
+}
+
+// Types pour les données filtrées
+export interface FilteredData {
+  folders: Folder[];
+  notes: FileArticle[];
+}
+
+// Types pour les éléments du menu contextuel
+export interface ContextMenuItem {
+  label: string;
+  onClick: () => void;
+}
+
+// Types pour l'état du menu contextuel
+export interface ContextMenuState {
+  visible: boolean;
+  x: number;
+  y: number;
+  item: Folder | FileArticle | null;
 } 

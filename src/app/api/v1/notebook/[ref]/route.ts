@@ -84,7 +84,7 @@ export async function PUT(req: NextRequest, { params }: any): Promise<Response> 
       return new Response(JSON.stringify({ error: 'Classeur non trouvé.' }), { status: 404 });
     }
     // Générer un nouveau slug si le nom change
-    let updates: any = { name, emoji: emoji || null, updated_at: new Date().toISOString() };
+    const updates: Record<string, unknown> = { name, emoji: emoji || null, updated_at: new Date().toISOString() };
     if (existingNotebook.name !== name) {
       const { SlugGenerator } = await import('@/utils/slugGenerator');
       const newSlug = await SlugGenerator.generateSlug(name, 'classeur', USER_ID, classeurId);

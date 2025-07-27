@@ -3,7 +3,6 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 // import Sidebar from '../components/Sidebar';
-import Header from '../components/Header';
 import '../styles/typography.css';
 import '../styles/design-system.css';
 import '../styles/editor.css';
@@ -17,10 +16,8 @@ import '../components/editor/editor-slash-menu.css';
 import '../components/editor/editor-header-image.css';
 
 import '../components/editor/editor-modal.css';
-import { AuthProvider } from '../components/AuthProvider';
 import { LanguageProvider } from '../contexts/LanguageContext';
 import { Toaster } from 'react-hot-toast';
-import AppMainContent from '../components/AppMainContent';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -45,7 +42,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <link rel="icon" href="/feather.svg" type="image/svg+xml" />
       </head>
-      <body className={`${geistSans.variable} ${geistMono.variable}`}>
+      <body className={`${geistSans.variable} ${geistMono.variable} app-container`}>
         <LanguageProvider>
           <Toaster position="top-right" />
           {children}

@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import { z } from 'zod';
+
 import type { Classeur } from '@/types/supabase';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -15,7 +15,7 @@ export type GetNotebooksResponse =
  * Récupère la liste des notebooks (classeurs) de l'utilisateur
  * Réponse : { notebooks: [{ id, name, emoji, slug, ... }] }
  */
-export async function GET(req: Request): Promise<Response> {
+export async function GET(): Promise<Response> {
   try {
     // [TEMP] USER_ID HARDCODED FOR DEV/LLM
     // TODO: Extract user_id from API key when auth is implemented!
@@ -30,8 +30,8 @@ export async function GET(req: Request): Promise<Response> {
       return new Response(JSON.stringify({ error: error.message }), { status: 500 });
     }
     return new Response(JSON.stringify({ notebooks: data }), { status: 200 });
-  } catch (err: any) {
-    return new Response(JSON.stringify({ error: err.message }), { status: 500 });
+  } catch (err: unknown) {
+    return new Response(JSON.stringify({ error: err instanceof Error ? err.message : 'Erreur inconnue' }), { status: 500 });
   }
 }
 

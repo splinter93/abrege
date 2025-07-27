@@ -3,7 +3,7 @@ import { useEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import { Markdown } from 'tiptap-markdown';
 import EditorToolbar from '@/components/EditorToolbar';
-import { FiMoreVertical, FiEye, FiX, FiImage } from 'react-icons/fi';
+import { FiEye, FiX, FiImage } from 'react-icons/fi';
 import EditorKebabMenu from '@/components/EditorKebabMenu';
 import React, { useRef, useEffect } from 'react';
 import EditorHeaderImage from '@/components/EditorHeaderImage';
@@ -16,13 +16,11 @@ import { updateNoteREST } from '@/services/api';
 import { getArticleById } from '@/services/supabase';
 import useEditorSave from '@/hooks/useEditorSave';
 import toast from 'react-hot-toast';
-import { FiSave } from 'react-icons/fi';
 import EditorPreview from '@/components/EditorPreview';
 import { createMarkdownIt } from '@/utils/markdownItConfig';
 import TaskList from '@tiptap/extension-task-list';
 import TaskItem from '@tiptap/extension-task-item';
 import EditorSlashMenu from '@/components/EditorSlashMenu';
-import { SLASH_COMMANDS } from '@/components/slashCommands';
 import type { EditorSlashMenuHandle } from '@/components/EditorSlashMenu';
 import Table from '@tiptap/extension-table';
 import TableRow from '@tiptap/extension-table-row';
@@ -136,7 +134,7 @@ export default function NoteEditorPage() {
         }
         await updateNoteREST(noteId, payload);
         setLastSaved(new Date());
-      } catch (err) {
+      } catch {
         // toast error déjà géré dans le hook
       }
     },
@@ -159,11 +157,11 @@ export default function NoteEditorPage() {
         setHasInitialized(true);
         setLoading(false);
       })
-      .catch((err: any) => {
+      .catch((_err: unknown) => {
         setLoadError('Erreur lors du chargement de la note.');
         setLoading(false);
       });
-  }, [editor, noteId, hasInitialized]);
+  }, [editor, noteId, hasInitialized, getHeadingsFromEditor]);
 
   // Realtime : recharge la note en direct si modifiée ailleurs
   React.useEffect(() => {
@@ -174,7 +172,7 @@ export default function NoteEditorPage() {
           schema: 'public',
           table: 'articles',
         filter: `id=eq.${noteId}`
-      }, async (payload) => {
+      }, async () => {
         // Recharge la note depuis la base
         const note = await getArticleById(noteId);
         if (note) {
@@ -203,7 +201,7 @@ export default function NoteEditorPage() {
         setPublishedUrl(null);
       }
     })();
-  }, [editor, noteId, hasInitialized, published]);
+  }, [editor, noteId, hasInitialized, published, handleSave]);
 
   // Fonction utilitaire pour extraire les headings du doc Tiptap
   function getHeadingsFromEditor(editorInstance: typeof editor): Heading[] {
@@ -212,7 +210,7 @@ export default function NoteEditorPage() {
     const slugCount: Record<string, number> = {};
     editorInstance.state.doc.descendants((node) => {
       if (node.type.name === 'heading') {
-        let baseSlug = slugify(`${node.textContent}-${node.attrs.level}`, { lower: true, strict: true });
+        const baseSlug = slugify(`${node.textContent}-${node.attrs.level}`, { lower: true, strict: true });
         let slug = baseSlug;
         if (slugCount[baseSlug] !== undefined) {
           slug = `${baseSlug}-${++slugCount[baseSlug]}`;
@@ -262,7 +260,7 @@ export default function NoteEditorPage() {
   React.useEffect(() => {
     if (!editor) return;
     let timeout: NodeJS.Timeout | null = null;
-    let savingToastId: string | undefined;
+
     const triggerSave = () => {
       if (timeout) clearTimeout(timeout);
       timeout = setTimeout(() => {
@@ -510,7 +508,7 @@ export default function NoteEditorPage() {
         setPublishedUrl(null);
       }
       toast.success(value ? 'Note publiée !' : 'Note dépubliée.');
-    } catch (err: any) {
+    } catch {
       toast.error('Erreur lors de la mise à jour du statut de publication.');
     } finally {
       setIsPublishing(false);

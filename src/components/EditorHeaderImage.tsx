@@ -38,14 +38,13 @@ const EditorHeaderImage: React.FC<EditorHeaderImageProps> = ({
   headerImageUrl,
   onHeaderChange,
   imageMenuOpen,
-  onImageMenuOpen,
   onImageMenuClose,
   noteId,
   userId,
 }) => {
   const [headerOverlayLevel, setHeaderOverlayLevel] = useState(0);
   const [headerBlurLevel, setHeaderBlurLevel] = useState(0);
-  const [imageSettingsOpen, setImageSettingsOpen] = useState(false);
+  // const [imageSettingsOpen, setImageSettingsOpen] = useState(false);
   const [imageOffsetY, setImageOffsetY] = useState(50); // 0-100 (%)
   const dragging = useRef(false);
   const startY = useRef(0);
@@ -174,9 +173,9 @@ const EditorHeaderImage: React.FC<EditorHeaderImageProps> = ({
       {/* Menu contextuel pour l'image */}
       <ImageMenu open={imageMenuOpen} onClose={onImageMenuClose} onInsertImage={onHeaderChange} noteId={noteId} userId={userId} />
       {/* Modal ou menu pour les réglages */}
-      {imageSettingsOpen && (
+      {/* {imageSettingsOpen && (
         <div className="image-settings-modal">Réglages à implémenter…</div>
-      )}
+      )} */}
     </div>
   );
 };

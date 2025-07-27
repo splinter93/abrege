@@ -12,7 +12,7 @@ export type GetNoteContentResponse =
   | { content: string }
   | { error: string; details?: string[] };
 
-export async function GET(req: NextRequest, { params }: any): Promise<Response> {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ ref: string }> }): Promise<Response> {
   try {
     const { ref } = await params;
     const schema = z.object({ ref: z.string().min(1, 'note_ref requis') });
@@ -37,12 +37,12 @@ export async function GET(req: NextRequest, { params }: any): Promise<Response> 
       return new Response(JSON.stringify({ error: error?.message || 'Note non trouvée.' }), { status: 404 });
     }
     return new Response(JSON.stringify({ content: note.markdown_content || '' }), { status: 200 });
-  } catch (err: any) {
-    return new Response(JSON.stringify({ error: err.message }), { status: 500 });
+  } catch (err: unknown) {
+    return new Response(JSON.stringify({ error: err instanceof Error ? err.message : 'Erreur inconnue' }), { status: 500 });
   }
 }
 
-export async function POST(req: NextRequest, { params }: any): Promise<Response> {
+export async function POST(req: NextRequest): Promise<Response> {
   try {
     const body = await req.json();
     console.log('POST /api/v1/note/[ref]/content body:', body);
@@ -86,25 +86,25 @@ export async function POST(req: NextRequest, { params }: any): Promise<Response>
       key: result.key 
     }), { status: 200 });
     
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('POST /api/v1/note/[ref]/content error:', err);
     
     // Gestion d'erreurs spécifiques
-    if (err.message.includes('Configuration S3 invalide')) {
+    if (err instanceof Error && err.message.includes('Configuration S3 invalide')) {
       return new Response(JSON.stringify({ 
         error: 'Configuration serveur invalide',
         code: 'S3_CONFIG_ERROR'
       }), { status: 500 });
     }
     
-    if (err.message.includes('Type de fichier non supporté')) {
+    if (err instanceof Error && err.message.includes('Type de fichier non supporté')) {
       return new Response(JSON.stringify({ 
         error: err.message,
         code: 'INVALID_FILE_TYPE'
       }), { status: 400 });
     }
     
-    if (err.message.includes('Fichier trop volumineux')) {
+    if (err instanceof Error && err.message.includes('Fichier trop volumineux')) {
       return new Response(JSON.stringify({ 
         error: err.message,
         code: 'FILE_TOO_LARGE'

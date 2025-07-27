@@ -12,7 +12,7 @@ const EditorDiffOverlay: React.FC<EditorDiffOverlayProps> = ({
   isVisible,
   editorRef
 }) => {
-  const [highlights, setHighlights] = useState<Array<{
+  const [, setHighlights] = useState<Array<{
     element: HTMLElement;
     type: 'added' | 'removed';
     text: string;

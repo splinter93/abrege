@@ -45,7 +45,7 @@ async function generateSlug(title: string, type: 'note' | 'folder' | 'classeur',
       .replace(/-+/g, '-');
   };
 
-  let baseSlug = slugify(title);
+  const baseSlug = slugify(title);
   let candidateSlug = baseSlug;
   let counter = 1;
   

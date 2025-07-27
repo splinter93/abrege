@@ -1,5 +1,6 @@
 import React from 'react';
-import '../../styles/markdown.css';
+import './editor-content.css';
+import '@/styles/markdown.css';
 
 interface EditorContentProps {
   children?: React.ReactNode;
@@ -10,7 +11,7 @@ interface EditorContentProps {
  */
 const EditorContent: React.FC<EditorContentProps> = ({ children }) => {
   return (
-    <div className="editor-content-wrapper markdown-body" style={{ width: 750, margin: 0, display: 'block', textAlign: 'left' }}>
+    <div className="editor-content-wrapper markdown-body editor-container-width editor-text-left">
       {children}
     </div>
   );

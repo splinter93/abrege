@@ -17,9 +17,18 @@
   box-sizing: border-box;
 }
 
+/* Garantir que tous les éléments enfants sont centrés verticalement */
+.editor-header > * {
+  display: flex;
+  align-items: center;
+}
+
 /* Couleur par défaut pour tous les boutons du header */
 .editor-header button {
   color: #a3a3a3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* Exception pour le bouton AI - orange dégradé vif */
@@ -41,18 +50,22 @@
 .editor-header-logo {
   display: flex;
   align-items: center;
+  justify-content: center;
   font-size: 1.5rem;
   font-weight: 700;
   color: var(--accent-primary);
   letter-spacing: -0.02em;
   gap: 0.7rem;
   margin-left: 3px;
+  height: 100%;
 }
 
 .editor-header-toolbar {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 1rem;
+  height: 100%;
 }
 
 .editor-header-close {
@@ -189,8 +202,8 @@
   height: 16px;
 }
 .font-dropdown-btn svg {
-  width: 18px !important;
-  height: 18px !important;
+  width: 18px;
+  height: 18px;
 }
 .toolbar-button.icon-text-style svg {
   width: auto;
@@ -276,7 +289,7 @@
 
 .editor-title-section {
   width: 100%;
-  max-width: 750px !important;
+  max-width: 750px;
   margin: 0 auto;
   padding: 2.5rem 3rem 0.1rem 3rem;
   display: flex;

@@ -56,7 +56,7 @@ export function extractTOCWithSlugs(markdown: string): TOCItemWithSlug[] {
     const line = lines[i];
     const match = line.match(/^(#{1,6})\s+(.+)/);
     if (match) {
-      let baseSlug = slugify(match[2].trim());
+      const baseSlug = slugify(match[2].trim());
       let slug = baseSlug;
       if (slugCount[baseSlug] !== undefined) {
         slug = `${baseSlug}-${++slugCount[baseSlug]}`;
@@ -95,7 +95,7 @@ export function appendToSection(markdown: string, section: string, text: string,
   if (sectionIdx === -1) throw new Error('Section non trouvée (titre ou slug inconnu)');
   const target = toc[sectionIdx];
   const lines = markdown.split('\n');
-  let sectionStart = target.line - 1;
+  const sectionStart = target.line - 1;
   let sectionEnd = lines.length;
   for (let i = target.line; i < lines.length; i++) {
     const match = lines[i].match(/^(#{1,6})\s+(.+)/);
@@ -135,7 +135,7 @@ export function clearSection(markdown: string, section: string): string {
   
   const target = toc[sectionIdx];
   const lines = markdown.split('\n');
-  let sectionStart = target.line - 1;
+  const sectionStart = target.line - 1;
   let sectionEnd = lines.length;
   
   // Trouver la fin de la section (prochain titre de même niveau ou supérieur)

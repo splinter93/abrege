@@ -1,11 +1,8 @@
 import { createClient } from '@supabase/supabase-js';
 import '@/styles/markdown.css';
 import LogoScrivia from '@/components/LogoScrivia';
-import dynamic from 'next/dynamic';
-import { useEffect, useState } from 'react';
-import type { Heading } from '@/types/editor';
+
 import PublicTOCClient from '@/components/PublicTOCClient';
-import { FiFeather } from 'react-icons/fi';
 import CraftedBadge from '@/components/CraftedBadge';
 import type { Metadata } from 'next';
 
@@ -13,8 +10,8 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-export async function generateMetadata({ params }: { params: any }): Promise<Metadata> {
-  const { username, slug } = params;
+export async function generateMetadata({ params }: { params: Promise<{ username: string; slug: string }> }): Promise<Metadata> {
+  const { username, slug } = await params;
   const decodedUsername = decodeURIComponent(username).replace(/^@/, '');
   // Chercher l'utilisateur par username
   const { data: user } = await supabase
@@ -35,7 +32,7 @@ export async function generateMetadata({ params }: { params: any }): Promise<Met
   return { title: note.source_title + ' – Scrivia' };
 }
 
-export default async function Page(props: any) {
+export default async function Page(props: { params: Promise<{ username: string; slug: string }> }) {
   const { username, slug } = await props.params;
 
   // Décoder l'username (retirer le @ et décoder l'URL)
@@ -55,7 +52,7 @@ export default async function Page(props: any) {
           <LogoScrivia />
         </div>
         <h1>Utilisateur non trouvé</h1>
-        <p>Vérifiez l'URL ou contactez l'auteur.</p>
+        <p>Vérifiez l&apos;URL ou contactez l&apos;auteur.</p>
         <p>Debug: error = {userError?.message}</p>
       </div>
     );
@@ -77,7 +74,7 @@ export default async function Page(props: any) {
           <LogoScrivia />
         </div>
         <h1>Note non trouvée ou non publiée</h1>
-        <p>Vérifiez l'URL ou contactez l'auteur.</p>
+        <p>Vérifiez l&apos;URL ou contactez l&apos;auteur.</p>
       </div>
     );
   }

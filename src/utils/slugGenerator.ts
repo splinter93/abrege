@@ -42,7 +42,7 @@ export class SlugGenerator {
     userId: string,
     excludeId?: string
   ): Promise<string> {
-    let baseSlug = this.slugify(title);
+    const baseSlug = this.slugify(title);
     let candidateSlug = baseSlug;
     let counter = 1;
     

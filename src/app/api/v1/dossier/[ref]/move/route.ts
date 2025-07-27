@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 import type { NextRequest } from 'next/server';
-import type { Folder } from '@/types/supabase';
+
 import { resolveFolderRef, resolveClasseurRef } from '@/middleware/resourceResolver';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -14,7 +14,7 @@ export type MoveDossierPayload = {
   position?: number;
 };
 
-export async function PATCH(req: NextRequest, { params }: any): Promise<Response> {
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ ref: string }> }): Promise<Response> {
   const { ref } = await params;
   try {
     const paramSchema = z.object({ ref: z.string().min(1, 'dossier_ref requis') });
@@ -55,7 +55,7 @@ export async function PATCH(req: NextRequest, { params }: any): Promise<Response
     if ('target_classeur_id' in body && body.target_classeur_id) {
       try {
         resolvedClasseurId = await resolveClasseurRef(body.target_classeur_id, USER_ID);
-      } catch (err) {
+      } catch {
         return new Response(
           JSON.stringify({ error: `Classeur cible '${body.target_classeur_id}' introuvable ou non accessible.` }),
           { status: 404 }
@@ -68,7 +68,7 @@ export async function PATCH(req: NextRequest, { params }: any): Promise<Response
       } else if (body.target_parent_id) {
         try {
           resolvedParentId = await resolveFolderRef(body.target_parent_id, USER_ID);
-        } catch (err) {
+        } catch {
           return new Response(
             JSON.stringify({ error: `Dossier parent cible '${body.target_parent_id}' introuvable ou non accessible.` }),
             { status: 404 }
@@ -77,7 +77,7 @@ export async function PATCH(req: NextRequest, { params }: any): Promise<Response
       }
     }
     // Construction de l'objet d'update
-    const updates: any = {};
+    const updates: Record<string, unknown> = {};
     if (resolvedClasseurId !== undefined) updates.classeur_id = resolvedClasseurId;
     if (resolvedParentId !== undefined) updates.parent_id = resolvedParentId;
     if ('position' in body) updates.position = body.position;

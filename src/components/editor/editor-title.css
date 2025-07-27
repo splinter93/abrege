@@ -1,6 +1,6 @@
 /* Styles dédiés au titre de l'éditeur */
 
-.editor-title-span, .editor-title-input {
+.editor-title-span, .editor-title-field {
   flex-grow: 1;
   border: none;
   background: none;
@@ -19,7 +19,7 @@
   font-family: var(--editor-font-family);
 }
 
-.editor-title-input:focus {
+.editor-title-field:focus {
   outline: none;
   box-shadow: none;
   font-size: var(--editor-xxl-size);
@@ -30,7 +30,7 @@
   transform: scale(1.01);
 }
 
-.editor-title-input::placeholder {
+.editor-title-field::placeholder {
   color: var(--text-3);
   opacity: 0.7;
 }
@@ -43,22 +43,22 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+  min-height: 45px;
+  margin-bottom: 24px;
 }
 
 .editor-header.title-focused .editor-title-wrapper {
   padding: 2rem 3rem 0.1rem 3rem;
 }
 
-.editor-title-input:focus {
+.editor-title-field:focus {
   outline: none;
   box-shadow: none;
 }
 
-.editor-title,
-.editor-title-input,
+.editor-title-field,
 .editor-title-span,
-textarea.editor-title,
-textarea.editor-title-input {
+textarea.editor-title-field {
   width: 100%;
   max-width: 750px;
   min-height: 45px;
@@ -79,22 +79,20 @@ textarea.editor-title-input {
   resize: none;
   text-align: left;
   transition: none;
+  /* Styles spécifiques pour textarea */
+  max-height: 200px;
+  height: auto;
+  font-family: inherit;
+  white-space: pre-line;
 }
 
-.editor-title {
-  margin-bottom: 0 !important;
-  text-align: left !important;
+.editor-title-field {
+  margin-bottom: 0;
+  text-align: left;
 }
 
-.editor-title,
-.editor-title-input {
-  text-align: left !important;
-}
-
-.editor-title,
-.editor-title-input,
+.editor-title-field,
 .editor-title-span,
-textarea.editor-title,
-textarea.editor-title-input {
-  text-align: left !important;
+textarea.editor-title-field {
+  text-align: left;
 } 

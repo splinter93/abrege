@@ -1,0 +1,91 @@
+/* ==========================================================================
+   FOLDER CONTENT - STYLES POUR REMPLACER TAILWIND
+   ========================================================================== */
+
+.folder-content-container {
+  width: 100%;
+  max-width: 1400px;
+  margin: 32px auto 0 auto;
+  padding: 0 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.folder-content-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 240px;
+  color: var(--editor-text-muted);
+}
+
+.folder-content-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 240px;
+  color: #ef4444;
+  text-align: center;
+}
+
+.folder-content-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 240px;
+  color: var(--editor-text-muted);
+  text-align: center;
+}
+
+.folder-content-empty-title {
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+
+.folder-content-separator {
+  border-top: 1.5px solid rgba(255, 255, 255, 0.1);
+  width: 60%;
+  margin: 60px 0 40px 0;
+}
+
+/* Grilles responsives */
+.folder-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  justify-items: center;
+  width: 100%;
+}
+
+.folder-grid.files {
+  margin-top: 25px;
+}
+
+/* Responsive breakpoints */
+@media (min-width: 640px) {
+  .folder-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 768px) {
+  .folder-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .folder-grid {
+    grid-template-columns: repeat(5, 1fr);
+  }
+}
+
+/* Animation pour les fichiers */
+.file-item-animation {
+  width: 168px;
+  height: 132px;
+} 

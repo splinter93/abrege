@@ -5,7 +5,7 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-export default async function Page(props: any) {
+export default async function Page(props: { params: Promise<{ username: string; noteId: string }> }) {
   const { username, noteId: noteId } = await props.params;
 
   // Décoder l'username (retirer le @ et décoder l'URL)
@@ -22,7 +22,7 @@ export default async function Page(props: any) {
     return (
       <div style={{ padding: '2rem', textAlign: 'center' }}>
         <h1>Utilisateur non trouvé</h1>
-        <p>Vérifiez l'URL ou contactez l'auteur.</p>
+        <p>Vérifiez l&apos;URL ou contactez l&apos;auteur.</p>
       </div>
     );
   }
@@ -40,7 +40,7 @@ export default async function Page(props: any) {
     return (
       <div style={{ padding: '2rem', textAlign: 'center' }}>
         <h1>Note non trouvée ou non publiée</h1>
-        <p>Vérifiez l'URL ou contactez l'auteur.</p>
+        <p>Vérifiez l&apos;URL ou contactez l&apos;auteur.</p>
       </div>
     );
   }

@@ -2,12 +2,10 @@
 import React, { useCallback, useEffect } from "react";
 import FolderManager from "../../../components/FolderManager";
 import ClasseurTabs, { Classeur } from "../../../components/ClasseurTabs";
-import DynamicIcon from "../../../components/DynamicIcon";
-import { getClasseurs, createClasseur, updateClasseur, deleteClasseur, updateClasseurPositions, getArticles } from "../../../services/supabase";
+import { getClasseurs, createClasseur, updateClasseur, deleteClasseur, updateClasseurPositions } from "../../../services/supabase";
 import { supabase } from "../../../supabaseClient";
 import { toast } from "react-hot-toast";
 import "./DossiersPage.css";
-import { useRealtime } from '@/hooks/useRealtime';
 import { useFileSystemStore } from '@/store/useFileSystemStore';
 import type { FileSystemState } from '@/store/useFileSystemStore';
 import { subscribeToNotes, subscribeToDossiers, subscribeToClasseurs, unsubscribeFromAll, startSubscriptionMonitoring } from '@/realtime/dispatcher';
@@ -17,26 +15,7 @@ const selectNotes = (s: FileSystemState) => s.notes;
 const selectClasseurs = (s: FileSystemState) => s.classeurs;
 // useCallback et Classeur déjà importés plus haut si besoin
 
-// Merge ciblé : ajoute, met à jour, supprime les items par ID
-const mergeClasseursState = (prev: Classeur[], fetched: Classeur[]) => {
-  const prevMap = new Map(prev.map(c => [c.id, c]));
-  const fetchedMap = new Map(fetched.map(c => [c.id, c]));
-  // Ajouts et updates
-  const merged = fetched.map(c => {
-    const prevItem = prevMap.get(c.id);
-    if (!prevItem) return c; // Ajout
-    if (JSON.stringify(prevItem) !== JSON.stringify(c)) return c; // Update
-    return prevItem; // Inchangé
-  });
-  // Suppressions
-  prev.forEach(c => {
-    if (!fetchedMap.has(c.id)) {
-      // Item supprimé
-      // On ne l'ajoute pas à merged
-    }
-  });
-  return merged;
-};
+
 
 const DossiersPage: React.FC = () => {
   useEffect(() => {
@@ -209,7 +188,7 @@ const DossiersPage: React.FC = () => {
         console.error('[DossiersPage] ❌ Erreur lors de la désactivation des souscriptions:', error);
       }
     };
-  }, []); // Dépendances vides = exécuté une seule fois au montage
+  }, [setActiveClasseurId]); // Ajout de la dépendance manquante
   
   // Navigation locale (dossier courant)
   const [currentFolderId, setCurrentFolderId] = React.useState<string | undefined>(undefined);
@@ -289,7 +268,7 @@ const DossiersPage: React.FC = () => {
         localStorage.setItem("activeClasseurId", newClasseur.id);
         toast.dismiss();
         toast.success("Classeur créé avec succès.");
-      } catch (err: any) {
+      } catch (err: unknown) {
         toast.dismiss();
         console.error("Erreur technique lors de la création du classeur:", err);
         toast.error("Erreur lors de la création du classeur.");

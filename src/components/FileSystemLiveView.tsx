@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useRealtime } from '@/hooks/useRealtime';
 
 /**
@@ -19,7 +19,9 @@ export default function FileSystemLiveView({ token, debug = false }: { token: st
     token,
     debug,
     onEvent: (event) => {
-      if (debug) console.log('[WS EVENT]', event);
+      if (debug && process.env.NODE_ENV !== 'production') {
+        console.log('[WS EVENT]', event);
+      }
       switch (event.type) {
         case 'note.created':
           setNotes(prev => prev.some(n => n.id === event.payload.id)

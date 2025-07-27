@@ -14,7 +14,7 @@ interface FolderListProps {
 }
 
 const FolderList: React.FC<FolderListProps> = ({ folders, onOpen, onStartRenameClick, onRename, onCancelRename, renamingFolderId, onReorder }) => {
-  const { sensors, handleDragEnd, SortableContext, strategy } = useDragAndDrop<Folder>({
+  const { SortableContext, strategy } = useDragAndDrop<Folder>({
     items: folders,
     onReorder,
     getId: (folder) => folder.id,

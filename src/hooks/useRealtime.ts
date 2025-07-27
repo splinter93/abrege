@@ -67,7 +67,7 @@ export function useRealtime(config: RealtimeConfig) {
 
   const REALTIME_PROVIDER = process.env.NEXT_PUBLIC_REALTIME_PROVIDER || 'websocket';
   const isSupabase = REALTIME_PROVIDER === 'supabase';
-  const realtimeService = isSupabase ? {
+  const _realtimeService = isSupabase ? {
     subscribe: (table: string, callback: (event: ChangeEvent) => void) => {
       // Supabase realtime service does not have a direct subscribe/unsubscribe method for tables
       // This is a placeholder for future implementation if needed
@@ -96,7 +96,7 @@ export function useRealtime(config: RealtimeConfig) {
   // Handler générique pour tous les events WebSocket/Supabase
   useEffect(() => {
     if (config.type !== 'websocket' || !config.onEvent) return;
-    const handleRawEvent = (event: { type: string, payload: any, timestamp: number }) => {
+    const _handleRawEvent = (event: { type: string, payload: unknown, timestamp: number }) => {
       if (config.debug) console.log('[WS EVENT]', event);
       config.onEvent?.(event);
     };

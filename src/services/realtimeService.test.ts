@@ -32,7 +32,7 @@ describe('RealtimeService - Polling Intelligent', () => {
   });
 
   it('devrait détecter les INSERT', async () => {
-    const service = initRealtimeService('test-user');
+    const _service = initRealtimeService('test-user');
     const events: any[] = [];
 
     subscribeToTable('articles', (event) => {
@@ -62,7 +62,7 @@ describe('RealtimeService - Polling Intelligent', () => {
   });
 
   it('devrait détecter les UPDATE', async () => {
-    const service = initRealtimeService('test-user');
+    const _service = initRealtimeService('test-user');
     const events: any[] = [];
 
     subscribeToTable('articles', (event) => {
@@ -95,7 +95,7 @@ describe('RealtimeService - Polling Intelligent', () => {
   });
 
   it('devrait détecter les DELETE', async () => {
-    const service = initRealtimeService('test-user');
+    const _service = initRealtimeService('test-user');
     const events: any[] = [];
 
     subscribeToTable('articles', (event) => {
@@ -125,7 +125,7 @@ describe('RealtimeService - Polling Intelligent', () => {
   });
 
   it('devrait gérer plusieurs tables simultanément', async () => {
-    const service = initRealtimeService('test-user');
+    const _service = initRealtimeService('test-user');
     const events: any[] = [];
 
     // S'abonner à plusieurs tables

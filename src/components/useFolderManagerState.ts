@@ -2,17 +2,8 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Folder, FileArticle } from './types';
 import {
-  getFolders,
-  getArticles,
-  createFolder as apiCreateFolder,
-  createArticle as apiCreateFile,
-  deleteFolder as apiDeleteFolder,
-  deleteArticle as apiDeleteFile,
-  renameItem as apiRenameItem,
-  updateItemPositions,
-  moveItemUniversal
+  updateItemPositions
 } from '../services/supabase';
-import { supabase } from '../supabaseClient';
 import {
   createNoteREST,
   createFolderREST,

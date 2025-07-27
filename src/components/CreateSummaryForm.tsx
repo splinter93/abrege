@@ -8,7 +8,7 @@ import { toast } from 'react-hot-toast';
 interface Classeur {
   id: string;
   name: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 const CreateSummaryForm: React.FC = () => {
@@ -40,15 +40,11 @@ const CreateSummaryForm: React.FC = () => {
       classeurId: selectedClasseur
     };
 
-    console.log('Envoi à Synesia...', payload);
-
     try {
-      const result = await sendPayloadToSynesia(payload);
-      console.log('Résultat de Synesia :', result);
+      await sendPayloadToSynesia(payload);
       toast.success('Votre résumé arrive dans une minute !');
       setUrl('');
-    } catch (error) {
-      console.error("Erreur lors de la récupération du résumé :", error);
+    } catch {
       toast.error("Une erreur est survenue lors de la création du résumé.");
     } finally {
       setIsLoading(false);

@@ -6,11 +6,11 @@ const TABS = [
   { id: 'ai', label: "Générer avec l'IA" },
 ];
 
-// Types d'erreurs
-interface UploadError {
-  code: string;
-  message: string;
-}
+// Types d'erreurs (pour usage futur)
+// interface UploadError {
+//   code: string;
+//   message: string;
+// }
 
 interface ImageMenuProps {
   open: boolean;
@@ -132,9 +132,11 @@ const ImageMenu: React.FC<ImageMenuProps> = ({ open, onClose, onInsertImage, not
       setFile(null);
       onClose();
       
-    } catch (err: any) {
-      console.error('Upload error:', err);
-      setError(err.message || 'Erreur lors de l\'upload de l\'image');
+    } catch (err: unknown) {
+      if (process.env.NODE_ENV !== 'production') {
+        console.error('Upload error:', err);
+      }
+      setError(err instanceof Error ? err.message : 'Erreur lors de l\'upload de l\'image');
     } finally {
       setLoading(false);
     }

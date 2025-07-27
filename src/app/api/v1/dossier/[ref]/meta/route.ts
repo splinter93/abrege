@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 import type { NextRequest } from 'next/server';
-import type { Folder } from '@/types/supabase';
+
 import { resolveFolderRef } from '@/middleware/resourceResolver';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -14,7 +14,7 @@ const supabase = createClient(supabaseUrl, supabaseAnonKey);
  * Body JSON : { name: string }
  * Réponse : { id, name, parent_id, classeur_id }
  */
-export async function PATCH(req: NextRequest, { params }: any): Promise<Response> {
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ ref: string }> }): Promise<Response> {
   const { ref } = await params;
   // Validation de la ref
   const refSchema = z.string().min(1, 'dossier_ref requis');
@@ -26,7 +26,7 @@ export async function PATCH(req: NextRequest, { params }: any): Promise<Response
     );
   }
   // Validation du body
-  let body: any;
+  let body: unknown;
   try {
     body = await req.json();
   } catch {
@@ -35,7 +35,7 @@ export async function PATCH(req: NextRequest, { params }: any): Promise<Response
   const bodySchema = z.object({
     name: z.string().min(1, 'Le nom du dossier est requis'),
   });
-  const bodyResult = bodySchema.safeParse(body);
+  const bodyResult = bodySchema.safeParse(body as Record<string, unknown>);
   if (!bodyResult.success) {
     return new Response(
       JSON.stringify({ error: 'Body invalide', details: bodyResult.error.errors.map(e => e.message) }),
@@ -63,10 +63,10 @@ export async function PATCH(req: NextRequest, { params }: any): Promise<Response
     .select('name')
     .eq('id', folderId)
     .single();
-  let updates: any = { name: body.name };
-  if (!oldFolderError && oldFolder && oldFolder.name !== body.name) {
+  const updates: Record<string, unknown> = { name: bodyResult.data.name };
+  if (!oldFolderError && oldFolder && oldFolder.name !== bodyResult.data.name) {
     const { SlugGenerator } = await import('@/utils/slugGenerator');
-    const newSlug = await SlugGenerator.generateSlug(body.name, 'folder', USER_ID, folderId);
+    const newSlug = await SlugGenerator.generateSlug(bodyResult.data.name, 'folder', USER_ID, folderId);
     updates.slug = newSlug;
   }
   const { data: updated, error: updateError } = await supabase

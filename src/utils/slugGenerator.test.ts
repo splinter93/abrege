@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { SlugGenerator } from './slugGenerator';
 
 // Mock Supabase client
-const mockSupabase = {
+const _mockSupabase = {
   from: vi.fn(() => ({
     select: vi.fn(() => ({
       eq: vi.fn(() => ({

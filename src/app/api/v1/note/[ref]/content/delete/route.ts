@@ -1,14 +1,10 @@
-import { createClient } from '@supabase/supabase-js';
+
 import { z } from 'zod';
 import type { NextRequest } from 'next/server';
 import { resolveNoteRef } from '@/middleware/resourceResolver';
 import { s3Service } from '@/services/s3Service';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
-export async function DELETE(req: NextRequest, { params }: any): Promise<Response> {
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ ref: string }> }): Promise<Response> {
   try {
     const { ref } = await params;
     const schema = z.object({ ref: z.string().min(1, 'note_ref requis') });
@@ -57,18 +53,18 @@ export async function DELETE(req: NextRequest, { params }: any): Promise<Respons
       message: 'Fichier supprimé avec succès'
     }), { status: 200 });
     
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('DELETE /api/v1/note/[ref]/content/delete error:', err);
     
     // Gestion d'erreurs spécifiques
-    if (err.message.includes('Configuration S3 invalide')) {
+    if (err instanceof Error && err.message.includes('Configuration S3 invalide')) {
       return new Response(JSON.stringify({ 
         error: 'Configuration serveur invalide',
         code: 'S3_CONFIG_ERROR'
       }), { status: 500 });
     }
     
-    if (err.message.includes('Access Denied')) {
+    if (err instanceof Error && err.message.includes('Access Denied')) {
       return new Response(JSON.stringify({ 
         error: 'Accès refusé au fichier',
         code: 'ACCESS_DENIED'

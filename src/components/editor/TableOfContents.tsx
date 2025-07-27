@@ -14,26 +14,21 @@ interface TableOfContentsProps {
 }
 
 /**
- * Table des matières dynamique pour l’éditeur
+ * Table des matières dynamique pour l'éditeur
  */
 const TableOfContents: React.FC<TableOfContentsProps> = ({ items, currentId, onClickItem }) => {
   return (
-    <nav className="editor-toc" style={{ width: 220, background: 'transparent', border: 'none', borderRadius: 16, color: 'var(--text-2)', overflowY: 'auto', fontFamily: 'inherit', display: 'flex', flexDirection: 'column', gap: 0, padding: 0, boxShadow: 'none', maxHeight: '80vh' }}>
+    <nav className="editor-toc">
       {items.map(item => (
-        <div
+        <button
           key={item.id}
-          style={{
-            padding: '6px 18px',
-            fontWeight: item.id === currentId ? 700 : 400,
-            opacity: item.id === currentId ? 1 : 0.7,
-            cursor: 'pointer',
-            marginLeft: item.level === 2 ? 0 : 18,
-            fontSize: item.level === 2 ? 17 : 15,
-          }}
+          className={`editor-toc-item ${item.id === currentId ? 'editor-toc-item-active' : ''} ${
+            item.level === 2 ? 'editor-toc-item-h2' : 'editor-toc-item-h3'
+          }`}
           onClick={() => onClickItem?.(item.id)}
         >
           {item.text}
-        </div>
+        </button>
       ))}
     </nav>
   );

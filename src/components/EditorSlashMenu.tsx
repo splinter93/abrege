@@ -4,12 +4,12 @@ import './editor/editor-slash-menu.css';
 // import type { SlashCommand } from './SlashMenu';
 type SlashCommand = {
   id: string;
-  alias: Record<string, string>;
+  alias: Record<string, string | string[]>;
   label: Record<string, string>;
   description: Record<string, string>;
   preview?: string;
-  action?: (editor: any) => void;
-  [key: string]: any;
+  action?: (editor: unknown) => void;
+  [key: string]: unknown;
 };
 
 export interface EditorSlashMenuProps {
@@ -22,7 +22,7 @@ export interface EditorSlashMenuHandle {
 }
 
 const EditorSlashMenu = forwardRef<EditorSlashMenuHandle, EditorSlashMenuProps>(
-  ({ onInsert, lang = 'fr' }, ref) => {
+  function EditorSlashMenu({ onInsert, lang = 'fr' }, ref) {
     const [slashOpen, setSlashOpen] = useState(false);
     const [slashSearch, setSlashSearch] = useState('');
     const slashAnchorRef = useRef<{ left: number; top: number }>({ left: 0, top: 0 });
@@ -43,7 +43,7 @@ const EditorSlashMenu = forwardRef<EditorSlashMenuHandle, EditorSlashMenuProps>(
     };
 
     // Fonction pour insérer un bloc
-    const handleSelect = (cmd: any) => {
+    const handleSelect = (cmd: SlashCommand) => {
       onInsert(cmd);
       closeMenu();
     };

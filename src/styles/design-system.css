@@ -13,6 +13,16 @@
   --font-serif: 'Ibarra Real Nova', serif;
   --font-mono: 'JetBrains Mono', monospace;
   
+  /* Font Sizes */
+  --font-size-xs: 0.75rem;    /* 12px */
+  --font-size-sm: 0.875rem;   /* 14px */
+  --font-size-base: 1rem;     /* 16px */
+  --font-size-lg: 1.125rem;   /* 18px */
+  --font-size-xl: 1.25rem;    /* 20px */
+  --font-size-2xl: 1.5rem;    /* 24px */
+  --font-size-3xl: 1.875rem;  /* 30px */
+  --font-size-4xl: 2.25rem;   /* 36px */
+  
   /* Colors */
   --bg-main: #121212;
   --bg-base: #121212;
@@ -29,6 +39,7 @@
   --text-primary: var(--text-1);
   --text-secondary: var(--text-2);
   --text-on-contrast: #121212;
+  --text-disabled: #666666;
   
   /* Surface Colors */
   --surface-0: var(--bg-main);
@@ -49,7 +60,11 @@
   --accent-secondary: #3b82f6;
   --accent-purple: #9b59b6;
   --accent-subtle: rgba(229, 90, 44, 0.15);
+  --accent-primary-faded: rgba(229, 90, 44, 0.1);
   --accent-text: #e55a2c;
+  
+  /* Background Colors */
+  --background-hover: var(--bg-surface-hover);
   
   /* Toast Colors */
   --success: #10B981;

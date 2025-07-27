@@ -5,9 +5,17 @@ import Link from 'next/link';
 import './ContentCard.css';
 
 export interface ContentCardProps {
-  data: any;
+  data: {
+    id: string | number;
+    imageUrl: string;
+    category: string;
+    title: string;
+    source: string;
+    duration: string;
+    readTime: string;
+  };
   onClick?: () => void;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 const ContentCard: React.FC<ContentCardProps> = ({ data, onClick, ...props }) => {

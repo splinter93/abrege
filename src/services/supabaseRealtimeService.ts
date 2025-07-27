@@ -6,7 +6,7 @@ export type SupabaseEventType = 'INSERT' | 'UPDATE' | 'DELETE';
 
 export interface SupabaseRealtimeEvent {
   type: string; // ex: note.created, folder.updated, etc.
-  payload: any;
+  payload: unknown;
   timestamp: number;
 }
 

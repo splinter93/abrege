@@ -17,7 +17,7 @@ const PublicTOCClient: React.FC<PublicTOCClientProps> = ({ slug }) => {
       .then(data => {
         if (data.toc) {
           setHeadings(
-            data.toc.map((item: any) => ({
+            data.toc.map((item: { slug: string; title: string; level: number }) => ({
               id: item.slug,
               text: item.title,
               level: item.level

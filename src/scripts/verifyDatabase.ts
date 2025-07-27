@@ -17,7 +17,7 @@ async function checkTableStructure(tableName: string) {
   
   try {
     // Vérifier si la colonne slug existe
-    const { data: testData, error: testError } = await supabase
+    const { data: _testData, error: testError } = await supabase
       .from(tableName)
       .select('slug')
       .limit(1);
@@ -186,7 +186,7 @@ async function main() {
     await checkIndexes();
     
     // Vérifier les données d'exemple
-    const sampleData = await checkSampleData();
+    const _sampleData = await checkSampleData();
     
     // Test de génération de slugs
     await testSlugGeneration();

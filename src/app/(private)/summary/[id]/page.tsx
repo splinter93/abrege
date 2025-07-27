@@ -104,7 +104,7 @@ const HeroCoverImage: React.FC<{ currentImage: string }> = ({ currentImage }) =>
 
 export default function SummaryPage() {
   const params = useParams();
-  const id = params?.id as string;
+
   const [activeTakeawayIndex, setActiveTakeawayIndex] = useState<number | null>(null);
   const [isPlayerExpanded, setIsPlayerExpanded] = useState<boolean>(false);
   const [isPocasting, setIsPocasting] = useState<boolean>(false);

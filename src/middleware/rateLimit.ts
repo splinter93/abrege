@@ -27,7 +27,7 @@ export class RateLimiter {
    */
   isAllowed(identifier: string): { allowed: boolean; remaining: number; resetTime: number } {
     const now = Date.now();
-    const windowStart = now - this.config.windowMs;
+    const _windowStart = now - this.config.windowMs;
 
     // Nettoyer les anciennes entrées
     if (rateLimitStore[identifier] && rateLimitStore[identifier].resetTime < now) {

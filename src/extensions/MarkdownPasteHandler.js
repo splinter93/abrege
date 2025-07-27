@@ -10,7 +10,7 @@ const MarkdownPasteHandler = Extension.create({
       new Plugin({
         key: new PluginKey('markdownPasteHandler'),
         props: {
-          handlePaste: (view, event, slice) => {
+          handlePaste: (view, event) => {
             const text = event.clipboardData?.getData('text/plain');
             if (!text) return false;
 

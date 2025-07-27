@@ -199,7 +199,7 @@ class DiffService {
    */
   private extractModifiedSections(lineDiff: Change[], originalContent: string): string[] {
     const sections = new Set<string>();
-    const lines = originalContent.split('\n');
+    const _lines = originalContent.split('\n');
 
     lineDiff.forEach(change => {
       if (change.added || change.removed) {

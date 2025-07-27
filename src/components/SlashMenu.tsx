@@ -7,7 +7,7 @@ interface SlashCommand {
   label: Record<string, string>;
   description: Record<string, string>;
   preview?: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 interface AnchorRef {

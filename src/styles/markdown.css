@@ -261,17 +261,17 @@
 .markdown-body input[type='checkbox'],
 .editor-content input[type='checkbox'] {
   appearance: none;
-  width: 1.15em;
-  height: 1.15em;
+  width: 1.5em;
+  height: 1.5em;
   border: 2px solid var(--editor-border-subtle);
-  border-radius: 5px;
+  border-radius: 6px;
   background: var(--editor-surface-1);
   display: inline-block;
   vertical-align: middle;
   position: relative;
   transition: border-color 0.18s, background 0.18s;
   cursor: pointer;
-  margin-right: 0.7em;
+  margin-right: 0.8em;
   margin-top: 0;
 }
 
@@ -283,16 +283,19 @@
 
 .markdown-body input[type='checkbox']:checked::after,
 .editor-content input[type='checkbox']:checked::after {
-  content: '';
-  display: block;
-  position: absolute;
-  left: 0.32em;
-  top: 0.08em;
-  width: 0.35em;
-  height: 0.7em;
-  border: solid #fff;
-  border-width: 0 0.18em 0.18em 0;
-  transform: rotate(45deg);
+  content: '✓' !important; /* ✅ VRAI CHECKMARK UNICODE */
+  position: absolute !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  color: white !important;
+  font-size: 1em !important; /* ✅ TAILLE ADAPTÉE */
+  font-weight: bold !important;
+  line-height: 1 !important;
+  text-align: center !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
 }
 
 .markdown-body input[type='checkbox']:focus,
@@ -591,10 +594,363 @@ li[data-type="taskItem"] > div p {
 }
 
 /* ==========================================================================
+   PROSEMIRROR TASK LISTS
+   ========================================================================== */
+
+.ProseMirror li[data-type="taskItem"] {
+  display: flex !important;
+  align-items: flex-start !important;
+  gap: 0.6em !important;
+  list-style-type: none !important; /* ❌ SUPPRIME LA BULLET */
+  padding-left: 0 !important; /* ✅ SUPPRIME LE PADDING GAUCHE */
+  margin-left: 0 !important; /* ✅ SUPPRIME LA MARGIN GAUCHE */
+}
+
+.ProseMirror li[data-type="taskItem"] > label {
+  display: flex !important;
+  align-items: center !important; /* ✅ CENTRE VERTICALEMENT */
+  width: 100% !important;
+  gap: 0.6em !important;
+  margin-top: 0 !important;
+  flex-shrink: 0 !important;
+}
+
+.ProseMirror li[data-type="taskItem"] > div {
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  word-break: break-word !important;
+  white-space: pre-line !important;
+  display: block !important;
+}
+
+.ProseMirror li[data-type="taskItem"] > div p {
+  margin: 0 !important;
+}
+
+/* ==========================================================================
+   CHECKBOXES PROSEMIRROR
+   ========================================================================== */
+
+.ProseMirror input[type='checkbox'] {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  width: 1.15em !important;
+  height: 1.15em !important;
+  border: 2px solid var(--editor-border-subtle) !important;
+  border-radius: 5px !important;
+  background: var(--editor-surface-1) !important;
+  display: inline-block !important;
+  vertical-align: middle !important;
+  position: relative !important;
+  transition: border-color 0.18s, background 0.18s !important;
+  cursor: pointer !important;
+  margin-right: 0.7em !important;
+  margin-top: 0.1em !important;
+}
+
+.ProseMirror input[type='checkbox']:checked {
+  background: var(--editor-accent-primary) !important;
+  border-color: var(--editor-accent-primary) !important;
+}
+
+.ProseMirror input[type='checkbox']:checked::after {
+  content: '✓' !important;
+  position: absolute !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  color: white !important;
+  font-size: 0.7em !important;
+  font-weight: bold !important;
+  line-height: 1 !important;
+}
+
+.ProseMirror input[type='checkbox']:focus {
+  outline: 2px solid var(--editor-accent-subtle) !important;
+  outline-offset: 2px !important;
+}
+
+/* ==========================================================================
+   TASK LISTS - STYLES ULTRA-AGRESSIFS
+   ========================================================================== */
+
+/* Supprime TOUS les bullets des listes task */
+.ProseMirror ul li[data-type="taskItem"],
+.ProseMirror ol li[data-type="taskItem"],
+li[data-type="taskItem"],
+.task-list-item {
+  list-style: none !important;
+  list-style-type: none !important;
+  list-style-image: none !important;
+  list-style-position: outside !important;
+  padding-left: 0 !important;
+  margin-left: 0 !important;
+  text-indent: 0 !important;
+}
+
+/* Supprime les bullets de tous les éléments task dans ProseMirror */
+.ProseMirror li[data-type="taskItem"]::before,
+.ProseMirror li[data-type="taskItem"]::after,
+li[data-type="taskItem"]::before,
+li[data-type="taskItem"]::after {
+  content: none !important;
+  display: none !important;
+}
+
+/* Force la structure flex pour les task items */
+.ProseMirror li[data-type="taskItem"],
+li[data-type="taskItem"] {
+  display: flex !important;
+  align-items: flex-start !important;
+  gap: 0.6em !important;
+  flex-direction: row !important;
+  width: 100% !important;
+}
+
+/* Styles pour les labels des task items */
+.ProseMirror li[data-type="taskItem"] > label,
+li[data-type="taskItem"] > label {
+  display: flex !important;
+  align-items: center !important;
+  width: 100% !important;
+  gap: 0.6em !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* Styles pour le contenu des task items */
+.ProseMirror li[data-type="taskItem"] > div,
+li[data-type="taskItem"] > div {
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  word-break: break-word !important;
+  white-space: pre-line !important;
+  display: block !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.ProseMirror li[data-type="taskItem"] > div p,
+li[data-type="taskItem"] > div p {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* ==========================================================================
+   CHECKBOXES - STYLES ULTRA-AGRESSIFS
+   ========================================================================== */
+
+/* Styles pour TOUS les checkbox dans ProseMirror */
+.ProseMirror input[type='checkbox'],
+.editor-content input[type='checkbox'],
+.markdown-body input[type='checkbox'] {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  width: 1.5em !important;
+  height: 1.5em !important;
+  border: 2px solid var(--editor-border-subtle) !important;
+  border-radius: 6px !important;
+  background: var(--editor-surface-1) !important;
+  display: inline-block !important;
+  vertical-align: middle !important;
+  position: relative !important;
+  transition: border-color 0.18s, background 0.18s !important;
+  cursor: pointer !important;
+  margin-right: 0.8em !important;
+  margin-top: 0.1em !important;
+  flex-shrink: 0 !important;
+}
+
+.ProseMirror input[type='checkbox']:checked,
+.editor-content input[type='checkbox']:checked,
+.markdown-body input[type='checkbox']:checked {
+  background: var(--editor-accent-primary) !important;
+  border-color: var(--editor-accent-primary) !important;
+}
+
+.ProseMirror input[type='checkbox']:checked::after,
+.editor-content input[type='checkbox']:checked::after,
+.markdown-body input[type='checkbox']:checked::after {
+  content: '✓' !important; /* ✅ VRAI CHECKMARK UNICODE */
+  position: absolute !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  color: white !important;
+  font-size: 1em !important; /* ✅ TAILLE ADAPTÉE */
+  font-weight: bold !important;
+  line-height: 1 !important;
+  text-align: center !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.ProseMirror input[type='checkbox']:focus,
+.editor-content input[type='checkbox']:focus,
+.markdown-body input[type='checkbox']:focus {
+  outline: 2px solid var(--editor-accent-subtle) !important;
+  outline-offset: 2px !important;
+}
+
+/* ==========================================================================
    ESPACEMENTS SUPPLÉMENTAIRES
    ========================================================================== */
 
 /* Espace sous les tableaux pour la lisibilité */
 .markdown-body table {
   margin-bottom: 2.5em;
+} 
+
+/* ==========================================================================
+   TASK LISTS - COUVERTURE COMPLÈTE TIPTAP
+   ========================================================================== */
+
+/* Cible TOUS les éléments possibles de task lists */
+.ProseMirror ul li[data-type="taskItem"],
+.ProseMirror ol li[data-type="taskItem"],
+.ProseMirror li[data-type="taskItem"],
+.ProseMirror .task-list-item,
+.ProseMirror ul .task-list-item,
+.ProseMirror ol .task-list-item,
+li[data-type="taskItem"],
+.task-list-item,
+ul li[data-type="taskItem"],
+ol li[data-type="taskItem"],
+ul .task-list-item,
+ol .task-list-item {
+  list-style: none !important;
+  list-style-type: none !important;
+  list-style-image: none !important;
+  list-style-position: outside !important;
+  padding-left: 0 !important;
+  margin-left: 0 !important;
+  text-indent: 0 !important;
+  display: flex !important;
+  align-items: flex-start !important;
+  gap: 0.6em !important;
+  flex-direction: row !important;
+  width: 100% !important;
+}
+
+/* Supprime TOUS les pseudo-éléments */
+.ProseMirror li[data-type="taskItem"]::before,
+.ProseMirror li[data-type="taskItem"]::after,
+.ProseMirror .task-list-item::before,
+.ProseMirror .task-list-item::after,
+li[data-type="taskItem"]::before,
+li[data-type="taskItem"]::after,
+.task-list-item::before,
+.task-list-item::after,
+ul li[data-type="taskItem"]::before,
+ul li[data-type="taskItem"]::after,
+ol li[data-type="taskItem"]::before,
+ol li[data-type="taskItem"]::after {
+  content: none !important;
+  display: none !important;
+  visibility: hidden !important;
+}
+
+/* Force la structure pour tous les labels */
+.ProseMirror li[data-type="taskItem"] > label,
+.ProseMirror .task-list-item > label,
+li[data-type="taskItem"] > label,
+.task-list-item > label {
+  display: flex !important;
+  align-items: center !important;
+  width: 100% !important;
+  gap: 0.6em !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* Force la structure pour tous les contenus */
+.ProseMirror li[data-type="taskItem"] > div,
+.ProseMirror .task-list-item > div,
+li[data-type="taskItem"] > div,
+.task-list-item > div {
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  word-break: break-word !important;
+  white-space: pre-line !important;
+  display: block !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.ProseMirror li[data-type="taskItem"] > div p,
+.ProseMirror .task-list-item > div p,
+li[data-type="taskItem"] > div p,
+.task-list-item > div p {
+  margin: 0 !important;
+  padding: 0 !important;
+} 
+
+/* ==========================================================================
+   MARKDOWN TASK LISTS - SUPPRESSION BULLETS
+   ========================================================================== */
+
+/* Cible les listes markdown qui contiennent des checkbox */
+.markdown-body ul li:has(input[type="checkbox"]),
+.markdown-body ol li:has(input[type="checkbox"]),
+.editor-content ul li:has(input[type="checkbox"]),
+.editor-content ol li:has(input[type="checkbox"]) {
+  list-style: none !important;
+  list-style-type: none !important;
+  list-style-image: none !important;
+  padding-left: 0 !important;
+  margin-left: 0 !important;
+  display: flex !important;
+  align-items: flex-start !important;
+  gap: 0.6em !important;
+}
+
+/* Cible les éléments avec des checkbox dans le markdown */
+.markdown-body li:has(input[type="checkbox"])::before,
+.markdown-body li:has(input[type="checkbox"])::after,
+.editor-content li:has(input[type="checkbox"])::before,
+.editor-content li:has(input[type="checkbox"])::after {
+  content: none !important;
+  display: none !important;
+}
+
+/* Force la structure pour les éléments avec checkbox */
+.markdown-body li:has(input[type="checkbox"]),
+.editor-content li:has(input[type="checkbox"]) {
+  display: flex !important;
+  align-items: flex-start !important;
+  gap: 0.6em !important;
+  padding-left: 0 !important;
+  margin-left: 0 !important;
+} 
+
+/* ==========================================================================
+   STYLE GLOBAL - SUPPRESSION BULLETS FORCÉE
+   ========================================================================== */
+
+/* Style global pour TOUS les éléments task */
+*[data-type="taskItem"],
+*.task-list-item,
+*:has(input[type="checkbox"]) {
+  list-style: none !important;
+  list-style-type: none !important;
+  list-style-image: none !important;
+  list-style-position: outside !important;
+  padding-left: 0 !important;
+  margin-left: 0 !important;
+  text-indent: 0 !important;
+}
+
+/* Supprime TOUS les pseudo-éléments de TOUS les éléments task */
+*[data-type="taskItem"]::before,
+*[data-type="taskItem"]::after,
+*.task-list-item::before,
+*.task-list-item::after,
+*:has(input[type="checkbox"])::before,
+*:has(input[type="checkbox"])::after {
+  content: none !important;
+  display: none !important;
+  visibility: hidden !important;
 } 

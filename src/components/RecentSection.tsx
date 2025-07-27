@@ -1,5 +1,6 @@
 import React from 'react';
 import ContentCard from './ContentCard';
+import './RecentSection.css';
 
 const mockData = {
   id: '1',

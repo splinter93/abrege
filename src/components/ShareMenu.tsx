@@ -28,7 +28,9 @@ export default function ShareMenu({ url, title = "Note Scrivia", description = "
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
-      console.error('Erreur lors de la copie:', err);
+      if (process.env.NODE_ENV !== 'production') {
+        console.error('Erreur lors de la copie:', err);
+      }
     }
   };
 

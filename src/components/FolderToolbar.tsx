@@ -14,7 +14,7 @@ const FolderToolbar: React.FC<FolderToolbarProps> = ({ onCreateFolder, onCreateF
   return (
     <div className="folder-toolbar" style={{ display: 'flex', gap: 18, alignItems: 'center', padding: '10px 0' }}>
       <button
-        className="control-btn"
+        className="fm-control-btn"
         title="Nouvelle note"
         aria-label="Nouvelle note"
         onClick={onCreateFile}
@@ -23,7 +23,7 @@ const FolderToolbar: React.FC<FolderToolbarProps> = ({ onCreateFolder, onCreateF
         <Pencil size={20} />
       </button>
       <button
-        className="control-btn"
+        className="fm-control-btn"
         title="Nouveau dossier"
         aria-label="Nouveau dossier"
         onClick={onCreateFolder}
@@ -32,7 +32,7 @@ const FolderToolbar: React.FC<FolderToolbarProps> = ({ onCreateFolder, onCreateF
         <FolderPlus size={20} />
       </button>
       <button
-        className={`control-btn${viewMode === 'list' ? ' active' : ''}`}
+        className={`fm-control-btn${viewMode === 'list' ? ' active' : ''}`}
         title="Vue liste"
         aria-label="Vue liste"
         onClick={() => onToggleView('list')}
@@ -41,7 +41,7 @@ const FolderToolbar: React.FC<FolderToolbarProps> = ({ onCreateFolder, onCreateF
         <List size={20} />
       </button>
       <button
-        className={`control-btn${viewMode === 'grid' ? ' active' : ''}`}
+        className={`fm-control-btn${viewMode === 'grid' ? ' active' : ''}`}
         title="Vue grille"
         aria-label="Vue grille"
         onClick={() => onToggleView('grid')}

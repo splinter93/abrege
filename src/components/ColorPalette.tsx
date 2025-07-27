@@ -5,7 +5,7 @@ export interface ColorPaletteProps {
   colors: string[];
   onSelect: (color: string) => void;
   selectedColor?: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 const ColorPalette: React.FC<ColorPaletteProps> = ({ colors, onSelect, selectedColor, ...props }) => {

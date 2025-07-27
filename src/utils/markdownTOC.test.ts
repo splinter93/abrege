@@ -1,4 +1,4 @@
-const { slugify, extractTOCWithSlugs, appendToSection } = require('./markdownTOC');
+import { slugify, extractTOCWithSlugs, appendToSection } from './markdownTOC';
 
 describe('slugify', () => {
   it('génère un slug simple', () => {

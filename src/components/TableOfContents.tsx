@@ -1,5 +1,4 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { FiMenu } from 'react-icons/fi';
 import type { Heading } from '../types/editor';
 
 interface TableOfContentsProps {
@@ -8,10 +7,10 @@ interface TableOfContentsProps {
   pinned?: boolean;
   onPin?: () => void;
   onClose?: () => void;
-  containerRef?: React.RefObject<any>;
+  containerRef?: React.RefObject<HTMLElement | null>;
 }
 
-export default function TableOfContents({ headings = [], currentId, pinned = false, onPin, onClose, containerRef }: TableOfContentsProps) {
+export default function TableOfContents({ headings = [], currentId, containerRef }: TableOfContentsProps) {
   const [hovered, setHovered] = useState(false);
   const [show, setShow] = useState(true);
   const tocRef = useRef<HTMLDivElement>(null);

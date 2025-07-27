@@ -18,7 +18,7 @@ function extractSectionContent(markdown: string, section: string): string {
   if (sectionIdx === -1) throw new Error('Section non trouvée (titre ou slug inconnu)');
   const target = toc[sectionIdx];
   const lines = markdown.split('\n');
-  let sectionStart = target.line - 1;
+  const sectionStart = target.line - 1;
   let sectionEnd = lines.length;
   for (let i = target.line; i < lines.length; i++) {
     const match = lines[i].match(/^(#{1,6})\s+(.+)/);
@@ -30,7 +30,7 @@ function extractSectionContent(markdown: string, section: string): string {
   return lines.slice(sectionStart + 1, sectionEnd).join('\n').trim();
 }
 
-export async function GET(req: NextRequest, { params }: any): Promise<Response> {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ ref: string }> }): Promise<Response> {
   try {
     const { ref } = await params;
     const { searchParams } = new URL(req.url);
@@ -59,12 +59,12 @@ export async function GET(req: NextRequest, { params }: any): Promise<Response> 
     let content = '';
     try {
       content = extractSectionContent(note.markdown_content || '', section!);
-    } catch (e: any) {
-      return new Response(JSON.stringify({ error: e.message }), { status: 404 });
+    } catch (e: unknown) {
+      return new Response(JSON.stringify({ error: e instanceof Error ? e.message : 'Erreur inconnue' }), { status: 404 });
     }
     return new Response(JSON.stringify({ section, content }), { status: 200 });
-  } catch (err: any) {
-    return new Response(JSON.stringify({ error: err.message }), { status: 500 });
+  } catch (err: unknown) {
+    return new Response(JSON.stringify({ error: err instanceof Error ? err.message : 'Erreur inconnue' }), { status: 500 });
   }
 }
 

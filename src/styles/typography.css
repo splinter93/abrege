@@ -11,6 +11,8 @@
      COULEURS HARMONISÉES
      ========================================================================== */
   --editor-text-color: #EFE9DC;
+  --editor-text-primary: #EFE9DC;    /* Ajouté pour compatibilité */
+  --editor-text-muted: #737373;      /* Ajouté pour FolderContent.css et RecentSection.css */
   --editor-accent-primary: #ff6b35;
   --editor-accent-hover: #f7931e;
   --editor-surface-1: #1a1a1c;
@@ -38,6 +40,7 @@
      ========================================================================== */
   --editor-title-size: 2.25rem;      /* 36px */
   --editor-body-size: 1.125rem;      /* 18px */
+  --editor-body-size-mobile: 1rem;   /* Ajouté pour editor-content.css */
   --editor-h1-size: 2.25rem;         /* 36px */
   --editor-h2-size: 1.75rem;         /* 28px */
   --editor-h3-size: 1.375rem;        /* 22px */

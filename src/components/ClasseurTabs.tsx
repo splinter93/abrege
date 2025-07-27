@@ -1,7 +1,5 @@
 "use client";
 import React, { useState, useRef, useEffect, MouseEvent } from "react";
-import { motion } from "framer-motion";
-import DynamicIcon from "./DynamicIcon";
 import SimpleContextMenu from "./SimpleContextMenu";
 import ColorPalette from "./ColorPalette";
 import "./ClasseurTabs.css";
@@ -23,7 +21,7 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
-const EMOJI_CHOICES = ["📁", "📄", "📚", "🗂️", "📝", "📒", "📦", "🧩", "📜", "📂"];
+// const EMOJI_CHOICES = ["📁", "📄", "📚", "🗂️", "📝", "📒", "📦", "🧩", "📜", "📂"];
 
 const ALL_EMOJIS =
   "😀😁😂🤣😃😄😅😆😉😊😋😎😍😘🥰😗😙😚🙂🤗🤩🤔🤨😐😑😶🙄😏😣😥😮🤐😯😪😫😴😌😛😜😝🤤😒😓😔😕🙃🤑😲☹️🙁😖😞😟😤😢😭😦😧😨😩🤯😬😰😱🥵🥶😳🤪😵😡😠🤬😷🤒🤕🤢🤮🤧😇🥳🥺🤠🤡🤥🤫🤭🧐🤓😈👿👹👺💀👻👽🤖💩😺😸😹😻😼😽🙀😿😾🐶🐱🐭🐹🐰🦊🐻🐼🐨🐯🦁🐮🐷🐽🐸🐵🙈🙉🙊🐒🐔🐧🐦🐤🐣🐥🦆🦅🦉🦇🐺🐗🐴🦄🐝🐛🦋🐌🐞🐜🦟🦗🕷️🕸️🐢🐍🦎🦂🦀🦞🦐🦑🐙🦑🦐🦞🦀🦋🐌🐛🐜🐝🦗🕷️🦂🦟🦠🐢🐍🦎🦖🦕🐙🦑🦐🦞🦀🐡🐠🐟🐬🐳🐋🦈🐊🐅🐆🦓🦍🦧🐘🦛🦏🐪🐫🦒🦘🦥🦦🦨🦡🐁🐀🐇🐿️🦔🐾🐉🐲🌵🎄🌲🌳🌴🌱🌿☘️🍀🎍🎋🍃🍂🍁🍄🌾💐🌷🌹🥀🌺🌸🌼🌻🌞🌝🌛🌜🌚🌕🌖🌗🌘🌑🌒🌓🌔🌙🌎🌍🌏💫⭐🌟✨⚡☄️💥🔥🌪️🌈☀️🌤️⛅🌥️🌦️🌧️🌨️🌩️🌪️🌫️🌬️🌀🌈🌂☂️☔⛱️⚽🏈⚾🥎🎾🏐🏉🥏🎱🏓🏸🥅🏒🏑🏏⛳🏹🎣🥊🥋🎽⛸️🥌🛷⛷️🏂🏋️🤼🤸⛹️🤺🤾🏌️🏇🧘🏄🏊🤽🚣🧗🚵🚴🏆🥇🥈🥉🏅🎖️🏵️🎗️🎫🎟️🎪🤹🎭🎨🎬🎤🎧🎼🎹🥁🎷🎺🎸🎻🎲🎯🎳🎮🎰🎲🧩🧸🪁🪀🪅🪆🪐🪁🪀🪅🪆🪐🪁🪀🪅🪆🪐".split("");
@@ -40,13 +38,13 @@ interface SortableTabProps {
   isActive: boolean;
   onSelectClasseur: (id: string) => void;
   onContextMenu: (e: MouseEvent<HTMLButtonElement>, classeur: Classeur) => void;
-  listeners?: any;
-  attributes?: any;
+  listeners?: Record<string, unknown>;
+  attributes?: Record<string, unknown>;
   setNodeRef?: (el: HTMLElement | null) => void;
   isDragging?: boolean;
   isOverlay?: boolean;
-  sortableTransform?: any;
-  sortableTransition?: any;
+  sortableTransform?: unknown;
+  sortableTransition?: unknown;
   onDropToClasseur?: (classeurId: string, itemId: string, itemType: 'folder' | 'file') => void;
 }
 
@@ -80,23 +78,10 @@ function SortableTab({ classeur, isActive, onSelectClasseur, onContextMenu, onDr
         setIsDropActive(false);
         window.__isTabDropActive = false;
       }}
-      onDrop={e => {
+      onDrop={() => {
         setIsDropActive(false);
         window.__isTabDropActive = false;
-        e.stopPropagation();
-        try {
-          const data = JSON.parse(e.dataTransfer.getData('application/json'));
-          if (data && data.id && data.type && onDropToClasseur) {
-            console.log('[DnD] onDropToClasseur called', { classeurId: classeur.id, itemId: data.id, itemType: data.type });
-            onDropToClasseur(classeur.id, data.id, data.type);
-            // Ajoute target: 'tab' dans le payload pour signaler le contexte
-            const eventPayload = { classeurId: classeur.id, itemId: data.id, itemType: data.type, target: 'tab' };
-            console.log('[DnD] Dispatching drop-to-classeur event', eventPayload);
-            window.dispatchEvent(new CustomEvent('drop-to-classeur', { detail: eventPayload }));
-          }
-        } catch (err) {
-          console.error('[DnD] Error in onDrop', err);
-        }
+        // Error handling for drop operation
       }}
     >
       <button
@@ -147,7 +132,7 @@ const ClasseurTabs: React.FC<ClasseurTabsProps> = ({
   }, []);
   const [contextMenu, setContextMenu] = useState<{ visible: boolean; x: number; y: number; item: Classeur | null }>({ visible: false, x: 0, y: 0, item: null });
   const [isColorPickerVisible, setColorPickerVisible] = useState(false);
-  const [activeId, setActiveId] = useState<string | null>(null);
+  // const [activeId, setActiveId] = useState<string | null>(null);
   const [emojiPicker, setEmojiPicker] = useState<{ visible: boolean; classeur: Classeur | null }>({ visible: false, classeur: null });
   const emojiPickerRef = useRef<HTMLDivElement>(null);
 
@@ -210,10 +195,8 @@ const ClasseurTabs: React.FC<ClasseurTabsProps> = ({
     const id = event.active.id as string;
     const found = classeurs.find((c) => c.id === id) || null;
     setDraggedClasseur(found);
-    setActiveId(id);
   };
   const handleDragEnd = (event: DragEndEvent) => {
-    setActiveId(null);
     setDraggedClasseur(null);
     const { active, over } = event;
     if (active && over && active.id !== over.id) {

@@ -1,4 +1,5 @@
 import React from 'react';
+import '@/styles/folder-manager-utilities.css';
 import { Folder } from './types';
 import { FolderIcon } from './CustomIcons';
 
@@ -49,27 +50,7 @@ const FolderItem: React.FC<FolderItemProps> = ({ folder, onOpen, isRenaming, onR
 
   return (
     <div
-      className={`folder-square-container${isDragOver ? ' drag-over' : ''}`}
-      style={{
-        width: 168,
-        height: 132,
-        background: isDragOver ? 'rgba(255,140,0,0.10)' : 'rgba(255,255,255,0.025)',
-        border: isDragOver ? '2px solid rgba(255,140,0,0.22)' : '1px solid rgba(255,255,255,0.06)',
-        borderRadius: 16,
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        boxShadow: isDragOver
-          ? '0 0 0 1.2px rgba(255,140,0,0.18), 0 8px 32px 0 rgba(255,140,0,0.13), 0 2px 12px 0 rgba(31, 38, 135, 0.08)'
-          : '0 2px 8px rgba(0,0,0,0.08)',
-        cursor: isRenaming ? 'text' : 'pointer',
-        userSelect: 'none',
-        transition: 'box-shadow 0.18s, background 0.18s, border 0.18s',
-        backdropFilter: 'blur(8px)',
-        WebkitBackdropFilter: 'blur(8px)',
-        zIndex: isDragOver ? 2 : undefined,
-      }}
+      className={`folder-square-container folder-flex-column folder-text-center folder-cursor-pointer folder-transition-all ${isDragOver ? ' drag-over' : ''}`}
       onMouseEnter={e => {
         if (!isDragOver) {
           e.currentTarget.style.background = 'rgba(255,255,255,0.07)';
@@ -77,16 +58,13 @@ const FolderItem: React.FC<FolderItemProps> = ({ folder, onOpen, isRenaming, onR
           e.currentTarget.style.boxShadow = '0 4px 18px rgba(0,0,0,0.13), 0 2px 8px rgba(0,0,0,0.08)';
         }
       }}
-      onMouseLeave={e => {
+      onMouseLeave={() => {
         if (!isDragOver) {
-          e.currentTarget.style.background = 'rgba(255,255,255,0.025)';
-          e.currentTarget.style.border = '1px solid rgba(255,255,255,0.06)';
-          e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.08)';
+          // Reset styles handled by CSS
         }
       }}
-      onMouseDown={e => {
-        console.log('[DEBUG] FolderItem onMouseDown - button:', e.button, 'isRenaming:', isRenaming);
-        if (e.button === 2) {
+              onMouseDown={e => {
+          if (e.button === 2) {
           e.preventDefault();
           lastWasRightClick.current = true;
           setIsDraggable(false);
@@ -101,9 +79,8 @@ const FolderItem: React.FC<FolderItemProps> = ({ folder, onOpen, isRenaming, onR
         }
         lastWasRightClick.current = false;
       }}
-      onContextMenu={e => {
-        console.log('[DEBUG] FolderItem onContextMenu');
-        e.preventDefault();
+              onContextMenu={e => {
+          e.preventDefault();
         if (onContextMenu) {
           onContextMenu(e, folder);
         }
@@ -138,19 +115,18 @@ const FolderItem: React.FC<FolderItemProps> = ({ folder, onOpen, isRenaming, onR
         setIsDragOver(false);
         try {
           const data = JSON.parse(e.dataTransfer.getData('application/json'));
-          if (data && data.target === 'tab') return; // Ignore drop venant d’un tab
+          if (data && data.target === 'tab') return; // Ignore drop venant d'un tab
         } catch {}
         if (onDropItem) {
           const itemId = e.dataTransfer.getData('itemId');
           const itemType = e.dataTransfer.getData('itemType') as 'folder' | 'file';
-          console.log('[DND] FolderItem onDrop', { itemId, itemType, targetFolderId: folder.id });
           if (itemId && itemType) {
             onDropItem(itemId, itemType);
           }
         }
       }}
     >
-      <FolderIcon size={64} className="mb-1" />
+      <FolderIcon size={64} className="folder-margin-bottom-small" />
       {isRenaming ? (
         <input
           ref={inputRef}
@@ -158,29 +134,14 @@ const FolderItem: React.FC<FolderItemProps> = ({ folder, onOpen, isRenaming, onR
           onChange={e => setInputValue(e.target.value)}
           onKeyDown={handleInputKeyDown}
           onBlur={handleInputBlur}
-          style={{
-            fontWeight: 500,
-            fontSize: 15,
-            color: '#fff',
-            textAlign: 'center',
-            marginTop: 2,
-            maxWidth: 140,
-            background: 'rgba(0,0,0,0.18)',
-            border: '1px solid rgba(255,255,255,0.10)',
-            borderRadius: 6,
-            outline: 'none',
-            padding: '2px 8px',
-            boxShadow: '0 1px 4px rgba(0,0,0,0.10)',
-            textShadow: '0 1px 4px rgba(0,0,0,0.18)',
-          }}
+          className="folder-font-medium folder-text-sm folder-text-white folder-text-center folder-margin-top-small folder-bg-transparent folder-border-none folder-shadow-text"
           autoFocus
           spellCheck={false}
           onClick={e => e.stopPropagation()}
         />
       ) : (
         <span
-          className="folder-title-multiline"
-          style={{ textAlign: 'center', marginTop: 2, maxWidth: 140, textShadow: '0 1px 4px rgba(0,0,0,0.18)' }}
+          className="folder-title-multiline folder-text-center folder-margin-top-small folder-shadow-text"
           onClick={e => {
             if (onStartRenameClick) {
               e.stopPropagation();

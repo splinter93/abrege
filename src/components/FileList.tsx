@@ -14,7 +14,7 @@ interface FileListProps {
 }
 
 const FileList: React.FC<FileListProps> = ({ files, onDoubleClick, onStartRenameClick, onRename, onCancelRename, renamingFileId, onReorderFile }) => {
-  const { sensors, handleDragEnd, SortableContext, strategy } = useDragAndDrop<FileArticle>({
+  const { SortableContext, strategy } = useDragAndDrop<FileArticle>({
     items: files,
     onReorder: onReorderFile,
     getId: (file) => file.id,

@@ -2,14 +2,14 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { useLanguageContext } from '../contexts/LanguageContext';
+
 import LogoScrivia from '@/components/LogoScrivia';
 import { FiShare2, FiStar, FiMoreHorizontal, FiMaximize2, FiMinimize2, FiCheck } from 'react-icons/fi';
 import { supabase } from '@/supabaseClient';
 import ShareMenu from './ShareMenu';
 
 const Header: React.FC = () => {
-  const { t } = useLanguageContext();
+  // const { t } = useLanguageContext();
   const [isLoggedIn, setIsLoggedIn] = React.useState<boolean>(false);
   const [isShareMenuOpen, setIsShareMenuOpen] = React.useState<boolean>(false);
   const [isKebabMenuOpen, setIsKebabMenuOpen] = React.useState<boolean>(false);

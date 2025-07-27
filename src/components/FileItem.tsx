@@ -1,4 +1,5 @@
 import React from 'react';
+import '@/styles/folder-manager-utilities.css';
 import { FileArticle } from './types';
 import { FileIcon } from './CustomIcons';
 import { motion } from 'framer-motion';
@@ -46,7 +47,7 @@ const FileItem: React.FC<FileItemProps> = ({ file, onOpen, isRenaming, onRename,
     }
   };
 
-  const info = file.updated_at ? new Date(file.updated_at).toLocaleDateString() : file.source_type;
+  // const info = file.updated_at ? new Date(file.updated_at).toLocaleDateString() : file.source_type;
   return (
     <div
       draggable={isDraggable}
@@ -67,24 +68,7 @@ const FileItem: React.FC<FileItemProps> = ({ file, onOpen, isRenaming, onRename,
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.92 }}
         transition={{ duration: 0.38, ease: 'easeOut' }}
-        className="file-square-container"
-        style={{
-          width: 168,
-          height: 132,
-          background: 'rgba(255,255,255,0.025)',
-          border: '1px solid rgba(255,255,255,0.06)',
-          borderRadius: 16,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-          cursor: isRenaming ? 'text' : 'pointer',
-          userSelect: 'none',
-          transition: 'box-shadow 0.15s, background 0.18s, border 0.18s',
-          backdropFilter: 'blur(8px)',
-          WebkitBackdropFilter: 'blur(8px)',
-        }}
+        className="file-square-container folder-flex-column folder-text-center folder-cursor-pointer folder-transition-all"
         onMouseEnter={e => {
           e.currentTarget.style.background = 'rgba(255,255,255,0.07)';
           e.currentTarget.style.border = '1.5px solid rgba(255,255,255,0.18)';
@@ -96,7 +80,6 @@ const FileItem: React.FC<FileItemProps> = ({ file, onOpen, isRenaming, onRename,
           e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.08)';
         }}
         onMouseDown={e => {
-          console.log('[DEBUG] FileItem onMouseDown - button:', e.button, 'isRenaming:', isRenaming);
           if (e.button === 2) {
             e.preventDefault();
             lastWasRightClick.current = true;
@@ -116,7 +99,6 @@ const FileItem: React.FC<FileItemProps> = ({ file, onOpen, isRenaming, onRename,
         role="button"
         aria-label={file.source_title}
         onContextMenu={e => {
-          console.log('[DEBUG] FileItem onContextMenu');
           if (onContextMenu) {
             e.preventDefault();
             onContextMenu(e, file);
@@ -125,7 +107,7 @@ const FileItem: React.FC<FileItemProps> = ({ file, onOpen, isRenaming, onRename,
           lastWasRightClick.current = false;
         }}
       >
-        <FileIcon size={64} className="mb-1" />
+        <FileIcon size={64} className="folder-margin-bottom-small" />
         {isRenaming ? (
           <input
             ref={inputRef}
@@ -133,29 +115,14 @@ const FileItem: React.FC<FileItemProps> = ({ file, onOpen, isRenaming, onRename,
             onChange={e => setInputValue(e.target.value)}
             onKeyDown={handleInputKeyDown}
             onBlur={handleInputBlur}
-            style={{
-              fontWeight: 500,
-              fontSize: 15,
-              color: '#fff',
-              textAlign: 'center',
-              marginTop: 2,
-              maxWidth: 140,
-              background: 'rgba(0,0,0,0.18)',
-              border: '1px solid rgba(255,255,255,0.10)',
-              borderRadius: 6,
-              outline: 'none',
-              padding: '2px 8px',
-              boxShadow: '0 1px 4px rgba(0,0,0,0.10)',
-              textShadow: '0 1px 4px rgba(0,0,0,0.18)',
-            }}
+            className="folder-font-medium folder-text-sm folder-text-white folder-text-center folder-margin-top-small folder-bg-transparent folder-border-none folder-shadow-text"
             autoFocus
             spellCheck={false}
             onClick={e => e.stopPropagation()}
           />
         ) : (
           <span
-            className="folder-title-multiline"
-            style={{ textAlign: 'center', marginTop: 2, maxWidth: 140, textShadow: '0 1px 4px rgba(0,0,0,0.18)' }}
+            className="folder-title-multiline folder-text-center folder-margin-top-small folder-shadow-text"
             onClick={e => {
               if (onStartRenameClick) {
                 e.stopPropagation();

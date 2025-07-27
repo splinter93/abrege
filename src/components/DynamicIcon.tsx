@@ -7,12 +7,12 @@ export type DynamicIconName = 'Folder' | 'Book' | 'Rocket' | 'Brain' | 'Briefcas
 interface DynamicIconProps {
   name: DynamicIconName;
   color?: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 // Ce mapping permet de ne pas importer toute la bibliothèque d'un coup
 // et de contrôler les icônes disponibles.
-const iconMap: Record<DynamicIconName, React.ComponentType<any>> = {
+const iconMap: Record<DynamicIconName, React.ComponentType<{ color?: string; [key: string]: unknown }>> = {
   Folder,
   Book,
   Rocket,

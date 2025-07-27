@@ -3,27 +3,26 @@ import './editor-header.css';
 
 interface EditorHeaderProps {
   headerImageUrl?: string | null;
-  onHeaderChange?: (url: string | null) => void;
   children?: React.ReactNode; // Pour la toolbar ou autres actions
 }
 
 /**
- * Header de l’éditeur : image d’en-tête + actions globales (toolbar, etc.)
+ * Header de l'éditeur : image d'en-tête + actions globales (toolbar, etc.)
  */
-const EditorHeader: React.FC<EditorHeaderProps> = ({ headerImageUrl, onHeaderChange, children }) => {
+const EditorHeader: React.FC<EditorHeaderProps> = ({ headerImageUrl, children }) => {
   return (
-    <div className="editor-header">
+    <header className="editor-header" role="banner" aria-label="En-tête de l'éditeur">
       {headerImageUrl && (
         <img
           src={headerImageUrl}
-          alt="Header"
+          alt="Image d'en-tête"
           className="editor-header-image-img"
         />
       )}
-      <div className="editor-header-toolbar">
+      <div className="editor-header-toolbar" role="toolbar" aria-label="Barre d'outils">
         {children}
       </div>
-    </div>
+    </header>
   );
 };
 

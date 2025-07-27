@@ -1,8 +1,7 @@
 import { useState, useCallback } from 'react';
 import { toast } from 'react-hot-toast';
 import type { NoteData } from '../types/editor';
-import { updateNoteREST } from '../services/api';
-import { FiSave } from 'react-icons/fi';
+
 
 export interface UseEditorSaveOptions {
   onSave?: (data: NoteData) => void;
@@ -54,7 +53,7 @@ export default function useEditorSave({ onSave, editor, headerImage, titleAlign 
             fontSize: 13,
           },
         });
-      } catch (err) {
+      } catch {
         toast.error('Erreur lors de la sauvegarde');
       } finally {
         setIsSaving(false);

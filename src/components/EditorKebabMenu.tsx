@@ -23,8 +23,6 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
   onClose,
   a4Mode,
   setA4Mode,
-  slashLang,
-  setSlashLang,
   published,
   setPublished,
   publishedUrl,

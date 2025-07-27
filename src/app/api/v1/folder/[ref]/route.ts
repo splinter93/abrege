@@ -90,7 +90,7 @@ export async function PUT(req: NextRequest, { params }: any): Promise<Response> 
       .select('name')
       .eq('id', folderId)
       .single();
-    let updates: any = { name };
+    const updates: Record<string, unknown> = { name };
     if (!oldFolderError && oldFolder && oldFolder.name !== name) {
       // Générer le nouveau slug
       const { SlugGenerator } = await import('@/utils/slugGenerator');

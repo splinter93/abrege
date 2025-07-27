@@ -33,7 +33,7 @@ async function checkDatabaseStatus() {
         console.log(`✅ Table ${table}: Colonne slug présente`);
         results[table] = true;
       }
-    } catch (error) {
+    } catch {
       console.log(`❌ Table ${table}: Erreur de vérification`);
       results[table] = false;
     }

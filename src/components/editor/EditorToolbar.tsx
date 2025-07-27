@@ -5,11 +5,11 @@ interface EditorToolbarProps {
 }
 
 /**
- * Toolbar d’édition (actions de formatage, etc.)
+ * Toolbar d'édition (actions de formatage, etc.)
  */
 const EditorToolbar: React.FC<EditorToolbarProps> = ({ children }) => {
   return (
-    <div className="editor-toolbar" style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 8, margin: '16px 0' }}>
+    <div className="editor-toolbar editor-full-width editor-flex-center editor-margin-standard">
       {children}
     </div>
   );

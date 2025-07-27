@@ -29,7 +29,7 @@ export default async function PreviewPage({ params }: PreviewPageProps) {
           <LogoScrivia />
         </div>
         <h1>Note non trouvée ou non publiée</h1>
-        <p>Cette note n'existe pas ou n'est pas accessible publiquement.</p>
+        <p>Cette note n&apos;existe pas ou n&apos;est pas accessible publiquement.</p>
       </div>
     );
   }

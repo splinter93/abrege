@@ -17,7 +17,7 @@ export type MoveNoteResponse =
   | { note: Article }
   | { error: string; details?: string[] };
 
-export async function PATCH(req: NextRequest, { params }: any): Promise<Response> {
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ ref: string }> }): Promise<Response> {
   const { ref } = await params;
   try {
     const body: MoveNotePayload = await req.json();
@@ -54,7 +54,7 @@ export async function PATCH(req: NextRequest, { params }: any): Promise<Response
     if (body.target_classeur_id) {
       try {
         targetClasseurId = await resolveClasseurRef(body.target_classeur_id, USER_ID);
-      } catch (err) {
+      } catch {
         return new Response(JSON.stringify({ error: `Notebook cible '${body.target_classeur_id}' introuvable ou non accessible.` }), { status: 404, headers: { 'Content-Type': 'application/json' } });
       }
     }
@@ -64,13 +64,13 @@ export async function PATCH(req: NextRequest, { params }: any): Promise<Response
       } else {
         try {
           targetFolderId = await resolveFolderRef(body.target_folder_id, USER_ID);
-        } catch (err) {
+        } catch {
           return new Response(JSON.stringify({ error: `Dossier cible '${body.target_folder_id}' introuvable ou non accessible.` }), { status: 404, headers: { 'Content-Type': 'application/json' } });
         }
       }
     }
     // Construction de l'objet d'update
-    const updates: any = {};
+    const updates: Record<string, unknown> = {};
     if (targetClasseurId !== undefined) updates.classeur_id = targetClasseurId;
     if (targetFolderId !== undefined) updates.folder_id = targetFolderId;
     if ('position' in body) updates.position = body.position;
@@ -99,9 +99,9 @@ export async function PATCH(req: NextRequest, { params }: any): Promise<Response
       return new Response(JSON.stringify({ error: 'Aucune note mise à jour (slug/id incorrect ?)' }), { status: 404, headers: { 'Content-Type': 'application/json' } });
     }
     return new Response(JSON.stringify({ note: updated }), { status: 200, headers: { 'Content-Type': 'application/json' } });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('[moveNote] PATCH error:', err);
-    return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: { 'Content-Type': 'application/json' } });
+    return new Response(JSON.stringify({ error: err instanceof Error ? err.message : 'Erreur inconnue' }), { status: 500, headers: { 'Content-Type': 'application/json' } });
   }
 }
 
