@@ -53,12 +53,14 @@ const EditorHeaderImage: React.FC<EditorHeaderImageProps> = ({
   const dragging = useRef(false);
   const startY = useRef(0);
   const startOffsetY = useRef(Math.round(headerImageOffset * 100) / 100);
+  const currentOffsetRef = useRef(Math.round(headerImageOffset * 100) / 100);
 
   // Drag logic
   const handleMouseDown = (e: React.MouseEvent) => {
     dragging.current = true;
     startY.current = e.clientY;
-    startOffsetY.current = imageOffsetY;
+    // Capturer la position de départ actuelle
+    startOffsetY.current = currentOffsetRef.current;
     document.body.style.cursor = 'grabbing';
     window.addEventListener('mousemove', handleMouseMove);
     window.addEventListener('mouseup', handleMouseUp);
@@ -70,7 +72,9 @@ const EditorHeaderImage: React.FC<EditorHeaderImageProps> = ({
     let newOffset = startOffsetY.current + (deltaY / 220) * 100;
     newOffset = Math.max(0, Math.min(100, newOffset));
     // Arrondir au centième pour plus de précision
-    setImageOffsetY(Math.round(newOffset * 100) / 100);
+    const roundedOffset = Math.round(newOffset * 100) / 100;
+    setImageOffsetY(roundedOffset);
+    currentOffsetRef.current = roundedOffset;
   };
   const handleMouseUp = () => {
     dragging.current = false;
@@ -78,20 +82,9 @@ const EditorHeaderImage: React.FC<EditorHeaderImageProps> = ({
     window.removeEventListener('mousemove', handleMouseMove);
     window.removeEventListener('mouseup', handleMouseUp);
     
-    console.log('[EditorHeaderImage] handleMouseUp appelé');
-    console.log('[EditorHeaderImage] imageOffsetY:', imageOffsetY);
-    console.log('[EditorHeaderImage] headerImageOffset:', headerImageOffset);
-    console.log('[EditorHeaderImage] onHeaderOffsetChange existe:', !!onHeaderOffsetChange);
-    
-    // Sauvegarder la nouvelle position si elle a changé
-    // Utiliser une comparaison avec tolérance pour les décimales
-    const hasChanged = Math.abs(imageOffsetY - headerImageOffset) > 0.01;
-    if (onHeaderOffsetChange && hasChanged) {
-      console.log('[EditorHeaderImage] Appel de onHeaderOffsetChange avec:', imageOffsetY);
-      onHeaderOffsetChange(imageOffsetY);
-    } else {
-      console.log('[EditorHeaderImage] Pas de sauvegarde - pas de changement ou pas de callback');
-      console.log('[EditorHeaderImage] Différence:', Math.abs(imageOffsetY - headerImageOffset));
+    // Sauvegarder la position finale (utiliser la ref qui a toujours la valeur la plus récente)
+    if (onHeaderOffsetChange) {
+      onHeaderOffsetChange(currentOffsetRef.current);
     }
   };
 

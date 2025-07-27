@@ -181,19 +181,12 @@ export default function NoteEditorPage() {
   const handleHeaderImageOffsetSave = async (newOffset: number) => {
     if (!noteId) return;
     try {
-      console.log('[header-image-offset] Tentative de sauvegarde:', { newOffset, noteId });
-      
       // Arrondir la valeur au centième pour plus de précision
       const roundedOffset = Math.round(newOffset * 100) / 100;
-      console.log('[header-image-offset] Valeur arrondie:', roundedOffset);
-      
       const payload: Record<string, unknown> = {
         header_image_offset: roundedOffset,
       };
-      console.log('[header-image-offset] Payload:', payload);
-      
       await updateNoteREST(noteId, payload);
-      console.log('[header-image-offset] Sauvegarde réussie');
     } catch (error) {
       console.error('[header-image-offset] Erreur lors de la sauvegarde de l\'offset:', error);
     }
