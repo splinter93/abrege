@@ -1,7 +1,6 @@
 import { useState, useCallback } from 'react';
 import { toast } from 'react-hot-toast';
 import type { NoteData } from '../types/editor';
-import { useEditorPersistence } from './useEditorPersistence';
 
 
 export interface UseEditorSaveOptions {
@@ -27,9 +26,6 @@ export interface UseEditorSaveResult {
 export default function useEditorSave({ onSave, editor, headerImage, titleAlign }: UseEditorSaveOptions): UseEditorSaveResult {
   const [isSaving, setIsSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState(new Date());
-  
-  // Intégration de la persistance locale
-  const { clearAfterSave } = useEditorPersistence();
 
   /**
    * Fonction de sauvegarde à appeler depuis l'éditeur
@@ -41,14 +37,20 @@ export default function useEditorSave({ onSave, editor, headerImage, titleAlign 
       let markdown_content = editor.storage.markdown.getMarkdown();
       markdown_content = markdown_content.replace(/\\(#+ )/g, '$1');
       markdown_content = markdown_content.replace(/(\!\[.*?\]\(.*?\))\s*(#+ )/g, '$1\n\n$2');
+      if (process.env.NODE_ENV === 'development') {
+        // Log autosave déclenchée
+        // eslint-disable-next-line no-console
+        console.log('[AUTOSAVE] Sauvegarde déclenchée', { newTitle, markdown_content });
+      }
       try {
         await onSave({ title: newTitle, markdown_content, html_content, headerImage, titleAlign: align });
         setLastSaved(new Date());
-        
-        // Nettoyer l'état persisté après une sauvegarde réussie
-        clearAfterSave();
-      } catch {
+      } catch (e) {
         toast.error('Erreur lors de la sauvegarde');
+        if (process.env.NODE_ENV === 'development') {
+          // eslint-disable-next-line no-console
+          console.error('[AUTOSAVE] Échec de la sauvegarde', e);
+        }
       } finally {
         setIsSaving(false);
       }
