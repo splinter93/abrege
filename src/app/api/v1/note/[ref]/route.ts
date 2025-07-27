@@ -86,6 +86,9 @@ export async function PUT(req: NextRequest, { params }: any): Promise<Response> 
     }
     if (body.header_image_offset !== undefined) {
       updateData.header_image_offset = body.header_image_offset;
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[API] Mise à jour header_image_offset:', body.header_image_offset);
+      }
     }
     if (body.source_title !== undefined) {
       updateData.source_title = body.source_title;

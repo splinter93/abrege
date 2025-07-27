@@ -167,11 +167,20 @@ export default function NoteEditorPage() {
   const handleHeaderImageSave = async (newHeaderImage: string | null) => {
     if (!noteId) return;
     try {
-
+      // Réinitialiser l'offset à 50.00 pour toute nouvelle image
       const payload: Record<string, unknown> = {
         header_image: newHeaderImage,
+        header_image_offset: 50.00,
       };
+      
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[header-image] Changement d\'image - réinitialisation de l\'offset à 50.00');
+      }
+      
       await updateNoteREST(noteId, payload);
+      
+      // Mettre à jour l'état local pour refléter le changement
+      setHeaderImageOffset(50.00);
     } catch (error) {
       console.error('[header-image] Erreur lors de la sauvegarde de l\'image:', error);
     }
