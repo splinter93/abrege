@@ -217,19 +217,22 @@ export default function NoteEditorPage() {
   }, [editor, noteId]);
 
   // Lors du chargement initial ou reload, récupérer l'URL publique si la note est publiée
+  // Récupérer l'URL publiée au chargement initial seulement
   React.useEffect(() => {
-    if (!editor || !noteId || !hasInitialized) return;
-    (async () => {
-      if (published) {
-        try {
-          const res = await publishNoteREST(noteId, true);
-          if (res.url) setPublishedUrl(res.url);
-        } catch {}
-      } else {
-        setPublishedUrl(null);
-      }
-    })();
-  }, [editor, noteId, hasInitialized, published, handleSave]);
+    if (!noteId || !hasInitialized) return;
+    if (published && !publishedUrl) {
+      // Récupérer l'URL depuis la base de données sans déclencher de publish
+      getArticleById(noteId)
+        .then((note: Record<string, unknown>) => {
+          if (note && note.public_url) {
+            setPublishedUrl(note.public_url as string);
+          }
+        })
+        .catch(() => {
+          // Ignorer les erreurs
+        });
+    }
+  }, [noteId, hasInitialized, published, publishedUrl]);
 
   // Fonction utilitaire pour extraire les headings du doc Tiptap
   function getHeadingsFromEditor(editorInstance: typeof editor): Heading[] {
