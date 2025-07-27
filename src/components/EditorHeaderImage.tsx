@@ -48,18 +48,17 @@ const EditorHeaderImage: React.FC<EditorHeaderImageProps> = ({
 }) => {
   const [headerOverlayLevel, setHeaderOverlayLevel] = useState(0);
   const [headerBlurLevel, setHeaderBlurLevel] = useState(0);
-  // const [imageSettingsOpen, setImageSettingsOpen] = useState(false);
-  const [imageOffsetY, setImageOffsetY] = useState(Math.round(headerImageOffset * 100) / 100); // 0-100 (%)
+  const [imageOffsetY, setImageOffsetY] = useState(headerImageOffset);
   const dragging = useRef(false);
   const startY = useRef(0);
-  const startOffsetY = useRef(Math.round(headerImageOffset * 100) / 100);
-  const currentOffsetRef = useRef(Math.round(headerImageOffset * 100) / 100);
+  const startOffsetY = useRef(headerImageOffset);
+  const currentOffsetRef = useRef(headerImageOffset);
 
-  // Synchroniser l'état local avec la prop headerImageOffset
+  // Synchroniser avec headerImageOffset
   React.useEffect(() => {
-    const newOffset = Math.round(headerImageOffset * 100) / 100;
-    setImageOffsetY(newOffset);
-    currentOffsetRef.current = newOffset;
+    setImageOffsetY(headerImageOffset);
+    currentOffsetRef.current = headerImageOffset;
+    startOffsetY.current = headerImageOffset;
   }, [headerImageOffset]);
 
   // Drag logic
@@ -78,10 +77,8 @@ const EditorHeaderImage: React.FC<EditorHeaderImageProps> = ({
     // 220px de hauteur, on veut un offset de 0 à 100 (%)
     let newOffset = startOffsetY.current + (deltaY / 220) * 100;
     newOffset = Math.max(0, Math.min(100, newOffset));
-    // Arrondir au centième pour plus de précision
-    const roundedOffset = Math.round(newOffset * 100) / 100;
-    setImageOffsetY(roundedOffset);
-    currentOffsetRef.current = roundedOffset;
+    setImageOffsetY(newOffset);
+    currentOffsetRef.current = newOffset;
   };
   const handleMouseUp = () => {
     dragging.current = false;

@@ -35,8 +35,7 @@ import CustomImage from '@/extensions/CustomImage';
 import { useSession } from '@supabase/auth-helpers-react';
 import { publishNoteREST } from '@/services/api';
 import LogoScrivia from '@/components/LogoScrivia';
-import { subscribeToNotes, unsubscribeFromAll } from '@/realtime/dispatcher';
-import { useFileSystemStore } from '@/store/useFileSystemStore';
+
 
 type SlashCommand = {
   id: string;
@@ -168,28 +167,21 @@ export default function NoteEditorPage() {
   const handleHeaderImageSave = async (newHeaderImage: string | null, newOffset?: number | null) => {
     if (!noteId) return;
     try {
-      // Logique intelligente pour l'offset :
-      // - Si newOffset est fourni (LLM) → utiliser sa valeur
-      // - Si newOffset est null/undefined → réinitialiser à 50.00
-      const finalOffset = newOffset !== undefined && newOffset !== null ? newOffset : 50.00;
-      
+      // SIMPLIFICATION : Toujours réinitialiser à 50 lors du changement d'image
       const payload: Record<string, unknown> = {
         header_image: newHeaderImage,
-        header_image_offset: finalOffset,
+        header_image_offset: 50,
       };
       
       if (process.env.NODE_ENV === 'development') {
-        if (newOffset !== undefined && newOffset !== null) {
-          console.log(`[header-image] Changement d'image avec offset LLM: ${newOffset}`);
-        } else {
-          console.log('[header-image] Changement d\'image - réinitialisation de l\'offset à 50.00');
-        }
+        console.log('[header-image] Changement d\'image - réinitialisation offset à 50');
       }
       
       await updateNoteREST(noteId, payload);
       
-      // Mettre à jour l'état local pour refléter le changement
-      setHeaderImageOffset(finalOffset);
+      // Mettre à jour l'état local
+      setHeaderImageUrl(newHeaderImage);
+      setHeaderImageOffset(50);
     } catch (error) {
       console.error('[header-image] Erreur lors de la sauvegarde de l\'image:', error);
     }
@@ -199,12 +191,11 @@ export default function NoteEditorPage() {
   const handleHeaderImageOffsetSave = async (newOffset: number) => {
     if (!noteId) return;
     try {
-      // Arrondir la valeur au centième pour plus de précision
-      const roundedOffset = Math.round(newOffset * 100) / 100;
       const payload: Record<string, unknown> = {
-        header_image_offset: roundedOffset,
+        header_image_offset: newOffset,
       };
       await updateNoteREST(noteId, payload);
+      setHeaderImageOffset(newOffset);
     } catch (error) {
       console.error('[header-image-offset] Erreur lors de la sauvegarde de l\'offset:', error);
     }
@@ -325,15 +316,35 @@ export default function NoteEditorPage() {
 
     // Fonction pour s'abonner au realtime
     const subscribeToNoteRealtime = () => {
-      // Utiliser l'abonnement Zustand au lieu de l'abonnement direct Supabase
-      // Cela évite les conflits WebSocket et centralise la gestion
+      const channel = supabase.channel('realtime-article-' + noteId)
+        .on('postgres_changes', {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'articles',
+          filter: `id=eq.${noteId}`
+        }, async (payload) => {
+
+          // Recharge la note depuis la base
+          setIsUpdatingFromRealtime(true);
+          const note = await getArticleById(noteId);
+                      if (note) {
+            setTitle(note.source_title || '');
+                          setHeaderImageUrl(note.header_image || null);
+            setHeaderImageOffset(note.header_image_offset || 50);
+            setPublished(!!note.ispublished);
+            editor.commands.setContent(note.markdown_content || '');
+                        setLastSavedContent(note.markdown_content || '');
+          }
+          // Délai pour éviter les boucles infinies
+          setTimeout(() => {
+            setIsUpdatingFromRealtime(false);
+          }, 100);
+        })
+        .subscribe();
       if (process.env.NODE_ENV === 'development') {
-        console.log('[realtime] Abonnement Zustand activé pour les notes');
+        console.log('[realtime] Canal realtime abonné');
       }
     };
-
-    // Abonnement au store Zustand pour les mises à jour d'offset
-    const notesSubscription = subscribeToNotes();
 
     subscribeToNoteRealtime();
 
@@ -362,6 +373,7 @@ export default function NoteEditorPage() {
                   if (note) {
             setTitle(note.source_title || '');
                           setHeaderImageUrl(note.header_image || null);
+            setHeaderImageOffset(note.header_image_offset || 50);
             setPublished(!!note.ispublished);
             editor.commands.setContent(note.markdown_content || '');
             setLastSavedContent(note.markdown_content || '');
@@ -397,10 +409,7 @@ export default function NoteEditorPage() {
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('blur', handleWindowBlur);
-      // Nettoyer l'abonnement Zustand
-      if (notesSubscription) {
-        unsubscribeFromAll();
-      }
+
       unsubscribed = true;
     };
   }, [editor, noteId, title, isInitialLoad]); // Retiré handleSave et lastSavedContent des dépendances
@@ -474,20 +483,7 @@ export default function NoteEditorPage() {
     };
   }, [editor, title, isInitialLoad, isUpdatingFromRealtime]);
 
-  // Écouter les changements du store Zustand pour l'offset de l'image d'en-tête
-  React.useEffect(() => {
-    if (!noteId) return;
-    
-    const store = useFileSystemStore.getState();
-    const note = store.notes[noteId];
-    
-    if (note && note.header_image_offset !== undefined) {
-      setHeaderImageOffset(note.header_image_offset);
-      if (process.env.NODE_ENV === 'development') {
-        console.log('[store] Offset mis à jour depuis le store:', note.header_image_offset);
-      }
-    }
-  }, [noteId]);
+
 
   // Persistance locale des changements de titre
   // React.useEffect(() => {
@@ -595,6 +591,7 @@ export default function NoteEditorPage() {
     if (note) {
       setTitle(note.source_title || '');
       setHeaderImageUrl(note.header_image || null);
+      setHeaderImageOffset(note.header_image_offset || 50);
       setPublished(!!note.ispublished);
       editor.commands.setContent(note.markdown_content || '');
     }
