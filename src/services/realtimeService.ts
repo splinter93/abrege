@@ -220,10 +220,10 @@ class RealtimeService {
   /**
    * Se désabonner des changements
    */
-  unsubscribe(table: string, callback: (event: ChangeEvent) => void) {
+  unsubscribe(table: string, _callback: (event: ChangeEvent) => void) {
     const listeners = this.listeners.get(table);
     if (listeners) {
-      listeners.delete(callback);
+      listeners.delete(_callback);
       if (listeners.size === 0) {
         this.stopPolling(table);
         this.listeners.delete(table);

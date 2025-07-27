@@ -14,7 +14,8 @@ import { supabase } from '@/supabaseClient';
  * Gère aussi les événements editor.* via handleEditorEvent
  */
 export function handleRealtimeEvent(event: { type: string, payload: any, timestamp: number }, debug = false) {
-  console.log('[REALTIME] handleRealtimeEvent', event.type, event.payload);
+  // 🚧 Temp: Authentification non implémentée
+  // TODO: Remplacer USER_ID par l'authentification Supabase
   const store = useFileSystemStore.getState();
   if (debug) logEventToConsole(event);
   const { type, payload } = event;
@@ -93,20 +94,24 @@ let classeursSubscriptionActive = false;
  * Monitoring des souscriptions realtime
  */
 export function startSubscriptionMonitoring() {
-  console.log('[REALTIME] 🔍 Démarrage du monitoring des souscriptions...');
+  // 🚧 Temp: Authentification non implémentée
+  // TODO: Remplacer USER_ID par l'authentification Supabase
   
   // Vérifier toutes les 30 secondes si les souscriptions sont actives
   setInterval(() => {
     if (!notesSubscriptionActive) {
-      console.log('[REALTIME] 🔄 Reconnexion notes (monitoring)...');
+      // 🚧 Temp: Authentification non implémentée
+      // TODO: Remplacer USER_ID par l'authentification Supabase
       subscribeToNotes();
     }
     if (!dossiersSubscriptionActive) {
-      console.log('[REALTIME] 🔄 Reconnexion dossiers (monitoring)...');
+      // 🚧 Temp: Authentification non implémentée
+      // TODO: Remplacer USER_ID par l'authentification Supabase
       subscribeToDossiers();
     }
     if (!classeursSubscriptionActive) {
-      console.log('[REALTIME] 🔄 Reconnexion classeurs (monitoring)...');
+      // 🚧 Temp: Authentification non implémentée
+      // TODO: Remplacer USER_ID par l'authentification Supabase
       subscribeToClasseurs();
     }
   }, 30000); // 30 secondes
@@ -117,7 +122,8 @@ export function startSubscriptionMonitoring() {
  * Écoute les événements INSERT, UPDATE, DELETE sur la table 'articles'
  */
 export function subscribeToNotes() {
-  console.log('[REALTIME] 📝 S\'abonnement aux notes...');
+  // 🚧 Temp: Authentification non implémentée
+  // TODO: Remplacer USER_ID par l'authentification Supabase
   
   const channel = supabase
     .channel('public:articles')

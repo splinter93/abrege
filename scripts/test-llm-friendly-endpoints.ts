@@ -11,7 +11,9 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-const USER_ID = "3223651c-5580-4471-affb-b3f4456bd729";
+// 🚧 Temp: Authentification non implémentée
+    // TODO: Remplacer USER_ID par l'authentification Supabase
+    const USER_ID = "3223651c-5580-4471-affb-b3f4456bd729";
 const BASE_URL = "http://localhost:3000/api/v1";
 
 interface TestResult {

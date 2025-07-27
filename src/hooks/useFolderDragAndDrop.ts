@@ -73,7 +73,7 @@ export const useFolderDragAndDrop = ({
   useEffect(() => {
     const handler = async (e: Event) => {
       const customEvent = e as CustomEvent<DropEventDetail>;
-      const { classeurId: targetClasseurId, itemId, itemType, target } = customEvent.detail || {};
+      const { classeurId: targetClasseurId, itemId, itemType } = customEvent.detail || {};
       if (!targetClasseurId || !itemId || !itemType) return;
       
       toast.loading('Déplacement en cours...');

@@ -52,7 +52,10 @@ export async function POST(req: NextRequest): Promise<Response> {
         { status: 422 }
       );
     }
-    // [TEMP] USER_ID HARDCODED FOR DEV/LLM
+    // 🚧 Temp: Authentification non implémentée
+    // TODO: Remplacer USER_ID par l'authentification Supabase
+    // 🚧 Temp: Authentification non implémentée
+    // TODO: Remplacer USER_ID par l'authentification Supabase
     const USER_ID = "3223651c-5580-4471-affb-b3f4456bd729";
     // Résoudre tous les note_ids (slug ou id)
     const resolvedNoteIds: string[] = [];
@@ -98,8 +101,11 @@ export async function POST(req: NextRequest): Promise<Response> {
     if (create_new) {
       // Créer une nouvelle note fusionnée
       const newTitle = title || `Fusion de ${orderedNotes.length} notes`;
-      // [TEMP] USER_ID HARDCODED FOR DEV/LLM
-      const USER_ID = "3223651c-5580-4471-affb-b3f4456bd729";
+      // 🚧 Temp: Authentification non implémentée
+    // TODO: Remplacer USER_ID par l'authentification Supabase
+    // 🚧 Temp: Authentification non implémentée
+    // TODO: Remplacer USER_ID par l'authentification Supabase
+    const USER_ID = "3223651c-5580-4471-affb-b3f4456bd729";
       // Générer le slug unique pour la note fusionnée
       const { SlugGenerator } = await import('@/utils/slugGenerator');
       const newSlug = await SlugGenerator.generateSlug(newTitle, 'note', USER_ID);

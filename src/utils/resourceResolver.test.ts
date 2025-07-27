@@ -2,8 +2,8 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ResourceResolver } from './resourceResolver';
 
 // Mock Supabase client
-const _mockSupabase = {
-  from: vi.fn(() => ({
+    const mockSupabase = {
+    from: vi.fn(() => ({
     select: vi.fn(() => ({
       eq: vi.fn(() => ({
         eq: vi.fn(() => ({

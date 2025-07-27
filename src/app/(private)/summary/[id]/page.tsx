@@ -1,6 +1,7 @@
 'use client';
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
+// 🚧 Temp: Authentification non implémentée
+// TODO: Remplacer USER_ID par l'authentification Supabase
 import { sendPayloadToSynesia } from '../../../../actions/synesia';
 import { toast } from 'react-hot-toast';
 import './SummaryPage.css';
@@ -103,7 +104,6 @@ const HeroCoverImage: React.FC<{ currentImage: string }> = ({ currentImage }) =>
 };
 
 export default function SummaryPage() {
-  const params = useParams();
 
   const [activeTakeawayIndex, setActiveTakeawayIndex] = useState<number | null>(null);
   const [isPlayerExpanded, setIsPlayerExpanded] = useState<boolean>(false);
@@ -199,7 +199,7 @@ export default function SummaryPage() {
       <article className="summary-article markdown-body">
         <button className="hero-image-change-btn" onClick={handleChangeCover} style={{position:'absolute',top:0,right:0,margin:'12px 18px'}}>
           <MdRefresh size={20} style={{marginRight:6}} />
-          Changer l'image
+          Changer l&apos;image
         </button>
         <header className="summary-header">
           <h1>{summary.title}</h1>
@@ -213,7 +213,7 @@ export default function SummaryPage() {
           <div className="podcast-button-container">
              {audioUrl ? (
               <audio controls src={audioUrl} className="custom-audio-player">
-                Votre navigateur ne supporte pas l'élément audio.
+                Votre navigateur ne supporte pas l&apos;élément audio.
               </audio>
             ) : (
               <button className="btn btn-primary" onClick={handlePodcastClick} disabled={isPocasting}>

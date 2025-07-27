@@ -27,7 +27,8 @@ export class RateLimiter {
    */
   isAllowed(identifier: string): { allowed: boolean; remaining: number; resetTime: number } {
     const now = Date.now();
-    const _windowStart = now - this.config.windowMs;
+    // 🚧 Temp: Authentification non implémentée
+    // TODO: Remplacer USER_ID par l'authentification Supabase
 
     // Nettoyer les anciennes entrées
     if (rateLimitStore[identifier] && rateLimitStore[identifier].resetTime < now) {

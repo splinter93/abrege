@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { toast } from 'react-hot-toast';
 import type { NoteData } from '../types/editor';
+import { useEditorPersistence } from './useEditorPersistence';
 
 
 export interface UseEditorSaveOptions {
@@ -26,6 +27,9 @@ export interface UseEditorSaveResult {
 export default function useEditorSave({ onSave, editor, headerImage, titleAlign }: UseEditorSaveOptions): UseEditorSaveResult {
   const [isSaving, setIsSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState(new Date());
+  
+  // Intégration de la persistance locale
+  const { clearAfterSave } = useEditorPersistence();
 
   /**
    * Fonction de sauvegarde à appeler depuis l'éditeur
@@ -40,19 +44,9 @@ export default function useEditorSave({ onSave, editor, headerImage, titleAlign 
       try {
         await onSave({ title: newTitle, markdown_content, html_content, headerImage, titleAlign: align });
         setLastSaved(new Date());
-        toast.success('Saved', {
-          duration: 2000,
-          position: 'bottom-right',
-          style: {
-            background: '#000000',
-            color: '#FFFFFF',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
-            borderRadius: 8,
-            padding: '8px 12px',
-            minWidth: 0,
-            fontSize: 13,
-          },
-        });
+        
+        // Nettoyer l'état persisté après une sauvegarde réussie
+        clearAfterSave();
       } catch {
         toast.error('Erreur lors de la sauvegarde');
       } finally {

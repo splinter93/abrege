@@ -19,6 +19,8 @@ export async function GET(): Promise<Response> {
   try {
     // [TEMP] USER_ID HARDCODED FOR DEV/LLM
     // TODO: Extract user_id from API key when auth is implemented!
+    // 🚧 Temp: Authentification non implémentée
+    // TODO: Remplacer USER_ID par l'authentification Supabase
     const USER_ID = "3223651c-5580-4471-affb-b3f4456bd729";
     
     const { data, error } = await supabase

@@ -106,7 +106,7 @@ const FolderItem: React.FC<FolderItemProps> = ({ folder, onOpen, isRenaming, onR
         e.dataTransfer.dropEffect = 'move';
         setIsDragOver(true);
       }}
-      onDragLeave={e => {
+      onDragLeave={() => {
         setIsDragOver(false);
       }}
       onDrop={e => {

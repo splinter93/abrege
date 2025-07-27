@@ -114,7 +114,7 @@ export function useFolderManagerState(classeurId: string, parentFolderId?: strin
 
   // --- SYNCHRO TEMPS RÉEL (Polling Intelligent) ---
   const { subscribe, unsubscribe } = useRealtime({
-    userId: "3223651c-5580-4471-affb-b3f4456bd729", // [TEMP] USER_ID HARDCODED
+          userId: "3223651c-5580-4471-affb-b3f4456bd729", // 🚧 Temp: Authentification non implémentée
     type: 'polling',
     interval: 3000
   });

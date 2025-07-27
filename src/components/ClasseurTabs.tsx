@@ -78,10 +78,9 @@ function SortableTab({ classeur, isActive, onSelectClasseur, onContextMenu, onDr
         setIsDropActive(false);
         window.__isTabDropActive = false;
       }}
-      onDrop={() => {
+      onDrop={_e => {
         setIsDropActive(false);
         window.__isTabDropActive = false;
-        // Error handling for drop operation
       }}
     >
       <button

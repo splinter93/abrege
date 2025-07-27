@@ -67,39 +67,15 @@ export function useRealtime(config: RealtimeConfig) {
 
   const REALTIME_PROVIDER = process.env.NEXT_PUBLIC_REALTIME_PROVIDER || 'websocket';
   const isSupabase = REALTIME_PROVIDER === 'supabase';
-  const _realtimeService = isSupabase ? {
-    subscribe: (table: string, callback: (event: ChangeEvent) => void) => {
-      // Supabase realtime service does not have a direct subscribe/unsubscribe method for tables
-      // This is a placeholder for future implementation if needed
-      console.warn(`Supabase realtime service does not support direct table subscription for ${table}. Consider using a different provider or implementing a custom solution.`);
-    },
-    unsubscribe: (table: string, callback: (event: ChangeEvent) => void) => {
-      // Supabase realtime service does not have a direct subscribe/unsubscribe method for tables
-      // This is a placeholder for future implementation if needed
-      console.warn(`Supabase realtime service does not support direct table unsubscribe for ${table}. Consider using a different provider or implementing a custom solution.`);
-    },
-    send: () => {},
-    stop: () => {},
-  } : {
-    subscribe: (table: string, callback: (event: ChangeEvent) => void) => {
-      // This is a placeholder for future implementation if needed
-      console.warn(`WebSocket realtime service does not have a direct table subscription method for ${table}. Consider using a different provider or implementing a custom solution.`);
-    },
-    unsubscribe: (table: string, callback: (event: ChangeEvent) => void) => {
-      // This is a placeholder for future implementation if needed
-      console.warn(`WebSocket realtime service does not have a direct table unsubscribe method for ${table}. Consider using a different provider or implementing a custom solution.`);
-    },
-    send: () => {},
-    stop: () => {},
-  };
+  // 🚧 Temp: Authentification non implémentée
+  // TODO: Remplacer USER_ID par l'authentification Supabase
 
   // Handler générique pour tous les events WebSocket/Supabase
   useEffect(() => {
     if (config.type !== 'websocket' || !config.onEvent) return;
-    const _handleRawEvent = (event: { type: string, payload: unknown, timestamp: number }) => {
-      if (config.debug) console.log('[WS EVENT]', event);
-      config.onEvent?.(event);
-    };
+    
+    // 🚧 Temp: Authentification non implémentée
+    // TODO: Remplacer USER_ID par l'authentification Supabase
     // TODO: Affiner le typage de subscribeToWebSocket pour gérer le cas spécifique de la table 'all'
     if (isSupabase) {
       // Supabase realtime service does not have a direct subscribe method for tables
@@ -169,8 +145,8 @@ export function useRealtime(config: RealtimeConfig) {
   /**
    * S'abonner aux changements d'une table
    */
-  const subscribe = (table: string, callback: (event: ChangeEvent) => void) => {
-    listeners.current.set(table, callback);
+  const subscribe = (table: string, _callback: (event: ChangeEvent) => void) => {
+    listeners.current.set(table, _callback);
     // ANCIEN SYSTÈME DÉSACTIVÉ - Utilisation du nouveau système realtime
     console.log(`[useRealtime] 🚫 Ancien système realtime désactivé pour ${table} - Utilisation du nouveau système`);
     
@@ -184,7 +160,7 @@ export function useRealtime(config: RealtimeConfig) {
   /**
    * Se désabonner des changements
    */
-  const unsubscribe = (table: string, callback: (event: ChangeEvent) => void) => {
+  const unsubscribe = (table: string, _callback: (event: ChangeEvent) => void) => {
     listeners.current.delete(table);
     // ANCIEN SYSTÈME DÉSACTIVÉ - Utilisation du nouveau système realtime
     console.log(`[useRealtime] 🚫 Ancien système realtime désactivé pour ${table} - Utilisation du nouveau système`);
@@ -199,18 +175,18 @@ export function useRealtime(config: RealtimeConfig) {
   /**
    * S'abonner à plusieurs tables
    */
-  const subscribeToTables = (tables: string[], callback: (event: ChangeEvent) => void) => {
+  const subscribeToTables = (tables: string[], _callback: (event: ChangeEvent) => void) => {
     tables.forEach(table => {
-      subscribe(table, callback);
+              subscribe(table, _callback);
     });
   };
 
   /**
    * Se désabonner de plusieurs tables
    */
-  const unsubscribeFromTables = (tables: string[], callback: (event: ChangeEvent) => void) => {
+  const unsubscribeFromTables = (tables: string[], _callback: (event: ChangeEvent) => void) => {
     tables.forEach(table => {
-      unsubscribe(table, callback);
+              unsubscribe(table, _callback);
     });
   };
 

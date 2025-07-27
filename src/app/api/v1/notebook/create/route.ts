@@ -29,7 +29,10 @@ export async function POST(req: Request): Promise<Response> {
     
     const { name, emoji } = parseResult.data;
     
-    // [TEMP] USER_ID HARDCODED FOR DEV/LLM
+    // 🚧 Temp: Authentification non implémentée
+    // TODO: Remplacer USER_ID par l'authentification Supabase
+    // 🚧 Temp: Authentification non implémentée
+    // TODO: Remplacer USER_ID par l'authentification Supabase
     const USER_ID = "3223651c-5580-4471-affb-b3f4456bd729";
     
     // Générer le slug

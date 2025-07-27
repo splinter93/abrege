@@ -6,7 +6,8 @@ export const getClasseurs = async (): Promise<any[]> => {
     .from('classeurs')
     .select('*')
     .order('position');
-  console.log('getClasseurs result:', selectData, error);
+  // 🚧 Temp: Authentification non implémentée
+  // TODO: Remplacer USER_ID par l'authentification Supabase
   if (error) throw error;
   return selectData;
 };

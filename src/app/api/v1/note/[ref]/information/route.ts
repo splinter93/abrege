@@ -25,7 +25,10 @@ export async function GET(req: NextRequest, { params }: any): Promise<Response> 
       );
     }
     
-    // [TEMP] USER_ID HARDCODED FOR DEV/LLM
+    // 🚧 Temp: Authentification non implémentée
+    // TODO: Remplacer USER_ID par l'authentification Supabase
+    // 🚧 Temp: Authentification non implémentée
+    // TODO: Remplacer USER_ID par l'authentification Supabase
     const USER_ID = "3223651c-5580-4471-affb-b3f4456bd729";
     const noteId = await resolveNoteRef(ref, USER_ID);
     
@@ -68,7 +71,10 @@ export async function PATCH(req: NextRequest, { params }: any): Promise<Response
     
     const { source_title, header_image } = parseResult.data;
     
-    // [TEMP] USER_ID HARDCODED FOR DEV/LLM
+    // 🚧 Temp: Authentification non implémentée
+    // TODO: Remplacer USER_ID par l'authentification Supabase
+    // 🚧 Temp: Authentification non implémentée
+    // TODO: Remplacer USER_ID par l'authentification Supabase
     const USER_ID = "3223651c-5580-4471-affb-b3f4456bd729";
     const noteId = await resolveNoteRef(ref, USER_ID);
     

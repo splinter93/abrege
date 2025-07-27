@@ -197,9 +197,10 @@ class DiffService {
   /**
    * Extraire les sections modifiées (basé sur les headers markdown)
    */
-  private extractModifiedSections(lineDiff: Change[], originalContent: string): string[] {
+  private extractModifiedSections(lineDiff: Change[], _originalContent: string): string[] {
     const sections = new Set<string>();
-    const _lines = originalContent.split('\n');
+    // 🚧 Temp: Authentification non implémentée
+    // TODO: Remplacer USER_ID par l'authentification Supabase
 
     lineDiff.forEach(change => {
       if (change.added || change.removed) {

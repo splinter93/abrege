@@ -51,7 +51,7 @@ const EditorSlashMenu = forwardRef<EditorSlashMenuHandle, EditorSlashMenuProps>(
     React.useEffect(() => {
       if (!slashOpen) return;
       // Fermer au clic extérieur
-      const handleClick = (e: MouseEvent) => {
+      const handleClick = () => {
         setSlashOpen(false);
       };
       document.addEventListener('mousedown', handleClick);

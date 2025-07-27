@@ -15,6 +15,8 @@ import { useParams } from 'next/navigation';
 import { updateNoteREST } from '@/services/api';
 import { getArticleById } from '@/services/supabase';
 import useEditorSave from '@/hooks/useEditorSave';
+import { useEditorPersistence } from '../../../../hooks/useEditorPersistence';
+import { UnsavedChangesIndicator } from '../../../../components/UnsavedChangesIndicator';
 import toast from 'react-hot-toast';
 import EditorPreview from '@/components/EditorPreview';
 import { createMarkdownIt } from '@/utils/markdownItConfig';
@@ -116,6 +118,16 @@ export default function NoteEditorPage() {
   const [publishedUrl, setPublishedUrl] = React.useState<string | null>(null);
   const [isPublishing, setIsPublishing] = React.useState(false);
 
+  // Hook de persistance locale
+  const {
+    saveNoteLocally,
+    updateNoteContent,
+    updateNoteTitle,
+    restorePersistedNote,
+    clearAfterSave,
+    hasUnsavedChangesForNote,
+  } = useEditorPersistence();
+
   // Hook de sauvegarde premium
   const { isSaving, handleSave } = useEditorSave({
     editor: editor ? {
@@ -137,6 +149,9 @@ export default function NoteEditorPage() {
         }
         await updateNoteREST(noteId, payload);
         setLastSaved(new Date());
+        
+        // Nettoyer l'état persisté après une sauvegarde réussie
+        clearAfterSave();
       } catch {
         // toast error déjà géré dans le hook
       }
@@ -148,23 +163,33 @@ export default function NoteEditorPage() {
     if (!editor || !noteId || hasInitialized) return;
     setLoading(true);
     setLoadError(null);
+    
+    // Vérifier s'il existe une version persistée locale
+    const persistedNote = restorePersistedNote(noteId);
+    
     getArticleById(noteId)
       .then((note: Record<string, unknown>) => {
         if (note) {
-          setTitle((note.source_title as string) || '');
+          // Si une version persistée existe, l'utiliser en priorité
+          if (persistedNote) {
+            setTitle(persistedNote.title);
+            editor.commands.setContent(persistedNote.content);
+          } else {
+            setTitle((note.source_title as string) || '');
+            editor.commands.setContent((note.markdown_content as string) || '');
+          }
           setHeaderImageUrl((note.header_image as string) || null);
           setPublished(!!(note.ispublished as boolean));
-          setPublishedUrl((note.public_url as string) || null); // <-- utilise la colonne public_url
-          editor.commands.setContent((note.markdown_content as string) || '');
+          setPublishedUrl((note.public_url as string) || null);
         }
         setHasInitialized(true);
         setLoading(false);
       })
-      .catch((_err: unknown) => {
+      .catch(() => {
         setLoadError('Erreur lors du chargement de la note.');
         setLoading(false);
       });
-  }, [editor, noteId, hasInitialized, getHeadingsFromEditor]);
+  }, [editor, noteId, hasInitialized, getHeadingsFromEditor, restorePersistedNote]);
 
   // Realtime : recharge la note en direct si modifiée ailleurs
   React.useEffect(() => {
@@ -259,7 +284,7 @@ export default function NoteEditorPage() {
     };
   }, [editor]);
 
-  // Autosave à chaque modif (debounce 1s)
+  // Autosave à chaque modif (debounce 1s) + Persistance locale
   React.useEffect(() => {
     if (!editor) return;
     let timeout: NodeJS.Timeout | null = null;
@@ -271,6 +296,13 @@ export default function NoteEditorPage() {
       }, 1000);
     };
     editor.on('transaction', triggerSave);
+
+    // Persistance locale automatique des changements de contenu
+    const triggerLocalSave = () => {
+      const content = editor.storage.markdown.getMarkdown();
+      saveNoteLocally(noteId, title, content);
+    };
+    editor.on('transaction', triggerLocalSave);
 
     // --- PATCH : Sauvegarde immédiate avant de quitter l'onglet ---
     const handleVisibilityChange = () => {
@@ -293,11 +325,12 @@ export default function NoteEditorPage() {
     window.addEventListener('keydown', handleKeyDown);
     return () => {
       editor.off('transaction', triggerSave);
+      editor.off('transaction', triggerLocalSave);
       if (timeout) clearTimeout(timeout);
       window.removeEventListener('keydown', handleKeyDown);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [editor, title, handleSave, isSaving]);
+  }, [editor, title, handleSave, isSaving, saveNoteLocally, noteId]);
 
   // Autosave sur modification du titre ou de l'image (en plus du texte)
   React.useEffect(() => {
@@ -313,6 +346,14 @@ export default function NoteEditorPage() {
       if (timeout) clearTimeout(timeout);
     };
   }, [title, headerImageUrl, editor]);
+
+  // Persistance locale des changements de titre
+  React.useEffect(() => {
+    if (!editor || !hasInitialized) return;
+    const content = editor.storage.markdown.getMarkdown();
+    updateNoteTitle(title);
+    saveNoteLocally(noteId, title, content);
+  }, [title, noteId, hasInitialized, updateNoteTitle, saveNoteLocally, editor]);
 
   // Sauvegarde automatique du header image
   React.useEffect(() => {
@@ -557,6 +598,8 @@ export default function NoteEditorPage() {
       flexDirection: 'column',
       alignItems: 'center'
     }}>
+      {/* Indicateur de changements non sauvegardés */}
+      <UnsavedChangesIndicator />
       {/* Header sticky premium */}
       <header className="editor-header">
         <Logo />
@@ -726,6 +769,11 @@ export default function NoteEditorPage() {
           }}>
             <div style={{ flex: 1, textAlign: 'left' }}>
               Last Saved : {getRelativeTime(lastSaved)}
+              {hasUnsavedChangesForNote(noteId) && (
+                <span style={{ color: 'var(--accent-primary)', marginLeft: '8px' }}>
+                  ● Unsaved changes
+                </span>
+              )}
             </div>
             <div style={{ flex: 1, textAlign: 'right' }}>
               {getWordCount()} words

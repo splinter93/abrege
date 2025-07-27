@@ -9,8 +9,11 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-// [TEMP] USER_ID HARDCODED FOR DEV/LLM
-const USER_ID = "3223651c-5580-4471-affb-b3f4456bd729";
+// 🚧 Temp: Authentification non implémentée
+    // TODO: Remplacer USER_ID par l'authentification Supabase
+    // 🚧 Temp: Authentification non implémentée
+    // TODO: Remplacer USER_ID par l'authentification Supabase
+    const USER_ID = "3223651c-5580-4471-affb-b3f4456bd729";
 
 async function checkTableStructure(tableName: string) {
   console.log(`\n🔍 Vérification de la table ${tableName}...`);

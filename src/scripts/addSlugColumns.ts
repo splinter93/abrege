@@ -16,13 +16,13 @@ async function addSlugColumns() {
   try {
     // Ajouter la colonne slug à la table articles
     console.log('📝 Ajout de la colonne slug à la table articles...');
-    const { error: _articlesError } = await supabase
+            const { error: articlesError } = await supabase
       .from('articles')
       .select('id')
       .limit(1);
     
     // Vérifier si la colonne existe déjà en essayant de la sélectionner
-    const { data: _testData, error: testError } = await supabase
+    const { data: testData, error: testError } = await supabase
       .from('articles')
       .select('slug')
       .limit(1);
