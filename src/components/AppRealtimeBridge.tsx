@@ -14,8 +14,8 @@ export default function AppRealtimeBridge({ wsUrl, token, debug = false }: { wsU
     type: 'websocket',
     wsUrl: wsUrl || process.env.NEXT_PUBLIC_WS_URL || '',
     token,
-    debug,
-    onEvent: (event) => handleRealtimeEvent(event, debug)
+    debug: true, // Temporairement activé pour debug
+    onEvent: (event) => handleRealtimeEvent(event, true) // Temporairement activé pour debug
   });
   return null;
 } 

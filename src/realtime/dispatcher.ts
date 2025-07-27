@@ -39,6 +39,10 @@ export function handleRealtimeEvent(event: { type: string, payload: any, timesta
       store.moveNote(payload.id, payload.folder_id, payload.classeur_id);
       break;
     case 'note.updated':
+      if (debug) {
+        console.log('[Realtime] note.updated - Payload complet:', payload);
+        console.log('[Realtime] note.updated - header_image_offset:', payload.header_image_offset);
+      }
       store.updateNote(payload.id, payload);
       break;
     // Folders

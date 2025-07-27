@@ -1,5 +1,4 @@
 import React, { useState, useRef } from 'react';
-import { motion } from 'framer-motion';
 import { MdClose } from 'react-icons/md';
 import { LuMoon, LuCloudFog } from 'react-icons/lu';
 import { FiImage } from 'react-icons/fi';
@@ -51,12 +50,10 @@ const EditorHeaderImage: React.FC<EditorHeaderImageProps> = ({
   const [headerBlurLevel, setHeaderBlurLevel] = useState(0);
   // const [imageSettingsOpen, setImageSettingsOpen] = useState(false);
   const [imageOffsetY, setImageOffsetY] = useState(Math.round(headerImageOffset * 100) / 100); // 0-100 (%)
-  const [isAnimating, setIsAnimating] = useState(false);
   const dragging = useRef(false);
   const startY = useRef(0);
   const startOffsetY = useRef(Math.round(headerImageOffset * 100) / 100);
   const currentOffsetRef = useRef(Math.round(headerImageOffset * 100) / 100);
-  const previousImageUrl = useRef(headerImageUrl);
 
   // Synchroniser l'état local avec la prop headerImageOffset
   React.useEffect(() => {
@@ -64,19 +61,6 @@ const EditorHeaderImage: React.FC<EditorHeaderImageProps> = ({
     setImageOffsetY(newOffset);
     currentOffsetRef.current = newOffset;
   }, [headerImageOffset]);
-
-  // Déclencher l'animation lors du changement d'image
-  React.useEffect(() => {
-    if (headerImageUrl !== previousImageUrl.current && headerImageUrl) {
-      setIsAnimating(true);
-      // Réinitialiser l'animation après 300ms
-      const timer = setTimeout(() => {
-        setIsAnimating(false);
-      }, 300);
-      return () => clearTimeout(timer);
-    }
-    previousImageUrl.current = headerImageUrl;
-  }, [headerImageUrl]);
 
   // Drag logic
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -132,28 +116,13 @@ const EditorHeaderImage: React.FC<EditorHeaderImageProps> = ({
 
   return (
     <div className="editor-header-image">
-      <motion.div
-        initial={{ opacity: 1, scale: 1 }}
-        animate={isAnimating ? { opacity: [1, 0.8, 1], scale: [1, 0.98, 1] } : { opacity: 1, scale: 1 }}
-        transition={{ duration: 0.3, ease: "easeInOut" }}
-        style={{ width: '100%', height: '100%' }}
-      >
-        <img
-          src={headerImageUrl}
-          alt="Header"
-          style={{ 
-            width: '100%', 
-            height: '100%', 
-            objectFit: 'cover', 
-            filter: `blur(${headerBlurLevel * 2}px)`, 
-            transition: 'filter 0.2s', 
-            objectPosition: `center ${imageOffsetY}%`, 
-            cursor: dragging.current ? 'grabbing' : 'grab' 
-          }}
-          onMouseDown={handleMouseDown}
-          draggable={false}
-        />
-      </motion.div>
+      <img
+        src={headerImageUrl}
+        alt="Header"
+        style={{ width: '100%', height: '100%', objectFit: 'cover', filter: `blur(${headerBlurLevel * 2}px)`, transition: 'filter 0.2s', objectPosition: `center ${imageOffsetY}%`, cursor: dragging.current ? 'grabbing' : 'grab' }}
+        onMouseDown={handleMouseDown}
+        draggable={false}
+      />
       {/* Overlay visuel appliqué sur l'image */}
       <div style={{ position: 'absolute', inset: 0, background: `rgba(24,24,24,${0.08 + 0.14 * headerOverlayLevel})`, pointerEvents: 'none', transition: 'background 0.2s' }} />
       <div className="editor-header-image-btns" style={{

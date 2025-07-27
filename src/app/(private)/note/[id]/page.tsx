@@ -35,6 +35,8 @@ import CustomImage from '@/extensions/CustomImage';
 import { useSession } from '@supabase/auth-helpers-react';
 import { publishNoteREST } from '@/services/api';
 import LogoScrivia from '@/components/LogoScrivia';
+import { subscribeToNotes, unsubscribeFromAll } from '@/realtime/dispatcher';
+import { useFileSystemStore } from '@/store/useFileSystemStore';
 
 type SlashCommand = {
   id: string;
@@ -356,6 +358,9 @@ export default function NoteEditorPage() {
       }
     };
 
+    // Abonnement au store Zustand pour les mises à jour d'offset
+    const notesSubscription = subscribeToNotes();
+
     subscribeToNoteRealtime();
 
     const handleVisibilityChange = async () => {
@@ -420,6 +425,10 @@ export default function NoteEditorPage() {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('blur', handleWindowBlur);
       if (channel) supabase.removeChannel(channel);
+      // Nettoyer l'abonnement Zustand
+      if (notesSubscription) {
+        unsubscribeFromAll();
+      }
       unsubscribed = true;
     };
   }, [editor, noteId, title, isInitialLoad]); // Retiré handleSave et lastSavedContent des dépendances
@@ -492,6 +501,21 @@ export default function NoteEditorPage() {
       if (autosaveTimeoutRef.current) clearTimeout(autosaveTimeoutRef.current);
     };
   }, [editor, title, isInitialLoad, isUpdatingFromRealtime]);
+
+  // Écouter les changements du store Zustand pour l'offset de l'image d'en-tête
+  React.useEffect(() => {
+    if (!noteId) return;
+    
+    const store = useFileSystemStore.getState();
+    const note = store.notes[noteId];
+    
+    if (note && note.header_image_offset !== undefined) {
+      setHeaderImageOffset(note.header_image_offset);
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[store] Offset mis à jour depuis le store:', note.header_image_offset);
+      }
+    }
+  }, [noteId]);
 
   // Persistance locale des changements de titre
   // React.useEffect(() => {
