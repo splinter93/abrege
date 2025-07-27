@@ -6,6 +6,7 @@ export type Article = {
   flash_summary: string | null;
   folder_id: string | null;
   header_image: string | null;
+  header_image_offset: number | null; // DECIMAL(5,2) - peut avoir 2 décimales
   html_content: string | null;
   id: string;
   image_url: string | null;

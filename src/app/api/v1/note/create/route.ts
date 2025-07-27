@@ -21,6 +21,7 @@ export async function POST(req: Request): Promise<Response> {
       source_title: z.string().min(1, 'source_title requis'),
       markdown_content: z.string().min(1, 'markdown_content requis'),
       header_image: z.string().optional(),
+      header_image_offset: z.number().min(0).max(100).optional(), // Accepte les décimales
       folder_id: z.string().optional(),
       notebook_id: z.string().min(1, 'notebook_id OBLIGATOIRE'), // ✅ OBLIGATOIRE
       classeur_id: z.string().optional(), // ✅ Rétrocompatibilité
@@ -35,7 +36,7 @@ export async function POST(req: Request): Promise<Response> {
       );
     }
     
-    const { source_title, markdown_content, header_image, folder_id, notebook_id, classeur_id } = parseResult.data;
+    const { source_title, markdown_content, header_image, header_image_offset, folder_id, notebook_id, classeur_id } = parseResult.data;
     
     // 🚧 Temp: Authentification non implémentée
     // TODO: Remplacer USER_ID par l'authentification Supabase
@@ -124,6 +125,7 @@ export async function POST(req: Request): Promise<Response> {
         source_title,
         markdown_content,
         header_image: header_image || null,
+        header_image_offset: header_image_offset || 50,
         folder_id: finalFolderId || null,
         classeur_id: finalNotebookIdResolved, // ✅ TOUJOURS défini maintenant !
         user_id: USER_ID,

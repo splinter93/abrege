@@ -98,6 +98,7 @@ export default function NoteEditorPage() {
     immediatelyRender: false,
   });
   const [headerImageUrl, setHeaderImageUrl] = React.useState<string | null>(null);
+  const [headerImageOffset, setHeaderImageOffset] = React.useState<number>(50);
   const [imageMenuOpen, setImageMenuOpen] = React.useState(false);
   const [kebabOpen, setKebabOpen] = React.useState(false);
   const [showPreview, setShowPreview] = React.useState(false);
@@ -176,6 +177,28 @@ export default function NoteEditorPage() {
     }
   };
 
+  // Fonction dédiée pour sauvegarder l'offset de l'image d'en-tête
+  const handleHeaderImageOffsetSave = async (newOffset: number) => {
+    if (!noteId) return;
+    try {
+      console.log('[header-image-offset] Tentative de sauvegarde:', { newOffset, noteId });
+      
+      // Arrondir la valeur au centième pour plus de précision
+      const roundedOffset = Math.round(newOffset * 100) / 100;
+      console.log('[header-image-offset] Valeur arrondie:', roundedOffset);
+      
+      const payload: Record<string, unknown> = {
+        header_image_offset: roundedOffset,
+      };
+      console.log('[header-image-offset] Payload:', payload);
+      
+      await updateNoteREST(noteId, payload);
+      console.log('[header-image-offset] Sauvegarde réussie');
+    } catch (error) {
+      console.error('[header-image-offset] Erreur lors de la sauvegarde de l\'offset:', error);
+    }
+  };
+
   // Chargement initial de la note (une seule fois)
   React.useEffect(() => {
     if (!editor || !noteId || hasInitialized) return;
@@ -198,6 +221,7 @@ export default function NoteEditorPage() {
             editor.commands.setContent((note.markdown_content as string) || '');
           // }
           setHeaderImageUrl((note.header_image as string) || null);
+          setHeaderImageOffset((note.header_image_offset as number) || 50);
           setPublished(!!(note.ispublished as boolean));
           setPublishedUrl((note.public_url as string) || null);
         }
@@ -751,8 +775,12 @@ export default function NoteEditorPage() {
           {headerImageUrl ? (
             <EditorHeaderImage
               headerImageUrl={headerImageUrl}
+              headerImageOffset={headerImageOffset}
               onHeaderChange={(newImage) => {
                 handleHeaderImageSave(newImage);
+              }}
+              onHeaderOffsetChange={(newOffset) => {
+                handleHeaderImageOffsetSave(newOffset);
               }}
               imageMenuOpen={imageMenuOpen}
               onImageMenuOpen={() => setImageMenuOpen(true)}

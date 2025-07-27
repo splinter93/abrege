@@ -7,7 +7,9 @@ import ImageMenu from './ImageMenu';
 
 interface EditorHeaderImageProps {
   headerImageUrl: string | null;
+  headerImageOffset?: number;
   onHeaderChange: (url: string | null) => void;
+  onHeaderOffsetChange?: (offset: number) => void;
   imageMenuOpen: boolean;
   onImageMenuOpen: () => void;
   onImageMenuClose: () => void;
@@ -36,7 +38,9 @@ function getRandomHeaderImage(current: string | null) {
 
 const EditorHeaderImage: React.FC<EditorHeaderImageProps> = ({
   headerImageUrl,
+  headerImageOffset = 50,
   onHeaderChange,
+  onHeaderOffsetChange,
   imageMenuOpen,
   onImageMenuClose,
   noteId,
@@ -45,10 +49,10 @@ const EditorHeaderImage: React.FC<EditorHeaderImageProps> = ({
   const [headerOverlayLevel, setHeaderOverlayLevel] = useState(0);
   const [headerBlurLevel, setHeaderBlurLevel] = useState(0);
   // const [imageSettingsOpen, setImageSettingsOpen] = useState(false);
-  const [imageOffsetY, setImageOffsetY] = useState(50); // 0-100 (%)
+  const [imageOffsetY, setImageOffsetY] = useState(Math.round(headerImageOffset * 100) / 100); // 0-100 (%)
   const dragging = useRef(false);
   const startY = useRef(0);
-  const startOffsetY = useRef(50);
+  const startOffsetY = useRef(Math.round(headerImageOffset * 100) / 100);
 
   // Drag logic
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -65,13 +69,30 @@ const EditorHeaderImage: React.FC<EditorHeaderImageProps> = ({
     // 220px de hauteur, on veut un offset de 0 à 100 (%)
     let newOffset = startOffsetY.current + (deltaY / 220) * 100;
     newOffset = Math.max(0, Math.min(100, newOffset));
-    setImageOffsetY(newOffset);
+    // Arrondir au centième pour plus de précision
+    setImageOffsetY(Math.round(newOffset * 100) / 100);
   };
   const handleMouseUp = () => {
     dragging.current = false;
     document.body.style.cursor = '';
     window.removeEventListener('mousemove', handleMouseMove);
     window.removeEventListener('mouseup', handleMouseUp);
+    
+    console.log('[EditorHeaderImage] handleMouseUp appelé');
+    console.log('[EditorHeaderImage] imageOffsetY:', imageOffsetY);
+    console.log('[EditorHeaderImage] headerImageOffset:', headerImageOffset);
+    console.log('[EditorHeaderImage] onHeaderOffsetChange existe:', !!onHeaderOffsetChange);
+    
+    // Sauvegarder la nouvelle position si elle a changé
+    // Utiliser une comparaison avec tolérance pour les décimales
+    const hasChanged = Math.abs(imageOffsetY - headerImageOffset) > 0.01;
+    if (onHeaderOffsetChange && hasChanged) {
+      console.log('[EditorHeaderImage] Appel de onHeaderOffsetChange avec:', imageOffsetY);
+      onHeaderOffsetChange(imageOffsetY);
+    } else {
+      console.log('[EditorHeaderImage] Pas de sauvegarde - pas de changement ou pas de callback');
+      console.log('[EditorHeaderImage] Différence:', Math.abs(imageOffsetY - headerImageOffset));
+    }
   };
 
   const headerBtnStyle: React.CSSProperties = {

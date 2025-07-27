@@ -34,7 +34,7 @@ export async function GET(req: NextRequest, { params }: any): Promise<Response> 
     
     const { data: note, error } = await supabase
       .from('articles')
-      .select('id, source_title, header_image, created_at, updated_at, folder_id, classeur_id, slug')
+      .select('id, source_title, header_image, header_image_offset, created_at, updated_at, folder_id, classeur_id, slug')
       .eq('id', noteId)
       .single();
     if (error || !note) {
@@ -58,7 +58,8 @@ export async function PATCH(req: NextRequest, { params }: any): Promise<Response
     
     const schema = z.object({
       source_title: z.string().optional(),
-      header_image: z.string().optional()
+      header_image: z.string().optional(),
+      header_image_offset: z.number().min(0).max(100).optional() // Accepte les décimales
     });
     
     const parseResult = schema.safeParse(body);
@@ -69,7 +70,7 @@ export async function PATCH(req: NextRequest, { params }: any): Promise<Response
       );
     }
     
-    const { source_title, header_image } = parseResult.data;
+    const { source_title, header_image, header_image_offset } = parseResult.data;
     
     // 🚧 Temp: Authentification non implémentée
     // TODO: Remplacer USER_ID par l'authentification Supabase
@@ -94,6 +95,7 @@ export async function PATCH(req: NextRequest, { params }: any): Promise<Response
     const updateData: any = { updated_at: new Date().toISOString() };
     if (source_title !== undefined) updateData.source_title = source_title;
     if (header_image !== undefined) updateData.header_image = header_image;
+    if (header_image_offset !== undefined) updateData.header_image_offset = header_image_offset;
     
     // Si le titre change, mettre à jour le slug automatiquement
     if (source_title !== undefined) {

@@ -22,6 +22,7 @@ export async function POST(req: Request): Promise<Response> {
       source_title: z.string().min(1, 'source_title requis'),
       markdown_content: z.string().min(1, 'markdown_content requis'),
       header_image: z.string().optional(),
+      header_image_offset: z.number().min(0).max(100).optional(), // Accepte les décimales
     });
     
     const parseResult = schema.safeParse(body);
@@ -32,7 +33,7 @@ export async function POST(req: Request): Promise<Response> {
       );
     }
     
-    const { note_id, source_title, markdown_content, header_image } = parseResult.data;
+    const { note_id, source_title, markdown_content, header_image, header_image_offset } = parseResult.data;
     
     // 🚧 Temp: Authentification non implémentée
     // TODO: Remplacer USER_ID par l'authentification Supabase
@@ -74,6 +75,7 @@ export async function POST(req: Request): Promise<Response> {
         source_title,
         markdown_content,
         header_image: header_image || null,
+        header_image_offset: header_image_offset || 50,
         slug: newSlug,
         updated_at: new Date().toISOString()
       })
