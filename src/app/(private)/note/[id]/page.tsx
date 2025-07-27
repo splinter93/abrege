@@ -100,6 +100,8 @@ export default function NoteEditorPage() {
   });
   const [headerImageUrl, setHeaderImageUrl] = React.useState<string | null>(null);
   const [headerImageOffset, setHeaderImageOffset] = React.useState<number>(50);
+  const [headerImageBlur, setHeaderImageBlur] = React.useState<number>(0);
+  const [headerImageOverlay, setHeaderImageOverlay] = React.useState<number>(0);
   const [imageMenuOpen, setImageMenuOpen] = React.useState(false);
   const [kebabOpen, setKebabOpen] = React.useState(false);
   const [showPreview, setShowPreview] = React.useState(false);
@@ -171,10 +173,12 @@ export default function NoteEditorPage() {
       const payload: Record<string, unknown> = {
         header_image: newHeaderImage,
         header_image_offset: 50,
+        header_image_blur: 0,
+        header_image_overlay: 0,
       };
       
       if (process.env.NODE_ENV === 'development') {
-        console.log('[header-image] Changement d\'image - réinitialisation offset à 50');
+        console.log('[header-image] Changement d\'image - réinitialisation offset à 50, blur et overlay à 0');
       }
       
       await updateNoteREST(noteId, payload);
@@ -182,6 +186,8 @@ export default function NoteEditorPage() {
       // Mettre à jour l'état local
       setHeaderImageUrl(newHeaderImage);
       setHeaderImageOffset(50);
+      setHeaderImageBlur(0);
+      setHeaderImageOverlay(0);
     } catch (error) {
       console.error('[header-image] Erreur lors de la sauvegarde de l\'image:', error);
     }
@@ -198,6 +204,34 @@ export default function NoteEditorPage() {
       setHeaderImageOffset(newOffset);
     } catch (error) {
       console.error('[header-image-offset] Erreur lors de la sauvegarde de l\'offset:', error);
+    }
+  };
+
+  // Fonction dédiée pour sauvegarder le blur de l'image d'en-tête
+  const handleHeaderImageBlurSave = async (newBlur: number) => {
+    if (!noteId) return;
+    try {
+      const payload: Record<string, unknown> = {
+        header_image_blur: newBlur,
+      };
+      await updateNoteREST(noteId, payload);
+      setHeaderImageBlur(newBlur);
+    } catch (error) {
+      console.error('[header-image-blur] Erreur lors de la sauvegarde du blur:', error);
+    }
+  };
+
+  // Fonction dédiée pour sauvegarder l'overlay de l'image d'en-tête
+  const handleHeaderImageOverlaySave = async (newOverlay: number) => {
+    if (!noteId) return;
+    try {
+      const payload: Record<string, unknown> = {
+        header_image_overlay: newOverlay,
+      };
+      await updateNoteREST(noteId, payload);
+      setHeaderImageOverlay(newOverlay);
+    } catch (error) {
+      console.error('[header-image-overlay] Erreur lors de la sauvegarde de l\'overlay:', error);
     }
   };
 
@@ -223,7 +257,9 @@ export default function NoteEditorPage() {
             editor.commands.setContent((note.markdown_content as string) || '');
           // }
           setHeaderImageUrl((note.header_image as string) || null);
-          setHeaderImageOffset((note.header_image_offset as number) || 50);
+          setHeaderImageOffset((note.header_image_offset as number) ?? 50);
+          setHeaderImageBlur((note.header_image_blur as number) || 0);
+          setHeaderImageOverlay((note.header_image_overlay as number) || 0);
           setPublished(!!(note.ispublished as boolean));
           setPublishedUrl((note.public_url as string) || null);
         }
@@ -330,7 +366,9 @@ export default function NoteEditorPage() {
                       if (note) {
             setTitle(note.source_title || '');
                           setHeaderImageUrl(note.header_image || null);
-            setHeaderImageOffset(note.header_image_offset || 50);
+            setHeaderImageOffset(note.header_image_offset ?? 50);
+            setHeaderImageBlur(note.header_image_blur ?? 0);
+            setHeaderImageOverlay(note.header_image_overlay ?? 0);
             setPublished(!!note.ispublished);
             editor.commands.setContent(note.markdown_content || '');
                         setLastSavedContent(note.markdown_content || '');
@@ -373,7 +411,9 @@ export default function NoteEditorPage() {
                   if (note) {
             setTitle(note.source_title || '');
                           setHeaderImageUrl(note.header_image || null);
-            setHeaderImageOffset(note.header_image_offset || 50);
+            setHeaderImageOffset(note.header_image_offset ?? 50);
+            setHeaderImageBlur(note.header_image_blur ?? 0);
+            setHeaderImageOverlay(note.header_image_overlay ?? 0);
             setPublished(!!note.ispublished);
             editor.commands.setContent(note.markdown_content || '');
             setLastSavedContent(note.markdown_content || '');
@@ -592,6 +632,8 @@ export default function NoteEditorPage() {
       setTitle(note.source_title || '');
       setHeaderImageUrl(note.header_image || null);
       setHeaderImageOffset(note.header_image_offset || 50);
+      setHeaderImageBlur(note.header_image_blur || 0);
+      setHeaderImageOverlay(note.header_image_overlay || 0);
       setPublished(!!note.ispublished);
       editor.commands.setContent(note.markdown_content || '');
     }
@@ -779,11 +821,19 @@ export default function NoteEditorPage() {
             <EditorHeaderImage
               headerImageUrl={headerImageUrl}
               headerImageOffset={headerImageOffset}
+              headerImageBlur={headerImageBlur}
+              headerImageOverlay={headerImageOverlay}
               onHeaderChange={(newImage) => {
                 handleHeaderImageSave(newImage);
               }}
               onHeaderOffsetChange={(newOffset) => {
                 handleHeaderImageOffsetSave(newOffset);
+              }}
+              onHeaderBlurChange={(newBlur) => {
+                handleHeaderImageBlurSave(newBlur);
+              }}
+              onHeaderOverlayChange={(newOverlay) => {
+                handleHeaderImageOverlaySave(newOverlay);
               }}
               imageMenuOpen={imageMenuOpen}
               onImageMenuOpen={() => setImageMenuOpen(true)}

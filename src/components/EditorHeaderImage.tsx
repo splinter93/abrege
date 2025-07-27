@@ -8,8 +8,12 @@ import ImageMenu from './ImageMenu';
 interface EditorHeaderImageProps {
   headerImageUrl: string | null;
   headerImageOffset?: number;
+  headerImageBlur?: number;
+  headerImageOverlay?: number;
   onHeaderChange: (url: string | null) => void;
   onHeaderOffsetChange?: (offset: number) => void;
+  onHeaderBlurChange?: (blur: number) => void;
+  onHeaderOverlayChange?: (overlay: number) => void;
   imageMenuOpen: boolean;
   onImageMenuOpen: () => void;
   onImageMenuClose: () => void;
@@ -39,26 +43,31 @@ function getRandomHeaderImage(current: string | null) {
 const EditorHeaderImage: React.FC<EditorHeaderImageProps> = ({
   headerImageUrl,
   headerImageOffset = 50,
+  headerImageBlur = 0,
+  headerImageOverlay = 0,
   onHeaderChange,
   onHeaderOffsetChange,
+  onHeaderBlurChange,
+  onHeaderOverlayChange,
   imageMenuOpen,
   onImageMenuClose,
   noteId,
   userId,
 }) => {
-  const [headerOverlayLevel, setHeaderOverlayLevel] = useState(0);
-  const [headerBlurLevel, setHeaderBlurLevel] = useState(0);
   const [imageOffsetY, setImageOffsetY] = useState(headerImageOffset);
   const dragging = useRef(false);
+  const isUpdatingFromDrag = useRef(false);
   const startY = useRef(0);
   const startOffsetY = useRef(headerImageOffset);
   const currentOffsetRef = useRef(headerImageOffset);
 
-  // Synchroniser avec headerImageOffset
+  // Synchroniser avec headerImageOffset (seulement si on ne vient pas de drag)
   React.useEffect(() => {
-    setImageOffsetY(headerImageOffset);
-    currentOffsetRef.current = headerImageOffset;
-    startOffsetY.current = headerImageOffset;
+    if (!dragging.current && !isUpdatingFromDrag.current) {
+      setImageOffsetY(headerImageOffset);
+      currentOffsetRef.current = headerImageOffset;
+      startOffsetY.current = headerImageOffset;
+    }
   }, [headerImageOffset]);
 
   // Drag logic
@@ -77,6 +86,8 @@ const EditorHeaderImage: React.FC<EditorHeaderImageProps> = ({
     // 220px de hauteur, on veut un offset de 0 à 100 (%)
     let newOffset = startOffsetY.current + (deltaY / 220) * 100;
     newOffset = Math.max(0, Math.min(100, newOffset));
+    // Arrondir à 1 décimale pour éviter les valeurs trop précises
+    newOffset = Math.round(newOffset * 10) / 10;
     setImageOffsetY(newOffset);
     currentOffsetRef.current = newOffset;
   };
@@ -86,10 +97,20 @@ const EditorHeaderImage: React.FC<EditorHeaderImageProps> = ({
     window.removeEventListener('mousemove', handleMouseMove);
     window.removeEventListener('mouseup', handleMouseUp);
     
+    // Marquer qu'on vient de drag pour éviter la synchronisation
+    isUpdatingFromDrag.current = true;
+    
     // Sauvegarder la position finale (utiliser la ref qui a toujours la valeur la plus récente)
     if (onHeaderOffsetChange) {
-      onHeaderOffsetChange(currentOffsetRef.current);
+      // Arrondir la valeur finale pour éviter les décimales trop précises
+      const finalOffset = Math.round(currentOffsetRef.current * 10) / 10;
+      onHeaderOffsetChange(finalOffset);
     }
+    
+    // Réinitialiser le flag après un délai
+    setTimeout(() => {
+      isUpdatingFromDrag.current = false;
+    }, 500);
   };
 
   const headerBtnStyle: React.CSSProperties = {
@@ -116,12 +137,12 @@ const EditorHeaderImage: React.FC<EditorHeaderImageProps> = ({
       <img
         src={headerImageUrl}
         alt="Header"
-        style={{ width: '100%', height: '100%', objectFit: 'cover', filter: `blur(${headerBlurLevel * 2}px)`, transition: 'filter 0.2s', objectPosition: `center ${imageOffsetY}%`, cursor: dragging.current ? 'grabbing' : 'grab' }}
+        style={{ width: '100%', height: '100%', objectFit: 'cover', filter: `blur(${headerImageBlur}px)`, transition: 'filter 0.2s', objectPosition: `center ${imageOffsetY}%`, cursor: dragging.current ? 'grabbing' : 'grab' }}
         onMouseDown={handleMouseDown}
         draggable={false}
       />
       {/* Overlay visuel appliqué sur l'image */}
-      <div style={{ position: 'absolute', inset: 0, background: `rgba(24,24,24,${0.08 + 0.14 * headerOverlayLevel})`, pointerEvents: 'none', transition: 'background 0.2s' }} />
+      <div style={{ position: 'absolute', inset: 0, background: `rgba(24,24,24,${0.08 + 0.14 * headerImageOverlay})`, pointerEvents: 'none', transition: 'background 0.2s' }} />
       <div className="editor-header-image-btns" style={{
         position: 'absolute',
         top: '50%',
@@ -152,10 +173,10 @@ const EditorHeaderImage: React.FC<EditorHeaderImageProps> = ({
           </button>
         </Tooltip>
         {/* Overlay */}
-        <Tooltip text={`Overlay: ${headerOverlayLevel}/5`}>
+        <Tooltip text={`Overlay: ${headerImageOverlay}/5`}>
           <button
             className="header-image-btn"
-            onClick={() => setHeaderOverlayLevel(l => (l + 1) % 6)}
+            onClick={() => onHeaderOverlayChange && onHeaderOverlayChange((headerImageOverlay + 1) % 6)}
             style={headerBtnStyle}
             onMouseOver={e => { e.currentTarget.style.color = 'var(--accent-primary)'; }}
             onMouseOut={e => { e.currentTarget.style.color = 'var(--text-2)'; }}
@@ -164,10 +185,10 @@ const EditorHeaderImage: React.FC<EditorHeaderImageProps> = ({
           </button>
         </Tooltip>
         {/* Blur */}
-        <Tooltip text={`Blur: ${headerBlurLevel}/5`}>
+        <Tooltip text={`Blur: ${headerImageBlur}/5`}>
           <button
             className="header-image-btn"
-            onClick={() => setHeaderBlurLevel(l => (l + 1) % 6)}
+            onClick={() => onHeaderBlurChange && onHeaderBlurChange((headerImageBlur + 1) % 6)}
             style={headerBtnStyle}
             onMouseOver={e => { e.currentTarget.style.color = 'var(--accent-primary)'; }}
             onMouseOut={e => { e.currentTarget.style.color = 'var(--text-2)'; }}

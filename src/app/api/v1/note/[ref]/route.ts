@@ -56,6 +56,8 @@ export async function PUT(req: NextRequest, { params }: any): Promise<Response> 
       ref: z.string().min(1, 'note_ref requis'),
       header_image: z.string().url('header_image doit être une URL valide').optional().nullable(),
       header_image_offset: z.number().min(0).max(100).optional(), // Accepte les décimales
+      header_image_blur: z.number().int().min(0).max(5).optional(),
+      header_image_overlay: z.number().int().min(0).max(5).optional(),
       source_title: z.string().min(1, 'source_title requis').optional(),
       markdown_content: z.string().optional(),
       html_content: z.string().optional()
@@ -85,9 +87,23 @@ export async function PUT(req: NextRequest, { params }: any): Promise<Response> 
       updateData.header_image = body.header_image;
     }
     if (body.header_image_offset !== undefined) {
-      updateData.header_image_offset = body.header_image_offset;
+      // Arrondir l'offset à 1 décimale pour éviter les valeurs trop précises
+      const roundedOffset = Math.round(body.header_image_offset * 10) / 10;
+      updateData.header_image_offset = roundedOffset;
       if (process.env.NODE_ENV === 'development') {
-        console.log('[API] Mise à jour header_image_offset:', body.header_image_offset);
+        console.log('[API] Mise à jour header_image_offset:', roundedOffset);
+      }
+    }
+    if (body.header_image_blur !== undefined) {
+      updateData.header_image_blur = body.header_image_blur;
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[API] Mise à jour header_image_blur:', body.header_image_blur);
+      }
+    }
+    if (body.header_image_overlay !== undefined) {
+      updateData.header_image_overlay = body.header_image_overlay;
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[API] Mise à jour header_image_overlay:', body.header_image_overlay);
       }
     }
     if (body.source_title !== undefined) {
