@@ -960,7 +960,7 @@ export default function NoteEditorPage() {
       {/* Ajoute le menu contextuel kebab pour les options premium (dont le switch de langue) */}
       <EditorKebabMenu
         open={kebabOpen}
-        position={{ top: 60, left: window.innerWidth - 260 }}
+        position={{ top: 48, left: window.innerWidth - 270 }}
         onClose={() => setKebabOpen(false)}
         a4Mode={a4Mode}
         setA4Mode={setA4Mode}

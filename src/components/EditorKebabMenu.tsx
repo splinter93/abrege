@@ -1,5 +1,5 @@
-import React, { useEffect, useRef } from 'react';
-import { FiShare2, FiDownload, FiCopy, FiMaximize2, FiMinimize2 } from 'react-icons/fi';
+import React, { useEffect, useRef, useState } from 'react';
+import { FiShare2, FiDownload, FiCopy, FiMaximize2, FiMinimize2, FiGlobe, FiCheck } from 'react-icons/fi';
 import './editor-kebab-menu.css';
 
 interface EditorKebabMenuProps {
@@ -32,6 +32,7 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
   isPublishing = false,
 }) => {
   const menuRef = useRef<HTMLDivElement>(null);
+  const [copyConfirmed, setCopyConfirmed] = useState(false);
 
   useEffect(() => {
     if (!open) return;
@@ -56,7 +57,8 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
   const handleCopyUrl = () => {
     if (publishedUrl) {
       navigator.clipboard.writeText(publishedUrl);
-      // TODO: Ajouter un toast de confirmation
+      setCopyConfirmed(true);
+      setTimeout(() => setCopyConfirmed(false), 2000); // Reset après 2 secondes
     }
   };
 
@@ -101,18 +103,20 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
       label: 'A4 Mode',
       icon: <A4Icon />,
       onClick: () => { setA4Mode(!a4Mode); },
-      color: a4Mode ? '#10b981' : '#D4D4D4'
+      color: a4Mode ? '#10b981' : '#D4D4D4',
+      type: 'coming-soon' as const
     },
     {
       id: 'published',
-      label: 'Published',
+      label: published ? 'Published' : 'Publish',
+      icon: <FiGlobe size={18} />,
       onClick: () => { 
         // Éviter la boucle infinie en désactivant pendant la publication
         if (!isPublishing) {
           setPublished(!published); 
         }
       },
-      color: published ? '#10b981' : '#D4D4D4',
+      color: published ? '#ff6b35' : '#D4D4D4',
       type: 'switch' as const,
       showCopyButton: published && publishedUrl,
       disabled: isPublishing
@@ -144,7 +148,7 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
           background: '#1a1a1c',
           border: '1px solid #2a2a2c',
           borderRadius: 12,
-          padding: '6px 0',
+          padding: '4px 0',
           minWidth: 200,
           boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)',
           zIndex: 1000,
@@ -162,6 +166,42 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
                   </span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  {/* Bouton copier URL (seulement pour Published) */}
+                  {option.showCopyButton && (
+                    <button
+                      onClick={handleCopyUrl}
+                      style={{
+                        padding: '8px',
+                        background: 'transparent',
+                        border: '1px solid #444',
+                        color: copyConfirmed ? '#ff6b35' : '#D4D4D4',
+                        cursor: 'pointer',
+                        borderRadius: 4,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        transition: 'all 0.15s ease',
+                        marginLeft: '8px'
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!copyConfirmed) {
+                          e.currentTarget.style.backgroundColor = '#2a2a2c';
+                          e.currentTarget.style.color = '#ff6b35';
+                          e.currentTarget.style.borderColor = '#ff6b35';
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!copyConfirmed) {
+                          e.currentTarget.style.backgroundColor = 'transparent';
+                          e.currentTarget.style.color = '#D4D4D4';
+                          e.currentTarget.style.borderColor = '#444';
+                        }
+                      }}
+                      title={copyConfirmed ? "URL copiée !" : "Copier l'URL"}
+                    >
+                      {copyConfirmed ? <FiCheck size={10} /> : <FiCopy size={10} />}
+                    </button>
+                  )}
                   {/* Switch toggle */}
                   <button
                     onClick={option.onClick}
@@ -169,7 +209,7 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
                     style={{
                       width: 44,
                       height: 24,
-                      background: (option.id === 'a4Mode' ? a4Mode : published) ? '#10b981' : '#444',
+                      background: option.id === 'a4Mode' ? (a4Mode ? '#10b981' : '#444') : (published ? '#ff6b35' : '#444'),
                       border: 'none',
                       borderRadius: 12,
                       cursor: option.disabled ? 'not-allowed' : 'pointer',
@@ -193,35 +233,29 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
                       }}
                     />
                   </button>
-                  {/* Bouton copier URL (seulement pour Published) */}
-                  {option.showCopyButton && (
-                    <button
-                      onClick={handleCopyUrl}
-                      style={{
-                        padding: '6px',
-                        background: 'transparent',
-                        border: 'none',
-                        color: '#D4D4D4',
-                        cursor: 'pointer',
-                        borderRadius: 4,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        transition: 'all 0.15s ease'
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.backgroundColor = '#2a2a2c';
-                        e.currentTarget.style.color = '#10b981';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor = 'transparent';
-                        e.currentTarget.style.color = '#D4D4D4';
-                      }}
-                      title="Copier l'URL"
-                    >
-                      <FiCopy size={14} />
-                    </button>
-                  )}
+                </div>
+              </div>
+            ) : option.type === 'coming-soon' ? (
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  {option.icon}
+                  <span style={{ color: option.color, fontSize: '14px', fontFamily: 'Noto Sans, Inter, Arial, sans-serif' }}>
+                    {option.label}
+                  </span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center' }}>
+                  <span style={{ 
+                    color: '#737373', 
+                    fontSize: '9px', 
+                    fontFamily: 'Noto Sans, Inter, Arial, sans-serif',
+                    fontStyle: 'italic',
+                    padding: '1px 4px',
+                    background: '#2a2a2c',
+                    borderRadius: '3px',
+                    border: '1px solid #444'
+                  }}>
+                    Coming Soon
+                  </span>
                 </div>
               </div>
             ) : (
