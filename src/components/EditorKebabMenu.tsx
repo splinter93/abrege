@@ -171,9 +171,9 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
                     <button
                       onClick={handleCopyUrl}
                       style={{
-                        padding: '8px',
+                        padding: '10px',
                         background: 'transparent',
-                        border: '1px solid #444',
+                        border: 'none',
                         color: copyConfirmed ? '#ff6b35' : '#D4D4D4',
                         cursor: 'pointer',
                         borderRadius: 4,
@@ -187,19 +187,17 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
                         if (!copyConfirmed) {
                           e.currentTarget.style.backgroundColor = '#2a2a2c';
                           e.currentTarget.style.color = '#ff6b35';
-                          e.currentTarget.style.borderColor = '#ff6b35';
                         }
                       }}
                       onMouseLeave={(e) => {
                         if (!copyConfirmed) {
                           e.currentTarget.style.backgroundColor = 'transparent';
                           e.currentTarget.style.color = '#D4D4D4';
-                          e.currentTarget.style.borderColor = '#444';
                         }
                       }}
                       title={copyConfirmed ? "URL copiée !" : "Copier l'URL"}
                     >
-                      {copyConfirmed ? <FiCheck size={10} /> : <FiCopy size={10} />}
+                      {copyConfirmed ? <FiCheck size={12} /> : <FiCopy size={12} />}
                     </button>
                   )}
                   {/* Switch toggle */}
@@ -242,8 +240,6 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
                   <span style={{ color: option.color, fontSize: '14px', fontFamily: 'Noto Sans, Inter, Arial, sans-serif' }}>
                     {option.label}
                   </span>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center' }}>
                   <span style={{ 
                     color: '#737373', 
                     fontSize: '9px', 
@@ -252,10 +248,24 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
                     padding: '1px 4px',
                     background: '#2a2a2c',
                     borderRadius: '3px',
-                    border: '1px solid #444'
-                  }}>
+                    border: '1px solid #444',
+                    marginLeft: '8px',
+                    cursor: 'default',
+                    transition: 'all 0.15s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.color = '#ff6b35';
+                    e.currentTarget.style.borderColor = '#ff6b35';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.color = '#737373';
+                    e.currentTarget.style.borderColor = '#444';
+                  }}
+                  >
                     Coming Soon
                   </span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center' }}>
                 </div>
               </div>
             ) : (

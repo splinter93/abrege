@@ -811,9 +811,15 @@ export default function NoteEditorPage() {
         <div className="editor-header-toolbar" style={{ gap: '0.5rem', display: 'flex', alignItems: 'center' }}>
           <button
             className="editor-header-preview"
-            title={showPreview ? 'Quitter l’aperçu' : 'Aperçu'}
+            title={showPreview ? 'Quitter l\'aperçu' : 'Aperçu'}
             style={{ background: 'none', border: 'none', color: showPreview ? 'var(--accent-primary)' : 'var(--text-2)', fontSize: 17, cursor: 'pointer', padding: '0.5rem', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}
             onClick={() => setShowPreview(p => !p)}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.color = '#ff6b35';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.color = showPreview ? 'var(--accent-primary)' : 'var(--text-2)';
+            }}
           >
             <FiEye size={17} />
           </button>
@@ -822,8 +828,24 @@ export default function NoteEditorPage() {
             title="Menu"
             style={{ background: 'none', border: 'none', color: 'var(--text-2)', fontSize: 20, cursor: 'pointer', padding: '0.5rem', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}
             onClick={() => setKebabOpen(true)}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.color = '#ff6b35';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.color = 'var(--text-2)';
+            }}
           >⋯</button>
-          <button className="editor-header-close" title="Fermer" style={{ background: 'none', border: 'none', color: 'var(--text-2)', fontSize: 17, cursor: 'pointer', padding: '0.5rem', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}>
+          <button 
+            className="editor-header-close" 
+            title="Fermer" 
+            style={{ background: 'none', border: 'none', color: 'var(--text-2)', fontSize: 17, cursor: 'pointer', padding: '0.5rem', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.color = '#ff6b35';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.color = 'var(--text-2)';
+            }}
+          >
             <FiX size={17} />
           </button>
         </div>
