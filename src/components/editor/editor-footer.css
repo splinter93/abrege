@@ -1,43 +1,64 @@
-/* Styles dédiés au footer de l’éditeur */
+/* ==========================================================================
+   FOOTER ÉDITEUR - VERSION PROPRE ET ORGANISÉE
+   ========================================================================== */
 
-.editor-footer {
-  width: 100%;
-  max-width: 750px;
-  margin: 32px auto 0 auto;
+/* Footer fixe en bas de l'écran */
+.editor-footer-fixed {
+  position: fixed;
+  left: 0;
+  bottom: 0;
+  width: 100vw;
+  height: 28px;
+  background: #141416;
+  border-top: 0.5px solid #2a2a2c;
   color: var(--text-3);
-  font-size: 15px;
-  text-align: right;
-  padding-top: 18px;
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  gap: 2.5rem;
-  border-top: 1px solid var(--border-subtle);
-  background: none;
-}
-
-.editor-footer-stats {
-  display: flex;
-  gap: 1.2rem;
-  align-items: center;
-  color: var(--text-3);
-  font-size: 15px;
-}
-
-.editor-footer-time {
-  color: var(--text-3);
-  font-size: 15px;
-  margin-left: 1.2rem;
-}
-
-/* Styles supplémentaires pour le footer */
-.editor-footer {
+  font-size: 12px;
+  font-family: 'Noto Sans', 'Inter', 'Arial', sans-serif;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  padding: 0 16px;
+  z-index: 1201;
+  letter-spacing: 0.01em;
+  box-sizing: border-box;
+  user-select: none;
+}
+
+/* Section gauche du footer */
+.editor-footer-left {
+  flex: 1;
+  text-align: left;
+}
+
+/* Section droite du footer */
+.editor-footer-right {
+  flex: 1;
+  text-align: right;
+}
+
+/* ==========================================================================
+   FOOTER CLASSIQUE (pour compatibilité)
+   ========================================================================== */
+
+/* Footer classique (non fixe) */
+.editor-footer {
+  width: 100%;
+  max-width: 1600px;
+  margin: 24px auto 0 auto;
   padding: 1rem 2rem;
-  background: var(--surface-2);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #141416;
   border-top: 1px solid var(--border-subtle);
+  color: var(--text-3);
+  font-size: 14px;
+}
+
+/* Classes utilitaires pour compatibilité */
+.editor-time {
+  color: var(--text-3);
+  font-size: 14px;
 }
 
 .editor-stats {
@@ -45,7 +66,7 @@
   align-items: center;
   gap: 1rem;
   color: var(--text-2);
-  font-size: var(--editor-small-size);
+  font-size: 14px;
 }
 
 .editor-stats span {
@@ -54,7 +75,16 @@
   gap: 0.5rem;
 }
 
-.editor-time {
+.editor-footer-stats {
+  display: flex;
+  gap: 1.2rem;
+  align-items: center;
   color: var(--text-3);
-  font-size: var(--editor-small-size);
+  font-size: 14px;
+}
+
+.editor-footer-time {
+  color: var(--text-3);
+  font-size: 14px;
+  margin-left: 1.2rem;
 } 

@@ -15,11 +15,11 @@
   --editor-text-muted: #737373;      /* Ajouté pour FolderContent.css et RecentSection.css */
   --editor-accent-primary: #ff6b35;
   --editor-accent-hover: #f7931e;
-  --editor-surface-1: #1a1a1c;
-  --editor-surface-2: #2a2a2c;
-  --editor-surface-hover: #2f2f31;
-  --editor-border-subtle: #3a3a3c;
-  --editor-border-hover: #4a4a4c;
+  --editor-surface-1: transparent;    /* Transparent pour utiliser le background global */
+  --editor-surface-2: #0f0f10;       /* Encore plus sombre - était #1a1a1c */
+  --editor-surface-hover: #151517;    /* Encore plus sombre - était #1f1f21 */
+  --editor-border-subtle: #1a1a1c;   /* Encore plus sombre - était #2a2a2c */
+  --editor-border-hover: #2a2a2c;    /* Encore plus sombre - était #3a3a3c */
 
   /* ==========================================================================
      FONTS HARMONISÉES
@@ -73,8 +73,8 @@
   /* ==========================================================================
      PADDINGS ET ESPACEMENTS TYPOGRAPHIQUES
      ========================================================================== */
-  --editor-title-padding: 0 0 8px 0;
-  --editor-content-padding: 18px 0 120px 0;
+  --editor-title-padding: 0 0 24px 0;
+  --editor-content-padding: 12px 0 120px 0;
   --editor-title-line-height: 1.15;
   --editor-title-letter-spacing: -0.02em;
   --editor-title-min-height: 45px;
@@ -132,6 +132,7 @@
   display: flex;
   justify-content: center;
   transition: all 0.2s ease;
+  background: var(--editor-surface-1);
 }
 
 /* Style typographique complet du titre */
@@ -165,7 +166,7 @@
 
 /* 1. Pas d'image */
 .noteLayout.noImage .noteLayout-title {
-  padding-top: 48px; /* Augmente l'espacement au-dessus du titre */
+  padding-top: 70px; /* Augmente franchement l'espacement au-dessus du titre */
 }
 .noteLayout.noImage .noteLayout-content {
   margin-top: 0px; /* Espacement nul entre le titre et le contenu */
@@ -176,8 +177,10 @@
 }
 
 .noteLayout.noImage .noteLayout-title textarea {
-  padding-bottom: 0; /* Supprime le padding parasite du textarea */
+  padding-bottom: 12px; /* Réduit l'espacement entre titre et texte */
 }
+
+
 
 /* 2. Image avec titre intégré */
 .noteLayout.imageWithTitle .noteLayout-title {
@@ -185,21 +188,29 @@
   top: 160px; /* Moitié de la hauteur de l'image (300px) */
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 100%;
-  padding: 0 20px; /* Ajoute un peu de marge sur les côtés */
+  width: 90%; /* Permet d'utiliser presque toute la largeur disponible */
+  padding: 0;
   box-sizing: border-box;
   text-align: center;
   z-index: 10;
+  max-width: 1000px; /* Limite max pour les très grands écrans */
 }
 
 .noteLayout.imageWithTitle .noteLayout-title textarea {
   color: white !important; /* Override pour le titre dans l'image */
   text-shadow: 0 2px 4px rgba(0,0,0,0.2);
   text-align: center;
+  width: 100% !important; /* Utilise toute la largeur du conteneur */
+  max-width: none !important;
+  padding: 0 !important;
+  white-space: pre-wrap !important; /* Permet le retour à la ligne */
+  overflow: visible !important; /* Assure que le texte n'est pas coupé */
 }
 .noteLayout.imageWithTitle .noteLayout-content {
-  margin-top: -5px; /* Remonte le contenu de 5px */
-  padding-top: 0px; /* Crée un espace de 10px avant le texte */
+  position: relative;
+  top: 0;
+  margin-top: -32px; /* Ajustement pour remonter le contenu */
+  padding-top: 24px; /* Padding pour descendre le texte */
 }
 
 .noteLayout.imageWithTitle .noteLayout-content .editor-content {
@@ -212,7 +223,7 @@
 
 /* 3. Image avec titre en dessous */
 .noteLayout.imageOnly .noteLayout-title {
-  padding-top: 5px; /* Espacement minimal de 5px sous l'image */
+  padding-top: 8px; /* Espacement pour descendre le titre */
   text-align: left;
 }
 .noteLayout.imageOnly .noteLayout-title textarea {

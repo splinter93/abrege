@@ -9,9 +9,9 @@
 :root {
   /* Variables spécifiques à l'éditeur uniquement */
   --editor-accent-subtle: rgba(41, 148, 255, 0.1);
-  --editor-surface-hover: #1a1a1c;
-  --editor-border-subtle: #2a2a2c;
-  --editor-border-hover: #3a3a3c;
+  --editor-surface-hover: #2f2f31;   /* Harmonisé avec typography.css */
+  --editor-border-subtle: #3a3a3c;   /* Harmonisé avec typography.css */
+  --editor-border-hover: #4a4a4c;    /* Harmonisé avec typography.css */
   
   /* Tailles spécifiques à l'éditeur */
   --editor-xxl-size: 2.5rem;

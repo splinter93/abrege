@@ -26,6 +26,7 @@ import TaskList from '@tiptap/extension-task-list';
 import TaskItem from '@tiptap/extension-task-item';
 import EditorSlashMenu from '@/components/EditorSlashMenu';
 import type { EditorSlashMenuHandle } from '@/components/EditorSlashMenu';
+import EditorFooter from '@/components/editor/EditorFooter';
 import Table from '@tiptap/extension-table';
 import TableRow from '@tiptap/extension-table-row';
 import TableCell from '@tiptap/extension-table-cell';
@@ -948,38 +949,12 @@ export default function NoteEditorPage() {
           </div>
           {/* Le reste de la page éditeur ici... */}
           {/* Footer fixe premium */}
-          <footer style={{
-            position: 'fixed',
-            left: 0,
-            bottom: 0,
-            width: '100vw',
-            background: 'rgba(24,24,28,0.98)',
-            borderTop: '1px solid var(--border-subtle)',
-            color: 'var(--text-3)',
-            fontSize: 12,
-            fontFamily: 'Noto Sans, Inter, Arial, sans-serif',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            padding: '0 16px',
-            height: 28,
-            zIndex: 1201,
-            letterSpacing: 0.01,
-            boxSizing: 'border-box',
-            userSelect: 'none',
-          }}>
-            <div style={{ flex: 1, textAlign: 'left' }}>
-              Last Saved : {getRelativeTime(lastSaved)}
-              {/* {hasUnsavedChangesForNote(noteId) && (
-                <span style={{ color: 'var(--accent-primary)', marginLeft: '8px' }}>
-                  ● Unsaved changes
-                </span>
-              )} */}
-            </div>
-            <div style={{ flex: 1, textAlign: 'right' }}>
-              {getWordCount()} words
-            </div>
-          </footer>
+          <EditorFooter
+            lastSaved={lastSaved}
+            wordCount={getWordCount()}
+            getRelativeTime={getRelativeTime}
+            getWordCount={getWordCount}
+          />
         </>
       )}
       {/* Ajoute le menu contextuel kebab pour les options premium (dont le switch de langue) */}
