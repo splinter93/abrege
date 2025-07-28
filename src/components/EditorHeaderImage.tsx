@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { MdClose } from 'react-icons/md';
 import { LuMoon, LuCloudFog } from 'react-icons/lu';
-import { FiImage } from 'react-icons/fi';
+import { FiImage, FiDroplet } from 'react-icons/fi';
 import Tooltip from './Tooltip';
 import ImageMenu from './ImageMenu';
 
@@ -197,7 +197,7 @@ const EditorHeaderImage: React.FC<EditorHeaderImageProps> = ({
             onMouseOver={e => { e.currentTarget.style.color = 'var(--accent-primary)'; }}
             onMouseOut={e => { e.currentTarget.style.color = 'var(--text-2)'; }}
           >
-            <LuCloudFog size={18} />
+            <FiDroplet size={18} />
           </button>
         </Tooltip>
         {/* Toggle titre dans l'image */}
@@ -210,6 +210,7 @@ const EditorHeaderImage: React.FC<EditorHeaderImageProps> = ({
               fontFamily: 'Inter, sans-serif',
               fontWeight: 600,
               color: headerTitleInImage ? 'var(--accent-primary)' : 'var(--text-2)',
+              padding: '4px 10px',
             }}
             onMouseOver={e => { e.currentTarget.style.color = 'var(--accent-primary)'; }}
             onMouseOut={e => { e.currentTarget.style.color = headerTitleInImage ? 'var(--accent-primary)' : 'var(--text-2)'; }}
