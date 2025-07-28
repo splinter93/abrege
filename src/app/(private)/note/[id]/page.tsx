@@ -396,7 +396,7 @@ export default function NoteEditorPage() {
           // Délai pour éviter les boucles infinies
           setTimeout(() => {
             setIsUpdatingFromRealtime(false);
-          }, 100);
+          }, 500);
         })
         .subscribe();
       if (process.env.NODE_ENV === 'development') {
@@ -440,7 +440,7 @@ export default function NoteEditorPage() {
         }
         setTimeout(() => {
           setIsUpdatingFromRealtime(false);
-        }, 100);
+        }, 500);
         if (process.env.NODE_ENV === 'development') {
           console.log('[realtime] Synchronisation effectuée (onglet visible)');
         }
