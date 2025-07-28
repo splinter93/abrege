@@ -5,37 +5,16 @@
 /* Styles généraux de l'éditeur - Les styles spécifiques aux composants 
    ont été migrés vers leurs fichiers CSS dédiés */
 
-/* Variables spécifiques à l'éditeur (non définies dans typography.css) */
-:root {
-  /* Variables spécifiques à l'éditeur uniquement */
-  --editor-accent-subtle: rgba(41, 148, 255, 0.1);
-  --editor-surface-hover: #2f2f31;   /* Harmonisé avec typography.css */
-  --editor-border-subtle: #3a3a3c;   /* Harmonisé avec typography.css */
-  --editor-border-hover: #4a4a4c;    /* Harmonisé avec typography.css */
-  
-  /* Tailles spécifiques à l'éditeur */
-  --editor-xxl-size: 2.5rem;
-  
-  /* Tailles mobiles spécifiques */
-  --editor-h1-size-mobile: 1.75rem;
-  --editor-h2-size-mobile: 1.5rem;
-  --editor-h3-size-mobile: 1.25rem;
-  --editor-h5-size: 0.875rem;
-  
-  /* Transitions */
-  --transition-speed: 0.2s ease;
-}
-
 /* Styles de base pour l'éditeur */
 .editor-base {
   font-family: var(--editor-font-family);
   color: var(--editor-text-color);
-  background: var(--editor-surface-1);
+  background: var(--surface-1);
 }
 
 /* Styles pour les sélections */
 .editor-selection {
-  background: rgba(229, 90, 44, 0.13);
+  background: rgba(var(--accent-primary-rgb), 0.13);
 }
 
 /* Styles pour les éléments sélectionnés */

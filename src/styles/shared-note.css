@@ -15,12 +15,12 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--editor-border-subtle);
+  background: var(--border-subtle);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--editor-border-hover);
+  background: var(--border-strong);
 }
 
 ::-webkit-scrollbar-corner {

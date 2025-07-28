@@ -31,6 +31,6 @@
 }
 
 .tabs button.active {
-  background: var(--editor-accent-primary);
+  background: var(--accent-primary);
   color: white;
 } 

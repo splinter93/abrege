@@ -1,26 +1,18 @@
 /* ==========================================================================
    TYPOGRAPHIE CENTRALISÉE - ÉDITEUR
    ==========================================================================
-   Système unifié pour couleurs, fonts, tailles, layouts
-   Contrôle total de l'apparence textuelle et du positionnement
-   Migration depuis colors.css, fonts.css et NoteHeaderLayout.css
+   Système unifié pour fonts, tailles, layouts.
+   Les couleurs sont gérées par src/styles/design-system.css
 */
 
 :root {
   /* ==========================================================================
-     COULEURS HARMONISÉES
+     COULEURS TYPOGRAPHIQUES
      ========================================================================== */
   --editor-text-color: #F5F5DC;
-  --editor-text-primary: #F5F5DC;    /* Ajouté pour compatibilité */
-  --editor-text-muted: #737373;      /* Ajouté pour FolderContent.css et RecentSection.css */
-  --editor-accent-primary: #ff6b35;
-  --editor-accent-hover: #f7931e;
-  --editor-surface-1: transparent;    /* Transparent pour utiliser le background global */
-  --editor-surface-2: #0f0f10;       /* Encore plus sombre - était #1a1a1c */
-  --editor-surface-hover: #151517;    /* Encore plus sombre - était #1f1f21 */
-  --editor-border-subtle: #1a1a1c;   /* Encore plus sombre - était #2a2a2c */
-  --editor-border-hover: #2a2a2c;    /* Encore plus sombre - était #3a3a3c */
-
+  --editor-text-primary: #F5F5DC;
+  --editor-text-muted: #737373;
+  
   /* ==========================================================================
      FONTS HARMONISÉES
      ========================================================================== */
@@ -132,7 +124,7 @@
   display: flex;
   justify-content: center;
   transition: all 0.2s ease;
-  background: var(--editor-surface-1);
+  background: var(--surface-1);
 }
 
 /* Style typographique complet du titre */
@@ -188,21 +180,21 @@
   top: 160px; /* Moitié de la hauteur de l'image (300px) */
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 90%; /* Permet d'utiliser presque toute la largeur disponible */
+  width: auto;
+  max-width: 750px;
   padding: 0;
   box-sizing: border-box;
   text-align: center;
   z-index: 10;
-  max-width: 1000px; /* Limite max pour les très grands écrans */
 }
 
 .noteLayout.imageWithTitle .noteLayout-title textarea {
   color: white !important; /* Override pour le titre dans l'image */
   text-shadow: 0 2px 4px rgba(0,0,0,0.2);
   text-align: center;
-  width: 100% !important; /* Utilise toute la largeur du conteneur */
-  max-width: none !important;
-  padding: 0 !important;
+  width: auto !important; /* S'adapte à la largeur du texte */
+  max-width: 750px !important;
+  padding: 0 0 4px 0 !important; /* Légère marge en bas */
   white-space: pre-wrap !important; /* Permet le retour à la ligne */
   overflow: visible !important; /* Assure que le texte n'est pas coupé */
 }

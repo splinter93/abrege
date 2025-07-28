@@ -107,14 +107,14 @@
    ========================================================================== */
 
 .markdown-body a {
-  color: var(--editor-accent-hover);
+  color: var(--accent-hover);
   text-decoration: none;
   filter: brightness(0.8);
   transition: color 0.18s, filter 0.18s;
 }
 
 .markdown-body a:hover {
-  color: var(--editor-accent-primary);
+  color: var(--accent-primary);
   filter: brightness(0.95);
   text-decoration: underline;
 }
@@ -124,7 +124,7 @@
    ========================================================================== */
 
 .markdown-body code {
-  background: var(--editor-surface-2);
+  background: var(--surface-2);
   color: var(--editor-text-color);
   border-radius: 4px;
   padding: 0.13em 0.38em;
@@ -133,7 +133,7 @@
 }
 
 .markdown-body pre {
-  background: var(--editor-surface-2);
+  background: var(--surface-2);
   color: var(--editor-text-color);
   border-radius: 8px;
   padding: 1.1em 1.3em;
@@ -148,7 +148,7 @@
    ========================================================================== */
 
 .markdown-body .tableWrapper {
-  border: 1px solid var(--editor-border-subtle);
+  border: 1px solid var(--border-subtle);
   border-radius: 10px;
   overflow: hidden;
   background: none;
@@ -170,8 +170,8 @@
 .markdown-body th,
 .markdown-body td {
   border: none;
-  border-bottom: 1px solid var(--editor-border-subtle);
-  border-right: 1px solid var(--editor-border-subtle);
+  border-bottom: 1px solid var(--border-subtle);
+  border-right: 1px solid var(--border-subtle);
   background: none;
   color: var(--editor-text-color);
   font-size: 1rem;
@@ -183,8 +183,8 @@
 }
 
 .markdown-body th {
-  background: var(--editor-surface-2);
-  color: var(--editor-accent-primary);
+  background: var(--surface-2);
+  color: var(--accent-primary);
   font-weight: 600;
   font-size: 1.18rem;
 }
@@ -200,11 +200,11 @@
 }
 
 .markdown-body tbody tr:nth-child(odd) td {
-  background: var(--editor-surface-2);
+  background: var(--surface-2);
 }
 
 .markdown-body tbody tr:nth-child(even) td {
-  background: var(--editor-surface-1);
+  background: var(--surface-1);
 }
 
 .markdown-body table p {
@@ -217,8 +217,8 @@
    ========================================================================== */
 
 .markdown-body blockquote {
-  border-left: 4px solid var(--editor-accent-primary);
-  background: var(--editor-surface-1);
+  border-left: 4px solid var(--accent-primary);
+  background: var(--surface-1);
   color: var(--editor-text-color);
   font-weight: 400;
   font-style: normal;
@@ -239,7 +239,7 @@
 
 .markdown-body hr {
   border: none;
-  border-top: 1px solid var(--editor-border-subtle);
+  border-top: 1px solid var(--border-subtle);
   margin: 1.2rem 0;
 }
 
@@ -263,9 +263,9 @@
   appearance: none;
   width: 1.5em;
   height: 1.5em;
-  border: 2px solid var(--editor-border-subtle);
+  border: 2px solid var(--border-subtle);
   border-radius: 6px;
-  background: var(--editor-surface-1);
+  background: var(--surface-1);
   display: inline-block;
   vertical-align: middle;
   position: relative;
@@ -277,8 +277,8 @@
 
 .markdown-body input[type='checkbox']:checked,
 .editor-content input[type='checkbox']:checked {
-  border-color: var(--editor-accent-primary);
-  background: var(--editor-accent-primary);
+  border-color: var(--accent-primary);
+  background: var(--accent-primary);
 }
 
 .markdown-body input[type='checkbox']:checked::after,
@@ -300,7 +300,7 @@
 
 .markdown-body input[type='checkbox']:focus,
 .editor-content input[type='checkbox']:focus {
-  outline: 2px solid var(--editor-accent-primary);
+  outline: 2px solid var(--accent-primary);
   outline-offset: 1px;
 }
 
@@ -362,7 +362,7 @@ li[data-type="taskItem"] > div p {
    ========================================================================== */
 
 .markdown-body pre {
-  background: var(--editor-surface-2);
+  background: var(--surface-2);
   color: var(--editor-text-color);
   border-radius: 8px;
   padding: 1.1em 1.3em;
@@ -373,7 +373,7 @@ li[data-type="taskItem"] > div p {
 }
 
 .markdown-body pre:hover {
-  background: var(--editor-surface-hover);
+  background: var(--surface-hover);
 }
 
 .markdown-body pre code {
@@ -386,7 +386,7 @@ li[data-type="taskItem"] > div p {
 }
 
 .markdown-body code {
-  background: var(--editor-surface-2);
+  background: var(--surface-2);
   color: var(--editor-text-color);
   border-radius: 4px;
   padding: 0.13em 0.38em;
@@ -406,7 +406,7 @@ li[data-type="taskItem"] > div p {
 }
 
 .markdown-body mark {
-  background: var(--editor-accent-subtle);
+  background: var(--accent-subtle);
   color: var(--editor-text-color);
   padding: 0.1em 0.2em;
   border-radius: 3px;
@@ -418,7 +418,7 @@ li[data-type="taskItem"] > div p {
 
 .markdown-body hr {
   border: none;
-  border-top: 1px solid var(--editor-border-subtle);
+  border-top: 1px solid var(--border-subtle);
   margin: 1.2rem 0;
 }
 
@@ -430,7 +430,7 @@ li[data-type="taskItem"] > div p {
   color: var(--editor-text-color);
   text-align: center;
   font-weight: 600;
-  background: var(--editor-surface-2);
+  background: var(--surface-2);
 }
 
 /* ==========================================================================
@@ -439,7 +439,7 @@ li[data-type="taskItem"] > div p {
 
 .ProseMirror .tableWrapper {
   margin: 1.5rem 0;
-  border: 1px solid var(--editor-border-subtle);
+  border: 1px solid var(--border-subtle);
   border-radius: 10px;
   overflow: hidden;
   background: none;
@@ -463,8 +463,8 @@ li[data-type="taskItem"] > div p {
 .ProseMirror td,
 .ProseMirror th {
   border: none;
-  border-bottom: 1px solid var(--editor-border-subtle);
-  border-right: 1px solid var(--editor-border-subtle);
+  border-bottom: 1px solid var(--border-subtle);
+  border-right: 1px solid var(--border-subtle);
   background: none;
   color: var(--editor-text-color);
   font-size: 1rem;
@@ -476,18 +476,18 @@ li[data-type="taskItem"] > div p {
 }
 
 .ProseMirror th {
-  background: var(--editor-surface-2);
-  color: var(--editor-accent-primary);
+  background: var(--surface-2);
+  color: var(--accent-primary);
   font-weight: 600;
   font-size: 1.18rem;
 }
 
 .ProseMirror th:not(:last-child) {
-  border-right: 1px solid var(--editor-border-subtle);
+  border-right: 1px solid var(--border-subtle);
 }
 
 .ProseMirror td {
-  background: var(--editor-surface-1);
+  background: var(--surface-1);
 }
 
 .ProseMirror tr:last-child td {
@@ -500,7 +500,7 @@ li[data-type="taskItem"] > div p {
   top: 0;
   bottom: 0;
   width: 4px;
-  background-color: var(--editor-accent-primary);
+  background-color: var(--accent-primary);
   opacity: 0;
   transition: opacity 0.2s ease;
   pointer-events: none;
@@ -522,11 +522,11 @@ li[data-type="taskItem"] > div p {
 }
 
 .ProseMirror tbody tr:nth-child(odd) td {
-  background: var(--editor-surface-1);
+  background: var(--surface-1);
 }
 
 .ProseMirror tbody tr:nth-child(even) td {
-  background: var(--editor-surface-2);
+  background: var(--surface-2);
 }
 
 /* ==========================================================================
@@ -637,9 +637,9 @@ li[data-type="taskItem"] > div p {
   -moz-appearance: none !important;
   width: 1.15em !important;
   height: 1.15em !important;
-  border: 2px solid var(--editor-border-subtle) !important;
+  border: 2px solid var(--border-subtle) !important;
   border-radius: 5px !important;
-  background: var(--editor-surface-1) !important;
+  background: var(--surface-1) !important;
   display: inline-block !important;
   vertical-align: middle !important;
   position: relative !important;
@@ -650,8 +650,8 @@ li[data-type="taskItem"] > div p {
 }
 
 .ProseMirror input[type='checkbox']:checked {
-  background: var(--editor-accent-primary) !important;
-  border-color: var(--editor-accent-primary) !important;
+  background: var(--accent-primary) !important;
+  border-color: var(--accent-primary) !important;
 }
 
 .ProseMirror input[type='checkbox']:checked::after {
@@ -667,7 +667,7 @@ li[data-type="taskItem"] > div p {
 }
 
 .ProseMirror input[type='checkbox']:focus {
-  outline: 2px solid var(--editor-accent-subtle) !important;
+  outline: 2px solid var(--accent-subtle) !important;
   outline-offset: 2px !important;
 }
 
@@ -750,9 +750,9 @@ li[data-type="taskItem"] > div p {
   -moz-appearance: none !important;
   width: 1.5em !important;
   height: 1.5em !important;
-  border: 2px solid var(--editor-border-subtle) !important;
+  border: 2px solid var(--border-subtle) !important;
   border-radius: 6px !important;
-  background: var(--editor-surface-1) !important;
+  background: var(--surface-1) !important;
   display: inline-block !important;
   vertical-align: middle !important;
   position: relative !important;
@@ -766,8 +766,8 @@ li[data-type="taskItem"] > div p {
 .ProseMirror input[type='checkbox']:checked,
 .editor-content input[type='checkbox']:checked,
 .markdown-body input[type='checkbox']:checked {
-  background: var(--editor-accent-primary) !important;
-  border-color: var(--editor-accent-primary) !important;
+  background: var(--accent-primary) !important;
+  border-color: var(--accent-primary) !important;
 }
 
 .ProseMirror input[type='checkbox']:checked::after,
@@ -791,7 +791,7 @@ li[data-type="taskItem"] > div p {
 .ProseMirror input[type='checkbox']:focus,
 .editor-content input[type='checkbox']:focus,
 .markdown-body input[type='checkbox']:focus {
-  outline: 2px solid var(--editor-accent-subtle) !important;
+  outline: 2px solid var(--accent-subtle) !important;
   outline-offset: 2px !important;
 }
 

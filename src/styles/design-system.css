@@ -24,12 +24,12 @@
   --font-size-4xl: 2.25rem;   /* 36px */
   
   /* Colors */
-  --bg-main: #050505;                 /* Encore plus sombre - était #0a0a0a */
-  --bg-base: #050505;                 /* Encore plus sombre - était #0a0a0a */
-  --bg-surface: #080808;              /* Encore plus sombre - était #0f0f10 */
-  --bg-elevated: #0f0f10;             /* Encore plus sombre - était #1a1a1c */
-  --bg-hover: rgba(255, 255, 255, 0.06); /* Encore plus subtil - était 0.08 */
-  --bg-surface-hover: #151517;        /* Encore plus sombre - était #1f1f21 */
+  --bg-main: #141414;
+  --bg-base: #141414;
+  --bg-surface: #141414;
+  --bg-elevated: #1c1c1c;
+  --bg-hover: rgba(255, 255, 255, 0.08);
+  --bg-surface-hover: #212121;
   --bg-contrast: #ffffff;
   
   /* Text Colors */
@@ -45,12 +45,12 @@
   --surface-0: var(--bg-main);
   --surface-1: var(--bg-surface);
   --surface-2: var(--bg-elevated);
-  --surface-3: #151517;                 /* Encore plus sombre - était #1f1f21 */
+  --surface-3: #1f1f21;
   --surface-hover: var(--bg-hover);
   
   /* Border Colors */
-  --border-subtle: #1a1a1c;           /* Encore plus sombre - était #2a2a2c */
-  --border-strong: #2a2a2c;           /* Encore plus sombre - était #3a3a3c */
+  --border-subtle: #2a2a2c;
+  --border-strong: #3a3a3c;
   --border-color: var(--border-subtle);
   
   /* Accent Colors */
