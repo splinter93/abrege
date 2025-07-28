@@ -24,6 +24,8 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
   onClose,
   a4Mode,
   setA4Mode,
+  slashLang,
+  setSlashLang,
   published,
   setPublished,
   publishedUrl,
@@ -73,24 +75,48 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
     </svg>
   );
 
+  // Traductions
+  const translations = {
+    fr: {
+      share: 'Partager',
+      export: 'Exporter',
+      wideMode: 'Mode Large',
+      a4Mode: 'Mode A4',
+      published: 'Publié',
+      publish: 'Publier',
+      comingSoon: 'Bientôt'
+    },
+    en: {
+      share: 'Share',
+      export: 'Export',
+      wideMode: 'Wide Mode',
+      a4Mode: 'A4 Mode',
+      published: 'Published',
+      publish: 'Publish',
+      comingSoon: 'Coming Soon'
+    }
+  };
+
+  const t = translations[slashLang];
+
   const menuOptions = [
     {
       id: 'share',
-      label: 'Partager',
+      label: t.share,
       icon: <FiShare2 size={18} />,
       onClick: () => { onClose(); /* TODO: implémenter partage */ },
       color: '#D4D4D4'
     },
     {
       id: 'export',
-      label: 'Exporter',
+      label: t.export,
       icon: <FiDownload size={18} />,
       onClick: () => { onClose(); /* TODO: implémenter export */ },
       color: '#D4D4D4'
     },
     {
       id: 'fullWidth',
-      label: 'Pleine largeur',
+      label: t.wideMode,
       icon: fullWidth ? <FiMinimize2 size={18} /> : <FiMaximize2 size={18} />,
       onClick: () => { 
         setFullWidth(!fullWidth); 
@@ -100,7 +126,7 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
     },
     {
       id: 'a4Mode',
-      label: 'A4 Mode',
+      label: t.a4Mode,
       icon: <A4Icon />,
       onClick: () => { setA4Mode(!a4Mode); },
       color: a4Mode ? '#10b981' : '#D4D4D4',
@@ -108,7 +134,7 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
     },
     {
       id: 'published',
-      label: published ? 'Published' : 'Publish',
+      label: published ? t.published : t.publish,
       icon: <FiGlobe size={18} />,
       onClick: () => { 
         // Éviter la boucle infinie en désactivant pendant la publication
@@ -242,10 +268,10 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
                   </span>
                   <span style={{ 
                     color: '#737373', 
-                    fontSize: '9px', 
+                    fontSize: '10px', 
                     fontFamily: 'Noto Sans, Inter, Arial, sans-serif',
                     fontStyle: 'italic',
-                    padding: '1px 4px',
+                    padding: '2px 6px',
                     background: '#2a2a2c',
                     borderRadius: '3px',
                     border: '1px solid #444',
@@ -262,7 +288,7 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
                     e.currentTarget.style.borderColor = '#444';
                   }}
                   >
-                    Coming Soon
+                    {t.comingSoon}
                   </span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center' }}>

@@ -111,7 +111,7 @@ export default function NoteEditorPage() {
   const [showPreview, setShowPreview] = React.useState(false);
   const [a4Mode, setA4Mode] = React.useState(false);
   const [fullWidth, setFullWidth] = React.useState(false);
-  const [slashLang, setSlashLang] = React.useState<'fr' | 'en'>('fr');
+  const [slashLang, setSlashLang] = React.useState<'fr' | 'en'>('en');
   const [title, setTitle] = React.useState('');
   const [tocHeadings, setTocHeadings] = React.useState<Heading[]>([]);
   const editorContainerRef = React.useRef<HTMLDivElement>(null);
