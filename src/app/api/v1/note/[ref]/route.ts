@@ -61,7 +61,8 @@ export async function PUT(req: NextRequest, { params }: any): Promise<Response> 
       header_title_in_image: z.boolean().optional(),
       source_title: z.string().min(1, 'source_title requis').optional(),
       markdown_content: z.string().optional(),
-      html_content: z.string().optional()
+      html_content: z.string().optional(),
+      wide_mode: z.boolean().optional()
     });
     
     const parseResult = schema.safeParse({ ref, ...body });
@@ -124,6 +125,9 @@ export async function PUT(req: NextRequest, { params }: any): Promise<Response> 
     }
     if (body.html_content !== undefined) {
       updateData.html_content = body.html_content;
+    }
+    if (body.wide_mode !== undefined) {
+      updateData.wide_mode = body.wide_mode;
     }
     
         const { data: updatedNote, error } = await supabase

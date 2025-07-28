@@ -256,6 +256,23 @@ export default function NoteEditorPage() {
     }
   };
 
+  // Fonction dédiée pour sauvegarder le mode pleine largeur
+  const handleFullWidthSave = async (newValue: boolean) => {
+    if (!noteId) return;
+    try {
+      const payload: Record<string, unknown> = {
+        wide_mode: newValue,
+      };
+      await updateNoteREST(noteId, payload);
+      setFullWidth(newValue);
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[wide-mode] Toggle mode pleine largeur →', newValue);
+      }
+    } catch (error) {
+      console.error('[wide-mode] Erreur lors de la sauvegarde du mode pleine largeur:', error);
+    }
+  };
+
   // Chargement initial de la note (une seule fois)
   React.useEffect(() => {
     if (!editor || !noteId || hasInitialized) return;
@@ -282,6 +299,7 @@ export default function NoteEditorPage() {
           setHeaderImageBlur((note.header_image_blur as number) ?? 0);
           setHeaderImageOverlay((note.header_image_overlay as number) ?? 0);
           setHeaderTitleInImage((note.header_title_in_image as boolean) ?? false);
+          setFullWidth((note.wide_mode as boolean) ?? false);
           setPublished(!!(note.ispublished as boolean));
           setPublishedUrl((note.public_url as string) || null);
         }
@@ -391,6 +409,7 @@ export default function NoteEditorPage() {
             setHeaderImageOffset(note.header_image_offset ?? 50);
             setHeaderImageBlur(note.header_image_blur ?? 0);
             setHeaderImageOverlay(note.header_image_overlay ?? 0);
+            setFullWidth(note.wide_mode ?? false);
             setPublished(!!note.ispublished);
             editor.commands.setContent(note.markdown_content || '');
                         setLastSavedContent(note.markdown_content || '');
@@ -436,6 +455,7 @@ export default function NoteEditorPage() {
             setHeaderImageOffset(note.header_image_offset ?? 50);
             setHeaderImageBlur(note.header_image_blur ?? 0);
             setHeaderImageOverlay(note.header_image_overlay ?? 0);
+            setFullWidth(note.wide_mode ?? false);
             setPublished(!!note.ispublished);
             editor.commands.setContent(note.markdown_content || '');
             setLastSavedContent(note.markdown_content || '');
@@ -656,6 +676,7 @@ export default function NoteEditorPage() {
       setHeaderImageOffset(note.header_image_offset || 50);
       setHeaderImageBlur(note.header_image_blur || 0);
       setHeaderImageOverlay(note.header_image_overlay || 0);
+      setFullWidth(note.wide_mode || false);
       setPublished(!!note.ispublished);
       editor.commands.setContent(note.markdown_content || '');
     }
@@ -992,7 +1013,7 @@ export default function NoteEditorPage() {
         setPublished={handleTogglePublished}
         publishedUrl={publishedUrl || undefined}
         fullWidth={fullWidth}
-        setFullWidth={setFullWidth}
+        setFullWidth={handleFullWidthSave}
         isPublishing={isPublishing}
       />
     </div>
