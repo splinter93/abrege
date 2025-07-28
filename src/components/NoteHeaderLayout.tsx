@@ -1,5 +1,5 @@
 import React from 'react';
-import './NoteHeaderLayout.css';
+import '@/styles/typography.css';
 
 interface NoteHeaderLayoutProps {
   headerImageUrl: string | null;
@@ -38,8 +38,8 @@ export const NoteHeaderLayout: React.FC<NoteHeaderLayoutProps> = ({
   // Applique la largeur maximale via CSS custom property
   React.useEffect(() => {
     document.documentElement.style.setProperty(
-      '--editor-max-width',
-      fullWidth ? '1000px' : '750px'
+      '--editor-content-width',
+      fullWidth ? 'var(--editor-content-width-wide)' : 'var(--editor-content-width-normal)'
     );
   }, [fullWidth]);
 

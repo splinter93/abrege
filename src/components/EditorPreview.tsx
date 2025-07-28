@@ -41,16 +41,16 @@ const EditorPreview: React.FC<EditorPreviewProps> = ({ title, htmlContent, heade
         <TableOfContents headings={tocHeadings} />
       </div>
       <div style={{ width: '100%', display: 'flex', flexDirection: 'row', justifyContent: 'center', alignItems: 'flex-start', margin: '0 auto', marginBottom: 32, gap: 32 }}>
-        <div style={{ maxWidth: 750, width: 750 }}>
+        <div style={{ maxWidth: 'var(--editor-content-width)', width: 'var(--editor-content-width)' }}>
           <h1 style={{
-            fontSize: '2.25rem',
+            fontSize: 'var(--editor-title-size)',
             fontWeight: 700,
-            color: 'var(--text-primary)',
+            color: 'var(--editor-text-color)',
             margin: 0,
             padding: 0,
             textAlign: titleAlign,
-            maxWidth: 750,
-            width: 750,
+            maxWidth: 'var(--editor-content-width)',
+            width: 'var(--editor-content-width)',
             lineHeight: 1.1,
             fontFamily: 'var(--editor-font-family)',
           }}>{title}</h1>
@@ -58,8 +58,8 @@ const EditorPreview: React.FC<EditorPreviewProps> = ({ title, htmlContent, heade
           <div
             className="markdown-body"
             style={{
-              maxWidth: 750,
-              width: 750,
+              maxWidth: 'var(--editor-content-width)',
+              width: 'var(--editor-content-width)',
               margin: '0 auto',
               background: 'none',
               padding: '0 0 64px 0',

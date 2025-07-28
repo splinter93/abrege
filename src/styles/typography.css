@@ -1,9 +1,9 @@
 /* ==========================================================================
    TYPOGRAPHIE CENTRALISÉE - ÉDITEUR
    ==========================================================================
-   Système unifié pour couleurs, fonts, tailles
-   Contrôle total de l'apparence textuelle
-   Migration depuis colors.css et fonts.css
+   Système unifié pour couleurs, fonts, tailles, layouts
+   Contrôle total de l'apparence textuelle et du positionnement
+   Migration depuis colors.css, fonts.css et NoteHeaderLayout.css
 */
 
 :root {
@@ -62,6 +62,22 @@
   --editor-h1-size-mobile: 1.875rem;     /* 30px */
   --editor-h2-size-mobile: 1.5rem;       /* 24px */
   --editor-h3-size-mobile: 1.25rem;      /* 20px */
+
+  /* ==========================================================================
+     LARGEURS TYPOGRAPHIQUES
+     ========================================================================== */
+  --editor-content-width-normal: 750px;
+  --editor-content-width-wide: 1000px;
+  --editor-content-width: var(--editor-content-width-normal); /* Par défaut */
+
+  /* ==========================================================================
+     PADDINGS ET ESPACEMENTS TYPOGRAPHIQUES
+     ========================================================================== */
+  --editor-title-padding: 0 0 8px 0;
+  --editor-content-padding: 18px 0 120px 0;
+  --editor-title-line-height: 1.15;
+  --editor-title-letter-spacing: -0.02em;
+  --editor-title-min-height: 45px;
 }
 
 /* ==========================================================================
@@ -87,4 +103,128 @@
 .font-source-sans-3 { font-family: var(--font-source-sans-3); }
 .font-work-sans { font-family: var(--font-work-sans); }
 .font-cormorant-garamond { font-family: var(--font-cormorant-garamond); }
-.font-monospace { font-family: var(--font-monospace); } 
+.font-monospace { font-family: var(--font-monospace); }
+
+/* ==========================================================================
+   LAYOUT TYPOGRAPHIQUE - NOTE HEADER
+   ==========================================================================
+   Intégré depuis NoteHeaderLayout.css
+   Gestion complète du positionnement titre/contenu
+*/
+
+/* Classe de base pour le layout */
+.noteLayout {
+  width: 100%;
+  transition: all 0.2s ease;
+}
+
+/* Conteneur du titre */
+.noteLayout-title {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+/* Conteneur du contenu */
+.noteLayout-content {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+/* Style typographique complet du titre */
+.noteLayout-title textarea {
+  width: 100%;
+  max-width: var(--editor-content-width);
+  font-size: var(--editor-title-size);
+  font-weight: 700;
+  font-family: var(--editor-font-family);
+  color: var(--editor-text-color);
+  background: none;
+  border: none;
+  outline: none;
+  padding: var(--editor-title-padding);
+  margin: 0;
+  letter-spacing: var(--editor-title-letter-spacing);
+  resize: none;
+  overflow: visible;
+  line-height: var(--editor-title-line-height);
+  min-height: var(--editor-title-min-height);
+  height: auto;
+  transition: all 0.2s ease;
+}
+
+/* Padding typographique du contenu */
+.noteLayout-content .editor-content {
+  padding: var(--editor-content-padding);
+}
+
+/* États du layout */
+
+/* 1. Pas d'image */
+.noteLayout.noImage .noteLayout-title {
+  padding-top: 48px; /* Augmente l'espacement au-dessus du titre */
+}
+.noteLayout.noImage .noteLayout-content {
+  margin-top: 0px; /* Espacement nul entre le titre et le contenu */
+}
+
+.noteLayout.noImage .noteLayout-content .editor-content {
+  padding-top: 0; /* Supprime le padding-top du conteneur editor */
+}
+
+.noteLayout.noImage .noteLayout-title textarea {
+  padding-bottom: 0; /* Supprime le padding parasite du textarea */
+}
+
+/* 2. Image avec titre intégré */
+.noteLayout.imageWithTitle .noteLayout-title {
+  position: absolute;
+  top: 160px; /* Moitié de la hauteur de l'image (300px) */
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%;
+  padding: 0 20px; /* Ajoute un peu de marge sur les côtés */
+  box-sizing: border-box;
+  text-align: center;
+  z-index: 10;
+}
+
+.noteLayout.imageWithTitle .noteLayout-title textarea {
+  color: white !important; /* Override pour le titre dans l'image */
+  text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  text-align: center;
+}
+.noteLayout.imageWithTitle .noteLayout-content {
+  margin-top: -5px; /* Remonte le contenu de 5px */
+  padding-top: 0px; /* Crée un espace de 10px avant le texte */
+}
+
+.noteLayout.imageWithTitle .noteLayout-content .editor-content {
+  padding-top: 0; /* Supprime le padding-top */
+}
+
+.noteLayout.imageWithTitle .noteLayout-content .markdown-body {
+  padding-top: 0; /* Supprime le padding-top */
+}
+
+/* 3. Image avec titre en dessous */
+.noteLayout.imageOnly .noteLayout-title {
+  padding-top: 5px; /* Espacement minimal de 5px sous l'image */
+  text-align: left;
+}
+.noteLayout.imageOnly .noteLayout-title textarea {
+  padding: 0; /* Supprime tout padding du textarea */
+}
+.noteLayout.imageOnly .noteLayout-content {
+  margin-top: 0px; /* Espacement nul entre le titre et le contenu */
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .noteLayout-title textarea {
+    font-size: var(--editor-title-size-mobile);
+  }
+} 

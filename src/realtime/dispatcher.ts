@@ -217,12 +217,19 @@ export function subscribeToNotes() {
   return channel;
 }
 
+let dossierSubscriptionRetries = 0;
+const MAX_DOSSIER_RETRIES = 5;
+
 /**
  * S'abonner aux changements des dossiers via Supabase Realtime
  * Écoute les événements INSERT, UPDATE, DELETE sur la table 'folders'
  */
 export function subscribeToDossiers() {
-  console.log('[REALTIME] 📁 S\'abonnement aux dossiers...');
+  if (dossierSubscriptionRetries >= MAX_DOSSIER_RETRIES) {
+    console.error(`[REALTIME] ❌ Échec de l'abonnement aux dossiers après ${MAX_DOSSIER_RETRIES} tentatives. Abandon.`);
+    return;
+  }
+  console.log(`[REALTIME] 📁 Tentative d'abonnement aux dossiers... (${dossierSubscriptionRetries + 1}/${MAX_DOSSIER_RETRIES})`);
   
   const channel = supabase
     .channel('public:folders')
@@ -268,10 +275,11 @@ export function subscribeToDossiers() {
         dossiersSubscriptionActive = true;
       } else if (status === 'CLOSED' || status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
         dossiersSubscriptionActive = false;
+        dossierSubscriptionRetries++;
         // Reconnexion automatique après fermeture/erreur/timeout
         setTimeout(() => {
           subscribeToDossiers();
-        }, 2000);
+        }, 2000 * dossierSubscriptionRetries); // Augmente le délai à chaque tentative
       }
     });
     

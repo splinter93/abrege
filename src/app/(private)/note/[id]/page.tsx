@@ -1,4 +1,5 @@
 'use client';
+import '@/styles/typography.css';
 import { useEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import { Markdown } from 'tiptap-markdown';
@@ -905,7 +906,7 @@ export default function NoteEditorPage() {
                   ref={editorContainerRef}
                   style={{
                     width: '100%',
-                    maxWidth: fullWidth ? 1000 : 750,
+                    maxWidth: 'var(--editor-content-width)',
                     minHeight: 220,
                     background: 'none',
                     color: 'var(--editor-text-color)',
