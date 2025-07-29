@@ -248,8 +248,13 @@
   padding-bottom: 64px;
 }
 
+/* ==========================================================================
+   HEADER PAGE PUBLIQUE
+   ==========================================================================
+*/
+
 /* Header de la page publique */
-.public-note-header {
+.public-page-header {
   width: 100%;
   background: var(--surface-3);
   display: flex;
@@ -267,7 +272,7 @@
 }
 
 /* Logo dans le header public */
-.public-note-header .logo-link {
+.public-header-logo {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -275,14 +280,14 @@
 }
 
 /* Conteneur des boutons du header public */
-.public-note-header .header-buttons {
+.public-header-buttons {
   display: flex;
   align-items: center;
   gap: 18px;
 }
 
 /* Bouton de connexion dans le header public */
-.public-note-header .login-button {
+.public-header-login {
   color: var(--accent-primary);
   background: none;
   font-weight: 500;
@@ -298,7 +303,7 @@
   border: 1px solid var(--accent-primary);
 }
 
-.public-note-header .login-button:hover {
+.public-header-login:hover {
   color: var(--accent-hover);
   border-color: var(--accent-hover);
 }
