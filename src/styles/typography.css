@@ -96,6 +96,7 @@
 .font-work-sans { font-family: var(--font-work-sans); }
 .font-cormorant-garamond { font-family: var(--font-cormorant-garamond); }
 .font-monospace { font-family: var(--font-monospace); }
+.font-noto-sans { font-family: var(--editor-font-family); }
 
 /* ==========================================================================
    LAYOUT TYPOGRAPHIQUE - NOTE HEADER
@@ -242,15 +243,15 @@
 .public-note-container {
   width: 100vw;
   min-height: 100vh;
-  background: #121217;
-  color: #D4D4D4;
+  background: var(--bg-main);
+  color: var(--editor-text-color);
   padding-bottom: 64px;
 }
 
 /* Header de la page publique */
 .public-note-header {
   width: 100%;
-  background: #323236;
+  background: var(--surface-3);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -329,4 +330,27 @@
   max-width: var(--editor-content-width);
   width: var(--editor-content-width);
   line-height: 1.1;
+  color: var(--editor-text-color);
+  font-size: var(--editor-title-size);
+  font-weight: 700;
+}
+
+/* Contenu de la page publique */
+.public-note-content-wrapper .noteLayout-content {
+  color: var(--editor-text-color);
+}
+
+/* Titre dans l'image d'en-tête */
+.public-header-title h1 {
+  color: white;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  font-size: var(--editor-title-size);
+  font-weight: 700;
+  margin: 0;
+  text-align: center;
+  width: auto;
+  max-width: 750px;
+  padding: 0 0 4px 0;
+  white-space: pre-wrap;
+  overflow: visible;
 } 

@@ -24,24 +24,14 @@ export default function PublicNoteContent({ note, slug }: PublicNoteProps) {
   const titleRef = React.useRef<HTMLHeadingElement>(null);
   const contentRef = React.useRef<HTMLDivElement>(null);
 
-  React.useEffect(() => {
+    React.useEffect(() => {
     // Appliquer le mode pleine largeur
     const fullWidth = note.wide_mode ?? false;
     document.documentElement.style.setProperty(
       '--editor-content-width',
       fullWidth ? 'var(--editor-content-width-wide)' : 'var(--editor-content-width-normal)'
     );
-
-    // Appliquer la police avec useRef
-    const fontFamily = note.font_family ?? 'Noto Sans';
-    
-    if (titleRef.current) {
-      titleRef.current.style.fontFamily = fontFamily;
-    }
-    if (contentRef.current) {
-      contentRef.current.style.fontFamily = fontFamily;
-    }
-  }, [note.wide_mode, note.font_family]);
+  }, [note.wide_mode]);
 
   // Déterminer la classe CSS selon la configuration
   const getLayoutClass = () => {
@@ -81,20 +71,7 @@ export default function PublicNoteContent({ note, slug }: PublicNoteProps) {
           {/* Titre dans l'image si activé - maintenant dans le conteneur de l'image */}
           {note.header_title_in_image && (
             <div className="public-header-title">
-              <h1 style={{
-                color: 'white',
-                textShadow: '0 2px 4px rgba(0,0,0,0.2)',
-                fontFamily: note.font_family ?? 'Noto Sans',
-                fontSize: 'var(--editor-title-size)',
-                fontWeight: 700,
-                margin: 0,
-                textAlign: 'center',
-                width: 'auto',
-                maxWidth: '750px',
-                padding: '0 0 4px 0',
-                whiteSpace: 'pre-wrap',
-                overflow: 'visible'
-              }}>
+              <h1 className={note.font_family ? `font-${note.font_family.replace(/\s+/g, '-').toLowerCase()}` : 'font-noto-sans'}>
                 {note.source_title}
               </h1>
             </div>
@@ -109,9 +86,7 @@ export default function PublicNoteContent({ note, slug }: PublicNoteProps) {
             <div className="noteLayout-title">
               <h1 
                 ref={titleRef}
-                style={{
-                  fontFamily: note.font_family ?? 'Noto Sans',
-                }}
+                className={note.font_family ? `font-${note.font_family.replace(/\s+/g, '-').toLowerCase()}` : 'font-noto-sans'}
               >
                 {note.source_title}
               </h1>
@@ -121,10 +96,7 @@ export default function PublicNoteContent({ note, slug }: PublicNoteProps) {
           <div className="noteLayout-content">
             <div
               ref={contentRef}
-              className="editor-content markdown-body"
-              style={{
-                fontFamily: note.font_family ?? 'Noto Sans',
-              }}
+              className={`editor-content markdown-body ${note.font_family ? `font-${note.font_family.replace(/\s+/g, '-').toLowerCase()}` : 'font-noto-sans'}`}
               dangerouslySetInnerHTML={{ __html: note.html_content || '' }}
             />
           </div>
