@@ -55,7 +55,7 @@ export default function PublicPageHeader() {
           <LogoScrivia />
         </Link>
         <div className="public-header-search">
-          <FiSearch size={18} className="public-header-search-icon" />
+          <FiSearch size={15} className="public-header-search-icon" />
           <input
             type="text"
             placeholder="Rechercher..."
