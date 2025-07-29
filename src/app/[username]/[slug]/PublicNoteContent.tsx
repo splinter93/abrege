@@ -1,6 +1,8 @@
 'use client';
 
 import React from 'react';
+import Link from 'next/link';
+import LogoScrivia from '@/components/LogoScrivia';
 import PublicTOCClient from '@/components/PublicTOCClient';
 import CraftedBadge from '@/components/CraftedBadge';
 import '@/styles/typography.css'; // Importer le CSS typography
@@ -43,7 +45,14 @@ export default function PublicNoteContent({ note, slug }: PublicNoteProps) {
   return (
     <div className="public-note-container">
       <div className="public-note-header">
-        {/* Le Header est déjà injecté par AppMainContent, donc rien à ajouter ici */}
+        <Link href="/" className="logo-link">
+          <LogoScrivia />
+        </Link>
+        <div className="header-buttons">
+          <Link href="https://scrivia.app" className="login-button">
+            Connexion
+          </Link>
+        </div>
       </div>
       
       {/* Image d'en-tête avec personnalisations */}
