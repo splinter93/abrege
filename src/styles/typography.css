@@ -267,7 +267,6 @@
   position: sticky;
   top: 0;
   z-index: 100;
-  overflow: hidden;
   box-sizing: border-box;
 }
 
@@ -305,12 +304,12 @@
 
 .public-header-search-input {
   width: 140px;
-  height: 26px;
-  background: rgba(255,255,255,0.008);
-  border: 1px solid rgba(255,255,255,0.04);
-  border-radius: 13px;
-  padding: 0 10px 0 28px;
-  color: var(--editor-text-color);
+  height: 36px;
+  background: transparent;
+  border: 0.5px solid #8a8a8a;
+  border-radius: 18px;
+  padding: 0 14px 0 36px;
+  color: #8a8a8a;
   font-family: var(--editor-font-family);
   font-size: 12px;
   outline: none;
@@ -318,18 +317,20 @@
 }
 
 .public-header-search-input::placeholder {
-  color: var(--editor-text-muted);
-  opacity: 0.4;
+  color: #8a8a8a;
+  opacity: 0.6;
 }
 
 .public-header-search-input:hover {
-  background: rgba(255,255,255,0.015);
-  border-color: rgba(255,255,255,0.06);
+  background: rgba(255,255,255,0.02);
+  border-color: #8a8a8a;
+  color: #8a8a8a;
 }
 
 .public-header-search-input:focus {
-  background: rgba(255,255,255,0.02);
-  border-color: rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.03);
+  border-color: #8a8a8a;
+  color: #8a8a8a;
 }
 
 /* Conteneur des boutons du header public */
@@ -338,6 +339,7 @@
   align-items: center;
   gap: 18px;
   position: relative;
+  height: 100%;
 }
 
 /* Bouton de connexion dans le header public */
@@ -402,7 +404,7 @@
 /* Menu kebab de la page publique */
 .public-kebab-menu {
   position: absolute;
-  top: 100%;
+  top: calc(100% + 4px);
   right: 0;
   background: #1a1a1c;
   border: 1px solid #2a2a2c;
@@ -410,8 +412,7 @@
   box-shadow: 0 4px 12px rgba(0,0,0,0.15);
   z-index: 99999;
   min-width: 160px;
-  overflow: hidden;
-  margin-top: 8px;
+  margin-top: 4px;
 }
 
 .public-kebab-menu-item {

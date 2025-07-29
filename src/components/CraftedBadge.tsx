@@ -16,7 +16,7 @@ export default function CraftedBadge() {
         fontWeight: 400,
         fontSize: '0.85rem',
         borderRadius: 14,
-        padding: '4px 14px',
+        padding: '6px 14px',
         fontFamily: 'Noto Sans, Inter, Arial, sans-serif',
         boxShadow: '0 2px 8px 0 rgba(44,44,44,0.10)',
         letterSpacing: '0.01em',
