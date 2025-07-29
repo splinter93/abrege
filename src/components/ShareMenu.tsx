@@ -98,10 +98,11 @@ export default function ShareMenu({ url, title = "Note Scrivia", description = "
           border: '1px solid #2a2a2c',
           borderRadius: 12,
           padding: '6px 0',
-          minWidth: 200,
+          minWidth: 180,
           boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)',
           zIndex: 1000,
-          backdropFilter: 'blur(10px)'
+          backdropFilter: 'blur(10px)',
+          transform: 'translateX(0)'
         }}
       >
         {shareOptions.map((option, index) => (
