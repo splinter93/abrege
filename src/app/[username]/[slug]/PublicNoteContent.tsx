@@ -153,7 +153,7 @@ export default function PublicNoteContent({ note, slug }: PublicNoteProps) {
           <div className="noteLayout-content">
             <div
               ref={contentRef}
-              className="markdown-body"
+              className="editor-content markdown-body"
               style={{
                 maxWidth: 'var(--editor-content-width)',
                 width: 'var(--editor-content-width)',
