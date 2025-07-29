@@ -3,6 +3,7 @@
 import React from 'react';
 import PublicTOCClient from '@/components/PublicTOCClient';
 import CraftedBadge from '@/components/CraftedBadge';
+import '@/styles/typography.css'; // Importer le CSS typography
 
 interface PublicNoteProps {
   note: {
@@ -42,6 +43,13 @@ export default function PublicNoteContent({ note, slug }: PublicNoteProps) {
     }
   }, [note.wide_mode, note.font_family]);
 
+  // Déterminer la classe CSS selon la configuration
+  const getLayoutClass = () => {
+    if (!note.header_image) return 'noteLayout noImage';
+    if (note.header_title_in_image) return 'noteLayout imageWithTitle';
+    return 'noteLayout imageOnly';
+  };
+
   return (
     <div style={{ width: '100vw', minHeight: '100vh', background: '#121217', color: '#D4D4D4', paddingBottom: 64 }}>
       <div style={{ width: '100%', background: '#323236', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
@@ -52,7 +60,7 @@ export default function PublicNoteContent({ note, slug }: PublicNoteProps) {
       {note.header_image && (
         <div style={{ 
           width: '100%', 
-          maxHeight: 300, 
+          height: 300, // Hauteur fixe comme dans l'éditeur
           overflow: 'hidden', 
           marginBottom: 32,
           position: 'relative'
@@ -62,15 +70,15 @@ export default function PublicNoteContent({ note, slug }: PublicNoteProps) {
             alt="Header"
             style={{ 
               width: '100%', 
+              height: '100%', // Utiliser toute la hauteur
               objectFit: 'cover', 
-              maxHeight: 300, 
               borderRadius: 0,
               filter: `blur(${note.header_image_blur ?? 0}px)`,
-              transform: `translateY(${note.header_image_offset ?? 50}%)`
+              objectPosition: `center ${note.header_image_offset ?? 50}%` // Utiliser objectPosition au lieu de transform
             }}
             draggable={false}
           />
-          {/* Overlay */}
+          {/* Overlay avec la bonne formule */}
           {note.header_image_overlay && note.header_image_overlay > 0 && (
             <div style={{
               position: 'absolute',
@@ -78,18 +86,21 @@ export default function PublicNoteContent({ note, slug }: PublicNoteProps) {
               left: 0,
               right: 0,
               bottom: 0,
-              backgroundColor: `rgba(0, 0, 0, ${(note.header_image_overlay / 5) * 0.3})`
+              backgroundColor: `rgba(24,24,24,${0.08 + 0.14 * note.header_image_overlay})` // Formule exacte de l'éditeur
             }} />
           )}
           
-          {/* Titre dans l'image si activé */}
+          {/* Titre dans l'image si activé - utiliser les classes CSS */}
           {note.header_title_in_image && (
-            <div style={{
+            <div className="noteLayout-title" style={{
               position: 'absolute',
-              bottom: 32,
+              top: '50%',
               left: '50%',
-              transform: 'translateX(-50%)',
-              color: '#fff',
+              transform: 'translate(-50%, -50%)',
+              width: 'auto',
+              maxWidth: '750px',
+              padding: 0,
+              boxSizing: 'border-box',
               textAlign: 'center',
               zIndex: 10
             }}>
@@ -97,8 +108,15 @@ export default function PublicNoteContent({ note, slug }: PublicNoteProps) {
                 fontSize: 'var(--editor-title-size)',
                 fontWeight: 700,
                 margin: 0,
-                textShadow: '0 2px 4px rgba(0,0,0,0.5)',
-                fontFamily: note.font_family ?? 'Noto Sans'
+                color: 'white',
+                textShadow: '0 2px 4px rgba(0,0,0,0.2)',
+                fontFamily: note.font_family ?? 'Noto Sans',
+                textAlign: 'center',
+                width: 'auto',
+                maxWidth: '750px',
+                padding: '0 0 4px 0',
+                whiteSpace: 'pre-wrap',
+                overflow: 'visible'
               }}>
                 {note.source_title}
               </h1>
@@ -107,11 +125,11 @@ export default function PublicNoteContent({ note, slug }: PublicNoteProps) {
         </div>
       )}
       
-      <div style={{ width: '100%', display: 'flex', flexDirection: 'row', justifyContent: 'center', alignItems: 'flex-start', margin: '0 auto', marginBottom: 32, gap: 32, position: 'relative' }}>
+      <div className={getLayoutClass()} style={{ width: '100%', display: 'flex', flexDirection: 'row', justifyContent: 'center', alignItems: 'flex-start', margin: '0 auto', marginBottom: 32, gap: 32, position: 'relative' }}>
         <div data-main-content style={{ maxWidth: 'var(--editor-content-width)', width: 'var(--editor-content-width)' }}>
           {/* Titre principal (seulement si pas dans l'image) */}
           {!note.header_title_in_image && (
-            <>
+            <div className="noteLayout-title">
               <h1 
                 ref={titleRef}
                 style={{
@@ -129,28 +147,29 @@ export default function PublicNoteContent({ note, slug }: PublicNoteProps) {
               >
                 {note.source_title}
               </h1>
-              <div style={{ height: 18 }} />
-            </>
+            </div>
           )}
           
-          <div
-            ref={contentRef}
-            className="markdown-body"
-            style={{
-              maxWidth: 'var(--editor-content-width)',
-              width: 'var(--editor-content-width)',
-              margin: '0 auto',
-              background: 'none',
-              padding: '0 0 64px 0',
-              fontSize: 'var(--editor-body-size)',
-              color: 'var(--editor-text-color)',
-              minHeight: '60vh',
-              pointerEvents: 'auto',
-              userSelect: 'text',
-              fontFamily: note.font_family ?? 'Noto Sans',
-            }}
-            dangerouslySetInnerHTML={{ __html: note.html_content || '' }}
-          />
+          <div className="noteLayout-content">
+            <div
+              ref={contentRef}
+              className="markdown-body"
+              style={{
+                maxWidth: 'var(--editor-content-width)',
+                width: 'var(--editor-content-width)',
+                margin: '0 auto',
+                background: 'none',
+                padding: '0 0 64px 0',
+                fontSize: 'var(--editor-body-size)',
+                color: 'var(--editor-text-color)',
+                minHeight: '60vh',
+                pointerEvents: 'auto',
+                userSelect: 'text',
+                fontFamily: note.font_family ?? 'Noto Sans',
+              }}
+              dangerouslySetInnerHTML={{ __html: note.html_content || '' }}
+            />
+          </div>
         </div>
         {/* TOC sticky tout à droite */}
         <div style={{ position: 'fixed', top: 380, right: 0, paddingRight: 0, minWidth: 220, maxWidth: 320, zIndex: 20 }}>
