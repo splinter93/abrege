@@ -111,6 +111,7 @@ export default function NoteEditorPage() {
   const [showPreview, setShowPreview] = React.useState(false);
   const [a4Mode, setA4Mode] = React.useState(false);
   const [fullWidth, setFullWidth] = React.useState(false);
+  const [fontFamily, setFontFamily] = React.useState<string>('Noto Sans');
   const [slashLang, setSlashLang] = React.useState<'fr' | 'en'>('en');
   const [title, setTitle] = React.useState('');
   const [tocHeadings, setTocHeadings] = React.useState<Heading[]>([]);
@@ -273,6 +274,23 @@ export default function NoteEditorPage() {
     }
   };
 
+  // Fonction dédiée pour sauvegarder la police
+  const handleFontFamilySave = async (newFontFamily: string) => {
+    if (!noteId) return;
+    try {
+      const payload: Record<string, unknown> = {
+        font_family: newFontFamily,
+      };
+      await updateNoteREST(noteId, payload);
+      setFontFamily(newFontFamily);
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[font-family] Changement de police →', newFontFamily);
+      }
+    } catch (error) {
+      console.error('[font-family] Erreur lors de la sauvegarde de la police:', error);
+    }
+  };
+
   // Chargement initial de la note (une seule fois)
   React.useEffect(() => {
     if (!editor || !noteId || hasInitialized) return;
@@ -300,6 +318,21 @@ export default function NoteEditorPage() {
           setHeaderImageOverlay((note.header_image_overlay as number) ?? 0);
           setHeaderTitleInImage((note.header_title_in_image as boolean) ?? false);
           setFullWidth((note.wide_mode as boolean) ?? false);
+          setFontFamily((note.font_family as string) ?? 'Noto Sans');
+          // Appliquer la police au titre et au contenu
+          setTimeout(() => {
+            const titleElement = titleRef.current;
+            if (titleElement) {
+              titleElement.style.fontFamily = (note.font_family as string) ?? 'Noto Sans';
+            }
+            // Appliquer la police au contenu de l'éditeur
+            if (editor) {
+              const editorElement = editor.view.dom;
+              if (editorElement) {
+                editorElement.style.fontFamily = (note.font_family as string) ?? 'Noto Sans';
+              }
+            }
+          }, 0);
           setPublished(!!(note.ispublished as boolean));
           setPublishedUrl((note.public_url as string) || null);
         }
@@ -410,6 +443,21 @@ export default function NoteEditorPage() {
             setHeaderImageBlur(note.header_image_blur ?? 0);
             setHeaderImageOverlay(note.header_image_overlay ?? 0);
             setFullWidth(note.wide_mode ?? false);
+            setFontFamily(note.font_family ?? 'Noto Sans');
+            // Appliquer la police au titre et au contenu
+            setTimeout(() => {
+              const titleElement = titleRef.current;
+              if (titleElement) {
+                titleElement.style.fontFamily = note.font_family ?? 'Noto Sans';
+              }
+              // Appliquer la police au contenu de l'éditeur
+              if (editor) {
+                const editorElement = editor.view.dom;
+                if (editorElement) {
+                  editorElement.style.fontFamily = note.font_family ?? 'Noto Sans';
+                }
+              }
+            }, 0);
             setPublished(!!note.ispublished);
             editor.commands.setContent(note.markdown_content || '');
                         setLastSavedContent(note.markdown_content || '');
@@ -456,6 +504,21 @@ export default function NoteEditorPage() {
             setHeaderImageBlur(note.header_image_blur ?? 0);
             setHeaderImageOverlay(note.header_image_overlay ?? 0);
             setFullWidth(note.wide_mode ?? false);
+            setFontFamily(note.font_family ?? 'Noto Sans');
+            // Appliquer la police au titre et au contenu
+            setTimeout(() => {
+              const titleElement = titleRef.current;
+              if (titleElement) {
+                titleElement.style.fontFamily = note.font_family ?? 'Noto Sans';
+              }
+              // Appliquer la police au contenu de l'éditeur
+              if (editor) {
+                const editorElement = editor.view.dom;
+                if (editorElement) {
+                  editorElement.style.fontFamily = note.font_family ?? 'Noto Sans';
+                }
+              }
+            }, 0);
             setPublished(!!note.ispublished);
             editor.commands.setContent(note.markdown_content || '');
             setLastSavedContent(note.markdown_content || '');
@@ -677,6 +740,21 @@ export default function NoteEditorPage() {
       setHeaderImageBlur(note.header_image_blur || 0);
       setHeaderImageOverlay(note.header_image_overlay || 0);
       setFullWidth(note.wide_mode || false);
+      setFontFamily(note.font_family || 'Noto Sans');
+      // Appliquer la police au titre et au contenu
+      setTimeout(() => {
+        const titleElement = titleRef.current;
+        if (titleElement) {
+          titleElement.style.fontFamily = note.font_family || 'Noto Sans';
+        }
+        // Appliquer la police au contenu de l'éditeur
+        if (editor) {
+          const editorElement = editor.view.dom;
+          if (editorElement) {
+            editorElement.style.fontFamily = note.font_family || 'Noto Sans';
+          }
+        }
+      }, 0);
       setPublished(!!note.ispublished);
       editor.commands.setContent(note.markdown_content || '');
     }
@@ -801,6 +879,17 @@ export default function NoteEditorPage() {
       // Recalcule la hauteur après le changement de police
       setTimeout(resizeTitle, 0);
     }
+    
+    // Applique la police au contenu de l'éditeur
+    if (editor) {
+      const editorElement = editor.view.dom;
+      if (editorElement) {
+        editorElement.style.fontFamily = fontName;
+      }
+    }
+    
+    // Sauvegarde la police en base de données
+    handleFontFamilySave(fontName);
   };
 
   if (loading) {

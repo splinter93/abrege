@@ -31,6 +31,7 @@ export type Article = {
   updated_at: string | null;
   user_id: string | null;
   wide_mode: boolean | null;
+  font_family: string | null;
 };
 
 export type Classeur = {

@@ -62,7 +62,8 @@ export async function PUT(req: NextRequest, { params }: any): Promise<Response> 
       source_title: z.string().min(1, 'source_title requis').optional(),
       markdown_content: z.string().optional(),
       html_content: z.string().optional(),
-      wide_mode: z.boolean().optional()
+      wide_mode: z.boolean().optional(),
+      font_family: z.string().optional()
     });
     
     const parseResult = schema.safeParse({ ref, ...body });
@@ -128,6 +129,9 @@ export async function PUT(req: NextRequest, { params }: any): Promise<Response> 
     }
     if (body.wide_mode !== undefined) {
       updateData.wide_mode = body.wide_mode;
+    }
+    if (body.font_family !== undefined) {
+      updateData.font_family = body.font_family;
     }
     
         const { data: updatedNote, error } = await supabase
