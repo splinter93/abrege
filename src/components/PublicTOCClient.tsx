@@ -11,10 +11,17 @@ interface PublicTOCClientProps {
 
 const PublicTOCClient: React.FC<PublicTOCClientProps> = ({ slug }) => {
   const [headings, setHeadings] = useState<Heading[]>([]);
+  const [error, setError] = useState<string | null>(null);
+
   useEffect(() => {
-    fetch(`/api/v1/note/${slug}/table-of-contents`)
-      .then(res => res.json())
-      .then(data => {
+    const fetchTOC = async () => {
+      try {
+        const res = await fetch(`/api/v1/note/${slug}/table-of-contents`);
+        if (!res.ok) {
+          throw new Error(`TOC non disponible (${res.status})`);
+        }
+        
+        const data = await res.json();
         if (data.toc) {
           setHeadings(
             data.toc.map((item: { slug: string; title: string; level: number }) => ({
@@ -24,9 +31,18 @@ const PublicTOCClient: React.FC<PublicTOCClientProps> = ({ slug }) => {
             }))
           );
         }
-      });
+      } catch (err) {
+        console.warn('TOC non chargée:', err);
+        setError(err instanceof Error ? err.message : 'Erreur TOC');
+        // Ne pas afficher d'erreur à l'utilisateur, juste ne pas montrer la TOC
+      }
+    };
+
+    fetchTOC();
   }, [slug]);
-  if (!headings.length) return null;
+
+  if (error || !headings.length) return null;
+  
   return <TableOfContents headings={headings} />;
 };
 

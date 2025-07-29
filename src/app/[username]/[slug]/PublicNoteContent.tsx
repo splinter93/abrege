@@ -20,6 +20,9 @@ interface PublicNoteProps {
 }
 
 export default function PublicNoteContent({ note, slug }: PublicNoteProps) {
+  const titleRef = React.useRef<HTMLHeadingElement>(null);
+  const contentRef = React.useRef<HTMLDivElement>(null);
+
   React.useEffect(() => {
     // Appliquer le mode pleine largeur
     const fullWidth = note.wide_mode ?? false;
@@ -28,16 +31,14 @@ export default function PublicNoteContent({ note, slug }: PublicNoteProps) {
       fullWidth ? 'var(--editor-content-width-wide)' : 'var(--editor-content-width-normal)'
     );
 
-    // Appliquer la police
+    // Appliquer la police avec useRef
     const fontFamily = note.font_family ?? 'Noto Sans';
-    const titleElement = document.querySelector('[data-public-title]') as HTMLElement;
-    const contentElement = document.querySelector('[data-public-content]') as HTMLElement;
     
-    if (titleElement) {
-      titleElement.style.fontFamily = fontFamily;
+    if (titleRef.current) {
+      titleRef.current.style.fontFamily = fontFamily;
     }
-    if (contentElement) {
-      contentElement.style.fontFamily = fontFamily;
+    if (contentRef.current) {
+      contentRef.current.style.fontFamily = fontFamily;
     }
   }, [note.wide_mode, note.font_family]);
 
@@ -112,7 +113,7 @@ export default function PublicNoteContent({ note, slug }: PublicNoteProps) {
           {!note.header_title_in_image && (
             <>
               <h1 
-                data-public-title
+                ref={titleRef}
                 style={{
                   fontSize: 'var(--editor-title-size)',
                   fontWeight: 700,
@@ -133,7 +134,7 @@ export default function PublicNoteContent({ note, slug }: PublicNoteProps) {
           )}
           
           <div
-            data-public-content
+            ref={contentRef}
             className="markdown-body"
             style={{
               maxWidth: 'var(--editor-content-width)',

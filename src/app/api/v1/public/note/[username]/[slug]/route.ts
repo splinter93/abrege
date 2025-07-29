@@ -17,7 +17,7 @@ export async function GET(req: NextRequest, { params }: any): Promise<Response> 
       username: z.string().min(1, 'username requis'),
       slug: z.string().min(1, 'slug requis'),
     });
-    const { username, slug } = params;
+    const { username, slug } = await params;
     const parseResult = schema.safeParse({ username, slug });
     if (!parseResult.success) {
       return new Response(

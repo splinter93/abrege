@@ -24,13 +24,33 @@ export async function generateMetadata({ params }: { params: Promise<{ username:
   // Chercher la note par slug et user_id, ispublished = true
   const { data: note } = await supabase
     .from('articles')
-    .select('source_title')
+    .select('source_title, summary, header_image')
     .eq('slug', slug)
     .eq('user_id', user.id)
     .eq('ispublished', true)
     .single();
   if (!note) return { title: 'Note introuvable – Scrivia' };
-  return { title: note.source_title + ' – Scrivia' };
+  
+  const title = note.source_title + ' – Scrivia';
+  const description = note.summary || 'Note partagée via Scrivia';
+  const image = note.header_image || undefined;
+  
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      images: image ? [{ url: image, width: 1200, height: 630 }] : [],
+      type: 'article',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: image ? [image] : [],
+    },
+  };
 }
 
 export default async function Page(props: { params: Promise<{ username: string; slug: string }> }) {
