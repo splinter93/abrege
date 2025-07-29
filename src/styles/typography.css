@@ -256,6 +256,7 @@
 /* Header de la page publique */
 .public-page-header {
   width: 100%;
+  max-width: 100vw;
   background: var(--surface-3);
   display: flex;
   justify-content: space-between;
@@ -269,6 +270,7 @@
   top: 0;
   z-index: 100;
   overflow: hidden;
+  box-sizing: border-box;
 }
 
 /* Logo dans le header public */
@@ -306,6 +308,30 @@
 .public-header-login:hover {
   color: var(--accent-hover);
   border-color: var(--accent-hover);
+}
+
+/* Boutons du header public */
+.public-header-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: var(--editor-text-color);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  transition: background 0.18s, color 0.18s;
+  box-shadow: none;
+  font-family: var(--editor-font-family);
+  outline: none;
+  font-size: 0;
+  cursor: pointer;
+}
+
+.public-header-button:hover {
+  background: rgba(255,255,255,0.08);
+  color: var(--editor-text-color);
 }
 
 /* Image d'en-tête publique */
