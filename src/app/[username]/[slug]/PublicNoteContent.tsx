@@ -77,6 +77,28 @@ export default function PublicNoteContent({ note, slug }: PublicNoteProps) {
               }} 
             />
           )}
+          
+          {/* Titre dans l'image si activé - maintenant dans le conteneur de l'image */}
+          {note.header_title_in_image && (
+            <div className="public-header-title">
+              <h1 style={{
+                color: 'white',
+                textShadow: '0 2px 4px rgba(0,0,0,0.2)',
+                fontFamily: note.font_family ?? 'Noto Sans',
+                fontSize: 'var(--editor-title-size)',
+                fontWeight: 700,
+                margin: 0,
+                textAlign: 'center',
+                width: 'auto',
+                maxWidth: '750px',
+                padding: '0 0 4px 0',
+                whiteSpace: 'pre-wrap',
+                overflow: 'visible'
+              }}>
+                {note.source_title}
+              </h1>
+            </div>
+          )}
         </div>
       )}
       
@@ -91,19 +113,6 @@ export default function PublicNoteContent({ note, slug }: PublicNoteProps) {
                   fontFamily: note.font_family ?? 'Noto Sans',
                 }}
               >
-                {note.source_title}
-              </h1>
-            </div>
-          )}
-          
-          {/* Titre dans l'image si activé - maintenant dans le bon layout */}
-          {note.header_title_in_image && (
-            <div className="noteLayout-title">
-              <h1 style={{
-                color: 'white',
-                textShadow: '0 2px 4px rgba(0,0,0,0.2)',
-                fontFamily: note.font_family ?? 'Noto Sans',
-              }}>
                 {note.source_title}
               </h1>
             </div>
