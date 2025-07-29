@@ -19,7 +19,7 @@ export async function POST(req: Request): Promise<Response> {
     console.log('[createNote] Payload reçu:', body);
     const schema = z.object({
       source_title: z.string().min(1, 'source_title requis'),
-      markdown_content: z.string().min(1, 'markdown_content requis'),
+      markdown_content: z.string().optional().default(''), // Permet les notes vides
       header_image: z.string().optional(),
       header_image_offset: z.number().min(0).max(100).optional(), // Accepte les décimales
       folder_id: z.string().optional(),

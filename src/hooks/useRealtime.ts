@@ -1,4 +1,8 @@
-import { useEffect, useRef } from 'react';
+"use client";
+
+import { useState, useEffect, useRef } from 'react';
+import { subscribeToNotes, subscribeToDossiers, subscribeToClasseurs, unsubscribeFromAll, startSubscriptionMonitoring } from '@/realtime/dispatcher';
+import { supabase } from '@/supabaseClient';
 // ANCIEN SYSTÈME DÉSACTIVÉ - Utilisation du nouveau système realtime
 // import { initRealtimeService, subscribeToTable as subscribeToPolling, unsubscribeFromTable as unsubscribeFromPolling, stopRealtimeService } from '@/services/realtimeService';
 // import { initWebSocketService, subscribeToTable as subscribeToWebSocket, unsubscribeFromTable as unsubscribeFromWebSocket, stopWebSocketService } from '@/services/websocketService';
@@ -27,6 +31,75 @@ interface ChangeEvent {
   new: any;
   old: any;
   timestamp: number;
+}
+
+/**
+ * Hook pour démarrer les souscriptions Supabase Realtime
+ */
+export function useSupabaseRealtime() {
+  const [isConnected, setIsConnected] = useState(false);
+  const initialized = useRef(false);
+
+  useEffect(() => {
+    // Éviter les initialisations multiples
+    if (initialized.current) {
+      return;
+    }
+    
+    console.log('[REALTIME] 🚀 Démarrage des souscriptions Supabase Realtime...');
+    
+    // Démarrer les souscriptions avec l'ancienne logique qui marchait
+    const setupRealtime = async () => {
+      try {
+        // Authentification anonyme pour permettre le realtime
+        console.log('[REALTIME] 🔐 Authentification anonyme...');
+        const { data: { user }, error: authError } = await supabase.auth.getUser();
+        
+        if (!user) {
+          console.log('[REALTIME] 🔐 Création session anonyme...');
+          const { data, error } = await supabase.auth.signInAnonymously();
+          if (error) {
+            console.log('[REALTIME] ⚠️ Erreur auth anonyme:', error.message);
+          } else {
+            console.log('[REALTIME] ✅ Session anonyme créée');
+          }
+        } else {
+          console.log('[REALTIME] ✅ Utilisateur déjà authentifié:', user.id);
+        }
+        
+        // Marquer comme initialisé
+        initialized.current = true;
+        
+        console.log('[REALTIME] 🚀 Démarrage des souscriptions...');
+        
+        // S'abonner aux événements realtime (comme avant)
+        subscribeToNotes();
+        subscribeToDossiers();
+        subscribeToClasseurs();
+        startSubscriptionMonitoring();
+        
+        // Marquer comme connecté
+        setIsConnected(true);
+        
+      } catch (error) {
+        console.error('[REALTIME] ❌ Erreur lors de l\'activation des souscriptions realtime:', error);
+        // Réessayer dans 3 secondes en cas d'erreur
+        setTimeout(setupRealtime, 3000);
+      }
+    };
+    
+    // Attendre 2 secondes que l'authentification soit établie (comme avant)
+    setTimeout(setupRealtime, 2000);
+    
+    return () => {
+      console.log('[REALTIME] 🛑 Arrêt des souscriptions...');
+      unsubscribeFromAll();
+      setIsConnected(false);
+      initialized.current = false;
+    };
+  }, []);
+
+  return { isConnected };
 }
 
 /**

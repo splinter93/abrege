@@ -9,7 +9,6 @@ export interface UseEditorSaveOptions {
     getHTML: () => string;
     storage: { markdown: { getMarkdown: () => string } };
   };
-  headerImage?: string | null;
   titleAlign?: 'left' | 'center' | 'right';
 }
 
@@ -23,7 +22,7 @@ export interface UseEditorSaveResult {
  * Hook pour gérer la sauvegarde de l'éditeur (logique extraite de Editor.jsx).
  * @param {Object} options - { onSave, editor, headerImage, titleAlign }
  */
-export default function useEditorSave({ onSave, editor, headerImage, titleAlign }: UseEditorSaveOptions): UseEditorSaveResult {
+export default function useEditorSave({ onSave, editor, titleAlign }: UseEditorSaveOptions): UseEditorSaveResult {
   const [isSaving, setIsSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState(new Date());
 
@@ -39,7 +38,7 @@ export default function useEditorSave({ onSave, editor, headerImage, titleAlign 
       markdown_content = markdown_content.replace(/(\!\[.*?\]\(.*?\))\s*(#+ )/g, '$1\n\n$2');
       if (process.env.NODE_ENV === 'development') {
         // Log autosave déclenchée
-        // eslint-disable-next-line no-console
+         
         console.log('[AUTOSAVE] Sauvegarde déclenchée', { newTitle, markdown_content });
       }
       try {
@@ -49,7 +48,7 @@ export default function useEditorSave({ onSave, editor, headerImage, titleAlign 
       } catch (e) {
         toast.error('Erreur lors de la sauvegarde');
         if (process.env.NODE_ENV === 'development') {
-          // eslint-disable-next-line no-console
+           
           console.error('[AUTOSAVE] Échec de la sauvegarde', e);
         }
       } finally {

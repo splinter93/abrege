@@ -36,17 +36,7 @@ export default function PublicPageHeader() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isKebabMenuOpen]);
 
-  const kebabMenuOptions = [
-    {
-      id: 'fullWidth',
-      label: 'Pleine largeur',
-      icon: fullWidth ? <FiMinimize2 size={18} /> : <FiMaximize2 size={18} />,
-      onClick: () => { 
-        setFullWidth(!fullWidth); 
-      },
-      color: fullWidth ? '#10b981' : '#D4D4D4'
-    }
-  ];
+
 
   return (
     <header className="public-page-header">

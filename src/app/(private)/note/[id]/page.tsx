@@ -32,6 +32,7 @@ import TableRow from '@tiptap/extension-table-row';
 import TableCell from '@tiptap/extension-table-cell';
 import TableHeader from '@tiptap/extension-table-header';
 import Underline from '@tiptap/extension-underline';
+import Placeholder from '@tiptap/extension-placeholder';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/supabaseClient';
 import CustomImage from '@/extensions/CustomImage';
@@ -97,6 +98,9 @@ export default function NoteEditorPage() {
       TableCell,
       TableHeader,
       Underline,
+      Placeholder.configure({
+        placeholder: 'Écrivez quelque chose d\'incroyable...',
+      }),
     ],
     content: '',
     immediatelyRender: false,

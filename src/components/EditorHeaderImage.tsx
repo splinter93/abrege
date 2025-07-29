@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { MdClose } from 'react-icons/md';
-import { LuMoon, LuCloudFog } from 'react-icons/lu';
+import { LuMoon } from 'react-icons/lu';
 import { FiImage, FiDroplet } from 'react-icons/fi';
 import Tooltip from './Tooltip';
 import ImageMenu from './ImageMenu';

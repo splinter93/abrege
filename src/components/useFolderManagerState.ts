@@ -17,6 +17,7 @@ import {
 import { useRealtime } from '@/hooks/useRealtime';
 import { useFileSystemStore } from '@/store/useFileSystemStore';
 import type { FileSystemState } from '@/store/useFileSystemStore';
+import { generateUniqueNoteName } from '@/utils/generateUniqueName';
 const selectFolders = (s: FileSystemState) => s.folders;
 const selectNotes = (s: FileSystemState) => s.notes;
 
@@ -112,54 +113,18 @@ export function useFolderManagerState(classeurId: string, parentFolderId?: strin
     setError(null);
   }, [classeurId, refreshKey]); // parentFolderId retiré pour éviter toute boucle
 
-  // --- SYNCHRO TEMPS RÉEL (Polling Intelligent) ---
-  const { subscribe, unsubscribe } = useRealtime({
-          userId: "3223651c-5580-4471-affb-b3f4456bd729", // 🚧 Temp: Authentification non implémentée
-    type: 'polling',
-    interval: 3000
-  });
+  // --- SYNCHRO TEMPS RÉEL (Supabase Realtime) ---
+  // Le RealtimeProvider gère déjà les souscriptions, pas besoin d'appeler useSupabaseRealtime ici
+  // const { isConnected } = useSupabaseRealtime();
 
   useEffect(() => {
-    console.log('[EFFECT] useEffect triggered in useFolderManagerState (realtime subscribe)', { classeurId, parentFolderId, refreshKey, subscribe, unsubscribe });
-    if (!classeurId) return;
-
-    const handleArticleChange = (event: any) => {
-      // Vérifie que la note concerne le bon classeur/dossier
-      if (
-        event.table === 'articles' &&
-        event.new?.classeur_id === classeurId &&
-        ((parentFolderId && event.new.folder_id === parentFolderId) || (!parentFolderId && !event.new.folder_id))
-      ) {
-        // setFiles((files) => { // Supprimé
-        //   // Évite les doublons si la note existe déjà
-        //   if (files.some(f => f.id === event.new.id)) return files;
-        //   const newFile: FileArticle = {
-        //     id: event.new.id,
-        //     source_title: event.new.source_title,
-        //     source_type: event.new.source_type,
-        //     updated_at: event.new.updated_at,
-        //   };
-        //   return [...files, newFile];
-        // });
-      }
-    };
-
-    const handleFolderChange = (event: any) => {
-      if (event.table === 'folders' && event.new?.classeur_id === classeurId) {
-        // Rafraîchir la liste des dossiers à chaque changement
-        // getFolders(classeurId, parentFolderId).then(setFolders); // Supprimé
-      }
-    };
-
-    // S'abonner aux changements
-    subscribe('articles', handleArticleChange);
-    subscribe('folders', handleFolderChange);
-
-    return () => {
-      unsubscribe('articles', handleArticleChange);
-      unsubscribe('folders', handleFolderChange);
-    };
-  }, [classeurId, parentFolderId, refreshKey, subscribe, unsubscribe]);
+    console.log('[EFFECT] useEffect triggered in useFolderManagerState (realtime status)', { 
+      classeurId, 
+      parentFolderId, 
+      refreshKey
+      // isConnected retiré car géré par RealtimeProvider
+    });
+  }, [classeurId, parentFolderId, refreshKey]);
 
   // --- NAVIGATION ---
   // Navigation contrôlée par le parent, plus de setCurrentFolderId ici
@@ -194,11 +159,14 @@ export function useFolderManagerState(classeurId: string, parentFolderId?: strin
 
   const createFile = useCallback(async (name: string): Promise<FileArticle | undefined> => {
     try {
-      console.log('[UI] 📝 Création note, en attente du patch realtime...', { name, classeurId, parentFolderId });
+      // Générer un nom unique pour la note
+      const uniqueName = generateUniqueNoteName(files);
+      
+      console.log('[UI] 📝 Création note, en attente du patch realtime...', { name: uniqueName, classeurId, parentFolderId });
       const payload: any = {
-        source_title: name,
+        source_title: uniqueName,
         notebook_id: classeurId,
-        markdown_content: '# ' + name,
+        markdown_content: '', // Contenu vide par défaut
         header_image: DEFAULT_HEADER_IMAGE,
       };
       if (parentFolderId) {
@@ -213,7 +181,7 @@ export function useFolderManagerState(classeurId: string, parentFolderId?: strin
       setError('Erreur lors de la création du fichier.');
       return undefined;
     }
-  }, [classeurId, parentFolderId]);
+  }, [classeurId, parentFolderId, files]);
 
   const deleteFolder = useCallback(async (id: string) => {
     try {

@@ -7,7 +7,7 @@ interface EditorKebabMenuProps {
   position: { top: number; left: number };
   onClose: () => void;
   a4Mode: boolean;
-  setA4Mode: (v: boolean) => void;
+    setA4Mode: (v: boolean) => void;
   slashLang: 'fr' | 'en';
   setSlashLang: (lang: 'fr' | 'en') => void;
   published: boolean;

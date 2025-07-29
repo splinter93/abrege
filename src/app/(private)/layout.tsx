@@ -1,6 +1,7 @@
-import AppMainContent from '@/components/AppMainContent';
+
 import { AuthProvider } from '@/components/AuthProvider';
 import ClientOnly from '@/components/ClientOnly';
+import RealtimeProvider from '@/components/RealtimeProvider';
 
 export default function PrivateLayout({
   children,
@@ -9,7 +10,11 @@ export default function PrivateLayout({
 }) {
   return (
     <ClientOnly>
-      <AuthProvider>{children}</AuthProvider>
+      <AuthProvider>
+        <RealtimeProvider>
+          {children}
+        </RealtimeProvider>
+      </AuthProvider>
     </ClientOnly>
   );
 }

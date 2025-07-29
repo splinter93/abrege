@@ -2,8 +2,7 @@ import { createClient } from '@supabase/supabase-js';
 import '@/styles/markdown.css';
 import LogoScrivia from '@/components/LogoScrivia';
 
-import PublicTOCClient from '@/components/PublicTOCClient';
-import CraftedBadge from '@/components/CraftedBadge';
+
 import type { Metadata } from 'next';
 import PublicNoteContent from './PublicNoteContent';
 

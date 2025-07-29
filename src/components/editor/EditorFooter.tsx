@@ -3,7 +3,6 @@ import './editor-footer.css';
 
 interface EditorFooterProps {
   lastSaved: Date | null;
-  wordCount: number;
   getRelativeTime: (date: Date | null) => string;
   getWordCount: () => number;
 }
@@ -13,7 +12,6 @@ interface EditorFooterProps {
  */
 const EditorFooter: React.FC<EditorFooterProps> = ({ 
   lastSaved, 
-  wordCount, 
   getRelativeTime, 
   getWordCount 
 }) => {

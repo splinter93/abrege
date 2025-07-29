@@ -61,7 +61,7 @@ export async function POST(req: NextRequest): Promise<Response> {
     const resolvedNoteIds: string[] = [];
     for (const ref of note_ids) {
       try {
-        // eslint-disable-next-line no-await-in-loop
+         
         const id = await (await import('@/middleware/resourceResolver')).resolveNoteRef(ref, USER_ID);
         resolvedNoteIds.push(id);
       } catch {

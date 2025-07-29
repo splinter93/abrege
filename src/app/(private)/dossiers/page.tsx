@@ -8,7 +8,6 @@ import { toast } from "react-hot-toast";
 import "./DossiersPage.css";
 import { useFileSystemStore } from '@/store/useFileSystemStore';
 import type { FileSystemState } from '@/store/useFileSystemStore';
-import { subscribeToNotes, subscribeToDossiers, subscribeToClasseurs, unsubscribeFromAll, startSubscriptionMonitoring } from '@/realtime/dispatcher';
 
 const selectFolders = (s: FileSystemState) => s.folders;
 const selectNotes = (s: FileSystemState) => s.notes;
@@ -152,21 +151,9 @@ const DossiersPage: React.FC = () => {
         // Attendre un peu que l'authentification soit stable
         await new Promise(resolve => setTimeout(resolve, 500));
         
-        // S'abonner aux événements realtime
-        console.log('[DossiersPage] 📝 Activation souscription notes...');
-        const notesSubscription = subscribeToNotes();
-        
-        console.log('[DossiersPage] 📁 Activation souscription dossiers...');
-        const dossiersSubscription = subscribeToDossiers();
-        
-        console.log('[DossiersPage] 📚 Activation souscription classeurs...');
-        const classeursSubscription = subscribeToClasseurs();
-        
-        console.log('[DossiersPage] ✅ Souscriptions realtime activées');
-        console.log('[DossiersPage] 📡 Canaux créés:', { notesSubscription, dossiersSubscription, classeursSubscription });
-        
-        // Démarrer le monitoring des souscriptions
-        startSubscriptionMonitoring();
+        // Les souscriptions realtime sont maintenant gérées par le RealtimeProvider
+        // Pas besoin d'appeler directement subscribeToNotes, subscribeToDossiers, etc.
+        console.log('[DossiersPage] ✅ Realtime géré par RealtimeProvider');
         
       } catch (error) {
         console.error('[DossiersPage] ❌ Erreur lors de l\'activation des souscriptions realtime:', error);
@@ -180,13 +167,8 @@ const DossiersPage: React.FC = () => {
     
     // Nettoyage au démontage
     return () => {
-      console.log('[DossiersPage] 🛑 Arrêt des souscriptions realtime...');
-      try {
-        unsubscribeFromAll();
-        console.log('[DossiersPage] ✅ Souscriptions realtime désactivées');
-      } catch (error) {
-        console.error('[DossiersPage] ❌ Erreur lors de la désactivation des souscriptions:', error);
-      }
+      console.log('[DossiersPage] 🛑 Nettoyage de la page...');
+      // Le RealtimeProvider gère déjà le nettoyage des souscriptions
     };
   }, [setActiveClasseurId]); // Ajout de la dépendance manquante
   
@@ -260,7 +242,7 @@ const DossiersPage: React.FC = () => {
         const newClasseurData = {
           name: newName.trim(),
           position: classeurs.length,
-          emoji: "FileText",
+          emoji: "📁",
           color: "#808080",
         };
         const newClasseur = await createClasseur(newClasseurData);

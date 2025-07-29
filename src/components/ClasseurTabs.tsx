@@ -45,10 +45,10 @@ interface SortableTabProps {
   isOverlay?: boolean;
   sortableTransform?: unknown;
   sortableTransition?: unknown;
-  onDropToClasseur?: (classeurId: string, itemId: string, itemType: 'folder' | 'file') => void;
+
 }
 
-function SortableTab({ classeur, isActive, onSelectClasseur, onContextMenu, onDropToClasseur, isDragging, isOverlay }: SortableTabProps) {
+function SortableTab({ classeur, isActive, onSelectClasseur, onContextMenu, isDragging, isOverlay }: SortableTabProps) {
   const [isDropActive, setIsDropActive] = useState(false);
   const sortable = useSortable({ id: classeur.id });
   const isOverlayMode = !!isOverlay;
@@ -78,7 +78,7 @@ function SortableTab({ classeur, isActive, onSelectClasseur, onContextMenu, onDr
         setIsDropActive(false);
         window.__isTabDropActive = false;
       }}
-      onDrop={_e => {
+      onDrop={() => {
         setIsDropActive(false);
         window.__isTabDropActive = false;
       }}
@@ -86,7 +86,7 @@ function SortableTab({ classeur, isActive, onSelectClasseur, onContextMenu, onDr
       <button
         className={`classeur-btn-glass${isActive ? " active" : ""}`}
         onClick={() => onSelectClasseur(classeur.id)}
-        onContextMenu={e => onContextMenu(e, classeur)}
+        onContextMenu={(e) => onContextMenu(e, classeur)}
         style={{ fontFamily: "Inter, Noto Sans, Arial, sans-serif", background: isDropActive ? 'rgba(255,140,0,0.13)' : undefined, borderColor: isDropActive ? 'var(--accent-primary)' : undefined }}
       >
         <span
@@ -208,12 +208,7 @@ const ClasseurTabs: React.FC<ClasseurTabsProps> = ({
     }
   };
 
-  // Handler drop natif sur un tab
-  const handleDropToClasseur = (classeurId: string, itemId: string, itemType: 'folder' | 'file') => {
-    // TODO: appeler la mutation pour ramener à la racine du classeur (si classeur courant)
-    // (À compléter dans FolderManager ou via callback prop)
-    window.dispatchEvent(new CustomEvent('drop-to-classeur', { detail: { classeurId, itemId, itemType } }));
-  };
+
 
   // Robustesse : toujours un tableau pour éviter les erreurs React #310
   const safeClasseurs = Array.isArray(classeurs) ? classeurs : [];
@@ -230,7 +225,7 @@ const ClasseurTabs: React.FC<ClasseurTabsProps> = ({
                 isActive={activeClasseurId === classeur.id}
                 onSelectClasseur={onSelectClasseur}
                 onContextMenu={handleContextMenu}
-                onDropToClasseur={handleDropToClasseur}
+
               />
             ))}
           </SortableContext>

@@ -94,8 +94,26 @@ let notesSubscriptionActive = false;
 let dossiersSubscriptionActive = false;
 let classeursSubscriptionActive = false;
 
-// Système de déduplication pour éviter les boucles infinies
-let lastProcessedEvents = new Map<string, number>();
+// Gestion des canaux existants pour éviter les conflits
+let notesChannel: any = null;
+let dossiersChannel: any = null;
+let classeursChannel: any = null;
+
+// Gestion des retries pour éviter les boucles infinies
+let notesRetryCount = 0;
+let dossiersRetryCount = 0;
+let classeursRetryCount = 0;
+const MAX_RETRIES = 3;
+const RETRY_DELAY = 5000; // 5 secondes
+
+// Timestamps pour éviter les reconnexions trop fréquentes
+let lastNotesRetry = 0;
+let lastDossiersRetry = 0;
+let lastClasseursRetry = 0;
+const MIN_RETRY_INTERVAL = 10000; // 10 secondes minimum entre les tentatives
+
+// Map pour la déduplication des événements
+const lastProcessedEvents = new Map();
 const DEDUPLICATION_WINDOW = 1000; // 1 seconde
 
 /**
@@ -105,21 +123,24 @@ export function startSubscriptionMonitoring() {
   // 🚧 Temp: Authentification non implémentée
   // TODO: Remplacer USER_ID par l'authentification Supabase
   
+  console.log('[REALTIME] 🔍 Démarrage du monitoring des souscriptions...');
+  
   // Vérifier toutes les 30 secondes si les souscriptions sont actives
   setInterval(() => {
+    // Réinitialiser les compteurs de tentatives pour permettre de nouvelles tentatives
     if (!notesSubscriptionActive) {
-      // 🚧 Temp: Authentification non implémentée
-      // TODO: Remplacer USER_ID par l'authentification Supabase
+      console.log('[REALTIME] 🔄 Monitoring: Redémarrage des souscriptions notes...');
+      notesRetryCount = 0;
       subscribeToNotes();
     }
     if (!dossiersSubscriptionActive) {
-      // 🚧 Temp: Authentification non implémentée
-      // TODO: Remplacer USER_ID par l'authentification Supabase
+      console.log('[REALTIME] 🔄 Monitoring: Redémarrage des souscriptions dossiers...');
+      dossiersRetryCount = 0;
       subscribeToDossiers();
     }
     if (!classeursSubscriptionActive) {
-      // 🚧 Temp: Authentification non implémentée
-      // TODO: Remplacer USER_ID par l'authentification Supabase
+      console.log('[REALTIME] 🔄 Monitoring: Redémarrage des souscriptions classeurs...');
+      classeursRetryCount = 0;
       subscribeToClasseurs();
     }
   }, 30000); // 30 secondes
@@ -130,22 +151,47 @@ export function startSubscriptionMonitoring() {
  * Écoute les événements INSERT, UPDATE, DELETE sur la table 'articles'
  */
 export function subscribeToNotes() {
-  // 🚧 Temp: Authentification non implémentée
-  // TODO: Remplacer USER_ID par l'authentification Supabase
+  // Vérifier le nombre de tentatives
+  if (notesRetryCount >= MAX_RETRIES) {
+    console.error(`[REALTIME] ❌ Échec de l'abonnement aux notes après ${MAX_RETRIES} tentatives. Abandon.`);
+    return null;
+  }
   
-  const channel = supabase
+  // Vérifier le délai minimum entre les tentatives
+  const now = Date.now();
+  if (now - lastNotesRetry < MIN_RETRY_INTERVAL) {
+    console.log(`[REALTIME] ⏳ Attente avant nouvelle tentative notes (${Math.ceil((MIN_RETRY_INTERVAL - (now - lastNotesRetry)) / 1000)}s restantes)`);
+    return null;
+  }
+  
+  // Si un canal existe déjà, ne pas en créer un nouveau
+  if (notesChannel && notesSubscriptionActive) {
+    console.log('[REALTIME] 📝 Canal notes déjà actif, pas de nouvelle souscription');
+    return notesChannel;
+  }
+  
+  lastNotesRetry = now;
+  console.log(`[REALTIME] 📝 Démarrage de l'abonnement aux notes... (tentative ${notesRetryCount + 1}/${MAX_RETRIES})`);
+  
+  notesChannel = supabase
     .channel('public:articles')
     .on(
       'postgres_changes',
       { event: '*', schema: 'public', table: 'articles' },
       (payload) => {
+        // Logs réduits - seulement les événements importants
+        if (payload.eventType === 'INSERT' || payload.eventType === 'DELETE') {
+          const title = (payload.new as any)?.source_title || (payload.old as any)?.source_title;
+          console.log('[REALTIME] 📝', payload.eventType, title);
+        }
+        
         // Déduplication pour éviter les boucles infinies
         const eventKey = `${payload.eventType}-${(payload.new as any)?.id || (payload.old as any)?.id}-${(payload.new as any)?.updated_at || (payload.old as any)?.updated_at}`;
         const now = Date.now();
         const lastProcessed = lastProcessedEvents.get(eventKey);
         
         if (lastProcessed && (now - lastProcessed) < DEDUPLICATION_WINDOW) {
-          // Événement déjà traité récemment, ignorer
+          console.log('[REALTIME] ⏭️ Événement ignoré (déduplication):', eventKey);
           return;
         }
         
@@ -165,6 +211,7 @@ export function subscribeToNotes() {
         
         switch (payload.eventType) {
           case 'INSERT':
+            console.log('[REALTIME] ➕ Ajout d\'une note:', payload.new.id);
             // Convertir les données Supabase vers le type Note
             const newNote = {
               id: payload.new.id,
@@ -181,6 +228,7 @@ export function subscribeToNotes() {
             break;
             
           case 'UPDATE':
+            console.log('[REALTIME] ✏️ Mise à jour d\'une note:', payload.new.id);
             // Convertir les données Supabase vers le type Note
             const updatedNote = {
               id: payload.new.id,
@@ -197,7 +245,12 @@ export function subscribeToNotes() {
             break;
             
           case 'DELETE':
+            console.log('[REALTIME] 🗑️ Suppression d\'une note:', payload.old.id);
             store.removeNote(payload.old.id);
+            break;
+            
+          default:
+            console.log('[REALTIME] ❓ Événement inconnu:', (payload as any).eventType);
             break;
         }
       }
@@ -205,16 +258,35 @@ export function subscribeToNotes() {
     .subscribe((status) => {
       if (status === 'SUBSCRIBED') {
         notesSubscriptionActive = true;
+        notesRetryCount = 0; // Reset du compteur de tentatives
+        console.log('[REALTIME] ✅ Canal notes connecté avec succès');
       } else if (status === 'CLOSED' || status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
         notesSubscriptionActive = false;
-        // Reconnexion automatique après fermeture/erreur/timeout
-        setTimeout(() => {
-          subscribeToNotes();
-        }, 2000);
+        notesChannel = null;
+        
+        // Incrémenter le compteur de tentatives
+        notesRetryCount++;
+        
+        // Logs réduits - seulement en cas d'erreur persistante
+        if (status === 'CHANNEL_ERROR') {
+          console.warn(`[REALTIME] ⚠️ Canal notes fermé: ${status} (tentative ${notesRetryCount}/${MAX_RETRIES})`);
+        }
+        
+        // Reconnexion automatique seulement si on n'a pas dépassé le maximum
+        if (notesRetryCount < MAX_RETRIES) {
+          setTimeout(() => {
+            if (!notesSubscriptionActive) {
+              console.log(`[REALTIME] 🔄 Reconnexion notes... (tentative ${notesRetryCount + 1}/${MAX_RETRIES})`);
+              subscribeToNotes();
+            }
+          }, RETRY_DELAY);
+        } else {
+          console.error(`[REALTIME] ❌ Abandon de la reconnexion notes après ${MAX_RETRIES} tentatives`);
+        }
       }
     });
     
-  return channel;
+  return notesChannel;
 }
 
 let dossierSubscriptionRetries = 0;
@@ -225,22 +297,67 @@ const MAX_DOSSIER_RETRIES = 5;
  * Écoute les événements INSERT, UPDATE, DELETE sur la table 'folders'
  */
 export function subscribeToDossiers() {
-  if (dossierSubscriptionRetries >= MAX_DOSSIER_RETRIES) {
-    console.error(`[REALTIME] ❌ Échec de l'abonnement aux dossiers après ${MAX_DOSSIER_RETRIES} tentatives. Abandon.`);
-    return;
+  // Vérifier le nombre de tentatives
+  if (dossiersRetryCount >= MAX_RETRIES) {
+    console.error(`[REALTIME] ❌ Échec de l'abonnement aux dossiers après ${MAX_RETRIES} tentatives. Abandon.`);
+    return null;
   }
-  console.log(`[REALTIME] 📁 Tentative d'abonnement aux dossiers... (${dossierSubscriptionRetries + 1}/${MAX_DOSSIER_RETRIES})`);
   
-  const channel = supabase
-    .channel('public:folders')
+  // Vérifier le délai minimum entre les tentatives
+  const now = Date.now();
+  if (now - lastDossiersRetry < MIN_RETRY_INTERVAL) {
+    console.log(`[REALTIME] ⏳ Attente avant nouvelle tentative dossiers (${Math.ceil((MIN_RETRY_INTERVAL - (now - lastDossiersRetry)) / 1000)}s restantes)`);
+    return null;
+  }
+  
+  // Si un canal existe déjà, ne pas en créer un nouveau
+  if (dossiersChannel && dossiersSubscriptionActive) {
+    console.log('[REALTIME] 📁 Canal dossiers déjà actif, pas de nouvelle souscription');
+    return dossiersChannel;
+  }
+  
+  lastDossiersRetry = now;
+  console.log(`[REALTIME] 📁 Démarrage de l'abonnement aux dossiers... (tentative ${dossiersRetryCount + 1}/${MAX_RETRIES})`);
+  
+  dossiersChannel = supabase
+    .channel('folders')
     .on(
       'postgres_changes',
       { event: '*', schema: 'public', table: 'folders' },
       (payload) => {
+        // Logs réduits - seulement les événements importants
+        if (payload.eventType === 'INSERT' || payload.eventType === 'DELETE') {
+          const name = (payload.new as any)?.name || (payload.old as any)?.name;
+          console.log('[REALTIME] 📁', payload.eventType, name);
+        }
+        
+        // Déduplication pour éviter les boucles infinies
+        const eventKey = `${payload.eventType}-${(payload.new as any)?.id || (payload.old as any)?.id}-${(payload.new as any)?.updated_at || (payload.old as any)?.updated_at}`;
+        const now = Date.now();
+        const lastProcessed = lastProcessedEvents.get(eventKey);
+        
+        if (lastProcessed && (now - lastProcessed) < DEDUPLICATION_WINDOW) {
+          console.log('[REALTIME] ⏭️ Événement ignoré (déduplication):', eventKey);
+          return;
+        }
+        
+        lastProcessedEvents.set(eventKey, now);
+        
+        // Nettoyer les anciens événements (garder seulement les 100 derniers)
+        if (lastProcessedEvents.size > 100) {
+          const oldestAllowed = now - (DEDUPLICATION_WINDOW * 10);
+          for (const [key, timestamp] of lastProcessedEvents.entries()) {
+            if (timestamp < oldestAllowed) {
+              lastProcessedEvents.delete(key);
+            }
+          }
+        }
+        
         const store = useFileSystemStore.getState();
         
         switch (payload.eventType) {
           case 'INSERT':
+            console.log('[REALTIME] ➕ Ajout d\'un dossier:', payload.new.id);
             // Convertir les données Supabase vers le type Folder
             const newFolder = {
               id: payload.new.id,
@@ -253,6 +370,7 @@ export function subscribeToDossiers() {
             break;
             
           case 'UPDATE':
+            console.log('[REALTIME] ✏️ Mise à jour d\'un dossier:', payload.new.id);
             // Convertir les données Supabase vers le type Folder
             const updatedFolder = {
               id: payload.new.id,
@@ -265,7 +383,12 @@ export function subscribeToDossiers() {
             break;
             
           case 'DELETE':
+            console.log('[REALTIME] 🗑️ Suppression d\'un dossier:', payload.old.id);
             store.removeFolder(payload.old.id);
+            break;
+            
+          default:
+            console.log('[REALTIME] ❓ Événement inconnu:', (payload as any).eventType);
             break;
         }
       }
@@ -273,36 +396,106 @@ export function subscribeToDossiers() {
     .subscribe((status) => {
       if (status === 'SUBSCRIBED') {
         dossiersSubscriptionActive = true;
+        dossiersRetryCount = 0; // Reset du compteur de tentatives
+        console.log('[REALTIME] ✅ Canal dossiers connecté avec succès');
       } else if (status === 'CLOSED' || status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
         dossiersSubscriptionActive = false;
-        dossierSubscriptionRetries++;
-        // Reconnexion automatique après fermeture/erreur/timeout
-        setTimeout(() => {
-          subscribeToDossiers();
-        }, 2000 * dossierSubscriptionRetries); // Augmente le délai à chaque tentative
+        dossiersChannel = null;
+        
+        // Incrémenter le compteur de tentatives
+        dossiersRetryCount++;
+        
+        // Logs réduits - seulement en cas d'erreur persistante
+        if (status === 'CHANNEL_ERROR') {
+          console.warn(`[REALTIME] ⚠️ Canal dossiers fermé: ${status} (tentative ${dossiersRetryCount}/${MAX_RETRIES})`);
+        }
+        
+        // Reconnexion automatique seulement si on n'a pas dépassé le maximum
+        if (dossiersRetryCount < MAX_RETRIES) {
+          setTimeout(() => {
+            if (!dossiersSubscriptionActive) {
+              console.log(`[REALTIME] 🔄 Reconnexion dossiers... (tentative ${dossiersRetryCount + 1}/${MAX_RETRIES})`);
+              subscribeToDossiers();
+            }
+          }, RETRY_DELAY);
+        } else {
+          console.error(`[REALTIME] ❌ Abandon de la reconnexion dossiers après ${MAX_RETRIES} tentatives`);
+        }
       }
     });
     
-  return channel;
+  return dossiersChannel;
 }
+
+let classeurSubscriptionRetries = 0;
+const MAX_CLASSEUR_RETRIES = 5;
 
 /**
  * S'abonner aux changements des classeurs via Supabase Realtime
  * Écoute les événements INSERT, UPDATE, DELETE sur la table 'classeurs'
  */
 export function subscribeToClasseurs() {
-  console.log('[REALTIME] 📚 S\'abonnement aux classeurs...');
+  // Vérifier le nombre de tentatives
+  if (classeursRetryCount >= MAX_RETRIES) {
+    console.error(`[REALTIME] ❌ Échec de l'abonnement aux classeurs après ${MAX_RETRIES} tentatives. Abandon.`);
+    return null;
+  }
   
-  const channel = supabase
-    .channel('public:classeurs')
+  // Vérifier le délai minimum entre les tentatives
+  const now = Date.now();
+  if (now - lastClasseursRetry < MIN_RETRY_INTERVAL) {
+    console.log(`[REALTIME] ⏳ Attente avant nouvelle tentative classeurs (${Math.ceil((MIN_RETRY_INTERVAL - (now - lastClasseursRetry)) / 1000)}s restantes)`);
+    return null;
+  }
+  
+  // Si un canal existe déjà, ne pas en créer un nouveau
+  if (classeursChannel && classeursSubscriptionActive) {
+    console.log('[REALTIME] 📚 Canal classeurs déjà actif, pas de nouvelle souscription');
+    return classeursChannel;
+  }
+  
+  lastClasseursRetry = now;
+  console.log(`[REALTIME] 📚 Démarrage de l'abonnement aux classeurs... (tentative ${classeursRetryCount + 1}/${MAX_RETRIES})`);
+  
+  classeursChannel = supabase
+    .channel('classeurs')
     .on(
       'postgres_changes',
       { event: '*', schema: 'public', table: 'classeurs' },
       (payload) => {
+        // Logs réduits - seulement les événements importants
+        if (payload.eventType === 'INSERT' || payload.eventType === 'DELETE') {
+          const name = (payload.new as any)?.name || (payload.old as any)?.name;
+          console.log('[REALTIME] 📚', payload.eventType, name);
+        }
+        
+        // Déduplication pour éviter les boucles infinies
+        const eventKey = `${payload.eventType}-${(payload.new as any)?.id || (payload.old as any)?.id}-${(payload.new as any)?.updated_at || (payload.old as any)?.updated_at}`;
+        const now = Date.now();
+        const lastProcessed = lastProcessedEvents.get(eventKey);
+        
+        if (lastProcessed && (now - lastProcessed) < DEDUPLICATION_WINDOW) {
+          console.log('[REALTIME] ⏭️ Événement ignoré (déduplication):', eventKey);
+          return;
+        }
+        
+        lastProcessedEvents.set(eventKey, now);
+        
+        // Nettoyer les anciens événements (garder seulement les 100 derniers)
+        if (lastProcessedEvents.size > 100) {
+          const oldestAllowed = now - (DEDUPLICATION_WINDOW * 10);
+          for (const [key, timestamp] of lastProcessedEvents.entries()) {
+            if (timestamp < oldestAllowed) {
+              lastProcessedEvents.delete(key);
+            }
+          }
+        }
+        
         const store = useFileSystemStore.getState();
         
         switch (payload.eventType) {
           case 'INSERT':
+            console.log('[REALTIME] ➕ Ajout d\'un classeur:', payload.new.id);
             // Convertir les données Supabase vers le type Classeur
             const newClasseur = {
               id: payload.new.id,
@@ -313,6 +506,7 @@ export function subscribeToClasseurs() {
             break;
             
           case 'UPDATE':
+            console.log('[REALTIME] ✏️ Mise à jour d\'un classeur:', payload.new.id);
             // Convertir les données Supabase vers le type Classeur
             const updatedClasseur = {
               id: payload.new.id,
@@ -323,7 +517,12 @@ export function subscribeToClasseurs() {
             break;
             
           case 'DELETE':
+            console.log('[REALTIME] 🗑️ Suppression d\'un classeur:', payload.old.id);
             store.removeClasseur(payload.old.id);
+            break;
+            
+          default:
+            console.log('[REALTIME] ❓ Événement inconnu:', (payload as any).eventType);
             break;
         }
       }
@@ -331,16 +530,35 @@ export function subscribeToClasseurs() {
     .subscribe((status) => {
       if (status === 'SUBSCRIBED') {
         classeursSubscriptionActive = true;
+        classeursRetryCount = 0; // Reset du compteur de tentatives
+        console.log('[REALTIME] ✅ Canal classeurs connecté avec succès');
       } else if (status === 'CLOSED' || status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
         classeursSubscriptionActive = false;
-        // Reconnexion automatique après fermeture/erreur/timeout
-        setTimeout(() => {
-          subscribeToClasseurs();
-        }, 2000);
+        classeursChannel = null;
+        
+        // Incrémenter le compteur de tentatives
+        classeursRetryCount++;
+        
+        // Logs réduits - seulement en cas d'erreur persistante
+        if (status === 'CHANNEL_ERROR') {
+          console.warn(`[REALTIME] ⚠️ Canal classeurs fermé: ${status} (tentative ${classeursRetryCount}/${MAX_RETRIES})`);
+        }
+        
+        // Reconnexion automatique seulement si on n'a pas dépassé le maximum
+        if (classeursRetryCount < MAX_RETRIES) {
+          setTimeout(() => {
+            if (!classeursSubscriptionActive) {
+              console.log(`[REALTIME] 🔄 Reconnexion classeurs... (tentative ${classeursRetryCount + 1}/${MAX_RETRIES})`);
+              subscribeToClasseurs();
+            }
+          }, RETRY_DELAY);
+        } else {
+          console.error(`[REALTIME] ❌ Abandon de la reconnexion classeurs après ${MAX_RETRIES} tentatives`);
+        }
       }
     });
     
-  return channel;
+  return classeursChannel;
 }
 
 /**
@@ -351,6 +569,21 @@ export function unsubscribeFromAll() {
   
   // Désabonner de tous les canaux
   supabase.removeAllChannels();
+  
+  // Réinitialiser les états
+  notesSubscriptionActive = false;
+  dossiersSubscriptionActive = false;
+  classeursSubscriptionActive = false;
+  
+  // Nettoyer les références aux canaux
+  notesChannel = null;
+  dossiersChannel = null;
+  classeursChannel = null;
+  
+  // Réinitialiser les compteurs de tentatives
+  notesRetryCount = 0;
+  dossiersRetryCount = 0;
+  classeursRetryCount = 0;
   
   console.log('[REALTIME] ✅ Tous les canaux désabonnés');
 } 
