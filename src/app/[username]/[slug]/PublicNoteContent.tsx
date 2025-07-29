@@ -1,0 +1,163 @@
+'use client';
+
+import React from 'react';
+import PublicTOCClient from '@/components/PublicTOCClient';
+import CraftedBadge from '@/components/CraftedBadge';
+
+interface PublicNoteProps {
+  note: {
+    source_title: string;
+    html_content: string;
+    header_image: string | null;
+    header_image_offset: number | null;
+    header_image_blur: number | null;
+    header_image_overlay: number | null;
+    header_title_in_image: boolean | null;
+    wide_mode: boolean | null;
+    font_family: string | null;
+  };
+  slug: string;
+}
+
+export default function PublicNoteContent({ note, slug }: PublicNoteProps) {
+  React.useEffect(() => {
+    // Appliquer le mode pleine largeur
+    const fullWidth = note.wide_mode ?? false;
+    document.documentElement.style.setProperty(
+      '--editor-content-width',
+      fullWidth ? 'var(--editor-content-width-wide)' : 'var(--editor-content-width-normal)'
+    );
+
+    // Appliquer la police
+    const fontFamily = note.font_family ?? 'Noto Sans';
+    const titleElement = document.querySelector('[data-public-title]') as HTMLElement;
+    const contentElement = document.querySelector('[data-public-content]') as HTMLElement;
+    
+    if (titleElement) {
+      titleElement.style.fontFamily = fontFamily;
+    }
+    if (contentElement) {
+      contentElement.style.fontFamily = fontFamily;
+    }
+  }, [note.wide_mode, note.font_family]);
+
+  return (
+    <div style={{ width: '100vw', minHeight: '100vh', background: '#121217', color: '#D4D4D4', paddingBottom: 64 }}>
+      <div style={{ width: '100%', background: '#323236', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+        {/* Le Header est déjà injecté par AppMainContent, donc rien à ajouter ici */}
+      </div>
+      
+      {/* Image d'en-tête avec personnalisations */}
+      {note.header_image && (
+        <div style={{ 
+          width: '100%', 
+          maxHeight: 300, 
+          overflow: 'hidden', 
+          marginBottom: 32,
+          position: 'relative'
+        }}>
+          <img
+            src={note.header_image}
+            alt="Header"
+            style={{ 
+              width: '100%', 
+              objectFit: 'cover', 
+              maxHeight: 300, 
+              borderRadius: 0,
+              filter: `blur(${note.header_image_blur ?? 0}px)`,
+              transform: `translateY(${note.header_image_offset ?? 50}%)`
+            }}
+            draggable={false}
+          />
+          {/* Overlay */}
+          {note.header_image_overlay && note.header_image_overlay > 0 && (
+            <div style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: `rgba(0, 0, 0, ${(note.header_image_overlay / 5) * 0.3})`
+            }} />
+          )}
+          
+          {/* Titre dans l'image si activé */}
+          {note.header_title_in_image && (
+            <div style={{
+              position: 'absolute',
+              bottom: 32,
+              left: '50%',
+              transform: 'translateX(-50%)',
+              color: '#fff',
+              textAlign: 'center',
+              zIndex: 10
+            }}>
+              <h1 style={{
+                fontSize: 'var(--editor-title-size)',
+                fontWeight: 700,
+                margin: 0,
+                textShadow: '0 2px 4px rgba(0,0,0,0.5)',
+                fontFamily: note.font_family ?? 'Noto Sans'
+              }}>
+                {note.source_title}
+              </h1>
+            </div>
+          )}
+        </div>
+      )}
+      
+      <div style={{ width: '100%', display: 'flex', flexDirection: 'row', justifyContent: 'center', alignItems: 'flex-start', margin: '0 auto', marginBottom: 32, gap: 32, position: 'relative' }}>
+        <div data-main-content style={{ maxWidth: 'var(--editor-content-width)', width: 'var(--editor-content-width)' }}>
+          {/* Titre principal (seulement si pas dans l'image) */}
+          {!note.header_title_in_image && (
+            <>
+              <h1 
+                data-public-title
+                style={{
+                  fontSize: 'var(--editor-title-size)',
+                  fontWeight: 700,
+                  color: 'var(--editor-text-color)',
+                  margin: 0,
+                  padding: 0,
+                  textAlign: 'left',
+                  maxWidth: 'var(--editor-content-width)',
+                  width: 'var(--editor-content-width)',
+                  lineHeight: 1.1,
+                  fontFamily: note.font_family ?? 'Noto Sans',
+                }}
+              >
+                {note.source_title}
+              </h1>
+              <div style={{ height: 18 }} />
+            </>
+          )}
+          
+          <div
+            data-public-content
+            className="markdown-body"
+            style={{
+              maxWidth: 'var(--editor-content-width)',
+              width: 'var(--editor-content-width)',
+              margin: '0 auto',
+              background: 'none',
+              padding: '0 0 64px 0',
+              fontSize: 'var(--editor-body-size)',
+              color: 'var(--editor-text-color)',
+              minHeight: '60vh',
+              pointerEvents: 'auto',
+              userSelect: 'text',
+              fontFamily: note.font_family ?? 'Noto Sans',
+            }}
+            dangerouslySetInnerHTML={{ __html: note.html_content || '' }}
+          />
+        </div>
+        {/* TOC sticky tout à droite */}
+        <div style={{ position: 'fixed', top: 380, right: 0, paddingRight: 0, minWidth: 220, maxWidth: 320, zIndex: 20 }}>
+          <PublicTOCClient slug={slug} />
+        </div>
+      </div>
+      {/* Footer discret */}
+      <CraftedBadge />
+    </div>
+  );
+} 

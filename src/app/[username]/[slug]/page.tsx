@@ -5,6 +5,7 @@ import LogoScrivia from '@/components/LogoScrivia';
 import PublicTOCClient from '@/components/PublicTOCClient';
 import CraftedBadge from '@/components/CraftedBadge';
 import type { Metadata } from 'next';
+import PublicNoteContent from './PublicNoteContent';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -61,7 +62,7 @@ export default async function Page(props: { params: Promise<{ username: string; 
   // Chercher la note par slug et user_id, ispublished = true
   const { data: note, error: noteError } = await supabase
     .from('articles')
-    .select('source_title, html_content, markdown_content, header_image, created_at, updated_at')
+    .select('source_title, html_content, markdown_content, header_image, header_image_offset, header_image_blur, header_image_overlay, header_title_in_image, wide_mode, font_family, created_at, updated_at')
     .eq('slug', slug)
     .eq('user_id', user.id)
     .eq('ispublished', true)
@@ -79,62 +80,5 @@ export default async function Page(props: { params: Promise<{ username: string; 
     );
   }
 
-  // Afficher directement le contenu avec le même design que la preview de l'éditeur
-  return (
-    <div style={{ width: '100vw', minHeight: '100vh', background: '#121217', color: '#D4D4D4', paddingBottom: 64 }}>
-      <div style={{ width: '100%', background: '#323236', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-        {/* Le Header est déjà injecté par AppMainContent, donc rien à ajouter ici */}
-      </div>
-      {note.header_image && (
-        <div style={{ width: '100%', maxHeight: 300, overflow: 'hidden', marginBottom: 32 }}>
-          <img
-            src={note.header_image}
-            alt="Header"
-            style={{ width: '100%', objectFit: 'cover', maxHeight: 300, borderRadius: 0 }}
-            draggable={false}
-          />
-        </div>
-      )}
-      <div style={{ width: '100%', display: 'flex', flexDirection: 'row', justifyContent: 'center', alignItems: 'flex-start', margin: '0 auto', marginBottom: 32, gap: 32, position: 'relative' }}>
-        <div data-main-content style={{ maxWidth: 'var(--editor-content-width)', width: 'var(--editor-content-width)' }}>
-          {/* Titre principal */}
-          <h1 style={{
-            fontSize: 'var(--editor-title-size)',
-            fontWeight: 700,
-            color: 'var(--editor-text-color)',
-            margin: 0,
-            padding: 0,
-            textAlign: 'left',
-            maxWidth: 'var(--editor-content-width)',
-            width: 'var(--editor-content-width)',
-            lineHeight: 1.1,
-            fontFamily: 'var(--editor-font-family)',
-          }}>{note.source_title}</h1>
-          <div style={{ height: 18 }} />
-          <div
-            className="markdown-body"
-            style={{
-              maxWidth: 'var(--editor-content-width)',
-              width: 'var(--editor-content-width)',
-              margin: '0 auto',
-              background: 'none',
-              padding: '0 0 64px 0',
-              fontSize: 'var(--editor-body-size)',
-              color: 'var(--editor-text-color)',
-              minHeight: '60vh',
-              pointerEvents: 'auto',
-              userSelect: 'text',
-            }}
-            dangerouslySetInnerHTML={{ __html: note.html_content || '' }}
-          />
-        </div>
-        {/* TOC sticky tout à droite */}
-        <div style={{ position: 'fixed', top: 380, right: 0, paddingRight: 0, minWidth: 220, maxWidth: 320, zIndex: 20 }}>
-          <PublicTOCClient slug={slug} />
-        </div>
-      </div>
-      {/* Footer discret */}
-      <CraftedBadge />
-    </div>
-  );
+  return <PublicNoteContent note={note} slug={slug} />;
 } 

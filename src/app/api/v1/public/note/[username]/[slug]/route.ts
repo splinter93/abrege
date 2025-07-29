@@ -39,7 +39,7 @@ export async function GET(req: NextRequest, { params }: any): Promise<Response> 
     // Chercher la note par slug et user_id, ispublished = true
     const { data: note, error: noteError } = await supabase
       .from('articles')
-      .select('id, source_title, html_content, header_image, created_at, updated_at')
+      .select('id, source_title, html_content, header_image, header_image_offset, header_image_blur, header_image_overlay, header_title_in_image, wide_mode, font_family, created_at, updated_at')
       .eq('slug', slug)
       .eq('user_id', user.id)
       .eq('ispublished', true)
