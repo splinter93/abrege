@@ -77,19 +77,6 @@ export default function PublicNoteContent({ note, slug }: PublicNoteProps) {
               }} 
             />
           )}
-          
-          {/* Titre dans l'image si activé - utiliser les classes CSS */}
-          {note.header_title_in_image && (
-            <div className="noteLayout-title">
-              <h1 style={{
-                color: 'white',
-                textShadow: '0 2px 4px rgba(0,0,0,0.2)',
-                fontFamily: note.font_family ?? 'Noto Sans',
-              }}>
-                {note.source_title}
-              </h1>
-            </div>
-          )}
         </div>
       )}
       
@@ -104,6 +91,19 @@ export default function PublicNoteContent({ note, slug }: PublicNoteProps) {
                   fontFamily: note.font_family ?? 'Noto Sans',
                 }}
               >
+                {note.source_title}
+              </h1>
+            </div>
+          )}
+          
+          {/* Titre dans l'image si activé - maintenant dans le bon layout */}
+          {note.header_title_in_image && (
+            <div className="noteLayout-title">
+              <h1 style={{
+                color: 'white',
+                textShadow: '0 2px 4px rgba(0,0,0,0.2)',
+                fontFamily: note.font_family ?? 'Noto Sans',
+              }}>
                 {note.source_title}
               </h1>
             </div>
