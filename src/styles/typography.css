@@ -304,10 +304,10 @@
 }
 
 .public-header-search-input {
-  width: 240px;
-  height: 32px;
-  background: rgba(255,255,255,0.02);
-  border: 1px solid rgba(255,255,255,0.08);
+  width: 200px;
+  height: 30px;
+  background: rgba(255,255,255,0.01);
+  border: 1px solid rgba(255,255,255,0.06);
   border-radius: 16px;
   padding: 0 12px 0 36px;
   color: var(--editor-text-color);
@@ -319,17 +319,17 @@
 
 .public-header-search-input::placeholder {
   color: var(--editor-text-muted);
-  opacity: 0.7;
+  opacity: 0.6;
 }
 
 .public-header-search-input:hover {
-  background: rgba(255,255,255,0.03);
-  border-color: rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.02);
+  border-color: rgba(255,255,255,0.08);
 }
 
 .public-header-search-input:focus {
-  background: rgba(255,255,255,0.04);
-  border-color: rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.03);
+  border-color: rgba(255,255,255,0.1);
 }
 
 /* Conteneur des boutons du header public */

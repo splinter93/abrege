@@ -50,6 +50,10 @@ export default function PublicPageHeader() {
 
   return (
     <header className="public-page-header">
+      {/* Debug: afficher les états */}
+      <div style={{ position: 'fixed', top: 10, left: 10, background: 'red', color: 'white', padding: 10, zIndex: 9999 }}>
+        Share: {isShareMenuOpen ? 'OPEN' : 'CLOSED'} | Kebab: {isKebabMenuOpen ? 'OPEN' : 'CLOSED'}
+      </div>
       <div className="public-header-left">
         <Link href="/" className="public-header-logo">
           <LogoScrivia />
@@ -72,7 +76,10 @@ export default function PublicPageHeader() {
         )}
         {/* Partager */}
         <button
-          onClick={() => setIsShareMenuOpen(!isShareMenuOpen)}
+          onClick={() => {
+            console.log('Share button clicked, current state:', isShareMenuOpen);
+            setIsShareMenuOpen(!isShareMenuOpen);
+          }}
           title="Partager cette page"
           className="public-header-button"
         >
@@ -85,7 +92,10 @@ export default function PublicPageHeader() {
           title="Note Scrivia"
           description="Découvrez cette note créée avec Scrivia"
           isOpen={isShareMenuOpen}
-          onClose={() => setIsShareMenuOpen(false)}
+          onClose={() => {
+            console.log('ShareMenu onClose called');
+            setIsShareMenuOpen(false);
+          }}
         />
         {/* Favori */}
         <button
@@ -97,7 +107,10 @@ export default function PublicPageHeader() {
         </button>
         {/* Options */}
         <button
-          onClick={() => setIsKebabMenuOpen(!isKebabMenuOpen)}
+          onClick={() => {
+            console.log('Kebab button clicked, current state:', isKebabMenuOpen);
+            setIsKebabMenuOpen(!isKebabMenuOpen);
+          }}
           title="Options"
           className="public-header-button"
         >
@@ -106,7 +119,7 @@ export default function PublicPageHeader() {
         
         {/* Menu kebab simple */}
         {isKebabMenuOpen && (
-          <div className="public-kebab-menu">
+          <div className="public-kebab-menu" style={{ display: 'block' }}>
             <div className="public-kebab-menu-item" onClick={() => {
               setFullWidth(!fullWidth);
               setIsKebabMenuOpen(false);
