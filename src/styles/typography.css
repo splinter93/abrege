@@ -304,32 +304,32 @@
 }
 
 .public-header-search-input {
-  width: 200px;
-  height: 30px;
-  background: rgba(255,255,255,0.01);
-  border: 1px solid rgba(255,255,255,0.06);
-  border-radius: 16px;
-  padding: 0 12px 0 36px;
+  width: 140px;
+  height: 26px;
+  background: rgba(255,255,255,0.008);
+  border: 1px solid rgba(255,255,255,0.04);
+  border-radius: 13px;
+  padding: 0 10px 0 28px;
   color: var(--editor-text-color);
   font-family: var(--editor-font-family);
-  font-size: 13px;
+  font-size: 12px;
   outline: none;
   transition: all 0.2s ease;
 }
 
 .public-header-search-input::placeholder {
   color: var(--editor-text-muted);
-  opacity: 0.6;
+  opacity: 0.4;
 }
 
 .public-header-search-input:hover {
-  background: rgba(255,255,255,0.02);
-  border-color: rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.015);
+  border-color: rgba(255,255,255,0.06);
 }
 
 .public-header-search-input:focus {
-  background: rgba(255,255,255,0.03);
-  border-color: rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.02);
+  border-color: rgba(255,255,255,0.08);
 }
 
 /* Conteneur des boutons du header public */
@@ -388,7 +388,15 @@
 
 /* S'assurer que les menus s'affichent au-dessus de tout */
 .public-header-buttons > div {
-  z-index: 10000;
+  z-index: 99999;
+}
+
+/* Forcer l'affichage des menus */
+.public-kebab-menu,
+.public-header-buttons > div[style*="position: absolute"] {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
 }
 
 /* Menu kebab de la page publique */
@@ -396,11 +404,11 @@
   position: absolute;
   top: 100%;
   right: 0;
-  background: var(--surface-1);
-  border: 1px solid var(--border-subtle);
+  background: #1a1a1c;
+  border: 1px solid #2a2a2c;
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-  z-index: 10000;
+  z-index: 99999;
   min-width: 160px;
   overflow: hidden;
   margin-top: 8px;
