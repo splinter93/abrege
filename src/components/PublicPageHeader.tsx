@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import LogoScrivia from '@/components/LogoScrivia';
-import { FiShare2, FiStar, FiMoreHorizontal, FiMaximize2, FiMinimize2 } from 'react-icons/fi';
+import { FiShare2, FiStar, FiMoreHorizontal, FiMaximize2, FiMinimize2, FiSearch } from 'react-icons/fi';
 import { supabase } from '@/supabaseClient';
 import ShareMenu from './ShareMenu';
 import '@/styles/typography.css';
@@ -21,6 +21,21 @@ export default function PublicPageHeader() {
     });
   }, []);
 
+  // Fermer le menu kebab quand on clique à l'extérieur
+  React.useEffect(() => {
+    if (!isKebabMenuOpen) return;
+    
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Element;
+      if (!target.closest('.public-kebab-menu') && !target.closest('button[title="Options"]')) {
+        setIsKebabMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isKebabMenuOpen]);
+
   const kebabMenuOptions = [
     {
       id: 'fullWidth',
@@ -35,9 +50,19 @@ export default function PublicPageHeader() {
 
   return (
     <header className="public-page-header">
-      <Link href="/" className="public-header-logo">
-        <LogoScrivia />
-      </Link>
+      <div className="public-header-left">
+        <Link href="/" className="public-header-logo">
+          <LogoScrivia />
+        </Link>
+        <div className="public-header-search">
+          <FiSearch size={18} className="public-header-search-icon" />
+          <input
+            type="text"
+            placeholder="Rechercher..."
+            className="public-header-search-input"
+          />
+        </div>
+      </div>
       <div className="public-header-buttons">
         {/* Se connecter (si non connecté) */}
         {!isLoggedIn && (
@@ -78,6 +103,19 @@ export default function PublicPageHeader() {
         >
           <FiMoreHorizontal size={18} />
         </button>
+        
+        {/* Menu kebab simple */}
+        {isKebabMenuOpen && (
+          <div className="public-kebab-menu">
+            <div className="public-kebab-menu-item" onClick={() => {
+              setFullWidth(!fullWidth);
+              setIsKebabMenuOpen(false);
+            }}>
+              {fullWidth ? <FiMinimize2 size={18} /> : <FiMaximize2 size={18} />}
+              <span>{fullWidth ? 'Mode normal' : 'Pleine largeur'}</span>
+            </div>
+          </div>
+        )}
       </div>
     </header>
   );

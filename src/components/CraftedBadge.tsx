@@ -14,9 +14,9 @@ export default function CraftedBadge() {
         background: 'linear-gradient(90deg, #232325 0%, #44444a 100%)',
         color: '#D4D4D4',
         fontWeight: 400,
-        fontSize: '0.92rem',
+        fontSize: '0.85rem',
         borderRadius: 14,
-        padding: '5px 16px',
+        padding: '4px 14px',
         fontFamily: 'Noto Sans, Inter, Arial, sans-serif',
         boxShadow: '0 2px 8px 0 rgba(44,44,44,0.10)',
         letterSpacing: '0.01em',
@@ -41,7 +41,7 @@ export default function CraftedBadge() {
         if (feather) feather.style.color = '#D4D4D4';
       }}
     >
-      <FiFeather size={17} style={{ marginRight: 1, color: '#D4D4D4', flexShrink: 0, transition: 'color 0.18s' }} />
+      <FiFeather size={15} style={{ marginRight: 1, color: '#D4D4D4', flexShrink: 0, transition: 'color 0.18s' }} />
       Crafted with Scrivia
     </a>
   );

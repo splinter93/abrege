@@ -271,12 +271,61 @@
   box-sizing: border-box;
 }
 
+/* Partie gauche du header public */
+.public-header-left {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+}
+
 /* Logo dans le header public */
 .public-header-logo {
   display: flex;
   align-items: center;
   gap: 10px;
   text-decoration: none;
+}
+
+/* Search bar dans le header public */
+.public-header-search {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.public-header-search-icon {
+  position: absolute;
+  left: 12px;
+  color: var(--editor-text-muted);
+  pointer-events: none;
+}
+
+.public-header-search-input {
+  width: 280px;
+  height: 36px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 8px;
+  padding: 0 12px 0 40px;
+  color: var(--editor-text-color);
+  font-family: var(--editor-font-family);
+  font-size: 14px;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.public-header-search-input::placeholder {
+  color: var(--editor-text-muted);
+}
+
+.public-header-search-input:hover {
+  background: rgba(255,255,255,0.06);
+  border-color: rgba(255,255,255,0.15);
+}
+
+.public-header-search-input:focus {
+  background: rgba(255,255,255,0.08);
+  border-color: rgba(255,255,255,0.2);
 }
 
 /* Conteneur des boutons du header public */
@@ -330,6 +379,35 @@
 .public-header-button:hover {
   background: rgba(255,255,255,0.08);
   color: var(--editor-text-color);
+}
+
+/* Menu kebab de la page publique */
+.public-kebab-menu {
+  position: absolute;
+  top: 100%;
+  right: 16px;
+  background: var(--surface-1);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  z-index: 1000;
+  min-width: 160px;
+  overflow: hidden;
+}
+
+.public-kebab-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  color: var(--editor-text-color);
+  cursor: pointer;
+  transition: background 0.2s;
+  font-size: 14px;
+}
+
+.public-kebab-menu-item:hover {
+  background: rgba(255,255,255,0.05);
 }
 
 /* Image d'en-tête publique */
