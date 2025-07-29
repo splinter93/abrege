@@ -304,12 +304,12 @@
 
 .public-header-search-input {
   width: 140px;
-  height: 36px;
+  height: 30px;
   background: transparent;
-  border: 0.5px solid #8a8a8a;
-  border-radius: 18px;
-  padding: 0 14px 0 36px;
-  color: #8a8a8a;
+  border: 1px solid #3a3a3a;
+  border-radius: 15px;
+  padding: 0 12px 0 32px;
+  color: #3a3a3a;
   font-family: var(--editor-font-family);
   font-size: 12px;
   outline: none;
@@ -317,20 +317,20 @@
 }
 
 .public-header-search-input::placeholder {
-  color: #8a8a8a;
-  opacity: 0.6;
+  color: #4a4a4a;
+  opacity: 1;
 }
 
 .public-header-search-input:hover {
-  background: rgba(255,255,255,0.02);
-  border-color: #8a8a8a;
-  color: #8a8a8a;
+  background: transparent;
+  border-color: #3a3a3a;
+  color: #3a3a3a;
 }
 
 .public-header-search-input:focus {
-  background: rgba(255,255,255,0.03);
-  border-color: #8a8a8a;
-  color: #8a8a8a;
+  background: transparent;
+  border-color: #3a3a3a;
+  color: #3a3a3a;
 }
 
 /* Conteneur des boutons du header public */
