@@ -129,7 +129,7 @@ body {
 }
 
 .auth-title {
-  font-family: 'Inter', 'Noto Sans', sans-serif !important;
+  font-family: var(--font-main);
   font-size: 2.2rem;
   font-weight: 700;
   color: #ff6a00;
@@ -172,7 +172,7 @@ body {
   color: #fff;
   font-size: 1.08rem;
   margin-bottom: 18px;
-  font-family: 'Inter', 'Noto Sans', sans-serif;
+  font-family: var(--font-main);
 }
 .auth-form-wrapper input[type="email"]:focus,
 .auth-form-wrapper input[type="password"]:focus {

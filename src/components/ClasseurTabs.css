@@ -41,7 +41,6 @@
   gap: 0.7rem;
   backdrop-filter: blur(8px) saturate(120%);
   -webkit-backdrop-filter: blur(8px) saturate(120%);
-  font-family: 'Inter', 'Noto Sans', Arial, sans-serif !important;
 }
 
 .classeur-tab:hover {
@@ -65,7 +64,6 @@
   color: rgba(255,255,255,0.72);
   border: 1px solid rgba(255,255,255,0.38);
   transition: background 0.18s, color 0.18s, box-shadow 0.18s, border-color 0.18s;
-  font-family: 'Inter', 'Noto Sans', Arial, sans-serif !important;
 }
 
 .add-classeur-btn:hover, .add-classeur-btn-glass:hover {
@@ -117,7 +115,7 @@
   background: rgba(30, 30, 36, 0.22);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 14px;
-  color: #fff;
+  color: var(--text-2);
   font-size: 1.08rem;
   font-weight: 400;
   font-family: var(--font-main);
@@ -125,19 +123,18 @@
   backdrop-filter: blur(14px) saturate(150%);
   -webkit-backdrop-filter: blur(14px) saturate(150%);
   transition: background 0.18s, color 0.18s, border-color 0.18s, box-shadow 0.18s;
-  font-family: 'Inter', 'Noto Sans', Arial, sans-serif !important;
 }
 
 .classeur-btn-glass:hover {
-  background: rgba(255,255,255,0.4) !important;
-  color: #fff !important;
+  background: rgba(255,255,255,0.2) !important;
+  color: var(--text-1) !important;
   border: 1.5px solid rgba(255,255,255,1) !important;
   box-shadow: 0 18px 40px 0 rgba(255,255,255,0.35) !important;
 }
 
 .classeur-btn-glass.active {
   background: linear-gradient(90deg, rgba(255,255,255,0.08) 0%, rgba(30,30,36,0.22) 100%) !important;
-  color: #fff !important;
+  color: var(--text-1) !important;
   border: 1.5px solid rgba(255,255,255,0.38) !important;
   filter: brightness(1.02) !important;
   z-index: 3;
@@ -160,7 +157,6 @@
   backdrop-filter: blur(8px) saturate(120%);
   -webkit-backdrop-filter: blur(8px) saturate(120%);
   transition: background 0.18s, color 0.18s, box-shadow 0.18s, border-color 0.18s;
-  font-family: 'Inter', 'Noto Sans', Arial, sans-serif !important;
 }
 
 .add-classeur-btn-glass:hover {

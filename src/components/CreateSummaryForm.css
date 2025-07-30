@@ -42,7 +42,7 @@
   border: 1px solid var(--border-color);
   border-radius: 8px;
   padding: 0.6rem 1rem;
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-main);
   cursor: pointer;
   outline: none;
   transition: border-color var(--transition-speed), color var(--transition-speed);
@@ -63,7 +63,7 @@
   border: none;
   cursor: pointer;
   transition: background-color var(--transition-speed), filter var(--transition-speed);
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-main);
   background-color: var(--accent-primary);
   color: var(--text-primary);
   filter: brightness(0.8);

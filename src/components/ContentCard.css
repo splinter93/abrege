@@ -90,7 +90,7 @@
   border: none;
   cursor: pointer;
   transition: background-color var(--transition-speed), filter var(--transition-speed);
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-main);
   background-color: var(--accent-primary);
   color: var(--text-primary);
   filter: brightness(0.8);

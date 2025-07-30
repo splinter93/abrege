@@ -184,7 +184,9 @@
 
 .fm-grid-item:hover {
   background: rgba(255, 255, 255, 0.02);
-  transform: translateY(-1px);
+  transform: translateY(-0.5px); /* Reduced movement */
+  padding: 1rem; /* Reduced padding on hover for smaller square */
+  border-radius: 8px; /* Smaller border radius for more compact look */
 }
 
 .fm-grid-item svg {
@@ -226,6 +228,29 @@
 
 .fm-grid-item:hover .fm-item-name {
   color: var(--text-1);
+}
+
+/* ==========================================================================
+   DRAG AND DROP STATES
+   ========================================================================== */
+
+.fm-grid-item.drag-over {
+  border: 1px solid var(--accent-primary);
+  background: rgba(255, 106, 0, 0.03);
+  box-shadow: 0 0 0 2px rgba(255, 106, 0, 0.08);
+  transform: scale(1.01);
+  padding: 1rem; /* Same compact padding as hover */
+  border-radius: 8px; /* Same border radius as hover */
+}
+
+.fm-grid-item.drag-over svg {
+  color: var(--accent-primary);
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+.fm-grid-item.drag-over .fm-item-name {
+  color: var(--accent-primary);
 }
 
 /* ==========================================================================

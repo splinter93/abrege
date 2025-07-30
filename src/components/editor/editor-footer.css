@@ -13,7 +13,7 @@
   border-top: 0.5px solid #2a2a2c;
   color: var(--text-3);
   font-size: 12px;
-  font-family: 'Noto Sans', 'Inter', 'Arial', sans-serif;
+  font-family: var(--font-main);
   display: flex;
   align-items: center;
   justify-content: space-between;
