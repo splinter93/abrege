@@ -18,8 +18,8 @@
 :root {
   /* LIGHT THEME (par défaut) */
   /* Typography */
-  --font-main: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-main: 'Noto Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-sans: 'Noto Sans', -apple-system, BlinkMacSystemFont, sans-serif;
   --font-serif: 'Ibarra Real Nova', serif;
   --font-mono: 'JetBrains Mono', monospace;
 

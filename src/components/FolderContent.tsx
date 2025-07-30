@@ -77,52 +77,55 @@ const FolderContent: React.FC<FolderContentProps> = ({
   }
   return (
     <div className="folder-content-container">
-      {/* Grille dossiers */}
-      <div className="folder-grid">
-        {safeFolders.map(folder => (
-          <FolderItem
-            key={folder.id}
-            folder={folder}
-            onOpen={onFolderOpen}
-            isRenaming={renamingItemId === folder.id}
-            onRename={(newName, type) => onRenameFolder && onRenameFolder(folder.id, newName, type)}
-            onCancelRename={onCancelRename}
-            onContextMenu={onContextMenuItem}
-            onDropItem={(itemId, itemType) => {
-              // Ne traiter le drop que si l'item ET la cible existent dans la vue locale
-              const isFolder = itemType === 'folder';
-              const isFile = itemType === 'file';
-              const itemExists = (isFolder && safeFolders.some(f => f.id === itemId)) || (isFile && safeFiles.some(f => f.id === itemId));
-              const targetExists = safeFolders.some(f => f.id === folder.id);
-              if (!itemExists || !targetExists) return;
-              if (onDropItem) {
-                onDropItem(itemId, itemType, folder.id);
-              }
-            }}
-            onStartRenameClick={onStartRenameFolderClick}
-          />
-        ))}
-      </div>
-      {/* Séparateur horizontal */}
-      <div className="folder-content-separator"></div>
-      {/* Grille fichiers rapprochée */}
-      <div className="folder-grid files">
-        {safeFiles.map(file => (
-          <div
-            key={file.id}
-            className="file-item-animation"
-          >
-            <FileItem
-              file={file}
-              onOpen={onFileOpen}
-              isRenaming={renamingItemId === file.id}
-              onRename={(newName, type) => onRenameFile && onRenameFile(file.id, newName, type)}
+      {/* Container pour les grilles - style macOS */}
+      <div className="folder-grid-container">
+        {/* Grille dossiers */}
+        <div className="folder-grid">
+          {safeFolders.map(folder => (
+            <FolderItem
+              key={folder.id}
+              folder={folder}
+              onOpen={onFolderOpen}
+              isRenaming={renamingItemId === folder.id}
+              onRename={(newName, type) => onRenameFolder && onRenameFolder(folder.id, newName, type)}
               onCancelRename={onCancelRename}
               onContextMenu={onContextMenuItem}
-              onStartRenameClick={onStartRenameFileClick}
+              onDropItem={(itemId, itemType) => {
+                // Ne traiter le drop que si l'item ET la cible existent dans la vue locale
+                const isFolder = itemType === 'folder';
+                const isFile = itemType === 'file';
+                const itemExists = (isFolder && safeFolders.some(f => f.id === itemId)) || (isFile && safeFiles.some(f => f.id === itemId));
+                const targetExists = safeFolders.some(f => f.id === folder.id);
+                if (!itemExists || !targetExists) return;
+                if (onDropItem) {
+                  onDropItem(itemId, itemType, folder.id);
+                }
+              }}
+              onStartRenameClick={onStartRenameFolderClick}
             />
-          </div>
-        ))}
+          ))}
+        </div>
+        {/* Séparateur horizontal */}
+        <div className="folder-content-separator"></div>
+        {/* Grille fichiers rapprochée */}
+        <div className="folder-grid files">
+          {safeFiles.map(file => (
+            <div
+              key={file.id}
+              className="file-item-animation"
+            >
+              <FileItem
+                file={file}
+                onOpen={onFileOpen}
+                isRenaming={renamingItemId === file.id}
+                onRename={(newName, type) => onRenameFile && onRenameFile(file.id, newName, type)}
+                onCancelRename={onCancelRename}
+                onContextMenu={onContextMenuItem}
+                onStartRenameClick={onStartRenameFileClick}
+              />
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );

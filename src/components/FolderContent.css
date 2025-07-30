@@ -8,7 +8,7 @@
   padding: 0;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-start;
 }
 
 .folder-content-loading {
@@ -47,43 +47,30 @@
 
 .folder-content-separator {
   border-top: 1.5px solid rgba(255, 255, 255, 0.1);
-  width: 60%;
+  width: 100%;
   margin: 10px 0 10px 0;
+  align-self: flex-start;
+}
+
+/* Container pour les grilles - style macOS */
+.folder-grid-container {
+  width: 100%;
+  padding: 0;
+  padding-left: 3rem;
 }
 
 /* Grilles responsives - UTILISÉES PAR FOLDERMANAGER */
 .folder-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(168px, 168px));
   gap: 16px;
-  justify-items: center;
+  justify-items: start;
   width: 100%;
-  margin: 0;
   padding: 0;
 }
 
 .folder-grid.files {
   margin-top: 5px;
-  grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
-}
-
-/* Responsive breakpoints */
-@media (min-width: 640px) {
-  .folder-grid {
-    grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
-  }
-}
-
-@media (min-width: 768px) {
-  .folder-grid {
-    grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
-  }
-}
-
-@media (min-width: 1024px) {
-  .folder-grid {
-    grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
-  }
 }
 
 /* Animation pour les fichiers */
