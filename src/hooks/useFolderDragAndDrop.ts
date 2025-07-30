@@ -1,7 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
-import { updateFolder } from '../services/api';
-import { moveNoteREST } from '../services/api';
 import { DropEventDetail } from '../components/types';
 import { useFileSystemStore } from '@/store/useFileSystemStore';
 import { clientPollingTrigger } from '@/services/clientPollingTrigger';
@@ -114,7 +112,7 @@ export const useFolderDragAndDrop = ({
             toast.dismiss();
             toast.error('Erreur lors du déplacement du dossier.');
             if (process.env.NODE_ENV === 'development') {
-              console.error('[DnD] updateFolder ERROR', err);
+              console.error('[DnD] Déplacement dossier ERROR', err);
             }
           }
         } else {
@@ -141,7 +139,7 @@ export const useFolderDragAndDrop = ({
             toast.dismiss();
             toast.error('Erreur lors du déplacement de la note.');
             if (process.env.NODE_ENV === 'development') {
-              console.error('[DnD] moveNoteREST ERROR', err);
+              console.error('[DnD] Déplacement note ERROR', err);
             }
           }
         }

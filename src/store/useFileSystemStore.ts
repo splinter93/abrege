@@ -6,11 +6,15 @@ import type { DiffResult } from '@/services/diffService';
 export interface Note {
   id: string;
   source_title: string; // Correspond à FileArticle
+  title?: string; // Alias pour source_title (pour compatibilité)
   source_type?: string;
   updated_at?: string;
+  created_at?: string;
   classeur_id?: string;
   folder_id?: string | null;
+  position?: number;
   markdown_content?: string;
+  content?: string; // Alias pour markdown_content (pour compatibilité éditeur)
   html_content?: string;
   // Propriétés additionnelles pour l'état optimiste et le diff
   _optimistic?: boolean | 'deleting';
@@ -24,6 +28,7 @@ export interface Folder {
   parent_id?: string | null;
   classeur_id?: string;
   position?: number;
+  created_at?: string;
 }
 
 export interface Classeur {
@@ -31,7 +36,9 @@ export interface Classeur {
   name: string;
   description?: string;
   icon?: string;
+  emoji?: string;
   position?: number;
+  created_at?: string;
 }
 
 export interface EditorPatch {
