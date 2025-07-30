@@ -1,10 +1,8 @@
-import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 import { SlugGenerator } from '@/utils/slugGenerator';
+import { getSupabaseClient } from '@/services/supabaseService';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+const supabase = getSupabaseClient();
 
 /**
  * POST /api/v1/note/create
@@ -16,7 +14,9 @@ const supabase = createClient(supabaseUrl, supabaseAnonKey);
 export async function POST(req: Request): Promise<Response> {
   try {
     const body = await req.json();
-    console.log('[createNote] Payload reçu:', body);
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[createNote] Payload reçu:', body);
+    }
     const schema = z.object({
       source_title: z.string().min(1, 'source_title requis'),
       markdown_content: z.string().optional().default(''), // Permet les notes vides
@@ -29,7 +29,9 @@ export async function POST(req: Request): Promise<Response> {
     
     const parseResult = schema.safeParse(body);
     if (!parseResult.success) {
-      console.log('[createNote] Erreur de validation Zod:', parseResult.error.errors);
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[createNote] Erreur de validation Zod:', parseResult.error.errors);
+      }
       return new Response(
         JSON.stringify({ error: 'Payload invalide', details: parseResult.error.errors.map(e => e.message) }),
         { status: 422 }
@@ -46,7 +48,9 @@ export async function POST(req: Request): Promise<Response> {
     
     // Déterminer le notebook_id final (priorité à notebook_id, puis classeur_id)
     const finalNotebookId = notebook_id || classeur_id;
-    console.log('[createNote] notebook_id:', notebook_id, 'classeur_id:', classeur_id, 'finalNotebookId:', finalNotebookId, 'user_id:', USER_ID);
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[createNote] notebook_id:', notebook_id, 'classeur_id:', classeur_id, 'finalNotebookId:', finalNotebookId, 'user_id:', USER_ID);
+    }
     
     if (!finalNotebookId) {
       return new Response(
@@ -60,7 +64,9 @@ export async function POST(req: Request): Promise<Response> {
     const isNotebookSlug = !finalNotebookId.includes('-') && finalNotebookId.length < 36;
     
     if (isNotebookSlug) {
-      console.log(`[createNote] Résolution slug notebook: ${finalNotebookId}`);
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`[createNote] Résolution slug notebook: ${finalNotebookId}`);
+      }
       const { data: notebook, error: notebookError } = await supabase
         .from('classeurs')
         .select('id')
@@ -69,7 +75,9 @@ export async function POST(req: Request): Promise<Response> {
         .single();
       
       if (notebookError || !notebook) {
-        console.log(`[createNote] Notebook slug non trouvé:`, notebookError);
+        if (process.env.NODE_ENV === 'development') {
+          console.log(`[createNote] Notebook slug non trouvé:`, notebookError);
+        }
         return new Response(
           JSON.stringify({ error: `Notebook avec slug '${finalNotebookId}' non trouvé` }), 
           { status: 404 }
@@ -77,9 +85,13 @@ export async function POST(req: Request): Promise<Response> {
       }
       
       finalNotebookIdResolved = notebook.id;
-      console.log(`[createNote] Notebook résolu: ${finalNotebookId} → ${finalNotebookIdResolved}`);
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`[createNote] Notebook résolu: ${finalNotebookId} → ${finalNotebookIdResolved}`);
+      }
     }
-    console.log('[createNote] finalNotebookIdResolved:', finalNotebookIdResolved);
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[createNote] finalNotebookIdResolved:', finalNotebookIdResolved);
+    }
     
     // Résolution slug → ID pour folder_id
     let finalFolderId = folder_id;
@@ -87,7 +99,9 @@ export async function POST(req: Request): Promise<Response> {
       const isFolderSlug = !folder_id.includes('-') && folder_id.length < 36;
       
       if (isFolderSlug) {
-        console.log(`🔍 Résolution slug dossier: ${folder_id}`);
+        if (process.env.NODE_ENV === 'development') {
+          console.log(`🔍 Résolution slug dossier: ${folder_id}`);
+        }
         const { data: folder, error: folderError } = await supabase
           .from('folders')
           .select('id, classeur_id')
