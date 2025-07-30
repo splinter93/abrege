@@ -12,7 +12,10 @@ export interface Note {
   folder_id?: string | null;
   markdown_content?: string;
   html_content?: string;
-  [key: string]: any;
+  // Propriétés additionnelles pour l'état optimiste et le diff
+  _optimistic?: boolean | 'deleting';
+  _lastPatch?: any;
+  _lastDiff?: DiffResult;
 }
 
 export interface Folder {
@@ -20,13 +23,15 @@ export interface Folder {
   name: string;
   parent_id?: string | null;
   classeur_id?: string;
-  [key: string]: any;
+  position?: number;
 }
 
 export interface Classeur {
   id: string;
   name: string;
-  [key: string]: any;
+  description?: string;
+  icon?: string;
+  position?: number;
 }
 
 export interface EditorPatch {
@@ -205,8 +210,7 @@ export const useFileSystemStore = create<FileSystemState>()((set, get) => ({
   })),
   
   setActiveClasseurId: (id: string | null) => {
-    // 🚧 Temp: Authentification non implémentée
-    // TODO: Remplacer USER_ID par l'authentification Supabase
+    // TODO: Remplacer par l'authentification Supabase quand elle sera implémentée
     set({ activeClasseurId: id });
   },
   

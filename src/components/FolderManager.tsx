@@ -41,9 +41,6 @@ const FolderManager: React.FC<FolderManagerProps> = ({
   filteredFolders,
   filteredNotes
 }) => {
-  // Debug: vérifier si parentFolderId est bien passé
-  console.log('[FolderManager] parentFolderId:', parentFolderId, 'type:', typeof parentFolderId);
-  
   // Optimisation : éviter les appels API redondants
   const [refreshKey, setRefreshKey] = useState(0);
   const {

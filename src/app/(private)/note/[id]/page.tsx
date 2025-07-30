@@ -1,5 +1,4 @@
 'use client';
-import '@/styles/typography.css';
 import { useEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import { Markdown } from 'tiptap-markdown';
@@ -318,17 +317,17 @@ export default function NoteEditorPage() {
           setHeaderTitleInImage((note.header_title_in_image as boolean) ?? false);
           setFullWidth((note.wide_mode as boolean) ?? false);
           setFontFamily((note.font_family as string) ?? 'Noto Sans');
-          // Appliquer la police au titre et au contenu
+          // Appliquer la police au titre et au contenu avec !important
           setTimeout(() => {
             const titleElement = titleRef.current;
             if (titleElement) {
-              titleElement.style.fontFamily = (note.font_family as string) ?? 'Noto Sans';
+              titleElement.style.setProperty('font-family', (note.font_family as string) ?? 'Noto Sans', 'important');
             }
-            // Appliquer la police au contenu de l'éditeur
+            // Appliquer la police au contenu de l'éditeur avec !important
             if (editor) {
               const editorElement = editor.view.dom;
               if (editorElement) {
-                editorElement.style.fontFamily = (note.font_family as string) ?? 'Noto Sans';
+                editorElement.style.setProperty('font-family', (note.font_family as string) ?? 'Noto Sans', 'important');
               }
             }
           }, 0);
@@ -691,6 +690,23 @@ export default function NoteEditorPage() {
     return md.render(markdownContent || '');
   }, [markdownContent]);
 
+  // Applique la police par défaut au chargement initial
+  React.useEffect(() => {
+    if (!editor) return;
+    
+    // Applique la police par défaut à l'éditeur
+    const editorElement = editor.view.dom;
+    if (editorElement) {
+      editorElement.style.setProperty('font-family', fontFamily, 'important');
+    }
+    
+    // Applique la police par défaut au titre
+    const titleElement = titleRef.current;
+    if (titleElement) {
+      titleElement.style.setProperty('font-family', fontFamily, 'important');
+    }
+  }, [editor, fontFamily]);
+
   // Ouvre le menu slash sur '/' dans la zone de texte
   React.useEffect(() => {
     if (!editor) return;
@@ -880,19 +896,55 @@ export default function NoteEditorPage() {
   }, [title, fullWidth]);
   
   const handleFontChange = (fontName: string) => {
-    // Applique la police au titre
+    // Log pour debug
+    console.log('[Font] handleFontChange appelé avec:', fontName);
+    
+    // Vérifier si la police est chargée
+    const testElement = document.createElement('div');
+    testElement.style.fontFamily = fontName;
+    testElement.style.position = 'absolute';
+    testElement.style.visibility = 'hidden';
+    testElement.textContent = 'Test';
+    document.body.appendChild(testElement);
+    
+    const computedFont = window.getComputedStyle(testElement).fontFamily;
+    console.log('[Font] Police calculée pour titre:', computedFont);
+    
+    document.body.removeChild(testElement);
+    
+    // MODIFIER LA VARIABLE CSS AU LIEU D'APPLIQUER DIRECTEMENT
+    const fontWithFallback = `${fontName}, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif`;
+    
+    // Modifier la variable CSS globale
+    document.documentElement.style.setProperty('--editor-font-family', fontWithFallback);
+    console.log('[Font] Variable CSS modifiée:', fontWithFallback);
+    
+    // Applique la police au titre avec !important pour dominer
     const titleElement = titleRef.current;
     if (titleElement) {
-      titleElement.style.fontFamily = fontName;
+      titleElement.style.setProperty('font-family', fontWithFallback, 'important');
+      console.log('[Font] Police appliquée au titre:', fontWithFallback);
+      
       // Recalcule la hauteur après le changement de police
       setTimeout(resizeTitle, 0);
     }
     
-    // Applique la police au contenu de l'éditeur
+    // Applique la police au contenu de l'éditeur avec !important pour dominer
     if (editor) {
       const editorElement = editor.view.dom;
       if (editorElement) {
-        editorElement.style.fontFamily = fontName;
+        // Appliquer à l'élément principal de l'éditeur
+        editorElement.style.setProperty('font-family', fontWithFallback, 'important');
+        
+        // Appliquer à TOUS les éléments de l'éditeur
+        const allElements = editorElement.querySelectorAll('*');
+        allElements.forEach((element) => {
+          if (element instanceof HTMLElement) {
+            element.style.setProperty('font-family', fontWithFallback, 'important');
+          }
+        });
+        
+        console.log('[Font] Police appliquée à tous les éléments ProseMirror:', fontWithFallback);
       }
     }
     
@@ -921,7 +973,7 @@ export default function NoteEditorPage() {
         <Logo />
         <div style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
           {editor ? (
-            <EditorToolbar editor={editor} setImageMenuOpen={setImageMenuOpen} onFontChange={handleFontChange} />
+            <EditorToolbar editor={editor} setImageMenuOpen={setImageMenuOpen} onFontChange={handleFontChange} currentFont={fontFamily} />
           ) : (
             <div style={{ color: '#888', fontWeight: 500 }}>Chargement…</div>
           )}
@@ -1052,7 +1104,6 @@ export default function NoteEditorPage() {
                     background: 'none',
                     color: 'var(--editor-text-color)',
                     fontSize: 'var(--editor-body-size)',
-                    fontFamily: 'var(--editor-font-family)',
                     fontWeight: 400,
                     lineHeight: 1.8,
                     border: 'none',

@@ -38,7 +38,9 @@ export const useFolderDragAndDrop = ({
   // Handler d'imbrication DnD
   const handleDropItem = useCallback((itemId: string, itemType: 'folder' | 'file', targetFolderId: string) => {
     if (itemType === 'folder' && itemId === targetFolderId) {
-      console.warn('Action empêchée : un dossier ne peut pas être imbriqué dans lui-même.');
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('Action empêchée : un dossier ne peut pas être imbriqué dans lui-même.');
+      }
       return;
     }
     moveItem(itemId, targetFolderId, itemType);
@@ -111,7 +113,9 @@ export const useFolderDragAndDrop = ({
           } catch (err) {
             toast.dismiss();
             toast.error('Erreur lors du déplacement du dossier.');
-            console.error('[DnD] updateFolder ERROR', err);
+            if (process.env.NODE_ENV === 'development') {
+              console.error('[DnD] updateFolder ERROR', err);
+            }
           }
         } else {
           try {
@@ -136,7 +140,9 @@ export const useFolderDragAndDrop = ({
           } catch (err) {
             toast.dismiss();
             toast.error('Erreur lors du déplacement de la note.');
-            console.error('[DnD] moveNoteREST ERROR', err);
+            if (process.env.NODE_ENV === 'development') {
+              console.error('[DnD] moveNoteREST ERROR', err);
+            }
           }
         }
         // Rafraîchir la vue du classeur courant pour que l'item disparaisse
