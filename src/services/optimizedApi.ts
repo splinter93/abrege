@@ -384,6 +384,48 @@ export class OptimizedApi {
       throw error;
     }
   }
+
+  /**
+   * Réorganiser les classeurs avec mise à jour directe de Zustand + polling côté client
+   */
+  async reorderClasseurs(updatedClasseurs: { id: string; position: number }[]) {
+    console.log('[OptimizedApi] 🔄 Réorganisation classeurs optimisée');
+    const startTime = Date.now();
+    
+    try {
+      // Appel API
+      const response = await fetch('/api/v1/classeur/reorder', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ classeurs: updatedClasseurs })
+      });
+
+      if (!response.ok) {
+        throw new Error(`Erreur réorganisation classeurs: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      const apiTime = Date.now() - startTime;
+      console.log(`[OptimizedApi] ✅ API terminée en ${apiTime}ms`);
+
+      // 🚀 Mise à jour directe de Zustand (instantanée)
+      const store = useFileSystemStore.getState();
+      updatedClasseurs.forEach(({ id, position }) => {
+        store.updateClasseur(id, { position });
+      });
+      
+      // 🚀 Déclencher le polling côté client immédiatement
+      await clientPollingTrigger.triggerClasseursPolling('UPDATE');
+      
+      const totalTime = Date.now() - startTime;
+      console.log(`[OptimizedApi] ✅ Classeurs réorganisés dans Zustand + polling déclenché en ${totalTime}ms total`);
+      
+      return result;
+    } catch (error) {
+      console.error('[OptimizedApi] ❌ Erreur réorganisation classeurs:', error);
+      throw error;
+    }
+  }
 }
 
 // Export de l'instance singleton

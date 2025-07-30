@@ -36,7 +36,6 @@ class RealtimeService {
   private lastTimestamps: Map<string, string> = new Map();
   private lastCounts: Map<string, number> = new Map(); // Pour détecter INSERT/DELETE
   private listeners: Map<string, Set<(event: ChangeEvent) => void>> = new Map();
-  private lastClasseurState: Map<string, number> | null = null; // Pour détecter les changements de position
 
   constructor(config: PollingConfig) {
     this.config = config;
@@ -114,9 +113,11 @@ class RealtimeService {
         query = query.gt('created_at', lastTimestamp);
       }
     } else if (table === 'classeurs') {
-      // Pour les classeurs, on surveille `created_at` ET `position` pour détecter les reorders
-      query = query.eq('user_id', this.config.userId).order('position', { ascending: true }).limit(50);
-      // Pas de filtre timestamp pour les classeurs car on veut toujours détecter les changements de position
+      // Pour les classeurs, on se base sur `created_at` car il n'y a pas `updated_at`
+      query = query.eq('user_id', this.config.userId).order('created_at', { ascending: false }).limit(50);
+      if (lastTimestamp) {
+        query = query.gt('created_at', lastTimestamp);
+      }
     } else {
       // Pour les articles, on utilise `updated_at`
       query = query.eq('user_id', this.config.userId).order('updated_at', { ascending: false }).limit(50);
@@ -135,88 +136,43 @@ class RealtimeService {
     console.log(`[Polling] 📊 Résultats UPDATE ${table}: ${data?.length || 0} éléments`);
 
     if (data && data.length > 0) {
-      // Logique spéciale pour les classeurs : détecter les changements de position
-      if (table === 'classeurs') {
-        // Comparer avec l'état précédent pour détecter les changements de position
-        const previousState = this.lastClasseurState || new Map();
-        const currentState = new Map(data.map(item => [item.id, item.position]));
-        
-        // Détecter les changements de position
-        const positionChanges = data.filter(item => {
-          const previousPosition = previousState.get(item.id);
-          return previousPosition !== undefined && previousPosition !== item.position;
-        });
-        
-        if (positionChanges.length > 0) {
-          if (process.env.NODE_ENV === 'development') {
-            console.log(`[Polling] 🔄 Changements de position détectés pour ${table}:`, positionChanges.length);
-          }
-          
-          // Notifier pour chaque changement de position
-          positionChanges.forEach(item => {
-            const event = {
-              table,
-              eventType: 'UPDATE' as const,
-              new: item,
-              old: null,
-              timestamp: Date.now(),
-            };
-            
-            if (process.env.NODE_ENV === 'development') {
-              console.log(`[Polling] 📡 Notification changement position pour ${table}:`, item.id, `position: ${item.position}`);
-            }
-            this.notifyListeners(table, event);
-          });
-        }
-        
-        // Sauvegarder l'état actuel pour la prochaine comparaison
-        this.lastClasseurState = currentState;
+      // Mettre à jour le timestamp avec le plus récent de la liste
+      let latestTimestamp: string;
+      if (table === 'folders' || table === 'classeurs') {
+        latestTimestamp = data.reduce((max, item) => item.created_at > max ? item.created_at : max, this.lastTimestamps.get(table) || '');
       } else {
-        // Logique normale pour les autres tables
-        // Mettre à jour le timestamp avec le plus récent de la liste
-        let latestTimestamp: string;
-        if (table === 'folders') {
-          latestTimestamp = data.reduce((max, item) => item.created_at > max ? item.created_at : max, this.lastTimestamps.get(table) || '');
-        } else {
-          latestTimestamp = data.reduce((max, item) => item.updated_at > max ? item.updated_at : max, this.lastTimestamps.get(table) || '');
-        }
-        this.lastTimestamps.set(table, latestTimestamp);
-
-        if (process.env.NODE_ENV === 'development') {
-          console.log(`[Polling] ✅ ${data.length} UPDATE(s) détecté(s) pour ${table}`);
-        }
-
-        // Notifier les listeners pour chaque UPDATE avec diff
-        data.forEach(item => {
-          let diff: DiffResult | undefined;
-          
-          // Générer le diff pour les articles
-          if (table === 'articles' && item.markdown_content) {
-            const diffResult = diffService.generateDiff(item.id, item.markdown_content);
-            if (diffResult) {
-              diff = diffResult;
-            }
-          }
-
-          const event = {
-            table,
-            eventType: 'UPDATE' as const,
-            new: item,
-            old: null, // On ne gère pas le 'old' pour l'instant pour simplifier
-            timestamp: Date.now(),
-            diff: diff, // On ajoute le diff ici
-          };
-
-          if (process.env.NODE_ENV === 'development') {
-            console.log(`[Polling] 📡 Notification UPDATE pour ${table}:`, item.id);
-          }
-          this.notifyListeners(table, event);
-        });
+        latestTimestamp = data.reduce((max, item) => item.updated_at > max ? item.updated_at : max, this.lastTimestamps.get(table) || '');
       }
+      this.lastTimestamps.set(table, latestTimestamp);
+
+      console.log(`[Polling] ✅ ${data.length} UPDATE(s) détecté(s) pour ${table}`);
+
+      // Notifier les listeners pour chaque UPDATE avec diff
+      data.forEach(item => {
+        let diff: DiffResult | undefined;
+        
+        // Générer le diff pour les articles
+        if (table === 'articles' && item.markdown_content) {
+          const diffResult = diffService.generateDiff(item.id, item.markdown_content);
+          if (diffResult) {
+            diff = diffResult;
+          }
+        }
+
+        const event = {
+          table,
+          eventType: 'UPDATE' as const,
+          new: item,
+          old: null, // On ne gère pas le 'old' pour l'instant pour simplifier
+          timestamp: Date.now(),
+          diff: diff, // On ajoute le diff ici
+        };
+
+        console.log(`[Polling] 📡 Notification UPDATE pour ${table}:`, item.id);
+        this.notifyListeners(table, event);
+      });
     } else {
-      if (process.env.NODE_ENV === 'development') {
-        console.log(`[Polling] ⏭️ Aucun UPDATE détecté pour ${table}`);
-      }
+      console.log(`[Polling] ⏭️ Aucun UPDATE détecté pour ${table}`);
     }
   }
 

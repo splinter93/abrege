@@ -2,7 +2,7 @@
 import React, { useCallback, useEffect } from "react";
 import FolderManager from "../../../components/FolderManager";
 import ClasseurTabs, { Classeur } from "../../../components/ClasseurTabs";
-import { getClasseurs, updateClasseurPositions } from "../../../services/supabase";
+import { getClasseurs } from "../../../services/supabase";
 import { optimizedApi } from "../../../services/optimizedApi";
 import { supabase } from "../../../supabaseClient";
 import { toast } from "react-hot-toast";
@@ -460,11 +460,15 @@ const DossiersPage: React.FC = () => {
 
   const handleUpdateClasseurPositions = async (updatedClasseurs: { id: string; position: number }[]) => {
     try {
-      await updateClasseurPositions(updatedClasseurs);
+      console.log('[DossiersPage] 🔄 Réorganisation classeurs avec API optimisée');
+      const result = await optimizedApi.reorderClasseurs(updatedClasseurs);
+      console.log('[DossiersPage] ✅ Classeurs réorganisés avec API optimisée');
       toast.success("Ordre des classeurs sauvegardé.");
+      return result;
     } catch (error) {
-      console.error("Erreur lors de la sauvegarde de l'ordre:", error);
+      console.error('[DossiersPage] ❌ Erreur réorganisation classeurs:', error);
       toast.error("Erreur lors de la sauvegarde de l'ordre.");
+      throw error;
     }
   };
 
