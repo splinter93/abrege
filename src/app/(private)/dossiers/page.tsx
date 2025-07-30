@@ -10,7 +10,7 @@ import "./DossiersPage.css";
 import { useFileSystemStore } from '@/store/useFileSystemStore';
 import type { FileSystemState } from '@/store/useFileSystemStore';
 import { useRealtime } from '@/hooks/useRealtime';
-import PollingIndicator from '@/components/PollingIndicator';
+
 
 const selectFolders = (s: FileSystemState) => s.folders;
 const selectNotes = (s: FileSystemState) => s.notes;
@@ -78,13 +78,26 @@ const DossiersPage: React.FC = () => {
           .order('created_at', { ascending: false });
 
         if (classeursError) {
-          console.error('[DossiersPage] ❌ Erreur chargement classeurs:', classeursError);
+          if (process.env.NODE_ENV === 'development') {
+            console.error('[DossiersPage] ❌ Erreur chargement classeurs:', classeursError);
+          }
         } else {
-          console.log('[DossiersPage] ✅ Classeurs chargés:', classeursData?.length || 0);
+          if (process.env.NODE_ENV === 'development') {
+            console.log('[DossiersPage] ✅ Classeurs chargés:', classeursData?.length || 0);
+          }
           // Ajouter au store Zustand
           classeursData?.forEach(classeur => {
             useFileSystemStore.getState().addClasseur(classeur);
           });
+          
+          // Définir le premier classeur comme classeur par défaut
+          if (classeursData && classeursData.length > 0) {
+            const firstClasseur = classeursData[0];
+            useFileSystemStore.getState().setActiveClasseurId(firstClasseur.id);
+            if (process.env.NODE_ENV === 'development') {
+              console.log('[DossiersPage] 🎯 Premier classeur défini par défaut:', firstClasseur.name);
+            }
+          }
         }
 
         // Charger les dossiers
@@ -520,7 +533,7 @@ const DossiersPage: React.FC = () => {
   return (
     <div className="dossiers-page">
       {/* Indicateur de polling en temps réel */}
-      <PollingIndicator />
+      
       
       {/* Contenu existant */}
       <div className="dossiers-container">
