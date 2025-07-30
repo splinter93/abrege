@@ -115,7 +115,7 @@ const FolderManager: React.FC<FolderManagerProps> = ({
 
   // Handler pour créer et renommer un fichier
   const handleCreateAndRenameFile = async () => {
-    const newFile = await createFile(''); // Le nom sera généré automatiquement
+    const newFile = await createFile('', parentFolderId || null); // Le nom sera généré automatiquement
     if (newFile && newFile.id) {
       startRename(newFile.id, 'file');
     }

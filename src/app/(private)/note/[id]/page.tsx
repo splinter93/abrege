@@ -150,8 +150,7 @@ export default function NoteEditorPage() {
       getHTML: () => editor.getHTML(),
       storage: { markdown: { getMarkdown: () => editor.storage.markdown.getMarkdown() } }
     } : undefined,
-    headerImage: headerImageUrl,
-    onSave: async ({ title, markdown_content, html_content, headerImage }) => {
+    onSave: async ({ title, markdown_content, html_content }) => {
       if (!noteId) return;
       try {
         const payload: Record<string, unknown> = {
@@ -159,10 +158,6 @@ export default function NoteEditorPage() {
           markdown_content,
           html_content,
         };
-        // Ne sauvegarder l'image que si elle est explicitement fournie
-        if (headerImage !== undefined) {
-          payload.header_image = headerImage;
-        }
         await updateNoteREST(noteId, payload);
         setLastSaved(new Date());
         
@@ -1087,7 +1082,6 @@ export default function NoteEditorPage() {
           {/* Footer fixe premium */}
           <EditorFooter
             lastSaved={lastSaved}
-            wordCount={getWordCount()}
             getRelativeTime={getRelativeTime}
             getWordCount={getWordCount}
           />

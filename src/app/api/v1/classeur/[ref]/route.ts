@@ -3,10 +3,11 @@ import { supabase } from '@/supabaseClient';
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { ref: string } }
+  { params }: { params: Promise<{ ref: string }> }
 ) {
   try {
-    const classeurId = params.ref;
+    const { ref } = await params;
+    const classeurId = ref;
     const body = await request.json();
     const { name, emoji, color, position } = body;
 
@@ -62,10 +63,11 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { ref: string } }
+  { params }: { params: Promise<{ ref: string }> }
 ) {
   try {
-    const classeurId = params.ref;
+    const { ref } = await params;
+    const classeurId = ref;
 
     // Supprimer le classeur
     const { error } = await supabase
