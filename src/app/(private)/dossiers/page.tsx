@@ -1,5 +1,5 @@
 "use client";
-import React, { useCallback, useEffect, useMemo } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import FolderManager from "../../../components/FolderManager";
 import ClasseurTabs, { Classeur } from "../../../components/ClasseurTabs";
 import { getClasseurs } from "../../../services/supabase";
@@ -361,9 +361,18 @@ const DossiersPage: React.FC = () => {
   }, [subscribe, unsubscribe]);
   
   // Navigation locale (dossier courant)
-  const [currentFolderId, setCurrentFolderId] = React.useState<string | undefined>(undefined);
-  const handleFolderOpen = useCallback((folder: { id: string }) => setCurrentFolderId(folder.id), []);
-  const handleGoBack = useCallback(() => setCurrentFolderId(undefined), []);
+  const [folderPath, setFolderPath] = useState<string[]>([]);
+  const parentFolderId = folderPath.length > 0 ? folderPath[folderPath.length - 1] : undefined;
+  
+  // Debug: vérifier le calcul du parentFolderId
+  console.log('[DossiersPage] folderPath:', folderPath, 'parentFolderId:', parentFolderId);
+  
+  const handleFolderOpen = useCallback((folder: { id: string }) => {
+    setFolderPath(path => [...path, folder.id]);
+  }, []);
+  const handleGoBack = useCallback(() => {
+    setFolderPath(path => path.slice(0, -1));
+  }, []);
   
   // Filtrage par classeur actif ET navigation imbriquée
   const filteredFolders = React.useMemo(() => {
@@ -373,16 +382,15 @@ const DossiersPage: React.FC = () => {
       // Filtre par classeur
       if (f.classeur_id !== activeClasseurId) return false;
       
-      // Filtre par parent_id pour navigation imbriquée
-      if (currentFolderId === undefined) {
+      if (parentFolderId === undefined) {
         // À la racine : afficher seulement les dossiers sans parent
         return f.parent_id === null;
       } else {
         // Dans un dossier : afficher seulement les sous-dossiers du dossier courant
-        return f.parent_id === currentFolderId;
+        return f.parent_id === parentFolderId;
       }
     });
-  }, [folders, activeClasseurId, currentFolderId]);
+  }, [folders, activeClasseurId, parentFolderId]);
   
   const filteredNotes = React.useMemo(() => {
     if (!activeClasseurId) return [];
@@ -391,13 +399,12 @@ const DossiersPage: React.FC = () => {
       // Filtre par classeur
       if (n.classeur_id !== activeClasseurId) return false;
       
-      // Filtre par folder_id pour navigation imbriquée
-      if (currentFolderId === undefined) {
+      if (parentFolderId === undefined) {
         // À la racine : afficher seulement les notes sans dossier
         return n.folder_id === null;
       } else {
         // Dans un dossier : afficher seulement les notes du dossier courant
-        return n.folder_id === currentFolderId;
+        return n.folder_id === parentFolderId;
       }
     }).sort((a, b) => {
       // Tri stable par position ou par titre
@@ -406,7 +413,7 @@ const DossiersPage: React.FC = () => {
       }
       return a.source_title.localeCompare(b.source_title);
     });
-  }, [notes, activeClasseurId, currentFolderId]);
+  }, [notes, activeClasseurId, parentFolderId]);
   
   // Les helpers de déduplication et d'extraction d'IDs ne sont plus nécessaires
 
@@ -588,7 +595,7 @@ const DossiersPage: React.FC = () => {
           classeurId={activeClasseur.id}
           classeurName={activeClasseur.name}
           classeurIcon={activeClasseur.emoji}
-          parentFolderId={currentFolderId}
+          parentFolderId={parentFolderId}
           onFolderOpen={handleFolderOpen}
           onGoBack={handleGoBack}
           filteredFolders={filteredFolders}

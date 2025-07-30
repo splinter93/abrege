@@ -12,6 +12,7 @@ import {
   DragOverlay,
   DragStartEvent,
   DragEndEvent,
+  useDroppable,
 } from "@dnd-kit/core";
 import {
   arrayMove,
@@ -42,18 +43,34 @@ interface SortableTabProps {
 
 function SortableTab({ classeur, isActive, onSelectClasseur, onContextMenu, isDragging, isOverlay }: SortableTabProps) {
   const sortable = useSortable({ id: classeur.id });
+  const droppable = useDroppable({ id: classeur.id });
   const isOverlayMode = !!isOverlay;
   
   return (
     <div
-      ref={sortable.setNodeRef}
+      ref={node => {
+        sortable.setNodeRef(node);
+        droppable.setNodeRef(node);
+      }}
+      className={`motion-tab-wrapper${(sortable.isDragging || isOverlayMode) ? ' dragged' : ''}${(droppable.isOver && !sortable.isDragging) ? ' drag-over-target' : ''}`}
+      onDragOver={e => e.preventDefault()}
+      onDrop={e => {
+        e.preventDefault();
+        try {
+          const data = JSON.parse(e.dataTransfer.getData('application/json'));
+          if (data && data.id && data.type) {
+            window.dispatchEvent(new CustomEvent('drop-to-classeur', {
+              detail: { classeurId: classeur.id, itemId: data.id, itemType: data.type }
+            }));
+          }
+        } catch {}
+      }}
       style={{
         display: "inline-block",
         opacity: 1,
         zIndex: isOverlayMode ? 9999 : (isDragging || sortable.isDragging) ? 10 : "auto",
         pointerEvents: isOverlayMode ? "none" : undefined,
         background: "inherit",
-        // Pas d'effets visuels : transform et transition supprimés
       }}
       {...sortable.attributes}
       {...sortable.listeners}

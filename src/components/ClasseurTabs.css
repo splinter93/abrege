@@ -81,6 +81,11 @@
   cursor: grabbing;
 }
 
+/* Drag-over target indicator */
+.motion-tab-wrapper.drag-over-target {
+  border-left: 2px solid var(--accent-primary);
+}
+
 .classeur-tabs-glass-wrapper {
   width: 100%;
   background: transparent;

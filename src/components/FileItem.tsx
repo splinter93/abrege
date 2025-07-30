@@ -106,7 +106,7 @@ const FileItem: React.FC<FileItemProps> = ({ file, onOpen, isRenaming, onRename,
             onChange={e => setInputValue(e.target.value)}
             onKeyDown={handleInputKeyDown}
             onBlur={handleInputBlur}
-            className="folder-font-medium folder-text-sm folder-text-white folder-text-center folder-margin-top-small folder-bg-transparent folder-border-none folder-shadow-text"
+            className="fm-rename-input"
             autoFocus
             spellCheck={false}
             onClick={e => e.stopPropagation()}

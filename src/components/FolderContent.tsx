@@ -24,6 +24,7 @@ interface FolderContentProps {
   onDropItem?: (itemId: string, itemType: 'folder' | 'file', targetFolderId: string) => void;
   onStartRenameFolderClick?: (folder: Folder) => void;
   onStartRenameFileClick?: (file: FileArticle) => void;
+  isInFolder?: boolean; /* New prop to detect folder context */
 }
 
 const FolderContent: React.FC<FolderContentProps> = ({
@@ -42,6 +43,8 @@ const FolderContent: React.FC<FolderContentProps> = ({
   onDropItem,
   onStartRenameFolderClick,
   onStartRenameFileClick,
+  classeurName,
+  isInFolder,
 }) => {
   // Robustesse : toujours un tableau pour éviter les erreurs React #310
   const safeFolders = Array.isArray(folders) ? folders : [];
@@ -67,9 +70,11 @@ const FolderContent: React.FC<FolderContentProps> = ({
       emptyMessage ? (
         emptyMessage
       ) : (
-        <div className="folder-content-empty">
-          <div className="folder-text-4xl folder-margin-bottom-medium">📁</div>
-          <div className="folder-content-empty-title">Ce classeur est vide.</div>
+        <div className="folder-content-empty" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '50vh' }}>
+          <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>📁</div>
+          <div style={{ fontWeight: 'bold', color: 'var(--text-1)', marginBottom: '0.5rem', fontSize: '1.2rem' }}>
+            {isInFolder ? 'Ce dossier est vide.' : 'Ce classeur est vide.'}
+          </div>
           <div>Créez votre premier dossier ou note avec la barre d&apos;outils.</div>
         </div>
       )

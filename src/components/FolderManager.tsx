@@ -38,6 +38,9 @@ const FolderManager: React.FC<FolderManagerProps> = ({
   filteredFolders,
   filteredNotes
 }) => {
+  // Debug: vérifier si parentFolderId est bien passé
+  console.log('[FolderManager] parentFolderId:', parentFolderId, 'type:', typeof parentFolderId);
+  
   // Optimisation : éviter les appels API redondants
   const [refreshKey, setRefreshKey] = useState(0);
   const {
@@ -131,14 +134,14 @@ const FolderManager: React.FC<FolderManagerProps> = ({
         {/* Header avec titre et contrôles */}
         <header className="folder-manager-header">
           <div>
-            <h1 className="classeur-header-title">{classeurName}</h1>
-            {parentFolderId && (
-              <div className="breadcrumbs">
+            <h1 className="classeur-header-title">
+              {parentFolderId && (
                 <button onClick={onGoBack} className="breadcrumb-item">
-                  ← Retour
+                  ←
                 </button>
-              </div>
-            )}
+              )}
+              {classeurName}
+            </h1>
           </div>
           <div className="view-controls">
             <FolderToolbar
@@ -168,6 +171,7 @@ const FolderManager: React.FC<FolderManagerProps> = ({
             onDropItem={handleDropItem}
             onStartRenameFolderClick={handleStartRenameFolderClick}
             onStartRenameFileClick={handleStartRenameFileClick}
+            isInFolder={!!parentFolderId}
           />
         </main>
       </div>
