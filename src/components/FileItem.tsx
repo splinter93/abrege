@@ -1,5 +1,5 @@
 import React from 'react';
-import '@/styles/folder-manager-utilities.css';
+
 import { FileArticle } from './types';
 import { FileIcon } from './CustomIcons';
 import { motion } from 'framer-motion';
@@ -68,17 +68,8 @@ const FileItem: React.FC<FileItemProps> = ({ file, onOpen, isRenaming, onRename,
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.92 }}
         transition={{ duration: 0.38, ease: 'easeOut' }}
-        className="file-square-container folder-flex-column folder-text-center folder-cursor-pointer folder-transition-all"
-        onMouseEnter={e => {
-          e.currentTarget.style.background = 'rgba(255,255,255,0.07)';
-          e.currentTarget.style.border = '1.5px solid rgba(255,255,255,0.18)';
-          e.currentTarget.style.boxShadow = '0 4px 18px rgba(0,0,0,0.13), 0 2px 8px rgba(0,0,0,0.08)';
-        }}
-        onMouseLeave={e => {
-          e.currentTarget.style.background = 'rgba(255,255,255,0.025)';
-          e.currentTarget.style.border = '1px solid rgba(255,255,255,0.06)';
-          e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.08)';
-        }}
+        className="fm-grid-item"
+
         onMouseDown={e => {
           if (e.button === 2) {
             e.preventDefault();
@@ -107,7 +98,7 @@ const FileItem: React.FC<FileItemProps> = ({ file, onOpen, isRenaming, onRename,
           lastWasRightClick.current = false;
         }}
       >
-        <FileIcon size={64} className="folder-margin-bottom-small" />
+        <FileIcon size={60} />
         {isRenaming ? (
           <input
             ref={inputRef}
@@ -122,7 +113,7 @@ const FileItem: React.FC<FileItemProps> = ({ file, onOpen, isRenaming, onRename,
           />
         ) : (
           <span
-            className="folder-title-multiline folder-text-center folder-margin-top-small folder-shadow-text"
+            className="fm-item-name"
             onClick={e => {
               if (onStartRenameClick) {
                 e.stopPropagation();

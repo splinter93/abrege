@@ -1,5 +1,5 @@
 "use client";
-import React, { useCallback, useEffect } from "react";
+import React, { useCallback, useEffect, useMemo } from "react";
 import FolderManager from "../../../components/FolderManager";
 import ClasseurTabs, { Classeur } from "../../../components/ClasseurTabs";
 import { getClasseurs } from "../../../services/supabase";
@@ -10,6 +10,7 @@ import "./DossiersPage.css";
 import { useFileSystemStore } from '@/store/useFileSystemStore';
 import type { FileSystemState } from '@/store/useFileSystemStore';
 import { useRealtime } from '@/hooks/useRealtime';
+import LogoScrivia from "../../../components/LogoScrivia";
 
 
 const selectFolders = (s: FileSystemState) => s.folders;
@@ -32,9 +33,25 @@ const DossiersPage: React.FC = () => {
   const setActiveClasseurId = useFileSystemStore(s => s.setActiveClasseurId);
   
   // Optimisation : éviter les re-calculs inutiles
-  const folders = React.useMemo(() => Object.values(foldersObj), [foldersObj]);
-  const notes = React.useMemo(() => Object.values(notesObj), [notesObj]);
-  const classeurs = React.useMemo(() => Object.values(classeursObj), [classeursObj]);
+  const folders = useMemo(() => Object.values(foldersObj), [foldersObj]);
+  const notes = useMemo(() => Object.values(notesObj), [notesObj]);
+  const classeurs = useMemo(() => {
+    const classeursArray = Object.values(classeursObj);
+    // Trier par position si disponible, sinon par created_at
+    const sortedClasseurs = classeursArray.sort((a, b) => {
+      if (a.position !== undefined && b.position !== undefined) {
+        return a.position - b.position;
+      }
+      // Fallback sur created_at si pas de position
+      return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime();
+    });
+    
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[DossiersPage] 📋 Classeurs triés:', sortedClasseurs.map(c => ({ id: c.id, name: c.name, position: c.position })));
+    }
+    
+    return sortedClasseurs;
+  }, [classeursObj]);
   
   // ===== ACTIVATION DU POLLING TEMPS RÉEL =====
   const { subscribe, unsubscribe } = useRealtime({
@@ -45,7 +62,7 @@ const DossiersPage: React.FC = () => {
   });
 
   // ===== VÉRIFICATION AUTHENTIFICATION =====
-  React.useEffect(() => {
+  useEffect(() => {
     const checkAuth = async () => {
       try {
         const { data: { user }, error } = await supabase.auth.getUser();
@@ -65,7 +82,7 @@ const DossiersPage: React.FC = () => {
   }, []);
   
   // ===== EFFET D'HYDRATATION INITIALE =====
-  React.useEffect(() => {
+  useEffect(() => {
     const loadInitialData = async () => {
       try {
         console.log('[DossiersPage] 🔄 Chargement des données initiales...');
@@ -75,7 +92,7 @@ const DossiersPage: React.FC = () => {
           .from('classeurs')
           .select('*')
           .eq('user_id', "3223651c-5580-4471-affb-b3f4456bd729")
-          .order('created_at', { ascending: false });
+          .order('position', { ascending: true });
 
         if (classeursError) {
           if (process.env.NODE_ENV === 'development') {
@@ -84,6 +101,7 @@ const DossiersPage: React.FC = () => {
         } else {
           if (process.env.NODE_ENV === 'development') {
             console.log('[DossiersPage] ✅ Classeurs chargés:', classeursData?.length || 0);
+            console.log('[DossiersPage] 📋 Positions des classeurs:', classeursData?.map(c => ({ id: c.id, name: c.name, position: c.position })));
           }
           // Ajouter au store Zustand
           classeursData?.forEach(classeur => {
@@ -536,44 +554,52 @@ const DossiersPage: React.FC = () => {
 
   return (
     <div className="dossiers-page">
-      {/* Indicateur de polling en temps réel */}
-      
-      
-      {/* Contenu existant */}
-      <div className="dossiers-container">
-        <ClasseurTabs
-          classeurs={safeClasseurs}
-          setClasseurs={() => {}} // plus utilisé, mais prop requise
-          activeClasseurId={activeClasseurId}
-          onSelectClasseur={handleSelectClasseur}
-          onCreateClasseur={handleCreateClasseur}
-          onRenameClasseur={(id, name) => handleUpdateClasseur(id, { name })}
-          onUpdateClasseur={handleUpdateClasseur}
-          onDeleteClasseur={handleDeleteClasseur}
-          onUpdateClasseurPositions={handleUpdateClasseurPositions}
-        />
-        <div className="page-content">
-          {activeClasseur ? (
-            <FolderManager
-              key={activeClasseur.id}
-              classeurId={activeClasseur.id}
-              classeurName={activeClasseur.name}
-              classeurIcon={activeClasseur.emoji}
-              parentFolderId={currentFolderId}
-              onFolderOpen={handleFolderOpen}
-              onGoBack={handleGoBack}
-              // Ajout des données filtrées
-              filteredFolders={filteredFolders}
-              filteredNotes={filteredNotes}
-            />
-          ) : (
-            <div className="empty-state">
-              <h2>Aucun classeur trouvé.</h2>
-              <button onClick={handleCreateClasseur}>Créer votre premier classeur</button>
-            </div>
-          )}
+      {/* Header principal */}
+      <div className="dossiers-top-header">
+        <div className="logo-container">
+          <LogoScrivia />
+        </div>
+        <div className="kebab-menu">
+          <div className="kebab-dots">
+            <div className="kebab-dot"></div>
+            <div className="kebab-dot"></div>
+            <div className="kebab-dot"></div>
+          </div>
         </div>
       </div>
+
+      {/* Tabs des classeurs */}
+      <ClasseurTabs
+        classeurs={safeClasseurs}
+        setClasseurs={() => {}} // plus utilisé, mais prop requise
+        activeClasseurId={activeClasseurId}
+        onSelectClasseur={handleSelectClasseur}
+        onCreateClasseur={handleCreateClasseur}
+        onRenameClasseur={(id, name) => handleUpdateClasseur(id, { name })}
+        onUpdateClasseur={handleUpdateClasseur}
+        onDeleteClasseur={handleDeleteClasseur}
+        onUpdateClasseurPositions={handleUpdateClasseurPositions}
+      />
+      
+      {/* Contenu principal */}
+      {activeClasseur ? (
+        <FolderManager
+          key={activeClasseur.id}
+          classeurId={activeClasseur.id}
+          classeurName={activeClasseur.name}
+          classeurIcon={activeClasseur.emoji}
+          parentFolderId={currentFolderId}
+          onFolderOpen={handleFolderOpen}
+          onGoBack={handleGoBack}
+          filteredFolders={filteredFolders}
+          filteredNotes={filteredNotes}
+        />
+      ) : (
+        <div className="empty-state">
+          <h2>Aucun classeur trouvé.</h2>
+          <button onClick={handleCreateClasseur}>Créer votre premier classeur</button>
+        </div>
+      )}
     </div>
   );
 };

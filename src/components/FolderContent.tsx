@@ -1,6 +1,6 @@
 import React from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import '@/styles/folder-manager-utilities.css';
+// import { motion, AnimatePresence } from 'framer-motion'; // Désactivé pour interface simple
+
 import FolderItem from './FolderItem';
 import FileItem from './FileItem';
 import { Folder, FileArticle } from './types';
@@ -107,28 +107,22 @@ const FolderContent: React.FC<FolderContentProps> = ({
       <div className="folder-content-separator"></div>
       {/* Grille fichiers rapprochée */}
       <div className="folder-grid files">
-        <AnimatePresence initial={false}>
-          {safeFiles.map(file => (
-            <motion.div
-              key={file.id}
-              initial={{ opacity: 0, scale: 0.92 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.92 }}
-              transition={{ duration: 0.38, ease: 'easeOut' }}
-              className="file-item-animation"
-            >
-              <FileItem
-                file={file}
-                onOpen={onFileOpen}
-                isRenaming={renamingItemId === file.id}
-                onRename={(newName, type) => onRenameFile && onRenameFile(file.id, newName, type)}
-                onCancelRename={onCancelRename}
-                onContextMenu={onContextMenuItem}
-                onStartRenameClick={onStartRenameFileClick}
-              />
-            </motion.div>
-          ))}
-        </AnimatePresence>
+        {safeFiles.map(file => (
+          <div
+            key={file.id}
+            className="file-item-animation"
+          >
+            <FileItem
+              file={file}
+              onOpen={onFileOpen}
+              isRenaming={renamingItemId === file.id}
+              onRename={(newName, type) => onRenameFile && onRenameFile(file.id, newName, type)}
+              onCancelRename={onCancelRename}
+              onContextMenu={onContextMenuItem}
+              onStartRenameClick={onStartRenameFileClick}
+            />
+          </div>
+        ))}
       </div>
     </div>
   );

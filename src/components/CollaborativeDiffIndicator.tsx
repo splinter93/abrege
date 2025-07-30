@@ -60,12 +60,12 @@ const CollaborativeDiffIndicator: React.FC<CollaborativeDiffIndicatorProps> = ({
           display: flex;
           align-items: center;
           gap: 12px;
-          animation: slideInLeft 0.3s ease-out;
+          /* animation: slideInLeft 0.3s ease-out; */ /* Animation désactivée pour interface simple */
           border: 1px solid rgba(255, 255, 255, 0.1);
           max-width: 300px;
         }
         
-        @keyframes slideInLeft {
+        /* @keyframes slideInLeft {
           from {
             transform: translateX(-100%);
             opacity: 0;
@@ -74,7 +74,7 @@ const CollaborativeDiffIndicator: React.FC<CollaborativeDiffIndicatorProps> = ({
             transform: translateX(0);
             opacity: 1;
           }
-        }
+        } */ /* Animation désactivée pour interface simple */
         
         .avatar {
           width: 32px;
@@ -115,7 +115,7 @@ const CollaborativeDiffIndicator: React.FC<CollaborativeDiffIndicatorProps> = ({
           border-radius: 4px;
           font-size: 16px;
           line-height: 1;
-          transition: color 0.2s;
+          /* transition: color 0.2s; */ /* Transition désactivée pour interface simple */
         }
         
         .dismiss-btn:hover {

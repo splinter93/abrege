@@ -21,8 +21,6 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
-// const EMOJI_CHOICES = ["📁", "📄", "📚", "🗂️", "📝", "📒", "📦", "🧩", "📜", "📂"];
-
 const ALL_EMOJIS =
   "😀😁😂🤣😃😄😅😆😉😊😋😎😍😘🥰😗😙😚🙂🤗🤩🤔🤨😐😑😶🙄😏😣😥😮🤐😯😪😫😴😌😛😜😝🤤😒😓😔😕🙃🤑😲☹️🙁😖😞😟😤😢😭😦😧😨😩🤯😬😰😱🥵🥶😳🤪😵😡😠🤬😷🤒🤕🤢🤮🤧😇🥳🥺🤠🤡🤥🤫🤭🧐🤓😈👿👹👺💀👻👽🤖💩😺😸😹😻😼😽🙀😿😾🐶🐱🐭🐹🐰🦊🐻🐼🐨🐯🦁🐮🐷🐽🐸🐵🙈🙉🙊🐒🐔🐧🐦🐤🐣🐥🦆🦅🦉🦇🐺🐗🐴🦄🐝🐛🦋🐌🐞🐜🦟🦗🕷️🕸️🐢🐍🦎🦂🦀🦞🦐🦑🐙🦑🦐🦞🦀🦋🐌🐛🐜🐝🦗🕷️🦂🦟🦠🐢🐍🦎🦖🦕🐙🦑🦐🦞🦀🐡🐠🐟🐬🐳🐋🦈🐊🐅🐆🦓🦍🦧🐘🦛🦏🐪🐫🦒🦘🦥🦦🦨🦡🐁🐀🐇🐿️🦔🐾🐉🐲🌵🎄🌲🌳🌴🌱🌿☘️🍀🎍🎋🍃🍂🍁🍄🌾💐🌷🌹🥀🌺🌸🌼🌻🌞🌝🌛🌜🌚🌕🌖🌗🌘🌑🌒🌓🌔🌙🌎🌍🌏💫⭐🌟✨⚡☄️💥🔥🌪️🌈☀️🌤️⛅🌥️🌦️🌧️🌨️🌩️🌪️🌫️🌬️🌀🌈🌂☂️☔⛱️⚽🏈⚾🥎🎾🏐🏉🥏🎱🏓🏸🥅🏒🏑🏏⛳🏹🎣🥊🥋🎽⛸️🥌🛷⛷️🏂🏋️🤼🤸⛹️🤺🤾🏌️🏇🧘🏄🏊🤽🚣🧗🚵🚴🏆🥇🥈🥉🏅🎖️🏵️🎗️🎫🎟️🎪🤹🎭🎨🎬🎤🎧🎼🎹🥁🎷🎺🎸🎻🎲🎯🎳🎮🎰🎲🧩🧸🪁🪀🪅🪆🪐🪁🪀🪅🪆🪐🪁🪀🪅🪆🪐".split("");
 
@@ -38,20 +36,14 @@ interface SortableTabProps {
   isActive: boolean;
   onSelectClasseur: (id: string) => void;
   onContextMenu: (e: MouseEvent<HTMLButtonElement>, classeur: Classeur) => void;
-  listeners?: Record<string, unknown>;
-  attributes?: Record<string, unknown>;
-  setNodeRef?: (el: HTMLElement | null) => void;
   isDragging?: boolean;
   isOverlay?: boolean;
-  sortableTransform?: unknown;
-  sortableTransition?: unknown;
-
 }
 
 function SortableTab({ classeur, isActive, onSelectClasseur, onContextMenu, isDragging, isOverlay }: SortableTabProps) {
-  const [isDropActive, setIsDropActive] = useState(false);
   const sortable = useSortable({ id: classeur.id });
   const isOverlayMode = !!isOverlay;
+  
   return (
     <div
       ref={sortable.setNodeRef}
@@ -60,34 +52,17 @@ function SortableTab({ classeur, isActive, onSelectClasseur, onContextMenu, isDr
         opacity: 1,
         zIndex: isOverlayMode ? 9999 : (isDragging || sortable.isDragging) ? 10 : "auto",
         pointerEvents: isOverlayMode ? "none" : undefined,
-        boxShadow: isOverlayMode ? "0 4px 24px rgba(0,0,0,0.10)" : undefined,
         background: "inherit",
-        transform: isOverlayMode
-          ? (sortable.transform ? `${CSS.Transform.toString(sortable.transform)} translateY(-85%)` : "translateY(-85%)")
-          : (sortable.transform ? CSS.Transform.toString(sortable.transform) : undefined),
-        transition: sortable.transition || "transform 0.18s",
+        // Pas d'effets visuels : transform et transition supprimés
       }}
       {...sortable.attributes}
       {...sortable.listeners}
-      onDragOver={e => {
-        e.preventDefault();
-        setIsDropActive(true);
-        window.__isTabDropActive = true;
-      }}
-      onDragLeave={e => {
-        setIsDropActive(false);
-        window.__isTabDropActive = false;
-      }}
-      onDrop={() => {
-        setIsDropActive(false);
-        window.__isTabDropActive = false;
-      }}
     >
       <button
         className={`classeur-btn-glass${isActive ? " active" : ""}`}
         onClick={() => onSelectClasseur(classeur.id)}
         onContextMenu={(e) => onContextMenu(e, classeur)}
-        style={{ fontFamily: "Inter, Noto Sans, Arial, sans-serif", background: isDropActive ? 'rgba(255,140,0,0.13)' : undefined, borderColor: isDropActive ? 'var(--accent-primary)' : undefined }}
+        style={{ fontFamily: "Inter, Noto Sans, Arial, sans-serif" }}
       >
         <span
           style={{ fontSize: 18, marginRight: 6, verticalAlign: "middle", cursor: "pointer", display: "inline-block" }}
@@ -129,9 +104,9 @@ const ClasseurTabs: React.FC<ClasseurTabsProps> = ({
   React.useEffect(() => {
     console.debug('[EFFECT] useEffect triggered in ClasseurTabs (DnD Ready)', {});
   }, []);
+  
   const [contextMenu, setContextMenu] = useState<{ visible: boolean; x: number; y: number; item: Classeur | null }>({ visible: false, x: 0, y: 0, item: null });
   const [isColorPickerVisible, setColorPickerVisible] = useState(false);
-  // const [activeId, setActiveId] = useState<string | null>(null);
   const [emojiPicker, setEmojiPicker] = useState<{ visible: boolean; classeur: Classeur | null }>({ visible: false, classeur: null });
   const emojiPickerRef = useRef<HTMLDivElement>(null);
 
@@ -158,7 +133,9 @@ const ClasseurTabs: React.FC<ClasseurTabsProps> = ({
     e.preventDefault();
     setContextMenu({ visible: true, x: e.clientX, y: e.clientY, item: classeur });
   };
+  
   const closeContextMenu = () => setContextMenu({ ...contextMenu, visible: false });
+  
   const handleRename = () => {
     if (contextMenu.item) {
       const newName = prompt("Nouveau nom du classeur :", contextMenu.item.name);
@@ -168,6 +145,7 @@ const ClasseurTabs: React.FC<ClasseurTabsProps> = ({
     }
     closeContextMenu();
   };
+  
   const handleDelete = () => {
     if (contextMenu.item) {
       if (window.confirm(`Voulez-vous vraiment supprimer le classeur "${contextMenu.item.name}" et tout son contenu ?`)) {
@@ -176,10 +154,12 @@ const ClasseurTabs: React.FC<ClasseurTabsProps> = ({
     }
     closeContextMenu();
   };
+  
   const openColorPicker = () => {
     setColorPickerVisible(true);
     setContextMenu({ ...contextMenu, visible: false });
   };
+  
   const handleSelectColor = (color: string) => {
     if (contextMenu.item) {
       onUpdateClasseur(contextMenu.item.id, { color });
@@ -187,7 +167,7 @@ const ClasseurTabs: React.FC<ClasseurTabsProps> = ({
     setColorPickerVisible(false);
   };
 
-  // DnD Kit reorder logic
+  // DnD Kit reorder logic - SANS EFFETS VISUELS
   const [draggedClasseur, setDraggedClasseur] = useState<Classeur | null>(null);
   const handleDragStart = (event: DragStartEvent) => {
     console.debug('Drag start', event);
@@ -209,8 +189,6 @@ const ClasseurTabs: React.FC<ClasseurTabsProps> = ({
     }
   };
 
-
-
   // Robustesse : toujours un tableau pour éviter les erreurs React #310
   const safeClasseurs = Array.isArray(classeurs) ? classeurs : [];
 
@@ -226,7 +204,8 @@ const ClasseurTabs: React.FC<ClasseurTabsProps> = ({
                 isActive={activeClasseurId === classeur.id}
                 onSelectClasseur={onSelectClasseur}
                 onContextMenu={handleContextMenu}
-
+                isDragging={false}
+                isOverlay={false}
               />
             ))}
           </SortableContext>
@@ -313,19 +292,32 @@ const ClasseurTabs: React.FC<ClasseurTabsProps> = ({
               onClick={() => setEmojiPicker({ ...emojiPicker, visible: false })}
               aria-label="Fermer"
             >
-              ×
+              ✕
             </button>
-            {ALL_EMOJIS.map(emoji => (
+            {ALL_EMOJIS.map((emoji, index) => (
               <button
-                key={emoji}
-                style={{ fontSize: 26, background: "none", border: "none", cursor: "pointer", padding: 2, borderRadius: 7, transition: "background 0.15s" }}
+                key={index}
+                style={{
+                  background: "none",
+                  border: "none",
+                  fontSize: 24,
+                  cursor: "pointer",
+                  padding: 8,
+                  borderRadius: 8,
+                  // Pas de transition pour interface simple
+                }}
                 onClick={() => {
                   if (emojiPicker.classeur) {
                     onUpdateClasseur(emojiPicker.classeur.id, { emoji });
-                    setEmojiPicker({ ...emojiPicker, visible: false });
                   }
+                  setEmojiPicker({ ...emojiPicker, visible: false });
                 }}
-                aria-label={`Choisir ${emoji}`}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = "rgba(255,255,255,0.1)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = "none";
+                }}
               >
                 {emoji}
               </button>
@@ -336,7 +328,5 @@ const ClasseurTabs: React.FC<ClasseurTabsProps> = ({
     </div>
   );
 };
-
-declare global { interface Window { __isTabDropActive?: boolean } }
 
 export default ClasseurTabs; 

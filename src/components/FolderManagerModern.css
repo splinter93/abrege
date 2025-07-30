@@ -1,130 +1,115 @@
-/* ==========================================================================
-   FOLDER MANAGER MODERN - DESIGN SYSTEM
-   ========================================================================== */
-
-/* Variables CSS modernes */
-:root {
-  --fm-bg-main: #000000;
-  --fm-bg-surface: #1A1A1A;
-  --fm-bg-card: rgba(255, 255, 255, 0.02);
-  --fm-bg-card-hover: rgba(255, 255, 255, 0.05);
-  --fm-text-primary: #FFFFFF;
-  --fm-text-secondary: #AAAAAA;
-  --fm-text-muted: #666666;
-  --fm-accent-primary: #FF6A00;
-  --fm-accent-hover: #FF8533;
-  --fm-border-radius-sm: 0.5rem;
-  --fm-border-radius-md: 0.75rem;
-  --fm-border-radius-lg: 1rem;
-  --fm-spacing-xs: 0.25rem;
-  --fm-spacing-sm: 0.5rem;
-  --fm-spacing-md: 1rem;
-  --fm-spacing-lg: 1.5rem;
-  --fm-spacing-xl: 2rem;
-  --fm-spacing-2xl: 3rem;
-  --fm-shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.08);
-  --fm-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.15);
-  --fm-shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.2);
-  --fm-transition-fast: 0.15s ease-in-out;
-  --fm-transition-normal: 0.2s ease-in-out;
-  --fm-transition-slow: 0.3s ease-in-out;
-}
+/*
+  FOLDER MANAGER - CSS CENTRALISÉ ET NETTOYÉ
+  ===========================================
+  Structure : 2 niveaux max
+  - .folder-manager : conteneur principal (drag & drop)
+  - .folder-manager-content : contenu glassmorphism
+*/
 
 /* ==========================================================================
    CONTAINER PRINCIPAL
    ========================================================================== */
 
-.folder-manager-modern {
-  background: var(--fm-bg-main);
-  color: var(--fm-text-primary);
-  font-family: 'Noto Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  min-height: 100vh;
+.folder-manager {
   width: 100%;
-}
-
-.folder-manager-modern .folder-manager-root {
-  width: 100%;
-  max-width: 100%;
-  margin: 0 auto;
-  padding: 0;
-  background: var(--fm-bg-main);
   position: relative;
-  overflow-x: hidden;
-}
-
-.folder-manager-modern .folder-manager-container {
-  width: 100%;
-  max-width: 100%;
-  margin: 0 auto;
-  padding: var(--fm-spacing-2xl) var(--fm-spacing-2xl);
-  background: var(--fm-bg-main);
-  position: relative;
-  overflow-x: hidden;
+  box-sizing: border-box;
 }
 
 /* ==========================================================================
-   HEADER MODERNE
+   CONTENU GLASSMORPHISM
    ========================================================================== */
 
-.folder-manager-modern .folder-manager-header {
+.folder-manager-content {
+  width: 100%;
+  min-height: calc(100vh - 200px);
+  padding: 2rem;
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 24px;
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.12),
+    0 4px 16px rgba(0, 0, 0, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  position: relative;
+  box-sizing: border-box;
+}
+
+/* ==========================================================================
+   HEADER INTERNE
+   ========================================================================== */
+
+.folder-manager-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: var(--fm-spacing-xl);
-  padding: var(--fm-spacing-lg) 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  margin-bottom: 0;
+  padding: 0;
+  background: transparent;
+  border: none;
 }
 
-.folder-manager-modern .classeur-header-title {
+.classeur-header-title {
   font-size: 2rem;
   font-weight: 700;
-  color: var(--fm-text-primary);
+  color: var(--text-1);
   margin: 0;
+  margin-left: 1.2rem;
   line-height: 1.2;
   letter-spacing: -0.02em;
 }
 
-.folder-manager-modern .breadcrumbs {
+.breadcrumbs {
   display: flex;
   align-items: center;
-  gap: var(--fm-spacing-sm);
+  gap: 0.5rem;
   font-size: 0.875rem;
-  color: var(--fm-text-secondary);
+  color: var(--text-2);
+  margin-top: 0.5rem;
 }
 
-.folder-manager-modern .breadcrumb-item {
-  color: var(--fm-text-secondary);
+.breadcrumb-item {
+  color: var(--text-2);
   text-decoration: none;
-  transition: var(--fm-transition-fast);
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: color 0.2s;
 }
 
-.folder-manager-modern .breadcrumb-item:hover {
-  color: var(--fm-text-primary);
+.breadcrumb-item:hover {
+  color: var(--text-1);
 }
 
-.folder-manager-modern .breadcrumb-separator {
-  color: var(--fm-text-muted);
-  margin: 0 var(--fm-spacing-xs);
-}
-
-.folder-manager-modern .view-controls {
+.view-controls {
   display: flex;
   align-items: center;
-  gap: var(--fm-spacing-sm);
+  gap: 0.5rem;
 }
 
 /* ==========================================================================
-   TOOLBAR MODERNE
+   CONTENU PRINCIPAL
    ========================================================================== */
 
-.folder-manager-modern .folder-toolbar {
-  display: flex;
-  align-items: center;
-  gap: var(--fm-spacing-sm);
-  margin-bottom: var(--fm-spacing-lg);
+.folder-manager-main {
+  width: 100%;
+  margin-top: 0;
+  padding-top: 0;
 }
 
-.folder-manager-modern .folder-toolbar .fm-control-btn {
+/* ==========================================================================
+   TOOLBAR
+   ========================================================================== */
+
+.folder-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.fm-control-btn {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -133,486 +118,165 @@
   border-radius: 50%;
   border: none;
   background: rgba(255, 255, 255, 0.05);
-  color: var(--fm-text-secondary);
+  color: var(--text-2);
   cursor: pointer;
-  transition: var(--fm-transition-normal);
+  transition: all 0.2s;
   position: relative;
   overflow: hidden;
 }
 
-.folder-manager-modern .folder-toolbar .fm-control-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: var(--fm-text-primary);
-  transform: scale(1.05);
-}
-
-.folder-manager-modern .folder-toolbar .fm-control-btn.active {
-  background: rgba(255, 255, 255, 0.15);
-  color: var(--fm-text-primary);
-}
-
-.folder-manager-modern .folder-toolbar .fm-control-btn svg {
-  width: 20px;
-  height: 20px;
-  transition: var(--fm-transition-fast);
-}
-
-/* Boutons de création avec gradient orange */
-.folder-manager-modern .folder-toolbar .fm-control-btn[title="Nouvelle note"],
-.folder-manager-modern .folder-toolbar .fm-control-btn[title="Nouveau dossier"] {
-  background: linear-gradient(135deg, var(--fm-accent-primary) 0%, var(--fm-accent-hover) 100%);
-  color: white;
-  box-shadow: 0 2px 8px rgba(255, 106, 0, 0.3);
-}
-
-.folder-manager-modern .folder-toolbar .fm-control-btn[title="Nouvelle note"]:hover,
-.folder-manager-modern .folder-toolbar .fm-control-btn[title="Nouveau dossier"]:hover {
-  background: linear-gradient(135deg, var(--fm-accent-hover) 0%, var(--fm-accent-primary) 100%);
-  transform: scale(1.05);
-  box-shadow: 0 4px 12px rgba(255, 106, 0, 0.4);
-}
-
-/* Boutons de vue avec style subtil */
-.folder-manager-modern .folder-toolbar .fm-control-btn[title="Vue liste"],
-.folder-manager-modern .folder-toolbar .fm-control-btn[title="Vue grille"] {
-  background: rgba(255, 255, 255, 0.03);
-  color: var(--fm-text-secondary);
-}
-
-.folder-manager-modern .folder-toolbar .fm-control-btn[title="Vue liste"]:hover,
-.folder-manager-modern .folder-toolbar .fm-control-btn[title="Vue grille"]:hover {
-  background: rgba(255, 255, 255, 0.08);
-  color: var(--fm-text-primary);
-}
-
-.folder-manager-modern .folder-toolbar .fm-control-btn[title="Vue liste"].active,
-.folder-manager-modern .folder-toolbar .fm-control-btn[title="Vue grille"].active {
+.fm-control-btn:hover {
   background: rgba(255, 255, 255, 0.12);
-  color: var(--fm-text-primary);
+  color: var(--text-1);
 }
 
-/* ==========================================================================
-   BOUTONS DE CONTRÔLE GÉNÉRAUX
-   ========================================================================== */
-
-.folder-manager-modern .fm-control-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: var(--fm-spacing-sm) var(--fm-spacing-md);
-  border-radius: var(--fm-border-radius-sm);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(255, 255, 255, 0.05);
-  color: var(--fm-text-secondary);
-  cursor: pointer;
-  transition: var(--fm-transition-normal);
-  font-size: 0.875rem;
-  font-weight: 500;
-}
-
-.folder-manager-modern .fm-control-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: var(--fm-text-primary);
-  border-color: rgba(255, 255, 255, 0.2);
-}
-
-.folder-manager-modern .fm-control-btn.active {
+.fm-control-btn.active {
   background: rgba(255, 255, 255, 0.15);
-  color: var(--fm-text-primary);
-  border-color: rgba(255, 255, 255, 0.3);
+  color: var(--accent-primary);
 }
 
-.folder-manager-modern .fm-control-btn svg {
+.fm-control-btn svg {
   width: 16px;
   height: 16px;
-  margin-right: var(--fm-spacing-xs);
 }
 
 /* ==========================================================================
-   BOUTONS SPÉCIALISÉS
+   GRID VIEW
    ========================================================================== */
 
-.folder-manager-modern .new-folder-btn {
-  background: linear-gradient(135deg, var(--fm-accent-primary) 0%, var(--fm-accent-hover) 100%);
-  color: white;
-  border: none;
-  padding: var(--fm-spacing-sm) var(--fm-spacing-lg);
-  border-radius: var(--fm-border-radius-md);
-  font-weight: 600;
-  box-shadow: 0 2px 8px rgba(255, 106, 0, 0.3);
-  transition: var(--fm-transition-normal);
-}
-
-.folder-manager-modern .new-folder-btn:hover {
-  background: linear-gradient(135deg, var(--fm-accent-hover) 0%, var(--fm-accent-primary) 100%);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(255, 106, 0, 0.4);
-}
-
-/* ==========================================================================
-   VUE GRILLE MODERNE
-   ========================================================================== */
-
-.folder-manager-modern .grid-view {
+.grid-view {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-  gap: var(--fm-spacing-lg);
-  padding: var(--fm-spacing-xl) 0;
+  gap: 1.5rem;
+  padding: 0;
+  margin: 0;
 }
 
 /* ==========================================================================
-   CARDS MODERNES
+   GRID ITEMS
    ========================================================================== */
 
-.folder-manager-modern .fm-grid-item {
+.fm-grid-item {
   width: 100%;
   height: 140px;
-  padding: var(--fm-spacing-md);
-  border-radius: var(--fm-border-radius-md);
+  padding: 1.5rem;
+  border-radius: 12px;
   cursor: pointer;
-  transition: var(--fm-transition-normal);
+  transition: all 0.2s ease-out;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: var(--fm-spacing-sm);
-  background: var(--fm-bg-card);
-  border: 1px solid rgba(255, 255, 255, 0.04);
-  box-shadow: var(--fm-shadow-sm);
-  position: relative;
-  overflow: hidden;
-}
-
-.folder-manager-modern .fm-grid-item::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.02) 0%, transparent 100%);
-  opacity: 0;
-  transition: var(--fm-transition-normal);
-}
-
-.folder-manager-modern .fm-grid-item:hover {
-  background: var(--fm-bg-card-hover);
-  transform: translateY(-4px);
-  box-shadow: var(--fm-shadow-md);
-  border-color: rgba(255, 255, 255, 0.08);
-}
-
-.folder-manager-modern .fm-grid-item:hover::before {
-  opacity: 1;
-}
-
-.folder-manager-modern .fm-grid-item:active {
-  transform: translateY(-2px);
-  transition: var(--fm-transition-fast);
-}
-
-/* ==========================================================================
-   ICÔNES MODERNES
-   ========================================================================== */
-
-.folder-manager-modern .fm-grid-item svg {
-  width: 40px;
-  height: 40px;
-  flex-shrink: 0;
-  margin-bottom: var(--fm-spacing-sm);
-  filter: none;
+  gap: 0.25rem;
+  background: transparent;
+  border: none;
   box-shadow: none;
-  background: none;
-  transition: var(--fm-transition-normal);
-  z-index: 1;
   position: relative;
 }
 
-.folder-manager-modern .fm-grid-item:hover svg {
-  transform: scale(1.05);
-  filter: brightness(1.1);
+.fm-grid-item:hover {
+  background: rgba(255, 255, 255, 0.02);
+  transform: translateY(-1px);
 }
 
-/* ==========================================================================
-   TYPOGRAPHIE DES NOMS
-   ========================================================================== */
+.fm-grid-item svg {
+  width: 70px;
+  height: 70px;
+  color: var(--text-2);
+  transition: all 0.2s ease-out;
+  opacity: 0.8;
+  flex-shrink: 0;
+}
 
-.folder-manager-modern .fm-item-name,
-.folder-manager-modern .folder-title-multiline {
-  color: var(--fm-text-secondary);
-  font-size: 0.9375rem;
+.fm-grid-item:hover svg {
+  color: var(--accent-primary);
+  opacity: 1;
+  transform: scale(1.05);
+}
+
+.fm-item-name {
+  font-size: 1.1rem;
   font-weight: 500;
+  color: var(--text-2);
   text-align: center;
-  overflow-wrap: break-word;
-  word-break: break-word;
+  line-height: 1.3;
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
-  display: -webkit-box;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  line-height: 1.4;
-  max-width: 120px;
-  margin: 0;
-  z-index: 1;
-  position: relative;
-  transition: var(--fm-transition-fast);
-}
-
-.folder-manager-modern .fm-grid-item:hover .fm-item-name,
-.folder-manager-modern .fm-grid-item:hover .folder-title-multiline {
-  color: var(--fm-text-primary);
-}
-
-/* ==========================================================================
-   CHAMP DE RENOMMAGE
-   ========================================================================== */
-
-.folder-manager-modern .item-rename-input {
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: var(--fm-border-radius-sm);
-  padding: var(--fm-spacing-xs) var(--fm-spacing-sm);
-  color: var(--fm-text-primary);
-  font-size: 0.875rem;
-  font-weight: 500;
-  text-align: center;
-  width: 100%;
-  max-width: 120px;
-  outline: none;
-  transition: var(--fm-transition-fast);
-  z-index: 2;
-  position: relative;
-}
-
-.folder-manager-modern .item-rename-input:focus {
-  background: rgba(255, 255, 255, 0.15);
-  border-color: var(--fm-accent-primary);
-  box-shadow: 0 0 0 2px rgba(255, 106, 0, 0.2);
-}
-
-/* ==========================================================================
-   VUE LISTE MODERNE
-   ========================================================================== */
-
-.folder-manager-modern .grid-view.list-view {
-  display: block;
-  gap: 0;
-}
-
-.folder-manager-modern .list-view .motion-item-wrapper {
-  margin-bottom: var(--fm-spacing-sm);
-}
-
-.folder-manager-modern .fm-list-item {
-  display: flex;
-  align-items: center;
-  padding: var(--fm-spacing-md);
-  border-radius: var(--fm-border-radius-sm);
-  background: var(--fm-bg-card);
-  border: 1px solid rgba(255, 255, 255, 0.04);
-  cursor: pointer;
-  transition: var(--fm-transition-normal);
-  gap: var(--fm-spacing-md);
-}
-
-.folder-manager-modern .fm-list-item:hover {
-  background: var(--fm-bg-card-hover);
-  border-color: rgba(255, 255, 255, 0.08);
-  transform: translateX(4px);
-}
-
-.folder-manager-modern .fm-list-item svg {
-  width: 24px;
-  height: 24px;
+  transition: color 0.2s ease-out;
+  word-break: break-word;
+  hyphens: auto;
   flex-shrink: 0;
-  filter: none;
-  box-shadow: none;
-  background: none;
 }
 
-.folder-manager-modern .fm-list-item-name-col {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: var(--fm-spacing-xs);
-}
-
-.folder-manager-modern .fm-list-item-name-col .fm-item-name {
-  color: var(--fm-text-secondary);
-  font-size: 0.875rem;
-  font-weight: 500;
-  text-overflow: ellipsis;
-  overflow: hidden;
-  white-space: nowrap;
-  max-width: 100%;
-}
-
-.folder-manager-modern .fm-list-item:hover .fm-item-name {
-  color: var(--fm-text-primary);
+.fm-grid-item:hover .fm-item-name {
+  color: var(--text-1);
 }
 
 /* ==========================================================================
-   DRAG & DROP MODERNE
-   ========================================================================== */
-
-.folder-manager-modern .motion-item-wrapper.drag-over {
-  transform: scale(1.02);
-  z-index: 10;
-}
-
-.folder-manager-modern .fm-grid-item.drag-over {
-  background: rgba(255, 106, 0, 0.1);
-  border-color: var(--fm-accent-primary);
-  box-shadow: 0 0 0 2px rgba(255, 106, 0, 0.3);
-}
-
-.folder-manager-modern .fm-grid-item.drop-target {
-  background: rgba(255, 106, 0, 0.15);
-  border-color: var(--fm-accent-primary);
-  box-shadow: 0 0 0 3px rgba(255, 106, 0, 0.4);
-}
-
-/* ==========================================================================
-   ÉTATS DE CHARGEMENT ET ERREUR
-   ========================================================================== */
-
-.folder-manager-modern .folder-content-loading,
-.folder-manager-modern .folder-content-error,
-.folder-manager-modern .folder-content-empty {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: var(--fm-spacing-2xl);
-  text-align: center;
-  color: var(--fm-text-secondary);
-}
-
-.folder-manager-modern .folder-content-loading {
-  font-size: 1.125rem;
-}
-
-.folder-manager-modern .folder-content-error {
-  color: #ff6b6b;
-}
-
-.folder-manager-modern .folder-content-empty {
-  color: var(--fm-text-muted);
-}
-
-.folder-manager-modern .folder-content-empty-title {
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: var(--fm-text-secondary);
-  margin-bottom: var(--fm-spacing-sm);
-}
-
-/* ==========================================================================
-   RESPONSIVE DESIGN
+   RESPONSIVE
    ========================================================================== */
 
 @media (max-width: 768px) {
-  .folder-manager-modern .folder-manager-root {
-    padding: var(--fm-spacing-lg);
+  .folder-manager {
+    margin: 1rem auto;
   }
-
-  .folder-manager-modern .grid-view {
-    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-    gap: var(--fm-spacing-md);
+  
+  .folder-manager-content {
+    padding: 1.5rem 2rem;
   }
-
-  .folder-manager-modern .fm-grid-item {
-    height: 120px;
-    padding: var(--fm-spacing-sm);
+  
+  .folder-manager-header {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: flex-start;
   }
-
-  .folder-manager-modern .fm-grid-item svg {
-    width: 32px;
-    height: 32px;
-  }
-
-  .folder-manager-modern .fm-item-name,
-  .folder-manager-modern .folder-title-multiline {
-    font-size: 0.875rem;
-    max-width: 100px;
-  }
-
-  .folder-manager-modern .classeur-header-title {
+  
+  .classeur-header-title {
     font-size: 1.5rem;
   }
-
-  .folder-manager-modern .view-controls {
-    gap: var(--fm-spacing-xs);
+  
+  .grid-view {
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 1rem;
   }
-
-  .folder-manager-modern .fm-control-btn {
-    width: 36px;
-    height: 36px;
+  
+  .fm-grid-item {
+    height: 120px;
+    padding: 0.75rem;
   }
-
-  .folder-manager-modern .folder-toolbar {
-    gap: var(--fm-spacing-xs);
-  }
-
-  .folder-manager-modern .folder-toolbar .fm-control-btn {
-    width: 36px;
-    height: 36px;
-  }
-
-  .folder-manager-modern .folder-toolbar .fm-control-btn svg {
-    width: 18px;
-    height: 18px;
+  
+  .fm-grid-item svg {
+    width: 32px;
+    height: 32px;
   }
 }
 
 @media (max-width: 480px) {
-  .folder-manager-modern .grid-view {
+  .folder-manager-content {
+    padding: 1rem 1.5rem;
+  }
+  
+  .grid-view {
     grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-    gap: var(--fm-spacing-sm);
+    gap: 0.75rem;
   }
-
-  .folder-manager-modern .fm-grid-item {
+  
+  .fm-grid-item {
     height: 100px;
-    padding: var(--fm-spacing-xs);
+    padding: 0.5rem;
   }
-
-  .folder-manager-modern .fm-grid-item svg {
+  
+  .fm-grid-item svg {
     width: 28px;
     height: 28px;
   }
-
-  .folder-manager-modern .fm-item-name,
-  .folder-manager-modern .folder-title-multiline {
-    font-size: 0.8125rem;
-    max-width: 80px;
+  
+  .fm-item-name {
+    font-size: 0.75rem;
   }
-}
-
-/* ==========================================================================
-   ANIMATIONS ET TRANSITIONS
-   ========================================================================== */
-
-.folder-manager-modern .motion-item-wrapper {
-  transition: var(--fm-transition-normal);
-}
-
-.folder-manager-modern .motion-item-wrapper:hover {
-  transform: translateY(-2px);
-}
-
-/* ==========================================================================
-   ACCESSIBILITÉ
-   ========================================================================== */
-
-.folder-manager-modern .fm-grid-item:focus-visible,
-.folder-manager-modern .fm-list-item:focus-visible,
-.folder-manager-modern .fm-control-btn:focus-visible {
-  outline: 2px solid var(--fm-accent-primary);
-  outline-offset: 2px;
-}
-
-.folder-manager-modern .fm-grid-item:focus-visible,
-.folder-manager-modern .fm-list-item:focus-visible {
-  box-shadow: 0 0 0 2px rgba(255, 106, 0, 0.3);
 } 

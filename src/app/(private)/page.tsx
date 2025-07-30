@@ -162,7 +162,7 @@ export default function HomePage() {
           border-radius: 14px;
           box-shadow: 0 4px 15px rgba(0, 0, 0, 0.13);
           padding: 16px 20px;
-          transition: background 0.2s, box-shadow 0.2s, border-color 0.2s;
+          /* transition: background 0.2s, box-shadow 0.2s, border-color 0.2s; */ /* Transition désactivée pour interface simple */
           margin-left: auto;
           margin-right: auto;
         }
@@ -180,7 +180,7 @@ export default function HomePage() {
           color: #fff;
           font-size: 1.1rem;
           outline: none;
-          transition: border-color 0.2s;
+          /* transition: border-color 0.2s; */ /* Transition désactivée pour interface simple */
           box-shadow: none;
         }
         .url-input:focus {
@@ -245,7 +245,7 @@ export default function HomePage() {
           align-items: flex-start;
           padding: 18px 0;
           z-index: 9;
-          transition: width 0.28s cubic-bezier(.4,1.2,.4,1), opacity 0.18s, box-shadow 0.2s;
+          /* transition: width 0.28s cubic-bezier(.4,1.2,.4,1), opacity 0.18s, box-shadow 0.2s; */ /* Transition désactivée pour interface simple */
           overflow: hidden;
           pointer-events: none;
         }
@@ -276,7 +276,7 @@ export default function HomePage() {
           font-weight: 500;
           padding: 10px 0;
           border-radius: 10px;
-          transition: background 0.2s, color 0.2s;
+          /* transition: background 0.2s, color 0.2s; */ /* Transition désactivée pour interface simple */
           width: 100%;
           justify-content: flex-start;
           text-align: left;
@@ -288,7 +288,7 @@ export default function HomePage() {
         }
         .sidebar-link-glass span {
           opacity: 0;
-          transition: opacity 0.18s, margin 0.18s;
+          /* transition: opacity 0.18s, margin 0.18s; */ /* Transition désactivée pour interface simple */
           margin-left: -8px;
           pointer-events: none;
         }

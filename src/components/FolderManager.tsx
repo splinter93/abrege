@@ -1,9 +1,9 @@
 "use client";
 import React, { useState, useCallback } from 'react';
-import '@/styles/folder-manager-utilities.css';
 import './FolderManagerModern.css';
 import FolderContent from './FolderContent';
 import FolderToolbar, { ViewMode } from './FolderToolbar';
+import LogoScrivia from './LogoScrivia';
 import { useFolderManagerState } from './useFolderManagerState';
 import { Folder, FileArticle } from './types';
 import SimpleContextMenu from './SimpleContextMenu';
@@ -27,8 +27,7 @@ interface FolderManagerProps {
 
 /**
  * FolderManager - Gestionnaire de dossiers et fichiers avec drag & drop
- * Interface moderne avec glassmorphism et animations fluides
- * Rôle de présentateur : utilise des hooks pour la logique métier
+ * Structure simplifiée : 2 niveaux max
  */
 const FolderManager: React.FC<FolderManagerProps> = ({ 
   classeurId, 
@@ -122,37 +121,37 @@ const FolderManager: React.FC<FolderManagerProps> = ({
   };
 
   return (
-    <div className="folder-manager-modern">
-      <div 
-        className="folder-manager-root"
-        onDragOver={handleRootDragOver}
-        onDragLeave={handleRootDragLeave}
-        onDrop={handleRootDrop}
-      >
-        <div className="folder-manager-container">
-          {/* Header avec titre et contrôles */}
-          <div className="folder-manager-header">
-            <div>
-              <h1 className="classeur-header-title">{classeurName}</h1>
-              {parentFolderId && (
-                <div className="breadcrumbs">
-                  <button onClick={onGoBack} className="breadcrumb-item">
-                    ← Retour
-                  </button>
-                </div>
-              )}
-            </div>
-            <div className="view-controls">
-                              <FolderToolbar
-                  onCreateFolder={() => createFolder('Nouveau dossier')}
-                  onCreateFile={handleCreateAndRenameFile}
-                  onToggleView={setViewMode}
-                  viewMode={viewMode}
-                />
-            </div>
+    <div 
+      className="folder-manager"
+      onDragOver={handleRootDragOver}
+      onDragLeave={handleRootDragLeave}
+      onDrop={handleRootDrop}
+    >
+      <div className="folder-manager-content">
+        {/* Header avec titre et contrôles */}
+        <header className="folder-manager-header">
+          <div>
+            <h1 className="classeur-header-title">{classeurName}</h1>
+            {parentFolderId && (
+              <div className="breadcrumbs">
+                <button onClick={onGoBack} className="breadcrumb-item">
+                  ← Retour
+                </button>
+              </div>
+            )}
           </div>
+          <div className="view-controls">
+            <FolderToolbar
+              onCreateFolder={() => createFolder('Nouveau dossier')}
+              onCreateFile={handleCreateAndRenameFile}
+              onToggleView={setViewMode}
+              viewMode={viewMode}
+            />
+          </div>
+        </header>
 
-          {/* Contenu principal */}
+        {/* Contenu principal */}
+        <main className="folder-manager-main">
           <FolderContent
             classeurName={classeurName}
             folders={safeFolders}
@@ -170,7 +169,7 @@ const FolderManager: React.FC<FolderManagerProps> = ({
             onStartRenameFolderClick={handleStartRenameFolderClick}
             onStartRenameFileClick={handleStartRenameFileClick}
           />
-        </div>
+        </main>
       </div>
 
       {/* Menu contextuel */}

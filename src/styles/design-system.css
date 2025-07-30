@@ -1,3 +1,14 @@
+/*
+  DESIGN SYSTEM - DARK & LIGHT MODE CENTRALIZED
+  --------------------------------------------------
+  Référence couleurs dark mode (éditeur) :
+    - Fond éditeur : #0b0b10 (modale), var(--surface-1) (#141414)
+    - Header éditeur : #141416
+    - Border header éditeur : #2a2a2c
+    - Texte principal : #f5f5f5
+    - Accent : #e55a2c (orange)
+*/
+
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;400;700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans:wght@100;400;700&display=swap');
@@ -5,72 +16,71 @@
 @import url('https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;600&display=swap');
 
 :root {
-  /* This is a clean, minimal version of the design system to prevent build errors. */
-
+  /* LIGHT THEME (par défaut) */
   /* Typography */
   --font-main: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   --font-serif: 'Ibarra Real Nova', serif;
   --font-mono: 'JetBrains Mono', monospace;
-  
+
   /* Font Sizes */
-  --font-size-xs: 0.75rem;    /* 12px */
-  --font-size-sm: 0.875rem;   /* 14px */
-  --font-size-base: 1rem;     /* 16px */
-  --font-size-lg: 1.125rem;   /* 18px */
-  --font-size-xl: 1.25rem;    /* 20px */
-  --font-size-2xl: 1.5rem;    /* 24px */
-  --font-size-3xl: 1.875rem;  /* 30px */
-  --font-size-4xl: 2.25rem;   /* 36px */
-  
-  /* Colors */
-  --bg-main: #141414;
-  --bg-base: #141414;
-  --bg-surface: #141414;
-  --bg-elevated: #1c1c1c;
-  --bg-hover: rgba(255, 255, 255, 0.08);
-  --bg-surface-hover: #212121;
-  --bg-contrast: #ffffff;
-  
+  --font-size-xs: 0.75rem;
+  --font-size-sm: 0.875rem;
+  --font-size-base: 1rem;
+  --font-size-lg: 1.125rem;
+  --font-size-xl: 1.25rem;
+  --font-size-2xl: 1.5rem;
+  --font-size-3xl: 1.875rem;
+  --font-size-4xl: 2.25rem;
+
+  /* Colors - LIGHT */
+  --bg-main: #f7f7f9;
+  --bg-base: #ffffff;
+  --bg-surface: #f7f7f9;
+  --bg-elevated: #f0f0f4;
+  --bg-hover: rgba(0, 0, 0, 0.04);
+  --bg-surface-hover: #ececf0;
+  --bg-contrast: #141414;
+
   /* Text Colors */
-  --text-1: #f5f5f5;
-  --text-2: #a3a3a3;
-  --text-3: #737373;
+  --text-1: #222226;
+  --text-2: #6b6b6b;
+  --text-3: #b0b0b7;
   --text-primary: var(--text-1);
   --text-secondary: var(--text-2);
-  --text-on-contrast: #121212;
-  --text-disabled: #666666;
-  
+  --text-on-contrast: #ffffff;
+  --text-disabled: #cccccc;
+
   /* Surface Colors */
   --surface-0: var(--bg-main);
   --surface-1: var(--bg-surface);
   --surface-2: var(--bg-elevated);
-  --surface-3: #1f1f21;
+  --surface-3: #e5e5ea;
   --surface-hover: var(--bg-hover);
-  
+
   /* Border Colors */
-  --border-subtle: #2a2a2c;
-  --border-strong: #3a3a3c;
+  --border-subtle: #e0e0e0;
+  --border-strong: #cccccc;
   --border-color: var(--border-subtle);
-  
+
   /* Accent Colors */
   --accent-primary: #e55a2c;
   --accent-primary-rgb: 229, 90, 44;
   --accent-hover: #ff6b3d;
   --accent-secondary: #3b82f6;
   --accent-purple: #9b59b6;
-  --accent-subtle: rgba(229, 90, 44, 0.15);
-  --accent-primary-faded: rgba(229, 90, 44, 0.1);
+  --accent-subtle: rgba(229, 90, 44, 0.10);
+  --accent-primary-faded: rgba(229, 90, 44, 0.07);
   --accent-text: #e55a2c;
-  
+
   /* Background Colors */
   --background-hover: var(--bg-surface-hover);
-  
+
   /* Toast Colors */
   --success: #10B981;
   --error: #EF4444;
   --info: #3B82F6;
-  
+
   /* Spacing */
   --spacing-unit: 8px;
   --spacing-xs: 4px;
@@ -88,9 +98,70 @@
   --border-radius-lg: 12px;
   --border-radius-xl: 16px;
 
+  /* Editor-specific (light) */
+  --editor-bg: #fff;
+  --editor-header-bg: #f7f7f9;
+  --editor-header-border: #e0e0e0;
+  --editor-text-color: #222226;
+  --editor-modal-bg: #f0f0f4;
+
   /* Transitions */
-  --transition-speed: 0.2s ease-in-out;
+  --transition-speed: 0s;
 }
+
+.dark {
+  /* DARK THEME */
+  --bg-main: #141414;
+  --bg-base: #141414;
+  --bg-surface: #141414;
+  --bg-elevated: #1c1c1c;
+  --bg-hover: rgba(255, 255, 255, 0.08);
+  --bg-surface-hover: #212121;
+  --bg-contrast: #ffffff;
+
+  --text-1: #f5f5f5;
+  --text-2: #a3a3a3;
+  --text-3: #737373;
+  --text-primary: var(--text-1);
+  --text-secondary: var(--text-2);
+  --text-on-contrast: #121212;
+  --text-disabled: #666666;
+
+  --surface-0: var(--bg-main);
+  --surface-1: var(--bg-surface);
+  --surface-2: var(--bg-elevated);
+  --surface-3: #1f1f21;
+  --surface-hover: var(--bg-hover);
+
+  --border-subtle: #2a2a2c;
+  --border-strong: #3a3a3c;
+  --border-color: var(--border-subtle);
+
+  --accent-primary: #e55a2c;
+  --accent-primary-rgb: 229, 90, 44;
+  --accent-hover: #ff6b3d;
+  --accent-secondary: #3b82f6;
+  --accent-purple: #9b59b6;
+  --accent-subtle: rgba(229, 90, 44, 0.15);
+  --accent-primary-faded: rgba(229, 90, 44, 0.1);
+  --accent-text: #e55a2c;
+
+  --background-hover: var(--bg-surface-hover);
+
+  --success: #10B981;
+  --error: #EF4444;
+  --info: #3B82F6;
+
+  --editor-bg: #0b0b10;
+  --editor-header-bg: #141416;
+  --editor-header-border: #2a2a2c;
+  --editor-text-color: #f5f5f5;
+  --editor-modal-bg: #141414;
+
+  --transition-speed: 0s;
+}
+
+/* Utilisation : ajouter la classe .dark sur <html> ou <body> pour activer le dark mode */
 
 .app-layout {
   display: flex;
@@ -109,12 +180,5 @@
 }
 
 .active-flash {
-  animation: flashBorder 1.2s ease;
-}
-
-@keyframes flashBorder {
-  0%   { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7); }
-  30%  { box-shadow: 0 0 0 8px rgba(255, 255, 255, 0.4); }
-  60%  { box-shadow: 0 0 0 12px rgba(255, 255, 255, 0.1); }
-  100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0); }
+  /* Animation désactivée pour interface simple */
 } 

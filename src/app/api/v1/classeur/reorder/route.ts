@@ -49,6 +49,10 @@ export async function PUT(req: NextRequest): Promise<Response> {
     
     // Mettre à jour les positions des classeurs
     const updatePromises = classeurs.map(async ({ id, position }) => {
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`[reorderClasseurs] 🔄 Mise à jour position classeur ${id} -> ${position}`);
+      }
+      
       const { error } = await supabase
         .from('classeurs')
         .update({ position })
@@ -57,9 +61,13 @@ export async function PUT(req: NextRequest): Promise<Response> {
       
       if (error) {
         if (process.env.NODE_ENV === 'development') {
-          console.error(`[reorderClasseurs] Erreur mise à jour classeur ${id}:`, error);
+          console.error(`[reorderClasseurs] ❌ Erreur mise à jour classeur ${id}:`, error);
         }
         throw new Error(`Erreur mise à jour classeur ${id}: ${error.message}`);
+      }
+      
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`[reorderClasseurs] ✅ Position mise à jour classeur ${id} -> ${position}`);
       }
       
       return { id, position };

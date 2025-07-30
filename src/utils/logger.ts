@@ -100,7 +100,7 @@ export class Logger {
    */
   store(operation: string, message: string, context?: LogContext, ...args: any[]): void {
     this.debug(`[STORE] ${operation}: ${message}`, { ...context, operation }, ...args);
-  }
+    }
 
   /**
    * Logger pour les opérations d'éditeur

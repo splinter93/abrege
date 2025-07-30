@@ -58,11 +58,11 @@ const DiffHighlighter: React.FC<DiffHighlighterProps> = ({
           overflow-y: auto;
           z-index: 1000;
           box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-          animation: slideIn 0.3s ease-out;
+          /* animation: slideIn 0.3s ease-out; */ /* Animation désactivée pour interface simple */
           border: 1px solid rgba(255, 255, 255, 0.1);
         }
         
-        @keyframes slideIn {
+        /* @keyframes slideIn {
           from {
             transform: translateX(100%);
             opacity: 0;
@@ -71,7 +71,7 @@ const DiffHighlighter: React.FC<DiffHighlighterProps> = ({
             transform: translateX(0);
             opacity: 1;
           }
-        }
+        } */ /* Animation désactivée pour interface simple */
         
         .change-item {
           margin-bottom: 8px;

@@ -153,7 +153,7 @@ const EditorDiffOverlay: React.FC<EditorDiffOverlayProps> = ({
   useEffect(() => {
     const style = document.createElement('style');
     style.textContent = `
-      @keyframes highlightAdded {
+      /* @keyframes highlightAdded {
         0% {
           background: rgba(34, 197, 94, 0.8);
           transform: scale(1.05);
@@ -173,7 +173,7 @@ const EditorDiffOverlay: React.FC<EditorDiffOverlayProps> = ({
           background: rgba(239, 68, 68, 0.3);
           transform: scale(1);
         }
-      }
+      } */ /* Animations désactivées pour interface simple */
       
       /* Support pour la réduction de mouvement */
       @media (prefers-reduced-motion: reduce) {

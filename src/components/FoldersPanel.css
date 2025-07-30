@@ -3,7 +3,7 @@
   height: 100%;
   background-color: var(--bg-main);
   border-right: 1px solid transparent;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  /* transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); */ /* Transition désactivée pour interface simple */
   flex-shrink: 0;
   overflow: hidden;
   transform-origin: left center;
@@ -23,7 +23,7 @@
   flex-direction: column;
   transform: translateX(-20px);
   opacity: 0;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  /* transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); */ /* Transition désactivée pour interface simple */
 }
 
 .folders-panel.open .panel-inner-wrapper {

@@ -1,5 +1,5 @@
 import React from 'react';
-import '@/styles/folder-manager-utilities.css';
+
 import { Folder } from './types';
 import { FolderIcon } from './CustomIcons';
 
@@ -50,19 +50,8 @@ const FolderItem: React.FC<FolderItemProps> = ({ folder, onOpen, isRenaming, onR
 
   return (
     <div
-      className={`folder-square-container folder-flex-column folder-text-center folder-cursor-pointer folder-transition-all ${isDragOver ? ' drag-over' : ''}`}
-      onMouseEnter={e => {
-        if (!isDragOver) {
-          e.currentTarget.style.background = 'rgba(255,255,255,0.07)';
-          e.currentTarget.style.border = '1.5px solid rgba(255,255,255,0.18)';
-          e.currentTarget.style.boxShadow = '0 4px 18px rgba(0,0,0,0.13), 0 2px 8px rgba(0,0,0,0.08)';
-        }
-      }}
-      onMouseLeave={() => {
-        if (!isDragOver) {
-          // Reset styles handled by CSS
-        }
-      }}
+      className={`fm-grid-item ${isDragOver ? ' drag-over' : ''}`}
+
               onMouseDown={e => {
           if (e.button === 2) {
           e.preventDefault();
@@ -126,7 +115,7 @@ const FolderItem: React.FC<FolderItemProps> = ({ folder, onOpen, isRenaming, onR
         }
       }}
     >
-      <FolderIcon size={64} className="folder-margin-bottom-small" />
+      <FolderIcon size={60} />
       {isRenaming ? (
         <input
           ref={inputRef}
@@ -141,7 +130,7 @@ const FolderItem: React.FC<FolderItemProps> = ({ folder, onOpen, isRenaming, onR
         />
       ) : (
         <span
-          className="folder-title-multiline folder-text-center folder-margin-top-small folder-shadow-text"
+          className="fm-item-name"
           onClick={e => {
             if (onStartRenameClick) {
               e.stopPropagation();

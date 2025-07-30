@@ -32,9 +32,9 @@ html {
   scroll-behavior: smooth;
 }
 
-/* Transitions fluides */
+/* Transitions fluides - DÉSACTIVÉES */
 .smooth-transition {
-  transition: all 0.2s ease-in-out;
+  /* transition: all 0.2s ease-in-out; */ /* Transition désactivée pour interface simple */
 } 
 
  

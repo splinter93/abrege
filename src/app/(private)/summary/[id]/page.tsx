@@ -5,7 +5,7 @@ import React, { useState, useEffect } from 'react';
 import { sendPayloadToSynesia } from '../../../../actions/synesia';
 import { toast } from 'react-hot-toast';
 import './SummaryPage.css';
-import { motion } from 'framer-motion';
+// import { motion } from 'framer-motion'; // Désactivé pour interface simple
 import { MdRefresh } from 'react-icons/md';
 import '@/styles/markdown.css';
 
@@ -88,14 +88,14 @@ const YouTubePlayer: React.FC<{ videoUrl: string }> = ({ videoUrl }) => {
 const HeroCoverImage: React.FC<{ currentImage: string }> = ({ currentImage }) => {
   return (
     <div style={{ position: 'relative', width: '100vw', left: '50%', right: '50%', marginLeft: '-50vw', marginRight: '-50vw', overflow: 'hidden', zIndex: 2 }}>
-      <motion.img
+      <img
         key={currentImage}
         src={currentImage + '?auto=format&fit=crop&w=1600&q=80'}
         className="hero-image"
-        initial={{ opacity: 0, scale: 0.98 }}
+        /* initial={{ opacity: 0, scale: 0.98 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.98 }}
-        transition={{ duration: 0.5 }}
+        transition={{ duration: 0.5 }} */ /* Animation désactivée pour interface simple */
         alt="Image de couverture"
         style={{ pointerEvents: 'none', userSelect: 'none' }}
       />
