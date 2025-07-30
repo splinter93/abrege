@@ -4,7 +4,7 @@ import LogoScrivia from '@/components/LogoScrivia';
 
 
 import type { Metadata } from 'next';
-import PublicNoteContent from './PublicNoteContent';
+import PublicNoteContent from '@/app/[username]/[slug]/PublicNoteContent';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;

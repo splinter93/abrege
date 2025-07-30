@@ -470,9 +470,10 @@ export default function NoteEditorPage() {
       if (process.env.NODE_ENV === 'development') {
         console.log('[realtime] Canal realtime abonné');
       }
+      return channel; // Retourner le channel pour le cleanup
     };
 
-    subscribeToNoteRealtime();
+    const channel = subscribeToNoteRealtime();
 
     const handleVisibilityChange = async () => {
       if (document.visibilityState === 'hidden') {
@@ -553,6 +554,14 @@ export default function NoteEditorPage() {
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('blur', handleWindowBlur);
+
+      // Nettoyer l'abonnement Supabase Realtime
+      if (channel) {
+        channel.unsubscribe();
+        if (process.env.NODE_ENV === 'development') {
+          console.log('[realtime] Canal realtime désabonné');
+        }
+      }
 
       unsubscribed = true;
     };
