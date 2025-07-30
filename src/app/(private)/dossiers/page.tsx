@@ -57,7 +57,7 @@ const DossiersPage: React.FC = () => {
   const { subscribe, unsubscribe } = useRealtime({
     userId: "3223651c-5580-4471-affb-b3f4456bd729",
     type: 'polling',
-    interval: 3000,
+    interval: 3000, // Back to normal interval
     debug: true
   });
 
@@ -424,6 +424,8 @@ const DossiersPage: React.FC = () => {
     if (classeurs.find(c => c.id === id)) {
       setActiveClasseurId(id);
       localStorage.setItem("activeClasseurId", id);
+      // Reset folder path when changing classeur to go back to root
+      setFolderPath([]);
     } else {
       // selectFirstClasseur(classeurs); // This line is removed
     }
@@ -444,6 +446,8 @@ const DossiersPage: React.FC = () => {
         const result = await optimizedApi.createClasseur(newClasseurData);
         setActiveClasseurId(result.classeur.id);
         localStorage.setItem("activeClasseurId", result.classeur.id);
+        // Reset folder path when creating new classeur
+        setFolderPath([]);
         toast.dismiss();
         toast.success("Classeur créé avec succès.");
       } catch (err: unknown) {
@@ -473,6 +477,8 @@ const DossiersPage: React.FC = () => {
       await optimizedApi.deleteClasseur(id);
       if (activeClasseurId === id) {
         setActiveClasseurId(classeurs[0]?.id || null);
+        // Reset folder path when deleting active classeur
+        setFolderPath([]);
       }
       toast.dismiss();
       toast.success("Classeur supprimé avec succès.");

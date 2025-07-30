@@ -1,8 +1,10 @@
 import { useState, useCallback, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
-import { updateFolder } from '../services/supabase';
+import { updateFolder } from '../services/api';
 import { moveNoteREST } from '../services/api';
 import { DropEventDetail } from '../components/types';
+import { useFileSystemStore } from '@/store/useFileSystemStore';
+import { clientPollingTrigger } from '@/services/clientPollingTrigger';
 
 interface UseFolderDragAndDropProps {
   classeurId: string;
@@ -88,7 +90,21 @@ export const useFolderDragAndDrop = ({
         // Sinon, changer de classeur ET ramener à la racine
         if (itemType === 'folder') {
           try {
-            await updateFolder(itemId, { classeur_id: targetClasseurId, parent_id: null });
+            const response = await fetch(`/api/v1/dossier/${itemId}/move`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                target_parent_id: null,
+                target_classeur_id: targetClasseurId
+              })
+            });
+            if (!response.ok) {
+              throw new Error(`Erreur déplacement dossier: ${response.statusText}`);
+            }
+            const result = await response.json();
+            const store = useFileSystemStore.getState();
+            store.moveFolder(itemId, null, targetClasseurId);
+            await clientPollingTrigger.triggerFoldersPolling('UPDATE');
             refreshNow();
             toast.dismiss();
             toast.success('Déplacement terminé !');
@@ -99,7 +115,21 @@ export const useFolderDragAndDrop = ({
           }
         } else {
           try {
-            await moveNoteREST(itemId, { target_classeur_id: targetClasseurId, target_folder_id: null });
+            const response = await fetch(`/api/v1/note/${itemId}/move`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                target_folder_id: null,
+                target_classeur_id: targetClasseurId
+              })
+            });
+            if (!response.ok) {
+              throw new Error(`Erreur déplacement note: ${response.statusText}`);
+            }
+            const result = await response.json();
+            const store = useFileSystemStore.getState();
+            store.moveNote(itemId, null, targetClasseurId);
+            await clientPollingTrigger.triggerArticlesPolling('UPDATE');
             refreshNow();
             toast.dismiss();
             toast.success('Déplacement terminé !');
