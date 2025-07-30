@@ -51,7 +51,9 @@ class RealtimeService {
     }
 
     // 🚫 POLLING CONTINU COMPLÈTEMENT DÉSACTIVÉ
-    console.log(`[Polling] ⏸️ Polling continu désactivé pour ${table} - utilisation du polling déclenché par API uniquement`);
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`[Polling] ⏸️ Polling continu désactivé pour ${table} - utilisation du polling déclenché par API uniquement`);
+    }
     
     // Pas de setInterval - plus de polling continu qui matraque !
     // this.intervals.set(table, interval);
@@ -66,7 +68,9 @@ class RealtimeService {
     if (interval) {
       clearInterval(interval);
       this.intervals.delete(table);
-      console.log(`⏹️ Polling arrêté pour ${table}`);
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`⏹️ Polling arrêté pour ${table}`);
+      }
     }
   }
 
@@ -75,7 +79,9 @@ class RealtimeService {
    */
   private async checkForChanges(table: string) {
     try {
-      console.log(`[Polling] 🔍 Vérification changements pour ${table}...`);
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`[Polling] 🔍 Vérification changements pour ${table}...`);
+      }
       
       // 1. Vérifier les UPDATE (changements de contenu)
       await this.checkForUpdates(table);
@@ -84,7 +90,9 @@ class RealtimeService {
       await this.checkForStructureChanges(table);
       
     } catch (error) {
-      console.error(`❌ Erreur polling ${table}:`, error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error(`❌ Erreur polling ${table}:`, error);
+      }
     }
   }
 

@@ -132,11 +132,15 @@ const DossiersPage: React.FC = () => {
   
   // ===== ACTIVATION DU POLLING TEMPS RÉEL =====
   React.useEffect(() => {
-    console.log('[DossiersPage] 🔄 Activation du polling temps réel...');
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[DossiersPage] 🔄 Activation du polling temps réel...');
+    }
     
     const loadInitialData = async () => {
       try {
-        console.log('[DossiersPage] 🔄 Rechargement des données...');
+        if (process.env.NODE_ENV === 'development') {
+          console.log('[DossiersPage] 🔄 Rechargement des données...');
+        }
         
         // Charger les classeurs
         const { data: classeursData, error: classeursError } = await supabase
@@ -146,9 +150,13 @@ const DossiersPage: React.FC = () => {
           .order('created_at', { ascending: false });
 
         if (classeursError) {
-          console.error('[DossiersPage] ❌ Erreur chargement classeurs:', classeursError);
+          if (process.env.NODE_ENV === 'development') {
+            console.error('[DossiersPage] ❌ Erreur chargement classeurs:', classeursError);
+          }
         } else {
-          console.log('[DossiersPage] ✅ Classeurs rechargés:', classeursData?.length || 0);
+          if (process.env.NODE_ENV === 'development') {
+            console.log('[DossiersPage] ✅ Classeurs rechargés:', classeursData?.length || 0);
+          }
           // Réinitialiser et ajouter au store Zustand
           useFileSystemStore.getState().setClasseurs(classeursData || []);
         }
@@ -161,9 +169,13 @@ const DossiersPage: React.FC = () => {
           .order('created_at', { ascending: false });
 
         if (foldersError) {
-          console.error('[DossiersPage] ❌ Erreur chargement dossiers:', foldersError);
+          if (process.env.NODE_ENV === 'development') {
+            console.error('[DossiersPage] ❌ Erreur chargement dossiers:', foldersError);
+          }
         } else {
-          console.log('[DossiersPage] ✅ Dossiers rechargés:', foldersData?.length || 0);
+          if (process.env.NODE_ENV === 'development') {
+            console.log('[DossiersPage] ✅ Dossiers rechargés:', foldersData?.length || 0);
+          }
           // Réinitialiser et ajouter au store Zustand
           useFileSystemStore.getState().setFolders(foldersData || []);
         }
@@ -176,37 +188,53 @@ const DossiersPage: React.FC = () => {
           .order('updated_at', { ascending: false });
 
         if (notesError) {
-          console.error('[DossiersPage] ❌ Erreur chargement notes:', notesError);
+          if (process.env.NODE_ENV === 'development') {
+            console.error('[DossiersPage] ❌ Erreur chargement notes:', notesError);
+          }
         } else {
-          console.log('[DossiersPage] ✅ Notes rechargées:', notesData?.length || 0);
+          if (process.env.NODE_ENV === 'development') {
+            console.log('[DossiersPage] ✅ Notes rechargées:', notesData?.length || 0);
+          }
           // Réinitialiser et ajouter au store Zustand
           useFileSystemStore.getState().setNotes(notesData || []);
         }
 
-        console.log('[DossiersPage] ✅ Données rechargées avec succès');
+        if (process.env.NODE_ENV === 'development') {
+          console.log('[DossiersPage] ✅ Données rechargées avec succès');
+        }
       } catch (error) {
-        console.error('[DossiersPage] ❌ Erreur lors du rechargement:', error);
+        if (process.env.NODE_ENV === 'development') {
+          console.error('[DossiersPage] ❌ Erreur lors du rechargement:', error);
+        }
       }
     };
     
     const handleArticleChange = (event: any) => {
-      console.log('[DossiersPage] 📡 Événement articles reçu:', event);
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[DossiersPage] 📡 Événement articles reçu:', event);
+      }
       
       switch (event.eventType) {
         case 'UPDATE':
           if (event.new) {
-            console.log('[DossiersPage] 🔄 Mise à jour note:', event.new.source_title);
+            if (process.env.NODE_ENV === 'development') {
+              console.log('[DossiersPage] 🔄 Mise à jour note:', event.new.source_title);
+            }
             useFileSystemStore.getState().updateNote(event.new.id, event.new);
           }
           break;
         case 'INSERT':
           if (event.new) {
-            console.log('[DossiersPage] ➕ Nouvelle note créée:', event.new.source_title);
+            if (process.env.NODE_ENV === 'development') {
+              console.log('[DossiersPage] ➕ Nouvelle note créée:', event.new.source_title);
+            }
             useFileSystemStore.getState().addNote(event.new);
           }
           break;
         case 'DELETE':
-          console.log('[DossiersPage] 🗑️ Note supprimée');
+          if (process.env.NODE_ENV === 'development') {
+            console.log('[DossiersPage] 🗑️ Note supprimée');
+          }
           // Pour les DELETE, on ne peut pas identifier précisément quelle note a été supprimée
           // car l'élément n'existe plus dans la base. On peut soit :
           // 1. Recharger complètement les données
@@ -218,23 +246,31 @@ const DossiersPage: React.FC = () => {
     };
 
     const handleFolderChange = (event: any) => {
-      console.log('[DossiersPage] 📡 Événement folders reçu:', event);
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[DossiersPage] 📡 Événement folders reçu:', event);
+      }
       
       switch (event.eventType) {
         case 'UPDATE':
           if (event.new) {
-            console.log('[DossiersPage] 🔄 Mise à jour dossier:', event.new.name);
+            if (process.env.NODE_ENV === 'development') {
+              console.log('[DossiersPage] 🔄 Mise à jour dossier:', event.new.name);
+            }
             useFileSystemStore.getState().updateFolder(event.new.id, event.new);
           }
           break;
         case 'INSERT':
           if (event.new) {
-            console.log('[DossiersPage] ➕ Nouveau dossier créé:', event.new.name);
+            if (process.env.NODE_ENV === 'development') {
+              console.log('[DossiersPage] ➕ Nouveau dossier créé:', event.new.name);
+            }
             useFileSystemStore.getState().addFolder(event.new);
           }
           break;
         case 'DELETE':
-          console.log('[DossiersPage] 🗑️ Dossier supprimé');
+          if (process.env.NODE_ENV === 'development') {
+            console.log('[DossiersPage] 🗑️ Dossier supprimé');
+          }
           // Recharger les données pour les dossiers supprimés
           loadInitialData();
           break;
@@ -242,23 +278,31 @@ const DossiersPage: React.FC = () => {
     };
 
     const handleClasseurChange = (event: any) => {
-      console.log('[DossiersPage] 📡 Événement classeurs reçu:', event);
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[DossiersPage] 📡 Événement classeurs reçu:', event);
+      }
       
       switch (event.eventType) {
         case 'UPDATE':
           if (event.new) {
-            console.log('[DossiersPage] 🔄 Mise à jour classeur:', event.new.name);
+            if (process.env.NODE_ENV === 'development') {
+              console.log('[DossiersPage] 🔄 Mise à jour classeur:', event.new.name);
+            }
             useFileSystemStore.getState().updateClasseur(event.new.id, event.new);
           }
           break;
         case 'INSERT':
           if (event.new) {
-            console.log('[DossiersPage] ➕ Nouveau classeur créé:', event.new.name);
+            if (process.env.NODE_ENV === 'development') {
+              console.log('[DossiersPage] ➕ Nouveau classeur créé:', event.new.name);
+            }
             useFileSystemStore.getState().addClasseur(event.new);
           }
           break;
         case 'DELETE':
-          console.log('[DossiersPage] 🗑️ Classeur supprimé');
+          if (process.env.NODE_ENV === 'development') {
+            console.log('[DossiersPage] 🗑️ Classeur supprimé');
+          }
           // Recharger les données pour les classeurs supprimés
           loadInitialData();
           break;
@@ -270,11 +314,15 @@ const DossiersPage: React.FC = () => {
     subscribe('folders', handleFolderChange);
     subscribe('classeurs', handleClasseurChange);
 
-    console.log('[DossiersPage] ✅ Polling temps réel activé');
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[DossiersPage] ✅ Polling temps réel activé');
+    }
 
     // Nettoyage au démontage
     return () => {
-      console.log('[DossiersPage] 🛑 Désactivation du polling temps réel...');
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[DossiersPage] 🛑 Désactivation du polling temps réel...');
+      }
       unsubscribe('articles', handleArticleChange);
       unsubscribe('folders', handleFolderChange);
       unsubscribe('classeurs', handleClasseurChange);

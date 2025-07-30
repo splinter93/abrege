@@ -20,10 +20,14 @@ export default function PollingIndicator({ className = '' }: PollingIndicatorPro
   });
 
   useEffect(() => {
-    console.log('[PollingIndicator] 🔄 Initialisation de l\'indicateur de polling...');
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[PollingIndicator] 🔄 Initialisation de l\'indicateur de polling...');
+    }
 
     const handleArticleChange = (event: any) => {
-      console.log('[PollingIndicator] 📡 Événement reçu:', event);
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[PollingIndicator] 📡 Événement reçu:', event);
+      }
       
       let eventText = '';
       switch (event.eventType) {
@@ -43,7 +47,9 @@ export default function PollingIndicator({ className = '' }: PollingIndicatorPro
     };
 
     const handleFolderChange = (event: any) => {
-      console.log('[PollingIndicator] 📡 Événement reçu:', event);
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[PollingIndicator] 📡 Événement reçu:', event);
+      }
       
       let eventText = '';
       switch (event.eventType) {
@@ -67,10 +73,14 @@ export default function PollingIndicator({ className = '' }: PollingIndicatorPro
     subscribe('folders', handleFolderChange);
     setIsConnected(true);
 
-    console.log('[PollingIndicator] ✅ Indicateur de polling activé');
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[PollingIndicator] ✅ Indicateur de polling activé');
+    }
 
     return () => {
-      console.log('[PollingIndicator] 🛑 Désactivation de l\'indicateur...');
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[PollingIndicator] 🛑 Désactivation de l\'indicateur...');
+      }
       unsubscribe('articles', handleArticleChange);
       unsubscribe('folders', handleFolderChange);
       setIsConnected(false);
