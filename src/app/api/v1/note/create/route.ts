@@ -122,25 +122,29 @@ export async function POST(req: Request): Promise<Response> {
     const { data: note, error } = await supabase
       .from('articles')
       .insert({
-        source_title,
-        markdown_content,
-        header_image: header_image || null,
-        header_image_offset: header_image_offset || 50,
-        folder_id: finalFolderId || null,
-        classeur_id: finalNotebookIdResolved, // ✅ TOUJOURS défini maintenant !
+        source_title: source_title,
+        markdown_content: markdown_content || '',
+        classeur_id: finalNotebookIdResolved,
+        folder_id: finalFolderId,
         user_id: USER_ID,
         slug,
+        header_image: header_image || null,
+        header_image_offset: header_image_offset || 50,
         position: 0
       })
       .select()
       .single();
     
     if (error) {
-      console.error('❌ Erreur création note:', error);
+      console.error('[createNote] Erreur création note:', error);
       return new Response(JSON.stringify({ error: error.message }), { status: 500 });
     }
     
-    console.log(`✅ Note créée avec classeur_id: ${finalNotebookIdResolved}`);
+    console.log('✅ Note créée avec classeur_id:', finalNotebookIdResolved);
+    
+    // 🚫 POLLING DÉCLENCHÉ PAR L'API CLIENT OPTIMISÉE
+    // Plus besoin de déclencher le polling côté serveur
+    
     return new Response(JSON.stringify({ note }), { status: 201 });
   } catch (err: any) {
     console.error('❌ Erreur générale:', err);

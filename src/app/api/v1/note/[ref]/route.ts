@@ -145,6 +145,9 @@ export async function PUT(req: NextRequest, { params }: any): Promise<Response> 
       return new Response(JSON.stringify({ error: error.message }), { status: 500 });
     }
     
+    // 🚫 POLLING DÉCLENCHÉ PAR L'API CLIENT OPTIMISÉE
+    // Plus besoin de déclencher le polling côté serveur
+    
     return new Response(JSON.stringify({ note: updatedNote }), { status: 200 });
   } catch (err: any) {
     return new Response(JSON.stringify({ error: err.message }), { status: 500 });
@@ -177,6 +180,10 @@ export async function DELETE(req: Request, { params }: any): Promise<Response> {
     if (error) {
       return new Response(JSON.stringify({ error: error.message }), { status: 500 });
     }
+    
+    // 🚫 POLLING DÉCLENCHÉ PAR L'API CLIENT OPTIMISÉE
+    // Plus besoin de déclencher le polling côté serveur
+    
     return new Response(JSON.stringify({ success: true }), { status: 200 });
   } catch (err: any) {
     return new Response(JSON.stringify({ error: err.message }), { status: 500 });

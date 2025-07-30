@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { StateCreator } from 'zustand';
+import type { DiffResult } from '@/services/diffService';
 
 // Types de base - mis à jour pour correspondre aux types réels
 export interface Note {
@@ -72,6 +73,14 @@ export interface FileSystemState {
   setFolders: (folders: Folder[]) => void;
   setClasseurs: (classeurs: Classeur[]) => void;
   setNotes: (notes: Note[]) => void;
+
+  // Actions optimistes
+  addNoteOptimistic: (note: Note, tempId: string) => void;
+  updateNoteOptimistic: (id: string, patch: Partial<Note>) => void;
+  removeNoteOptimistic: (id: string) => void;
+
+  // Action pour le diff
+  applyDiff: (noteId: string, diff: DiffResult) => void;
 }
 
 /**
@@ -213,4 +222,66 @@ export const useFileSystemStore = create<FileSystemState>()((set, get) => ({
   setNotes: (notes: Note[]) => set(() => ({ 
     notes: Object.fromEntries(notes.map(n => [n.id, n])) 
   })),
+
+  // --- ACTIONS OPTIMISTES ---
+  addNoteOptimistic: (note: Note, tempId: string) => {
+    set(state => ({
+      notes: { ...state.notes, [tempId]: { ...note, id: tempId, _optimistic: true } }
+    }));
+  },
+
+  updateNoteOptimistic: (id: string, patch: Partial<Note>) => {
+    set(state => {
+      if (!state.notes[id]) return {};
+      return {
+        notes: {
+          ...state.notes,
+          [id]: { ...state.notes[id], ...patch, _optimistic: true }
+        }
+      };
+    });
+  },
+
+  removeNoteOptimistic: (id: string) => {
+    set(state => {
+      if (!state.notes[id]) return {};
+      return {
+        notes: {
+          ...state.notes,
+          [id]: { ...state.notes[id], _optimistic: 'deleting' }
+        }
+      };
+    });
+  },
+
+  // --- ACTION POUR APPLIQUER UN DIFF ---
+  applyDiff: (noteId: string, diff: DiffResult) => {
+    set(state => {
+      const note = state.notes[noteId];
+      if (!note || !note.markdown_content) return {};
+
+      // Logique d'application du diff (simplifiée)
+      const newContent = diff.changes.map(change => {
+        if (change.added) {
+          return change.value;
+        }
+        if (change.removed) {
+          return '';
+        }
+        return change.value;
+      }).join('');
+
+
+      return {
+        notes: {
+          ...state.notes,
+          [noteId]: {
+            ...note,
+            markdown_content: newContent,
+            _lastDiff: diff, // Pour debug
+          }
+        }
+      };
+    });
+  },
 })); 

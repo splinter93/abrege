@@ -4,10 +4,11 @@ import { useState, useEffect, useRef } from 'react';
 import { subscribeToNotes, subscribeToDossiers, subscribeToClasseurs, unsubscribeFromAll, startSubscriptionMonitoring } from '@/realtime/dispatcher';
 import { supabase } from '@/supabaseClient';
 // ANCIEN SYSTÈME DÉSACTIVÉ - Utilisation du nouveau système realtime
-// import { initRealtimeService, subscribeToTable as subscribeToPolling, unsubscribeFromTable as unsubscribeFromPolling, stopRealtimeService } from '@/services/realtimeService';
+import { initRealtimeService, subscribeToTable as subscribeToPolling, unsubscribeFromTable as unsubscribeFromPolling, stopRealtimeService } from '@/services/realtimeService';
 // import { initWebSocketService, subscribeToTable as subscribeToWebSocket, unsubscribeFromTable as unsubscribeFromWebSocket, stopWebSocketService } from '@/services/websocketService';
 // import * as supabaseRealtimeService from '@/services/supabaseRealtimeService';
 // import { initSSEService, subscribeToTable, unsubscribeFromTable, stopSSEService } from '@/services/sseService';
+import { useFileSystemStore } from '@/store/useFileSystemStore';
 
 interface RealtimeConfig {
   userId?: string;
@@ -31,6 +32,7 @@ interface ChangeEvent {
   new: any;
   old: any;
   timestamp: number;
+  diff?: any; // Pour les événements UPDATE avec diff
 }
 
 /**
@@ -41,62 +43,45 @@ export function useSupabaseRealtime() {
   const initialized = useRef(false);
 
   useEffect(() => {
-    // Éviter les initialisations multiples
-    if (initialized.current) {
-      return;
-    }
-    
-    console.log('[REALTIME] 🚀 Démarrage des souscriptions Supabase Realtime...');
-    
-    // Démarrer les souscriptions avec l'ancienne logique qui marchait
-    const setupRealtime = async () => {
-      try {
-        // Authentification anonyme pour permettre le realtime
-        console.log('[REALTIME] 🔐 Authentification anonyme...');
-        const { data: { user }, error: authError } = await supabase.auth.getUser();
-        
-        if (!user) {
-          console.log('[REALTIME] 🔐 Création session anonyme...');
-          const { data, error } = await supabase.auth.signInAnonymously();
-          if (error) {
-            console.log('[REALTIME] ⚠️ Erreur auth anonyme:', error.message);
-          } else {
-            console.log('[REALTIME] ✅ Session anonyme créée');
-          }
-        } else {
-          console.log('[REALTIME] ✅ Utilisateur déjà authentifié:', user.id);
-        }
-        
-        // Marquer comme initialisé
-        initialized.current = true;
-        
-        console.log('[REALTIME] 🚀 Démarrage des souscriptions...');
-        
-        // S'abonner aux événements realtime (comme avant)
-        subscribeToNotes();
-        subscribeToDossiers();
-        subscribeToClasseurs();
-        startSubscriptionMonitoring();
-        
-        // Marquer comme connecté
-        setIsConnected(true);
-        
-      } catch (error) {
-        console.error('[REALTIME] ❌ Erreur lors de l\'activation des souscriptions realtime:', error);
-        // Réessayer dans 3 secondes en cas d'erreur
-        setTimeout(setupRealtime, 3000);
-      }
-    };
-    
-    // Attendre 2 secondes que l'authentification soit établie (comme avant)
-    setTimeout(setupRealtime, 2000);
-    
-    return () => {
-      console.log('[REALTIME] 🛑 Arrêt des souscriptions...');
-      unsubscribeFromAll();
-      setIsConnected(false);
-      initialized.current = false;
-    };
+    // TOUT EST COMMENTÉ POUR DÉSACTIVER LE REALTIME
+    // if (initialized.current) {
+    //   return;
+    // }
+    // console.log('[REALTIME] 🚀 Démarrage des souscriptions Supabase Realtime...');
+    // const setupRealtime = async () => {
+    //   try {
+    //     console.log('[REALTIME] 🔐 Authentification anonyme...');
+    //     const { data: { user }, error: authError } = await supabase.auth.getUser();
+    //     if (!user) {
+    //       console.log('[REALTIME] 🔐 Création session anonyme...');
+    //       const { data, error } = await supabase.auth.signInAnonymously();
+    //       if (error) {
+    //         console.log('[REALTIME] ⚠️ Erreur auth anonyme:', error.message);
+    //       } else {
+    //         console.log('[REALTIME] ✅ Session anonyme créée');
+    //       }
+    //     } else {
+    //       console.log('[REALTIME] ✅ Utilisateur déjà authentifié:', user.id);
+    //     }
+    //     initialized.current = true;
+    //     console.log('[REALTIME] 🚀 Démarrage des souscriptions...');
+    //     subscribeToNotes();
+    //     subscribeToDossiers();
+    //     subscribeToClasseurs();
+    //     startSubscriptionMonitoring();
+    //     setIsConnected(true);
+    //   } catch (error) {
+    //     console.error('[REALTIME] ❌ Erreur lors de l\'activation des souscriptions realtime:', error);
+    //     setTimeout(setupRealtime, 3000);
+    //   }
+    // };
+    // setTimeout(setupRealtime, 2000);
+    // return () => {
+    //   console.log('[REALTIME] 🛑 Arrêt des souscriptions...');
+    //   unsubscribeFromAll();
+    //   setIsConnected(false);
+    //   initialized.current = false;
+    // };
   }, []);
 
   return { isConnected };
@@ -167,7 +152,7 @@ export function useRealtime(config: RealtimeConfig) {
       switch (config.type) {
         case 'polling':
           if (!config.userId) throw new Error('userId requis pour le polling');
-          // initRealtimeService(config.userId); // ANCIEN SYSTÈME DÉSACTIVÉ
+          initRealtimeService(config.userId); // ANCIEN SYSTÈME DÉSACTIVÉ
           break;
         case 'websocket':
           if (isSupabase) {
@@ -194,7 +179,7 @@ export function useRealtime(config: RealtimeConfig) {
       try {
         switch (config.type) {
           case 'polling':
-            // stopRealtimeService(); // ANCIEN SYSTÈME DÉSACTIVÉ
+            stopRealtimeService(); // ANCIEN SYSTÈME DÉSACTIVÉ
             break;
           case 'websocket':
             if (isSupabase) {
@@ -218,31 +203,27 @@ export function useRealtime(config: RealtimeConfig) {
   /**
    * S'abonner aux changements d'une table
    */
-  const subscribe = (table: string, _callback: (event: ChangeEvent) => void) => {
-    listeners.current.set(table, _callback);
+  const subscribe = (table: string, callback: (event: ChangeEvent) => void) => {
+    listeners.current.set(table, callback);
     // ANCIEN SYSTÈME DÉSACTIVÉ - Utilisation du nouveau système realtime
-    console.log(`[useRealtime] 🚫 Ancien système realtime désactivé pour ${table} - Utilisation du nouveau système`);
+    // console.log(`[useRealtime] 🚫 Ancien système realtime désactivé pour ${table} - Utilisation du nouveau système`);
     
-    // if (config.type === 'websocket') {
-    //   realtimeService.subscribe(table, callback);
-    // } else {
-    //   subscribeToPolling(table, callback);
-    // }
+    if (config.type === 'polling') {
+      subscribeToPolling(table, callback);
+    }
   };
 
   /**
    * Se désabonner des changements
    */
-  const unsubscribe = (table: string, _callback: (event: ChangeEvent) => void) => {
+  const unsubscribe = (table: string, callback: (event: ChangeEvent) => void) => {
     listeners.current.delete(table);
     // ANCIEN SYSTÈME DÉSACTIVÉ - Utilisation du nouveau système realtime
-    console.log(`[useRealtime] 🚫 Ancien système realtime désactivé pour ${table} - Utilisation du nouveau système`);
+    // console.log(`[useRealtime] 🚫 Ancien système realtime désactivé pour ${table} - Utilisation du nouveau système`);
     
-    // if (config.type === 'websocket') {
-    //   realtimeService.unsubscribe(table, callback);
-    // } else {
-    //   unsubscribeFromPolling(table, callback);
-    // }
+    if (config.type === 'polling') {
+      unsubscribeFromPolling(table, callback);
+    }
   };
 
   /**
@@ -289,8 +270,11 @@ export function useNoteRealtime(noteId: string, userId: string) {
         switch (event.eventType) {
           case 'UPDATE':
             if (event.new?.id === noteId) {
-              console.log('📝 Note modifiée en temps réel:', event);
-              // Ici vous pouvez déclencher une action (recharger la note, etc.)
+              if (event.diff) {
+                useFileSystemStore.getState().applyDiff(noteId, event.diff);
+              } else {
+                useFileSystemStore.getState().updateNote(noteId, event.new);
+              }
             }
             break;
           case 'DELETE':
@@ -358,8 +342,11 @@ export function useFolderRealtime(classeurId: string, userId: string) {
         switch (event.eventType) {
           case 'UPDATE':
             if (event.new?.classeur_id === classeurId) {
-              console.log('📄 Article modifié en temps réel:', event);
-              // Ici vous pouvez déclencher une action (recharger la liste, etc.)
+              if (event.diff) {
+                useFileSystemStore.getState().applyDiff(event.new.id, event.diff);
+              } else {
+                useFileSystemStore.getState().updateNote(event.new.id, event.new);
+              }
             }
             break;
           case 'INSERT':

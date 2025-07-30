@@ -92,6 +92,9 @@ export async function POST(req: Request): Promise<Response> {
       return new Response(JSON.stringify({ error: error.message }), { status: 500 });
     }
     
+    // 🚫 POLLING DÉCLENCHÉ PAR L'API CLIENT OPTIMISÉE
+    // Plus besoin de déclencher le polling côté serveur
+    
     return new Response(JSON.stringify({ folder }), { status: 201 });
   } catch (err: any) {
     return new Response(JSON.stringify({ error: err.message }), { status: 500 });

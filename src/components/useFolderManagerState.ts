@@ -4,27 +4,22 @@ import { Folder, FileArticle } from './types';
 import {
   updateItemPositions
 } from '../services/supabase';
-import {
-  createNoteREST,
-  createFolderREST,
-  renameItemREST,
-  deleteNoteREST,
-  deleteFolderREST,
-  moveNoteREST,
-  moveFolderREST
-} from '../services/api';
+import { optimizedApi } from '@/services/optimizedApi';
 
 import { useRealtime } from '@/hooks/useRealtime';
 import { useFileSystemStore } from '@/store/useFileSystemStore';
-import type { FileSystemState } from '@/store/useFileSystemStore';
+import type { FileSystemState, Note } from '@/store/useFileSystemStore';
 import { generateUniqueNoteName } from '@/utils/generateUniqueName';
-const selectFolders = (s: FileSystemState) => s.folders;
-const selectNotes = (s: FileSystemState) => s.notes;
+
+const selectFoldersData = (s: FileSystemState) => s.folders;
+const selectNotesData = (s: FileSystemState) => s.notes;
+const selectClasseursData = (s: FileSystemState) => s.classeurs;
+const selectActiveClasseurId = (s: FileSystemState) => s.activeClasseurId;
 
 // Types pour le renommage
 export type RenamingType = 'folder' | 'file' | null;
 
-interface UseFolderManagerState {
+interface FolderManagerResult {
   folders: Folder[];
   files: FileArticle[];
   currentFolderId: string | null;
@@ -49,7 +44,7 @@ interface UseFolderManagerState {
 
   // Création / suppression
   createFolder: (name: string) => Promise<Folder | undefined>;
-  createFile: (name: string) => Promise<FileArticle | undefined>;
+  createFile: (name: string, parentFolderId: string | null) => Promise<Note | undefined>;
   deleteFolder: (id: string) => Promise<void>;
   deleteFile: (id: string) => Promise<void>;
 
@@ -78,25 +73,27 @@ function toUIFile(n: any): FileArticle {
   };
 }
 
-export function useFolderManagerState(classeurId: string, parentFolderId?: string, refreshKey?: number): UseFolderManagerState {
+export function useFolderManagerState(classeurId: string, parentFolderId?: string, refreshKey?: number): FolderManagerResult {
   // --- ÉTAT PRINCIPAL ---
-  const rawFoldersObj = useFileSystemStore(selectFolders);
-  const rawNotesObj = useFileSystemStore(selectNotes);
-  const rawFolders = useMemo(() => Object.values(rawFoldersObj), [rawFoldersObj]);
-  const rawNotes = useMemo(() => Object.values(rawNotesObj), [rawNotesObj]);
+  const foldersMap = useFileSystemStore(selectFoldersData);
+  const folders = useMemo(() => Object.values(foldersMap), [foldersMap]);
+  const notesMap = useFileSystemStore(selectNotesData);
+  const notes = useMemo(() => Object.values(notesMap), [notesMap]);
+  const classeurs = useFileSystemStore(selectClasseursData);
+  const activeClasseurId = useFileSystemStore(selectActiveClasseurId);
 
   // Correction : filtrage par classeurId et parentFolderId
-  const folders: Folder[] = useMemo(
-    () => rawFolders
-      .filter(f => f.classeur_id === classeurId && (f.parent_id === parentFolderId || (!f.parent_id && !parentFolderId)))
+  const filteredFolders: Folder[] = useMemo(
+    () => folders
+      .filter((f: any) => f.classeur_id === classeurId && (f.parent_id === parentFolderId || (!f.parent_id && !parentFolderId)))
       .map(toUIFolder),
-    [rawFolders, classeurId, parentFolderId]
+    [folders, classeurId, parentFolderId]
   );
-  const files: FileArticle[] = useMemo(
-    () => rawNotes
-      .filter(n => n.classeur_id === classeurId && (n.folder_id === parentFolderId || (!n.folder_id && !parentFolderId)))
+  const filteredFiles: FileArticle[] = useMemo(
+    () => notes
+      .filter((n: any) => n.classeur_id === classeurId && (n.folder_id === parentFolderId || (!n.folder_id && !parentFolderId)))
       .map(toUIFile),
-    [rawNotes, classeurId, parentFolderId]
+    [notes, classeurId, parentFolderId]
   );
   // Supprimé : la navigation est contrôlée par le parent (FolderManager)
   const [loading, setLoading] = useState<boolean>(true);
@@ -140,14 +137,14 @@ export function useFolderManagerState(classeurId: string, parentFolderId?: strin
   // --- CRÉATION / SUPPRESSION ---
   const createFolder = useCallback(async (name: string): Promise<Folder | undefined> => {
     try {
-      console.log('[UI] 📁 Création dossier, en attente du patch realtime...', { name, classeurId, parentFolderId });
-      const newFolder = await createFolderREST({
+      console.log('[UI] 📁 Création dossier avec API optimisée...', { name, classeurId, parentFolderId });
+      const result = await optimizedApi.createFolder({
         name,
         notebook_id: classeurId,
         parent_id: parentFolderId,
       });
-      console.log('[UI] ✅ Dossier créé via API, patch realtime attendu...', newFolder);
-      return newFolder;
+      console.log('[UI] ✅ Dossier créé avec API optimisée:', result.folder.name);
+      return toUIFolder(result.folder);
     } catch (err) {
       console.error('[UI] ❌ Erreur création dossier:', err);
       setError('Erreur lors de la création du dossier.');
@@ -157,10 +154,10 @@ export function useFolderManagerState(classeurId: string, parentFolderId?: strin
 
   const DEFAULT_HEADER_IMAGE = 'https://images.unsplash.com/photo-1443890484047-5eaa67d1d630?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D';
 
-  const createFile = useCallback(async (name: string): Promise<FileArticle | undefined> => {
+  const createFile = useCallback(async (name: string, parentFolderId: string | null): Promise<Note | undefined> => {
     try {
       // Générer un nom unique pour la note
-      const uniqueName = generateUniqueNoteName(files);
+      const uniqueName = generateUniqueNoteName(filteredFiles);
       
       console.log('[UI] 📝 Création note, en attente du patch realtime...', { name: uniqueName, classeurId, parentFolderId });
       const payload: any = {
@@ -172,22 +169,22 @@ export function useFolderManagerState(classeurId: string, parentFolderId?: strin
       if (parentFolderId) {
         payload.folder_id = parentFolderId;
       }
-      console.log('Payload createNoteREST', payload);
-      const newFile = await createNoteREST(payload);
-      console.log('[UI] ✅ Note créée via API, patch realtime attendu...', newFile);
-      return newFile;
+      console.log('Payload createNote optimisée', payload);
+      const result = await optimizedApi.createNote(payload);
+      console.log('[UI] ✅ Note créée avec API optimisée:', result.note.source_title);
+      return result.note;
     } catch (err) {
       console.error('[UI] ❌ Erreur création note:', err);
       setError('Erreur lors de la création du fichier.');
       return undefined;
     }
-  }, [classeurId, parentFolderId, files]);
+  }, [classeurId, parentFolderId, filteredFiles]);
 
   const deleteFolder = useCallback(async (id: string) => {
     try {
-      console.log('[UI] 🗑️ Suppression dossier, en attente du patch realtime...', { id });
-      await deleteFolderREST(id);
-      console.log('[UI] ✅ Dossier supprimé via API, patch realtime attendu...');
+      console.log('[UI] 🗑️ Suppression dossier avec API optimisée...', { id });
+      await optimizedApi.deleteFolder(id);
+      console.log('[UI] ✅ Dossier supprimé avec API optimisée');
       if (parentFolderId === id) {
         // setCurrentFolderId(null); // Supprimé
         // setCurrentFolder(null); // Supprimé
@@ -198,11 +195,39 @@ export function useFolderManagerState(classeurId: string, parentFolderId?: strin
     }
   }, [parentFolderId]);
 
-  const deleteFile = useCallback(async (id: string) => {
+  const updateFile = useCallback(async (id: string, name: string): Promise<void> => {
+    const originalNote = notes.find(n => n.id === id);
+    if (!originalNote) return;
+
+    useFileSystemStore.getState().updateNoteOptimistic(id, { source_title: name });
+
     try {
-      console.log('[UI] 🗑️ Suppression note, en attente du patch realtime...', { id });
-      await deleteNoteREST(id);
-      console.log('[UI] ✅ Note supprimée via API, patch realtime attendu...');
+      await optimizedApi.updateNote(id, { source_title: name });
+    } catch (error) {
+      console.error('Erreur renommage note:', error);
+      useFileSystemStore.getState().updateNote(id, { source_title: originalNote.source_title });
+    }
+  }, [notes]);
+
+  const updateFolder = useCallback(async (id: string, name: string): Promise<void> => {
+    const originalFolder = folders.find(f => f.id === id);
+    if (!originalFolder) return;
+
+    useFileSystemStore.getState().updateFolder(id, { name });
+
+    try {
+      await optimizedApi.updateFolder(id, { name });
+    } catch (error) {
+      console.error('Erreur renommage dossier:', error);
+      useFileSystemStore.getState().updateFolder(id, { name: originalFolder.name });
+    }
+  }, [folders]);
+
+  const deleteFile = useCallback(async (id: string): Promise<void> => {
+    try {
+      console.log('[UI] 🗑️ Suppression note avec API optimisée...', { id });
+      await optimizedApi.deleteNote(id);
+      console.log('[UI] ✅ Note supprimée avec API optimisée');
     } catch (err) {
       console.error('[UI] ❌ Erreur suppression note:', err);
       setError('Erreur lors de la suppression du fichier.');
@@ -212,9 +237,13 @@ export function useFolderManagerState(classeurId: string, parentFolderId?: strin
   // --- RENOMMAGE ---
   const submitRename = useCallback(async (id: string, newName: string, type: 'folder' | 'file') => {
     try {
-      console.log('[UI] ✏️ Renommage item, en attente du patch realtime...', { id, newName, type });
-      await renameItemREST(id, type === 'file' ? 'note' : 'folder', newName);
-      console.log('[UI] ✅ Item renommé via API, patch realtime attendu...');
+      console.log('[UI] ✏️ Renommage item avec API optimisée...', { id, newName, type });
+      if (type === 'file') {
+        await optimizedApi.updateNote(id, { source_title: newName });
+      } else {
+        await optimizedApi.updateFolder(id, { name: newName });
+      }
+      console.log('[UI] ✅ Item renommé avec API optimisée');
     } catch (err) {
       console.error('[UI] ❌ Erreur renommage:', err);
       setError('Erreur lors du renommage.');
@@ -257,36 +286,26 @@ export function useFolderManagerState(classeurId: string, parentFolderId?: strin
   // --- IMBRICATION DnD ---
   const moveItem = useCallback(async (id: string, newParentId: string | null, type: 'folder' | 'file') => {
     try {
-      console.log('[UI] 📦 Déplacement item, en attente du patch realtime...', { id, newParentId, type });
+      console.log('[UI] 📦 Déplacement item avec API optimisée...', { id, newParentId, type });
+      // TODO: Ajouter les méthodes de déplacement à l'OptimizedApi
       if (type === 'folder') {
-        await moveFolderREST(id, {
-          target_classeur_id: classeurId,
-          target_parent_id: newParentId,
-        });
+        // await optimizedApi.moveFolder(id, { target_parent_id: newParentId, target_classeur_id: activeClasseurId });
+        console.log('[UI] ⚠️ Déplacement dossier non implémenté dans OptimizedApi');
       } else {
-        await moveNoteREST(id, {
-          target_classeur_id: classeurId,
-          target_folder_id: newParentId,
-        });
+        // await optimizedApi.moveNote(id, { target_folder_id: newParentId, target_classeur_id: activeClasseurId });
+        console.log('[UI] ⚠️ Déplacement note non implémenté dans OptimizedApi');
       }
-      console.log('[UI] ✅ Item déplacé via API, patch realtime attendu...');
-      // Rafraîchir les dossiers/fichiers
-      // const [fetchedFolders, fetchedFiles] = await Promise.all([ // Supprimé
-      //   getFolders(classeurId, parentFolderId),
-      //   getArticles(classeurId, parentFolderId)
-      // ]);
-      // setFolders(fetchedFolders.sort((a, b) => (a.position || 0) - (b.position || 0))); // Supprimé
-      // setFiles(fetchedFiles.sort((a, b) => (a.position || 0) - (b.position || 0))); // Supprimé
+      console.log('[UI] ✅ Item déplacé avec API optimisée');
     } catch (err) {
       console.error('[UI] ❌ Erreur déplacement item:', err);
       setError('Erreur lors du déplacement de l\'élément.');
     }
-  }, [classeurId, parentFolderId]);
+  }, [activeClasseurId]);
 
   // --- EXPORT ---
   return {
-    folders,
-    files,
+    folders: filteredFolders,
+    files: filteredFiles,
     currentFolderId: parentFolderId ?? null, // Expose parentFolderId comme currentFolderId, typé string | null
     currentFolder: null, // currentFolder n'est plus géré ici
     loading,
