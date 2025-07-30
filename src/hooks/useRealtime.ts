@@ -9,6 +9,8 @@ import { initRealtimeService, subscribeToTable as subscribeToPolling, unsubscrib
 // import * as supabaseRealtimeService from '@/services/supabaseRealtimeService';
 // import { initSSEService, subscribeToTable, unsubscribeFromTable, stopSSEService } from '@/services/sseService';
 import { useFileSystemStore } from '@/store/useFileSystemStore';
+import { useAuth } from './useAuth';
+import { logApi } from '@/utils/logger';
 
 interface RealtimeConfig {
   userId?: string;
@@ -151,8 +153,18 @@ export function useRealtime(config: RealtimeConfig) {
     try {
       switch (config.type) {
         case 'polling':
-          if (!config.userId) throw new Error('userId requis pour le polling');
-          initRealtimeService(config.userId); // ANCIEN SYSTÈME DÉSACTIVÉ
+          if (!config.userId) {
+            const fallbackUserId = process.env.NEXT_PUBLIC_FALLBACK_USER_ID;
+            if (!fallbackUserId) {
+              logApi('realtime', 'Aucun userId fourni et aucun fallback configuré');
+              throw new Error('userId requis pour le polling');
+            }
+            logApi('realtime', `Utilisation du fallback userId: ${fallbackUserId}`);
+            initRealtimeService(fallbackUserId);
+          } else {
+            logApi('realtime', `Initialisation polling avec userId: ${config.userId}`);
+            initRealtimeService(config.userId);
+          }
           break;
         case 'websocket':
           if (isSupabase) {

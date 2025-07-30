@@ -14,7 +14,7 @@ import { EditorContent } from '@tiptap/react';
 import slugify from 'slugify';
 import type { Heading } from '@/types/editor';
 import { useParams } from 'next/navigation';
-import { updateNoteREST } from '@/services/api';
+import { optimizedApi } from '@/services/optimizedApi';
 import { getArticleById } from '@/services/supabase';
 import useEditorSave from '@/hooks/useEditorSave';
 // import { useEditorPersistence } from '@/hooks/useEditorPersistence';
@@ -158,7 +158,7 @@ export default function NoteEditorPage() {
           markdown_content,
           html_content,
         };
-        await updateNoteREST(noteId, payload);
+        await optimizedApi.updateNote(noteId, payload);
         setLastSaved(new Date());
         
         // Nettoyer l'état persisté après une sauvegarde réussie
@@ -185,7 +185,7 @@ export default function NoteEditorPage() {
         console.log('[header-image] Changement d\'image - réinitialisation offset à 50, blur et overlay à 0');
       }
       
-      await updateNoteREST(noteId, payload);
+      await optimizedApi.updateNote(noteId, payload);
       
       // Mettre à jour l'état local
       setHeaderImageUrl(newHeaderImage);
@@ -204,7 +204,7 @@ export default function NoteEditorPage() {
       const payload: Record<string, unknown> = {
         header_image_offset: newOffset,
       };
-      await updateNoteREST(noteId, payload);
+      await optimizedApi.updateNote(noteId, payload);
       setHeaderImageOffset(newOffset);
     } catch (error) {
       console.error('[header-image-offset] Erreur lors de la sauvegarde de l\'offset:', error);
@@ -218,7 +218,7 @@ export default function NoteEditorPage() {
       const payload: Record<string, unknown> = {
         header_image_blur: newBlur,
       };
-      await updateNoteREST(noteId, payload);
+      await optimizedApi.updateNote(noteId, payload);
       setHeaderImageBlur(newBlur);
     } catch (error) {
       console.error('[header-image-blur] Erreur lors de la sauvegarde du blur:', error);
@@ -232,7 +232,7 @@ export default function NoteEditorPage() {
       const payload: Record<string, unknown> = {
         header_image_overlay: newOverlay,
       };
-      await updateNoteREST(noteId, payload);
+      await optimizedApi.updateNote(noteId, payload);
       setHeaderImageOverlay(newOverlay);
     } catch (error) {
       console.error('[header-image-overlay] Erreur lors de la sauvegarde de l\'overlay:', error);
@@ -246,7 +246,7 @@ export default function NoteEditorPage() {
       const payload: Record<string, unknown> = {
         header_title_in_image: newValue,
       };
-      await updateNoteREST(noteId, payload);
+      await optimizedApi.updateNote(noteId, payload);
       setHeaderTitleInImage(newValue);
       if (process.env.NODE_ENV === 'development') {
         console.log('[header-image] Toggle titre dans image →', newValue);
@@ -263,7 +263,7 @@ export default function NoteEditorPage() {
       const payload: Record<string, unknown> = {
         wide_mode: newValue,
       };
-      await updateNoteREST(noteId, payload);
+      await optimizedApi.updateNote(noteId, payload);
       setFullWidth(newValue);
       if (process.env.NODE_ENV === 'development') {
         console.log('[wide-mode] Toggle mode pleine largeur →', newValue);
@@ -280,7 +280,7 @@ export default function NoteEditorPage() {
       const payload: Record<string, unknown> = {
         font_family: newFontFamily,
       };
-      await updateNoteREST(noteId, payload);
+      await optimizedApi.updateNote(noteId, payload);
       setFontFamily(newFontFamily);
       if (process.env.NODE_ENV === 'development') {
         console.log('[font-family] Changement de police →', newFontFamily);

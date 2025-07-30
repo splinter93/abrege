@@ -1,5 +1,7 @@
 import { useFileSystemStore } from '@/store/useFileSystemStore';
 import { clientPollingTrigger } from './clientPollingTrigger';
+import { ErrorHandler } from './errorHandler';
+import { logApi, logStore, logPolling } from '@/utils/logger';
 
 /**
  * Service API optimisé pour une latence minimale
@@ -19,8 +21,10 @@ export class OptimizedApi {
    * Créer une note avec mise à jour directe de Zustand + polling côté client
    */
   async createNote(noteData: any) {
-    console.log('[OptimizedApi] 🚀 Création note optimisée');
     const startTime = Date.now();
+    const context = { operation: 'create_note', component: 'OptimizedApi' };
+    
+    logApi('create_note', '🚀 Début création note', context);
     
     try {
       // Appel API
@@ -31,26 +35,31 @@ export class OptimizedApi {
       });
 
       if (!response.ok) {
-        throw new Error(`Erreur création note: ${response.statusText}`);
+        const error = new Error(`Erreur création note: ${response.statusText}`);
+        (error as any).status = response.status;
+        (error as any).statusText = response.statusText;
+        throw error;
       }
 
       const result = await response.json();
       const apiTime = Date.now() - startTime;
-      console.log(`[OptimizedApi] ✅ API terminée en ${apiTime}ms`);
+      logApi('create_note', `✅ API terminée en ${apiTime}ms`, context);
 
       // 🚀 Mise à jour directe de Zustand (instantanée)
       const store = useFileSystemStore.getState();
       store.addNote(result.note);
+      logStore('add_note', `Note ajoutée: ${result.note.source_title}`, context);
       
       // 🚀 Déclencher le polling côté client immédiatement
       await clientPollingTrigger.triggerArticlesPolling('INSERT');
+      logPolling('trigger', 'Polling INSERT déclenché', context);
       
       const totalTime = Date.now() - startTime;
-      console.log(`[OptimizedApi] ✅ Note ajoutée à Zustand + polling déclenché en ${totalTime}ms total`);
+      logApi('create_note', `✅ Opération complète en ${totalTime}ms`, context);
       
       return result;
     } catch (error) {
-      console.error('[OptimizedApi] ❌ Erreur création note:', error);
+      ErrorHandler.handleApiError(error, context);
       throw error;
     }
   }
