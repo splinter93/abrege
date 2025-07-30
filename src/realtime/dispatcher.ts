@@ -116,6 +116,8 @@ const MIN_RETRY_INTERVAL = 10000; // 10 secondes minimum entre les tentatives
 const lastProcessedEvents = new Map();
 const DEDUPLICATION_WINDOW = 1000; // 1 seconde
 
+let monitoringInterval: NodeJS.Timeout | null = null;
+
 /**
  * Monitoring des souscriptions realtime
  */
@@ -125,8 +127,13 @@ export function startSubscriptionMonitoring() {
   
   console.log('[REALTIME] 🔍 Démarrage du monitoring des souscriptions...');
   
+  // Nettoyer l'interval précédent s'il existe
+  if (monitoringInterval) {
+    clearInterval(monitoringInterval);
+  }
+  
   // Vérifier toutes les 30 secondes si les souscriptions sont actives
-  setInterval(() => {
+  monitoringInterval = setInterval(() => {
     // Réinitialiser les compteurs de tentatives pour permettre de nouvelles tentatives
     if (!notesSubscriptionActive) {
       console.log('[REALTIME] 🔄 Monitoring: Redémarrage des souscriptions notes...');
@@ -566,6 +573,13 @@ export function subscribeToClasseurs() {
  */
 export function unsubscribeFromAll() {
   console.log('[REALTIME] 🛑 Désabonnement de tous les canaux...');
+  
+  // Nettoyer l'interval de monitoring
+  if (monitoringInterval) {
+    clearInterval(monitoringInterval);
+    monitoringInterval = null;
+    console.log('[REALTIME] 🛑 Monitoring arrêté');
+  }
   
   // Désabonner de tous les canaux
   supabase.removeAllChannels();

@@ -1,6 +1,6 @@
 import { renderHook, act } from '@testing-library/react';
 import { vi } from 'vitest';
-import { useMarkdownRender } from './useMarkdownRender';
+import { useMarkdownRender } from '@/hooks/editor/useMarkdownRender';
 
 // Mock markdown-it
 vi.mock('@/utils/markdownItConfig', () => ({
