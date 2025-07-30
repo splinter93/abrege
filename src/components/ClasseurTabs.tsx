@@ -65,7 +65,7 @@ function SortableTab({ classeur, isActive, onSelectClasseur, onContextMenu, isDr
         style={{ fontFamily: "Inter, Noto Sans, Arial, sans-serif" }}
       >
         <span
-          style={{ fontSize: 18, marginRight: 6, verticalAlign: "middle", cursor: "pointer", display: "inline-block" }}
+          style={{ fontSize: 18, verticalAlign: "middle", cursor: "pointer", display: "inline-block" }}
           tabIndex={0}
           role="button"
           aria-label="Changer l'emoji"
