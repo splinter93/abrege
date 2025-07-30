@@ -202,7 +202,8 @@ const ClasseurTabs: React.FC<ClasseurTabsProps> = ({
       const oldIndex = classeurs.findIndex((c) => c.id === active.id);
       const newIndex = classeurs.findIndex((c) => c.id === over.id);
       const reorderedClasseurs = arrayMove(classeurs, oldIndex, newIndex);
-      setClasseurs(reorderedClasseurs);
+      
+      // Ne pas mettre à jour l'état local, laisser Zustand gérer via l'API
       const positionsToUpdate = reorderedClasseurs.map((c, index) => ({ id: c.id, position: index }));
       onUpdateClasseurPositions(positionsToUpdate);
     }

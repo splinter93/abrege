@@ -412,6 +412,9 @@ export class OptimizedApi {
       const store = useFileSystemStore.getState();
       updatedClasseurs.forEach(({ id, position }) => {
         store.updateClasseur(id, { position });
+        if (process.env.NODE_ENV === 'development') {
+          console.log(`[OptimizedApi] 📍 Position mise à jour pour classeur ${id}: ${position}`);
+        }
       });
       
       // 🚀 Déclencher le polling côté client immédiatement

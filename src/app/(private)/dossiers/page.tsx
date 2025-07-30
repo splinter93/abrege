@@ -460,9 +460,9 @@ const DossiersPage: React.FC = () => {
 
   const handleUpdateClasseurPositions = async (updatedClasseurs: { id: string; position: number }[]) => {
     try {
-      console.log('[DossiersPage] 🔄 Réorganisation classeurs avec API optimisée');
+      console.log('[DossiersPage] 🔄 Réorganisation classeurs avec API optimisée:', updatedClasseurs);
       const result = await optimizedApi.reorderClasseurs(updatedClasseurs);
-      console.log('[DossiersPage] ✅ Classeurs réorganisés avec API optimisée');
+      console.log('[DossiersPage] ✅ Classeurs réorganisés avec API optimisée:', result);
       toast.success("Ordre des classeurs sauvegardé.");
       return result;
     } catch (error) {
