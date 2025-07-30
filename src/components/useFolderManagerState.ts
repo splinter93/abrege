@@ -302,7 +302,7 @@ export function useFolderManagerState(classeurId: string, parentFolderId?: strin
         }
         const result = await response.json();
         const store = useFileSystemStore.getState();
-        store.moveFolder(id, newParentId, activeClasseurId);
+        store.moveFolder(id, newParentId, activeClasseurId || undefined);
         await clientPollingTrigger.triggerFoldersPolling('UPDATE');
         console.log('[UI] ✅ Dossier déplacé:', result.folder?.name || id);
       } else {
@@ -319,7 +319,7 @@ export function useFolderManagerState(classeurId: string, parentFolderId?: strin
         }
         const result = await response.json();
         const store = useFileSystemStore.getState();
-        store.moveNote(id, newParentId, activeClasseurId);
+        store.moveNote(id, newParentId, activeClasseurId || undefined);
         await clientPollingTrigger.triggerArticlesPolling('UPDATE');
         console.log('[UI] ✅ Note déplacée:', result.note?.source_title || id);
       }

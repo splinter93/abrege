@@ -62,7 +62,16 @@
   letter-spacing: -0.02em;
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 0.9rem;
+}
+
+.classeur-icon {
+  font-size: 2rem;
+}
+
+.classeur-name {
+  font-size: 2rem;
+  font-weight: 700;
 }
 
 .breadcrumbs {
@@ -310,6 +319,15 @@
   }
   
   .classeur-header-title {
+    font-size: 1.5rem;
+    gap: 1rem;
+  }
+  
+  .classeur-icon {
+    font-size: 1.5rem;
+  }
+  
+  .classeur-name {
     font-size: 1.5rem;
   }
   

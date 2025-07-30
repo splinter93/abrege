@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useCallback } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import './FolderManagerModern.css';
 import FolderContent from './FolderContent';
 import FolderToolbar, { ViewMode } from './FolderToolbar';
@@ -12,6 +13,7 @@ import { useContextMenuManager } from '../hooks/useContextMenuManager';
 import { useFolderSelection } from '../hooks/useFolderSelection';
 import { useFolderFilter } from '../hooks/useFolderFilter';
 import { useFolderKeyboard } from '../hooks/useFolderKeyboard';
+import { classeurTabVariants, classeurTabTransition } from './FolderAnimation';
 
 interface FolderManagerProps {
   classeurId: string;
@@ -32,6 +34,7 @@ interface FolderManagerProps {
 const FolderManager: React.FC<FolderManagerProps> = ({ 
   classeurId, 
   classeurName, 
+  classeurIcon,
   parentFolderId, 
   onFolderOpen, 
   onGoBack,
@@ -134,14 +137,22 @@ const FolderManager: React.FC<FolderManagerProps> = ({
         {/* Header avec titre et contrôles */}
         <header className="folder-manager-header">
           <div>
-            <h1 className="classeur-header-title">
+            <motion.h1 
+              className="classeur-header-title"
+              variants={classeurTabVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              transition={classeurTabTransition}
+            >
               {parentFolderId && (
                 <button onClick={onGoBack} className="breadcrumb-item">
-                  ←
+                  ◀
                 </button>
               )}
-              {classeurName}
-            </h1>
+              <span className="classeur-icon">{classeurIcon || '📁'}</span>
+              <span className="classeur-name">{classeurName}</span>
+            </motion.h1>
           </div>
           <div className="view-controls">
             <FolderToolbar

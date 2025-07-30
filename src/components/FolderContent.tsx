@@ -1,10 +1,25 @@
 import React from 'react';
-// import { motion, AnimatePresence } from 'framer-motion'; // Désactivé pour interface simple
+import { motion, AnimatePresence } from 'framer-motion';
 
 import FolderItem from './FolderItem';
 import FileItem from './FileItem';
 import { Folder, FileArticle } from './types';
 import './FolderContent.css';
+import { 
+  contentVariants, 
+  loadingVariants, 
+  errorVariants, 
+  emptyStateVariants,
+  fileListVariants,
+  folderListVariants,
+  gridExpandVariants,
+  gridShrinkVariants,
+  gridReorderVariants,
+  gridRowVariants,
+  gridColumnVariants,
+  gridTransition,
+  gridReorderTransition
+} from './FolderAnimation';
 
 interface FolderContentProps {
   classeurName: string;
@@ -51,18 +66,30 @@ const FolderContent: React.FC<FolderContentProps> = ({
   const safeFiles = Array.isArray(files) ? files : [];
   if (loading) {
     return (
-      <div className="folder-content-loading">
+      <motion.div 
+        className="folder-content-loading"
+        variants={loadingVariants}
+        initial="initial"
+        animate="animate"
+        exit="exit"
+      >
         <div className="folder-text-3xl folder-margin-bottom-large folder-animate-spin">⏳</div>
         <span>Chargement…</span>
-      </div>
+      </motion.div>
     );
   }
   if (error) {
     return (
-      <div className="folder-content-error">
+      <motion.div 
+        className="folder-content-error"
+        variants={errorVariants}
+        initial="initial"
+        animate="animate"
+        exit="exit"
+      >
         <span className="folder-text-xl folder-margin-bottom-small">😕</span>
         <span>Une erreur est survenue lors du chargement du classeur.</span>
-      </div>
+      </motion.div>
     );
   }
   if (safeFolders.length === 0 && safeFiles.length === 0) {
@@ -70,69 +97,127 @@ const FolderContent: React.FC<FolderContentProps> = ({
       emptyMessage ? (
         emptyMessage
       ) : (
-        <div className="folder-content-empty" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '50vh' }}>
+        <motion.div 
+          className="folder-content-empty" 
+          style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '50vh' }}
+          variants={emptyStateVariants}
+          initial="initial"
+          animate="animate"
+          exit="exit"
+        >
           <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>📁</div>
           <div style={{ fontWeight: 'bold', color: 'var(--text-1)', marginBottom: '0.5rem', fontSize: '1.2rem' }}>
             {isInFolder ? 'Ce dossier est vide.' : 'Ce classeur est vide.'}
           </div>
           <div>Créez votre premier dossier ou note avec la barre d&apos;outils.</div>
-        </div>
+        </motion.div>
       )
     );
   }
   return (
-    <div className="folder-content-container">
+    <motion.div 
+      className="folder-content-container"
+      variants={contentVariants}
+      initial="initial"
+      animate="animate"
+      exit="exit"
+      layout
+      transition={gridTransition}
+    >
       {/* Container pour les grilles - style macOS */}
-      <div className="folder-grid-container">
+      <motion.div 
+        className="folder-grid-container"
+        layout
+        transition={gridTransition}
+      >
         {/* Grille dossiers */}
-        <div className="folder-grid">
-          {safeFolders.map(folder => (
-            <FolderItem
-              key={folder.id}
-              folder={folder}
-              onOpen={onFolderOpen}
-              isRenaming={renamingItemId === folder.id}
-              onRename={(newName, type) => onRenameFolder && onRenameFolder(folder.id, newName, type)}
-              onCancelRename={onCancelRename}
-              onContextMenu={onContextMenuItem}
-              onDropItem={(itemId, itemType) => {
-                // Ne traiter le drop que si l'item ET la cible existent dans la vue locale
-                const isFolder = itemType === 'folder';
-                const isFile = itemType === 'file';
-                const itemExists = (isFolder && safeFolders.some(f => f.id === itemId)) || (isFile && safeFiles.some(f => f.id === itemId));
-                const targetExists = safeFolders.some(f => f.id === folder.id);
-                if (!itemExists || !targetExists) return;
-                if (onDropItem) {
-                  onDropItem(itemId, itemType, folder.id);
-                }
-              }}
-              onStartRenameClick={onStartRenameFolderClick}
-            />
-          ))}
-        </div>
+        <motion.div 
+          className="folder-grid"
+          variants={safeFolders.length > 0 ? gridExpandVariants : gridShrinkVariants}
+          initial="initial"
+          animate="animate"
+          exit="exit"
+          transition={gridTransition}
+          layout
+        >
+          <AnimatePresence mode="popLayout">
+            {safeFolders.map(folder => (
+              <motion.div
+                key={folder.id}
+                variants={gridRowVariants}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+                layout
+                transition={gridTransition}
+              >
+                <FolderItem
+                  folder={folder}
+                  onOpen={onFolderOpen}
+                  isRenaming={renamingItemId === folder.id}
+                  onRename={(newName, type) => onRenameFolder && onRenameFolder(folder.id, newName, type)}
+                  onCancelRename={onCancelRename}
+                  onContextMenu={onContextMenuItem}
+                  onDropItem={(itemId, itemType) => {
+                    // Ne traiter le drop que si l'item ET la cible existent dans la vue locale
+                    const isFolder = itemType === 'folder';
+                    const isFile = itemType === 'file';
+                    const itemExists = (isFolder && safeFolders.some(f => f.id === itemId)) || (isFile && safeFiles.some(f => f.id === itemId));
+                    const targetExists = safeFolders.some(f => f.id === folder.id);
+                    if (!itemExists || !targetExists) return;
+                    if (onDropItem) {
+                      onDropItem(itemId, itemType, folder.id);
+                    }
+                  }}
+                  onStartRenameClick={onStartRenameFolderClick}
+                />
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        </motion.div>
         {/* Séparateur horizontal */}
-        <div className="folder-content-separator"></div>
+        <motion.div 
+          className="folder-content-separator"
+          layout
+          transition={gridTransition}
+        />
         {/* Grille fichiers rapprochée */}
-        <div className="folder-grid files">
-          {safeFiles.map(file => (
-            <div
-              key={file.id}
-              className="file-item-animation"
-            >
-              <FileItem
-                file={file}
-                onOpen={onFileOpen}
-                isRenaming={renamingItemId === file.id}
-                onRename={(newName, type) => onRenameFile && onRenameFile(file.id, newName, type)}
-                onCancelRename={onCancelRename}
-                onContextMenu={onContextMenuItem}
-                onStartRenameClick={onStartRenameFileClick}
-              />
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
+        <motion.div 
+          className="folder-grid files"
+          variants={safeFiles.length > 0 ? gridExpandVariants : gridShrinkVariants}
+          initial="initial"
+          animate="animate"
+          exit="exit"
+          transition={gridTransition}
+          layout
+        >
+          <AnimatePresence mode="popLayout">
+            {safeFiles.map(file => (
+              <motion.div
+                key={file.id}
+                className="file-item-animation"
+                variants={gridRowVariants}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+                layout
+                transition={gridTransition}
+              >
+                <FileItem
+                  file={file}
+                  onOpen={onFileOpen}
+                  isRenaming={renamingItemId === file.id}
+                  onRename={(newName, type) => onRenameFile && onRenameFile(file.id, newName, type)}
+                  onCancelRename={onCancelRename}
+                  onContextMenu={onContextMenuItem}
+                  onStartRenameClick={onStartRenameFileClick}
+                />
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        </motion.div>
+      </motion.div>
+    </motion.div>
   );
 };
 

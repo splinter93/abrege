@@ -3,6 +3,7 @@ import React from 'react';
 import { FileArticle } from './types';
 import { FileIcon } from './CustomIcons';
 import { motion } from 'framer-motion';
+import { fileItemVariants, fileItemTransition } from './FolderAnimation';
 
 interface FileItemProps {
   file: FileArticle;
@@ -64,10 +65,11 @@ const FileItem: React.FC<FileItemProps> = ({ file, onOpen, isRenaming, onRename,
       }}
     >
       <motion.div
-        initial={{ opacity: 0, scale: 0.92 }}
-        animate={{ opacity: 1, scale: 1 }}
-        exit={{ opacity: 0, scale: 0.92 }}
-        transition={{ duration: 0.38, ease: 'easeOut' }}
+        variants={fileItemVariants}
+        initial="initial"
+        animate="animate"
+        exit="exit"
+        transition={fileItemTransition}
         className="fm-grid-item"
 
         onMouseDown={e => {

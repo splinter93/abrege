@@ -1,8 +1,10 @@
 "use client";
 import React, { useState, useRef, useEffect, MouseEvent } from "react";
+import { motion, AnimatePresence } from 'framer-motion';
 import SimpleContextMenu from "./SimpleContextMenu";
 import ColorPalette from "./ColorPalette";
 import "./ClasseurTabs.css";
+import { classeurTabVariants, classeurTabsListVariants, classeurTabTransition } from './FolderAnimation';
 import {
   DndContext,
   PointerSensor,
@@ -47,12 +49,17 @@ function SortableTab({ classeur, isActive, onSelectClasseur, onContextMenu, isDr
   const isOverlayMode = !!isOverlay;
   
   return (
-    <div
+    <motion.div
       ref={node => {
         sortable.setNodeRef(node);
         droppable.setNodeRef(node);
       }}
       className={`motion-tab-wrapper${(sortable.isDragging || isOverlayMode) ? ' dragged' : ''}${(droppable.isOver && !sortable.isDragging) ? ' drag-over-target' : ''}`}
+      variants={classeurTabVariants}
+      initial="initial"
+      animate="animate"
+      exit="exit"
+      transition={classeurTabTransition}
       onDragOver={e => e.preventDefault()}
       onDrop={e => {
         e.preventDefault();
@@ -91,7 +98,7 @@ function SortableTab({ classeur, isActive, onSelectClasseur, onContextMenu, isDr
         </span>
         <span style={{ fontFamily: "inherit" }}>{classeur.name}</span>
       </button>
-    </div>
+    </motion.div>
   );
 }
 
@@ -214,17 +221,19 @@ const ClasseurTabs: React.FC<ClasseurTabsProps> = ({
       <div className="classeur-tabs-btn-list">
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
           <SortableContext items={safeClasseurs.map((c) => c.id)} strategy={horizontalListSortingStrategy}>
-            {safeClasseurs.map((classeur) => (
-              <SortableTab
-                key={classeur.id}
-                classeur={classeur}
-                isActive={activeClasseurId === classeur.id}
-                onSelectClasseur={onSelectClasseur}
-                onContextMenu={handleContextMenu}
-                isDragging={false}
-                isOverlay={false}
-              />
-            ))}
+            <AnimatePresence mode="popLayout">
+              {safeClasseurs.map((classeur) => (
+                <SortableTab
+                  key={classeur.id}
+                  classeur={classeur}
+                  isActive={activeClasseurId === classeur.id}
+                  onSelectClasseur={onSelectClasseur}
+                  onContextMenu={handleContextMenu}
+                  isDragging={false}
+                  isOverlay={false}
+                />
+              ))}
+            </AnimatePresence>
           </SortableContext>
           <DragOverlay>
             {draggedClasseur ? (
