@@ -5,6 +5,7 @@ import {
   updateItemPositions
 } from '../services/supabase';
 import { optimizedApi } from '@/services/optimizedApi';
+import { clientPollingTrigger } from '@/services/clientPollingTrigger';
 
 import { useRealtime } from '@/hooks/useRealtime';
 import { useFileSystemStore } from '@/store/useFileSystemStore';
@@ -286,16 +287,43 @@ export function useFolderManagerState(classeurId: string, parentFolderId?: strin
   // --- IMBRICATION DnD ---
   const moveItem = useCallback(async (id: string, newParentId: string | null, type: 'folder' | 'file') => {
     try {
-      console.log('[UI] 📦 Déplacement item avec API optimisée...', { id, newParentId, type });
-      // TODO: Ajouter les méthodes de déplacement à l'OptimizedApi
+      console.log('[UI] 📦 Déplacement item avec API...', { id, newParentId, type });
       if (type === 'folder') {
-        // await optimizedApi.moveFolder(id, { target_parent_id: newParentId, target_classeur_id: activeClasseurId });
-        console.log('[UI] ⚠️ Déplacement dossier non implémenté dans OptimizedApi');
+        const response = await fetch(`/api/v1/dossier/${id}/move`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            target_parent_id: newParentId,
+            target_classeur_id: activeClasseurId
+          })
+        });
+        if (!response.ok) {
+          throw new Error(`Erreur déplacement dossier: ${response.statusText}`);
+        }
+        const result = await response.json();
+        const store = useFileSystemStore.getState();
+        store.moveFolder(id, newParentId, activeClasseurId);
+        await clientPollingTrigger.triggerFoldersPolling('UPDATE');
+        console.log('[UI] ✅ Dossier déplacé:', result.folder?.name || id);
       } else {
-        // await optimizedApi.moveNote(id, { target_folder_id: newParentId, target_classeur_id: activeClasseurId });
-        console.log('[UI] ⚠️ Déplacement note non implémenté dans OptimizedApi');
+        const response = await fetch(`/api/v1/note/${id}/move`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            target_folder_id: newParentId,
+            target_classeur_id: activeClasseurId
+          })
+        });
+        if (!response.ok) {
+          throw new Error(`Erreur déplacement note: ${response.statusText}`);
+        }
+        const result = await response.json();
+        const store = useFileSystemStore.getState();
+        store.moveNote(id, newParentId, activeClasseurId);
+        await clientPollingTrigger.triggerArticlesPolling('UPDATE');
+        console.log('[UI] ✅ Note déplacée:', result.note?.source_title || id);
       }
-      console.log('[UI] ✅ Item déplacé avec API optimisée');
+      console.log('[UI] ✅ Item déplacé avec API + Zustand + polling');
     } catch (err) {
       console.error('[UI] ❌ Erreur déplacement item:', err);
       setError('Erreur lors du déplacement de l\'élément.');
