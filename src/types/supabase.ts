@@ -4,7 +4,6 @@ export type Article = {
   allow_comments: boolean | null;
   classeur_id: string | null;
   created_at: string | null;
-  flash_summary: string | null;
   folder_id: string | null;
   header_image: string | null;
   header_image_blur: number | null;
@@ -13,14 +12,11 @@ export type Article = {
   header_title_in_image: boolean | null;
   html_content: string | null;
   id: string;
-  image_url: string | null;
-  is_public: boolean | null;
   ispublished: boolean | null;
   markdown_content: string | null;
   podcast_url: string | null;
   position: number | null;
   public_url: string | null;
-  share_token: string | null;
   slug: string | null;
   source_title: string;
   source_type: string | null;
