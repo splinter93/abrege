@@ -37,7 +37,7 @@ export const useFolderDragAndDrop = ({
   const handleDropItem = useCallback((itemId: string, itemType: 'folder' | 'file', targetFolderId: string) => {
     if (itemType === 'folder' && itemId === targetFolderId) {
       if (process.env.NODE_ENV === 'development') {
-        console.warn('Action empêchée : un dossier ne peut pas être imbriqué dans lui-même.');
+      console.warn('Action empêchée : un dossier ne peut pas être imbriqué dans lui-même.');
       }
       return;
     }

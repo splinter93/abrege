@@ -3,6 +3,7 @@ import { z } from 'zod';
 import type { NextRequest } from 'next/server';
 import { resolveNoteRef } from '@/middleware/resourceResolver';
 import { appendToSection, extractTOCWithSlugs } from '@/utils/markdownTOC';
+import { updateArticleInsight } from '@/utils/insightUpdater';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -98,6 +99,15 @@ export async function PATCH(req: NextRequest, { params }: any): Promise<Response
     if (error) {
       console.error('❌ Erreur mise à jour note:', error);
       return new Response(JSON.stringify({ error: error.message }), { status: 500 });
+    }
+    
+    // Mettre à jour l'insight avec la nouvelle TOC
+    try {
+      await updateArticleInsight(noteId);
+      console.log(`✅ Insight mis à jour pour la note ${noteId}`);
+    } catch (insightError) {
+      console.error('⚠️ Erreur mise à jour insight:', insightError);
+      // Ne pas faire échouer la requête si l'insight échoue
     }
     
     console.log(`✅ Contenu ajouté à la section "${targetSection}"`);

@@ -136,7 +136,7 @@ export function useFolderManagerState(classeurId: string, parentFolderId?: strin
   // --- CHARGEMENT INITIAL ---
   useEffect(() => {
     if (process.env.NODE_ENV === 'development') {
-      console.log('[EFFECT] useEffect triggered in useFolderManagerState (loading)', { classeurId, refreshKey });
+    console.log('[EFFECT] useEffect triggered in useFolderManagerState (loading)', { classeurId, refreshKey });
     }
     setLoading(false); // On considère que le chargement Zustand est instantané
     setError(null);
@@ -148,12 +148,12 @@ export function useFolderManagerState(classeurId: string, parentFolderId?: strin
 
   useEffect(() => {
     if (process.env.NODE_ENV === 'development') {
-      console.log('[EFFECT] useEffect triggered in useFolderManagerState (realtime status)', { 
-        classeurId, 
-        parentFolderId, 
-        refreshKey
-        // isConnected retiré car géré par RealtimeProvider
-      });
+    console.log('[EFFECT] useEffect triggered in useFolderManagerState (realtime status)', { 
+      classeurId, 
+      parentFolderId, 
+      refreshKey
+      // isConnected retiré car géré par RealtimeProvider
+    });
     }
   }, [classeurId, parentFolderId, refreshKey]);
 
@@ -172,7 +172,7 @@ export function useFolderManagerState(classeurId: string, parentFolderId?: strin
   const createFolder = useCallback(async (name: string): Promise<Folder | undefined> => {
     try {
       if (process.env.NODE_ENV === 'development') {
-        console.log('[UI] 📁 Création dossier avec API optimisée...', { name, classeurId, parentFolderId });
+      console.log('[UI] 📁 Création dossier avec API optimisée...', { name, classeurId, parentFolderId });
       }
       const result = await optimizedApi.createFolder({
         name,
@@ -180,7 +180,7 @@ export function useFolderManagerState(classeurId: string, parentFolderId?: strin
         parent_id: parentFolderId,
       });
       if (process.env.NODE_ENV === 'development') {
-        console.log('[UI] ✅ Dossier créé avec API optimisée:', result.folder.name);
+      console.log('[UI] ✅ Dossier créé avec API optimisée:', result.folder.name);
       }
       return toUIFolder(result.folder);
     } catch (err) {
@@ -198,7 +198,7 @@ export function useFolderManagerState(classeurId: string, parentFolderId?: strin
       const uniqueName = generateUniqueNoteName(filteredFiles);
       
       if (process.env.NODE_ENV === 'development') {
-        console.log('[UI] 📝 Création note, en attente du patch realtime...', { name: uniqueName, classeurId, parentFolderId });
+      console.log('[UI] 📝 Création note, en attente du patch realtime...', { name: uniqueName, classeurId, parentFolderId });
       }
       const payload: CreateNotePayload = {
         source_title: uniqueName,
@@ -210,11 +210,11 @@ export function useFolderManagerState(classeurId: string, parentFolderId?: strin
         payload.folder_id = parentFolderId;
       }
       if (process.env.NODE_ENV === 'development') {
-        console.log('Payload createNote optimisée', payload);
+      console.log('Payload createNote optimisée', payload);
       }
       const result = await optimizedApi.createNote(payload);
       if (process.env.NODE_ENV === 'development') {
-        console.log('[UI] ✅ Note créée avec API optimisée:', result.note.source_title);
+      console.log('[UI] ✅ Note créée avec API optimisée:', result.note.source_title);
       }
       return result.note;
     } catch (err) {
@@ -227,11 +227,11 @@ export function useFolderManagerState(classeurId: string, parentFolderId?: strin
   const deleteFolder = useCallback(async (id: string) => {
     try {
       if (process.env.NODE_ENV === 'development') {
-        console.log('[UI] 🗑️ Suppression dossier avec API optimisée...', { id });
+      console.log('[UI] 🗑️ Suppression dossier avec API optimisée...', { id });
       }
       await optimizedApi.deleteFolder(id);
       if (process.env.NODE_ENV === 'development') {
-        console.log('[UI] ✅ Dossier supprimé avec API optimisée');
+      console.log('[UI] ✅ Dossier supprimé avec API optimisée');
       }
       if (parentFolderId === id) {
         // setCurrentFolderId(null); // Supprimé
@@ -274,11 +274,11 @@ export function useFolderManagerState(classeurId: string, parentFolderId?: strin
   const deleteFile = useCallback(async (id: string): Promise<void> => {
     try {
       if (process.env.NODE_ENV === 'development') {
-        console.log('[UI] 🗑️ Suppression note avec API optimisée...', { id });
+      console.log('[UI] 🗑️ Suppression note avec API optimisée...', { id });
       }
       await optimizedApi.deleteNote(id);
       if (process.env.NODE_ENV === 'development') {
-        console.log('[UI] ✅ Note supprimée avec API optimisée');
+      console.log('[UI] ✅ Note supprimée avec API optimisée');
       }
     } catch (err) {
       console.error('[UI] ❌ Erreur suppression note:', err);
@@ -290,7 +290,7 @@ export function useFolderManagerState(classeurId: string, parentFolderId?: strin
   const submitRename = useCallback(async (id: string, newName: string, type: 'folder' | 'file') => {
     try {
       if (process.env.NODE_ENV === 'development') {
-        console.log('[UI] ✏️ Renommage item avec API optimisée...', { id, newName, type });
+      console.log('[UI] ✏️ Renommage item avec API optimisée...', { id, newName, type });
       }
       if (type === 'file') {
         await optimizedApi.updateNote(id, { source_title: newName });
@@ -298,7 +298,7 @@ export function useFolderManagerState(classeurId: string, parentFolderId?: strin
         await optimizedApi.updateFolder(id, { name: newName });
       }
       if (process.env.NODE_ENV === 'development') {
-        console.log('[UI] ✅ Item renommé avec API optimisée');
+      console.log('[UI] ✅ Item renommé avec API optimisée');
       }
     } catch (err) {
       console.error('[UI] ❌ Erreur renommage:', err);
@@ -319,11 +319,11 @@ export function useFolderManagerState(classeurId: string, parentFolderId?: strin
     // setFolders(newOrder); // Supprimé
     try {
       if (process.env.NODE_ENV === 'development') {
-        console.log('[UI] 🔄 Réordonnancement dossiers, en attente du patch realtime...', newOrder.length);
+      console.log('[UI] 🔄 Réordonnancement dossiers, en attente du patch realtime...', newOrder.length);
       }
       await updateItemPositions(newOrder.map((item, idx) => ({ id: item.id, position: idx, type: 'folder' })));
       if (process.env.NODE_ENV === 'development') {
-        console.log('[UI] ✅ Dossiers réordonnés via API, patch realtime attendu...');
+      console.log('[UI] ✅ Dossiers réordonnés via API, patch realtime attendu...');
       }
     } catch (err) {
       console.error('[UI] ❌ Erreur réordonnancement dossiers:', err);
@@ -335,11 +335,11 @@ export function useFolderManagerState(classeurId: string, parentFolderId?: strin
     // setFiles(newOrder); // Supprimé
     try {
       if (process.env.NODE_ENV === 'development') {
-        console.log('[UI] 🔄 Réordonnancement notes, en attente du patch realtime...', newOrder.length);
+      console.log('[UI] 🔄 Réordonnancement notes, en attente du patch realtime...', newOrder.length);
       }
       await updateItemPositions(newOrder.map((item, idx) => ({ id: item.id, position: idx, type: 'file' })));
       if (process.env.NODE_ENV === 'development') {
-        console.log('[UI] ✅ Notes réordonnées via API, patch realtime attendu...');
+      console.log('[UI] ✅ Notes réordonnées via API, patch realtime attendu...');
       }
     } catch (err) {
       console.error('[UI] ❌ Erreur réordonnancement notes:', err);
@@ -351,7 +351,7 @@ export function useFolderManagerState(classeurId: string, parentFolderId?: strin
   const moveItem = useCallback(async (id: string, newParentId: string | null, type: 'folder' | 'file') => {
     try {
       if (process.env.NODE_ENV === 'development') {
-        console.log('[UI] 📦 Déplacement item avec API...', { id, newParentId, type });
+      console.log('[UI] 📦 Déplacement item avec API...', { id, newParentId, type });
       }
       if (type === 'folder') {
         const response = await fetch(`/api/v1/dossier/${id}/move`, {
@@ -370,7 +370,7 @@ export function useFolderManagerState(classeurId: string, parentFolderId?: strin
         store.moveFolder(id, newParentId, activeClasseurId || undefined);
         await clientPollingTrigger.triggerFoldersPolling('UPDATE');
         if (process.env.NODE_ENV === 'development') {
-          console.log('[UI] ✅ Dossier déplacé:', result.folder?.name || id);
+        console.log('[UI] ✅ Dossier déplacé:', result.folder?.name || id);
         }
       } else {
         const response = await fetch(`/api/v1/note/${id}/move`, {
@@ -389,11 +389,11 @@ export function useFolderManagerState(classeurId: string, parentFolderId?: strin
         store.moveNote(id, newParentId, activeClasseurId || undefined);
         await clientPollingTrigger.triggerArticlesPolling('UPDATE');
         if (process.env.NODE_ENV === 'development') {
-          console.log('[UI] ✅ Note déplacée:', result.note?.source_title || id);
+        console.log('[UI] ✅ Note déplacée:', result.note?.source_title || id);
         }
       }
       if (process.env.NODE_ENV === 'development') {
-        console.log('[UI] ✅ Item déplacé avec API + Zustand + polling');
+      console.log('[UI] ✅ Item déplacé avec API + Zustand + polling');
       }
     } catch (err) {
       console.error('[UI] ❌ Erreur déplacement item:', err);
