@@ -49,6 +49,12 @@ interface ApiError extends Error {
   statusText?: string;
 }
 
+interface PublishNoteResponse {
+  success: boolean;
+  url?: string;
+  message?: string;
+}
+
 /**
  * Service API optimisé pour une latence minimale
  * Met à jour directement Zustand et déclenche le polling côté client
@@ -530,6 +536,40 @@ export class OptimizedApi {
       return result;
     } catch (error) {
       console.error('[OptimizedApi] ❌ Erreur réorganisation classeurs:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Publier/dépublier une note
+   */
+  async publishNoteREST(noteId: string, isPublished: boolean): Promise<PublishNoteResponse> {
+    const startTime = Date.now();
+    const context = { operation: 'publish_note', component: 'OptimizedApi' };
+    
+    logApi('publish_note', `🚀 Début publication note ${noteId}`, context);
+    
+    try {
+      const response = await fetch(`/api/v1/note/${noteId}/publish`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ispublished: isPublished })
+      });
+
+      if (!response.ok) {
+        const error = new Error(`Erreur publication note: ${response.statusText}`) as ApiError;
+        error.status = response.status;
+        error.statusText = response.statusText;
+        throw error;
+      }
+
+      const result = await response.json();
+      const apiTime = Date.now() - startTime;
+      logApi('publish_note', `✅ Publication terminée en ${apiTime}ms`, context);
+
+      return result;
+    } catch (error) {
+      logApi('publish_note', `❌ Erreur publication: ${error}`, context);
       throw error;
     }
   }

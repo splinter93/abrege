@@ -36,7 +36,6 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '@/supabaseClient';
 import CustomImage from '@/extensions/CustomImage';
 import { useSession } from '@supabase/auth-helpers-react';
-import { publishNoteREST } from '@/services/api';
 import LogoScrivia from '@/components/LogoScrivia';
 
 
@@ -865,7 +864,7 @@ export default function NoteEditorPage() {
   const handleTogglePublished = async (value: boolean) => {
     setIsPublishing(true);
     try {
-      const res = await publishNoteREST(noteId, value);
+      const res = await optimizedApi.publishNoteREST(noteId, value);
       setPublished(value);
       if (value && res.url) {
         setPublishedUrl(res.url);
