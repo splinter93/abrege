@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { createArticle } from '../services/api';
+import { optimizedApi } from '../services/optimizedApi';
 
 const SYNESIA_API_URL = 'https://api.synesia.app/webhooks/a416f2c7-3ebd-4bc7-8979-70f7e1ad572f?wait=true';
 
@@ -15,7 +15,7 @@ export const sendPayloadToSynesia = async ({ url, type, classeurId }) => {
   
   try {
     // Crée immédiatement un article "en attente" avec le bon classeurId
-    const newArticle = await createArticle({
+    const newArticle = await optimizedApi.createNote({
       source_type: type,
       source_url: url,
       source_title: `Résumé en cours pour : ${url}`,
@@ -23,7 +23,7 @@ export const sendPayloadToSynesia = async ({ url, type, classeurId }) => {
       classeur_id: classeurId,
     });
 
-    console.log('Article créé en BDD, en attente du résumé:', newArticle);
+    console.log('Article créé en BDD, en attente du résumé:', newArticle.note);
     
     // Vous pouvez ici ajouter la logique pour appeler un service externe (Synesia)
     // en lui passant le `newArticle.id` pour qu'il puisse mettre à jour l'article plus tard.
@@ -31,7 +31,7 @@ export const sendPayloadToSynesia = async ({ url, type, classeurId }) => {
     // Exemple d'appel futur :
     // await externalSynesiaService.process({ articleId: newArticle.id, url, type });
 
-    return newArticle;
+    return newArticle.note;
 
   } catch (error) {
     console.error("Erreur lors de la création de l'article avant l'envoi à Synesia :", error);
