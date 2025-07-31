@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { NextResponse } from 'next/server';
 
 // ============================================================================
 // NOTE MANAGEMENT SCHEMAS
@@ -227,15 +228,12 @@ export function validatePayload<T>(schema: z.ZodSchema<T>, payload: any): { succ
 /**
  * Crée une réponse d'erreur de validation
  */
-export function createValidationErrorResponse(validationResult: { success: false; error: string; details: string[] }): Response {
-  return new Response(
-    JSON.stringify({
+export function createValidationErrorResponse(validationResult: { success: false; error: string; details: string[] }): NextResponse {
+  return NextResponse.json(
+    {
       error: validationResult.error,
       details: validationResult.details
-    }),
-    { 
-      status: 422,
-      headers: { 'Content-Type': 'application/json' }
-    }
+    },
+    { status: 422 }
   );
 } 
