@@ -205,24 +205,31 @@
 
 /* Input Area */
 .input-area-container {
-  padding: 0.5rem 2rem 1rem 2rem;
+  padding: 1.5rem 2rem;
   position: relative;
   margin-top: auto;
   display: flex;
   justify-content: center;
+  background: #333333;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .input-area {
-  margin-top: auto;
-  padding: 0.75rem 1.5rem;
-  background: #333333;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
   display: flex;
-  align-items: flex-end;
-  gap: 0.75rem;
-  border-radius: 12px;
+  align-items: center;
+  gap: 1rem;
+  background: #404040;
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  border-radius: 16px;
+  padding: 1rem 1.5rem;
   max-width: 600px;
   width: 100%;
+  transition: all 0.2s ease;
+}
+
+.input-area:focus-within {
+  border-color: rgba(102, 126, 234, 0.6);
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
 .chat-textarea {
@@ -232,23 +239,25 @@
   background: transparent;
   resize: none;
   font-family: inherit;
-  font-size: 0.9rem;
-  line-height: 1.4;
+  font-size: 1rem;
+  line-height: 1.5;
   color: #ffffff;
-  min-height: 18px;
-  max-height: 100px;
+  min-height: 24px;
+  max-height: 120px;
+  font-weight: 400;
 }
 
 .chat-textarea::placeholder {
-  color: #cccccc;
+  color: rgba(255, 255, 255, 0.6);
+  font-weight: 400;
 }
 
 .send-button {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
+  width: 44px;
+  height: 44px;
   border: none;
   border-radius: 50%;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -256,11 +265,16 @@
   cursor: pointer;
   transition: all 0.2s ease;
   flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
 }
 
 .send-button:hover:not(:disabled) {
   transform: scale(1.05);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 4px 16px rgba(102, 126, 234, 0.5);
+}
+
+.send-button:active:not(:disabled) {
+  transform: scale(0.98);
 }
 
 .send-button:disabled {
