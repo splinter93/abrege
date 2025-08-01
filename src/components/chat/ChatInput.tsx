@@ -1,4 +1,4 @@
-import React, { useState, useRef, RefObject } from 'react';
+import React, { useState, useRef, RefObject, memo, useCallback } from 'react';
 
 interface ChatInputProps {
   onSend: (message: string) => void;
@@ -7,24 +7,24 @@ interface ChatInputProps {
   onKeyPress?: (e: React.KeyboardEvent<HTMLTextAreaElement>) => void;
 }
 
-const ChatInput: React.FC<ChatInputProps> = ({ onSend, loading, textareaRef, onKeyPress }) => {
+const ChatInput: React.FC<ChatInputProps> = memo(({ onSend, loading, textareaRef, onKeyPress }) => {
   const [inputValue, setInputValue] = useState('');
 
-  const handleSubmit = () => {
+  const handleSubmit = useCallback(() => {
     const trimmedInput = inputValue.trim();
     if (trimmedInput && !loading) {
       onSend(trimmedInput);
       setInputValue('');
     }
-  };
+  }, [inputValue, loading, onSend]);
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSubmit();
     }
     onKeyPress?.(e);
-  };
+  }, [handleSubmit, onKeyPress]);
 
   return (
     <div className="input-area-container">
@@ -57,6 +57,6 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend, loading, textareaRef, onK
       </div>
     </div>
   );
-};
+});
 
 export default ChatInput; 

@@ -1,11 +1,18 @@
-interface Message {
+import { ChatLogger } from './chatLogger';
+
+export interface Message {
   id: string;
   role: 'user' | 'assistant';
   content: string;
   timestamp: Date;
 }
 
-export async function getSynesiaResponse(message: string, messages: Message[] = []) {
+export interface SynesiaResponse {
+  response?: string;
+  error?: string;
+}
+
+export async function getSynesiaResponse(message: string, messages: Message[] = []): Promise<SynesiaResponse> {
   try {
     const response = await fetch("/api/chat/synesia", {
       method: "POST",
@@ -26,7 +33,10 @@ export async function getSynesiaResponse(message: string, messages: Message[] = 
     const data = await response.json();
     return { response: data.response };
   } catch (error) {
-    console.error("Error calling Synesia API:", error);
-    return { error: error instanceof Error ? error.message : "Unknown error occurred" };
+    ChatLogger.error('API', error instanceof Error ? error : new Error(String(error)), {
+      message,
+      messageCount: messages.length
+    });
+    return { error: error instanceof Error ? error.message : "Une erreur inconnue s'est produite" };
   }
 } 

@@ -2,24 +2,18 @@
 import React, { useState, useRef, useEffect } from 'react';
 import ChatInput from './ChatInput';
 import MarkdownMessage from './MarkdownMessage';
-import { getSynesiaResponse } from './chatService';
+import ChatKebabMenu from './ChatKebabMenu';
+import { useChatMessages } from './useChatMessages';
 import './chat.css';
-
-interface Message {
-  id: string;
-  role: 'user' | 'assistant';
-  content: string;
-  timestamp: Date;
-}
 
 interface ChatComponentProps {
   className?: string;
 }
 
 const ChatComponent: React.FC<ChatComponentProps> = ({ className = '' }) => {
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [loading, setLoading] = useState(false);
+  const { messages, loading, sendMessage } = useChatMessages();
   const [isOpen, setIsOpen] = useState(false);
+  const [isWideMode, setIsWideMode] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -31,54 +25,12 @@ const ChatComponent: React.FC<ChatComponentProps> = ({ className = '' }) => {
     scrollToBottom();
   }, [messages]);
 
-  const handleSend = async (message: string) => {
-    if (!message.trim()) return;
-
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      role: 'user',
-      content: message,
-      timestamp: new Date(),
-    };
-
-    setMessages(prev => [...prev, userMessage]);
-    setLoading(true);
-
-    try {
-      const response = await getSynesiaResponse(message, messages);
-      
-      if (response.error) {
-        const errorMessage: Message = {
-          id: (Date.now() + 1).toString(),
-          role: 'assistant',
-          content: `Erreur: ${response.error}`,
-          timestamp: new Date(),
-        };
-        setMessages(prev => [...prev, errorMessage]);
-      } else if (response.response) {
-        const assistantMessage: Message = {
-          id: (Date.now() + 1).toString(),
-          role: 'assistant',
-          content: response.response,
-          timestamp: new Date(),
-        };
-        setMessages(prev => [...prev, assistantMessage]);
-      }
-    } catch (error) {
-      const errorMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        role: 'assistant',
-        content: 'Erreur lors de la communication avec l\'IA',
-        timestamp: new Date(),
-      };
-      setMessages(prev => [...prev, errorMessage]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const onToggle = () => {
     setIsOpen(!isOpen);
+  };
+
+  const handleToggleWideMode = () => {
+    setIsWideMode(!isWideMode);
   };
 
   return (
@@ -95,11 +47,15 @@ const ChatComponent: React.FC<ChatComponentProps> = ({ className = '' }) => {
       </button>
 
       {isOpen && (
-        <div className={`chat-container ${className}`} role="dialog" aria-label="Chat avec l'assistant IA">
+        <div className={`chat-container ${isWideMode ? 'chat-container-wide' : 'chat-container-normal'} ${className}`} role="dialog" aria-label="Chat avec l'assistant IA">
           <div className="chat-header">
             <div className="chat-title">
-              <span>Assistant IA</span>
+              <span>Scrivia Chat</span>
             </div>
+            <ChatKebabMenu 
+              isWideMode={isWideMode}
+              onToggleWideMode={handleToggleWideMode}
+            />
           </div>
 
           <div className="chat-content">
@@ -133,7 +89,7 @@ const ChatComponent: React.FC<ChatComponentProps> = ({ className = '' }) => {
             </div>
 
             <ChatInput
-              onSend={handleSend}
+              onSend={sendMessage}
               loading={loading}
               textareaRef={textareaRef}
             />
