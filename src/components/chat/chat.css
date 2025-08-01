@@ -205,24 +205,22 @@
 
 /* Input Area */
 .input-area-container {
-  padding: 1.5rem 2rem;
+  padding: 1.725rem 2.3rem;
   position: relative;
   margin-top: auto;
   display: flex;
   justify-content: center;
-  background: #333333;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .input-area {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 1.15rem;
   background: #404040;
-  border: 2px solid rgba(255, 255, 255, 0.15);
-  border-radius: 16px;
-  padding: 1rem 1.5rem;
-  max-width: 600px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 18px;
+  padding: 1.15rem 1.725rem;
+  max-width: 690px;
   width: 100%;
   transition: all 0.2s ease;
 }
@@ -239,11 +237,11 @@
   background: transparent;
   resize: none;
   font-family: inherit;
-  font-size: 1rem;
+  font-size: 1.15rem;
   line-height: 1.5;
   color: #ffffff;
-  min-height: 24px;
-  max-height: 120px;
+  min-height: 28px;
+  max-height: 138px;
   font-weight: 400;
 }
 
@@ -256,8 +254,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 44px;
-  height: 44px;
+  width: 51px;
+  height: 51px;
   border: none;
   border-radius: 50%;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
