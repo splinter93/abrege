@@ -62,15 +62,17 @@
 
 .user-message {
   justify-content: flex-end;
+  padding-right: 1rem;
 }
 
 .assistant-message {
   justify-content: flex-start;
+  padding-left: 1rem;
 }
 
 .message-bubble {
-  max-width: 80%;
-  padding: 0.75rem 1rem;
+  max-width: 75%;
+  padding: 1rem 1.25rem;
   border-radius: 18px;
   word-wrap: break-word;
   line-height: 1.4;
@@ -170,12 +172,13 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.75rem 1rem;
+  padding: 1rem 1.25rem;
   background: #404040;
   border-radius: 18px;
   border-bottom-left-radius: 4px;
-  max-width: 80%;
+  max-width: 75%;
   border: 1px solid rgba(255, 255, 255, 0.1);
+  margin-left: 1rem;
 }
 
 .typing-dot {
@@ -311,8 +314,8 @@
 
 .message-list .flex.justify-end .user-bubble {
   margin-left: auto;
-  margin-right: 1rem;
-  max-width: 80%;
+  margin-right: 0;
+  max-width: 75%;
 }
 
 
