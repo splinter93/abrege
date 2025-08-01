@@ -14,8 +14,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Prepare message history
-    const messageHistory = messages.map((msg: any) => ({
+    // Prepare message history - only last 10 messages
+    const recentMessages = messages.slice(-10);
+    const messageHistory = recentMessages.map((msg: any) => ({
       role: msg.role,
       content: msg.content
     }));
