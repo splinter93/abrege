@@ -4,10 +4,9 @@ interface ChatInputProps {
   onSend: (message: string) => void;
   loading: boolean;
   textareaRef: RefObject<HTMLTextAreaElement | null>;
-  onKeyPress?: (e: React.KeyboardEvent<HTMLTextAreaElement>) => void;
 }
 
-const ChatInput: React.FC<ChatInputProps> = memo(({ onSend, loading, textareaRef, onKeyPress }) => {
+const ChatInput: React.FC<ChatInputProps> = memo(({ onSend, loading, textareaRef }) => {
   const [inputValue, setInputValue] = useState('');
 
   const handleSubmit = useCallback(() => {
@@ -23,8 +22,7 @@ const ChatInput: React.FC<ChatInputProps> = memo(({ onSend, loading, textareaRef
       e.preventDefault();
       handleSubmit();
     }
-    onKeyPress?.(e);
-  }, [handleSubmit, onKeyPress]);
+  }, [handleSubmit]);
 
   return (
     <div className="input-area-container">

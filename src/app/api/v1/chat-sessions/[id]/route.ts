@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import type { ChatMessage } from '../../../../../types/chat';
 
 // Utiliser la clé anonyme par défaut, ou la service role si disponible
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -43,7 +44,14 @@ export async function PUT(
     }
 
     // Préparer les données de mise à jour
-    const updateData: any = {
+    const updateData: {
+      updated_at: string;
+      thread?: ChatMessage[];
+      name?: string;
+      history_limit?: number;
+      is_active?: boolean;
+      metadata?: Record<string, unknown>;
+    } = {
       updated_at: new Date().toISOString()
     };
 

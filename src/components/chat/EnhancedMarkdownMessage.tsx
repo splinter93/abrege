@@ -7,10 +7,9 @@ import './chatMarkdown.css';
 
 interface EnhancedMarkdownMessageProps {
   content: string;
-  className?: string;
 }
 
-const EnhancedMarkdownMessage: React.FC<EnhancedMarkdownMessageProps> = ({ content, className = '' }) => {
+const EnhancedMarkdownMessage: React.FC<EnhancedMarkdownMessageProps> = ({ content }) => {
   // Détecter les blocs Mermaid
   const blocks = useMemo(() => detectMermaidBlocks(content), [content]);
 
@@ -19,7 +18,7 @@ const EnhancedMarkdownMessage: React.FC<EnhancedMarkdownMessageProps> = ({ conte
     const { html } = useMarkdownRender({ content, debounceDelay: 0 });
     return (
       <div 
-        className={`chat-markdown ${className}`}
+        className="chat-markdown"
         dangerouslySetInnerHTML={{ __html: html }}
       />
     );
@@ -27,7 +26,7 @@ const EnhancedMarkdownMessage: React.FC<EnhancedMarkdownMessageProps> = ({ conte
 
   // Rendu mixte : texte + Mermaid
   return (
-    <div className={`enhanced-markdown ${className}`}>
+    <div className="enhanced-markdown">
       {blocks.map((block, index) => {
         if (block.type === 'text') {
           // Rendu markdown pour le texte

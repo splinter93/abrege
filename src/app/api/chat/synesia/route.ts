@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
 
     // Prepare message history - only last 10 messages
     const recentMessages = messages.slice(-10);
-    const messageHistory = recentMessages.map((msg: any) => ({
+    const messageHistory = recentMessages.map((msg: { role: string; content: string }) => ({
       role: msg.role,
       content: msg.content
     }));
