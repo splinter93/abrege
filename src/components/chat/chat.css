@@ -5,12 +5,11 @@
   left: 1rem;
   right: 1rem;
   height: calc(100vh - 2rem);
-  background: linear-gradient(135deg, rgba(0, 0, 0, 0.85) 0%, rgba(255, 69, 0, 0.85) 100%);
-  backdrop-filter: blur(20px) saturate(200%);
-  -webkit-backdrop-filter: blur(20px) saturate(200%);
+  background: #2a2a2a;
+  backdrop-filter: blur(20px);
   border-radius: 16px;
-  border: 1px solid rgba(255, 69, 0, 0.3);
-  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 69, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
   display: flex;
   flex-direction: column;
   z-index: 1000;
@@ -20,11 +19,8 @@
 /* Chat Header */
 .chat-header {
   padding: 1rem 1.5rem;
-  border-bottom: 1px solid rgba(255, 69, 0, 0.5);
-  background: rgba(0, 0, 0, 0.3);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border-radius: 16px 16px 0 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  background: #333333;
 }
 
 .chat-title {
@@ -32,7 +28,7 @@
   align-items: center;
   gap: 0.5rem;
   font-weight: 600;
-  color: #333;
+  color: #ffffff;
 }
 
 /* Chat Content Layout */
@@ -49,6 +45,7 @@
   display: flex;
   flex-direction: column;
   padding: 1rem;
+  background: #2a2a2a;
 }
 
 .message-list {
@@ -86,14 +83,15 @@
 }
 
 .assistant-bubble {
-  background: rgba(0, 0, 0, 0.05);
-  color: #333;
+  background: #404040;
+  color: #ffffff;
   border-bottom-left-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 /* Markdown styling in chat bubbles */
 .assistant-bubble .markdown-body {
-  color: #333;
+  color: #ffffff;
   font-size: 0.95rem;
   line-height: 1.4;
 }
@@ -106,7 +104,7 @@
 .assistant-bubble .markdown-body h6 {
   margin-top: 0.5rem;
   margin-bottom: 0.5rem;
-  color: #333;
+  color: #ffffff;
 }
 
 .assistant-bubble .markdown-body p {
@@ -114,14 +112,15 @@
 }
 
 .assistant-bubble .markdown-body code {
-  background: rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.1);
   padding: 0.125rem 0.25rem;
   border-radius: 3px;
   font-size: 0.9em;
+  color: #ffffff;
 }
 
 .assistant-bubble .markdown-body pre {
-  background: rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.1);
   padding: 0.5rem;
   border-radius: 6px;
   overflow-x: auto;
@@ -144,10 +143,10 @@
 }
 
 .assistant-bubble .markdown-body blockquote {
-  border-left: 3px solid rgba(0, 0, 0, 0.2);
+  border-left: 3px solid rgba(255, 255, 255, 0.3);
   margin: 0.5rem 0;
   padding-left: 0.75rem;
-  color: #666;
+  color: #cccccc;
 }
 
 .assistant-bubble .markdown-body table {
@@ -158,12 +157,12 @@
 
 .assistant-bubble .markdown-body th,
 .assistant-bubble .markdown-body td {
-  border: 1px solid rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   padding: 0.25rem 0.5rem;
 }
 
 .assistant-bubble .markdown-body th {
-  background: rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.1);
 }
 
 /* Loading Animation */
@@ -172,17 +171,18 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.75rem 1rem;
-  background: rgba(0, 0, 0, 0.05);
+  background: #404040;
   border-radius: 18px;
   border-bottom-left-radius: 4px;
   max-width: 80%;
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .typing-dot {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #999;
+  background: #cccccc;
   animation: typing 1.4s infinite ease-in-out;
 }
 
@@ -210,8 +210,8 @@
 .input-area {
   margin-top: auto;
   padding: 1rem 2rem;
-  background: rgba(0, 0, 0, 0.1);
-  border-top: 1px solid var(--glass-border-dark);
+  background: #333333;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
   display: flex;
   align-items: flex-end;
   gap: 0.75rem;
@@ -227,13 +227,13 @@
   font-family: inherit;
   font-size: 0.95rem;
   line-height: 1.4;
-  color: #333;
+  color: #ffffff;
   min-height: 20px;
   max-height: 120px;
 }
 
 .chat-textarea::placeholder {
-  color: #999;
+  color: #cccccc;
 }
 
 .send-button {
