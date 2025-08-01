@@ -11,6 +11,7 @@ import { useFileSystemStore } from '@/store/useFileSystemStore';
 import type { FileSystemState } from '@/store/useFileSystemStore';
 import { useRealtime } from '@/hooks/useRealtime';
 import LogoScrivia from "../../../components/LogoScrivia";
+import ChatComponent from "../../../components/chat/ChatComponent";
 
 // Types pour les événements Supabase Realtime
 interface ChangeEvent {
@@ -572,6 +573,9 @@ const DossiersPage: React.FC = () => {
           <button onClick={handleCreateClasseur}>Créer votre premier classeur</button>
         </div>
       )}
+      
+      {/* Chat IA */}
+      <ChatComponent />
     </div>
   );
 };
