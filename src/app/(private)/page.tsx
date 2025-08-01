@@ -4,6 +4,7 @@ import React from 'react';
 import ContentCard from '../../components/ContentCard';
 import { useLanguageContext } from '../../contexts/LanguageContext';
 import Link from 'next/link';
+import Image from 'next/image';
 import '../globals.css';
 
 const mockNotes = [
@@ -42,7 +43,7 @@ export default function HomePage() {
     <div className="home-root">
       {/* Nouveau logo Scrivia */}
       <div style={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', marginTop: 32 }}>
-        <img src="/logo_scrivia_white.png" alt="Scrivia Logo" style={{ height: 54, marginBottom: 32 }} />
+        <Image src="/logo_scrivia_white.png" alt="Scrivia Logo" width={200} height={54} style={{ marginBottom: 32 }} />
       </div>
       {/* Sidebar glassmorphism */}
       <div className="sidebar-trigger" />

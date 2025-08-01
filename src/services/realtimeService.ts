@@ -15,8 +15,8 @@ interface PollingConfig {
 interface ChangeEvent {
   table: string;
   eventType: 'INSERT' | 'UPDATE' | 'DELETE';
-  new: any;
-  old: any;
+  new: Record<string, unknown> | null;
+  old: Record<string, unknown> | null;
   timestamp: number;
   diff?: DiffResult; // Nouveau: diff des changements
   // Nouveau: support collaboratif

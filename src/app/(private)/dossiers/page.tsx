@@ -12,6 +12,15 @@ import type { FileSystemState } from '@/store/useFileSystemStore';
 import { useRealtime } from '@/hooks/useRealtime';
 import LogoScrivia from "../../../components/LogoScrivia";
 
+// Types pour les événements Supabase Realtime
+interface ChangeEvent {
+  table: string;
+  eventType: 'INSERT' | 'UPDATE' | 'DELETE';
+  new: any;
+  old: any;
+  timestamp: number;
+  diff?: any; // Pour les événements UPDATE avec diff
+}
 
 const selectFolders = (s: FileSystemState) => s.folders;
 const selectNotes = (s: FileSystemState) => s.notes;
@@ -240,7 +249,7 @@ const DossiersPage: React.FC = () => {
       }
     };
     
-    const handleArticleChange = (event: any) => {
+    const handleArticleChange = (event: ChangeEvent) => {
       if (process.env.NODE_ENV === 'development') {
         console.log('[DossiersPage] 📡 Événement articles reçu:', event);
       }
@@ -276,7 +285,7 @@ const DossiersPage: React.FC = () => {
       }
     };
 
-    const handleFolderChange = (event: any) => {
+    const handleFolderChange = (event: ChangeEvent) => {
       if (process.env.NODE_ENV === 'development') {
         console.log('[DossiersPage] 📡 Événement folders reçu:', event);
       }
@@ -308,7 +317,7 @@ const DossiersPage: React.FC = () => {
       }
     };
 
-    const handleClasseurChange = (event: any) => {
+    const handleClasseurChange = (event: ChangeEvent) => {
       if (process.env.NODE_ENV === 'development') {
         console.log('[DossiersPage] 📡 Événement classeurs reçu:', event);
       }

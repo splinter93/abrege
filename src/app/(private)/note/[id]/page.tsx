@@ -143,7 +143,7 @@ export default function NoteEditorPage() {
   // } = useEditorPersistence();
 
   // Hook de sauvegarde premium
-  const { isSaving, handleSave } = useEditorSave({
+  const { handleSave } = useEditorSave({
     editor: editor ? {
       getHTML: () => editor.getHTML(),
       storage: { markdown: { getMarkdown: () => editor.storage.markdown.getMarkdown() } }
@@ -168,7 +168,7 @@ export default function NoteEditorPage() {
   });
 
   // Fonction dédiée pour sauvegarder l'image d'en-tête
-  const handleHeaderImageSave = async (newHeaderImage: string | null, newOffset?: number | null) => {
+  const handleHeaderImageSave = async (newHeaderImage: string | null) => {
     if (!noteId) return;
     try {
       // SIMPLIFICATION : Toujours réinitialiser à 50 lors du changement d'image
@@ -340,7 +340,7 @@ export default function NoteEditorPage() {
         setLoadError('Erreur lors du chargement de la note.');
         setLoading(false);
       });
-  }, [editor, noteId, hasInitialized, getHeadingsFromEditor]);
+  }, [editor, noteId, hasInitialized]);
 
 
 
@@ -362,29 +362,7 @@ export default function NoteEditorPage() {
     }
   }, [noteId, hasInitialized, published, publishedUrl]);
 
-  // Fonction utilitaire pour extraire les headings du doc Tiptap
-  function getHeadingsFromEditor(editorInstance: typeof editor): Heading[] {
-    if (!editorInstance || !editorInstance.state) return [];
-    const headings: Heading[] = [];
-    const slugCount: Record<string, number> = {};
-    editorInstance.state.doc.descendants((node) => {
-      if (node.type.name === 'heading') {
-        const baseSlug = slugify(`${node.textContent}-${node.attrs.level}`, { lower: true, strict: true });
-        let slug = baseSlug;
-        if (slugCount[baseSlug] !== undefined) {
-          slug = `${baseSlug}-${++slugCount[baseSlug]}`;
-        } else {
-          slugCount[baseSlug] = 0;
-        }
-        headings.push({
-          id: slug,
-          text: node.textContent,
-          level: node.attrs.level,
-        });
-      }
-    });
-    return headings;
-  }
+
 
   // Fonction pour compter les mots du contenu
   function getWordCount(): number {
@@ -404,21 +382,11 @@ export default function NoteEditorPage() {
     return `${Math.floor(diff / 86400)} days ago`;
   }
 
-  // Met à jour la TOC à chaque changement du doc
-  React.useEffect(() => {
-    if (!editor) return;
-    const updateTOC = () => setTocHeadings(getHeadingsFromEditor(editor));
-    updateTOC();
-    editor.on('transaction', updateTOC);
-    return () => {
-      editor.off('transaction', updateTOC);
-    };
-  }, [editor]);
+
 
   // --- Gestion centralisée de la visibilité ---
   React.useEffect(() => {
     if (!editor || !noteId) return;
-    let unsubscribed = false;
 
     // Fonction pour s'abonner au realtime
     const subscribeToNoteRealtime = () => {
@@ -428,7 +396,7 @@ export default function NoteEditorPage() {
           schema: 'public',
           table: 'articles',
           filter: `id=eq.${noteId}`
-        }, async (payload) => {
+        }, async () => {
 
           // Recharge la note depuis la base
           setIsUpdatingFromRealtime(true);
@@ -560,8 +528,6 @@ export default function NoteEditorPage() {
           console.log('[realtime] Canal realtime désabonné');
         }
       }
-
-      unsubscribed = true;
     };
   }, [editor, noteId, title, isInitialLoad]); // Retiré handleSave et lastSavedContent des dépendances
 
