@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useRef, useEffect } from 'react';
 import ChatInput from './ChatInput';
+import MarkdownMessage from './MarkdownMessage';
 import { getSynesiaResponse } from './chatService';
 import './chat.css';
 
@@ -102,7 +103,11 @@ const ChatComponent: React.FC<ChatComponentProps> = ({ className = '' }) => {
                 {messages.map((msg, idx) => (
                   <div key={msg.id || idx} className={`message ${msg.role === 'user' ? 'user-message' : 'assistant-message'}`}>
                     <div className={`message-bubble ${msg.role === 'user' ? 'user-bubble' : 'assistant-bubble'}`}>
-                      {msg.content}
+                      {msg.role === 'assistant' ? (
+                        <MarkdownMessage content={msg.content} />
+                      ) : (
+                        msg.content
+                      )}
                     </div>
                   </div>
                 ))}
