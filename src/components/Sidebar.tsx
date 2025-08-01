@@ -1,6 +1,7 @@
 'use client';
 import React, { useRef, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import './Sidebar.css';
 
 // --- Icônes Minimalistes ---
@@ -76,55 +77,34 @@ const Sidebar: React.FC<SidebarProps> = ({ onToggleFoldersPanel = () => {} }) =>
   }, []);
 
   return (
-    <aside className="sidebar">
-      <div className="sidebar-main-content">
-        {/* -- Bloc Navigation -- */}
-        <div className="sidebar-block">
+          <aside className="sidebar">
+        <div className="sidebar-main-content">
+          {/* -- Logo Scrivia -- */}
+          <div className="sidebar-logo">
+            <Image src="/logo scrivia white.png" alt="Scrivia Logo" width={120} height={32} />
+          </div>
+          
+          {/* -- Bloc Workspace -- */}
+          <div className="sidebar-block">
+          <div className="workspace-header">
+            <span className="workspace-title">My Workspace</span>
+          </div>
           <nav className="sidebar-nav">
-            <Link href="/" className="nav-link">
-              <HomeIcon />
-              <span>Accueil</span>
+            <Link href="/dossiers" className="nav-link">
+              <FolderIcon />
+              <span>Mes Dossiers</span>
             </Link>
-            <Link href="/favoris" className="nav-link">
-              <StarIcon />
-              <span>Favoris</span>
+            <Link href="/chat" className="nav-link">
+              <ChatIcon />
+              <span>Chat</span>
             </Link>
-          </nav>
-        </div>
-
-        {/* -- Bloc Organisation -- */}
-        <div className="sidebar-block">
-          <nav className="sidebar-nav">
-            <div className="special-item">
-              <Link href="/dossiers" className="nav-link">
-                <FolderIcon />
-                <span>Mes Dossiers</span>
-              </Link>
-              <button 
-                className="sidebar-toggle-button"
-                onMouseEnter={handleChevronMouseEnter}
-                onMouseLeave={handleChevronMouseLeave}
-              >
-                <ChevronsRightIcon />
-              </button>
-            </div>
             <Link href="/agents" className="nav-link">
               <AgentIcon />
               <span>Mes Agents</span>
             </Link>
-            <Link href="/chat" className="nav-link nav-link-chat">
-              <ChatIcon />
-              <span>Chat IA</span>
-            </Link>
-          </nav>
-        </div>
-        
-        {/* -- Bloc Système -- */}
-        <div className="sidebar-block">
-          <nav className="sidebar-nav">
             <Link href="/parametres" className="nav-link">
               <SettingsIcon />
-              <span>Paramètres</span>
+              <span>Settings</span>
             </Link>
           </nav>
         </div>

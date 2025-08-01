@@ -1,10 +1,11 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import ContentCard from '../../components/ContentCard';
 import { useLanguageContext } from '../../contexts/LanguageContext';
 import Link from 'next/link';
 import Image from 'next/image';
+import Sidebar from '../../components/Sidebar';
 import '../globals.css';
 
 const mockNotes = [
@@ -39,6 +40,34 @@ const mockNotes = [
 
 export default function HomePage() {
   const { t } = useLanguageContext();
+  const [username, setUsername] = useState<string>('');
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const response = await fetch('/api/v1/user/current', {
+          credentials: 'include', // Inclure les cookies
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+        if (response.ok) {
+          const userData = await response.json();
+          setUsername(userData.username || 'User');
+          console.log('User data received:', userData);
+        } else {
+          console.error('Error response:', response.status);
+          setUsername('User');
+        }
+      } catch (error) {
+        console.error('Error fetching user:', error);
+        setUsername('User');
+      }
+    };
+
+    fetchUser();
+  }, []);
+
   return (
     <div className="home-root">
       {/* Nouveau logo Scrivia */}
@@ -46,35 +75,10 @@ export default function HomePage() {
         <Image src="/logo_scrivia_white.png" alt="Scrivia Logo" width={200} height={54} style={{ marginBottom: 32 }} />
       </div>
       {/* Sidebar glassmorphism */}
-      <div className="sidebar-trigger" />
-      <aside className="sidebar-glass">
-        <nav className="sidebar-nav-glass">
-          <Link href="/dossiers" className="sidebar-link-glass">
-            <svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
-            <span>{t('nav.folders')}</span>
-          </Link>
-          <div className="sidebar-separator" />
-          <a href="#" className="sidebar-link-glass">
-            <svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/><line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="14" x2="23" y2="14"/><line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="14" x2="4" y2="14"/></svg>
-            <span>{t('nav.agents')}</span>
-          </a>
-          <div className="sidebar-separator" />
-          <a href="#" className="sidebar-link-glass">
-            <svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1-2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-            <span>{t('nav.settings')}</span>
-          </a>
-        </nav>
-        <div style={{flex: 1}} />
-        <div style={{width: '100%', paddingLeft: 12, paddingBottom: 18}}>
-          <a href="#" className="sidebar-link-glass">
-            <svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="7" r="4"/><path d="M5.5 21a7.5 7.5 0 0 1 13 0"/></svg>
-            <span>{t('nav.account')}</span>
-          </a>
-        </div>
-      </aside>
+      <Sidebar />
       <main className="main-content">
         {/* Headline premium */}
-        <div className="home-headline-glass">{t('home.headline')}</div>
+        <div className="home-headline-glass">Welcome Home, {username}</div>
         {/* Barre de saisie */}
         <section className="input-section">
           <input
@@ -127,11 +131,14 @@ export default function HomePage() {
           top: 0; left: 0; right: 0; bottom: 0;
           pointer-events: none;
           background:
-            linear-gradient(120deg, #131318 0%, #181824 40%, #23233a 70%, #2d225a 100%, #18181c 130%),
-            radial-gradient(ellipse at 80% 90%, rgba(255,106,0,0.08) 0%, transparent 70%),
-            radial-gradient(ellipse at 20% 10%, rgba(80,120,255,0.06) 0%, transparent 70%);
-          /* Halo orange subtil en bas à droite, halo bleu en haut à gauche */
-          box-shadow: 0 80vh 120px 80px rgba(255,106,0,0.07) inset;
+            linear-gradient(135deg, 
+              hsl(220, 8%, 2%) 0%, 
+              hsl(220, 12%, 4%) 20%, 
+              hsl(220, 15%, 6%) 40%, 
+              hsl(220, 18%, 8%) 60%, 
+              hsl(220, 20%, 10%) 80%, 
+              hsl(220, 25%, 12%) 100%
+            );
           backdrop-filter: blur(20px) saturate(120%) brightness(0.85);
           -webkit-backdrop-filter: blur(20px) saturate(120%) brightness(0.85);
         }
@@ -145,9 +152,12 @@ export default function HomePage() {
           align-items: center;
           justify-content: flex-start;
           padding: 48px 24px 24px 24px;
-          width: 100%;
+          width: calc(100% - 280px);
           max-width: 1200px;
           margin: 0 auto;
+          margin-left: 280px;
+          min-height: 100vh;
+          box-sizing: border-box;
         }
         .input-section {
           display: flex;
@@ -215,98 +225,7 @@ export default function HomePage() {
             padding: 32px 8px 8px 8px;
           }
         }
-        .sidebar-trigger {
-          position: fixed;
-          top: 115px;
-          left: 0;
-          width: 100px;
-          height: 75vh;
-          z-index: 10;
-          cursor: pointer;
-        }
-        .sidebar-glass {
-          position: fixed;
-          top: 114px;
-          left: 0;
-          height: 75vh;
-          width: 0;
-          min-width: 0;
-          opacity: 0;
-          background: rgba(30, 30, 36, 0.38);
-          backdrop-filter: blur(10px) saturate(140%);
-          -webkit-backdrop-filter: blur(10px) saturate(140%);
-          border-radius: 0 18px 18px 0;
-          border-top: 1.5px solid rgba(255,255,255,0.10);
-          border-right: 1.5px solid rgba(255,255,255,0.10);
-          border-bottom: 1.5px solid rgba(255,255,255,0.10);
-          border-left: none;
-          box-shadow: none;
-          display: flex;
-          flex-direction: column;
-          align-items: flex-start;
-          padding: 18px 0;
-          z-index: 9;
-          /* transition: width 0.28s cubic-bezier(.4,1.2,.4,1), opacity 0.18s, box-shadow 0.2s; */ /* Transition désactivée pour interface simple */
-          overflow: hidden;
-          pointer-events: none;
-        }
-        .sidebar-glass:hover,
-        .sidebar-trigger:hover + .sidebar-glass {
-          width: 220px;
-          min-width: 220px;
-          opacity: 1;
-          pointer-events: auto;
-          box-shadow: none;
-        }
-        .sidebar-nav-glass {
-          display: flex;
-          flex-direction: column;
-          gap: 32px;
-          align-items: flex-start;
-          width: 100%;
-          padding-left: 12px;
-        }
-        .sidebar-link-glass {
-          display: flex;
-          flex-direction: row;
-          align-items: center;
-          gap: 14px;
-          color: #b0b0b7;
-          text-decoration: none;
-          font-size: 1.08rem;
-          font-weight: 500;
-          padding: 10px 0;
-          border-radius: 10px;
-          /* transition: background 0.2s, color 0.2s; */ /* Transition désactivée pour interface simple */
-          width: 100%;
-          justify-content: flex-start;
-          text-align: left;
-          min-width: 0;
-        }
-        .sidebar-link-glass:hover {
-          background: rgba(255,255,255,0.08);
-          color: #ff6a00;
-        }
-        .sidebar-link-glass span {
-          opacity: 0;
-          /* transition: opacity 0.18s, margin 0.18s; */ /* Transition désactivée pour interface simple */
-          margin-left: -8px;
-          pointer-events: none;
-        }
-        .sidebar-trigger:hover + .sidebar-glass .sidebar-link-glass span,
-        .sidebar-glass:hover .sidebar-link-glass span {
-          opacity: 1;
-          margin-left: 0;
-          pointer-events: auto;
-        }
-        .sidebar-separator {
-          width: 80%;
-          height: 1px;
-          margin: 8px 0 8px 10%;
-          background: linear-gradient(90deg, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.04) 100%);
-          border: none;
-          border-radius: 1px;
-        }
+
         .home-headline-glass {
           color: #fff;
           font-size: 2.1rem;

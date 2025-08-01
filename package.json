@@ -75,7 +75,7 @@
     "tiptap-markdown": "^0.8.10",
     "turndown": "^7.2.0",
     "zod": "^3.25.74",
-    "zustand": "^5.0.6"
+    "zustand": "^5.0.7"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

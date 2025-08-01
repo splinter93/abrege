@@ -4,11 +4,20 @@ import React, { useState, useRef, useEffect } from 'react';
 interface ChatKebabMenuProps {
   isWideMode: boolean;
   isFullscreen: boolean;
+  historyLimit: number;
   onToggleWideMode: () => void;
   onToggleFullscreen: () => void;
+  onHistoryLimitChange: (limit: number) => void;
 }
 
-const ChatKebabMenu: React.FC<ChatKebabMenuProps> = ({ isWideMode, isFullscreen, onToggleWideMode, onToggleFullscreen }) => {
+const ChatKebabMenu: React.FC<ChatKebabMenuProps> = ({ 
+  isWideMode, 
+  isFullscreen, 
+  historyLimit,
+  onToggleWideMode, 
+  onToggleFullscreen,
+  onHistoryLimitChange 
+}) => {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -35,6 +44,11 @@ const ChatKebabMenu: React.FC<ChatKebabMenuProps> = ({ isWideMode, isFullscreen,
   const handleFullscreenToggle = () => {
     onToggleFullscreen();
     setIsOpen(false);
+  };
+
+  const handleHistoryLimitChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const newLimit = parseInt(event.target.value);
+    onHistoryLimitChange(newLimit);
   };
 
   return (
@@ -70,6 +84,7 @@ const ChatKebabMenu: React.FC<ChatKebabMenuProps> = ({ isWideMode, isFullscreen,
             </svg>
             <span>{isWideMode ? "Mode Normal" : "Mode Large"}</span>
           </button>
+          
           <button
             onClick={handleFullscreenToggle}
             className="kebab-option"
@@ -86,6 +101,26 @@ const ChatKebabMenu: React.FC<ChatKebabMenuProps> = ({ isWideMode, isFullscreen,
             </svg>
             <span>{isFullscreen ? "Quitter Plein Écran" : "Plein Écran"}</span>
           </button>
+
+          <div className="kebab-option history-limit-selector">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span>Historique:</span>
+            <select 
+              value={historyLimit} 
+              onChange={handleHistoryLimitChange}
+              className="history-limit-select"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <option value={5}>5 messages</option>
+              <option value={10}>10 messages</option>
+              <option value={15}>15 messages</option>
+              <option value={20}>20 messages</option>
+              <option value={30}>30 messages</option>
+              <option value={50}>50 messages</option>
+            </select>
+          </div>
         </div>
       )}
     </div>

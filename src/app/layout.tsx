@@ -19,6 +19,7 @@ import '../components/editor/editor-toolbar.css';
 import '../components/editor/editor-modal.css';
 import { LanguageProvider } from '../contexts/LanguageContext';
 import { Toaster } from 'react-hot-toast';
+import ChatWidget from '../components/chat/ChatWidget';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -63,6 +64,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <LanguageProvider>
           <Toaster position="top-right" />
           {children}
+          <ChatWidget />
         </LanguageProvider>
       </body>
     </html>

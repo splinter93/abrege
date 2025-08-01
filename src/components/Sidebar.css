@@ -1,6 +1,6 @@
 /* Variables CSS */
 :root {
-  --sidebar-bg: rgba(15, 23, 42, 0.8);
+  --sidebar-bg: rgba(15, 23, 42, 0.3);
   --sidebar-border: rgba(148, 163, 184, 0.1);
   --nav-item-bg: rgba(255, 255, 255, 0.05);
   --nav-item-hover: rgba(255, 255, 255, 0.1);
@@ -25,35 +25,35 @@
   padding: 1.5rem 1rem;
   display: flex;
   flex-direction: column;
-  min-height: calc(100vh - 61px);
-  border-radius: 0 20px 20px 0;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
-  overflow: hidden;
-}
-
-.sidebar::before {
-  content: '';
-  position: absolute;
+  height: 100vh;
+  border-radius: 0;
+  transition: all 0.3s cubic-bezier(0.4, 0.4, 0.2, 1);
+  position: fixed;
   top: 0;
   left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(
-    135deg,
-    rgba(59, 130, 246, 0.05) 0%,
-    rgba(139, 92, 246, 0.05) 50%,
-    rgba(16, 185, 129, 0.05) 100%
-  );
-  pointer-events: none;
-  z-index: -1;
+  width: 280px;
+  z-index: 1000;
+  overflow: hidden;
+  box-sizing: border-box;
 }
+
+
 
 .sidebar-main-content {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
   flex-grow: 1;
+}
+
+/* Logo */
+.sidebar-logo {
+  padding: 1.5rem 1rem 1rem 1rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-bottom: 1px solid var(--sidebar-border);
+  margin-bottom: 1rem;
 }
 
 /* Blocs de navigation */
@@ -64,6 +64,22 @@
 .sidebar-block + .sidebar-block {
   border-top: 1px solid var(--sidebar-border);
   padding-top: 1.5rem;
+}
+
+/* Header Workspace */
+.workspace-header {
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--sidebar-border);
+}
+
+.workspace-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  display: block;
 }
 
 .sidebar-block::before {
@@ -98,7 +114,7 @@
   color: var(--text-secondary);
   text-decoration: none;
   font-weight: 500;
-  font-size: 0.875rem;
+  font-size: 1.05rem;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   background: transparent;
   border: 1px solid transparent;
@@ -190,8 +206,8 @@
 
 /* Icônes */
 .nav-link svg {
-  width: 1.25rem;
-  height: 1.25rem;
+  width: 1.4rem;
+  height: 1.4rem;
   transition: all 0.2s ease;
   flex-shrink: 0;
 }
@@ -298,7 +314,7 @@
   
   .nav-link {
     padding: 0.625rem 0.875rem;
-    font-size: 0.8125rem;
+    font-size: 0.95rem;
   }
 }
 
