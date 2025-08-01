@@ -138,7 +138,6 @@ const ChatWidget: React.FC = () => {
                 alt="Scrivia" 
                 className="chat-logo"
               />
-              <span className="chat-version">Chat v1 (Synesia)</span>
             </div>
             <div className="chat-widget-actions">
               <button
@@ -262,4 +261,4 @@ const ChatWidget: React.FC = () => {
   );
 };
 
-export default ChatWidget; 
+export default ChatWidget;

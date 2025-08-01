@@ -109,7 +109,6 @@ const ChatFullscreen: React.FC = () => {
             alt="Scrivia" 
             className="chat-logo"
           />
-          <span className="chat-version">Chat v1 (Synesia)</span>
         </div>
         <div className="chat-fullscreen-actions">
           <button
