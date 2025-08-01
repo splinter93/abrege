@@ -202,20 +202,24 @@
 
 /* Input Area */
 .input-area-container {
-  padding: 0.36rem 2rem 1rem 2rem;
+  padding: 0.5rem 2rem 1rem 2rem;
   position: relative;
   margin-top: auto;
+  display: flex;
+  justify-content: center;
 }
 
 .input-area {
   margin-top: auto;
-  padding: 1rem 2rem;
+  padding: 0.75rem 1.5rem;
   background: #333333;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
   display: flex;
   align-items: flex-end;
   gap: 0.75rem;
   border-radius: 12px;
+  max-width: 600px;
+  width: 100%;
 }
 
 .chat-textarea {
@@ -225,11 +229,11 @@
   background: transparent;
   resize: none;
   font-family: inherit;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   line-height: 1.4;
   color: #ffffff;
-  min-height: 20px;
-  max-height: 120px;
+  min-height: 18px;
+  max-height: 100px;
 }
 
 .chat-textarea::placeholder {
@@ -240,8 +244,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   border: none;
   border-radius: 50%;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
