@@ -38,11 +38,13 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend, loading, textareaRef, onK
           disabled={loading}
           rows={1}
           className="chat-textarea"
+          aria-label="Zone de saisie du message"
         />
         <button
           onClick={handleSubmit}
           disabled={loading || !inputValue.trim()}
           className="send-button"
+          aria-label="Envoyer le message"
         >
           {loading ? (
             <div className="loading-spinner"></div>

@@ -1,4 +1,11 @@
-export async function getSynesiaResponse(message: string, messages: any[] = []) {
+interface Message {
+  id: string;
+  role: 'user' | 'assistant';
+  content: string;
+  timestamp: Date;
+}
+
+export async function getSynesiaResponse(message: string, messages: Message[] = []) {
   try {
     const response = await fetch("/api/chat/synesia", {
       method: "POST",
