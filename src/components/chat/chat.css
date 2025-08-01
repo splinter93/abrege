@@ -10,7 +10,7 @@
   --chat-button-size: 61px;
   --chat-toggle-size: 56px;
   --chat-border-radius: 22px;
-  --chat-padding: 1.38rem 2.07rem;
+  --chat-padding: 1rem 1.5rem;
   --chat-bg-secondary: rgba(255, 255, 255, 0.05);
   --chat-bg-primary: rgba(255, 255, 255, 0.08);
   --chat-bg-tertiary: rgba(255, 255, 255, 0.02);
@@ -46,9 +46,9 @@
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: var(--chat-container-bg);
+  background: rgba(42, 42, 42, 0.5);
   backdrop-filter: blur(20px);
-  z-index: 1000;
+  z-index: 1001;
   display: flex;
   flex-direction: column;
   border-radius: 0;
@@ -139,6 +139,24 @@
   background: var(--chat-bg-secondary);
 }
 
+.chat-reduce-button {
+  background: none;
+  border: none;
+  color: var(--chat-text-muted);
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.chat-reduce-button:hover {
+  color: var(--chat-text-color);
+  background: var(--chat-bg-secondary);
+}
+
 .chat-wide-button {
   background: none;
   border: none;
@@ -199,9 +217,9 @@
 
 /* Chat Header */
 .chat-header {
-  padding: 0.5rem 1.5rem;
+  padding: 0.5rem 1rem 0.5rem 0.5rem;
   border-bottom: 1px solid var(--chat-border-color);
-  background: var(--chat-header-bg);
+  background: rgba(51, 51, 51, 0.5);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -216,7 +234,7 @@
   gap: 0.5rem;
   font-weight: 600;
   color: var(--chat-text-color);
-  margin-left: 3px;
+  margin-left: 5px;
 }
 
 .chat-logo {
@@ -240,32 +258,32 @@
   overflow-x: hidden;
   display: flex;
   flex-direction: column;
-  background: var(--chat-container-bg);
+  background: transparent;
   position: relative;
 }
 
-/* Scrollbar styling - Sombre et à droite de la page */
-html::-webkit-scrollbar {
+/* Scrollbar styling - Sombre et à droite de la page entière */
+*::-webkit-scrollbar {
   width: 8px;
 }
 
-html::-webkit-scrollbar-track {
+*::-webkit-scrollbar-track {
   background: rgba(255, 255, 255, 0.05);
   border-radius: 4px;
 }
 
-html::-webkit-scrollbar-thumb {
+*::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.2);
   border-radius: 4px;
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-html::-webkit-scrollbar-thumb:hover {
+*::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.3);
 }
 
 /* Firefox scrollbar - Page entière */
-html {
+* {
   scrollbar-width: thin;
   scrollbar-color: rgba(255, 255, 255, 0.2) rgba(255, 255, 255, 0.05);
 }
@@ -301,12 +319,13 @@ html {
 }
 
 .user-bubble {
-  background: var(--chat-input-bg);
+  background: rgba(64, 64, 64, 0.5);
   color: var(--chat-text-color);
   border-bottom-right-radius: 4px;
   border: 0px solid var(--chat-border-color);
   font-size: 0.95rem;
   line-height: 1.4;
+  max-width: 65%;
 }
 
 .assistant-bubble {
@@ -314,6 +333,7 @@ html {
   color: var(--chat-text-color);
   border-bottom-left-radius: 4px;
   border: 0px solid var(--chat-border-color);
+  max-width: 100%;
 }
 
 /* Chat Markdown - Utilise les styles dédiés chatMarkdown.css */
@@ -503,7 +523,7 @@ html {
   display: flex;
   align-items: center;
   gap: 1.38rem;
-  background: var(--chat-input-bg);
+  background: rgba(64, 64, 64, 0.5);
   border: 1.5px solid var(--chat-border-color);
   border-radius: var(--chat-border-radius);
   padding: var(--chat-padding);
@@ -587,7 +607,7 @@ html {
   background: transparent;
   resize: none;
   font-family: inherit;
-  font-size: 1.38rem;
+  font-size: 0.95rem;
   line-height: 1.5;
   color: var(--chat-text-color);
   min-height: 34px;
@@ -608,7 +628,7 @@ html {
   width: var(--chat-button-size);
   height: var(--chat-button-size);
   border: 1.6px solid rgba(255, 255, 255, 0.3);
-  border-radius: 50%;
+  border-radius: 12px;
   background: rgba(255, 255, 255, 0.2);
   backdrop-filter: blur(10px);
   color: var(--chat-text-color);
@@ -1055,4 +1075,203 @@ html {
 
 .error-close:hover {
   background: rgba(220, 38, 38, 0.1);
+} 
+
+/* Bouton de sidebar flottant en haut à gauche */
+.chat-sidebar-floating-button {
+  position: fixed;
+  top: 70px; /* Descendre juste un peu */
+  left: 1rem;
+  width: 48px;
+  height: 48px;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  color: var(--chat-text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  z-index: 1001;
+  backdrop-filter: none;
+  box-shadow: none;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-10px);
+}
+
+/* Afficher le bouton quand le widget est ouvert */
+.chat-widget-container ~ .chat-sidebar-floating-button {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.chat-sidebar-floating-button:hover {
+  color: var(--chat-text-color);
+  background: transparent;
+  transform: translateY(0);
+  box-shadow: none;
+}
+
+.chat-sidebar-floating-button svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* Masquer le bouton de sidebar dans les actions du header */
+.chat-fullscreen-actions .chat-sidebar-toggle,
+.chat-widget-actions .chat-sidebar-toggle {
+  display: none;
+}
+
+/* Ajuster la position pour le mode plein écran */
+.chat-fullscreen-container .chat-sidebar-floating-button {
+  top: 3.5rem; /* Descendre juste un peu en mode plein écran */
+  left: 1rem;
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+/* Ajuster la position pour le mode widget */
+.chat-widget-container ~ .chat-sidebar-floating-button {
+  top: 70px;
+  left: 1rem;
+} 
+
+/* Masquer le widget sur la page chat fullscreen */
+.chat-fullscreen-container ~ .chat-widget-button,
+.chat-fullscreen-container ~ .chat-toggle-button {
+  display: none !important;
+} 
+
+/* Masquer le bouton de sidebar quand la sidebar est ouverte */
+.chat-sidebar.open ~ .chat-sidebar-floating-button,
+.chat-sidebar.open ~ .chat-sidebar-floating-button {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  transform: translateY(-10px) !important;
+}
+
+/* ==========================================================================
+   KEBAB MENU - Menu propre et organisé
+   ========================================================================== */
+
+.chat-kebab-menu {
+  position: relative;
+  display: inline-block;
+}
+
+.kebab-button {
+  background: none;
+  border: none;
+  color: var(--chat-text-muted);
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.kebab-button:hover {
+  color: var(--chat-text-color);
+  background: var(--chat-bg-secondary);
+}
+
+.kebab-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: var(--chat-container-bg);
+  border: 1px solid var(--chat-border-color);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px var(--chat-shadow-color);
+  backdrop-filter: blur(20px);
+  min-width: 220px;
+  z-index: 1002;
+  overflow: hidden;
+  margin-top: 0.5rem;
+}
+
+/* Sections du menu */
+.kebab-section {
+  border-bottom: 1px solid var(--chat-border-color);
+}
+
+.kebab-section:last-child {
+  border-bottom: none;
+}
+
+.kebab-section-title {
+  padding: 0.75rem 1rem 0.5rem 1rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--chat-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  background: var(--chat-bg-secondary);
+}
+
+.kebab-option {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: none;
+  border: none;
+  color: var(--chat-text-color);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.9rem;
+  text-align: left;
+}
+
+.kebab-option:hover {
+  background: var(--chat-bg-secondary);
+}
+
+.kebab-option svg {
+  flex-shrink: 0;
+  color: var(--chat-text-muted);
+}
+
+.kebab-option span {
+  flex: 1;
+}
+
+/* Sélecteur d'historique */
+.history-limit-selector {
+  cursor: default;
+}
+
+.history-limit-selector:hover {
+  background: none;
+}
+
+.history-limit-input {
+  background: var(--chat-input-bg);
+  border: 1px solid var(--chat-border-color);
+  border-radius: 6px;
+  color: var(--chat-text-color);
+  padding: 0.25rem 0.5rem;
+  font-size: 0.8rem;
+  cursor: pointer;
+  width: 60px;
+  text-align: center;
+}
+
+.history-limit-input:focus {
+  outline: none;
+  border-color: var(--chat-border-color-focus);
+}
+
+.history-limit-input::-webkit-inner-spin-button,
+.history-limit-input::-webkit-outer-spin-button {
+  opacity: 1;
+  height: 20px;
 } 

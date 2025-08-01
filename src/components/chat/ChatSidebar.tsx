@@ -63,11 +63,6 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({ isOpen, onClose }) => {
         {/* Header de la sidebar */}
         <div className="chat-sidebar-header">
           <div className="chat-sidebar-title">
-            <img 
-              src="/logo scrivia white.png" 
-              alt="Scrivia" 
-              className="chat-sidebar-logo"
-            />
             <span>Conversations</span>
           </div>
           <button

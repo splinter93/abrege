@@ -9,6 +9,7 @@ import './chat.css';
 
 const ChatWidget: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isOnChatPage, setIsOnChatPage] = useState(false);
   
   const {
     sessions,
@@ -30,6 +31,20 @@ const ChatWidget: React.FC = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
+  // Vérifier si on est sur la page chat
+  useEffect(() => {
+    const checkIfOnChatPage = () => {
+      setIsOnChatPage(window.location.pathname === '/chat');
+    };
+    
+    checkIfOnChatPage();
+    window.addEventListener('popstate', checkIfOnChatPage);
+    
+    return () => {
+      window.removeEventListener('popstate', checkIfOnChatPage);
+    };
+  }, []);
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
@@ -41,6 +56,11 @@ const ChatWidget: React.FC = () => {
   useEffect(() => {
     loadSessions();
   }, []);
+
+  // Masquer le widget si on est sur la page chat
+  if (isOnChatPage) {
+    return null;
+  }
 
   const handleSendMessage = async (message: string) => {
     if (!message.trim() || !currentSession) return;
@@ -125,6 +145,18 @@ const ChatWidget: React.FC = () => {
       >
         <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
           <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+        </svg>
+      </button>
+
+      {/* Bouton de sidebar flottant en haut à gauche */}
+      <button
+        onClick={() => setSidebarOpen(true)}
+        className="chat-sidebar-floating-button"
+        aria-label="Ouvrir les conversations"
+        title="Conversations"
+      >
+        <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+          <path d="M3 3h18v18H3zM9 9h6M9 13h6M9 17h6"></path>
         </svg>
       </button>
 

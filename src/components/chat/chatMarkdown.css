@@ -203,6 +203,8 @@
   margin: 0.75rem 0;
   width: 100%;
   font-size: 0.875rem;
+  border-radius: 8px;
+  overflow: hidden;
 }
 
 .chat-markdown th,

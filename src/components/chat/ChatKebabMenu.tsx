@@ -46,9 +46,11 @@ const ChatKebabMenu: React.FC<ChatKebabMenuProps> = ({
     setIsOpen(false);
   };
 
-  const handleHistoryLimitChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+  const handleHistoryLimitChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const newLimit = parseInt(event.target.value);
-    onHistoryLimitChange(newLimit);
+    if (!isNaN(newLimit) && newLimit > 0 && newLimit <= 100) {
+      onHistoryLimitChange(newLimit);
+    }
   };
 
   return (
@@ -59,67 +61,69 @@ const ChatKebabMenu: React.FC<ChatKebabMenuProps> = ({
         aria-label="Menu des options"
         aria-expanded={isOpen}
       >
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <circle cx="12" cy="5" r="1" />
           <circle cx="12" cy="12" r="1" />
-          <circle cx="19" cy="12" r="1" />
-          <circle cx="5" cy="12" r="1" />
+          <circle cx="12" cy="19" r="1" />
         </svg>
       </button>
 
       {isOpen && (
         <div className="kebab-dropdown">
-          <button
-            onClick={handleWideModeToggle}
-            className="kebab-option"
-            aria-label={isWideMode ? "Passer en mode normal" : "Passer en mode large"}
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              {isWideMode ? (
-                // Icon for normal mode (narrow)
-                <path d="M4 6h16M4 12h16M4 18h16" />
-              ) : (
-                // Icon for wide mode (expand)
-                <path d="M2 6h20M2 12h20M2 18h20" />
-              )}
-            </svg>
-            <span>{isWideMode ? "Mode Normal" : "Mode Large"}</span>
-          </button>
-          
-          <button
-            onClick={handleFullscreenToggle}
-            className="kebab-option"
-            aria-label={isFullscreen ? "Quitter le mode plein écran" : "Passer en mode plein écran"}
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              {isFullscreen ? (
-                // Icon for exit fullscreen
-                <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3" />
-              ) : (
-                // Icon for enter fullscreen
-                <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 1 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
-              )}
-            </svg>
-            <span>{isFullscreen ? "Quitter Plein Écran" : "Plein Écran"}</span>
-          </button>
-
-          <div className="kebab-option history-limit-selector">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <span>Historique:</span>
-            <select 
-              value={historyLimit} 
-              onChange={handleHistoryLimitChange}
-              className="history-limit-select"
-              onClick={(e) => e.stopPropagation()}
+          {/* Section Affichage */}
+          <div className="kebab-section">
+            <div className="kebab-section-title">Affichage</div>
+            
+            <button
+              onClick={handleWideModeToggle}
+              className="kebab-option"
+              aria-label={isWideMode ? "Passer en mode normal" : "Passer en mode large"}
             >
-              <option value={5}>5 messages</option>
-              <option value={10}>10 messages</option>
-              <option value={15}>15 messages</option>
-              <option value={20}>20 messages</option>
-              <option value={30}>30 messages</option>
-              <option value={50}>50 messages</option>
-            </select>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                {isWideMode ? (
+                  <path d="M4 6h16M4 12h16M4 18h16" />
+                ) : (
+                  <path d="M2 6h20M2 12h20M2 18h20" />
+                )}
+              </svg>
+              <span>{isWideMode ? "Mode Normal" : "Mode Large"}</span>
+            </button>
+            
+            <button
+              onClick={handleFullscreenToggle}
+              className="kebab-option"
+              aria-label={isFullscreen ? "Quitter le mode plein écran" : "Passer en mode plein écran"}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                {isFullscreen ? (
+                  <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3" />
+                ) : (
+                  <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 1 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
+                )}
+              </svg>
+              <span>{isFullscreen ? "Quitter Plein Écran" : "Plein Écran"}</span>
+            </button>
+          </div>
+
+          {/* Section Configuration */}
+          <div className="kebab-section">
+            <div className="kebab-section-title">Configuration</div>
+            
+            <div className="kebab-option history-limit-selector">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span>Limite d'historique</span>
+              <input 
+                type="number"
+                value={historyLimit} 
+                onChange={handleHistoryLimitChange}
+                className="history-limit-input"
+                min="1"
+                max="100"
+                onClick={(e) => e.stopPropagation()}
+              />
+            </div>
           </div>
         </div>
       )}

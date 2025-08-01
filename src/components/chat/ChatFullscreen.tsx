@@ -11,6 +11,7 @@ import './chat.css';
 const ChatFullscreen: React.FC = () => {
   const [wideMode, setWideMode] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [pendingMessage, setPendingMessage] = useState<string | null>(null);
   
   const {
     sessions,
@@ -40,8 +41,23 @@ const ChatFullscreen: React.FC = () => {
     loadSessions();
   }, []);
 
+  // Réessayer d'envoyer le message en attente après création de session
+  useEffect(() => {
+    if (currentSession && pendingMessage) {
+      handleSendMessage(pendingMessage);
+      setPendingMessage(null);
+    }
+  }, [currentSession, pendingMessage]);
+
   const handleSendMessage = async (message: string) => {
-    if (!message.trim() || !currentSession) return;
+    if (!message.trim()) return;
+
+    // Créer une session si elle n'existe pas
+    if (!currentSession) {
+      setPendingMessage(message);
+      await createSession();
+      return;
+    }
 
     const userMessage: ChatMessage = {
       id: `user-${Date.now()}`,
@@ -102,6 +118,18 @@ const ChatFullscreen: React.FC = () => {
 
   return (
     <div className={`chat-fullscreen-container ${wideMode ? 'wide-mode' : ''}`}>
+      {/* Bouton de sidebar flottant en haut à gauche */}
+      <button
+        onClick={() => setSidebarOpen(true)}
+        className="chat-sidebar-floating-button"
+        aria-label="Ouvrir les conversations"
+        title="Conversations"
+      >
+        <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+          <path d="M3 3h18v18H3zM9 9h6M9 13h6M9 17h6"></path>
+        </svg>
+      </button>
+
       <div className="chat-header">
         <div className="chat-title">
           <img 
@@ -132,13 +160,13 @@ const ChatFullscreen: React.FC = () => {
             </svg>
           </button>
           <button
-            onClick={() => setWideMode(!wideMode)}
-            className={`chat-wide-button ${wideMode ? 'active' : ''}`}
-            aria-label="Mode large"
-            title="Passer en mode large"
+            onClick={() => window.history.back()}
+            className="chat-reduce-button"
+            aria-label="Réduire le chat"
+            title="Réduire"
           >
             <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
-              <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
+              <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3" />
             </svg>
           </button>
           <ChatKebabMenu 
