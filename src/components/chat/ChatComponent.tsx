@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useRef, useEffect } from 'react';
 import ChatInput from './ChatInput';
-import MarkdownMessage from './MarkdownMessage';
+import EnhancedMarkdownMessage from './EnhancedMarkdownMessage';
 import ChatKebabMenu from './ChatKebabMenu';
 import { useChatMessages } from './useChatMessages';
 import './chat.css';
@@ -14,6 +14,7 @@ const ChatComponent: React.FC<ChatComponentProps> = ({ className = '' }) => {
   const { messages, loading, sendMessage } = useChatMessages();
   const [isOpen, setIsOpen] = useState(false);
   const [isWideMode, setIsWideMode] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -33,6 +34,10 @@ const ChatComponent: React.FC<ChatComponentProps> = ({ className = '' }) => {
     setIsWideMode(!isWideMode);
   };
 
+  const handleToggleFullscreen = () => {
+    setIsFullscreen(!isFullscreen);
+  };
+
   return (
     <>
       <button 
@@ -47,14 +52,21 @@ const ChatComponent: React.FC<ChatComponentProps> = ({ className = '' }) => {
       </button>
 
       {isOpen && (
-        <div className={`chat-container ${isWideMode ? 'chat-container-wide' : 'chat-container-normal'} ${className}`} role="dialog" aria-label="Chat avec l'assistant IA">
+        <div className={`chat-container ${isWideMode ? 'chat-container-wide' : 'chat-container-normal'} ${isFullscreen ? 'chat-container-fullscreen' : ''} ${className}`} role="dialog" aria-label="Chat avec l'assistant IA">
           <div className="chat-header">
             <div className="chat-title">
-              <span>Scrivia Chat</span>
+              <img 
+                src="/logo scrivia white.png" 
+                alt="Scrivia" 
+                className="chat-logo"
+              />
+              <span className="chat-version">Chat v1</span>
             </div>
             <ChatKebabMenu 
               isWideMode={isWideMode}
+              isFullscreen={isFullscreen}
               onToggleWideMode={handleToggleWideMode}
+              onToggleFullscreen={handleToggleFullscreen}
             />
           </div>
 
@@ -70,7 +82,7 @@ const ChatComponent: React.FC<ChatComponentProps> = ({ className = '' }) => {
                   >
                     <div className={`message-bubble ${msg.role === 'user' ? 'user-bubble' : 'assistant-bubble'}`}>
                       {msg.role === 'assistant' ? (
-                        <MarkdownMessage content={msg.content} />
+                        <EnhancedMarkdownMessage content={msg.content} />
                       ) : (
                         msg.content
                       )}

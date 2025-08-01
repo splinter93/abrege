@@ -26,11 +26,24 @@ Système de chat premium avec interface moderne et fonctionnalités avancées.
 - **Mode Large** : Container de messages à 1000px
 - Basculement via le kebab menu dans le header
 
+### Mode plein écran
+- **Activation** : Via le kebab menu → "Plein Écran"
+- **Comportement** : Chat occupe tout l'écran
+- **Largeurs** : 800px (normal) / 1200px (large) en plein écran
+- **Sortie** : Via le kebab menu → "Quitter Plein Écran"
+
 ### Interface
 - Design glassmorphism moderne
 - Bulles de messages épurées (pas de fond pour l'assistant)
 - Bouton d'envoi avec effet glassmorphism
 - Responsive design
+
+### Support Mermaid
+- **Détection automatique** des blocs ```mermaid
+- **Rendu en temps réel** des diagrammes
+- **Types supportés** : flowchart, sequence, class, state, gantt, pie, etc.
+- **Gestion d'erreurs** avec affichage des détails
+- **Thème sombre** adapté au design du chat
 
 ### Accessibilité
 - ARIA labels complets
@@ -45,6 +58,29 @@ import { ChatComponent } from '@/components/chat';
 function App() {
   return <ChatComponent />;
 }
+```
+
+### Exemple avec Mermaid
+
+```tsx
+import { EnhancedMarkdownMessage } from '@/components/chat';
+
+const content = `
+Voici un diagramme de flux :
+
+\`\`\`mermaid
+flowchart TD
+    A[Début] --> B{Condition}
+    B -->|Oui| C[Action 1]
+    B -->|Non| D[Action 2]
+    C --> E[Fin]
+    D --> E
+\`\`\`
+
+Et du texte normal après.
+`;
+
+<EnhancedMarkdownMessage content={content} />
 ```
 
 ## 🔧 Configuration

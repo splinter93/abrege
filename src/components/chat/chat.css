@@ -29,6 +29,25 @@
   flex-direction: column;
   z-index: 1000;
   overflow: hidden;
+  transition: all 0.3s ease;
+  min-height: 400px;
+}
+
+/* Fullscreen Mode */
+.chat-container-fullscreen {
+  bottom: 0;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 100vh;
+  border-radius: 0;
+  border: none;
+  box-shadow: none;
+  z-index: 9999;
+}
+
+.chat-container-fullscreen .chat-header {
+  z-index: 10010;
 }
 
 /* Chat Header */
@@ -39,6 +58,9 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  position: relative;
+  z-index: 1001;
+  flex-shrink: 0;
 }
 
 .chat-title {
@@ -49,20 +71,64 @@
   color: var(--chat-text-color);
 }
 
+.chat-logo {
+  height: 24px;
+  width: auto;
+  object-fit: contain;
+}
+
+.chat-version {
+  font-size: 1rem;
+  color: var(--chat-text-color);
+  opacity: 0.7;
+  font-weight: 400;
+  margin-left: 0.1rem;
+  margin-top: 4.3px;
+}
+
 /* Chat Content Layout */
 .chat-content {
   display: flex;
   flex-direction: column;
   height: 100%;
   flex: 1;
+  overflow: hidden;
 }
 
 .messages-container {
   flex: 1;
   overflow-y: auto;
+  overflow-x: hidden;
   display: flex;
   flex-direction: column;
   background: var(--chat-container-bg);
+  position: relative;
+}
+
+/* Scrollbar styling - Sombre et à droite de la page */
+html::-webkit-scrollbar {
+  width: 8px;
+}
+
+html::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+}
+
+html::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+html::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Firefox scrollbar - Page entière */
+html {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.2) rgba(255, 255, 255, 0.05);
 }
 
 .message-list {
@@ -100,6 +166,8 @@
   color: var(--chat-text-color);
   border-bottom-right-radius: 4px;
   border: 0px solid var(--chat-border-color);
+  font-size: 0.95rem;
+  line-height: 1.4;
 }
 
 .assistant-bubble {
@@ -109,80 +177,132 @@
   border: 0px solid var(--chat-border-color);
 }
 
-/* Markdown styling in chat bubbles */
-.assistant-bubble .markdown-body {
-  color: var(--chat-text-color);
-  font-size: 0.95rem;
-  line-height: 1.4;
+/* Chat Markdown - Utilise les styles dédiés chatMarkdown.css */
+
+/* Mermaid Styles */
+.mermaid-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 1rem 0;
+  min-height: 100px;
+  position: relative;
 }
 
-.assistant-bubble .markdown-body h1,
-.assistant-bubble .markdown-body h2,
-.assistant-bubble .markdown-body h3,
-.assistant-bubble .markdown-body h4,
-.assistant-bubble .markdown-body h5,
-.assistant-bubble .markdown-body h6 {
+.mermaid-container svg,
+.mermaid-svg-container svg {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 1rem;
+}
+
+.mermaid-svg-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+}
+
+.mermaid-loading {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  padding: 2rem;
+}
+
+.mermaid-loading-indicator {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--chat-text-color);
+  opacity: 0.7;
+}
+
+.mermaid-spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid transparent;
+  border-top: 2px solid var(--chat-text-color);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.mermaid-error {
+  background: rgba(255, 0, 0, 0.1);
+  border: 1px solid rgba(255, 0, 0, 0.3);
+  border-radius: 8px;
+  padding: 1rem;
+  margin: 1rem 0;
+}
+
+.mermaid-error-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  color: #ff6b6b;
+}
+
+.mermaid-error-content details {
   margin-top: 0.5rem;
-  margin-bottom: 0.5rem;
-  color: var(--chat-text-color);
 }
 
-.assistant-bubble .markdown-body p {
-  margin: 0.25rem 0;
-}
-
-.assistant-bubble .markdown-body code {
-  background: rgba(255, 255, 255, 0.1);
-  padding: 0.125rem 0.25rem;
-  border-radius: 3px;
-  font-size: 0.9em;
-  color: var(--chat-text-color);
-}
-
-.assistant-bubble .markdown-body pre {
-  background: rgba(255, 255, 255, 0.1);
+.mermaid-error-content pre {
+  background: rgba(0, 0, 0, 0.3);
   padding: 0.5rem;
-  border-radius: 6px;
+  border-radius: 4px;
+  font-size: 0.8rem;
   overflow-x: auto;
-  margin: 0.5rem 0;
 }
 
-.assistant-bubble .markdown-body pre code {
-  background: none;
-  padding: 0;
+.mermaid-block {
+  margin: 1rem 0;
 }
 
-.assistant-bubble .markdown-body ul,
-.assistant-bubble .markdown-body ol {
-  margin: 0.25rem 0;
-  padding-left: 1.5rem;
+.mermaid-inline {
+  width: 100%;
 }
 
-.assistant-bubble .markdown-body li {
-  margin: 0.125rem 0;
+.mermaid-invalid {
+  background: rgba(255, 165, 0, 0.1);
+  border: 1px solid rgba(255, 165, 0, 0.3);
+  border-radius: 8px;
+  padding: 1rem;
+  margin: 1rem 0;
 }
 
-.assistant-bubble .markdown-body blockquote {
-  border-left: 3px solid rgba(255, 255, 255, 0.3);
-  margin: 0.5rem 0;
-  padding-left: 0.75rem;
-  color: #cccccc;
+.mermaid-invalid-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  color: #ffa500;
 }
 
-.assistant-bubble .markdown-body table {
-  border-collapse: collapse;
-  margin: 0.5rem 0;
-  font-size: 0.9em;
+.mermaid-invalid-content details {
+  margin-top: 0.5rem;
 }
 
-.assistant-bubble .markdown-body th,
-.assistant-bubble .markdown-body td {
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  padding: 0.25rem 0.5rem;
+.mermaid-invalid-content pre {
+  background: rgba(0, 0, 0, 0.3);
+  padding: 0.5rem;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  overflow-x: auto;
 }
 
-.assistant-bubble .markdown-body th {
-  background: rgba(255, 255, 255, 0.1);
+.mermaid-source {
+  background: rgba(0, 0, 0, 0.3);
+  padding: 0.5rem;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.enhanced-markdown {
+  width: 100%;
 }
 
 /* Loading Animation */
@@ -257,6 +377,15 @@
 
 .chat-container-wide .input-area {
   max-width: 1000px;
+}
+
+/* Fullscreen Input Area */
+.chat-container-fullscreen.chat-container-normal .input-area {
+  max-width: 800px;
+}
+
+.chat-container-fullscreen.chat-container-wide .input-area {
+  max-width: 1200px;
 }
 
 .input-area:focus-within {
@@ -348,6 +477,11 @@
   justify-content: center;
 }
 
+/* Hide toggle button in fullscreen mode */
+.chat-container-fullscreen ~ .chat-toggle-button {
+  display: none;
+}
+
 .chat-toggle-button:hover {
   transform: scale(1.1);
   box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
@@ -377,6 +511,21 @@
   width: 1000px;
   margin: 0 auto;
   padding: 1rem 1rem;
+}
+
+/* Fullscreen Width Modes */
+.chat-container-fullscreen.chat-container-normal .messages-container {
+  max-width: 800px !important;
+  width: 800px;
+  margin: 0 auto;
+  padding: 2rem 3rem;
+}
+
+.chat-container-fullscreen.chat-container-wide .messages-container {
+  max-width: 1200px !important;
+  width: 1200px;
+  margin: 0 auto;
+  padding: 2rem 2rem;
 }
 
 /* Kebab Menu Styles */
@@ -414,7 +563,7 @@
   border: 1px solid var(--chat-border-color);
   border-radius: 8px;
   box-shadow: 0 4px 16px var(--chat-shadow-color);
-  z-index: 1001;
+  z-index: 10001;
   min-width: 160px;
   margin-top: 0.5rem;
 }
@@ -498,6 +647,22 @@
   
   .chat-container-normal .input-area,
   .chat-container-wide .input-area {
+    max-width: 95%;
+  }
+  
+  /* Fullscreen mode on mobile */
+  .chat-container-fullscreen {
+    border-radius: 0;
+  }
+  
+  .chat-container-fullscreen .messages-container {
+    max-width: 100% !important;
+    width: 100%;
+    margin: 0;
+    padding: 1rem;
+  }
+  
+  .chat-container-fullscreen .input-area {
     max-width: 95%;
   }
 }

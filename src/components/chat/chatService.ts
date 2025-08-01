@@ -20,8 +20,8 @@ export async function getSynesiaResponse(message: string, messages: Message[] = 
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        message,
-        messages
+        message, // Ceci sera utilisé comme 'args'
+        messages // Ceci sera utilisé pour 'history_messages'
       }),
     });
 
