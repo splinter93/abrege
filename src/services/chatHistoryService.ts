@@ -75,11 +75,13 @@ export class ChatHistoryService {
       truncateStrategy: 'keep_latest'
     });
 
-    // Convertir en format Synesia
-    const historyMessages = processed.messages.map(msg => ({
-      role: msg.role,
-      content: msg.content
-    }));
+    // Convertir en format Synesia (filtrer les messages système)
+    const historyMessages = processed.messages
+      .filter(msg => msg.role === 'user' || msg.role === 'assistant')
+      .map(msg => ({
+        role: msg.role as 'user' | 'assistant',
+        content: msg.content
+      }));
 
     return {
       callable_id: "a62f3fb5-17ee-488c-b775-b57fc89c617e",

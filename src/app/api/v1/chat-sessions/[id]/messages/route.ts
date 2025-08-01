@@ -16,9 +16,11 @@ const addMessageSchema = z.object({
 // POST /api/v1/chat-sessions/[id]/messages - Ajouter un message à une session
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await context.params;
+    
     // Récupérer l'utilisateur authentifié
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     
@@ -29,7 +31,7 @@ export async function POST(
       );
     }
 
-    const sessionId = params.id;
+    const sessionId = id;
     const body = await request.json();
     const validatedData = addMessageSchema.parse(body);
 
@@ -114,9 +116,11 @@ export async function POST(
 // GET /api/v1/chat-sessions/[id]/messages - Récupérer les messages d'une session
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await context.params;
+    
     // Récupérer l'utilisateur authentifié
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     
@@ -127,7 +131,7 @@ export async function GET(
       );
     }
 
-    const sessionId = params.id;
+    const sessionId = id;
 
     // Récupérer la session avec son thread
     const { data: session, error } = await supabase

@@ -12,10 +12,11 @@ const supabase = createClient(
  */
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
-    const sessionId = params.id;
+    const { id } = await context.params;
+    const sessionId = id;
     const body = await request.json();
     const { thread, name, history_limit, is_active, metadata } = body;
 
@@ -97,10 +98,11 @@ export async function PUT(
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
-    const sessionId = params.id;
+    const { id } = await context.params;
+    const sessionId = id;
 
     // Récupérer l'utilisateur depuis l'en-tête d'autorisation
     const authHeader = request.headers.get('authorization');
@@ -149,8 +151,7 @@ export async function GET(
 
     return NextResponse.json({
       success: true,
-      data: session,
-      message: 'Session récupérée avec succès'
+      data: session
     });
 
   } catch (error) {

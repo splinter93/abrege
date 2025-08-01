@@ -3,7 +3,7 @@ import { persist } from 'zustand/middleware';
 
 export interface ChatMessage {
   id: string;
-  role: 'user' | 'assistant';
+  role: 'user' | 'assistant' | 'system';
   content: string;
   timestamp: string;
 }
@@ -15,6 +15,12 @@ export interface ChatSession {
   history_limit: number;
   created_at: string;
   updated_at: string;
+}
+
+interface ApiResponse<T> {
+  success: boolean;
+  data: T;
+  error?: string;
 }
 
 interface ChatStore {
@@ -51,14 +57,14 @@ export const useChatStore = create<ChatStore>()(
       error: null,
 
       // Actions
-      setSessions: (sessions) => set({ sessions }),
+      setSessions: (sessions: ChatSession[]) => set({ sessions }),
       
-      setCurrentSession: (session) => set({ currentSession: session }),
+      setCurrentSession: (session: ChatSession | null) => set({ currentSession: session }),
       
-      addMessage: (message) => {
+      addMessage: (message: ChatMessage) => {
         const { currentSession } = get();
         if (currentSession) {
-          const updatedSession = {
+          const updatedSession: ChatSession = {
             ...currentSession,
             thread: [...currentSession.thread, message],
             updated_at: new Date().toISOString()
@@ -88,9 +94,9 @@ export const useChatStore = create<ChatStore>()(
 
       closeWidget: () => set({ isWidgetOpen: false }),
 
-      setLoading: (loading) => set({ loading }),
+      setLoading: (loading: boolean) => set({ loading }),
 
-      setError: (error) => set({ error }),
+      setError: (error: string | null) => set({ error }),
 
       createSession: async () => {
         const { setLoading, setError, sessions, setSessions, setCurrentSession } = get();
@@ -105,7 +111,7 @@ export const useChatStore = create<ChatStore>()(
           });
           
           if (response.ok) {
-            const data = await response.json();
+            const data = await response.json() as ApiResponse<ChatSession>;
             const newSession = data.data;
             
             const updatedSessions = [...sessions, newSession];
@@ -115,6 +121,7 @@ export const useChatStore = create<ChatStore>()(
             setError('Erreur lors de la création de la session');
           }
         } catch (error) {
+          console.error('Erreur lors de la création de session:', error);
           setError('Erreur réseau');
         } finally {
           setLoading(false);
@@ -129,7 +136,7 @@ export const useChatStore = create<ChatStore>()(
         
         try {
           const response = await fetch('/api/v1/chat-sessions');
-          const data = await response.json();
+          const data = await response.json() as ApiResponse<ChatSession[]>;
           
           if (data.success && data.data) {
             setSessions(data.data);
@@ -138,6 +145,7 @@ export const useChatStore = create<ChatStore>()(
             }
           }
         } catch (error) {
+          console.error('Erreur lors du chargement des sessions:', error);
           setError('Erreur lors du chargement des sessions');
         } finally {
           setLoading(false);
