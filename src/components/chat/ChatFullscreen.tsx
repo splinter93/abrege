@@ -20,6 +20,7 @@ const ChatFullscreen: React.FC = () => {
     setCurrentSession,
     addMessage,
     setError,
+    setLoading,
     createSession,
     loadSessions
   } = useChatStore();
@@ -52,16 +53,49 @@ const ChatFullscreen: React.FC = () => {
     // Ajouter le message utilisateur
     addMessage(userMessage);
 
-    // Simuler la réponse de l'IA
-    setTimeout(() => {
+    // Appeler l'API Synesia
+    try {
+      setLoading(true);
+      
+      const response = await fetch('/api/chat/synesia', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: message,
+          messages: currentSession.thread
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Erreur API: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
       const assistantMessage: ChatMessage = {
         id: `assistant-${Date.now()}`,
         role: 'assistant',
-        content: `Je reçois votre message : "${message}". Comment puis-je vous aider ?`,
+        content: data.response || 'Désolé, je n\'ai pas pu traiter votre demande.',
         timestamp: new Date().toISOString()
       };
+      
       addMessage(assistantMessage);
-    }, 1000);
+    } catch (error) {
+      console.error('Erreur lors de l\'appel à Synesia:', error);
+      
+      const errorMessage: ChatMessage = {
+        id: `assistant-${Date.now()}`,
+        role: 'assistant',
+        content: 'Désolé, une erreur est survenue lors du traitement de votre message. Veuillez réessayer.',
+        timestamp: new Date().toISOString()
+      };
+      
+      addMessage(errorMessage);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const messages = currentSession?.thread || [];
