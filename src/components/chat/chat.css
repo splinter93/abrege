@@ -205,7 +205,7 @@
 
 /* Input Area */
 .input-area-container {
-  padding: 1.725rem 2.3rem;
+  padding: 2.07rem 2.76rem;
   position: relative;
   margin-top: auto;
   display: flex;
@@ -215,12 +215,12 @@
 .input-area {
   display: flex;
   align-items: center;
-  gap: 1.15rem;
+  gap: 1.38rem;
   background: #404040;
   border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 18px;
-  padding: 1.15rem 1.725rem;
-  max-width: 690px;
+  border-radius: 22px;
+  padding: 1.38rem 2.07rem;
+  max-width: 828px;
   width: 100%;
   transition: all 0.2s ease;
 }
@@ -237,11 +237,11 @@
   background: transparent;
   resize: none;
   font-family: inherit;
-  font-size: 1.15rem;
+  font-size: 1.38rem;
   line-height: 1.5;
   color: #ffffff;
-  min-height: 28px;
-  max-height: 138px;
+  min-height: 34px;
+  max-height: 166px;
   font-weight: 400;
 }
 
@@ -254,8 +254,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 51px;
-  height: 51px;
+  width: 61px;
+  height: 61px;
   border: none;
   border-radius: 50%;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
