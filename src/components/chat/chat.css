@@ -199,7 +199,7 @@
 
 /* Chat Header */
 .chat-header {
-  padding: 0.75rem 1.5rem;
+  padding: 0.5rem 1.5rem;
   border-bottom: 1px solid var(--chat-border-color);
   background: var(--chat-header-bg);
   display: flex;
@@ -216,6 +216,7 @@
   gap: 0.5rem;
   font-weight: 600;
   color: var(--chat-text-color);
+  margin-left: 3px;
 }
 
 .chat-logo {
