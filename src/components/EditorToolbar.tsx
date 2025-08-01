@@ -166,6 +166,7 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor, setImageMenuOpen,
       document.addEventListener('mousedown', handleClickOutside);
       return () => document.removeEventListener('mousedown', handleClickOutside);
     }
+    return undefined;
   }, [fontMenuOpen]);
   
   // Focus sur la recherche quand le menu s'ouvre
@@ -194,6 +195,7 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor, setImageMenuOpen,
       document.addEventListener('keydown', handleKeyDown);
       return () => document.removeEventListener('keydown', handleKeyDown);
     }
+    return undefined;
   }, [fontMenuOpen, filteredFonts]);
   
   return (

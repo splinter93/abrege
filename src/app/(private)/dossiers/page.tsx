@@ -2,7 +2,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import FolderManager from "../../../components/FolderManager";
 import ClasseurTabs, { Classeur } from "../../../components/ClasseurTabs";
-import { getClasseurs } from "../../../services/supabase";
+
 import { optimizedApi } from "../../../services/optimizedApi";
 import { supabase } from "../../../supabaseClient";
 import { toast } from "react-hot-toast";
@@ -513,57 +513,7 @@ const DossiersPage: React.FC = () => {
 
   // Plus aucun useEffect, polling, subscribe, ou cache local pour la liste des classeurs
 
-  // Fonction pour créer une note avec API optimisée
-  const createNoteOptimized = async (noteData: any) => {
-    try {
-      console.log('[DossiersPage] 🚀 Création note avec API optimisée');
-      const result = await optimizedApi.createNote(noteData);
-      console.log('[DossiersPage] ✅ Note créée avec API optimisée:', result.note.source_title);
-      return result;
-    } catch (error) {
-      console.error('[DossiersPage] ❌ Erreur création note:', error);
-      throw error;
-    }
-  };
 
-  // Fonction pour créer un dossier avec API optimisée
-  const createFolderOptimized = async (folderData: any) => {
-    try {
-      console.log('[DossiersPage] 🚀 Création dossier avec API optimisée');
-      const result = await optimizedApi.createFolder(folderData);
-      console.log('[DossiersPage] ✅ Dossier créé avec API optimisée:', result.folder.name);
-      return result;
-    } catch (error) {
-      console.error('[DossiersPage] ❌ Erreur création dossier:', error);
-      throw error;
-    }
-  };
-
-  // Fonction pour supprimer une note avec API optimisée
-  const deleteNoteOptimized = async (noteId: string) => {
-    try {
-      console.log('[DossiersPage] 🗑️ Suppression note avec API optimisée');
-      const result = await optimizedApi.deleteNote(noteId);
-      console.log('[DossiersPage] ✅ Note supprimée avec API optimisée');
-      return result;
-    } catch (error) {
-      console.error('[DossiersPage] ❌ Erreur suppression note:', error);
-      throw error;
-    }
-  };
-
-  // Fonction pour supprimer un dossier avec API optimisée
-  const deleteFolderOptimized = async (folderId: string) => {
-    try {
-      console.log('[DossiersPage] 🗑️ Suppression dossier avec API optimisée');
-      const result = await optimizedApi.deleteFolder(folderId);
-      console.log('[DossiersPage] ✅ Dossier supprimé avec API optimisée');
-      return result;
-    } catch (error) {
-      console.error('[DossiersPage] ❌ Erreur suppression dossier:', error);
-      throw error;
-    }
-  };
 
   return (
     <div className="dossiers-page">

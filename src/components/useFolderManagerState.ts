@@ -109,7 +109,6 @@ export function useFolderManagerState(classeurId: string, parentFolderId?: strin
   const folders = useMemo(() => Object.values(foldersMap), [foldersMap]);
   const notesMap = useFileSystemStore(selectNotesData);
   const notes = useMemo(() => Object.values(notesMap), [notesMap]);
-  const classeurs = useFileSystemStore(selectClasseursData);
   const activeClasseurId = useFileSystemStore(selectActiveClasseurId);
 
   // Correction : filtrage par classeurId et parentFolderId
