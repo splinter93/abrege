@@ -3,8 +3,8 @@ import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 // Schéma de validation pour ajouter un message
 const addMessageSchema = z.object({
@@ -20,20 +20,35 @@ export async function POST(
 ) {
   try {
     const { id } = await context.params;
+    console.log('[Chat Messages API] 📝 Ajout de message à la session:', id);
     
-    // Récupérer l'utilisateur authentifié
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    
-    if (authError || !user) {
-      return NextResponse.json(
-        { success: false, error: 'Non authentifié' },
-        { status: 401 }
-      );
+    // Récupérer l'utilisateur depuis l'en-tête d'autorisation
+    const authHeader = request.headers.get('authorization');
+    let userId: string;
+
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      // Token JWT fourni
+      const token = authHeader.substring(7);
+      const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+      
+      if (authError || !user) {
+        console.error('[Chat Messages API] ❌ Erreur auth:', authError);
+        return NextResponse.json(
+          { error: 'Token invalide ou expiré' },
+          { status: 401 }
+        );
+      }
+      userId = user.id;
+    } else {
+      // Utilisateur de test pour le développement
+      userId = '00000000-0000-0000-0000-000000000001';
     }
 
     const sessionId = id;
     const body = await request.json();
     const validatedData = addMessageSchema.parse(body);
+
+    console.log('[Chat Messages API] 📋 Données reçues:', validatedData);
 
     // Créer le nouveau message
     const newMessage = {
@@ -46,48 +61,63 @@ export async function POST(
     // Récupérer la session actuelle
     const { data: currentSession, error: fetchError } = await supabase
       .from('chat_sessions')
-      .select('thread')
+      .select('thread, history_limit')
       .eq('id', sessionId)
-      .eq('user_id', user.id)
+      .eq('user_id', userId)
       .single();
 
     if (fetchError) {
       if (fetchError.code === 'PGRST116') {
+        console.error('[Chat Messages API] ❌ Session non trouvée:', sessionId);
         return NextResponse.json(
-          { success: false, error: 'Session non trouvée' },
+          { error: 'Session non trouvée' },
           { status: 404 }
         );
       }
       
-      console.error('Erreur lors de la récupération de la session:', fetchError);
+      console.error('[Chat Messages API] ❌ Erreur récupération session:', fetchError);
       return NextResponse.json(
-        { success: false, error: 'Erreur lors de la récupération de la session' },
+        { error: 'Erreur lors de la récupération de la session' },
         { status: 500 }
       );
     }
 
     // Ajouter le nouveau message au thread
-    const updatedThread = [...(currentSession.thread || []), newMessage];
+    const currentThread = currentSession.thread || [];
+    const updatedThread = [...currentThread, newMessage];
 
-    // Mettre à jour la session avec le nouveau thread
+    // Appliquer la limite d'historique
+    const historyLimit = currentSession.history_limit || 10;
+    const limitedThread = updatedThread.slice(-historyLimit);
+
+    console.log('[Chat Messages API] 💾 Mise à jour du thread...', {
+      ancienThread: currentThread.length,
+      nouveauThread: updatedThread.length,
+      threadLimité: limitedThread.length,
+      limite: historyLimit
+    });
+
+    // Mettre à jour la session avec le nouveau thread limité
     const { data: updatedSession, error: updateError } = await supabase
       .from('chat_sessions')
       .update({ 
-        thread: updatedThread,
+        thread: limitedThread,
         updated_at: new Date().toISOString()
       })
       .eq('id', sessionId)
-      .eq('user_id', user.id)
+      .eq('user_id', userId)
       .select()
       .single();
 
     if (updateError) {
-      console.error('Erreur lors de la mise à jour de la session:', updateError);
+      console.error('[Chat Messages API] ❌ Erreur mise à jour session:', updateError);
       return NextResponse.json(
-        { success: false, error: 'Erreur lors de la mise à jour de la session' },
+        { error: 'Erreur lors de la mise à jour de la session' },
         { status: 500 }
       );
     }
+
+    console.log('[Chat Messages API] ✅ Message ajouté avec succès');
 
     return NextResponse.json({
       success: true,
@@ -99,15 +129,16 @@ export async function POST(
 
   } catch (error) {
     if (error instanceof z.ZodError) {
+      console.error('[Chat Messages API] ❌ Erreur validation:', error.errors);
       return NextResponse.json(
-        { success: false, error: 'Données invalides', details: error.errors },
+        { error: 'Données invalides', details: error.errors },
         { status: 400 }
       );
     }
 
-    console.error('Erreur serveur:', error);
+    console.error('[Chat Messages API] ❌ Erreur serveur:', error);
     return NextResponse.json(
-      { success: false, error: 'Erreur serveur interne' },
+      { error: 'Erreur serveur interne' },
       { status: 500 }
     );
   }

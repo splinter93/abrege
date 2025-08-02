@@ -171,3 +171,204 @@ export async function GET(
     );
   }
 } 
+
+/**
+ * Endpoint pour supprimer une session de chat
+ * Usage: DELETE /api/v1/chat-sessions/[id]
+ */
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    console.log('[Chat Sessions API] 🗑️ Suppression de session:', params.id);
+    
+    const sessionId = params.id;
+    
+    // Récupérer l'utilisateur depuis l'en-tête d'autorisation
+    const authHeader = request.headers.get('authorization');
+    let userId: string;
+
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      // Token JWT fourni
+      const token = authHeader.substring(7);
+      const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+      
+      if (authError || !user) {
+        console.error('[Chat Sessions API] ❌ Erreur auth:', authError);
+        return NextResponse.json(
+          { error: 'Token invalide ou expiré' },
+          { status: 401 }
+        );
+      }
+      userId = user.id;
+    } else {
+      // Utilisateur de test pour le développement
+      userId = '00000000-0000-0000-0000-000000000001';
+    }
+
+    // Vérifier que la session appartient à l'utilisateur
+    const { data: existingSession, error: fetchError } = await supabase
+      .from('chat_sessions')
+      .select('id, user_id')
+      .eq('id', sessionId)
+      .single();
+
+    if (fetchError || !existingSession) {
+      console.error('[Chat Sessions API] ❌ Session non trouvée:', fetchError);
+      return NextResponse.json(
+        { error: 'Session non trouvée' },
+        { status: 404 }
+      );
+    }
+
+    if (existingSession.user_id !== userId) {
+      console.error('[Chat Sessions API] ❌ Accès non autorisé');
+      return NextResponse.json(
+        { error: 'Accès non autorisé' },
+        { status: 403 }
+      );
+    }
+
+    // Supprimer la session
+    const { error: deleteError } = await supabase
+      .from('chat_sessions')
+      .delete()
+      .eq('id', sessionId);
+
+    if (deleteError) {
+      console.error('[Chat Sessions API] ❌ Erreur suppression:', deleteError);
+      return NextResponse.json(
+        { error: 'Erreur lors de la suppression de la session', details: deleteError.message },
+        { status: 500 }
+      );
+    }
+
+    console.log('[Chat Sessions API] ✅ Session supprimée:', sessionId);
+
+    return NextResponse.json({
+      success: true,
+      message: 'Session supprimée avec succès'
+    });
+
+  } catch (error) {
+    console.error('[Chat Sessions API] ❌ Erreur:', error);
+    return NextResponse.json(
+      { error: 'Erreur interne du serveur', details: error instanceof Error ? error.message : 'Unknown error' },
+      { status: 500 }
+    );
+  }
+} 
+
+/**
+ * Endpoint pour mettre à jour une session de chat
+ * Usage: PATCH /api/v1/chat-sessions/[id]
+ */
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    console.log('[Chat Sessions API] 🔧 Mise à jour de session:', params.id);
+    
+    const sessionId = params.id;
+    const body = await request.json();
+    const { history_limit } = body;
+    
+    // Récupérer l'utilisateur depuis l'en-tête d'autorisation
+    const authHeader = request.headers.get('authorization');
+    let userId: string;
+
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      // Token JWT fourni
+      const token = authHeader.substring(7);
+      const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+      
+      if (authError || !user) {
+        console.error('[Chat Sessions API] ❌ Erreur auth:', authError);
+        return NextResponse.json(
+          { error: 'Token invalide ou expiré' },
+          { status: 401 }
+        );
+      }
+      userId = user.id;
+    } else {
+      // Utilisateur de test pour le développement
+      userId = '00000000-0000-0000-0000-000000000001';
+    }
+
+    // Vérifier que la session appartient à l'utilisateur
+    const { data: existingSession, error: fetchError } = await supabase
+      .from('chat_sessions')
+      .select('id, user_id, thread')
+      .eq('id', sessionId)
+      .single();
+
+    if (fetchError || !existingSession) {
+      console.error('[Chat Sessions API] ❌ Session non trouvée:', fetchError);
+      return NextResponse.json(
+        { error: 'Session non trouvée' },
+        { status: 404 }
+      );
+    }
+
+    if (existingSession.user_id !== userId) {
+      console.error('[Chat Sessions API] ❌ Accès non autorisé');
+      return NextResponse.json(
+        { error: 'Accès non autorisé' },
+        { status: 403 }
+      );
+    }
+
+    // Préparer les données de mise à jour
+    const updateData: any = {
+      updated_at: new Date().toISOString()
+    };
+
+    if (history_limit !== undefined) {
+      updateData.history_limit = history_limit;
+      
+      // Appliquer la nouvelle limite au thread existant
+      if (existingSession.thread && existingSession.thread.length > history_limit) {
+        updateData.thread = existingSession.thread.slice(-history_limit);
+        console.log('[Chat Sessions API] 🔧 Thread limité:', {
+          ancien: existingSession.thread.length,
+          nouveau: updateData.thread.length,
+          limite: history_limit
+        });
+      }
+    }
+
+    // Mettre à jour la session
+    const { data: updatedSession, error: updateError } = await supabase
+      .from('chat_sessions')
+      .update(updateData)
+      .eq('id', sessionId)
+      .eq('user_id', userId)
+      .select()
+      .single();
+
+    if (updateError) {
+      console.error('[Chat Sessions API] ❌ Erreur mise à jour:', updateError);
+      return NextResponse.json(
+        { error: 'Erreur lors de la mise à jour de la session', details: updateError.message },
+        { status: 500 }
+      );
+    }
+
+    console.log('[Chat Sessions API] ✅ Session mise à jour:', sessionId);
+
+    return NextResponse.json({
+      success: true,
+      data: updatedSession,
+      message: 'Session mise à jour avec succès'
+    });
+
+  } catch (error) {
+    console.error('[Chat Sessions API] ❌ Erreur:', error);
+    return NextResponse.json(
+      { error: 'Erreur interne du serveur', details: error instanceof Error ? error.message : 'Unknown error' },
+      { status: 500 }
+    );
+  }
+} 

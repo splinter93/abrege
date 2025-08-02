@@ -195,21 +195,26 @@
 }
 
 .chat-sidebar-item-delete {
+  opacity: 0;
+  transition: opacity 0.2s ease;
   background: none;
   border: none;
-  color: var(--chat-text-muted);
+  color: var(--chat-text-color);
   cursor: pointer;
-  padding: 0.25rem;
+  padding: 4px;
   border-radius: 4px;
-  transition: all 0.2s ease;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .chat-sidebar-item-delete:hover {
+  background-color: rgba(255, 255, 255, 0.1);
   color: #ef4444;
-  background: rgba(239, 68, 68, 0.1);
+}
+
+.chat-sidebar-item:hover .chat-sidebar-item-delete {
+  opacity: 1;
 }
 
 /* Footer de la sidebar */

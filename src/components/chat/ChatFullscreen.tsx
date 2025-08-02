@@ -67,7 +67,7 @@ const ChatFullscreen: React.FC = () => {
     };
 
     // Ajouter le message utilisateur
-    addMessage(userMessage);
+    await addMessage(userMessage);
 
     // Appeler l'API Synesia
     try {
@@ -97,7 +97,7 @@ const ChatFullscreen: React.FC = () => {
         timestamp: new Date().toISOString()
       };
       
-      addMessage(assistantMessage);
+      await addMessage(assistantMessage);
     } catch (error) {
       console.error('Erreur lors de l\'appel à Synesia:', error);
       
@@ -108,7 +108,7 @@ const ChatFullscreen: React.FC = () => {
         timestamp: new Date().toISOString()
       };
       
-      addMessage(errorMessage);
+      await addMessage(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -147,16 +147,6 @@ const ChatFullscreen: React.FC = () => {
           >
             <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
               <path d="M3 3h18v18H3zM9 9h6M9 13h6M9 17h6"></path>
-            </svg>
-          </button>
-          <button
-            onClick={() => window.history.back()}
-            className="chat-back-button"
-            aria-label="Retour"
-            title="Retour"
-          >
-            <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
-              <path d="M19 12H5M12 19l-7-7 7-7"></path>
             </svg>
           </button>
           <button

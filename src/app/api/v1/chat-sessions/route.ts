@@ -5,6 +5,12 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
+console.log('[Chat Sessions API] 🔧 Configuration:', {
+  supabaseUrl: supabaseUrl ? '✅ Configuré' : '❌ Manquant',
+  supabaseKey: supabaseKey ? '✅ Configuré' : '❌ Manquant',
+  serviceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY ? '✅ Configuré' : '❌ Manquant'
+});
+
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 /**
@@ -13,8 +19,14 @@ const supabase = createClient(supabaseUrl, supabaseKey);
  */
 export async function POST(request: NextRequest) {
   try {
+    console.log('[Chat Sessions API] 📝 Création de session...');
+    console.log('[Chat Sessions API] 🔧 URL:', request.url);
+    console.log('[Chat Sessions API] 🔧 Méthode:', request.method);
+    
     const body = await request.json();
     const { name = 'Nouvelle conversation', history_limit = 10 } = body;
+
+    console.log('[Chat Sessions API] 📋 Données reçues:', { name, history_limit });
 
     // Récupérer l'utilisateur depuis l'en-tête d'autorisation
     const authHeader = request.headers.get('authorization');
@@ -23,21 +35,36 @@ export async function POST(request: NextRequest) {
     if (authHeader && authHeader.startsWith('Bearer ')) {
       // Token JWT fourni
       const token = authHeader.substring(7);
+      console.log('[Chat Sessions API] 🔐 Token JWT détecté');
+      
       const { data: { user }, error: authError } = await supabase.auth.getUser(token);
       
       if (authError || !user) {
+        console.error('[Chat Sessions API] ❌ Erreur auth:', authError);
         return NextResponse.json(
           { error: 'Token invalide ou expiré' },
           { status: 401 }
         );
       }
       userId = user.id;
+      console.log('[Chat Sessions API] ✅ Utilisateur authentifié:', userId);
     } else {
       // Utilisateur de test pour le développement
       userId = '00000000-0000-0000-0000-000000000001';
+      console.log('[Chat Sessions API] 🧪 Utilisateur de test:', userId);
     }
 
     // Créer la session dans la base de données
+    console.log('[Chat Sessions API] 💾 Insertion en base...');
+    console.log('[Chat Sessions API] 💾 Données à insérer:', {
+      user_id: userId,
+      name,
+      thread: [],
+      history_limit,
+      is_active: true,
+      metadata: { created_via: 'api_endpoint' }
+    });
+    
     const { data: session, error } = await supabase
       .from('chat_sessions')
       .insert({
@@ -53,24 +80,35 @@ export async function POST(request: NextRequest) {
 
     if (error) {
       console.error('[Chat Sessions API] ❌ Erreur création session:', error);
+      console.error('[Chat Sessions API] ❌ Détails erreur:', {
+        code: error.code,
+        message: error.message,
+        details: error.details,
+        hint: error.hint
+      });
       return NextResponse.json(
-        { error: 'Erreur lors de la création de la session' },
+        { error: 'Erreur lors de la création de la session', details: error.message },
         { status: 500 }
       );
     }
 
     console.log('[Chat Sessions API] ✅ Session créée:', session.id);
+    console.log('[Chat Sessions API] ✅ Session complète:', session);
 
-    return NextResponse.json({
+    const response = {
       success: true,
       data: session,
       message: 'Session créée avec succès'
-    });
+    };
+
+    console.log('[Chat Sessions API] 📤 Réponse envoyée:', response);
+
+    return NextResponse.json(response);
 
   } catch (error) {
     console.error('[Chat Sessions API] ❌ Erreur:', error);
     return NextResponse.json(
-      { error: 'Erreur interne du serveur' },
+      { error: 'Erreur interne du serveur', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     );
   }
@@ -119,11 +157,22 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    console.log('[Chat Sessions API] ✅ Sessions récupérées:', sessions.length);
+    // Appliquer la limite d'historique à chaque session
+    const sessionsWithLimitedHistory = sessions.map(session => {
+      const historyLimit = session.history_limit || 10;
+      const limitedThread = session.thread ? session.thread.slice(-historyLimit) : [];
+      
+      return {
+        ...session,
+        thread: limitedThread
+      };
+    });
+
+    console.log('[Chat Sessions API] ✅ Sessions récupérées:', sessionsWithLimitedHistory.length);
 
     return NextResponse.json({
       success: true,
-      data: sessions,
+      data: sessionsWithLimitedHistory,
       message: 'Sessions récupérées avec succès'
     });
 

@@ -73,7 +73,7 @@ const ChatWidget: React.FC = () => {
     };
 
     // Ajouter le message utilisateur
-    addMessage(userMessage);
+    await addMessage(userMessage);
 
     // Appeler l'API Synesia
     try {
@@ -103,7 +103,7 @@ const ChatWidget: React.FC = () => {
         timestamp: new Date().toISOString()
       };
       
-      addMessage(assistantMessage);
+      await addMessage(assistantMessage);
     } catch (error) {
       console.error('Erreur lors de l\'appel à Synesia:', error);
       
@@ -114,7 +114,7 @@ const ChatWidget: React.FC = () => {
         timestamp: new Date().toISOString()
       };
       
-      addMessage(errorMessage);
+      await addMessage(errorMessage);
     } finally {
       setLoading(false);
     }

@@ -15,6 +15,7 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({ isOpen, onClose }) => {
     currentSession,
     setCurrentSession,
     createSession,
+    deleteSession,
     closeWidget
   } = useChatStore();
 
@@ -24,6 +25,13 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({ isOpen, onClose }) => {
 
   const handleNewChat = async () => {
     await createSession();
+  };
+
+  const handleDeleteSession = async (sessionId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (confirm('Êtes-vous sûr de vouloir supprimer cette conversation ?')) {
+      await deleteSession(sessionId);
+    }
   };
 
   const formatDate = (dateString: string) => {
@@ -118,10 +126,7 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({ isOpen, onClose }) => {
                 <div className="chat-sidebar-item-actions">
                   <button
                     className="chat-sidebar-item-delete"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      // TODO: Implémenter la suppression
-                    }}
+                    onClick={(e) => handleDeleteSession(session.id, e)}
                     aria-label="Supprimer la conversation"
                   >
                     <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
