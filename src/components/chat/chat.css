@@ -64,10 +64,10 @@
   bottom: 5rem;
   right: 2rem;
   left: auto;
-  width: 350px;
+  width: 420px;
   height: 450px;
   min-height: auto;
-  background: var(--chat-container-bg);
+  background: rgba(42, 42, 42, 0.7);
   backdrop-filter: blur(20px);
   border: 1px solid var(--chat-border-color);
   border-radius: 16px;
@@ -554,11 +554,12 @@
 /* Widget Input Area */
 .chat-widget-container .input-area {
   max-width: 100%;
-  padding: 1rem 1.5rem;
+  padding: 0.75rem 1.25rem;
+  border-width: 1px;
 }
 
 .chat-widget-container .input-area-container {
-  padding: 1rem 1.5rem;
+  padding: 0.75rem 1.25rem;
 }
 
 /* Fullscreen Input Area */
@@ -613,6 +614,11 @@
   min-height: 34px;
   max-height: 166px;
   font-weight: 400;
+}
+
+.chat-widget-container .chat-textarea {
+  min-height: 28px;
+  font-size: 0.9rem;
 }
 
 .chat-textarea::placeholder {
@@ -1144,6 +1150,12 @@
 /* Masquer le widget sur la page chat fullscreen */
 .chat-fullscreen-container ~ .chat-widget-button,
 .chat-fullscreen-container ~ .chat-toggle-button {
+  display: none !important;
+}
+
+/* Masquer la section d'historique dans le widget */
+.chat-widget-container .chat-sessions-selector,
+.chat-widget-container .chat-history-info {
   display: none !important;
 } 
 
