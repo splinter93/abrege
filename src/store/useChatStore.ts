@@ -88,8 +88,13 @@ export const useChatStore = create<ChatStore>()(
               console.log('[Chat Store] 💾 Sauvegarde du message via API...');
               
               // Récupérer le token d'authentification
-              const { data: { session } } = await supabase.auth.getSession();
-              const token = session?.access_token;
+              let token = null;
+              try {
+                const { data: { session } } = await supabase.auth.getSession();
+                token = session?.access_token;
+              } catch (error) {
+                console.warn('[Chat Store] ❌ Erreur Supabase:', error);
+              }
               
               if (!token) {
                 console.warn('[Chat Store] ❌ Pas de token d\'authentification pour sauvegarde');
@@ -152,8 +157,13 @@ export const useChatStore = create<ChatStore>()(
           console.log('[Chat Store] 📝 Tentative de création de session...');
           
           // Récupérer le token d'authentification
-          const { data: { session } } = await supabase.auth.getSession();
-          const token = session?.access_token;
+          let token = null;
+          try {
+            const { data: { session } } = await supabase.auth.getSession();
+            token = session?.access_token;
+          } catch (error) {
+            console.warn('[Chat Store] ❌ Erreur Supabase:', error);
+          }
           
           if (!token) {
             console.warn('[Chat Store] ❌ Pas de token d\'authentification');
@@ -273,8 +283,13 @@ export const useChatStore = create<ChatStore>()(
         
         try {
           // Récupérer le token d'authentification
-          const { data: { session } } = await supabase.auth.getSession();
-          const token = session?.access_token;
+          let token = null;
+          try {
+            const { data: { session } } = await supabase.auth.getSession();
+            token = session?.access_token;
+          } catch (error) {
+            console.warn('[Chat Store] ❌ Erreur Supabase:', error);
+          }
           
           if (!token) {
             console.warn('[Chat Store] ❌ Pas de token d\'authentification');
@@ -332,8 +347,13 @@ export const useChatStore = create<ChatStore>()(
         
         try {
           // Récupérer le token d'authentification
-          const { data: { session } } = await supabase.auth.getSession();
-          const token = session?.access_token;
+          let token = null;
+          try {
+            const { data: { session } } = await supabase.auth.getSession();
+            token = session?.access_token;
+          } catch (error) {
+            console.warn('[Chat Store] ❌ Erreur Supabase:', error);
+          }
           
           if (!token) {
             console.warn('[Chat Store] ❌ Pas de token d\'authentification pour suppression');
