@@ -16,6 +16,7 @@ if (!supabaseUrl || !supabaseKey) {
   throw new Error('Configuration Supabase manquante');
 }
 
+// Client avec service role pour bypasser RLS temporairement
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 /**
@@ -80,6 +81,7 @@ export async function POST(request: NextRequest) {
       metadata: { created_via: 'api_endpoint' }
     });
     
+    // Utiliser le client service role pour bypasser RLS temporairement
     const { data: session, error } = await supabase
       .from('chat_sessions')
       .insert({
