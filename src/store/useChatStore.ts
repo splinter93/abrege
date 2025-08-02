@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { supabase } from '@/supabaseClient';
 
 export interface ChatMessage {
   id: string;
@@ -86,9 +87,21 @@ export const useChatStore = create<ChatStore>()(
             try {
               console.log('[Chat Store] 💾 Sauvegarde du message via API...');
               
+              // Récupérer le token d'authentification
+              const { data: { session } } = await supabase.auth.getSession();
+              const token = session?.access_token;
+              
+              if (!token) {
+                console.warn('[Chat Store] ❌ Pas de token d\'authentification pour sauvegarde');
+                return;
+              }
+              
               const response = await fetch(`/api/v1/chat-sessions/${currentSession.id}/messages`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${token}`
+                },
                 body: JSON.stringify({
                   role: message.role,
                   content: message.content
@@ -138,9 +151,35 @@ export const useChatStore = create<ChatStore>()(
         try {
           console.log('[Chat Store] 📝 Tentative de création de session...');
           
+          // Récupérer le token d'authentification
+          const { data: { session } } = await supabase.auth.getSession();
+          const token = session?.access_token;
+          
+          if (!token) {
+            console.warn('[Chat Store] ❌ Pas de token d\'authentification');
+            // Créer une session temporaire en local
+            const tempSession: ChatSession = {
+              id: `temp-${Date.now()}`,
+              name: 'Nouvelle conversation',
+              thread: [],
+              history_limit: 10,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            };
+            
+            const { sessions } = get();
+            const updatedSessions = [...sessions, tempSession];
+            setSessions(updatedSessions);
+            setCurrentSession(tempSession);
+            return;
+          }
+          
           const response = await fetch('/api/v1/chat-sessions', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
             body: JSON.stringify({
               name: 'Nouvelle conversation',
               history_limit: 10
@@ -233,7 +272,26 @@ export const useChatStore = create<ChatStore>()(
         setError(null);
         
         try {
-          const response = await fetch('/api/v1/chat-sessions');
+          // Récupérer le token d'authentification
+          const { data: { session } } = await supabase.auth.getSession();
+          const token = session?.access_token;
+          
+          if (!token) {
+            console.warn('[Chat Store] ❌ Pas de token d\'authentification');
+            // Utiliser les sessions stockées localement
+            const { sessions } = get();
+            if (sessions.length > 0 && !get().currentSession) {
+              setCurrentSession(sessions[0]);
+            }
+            return;
+          }
+          
+          const response = await fetch('/api/v1/chat-sessions', {
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            }
+          });
           
           if (response.ok) {
             const data = await response.json() as ApiResponse<ChatSession[]>;
@@ -273,9 +331,34 @@ export const useChatStore = create<ChatStore>()(
         setError(null);
         
         try {
+          // Récupérer le token d'authentification
+          const { data: { session } } = await supabase.auth.getSession();
+          const token = session?.access_token;
+          
+          if (!token) {
+            console.warn('[Chat Store] ❌ Pas de token d\'authentification pour suppression');
+            // Supprimer quand même en local si c'est une session temporaire
+            if (sessionId.startsWith('temp-')) {
+              const updatedSessions = sessions.filter(s => s.id !== sessionId);
+              setSessions(updatedSessions);
+              
+              if (currentSession?.id === sessionId) {
+                if (updatedSessions.length > 0) {
+                  setCurrentSession(updatedSessions[0]);
+                } else {
+                  setCurrentSession(null);
+                }
+              }
+            }
+            return;
+          }
+          
           const response = await fetch(`/api/v1/chat-sessions/${sessionId}`, {
             method: 'DELETE',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
           });
           
           if (response.ok) {
