@@ -49,9 +49,10 @@ export async function POST(request: NextRequest) {
       userId = user.id;
       console.log('[Chat Sessions API] ✅ Utilisateur authentifié:', userId);
     } else {
-      // Utilisateur de test pour le développement
-      userId = '00000000-0000-0000-0000-000000000001';
-      console.log('[Chat Sessions API] 🧪 Utilisateur de test:', userId);
+      return NextResponse.json(
+        { error: 'Authentification requise' },
+        { status: 401 }
+      );
     }
 
     // Créer la session dans la base de données
@@ -137,8 +138,10 @@ export async function GET(request: NextRequest) {
       }
       userId = user.id;
     } else {
-      // Utilisateur de test pour le développement
-      userId = '00000000-0000-0000-0000-000000000001';
+      return NextResponse.json(
+        { error: 'Authentification requise' },
+        { status: 401 }
+      );
     }
 
     // Récupérer les sessions de l'utilisateur
