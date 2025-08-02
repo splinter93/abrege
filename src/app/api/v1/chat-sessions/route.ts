@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-// Utiliser la clé anonyme par défaut, ou la service role si disponible
+// Configuration Supabase
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
@@ -16,8 +16,8 @@ if (!supabaseUrl || !supabaseKey) {
   throw new Error('Configuration Supabase manquante');
 }
 
-// Client avec service role pour bypasser RLS temporairement
-const supabase = createClient(supabaseUrl, supabaseKey);
+// Client avec service role pour les opérations admin
+const supabaseAdmin = createClient(supabaseUrl, supabaseKey);
 
 /**
  * Endpoint pour créer une nouvelle session de chat
@@ -35,6 +35,7 @@ export async function POST(request: NextRequest) {
         { status: 500 }
       );
     }
+    
     console.log('[Chat Sessions API] 🔧 URL:', request.url);
     console.log('[Chat Sessions API] 🔧 Méthode:', request.method);
     
@@ -46,13 +47,14 @@ export async function POST(request: NextRequest) {
     // Récupérer l'utilisateur depuis l'en-tête d'autorisation
     const authHeader = request.headers.get('authorization');
     let userId: string;
+    let userToken: string;
 
     if (authHeader && authHeader.startsWith('Bearer ')) {
       // Token JWT fourni
-      const token = authHeader.substring(7);
+      userToken = authHeader.substring(7);
       console.log('[Chat Sessions API] 🔐 Token JWT détecté');
       
-      const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+      const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(userToken);
       
       if (authError || !user) {
         console.error('[Chat Sessions API] ❌ Erreur auth:', authError);
@@ -70,7 +72,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Créer la session dans la base de données
+    // Créer un client avec le contexte d'authentification de l'utilisateur
+    const userClient = createClient(supabaseUrl, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, {
+      global: {
+        headers: {
+          Authorization: `Bearer ${userToken}`
+        }
+      }
+    });
+
+    // Créer la session dans la base de données avec le contexte utilisateur
     console.log('[Chat Sessions API] 💾 Insertion en base...');
     console.log('[Chat Sessions API] 💾 Données à insérer:', {
       user_id: userId,
@@ -81,8 +92,7 @@ export async function POST(request: NextRequest) {
       metadata: { created_via: 'api_endpoint' }
     });
     
-    // Utiliser le client service role pour bypasser RLS temporairement
-    const { data: session, error } = await supabase
+    const { data: session, error } = await userClient
       .from('chat_sessions')
       .insert({
         user_id: userId,
@@ -149,11 +159,12 @@ export async function GET(request: NextRequest) {
     // Récupérer l'utilisateur depuis l'en-tête d'autorisation
     const authHeader = request.headers.get('authorization');
     let userId: string;
+    let userToken: string;
 
     if (authHeader && authHeader.startsWith('Bearer ')) {
       // Token JWT fourni
-      const token = authHeader.substring(7);
-      const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+      userToken = authHeader.substring(7);
+      const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(userToken);
       
       if (authError || !user) {
         return NextResponse.json(
@@ -169,11 +180,19 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Récupérer les sessions de l'utilisateur
-    const { data: sessions, error } = await supabase
+    // Créer un client avec le contexte d'authentification de l'utilisateur
+    const userClient = createClient(supabaseUrl, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, {
+      global: {
+        headers: {
+          Authorization: `Bearer ${userToken}`
+        }
+      }
+    });
+
+    // Récupérer les sessions de l'utilisateur avec le contexte utilisateur
+    const { data: sessions, error } = await userClient
       .from('chat_sessions')
       .select('*')
-      .eq('user_id', userId)
       .eq('is_active', true)
       .order('updated_at', { ascending: false });
 
