@@ -2,14 +2,19 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
 // Utiliser la clé anonyme par défaut, ou la service role si disponible
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
 console.log('[Chat Sessions API] 🔧 Configuration:', {
   supabaseUrl: supabaseUrl ? '✅ Configuré' : '❌ Manquant',
   supabaseKey: supabaseKey ? '✅ Configuré' : '❌ Manquant',
   serviceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY ? '✅ Configuré' : '❌ Manquant'
 });
+
+if (!supabaseUrl || !supabaseKey) {
+  console.error('[Chat Sessions API] ❌ Variables d\'environnement Supabase manquantes');
+  throw new Error('Configuration Supabase manquante');
+}
 
 const supabase = createClient(supabaseUrl, supabaseKey);
 
@@ -20,6 +25,15 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 export async function POST(request: NextRequest) {
   try {
     console.log('[Chat Sessions API] 📝 Création de session...');
+    
+    // Vérifier la configuration Supabase
+    if (!supabaseUrl || !supabaseKey) {
+      console.error('[Chat Sessions API] ❌ Configuration Supabase manquante');
+      return NextResponse.json(
+        { error: 'Configuration serveur manquante' },
+        { status: 500 }
+      );
+    }
     console.log('[Chat Sessions API] 🔧 URL:', request.url);
     console.log('[Chat Sessions API] 🔧 Méthode:', request.method);
     
@@ -121,6 +135,15 @@ export async function POST(request: NextRequest) {
  */
 export async function GET(request: NextRequest) {
   try {
+    // Vérifier la configuration Supabase
+    if (!supabaseUrl || !supabaseKey) {
+      console.error('[Chat Sessions API] ❌ Configuration Supabase manquante');
+      return NextResponse.json(
+        { error: 'Configuration serveur manquante' },
+        { status: 500 }
+      );
+    }
+    
     // Récupérer l'utilisateur depuis l'en-tête d'autorisation
     const authHeader = request.headers.get('authorization');
     let userId: string;
