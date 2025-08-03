@@ -143,8 +143,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ re
     }
     return new Response(JSON.stringify({ note: updated }), { status: 200, headers: { 'Content-Type': 'application/json' } });
   } catch (err: unknown) {
+    const error = err as Error;
     console.error('[moveNote] PATCH error:', err);
-    return new Response(JSON.stringify({ error: err instanceof Error ? err.message : 'Erreur inconnue' }), { status: 500, headers: { 'Content-Type': 'application/json' } });
+    return new Response(JSON.stringify({ error: err instanceof Error ? error.message : 'Erreur inconnue' }), { status: 500, headers: { 'Content-Type': 'application/json' } });
   }
 }
 

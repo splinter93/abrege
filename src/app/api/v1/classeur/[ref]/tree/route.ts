@@ -51,10 +51,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ ref:
       );
     }
     
-    // 🚧 Temp: Authentification non implémentée
-    // TODO: Remplacer USER_ID par l'authentification Supabase
-    // 🚧 Temp: Authentification non implémentée
-    // TODO: Remplacer USER_ID par l'authentification Supabase
+    // ✅ Authentification implémentée
     const { supabase, userId } = await getAuthenticatedClient(req);
     const classeurId = await resolveClasseurRef(ref, userId);
     

@@ -57,10 +57,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ ref:
       );
     }
     
-    // 🚧 Temp: Authentification non implémentée
-    // TODO: Remplacer USER_ID par l'authentification Supabase
-    // 🚧 Temp: Authentification non implémentée
-    // TODO: Remplacer USER_ID par l'authentification Supabase
+    // ✅ Authentification implémentée
     const { supabase, userId } = await getAuthenticatedClient(req);
     const noteId = await resolveNoteRef(ref, userId);
     
@@ -74,7 +71,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ ref:
     }
     return new Response(JSON.stringify({ content: note.markdown_content || '' }), { status: 200 });
   } catch (err: unknown) {
-    return new Response(JSON.stringify({ error: err instanceof Error ? err.message : 'Erreur inconnue' }), { status: 500 });
+    const error = err as Error;
+    return new Response(JSON.stringify({ error: err instanceof Error ? error.message : 'Erreur inconnue' }), { status: 500 });
   }
 }
 
@@ -123,26 +121,27 @@ export async function POST(req: NextRequest): Promise<Response> {
     }), { status: 200 });
     
   } catch (err: unknown) {
+    const error = err as Error;
     console.error('POST /api/v1/note/[ref]/content error:', err);
     
     // Gestion d'erreurs spécifiques
-    if (err instanceof Error && err.message.includes('Configuration S3 invalide')) {
+    if (err instanceof Error && error.message.includes('Configuration S3 invalide')) {
       return new Response(JSON.stringify({ 
         error: 'Configuration serveur invalide',
         code: 'S3_CONFIG_ERROR'
       }), { status: 500 });
     }
     
-    if (err instanceof Error && err.message.includes('Type de fichier non supporté')) {
+    if (err instanceof Error && error.message.includes('Type de fichier non supporté')) {
       return new Response(JSON.stringify({ 
-        error: err.message,
+        error: error.message,
         code: 'INVALID_FILE_TYPE'
       }), { status: 400 });
     }
     
-    if (err instanceof Error && err.message.includes('Fichier trop volumineux')) {
+    if (err instanceof Error && error.message.includes('Fichier trop volumineux')) {
       return new Response(JSON.stringify({ 
-        error: err.message,
+        error: error.message,
         code: 'FILE_TOO_LARGE'
       }), { status: 400 });
     }

@@ -49,7 +49,8 @@ export async function GET(req: NextRequest, { params }: any): Promise<Response> 
     }
 
     return new Response(JSON.stringify({ note }), { status: 200 });
-  } catch (err: any) {
-    return new Response(JSON.stringify({ error: err.message }), { status: 500 });
+  } catch (err: unknown) {
+    const error = err as Error;
+    return new Response(JSON.stringify({ error: error.message }), { status: 500 });
   }
 } 

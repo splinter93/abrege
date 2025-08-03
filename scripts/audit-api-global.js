@@ -12,13 +12,14 @@ const CRITICAL_ISSUES = [];
 const WARNINGS = [];
 const GOOD_PRACTICES = [];
 
-// Patterns à rechercher
+// Patterns à rechercher - CORRIGÉS
 const PATTERNS = {
   hardcodedUserId: /USER_ID|user_id.*=.*['"][^'"]+['"]/g,
   anyType: /: any/g,
   consoleLog: /console\.log/g,
   consoleError: /console\.error/g,
-  missingAuth: /getAuthenticatedClient|auth\.uid\(\)/g,
+  // Patterns d'authentification CORRIGÉS
+  missingAuth: /authHeader.*authorization|supabase\.auth\.getUser|getAuthenticatedClient/g,
   missingValidation: /zod|validation/g,
   missingErrorHandling: /catch.*error/g,
   missingTypes: /NextRequest|NextResponse/g,
@@ -26,7 +27,7 @@ const PATTERNS = {
   missingStatusCodes: /status.*[0-9]{3}/g
 };
 
-// Fonctions d'audit
+// Fonctions d'audit CORRIGÉES
 function auditFile(filePath) {
   const content = fs.readFileSync(filePath, 'utf8');
   const fileName = path.basename(filePath);
@@ -45,8 +46,15 @@ function auditFile(filePath) {
     issues.push('Types any non corrigés');
   }
   
-  if (!PATTERNS.missingAuth.test(content) && content.includes('supabase')) {
+  // Vérification d'authentification CORRIGÉE
+  const hasAuthHeader = content.includes('authHeader') && content.includes('authorization');
+  const hasAuthUser = content.includes('supabase.auth.getUser');
+  const hasGetAuthClient = content.includes('getAuthenticatedClient');
+  
+  if (!hasAuthHeader && !hasAuthUser && !hasGetAuthClient && content.includes('supabase')) {
     issues.push('Authentification manquante');
+  } else if (hasAuthHeader || hasAuthUser || hasGetAuthClient) {
+    good.push('Authentification présente');
   }
   
   if (!PATTERNS.missingValidation.test(content) && content.includes('request.json()')) {
@@ -120,8 +128,8 @@ function scanDirectory(dir) {
 }
 
 // Audit principal
-console.log('🔍 AUDIT GLOBAL DE L\'API');
-console.log('========================\n');
+console.log('🔍 AUDIT GLOBAL DE L\'API (CORRIGÉ)');
+console.log('====================================\n');
 
 const allResults = [];
 
@@ -150,8 +158,8 @@ const filesWithIssues = allResults.filter(r => r.hasIssues).length;
 const filesWithWarnings = allResults.filter(r => r.hasWarnings).length;
 const cleanFiles = allResults.filter(r => !r.hasIssues && !r.hasWarnings).length;
 
-console.log('📊 STATISTIQUES GLOBALES');
-console.log('========================');
+console.log('📊 STATISTIQUES GLOBALES (CORRIGÉES)');
+console.log('=====================================');
 console.log(`Total de fichiers: ${totalFiles}`);
 console.log(`Fichiers avec problèmes critiques: ${filesWithIssues}`);
 console.log(`Fichiers avec avertissements: ${filesWithWarnings}`);

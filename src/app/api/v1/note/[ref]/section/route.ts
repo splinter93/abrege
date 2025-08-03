@@ -77,10 +77,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ ref:
       );
     }
     
-    // 🚧 Temp: Authentification non implémentée
-    // TODO: Remplacer USER_ID par l'authentification Supabase
-    // 🚧 Temp: Authentification non implémentée
-    // TODO: Remplacer USER_ID par l'authentification Supabase
+    // ✅ Authentification implémentée
     const { supabase, userId } = await getAuthenticatedClient(req);
     const noteId = await resolveNoteRef(ref, userId);
     
@@ -100,7 +97,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ ref:
     }
     return new Response(JSON.stringify({ section, content }), { status: 200 });
   } catch (err: unknown) {
-    return new Response(JSON.stringify({ error: err instanceof Error ? err.message : 'Erreur inconnue' }), { status: 500 });
+    const error = err as Error;
+    return new Response(JSON.stringify({ error: err instanceof Error ? error.message : 'Erreur inconnue' }), { status: 500 });
   }
 }
 

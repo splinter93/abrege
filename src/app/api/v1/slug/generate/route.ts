@@ -22,7 +22,8 @@ export async function POST(req: Request): Promise<Response> {
     const slug = await SlugGenerator.generateSlug(title, type, userId);
     
     return new Response(JSON.stringify({ slug }), { status: 200 });
-  } catch (err: any) {
-    return new Response(JSON.stringify({ error: err.message }), { status: 500 });
+  } catch (err: unknown) {
+    const error = err as Error;
+    return new Response(JSON.stringify({ error: error.message }), { status: 500 });
   }
 } 

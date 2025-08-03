@@ -200,8 +200,9 @@ export async function POST(request: NextRequest): Promise<Response> {
     console.log("[Note Create API] ✅ Note créée:", note.id);
     
     return new Response(JSON.stringify({ note }), { status: 201 });
-  } catch (err: any) {
-    console.error("[Note Create API] ❌ Erreur:", err);
-    return new Response(JSON.stringify({ error: err.message }), { status: 500 });
+  } catch (err: unknown) {
+    const error = err as Error;
+    console.error("[Note Create API] ❌ Erreur:", error);
+    return new Response(JSON.stringify({ error: error.message }), { status: 500 });
   }
 } 

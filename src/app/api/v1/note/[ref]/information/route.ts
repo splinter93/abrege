@@ -69,11 +69,12 @@ export async function GET(req: NextRequest, { params }: any): Promise<Response> 
     }
     return new Response(JSON.stringify({ note }), { status: 200 });
   
-  } catch (err: any) {
-    if (err.message === 'Token invalide ou expiré' || err.message === 'Authentification requise') {
-      return new Response(JSON.stringify({ error: err.message }), { status: 401 });
+  } catch (err: unknown) {
+    const error = err as Error;
+    if (error.message === 'Token invalide ou expiré' || error.message === 'Authentification requise') {
+      return new Response(JSON.stringify({ error: error.message }), { status: 401 });
     }
-    return new Response(JSON.stringify({ error: err.message }), { status: 500 });
+    return new Response(JSON.stringify({ error: error.message }), { status: 500 });
   }
 }
 
@@ -143,10 +144,11 @@ export async function PATCH(req: NextRequest, { params }: any): Promise<Response
     
     return new Response(JSON.stringify({ note }), { status: 200 });
   
-  } catch (err: any) {
-    if (err.message === 'Token invalide ou expiré' || err.message === 'Authentification requise') {
-      return new Response(JSON.stringify({ error: err.message }), { status: 401 });
+  } catch (err: unknown) {
+    const error = err as Error;
+    if (error.message === 'Token invalide ou expiré' || error.message === 'Authentification requise') {
+      return new Response(JSON.stringify({ error: error.message }), { status: 401 });
     }
-    return new Response(JSON.stringify({ error: err.message }), { status: 500 });
+    return new Response(JSON.stringify({ error: error.message }), { status: 500 });
   }
 }

@@ -94,17 +94,18 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ r
     }), { status: 200 });
     
   } catch (err: unknown) {
+    const error = err as Error;
     console.error('DELETE /api/v1/note/[ref]/content/delete error:', err);
     
     // Gestion d'erreurs spécifiques
-    if (err instanceof Error && err.message.includes('Configuration S3 invalide')) {
+    if (err instanceof Error && error.message.includes('Configuration S3 invalide')) {
       return new Response(JSON.stringify({ 
         error: 'Configuration serveur invalide',
         code: 'S3_CONFIG_ERROR'
       }), { status: 500 });
     }
     
-    if (err instanceof Error && err.message.includes('Access Denied')) {
+    if (err instanceof Error && error.message.includes('Access Denied')) {
       return new Response(JSON.stringify({ 
         error: 'Accès refusé au fichier',
         code: 'ACCESS_DENIED'

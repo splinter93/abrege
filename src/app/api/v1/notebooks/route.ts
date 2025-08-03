@@ -60,10 +60,11 @@ export async function GET(req: NextRequest): Promise<Response> {
     }
     return new Response(JSON.stringify({ notebooks: data }), { status: 200 });
   } catch (err: unknown) {
-    if (err instanceof Error && (err.message === 'Token invalide ou expiré' || err.message === 'Authentification requise')) {
-      return new Response(JSON.stringify({ error: err.message }), { status: 401 });
+    const error = err as Error;
+    if (err instanceof Error && (error.message === 'Token invalide ou expiré' || error.message === 'Authentification requise')) {
+      return new Response(JSON.stringify({ error: error.message }), { status: 401 });
     }
-    return new Response(JSON.stringify({ error: err instanceof Error ? err.message : 'Erreur inconnue' }), { status: 500 });
+    return new Response(JSON.stringify({ error: err instanceof Error ? error.message : 'Erreur inconnue' }), { status: 500 });
   }
 }
 

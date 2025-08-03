@@ -170,7 +170,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ re
     }
     return new Response(JSON.stringify({ folder: updated }), { status: 200 });
   } catch (err: unknown) {
+    const error = err as Error;
     console.error('[moveDossier] PATCH error:', err);
-    return new Response(JSON.stringify({ error: err instanceof Error ? err.message : 'Erreur inconnue' }), { status: 500 });
+    return new Response(JSON.stringify({ error: err instanceof Error ? error.message : 'Erreur inconnue' }), { status: 500 });
   }
 } 
