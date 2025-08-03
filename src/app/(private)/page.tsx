@@ -6,6 +6,7 @@ import { useLanguageContext } from '../../contexts/LanguageContext';
 import Link from 'next/link';
 import Image from 'next/image';
 import Sidebar from '../../components/Sidebar';
+import { supabase } from '../../supabaseClient';
 import '../globals.css';
 
 const mockNotes = [
@@ -45,12 +46,23 @@ export default function HomePage() {
   useEffect(() => {
     const fetchUser = async () => {
       try {
+        // Récupérer la session Supabase
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError || !session) {
+          console.error('No session found:', sessionError);
+          setUsername('User');
+          return;
+        }
+
+        // Appeler l'API avec le token Bearer
         const response = await fetch('/api/v1/user/current', {
-          credentials: 'include', // Inclure les cookies
           headers: {
             'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.access_token}`,
           },
         });
+        
         if (response.ok) {
           const userData = await response.json();
           setUsername(userData.username || 'User');

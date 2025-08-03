@@ -33,11 +33,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { message, messages, streaming = false, sessionId } = await request.json();
+    const { message, messages } = await request.json();
     
     console.log("[Synesia API] 🚀 Début de la requête");
     console.log("[Synesia API] 👤 Utilisateur:", userId);
-    console.log("[Synesia API] 📦 Body reçu:", { message, messages, streaming, sessionId });
+    console.log("[Synesia API] 📦 Body reçu:", { message, messages });
 
     const apiKey = process.env.SYNESIA_API_KEY;
     const projectId = process.env.SYNESIA_PROJECT_ID;
@@ -70,20 +70,13 @@ export async function POST(request: NextRequest) {
       callable_id: "a62f3fb5-17ee-488c-b775-b57fc89c617e",
       args: message,
       settings: {
-        history_messages: messageHistory,
-        // Activer le streaming si demandé
-        ...(streaming && { stream: true })
+        history_messages: messageHistory
       }
     };
     
     console.log("[Synesia API] 📤 Payload envoyé:", payload);
     
-    // Si streaming activé, utiliser Server-Sent Events
-    if (streaming) {
-      return handleStreamingResponse(payload, apiKey, projectId, sessionId);
-    }
-    
-    // Sinon, réponse normale
+    // Réponse normale
     const response = await fetch("https://api.synesia.app/execution?wait=true", {
       method: "POST",
       headers: {
@@ -123,83 +116,4 @@ export async function POST(request: NextRequest) {
   }
 }
 
-/**
- * Gérer la réponse streaming via Server-Sent Events
- */
-async function handleStreamingResponse(payload: any, apiKey: string, projectId: string, sessionId: string) {
-  const encoder = new TextEncoder();
-  
-  const stream = new ReadableStream({
-    async start(controller) {
-      try {
-        const response = await fetch("https://api.synesia.app/execution?stream=true", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `ApiKey ${apiKey}`,
-            "X-Project-ID": projectId,
-          },
-          body: JSON.stringify(payload),
-        });
-
-        if (!response.ok) {
-          throw new Error(`Synesia API error: ${response.status}`);
-        }
-
-        const reader = response.body?.getReader();
-        if (!reader) {
-          throw new Error("No response body");
-        }
-
-        while (true) {
-          const { done, value } = await reader.read();
-          
-          if (done) {
-            // Envoyer le signal de fin
-            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'LLM_COMPLETE', sessionId })}\n\n`));
-            break;
-          }
-
-          // Décoder et traiter chaque chunk
-          const chunk = new TextDecoder().decode(value);
-          const lines = chunk.split('\n');
-          
-          for (const line of lines) {
-            if (line.startsWith('data: ')) {
-              try {
-                const data = JSON.parse(line.slice(6));
-                if (data.token) {
-                  // Envoyer chaque token
-                  controller.enqueue(encoder.encode(`data: ${JSON.stringify({ 
-                    type: 'LLM_STREAM', 
-                    sessionId, 
-                    token: data.token 
-                  })}\n\n`));
-                }
-              } catch (e) {
-                console.warn("[Synesia API] ⚠️ Erreur parsing chunk:", e);
-              }
-            }
-          }
-        }
-      } catch (error) {
-        console.error("[Synesia API] ❌ Erreur streaming:", error);
-        controller.enqueue(encoder.encode(`data: ${JSON.stringify({ 
-          type: 'ERROR', 
-          sessionId, 
-          error: error instanceof Error ? error.message : 'Unknown error'
-        })}\n\n`));
-      } finally {
-        controller.close();
-      }
-    }
-  });
-
-  return new Response(stream, {
-    headers: {
-      'Content-Type': 'text/event-stream',
-      'Cache-Control': 'no-cache',
-      'Connection': 'keep-alive',
-    },
-  });
-} 
+ 
