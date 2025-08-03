@@ -151,7 +151,8 @@ export async function DELETE(
       folderId
     });
 
-  } catch (error) {
+  } catch (err: unknown) {
+    const error = err as Error;
     logApi('v2_folder_delete', `❌ Erreur serveur: ${error}`, context);
     return NextResponse.json(
       { error: 'Erreur serveur' },

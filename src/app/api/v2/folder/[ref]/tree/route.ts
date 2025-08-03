@@ -144,7 +144,8 @@ export async function GET(
       }
     });
 
-  } catch (error) {
+  } catch (err: unknown) {
+    const error = err as Error;
     logApi('v2_folder_tree', `❌ Erreur serveur: ${error}`, context);
     return NextResponse.json(
       { error: 'Erreur serveur' },

@@ -60,7 +60,7 @@ export async function GET(
     logApi('v2_classeur_tree', `❌ Permissions insuffisantes pour classeur ${classeurId}`, context);
     return NextResponse.json(
       { error: 'Permissions insuffisantes pour accéder à ce classeur' },
-      { status: 403 }
+      { status: 403, headers: { "Content-Type": "application/json" } }
     );
   }
 
@@ -76,7 +76,7 @@ export async function GET(
       logApi('v2_classeur_tree', `❌ Classeur non trouvé: ${classeurId}`, context);
       return NextResponse.json(
         { error: 'Classeur non trouvé' },
-        { status: 404 }
+        { status: 404, headers: { "Content-Type": "application/json" } }
       );
     }
 
@@ -91,7 +91,7 @@ export async function GET(
       logApi('v2_classeur_tree', `❌ Erreur récupération dossiers: ${foldersError.message}`, context);
       return NextResponse.json(
         { error: 'Erreur lors de la récupération des dossiers' },
-        { status: 500 }
+        { status: 500, headers: { "Content-Type": "application/json" } }
       );
     }
 
@@ -107,7 +107,7 @@ export async function GET(
       logApi('v2_classeur_tree', `❌ Erreur récupération notes: ${notesError.message}`, context);
       return NextResponse.json(
         { error: 'Erreur lors de la récupération des notes' },
-        { status: 500 }
+        { status: 500, headers: { "Content-Type": "application/json" } }
       );
     }
 
@@ -143,13 +143,14 @@ export async function GET(
           updatedAt: note.updated_at
         })) || []
       }
-    });
+    }, { headers: { "Content-Type": "application/json" } });
 
-  } catch (error) {
+  } catch (err: unknown) {
+    const error = err as Error;
     logApi('v2_classeur_tree', `❌ Erreur serveur: ${error}`, context);
     return NextResponse.json(
       { error: 'Erreur serveur' },
-      { status: 500 }
+      { status: 500, headers: { "Content-Type": "application/json" } }
     );
   }
 } 

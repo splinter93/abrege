@@ -141,7 +141,8 @@ export async function PUT(
       note: movedNote
     });
 
-  } catch (error) {
+  } catch (err: unknown) {
+    const error = err as Error;
     logApi('v2_note_move', `❌ Erreur serveur: ${error}`, context);
     return NextResponse.json(
       { error: 'Erreur serveur' },

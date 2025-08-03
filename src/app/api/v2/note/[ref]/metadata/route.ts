@@ -137,7 +137,8 @@ export async function GET(
       }
     });
 
-  } catch (error) {
+  } catch (err: unknown) {
+    const error = err as Error;
     logApi('v2_note_metadata', `❌ Erreur serveur: ${error}`, context);
     return NextResponse.json(
       { error: 'Erreur serveur' },

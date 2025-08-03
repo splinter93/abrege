@@ -61,7 +61,7 @@ export async function DELETE(
     logApi('v2_classeur_delete', `❌ Permissions insuffisantes pour classeur ${classeurId}`, context);
     return NextResponse.json(
       { error: 'Permissions insuffisantes pour supprimer ce classeur' },
-      { status: 403 }
+      { status: 403, headers: { "Content-Type": "application/json" } }
     );
   }
 
@@ -77,7 +77,7 @@ export async function DELETE(
       logApi('v2_classeur_delete', `❌ Classeur non trouvé: ${classeurId}`, context);
       return NextResponse.json(
         { error: 'Classeur non trouvé' },
-        { status: 404 }
+        { status: 404, headers: { "Content-Type": "application/json" } }
       );
     }
 
@@ -91,7 +91,7 @@ export async function DELETE(
       logApi('v2_classeur_delete', `❌ Erreur vérification dossiers: ${foldersError.message}`, context);
       return NextResponse.json(
         { error: 'Erreur lors de la vérification' },
-        { status: 500 }
+        { status: 500, headers: { "Content-Type": "application/json" } }
       );
     }
 
@@ -99,7 +99,7 @@ export async function DELETE(
       logApi('v2_classeur_delete', `❌ Classeur contient des dossiers: ${folders.length}`, context);
       return NextResponse.json(
         { error: 'Impossible de supprimer un classeur contenant des dossiers' },
-        { status: 400 }
+        { status: 400, headers: { "Content-Type": "application/json" } }
       );
     }
 
@@ -113,7 +113,7 @@ export async function DELETE(
       logApi('v2_classeur_delete', `❌ Erreur vérification notes: ${notesError.message}`, context);
       return NextResponse.json(
         { error: 'Erreur lors de la vérification' },
-        { status: 500 }
+        { status: 500, headers: { "Content-Type": "application/json" } }
       );
     }
 
@@ -121,7 +121,7 @@ export async function DELETE(
       logApi('v2_classeur_delete', `❌ Classeur contient des notes: ${notes.length}`, context);
       return NextResponse.json(
         { error: 'Impossible de supprimer un classeur contenant des notes' },
-        { status: 400 }
+        { status: 400, headers: { "Content-Type": "application/json" } }
       );
     }
 
@@ -135,7 +135,7 @@ export async function DELETE(
       logApi('v2_classeur_delete', `❌ Erreur suppression: ${deleteError.message}`, context);
       return NextResponse.json(
         { error: 'Erreur lors de la suppression' },
-        { status: 500 }
+        { status: 500, headers: { "Content-Type": "application/json" } }
       );
     }
 
@@ -149,13 +149,14 @@ export async function DELETE(
       success: true,
       message: 'Classeur supprimé avec succès',
       classeurId
-    });
+    }, { headers: { "Content-Type": "application/json" } });
 
-  } catch (error) {
+  } catch (err: unknown) {
+    const error = err as Error;
     logApi('v2_classeur_delete', `❌ Erreur serveur: ${error}`, context);
     return NextResponse.json(
       { error: 'Erreur serveur' },
-      { status: 500 }
+      { status: 500, headers: { "Content-Type": "application/json" } }
     );
   }
 } 

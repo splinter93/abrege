@@ -66,7 +66,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       classeur: result.classeur
     });
 
-  } catch (error) {
+  } catch (err: unknown) {
+    const error = err as Error;
     logApi('v2_classeur_create', `❌ Erreur serveur: ${error}`, context);
     return NextResponse.json(
       { error: 'Erreur serveur' },
