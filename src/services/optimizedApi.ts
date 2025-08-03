@@ -654,10 +654,11 @@ export class OptimizedApi {
     const startTime = Date.now();
     
     try {
-      // Appel API
+      // Appel API avec authentification
+      const headers = await this.getAuthHeaders();
       const response = await fetch('/api/v1/classeur/reorder', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({ classeurs: updatedClasseurs })
       });
 
