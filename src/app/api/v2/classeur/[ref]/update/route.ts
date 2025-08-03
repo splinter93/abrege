@@ -55,14 +55,14 @@ export async function PUT(
     logApi('v2_classeur_update', `❌ Erreur vérification permissions: ${permissionResult.error}`, context);
     return NextResponse.json(
       { error: permissionResult.error },
-      { status: permissionResult.status || 500 }
+      { status: permissionResult.status || 500, headers: { "Content-Type": "application/json" } }
     );
   }
   if (!permissionResult.hasPermission) {
     logApi('v2_classeur_update', `❌ Permissions insuffisantes pour classeur ${classeurId}`, context);
     return NextResponse.json(
       { error: 'Permissions insuffisantes pour modifier ce classeur' },
-      { status: 403 }
+      { status: 403, headers: { "Content-Type": "application/json" } }
     );
   }
 
@@ -89,7 +89,7 @@ export async function PUT(
       logApi('v2_classeur_update', `❌ Classeur non trouvé: ${classeurId}`, context);
       return NextResponse.json(
         { error: 'Classeur non trouvé' },
-        { status: 404 }
+        { status: 404, headers: { "Content-Type": "application/json" } }
       );
     }
 
@@ -123,7 +123,7 @@ export async function PUT(
       logApi('v2_classeur_update', `❌ Erreur mise à jour: ${updateError.message}`, context);
       return NextResponse.json(
         { error: 'Erreur lors de la mise à jour' },
-        { status: 500 }
+        { status: 500, headers: { "Content-Type": "application/json" } }
       );
     }
 
@@ -137,14 +137,14 @@ export async function PUT(
       success: true,
       message: 'Classeur mis à jour avec succès',
       classeur: updatedClasseur
-    });
+    }, { headers: { "Content-Type": "application/json" } });
 
   } catch (err: unknown) {
     const error = err as Error;
     logApi('v2_classeur_update', `❌ Erreur serveur: ${error}`, context);
     return NextResponse.json(
       { error: 'Erreur serveur' },
-      { status: 500 }
+      { status: 500, headers: { "Content-Type": "application/json" } }
     );
   }
 } 
