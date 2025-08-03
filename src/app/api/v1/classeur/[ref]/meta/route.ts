@@ -48,7 +48,7 @@ export type UpdateClasseurMetaResponse =
   | { classeur: Classeur }
   | { error: string; details?: string[] };
 
-export async function PATCH(req: NextRequest, { params }: any): Promise<Response> {
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ ref: string }> }): Promise<Response> {
   const { ref } = await params;
   try {
     const paramSchema = z.object({ ref: z.string().min(1, 'classeur_ref requis') });
@@ -81,7 +81,7 @@ export async function PATCH(req: NextRequest, { params }: any): Promise<Response
     const { supabase, userId } = await getAuthenticatedClient(req);
     const classeurId = await resolveClasseurRef(ref, userId);
     
-    const updates: any = {};
+    const updates: Record<string, unknown> = {};
     if (body.name) updates.name = body.name;
     if (body.emoji) updates.emoji = body.emoji;
 
@@ -107,11 +107,12 @@ export async function PATCH(req: NextRequest, { params }: any): Promise<Response
       return new Response(JSON.stringify({ error: error.message }), { status: 500 });
     }
     return new Response(JSON.stringify({ classeur: updated }), { status: 200 });
-  } catch (err: any) {
-    if (err.message === 'Token invalide ou expiré' || err.message === 'Authentification requise') {
-      return new Response(JSON.stringify({ error: err.message }), { status: 401 });
+  } catch (err: unknown) {
+    const error = err as Error;
+    if (error.message === 'Token invalide ou expiré' || error.message === 'Authentification requise') {
+      return new Response(JSON.stringify({ error: error.message }), { status: 401 });
     }
-    return new Response(JSON.stringify({ error: err.message }), { status: 500 });
+    return new Response(JSON.stringify({ error: error.message }), { status: 500 });
   }
 }
 

@@ -117,7 +117,8 @@ export async function PUT(req: NextRequest): Promise<Response> {
       { status: 200 }
     );
     
-  } catch (error: any) {
+  } catch (err: unknown) {
+    const error = err as Error;
     if (error.message === 'Token invalide ou expiré' || error.message === 'Authentification requise') {
       return new Response(JSON.stringify({ error: error.message }), { status: 401 });
     }

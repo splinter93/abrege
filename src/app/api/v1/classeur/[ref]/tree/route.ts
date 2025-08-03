@@ -38,7 +38,7 @@ async function getAuthenticatedClient(req: NextRequest) {
   }
 }
 
-export async function GET(req: NextRequest, { params }: any): Promise<Response> {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ ref: string }> }): Promise<Response> {
   const { ref } = await params;
   try {
     // Validation de la ref
@@ -121,8 +121,9 @@ export async function GET(req: NextRequest, { params }: any): Promise<Response> 
       }),
       { status: 200 }
     );
-  } catch (err: any) {
-    return new Response(JSON.stringify({ error: err.message }), { status: 500 });
+  } catch (err: unknown) {
+    const error = err as Error;
+    return new Response(JSON.stringify({ error: error.message }), { status: 500 });
   }
 }
 
@@ -147,7 +148,7 @@ function buildFolderTree(folders: Folder[], notes: Note[], parentId: string | nu
   name: string;
   parent_id: string | null;
   notes: Array<{ id: string; title: string; header_image: string | null; created_at: string }>;
-  children: any[];
+  children: ReturnType<typeof buildFolderTree>;
 }> {
   return folders
     .filter((folder: Folder) => folder.parent_id === parentId)
