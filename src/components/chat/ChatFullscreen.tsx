@@ -6,6 +6,7 @@ import { useSessionSync } from '@/hooks/useSessionSync';
 import { chatPollingService } from '@/services/chatPollingService';
 import { llmService } from '@/services/llmService';
 import { useAppContext } from '@/hooks/useAppContext';
+import { useLLMStore } from '@/store/useLLMStore';
 import ChatInput from './ChatInput';
 import EnhancedMarkdownMessage from './EnhancedMarkdownMessage';
 import ChatKebabMenu from './ChatKebabMenu';
@@ -138,18 +139,38 @@ const ChatFullscreen: React.FC = () => {
       
       console.log('[ChatFullscreen] 🎯 Contexte:', context);
       
-      // Appeler le LLM via le service
-      const llmResponse = await llmService.sendMessage(
-        message,
-        context,
-        currentSession.thread
-      );
+      // Récupérer le token de session
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      
+      if (!token) {
+        throw new Error('Token d\'authentification manquant');
+      }
+      
+      // Récupérer le provider actuel
+      const currentProvider = useLLMStore.getState().getCurrentProvider();
+      
+      // Appeler l'API LLM
+      const response = await fetch('/api/chat/llm', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          message: message,
+          context: context,
+          history: currentSession.thread,
+          provider: currentProvider
+        }),
+      });
 
-      if (!llmResponse.success) {
-        throw new Error(llmResponse.error || 'Erreur lors de l\'appel LLM');
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(`Erreur API: ${response.status} - ${errorData.error || 'Erreur inconnue'}`);
       }
 
-      const data = { response: llmResponse.response };
+      const data = await response.json();
       
       const assistantMessage: ChatMessage = {
         id: `assistant-${Date.now()}`,
