@@ -7,6 +7,7 @@ import EnhancedMarkdownMessage from './EnhancedMarkdownMessage';
 import ChatKebabMenu from './ChatKebabMenu';
 import ChatSidebar from './ChatSidebar';
 import './chat.css';
+import { supabase } from '@/supabaseClient';
 
 const ChatFullscreen: React.FC = () => {
   const [wideMode, setWideMode] = useState(false);
@@ -73,10 +74,19 @@ const ChatFullscreen: React.FC = () => {
     try {
       setLoading(true);
       
+      // Récupérer le token de session
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      
+      if (!token) {
+        throw new Error('Token d\'authentification manquant');
+      }
+      
       const response = await fetch('/api/chat/synesia', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({
           message: message,
@@ -85,7 +95,8 @@ const ChatFullscreen: React.FC = () => {
       });
 
       if (!response.ok) {
-        throw new Error(`Erreur API: ${response.status}`);
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(`Erreur API: ${response.status} - ${errorData.error || 'Erreur inconnue'}`);
       }
 
       const data = await response.json();

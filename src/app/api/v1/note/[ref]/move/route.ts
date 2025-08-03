@@ -6,7 +6,6 @@ import { resolveNoteRef, resolveClasseurRef, resolveFolderRef } from '@/middlewa
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 export type MoveNotePayload = {
   target_classeur_id?: string;
@@ -20,6 +19,42 @@ export type MoveNoteResponse =
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ ref: string }> }): Promise<Response> {
   const { ref } = await params;
   try {
+    // Vérifier l'authentification AVANT de traiter la requête
+    const authHeader = req.headers.get('authorization');
+    let userId: string;
+    let userToken: string;
+
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      userToken = authHeader.substring(7);
+      
+      // Créer un client Supabase avec le token d'authentification
+      const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+        global: {
+          headers: {
+            Authorization: `Bearer ${userToken}`
+          }
+        }
+      });
+      
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      
+      if (authError || !user) {
+        console.log("[Move Note API] ❌ Token invalide ou expiré");
+        return new Response(
+          JSON.stringify({ error: 'Token invalide ou expiré' }),
+          { status: 401, headers: { 'Content-Type': 'application/json' } }
+        );
+      }
+      userId = user.id;
+      console.log("[Move Note API] ✅ Utilisateur authentifié:", userId);
+    } else {
+      console.log("[Move Note API] ❌ Token d'authentification manquant");
+      return new Response(
+        JSON.stringify({ error: 'Authentification requise' }),
+        { status: 401, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
     const body: MoveNotePayload = await req.json();
     // --- LLM/legacy mapping ---
     if ('target_notebook_id' in body && !('target_classeur_id' in body)) {
@@ -45,18 +80,23 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ re
         { status: 422, headers: { 'Content-Type': 'application/json' } }
       );
     }
-    // 🚧 Temp: Authentification non implémentée
-    // TODO: Remplacer USER_ID par l'authentification Supabase
-    // 🚧 Temp: Authentification non implémentée
-    // TODO: Remplacer USER_ID par l'authentification Supabase
-    const USER_ID = "3223651c-5580-4471-affb-b3f4456bd729";
-    const noteId = await resolveNoteRef(ref, USER_ID);
+
+    // Créer un client Supabase avec le token d'authentification pour les opérations DB
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      global: {
+        headers: {
+          Authorization: `Bearer ${userToken}`
+        }
+      }
+    });
+
+    const noteId = await resolveNoteRef(ref, userId);
     // Résoudre les références de destination
     let targetClasseurId: string | undefined;
     let targetFolderId: string | null | undefined;
     if (body.target_classeur_id) {
       try {
-        targetClasseurId = await resolveClasseurRef(body.target_classeur_id, USER_ID);
+        targetClasseurId = await resolveClasseurRef(body.target_classeur_id, userId);
       } catch {
         return new Response(JSON.stringify({ error: `Notebook cible '${body.target_classeur_id}' introuvable ou non accessible.` }), { status: 404, headers: { 'Content-Type': 'application/json' } });
       }
@@ -66,7 +106,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ re
         targetFolderId = null;
       } else {
         try {
-          targetFolderId = await resolveFolderRef(body.target_folder_id, USER_ID);
+          targetFolderId = await resolveFolderRef(body.target_folder_id, userId);
         } catch {
           return new Response(JSON.stringify({ error: `Dossier cible '${body.target_folder_id}' introuvable ou non accessible.` }), { status: 404, headers: { 'Content-Type': 'application/json' } });
         }

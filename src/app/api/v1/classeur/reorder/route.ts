@@ -1,10 +1,41 @@
-import { NextRequest } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
+import type { NextRequest } from 'next/server';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+/**
+ * Récupère le token d'authentification et crée un client Supabase authentifié
+ */
+async function getAuthenticatedClient(req: NextRequest) {
+  const authHeader = req.headers.get('authorization');
+  let userId: string;
+  let userToken: string;
+
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    userToken = authHeader.substring(7);
+    
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      global: {
+        headers: {
+          Authorization: `Bearer ${userToken}`
+        }
+      }
+    });
+    
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    
+    if (authError || !user) {
+      throw new Error('Token invalide ou expiré');
+    }
+    
+    userId = user.id;
+    return { supabase, userId };
+  } else {
+    throw new Error('Authentification requise');
+  }
+}
 
 /**
  * PUT /api/v1/classeur/reorder
@@ -13,6 +44,8 @@ const supabase = createClient(supabaseUrl, supabaseAnonKey);
  */
 export async function PUT(req: NextRequest): Promise<Response> {
   try {
+    const { supabase, userId } = await getAuthenticatedClient(req);
+    
     const body = await req.json();
     
     if (process.env.NODE_ENV === 'development') {
@@ -39,12 +72,8 @@ export async function PUT(req: NextRequest): Promise<Response> {
     
     const { classeurs } = parseResult.data;
     
-    // 🚧 Temp: Authentification non implémentée
-    // TODO: Remplacer USER_ID par l'authentification Supabase
-    const USER_ID = "3223651c-5580-4471-affb-b3f4456bd729";
-    
     if (process.env.NODE_ENV === 'development') {
-      console.log('[reorderClasseurs] Réorganisation de', classeurs.length, 'classeurs pour user:', USER_ID);
+      console.log('[reorderClasseurs] Réorganisation de', classeurs.length, 'classeurs pour user:', userId);
     }
     
     // Mettre à jour les positions des classeurs
@@ -57,7 +86,7 @@ export async function PUT(req: NextRequest): Promise<Response> {
         .from('classeurs')
         .update({ position })
         .eq('id', id)
-        .eq('user_id', USER_ID);
+        .eq('user_id', userId);
       
       if (error) {
         if (process.env.NODE_ENV === 'development') {
@@ -88,7 +117,11 @@ export async function PUT(req: NextRequest): Promise<Response> {
       { status: 200 }
     );
     
-  } catch (error) {
+  } catch (error: any) {
+    if (error.message === 'Token invalide ou expiré' || error.message === 'Authentification requise') {
+      return new Response(JSON.stringify({ error: error.message }), { status: 401 });
+    }
+    
     if (process.env.NODE_ENV === 'development') {
       console.error('[reorderClasseurs] ❌ Erreur:', error);
     }

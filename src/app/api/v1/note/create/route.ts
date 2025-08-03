@@ -1,8 +1,11 @@
 import { z } from 'zod';
 import { SlugGenerator } from '@/utils/slugGenerator';
 import { getSupabaseClient } from '@/services/supabaseService';
+import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
 
-const supabase = getSupabaseClient();
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
 /**
  * POST /api/v1/note/create
@@ -11,9 +14,45 @@ const supabase = getSupabaseClient();
  * folder_id est optionnel (slug ou ID supporté)
  * Réponse : { note: { id, slug, source_title, markdown_content, ... } }
  */
-export async function POST(req: Request): Promise<Response> {
+export async function POST(request: NextRequest): Promise<Response> {
   try {
-    const body = await req.json();
+    // Vérifier l'authentification AVANT de traiter la requête
+    const authHeader = request.headers.get('authorization');
+    let userId: string;
+    let userToken: string;
+
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      userToken = authHeader.substring(7);
+      
+      // Créer un client Supabase avec le token d'authentification
+      const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+        global: {
+          headers: {
+            Authorization: `Bearer ${userToken}`
+          }
+        }
+      });
+      
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      
+      if (authError || !user) {
+        console.log("[Note Create API] ❌ Token invalide ou expiré");
+        return NextResponse.json(
+          { error: 'Token invalide ou expiré' },
+          { status: 401 }
+        );
+      }
+      userId = user.id;
+      console.log("[Note Create API] ✅ Utilisateur authentifié:", userId);
+    } else {
+      console.log("[Note Create API] ❌ Token d'authentification manquant");
+      return NextResponse.json(
+        { error: 'Authentification requise' },
+        { status: 401 }
+      );
+    }
+
+    const body = await request.json();
     if (process.env.NODE_ENV === 'development') {
       console.log('[createNote] Payload reçu:', body);
     }
@@ -40,16 +79,10 @@ export async function POST(req: Request): Promise<Response> {
     
     const { source_title, markdown_content, header_image, header_image_offset, folder_id, notebook_id, classeur_id } = parseResult.data;
     
-    // 🚧 Temp: Authentification non implémentée
-    // TODO: Remplacer USER_ID par l'authentification Supabase
-    // 🚧 Temp: Authentification non implémentée
-    // TODO: Remplacer USER_ID par l'authentification Supabase
-    const USER_ID = "3223651c-5580-4471-affb-b3f4456bd729";
-    
     // Déterminer le notebook_id final (priorité à notebook_id, puis classeur_id)
     const finalNotebookId = notebook_id || classeur_id;
     if (process.env.NODE_ENV === 'development') {
-      console.log('[createNote] notebook_id:', notebook_id, 'classeur_id:', classeur_id, 'finalNotebookId:', finalNotebookId, 'user_id:', USER_ID);
+      console.log('[createNote] notebook_id:', notebook_id, 'classeur_id:', classeur_id, 'finalNotebookId:', finalNotebookId, 'user_id:', userId);
     }
     
     if (!finalNotebookId) {
@@ -58,6 +91,15 @@ export async function POST(req: Request): Promise<Response> {
         { status: 400 }
       );
     }
+    
+    // Créer un client Supabase avec le token d'authentification pour les opérations DB
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      global: {
+        headers: {
+          Authorization: `Bearer ${userToken}`
+        }
+      }
+    });
     
     // Résolution slug → ID pour notebook_id
     let finalNotebookIdResolved = finalNotebookId;
@@ -71,7 +113,7 @@ export async function POST(req: Request): Promise<Response> {
         .from('classeurs')
         .select('id')
         .eq('slug', finalNotebookId)
-        .eq('user_id', USER_ID)
+        .eq('user_id', userId)
         .single();
       
       if (notebookError || !notebook) {
@@ -106,7 +148,7 @@ export async function POST(req: Request): Promise<Response> {
           .from('folders')
           .select('id, classeur_id')
           .eq('slug', folder_id)
-          .eq('user_id', USER_ID)
+          .eq('user_id', userId)
           .single();
         
         if (folderError || !folder) {
@@ -130,38 +172,36 @@ export async function POST(req: Request): Promise<Response> {
     }
     
     // Générer le slug
-    const slug = await SlugGenerator.generateSlug(source_title, 'note', USER_ID);
+    const slug = await SlugGenerator.generateSlug(source_title, 'note', userId);
     
-    // Créer la note
+    // Créer la note avec le client authentifié
     const { data: note, error } = await supabase
       .from('articles')
       .insert({
         source_title: source_title,
         markdown_content: markdown_content || '',
-        classeur_id: finalNotebookIdResolved,
-        folder_id: finalFolderId,
-        user_id: USER_ID,
-        slug,
+        html_content: '', // Sera généré automatiquement
         header_image: header_image || null,
-        header_image_offset: header_image_offset || 50,
+        header_image_offset: header_image_offset || 0,
+        classeur_id: finalNotebookIdResolved,
+        folder_id: finalFolderId || null,
+        user_id: userId,
+        slug,
         position: 0
       })
       .select()
       .single();
     
     if (error) {
-      console.error('[createNote] Erreur création note:', error);
+      console.error("[Note Create API] ❌ Erreur création note:", error);
       return new Response(JSON.stringify({ error: error.message }), { status: 500 });
     }
     
-    console.log('✅ Note créée avec classeur_id:', finalNotebookIdResolved);
-    
-    // 🚫 POLLING DÉCLENCHÉ PAR L'API CLIENT OPTIMISÉE
-    // Plus besoin de déclencher le polling côté serveur
+    console.log("[Note Create API] ✅ Note créée:", note.id);
     
     return new Response(JSON.stringify({ note }), { status: 201 });
   } catch (err: any) {
-    console.error('❌ Erreur générale:', err);
+    console.error("[Note Create API] ❌ Erreur:", err);
     return new Response(JSON.stringify({ error: err.message }), { status: 500 });
   }
 } 

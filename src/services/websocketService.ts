@@ -1,9 +1,13 @@
 interface WebSocketMessage {
-  type: 'CHANGE' | 'PING' | 'PONG';
+  type: 'CHANGE' | 'PING' | 'PONG' | 'LLM_STREAM' | 'LLM_COMPLETE';
   table?: string;
   eventType?: 'INSERT' | 'UPDATE' | 'DELETE';
   data?: any;
   timestamp?: number;
+  // Nouveaux champs pour le streaming LLM
+  sessionId?: string;
+  token?: string;
+  isComplete?: boolean;
 }
 
 interface ChangeEvent {
@@ -92,6 +96,31 @@ class WebSocketService {
             eventType: message.eventType,
             new: message.data.new,
             old: message.data.old,
+            timestamp: message.timestamp || Date.now()
+          });
+        }
+        break;
+      
+      case 'LLM_STREAM':
+        // Streaming LLM - token par token
+        if (message.sessionId && message.token) {
+          this.notifyListeners('llm_stream', {
+            type: 'LLM_STREAM',
+            sessionId: message.sessionId,
+            token: message.token,
+            isComplete: false,
+            timestamp: message.timestamp || Date.now()
+          });
+        }
+        break;
+      
+      case 'LLM_COMPLETE':
+        // Fin du streaming LLM
+        if (message.sessionId) {
+          this.notifyListeners('llm_stream', {
+            type: 'LLM_COMPLETE',
+            sessionId: message.sessionId,
+            isComplete: true,
             timestamp: message.timestamp || Date.now()
           });
         }

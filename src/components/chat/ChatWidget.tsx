@@ -5,6 +5,7 @@ import { useChatStore, type ChatMessage } from '../../store/useChatStore';
 import ChatInput from './ChatInput';
 import EnhancedMarkdownMessage from './EnhancedMarkdownMessage';
 import ChatSidebar from './ChatSidebar';
+import { supabase } from '@/supabaseClient';
 import './chat.css';
 
 const ChatWidget: React.FC = () => {
@@ -79,10 +80,19 @@ const ChatWidget: React.FC = () => {
     try {
       setLoading(true);
       
+      // Récupérer le token de session
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      
+      if (!token) {
+        throw new Error('Token d\'authentification manquant');
+      }
+      
       const response = await fetch('/api/chat/synesia', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({
           message: message,
@@ -91,7 +101,8 @@ const ChatWidget: React.FC = () => {
       });
 
       if (!response.ok) {
-        throw new Error(`Erreur API: ${response.status}`);
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(`Erreur API: ${response.status} - ${errorData.error || 'Erreur inconnue'}`);
       }
 
       const data = await response.json();

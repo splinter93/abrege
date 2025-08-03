@@ -225,7 +225,7 @@ Permet d’activer ou désactiver la publication publique d’une note (partage 
 ```json
 {
   "success": true,
-  "url": "https://abrege93.vercel.app/@username/shared/note-slug"
+  "url": "https://scrivia.app/@username/shared/note-slug"
 }
 ```
 - `url` est présent uniquement si la note est publiée (`isPublished: true`).

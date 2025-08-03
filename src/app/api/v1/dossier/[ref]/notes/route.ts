@@ -6,7 +6,38 @@ import { resolveFolderRef } from '@/middleware/resourceResolver';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+/**
+ * Récupère le token d'authentification et crée un client Supabase authentifié
+ */
+async function getAuthenticatedClient(req: NextRequest) {
+  const authHeader = req.headers.get('authorization');
+  let userId: string;
+  let userToken: string;
+
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    userToken = authHeader.substring(7);
+    
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      global: {
+        headers: {
+          Authorization: `Bearer ${userToken}`
+        }
+      }
+    });
+    
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    
+    if (authError || !user) {
+      throw new Error('Token invalide ou expiré');
+    }
+    
+    userId = user.id;
+    return { supabase, userId };
+  } else {
+    throw new Error('Authentification requise');
+  }
+}
 
 export type GetDossierNotesResponse =
   | { notes: Article[] }
@@ -24,12 +55,8 @@ export async function GET(req: NextRequest, { params }: any): Promise<Response> 
       );
     }
     
-    // 🚧 Temp: Authentification non implémentée
-    // TODO: Remplacer USER_ID par l'authentification Supabase
-    // 🚧 Temp: Authentification non implémentée
-    // TODO: Remplacer USER_ID par l'authentification Supabase
-    const USER_ID = "3223651c-5580-4471-affb-b3f4456bd729";
-    const folderId = await resolveFolderRef(ref, USER_ID);
+    const { supabase, userId } = await getAuthenticatedClient(req);
+    const folderId = await resolveFolderRef(ref, userId);
     
     const { data, error } = await supabase
       .from('articles')
@@ -41,6 +68,9 @@ export async function GET(req: NextRequest, { params }: any): Promise<Response> 
     }
     return new Response(JSON.stringify({ notes: data }), { status: 200 });
   } catch (err: any) {
+    if (err.message === 'Token invalide ou expiré' || err.message === 'Authentification requise') {
+      return new Response(JSON.stringify({ error: err.message }), { status: 401 });
+    }
     return new Response(JSON.stringify({ error: err.message }), { status: 500 });
   }
 }
@@ -52,6 +82,7 @@ export async function GET(req: NextRequest, { params }: any): Promise<Response> 
  * - Retourne la liste des notes du dossier (table articles)
  * - Réponses :
  *   - 200 : { notes }
+ *   - 401 : { error: 'Token invalide ou expiré' | 'Authentification requise' }
  *   - 422 : { error: 'Paramètre dossier_id invalide', details }
  *   - 500 : { error: string }
  */ 

@@ -6,7 +6,40 @@ import { SlugGenerator } from '@/utils/slugGenerator';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+
+/**
+ * Récupère le token d'authentification et crée un client Supabase authentifié
+ */
+async function getAuthenticatedClient(req: NextRequest) {
+  const authHeader = req.headers.get('authorization');
+  let userId: string;
+  let userToken: string;
+
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    userToken = authHeader.substring(7);
+    
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      global: {
+        headers: {
+          Authorization: `Bearer ${userToken}`
+        }
+      }
+    });
+    
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    
+    if (authError || !user) {
+      throw new Error('Token invalide ou expiré');
+    }
+    
+    userId = user.id;
+    return { supabase, userId };
+  } else {
+    throw new Error('Authentification requise');
+  }
+}
+
 
 /**
  * GET /api/v1/note/{ref}/information
@@ -26,11 +59,11 @@ export async function GET(req: NextRequest, { params }: any): Promise<Response> 
     }
     
     // 🚧 Temp: Authentification non implémentée
-    // TODO: Remplacer USER_ID par l'authentification Supabase
+    // TODO: Remplacer userId par l'authentification Supabase
     // 🚧 Temp: Authentification non implémentée
-    // TODO: Remplacer USER_ID par l'authentification Supabase
-    const USER_ID = "3223651c-5580-4471-affb-b3f4456bd729";
-    const noteId = await resolveNoteRef(ref, USER_ID);
+    // TODO: Remplacer userId par l'authentification Supabase
+    const { supabase, userId } = await getAuthenticatedClient(req);
+    const noteId = await resolveNoteRef(ref, userId);
     
     const { data: note, error } = await supabase
       .from('articles')
@@ -41,8 +74,13 @@ export async function GET(req: NextRequest, { params }: any): Promise<Response> 
       return new Response(JSON.stringify({ error: error?.message || 'Note non trouvée.' }), { status: 404 });
     }
     return new Response(JSON.stringify({ note }), { status: 200 });
+  
   } catch (err: any) {
+    if (err.message === 'Token invalide ou expiré' || err.message === 'Authentification requise') {
+      return new Response(JSON.stringify({ error: err.message }), { status: 401 });
+    }
     return new Response(JSON.stringify({ error: err.message }), { status: 500 });
+  }
   }
 }
 
@@ -73,18 +111,18 @@ export async function PATCH(req: NextRequest, { params }: any): Promise<Response
     const { source_title, header_image, header_image_offset } = parseResult.data;
     
     // 🚧 Temp: Authentification non implémentée
-    // TODO: Remplacer USER_ID par l'authentification Supabase
+    // TODO: Remplacer userId par l'authentification Supabase
     // 🚧 Temp: Authentification non implémentée
-    // TODO: Remplacer USER_ID par l'authentification Supabase
-    const USER_ID = "3223651c-5580-4471-affb-b3f4456bd729";
-    const noteId = await resolveNoteRef(ref, USER_ID);
+    // TODO: Remplacer userId par l'authentification Supabase
+    const { supabase, userId } = await getAuthenticatedClient(req);
+    const noteId = await resolveNoteRef(ref, userId);
     
     // Vérifier que la note existe
     const { data: existingNote, error: fetchError } = await supabase
       .from('articles')
       .select('id')
       .eq('id', noteId)
-      .eq('user_id', USER_ID)
+      .eq('user_id', userId)
       .single();
     
     if (fetchError || !existingNote) {
@@ -99,7 +137,7 @@ export async function PATCH(req: NextRequest, { params }: any): Promise<Response
     
     // Si le titre change, mettre à jour le slug automatiquement
     if (source_title !== undefined) {
-      const newSlug = await SlugGenerator.generateSlug(source_title, 'note', USER_ID, noteId);
+      const newSlug = await SlugGenerator.generateSlug(source_title, 'note', userId, noteId);
       updateData.slug = newSlug;
     }
     
@@ -115,7 +153,11 @@ export async function PATCH(req: NextRequest, { params }: any): Promise<Response
     }
     
     return new Response(JSON.stringify({ note }), { status: 200 });
+  
   } catch (err: any) {
+    if (err.message === 'Token invalide ou expiré' || err.message === 'Authentification requise') {
+      return new Response(JSON.stringify({ error: err.message }), { status: 401 });
+    }
     return new Response(JSON.stringify({ error: err.message }), { status: 500 });
   }
-} 
+  }

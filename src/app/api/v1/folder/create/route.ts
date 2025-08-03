@@ -1,19 +1,55 @@
 import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 import { SlugGenerator } from '@/utils/slugGenerator';
+import { NextRequest, NextResponse } from 'next/server';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 /**
  * POST /api/v1/folder/create
  * Crée un nouveau dossier avec génération automatique de slug
  * Réponse : { folder: { id, slug, name, ... } }
  */
-export async function POST(req: Request): Promise<Response> {
+export async function POST(request: NextRequest): Promise<Response> {
   try {
-    const body = await req.json();
+    // Vérifier l'authentification AVANT de traiter la requête
+    const authHeader = request.headers.get('authorization');
+    let userId: string;
+    let userToken: string;
+
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      userToken = authHeader.substring(7);
+      
+      // Créer un client Supabase avec le token d'authentification
+      const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+        global: {
+          headers: {
+            Authorization: `Bearer ${userToken}`
+          }
+        }
+      });
+      
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      
+      if (authError || !user) {
+        console.log("[Folder Create API] ❌ Token invalide ou expiré");
+        return NextResponse.json(
+          { error: 'Token invalide ou expiré' },
+          { status: 401 }
+        );
+      }
+      userId = user.id;
+      console.log("[Folder Create API] ✅ Utilisateur authentifié:", userId);
+    } else {
+      console.log("[Folder Create API] ❌ Token d'authentification manquant");
+      return NextResponse.json(
+        { error: 'Authentification requise' },
+        { status: 401 }
+      );
+    }
+
+    const body = await request.json();
     const schema = z.object({
       name: z.string().min(1, 'name requis'),
       notebook_id: z.string().min(1, 'notebook_id requis'),
@@ -41,14 +77,17 @@ export async function POST(req: Request): Promise<Response> {
       );
     }
     
-    // 🚧 Temp: Authentification non implémentée
-    // TODO: Remplacer USER_ID par l'authentification Supabase
-    // 🚧 Temp: Authentification non implémentée
-    // TODO: Remplacer USER_ID par l'authentification Supabase
-    const USER_ID = "3223651c-5580-4471-affb-b3f4456bd729";
+    // Créer un client Supabase avec le token d'authentification pour les opérations DB
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      global: {
+        headers: {
+          Authorization: `Bearer ${userToken}`
+        }
+      }
+    });
     
     // Générer le slug
-    const slug = await SlugGenerator.generateSlug(name, 'folder', USER_ID);
+    const slug = await SlugGenerator.generateSlug(name, 'folder', userId);
     
     // Résolution slug → ID pour notebook_id
     let finalNotebookIdResolved = finalNotebookId;
@@ -60,7 +99,7 @@ export async function POST(req: Request): Promise<Response> {
         .from('classeurs')
         .select('id')
         .eq('slug', finalNotebookId)
-        .eq('user_id', USER_ID)
+        .eq('user_id', userId)
         .single();
       
       if (notebookError || !notebook) {
@@ -74,14 +113,14 @@ export async function POST(req: Request): Promise<Response> {
       console.log(`✅ Notebook résolu: ${finalNotebookId} → ${finalNotebookIdResolved}`);
     }
     
-    // Créer le dossier
+    // Créer le dossier avec le client authentifié
     const { data: folder, error } = await supabase
       .from('folders')
       .insert({
         name,
         classeur_id: finalNotebookIdResolved,
         parent_id: parent_id || null,
-        user_id: USER_ID,
+        user_id: userId,
         slug,
         position: 0
       })
@@ -89,14 +128,15 @@ export async function POST(req: Request): Promise<Response> {
       .single();
     
     if (error) {
+      console.error("[Folder Create API] ❌ Erreur création dossier:", error);
       return new Response(JSON.stringify({ error: error.message }), { status: 500 });
     }
     
-    // 🚫 POLLING DÉCLENCHÉ PAR L'API CLIENT OPTIMISÉE
-    // Plus besoin de déclencher le polling côté serveur
+    console.log("[Folder Create API] ✅ Dossier créé:", folder.id);
     
     return new Response(JSON.stringify({ folder }), { status: 201 });
   } catch (err: any) {
+    console.error("[Folder Create API] ❌ Erreur:", err);
     return new Response(JSON.stringify({ error: err.message }), { status: 500 });
   }
 } 

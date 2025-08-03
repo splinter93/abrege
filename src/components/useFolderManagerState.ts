@@ -372,23 +372,10 @@ export function useFolderManagerState(classeurId: string, parentFolderId?: strin
         console.log('[UI] ✅ Dossier déplacé:', result.folder?.name || id);
         }
       } else {
-        const response = await fetch(`/api/v1/note/${id}/move`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            target_folder_id: newParentId,
-            target_classeur_id: activeClasseurId
-          })
-        });
-        if (!response.ok) {
-          throw new Error(`Erreur déplacement note: ${response.statusText}`);
-        }
-        const result = await response.json();
-        const store = useFileSystemStore.getState();
-        store.moveNote(id, newParentId, activeClasseurId || undefined);
-        await clientPollingTrigger.triggerArticlesPolling('UPDATE');
+        // Utiliser l'API optimisée pour le déplacement de note
+        const result = await optimizedApi.moveNote(id, newParentId, activeClasseurId || undefined);
         if (process.env.NODE_ENV === 'development') {
-        console.log('[UI] ✅ Note déplacée:', result.note?.source_title || id);
+        console.log('[UI] ✅ Note déplacée avec API optimisée:', result.note?.source_title || id);
         }
       }
       if (process.env.NODE_ENV === 'development') {

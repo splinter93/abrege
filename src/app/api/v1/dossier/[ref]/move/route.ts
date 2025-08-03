@@ -1,12 +1,10 @@
 import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 import type { NextRequest } from 'next/server';
-
 import { resolveFolderRef, resolveClasseurRef } from '@/middleware/resourceResolver';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 export type MoveDossierPayload = {
   target_classeur_id?: string;
@@ -17,47 +15,81 @@ export type MoveDossierPayload = {
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ ref: string }> }): Promise<Response> {
   const { ref } = await params;
   try {
-    const paramSchema = z.object({ ref: z.string().min(1, 'dossier_ref requis') });
-    const body: MoveDossierPayload = await req.json();
+    // Vérifier l'authentification AVANT de traiter la requête
+    const authHeader = req.headers.get('authorization');
+    let userId: string;
+    let userToken: string;
 
-    // --- Correction alias LLM/legacy ---
-    if ('target_notebook_id' in body && !('target_classeur_id' in body)) {
-      body.target_classeur_id = String(body.target_notebook_id);
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      userToken = authHeader.substring(7);
+      
+      // Créer un client Supabase avec le token d'authentification
+      const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+        global: {
+          headers: {
+            Authorization: `Bearer ${userToken}`
+          }
+        }
+      });
+      
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      
+      if (authError || !user) {
+        console.log("[Dossier Move API] ❌ Token invalide ou expiré");
+        return new Response(
+          JSON.stringify({ error: 'Token invalide ou expiré' }),
+          { status: 401, headers: { 'Content-Type': 'application/json' } }
+        );
+      }
+      userId = user.id;
+      console.log("[Dossier Move API] ✅ Utilisateur authentifié:", userId);
+    } else {
+      console.log("[Dossier Move API] ❌ Token d'authentification manquant");
+      return new Response(
+        JSON.stringify({ error: 'Authentification requise' }),
+        { status: 401, headers: { 'Content-Type': 'application/json' } }
+      );
     }
 
+    const body: MoveDossierPayload = await req.json();
     const bodySchema = z.object({
       target_classeur_id: z.string().optional(),
       target_parent_id: z.string().nullable().optional(),
       position: z.number().int().nonnegative().optional(),
     });
+    const paramSchema = z.object({ ref: z.string().min(1, 'dossier_ref requis') });
     const paramResult = paramSchema.safeParse({ ref });
     const bodyResult = bodySchema.safeParse(body);
     if (!paramResult.success) {
       return new Response(
         JSON.stringify({ error: 'Paramètre dossier_ref invalide', details: paramResult.error.errors.map(e => e.message) }),
-        { status: 422 }
+        { status: 422, headers: { 'Content-Type': 'application/json' } }
       );
     }
     if (!bodyResult.success) {
       return new Response(
         JSON.stringify({ error: 'Payload invalide', details: bodyResult.error.errors.map(e => e.message) }),
-        { status: 422 }
+        { status: 422, headers: { 'Content-Type': 'application/json' } }
       );
     }
-    
-    // 🚧 Temp: Authentification non implémentée
-    // TODO: Remplacer USER_ID par l'authentification Supabase
-    // 🚧 Temp: Authentification non implémentée
-    // TODO: Remplacer USER_ID par l'authentification Supabase
-    const USER_ID = "3223651c-5580-4471-affb-b3f4456bd729";
-    const folderId = await resolveFolderRef(ref, USER_ID);
+
+    // Créer un client Supabase avec le token d'authentification pour les opérations DB
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      global: {
+        headers: {
+          Authorization: `Bearer ${userToken}`
+        }
+      }
+    });
+
+    const folderId = await resolveFolderRef(ref, userId);
     
     // Résolution des références (slug ou id) pour classeur et parent
     let resolvedClasseurId: string | undefined = undefined;
     let resolvedParentId: string | null | undefined = undefined;
     if ('target_classeur_id' in body && body.target_classeur_id) {
       try {
-        resolvedClasseurId = await resolveClasseurRef(body.target_classeur_id, USER_ID);
+        resolvedClasseurId = await resolveClasseurRef(body.target_classeur_id, userId);
       } catch {
         return new Response(
           JSON.stringify({ error: `Classeur cible '${body.target_classeur_id}' introuvable ou non accessible.` }),
@@ -70,7 +102,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ re
         resolvedParentId = null;
       } else if (body.target_parent_id) {
         try {
-          resolvedParentId = await resolveFolderRef(body.target_parent_id, USER_ID);
+          resolvedParentId = await resolveFolderRef(body.target_parent_id, userId);
         } catch {
           return new Response(
             JSON.stringify({ error: `Dossier parent cible '${body.target_parent_id}' introuvable ou non accessible.` }),
@@ -106,7 +138,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ re
       const { data: allFolders, error: fetchFoldersError } = await supabase
         .from('folders')
         .select('id, parent_id')
-        .eq('user_id', USER_ID);
+        .eq('user_id', userId);
       if (fetchFoldersError) {
         return new Response(JSON.stringify({ error: 'Erreur lors de la récupération des sous-dossiers.' }), { status: 500 });
       }
@@ -137,7 +169,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ re
       }
     }
     return new Response(JSON.stringify({ folder: updated }), { status: 200 });
-  } catch (err: any) {
-    return new Response(JSON.stringify({ error: err.message }), { status: 500 });
+  } catch (err: unknown) {
+    console.error('[moveDossier] PATCH error:', err);
+    return new Response(JSON.stringify({ error: err instanceof Error ? err.message : 'Erreur inconnue' }), { status: 500 });
   }
 } 

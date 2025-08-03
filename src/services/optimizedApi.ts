@@ -2,6 +2,7 @@ import { useFileSystemStore } from '@/store/useFileSystemStore';
 import { clientPollingTrigger } from './clientPollingTrigger';
 import { ErrorHandler } from './errorHandler';
 import { logApi, logStore, logPolling } from '@/utils/logger';
+import { supabase } from '@/supabaseClient';
 
 // Types pour les données d'API
 interface CreateNoteData {
@@ -62,11 +63,34 @@ interface PublishNoteResponse {
 export class OptimizedApi {
   private static instance: OptimizedApi;
 
+  private constructor() {}
+
   static getInstance(): OptimizedApi {
     if (!OptimizedApi.instance) {
       OptimizedApi.instance = new OptimizedApi();
     }
     return OptimizedApi.instance;
+  }
+
+  /**
+   * Récupère le token d'authentification pour les appels API
+   */
+  private async getAuthHeaders(): Promise<HeadersInit> {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json'
+      };
+      
+      if (session?.access_token) {
+        headers['Authorization'] = `Bearer ${session.access_token}`;
+      }
+      
+      return headers;
+    } catch (error) {
+      console.error('[OptimizedApi] ❌ Erreur récupération token:', error);
+      return { 'Content-Type': 'application/json' };
+    }
   }
 
   /**
@@ -79,10 +103,13 @@ export class OptimizedApi {
     logApi('create_note', '🚀 Début création note', context);
     
     try {
+      // Récupérer les headers d'authentification
+      const headers = await this.getAuthHeaders();
+      
       // Appel API
       const response = await fetch('/api/v1/note/create', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify(noteData)
       });
 
@@ -126,10 +153,13 @@ export class OptimizedApi {
     const startTime = Date.now();
     
     try {
+      // Récupérer les headers d'authentification
+      const headers = await this.getAuthHeaders();
+      
       // Appel API
       const response = await fetch(`/api/v1/note/${noteId}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify(updateData)
       });
 
@@ -172,9 +202,13 @@ export class OptimizedApi {
     const startTime = Date.now();
     
     try {
+      // Récupérer les headers d'authentification
+      const headers = await this.getAuthHeaders();
+      
       // Appel API
       const response = await fetch(`/api/v1/note/${noteId}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers
       });
 
       if (!response.ok) {
@@ -215,10 +249,13 @@ export class OptimizedApi {
     const startTime = Date.now();
     
     try {
+      // Récupérer les headers d'authentification
+      const headers = await this.getAuthHeaders();
+      
       // Appel API
       const response = await fetch('/api/v1/folder/create', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify(folderData)
       });
 
@@ -261,10 +298,13 @@ export class OptimizedApi {
     const startTime = Date.now();
     
     try {
+      // Récupérer les headers d'authentification
+      const headers = await this.getAuthHeaders();
+      
       // Appel API
       const response = await fetch(`/api/v1/folder/${folderId}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify(updateData)
       });
 
@@ -307,9 +347,13 @@ export class OptimizedApi {
     const startTime = Date.now();
     
     try {
+      // Récupérer les headers d'authentification
+      const headers = await this.getAuthHeaders();
+      
       // Appel API
       const response = await fetch(`/api/v1/folder/${folderId}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers
       });
 
       if (!response.ok) {
@@ -341,6 +385,114 @@ export class OptimizedApi {
   }
 
   /**
+   * Déplacer une note avec mise à jour directe de Zustand + polling côté client
+   */
+  async moveNote(noteId: string, targetFolderId: string | null, targetClasseurId?: string) {
+    if (process.env.NODE_ENV === 'development') {
+    console.log('[OptimizedApi] 📦 Déplacement note optimisée');
+    }
+    const startTime = Date.now();
+    
+    try {
+      // Récupérer les headers d'authentification
+      const headers = await this.getAuthHeaders();
+      
+      // Préparer le payload
+      const payload: any = {};
+      if (targetFolderId !== undefined) payload.target_folder_id = targetFolderId;
+      if (targetClasseurId) payload.target_classeur_id = targetClasseurId;
+      
+      // Appel API
+      const response = await fetch(`/api/v1/note/${noteId}/move`, {
+        method: 'PATCH',
+        headers,
+        body: JSON.stringify(payload)
+      });
+
+      if (!response.ok) {
+        throw new Error(`Erreur déplacement note: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      const apiTime = Date.now() - startTime;
+      if (process.env.NODE_ENV === 'development') {
+      console.log(`[OptimizedApi] ✅ API terminée en ${apiTime}ms`);
+      }
+
+      // 🚀 Mise à jour directe de Zustand (instantanée)
+      const store = useFileSystemStore.getState();
+      store.moveNote(noteId, targetFolderId, targetClasseurId);
+      
+      // 🚀 Déclencher le polling côté client immédiatement
+      await clientPollingTrigger.triggerArticlesPolling('UPDATE');
+      
+      const totalTime = Date.now() - startTime;
+      if (process.env.NODE_ENV === 'development') {
+      console.log(`[OptimizedApi] ✅ Note déplacée dans Zustand + polling déclenché en ${totalTime}ms total`);
+      }
+      
+      return result;
+    } catch (error) {
+      console.error('[OptimizedApi] ❌ Erreur déplacement note:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Déplacer un dossier avec mise à jour directe de Zustand + polling côté client
+   */
+  async moveFolder(folderId: string, targetParentId: string | null, targetClasseurId?: string) {
+    if (process.env.NODE_ENV === 'development') {
+    console.log('[OptimizedApi] 📦 Déplacement dossier optimisé');
+    }
+    const startTime = Date.now();
+    
+    try {
+      // Récupérer les headers d'authentification
+      const headers = await this.getAuthHeaders();
+      
+      // Préparer le payload
+      const payload: any = {};
+      if (targetParentId !== undefined) payload.target_parent_id = targetParentId;
+      if (targetClasseurId) payload.target_classeur_id = targetClasseurId;
+      
+      // Appel API
+      const response = await fetch(`/api/v1/dossier/${folderId}/move`, {
+        method: 'PATCH',
+        headers,
+        body: JSON.stringify(payload)
+      });
+
+      if (!response.ok) {
+        throw new Error(`Erreur déplacement dossier: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      const apiTime = Date.now() - startTime;
+      if (process.env.NODE_ENV === 'development') {
+      console.log(`[OptimizedApi] ✅ API terminée en ${apiTime}ms`);
+      }
+
+      // 🚀 Mise à jour directe de Zustand (instantanée)
+      const store = useFileSystemStore.getState();
+      store.moveFolder(folderId, targetParentId, targetClasseurId);
+      
+      // 🚀 Déclencher le polling côté client immédiatement
+      await clientPollingTrigger.triggerFoldersPolling('UPDATE');
+      
+      const totalTime = Date.now() - startTime;
+      if (process.env.NODE_ENV === 'development') {
+      console.log(`[OptimizedApi] ✅ Dossier déplacé dans Zustand + polling déclenché en ${totalTime}ms total`);
+      }
+      
+      return result;
+    } catch (error) {
+      console.error('[OptimizedApi] ❌ Erreur déplacement dossier:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Créer un classeur avec mise à jour directe de Zustand + polling côté client
    */
   async createClasseur(classeurData: CreateClasseurData) {
@@ -350,10 +502,13 @@ export class OptimizedApi {
     const startTime = Date.now();
     
     try {
+      // Récupérer les headers d'authentification
+      const headers = await this.getAuthHeaders();
+      
       // Appel API
       const response = await fetch('/api/v1/classeur/create', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify(classeurData)
       });
 
@@ -550,9 +705,10 @@ export class OptimizedApi {
     logApi('publish_note', `🚀 Début publication note ${noteId}`, context);
     
     try {
+      const headers = await this.getAuthHeaders();
       const response = await fetch(`/api/v1/note/${noteId}/publish`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({ ispublished: isPublished })
       });
 

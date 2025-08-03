@@ -3,10 +3,42 @@ import { z } from 'zod';
 import type { NextRequest } from 'next/server';
 import type { Classeur } from '@/types/supabase';
 import { resolveClasseurRef } from '@/middleware/resourceResolver';
+import { SlugGenerator } from '@/utils/slugGenerator';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+/**
+ * Récupère le token d'authentification et crée un client Supabase authentifié
+ */
+async function getAuthenticatedClient(req: NextRequest) {
+  const authHeader = req.headers.get('authorization');
+  let userId: string;
+  let userToken: string;
+
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    userToken = authHeader.substring(7);
+    
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      global: {
+        headers: {
+          Authorization: `Bearer ${userToken}`
+        }
+      }
+    });
+    
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    
+    if (authError || !user) {
+      throw new Error('Token invalide ou expiré');
+    }
+    
+    userId = user.id;
+    return { supabase, userId };
+  } else {
+    throw new Error('Authentification requise');
+  }
+}
 
 export type UpdateClasseurMetaPayload = {
   name?: string;
@@ -46,12 +78,8 @@ export async function PATCH(req: NextRequest, { params }: any): Promise<Response
       );
     }
     
-    // 🚧 Temp: Authentification non implémentée
-    // TODO: Remplacer USER_ID par l'authentification Supabase
-    // 🚧 Temp: Authentification non implémentée
-    // TODO: Remplacer USER_ID par l'authentification Supabase
-    const USER_ID = "3223651c-5580-4471-affb-b3f4456bd729";
-    const classeurId = await resolveClasseurRef(ref, USER_ID);
+    const { supabase, userId } = await getAuthenticatedClient(req);
+    const classeurId = await resolveClasseurRef(ref, userId);
     
     const updates: any = {};
     if (body.name) updates.name = body.name;
@@ -64,8 +92,7 @@ export async function PATCH(req: NextRequest, { params }: any): Promise<Response
       .eq('id', classeurId)
       .single();
     if (body.name && !oldClasseurError && oldClasseur && oldClasseur.name !== body.name) {
-      const { SlugGenerator } = await import('@/utils/slugGenerator');
-      const newSlug = await SlugGenerator.generateSlug(body.name, 'classeur', USER_ID, classeurId);
+      const newSlug = await SlugGenerator.generateSlug(body.name, 'classeur', userId, classeurId);
       updates.slug = newSlug;
     }
 
@@ -81,6 +108,9 @@ export async function PATCH(req: NextRequest, { params }: any): Promise<Response
     }
     return new Response(JSON.stringify({ classeur: updated }), { status: 200 });
   } catch (err: any) {
+    if (err.message === 'Token invalide ou expiré' || err.message === 'Authentification requise') {
+      return new Response(JSON.stringify({ error: err.message }), { status: 401 });
+    }
     return new Response(JSON.stringify({ error: err.message }), { status: 500 });
   }
 }
@@ -93,6 +123,7 @@ export async function PATCH(req: NextRequest, { params }: any): Promise<Response
  * - Tous les champs sont optionnels, au moins un doit être fourni
  * - Réponses :
  *   - 200 : { classeur }
+ *   - 401 : { error: 'Token invalide ou expiré' | 'Authentification requise' }
  *   - 404 : { error: 'Classeur non trouvé.' }
  *   - 422 : { error: 'Paramètre classeur_ref invalide' | 'Payload invalide' | 'Aucun champ à mettre à jour.', details }
  *   - 500 : { error: string }

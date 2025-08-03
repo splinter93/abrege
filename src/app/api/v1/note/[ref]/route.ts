@@ -2,19 +2,51 @@ import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 import type { Article } from '@/types/supabase';
 import type { NextRequest } from 'next/server';
+import type { ApiContext } from '@/types/api';
 import { resolveNoteRef } from '@/middleware/resourceResolver';
 import { SlugGenerator } from '@/utils/slugGenerator';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 // Types explicites pour la réponse
 export type GetNoteResponse =
   | { note: Article }
   | { error: string; details?: string[] };
 
-export async function GET(req: NextRequest, { params }: any): Promise<Response> {
+/**
+ * Récupère le token d'authentification et crée un client Supabase authentifié
+ */
+async function getAuthenticatedClient(req: NextRequest) {
+  const authHeader = req.headers.get('authorization');
+  let userId: string;
+  let userToken: string;
+
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    userToken = authHeader.substring(7);
+    
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      global: {
+        headers: {
+          Authorization: `Bearer ${userToken}`
+        }
+      }
+    });
+    
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    
+    if (authError || !user) {
+      throw new Error('Token invalide ou expiré');
+    }
+    
+    userId = user.id;
+    return { supabase, userId };
+  } else {
+    throw new Error('Authentification requise');
+  }
+}
+
+export async function GET(req: NextRequest, { params }: ApiContext): Promise<Response> {
   try {
     const { ref } = await params;
     const schema = z.object({ ref: z.string().min(1, 'note_ref requis') });
@@ -26,12 +58,8 @@ export async function GET(req: NextRequest, { params }: any): Promise<Response> 
       );
     }
     
-    // 🚧 Temp: Authentification non implémentée
-    // TODO: Remplacer USER_ID par l'authentification Supabase
-    // 🚧 Temp: Authentification non implémentée
-    // TODO: Remplacer USER_ID par l'authentification Supabase
-    const USER_ID = "3223651c-5580-4471-affb-b3f4456bd729";
-    const noteId = await resolveNoteRef(ref, USER_ID);
+    const { supabase, userId } = await getAuthenticatedClient(req);
+    const noteId = await resolveNoteRef(ref, userId);
     
     const { data, error } = await supabase
       .from('articles')
@@ -42,12 +70,16 @@ export async function GET(req: NextRequest, { params }: any): Promise<Response> 
       return new Response(JSON.stringify({ error: error?.message || 'Note non trouvée.' }), { status: 404 });
     }
     return new Response(JSON.stringify({ note: data }), { status: 200 });
-  } catch (err: any) {
-    return new Response(JSON.stringify({ error: err.message }), { status: 500 });
+  } catch (err: unknown) {
+    const error = err as Error;
+    if (error.message === 'Token invalide ou expiré' || error.message === 'Authentification requise') {
+      return new Response(JSON.stringify({ error: error.message }), { status: 401 });
+    }
+    return new Response(JSON.stringify({ error: error.message }), { status: 500 });
   }
 }
 
-export async function PUT(req: NextRequest, { params }: any): Promise<Response> {
+export async function PUT(req: NextRequest, { params }: ApiContext): Promise<Response> {
   try {
     const { ref } = await params;
     const body = await req.json();
@@ -74,12 +106,8 @@ export async function PUT(req: NextRequest, { params }: any): Promise<Response> 
       );
     }
     
-    // 🚧 Temp: Authentification non implémentée
-    // TODO: Remplacer USER_ID par l'authentification Supabase
-    // 🚧 Temp: Authentification non implémentée
-    // TODO: Remplacer USER_ID par l'authentification Supabase
-    const USER_ID = "3223651c-5580-4471-affb-b3f4456bd729";
-    const noteId = await resolveNoteRef(ref, USER_ID);
+    const { supabase, userId } = await getAuthenticatedClient(req);
+    const noteId = await resolveNoteRef(ref, userId);
     
     // Préparer les données à mettre à jour
     const updateData: any = {
@@ -99,27 +127,15 @@ export async function PUT(req: NextRequest, { params }: any): Promise<Response> 
     }
     if (body.header_image_blur !== undefined) {
       updateData.header_image_blur = body.header_image_blur;
-      if (process.env.NODE_ENV === 'development') {
-        console.log('[API] Mise à jour header_image_blur:', body.header_image_blur);
-      }
     }
     if (body.header_image_overlay !== undefined) {
       updateData.header_image_overlay = body.header_image_overlay;
-      if (process.env.NODE_ENV === 'development') {
-        console.log('[API] Mise à jour header_image_overlay:', body.header_image_overlay);
-      }
     }
     if (body.header_title_in_image !== undefined) {
       updateData.header_title_in_image = body.header_title_in_image;
-      if (process.env.NODE_ENV === 'development') {
-        console.log('[API] Mise à jour header_title_in_image:', body.header_title_in_image);
-      }
     }
     if (body.source_title !== undefined) {
       updateData.source_title = body.source_title;
-      // Si le titre change, mettre à jour le slug automatiquement
-      const newSlug = await SlugGenerator.generateSlug(body.source_title, 'note', USER_ID, noteId);
-      updateData.slug = newSlug;
     }
     if (body.markdown_content !== undefined) {
       updateData.markdown_content = body.markdown_content;
@@ -134,27 +150,28 @@ export async function PUT(req: NextRequest, { params }: any): Promise<Response> 
       updateData.font_family = body.font_family;
     }
     
-        const { data: updatedNote, error } = await supabase
+    const { data, error } = await supabase
       .from('articles')
       .update(updateData)
       .eq('id', noteId)
       .select()
       .single();
-
+    
     if (error) {
       return new Response(JSON.stringify({ error: error.message }), { status: 500 });
     }
     
-    // 🚫 POLLING DÉCLENCHÉ PAR L'API CLIENT OPTIMISÉE
-    // Plus besoin de déclencher le polling côté serveur
-    
-    return new Response(JSON.stringify({ note: updatedNote }), { status: 200 });
-  } catch (err: any) {
-    return new Response(JSON.stringify({ error: err.message }), { status: 500 });
+    return new Response(JSON.stringify({ note: data }), { status: 200 });
+  } catch (err: unknown) {
+    const error = err as Error;
+    if (error.message === 'Token invalide ou expiré' || error.message === 'Authentification requise') {
+      return new Response(JSON.stringify({ error: error.message }), { status: 401 });
+    }
+    return new Response(JSON.stringify({ error: error.message }), { status: 500 });
   }
 }
 
-export async function DELETE(req: Request, { params }: any): Promise<Response> {
+export async function DELETE(req: NextRequest, { params }: ApiContext): Promise<Response> {
   try {
     const { ref } = await params;
     const schema = z.object({ ref: z.string().min(1, 'note_ref requis') });
@@ -166,27 +183,25 @@ export async function DELETE(req: Request, { params }: any): Promise<Response> {
       );
     }
     
-    // 🚧 Temp: Authentification non implémentée
-    // TODO: Remplacer USER_ID par l'authentification Supabase
-    // 🚧 Temp: Authentification non implémentée
-    // TODO: Remplacer USER_ID par l'authentification Supabase
-    const USER_ID = "3223651c-5580-4471-affb-b3f4456bd729";
-    const noteId = await resolveNoteRef(ref, USER_ID);
+    const { supabase, userId } = await getAuthenticatedClient(req);
+    const noteId = await resolveNoteRef(ref, userId);
     
     const { error } = await supabase
       .from('articles')
       .delete()
       .eq('id', noteId);
+    
     if (error) {
       return new Response(JSON.stringify({ error: error.message }), { status: 500 });
     }
     
-    // 🚫 POLLING DÉCLENCHÉ PAR L'API CLIENT OPTIMISÉE
-    // Plus besoin de déclencher le polling côté serveur
-    
     return new Response(JSON.stringify({ success: true }), { status: 200 });
-  } catch (err: any) {
-    return new Response(JSON.stringify({ error: err.message }), { status: 500 });
+  } catch (err: unknown) {
+    const error = err as Error;
+    if (error.message === 'Token invalide ou expiré' || error.message === 'Authentification requise') {
+      return new Response(JSON.stringify({ error: error.message }), { status: 401 });
+    }
+    return new Response(JSON.stringify({ error: error.message }), { status: 500 });
   }
 }
 

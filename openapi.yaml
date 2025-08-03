@@ -14,7 +14,7 @@ info:
     _FR: Voir les commentaires pour les subtilités REST/LLM._
   version: 3.0.0
 servers:
-  - url: https://abrege-splinter93s-projects.vercel.app
+        - url: https://scrivia.app
 security:
   - bearerAuth: []
 tags:

@@ -5,7 +5,40 @@ import type { NextRequest } from 'next/server';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+
+/**
+ * Récupère le token d'authentification et crée un client Supabase authentifié
+ */
+async function getAuthenticatedClient(req: NextRequest) {
+  const authHeader = req.headers.get('authorization');
+  let userId: string;
+  let userToken: string;
+
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    userToken = authHeader.substring(7);
+    
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      global: {
+        headers: {
+          Authorization: `Bearer ${userToken}`
+        }
+      }
+    });
+    
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    
+    if (authError || !user) {
+      throw new Error('Token invalide ou expiré');
+    }
+    
+    userId = user.id;
+    return { supabase, userId };
+  } else {
+    throw new Error('Authentification requise');
+  }
+}
+
 
 export type MergeNotesPayload = {
   note_ids: string[];
@@ -53,16 +86,16 @@ export async function POST(req: NextRequest): Promise<Response> {
       );
     }
     // 🚧 Temp: Authentification non implémentée
-    // TODO: Remplacer USER_ID par l'authentification Supabase
+    // TODO: Remplacer userId par l'authentification Supabase
     // 🚧 Temp: Authentification non implémentée
-    // TODO: Remplacer USER_ID par l'authentification Supabase
-    const USER_ID = "3223651c-5580-4471-affb-b3f4456bd729";
+    // TODO: Remplacer userId par l'authentification Supabase
+    const { supabase, userId } = await getAuthenticatedClient(req);
     // Résoudre tous les note_ids (slug ou id)
     const resolvedNoteIds: string[] = [];
     for (const ref of note_ids) {
       try {
          
-        const id = await (await import('@/middleware/resourceResolver')).resolveNoteRef(ref, USER_ID);
+        const id = await (await import('@/middleware/resourceResolver')).resolveNoteRef(ref, userId);
         resolvedNoteIds.push(id);
       } catch {
         return new Response(
@@ -102,20 +135,20 @@ export async function POST(req: NextRequest): Promise<Response> {
       // Créer une nouvelle note fusionnée
       const newTitle = title || `Fusion de ${orderedNotes.length} notes`;
       // 🚧 Temp: Authentification non implémentée
-    // TODO: Remplacer USER_ID par l'authentification Supabase
+    // TODO: Remplacer userId par l'authentification Supabase
     // 🚧 Temp: Authentification non implémentée
-    // TODO: Remplacer USER_ID par l'authentification Supabase
-    const USER_ID = "3223651c-5580-4471-affb-b3f4456bd729";
+    // TODO: Remplacer userId par l'authentification Supabase
+    const { supabase, userId } = await getAuthenticatedClient(req);
       // Générer le slug unique pour la note fusionnée
       const { SlugGenerator } = await import('@/utils/slugGenerator');
-      const newSlug = await SlugGenerator.generateSlug(newTitle, 'note', USER_ID);
+      const newSlug = await SlugGenerator.generateSlug(newTitle, 'note', userId);
       const insertPayload: any = {
         source_title: newTitle,
         markdown_content: merged_content,
         html_content: '', // à générer côté front ou via un service si besoin
         folder_id: folder_id || null,
         classeur_id: finalClasseurId,
-        user_id: USER_ID,
+        user_id: userId,
         slug: newSlug,
       };
       // Optionnel : générer le html_content ici si tu as une fonction utilitaire
@@ -144,8 +177,13 @@ export async function POST(req: NextRequest): Promise<Response> {
       }),
       { status: 200 }
     );
+  
   } catch (err: any) {
+    if (err.message === 'Token invalide ou expiré' || err.message === 'Authentification requise') {
+      return new Response(JSON.stringify({ error: err.message }), { status: 401 });
+    }
     return new Response(JSON.stringify({ error: err.message }), { status: 500 });
+  }
   }
 }
 
