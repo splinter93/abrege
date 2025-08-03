@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { z } from 'zod';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -39,12 +40,38 @@ async function getAuthenticatedClient(req: NextRequest) {
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ ref: string }> }
-) {
+): Promise<Response> {
   try {
     const { ref } = await params;
     const classeurId = ref;
+    
+    // Validation du paramètre
+    const paramSchema = z.object({ ref: z.string().min(1, 'classeur_ref requis') });
+    const paramResult = paramSchema.safeParse({ ref });
+    if (!paramResult.success) {
+      return NextResponse.json(
+        { error: 'Paramètre classeur_ref invalide', details: paramResult.error.errors.map(e => e.message) },
+        { status: 422 }
+      );
+    }
+    
     const body = await request.json();
-    const { name, emoji, color, position } = body;
+    const bodySchema = z.object({
+      name: z.string().optional(),
+      emoji: z.string().optional(),
+      color: z.string().optional(),
+      position: z.number().optional()
+    });
+    
+    const bodyResult = bodySchema.safeParse(body);
+    if (!bodyResult.success) {
+      return NextResponse.json(
+        { error: 'Payload invalide', details: bodyResult.error.errors.map(e => e.message) },
+        { status: 422 }
+      );
+    }
+    
+    const { name, emoji, color, position } = bodyResult.data;
 
     // Validation des données
     if (!name && !emoji && !color && position === undefined) {
@@ -72,7 +99,7 @@ export async function PUT(
     }
 
     // Préparer les données à mettre à jour
-    const updateData: any = {};
+    const updateData: Record<string, unknown> = {};
     if (name) updateData.name = name;
     if (emoji) updateData.emoji = emoji;
     if (color) updateData.color = color;
@@ -104,7 +131,8 @@ export async function PUT(
     console.log('[API] ✅ Classeur mis à jour:', classeur.name);
     return NextResponse.json({ classeur });
 
-  } catch (error: any) {
+  } catch (err: unknown) {
+    const error = err as Error;
     if (error.message === 'Token invalide ou expiré' || error.message === 'Authentification requise') {
       return NextResponse.json({ error: error.message }, { status: 401 });
     }
@@ -119,7 +147,7 @@ export async function PUT(
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ ref: string }> }
-) {
+): Promise<Response> {
   try {
     const { ref } = await params;
     const classeurId = ref;
@@ -158,7 +186,8 @@ export async function DELETE(
     console.log('[API] ✅ Classeur supprimé:', classeurId);
     return NextResponse.json({ success: true });
 
-  } catch (error: any) {
+  } catch (err: unknown) {
+    const error = err as Error;
     if (error.message === 'Token invalide ou expiré' || error.message === 'Authentification requise') {
       return NextResponse.json({ error: error.message }, { status: 401 });
     }
