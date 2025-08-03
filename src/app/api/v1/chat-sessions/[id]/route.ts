@@ -1,12 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import type { ChatMessage } from '../../../../../types/chat';
+import { z } from 'zod';
 
 // Utiliser la clé anonyme par défaut, ou la service role si disponible
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
 const supabase = createClient(supabaseUrl, supabaseKey);
+
+// Schéma de validation pour le renommage
+const updateSessionSchema = z.object({
+  name: z.string().min(1, 'Le nom ne peut pas être vide').max(100, 'Le nom est trop long'),
+});
 
 /**
  * Endpoint pour mettre à jour une session de chat
@@ -288,23 +294,20 @@ export async function PATCH(
 ) {
   try {
     const { id } = await context.params;
-    const sessionId = id;
-    
-    console.log('[Chat Sessions API] 🔧 Mise à jour de session:', sessionId);
-    const body = await request.json();
-    const { history_limit } = body;
+    console.log('[Chat Session API] ✏️ Renommage de la session:', id);
     
     // Récupérer l'utilisateur depuis l'en-tête d'autorisation
     const authHeader = request.headers.get('authorization');
     let userId: string;
+    let userToken: string;
 
     if (authHeader && authHeader.startsWith('Bearer ')) {
       // Token JWT fourni
-      const token = authHeader.substring(7);
-      const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+      userToken = authHeader.substring(7);
+      const { data: { user }, error: authError } = await supabase.auth.getUser(userToken);
       
       if (authError || !user) {
-        console.error('[Chat Sessions API] ❌ Erreur auth:', authError);
+        console.error('[Chat Session API] ❌ Erreur auth:', authError);
         return NextResponse.json(
           { error: 'Token invalide ou expiré' },
           { status: 401 }
@@ -312,82 +315,89 @@ export async function PATCH(
       }
       userId = user.id;
     } else {
-      // Utilisateur de test pour le développement
-      userId = '00000000-0000-0000-0000-000000000001';
-    }
-
-    // Vérifier que la session appartient à l'utilisateur
-    const { data: existingSession, error: fetchError } = await supabase
-      .from('chat_sessions')
-      .select('id, user_id, thread')
-      .eq('id', sessionId)
-      .single();
-
-    if (fetchError || !existingSession) {
-      console.error('[Chat Sessions API] ❌ Session non trouvée:', fetchError);
       return NextResponse.json(
-        { error: 'Session non trouvée' },
-        { status: 404 }
+        { error: 'Authentification requise' },
+        { status: 401 }
       );
     }
 
-    if (existingSession.user_id !== userId) {
-      console.error('[Chat Sessions API] ❌ Accès non autorisé');
-      return NextResponse.json(
-        { error: 'Accès non autorisé' },
-        { status: 403 }
-      );
-    }
+    const sessionId = id;
+    const body = await request.json();
+    const validatedData = updateSessionSchema.parse(body);
 
-    // Préparer les données de mise à jour
-    const updateData: Record<string, unknown> = {
-      updated_at: new Date().toISOString()
-    };
+    console.log('[Chat Session API] 📋 Données reçues:', validatedData);
 
-    if (history_limit !== undefined) {
-      updateData.history_limit = history_limit;
-      
-      // Appliquer la nouvelle limite au thread existant
-      if (existingSession.thread && existingSession.thread.length > history_limit) {
-        const limitedThread = existingSession.thread.slice(-history_limit);
-        updateData.thread = limitedThread;
-        console.log('[Chat Sessions API] 🔧 Thread limité:', {
-          ancien: existingSession.thread.length,
-          nouveau: limitedThread.length,
-          limite: history_limit
-        });
+    // Créer un client avec le contexte d'authentification de l'utilisateur
+    const userClient = createClient(supabaseUrl, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, {
+      global: {
+        headers: {
+          Authorization: `Bearer ${userToken}`
+        }
       }
-    }
+    });
 
-    // Mettre à jour la session
-    const { data: updatedSession, error: updateError } = await supabase
+    // Vérifier que la session existe et appartient à l'utilisateur
+    const { data: existingSession, error: fetchError } = await userClient
       .from('chat_sessions')
-      .update(updateData)
+      .select('id, name')
       .eq('id', sessionId)
       .eq('user_id', userId)
-      .select()
       .single();
 
-    if (updateError) {
-      console.error('[Chat Sessions API] ❌ Erreur mise à jour:', updateError);
+    if (fetchError) {
+      if (fetchError.code === 'PGRST116') {
+        console.error('[Chat Session API] ❌ Session non trouvée:', sessionId);
+        return NextResponse.json(
+          { error: 'Session non trouvée' },
+          { status: 404 }
+        );
+      }
+      
+      console.error('[Chat Session API] ❌ Erreur récupération session:', fetchError);
       return NextResponse.json(
-        { error: 'Erreur lors de la mise à jour de la session', details: updateError.message },
+        { error: 'Erreur lors de la récupération de la session' },
         { status: 500 }
       );
     }
 
-    console.log('[Chat Sessions API] ✅ Session mise à jour:', sessionId);
+    // Mettre à jour le nom de la session
+    const { data: updatedSession, error: updateError } = await userClient
+      .from('chat_sessions')
+      .update({ 
+        name: validatedData.name,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', sessionId)
+      .select()
+      .single();
+
+    if (updateError) {
+      console.error('[Chat Session API] ❌ Erreur mise à jour session:', updateError);
+      return NextResponse.json(
+        { error: 'Erreur lors de la mise à jour de la session' },
+        { status: 500 }
+      );
+    }
+
+    console.log('[Chat Session API] ✅ Session renommée avec succès');
 
     return NextResponse.json({
       success: true,
-      data: updatedSession,
-      message: 'Session mise à jour avec succès'
+      data: updatedSession
     });
 
   } catch (error) {
-    console.error('[Chat Sessions API] ❌ Erreur:', error);
+    if (error instanceof z.ZodError) {
+      console.error('[Chat Session API] ❌ Erreur validation:', error.errors);
+      return NextResponse.json(
+        { error: 'Données invalides', details: error.errors },
+        { status: 400 }
+      );
+    }
+
+    console.error('[Chat Session API] ❌ Erreur serveur:', error);
     return NextResponse.json(
-      { error: 'Erreur interne du serveur', details: error instanceof Error ? error.message : 'Unknown error' },
+      { error: 'Erreur serveur interne' },
       { status: 500 }
     );
   }

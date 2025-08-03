@@ -1,8 +1,9 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useChatStore, type ChatSession } from '../../store/useChatStore';
 import { chatPollingService } from '@/services/chatPollingService';
+import RenameInput from '../RenameInput';
 import './ChatSidebar.css';
 
 interface ChatSidebarProps {
@@ -11,6 +12,8 @@ interface ChatSidebarProps {
 }
 
 const ChatSidebar: React.FC<ChatSidebarProps> = ({ isOpen, onClose }) => {
+  const [renamingSessionId, setRenamingSessionId] = useState<string | null>(null);
+  
   const {
     sessions,
     currentSession,
@@ -51,6 +54,72 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({ isOpen, onClose }) => {
     console.log('[ChatSidebar] ⏳ Création session en DB...');
     await createSession();
     console.log('[ChatSidebar] ✅ Session créée en DB');
+  };
+
+  const handleStartRename = (sessionId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setRenamingSessionId(sessionId);
+  };
+
+  const handleRenameSession = async (sessionId: string, newName: string) => {
+    if (!newName.trim()) return;
+    
+    // Mise à jour optimiste immédiate
+    const { setSessions } = useChatStore.getState();
+    const currentSessions = useChatStore.getState().sessions;
+    const updatedSessions = currentSessions.map(s => 
+      s.id === sessionId ? { ...s, name: newName.trim() } : s
+    );
+    setSessions(updatedSessions);
+    console.log('[ChatSidebar] ✅ Nom de session mis à jour immédiatement');
+    
+    // Mise à jour en DB (en arrière-plan)
+    try {
+      // Récupérer le token d'authentification
+      const { supabase } = await import('@/supabaseClient');
+      const { data: { session } } = await supabase.auth.getSession();
+      const accessToken = session?.access_token;
+      
+      if (!accessToken) {
+        throw new Error('Token d\'authentification manquant');
+      }
+      
+      const response = await fetch(`/api/v1/chat-sessions/${sessionId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({ name: newName.trim() }),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Erreur lors du renommage');
+      }
+      
+      console.log('[ChatSidebar] ✅ Session renommée en DB');
+      
+      // Déclencher un polling après renommage
+      await chatPollingService.triggerPolling('renommage session');
+    } catch (error) {
+      console.error('[ChatSidebar] ❌ Erreur renommage:', error);
+      // Revenir à l'ancien nom en cas d'erreur
+      const { setSessions } = useChatStore.getState();
+      const currentSessions = useChatStore.getState().sessions;
+      const session = currentSessions.find(s => s.id === sessionId);
+      if (session) {
+        const updatedSessions = currentSessions.map(s => 
+          s.id === sessionId ? { ...s, name: session.name } : s
+        );
+        setSessions(updatedSessions);
+      }
+    } finally {
+      setRenamingSessionId(null);
+    }
+  };
+
+  const handleCancelRename = () => {
+    setRenamingSessionId(null);
   };
 
   const handleDeleteSession = async (sessionId: string, e: React.MouseEvent) => {
@@ -186,7 +255,21 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({ isOpen, onClose }) => {
               >
                 <div className="chat-sidebar-item-content">
                   <div className="chat-sidebar-item-title">
-                    {session.name}
+                    {renamingSessionId === session.id ? (
+                      <RenameInput
+                        initialValue={session.name}
+                        onSubmit={(newName) => handleRenameSession(session.id, newName)}
+                        onCancel={handleCancelRename}
+                        autoFocus={true}
+                      />
+                    ) : (
+                      <span 
+                        onDoubleClick={(e) => handleStartRename(session.id, e)}
+                        style={{ cursor: 'pointer' }}
+                      >
+                        {session.name}
+                      </span>
+                    )}
                   </div>
                   <div className="chat-sidebar-item-preview">
                     {getLastMessage(session)}
