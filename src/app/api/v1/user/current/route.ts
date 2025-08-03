@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
     // Récupérer l'utilisateur depuis la table users
     const { data: user, error } = await supabase
       .from('users')
-      .select('id, username, email, created_at')
+      .select('id, username, email, name, surname, profile_picture, created_at')
       .eq('id', userId)
       .single();
 
@@ -58,7 +58,10 @@ export async function GET(request: NextRequest) {
             {
               id: userId,
               username: 'User',
-              email: 'user@example.com'
+              email: 'user@example.com',
+              name: null,
+              surname: null,
+              profile_picture: null
             }
           ])
           .select()
