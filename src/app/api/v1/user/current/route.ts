@@ -30,6 +30,7 @@ async function getAuthenticatedClient(req: NextRequest) {
     }
     
     userId = user.id;
+    const userEmail = user.email; // Récupérer l'email depuis l'auth
     
     // Récupérer les informations d'authentification
     const { data: { session }, error: sessionError } = await supabase.auth.getSession();
@@ -45,7 +46,7 @@ async function getAuthenticatedClient(req: NextRequest) {
       }
     }
     
-    return { supabase, userId, authProvider };
+    return { supabase, userId, authProvider, userEmail };
   } else {
     throw new Error('Authentification requise');
   }
@@ -53,7 +54,7 @@ async function getAuthenticatedClient(req: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    const { supabase, userId, authProvider } = await getAuthenticatedClient(request);
+    const { supabase, userId, authProvider, userEmail } = await getAuthenticatedClient(request);
     
     // Récupérer l'utilisateur depuis la table users
     const { data: user, error } = await supabase
@@ -73,7 +74,7 @@ export async function GET(request: NextRequest) {
             {
               id: userId,
               username: 'User',
-              email: 'user@example.com',
+              email: userEmail || 'user@example.com', // Utiliser l'email de l'auth
               name: null,
               surname: null,
               profile_picture: null,
@@ -94,15 +95,26 @@ export async function GET(request: NextRequest) {
       return new Response(JSON.stringify({ error: 'User not found' }), { status: 404 });
     }
 
-    // Mettre à jour le provider d'authentification si différent
+    // Mettre à jour le provider d'authentification et l'email si différents
+    const updates: Record<string, unknown> = {};
+    
     if (user.auth_provider !== authProvider) {
+      updates.auth_provider = authProvider;
+    }
+    
+    if (userEmail && user.email !== userEmail) {
+      updates.email = userEmail;
+    }
+    
+    if (Object.keys(updates).length > 0) {
       const { error: updateError } = await supabase
         .from('users')
-        .update({ auth_provider: authProvider })
+        .update(updates)
         .eq('id', userId);
       
       if (!updateError) {
-        user.auth_provider = authProvider;
+        // Mettre à jour l'objet user pour la réponse
+        Object.assign(user, updates);
       }
     }
 
