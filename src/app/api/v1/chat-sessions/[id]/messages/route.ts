@@ -80,7 +80,7 @@ export async function POST(
       throw new Error('NEXT_PUBLIC_SUPABASE_ANON_KEY manquante');
     }
     
-    const userClient = createClient(supabaseUrl, anonKey, {
+    const userClient = createClient(supabaseUrl, anonKey as string, {
       global: {
         headers: {
           Authorization: `Bearer ${userToken}`
@@ -199,7 +199,7 @@ export async function GET(
       throw new Error('NEXT_PUBLIC_SUPABASE_ANON_KEY manquante');
     }
     
-    const userClient = createClient(supabaseUrl, anonKey, {
+    const userClient = createClient(supabaseUrl, anonKey as string, {
       global: {
         headers: {
           Authorization: `Bearer ${userToken}`
