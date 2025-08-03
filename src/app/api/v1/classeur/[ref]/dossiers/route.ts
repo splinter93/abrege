@@ -64,15 +64,15 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ ref:
       .eq('classeur_id', classeurId)
       .order('position');
     if (error) {
-      return new Response(JSON.stringify({ error: error.message }), { status: 500 });
+      return new Response(JSON.stringify({ error: error.message }), { status: 500, headers: { "Content-Type": "application/json" } });
     }
-    return new Response(JSON.stringify({ dossiers: data }), { status: 200 });
+    return new Response(JSON.stringify({ dossiers: data }), { status: 200, headers: { "Content-Type": "application/json" } });
   } catch (err: unknown) {
     const error = err as Error;
     if (error.message === 'Token invalide ou expiré' || error.message === 'Authentification requise') {
-      return new Response(JSON.stringify({ error: error.message }), { status: 401 });
+      return new Response(JSON.stringify({ error: error.message }), { status: 401, headers: { "Content-Type": "application/json" } });
     }
-    return new Response(JSON.stringify({ error: error.message }), { status: 500 });
+    return new Response(JSON.stringify({ error: error.message }), { status: 500, headers: { "Content-Type": "application/json" } });
   }
 }
 

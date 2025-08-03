@@ -54,13 +54,15 @@ type Note = {
   classeur_id: string;
 };
 
-function buildFolderTree(folders: Folder[], notes: Note[], parentId: string): Array<{
+type FolderTreeItem = {
   id: string;
   name: string;
   parent_id: string | null;
   notes: Array<{ id: string; title: string; header_image: string | null; created_at: string }>;
-  children: any[];
-}> {
+  children: FolderTreeItem[];
+};
+
+function buildFolderTree(folders: Folder[], notes: Note[], parentId: string): FolderTreeItem[] {
   return folders
     .filter((folder: Folder) => folder.parent_id === parentId)
     .map((folder: Folder) => ({
@@ -77,7 +79,7 @@ function buildFolderTree(folders: Folder[], notes: Note[], parentId: string): Ar
     }));
 }
 
-export async function GET(req: NextRequest, { params }: any): Promise<Response> {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ ref: string }> }): Promise<Response> {
   const { ref } = await params;
   try {
     // Validation de la ref
@@ -100,7 +102,7 @@ export async function GET(req: NextRequest, { params }: any): Promise<Response> 
       .eq('id', folderId)
       .single();
     if (folderError || !rootFolder) {
-      return new Response(JSON.stringify({ error: folderError?.message || 'Dossier non trouvé.' }), { status: 404 });
+      return new Response(JSON.stringify({ error: folderError?.message || 'Dossier non trouvé.' }), { status: 404, headers: { "Content-Type": "application/json" } });
     }
     // Récupérer tous les dossiers du même classeur
     const { data: folders, error: foldersError } = await supabase
@@ -108,7 +110,7 @@ export async function GET(req: NextRequest, { params }: any): Promise<Response> 
       .select('id, name, parent_id, classeur_id')
       .eq('classeur_id', rootFolder.classeur_id);
     if (foldersError) {
-      return new Response(JSON.stringify({ error: foldersError.message }), { status: 500 });
+      return new Response(JSON.stringify({ error: foldersError.message }), { status: 500, headers: { "Content-Type": "application/json" } });
     }
     // Récupérer toutes les notes du même classeur
     const folderIds = (folders || []).map(f => f.id);
@@ -119,7 +121,7 @@ export async function GET(req: NextRequest, { params }: any): Promise<Response> 
         folderIds.length > 0 ? `folder_id.in.(${folderIds.join(',')})` : '',
       ].filter(Boolean).join(','));
     if (notesError) {
-      return new Response(JSON.stringify({ error: notesError.message }), { status: 500 });
+      return new Response(JSON.stringify({ error: notesError.message }), { status: 500, headers: { "Content-Type": "application/json" } });
     }
     // Arbre de dossiers imbriqués à partir du dossier racine
     const foldersTree = buildFolderTree(folders || [], notes || [], folderId);
@@ -143,9 +145,9 @@ export async function GET(req: NextRequest, { params }: any): Promise<Response> 
   } catch (err: unknown) {
     const error = err as Error;
     if (error.message === 'Token invalide ou expiré' || error.message === 'Authentification requise') {
-      return new Response(JSON.stringify({ error: error.message }), { status: 401 });
+      return new Response(JSON.stringify({ error: error.message }), { status: 401, headers: { "Content-Type": "application/json" } });
     }
-    return new Response(JSON.stringify({ error: error.message }), { status: 500 });
+    return new Response(JSON.stringify({ error: error.message }), { status: 500, headers: { "Content-Type": "application/json" } });
   }
 }
 

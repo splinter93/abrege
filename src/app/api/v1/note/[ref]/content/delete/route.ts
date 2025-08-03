@@ -76,13 +76,13 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ r
     const noteId = await resolveNoteRef(ref, userId);
     
     if (!noteId) {
-      return new Response(JSON.stringify({ error: 'Note non trouvée.' }), { status: 404 });
+      return new Response(JSON.stringify({ error: 'Note non trouvée.' }), { status: 404, headers: { "Content-Type": "application/json" } });
     }
 
     // Vérifier que le fichier existe avant de le supprimer
     const fileExists = await s3Service.fileExists(fileKey);
     if (!fileExists) {
-      return new Response(JSON.stringify({ error: 'Fichier non trouvé.' }), { status: 404 });
+      return new Response(JSON.stringify({ error: 'Fichier non trouvé.' }), { status: 404, headers: { "Content-Type": "application/json" } });
     }
 
     // Supprimer le fichier
@@ -91,7 +91,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ r
     return new Response(JSON.stringify({ 
       success: true,
       message: 'Fichier supprimé avec succès'
-    }), { status: 200 });
+    }), { status: 200, headers: { "Content-Type": "application/json" } });
     
   } catch (err: unknown) {
     const error = err as Error;
@@ -102,21 +102,21 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ r
       return new Response(JSON.stringify({ 
         error: 'Configuration serveur invalide',
         code: 'S3_CONFIG_ERROR'
-      }), { status: 500 });
+      }), { status: 500, headers: { "Content-Type": "application/json" } });
     }
     
     if (err instanceof Error && error.message.includes('Access Denied')) {
       return new Response(JSON.stringify({ 
         error: 'Accès refusé au fichier',
         code: 'ACCESS_DENIED'
-      }), { status: 403 });
+      }), { status: 403, headers: { "Content-Type": "application/json" } });
     }
     
     // Erreur générique
     return new Response(JSON.stringify({ 
       error: 'Erreur lors de la suppression du fichier',
       code: 'DELETE_ERROR'
-    }), { status: 500 });
+    }), { status: 500, headers: { "Content-Type": "application/json" } });
   }
 }
 

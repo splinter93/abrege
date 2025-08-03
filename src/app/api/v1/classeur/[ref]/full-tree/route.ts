@@ -61,7 +61,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ ref:
       .eq('id', classeurId)
       .single();
     if (classeurError || !classeur) {
-      return new Response(JSON.stringify({ error: classeurError?.message || 'Classeur non trouvé.' }), { status: 404 });
+      return new Response(JSON.stringify({ error: classeurError?.message || 'Classeur non trouvé.' }), { status: 404, headers: { "Content-Type": "application/json" } });
     }
     // Récupérer tous les dossiers du classeur
     const { data: folders, error: foldersError } = await supabase
@@ -69,7 +69,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ ref:
       .select('id, name, parent_id, classeur_id')
       .eq('classeur_id', classeurId);
     if (foldersError) {
-      return new Response(JSON.stringify({ error: foldersError.message }), { status: 500 });
+      return new Response(JSON.stringify({ error: foldersError.message }), { status: 500, headers: { "Content-Type": "application/json" } });
     }
     // Récupérer toutes les notes du classeur
     const { data: notes, error: notesError } = await supabase
@@ -77,7 +77,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ ref:
       .select('id, source_title, header_image, created_at, folder_id, classeur_id')
       .eq('classeur_id', classeurId);
     if (notesError) {
-      return new Response(JSON.stringify({ error: notesError.message }), { status: 500 });
+      return new Response(JSON.stringify({ error: notesError.message }), { status: 500, headers: { "Content-Type": "application/json" } });
     }
     // Notes à la racine (folder_id null)
     const notes_at_root = (notes || [])
@@ -101,9 +101,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ ref:
   } catch (err: unknown) {
     const error = err as Error;
     if (error.message === 'Token invalide ou expiré' || error.message === 'Authentification requise') {
-      return new Response(JSON.stringify({ error: error.message }), { status: 401 });
+      return new Response(JSON.stringify({ error: error.message }), { status: 401, headers: { "Content-Type": "application/json" } });
     }
-    return new Response(JSON.stringify({ error: error.message }), { status: 500 });
+    return new Response(JSON.stringify({ error: error.message }), { status: 500, headers: { "Content-Type": "application/json" } });
   }
 }
 

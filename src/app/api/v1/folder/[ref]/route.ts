@@ -44,7 +44,7 @@ async function getAuthenticatedClient(req: NextRequest) {
  * Récupère un dossier par ID ou slug
  * Réponse : { folder: { id, name, classeur_id, parent_id, ... } }
  */
-export async function GET(req: NextRequest, { params }: any): Promise<Response> {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ ref: string }> }): Promise<Response> {
   try {
     const { ref } = await params;
     const schema = z.object({ ref: z.string().min(1, 'folder_ref requis') });
@@ -65,15 +65,15 @@ export async function GET(req: NextRequest, { params }: any): Promise<Response> 
       .eq('id', folderId)
       .single();
     if (error || !folder) {
-      return new Response(JSON.stringify({ error: error?.message || 'Dossier non trouvé.' }), { status: 404 });
+      return new Response(JSON.stringify({ error: error?.message || 'Dossier non trouvé.' }), { status: 404, headers: { "Content-Type": "application/json" } });
     }
-    return new Response(JSON.stringify({ folder }), { status: 200 });
+    return new Response(JSON.stringify({ folder }), { status: 200, headers: { "Content-Type": "application/json" } });
   } catch (err: unknown) {
     const error = err as Error;
     if (error.message === 'Token invalide ou expiré' || error.message === 'Authentification requise') {
-      return new Response(JSON.stringify({ error: error.message }), { status: 401 });
+      return new Response(JSON.stringify({ error: error.message }), { status: 401, headers: { "Content-Type": "application/json" } });
     }
-    return new Response(JSON.stringify({ error: error.message }), { status: 500 });
+    return new Response(JSON.stringify({ error: error.message }), { status: 500, headers: { "Content-Type": "application/json" } });
   }
 }
 
@@ -82,7 +82,7 @@ export async function GET(req: NextRequest, { params }: any): Promise<Response> 
  * Met à jour un dossier par ID ou slug
  * Réponse : { folder: { id, name, ... } }
  */
-export async function PUT(req: NextRequest, { params }: any): Promise<Response> {
+export async function PUT(req: NextRequest, { params }: { params: Promise<{ ref: string }> }): Promise<Response> {
   try {
     const { ref } = await params;
     const body = await req.json();
@@ -114,7 +114,7 @@ export async function PUT(req: NextRequest, { params }: any): Promise<Response> 
       .single();
     
     if (fetchError || !existingFolder) {
-      return new Response(JSON.stringify({ error: 'Dossier non trouvé.' }), { status: 404 });
+      return new Response(JSON.stringify({ error: 'Dossier non trouvé.' }), { status: 404, headers: { "Content-Type": "application/json" } });
     }
     
     // Mettre à jour le dossier (pas d'updated_at dans la table folders)
@@ -139,16 +139,16 @@ export async function PUT(req: NextRequest, { params }: any): Promise<Response> 
       .single();
     
     if (error) {
-      return new Response(JSON.stringify({ error: error.message }), { status: 500 });
+      return new Response(JSON.stringify({ error: error.message }), { status: 500, headers: { "Content-Type": "application/json" } });
     }
     
-    return new Response(JSON.stringify({ folder: updatedFolder }), { status: 200 });
+    return new Response(JSON.stringify({ folder: updatedFolder }), { status: 200, headers: { "Content-Type": "application/json" } });
   } catch (err: unknown) {
     const error = err as Error;
     if (error.message === 'Token invalide ou expiré' || error.message === 'Authentification requise') {
-      return new Response(JSON.stringify({ error: error.message }), { status: 401 });
+      return new Response(JSON.stringify({ error: error.message }), { status: 401, headers: { "Content-Type": "application/json" } });
     }
-    return new Response(JSON.stringify({ error: error.message }), { status: 500 });
+    return new Response(JSON.stringify({ error: error.message }), { status: 500, headers: { "Content-Type": "application/json" } });
   }
 }
 
@@ -157,7 +157,7 @@ export async function PUT(req: NextRequest, { params }: any): Promise<Response> 
  * Supprime un dossier par ID ou slug
  * Réponse : { success: true }
  */
-export async function DELETE(req: NextRequest, { params }: any): Promise<Response> {
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ ref: string }> }): Promise<Response> {
   try {
     const { ref } = await params;
     const schema = z.object({ ref: z.string().min(1, 'folder_ref requis') });
@@ -181,7 +181,7 @@ export async function DELETE(req: NextRequest, { params }: any): Promise<Respons
       .single();
     
     if (fetchError || !existingFolder) {
-      return new Response(JSON.stringify({ error: 'Dossier non trouvé.' }), { status: 404 });
+      return new Response(JSON.stringify({ error: 'Dossier non trouvé.' }), { status: 404, headers: { "Content-Type": "application/json" } });
     }
     
     // Supprimer le dossier
@@ -191,15 +191,15 @@ export async function DELETE(req: NextRequest, { params }: any): Promise<Respons
       .eq('id', folderId);
     
     if (error) {
-      return new Response(JSON.stringify({ error: error.message }), { status: 500 });
+      return new Response(JSON.stringify({ error: error.message }), { status: 500, headers: { "Content-Type": "application/json" } });
     }
     
-    return new Response(JSON.stringify({ success: true }), { status: 200 });
+    return new Response(JSON.stringify({ success: true }), { status: 200, headers: { "Content-Type": "application/json" } });
   } catch (err: unknown) {
     const error = err as Error;
     if (error.message === 'Token invalide ou expiré' || error.message === 'Authentification requise') {
-      return new Response(JSON.stringify({ error: error.message }), { status: 401 });
+      return new Response(JSON.stringify({ error: error.message }), { status: 401, headers: { "Content-Type": "application/json" } });
     }
-    return new Response(JSON.stringify({ error: error.message }), { status: 500 });
+    return new Response(JSON.stringify({ error: error.message }), { status: 500, headers: { "Content-Type": "application/json" } });
   }
 } 

@@ -194,15 +194,15 @@ export async function POST(request: NextRequest): Promise<Response> {
     
     if (error) {
       console.error("[Note Create API] ❌ Erreur création note:", error);
-      return new Response(JSON.stringify({ error: error.message }), { status: 500 });
+      return new Response(JSON.stringify({ error: error.message }), { status: 500, headers: { "Content-Type": "application/json" } });
     }
     
     console.log("[Note Create API] ✅ Note créée:", note.id);
     
-    return new Response(JSON.stringify({ note }), { status: 201 });
+    return new Response(JSON.stringify({ note }), { status: 201, headers: { "Content-Type": "application/json" } });
   } catch (err: unknown) {
     const error = err as Error;
     console.error("[Note Create API] ❌ Erreur:", error);
-    return new Response(JSON.stringify({ error: error.message }), { status: 500 });
+    return new Response(JSON.stringify({ error: error.message }), { status: 500, headers: { "Content-Type": "application/json" } });
   }
 } 

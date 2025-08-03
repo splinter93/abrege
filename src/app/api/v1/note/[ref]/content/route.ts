@@ -67,12 +67,12 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ ref:
       .eq('id', noteId)
       .single();
     if (error || !note) {
-      return new Response(JSON.stringify({ error: error?.message || 'Note non trouvée.' }), { status: 404 });
+      return new Response(JSON.stringify({ error: error?.message || 'Note non trouvée.' }), { status: 404, headers: { "Content-Type": "application/json" } });
     }
-    return new Response(JSON.stringify({ content: note.markdown_content || '' }), { status: 200 });
+    return new Response(JSON.stringify({ content: note.markdown_content || '' }), { status: 200, headers: { "Content-Type": "application/json" } });
   } catch (err: unknown) {
     const error = err as Error;
-    return new Response(JSON.stringify({ error: err instanceof Error ? error.message : 'Erreur inconnue' }), { status: 500 });
+    return new Response(JSON.stringify({ error: err instanceof Error ? error.message : 'Erreur inconnue' }), { status: 500, headers: { "Content-Type": "application/json" } });
   }
 }
 
@@ -118,7 +118,7 @@ export async function POST(req: NextRequest): Promise<Response> {
       url: result.url,
       publicUrl: result.publicUrl,
       key: result.key 
-    }), { status: 200 });
+    }), { status: 200, headers: { "Content-Type": "application/json" } });
     
   } catch (err: unknown) {
     const error = err as Error;
@@ -129,28 +129,28 @@ export async function POST(req: NextRequest): Promise<Response> {
       return new Response(JSON.stringify({ 
         error: 'Configuration serveur invalide',
         code: 'S3_CONFIG_ERROR'
-      }), { status: 500 });
+      }), { status: 500, headers: { "Content-Type": "application/json" } });
     }
     
     if (err instanceof Error && error.message.includes('Type de fichier non supporté')) {
       return new Response(JSON.stringify({ 
         error: error.message,
         code: 'INVALID_FILE_TYPE'
-      }), { status: 400 });
+      }), { status: 400, headers: { "Content-Type": "application/json" } });
     }
     
     if (err instanceof Error && error.message.includes('Fichier trop volumineux')) {
       return new Response(JSON.stringify({ 
         error: error.message,
         code: 'FILE_TOO_LARGE'
-      }), { status: 400 });
+      }), { status: 400, headers: { "Content-Type": "application/json" } });
     }
     
     // Erreur générique
     return new Response(JSON.stringify({ 
       error: 'Erreur lors de la génération de l\'URL d\'upload',
       code: 'UPLOAD_ERROR'
-    }), { status: 500 });
+    }), { status: 500, headers: { "Content-Type": "application/json" } });
   }
 }
 

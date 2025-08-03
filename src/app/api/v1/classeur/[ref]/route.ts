@@ -134,7 +134,7 @@ export async function PUT(
   } catch (err: unknown) {
     const error = err as Error;
     if (error.message === 'Token invalide ou expiré' || error.message === 'Authentification requise') {
-      return NextResponse.json({ error: error.message }, { status: 401 });
+      return NextResponse.json({ error: error.message }, { status: 401, headers: { "Content-Type": "application/json" } });
     }
     console.error('[API] ❌ Erreur serveur mise à jour classeur:', error);
     return NextResponse.json(
@@ -189,7 +189,7 @@ export async function DELETE(
   } catch (err: unknown) {
     const error = err as Error;
     if (error.message === 'Token invalide ou expiré' || error.message === 'Authentification requise') {
-      return NextResponse.json({ error: error.message }, { status: 401 });
+      return NextResponse.json({ error: error.message }, { status: 401, headers: { "Content-Type": "application/json" } });
     }
     console.error('[API] ❌ Erreur serveur suppression classeur:', error);
     return NextResponse.json(

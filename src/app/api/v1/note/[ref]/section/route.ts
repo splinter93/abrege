@@ -87,18 +87,18 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ ref:
       .eq('id', noteId)
       .single();
     if (error || !note) {
-      return new Response(JSON.stringify({ error: error?.message || 'Note non trouvée.' }), { status: 404 });
+      return new Response(JSON.stringify({ error: error?.message || 'Note non trouvée.' }), { status: 404, headers: { "Content-Type": "application/json" } });
     }
     let content = '';
     try {
       content = extractSectionContent(note.markdown_content || '', section!);
     } catch (e: unknown) {
-      return new Response(JSON.stringify({ error: e instanceof Error ? e.message : 'Erreur inconnue' }), { status: 404 });
+      return new Response(JSON.stringify({ error: e instanceof Error ? e.message : 'Erreur inconnue' }), { status: 404, headers: { "Content-Type": "application/json" } });
     }
-    return new Response(JSON.stringify({ section, content }), { status: 200 });
+    return new Response(JSON.stringify({ section, content }), { status: 200, headers: { "Content-Type": "application/json" } });
   } catch (err: unknown) {
     const error = err as Error;
-    return new Response(JSON.stringify({ error: err instanceof Error ? error.message : 'Erreur inconnue' }), { status: 500 });
+    return new Response(JSON.stringify({ error: err instanceof Error ? error.message : 'Erreur inconnue' }), { status: 500, headers: { "Content-Type": "application/json" } });
   }
 }
 

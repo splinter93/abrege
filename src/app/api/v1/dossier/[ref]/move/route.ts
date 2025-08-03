@@ -117,7 +117,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ re
     if (resolvedParentId !== undefined) updates.parent_id = resolvedParentId;
     if ('position' in body) updates.position = body.position;
     if (Object.keys(updates).length === 0) {
-      return new Response(JSON.stringify({ error: 'Aucun champ à mettre à jour.' }), { status: 400 });
+      return new Response(JSON.stringify({ error: 'Aucun champ à mettre à jour.' }), { status: 400, headers: { "Content-Type": "application/json" } });
     }
     // --- Déplacement du dossier parent ---
     const { data: updated, error } = await supabase
@@ -127,7 +127,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ re
       .select()
       .single();
     if (error) {
-      return new Response(JSON.stringify({ error: error.message }), { status: 500 });
+      return new Response(JSON.stringify({ error: error.message }), { status: 500, headers: { "Content-Type": "application/json" } });
     }
     if (!updated) {
       return new Response(JSON.stringify({ error: 'Aucun dossier mis à jour (slug/id incorrect ?)' }), { status: 404 });
@@ -140,7 +140,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ re
         .select('id, parent_id')
         .eq('user_id', userId);
       if (fetchFoldersError) {
-        return new Response(JSON.stringify({ error: 'Erreur lors de la récupération des sous-dossiers.' }), { status: 500 });
+        return new Response(JSON.stringify({ error: 'Erreur lors de la récupération des sous-dossiers.' }), { status: 500, headers: { "Content-Type": "application/json" } });
       }
       // Fonction récursive pour trouver tous les descendants
       function getDescendantFolderIds(parentId: string, folders: { id: string; parent_id: string | null }[]): string[] {
@@ -156,7 +156,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ re
           .update({ classeur_id: resolvedClasseurId })
           .in('id', descendantIds);
         if (updateSubfoldersError) {
-          return new Response(JSON.stringify({ error: 'Erreur lors de la mise à jour des sous-dossiers.' }), { status: 500 });
+          return new Response(JSON.stringify({ error: 'Erreur lors de la mise à jour des sous-dossiers.' }), { status: 500, headers: { "Content-Type": "application/json" } });
         }
       }
       // 3. Update classeur_id sur toutes les notes de ces dossiers
@@ -165,13 +165,13 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ re
         .update({ classeur_id: resolvedClasseurId })
         .in('folder_id', allToUpdate);
       if (updateNotesError) {
-        return new Response(JSON.stringify({ error: 'Erreur lors de la mise à jour des notes du dossier.' }), { status: 500 });
+        return new Response(JSON.stringify({ error: 'Erreur lors de la mise à jour des notes du dossier.' }), { status: 500, headers: { "Content-Type": "application/json" } });
       }
     }
-    return new Response(JSON.stringify({ folder: updated }), { status: 200 });
+    return new Response(JSON.stringify({ folder: updated }), { status: 200, headers: { "Content-Type": "application/json" } });
   } catch (err: unknown) {
     const error = err as Error;
     console.error('[moveDossier] PATCH error:', err);
-    return new Response(JSON.stringify({ error: err instanceof Error ? error.message : 'Erreur inconnue' }), { status: 500 });
+    return new Response(JSON.stringify({ error: err instanceof Error ? error.message : 'Erreur inconnue' }), { status: 500, headers: { "Content-Type": "application/json" } });
   }
 } 

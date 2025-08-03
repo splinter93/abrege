@@ -11,7 +11,7 @@ const supabase = createClient(supabaseUrl, supabaseAnonKey);
  * Récupère une note publique par username et slug, si isPublished = true
  * Réponse : { note: { source_title, html_content, header_image, created_at, updated_at } }
  */
-export async function GET(req: NextRequest, { params }: any): Promise<Response> {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ username: string; slug: string }> }): Promise<Response> {
   try {
     const schema = z.object({
       username: z.string().min(1, 'username requis'),
@@ -33,7 +33,7 @@ export async function GET(req: NextRequest, { params }: any): Promise<Response> 
       .eq('username', username)
       .single();
     if (userError || !user) {
-      return new Response(JSON.stringify({ error: 'Utilisateur non trouvé.' }), { status: 404 });
+      return new Response(JSON.stringify({ error: 'Utilisateur non trouvé.' }), { status: 404, headers: { "Content-Type": "application/json" } });
     }
 
     // Chercher la note par slug et user_id, ispublished = true
@@ -45,12 +45,12 @@ export async function GET(req: NextRequest, { params }: any): Promise<Response> 
       .eq('ispublished', true)
       .single();
     if (noteError || !note) {
-      return new Response(JSON.stringify({ error: 'Note non trouvée ou non publiée.' }), { status: 404 });
+      return new Response(JSON.stringify({ error: 'Note non trouvée ou non publiée.' }), { status: 404, headers: { "Content-Type": "application/json" } });
     }
 
-    return new Response(JSON.stringify({ note }), { status: 200 });
+    return new Response(JSON.stringify({ note }), { status: 200, headers: { "Content-Type": "application/json" } });
   } catch (err: unknown) {
     const error = err as Error;
-    return new Response(JSON.stringify({ error: error.message }), { status: 500 });
+    return new Response(JSON.stringify({ error: error.message }), { status: 500, headers: { "Content-Type": "application/json" } });
   }
 } 

@@ -56,15 +56,15 @@ export async function GET(req: NextRequest): Promise<Response> {
       .eq('user_id', userId)
       .order('position');
     if (error) {
-      return new Response(JSON.stringify({ error: error.message }), { status: 500 });
+      return new Response(JSON.stringify({ error: error.message }), { status: 500, headers: { "Content-Type": "application/json" } });
     }
-    return new Response(JSON.stringify({ notebooks: data }), { status: 200 });
+    return new Response(JSON.stringify({ notebooks: data }), { status: 200, headers: { "Content-Type": "application/json" } });
   } catch (err: unknown) {
     const error = err as Error;
     if (err instanceof Error && (error.message === 'Token invalide ou expiré' || error.message === 'Authentification requise')) {
-      return new Response(JSON.stringify({ error: error.message }), { status: 401 });
+      return new Response(JSON.stringify({ error: error.message }), { status: 401, headers: { "Content-Type": "application/json" } });
     }
-    return new Response(JSON.stringify({ error: err instanceof Error ? error.message : 'Erreur inconnue' }), { status: 500 });
+    return new Response(JSON.stringify({ error: err instanceof Error ? error.message : 'Erreur inconnue' }), { status: 500, headers: { "Content-Type": "application/json" } });
   }
 }
 

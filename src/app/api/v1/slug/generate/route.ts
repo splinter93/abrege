@@ -21,9 +21,9 @@ export async function POST(req: Request): Promise<Response> {
     const { title, type, userId } = parseResult.data;
     const slug = await SlugGenerator.generateSlug(title, type, userId);
     
-    return new Response(JSON.stringify({ slug }), { status: 200 });
+    return new Response(JSON.stringify({ slug }), { status: 200, headers: { "Content-Type": "application/json" } });
   } catch (err: unknown) {
     const error = err as Error;
-    return new Response(JSON.stringify({ error: error.message }), { status: 500 });
+    return new Response(JSON.stringify({ error: error.message }), { status: 500, headers: { "Content-Type": "application/json" } });
   }
 } 

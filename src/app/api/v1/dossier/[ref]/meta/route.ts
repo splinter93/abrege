@@ -62,7 +62,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ re
     try {
       body = await req.json();
     } catch {
-      return new Response(JSON.stringify({ error: 'Body JSON invalide' }), { status: 400 });
+      return new Response(JSON.stringify({ error: 'Body JSON invalide' }), { status: 400, headers: { "Content-Type": "application/json" } });
     }
     const bodySchema = z.object({
       name: z.string().min(1, 'Le nom du dossier est requis'),
@@ -85,7 +85,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ re
       .eq('id', folderId)
       .single();
     if (folderError || !folder) {
-      return new Response(JSON.stringify({ error: folderError?.message || 'Dossier non trouvé.' }), { status: 404 });
+      return new Response(JSON.stringify({ error: folderError?.message || 'Dossier non trouvé.' }), { status: 404, headers: { "Content-Type": "application/json" } });
     }
     // Mettre à jour le nom et le slug si besoin
     // Récupérer l'ancien nom pour comparer
@@ -106,14 +106,14 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ re
       .select('id, name, parent_id, classeur_id')
       .single();
     if (updateError) {
-      return new Response(JSON.stringify({ error: updateError.message }), { status: 500 });
+      return new Response(JSON.stringify({ error: updateError.message }), { status: 500, headers: { "Content-Type": "application/json" } });
     }
-    return new Response(JSON.stringify(updated), { status: 200 });
+    return new Response(JSON.stringify(updated), { status: 200, headers: { "Content-Type": "application/json" } });
   } catch (err: unknown) {
     const error = err as Error;
     if (error.message === 'Token invalide ou expiré' || error.message === 'Authentification requise') {
-      return new Response(JSON.stringify({ error: error.message }), { status: 401 });
+      return new Response(JSON.stringify({ error: error.message }), { status: 401, headers: { "Content-Type": "application/json" } });
     }
-    return new Response(JSON.stringify({ error: error.message }), { status: 500 });
+    return new Response(JSON.stringify({ error: error.message }), { status: 500, headers: { "Content-Type": "application/json" } });
   }
 } 

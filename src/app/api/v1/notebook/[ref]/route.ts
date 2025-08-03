@@ -44,7 +44,7 @@ async function getAuthenticatedClient(req: NextRequest) {
  * Récupère un classeur par ID ou slug
  * Réponse : { notebook: { id, name, emoji, ... } }
  */
-export async function GET(req: NextRequest, { params }: any): Promise<Response> {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ ref: string }> }): Promise<Response> {
   try {
     const { ref } = await params;
     const schema = z.object({ ref: z.string().min(1, 'notebook_ref requis') });
@@ -65,15 +65,15 @@ export async function GET(req: NextRequest, { params }: any): Promise<Response> 
       .eq('id', classeurId)
       .single();
     if (error || !notebook) {
-      return new Response(JSON.stringify({ error: error?.message || 'Classeur non trouvé.' }), { status: 404 });
+      return new Response(JSON.stringify({ error: error?.message || 'Classeur non trouvé.' }), { status: 404, headers: { "Content-Type": "application/json" } });
     }
-    return new Response(JSON.stringify({ notebook }), { status: 200 });
+    return new Response(JSON.stringify({ notebook }), { status: 200, headers: { "Content-Type": "application/json" } });
   } catch (err: unknown) {
     const error = err as Error;
     if (error.message === 'Token invalide ou expiré' || error.message === 'Authentification requise') {
-      return new Response(JSON.stringify({ error: error.message }), { status: 401 });
+      return new Response(JSON.stringify({ error: error.message }), { status: 401, headers: { "Content-Type": "application/json" } });
     }
-    return new Response(JSON.stringify({ error: error.message }), { status: 500 });
+    return new Response(JSON.stringify({ error: error.message }), { status: 500, headers: { "Content-Type": "application/json" } });
   }
 }
 
@@ -82,7 +82,7 @@ export async function GET(req: NextRequest, { params }: any): Promise<Response> 
  * Met à jour un classeur par ID ou slug
  * Réponse : { notebook: { id, name, emoji, ... } }
  */
-export async function PUT(req: NextRequest, { params }: any): Promise<Response> {
+export async function PUT(req: NextRequest, { params }: { params: Promise<{ ref: string }> }): Promise<Response> {
   try {
     const { ref } = await params;
     const body = await req.json();
@@ -115,7 +115,7 @@ export async function PUT(req: NextRequest, { params }: any): Promise<Response> 
       .single();
     
     if (fetchError || !existingNotebook) {
-      return new Response(JSON.stringify({ error: 'Classeur non trouvé.' }), { status: 404 });
+      return new Response(JSON.stringify({ error: 'Classeur non trouvé.' }), { status: 404, headers: { "Content-Type": "application/json" } });
     }
     // Générer un nouveau slug si le nom change
     const updates: Record<string, unknown> = { name, emoji: emoji || null, updated_at: new Date().toISOString() };
@@ -132,16 +132,16 @@ export async function PUT(req: NextRequest, { params }: any): Promise<Response> 
       .single();
     
     if (error) {
-      return new Response(JSON.stringify({ error: error.message }), { status: 500 });
+      return new Response(JSON.stringify({ error: error.message }), { status: 500, headers: { "Content-Type": "application/json" } });
     }
     
-    return new Response(JSON.stringify({ notebook }), { status: 200 });
+    return new Response(JSON.stringify({ notebook }), { status: 200, headers: { "Content-Type": "application/json" } });
   } catch (err: unknown) {
     const error = err as Error;
     if (error.message === 'Token invalide ou expiré' || error.message === 'Authentification requise') {
-      return new Response(JSON.stringify({ error: error.message }), { status: 401 });
+      return new Response(JSON.stringify({ error: error.message }), { status: 401, headers: { "Content-Type": "application/json" } });
     }
-    return new Response(JSON.stringify({ error: error.message }), { status: 500 });
+    return new Response(JSON.stringify({ error: error.message }), { status: 500, headers: { "Content-Type": "application/json" } });
   }
 }
 
@@ -150,7 +150,7 @@ export async function PUT(req: NextRequest, { params }: any): Promise<Response> 
  * Supprime un classeur par ID ou slug
  * Réponse : { success: true }
  */
-export async function DELETE(req: NextRequest, { params }: any): Promise<Response> {
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ ref: string }> }): Promise<Response> {
   try {
     const { ref } = await params;
     const refSchema = z.string().min(1, 'notebook_ref requis');
@@ -173,7 +173,7 @@ export async function DELETE(req: NextRequest, { params }: any): Promise<Respons
       .eq('user_id', userId)
       .single();
     if (fetchError || !notebook) {
-      return new Response(JSON.stringify({ error: 'Classeur non trouvé.' }), { status: 404 });
+      return new Response(JSON.stringify({ error: 'Classeur non trouvé.' }), { status: 404, headers: { "Content-Type": "application/json" } });
     }
     // Supprimer le classeur
     const { error: deleteError } = await supabase
@@ -181,14 +181,14 @@ export async function DELETE(req: NextRequest, { params }: any): Promise<Respons
       .delete()
       .eq('id', classeurId);
     if (deleteError) {
-      return new Response(JSON.stringify({ error: deleteError.message }), { status: 500 });
+      return new Response(JSON.stringify({ error: deleteError.message }), { status: 500, headers: { "Content-Type": "application/json" } });
     }
-    return new Response(JSON.stringify({ success: true }), { status: 200 });
+    return new Response(JSON.stringify({ success: true }), { status: 200, headers: { "Content-Type": "application/json" } });
   } catch (err: unknown) {
     const error = err as Error;
     if (error.message === 'Token invalide ou expiré' || error.message === 'Authentification requise') {
-      return new Response(JSON.stringify({ error: error.message }), { status: 401 });
+      return new Response(JSON.stringify({ error: error.message }), { status: 401, headers: { "Content-Type": "application/json" } });
     }
-    return new Response(JSON.stringify({ error: error.message }), { status: 500 });
+    return new Response(JSON.stringify({ error: error.message }), { status: 500, headers: { "Content-Type": "application/json" } });
   }
 } 

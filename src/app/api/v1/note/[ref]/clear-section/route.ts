@@ -48,7 +48,7 @@ async function getAuthenticatedClient(req: NextRequest) {
  * Body: { section: string }
  * Réponse : { note: { id, markdown_content, ... } }
  */
-export async function PATCH(req: NextRequest, { params }: any): Promise<Response> {
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ ref: string }> }): Promise<Response> {
   try {
     const { ref } = await params;
     const body = await req.json();
@@ -104,7 +104,7 @@ export async function PATCH(req: NextRequest, { params }: any): Promise<Response
       .single();
     
     if (fetchError || !note) {
-      return new Response(JSON.stringify({ error: 'Note non trouvée.' }), { status: 404 });
+      return new Response(JSON.stringify({ error: 'Note non trouvée.' }), { status: 404, headers: { "Content-Type": "application/json" } });
     }
     
     // Debug: afficher les sections disponibles
@@ -145,7 +145,7 @@ export async function PATCH(req: NextRequest, { params }: any): Promise<Response
     
     if (error) {
       console.error('❌ Erreur mise à jour note:', error);
-      return new Response(JSON.stringify({ error: error.message }), { status: 500 });
+      return new Response(JSON.stringify({ error: error.message }), { status: 500, headers: { "Content-Type": "application/json" } });
     }
     
     // Mettre à jour l'insight avec la nouvelle TOC
@@ -158,13 +158,13 @@ export async function PATCH(req: NextRequest, { params }: any): Promise<Response
     }
     
     console.log(`✅ Section "${targetSection}" effacée`);
-    return new Response(JSON.stringify({ note: updatedNote }), { status: 200 });
+    return new Response(JSON.stringify({ note: updatedNote }), { status: 200, headers: { "Content-Type": "application/json" } });
   
   } catch (err: unknown) {
     const error = err as Error;
     if (error.message === 'Token invalide ou expiré' || error.message === 'Authentification requise') {
-      return new Response(JSON.stringify({ error: error.message }), { status: 401 });
+      return new Response(JSON.stringify({ error: error.message }), { status: 401, headers: { "Content-Type": "application/json" } });
     }
-    return new Response(JSON.stringify({ error: error.message }), { status: 500 });
+    return new Response(JSON.stringify({ error: error.message }), { status: 500, headers: { "Content-Type": "application/json" } });
   }
   }

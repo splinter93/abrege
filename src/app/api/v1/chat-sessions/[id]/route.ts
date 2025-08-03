@@ -340,7 +340,7 @@ export async function PATCH(
     }
 
     // Préparer les données de mise à jour
-    const updateData: any = {
+    const updateData: Record<string, unknown> = {
       updated_at: new Date().toISOString()
     };
 
@@ -349,10 +349,11 @@ export async function PATCH(
       
       // Appliquer la nouvelle limite au thread existant
       if (existingSession.thread && existingSession.thread.length > history_limit) {
-        updateData.thread = existingSession.thread.slice(-history_limit);
+        const limitedThread = existingSession.thread.slice(-history_limit);
+        updateData.thread = limitedThread;
         console.log('[Chat Sessions API] 🔧 Thread limité:', {
           ancien: existingSession.thread.length,
-          nouveau: updateData.thread.length,
+          nouveau: limitedThread.length,
           limite: history_limit
         });
       }

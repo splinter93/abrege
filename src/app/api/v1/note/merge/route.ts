@@ -73,7 +73,7 @@ export async function POST(req: NextRequest): Promise<Response> {
       .single();
     
     if (sourceError || !sourceNote) {
-      return new Response(JSON.stringify({ error: 'Note source non trouvée.' }), { status: 404 });
+      return new Response(JSON.stringify({ error: 'Note source non trouvée.' }), { status: 404, headers: { "Content-Type": "application/json" } });
     }
     
     const { data: targetNote, error: targetError } = await supabase
@@ -84,7 +84,7 @@ export async function POST(req: NextRequest): Promise<Response> {
       .single();
     
     if (targetError || !targetNote) {
-      return new Response(JSON.stringify({ error: 'Note cible non trouvée.' }), { status: 404 });
+      return new Response(JSON.stringify({ error: 'Note cible non trouvée.' }), { status: 404, headers: { "Content-Type": "application/json" } });
     }
     
     // Fusionner le contenu
@@ -104,7 +104,7 @@ export async function POST(req: NextRequest): Promise<Response> {
       .single();
     
     if (updateError) {
-      return new Response(JSON.stringify({ error: updateError.message }), { status: 500 });
+      return new Response(JSON.stringify({ error: updateError.message }), { status: 500, headers: { "Content-Type": "application/json" } });
     }
     
     // Supprimer la note source
@@ -121,13 +121,13 @@ export async function POST(req: NextRequest): Promise<Response> {
     return new Response(JSON.stringify({ 
       success: true, 
       mergedNote 
-    }), { status: 200 });
+    }), { status: 200, headers: { "Content-Type": "application/json" } });
   
   } catch (err: unknown) {
     const error = err as Error;
     if (error.message === 'Token invalide ou expiré' || error.message === 'Authentification requise') {
-      return new Response(JSON.stringify({ error: error.message }), { status: 401 });
+      return new Response(JSON.stringify({ error: error.message }), { status: 401, headers: { "Content-Type": "application/json" } });
     }
-    return new Response(JSON.stringify({ error: error.message }), { status: 500 });
+    return new Response(JSON.stringify({ error: error.message }), { status: 500, headers: { "Content-Type": "application/json" } });
   }
 } 

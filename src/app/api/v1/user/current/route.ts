@@ -86,13 +86,13 @@ export async function GET(request: NextRequest) {
 
         if (createError) {
           console.error('Create user error:', createError);
-          return new Response(JSON.stringify({ error: 'Failed to create user' }), { status: 500 });
+          return new Response(JSON.stringify({ error: 'Failed to create user' }), { status: 500, headers: { "Content-Type": "application/json" } });
         }
 
-        return new Response(JSON.stringify(newUser), { status: 200 });
+        return new Response(JSON.stringify(newUser), { status: 200, headers: { "Content-Type": "application/json" } });
       }
 
-      return new Response(JSON.stringify({ error: 'User not found' }), { status: 404 });
+      return new Response(JSON.stringify({ error: 'User not found' }), { status: 404, headers: { "Content-Type": "application/json" } });
     }
 
     // Mettre à jour le provider d'authentification et l'email si différents
@@ -118,14 +118,14 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    return new Response(JSON.stringify(user), { status: 200 });
+    return new Response(JSON.stringify(user), { status: 200, headers: { "Content-Type": "application/json" } });
   } catch (err: unknown) {
     const error = err as Error;
     if (error.message === 'Token invalide ou expiré' || error.message === 'Authentification requise') {
-      return new Response(JSON.stringify({ error: error.message }), { status: 401 });
+      return new Response(JSON.stringify({ error: error.message }), { status: 401, headers: { "Content-Type": "application/json" } });
     }
     
     console.error('Unexpected error:', error);
-    return new Response(JSON.stringify({ error: 'Internal server error' }), { status: 500 });
+    return new Response(JSON.stringify({ error: 'Internal server error' }), { status: 500, headers: { "Content-Type": "application/json" } });
   }
 } 

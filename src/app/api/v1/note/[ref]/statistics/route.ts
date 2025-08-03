@@ -46,7 +46,7 @@ async function getAuthenticatedClient(req: NextRequest) {
  * Récupère les statistiques détaillées d'une note
  * Réponse : { id, title, word_count, char_count, section_count, toc, ... }
  */
-export async function GET(req: NextRequest, { params }: any): Promise<Response> {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ ref: string }> }): Promise<Response> {
   try {
     const { ref } = await params;
     const schema = z.object({ ref: z.string().min(1, 'note_ref requis') });
@@ -71,7 +71,7 @@ export async function GET(req: NextRequest, { params }: any): Promise<Response> 
       .eq('id', noteId)
       .single();
     if (error || !note) {
-      return new Response(JSON.stringify({ error: error?.message || 'Note non trouvée.' }), { status: 404 });
+      return new Response(JSON.stringify({ error: error?.message || 'Note non trouvée.' }), { status: 404, headers: { "Content-Type": "application/json" } });
     }
     const markdown = note.markdown_content || '';
     const toc = extractTOCWithSlugs(markdown);
@@ -96,8 +96,8 @@ export async function GET(req: NextRequest, { params }: any): Promise<Response> 
   } catch (err: unknown) {
     const error = err as Error;
     if (error.message === 'Token invalide ou expiré' || error.message === 'Authentification requise') {
-      return new Response(JSON.stringify({ error: error.message }), { status: 401 });
+      return new Response(JSON.stringify({ error: error.message }), { status: 401, headers: { "Content-Type": "application/json" } });
     }
-    return new Response(JSON.stringify({ error: error.message }), { status: 500 });
+    return new Response(JSON.stringify({ error: error.message }), { status: 500, headers: { "Content-Type": "application/json" } });
   }
   }

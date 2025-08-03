@@ -129,15 +129,15 @@ export async function POST(request: NextRequest): Promise<Response> {
     
     if (error) {
       console.error("[Folder Create API] ❌ Erreur création dossier:", error);
-      return new Response(JSON.stringify({ error: error.message }), { status: 500 });
+      return new Response(JSON.stringify({ error: error.message }), { status: 500, headers: { "Content-Type": "application/json" } });
     }
     
     console.log("[Folder Create API] ✅ Dossier créé:", folder.id);
     
-    return new Response(JSON.stringify({ folder }), { status: 201 });
+    return new Response(JSON.stringify({ folder }), { status: 201, headers: { "Content-Type": "application/json" } });
   } catch (err: unknown) {
     const error = err as Error;
     console.error("[Folder Create API] ❌ Erreur:", err);
-    return new Response(JSON.stringify({ error: error.message }), { status: 500 });
+    return new Response(JSON.stringify({ error: error.message }), { status: 500, headers: { "Content-Type": "application/json" } });
   }
 } 

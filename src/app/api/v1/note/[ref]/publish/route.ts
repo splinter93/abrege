@@ -65,7 +65,7 @@ export async function POST(req: NextRequest, { params }: ApiContext): Promise<Re
 
     const noteId = await resolveNoteRef(ref, userId);
     if (!noteId) {
-      return new Response(JSON.stringify({ error: 'Note non trouvée.' }), { status: 404 });
+      return new Response(JSON.stringify({ error: 'Note non trouvée.' }), { status: 404, headers: { "Content-Type": "application/json" } });
     }
 
     // Mettre à jour ispublished et public_url
@@ -77,7 +77,7 @@ export async function POST(req: NextRequest, { params }: ApiContext): Promise<Re
         .eq('id', userId)
         .single();
       if (userError || !user?.username) {
-        return new Response(JSON.stringify({ error: 'Utilisateur ou username introuvable.' }), { status: 500 });
+        return new Response(JSON.stringify({ error: 'Utilisateur ou username introuvable.' }), { status: 500, headers: { "Content-Type": "application/json" } });
       }
       url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/@${user.username}/id/${noteId}`;
     }
@@ -94,15 +94,15 @@ export async function POST(req: NextRequest, { params }: ApiContext): Promise<Re
       .single();
       
     if (error || !updated) {
-      return new Response(JSON.stringify({ error: error?.message || 'Erreur lors de la mise à jour.' }), { status: 500 });
+      return new Response(JSON.stringify({ error: error?.message || 'Erreur lors de la mise à jour.' }), { status: 500, headers: { "Content-Type": "application/json" } });
     }
     
-    return new Response(JSON.stringify({ success: true, url: updated.public_url }), { status: 200 });
+    return new Response(JSON.stringify({ success: true, url: updated.public_url }), { status: 200, headers: { "Content-Type": "application/json" } });
   } catch (err: unknown) {
     const error = err as Error;
     if (error.message === 'Token invalide ou expiré' || error.message === 'Authentification requise') {
-      return new Response(JSON.stringify({ error: error.message }), { status: 401 });
+      return new Response(JSON.stringify({ error: error.message }), { status: 401, headers: { "Content-Type": "application/json" } });
     }
-    return new Response(JSON.stringify({ error: error.message }), { status: 500 });
+    return new Response(JSON.stringify({ error: error.message }), { status: 500, headers: { "Content-Type": "application/json" } });
   }
 } 
