@@ -51,7 +51,7 @@ export default function HomePage() {
         
         if (sessionError || !session) {
           console.error('No session found:', sessionError);
-          setUsername('User');
+          setUsername('User.');
           return;
         }
 
@@ -65,15 +65,20 @@ export default function HomePage() {
         
         if (response.ok) {
           const userData = await response.json();
-          setUsername(userData.username || 'User');
+          // Formater le username : première lettre en majuscule + point à la fin
+          const formattedUsername = (userData.username || 'User')
+            .charAt(0).toUpperCase() + 
+            (userData.username || 'User').slice(1) + 
+            '.';
+          setUsername(formattedUsername);
           console.log('User data received:', userData);
         } else {
           console.error('Error response:', response.status);
-          setUsername('User');
+          setUsername('User.');
         }
       } catch (error) {
         console.error('Error fetching user:', error);
-        setUsername('User');
+        setUsername('User.');
       }
     };
 
