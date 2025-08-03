@@ -565,10 +565,13 @@ export class OptimizedApi {
     const startTime = Date.now();
     
     try {
+      // Récupérer les headers d'authentification
+      const headers = await this.getAuthHeaders();
+      
       // Appel API
       const response = await fetch(`/api/v1/classeur/${classeurId}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify(updateData)
       });
 
