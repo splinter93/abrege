@@ -25,7 +25,6 @@ export function useStreamingChat(options: UseStreamingChatOptions) {
       // Sauvegarder le message complet
       if (streamingText.trim()) {
         addMessage({
-          id: `assistant-${Date.now()}`,
           role: 'assistant',
           content: streamingText,
           timestamp: new Date().toISOString()
@@ -46,7 +45,6 @@ export function useStreamingChat(options: UseStreamingChatOptions) {
 
     // Ajouter le message utilisateur
     const userMessage = {
-      id: `user-${Date.now()}`,
       role: 'user' as const,
       content: message,
       timestamp: new Date().toISOString()
@@ -119,7 +117,6 @@ export function useStreamingChat(options: UseStreamingChatOptions) {
       
       // Ajouter un message d'erreur
       await addMessage({
-        id: `assistant-${Date.now()}`,
         role: 'assistant',
         content: 'Désolé, une erreur est survenue lors du traitement de votre message.',
         timestamp: new Date().toISOString()
