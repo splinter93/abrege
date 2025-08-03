@@ -31,7 +31,7 @@ export async function DELETE(
     logApi('v2_folder_delete', `❌ Authentification échouée: ${authResult.error}`, context);
     return NextResponse.json(
       { error: authResult.error },
-      { status: authResult.status || 401 }
+      { status: authResult.status || 401, headers: { "Content-Type": "application/json" } }
     );
   }
 
@@ -42,7 +42,7 @@ export async function DELETE(
   if (!resolveResult.success) {
     return NextResponse.json(
       { error: resolveResult.error },
-      { status: resolveResult.status }
+      { status: resolveResult.status, headers: { "Content-Type": "application/json" } }
     );
   }
 
@@ -54,14 +54,14 @@ export async function DELETE(
     logApi('v2_folder_delete', `❌ Erreur vérification permissions: ${permissionResult.error}`, context);
     return NextResponse.json(
       { error: permissionResult.error },
-      { status: permissionResult.status || 500 }
+      { status: permissionResult.status || 500, headers: { "Content-Type": "application/json" } }
     );
   }
   if (!permissionResult.hasPermission) {
     logApi('v2_folder_delete', `❌ Permissions insuffisantes pour dossier ${folderId}`, context);
     return NextResponse.json(
       { error: 'Permissions insuffisantes pour supprimer ce dossier' },
-      { status: 403 }
+      { status: 403, headers: { "Content-Type": "application/json" } }
     );
   }
 
@@ -77,7 +77,7 @@ export async function DELETE(
       logApi('v2_folder_delete', `❌ Dossier non trouvé: ${folderId}`, context);
       return NextResponse.json(
         { error: 'Dossier non trouvé' },
-        { status: 404 }
+        { status: 404, headers: { "Content-Type": "application/json" } }
       );
     }
 
@@ -91,7 +91,7 @@ export async function DELETE(
       logApi('v2_folder_delete', `❌ Erreur vérification sous-dossiers: ${subfoldersError.message}`, context);
       return NextResponse.json(
         { error: 'Erreur lors de la vérification' },
-        { status: 500 }
+        { status: 500, headers: { "Content-Type": "application/json" } }
       );
     }
 
@@ -99,7 +99,7 @@ export async function DELETE(
       logApi('v2_folder_delete', `❌ Dossier contient des sous-dossiers: ${subfolders.length}`, context);
       return NextResponse.json(
         { error: 'Impossible de supprimer un dossier contenant des sous-dossiers' },
-        { status: 400 }
+        { status: 400, headers: { "Content-Type": "application/json" } }
       );
     }
 
@@ -113,7 +113,7 @@ export async function DELETE(
       logApi('v2_folder_delete', `❌ Erreur vérification notes: ${notesError.message}`, context);
       return NextResponse.json(
         { error: 'Erreur lors de la vérification' },
-        { status: 500 }
+        { status: 500, headers: { "Content-Type": "application/json" } }
       );
     }
 
@@ -121,7 +121,7 @@ export async function DELETE(
       logApi('v2_folder_delete', `❌ Dossier contient des notes: ${notes.length}`, context);
       return NextResponse.json(
         { error: 'Impossible de supprimer un dossier contenant des notes' },
-        { status: 400 }
+        { status: 400, headers: { "Content-Type": "application/json" } }
       );
     }
 
@@ -135,7 +135,7 @@ export async function DELETE(
       logApi('v2_folder_delete', `❌ Erreur suppression: ${deleteError.message}`, context);
       return NextResponse.json(
         { error: 'Erreur lors de la suppression' },
-        { status: 500 }
+        { status: 500, headers: { "Content-Type": "application/json" } }
       );
     }
 
@@ -149,14 +149,14 @@ export async function DELETE(
       success: true,
       message: 'Dossier supprimé avec succès',
       folderId
-    });
+    }, { headers: { "Content-Type": "application/json" } });
 
   } catch (err: unknown) {
     const error = err as Error;
     logApi('v2_folder_delete', `❌ Erreur serveur: ${error}`, context);
     return NextResponse.json(
       { error: 'Erreur serveur' },
-      { status: 500 }
+      { status: 500, headers: { "Content-Type": "application/json" } }
     );
   }
 } 

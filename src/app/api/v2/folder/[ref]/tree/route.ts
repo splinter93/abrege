@@ -30,7 +30,7 @@ export async function GET(
     logApi('v2_folder_tree', `❌ Authentification échouée: ${authResult.error}`, context);
     return NextResponse.json(
       { error: authResult.error },
-      { status: authResult.status || 401 }
+      { status: authResult.status || 401, headers: { "Content-Type": "application/json" } }
     );
   }
 
@@ -41,7 +41,7 @@ export async function GET(
   if (!resolveResult.success) {
     return NextResponse.json(
       { error: resolveResult.error },
-      { status: resolveResult.status }
+      { status: resolveResult.status, headers: { "Content-Type": "application/json" } }
     );
   }
 
@@ -53,14 +53,14 @@ export async function GET(
     logApi('v2_folder_tree', `❌ Erreur vérification permissions: ${permissionResult.error}`, context);
     return NextResponse.json(
       { error: permissionResult.error },
-      { status: permissionResult.status || 500 }
+      { status: permissionResult.status || 500, headers: { "Content-Type": "application/json" } }
     );
   }
   if (!permissionResult.hasPermission) {
     logApi('v2_folder_tree', `❌ Permissions insuffisantes pour dossier ${folderId}`, context);
     return NextResponse.json(
       { error: 'Permissions insuffisantes pour accéder à ce dossier' },
-      { status: 403 }
+      { status: 403, headers: { "Content-Type": "application/json" } }
     );
   }
 
@@ -76,7 +76,7 @@ export async function GET(
       logApi('v2_folder_tree', `❌ Dossier non trouvé: ${folderId}`, context);
       return NextResponse.json(
         { error: 'Dossier non trouvé' },
-        { status: 404 }
+        { status: 404, headers: { "Content-Type": "application/json" } }
       );
     }
 
@@ -91,7 +91,7 @@ export async function GET(
       logApi('v2_folder_tree', `❌ Erreur récupération sous-dossiers: ${subfoldersError.message}`, context);
       return NextResponse.json(
         { error: 'Erreur lors de la récupération des sous-dossiers' },
-        { status: 500 }
+        { status: 500, headers: { "Content-Type": "application/json" } }
       );
     }
 
@@ -106,7 +106,7 @@ export async function GET(
       logApi('v2_folder_tree', `❌ Erreur récupération notes: ${notesError.message}`, context);
       return NextResponse.json(
         { error: 'Erreur lors de la récupération des notes' },
-        { status: 500 }
+        { status: 500, headers: { "Content-Type": "application/json" } }
       );
     }
 
@@ -142,14 +142,14 @@ export async function GET(
           updatedAt: note.updated_at
         })) || []
       }
-    });
+    }, { headers: { "Content-Type": "application/json" } });
 
   } catch (err: unknown) {
     const error = err as Error;
     logApi('v2_folder_tree', `❌ Erreur serveur: ${error}`, context);
     return NextResponse.json(
       { error: 'Erreur serveur' },
-      { status: 500 }
+      { status: 500, headers: { "Content-Type": "application/json" } }
     );
   }
 } 
