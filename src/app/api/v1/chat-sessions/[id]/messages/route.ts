@@ -2,9 +2,22 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const supabase = createClient(supabaseUrl, supabaseKey);
+// Configuration Supabase
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+console.log('[Chat Messages API] 🔧 Configuration:', {
+  supabaseUrl: supabaseUrl ? '✅ Configuré' : '❌ Manquant',
+  supabaseKey: supabaseKey ? '✅ Configuré' : '❌ Manquant'
+});
+
+if (!supabaseUrl || !supabaseKey) {
+  console.error('[Chat Messages API] ❌ Variables d\'environnement Supabase manquantes');
+  throw new Error('Configuration Supabase manquante');
+}
+
+// Client avec service role pour les opérations admin
+const supabaseAdmin = createClient(supabaseUrl, supabaseKey);
 
 // Schéma de validation pour ajouter un message
 const addMessageSchema = z.object({
@@ -25,11 +38,12 @@ export async function POST(
     // Récupérer l'utilisateur depuis l'en-tête d'autorisation
     const authHeader = request.headers.get('authorization');
     let userId: string;
+    let userToken: string;
 
     if (authHeader && authHeader.startsWith('Bearer ')) {
       // Token JWT fourni
-      const token = authHeader.substring(7);
-      const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+      userToken = authHeader.substring(7);
+      const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(userToken);
       
       if (authError || !user) {
         console.error('[Chat Messages API] ❌ Erreur auth:', authError);
@@ -40,8 +54,10 @@ export async function POST(
       }
       userId = user.id;
     } else {
-      // Utilisateur de test pour le développement
-      userId = '00000000-0000-0000-0000-000000000001';
+      return NextResponse.json(
+        { error: 'Authentification requise' },
+        { status: 401 }
+      );
     }
 
     const sessionId = id;
@@ -58,12 +74,25 @@ export async function POST(
       timestamp: validatedData.timestamp
     };
 
-    // Récupérer la session actuelle
-    const { data: currentSession, error: fetchError } = await supabase
+    // Créer un client avec le contexte d'authentification de l'utilisateur
+    const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    if (!anonKey) {
+      throw new Error('NEXT_PUBLIC_SUPABASE_ANON_KEY manquante');
+    }
+    
+    const userClient = createClient(supabaseUrl, anonKey, {
+      global: {
+        headers: {
+          Authorization: `Bearer ${userToken}`
+        }
+      }
+    });
+
+    // Récupérer la session actuelle avec le contexte utilisateur
+    const { data: currentSession, error: fetchError } = await userClient
       .from('chat_sessions')
       .select('thread, history_limit')
       .eq('id', sessionId)
-      .eq('user_id', userId)
       .single();
 
     if (fetchError) {
@@ -98,14 +127,13 @@ export async function POST(
     });
 
     // Mettre à jour la session avec le nouveau thread limité
-    const { data: updatedSession, error: updateError } = await supabase
+    const { data: updatedSession, error: updateError } = await userClient
       .from('chat_sessions')
       .update({ 
         thread: limitedThread,
         updated_at: new Date().toISOString()
       })
       .eq('id', sessionId)
-      .eq('user_id', userId)
       .select()
       .single();
 
@@ -152,24 +180,40 @@ export async function GET(
   try {
     const { id } = await context.params;
     
-    // Récupérer l'utilisateur authentifié
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    
-    if (authError || !user) {
+    // Récupérer l'utilisateur depuis l'en-tête d'autorisation
+    const authHeader = request.headers.get('authorization');
+    let userToken: string;
+
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      userToken = authHeader.substring(7);
+    } else {
       return NextResponse.json(
-        { success: false, error: 'Non authentifié' },
+        { error: 'Authentification requise' },
         { status: 401 }
       );
     }
 
+    // Créer un client avec le contexte d'authentification de l'utilisateur
+    const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    if (!anonKey) {
+      throw new Error('NEXT_PUBLIC_SUPABASE_ANON_KEY manquante');
+    }
+    
+    const userClient = createClient(supabaseUrl, anonKey, {
+      global: {
+        headers: {
+          Authorization: `Bearer ${userToken}`
+        }
+      }
+    });
+
     const sessionId = id;
 
     // Récupérer la session avec son thread
-    const { data: session, error } = await supabase
+    const { data: session, error } = await userClient
       .from('chat_sessions')
       .select('thread')
       .eq('id', sessionId)
-      .eq('user_id', user.id)
       .single();
 
     if (error) {
