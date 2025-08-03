@@ -45,7 +45,6 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const schema = z.object({
       name: z.string().min(1, 'Nom requis'),
-      description: z.string().optional(),
       icon: z.string().optional(),
       position: z.number().optional()
     });
@@ -58,7 +57,7 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    const { name, description, icon, position } = parseResult.data;
+    const { name, icon, position } = parseResult.data;
     
     // Générer un slug unique
     const slug = await SlugGenerator.generateSlug(name, 'classeur', userId);
@@ -68,7 +67,6 @@ export async function POST(request: NextRequest) {
       .from('classeurs')
       .insert({
         name,
-        description: description || null,
         emoji: icon || '📁',
         position: position || 0,
         user_id: userId,
