@@ -2,6 +2,8 @@
 
 import React, { useRef, useEffect, useState } from 'react';
 import { useChatStore, type ChatMessage } from '../../store/useChatStore';
+import { useSessionSync } from '@/hooks/useSessionSync';
+import { chatPollingService } from '@/services/chatPollingService';
 import ChatInput from './ChatInput';
 import EnhancedMarkdownMessage from './EnhancedMarkdownMessage';
 import ChatKebabMenu from './ChatKebabMenu';
@@ -20,12 +22,13 @@ const ChatFullscreen: React.FC = () => {
     loading,
     error,
     setCurrentSession,
-    addMessage,
     setError,
     setLoading,
-    createSession,
-    loadSessions
+    syncSessions
   } = useChatStore();
+
+  // Hook pour synchroniser les sessions
+  const { syncSessions: syncSessionsFromHook, createSession, addMessage } = useSessionSync();
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -39,8 +42,17 @@ const ChatFullscreen: React.FC = () => {
   }, [currentSession?.thread]);
 
   useEffect(() => {
-    loadSessions();
-  }, []);
+    syncSessionsFromHook();
+  }, [syncSessionsFromHook]);
+
+  // S'assurer que la session la plus récente est sélectionnée au chargement
+  useEffect(() => {
+    if (sessions.length > 0 && !currentSession) {
+      // Les sessions sont déjà triées par updated_at DESC dans le store
+      setCurrentSession(sessions[0]);
+      console.log('[Chat Fullscreen] ✅ Session la plus récente sélectionnée:', sessions[0].name);
+    }
+  }, [sessions, currentSession, setCurrentSession]);
 
   // Réessayer d'envoyer le message en attente après création de session
   useEffect(() => {
@@ -67,8 +79,46 @@ const ChatFullscreen: React.FC = () => {
       timestamp: new Date().toISOString()
     };
 
-    // Ajouter le message utilisateur
+    // Ajouter le message utilisateur IMMÉDIATEMENT dans l'UI
+    const { setCurrentSession } = useChatStore.getState();
+    if (currentSession) {
+      const updatedSession = {
+        ...currentSession,
+        thread: [...currentSession.thread, userMessage]
+      };
+      setCurrentSession(updatedSession);
+      console.log('[ChatFullscreen] ✅ Message utilisateur ajouté immédiatement');
+    }
+
+    // Ajouter le message en DB et attendre qu'il soit sauvegardé
+    console.log('[ChatFullscreen] 🔍 Session ID:', currentSession?.id);
     await addMessage(userMessage);
+    
+    // Attendre un peu que le message soit bien en DB
+    console.log('[ChatFullscreen] ⏳ Attente sauvegarde message...');
+    await new Promise(resolve => setTimeout(resolve, 200));
+    
+    // Recharger les sessions depuis la DB
+    console.log('[ChatFullscreen] 🔄 Rechargement des sessions depuis DB...');
+    console.log('[ChatFullscreen] 📊 Thread avant sync:', currentSession?.thread.length, 'messages');
+    const { syncSessions } = useChatStore.getState();
+    await syncSessions();
+    
+    // Mettre à jour la session courante avec les nouvelles données
+    const store = useChatStore.getState();
+    const updatedSessions = store.sessions;
+    console.log('[ChatFullscreen] 🔍 Session courante ID:', currentSession?.id);
+    console.log('[ChatFullscreen] 🔍 Sessions disponibles:', updatedSessions.map(s => s.id));
+    
+    const updatedCurrentSession = updatedSessions.find(s => s.id === currentSession?.id);
+    if (updatedCurrentSession) {
+      store.setCurrentSession(updatedCurrentSession);
+      console.log('[ChatFullscreen] ✅ Session courante mise à jour');
+    } else {
+      console.log('[ChatFullscreen] ⚠️ Session courante non trouvée dans les sessions mises à jour');
+    }
+    
+    console.log('[ChatFullscreen] 📊 Thread après sync:', useChatStore.getState().currentSession?.thread.length, 'messages');
 
     // Appeler l'API Synesia
     try {
@@ -108,7 +158,25 @@ const ChatFullscreen: React.FC = () => {
         timestamp: new Date().toISOString()
       };
       
+      // Ajouter la réponse LLM IMMÉDIATEMENT dans l'UI
+      const store = useChatStore.getState();
+      const currentSessionFromStore = store.currentSession;
+      if (currentSessionFromStore) {
+        const updatedSession = {
+          ...currentSessionFromStore,
+          thread: [...currentSessionFromStore.thread, assistantMessage]
+        };
+        store.setCurrentSession(updatedSession);
+        console.log('[ChatFullscreen] ✅ Réponse LLM ajoutée immédiatement');
+      }
+      
+      // Ajouter le message en DB (en arrière-plan)
       await addMessage(assistantMessage);
+      
+      // Recharger les sessions depuis la DB
+      console.log('[ChatFullscreen] 🔄 Rechargement des sessions depuis DB...');
+      const { syncSessions } = useChatStore.getState();
+      await syncSessions();
     } catch (error) {
       console.error('Erreur lors de l\'appel à Synesia:', error);
       

@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { useChatStore, type ChatSession } from '../../store/useChatStore';
+import { chatPollingService } from '@/services/chatPollingService';
 import './ChatSidebar.css';
 
 interface ChatSidebarProps {
@@ -19,18 +20,80 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({ isOpen, onClose }) => {
     closeWidget
   } = useChatStore();
 
+  // Debug: afficher le nombre de sessions
+  console.log('[ChatSidebar] 📊 Sessions dans le store:', sessions.length);
+  console.log('[ChatSidebar] 📋 Sessions:', sessions);
+
   const handleSessionClick = (session: ChatSession) => {
     setCurrentSession(session);
   };
 
   const handleNewChat = async () => {
+    // Créer une session temporaire immédiatement
+    const tempSession: ChatSession = {
+      id: `temp-${Date.now()}`,
+      name: 'Nouvelle conversation',
+      thread: [],
+      history_limit: 10,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
+    
+    // Ajouter immédiatement dans l'UI
+    const { setSessions, setCurrentSession } = useChatStore.getState();
+    const currentSessions = useChatStore.getState().sessions;
+    const updatedSessions = [tempSession, ...currentSessions];
+    setSessions(updatedSessions);
+    setCurrentSession(tempSession);
+    console.log('[ChatSidebar] ✅ Nouvelle session ajoutée immédiatement');
+    
+    // Créer la session en DB et attendre
+    console.log('[ChatSidebar] ⏳ Création session en DB...');
     await createSession();
+    console.log('[ChatSidebar] ✅ Session créée en DB');
   };
 
   const handleDeleteSession = async (sessionId: string, e: React.MouseEvent) => {
     e.stopPropagation();
     if (confirm('Êtes-vous sûr de vouloir supprimer cette conversation ?')) {
+      // Vérifier si c'est une session temporaire
+      const isTempSession = sessionId.startsWith('temp-');
+      
+      if (isTempSession) {
+        console.log('[ChatSidebar] ⚠️ Suppression session temporaire, pas de DB');
+        // Supprimer immédiatement de l'UI
+        const { setSessions, setCurrentSession } = useChatStore.getState();
+        const currentSessions = useChatStore.getState().sessions;
+        const updatedSessions = currentSessions.filter(s => s.id !== sessionId);
+        setSessions(updatedSessions);
+        
+        // Si la session supprimée était la session courante, sélectionner la première
+        if (useChatStore.getState().currentSession?.id === sessionId) {
+          setCurrentSession(updatedSessions[0] || null);
+        }
+        
+        console.log('[ChatSidebar] ✅ Session temporaire supprimée');
+        return;
+      }
+      
+      // Supprimer immédiatement de l'UI
+      const { setSessions, setCurrentSession } = useChatStore.getState();
+      const currentSessions = useChatStore.getState().sessions;
+      const updatedSessions = currentSessions.filter(s => s.id !== sessionId);
+      setSessions(updatedSessions);
+      
+      // Si la session supprimée était la session courante, sélectionner la première
+      if (useChatStore.getState().currentSession?.id === sessionId) {
+        setCurrentSession(updatedSessions[0] || null);
+      }
+      
+      console.log('[ChatSidebar] ✅ Session supprimée immédiatement');
+      
+      // Supprimer en DB (en arrière-plan)
       await deleteSession(sessionId);
+      
+      // Déclencher un polling après suppression de session
+      await chatPollingService.triggerPolling('suppression session');
     }
   };
 
@@ -39,13 +102,18 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({ isOpen, onClose }) => {
     const now = new Date();
     const diffTime = Math.abs(now.getTime() - date.getTime());
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    const diffHours = Math.ceil(diffTime / (1000 * 60 * 60));
+    const diffMinutes = Math.ceil(diffTime / (1000 * 60));
     
+    if (diffMinutes < 60) return `Il y a ${diffMinutes} min`;
+    if (diffHours < 24) return `Il y a ${diffHours}h`;
     if (diffDays === 1) return 'Hier';
     if (diffDays === 0) return 'Aujourd\'hui';
     if (diffDays < 7) return `Il y a ${diffDays} jours`;
     return date.toLocaleDateString('fr-FR', { 
       day: 'numeric', 
-      month: 'short' 
+      month: 'short',
+      year: 'numeric'
     });
   };
 
@@ -106,11 +174,15 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({ isOpen, onClose }) => {
               <p>Commencez une nouvelle conversation</p>
             </div>
           ) : (
-            sessions.map((session) => (
+            // Trier les sessions par updated_at (plus récent en premier)
+            sessions
+              .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())
+              .map((session) => (
               <div
                 key={session.id}
-                className={`chat-sidebar-item ${currentSession?.id === session.id ? 'active' : ''}`}
+                className={`chat-sidebar-item ${currentSession?.id === session.id ? 'active' : ''} ${sessions.indexOf(session) === 0 ? 'most-recent' : ''}`}
                 onClick={() => handleSessionClick(session)}
+                title={`${session.name} - ${formatDate(session.updated_at)}`}
               >
                 <div className="chat-sidebar-item-content">
                   <div className="chat-sidebar-item-title">

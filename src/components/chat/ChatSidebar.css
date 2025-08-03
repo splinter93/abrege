@@ -152,6 +152,16 @@
   border-bottom-color: var(--chat-border-color);
 }
 
+.chat-sidebar-item.most-recent {
+  border-left: 3px solid var(--chat-accent-color);
+}
+
+.chat-sidebar-item.most-recent .chat-sidebar-item-title::before {
+  content: "🕒 ";
+  margin-right: 0.25rem;
+  font-size: 0.8rem;
+}
+
 .chat-sidebar-item-content {
   flex: 1;
   min-width: 0;

@@ -202,9 +202,12 @@ export async function GET(request: NextRequest) {
     });
 
     // Récupérer les sessions de l'utilisateur avec le contexte utilisateur
+    console.log('[Chat Sessions API] 🔍 Récupération sessions pour utilisateur:', userId);
+    
     const { data: sessions, error } = await userClient
       .from('chat_sessions')
       .select('*')
+      .eq('user_id', userId)
       .eq('is_active', true)
       .order('updated_at', { ascending: false });
 

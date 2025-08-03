@@ -6,6 +6,7 @@ import type {
   ChatSessionResponse,
   ChatSessionsListResponse 
 } from '@/types/chat';
+import { supabase } from '@/supabaseClient';
 
 /**
  * Service pour gérer les sessions de chat
@@ -35,6 +36,21 @@ export class ChatSessionService {
     search?: string;
   }): Promise<ChatSessionsListResponse> {
     try {
+      console.log('[ChatSessionService] 🔄 getSessions appelé...');
+      
+      // Récupérer le token d'authentification
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      
+      console.log('[ChatSessionService] 🔐 Token trouvé:', token ? 'Oui' : 'Non');
+      
+      if (!token) {
+        console.log('[ChatSessionService] ❌ Pas de token, authentification requise');
+        throw new Error('Authentification requise');
+      }
+
+      console.log('[ChatSessionService] ✅ Token valide, appel API...');
+
       const params = new URLSearchParams();
       if (filters?.is_active !== undefined) {
         params.append('is_active', filters.is_active.toString());
@@ -49,7 +65,12 @@ export class ChatSessionService {
         params.append('search', filters.search);
       }
 
-      const response = await fetch(`${this.baseUrl}?${params.toString()}`);
+      const response = await fetch(`${this.baseUrl}?${params.toString()}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
       const data = await response.json();
 
       if (!response.ok) {
@@ -71,7 +92,20 @@ export class ChatSessionService {
    */
   async getSession(sessionId: string): Promise<ChatSessionResponse> {
     try {
-      const response = await fetch(`${this.baseUrl}/${sessionId}`);
+      // Récupérer le token d'authentification
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      
+      if (!token) {
+        throw new Error('Authentification requise');
+      }
+
+      const response = await fetch(`${this.baseUrl}/${sessionId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
       const data = await response.json();
 
       if (!response.ok) {
@@ -93,9 +127,18 @@ export class ChatSessionService {
    */
   async createSession(data: CreateChatSessionData): Promise<ChatSessionResponse> {
     try {
+      // Récupérer le token d'authentification
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      
+      if (!token) {
+        throw new Error('Authentification requise');
+      }
+
       const response = await fetch(this.baseUrl, {
         method: 'POST',
         headers: {
+          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(data),
@@ -122,9 +165,18 @@ export class ChatSessionService {
    */
   async updateSession(sessionId: string, data: UpdateChatSessionData): Promise<ChatSessionResponse> {
     try {
+      // Récupérer le token d'authentification
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      
+      if (!token) {
+        throw new Error('Authentification requise');
+      }
+
       const response = await fetch(`${this.baseUrl}/${sessionId}`, {
         method: 'PUT',
         headers: {
+          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(data),
@@ -151,8 +203,20 @@ export class ChatSessionService {
    */
   async deleteSession(sessionId: string): Promise<{ success: boolean; error?: string }> {
     try {
+      // Récupérer le token d'authentification
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      
+      if (!token) {
+        throw new Error('Authentification requise');
+      }
+
       const response = await fetch(`${this.baseUrl}/${sessionId}`, {
         method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
       });
 
       const data = await response.json();
@@ -180,9 +244,18 @@ export class ChatSessionService {
     error?: string;
   }> {
     try {
+      // Récupérer le token d'authentification
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      
+      if (!token) {
+        throw new Error('Authentification requise');
+      }
+
       const response = await fetch(`${this.baseUrl}/${sessionId}/messages`, {
         method: 'POST',
         headers: {
+          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(message),
@@ -213,7 +286,20 @@ export class ChatSessionService {
     error?: string;
   }> {
     try {
-      const response = await fetch(`${this.baseUrl}/${sessionId}/messages`);
+      // Récupérer le token d'authentification
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      
+      if (!token) {
+        throw new Error('Authentification requise');
+      }
+
+      const response = await fetch(`${this.baseUrl}/${sessionId}/messages`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
       const data = await response.json();
 
       if (!response.ok) {

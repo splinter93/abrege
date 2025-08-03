@@ -1,0 +1,264 @@
+import { ChatSessionService } from './chatSessionService';
+import type { ChatMessage as ApiChatMessage, ChatSession as ApiChatSession } from '@/types/chat';
+
+// Types pour le store (définis localement pour éviter les imports circulaires)
+interface ChatMessage {
+  id: string;
+  role: 'user' | 'assistant' | 'system';
+  content: string;
+  timestamp: string;
+}
+
+interface ChatSession {
+  id: string;
+  name: string;
+  thread: ChatMessage[];
+  history_limit: number;
+  created_at: string;
+  updated_at: string;
+}
+
+/**
+ * Service de synchronisation entre la DB et le store Zustand
+ * Principe: DB = source de vérité, Store = cache léger
+ */
+export class SessionSyncService {
+  private static instance: SessionSyncService;
+  private chatSessionService: ChatSessionService;
+
+  constructor() {
+    this.chatSessionService = ChatSessionService.getInstance();
+  }
+
+  static getInstance(): SessionSyncService {
+    if (!SessionSyncService.instance) {
+      SessionSyncService.instance = new SessionSyncService();
+    }
+    return SessionSyncService.instance;
+  }
+
+  /**
+   * 🔄 Synchroniser les sessions depuis la DB vers le store
+   * DB → Store (source de vérité → cache)
+   */
+  async syncSessionsFromDB(): Promise<{
+    success: boolean;
+    sessions?: ChatSession[];
+    error?: string;
+  }> {
+    try {
+      console.log('[SessionSync] 🔄 Synchronisation sessions depuis DB...');
+      
+      // 1. Récupérer depuis la DB (source de vérité)
+      const response = await this.chatSessionService.getSessions();
+      
+      if (!response.success || !response.data) {
+        throw new Error(response.error || 'Erreur récupération sessions');
+      }
+
+      // 2. Convertir les sessions pour le store
+      const convertedSessions = response.data.map(convertApiSessionToStore);
+      
+      console.log('[SessionSync] ✅ Sessions converties:', convertedSessions.length);
+      console.log('[SessionSync] ✅ Synchronisation réussie:', response.data.length, 'sessions');
+      console.log('[SessionSync] 📊 Sessions à retourner:', convertedSessions.length);
+      
+      return {
+        success: true,
+        sessions: convertedSessions
+      };
+
+    } catch (error) {
+      console.error('[SessionSync] ❌ Erreur synchronisation:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Erreur inconnue'
+      };
+    }
+  }
+
+  /**
+   * ➕ Créer une session en DB puis synchroniser
+   * DB → Store (création → cache)
+   */
+  async createSessionAndSync(name: string = 'Nouvelle conversation'): Promise<{
+    success: boolean;
+    session?: ChatSession;
+    error?: string;
+  }> {
+    try {
+      console.log('[SessionSync] ➕ Création session en DB...');
+      
+      // 1. Créer en DB (source de vérité)
+      const response = await this.chatSessionService.createSession({
+        name,
+        history_limit: 10
+      });
+      
+      if (!response.success || !response.data) {
+        throw new Error(response.error || 'Erreur création session');
+      }
+
+      // 2. Synchroniser depuis la DB (pour avoir la version à jour)
+      await this.syncSessionsFromDB();
+      
+      console.log('[SessionSync] ✅ Session créée et synchronisée:', response.data.name);
+      
+      return {
+        success: true,
+        session: convertApiSessionToStore(response.data)
+      };
+
+    } catch (error) {
+      console.error('[SessionSync] ❌ Erreur création session:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Erreur inconnue'
+      };
+    }
+  }
+
+  /**
+   * 💬 Ajouter un message en DB puis synchroniser
+   * DB → Store (ajout → cache)
+   */
+  async addMessageAndSync(sessionId: string, message: Omit<ChatMessage, 'id'>): Promise<{
+    success: boolean;
+    error?: string;
+  }> {
+    try {
+      console.log('[SessionSync] 💬 Ajout message en DB...');
+      
+      // 1. Ajouter en DB (source de vérité) avec conversion des types
+      const apiMessage = convertStoreMessageToApi(message);
+      const response = await this.chatSessionService.addMessage(sessionId, apiMessage);
+      
+      if (!response.success) {
+        throw new Error(response.error || 'Erreur ajout message');
+      }
+
+      // 2. Synchroniser depuis la DB (pour avoir la version à jour)
+      await this.syncSessionsFromDB();
+      
+      console.log('[SessionSync] ✅ Message ajouté et synchronisé');
+      
+      return {
+        success: true
+      };
+
+    } catch (error) {
+      console.error('[SessionSync] ❌ Erreur ajout message:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Erreur inconnue'
+      };
+    }
+  }
+
+  /**
+   * 🗑️ Supprimer une session en DB puis synchroniser
+   * DB → Store (suppression → cache)
+   */
+  async deleteSessionAndSync(sessionId: string): Promise<{
+    success: boolean;
+    error?: string;
+  }> {
+    try {
+      console.log('[SessionSync] 🗑️ Suppression session en DB...');
+      
+      // 1. Supprimer en DB (source de vérité)
+      const response = await this.chatSessionService.deleteSession(sessionId);
+      
+      if (!response.success) {
+        throw new Error(response.error || 'Erreur suppression session');
+      }
+
+      // 2. Synchroniser depuis la DB (pour avoir la version à jour)
+      await this.syncSessionsFromDB();
+      
+      console.log('[SessionSync] ✅ Session supprimée et synchronisée');
+      
+      return {
+        success: true
+      };
+
+    } catch (error) {
+      console.error('[SessionSync] ❌ Erreur suppression session:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Erreur inconnue'
+      };
+    }
+  }
+
+  /**
+   * ⚙️ Mettre à jour une session en DB puis synchroniser
+   * DB → Store (mise à jour → cache)
+   */
+  async updateSessionAndSync(sessionId: string, data: {
+    name?: string;
+    history_limit?: number;
+  }): Promise<{
+    success: boolean;
+    session?: ChatSession;
+    error?: string;
+  }> {
+    try {
+      console.log('[SessionSync] ⚙️ Mise à jour session en DB...');
+      
+      // 1. Mettre à jour en DB (source de vérité)
+      const response = await this.chatSessionService.updateSession(sessionId, data);
+      
+      if (!response.success || !response.data) {
+        throw new Error(response.error || 'Erreur mise à jour session');
+      }
+
+      // 2. Synchroniser depuis la DB (pour avoir la version à jour)
+      await this.syncSessionsFromDB();
+      
+      console.log('[SessionSync] ✅ Session mise à jour et synchronisée');
+      
+      return {
+        success: true,
+        session: convertApiSessionToStore(response.data)
+      };
+
+    } catch (error) {
+      console.error('[SessionSync] ❌ Erreur mise à jour session:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Erreur inconnue'
+      };
+    }
+  }
+}
+
+/**
+ * 🔄 Fonction de conversion API → Store
+ * Gère les différences de types (Date vs string pour timestamp)
+ */
+function convertApiSessionToStore(apiSession: ApiChatSession): ChatSession {
+  return {
+    ...apiSession,
+    thread: apiSession.thread.map(apiMessage => ({
+      ...apiMessage,
+      timestamp: apiMessage.timestamp instanceof Date 
+        ? apiMessage.timestamp.toISOString() 
+        : apiMessage.timestamp
+    }))
+  };
+}
+
+/**
+ * 🔄 Fonction de conversion Store → API
+ * Gère les différences de types (string vs Date pour timestamp)
+ */
+function convertStoreMessageToApi(storeMessage: Omit<ChatMessage, 'id'>): Omit<ApiChatMessage, 'id'> {
+  return {
+    ...storeMessage,
+    timestamp: new Date(storeMessage.timestamp)
+  };
+}
+
+// 🔄 Export de l'instance singleton
+export const sessionSyncService = SessionSyncService.getInstance(); 

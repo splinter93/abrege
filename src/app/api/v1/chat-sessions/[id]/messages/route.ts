@@ -89,6 +89,7 @@ export async function POST(
     });
 
     // Récupérer la session actuelle avec le contexte utilisateur
+    console.log('[Chat Messages API] 🔍 Recherche session:', sessionId);
     const { data: currentSession, error: fetchError } = await userClient
       .from('chat_sessions')
       .select('thread, history_limit')

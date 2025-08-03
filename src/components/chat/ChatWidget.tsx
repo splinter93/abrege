@@ -2,6 +2,7 @@
 
 import React, { useRef, useEffect, useState } from 'react';
 import { useChatStore, type ChatMessage } from '../../store/useChatStore';
+import { useSessionSync } from '@/hooks/useSessionSync';
 import ChatInput from './ChatInput';
 import EnhancedMarkdownMessage from './EnhancedMarkdownMessage';
 import ChatSidebar from './ChatSidebar';
@@ -19,15 +20,16 @@ const ChatWidget: React.FC = () => {
     error,
     isWidgetOpen,
     setCurrentSession,
-    addMessage,
     setError,
     setLoading,
-    createSession,
-    loadSessions,
+    syncSessions,
     toggleWidget,
     openFullscreen,
     closeWidget
   } = useChatStore();
+
+  // Hook pour synchroniser les sessions
+  const { syncSessions: syncSessionsFromHook, createSession, addMessage } = useSessionSync();
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -55,8 +57,8 @@ const ChatWidget: React.FC = () => {
   }, [currentSession?.thread]);
 
   useEffect(() => {
-    loadSessions();
-  }, []);
+    syncSessionsFromHook();
+  }, [syncSessionsFromHook]);
 
   // Masquer le widget si on est sur la page chat
   if (isOnChatPage) {
@@ -139,6 +141,7 @@ const ChatWidget: React.FC = () => {
     const session = sessions.find(s => s.id === sessionId);
     if (session) {
       setCurrentSession(session);
+      console.log('[Chat Widget] ✅ Session changée vers:', session.name);
     }
   };
 
@@ -226,7 +229,7 @@ const ChatWidget: React.FC = () => {
               >
                 {sessions.map(session => (
                   <option key={session.id} value={session.id}>
-                    {session.name}
+                    {session.name} {session.updated_at ? `(${new Date(session.updated_at).toLocaleDateString()})` : ''}
                   </option>
                 ))}
               </select>
