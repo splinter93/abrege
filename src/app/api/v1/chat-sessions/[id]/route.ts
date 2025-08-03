@@ -203,54 +203,71 @@ export async function DELETE(
         );
       }
       userId = user.id;
+      
+      // Créer un client avec le contexte d'authentification de l'utilisateur
+      const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+      if (!anonKey) {
+        throw new Error('NEXT_PUBLIC_SUPABASE_ANON_KEY manquante');
+      }
+      
+      const userClient = createClient(supabaseUrl!, anonKey, {
+        global: {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      });
+
+      // Vérifier que la session appartient à l'utilisateur avec le contexte utilisateur
+      const { data: existingSession, error: fetchError } = await userClient
+        .from('chat_sessions')
+        .select('id, user_id')
+        .eq('id', sessionId)
+        .single();
+
+      if (fetchError || !existingSession) {
+        console.error('[Chat Sessions API] ❌ Session non trouvée:', fetchError);
+        return NextResponse.json(
+          { error: 'Session non trouvée' },
+          { status: 404 }
+        );
+      }
+
+      if (existingSession.user_id !== userId) {
+        console.error('[Chat Sessions API] ❌ Accès non autorisé');
+        return NextResponse.json(
+          { error: 'Accès non autorisé' },
+          { status: 403 }
+        );
+      }
+
+      // Supprimer la session avec le contexte utilisateur
+      const { error: deleteError } = await userClient
+        .from('chat_sessions')
+        .delete()
+        .eq('id', sessionId);
+
+      if (deleteError) {
+        console.error('[Chat Sessions API] ❌ Erreur suppression:', deleteError);
+        return NextResponse.json(
+          { error: 'Erreur lors de la suppression de la session', details: deleteError.message },
+          { status: 500 }
+        );
+      }
+
+      console.log('[Chat Sessions API] ✅ Session supprimée:', sessionId);
+
+      return NextResponse.json({
+        success: true,
+        message: 'Session supprimée avec succès'
+      });
+
     } else {
-      // Utilisateur de test pour le développement
-      userId = '00000000-0000-0000-0000-000000000001';
-    }
-
-    // Vérifier que la session appartient à l'utilisateur
-    const { data: existingSession, error: fetchError } = await supabase
-      .from('chat_sessions')
-      .select('id, user_id')
-      .eq('id', sessionId)
-      .single();
-
-    if (fetchError || !existingSession) {
-      console.error('[Chat Sessions API] ❌ Session non trouvée:', fetchError);
       return NextResponse.json(
-        { error: 'Session non trouvée' },
-        { status: 404 }
+        { error: 'Authentification requise' },
+        { status: 401 }
       );
     }
-
-    if (existingSession.user_id !== userId) {
-      console.error('[Chat Sessions API] ❌ Accès non autorisé');
-      return NextResponse.json(
-        { error: 'Accès non autorisé' },
-        { status: 403 }
-      );
-    }
-
-    // Supprimer la session
-    const { error: deleteError } = await supabase
-      .from('chat_sessions')
-      .delete()
-      .eq('id', sessionId);
-
-    if (deleteError) {
-      console.error('[Chat Sessions API] ❌ Erreur suppression:', deleteError);
-      return NextResponse.json(
-        { error: 'Erreur lors de la suppression de la session', details: deleteError.message },
-        { status: 500 }
-      );
-    }
-
-    console.log('[Chat Sessions API] ✅ Session supprimée:', sessionId);
-
-    return NextResponse.json({
-      success: true,
-      message: 'Session supprimée avec succès'
-    });
 
   } catch (error) {
     console.error('[Chat Sessions API] ❌ Erreur:', error);

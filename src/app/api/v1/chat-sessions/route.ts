@@ -39,12 +39,7 @@ export async function POST(request: NextRequest) {
     console.log('[Chat Sessions API] 🔧 URL:', request.url);
     console.log('[Chat Sessions API] 🔧 Méthode:', request.method);
     
-    const body = await request.json();
-    const { name = 'Nouvelle conversation', history_limit = 10 } = body;
-
-    console.log('[Chat Sessions API] 📋 Données reçues:', { name, history_limit });
-
-    // Récupérer l'utilisateur depuis l'en-tête d'autorisation
+    // Vérifier l'authentification AVANT de parser le JSON
     const authHeader = request.headers.get('authorization');
     let userId: string;
     let userToken: string;
@@ -71,6 +66,23 @@ export async function POST(request: NextRequest) {
         { status: 401 }
       );
     }
+    
+    // Maintenant parser le JSON
+    let body;
+    try {
+      body = await request.json();
+      console.log('[Chat Sessions API] 📋 Body brut reçu:', body);
+    } catch (error) {
+      console.error('[Chat Sessions API] ❌ Erreur parsing JSON:', error);
+      return NextResponse.json(
+        { error: 'Données JSON invalides' },
+        { status: 400 }
+      );
+    }
+    
+    const { name = 'Nouvelle conversation', history_limit = 10 } = body;
+
+    console.log('[Chat Sessions API] 📋 Données reçues:', { name, history_limit });
 
     // Créer un client avec le contexte d'authentification de l'utilisateur
     const userClient = createClient(supabaseUrl, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, {
