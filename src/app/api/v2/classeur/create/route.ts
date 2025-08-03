@@ -26,7 +26,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     logApi('v2_classeur_create', `❌ Authentification échouée: ${authResult.error}`, context);
     return NextResponse.json(
       { error: authResult.error },
-      { status: authResult.status || 401 }
+      { status: authResult.status || 401, headers: { "Content-Type": "application/json" } }
     );
   }
 
@@ -53,7 +53,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       logApi('v2_classeur_create', `❌ Erreur création: ${result.error}`, context);
       return NextResponse.json(
         { error: result.error },
-        { status: 500 }
+        { status: 500, headers: { "Content-Type": "application/json" } }
       );
     }
 
@@ -64,14 +64,14 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       success: true,
       message: 'Classeur créé avec succès',
       classeur: result.classeur
-    });
+    }, { headers: { "Content-Type": "application/json" } });
 
   } catch (err: unknown) {
     const error = err as Error;
     logApi('v2_classeur_create', `❌ Erreur serveur: ${error}`, context);
     return NextResponse.json(
       { error: 'Erreur serveur' },
-      { status: 500 }
+      { status: 500, headers: { "Content-Type": "application/json" } }
     );
   }
 } 

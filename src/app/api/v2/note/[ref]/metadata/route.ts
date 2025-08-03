@@ -30,7 +30,7 @@ export async function GET(
     logApi('v2_note_metadata', `❌ Authentification échouée: ${authResult.error}`, context);
     return NextResponse.json(
       { error: authResult.error },
-      { status: authResult.status || 401 }
+      { status: authResult.status || 401, headers: { "Content-Type": "application/json" } }
     );
   }
 
@@ -41,7 +41,7 @@ export async function GET(
   if (!resolveResult.success) {
     return NextResponse.json(
       { error: resolveResult.error },
-      { status: resolveResult.status }
+      { status: resolveResult.status, headers: { "Content-Type": "application/json" } }
     );
   }
 
@@ -61,7 +61,7 @@ export async function GET(
       logApi('v2_note_metadata', `❌ Accès refusé pour note ${noteId}`, context);
       return NextResponse.json(
         { error: 'Accès refusé' },
-        { status: 403 }
+        { status: 403, headers: { "Content-Type": "application/json" } }
       );
     }
   }
