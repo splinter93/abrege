@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
+import type { NextRequest } from 'next/server';
 import { markdownContentSchema } from '@/utils/markdownValidation';
 import { resolveNoteRef } from '@/middleware/resourceResolver';
 import { SlugGenerator } from '@/utils/slugGenerator';
@@ -47,7 +48,7 @@ async function getAuthenticatedClient(req: NextRequest) {
  * Supporte les IDs et les slugs
  * Réponse : { note: { id, source_title, markdown_content, ... } }
  */
-export async function POST(req: Request): Promise<Response> {
+export async function POST(req: NextRequest): Promise<Response> {
   try {
     const body = await req.json();
     const schema = z.object({

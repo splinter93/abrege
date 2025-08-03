@@ -68,9 +68,9 @@ export async function PATCH(req: NextRequest, { params }: any): Promise<Response
     const { text, position } = parseResult.data;
     
     // 🚧 Temp: Authentification non implémentée
-    // TODO: Remplacer USER_ID par l'authentification Supabase
+    // TODO: Remplacer userId par l'authentification Supabase
     // 🚧 Temp: Authentification non implémentée
-    // TODO: Remplacer USER_ID par l'authentification Supabase
+    // TODO: Remplacer userId par l'authentification Supabase
     const { supabase, userId } = await getAuthenticatedClient(req);
     const noteId = await resolveNoteRef(ref, userId);
     

@@ -1,8 +1,45 @@
 
+import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 import type { NextRequest } from 'next/server';
 import { resolveNoteRef } from '@/middleware/resourceResolver';
 import { s3Service } from '@/services/s3Service';
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+
+/**
+ * Récupère le token d'authentification et crée un client Supabase authentifié
+ */
+async function getAuthenticatedClient(req: NextRequest) {
+  const authHeader = req.headers.get('authorization');
+  let userId: string;
+  let userToken: string;
+
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    userToken = authHeader.substring(7);
+    
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      global: {
+        headers: {
+          Authorization: `Bearer ${userToken}`
+        }
+      }
+    });
+    
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    
+    if (authError || !user) {
+      throw new Error('Token invalide ou expiré');
+    }
+    
+    userId = user.id;
+    return { supabase, userId };
+  } else {
+    throw new Error('Authentification requise');
+  }
+}
+
 
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ ref: string }> }): Promise<Response> {
   try {
@@ -32,11 +69,11 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ r
     const { fileKey } = bodyParseResult.data;
     
     // 🚧 Temp: Authentification non implémentée
-    // TODO: Remplacer USER_ID par l'authentification Supabase
+    // TODO: Remplacer userId par l'authentification Supabase
     // 🚧 Temp: Authentification non implémentée
-    // TODO: Remplacer USER_ID par l'authentification Supabase
+    // TODO: Remplacer userId par l'authentification Supabase
     const { supabase, userId } = await getAuthenticatedClient(req);
-    const noteId = await resolveNoteRef(ref, USER_ID);
+    const noteId = await resolveNoteRef(ref, userId);
     
     if (!noteId) {
       return new Response(JSON.stringify({ error: 'Note non trouvée.' }), { status: 404 });

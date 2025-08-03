@@ -62,7 +62,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ ref:
     // 🚧 Temp: Authentification non implémentée
     // TODO: Remplacer USER_ID par l'authentification Supabase
     const { supabase, userId } = await getAuthenticatedClient(req);
-    const noteId = await resolveNoteRef(ref, USER_ID);
+    const noteId = await resolveNoteRef(ref, userId);
     
     const { data: note, error } = await supabase
       .from('articles')

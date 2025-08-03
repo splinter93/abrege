@@ -7,7 +7,6 @@ import { SlugGenerator } from '@/utils/slugGenerator';
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
-
 /**
  * Récupère le token d'authentification et crée un client Supabase authentifié
  */
@@ -40,7 +39,6 @@ async function getAuthenticatedClient(req: NextRequest) {
   }
 }
 
-
 /**
  * GET /api/v1/note/{ref}/information
  * Récupère les informations de base d'une note
@@ -58,10 +56,6 @@ export async function GET(req: NextRequest, { params }: any): Promise<Response> 
       );
     }
     
-    // 🚧 Temp: Authentification non implémentée
-    // TODO: Remplacer userId par l'authentification Supabase
-    // 🚧 Temp: Authentification non implémentée
-    // TODO: Remplacer userId par l'authentification Supabase
     const { supabase, userId } = await getAuthenticatedClient(req);
     const noteId = await resolveNoteRef(ref, userId);
     
@@ -81,7 +75,6 @@ export async function GET(req: NextRequest, { params }: any): Promise<Response> 
     }
     return new Response(JSON.stringify({ error: err.message }), { status: 500 });
   }
-  }
 }
 
 /**
@@ -97,7 +90,7 @@ export async function PATCH(req: NextRequest, { params }: any): Promise<Response
     const schema = z.object({
       source_title: z.string().optional(),
       header_image: z.string().optional(),
-      header_image_offset: z.number().min(0).max(100).optional() // Accepte les décimales
+      header_image_offset: z.number().min(0).max(100).optional()
     });
     
     const parseResult = schema.safeParse(body);
@@ -110,10 +103,6 @@ export async function PATCH(req: NextRequest, { params }: any): Promise<Response
     
     const { source_title, header_image, header_image_offset } = parseResult.data;
     
-    // 🚧 Temp: Authentification non implémentée
-    // TODO: Remplacer userId par l'authentification Supabase
-    // 🚧 Temp: Authentification non implémentée
-    // TODO: Remplacer userId par l'authentification Supabase
     const { supabase, userId } = await getAuthenticatedClient(req);
     const noteId = await resolveNoteRef(ref, userId);
     
@@ -160,4 +149,4 @@ export async function PATCH(req: NextRequest, { params }: any): Promise<Response
     }
     return new Response(JSON.stringify({ error: err.message }), { status: 500 });
   }
-  }
+}

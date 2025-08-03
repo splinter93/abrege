@@ -44,7 +44,7 @@ async function getAuthenticatedClient(req: NextRequest) {
  * Récupère un dossier par ID ou slug
  * Réponse : { folder: { id, name, classeur_id, parent_id, ... } }
  */
-export async function GET(req: NextRequest, { params }: ApiContext): Promise<Response> {
+export async function GET(req: NextRequest, { params }: any): Promise<Response> {
   try {
     const { ref } = await params;
     const schema = z.object({ ref: z.string().min(1, 'folder_ref requis') });
@@ -82,7 +82,7 @@ export async function GET(req: NextRequest, { params }: ApiContext): Promise<Res
  * Met à jour un dossier par ID ou slug
  * Réponse : { folder: { id, name, ... } }
  */
-export async function PUT(req: NextRequest, { params }: ApiContext): Promise<Response> {
+export async function PUT(req: NextRequest, { params }: any): Promise<Response> {
   try {
     const { ref } = await params;
     const body = await req.json();
@@ -157,7 +157,7 @@ export async function PUT(req: NextRequest, { params }: ApiContext): Promise<Res
  * Supprime un dossier par ID ou slug
  * Réponse : { success: true }
  */
-export async function DELETE(req: NextRequest, { params }: ApiContext): Promise<Response> {
+export async function DELETE(req: NextRequest, { params }: any): Promise<Response> {
   try {
     const { ref } = await params;
     const schema = z.object({ ref: z.string().min(1, 'folder_ref requis') });

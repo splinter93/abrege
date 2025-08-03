@@ -1,11 +1,10 @@
 import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 import type { NextRequest } from 'next/server';
-
+import { resolveNoteRef } from '@/middleware/resourceResolver';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-
 
 /**
  * Récupère le token d'authentification et crée un client Supabase authentifié
@@ -39,36 +38,22 @@ async function getAuthenticatedClient(req: NextRequest) {
   }
 }
 
-
-export type MergeNotesPayload = {
-  note_ids: string[];
-  order?: string[];
-};
-export type MergeNotesResponse =
-  | { merged_content: string; notes: { id: string; title: string }[] }
-  | { error: string; details?: string[] };
-
 /**
- * Extension :
- * Si le payload contient { create_new: true, title?: string, classeur_id?: string, folder_id?: string },
- * alors l'API crée une nouvelle note fusionnée en base avec le contenu fusionné.
- * - title : titre de la note fusionnée (optionnel, défaut : 'Fusion de X notes')
- * - classeur_id, folder_id : pour placer la note (optionnels)
- * La réponse retourne la note créée.
+ * POST /api/v1/note/merge
+ * Fusionne deux notes en une seule
+ * Body: { sourceNoteId: string, targetNoteId: string }
+ * Réponse: { success: true, mergedNote: { id, source_title, ... } }
  */
-
 export async function POST(req: NextRequest): Promise<Response> {
   try {
+    const { supabase, userId } = await getAuthenticatedClient(req);
+    
     const body = await req.json();
     const schema = z.object({
-      note_ids: z.array(z.string().min(1)).min(2, 'Au moins deux notes à fusionner'),
-      order: z.array(z.string().min(1)).optional(),
-      create_new: z.boolean().optional(),
-      title: z.string().min(1).optional(),
-      classeur_id: z.string().optional(),
-      folder_id: z.string().optional(),
-      notebook_id: z.string().optional(), // alias LLM-friendly
+      sourceNoteId: z.string().min(1, 'sourceNoteId requis'),
+      targetNoteId: z.string().min(1, 'targetNoteId requis')
     });
+    
     const parseResult = schema.safeParse(body);
     if (!parseResult.success) {
       return new Response(
@@ -76,107 +61,67 @@ export async function POST(req: NextRequest): Promise<Response> {
         { status: 422 }
       );
     }
-    const { note_ids, order, create_new, title, classeur_id, folder_id, notebook_id } = parseResult.data;
-    // Si create_new, notebook/classeur est obligatoire
-    const finalClasseurId = classeur_id || notebook_id;
-    if (create_new && !finalClasseurId) {
-      return new Response(
-        JSON.stringify({ error: 'classeur_id (ou notebook_id) obligatoire pour créer une note fusionnée.' }),
-        { status: 422 }
-      );
-    }
-    // 🚧 Temp: Authentification non implémentée
-    // TODO: Remplacer userId par l'authentification Supabase
-    // 🚧 Temp: Authentification non implémentée
-    // TODO: Remplacer userId par l'authentification Supabase
-    const { supabase, userId } = await getAuthenticatedClient(req);
-    // Résoudre tous les note_ids (slug ou id)
-    const resolvedNoteIds: string[] = [];
-    for (const ref of note_ids) {
-      try {
-         
-        const id = await (await import('@/middleware/resourceResolver')).resolveNoteRef(ref, userId);
-        resolvedNoteIds.push(id);
-      } catch {
-        return new Response(
-          JSON.stringify({ error: `Note introuvable ou non accessible : ${ref}` }),
-          { status: 404 }
-        );
-      }
-    }
-    // Récupérer toutes les notes
-    const { data: notes, error } = await supabase
+    
+    const { sourceNoteId, targetNoteId } = parseResult.data;
+    
+    // Vérifier que les deux notes existent et appartiennent à l'utilisateur
+    const { data: sourceNote, error: sourceError } = await supabase
       .from('articles')
       .select('id, source_title, markdown_content')
-      .in('id', resolvedNoteIds);
-    if (error) {
-      return new Response(JSON.stringify({ error: error.message }), { status: 500 });
+      .eq('id', sourceNoteId)
+      .eq('user_id', userId)
+      .single();
+    
+    if (sourceError || !sourceNote) {
+      return new Response(JSON.stringify({ error: 'Note source non trouvée.' }), { status: 404 });
     }
-    if (!notes || notes.length < resolvedNoteIds.length) {
-      return new Response(
-        JSON.stringify({ error: 'Certaines notes sont introuvables.' }),
-        { status: 404 }
-      );
+    
+    const { data: targetNote, error: targetError } = await supabase
+      .from('articles')
+      .select('id, source_title, markdown_content')
+      .eq('id', targetNoteId)
+      .eq('user_id', userId)
+      .single();
+    
+    if (targetError || !targetNote) {
+      return new Response(JSON.stringify({ error: 'Note cible non trouvée.' }), { status: 404 });
     }
-    // Ordonner les notes selon order[] si fourni, sinon note_ids
-    let orderedNotes = notes;
-    if (order && order.length === note_ids.length) {
-      orderedNotes = order.map(ref => {
-        const idx = note_ids.indexOf(ref);
-        return notes.find(n => n.id === resolvedNoteIds[idx]);
-      }).filter(Boolean) as typeof notes;
-    } else {
-      orderedNotes = note_ids.map((ref, i) => notes.find(n => n.id === resolvedNoteIds[i])).filter(Boolean) as typeof notes;
+    
+    // Fusionner le contenu
+    const sourceContent = sourceNote.markdown_content || '';
+    const targetContent = targetNote.markdown_content || '';
+    const mergedContent = `${targetContent}\n\n---\n\n${sourceContent}`;
+    
+    // Mettre à jour la note cible avec le contenu fusionné
+    const { data: mergedNote, error: updateError } = await supabase
+      .from('articles')
+      .update({
+        markdown_content: mergedContent,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', targetNoteId)
+      .select()
+      .single();
+    
+    if (updateError) {
+      return new Response(JSON.stringify({ error: updateError.message }), { status: 500 });
     }
-    // Concaténer les contenus avec deux sauts de ligne
-    const merged_content = orderedNotes.map(n => n.markdown_content?.trim() || '').join('\n\n');
-
-    if (create_new) {
-      // Créer une nouvelle note fusionnée
-      const newTitle = title || `Fusion de ${orderedNotes.length} notes`;
-      // 🚧 Temp: Authentification non implémentée
-    // TODO: Remplacer userId par l'authentification Supabase
-    // 🚧 Temp: Authentification non implémentée
-    // TODO: Remplacer userId par l'authentification Supabase
-    const { supabase, userId } = await getAuthenticatedClient(req);
-      // Générer le slug unique pour la note fusionnée
-      const { SlugGenerator } = await import('@/utils/slugGenerator');
-      const newSlug = await SlugGenerator.generateSlug(newTitle, 'note', userId);
-      const insertPayload: any = {
-        source_title: newTitle,
-        markdown_content: merged_content,
-        html_content: '', // à générer côté front ou via un service si besoin
-        folder_id: folder_id || null,
-        classeur_id: finalClasseurId,
-        user_id: userId,
-        slug: newSlug,
-      };
-      // Optionnel : générer le html_content ici si tu as une fonction utilitaire
-      const { data: inserted, error: insertError } = await supabase
-        .from('articles')
-        .insert([insertPayload])
-        .select('id, source_title, markdown_content, folder_id, classeur_id, created_at')
-        .single();
-      if (insertError || !inserted) {
-        return new Response(JSON.stringify({ error: insertError?.message || 'Erreur lors de la création de la note fusionnée.' }), { status: 500 });
-      }
-      return new Response(
-        JSON.stringify({
-          created_note: inserted,
-          merged_from: orderedNotes.map(n => ({ id: n.id, title: n.source_title })),
-        }),
-        { status: 201 }
-      );
+    
+    // Supprimer la note source
+    const { error: deleteError } = await supabase
+      .from('articles')
+      .delete()
+      .eq('id', sourceNoteId);
+    
+    if (deleteError) {
+      console.error('Erreur lors de la suppression de la note source:', deleteError);
+      // Ne pas faire échouer la requête si la suppression échoue
     }
-
-    // Fusion virtuelle (comportement par défaut)
-    return new Response(
-      JSON.stringify({
-        merged_content,
-        notes: orderedNotes.map(n => ({ id: n.id, title: n.source_title }))
-      }),
-      { status: 200 }
-    );
+    
+    return new Response(JSON.stringify({ 
+      success: true, 
+      mergedNote 
+    }), { status: 200 });
   
   } catch (err: any) {
     if (err.message === 'Token invalide ou expiré' || err.message === 'Authentification requise') {
@@ -184,17 +129,4 @@ export async function POST(req: NextRequest): Promise<Response> {
     }
     return new Response(JSON.stringify({ error: err.message }), { status: 500 });
   }
-  }
-}
-
-/**
- * Endpoint: POST /api/v1/note/merge
- * Payload attendu : { note_ids: string[], order?: string[] }
- * - Récupère toutes les notes, les concatène dans l'ordre donné (ou note_ids)
- * - Retourne le markdown fusionné (pas d'écriture en base)
- * - Réponses :
- *   - 200 : { merged_content, notes }
- *   - 404 : { error: 'Certaines notes sont introuvables.' }
- *   - 422 : { error: 'Payload invalide', details }
- *   - 500 : { error: string }
- */ 
+} 

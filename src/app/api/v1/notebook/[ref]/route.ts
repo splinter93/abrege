@@ -44,7 +44,7 @@ async function getAuthenticatedClient(req: NextRequest) {
  * Récupère un classeur par ID ou slug
  * Réponse : { notebook: { id, name, emoji, ... } }
  */
-export async function GET(req: NextRequest, { params }: ApiContext): Promise<Response> {
+export async function GET(req: NextRequest, { params }: any): Promise<Response> {
   try {
     const { ref } = await params;
     const schema = z.object({ ref: z.string().min(1, 'notebook_ref requis') });
@@ -82,7 +82,7 @@ export async function GET(req: NextRequest, { params }: ApiContext): Promise<Res
  * Met à jour un classeur par ID ou slug
  * Réponse : { notebook: { id, name, emoji, ... } }
  */
-export async function PUT(req: NextRequest, { params }: ApiContext): Promise<Response> {
+export async function PUT(req: NextRequest, { params }: any): Promise<Response> {
   try {
     const { ref } = await params;
     const body = await req.json();
@@ -150,7 +150,7 @@ export async function PUT(req: NextRequest, { params }: ApiContext): Promise<Res
  * Supprime un classeur par ID ou slug
  * Réponse : { success: true }
  */
-export async function DELETE(req: NextRequest, { params }: ApiContext): Promise<Response> {
+export async function DELETE(req: NextRequest, { params }: any): Promise<Response> {
   try {
     const { ref } = await params;
     const refSchema = z.string().min(1, 'notebook_ref requis');
