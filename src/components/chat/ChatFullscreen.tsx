@@ -4,6 +4,8 @@ import React, { useRef, useEffect, useState } from 'react';
 import { useChatStore, type ChatMessage } from '../../store/useChatStore';
 import { useSessionSync } from '@/hooks/useSessionSync';
 import { chatPollingService } from '@/services/chatPollingService';
+import { llmService } from '@/services/llmService';
+import { useAppContext } from '@/hooks/useAppContext';
 import ChatInput from './ChatInput';
 import EnhancedMarkdownMessage from './EnhancedMarkdownMessage';
 import ChatKebabMenu from './ChatKebabMenu';
@@ -15,6 +17,9 @@ const ChatFullscreen: React.FC = () => {
   const [wideMode, setWideMode] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [pendingMessage, setPendingMessage] = useState<string | null>(null);
+  
+  // Récupérer le contexte de l'app
+  const appContext = useAppContext();
   
   const {
     sessions,
@@ -120,36 +125,31 @@ const ChatFullscreen: React.FC = () => {
     
     console.log('[ChatFullscreen] 📊 Thread après sync:', useChatStore.getState().currentSession?.thread.length, 'messages');
 
-    // Appeler l'API Synesia
+    // Appeler le LLM avec le provider sélectionné
     try {
       setLoading(true);
       
-      // Récupérer le token de session
-      const { data: { session } } = await supabase.auth.getSession();
-      const token = session?.access_token;
+      // Préparer le contexte
+      const context = appContext || {
+        type: 'chat_session',
+        id: 'default',
+        name: 'Chat général'
+      };
       
-      if (!token) {
-        throw new Error('Token d\'authentification manquant');
-      }
+      console.log('[ChatFullscreen] 🎯 Contexte:', context);
       
-      const response = await fetch('/api/chat/synesia', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          message: message,
-          messages: currentSession.thread
-        }),
-      });
+      // Appeler le LLM via le service
+      const llmResponse = await llmService.sendMessage(
+        message,
+        context,
+        currentSession.thread
+      );
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(`Erreur API: ${response.status} - ${errorData.error || 'Erreur inconnue'}`);
+      if (!llmResponse.success) {
+        throw new Error(llmResponse.error || 'Erreur lors de l\'appel LLM');
       }
 
-      const data = await response.json();
+      const data = { response: llmResponse.response };
       
       const assistantMessage: ChatMessage = {
         id: `assistant-${Date.now()}`,
@@ -178,7 +178,7 @@ const ChatFullscreen: React.FC = () => {
       const { syncSessions } = useChatStore.getState();
       await syncSessions();
     } catch (error) {
-      console.error('Erreur lors de l\'appel à Synesia:', error);
+      console.error('Erreur lors de l\'appel LLM:', error);
       
       const errorMessage: ChatMessage = {
         id: `assistant-${Date.now()}`,

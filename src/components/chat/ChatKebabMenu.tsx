@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useRef, useEffect } from 'react';
+import { useLLMStore } from '@/store/useLLMStore';
 
 interface ChatKebabMenuProps {
   isWideMode: boolean;
@@ -20,6 +21,9 @@ const ChatKebabMenu: React.FC<ChatKebabMenuProps> = ({
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  
+  // LLM Provider state
+  const { currentProvider, availableProviders, setProvider } = useLLMStore();
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -51,6 +55,12 @@ const ChatKebabMenu: React.FC<ChatKebabMenuProps> = ({
     if (!isNaN(newLimit) && newLimit > 0 && newLimit <= 100) {
       onHistoryLimitChange(newLimit);
     }
+  };
+
+  const handleProviderChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const newProvider = event.target.value;
+    setProvider(newProvider);
+    console.log(`[ChatKebabMenu] 🔄 Provider changé: ${newProvider}`);
   };
 
   return (
@@ -123,6 +133,23 @@ const ChatKebabMenu: React.FC<ChatKebabMenuProps> = ({
                 max="100"
                 onClick={(e) => e.stopPropagation()}
               />
+            </div>
+
+            {/* Sélecteur de Provider LLM */}
+            <div className="kebab-option provider-selector">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span>Provider IA</span>
+              <select 
+                value={currentProvider} 
+                onChange={handleProviderChange}
+                className="provider-select"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <option value="synesia">Synesia</option>
+                <option value="deepseek">DeepSeek</option>
+              </select>
             </div>
           </div>
         </div>
