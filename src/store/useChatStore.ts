@@ -7,6 +7,7 @@ export interface ChatMessage {
   role: 'user' | 'assistant' | 'system';
   content: string;
   timestamp: string;
+  isStreaming?: boolean; // Pour indiquer si le message est en cours de streaming
 }
 
 export interface ChatSession {

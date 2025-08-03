@@ -36,7 +36,7 @@ export class DeepSeekProvider implements LLMProvider {
       const payload = {
         model: 'deepseek-chat', // DeepSeek-V3-0324 selon la doc
         messages,
-        stream: true, // Activer le streaming
+        stream: false, // Désactiver le streaming pour l'instant
         temperature: 0.7,
         max_tokens: 4000
       };
@@ -57,45 +57,10 @@ export class DeepSeekProvider implements LLMProvider {
         throw new Error(`DeepSeek API error: ${response.status} - ${errorText}`);
       }
 
-      // Gérer le streaming
-      const reader = response.body?.getReader();
-      if (!reader) {
-        throw new Error('Pas de body de réponse pour le streaming');
-      }
+      const data = await response.json();
+      console.log('[DeepSeek Provider] ✅ Réponse reçue:', data);
 
-      const decoder = new TextDecoder();
-      let fullResponse = '';
-
-      while (true) {
-        const { done, value } = await reader.read();
-        
-        if (done) break;
-        
-        const chunk = decoder.decode(value);
-        const lines = chunk.split('\n');
-        
-        for (const line of lines) {
-          if (line.startsWith('data: ')) {
-            try {
-              const data = JSON.parse(line.slice(6));
-              
-              if (data.choices && data.choices[0]?.delta?.content) {
-                const token = data.choices[0].delta.content;
-                fullResponse += token;
-                console.log('[DeepSeek Provider] 📝 Token reçu:', token);
-              } else if (data.choices && data.choices[0]?.finish_reason) {
-                console.log('[DeepSeek Provider] ✅ Streaming terminé');
-                break;
-              }
-            } catch (e) {
-              console.warn('[DeepSeek Provider] ⚠️ Erreur parsing SSE:', e);
-            }
-          }
-        }
-      }
-
-      console.log('[DeepSeek Provider] ✅ Réponse complète:', fullResponse);
-      return fullResponse || 'Désolé, je n\'ai pas pu traiter votre demande.';
+      return data.choices?.[0]?.message?.content || 'Désolé, je n\'ai pas pu traiter votre demande.';
 
     } catch (error) {
       console.error('[DeepSeek Provider] ❌ Erreur:', error);
@@ -107,7 +72,7 @@ export class DeepSeekProvider implements LLMProvider {
     return !!this.apiKey;
   }
 
-  private formatContext(context: AppContext): string {
+  formatContext(context: AppContext): string {
     return `## **🎯 Ton identité**
 
 **Nom** : Donna

@@ -1,18 +1,20 @@
 import { ChatSessionService } from './chatSessionService';
+import type { ChatMessage, ChatSession } from '@/store/useChatStore';
 import type { ChatMessage as ApiChatMessage, ChatSession as ApiChatSession } from '@/types/chat';
 
-// Types pour le store (définis localement pour éviter les imports circulaires)
-interface ChatMessage {
+// Types locaux pour la conversion
+interface LocalChatMessage {
   id: string;
   role: 'user' | 'assistant' | 'system';
   content: string;
-  timestamp: string;
+  timestamp: string | Date;
+  isStreaming?: boolean;
 }
 
-interface ChatSession {
+interface LocalChatSession {
   id: string;
   name: string;
-  thread: ChatMessage[];
+  thread: LocalChatMessage[];
   history_limit: number;
   created_at: string;
   updated_at: string;
@@ -239,13 +241,18 @@ export class SessionSyncService {
  */
 function convertApiSessionToStore(apiSession: ApiChatSession): ChatSession {
   return {
-    ...apiSession,
+    id: apiSession.id,
+    name: apiSession.name,
     thread: apiSession.thread.map(apiMessage => ({
-      ...apiMessage,
-      timestamp: apiMessage.timestamp instanceof Date 
-        ? apiMessage.timestamp.toISOString() 
-        : apiMessage.timestamp
-    }))
+      id: apiMessage.id,
+      role: apiMessage.role,
+      content: apiMessage.content,
+      timestamp: apiMessage.timestamp as string,
+      isStreaming: apiMessage.isStreaming
+    })),
+    history_limit: apiSession.history_limit,
+    created_at: apiSession.created_at,
+    updated_at: apiSession.updated_at
   };
 }
 
@@ -255,8 +262,10 @@ function convertApiSessionToStore(apiSession: ApiChatSession): ChatSession {
  */
 function convertStoreMessageToApi(storeMessage: Omit<ChatMessage, 'id'>): Omit<ApiChatMessage, 'id'> {
   return {
-    ...storeMessage,
-    timestamp: new Date(storeMessage.timestamp)
+    role: storeMessage.role,
+    content: storeMessage.content,
+    timestamp: storeMessage.timestamp,
+    isStreaming: storeMessage.isStreaming
   };
 }
 

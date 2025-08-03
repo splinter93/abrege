@@ -4,7 +4,8 @@ export interface ChatMessage {
   id: string;
   role: 'user' | 'assistant' | 'system';
   content: string;
-  timestamp: Date;
+  timestamp: string;
+  isStreaming?: boolean; // Pour indiquer si le message est en cours de streaming
 }
 
 export interface ChatSession {
