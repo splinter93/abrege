@@ -30,7 +30,22 @@ async function getAuthenticatedClient(req: NextRequest) {
     }
     
     userId = user.id;
-    return { supabase, userId };
+    
+    // Récupérer les informations d'authentification
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    let authProvider = 'email'; // Par défaut
+    
+    if (!sessionError && session?.user?.app_metadata?.provider) {
+      authProvider = session.user.app_metadata.provider;
+    } else if (session?.user?.identities && session.user.identities.length > 0) {
+      // Essayer de détecter le provider depuis les identités
+      const identity = session.user.identities[0];
+      if (identity.provider) {
+        authProvider = identity.provider;
+      }
+    }
+    
+    return { supabase, userId, authProvider };
   } else {
     throw new Error('Authentification requise');
   }
@@ -38,12 +53,12 @@ async function getAuthenticatedClient(req: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    const { supabase, userId } = await getAuthenticatedClient(request);
+    const { supabase, userId, authProvider } = await getAuthenticatedClient(request);
     
     // Récupérer l'utilisateur depuis la table users
     const { data: user, error } = await supabase
       .from('users')
-      .select('id, username, email, name, surname, profile_picture, created_at')
+      .select('id, username, email, name, surname, profile_picture, auth_provider, created_at')
       .eq('id', userId)
       .single();
 
@@ -61,7 +76,8 @@ export async function GET(request: NextRequest) {
               email: 'user@example.com',
               name: null,
               surname: null,
-              profile_picture: null
+              profile_picture: null,
+              auth_provider: authProvider
             }
           ])
           .select()
@@ -76,6 +92,18 @@ export async function GET(request: NextRequest) {
       }
 
       return new Response(JSON.stringify({ error: 'User not found' }), { status: 404 });
+    }
+
+    // Mettre à jour le provider d'authentification si différent
+    if (user.auth_provider !== authProvider) {
+      const { error: updateError } = await supabase
+        .from('users')
+        .update({ auth_provider: authProvider })
+        .eq('id', userId);
+      
+      if (!updateError) {
+        user.auth_provider = authProvider;
+      }
     }
 
     return new Response(JSON.stringify(user), { status: 200 });
