@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { GET, DELETE } from './route';
-import { NextRequest } from 'next/server';
+undefined';
 
 // Mock Supabase
 vi.mock('@/utils/supabase', () => ({
