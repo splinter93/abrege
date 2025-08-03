@@ -30,7 +30,7 @@ export async function GET(
     logApi('v2_note_content', `❌ Authentification échouée: ${authResult.error}`, context);
     return NextResponse.json(
       { error: authResult.error },
-      { status: authResult.status || 401 }
+      { status: authResult.status || 401, headers: { "Content-Type": "application/json" } }
     );
   }
 
@@ -41,7 +41,7 @@ export async function GET(
   if (!resolveResult.success) {
     return NextResponse.json(
       { error: resolveResult.error },
-      { status: resolveResult.status }
+      { status: resolveResult.status, headers: { "Content-Type": "application/json" } }
     );
   }
 
@@ -78,7 +78,7 @@ export async function GET(
       logApi('v2_note_content', `❌ Note non trouvée: ${noteId}`, context);
       return NextResponse.json(
         { error: 'Note non trouvée' },
-        { status: 404 }
+        { status: 404, headers: { "Content-Type": "application/json" } }
       );
     }
 
@@ -104,7 +104,7 @@ export async function GET(
     logApi('v2_note_content', `❌ Erreur serveur: ${error}`, context);
     return NextResponse.json(
       { error: 'Erreur serveur' },
-      { status: 500 }
+      { status: 500, headers: { "Content-Type": "application/json" } }
     );
   }
 } 

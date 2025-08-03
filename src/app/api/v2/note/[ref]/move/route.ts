@@ -32,7 +32,7 @@ export async function PUT(
     logApi('v2_note_move', `❌ Authentification échouée: ${authResult.error}`, context);
     return NextResponse.json(
       { error: authResult.error },
-      { status: authResult.status || 401 }
+      { status: authResult.status || 401, headers: { "Content-Type": "application/json" } }
     );
   }
 
@@ -43,7 +43,7 @@ export async function PUT(
   if (!resolveResult.success) {
     return NextResponse.json(
       { error: resolveResult.error },
-      { status: resolveResult.status }
+      { status: resolveResult.status, headers: { "Content-Type": "application/json" } }
     );
   }
 
@@ -55,14 +55,14 @@ export async function PUT(
     logApi('v2_note_move', `❌ Erreur vérification permissions: ${permissionResult.error}`, context);
     return NextResponse.json(
       { error: permissionResult.error },
-      { status: permissionResult.status || 500 }
+      { status: permissionResult.status || 500, headers: { "Content-Type": "application/json" } }
     );
   }
   if (!permissionResult.hasPermission) {
     logApi('v2_note_move', `❌ Permissions insuffisantes pour note ${noteId}`, context);
     return NextResponse.json(
       { error: 'Permissions insuffisantes pour déplacer cette note' },
-      { status: 403 }
+      { status: 403, headers: { "Content-Type": "application/json" } }
     );
   }
 
@@ -89,7 +89,7 @@ export async function PUT(
       logApi('v2_note_move', `❌ Note non trouvée: ${noteId}`, context);
       return NextResponse.json(
         { error: 'Note non trouvée' },
-        { status: 404 }
+        { status: 404, headers: { "Content-Type": "application/json" } }
       );
     }
 
@@ -125,7 +125,7 @@ export async function PUT(
       logApi('v2_note_move', `❌ Erreur déplacement: ${moveError.message}`, context);
       return NextResponse.json(
         { error: 'Erreur lors du déplacement' },
-        { status: 500 }
+        { status: 500, headers: { "Content-Type": "application/json" } }
       );
     }
 
@@ -146,7 +146,7 @@ export async function PUT(
     logApi('v2_note_move', `❌ Erreur serveur: ${error}`, context);
     return NextResponse.json(
       { error: 'Erreur serveur' },
-      { status: 500 }
+      { status: 500, headers: { "Content-Type": "application/json" } }
     );
   }
 } 

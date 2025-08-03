@@ -31,7 +31,7 @@ export async function DELETE(
     logApi('v2_note_delete', `❌ Authentification échouée: ${authResult.error}`, context);
     return NextResponse.json(
       { error: authResult.error },
-      { status: authResult.status || 401 }
+      { status: authResult.status || 401, headers: { "Content-Type": "application/json" } }
     );
   }
 
@@ -42,7 +42,7 @@ export async function DELETE(
   if (!resolveResult.success) {
     return NextResponse.json(
       { error: resolveResult.error },
-      { status: resolveResult.status }
+      { status: resolveResult.status, headers: { "Content-Type": "application/json" } }
     );
   }
 
@@ -54,14 +54,14 @@ export async function DELETE(
     logApi('v2_note_delete', `❌ Erreur vérification permissions: ${permissionResult.error}`, context);
     return NextResponse.json(
       { error: permissionResult.error },
-      { status: permissionResult.status || 500 }
+      { status: permissionResult.status || 500, headers: { "Content-Type": "application/json" } }
     );
   }
   if (!permissionResult.hasPermission) {
     logApi('v2_note_delete', `❌ Permissions insuffisantes pour note ${noteId}`, context);
     return NextResponse.json(
       { error: 'Permissions insuffisantes pour supprimer cette note' },
-      { status: 403 }
+      { status: 403, headers: { "Content-Type": "application/json" } }
     );
   }
 
@@ -77,7 +77,7 @@ export async function DELETE(
       logApi('v2_note_delete', `❌ Note non trouvée: ${noteId}`, context);
       return NextResponse.json(
         { error: 'Note non trouvée' },
-        { status: 404 }
+        { status: 404, headers: { "Content-Type": "application/json" } }
       );
     }
 
@@ -91,7 +91,7 @@ export async function DELETE(
       logApi('v2_note_delete', `❌ Erreur suppression: ${deleteError.message}`, context);
       return NextResponse.json(
         { error: 'Erreur lors de la suppression' },
-        { status: 500 }
+        { status: 500, headers: { "Content-Type": "application/json" } }
       );
     }
 
@@ -105,14 +105,14 @@ export async function DELETE(
       success: true,
       message: 'Note supprimée avec succès',
       noteId
-    });
+    }, { headers: { "Content-Type": "application/json" } });
 
   } catch (err: unknown) {
     const error = err as Error;
     logApi('v2_note_delete', `❌ Erreur serveur: ${error}`, context);
     return NextResponse.json(
       { error: 'Erreur serveur' },
-      { status: 500 }
+      { status: 500, headers: { "Content-Type": "application/json" } }
     );
   }
 } 

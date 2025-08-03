@@ -33,7 +33,7 @@ export async function POST(
     logApi('v2_note_add_content', `❌ Authentification échouée: ${authResult.error}`, context);
     return NextResponse.json(
       { error: authResult.error },
-      { status: authResult.status || 401 }
+      { status: authResult.status || 401, headers: { "Content-Type": "application/json" } }
     );
   }
 
@@ -44,7 +44,7 @@ export async function POST(
   if (!resolveResult.success) {
     return NextResponse.json(
       { error: resolveResult.error },
-      { status: resolveResult.status }
+      { status: resolveResult.status, headers: { "Content-Type": "application/json" } }
     );
   }
 
@@ -56,14 +56,14 @@ export async function POST(
     logApi('v2_note_add_content', `❌ Erreur vérification permissions: ${permissionResult.error}`, context);
     return NextResponse.json(
       { error: permissionResult.error },
-      { status: permissionResult.status || 500 }
+      { status: permissionResult.status || 500, headers: { "Content-Type": "application/json" } }
     );
   }
   if (!permissionResult.hasPermission) {
     logApi('v2_note_add_content', `❌ Permissions insuffisantes pour note ${noteId}`, context);
     return NextResponse.json(
       { error: 'Permissions insuffisantes pour modifier cette note' },
-      { status: 403 }
+      { status: 403, headers: { "Content-Type": "application/json" } }
     );
   }
 
@@ -90,7 +90,7 @@ export async function POST(
       logApi('v2_note_add_content', `❌ Note non trouvée: ${noteId}`, context);
       return NextResponse.json(
         { error: 'Note non trouvée' },
-        { status: 404 }
+        { status: 404, headers: { "Content-Type": "application/json" } }
       );
     }
 
@@ -112,7 +112,7 @@ export async function POST(
       logApi('v2_note_add_content', `❌ Erreur mise à jour: ${updateError.message}`, context);
       return NextResponse.json(
         { error: 'Erreur lors de la mise à jour' },
-        { status: 500 }
+        { status: 500, headers: { "Content-Type": "application/json" } }
       );
     }
 
@@ -129,14 +129,14 @@ export async function POST(
       success: true,
       message: 'Contenu ajouté avec succès',
       note: updatedNote
-    });
+    }, { headers: { "Content-Type": "application/json" } });
 
   } catch (err: unknown) {
     const error = err as Error;
     logApi('v2_note_add_content', `❌ Erreur serveur: ${error}`, context);
     return NextResponse.json(
       { error: 'Erreur serveur' },
-      { status: 500 }
+      { status: 500, headers: { "Content-Type": "application/json" } }
     );
   }
 } 
