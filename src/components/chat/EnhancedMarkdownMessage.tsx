@@ -3,7 +3,7 @@ import React, { useMemo } from 'react';
 import { useMarkdownRender } from '../../hooks/editor/useMarkdownRender';
 import { detectMermaidBlocks, validateMermaidSyntax, cleanMermaidContent } from './mermaidService';
 import MermaidRenderer from './MermaidRenderer';
-import './chatMarkdown.css';
+import './index.css';
 
 interface EnhancedMarkdownMessageProps {
   content: string;
@@ -55,7 +55,7 @@ const EnhancedMarkdownMessage: React.FC<EnhancedMarkdownMessageProps> = ({ conte
 
   // Rendu mixte : texte + Mermaid
   return (
-    <div className="enhanced-markdown">
+            <div className="chat-enhanced-markdown">
       {renderedBlocks.map((block) => {
         if (block.type === 'text') {
           return (

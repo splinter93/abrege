@@ -1,5 +1,5 @@
 /* ========================================
-   CHAT DESIGN SYSTEM
+   CHAT DESIGN SYSTEM - VERSION NETTOYÉE
    ======================================== */
 
 /* ========================================
@@ -7,26 +7,26 @@
    ======================================== */
 :root {
   /* Couleurs de base */
-  --chat-color-primary: #222222;      /* Gris anthracite principal - LÉGÈREMENT PLUS CLAIR */
-  --chat-color-secondary: #333333;    /* Gris plus clair - LÉGÈREMENT PLUS CLAIR */
-  --chat-color-tertiary: #444444;     /* Gris moyen - LÉGÈREMENT PLUS CLAIR */
-  --chat-color-elevated: #33333a;     /* Gris surélevé - LÉGÈREMENT PLUS CLAIR */
+  --chat-color-primary: #222222;
+  --chat-color-secondary: #333333;
+  --chat-color-tertiary: #444444;
+  --chat-color-elevated: #33333a;
   
   /* Couleurs de texte */
-  --chat-color-text-primary: #ececf1;    /* Texte principal blanc */
-  --chat-color-text-secondary: #8e8ea0;  /* Texte secondaire gris */
-  --chat-color-text-muted: #6b7280;      /* Texte atténué */
+  --chat-color-text-primary: #ececf1;
+  --chat-color-text-secondary: #8e8ea0;
+  --chat-color-text-muted: #6b7280;
   
   /* Couleurs d'accent */
-  --chat-color-accent: #ececf1;          /* Accent blanc */
-  --chat-color-accent-hover: #d1d5db;    /* Accent hover */
-  --chat-color-accent-active: #b8bcc0;   /* Accent actif */
+  --chat-color-accent: #ececf1;
+  --chat-color-accent-hover: #d1d5db;
+  --chat-color-accent-active: #b8bcc0;
   
   /* Couleurs d'état */
-  --chat-color-success: #10b981;         /* Vert succès */
-  --chat-color-warning: #f59e0b;         /* Orange avertissement */
-  --chat-color-error: #ef4444;           /* Rouge erreur */
-  --chat-color-info: #3b82f6;            /* Bleu info */
+  --chat-color-success: #10b981;
+  --chat-color-warning: #f59e0b;
+  --chat-color-error: #ef4444;
+  --chat-color-info: #3b82f6;
 }
 
 /* ========================================
@@ -110,12 +110,12 @@
    ======================================== */
 :root {
   /* Espacements principaux */
-  --chat-spacing-xs: 0.25rem;    /* 4px */
-  --chat-spacing-sm: 0.5rem;     /* 8px */
-  --chat-spacing-md: 0.75rem;    /* 12px */
-  --chat-spacing-lg: 1rem;       /* 16px */
-  --chat-spacing-xl: 1.5rem;     /* 24px */
-  --chat-spacing-2xl: 2rem;      /* 32px */
+  --chat-spacing-xs: 0.25rem;
+  --chat-spacing-sm: 0.5rem;
+  --chat-spacing-md: 0.75rem;
+  --chat-spacing-lg: 1rem;
+  --chat-spacing-xl: 1.5rem;
+  --chat-spacing-2xl: 2rem;
   
   /* Espacements spécifiques */
   --chat-spacing-input: 0.75rem;
@@ -203,11 +203,11 @@
    ======================================== */
 :root {
   /* Tailles de police */
-  --chat-font-size-xs: 0.75rem;    /* 12px */
-  --chat-font-size-sm: 0.875rem;   /* 14px */
-  --chat-font-size-md: 1rem;       /* 16px */
-  --chat-font-size-lg: 1.125rem;   /* 18px */
-  --chat-font-size-xl: 1.25rem;    /* 20px */
+  --chat-font-size-xs: 0.75rem;
+  --chat-font-size-sm: 0.875rem;
+  --chat-font-size-md: 1rem;
+  --chat-font-size-lg: 1.125rem;
+  --chat-font-size-xl: 1.25rem;
   
   /* Poids de police */
   --chat-font-weight-normal: 400;
@@ -229,20 +229,6 @@
   --chat-breakpoint-md: 768px;
   --chat-breakpoint-lg: 1024px;
   --chat-breakpoint-xl: 1280px;
-}
-
-/* ========================================
-   COMPATIBILITÉ - Variables legacy
-   ======================================== */
-:root {
-  /* Variables legacy pour compatibilité */
-  --chat-text-color: var(--chat-text-primary);
-  --chat-text-muted: var(--chat-text-secondary);
-  --chat-border-color: var(--chat-border-primary);
-  --chat-border-color-focus: var(--chat-border-focus);
-  --chat-accent-color: var(--chat-accent);
-  --chat-header-bg: var(--chat-bg-primary);
-  --chat-container-bg: var(--chat-bg-primary);
 }
 
 /* ========================================

@@ -1,14 +1,13 @@
 /* ========================================
-   CHAT STYLES - INDEX CENTRALISÉ
+   CHAT STYLES - INDEX V2 MODULAIRE
    ======================================== */
 
 /* Import du design system global */
-@import '../../styles/chat-design-system.css';
+@import '../../styles/chat-design-system-v2.css';
 
-/* Import des styles principaux consolidés */
-@import './chat-main.css';
-
-/* Import des styles spécifiques */
+/* Import des composants modulaires */
+@import './ChatLayout.css';
+@import './ChatBubbles.css';
 @import './ChatSidebar.css';
-@import './ChatKebabMenu.css';
-@import './chatMarkdown.css'; 
+@import './ChatInput.css';
+@import './ChatMarkdown.css'; 

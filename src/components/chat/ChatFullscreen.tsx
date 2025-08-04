@@ -276,7 +276,7 @@ const ChatFullscreen: React.FC = () => {
   const messages = currentSession?.thread || [];
 
   return (
-    <div className={`chat-fullscreen-container ${wideMode ? 'wide-mode' : ''}`}>
+    <div className={`chat-fullscreen-container ${wideMode ? 'wide-mode' : ''} ${sidebarOpen ? 'sidebar-open' : ''}`}>
       {/* Sidebar */}
       <ChatSidebar 
         isOpen={sidebarOpen} 
@@ -322,11 +322,11 @@ const ChatFullscreen: React.FC = () => {
         </div>
 
         {/* Messages */}
-        <div className="messages-container">
-          <div className="message-list">
+        <div className="chat-messages-container">
+          <div className="chat-message-list">
             {messages.map((message, index) => (
-              <div key={message.id || index} className={`message ${message.role}-message`}>
-                <div className={`message-bubble ${message.role}-bubble`}>
+              <div key={message.id || index} className={`chat-message chat-message-${message.role}`}>
+                <div className={`chat-message-bubble chat-message-bubble-${message.role}`}>
                   <EnhancedMarkdownMessage content={message.content} />
                 </div>
               </div>
@@ -334,13 +334,13 @@ const ChatFullscreen: React.FC = () => {
             
             {/* Message en cours de streaming */}
             {isStreaming && streamingContent && (
-              <div className="message assistant-message">
-                <div className="message-bubble assistant-bubble">
+              <div className="chat-message chat-message-assistant">
+                <div className="chat-message-bubble chat-message-bubble-assistant">
                   <EnhancedMarkdownMessage content={streamingContent} />
-                  <div className="typing-indicator">
-                    <div className="typing-dot"></div>
-                    <div className="typing-dot"></div>
-                    <div className="typing-dot"></div>
+                  <div className="chat-typing-indicator">
+                    <div className="chat-typing-dot"></div>
+                    <div className="chat-typing-dot"></div>
+                    <div className="chat-typing-dot"></div>
                   </div>
                 </div>
               </div>
@@ -350,7 +350,7 @@ const ChatFullscreen: React.FC = () => {
         </div>
 
         {/* Input */}
-        <div className="input-area-container">
+        <div className="chat-input-container">
           <ChatInput 
             onSend={handleSendMessage}
             loading={loading}

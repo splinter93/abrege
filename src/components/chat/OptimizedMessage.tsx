@@ -14,11 +14,11 @@ interface OptimizedMessageProps {
 const OptimizedMessage = React.memo<OptimizedMessageProps>(({ message, index }) => {
   return (
     <div 
-      className={`message ${message.role === 'user' ? 'user-message' : 'assistant-message'}`}
+      className={`chat-message chat-message-${message.role}`}
       role="article"
       aria-label={`Message ${message.role === 'user' ? 'utilisateur' : 'assistant'}`}
     >
-      <div className={`message-bubble ${message.role === 'user' ? 'user-bubble' : 'assistant-bubble'}`}>
+      <div className={`chat-message-bubble chat-message-bubble-${message.role}`}>
         {message.role === 'assistant' ? (
           <EnhancedMarkdownMessage content={message.content} />
         ) : (

@@ -5,7 +5,7 @@ import { useChatStore } from '@/store/useChatStore';
 import { useAuth } from '@/hooks/useAuth';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { Edit, Trash2, Check, X, LogOut, Settings, ChevronDown, ChevronRight } from 'react-feather';
+import { Edit, Trash2, LogOut, Settings, ChevronDown, ChevronRight, Plus } from 'react-feather';
 
 interface ChatSidebarProps {
   isOpen: boolean;
@@ -36,7 +36,7 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({ isOpen, isDesktop, onClose })
     const preview = lines.slice(0, 2).join(' ');
     
     // Limiter la longueur
-    return preview.length > 100 ? preview.substring(0, 100) + '...' : preview;
+    return preview.length > 80 ? preview.substring(0, 80) + '...' : preview;
   };
 
   const handleCreateNewSession = async () => {
@@ -77,37 +77,46 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({ isOpen, isDesktop, onClose })
   return (
     <div className={sidebarClass}>
       <div className="sidebar-content-wrapper">
-        {/* Boutons d'action en haut */}
-        <div className="sidebar-top-actions">
-          <button onClick={handleCreateNewSession} className="new-note-btn">
-            <Edit size={16} />
-          </button>
-          <button onClick={onClose} className="collapse-btn">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="3" x2="9" y2="21"></line>
-            </svg>
-          </button>
+        {/* Header de la sidebar */}
+        <div className="sidebar-header">
+          <div className="sidebar-header-content">
+            <h2 className="sidebar-title">Chat</h2>
+            <div className="sidebar-actions">
+              <button onClick={handleCreateNewSession} className="action-btn" title="Nouvelle conversation">
+                <Plus size={16} />
+              </button>
+              <button onClick={onClose} className="action-btn" title="Fermer la sidebar">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="3" x2="9" y2="21"></line>
+                </svg>
+              </button>
+            </div>
+          </div>
         </div>
 
-        <div className="sidebar-content">
+        {/* Contenu principal */}
+        <div className="sidebar-main">
           {/* Section Mes Agents */}
           <div className="sidebar-section">
             <div className="section-header">
-              <h3>Mes Agents</h3>
+              <h3 className="section-title">Mes Agents</h3>
               <button 
                 onClick={() => setAgentsOpen(!agentsOpen)} 
                 className="section-toggle"
+                aria-label={agentsOpen ? "Réduire les agents" : "Développer les agents"}
               >
-                {agentsOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                {agentsOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
               </button>
             </div>
             {agentsOpen && (
               <div className="section-content">
                 <button className="agent-option">
-                  <span>DeepSeek</span>
+                  <div className="agent-icon">🤖</div>
+                  <span className="agent-name">DeepSeek</span>
                 </button>
                 <button className="agent-option">
-                  <span>Synesia</span>
+                  <div className="agent-icon">🧠</div>
+                  <span className="agent-name">Synesia</span>
                 </button>
               </div>
             )}
@@ -116,57 +125,101 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({ isOpen, isDesktop, onClose })
           {/* Section Conversations */}
           <div className="sidebar-section">
             <div className="section-header">
-              <h3>Conversations</h3>
+              <h3 className="section-title">Conversations</h3>
+              <span className="session-count">{sessions.length}</span>
             </div>
             <div className="conversations-list">
-              {sortedSessions.map((session) => (
-                <div
-                  key={session.id}
-                  className={`conversation-item ${currentSession?.id === session.id ? 'active' : ''}`}
-                  onClick={() => renamingSessionId !== session.id && handleSelectSession(session)}
-                >
-                  {renamingSessionId === session.id ? (
-                    <input
-                      type="text"
-                      value={newName}
-                      onChange={(e) => setNewName(e.target.value)}
-                      onBlur={() => handleRename(session.id)}
-                      onKeyDown={(e) => e.key === 'Enter' && handleRename(session.id)}
-                      autoFocus
-                      className="rename-input"
-                    />
-                  ) : (
-                    <div className="conversation-content">
-                      <span 
-                        className="conversation-title" 
-                        onClick={() => startRenaming(session)}
-                        style={{ cursor: 'pointer' }}
-                      >
-                        {session.name || 'Nouvelle conversation'}
-                      </span>
-                      <span className="conversation-preview">
-                        {getLastResponsePreview(session)}
-                      </span>
-                    </div>
-                  )}
-                  {currentSession?.id === session.id && (
-                    <div className="conversation-actions">
-                      <button onClick={() => deleteSession(session.id)}><Trash2 size={16} /></button>
-                    </div>
-                  )}
+              {sortedSessions.length === 0 ? (
+                <div className="empty-state">
+                  <div className="empty-icon">💬</div>
+                  <p className="empty-text">Aucune conversation</p>
+                  <button onClick={handleCreateNewSession} className="empty-action">
+                    Créer une conversation
+                  </button>
                 </div>
-              ))}
+              ) : (
+                sortedSessions.map((session) => (
+                  <div
+                    key={session.id}
+                    className={`conversation-item ${currentSession?.id === session.id ? 'active' : ''}`}
+                    onClick={() => renamingSessionId !== session.id && handleSelectSession(session)}
+                  >
+                    {renamingSessionId === session.id ? (
+                      <input
+                        type="text"
+                        value={newName}
+                        onChange={(e) => setNewName(e.target.value)}
+                        onBlur={() => handleRename(session.id)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') handleRename(session.id);
+                          if (e.key === 'Escape') cancelRenaming();
+                        }}
+                        autoFocus
+                        className="rename-input"
+                      />
+                    ) : (
+                      <div className="conversation-content">
+                        <div className="conversation-header">
+                          <span 
+                            className="conversation-title" 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              startRenaming(session);
+                            }}
+                          >
+                            {session.name || 'Nouvelle conversation'}
+                          </span>
+                          {currentSession?.id === session.id && (
+                            <button 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                deleteSession(session.id);
+                              }}
+                              className="delete-btn"
+                              title="Supprimer la conversation"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          )}
+                        </div>
+                        <div className="conversation-preview">
+                          {getLastResponsePreview(session)}
+                        </div>
+                        <div className="conversation-meta">
+                          <span className="conversation-date">
+                            {formatDistanceToNow(new Date(session.created_at), { addSuffix: true, locale: fr })}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))
+              )}
             </div>
           </div>
         </div>
 
-        <div className="sidebar-bottom">
+        {/* Footer avec utilisateur */}
+        <div className="sidebar-footer">
           <div className="user-menu">
-            <img src={user?.user_metadata?.avatar_url || `https://api.dicebear.com/8.x/initials/svg?seed=${user?.email}`} alt="User" className="user-avatar" />
-            <span className="user-email">{user?.email}</span>
-            <div className="user-menu-dropdown">
-              <button className="user-menu-item"><Settings size={16}/><span>Paramètres</span></button>
-              <button onClick={signOut} className="user-menu-item"><LogOut size={16}/><span>Déconnexion</span></button>
+            <div className="user-info">
+              <img 
+                src={user?.user_metadata?.avatar_url || `https://api.dicebear.com/8.x/initials/svg?seed=${user?.email}`} 
+                alt="Avatar utilisateur" 
+                className="user-avatar" 
+              />
+              <div className="user-details">
+                <span className="user-name">{user?.user_metadata?.full_name || 'Utilisateur'}</span>
+                <span className="user-email">{user?.email}</span>
+              </div>
+            </div>
+            <div className="user-actions">
+              <button className="user-action-btn" title="Paramètres">
+                <Settings size={16} />
+              </button>
+              <button onClick={signOut} className="user-action-btn" title="Déconnexion">
+                <LogOut size={16} />
+              </button>
             </div>
           </div>
         </div>

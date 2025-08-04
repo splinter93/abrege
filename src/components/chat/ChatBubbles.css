@@ -1,0 +1,74 @@
+/* ========================================
+   CHAT BUBBLES - FICHIER DÉDIÉ
+   ======================================== */
+
+/* ========================================
+   STRUCTURE DES MESSAGES
+   ======================================== */
+
+.chat-message {
+  display: flex;
+  margin-bottom: var(--chat-spacing-lg);
+}
+
+.chat-message-user {
+  justify-content: flex-end;
+}
+
+.chat-message-assistant {
+  justify-content: flex-start;
+}
+
+/* ========================================
+   BULLES DE BASE
+   ======================================== */
+
+.chat-message-bubble {
+  max-width: 80%;
+  padding: var(--chat-spacing-lg);
+  border-radius: var(--chat-radius-xl);
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  border: none;
+  outline: none;
+  box-shadow: none;
+}
+
+/* ========================================
+   BULLE UTILISATEUR
+   ======================================== */
+
+.chat-message-bubble-user {
+  background: var(--chat-bg-secondary);
+  color: var(--chat-text-primary);
+  border: 2px solid var(--chat-border-primary);
+  box-shadow: var(--chat-shadow-sm);
+}
+
+/* ========================================
+   BULLE ASSISTANT - SANS ENCADRÉ ET SANS BACKGROUND
+   ======================================== */
+
+.chat-message-bubble-assistant {
+  background: transparent !important;
+  color: var(--chat-text-primary) !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  border-width: 0 !important;
+  border-style: none !important;
+  border-color: transparent !important;
+}
+
+
+
+/* ========================================
+   RESPONSIVE
+   ======================================== */
+
+@media (max-width: 768px) {
+  .chat-message-bubble {
+    max-width: 90%;
+    padding: var(--chat-spacing-md);
+  }
+} 

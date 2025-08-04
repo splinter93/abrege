@@ -45,73 +45,73 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend, loading, textareaRef }) =
   }, [message, textareaRef]);
 
   return (
-    <div className="chatgpt-input-area">
-      <div className="input-main-container">
-        <div className="input-content">
+    <div className="chat-input-area">
+      <div className="chat-input-main">
+        <div className="chat-input-content">
           <textarea
             ref={textareaRef}
             value={message}
             onChange={handleInputChange}
             onKeyDown={handleKeyDown}
             placeholder="Poser une question"
-            className="chatgpt-textarea"
+            className="chat-input-textarea"
             rows={1}
           />
           
-          <div className="input-icons-container">
-            <div className="input-icons-left">
-              <button className="icon-button" aria-label="Ajouter">
+          <div className="chat-input-icons">
+            <div className="chat-input-icons-left">
+              <button className="chat-input-icon-btn" aria-label="Ajouter">
                 <Plus size={16} />
               </button>
-              <button className="icon-button" aria-label="Globe">
+              <button className="chat-input-icon-btn" aria-label="Globe">
                 <Globe size={16} />
               </button>
-              <button className="icon-button" aria-label="Rechercher">
+              <button className="chat-input-icon-btn" aria-label="Rechercher">
                 <Search size={16} />
               </button>
-              <button className="icon-button" aria-label="Format">
+              <button className="chat-input-icon-btn" aria-label="Format">
                 <Type size={16} />
               </button>
-              <span className="version-text">o3</span>
+              <span className="chat-input-version">o3</span>
             </div>
           </div>
         </div>
         
-                  <div className="input-actions">
-            <button className="speaker-button" aria-label="Haut-parleur">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
-                <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
-                <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
-              </svg>
-            </button>
-            
-            <button 
-              onClick={handleSend} 
-              disabled={!message.trim() || loading}
-              className="mic-button-chatgpt"
-              aria-label="Microphone"
-            >
-              {loading ? (
-                <Loader size={16} className="loading-spinner" />
-              ) : (
-                <Mic size={16} />
-              )}
-            </button>
-            
-            <button 
-              onClick={handleSend} 
-              disabled={!message.trim() || loading}
-              className="send-button-chatgpt"
-              aria-label="Envoyer le message"
-            >
-              {loading ? (
-                <Loader size={16} className="loading-spinner" />
-              ) : (
-                <ArrowUp size={16} />
-              )}
-            </button>
-          </div>
+        <div className="chat-input-actions">
+          <button className="chat-input-speaker" aria-label="Haut-parleur">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+              <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+              <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
+            </svg>
+          </button>
+          
+          <button 
+            onClick={handleSend} 
+            disabled={!message.trim() || loading}
+            className="chat-input-mic"
+            aria-label="Microphone"
+          >
+            {loading ? (
+              <Loader size={16} className="loading-spinner" />
+            ) : (
+              <Mic size={16} />
+            )}
+          </button>
+          
+          <button 
+            onClick={handleSend} 
+            disabled={!message.trim() || loading}
+            className="chat-input-send"
+            aria-label="Envoyer le message"
+          >
+            {loading ? (
+              <Loader size={16} className="loading-spinner" />
+            ) : (
+              <ArrowUp size={16} />
+            )}
+          </button>
+        </div>
       </div>
     </div>
   );

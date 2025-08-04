@@ -260,16 +260,16 @@ const ChatWidget: React.FC = () => {
           )}
 
           <div className="chat-content">
-            <div className="messages-container" role="log" aria-live="polite" aria-label="Messages du chat">
-              <div className="message-list">
+            <div className="chat-messages-container" role="log" aria-live="polite" aria-label="Messages du chat">
+              <div className="chat-message-list">
                 {messages.map((msg: ChatMessage, idx: number) => (
                   <div 
                     key={msg.id || idx} 
-                    className={`message ${msg.role === 'user' ? 'user-message' : 'assistant-message'}`}
+                    className={`chat-message chat-message-${msg.role}`}
                     role="article"
                     aria-label={`Message ${msg.role === 'user' ? 'utilisateur' : 'assistant'}`}
                   >
-                    <div className={`message-bubble ${msg.role === 'user' ? 'user-bubble' : 'assistant-bubble'}`}>
+                    <div className={`chat-message-bubble chat-message-bubble-${msg.role}`}>
                       {msg.role === 'assistant' ? (
                         <EnhancedMarkdownMessage content={msg.content} />
                       ) : (

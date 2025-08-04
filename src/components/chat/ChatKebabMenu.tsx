@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useRef, useEffect } from 'react';
 import { useLLMStore } from '@/store/useLLMStore';
-import './ChatKebabMenu.css';
+import './index.css';
 
 interface ChatKebabMenuProps {
   isWideMode: boolean;
