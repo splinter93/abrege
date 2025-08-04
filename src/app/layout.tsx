@@ -5,6 +5,7 @@ import "./globals.css";
 // import Sidebar from '../components/Sidebar';
 import '../styles/typography.css';
 import '../styles/design-system.css';
+import '../styles/chat-design-system.css';
 import '../styles/editor.css';
 import '../styles/markdown.css';
 import '../components/editor/editor-header.css';

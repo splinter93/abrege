@@ -7,8 +7,7 @@ import ChatInput from './ChatInput';
 import EnhancedMarkdownMessage from './EnhancedMarkdownMessage';
 import ChatSidebar from './ChatSidebar';
 import { supabase } from '@/supabaseClient';
-import './chat-core.css';
-import './chat-components.css';
+import './index.css';
 
 const ChatWidget: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);

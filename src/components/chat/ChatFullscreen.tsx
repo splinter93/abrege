@@ -9,8 +9,7 @@ import ChatInput from './ChatInput';
 import EnhancedMarkdownMessage from './EnhancedMarkdownMessage';
 import ChatKebabMenu from './ChatKebabMenu';
 import ChatSidebar from './ChatSidebar';
-import './chat-core.css';
-import './chat-components.css';
+import './index.css';
 import { supabase } from '@/supabaseClient';
 import OptimizedMessage from './OptimizedMessage';
 
