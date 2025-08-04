@@ -68,35 +68,49 @@ export const useSessionSync = () => {
     setError(null);
 
     try {
+      console.log('[useSessionSync] ➕ Création session avec nom:', name);
+      
       // Vérifier l'authentification avant de créer
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.access_token) {
+        console.log('[useSessionSync] ❌ Pas de token d\'authentification');
         setError('Authentification requise pour créer une session');
         setLoading(false);
         return { success: false, error: 'Authentification requise' };
       }
 
+      console.log('[useSessionSync] ✅ Token trouvé, appel sessionSyncService...');
       const result = await sessionSyncService.createSessionAndSync(name);
+      console.log('[useSessionSync] 📋 Résultat sessionSyncService:', result);
       
       if (!result.success) {
+        console.log('[useSessionSync] ❌ Échec création session:', result.error);
         setError(result.error || 'Erreur création session');
         return result;
       } else {
+        console.log('[useSessionSync] ✅ Session créée avec succès');
+        
         // Déclencher un polling après création de session
         await chatPollingService.triggerPolling('création session');
         
         // Récupérer la session créée depuis le store
         const store = useChatStore.getState();
         const sessions = store.sessions;
+        console.log('[useSessionSync] 📊 Sessions dans le store:', sessions.length);
+        console.log('[useSessionSync] 📋 Sessions:', sessions);
+        
         const newSession = sessions[sessions.length - 1]; // La dernière session créée
+        console.log('[useSessionSync] 🎯 Nouvelle session trouvée:', newSession);
         
         if (newSession) {
           // Définir cette session comme courante
           store.setCurrentSession(newSession);
           console.log('[useSessionSync] ✅ Nouvelle session définie comme courante:', newSession);
+          return { ...result, session: newSession };
+        } else {
+          console.log('[useSessionSync] ⚠️ Aucune nouvelle session trouvée dans le store');
+          return { success: false, error: 'Session créée mais non trouvée dans le store' };
         }
-        
-        return { ...result, session: newSession };
       }
     } catch (error) {
       console.error('[useSessionSync] ❌ Erreur createSession:', error);
