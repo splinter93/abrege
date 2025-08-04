@@ -14,6 +14,7 @@ interface ChatSidebarProps {
 
 const ChatSidebar: React.FC<ChatSidebarProps> = ({ isOpen, onClose }) => {
   const [renamingSessionId, setRenamingSessionId] = useState<string | null>(null);
+  const [agentsExpanded, setAgentsExpanded] = useState(false);
   
   const {
     sessions,
@@ -263,23 +264,41 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({ isOpen, onClose }) => {
 
         {/* Menu déroulant Mes Agents */}
         <div className="chat-sidebar-agents">
-          <div className="chat-sidebar-agents-header">
+          <div 
+            className="chat-sidebar-agents-header"
+            onClick={() => setAgentsExpanded(!agentsExpanded)}
+          >
             <span>Mes Agents</span>
-            <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+            <svg 
+              width="12" 
+              height="12" 
+              fill="none" 
+              stroke="currentColor" 
+              strokeWidth="2" 
+              strokeLinecap="round" 
+              strokeLinejoin="round" 
+              viewBox="0 0 24 24"
+              style={{ 
+                transform: agentsExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
+                transition: 'transform 0.2s ease'
+              }}
+            >
               <polyline points="6,9 12,15 18,9"></polyline>
             </svg>
           </div>
-          <div className="chat-sidebar-agents-content">
-            <div className="chat-sidebar-agent-item">
-              <span>Assistant Général</span>
+          {agentsExpanded && (
+            <div className="chat-sidebar-agents-content">
+              <div className="chat-sidebar-agent-item">
+                <span>Assistant Général</span>
+              </div>
+              <div className="chat-sidebar-agent-item">
+                <span>Expert Technique</span>
+              </div>
+              <div className="chat-sidebar-agent-item">
+                <span>Rédacteur</span>
+              </div>
             </div>
-            <div className="chat-sidebar-agent-item">
-              <span>Expert Technique</span>
-            </div>
-            <div className="chat-sidebar-agent-item">
-              <span>Rédacteur</span>
-            </div>
-          </div>
+          )}
         </div>
 
         {/* Section Conversations */}

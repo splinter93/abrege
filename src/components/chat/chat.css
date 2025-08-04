@@ -1498,6 +1498,8 @@
 
 .chat-sidebar-agents-content {
   margin-top: 0.5rem;
+  overflow: hidden;
+  transition: all 0.3s ease;
 }
 
 .chat-sidebar-agent-item {
