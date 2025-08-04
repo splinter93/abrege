@@ -26,8 +26,9 @@
 }
 
 .chat-message-bubble-user {
-  background: var(--chat-accent);
-  color: var(--chat-bg-primary);
+  background: var(--chat-bg-elevated);
+  color: var(--chat-text-primary);
+  border: 1px solid var(--chat-border-secondary);
   border-bottom-right-radius: var(--chat-radius-sm);
 }
 
