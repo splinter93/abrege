@@ -68,31 +68,17 @@ export function detectMermaidBlocks(content: string): ContentBlock[] {
 }
 
 /**
- * Valide si le contenu Mermaid est syntaxiquement correct
+ * Valide si le contenu Mermaid est syntaxiquement correct.
+ * On laisse Mermaid.js faire sa propre validation - notre validation était trop restrictive.
  */
 export function validateMermaidSyntax(content: string): { isValid: boolean; error?: string } {
   try {
-    // Vérifications basiques
     if (!content.trim()) {
       return { isValid: false, error: 'Contenu vide' };
     }
 
-    // Vérifier les types de diagrammes supportés
-    const supportedTypes = [
-      'graph', 'flowchart', 'sequenceDiagram', 'classDiagram', 
-      'stateDiagram', 'entityRelationshipDiagram', 'userJourney',
-      'gantt', 'pie', 'gitgraph', 'journey', 'er'
-    ];
-
-    const firstLine = content.trim().split('\n')[0];
-    const hasValidType = supportedTypes.some(type => 
-      firstLine.toLowerCase().includes(type)
-    );
-
-    if (!hasValidType) {
-      return { isValid: false, error: 'Type de diagramme non reconnu' };
-    }
-
+    // On accepte tout contenu non-vide et on laisse Mermaid.js valider
+    // La validation précédente était trop restrictive et cassait des diagrammes valides
     return { isValid: true };
   } catch (error) {
     return { 

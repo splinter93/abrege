@@ -1,0 +1,211 @@
+/* ========================================
+   CHAT MESSAGE - COMPOSANT SIMPLIFIÉ
+   ======================================== */
+
+.chat-message {
+  display: flex;
+  margin-bottom: var(--chat-spacing-lg);
+  animation: chatMessageSlideIn 0.3s ease-out;
+}
+
+.chat-message-user {
+  justify-content: flex-end;
+}
+
+.chat-message-assistant {
+  justify-content: flex-start;
+}
+
+.chat-message-bubble {
+  max-width: 80%;
+  padding: var(--chat-spacing-md) var(--chat-spacing-lg);
+  border-radius: var(--chat-radius-lg);
+  position: relative;
+  word-wrap: break-word;
+  line-height: var(--chat-line-height-normal);
+}
+
+.chat-message-bubble-user {
+  background: var(--chat-accent);
+  color: var(--chat-bg-primary);
+  border-bottom-right-radius: var(--chat-radius-sm);
+}
+
+.chat-message-bubble-assistant {
+  background: var(--chat-bg-elevated);
+  color: var(--chat-text-primary);
+  border: 1px solid var(--chat-border-secondary);
+  border-bottom-left-radius: var(--chat-radius-sm);
+}
+
+/* ========================================
+   MARKDOWN STYLES
+   ======================================== */
+
+.chat-markdown {
+  font-size: var(--chat-font-size-md);
+  line-height: var(--chat-line-height-relaxed);
+}
+
+.chat-markdown h1,
+.chat-markdown h2,
+.chat-markdown h3,
+.chat-markdown h4,
+.chat-markdown h5,
+.chat-markdown h6 {
+  margin: var(--chat-spacing-md) 0 var(--chat-spacing-sm) 0;
+  font-weight: var(--chat-font-weight-semibold);
+  line-height: var(--chat-line-height-tight);
+}
+
+.chat-markdown h1 { font-size: var(--chat-font-size-xl); }
+.chat-markdown h2 { font-size: var(--chat-font-size-lg); }
+.chat-markdown h3 { font-size: var(--chat-font-size-md); }
+
+.chat-markdown p {
+  margin: 0 0 var(--chat-spacing-sm) 0;
+}
+
+.chat-markdown p:last-child {
+  margin-bottom: 0;
+}
+
+.chat-markdown ul,
+.chat-markdown ol {
+  margin: var(--chat-spacing-sm) 0;
+  padding-left: var(--chat-spacing-xl);
+}
+
+.chat-markdown li {
+  margin: var(--chat-spacing-xs) 0;
+}
+
+.chat-markdown blockquote {
+  margin: var(--chat-spacing-sm) 0;
+  padding: var(--chat-spacing-sm) var(--chat-spacing-md);
+  border-left: 3px solid var(--chat-accent);
+  background: var(--chat-bg-tertiary);
+  border-radius: 0 var(--chat-radius-md) var(--chat-radius-md) 0;
+}
+
+.chat-markdown code {
+  background: var(--chat-bg-tertiary);
+  padding: 2px 6px;
+  border-radius: var(--chat-radius-sm);
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 0.9em;
+}
+
+.chat-markdown pre {
+  background: var(--chat-bg-tertiary);
+  padding: var(--chat-spacing-md);
+  border-radius: var(--chat-radius-md);
+  overflow-x: auto;
+  margin: var(--chat-spacing-sm) 0;
+}
+
+.chat-markdown pre code {
+  background: none;
+  padding: 0;
+}
+
+.chat-markdown a {
+  color: var(--chat-accent);
+  text-decoration: none;
+  transition: color var(--chat-transition-fast);
+}
+
+.chat-markdown a:hover {
+  color: var(--chat-accent-hover);
+  text-decoration: underline;
+}
+
+.chat-markdown strong {
+  font-weight: var(--chat-font-weight-semibold);
+}
+
+.chat-markdown em {
+  font-style: italic;
+}
+
+.chat-markdown table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: var(--chat-spacing-sm) 0;
+  font-size: 0.9em;
+}
+
+.chat-markdown th,
+.chat-markdown td {
+  padding: var(--chat-spacing-sm);
+  text-align: left;
+  border-bottom: 1px solid var(--chat-border-secondary);
+}
+
+.chat-markdown th {
+  background: var(--chat-bg-tertiary);
+  font-weight: var(--chat-font-weight-medium);
+}
+
+/* ========================================
+   TYPING INDICATOR
+   ======================================== */
+
+.chat-typing-indicator {
+  display: flex;
+  gap: var(--chat-spacing-xs);
+  margin-top: var(--chat-spacing-sm);
+  justify-content: flex-start;
+}
+
+.chat-typing-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--chat-text-secondary);
+  animation: chatTyping 1.4s infinite ease-in-out;
+}
+
+.chat-typing-dot:nth-child(1) { animation-delay: -0.32s; }
+.chat-typing-dot:nth-child(2) { animation-delay: -0.16s; }
+
+@keyframes chatTyping {
+  0%, 80%, 100% {
+    transform: scale(0.8);
+    opacity: 0.5;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* ========================================
+   ANIMATIONS
+   ======================================== */
+
+@keyframes chatMessageSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ========================================
+   RESPONSIVE
+   ======================================== */
+
+@media (max-width: 768px) {
+  .chat-message-bubble {
+    max-width: 90%;
+    padding: var(--chat-spacing-sm) var(--chat-spacing-md);
+  }
+  
+  .chat-markdown {
+    font-size: var(--chat-font-size-sm);
+  }
+} 

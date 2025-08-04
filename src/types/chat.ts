@@ -84,4 +84,17 @@ export interface SynesiaPayload {
     }>;
     history_limit?: number;
   };
+}
+
+export interface Agent {
+  id: string;
+  name: string;
+  provider: string;
+  profile_picture?: string;
+  temperature: number;
+  top_p: number;
+  instructions?: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
 } 

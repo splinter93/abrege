@@ -42,14 +42,56 @@ const ChatFullscreen: React.FC = () => {
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const lastScrollTriggerRef = useRef<string>('');
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
+  const scrollToBottom = useCallback((force = false) => {
+    // Éviter les scrolls multiples dans un court laps de temps
+    const now = Date.now();
+    const timeSinceLastScroll = now - parseInt(lastScrollTriggerRef.current || '0');
+    
+    if (!force && timeSinceLastScroll < 100) {
+      return;
+    }
+    
+    // Clear le timeout précédent
+    if (scrollTimeoutRef.current) {
+      clearTimeout(scrollTimeoutRef.current);
+    }
+    
+    // Debounce le scroll
+    scrollTimeoutRef.current = setTimeout(() => {
+      messagesEndRef.current?.scrollIntoView({ 
+        behavior: 'smooth',
+        block: 'end'
+      });
+      lastScrollTriggerRef.current = now.toString();
+    }, 50);
+  }, []);
 
+  // Scroll automatique optimisé
   useEffect(() => {
-    scrollToBottom();
-  }, [currentSession?.thread, streamingContent]);
+    // Scroll seulement quand de nouveaux messages sont ajoutés
+    if (currentSession?.thread && currentSession.thread.length > 0) {
+      scrollToBottom();
+    }
+  }, [currentSession?.thread, scrollToBottom]);
+
+  // Scroll pendant le streaming (avec debounce)
+  useEffect(() => {
+    if (isStreaming && streamingContent) {
+      scrollToBottom();
+    }
+  }, [isStreaming, streamingContent, scrollToBottom]);
+
+  // Cleanup des timeouts
+  useEffect(() => {
+    return () => {
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+    };
+  }, []);
 
   // Charger les sessions au montage
   useEffect(() => {
@@ -74,6 +116,17 @@ const ChatFullscreen: React.FC = () => {
     };
   }, [streamingChannel]);
 
+  // Gestion du scroll global
+  useEffect(() => {
+    // Empêcher le scroll global quand le chat est actif
+    document.body.classList.add('chat-active');
+    
+    return () => {
+      // Restaurer le scroll global quand le chat est fermé
+      document.body.classList.remove('chat-active');
+    };
+  }, []);
+
   const handleSendMessage = async (message: string) => {
     if (!message.trim() || loading) return;
     
@@ -97,6 +150,9 @@ const ChatFullscreen: React.FC = () => {
         timestamp: new Date().toISOString()
       };
       await addMessage(userMessage);
+
+      // Attendre un tick pour s'assurer que le message utilisateur est bien ajouté
+      await new Promise(resolve => setTimeout(resolve, 0));
 
       // Récupérer le token d'authentification
       const { data: { session } } = await supabase.auth.getSession();
@@ -129,11 +185,17 @@ const ChatFullscreen: React.FC = () => {
         .channel(clientChannelId)
         .on('broadcast', { event: 'llm-token' }, (payload) => {
           try {
-            console.log('[ChatFullscreen] 📝 Token received via broadcast:', payload);
             const { token, sessionId } = payload.payload || {};
             const ref = streamingContextRef.current;
             if (ref && sessionId === ref.sessionId && token) {
-              setStreamingContent(prev => prev + token);
+              setStreamingContent(prev => {
+                const newContent = prev + token;
+                // Log seulement tous les 50 tokens pour éviter le spam
+                if (newContent.length % 50 === 0) {
+                  console.log('[ChatFullscreen] 📝 Streaming progress:', newContent.length, 'chars');
+                }
+                return newContent;
+              });
             }
           } catch (error) {
             console.error('[ChatFullscreen] ❌ Erreur traitement token:', error);
@@ -145,6 +207,14 @@ const ChatFullscreen: React.FC = () => {
             const { sessionId, fullResponse } = payload.payload || {};
             const ref = streamingContextRef.current;
             if (ref && sessionId === ref.sessionId && fullResponse) {
+              // Reset streaming state AVANT d'ajouter le message pour éviter les conflits
+              streamingContextRef.current = null;
+              setIsStreaming(false);
+              setStreamingContent('');
+              
+              // Attendre un tick pour s'assurer que le state est mis à jour
+              await new Promise(resolve => setTimeout(resolve, 0));
+              
               // Sauvegarder le message final
               const finalMessage = {
                 role: 'assistant' as const,
@@ -155,13 +225,12 @@ const ChatFullscreen: React.FC = () => {
               await addMessage(finalMessage);
               console.log('[ChatFullscreen] 💾 Message assistant sauvegardé');
               
-              // Reset streaming state
-              streamingContextRef.current = null;
-              setIsStreaming(false);
-              setStreamingContent('');
+              // Scroll forcé après l'ajout du message
+              setTimeout(() => scrollToBottom(true), 100);
             }
           } catch (error) {
             console.error('[ChatFullscreen] ❌ Erreur traitement completion:', error);
+            streamingContextRef.current = null;
             setIsStreaming(false);
             setStreamingContent('');
           }

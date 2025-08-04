@@ -9,100 +9,93 @@ interface EnhancedMarkdownMessageProps {
   content: string;
 }
 
-const EnhancedMarkdownMessage: React.FC<EnhancedMarkdownMessageProps> = React.memo(({ content }) => {
-  // Rendu markdown optimisé pour le streaming
-  const { html: fullHtml } = useMarkdownRender({ 
-    content, 
-    debounceDelay: 0, 
-    disableDebounce: true 
-  });
+// Composant séparé pour les blocs de texte
+const TextBlock: React.FC<{ content: string; index: number }> = React.memo(({ content, index }) => {
+  const { html } = useMarkdownRender({ content });
+  
+  return (
+    <div 
+      key={`text-${index}`}
+      className="chat-markdown"
+      dangerouslySetInnerHTML={{ __html: html }}
+    />
+  );
+});
 
-  // Détection Mermaid optimisée avec memoization
+TextBlock.displayName = 'TextBlock';
+
+const EnhancedMarkdownMessage: React.FC<EnhancedMarkdownMessageProps> = React.memo(({ content }) => {
+  // ==================================================================
+  // 1. Appeler TOUS les hooks inconditionnellement en premier
+  // ==================================================================
+  
+  const { html: fullHtml } = useMarkdownRender({ content });
+
   const blocks = useMemo(() => detectMermaidBlocks(content), [content]);
 
-  // Si pas de Mermaid, rendu simple et rapide
-  if (blocks.length === 1 && blocks[0].type === 'text') {
-    return (
-      <div 
-        className="chat-markdown"
-        dangerouslySetInnerHTML={{ __html: fullHtml }}
-      />
-    );
-  }
+  // Mémoriser le rendu pour éviter les re-renders inutiles
+  const renderedContent = useMemo(() => {
+    // Si pas de blocs Mermaid, rendu simple
+    if (blocks.length === 1 && blocks[0].type === 'text') {
+      return (
+        <div 
+          className="chat-markdown"
+          dangerouslySetInnerHTML={{ __html: fullHtml }}
+        />
+      );
+    }
 
-  // Rendu mixte optimisé
-  const renderedBlocks = useMemo(() => {
-    return blocks.map((block, index) => {
-      if (block.type === 'text') {
-        return {
-          type: 'text' as const,
-          content: fullHtml,
-          index
-        };
-      } else {
-        const mermaidContent = cleanMermaidContent(block.content);
-        const validation = validateMermaidSyntax(mermaidContent);
-        
-        return {
-          type: 'mermaid' as const,
-          content: mermaidContent,
-          validation,
-          originalContent: block.content,
-          startIndex: block.startIndex,
-          index
-        };
-      }
-    });
+    // Si on a des blocs Mermaid, on doit traiter chaque bloc séparément
+    return (
+      <div className="chat-enhanced-markdown">
+        {blocks.map((block, index) => {
+          if (block.type === 'text') {
+            // Pour les blocs de texte, utiliser le composant séparé
+            return <TextBlock key={`text-${index}`} content={block.content} index={index} />;
+          } else {
+            // Pour les blocs Mermaid
+            const mermaidContent = cleanMermaidContent(block.content);
+            const validation = validateMermaidSyntax(mermaidContent);
+            
+            return (
+              <div key={`mermaid-${index}`} className="mermaid-block">
+                {validation.isValid ? (
+                  <MermaidRenderer 
+                    key={`mermaid-renderer-${index}`}
+                    chart={mermaidContent}
+                    className="mermaid-inline"
+                  />
+                ) : (
+                  <div className="mermaid-invalid">
+                    <div className="mermaid-invalid-content">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <circle cx="12" cy="12" r="10" />
+                        <line x1="15" y1="9" x2="9" y2="15" />
+                        <line x1="9" y1="9" x2="15" y2="15" />
+                      </svg>
+                      <span>Diagramme Mermaid invalide</span>
+                      {validation.error && (
+                        <details>
+                          <summary>Erreur</summary>
+                          <pre>{validation.error}</pre>
+                        </details>
+                      )}
+                      <details>
+                        <summary>Code source</summary>
+                        <pre className="mermaid-source">{block.content}</pre>
+                      </details>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          }
+        })}
+      </div>
+    );
   }, [blocks, fullHtml]);
 
-  return (
-    <div className="chat-enhanced-markdown">
-      {renderedBlocks.map((block) => {
-        if (block.type === 'text') {
-          return (
-            <div 
-              key={`text-${block.index}`}
-              className="chat-markdown"
-              dangerouslySetInnerHTML={{ __html: block.content }}
-            />
-          );
-        } else {
-          return (
-            <div key={`mermaid-${block.index}-${block.startIndex}`} className="mermaid-block">
-              {block.validation.isValid ? (
-                <MermaidRenderer 
-                  key={`mermaid-renderer-${block.index}-${block.startIndex}`}
-                  chart={block.content}
-                  className="mermaid-inline"
-                />
-              ) : (
-                <div className="mermaid-invalid">
-                  <div className="mermaid-invalid-content">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <circle cx="12" cy="12" r="10" />
-                      <line x1="15" y1="9" x2="9" y2="15" />
-                      <line x1="9" y1="9" x2="15" y2="15" />
-                    </svg>
-                    <span>Diagramme Mermaid invalide</span>
-                    {block.validation.error && (
-                      <details>
-                        <summary>Erreur</summary>
-                        <pre>{block.validation.error}</pre>
-                      </details>
-                    )}
-                    <details>
-                      <summary>Code source</summary>
-                      <pre className="mermaid-source">{block.originalContent}</pre>
-                    </details>
-                  </div>
-                </div>
-              )}
-            </div>
-          );
-        }
-      })}
-    </div>
-  );
+  return renderedContent;
 });
 
 EnhancedMarkdownMessage.displayName = 'EnhancedMarkdownMessage';

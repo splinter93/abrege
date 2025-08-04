@@ -14,6 +14,11 @@
   overflow: hidden;
   background: var(--chat-bg-primary);
   color: var(--chat-text-primary);
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
 }
 
 .main-content-area {
@@ -21,6 +26,7 @@
   flex: 1;
   overflow: hidden;
   position: relative;
+  min-height: 0; /* Important pour que flex fonctionne correctement */
 }
 
 /* ========================================
@@ -81,7 +87,7 @@
   overflow: hidden;
   position: relative;
   background: var(--chat-bg-primary);
-  /* La transition de la marge est supprimée car nous utilisons la transition de largeur de la sidebar */
+  min-height: 0; /* Important pour que flex fonctionne correctement */
 }
 
 /* ========================================
@@ -98,11 +104,8 @@
   border-radius: var(--chat-radius-lg);
   color: var(--chat-text-secondary);
   cursor: pointer;
-  padding: var(--chat-spacing-md);
+  padding: var(--chat-spacing-sm);
   transition: all var(--chat-transition-normal);
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
 .sidebar-toggle-btn-floating:hover {
@@ -129,8 +132,6 @@
   }
 }
 
-
-
 /* ========================================
    MESSAGES CONTAINER
    ======================================== */
@@ -138,9 +139,18 @@
 .chat-messages-container {
   flex: 1;
   overflow-y: auto;
+  overflow-x: hidden;
   padding: var(--chat-spacing-xl);
   padding-bottom: 16rem;
   background: var(--chat-bg-primary);
+  min-height: 0; /* Important pour que flex fonctionne correctement */
+  /* Amélioration du scroll */
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch; /* Pour iOS */
+  /* Optimisations de performance */
+  will-change: scroll-position;
+  transform: translateZ(0); /* Force hardware acceleration */
+  backface-visibility: hidden;
 }
 
 .chat-message-list {
@@ -149,6 +159,20 @@
   display: flex;
   flex-direction: column;
   gap: var(--chat-spacing-xl);
+  /* Optimisations de performance */
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+/* ========================================
+   INPUT CONTAINER
+   ======================================== */
+
+.chat-input-container {
+  flex-shrink: 0;
+  background: var(--chat-bg-primary);
+  padding: var(--chat-spacing-lg);
+  z-index: var(--chat-z-sidebar);
 }
 
 /* ========================================

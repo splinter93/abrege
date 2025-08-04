@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useChatStore } from '@/store/useChatStore';
 import { useAuth } from '@/hooks/useAuth';
+import { useAgents } from '@/hooks/useAgents';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Edit, Trash2, LogOut, Settings, ChevronDown, ChevronRight, Plus } from 'react-feather';
@@ -16,6 +17,7 @@ interface ChatSidebarProps {
 const ChatSidebar: React.FC<ChatSidebarProps> = ({ isOpen, isDesktop, onClose }) => {
   const { user, signOut } = useAuth();
   const { sessions, currentSession, createSession, setCurrentSession, deleteSession, updateSession } = useChatStore();
+  const { agents, loading: agentsLoading } = useAgents();
   const [renamingSessionId, setRenamingSessionId] = useState<string | null>(null);
   const [newName, setNewName] = useState('');
   const [agentsOpen, setAgentsOpen] = useState(true);
@@ -110,14 +112,18 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({ isOpen, isDesktop, onClose })
             </div>
             {agentsOpen && (
               <div className="section-content">
-                <button className="agent-option">
-                  <div className="agent-icon">🤖</div>
-                  <span className="agent-name">DeepSeek</span>
-                </button>
-                <button className="agent-option">
-                  <div className="agent-icon">🧠</div>
-                  <span className="agent-name">Synesia</span>
-                </button>
+                {agentsLoading ? (
+                  <div className="agent-loading">Chargement des agents...</div>
+                ) : agents.length > 0 ? (
+                  agents.map((agent) => (
+                    <button key={agent.id} className="agent-option">
+                      <div className="agent-icon">{agent.profile_picture || '🤖'}</div>
+                      <span className="agent-name">{agent.name}</span>
+                    </button>
+                  ))
+                ) : (
+                  <div className="agent-empty">Aucun agent disponible</div>
+                )}
               </div>
             )}
           </div>

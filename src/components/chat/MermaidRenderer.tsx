@@ -88,15 +88,26 @@ const MermaidRenderer: React.FC<MermaidRendererProps> = ({ chart, className = ''
     return (
       <div className={`mermaid-error ${className}`}>
         <div className="mermaid-error-content">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <circle cx="12" cy="12" r="10" />
-            <line x1="15" y1="9" x2="9" y2="15" />
-            <line x1="9" y1="9" x2="15" y2="15" />
-          </svg>
-          <span>Erreur de rendu du diagramme</span>
-          <details>
-            <summary>Détails</summary>
-            <pre>{error}</pre>
+          <div className="mermaid-error-header">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="15" y1="9" x2="9" y2="15" />
+              <line x1="9" y1="9" x2="15" y2="15" />
+            </svg>
+            <span>Erreur de rendu du diagramme</span>
+          </div>
+          <details className="mermaid-error-details">
+            <summary>Voir l'erreur</summary>
+            <div className="mermaid-error-body">
+              <div className="mermaid-error-message">
+                <strong>Erreur :</strong>
+                <pre>{error}</pre>
+              </div>
+              <div className="mermaid-error-source">
+                <strong>Code source :</strong>
+                <pre className="mermaid-source">{chart}</pre>
+              </div>
+            </div>
           </details>
         </div>
       </div>

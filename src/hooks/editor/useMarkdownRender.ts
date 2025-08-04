@@ -1,10 +1,8 @@
-import { useMemo, useRef } from 'react';
+import { useMemo, useRef, useState, useEffect } from 'react';
 import { createMarkdownIt } from '@/utils/markdownItConfig';
 
 interface UseMarkdownRenderProps {
   content: string;
-  debounceDelay?: number;
-  disableDebounce?: boolean;
 }
 
 interface UseMarkdownRenderReturn {
@@ -14,30 +12,42 @@ interface UseMarkdownRenderReturn {
 }
 
 /**
- * Hook optimisé pour le rendu markdown en streaming
- * Suppression du debounce pour un rendu instantané
- * Optimisation des performances pour éviter les saccades
+ * Hook de rendu Markdown, fiabilisé pour le streaming.
+ * La clé est de ne jamais planter sur du markdown partiel et de forcer
+ * le rendu à chaque changement de contenu.
  */
 export const useMarkdownRender = ({
   content,
-  debounceDelay = 0,
-  disableDebounce = true // Désactivé par défaut pour le streaming
 }: UseMarkdownRenderProps): UseMarkdownRenderReturn => {
-  // Memoize markdown-it instance une seule fois
   const mdRef = useRef<ReturnType<typeof createMarkdownIt> | null>(null);
+
+  // Initialisation paresseuse et unique de markdown-it
   if (!mdRef.current) {
     mdRef.current = createMarkdownIt();
   }
 
-  // Rendu direct sans debounce pour le streaming
-  const html = useMemo(() => {
-    if (!content) return '';
-    return mdRef.current!.render(content);
+  // Utiliser useMemo pour éviter les re-renders inutiles
+  const { html, isRendering } = useMemo(() => {
+    try {
+      const rendered = mdRef.current!.render(content);
+      return {
+        html: rendered,
+        isRendering: false
+      };
+    } catch (error) {
+      console.error('Erreur de rendu Markdown (partiel, attendu):', error);
+      // En cas d'erreur (ex: markdown partiel), on affiche le contenu brut
+      // La prochaine mise à jour corrigera probablement le rendu.
+      return {
+        html: content,
+        isRendering: false
+      };
+    }
   }, [content]);
 
   return {
     html,
-    isRendering: false, // Pas de state de rendu pour éviter les re-renders
+    isRendering,
     md: mdRef.current
   };
 }; 

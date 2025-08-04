@@ -1,11 +1,11 @@
 'use client';
 
-import ChatFullscreen from '../../../components/chat/ChatFullscreen';
+import ChatFullscreenV2 from '../../../components/chat/ChatFullscreenV2';
 
 export default function ChatPage() {
   return (
     <div className="chat-page-root">
-      <ChatFullscreen />
+      <ChatFullscreenV2 />
       
       <style jsx>{`
         .chat-page-root {
