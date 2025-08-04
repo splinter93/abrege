@@ -86,38 +86,40 @@ export const useSessionSync = () => {
       if (!result.success) {
         console.log('[useSessionSync] ❌ Échec création session:', result.error);
         setError(result.error || 'Erreur création session');
+        setLoading(false);
         return result;
+      }
+      
+      console.log('[useSessionSync] ✅ Session créée avec succès');
+      
+      // Déclencher un polling après création de session
+      await chatPollingService.triggerPolling('création session');
+      
+      // Récupérer la session créée depuis le store
+      const store = useChatStore.getState();
+      const sessions = store.sessions;
+      console.log('[useSessionSync] 📊 Sessions dans le store:', sessions.length);
+      console.log('[useSessionSync] 📋 Sessions:', sessions);
+      
+      const newSession = sessions[sessions.length - 1]; // La dernière session créée
+      console.log('[useSessionSync] 🎯 Nouvelle session trouvée:', newSession);
+      
+      if (newSession) {
+        // Définir cette session comme courante
+        store.setCurrentSession(newSession);
+        console.log('[useSessionSync] ✅ Nouvelle session définie comme courante:', newSession);
+        setLoading(false);
+        return { ...result, session: newSession };
       } else {
-        console.log('[useSessionSync] ✅ Session créée avec succès');
-        
-        // Déclencher un polling après création de session
-        await chatPollingService.triggerPolling('création session');
-        
-        // Récupérer la session créée depuis le store
-        const store = useChatStore.getState();
-        const sessions = store.sessions;
-        console.log('[useSessionSync] 📊 Sessions dans le store:', sessions.length);
-        console.log('[useSessionSync] 📋 Sessions:', sessions);
-        
-        const newSession = sessions[sessions.length - 1]; // La dernière session créée
-        console.log('[useSessionSync] 🎯 Nouvelle session trouvée:', newSession);
-        
-        if (newSession) {
-          // Définir cette session comme courante
-          store.setCurrentSession(newSession);
-          console.log('[useSessionSync] ✅ Nouvelle session définie comme courante:', newSession);
-          return { ...result, session: newSession };
-        } else {
-          console.log('[useSessionSync] ⚠️ Aucune nouvelle session trouvée dans le store');
-          return { success: false, error: 'Session créée mais non trouvée dans le store' };
-        }
+        console.log('[useSessionSync] ⚠️ Aucune nouvelle session trouvée dans le store');
+        setLoading(false);
+        return { success: false, error: 'Session créée mais non trouvée dans le store' };
       }
     } catch (error) {
       console.error('[useSessionSync] ❌ Erreur createSession:', error);
       setError('Erreur lors de la création');
-      return { success: false, error: 'Erreur lors de la création' };
-    } finally {
       setLoading(false);
+      return { success: false, error: 'Erreur lors de la création' };
     }
   }, [setLoading, setError]);
 
