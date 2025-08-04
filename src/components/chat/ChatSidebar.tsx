@@ -32,28 +32,17 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({ isOpen, onClose }) => {
   };
 
   const handleNewChat = async () => {
-    // Créer une session temporaire immédiatement
-    const tempSession: ChatSession = {
-      id: `temp-${Date.now()}`,
-      name: 'Nouvelle conversation',
-      thread: [],
-      history_limit: 10,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    };
+    console.log('[ChatSidebar] ➕ Création nouvelle session...');
     
-    // Ajouter immédiatement dans l'UI
-    const { setSessions, setCurrentSession } = useChatStore.getState();
-    const currentSessions = useChatStore.getState().sessions;
-    const updatedSessions = [tempSession, ...currentSessions];
-    setSessions(updatedSessions);
-    setCurrentSession(tempSession);
-    console.log('[ChatSidebar] ✅ Nouvelle session ajoutée immédiatement');
+    // Créer directement une vraie session en DB
+    const result = await createSession('Nouvelle conversation') as any;
     
-    // Créer la session en DB et attendre
-    console.log('[ChatSidebar] ⏳ Création session en DB...');
-    await createSession();
-    console.log('[ChatSidebar] ✅ Session créée en DB');
+    if (!result?.success) {
+      console.error('[ChatSidebar] ❌ Erreur création session:', result?.error);
+      return;
+    }
+    
+    console.log('[ChatSidebar] ✅ Session créée en DB:', result.session);
   };
 
   const handleStartRename = (sessionId: string, e: React.MouseEvent) => {
