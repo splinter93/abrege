@@ -2,6 +2,7 @@ import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 import { SlugGenerator } from '@/utils/slugGenerator';
 import { NextRequest, NextResponse } from 'next/server';
+import { simpleLogger as logger } from '@/utils/logger';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -33,16 +34,16 @@ export async function POST(request: NextRequest): Promise<Response> {
       const { data: { user }, error: authError } = await supabase.auth.getUser();
       
       if (authError || !user) {
-        console.log("[Folder Create API] ❌ Token invalide ou expiré");
+        logger.dev("[Folder Create API] ❌ Token invalide ou expiré");
         return NextResponse.json(
           { error: 'Token invalide ou expiré' },
           { status: 401 }
         );
       }
       userId = user.id;
-      console.log("[Folder Create API] ✅ Utilisateur authentifié:", userId);
+      logger.dev("[Folder Create API] ✅ Utilisateur authentifié:", userId);
     } else {
-      console.log("[Folder Create API] ❌ Token d'authentification manquant");
+      logger.dev("[Folder Create API] ❌ Token d'authentification manquant");
       return NextResponse.json(
         { error: 'Authentification requise' },
         { status: 401 }
@@ -94,7 +95,7 @@ export async function POST(request: NextRequest): Promise<Response> {
     const isNotebookSlug = !finalNotebookId.includes('-') && finalNotebookId.length < 36;
     
     if (isNotebookSlug) {
-      console.log(`🔍 Résolution slug notebook: ${finalNotebookId}`);
+      logger.dev(`🔍 Résolution slug notebook: ${finalNotebookId}`);
       const { data: notebook, error: notebookError } = await supabase
         .from('classeurs')
         .select('id')
@@ -110,7 +111,7 @@ export async function POST(request: NextRequest): Promise<Response> {
       }
       
       finalNotebookIdResolved = notebook.id;
-      console.log(`✅ Notebook résolu: ${finalNotebookId} → ${finalNotebookIdResolved}`);
+      logger.dev(`✅ Notebook résolu: ${finalNotebookId} → ${finalNotebookIdResolved}`);
     }
     
     // Créer le dossier avec le client authentifié
@@ -128,16 +129,16 @@ export async function POST(request: NextRequest): Promise<Response> {
       .single();
     
     if (error) {
-      console.error("[Folder Create API] ❌ Erreur création dossier:", error);
+      logger.error("[Folder Create API] ❌ Erreur création dossier:", error);
       return new Response(JSON.stringify({ error: error.message }), { status: 500, headers: { "Content-Type": "application/json" } });
     }
     
-    console.log("[Folder Create API] ✅ Dossier créé:", folder.id);
+    logger.dev("[Folder Create API] ✅ Dossier créé:", folder.id);
     
     return new Response(JSON.stringify({ folder }), { status: 201, headers: { "Content-Type": "application/json" } });
   } catch (err: unknown) {
     const error = err as Error;
-    console.error("[Folder Create API] ❌ Erreur:", err);
+    logger.error("[Folder Create API] ❌ Erreur:", err);
     return new Response(JSON.stringify({ error: error.message }), { status: 500, headers: { "Content-Type": "application/json" } });
   }
 } 

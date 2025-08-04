@@ -2,6 +2,7 @@ import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 import type { NextRequest } from 'next/server';
 import { SlugGenerator } from '@/utils/slugGenerator';
+import { simpleLogger as logger } from '@/utils/logger';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -76,14 +77,14 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (error) {
-      console.error('[API] ❌ Erreur création classeur:', error);
+      logger.error('[API] ❌ Erreur création classeur:', error);
       return new Response(
         JSON.stringify({ error: error.message }),
         { status: 500 }
       );
     }
 
-    console.log('[API] ✅ Classeur créé:', classeur.name);
+    logger.dev('[API] ✅ Classeur créé:', classeur.name);
     return new Response(
       JSON.stringify({ classeur }),
       { status: 201 }
@@ -95,7 +96,7 @@ export async function POST(request: NextRequest) {
       return new Response(JSON.stringify({ error: error.message }), { status: 401, headers: { "Content-Type": "application/json" } });
     }
     
-    console.error('[API] ❌ Erreur serveur création classeur:', error);
+    logger.error('[API] ❌ Erreur serveur création classeur:', error);
     return new Response(
       JSON.stringify({ error: 'Erreur serveur' }),
       { status: 500 }

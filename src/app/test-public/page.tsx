@@ -3,6 +3,7 @@ import PublicNoteContent from '@/app/[username]/[slug]/PublicNoteContent';
 import PublicPageHeader from '@/components/PublicPageHeader';
 import CraftedBadge from '@/components/CraftedBadge';
 import '@/styles/typography.css';
+import { simpleLogger as logger } from '@/utils/logger';
 
 export default function TestPublicPage() {
   // Données de test qui simulent une note publique
@@ -23,7 +24,7 @@ export default function TestPublicPage() {
 
 <h3>Code de test</h3>
 
-<pre><code class="language-javascript">console.log('Test de la page publique');</code></pre>
+<pre><code class="language-javascript">logger.dev('Test de la page publique');</code></pre>
 
 <h2>Liste de test</h2>
 

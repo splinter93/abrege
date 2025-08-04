@@ -8,6 +8,7 @@ import './SummaryPage.css';
 // import { motion } from 'framer-motion'; // Désactivé pour interface simple
 import { MdRefresh } from 'react-icons/md';
 import '@/styles/markdown.css';
+import { simpleLogger as logger } from '@/utils/logger';
 
 interface SummaryContentItem {
   type: 'paragraph' | 'takeaway' | 'list' | 'quote' | 'code';
@@ -155,10 +156,10 @@ export default function SummaryPage() {
         setAudioUrl(url);
       } else {
         toast.success("Le podcast arrive dans quelques instants !");
-        console.warn("La réponse de l'API ne contenait pas de champ 'audioB64'.");
+        logger.warn("La réponse de l'API ne contenait pas de champ 'audioB64'.");
       }
     } catch (error) {
-      console.error("Erreur lors de la création du podcast :", error);
+      logger.error("Erreur lors de la création du podcast :", error);
       toast.error("Une erreur est survenue lors de la création du podcast.");
     } finally {
       setIsPocasting(false);

@@ -1,4 +1,5 @@
 import { toast } from 'react-hot-toast';
+import { simpleLogger as logger } from '@/utils/logger';
 
 export interface ErrorContext {
   operation: string;
@@ -53,11 +54,11 @@ export class ErrorHandler {
 
     if (process.env.NODE_ENV === 'development') {
       console.group(`🚨 Erreur API - ${context.operation}`);
-      console.error('Détails:', errorInfo);
+      logger.error('Détails:', errorInfo);
       console.groupEnd();
     } else {
       // En production, on pourrait envoyer à un service de monitoring
-      console.error(`[ERROR] ${context.operation}:`, error.message);
+      logger.error(`[ERROR] ${context.operation}:`, error.message);
     }
   }
 
@@ -126,7 +127,7 @@ export class ErrorHandler {
     });
 
     if (process.env.NODE_ENV === 'development') {
-      console.error(`[NETWORK_ERROR] ${context.operation}: Problème de connexion`);
+      logger.error(`[NETWORK_ERROR] ${context.operation}: Problème de connexion`);
     }
   }
 
@@ -141,7 +142,7 @@ export class ErrorHandler {
     });
 
     if (process.env.NODE_ENV === 'development') {
-      console.error(`[VALIDATION_ERROR] ${context.operation}: Champ invalide - ${field}`);
+      logger.error(`[VALIDATION_ERROR] ${context.operation}: Champ invalide - ${field}`);
     }
   }
 }

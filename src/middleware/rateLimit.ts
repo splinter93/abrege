@@ -74,10 +74,10 @@ export const authRateLimiter = new RateLimiter({
  * Middleware de rate limiting
  */
 export function withRateLimit(
-  handler: (req: NextRequest, params?: any) => Promise<Response>,
+  handler: (req: NextRequest, params?: Record<string, string>) => Promise<Response>,
   limiter: RateLimiter = apiRateLimiter
 ) {
-  return async (req: NextRequest, params?: any): Promise<Response> => {
+  return async (req: NextRequest, params?: Record<string, string>): Promise<Response> => {
     // Identifier basé sur l'IP et l'endpoint
     const identifier = `${req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown'}:${req.nextUrl?.pathname || 'unknown'}`;
     

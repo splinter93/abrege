@@ -1,5 +1,6 @@
 import type { LLMProvider, AppContext, ChatMessage } from './types';
 import { SynesiaProvider, DeepSeekProvider } from './providers';
+import { simpleLogger as logger } from '@/utils/logger';
 
 export class LLMProviderManager {
   private providers: Map<string, LLMProvider> = new Map();
@@ -13,15 +14,15 @@ export class LLMProviderManager {
 
   registerProvider(provider: LLMProvider) {
     this.providers.set(provider.id, provider);
-    console.log(`[LLM Manager] ✅ Provider enregistré: ${provider.name} (${provider.id})`);
+    logger.dev(`[LLM Manager] ✅ Provider enregistré: ${provider.name} (${provider.id})`);
   }
 
   setProvider(providerId: string) {
     if (this.providers.has(providerId)) {
       this.currentProvider = providerId;
-      console.log(`[LLM Manager] 🔄 Provider changé: ${providerId}`);
+      logger.dev(`[LLM Manager] 🔄 Provider changé: ${providerId}`);
     } else {
-      console.error(`[LLM Manager] ❌ Provider non trouvé: ${providerId}`);
+      logger.error(`[LLM Manager] ❌ Provider non trouvé: ${providerId}`);
     }
   }
 
@@ -43,7 +44,7 @@ export class LLMProviderManager {
       throw new Error(`Provider ${provider.name} non configuré`);
     }
 
-    console.log(`[LLM Manager] 🚀 Appel via ${provider.name} (${provider.id})`);
+    logger.dev(`[LLM Manager] 🚀 Appel via ${provider.name} (${provider.id})`);
     return provider.call(message, context, history);
   }
 

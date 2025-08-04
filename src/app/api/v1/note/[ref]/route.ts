@@ -5,6 +5,7 @@ import type { NextRequest } from 'next/server';
 import type { ApiContext } from '@/types/api';
 import { resolveNoteRef } from '@/middleware/resourceResolver';
 import { SlugGenerator } from '@/utils/slugGenerator';
+import { simpleLogger as logger } from '@/utils/logger';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -122,7 +123,7 @@ export async function PUT(req: NextRequest, { params }: ApiContext): Promise<Res
       const roundedOffset = Math.round(body.header_image_offset * 10) / 10;
       updateData.header_image_offset = roundedOffset;
       if (process.env.NODE_ENV === 'development') {
-        console.log('[API] Mise à jour header_image_offset:', roundedOffset);
+        logger.dev('[API] Mise à jour header_image_offset:', roundedOffset);
       }
     }
     if (body.header_image_blur !== undefined) {

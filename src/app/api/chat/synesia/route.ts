@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { simpleLogger as logger } from '@/utils/logger';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -17,16 +18,16 @@ export async function POST(request: NextRequest) {
       const { data: { user }, error: authError } = await supabase.auth.getUser(userToken);
       
       if (authError || !user) {
-        console.log("[Synesia API] ❌ Token invalide ou expiré");
+        logger.dev("[Synesia API] ❌ Token invalide ou expiré");
         return NextResponse.json(
           { error: 'Token invalide ou expiré' },
           { status: 401 }
         );
       }
       userId = user.id;
-      console.log("[Synesia API] ✅ Utilisateur authentifié:", userId);
+      logger.dev("[Synesia API] ✅ Utilisateur authentifié:", userId);
     } else {
-      console.log("[Synesia API] ❌ Token d'authentification manquant");
+      logger.dev("[Synesia API] ❌ Token d'authentification manquant");
       return NextResponse.json(
         { error: 'Authentification requise' },
         { status: 401 }
@@ -35,23 +36,23 @@ export async function POST(request: NextRequest) {
 
     const { message, messages } = await request.json();
     
-    console.log("[Synesia API] 🚀 Début de la requête");
-    console.log("[Synesia API] 👤 Utilisateur:", userId);
-    console.log("[Synesia API] 📦 Body reçu:", { message, messages });
+    logger.dev("[Synesia API] 🚀 Début de la requête");
+    logger.dev("[Synesia API] 👤 Utilisateur:", userId);
+    logger.dev("[Synesia API] 📦 Body reçu:", { message, messages });
 
     const apiKey = process.env.SYNESIA_API_KEY;
     const projectId = process.env.SYNESIA_PROJECT_ID;
 
     if (!apiKey || !projectId) {
-      console.log("[Synesia API] ❌ Configuration manquante");
+      logger.dev("[Synesia API] ❌ Configuration manquante");
       return NextResponse.json(
         { error: "Synesia API configuration missing. Please check SYNESIA_API_KEY and SYNESIA_PROJECT_ID environment variables." },
         { status: 500 }
       );
     }
     
-    console.log("[Synesia API] 🔑 API Key:", apiKey ? "✅ Présent" : "❌ Manquant");
-    console.log("[Synesia API] 🆔 Project ID:", projectId ? "✅ Présent" : "❌ Manquant");
+    logger.dev("[Synesia API] 🔑 API Key:", apiKey ? "✅ Présent" : "❌ Manquant");
+    logger.dev("[Synesia API] 🆔 Project ID:", projectId ? "✅ Présent" : "❌ Manquant");
 
     // Prepare message history - only last 10 messages
     const recentMessages = messages.slice(-10);
@@ -74,7 +75,7 @@ export async function POST(request: NextRequest) {
       }
     };
     
-    console.log("[Synesia API] 📤 Payload envoyé:", payload);
+    logger.dev("[Synesia API] 📤 Payload envoyé:", payload);
     
     // Réponse normale
     const response = await fetch("https://api.synesia.app/execution?wait=true", {
@@ -87,12 +88,12 @@ export async function POST(request: NextRequest) {
       body: JSON.stringify(payload),
     });
 
-    console.log("[Synesia API] 📡 Status de la réponse:", response.status);
-    console.log("[Synesia API] 📡 Headers de la réponse:", Object.fromEntries(response.headers.entries()));
+    logger.dev("[Synesia API] 📡 Status de la réponse:", response.status);
+    logger.dev("[Synesia API] 📡 Headers de la réponse:", Object.fromEntries(response.headers.entries()));
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("[Synesia API] ❌ Erreur API:", errorText);
+      logger.error("[Synesia API] ❌ Erreur API:", errorText);
       return NextResponse.json(
         { error: `Synesia API error: ${response.status} - ${errorText}` },
         { status: response.status }
@@ -100,7 +101,7 @@ export async function POST(request: NextRequest) {
     }
 
     const data = await response.json();
-    console.log("[Synesia API] ✅ Réponse reçue:", data);
+    logger.dev("[Synesia API] ✅ Réponse reçue:", data);
 
     return NextResponse.json({
       response: data.result || data.response || "Désolé, je n'ai pas pu traiter votre demande.",
@@ -108,7 +109,7 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error("[Synesia API] ❌ Erreur:", error);
+    logger.error("[Synesia API] ❌ Erreur:", error);
     return NextResponse.json(
       { error: "Erreur interne du serveur" },
       { status: 500 }

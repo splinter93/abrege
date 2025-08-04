@@ -1,4 +1,5 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { simpleLogger as logger } from '@/utils/logger';
 
 // Cache pour éviter les créations multiples de clients
 let supabaseClient: SupabaseClient | null = null;
@@ -18,7 +19,7 @@ export function getSupabaseClient(): SupabaseClient {
 
     // Logs conditionnels pour éviter le spam en production
     if (process.env.NODE_ENV === 'development') {
-      console.log('🔧 Initialisation client Supabase centralisé');
+      logger.dev('🔧 Initialisation client Supabase centralisé');
     }
 
     supabaseClient = createClient(supabaseUrl, supabaseAnonKey);
@@ -40,7 +41,7 @@ export function getCachedQuery<T>(key: string, queryFn: () => Promise<T>): Promi
 
   if (cached && (now - cached.timestamp) < CACHE_DURATION) {
     if (process.env.NODE_ENV === 'development') {
-      console.log(`📦 Cache hit pour: ${key}`);
+      logger.dev(`📦 Cache hit pour: ${key}`);
     }
     return Promise.resolve(cached.data);
   }
@@ -48,7 +49,7 @@ export function getCachedQuery<T>(key: string, queryFn: () => Promise<T>): Promi
   return queryFn().then(data => {
     queryCache.set(key, { data, timestamp: now });
     if (process.env.NODE_ENV === 'development') {
-      console.log(`💾 Cache miss pour: ${key}`);
+      logger.dev(`💾 Cache miss pour: ${key}`);
     }
     return data;
   });
@@ -60,6 +61,6 @@ export function getCachedQuery<T>(key: string, queryFn: () => Promise<T>): Promi
 export function clearCache(): void {
   queryCache.clear();
   if (process.env.NODE_ENV === 'development') {
-    console.log('🧹 Cache Supabase nettoyé');
+    logger.dev('🧹 Cache Supabase nettoyé');
   }
 } 

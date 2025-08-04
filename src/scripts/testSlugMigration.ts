@@ -1,6 +1,7 @@
 import { config } from 'dotenv';
 import { resolve } from 'path';
 import { createClient } from '@supabase/supabase-js';
+import { simpleLogger as logger } from '@/utils/logger';
 
 // Charger les variables d'environnement depuis .env
 config({ path: resolve(process.cwd(), '.env') });
@@ -61,8 +62,8 @@ async function generateSlug(title: string, type: 'note' | 'folder' | 'classeur',
 }
 
 async function testSlugGeneration() {
-  console.log('🧪 Test de génération de slugs...');
-  console.log('=====================================');
+  logger.dev('🧪 Test de génération de slugs...');
+  logger.dev('=====================================');
   
   try {
     // Test avec des exemples
@@ -77,14 +78,14 @@ async function testSlugGeneration() {
     for (const testCase of testCases) {
       try {
         const slug = await generateSlug(testCase.title, testCase.type, USER_ID);
-        console.log(`✅ "${testCase.title}" -> "${slug}" (${testCase.type})`);
+        logger.dev(`✅ "${testCase.title}" -> "${slug}" (${testCase.type})`);
       } catch (err) {
-        console.error(`❌ Erreur pour "${testCase.title}":`, err);
+        logger.error(`❌ Erreur pour "${testCase.title}":`, err);
       }
     }
     
-    console.log('');
-    console.log('🎯 Test de résolution de références...');
+    logger.dev('');
+    logger.dev('🎯 Test de résolution de références...');
     
     // Test de résolution (simulation)
     const testRefs = [
@@ -96,19 +97,19 @@ async function testSlugGeneration() {
     ];
     
     for (const ref of testRefs) {
-      console.log(`🔍 Résolution de "${ref}" -> [SIMULATION: ID résolu]`);
+      logger.dev(`🔍 Résolution de "${ref}" -> [SIMULATION: ID résolu]`);
     }
     
-    console.log('');
-    console.log('✅ Tests terminés !');
-    console.log('');
-    console.log('📋 Prochaines étapes:');
-    console.log('1. Exécutez la migration SQL dans Supabase');
-    console.log('2. Lancez: npm run migrate-slugs');
-    console.log('3. Testez les endpoints avec des slugs');
+    logger.dev('');
+    logger.dev('✅ Tests terminés !');
+    logger.dev('');
+    logger.dev('📋 Prochaines étapes:');
+    logger.dev('1. Exécutez la migration SQL dans Supabase');
+    logger.dev('2. Lancez: npm run migrate-slugs');
+    logger.dev('3. Testez les endpoints avec des slugs');
     
   } catch (err) {
-    console.error('❌ Erreur lors des tests:', err);
+    logger.error('❌ Erreur lors des tests:', err);
   }
 }
 

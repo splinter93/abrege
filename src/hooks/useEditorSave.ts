@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { toast } from 'react-hot-toast';
 import type { NoteData } from '../types/editor';
+import { simpleLogger as logger } from '@/utils/logger';
 
 
 export interface UseEditorSaveOptions {
@@ -39,7 +40,7 @@ export default function useEditorSave({ onSave, editor, titleAlign }: UseEditorS
       if (process.env.NODE_ENV === 'development') {
         // Log autosave déclenchée
          
-        console.log('[AUTOSAVE] Sauvegarde déclenchée', { newTitle, markdown_content });
+        logger.dev('[AUTOSAVE] Sauvegarde déclenchée', { newTitle, markdown_content });
       }
       try {
         // Ne pas inclure headerImage dans l'autosave de texte pour éviter les conflits
@@ -49,7 +50,7 @@ export default function useEditorSave({ onSave, editor, titleAlign }: UseEditorS
         toast.error('Erreur lors de la sauvegarde');
         if (process.env.NODE_ENV === 'development') {
            
-          console.error('[AUTOSAVE] Échec de la sauvegarde', e);
+          logger.error('[AUTOSAVE] Échec de la sauvegarde', e);
         }
       } finally {
         setIsSaving(false);

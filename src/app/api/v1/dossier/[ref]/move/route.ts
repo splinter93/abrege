@@ -2,6 +2,7 @@ import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 import type { NextRequest } from 'next/server';
 import { resolveFolderRef, resolveClasseurRef } from '@/middleware/resourceResolver';
+import { simpleLogger as logger } from '@/utils/logger';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -35,16 +36,16 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ re
       const { data: { user }, error: authError } = await supabase.auth.getUser();
       
       if (authError || !user) {
-        console.log("[Dossier Move API] ❌ Token invalide ou expiré");
+        logger.dev("[Dossier Move API] ❌ Token invalide ou expiré");
         return new Response(
           JSON.stringify({ error: 'Token invalide ou expiré' }),
           { status: 401, headers: { 'Content-Type': 'application/json' } }
         );
       }
       userId = user.id;
-      console.log("[Dossier Move API] ✅ Utilisateur authentifié:", userId);
+      logger.dev("[Dossier Move API] ✅ Utilisateur authentifié:", userId);
     } else {
-      console.log("[Dossier Move API] ❌ Token d'authentification manquant");
+      logger.dev("[Dossier Move API] ❌ Token d'authentification manquant");
       return new Response(
         JSON.stringify({ error: 'Authentification requise' }),
         { status: 401, headers: { 'Content-Type': 'application/json' } }
@@ -171,7 +172,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ re
     return new Response(JSON.stringify({ folder: updated }), { status: 200, headers: { "Content-Type": "application/json" } });
   } catch (err: unknown) {
     const error = err as Error;
-    console.error('[moveDossier] PATCH error:', err);
+    logger.error('[moveDossier] PATCH error:', err);
     return new Response(JSON.stringify({ error: err instanceof Error ? error.message : 'Erreur inconnue' }), { status: 500, headers: { "Content-Type": "application/json" } });
   }
 } 

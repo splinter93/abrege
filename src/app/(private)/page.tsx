@@ -1,4 +1,5 @@
 'use client';
+import { simpleLogger as logger } from '@/utils/logger';
 
 import React, { useState, useEffect } from 'react';
 import ContentCard from '../../components/ContentCard';
@@ -50,7 +51,7 @@ export default function HomePage() {
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         
         if (sessionError || !session) {
-          console.error('No session found:', sessionError);
+          logger.error('No session found:', sessionError);
           setUsername('User.');
           return;
         }
@@ -71,13 +72,13 @@ export default function HomePage() {
             (userData.username || 'User').slice(1) + 
             '.';
           setUsername(formattedUsername);
-          console.log('User data received:', userData);
+          logger.dev('User data received:', userData);
         } else {
-          console.error('Error response:', response.status);
+          logger.error('Error response:', response.status);
           setUsername('User.');
         }
       } catch (error) {
-        console.error('Error fetching user:', error);
+        logger.error('Error fetching user:', error);
         setUsername('User.');
       }
     };

@@ -1,4 +1,5 @@
 'use client';
+import { simpleLogger as logger } from '@/utils/logger';
 
 import React, { useState, useEffect } from 'react';
 import { useRealtime } from '@/hooks/useRealtime';
@@ -24,15 +25,15 @@ export default function PollingTest() {
   });
 
   useEffect(() => {
-    console.log('[PollingTest] 🔄 Initialisation du test de polling...');
+    logger.dev('[PollingTest] 🔄 Initialisation du test de polling...');
 
     const handleArticleChange = (event: PollingEvent) => {
-      console.log('[PollingTest] 📡 Événement articles reçu:', event);
+      logger.dev('[PollingTest] 📡 Événement articles reçu:', event);
       setEvents(prev => [event, ...prev.slice(0, 9)]); // Garder les 10 derniers
     };
 
     const handleFolderChange = (event: PollingEvent) => {
-      console.log('[PollingTest] 📡 Événement folders reçu:', event);
+      logger.dev('[PollingTest] 📡 Événement folders reçu:', event);
       setEvents(prev => [event, ...prev.slice(0, 9)]); // Garder les 10 derniers
     };
 
@@ -41,10 +42,10 @@ export default function PollingTest() {
     subscribe('folders', handleFolderChange);
     setIsConnected(true);
 
-    console.log('[PollingTest] ✅ Abonnements activés');
+    logger.dev('[PollingTest] ✅ Abonnements activés');
 
     return () => {
-      console.log('[PollingTest] 🛑 Nettoyage des abonnements...');
+      logger.dev('[PollingTest] 🛑 Nettoyage des abonnements...');
       unsubscribe('articles', handleArticleChange);
       unsubscribe('folders', handleFolderChange);
       setIsConnected(false);

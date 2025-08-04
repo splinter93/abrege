@@ -11,6 +11,7 @@ import { initRealtimeService, subscribeToTable as subscribeToPolling, unsubscrib
 import { useFileSystemStore } from '@/store/useFileSystemStore';
 import { useAuth } from './useAuth';
 import { logApi } from '@/utils/logger';
+import { simpleLogger as logger } from '@/utils/logger';
 
 interface RealtimeConfig {
   userId?: string;
@@ -22,10 +23,10 @@ interface RealtimeConfig {
   onError?: (err: any) => void;
   /**
    * Handler générique appelé à chaque événement WebSocket reçu (mode websocket uniquement).
-   * Signature : (event: { type: string, payload: any, timestamp: number }) => void
+   * Signature : (event: { type: string, payload: unknown, timestamp: number }) => void
    * L'utilisateur peut dispatcher comme il veut dans son UI ou son store.
    */
-  onEvent?: (event: { type: string, payload: any, timestamp: number }) => void;
+  onEvent?: (event: { type: string, payload: unknown, timestamp: number }) => void;
 }
 
 interface ChangeEvent {
@@ -49,37 +50,37 @@ export function useSupabaseRealtime() {
     // if (initialized.current) {
     //   return;
     // }
-    // console.log('[REALTIME] 🚀 Démarrage des souscriptions Supabase Realtime...');
+    // logger.dev('[REALTIME] 🚀 Démarrage des souscriptions Supabase Realtime...');
     // const setupRealtime = async () => {
     //   try {
-    //     console.log('[REALTIME] 🔐 Authentification anonyme...');
+    //     logger.dev('[REALTIME] 🔐 Authentification anonyme...');
     //     const { data: { user }, error: authError } = await supabase.auth.getUser();
     //     if (!user) {
-    //       console.log('[REALTIME] 🔐 Création session anonyme...');
+    //       logger.dev('[REALTIME] 🔐 Création session anonyme...');
     //       const { data, error } = await supabase.auth.signInAnonymously();
     //       if (error) {
-    //         console.log('[REALTIME] ⚠️ Erreur auth anonyme:', error.message);
+    //         logger.dev('[REALTIME] ⚠️ Erreur auth anonyme:', error.message);
     //       } else {
-    //         console.log('[REALTIME] ✅ Session anonyme créée');
+    //         logger.dev('[REALTIME] ✅ Session anonyme créée');
     //       }
     //     } else {
-    //       console.log('[REALTIME] ✅ Utilisateur déjà authentifié:', user.id);
+    //       logger.dev('[REALTIME] ✅ Utilisateur déjà authentifié:', user.id);
     //     }
     //     initialized.current = true;
-    //     console.log('[REALTIME] 🚀 Démarrage des souscriptions...');
+    //     logger.dev('[REALTIME] 🚀 Démarrage des souscriptions...');
     //     subscribeToNotes();
     //     subscribeToDossiers();
     //     subscribeToClasseurs();
     //     startSubscriptionMonitoring();
     //     setIsConnected(true);
     //   } catch (error) {
-    //     console.error('[REALTIME] ❌ Erreur lors de l\'activation des souscriptions realtime:', error);
+    //     logger.error('[REALTIME] ❌ Erreur lors de l\'activation des souscriptions realtime:', error);
     //     setTimeout(setupRealtime, 3000);
     //   }
     // };
     // setTimeout(setupRealtime, 2000);
     // return () => {
-    //   console.log('[REALTIME] 🛑 Arrêt des souscriptions...');
+    //   logger.dev('[REALTIME] 🛑 Arrêt des souscriptions...');
     //   unsubscribeFromAll();
     //   setIsConnected(false);
     //   initialized.current = false;
@@ -140,11 +141,11 @@ export function useRealtime(config: RealtimeConfig) {
     if (isSupabase) {
       // Supabase realtime service does not have a direct subscribe method for tables
       // This is a placeholder for future implementation if needed
-      console.warn('Supabase realtime service does not support direct table subscription. Consider using a different provider or implementing a custom solution.');
+      logger.warn('Supabase realtime service does not support direct table subscription. Consider using a different provider or implementing a custom solution.');
     } else {
       // WebSocket realtime service does not have a direct subscribe method for tables
       // This is a placeholder for future implementation if needed
-      console.warn('WebSocket realtime service does not support direct table subscription. Consider using a different provider or implementing a custom solution.');
+      logger.warn('WebSocket realtime service does not support direct table subscription. Consider using a different provider or implementing a custom solution.');
     }
   }, [config.type, config.token, config.onEvent, config.debug]);
 
@@ -181,9 +182,9 @@ export function useRealtime(config: RealtimeConfig) {
           throw new Error(`Type de realtime non supporté: ${config.type}`);
       }
       initialized.current = true;
-      if (config.debug) console.log(`🔄 Service realtime initialisé (${config.type})`);
+      if (config.debug) logger.dev(`🔄 Service realtime initialisé (${config.type})`);
     } catch (error) {
-      if (config.debug) console.error('❌ Erreur initialisation realtime:', error);
+      if (config.debug) logger.error('❌ Erreur initialisation realtime:', error);
       if (config.onError) config.onError(error);
     }
     // Cleanup
@@ -206,7 +207,7 @@ export function useRealtime(config: RealtimeConfig) {
         }
         initialized.current = false;
       } catch (error) {
-        if (config.debug) console.error('❌ Erreur cleanup realtime:', error);
+        if (config.debug) logger.error('❌ Erreur cleanup realtime:', error);
         if (config.onError) config.onError(error);
       }
     };
@@ -218,7 +219,7 @@ export function useRealtime(config: RealtimeConfig) {
   const subscribe = (table: string, callback: (event: ChangeEvent) => void) => {
     listeners.current.set(table, callback);
     // ANCIEN SYSTÈME DÉSACTIVÉ - Utilisation du nouveau système realtime
-    // console.log(`[useRealtime] 🚫 Ancien système realtime désactivé pour ${table} - Utilisation du nouveau système`);
+    // logger.dev(`[useRealtime] 🚫 Ancien système realtime désactivé pour ${table} - Utilisation du nouveau système`);
     
     if (config.type === 'polling') {
       subscribeToPolling(table, callback);
@@ -231,7 +232,7 @@ export function useRealtime(config: RealtimeConfig) {
   const unsubscribe = (table: string, callback: (event: ChangeEvent) => void) => {
     listeners.current.delete(table);
     // ANCIEN SYSTÈME DÉSACTIVÉ - Utilisation du nouveau système realtime
-    // console.log(`[useRealtime] 🚫 Ancien système realtime désactivé pour ${table} - Utilisation du nouveau système`);
+    // logger.dev(`[useRealtime] 🚫 Ancien système realtime désactivé pour ${table} - Utilisation du nouveau système`);
     
     if (config.type === 'polling') {
       unsubscribeFromPolling(table, callback);
@@ -291,12 +292,12 @@ export function useNoteRealtime(noteId: string, userId: string) {
             break;
           case 'DELETE':
             if (event.old?.id === noteId) {
-              console.log('🗑️ Note supprimée en temps réel:', event);
+              logger.dev('🗑️ Note supprimée en temps réel:', event);
               // Ici vous pouvez déclencher une action (rediriger, etc.)
             }
             break;
           case 'INSERT':
-            console.log('➕ Nouvelle note créée en temps réel:', event);
+            logger.dev('➕ Nouvelle note créée en temps réel:', event);
             // Ici vous pouvez déclencher une action (rafraîchir la liste, etc.)
             break;
         }
@@ -331,18 +332,18 @@ export function useFolderRealtime(classeurId: string, userId: string) {
         switch (event.eventType) {
           case 'UPDATE':
             if (event.new?.classeur_id === classeurId) {
-              console.log('📁 Dossier modifié en temps réel:', event);
+              logger.dev('📁 Dossier modifié en temps réel:', event);
               // Ici vous pouvez déclencher une action (recharger la liste, etc.)
             }
             break;
           case 'INSERT':
             if (event.new?.classeur_id === classeurId) {
-              console.log('📁 Nouveau dossier créé en temps réel:', event);
+              logger.dev('📁 Nouveau dossier créé en temps réel:', event);
               // Ici vous pouvez déclencher une action (ajouter à la liste, etc.)
             }
             break;
           case 'DELETE':
-            console.log('🗑️ Dossier supprimé en temps réel:', event);
+            logger.dev('🗑️ Dossier supprimé en temps réel:', event);
             // Ici vous pouvez déclencher une action (retirer de la liste, etc.)
             break;
         }
@@ -363,12 +364,12 @@ export function useFolderRealtime(classeurId: string, userId: string) {
             break;
           case 'INSERT':
             if (event.new?.classeur_id === classeurId) {
-              console.log('📄 Nouvel article créé en temps réel:', event);
+              logger.dev('📄 Nouvel article créé en temps réel:', event);
               // Ici vous pouvez déclencher une action (ajouter à la liste, etc.)
             }
             break;
           case 'DELETE':
-            console.log('🗑️ Article supprimé en temps réel:', event);
+            logger.dev('🗑️ Article supprimé en temps réel:', event);
             // Ici vous pouvez déclencher une action (retirer de la liste, etc.)
             break;
         }

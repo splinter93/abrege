@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { markdownContentSchema, markdownExamples } from './markdownValidation';
+import { simpleLogger as logger } from '@/utils/logger';
 
 describe('markdownContentSchema', () => {
   it('accepte le markdown pur et les balises <div align>', () => {
@@ -22,7 +23,7 @@ describe('markdownContentSchema', () => {
           markdownContentSchema.parse('<b>test</b>');
         } catch (e) {
           const msg = (e && typeof e === 'object' && 'errors' in e && Array.isArray(e.errors)) ? e.errors[0]?.message : (e && typeof e === 'object' && 'message' in e ? e.message : String(e));
-          console.warn('Tentative d\'injection rejetée:', msg);
+          logger.warn('Tentative d\'injection rejetée:', msg);
           throw e;
         }
       }).toThrow();

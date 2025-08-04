@@ -5,6 +5,7 @@ import { DropEventDetail } from '../components/types';
 import { useFileSystemStore } from '@/store/useFileSystemStore';
 import { clientPollingTrigger } from '@/services/clientPollingTrigger';
 import { optimizedApi } from '@/services/optimizedApi';
+import { simpleLogger as logger } from '@/utils/logger';
 
 interface UseFolderDragAndDropProps {
   classeurId: string;
@@ -39,7 +40,7 @@ export const useFolderDragAndDrop = ({
   const handleDropItem = useCallback((itemId: string, itemType: 'folder' | 'file', targetFolderId: string) => {
     if (itemType === 'folder' && itemId === targetFolderId) {
       if (process.env.NODE_ENV === 'development') {
-      console.warn('Action empêchée : un dossier ne peut pas être imbriqué dans lui-même.');
+      logger.warn('Action empêchée : un dossier ne peut pas être imbriqué dans lui-même.');
       }
       return;
     }
@@ -101,7 +102,7 @@ export const useFolderDragAndDrop = ({
             toast.dismiss();
             toast.error('Erreur lors du déplacement du dossier.');
             if (process.env.NODE_ENV === 'development') {
-              console.error('[DnD] Déplacement dossier ERROR', err);
+              logger.error('[DnD] Déplacement dossier ERROR', err);
             }
           }
         } else {
@@ -115,7 +116,7 @@ export const useFolderDragAndDrop = ({
             toast.dismiss();
             toast.error('Erreur lors du déplacement de la note.');
             if (process.env.NODE_ENV === 'development') {
-              console.error('[DnD] Déplacement note ERROR', err);
+              logger.error('[DnD] Déplacement note ERROR', err);
             }
           }
         }

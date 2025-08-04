@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { llmManager } from '@/services/llm';
 import type { AppContext } from '@/services/llm/types';
+import { simpleLogger as logger } from '@/utils/logger';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -18,16 +19,16 @@ export async function POST(request: NextRequest) {
       const { data: { user }, error: authError } = await supabase.auth.getUser(userToken);
       
       if (authError || !user) {
-        console.log("[Chat API] ❌ Token invalide ou expiré");
+        logger.dev("[Chat API] ❌ Token invalide ou expiré");
         return NextResponse.json(
           { error: 'Token invalide ou expiré' },
           { status: 401 }
         );
       }
       userId = user.id;
-      console.log("[Chat API] ✅ Utilisateur authentifié:", userId);
+      logger.dev("[Chat API] ✅ Utilisateur authentifié:", userId);
     } else {
-      console.log("[Chat API] ❌ Token d'authentification manquant");
+      logger.dev("[Chat API] ❌ Token d'authentification manquant");
       return NextResponse.json(
         { error: 'Authentification requise' },
         { status: 401 }
@@ -36,9 +37,9 @@ export async function POST(request: NextRequest) {
 
     const { message, messages, context, provider } = await request.json();
     
-    console.log("[Chat API] 🚀 Début de la requête");
-    console.log("[Chat API] 👤 Utilisateur:", userId);
-    console.log("[Chat API] 📦 Body reçu:", { message, messages, context, provider });
+    logger.dev("[Chat API] 🚀 Début de la requête");
+    logger.dev("[Chat API] 👤 Utilisateur:", userId);
+    logger.dev("[Chat API] 📦 Body reçu:", { message, messages, context, provider });
 
     // Changer de provider si spécifié
     if (provider && provider !== llmManager.getCurrentProviderId()) {
@@ -55,7 +56,7 @@ export async function POST(request: NextRequest) {
     // Appeler le LLM via le manager
     const response = await llmManager.call(message, appContext, messages);
 
-    console.log("[Chat API] ✅ Réponse LLM reçue");
+    logger.dev("[Chat API] ✅ Réponse LLM reçue");
 
     return NextResponse.json({
       response,
@@ -64,7 +65,7 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error("[Chat API] ❌ Erreur:", error);
+    logger.error("[Chat API] ❌ Erreur:", error);
     return NextResponse.json(
       { error: "Erreur interne du serveur" },
       { status: 500 }

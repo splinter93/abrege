@@ -4,6 +4,7 @@ import type { NextRequest } from 'next/server';
 import { resolveNoteRef } from '@/middleware/resourceResolver';
 import { appendToSection, extractTOCWithSlugs } from '@/utils/markdownTOC';
 import { updateArticleInsight } from '@/utils/insightUpdater';
+import { simpleLogger as logger } from '@/utils/logger';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -100,8 +101,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ re
     
     // Debug: afficher les sections disponibles
     const toc = extractTOCWithSlugs(note.markdown_content || '');
-    console.log(`🔍 Sections disponibles:`, toc.map(t => ({ title: t.title, slug: t.slug })));
-    console.log(`🔍 Section recherchée: "${targetSection}"`);
+    logger.dev(`🔍 Sections disponibles:`, toc.map(t => ({ title: t.title, slug: t.slug })));
+    logger.dev(`🔍 Section recherchée: "${targetSection}"`);
     
     // Vérifier si la section existe
     const sectionIdx = toc.findIndex(t => t.title === targetSection || t.slug === targetSection);
@@ -130,20 +131,20 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ re
       .single();
     
     if (error) {
-      console.error('❌ Erreur mise à jour note:', error);
+      logger.error('❌ Erreur mise à jour note:', error);
       return new Response(JSON.stringify({ error: error.message }), { status: 500, headers: { "Content-Type": "application/json" } });
     }
     
     // Mettre à jour l'insight avec la nouvelle TOC
     try {
       await updateArticleInsight(noteId);
-      console.log(`✅ Insight mis à jour pour la note ${noteId}`);
+      logger.dev(`✅ Insight mis à jour pour la note ${noteId}`);
     } catch (insightError) {
-      console.error('⚠️ Erreur mise à jour insight:', insightError);
+      logger.error('⚠️ Erreur mise à jour insight:', insightError);
       // Ne pas faire échouer la requête si l'insight échoue
     }
     
-    console.log(`✅ Contenu ajouté à la section "${targetSection}"`);
+    logger.dev(`✅ Contenu ajouté à la section "${targetSection}"`);
     return new Response(JSON.stringify({ note: updatedNote }), { status: 200, headers: { "Content-Type": "application/json" } });
   
   } catch (err: unknown) {

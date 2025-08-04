@@ -10,6 +10,7 @@ import {
   LinkedinIcon
 } from 'react-share';
 import { FiLink, FiCheck } from 'react-icons/fi';
+import { simpleLogger as logger } from '@/utils/logger';
 
 interface ShareMenuProps {
   url: string;
@@ -29,7 +30,7 @@ export default function ShareMenu({ url, title = "Note Scrivia", description = "
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
       if (process.env.NODE_ENV !== 'production') {
-        console.error('Erreur lors de la copie:', err);
+        logger.error('Erreur lors de la copie:', err);
       }
     }
   };

@@ -3,6 +3,7 @@ import { z } from 'zod';
 import type { NextRequest } from 'next/server';
 import type { Article } from '@/types/supabase';
 import { resolveNoteRef, resolveClasseurRef, resolveFolderRef } from '@/middleware/resourceResolver';
+import { simpleLogger as logger } from '@/utils/logger';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -39,16 +40,16 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ re
       const { data: { user }, error: authError } = await supabase.auth.getUser();
       
       if (authError || !user) {
-        console.log("[Move Note API] ❌ Token invalide ou expiré");
+        logger.dev("[Move Note API] ❌ Token invalide ou expiré");
         return new Response(
           JSON.stringify({ error: 'Token invalide ou expiré' }),
           { status: 401, headers: { 'Content-Type': 'application/json' } }
         );
       }
       userId = user.id;
-      console.log("[Move Note API] ✅ Utilisateur authentifié:", userId);
+      logger.dev("[Move Note API] ✅ Utilisateur authentifié:", userId);
     } else {
-      console.log("[Move Note API] ❌ Token d'authentification manquant");
+      logger.dev("[Move Note API] ❌ Token d'authentification manquant");
       return new Response(
         JSON.stringify({ error: 'Authentification requise' }),
         { status: 401, headers: { 'Content-Type': 'application/json' } }
@@ -118,7 +119,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ re
     if (targetFolderId !== undefined) updates.folder_id = targetFolderId;
     if ('position' in body) updates.position = body.position;
     updates.updated_at = new Date().toISOString();
-    console.log('[moveNote] DEBUG', {
+    logger.dev('[moveNote] DEBUG', {
       ref,
       noteId,
       targetClasseurId,
@@ -126,8 +127,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ re
       updates,
       body
     });
-    console.log('[moveNote] Payload:', body);
-    console.log('[moveNote] Updates:', updates);
+    logger.dev('[moveNote] Payload:', body);
+    logger.dev('[moveNote] Updates:', updates);
     const { data: updated, error } = await supabase
       .from('articles')
       .update(updates)
@@ -135,7 +136,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ re
       .select()
       .single();
     if (error) {
-      console.error('[moveNote] Update error:', error);
+      logger.error('[moveNote] Update error:', error);
       return new Response(JSON.stringify({ error: error.message }), { status: 500, headers: { 'Content-Type': 'application/json' } });
     }
     if (!updated) {
@@ -144,7 +145,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ re
     return new Response(JSON.stringify({ note: updated }), { status: 200, headers: { 'Content-Type': 'application/json' } });
   } catch (err: unknown) {
     const error = err as Error;
-    console.error('[moveNote] PATCH error:', err);
+    logger.error('[moveNote] PATCH error:', err);
     return new Response(JSON.stringify({ error: err instanceof Error ? error.message : 'Erreur inconnue' }), { status: 500, headers: { 'Content-Type': 'application/json' } });
   }
 }

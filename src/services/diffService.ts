@@ -1,4 +1,5 @@
 import { diffWords, diffLines, Change } from 'diff';
+import { simpleLogger as logger } from '@/utils/logger';
 
 interface DiffResult {
   changes: Change[];
@@ -48,7 +49,7 @@ class DiffService {
     // Vérifier si le changement est trop important (risque de faux positif)
     const changeRatio = this.calculateChangeRatio(contentToCompare, currentContent);
     if (changeRatio > 0.8) {
-      console.warn('⚠️ Changement trop important détecté, diff ignoré:', changeRatio);
+      logger.warn('⚠️ Changement trop important détecté, diff ignoré:', changeRatio);
       this.previousVersions.set(noteId, currentContent);
       return null;
     }
@@ -69,7 +70,7 @@ class DiffService {
 
     // Ignorer les changements avec faible confiance
     if (confidence < this.MIN_CONFIDENCE) {
-      console.warn('⚠️ Diff ignoré (faible confiance):', confidence);
+      logger.warn('⚠️ Diff ignoré (faible confiance):', confidence);
       this.previousVersions.set(noteId, currentContent);
       return null;
     }

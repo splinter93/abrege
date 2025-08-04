@@ -1,1 +1,515 @@
- 
+/* ========================================
+   CHAT MARKDOWN - STYLE CHATGPT
+   ======================================== */
+
+.chat-markdown,
+.chat-enhanced-markdown {
+  color: var(--chat-text-primary);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+  line-height: 2.0;
+  font-size: 16px;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  /* Optimisations pour le streaming */
+  contain: layout style paint;
+  will-change: contents;
+  transform: translateZ(0); /* Force GPU acceleration */
+}
+
+/* ========================================
+   PARAGRAPHES ET ESPACEMENTS
+   ======================================== */
+
+.chat-markdown p {
+  margin: 0 0 1.5em 0;
+  color: var(--chat-text-primary) !important;
+  line-height: 2.0;
+  /* Prévenir les layout shifts */
+  min-height: 2.0em;
+  display: block !important;
+}
+
+.chat-markdown p:last-child {
+  margin-bottom: 0;
+}
+
+/* ========================================
+   TITRES - HIÉRARCHIE CLAIRE
+   ======================================== */
+
+.chat-markdown h1,
+.chat-markdown h2,
+.chat-markdown h3,
+.chat-markdown h4,
+.chat-markdown h5,
+.chat-markdown h6 {
+  color: var(--chat-text-primary) !important;
+  font-weight: 600 !important;
+  line-height: 1.4 !important;
+  margin: 2em 0 1em 0 !important;
+  letter-spacing: -0.02em !important;
+  display: block !important;
+  /* Prévenir les layout shifts */
+  contain: layout;
+}
+
+.chat-markdown h1 {
+  font-size: 1.8em !important;
+  font-weight: 700 !important;
+  margin-top: 2.5em !important;
+}
+
+.chat-markdown h2 {
+  font-size: 1.5em !important;
+  font-weight: 600 !important;
+  margin-top: 2.2em !important;
+}
+
+.chat-markdown h3 {
+  font-size: 1.3em !important;
+  font-weight: 600 !important;
+  margin-top: 2em !important;
+}
+
+.chat-markdown h4 {
+  font-size: 1.1em !important;
+  font-weight: 600 !important;
+  margin-top: 1.8em !important;
+}
+
+.chat-markdown h5,
+.chat-markdown h6 {
+  font-size: 1em !important;
+  font-weight: 600 !important;
+  margin-top: 1.6em !important;
+}
+
+/* ========================================
+   LISTES - ESPACEMENT GÉNÉREUX
+   ======================================== */
+
+.chat-markdown ul,
+.chat-markdown ol {
+  margin: 1.5em 0;
+  padding-left: 1.5em;
+  color: var(--chat-text-primary);
+  /* Prévenir les layout shifts */
+  contain: layout;
+}
+
+.chat-markdown li {
+  margin: 0.5em 0;
+  color: var(--chat-text-primary);
+  line-height: 1.9;
+  /* Prévenir les layout shifts */
+  min-height: 1.9em;
+}
+
+.chat-markdown li > ul,
+.chat-markdown li > ol {
+  margin: 0.5em 0;
+}
+
+/* ========================================
+   CODE - STYLE MODERNE
+   ======================================== */
+
+.chat-markdown code {
+  background: rgba(175, 184, 193, 0.2);
+  color: var(--chat-text-primary);
+  padding: 0.2em 0.4em;
+  border-radius: 6px;
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Source Code Pro', monospace;
+  font-size: 0.9em;
+  font-weight: 500;
+  border: 1px solid rgba(175, 184, 193, 0.2);
+  /* Optimisations pour le streaming */
+  display: inline-block;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.chat-markdown pre {
+  background: #f6f8fa;
+  color: #24292f;
+  padding: 1.5em;
+  border-radius: 8px;
+  overflow-x: auto;
+  margin: 1.5em 0;
+  border: 1px solid rgba(175, 184, 193, 0.2);
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Source Code Pro', monospace;
+  font-size: 0.9em;
+  line-height: 1.5;
+  /* Optimisations pour le streaming */
+  contain: layout style paint;
+  will-change: scroll-position;
+}
+
+.chat-markdown pre code {
+  background: none;
+  padding: 0;
+  border-radius: 0;
+  border: none;
+  color: inherit;
+  font-size: inherit;
+  display: block;
+}
+
+/* ========================================
+   CITATIONS - STYLE ÉLÉGANT
+   ======================================== */
+
+.chat-markdown blockquote {
+  border-left: 4px solid #0969da;
+  padding: 0 0 0 1.5em;
+  margin: 1.5em 0;
+  color: var(--chat-text-secondary);
+  font-style: normal;
+  background: rgba(9, 105, 218, 0.05);
+  border-radius: 0 8px 8px 0;
+  padding: 1em 1.5em;
+  /* Prévenir les layout shifts */
+  contain: layout;
+}
+
+.chat-markdown blockquote p {
+  margin: 0;
+  color: var(--chat-text-secondary);
+}
+
+/* ========================================
+   LIENS - STYLE MODERNE
+   ======================================== */
+
+.chat-markdown a {
+  color: #0969da;
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: all 0.2s ease;
+  /* Optimisations pour le streaming */
+  display: inline;
+}
+
+.chat-markdown a:hover {
+  color: #1a7f37;
+  border-bottom-color: #1a7f37;
+}
+
+/* ========================================
+   EMPHASE - STYLE CLAIR
+   ======================================== */
+
+.chat-markdown strong,
+.chat-markdown b {
+  font-weight: 600 !important;
+  color: var(--chat-text-primary) !important;
+}
+
+.chat-markdown em,
+.chat-markdown i {
+  font-style: italic !important;
+  color: var(--chat-text-primary) !important;
+}
+
+/* ========================================
+   TABLEAUX - STYLE MODERNE
+   ======================================== */
+
+.chat-markdown table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.5em 0;
+  background: #ffffff;
+  border: 1px solid rgba(175, 184, 193, 0.2);
+  border-radius: 8px;
+  overflow: hidden;
+  font-size: 0.9em;
+  /* Optimisations pour le streaming */
+  contain: layout style;
+  table-layout: fixed;
+}
+
+.chat-markdown th,
+.chat-markdown td {
+  padding: 0.75em 1em;
+  text-align: left;
+  border-bottom: 1px solid rgba(175, 184, 193, 0.2);
+  color: var(--chat-text-primary);
+  line-height: 1.4;
+  /* Prévenir les layout shifts */
+  vertical-align: top;
+  word-wrap: break-word;
+}
+
+.chat-markdown th {
+  background: #f6f8fa;
+  font-weight: 600;
+  color: var(--chat-text-primary);
+  font-size: 0.9em;
+}
+
+.chat-markdown tr:last-child td {
+  border-bottom: none;
+}
+
+.chat-markdown tr:hover {
+  background: rgba(175, 184, 193, 0.05);
+}
+
+/* ========================================
+   HORIZONTAL RULE
+   ======================================== */
+
+.chat-markdown hr {
+  border: none;
+  height: 1px;
+  background: rgba(175, 184, 193, 0.2);
+  margin: 2em 0;
+}
+
+/* ========================================
+   OPTIMISATIONS STREAMING
+   ======================================== */
+
+/* Prévenir les layout shifts pendant le streaming */
+.chat-markdown * {
+  box-sizing: border-box;
+}
+
+/* Optimisation pour les contenus en cours de streaming */
+.chat-markdown.streaming {
+  opacity: 0.99; /* Force un nouveau layer */
+}
+
+/* ========================================
+   RESPONSIVE
+   ======================================== */
+
+@media (max-width: 768px) {
+  .chat-markdown,
+  .chat-enhanced-markdown {
+    font-size: 15px;
+    line-height: 1.9;
+  }
+  
+  .chat-markdown h1 {
+    font-size: 1.6em;
+  }
+  
+  .chat-markdown h2 {
+    font-size: 1.4em;
+  }
+  
+  .chat-markdown h3 {
+    font-size: 1.2em;
+  }
+  
+  .chat-markdown pre {
+    padding: 1em;
+    font-size: 0.85em;
+  }
+  
+  .chat-markdown table {
+    font-size: 0.85em;
+  }
+  
+  .chat-markdown ul,
+  .chat-markdown ol {
+    padding-left: 1.2em;
+  }
+} 
+
+/* ========================================
+   MERMAID ERROR STYLES - COMPACT
+   ======================================== */
+
+.mermaid-error {
+  border: 1px solid #ef4444;
+  border-radius: 6px;
+  background: rgba(239, 68, 68, 0.1);
+  margin: 0.5em 0;
+  font-size: 0.9em;
+}
+
+.mermaid-error-content {
+  padding: 0.75em;
+}
+
+.mermaid-error-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  color: #ef4444;
+  font-weight: 500;
+  margin-bottom: 0.5em;
+}
+
+.mermaid-error-details {
+  margin: 0;
+}
+
+.mermaid-error-details summary {
+  cursor: pointer;
+  color: #6b7280;
+  font-size: 0.85em;
+  padding: 0.25em 0;
+}
+
+.mermaid-error-details summary:hover {
+  color: #374151;
+}
+
+.mermaid-error-body {
+  margin-top: 0.5em;
+  padding-top: 0.5em;
+  border-top: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.mermaid-error-message,
+.mermaid-error-source {
+  margin-bottom: 0.75em;
+}
+
+.mermaid-error-message strong,
+.mermaid-error-source strong {
+  display: block;
+  margin-bottom: 0.25em;
+  color: #374151;
+  font-size: 0.85em;
+}
+
+.mermaid-error-message pre,
+.mermaid-error-source pre {
+  background: rgba(0, 0, 0, 0.1);
+  padding: 0.5em;
+  border-radius: 4px;
+  font-size: 0.8em;
+  overflow-x: auto;
+  margin: 0;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.mermaid-source {
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Source Code Pro', monospace;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* ========================================
+   MERMAID CONTAINER STYLES
+   ======================================== */
+
+.mermaid-container {
+  margin: 1em 0;
+  text-align: center;
+}
+
+.mermaid-loading {
+  min-height: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mermaid-loading-indicator {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5em;
+  color: #6b7280;
+  font-size: 0.9em;
+}
+
+.mermaid-spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid #e5e7eb;
+  border-top: 2px solid #3b82f6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.mermaid-svg-container {
+  display: inline-block;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.mermaid-svg-container svg {
+  max-width: 100%;
+  height: auto;
+}
+
+/* ========================================
+   MERMAID BLOCK STYLES
+   ======================================== */
+
+.mermaid-block {
+  margin: 1em 0;
+  padding: 1em;
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.mermaid-inline {
+  margin: 0;
+  padding: 0;
+  background: none;
+  border: none;
+}
+
+/* ========================================
+   MERMAID INVALID STYLES
+   ======================================== */
+
+.mermaid-invalid {
+  border: 1px solid #f59e0b;
+  border-radius: 6px;
+  background: rgba(245, 158, 11, 0.1);
+  padding: 0.75em;
+  margin: 0.5em 0;
+}
+
+.mermaid-invalid-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5em;
+}
+
+.mermaid-invalid-content svg {
+  color: #f59e0b;
+}
+
+.mermaid-invalid-content span {
+  color: #f59e0b;
+  font-weight: 500;
+}
+
+.mermaid-invalid-content details {
+  margin-top: 0.5em;
+}
+
+.mermaid-invalid-content details summary {
+  cursor: pointer;
+  color: #6b7280;
+  font-size: 0.85em;
+  margin-bottom: 0.25em;
+}
+
+.mermaid-invalid-content details pre {
+  background: rgba(0, 0, 0, 0.1);
+  padding: 0.5em;
+  border-radius: 4px;
+  font-size: 0.8em;
+  overflow-x: auto;
+  margin: 0;
+  max-height: 200px;
+  overflow-y: auto;
+} 

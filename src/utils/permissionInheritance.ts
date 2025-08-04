@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { simpleLogger as logger } from '@/utils/logger';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -72,7 +73,7 @@ export async function checkPermissionInheritance(
 
     return null;
   } catch (error) {
-    console.error('Erreur lors de la vérification des permissions:', error);
+    logger.error('Erreur lors de la vérification des permissions:', error);
     return null;
   }
 }
@@ -104,13 +105,13 @@ export async function moveNoteWithPermissionHandling(
       .eq('id', noteId);
 
     if (error) {
-      console.error('Erreur lors du déplacement de la note:', error);
+      logger.error('Erreur lors du déplacement de la note:', error);
       return { success: false };
     }
 
     return { success: true };
   } catch (error) {
-    console.error('Erreur dans moveNoteWithPermissionHandling:', error);
+    logger.error('Erreur dans moveNoteWithPermissionHandling:', error);
     return { success: false };
   }
 }

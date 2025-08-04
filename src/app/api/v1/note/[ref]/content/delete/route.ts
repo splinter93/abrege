@@ -4,6 +4,7 @@ import { z } from 'zod';
 import type { NextRequest } from 'next/server';
 import { resolveNoteRef } from '@/middleware/resourceResolver';
 import { s3Service } from '@/services/s3Service';
+import { simpleLogger as logger } from '@/utils/logger';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -95,7 +96,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ r
     
   } catch (err: unknown) {
     const error = err as Error;
-    console.error('DELETE /api/v1/note/[ref]/content/delete error:', err);
+    logger.error('DELETE /api/v1/note/[ref]/content/delete error:', err);
     
     // Gestion d'erreurs spécifiques
     if (err instanceof Error && error.message.includes('Configuration S3 invalide')) {

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
+import { simpleLogger as logger } from '@/utils/logger';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -114,7 +115,7 @@ export async function PUT(
       .single();
 
     if (error) {
-      console.error('[API] ❌ Erreur mise à jour classeur:', error);
+      logger.error('[API] ❌ Erreur mise à jour classeur:', error);
       return NextResponse.json(
         { error: error.message },
         { status: 500 }
@@ -128,7 +129,7 @@ export async function PUT(
       );
     }
 
-    console.log('[API] ✅ Classeur mis à jour:', classeur.name);
+    logger.dev('[API] ✅ Classeur mis à jour:', classeur.name);
     return NextResponse.json({ classeur });
 
   } catch (err: unknown) {
@@ -136,7 +137,7 @@ export async function PUT(
     if (error.message === 'Token invalide ou expiré' || error.message === 'Authentification requise') {
       return NextResponse.json({ error: error.message }, { status: 401, headers: { "Content-Type": "application/json" } });
     }
-    console.error('[API] ❌ Erreur serveur mise à jour classeur:', error);
+    logger.error('[API] ❌ Erreur serveur mise à jour classeur:', error);
     return NextResponse.json(
       { error: 'Erreur serveur' },
       { status: 500 }
@@ -176,14 +177,14 @@ export async function DELETE(
       .eq('id', classeurId);
 
     if (error) {
-      console.error('[API] ❌ Erreur suppression classeur:', error);
+      logger.error('[API] ❌ Erreur suppression classeur:', error);
       return NextResponse.json(
         { error: error.message },
         { status: 500 }
       );
     }
 
-    console.log('[API] ✅ Classeur supprimé:', classeurId);
+    logger.dev('[API] ✅ Classeur supprimé:', classeurId);
     return NextResponse.json({ success: true });
 
   } catch (err: unknown) {
@@ -191,7 +192,7 @@ export async function DELETE(
     if (error.message === 'Token invalide ou expiré' || error.message === 'Authentification requise') {
       return NextResponse.json({ error: error.message }, { status: 401, headers: { "Content-Type": "application/json" } });
     }
-    console.error('[API] ❌ Erreur serveur suppression classeur:', error);
+    logger.error('[API] ❌ Erreur serveur suppression classeur:', error);
     return NextResponse.json(
       { error: 'Erreur serveur' },
       { status: 500 }

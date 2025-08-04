@@ -1,4 +1,5 @@
 import { supabase } from '../supabaseClient';
+import { simpleLogger as logger } from '@/utils/logger';
 
 // --- Classeur Operations ---
 export const getClasseurs = async (): Promise<any[]> => {
@@ -132,7 +133,7 @@ export const createArticle = async (data: any): Promise<any> => {
   const user = userResponse.user;
 
   if (!user) {
-    console.error('User not authenticated');
+    logger.error('User not authenticated');
     throw new Error('User not authenticated');
   }
 
@@ -155,7 +156,7 @@ export const createArticle = async (data: any): Promise<any> => {
     .single();
 
   if (error) {
-    console.error('Error creating article:', error.message);
+    logger.error('Error creating article:', error.message);
     throw error;
   }
   return insertData;
@@ -235,7 +236,7 @@ export const updateItemPositions = async (items: any[]): Promise<any> => {
 export const moveItem = async (id: string, newParentId: string): Promise<any> => {
   if (!id) throw new Error('Item ID is required for moving items.');
 
-  console.log('moveItem: Calling Supabase RPC with:', { p_item_id: id, p_target_folder_id: newParentId });
+  logger.dev('moveItem: Calling Supabase RPC with:', { p_item_id: id, p_target_folder_id: newParentId });
   
   const { data, error } = await supabase.rpc('move_item', {
     p_item_id: id,
@@ -243,11 +244,11 @@ export const moveItem = async (id: string, newParentId: string): Promise<any> =>
   });
 
   if (error) {
-    console.error("Error from move_item RPC:", error);
+    logger.error("Error from move_item RPC:", error);
     throw error;
   }
 
-  console.log('moveItem: Success, response:', data);
+  logger.dev('moveItem: Success, response:', data);
   return true;
 };
 
@@ -291,7 +292,7 @@ export const moveItemUniversal = async (
   newParentId: string | null,
   type: 'folder' | 'file'
 ): Promise<any> => {
-  console.log('[DND] moveItemUniversal', { id, newParentId, type });
+  logger.dev('[DND] moveItemUniversal', { id, newParentId, type });
   if (!id) throw new Error('Item ID is required for moving items.');
   if (!type) throw new Error('Type is required (folder/file)');
 

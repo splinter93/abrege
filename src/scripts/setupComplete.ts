@@ -2,6 +2,7 @@ import { config } from 'dotenv';
 import { resolve } from 'path';
 import { createClient } from '@supabase/supabase-js';
 import { execSync } from 'child_process';
+import { simpleLogger as logger } from '@/utils/logger';
 
 // Charger les variables d'environnement depuis .env
 config({ path: resolve(process.cwd(), '.env') });
@@ -17,7 +18,7 @@ const supabase = createClient(supabaseUrl, supabaseAnonKey);
     const USER_ID = "3223651c-5580-4471-affb-b3f4456bd729";
 
 async function checkDatabaseStatus() {
-  console.log('🔍 Vérification de l\'état de la base de données...');
+  logger.dev('🔍 Vérification de l\'état de la base de données...');
   
   const tables = ['articles', 'folders', 'classeurs'];
   const results: Record<string, boolean> = {};
@@ -30,14 +31,14 @@ async function checkDatabaseStatus() {
         .limit(1);
       
       if (error && error.message.includes('column') && error.message.includes('does not exist')) {
-        console.log(`❌ Table ${table}: Colonne slug manquante`);
+        logger.dev(`❌ Table ${table}: Colonne slug manquante`);
         results[table] = false;
       } else {
-        console.log(`✅ Table ${table}: Colonne slug présente`);
+        logger.dev(`✅ Table ${table}: Colonne slug présente`);
         results[table] = true;
       }
     } catch {
-      console.log(`❌ Table ${table}: Erreur de vérification`);
+      logger.dev(`❌ Table ${table}: Erreur de vérification`);
       results[table] = false;
     }
   }
@@ -46,16 +47,16 @@ async function checkDatabaseStatus() {
 }
 
 function showMigrationInstructions() {
-  console.log('\n🚨 MIGRATION SQL REQUISE');
-  console.log('========================');
-  console.log('\n📋 Étapes à suivre :');
-  console.log('\n1. 🌐 Aller dans Supabase Dashboard :');
-  console.log('   https://supabase.com/dashboard');
-  console.log('\n2. 📁 Sélectionner le projet Abrège');
-  console.log('\n3. 🔧 Aller dans SQL Editor');
-  console.log('\n4. 📝 Copier-coller et exécuter ce code SQL :');
-  console.log('\n' + '='.repeat(60));
-  console.log(`
+  logger.dev('\n🚨 MIGRATION SQL REQUISE');
+  logger.dev('========================');
+  logger.dev('\n📋 Étapes à suivre :');
+  logger.dev('\n1. 🌐 Aller dans Supabase Dashboard :');
+  logger.dev('   https://supabase.com/dashboard');
+  logger.dev('\n2. 📁 Sélectionner le projet Abrège');
+  logger.dev('\n3. 🔧 Aller dans SQL Editor');
+  logger.dev('\n4. 📝 Copier-coller et exécuter ce code SQL :');
+  logger.dev('\n' + '='.repeat(60));
+  logger.dev(`
 -- Migration: Ajout des colonnes slug aux tables
 -- Date: 2024-12-05
 
@@ -86,64 +87,64 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_classeurs_slug_user_id
 ON classeurs(slug, user_id) 
 WHERE slug IS NOT NULL;
 `);
-  console.log('='.repeat(60));
-  console.log('\n5. ✅ Cliquer sur "Run" pour exécuter');
-  console.log('\n6. 🔄 Revenir ici et relancer ce script');
-  console.log('\n💡 Appuyer sur Entrée quand c\'est fait...');
+  logger.dev('='.repeat(60));
+  logger.dev('\n5. ✅ Cliquer sur "Run" pour exécuter');
+  logger.dev('\n6. 🔄 Revenir ici et relancer ce script');
+  logger.dev('\n💡 Appuyer sur Entrée quand c\'est fait...');
 }
 
 async function runMigrationScripts() {
-  console.log('\n🔄 Exécution des scripts de migration...');
+  logger.dev('\n🔄 Exécution des scripts de migration...');
   
   try {
     // Vérifier les colonnes
-    console.log('\n📋 Vérification des colonnes...');
+    logger.dev('\n📋 Vérification des colonnes...');
     execSync('npm run add-slug-columns', { stdio: 'inherit' });
     
     // Migrer les données
-    console.log('\n📊 Migration des données...');
+    logger.dev('\n📊 Migration des données...');
     execSync('npm run migrate-slugs', { stdio: 'inherit' });
     
     // Vérifier la base de données
-    console.log('\n🔍 Vérification finale...');
+    logger.dev('\n🔍 Vérification finale...');
     execSync('npm run verify-database', { stdio: 'inherit' });
     
   } catch (error) {
-    console.error('❌ Erreur lors de l\'exécution des scripts:', error);
+    logger.error('❌ Erreur lors de l\'exécution des scripts:', error);
   }
 }
 
 async function testAPI() {
-  console.log('\n🧪 Test de l\'API...');
+  logger.dev('\n🧪 Test de l\'API...');
   
   try {
     execSync('npm run test-endpoints', { stdio: 'inherit' });
   } catch (error) {
-    console.error('❌ Erreur lors du test de l\'API:', error);
+    logger.error('❌ Erreur lors du test de l\'API:', error);
   }
 }
 
 async function main() {
-  console.log('🚀 SETUP COMPLET - API LLM-Friendly');
-  console.log('===================================');
-  console.log(`👤 USER_ID: ${USER_ID}`);
-  console.log(`🌐 Supabase URL: ${supabaseUrl}`);
+  logger.dev('🚀 SETUP COMPLET - API LLM-Friendly');
+  logger.dev('===================================');
+  logger.dev(`👤 USER_ID: ${USER_ID}`);
+  logger.dev(`🌐 Supabase URL: ${supabaseUrl}`);
   
   // Étape 1: Vérifier l'état de la base de données
   const dbStatus = await checkDatabaseStatus();
   const allTablesReady = Object.values(dbStatus).every(status => status);
   
   if (!allTablesReady) {
-    console.log('\n⚠️  Colonnes slug manquantes détectées !');
+    logger.dev('\n⚠️  Colonnes slug manquantes détectées !');
     showMigrationInstructions();
     
     // Attendre que l'utilisateur exécute la migration SQL
-    console.log('\n⏳ En attente de la migration SQL...');
-    console.log('💡 Exécute la migration SQL dans Supabase, puis appuie sur Entrée...');
+    logger.dev('\n⏳ En attente de la migration SQL...');
+    logger.dev('💡 Exécute la migration SQL dans Supabase, puis appuie sur Entrée...');
     
     // En mode réel, on attendrait une entrée utilisateur
     // Pour l'automatisation, on simule que c'est fait
-    console.log('\n🔄 Supposons que la migration SQL est terminée...');
+    logger.dev('\n🔄 Supposons que la migration SQL est terminée...');
   }
   
   // Étape 2: Exécuter les scripts de migration
@@ -153,19 +154,19 @@ async function main() {
   await testAPI();
   
   // Résumé final
-  console.log('\n🎉 SETUP TERMINÉ !');
-  console.log('\n📋 Résumé :');
-  console.log('- ✅ Colonnes slug ajoutées');
-  console.log('- ✅ Données migrées');
-  console.log('- ✅ API testée');
-  console.log('- ✅ Prêt pour l\'utilisation');
+  logger.dev('\n🎉 SETUP TERMINÉ !');
+  logger.dev('\n📋 Résumé :');
+  logger.dev('- ✅ Colonnes slug ajoutées');
+  logger.dev('- ✅ Données migrées');
+  logger.dev('- ✅ API testée');
+  logger.dev('- ✅ Prêt pour l\'utilisation');
   
-  console.log('\n📚 Documentation disponible :');
-  console.log('- MIGRATION-COMPLETE-GUIDE.md (guide complet)');
-  console.log('- DONNA-LLM-FRIENDLY-GUIDE.md (guide pour Donna)');
-  console.log('- API-DOCUMENTATION.md (documentation technique)');
+  logger.dev('\n📚 Documentation disponible :');
+  logger.dev('- MIGRATION-COMPLETE-GUIDE.md (guide complet)');
+  logger.dev('- DONNA-LLM-FRIENDLY-GUIDE.md (guide pour Donna)');
+  logger.dev('- API-DOCUMENTATION.md (documentation technique)');
   
-  console.log('\n🚀 L\'API LLM-friendly est maintenant 100% opérationnelle !');
+  logger.dev('\n🚀 L\'API LLM-friendly est maintenant 100% opérationnelle !');
 }
 
 // Exécuter le script si appelé directement

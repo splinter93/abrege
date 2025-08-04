@@ -3,6 +3,7 @@ import { z } from 'zod';
 import type { NextRequest } from 'next/server';
 import { resolveNoteRef } from '@/middleware/resourceResolver';
 import { s3Service } from '@/services/s3Service';
+import { simpleLogger as logger } from '@/utils/logger';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -79,7 +80,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ ref:
 export async function POST(req: NextRequest): Promise<Response> {
   try {
     const body = await req.json();
-    console.log('POST /api/v1/note/[ref]/content body:', body);
+    logger.dev('POST /api/v1/note/[ref]/content body:', body);
     
     // Validation des paramètres
     const schema = z.object({
@@ -122,7 +123,7 @@ export async function POST(req: NextRequest): Promise<Response> {
     
   } catch (err: unknown) {
     const error = err as Error;
-    console.error('POST /api/v1/note/[ref]/content error:', err);
+    logger.error('POST /api/v1/note/[ref]/content error:', err);
     
     // Gestion d'erreurs spécifiques
     if (err instanceof Error && error.message.includes('Configuration S3 invalide')) {

@@ -3,6 +3,7 @@ import { SlugGenerator } from '@/utils/slugGenerator';
 import { getSupabaseClient } from '@/services/supabaseService';
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { simpleLogger as logger } from '@/utils/logger';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -36,16 +37,16 @@ export async function POST(request: NextRequest): Promise<Response> {
       const { data: { user }, error: authError } = await supabase.auth.getUser();
       
       if (authError || !user) {
-        console.log("[Note Create API] ❌ Token invalide ou expiré");
+        logger.dev("[Note Create API] ❌ Token invalide ou expiré");
         return NextResponse.json(
           { error: 'Token invalide ou expiré' },
           { status: 401 }
         );
       }
       userId = user.id;
-      console.log("[Note Create API] ✅ Utilisateur authentifié:", userId);
+      logger.dev("[Note Create API] ✅ Utilisateur authentifié:", userId);
     } else {
-      console.log("[Note Create API] ❌ Token d'authentification manquant");
+      logger.dev("[Note Create API] ❌ Token d'authentification manquant");
       return NextResponse.json(
         { error: 'Authentification requise' },
         { status: 401 }
@@ -54,7 +55,7 @@ export async function POST(request: NextRequest): Promise<Response> {
 
     const body = await request.json();
     if (process.env.NODE_ENV === 'development') {
-      console.log('[createNote] Payload reçu:', body);
+      logger.dev('[createNote] Payload reçu:', body);
     }
     const schema = z.object({
       source_title: z.string().min(1, 'source_title requis'),
@@ -69,7 +70,7 @@ export async function POST(request: NextRequest): Promise<Response> {
     const parseResult = schema.safeParse(body);
     if (!parseResult.success) {
       if (process.env.NODE_ENV === 'development') {
-        console.log('[createNote] Erreur de validation Zod:', parseResult.error.errors);
+        logger.dev('[createNote] Erreur de validation Zod:', parseResult.error.errors);
       }
       return new Response(
         JSON.stringify({ error: 'Payload invalide', details: parseResult.error.errors.map(e => e.message) }),
@@ -82,7 +83,7 @@ export async function POST(request: NextRequest): Promise<Response> {
     // Déterminer le notebook_id final (priorité à notebook_id, puis classeur_id)
     const finalNotebookId = notebook_id || classeur_id;
     if (process.env.NODE_ENV === 'development') {
-      console.log('[createNote] notebook_id:', notebook_id, 'classeur_id:', classeur_id, 'finalNotebookId:', finalNotebookId, 'user_id:', userId);
+      logger.dev('[createNote] notebook_id:', notebook_id, 'classeur_id:', classeur_id, 'finalNotebookId:', finalNotebookId, 'user_id:', userId);
     }
     
     if (!finalNotebookId) {
@@ -107,7 +108,7 @@ export async function POST(request: NextRequest): Promise<Response> {
     
     if (isNotebookSlug) {
       if (process.env.NODE_ENV === 'development') {
-        console.log(`[createNote] Résolution slug notebook: ${finalNotebookId}`);
+        logger.dev(`[createNote] Résolution slug notebook: ${finalNotebookId}`);
       }
       const { data: notebook, error: notebookError } = await supabase
         .from('classeurs')
@@ -118,7 +119,7 @@ export async function POST(request: NextRequest): Promise<Response> {
       
       if (notebookError || !notebook) {
         if (process.env.NODE_ENV === 'development') {
-          console.log(`[createNote] Notebook slug non trouvé:`, notebookError);
+          logger.dev(`[createNote] Notebook slug non trouvé:`, notebookError);
         }
         return new Response(
           JSON.stringify({ error: `Notebook avec slug '${finalNotebookId}' non trouvé` }), 
@@ -128,11 +129,11 @@ export async function POST(request: NextRequest): Promise<Response> {
       
       finalNotebookIdResolved = notebook.id;
       if (process.env.NODE_ENV === 'development') {
-        console.log(`[createNote] Notebook résolu: ${finalNotebookId} → ${finalNotebookIdResolved}`);
+        logger.dev(`[createNote] Notebook résolu: ${finalNotebookId} → ${finalNotebookIdResolved}`);
       }
     }
     if (process.env.NODE_ENV === 'development') {
-      console.log('[createNote] finalNotebookIdResolved:', finalNotebookIdResolved);
+      logger.dev('[createNote] finalNotebookIdResolved:', finalNotebookIdResolved);
     }
     
     // Résolution slug → ID pour folder_id
@@ -142,7 +143,7 @@ export async function POST(request: NextRequest): Promise<Response> {
       
       if (isFolderSlug) {
         if (process.env.NODE_ENV === 'development') {
-          console.log(`🔍 Résolution slug dossier: ${folder_id}`);
+          logger.dev(`🔍 Résolution slug dossier: ${folder_id}`);
         }
         const { data: folder, error: folderError } = await supabase
           .from('folders')
@@ -167,7 +168,7 @@ export async function POST(request: NextRequest): Promise<Response> {
         }
         
         finalFolderId = folder.id;
-        console.log(`✅ Dossier résolu: ${folder_id} → ${finalFolderId}`);
+        logger.dev(`✅ Dossier résolu: ${folder_id} → ${finalFolderId}`);
       }
     }
     
@@ -193,16 +194,16 @@ export async function POST(request: NextRequest): Promise<Response> {
       .single();
     
     if (error) {
-      console.error("[Note Create API] ❌ Erreur création note:", error);
+      logger.error("[Note Create API] ❌ Erreur création note:", error);
       return new Response(JSON.stringify({ error: error.message }), { status: 500, headers: { "Content-Type": "application/json" } });
     }
     
-    console.log("[Note Create API] ✅ Note créée:", note.id);
+    logger.dev("[Note Create API] ✅ Note créée:", note.id);
     
     return new Response(JSON.stringify({ note }), { status: 201, headers: { "Content-Type": "application/json" } });
   } catch (err: unknown) {
     const error = err as Error;
-    console.error("[Note Create API] ❌ Erreur:", error);
+    logger.error("[Note Create API] ❌ Erreur:", error);
     return new Response(JSON.stringify({ error: error.message }), { status: 500, headers: { "Content-Type": "application/json" } });
   }
 } 

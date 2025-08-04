@@ -1,6 +1,7 @@
 import { llmManager } from '@/services/llm';
 import { useLLMStore } from '@/store/useLLMStore';
 import type { AppContext, ChatMessage } from '@/services/llm/types';
+import { simpleLogger as logger } from '@/utils/logger';
 
 /**
  * Service pour gérer les appels LLM avec le provider sélectionné
@@ -29,14 +30,14 @@ export class LLMService {
       // Récupérer le provider actuel depuis le store
       const currentProvider = useLLMStore.getState().getCurrentProvider();
       
-      console.log('[LLM Service] 🚀 Envoi message via:', currentProvider);
-      console.log('[LLM Service] 📝 Message:', message);
-      console.log('[LLM Service] 🎯 Contexte:', context);
+      logger.dev('[LLM Service] 🚀 Envoi message via:', currentProvider);
+      logger.dev('[LLM Service] 📝 Message:', message);
+      logger.dev('[LLM Service] 🎯 Contexte:', context);
 
       // Appeler le LLM via le manager
       const response = await llmManager.call(message, context, history);
 
-      console.log('[LLM Service] ✅ Réponse reçue');
+      logger.dev('[LLM Service] ✅ Réponse reçue');
 
       return {
         success: true,
@@ -44,7 +45,7 @@ export class LLMService {
       };
 
     } catch (error) {
-      console.error('[LLM Service] ❌ Erreur:', error);
+      logger.error('[LLM Service] ❌ Erreur:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Erreur inconnue'
@@ -58,7 +59,7 @@ export class LLMService {
   setProvider(providerId: string): void {
     useLLMStore.getState().setProvider(providerId);
     llmManager.setProvider(providerId);
-    console.log('[LLM Service] 🔄 Provider changé:', providerId);
+    logger.dev('[LLM Service] 🔄 Provider changé:', providerId);
   }
 
   /**

@@ -1,4 +1,5 @@
 import { getRealtimeService } from './realtimeService';
+import { simpleLogger as logger } from '@/utils/logger';
 
 /**
  * Service de déclenchement de polling côté client
@@ -25,23 +26,23 @@ export class ClientPollingTrigger {
   async triggerClientPolling(table: string, operation: 'INSERT' | 'UPDATE' | 'DELETE') {
     if (!this.realtimeService) {
       if (process.env.NODE_ENV === 'development') {
-      console.log('[ClientPollingTrigger] ⚠️ Service de polling non disponible côté client');
+      logger.dev('[ClientPollingTrigger] ⚠️ Service de polling non disponible côté client');
       }
       return;
     }
 
     if (process.env.NODE_ENV === 'development') {
-    console.log(`[ClientPollingTrigger] 🚀 Déclenchement polling client pour ${table} (${operation})`);
+    logger.dev(`[ClientPollingTrigger] 🚀 Déclenchement polling client pour ${table} (${operation})`);
     }
     
     try {
       // Déclencher immédiatement la vérification côté client
       await this.realtimeService.triggerImmediateCheck(table, operation);
       if (process.env.NODE_ENV === 'development') {
-      console.log(`[ClientPollingTrigger] ✅ Polling client terminé pour ${table}`);
+      logger.dev(`[ClientPollingTrigger] ✅ Polling client terminé pour ${table}`);
       }
     } catch (error) {
-      console.error(`[ClientPollingTrigger] ❌ Erreur polling client ${table}:`, error);
+      logger.error(`[ClientPollingTrigger] ❌ Erreur polling client ${table}:`, error);
     }
   }
 

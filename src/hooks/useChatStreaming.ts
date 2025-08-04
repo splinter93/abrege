@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { supabase } from '@/supabaseClient';
+import { simpleLogger as logger } from '@/utils/logger';
 
 interface UseChatStreamingOptions {
   onToken?: (token: string) => void;
@@ -23,7 +24,7 @@ export function useChatStreaming(options: UseChatStreamingOptions = {}): UseChat
   const { onToken, onComplete, onError } = options;
 
   const startStreaming = useCallback((channelId: string, sessionId: string) => {
-    console.log('[useChatStreaming] 🚀 Démarrage streaming:', { channelId, sessionId });
+    logger.dev('[useChatStreaming] 🚀 Démarrage streaming:', { channelId, sessionId });
     
     // Nettoyer l'état précédent
     setIsStreaming(false);
@@ -35,10 +36,10 @@ export function useChatStreaming(options: UseChatStreamingOptions = {}): UseChat
     const channel = supabase
       .channel(channelId)
       .on('broadcast', { event: 'llm-token' }, (payload) => {
-        console.log('[useChatStreaming] 📝 Token reçu:', payload);
+        logger.dev('[useChatStreaming] 📝 Token reçu:', payload);
         try {
           const { token, sessionId: payloadSessionId } = payload.payload || {};
-          console.log('[useChatStreaming] 🔍 Comparaison sessionId:', { 
+          logger.dev('[useChatStreaming] 🔍 Comparaison sessionId:', { 
             expected: sessionId, 
             received: payloadSessionId,
             token: token?.substring(0, 20) + '...'
@@ -47,33 +48,33 @@ export function useChatStreaming(options: UseChatStreamingOptions = {}): UseChat
           if (payloadSessionId === sessionId && token) {
             setContent(prev => {
               const newContent = prev + token;
-              console.log('[useChatStreaming] 📊 Contenu mis à jour:', newContent.length, 'chars');
+              logger.dev('[useChatStreaming] 📊 Contenu mis à jour:', newContent.length, 'chars');
               return newContent;
             });
             onToken?.(token);
           }
         } catch (error) {
-          console.error('[useChatStreaming] ❌ Erreur token:', error);
+          logger.error('[useChatStreaming] ❌ Erreur token:', error);
         }
       })
       .on('broadcast', { event: 'llm-complete' }, (payload) => {
-        console.log('[useChatStreaming] ✅ Complete reçu:', payload);
+        logger.dev('[useChatStreaming] ✅ Complete reçu:', payload);
         try {
           const { sessionId: payloadSessionId, fullResponse } = payload.payload || {};
-          console.log('[useChatStreaming] 🔍 Complete sessionId:', { 
+          logger.dev('[useChatStreaming] 🔍 Complete sessionId:', { 
             expected: sessionId, 
             received: payloadSessionId,
             hasResponse: !!fullResponse
           });
           
           if (payloadSessionId === sessionId && fullResponse) {
-            console.log('[useChatStreaming] 🎯 Completion traitée');
+            logger.dev('[useChatStreaming] 🎯 Completion traitée');
             setIsStreaming(false);
             setContent(fullResponse);
             onComplete?.(fullResponse);
           }
         } catch (error) {
-          console.error('[useChatStreaming] ❌ Erreur completion:', error);
+          logger.error('[useChatStreaming] ❌ Erreur completion:', error);
           setIsStreaming(false);
           onError?.('Erreur lors de la réception de la réponse');
         }
@@ -86,7 +87,7 @@ export function useChatStreaming(options: UseChatStreamingOptions = {}): UseChat
             onError?.(errorMessage || 'Erreur lors du streaming');
           }
         } catch (error) {
-          console.error('[useChatStreaming] Erreur error event:', error);
+          logger.error('[useChatStreaming] Erreur error event:', error);
           setIsStreaming(false);
           onError?.('Erreur lors du streaming');
         }
@@ -94,9 +95,9 @@ export function useChatStreaming(options: UseChatStreamingOptions = {}): UseChat
       .subscribe((status) => {
         if (status === 'SUBSCRIBED') {
           setIsStreaming(true);
-          console.log('[useChatStreaming] ✅ Canal connecté');
+          logger.dev('[useChatStreaming] ✅ Canal connecté');
         } else if (status === 'CHANNEL_ERROR') {
-          console.error('[useChatStreaming] ❌ Erreur canal');
+          logger.error('[useChatStreaming] ❌ Erreur canal');
           setIsStreaming(false);
           onError?.('Erreur de connexion au canal de streaming');
         }

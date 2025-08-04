@@ -1,6 +1,7 @@
 import { config } from 'dotenv';
 import { resolve } from 'path';
 import { createClient } from '@supabase/supabase-js';
+import { simpleLogger as logger } from '@/utils/logger';
 
 // Charger les variables d'environnement depuis .env
 config({ path: resolve(process.cwd(), '.env') });
@@ -61,7 +62,7 @@ async function generateSlug(title: string, type: 'note' | 'folder' | 'classeur',
 }
 
 async function migrateNotes() {
-  console.log('🔄 Migration des slugs pour les notes...');
+  logger.dev('🔄 Migration des slugs pour les notes...');
   
   // Récupérer toutes les notes sans slug
   const { data: notes, error } = await supabase
@@ -70,14 +71,14 @@ async function migrateNotes() {
     .is('slug', null);
   
   if (error) {
-    console.error('❌ Erreur lors de la récupération des notes:', error);
+    logger.error('❌ Erreur lors de la récupération des notes:', error);
     return;
   }
   
-  console.log(`📝 ${notes?.length || 0} notes à migrer`);
+  logger.dev(`📝 ${notes?.length || 0} notes à migrer`);
   
   if (!notes || notes.length === 0) {
-    console.log('✅ Aucune note à migrer');
+    logger.dev('✅ Aucune note à migrer');
     return;
   }
   
@@ -92,18 +93,18 @@ async function migrateNotes() {
         .eq('id', note.id);
       
       if (updateError) {
-        console.error(`❌ Erreur lors de la mise à jour de la note ${note.id}:`, updateError);
+        logger.error(`❌ Erreur lors de la mise à jour de la note ${note.id}:`, updateError);
       } else {
-        console.log(`✅ Note migrée: "${note.source_title}" -> "${slug}"`);
+        logger.dev(`✅ Note migrée: "${note.source_title}" -> "${slug}"`);
       }
     } catch (err) {
-      console.error(`❌ Erreur lors de la migration de la note ${note.id}:`, err);
+      logger.error(`❌ Erreur lors de la migration de la note ${note.id}:`, err);
     }
   }
 }
 
 async function migrateFolders() {
-  console.log('🔄 Migration des slugs pour les dossiers...');
+  logger.dev('🔄 Migration des slugs pour les dossiers...');
   
   // Récupérer tous les dossiers sans slug
   const { data: folders, error } = await supabase
@@ -112,14 +113,14 @@ async function migrateFolders() {
     .is('slug', null);
   
   if (error) {
-    console.error('❌ Erreur lors de la récupération des dossiers:', error);
+    logger.error('❌ Erreur lors de la récupération des dossiers:', error);
     return;
   }
   
-  console.log(`📁 ${folders?.length || 0} dossiers à migrer`);
+  logger.dev(`📁 ${folders?.length || 0} dossiers à migrer`);
   
   if (!folders || folders.length === 0) {
-    console.log('✅ Aucun dossier à migrer');
+    logger.dev('✅ Aucun dossier à migrer');
     return;
   }
   
@@ -134,18 +135,18 @@ async function migrateFolders() {
         .eq('id', folder.id);
       
       if (updateError) {
-        console.error(`❌ Erreur lors de la mise à jour du dossier ${folder.id}:`, updateError);
+        logger.error(`❌ Erreur lors de la mise à jour du dossier ${folder.id}:`, updateError);
       } else {
-        console.log(`✅ Dossier migré: "${folder.name}" -> "${slug}"`);
+        logger.dev(`✅ Dossier migré: "${folder.name}" -> "${slug}"`);
       }
     } catch (err) {
-      console.error(`❌ Erreur lors de la migration du dossier ${folder.id}:`, err);
+      logger.error(`❌ Erreur lors de la migration du dossier ${folder.id}:`, err);
     }
   }
 }
 
 async function migrateClasseurs() {
-  console.log('🔄 Migration des slugs pour les classeurs...');
+  logger.dev('🔄 Migration des slugs pour les classeurs...');
   
   // Récupérer tous les classeurs sans slug
   const { data: classeurs, error } = await supabase
@@ -154,14 +155,14 @@ async function migrateClasseurs() {
     .is('slug', null);
   
   if (error) {
-    console.error('❌ Erreur lors de la récupération des classeurs:', error);
+    logger.error('❌ Erreur lors de la récupération des classeurs:', error);
     return;
   }
   
-  console.log(`📚 ${classeurs?.length || 0} classeurs à migrer`);
+  logger.dev(`📚 ${classeurs?.length || 0} classeurs à migrer`);
   
   if (!classeurs || classeurs.length === 0) {
-    console.log('✅ Aucun classeur à migrer');
+    logger.dev('✅ Aucun classeur à migrer');
     return;
   }
   
@@ -176,31 +177,31 @@ async function migrateClasseurs() {
         .eq('id', classeur.id);
       
       if (updateError) {
-        console.error(`❌ Erreur lors de la mise à jour du classeur ${classeur.id}:`, updateError);
+        logger.error(`❌ Erreur lors de la mise à jour du classeur ${classeur.id}:`, updateError);
       } else {
-        console.log(`✅ Classeur migré: "${classeur.name}" -> "${slug}"`);
+        logger.dev(`✅ Classeur migré: "${classeur.name}" -> "${slug}"`);
       }
     } catch (err) {
-      console.error(`❌ Erreur lors de la migration du classeur ${classeur.id}:`, err);
+      logger.error(`❌ Erreur lors de la migration du classeur ${classeur.id}:`, err);
     }
   }
 }
 
 async function main() {
-  console.log('🚀 Début de la migration des slugs...');
-  console.log('=====================================');
+  logger.dev('🚀 Début de la migration des slugs...');
+  logger.dev('=====================================');
   
   try {
     await migrateNotes();
-    console.log('---');
+    logger.dev('---');
     await migrateFolders();
-    console.log('---');
+    logger.dev('---');
     await migrateClasseurs();
-    console.log('---');
+    logger.dev('---');
     
-    console.log('✅ Migration terminée !');
+    logger.dev('✅ Migration terminée !');
   } catch (err) {
-    console.error('❌ Erreur lors de la migration:', err);
+    logger.error('❌ Erreur lors de la migration:', err);
   }
 }
 

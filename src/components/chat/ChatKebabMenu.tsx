@@ -1,7 +1,9 @@
 "use client";
 import React, { useState, useRef, useEffect } from 'react';
 import { useLLMStore } from '@/store/useLLMStore';
+import { useChatStore } from '@/store/useChatStore';
 import './ChatKebabMenu.css';
+import { simpleLogger as logger } from '@/utils/logger';
 
 interface ChatKebabMenuProps {
   isWideMode: boolean;
@@ -25,6 +27,7 @@ const ChatKebabMenu: React.FC<ChatKebabMenuProps> = ({
   
   // LLM Provider state
   const { currentProvider, availableProviders, setProvider } = useLLMStore();
+  const { selectedAgent } = useChatStore();
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -61,7 +64,7 @@ const ChatKebabMenu: React.FC<ChatKebabMenuProps> = ({
   const handleProviderChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const newProvider = event.target.value;
     setProvider(newProvider);
-    console.log(`[ChatKebabMenu] 🔄 Provider changé: ${newProvider}`);
+    logger.dev(`[ChatKebabMenu] 🔄 Provider changé: ${newProvider}`);
   };
 
   return (
@@ -135,15 +138,29 @@ const ChatKebabMenu: React.FC<ChatKebabMenuProps> = ({
             </div>
 
             <div className="kebab-input-group">
-              <label className="kebab-input-label">Provider IA</label>
+              <label className="kebab-input-label">
+                Provider IA
+                {selectedAgent && (
+                  <span className="agent-override-indicator">
+                    (Agent: {selectedAgent.name})
+                  </span>
+                )}
+              </label>
               <select 
                 value={currentProvider} 
                 onChange={handleProviderChange}
                 className="kebab-select"
+                disabled={!!selectedAgent}
+                title={selectedAgent ? `Provider forcé par l'agent ${selectedAgent.name}` : 'Choisir le provider'}
               >
                 <option value="synesia">🤖 Synesia</option>
                 <option value="deepseek">🔍 DeepSeek</option>
               </select>
+              {selectedAgent && (
+                <div className="agent-override-message">
+                  Provider forcé par l'agent sélectionné
+                </div>
+              )}
             </div>
           </div>
 

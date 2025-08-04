@@ -1,18 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { simpleLogger as logger } from '@/utils/logger';
 
 // Configuration Supabase
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-console.log('[Chat Sessions API] 🔧 Configuration:', {
+logger.dev('[Chat Sessions API] 🔧 Configuration:', {
   supabaseUrl: supabaseUrl ? '✅ Configuré' : '❌ Manquant',
   supabaseKey: supabaseKey ? '✅ Configuré' : '❌ Manquant',
   serviceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY ? '✅ Configuré' : '❌ Manquant'
 });
 
 if (!supabaseUrl || !supabaseKey) {
-  console.error('[Chat Sessions API] ❌ Variables d\'environnement Supabase manquantes');
+  logger.error('[Chat Sessions API] ❌ Variables d\'environnement Supabase manquantes');
   throw new Error('Configuration Supabase manquante');
 }
 
@@ -25,19 +26,19 @@ const supabaseAdmin = createClient(supabaseUrl, supabaseKey);
  */
 export async function POST(request: NextRequest) {
   try {
-    console.log('[Chat Sessions API] 📝 Création de session...');
+    logger.dev('[Chat Sessions API] 📝 Création de session...');
     
     // Vérifier la configuration Supabase
     if (!supabaseUrl || !supabaseKey) {
-      console.error('[Chat Sessions API] ❌ Configuration Supabase manquante');
+      logger.error('[Chat Sessions API] ❌ Configuration Supabase manquante');
       return NextResponse.json(
         { error: 'Configuration serveur manquante' },
         { status: 500 }
       );
     }
     
-    console.log('[Chat Sessions API] 🔧 URL:', request.url);
-    console.log('[Chat Sessions API] 🔧 Méthode:', request.method);
+    logger.dev('[Chat Sessions API] 🔧 URL:', request.url);
+    logger.dev('[Chat Sessions API] 🔧 Méthode:', request.method);
     
     // Vérifier l'authentification AVANT de parser le JSON
     const authHeader = request.headers.get('authorization');
@@ -47,19 +48,19 @@ export async function POST(request: NextRequest) {
     if (authHeader && authHeader.startsWith('Bearer ')) {
       // Token JWT fourni
       userToken = authHeader.substring(7);
-      console.log('[Chat Sessions API] 🔐 Token JWT détecté');
+      logger.dev('[Chat Sessions API] 🔐 Token JWT détecté');
       
       const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(userToken);
       
       if (authError || !user) {
-        console.error('[Chat Sessions API] ❌ Erreur auth:', authError);
+        logger.error('[Chat Sessions API] ❌ Erreur auth:', authError);
         return NextResponse.json(
           { error: 'Token invalide ou expiré' },
           { status: 401 }
         );
       }
       userId = user.id;
-      console.log('[Chat Sessions API] ✅ Utilisateur authentifié:', userId);
+      logger.dev('[Chat Sessions API] ✅ Utilisateur authentifié:', userId);
     } else {
       return NextResponse.json(
         { error: 'Authentification requise' },
@@ -71,9 +72,9 @@ export async function POST(request: NextRequest) {
     let body;
     try {
       body = await request.json();
-      console.log('[Chat Sessions API] 📋 Body brut reçu:', body);
+      logger.dev('[Chat Sessions API] 📋 Body brut reçu:', body);
     } catch (error) {
-      console.error('[Chat Sessions API] ❌ Erreur parsing JSON:', error);
+      logger.error('[Chat Sessions API] ❌ Erreur parsing JSON:', error);
       return NextResponse.json(
         { error: 'Données JSON invalides' },
         { status: 400 }
@@ -82,7 +83,7 @@ export async function POST(request: NextRequest) {
     
     const { name = 'Nouvelle conversation', history_limit = 10 } = body;
 
-    console.log('[Chat Sessions API] 📋 Données reçues:', { name, history_limit });
+    logger.dev('[Chat Sessions API] 📋 Données reçues:', { name, history_limit });
 
     // Créer un client avec le contexte d'authentification de l'utilisateur
     const userClient = createClient(supabaseUrl, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, {
@@ -94,8 +95,8 @@ export async function POST(request: NextRequest) {
     });
 
     // Créer la session dans la base de données avec le contexte utilisateur
-    console.log('[Chat Sessions API] 💾 Insertion en base...');
-    console.log('[Chat Sessions API] 💾 Données à insérer:', {
+    logger.dev('[Chat Sessions API] 💾 Insertion en base...');
+    logger.dev('[Chat Sessions API] 💾 Données à insérer:', {
       user_id: userId,
       name,
       thread: [],
@@ -118,8 +119,8 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (error) {
-      console.error('[Chat Sessions API] ❌ Erreur création session:', error);
-      console.error('[Chat Sessions API] ❌ Détails erreur:', {
+      logger.error('[Chat Sessions API] ❌ Erreur création session:', error);
+      logger.error('[Chat Sessions API] ❌ Détails erreur:', {
         code: error.code,
         message: error.message,
         details: error.details,
@@ -131,8 +132,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log('[Chat Sessions API] ✅ Session créée:', session.id);
-    console.log('[Chat Sessions API] ✅ Session complète:', session);
+    logger.dev('[Chat Sessions API] ✅ Session créée:', session.id);
+    logger.dev('[Chat Sessions API] ✅ Session complète:', session);
 
     const response = {
       success: true,
@@ -140,12 +141,12 @@ export async function POST(request: NextRequest) {
       message: 'Session créée avec succès'
     };
 
-    console.log('[Chat Sessions API] 📤 Réponse envoyée:', response);
+    logger.dev('[Chat Sessions API] 📤 Réponse envoyée:', response);
 
     return NextResponse.json(response);
 
   } catch (error) {
-    console.error('[Chat Sessions API] ❌ Erreur:', error);
+    logger.error('[Chat Sessions API] ❌ Erreur:', error);
     return NextResponse.json(
       { error: 'Erreur interne du serveur', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
@@ -161,7 +162,7 @@ export async function GET(request: NextRequest) {
   try {
     // Vérifier la configuration Supabase
     if (!supabaseUrl || !supabaseKey) {
-      console.error('[Chat Sessions API] ❌ Configuration Supabase manquante');
+      logger.error('[Chat Sessions API] ❌ Configuration Supabase manquante');
       return NextResponse.json(
         { error: 'Configuration serveur manquante' },
         { status: 500 }
@@ -202,7 +203,7 @@ export async function GET(request: NextRequest) {
     });
 
     // Récupérer les sessions de l'utilisateur avec le contexte utilisateur
-    console.log('[Chat Sessions API] 🔍 Récupération sessions pour utilisateur:', userId);
+    logger.dev('[Chat Sessions API] 🔍 Récupération sessions pour utilisateur:', userId);
     
     const { data: sessions, error } = await userClient
       .from('chat_sessions')
@@ -212,7 +213,7 @@ export async function GET(request: NextRequest) {
       .order('updated_at', { ascending: false });
 
     if (error) {
-      console.error('[Chat Sessions API] ❌ Erreur récupération sessions:', error);
+      logger.error('[Chat Sessions API] ❌ Erreur récupération sessions:', error);
       return NextResponse.json(
         { error: 'Erreur lors de la récupération des sessions' },
         { status: 500 }
@@ -230,7 +231,7 @@ export async function GET(request: NextRequest) {
       };
     });
 
-    console.log('[Chat Sessions API] ✅ Sessions récupérées:', sessionsWithLimitedHistory.length);
+    logger.dev('[Chat Sessions API] ✅ Sessions récupérées:', sessionsWithLimitedHistory.length);
 
     return NextResponse.json({
       success: true,
@@ -239,7 +240,7 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('[Chat Sessions API] ❌ Erreur:', error);
+    logger.error('[Chat Sessions API] ❌ Erreur:', error);
     return NextResponse.json(
       { error: 'Erreur interne du serveur' },
       { status: 500 }

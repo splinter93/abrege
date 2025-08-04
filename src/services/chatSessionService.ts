@@ -7,6 +7,7 @@ import type {
   ChatSessionsListResponse 
 } from '@/types/chat';
 import { supabase } from '@/supabaseClient';
+import { simpleLogger as logger } from '@/utils/logger';
 
 /**
  * Service pour gérer les sessions de chat
@@ -36,20 +37,20 @@ export class ChatSessionService {
     search?: string;
   }): Promise<ChatSessionsListResponse> {
     try {
-      console.log('[ChatSessionService] 🔄 getSessions appelé...');
+      logger.dev('[ChatSessionService] 🔄 getSessions appelé...');
       
       // Récupérer le token d'authentification
       const { data: { session } } = await supabase.auth.getSession();
       const token = session?.access_token;
       
-      console.log('[ChatSessionService] 🔐 Token trouvé:', token ? 'Oui' : 'Non');
+      logger.dev('[ChatSessionService] 🔐 Token trouvé:', token ? 'Oui' : 'Non');
       
       if (!token) {
-        console.log('[ChatSessionService] ❌ Pas de token, authentification requise');
+        logger.dev('[ChatSessionService] ❌ Pas de token, authentification requise');
         throw new Error('Authentification requise');
       }
 
-      console.log('[ChatSessionService] ✅ Token valide, appel API...');
+      logger.dev('[ChatSessionService] ✅ Token valide, appel API...');
 
       const params = new URLSearchParams();
       if (filters?.is_active !== undefined) {
@@ -77,7 +78,7 @@ export class ChatSessionService {
       } catch (error) {
         // Si la réponse n'est pas du JSON, c'est probablement une erreur HTML
         const textResponse = await response.text();
-        console.error('[ChatSessionService] ❌ Réponse non-JSON reçue:', textResponse.substring(0, 200));
+        logger.error('[ChatSessionService] ❌ Réponse non-JSON reçue:', textResponse.substring(0, 200));
         throw new Error(`Erreur serveur (${response.status}): Réponse non-JSON reçue`);
       }
 
@@ -87,7 +88,7 @@ export class ChatSessionService {
 
       return data;
     } catch (error) {
-      console.error('Erreur ChatSessionService.getSessions:', error);
+      logger.error('Erreur ChatSessionService.getSessions:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Erreur inconnue'
@@ -122,7 +123,7 @@ export class ChatSessionService {
 
       return data;
     } catch (error) {
-      console.error('Erreur ChatSessionService.getSession:', error);
+      logger.error('Erreur ChatSessionService.getSession:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Erreur inconnue'
@@ -158,7 +159,7 @@ export class ChatSessionService {
       } catch (error) {
         // Si la réponse n'est pas du JSON, c'est probablement une erreur HTML
         const textResponse = await response.text();
-        console.error('[ChatSessionService] ❌ Réponse non-JSON reçue:', textResponse.substring(0, 200));
+        logger.error('[ChatSessionService] ❌ Réponse non-JSON reçue:', textResponse.substring(0, 200));
         throw new Error(`Erreur serveur (${response.status}): Réponse non-JSON reçue`);
       }
 
@@ -168,7 +169,7 @@ export class ChatSessionService {
 
       return responseData;
     } catch (error) {
-      console.error('Erreur ChatSessionService.createSession:', error);
+      logger.error('Erreur ChatSessionService.createSession:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Erreur inconnue'
@@ -206,7 +207,7 @@ export class ChatSessionService {
 
       return responseData;
     } catch (error) {
-      console.error('Erreur ChatSessionService.updateSession:', error);
+      logger.error('Erreur ChatSessionService.updateSession:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Erreur inconnue'
@@ -243,7 +244,7 @@ export class ChatSessionService {
 
       return { success: true };
     } catch (error) {
-      console.error('Erreur ChatSessionService.deleteSession:', error);
+      logger.error('Erreur ChatSessionService.deleteSession:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Erreur inconnue'
@@ -285,7 +286,7 @@ export class ChatSessionService {
 
       return data;
     } catch (error) {
-      console.error('Erreur ChatSessionService.addMessage:', error);
+      logger.error('Erreur ChatSessionService.addMessage:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Erreur inconnue'
@@ -324,7 +325,7 @@ export class ChatSessionService {
 
       return data;
     } catch (error) {
-      console.error('Erreur ChatSessionService.getMessages:', error);
+      logger.error('Erreur ChatSessionService.getMessages:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Erreur inconnue'

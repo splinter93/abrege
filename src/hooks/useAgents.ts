@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Agent } from '@/types/chat';
-import { AgentService } from '@/services/agentService';
+import { supabase } from '@/supabaseClient';
+
+import { simpleLogger as logger } from '@/utils/logger';
 
 /**
  * Hook pour gérer les agents
@@ -17,11 +19,17 @@ export const useAgents = () => {
     try {
       setLoading(true);
       setError(null);
-      const agentsData = await AgentService.getActiveAgents();
-      setAgents(agentsData);
+      const { data: agentsData, error } = await supabase
+        .from('agents')
+        .select('*')
+        .eq('is_active', true)
+        .order('priority', { ascending: false });
+        
+      if (error) throw error;
+      setAgents(agentsData || []);
     } catch (err) {
       setError('Erreur lors du chargement des agents');
-      console.error('Erreur useAgents.loadAgents:', err);
+      logger.error('Erreur useAgents.loadAgents:', err);
     } finally {
       setLoading(false);
     }
@@ -32,7 +40,13 @@ export const useAgents = () => {
    */
   const createAgent = async (agentData: Omit<Agent, 'id' | 'created_at' | 'updated_at'>) => {
     try {
-      const newAgent = await AgentService.createAgent(agentData);
+      const { data: newAgent, error } = await supabase
+        .from('agents')
+        .insert(agentData)
+        .select()
+        .single();
+        
+      if (error) throw error;
       if (newAgent) {
         setAgents(prev => [...prev, newAgent]);
         return newAgent;
@@ -40,7 +54,7 @@ export const useAgents = () => {
       return null;
     } catch (err) {
       setError('Erreur lors de la création de l\'agent');
-      console.error('Erreur useAgents.createAgent:', err);
+      logger.error('Erreur useAgents.createAgent:', err);
       return null;
     }
   };
@@ -50,7 +64,14 @@ export const useAgents = () => {
    */
   const updateAgent = async (id: string, updates: Partial<Agent>) => {
     try {
-      const updatedAgent = await AgentService.updateAgent(id, updates);
+      const { data: updatedAgent, error } = await supabase
+        .from('agents')
+        .update(updates)
+        .eq('id', id)
+        .select()
+        .single();
+        
+      if (error) throw error;
       if (updatedAgent) {
         setAgents(prev => prev.map(agent => 
           agent.id === id ? updatedAgent : agent
@@ -60,7 +81,7 @@ export const useAgents = () => {
       return null;
     } catch (err) {
       setError('Erreur lors de la mise à jour de l\'agent');
-      console.error('Erreur useAgents.updateAgent:', err);
+      logger.error('Erreur useAgents.updateAgent:', err);
       return null;
     }
   };
@@ -70,15 +91,17 @@ export const useAgents = () => {
    */
   const deleteAgent = async (id: string) => {
     try {
-      const success = await AgentService.deleteAgent(id);
-      if (success) {
-        setAgents(prev => prev.filter(agent => agent.id !== id));
-        return true;
-      }
-      return false;
+      const { error } = await supabase
+        .from('agents')
+        .delete()
+        .eq('id', id);
+        
+      if (error) throw error;
+      setAgents(prev => prev.filter(agent => agent.id !== id));
+      return true;
     } catch (err) {
       setError('Erreur lors de la suppression de l\'agent');
-      console.error('Erreur useAgents.deleteAgent:', err);
+      logger.error('Erreur useAgents.deleteAgent:', err);
       return false;
     }
   };
@@ -88,9 +111,17 @@ export const useAgents = () => {
    */
   const getAgentByProvider = async (provider: string) => {
     try {
-      return await AgentService.getAgentByProvider(provider);
+      const { data: agent, error } = await supabase
+        .from('agents')
+        .select('*')
+        .eq('provider', provider)
+        .eq('is_active', true)
+        .single();
+        
+      if (error) throw error;
+      return agent;
     } catch (err) {
-      console.error('Erreur useAgents.getAgentByProvider:', err);
+      logger.error('Erreur useAgents.getAgentByProvider:', err);
       return null;
     }
   };

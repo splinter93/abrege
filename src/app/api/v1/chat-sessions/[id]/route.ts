@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import type { ChatMessage } from '../../../../../types/chat';
 import { z } from 'zod';
+import { simpleLogger as logger } from '@/utils/logger';
 
 // Utiliser la clé anonyme par défaut, ou la service role si disponible
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -83,14 +84,14 @@ export async function PUT(
           { status: 404 }
         );
       }
-      console.error('[Chat Sessions API] ❌ Erreur mise à jour session:', error);
+      logger.error('[Chat Sessions API] ❌ Erreur mise à jour session:', error);
       return NextResponse.json(
         { error: 'Erreur lors de la mise à jour de la session' },
         { status: 500 }
       );
     }
 
-    console.log('[Chat Sessions API] ✅ Session mise à jour:', sessionId);
+    logger.dev('[Chat Sessions API] ✅ Session mise à jour:', sessionId);
 
     return NextResponse.json({
       success: true,
@@ -99,7 +100,7 @@ export async function PUT(
     });
 
   } catch (error) {
-    console.error('[Chat Sessions API] ❌ Erreur:', error);
+    logger.error('[Chat Sessions API] ❌ Erreur:', error);
     return NextResponse.json(
       { error: 'Erreur interne du serveur' },
       { status: 500 }
@@ -155,14 +156,14 @@ export async function GET(
           { status: 404 }
         );
       }
-      console.error('[Chat Sessions API] ❌ Erreur récupération session:', error);
+      logger.error('[Chat Sessions API] ❌ Erreur récupération session:', error);
       return NextResponse.json(
         { error: 'Erreur lors de la récupération de la session' },
         { status: 500 }
       );
     }
 
-    console.log('[Chat Sessions API] ✅ Session récupérée:', sessionId);
+    logger.dev('[Chat Sessions API] ✅ Session récupérée:', sessionId);
 
     return NextResponse.json({
       success: true,
@@ -170,7 +171,7 @@ export async function GET(
     });
 
   } catch (error) {
-    console.error('[Chat Sessions API] ❌ Erreur:', error);
+    logger.error('[Chat Sessions API] ❌ Erreur:', error);
     return NextResponse.json(
       { error: 'Erreur interne du serveur' },
       { status: 500 }
@@ -190,7 +191,7 @@ export async function DELETE(
     const { id } = await context.params;
     const sessionId = id;
     
-    console.log('[Chat Sessions API] 🗑️ Suppression de session:', sessionId);
+    logger.dev('[Chat Sessions API] 🗑️ Suppression de session:', sessionId);
     
     // Récupérer l'utilisateur depuis l'en-tête d'autorisation
     const authHeader = request.headers.get('authorization');
@@ -202,7 +203,7 @@ export async function DELETE(
       const { data: { user }, error: authError } = await supabase.auth.getUser(token);
       
       if (authError || !user) {
-        console.error('[Chat Sessions API] ❌ Erreur auth:', authError);
+        logger.error('[Chat Sessions API] ❌ Erreur auth:', authError);
         return NextResponse.json(
           { error: 'Token invalide ou expiré' },
           { status: 401 }
@@ -232,7 +233,7 @@ export async function DELETE(
         .single();
 
       if (fetchError || !existingSession) {
-        console.error('[Chat Sessions API] ❌ Session non trouvée:', fetchError);
+        logger.error('[Chat Sessions API] ❌ Session non trouvée:', fetchError);
         return NextResponse.json(
           { error: 'Session non trouvée' },
           { status: 404 }
@@ -240,7 +241,7 @@ export async function DELETE(
       }
 
       if (existingSession.user_id !== userId) {
-        console.error('[Chat Sessions API] ❌ Accès non autorisé');
+        logger.error('[Chat Sessions API] ❌ Accès non autorisé');
         return NextResponse.json(
           { error: 'Accès non autorisé' },
           { status: 403 }
@@ -254,14 +255,14 @@ export async function DELETE(
         .eq('id', sessionId);
 
       if (deleteError) {
-        console.error('[Chat Sessions API] ❌ Erreur suppression:', deleteError);
+        logger.error('[Chat Sessions API] ❌ Erreur suppression:', deleteError);
         return NextResponse.json(
           { error: 'Erreur lors de la suppression de la session', details: deleteError.message },
           { status: 500 }
         );
       }
 
-      console.log('[Chat Sessions API] ✅ Session supprimée:', sessionId);
+      logger.dev('[Chat Sessions API] ✅ Session supprimée:', sessionId);
 
       return NextResponse.json({
         success: true,
@@ -276,7 +277,7 @@ export async function DELETE(
     }
 
   } catch (error) {
-    console.error('[Chat Sessions API] ❌ Erreur:', error);
+    logger.error('[Chat Sessions API] ❌ Erreur:', error);
     return NextResponse.json(
       { error: 'Erreur interne du serveur', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
@@ -294,7 +295,7 @@ export async function PATCH(
 ) {
   try {
     const { id } = await context.params;
-    console.log('[Chat Session API] ✏️ Renommage de la session:', id);
+    logger.dev('[Chat Session API] ✏️ Renommage de la session:', id);
     
     // Récupérer l'utilisateur depuis l'en-tête d'autorisation
     const authHeader = request.headers.get('authorization');
@@ -307,7 +308,7 @@ export async function PATCH(
       const { data: { user }, error: authError } = await supabase.auth.getUser(userToken);
       
       if (authError || !user) {
-        console.error('[Chat Session API] ❌ Erreur auth:', authError);
+        logger.error('[Chat Session API] ❌ Erreur auth:', authError);
         return NextResponse.json(
           { error: 'Token invalide ou expiré' },
           { status: 401 }
@@ -325,7 +326,7 @@ export async function PATCH(
     const body = await request.json();
     const validatedData = updateSessionSchema.parse(body);
 
-    console.log('[Chat Session API] 📋 Données reçues:', validatedData);
+    logger.dev('[Chat Session API] 📋 Données reçues:', validatedData);
 
     // Créer un client avec le contexte d'authentification de l'utilisateur
     const userClient = createClient(supabaseUrl, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, {
@@ -346,14 +347,14 @@ export async function PATCH(
 
     if (fetchError) {
       if (fetchError.code === 'PGRST116') {
-        console.error('[Chat Session API] ❌ Session non trouvée:', sessionId);
+        logger.error('[Chat Session API] ❌ Session non trouvée:', sessionId);
         return NextResponse.json(
           { error: 'Session non trouvée' },
           { status: 404 }
         );
       }
       
-      console.error('[Chat Session API] ❌ Erreur récupération session:', fetchError);
+      logger.error('[Chat Session API] ❌ Erreur récupération session:', fetchError);
       return NextResponse.json(
         { error: 'Erreur lors de la récupération de la session' },
         { status: 500 }
@@ -372,14 +373,14 @@ export async function PATCH(
       .single();
 
     if (updateError) {
-      console.error('[Chat Session API] ❌ Erreur mise à jour session:', updateError);
+      logger.error('[Chat Session API] ❌ Erreur mise à jour session:', updateError);
       return NextResponse.json(
         { error: 'Erreur lors de la mise à jour de la session' },
         { status: 500 }
       );
     }
 
-    console.log('[Chat Session API] ✅ Session renommée avec succès');
+    logger.dev('[Chat Session API] ✅ Session renommée avec succès');
 
     return NextResponse.json({
       success: true,
@@ -388,14 +389,14 @@ export async function PATCH(
 
   } catch (error) {
     if (error instanceof z.ZodError) {
-      console.error('[Chat Session API] ❌ Erreur validation:', error.errors);
+      logger.error('[Chat Session API] ❌ Erreur validation:', error.errors);
       return NextResponse.json(
         { error: 'Données invalides', details: error.errors },
         { status: 400 }
       );
     }
 
-    console.error('[Chat Session API] ❌ Erreur serveur:', error);
+    logger.error('[Chat Session API] ❌ Erreur serveur:', error);
     return NextResponse.json(
       { error: 'Erreur serveur interne' },
       { status: 500 }

@@ -1,4 +1,5 @@
 'use client';
+import { simpleLogger as logger } from '@/utils/logger';
 
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { useChatStore } from '@/store/useChatStore';
@@ -102,7 +103,7 @@ const ChatFullscreen: React.FC = () => {
   useEffect(() => {
     if (sessions.length > 0 && !currentSession) {
       setCurrentSession(sessions[0]);
-      console.log('[Chat Fullscreen] ✅ Session la plus récente sélectionnée:', sessions[0].name);
+      logger.dev('[Chat Fullscreen] ✅ Session la plus récente sélectionnée:', sessions[0].name);
     }
   }, [sessions, currentSession, setCurrentSession]);
 
@@ -111,7 +112,7 @@ const ChatFullscreen: React.FC = () => {
     return () => {
       if (streamingChannel) {
         supabase.removeChannel(streamingChannel);
-        console.log('[ChatFullscreen] 🧹 Canal streaming nettoyé');
+        logger.dev('[ChatFullscreen] 🧹 Canal streaming nettoyé');
       }
     };
   }, [streamingChannel]);
@@ -137,7 +138,7 @@ const ChatFullscreen: React.FC = () => {
     try {
       // Vérifier si on a une session courante
       if (!currentSession) {
-        console.log('[ChatFullscreen] ⚠️ Pas de session courante, création...');
+        logger.dev('[ChatFullscreen] ⚠️ Pas de session courante, création...');
         await createSession();
         // La session sera automatiquement sélectionnée par le useEffect
         return;
@@ -178,7 +179,7 @@ const ChatFullscreen: React.FC = () => {
       streamingContextRef.current = { sessionId: currentSession.id, messageId: `assistant-${Date.now()}` };
       
       const clientChannelId = `llm-stream-${Date.now()}-${Math.random().toString(36).substr(2,9)}`;
-      console.log('[ChatFullscreen] 📡 Generated client channel:', clientChannelId);
+      logger.dev('[ChatFullscreen] 📡 Generated client channel:', clientChannelId);
       
       // Créer le canal avec gestion d'erreur robuste
       const channel = supabase
@@ -192,18 +193,18 @@ const ChatFullscreen: React.FC = () => {
                 const newContent = prev + token;
                 // Log seulement tous les 50 tokens pour éviter le spam
                 if (newContent.length % 50 === 0) {
-                  console.log('[ChatFullscreen] 📝 Streaming progress:', newContent.length, 'chars');
+                  logger.dev('[ChatFullscreen] 📝 Streaming progress:', newContent.length, 'chars');
                 }
                 return newContent;
               });
             }
           } catch (error) {
-            console.error('[ChatFullscreen] ❌ Erreur traitement token:', error);
+            logger.error('[ChatFullscreen] ❌ Erreur traitement token:', error);
           }
         })
         .on('broadcast', { event: 'llm-complete' }, async (payload) => {
           try {
-            console.log('[ChatFullscreen] ✅ Complete received via broadcast:', payload);
+            logger.dev('[ChatFullscreen] ✅ Complete received via broadcast:', payload);
             const { sessionId, fullResponse } = payload.payload || {};
             const ref = streamingContextRef.current;
             if (ref && sessionId === ref.sessionId && fullResponse) {
@@ -223,13 +224,13 @@ const ChatFullscreen: React.FC = () => {
               };
               
               await addMessage(finalMessage);
-              console.log('[ChatFullscreen] 💾 Message assistant sauvegardé');
+              logger.dev('[ChatFullscreen] 💾 Message assistant sauvegardé');
               
               // Scroll forcé après l'ajout du message
               setTimeout(() => scrollToBottom(true), 100);
             }
           } catch (error) {
-            console.error('[ChatFullscreen] ❌ Erreur traitement completion:', error);
+            logger.error('[ChatFullscreen] ❌ Erreur traitement completion:', error);
             streamingContextRef.current = null;
             setIsStreaming(false);
             setStreamingContent('');
@@ -237,7 +238,7 @@ const ChatFullscreen: React.FC = () => {
         })
         .on('broadcast', { event: 'llm-error' }, (payload) => {
           try {
-            console.error('[ChatFullscreen] ❌ Error received via broadcast:', payload);
+            logger.error('[ChatFullscreen] ❌ Error received via broadcast:', payload);
             const { sessionId, error: errorMessage } = payload.payload || {};
             const ref = streamingContextRef.current;
             if (ref && sessionId === ref.sessionId) {
@@ -256,17 +257,17 @@ const ChatFullscreen: React.FC = () => {
               setStreamingContent('');
             }
           } catch (error) {
-            console.error('[ChatFullscreen] ❌ Erreur traitement error event:', error);
+            logger.error('[ChatFullscreen] ❌ Erreur traitement error event:', error);
             setIsStreaming(false);
             setStreamingContent('');
           }
         })
         .subscribe((status) => {
-          console.log('[ChatFullscreen] 📡 Channel status:', status);
+          logger.dev('[ChatFullscreen] 📡 Channel status:', status);
           if (status === 'SUBSCRIBED') {
-            console.log('[ChatFullscreen] ✅ Canal streaming connecté');
+            logger.dev('[ChatFullscreen] ✅ Canal streaming connecté');
           } else if (status === 'CHANNEL_ERROR') {
-            console.error('[ChatFullscreen] ❌ Erreur canal streaming');
+            logger.error('[ChatFullscreen] ❌ Erreur canal streaming');
             setIsStreaming(false);
             setStreamingContent('');
           }
@@ -299,7 +300,7 @@ const ChatFullscreen: React.FC = () => {
 
       // Handle non-streaming fallback responses
       if (data.response && !isStreaming) {
-        console.log('[ChatFullscreen] ✅ Non-streaming response received:', data.response);
+        logger.dev('[ChatFullscreen] ✅ Non-streaming response received:', data.response);
         const finalMessage = {
           role: 'assistant' as const,
           content: data.response,
@@ -311,7 +312,7 @@ const ChatFullscreen: React.FC = () => {
       }
 
     } catch (error) {
-      console.error('Erreur lors de l\'appel LLM:', error);
+      logger.error('Erreur lors de l\'appel LLM:', error);
       
       const errorMessage = {
         role: 'assistant' as const,
@@ -331,13 +332,13 @@ const ChatFullscreen: React.FC = () => {
     if (!currentSession) return;
     
     try {
-      console.log(`[ChatFullscreen] 🔄 Mise à jour history_limit: ${newLimit}`);
+      logger.dev(`[ChatFullscreen] 🔄 Mise à jour history_limit: ${newLimit}`);
       
       await updateSession(currentSession.id, { history_limit: newLimit });
       
-      console.log(`[ChatFullscreen] ✅ History limit mis à jour: ${newLimit}`);
+      logger.dev(`[ChatFullscreen] ✅ History limit mis à jour: ${newLimit}`);
     } catch (error) {
-      console.error('[ChatFullscreen] ❌ Erreur mise à jour history_limit:', error);
+      logger.error('[ChatFullscreen] ❌ Erreur mise à jour history_limit:', error);
       setError('Erreur lors de la mise à jour de la limite d\'historique');
     }
   };

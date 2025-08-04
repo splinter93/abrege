@@ -1,78 +1,37 @@
 import type { LLMProvider, AppContext, ChatMessage } from '../types';
+import { Agent } from '@/types/chat';
+import { LLMProviderTemplate } from './template';
 
-export class DeepSeekProvider implements LLMProvider {
+export class DeepSeekProvider extends LLMProviderTemplate {
   name = 'DeepSeek';
   id = 'deepseek';
-  
-  private apiKey: string;
-  private baseUrl = 'https://api.deepseek.com/v1';
 
   constructor() {
-    this.apiKey = process.env.DEEPSEEK_API_KEY || '';
-  }
-
-  async call(message: string, context: AppContext, history: ChatMessage[]): Promise<string> {
-    if (!this.isAvailable()) {
-      throw new Error('DeepSeek API key not configured');
+    super('DEEPSEEK_API_KEY', 'https://api.deepseek.com/v1');
     }
 
-    try {
-      // Préparer les messages selon la doc DeepSeek
-      const messages = [
-        {
-          role: 'system' as const,
-          content: this.formatContext(context)
-        },
-        ...history.map(msg => ({
-          role: msg.role as 'user' | 'assistant' | 'system',
-          content: msg.content
-        })),
-        {
-          role: 'user' as const,
-          content: message
-        }
-      ];
-
-      const payload = {
-        model: 'deepseek-chat', // DeepSeek-V3-0324 selon la doc
-        messages,
-        stream: false, // Désactiver le streaming pour l'instant
+  /**
+   * Configuration par défaut pour DeepSeek
+   */
+  getDefaultConfig() {
+    return {
+      model: 'deepseek-chat',
         temperature: 0.7,
-        max_tokens: 4000
-      };
-
-      console.log('[DeepSeek Provider] 📤 Payload:', payload);
-
-      const response = await fetch(`${this.baseUrl}/chat/completions`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${this.apiKey}`
-        },
-        body: JSON.stringify(payload)
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`DeepSeek API error: ${response.status} - ${errorText}`);
+      max_tokens: 4000,
+      top_p: 1.0,
+      system_instructions: this.getDefaultInstructions(),
+      context_template: this.getDefaultContextTemplate(),
+      api_config: {
+        baseUrl: 'https://api.deepseek.com/v1',
+        endpoint: '/chat/completions'
       }
-
-      const data = await response.json();
-      console.log('[DeepSeek Provider] ✅ Réponse reçue:', data);
-
-      return data.choices?.[0]?.message?.content || 'Désolé, je n\'ai pas pu traiter votre demande.';
-
-    } catch (error) {
-      console.error('[DeepSeek Provider] ❌ Erreur:', error);
-      throw error;
-    }
+    };
   }
 
-  isAvailable(): boolean {
-    return !!this.apiKey;
-  }
-
-  formatContext(context: AppContext): string {
+  /**
+   * Instructions par défaut pour Donna
+   */
+  private getDefaultInstructions(): string {
     return `## **🎯 Ton identité**
 
 **Nom** : Donna
@@ -170,16 +129,21 @@ Utiliser par défaut l'endpoint synchrone ExecuteAgentsSynchronous pour les gén
 - Être proactive sans interrompre l'utilisateur
 - Maintenir un flow de conversation fluide, cohérent et naturel
 - Résultat final : clair, propre, directement exploitable par l'utilisateur
-- **Utiliser les slugs en priorité** pour des URLs plus lisibles et partageables
+- **Utiliser les slugs en priorité** pour des URLs plus lisibles et partageables`;
+  }
 
----
+  /**
+   * Template de contexte par défaut
+   */
+  private getDefaultContextTemplate(): string {
+    return `---
 
 ## **🎯 Contexte actuel de l'utilisateur**
 
-- **Type** : ${context.type}
-- **Nom** : ${context.name}
-- **ID** : ${context.id}
-${context.content ? `- **Contenu** : ${context.content.substring(0, 500)}...` : ''}
+- **Type** : {{type}}
+- **Nom** : {{name}}
+- **ID** : {{id}}
+{{#if content}}- **Contenu** : {{content}}{{/if}}
 
 **Maintenant, agis comme Donna et aide cet utilisateur !**`;
   }

@@ -1,6 +1,7 @@
 import { config } from 'dotenv';
 import { resolve } from 'path';
 import { createClient } from '@supabase/supabase-js';
+import { simpleLogger as logger } from '@/utils/logger';
 
 // Charger les variables d'environnement depuis .env
 config({ path: resolve(process.cwd(), '.env') });
@@ -24,8 +25,8 @@ async function testEndpoint(method: string, endpoint: string, data?: any, descri
     'Content-Type': 'application/json',
   };
 
-  console.log(`\n🔍 Test: ${method} ${endpoint}`);
-  if (description) console.log(`📝 Description: ${description}`);
+  logger.dev(`\n🔍 Test: ${method} ${endpoint}`);
+  if (description) logger.dev(`📝 Description: ${description}`);
   
   try {
     const response = await fetch(url, {
@@ -37,20 +38,20 @@ async function testEndpoint(method: string, endpoint: string, data?: any, descri
     const responseData = await response.json();
     
     if (response.ok) {
-      console.log(`✅ Succès (${response.status}): ${JSON.stringify(responseData, null, 2)}`);
+      logger.dev(`✅ Succès (${response.status}): ${JSON.stringify(responseData, null, 2)}`);
       return { success: true, data: responseData };
     } else {
-      console.log(`❌ Erreur (${response.status}): ${JSON.stringify(responseData, null, 2)}`);
+      logger.dev(`❌ Erreur (${response.status}): ${JSON.stringify(responseData, null, 2)}`);
       return { success: false, error: responseData };
     }
   } catch (error) {
-    console.log(`❌ Exception: ${error}`);
+    logger.dev(`❌ Exception: ${error}`);
     return { success: false, error };
   }
 }
 
 async function testSlugResolution() {
-  console.log('\n🎯 Test de résolution des slugs...');
+  logger.dev('\n🎯 Test de résolution des slugs...');
   
   // Récupérer quelques exemples de chaque type
   const { data: notes } = await supabase
@@ -74,15 +75,15 @@ async function testSlugResolution() {
     .not('slug', 'is', null)
     .limit(2);
 
-  console.log('\n📝 Notes disponibles:', notes?.map(n => ({ id: n.id, slug: n.slug, title: n.source_title })));
-  console.log('📁 Dossiers disponibles:', folders?.map(f => ({ id: f.id, slug: f.slug, name: f.name })));
-  console.log('📚 Classeurs disponibles:', classeurs?.map(c => ({ id: c.id, slug: c.slug, name: c.name })));
+  logger.dev('\n📝 Notes disponibles:', notes?.map(n => ({ id: n.id, slug: n.slug, title: n.source_title })));
+  logger.dev('📁 Dossiers disponibles:', folders?.map(f => ({ id: f.id, slug: f.slug, name: f.name })));
+  logger.dev('📚 Classeurs disponibles:', classeurs?.map(c => ({ id: c.id, slug: c.slug, name: c.name })));
 
   return { notes, folders, classeurs };
 }
 
 async function testCreateEndpoints() {
-  console.log('\n🚀 Test des endpoints de création...');
+  logger.dev('\n🚀 Test des endpoints de création...');
   
   // Test création de note
   await testEndpoint('POST', '/note/create', {
@@ -103,14 +104,14 @@ async function testCreateEndpoints() {
 }
 
 async function testListEndpoints() {
-  console.log('\n📋 Test des endpoints de liste...');
+  logger.dev('\n📋 Test des endpoints de liste...');
   
   // Test liste des notebooks
   await testEndpoint('GET', '/notebooks', undefined, 'Lister tous les notebooks');
 }
 
 async function testSlugEndpoints(samples: any) {
-  console.log('\n🔗 Test des endpoints avec slugs...');
+  logger.dev('\n🔗 Test des endpoints avec slugs...');
   
   if (samples.notes && samples.notes.length > 0) {
     const note = samples.notes[0];
@@ -150,7 +151,7 @@ async function testSlugEndpoints(samples: any) {
 }
 
 async function testContentEndpoints(samples: any) {
-  console.log('\n📄 Test des endpoints de contenu...');
+  logger.dev('\n📄 Test des endpoints de contenu...');
   
   if (samples.notes && samples.notes.length > 0) {
     const note = samples.notes[0];
@@ -167,10 +168,10 @@ async function testContentEndpoints(samples: any) {
 }
 
 async function main() {
-  console.log('🧪 Test complet de l\'API LLM-Friendly');
-  console.log('=====================================');
-  console.log(`🌐 URL de base: ${BASE_URL}`);
-  console.log(`👤 USER_ID: ${USER_ID}`);
+  logger.dev('🧪 Test complet de l\'API LLM-Friendly');
+  logger.dev('=====================================');
+  logger.dev(`🌐 URL de base: ${BASE_URL}`);
+  logger.dev(`👤 USER_ID: ${USER_ID}`);
   
   try {
     // Test de résolution des slugs
@@ -188,15 +189,15 @@ async function main() {
     // Test des endpoints de contenu
     await testContentEndpoints(samples);
     
-    console.log('\n🎉 Tests terminés !');
-    console.log('\n📋 Résumé:');
-    console.log('- ✅ Endpoints de création testés');
-    console.log('- ✅ Endpoints de liste testés');
-    console.log('- ✅ Résolution de slugs testée');
-    console.log('- ✅ Endpoints de contenu testés');
+    logger.dev('\n🎉 Tests terminés !');
+    logger.dev('\n📋 Résumé:');
+    logger.dev('- ✅ Endpoints de création testés');
+    logger.dev('- ✅ Endpoints de liste testés');
+    logger.dev('- ✅ Résolution de slugs testée');
+    logger.dev('- ✅ Endpoints de contenu testés');
     
   } catch (error) {
-    console.error('❌ Erreur lors des tests:', error);
+    logger.error('❌ Erreur lors des tests:', error);
   }
 }
 

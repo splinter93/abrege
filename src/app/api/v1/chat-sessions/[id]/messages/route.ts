@@ -1,18 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
+import { simpleLogger as logger } from '@/utils/logger';
 
 // Configuration Supabase
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-console.log('[Chat Messages API] 🔧 Configuration:', {
+logger.dev('[Chat Messages API] 🔧 Configuration:', {
   supabaseUrl: supabaseUrl ? '✅ Configuré' : '❌ Manquant',
   supabaseKey: supabaseKey ? '✅ Configuré' : '❌ Manquant'
 });
 
 if (!supabaseUrl || !supabaseKey) {
-  console.error('[Chat Messages API] ❌ Variables d\'environnement Supabase manquantes');
+  logger.error('[Chat Messages API] ❌ Variables d\'environnement Supabase manquantes');
   throw new Error('Configuration Supabase manquante');
 }
 
@@ -33,7 +34,7 @@ export async function POST(
 ) {
   try {
     const { id } = await context.params;
-    console.log('[Chat Messages API] 📝 Ajout de message à la session:', id);
+    logger.dev('[Chat Messages API] 📝 Ajout de message à la session:', id);
     
     // Récupérer l'utilisateur depuis l'en-tête d'autorisation
     const authHeader = request.headers.get('authorization');
@@ -46,7 +47,7 @@ export async function POST(
       const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(userToken);
       
       if (authError || !user) {
-        console.error('[Chat Messages API] ❌ Erreur auth:', authError);
+        logger.error('[Chat Messages API] ❌ Erreur auth:', authError);
         return NextResponse.json(
           { error: 'Token invalide ou expiré' },
           { status: 401 }
@@ -64,7 +65,7 @@ export async function POST(
     const body = await request.json();
     const validatedData = addMessageSchema.parse(body);
 
-    console.log('[Chat Messages API] 📋 Données reçues:', validatedData);
+    logger.dev('[Chat Messages API] 📋 Données reçues:', validatedData);
 
     // Créer le nouveau message
     const newMessage = {
@@ -89,7 +90,7 @@ export async function POST(
     });
 
     // Récupérer la session actuelle avec le contexte utilisateur
-    console.log('[Chat Messages API] 🔍 Recherche session:', sessionId);
+    logger.dev('[Chat Messages API] 🔍 Recherche session:', sessionId);
     const { data: currentSession, error: fetchError } = await userClient
       .from('chat_sessions')
       .select('thread, history_limit')
@@ -98,14 +99,14 @@ export async function POST(
 
     if (fetchError) {
       if (fetchError.code === 'PGRST116') {
-        console.error('[Chat Messages API] ❌ Session non trouvée:', sessionId);
+        logger.error('[Chat Messages API] ❌ Session non trouvée:', sessionId);
         return NextResponse.json(
           { error: 'Session non trouvée' },
           { status: 404 }
         );
       }
       
-      console.error('[Chat Messages API] ❌ Erreur récupération session:', fetchError);
+      logger.error('[Chat Messages API] ❌ Erreur récupération session:', fetchError);
       return NextResponse.json(
         { error: 'Erreur lors de la récupération de la session' },
         { status: 500 }
@@ -120,7 +121,7 @@ export async function POST(
     const historyLimit = currentSession.history_limit || 10;
     const limitedThread = updatedThread.slice(-historyLimit);
 
-    console.log('[Chat Messages API] 💾 Mise à jour du thread...', {
+    logger.dev('[Chat Messages API] 💾 Mise à jour du thread...', {
       ancienThread: currentThread.length,
       nouveauThread: updatedThread.length,
       threadLimité: limitedThread.length,
@@ -139,14 +140,14 @@ export async function POST(
       .single();
 
     if (updateError) {
-      console.error('[Chat Messages API] ❌ Erreur mise à jour session:', updateError);
+      logger.error('[Chat Messages API] ❌ Erreur mise à jour session:', updateError);
       return NextResponse.json(
         { error: 'Erreur lors de la mise à jour de la session' },
         { status: 500 }
       );
     }
 
-    console.log('[Chat Messages API] ✅ Message ajouté avec succès');
+    logger.dev('[Chat Messages API] ✅ Message ajouté avec succès');
 
     return NextResponse.json({
       success: true,
@@ -158,14 +159,14 @@ export async function POST(
 
   } catch (error) {
     if (error instanceof z.ZodError) {
-      console.error('[Chat Messages API] ❌ Erreur validation:', error.errors);
+      logger.error('[Chat Messages API] ❌ Erreur validation:', error.errors);
       return NextResponse.json(
         { error: 'Données invalides', details: error.errors },
         { status: 400 }
       );
     }
 
-    console.error('[Chat Messages API] ❌ Erreur serveur:', error);
+    logger.error('[Chat Messages API] ❌ Erreur serveur:', error);
     return NextResponse.json(
       { error: 'Erreur serveur interne' },
       { status: 500 }
@@ -225,7 +226,7 @@ export async function GET(
         );
       }
       
-      console.error('Erreur lors de la récupération des messages:', error);
+      logger.error('Erreur lors de la récupération des messages:', error);
       return NextResponse.json(
         { success: false, error: 'Erreur lors de la récupération des messages' },
         { status: 500 }
@@ -240,7 +241,7 @@ export async function GET(
     });
 
   } catch (error) {
-    console.error('Erreur serveur:', error);
+    logger.error('Erreur serveur:', error);
     return NextResponse.json(
       { success: false, error: 'Erreur serveur interne' },
       { status: 500 }

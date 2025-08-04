@@ -4,6 +4,7 @@ import type { NextRequest } from 'next/server';
 import { resolveNoteRef } from '@/middleware/resourceResolver';
 import { clearSection, extractTOCWithSlugs, appendToSection } from '@/utils/markdownTOC';
 import { updateArticleInsight } from '@/utils/insightUpdater';
+import { simpleLogger as logger } from '@/utils/logger';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -54,8 +55,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ re
     const body = await req.json();
     
     // Debug: afficher le payload reçu
-    console.log('🔍 clear-section payload reçu:', JSON.stringify(body, null, 2));
-    console.log('🔍 clear-section ref:', ref);
+    logger.dev('🔍 clear-section payload reçu:', JSON.stringify(body, null, 2));
+    logger.dev('🔍 clear-section ref:', ref);
     
     const schema = z.object({
       section: z.string().min(1, 'section requis').optional(),
@@ -71,7 +72,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ re
     
     const parseResult = schema.safeParse(body);
     if (!parseResult.success) {
-      console.log('❌ clear-section validation échouée:', parseResult.error.errors);
+      logger.dev('❌ clear-section validation échouée:', parseResult.error.errors);
       return new Response(
         JSON.stringify({ error: 'Payload invalide', details: parseResult.error.errors.map(e => e.message) }),
         { status: 422 }
@@ -109,8 +110,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ re
     
     // Debug: afficher les sections disponibles
     const toc = extractTOCWithSlugs(note.markdown_content || '');
-    console.log(`🔍 Sections disponibles:`, toc.map(t => ({ title: t.title, slug: t.slug })));
-    console.log(`🔍 Section recherchée: "${section}"`);
+    logger.dev(`🔍 Sections disponibles:`, toc.map(t => ({ title: t.title, slug: t.slug })));
+    logger.dev(`🔍 Section recherchée: "${section}"`);
     
     // Vérifier si la section existe
     const sectionIdx = toc.findIndex(t => t.title === targetSection || t.slug === targetSection);
@@ -144,20 +145,20 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ re
       .single();
     
     if (error) {
-      console.error('❌ Erreur mise à jour note:', error);
+      logger.error('❌ Erreur mise à jour note:', error);
       return new Response(JSON.stringify({ error: error.message }), { status: 500, headers: { "Content-Type": "application/json" } });
     }
     
     // Mettre à jour l'insight avec la nouvelle TOC
     try {
       await updateArticleInsight(noteId);
-      console.log(`✅ Insight mis à jour pour la note ${noteId}`);
+      logger.dev(`✅ Insight mis à jour pour la note ${noteId}`);
     } catch (insightError) {
-      console.error('⚠️ Erreur mise à jour insight:', insightError);
+      logger.error('⚠️ Erreur mise à jour insight:', insightError);
       // Ne pas faire échouer la requête si l'insight échoue
     }
     
-    console.log(`✅ Section "${targetSection}" effacée`);
+    logger.dev(`✅ Section "${targetSection}" effacée`);
     return new Response(JSON.stringify({ note: updatedNote }), { status: 200, headers: { "Content-Type": "application/json" } });
   
   } catch (err: unknown) {

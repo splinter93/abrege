@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Change } from 'diff';
+import { simpleLogger as logger } from '@/utils/logger';
 
 interface EditorDiffOverlayProps {
   changes: Change[];
@@ -73,7 +74,7 @@ const EditorDiffOverlay: React.FC<EditorDiffOverlayProps> = ({
                 text: change.value
               });
             } catch (e) {
-              console.warn('Impossible de surligner le changement:', e);
+              logger.warn('Impossible de surligner le changement:', e);
             }
           } else if (change.removed && text.includes(change.value)) {
             // Créer un surlignage pour le texte supprimé
@@ -110,7 +111,7 @@ const EditorDiffOverlay: React.FC<EditorDiffOverlayProps> = ({
                 text: change.value
               });
             } catch (e) {
-              console.warn('Impossible de surligner le changement:', e);
+              logger.warn('Impossible de surligner le changement:', e);
             }
           }
         });

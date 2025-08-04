@@ -37,6 +37,7 @@ import { supabase } from '@/supabaseClient';
 import CustomImage from '@/extensions/CustomImage';
 import { useSession } from '@supabase/auth-helpers-react';
 import LogoScrivia from '@/components/LogoScrivia';
+import { simpleLogger as logger } from '@/utils/logger';
 
 
 type SlashCommand = {
@@ -180,7 +181,7 @@ export default function NoteEditorPage() {
       };
       
       if (process.env.NODE_ENV === 'development') {
-        console.log('[header-image] Changement d\'image - réinitialisation offset à 50, blur et overlay à 0');
+        logger.dev('[header-image] Changement d\'image - réinitialisation offset à 50, blur et overlay à 0');
       }
       
       await optimizedApi.updateNote(noteId, payload);
@@ -191,7 +192,7 @@ export default function NoteEditorPage() {
       setHeaderImageBlur(0);
       setHeaderImageOverlay(0);
     } catch (error) {
-      console.error('[header-image] Erreur lors de la sauvegarde de l\'image:', error);
+      logger.error('[header-image] Erreur lors de la sauvegarde de l\'image:', error);
     }
   };
 
@@ -205,7 +206,7 @@ export default function NoteEditorPage() {
       await optimizedApi.updateNote(noteId, payload);
       setHeaderImageOffset(newOffset);
     } catch (error) {
-      console.error('[header-image-offset] Erreur lors de la sauvegarde de l\'offset:', error);
+      logger.error('[header-image-offset] Erreur lors de la sauvegarde de l\'offset:', error);
     }
   };
 
@@ -219,7 +220,7 @@ export default function NoteEditorPage() {
       await optimizedApi.updateNote(noteId, payload);
       setHeaderImageBlur(newBlur);
     } catch (error) {
-      console.error('[header-image-blur] Erreur lors de la sauvegarde du blur:', error);
+      logger.error('[header-image-blur] Erreur lors de la sauvegarde du blur:', error);
     }
   };
 
@@ -233,7 +234,7 @@ export default function NoteEditorPage() {
       await optimizedApi.updateNote(noteId, payload);
       setHeaderImageOverlay(newOverlay);
     } catch (error) {
-      console.error('[header-image-overlay] Erreur lors de la sauvegarde de l\'overlay:', error);
+      logger.error('[header-image-overlay] Erreur lors de la sauvegarde de l\'overlay:', error);
     }
   };
 
@@ -247,10 +248,10 @@ export default function NoteEditorPage() {
       await optimizedApi.updateNote(noteId, payload);
       setHeaderTitleInImage(newValue);
       if (process.env.NODE_ENV === 'development') {
-        console.log('[header-image] Toggle titre dans image →', newValue);
+        logger.dev('[header-image] Toggle titre dans image →', newValue);
       }
     } catch (error) {
-      console.error('[header-title-in-image] Erreur lors de la sauvegarde de la position du titre:', error);
+      logger.error('[header-title-in-image] Erreur lors de la sauvegarde de la position du titre:', error);
     }
   };
 
@@ -264,10 +265,10 @@ export default function NoteEditorPage() {
       await optimizedApi.updateNote(noteId, payload);
       setFullWidth(newValue);
       if (process.env.NODE_ENV === 'development') {
-        console.log('[wide-mode] Toggle mode pleine largeur →', newValue);
+        logger.dev('[wide-mode] Toggle mode pleine largeur →', newValue);
       }
     } catch (error) {
-      console.error('[wide-mode] Erreur lors de la sauvegarde du mode pleine largeur:', error);
+      logger.error('[wide-mode] Erreur lors de la sauvegarde du mode pleine largeur:', error);
     }
   };
 
@@ -281,10 +282,10 @@ export default function NoteEditorPage() {
       await optimizedApi.updateNote(noteId, payload);
       setFontFamily(newFontFamily);
       if (process.env.NODE_ENV === 'development') {
-        console.log('[font-family] Changement de police →', newFontFamily);
+        logger.dev('[font-family] Changement de police →', newFontFamily);
       }
     } catch (error) {
-      console.error('[font-family] Erreur lors de la sauvegarde de la police:', error);
+      logger.error('[font-family] Erreur lors de la sauvegarde de la police:', error);
     }
   };
 
@@ -434,7 +435,7 @@ export default function NoteEditorPage() {
         })
         .subscribe();
       if (process.env.NODE_ENV === 'development') {
-        console.log('[realtime] Canal realtime abonné');
+        logger.dev('[realtime] Canal realtime abonné');
       }
       return channel; // Retourner le channel pour le cleanup
     };
@@ -447,17 +448,17 @@ export default function NoteEditorPage() {
         const currentContent = editor?.storage?.markdown?.getMarkdown() || '';
         if (currentContent !== lastSavedContent && !isInitialLoad && !isUpdatingFromRealtime) {
           if (process.env.NODE_ENV === 'development') {
-            console.log('[visibility] Onglet caché, autosave avant désabonnement realtime...');
+            logger.dev('[visibility] Onglet caché, autosave avant désabonnement realtime...');
           }
           await handleSave(title, currentContent);
           setLastSavedContent(currentContent);
           if (process.env.NODE_ENV === 'development') {
-            console.log('[autosave] Autosave déclenchée par visibilitychange (hidden)');
+            logger.dev('[autosave] Autosave déclenchée par visibilitychange (hidden)');
           }
         }
         // L'abonnement Zustand reste actif, pas besoin de le désabonner
         if (process.env.NODE_ENV === 'development') {
-          console.log('[realtime] Abonnement Zustand maintenu (onglet caché)');
+          logger.dev('[realtime] Abonnement Zustand maintenu (onglet caché)');
         }
       } else if (document.visibilityState === 'visible') {
         // Refetch la note pour s'assurer de la synchronisation
@@ -493,7 +494,7 @@ export default function NoteEditorPage() {
           setIsUpdatingFromRealtime(false);
         }, 500);
         if (process.env.NODE_ENV === 'development') {
-          console.log('[realtime] Synchronisation effectuée (onglet visible)');
+          logger.dev('[realtime] Synchronisation effectuée (onglet visible)');
         }
       }
     };
@@ -501,7 +502,7 @@ export default function NoteEditorPage() {
     // Mécanisme supplémentaire pour macOS (swipe entre fenêtres)
     const handleWindowBlur = async () => {
       if (process.env.NODE_ENV === 'development') {
-        console.log('[window-blur] Fenêtre perd le focus (macOS swipe)...');
+        logger.dev('[window-blur] Fenêtre perd le focus (macOS swipe)...');
       }
       // Sauvegarde immédiate quand la fenêtre perd le focus
       const currentContent = editor?.storage?.markdown?.getMarkdown() || '';
@@ -509,7 +510,7 @@ export default function NoteEditorPage() {
         await handleSave(title, currentContent);
         setLastSavedContent(currentContent);
         if (process.env.NODE_ENV === 'development') {
-          console.log('[autosave] Autosave déclenchée par window.blur (macOS swipe)');
+          logger.dev('[autosave] Autosave déclenchée par window.blur (macOS swipe)');
         }
       }
     };
@@ -525,7 +526,7 @@ export default function NoteEditorPage() {
       if (channel) {
         channel.unsubscribe();
         if (process.env.NODE_ENV === 'development') {
-          console.log('[realtime] Canal realtime désabonné');
+          logger.dev('[realtime] Canal realtime désabonné');
         }
       }
     };
@@ -539,7 +540,7 @@ export default function NoteEditorPage() {
       lastSavedTitleRef.current = title;
       lastSavedContentRef.current = editor?.storage.markdown.getMarkdown() || '';
       if (process.env.NODE_ENV === 'development') {
-        console.log('[init] Chargement initial terminé, autosave activée');
+        logger.dev('[init] Chargement initial terminé, autosave activée');
       }
     }
   }, [hasInitialized, isInitialLoad, title, editor]);
@@ -558,7 +559,7 @@ export default function NoteEditorPage() {
         // Éviter l'autosave si on vient de recevoir une mise à jour realtime
         if (isUpdatingFromRealtime) {
           if (process.env.NODE_ENV === 'development') {
-            console.log('[autosave] Ignoré car mise à jour realtime en cours');
+            logger.dev('[autosave] Ignoré car mise à jour realtime en cours');
           }
           return;
         }
@@ -580,7 +581,7 @@ export default function NoteEditorPage() {
             const changes = [];
             if (titleChanged) changes.push('titre');
             if (contentChanged) changes.push('contenu');
-            console.log(`[autosave] Autosave déclenchée (${changes.join(', ')})`);
+            logger.dev(`[autosave] Autosave déclenchée (${changes.join(', ')})`);
           }
         }
       }, 1000);
@@ -862,7 +863,7 @@ export default function NoteEditorPage() {
   
   const handleFontChange = (fontName: string) => {
     // Log pour debug
-    console.log('[Font] handleFontChange appelé avec:', fontName);
+    logger.dev('[Font] handleFontChange appelé avec:', fontName);
     
     // Vérifier si la police est chargée
     const testElement = document.createElement('div');
@@ -873,7 +874,7 @@ export default function NoteEditorPage() {
     document.body.appendChild(testElement);
     
     const computedFont = window.getComputedStyle(testElement).fontFamily;
-    console.log('[Font] Police calculée pour titre:', computedFont);
+    logger.dev('[Font] Police calculée pour titre:', computedFont);
     
     document.body.removeChild(testElement);
     
@@ -882,13 +883,13 @@ export default function NoteEditorPage() {
     
     // Modifier la variable CSS globale
     document.documentElement.style.setProperty('--editor-font-family', fontWithFallback);
-    console.log('[Font] Variable CSS modifiée:', fontWithFallback);
+    logger.dev('[Font] Variable CSS modifiée:', fontWithFallback);
     
     // Applique la police au titre avec !important pour dominer
     const titleElement = titleRef.current;
     if (titleElement) {
       titleElement.style.setProperty('font-family', fontWithFallback, 'important');
-      console.log('[Font] Police appliquée au titre:', fontWithFallback);
+      logger.dev('[Font] Police appliquée au titre:', fontWithFallback);
       
       // Recalcule la hauteur après le changement de police
       setTimeout(resizeTitle, 0);
@@ -909,7 +910,7 @@ export default function NoteEditorPage() {
           }
         });
         
-        console.log('[Font] Police appliquée à tous les éléments ProseMirror:', fontWithFallback);
+        logger.dev('[Font] Police appliquée à tous les éléments ProseMirror:', fontWithFallback);
       }
     }
     

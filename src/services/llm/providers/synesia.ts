@@ -1,4 +1,5 @@
 import type { LLMProvider, AppContext, ChatMessage } from '../types';
+import { simpleLogger as logger } from '@/utils/logger';
 
 export class SynesiaProvider implements LLMProvider {
   name = 'Synesia';
@@ -37,7 +38,7 @@ export class SynesiaProvider implements LLMProvider {
         }
       };
 
-      console.log('[Synesia Provider] 📤 Payload envoyé:', payload);
+      logger.dev('[Synesia Provider] 📤 Payload envoyé:', payload);
 
       const response = await fetch('https://api.synesia.app/execution?wait=true', {
         method: 'POST',
@@ -55,12 +56,12 @@ export class SynesiaProvider implements LLMProvider {
       }
 
       const data = await response.json();
-      console.log('[Synesia Provider] ✅ Réponse reçue:', data);
+      logger.dev('[Synesia Provider] ✅ Réponse reçue:', data);
 
       return data.result || data.response || 'Désolé, je n\'ai pas pu traiter votre demande.';
 
     } catch (error) {
-      console.error('[Synesia Provider] ❌ Erreur:', error);
+      logger.error('[Synesia Provider] ❌ Erreur:', error);
       throw error;
     }
   }

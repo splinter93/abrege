@@ -2,6 +2,7 @@ import { ChatSessionService } from './chatSessionService';
 import type { ChatMessage, ChatSession } from '@/store/useChatStore';
 import type { ChatMessage as ApiChatMessage, ChatSession as ApiChatSession } from '@/types/chat';
 import { useChatStore } from '@/store/useChatStore';
+import { simpleLogger as logger } from '@/utils/logger';
 
 // Types locaux pour la conversion
 interface LocalChatMessage {
@@ -50,7 +51,7 @@ export class SessionSyncService {
     error?: string;
   }> {
     try {
-      console.log('[SessionSync] 🔄 Synchronisation sessions depuis DB...');
+      logger.dev('[SessionSync] 🔄 Synchronisation sessions depuis DB...');
       
       // 1. Récupérer depuis la DB (source de vérité)
       const response = await this.chatSessionService.getSessions();
@@ -62,9 +63,9 @@ export class SessionSyncService {
       // 2. Convertir les sessions pour le store
       const convertedSessions = response.data.map(convertApiSessionToStore);
       
-      console.log('[SessionSync] ✅ Sessions converties:', convertedSessions.length);
-      console.log('[SessionSync] ✅ Synchronisation réussie:', response.data.length, 'sessions');
-      console.log('[SessionSync] 📊 Sessions à retourner:', convertedSessions.length);
+      logger.dev('[SessionSync] ✅ Sessions converties:', convertedSessions.length);
+      logger.dev('[SessionSync] ✅ Synchronisation réussie:', response.data.length, 'sessions');
+      logger.dev('[SessionSync] 📊 Sessions à retourner:', convertedSessions.length);
       
       return {
         success: true,
@@ -72,7 +73,7 @@ export class SessionSyncService {
       };
 
     } catch (error) {
-      console.error('[SessionSync] ❌ Erreur synchronisation:', error);
+      logger.error('[SessionSync] ❌ Erreur synchronisation:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Erreur inconnue'
@@ -90,7 +91,7 @@ export class SessionSyncService {
     error?: string;
   }> {
     try {
-      console.log('[SessionSync] ➕ Création session en DB...');
+      logger.dev('[SessionSync] ➕ Création session en DB...');
       
       // 1. Créer en DB (source de vérité)
       const response = await this.chatSessionService.createSession({
@@ -105,7 +106,7 @@ export class SessionSyncService {
       // 2. Synchroniser depuis la DB (pour avoir la version à jour)
       await this.syncSessionsFromDB();
       
-      console.log('[SessionSync] ✅ Session créée et synchronisée:', response.data.name);
+      logger.dev('[SessionSync] ✅ Session créée et synchronisée:', response.data.name);
       
       return {
         success: true,
@@ -113,7 +114,7 @@ export class SessionSyncService {
       };
 
     } catch (error) {
-      console.error('[SessionSync] ❌ Erreur création session:', error);
+      logger.error('[SessionSync] ❌ Erreur création session:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Erreur inconnue'
@@ -130,11 +131,11 @@ export class SessionSyncService {
     error?: string;
   }> {
     try {
-      console.log('[SessionSync] 💬 Ajout message en DB...');
+      logger.dev('[SessionSync] 💬 Ajout message en DB...');
       
       // Vérifier si c'est une session temporaire
       if (sessionId.startsWith('temp-')) {
-        console.log('[SessionSync] ⚠️ Session temporaire, mise à jour locale uniquement');
+        logger.dev('[SessionSync] ⚠️ Session temporaire, mise à jour locale uniquement');
         
         // Mettre à jour le store localement sans appeler l'API
         const store = useChatStore.getState();
@@ -152,7 +153,7 @@ export class SessionSyncService {
           };
           
           store.setCurrentSession(updatedSession);
-          console.log('[SessionSync] ✅ Message ajouté localement à la session temporaire');
+          logger.dev('[SessionSync] ✅ Message ajouté localement à la session temporaire');
         }
         
         return {
@@ -171,14 +172,14 @@ export class SessionSyncService {
       // 2. Synchroniser depuis la DB (pour avoir la version à jour)
       await this.syncSessionsFromDB();
       
-      console.log('[SessionSync] ✅ Message ajouté et synchronisé');
+      logger.dev('[SessionSync] ✅ Message ajouté et synchronisé');
       
       return {
         success: true
       };
 
     } catch (error) {
-      console.error('[SessionSync] ❌ Erreur ajout message:', error);
+      logger.error('[SessionSync] ❌ Erreur ajout message:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Erreur inconnue'
@@ -195,11 +196,11 @@ export class SessionSyncService {
     error?: string;
   }> {
     try {
-      console.log('[SessionSync] 🗑️ Suppression session en DB...');
+      logger.dev('[SessionSync] 🗑️ Suppression session en DB...');
       
       // Vérifier si c'est une session temporaire
       if (sessionId.startsWith('temp-')) {
-        console.log('[SessionSync] ⚠️ Session temporaire, suppression locale uniquement');
+        logger.dev('[SessionSync] ⚠️ Session temporaire, suppression locale uniquement');
         
         // Supprimer du store localement sans appeler l'API
         const store = useChatStore.getState();
@@ -211,7 +212,7 @@ export class SessionSyncService {
           store.setCurrentSession(null);
         }
         
-        console.log('[SessionSync] ✅ Session temporaire supprimée localement');
+        logger.dev('[SessionSync] ✅ Session temporaire supprimée localement');
         
         return {
           success: true
@@ -228,14 +229,14 @@ export class SessionSyncService {
       // 2. Synchroniser depuis la DB (pour avoir la version à jour)
       await this.syncSessionsFromDB();
       
-      console.log('[SessionSync] ✅ Session supprimée et synchronisée');
+      logger.dev('[SessionSync] ✅ Session supprimée et synchronisée');
       
       return {
         success: true
       };
 
     } catch (error) {
-      console.error('[SessionSync] ❌ Erreur suppression session:', error);
+      logger.error('[SessionSync] ❌ Erreur suppression session:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Erreur inconnue'
@@ -256,7 +257,7 @@ export class SessionSyncService {
     error?: string;
   }> {
     try {
-      console.log('[SessionSync] ⚙️ Mise à jour session en DB...');
+      logger.dev('[SessionSync] ⚙️ Mise à jour session en DB...');
       
       // 1. Mettre à jour en DB (source de vérité)
       const response = await this.chatSessionService.updateSession(sessionId, data);
@@ -268,7 +269,7 @@ export class SessionSyncService {
       // 2. Synchroniser depuis la DB (pour avoir la version à jour)
       await this.syncSessionsFromDB();
       
-      console.log('[SessionSync] ✅ Session mise à jour et synchronisée');
+      logger.dev('[SessionSync] ✅ Session mise à jour et synchronisée');
       
       return {
         success: true,
@@ -276,7 +277,7 @@ export class SessionSyncService {
       };
 
     } catch (error) {
-      console.error('[SessionSync] ❌ Erreur mise à jour session:', error);
+      logger.error('[SessionSync] ❌ Erreur mise à jour session:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Erreur inconnue'

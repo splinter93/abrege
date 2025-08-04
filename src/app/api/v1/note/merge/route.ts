@@ -2,6 +2,7 @@ import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 import type { NextRequest } from 'next/server';
 import { resolveNoteRef } from '@/middleware/resourceResolver';
+import { simpleLogger as logger } from '@/utils/logger';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -114,7 +115,7 @@ export async function POST(req: NextRequest): Promise<Response> {
       .eq('id', sourceNoteId);
     
     if (deleteError) {
-      console.error('Erreur lors de la suppression de la note source:', deleteError);
+      logger.error('Erreur lors de la suppression de la note source:', deleteError);
       // Ne pas faire échouer la requête si la suppression échoue
     }
     

@@ -2,6 +2,9 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { supabase } from '@/supabaseClient';
 import { sessionSyncService } from '@/services/sessionSyncService';
+import { Agent } from '@/types/chat';
+
+import { simpleLogger as logger } from '@/utils/logger';
 
 export interface ChatMessage {
   id: string;
@@ -24,6 +27,8 @@ interface ChatStore {
   // 🎯 État
   sessions: ChatSession[];
   currentSession: ChatSession | null;
+  selectedAgent: Agent | null;
+  selectedAgentId: string | null; // Ajouté pour la persistance
   isWidgetOpen: boolean;
   isFullscreen: boolean;
   loading: boolean;
@@ -32,6 +37,8 @@ interface ChatStore {
   // 🔄 Actions de base
   setSessions: (sessions: ChatSession[]) => void;
   setCurrentSession: (session: ChatSession | null) => void;
+  setSelectedAgent: (agent: Agent | null) => void;
+  setSelectedAgentId: (agentId: string | null) => void; // Ajouté
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
   
@@ -54,6 +61,8 @@ export const useChatStore = create<ChatStore>()(
       // 🎯 État initial
       sessions: [],
       currentSession: null,
+      selectedAgent: null,
+      selectedAgentId: null,
       isWidgetOpen: false,
       isFullscreen: false,
       loading: false,
@@ -62,6 +71,11 @@ export const useChatStore = create<ChatStore>()(
       // 🔄 Actions de base
       setSessions: (sessions: ChatSession[]) => set({ sessions: Array.isArray(sessions) ? sessions : [] }),
       setCurrentSession: (session: ChatSession | null) => set({ currentSession: session }),
+      setSelectedAgent: (agent: Agent | null) => set({ 
+        selectedAgent: agent,
+        selectedAgentId: agent?.id || null 
+      }),
+      setSelectedAgentId: (agentId: string | null) => set({ selectedAgentId: agentId }),
       setLoading: (loading: boolean) => set({ loading }),
       setError: (error: string | null) => set({ error }),
 
@@ -92,12 +106,12 @@ export const useChatStore = create<ChatStore>()(
         setError(null);
         
         try {
-          console.log('[Chat Store] 🔄 Synchronisation depuis DB...');
+          logger.dev('[Chat Store] 🔄 Synchronisation depuis DB...');
           
           // Vérifier l'authentification
           const { data: { session } } = await supabase.auth.getSession();
           if (!session?.access_token) {
-            console.log('[Chat Store] ⚠️ Utilisateur non authentifié');
+            logger.dev('[Chat Store] ⚠️ Utilisateur non authentifié');
             setSessions([]);
             setError('Utilisateur non authentifié');
             return;
@@ -112,11 +126,11 @@ export const useChatStore = create<ChatStore>()(
 
           if (result.sessions) {
             setSessions(result.sessions);
-            console.log('[Chat Store] ✅ Sessions synchronisées:', result.sessions.length);
+            logger.dev('[Chat Store] ✅ Sessions synchronisées:', result.sessions.length);
           }
           
         } catch (error) {
-          console.error('[Chat Store] ❌ Erreur synchronisation:', error);
+          logger.error('[Chat Store] ❌ Erreur synchronisation:', error);
           setError('Erreur lors de la synchronisation');
         } finally {
           setLoading(false);
@@ -152,7 +166,7 @@ export const useChatStore = create<ChatStore>()(
           const newSessions = [tempSession, ...sessions];
           setSessions(newSessions);
           setCurrentSession(tempSession);
-          console.log('[Chat Store] ⚡ Session temporaire créée');
+          logger.dev('[Chat Store] ⚡ Session temporaire créée');
 
           // 2. API call via service
           const result = await sessionSyncService.createSessionAndSync(name);
@@ -161,7 +175,7 @@ export const useChatStore = create<ChatStore>()(
             throw new Error(result.error || 'Erreur création session');
           }
 
-          console.log('[Chat Store] ✅ Session créée en DB:', result.session);
+          logger.dev('[Chat Store] ✅ Session créée en DB:', result.session);
 
           // 3. Remplacer la session temporaire par la vraie
           if (result.session) {
@@ -173,7 +187,7 @@ export const useChatStore = create<ChatStore>()(
           }
           
         } catch (error) {
-          console.error('[Chat Store] ❌ Erreur création session:', error);
+          logger.error('[Chat Store] ❌ Erreur création session:', error);
           setError('Erreur lors de la création de la session');
           
           // Rollback sécurisé - restaurer l'état initial
@@ -216,7 +230,7 @@ export const useChatStore = create<ChatStore>()(
           };
 
           setCurrentSession(updatedSession);
-          console.log('[Chat Store] ⚡ Message ajouté optimistiquement');
+          logger.dev('[Chat Store] ⚡ Message ajouté optimistiquement');
 
           // 2. API call via service
           const result = await sessionSyncService.addMessageAndSync(currentSession.id, message);
@@ -225,10 +239,10 @@ export const useChatStore = create<ChatStore>()(
             throw new Error(result.error || 'Erreur ajout message');
           }
 
-          console.log('[Chat Store] ✅ Message sauvegardé en DB');
+          logger.dev('[Chat Store] ✅ Message sauvegardé en DB');
           
         } catch (error) {
-          console.error('[Chat Store] ❌ Erreur ajout message:', error);
+          logger.error('[Chat Store] ❌ Erreur ajout message:', error);
           setError('Erreur lors de l\'ajout du message');
           
           // Rollback sécurisé - restaurer l'état initial
@@ -269,7 +283,7 @@ export const useChatStore = create<ChatStore>()(
             setCurrentSession(updatedSessions[0] || null);
           }
 
-          console.log('[Chat Store] ⚡ Session supprimée optimistiquement');
+          logger.dev('[Chat Store] ⚡ Session supprimée optimistiquement');
 
           // 2. API call via service
           const result = await sessionSyncService.deleteSessionAndSync(sessionId);
@@ -278,10 +292,10 @@ export const useChatStore = create<ChatStore>()(
             throw new Error(result.error || 'Erreur suppression session');
           }
 
-          console.log('[Chat Store] ✅ Session supprimée en DB');
+          logger.dev('[Chat Store] ✅ Session supprimée en DB');
           
         } catch (error) {
-          console.error('[Chat Store] ❌ Erreur suppression session:', error);
+          logger.error('[Chat Store] ❌ Erreur suppression session:', error);
           setError('Erreur lors de la suppression');
           
           // Rollback sécurisé - restaurer l'état initial
@@ -322,7 +336,7 @@ export const useChatStore = create<ChatStore>()(
             }
           }
 
-          console.log('[Chat Store] ⚡ Session mise à jour optimistiquement');
+          logger.dev('[Chat Store] ⚡ Session mise à jour optimistiquement');
 
           // 2. API call via service
           const result = await sessionSyncService.updateSessionAndSync(sessionId, data);
@@ -331,10 +345,10 @@ export const useChatStore = create<ChatStore>()(
             throw new Error(result.error || 'Erreur mise à jour session');
           }
 
-          console.log('[Chat Store] ✅ Session mise à jour en DB');
+          logger.dev('[Chat Store] ✅ Session mise à jour en DB');
           
         } catch (error) {
-          console.error('[Chat Store] ❌ Erreur mise à jour session:', error);
+          logger.error('[Chat Store] ❌ Erreur mise à jour session:', error);
           setError('Erreur lors de la mise à jour');
           
           // Rollback sécurisé - restaurer l'état initial
@@ -352,6 +366,7 @@ export const useChatStore = create<ChatStore>()(
         isWidgetOpen: state.isWidgetOpen,
         isFullscreen: state.isFullscreen,
         currentSessionId: state.currentSession?.id || null,
+        selectedAgentId: state.selectedAgentId || null,
       }),
     }
   )

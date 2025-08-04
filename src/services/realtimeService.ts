@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { diffService, type DiffResult } from './diffService';
+import { simpleLogger as logger } from '@/utils/logger';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -46,18 +47,18 @@ class RealtimeService {
    */
   startPolling(table: string) {
     if (!this.config.enabled || this.intervals.has(table)) {
-      console.log(`[Polling] ⚠️ Polling déjà actif ou désactivé pour ${table}`);
+      logger.dev(`[Polling] ⚠️ Polling déjà actif ou désactivé pour ${table}`);
       return;
     }
 
     // 🚫 POLLING CONTINU COMPLÈTEMENT DÉSACTIVÉ
     if (process.env.NODE_ENV === 'development') {
-      console.log(`[Polling] ⏸️ Polling continu désactivé pour ${table} - utilisation du polling déclenché par API uniquement`);
+      logger.dev(`[Polling] ⏸️ Polling continu désactivé pour ${table} - utilisation du polling déclenché par API uniquement`);
     }
     
     // Pas de setInterval - plus de polling continu qui matraque !
     // this.intervals.set(table, interval);
-    // console.log(`[Polling] ✅ Polling démarré pour ${table}`);
+    // logger.dev(`[Polling] ✅ Polling démarré pour ${table}`);
   }
 
   /**
@@ -69,7 +70,7 @@ class RealtimeService {
       clearInterval(interval);
       this.intervals.delete(table);
       if (process.env.NODE_ENV === 'development') {
-        console.log(`⏹️ Polling arrêté pour ${table}`);
+        logger.dev(`⏹️ Polling arrêté pour ${table}`);
       }
     }
   }
@@ -80,7 +81,7 @@ class RealtimeService {
   private async checkForChanges(table: string) {
     try {
       if (process.env.NODE_ENV === 'development') {
-        console.log(`[Polling] 🔍 Vérification changements pour ${table}...`);
+        logger.dev(`[Polling] 🔍 Vérification changements pour ${table}...`);
       }
       
       // 1. Vérifier les UPDATE (changements de contenu)
@@ -91,7 +92,7 @@ class RealtimeService {
       
     } catch (error) {
       if (process.env.NODE_ENV === 'development') {
-        console.error(`❌ Erreur polling ${table}:`, error);
+        logger.error(`❌ Erreur polling ${table}:`, error);
       }
     }
   }
@@ -103,7 +104,7 @@ class RealtimeService {
     const lastTimestamp = this.lastTimestamps.get(table);
     let query = supabase.from(table).select('*');
 
-    console.log(`[Polling] 📊 Vérification UPDATE pour ${table} (lastTimestamp: ${lastTimestamp || 'aucun'})`);
+    logger.dev(`[Polling] 📊 Vérification UPDATE pour ${table} (lastTimestamp: ${lastTimestamp || 'aucun'})`);
 
     // Adapter la requête selon la table
     if (table === 'folders') {
@@ -129,11 +130,11 @@ class RealtimeService {
     const { data, error } = await query;
 
     if (error) {
-      console.error(`❌ Erreur polling UPDATE ${table}:`, error);
+      logger.error(`❌ Erreur polling UPDATE ${table}:`, error);
       return;
     }
 
-    console.log(`[Polling] 📊 Résultats UPDATE ${table}: ${data?.length || 0} éléments`);
+    logger.dev(`[Polling] 📊 Résultats UPDATE ${table}: ${data?.length || 0} éléments`);
 
     if (data && data.length > 0) {
       // Mettre à jour le timestamp avec le plus récent de la liste
@@ -145,7 +146,7 @@ class RealtimeService {
       }
       this.lastTimestamps.set(table, latestTimestamp);
 
-      console.log(`[Polling] ✅ ${data.length} UPDATE(s) détecté(s) pour ${table}`);
+      logger.dev(`[Polling] ✅ ${data.length} UPDATE(s) détecté(s) pour ${table}`);
 
       // Notifier les listeners pour chaque UPDATE avec diff
       data.forEach(item => {
@@ -168,11 +169,11 @@ class RealtimeService {
           diff: diff, // On ajoute le diff ici
         };
 
-        console.log(`[Polling] 📡 Notification UPDATE pour ${table}:`, item.id);
+        logger.dev(`[Polling] 📡 Notification UPDATE pour ${table}:`, item.id);
         this.notifyListeners(table, event);
       });
     } else {
-      console.log(`[Polling] ⏭️ Aucun UPDATE détecté pour ${table}`);
+      logger.dev(`[Polling] ⏭️ Aucun UPDATE détecté pour ${table}`);
     }
   }
 
@@ -180,7 +181,7 @@ class RealtimeService {
    * Vérifier les changements de structure (INSERT/DELETE)
    */
   private async checkForStructureChanges(table: string) {
-    console.log(`[Polling] 🔍 Vérification structure pour ${table}...`);
+    logger.dev(`[Polling] 🔍 Vérification structure pour ${table}...`);
     
     // Compter le nombre total d'éléments
     const { count, error } = await supabase
@@ -189,20 +190,20 @@ class RealtimeService {
       .eq('user_id', this.config.userId);
 
     if (error) {
-      console.error(`❌ Erreur polling structure ${table}:`, error);
+      logger.error(`❌ Erreur polling structure ${table}:`, error);
       return;
     }
 
     const currentCount = count || 0;
     const lastCount = this.lastCounts.get(table);
 
-    console.log(`[Polling] 📊 Comptage ${table}: actuel=${currentCount}, précédent=${lastCount || 'aucun'}`);
+    logger.dev(`[Polling] 📊 Comptage ${table}: actuel=${currentCount}, précédent=${lastCount || 'aucun'}`);
 
     if (lastCount !== undefined && lastCount !== currentCount) {
       // Changement de structure détecté
       if (currentCount > lastCount) {
         // INSERT détecté - récupérer le(s) nouvel(le)(s) élément(s)
-        console.log(`[Polling] ➕ INSERT détecté pour ${table}: +${currentCount - lastCount} élément(s)`);
+        logger.dev(`[Polling] ➕ INSERT détecté pour ${table}: +${currentCount - lastCount} élément(s)`);
         
         const { data: newItems } = await supabase
           .from(table)
@@ -221,13 +222,13 @@ class RealtimeService {
               timestamp: Date.now()
             };
             
-            console.log(`[Polling] 📡 Notification INSERT pour ${table}:`, item.id);
+            logger.dev(`[Polling] 📡 Notification INSERT pour ${table}:`, item.id);
             this.notifyListeners(table, event);
           });
         }
       } else if (currentCount < lastCount) {
         // DELETE détecté
-        console.log(`[Polling] 🗑️ DELETE détecté pour ${table}: -${lastCount - currentCount} élément(s)`);
+        logger.dev(`[Polling] 🗑️ DELETE détecté pour ${table}: -${lastCount - currentCount} élément(s)`);
         
         // Pour les DELETE, on ne peut pas récupérer l'élément supprimé
         // mais on peut notifier qu'une suppression a eu lieu
@@ -239,19 +240,19 @@ class RealtimeService {
           timestamp: Date.now()
         };
         
-        console.log(`[Polling] 📡 Notification DELETE pour ${table}`);
+        logger.dev(`[Polling] 📡 Notification DELETE pour ${table}`);
         this.notifyListeners(table, event);
       }
 
       // Mettre à jour le compteur
       this.lastCounts.set(table, currentCount);
-      console.log(`[Polling] ✅ Compteur ${table} mis à jour: ${currentCount}`);
+      logger.dev(`[Polling] ✅ Compteur ${table} mis à jour: ${currentCount}`);
     } else if (lastCount === undefined) {
       // Première vérification - initialiser le compteur
       this.lastCounts.set(table, currentCount);
-      console.log(`[Polling] 🎯 Initialisation compteur ${table}: ${currentCount}`);
+      logger.dev(`[Polling] 🎯 Initialisation compteur ${table}: ${currentCount}`);
     } else {
-      console.log(`[Polling] ⏭️ Aucun changement de structure pour ${table}`);
+      logger.dev(`[Polling] ⏭️ Aucun changement de structure pour ${table}`);
     }
   }
 
@@ -260,7 +261,7 @@ class RealtimeService {
    * Utilisé après les appels API pour une mise à jour instantanée
    */
   async triggerImmediateCheck(table: string, operation: 'INSERT' | 'UPDATE' | 'DELETE') {
-    console.log(`[RealtimeService] 🚀 Vérification immédiate pour ${table} (${operation})`);
+    logger.dev(`[RealtimeService] 🚀 Vérification immédiate pour ${table} (${operation})`);
     
     try {
       // Vérifier les changements immédiatement
@@ -268,13 +269,13 @@ class RealtimeService {
       
       // Si c'est un INSERT, on peut aussi forcer une vérification UPDATE
       if (operation === 'INSERT') {
-        console.log(`[RealtimeService] 🔄 Vérification UPDATE supplémentaire pour ${table}`);
+        logger.dev(`[RealtimeService] 🔄 Vérification UPDATE supplémentaire pour ${table}`);
         await this.checkForUpdates(table);
       }
       
-      console.log(`[RealtimeService] ✅ Vérification immédiate terminée pour ${table}`);
+      logger.dev(`[RealtimeService] ✅ Vérification immédiate terminée pour ${table}`);
     } catch (error) {
-      console.error(`[RealtimeService] ❌ Erreur vérification immédiate ${table}:`, error);
+      logger.error(`[RealtimeService] ❌ Erreur vérification immédiate ${table}:`, error);
     }
   }
 
@@ -313,16 +314,16 @@ class RealtimeService {
   private notifyListeners(table: string, event: ChangeEvent) {
     const listeners = this.listeners.get(table);
     if (listeners) {
-      console.log(`[Polling] 📡 Notification ${listeners.size} listener(s) pour ${table}:`, event.eventType);
+      logger.dev(`[Polling] 📡 Notification ${listeners.size} listener(s) pour ${table}:`, event.eventType);
       listeners.forEach(callback => {
         try {
           callback(event);
         } catch (error) {
-          console.error('❌ Erreur dans listener:', error);
+          logger.error('❌ Erreur dans listener:', error);
         }
       });
     } else {
-      console.log(`[Polling] ⚠️ Aucun listener pour ${table}`);
+      logger.dev(`[Polling] ⚠️ Aucun listener pour ${table}`);
     }
   }
 
@@ -337,7 +338,7 @@ class RealtimeService {
     this.listeners.clear();
     this.lastTimestamps.clear();
     this.lastCounts.clear();
-    console.log('⏹️ Tous les pollings arrêtés');
+    logger.dev('⏹️ Tous les pollings arrêtés');
   }
 }
 

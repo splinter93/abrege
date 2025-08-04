@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import type { Heading } from "@/types/editor";
+import { simpleLogger as logger } from '@/utils/logger';
 
 const TableOfContents = dynamic(() => import("@/components/TableOfContents"), { ssr: false });
 
@@ -32,7 +33,7 @@ const PublicTOCClient: React.FC<PublicTOCClientProps> = ({ slug }) => {
           );
         }
       } catch (err) {
-        console.warn('TOC non chargée:', err);
+        logger.warn('TOC non chargée:', err);
         setError(err instanceof Error ? err.message : 'Erreur TOC');
         // Ne pas afficher d'erreur à l'utilisateur, juste ne pas montrer la TOC
       }

@@ -1,6 +1,7 @@
 "use client";
 import React, { useEffect, useRef, useState } from 'react';
 import mermaid from 'mermaid';
+import { simpleLogger as logger } from '@/utils/logger';
 
 interface MermaidRendererProps {
   chart: string;
@@ -70,7 +71,7 @@ const MermaidRenderer: React.FC<MermaidRendererProps> = ({ chart, className = ''
         }
       } catch (err) {
         if (isMounted) {
-          console.error('Erreur lors du rendu Mermaid:', err);
+          logger.error('Erreur lors du rendu Mermaid:', err);
           setError(err instanceof Error ? err.message : 'Erreur inconnue');
           setIsRendered(false);
         }

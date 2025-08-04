@@ -1,5 +1,6 @@
 import { sessionSyncService } from './sessionSyncService';
 import { useChatStore } from '../store/useChatStore';
+import { simpleLogger as logger } from '@/utils/logger';
 
 /**
  * 🎯 Service de polling intelligent et ciblé pour le chat
@@ -24,12 +25,12 @@ export class ChatPollingService {
    * Utilise un debounce pour éviter les pollings multiples
    */
   async triggerPolling(action: string, delay: number = 500): Promise<void> {
-    console.log(`[ChatPolling] 🎯 Polling déclenché après: ${action}`);
+    logger.dev(`[ChatPolling] 🎯 Polling déclenché après: ${action}`);
     
     // Ne pas déclencher de polling pour les actions de messages
     // car les messages sont rechargés directement après
     if (action.includes('message') || action.includes('LLM')) {
-      console.log(`[ChatPolling] ⏭️ Polling ignoré pour: ${action} (rechargement direct)`);
+      logger.dev(`[ChatPolling] ⏭️ Polling ignoré pour: ${action} (rechargement direct)`);
       return;
     }
     
@@ -49,12 +50,12 @@ export class ChatPollingService {
    */
   private async performPolling(triggerAction: string): Promise<void> {
     if (this.isPolling) {
-      console.log('[ChatPolling] ⏳ Polling déjà en cours, ignoré');
+      logger.dev('[ChatPolling] ⏳ Polling déjà en cours, ignoré');
       return;
     }
 
     this.isPolling = true;
-    console.log(`[ChatPolling] 🔄 Début polling (déclenché par: ${triggerAction})`);
+    logger.dev(`[ChatPolling] 🔄 Début polling (déclenché par: ${triggerAction})`);
 
     try {
       // Synchroniser les sessions depuis la DB
@@ -78,12 +79,12 @@ export class ChatPollingService {
         });
         
         setSessions(mergedSessions);
-        console.log(`[ChatPolling] ✅ Polling réussi: ${result.sessions.length} sessions synchronisées (fusion intelligente)`);
+        logger.dev(`[ChatPolling] ✅ Polling réussi: ${result.sessions.length} sessions synchronisées (fusion intelligente)`);
       } else {
-        console.log('[ChatPolling] ⚠️ Polling échoué:', result.error);
+        logger.dev('[ChatPolling] ⚠️ Polling échoué:', result.error);
       }
     } catch (error) {
-      console.error('[ChatPolling] ❌ Erreur polling:', error);
+      logger.error('[ChatPolling] ❌ Erreur polling:', error);
     } finally {
       this.isPolling = false;
     }
@@ -98,7 +99,7 @@ export class ChatPollingService {
       this.pollingTimeout = null;
     }
     this.isPolling = false;
-    console.log('[ChatPolling] 🛑 Polling arrêté');
+    logger.dev('[ChatPolling] 🛑 Polling arrêté');
   }
 }
 

@@ -1,4 +1,5 @@
 'use client';
+import { simpleLogger as logger } from '@/utils/logger';
 
 import React, { useState } from 'react';
 import { useChatStore } from '@/store/useChatStore';
@@ -16,7 +17,7 @@ interface ChatSidebarProps {
 
 const ChatSidebar: React.FC<ChatSidebarProps> = ({ isOpen, isDesktop, onClose }) => {
   const { user, signOut } = useAuth();
-  const { sessions, currentSession, createSession, setCurrentSession, deleteSession, updateSession } = useChatStore();
+  const { sessions, currentSession, selectedAgent, createSession, setCurrentSession, setSelectedAgent, deleteSession, updateSession } = useChatStore();
   const { agents, loading: agentsLoading } = useAgents();
   const [renamingSessionId, setRenamingSessionId] = useState<string | null>(null);
   const [newName, setNewName] = useState('');
@@ -50,6 +51,27 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({ isOpen, isDesktop, onClose })
 
   const handleSelectSession = (session: any) => {
     setCurrentSession(session);
+    if (!isDesktop) {
+      onClose();
+    }
+  };
+
+  const handleSelectAgent = (agent: any) => {
+    logger.dev(`[ChatSidebar] 🎯 Sélection de l'agent:`, {
+      id: agent.id,
+      name: agent.name,
+      model: agent.model,
+      provider: agent.provider,
+      system_instructions: agent.system_instructions ? '✅ Présentes' : '❌ Manquantes',
+      context_template: agent.context_template ? '✅ Présent' : '❌ Manquant',
+      temperature: agent.temperature,
+      max_tokens: agent.max_tokens
+    });
+    setSelectedAgent(agent);
+    logger.dev(`[ChatSidebar] ✅ Agent sélectionné dans le store: ${agent.name} (${agent.model})`);
+    if (agent.system_instructions) {
+      logger.dev(`[ChatSidebar] 📝 Instructions système (extrait):`, agent.system_instructions.substring(0, 100) + '...');
+    }
     if (!isDesktop) {
       onClose();
     }
@@ -116,9 +138,19 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({ isOpen, isDesktop, onClose })
                   <div className="agent-loading">Chargement des agents...</div>
                 ) : agents.length > 0 ? (
                   agents.map((agent) => (
-                    <button key={agent.id} className="agent-option">
+                    <button 
+                      key={agent.id} 
+                      className={`agent-option ${selectedAgent?.id === agent.id ? 'active' : ''}`}
+                      onClick={() => handleSelectAgent(agent)}
+                    >
                       <div className="agent-icon">{agent.profile_picture || '🤖'}</div>
-                      <span className="agent-name">{agent.name}</span>
+                      <div className="agent-info">
+                        <span className="agent-name">{agent.name}</span>
+                        <span className="agent-model">{agent.model}</span>
+                      </div>
+                      {selectedAgent?.id === agent.id && (
+                        <div className="agent-selected-indicator">✓</div>
+                      )}
                     </button>
                   ))
                 ) : (

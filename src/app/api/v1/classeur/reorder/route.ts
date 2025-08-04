@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 import type { NextRequest } from 'next/server';
+import { simpleLogger as logger } from '@/utils/logger';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -49,7 +50,7 @@ export async function PUT(req: NextRequest): Promise<Response> {
     const body = await req.json();
     
     if (process.env.NODE_ENV === 'development') {
-      console.log('[reorderClasseurs] Payload reçu:', body);
+      logger.dev('[reorderClasseurs] Payload reçu:', body);
     }
     
     const schema = z.object({
@@ -62,7 +63,7 @@ export async function PUT(req: NextRequest): Promise<Response> {
     const parseResult = schema.safeParse(body);
     if (!parseResult.success) {
       if (process.env.NODE_ENV === 'development') {
-        console.log('[reorderClasseurs] Erreur de validation Zod:', parseResult.error.errors);
+        logger.dev('[reorderClasseurs] Erreur de validation Zod:', parseResult.error.errors);
       }
       return new Response(
         JSON.stringify({ error: 'Payload invalide', details: parseResult.error.errors.map(e => e.message) }),
@@ -73,13 +74,13 @@ export async function PUT(req: NextRequest): Promise<Response> {
     const { classeurs } = parseResult.data;
     
     if (process.env.NODE_ENV === 'development') {
-      console.log('[reorderClasseurs] Réorganisation de', classeurs.length, 'classeurs pour user:', userId);
+      logger.dev('[reorderClasseurs] Réorganisation de', classeurs.length, 'classeurs pour user:', userId);
     }
     
     // Mettre à jour les positions des classeurs
     const updatePromises = classeurs.map(async ({ id, position }) => {
       if (process.env.NODE_ENV === 'development') {
-        console.log(`[reorderClasseurs] 🔄 Mise à jour position classeur ${id} -> ${position}`);
+        logger.dev(`[reorderClasseurs] 🔄 Mise à jour position classeur ${id} -> ${position}`);
       }
       
       const { error } = await supabase
@@ -90,13 +91,13 @@ export async function PUT(req: NextRequest): Promise<Response> {
       
       if (error) {
         if (process.env.NODE_ENV === 'development') {
-          console.error(`[reorderClasseurs] ❌ Erreur mise à jour classeur ${id}:`, error);
+          logger.error(`[reorderClasseurs] ❌ Erreur mise à jour classeur ${id}:`, error);
         }
         throw new Error(`Erreur mise à jour classeur ${id}: ${error.message}`);
       }
       
       if (process.env.NODE_ENV === 'development') {
-        console.log(`[reorderClasseurs] ✅ Position mise à jour classeur ${id} -> ${position}`);
+        logger.dev(`[reorderClasseurs] ✅ Position mise à jour classeur ${id} -> ${position}`);
       }
       
       return { id, position };
@@ -105,7 +106,7 @@ export async function PUT(req: NextRequest): Promise<Response> {
     const results = await Promise.all(updatePromises);
     
     if (process.env.NODE_ENV === 'development') {
-      console.log('[reorderClasseurs] ✅ Réorganisation terminée:', results.length, 'classeurs mis à jour');
+      logger.dev('[reorderClasseurs] ✅ Réorganisation terminée:', results.length, 'classeurs mis à jour');
     }
     
     return new Response(
@@ -124,7 +125,7 @@ export async function PUT(req: NextRequest): Promise<Response> {
     }
     
     if (process.env.NODE_ENV === 'development') {
-      console.error('[reorderClasseurs] ❌ Erreur:', error);
+      logger.error('[reorderClasseurs] ❌ Erreur:', error);
     }
     
     return new Response(

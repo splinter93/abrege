@@ -1,6 +1,7 @@
 import { S3Client, PutObjectCommand, DeleteObjectCommand, HeadObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { z } from 'zod';
+import { simpleLogger as logger } from '@/utils/logger';
 
 // Configuration validation
 const s3ConfigSchema = z.object({
@@ -151,7 +152,7 @@ export class S3Service {
     s3Error.requestId = error.requestId;
 
     // Log détaillé pour le debugging
-    console.error(`S3 Error [${operation}]:`, {
+    logger.error(`S3 Error [${operation}]:`, {
       message: error.message,
       code: error.code,
       statusCode: error.statusCode,

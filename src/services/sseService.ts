@@ -1,3 +1,4 @@
+import { simpleLogger as logger } from '@/utils/logger';
 interface SSEEvent {
   table: string;
   eventType: 'INSERT' | 'UPDATE' | 'DELETE';
@@ -28,7 +29,7 @@ class SSEService {
       this.eventSource = new EventSource(`${this.url}?userId=${this.userId}`);
       
       this.eventSource.onopen = () => {
-        console.log('🔌 SSE connecté');
+        logger.dev('🔌 SSE connecté');
         this.reconnectAttempts = 0;
       };
 
@@ -37,17 +38,17 @@ class SSEService {
           const data: SSEEvent = JSON.parse(event.data);
           this.handleEvent(data);
         } catch (error) {
-          console.error('❌ Erreur parsing SSE:', error);
+          logger.error('❌ Erreur parsing SSE:', error);
         }
       };
 
       this.eventSource.onerror = (error) => {
-        console.error('❌ Erreur SSE:', error);
+        logger.error('❌ Erreur SSE:', error);
         this.scheduleReconnect();
       };
 
     } catch (error) {
-      console.error('❌ Erreur connexion SSE:', error);
+      logger.error('❌ Erreur connexion SSE:', error);
     }
   }
 
@@ -66,13 +67,13 @@ class SSEService {
       this.reconnectAttempts++;
       const delay = this.reconnectDelay * Math.pow(2, this.reconnectAttempts - 1);
       
-      console.log(`🔄 Reconnexion SSE dans ${delay}ms (tentative ${this.reconnectAttempts}/${this.maxReconnectAttempts})`);
+      logger.dev(`🔄 Reconnexion SSE dans ${delay}ms (tentative ${this.reconnectAttempts}/${this.maxReconnectAttempts})`);
       
       setTimeout(() => {
         this.connect();
       }, delay);
     } else {
-      console.error('❌ Nombre maximum de tentatives de reconnexion SSE atteint');
+      logger.error('❌ Nombre maximum de tentatives de reconnexion SSE atteint');
     }
   }
 
@@ -109,7 +110,7 @@ class SSEService {
         try {
           callback(event);
         } catch (error) {
-          console.error('❌ Erreur dans listener SSE:', error);
+          logger.error('❌ Erreur dans listener SSE:', error);
         }
       });
     }

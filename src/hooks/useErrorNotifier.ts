@@ -1,5 +1,6 @@
 import { useCallback } from 'react';
 import toast from 'react-hot-toast';
+import { simpleLogger as logger } from '@/utils/logger';
 
 export interface ErrorNotification {
   title: string;
@@ -87,7 +88,7 @@ export const useErrorNotifier = () => {
 
     // Log en développement
     if (process.env.NODE_ENV === 'development') {
-      console.error('[ErrorNotifier]', context, error);
+      logger.error('[ErrorNotifier]', error);
     }
   }, [notifyError]);
 

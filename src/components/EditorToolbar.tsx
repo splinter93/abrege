@@ -4,6 +4,7 @@ import { AiOutlineOrderedList } from 'react-icons/ai';
 import { MdGridOn, MdFormatQuote } from 'react-icons/md';
 import { FiCode } from 'react-icons/fi';
 import Tooltip from './Tooltip';
+import { simpleLogger as logger } from '@/utils/logger';
 
 interface EditorToolbarProps {
   editor: {
@@ -53,7 +54,7 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor, setImageMenuOpen,
     return new Promise((resolve) => {
       // Vérifier si la police est déjà chargée
       if (document.fonts.check(`12px "${fontName}"`)) {
-        console.log('[Font] Police déjà chargée:', fontName);
+        logger.dev('[Font] Police déjà chargée:', fontName);
         resolve(true);
         return;
       }
@@ -64,12 +65,12 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor, setImageMenuOpen,
       link.href = `https://fonts.googleapis.com/css2?family=${fontName.replace(' ', '+')}:wght@400&display=swap`;
       
       link.onload = () => {
-        console.log('[Font] Police chargée avec succès:', fontName);
+        logger.dev('[Font] Police chargée avec succès:', fontName);
         resolve(true);
       };
       
       link.onerror = () => {
-        console.log('[Font] Erreur de chargement de la police:', fontName);
+        logger.dev('[Font] Erreur de chargement de la police:', fontName);
         resolve(false);
       };
       
@@ -79,12 +80,12 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor, setImageMenuOpen,
 
   const setFont = async (fontName: string) => {
     // Log pour debug
-    console.log('[Font] Application de la police:', fontName);
+    logger.dev('[Font] Application de la police:', fontName);
     
     // Charger la police Google Fonts si nécessaire
     if (fontName !== 'Arial' && fontName !== 'Helvetica' && fontName !== 'Verdana' && 
         fontName !== 'Georgia' && fontName !== 'Palatino' && fontName !== 'Times New Roman') {
-      console.log('[Font] Chargement de la police Google Fonts:', fontName);
+      logger.dev('[Font] Chargement de la police Google Fonts:', fontName);
       await loadGoogleFont(fontName);
     }
     
@@ -97,20 +98,20 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor, setImageMenuOpen,
     document.body.appendChild(testElement);
     
     const computedFont = window.getComputedStyle(testElement).fontFamily;
-    console.log('[Font] Police calculée:', computedFont);
+    logger.dev('[Font] Police calculée:', computedFont);
     
     document.body.removeChild(testElement);
     
     // Vérifier si la police est réellement chargée
     const isFontLoaded = computedFont.includes(fontName);
-    console.log('[Font] Police chargée:', isFontLoaded);
+    logger.dev('[Font] Police chargée:', isFontLoaded);
     
     // MODIFIER LA VARIABLE CSS AU LIEU D'APPLIQUER DIRECTEMENT
     const fontWithFallback = `${fontName}, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif`;
     
     // Modifier la variable CSS globale
     document.documentElement.style.setProperty('--editor-font-family', fontWithFallback);
-    console.log('[Font] Variable CSS modifiée:', fontWithFallback);
+    logger.dev('[Font] Variable CSS modifiée:', fontWithFallback);
     
     // CIBLER SPÉCIFIQUEMENT L'ÉDITEUR PROSEMIRROR
     const editorElement = editor.view.dom;
@@ -126,7 +127,7 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor, setImageMenuOpen,
         }
       });
       
-      console.log('[Font] Police appliquée à tous les éléments ProseMirror:', fontWithFallback);
+      logger.dev('[Font] Police appliquée à tous les éléments ProseMirror:', fontWithFallback);
     }
     
     // Notifie le parent du changement de police

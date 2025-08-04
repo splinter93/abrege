@@ -2,6 +2,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import FolderManager from "../../../components/FolderManager";
 import ClasseurTabs, { Classeur } from "../../../components/ClasseurTabs";
+import { simpleLogger as logger } from '@/utils/logger';
 
 import { optimizedApi } from "../../../services/optimizedApi";
 import { supabase } from "../../../supabaseClient";
@@ -56,7 +57,7 @@ const DossiersPage: React.FC = () => {
     });
     
     if (process.env.NODE_ENV === 'development') {
-      console.log('[DossiersPage] 📋 Classeurs triés:', sortedClasseurs.map(c => ({ id: c.id, name: c.name, position: c.position })));
+      logger.dev('[DossiersPage] 📋 Classeurs triés:', sortedClasseurs.map(c => ({ id: c.id, name: c.name, position: c.position })));
     }
     
     return sortedClasseurs;
@@ -76,14 +77,14 @@ const DossiersPage: React.FC = () => {
       try {
         const { data: { user }, error } = await supabase.auth.getUser();
         if (error) {
-          console.error('[DossiersPage] ❌ Erreur authentification:', error);
+          logger.error('[DossiersPage] ❌ Erreur authentification:', error);
         } else if (user) {
-          console.log('[DossiersPage] ✅ Utilisateur authentifié:', user.id);
+          logger.dev('[DossiersPage] ✅ Utilisateur authentifié:', user.id);
         } else {
-          console.log('[DossiersPage] ⚠️ Aucun utilisateur authentifié');
+          logger.dev('[DossiersPage] ⚠️ Aucun utilisateur authentifié');
         }
       } catch (err) {
-        console.error('[DossiersPage] ❌ Erreur lors de la vérification auth:', err);
+        logger.error('[DossiersPage] ❌ Erreur lors de la vérification auth:', err);
       }
     };
     
@@ -94,7 +95,7 @@ const DossiersPage: React.FC = () => {
   useEffect(() => {
     const loadInitialData = async () => {
       try {
-        console.log('[DossiersPage] 🔄 Chargement des données initiales...');
+        logger.dev('[DossiersPage] 🔄 Chargement des données initiales...');
         
         // Charger les classeurs
         const { data: classeursData, error: classeursError } = await supabase
@@ -105,12 +106,12 @@ const DossiersPage: React.FC = () => {
 
         if (classeursError) {
           if (process.env.NODE_ENV === 'development') {
-            console.error('[DossiersPage] ❌ Erreur chargement classeurs:', classeursError);
+            logger.error('[DossiersPage] ❌ Erreur chargement classeurs:', classeursError);
           }
         } else {
           if (process.env.NODE_ENV === 'development') {
-            console.log('[DossiersPage] ✅ Classeurs chargés:', classeursData?.length || 0);
-            console.log('[DossiersPage] 📋 Positions des classeurs:', classeursData?.map(c => ({ id: c.id, name: c.name, position: c.position })));
+            logger.dev('[DossiersPage] ✅ Classeurs chargés:', classeursData?.length || 0);
+            logger.dev('[DossiersPage] 📋 Positions des classeurs:', classeursData?.map(c => ({ id: c.id, name: c.name, position: c.position })));
           }
           // Ajouter au store Zustand
           classeursData?.forEach(classeur => {
@@ -122,7 +123,7 @@ const DossiersPage: React.FC = () => {
             const firstClasseur = classeursData[0];
             useFileSystemStore.getState().setActiveClasseurId(firstClasseur.id);
             if (process.env.NODE_ENV === 'development') {
-              console.log('[DossiersPage] 🎯 Premier classeur défini par défaut:', firstClasseur.name);
+              logger.dev('[DossiersPage] 🎯 Premier classeur défini par défaut:', firstClasseur.name);
             }
           }
         }
@@ -135,9 +136,9 @@ const DossiersPage: React.FC = () => {
           .order('created_at', { ascending: false });
 
         if (foldersError) {
-          console.error('[DossiersPage] ❌ Erreur chargement dossiers:', foldersError);
+          logger.error('[DossiersPage] ❌ Erreur chargement dossiers:', foldersError);
         } else {
-          console.log('[DossiersPage] ✅ Dossiers chargés:', foldersData?.length || 0);
+          logger.dev('[DossiersPage] ✅ Dossiers chargés:', foldersData?.length || 0);
           // Ajouter au store Zustand
           foldersData?.forEach(folder => {
             useFileSystemStore.getState().addFolder(folder);
@@ -152,18 +153,18 @@ const DossiersPage: React.FC = () => {
           .order('updated_at', { ascending: false });
 
         if (notesError) {
-          console.error('[DossiersPage] ❌ Erreur chargement notes:', notesError);
+          logger.error('[DossiersPage] ❌ Erreur chargement notes:', notesError);
         } else {
-          console.log('[DossiersPage] ✅ Notes chargées:', notesData?.length || 0);
+          logger.dev('[DossiersPage] ✅ Notes chargées:', notesData?.length || 0);
           // Ajouter au store Zustand
           notesData?.forEach(note => {
             useFileSystemStore.getState().addNote(note);
           });
         }
 
-        console.log('[DossiersPage] ✅ Données initiales chargées avec succès');
+        logger.dev('[DossiersPage] ✅ Données initiales chargées avec succès');
       } catch (error) {
-        console.error('[DossiersPage] ❌ Erreur lors du chargement initial:', error);
+        logger.error('[DossiersPage] ❌ Erreur lors du chargement initial:', error);
       }
     };
     
@@ -173,13 +174,13 @@ const DossiersPage: React.FC = () => {
   // ===== ACTIVATION DU POLLING TEMPS RÉEL =====
   React.useEffect(() => {
     if (process.env.NODE_ENV === 'development') {
-      console.log('[DossiersPage] 🔄 Activation du polling temps réel...');
+      logger.dev('[DossiersPage] 🔄 Activation du polling temps réel...');
     }
     
     const loadInitialData = async () => {
       try {
         if (process.env.NODE_ENV === 'development') {
-          console.log('[DossiersPage] 🔄 Rechargement des données...');
+          logger.dev('[DossiersPage] 🔄 Rechargement des données...');
         }
         
         // Charger les classeurs
@@ -191,11 +192,11 @@ const DossiersPage: React.FC = () => {
 
         if (classeursError) {
           if (process.env.NODE_ENV === 'development') {
-            console.error('[DossiersPage] ❌ Erreur chargement classeurs:', classeursError);
+            logger.error('[DossiersPage] ❌ Erreur chargement classeurs:', classeursError);
           }
         } else {
           if (process.env.NODE_ENV === 'development') {
-            console.log('[DossiersPage] ✅ Classeurs rechargés:', classeursData?.length || 0);
+            logger.dev('[DossiersPage] ✅ Classeurs rechargés:', classeursData?.length || 0);
           }
           // Réinitialiser et ajouter au store Zustand
           useFileSystemStore.getState().setClasseurs(classeursData || []);
@@ -210,11 +211,11 @@ const DossiersPage: React.FC = () => {
 
         if (foldersError) {
           if (process.env.NODE_ENV === 'development') {
-            console.error('[DossiersPage] ❌ Erreur chargement dossiers:', foldersError);
+            logger.error('[DossiersPage] ❌ Erreur chargement dossiers:', foldersError);
           }
         } else {
           if (process.env.NODE_ENV === 'development') {
-            console.log('[DossiersPage] ✅ Dossiers rechargés:', foldersData?.length || 0);
+            logger.dev('[DossiersPage] ✅ Dossiers rechargés:', foldersData?.length || 0);
           }
           // Réinitialiser et ajouter au store Zustand
           useFileSystemStore.getState().setFolders(foldersData || []);
@@ -229,36 +230,36 @@ const DossiersPage: React.FC = () => {
 
         if (notesError) {
           if (process.env.NODE_ENV === 'development') {
-            console.error('[DossiersPage] ❌ Erreur chargement notes:', notesError);
+            logger.error('[DossiersPage] ❌ Erreur chargement notes:', notesError);
           }
         } else {
           if (process.env.NODE_ENV === 'development') {
-            console.log('[DossiersPage] ✅ Notes rechargées:', notesData?.length || 0);
+            logger.dev('[DossiersPage] ✅ Notes rechargées:', notesData?.length || 0);
           }
           // Réinitialiser et ajouter au store Zustand
           useFileSystemStore.getState().setNotes(notesData || []);
         }
 
         if (process.env.NODE_ENV === 'development') {
-          console.log('[DossiersPage] ✅ Données rechargées avec succès');
+          logger.dev('[DossiersPage] ✅ Données rechargées avec succès');
         }
       } catch (error) {
         if (process.env.NODE_ENV === 'development') {
-          console.error('[DossiersPage] ❌ Erreur lors du rechargement:', error);
+          logger.error('[DossiersPage] ❌ Erreur lors du rechargement:', error);
         }
       }
     };
     
     const handleArticleChange = (event: ChangeEvent) => {
       if (process.env.NODE_ENV === 'development') {
-        console.log('[DossiersPage] 📡 Événement articles reçu:', event);
+        logger.dev('[DossiersPage] 📡 Événement articles reçu:', event);
       }
       
       switch (event.eventType) {
         case 'UPDATE':
           if (event.new) {
             if (process.env.NODE_ENV === 'development') {
-              console.log('[DossiersPage] 🔄 Mise à jour note:', event.new.source_title);
+              logger.dev('[DossiersPage] 🔄 Mise à jour note:', event.new.source_title);
             }
             useFileSystemStore.getState().updateNote(event.new.id, event.new);
           }
@@ -266,14 +267,14 @@ const DossiersPage: React.FC = () => {
         case 'INSERT':
           if (event.new) {
             if (process.env.NODE_ENV === 'development') {
-              console.log('[DossiersPage] ➕ Nouvelle note créée:', event.new.source_title);
+              logger.dev('[DossiersPage] ➕ Nouvelle note créée:', event.new.source_title);
             }
             useFileSystemStore.getState().addNote(event.new);
           }
           break;
         case 'DELETE':
           if (process.env.NODE_ENV === 'development') {
-            console.log('[DossiersPage] 🗑️ Note supprimée');
+            logger.dev('[DossiersPage] 🗑️ Note supprimée');
           }
           // Pour les DELETE, on ne peut pas identifier précisément quelle note a été supprimée
           // car l'élément n'existe plus dans la base. On peut soit :
@@ -287,14 +288,14 @@ const DossiersPage: React.FC = () => {
 
     const handleFolderChange = (event: ChangeEvent) => {
       if (process.env.NODE_ENV === 'development') {
-        console.log('[DossiersPage] 📡 Événement folders reçu:', event);
+        logger.dev('[DossiersPage] 📡 Événement folders reçu:', event);
       }
       
       switch (event.eventType) {
         case 'UPDATE':
           if (event.new) {
             if (process.env.NODE_ENV === 'development') {
-              console.log('[DossiersPage] 🔄 Mise à jour dossier:', event.new.name);
+              logger.dev('[DossiersPage] 🔄 Mise à jour dossier:', event.new.name);
             }
             useFileSystemStore.getState().updateFolder(event.new.id, event.new);
           }
@@ -302,14 +303,14 @@ const DossiersPage: React.FC = () => {
         case 'INSERT':
           if (event.new) {
             if (process.env.NODE_ENV === 'development') {
-              console.log('[DossiersPage] ➕ Nouveau dossier créé:', event.new.name);
+              logger.dev('[DossiersPage] ➕ Nouveau dossier créé:', event.new.name);
             }
             useFileSystemStore.getState().addFolder(event.new);
           }
           break;
         case 'DELETE':
           if (process.env.NODE_ENV === 'development') {
-            console.log('[DossiersPage] 🗑️ Dossier supprimé');
+            logger.dev('[DossiersPage] 🗑️ Dossier supprimé');
           }
           // Recharger les données pour les dossiers supprimés
           loadInitialData();
@@ -319,14 +320,14 @@ const DossiersPage: React.FC = () => {
 
     const handleClasseurChange = (event: ChangeEvent) => {
       if (process.env.NODE_ENV === 'development') {
-        console.log('[DossiersPage] 📡 Événement classeurs reçu:', event);
+        logger.dev('[DossiersPage] 📡 Événement classeurs reçu:', event);
       }
       
       switch (event.eventType) {
         case 'UPDATE':
           if (event.new) {
             if (process.env.NODE_ENV === 'development') {
-              console.log('[DossiersPage] 🔄 Mise à jour classeur:', event.new.name);
+              logger.dev('[DossiersPage] 🔄 Mise à jour classeur:', event.new.name);
             }
             useFileSystemStore.getState().updateClasseur(event.new.id, event.new);
           }
@@ -334,14 +335,14 @@ const DossiersPage: React.FC = () => {
         case 'INSERT':
           if (event.new) {
             if (process.env.NODE_ENV === 'development') {
-              console.log('[DossiersPage] ➕ Nouveau classeur créé:', event.new.name);
+              logger.dev('[DossiersPage] ➕ Nouveau classeur créé:', event.new.name);
             }
             useFileSystemStore.getState().addClasseur(event.new);
           }
           break;
         case 'DELETE':
           if (process.env.NODE_ENV === 'development') {
-            console.log('[DossiersPage] 🗑️ Classeur supprimé');
+            logger.dev('[DossiersPage] 🗑️ Classeur supprimé');
           }
           // Recharger les données pour les classeurs supprimés
           loadInitialData();
@@ -355,13 +356,13 @@ const DossiersPage: React.FC = () => {
     subscribe('classeurs', handleClasseurChange);
 
     if (process.env.NODE_ENV === 'development') {
-      console.log('[DossiersPage] ✅ Polling temps réel activé');
+      logger.dev('[DossiersPage] ✅ Polling temps réel activé');
     }
 
     // Nettoyage au démontage
     return () => {
       if (process.env.NODE_ENV === 'development') {
-        console.log('[DossiersPage] 🛑 Désactivation du polling temps réel...');
+        logger.dev('[DossiersPage] 🛑 Désactivation du polling temps réel...');
       }
       unsubscribe('articles', handleArticleChange);
       unsubscribe('folders', handleFolderChange);
@@ -374,7 +375,7 @@ const DossiersPage: React.FC = () => {
   const parentFolderId = folderPath.length > 0 ? folderPath[folderPath.length - 1] : undefined;
   
   // Debug: vérifier le calcul du parentFolderId
-  console.log('[DossiersPage] folderPath:', folderPath, 'parentFolderId:', parentFolderId);
+  logger.dev('[DossiersPage] folderPath:', folderPath, 'parentFolderId:', parentFolderId);
   
   const handleFolderOpen = useCallback((folder: { id: string }) => {
     setFolderPath(path => [...path, folder.id]);
@@ -461,7 +462,7 @@ const DossiersPage: React.FC = () => {
         toast.success("Classeur créé avec succès.");
       } catch (err: unknown) {
         toast.dismiss();
-        console.error("Erreur technique lors de la création du classeur:", err);
+        logger.error("Erreur technique lors de la création du classeur:", err);
         toast.error("Erreur lors de la création du classeur.");
       }
     }
@@ -475,7 +476,7 @@ const DossiersPage: React.FC = () => {
       toast.success("Classeur mis à jour avec succès.");
     } catch (error) {
       toast.dismiss();
-      console.error("Erreur lors de la mise à jour:", error);
+      logger.error("Erreur lors de la mise à jour:", error);
       toast.error("Erreur lors de la mise à jour du classeur.");
     }
   };
@@ -493,20 +494,20 @@ const DossiersPage: React.FC = () => {
       toast.success("Classeur supprimé avec succès.");
     } catch (error) {
       toast.dismiss();
-      console.error("Erreur lors de la suppression:", error);
+      logger.error("Erreur lors de la suppression:", error);
       toast.error("Erreur lors de la suppression du classeur.");
     }
   };
 
   const handleUpdateClasseurPositions = async (updatedClasseurs: { id: string; position: number }[]) => {
     try {
-      console.log('[DossiersPage] 🔄 Réorganisation classeurs avec API optimisée:', updatedClasseurs);
+      logger.dev('[DossiersPage] 🔄 Réorganisation classeurs avec API optimisée:', updatedClasseurs);
       const result = await optimizedApi.reorderClasseurs(updatedClasseurs);
-      console.log('[DossiersPage] ✅ Classeurs réorganisés avec API optimisée:', result);
+      logger.dev('[DossiersPage] ✅ Classeurs réorganisés avec API optimisée:', result);
       toast.success("Ordre des classeurs sauvegardé.");
       return result;
     } catch (error) {
-      console.error('[DossiersPage] ❌ Erreur réorganisation classeurs:', error);
+      logger.error('[DossiersPage] ❌ Erreur réorganisation classeurs:', error);
       toast.error("Erreur lors de la sauvegarde de l'ordre.");
       throw error;
     }

@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { useRealtime } from '@/hooks/useRealtime';
+import { simpleLogger as logger } from '@/utils/logger';
+import { RealtimeEvent, isNoteCreatedEvent, isNoteDeletedEvent, isNoteRenamedEvent } from '@/types/events';
 
 /**
  * FileSystemLiveView
@@ -18,28 +20,22 @@ export default function FileSystemLiveView({ token, debug = false }: { token: st
     wsUrl: process.env.NEXT_PUBLIC_WS_URL || '',
     token,
     debug,
-    onEvent: (event) => {
+    onEvent: (event: { type: string, payload: unknown, timestamp: number }) => {
       if (debug && process.env.NODE_ENV !== 'production') {
-        console.log('[WS EVENT]', event);
+        logger.dev('[WS EVENT]', event);
       }
-      switch (event.type) {
-        case 'note.created':
-          setNotes(prev => prev.some(n => n.id === event.payload.id)
-            ? prev
-            : [...prev, { id: event.payload.id, title: event.payload.title || event.payload.source_title || 'Nouvelle note' }]
-          );
-          break;
-        case 'note.deleted':
-          setNotes(prev => prev.filter(n => n.id !== event.payload.id));
-          break;
-        case 'note.renamed':
-          setNotes(prev => prev.map(n => n.id === event.payload.id ? { ...n, title: event.payload.title || event.payload.source_title || n.title } : n));
-          break;
-        // Ajoute d'autres cas si besoin
-        default:
-          // Ignorer les autres events
-          break;
+      
+      if (isNoteCreatedEvent(event)) {
+        setNotes(prev => prev.some(n => n.id === event.payload.id)
+          ? prev
+          : [...prev, { id: event.payload.id, title: event.payload.title || event.payload.source_title || 'Nouvelle note' }]
+        );
+      } else if (isNoteDeletedEvent(event)) {
+        setNotes(prev => prev.filter(n => n.id !== event.payload.id));
+      } else if (isNoteRenamedEvent(event)) {
+        setNotes(prev => prev.map(n => n.id === event.payload.id ? { ...n, title: event.payload.title || event.payload.source_title || n.title } : n));
       }
+      // Ignorer les autres events
     }
   });
 

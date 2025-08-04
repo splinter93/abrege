@@ -97,4 +97,16 @@ export interface Agent {
   is_active: boolean;
   created_at: string;
   updated_at: string;
+  // Nouvelles colonnes pour le système template
+  model: string;
+  max_tokens: number;
+  system_instructions?: string;
+  context_template?: string;
+  api_config: Record<string, any>;
+  personality?: string;
+  expertise?: string[];
+  capabilities: string[];
+  version: string;
+  is_default: boolean;
+  priority: number;
 } 

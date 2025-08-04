@@ -1,4 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
+import { simpleLogger as logger } from '@/utils/logger';
 
 const TABS = [
   { id: 'upload', label: 'Charger' },
@@ -134,7 +135,7 @@ const ImageMenu: React.FC<ImageMenuProps> = ({ open, onClose, onInsertImage, not
       
     } catch (err: unknown) {
       if (process.env.NODE_ENV !== 'production') {
-        console.error('Upload error:', err);
+        logger.error('Upload error:', err);
       }
       setError(err instanceof Error ? err.message : 'Erreur lors de l\'upload de l\'image');
     } finally {

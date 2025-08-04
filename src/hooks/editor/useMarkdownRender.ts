@@ -1,5 +1,6 @@
 import { useMemo, useRef, useState, useEffect } from 'react';
 import { createMarkdownIt } from '@/utils/markdownItConfig';
+import { simpleLogger as logger } from '@/utils/logger';
 
 interface UseMarkdownRenderProps {
   content: string;
@@ -35,7 +36,7 @@ export const useMarkdownRender = ({
         isRendering: false
       };
     } catch (error) {
-      console.error('Erreur de rendu Markdown (partiel, attendu):', error);
+      logger.error('Erreur de rendu Markdown (partiel, attendu):', error);
       // En cas d'erreur (ex: markdown partiel), on affiche le contenu brut
       // La prochaine mise à jour corrigera probablement le rendu.
       return {

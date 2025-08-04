@@ -3,6 +3,7 @@ import { clientPollingTrigger } from './clientPollingTrigger';
 import { ErrorHandler } from './errorHandler';
 import { logApi, logStore, logPolling } from '@/utils/logger';
 import { supabase } from '@/supabaseClient';
+import { simpleLogger as logger } from '@/utils/logger';
 
 // Types pour les données d'API
 interface CreateNoteData {
@@ -88,7 +89,7 @@ export class OptimizedApi {
       
       return headers;
     } catch (error) {
-      console.error('[OptimizedApi] ❌ Erreur récupération token:', error);
+      logger.error('[OptimizedApi] ❌ Erreur récupération token:', error);
       return { 'Content-Type': 'application/json' };
     }
   }
@@ -148,7 +149,7 @@ export class OptimizedApi {
    */
   async updateNote(noteId: string, updateData: UpdateNoteData) {
     if (process.env.NODE_ENV === 'development') {
-    console.log('[OptimizedApi] 🔄 Mise à jour note optimisée');
+    logger.dev('[OptimizedApi] 🔄 Mise à jour note optimisée');
     }
     const startTime = Date.now();
     
@@ -170,7 +171,7 @@ export class OptimizedApi {
       const result = await response.json();
       const apiTime = Date.now() - startTime;
       if (process.env.NODE_ENV === 'development') {
-      console.log(`[OptimizedApi] ✅ API terminée en ${apiTime}ms`);
+      logger.dev(`[OptimizedApi] ✅ API terminée en ${apiTime}ms`);
       }
 
       // 🚀 Mise à jour directe de Zustand (instantanée)
@@ -182,12 +183,12 @@ export class OptimizedApi {
       
       const totalTime = Date.now() - startTime;
       if (process.env.NODE_ENV === 'development') {
-      console.log(`[OptimizedApi] ✅ Note mise à jour dans Zustand + polling déclenché en ${totalTime}ms total`);
+      logger.dev(`[OptimizedApi] ✅ Note mise à jour dans Zustand + polling déclenché en ${totalTime}ms total`);
       }
       
       return result;
     } catch (error) {
-      console.error('[OptimizedApi] ❌ Erreur mise à jour note:', error);
+      logger.error('[OptimizedApi] ❌ Erreur mise à jour note:', error);
       throw error;
     }
   }
@@ -197,7 +198,7 @@ export class OptimizedApi {
    */
   async deleteNote(noteId: string) {
     if (process.env.NODE_ENV === 'development') {
-    console.log('[OptimizedApi] 🗑️ Suppression note optimisée');
+    logger.dev('[OptimizedApi] 🗑️ Suppression note optimisée');
     }
     const startTime = Date.now();
     
@@ -217,7 +218,7 @@ export class OptimizedApi {
 
       const apiTime = Date.now() - startTime;
       if (process.env.NODE_ENV === 'development') {
-      console.log(`[OptimizedApi] ✅ API terminée en ${apiTime}ms`);
+      logger.dev(`[OptimizedApi] ✅ API terminée en ${apiTime}ms`);
       }
 
       // 🚀 Mise à jour directe de Zustand (instantanée)
@@ -229,12 +230,12 @@ export class OptimizedApi {
       
       const totalTime = Date.now() - startTime;
       if (process.env.NODE_ENV === 'development') {
-      console.log(`[OptimizedApi] ✅ Note supprimée de Zustand + polling déclenché en ${totalTime}ms total`);
+      logger.dev(`[OptimizedApi] ✅ Note supprimée de Zustand + polling déclenché en ${totalTime}ms total`);
       }
       
       return { success: true };
     } catch (error) {
-      console.error('[OptimizedApi] ❌ Erreur suppression note:', error);
+      logger.error('[OptimizedApi] ❌ Erreur suppression note:', error);
       throw error;
     }
   }
@@ -244,7 +245,7 @@ export class OptimizedApi {
    */
   async createFolder(folderData: CreateFolderData) {
     if (process.env.NODE_ENV === 'development') {
-    console.log('[OptimizedApi] 📁 Création dossier optimisée');
+    logger.dev('[OptimizedApi] 📁 Création dossier optimisée');
     }
     const startTime = Date.now();
     
@@ -266,7 +267,7 @@ export class OptimizedApi {
       const result = await response.json();
       const apiTime = Date.now() - startTime;
       if (process.env.NODE_ENV === 'development') {
-      console.log(`[OptimizedApi] ✅ API terminée en ${apiTime}ms`);
+      logger.dev(`[OptimizedApi] ✅ API terminée en ${apiTime}ms`);
       }
 
       // 🚀 Mise à jour directe de Zustand (instantanée)
@@ -278,12 +279,12 @@ export class OptimizedApi {
       
       const totalTime = Date.now() - startTime;
       if (process.env.NODE_ENV === 'development') {
-      console.log(`[OptimizedApi] ✅ Dossier ajouté à Zustand + polling déclenché en ${totalTime}ms total`);
+      logger.dev(`[OptimizedApi] ✅ Dossier ajouté à Zustand + polling déclenché en ${totalTime}ms total`);
       }
       
       return result;
     } catch (error) {
-      console.error('[OptimizedApi] ❌ Erreur création dossier:', error);
+      logger.error('[OptimizedApi] ❌ Erreur création dossier:', error);
       throw error;
     }
   }
@@ -293,7 +294,7 @@ export class OptimizedApi {
    */
   async updateFolder(folderId: string, updateData: UpdateFolderData) {
     if (process.env.NODE_ENV === 'development') {
-    console.log('[OptimizedApi] 🔄 Mise à jour dossier optimisée');
+    logger.dev('[OptimizedApi] 🔄 Mise à jour dossier optimisée');
     }
     const startTime = Date.now();
     
@@ -315,7 +316,7 @@ export class OptimizedApi {
       const result = await response.json();
       const apiTime = Date.now() - startTime;
       if (process.env.NODE_ENV === 'development') {
-      console.log(`[OptimizedApi] ✅ API terminée en ${apiTime}ms`);
+      logger.dev(`[OptimizedApi] ✅ API terminée en ${apiTime}ms`);
       }
 
       // 🚀 Mise à jour directe de Zustand (instantanée)
@@ -327,12 +328,12 @@ export class OptimizedApi {
       
       const totalTime = Date.now() - startTime;
       if (process.env.NODE_ENV === 'development') {
-      console.log(`[OptimizedApi] ✅ Dossier mis à jour dans Zustand + polling déclenché en ${totalTime}ms total`);
+      logger.dev(`[OptimizedApi] ✅ Dossier mis à jour dans Zustand + polling déclenché en ${totalTime}ms total`);
       }
       
       return result;
     } catch (error) {
-      console.error('[OptimizedApi] ❌ Erreur mise à jour dossier:', error);
+      logger.error('[OptimizedApi] ❌ Erreur mise à jour dossier:', error);
       throw error;
     }
   }
@@ -342,7 +343,7 @@ export class OptimizedApi {
    */
   async deleteFolder(folderId: string) {
     if (process.env.NODE_ENV === 'development') {
-    console.log('[OptimizedApi] 🗑️ Suppression dossier optimisée');
+    logger.dev('[OptimizedApi] 🗑️ Suppression dossier optimisée');
     }
     const startTime = Date.now();
     
@@ -362,7 +363,7 @@ export class OptimizedApi {
 
       const apiTime = Date.now() - startTime;
       if (process.env.NODE_ENV === 'development') {
-      console.log(`[OptimizedApi] ✅ API terminée en ${apiTime}ms`);
+      logger.dev(`[OptimizedApi] ✅ API terminée en ${apiTime}ms`);
       }
 
       // 🚀 Mise à jour directe de Zustand (instantanée)
@@ -374,12 +375,12 @@ export class OptimizedApi {
       
       const totalTime = Date.now() - startTime;
       if (process.env.NODE_ENV === 'development') {
-      console.log(`[OptimizedApi] ✅ Dossier supprimé de Zustand + polling déclenché en ${totalTime}ms total`);
+      logger.dev(`[OptimizedApi] ✅ Dossier supprimé de Zustand + polling déclenché en ${totalTime}ms total`);
       }
       
       return { success: true };
     } catch (error) {
-      console.error('[OptimizedApi] ❌ Erreur suppression dossier:', error);
+      logger.error('[OptimizedApi] ❌ Erreur suppression dossier:', error);
       throw error;
     }
   }
@@ -389,7 +390,7 @@ export class OptimizedApi {
    */
   async moveNote(noteId: string, targetFolderId: string | null, targetClasseurId?: string) {
     if (process.env.NODE_ENV === 'development') {
-    console.log('[OptimizedApi] 📦 Déplacement note optimisée');
+    logger.dev('[OptimizedApi] 📦 Déplacement note optimisée');
     }
     const startTime = Date.now();
     
@@ -416,7 +417,7 @@ export class OptimizedApi {
       const result = await response.json();
       const apiTime = Date.now() - startTime;
       if (process.env.NODE_ENV === 'development') {
-      console.log(`[OptimizedApi] ✅ API terminée en ${apiTime}ms`);
+      logger.dev(`[OptimizedApi] ✅ API terminée en ${apiTime}ms`);
       }
 
       // 🚀 Mise à jour directe de Zustand (instantanée)
@@ -428,12 +429,12 @@ export class OptimizedApi {
       
       const totalTime = Date.now() - startTime;
       if (process.env.NODE_ENV === 'development') {
-      console.log(`[OptimizedApi] ✅ Note déplacée dans Zustand + polling déclenché en ${totalTime}ms total`);
+      logger.dev(`[OptimizedApi] ✅ Note déplacée dans Zustand + polling déclenché en ${totalTime}ms total`);
       }
       
       return result;
     } catch (error) {
-      console.error('[OptimizedApi] ❌ Erreur déplacement note:', error);
+      logger.error('[OptimizedApi] ❌ Erreur déplacement note:', error);
       throw error;
     }
   }
@@ -443,7 +444,7 @@ export class OptimizedApi {
    */
   async moveFolder(folderId: string, targetParentId: string | null, targetClasseurId?: string) {
     if (process.env.NODE_ENV === 'development') {
-    console.log('[OptimizedApi] 📦 Déplacement dossier optimisé');
+    logger.dev('[OptimizedApi] 📦 Déplacement dossier optimisé');
     }
     const startTime = Date.now();
     
@@ -470,7 +471,7 @@ export class OptimizedApi {
       const result = await response.json();
       const apiTime = Date.now() - startTime;
       if (process.env.NODE_ENV === 'development') {
-      console.log(`[OptimizedApi] ✅ API terminée en ${apiTime}ms`);
+      logger.dev(`[OptimizedApi] ✅ API terminée en ${apiTime}ms`);
       }
 
       // 🚀 Mise à jour directe de Zustand (instantanée)
@@ -482,12 +483,12 @@ export class OptimizedApi {
       
       const totalTime = Date.now() - startTime;
       if (process.env.NODE_ENV === 'development') {
-      console.log(`[OptimizedApi] ✅ Dossier déplacé dans Zustand + polling déclenché en ${totalTime}ms total`);
+      logger.dev(`[OptimizedApi] ✅ Dossier déplacé dans Zustand + polling déclenché en ${totalTime}ms total`);
       }
       
       return result;
     } catch (error) {
-      console.error('[OptimizedApi] ❌ Erreur déplacement dossier:', error);
+      logger.error('[OptimizedApi] ❌ Erreur déplacement dossier:', error);
       throw error;
     }
   }
@@ -497,7 +498,7 @@ export class OptimizedApi {
    */
   async createClasseur(classeurData: CreateClasseurData) {
     if (process.env.NODE_ENV === 'development') {
-    console.log('[OptimizedApi] 📚 Création classeur optimisée');
+    logger.dev('[OptimizedApi] 📚 Création classeur optimisée');
     }
     const startTime = Date.now();
     
@@ -514,29 +515,29 @@ export class OptimizedApi {
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error(`[OptimizedApi] ❌ Réponse API: ${response.status} ${response.statusText}`);
-        console.error(`[OptimizedApi] ❌ Contenu erreur: ${errorText}`);
+        logger.error(`[OptimizedApi] ❌ Réponse API: ${response.status} ${response.statusText}`);
+        logger.error(`[OptimizedApi] ❌ Contenu erreur: ${errorText}`);
         throw new Error(`Erreur création classeur: ${response.status} ${response.statusText} - ${errorText}`);
       }
 
       const result = await response.json();
       const apiTime = Date.now() - startTime;
       if (process.env.NODE_ENV === 'development') {
-      console.log(`[OptimizedApi] ✅ API terminée en ${apiTime}ms`);
-      console.log(`[OptimizedApi] 📋 Réponse API:`, result);
+      logger.dev(`[OptimizedApi] ✅ API terminée en ${apiTime}ms`);
+      logger.dev(`[OptimizedApi] 📋 Réponse API:`, result);
       }
 
       // 🚀 Mise à jour directe de Zustand (instantanée)
       try {
         const store = useFileSystemStore.getState();
         if (process.env.NODE_ENV === 'development') {
-        console.log(`[OptimizedApi] 🔄 Ajout classeur à Zustand:`, result.classeur);
+        logger.dev(`[OptimizedApi] 🔄 Ajout classeur à Zustand:`, result.classeur);
         }
         store.addClasseur(result.classeur);
       } catch (storeError) {
-        console.error('[OptimizedApi] ⚠️ Erreur accès store Zustand:', storeError);
+        logger.error('[OptimizedApi] ⚠️ Erreur accès store Zustand:', storeError);
         if (process.env.NODE_ENV === 'development') {
-        console.log('[OptimizedApi] ⚠️ Store non disponible, mise à jour différée');
+        logger.dev('[OptimizedApi] ⚠️ Store non disponible, mise à jour différée');
         }
       }
       
@@ -545,12 +546,12 @@ export class OptimizedApi {
       
       const totalTime = Date.now() - startTime;
       if (process.env.NODE_ENV === 'development') {
-      console.log(`[OptimizedApi] ✅ Classeur ajouté à Zustand + polling déclenché en ${totalTime}ms total`);
+      logger.dev(`[OptimizedApi] ✅ Classeur ajouté à Zustand + polling déclenché en ${totalTime}ms total`);
       }
       
       return result;
     } catch (error) {
-      console.error('[OptimizedApi] ❌ Erreur création classeur:', error);
+      logger.error('[OptimizedApi] ❌ Erreur création classeur:', error);
       throw error;
     }
   }
@@ -560,7 +561,7 @@ export class OptimizedApi {
    */
   async updateClasseur(classeurId: string, updateData: UpdateClasseurData) {
     if (process.env.NODE_ENV === 'development') {
-    console.log('[OptimizedApi] 🔄 Mise à jour classeur optimisée');
+    logger.dev('[OptimizedApi] 🔄 Mise à jour classeur optimisée');
     }
     const startTime = Date.now();
     
@@ -582,7 +583,7 @@ export class OptimizedApi {
       const result = await response.json();
       const apiTime = Date.now() - startTime;
       if (process.env.NODE_ENV === 'development') {
-      console.log(`[OptimizedApi] ✅ API terminée en ${apiTime}ms`);
+      logger.dev(`[OptimizedApi] ✅ API terminée en ${apiTime}ms`);
       }
 
       // 🚀 Mise à jour directe de Zustand (instantanée)
@@ -594,12 +595,12 @@ export class OptimizedApi {
       
       const totalTime = Date.now() - startTime;
       if (process.env.NODE_ENV === 'development') {
-      console.log(`[OptimizedApi] ✅ Classeur mis à jour dans Zustand + polling déclenché en ${totalTime}ms total`);
+      logger.dev(`[OptimizedApi] ✅ Classeur mis à jour dans Zustand + polling déclenché en ${totalTime}ms total`);
       }
       
       return result;
     } catch (error) {
-      console.error('[OptimizedApi] ❌ Erreur mise à jour classeur:', error);
+      logger.error('[OptimizedApi] ❌ Erreur mise à jour classeur:', error);
       throw error;
     }
   }
@@ -609,7 +610,7 @@ export class OptimizedApi {
    */
   async deleteClasseur(classeurId: string) {
     if (process.env.NODE_ENV === 'development') {
-    console.log('[OptimizedApi] 🗑️ Suppression classeur optimisée');
+    logger.dev('[OptimizedApi] 🗑️ Suppression classeur optimisée');
     }
     const startTime = Date.now();
     
@@ -629,7 +630,7 @@ export class OptimizedApi {
 
       const apiTime = Date.now() - startTime;
       if (process.env.NODE_ENV === 'development') {
-      console.log(`[OptimizedApi] ✅ API terminée en ${apiTime}ms`);
+      logger.dev(`[OptimizedApi] ✅ API terminée en ${apiTime}ms`);
       }
 
       // 🚀 Mise à jour directe de Zustand (instantanée)
@@ -641,12 +642,12 @@ export class OptimizedApi {
       
       const totalTime = Date.now() - startTime;
       if (process.env.NODE_ENV === 'development') {
-      console.log(`[OptimizedApi] ✅ Classeur supprimé de Zustand + polling déclenché en ${totalTime}ms total`);
+      logger.dev(`[OptimizedApi] ✅ Classeur supprimé de Zustand + polling déclenché en ${totalTime}ms total`);
       }
       
       return { success: true };
     } catch (error) {
-      console.error('[OptimizedApi] ❌ Erreur suppression classeur:', error);
+      logger.error('[OptimizedApi] ❌ Erreur suppression classeur:', error);
       throw error;
     }
   }
@@ -656,7 +657,7 @@ export class OptimizedApi {
    */
   async reorderClasseurs(updatedClasseurs: { id: string; position: number }[]) {
     if (process.env.NODE_ENV === 'development') {
-    console.log('[OptimizedApi] 🔄 Réorganisation classeurs optimisée');
+    logger.dev('[OptimizedApi] 🔄 Réorganisation classeurs optimisée');
     }
     const startTime = Date.now();
     
@@ -676,7 +677,7 @@ export class OptimizedApi {
       const result = await response.json();
       const apiTime = Date.now() - startTime;
       if (process.env.NODE_ENV === 'development') {
-      console.log(`[OptimizedApi] ✅ API terminée en ${apiTime}ms`);
+      logger.dev(`[OptimizedApi] ✅ API terminée en ${apiTime}ms`);
       }
 
       // 🚀 Mise à jour directe de Zustand (instantanée)
@@ -684,7 +685,7 @@ export class OptimizedApi {
       updatedClasseurs.forEach(({ id, position }) => {
         store.updateClasseur(id, { position });
         if (process.env.NODE_ENV === 'development') {
-          console.log(`[OptimizedApi] 📍 Position mise à jour pour classeur ${id}: ${position}`);
+          logger.dev(`[OptimizedApi] 📍 Position mise à jour pour classeur ${id}: ${position}`);
         }
       });
       
@@ -693,12 +694,12 @@ export class OptimizedApi {
       
       const totalTime = Date.now() - startTime;
       if (process.env.NODE_ENV === 'development') {
-      console.log(`[OptimizedApi] ✅ Classeurs réorganisés dans Zustand + polling déclenché en ${totalTime}ms total`);
+      logger.dev(`[OptimizedApi] ✅ Classeurs réorganisés dans Zustand + polling déclenché en ${totalTime}ms total`);
       }
       
       return result;
     } catch (error) {
-      console.error('[OptimizedApi] ❌ Erreur réorganisation classeurs:', error);
+      logger.error('[OptimizedApi] ❌ Erreur réorganisation classeurs:', error);
       throw error;
     }
   }

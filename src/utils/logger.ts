@@ -193,4 +193,24 @@ export const logStore = (operation: string, message: string, context?: LogContex
   logger.store(operation, message, context, ...args);
 
 export const logEditor = (operation: string, message: string, context?: LogContext, ...args: any[]) => 
-  logger.editor(operation, message, context, ...args); 
+  logger.editor(operation, message, context, ...args);
+
+// Fonction simplifiée pour le nettoyage des logs
+export const simpleLogger = {
+  dev: (message: string, ...args: any[]) => {
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`[DEV] ${message}`, ...args);
+    }
+  },
+  error: (message: string, error?: any) => {
+    console.error(`[ERROR] ${message}`, error);
+  },
+  warn: (message: string, ...args: any[]) => {
+    console.warn(`[WARN] ${message}`, ...args);
+  },
+  info: (message: string, ...args: any[]) => {
+    if (process.env.NODE_ENV === 'development') {
+      console.info(`[INFO] ${message}`, ...args);
+    }
+  }
+}; 

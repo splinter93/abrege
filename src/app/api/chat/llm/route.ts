@@ -2,13 +2,39 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { llmManager } from '@/services/llm';
 import { DeepSeekProvider } from '@/services/llm/providers';
+
 import type { AppContext, ChatMessage } from '@/services/llm/types';
+import { simpleLogger as logger } from '@/utils/logger';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+// Créer une version du service avec la clé de service
+const agentServiceWithServiceKey = {
+  getAgentById: async (id: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('agents')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (error) {
+        logger.error('Erreur lors de la récupération de l\'agent:', error);
+        return null;
+      }
+
+      return data;
+    } catch (error) {
+      logger.error('Erreur AgentService.getAgentById:', error);
+      return null;
+    }
+  }
+};
 
 export async function POST(request: NextRequest) {
+  logger.dev("[LLM API] 🚀 REQUÊTE REÇUE !");
   try {
     // Vérifier l'authentification
     const authHeader = request.headers.get('authorization');
@@ -19,16 +45,16 @@ export async function POST(request: NextRequest) {
       const { data: { user }, error: authError } = await supabase.auth.getUser(userToken);
       
       if (authError || !user) {
-        console.log("[LLM API] ❌ Token invalide ou expiré");
+        logger.dev("[LLM API] ❌ Token invalide ou expiré");
         return NextResponse.json(
           { error: 'Token invalide ou expiré' },
           { status: 401 }
         );
       }
       userId = user.id;
-      console.log("[LLM API] ✅ Utilisateur authentifié:", userId);
+      logger.dev("[LLM API] ✅ Utilisateur authentifié:", userId);
     } else {
-      console.log("[LLM API] ❌ Token d'authentification manquant");
+      logger.dev("[LLM API] ❌ Token d'authentification manquant");
       return NextResponse.json(
         { error: 'Authentification requise' },
         { status: 401 }
@@ -37,13 +63,50 @@ export async function POST(request: NextRequest) {
 
     const { message, context, history, provider, channelId: incomingChannelId } = await request.json();
     
-    console.log("[LLM API] 🚀 Début de la requête");
-    console.log("[LLM API] 👤 Utilisateur:", userId);
-    console.log("[LLM API] 📦 Body reçu:", { message, context, provider });
+    logger.dev("[LLM API] 🚀 Début de la requête");
+    logger.dev("[LLM API] 👤 Utilisateur:", userId);
+    logger.dev("[LLM API] 📦 Body reçu:", { message, context, provider });
 
-    // Changer de provider si spécifié
-    if (provider && provider !== llmManager.getCurrentProviderId()) {
-      llmManager.setProvider(provider);
+                    // Récupérer la configuration de l'agent si spécifiée
+                let agentConfig = null;
+                if (context?.agentId) {
+                  logger.dev("[LLM API] 🔍 Recherche agent avec ID:", context.agentId);
+                  agentConfig = await agentServiceWithServiceKey.getAgentById(context.agentId);
+                  logger.dev("[LLM API] 🤖 Configuration agent trouvée:", agentConfig?.name);
+                  if (agentConfig) {
+                                      if (agentConfig.system_instructions) {
+                    logger.dev("[LLM API] 📝 Instructions système (extrait):", agentConfig.system_instructions.substring(0, 200) + '...');
+                  }
+                  } else {
+                    logger.dev("[LLM API] ⚠️ Agent non trouvé pour l'ID:", context.agentId);
+                  }
+                } else {
+                  logger.dev("[LLM API] ⚠️ Aucun agentId fourni dans le contexte");
+                }
+
+    // Déterminer le provider à utiliser
+    let targetProvider = provider;
+    
+    // PRIORITÉ 1: Agent sélectionné (priorité absolue)
+    if (agentConfig && agentConfig.provider) {
+      targetProvider = agentConfig.provider;
+      logger.dev("[LLM API] 🎯 Agent sélectionné - Forcer provider:", agentConfig.provider, "pour l'agent:", agentConfig.name);
+    }
+    // PRIORITÉ 2: Provider manuel (menu kebab)
+    else if (provider) {
+      targetProvider = provider;
+      logger.dev("[LLM API] 🔧 Provider manuel sélectionné:", provider);
+    }
+    // PRIORITÉ 3: Provider par défaut
+    else {
+      targetProvider = 'synesia';
+      logger.dev("[LLM API] ⚙️ Utilisation du provider par défaut:", targetProvider);
+    }
+
+    // Changer de provider si nécessaire
+    if (targetProvider && targetProvider !== llmManager.getCurrentProviderId()) {
+      llmManager.setProvider(targetProvider);
+      logger.dev("[LLM API] 🔄 Provider changé vers:", targetProvider);
     }
 
     // Préparer le contexte par défaut si non fourni
@@ -59,20 +122,38 @@ export async function POST(request: NextRequest) {
       throw new Error('Aucun provider LLM disponible');
     }
 
+    logger.dev("[LLM API] 🚀 Provider utilisé:", currentProvider.id);
+
     // Vérifier si c'est DeepSeek pour le streaming
     if (currentProvider.id === 'deepseek') {
-      console.log("[LLM API] 🚀 Streaming avec DeepSeek");
+      logger.dev("[LLM API] 🚀 Streaming avec DeepSeek");
       
       // Créer un canal unique pour le streaming
       const channelId = incomingChannelId || `llm-stream-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-      console.log("[LLM API] 📡 Canal utilisé:", channelId);
+      logger.dev("[LLM API] 📡 Canal utilisé:", channelId);
       
-      // Préparer les messages pour DeepSeek
+      // Utiliser le provider avec configuration d'agent
       const deepseekProvider = new DeepSeekProvider();
+      logger.dev("[LLM API] 🔧 Configuration avant merge:", {
+        defaultModel: deepseekProvider.getDefaultConfig().model,
+        defaultInstructions: deepseekProvider.getDefaultConfig().system_instructions?.substring(0, 50) + '...'
+      });
+      
+      const config = deepseekProvider['mergeConfigWithAgent'](agentConfig || undefined);
+      logger.dev("[LLM API] 🔧 Configuration après merge:", {
+        model: config.model,
+        temperature: config.temperature,
+        instructions: config.system_instructions?.substring(0, 100) + '...'
+      });
+      
+      // Préparer les messages avec la configuration dynamique
+      const systemContent = deepseekProvider['formatContext'](appContext, config);
+      logger.dev("[LLM API] 📝 Contenu système préparé:", systemContent.substring(0, 200) + '...');
+      
       const messages = [
         {
           role: 'system' as const,
-          content: deepseekProvider.formatContext(appContext)
+          content: systemContent
         },
         ...history.map((msg: ChatMessage) => ({
           role: msg.role as 'user' | 'assistant' | 'system',
@@ -84,16 +165,19 @@ export async function POST(request: NextRequest) {
         }
       ];
 
-      // Appeler DeepSeek avec streaming
+      // Appeler DeepSeek avec streaming et configuration dynamique
       const payload = {
-        model: 'deepseek-chat',
+        model: config.model,
         messages,
         stream: true,
-        temperature: 0.7,
-        max_tokens: 4000
+        temperature: config.temperature,
+        max_tokens: config.max_tokens,
+        top_p: config.top_p
       };
 
-      console.log("[LLM API] 📤 Appel DeepSeek avec streaming");
+      logger.dev("[LLM API] 📤 Payload complet envoyé à DeepSeek:");
+      logger.dev(JSON.stringify(payload, null, 2));
+      logger.dev("[LLM API] 📤 Appel DeepSeek avec streaming");
 
       const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
         method: 'POST',
@@ -118,7 +202,7 @@ export async function POST(request: NextRequest) {
       const decoder = new TextDecoder();
       let fullResponse = '';
 
-      console.log("[LLM API] 📝 Début du streaming...");
+      logger.dev("[LLM API] 📝 Début du streaming...");
 
       try {
         while (true) {
@@ -152,12 +236,12 @@ export async function POST(request: NextRequest) {
                       }
                     });
                     
-                    console.log("[LLM API] 📝 Token broadcasté:", token);
+                    logger.dev("[LLM API] 📝 Token broadcasté:", token);
                   } catch (broadcastError) {
-                    console.error("[LLM API] ❌ Erreur broadcast token:", broadcastError);
+                    logger.error("[LLM API] ❌ Erreur broadcast token:", broadcastError);
                   }
                 } else if (data.choices && data.choices[0]?.finish_reason) {
-                  console.log("[LLM API] ✅ Streaming terminé");
+                  logger.dev("[LLM API] ✅ Streaming terminé");
                   
                   // Broadcaster la fin du stream
                   const sessionId = context?.sessionId || appContext.id;
@@ -171,19 +255,19 @@ export async function POST(request: NextRequest) {
                       }
                     });
                   } catch (broadcastError) {
-                    console.error("[LLM API] ❌ Erreur broadcast completion:", broadcastError);
+                    logger.error("[LLM API] ❌ Erreur broadcast completion:", broadcastError);
                   }
                   
                   break;
                 }
               } catch (e) {
-                console.warn("[LLM API] ⚠️ Erreur parsing SSE:", e);
+                logger.warn("[LLM API] ⚠️ Erreur parsing SSE:", e);
               }
             }
           }
         }
       } catch (streamError) {
-        console.error("[LLM API] ❌ Erreur streaming:", streamError);
+        logger.error("[LLM API] ❌ Erreur streaming:", streamError);
         
         // Essayer de broadcaster une erreur
         try {
@@ -197,13 +281,13 @@ export async function POST(request: NextRequest) {
             }
           });
         } catch (broadcastError) {
-          console.error("[LLM API] ❌ Erreur broadcast error:", broadcastError);
+          logger.error("[LLM API] ❌ Erreur broadcast error:", broadcastError);
         }
         
         throw streamError;
       }
 
-      console.log("[LLM API] ✅ Streaming terminé, réponse complète:", fullResponse);
+      logger.dev("[LLM API] ✅ Streaming terminé, réponse complète:", fullResponse);
 
       return NextResponse.json({
         channelId,
@@ -214,7 +298,7 @@ export async function POST(request: NextRequest) {
 
     } else {
       // Fallback pour les autres providers (Synesia)
-      console.log("[LLM API] 🚀 Appel non-streaming avec", currentProvider.name);
+      logger.dev("[LLM API] 🚀 Appel non-streaming avec", currentProvider.name);
       
       const response = await currentProvider.call(message, appContext, history);
       
@@ -226,7 +310,7 @@ export async function POST(request: NextRequest) {
     }
 
   } catch (error) {
-    console.error("[LLM API] ❌ Erreur:", error);
+    logger.error("[LLM API] ❌ Erreur:", error);
     return NextResponse.json(
       { error: "Erreur interne du serveur" },
       { status: 500 }

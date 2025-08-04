@@ -1,3 +1,4 @@
+import { simpleLogger as logger } from '@/utils/logger';
 interface WebSocketMessage {
   type: 'CHANGE' | 'PING' | 'PONG' | 'LLM_STREAM' | 'LLM_COMPLETE';
   table?: string;
@@ -52,7 +53,7 @@ class WebSocketService {
       this.ws = new WebSocket(`${this.url}?token=${this.token}`);
       
       this.ws.onopen = () => {
-        if (this.debug) console.log('🔌 WebSocket connecté');
+        if (this.debug) logger.dev('🔌 WebSocket connecté');
         this.reconnectAttempts = 0;
         this.startPing();
       };
@@ -62,24 +63,24 @@ class WebSocketService {
           const message: WebSocketMessage = JSON.parse(event.data);
           this.handleMessage(message);
         } catch (error) {
-          if (this.debug) console.error('❌ Erreur parsing message:', error);
+          if (this.debug) logger.error('❌ Erreur parsing message:', error);
           if (this.onError) this.onError(error);
         }
       };
 
       this.ws.onclose = () => {
-        if (this.debug) console.log('🔌 WebSocket déconnecté');
+        if (this.debug) logger.dev('🔌 WebSocket déconnecté');
         this.stopPing();
         this.scheduleReconnect();
       };
 
       this.ws.onerror = (error) => {
-        if (this.debug) console.error('❌ Erreur WebSocket:', error);
+        if (this.debug) logger.error('❌ Erreur WebSocket:', error);
         if (this.onError) this.onError(error);
       };
 
     } catch (error) {
-      if (this.debug) console.error('❌ Erreur connexion WebSocket:', error);
+      if (this.debug) logger.error('❌ Erreur connexion WebSocket:', error);
       if (this.onError) this.onError(error);
     }
   }
@@ -131,7 +132,7 @@ class WebSocketService {
         break;
       
       default:
-        if (this.debug) console.warn('⚠️ Message WebSocket inconnu:', message);
+        if (this.debug) logger.warn('⚠️ Message WebSocket inconnu:', message);
     }
   }
 
@@ -164,13 +165,13 @@ class WebSocketService {
       this.reconnectAttempts++;
       const delay = this.reconnectDelay * Math.pow(2, this.reconnectAttempts - 1);
       
-      if (this.debug) console.log(`🔄 Reconnexion dans ${delay}ms (tentative ${this.reconnectAttempts}/${this.maxReconnectAttempts})`);
+      if (this.debug) logger.dev(`🔄 Reconnexion dans ${delay}ms (tentative ${this.reconnectAttempts}/${this.maxReconnectAttempts})`);
       
       setTimeout(() => {
         this.connect();
       }, delay);
     } else {
-      if (this.debug) console.error('❌ Nombre maximum de tentatives de reconnexion atteint');
+      if (this.debug) logger.error('❌ Nombre maximum de tentatives de reconnexion atteint');
     }
   }
 
@@ -207,7 +208,7 @@ class WebSocketService {
         try {
           callback(event);
         } catch (error) {
-          if (this.debug) console.error('❌ Erreur dans listener:', error);
+          if (this.debug) logger.error('❌ Erreur dans listener:', error);
         }
       });
     }
@@ -217,7 +218,7 @@ class WebSocketService {
         try {
           callback({ type: `${table}.${event.eventType?.toLowerCase?.() || 'event'}`, payload: event.new || event.data, timestamp: event.timestamp });
         } catch (error) {
-          if (this.debug) console.error('❌ Erreur dans listener all:', error);
+          if (this.debug) logger.error('❌ Erreur dans listener all:', error);
         }
       });
     }

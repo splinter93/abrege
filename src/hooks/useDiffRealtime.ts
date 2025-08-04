@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useRealtime } from './useRealtime';
 import { Change } from 'diff';
+import { simpleLogger as logger } from '@/utils/logger';
 
 interface DiffState {
   isVisible: boolean;
@@ -36,7 +37,7 @@ export function useDiffRealtime(noteId: string, userId: string) {
   useEffect(() => {
     const handleNoteChange = (event: any) => {
       if (event.table === 'articles' && event.eventType === 'UPDATE' && event.diff) {
-        console.log('🎯 Diff détecté:', event.diff);
+        logger.dev('🎯 Diff détecté:', event.diff);
         
         setDiffState({
           isVisible: true,

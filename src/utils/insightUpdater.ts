@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { extractTOCWithSlugs } from './markdownTOC';
+import { simpleLogger as logger } from '@/utils/logger';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -19,7 +20,7 @@ export async function updateArticleInsight(noteId: string): Promise<void> {
       .single();
 
     if (error || !note) {
-      console.error('Erreur lors de la récupération de la note:', error);
+      logger.error('Erreur lors de la récupération de la note:', error);
       return;
     }
 
@@ -44,12 +45,12 @@ export async function updateArticleInsight(noteId: string): Promise<void> {
       .eq('id', noteId);
 
     if (updateError) {
-      console.error('Erreur lors de la mise à jour de insight:', updateError);
+      logger.error('Erreur lors de la mise à jour de insight:', updateError);
     } else {
-      console.log(`Insight mis à jour pour la note ${noteId}`);
+      logger.dev(`Insight mis à jour pour la note ${noteId}`);
     }
   } catch (error) {
-    console.error('Erreur dans updateArticleInsight:', error);
+    logger.error('Erreur dans updateArticleInsight:', error);
   }
 }
 
@@ -65,18 +66,18 @@ export async function updateAllUserInsights(userId: string): Promise<void> {
       .eq('user_id', userId);
 
     if (error) {
-      console.error('Erreur lors de la récupération des notes:', error);
+      logger.error('Erreur lors de la récupération des notes:', error);
       return;
     }
 
-    console.log(`Mise à jour de l'insight pour ${notes.length} notes...`);
+    logger.dev(`Mise à jour de l'insight pour ${notes.length} notes...`);
     
     for (const note of notes) {
       await updateArticleInsight(note.id);
     }
 
-    console.log('Mise à jour terminée');
+    logger.dev('Mise à jour terminée');
   } catch (error) {
-    console.error('Erreur dans updateAllUserInsights:', error);
+    logger.error('Erreur dans updateAllUserInsights:', error);
   }
 } 

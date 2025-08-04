@@ -1,4 +1,5 @@
 'use client';
+import { simpleLogger as logger } from '@/utils/logger';
 
 import React, { useRef, useEffect, useState } from 'react';
 import { useChatStore, type ChatMessage } from '@/store/useChatStore';
@@ -118,7 +119,7 @@ const ChatWidget: React.FC = () => {
       
       await addMessage(assistantMessage);
     } catch (error) {
-      console.error('Erreur lors de l\'appel à Synesia:', error);
+      logger.error('Erreur lors de l\'appel à Synesia:', error);
       
       const errorMessage: ChatMessage = {
         id: `assistant-${Date.now()}`,
@@ -141,7 +142,7 @@ const ChatWidget: React.FC = () => {
     const session = sessions.find(s => s.id === sessionId);
     if (session) {
       setCurrentSession(session);
-      console.log('[Chat Widget] ✅ Session changée vers:', session.name);
+      logger.dev('[Chat Widget] ✅ Session changée vers:', session.name);
     }
   };
 

@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { simpleLogger as logger } from '@/utils/logger';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -56,7 +57,7 @@ export async function authenticateUser(req: NextRequest): Promise<AuthResult> {
     };
 
   } catch (error) {
-    console.error('Erreur d\'authentification:', error);
+    logger.error('Erreur d\'authentification:', error);
     return { user: null, error: 'Erreur d\'authentification' };
   }
 }
@@ -77,15 +78,16 @@ export async function getCurrentUser(req: NextRequest): Promise<AuthenticatedUse
 /**
  * Middleware pour les endpoints protégés
  */
-export function withAuth(handler: (req: NextRequest, user: AuthenticatedUser, params?: any) => Promise<Response>) {
-  return async (req: NextRequest, params?: any): Promise<Response> => {
+export function withAuth(handler: (req: NextRequest, user: AuthenticatedUser, params?: Record<string, string>) => Promise<Response>) {
+  return async (req: NextRequest, params?: Record<string, string>): Promise<Response> => {
     try {
       const user = await getCurrentUser(req);
       return await handler(req, user, params);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Authentification requise';
       return new Response(
         JSON.stringify({ 
-          error: error.message || 'Authentification requise',
+          error: errorMessage,
           code: 'AUTH_REQUIRED'
         }), 
         { status: 401 }

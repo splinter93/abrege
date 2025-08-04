@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { simpleLogger as logger } from '@/utils/logger';
 
 interface LLMStore {
   currentProvider: string;
@@ -16,7 +17,7 @@ export const useLLMStore = create<LLMStore>()(
       
       setProvider: (providerId: string) => {
         set({ currentProvider: providerId });
-        console.log(`[LLM Store] 🔄 Provider changé: ${providerId}`);
+        logger.dev(`[LLM Store] 🔄 Provider changé: ${providerId}`);
       },
       
       getCurrentProvider: () => {

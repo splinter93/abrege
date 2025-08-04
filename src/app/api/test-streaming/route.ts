@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { simpleLogger as logger } from '@/utils/logger';
 
 export async function POST(request: NextRequest) {
   try {
     const { message } = await request.json();
     
-    console.log("[Test Streaming] 🚀 Début test DeepSeek");
+    logger.dev("[Test Streaming] 🚀 Début test DeepSeek");
     
     const payload = {
       model: 'deepseek-chat',
@@ -23,7 +24,7 @@ export async function POST(request: NextRequest) {
       max_tokens: 100
     };
 
-    console.log("[Test Streaming] 📤 Appel DeepSeek avec streaming");
+    logger.dev("[Test Streaming] 📤 Appel DeepSeek avec streaming");
 
     const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
       method: 'POST',
@@ -49,7 +50,7 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error("[Test Streaming] ❌ Erreur:", error);
+    logger.error("[Test Streaming] ❌ Erreur:", error);
     return NextResponse.json(
       { error: "Erreur interne du serveur" },
       { status: 500 }

@@ -1,4 +1,5 @@
 'use client';
+import { simpleLogger as logger } from '@/utils/logger';
 
 import React, { useEffect, useState } from 'react';
 import { useChatStore } from '@/store/useChatStore';
@@ -28,9 +29,13 @@ const ChatFullscreenV2: React.FC = () => {
   const {
     sessions,
     currentSession,
+    selectedAgent,
+    selectedAgentId,
     loading,
     error,
     setCurrentSession,
+    setSelectedAgent,
+    setSelectedAgentId,
     setError,
     setLoading,
     syncSessions,
@@ -79,6 +84,49 @@ const ChatFullscreenV2: React.FC = () => {
     syncSessions();
   }, [syncSessions]);
 
+  // Log de l'état du store
+  useEffect(() => {
+    logger.dev('[ChatFullscreenV2] 📊 État du store:', {
+      selectedAgent: selectedAgent ? {
+        id: selectedAgent.id,
+        name: selectedAgent.name,
+        model: selectedAgent.model,
+        provider: selectedAgent.provider
+      } : null,
+      selectedAgentId,
+      currentSession: currentSession?.id,
+      sessionsCount: sessions.length
+    });
+  }, [selectedAgent, selectedAgentId, currentSession, sessions.length]);
+
+  // Restaurer l'agent sélectionné au montage
+  useEffect(() => {
+    const restoreSelectedAgent = async () => {
+      if (selectedAgentId && !selectedAgent) {
+        try {
+          logger.dev('[ChatFullscreenV2] 🔄 Restauration agent avec ID:', selectedAgentId);
+          // Récupérer l'agent depuis la DB
+          const { data: agent, error } = await supabase
+            .from('agents')
+            .select('*')
+            .eq('id', selectedAgentId)
+            .single();
+          if (agent) {
+            setSelectedAgent(agent);
+            logger.dev('[ChatFullscreenV2] ✅ Agent restauré:', agent.name);
+          } else {
+            logger.dev('[ChatFullscreenV2] ⚠️ Agent non trouvé, suppression de l\'ID');
+            setSelectedAgentId(null);
+          }
+        } catch (error) {
+          logger.error('[ChatFullscreenV2] ❌ Erreur restauration agent:', error);
+        }
+      }
+    };
+    
+    restoreSelectedAgent();
+  }, [selectedAgentId, selectedAgent, setSelectedAgent]);
+
   // Scroll initial après chargement des sessions
   useEffect(() => {
     if (sessions.length > 0 && currentSession?.thread && currentSession.thread.length > 0) {
@@ -123,7 +171,7 @@ const ChatFullscreenV2: React.FC = () => {
   // Scroll intelligent pendant le streaming
   useEffect(() => {
     if (isStreaming && streamingContent) {
-      console.log('[ChatFullscreenV2] 📝 Streaming content:', streamingContent.length, 'chars');
+      logger.dev('[ChatFullscreenV2] 📝 Streaming content:', streamingContent.length, 'chars');
       // Scroll seulement si l'utilisateur est près du bas
       if (isNearBottom) {
         scrollToBottom();
@@ -162,8 +210,23 @@ const ChatFullscreenV2: React.FC = () => {
       // Préparer le contexte pour l'API LLM
       const contextWithSessionId = {
         ...appContext,
-        sessionId: currentSession.id
+        sessionId: currentSession.id,
+        agentId: selectedAgent?.id // Ajouter l'ID de l'agent sélectionné
       };
+
+      logger.dev('[ChatFullscreenV2] 🎯 Contexte préparé:', {
+        sessionId: currentSession.id,
+        agentId: selectedAgent?.id,
+        agentName: selectedAgent?.name,
+        agentModel: selectedAgent?.model,
+        agentProvider: selectedAgent?.provider,
+        agentInstructions: selectedAgent?.system_instructions ? '✅ Présentes' : '❌ Manquantes',
+        agentTemperature: selectedAgent?.temperature,
+        agentMaxTokens: selectedAgent?.max_tokens
+      });
+      if (selectedAgent?.system_instructions) {
+        logger.dev('[ChatFullscreenV2] 📝 Instructions système (extrait):', selectedAgent.system_instructions.substring(0, 100) + '...');
+      }
 
       // Limiter l'historique selon la configuration
       const limitedHistory = currentSession.thread.slice(-currentSession.history_limit);
@@ -172,7 +235,7 @@ const ChatFullscreenV2: React.FC = () => {
       const channelId = `llm-stream-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
       
       // Démarrer le streaming
-      console.log('[ChatFullscreenV2] 🚀 Démarrage streaming avec channelId:', channelId);
+      logger.dev('[ChatFullscreenV2] 🚀 Démarrage streaming avec channelId:', channelId);
       startStreaming(channelId, currentSession.id);
 
       // Appeler l'API LLM
@@ -209,7 +272,7 @@ const ChatFullscreenV2: React.FC = () => {
       }
 
     } catch (error) {
-      console.error('Erreur lors de l\'appel LLM:', error);
+      logger.error('Erreur lors de l\'appel LLM:', error);
       
       const errorMessage = {
         role: 'assistant' as const,
@@ -229,7 +292,7 @@ const ChatFullscreenV2: React.FC = () => {
     try {
       await updateSession(currentSession.id, { history_limit: newLimit });
     } catch (error) {
-      console.error('[ChatFullscreenV2] ❌ Erreur mise à jour history_limit:', error);
+      logger.error('[ChatFullscreenV2] ❌ Erreur mise à jour history_limit:', error);
       setError('Erreur lors de la mise à jour de la limite d\'historique');
     }
   };
@@ -248,6 +311,13 @@ const ChatFullscreenV2: React.FC = () => {
             <h2 className="chat-session-name">
               {currentSession?.name || 'Nouvelle conversation'}
             </h2>
+            {selectedAgent && (
+              <div className="chat-agent-indicator">
+                <span className="agent-indicator-icon">{selectedAgent.profile_picture || '🤖'}</span>
+                <span className="agent-indicator-name">{selectedAgent.name}</span>
+                <span className="agent-indicator-model">({selectedAgent.model})</span>
+              </div>
+            )}
           </div>
         </div>
 
@@ -305,7 +375,7 @@ const ChatFullscreenV2: React.FC = () => {
               {/* Message en cours de streaming */}
               {isStreaming && streamingContent && (
                 <>
-                  {console.log('[ChatFullscreenV2] 🎯 Affichage message streaming:', streamingContent.length, 'chars')}
+                  {logger.dev('[ChatFullscreenV2] 🎯 Affichage message streaming:', streamingContent.length, 'chars')}
                   <ChatMessage
                     content={streamingContent}
                     role="assistant"
