@@ -2,9 +2,10 @@
 
 import React, { useState } from 'react';
 import { useChatStore, type ChatSession } from '../../store/useChatStore';
-import { chatPollingService } from '@/services/chatPollingService';
+import { useSessionSync } from '../../hooks/useSessionSync';
+import { chatPollingService } from '../../services/chatPollingService';
 import RenameInput from '../RenameInput';
-import './ChatSidebar.css';
+import './chat.css';
 
 interface ChatSidebarProps {
   isOpen: boolean;
@@ -18,11 +19,12 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({ isOpen, onClose }) => {
     sessions,
     currentSession,
     setCurrentSession,
-    createSession,
     deleteSession,
     closeWidget,
     syncSessions
   } = useChatStore();
+
+  const { createSession } = useSessionSync();
 
   // Debug: afficher le nombre de sessions
   console.log('[ChatSidebar] 📊 Sessions dans le store:', sessions.length);
@@ -289,7 +291,7 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({ isOpen, onClose }) => {
                     {renamingSessionId === session.id ? (
                       <RenameInput
                         initialValue={session.name}
-                        onSubmit={(newName) => handleRenameSession(session.id, newName)}
+                        onSubmit={(newName: string) => handleRenameSession(session.id, newName)}
                         onCancel={handleCancelRename}
                         autoFocus={true}
                       />
