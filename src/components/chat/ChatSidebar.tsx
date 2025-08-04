@@ -20,7 +20,8 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({ isOpen, onClose }) => {
     setCurrentSession,
     createSession,
     deleteSession,
-    closeWidget
+    closeWidget,
+    syncSessions
   } = useChatStore();
 
   // Debug: afficher le nombre de sessions
@@ -50,6 +51,11 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({ isOpen, onClose }) => {
       }
       
       console.log('[ChatSidebar] ✅ Session créée en DB:', result.session);
+      
+      // Forcer la synchronisation pour rafraîchir la sidebar
+      console.log('[ChatSidebar] 🔄 Synchronisation des sessions...');
+      await syncSessions();
+      console.log('[ChatSidebar] ✅ Sessions synchronisées');
     } catch (error) {
       console.error('[ChatSidebar] ❌ Erreur dans handleNewChat:', error);
     }
