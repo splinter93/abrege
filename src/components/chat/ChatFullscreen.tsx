@@ -280,16 +280,6 @@ const ChatFullscreen: React.FC = () => {
       {/* Header */}
       <div className="chat-header">
         <div className="chat-header-left">
-          <button
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="sidebar-toggle-btn"
-            aria-label={sidebarOpen ? "Fermer les conversations" : "Ouvrir les conversations"}
-            title={sidebarOpen ? "Fermer les conversations" : "Ouvrir les conversations"}
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="3" x2="9" y2="21"></line>
-            </svg>
-          </button>
           <div className="chat-title">
             <img src="/logo scrivia white.png" alt="Scrivia" className="chat-logo" />
           </div>
@@ -322,6 +312,20 @@ const ChatFullscreen: React.FC = () => {
 
         {/* Container principal */}
         <div className="chat-content">
+          {/* Bouton sidebar quand fermée */}
+          {!sidebarOpen && (
+            <button
+              onClick={() => setSidebarOpen(true)}
+              className="sidebar-toggle-btn-floating"
+              aria-label="Ouvrir les conversations"
+              title="Ouvrir les conversations"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="3" x2="9" y2="21"></line>
+              </svg>
+            </button>
+          )}
+          
           {/* Messages */}
           <div className="chat-messages-container">
             <div className="chat-message-list">

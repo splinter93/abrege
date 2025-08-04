@@ -85,6 +85,35 @@
 }
 
 /* ========================================
+   BOUTON SIDEBAR FLOTTANT
+   ======================================== */
+
+.sidebar-toggle-btn-floating {
+  position: absolute;
+  top: var(--chat-spacing-lg);
+  left: var(--chat-spacing-lg);
+  z-index: var(--chat-z-sidebar);
+  background: var(--chat-bg-secondary);
+  border: 1px solid var(--chat-border-primary);
+  border-radius: var(--chat-radius-lg);
+  color: var(--chat-text-secondary);
+  cursor: pointer;
+  padding: var(--chat-spacing-md);
+  transition: all var(--chat-transition-normal);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--chat-shadow-md);
+}
+
+.sidebar-toggle-btn-floating:hover {
+  background: var(--chat-bg-tertiary);
+  color: var(--chat-text-primary);
+  border-color: var(--chat-border-focus);
+  box-shadow: var(--chat-shadow-lg);
+}
+
+/* ========================================
    AJUSTEMENT QUAND LA SIDEBAR EST OUVERTE
    ======================================== */
 
