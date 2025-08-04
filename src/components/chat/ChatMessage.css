@@ -45,7 +45,7 @@
 
 .chat-markdown {
   font-size: 14px;
-  line-height: 1.7;
+  line-height: 2;
   color: #ececf1;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
@@ -102,7 +102,7 @@
 /* Paragraphes */
 .chat-markdown p {
   margin: 0 0 16px 0;
-  line-height: 1.7;
+  line-height: 2;
 }
 
 .chat-markdown p:last-child {
@@ -114,12 +114,12 @@
 .chat-markdown ol {
   margin: 16px 0;
   padding-left: 24px;
-  line-height: 1.7;
+  line-height: 2;
 }
 
 .chat-markdown li {
   margin: 4px 0;
-  line-height: 1.7;
+  line-height: 2;
 }
 
 .chat-markdown ul ul,
