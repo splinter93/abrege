@@ -33,7 +33,8 @@ const ChatFullscreen: React.FC = () => {
     setCurrentSession,
     setError,
     setLoading,
-    syncSessions
+    syncSessions,
+    updateSession
   } = useChatStore();
 
   // Hook pour synchroniser les sessions
@@ -212,6 +213,12 @@ const ChatFullscreen: React.FC = () => {
       // Récupérer le provider actuel
       const currentProvider = useLLMStore.getState().getCurrentProvider();
       
+      // Limiter l'historique selon history_limit
+      const historyLimit = updatedCurrentSession.history_limit || 10;
+      const limitedHistory = updatedCurrentSession.thread.slice(-historyLimit);
+      
+      console.log(`[ChatFullscreen] 📊 Historique limité: ${limitedHistory.length}/${updatedCurrentSession.thread.length} (limite: ${historyLimit})`);
+      
       // Créer un message assistant temporaire pour le streaming
       const assistantMessage: ChatMessage = {
         id: `assistant-${Date.now()}`,
@@ -292,7 +299,7 @@ const ChatFullscreen: React.FC = () => {
         body: JSON.stringify({
           message,
           context: contextWithSessionId,
-          history: updatedCurrentSession.thread,
+          history: limitedHistory,
           provider: currentProvider,
           channelId: clientChannelId
         }),
@@ -331,6 +338,25 @@ const ChatFullscreen: React.FC = () => {
       await addMessage(errorMessage);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleHistoryLimitChange = async (newLimit: number) => {
+    if (!currentSession) return;
+    
+    try {
+      console.log(`[ChatFullscreen] 🔄 Mise à jour history_limit: ${newLimit}`);
+      
+      // Mettre à jour dans le store
+      await updateSession(currentSession.id, { history_limit: newLimit });
+      
+      // Synchroniser les sessions pour refléter le changement
+      await syncSessions();
+      
+      console.log(`[ChatFullscreen] ✅ History limit mis à jour: ${newLimit}`);
+    } catch (error) {
+      console.error('[ChatFullscreen] ❌ Erreur mise à jour history_limit:', error);
+      setError('Erreur lors de la mise à jour de la limite d\'historique');
     }
   };
 
@@ -385,7 +411,7 @@ const ChatFullscreen: React.FC = () => {
             historyLimit={currentSession?.history_limit || 10}
             onToggleWideMode={() => setWideMode(!wideMode)}
             onToggleFullscreen={() => {}}
-            onHistoryLimitChange={() => {}}
+            onHistoryLimitChange={handleHistoryLimitChange}
           />
         </div>
       </div>
