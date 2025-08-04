@@ -266,6 +266,15 @@ const ChatFullscreen: React.FC = () => {
                   : msg
               );
               store.setCurrentSession({ ...sess, thread: updatedThread });
+              
+              // 💾 Sauvegarder le message final en DB
+              const finalMessage = {
+                role: 'assistant' as const,
+                content: fullResponse,
+                timestamp: new Date().toISOString()
+              };
+              await addMessage(finalMessage);
+              console.log('[ChatFullscreen] 💾 Message assistant sauvegardé en DB');
             }
             streamingContextRef.current = null;
           }
