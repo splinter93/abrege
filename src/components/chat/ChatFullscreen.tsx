@@ -19,6 +19,7 @@ const ChatFullscreen: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [pendingMessage, setPendingMessage] = useState<string | null>(null);
   const [streamingChannel, setStreamingChannel] = useState<any>(null);
+  const streamingContextRef = useRef<{ sessionId: string; messageId: string } | null>(null);
   const [streamingMessageId, setStreamingMessageId] = useState<string | null>(null);
   
   // Récupérer le contexte de l'app
@@ -110,17 +111,17 @@ const ChatFullscreen: React.FC = () => {
   };
 
   // Fonction pour finaliser le message streaming
-  const finalizeStreamingMessage = () => {
+  const finalizeStreamingMessage = (finalContent?: string) => {
     if (!streamingMessageId) return;
 
     const store = useChatStore.getState();
     const currentSessionFromStore = store.currentSession;
-    
     if (currentSessionFromStore) {
       const updatedThread = currentSessionFromStore.thread.map(msg => {
         if (msg.id === streamingMessageId) {
           return {
             ...msg,
+            content: finalContent !== undefined ? finalContent : msg.content,
             isStreaming: false
           };
         }
@@ -131,90 +132,74 @@ const ChatFullscreen: React.FC = () => {
         ...currentSessionFromStore,
         thread: updatedThread
       };
-      
       store.setCurrentSession(updatedSession);
-      console.log('[ChatFullscreen] ✅ Message streaming finalisé');
-      
-      // Sauvegarder le message en DB
-      const streamingMessage = updatedThread.find(msg => msg.id === streamingMessageId);
-      if (streamingMessage) {
-        addMessage(streamingMessage);
-      }
-      
-      setStreamingMessageId(null);
     }
+
+    setStreamingMessageId(null);
+    setStreamingChannel(null); // Important to unsubscribe
+    console.log('[ChatFullscreen] ✅ Streaming finalisé, message mis à jour');
   };
 
   const handleSendMessage = async (message: string) => {
-    if (!message.trim()) return;
-
-    // Créer une session si elle n'existe pas
-    if (!currentSession) {
-      setPendingMessage(message);
-      await createSession();
-      return;
-    }
-
-    const userMessage: ChatMessage = {
-      id: `user-${Date.now()}`,
-      role: 'user',
-      content: message,
-      timestamp: new Date().toISOString()
-    };
-
-    // Ajouter le message utilisateur IMMÉDIATEMENT dans l'UI
-    const { setCurrentSession } = useChatStore.getState();
-    if (currentSession) {
-      const updatedSession = {
-        ...currentSession,
-        thread: [...currentSession.thread, userMessage]
-      };
-      setCurrentSession(updatedSession);
-      console.log('[ChatFullscreen] ✅ Message utilisateur ajouté immédiatement');
-    }
-
-    // Ajouter le message en DB et attendre qu'il soit sauvegardé
-    console.log('[ChatFullscreen] 🔍 Session ID:', currentSession?.id);
-    await addMessage(userMessage);
+    if (!message.trim() || loading) return;
     
-    // Attendre un peu que le message soit bien en DB
-    console.log('[ChatFullscreen] ⏳ Attente sauvegarde message...');
-    await new Promise(resolve => setTimeout(resolve, 200));
+    setLoading(true);
     
-    // Recharger les sessions depuis la DB
-    console.log('[ChatFullscreen] 🔄 Rechargement des sessions depuis DB...');
-    console.log('[ChatFullscreen] 📊 Thread avant sync:', currentSession?.thread.length, 'messages');
-    const { syncSessions } = useChatStore.getState();
-    await syncSessions();
-    
-    // Mettre à jour la session courante avec les nouvelles données
-    const store = useChatStore.getState();
-    const updatedSessions = store.sessions;
-    console.log('[ChatFullscreen] 🔍 Session courante ID:', currentSession?.id);
-    console.log('[ChatFullscreen] 🔍 Sessions disponibles:', updatedSessions.map(s => s.id));
-    
-    const updatedCurrentSession = updatedSessions.find(s => s.id === currentSession?.id);
-    if (updatedCurrentSession) {
-      store.setCurrentSession(updatedCurrentSession);
-      console.log('[ChatFullscreen] ✅ Session courante mise à jour');
-    } else {
-      console.log('[ChatFullscreen] ⚠️ Session courante non trouvée dans les sessions mises à jour');
-    }
-    
-    console.log('[ChatFullscreen] 📊 Thread après sync:', useChatStore.getState().currentSession?.thread.length, 'messages');
-
-    // Appeler le LLM avec streaming
     try {
-      setLoading(true);
+      // Vérifier si on a une session courante
+      if (!currentSession) {
+        console.log('[ChatFullscreen] ⚠️ Pas de session courante, création...');
+        const newSession = await createSession();
+        if (!newSession) {
+          throw new Error('Impossible de créer une nouvelle session');
+        }
+        console.log('[ChatFullscreen] ✅ Nouvelle session créée:', newSession);
+      }
       
-      // Préparer le contexte
+      // Récupérer la session courante mise à jour
+      const store = useChatStore.getState();
+      const updatedCurrentSession = store.currentSession;
+      
+      if (!updatedCurrentSession) {
+        throw new Error('Aucune session disponible');
+      }
+      
+      console.log('[ChatFullscreen] 🎯 Session courante pour envoi:', updatedCurrentSession);
+      
+      // Créer le message utilisateur
+      const userMessage: ChatMessage = {
+        id: `user-${Date.now()}`,
+        role: 'user',
+        content: message,
+        timestamp: new Date().toISOString()
+      };
+      
+      // Ajouter le message utilisateur IMMÉDIATEMENT dans l'UI
+      const updatedThread = [...updatedCurrentSession.thread, userMessage];
+      const updatedSession = {
+        ...updatedCurrentSession,
+        thread: updatedThread
+      };
+      store.setCurrentSession(updatedSession);
+      console.log('[ChatFullscreen] ✅ Message utilisateur ajouté immédiatement');
+      
+      // Sauvegarder le message utilisateur en DB
+      await addMessage(userMessage);
+      
+      // Préparer le contexte avec l'ID de session réel
       const context = appContext || {
         type: 'chat_session',
         id: 'default',
         name: 'Chat général'
       };
       
-      console.log('[ChatFullscreen] 🎯 Contexte:', context);
+      // Ajouter l'ID de session au contexte pour le streaming
+      const contextWithSessionId = {
+        ...context,
+        sessionId: updatedCurrentSession.id
+      };
+      
+      console.log('[ChatFullscreen] 🎯 Contexte:', contextWithSessionId);
       
       // Récupérer le token de session
       const { data: { session } } = await supabase.auth.getSession();
@@ -237,74 +222,93 @@ const ChatFullscreen: React.FC = () => {
       };
       
       // Ajouter le message assistant IMMÉDIATEMENT dans l'UI
-      const store = useChatStore.getState();
-      const currentSessionFromStore = store.currentSession;
-      if (currentSessionFromStore) {
-        const updatedSession = {
-          ...currentSessionFromStore,
-          thread: [...currentSessionFromStore.thread, assistantMessage]
-        };
-        store.setCurrentSession(updatedSession);
-        console.log('[ChatFullscreen] ✅ Message assistant streaming ajouté immédiatement');
-      }
-      
+      const finalThread = [...updatedThread, assistantMessage];
+      const finalSession = {
+        ...updatedCurrentSession,
+        thread: finalThread
+      };
+      store.setCurrentSession(finalSession);
+      console.log('[ChatFullscreen] ✅ Message assistant streaming ajouté immédiatement');
       setStreamingMessageId(assistantMessage.id);
-      
-      // Appeler l'API LLM avec streaming
+      // Store context so subscription callbacks use fresh session/message IDs
+      streamingContextRef.current = { sessionId: updatedCurrentSession.id, messageId: assistantMessage.id };
+      const clientChannelId = `llm-stream-${Date.now()}-${Math.random().toString(36).substr(2,9)}`;
+      console.log('[ChatFullscreen] 📡 Generated client channel:', clientChannelId);
+      const channel = supabase
+        .channel(clientChannelId)
+        .on('broadcast', { event: 'llm-token' }, payload => {
+          console.log('[ChatFullscreen] 📝 Token received via broadcast:', payload);
+          const { token, sessionId } = payload.payload;
+          const ref = streamingContextRef.current;
+          if (ref && sessionId === ref.sessionId) {
+            const store = useChatStore.getState();
+            const sess = store.currentSession;
+            if (!sess) return;
+            const updatedThread = sess.thread.map(msg =>
+              msg.id === ref.messageId
+                ? { ...msg, content: msg.content + token, isStreaming: true }
+                : msg
+            );
+            store.setCurrentSession({ ...sess, thread: updatedThread });
+          }
+        })
+        .on('broadcast', { event: 'llm-complete' }, async payload => {
+          console.log('[ChatFullscreen] ✅ Complete received via broadcast:', payload);
+          const { sessionId, fullResponse } = payload.payload;
+          const ref = streamingContextRef.current;
+          if (ref && sessionId === ref.sessionId) {
+            const store = useChatStore.getState();
+            const sess = store.currentSession;
+            if (sess) {
+              const updatedThread = sess.thread.map(msg =>
+                msg.id === ref.messageId
+                  ? { ...msg, content: fullResponse, isStreaming: false }
+                  : msg
+              );
+              store.setCurrentSession({ ...sess, thread: updatedThread });
+            }
+            streamingContextRef.current = null;
+          }
+        })
+        .subscribe(status => console.log('[ChatFullscreen] 📡 Channel status:', status));
+      setStreamingChannel(channel);
+
+      // Call the LLM API with channelId for streaming
       const response = await fetch('/api/chat/llm', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
-          message: message,
-          context: context,
-          history: currentSession.thread,
-          provider: currentProvider
+          message,
+          context: contextWithSessionId,
+          history: updatedCurrentSession.thread,
+          provider: currentProvider,
+          channelId: clientChannelId
         }),
       });
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
+        const errorData = await response.json();
         throw new Error(`Erreur API: ${response.status} - ${errorData.error || 'Erreur inconnue'}`);
       }
 
       const data = await response.json();
-      
-      if (data.channelId) {
-        console.log('[ChatFullscreen] 📡 Connexion au canal streaming:', data.channelId);
-        
-        // S'abonner au canal Realtime
-        const channel = supabase.channel(data.channelId);
-        
-        channel
-          .on('broadcast', { event: 'llm-token' }, (payload) => {
-            const { token, sessionId } = payload;
-            if (sessionId === currentSession?.id) {
-              updateStreamingMessage(token);
-            }
-          })
-          .on('broadcast', { event: 'llm-complete' }, (payload) => {
-            const { sessionId } = payload;
-            if (sessionId === currentSession?.id) {
-              finalizeStreamingMessage();
-              // Déclencher un polling pour synchroniser
-              chatPollingService.triggerPolling('streaming terminé');
-            }
-          })
-          .subscribe((status) => {
-            console.log('[ChatFullscreen] 📡 Statut canal:', status);
-          });
-        
-        setStreamingChannel(channel);
-        
-      } else {
-        // Fallback si pas de streaming
-        console.log('[ChatFullscreen] ⚠️ Pas de streaming, réponse complète reçue');
-        finalizeStreamingMessage();
+
+      // Handle non-streaming fallback responses
+      if (data.response) {
+        console.log('[ChatFullscreen] ✅ Non-streaming response received:', data.response);
+        finalizeStreamingMessage(data.response);
+        const finalMessage = {
+          role: 'assistant' as const,
+          content: data.response,
+          timestamp: new Date().toISOString(),
+        };
+        await addMessage(finalMessage);
       }
-      
+      // end of refactored streaming logic
+
     } catch (error) {
       console.error('Erreur lors de l\'appel LLM:', error);
       

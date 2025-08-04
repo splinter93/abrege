@@ -13,13 +13,15 @@ const EnhancedMarkdownMessage: React.FC<EnhancedMarkdownMessageProps> = ({ conte
   // Détecter les blocs Mermaid
   const blocks = useMemo(() => detectMermaidBlocks(content), [content]);
 
+  // Always call useMarkdownRender at the top level to maintain hook order
+  const { html: fullHtml } = useMarkdownRender({ content, debounceDelay: 0 });
+
   // Si aucun bloc Mermaid, utiliser le rendu markdown normal
   if (blocks.length === 1 && blocks[0].type === 'text') {
-    const { html } = useMarkdownRender({ content, debounceDelay: 0 });
     return (
       <div 
         className="chat-markdown"
-        dangerouslySetInnerHTML={{ __html: html }}
+        dangerouslySetInnerHTML={{ __html: fullHtml }}
       />
     );
   }
@@ -29,7 +31,7 @@ const EnhancedMarkdownMessage: React.FC<EnhancedMarkdownMessageProps> = ({ conte
     <div className="enhanced-markdown">
       {blocks.map((block, index) => {
         if (block.type === 'text') {
-          // Rendu markdown pour le texte
+          // Use the full HTML for text blocks in mixed content
           const { html } = useMarkdownRender({ content: block.content, debounceDelay: 0 });
           return (
             <div 

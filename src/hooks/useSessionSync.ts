@@ -80,12 +80,24 @@ export const useSessionSync = () => {
       
       if (!result.success) {
         setError(result.error || 'Erreur création session');
+        return result;
       } else {
         // Déclencher un polling après création de session
         await chatPollingService.triggerPolling('création session');
+        
+        // Récupérer la session créée depuis le store
+        const store = useChatStore.getState();
+        const sessions = store.sessions;
+        const newSession = sessions[sessions.length - 1]; // La dernière session créée
+        
+        if (newSession) {
+          // Définir cette session comme courante
+          store.setCurrentSession(newSession);
+          console.log('[useSessionSync] ✅ Nouvelle session définie comme courante:', newSession);
+        }
+        
+        return { ...result, session: newSession };
       }
-      
-      return result;
     } catch (error) {
       console.error('[useSessionSync] ❌ Erreur createSession:', error);
       setError('Erreur lors de la création');

@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { message, context, history, provider } = await request.json();
+    const { message, context, history, provider, channelId: incomingChannelId } = await request.json();
     
     console.log("[LLM API] 🚀 Début de la requête");
     console.log("[LLM API] 👤 Utilisateur:", userId);
@@ -53,11 +53,7 @@ export async function POST(request: NextRequest) {
       name: 'Chat général'
     };
 
-    // Créer un canal unique pour le streaming
-    const channelId = `llm-stream-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-    console.log("[LLM API] 📡 Canal créé:", channelId);
-
-    // Utiliser le provider manager pour le streaming
+    // Utiliser le provider manager
     const currentProvider = llmManager.getCurrentProvider();
     if (!currentProvider) {
       throw new Error('Aucun provider LLM disponible');
@@ -67,11 +63,16 @@ export async function POST(request: NextRequest) {
     if (currentProvider.id === 'deepseek') {
       console.log("[LLM API] 🚀 Streaming avec DeepSeek");
       
+      // Créer un canal unique pour le streaming
+      const channelId = incomingChannelId || `llm-stream-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      console.log("[LLM API] 📡 Canal utilisé:", channelId);
+      
       // Préparer les messages pour DeepSeek
+      const deepseekProvider = new DeepSeekProvider();
       const messages = [
         {
           role: 'system' as const,
-          content: (currentProvider as any).formatContext(appContext)
+          content: deepseekProvider.formatContext(appContext)
         },
         ...history.map((msg: ChatMessage) => ({
           role: msg.role as 'user' | 'assistant' | 'system',
@@ -87,7 +88,7 @@ export async function POST(request: NextRequest) {
       const payload = {
         model: 'deepseek-chat',
         messages,
-        stream: true, // Activer le streaming
+        stream: true,
         temperature: 0.7,
         max_tokens: 4000
       };
@@ -137,12 +138,14 @@ export async function POST(request: NextRequest) {
                 fullResponse += token;
                 
                 // Broadcaster le token via Supabase Realtime
+                // Utiliser l'ID de session depuis le contexte ou un ID unique
+                const sessionId = context?.sessionId || appContext.id;
                 await supabase.channel(channelId).send({
                   type: 'broadcast',
                   event: 'llm-token',
                   payload: { 
                     token, 
-                    sessionId: appContext.id,
+                    sessionId,
                     fullResponse 
                   }
                 });
@@ -152,11 +155,12 @@ export async function POST(request: NextRequest) {
                 console.log("[LLM API] ✅ Streaming terminé");
                 
                 // Broadcaster la fin du stream
+                const sessionId = context?.sessionId || appContext.id;
                 await supabase.channel(channelId).send({
                   type: 'broadcast',
                   event: 'llm-complete',
                   payload: { 
-                    sessionId: appContext.id,
+                    sessionId,
                     fullResponse 
                   }
                 });

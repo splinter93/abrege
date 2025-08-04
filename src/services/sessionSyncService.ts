@@ -1,6 +1,7 @@
 import { ChatSessionService } from './chatSessionService';
 import type { ChatMessage, ChatSession } from '@/store/useChatStore';
 import type { ChatMessage as ApiChatMessage, ChatSession as ApiChatSession } from '@/types/chat';
+import { useChatStore } from '@/store/useChatStore';
 
 // Types locaux pour la conversion
 interface LocalChatMessage {
@@ -131,6 +132,34 @@ export class SessionSyncService {
     try {
       console.log('[SessionSync] 💬 Ajout message en DB...');
       
+      // Vérifier si c'est une session temporaire
+      if (sessionId.startsWith('temp-')) {
+        console.log('[SessionSync] ⚠️ Session temporaire, mise à jour locale uniquement');
+        
+        // Mettre à jour le store localement sans appeler l'API
+        const store = useChatStore.getState();
+        const currentSession = store.currentSession;
+        
+        if (currentSession && currentSession.id === sessionId) {
+          const updatedThread = [...currentSession.thread, {
+            ...message,
+            id: `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+          }];
+          
+          const updatedSession = {
+            ...currentSession,
+            thread: updatedThread
+          };
+          
+          store.setCurrentSession(updatedSession);
+          console.log('[SessionSync] ✅ Message ajouté localement à la session temporaire');
+        }
+        
+        return {
+          success: true
+        };
+      }
+      
       // 1. Ajouter en DB (source de vérité) avec conversion des types
       const apiMessage = convertStoreMessageToApi(message);
       const response = await this.chatSessionService.addMessage(sessionId, apiMessage);
@@ -167,6 +196,27 @@ export class SessionSyncService {
   }> {
     try {
       console.log('[SessionSync] 🗑️ Suppression session en DB...');
+      
+      // Vérifier si c'est une session temporaire
+      if (sessionId.startsWith('temp-')) {
+        console.log('[SessionSync] ⚠️ Session temporaire, suppression locale uniquement');
+        
+        // Supprimer du store localement sans appeler l'API
+        const store = useChatStore.getState();
+        const sessions = store.sessions.filter(s => s.id !== sessionId);
+        store.setSessions(sessions);
+        
+        // Si c'était la session courante, la désélectionner
+        if (store.currentSession?.id === sessionId) {
+          store.setCurrentSession(null);
+        }
+        
+        console.log('[SessionSync] ✅ Session temporaire supprimée localement');
+        
+        return {
+          success: true
+        };
+      }
       
       // 1. Supprimer en DB (source de vérité)
       const response = await this.chatSessionService.deleteSession(sessionId);
