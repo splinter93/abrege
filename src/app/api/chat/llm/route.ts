@@ -6,30 +6,37 @@ import { DeepSeekProvider } from '@/services/llm/providers';
 import type { AppContext, ChatMessage } from '@/services/llm/types';
 import { simpleLogger as logger } from '@/utils/logger';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
+// Fonction pour créer le client Supabase
+const createSupabaseClient = () => {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-// Créer une version du service avec la clé de service
-const agentServiceWithServiceKey = {
-  getAgentById: async (id: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('agents')
-        .select('*')
-        .eq('id', id)
-        .single();
+  if (!supabaseUrl || !supabaseServiceKey) {
+    throw new Error('Variables d\'environnement Supabase manquantes');
+  }
 
-      if (error) {
-        logger.error('Erreur lors de la récupération de l\'agent:', error);
-        return null;
-      }
+  return createClient(supabaseUrl, supabaseServiceKey);
+};
 
-      return data;
-    } catch (error) {
-      logger.error('Erreur AgentService.getAgentById:', error);
+// Fonction pour récupérer un agent
+const getAgentById = async (id: string) => {
+  try {
+    const supabase = createSupabaseClient();
+    const { data, error } = await supabase
+      .from('agents')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (error) {
+      logger.error('Erreur lors de la récupération de l\'agent:', error);
       return null;
     }
+
+    return data;
+  } catch (error) {
+    logger.error('Erreur getAgentById:', error);
+    return null;
   }
 };
 
@@ -42,6 +49,7 @@ export async function POST(request: NextRequest) {
 
     if (authHeader && authHeader.startsWith('Bearer ')) {
       const userToken = authHeader.substring(7);
+      const supabase = createSupabaseClient();
       const { data: { user }, error: authError } = await supabase.auth.getUser(userToken);
       
       if (authError || !user) {
@@ -71,7 +79,7 @@ export async function POST(request: NextRequest) {
                 let agentConfig = null;
                 if (context?.agentId) {
                   logger.dev("[LLM API] 🔍 Recherche agent avec ID:", context.agentId);
-                  agentConfig = await agentServiceWithServiceKey.getAgentById(context.agentId);
+                  agentConfig = await getAgentById(context.agentId);
                   logger.dev("[LLM API] 🤖 Configuration agent trouvée:", agentConfig?.name);
                   if (agentConfig) {
                                       if (agentConfig.system_instructions) {
@@ -226,6 +234,7 @@ export async function POST(request: NextRequest) {
                   // Utiliser l'ID de session depuis le contexte ou un ID unique
                   const sessionId = context?.sessionId || appContext.id;
                   try {
+                    const supabase = createSupabaseClient();
                     await supabase.channel(channelId).send({
                       type: 'broadcast',
                       event: 'llm-token',
@@ -246,6 +255,7 @@ export async function POST(request: NextRequest) {
                   // Broadcaster la fin du stream
                   const sessionId = context?.sessionId || appContext.id;
                   try {
+                    const supabase = createSupabaseClient();
                     await supabase.channel(channelId).send({
                       type: 'broadcast',
                       event: 'llm-complete',
@@ -272,6 +282,7 @@ export async function POST(request: NextRequest) {
         // Essayer de broadcaster une erreur
         try {
           const sessionId = context?.sessionId || appContext.id;
+          const supabase = createSupabaseClient();
           await supabase.channel(channelId).send({
             type: 'broadcast',
             event: 'llm-error',
