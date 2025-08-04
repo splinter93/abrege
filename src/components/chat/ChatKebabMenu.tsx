@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useRef, useEffect } from 'react';
 import { useLLMStore } from '@/store/useLLMStore';
-import './index.css';
+import './ChatKebabMenu.css';
 
 interface ChatKebabMenuProps {
   isWideMode: boolean;
@@ -98,6 +98,7 @@ const ChatKebabMenu: React.FC<ChatKebabMenuProps> = ({
                 )}
               </svg>
               <span>{isWideMode ? "Mode Normal" : "Mode Large"}</span>
+              <div className="badge">{isWideMode ? "Normal" : "Large"}</div>
             </button>
             
             <button
@@ -120,37 +121,43 @@ const ChatKebabMenu: React.FC<ChatKebabMenuProps> = ({
           <div className="kebab-section">
             <div className="kebab-section-title">Configuration</div>
             
-            <div className="kebab-option history-limit-selector">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <span>Limite d'historique</span>
+            <div className="kebab-input-group">
+              <label className="kebab-input-label">Limite d'historique</label>
               <input 
                 type="number"
                 value={historyLimit} 
                 onChange={handleHistoryLimitChange}
-                className="history-limit-input"
+                className="kebab-input"
                 min="1"
                 max="100"
-                onClick={(e) => e.stopPropagation()}
+                placeholder="10"
               />
             </div>
 
-            {/* Sélecteur de Provider LLM */}
-            <div className="kebab-option provider-selector">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <span>Provider IA</span>
+            <div className="kebab-input-group">
+              <label className="kebab-input-label">Provider IA</label>
               <select 
                 value={currentProvider} 
                 onChange={handleProviderChange}
-                className="provider-select"
-                onClick={(e) => e.stopPropagation()}
+                className="kebab-select"
               >
-                <option value="synesia">Synesia</option>
-                <option value="deepseek">DeepSeek</option>
+                <option value="synesia">🤖 Synesia</option>
+                <option value="deepseek">🔍 DeepSeek</option>
               </select>
+            </div>
+          </div>
+
+          {/* Section Statut */}
+          <div className="kebab-section">
+            <div className="kebab-section-title">Statut</div>
+            
+            <div className="kebab-option">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="12" cy="12" r="10" />
+                <path d="m9 12 2 2 4-4" />
+              </svg>
+              <span>Connecté</span>
+              <div className="status-indicator"></div>
             </div>
           </div>
         </div>

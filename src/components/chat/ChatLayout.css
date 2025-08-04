@@ -93,8 +93,8 @@
   top: var(--chat-spacing-lg);
   left: var(--chat-spacing-lg);
   z-index: var(--chat-z-sidebar);
-  background: var(--chat-bg-secondary);
-  border: 1px solid var(--chat-border-primary);
+  background: none;
+  border: none;
   border-radius: var(--chat-radius-lg);
   color: var(--chat-text-secondary);
   cursor: pointer;
@@ -103,14 +103,11 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: var(--chat-shadow-md);
 }
 
 .sidebar-toggle-btn-floating:hover {
   background: var(--chat-bg-tertiary);
   color: var(--chat-text-primary);
-  border-color: var(--chat-border-focus);
-  box-shadow: var(--chat-shadow-lg);
 }
 
 /* ========================================

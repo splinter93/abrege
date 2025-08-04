@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from 'react';
-import { Send, Loader, Plus, Globe, Search, Type, Mic, ArrowUp } from 'react-feather';
+import { Send, Loader, Plus, Globe, Search, Mic, ArrowUp, Zap } from 'react-feather';
 
 interface ChatInputProps {
   onSend: (message: string) => void;
@@ -53,7 +53,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend, loading, textareaRef }) =
             value={message}
             onChange={handleInputChange}
             onKeyDown={handleKeyDown}
-            placeholder="Poser une question"
+            placeholder="Envoyer un message..."
             className="chat-input-textarea"
             rows={1}
           />
@@ -63,16 +63,15 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend, loading, textareaRef }) =
               <button className="chat-input-icon-btn" aria-label="Ajouter">
                 <Plus size={16} />
               </button>
+              <button className="chat-input-icon-btn" aria-label="Reasoning">
+                <Zap size={16} />
+              </button>
               <button className="chat-input-icon-btn" aria-label="Globe">
                 <Globe size={16} />
               </button>
               <button className="chat-input-icon-btn" aria-label="Rechercher">
                 <Search size={16} />
               </button>
-              <button className="chat-input-icon-btn" aria-label="Format">
-                <Type size={16} />
-              </button>
-              <span className="chat-input-version">o3</span>
             </div>
           </div>
         </div>

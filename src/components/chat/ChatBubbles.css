@@ -8,7 +8,7 @@
 
 .chat-message {
   display: flex;
-  margin-bottom: var(--chat-spacing-lg);
+  margin-bottom: calc(var(--chat-spacing-lg) * 0.5);
 }
 
 .chat-message-user {
@@ -25,13 +25,17 @@
 
 .chat-message-bubble {
   max-width: 80%;
-  padding: var(--chat-spacing-lg);
+  padding: var(--chat-spacing-md);
   border-radius: var(--chat-radius-xl);
   word-wrap: break-word;
   overflow-wrap: break-word;
   border: none;
   outline: none;
   box-shadow: none;
+}
+
+.chat-message-bubble-assistant {
+  max-width: 1000px;
 }
 
 /* ========================================
