@@ -39,6 +39,18 @@
   min-height: 400px;
 }
 
+/* Normal Mode - 750px */
+.chat-container-normal {
+  max-width: 750px;
+  margin: 0 auto;
+}
+
+/* Wide Mode - 1000px */
+.chat-container-wide {
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
 /* Mode plein écran */
 .chat-fullscreen-container {
   position: fixed;
