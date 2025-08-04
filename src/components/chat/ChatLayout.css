@@ -77,6 +77,22 @@
 }
 
 /* ========================================
+   LOGO
+   ======================================== */
+
+.chat-logo {
+  display: flex;
+  align-items: center;
+  margin-right: var(--chat-spacing-lg);
+}
+
+.chat-logo-img {
+  height: 24px;
+  width: auto;
+  object-fit: contain;
+}
+
+/* ========================================
    NOM DE SESSION
    ======================================== */
 
