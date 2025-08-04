@@ -70,6 +70,18 @@
   overflow: hidden;
 }
 
+/* Wide mode pour fullscreen */
+.chat-fullscreen-container.wide-mode {
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+/* Normal mode pour fullscreen */
+.chat-fullscreen-container:not(.wide-mode) {
+  max-width: 750px;
+  margin: 0 auto;
+}
+
 /* Mode widget - petit format */
 .chat-widget-container {
   position: fixed;
