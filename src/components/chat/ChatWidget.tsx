@@ -1,13 +1,14 @@
 'use client';
 
 import React, { useRef, useEffect, useState } from 'react';
-import { useChatStore, type ChatMessage } from '../../store/useChatStore';
+import { useChatStore, type ChatMessage } from '@/store/useChatStore';
 import { useSessionSync } from '@/hooks/useSessionSync';
 import ChatInput from './ChatInput';
 import EnhancedMarkdownMessage from './EnhancedMarkdownMessage';
 import ChatSidebar from './ChatSidebar';
 import { supabase } from '@/supabaseClient';
-import './chat.css';
+import './chat-core.css';
+import './chat-components.css';
 
 const ChatWidget: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -302,6 +303,7 @@ const ChatWidget: React.FC = () => {
       <ChatSidebar 
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
+        isDesktop={false} // Le widget est toujours considéré comme "mobile"
       />
     </>
   );

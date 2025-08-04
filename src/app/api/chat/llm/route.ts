@@ -120,58 +120,87 @@ export async function POST(request: NextRequest) {
 
       console.log("[LLM API] 📝 Début du streaming...");
 
-      while (true) {
-        const { done, value } = await reader.read();
-        
-        if (done) break;
-        
-        const chunk = decoder.decode(value);
-        const lines = chunk.split('\n');
-        
-        for (const line of lines) {
-          if (line.startsWith('data: ')) {
-            try {
-              const data = JSON.parse(line.slice(6));
-              
-              if (data.choices && data.choices[0]?.delta?.content) {
-                const token = data.choices[0].delta.content;
-                fullResponse += token;
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          
+          if (done) break;
+          
+          const chunk = decoder.decode(value);
+          const lines = chunk.split('\n');
+          
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              try {
+                const data = JSON.parse(line.slice(6));
                 
-                // Broadcaster le token via Supabase Realtime
-                // Utiliser l'ID de session depuis le contexte ou un ID unique
-                const sessionId = context?.sessionId || appContext.id;
-                await supabase.channel(channelId).send({
-                  type: 'broadcast',
-                  event: 'llm-token',
-                  payload: { 
-                    token, 
-                    sessionId,
-                    fullResponse 
+                if (data.choices && data.choices[0]?.delta?.content) {
+                  const token = data.choices[0].delta.content;
+                  fullResponse += token;
+                  
+                  // Broadcaster le token via Supabase Realtime
+                  // Utiliser l'ID de session depuis le contexte ou un ID unique
+                  const sessionId = context?.sessionId || appContext.id;
+                  try {
+                    await supabase.channel(channelId).send({
+                      type: 'broadcast',
+                      event: 'llm-token',
+                      payload: { 
+                        token, 
+                        sessionId,
+                        fullResponse 
+                      }
+                    });
+                    
+                    console.log("[LLM API] 📝 Token broadcasté:", token);
+                  } catch (broadcastError) {
+                    console.error("[LLM API] ❌ Erreur broadcast token:", broadcastError);
                   }
-                });
-                
-                console.log("[LLM API] 📝 Token broadcasté:", token);
-              } else if (data.choices && data.choices[0]?.finish_reason) {
-                console.log("[LLM API] ✅ Streaming terminé");
-                
-                // Broadcaster la fin du stream
-                const sessionId = context?.sessionId || appContext.id;
-                await supabase.channel(channelId).send({
-                  type: 'broadcast',
-                  event: 'llm-complete',
-                  payload: { 
-                    sessionId,
-                    fullResponse 
+                } else if (data.choices && data.choices[0]?.finish_reason) {
+                  console.log("[LLM API] ✅ Streaming terminé");
+                  
+                  // Broadcaster la fin du stream
+                  const sessionId = context?.sessionId || appContext.id;
+                  try {
+                    await supabase.channel(channelId).send({
+                      type: 'broadcast',
+                      event: 'llm-complete',
+                      payload: { 
+                        sessionId,
+                        fullResponse 
+                      }
+                    });
+                  } catch (broadcastError) {
+                    console.error("[LLM API] ❌ Erreur broadcast completion:", broadcastError);
                   }
-                });
-                
-                break;
+                  
+                  break;
+                }
+              } catch (e) {
+                console.warn("[LLM API] ⚠️ Erreur parsing SSE:", e);
               }
-            } catch (e) {
-              console.warn("[LLM API] ⚠️ Erreur parsing SSE:", e);
             }
           }
         }
+      } catch (streamError) {
+        console.error("[LLM API] ❌ Erreur streaming:", streamError);
+        
+        // Essayer de broadcaster une erreur
+        try {
+          const sessionId = context?.sessionId || appContext.id;
+          await supabase.channel(channelId).send({
+            type: 'broadcast',
+            event: 'llm-error',
+            payload: { 
+              sessionId,
+              error: 'Erreur lors du streaming'
+            }
+          });
+        } catch (broadcastError) {
+          console.error("[LLM API] ❌ Erreur broadcast error:", broadcastError);
+        }
+        
+        throw streamError;
       }
 
       console.log("[LLM API] ✅ Streaming terminé, réponse complète:", fullResponse);

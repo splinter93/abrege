@@ -14,7 +14,34 @@ const EnhancedMarkdownMessage: React.FC<EnhancedMarkdownMessageProps> = ({ conte
   const blocks = useMemo(() => detectMermaidBlocks(content), [content]);
 
   // Always call useMarkdownRender at the top level to maintain hook order
-  const { html: fullHtml } = useMarkdownRender({ content, debounceDelay: 0 });
+  const { html: fullHtml } = useMarkdownRender({ content, debounceDelay: 0, disableDebounce: true });
+
+  // Pré-rendre tous les blocs de texte pour éviter les hooks conditionnels
+  const renderedBlocks = useMemo(() => {
+    return blocks.map((block, index) => {
+      if (block.type === 'text') {
+        // Pour les blocs de texte, utiliser le HTML complet
+        return {
+          type: 'text' as const,
+          content: fullHtml,
+          index
+        };
+      } else {
+        // Pour les blocs Mermaid, préparer les données
+        const mermaidContent = cleanMermaidContent(block.content);
+        const validation = validateMermaidSyntax(mermaidContent);
+        
+        return {
+          type: 'mermaid' as const,
+          content: mermaidContent,
+          validation,
+          originalContent: block.content,
+          startIndex: block.startIndex,
+          index
+        };
+      }
+    });
+  }, [blocks, fullHtml]);
 
   // Si aucun bloc Mermaid, utiliser le rendu markdown normal
   if (blocks.length === 1 && blocks[0].type === 'text') {
@@ -29,28 +56,23 @@ const EnhancedMarkdownMessage: React.FC<EnhancedMarkdownMessageProps> = ({ conte
   // Rendu mixte : texte + Mermaid
   return (
     <div className="enhanced-markdown">
-      {blocks.map((block, index) => {
+      {renderedBlocks.map((block) => {
         if (block.type === 'text') {
-          // Use the full HTML for text blocks in mixed content
-          const { html } = useMarkdownRender({ content: block.content, debounceDelay: 0 });
           return (
             <div 
-              key={`text-${index}`}
+              key={`text-${block.index}`}
               className="chat-markdown"
-              dangerouslySetInnerHTML={{ __html: html }}
+              dangerouslySetInnerHTML={{ __html: block.content }}
             />
           );
         } else {
           // Rendu Mermaid pour les diagrammes
-          const mermaidContent = cleanMermaidContent(block.content);
-          const validation = validateMermaidSyntax(mermaidContent);
-          
           return (
-            <div key={`mermaid-${index}-${block.startIndex}`} className="mermaid-block">
-              {validation.isValid ? (
+            <div key={`mermaid-${block.index}-${block.startIndex}`} className="mermaid-block">
+              {block.validation.isValid ? (
                 <MermaidRenderer 
-                  key={`mermaid-renderer-${index}-${block.startIndex}`}
-                  chart={mermaidContent}
+                  key={`mermaid-renderer-${block.index}-${block.startIndex}`}
+                  chart={block.content}
                   className="mermaid-inline"
                 />
               ) : (
@@ -62,15 +84,15 @@ const EnhancedMarkdownMessage: React.FC<EnhancedMarkdownMessageProps> = ({ conte
                       <line x1="9" y1="9" x2="15" y2="15" />
                     </svg>
                     <span>Diagramme Mermaid invalide</span>
-                    {validation.error && (
+                    {block.validation.error && (
                       <details>
                         <summary>Erreur</summary>
-                        <pre>{validation.error}</pre>
+                        <pre>{block.validation.error}</pre>
                       </details>
                     )}
                     <details>
                       <summary>Code source</summary>
-                      <pre className="mermaid-source">{block.content}</pre>
+                      <pre className="mermaid-source">{block.originalContent}</pre>
                     </details>
                   </div>
                 </div>

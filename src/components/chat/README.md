@@ -7,17 +7,22 @@ Système de chat premium avec interface moderne et fonctionnalités avancées.
 ## 🏗️ Architecture
 
 ### Composants principaux
-- `ChatComponent` : Composant principal du chat
-- `ChatInput` : Zone de saisie des messages
-- `ChatKebabMenu` : Menu des options (modes de largeur)
-- `MarkdownMessage` : Rendu des messages en markdown
+- `ChatFullscreen.tsx` - Chat plein écran
+- `ChatWidget.tsx` - Widget de chat
+- `ChatSidebar.tsx` - Sidebar des conversations
+- `ChatInput.tsx` - Zone de saisie
+- `ChatKebabMenu.tsx` - Menu des options
 
-### Hooks personnalisés
-- `useChatMessages` : Gestion de l'état des messages et communication API
+### Composants de rendu
+- `EnhancedMarkdownMessage.tsx` - Rendu markdown + Mermaid
+- `MermaidRenderer.tsx` - Rendu des diagrammes
+- `OptimizedMessage.tsx` - Message optimisé
 
 ### Services
-- `chatService` : Communication avec l'API Synesia
-- `chatLogger` : Logging structuré pour le debugging
+- `mermaidService.ts` - Service Mermaid
+
+### Store
+- `useChatStore.ts` - Store principal (robuste)
 
 ## 🎨 Fonctionnalités
 

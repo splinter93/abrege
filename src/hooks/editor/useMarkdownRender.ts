@@ -4,6 +4,7 @@ import { createMarkdownIt } from '@/utils/markdownItConfig';
 interface UseMarkdownRenderProps {
   content: string;
   debounceDelay?: number;
+  disableDebounce?: boolean; // Nouvelle option pour désactiver le debounce
 }
 
 interface UseMarkdownRenderReturn {
@@ -15,10 +16,12 @@ interface UseMarkdownRenderReturn {
 /**
  * Hook pour le rendu markdown avec debounce
  * Extrait la logique de rendu depuis Editor.tsx
+ * Optimisé pour le streaming avec option de désactivation du debounce
  */
 export const useMarkdownRender = ({
   content,
-  debounceDelay = 300
+  debounceDelay = 300,
+  disableDebounce = false
 }: UseMarkdownRenderProps): UseMarkdownRenderReturn => {
   const [debouncedContent, setDebouncedContent] = useState(content);
   const [isRendering, setIsRendering] = useState(false);
@@ -26,16 +29,22 @@ export const useMarkdownRender = ({
   // Memoize markdown-it instance
   const md = useMemo(() => createMarkdownIt(), []);
 
-  // Debounce content changes
+  // Debounce content changes (ou pas si désactivé)
   useEffect(() => {
-    setIsRendering(true);
-    const timer = setTimeout(() => {
+    if (disableDebounce) {
+      // Pas de debounce pour le streaming
       setDebouncedContent(content);
       setIsRendering(false);
-    }, debounceDelay);
+    } else {
+      setIsRendering(true);
+      const timer = setTimeout(() => {
+        setDebouncedContent(content);
+        setIsRendering(false);
+      }, debounceDelay);
 
-    return () => clearTimeout(timer);
-  }, [content, debounceDelay]);
+      return () => clearTimeout(timer);
+    }
+  }, [content, debounceDelay, disableDebounce]);
 
   // Memoize HTML rendering
   const html = useMemo(() => {

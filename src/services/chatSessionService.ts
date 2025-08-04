@@ -71,10 +71,18 @@ export class ChatSessionService {
           'Content-Type': 'application/json',
         },
       });
-      const data = await response.json();
+      let data;
+      try {
+        data = await response.json();
+      } catch (error) {
+        // Si la réponse n'est pas du JSON, c'est probablement une erreur HTML
+        const textResponse = await response.text();
+        console.error('[ChatSessionService] ❌ Réponse non-JSON reçue:', textResponse.substring(0, 200));
+        throw new Error(`Erreur serveur (${response.status}): Réponse non-JSON reçue`);
+      }
 
       if (!response.ok) {
-        throw new Error(data.error || 'Erreur lors de la récupération des sessions');
+        throw new Error(data.error || `Erreur lors de la récupération des sessions (${response.status})`);
       }
 
       return data;
@@ -144,10 +152,18 @@ export class ChatSessionService {
         body: JSON.stringify(data),
       });
 
-      const responseData = await response.json();
+      let responseData;
+      try {
+        responseData = await response.json();
+      } catch (error) {
+        // Si la réponse n'est pas du JSON, c'est probablement une erreur HTML
+        const textResponse = await response.text();
+        console.error('[ChatSessionService] ❌ Réponse non-JSON reçue:', textResponse.substring(0, 200));
+        throw new Error(`Erreur serveur (${response.status}): Réponse non-JSON reçue`);
+      }
 
       if (!response.ok) {
-        throw new Error(responseData.error || 'Erreur lors de la création de la session');
+        throw new Error(responseData.error || `Erreur lors de la création de la session (${response.status})`);
       }
 
       return responseData;

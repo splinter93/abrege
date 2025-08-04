@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { supabase } from '@/supabaseClient';
 import { sessionSyncService } from '@/services/sessionSyncService';
 
 export interface ChatMessage {
@@ -7,7 +8,7 @@ export interface ChatMessage {
   role: 'user' | 'assistant' | 'system';
   content: string;
   timestamp: string;
-  isStreaming?: boolean; // Pour indiquer si le message est en cours de streaming
+  isStreaming?: boolean;
 }
 
 export interface ChatSession {
@@ -20,7 +21,7 @@ export interface ChatSession {
 }
 
 interface ChatStore {
-  // 🎯 État (cache léger)
+  // 🎯 État
   sessions: ChatSession[];
   currentSession: ChatSession | null;
   isWidgetOpen: boolean;
@@ -28,7 +29,7 @@ interface ChatStore {
   loading: boolean;
   error: string | null;
   
-  // 🔄 Actions
+  // 🔄 Actions de base
   setSessions: (sessions: ChatSession[]) => void;
   setCurrentSession: (session: ChatSession | null) => void;
   setLoading: (loading: boolean) => void;
@@ -39,7 +40,7 @@ interface ChatStore {
   openFullscreen: () => void;
   closeWidget: () => void;
   
-  // 🔄 Actions de synchronisation (DB → Cache)
+  // ⚡ Actions optimisées avec optimistic updates
   syncSessions: () => Promise<void>;
   createSession: (name?: string) => Promise<void>;
   addMessage: (message: Omit<ChatMessage, 'id'>) => Promise<void>;
@@ -59,7 +60,7 @@ export const useChatStore = create<ChatStore>()(
       error: null,
 
       // 🔄 Actions de base
-      setSessions: (sessions: ChatSession[]) => set({ sessions }),
+      setSessions: (sessions: ChatSession[]) => set({ sessions: Array.isArray(sessions) ? sessions : [] }),
       setCurrentSession: (session: ChatSession | null) => set({ currentSession: session }),
       setLoading: (loading: boolean) => set({ loading }),
       setError: (error: string | null) => set({ error }),
@@ -79,11 +80,10 @@ export const useChatStore = create<ChatStore>()(
 
       closeWidget: () => set({ isWidgetOpen: false }),
 
-      // 🔄 Actions de synchronisation (DB → Cache)
+      // ⚡ Actions optimisées avec optimistic updates
       
       /**
        * 🔄 Synchroniser les sessions depuis la DB
-       * DB = source de vérité → Cache = miroir
        */
       syncSessions: async () => {
         const { setLoading, setError, setSessions } = get();
@@ -94,25 +94,25 @@ export const useChatStore = create<ChatStore>()(
         try {
           console.log('[Chat Store] 🔄 Synchronisation depuis DB...');
           
-          const result = await sessionSyncService.syncSessionsFromDB();
-          
-          console.log('[Chat Store] 📋 Résultat complet:', result);
-          
-          if (!result.success) {
-            setError(result.error || 'Erreur synchronisation');
+          // Vérifier l'authentification
+          const { data: { session } } = await supabase.auth.getSession();
+          if (!session?.access_token) {
+            console.log('[Chat Store] ⚠️ Utilisateur non authentifié');
+            setSessions([]);
+            setError('Utilisateur non authentifié');
             return;
           }
+
+          // Utiliser le service de synchronisation
+          const result = await sessionSyncService.syncSessionsFromDB();
           
-          console.log('[Chat Store] ✅ Synchronisation réussie');
-          console.log('[Chat Store] 📊 Sessions reçues:', result.sessions?.length || 0);
-          
-          // Mettre à jour le store avec les sessions
+          if (!result.success) {
+            throw new Error(result.error || 'Erreur synchronisation');
+          }
+
           if (result.sessions) {
-            console.log('[Chat Store] 🔄 Mise à jour du store avec', result.sessions.length, 'sessions');
             setSessions(result.sessions);
-            console.log('[Chat Store] ✅ Store mis à jour avec', result.sessions.length, 'sessions');
-          } else {
-            console.log('[Chat Store] ⚠️ Aucune session dans le résultat');
+            console.log('[Chat Store] ✅ Sessions synchronisées:', result.sessions.length);
           }
           
         } catch (error) {
@@ -124,133 +124,230 @@ export const useChatStore = create<ChatStore>()(
       },
 
       /**
-       * ➕ Créer une session en DB puis synchroniser
-       * DB d'abord → Cache ensuite
+       * ➕ Créer une session avec optimistic update et rollback sécurisé
        */
       createSession: async (name: string = 'Nouvelle conversation') => {
-        const { setLoading, setError } = get();
+        const { setLoading, setError, sessions, setSessions, setCurrentSession } = get();
         
         setLoading(true);
         setError(null);
         
+        // Sauvegarder l'état initial pour rollback
+        const initialState = {
+          sessions: [...sessions],
+          currentSession: get().currentSession
+        };
+        
         try {
-          console.log('[Chat Store] ➕ Création session en DB...');
-          
+          // 1. Optimistic update - créer une session temporaire
+          const tempSession: ChatSession = {
+            id: `temp-${Date.now()}`,
+            name,
+            thread: [],
+            history_limit: 10,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          };
+
+          const newSessions = [tempSession, ...sessions];
+          setSessions(newSessions);
+          setCurrentSession(tempSession);
+          console.log('[Chat Store] ⚡ Session temporaire créée');
+
+          // 2. API call via service
           const result = await sessionSyncService.createSessionAndSync(name);
           
           if (!result.success) {
-            setError(result.error || 'Erreur création session');
-            return;
+            throw new Error(result.error || 'Erreur création session');
           }
-          
-          console.log('[Chat Store] ✅ Session créée et synchronisée');
+
+          console.log('[Chat Store] ✅ Session créée en DB:', result.session);
+
+          // 3. Remplacer la session temporaire par la vraie
+          if (result.session) {
+            const updatedSessions = newSessions.map(s => 
+              s.id === tempSession.id ? result.session! : s
+            );
+            setSessions(updatedSessions);
+            setCurrentSession(result.session);
+          }
           
         } catch (error) {
           console.error('[Chat Store] ❌ Erreur création session:', error);
-          setError('Erreur lors de la création');
+          setError('Erreur lors de la création de la session');
+          
+          // Rollback sécurisé - restaurer l'état initial
+          setSessions(initialState.sessions);
+          setCurrentSession(initialState.currentSession);
         } finally {
           setLoading(false);
         }
       },
 
       /**
-       * 💬 Ajouter un message en DB puis synchroniser
-       * DB d'abord → Cache ensuite
+       * 💬 Ajouter un message avec optimistic update et rollback sécurisé
        */
       addMessage: async (message: Omit<ChatMessage, 'id'>) => {
-        const { currentSession, setLoading, setError } = get();
+        const { currentSession, setCurrentSession, setError } = get();
         
         if (!currentSession) {
           setError('Aucune session active');
           return;
         }
 
-        setLoading(true);
-        setError(null);
-        
+        // Sauvegarder l'état initial pour rollback
+        const initialState = {
+          thread: [...currentSession.thread],
+          updated_at: currentSession.updated_at
+        };
+
         try {
-          console.log('[Chat Store] 💬 Ajout message en DB...');
-          
+          // 1. Optimistic update - ajouter le message immédiatement
+          const messageWithId: ChatMessage = {
+            ...message,
+            id: `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+          };
+
+          const updatedThread = [...currentSession.thread, messageWithId];
+          const updatedSession = {
+            ...currentSession,
+            thread: updatedThread,
+            updated_at: new Date().toISOString()
+          };
+
+          setCurrentSession(updatedSession);
+          console.log('[Chat Store] ⚡ Message ajouté optimistiquement');
+
+          // 2. API call via service
           const result = await sessionSyncService.addMessageAndSync(currentSession.id, message);
           
           if (!result.success) {
-            setError(result.error || 'Erreur ajout message');
-            return;
+            throw new Error(result.error || 'Erreur ajout message');
           }
-          
-          console.log('[Chat Store] ✅ Message ajouté et synchronisé');
+
+          console.log('[Chat Store] ✅ Message sauvegardé en DB');
           
         } catch (error) {
           console.error('[Chat Store] ❌ Erreur ajout message:', error);
           setError('Erreur lors de l\'ajout du message');
-        } finally {
-          setLoading(false);
+          
+          // Rollback sécurisé - restaurer l'état initial
+          const currentState = get();
+          if (currentState.currentSession) {
+            const rollbackSession = {
+              ...currentState.currentSession,
+              thread: initialState.thread,
+              updated_at: initialState.updated_at
+            };
+            setCurrentSession(rollbackSession);
+          }
         }
       },
 
       /**
-       * 🗑️ Supprimer une session en DB puis synchroniser
-       * DB d'abord → Cache ensuite
+       * 🗑️ Supprimer une session avec rollback sécurisé
        */
       deleteSession: async (sessionId: string) => {
-        const { setLoading, setError } = get();
+        const { setLoading, setError, sessions, setSessions, currentSession, setCurrentSession } = get();
         
         setLoading(true);
         setError(null);
         
+        // Sauvegarder l'état initial pour rollback
+        const initialState = {
+          sessions: [...sessions],
+          currentSession: currentSession
+        };
+        
         try {
-          console.log('[Chat Store] 🗑️ Suppression session en DB...');
+          // 1. Optimistic update - supprimer immédiatement
+          const updatedSessions = sessions.filter(s => s.id !== sessionId);
+          setSessions(updatedSessions);
           
+          // Si c'était la session courante, sélectionner la première
+          if (currentSession?.id === sessionId) {
+            setCurrentSession(updatedSessions[0] || null);
+          }
+
+          console.log('[Chat Store] ⚡ Session supprimée optimistiquement');
+
+          // 2. API call via service
           const result = await sessionSyncService.deleteSessionAndSync(sessionId);
           
           if (!result.success) {
-            setError(result.error || 'Erreur suppression session');
-            return;
+            throw new Error(result.error || 'Erreur suppression session');
           }
-          
-          console.log('[Chat Store] ✅ Session supprimée et synchronisée');
+
+          console.log('[Chat Store] ✅ Session supprimée en DB');
           
         } catch (error) {
           console.error('[Chat Store] ❌ Erreur suppression session:', error);
           setError('Erreur lors de la suppression');
+          
+          // Rollback sécurisé - restaurer l'état initial
+          setSessions(initialState.sessions);
+          setCurrentSession(initialState.currentSession);
         } finally {
           setLoading(false);
         }
       },
 
       /**
-       * ⚙️ Mettre à jour une session en DB puis synchroniser
-       * DB d'abord → Cache ensuite
+       * ⚙️ Mettre à jour une session avec rollback sécurisé
        */
       updateSession: async (sessionId: string, data: { name?: string; history_limit?: number }) => {
-        const { setLoading, setError } = get();
+        const { setLoading, setError, sessions, setSessions, currentSession, setCurrentSession } = get();
         
         setLoading(true);
         setError(null);
         
+        // Sauvegarder l'état initial pour rollback
+        const initialState = {
+          sessions: [...sessions],
+          currentSession: currentSession
+        };
+        
         try {
-          console.log('[Chat Store] ⚙️ Mise à jour session en DB...');
+          // 1. Optimistic update
+          const updatedSessions = sessions.map(s => 
+            s.id === sessionId ? { ...s, ...data, updated_at: new Date().toISOString() } : s
+          );
+          setSessions(updatedSessions);
           
+          // Mettre à jour la session courante si nécessaire
+          if (currentSession?.id === sessionId) {
+            const updatedCurrentSession = updatedSessions.find(s => s.id === sessionId);
+            if (updatedCurrentSession) {
+              setCurrentSession(updatedCurrentSession);
+            }
+          }
+
+          console.log('[Chat Store] ⚡ Session mise à jour optimistiquement');
+
+          // 2. API call via service
           const result = await sessionSyncService.updateSessionAndSync(sessionId, data);
           
           if (!result.success) {
-            setError(result.error || 'Erreur mise à jour session');
-            return;
+            throw new Error(result.error || 'Erreur mise à jour session');
           }
-          
-          console.log('[Chat Store] ✅ Session mise à jour et synchronisée');
+
+          console.log('[Chat Store] ✅ Session mise à jour en DB');
           
         } catch (error) {
           console.error('[Chat Store] ❌ Erreur mise à jour session:', error);
           setError('Erreur lors de la mise à jour');
+          
+          // Rollback sécurisé - restaurer l'état initial
+          setSessions(initialState.sessions);
+          setCurrentSession(initialState.currentSession);
         } finally {
           setLoading(false);
         }
       },
     }),
     {
-      name: 'chat-store',
-      // 🎯 Cache léger: ne persister que l'état UI, pas les sessions
+      name: 'chat-store-robust',
+      // 🎯 Cache léger: ne persister que l'état UI
       partialize: (state) => ({
         isWidgetOpen: state.isWidgetOpen,
         isFullscreen: state.isFullscreen,
