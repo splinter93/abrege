@@ -240,9 +240,15 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({ isOpen, onClose }) => {
       <div className={`chat-sidebar ${isOpen ? 'open' : ''}`}>
         {/* Header de la sidebar */}
         <div className="chat-sidebar-header">
-          <div className="chat-sidebar-title">
-            <span>Conversations</span>
-          </div>
+          <button
+            onClick={handleNewChat}
+            className="chat-sidebar-new-btn"
+          >
+            <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+              <path d="M12 5v14M5 12h14"></path>
+            </svg>
+            New Chat
+          </button>
           <button
             onClick={onClose}
             className="chat-sidebar-close"
@@ -255,88 +261,100 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({ isOpen, onClose }) => {
           </button>
         </div>
 
-        {/* Bouton nouvelle conversation */}
-        <div className="chat-sidebar-new">
-          <button
-            onClick={handleNewChat}
-            className="chat-sidebar-new-btn"
-          >
-            <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
-              <path d="M12 5v14M5 12h14"></path>
+        {/* Menu déroulant Mes Agents */}
+        <div className="chat-sidebar-agents">
+          <div className="chat-sidebar-agents-header">
+            <span>Mes Agents</span>
+            <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+              <polyline points="6,9 12,15 18,9"></polyline>
             </svg>
-            Nouvelle conversation
-          </button>
+          </div>
+          <div className="chat-sidebar-agents-content">
+            <div className="chat-sidebar-agent-item">
+              <span>Assistant Général</span>
+            </div>
+            <div className="chat-sidebar-agent-item">
+              <span>Expert Technique</span>
+            </div>
+            <div className="chat-sidebar-agent-item">
+              <span>Rédacteur</span>
+            </div>
+          </div>
         </div>
 
-        {/* Liste des conversations */}
-        <div className="chat-sidebar-conversations">
-          {sessions.length === 0 ? (
-            <div className="chat-sidebar-empty">
-              <p>Aucune conversation</p>
-              <p>Commencez une nouvelle conversation</p>
-            </div>
-          ) : (
-            // Trier les sessions par updated_at (plus récent en premier)
-            sessions
-              .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())
-              .map((session) => (
-              <div
-                key={session.id}
-                className={`chat-sidebar-item ${currentSession?.id === session.id ? 'active' : ''} ${sessions.indexOf(session) === 0 ? 'most-recent' : ''}`}
-                onClick={() => handleSessionClick(session)}
-                title={`${session.name} - ${formatDate(session.updated_at)}`}
-              >
-                <div className="chat-sidebar-item-content">
-                  <div className="chat-sidebar-item-title">
-                    {renamingSessionId === session.id ? (
-                      <RenameInput
-                        initialValue={session.name}
-                        onSubmit={(newName: string) => handleRenameSession(session.id, newName)}
-                        onCancel={handleCancelRename}
-                        autoFocus={true}
-                      />
-                    ) : (
-                      <span 
-                        onDoubleClick={(e) => handleStartRename(session.id, e)}
-                        style={{ cursor: 'pointer' }}
-                      >
-                        {session.name}
-                      </span>
-                    )}
-                  </div>
-                  <div className="chat-sidebar-item-preview">
-                    {getLastMessage(session)}
-                  </div>
-                  <div className="chat-sidebar-item-date">
-                    {formatDate(session.updated_at)}
-                  </div>
-                </div>
-                <div className="chat-sidebar-item-actions">
-                  <button
-                    className="chat-sidebar-item-delete"
-                    onClick={(e) => handleDeleteSession(session.id, e)}
-                    aria-label="Supprimer la conversation"
-                  >
-                    <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
-                      <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                    </svg>
-                  </button>
-                </div>
+        {/* Section Conversations */}
+        <div className="chat-sidebar-conversations-section">
+          <div className="chat-sidebar-section-title">Conversations</div>
+          <div className="chat-sidebar-conversations">
+            {sessions.length === 0 ? (
+              <div className="chat-sidebar-empty">
+                <p>Aucune conversation</p>
+                <p>Commencez une nouvelle conversation</p>
               </div>
-            ))
-          )}
+            ) : (
+              // Trier les sessions par updated_at (plus récent en premier)
+              sessions
+                .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())
+                .map((session) => (
+                <div
+                  key={session.id}
+                  className={`chat-sidebar-item ${currentSession?.id === session.id ? 'active' : ''} ${sessions.indexOf(session) === 0 ? 'most-recent' : ''}`}
+                  onClick={() => handleSessionClick(session)}
+                  title={`${session.name} - ${formatDate(session.updated_at)}`}
+                >
+                  <div className="chat-sidebar-item-content">
+                    <div className="chat-sidebar-item-title">
+                      {renamingSessionId === session.id ? (
+                        <RenameInput
+                          initialValue={session.name}
+                          onSubmit={(newName: string) => handleRenameSession(session.id, newName)}
+                          onCancel={handleCancelRename}
+                          autoFocus={true}
+                        />
+                      ) : (
+                        <span 
+                          onDoubleClick={(e) => handleStartRename(session.id, e)}
+                          style={{ cursor: 'pointer' }}
+                        >
+                          {session.name}
+                        </span>
+                      )}
+                    </div>
+                    <div className="chat-sidebar-item-preview">
+                      {getLastMessage(session)}
+                    </div>
+                    <div className="chat-sidebar-item-date">
+                      {formatDate(session.updated_at)}
+                    </div>
+                  </div>
+                  <div className="chat-sidebar-item-actions">
+                    <button
+                      className="chat-sidebar-item-delete"
+                      onClick={(e) => handleDeleteSession(session.id, e)}
+                      aria-label="Supprimer la conversation"
+                    >
+                      <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                        <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
         </div>
 
         {/* Footer de la sidebar */}
         <div className="chat-sidebar-footer">
           <button
-            onClick={closeWidget}
-            className="chat-sidebar-widget-btn"
+            onClick={() => console.log('Settings clicked')}
+            className="chat-sidebar-settings-btn"
           >
             <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
-              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+              <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path>
+              <circle cx="12" cy="12" r="3"></circle>
             </svg>
-            Ouvrir le widget
+            Settings
           </button>
         </div>
       </div>
