@@ -1381,6 +1381,7 @@
 
 .chat-sidebar.open {
   left: 0;
+  backdrop-filter: none; /* Remove blur when open */
 }
 
 .chat-sidebar-overlay {
