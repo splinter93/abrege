@@ -84,6 +84,9 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({ isOpen, onClose }) => {
         throw new Error('Token d\'authentification manquant');
       }
       
+      console.log('[ChatSidebar] 🔐 Token trouvé, appel API...');
+      console.log('[ChatSidebar] 📤 Données envoyées:', { sessionId, newName: newName.trim() });
+      
       const response = await fetch(`/api/v1/chat-sessions/${sessionId}`, {
         method: 'PATCH',
         headers: {
@@ -93,11 +96,16 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({ isOpen, onClose }) => {
         body: JSON.stringify({ name: newName.trim() }),
       });
       
+      console.log('[ChatSidebar] 📥 Réponse reçue:', response.status, response.statusText);
+      
       if (!response.ok) {
-        throw new Error('Erreur lors du renommage');
+        const errorData = await response.json().catch(() => ({ error: 'Erreur inconnue' }));
+        console.error('[ChatSidebar] ❌ Erreur API:', errorData);
+        throw new Error(`Erreur lors du renommage: ${response.status} - ${errorData.error || 'Erreur inconnue'}`);
       }
       
-      console.log('[ChatSidebar] ✅ Session renommée en DB');
+      const responseData = await response.json();
+      console.log('[ChatSidebar] ✅ Session renommée en DB:', responseData);
       
       // Déclencher un polling après renommage
       await chatPollingService.triggerPolling('renommage session');
@@ -112,6 +120,7 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({ isOpen, onClose }) => {
           s.id === sessionId ? { ...s, name: session.name } : s
         );
         setSessions(updatedSessions);
+        console.log('[ChatSidebar] 🔄 Nom restauré après erreur');
       }
     } finally {
       setRenamingSessionId(null);
