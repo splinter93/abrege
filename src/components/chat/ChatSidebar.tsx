@@ -34,15 +34,25 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({ isOpen, onClose }) => {
   const handleNewChat = async () => {
     console.log('[ChatSidebar] ➕ Création nouvelle session...');
     
-    // Créer directement une vraie session en DB
-    const result = await createSession('Nouvelle conversation') as any;
-    
-    if (!result?.success) {
-      console.error('[ChatSidebar] ❌ Erreur création session:', result?.error);
-      return;
+    try {
+      // Créer directement une vraie session en DB
+      const result = await createSession('Nouvelle conversation') as any;
+      console.log('[ChatSidebar] 📋 Résultat createSession:', result);
+      
+      if (!result) {
+        console.error('[ChatSidebar] ❌ createSession a retourné undefined');
+        return;
+      }
+      
+      if (!result?.success) {
+        console.error('[ChatSidebar] ❌ Erreur création session:', result?.error);
+        return;
+      }
+      
+      console.log('[ChatSidebar] ✅ Session créée en DB:', result.session);
+    } catch (error) {
+      console.error('[ChatSidebar] ❌ Erreur dans handleNewChat:', error);
     }
-    
-    console.log('[ChatSidebar] ✅ Session créée en DB:', result.session);
   };
 
   const handleStartRename = (sessionId: string, e: React.MouseEvent) => {
