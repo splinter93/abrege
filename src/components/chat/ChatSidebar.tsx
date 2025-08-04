@@ -64,6 +64,23 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({ isOpen, onClose }) => {
   const handleRenameSession = async (sessionId: string, newName: string) => {
     if (!newName.trim()) return;
     
+    // Vérifier si c'est une session temporaire
+    const isTempSession = sessionId.startsWith('temp-');
+    
+    if (isTempSession) {
+      console.log('[ChatSidebar] ⚠️ Session temporaire, renommage local uniquement');
+      // Mise à jour optimiste immédiate pour les sessions temporaires
+      const { setSessions } = useChatStore.getState();
+      const currentSessions = useChatStore.getState().sessions;
+      const updatedSessions = currentSessions.map(s => 
+        s.id === sessionId ? { ...s, name: newName.trim() } : s
+      );
+      setSessions(updatedSessions);
+      console.log('[ChatSidebar] ✅ Nom de session temporaire mis à jour localement');
+      setRenamingSessionId(null);
+      return;
+    }
+    
     // Mise à jour optimiste immédiate
     const { setSessions } = useChatStore.getState();
     const currentSessions = useChatStore.getState().sessions;
