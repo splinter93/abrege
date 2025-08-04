@@ -77,6 +77,26 @@
 }
 
 /* ========================================
+   NOM DE SESSION
+   ======================================== */
+
+.chat-session-info {
+  display: flex;
+  align-items: center;
+}
+
+.chat-session-name {
+  font-size: var(--chat-font-size-sm);
+  font-weight: var(--chat-font-weight-medium);
+  color: var(--chat-text-secondary);
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 300px;
+}
+
+/* ========================================
    CONTENU PRINCIPAL (MESSAGES + INPUT)
    ======================================== */
 
