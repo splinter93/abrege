@@ -71,15 +71,17 @@
 }
 
 /* Wide mode pour fullscreen */
-.chat-fullscreen-container.wide-mode {
+.chat-fullscreen-container.wide-mode .chat-content {
   max-width: 1000px;
   margin: 0 auto;
+  width: 100%;
 }
 
 /* Normal mode pour fullscreen */
-.chat-fullscreen-container:not(.wide-mode) {
+.chat-fullscreen-container:not(.wide-mode) .chat-content {
   max-width: 750px;
   margin: 0 auto;
+  width: 100%;
 }
 
 /* Mode widget - petit format */
