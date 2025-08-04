@@ -1365,10 +1365,10 @@
 /* Sidebar Styles */
 .chat-sidebar {
   position: fixed;
-  top: 0;
+  top: 60px; /* Start below header */
   left: -400px;
   width: 400px;
-  height: 100vh;
+  height: calc(100vh - 60px); /* Subtract header height */
   background: var(--chat-container-bg);
   backdrop-filter: blur(20px);
   border-right: 1px solid var(--chat-border-color);
@@ -1590,6 +1590,8 @@
   .chat-sidebar {
     width: 100vw;
     left: -100vw;
+    top: 60px; /* Keep below header on mobile too */
+    height: calc(100vh - 60px);
   }
   
   .chat-sidebar.open {
