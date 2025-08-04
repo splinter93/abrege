@@ -18,7 +18,7 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({ isOpen, isDesktop, onClose })
   const { sessions, currentSession, createSession, setCurrentSession, deleteSession, updateSession } = useChatStore();
   const [renamingSessionId, setRenamingSessionId] = useState<string | null>(null);
   const [newName, setNewName] = useState('');
-  const [agentsOpen, setAgentsOpen] = useState(false);
+  const [agentsOpen, setAgentsOpen] = useState(true);
 
   // Fonction pour extraire l'aperçu de la dernière réponse
   const getLastResponsePreview = (session: any) => {
@@ -80,12 +80,12 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({ isOpen, isDesktop, onClose })
         {/* Header de la sidebar */}
         <div className="sidebar-header">
           <div className="sidebar-header-content">
-            <h2 className="sidebar-title">Chat</h2>
+            <h2 className="sidebar-title">Mon Chat</h2>
             <div className="sidebar-actions">
-              <button onClick={handleCreateNewSession} className="action-btn" title="Nouvelle conversation">
+              <button onClick={handleCreateNewSession} className="sidebar-icon-btn" title="Nouvelle conversation">
                 <Plus size={16} />
               </button>
-              <button onClick={onClose} className="action-btn" title="Fermer la sidebar">
+              <button onClick={onClose} className="sidebar-icon-btn" title="Fermer la sidebar">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="3" x2="9" y2="21"></line>
                 </svg>
@@ -121,6 +121,9 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({ isOpen, isDesktop, onClose })
               </div>
             )}
           </div>
+
+          {/* Séparateur élégant */}
+          <div className="sidebar-separator"></div>
 
           {/* Section Conversations */}
           <div className="sidebar-section">
@@ -162,7 +165,7 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({ isOpen, isDesktop, onClose })
                         <div className="conversation-header">
                           <span 
                             className="conversation-title" 
-                            onClick={(e) => {
+                            onDoubleClick={(e) => {
                               e.stopPropagation();
                               startRenaming(session);
                             }}
@@ -214,10 +217,10 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({ isOpen, isDesktop, onClose })
               </div>
             </div>
             <div className="user-actions">
-              <button className="user-action-btn" title="Paramètres">
+              <button className="sidebar-icon-btn" title="Paramètres">
                 <Settings size={16} />
               </button>
-              <button onClick={signOut} className="user-action-btn" title="Déconnexion">
+              <button onClick={signOut} className="sidebar-icon-btn" title="Déconnexion">
                 <LogOut size={16} />
               </button>
             </div>

@@ -1,60 +1,43 @@
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useRef } from 'react';
 import { createMarkdownIt } from '@/utils/markdownItConfig';
 
 interface UseMarkdownRenderProps {
   content: string;
   debounceDelay?: number;
-  disableDebounce?: boolean; // Nouvelle option pour désactiver le debounce
+  disableDebounce?: boolean;
 }
 
 interface UseMarkdownRenderReturn {
   html: string;
   isRendering: boolean;
-  md: unknown; // markdown-it instance
+  md: unknown;
 }
 
 /**
- * Hook pour le rendu markdown avec debounce
- * Extrait la logique de rendu depuis Editor.tsx
- * Optimisé pour le streaming avec option de désactivation du debounce
+ * Hook optimisé pour le rendu markdown en streaming
+ * Suppression du debounce pour un rendu instantané
+ * Optimisation des performances pour éviter les saccades
  */
 export const useMarkdownRender = ({
   content,
-  debounceDelay = 300,
-  disableDebounce = false
+  debounceDelay = 0,
+  disableDebounce = true // Désactivé par défaut pour le streaming
 }: UseMarkdownRenderProps): UseMarkdownRenderReturn => {
-  const [debouncedContent, setDebouncedContent] = useState(content);
-  const [isRendering, setIsRendering] = useState(false);
+  // Memoize markdown-it instance une seule fois
+  const mdRef = useRef<ReturnType<typeof createMarkdownIt> | null>(null);
+  if (!mdRef.current) {
+    mdRef.current = createMarkdownIt();
+  }
 
-  // Memoize markdown-it instance
-  const md = useMemo(() => createMarkdownIt(), []);
-
-  // Debounce content changes (ou pas si désactivé)
-  useEffect(() => {
-    if (disableDebounce) {
-      // Pas de debounce pour le streaming
-      setDebouncedContent(content);
-      setIsRendering(false);
-    } else {
-      setIsRendering(true);
-      const timer = setTimeout(() => {
-        setDebouncedContent(content);
-        setIsRendering(false);
-      }, debounceDelay);
-
-      return () => clearTimeout(timer);
-    }
-  }, [content, debounceDelay, disableDebounce]);
-
-  // Memoize HTML rendering
+  // Rendu direct sans debounce pour le streaming
   const html = useMemo(() => {
-    if (!debouncedContent) return '';
-    return md.render(debouncedContent);
-  }, [md, debouncedContent]);
+    if (!content) return '';
+    return mdRef.current!.render(content);
+  }, [content]);
 
   return {
     html,
-    isRendering,
-    md
+    isRendering: false, // Pas de state de rendu pour éviter les re-renders
+    md: mdRef.current
   };
 }; 

@@ -9,25 +9,37 @@ interface EnhancedMarkdownMessageProps {
   content: string;
 }
 
-const EnhancedMarkdownMessage: React.FC<EnhancedMarkdownMessageProps> = ({ content }) => {
-  // Détecter les blocs Mermaid
+const EnhancedMarkdownMessage: React.FC<EnhancedMarkdownMessageProps> = React.memo(({ content }) => {
+  // Rendu markdown optimisé pour le streaming
+  const { html: fullHtml } = useMarkdownRender({ 
+    content, 
+    debounceDelay: 0, 
+    disableDebounce: true 
+  });
+
+  // Détection Mermaid optimisée avec memoization
   const blocks = useMemo(() => detectMermaidBlocks(content), [content]);
 
-  // Always call useMarkdownRender at the top level to maintain hook order
-  const { html: fullHtml } = useMarkdownRender({ content, debounceDelay: 0, disableDebounce: true });
+  // Si pas de Mermaid, rendu simple et rapide
+  if (blocks.length === 1 && blocks[0].type === 'text') {
+    return (
+      <div 
+        className="chat-markdown"
+        dangerouslySetInnerHTML={{ __html: fullHtml }}
+      />
+    );
+  }
 
-  // Pré-rendre tous les blocs de texte pour éviter les hooks conditionnels
+  // Rendu mixte optimisé
   const renderedBlocks = useMemo(() => {
     return blocks.map((block, index) => {
       if (block.type === 'text') {
-        // Pour les blocs de texte, utiliser le HTML complet
         return {
           type: 'text' as const,
           content: fullHtml,
           index
         };
       } else {
-        // Pour les blocs Mermaid, préparer les données
         const mermaidContent = cleanMermaidContent(block.content);
         const validation = validateMermaidSyntax(mermaidContent);
         
@@ -43,19 +55,8 @@ const EnhancedMarkdownMessage: React.FC<EnhancedMarkdownMessageProps> = ({ conte
     });
   }, [blocks, fullHtml]);
 
-  // Si aucun bloc Mermaid, utiliser le rendu markdown normal
-  if (blocks.length === 1 && blocks[0].type === 'text') {
-    return (
-      <div 
-        className="chat-markdown"
-        dangerouslySetInnerHTML={{ __html: fullHtml }}
-      />
-    );
-  }
-
-  // Rendu mixte : texte + Mermaid
   return (
-            <div className="chat-enhanced-markdown">
+    <div className="chat-enhanced-markdown">
       {renderedBlocks.map((block) => {
         if (block.type === 'text') {
           return (
@@ -66,7 +67,6 @@ const EnhancedMarkdownMessage: React.FC<EnhancedMarkdownMessageProps> = ({ conte
             />
           );
         } else {
-          // Rendu Mermaid pour les diagrammes
           return (
             <div key={`mermaid-${block.index}-${block.startIndex}`} className="mermaid-block">
               {block.validation.isValid ? (
@@ -103,6 +103,8 @@ const EnhancedMarkdownMessage: React.FC<EnhancedMarkdownMessageProps> = ({ conte
       })}
     </div>
   );
-};
+});
+
+EnhancedMarkdownMessage.displayName = 'EnhancedMarkdownMessage';
 
 export default EnhancedMarkdownMessage; 
