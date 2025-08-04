@@ -22,27 +22,27 @@
    ======================================== */
 
 .chat-sidebar {
-  position: fixed;
-  top: 60px;
-  left: 0;
+  position: relative; /* Changé de fixed à relative */
   width: 320px;
-  height: calc(100vh - 60px);
+  height: 100%; /* Occupe toute la hauteur de son parent flex */
   background: var(--chat-bg-primary);
   backdrop-filter: blur(20px);
   border-right: 1px solid var(--chat-border-primary);
   z-index: var(--chat-z-sidebar);
   display: flex;
   flex-direction: column;
-  transform: translateX(-100%);
-  transition: transform var(--chat-transition-slow);
+  transition: width var(--chat-transition-slow);
   overflow: hidden;
-  border-radius: 0 12px 0 0;
+  flex-shrink: 0; /* Empêche la sidebar de rétrécir */
 }
 
-.chat-sidebar.open {
-  transform: translateX(0);
-  box-shadow: var(--chat-shadow-xl);
+.chat-sidebar.closed {
+  width: 0;
+  border-right: none;
+  overflow: hidden;
 }
+
+/* Les media queries pour le comportement mobile/desktop sont supprimées pour une approche unifiée */
 
 /* ========================================
    CONTENU DE LA SIDEBAR

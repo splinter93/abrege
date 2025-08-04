@@ -276,86 +276,88 @@ const ChatFullscreen: React.FC = () => {
   const messages = currentSession?.thread || [];
 
   return (
-    <div className={`chat-fullscreen-container ${wideMode ? 'wide-mode' : ''} ${sidebarOpen ? 'sidebar-open' : ''}`}>
-      {/* Sidebar */}
-      <ChatSidebar 
-        isOpen={sidebarOpen} 
-        isDesktop={isDesktop}
-        onClose={() => setSidebarOpen(false)} 
-      />
-      
-      {/* Overlay pour mobile/tablette */}
-      {!isDesktop && sidebarOpen && (
-        <div className="chat-sidebar-overlay" onClick={() => setSidebarOpen(false)} />
-      )}
-
-      {/* Container principal */}
-      <div className="chat-content">
-        {/* Header */}
-        <div className="chat-header">
-          <div className="header-left">
-            <button
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="sidebar-toggle-btn"
-              aria-label={sidebarOpen ? "Fermer les conversations" : "Ouvrir les conversations"}
-              title={sidebarOpen ? "Fermer les conversations" : "Ouvrir les conversations"}
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="3" x2="9" y2="21"></line>
-              </svg>
-            </button>
-            <div className="chat-title">
-              <img src="/logo scrivia white.png" alt="Scrivia" className="chat-logo" />
-            </div>
-          </div>
-          
-          <div className="chat-actions">
-            <ChatKebabMenu 
-              isWideMode={wideMode}
-              isFullscreen={true}
-              historyLimit={currentSession?.history_limit || 10}
-              onToggleWideMode={() => setWideMode(!wideMode)}
-              onToggleFullscreen={() => {}}
-              onHistoryLimitChange={handleHistoryLimitChange}
-            />
+    <div className={`chat-fullscreen-container ${wideMode ? 'wide-mode' : ''}`}>
+      {/* Header */}
+      <div className="chat-header">
+        <div className="chat-header-left">
+          <button
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+            className="sidebar-toggle-btn"
+            aria-label={sidebarOpen ? "Fermer les conversations" : "Ouvrir les conversations"}
+            title={sidebarOpen ? "Fermer les conversations" : "Ouvrir les conversations"}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="3" x2="9" y2="21"></line>
+            </svg>
+          </button>
+          <div className="chat-title">
+            <img src="/logo scrivia white.png" alt="Scrivia" className="chat-logo" />
           </div>
         </div>
+        
+        <div className="chat-actions">
+          <ChatKebabMenu 
+            isWideMode={wideMode}
+            isFullscreen={true}
+            historyLimit={currentSession?.history_limit || 10}
+            onToggleWideMode={() => setWideMode(!wideMode)}
+            onToggleFullscreen={() => {}}
+            onHistoryLimitChange={handleHistoryLimitChange}
+          />
+        </div>
+      </div>
 
-        {/* Messages */}
-        <div className="chat-messages-container">
-          <div className="chat-message-list">
-            {messages.map((message, index) => (
-              <div key={message.id || index} className={`chat-message chat-message-${message.role}`}>
-                <div className={`chat-message-bubble chat-message-bubble-${message.role}`}>
-                  <EnhancedMarkdownMessage content={message.content} />
-                </div>
-              </div>
-            ))}
-            
-            {/* Message en cours de streaming */}
-            {isStreaming && streamingContent && (
-              <div className="chat-message chat-message-assistant">
-                <div className="chat-message-bubble chat-message-bubble-assistant">
-                  <EnhancedMarkdownMessage content={streamingContent} />
-                  <div className="chat-typing-indicator">
-                    <div className="chat-typing-dot"></div>
-                    <div className="chat-typing-dot"></div>
-                    <div className="chat-typing-dot"></div>
+      <div className="main-content-area">
+        {/* Sidebar */}
+        <ChatSidebar 
+          isOpen={sidebarOpen} 
+          isDesktop={isDesktop}
+          onClose={() => setSidebarOpen(false)} 
+        />
+        
+        {/* Overlay pour mobile/tablette */}
+        {!isDesktop && sidebarOpen && (
+          <div className="chat-sidebar-overlay" onClick={() => setSidebarOpen(false)} />
+        )}
+
+        {/* Container principal */}
+        <div className="chat-content">
+          {/* Messages */}
+          <div className="chat-messages-container">
+            <div className="chat-message-list">
+              {messages.map((message, index) => (
+                <div key={message.id || index} className={`chat-message chat-message-${message.role}`}>
+                  <div className={`chat-message-bubble chat-message-bubble-${message.role}`}>
+                    <EnhancedMarkdownMessage content={message.content} />
                   </div>
                 </div>
-              </div>
-            )}
+              ))}
+              
+              {/* Message en cours de streaming */}
+              {isStreaming && streamingContent && (
+                <div className="chat-message chat-message-assistant">
+                  <div className="chat-message-bubble chat-message-bubble-assistant">
+                    <EnhancedMarkdownMessage content={streamingContent} />
+                    <div className="chat-typing-indicator">
+                      <div className="chat-typing-dot"></div>
+                      <div className="chat-typing-dot"></div>
+                      <div className="chat-typing-dot"></div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+            <div ref={messagesEndRef} />
           </div>
-          <div ref={messagesEndRef} />
-        </div>
 
-        {/* Input */}
-        <div className="chat-input-container">
-          <ChatInput 
-            onSend={handleSendMessage}
-            loading={loading}
-            textareaRef={textareaRef}
-          />
+          {/* Input */}
+          <div className="chat-input-container">
+            <ChatInput 
+              onSend={handleSendMessage}
+              loading={loading}
+              textareaRef={textareaRef}
+            />
+          </div>
         </div>
       </div>
     </div>

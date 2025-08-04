@@ -8,6 +8,7 @@
 
 .chat-fullscreen-container {
   display: flex;
+  flex-direction: column;
   height: 100vh;
   width: 100vw;
   overflow: hidden;
@@ -15,38 +16,15 @@
   color: var(--chat-text-primary);
 }
 
-.chat-content {
-  flex: 1;
+.main-content-area {
   display: flex;
-  flex-direction: column;
+  flex: 1;
   overflow: hidden;
   position: relative;
-  background: var(--chat-bg-primary);
-  transition: margin-left var(--chat-transition-slow);
 }
 
 /* ========================================
-   AJUSTEMENT QUAND LA SIDEBAR EST OUVERTE
-   ======================================== */
-
-.chat-fullscreen-container.sidebar-open .chat-content {
-  margin-left: 320px;
-  width: calc(100vw - 320px);
-}
-
-/* ========================================
-   RESPONSIVE - MOBILE
-   ======================================== */
-
-@media (max-width: 768px) {
-  .chat-fullscreen-container.sidebar-open .chat-content {
-    margin-left: 0;
-    width: 100vw;
-  }
-}
-
-/* ========================================
-   HEADER
+   HEADER FIXE
    ======================================== */
 
 .chat-header {
@@ -58,6 +36,7 @@
   background: var(--chat-bg-primary);
   border-bottom: 1px solid var(--chat-border-primary);
   flex-shrink: 0;
+  z-index: calc(var(--chat-z-sidebar) + 1);
 }
 
 .chat-header-left {
@@ -66,7 +45,7 @@
   gap: var(--chat-spacing-lg);
 }
 
-.chat-sidebar-toggle {
+.sidebar-toggle-btn {
   background: none;
   border: none;
   cursor: pointer;
@@ -76,7 +55,7 @@
   transition: background var(--chat-transition-normal);
 }
 
-.chat-sidebar-toggle:hover {
+.sidebar-toggle-btn:hover {
   background: var(--chat-bg-tertiary);
 }
 
@@ -90,6 +69,41 @@
   align-items: center;
   gap: var(--chat-spacing-sm);
 }
+
+/* ========================================
+   CONTENU PRINCIPAL (MESSAGES + INPUT)
+   ======================================== */
+
+.chat-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+  background: var(--chat-bg-primary);
+  /* La transition de la marge est supprimée car nous utilisons la transition de largeur de la sidebar */
+}
+
+/* ========================================
+   AJUSTEMENT QUAND LA SIDEBAR EST OUVERTE
+   ======================================== */
+
+.chat-fullscreen-container.sidebar-open .chat-content {
+  /* Cette logique est maintenant gérée par le layout flex de la sidebar elle-même */
+}
+
+/* ========================================
+   RESPONSIVE - MOBILE
+   ======================================== */
+
+@media (max-width: 768px) {
+  .chat-fullscreen-container.sidebar-open .chat-content {
+    margin-left: 0;
+    width: 100vw;
+  }
+}
+
+
 
 /* ========================================
    MESSAGES CONTAINER
