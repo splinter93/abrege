@@ -17,12 +17,8 @@ export class AgentApiV2Tools {
   private baseUrl: string;
 
   constructor() {
-    // En développement, utiliser une URL relative pour éviter les appels externes
-    if (process.env.NODE_ENV === 'development') {
-      this.baseUrl = '';
-    } else {
-      this.baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://scrivia.app';
-    }
+    // Utiliser l'URL de base configurée ou l'URL par défaut
+    this.baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://scrivia.app';
     this.initializeTools();
   }
 
