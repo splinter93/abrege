@@ -296,19 +296,32 @@ export class AgentApiV2Tools {
    * Exécuter un outil par son nom
    */
   async executeTool(toolName: string, parameters: any, jwtToken: string): Promise<any> {
-    const tool = this.tools.get(toolName);
-    if (!tool) {
-      throw new Error(`Tool not found: ${toolName}`);
+    const startTime = Date.now();
+    
+    try {
+      const tool = this.tools.get(toolName);
+      if (!tool) {
+        throw new Error(`Tool not found: ${toolName}`);
+      }
+
+      logger.dev(`[AgentApiV2Tools] 🔧 Exécution tool: ${toolName}`);
+      logger.dev(`[AgentApiV2Tools] 📦 Paramètres:`, parameters);
+
+      // Récupérer le userId à partir du JWT token
+      const userId = await this.getUserIdFromToken(jwtToken);
+      logger.dev(`[AgentApiV2Tools] 👤 User ID extrait:`, userId);
+
+      const result = await tool.execute(parameters, jwtToken, userId);
+      
+      const duration = Date.now() - startTime;
+      logger.dev(`[AgentApiV2Tools] ✅ Tool ${toolName} exécuté en ${duration}ms`);
+      
+      return result;
+    } catch (error) {
+      const duration = Date.now() - startTime;
+      logger.error(`[AgentApiV2Tools] ❌ Tool ${toolName} échoué après ${duration}ms:`, error);
+      throw error;
     }
-
-    logger.dev(`[AgentApiV2Tools] 🔧 Exécution tool: ${toolName}`);
-    logger.dev(`[AgentApiV2Tools] 📦 Paramètres:`, parameters);
-
-    // Récupérer le userId à partir du JWT token
-    const userId = await this.getUserIdFromToken(jwtToken);
-    logger.dev(`[AgentApiV2Tools] 👤 User ID extrait:`, userId);
-
-    return await tool.execute(parameters, jwtToken, userId);
   }
 
   /**

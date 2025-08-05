@@ -26,6 +26,7 @@ export async function createNoteDirect(params: CreateNoteParams, userId: string)
     clientType: 'llm'
   };
 
+  const startTime = Date.now();
   logApi('v2_note_create_direct', '🚀 Création note directe', context);
 
   const supabase = createSupabaseClient();
@@ -53,8 +54,8 @@ export async function createNoteDirect(params: CreateNoteParams, userId: string)
     logApi('v2_note_create_direct', `✅ Slug résolu: ${params.notebook_id} -> ${classeurId}`, context);
   }
 
-  // Créer la note
-  const { data: note, error: createError } = await supabase
+  // Créer la note avec timeout
+  const createPromise = supabase
     .from('articles')
     .insert({
       source_title: params.source_title,
@@ -68,12 +69,21 @@ export async function createNoteDirect(params: CreateNoteParams, userId: string)
     .select()
     .single();
 
+  // Timeout de 10 secondes
+  const timeoutPromise = new Promise((_, reject) => {
+    setTimeout(() => reject(new Error('Timeout création note')), 10000);
+  });
+
+  const { data: note, error: createError } = await Promise.race([createPromise, timeoutPromise]) as any;
+
   if (createError) {
-    logApi('v2_note_create_direct', `❌ Erreur création note:`, createError, context);
+    const duration = Date.now() - startTime;
+    logApi('v2_note_create_direct', `❌ Erreur création note après ${duration}ms:`, createError, context);
     throw new Error(`Erreur création note: ${createError.message}`);
   }
 
-  logApi('v2_note_create_direct', `✅ Note créée:`, note, context);
+  const duration = Date.now() - startTime;
+  logApi('v2_note_create_direct', `✅ Note créée en ${duration}ms:`, note, context);
   return { success: true, data: note };
 }
 

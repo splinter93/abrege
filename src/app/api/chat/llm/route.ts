@@ -333,11 +333,19 @@ export async function POST(request: NextRequest) {
           
           // Utiliser le token JWT de l'utilisateur pour l'authentification API
           logger.dev("[LLM API] 🔑 Token JWT utilisé pour tool call:", userToken.substring(0, 20) + "...");
-          const result = await agentApiV2Tools.executeTool(
+          
+          // Timeout de 15 secondes pour les tool calls
+          const toolCallPromise = agentApiV2Tools.executeTool(
             functionCallData.name, 
             functionArgs, 
             userToken
           );
+          
+          const timeoutPromise = new Promise((_, reject) => {
+            setTimeout(() => reject(new Error('Timeout tool call (15s)')), 15000);
+          });
+          
+          const result = await Promise.race([toolCallPromise, timeoutPromise]);
 
           logger.dev("[LLM API] ✅ Résultat de la fonction:", result);
 
