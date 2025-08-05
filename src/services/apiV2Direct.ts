@@ -118,7 +118,7 @@ export async function createFolderDirect(params: CreateFolderParams, userId: str
 
   // Créer le dossier
   const { data: folder, error: createError } = await supabase
-    .from('dossiers')
+    .from('folders')
     .insert({
       name: params.name,
       classeur_id: classeurId,
@@ -188,8 +188,8 @@ export async function getNotebookTreeDirect(notebookId: string, userId: string) 
   }
 
   // Récupérer l'arbre complet
-  const { data: dossiers, error: dossiersError } = await supabase
-    .from('dossiers')
+  const { data: folders, error: foldersError } = await supabase
+    .from('folders')
     .select('id, name, parent_id, created_at')
     .eq('classeur_id', classeurId)
     .eq('user_id', userId)
@@ -202,14 +202,14 @@ export async function getNotebookTreeDirect(notebookId: string, userId: string) 
     .eq('user_id', userId)
     .order('created_at', { ascending: true });
 
-  if (dossiersError || articlesError) {
-    throw new Error(`Erreur récupération arbre: ${dossiersError?.message || articlesError?.message}`);
+  if (foldersError || articlesError) {
+    throw new Error(`Erreur récupération arbre: ${foldersError?.message || articlesError?.message}`);
   }
 
   return { 
     success: true, 
     data: {
-      dossiers: dossiers || [],
+      folders: folders || [],
       articles: articles || []
     }
   };
