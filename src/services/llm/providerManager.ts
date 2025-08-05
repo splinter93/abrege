@@ -1,5 +1,5 @@
 import type { LLMProvider, AppContext, ChatMessage } from './types';
-import { SynesiaProvider, DeepSeekProvider, TogetherProvider } from './providers';
+import { SynesiaProvider, DeepSeekProvider, TogetherProvider, GroqProvider } from './providers';
 import { simpleLogger as logger } from '@/utils/logger';
 
 export class LLMProviderManager {
@@ -11,6 +11,7 @@ export class LLMProviderManager {
     this.registerProvider(new SynesiaProvider());
     this.registerProvider(new DeepSeekProvider());
     this.registerProvider(new TogetherProvider());
+    this.registerProvider(new GroqProvider());
   }
 
   registerProvider(provider: LLMProvider) {

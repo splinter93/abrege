@@ -19,7 +19,9 @@ export class AgentApiV2Tools {
   constructor() {
     // Utiliser l'URL de base configurée ou l'URL par défaut
     this.baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://scrivia.app';
+    logger.dev(`[AgentApiV2Tools] 🚀 Initialisation avec baseUrl: ${this.baseUrl}`);
     this.initializeTools();
+    logger.dev(`[AgentApiV2Tools] ✅ Initialisation terminée, ${this.tools.size} tools chargés`);
   }
 
   private initializeTools() {
@@ -360,7 +362,7 @@ export class AgentApiV2Tools {
     // Tool: Lister tous les classeurs
     this.tools.set('get_notebooks', {
       name: 'get_notebooks',
-      description: 'Récupérer la liste complète des classeurs de l\'utilisateur avec leurs métadonnées (nom, description, icône, position). Permet de choisir le bon classeur avant de créer des notes ou dossiers.',
+      description: 'Récupérer la liste complète des classeurs de l\'utilisateur avec leurs métadonnées (nom, description, icône, position). IMPORTANT: Cette fonction ne prend aucun paramètre, mais vous devez toujours fournir un objet JSON vide {} comme arguments. Permet de choisir le bon classeur avant de créer des notes ou dossiers.',
       parameters: {
         type: 'object',
         properties: {},
@@ -675,8 +677,11 @@ export class AgentApiV2Tools {
   /**
    * Obtenir la liste des outils disponibles pour function calling
    */
-  getToolsForFunctionCalling(): any[] {
-    return Array.from(this.tools.values()).map(tool => ({
+  getToolsForFunctionCalling(capabilities?: string[]): any[] {
+    logger.dev(`[AgentApiV2Tools] 🔧 Nombre de tools dans la Map: ${this.tools.size}`);
+    logger.dev(`[AgentApiV2Tools] 🔧 Tools disponibles: ${Array.from(this.tools.keys()).join(', ')}`);
+    
+    const allTools = Array.from(this.tools.values()).map(tool => ({
       type: 'function' as const,
       function: {
         name: tool.name,
@@ -684,6 +689,16 @@ export class AgentApiV2Tools {
         parameters: tool.parameters
       }
     }));
+    
+    // Si des capacités spécifiques sont demandées, filtrer
+    if (capabilities && capabilities.length > 0) {
+      const filteredTools = allTools.filter(tool => capabilities.includes(tool.function.name));
+      logger.dev(`[AgentApiV2Tools] 🔧 Tools filtrés selon capacités: ${filteredTools.length}/${allTools.length}`);
+      return filteredTools;
+    }
+    
+    logger.dev(`[AgentApiV2Tools] 🔧 Tools configurés pour function calling: ${allTools.length}`);
+    return allTools;
   }
 
   /**

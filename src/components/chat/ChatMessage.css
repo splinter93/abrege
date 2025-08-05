@@ -5,7 +5,6 @@
 .chat-message {
   display: flex;
   margin-bottom: var(--chat-spacing-lg);
-  animation: chatMessageSlideIn 0.3s ease-out;
 }
 
 .chat-message-user {
@@ -431,19 +430,8 @@
 }
 
 /* ========================================
-   ANIMATIONS
+   ANIMATIONS - SUPPRIMÉES POUR UNE MEILLEURE UX
    ======================================== */
-
-@keyframes chatMessageSlideIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
 
 /* ========================================
    RESPONSIVE
