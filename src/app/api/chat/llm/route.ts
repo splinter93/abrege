@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { llmManager } from '@/services/llm';
+import { LLMProviderManager } from '@/services/llm/providerManager';
 import { DeepSeekProvider } from '@/services/llm/providers';
+import { agentApiV2Tools } from '@/services/agentApiV2Tools';
 
 import type { AppContext, ChatMessage } from '@/services/llm/types';
 import { simpleLogger as logger } from '@/utils/logger';
+
+// Instance singleton du LLM Manager
+const llmManager = new LLMProviderManager();
 
 // Fonction pour créer le client Supabase
 const createSupabaseClient = () => {
@@ -75,22 +79,22 @@ export async function POST(request: NextRequest) {
     logger.dev("[LLM API] 👤 Utilisateur:", userId);
     logger.dev("[LLM API] 📦 Body reçu:", { message, context, provider });
 
-                    // Récupérer la configuration de l'agent si spécifiée
-                let agentConfig = null;
-                if (context?.agentId) {
-                  logger.dev("[LLM API] 🔍 Recherche agent avec ID:", context.agentId);
-                  agentConfig = await getAgentById(context.agentId);
-                  logger.dev("[LLM API] 🤖 Configuration agent trouvée:", agentConfig?.name);
-                  if (agentConfig) {
-                                      if (agentConfig.system_instructions) {
-                    logger.dev("[LLM API] 📝 Instructions système (extrait):", agentConfig.system_instructions.substring(0, 200) + '...');
-                  }
-                  } else {
-                    logger.dev("[LLM API] ⚠️ Agent non trouvé pour l'ID:", context.agentId);
-                  }
-                } else {
-                  logger.dev("[LLM API] ⚠️ Aucun agentId fourni dans le contexte");
-                }
+    // Récupérer la configuration de l'agent si spécifiée
+    let agentConfig = null;
+    if (context?.agentId) {
+      logger.dev("[LLM API] 🔍 Recherche agent avec ID:", context.agentId);
+      agentConfig = await getAgentById(context.agentId);
+      logger.dev("[LLM API] 🤖 Configuration agent trouvée:", agentConfig?.name);
+      if (agentConfig) {
+        if (agentConfig.system_instructions) {
+          logger.dev("[LLM API] 📝 Instructions système (extrait):", agentConfig.system_instructions.substring(0, 200) + '...');
+        }
+      } else {
+        logger.dev("[LLM API] ⚠️ Agent non trouvé pour l'ID:", context.agentId);
+      }
+    } else {
+      logger.dev("[LLM API] ⚠️ Aucun agentId fourni dans le contexte");
+    }
 
     // Déterminer le provider à utiliser
     let targetProvider = provider;
@@ -173,6 +177,15 @@ export async function POST(request: NextRequest) {
         }
       ];
 
+      // 🔧 ANTI-BUG: Forcer les outils pour test
+      const tools = agentApiV2Tools.getToolsForFunctionCalling();
+
+      logger.dev("[LLM API] 🔧 Capacités agent:", agentConfig?.api_v2_capabilities);
+      logger.dev("[LLM API] 🔧 Tools disponibles:", tools?.length || 0);
+      if (tools) {
+        logger.dev("[LLM API] 🔧 Tools:", tools.map(t => t.function.name));
+      }
+
       // Appeler DeepSeek avec streaming et configuration dynamique
       const payload = {
         model: config.model,
@@ -180,7 +193,8 @@ export async function POST(request: NextRequest) {
         stream: true,
         temperature: config.temperature,
         max_tokens: config.max_tokens,
-        top_p: config.top_p
+        top_p: config.top_p,
+        ...(tools && { tools })
       };
 
       logger.dev("[LLM API] 📤 Payload complet envoyé à DeepSeek:");
@@ -198,132 +212,227 @@ export async function POST(request: NextRequest) {
 
       if (!response.ok) {
         const errorText = await response.text();
+        logger.error("[LLM API] ❌ Erreur DeepSeek:", errorText);
         throw new Error(`DeepSeek API error: ${response.status} - ${errorText}`);
       }
 
-      // Lire le stream et broadcaster chaque token
+      // Gestion du streaming avec function calling
       const reader = response.body?.getReader();
       if (!reader) {
-        throw new Error('Pas de body de réponse pour le streaming');
+        throw new Error('Impossible de lire le stream de réponse');
       }
 
-      const decoder = new TextDecoder();
-      let fullResponse = '';
+      let accumulatedContent = '';
+      let functionCallData: any = null;
 
-      logger.dev("[LLM API] 📝 Début du streaming...");
+      // Créer le canal pour le broadcast
+      const supabase = createSupabaseClient();
+      const channel = supabase.channel(channelId);
 
-      try {
-        while (true) {
-          const { done, value } = await reader.read();
-          
-          if (done) break;
-          
-          const chunk = decoder.decode(value);
-          const lines = chunk.split('\n');
-          
-          for (const line of lines) {
-            if (line.startsWith('data: ')) {
-              try {
-                const data = JSON.parse(line.slice(6));
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = new TextDecoder().decode(value);
+        const lines = chunk.split('\n');
+
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            const data = line.slice(6);
+            if (data === '[DONE]') break;
+
+            try {
+              const parsed = JSON.parse(data);
+              
+              logger.dev("[LLM API] 📥 Chunk complet:", JSON.stringify(parsed));
+              
+              if (parsed.choices?.[0]?.delta) {
+                const delta = parsed.choices[0].delta;
+                logger.dev("[LLM API] 🔍 Delta trouvé:", JSON.stringify(delta));
                 
-                if (data.choices && data.choices[0]?.delta?.content) {
-                  const token = data.choices[0].delta.content;
-                  fullResponse += token;
+                // Gestion du function calling (ancien format)
+                if (delta.function_call) {
+                  if (!functionCallData) {
+                    functionCallData = {
+                      name: delta.function_call.name || '',
+                      arguments: delta.function_call.arguments || ''
+                    };
+                  } else {
+                    if (delta.function_call.name) {
+                      functionCallData.name = delta.function_call.name;
+                    }
+                    if (delta.function_call.arguments) {
+                      functionCallData.arguments += delta.function_call.arguments;
+                    }
+                  }
+                }
+                // Gestion du tool calling (nouveau format)
+                else if (delta.tool_calls) {
+                  logger.dev("[LLM API] 🔧 Tool calls détectés:", JSON.stringify(delta.tool_calls));
                   
-                  // Broadcaster le token via Supabase Realtime
-                  // Utiliser l'ID de session depuis le contexte ou un ID unique
-                  const sessionId = context?.sessionId || appContext.id;
+                  for (const toolCall of delta.tool_calls) {
+                    if (!functionCallData) {
+                      functionCallData = {
+                        name: toolCall.function?.name || '',
+                        arguments: toolCall.function?.arguments || ''
+                      };
+                    } else {
+                      if (toolCall.function?.name) {
+                        functionCallData.name = toolCall.function.name;
+                      }
+                      if (toolCall.function?.arguments) {
+                        functionCallData.arguments += toolCall.function.arguments;
+                      }
+                    }
+                  }
+                }
+                else if (delta.content) {
+                  accumulatedContent += delta.content;
+                  
+                  logger.dev("[LLM API] 📤 Broadcasting token:", delta.content.substring(0, 20) + '...');
+                  
+                  // Broadcast du token pour le streaming
                   try {
-                    const supabase = createSupabaseClient();
-                    await supabase.channel(channelId).send({
+                    await channel.send({
                       type: 'broadcast',
                       event: 'llm-token',
-                      payload: { 
-                        token, 
-                        sessionId,
-                        fullResponse 
+                      payload: {
+                        token: delta.content,
+                        sessionId: context.sessionId
                       }
                     });
-                    
-                    logger.dev("[LLM API] 📝 Token broadcasté:", token);
-                  } catch (broadcastError) {
-                    logger.error("[LLM API] ❌ Erreur broadcast token:", broadcastError);
+                    logger.dev("[LLM API] ✅ Token broadcasté avec succès");
+                  } catch (error) {
+                    logger.error("[LLM API] ❌ Erreur broadcast token:", error);
                   }
-                } else if (data.choices && data.choices[0]?.finish_reason) {
-                  logger.dev("[LLM API] ✅ Streaming terminé");
-                  
-                  // Broadcaster la fin du stream
-                  const sessionId = context?.sessionId || appContext.id;
-                  try {
-                    const supabase = createSupabaseClient();
-                    await supabase.channel(channelId).send({
-                      type: 'broadcast',
-                      event: 'llm-complete',
-                      payload: { 
-                        sessionId,
-                        fullResponse 
-                      }
-                    });
-                  } catch (broadcastError) {
-                    logger.error("[LLM API] ❌ Erreur broadcast completion:", broadcastError);
-                  }
-                  
-                  break;
                 }
-              } catch (e) {
-                logger.warn("[LLM API] ⚠️ Erreur parsing SSE:", e);
               }
+            } catch (error) {
+              logger.error("[LLM API] ❌ Erreur parsing chunk:", error);
             }
           }
         }
-      } catch (streamError) {
-        logger.error("[LLM API] ❌ Erreur streaming:", streamError);
-        
-        // Essayer de broadcaster une erreur
-        try {
-          const sessionId = context?.sessionId || appContext.id;
-          const supabase = createSupabaseClient();
-          await supabase.channel(channelId).send({
-            type: 'broadcast',
-            event: 'llm-error',
-            payload: { 
-              sessionId,
-              error: 'Erreur lors du streaming'
-            }
-          });
-        } catch (broadcastError) {
-          logger.error("[LLM API] ❌ Erreur broadcast error:", broadcastError);
-        }
-        
-        throw streamError;
       }
 
-      logger.dev("[LLM API] ✅ Streaming terminé, réponse complète:", fullResponse);
+      // Si une fonction a été appelée, l'exécuter
+      logger.dev("[LLM API] 🔍 Vérification function call:", functionCallData);
+      
+      // 🔧 ANTI-BOUCLE: Limiter à une seule exécution de fonction par requête
+      if (functionCallData && functionCallData.name) {
+        logger.dev("[LLM API] 🎯 ON ENTRE DANS LE BLOC FUNCTION CALL !");
+        try {
+          logger.dev("[LLM API] 🔧 Function call détectée:", functionCallData);
+          
+          const functionArgs = JSON.parse(functionCallData.arguments);
+          
+          // Utiliser le token JWT de l'utilisateur pour l'authentification API
+          const userToken = authHeader.substring(7); // Récupérer le token JWT
+          const result = await agentApiV2Tools.executeTool(
+            functionCallData.name, 
+            functionArgs, 
+            userToken
+          );
 
-      return NextResponse.json({
-        channelId,
-        success: true,
-        provider: llmManager.getCurrentProviderId(),
-        message: "Streaming démarré, écoutez le canal pour les tokens"
-      });
+          logger.dev("[LLM API] ✅ Résultat de la fonction:", result);
+
+          // 🔧 ANTI-BOUCLE: Broadcast direct du résultat sans re-prompt
+          logger.dev("[LLM API] 🔧 Broadcast du résultat sans re-prompt (anti-boucle)");
+
+          // Créer le message tool avec le bon format DeepSeek
+          const toolMessage = {
+            role: 'assistant' as const,
+            content: null,
+            tool_calls: [{
+              id: `call_${Date.now()}`,
+              type: 'function',
+              function: {
+                name: functionCallData.name,
+                arguments: functionCallData.arguments
+              }
+            }]
+          };
+
+          const toolResultMessage = {
+            role: 'tool' as const,
+            tool_call_id: `call_${Date.now()}`,
+            content: JSON.stringify(result)
+          };
+
+          // Créer un message de résumé avec le résultat de la fonction
+          const summaryMessage = `J'ai exécuté l'action "${functionCallData.name}" avec succès. Voici le résultat : ${JSON.stringify(result, null, 2)}`;
+          
+          // Broadcast du résultat
+          await channel.send({
+            type: 'broadcast',
+            event: 'llm-token',
+            payload: {
+              token: summaryMessage,
+              sessionId: context.sessionId
+            }
+          });
+
+          // Broadcast de completion
+          await channel.send({
+            type: 'broadcast',
+            event: 'llm-complete',
+            payload: {
+              sessionId: context.sessionId,
+              fullResponse: summaryMessage
+            }
+          });
+
+          return NextResponse.json({ 
+            success: true, 
+            response: summaryMessage,
+            functionResult: result
+          });
+
+        } catch (error) {
+          logger.error("[LLM API] ❌ Erreur exécution fonction:", error);
+          
+          const errorMessage = `Erreur lors de l'exécution de l'action: ${error instanceof Error ? error.message : 'Erreur inconnue'}`;
+          
+          // Broadcast d'erreur
+          await channel.send({
+            type: 'broadcast',
+            event: 'llm-error',
+            payload: {
+              sessionId: context.sessionId,
+              error: errorMessage
+            }
+          });
+          
+          return NextResponse.json({ 
+            success: false, 
+            error: errorMessage
+          });
+        }
+      } else {
+        logger.dev("[LLM API] ❌ PAS DE FUNCTION CALL - Réponse normale");
+        // Réponse normale sans function calling
+        // Broadcast de completion
+        await channel.send({
+          type: 'broadcast',
+          event: 'llm-complete',
+          payload: {
+            sessionId: context.sessionId,
+            fullResponse: accumulatedContent
+          }
+        });
+        
+        return NextResponse.json({ success: true, response: accumulatedContent });
+      }
 
     } else {
-      // Fallback pour les autres providers (Synesia)
-      logger.dev("[LLM API] 🚀 Appel non-streaming avec", currentProvider.name);
-      
+      // Pour les autres providers (Synesia, etc.)
       const response = await currentProvider.call(message, appContext, history);
-      
-      return NextResponse.json({
-        response,
-        success: true,
-        provider: llmManager.getCurrentProviderId()
-      });
+      return NextResponse.json({ success: true, response });
     }
 
   } catch (error) {
-    logger.error("[LLM API] ❌ Erreur:", error);
+    logger.error("[LLM API] ❌ Erreur générale:", error);
     return NextResponse.json(
-      { error: "Erreur interne du serveur" },
+      { error: 'Erreur interne du serveur' },
       { status: 500 }
     );
   }

@@ -169,10 +169,10 @@ export class SessionSyncService {
         throw new Error(response.error || 'Erreur ajout message');
       }
 
-      // 2. Synchroniser depuis la DB (pour avoir la version à jour)
-      await this.syncSessionsFromDB();
+      // 🔧 ANTI-DOUBLON: Ne pas synchroniser automatiquement après chaque ajout
+      // await this.syncSessionsFromDB();
       
-      logger.dev('[SessionSync] ✅ Message ajouté et synchronisé');
+      logger.dev('[SessionSync] ✅ Message ajouté (sans sync automatique)');
       
       return {
         success: true

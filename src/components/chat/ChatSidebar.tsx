@@ -145,8 +145,8 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({ isOpen, isDesktop, onClose })
                     >
                       <div className="agent-icon">{agent.profile_picture || '🤖'}</div>
                       <div className="agent-info">
-                        <span className="agent-name">{agent.name}</span>
-                        <span className="agent-model">{agent.model}</span>
+                        <div className="agent-name">{agent.name}</div>
+                        <div className="agent-model">{agent.model}</div>
                       </div>
                       {selectedAgent?.id === agent.id && (
                         <div className="agent-selected-indicator">✓</div>

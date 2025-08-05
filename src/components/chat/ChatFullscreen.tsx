@@ -22,6 +22,8 @@ const ChatFullscreen: React.FC = () => {
   const [streamingChannel, setStreamingChannel] = useState<any>(null);
   const [streamingContent, setStreamingContent] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
+  // Ref to skip fallback save when streaming completes
+  const skipFallbackSaveRef = useRef(false);
   const streamingContextRef = useRef<{ sessionId: string; messageId: string } | null>(null);
   
   // Récupérer le contexte de l'app
@@ -155,6 +157,21 @@ const ChatFullscreen: React.FC = () => {
       // Attendre un tick pour s'assurer que le message utilisateur est bien ajouté
       await new Promise(resolve => setTimeout(resolve, 0));
 
+      // 🔧 ANTI-DUPLICATION: Ajouter un message assistant temporaire et le sauvegarder en DB
+      const tempAssistantMessage = {
+        role: 'assistant' as const,
+        content: '',
+        timestamp: new Date().toISOString(),
+        isStreaming: true
+      };
+      
+      // Utiliser addMessage pour ajouter le message temporaire (qui le sauvegarde en DB)
+      await addMessage(tempAssistantMessage);
+      logger.dev('[ChatFullscreen] ✅ Message assistant temporaire ajouté et sauvegardé en DB');
+      
+      // Attendre un tick pour s'assurer que le message assistant est bien ajouté
+      await new Promise(resolve => setTimeout(resolve, 0));
+
       // Récupérer le token d'authentification
       const { data: { session } } = await supabase.auth.getSession();
       const token = session?.access_token;
@@ -203,12 +220,14 @@ const ChatFullscreen: React.FC = () => {
           }
         })
         .on('broadcast', { event: 'llm-complete' }, async (payload) => {
+          // Mark that we already saved via streaming callback
+          skipFallbackSaveRef.current = true;
           try {
             logger.dev('[ChatFullscreen] ✅ Complete received via broadcast:', payload);
             const { sessionId, fullResponse } = payload.payload || {};
             const ref = streamingContextRef.current;
             if (ref && sessionId === ref.sessionId && fullResponse) {
-              // Reset streaming state AVANT d'ajouter le message pour éviter les conflits
+              // Reset streaming state AVANT de traiter le message final
               streamingContextRef.current = null;
               setIsStreaming(false);
               setStreamingContent('');
@@ -216,17 +235,39 @@ const ChatFullscreen: React.FC = () => {
               // Attendre un tick pour s'assurer que le state est mis à jour
               await new Promise(resolve => setTimeout(resolve, 0));
               
-              // Sauvegarder le message final
-              const finalMessage = {
-                role: 'assistant' as const,
-                content: fullResponse,
-                timestamp: new Date().toISOString()
-              };
+                            // 🔧 ANTI-DUPLICATION: Mettre à jour le message assistant existant
+              const store = useChatStore.getState();
+              const currentSession = store.currentSession;
               
-              await addMessage(finalMessage);
-              logger.dev('[ChatFullscreen] 💾 Message assistant sauvegardé');
+              if (currentSession && currentSession.thread.length > 0) {
+                // Trouver le dernier message assistant (qui est le message temporaire)
+                const lastAssistantMessage = currentSession.thread
+                  .filter(msg => msg.role === 'assistant')
+                  .pop();
+                
+                if (lastAssistantMessage) {
+                  // Mettre à jour le contenu du message assistant
+                  const updatedThread = currentSession.thread.map(msg => 
+                    msg.id === lastAssistantMessage.id 
+                      ? { ...msg, content: fullResponse, isStreaming: false }
+                      : msg
+                  );
+                  
+                  const updatedSession = {
+                    ...currentSession,
+                    thread: updatedThread
+                  };
+                  
+                  store.setCurrentSession(updatedSession);
+                  logger.dev('[ChatFullscreen] ✅ Message assistant mis à jour avec le contenu final');
+                  
+                  // 🔧 ANTI-DUPLICATION: Le message est déjà en DB via l'optimistic update
+                  // Pas besoin de faire un appel API supplémentaire
+                  logger.dev('[ChatFullscreen] ✅ Message assistant mis à jour (pas de sauvegarde en double)');
+                }
+              }
               
-              // Scroll forcé après l'ajout du message
+              // Scroll forcé après la fin du streaming
               setTimeout(() => scrollToBottom(true), 100);
             }
           } catch (error) {
@@ -236,20 +277,49 @@ const ChatFullscreen: React.FC = () => {
             setStreamingContent('');
           }
         })
-        .on('broadcast', { event: 'llm-error' }, (payload) => {
+        .on('broadcast', { event: 'llm-error' }, async (payload) => {
           try {
             logger.error('[ChatFullscreen] ❌ Error received via broadcast:', payload);
-            const { sessionId, error: errorMessage } = payload.payload || {};
+            const { sessionId, error: errorMessageFromPayload } = payload.payload || {};
             const ref = streamingContextRef.current;
             if (ref && sessionId === ref.sessionId) {
-              // Ajouter un message d'erreur
-              const errorMsg = {
-                role: 'assistant' as const,
-                content: `Erreur: ${errorMessage || 'Erreur lors du streaming'}`,
-                timestamp: new Date().toISOString()
-              };
-              
-              addMessage(errorMsg);
+                                // 🔧 ANTI-DUPLICATION: Mettre à jour le message assistant existant avec l'erreur
+                  const store = useChatStore.getState();
+                  const currentSession = store.currentSession;
+                  
+                  if (currentSession && currentSession.thread.length > 0) {
+                    // Trouver le dernier message assistant (qui est le message temporaire)
+                    const lastAssistantMessage = currentSession.thread
+                      .filter(msg => msg.role === 'assistant')
+                      .pop();
+                    
+                    if (lastAssistantMessage) {
+                      const errorContent = `Erreur: ${errorMessageFromPayload || 'Erreur lors du streaming'}`;
+                      
+                      // Mettre à jour le contenu du message assistant avec l'erreur
+                      const updatedThread = currentSession.thread.map(msg => 
+                        msg.id === lastAssistantMessage.id 
+                          ? { 
+                              ...msg, 
+                              content: errorContent, 
+                              isStreaming: false 
+                            }
+                          : msg
+                      );
+                      
+                      const updatedSession = {
+                        ...currentSession,
+                        thread: updatedThread
+                      };
+                      
+                      store.setCurrentSession(updatedSession);
+                      logger.dev('[ChatFullscreen] ✅ Message assistant mis à jour avec l\'erreur');
+                      
+                      // 🔧 ANTI-DUPLICATION: Le message d'erreur est déjà en DB via l'optimistic update
+                      // Pas besoin de faire un appel API supplémentaire
+                      logger.dev('[ChatFullscreen] ✅ Message d\'erreur mis à jour (pas de sauvegarde en double)');
+                    }
+                  }
               
               // Reset streaming state
               streamingContextRef.current = null;
@@ -300,13 +370,64 @@ const ChatFullscreen: React.FC = () => {
 
       // Handle non-streaming fallback responses
       if (data.response && !isStreaming) {
-        logger.dev('[ChatFullscreen] ✅ Non-streaming response received:', data.response);
-        const finalMessage = {
-          role: 'assistant' as const,
-          content: data.response,
-          timestamp: new Date().toISOString(),
-        };
-        await addMessage(finalMessage);
+        if (!skipFallbackSaveRef.current) {
+          logger.dev('[ChatFullscreen] ✅ Non-streaming response received:', data.response);
+          
+          // 🔧 ANTI-DUPLICATION: Mettre à jour le message assistant existant et sauvegarder en DB
+          const store = useChatStore.getState();
+          const currentSession = store.currentSession;
+          
+          if (currentSession && currentSession.thread.length > 0) {
+            // Trouver le dernier message assistant (qui est le message temporaire)
+            const lastAssistantMessage = currentSession.thread
+              .filter(msg => msg.role === 'assistant')
+              .pop();
+            
+            if (lastAssistantMessage) {
+              // Mettre à jour le contenu du message assistant
+              const updatedThread = currentSession.thread.map(msg => 
+                msg.id === lastAssistantMessage.id 
+                  ? { ...msg, content: data.response, isStreaming: false }
+                  : msg
+              );
+              
+              const updatedSession = {
+                ...currentSession,
+                thread: updatedThread
+              };
+              
+              store.setCurrentSession(updatedSession);
+              logger.dev('[ChatFullscreen] ✅ Message assistant mis à jour avec la réponse non-streaming');
+              
+              // 🔧 SAUVEGARDER EN DB: Ajouter le message final en DB
+              const finalMessage = {
+                role: 'assistant' as const,
+                content: data.response,
+                timestamp: new Date().toISOString()
+              };
+              
+              // Utiliser directement le service de chat pour sauvegarder en DB (sans mettre à jour le store)
+              const response = await fetch(`/api/v1/chat-sessions/${currentSession.id}/messages`, {
+                method: 'POST',
+                headers: {
+                  'Authorization': `Bearer ${token}`,
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(finalMessage),
+              });
+              
+              if (!response.ok) {
+                logger.error('[ChatFullscreen] ❌ Erreur sauvegarde message non-streaming en DB:', response.status);
+              } else {
+                logger.dev('[ChatFullscreen] ✅ Message non-streaming sauvegardé en DB');
+              }
+            }
+          }
+        } else {
+          // reset the skip flag after skipping once
+          skipFallbackSaveRef.current = false;
+        }
+        
         setIsStreaming(false);
         setStreamingContent('');
       }

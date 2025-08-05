@@ -109,4 +109,6 @@ export interface Agent {
   version: string;
   is_default: boolean;
   priority: number;
+  // Capacités API v2
+  api_v2_capabilities?: string[];
 } 

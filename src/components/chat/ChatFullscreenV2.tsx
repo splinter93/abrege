@@ -311,13 +311,6 @@ const ChatFullscreenV2: React.FC = () => {
             <h2 className="chat-session-name">
               {currentSession?.name || 'Nouvelle conversation'}
             </h2>
-            {selectedAgent && (
-              <div className="chat-agent-indicator">
-                <span className="agent-indicator-icon">{selectedAgent.profile_picture || '🤖'}</span>
-                <span className="agent-indicator-name">{selectedAgent.name}</span>
-                <span className="agent-indicator-model">({selectedAgent.model})</span>
-              </div>
-            )}
           </div>
         </div>
 

@@ -225,8 +225,26 @@
   height: 24px;
 }
 
+.agent-info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--chat-spacing-xs);
+  flex: 1;
+  min-width: 0;
+}
+
 .agent-name {
   font-weight: var(--chat-font-weight-semibold);
+  color: var(--chat-text-primary);
+  font-size: var(--chat-font-size-sm);
+  line-height: var(--chat-line-height-tight);
+}
+
+.agent-model {
+  color: var(--chat-text-secondary);
+  font-size: var(--chat-font-size-xs);
+  line-height: var(--chat-line-height-tight);
+  opacity: 0.8;
 }
 
 .agent-loading,

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { POST } from './route';
-undefined';
+import { NextRequest } from 'next/server';
 
 // Mock SlugGenerator
 vi.mock('@/utils/slugGenerator', () => ({
