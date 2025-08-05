@@ -7,7 +7,6 @@ import { simpleLogger as logger } from '@/utils/logger';
 import { optimizedApi } from "../../../services/optimizedApi";
 import { supabase } from "../../../supabaseClient";
 import { toast } from "react-hot-toast";
-import "./DossiersPage.css";
 import { useFileSystemStore } from '@/store/useFileSystemStore';
 import type { FileSystemState } from '@/store/useFileSystemStore';
 import { useRealtime } from '@/hooks/useRealtime';
