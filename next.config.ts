@@ -9,6 +9,7 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  output: 'standalone',
   webpack: (config: any, options: any) => {
     // Resolve '@' to the 'src' directory
     config.resolve.alias = {
