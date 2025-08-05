@@ -530,7 +530,20 @@ export async function POST(request: NextRequest) {
           }
         });
         
-        return NextResponse.json({ success: true, response: accumulatedContent });
+        // 🔧 CORRECTION: Retourner un stream vide pour éviter le double appel
+        const emptyStream = new ReadableStream({
+          start(controller) {
+            controller.close();
+          }
+        });
+        
+        return new Response(emptyStream, {
+          headers: {
+            'Content-Type': 'text/plain; charset=utf-8',
+            'Cache-Control': 'no-cache',
+            'Connection': 'keep-alive',
+          },
+        });
       }
 
     } else {
