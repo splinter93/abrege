@@ -259,16 +259,32 @@ const ChatFullscreenV2: React.FC = () => {
         throw new Error(`Erreur API: ${response.status} - ${errorData.error || 'Erreur inconnue'}`);
       }
 
-      const data = await response.json();
-
-      // Gérer les réponses non-streaming
-      if (data.response && !isStreaming) {
-        const finalMessage = {
-          role: 'assistant' as const,
-          content: data.response,
-          timestamp: new Date().toISOString(),
-        };
-        await addMessage(finalMessage);
+      // 🔧 CORRECTION: Gérer les deux types de réponses (stream et JSON)
+      const contentType = response.headers.get('content-type');
+      
+      if (contentType?.includes('text/plain')) {
+        // Réponse streaming - le contenu est géré par le hook useChatStreaming
+        logger.dev('[ChatFullscreenV2] 📡 Réponse streaming détectée');
+      } else {
+        // Réponse JSON normale
+        try {
+          const data = await response.json();
+          logger.dev('[ChatFullscreenV2] 📄 Réponse JSON détectée:', data);
+          
+          // Gérer les réponses non-streaming
+          if (data.response && !isStreaming) {
+            const finalMessage = {
+              role: 'assistant' as const,
+              content: data.response,
+              timestamp: new Date().toISOString(),
+            };
+            await addMessage(finalMessage);
+          }
+        } catch (parseError) {
+          logger.error('[ChatFullscreenV2] ❌ Erreur parsing JSON:', parseError);
+          // Si on ne peut pas parser, c'est probablement un stream
+          logger.dev('[ChatFullscreenV2] 📡 Traitement comme stream');
+        }
       }
 
     } catch (error) {
