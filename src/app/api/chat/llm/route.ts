@@ -349,15 +349,16 @@ export async function POST(request: NextRequest) {
 
           logger.dev("[LLM API] ✅ Résultat de la fonction:", result);
 
-          // 🔧 ANTI-BOUCLE: Broadcast direct du résultat sans re-prompt
-          logger.dev("[LLM API] 🔧 Broadcast du résultat sans re-prompt (anti-boucle)");
+          // 🔧 CORRECTION: Injecter le message tool et relancer le LLM
+          logger.dev("[LLM API] 🔧 Injection du message tool et relance LLM");
 
-          // Créer le message tool avec le bon format DeepSeek
+          // 1. Créer le message tool avec le bon format
+          const toolCallId = `call_${Date.now()}`;
           const toolMessage = {
             role: 'assistant' as const,
             content: null,
             tool_calls: [{
-              id: `call_${Date.now()}`,
+              id: toolCallId,
               type: 'function',
               function: {
                 name: functionCallData.name,
@@ -368,37 +369,79 @@ export async function POST(request: NextRequest) {
 
           const toolResultMessage = {
             role: 'tool' as const,
-            tool_call_id: `call_${Date.now()}`,
+            tool_call_id: toolCallId,
             content: JSON.stringify(result)
           };
 
-          // Créer un message de résumé avec le résultat de la fonction
-          const summaryMessage = `J'ai exécuté l'action "${functionCallData.name}" avec succès. Voici le résultat : ${JSON.stringify(result, null, 2)}`;
-          
-          // Broadcast du résultat
-          await channel.send({
-            type: 'broadcast',
-            event: 'llm-token',
-            payload: {
-              token: summaryMessage,
-              sessionId: context.sessionId
+          // 2. Ajouter les messages à l'historique
+          const updatedMessages = [
+            ...messages,
+            toolMessage,
+            toolResultMessage
+          ];
+
+          logger.dev("[LLM API] 📝 Historique mis à jour avec tool messages");
+
+          // 3. Relancer le LLM avec l'historique complet
+          const finalResponse = await currentProvider.client.chat.completions.create({
+            model: agentConfig?.model || 'deepseek-chat',
+            messages: updatedMessages,
+            stream: true,
+            temperature: agentConfig?.temperature || 0.7,
+            max_tokens: agentConfig?.max_tokens || 4000,
+            ...(tools && { tools })
+          });
+
+          logger.dev("[LLM API] 🔄 LLM relancé avec historique complet");
+
+          // 4. Streamer la vraie réponse du LLM
+          const encoder = new TextEncoder();
+          const stream = new ReadableStream({
+            async start(controller) {
+              try {
+                for await (const chunk of finalResponse) {
+                  const delta = chunk.choices[0]?.delta;
+                  if (delta?.content) {
+                    const token = delta.content;
+                    
+                    // Broadcast du token
+                    await channel.send({
+                      type: 'broadcast',
+                      event: 'llm-token',
+                      payload: {
+                        token,
+                        sessionId: context.sessionId
+                      }
+                    });
+
+                    controller.enqueue(encoder.encode(`data: ${JSON.stringify({ token })}\n\n`));
+                  }
+                }
+
+                // Broadcast de completion
+                await channel.send({
+                  type: 'broadcast',
+                  event: 'llm-complete',
+                  payload: {
+                    sessionId: context.sessionId,
+                    fullResponse: "Réponse générée par le LLM après traitement des données"
+                  }
+                });
+
+                controller.close();
+              } catch (error) {
+                logger.error("[LLM API] ❌ Erreur streaming réponse finale:", error);
+                controller.error(error);
+              }
             }
           });
 
-          // Broadcast de completion
-          await channel.send({
-            type: 'broadcast',
-            event: 'llm-complete',
-            payload: {
-              sessionId: context.sessionId,
-              fullResponse: summaryMessage
-            }
-          });
-
-          return NextResponse.json({ 
-            success: true, 
-            response: summaryMessage,
-            functionResult: result
+          return new Response(stream, {
+            headers: {
+              'Content-Type': 'text/plain; charset=utf-8',
+              'Cache-Control': 'no-cache',
+              'Connection': 'keep-alive',
+            },
           });
 
         } catch (error) {
