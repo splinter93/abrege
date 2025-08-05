@@ -3,7 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 import { LLMProviderManager } from '@/services/llm/providerManager';
 import { DeepSeekProvider } from '@/services/llm/providers';
 // Import temporairement désactivé pour résoudre le problème de build Vercel
-// import { agentApiV2Tools } from '@/services/agentApiV2Tools';
+import { agentApiV2Tools } from '@/services/agentApiV2Tools';
 
 import type { AppContext, ChatMessage } from '@/services/llm/types';
 import { simpleLogger as logger } from '@/utils/logger';
@@ -186,12 +186,10 @@ export async function POST(request: NextRequest) {
 
       // 🔧 ANTI-BUG: Forcer les outils pour test
       // Temporairement désactivé pour résoudre le problème de build Vercel
-      // const tools = agentApiV2Tools.getToolsForFunctionCalling();
-      const tools = null;
+        const tools = agentApiV2Tools.getToolsForFunctionCalling();
 
       logger.dev("[LLM API] 🔧 Capacités agent:", agentConfig?.api_v2_capabilities);
-      logger.dev("[LLM API] 🔧 Tools disponibles:", 0);
-      logger.dev("[LLM API] 🔧 Tools: temporairement désactivés");
+              logger.dev("[LLM API] 🔧 Tools disponibles:", tools?.length || 0);
 
       // Appeler DeepSeek avec streaming et configuration dynamique
       const payload = {
@@ -200,8 +198,8 @@ export async function POST(request: NextRequest) {
         stream: true,
         temperature: config.temperature,
         max_tokens: config.max_tokens,
-        top_p: config.top_p
-        // Tools temporairement désactivés
+        top_p: config.top_p,
+        ...(tools && { tools })
       };
 
       logger.dev("[LLM API] 📤 Payload complet envoyé à DeepSeek:");
@@ -334,13 +332,11 @@ export async function POST(request: NextRequest) {
           
           // Utiliser le token JWT de l'utilisateur pour l'authentification API
           const userToken = authHeader.substring(7); // Récupérer le token JWT
-          // Temporairement désactivé pour résoudre le problème de build Vercel
-          // const result = await agentApiV2Tools.executeTool(
-          //   functionCallData.name, 
-          //   functionArgs, 
-          //   userToken
-          // );
-          const result = { error: 'Tool calls temporairement désactivés pour le déploiement' };
+          const result = await agentApiV2Tools.executeTool(
+            functionCallData.name, 
+            functionArgs, 
+            userToken
+          );
 
           logger.dev("[LLM API] ✅ Résultat de la fonction:", result);
 
