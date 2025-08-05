@@ -264,21 +264,25 @@ const ChatFullscreenV2: React.FC = () => {
       
       if (contentType?.includes('text/plain')) {
         // Réponse streaming - le contenu est géré par le hook useChatStreaming
-        logger.dev('[ChatFullscreenV2] 📡 Réponse streaming détectée');
+        logger.dev('[ChatFullscreenV2] 📡 Réponse streaming détectée - pas d\'ajout manuel');
       } else {
         // Réponse JSON normale
         try {
           const data = await response.json();
           logger.dev('[ChatFullscreenV2] 📄 Réponse JSON détectée:', data);
           
-          // Gérer les réponses non-streaming
-          if (data.response && !isStreaming) {
+          // 🔧 CORRECTION: Éviter le double ajout pour les messages sans tool call
+          // Le hook useChatStreaming gère déjà l'ajout via onComplete
+          if (data.response && !isStreaming && !data.completed) {
+            logger.dev('[ChatFullscreenV2] 📝 Ajout manuel du message (pas de streaming)');
             const finalMessage = {
               role: 'assistant' as const,
               content: data.response,
               timestamp: new Date().toISOString(),
             };
             await addMessage(finalMessage);
+          } else {
+            logger.dev('[ChatFullscreenV2] 📡 Message déjà géré par le streaming ou completed');
           }
         } catch (parseError) {
           logger.error('[ChatFullscreenV2] ❌ Erreur parsing JSON:', parseError);
