@@ -220,13 +220,18 @@ export class ChatSessionService {
    */
   async deleteSession(sessionId: string): Promise<{ success: boolean; error?: string }> {
     try {
+      logger.dev('[ChatSessionService] 🗑️ deleteSession appelé pour:', sessionId);
+      
       // Récupérer le token d'authentification
       const { data: { session } } = await supabase.auth.getSession();
       const token = session?.access_token;
       
       if (!token) {
+        logger.error('[ChatSessionService] ❌ Pas de token d\'authentification');
         throw new Error('Authentification requise');
       }
+
+      logger.dev('[ChatSessionService] 🔧 Appel API DELETE:', `${this.baseUrl}/${sessionId}`);
 
       const response = await fetch(`${this.baseUrl}/${sessionId}`, {
         method: 'DELETE',
@@ -236,15 +241,20 @@ export class ChatSessionService {
         },
       });
 
+      logger.dev(`[ChatSessionService] 📋 Status réponse: ${response.status}`);
+
       const data = await response.json();
+      logger.dev('[ChatSessionService] 📋 Données réponse:', data);
 
       if (!response.ok) {
+        logger.error('[ChatSessionService] ❌ Erreur API:', response.status, data);
         throw new Error(data.error || 'Erreur lors de la suppression de la session');
       }
 
+      logger.dev('[ChatSessionService] ✅ Suppression réussie');
       return { success: true };
     } catch (error) {
-      logger.error('Erreur ChatSessionService.deleteSession:', error);
+      logger.error('[ChatSessionService] ❌ Erreur deleteSession:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Erreur inconnue'

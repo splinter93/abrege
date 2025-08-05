@@ -220,9 +220,13 @@ export class SessionSyncService {
       }
       
       // 1. Supprimer en DB (source de vérité)
+      logger.dev('[SessionSync] 🔧 Appel chatSessionService.deleteSession...');
       const response = await this.chatSessionService.deleteSession(sessionId);
       
+      logger.dev('[SessionSync] 📋 Réponse deleteSession:', response);
+      
       if (!response.success) {
+        logger.error('[SessionSync] ❌ Échec suppression session:', response.error);
         throw new Error(response.error || 'Erreur suppression session');
       }
 
