@@ -250,7 +250,8 @@ export class AgentApiV2Tools {
 
       logger.dev(`[AgentApiV2Tools] 🌐 Appel API: ${method} ${url}`);
       logger.dev(`[AgentApiV2Tools] 📤 Données:`, data);
-      logger.dev(`[AgentApiV2Tools] 🔑 Headers:`, headers);
+      logger.dev(`[AgentApiV2Tools] 🔑 Token JWT (début):`, jwtToken.substring(0, 20) + "...");
+      logger.dev(`[AgentApiV2Tools] 🔑 Headers (sans token):`, { ...headers, Authorization: 'Bearer ***' });
 
       const response = await fetch(url, config);
       logger.dev(`[AgentApiV2Tools] 📥 Status:`, response.status);

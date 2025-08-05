@@ -57,9 +57,10 @@ export async function POST(request: NextRequest) {
     // Vérifier l'authentification
     const authHeader = request.headers.get('authorization');
     let userId: string;
+    let userToken: string;
 
     if (authHeader && authHeader.startsWith('Bearer ')) {
-      const userToken = authHeader.substring(7);
+      userToken = authHeader.substring(7);
       const supabase = createSupabaseAdmin();
       const { data: { user }, error: authError } = await supabase.auth.getUser(userToken);
       
@@ -331,7 +332,7 @@ export async function POST(request: NextRequest) {
           const functionArgs = JSON.parse(functionCallData.arguments);
           
           // Utiliser le token JWT de l'utilisateur pour l'authentification API
-          const userToken = authHeader.substring(7); // Récupérer le token JWT
+          logger.dev("[LLM API] 🔑 Token JWT utilisé pour tool call:", userToken.substring(0, 20) + "...");
           const result = await agentApiV2Tools.executeTool(
             functionCallData.name, 
             functionArgs, 
