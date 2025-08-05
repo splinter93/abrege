@@ -1,5 +1,5 @@
 import { simpleLogger as logger } from '@/utils/logger';
-import { createNoteDirect, createFolderDirect, getNotebooksDirect, getNotebookTreeDirect } from './apiV2Direct';
+import { createNoteDirect, createFolderDirect, createClasseurDirect, getNotebooksDirect, getNotebookTreeDirect } from './apiV2Direct';
 
 export interface ApiV2Tool {
   name: string;
@@ -232,7 +232,7 @@ export class AgentApiV2Tools {
         required: ['name']
       },
       execute: async (params, jwtToken, userId) => {
-        return await this.callApiV2('POST', '/api/v2/classeur/create', params, jwtToken);
+        return await createClasseurDirect(params, userId);
       }
     });
 

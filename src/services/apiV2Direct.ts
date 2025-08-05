@@ -19,6 +19,10 @@ export interface CreateFolderParams {
   notebook_id: string;
 }
 
+export interface CreateClasseurParams {
+  name: string;
+}
+
 export async function createNoteDirect(params: CreateNoteParams, userId: string) {
   const context = {
     operation: 'v2_note_create_direct',
@@ -132,6 +136,43 @@ export async function createFolderDirect(params: CreateFolderParams, userId: str
   }
 
   return { success: true, data: folder };
+}
+
+export async function createClasseurDirect(params: CreateClasseurParams, userId: string) {
+  const context = {
+    operation: 'v2_classeur_create_direct',
+    component: 'API_V2_DIRECT',
+    clientType: 'llm'
+  };
+
+  logApi('v2_classeur_create_direct', '🚀 Création classeur directe', context);
+
+  const supabase = createSupabaseClient();
+
+  // Créer le classeur avec timeout
+  const createPromise = supabase
+    .from('classeurs')
+    .insert({
+      name: params.name,
+      user_id: userId
+    })
+    .select()
+    .single();
+
+  // Timeout de 10 secondes
+  const timeoutPromise = new Promise((_, reject) => {
+    setTimeout(() => reject(new Error('Timeout création classeur')), 10000);
+  });
+
+  const { data: classeur, error: createError } = await Promise.race([createPromise, timeoutPromise]) as any;
+
+  if (createError) {
+    logApi('v2_classeur_create_direct', `❌ Erreur création classeur:`, createError, context);
+    throw new Error(`Erreur création classeur: ${createError.message}`);
+  }
+
+  logApi('v2_classeur_create_direct', `✅ Classeur créé:`, classeur, context);
+  return { success: true, data: classeur };
 }
 
 export async function getNotebooksDirect(userId: string) {
