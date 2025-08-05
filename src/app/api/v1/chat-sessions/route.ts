@@ -86,10 +86,13 @@ export async function POST(request: NextRequest) {
     logger.dev('[Chat Sessions API] 📋 Données reçues:', { name, history_limit });
 
     // Créer un client avec le contexte d'authentification de l'utilisateur
-    const { createSupabaseAnonClient } = await import('@/utils/supabaseClient');
-    const userClient = createSupabaseAnonClient();
-    // Ajouter le token d'authentification
-    userClient.auth.setSession({ access_token: userToken, refresh_token: '' });
+    const userClient = createClient(supabaseUrl, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, {
+      global: {
+        headers: {
+          Authorization: `Bearer ${userToken}`
+        }
+      }
+    });
 
     // Créer la session dans la base de données avec le contexte utilisateur
     logger.dev('[Chat Sessions API] 💾 Insertion en base...');
@@ -191,10 +194,13 @@ export async function GET(request: NextRequest) {
     }
 
     // Créer un client avec le contexte d'authentification de l'utilisateur
-    const { createSupabaseAnonClient } = await import('@/utils/supabaseClient');
-    const userClient = createSupabaseAnonClient();
-    // Ajouter le token d'authentification
-    userClient.auth.setSession({ access_token: userToken, refresh_token: '' });
+    const userClient = createClient(supabaseUrl, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, {
+      global: {
+        headers: {
+          Authorization: `Bearer ${userToken}`
+        }
+      }
+    });
 
     // Récupérer les sessions de l'utilisateur avec le contexte utilisateur
     logger.dev('[Chat Sessions API] 🔍 Récupération sessions pour utilisateur:', userId);
