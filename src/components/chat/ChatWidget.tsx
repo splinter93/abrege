@@ -9,6 +9,7 @@ import EnhancedMarkdownMessage from './EnhancedMarkdownMessage';
 import ChatSidebar from './ChatSidebar';
 import { supabase } from '@/supabaseClient';
 import './index.css';
+import './ChatWidget.css';
 
 const ChatWidget: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -61,8 +62,29 @@ const ChatWidget: React.FC = () => {
     syncSessionsFromHook();
   }, [syncSessionsFromHook]);
 
-  // Masquer le widget si on est sur la page chat
-  if (isOnChatPage) {
+  const [isOnAuthPage, setIsOnAuthPage] = useState(false);
+
+  // Vérifier si on est sur une page d'auth
+  useEffect(() => {
+    const checkIfOnAuthPage = () => {
+      const pathname = window.location.pathname;
+      setIsOnAuthPage(
+        pathname.includes('/auth') || 
+        pathname.includes('/login') || 
+        pathname.includes('/signup')
+      );
+    };
+    
+    checkIfOnAuthPage();
+    window.addEventListener('popstate', checkIfOnAuthPage);
+    
+    return () => {
+      window.removeEventListener('popstate', checkIfOnAuthPage);
+    };
+  }, []);
+
+  // Masquer le widget si on est sur la page chat ou sur les pages d'auth
+  if (isOnChatPage || isOnAuthPage) {
     return null;
   }
 
