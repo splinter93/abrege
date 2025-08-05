@@ -60,6 +60,31 @@ export function useChatStreaming(options: UseChatStreamingOptions = {}): UseChat
           logger.error('[useChatStreaming] ❌ Erreur token:', error);
         }
       })
+      .on('broadcast', { event: 'llm-token-batch' }, (payload) => {
+        logger.dev('[useChatStreaming] 📦 Batch de tokens reçu:', payload);
+        try {
+          const { tokens, sessionId: payloadSessionId } = payload.payload || {};
+          logger.dev('[useChatStreaming] 🔍 Comparaison sessionId batch:', { 
+            expected: sessionId, 
+            received: payloadSessionId,
+            tokensLength: tokens?.length || 0
+          });
+          
+          if (payloadSessionId === sessionId && tokens) {
+            setContent(prev => {
+              const newContent = prev + tokens;
+              logger.dev('[useChatStreaming] 📊 Contenu mis à jour (batch):', newContent.length, 'chars');
+              return newContent;
+            });
+            // Appeler onToken pour chaque token du batch
+            for (const token of tokens) {
+              onToken?.(token);
+            }
+          }
+        } catch (error) {
+          logger.error('[useChatStreaming] ❌ Erreur batch:', error);
+        }
+      })
       .on('broadcast', { event: 'llm-complete' }, (payload) => {
         logger.dev('[useChatStreaming] ✅ Complete reçu:', payload);
         try {

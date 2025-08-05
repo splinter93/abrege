@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { LLMProviderManager } from '@/services/llm/providerManager';
-import { DeepSeekProvider } from '@/services/llm/providers';
+import { DeepSeekProvider, TogetherProvider } from '@/services/llm/providers';
 // Import temporairement désactivé pour résoudre le problème de build Vercel
 import { agentApiV2Tools } from '@/services/agentApiV2Tools';
 
@@ -48,6 +48,53 @@ const getAgentById = async (id: string) => {
   } catch (error) {
     logger.error('Erreur getAgentById:', error);
     return null;
+  }
+};
+
+// Fonction pour récupérer l'historique des messages d'une session
+const getSessionHistory = async (sessionId: string, userToken: string) => {
+  try {
+    const { supabaseUrl, supabaseServiceKey } = getSupabaseConfig();
+    const userClient = createClient(supabaseUrl, supabaseServiceKey, {
+      global: {
+        headers: {
+          Authorization: `Bearer ${userToken}`
+        }
+      }
+    });
+
+    // Récupérer la session avec le thread complet
+    const { data: session, error } = await userClient
+      .from('chat_sessions')
+      .select('thread, history_limit')
+      .eq('id', sessionId)
+      .single();
+
+    if (error) {
+      logger.error('[LLM API] ❌ Erreur récupération session:', error);
+      return [];
+    }
+
+    if (!session) {
+      logger.error('[LLM API] ❌ Session non trouvée:', sessionId);
+      return [];
+    }
+
+    // Appliquer la limite d'historique
+    const historyLimit = session.history_limit || 10;
+    const limitedHistory = (session.thread || []).slice(-historyLimit);
+
+    logger.dev('[LLM API] 📚 Historique récupéré:', {
+      sessionId,
+      totalMessages: session.thread?.length || 0,
+      limitedMessages: limitedHistory.length,
+      limit: historyLimit
+    });
+
+    return limitedHistory;
+  } catch (error) {
+    logger.error('[LLM API] ❌ Erreur getSessionHistory:', error);
+    return [];
   }
 };
 
@@ -125,6 +172,27 @@ export async function POST(request: NextRequest) {
     logger.dev("[LLM API] 🚀 Début de la requête");
     logger.dev("[LLM API] 👤 Utilisateur:", userId);
     logger.dev("[LLM API] 📦 Body reçu:", { message, context, provider });
+
+    // 🔧 CORRECTION: Récupérer l'historique depuis la base de données
+    let sessionHistory: ChatMessage[] = [];
+    if (context?.sessionId) {
+      logger.dev("[LLM API] 📚 Récupération historique pour session:", context.sessionId);
+      sessionHistory = await getSessionHistory(context.sessionId, userToken);
+      logger.dev("[LLM API] ✅ Historique récupéré:", sessionHistory.length, "messages");
+      
+      // 🔧 CORRECTION: Exclure le dernier message s'il correspond au message actuel
+      if (sessionHistory.length > 0) {
+        const lastMessage = sessionHistory[sessionHistory.length - 1];
+        if (lastMessage.content === message && lastMessage.role === 'user') {
+          logger.dev("[LLM API] 🔧 Exclusion du dernier message (déjà dans l'historique):", message);
+          sessionHistory = sessionHistory.slice(0, -1);
+          logger.dev("[LLM API] ✅ Historique corrigé:", sessionHistory.length, "messages");
+        }
+      }
+    } else {
+      logger.dev("[LLM API] ⚠️ Pas de sessionId, utilisation de l'historique fourni");
+      sessionHistory = history || [];
+    }
 
     // Récupérer la configuration de l'agent si spécifiée
     let agentConfig: any = null;
@@ -214,7 +282,7 @@ export async function POST(request: NextRequest) {
           role: 'system' as const,
           content: systemContent
         },
-        ...history.map((msg: ChatMessage) => ({
+        ...sessionHistory.map((msg: ChatMessage) => ({
           role: msg.role as 'user' | 'assistant' | 'system',
           content: msg.content
         })),
@@ -268,10 +336,30 @@ export async function POST(request: NextRequest) {
 
       let accumulatedContent = '';
       let functionCallData: any = null;
+      let tokenBuffer = '';
+      let bufferSize = 0;
+      const BATCH_SIZE = 5; // Envoyer par batch de 5 tokens
+      const BATCH_TIMEOUT = 100; // Ou toutes les 100ms
 
       // Créer le canal pour le broadcast
       const supabase = createSupabaseAdmin();
       const channel = supabase.channel(channelId);
+
+      // Fonction pour envoyer le buffer de tokens
+      const flushTokenBuffer = async () => {
+        if (tokenBuffer.length > 0) {
+          await channel.send({
+            type: 'broadcast',
+            event: 'llm-token-batch',
+            payload: {
+              tokens: tokenBuffer,
+              sessionId: context.sessionId
+            }
+          });
+          tokenBuffer = '';
+          bufferSize = 0;
+        }
+      };
 
       while (true) {
         const { done, value } = await reader.read();
@@ -332,22 +420,20 @@ export async function POST(request: NextRequest) {
                 }
                 else if (delta.content) {
                   accumulatedContent += delta.content;
+                  tokenBuffer += delta.content;
+                  bufferSize++;
                   
                   // Log épuré pour le streaming
-                  logger.dev("[LLM API] 📤 Token streamé");
+                  logger.dev("[LLM API] 📤 Token ajouté au buffer:", bufferSize);
                   
-                  // Broadcast du token pour le streaming
-                  try {
-                    await channel.send({
-                      type: 'broadcast',
-                      event: 'llm-token',
-                      payload: {
-                        token: delta.content,
-                        sessionId: context.sessionId
-                      }
-                    });
-                  } catch (error) {
-                    logger.error("[LLM API] ❌ Erreur broadcast token:", error);
+                  // Envoyer le buffer si on atteint la taille ou le timeout
+                  if (bufferSize >= BATCH_SIZE) {
+                    try {
+                      await flushTokenBuffer();
+                      logger.dev("[LLM API] 📦 Batch envoyé");
+                    } catch (error) {
+                      logger.error("[LLM API] ❌ Erreur broadcast batch:", error);
+                    }
                   }
                 }
               }
@@ -358,11 +444,14 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      // Si une fonction a été appelée, l'exécuter
-      logger.dev("[LLM API] 🔍 Function call détectée:", functionCallData);
-      
-      // 🔧 ANTI-BOUCLE: Limiter à une seule exécution de fonction par requête
-      if (functionCallData && functionCallData.name) {
+              // Envoyer le buffer restant
+        await flushTokenBuffer();
+
+        // Si une fonction a été appelée, l'exécuter
+        logger.dev("[LLM API] 🔍 Function call détectée:", functionCallData);
+        
+        // 🔧 ANTI-BOUCLE: Limiter à une seule exécution de fonction par requête
+        if (functionCallData && functionCallData.name) {
         logger.dev("[LLM API] 🚀 Exécution tool:", functionCallData.name);
         try {
           // 🔧 NOUVEAU: Nettoyer et valider les arguments JSON
@@ -797,9 +886,169 @@ export async function POST(request: NextRequest) {
       }
 
     } else {
-      // Pour les autres providers (Synesia, etc.)
-      const response = await currentProvider.call(message, appContext, history);
-      return NextResponse.json({ success: true, response });
+      // Pour les autres providers (Synesia, Together AI, etc.)
+      if (currentProvider.id === 'together') {
+        logger.dev("[LLM API] 🚀 Streaming avec Together AI");
+        
+        // Créer un canal unique pour le streaming
+        const channelId = incomingChannelId || `llm-stream-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        logger.dev("[LLM API] 📡 Canal utilisé:", channelId);
+        
+        // Utiliser le provider avec configuration d'agent
+        const togetherProvider = new TogetherProvider();
+        logger.dev("[LLM API] 🔧 Configuration avant merge:", {
+          defaultModel: togetherProvider.getDefaultConfig().model,
+          defaultInstructions: togetherProvider.getDefaultConfig().system_instructions?.substring(0, 50) + '...'
+        });
+        
+        const config = togetherProvider['mergeConfigWithAgent'](agentConfig || undefined);
+        logger.dev("[LLM API] 🔧 Configuration après merge:", {
+          model: config.model,
+          temperature: config.temperature,
+          instructions: config.system_instructions?.substring(0, 100) + '...'
+        });
+        
+        // Préparer les messages avec la configuration dynamique
+        const systemContent = togetherProvider['formatContext'](appContext, config);
+        logger.dev("[LLM API] 📝 Contenu système préparé:", systemContent.substring(0, 200) + '...');
+        
+        const messages = [
+          {
+            role: 'system' as const,
+            content: systemContent
+          },
+          ...sessionHistory.map((msg: ChatMessage) => ({
+            role: msg.role as 'user' | 'assistant' | 'system',
+            content: msg.content
+          })),
+          {
+            role: 'user' as const,
+            content: message
+          }
+        ];
+
+        // Appeler Together AI avec streaming
+        const payload = {
+          model: config.model,
+          messages,
+          stream: true,
+          temperature: config.temperature,
+          max_tokens: config.max_tokens,
+          top_p: config.top_p
+        };
+
+        logger.dev("[LLM API] 📤 Payload complet envoyé à Together AI:");
+        logger.dev(JSON.stringify(payload, null, 2));
+        logger.dev("[LLM API] 📤 Appel Together AI avec streaming");
+
+        const response = await fetch('https://api.together.xyz/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${process.env.TOGETHER_API_KEY}`
+          },
+          body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          logger.error("[LLM API] ❌ Erreur Together AI:", errorText);
+          throw new Error(`Together AI API error: ${response.status} - ${errorText}`);
+        }
+
+        // Gestion du streaming
+        const reader = response.body?.getReader();
+        if (!reader) {
+          throw new Error('Impossible de lire le stream de réponse');
+        }
+
+        let accumulatedContent = '';
+        let tokenBuffer = '';
+        let bufferSize = 0;
+        const BATCH_SIZE = 5; // Envoyer par batch de 5 tokens
+
+        // Créer le canal pour le broadcast
+        const supabase = createSupabaseAdmin();
+        const channel = supabase.channel(channelId);
+
+        // Fonction pour envoyer le buffer de tokens
+        const flushTokenBuffer = async () => {
+          if (tokenBuffer.length > 0) {
+            await channel.send({
+              type: 'broadcast',
+              event: 'llm-token-batch',
+              payload: {
+                tokens: tokenBuffer,
+                sessionId: context.sessionId
+              }
+            });
+            tokenBuffer = '';
+            bufferSize = 0;
+          }
+        };
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          const chunk = new TextDecoder().decode(value);
+          const lines = chunk.split('\n');
+
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              const data = line.slice(6);
+              if (data === '[DONE]') break;
+
+              try {
+                const parsed = JSON.parse(data);
+                const delta = parsed.choices?.[0]?.delta;
+                
+                if (delta?.content) {
+                  const token = delta.content;
+                  accumulatedContent += token;
+                  tokenBuffer += token;
+                  bufferSize++;
+                  
+                  // Envoyer le buffer si on atteint la taille
+                  if (bufferSize >= BATCH_SIZE) {
+                    try {
+                      await flushTokenBuffer();
+                      logger.dev("[LLM API] 📦 Batch Together AI envoyé");
+                    } catch (error) {
+                      logger.error("[LLM API] ❌ Erreur broadcast batch Together AI:", error);
+                    }
+                  }
+                }
+              } catch (parseError) {
+                logger.dev("[LLM API] ⚠️ Chunk non-JSON ignoré:", data);
+              }
+            }
+          }
+        }
+
+        // Broadcast de completion avec le contenu accumulé
+        await channel.send({
+          type: 'broadcast',
+          event: 'llm-complete',
+          payload: {
+            sessionId: context.sessionId,
+            fullResponse: accumulatedContent
+          }
+        });
+
+        logger.dev("[LLM API] ✅ Streaming Together AI terminé, contenu accumulé:", accumulatedContent.substring(0, 100) + "...");
+
+        // Retourner du JSON pur pour éviter l'erreur parsing
+        return NextResponse.json({ 
+          success: true, 
+          completed: true,
+          response: accumulatedContent 
+        });
+      } else {
+        // Pour les autres providers (Synesia, etc.)
+        const response = await currentProvider.call(message, appContext, sessionHistory);
+        return NextResponse.json({ success: true, response });
+      }
     }
 
   } catch (error) {
