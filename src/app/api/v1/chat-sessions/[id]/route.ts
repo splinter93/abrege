@@ -329,13 +329,10 @@ export async function PATCH(
     logger.dev('[Chat Session API] 📋 Données reçues:', validatedData);
 
     // Créer un client avec le contexte d'authentification de l'utilisateur
-    const userClient = createClient(supabaseUrl, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, {
-      global: {
-        headers: {
-          Authorization: `Bearer ${userToken}`
-        }
-      }
-    });
+    const { createSupabaseAnonClient } = await import('@/utils/supabaseClient');
+    const userClient = createSupabaseAnonClient();
+    // Ajouter le token d'authentification
+    userClient.auth.setSession({ access_token: userToken, refresh_token: '' });
 
     // Vérifier que la session existe et appartient à l'utilisateur
     const { data: existingSession, error: fetchError } = await userClient

@@ -1,26 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
 import { LLMProviderManager } from '@/services/llm/providerManager';
 import { DeepSeekProvider } from '@/services/llm/providers';
 import { agentApiV2Tools } from '@/services/agentApiV2Tools';
+import { createSupabaseClient } from '@/utils/supabaseClient';
 
 import type { AppContext, ChatMessage } from '@/services/llm/types';
 import { simpleLogger as logger } from '@/utils/logger';
 
 // Instance singleton du LLM Manager
 const llmManager = new LLMProviderManager();
-
-// Fonction pour créer le client Supabase
-const createSupabaseClient = () => {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-  if (!supabaseUrl || !supabaseServiceKey) {
-    throw new Error('Variables d\'environnement Supabase manquantes');
-  }
-
-  return createClient(supabaseUrl, supabaseServiceKey);
-};
 
 // Fonction pour récupérer un agent
 const getAgentById = async (id: string) => {
