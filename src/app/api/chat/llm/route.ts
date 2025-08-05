@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { LLMProviderManager } from '@/services/llm/providerManager';
 import { DeepSeekProvider } from '@/services/llm/providers';
-import { agentApiV2Tools } from '@/services/agentApiV2Tools';
+import { agentApiV2Tools } from '@/services';
 
 import type { AppContext, ChatMessage } from '@/services/llm/types';
 import { simpleLogger as logger } from '@/utils/logger';
