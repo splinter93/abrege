@@ -1,4 +1,5 @@
 import { simpleLogger as logger } from '@/utils/logger';
+import { createNoteDirect, createFolderDirect, getNotebooksDirect, getNotebookTreeDirect } from './apiV2Direct';
 
 export interface ApiV2Tool {
   name: string;
@@ -8,7 +9,7 @@ export interface ApiV2Tool {
     properties: Record<string, any>;
     required: string[];
   };
-  execute: (params: any, jwtToken: string) => Promise<any>;
+  execute: (params: any, jwtToken: string, userId: string) => Promise<any>;
 }
 
 export class AgentApiV2Tools {
@@ -16,7 +17,12 @@ export class AgentApiV2Tools {
   private baseUrl: string;
 
   constructor() {
-    this.baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://scrivia.app';
+    // En développement, utiliser une URL relative pour éviter les appels externes
+    if (process.env.NODE_ENV === 'development') {
+      this.baseUrl = '';
+    } else {
+      this.baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://scrivia.app';
+    }
     this.initializeTools();
   }
 
@@ -47,8 +53,8 @@ export class AgentApiV2Tools {
         },
         required: ['source_title', 'notebook_id']
       },
-      execute: async (params, jwtToken) => {
-        return await this.callApiV2('POST', '/api/v2/note/create', params, jwtToken);
+      execute: async (params, jwtToken, userId) => {
+        return await createNoteDirect(params, userId);
       }
     });
 
@@ -74,7 +80,7 @@ export class AgentApiV2Tools {
         },
         required: ['ref']
       },
-      execute: async (params, jwtToken) => {
+      execute: async (params, jwtToken, userId) => {
         const { ref, ...data } = params;
         return await this.callApiV2('PUT', `/api/v2/note/${ref}/update`, data, jwtToken);
       }
@@ -98,7 +104,7 @@ export class AgentApiV2Tools {
         },
         required: ['ref', 'content']
       },
-      execute: async (params, jwtToken) => {
+      execute: async (params, jwtToken, userId) => {
         const { ref, content } = params;
         return await this.callApiV2('POST', `/api/v2/note/${ref}/add-content`, { content }, jwtToken);
       }
@@ -122,7 +128,7 @@ export class AgentApiV2Tools {
         },
         required: ['ref', 'folder_id']
       },
-      execute: async (params, jwtToken) => {
+      execute: async (params, jwtToken, userId) => {
         const { ref, folder_id } = params;
         return await this.callApiV2('PUT', `/api/v2/note/${ref}/move`, { folder_id }, jwtToken);
       }
@@ -142,7 +148,7 @@ export class AgentApiV2Tools {
         },
         required: ['ref']
       },
-      execute: async (params, jwtToken) => {
+      execute: async (params, jwtToken, userId) => {
         const { ref } = params;
         return await this.callApiV2('DELETE', `/api/v2/note/${ref}/delete`, {}, jwtToken);
       }
@@ -170,8 +176,8 @@ export class AgentApiV2Tools {
         },
         required: ['name', 'notebook_id']
       },
-      execute: async (params, jwtToken) => {
-        return await this.callApiV2('POST', '/api/v2/folder/create', params, jwtToken);
+      execute: async (params, jwtToken, userId) => {
+        return await createFolderDirect(params, userId);
       }
     });
 
@@ -189,7 +195,7 @@ export class AgentApiV2Tools {
         },
         required: ['ref']
       },
-      execute: async (params, jwtToken) => {
+      execute: async (params, jwtToken, userId) => {
         const { ref } = params;
         return await this.callApiV2('GET', `/api/v2/note/${ref}/content`, {}, jwtToken);
       }
@@ -209,9 +215,9 @@ export class AgentApiV2Tools {
         },
         required: ['notebook_id']
       },
-      execute: async (params, jwtToken) => {
+      execute: async (params, jwtToken, userId) => {
         const { notebook_id } = params;
-        return await this.callApiV2('GET', `/api/v2/classeur/${notebook_id}/tree`, {}, jwtToken);
+        return await getNotebookTreeDirect(notebook_id, userId);
       }
     });
 
@@ -224,8 +230,8 @@ export class AgentApiV2Tools {
         properties: {},
         required: []
       },
-      execute: async (params, jwtToken) => {
-        return await this.callApiV2('GET', '/api/v2/classeurs', {}, jwtToken);
+      execute: async (params, jwtToken, userId) => {
+        return await getNotebooksDirect(userId);
       }
     });
   }
@@ -298,7 +304,34 @@ export class AgentApiV2Tools {
     logger.dev(`[AgentApiV2Tools] 🔧 Exécution tool: ${toolName}`);
     logger.dev(`[AgentApiV2Tools] 📦 Paramètres:`, parameters);
 
-    return await tool.execute(parameters, jwtToken);
+    // Récupérer le userId à partir du JWT token
+    const userId = await this.getUserIdFromToken(jwtToken);
+    logger.dev(`[AgentApiV2Tools] 👤 User ID extrait:`, userId);
+
+    return await tool.execute(parameters, jwtToken, userId);
+  }
+
+  /**
+   * Extraire le userId à partir du JWT token
+   */
+  private async getUserIdFromToken(jwtToken: string): Promise<string> {
+    try {
+      const { createClient } = await import('@supabase/supabase-js');
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+      const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+      const supabase = createClient(supabaseUrl, supabaseAnonKey);
+      
+      const { data: { user }, error } = await supabase.auth.getUser(jwtToken);
+      
+      if (error || !user) {
+        throw new Error('Token invalide ou expiré');
+      }
+      
+      return user.id;
+    } catch (error) {
+      logger.error(`[AgentApiV2Tools] ❌ Erreur extraction userId:`, error);
+      throw new Error('Impossible d\'extraire l\'utilisateur du token');
+    }
   }
 
   /**
