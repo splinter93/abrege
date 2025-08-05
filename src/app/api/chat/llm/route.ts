@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
 import { LLMProviderManager } from '@/services/llm/providerManager';
 import { DeepSeekProvider } from '@/services/llm/providers';
 import { agentApiV2Tools } from '@/services/agentApiV2Tools';
-import { createSupabaseClient } from '@/utils/supabaseClient';
 
 import type { AppContext, ChatMessage } from '@/services/llm/types';
 import { simpleLogger as logger } from '@/utils/logger';
@@ -10,10 +10,28 @@ import { simpleLogger as logger } from '@/utils/logger';
 // Instance singleton du LLM Manager
 const llmManager = new LLMProviderManager();
 
+// Configuration Supabase - Vérification différée pour éviter les erreurs de build
+const getSupabaseConfig = () => {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!supabaseUrl || !supabaseServiceKey) {
+    throw new Error('Variables d\'environnement Supabase manquantes');
+  }
+
+  return { supabaseUrl, supabaseServiceKey };
+};
+
+// Fonction pour créer le client admin
+const createSupabaseAdmin = () => {
+  const { supabaseUrl, supabaseServiceKey } = getSupabaseConfig();
+  return createClient(supabaseUrl, supabaseServiceKey);
+};
+
 // Fonction pour récupérer un agent
 const getAgentById = async (id: string) => {
   try {
-    const supabase = createSupabaseClient();
+    const supabase = createSupabaseAdmin();
     const { data, error } = await supabase
       .from('agents')
       .select('*')
@@ -41,7 +59,7 @@ export async function POST(request: NextRequest) {
 
     if (authHeader && authHeader.startsWith('Bearer ')) {
       const userToken = authHeader.substring(7);
-      const supabase = createSupabaseClient();
+      const supabase = createSupabaseAdmin();
       const { data: { user }, error: authError } = await supabase.auth.getUser(userToken);
       
       if (authError || !user) {
@@ -214,7 +232,7 @@ export async function POST(request: NextRequest) {
       let functionCallData: any = null;
 
       // Créer le canal pour le broadcast
-      const supabase = createSupabaseClient();
+      const supabase = createSupabaseAdmin();
       const channel = supabase.channel(channelId);
 
       while (true) {
