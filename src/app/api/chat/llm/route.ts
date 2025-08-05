@@ -530,14 +530,18 @@ export async function POST(request: NextRequest) {
           }
         });
         
-        // 🔧 CORRECTION: Retourner un stream vide pour éviter le double appel
-        const emptyStream = new ReadableStream({
+        // 🔧 CORRECTION: Retourner un stream avec JSON valide pour éviter l'erreur parsing
+        const encoder = new TextEncoder();
+        const validStream = new ReadableStream({
           start(controller) {
+            // Envoyer un JSON valide pour éviter l'erreur parsing
+            const validJson = JSON.stringify({ success: true, completed: true });
+            controller.enqueue(encoder.encode(`data: ${validJson}\n\n`));
             controller.close();
           }
         });
         
-        return new Response(emptyStream, {
+        return new Response(validStream, {
           headers: {
             'Content-Type': 'text/plain; charset=utf-8',
             'Cache-Control': 'no-cache',
