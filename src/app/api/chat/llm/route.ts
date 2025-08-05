@@ -383,14 +383,32 @@ export async function POST(request: NextRequest) {
           logger.dev("[LLM API] 📝 Historique mis à jour avec tool messages");
 
           // 3. Relancer le LLM avec l'historique complet
-          const finalResponse = await currentProvider.client.chat.completions.create({
-            model: agentConfig?.model || 'deepseek-chat',
+          const finalPayload = {
+            model: config.model,
             messages: updatedMessages,
             stream: true,
-            temperature: agentConfig?.temperature || 0.7,
-            max_tokens: agentConfig?.max_tokens || 4000,
+            temperature: config.temperature,
+            max_tokens: config.max_tokens,
+            top_p: config.top_p,
             ...(tools && { tools })
+          };
+
+          logger.dev("[LLM API] 🔄 Relance LLM avec payload:", JSON.stringify(finalPayload, null, 2));
+
+          const finalResponse = await fetch('https://api.deepseek.com/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${process.env.DEEPSEEK_API_KEY}`
+            },
+            body: JSON.stringify(finalPayload)
           });
+
+          if (!finalResponse.ok) {
+            const errorText = await finalResponse.text();
+            logger.error("[LLM API] ❌ Erreur DeepSeek relance:", errorText);
+            throw new Error(`DeepSeek API error: ${finalResponse.status} - ${errorText}`);
+          }
 
           logger.dev("[LLM API] 🔄 LLM relancé avec historique complet");
 
@@ -399,22 +417,46 @@ export async function POST(request: NextRequest) {
           const stream = new ReadableStream({
             async start(controller) {
               try {
-                for await (const chunk of finalResponse) {
-                  const delta = chunk.choices[0]?.delta;
-                  if (delta?.content) {
-                    const token = delta.content;
-                    
-                    // Broadcast du token
-                    await channel.send({
-                      type: 'broadcast',
-                      event: 'llm-token',
-                      payload: {
-                        token,
-                        sessionId: context.sessionId
-                      }
-                    });
+                const reader = finalResponse.body?.getReader();
+                if (!reader) {
+                  throw new Error('Impossible de lire le stream de réponse finale');
+                }
 
-                    controller.enqueue(encoder.encode(`data: ${JSON.stringify({ token })}\n\n`));
+                while (true) {
+                  const { done, value } = await reader.read();
+                  if (done) break;
+
+                  const chunk = new TextDecoder().decode(value);
+                  const lines = chunk.split('\n');
+
+                  for (const line of lines) {
+                    if (line.startsWith('data: ')) {
+                      const data = line.slice(6);
+                      if (data === '[DONE]') break;
+
+                      try {
+                        const parsed = JSON.parse(data);
+                        const delta = parsed.choices?.[0]?.delta;
+                        
+                        if (delta?.content) {
+                          const token = delta.content;
+                          
+                          // Broadcast du token
+                          await channel.send({
+                            type: 'broadcast',
+                            event: 'llm-token',
+                            payload: {
+                              token,
+                              sessionId: context.sessionId
+                            }
+                          });
+
+                          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ token })}\n\n`));
+                        }
+                      } catch (parseError) {
+                        logger.dev("[LLM API] ⚠️ Chunk non-JSON ignoré:", data);
+                      }
+                    }
                   }
                 }
 
