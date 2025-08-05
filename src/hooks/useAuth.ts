@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/supabaseClient';
 import { logApi } from '@/utils/logger';
 
@@ -16,60 +16,39 @@ export interface AuthState {
 }
 
 export function useAuth() {
-  const [authState, setAuthState] = useState<AuthState>({
-    user: null,
-    loading: true,
-    error: null,
-  });
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const getSession = useCallback(async () => {
+    try {
+      setLoading(true);
+      const { data: { session }, error } = await supabase.auth.getSession();
+      
+      if (error) {
+        logApi('auth', 'Erreur récupération session', { error: error.message });
+        setUser(null);
+        setLoading(false);
+        return;
+      }
+
+      if (session?.user) {
+        logApi('auth', 'Session utilisateur trouvée');
+        setUser(session.user);
+      } else {
+        logApi('auth', 'Aucune session utilisateur');
+        setUser(null);
+      }
+    } catch (error) {
+      logApi('auth', 'Erreur inattendue lors de la récupération de session');
+      setUser(null);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    // Récupérer la session actuelle
-    const getCurrentSession = async () => {
-      try {
-        const { data: { session }, error } = await supabase.auth.getSession();
-        
-        if (error) {
-          logApi('auth', 'Erreur récupération session', { error: error.message });
-          setAuthState({
-            user: null,
-            loading: false,
-            error: error.message,
-          });
-          return;
-        }
-
-        if (session?.user) {
-          const user: User = {
-            id: session.user.id,
-            email: session.user.email || undefined,
-            username: session.user.user_metadata?.username || undefined,
-          };
-          
-          logApi('auth', 'Session utilisateur trouvée', { userId: user.id });
-          setAuthState({
-            user,
-            loading: false,
-            error: null,
-          });
-        } else {
-          logApi('auth', 'Aucune session utilisateur');
-          setAuthState({
-            user: null,
-            loading: false,
-            error: null,
-          });
-        }
-      } catch (error) {
-        logApi('auth', 'Erreur inattendue lors de la récupération de session', { error });
-        setAuthState({
-          user: null,
-          loading: false,
-          error: 'Erreur inattendue',
-        });
-      }
-    };
-
-    getCurrentSession();
+    getSession();
 
     // Écouter les changements d'authentification
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -77,23 +56,11 @@ export function useAuth() {
         logApi('auth', `Changement d'état d'authentification: ${event}`);
         
         if (event === 'SIGNED_IN' && session?.user) {
-          const user: User = {
-            id: session.user.id,
-            email: session.user.email || undefined,
-            username: session.user.user_metadata?.username || undefined,
-          };
-          
-          setAuthState({
-            user,
-            loading: false,
-            error: null,
-          });
+          logApi('auth', 'Session utilisateur trouvée');
+          setUser(session.user);
         } else if (event === 'SIGNED_OUT') {
-          setAuthState({
-            user: null,
-            loading: false,
-            error: null,
-          });
+          logApi('auth', 'Aucune session utilisateur');
+          setUser(null);
         }
       }
     );
@@ -101,10 +68,11 @@ export function useAuth() {
     return () => {
       subscription.unsubscribe();
     };
-  }, []);
+  }, [getSession]);
 
   const signIn = async (email: string, password: string) => {
-    setAuthState(prev => ({ ...prev, loading: true, error: null }));
+    setLoading(true);
+    setError(null);
     
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
@@ -114,11 +82,7 @@ export function useAuth() {
 
       if (error) {
         logApi('auth', 'Erreur connexion', { error: error.message });
-        setAuthState(prev => ({
-          ...prev,
-          loading: false,
-          error: error.message,
-        }));
+        setError(error.message);
         return { error: error.message };
       }
 
@@ -126,17 +90,16 @@ export function useAuth() {
       return { user: data.user };
     } catch (error) {
       logApi('auth', 'Erreur inattendue lors de la connexion', { error });
-      setAuthState(prev => ({
-        ...prev,
-        loading: false,
-        error: 'Erreur inattendue',
-      }));
+      setError('Erreur inattendue');
       return { error: 'Erreur inattendue' };
+    } finally {
+      setLoading(false);
     }
   };
 
   const signUp = async (email: string, password: string, username?: string) => {
-    setAuthState(prev => ({ ...prev, loading: true, error: null }));
+    setLoading(true);
+    setError(null);
     
     try {
       const { data, error } = await supabase.auth.signUp({
@@ -151,11 +114,7 @@ export function useAuth() {
 
       if (error) {
         logApi('auth', 'Erreur inscription', { error: error.message });
-        setAuthState(prev => ({
-          ...prev,
-          loading: false,
-          error: error.message,
-        }));
+        setError(error.message);
         return { error: error.message };
       }
 
@@ -163,21 +122,22 @@ export function useAuth() {
       return { user: data.user };
     } catch (error) {
       logApi('auth', 'Erreur inattendue lors de l\'inscription', { error });
-      setAuthState(prev => ({
-        ...prev,
-        loading: false,
-        error: 'Erreur inattendue',
-      }));
+      setError('Erreur inattendue');
       return { error: 'Erreur inattendue' };
+    } finally {
+      setLoading(false);
     }
   };
 
   const signOut = async () => {
+    setLoading(true);
+    setError(null);
     try {
       const { error } = await supabase.auth.signOut();
       
       if (error) {
         logApi('auth', 'Erreur déconnexion', { error: error.message });
+        setError(error.message);
         return { error: error.message };
       }
 
@@ -185,7 +145,10 @@ export function useAuth() {
       return { success: true };
     } catch (error) {
       logApi('auth', 'Erreur inattendue lors de la déconnexion', { error });
+      setError('Erreur inattendue');
       return { error: 'Erreur inattendue' };
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -195,7 +158,9 @@ export function useAuth() {
   };
 
   return {
-    ...authState,
+    user,
+    loading,
+    error,
     signIn,
     signUp,
     signOut,

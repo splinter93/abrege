@@ -37,20 +37,16 @@ export class ChatSessionService {
     search?: string;
   }): Promise<ChatSessionsListResponse> {
     try {
-      logger.dev('[ChatSessionService] 🔄 getSessions appelé...');
+      logger.dev('[ChatSessionService] 🔄 Récupération sessions...');
       
       // Récupérer le token d'authentification
       const { data: { session } } = await supabase.auth.getSession();
       const token = session?.access_token;
       
-      logger.dev('[ChatSessionService] 🔐 Token trouvé:', token ? 'Oui' : 'Non');
-      
       if (!token) {
         logger.dev('[ChatSessionService] ❌ Pas de token, authentification requise');
         throw new Error('Authentification requise');
       }
-
-      logger.dev('[ChatSessionService] ✅ Token valide, appel API...');
 
       const params = new URLSearchParams();
       if (filters?.is_active !== undefined) {
@@ -247,7 +243,7 @@ export class ChatSessionService {
       logger.dev('[ChatSessionService] 📋 Données réponse:', data);
 
       if (!response.ok) {
-        logger.error('[ChatSessionService] ❌ Erreur API:', response.status, data);
+        logger.error('[ChatSessionService] ❌ Erreur API:', response.status);
         throw new Error(data.error || 'Erreur lors de la suppression de la session');
       }
 

@@ -631,15 +631,16 @@ export class AgentApiV2Tools {
   }
 
   /**
-   * Appeler l'API v2 de Scrivia (pour les endpoints qui ne sont pas encore refactorisés)
+   * Appeler l'API v2 directement
    */
   private async callApiV2(method: string, endpoint: string, data: any, jwtToken: string) {
     try {
       const url = `${this.baseUrl}${endpoint}`;
-      const headers = {
+      
+      const headers: Record<string, string> = {
         'Content-Type': 'application/json',
         'X-Client-Type': 'llm',
-        'Authorization': `Bearer ${jwtToken}` // jwtToken est le token JWT
+        'Authorization': `Bearer ${jwtToken}`
       };
 
       const config: RequestInit = {
@@ -648,21 +649,20 @@ export class AgentApiV2Tools {
         ...(method !== 'GET' && { body: JSON.stringify(data) })
       };
 
-      logger.dev(`[AgentApiV2Tools] 🌐 Appel API: ${method} ${url}`);
-      logger.dev(`[AgentApiV2Tools] 📤 Données:`, data);
-      logger.dev(`[AgentApiV2Tools] 🔑 Token JWT (début):`, jwtToken.substring(0, 20) + "...");
-      logger.dev(`[AgentApiV2Tools] 🔑 Headers (sans token):`, { ...headers, Authorization: 'Bearer ***' });
-
-      const response = await fetch(url, config);
-      logger.dev(`[AgentApiV2Tools] 📥 Status:`, response.status);
-      logger.dev(`[AgentApiV2Tools] 📥 Headers:`, Object.fromEntries(response.headers.entries()));
-      
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(`API Error: ${response.status} - ${result.error || 'Unknown error'}`);
+      // Logs épurés pour le debug des tool calls
+      logger.dev(`[AgentApiV2Tools] 🔧 ${method} ${endpoint}`);
+      if (Object.keys(data || {}).length > 0) {
+        logger.dev(`[AgentApiV2Tools] 📦 Payload:`, data);
       }
 
+      const response = await fetch(url, config);
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(`API Error: ${response.status} - ${errorData.error || 'Unknown error'}`);
+      }
+
+      const result = await response.json();
       logger.dev(`[AgentApiV2Tools] ✅ Réponse:`, result);
       return result;
 
@@ -698,22 +698,21 @@ export class AgentApiV2Tools {
         throw new Error(`Tool not found: ${toolName}`);
       }
 
-      logger.dev(`[AgentApiV2Tools] 🔧 Exécution tool: ${toolName}`);
+      logger.dev(`[AgentApiV2Tools] 🚀 Tool: ${toolName}`);
       logger.dev(`[AgentApiV2Tools] 📦 Paramètres:`, parameters);
 
       // Récupérer le userId à partir du JWT token
       const userId = await this.getUserIdFromToken(jwtToken);
-      logger.dev(`[AgentApiV2Tools] 👤 User ID extrait:`, userId);
 
       const result = await tool.execute(parameters, jwtToken, userId);
       
       const duration = Date.now() - startTime;
-      logger.dev(`[AgentApiV2Tools] ✅ Tool ${toolName} exécuté en ${duration}ms`);
+      logger.dev(`[AgentApiV2Tools] ✅ ${toolName} (${duration}ms)`);
       
       return result;
     } catch (error) {
       const duration = Date.now() - startTime;
-      logger.error(`[AgentApiV2Tools] ❌ Tool ${toolName} échoué après ${duration}ms:`, error);
+      logger.error(`[AgentApiV2Tools] ❌ ${toolName} échoué (${duration}ms):`, error);
       throw error;
     }
   }

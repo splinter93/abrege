@@ -334,7 +334,8 @@ export async function POST(request: NextRequest) {
                 else if (delta.content) {
                   accumulatedContent += delta.content;
                   
-                  logger.dev("[LLM API] 📤 Broadcasting token:", delta.content.substring(0, 20) + '...');
+                  // Log épuré pour le streaming
+                  logger.dev("[LLM API] 📤 Token streamé");
                   
                   // Broadcast du token pour le streaming
                   try {
@@ -346,7 +347,6 @@ export async function POST(request: NextRequest) {
                         sessionId: context.sessionId
                       }
                     });
-                    logger.dev("[LLM API] ✅ Token broadcasté avec succès");
                   } catch (error) {
                     logger.error("[LLM API] ❌ Erreur broadcast token:", error);
                   }
@@ -360,19 +360,14 @@ export async function POST(request: NextRequest) {
       }
 
       // Si une fonction a été appelée, l'exécuter
-      logger.dev("[LLM API] 🔍 Vérification function call:", functionCallData);
+      logger.dev("[LLM API] 🔍 Function call détectée:", functionCallData);
       
       // 🔧 ANTI-BOUCLE: Limiter à une seule exécution de fonction par requête
       if (functionCallData && functionCallData.name) {
-        logger.dev("[LLM API] 🎯 ON ENTRE DANS LE BLOC FUNCTION CALL !");
+        logger.dev("[LLM API] 🚀 Exécution tool:", functionCallData.name);
         try {
-          logger.dev("[LLM API] 🔧 Function call détectée:", functionCallData);
-          
           // 🔧 NOUVEAU: Nettoyer et valider les arguments JSON
           const functionArgs = cleanAndParseFunctionArgs(functionCallData.arguments);
-          
-          // Utiliser le token JWT de l'utilisateur pour l'authentification API
-          logger.dev("[LLM API] 🔑 Token JWT utilisé pour tool call:", userToken.substring(0, 20) + "...");
           
           // Timeout de 15 secondes pour les tool calls
           const toolCallPromise = agentApiV2Tools.executeTool(
@@ -387,7 +382,7 @@ export async function POST(request: NextRequest) {
           
           const result = await Promise.race([toolCallPromise, timeoutPromise]);
 
-          logger.dev("[LLM API] ✅ Résultat de la fonction:", result);
+          logger.dev("[LLM API] ✅ Tool exécuté:", result);
 
           // 🔧 CORRECTION: Injecter le message tool et relancer le LLM
           logger.dev("[LLM API] 🔧 Injection du message tool et relance LLM");
@@ -419,8 +414,6 @@ export async function POST(request: NextRequest) {
             toolMessage,
             toolResultMessage
           ];
-
-          logger.dev("[LLM API] 📝 Historique mis à jour avec tool messages");
 
           // 3. Relancer le LLM avec l'historique complet (SANS tools pour éviter la boucle infinie)
           const finalPayload = {
