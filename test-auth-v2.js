@@ -17,8 +17,8 @@ async function testAuthV2() {
   try {
     // 1. Authentification avec un utilisateur de test
     const { data: { user }, error: authError } = await supabase.auth.signInWithPassword({
-      email: 'test@example.com',
-      password: 'testpassword'
+      email: 'test@scrivia.app',
+      password: 'test123456'
     });
 
     if (authError || !user) {

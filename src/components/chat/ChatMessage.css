@@ -39,6 +39,13 @@
   border-bottom-left-radius: var(--chat-radius-sm);
 }
 
+.chat-message-bubble-tool {
+  background: var(--chat-bg-elevated);
+  color: var(--chat-text-primary);
+  border: 1px solid var(--chat-border-secondary);
+  border-bottom-left-radius: var(--chat-radius-sm);
+}
+
 /* ========================================
    MARKDOWN STYLES - IDENTIQUES À CHATGPT
    ======================================== */
@@ -264,6 +271,166 @@
 }
 
 /* ========================================
+   TOOL CALLS - STYLE CHATGPT
+   ======================================== */
+
+.chat-tool-calls {
+  margin-top: 16px;
+}
+
+.chat-tool-call {
+  background: rgba(142, 142, 160, 0.1);
+  border: 1px solid rgba(142, 142, 160, 0.2);
+  border-radius: 8px;
+  margin-bottom: 12px;
+  overflow: hidden;
+}
+
+.chat-tool-call-header {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  background: rgba(142, 142, 160, 0.05);
+  border-bottom: 1px solid rgba(142, 142, 160, 0.1);
+}
+
+.chat-tool-call-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  background: rgba(142, 142, 160, 0.2);
+  border-radius: 6px;
+  margin-right: 12px;
+  color: #8e8ea0;
+}
+
+.chat-tool-call-info {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.chat-tool-call-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #ececf1;
+  margin-bottom: 2px;
+}
+
+.chat-tool-call-status {
+  font-size: 12px;
+  color: #8e8ea0;
+}
+
+.chat-tool-call-arguments {
+  padding: 16px;
+}
+
+.chat-tool-call-arguments-header {
+  font-size: 12px;
+  font-weight: 600;
+  color: #8e8ea0;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.chat-tool-call-arguments-content {
+  background: #1e1e1e;
+  border: 1px solid #2d2d2d;
+  border-radius: 6px;
+  padding: 12px;
+  font-family: "SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas, "Courier New", monospace;
+  font-size: 12px;
+  line-height: 1.4;
+  color: #ececf1;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* ========================================
+   TOOL RESULT - STYLE CHATGPT
+   ======================================== */
+
+.chat-tool-result {
+  background: rgba(142, 142, 160, 0.1);
+  border: 1px solid rgba(142, 142, 160, 0.2);
+  border-radius: 8px;
+  margin-top: 12px;
+  overflow: hidden;
+}
+
+.chat-tool-result-header {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  background: rgba(142, 142, 160, 0.05);
+  border-bottom: 1px solid rgba(142, 142, 160, 0.1);
+}
+
+.chat-tool-result-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  background: rgba(34, 197, 94, 0.2);
+  border-radius: 6px;
+  margin-right: 12px;
+  color: #22c55e;
+}
+
+.chat-tool-result-info {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.chat-tool-result-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #ececf1;
+  margin-bottom: 2px;
+}
+
+.chat-tool-result-status {
+  font-size: 12px;
+  color: #22c55e;
+}
+
+.chat-tool-result-content {
+  padding: 16px;
+}
+
+.chat-tool-result-content-header {
+  font-size: 12px;
+  font-weight: 600;
+  color: #8e8ea0;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.chat-tool-result-content-data {
+  background: #1e1e1e;
+  border: 1px solid #2d2d2d;
+  border-radius: 6px;
+  padding: 12px;
+  font-family: "SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas, "Courier New", monospace;
+  font-size: 12px;
+  line-height: 1.4;
+  color: #ececf1;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+/* ========================================
    ANIMATIONS
    ======================================== */
 
@@ -295,4 +462,10 @@
   .chat-markdown h1 { font-size: 20px; }
   .chat-markdown h2 { font-size: 18px; }
   .chat-markdown h3 { font-size: 16px; }
+  
+  .chat-tool-call-arguments-content,
+  .chat-tool-result-content-data {
+    font-size: 11px;
+    padding: 8px;
+  }
 } 

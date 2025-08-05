@@ -224,9 +224,8 @@ export async function POST(request: NextRequest) {
         }
       ];
 
-      // 🔧 ANTI-BUG: Forcer les outils pour test
-      // Temporairement désactivé pour résoudre le problème de build Vercel
-        const tools = agentApiV2Tools.getToolsForFunctionCalling();
+      // 🔧 TOOLS: Générer les outils pour function calling
+      const tools = agentApiV2Tools.getToolsForFunctionCalling();
 
       logger.dev("[LLM API] 🔧 Capacités agent:", agentConfig?.api_v2_capabilities);
               logger.dev("[LLM API] 🔧 Tools disponibles:", tools?.length || 0);
@@ -417,31 +416,50 @@ export async function POST(request: NextRequest) {
 
           // 🔧 NOUVEAU: Sauvegarder les messages tool dans la base de données
           try {
-            const { ChatSessionService } = await import('@/services/chatSessionService');
-            const chatSessionService = ChatSessionService.getInstance();
-            
-            // Sauvegarder le message assistant avec tool call
-            await chatSessionService.addMessage(context.sessionId, {
-              role: 'assistant',
-              content: null,
-              tool_calls: [{
-                id: toolCallId,
-                type: 'function',
-                function: {
-                  name: functionCallData.name,
-                  arguments: functionCallData.arguments
-                }
-              }],
-              timestamp: new Date().toISOString()
+            // Utiliser directement l'API avec le token utilisateur
+            const response1 = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3000'}/api/v1/chat-sessions/${context.sessionId}/messages`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${userToken}`
+              },
+              body: JSON.stringify({
+                role: 'assistant',
+                content: null,
+                tool_calls: [{
+                  id: toolCallId,
+                  type: 'function',
+                  function: {
+                    name: functionCallData.name,
+                    arguments: functionCallData.arguments
+                  }
+                }],
+                timestamp: new Date().toISOString()
+              })
             });
 
+            if (!response1.ok) {
+              throw new Error(`Erreur sauvegarde message assistant: ${response1.status}`);
+            }
+
             // Sauvegarder le message tool avec le résultat
-            await chatSessionService.addMessage(context.sessionId, {
-              role: 'tool',
-              tool_call_id: toolCallId,
-              content: JSON.stringify(result),
-              timestamp: new Date().toISOString()
+            const response2 = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3000'}/api/v1/chat-sessions/${context.sessionId}/messages`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${userToken}`
+              },
+              body: JSON.stringify({
+                role: 'tool',
+                tool_call_id: toolCallId,
+                content: JSON.stringify(result),
+                timestamp: new Date().toISOString()
+              })
             });
+
+            if (!response2.ok) {
+              throw new Error(`Erreur sauvegarde message tool: ${response2.status}`);
+            }
 
             logger.dev("[LLM API] ✅ Messages tool sauvegardés dans l'historique");
           } catch (saveError) {
@@ -629,7 +647,9 @@ export async function POST(request: NextRequest) {
               tool_call_id: toolCallId,
               content: JSON.stringify({ 
                 error: true, 
-                message: errorMessage 
+                message: `❌ ÉCHEC : ${errorMessage}`,
+                success: false,
+                action: 'failed'
               }),
               timestamp: new Date().toISOString()
             });

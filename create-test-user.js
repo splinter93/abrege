@@ -9,7 +9,7 @@ const supabase = createClient(supabaseUrl, supabaseAnonKey);
 async function createTestUser() {
   console.log('👤 Création d\'un utilisateur de test...\n');
 
-  const testEmail = 'test@abrege.local';
+  const testEmail = 'test@scrivia.app';
   const testPassword = 'test123456';
 
   try {

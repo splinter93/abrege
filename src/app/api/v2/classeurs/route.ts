@@ -5,7 +5,6 @@ import { getAuthenticatedUser } from '@/utils/authUtils';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 export async function GET(request: NextRequest): Promise<NextResponse> {
   const startTime = Date.now();
@@ -29,6 +28,27 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   }
 
   const userId = authResult.userId!;
+  
+  // Récupérer le token d'authentification
+  const authHeader = request.headers.get('Authorization');
+  const userToken = authHeader?.substring(7);
+  
+  if (!userToken) {
+    logApi('v2_classeurs_list', '❌ Token manquant', context);
+    return NextResponse.json(
+      { error: 'Token d\'authentification manquant' },
+      { status: 401, headers: { "Content-Type": "application/json" } }
+    );
+  }
+
+  // Créer un client Supabase authentifié
+  const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+    global: {
+      headers: {
+        Authorization: `Bearer ${userToken}`
+      }
+    }
+  });
 
   try {
     // Récupérer tous les classeurs de l'utilisateur

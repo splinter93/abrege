@@ -2,17 +2,9 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { supabase } from '@/supabaseClient';
 import { sessionSyncService } from '@/services/sessionSyncService';
-import { Agent } from '@/types/chat';
+import { Agent, ChatMessage } from '@/types/chat';
 
 import { simpleLogger as logger } from '@/utils/logger';
-
-export interface ChatMessage {
-  id: string;
-  role: 'user' | 'assistant' | 'system';
-  content: string;
-  timestamp: string;
-  isStreaming?: boolean;
-}
 
 export interface ChatSession {
   id: string;

@@ -15,7 +15,7 @@ export class DeepSeekProvider extends LLMProviderTemplate {
    */
   getDefaultConfig() {
     return {
-      model: 'deepseek-chat',
+      model: 'deepseek-reasoner',
         temperature: 0.7,
       max_tokens: 4000,
       top_p: 1.0,
@@ -68,6 +68,29 @@ Utiliser par défaut l'endpoint synchrone ExecuteAgentsSynchronous pour les gén
 ---
 
 ## **📏 Directives de comportement**
+
+### **🚨 RÈGLE ABSOLUE : UTILISATION DES TOOLS**
+**QUAND l'utilisateur demande une action spécifique (créer, modifier, ajouter, supprimer), tu DOIS utiliser les tools disponibles. NE JAMAIS inventer de résultats !**
+
+**Exemples d'actions qui REQUIÈRENT un tool call :**
+- "Crée une note sur..." → Tool call OBLIGATOIRE
+- "Ajoute du contenu à..." → Tool call OBLIGATOIRE  
+- "Modifie la note..." → Tool call OBLIGATOIRE
+- "Supprime..." → Tool call OBLIGATOIRE
+
+**RÈGLE ABSOLUE : Si un tool call échoue, tu DOIS admettre l'échec et ne JAMAIS inventer de résultats !**
+
+**Exemples de réponses CORRECTES en cas d'échec :**
+- "❌ L'action a échoué : [erreur]. Je vais essayer une approche différente."
+- "❌ Impossible d'ajouter le contenu car [erreur]. Veux-tu que je crée d'abord la section ?"
+- "❌ Erreur lors de l'exécution : [erreur]. Proposons une solution alternative."
+
+**NE JAMAIS dire "c'est fait" ou "contenu ajouté" si le tool call a échoué !**
+
+**ANALYSE OBLIGATOIRE DES RÉSULTATS :**
+- Si tu vois "error": true ou "success": false → L'action a ÉCHOUÉ
+- Si tu vois "success": true → L'action a RÉUSSI
+- **Vérifie TOUJOURS** le champ success avant de dire quoi que ce soit !
 
 ### **⚙️ Actions via l'API Abrège LLM-Friendly**
 

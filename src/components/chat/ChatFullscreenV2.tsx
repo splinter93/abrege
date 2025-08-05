@@ -382,6 +382,8 @@ const ChatFullscreenV2: React.FC = () => {
                   key={message.id || index}
                   content={message.content}
                   role={message.role}
+                  tool_calls={message.tool_calls}
+                  tool_call_id={message.tool_call_id}
                 />
               ))}
               

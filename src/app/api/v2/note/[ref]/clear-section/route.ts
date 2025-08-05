@@ -10,7 +10,7 @@ import { clearSection, extractTOCWithSlugs, appendToSection } from '@/utils/mark
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
 
 export async function DELETE(
   request: NextRequest,
@@ -39,6 +39,27 @@ export async function DELETE(
   }
 
   const userId = authResult.userId!;
+  
+  // Récupérer le token d'authentification
+  const authHeader = request.headers.get('Authorization');
+  const userToken = authHeader?.substring(7);
+  
+  if (!userToken) {
+    logApi('v2_clear-section', '❌ Token manquant', context);
+    return NextResponse.json(
+      { error: 'Token d\'authentification manquant' },
+      { status: 401, headers: { "Content-Type": "application/json" } }
+    );
+  }
+
+  // Créer un client Supabase authentifié
+  const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+    global: {
+      headers: {
+        Authorization: `Bearer ${userToken}`
+      }
+    }
+  });
 
   // Résoudre la référence (UUID ou slug)
   const resolveResult = await V2ResourceResolver.resolveRef(ref, 'note', userId, context);

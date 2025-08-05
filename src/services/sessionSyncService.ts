@@ -1,16 +1,26 @@
 import { ChatSessionService } from './chatSessionService';
-import type { ChatMessage, ChatSession } from '@/store/useChatStore';
-import type { ChatMessage as ApiChatMessage, ChatSession as ApiChatSession } from '@/types/chat';
+import type { ChatSession } from '@/store/useChatStore';
+import type { ChatMessage as ApiChatMessage, ChatSession as ApiChatSession, ChatMessage } from '@/types/chat';
 import { useChatStore } from '@/store/useChatStore';
 import { simpleLogger as logger } from '@/utils/logger';
 
 // Types locaux pour la conversion
 interface LocalChatMessage {
   id: string;
-  role: 'user' | 'assistant' | 'system';
-  content: string;
+  role: 'user' | 'assistant' | 'system' | 'tool';
+  content: string | null;
   timestamp: string | Date;
   isStreaming?: boolean;
+  // Support pour les tool calls (format DeepSeek)
+  tool_calls?: Array<{
+    id: string;
+    type: 'function';
+    function: {
+      name: string;
+      arguments: string;
+    };
+  }>;
+  tool_call_id?: string; // Pour les messages tool
 }
 
 interface LocalChatSession {
@@ -303,7 +313,9 @@ function convertApiSessionToStore(apiSession: ApiChatSession): ChatSession {
       role: apiMessage.role,
       content: apiMessage.content,
       timestamp: apiMessage.timestamp as string,
-      isStreaming: apiMessage.isStreaming
+      isStreaming: apiMessage.isStreaming,
+      tool_calls: apiMessage.tool_calls,
+      tool_call_id: apiMessage.tool_call_id
     })),
     history_limit: apiSession.history_limit,
     created_at: apiSession.created_at,
@@ -320,7 +332,9 @@ function convertStoreMessageToApi(storeMessage: Omit<ChatMessage, 'id'>): Omit<A
     role: storeMessage.role,
     content: storeMessage.content,
     timestamp: storeMessage.timestamp,
-    isStreaming: storeMessage.isStreaming
+    isStreaming: storeMessage.isStreaming,
+    tool_calls: storeMessage.tool_calls,
+    tool_call_id: storeMessage.tool_call_id
   };
 }
 

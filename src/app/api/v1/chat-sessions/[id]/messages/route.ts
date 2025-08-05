@@ -22,9 +22,19 @@ const supabaseAdmin = createClient(supabaseUrl, supabaseKey);
 
 // Schéma de validation pour ajouter un message
 const addMessageSchema = z.object({
-  role: z.enum(['user', 'assistant', 'system']),
-  content: z.string().min(1, 'Le contenu ne peut pas être vide'),
-  timestamp: z.string().optional().default(() => new Date().toISOString())
+  role: z.enum(['user', 'assistant', 'system', 'tool']),
+  content: z.string().nullable().optional(),
+  timestamp: z.string().optional().default(() => new Date().toISOString()),
+  // Support pour les tool calls (format DeepSeek)
+  tool_calls: z.array(z.object({
+    id: z.string(),
+    type: z.literal('function'),
+    function: z.object({
+      name: z.string(),
+      arguments: z.string()
+    })
+  })).optional(),
+  tool_call_id: z.string().optional() // Pour les messages tool
 });
 
 // POST /api/v1/chat-sessions/[id]/messages - Ajouter un message à une session
@@ -72,7 +82,9 @@ export async function POST(
       id: crypto.randomUUID(),
       role: validatedData.role,
       content: validatedData.content,
-      timestamp: validatedData.timestamp
+      timestamp: validatedData.timestamp,
+      tool_calls: validatedData.tool_calls,
+      tool_call_id: validatedData.tool_call_id
     };
 
     // Créer un client avec le contexte d'authentification de l'utilisateur
