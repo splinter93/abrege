@@ -16,7 +16,7 @@ export class AgentApiV2Tools {
   private baseUrl: string;
 
   constructor() {
-    this.baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://scrivia.app';
+    this.baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://scrivia.app';
     this.initializeTools();
   }
 
