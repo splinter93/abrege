@@ -154,6 +154,40 @@ export function clearSection(markdown: string, section: string): string {
   return before + (after ? '\n' + after : '');
 }
 
+/**
+ * Supprime complètement une section (titre + contenu)
+ * Retourne le nouveau markdown (ou lève une erreur si section non trouvée)
+ */
+export function eraseSection(markdown: string, section: string): string {
+  if (!section) {
+    throw new Error('Section requise pour eraseSection');
+  }
+  
+  const toc = extractTOCWithSlugs(markdown);
+  const sectionIdx = toc.findIndex(t => t.title === section || t.slug === section);
+  if (sectionIdx === -1) throw new Error('Section non trouvée (titre ou slug inconnu)');
+  
+  const target = toc[sectionIdx];
+  const lines = markdown.split('\n');
+  const sectionStart = target.line - 1;
+  let sectionEnd = lines.length;
+  
+  // Trouver la fin de la section (prochain titre de même niveau ou supérieur)
+  for (let i = target.line; i < lines.length; i++) {
+    const match = lines[i].match(/^(#{1,6})\s+(.+)/);
+    if (match && match[1].length <= target.level) {
+      sectionEnd = i;
+      break;
+    }
+  }
+  
+  // Reconstruire le markdown sans la section complète
+  const before = lines.slice(0, sectionStart).join('\n');
+  const after = lines.slice(sectionEnd).join('\n');
+  
+  return before + (after ? '\n' + after : '');
+}
+
 // Ajout d'un commentaire pour indiquer la nécessité d'un .d.ts si le problème persiste
 // Si TS ne résout pas les types, créer src/utils/markdownTOC.d.ts
 // declare module './markdownTOC'; 

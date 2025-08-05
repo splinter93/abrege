@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { logApi } from '@/utils/logger';
 import { createClasseurV2Schema, validatePayload, createValidationErrorResponse } from '@/utils/v2ValidationSchemas';
-import { optimizedApi } from '@/services/optimizedApi';
 import { getAuthenticatedUser } from '@/utils/authUtils';
+import { SlugGenerator } from '@/utils/slugGenerator';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -44,18 +44,35 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
     const validatedData = validationResult.data;
 
-    // Utiliser optimizedApi pour déclencher Zustand + polling
-    const result = await optimizedApi.createClasseur({
-      ...validatedData
-    });
+    // Générer un slug unique
+    const slug = await SlugGenerator.generateSlug(validatedData.name, 'classeur', userId);
+    
+    // Créer le classeur directement dans la base de données
+    const { data: classeur, error: createError } = await supabase
+      .from('classeurs')
+      .insert({
+        name: validatedData.name,
+        description: validatedData.description,
+        emoji: validatedData.icon || '📁',
+        position: 0,
+        user_id: userId,
+        slug
+      })
+      .select()
+      .single();
 
-    if (!result.success) {
-      logApi('v2_classeur_create', `❌ Erreur création: ${result.error}`, context);
+    if (createError) {
+      logApi('v2_classeur_create', `❌ Erreur création classeur: ${createError.message}`, context);
       return NextResponse.json(
-        { error: result.error },
-        { status: 500, headers: { "Content-Type": "application/json" } }
+        { error: `Erreur création classeur: ${createError.message}` },
+        { status: 500 }
       );
     }
+
+    const result = {
+      success: true,
+      classeur: classeur
+    };
 
     const apiTime = Date.now() - startTime;
     logApi('v2_classeur_create', `✅ Classeur créé en ${apiTime}ms`, context);
@@ -64,7 +81,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       success: true,
       message: 'Classeur créé avec succès',
       classeur: result.classeur
-    }, { headers: { "Content-Type": "application/json" } });
+    });
 
   } catch (err: unknown) {
     const error = err as Error;

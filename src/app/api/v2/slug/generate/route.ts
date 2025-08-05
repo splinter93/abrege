@@ -1,29 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { logApi } from '@/utils/logger';
-import { updateClasseurV2Schema, validatePayload, createValidationErrorResponse } from '@/utils/v2ValidationSchemas';
+import { generateSlugV2Schema, validatePayload, createValidationErrorResponse } from '@/utils/v2ValidationSchemas';
 import { getAuthenticatedUser } from '@/utils/authUtils';
-import { V2DatabaseUtils } from '@/utils/v2DatabaseUtils';
+import { SlugGenerator } from '@/utils/slugGenerator';
 
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: Promise<{ ref: string }> }
-): Promise<NextResponse> {
+export async function POST(request: NextRequest): Promise<NextResponse> {
   const startTime = Date.now();
-  const { ref } = await params;
   const clientType = request.headers.get('X-Client-Type') || 'unknown';
   const context = {
-    operation: 'v2_classeur_update',
+    operation: 'v2_slug_generate',
     component: 'API_V2',
-    ref,
     clientType
   };
 
-  logApi('v2_classeur_update', `🚀 Début mise à jour classeur v2 ${ref}`, context);
+  logApi('v2_slug_generate', '🚀 Début génération slug v2', context);
 
   // 🔐 Authentification
   const authResult = await getAuthenticatedUser(request);
   if (!authResult.success) {
-    logApi('v2_classeur_update', `❌ Authentification échouée: ${authResult.error}`, context);
+    logApi('v2_slug_generate', `❌ Authentification échouée: ${authResult.error}`, context);
     return NextResponse.json(
       { error: authResult.error },
       { status: authResult.status || 401, headers: { "Content-Type": "application/json" } }
@@ -36,29 +31,29 @@ export async function PUT(
     const body = await request.json();
 
     // Validation Zod V2
-    const validationResult = validatePayload(updateClasseurV2Schema, body);
+    const validationResult = validatePayload(generateSlugV2Schema, body);
     if (!validationResult.success) {
-      logApi('v2_classeur_update', '❌ Validation échouée', context);
+      logApi('v2_slug_generate', '❌ Validation échouée', context);
       return createValidationErrorResponse(validationResult);
     }
 
     const validatedData = validationResult.data;
 
-    // Utiliser V2DatabaseUtils pour l'accès direct à la base de données
-    const result = await V2DatabaseUtils.updateClasseur(ref, validatedData, userId, context);
+    // Générer le slug unique
+    const slug = await SlugGenerator.generateSlug(validatedData.text, validatedData.type, userId);
 
     const apiTime = Date.now() - startTime;
-    logApi('v2_classeur_update', `✅ Classeur mis à jour en ${apiTime}ms`, context);
+    logApi('v2_slug_generate', `✅ Slug généré en ${apiTime}ms`, context);
 
     return NextResponse.json({
       success: true,
-      message: 'Classeur mis à jour avec succès',
-      classeur: result.classeur
+      message: 'Slug généré avec succès',
+      slug: slug
     });
 
   } catch (err: unknown) {
     const error = err as Error;
-    logApi('v2_classeur_update', `❌ Erreur serveur: ${error}`, context);
+    logApi('v2_slug_generate', `❌ Erreur serveur: ${error}`, context);
     return NextResponse.json(
       { error: 'Erreur serveur' },
       { status: 500, headers: { "Content-Type": "application/json" } }

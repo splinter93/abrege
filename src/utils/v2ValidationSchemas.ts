@@ -57,6 +57,14 @@ export const addContentV2Schema = z.object({
 });
 
 /**
+ * Schéma pour insérer du contenu à une position spécifique V2
+ */
+export const insertContentV2Schema = z.object({
+  content: z.string().min(1, 'content requis'),
+  position: z.number().int('position doit être un entier').min(0, 'position doit être >= 0'),
+});
+
+/**
  * Schéma pour ajouter du contenu à une section V2
  */
 export const addToSectionV2Schema = z.object({
@@ -68,6 +76,13 @@ export const addToSectionV2Schema = z.object({
  * Schéma pour vider une section V2
  */
 export const clearSectionV2Schema = z.object({
+  sectionId: z.string().min(1, 'sectionId requis'),
+});
+
+/**
+ * Schéma pour supprimer une section V2
+ */
+export const eraseSectionV2Schema = z.object({
   sectionId: z.string().min(1, 'sectionId requis'),
 });
 
@@ -146,6 +161,16 @@ export const reorderClasseursV2Schema = z.object({
       position: z.number().int('position doit être un entier').min(0, 'position doit être >= 0'),
     })
   ).min(1, 'au moins un classeur requis'),
+});
+
+/**
+ * Schéma pour générer un slug V2
+ */
+export const generateSlugV2Schema = z.object({
+  text: z.string().min(1, 'text requis'),
+  type: z.enum(['note', 'classeur', 'folder'], {
+    errorMap: () => ({ message: 'type doit être note, classeur ou folder' })
+  }),
 });
 
 // ============================================================================

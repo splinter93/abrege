@@ -51,6 +51,45 @@ const getAgentById = async (id: string) => {
   }
 };
 
+/**
+ * Nettoie et valide les arguments JSON des function calls
+ */
+const cleanAndParseFunctionArgs = (rawArgs: string): any => {
+  try {
+    // Essayer de parser directement
+    return JSON.parse(rawArgs);
+  } catch (error) {
+    logger.dev("[LLM API] ⚠️ Arguments JSON malformés, tentative de nettoyage:", rawArgs);
+    
+    try {
+      // Nettoyer les arguments en supprimant les caractères problématiques
+      let cleanedArgs = rawArgs
+        .replace(/\n/g, '') // Supprimer les retours à la ligne
+        .replace(/\r/g, '') // Supprimer les retours chariot
+        .replace(/\t/g, '') // Supprimer les tabulations
+        .trim();
+      
+      // Si on a plusieurs objets JSON concaténés, prendre le premier
+      if (cleanedArgs.includes('}{')) {
+        const firstBrace = cleanedArgs.indexOf('{');
+        const lastBrace = cleanedArgs.lastIndexOf('}');
+        if (firstBrace !== -1 && lastBrace !== -1) {
+          cleanedArgs = cleanedArgs.substring(firstBrace, lastBrace + 1);
+        }
+      }
+      
+      // Essayer de parser le JSON nettoyé
+      const parsed = JSON.parse(cleanedArgs);
+      logger.dev("[LLM API] ✅ Arguments nettoyés avec succès:", parsed);
+      return parsed;
+      
+    } catch (cleanError) {
+      logger.error("[LLM API] ❌ Impossible de nettoyer les arguments JSON:", cleanError);
+      throw new Error(`Arguments JSON invalides: ${rawArgs}`);
+    }
+  }
+};
+
 export async function POST(request: NextRequest) {
   logger.dev("[LLM API] 🚀 REQUÊTE REÇUE !");
   try {
@@ -88,7 +127,7 @@ export async function POST(request: NextRequest) {
     logger.dev("[LLM API] 📦 Body reçu:", { message, context, provider });
 
     // Récupérer la configuration de l'agent si spécifiée
-    let agentConfig = null;
+    let agentConfig: any = null;
     if (context?.agentId) {
       logger.dev("[LLM API] 🔍 Recherche agent avec ID:", context.agentId);
       agentConfig = await getAgentById(context.agentId);
@@ -329,7 +368,8 @@ export async function POST(request: NextRequest) {
         try {
           logger.dev("[LLM API] 🔧 Function call détectée:", functionCallData);
           
-          const functionArgs = JSON.parse(functionCallData.arguments);
+          // 🔧 NOUVEAU: Nettoyer et valider les arguments JSON
+          const functionArgs = cleanAndParseFunctionArgs(functionCallData.arguments);
           
           // Utiliser le token JWT de l'utilisateur pour l'authentification API
           logger.dev("[LLM API] 🔑 Token JWT utilisé pour tool call:", userToken.substring(0, 20) + "...");
@@ -382,15 +422,15 @@ export async function POST(request: NextRequest) {
 
           logger.dev("[LLM API] 📝 Historique mis à jour avec tool messages");
 
-          // 3. Relancer le LLM avec l'historique complet
+          // 3. Relancer le LLM avec l'historique complet (SANS tools pour éviter la boucle infinie)
           const finalPayload = {
             model: config.model,
             messages: updatedMessages,
             stream: true,
             temperature: config.temperature,
             max_tokens: config.max_tokens,
-            top_p: config.top_p,
-            ...(tools && { tools })
+            top_p: config.top_p
+            // 🔧 ANTI-BOUCLE: Pas de tools lors de la relance
           };
 
           logger.dev("[LLM API] 🔄 Relance LLM avec payload:", JSON.stringify(finalPayload, null, 2));
@@ -502,19 +542,155 @@ export async function POST(request: NextRequest) {
           
           const errorMessage = `Erreur lors de l'exécution de l'action: ${error instanceof Error ? error.message : 'Erreur inconnue'}`;
           
-          // Broadcast d'erreur
-          await channel.send({
-            type: 'broadcast',
-            event: 'llm-error',
-            payload: {
-              sessionId: context.sessionId,
-              error: errorMessage
+          // 🔧 CORRECTION: Injecter l'erreur dans l'historique et relancer le LLM
+          logger.dev("[LLM API] 🔧 Injection de l'erreur tool dans l'historique");
+
+          // 1. Créer le message tool avec l'erreur
+          const toolCallId = `call_${Date.now()}`;
+          const toolMessage = {
+            role: 'assistant' as const,
+            content: null,
+            tool_calls: [{
+              id: toolCallId,
+              type: 'function',
+              function: {
+                name: functionCallData.name,
+                arguments: functionCallData.arguments
+              }
+            }]
+          };
+
+          const toolResultMessage = {
+            role: 'tool' as const,
+            tool_call_id: toolCallId,
+            content: JSON.stringify({ 
+              error: true, 
+              message: errorMessage 
+            })
+          };
+
+          // 2. Ajouter les messages à l'historique
+          const updatedMessages = [
+            ...messages,
+            toolMessage,
+            toolResultMessage
+          ];
+
+          logger.dev("[LLM API] 📝 Historique mis à jour avec erreur tool");
+
+          // 3. Relancer le LLM avec l'historique complet (SANS tools)
+          const finalPayload = {
+            model: config.model,
+            messages: updatedMessages,
+            stream: true,
+            temperature: config.temperature,
+            max_tokens: config.max_tokens,
+            top_p: config.top_p
+            // 🔧 ANTI-BOUCLE: Pas de tools lors de la relance
+          };
+
+          logger.dev("[LLM API] 🔄 Relance LLM avec erreur tool");
+
+          const finalResponse = await fetch('https://api.deepseek.com/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${process.env.DEEPSEEK_API_KEY}`
+            },
+            body: JSON.stringify(finalPayload)
+          });
+
+          if (!finalResponse.ok) {
+            const errorText = await finalResponse.text();
+            logger.error("[LLM API] ❌ Erreur DeepSeek relance:", errorText);
+            throw new Error(`DeepSeek API error: ${finalResponse.status} - ${errorText}`);
+          }
+
+          logger.dev("[LLM API] 🔄 LLM relancé avec erreur tool");
+
+          // 4. Streamer la réponse du LLM avec l'erreur
+          const encoder = new TextEncoder();
+          const stream = new ReadableStream({
+            async start(controller) {
+              try {
+                const reader = finalResponse.body?.getReader();
+                if (!reader) {
+                  throw new Error('Impossible de lire le stream de réponse finale');
+                }
+
+                let accumulatedContent = '';
+                let isComplete = false;
+
+                while (true) {
+                  const { done, value } = await reader.read();
+                  if (done) break;
+
+                  const chunk = new TextDecoder().decode(value);
+                  const lines = chunk.split('\n');
+
+                  for (const line of lines) {
+                    if (line.startsWith('data: ')) {
+                      const data = line.slice(6);
+                      if (data === '[DONE]') {
+                        isComplete = true;
+                        break;
+                      }
+
+                      try {
+                        const parsed = JSON.parse(data);
+                        const delta = parsed.choices?.[0]?.delta;
+                        
+                        if (delta?.content) {
+                          const token = delta.content;
+                          accumulatedContent += token;
+                          
+                          // Broadcast du token
+                          await channel.send({
+                            type: 'broadcast',
+                            event: 'llm-token',
+                            payload: {
+                              token,
+                              sessionId: context.sessionId
+                            }
+                          });
+
+                          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ token })}\n\n`));
+                        }
+                      } catch (parseError) {
+                        logger.dev("[LLM API] ⚠️ Chunk non-JSON ignoré:", data);
+                      }
+                    }
+                  }
+
+                  if (isComplete) break;
+                }
+
+                // Broadcast de completion avec le contenu accumulé
+                await channel.send({
+                  type: 'broadcast',
+                  event: 'llm-complete',
+                  payload: {
+                    sessionId: context.sessionId,
+                    fullResponse: accumulatedContent
+                  }
+                });
+
+                logger.dev("[LLM API] ✅ Streaming terminé avec erreur tool, contenu accumulé:", accumulatedContent.substring(0, 100) + "...");
+
+                controller.close();
+              } catch (streamError) {
+                logger.error("[LLM API] ❌ Erreur streaming réponse finale:", streamError);
+                controller.error(streamError);
+              }
             }
           });
-          
-          return NextResponse.json({ 
-            success: false, 
-            error: errorMessage
+
+          return new Response(stream, {
+            headers: {
+              'Content-Type': 'text/plain; charset=utf-8',
+              'Cache-Control': 'no-cache',
+              'Connection': 'keep-alive',
+            },
           });
         }
       } else {
