@@ -1,13 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
 import { logApi } from '@/utils/logger';
 import { createNoteV2Schema, validatePayload, createValidationErrorResponse } from '@/utils/v2ValidationSchemas';
 import { optimizedApi } from '@/services/optimizedApi';
 import { getAuthenticatedUser } from '@/utils/authUtils';
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
+import { createSupabaseClient } from '@/utils/supabaseClient';
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
   const startTime = Date.now();
@@ -19,6 +15,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   };
 
   logApi('v2_note_create', '🚀 Début création note v2', context);
+
+  // Initialiser Supabase
+  const supabase = createSupabaseClient();
 
   // 🔐 Authentification
   const authResult = await getAuthenticatedUser(request);
