@@ -221,6 +221,25 @@ export class AgentApiV2Tools {
       }
     });
 
+    // Tool: Créer un classeur
+    this.tools.set('create_notebook', {
+      name: 'create_notebook',
+      description: 'Créer un nouveau classeur',
+      parameters: {
+        type: 'object',
+        properties: {
+          name: {
+            type: 'string',
+            description: 'Nom du classeur'
+          }
+        },
+        required: ['name']
+      },
+      execute: async (params, jwtToken, userId) => {
+        return await this.callApiV2('POST', '/api/v2/classeur/create', params, jwtToken);
+      }
+    });
+
     // Tool: Lister tous les classeurs
     this.tools.set('get_notebooks', {
       name: 'get_notebooks',
