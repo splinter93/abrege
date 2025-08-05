@@ -2,23 +2,23 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { simpleLogger as logger } from '@/utils/logger';
 
-// Configuration Supabase
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+// Configuration Supabase - Vérification différée pour éviter les erreurs de build
+const getSupabaseConfig = () => {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-logger.dev('[Chat Sessions API] 🔧 Configuration:', {
-  supabaseUrl: supabaseUrl ? '✅ Configuré' : '❌ Manquant',
-  supabaseKey: supabaseKey ? '✅ Configuré' : '❌ Manquant',
-  serviceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY ? '✅ Configuré' : '❌ Manquant'
-});
+  if (!supabaseUrl || !supabaseKey) {
+    throw new Error('Configuration Supabase manquante');
+  }
 
-if (!supabaseUrl || !supabaseKey) {
-  logger.error('[Chat Sessions API] ❌ Variables d\'environnement Supabase manquantes');
-  throw new Error('Configuration Supabase manquante');
-}
+  return { supabaseUrl, supabaseKey };
+};
 
-// Client avec service role pour les opérations admin
-const supabaseAdmin = createClient(supabaseUrl, supabaseKey);
+// Fonction pour créer le client admin
+const createSupabaseAdmin = () => {
+  const { supabaseUrl, supabaseKey } = getSupabaseConfig();
+  return createClient(supabaseUrl, supabaseKey);
+};
 
 /**
  * Endpoint pour créer une nouvelle session de chat
@@ -29,7 +29,9 @@ export async function POST(request: NextRequest) {
     logger.dev('[Chat Sessions API] 📝 Création de session...');
     
     // Vérifier la configuration Supabase
-    if (!supabaseUrl || !supabaseKey) {
+    try {
+      getSupabaseConfig();
+    } catch (error) {
       logger.error('[Chat Sessions API] ❌ Configuration Supabase manquante');
       return NextResponse.json(
         { error: 'Configuration serveur manquante' },
@@ -50,6 +52,7 @@ export async function POST(request: NextRequest) {
       userToken = authHeader.substring(7);
       logger.dev('[Chat Sessions API] 🔐 Token JWT détecté');
       
+      const supabaseAdmin = createSupabaseAdmin();
       const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(userToken);
       
       if (authError || !user) {
@@ -86,6 +89,7 @@ export async function POST(request: NextRequest) {
     logger.dev('[Chat Sessions API] 📋 Données reçues:', { name, history_limit });
 
     // Créer un client avec le contexte d'authentification de l'utilisateur
+    const { supabaseUrl } = getSupabaseConfig();
     const userClient = createClient(supabaseUrl, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, {
       global: {
         headers: {
@@ -161,7 +165,9 @@ export async function POST(request: NextRequest) {
 export async function GET(request: NextRequest) {
   try {
     // Vérifier la configuration Supabase
-    if (!supabaseUrl || !supabaseKey) {
+    try {
+      getSupabaseConfig();
+    } catch (error) {
       logger.error('[Chat Sessions API] ❌ Configuration Supabase manquante');
       return NextResponse.json(
         { error: 'Configuration serveur manquante' },
@@ -177,6 +183,7 @@ export async function GET(request: NextRequest) {
     if (authHeader && authHeader.startsWith('Bearer ')) {
       // Token JWT fourni
       userToken = authHeader.substring(7);
+      const supabaseAdmin = createSupabaseAdmin();
       const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(userToken);
       
       if (authError || !user) {
@@ -194,6 +201,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Créer un client avec le contexte d'authentification de l'utilisateur
+    const { supabaseUrl } = getSupabaseConfig();
     const userClient = createClient(supabaseUrl, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, {
       global: {
         headers: {
