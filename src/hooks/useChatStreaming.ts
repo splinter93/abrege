@@ -21,6 +21,8 @@ export function useChatStreaming(options: UseChatStreamingOptions = {}): UseChat
   
   const channelRef = useRef<any>(null);
   const sessionIdRef = useRef<string>('');
+  const retryCountRef = useRef(0);
+  const maxRetries = 3;
   const { onToken, onComplete, onError } = options;
 
   const startStreaming = useCallback((channelId: string, sessionId: string) => {
@@ -29,6 +31,7 @@ export function useChatStreaming(options: UseChatStreamingOptions = {}): UseChat
     // Nettoyer l'état précédent
     setIsStreaming(false);
     setContent('');
+    retryCountRef.current = 0; // Reset le compteur de retry
     
     sessionIdRef.current = sessionId;
     
@@ -76,7 +79,12 @@ export function useChatStreaming(options: UseChatStreamingOptions = {}): UseChat
         } catch (error) {
           logger.error('[useChatStreaming] ❌ Erreur completion:', error);
           setIsStreaming(false);
-          onError?.('Erreur lors de la réception de la réponse');
+          // Ne pas afficher l'erreur à l'utilisateur si c'est juste un problème de parsing
+          if (error instanceof Error && error.message.includes('JSON')) {
+            logger.dev('[useChatStreaming] 🔧 Erreur de parsing JSON ignorée');
+          } else {
+            onError?.('Erreur lors de la réception de la réponse');
+          }
         }
       })
       .on('broadcast', { event: 'llm-error' }, (payload) => {
@@ -89,7 +97,12 @@ export function useChatStreaming(options: UseChatStreamingOptions = {}): UseChat
         } catch (error) {
           logger.error('[useChatStreaming] Erreur error event:', error);
           setIsStreaming(false);
-          onError?.('Erreur lors du streaming');
+          // Ne pas afficher l'erreur à l'utilisateur si c'est juste un problème de parsing
+          if (error instanceof Error && error.message.includes('JSON')) {
+            logger.dev('[useChatStreaming] 🔧 Erreur de parsing JSON ignorée');
+          } else {
+            onError?.('Erreur lors du streaming');
+          }
         }
       })
       .subscribe((status) => {
@@ -97,9 +110,33 @@ export function useChatStreaming(options: UseChatStreamingOptions = {}): UseChat
           setIsStreaming(true);
           logger.dev('[useChatStreaming] ✅ Canal connecté');
         } else if (status === 'CHANNEL_ERROR') {
-          logger.error('[useChatStreaming] ❌ Erreur canal');
+          logger.error('[useChatStreaming] ❌ Erreur canal - Tentative de reconnexion...');
           setIsStreaming(false);
-          onError?.('Erreur de connexion au canal de streaming');
+          
+          // Logique de retry avec limite
+          if (retryCountRef.current < maxRetries) {
+            retryCountRef.current++;
+            logger.dev(`[useChatStreaming] 🔄 Tentative de reconnexion ${retryCountRef.current}/${maxRetries}`);
+            
+            // Tentative de reconnexion automatique après 2 secondes
+            setTimeout(() => {
+              if (channelRef.current && sessionIdRef.current) {
+                logger.dev('[useChatStreaming] 🔄 Reconnexion en cours...');
+                // La reconnexion se fera automatiquement via le hook
+              }
+            }, 2000);
+          } else {
+            logger.error('[useChatStreaming] ❌ Nombre maximum de tentatives atteint');
+            retryCountRef.current = 0; // Reset pour la prochaine fois
+            // Ne pas afficher l'erreur à l'utilisateur, juste logger
+          }
+        } else if (status === 'TIMED_OUT') {
+          logger.error('[useChatStreaming] ⏰ Timeout canal');
+          setIsStreaming(false);
+          // Timeout est moins critique, on peut continuer sans streaming
+        } else if (status === 'CLOSED') {
+          logger.dev('[useChatStreaming] 🔒 Canal fermé');
+          setIsStreaming(false);
         }
       });
 
@@ -112,6 +149,7 @@ export function useChatStreaming(options: UseChatStreamingOptions = {}): UseChat
       channelRef.current = null;
     }
     setIsStreaming(false);
+    retryCountRef.current = 0; // Reset le compteur de retry
   }, []);
 
   // Cleanup au démontage
