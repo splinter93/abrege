@@ -472,7 +472,9 @@ const ChatFullscreen: React.FC = () => {
       <div className="chat-header">
         <div className="chat-header-left">
           <div className="chat-title">
-            <img src="/logo scrivia white.png" alt="Scrivia" className="chat-logo" />
+            <a href="/" className="chat-logo-link">
+              <img src="/logo scrivia white.png" alt="Scrivia" className="chat-logo" />
+            </a>
           </div>
         </div>
         

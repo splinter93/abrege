@@ -86,6 +86,17 @@
   margin-right: var(--chat-spacing-lg);
 }
 
+.chat-logo-link {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  transition: opacity var(--chat-transition-normal);
+}
+
+.chat-logo-link:hover {
+  opacity: 0.8;
+}
+
 .chat-logo-img {
   height: 24px;
   width: auto;
