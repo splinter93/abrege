@@ -2,10 +2,20 @@
 
 export interface ChatMessage {
   id: string;
-  role: 'user' | 'assistant' | 'system';
-  content: string;
+  role: 'user' | 'assistant' | 'system' | 'tool';
+  content: string | null;
   timestamp: string;
   isStreaming?: boolean; // Pour indiquer si le message est en cours de streaming
+  // Support pour les tool calls (format DeepSeek)
+  tool_calls?: Array<{
+    id: string;
+    type: 'function';
+    function: {
+      name: string;
+      arguments: string;
+    };
+  }>;
+  tool_call_id?: string; // Pour les messages tool
 }
 
 export interface ChatSession {

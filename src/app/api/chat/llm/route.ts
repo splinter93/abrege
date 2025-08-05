@@ -415,6 +415,40 @@ export async function POST(request: NextRequest) {
             toolResultMessage
           ];
 
+          // 🔧 NOUVEAU: Sauvegarder les messages tool dans la base de données
+          try {
+            const { ChatSessionService } = await import('@/services/chatSessionService');
+            const chatSessionService = ChatSessionService.getInstance();
+            
+            // Sauvegarder le message assistant avec tool call
+            await chatSessionService.addMessage(context.sessionId, {
+              role: 'assistant',
+              content: null,
+              tool_calls: [{
+                id: toolCallId,
+                type: 'function',
+                function: {
+                  name: functionCallData.name,
+                  arguments: functionCallData.arguments
+                }
+              }],
+              timestamp: new Date().toISOString()
+            });
+
+            // Sauvegarder le message tool avec le résultat
+            await chatSessionService.addMessage(context.sessionId, {
+              role: 'tool',
+              tool_call_id: toolCallId,
+              content: JSON.stringify(result),
+              timestamp: new Date().toISOString()
+            });
+
+            logger.dev("[LLM API] ✅ Messages tool sauvegardés dans l'historique");
+          } catch (saveError) {
+            logger.error("[LLM API] ❌ Erreur sauvegarde messages tool:", saveError);
+            // Continuer même si la sauvegarde échoue
+          }
+
           // 3. Relancer le LLM avec l'historique complet (SANS tools pour éviter la boucle infinie)
           const finalPayload = {
             model: config.model,
@@ -569,7 +603,42 @@ export async function POST(request: NextRequest) {
             toolResultMessage
           ];
 
-          logger.dev("[LLM API] 📝 Historique mis à jour avec erreur tool");
+          // 🔧 NOUVEAU: Sauvegarder les messages tool dans la base de données
+          try {
+            const { ChatSessionService } = await import('@/services/chatSessionService');
+            const chatSessionService = ChatSessionService.getInstance();
+            
+            // Sauvegarder le message assistant avec tool call
+            await chatSessionService.addMessage(context.sessionId, {
+              role: 'assistant',
+              content: null,
+              tool_calls: [{
+                id: toolCallId,
+                type: 'function',
+                function: {
+                  name: functionCallData.name,
+                  arguments: functionCallData.arguments
+                }
+              }],
+              timestamp: new Date().toISOString()
+            });
+
+            // Sauvegarder le message tool avec le résultat
+            await chatSessionService.addMessage(context.sessionId, {
+              role: 'tool',
+              tool_call_id: toolCallId,
+              content: JSON.stringify({ 
+                error: true, 
+                message: errorMessage 
+              }),
+              timestamp: new Date().toISOString()
+            });
+
+            logger.dev("[LLM API] ✅ Messages tool sauvegardés dans l'historique");
+          } catch (saveError) {
+            logger.error("[LLM API] ❌ Erreur sauvegarde messages tool:", saveError);
+            // Continuer même si la sauvegarde échoue
+          }
 
           // 3. Relancer le LLM avec l'historique complet (SANS tools)
           const finalPayload = {
