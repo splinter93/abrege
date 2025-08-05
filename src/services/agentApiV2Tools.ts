@@ -8,7 +8,7 @@ export interface ApiV2Tool {
     properties: Record<string, any>;
     required: string[];
   };
-  execute: (params: any, userId: string) => Promise<any>;
+  execute: (params: any, jwtToken: string) => Promise<any>;
 }
 
 export class AgentApiV2Tools {
@@ -47,8 +47,8 @@ export class AgentApiV2Tools {
         },
         required: ['source_title', 'notebook_id']
       },
-      execute: async (params, userId) => {
-        return await this.callApiV2('POST', '/api/v2/note/create', params, userId);
+      execute: async (params, jwtToken) => {
+        return await this.callApiV2('POST', '/api/v2/note/create', params, jwtToken);
       }
     });
 
@@ -74,9 +74,9 @@ export class AgentApiV2Tools {
         },
         required: ['ref']
       },
-      execute: async (params, userId) => {
+      execute: async (params, jwtToken) => {
         const { ref, ...data } = params;
-        return await this.callApiV2('PUT', `/api/v2/note/${ref}/update`, data, userId);
+        return await this.callApiV2('PUT', `/api/v2/note/${ref}/update`, data, jwtToken);
       }
     });
 
@@ -98,9 +98,9 @@ export class AgentApiV2Tools {
         },
         required: ['ref', 'content']
       },
-      execute: async (params, userId) => {
+      execute: async (params, jwtToken) => {
         const { ref, content } = params;
-        return await this.callApiV2('POST', `/api/v2/note/${ref}/add-content`, { content }, userId);
+        return await this.callApiV2('POST', `/api/v2/note/${ref}/add-content`, { content }, jwtToken);
       }
     });
 
@@ -122,9 +122,9 @@ export class AgentApiV2Tools {
         },
         required: ['ref', 'folder_id']
       },
-      execute: async (params, userId) => {
+      execute: async (params, jwtToken) => {
         const { ref, folder_id } = params;
-        return await this.callApiV2('PUT', `/api/v2/note/${ref}/move`, { folder_id }, userId);
+        return await this.callApiV2('PUT', `/api/v2/note/${ref}/move`, { folder_id }, jwtToken);
       }
     });
 
@@ -142,9 +142,9 @@ export class AgentApiV2Tools {
         },
         required: ['ref']
       },
-      execute: async (params, userId) => {
+      execute: async (params, jwtToken) => {
         const { ref } = params;
-        return await this.callApiV2('DELETE', `/api/v2/note/${ref}/delete`, {}, userId);
+        return await this.callApiV2('DELETE', `/api/v2/note/${ref}/delete`, {}, jwtToken);
       }
     });
 
@@ -170,8 +170,8 @@ export class AgentApiV2Tools {
         },
         required: ['name', 'notebook_id']
       },
-      execute: async (params, userId) => {
-        return await this.callApiV2('POST', '/api/v2/folder/create', params, userId);
+      execute: async (params, jwtToken) => {
+        return await this.callApiV2('POST', '/api/v2/folder/create', params, jwtToken);
       }
     });
 
@@ -189,9 +189,9 @@ export class AgentApiV2Tools {
         },
         required: ['ref']
       },
-      execute: async (params, userId) => {
+      execute: async (params, jwtToken) => {
         const { ref } = params;
-        return await this.callApiV2('GET', `/api/v2/note/${ref}/content`, {}, userId);
+        return await this.callApiV2('GET', `/api/v2/note/${ref}/content`, {}, jwtToken);
       }
     });
 
@@ -209,9 +209,9 @@ export class AgentApiV2Tools {
         },
         required: ['notebook_id']
       },
-      execute: async (params, userId) => {
+      execute: async (params, jwtToken) => {
         const { notebook_id } = params;
-        return await this.callApiV2('GET', `/api/v2/classeur/${notebook_id}/tree`, {}, userId);
+        return await this.callApiV2('GET', `/api/v2/classeur/${notebook_id}/tree`, {}, jwtToken);
       }
     });
 
@@ -224,8 +224,8 @@ export class AgentApiV2Tools {
         properties: {},
         required: []
       },
-      execute: async (params, userId) => {
-        return await this.callApiV2('GET', '/api/v2/classeurs', {}, userId);
+      execute: async (params, jwtToken) => {
+        return await this.callApiV2('GET', '/api/v2/classeurs', {}, jwtToken);
       }
     });
   }
@@ -233,13 +233,13 @@ export class AgentApiV2Tools {
   /**
    * Appeler l'API v2 de Scrivia
    */
-  private async callApiV2(method: string, endpoint: string, data: any, userId: string) {
+  private async callApiV2(method: string, endpoint: string, data: any, jwtToken: string) {
     try {
       const url = `${this.baseUrl}${endpoint}`;
       const headers = {
         'Content-Type': 'application/json',
         'X-Client-Type': 'llm',
-        'Authorization': `Bearer ${userId}` // userId est maintenant le token JWT
+        'Authorization': `Bearer ${jwtToken}` // jwtToken est le token JWT
       };
 
       const config: RequestInit = {
@@ -288,7 +288,7 @@ export class AgentApiV2Tools {
   /**
    * Exécuter un outil par son nom
    */
-  async executeTool(toolName: string, parameters: any, userId: string): Promise<any> {
+  async executeTool(toolName: string, parameters: any, jwtToken: string): Promise<any> {
     const tool = this.tools.get(toolName);
     if (!tool) {
       throw new Error(`Tool not found: ${toolName}`);
@@ -297,7 +297,7 @@ export class AgentApiV2Tools {
     logger.dev(`[AgentApiV2Tools] 🔧 Exécution tool: ${toolName}`);
     logger.dev(`[AgentApiV2Tools] 📦 Paramètres:`, parameters);
 
-    return await tool.execute(parameters, userId);
+    return await tool.execute(parameters, jwtToken);
   }
 
   /**
