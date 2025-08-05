@@ -422,6 +422,9 @@ export async function POST(request: NextRequest) {
                   throw new Error('Impossible de lire le stream de réponse finale');
                 }
 
+                let accumulatedContent = '';
+                let isComplete = false;
+
                 while (true) {
                   const { done, value } = await reader.read();
                   if (done) break;
@@ -432,7 +435,10 @@ export async function POST(request: NextRequest) {
                   for (const line of lines) {
                     if (line.startsWith('data: ')) {
                       const data = line.slice(6);
-                      if (data === '[DONE]') break;
+                      if (data === '[DONE]') {
+                        isComplete = true;
+                        break;
+                      }
 
                       try {
                         const parsed = JSON.parse(data);
@@ -440,6 +446,7 @@ export async function POST(request: NextRequest) {
                         
                         if (delta?.content) {
                           const token = delta.content;
+                          accumulatedContent += token;
                           
                           // Broadcast du token
                           await channel.send({
@@ -458,17 +465,21 @@ export async function POST(request: NextRequest) {
                       }
                     }
                   }
+
+                  if (isComplete) break;
                 }
 
-                // Broadcast de completion
+                // Broadcast de completion avec le contenu accumulé
                 await channel.send({
                   type: 'broadcast',
                   event: 'llm-complete',
                   payload: {
                     sessionId: context.sessionId,
-                    fullResponse: "Réponse générée par le LLM après traitement des données"
+                    fullResponse: accumulatedContent
                   }
                 });
+
+                logger.dev("[LLM API] ✅ Streaming terminé, contenu accumulé:", accumulatedContent.substring(0, 100) + "...");
 
                 controller.close();
               } catch (error) {
