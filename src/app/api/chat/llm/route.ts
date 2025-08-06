@@ -954,30 +954,32 @@ export async function POST(request: NextRequest) {
         // 🔧 TOOLS: Accès complet à tous les endpoints pour tous les modèles
         const isGptOss = config.model.includes('gpt-oss');
         const isQwen = config.model.includes('Qwen');
-        const supportsFunctionCalling = !isGptOss; // Qwen supporte les function calls
+        const supportsFunctionCalling = true; // ✅ Tous les modèles supportent les function calls
         
         if (isGptOss) {
-          logger.dev("[LLM API] ⚠️ GPT-OSS détecté - Function calling non supporté");
-          
-          // Ajouter un message système pour informer l'utilisateur
-          messages.unshift({
-            role: 'system',
-            content: '⚠️ Note: GPT-OSS ne supporte pas encore les function calls. Les actions seront décrites en texte au lieu d\'être exécutées automatiquement.'
-          });
+          logger.dev("[LLM API] ✅ GPT-OSS détecté - Function calling supporté via Groq");
         } else if (isQwen) {
           logger.dev("[LLM API] ✅ Qwen détecté - Function calling supporté");
         }
         
         // ✅ ACCÈS COMPLET: Tous les modèles ont accès à tous les endpoints
-        const tools = supportsFunctionCalling
-          ? agentApiV2Tools.getToolsForFunctionCalling() // Tous les tools disponibles
-          : undefined;
+        const tools = agentApiV2Tools.getToolsForFunctionCalling(); // Tous les tools disponibles
 
         logger.dev("[LLM API] 🔧 Capacités agent:", agentConfig?.api_v2_capabilities);
         logger.dev("[LLM API] 🔧 Support function calling:", supportsFunctionCalling);
         logger.dev("[LLM API] 🔧 Tools disponibles:", tools?.length || 0);
 
-        // Appeler Together AI avec streaming
+        // 🎯 DÉCISION: Utiliser Groq pour GPT-OSS, Together AI pour les autres
+        const useGroq = isGptOss;
+        const apiUrl = useGroq 
+          ? 'https://api.groq.com/openai/v1/chat/completions'
+          : 'https://api.together.xyz/v1/chat/completions';
+        const apiKey = useGroq 
+          ? process.env.GROQ_API_KEY
+          : process.env.TOGETHER_API_KEY;
+        const providerName = useGroq ? 'Groq' : 'Together AI';
+
+        // Appeler l'API appropriée avec streaming
         const payload = {
           model: config.model,
           messages,
@@ -988,23 +990,23 @@ export async function POST(request: NextRequest) {
           ...(tools && { tools, tool_choice: 'auto' })
         };
 
-        logger.dev("[LLM API] 📤 Payload complet envoyé à Together AI:");
+        logger.dev(`[LLM API] 📤 Payload complet envoyé à ${providerName}:`);
         logger.dev(JSON.stringify(payload, null, 2));
-        logger.dev("[LLM API] 📤 Appel Together AI avec streaming");
+        logger.dev(`[LLM API] 📤 Appel ${providerName} avec streaming`);
 
-        const response = await fetch('https://api.together.xyz/v1/chat/completions', {
+        const response = await fetch(apiUrl, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${process.env.TOGETHER_API_KEY}`
+            'Authorization': `Bearer ${apiKey}`
           },
           body: JSON.stringify(payload)
         });
 
         if (!response.ok) {
           const errorText = await response.text();
-          logger.error("[LLM API] ❌ Erreur Together AI:", errorText);
-          throw new Error(`Together AI API error: ${response.status} - ${errorText}`);
+          logger.error(`[LLM API] ❌ Erreur ${providerName}:`, errorText);
+          throw new Error(`${providerName} API error: ${response.status} - ${errorText}`);
         }
 
         // Gestion du streaming
