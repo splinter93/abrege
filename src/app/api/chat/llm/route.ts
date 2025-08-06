@@ -980,7 +980,17 @@ export async function POST(request: NextRequest) {
         const providerName = useGroq ? 'Groq' : 'Together AI';
 
         // Appeler l'API appropriée avec streaming
-        const payload = {
+        const payload = useGroq ? {
+          // 🎯 Payload spécifique pour Groq
+          model: 'openai/gpt-oss-120b', // ✅ Modèle correct pour Groq
+          messages,
+          stream: true,
+          temperature: config.temperature,
+          max_completion_tokens: config.max_tokens, // ✅ Groq utilise max_completion_tokens
+          top_p: config.top_p,
+          ...(tools && { tools, tool_choice: 'auto' })
+        } : {
+          // 🎯 Payload pour Together AI
           model: config.model,
           messages,
           stream: true,
