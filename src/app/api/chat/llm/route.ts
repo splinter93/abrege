@@ -307,18 +307,16 @@ export async function POST(request: NextRequest) {
       // 🔧 TOOLS: Accès complet à tous les endpoints pour tous les modèles
       const isGptOss = config.model.includes('gpt-oss');
       const isQwen = config.model.includes('Qwen');
-      const supportsFunctionCalling = !isGptOss; // Qwen supporte les function calls
+      const supportsFunctionCalling = true; // ✅ Tous les modèles supportent les function calls
       
       if (isGptOss) {
-        logger.dev("[LLM API] ⚠️ GPT-OSS détecté - Function calling non supporté");
+        logger.dev("[LLM API] ✅ GPT-OSS détecté - Function calling supporté via Groq");
       } else if (isQwen) {
         logger.dev("[LLM API] ✅ Qwen détecté - Function calling supporté");
       }
       
       // ✅ ACCÈS COMPLET: Tous les modèles ont accès à tous les endpoints
-      const tools = supportsFunctionCalling
-        ? agentApiV2Tools.getToolsForFunctionCalling() // Tous les tools disponibles
-        : undefined;
+      const tools = agentApiV2Tools.getToolsForFunctionCalling(); // Tous les tools disponibles
 
       logger.dev("[LLM API] 🔧 Capacités agent:", agentConfig?.api_v2_capabilities);
       logger.dev("[LLM API] 🔧 Support function calling:", supportsFunctionCalling);
