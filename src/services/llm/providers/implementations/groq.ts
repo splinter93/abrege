@@ -9,7 +9,7 @@ interface GroqConfig extends ProviderConfig {
   // Spécifique à Groq
   serviceTier?: 'auto' | 'on_demand' | 'flex' | 'performance';
   parallelToolCalls?: boolean;
-  reasoningEffort?: 'none' | 'default';
+  reasoningEffort?: 'none' | 'low' | 'medium' | 'high';
 }
 
 /**
@@ -67,7 +67,7 @@ const DEFAULT_GROQ_CONFIG: GroqConfig = {
   // Groq spécifique
   serviceTier: 'on_demand', // ✅ Gratuit au lieu de 'auto' (payant)
   parallelToolCalls: true,
-  reasoningEffort: 'default'
+  reasoningEffort: 'medium' // ✅ Correct au lieu de 'default'
 };
 
 /**
