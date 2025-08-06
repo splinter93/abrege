@@ -65,7 +65,7 @@ const DEFAULT_GROQ_CONFIG: GroqConfig = {
   enableMetrics: true,
   
   // Groq spécifique
-  serviceTier: 'auto',
+  serviceTier: 'on_demand', // ✅ Gratuit au lieu de 'auto' (payant)
   parallelToolCalls: true,
   reasoningEffort: 'default'
 };
