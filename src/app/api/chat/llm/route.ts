@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { LLMProviderManager } from '@/services/llm/providerManager';
-import { DeepSeekProvider, TogetherProvider } from '@/services/llm/providers';
+import { DeepSeekProvider, TogetherProvider, GroqProvider } from '@/services/llm/providers';
 // Import temporairement désactivé pour résoudre le problème de build Vercel
 import { agentApiV2Tools } from '@/services/agentApiV2Tools';
 
@@ -278,7 +278,13 @@ export async function POST(request: NextRequest) {
         defaultInstructions: deepseekProvider.getDefaultConfig().system_instructions?.substring(0, 50) + '...'
       });
       
-      const config = deepseekProvider['mergeConfigWithAgent'](agentConfig || undefined);
+      const config = {
+        model: agentConfig?.model || deepseekProvider.getDefaultConfig().model,
+        temperature: agentConfig?.temperature || deepseekProvider.getDefaultConfig().temperature,
+        max_tokens: agentConfig?.max_tokens || deepseekProvider.getDefaultConfig().max_tokens,
+        top_p: agentConfig?.top_p || deepseekProvider.getDefaultConfig().top_p,
+        system_instructions: agentConfig?.system_instructions || deepseekProvider.getDefaultConfig().system_instructions
+      };
       logger.dev("[LLM API] 🔧 Configuration après merge:", {
         model: config.model,
         temperature: config.temperature,
@@ -286,7 +292,7 @@ export async function POST(request: NextRequest) {
       });
       
       // Préparer les messages avec la configuration dynamique
-      const systemContent = deepseekProvider['formatContext'](appContext, config);
+      const systemContent = `Assistant IA spécialisé dans l'aide et la conversation. Contexte: ${appContext.name}`;
       logger.dev("[LLM API] 📝 Contenu système préparé:", systemContent.substring(0, 200) + '...');
       
       const messages = [
@@ -351,6 +357,127 @@ export async function POST(request: NextRequest) {
         logger.error("[LLM API] ❌ Erreur DeepSeek:", errorText);
         throw new Error(`DeepSeek API error: ${response.status} - ${errorText}`);
       }
+    }
+    // ✅ NOUVEAU: Vérifier si c'est Groq pour le streaming
+    else if (currentProvider.id === 'groq') {
+      logger.dev("[LLM API] 🚀 Streaming avec Groq");
+      
+      // Créer un canal unique pour le streaming
+      const channelId = incomingChannelId || `llm-stream-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      logger.dev("[LLM API] 📡 Canal utilisé:", channelId);
+      
+      // Utiliser le provider avec configuration d'agent
+      const groqProvider = new GroqProvider();
+      logger.dev("[LLM API] 🔧 Configuration avant merge:", {
+        defaultModel: groqProvider.config.model,
+        provider: groqProvider.id
+      });
+      
+      const config = {
+        model: agentConfig?.model || groqProvider.config.model,
+        temperature: agentConfig?.temperature || groqProvider.config.temperature,
+        max_tokens: agentConfig?.max_tokens || groqProvider.config.maxTokens,
+        top_p: agentConfig?.top_p || groqProvider.config.topP,
+        system_instructions: agentConfig?.system_instructions || 'Assistant IA spécialisé dans l\'aide et la conversation.'
+      };
+      logger.dev("[LLM API] 🔧 Configuration après merge:", {
+        model: config.model,
+        temperature: config.temperature,
+        instructions: config.system_instructions?.substring(0, 100) + '...'
+      });
+      
+      // Préparer les messages avec la configuration dynamique
+      const systemContent = `Assistant IA spécialisé dans l'aide et la conversation. Contexte: ${appContext.name}`;
+      logger.dev("[LLM API] 📝 Contenu système préparé:", systemContent.substring(0, 200) + '...');
+      
+      const messages = [
+        {
+          role: 'system' as const,
+          content: systemContent
+        },
+        ...sessionHistory.map((msg: ChatMessage) => ({
+          role: msg.role as 'user' | 'assistant' | 'system',
+          content: msg.content
+        })),
+        {
+          role: 'user' as const,
+          content: message
+        }
+      ];
+
+      // 🔧 TOOLS: Accès complet à tous les endpoints pour tous les modèles
+      const isGptOss = config.model.includes('gpt-oss');
+      const isQwen = config.model.includes('Qwen');
+      const supportsFunctionCalling = true; // ✅ Tous les modèles supportent les function calls
+      
+      if (isGptOss) {
+        logger.dev("[LLM API] ✅ GPT-OSS détecté - Function calling supporté via Groq");
+      } else if (isQwen) {
+        logger.dev("[LLM API] ✅ Qwen détecté - Function calling supporté");
+      }
+      
+      // ✅ ACCÈS COMPLET: Tous les modèles ont accès à tous les endpoints
+      const tools = agentApiV2Tools.getToolsForFunctionCalling(); // Tous les tools disponibles
+
+      logger.dev("[LLM API] 🔧 Capacités agent:", agentConfig?.api_v2_capabilities);
+      logger.dev("[LLM API] 🔧 Support function calling:", supportsFunctionCalling);
+      logger.dev("[LLM API] 🔧 Tools disponibles:", tools?.length || 0);
+
+      // 🎯 DÉCISION: Utiliser Groq pour GPT-OSS, Together AI pour les autres
+      const useGroq = isGptOss;
+      const apiUrl = useGroq 
+        ? 'https://api.groq.com/openai/v1/chat/completions'
+        : 'https://api.together.xyz/v1/chat/completions';
+      const apiKey = useGroq 
+        ? process.env.GROQ_API_KEY
+        : process.env.TOGETHER_API_KEY;
+      const providerName = useGroq ? 'Groq' : 'Together AI';
+
+      // Appeler l'API appropriée avec streaming
+      const payload = useGroq ? {
+        // 🎯 Payload spécifique pour Groq
+        model: 'openai/gpt-oss-120b', // ✅ Modèle correct pour Groq
+        messages,
+        stream: true,
+        temperature: config.temperature,
+        max_completion_tokens: config.max_tokens, // ✅ Groq utilise max_completion_tokens
+        top_p: config.top_p,
+        reasoning_effort: agentConfig?.api_config?.reasoning_effort || 'medium', // ✅ Utiliser la config de l'agent
+        ...(tools && { tools, tool_choice: 'auto' })
+      } : {
+        // 🎯 Payload pour Together AI avec support Qwen 3
+        model: config.model,
+        messages,
+        stream: true,
+        temperature: config.temperature,
+        max_tokens: config.max_tokens,
+        top_p: config.top_p,
+        // ✅ NOUVEAU: Support du reasoning pour Qwen 3 selon la documentation Alibaba Cloud
+        ...(isQwen && {
+          enable_thinking: false, // ❌ DÉSACTIVÉ: Le thinking/reasoning pour Qwen
+          result_format: 'message' // ✅ Format de réponse avec reasoning
+        }),
+        ...(tools && { tools, tool_choice: 'auto' })
+      };
+
+      logger.dev(`[LLM API] 📤 Payload complet envoyé à ${providerName}:`);
+      logger.dev(JSON.stringify(payload, null, 2));
+      logger.dev(`[LLM API] 📤 Appel ${providerName} avec streaming`);
+
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`
+        },
+        body: JSON.stringify(payload)
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        logger.error(`[LLM API] ❌ Erreur ${providerName}:`, errorText);
+        throw new Error(`${providerName} API error: ${response.status} - ${errorText}`);
+      }
 
       // Gestion du streaming avec function calling
       const reader = response.body?.getReader();
@@ -406,6 +533,17 @@ export async function POST(request: NextRequest) {
                 const delta = parsed.choices[0].delta;
                 logger.dev("[LLM API] 🔍 Delta trouvé:", JSON.stringify(delta));
                 
+                // 🔧 SÉCURITÉ: Log détaillé pour debug
+                if (delta.function_call || delta.tool_calls || delta.tool_call) {
+                  logger.dev("[LLM API] 🔧 Tool call détecté dans delta:", {
+                    hasFunctionCall: !!delta.function_call,
+                    hasToolCalls: !!delta.tool_calls,
+                    hasToolCall: !!delta.tool_call,
+                    toolCallsType: delta.tool_calls ? typeof delta.tool_calls : 'undefined',
+                    toolCallsIsArray: Array.isArray(delta.tool_calls)
+                  });
+                }
+                
                 // Gestion du function calling (ancien format)
                 if (delta.function_call) {
                   if (!functionCallData) {
@@ -427,6 +565,56 @@ export async function POST(request: NextRequest) {
                   logger.dev("[LLM API] 🔧 Tool calls détectés:", JSON.stringify(delta.tool_calls));
                   
                   for (const toolCall of delta.tool_calls) {
+                    logger.dev("[LLM API] 🔧 Tool call individuel:", {
+                      id: toolCall.id,
+                      type: toolCall.type,
+                      function: toolCall.function
+                    });
+                    
+                    if (!functionCallData) {
+                      functionCallData = {
+                        name: toolCall.function?.name || '',
+                        arguments: toolCall.function?.arguments || ''
+                      };
+                    } else {
+                      if (toolCall.function?.name) {
+                        functionCallData.name = toolCall.function.name;
+                      }
+                      if (toolCall.function?.arguments) {
+                        functionCallData.arguments += toolCall.function.arguments;
+                      }
+                    }
+                  }
+                }
+                // Gestion du tool calling (format alternatif)
+                else if (delta.tool_call) {
+                  logger.dev("[LLM API] 🔧 Tool call détecté (format alternatif):", JSON.stringify(delta.tool_call));
+                  
+                  if (!functionCallData) {
+                    functionCallData = {
+                      name: delta.tool_call.function?.name || '',
+                      arguments: delta.tool_call.function?.arguments || ''
+                    };
+                  } else {
+                    if (delta.tool_call.function?.name) {
+                      functionCallData.name = delta.tool_call.function.name;
+                    }
+                    if (delta.tool_call.function?.arguments) {
+                      functionCallData.arguments += delta.tool_call.function.arguments;
+                    }
+                  }
+                }
+                // Gestion spécifique Groq (format différent)
+                else if (delta.tool_calls && Array.isArray(delta.tool_calls)) {
+                  logger.dev("[LLM API] 🔧 Tool calls Groq détectés:", JSON.stringify(delta.tool_calls));
+                  
+                  for (const toolCall of delta.tool_calls) {
+                    logger.dev("[LLM API] 🔧 Tool call Groq individuel:", {
+                      id: toolCall.id,
+                      type: toolCall.type,
+                      function: toolCall.function
+                    });
+                    
                     if (!functionCallData) {
                       functionCallData = {
                         name: toolCall.function?.name || '',
@@ -473,6 +661,14 @@ export async function POST(request: NextRequest) {
 
         // Si une fonction a été appelée, l'exécuter
         logger.dev("[LLM API] 🔍 Function call détectée:", functionCallData);
+        logger.dev("[LLM API] 🔍 Function call name:", functionCallData?.name);
+        logger.dev("[LLM API] 🔍 Function call args:", functionCallData?.arguments);
+        
+        // 🔧 SÉCURITÉ: Vérifier que functionCallData est valide
+        if (!functionCallData || !functionCallData.name) {
+          logger.error("[LLM API] ❌ Function call data invalide:", functionCallData);
+          throw new Error('Function call data invalide - parsing échoué');
+        }
         
         // 🔧 ANTI-BOUCLE: Limiter à une seule exécution de fonction par requête
         if (functionCallData && functionCallData.name) {
@@ -496,33 +692,119 @@ export async function POST(request: NextRequest) {
 
           logger.dev("[LLM API] ✅ Tool exécuté:", result);
 
+          // ✅ CORRECTION: Vérifier si le tool a échoué
+          const safeResult = result || { success: true, message: "Tool exécuté avec succès" };
+          
+          // Si le tool a échoué, informer le modèle
+          if (safeResult.success === false) {
+            logger.dev("[LLM API] ⚠️ Tool a échoué:", safeResult.error);
+          }
+          
           // 🔧 CORRECTION: Injecter le message tool et relancer le LLM
           logger.dev("[LLM API] 🔧 Injection du message tool et relance LLM");
 
-          // 1. Créer le message tool avec le bon format
+          // 1. Créer le message assistant avec le bon format (structure minimale qui DÉBLOQUE tout)
           const toolCallId = `call_${Date.now()}`;
           const toolMessage = {
             role: 'assistant' as const,
-            content: null,
-            tool_calls: [{
-              id: toolCallId,
+            content: null, // 🔧 SÉCURITÉ: jamais "undefined"
+            tool_calls: [{ // 🔧 SÉCURITÉ: Array [{...}], pas nombre
+              id: toolCallId, // 🔧 SÉCURITÉ: ID arbitraire
               type: 'function',
               function: {
-                name: functionCallData.name,
+                name: functionCallData.name || 'unknown_tool', // 🔧 SÉCURITÉ: fallback
                 arguments: functionCallData.arguments
               }
             }]
           };
+          
+          // 🔧 SÉCURITÉ: Valider le message assistant
+          logger.dev("[LLM API] 🔧 Message assistant créé:", {
+            content: toolMessage.content,
+            tool_calls_length: toolMessage.tool_calls.length,
+            tool_call_id: toolMessage.tool_calls[0].id,
+            tool_call_name: toolMessage.tool_calls[0].function.name,
+            tool_call_type: toolMessage.tool_calls[0].type
+          });
+          
+          // 🔧 SÉCURITÉ: Validation stricte du format
+          if (toolMessage.content !== null) {
+            logger.error("[LLM API] ❌ Assistant content doit être null, pas:", toolMessage.content);
+            throw new Error('Assistant content doit être null');
+          }
+          
+          if (!Array.isArray(toolMessage.tool_calls) || toolMessage.tool_calls.length !== 1) {
+            logger.error("[LLM API] ❌ Assistant tool_calls doit être un array avec 1 élément, pas:", toolMessage.tool_calls);
+            throw new Error('Assistant tool_calls doit être un array avec 1 élément');
+          }
+          
+          if (!toolMessage.tool_calls[0].function?.name) {
+            logger.error("[LLM API] ❌ Assistant tool_call function name manquant");
+            throw new Error('Assistant tool_call function name manquant');
+          }
 
+          // 🔧 SÉCURITÉ: Éviter le double-échappement et vérifier la taille
+          let toolContent: string;
+          if (typeof safeResult === 'string') {
+            // Si c'est déjà une string, vérifier si c'est du JSON valide
+            try {
+              JSON.parse(safeResult); // Test si c'est du JSON valide
+              toolContent = safeResult; // Utiliser directement si c'est du JSON
+            } catch {
+              toolContent = JSON.stringify(safeResult); // Échapper si ce n'est pas du JSON
+            }
+          } else {
+            toolContent = JSON.stringify(safeResult);
+          }
+
+          // 🔧 SÉCURITÉ: Vérifier la taille du content (limite à 8KB)
+          const maxContentSize = 8 * 1024; // 8KB
+          if (toolContent.length > maxContentSize) {
+            logger.dev(`[LLM API] ⚠️ Content trop long (${toolContent.length} chars), tronquer`);
+            toolContent = JSON.stringify({
+              success: safeResult.success,
+              message: "Résultat tronqué - données trop volumineuses",
+              truncated: true,
+              original_size: toolContent.length
+            });
+          }
+
+          // 2. Créer le message tool avec le bon format (structure minimale qui DÉBLOQUE tout)
           const toolResultMessage = {
             role: 'tool' as const,
-            tool_call_id: toolCallId,
-            content: JSON.stringify(result)
+            tool_call_id: toolCallId, // 🔧 SÉCURITÉ: même ID
+            name: functionCallData.name || 'unknown_tool', // 🔧 SÉCURITÉ: même nom (fallback)
+            content: toolContent // 🔧 SÉCURITÉ: JSON string
           };
+          
+          // 🔧 SÉCURITÉ: Validation stricte du message tool
+          if (toolResultMessage.tool_call_id !== toolCallId) {
+            logger.error("[LLM API] ❌ Tool tool_call_id doit correspondre à l'ID de l'appel");
+            throw new Error('Tool tool_call_id doit correspondre à l\'ID de l\'appel');
+          }
+          
+          if (toolResultMessage.name !== toolMessage.tool_calls[0].function.name) {
+            logger.error("[LLM API] ❌ Tool name doit correspondre au nom de l'appel");
+            throw new Error('Tool name doit correspondre au nom de l\'appel');
+          }
+          
+          if (typeof toolResultMessage.content !== 'string') {
+            logger.error("[LLM API] ❌ Tool content doit être une string, pas:", typeof toolResultMessage.content);
+            throw new Error('Tool content doit être une string');
+          }
 
-          // 2. Ajouter les messages à l'historique
+          // 2. Nettoyer l'historique et ajouter les tool calls (pas de tool_calls dans les messages user)
+          const cleanMessages = messages.filter(msg => {
+            // Garder tous les messages sauf les tool_calls dans les messages user
+            if (msg.role === 'user' && 'tool_calls' in msg) {
+              logger.dev("[LLM API] 🔧 Suppression tool_calls du message user");
+              return false;
+            }
+            return true;
+          });
+          
           const updatedMessages = [
-            ...messages,
+            ...cleanMessages,
             toolMessage,
             toolResultMessage
           ];
@@ -565,7 +847,8 @@ export async function POST(request: NextRequest) {
               body: JSON.stringify({
                 role: 'tool',
                 tool_call_id: toolCallId,
-                content: JSON.stringify(result),
+                name: functionCallData.name,
+                content: typeof result === 'string' ? result : JSON.stringify(result),
                 timestamp: new Date().toISOString()
               })
             });
@@ -580,8 +863,21 @@ export async function POST(request: NextRequest) {
             // Continuer même si la sauvegarde échoue
           }
 
-          // 3. Relancer le LLM avec l'historique complet (SANS tools pour éviter la boucle infinie)
-          const finalPayload = {
+          // 3. Relancer le LLM avec l'historique complet SANS tools (anti-boucle infinie)
+          logger.dev("[LLM API] 🔧 Relance LLM SANS tools pour éviter la boucle infinie");
+          
+          const finalPayload = useGroq ? {
+            // 🎯 Payload spécifique pour Groq (relance SANS tools)
+            model: 'openai/gpt-oss-120b',
+            messages: updatedMessages,
+            stream: true,
+            temperature: config.temperature,
+            max_completion_tokens: config.max_tokens,
+            top_p: config.top_p,
+            reasoning_effort: agentConfig?.api_config?.reasoning_effort || 'medium'
+            // 🔧 ANTI-BOUCLE: Pas de tools lors de la relance
+          } : {
+            // 🎯 Payload pour Together AI (relance SANS tools)
             model: config.model,
             messages: updatedMessages,
             stream: true,
@@ -591,24 +887,31 @@ export async function POST(request: NextRequest) {
             // 🔧 ANTI-BOUCLE: Pas de tools lors de la relance
           };
 
-          logger.dev("[LLM API] 🔄 Relance LLM avec payload:", JSON.stringify(finalPayload, null, 2));
+          logger.dev("[LLM API] 🔄 Relance LLM avec payload SANS tools:", JSON.stringify(finalPayload, null, 2));
+          logger.dev("[LLM API] 📝 Messages injectés:", updatedMessages.map(m => ({ 
+            role: m.role, 
+            content: m.content?.substring(0, 100),
+            tool_calls: 'tool_calls' in m ? m.tool_calls?.length : undefined,
+            tool_call_id: 'tool_call_id' in m ? m.tool_call_id : undefined
+          })));
 
-          const finalResponse = await fetch('https://api.deepseek.com/v1/chat/completions', {
+          // ✅ CORRECTION: Utiliser le même provider que l'appel initial
+          const finalResponse = await fetch(apiUrl, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
-              'Authorization': `Bearer ${process.env.DEEPSEEK_API_KEY}`
+              'Authorization': `Bearer ${apiKey}`
             },
             body: JSON.stringify(finalPayload)
           });
 
           if (!finalResponse.ok) {
             const errorText = await finalResponse.text();
-            logger.error("[LLM API] ❌ Erreur DeepSeek relance:", errorText);
-            throw new Error(`DeepSeek API error: ${finalResponse.status} - ${errorText}`);
+            logger.error(`[LLM API] ❌ Erreur ${providerName} relance:`, errorText);
+            throw new Error(`${providerName} API error: ${finalResponse.status} - ${errorText}`);
           }
 
-          logger.dev("[LLM API] 🔄 LLM relancé avec historique complet");
+          logger.dev("[LLM API] 🔄 LLM relancé avec historique complet SANS tools");
 
           // 4. Streamer la vraie réponse du LLM
           const encoder = new TextEncoder();
@@ -696,12 +999,20 @@ export async function POST(request: NextRequest) {
           });
 
         } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
           logger.error("[LLM API] ❌ Erreur exécution fonction:", error);
           
-          const errorMessage = `Erreur lors de l'exécution de l'action: ${error instanceof Error ? error.message : 'Erreur inconnue'}`;
+          // 🔧 AMÉLIORATION: Créer un résultat d'erreur structuré
+          const errorResult = {
+            success: false,
+            error: true,
+            message: `❌ ÉCHEC : ${errorMessage}`,
+            tool_name: functionCallData.name,
+            tool_args: functionCallData.arguments,
+            timestamp: new Date().toISOString()
+          };
           
-          // 🔧 CORRECTION: Injecter l'erreur dans l'historique et relancer le LLM
-          logger.dev("[LLM API] 🔧 Injection de l'erreur tool dans l'historique");
+          logger.dev("[LLM API] 🔧 Injection de l'erreur tool dans l'historique avec feedback structuré");
 
           // 1. Créer le message tool avec l'erreur
           const toolCallId = `call_${Date.now()}`;
@@ -718,18 +1029,32 @@ export async function POST(request: NextRequest) {
             }]
           };
 
+          // 🔧 SÉCURITÉ: Standardiser le format d'erreur
+          const errorContent = JSON.stringify({
+            success: false,
+            error: errorMessage,
+            message: `❌ ÉCHEC : ${errorMessage}` // Message humain pour le modèle
+          });
+
           const toolResultMessage = {
             role: 'tool' as const,
             tool_call_id: toolCallId,
-            content: JSON.stringify({ 
-              error: true, 
-              message: errorMessage 
-            })
+            name: functionCallData.name || 'unknown_tool', // 🔧 SÉCURITÉ: fallback
+            content: errorContent
           };
 
-          // 2. Ajouter les messages à l'historique
+          // 2. Nettoyer l'historique et ajouter les messages d'erreur (pas de tool_calls dans les messages user)
+          const cleanMessages = messages.filter(msg => {
+            // Garder tous les messages sauf les tool_calls dans les messages user
+            if (msg.role === 'user' && 'tool_calls' in msg) {
+              logger.dev("[LLM API] 🔧 Suppression tool_calls du message user (erreur)");
+              return false;
+            }
+            return true;
+          });
+          
           const updatedMessages = [
-            ...messages,
+            ...cleanMessages,
             toolMessage,
             toolResultMessage
           ];
@@ -774,7 +1099,18 @@ export async function POST(request: NextRequest) {
           }
 
           // 3. Relancer le LLM avec l'historique complet (SANS tools)
-          const finalPayload = {
+          const finalPayload = useGroq ? {
+            // 🎯 Payload spécifique pour Groq (relance)
+            model: 'openai/gpt-oss-120b',
+            messages: updatedMessages,
+            stream: true,
+            temperature: config.temperature,
+            max_completion_tokens: config.max_tokens, // ✅ Groq utilise max_completion_tokens
+            top_p: config.top_p,
+            reasoning_effort: agentConfig?.api_config?.reasoning_effort || 'medium'
+            // 🔧 ANTI-BOUCLE: Pas de tools lors de la relance
+          } : {
+            // 🎯 Payload pour Together AI (relance)
             model: config.model,
             messages: updatedMessages,
             stream: true,
@@ -786,19 +1122,20 @@ export async function POST(request: NextRequest) {
 
           logger.dev("[LLM API] 🔄 Relance LLM avec erreur tool");
 
-          const finalResponse = await fetch('https://api.deepseek.com/v1/chat/completions', {
+          // ✅ CORRECTION: Utiliser le même provider que l'appel initial
+          const finalResponse = await fetch(apiUrl, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
-              'Authorization': `Bearer ${process.env.DEEPSEEK_API_KEY}`
+              'Authorization': `Bearer ${apiKey}`
             },
             body: JSON.stringify(finalPayload)
           });
 
           if (!finalResponse.ok) {
             const errorText = await finalResponse.text();
-            logger.error("[LLM API] ❌ Erreur DeepSeek relance:", errorText);
-            throw new Error(`DeepSeek API error: ${finalResponse.status} - ${errorText}`);
+            logger.error(`[LLM API] ❌ Erreur ${providerName} relance:`, errorText);
+            throw new Error(`${providerName} API error: ${finalResponse.status} - ${errorText}`);
           }
 
           logger.dev("[LLM API] 🔄 LLM relancé avec erreur tool");
@@ -988,15 +1325,21 @@ export async function POST(request: NextRequest) {
           temperature: config.temperature,
           max_completion_tokens: config.max_tokens, // ✅ Groq utilise max_completion_tokens
           top_p: config.top_p,
+          reasoning_effort: 'medium', // ✅ Activer le reasoning pour Groq
           ...(tools && { tools, tool_choice: 'auto' })
         } : {
-          // 🎯 Payload pour Together AI
+          // 🎯 Payload pour Together AI avec support Qwen 3
           model: config.model,
           messages,
           stream: true,
           temperature: config.temperature,
           max_tokens: config.max_tokens,
           top_p: config.top_p,
+          // ✅ NOUVEAU: Support du reasoning pour Qwen 3 selon la documentation Alibaba Cloud
+          ...(isQwen && {
+            enable_thinking: false, // ❌ DÉSACTIVÉ: Le thinking/reasoning pour Qwen
+            result_format: 'message' // ✅ Format de réponse avec reasoning
+          }),
           ...(tools && { tools, tool_choice: 'auto' })
         };
 
@@ -1088,8 +1431,9 @@ export async function POST(request: NextRequest) {
                       }
                     }
                   }
+                  
                   // Gestion du tool calling (nouveau format)
-                  else if (delta.tool_calls) {
+                  if (delta.tool_calls) {
                     logger.dev("[LLM API] 🔧 Tool calls Together AI détectés:", JSON.stringify(delta.tool_calls));
                     
                     for (const toolCall of delta.tool_calls) {
@@ -1108,19 +1452,51 @@ export async function POST(request: NextRequest) {
                       }
                     }
                   }
-                  else if (delta.content) {
-                  const token = delta.content;
-                  accumulatedContent += token;
-                  tokenBuffer += token;
-                  bufferSize++;
                   
-                  // Envoyer le buffer si on atteint la taille
-                  if (bufferSize >= BATCH_SIZE) {
-                    try {
-                      await flushTokenBuffer();
-                      logger.dev("[LLM API] 📦 Batch Together AI envoyé");
-                    } catch (error) {
-                      logger.error("[LLM API] ❌ Erreur broadcast batch Together AI:", error);
+                  // ✅ NOUVEAU: Gestion du reasoning pour Qwen 3 selon la documentation Alibaba Cloud
+                  if (delta.reasoning_content && isQwen) {
+                    logger.dev("[LLM API] 🧠 Reasoning Qwen détecté:", delta.reasoning_content);
+                    
+                    // Broadcast du reasoning en temps réel
+                    await channel.send({
+                      type: 'broadcast',
+                      event: 'llm-reasoning',
+                      payload: {
+                        reasoning: delta.reasoning_content,
+                        sessionId: context.sessionId
+                      }
+                    });
+                  }
+                  
+                  // ✅ NOUVEAU: Gestion du reasoning pour Groq GPT-OSS
+                  if (delta.reasoning_content && useGroq) {
+                    logger.dev("[LLM API] 🧠 Reasoning Groq détecté:", delta.reasoning_content);
+                    
+                    // Broadcast du reasoning en temps réel
+                    await channel.send({
+                      type: 'broadcast',
+                      event: 'llm-reasoning',
+                      payload: {
+                        reasoning: delta.reasoning_content,
+                        sessionId: context.sessionId
+                      }
+                    });
+                  }
+                  
+                  // ✅ CORRECTION: Traitement du contenu normal (peut coexister avec reasoning)
+                  if (delta.content) {
+                    const token = delta.content;
+                    accumulatedContent += token;
+                    tokenBuffer += token;
+                    bufferSize++;
+                    
+                    // Envoyer le buffer si on atteint la taille
+                    if (bufferSize >= BATCH_SIZE) {
+                      try {
+                        await flushTokenBuffer();
+                        logger.dev("[LLM API] 📦 Batch Together AI envoyé");
+                      } catch (error) {
+                        logger.error("[LLM API] ❌ Erreur broadcast batch Together AI:", error);
                       }
                     }
                   }
@@ -1146,12 +1522,12 @@ export async function POST(request: NextRequest) {
           const toolCallId = `call_${Date.now()}`;
           const toolMessage = {
             role: 'assistant' as const,
-            content: null,
-            tool_calls: [{
-              id: toolCallId,
+            content: null, // 🔧 SÉCURITÉ: jamais "undefined"
+            tool_calls: [{ // 🔧 SÉCURITÉ: Array [{...}], pas nombre
+              id: toolCallId, // 🔧 SÉCURITÉ: ID arbitraire
               type: 'function',
               function: {
-                name: functionCallData.name,
+                name: functionCallData.name || 'unknown_tool', // 🔧 SÉCURITÉ: fallback
                 arguments: functionCallData.arguments
               }
             }]
@@ -1159,13 +1535,23 @@ export async function POST(request: NextRequest) {
 
           const toolResultMessage = {
             role: 'tool' as const,
-            tool_call_id: toolCallId,
+            tool_call_id: toolCallId, // 🔧 SÉCURITÉ: même ID
+            name: functionCallData.name || 'unknown_tool', // 🔧 SÉCURITÉ: même nom (fallback)
             content: ''
           };
 
-          // 2. Ajouter les messages à l'historique
+          // 2. Nettoyer l'historique et ajouter les messages (pas de tool_calls dans les messages user)
+          const cleanMessages = messages.filter(msg => {
+            // Garder tous les messages sauf les tool_calls dans les messages user
+            if (msg.role === 'user' && 'tool_calls' in msg) {
+              logger.dev("[LLM API] 🔧 Suppression tool_calls du message user (Together AI)");
+              return false;
+            }
+            return true;
+          });
+          
           const updatedMessages = [
-            ...messages,
+            ...cleanMessages,
             toolMessage,
             toolResultMessage
           ];
@@ -1192,8 +1578,39 @@ export async function POST(request: NextRequest) {
             // 🔧 CORRECTION: Injecter le message tool et relancer le LLM
             logger.dev("[LLM API] 🔧 Injection du message tool et relance Together AI");
 
+            // 🔧 SÉCURITÉ: Éviter le double-échappement et vérifier la taille
+            let toolContent: string;
+            if (typeof result === 'string') {
+              // Si c'est déjà une string, vérifier si c'est du JSON valide
+              try {
+                JSON.parse(result); // Test si c'est du JSON valide
+                toolContent = result; // Utiliser directement si c'est du JSON
+              } catch {
+                toolContent = JSON.stringify(result); // Échapper si ce n'est pas du JSON
+              }
+            } else {
+              toolContent = JSON.stringify(result);
+            }
+
+            // 🔧 SÉCURITÉ: Vérifier la taille du content (limite à 8KB)
+            const maxContentSize = 8 * 1024; // 8KB
+            if (toolContent.length > maxContentSize) {
+              logger.dev(`[LLM API] ⚠️ Content Together AI trop long (${toolContent.length} chars), tronquer`);
+              toolContent = JSON.stringify({
+                success: result.success,
+                message: "Résultat tronqué - données trop volumineuses",
+                truncated: true,
+                original_size: toolContent.length
+              });
+            }
+
             // Mettre à jour le contenu du message tool avec le résultat
-            toolResultMessage.content = JSON.stringify(result);
+            toolResultMessage.content = toolContent;
+            
+            logger.dev("[LLM API] 📝 Message tool mis à jour:", {
+              toolCallId,
+              content: toolResultMessage.content.substring(0, 200) + "..."
+            });
 
             // 3. Relancer Together AI avec l'historique complet (SANS tools)
             const finalPayload = {
@@ -1207,7 +1624,11 @@ export async function POST(request: NextRequest) {
             };
 
             logger.dev("[LLM API] 📤 Relance Together AI avec historique tool");
-            logger.dev(JSON.stringify(finalPayload, null, 2));
+            logger.dev("[LLM API] 📋 Payload final:", {
+              model: finalPayload.model,
+              messageCount: finalPayload.messages.length,
+              lastMessage: finalPayload.messages[finalPayload.messages.length - 1]?.role
+            });
 
             const finalResponse = await fetch('https://api.together.xyz/v1/chat/completions', {
               method: 'POST',
@@ -1224,6 +1645,8 @@ export async function POST(request: NextRequest) {
               throw new Error(`Together AI relance error: ${finalResponse.status} - ${errorText}`);
             }
 
+            logger.dev("[LLM API] ✅ Relance Together AI réussie, début du streaming final");
+
             // Gestion du streaming de la relance
             const finalReader = finalResponse.body?.getReader();
             if (!finalReader) {
@@ -1233,20 +1656,26 @@ export async function POST(request: NextRequest) {
             let finalAccumulatedContent = '';
             let finalTokenBuffer = '';
             let finalBufferSize = 0;
+            let finalTokenCount = 0;
 
             // Fonction pour envoyer le buffer final
             const flushFinalTokenBuffer = async () => {
               if (finalTokenBuffer.length > 0) {
-                await channel.send({
-                  type: 'broadcast',
-                  event: 'llm-token-batch',
-                  payload: {
-                    tokens: finalTokenBuffer,
-                    sessionId: context.sessionId
-                  }
-                });
-                finalTokenBuffer = '';
-                finalBufferSize = 0;
+                try {
+                  await channel.send({
+                    type: 'broadcast',
+                    event: 'llm-token-batch',
+                    payload: {
+                      tokens: finalTokenBuffer,
+                      sessionId: context.sessionId
+                    }
+                  });
+                  logger.dev("[LLM API] 📦 Batch final envoyé:", finalTokenBuffer.length, "chars");
+                  finalTokenBuffer = '';
+                  finalBufferSize = 0;
+                } catch (error) {
+                  logger.error("[LLM API] ❌ Erreur broadcast batch final Together AI:", error);
+                }
               }
             };
 
@@ -1255,6 +1684,7 @@ export async function POST(request: NextRequest) {
               const { done, value } = await finalReader.read();
               if (done) {
                 isDone = true;
+                logger.dev("[LLM API] ✅ Streaming final terminé");
                 break;
               }
 
@@ -1266,6 +1696,7 @@ export async function POST(request: NextRequest) {
                   const data = line.slice(6);
                   if (data === '[DONE]') {
                     isDone = true;
+                    logger.dev("[LLM API] ✅ [DONE] reçu pour streaming final");
                     break;
                   }
 
@@ -1278,6 +1709,7 @@ export async function POST(request: NextRequest) {
                       finalAccumulatedContent += token;
                       finalTokenBuffer += token;
                       finalBufferSize++;
+                      finalTokenCount++;
                       
                       // Envoyer le buffer si on atteint la taille
                       if (finalBufferSize >= BATCH_SIZE) {
@@ -1299,15 +1731,25 @@ export async function POST(request: NextRequest) {
             // Envoyer le buffer final restant
             await flushFinalTokenBuffer();
 
-            // Broadcast de completion avec le contenu final
-            await channel.send({
-              type: 'broadcast',
-              event: 'llm-complete',
-              payload: {
-                sessionId: context.sessionId,
-                fullResponse: finalAccumulatedContent
-              }
+            logger.dev("[LLM API] 📊 Statistiques streaming final:", {
+              totalTokens: finalTokenCount,
+              finalContent: finalAccumulatedContent.substring(0, 100) + "..."
             });
+
+            // Broadcast de completion avec le contenu final
+            try {
+              await channel.send({
+                type: 'broadcast',
+                event: 'llm-complete',
+                payload: {
+                  sessionId: context.sessionId,
+                  fullResponse: finalAccumulatedContent
+                }
+              });
+              logger.dev("[LLM API] ✅ Broadcast completion final réussi");
+            } catch (error) {
+              logger.error("[LLM API] ❌ Erreur broadcast completion final:", error);
+            }
 
             logger.dev("[LLM API] ✅ Streaming final Together AI terminé, contenu final:", finalAccumulatedContent.substring(0, 100) + "...");
 
@@ -1361,127 +1803,32 @@ export async function POST(request: NextRequest) {
               // Continuer même si la sauvegarde échoue
             }
 
-            // 3. Relancer Together AI avec l'historique complet (SANS tools)
-            const finalPayload = {
-              model: config.model,
-              messages: updatedMessages,
-              stream: true,
-              temperature: config.temperature,
-              max_tokens: config.max_tokens,
-              top_p: config.top_p
-              // 🔧 ANTI-BOUCLE: Pas de tools lors de la relance
-            };
-
-            logger.dev("[LLM API] 📤 Relance Together AI après erreur");
-            logger.dev(JSON.stringify(finalPayload, null, 2));
-
-            const finalResponse = await fetch('https://api.together.xyz/v1/chat/completions', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${process.env.TOGETHER_API_KEY}`
-              },
-              body: JSON.stringify(finalPayload)
-            });
-
-            if (!finalResponse.ok) {
-              const errorText = await finalResponse.text();
-              logger.error("[LLM API] ❌ Erreur relance Together AI après erreur:", errorText);
-              throw new Error(`Together AI relance error: ${finalResponse.status} - ${errorText}`);
-            }
-
-            // Gestion du streaming de la relance après erreur
-            const finalReader = finalResponse.body?.getReader();
-            if (!finalReader) {
-              throw new Error('Impossible de lire le stream de relance après erreur');
-            }
-
-            let finalAccumulatedContent = '';
-            let finalTokenBuffer = '';
-            let finalBufferSize = 0;
-
-            // Fonction pour envoyer le buffer final
-            const flushFinalTokenBuffer = async () => {
-              if (finalTokenBuffer.length > 0) {
-                await channel.send({
-                  type: 'broadcast',
-                  event: 'llm-token-batch',
-                  payload: {
-                    tokens: finalTokenBuffer,
-                    sessionId: context.sessionId
-                  }
-                });
-                finalTokenBuffer = '';
-                finalBufferSize = 0;
-              }
-            };
-
-            let isDone = false;
-            while (!isDone) {
-              const { done, value } = await finalReader.read();
-              if (done) {
-                isDone = true;
-                break;
-              }
-
-              const chunk = new TextDecoder().decode(value);
-              const lines = chunk.split('\n');
-
-              for (const line of lines) {
-                if (line.startsWith('data: ')) {
-                  const data = line.slice(6);
-                  if (data === '[DONE]') {
-                    isDone = true;
-                    break;
-                  }
-
-                  try {
-                    const parsed = JSON.parse(data);
-                    const delta = parsed.choices?.[0]?.delta;
-                    
-                    if (delta?.content) {
-                      const token = delta.content;
-                      finalAccumulatedContent += token;
-                      finalTokenBuffer += token;
-                      finalBufferSize++;
-                      
-                      // Envoyer le buffer si on atteint la taille
-                      if (finalBufferSize >= BATCH_SIZE) {
-                        try {
-                          await flushFinalTokenBuffer();
-                          logger.dev("[LLM API] 📦 Batch final Together AI envoyé");
-                        } catch (error) {
-                          logger.error("[LLM API] ❌ Erreur broadcast batch final Together AI:", error);
-                        }
-                      }
-                    }
-                  } catch (parseError) {
-                    logger.dev("[LLM API] ⚠️ Chunk final non-JSON ignoré:", data);
-                  }
+            // 🔧 NOUVEAU: Fallback - Réponse d'erreur simple
+            logger.dev("[LLM API] 🔧 Fallback: Envoi d'une réponse d'erreur simple");
+            
+            const fallbackResponse = `❌ Désolé, je n'ai pas pu exécuter l'action demandée. Erreur: ${errorMessage}`;
+            
+            // Broadcast de completion avec la réponse d'erreur
+            try {
+              await channel.send({
+                type: 'broadcast',
+                event: 'llm-complete',
+                payload: {
+                  sessionId: context.sessionId,
+                  fullResponse: fallbackResponse
                 }
-              }
+              });
+              logger.dev("[LLM API] ✅ Broadcast completion fallback réussi");
+            } catch (broadcastError) {
+              logger.error("[LLM API] ❌ Erreur broadcast completion fallback:", broadcastError);
             }
 
-            // Envoyer le buffer final restant
-            await flushFinalTokenBuffer();
-
-            // Broadcast de completion avec le contenu final
-            await channel.send({
-              type: 'broadcast',
-              event: 'llm-complete',
-              payload: {
-                sessionId: context.sessionId,
-                fullResponse: finalAccumulatedContent
-              }
-            });
-
-            logger.dev("[LLM API] ✅ Streaming final Together AI terminé, contenu final:", finalAccumulatedContent.substring(0, 100) + "...");
-
-            // Retourner du JSON pur pour éviter l'erreur parsing
+            // Retourner la réponse d'erreur
             return NextResponse.json({ 
               success: true, 
               completed: true,
-              response: finalAccumulatedContent 
+              response: fallbackResponse,
+              error: true
             });
           }
         }
@@ -1497,6 +1844,272 @@ export async function POST(request: NextRequest) {
         });
 
         logger.dev("[LLM API] ✅ Streaming Together AI terminé, contenu accumulé:", accumulatedContent.substring(0, 100) + "...");
+
+        // Retourner du JSON pur pour éviter l'erreur parsing
+        return NextResponse.json({ 
+          success: true, 
+          completed: true,
+          response: accumulatedContent 
+        });
+      }
+      // ✅ NOUVEAU: Gestion du streaming pour Groq
+      else if (currentProvider.id === 'groq') {
+        logger.dev("[LLM API] 🚀 Streaming avec Groq");
+        
+        // Créer un canal unique pour le streaming
+        const channelId = incomingChannelId || `llm-stream-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        logger.dev("[LLM API] 📡 Canal utilisé:", channelId);
+        
+        // Utiliser le provider avec configuration d'agent
+        const groqProvider = new GroqProvider();
+        logger.dev("[LLM API] 🔧 Configuration avant merge:", {
+          defaultModel: groqProvider.config.model,
+          provider: groqProvider.id
+        });
+        
+        const config = {
+          model: agentConfig?.model || groqProvider.config.model,
+          temperature: agentConfig?.temperature || groqProvider.config.temperature,
+          max_tokens: agentConfig?.max_tokens || groqProvider.config.maxTokens,
+          top_p: agentConfig?.top_p || groqProvider.config.topP,
+          system_instructions: agentConfig?.system_instructions || 'Assistant IA spécialisé dans l\'aide et la conversation.'
+        };
+        logger.dev("[LLM API] 🔧 Configuration après merge:", {
+          model: config.model,
+          temperature: config.temperature,
+          instructions: config.system_instructions?.substring(0, 100) + '...'
+        });
+        
+        // Préparer les messages avec la configuration dynamique
+        const systemContent = `Assistant IA spécialisé dans l'aide et la conversation. Contexte: ${appContext.name}`;
+        logger.dev("[LLM API] 📝 Contenu système préparé:", systemContent.substring(0, 200) + '...');
+        
+        const messages = [
+          {
+            role: 'system' as const,
+            content: systemContent
+          },
+          ...sessionHistory.map((msg: ChatMessage) => ({
+            role: msg.role as 'user' | 'assistant' | 'system',
+            content: msg.content
+          })),
+          {
+            role: 'user' as const,
+            content: message
+          }
+        ];
+
+        // 🔧 TOOLS: Accès complet à tous les endpoints pour tous les modèles
+        const isGptOss = config.model.includes('gpt-oss');
+        const isQwen = config.model.includes('Qwen');
+        const supportsFunctionCalling = true; // ✅ Tous les modèles supportent les function calls
+        
+        if (isGptOss) {
+          logger.dev("[LLM API] ✅ GPT-OSS détecté - Function calling supporté via Groq");
+        } else if (isQwen) {
+          logger.dev("[LLM API] ✅ Qwen détecté - Function calling supporté");
+        }
+        
+        // ✅ ACCÈS COMPLET: Tous les modèles ont accès à tous les endpoints
+        const tools = agentApiV2Tools.getToolsForFunctionCalling(); // Tous les tools disponibles
+
+        logger.dev("[LLM API] 🔧 Capacités agent:", agentConfig?.api_v2_capabilities);
+        logger.dev("[LLM API] 🔧 Support function calling:", supportsFunctionCalling);
+        logger.dev("[LLM API] 🔧 Tools disponibles:", tools?.length || 0);
+
+        // 🎯 DÉCISION: Utiliser Groq pour GPT-OSS, Together AI pour les autres
+        const useGroq = isGptOss;
+        const apiUrl = useGroq 
+          ? 'https://api.groq.com/openai/v1/chat/completions'
+          : 'https://api.together.xyz/v1/chat/completions';
+        const apiKey = useGroq 
+          ? process.env.GROQ_API_KEY
+          : process.env.TOGETHER_API_KEY;
+        const providerName = useGroq ? 'Groq' : 'Together AI';
+
+        // Appeler l'API appropriée avec streaming
+        const payload = useGroq ? {
+          // 🎯 Payload spécifique pour Groq
+          model: 'openai/gpt-oss-120b', // ✅ Modèle correct pour Groq
+          messages,
+          stream: true,
+          temperature: config.temperature,
+          max_completion_tokens: config.max_tokens, // ✅ Groq utilise max_completion_tokens
+          top_p: config.top_p,
+          reasoning_effort: 'medium', // ✅ Activer le reasoning pour Groq
+          ...(tools && { tools, tool_choice: 'auto' })
+        } : {
+          // 🎯 Payload pour Together AI avec support Qwen 3
+          model: config.model,
+          messages,
+          stream: true,
+          temperature: config.temperature,
+          max_tokens: config.max_tokens,
+          top_p: config.top_p,
+          // ✅ NOUVEAU: Support du reasoning pour Qwen 3 selon la documentation Alibaba Cloud
+          ...(isQwen && {
+            enable_thinking: false, // ❌ DÉSACTIVÉ: Le thinking/reasoning pour Qwen
+            result_format: 'message' // ✅ Format de réponse avec reasoning
+          }),
+          ...(tools && { tools, tool_choice: 'auto' })
+        };
+
+        logger.dev(`[LLM API] 📤 Payload complet envoyé à ${providerName}:`);
+        logger.dev(JSON.stringify(payload, null, 2));
+        logger.dev(`[LLM API] 📤 Appel ${providerName} avec streaming`);
+
+        const response = await fetch(apiUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${apiKey}`
+          },
+          body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          logger.error(`[LLM API] ❌ Erreur ${providerName}:`, errorText);
+          throw new Error(`${providerName} API error: ${response.status} - ${errorText}`);
+        }
+
+        // Gestion du streaming
+        const reader = response.body?.getReader();
+        if (!reader) {
+          throw new Error('Impossible de lire le stream de réponse');
+        }
+
+        let accumulatedContent = '';
+        let functionCallData: any = null;
+        let tokenBuffer = '';
+        let bufferSize = 0;
+        const BATCH_SIZE = 5; // Envoyer par batch de 5 tokens
+
+        // Créer le canal pour le broadcast
+        const supabase = createSupabaseAdmin();
+        const channel = supabase.channel(channelId);
+
+        // Fonction pour envoyer le buffer de tokens
+        const flushTokenBuffer = async () => {
+          if (tokenBuffer.length > 0) {
+            await channel.send({
+              type: 'broadcast',
+              event: 'llm-token-batch',
+              payload: {
+                tokens: tokenBuffer,
+                sessionId: context.sessionId
+              }
+            });
+            tokenBuffer = '';
+            bufferSize = 0;
+          }
+        };
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          const chunk = new TextDecoder().decode(value);
+          const lines = chunk.split('\n');
+
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              const data = line.slice(6);
+              if (data === '[DONE]') break;
+
+              try {
+                const parsed = JSON.parse(data);
+                
+                logger.dev("[LLM API] 📥 Chunk complet:", JSON.stringify(parsed));
+                
+                if (parsed.choices?.[0]?.delta) {
+                  const delta = parsed.choices[0].delta;
+                  logger.dev("[LLM API] 🔍 Delta trouvé:", JSON.stringify(delta));
+                  
+                  // Gestion du function calling (ancien format)
+                  if (delta.function_call) {
+                    if (!functionCallData) {
+                      functionCallData = {
+                        name: delta.function_call.name || '',
+                        arguments: delta.function_call.arguments || ''
+                      };
+                    } else {
+                      if (delta.function_call.name) {
+                        functionCallData.name = delta.function_call.name;
+                      }
+                      if (delta.function_call.arguments) {
+                        functionCallData.arguments += delta.function_call.arguments;
+                      }
+                    }
+                  }
+                  // Gestion du tool calling (nouveau format)
+                  else if (delta.tool_calls) {
+                    logger.dev("[LLM API] 🔧 Tool calls détectés:", JSON.stringify(delta.tool_calls));
+                    
+                    for (const toolCall of delta.tool_calls) {
+                      if (!functionCallData) {
+                        functionCallData = {
+                          name: toolCall.function?.name || '',
+                          arguments: toolCall.function?.arguments || ''
+                        };
+                      } else {
+                        if (toolCall.function?.name) {
+                          functionCallData.name = toolCall.function.name;
+                        }
+                        if (toolCall.function?.arguments) {
+                          functionCallData.arguments += toolCall.function.arguments;
+                        }
+                      }
+                    }
+                  }
+                  
+                  // ✅ NOUVEAU: Gestion du reasoning pour Groq GPT-OSS
+                  if (delta.reasoning_content && useGroq) {
+                    logger.dev("[LLM API] 🧠 Reasoning Groq détecté:", delta.reasoning_content);
+                    
+                    // Broadcast du reasoning en temps réel
+                    await channel.send({
+                      type: 'broadcast',
+                      event: 'llm-reasoning',
+                      payload: {
+                        reasoning: delta.reasoning_content,
+                        sessionId: context.sessionId
+                      }
+                    });
+                  }
+                  
+                  else if (delta.content) {
+                    accumulatedContent += delta.content;
+                    tokenBuffer += delta.content;
+                    bufferSize++;
+                    
+                    // Envoyer le buffer si on atteint la taille
+                    if (bufferSize >= BATCH_SIZE) {
+                      await flushTokenBuffer();
+                    }
+                  }
+                }
+              } catch (parseError) {
+                logger.dev("[LLM API] ⚠️ Chunk non-JSON ignoré:", data);
+              }
+            }
+          }
+        }
+
+        // Envoyer le buffer final
+        await flushTokenBuffer();
+
+        // Broadcast de completion avec le contenu accumulé
+        await channel.send({
+          type: 'broadcast',
+          event: 'llm-complete',
+          payload: {
+            sessionId: context.sessionId,
+            fullResponse: accumulatedContent
+          }
+        });
+
+        logger.dev("[LLM API] ✅ Streaming Groq terminé, contenu accumulé:", accumulatedContent.substring(0, 100) + "...");
 
         // Retourner du JSON pur pour éviter l'erreur parsing
         return NextResponse.json({ 

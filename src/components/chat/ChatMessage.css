@@ -7,6 +7,37 @@
   margin-bottom: var(--chat-spacing-lg);
 }
 
+/* ========================================
+   REASONING MESSAGE - STYLE GRIS
+   ======================================== */
+
+.chat-message.reasoning-message {
+  opacity: 0.7;
+}
+
+.chat-message.reasoning-message .chat-message-bubble {
+  background: var(--chat-bg-secondary);
+  border-color: var(--chat-border-tertiary);
+  color: var(--chat-text-secondary);
+}
+
+.chat-message.reasoning-message .chat-markdown {
+  color: var(--chat-text-secondary);
+}
+
+.chat-message.reasoning-message .chat-markdown strong {
+  color: var(--chat-text-secondary);
+}
+
+.chat-message.reasoning-message .chat-markdown h1,
+.chat-message.reasoning-message .chat-markdown h2,
+.chat-message.reasoning-message .chat-markdown h3,
+.chat-message.reasoning-message .chat-markdown h4,
+.chat-message.reasoning-message .chat-markdown h5,
+.chat-message.reasoning-message .chat-markdown h6 {
+  color: var(--chat-text-secondary);
+}
+
 .chat-message-user {
   justify-content: flex-end;
 }

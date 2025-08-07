@@ -16,6 +16,83 @@ import ChatKebabMenu from './ChatKebabMenu';
 import ChatSidebar from './ChatSidebar';
 
 import './index.css';
+import './ChatFullscreenV2.css';
+
+// 🔧 NOUVEAU: Fonction de formatage du reasoning pour Qwen 3
+const formatReasoningForQwen = (reasoning: string, model?: string): string => {
+  if (!reasoning) return '';
+  
+  // Détecter si c'est Qwen 3
+  const isQwen3 = model?.includes('Qwen') || model?.includes('qwen');
+  
+  // Nettoyer le reasoning
+  let cleanedReasoning = reasoning.trim();
+  
+  // ✅ CORRECTION: Gestion spécifique des balises <think> et </think> de Qwen 3
+  if (isQwen3) {
+    // Extraire seulement le contenu entre <think> et </think>
+    const thinkMatch = cleanedReasoning.match(/<think>([\s\S]*?)<\/think>/);
+    
+    if (thinkMatch) {
+      // Prendre seulement le contenu entre les balises
+      cleanedReasoning = thinkMatch[1].trim();
+    } else {
+      // Si pas de balises, supprimer les balises partielles
+      cleanedReasoning = cleanedReasoning
+        .replace(/<think>/gi, '')
+        .replace(/<\/think>/gi, '')
+        .trim();
+    }
+    
+    // Nettoyer les espaces en début et fin
+    cleanedReasoning = cleanedReasoning.trim();
+    
+    // Formater avec une structure claire
+    const formattedReasoning = cleanedReasoning
+      .split('\n')
+      .map(line => line.trim())
+      .filter(line => line.length > 0)
+      .join('\n');
+    
+    // ✅ NOUVEAU: Formatage avec encadré et couleur grise
+    return `> **🧠 Raisonnement Qwen 3 :**
+> 
+> *${formattedReasoning}*
+> 
+> ---
+> *Ce raisonnement montre le processus de pensée du modèle avant de générer sa réponse finale.*`;
+  }
+  
+  // Pour les autres modèles, nettoyer les marqueurs de reasoning
+  const reasoningMarkers = [
+    '<|im_start|>reasoning\n',
+    '<|im_end|>\n',
+    'reasoning\n',
+    'Reasoning:\n',
+    'Raisonnement:\n'
+  ];
+  
+  for (const marker of reasoningMarkers) {
+    if (cleanedReasoning.startsWith(marker)) {
+      cleanedReasoning = cleanedReasoning.substring(marker.length);
+    }
+  }
+  
+  // Formater avec une structure claire
+  const formattedReasoning = cleanedReasoning
+    .split('\n')
+    .map(line => line.trim())
+    .filter(line => line.length > 0)
+    .join('\n');
+  
+  // Formatage générique pour les autres modèles
+  return `**🧠 Raisonnement :**
+
+${formattedReasoning}
+
+---
+*Processus de pensée du modèle.*`;
+};
 
 const ChatFullscreenV2: React.FC = () => {
   const isDesktop = useMediaQuery('(min-width: 1024px)');
@@ -50,6 +127,7 @@ const ChatFullscreenV2: React.FC = () => {
   const {
     isStreaming,
     content: streamingContent,
+    reasoning: streamingReasoning,
     startStreaming,
     stopStreaming
   } = useChatStreaming({
@@ -69,6 +147,13 @@ const ChatFullscreenV2: React.FC = () => {
         timestamp: new Date().toISOString()
       };
       addMessage(errorMsg);
+    },
+    onReasoning: (reasoningToken) => {
+      // Le reasoning est automatiquement accumulé dans le state streamingReasoning
+      // 🔧 OPTIMISATION: Log moins fréquent pour les reasoning tokens
+      if (Math.random() < 0.01) { // Log seulement 1% du temps
+        logger.dev('[ChatFullscreenV2] 🧠 Reasoning token reçu:', reasoningToken);
+      }
     }
   });
 
@@ -335,6 +420,34 @@ const ChatFullscreenV2: React.FC = () => {
         </div>
 
         <div className="chat-actions">
+          {/* Bouton Stop pour arrêter le streaming */}
+          {isStreaming && (
+            <button
+              onClick={() => {
+                logger.dev('[ChatFullscreenV2] 🛑 Arrêt manuel du streaming');
+                stopStreaming();
+                setLoading(false);
+                
+                // Ajouter un message d'arrêt
+                const stopMessage = {
+                  role: 'assistant' as const,
+                  content: '**🛑 Génération arrêtée**\n\nLa génération a été interrompue manuellement.',
+                  timestamp: new Date().toISOString()
+                };
+                addMessage(stopMessage);
+                scrollToBottom(true);
+              }}
+              className="chat-stop-btn"
+              aria-label="Arrêter la génération"
+              title="Arrêter la génération"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <rect x="6" y="6" width="12" height="12" rx="1" ry="1"></rect>
+              </svg>
+              <span>Stop</span>
+            </button>
+          )}
+          
           <ChatKebabMenu
             isWideMode={wideMode}
             isFullscreen={true}
@@ -388,14 +501,31 @@ const ChatFullscreenV2: React.FC = () => {
               ))}
               
               {/* Message en cours de streaming */}
-              {isStreaming && streamingContent && (
+              {isStreaming && (streamingContent || streamingReasoning) && (
                 <>
-                  {logger.dev('[ChatFullscreenV2] 🎯 Affichage message streaming:', streamingContent.length, 'chars')}
-                  <ChatMessage
-                    content={streamingContent}
-                    role="assistant"
-                    isStreaming={true}
-                  />
+                  {logger.dev('[ChatFullscreenV2] 🎯 Affichage message streaming:', {
+                    contentLength: streamingContent.length,
+                    reasoningLength: streamingReasoning.length
+                  })}
+                  
+                  {/* Afficher le reasoning séparément s'il y en a */}
+                  {streamingReasoning && (
+                    <ChatMessage
+                      content={formatReasoningForQwen(streamingReasoning, selectedAgent?.model)}
+                      role="assistant"
+                      isStreaming={false}
+                      className="reasoning-message"
+                    />
+                  )}
+                  
+                  {/* Afficher la réponse normale */}
+                  {streamingContent && (
+                    <ChatMessage
+                      content={streamingContent}
+                      role="assistant"
+                      isStreaming={true}
+                    />
+                  )}
                 </>
               )}
             </div>

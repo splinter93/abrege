@@ -19,6 +19,7 @@ interface ChatMessageProps {
   isStreaming?: boolean;
   tool_calls?: ToolCall[];
   tool_call_id?: string;
+  className?: string;
 }
 
 const ChatMessage = memo<ChatMessageProps>(({ 
@@ -26,7 +27,8 @@ const ChatMessage = memo<ChatMessageProps>(({
   role, 
   isStreaming = false, 
   tool_calls,
-  tool_call_id 
+  tool_call_id,
+  className
 }) => {
   const { html } = useMarkdownRender({ content: content || '' });
 
@@ -88,7 +90,16 @@ const ChatMessage = memo<ChatMessageProps>(({
             <span>Données retournées</span>
           </div>
           <pre className="chat-tool-result-content-data">
-            {content}
+            {(() => {
+              try {
+                // 🔧 CORRECTION: Parser et reformater le JSON pour un affichage propre
+                const parsedContent = JSON.parse(content || '{}');
+                return JSON.stringify(parsedContent, null, 2);
+              } catch (error) {
+                // Fallback si le parsing échoue
+                return content;
+              }
+            })()}
           </pre>
         </div>
       </div>
@@ -96,7 +107,7 @@ const ChatMessage = memo<ChatMessageProps>(({
   };
 
   return (
-    <div className={`chat-message chat-message-${role}`}>
+    <div className={`chat-message chat-message-${role} ${className || ''}`}>
       <div className={`chat-message-bubble chat-message-bubble-${role}`}>
         {/* Contenu markdown normal (pas pour les messages tool) */}
         {content && role !== 'tool' && (

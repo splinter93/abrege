@@ -10,7 +10,8 @@ const supabase = createClient(supabaseUrl, supabaseAnonKey);
 // Types pour les données
 export interface CreateNoteData {
   source_title: string;
-  notebook_id: string;
+  notebook_id?: string; // ✅ Optionnel pour supporter 'notebook'
+  notebook?: string; // ✅ Support pour Groq
   markdown_content?: string;
   header_image?: string;
   folder_id?: string | null;
@@ -64,7 +65,12 @@ export class V2DatabaseUtils {
     
     try {
       // Résoudre le notebook_id (peut être un UUID ou un slug)
-      let classeurId = data.notebook_id;
+      let classeurId = data.notebook_id || data.notebook; // ✅ Support pour 'notebook' (Groq)
+      
+      // ✅ Vérification que classeurId existe
+      if (!classeurId) {
+        throw new Error('notebook_id ou notebook manquant');
+      }
       
       // Si ce n'est pas un UUID, essayer de le résoudre comme un slug
       if (!classeurId.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
@@ -785,6 +791,11 @@ export class V2DatabaseUtils {
     logApi('v2_db_get_classeur_tree', '🚀 Récupération arbre classeur directe DB', context);
     
     try {
+      // ✅ CORRECTION: Vérifier que notebookId n'est pas undefined
+      if (!notebookId) {
+        throw new Error('notebook_id est requis');
+      }
+      
       // Résoudre le notebook_id (peut être un UUID ou un slug)
       let classeurId = notebookId;
       

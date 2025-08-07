@@ -1,5 +1,6 @@
 import { simpleLogger as logger } from '@/utils/logger';
 import { V2DatabaseUtils } from '@/utils/v2DatabaseUtils';
+import { OpenAPIToolsGenerator } from './openApiToolsGenerator';
 
 export interface ApiV2Tool {
   name: string;
@@ -15,52 +16,553 @@ export interface ApiV2Tool {
 export class AgentApiV2Tools {
   private tools: Map<string, ApiV2Tool> = new Map();
   private baseUrl: string;
+  private openApiGenerator: OpenAPIToolsGenerator | null = null;
 
   constructor() {
     // Utiliser l'URL de base configurée ou l'URL par défaut
     this.baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://scrivia.app';
     logger.dev(`[AgentApiV2Tools] 🚀 Initialisation avec baseUrl: ${this.baseUrl}`);
     this.initializeTools();
+    this.initializeOpenAPITools();
     logger.dev(`[AgentApiV2Tools] ✅ Initialisation terminée, ${this.tools.size} tools chargés`);
+  }
+
+  /**
+   * Initialiser les tools OpenAPI
+   */
+  private async initializeOpenAPITools() {
+    try {
+      logger.dev('[AgentApiV2Tools] 🔧 Initialisation des tools OpenAPI...');
+      
+      // Charger le schéma OpenAPI v2
+      const openApiSchema = await this.loadOpenAPISchema();
+      
+      if (openApiSchema) {
+        this.openApiGenerator = new OpenAPIToolsGenerator(openApiSchema);
+        const openApiTools = this.openApiGenerator.generateToolsForFunctionCalling();
+        
+        logger.dev(`[AgentApiV2Tools] 📊 ${openApiTools.length} tools OpenAPI générés`);
+        
+        // Ajouter les tools OpenAPI aux tools existants
+        openApiTools.forEach(tool => {
+          const toolName = tool.function.name;
+          if (!this.tools.has(toolName)) {
+            // Créer un tool compatible avec votre système
+            this.tools.set(toolName, {
+              name: toolName,
+              description: tool.function.description,
+              parameters: tool.function.parameters,
+              execute: async (params, jwtToken, userId) => {
+                return await this.executeOpenAPITool(toolName, params, jwtToken, userId);
+              }
+            });
+            logger.dev(`[AgentApiV2Tools] ✅ Tool OpenAPI ajouté: ${toolName}`);
+          }
+        });
+        
+        logger.dev(`[AgentApiV2Tools] 🎉 Tools OpenAPI intégrés avec succès`);
+      }
+    } catch (error) {
+      logger.error('[AgentApiV2Tools] ❌ Erreur lors de l\'initialisation OpenAPI:', error);
+    }
+  }
+
+  /**
+   * Charger le schéma OpenAPI
+   */
+  private async loadOpenAPISchema(): Promise<any> {
+    try {
+      // En production, vous pourriez charger depuis une URL
+      // Pour l'instant, on utilise le schéma intégré
+      const schema = {
+        paths: {
+          '/api/v2/note/create': {
+            post: {
+              summary: 'Créer une nouvelle note',
+              description: 'Créer une nouvelle note structurée dans un classeur spécifique',
+              requestBody: {
+                content: {
+                  'application/json': {
+                    schema: {
+                      $ref: '#/components/schemas/CreateNotePayload'
+                    }
+                  }
+                }
+              }
+            }
+          },
+          '/api/v2/note/{ref}/content': {
+            get: {
+              summary: 'Récupérer le contenu d\'une note',
+              description: 'Récupérer le contenu markdown et HTML d\'une note',
+              parameters: [
+                {
+                  name: 'ref',
+                  in: 'path',
+                  required: true,
+                  schema: { type: 'string' },
+                  description: 'ID ou slug de la note'
+                }
+              ]
+            }
+          },
+          '/api/v2/note/{ref}/add-content': {
+            post: {
+              summary: 'Ajouter du contenu à une note',
+              description: 'Ajouter du contenu markdown à la fin d\'une note existante',
+              parameters: [
+                {
+                  name: 'ref',
+                  in: 'path',
+                  required: true,
+                  schema: { type: 'string' },
+                  description: 'ID ou slug de la note'
+                }
+              ],
+              requestBody: {
+                content: {
+                  'application/json': {
+                    schema: {
+                      $ref: '#/components/schemas/AddContentPayload'
+                    }
+                  }
+                }
+              }
+            }
+          },
+          '/api/v2/note/{ref}/insert': {
+            post: {
+              summary: 'Insérer du contenu à une position spécifique',
+              description: 'Insérer du contenu markdown à une position spécifique dans la note',
+              parameters: [
+                {
+                  name: 'ref',
+                  in: 'path',
+                  required: true,
+                  schema: { type: 'string' },
+                  description: 'ID ou slug de la note'
+                }
+              ],
+              requestBody: {
+                content: {
+                  'application/json': {
+                    schema: {
+                      $ref: '#/components/schemas/InsertContentPayload'
+                    }
+                  }
+                }
+              }
+            }
+          },
+          '/api/v2/note/{ref}/insights': {
+            get: {
+              summary: 'Récupérer les insights d\'une note',
+              description: 'Récupérer les analyses et insights générés automatiquement pour une note',
+              parameters: [
+                {
+                  name: 'ref',
+                  in: 'path',
+                  required: true,
+                  schema: { type: 'string' },
+                  description: 'ID ou slug de la note'
+                }
+              ]
+            }
+          },
+          '/api/v2/note/{ref}/table-of-contents': {
+            get: {
+              summary: 'Récupérer la table des matières',
+              description: 'Récupérer la table des matières générée automatiquement d\'une note',
+              parameters: [
+                {
+                  name: 'ref',
+                  in: 'path',
+                  required: true,
+                  schema: { type: 'string' },
+                  description: 'ID ou slug de la note'
+                }
+              ]
+            }
+          },
+          '/api/v2/note/{ref}/statistics': {
+            get: {
+              summary: 'Récupérer les statistiques d\'une note',
+              description: 'Récupérer les statistiques détaillées d\'une note',
+              parameters: [
+                {
+                  name: 'ref',
+                  in: 'path',
+                  required: true,
+                  schema: { type: 'string' },
+                  description: 'ID ou slug de la note'
+                }
+              ]
+            }
+          },
+          '/api/v2/note/{ref}/merge': {
+            post: {
+              summary: 'Fusionner des notes',
+              description: 'Fusionner le contenu d\'une note avec une autre note selon une stratégie spécifique',
+              parameters: [
+                {
+                  name: 'ref',
+                  in: 'path',
+                  required: true,
+                  schema: { type: 'string' },
+                  description: 'ID ou slug de la note source'
+                }
+              ],
+              requestBody: {
+                content: {
+                  'application/json': {
+                    schema: {
+                      $ref: '#/components/schemas/MergeNotePayload'
+                    }
+                  }
+                }
+              }
+            }
+          },
+          '/api/v2/note/{ref}/publish': {
+            post: {
+              summary: 'Publier une note',
+              description: 'Changer le statut de publication d\'une note',
+              parameters: [
+                {
+                  name: 'ref',
+                  in: 'path',
+                  required: true,
+                  schema: { type: 'string' },
+                  description: 'ID ou slug de la note'
+                }
+              ],
+              requestBody: {
+                content: {
+                  'application/json': {
+                    schema: {
+                      $ref: '#/components/schemas/PublishNotePayload'
+                    }
+                  }
+                }
+              }
+            }
+          },
+          '/api/v2/folder/create': {
+            post: {
+              summary: 'Créer un nouveau dossier',
+              description: 'Créer un nouveau dossier dans un classeur spécifique',
+              requestBody: {
+                content: {
+                  'application/json': {
+                    schema: {
+                      $ref: '#/components/schemas/CreateFolderPayload'
+                    }
+                  }
+                }
+              }
+            }
+          },
+          '/api/v2/folder/{ref}/move': {
+            put: {
+              summary: 'Déplacer un dossier',
+              description: 'Déplacer un dossier vers un autre classeur',
+              parameters: [
+                {
+                  name: 'ref',
+                  in: 'path',
+                  required: true,
+                  schema: { type: 'string' },
+                  description: 'ID ou slug du dossier'
+                }
+              ],
+              requestBody: {
+                content: {
+                  'application/json': {
+                    schema: {
+                      $ref: '#/components/schemas/MoveFolderPayload'
+                    }
+                  }
+                }
+              }
+            }
+          },
+          '/api/v2/classeur/{ref}/tree': {
+            get: {
+              summary: 'Récupérer l\'arborescence d\'un classeur',
+              description: 'Récupérer la structure complète d\'un classeur avec ses dossiers et notes',
+              parameters: [
+                {
+                  name: 'ref',
+                  in: 'path',
+                  required: true,
+                  schema: { type: 'string' },
+                  description: 'ID ou slug du classeur'
+                }
+              ]
+            }
+          },
+          '/api/v2/classeur/{ref}/reorder': {
+            put: {
+              summary: 'Réorganiser un classeur',
+              description: 'Réorganiser l\'ordre des éléments dans un classeur',
+              parameters: [
+                {
+                  name: 'ref',
+                  in: 'path',
+                  required: true,
+                  schema: { type: 'string' },
+                  description: 'ID ou slug du classeur'
+                }
+              ],
+              requestBody: {
+                content: {
+                  'application/json': {
+                    schema: {
+                      $ref: '#/components/schemas/ReorderPayload'
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        components: {
+          schemas: {
+            CreateNotePayload: {
+              type: 'object',
+              properties: {
+                source_title: { type: 'string', minLength: 1, maxLength: 255 },
+                notebook_id: { type: 'string', description: 'ID ou slug du classeur' },
+                markdown_content: { type: 'string' },
+                header_image: { type: 'string', format: 'uri' },
+                folder_id: { type: 'string', format: 'uuid' }
+              },
+              required: ['source_title', 'notebook_id']
+            },
+            AddContentPayload: {
+              type: 'object',
+              properties: {
+                content: { type: 'string', minLength: 1 }
+              },
+              required: ['content']
+            },
+            InsertContentPayload: {
+              type: 'object',
+              properties: {
+                content: { type: 'string', minLength: 1 },
+                position: { type: 'integer', minimum: 0 }
+              },
+              required: ['content', 'position']
+            },
+            MergeNotePayload: {
+              type: 'object',
+              properties: {
+                targetNoteId: { type: 'string', format: 'uuid' },
+                mergeStrategy: { type: 'string', enum: ['append', 'prepend', 'replace'] }
+              },
+              required: ['targetNoteId', 'mergeStrategy']
+            },
+            PublishNotePayload: {
+              type: 'object',
+              properties: {
+                ispublished: { type: 'boolean' }
+              },
+              required: ['ispublished']
+            },
+            CreateFolderPayload: {
+              type: 'object',
+              properties: {
+                name: { type: 'string', minLength: 1, maxLength: 255 },
+                notebook_id: { type: 'string', description: 'ID ou slug du classeur' }
+              },
+              required: ['name', 'notebook_id']
+            },
+            MoveFolderPayload: {
+              type: 'object',
+              properties: {
+                notebook_id: { type: 'string', description: 'ID ou slug du classeur' }
+              },
+              required: ['notebook_id']
+            },
+            ReorderPayload: {
+              type: 'object',
+              properties: {
+                itemIds: {
+                  type: 'array',
+                  items: { type: 'string', format: 'uuid' }
+                }
+              },
+              required: ['itemIds']
+            }
+          }
+        }
+      };
+      
+      return schema;
+    } catch (error) {
+      logger.error('[AgentApiV2Tools] ❌ Erreur lors du chargement du schéma OpenAPI:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Exécuter un tool OpenAPI
+   */
+  private async executeOpenAPITool(toolName: string, params: any, jwtToken: string, userId: string): Promise<any> {
+    const context = { operation: `openapi_${toolName}`, component: 'AgentApiV2Tools' };
+    
+    try {
+      logger.dev(`[AgentApiV2Tools] 🚀 Exécution tool OpenAPI: ${toolName}`, params);
+      
+      // Mapping des tools OpenAPI vers les méthodes existantes
+      switch (toolName) {
+        case 'get_note_content':
+          return await this.callApiV2('GET', `/api/v2/note/${params.ref}/content`, null, jwtToken);
+          
+        case 'insert_content_to_note':
+          return await this.callApiV2('POST', `/api/v2/note/${params.ref}/insert`, params, jwtToken);
+          
+        case 'get_note_insights':
+          return await this.callApiV2('GET', `/api/v2/note/${params.ref}/insights`, null, jwtToken);
+          
+        case 'get_note_toc':
+          return await this.callApiV2('GET', `/api/v2/note/${params.ref}/table-of-contents`, null, jwtToken);
+          
+        case 'get_note_statistics':
+          return await this.callApiV2('GET', `/api/v2/note/${params.ref}/statistics`, null, jwtToken);
+          
+        case 'merge_note':
+          return await this.callApiV2('POST', `/api/v2/note/${params.ref}/merge`, params, jwtToken);
+          
+        case 'publish_note':
+          return await this.callApiV2('POST', `/api/v2/note/${params.ref}/publish`, params, jwtToken);
+          
+        case 'move_folder':
+          return await this.callApiV2('PUT', `/api/v2/folder/${params.ref}/move`, params, jwtToken);
+          
+        case 'get_notebook_tree':
+          return await this.callApiV2('GET', `/api/v2/classeur/${params.ref}/tree`, null, jwtToken);
+          
+        case 'reorder_notebook':
+          return await this.callApiV2('PUT', `/api/v2/classeur/${params.ref}/reorder`, params, jwtToken);
+          
+        default:
+          // Pour les tools qui n'ont pas de mapping spécifique, utiliser l'API v2
+          const endpoint = this.getOpenAPIEndpoint(toolName, params);
+          if (endpoint) {
+            return await this.callApiV2(endpoint.method, endpoint.path, params, jwtToken);
+          }
+          
+          throw new Error(`Tool OpenAPI non supporté: ${toolName}`);
+      }
+    } catch (error) {
+      logger.error(`[AgentApiV2Tools] ❌ Erreur lors de l'exécution du tool OpenAPI ${toolName}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Obtenir l'endpoint pour un tool OpenAPI
+   */
+  private getOpenAPIEndpoint(toolName: string, params: any): { method: string; path: string } | null {
+    const endpointMappings: Record<string, { method: string; path: string }> = {
+      'get_note_content': { method: 'GET', path: `/api/v2/note/${params.ref}/content` },
+      'insert_content_to_note': { method: 'POST', path: `/api/v2/note/${params.ref}/insert` },
+      'get_note_insights': { method: 'GET', path: `/api/v2/note/${params.ref}/insights` },
+      'get_note_toc': { method: 'GET', path: `/api/v2/note/${params.ref}/table-of-contents` },
+      'get_note_statistics': { method: 'GET', path: `/api/v2/note/${params.ref}/statistics` },
+      'merge_note': { method: 'POST', path: `/api/v2/note/${params.ref}/merge` },
+      'publish_note': { method: 'POST', path: `/api/v2/note/${params.ref}/publish` },
+      'move_folder': { method: 'PUT', path: `/api/v2/folder/${params.ref}/move` },
+      'get_notebook_tree': { method: 'GET', path: `/api/v2/classeur/${params.ref}/tree` },
+      'reorder_notebook': { method: 'PUT', path: `/api/v2/classeur/${params.ref}/reorder` }
+    };
+    
+    return endpointMappings[toolName] || null;
+  }
+
+  /**
+   * Ajouter des tools OpenAPI manuellement
+   */
+  addOpenAPITools(openApiSchema: any) {
+    if (!this.openApiGenerator) {
+      this.openApiGenerator = new OpenAPIToolsGenerator(openApiSchema);
+    }
+    
+    const openApiTools = this.openApiGenerator.generateToolsForFunctionCalling();
+    
+    openApiTools.forEach(tool => {
+      const toolName = tool.function.name;
+      if (!this.tools.has(toolName)) {
+        this.tools.set(toolName, {
+          name: toolName,
+          description: tool.function.description,
+          parameters: tool.function.parameters,
+          execute: async (params, jwtToken, userId) => {
+            return await this.executeOpenAPITool(toolName, params, jwtToken, userId);
+          }
+        });
+        logger.dev(`[AgentApiV2Tools] ✅ Tool OpenAPI ajouté: ${toolName}`);
+      }
+    });
+  }
+
+  /**
+   * Obtenir les informations de debug OpenAPI
+   */
+  getOpenAPIDebugInfo() {
+    if (!this.openApiGenerator) {
+      return { error: 'OpenAPI Generator non initialisé' };
+    }
+    
+    return this.openApiGenerator.getDebugInfo();
   }
 
   private initializeTools() {
     // Tool: Créer une note
     this.tools.set('create_note', {
       name: 'create_note',
-      description: 'Créer une nouvelle note structurée dans un classeur spécifique (par ID ou slug), avec un titre obligatoire, un contenu markdown optionnel, et un dossier parent facultatif. La note sera automatiquement positionnée dans l\'ordre du classeur.',
+      description: 'Créer une nouvelle note. IMPORTANT: Fournir UN SEUL objet JSON avec les paramètres suivants.',
       parameters: {
         type: 'object',
         properties: {
           source_title: {
             type: 'string',
-            description: 'Titre de la note (obligatoire, max 255 caractères)'
-          },
-          markdown_content: {
-            type: 'string',
-            description: 'Contenu markdown de la note (optionnel, sera ajouté au début)'
+            description: 'Titre de la note (obligatoire)'
           },
           notebook_id: {
             type: 'string',
-            description: 'ID ou slug du classeur où créer la note (obligatoire)'
+            description: 'ID ou slug du classeur (obligatoire)'
+          },
+          markdown_content: {
+            type: 'string',
+            description: 'Contenu markdown de la note (optionnel)'
           },
           folder_id: {
             type: 'string',
-            description: 'ID du dossier où créer la note (optionnel, null pour la racine)'
+            description: 'ID du dossier parent (optionnel)'
           }
         },
         required: ['source_title', 'notebook_id']
       },
       execute: async (params, jwtToken, userId) => {
+        // ✅ Mapping des paramètres pour supporter Groq
+        const mappedParams = {
+          ...params,
+          source_title: params.source_title || params.title, // Support pour 'title' (Groq)
+          notebook_id: params.notebook_id || params.notebook || params.notebook_slug, // Support pour 'notebook' et 'notebook_slug' (Groq)
+          markdown_content: params.markdown_content || params.content // Support pour 'content' (Groq)
+        };
+        
         const context = { operation: 'create_note', component: 'AgentApiV2Tools' };
-        return await V2DatabaseUtils.createNote(params, userId, context);
+        return await V2DatabaseUtils.createNote(mappedParams, userId, context);
       }
     });
 
     // Tool: Mettre à jour une note
     this.tools.set('update_note', {
       name: 'update_note',
-      description: 'Modifier une note existante identifiée par son ID ou slug, pour changer son titre, contenu markdown, description ou dossier parent (sans écraser les autres champs non spécifiés). Les champs non fournis restent inchangés.',
+      description: 'Modifier une note existante. IMPORTANT: Fournir UN SEUL objet JSON avec les paramètres suivants.',
       parameters: {
         type: 'object',
         properties: {
@@ -70,11 +572,11 @@ export class AgentApiV2Tools {
           },
           source_title: {
             type: 'string',
-            description: 'Nouveau titre de la note (optionnel, max 255 caractères)'
+            description: 'Nouveau titre de la note (optionnel)'
           },
           markdown_content: {
             type: 'string',
-            description: 'Nouveau contenu markdown (optionnel, remplace tout le contenu)'
+            description: 'Nouveau contenu markdown (optionnel)'
           }
         },
         required: ['ref']
@@ -89,7 +591,7 @@ export class AgentApiV2Tools {
     // Tool: Ajouter du contenu à une note
     this.tools.set('add_content_to_note', {
       name: 'add_content_to_note',
-      description: 'Ajouter du texte markdown à la fin du contenu d\'une note existante, sans remplacer le contenu existant. Le nouveau contenu sera concaténé après le contenu actuel.',
+      description: 'Ajouter du texte à la fin d\'une note. IMPORTANT: Fournir UN SEUL objet JSON avec les paramètres suivants.',
       parameters: {
         type: 'object',
         properties: {
@@ -99,7 +601,7 @@ export class AgentApiV2Tools {
           },
           content: {
             type: 'string',
-            description: 'Contenu markdown à ajouter à la fin (obligatoire)'
+            description: 'Contenu à ajouter à la fin (obligatoire)'
           }
         },
         required: ['ref', 'content']
@@ -114,7 +616,7 @@ export class AgentApiV2Tools {
     // Tool: Déplacer une note
     this.tools.set('move_note', {
       name: 'move_note',
-      description: 'Déplacer une note d\'un dossier vers un autre dossier spécifique, ou la sortir d\'un dossier vers la racine du classeur. La note conserve son contenu et ses métadonnées.',
+      description: 'Déplacer une note vers un autre dossier. IMPORTANT: Fournir UN SEUL objet JSON avec les paramètres suivants.',
       parameters: {
         type: 'object',
         properties: {
@@ -124,7 +626,7 @@ export class AgentApiV2Tools {
           },
           folder_id: {
             type: 'string',
-            description: 'ID du dossier de destination (obligatoire, null pour la racine)'
+            description: 'ID du dossier de destination (obligatoire)'
           }
         },
         required: ['ref', 'folder_id']
@@ -139,7 +641,7 @@ export class AgentApiV2Tools {
     // Tool: Supprimer une note
     this.tools.set('delete_note', {
       name: 'delete_note',
-      description: 'Supprimer définitivement une note et tout son contenu de la base de données. Cette action est irréversible et ne peut pas être annulée. La note disparaîtra de tous les classeurs et dossiers.',
+      description: 'Supprimer définitivement une note. IMPORTANT: Fournir UN SEUL objet JSON avec les paramètres suivants.',
       parameters: {
         type: 'object',
         properties: {
@@ -160,13 +662,13 @@ export class AgentApiV2Tools {
     // Tool: Créer un dossier
     this.tools.set('create_folder', {
       name: 'create_folder',
-      description: 'Créer un nouveau dossier avec un nom obligatoire dans un classeur spécifique, avec dossier parent optionnel. Le dossier sera automatiquement positionné dans l\'ordre du classeur ou du dossier parent.',
+      description: 'Créer un nouveau dossier. IMPORTANT: Fournir UN SEUL objet JSON avec les paramètres suivants.',
       parameters: {
         type: 'object',
         properties: {
           name: {
             type: 'string',
-            description: 'Nom du dossier (obligatoire, max 255 caractères)'
+            description: 'Nom du dossier (obligatoire)'
           },
           notebook_id: {
             type: 'string',
@@ -174,7 +676,7 @@ export class AgentApiV2Tools {
           },
           parent_id: {
             type: 'string',
-            description: 'ID du dossier parent (optionnel, null pour la racine du classeur)'
+            description: 'ID du dossier parent (optionnel)'
           }
         },
         required: ['name', 'notebook_id']
@@ -238,21 +740,21 @@ export class AgentApiV2Tools {
     // Tool: Créer un classeur
     this.tools.set('create_notebook', {
       name: 'create_notebook',
-      description: 'Créer un nouveau classeur avec un nom obligatoire, description et icône optionnelles. Le classeur sera automatiquement positionné à la fin de la liste des classeurs de l\'utilisateur.',
+      description: 'Créer un nouveau classeur. IMPORTANT: Fournir UN SEUL objet JSON avec les paramètres suivants.',
       parameters: {
         type: 'object',
         properties: {
           name: {
             type: 'string',
-            description: 'Nom du classeur (obligatoire, max 255 caractères)'
+            description: 'Nom du classeur (obligatoire)'
           },
           description: {
             type: 'string',
-            description: 'Description du classeur (optionnel, max 500 caractères)'
+            description: 'Description du classeur (optionnel)'
           },
           icon: {
             type: 'string',
-            description: 'Icône du classeur (optionnel, emoji ou nom d\'icône)'
+            description: 'Icône du classeur (optionnel)'
           }
         },
         required: ['name']
@@ -263,85 +765,25 @@ export class AgentApiV2Tools {
       }
     });
 
-    // Tool: Mettre à jour un classeur
-    this.tools.set('update_notebook', {
-      name: 'update_notebook',
-      description: 'Modifier le nom, description ou icône d\'un classeur existant identifié par son ID ou slug. Les champs non fournis restent inchangés. Le nom et la description peuvent être modifiés indépendamment.',
+    // Tool: Lister tous les classeurs
+    this.tools.set('get_notebooks', {
+      name: 'get_notebooks',
+      description: 'Récupérer la liste des classeurs. IMPORTANT: Cette fonction ne prend aucun paramètre, mais vous devez toujours fournir un objet JSON vide {} comme arguments.',
       parameters: {
         type: 'object',
-        properties: {
-          ref: {
-            type: 'string',
-            description: 'ID ou slug du classeur à modifier (obligatoire)'
-          },
-          name: {
-            type: 'string',
-            description: 'Nouveau nom du classeur (optionnel, max 255 caractères)'
-          },
-          description: {
-            type: 'string',
-            description: 'Nouvelle description du classeur (optionnel, max 500 caractères)'
-          },
-          icon: {
-            type: 'string',
-            description: 'Nouvelle icône du classeur (optionnel, emoji ou nom d\'icône)'
-          }
-        },
-        required: ['ref']
+        properties: {},
+        required: []
       },
       execute: async (params, jwtToken, userId) => {
-        const { ref, ...data } = params;
-        const context = { operation: 'update_notebook', component: 'AgentApiV2Tools' };
-        return await V2DatabaseUtils.updateClasseur(ref, data, userId, context);
+        const context = { operation: 'get_notebooks', component: 'AgentApiV2Tools' };
+        return await V2DatabaseUtils.getClasseurs(userId, context);
       }
     });
 
-    // Tool: Supprimer un classeur
-    this.tools.set('delete_notebook', {
-      name: 'delete_notebook',
-      description: 'Supprimer définitivement un classeur et tout son contenu (dossiers et notes) de la base de données. Cette action est irréversible et supprime toutes les données associées au classeur.',
-      parameters: {
-        type: 'object',
-        properties: {
-          ref: {
-            type: 'string',
-            description: 'ID ou slug du classeur à supprimer (obligatoire)'
-          }
-        },
-        required: ['ref']
-      },
-      execute: async (params, jwtToken, userId) => {
-        const { ref } = params;
-        const context = { operation: 'delete_notebook', component: 'AgentApiV2Tools' };
-        return await V2DatabaseUtils.deleteClasseur(ref, userId, context);
-      }
-    });
-
-    // Tool: Récupérer le contenu d'une note
-    this.tools.set('get_note_content', {
-      name: 'get_note_content',
-      description: 'Récupérer le contenu markdown et HTML d\'une note, avec toutes ses métadonnées (titre, image d\'en-tête, dates de création/modification, visibilité). Permet d\'analyser le contenu existant avant modification.',
-      parameters: {
-        type: 'object',
-        properties: {
-          ref: {
-            type: 'string',
-            description: 'ID ou slug de la note (obligatoire)'
-          }
-        },
-        required: ['ref']
-      },
-      execute: async (params, jwtToken, userId) => {
-        const { ref } = params;
-        const context = { operation: 'get_note_content', component: 'AgentApiV2Tools' };
-        return await V2DatabaseUtils.getNoteContent(ref, userId, context);
-      }
-    });
-
-    // Tool: Récupérer l'arbre d'un classeur spécifique
+    // Tool: Récupérer l'arborescence
     this.tools.set('get_tree', {
       name: 'get_tree',
-      description: 'Récupérer l\'arborescence complète d\'un classeur : dossiers, sous-dossiers et notes organisés hiérarchiquement. Permet de comprendre la structure avant d\'ajouter ou déplacer des éléments.',
+      description: 'Récupérer l\'arborescence d\'un classeur. IMPORTANT: Fournir UN SEUL objet JSON avec les paramètres suivants.',
       parameters: {
         type: 'object',
         properties: {
@@ -353,24 +795,19 @@ export class AgentApiV2Tools {
         required: ['notebook_id']
       },
       execute: async (params, jwtToken, userId) => {
-        const { notebook_id } = params;
         const context = { operation: 'get_tree', component: 'AgentApiV2Tools' };
-        return await V2DatabaseUtils.getClasseurTree(notebook_id, userId, context);
-      }
-    });
-
-    // Tool: Lister tous les classeurs
-    this.tools.set('get_notebooks', {
-      name: 'get_notebooks',
-      description: 'Récupérer la liste complète des classeurs de l\'utilisateur avec leurs métadonnées (nom, description, icône, position). IMPORTANT: Cette fonction ne prend aucun paramètre, mais vous devez toujours fournir un objet JSON vide {} comme arguments. Permet de choisir le bon classeur avant de créer des notes ou dossiers.',
-      parameters: {
-        type: 'object',
-        properties: {},
-        required: []
-      },
-      execute: async (params, jwtToken, userId) => {
-        const context = { operation: 'get_notebooks', component: 'AgentApiV2Tools' };
-        return await V2DatabaseUtils.getClasseurs(userId, context);
+        try {
+          // ✅ CORRECTION: Supporter slug ou notebook_id
+          const notebookId = params.notebook_id || params.slug;
+          return await V2DatabaseUtils.getClasseurTree(notebookId, userId, context);
+        } catch (error) {
+          // ✅ CORRECTION: Retourner l'erreur au lieu de planter
+          const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
+          return { 
+            success: false, 
+            error: `Échec de la récupération de l'arbre: ${errorMessage}` 
+          };
+        }
       }
     });
 
@@ -727,8 +1164,14 @@ export class AgentApiV2Tools {
       return result;
     } catch (error) {
       const duration = Date.now() - startTime;
-      logger.error(`[AgentApiV2Tools] ❌ ${toolName} échoué (${duration}ms):`, error);
-      throw error;
+      const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
+      logger.error(`[AgentApiV2Tools] ❌ ${toolName} échoué (${duration}ms):`, errorMessage);
+      
+      // ✅ CORRECTION: Retourner l'erreur au lieu de la relancer
+      return { 
+        success: false, 
+        error: `Échec de l'exécution de ${toolName}: ${errorMessage}` 
+      };
     }
   }
 

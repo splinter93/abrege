@@ -55,6 +55,11 @@ export class SlugGenerator {
   }
 
   private static slugify(text: string): string {
+    // ✅ Vérification pour éviter l'erreur undefined
+    if (!text || typeof text !== 'string') {
+      return 'untitled';
+    }
+    
     return text
       .toString()
       .normalize('NFD')

@@ -100,7 +100,9 @@ export class TogetherProvider implements LLMProvider {
    * Prépare le payload pour l'API Together
    */
   private preparePayload(messages: unknown[], config: Record<string, unknown>) {
-    return {
+    const isQwen = (config.model as string)?.includes('Qwen');
+    
+    const basePayload = {
       model: config.model,
       messages,
       stream: false, // Sera override par l'API route
@@ -108,6 +110,17 @@ export class TogetherProvider implements LLMProvider {
       max_tokens: config.max_tokens,
       top_p: config.top_p
     };
+
+    // ✅ NOUVEAU: Configuration spéciale pour Qwen 3 selon la documentation Alibaba Cloud
+    if (isQwen) {
+      return {
+        ...basePayload,
+        enable_thinking: false, // ❌ DÉSACTIVÉ: Le thinking/reasoning pour Qwen
+        result_format: 'message' // ✅ Format de réponse avec reasoning
+      };
+    }
+
+    return basePayload;
   }
 
   /**

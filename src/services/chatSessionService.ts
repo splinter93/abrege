@@ -301,6 +301,40 @@ export class ChatSessionService {
   }
 
   /**
+   * Ajouter un message à une session avec token fourni (pour usage côté serveur)
+   */
+  async addMessageWithToken(sessionId: string, message: Omit<ChatMessage, 'id'>, userToken: string): Promise<{
+    success: boolean;
+    data?: { session: ChatSession; message: ChatMessage };
+    error?: string;
+  }> {
+    try {
+      const response = await fetch(`${this.baseUrl}/${sessionId}/messages`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${userToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(message),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Erreur lors de l\'ajout du message');
+      }
+
+      return data;
+    } catch (error) {
+      logger.error('Erreur ChatSessionService.addMessageWithToken:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Erreur inconnue'
+      };
+    }
+  }
+
+  /**
    * Récupérer les messages d'une session
    */
   async getMessages(sessionId: string): Promise<{

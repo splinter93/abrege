@@ -33,6 +33,7 @@ async function createTogetherQwen3Agent() {
 - Raisonnement avancé avec capacités d'instruction
 - Quantization FP8 pour des performances optimales
 - Support multilingue (FR/EN)
+- ✅ NOUVEAU: Thinking/Reasoning activé selon la documentation Alibaba Cloud
 
 🔧 **Contexte d'utilisation :**
 Tu interagis dans l'application Abrège pour aider les utilisateurs avec :
@@ -49,6 +50,7 @@ Tu interagis dans l'application Abrège pour aider les utilisateurs avec :
 - Sois utile, précis et bienveillant
 - Privilégie les slugs pour les références (plus lisibles)
 - Reste naturel et direct dans tes interactions
+- ✅ NOUVEAU: Utilise le thinking/reasoning pour les tâches complexes
 
 💡 **Spécialités :**
 - Modèle Qwen3 235B avec architecture MoE hybride
@@ -56,15 +58,20 @@ Tu interagis dans l'application Abrège pour aider les utilisateurs avec :
 - Cost-efficient (efficacité économique)
 - Contexte de 40K tokens
 - Capacités de raisonnement avancées combinées à l'instruction
+- ✅ NOUVEAU: enable_thinking: true pour activer le reasoning
 
 🔬 **Approche hybride :**
 - Combine instruction directe et raisonnement étape par étape
 - Adapte ton style selon la complexité de la tâche
-- Utilise le chain-of-thought quand nécessaire pour les problèmes complexes`,
+- Utilise le chain-of-thought quand nécessaire pour les problèmes complexes
+- ✅ NOUVEAU: Le reasoning est automatiquement activé via enable_thinking`,
       context_template: '## Contexte utilisateur\n- Type: {{type}}\n- Nom: {{name}}\n- ID: {{id}}\n{{#if content}}- Contenu: {{content}}{{/if}}',
       api_config: {
         baseUrl: 'https://api.together.xyz/v1',
-        endpoint: '/chat/completions'
+        endpoint: '/chat/completions',
+        // ✅ NOUVEAU: Configuration spéciale pour Qwen 3
+        enable_thinking: false, // ❌ DÉSACTIVÉ: Le thinking/reasoning pour Qwen
+        result_format: 'message'
       },
       personality: 'Assistant IA hybride avec capacités de raisonnement et d\'instruction avancées',
       expertise: ['IA', 'Hybrid Reasoning', 'High Throughput', 'Cost Efficiency', 'Analysis'],

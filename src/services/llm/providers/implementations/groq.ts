@@ -29,6 +29,7 @@ const GROQ_INFO: ProviderInfo = {
     structuredOutput: true
   },
   supportedModels: [
+    'openai/gpt-oss-20b', // ✅ Modèle plus stable
     'openai/gpt-oss-120b',
     'llama-3.1-8b-instant',
     'llama-3.1-70b-version',
@@ -50,9 +51,9 @@ const DEFAULT_GROQ_CONFIG: GroqConfig = {
   timeout: 30000,
   
   // LLM
-  model: 'openai/gpt-oss-120b',
+  model: 'openai/gpt-oss-20b', // ✅ Modèle plus stable
   temperature: 0.7,
-  maxTokens: 4000,
+  maxTokens: 8000, // ✅ Augmenté pour plus de réponses
   topP: 0.9,
   
   // Features
@@ -67,7 +68,7 @@ const DEFAULT_GROQ_CONFIG: GroqConfig = {
   // Groq spécifique
   serviceTier: 'on_demand', // ✅ Gratuit au lieu de 'auto' (payant)
   parallelToolCalls: true,
-  reasoningEffort: 'medium' // ✅ Correct au lieu de 'default'
+  reasoningEffort: 'low' // ✅ Réduit le reasoning pour plus de réponses
 };
 
 /**
@@ -121,9 +122,9 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
   }
 
   /**
-   * Effectue un appel à l'API Groq
+   * Effectue un appel à l'API Groq avec support des function calls
    */
-  async call(message: string, context: AppContext, history: ChatMessage[]): Promise<string> {
+  async call(message: string, context: AppContext, history: ChatMessage[], tools?: any[]): Promise<any> {
     if (!this.isAvailable()) {
       throw new Error('Groq provider non configuré');
     }
@@ -131,11 +132,17 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
     try {
       logger.dev(`[GroqProvider] 🚀 Appel avec modèle: ${this.config.model}`);
 
+      // ✅ Vérifier si le streaming est activé
+      if (this.config.supportsStreaming) {
+        throw new Error('Streaming non supporté dans le provider Groq - utilisez la route API directement');
+      }
+
       // Préparer les messages
       const messages = this.prepareMessages(message, context, history);
       
-      // Préparer le payload
-      const payload = this.preparePayload(messages);
+      // Préparer le payload (sans streaming)
+      const payload = this.preparePayload(messages, tools);
+      payload.stream = false; // Forcer le mode non-streaming
       
       // Effectuer l'appel API
       const response = await this.makeApiCall(payload);
@@ -183,17 +190,24 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
   }
 
   /**
-   * Prépare le payload pour l'API Groq
+   * Prépare le payload pour l'API Groq avec support des tools
    */
-  private preparePayload(messages: any[]) {
+  private preparePayload(messages: any[], tools?: any[]) {
     const payload: any = {
       model: this.config.model,
       messages,
       temperature: this.config.temperature,
-      max_tokens: this.config.maxTokens,
+      max_completion_tokens: this.config.maxTokens, // ✅ Correction: Groq utilise max_completion_tokens
       top_p: this.config.topP,
-      stream: false // Pour l'instant, pas de streaming
+      stream: false // ✅ Streaming désactivé dans le provider (géré par la route API)
     };
+
+    // Ajouter les tools si disponibles
+    if (tools && tools.length > 0) {
+      payload.tools = tools;
+      payload.tool_choice = 'auto'; // ✅ Permettre à Groq de choisir les tools automatiquement
+      logger.dev(`[GroqProvider] 🔧 ${tools.length} tools disponibles pour les function calls`);
+    }
 
     // Ajouter les paramètres spécifiques à Groq
     if (this.config.serviceTier) {
@@ -230,23 +244,42 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
       throw new Error(`Groq API error: ${response.status} - ${errorText}`);
     }
 
+    // ✅ Gestion spéciale pour le streaming
+    if (payload.stream) {
+      // Pour le streaming, on ne peut pas parser la réponse comme du JSON
+      // Le streaming est géré directement dans la route API
+      throw new Error('Streaming non supporté dans le provider Groq - utilisez la route API directement');
+    }
+
     return await response.json();
   }
 
   /**
-   * Extrait la réponse de l'API Groq
+   * Extrait la réponse de l'API Groq avec support des tool calls
    */
-  private extractResponse(response: any): string {
+  private extractResponse(response: any): any {
     if (!response.choices || response.choices.length === 0) {
       throw new Error('Réponse invalide de Groq API');
     }
 
     const choice = response.choices[0];
-    if (!choice.message || !choice.message.content) {
-      throw new Error('Contenu de réponse manquant');
+    const result: any = {
+      content: choice.message.content || '',
+      model: response.model,
+      usage: response.usage
+    };
+
+    // ✅ Ajouter les tool calls si présents
+    if (choice.message.tool_calls && choice.message.tool_calls.length > 0) {
+      result.tool_calls = choice.message.tool_calls;
+      logger.dev(`[GroqProvider] 🔧 ${result.tool_calls.length} tool calls détectés`);
+      
+      result.tool_calls.forEach((toolCall: any, index: number) => {
+        logger.dev(`[GroqProvider] Tool call ${index + 1}: ${toolCall.function.name}`);
+      });
     }
 
-    return choice.message.content;
+    return result;
   }
 
   /**
@@ -271,6 +304,13 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
       systemMessage += `\n- Contenu: ${context.content}`;
     }
 
+    // ✅ Ajouter des instructions pour les function calls
+    systemMessage += `\n\n## Instructions pour les function calls
+- Tu peux utiliser les outils disponibles pour interagir avec l'API Scrivia
+- Choisis l'outil le plus approprié pour répondre à la demande
+- Fournis les paramètres requis pour chaque outil
+- Explique tes actions de manière claire`;
+
     return systemMessage;
   }
 
@@ -279,7 +319,87 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
    */
   getFunctionCallTools(): any[] {
     // Pour l'instant, retourner un tableau vide
-    // Les tools seront injectés depuis l'extérieur
+    // Les tools seront injectés depuis l'extérieur via AgentApiV2Tools
     return [];
+  }
+
+  /**
+   * Test de connexion avec Groq
+   */
+  async testConnection(): Promise<boolean> {
+    try {
+      logger.dev('[GroqProvider] 🧪 Test de connexion avec Groq...');
+      
+      const response = await fetch(`${this.config.baseUrl}/models`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${this.config.apiKey}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`Erreur ${response.status}: ${response.statusText}`);
+      }
+
+      const models = await response.json();
+      logger.dev(`[GroqProvider] ✅ Connexion réussie - ${models.data.length} modèles disponibles`);
+      
+      // Vérifier si GPT OSS est disponible
+      const gptOssModels = models.data.filter((model: any) => 
+        model.id.includes('gpt-oss')
+      );
+      
+      logger.dev(`[GroqProvider] 🎯 ${gptOssModels.length} modèles GPT OSS disponibles`);
+      
+      return true;
+    } catch (error) {
+      logger.error('[GroqProvider] ❌ Erreur de connexion:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Test d'appel avec function calls
+   */
+  async testFunctionCalls(tools: any[]): Promise<boolean> {
+    try {
+      logger.dev('[GroqProvider] 🧪 Test d\'appel avec function calls...');
+      
+      const messages = [
+        {
+          role: 'system',
+          content: 'Tu es un assistant IA utile. Tu peux utiliser les outils disponibles pour interagir avec l\'API Scrivia.'
+        },
+        {
+          role: 'user',
+          content: 'Crée une note intitulée "Test Groq OpenAPI" dans le classeur "main-notebook"'
+        }
+      ];
+
+      const payload = {
+        model: this.config.model,
+        messages,
+        tools,
+        tool_choice: 'auto',
+        temperature: this.config.temperature,
+        max_completion_tokens: this.config.maxTokens,
+        top_p: this.config.topP
+      };
+
+      const response = await this.makeApiCall(payload);
+      const result = this.extractResponse(response);
+      
+      if (result.tool_calls && result.tool_calls.length > 0) {
+        logger.dev(`[GroqProvider] ✅ Function calls testés avec succès - ${result.tool_calls.length} tool calls`);
+        return true;
+      } else {
+        logger.dev('[GroqProvider] ⚠️ Aucun tool call détecté dans la réponse');
+        return false;
+      }
+    } catch (error) {
+      logger.error('[GroqProvider] ❌ Erreur lors du test des function calls:', error);
+      return false;
+    }
   }
 } 

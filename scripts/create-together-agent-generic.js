@@ -28,6 +28,12 @@ const TOGETHER_MODELS = {
     description: 'Modèle Llama 3.1 avec 405B paramètres pour la génération de texte',
     capabilities: ['text_generation', 'content_creation', 'analysis']
   },
+  'llama-4-maverick': {
+    name: 'Llama 4 Maverick',
+    model: 'meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8',
+    description: 'Modèle SOTA 128-expert MoE avec capacités multimodales et multilingues (12 langues)',
+    capabilities: ['multimodal', 'multilingual', 'vision', 'function_calling', 'enterprise']
+  },
   'qwen3-235b': {
     name: 'Qwen3 235B A22B FP8',
     model: 'Qwen/Qwen3-235B-A22B-fp8-tput',

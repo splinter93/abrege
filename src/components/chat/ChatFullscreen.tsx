@@ -21,6 +21,7 @@ const ChatFullscreen: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(isDesktop); // Initialisation basée sur la taille d'écran
   const [streamingChannel, setStreamingChannel] = useState<any>(null);
   const [streamingContent, setStreamingContent] = useState('');
+  const [streamingReasoning, setStreamingReasoning] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
   // Ref to skip fallback save when streaming completes
   const skipFallbackSaveRef = useRef(false);
@@ -217,6 +218,21 @@ const ChatFullscreen: React.FC = () => {
             }
           } catch (error) {
             logger.error('[ChatFullscreen] ❌ Erreur traitement token:', error);
+          }
+        })
+        .on('broadcast', { event: 'llm-reasoning' }, (payload) => {
+          try {
+            const { reasoning: reasoningToken, sessionId } = payload.payload || {};
+            const ref = streamingContextRef.current;
+            if (ref && sessionId === ref.sessionId && reasoningToken) {
+              setStreamingReasoning(prev => {
+                const newReasoning = prev + reasoningToken;
+                logger.dev('[ChatFullscreen] 🧠 Reasoning progress:', newReasoning.length, 'chars');
+                return newReasoning;
+              });
+            }
+          } catch (error) {
+            logger.error('[ChatFullscreen] ❌ Erreur traitement reasoning:', error);
           }
         })
         .on('broadcast', { event: 'llm-complete' }, async (payload) => {
@@ -525,23 +541,39 @@ const ChatFullscreen: React.FC = () => {
               {messages.map((message, index) => (
                 <div key={message.id || index} className={`chat-message chat-message-${message.role}`}>
                   <div className={`chat-message-bubble chat-message-bubble-${message.role}`}>
-                    <EnhancedMarkdownMessage content={message.content} />
+                    <EnhancedMarkdownMessage content={message.content || ''} />
                   </div>
                 </div>
               ))}
               
               {/* Message en cours de streaming */}
-              {isStreaming && streamingContent && (
-                <div className="chat-message chat-message-assistant">
-                  <div className="chat-message-bubble chat-message-bubble-assistant">
-                    <EnhancedMarkdownMessage content={streamingContent} />
-                    <div className="chat-typing-indicator">
-                      <div className="chat-typing-dot"></div>
-                      <div className="chat-typing-dot"></div>
-                      <div className="chat-typing-dot"></div>
+              {isStreaming && (streamingContent || streamingReasoning) && (
+                <>
+                  {/* Afficher le reasoning séparément s'il y en a */}
+                  {streamingReasoning && (
+                    <div className="chat-message chat-message-assistant">
+                      <div className="chat-message-bubble chat-message-bubble-assistant">
+                        <EnhancedMarkdownMessage 
+                          content={`**🧠 Raisonnement :**\n\n${streamingReasoning}`}
+                        />
+                      </div>
                     </div>
-                  </div>
-                </div>
+                  )}
+                  
+                  {/* Afficher la réponse normale */}
+                  {streamingContent && (
+                    <div className="chat-message chat-message-assistant">
+                      <div className="chat-message-bubble chat-message-bubble-assistant">
+                        <EnhancedMarkdownMessage content={streamingContent || ''} />
+                        <div className="chat-typing-indicator">
+                          <div className="chat-typing-dot"></div>
+                          <div className="chat-typing-dot"></div>
+                          <div className="chat-typing-dot"></div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </>
               )}
             </div>
             <div ref={messagesEndRef} />
