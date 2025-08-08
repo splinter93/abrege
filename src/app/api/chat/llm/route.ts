@@ -822,6 +822,9 @@ export async function POST(request: NextRequest) {
             logger.dev("[LLM API] ⚠️ Tool a échoué:", safeResult.error);
           }
           
+          // 🔧 NOUVEAU: ID stable du tool call (utilisé pour broadcast, DB et réinjection)
+          const toolCallId = functionCallData.tool_call_id || `call_${Date.now()}`;
+
           // 🔧 NOUVEAU: Broadcast du résultat du tool call au frontend
           await channel.send({
             type: 'broadcast',
@@ -829,6 +832,7 @@ export async function POST(request: NextRequest) {
             payload: {
               sessionId: context.sessionId,
               tool_name: functionCallData.name,
+              tool_call_id: toolCallId,
               result: safeResult,
               success: safeResult.success !== false
             }
@@ -838,7 +842,6 @@ export async function POST(request: NextRequest) {
           logger.dev("[LLM API] 🔧 Injection du message tool et relance LLM");
 
           // 1. Créer le message assistant avec le bon format (structure minimale qui DÉBLOQUE tout)
-          const toolCallId = functionCallData.tool_call_id || `call_${Date.now()}`; // 🔧 CORRECTION: Utiliser l'ID réel du tool call
           const toolMessage = {
             role: 'assistant' as const,
             content: null, // 🔧 SÉCURITÉ: jamais "undefined"
@@ -976,7 +979,7 @@ export async function POST(request: NextRequest) {
                 role: 'tool',
                 tool_call_id: toolCallId,
                 name: functionCallData.name,
-                content: typeof result === 'string' ? result : JSON.stringify(result),
+                content: toolContent,
                 timestamp: new Date().toISOString()
               })
             });

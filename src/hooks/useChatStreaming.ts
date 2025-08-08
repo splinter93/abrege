@@ -8,7 +8,7 @@ interface UseChatStreamingOptions {
   onError?: (error: string) => void;
   onReasoning?: (reasoning: string) => void;
   onToolCalls?: (toolCalls: any[], toolName: string) => void;
-  onToolResult?: (toolName: string, result: any, success: boolean) => void;
+  onToolResult?: (toolName: string, result: any, success: boolean, toolCallId?: string) => void;
 }
 
 interface UseChatStreamingReturn {
@@ -175,10 +175,10 @@ export function useChatStreaming(options: UseChatStreamingOptions = {}): UseChat
       })
       .on('broadcast', { event: 'llm-tool-result' }, (payload) => {
         try {
-          const { sessionId: payloadSessionId, tool_name, result, success } = payload.payload || {};
+          const { sessionId: payloadSessionId, tool_name, tool_call_id, result, success } = payload.payload || {};
           if (payloadSessionId === sessionId) {
-            logger.debug('[useChatStreaming] ✅ Tool result reçu:', { tool_name, success });
-            onToolResult?.(tool_name, result, success);
+            logger.debug('[useChatStreaming] ✅ Tool result reçu:', { tool_name, success, tool_call_id });
+            onToolResult?.(tool_name, result, success, tool_call_id);
           }
         } catch (error) {
           logger.error('[useChatStreaming] ❌ Erreur tool result event:', error);

@@ -1,6 +1,7 @@
 'use client';
 import React from 'react';
 import { ChatMessage as ChatMessageType } from '@/types/chat';
+import EnhancedMarkdownMessage from './EnhancedMarkdownMessage';
 
 interface ChatMessageProps {
   message: ChatMessageType;
@@ -56,10 +57,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, className, isStreami
       <div className={`chat-message-bubble chat-message-bubble-${role}`}>
         {/* Contenu markdown normal (pas pour les messages tool) */}
         {content && role !== 'tool' && (
-          <div 
-            className="chat-markdown"
-            dangerouslySetInnerHTML={{ __html: content }}
-          />
+          <EnhancedMarkdownMessage content={content} />
         )}
         
         {/* Tool calls (style ChatGPT) */}

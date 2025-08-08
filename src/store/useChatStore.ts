@@ -42,7 +42,7 @@ interface ChatStore {
   // ⚡ Actions optimisées avec optimistic updates
   syncSessions: () => Promise<void>;
   createSession: (name?: string) => Promise<void>;
-  addMessage: (message: Omit<ChatMessage, 'id'>) => Promise<void>;
+  addMessage: (message: Omit<ChatMessage, 'id'>, options?: { persist?: boolean }) => Promise<void>;
   deleteSession: (sessionId: string) => Promise<void>;
   updateSession: (sessionId: string, data: { name?: string; history_limit?: number }) => Promise<void>;
 }
@@ -193,7 +193,7 @@ export const useChatStore = create<ChatStore>()(
       /**
        * 💬 Ajouter un message avec optimistic update et rollback sécurisé
        */
-      addMessage: async (message: Omit<ChatMessage, 'id'>) => {
+      addMessage: async (message: Omit<ChatMessage, 'id'>, options?: { persist?: boolean }) => {
         const { currentSession, setCurrentSession, setError } = get();
         
         if (!currentSession) {
@@ -224,14 +224,16 @@ export const useChatStore = create<ChatStore>()(
           setCurrentSession(updatedSession);
           logger.dev('[Chat Store] ⚡ Message ajouté optimistiquement');
 
-          // 2. API call via service
-          const result = await SessionSyncService.getInstance().addMessageAndSync(currentSession.id, message);
-          
-          if (!result.success) {
-            throw new Error(result.error || 'Erreur ajout message');
+          // 2. API call via service (sauf si persist=false)
+          if (options?.persist !== false) {
+            const result = await SessionSyncService.getInstance().addMessageAndSync(currentSession.id, message);
+            
+            if (!result.success) {
+              throw new Error(result.error || 'Erreur ajout message');
+            }
+            
+            logger.dev('[Chat Store] ✅ Message sauvegardé en DB');
           }
-
-          logger.dev('[Chat Store] ✅ Message sauvegardé en DB');
           
         } catch (error) {
           logger.error('[Chat Store] ❌ Erreur ajout message:', error);

@@ -166,22 +166,22 @@ const ChatFullscreenV2: React.FC = () => {
         timestamp: new Date().toISOString()
       };
       
-      await addMessage(toolMessage);
+      await addMessage(toolMessage, { persist: false });
       scrollToBottom(true);
     },
-    onToolResult: async (toolName, result, success) => {
+    onToolResult: async (toolName, result, success, toolCallId) => {
       logger.dev('[ChatFullscreenV2] ✅ Tool result reçu:', { toolName, success });
       
       // Créer un message tool avec le résultat
-      const toolResultMessage = {
-        role: 'tool' as const,
-        tool_call_id: `call_${Date.now()}`, // ID temporaire
-        name: toolName,
-        content: typeof result === 'string' ? result : JSON.stringify(result),
-        timestamp: new Date().toISOString()
-      };
+              const toolResultMessage = {
+          role: 'tool' as const,
+          tool_call_id: toolCallId || `call_${Date.now()}`,
+          name: toolName,
+          content: typeof result === 'string' ? result : JSON.stringify(result),
+          timestamp: new Date().toISOString()
+        };
       
-      await addMessage(toolResultMessage);
+      await addMessage(toolResultMessage, { persist: false });
       scrollToBottom(true);
     }
   });
