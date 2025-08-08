@@ -1,5 +1,5 @@
 'use client';
-import { simpleLogger as logger } from '@/utils/logger';
+import { logger } from '@/utils/logger';
 
 import React, { useState, useEffect } from 'react';
 import { useRealtime } from '@/hooks/useRealtime';
@@ -25,15 +25,15 @@ export default function PollingTest() {
   });
 
   useEffect(() => {
-    logger.dev('[PollingTest] 🔄 Initialisation du test de polling...');
+    logger.debug('[PollingTest] 🔄 Initialisation du test de polling...');
 
     const handleArticleChange = (event: PollingEvent) => {
-      logger.dev('[PollingTest] 📡 Événement articles reçu:', event);
+      logger.debug('[PollingTest] 📡 Événement articles reçu:', event);
       setEvents(prev => [event, ...prev.slice(0, 9)]); // Garder les 10 derniers
     };
 
     const handleFolderChange = (event: PollingEvent) => {
-      logger.dev('[PollingTest] 📡 Événement folders reçu:', event);
+      logger.debug('[PollingTest] 📡 Événement folders reçu:', event);
       setEvents(prev => [event, ...prev.slice(0, 9)]); // Garder les 10 derniers
     };
 
@@ -42,10 +42,10 @@ export default function PollingTest() {
     subscribe('folders', handleFolderChange);
     setIsConnected(true);
 
-    logger.dev('[PollingTest] ✅ Abonnements activés');
+    logger.debug('[PollingTest] ✅ Abonnements activés');
 
     return () => {
-      logger.dev('[PollingTest] 🛑 Nettoyage des abonnements...');
+      logger.debug('[PollingTest] 🛑 Nettoyage des abonnements...');
       unsubscribe('articles', handleArticleChange);
       unsubscribe('folders', handleFolderChange);
       setIsConnected(false);

@@ -1,4 +1,4 @@
-// import.*useRef.*from 'react';
+import { useRef, useState, useCallback, useEffect } from 'react';
 
 interface UseOptimizedStreamingOptions {
   onUpdate: (content: string) => void;
