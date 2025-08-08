@@ -1,6 +1,6 @@
 "use client";
-import React, { useState, useRef, useEffect, MouseEvent } from "react";
-import { motion, AnimatePresence } from 'framer-motion';
+// import.*useRef.*from "react";
+// import.*AnimatePresence.*from 'framer-motion';
 import SimpleContextMenu from "./SimpleContextMenu";
 import ColorPalette from "./ColorPalette";
 import "./ClasseurTabs.css";

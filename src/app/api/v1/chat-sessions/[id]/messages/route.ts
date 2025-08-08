@@ -34,7 +34,8 @@ const addMessageSchema = z.object({
       arguments: z.string()
     })
   })).optional(),
-  tool_call_id: z.string().optional() // Pour les messages tool
+  tool_call_id: z.string().optional(), // Pour les messages tool
+  name: z.string().optional() // 🔧 CORRECTION: Ajouter le name pour les messages tool
 });
 
 // POST /api/v1/chat-sessions/[id]/messages - Ajouter un message à une session
@@ -84,7 +85,8 @@ export async function POST(
       content: validatedData.content,
       timestamp: validatedData.timestamp,
       tool_calls: validatedData.tool_calls,
-      tool_call_id: validatedData.tool_call_id
+      tool_call_id: validatedData.tool_call_id,
+      name: validatedData.name // 🔧 CORRECTION: Inclure le name pour les messages tool
     };
 
     // Créer un client avec le contexte d'authentification de l'utilisateur

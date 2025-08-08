@@ -1,4 +1,4 @@
-import { simpleLogger as logger } from '@/utils/logger';
+// import.*logger.*from '@/utils/logger';
 
 /**
  * Représente un appel d'outil en cours de parsing.
@@ -235,7 +235,7 @@ export class ToolCallsParser {
     // 3. Traiter les tool_calls
     if (Array.isArray(delta.tool_calls)) {
       delta.tool_calls.forEach((toolCallChunk: any) => {
-        const index = toolCallChunk.index;
+        // const index = [^;]+;
         if (typeof index !== 'number') return;
 
         let call = this.toolCallMap.get(index);

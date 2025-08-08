@@ -2,17 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ResourceResolver } from './resourceResolver';
 
 // Mock Supabase client
-    const mockSupabase = {
-    from: vi.fn(() => ({
-    select: vi.fn(() => ({
-      eq: vi.fn(() => ({
-        eq: vi.fn(() => ({
-          single: vi.fn(() => Promise.resolve({ data: { id: 'test-id' } }))
-        }))
-      }))
-    }))
-  }))
-};
+    // const mockSupabase = [^;]+;
 
 vi.mock('@/utils/resourceResolver', () => ({
   ResourceResolver: {
@@ -29,9 +19,9 @@ describe('ResourceResolver', () => {
     it('should resolve note by ID', async () => {
       const ref = '123e4567-e89b-12d3-a456-426614174000';
       const type = 'note';
-      const userId = 'test-user-id';
+      // const userId = [^;]+;
 
-      const result = await ResourceResolver.resolveRef(ref, type, userId);
+      // const result = [^;]+;
       
       expect(result).toBe('123e4567-e89b-12d3-a456-426614174000');
     });
@@ -39,9 +29,9 @@ describe('ResourceResolver', () => {
     it('should resolve note by slug', async () => {
       const ref = 'ma-premiere-note';
       const type = 'note';
-      const userId = 'test-user-id';
+      // const userId = [^;]+;
 
-      const result = await ResourceResolver.resolveRef(ref, type, userId);
+      // const result = [^;]+;
       
       expect(result).toBe('test-id');
     });
@@ -49,9 +39,9 @@ describe('ResourceResolver', () => {
     it('should resolve folder by ID', async () => {
       const ref = '123e4567-e89b-12d3-a456-426614174000';
       const type = 'folder';
-      const userId = 'test-user-id';
+      // const userId = [^;]+;
 
-      const result = await ResourceResolver.resolveRef(ref, type, userId);
+      // const result = [^;]+;
       
       expect(result).toBe('123e4567-e89b-12d3-a456-426614174000');
     });
@@ -59,9 +49,9 @@ describe('ResourceResolver', () => {
     it('should resolve folder by slug', async () => {
       const ref = 'mon-dossier-important';
       const type = 'folder';
-      const userId = 'test-user-id';
+      // const userId = [^;]+;
 
-      const result = await ResourceResolver.resolveRef(ref, type, userId);
+      // const result = [^;]+;
       
       expect(result).toBe('test-id');
     });
@@ -69,9 +59,9 @@ describe('ResourceResolver', () => {
     it('should resolve classeur by ID', async () => {
       const ref = '123e4567-e89b-12d3-a456-426614174000';
       const type = 'classeur';
-      const userId = 'test-user-id';
+      // const userId = [^;]+;
 
-      const result = await ResourceResolver.resolveRef(ref, type, userId);
+      // const result = [^;]+;
       
       expect(result).toBe('123e4567-e89b-12d3-a456-426614174000');
     });
@@ -79,9 +69,9 @@ describe('ResourceResolver', () => {
     it('should resolve classeur by slug', async () => {
       const ref = 'classeur-de-travail';
       const type = 'classeur';
-      const userId = 'test-user-id';
+      // const userId = [^;]+;
 
-      const result = await ResourceResolver.resolveRef(ref, type, userId);
+      // const result = [^;]+;
       
       expect(result).toBe('test-id');
     });
@@ -89,9 +79,9 @@ describe('ResourceResolver', () => {
     it('should return null for non-existent resource', async () => {
       const ref = 'resource-inexistante';
       const type = 'note';
-      const userId = 'test-user-id';
+      // const userId = [^;]+;
 
-      const result = await ResourceResolver.resolveRef(ref, type, userId);
+      // const result = [^;]+;
       
       expect(result).toBeNull();
     });

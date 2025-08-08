@@ -1,4 +1,4 @@
-import { useCallback, useRef, useEffect, useState } from 'react';
+import { useRef, useState, useCallback, useEffect } from 'react';
 
 interface UseChatScrollOptions {
   autoScroll?: boolean;

@@ -244,8 +244,12 @@ export async function POST(request: NextRequest) {
 
     // Changer de provider si nécessaire
     if (targetProvider && targetProvider !== llmManager.getCurrentProviderId()) {
-      llmManager.setProvider(targetProvider);
-      logger.dev("[LLM API] 🔄 Provider changé vers:", targetProvider);
+      const success = llmManager.setProvider(targetProvider);
+      if (success) {
+        logger.dev("[LLM API] 🔄 Provider changé vers:", targetProvider);
+      } else {
+        logger.warn("[LLM API] ⚠️ Échec du changement de provider, utilisation du fallback");
+      }
     }
 
     // Préparer le contexte par défaut si non fourni
@@ -300,10 +304,37 @@ export async function POST(request: NextRequest) {
           role: 'system' as const,
           content: systemContent
         },
-        ...sessionHistory.map((msg: ChatMessage) => ({
-          role: msg.role as 'user' | 'assistant' | 'system',
-          content: msg.content
-        })),
+        ...sessionHistory.map((msg: ChatMessage) => {
+          // 🔍 DEBUG: Tracer la transmission du name
+          if ((msg as any).role === 'tool') {
+            logger.dev('[LLM API] 🔍 Transmission message tool:', {
+              originalName: (msg as any).name || '❌ MANQUE',
+              toolCallId: (msg as any).tool_call_id,
+              willIncludeName: !!(msg as any).name
+            });
+          }
+          const mappedMsg: any = {
+            role: msg.role as 'user' | 'assistant' | 'system' | 'tool',
+            content: msg.content
+          };
+          
+          // 🔧 CORRECTION: Transmettre les tool_calls pour les messages assistant
+          if (msg.role === 'assistant' && (msg as any).tool_calls) {
+            mappedMsg.tool_calls = (msg as any).tool_calls;
+          }
+          
+          // 🔧 CORRECTION: Transmettre tool_call_id et name pour les messages tool
+          if ((msg as any).role === 'tool') {
+            if ((msg as any).tool_call_id) {
+              mappedMsg.tool_call_id = (msg as any).tool_call_id;
+            }
+            if ((msg as any).name) {
+              mappedMsg.name = (msg as any).name;
+            }
+          }
+          
+          return mappedMsg;
+        }),
         {
           role: 'user' as const,
           content: message
@@ -321,8 +352,8 @@ export async function POST(request: NextRequest) {
         logger.dev("[LLM API] ✅ Qwen détecté - Function calling supporté");
       }
       
-      // ✅ ACCÈS COMPLET: Tous les modèles ont accès à tous les endpoints
-      const tools = agentApiV2Tools.getToolsForFunctionCalling(); // Tous les tools disponibles
+      // 🔧 ACCÈS COMPLET: GPT/Grok ont accès à TOUS les tools
+      const tools = agentApiV2Tools.getToolsForFunctionCalling(); // Tous les tools disponibles // Tous les tools disponibles
 
       logger.dev("[LLM API] 🔧 Capacités agent:", agentConfig?.api_v2_capabilities);
       logger.dev("[LLM API] 🔧 Support function calling:", supportsFunctionCalling);
@@ -395,10 +426,37 @@ export async function POST(request: NextRequest) {
           role: 'system' as const,
           content: systemContent
         },
-        ...sessionHistory.map((msg: ChatMessage) => ({
-          role: msg.role as 'user' | 'assistant' | 'system',
-          content: msg.content
-        })),
+        ...sessionHistory.map((msg: ChatMessage) => {
+          // 🔍 DEBUG: Tracer la transmission du name
+          if ((msg as any).role === 'tool') {
+            logger.dev('[LLM API] 🔍 Transmission message tool:', {
+              originalName: (msg as any).name || '❌ MANQUE',
+              toolCallId: (msg as any).tool_call_id,
+              willIncludeName: !!(msg as any).name
+            });
+          }
+          const mappedMsg: any = {
+            role: msg.role as 'user' | 'assistant' | 'system' | 'tool',
+            content: msg.content
+          };
+          
+          // 🔧 CORRECTION: Transmettre les tool_calls pour les messages assistant
+          if (msg.role === 'assistant' && (msg as any).tool_calls) {
+            mappedMsg.tool_calls = (msg as any).tool_calls;
+          }
+          
+          // 🔧 CORRECTION: Transmettre tool_call_id et name pour les messages tool
+          if ((msg as any).role === 'tool') {
+            if ((msg as any).tool_call_id) {
+              mappedMsg.tool_call_id = (msg as any).tool_call_id;
+            }
+            if ((msg as any).name) {
+              mappedMsg.name = (msg as any).name;
+            }
+          }
+          
+          return mappedMsg;
+        }),
         {
           role: 'user' as const,
           content: message
@@ -416,8 +474,8 @@ export async function POST(request: NextRequest) {
         logger.dev("[LLM API] ✅ Qwen détecté - Function calling supporté");
       }
       
-      // ✅ ACCÈS COMPLET: Tous les modèles ont accès à tous les endpoints
-      const tools = agentApiV2Tools.getToolsForFunctionCalling(); // Tous les tools disponibles
+      // 🔧 ACCÈS COMPLET: GPT/Grok ont accès à TOUS les tools
+      const tools = agentApiV2Tools.getToolsForFunctionCalling(); // Tous les tools disponibles // Tous les tools disponibles
 
       logger.dev("[LLM API] 🔧 Capacités agent:", agentConfig?.api_v2_capabilities);
       logger.dev("[LLM API] 🔧 Support function calling:", supportsFunctionCalling);
@@ -574,7 +632,8 @@ export async function POST(request: NextRequest) {
                     if (!functionCallData) {
                       functionCallData = {
                         name: toolCall.function?.name || '',
-                        arguments: toolCall.function?.arguments || ''
+                        arguments: toolCall.function?.arguments || '',
+                        tool_call_id: toolCall.id // 🔧 NOUVEAU: Stocker l'ID du tool call
                       };
                     } else {
                       if (toolCall.function?.name) {
@@ -583,8 +642,23 @@ export async function POST(request: NextRequest) {
                       if (toolCall.function?.arguments) {
                         functionCallData.arguments += toolCall.function.arguments;
                       }
+                      // 🔧 NOUVEAU: Garder l'ID du tool call
+                      if (toolCall.id) {
+                        functionCallData.tool_call_id = toolCall.id;
+                      }
                     }
                   }
+                  
+                  // 🔧 NOUVEAU: Broadcast des tool calls au frontend
+                  await channel.send({
+                    type: 'broadcast',
+                    event: 'llm-tool-calls',
+                    payload: {
+                      sessionId: context.sessionId,
+                      tool_calls: delta.tool_calls,
+                      tool_name: functionCallData?.name || 'unknown_tool'
+                    }
+                  });
                 }
                 // Gestion du tool calling (format alternatif)
                 else if (delta.tool_call) {
@@ -593,7 +667,8 @@ export async function POST(request: NextRequest) {
                   if (!functionCallData) {
                     functionCallData = {
                       name: delta.tool_call.function?.name || '',
-                      arguments: delta.tool_call.function?.arguments || ''
+                      arguments: delta.tool_call.function?.arguments || '',
+                      tool_call_id: delta.tool_call.id // 🔧 NOUVEAU: Stocker l'ID du tool call
                     };
                   } else {
                     if (delta.tool_call.function?.name) {
@@ -602,7 +677,22 @@ export async function POST(request: NextRequest) {
                     if (delta.tool_call.function?.arguments) {
                       functionCallData.arguments += delta.tool_call.function.arguments;
                     }
+                    // 🔧 NOUVEAU: Garder l'ID du tool call
+                    if (delta.tool_call.id) {
+                      functionCallData.tool_call_id = delta.tool_call.id;
+                    }
                   }
+                  
+                  // 🔧 NOUVEAU: Broadcast des tool calls au frontend
+                  await channel.send({
+                    type: 'broadcast',
+                    event: 'llm-tool-calls',
+                    payload: {
+                      sessionId: context.sessionId,
+                      tool_calls: [delta.tool_call],
+                      tool_name: functionCallData?.name || 'unknown_tool'
+                    }
+                  });
                 }
                 // Gestion spécifique Groq (format différent)
                 else if (delta.tool_calls && Array.isArray(delta.tool_calls)) {
@@ -618,7 +708,8 @@ export async function POST(request: NextRequest) {
                     if (!functionCallData) {
                       functionCallData = {
                         name: toolCall.function?.name || '',
-                        arguments: toolCall.function?.arguments || ''
+                        arguments: toolCall.function?.arguments || '',
+                        tool_call_id: toolCall.id // 🔧 NOUVEAU: Stocker l'ID du tool call
                       };
                     } else {
                       if (toolCall.function?.name) {
@@ -627,8 +718,23 @@ export async function POST(request: NextRequest) {
                       if (toolCall.function?.arguments) {
                         functionCallData.arguments += toolCall.function.arguments;
                       }
+                      // 🔧 NOUVEAU: Garder l'ID du tool call
+                      if (toolCall.id) {
+                        functionCallData.tool_call_id = toolCall.id;
+                      }
                     }
                   }
+                  
+                  // 🔧 NOUVEAU: Broadcast des tool calls au frontend
+                  await channel.send({
+                    type: 'broadcast',
+                    event: 'llm-tool-calls',
+                    payload: {
+                      sessionId: context.sessionId,
+                      tool_calls: delta.tool_calls,
+                      tool_name: functionCallData?.name || 'unknown_tool'
+                    }
+                  });
                 }
                 else if (delta.content) {
                   accumulatedContent += delta.content;
@@ -666,8 +772,24 @@ export async function POST(request: NextRequest) {
         
         // 🔧 SÉCURITÉ: Vérifier que functionCallData est valide
         if (!functionCallData || !functionCallData.name) {
-          logger.error("[LLM API] ❌ Function call data invalide:", functionCallData);
-          throw new Error('Function call data invalide - parsing échoué');
+          logger.dev("[LLM API] ❌ PAS DE FUNCTION CALL - Réponse normale");
+          // Réponse normale sans function calling
+          // Broadcast de completion
+          await channel.send({
+            type: 'broadcast',
+            event: 'llm-complete',
+            payload: {
+              sessionId: context.sessionId,
+              fullResponse: accumulatedContent
+            }
+          });
+          
+          // 🔧 CORRECTION: Retourner du JSON pur pour éviter l'erreur parsing
+          return NextResponse.json({ 
+            success: true, 
+            completed: true,
+            response: accumulatedContent 
+          });
         }
         
         // 🔧 ANTI-BOUCLE: Limiter à une seule exécution de fonction par requête
@@ -700,16 +822,28 @@ export async function POST(request: NextRequest) {
             logger.dev("[LLM API] ⚠️ Tool a échoué:", safeResult.error);
           }
           
+          // 🔧 NOUVEAU: Broadcast du résultat du tool call au frontend
+          await channel.send({
+            type: 'broadcast',
+            event: 'llm-tool-result',
+            payload: {
+              sessionId: context.sessionId,
+              tool_name: functionCallData.name,
+              result: safeResult,
+              success: safeResult.success !== false
+            }
+          });
+          
           // 🔧 CORRECTION: Injecter le message tool et relancer le LLM
           logger.dev("[LLM API] 🔧 Injection du message tool et relance LLM");
 
           // 1. Créer le message assistant avec le bon format (structure minimale qui DÉBLOQUE tout)
-          const toolCallId = `call_${Date.now()}`;
+          const toolCallId = functionCallData.tool_call_id || `call_${Date.now()}`; // 🔧 CORRECTION: Utiliser l'ID réel du tool call
           const toolMessage = {
             role: 'assistant' as const,
             content: null, // 🔧 SÉCURITÉ: jamais "undefined"
             tool_calls: [{ // 🔧 SÉCURITÉ: Array [{...}], pas nombre
-              id: toolCallId, // 🔧 SÉCURITÉ: ID arbitraire
+              id: toolCallId, // 🔧 CORRECTION: ID réel du tool call
               type: 'function',
               function: {
                 name: functionCallData.name || 'unknown_tool', // 🔧 SÉCURITÉ: fallback
@@ -776,13 +910,7 @@ export async function POST(request: NextRequest) {
             name: functionCallData.name || 'unknown_tool', // 🔧 SÉCURITÉ: même nom (fallback)
             content: toolContent // 🔧 SÉCURITÉ: JSON string
           };
-          
-          // 🔧 SÉCURITÉ: Validation stricte du message tool
-          if (toolResultMessage.tool_call_id !== toolCallId) {
-            logger.error("[LLM API] ❌ Tool tool_call_id doit correspondre à l'ID de l'appel");
-            throw new Error('Tool tool_call_id doit correspondre à l\'ID de l\'appel');
-          }
-          
+
           if (toolResultMessage.name !== toolMessage.tool_calls[0].function.name) {
             logger.error("[LLM API] ❌ Tool name doit correspondre au nom de l'appel");
             throw new Error('Tool name doit correspondre au nom de l\'appel');
@@ -1015,7 +1143,7 @@ export async function POST(request: NextRequest) {
           logger.dev("[LLM API] 🔧 Injection de l'erreur tool dans l'historique avec feedback structuré");
 
           // 1. Créer le message tool avec l'erreur
-          const toolCallId = `call_${Date.now()}`;
+          const toolCallId = functionCallData.tool_call_id || `call_${Date.now()}`; // 🔧 CORRECTION: Utiliser l'ID réel du tool call
           const toolMessage = {
             role: 'assistant' as const,
             content: null,
@@ -1042,12 +1170,12 @@ export async function POST(request: NextRequest) {
             name: functionCallData.name || 'unknown_tool', // 🔧 SÉCURITÉ: fallback
             content: errorContent
           };
-
-          // 2. Nettoyer l'historique et ajouter les messages d'erreur (pas de tool_calls dans les messages user)
+          
+          // 2. Nettoyer l'historique et ajouter les tool calls (pas de tool_calls dans les messages user)
           const cleanMessages = messages.filter(msg => {
             // Garder tous les messages sauf les tool_calls dans les messages user
             if (msg.role === 'user' && 'tool_calls' in msg) {
-              logger.dev("[LLM API] 🔧 Suppression tool_calls du message user (erreur)");
+              logger.dev("[LLM API] 🔧 Suppression tool_calls du message user");
               return false;
             }
             return true;
@@ -1083,6 +1211,7 @@ export async function POST(request: NextRequest) {
             await chatSessionService.addMessage(context.sessionId, {
               role: 'tool',
               tool_call_id: toolCallId,
+              name: functionCallData.name || 'unknown_tool', // 🔧 CORRECTION: Ajouter le name
               content: JSON.stringify({ 
                 error: true, 
                 message: `❌ ÉCHEC : ${errorMessage}`,
@@ -1278,10 +1407,37 @@ export async function POST(request: NextRequest) {
             role: 'system' as const,
             content: systemContent
           },
-          ...sessionHistory.map((msg: ChatMessage) => ({
-            role: msg.role as 'user' | 'assistant' | 'system',
+          ...sessionHistory.map((msg: ChatMessage) => {
+          // 🔍 DEBUG: Tracer la transmission du name
+          if ((msg as any).role === 'tool') {
+            logger.dev('[LLM API] 🔍 Transmission message tool:', {
+              originalName: (msg as any).name || '❌ MANQUE',
+              toolCallId: (msg as any).tool_call_id,
+              willIncludeName: !!(msg as any).name
+            });
+          }
+          const mappedMsg: any = {
+            role: msg.role as 'user' | 'assistant' | 'system' | 'tool',
             content: msg.content
-          })),
+          };
+          
+          // 🔧 CORRECTION: Transmettre les tool_calls pour les messages assistant
+          if (msg.role === 'assistant' && (msg as any).tool_calls) {
+            mappedMsg.tool_calls = (msg as any).tool_calls;
+          }
+          
+          // 🔧 CORRECTION: Transmettre tool_call_id et name pour les messages tool
+          if ((msg as any).role === 'tool') {
+            if ((msg as any).tool_call_id) {
+              mappedMsg.tool_call_id = (msg as any).tool_call_id;
+            }
+            if ((msg as any).name) {
+              mappedMsg.name = (msg as any).name;
+            }
+          }
+          
+          return mappedMsg;
+        }),
           {
             role: 'user' as const,
             content: message
@@ -1299,8 +1455,8 @@ export async function POST(request: NextRequest) {
           logger.dev("[LLM API] ✅ Qwen détecté - Function calling supporté");
         }
         
-        // ✅ ACCÈS COMPLET: Tous les modèles ont accès à tous les endpoints
-        const tools = agentApiV2Tools.getToolsForFunctionCalling(); // Tous les tools disponibles
+        // 🔧 ACCÈS COMPLET: GPT/Grok ont accès à TOUS les tools
+      const tools = agentApiV2Tools.getToolsForFunctionCalling(); // Tous les tools disponibles // Tous les tools disponibles
 
         logger.dev("[LLM API] 🔧 Capacités agent:", agentConfig?.api_v2_capabilities);
         logger.dev("[LLM API] 🔧 Support function calling:", supportsFunctionCalling);
@@ -1440,7 +1596,8 @@ export async function POST(request: NextRequest) {
                       if (!functionCallData) {
                         functionCallData = {
                           name: toolCall.function?.name || '',
-                          arguments: toolCall.function?.arguments || ''
+                          arguments: toolCall.function?.arguments || '',
+                          tool_call_id: toolCall.id // 🔧 NOUVEAU: Stocker l'ID du tool call
                         };
                       } else {
                         if (toolCall.function?.name) {
@@ -1449,8 +1606,23 @@ export async function POST(request: NextRequest) {
                         if (toolCall.function?.arguments) {
                           functionCallData.arguments += toolCall.function.arguments;
                         }
+                        // 🔧 NOUVEAU: Garder l'ID du tool call
+                        if (toolCall.id) {
+                          functionCallData.tool_call_id = toolCall.id;
+                        }
                       }
                     }
+                    
+                    // 🔧 NOUVEAU: Broadcast des tool calls au frontend
+                    await channel.send({
+                      type: 'broadcast',
+                      event: 'llm-tool-calls',
+                      payload: {
+                        sessionId: context.sessionId,
+                        tool_calls: delta.tool_calls,
+                        tool_name: functionCallData?.name || 'unknown_tool'
+                      }
+                    });
                   }
                   
                   // ✅ NOUVEAU: Gestion du reasoning pour Qwen 3 selon la documentation Alibaba Cloud
@@ -1519,7 +1691,7 @@ export async function POST(request: NextRequest) {
           logger.dev("[LLM API] 🚀 Exécution tool Together AI:", functionCallData.name);
           
           // Définir les variables en dehors du try/catch
-          const toolCallId = `call_${Date.now()}`;
+          const toolCallId = functionCallData.tool_call_id || `call_${Date.now()}`; // 🔧 CORRECTION: Utiliser l'ID réel du tool call
           const toolMessage = {
             role: 'assistant' as const,
             content: null, // 🔧 SÉCURITÉ: jamais "undefined"
@@ -1539,12 +1711,12 @@ export async function POST(request: NextRequest) {
             name: functionCallData.name || 'unknown_tool', // 🔧 SÉCURITÉ: même nom (fallback)
             content: ''
           };
-
-          // 2. Nettoyer l'historique et ajouter les messages (pas de tool_calls dans les messages user)
+          
+          // 2. Nettoyer l'historique et ajouter les tool calls (pas de tool_calls dans les messages user)
           const cleanMessages = messages.filter(msg => {
             // Garder tous les messages sauf les tool_calls dans les messages user
             if (msg.role === 'user' && 'tool_calls' in msg) {
-              logger.dev("[LLM API] 🔧 Suppression tool_calls du message user (Together AI)");
+              logger.dev("[LLM API] 🔧 Suppression tool_calls du message user");
               return false;
             }
             return true;
@@ -1788,6 +1960,7 @@ export async function POST(request: NextRequest) {
               await chatSessionService.addMessage(context.sessionId, {
                 role: 'tool',
                 tool_call_id: toolCallId,
+                name: functionCallData.name || 'unknown_tool', // 🔧 CORRECTION: Ajouter le name
                 content: JSON.stringify({ 
                   error: true, 
                   message: `❌ ÉCHEC : ${errorMessage}`,
@@ -1889,10 +2062,37 @@ export async function POST(request: NextRequest) {
             role: 'system' as const,
             content: systemContent
           },
-          ...sessionHistory.map((msg: ChatMessage) => ({
-            role: msg.role as 'user' | 'assistant' | 'system',
+          ...sessionHistory.map((msg: ChatMessage) => {
+          // 🔍 DEBUG: Tracer la transmission du name
+          if ((msg as any).role === 'tool') {
+            logger.dev('[LLM API] 🔍 Transmission message tool:', {
+              originalName: (msg as any).name || '❌ MANQUE',
+              toolCallId: (msg as any).tool_call_id,
+              willIncludeName: !!(msg as any).name
+            });
+          }
+          const mappedMsg: any = {
+            role: msg.role as 'user' | 'assistant' | 'system' | 'tool',
             content: msg.content
-          })),
+          };
+          
+          // 🔧 CORRECTION: Transmettre les tool_calls pour les messages assistant
+          if (msg.role === 'assistant' && (msg as any).tool_calls) {
+            mappedMsg.tool_calls = (msg as any).tool_calls;
+          }
+          
+          // 🔧 CORRECTION: Transmettre tool_call_id et name pour les messages tool
+          if ((msg as any).role === 'tool') {
+            if ((msg as any).tool_call_id) {
+              mappedMsg.tool_call_id = (msg as any).tool_call_id;
+            }
+            if ((msg as any).name) {
+              mappedMsg.name = (msg as any).name;
+            }
+          }
+          
+          return mappedMsg;
+        }),
           {
             role: 'user' as const,
             content: message
@@ -1910,8 +2110,8 @@ export async function POST(request: NextRequest) {
           logger.dev("[LLM API] ✅ Qwen détecté - Function calling supporté");
         }
         
-        // ✅ ACCÈS COMPLET: Tous les modèles ont accès à tous les endpoints
-        const tools = agentApiV2Tools.getToolsForFunctionCalling(); // Tous les tools disponibles
+        // 🔧 ACCÈS COMPLET: GPT/Grok ont accès à TOUS les tools
+      const tools = agentApiV2Tools.getToolsForFunctionCalling(); // Tous les tools disponibles // Tous les tools disponibles
 
         logger.dev("[LLM API] 🔧 Capacités agent:", agentConfig?.api_v2_capabilities);
         logger.dev("[LLM API] 🔧 Support function calling:", supportsFunctionCalling);
@@ -2050,7 +2250,8 @@ export async function POST(request: NextRequest) {
                       if (!functionCallData) {
                         functionCallData = {
                           name: toolCall.function?.name || '',
-                          arguments: toolCall.function?.arguments || ''
+                          arguments: toolCall.function?.arguments || '',
+                          tool_call_id: toolCall.id // 🔧 NOUVEAU: Stocker l'ID du tool call
                         };
                       } else {
                         if (toolCall.function?.name) {
@@ -2059,8 +2260,23 @@ export async function POST(request: NextRequest) {
                         if (toolCall.function?.arguments) {
                           functionCallData.arguments += toolCall.function.arguments;
                         }
+                        // 🔧 NOUVEAU: Garder l'ID du tool call
+                        if (toolCall.id) {
+                          functionCallData.tool_call_id = toolCall.id;
+                        }
                       }
                     }
+                    
+                    // 🔧 NOUVEAU: Broadcast des tool calls au frontend
+                    await channel.send({
+                      type: 'broadcast',
+                      event: 'llm-tool-calls',
+                      payload: {
+                        sessionId: context.sessionId,
+                        tool_calls: delta.tool_calls,
+                        tool_name: functionCallData?.name || 'unknown_tool'
+                      }
+                    });
                   }
                   
                   // ✅ NOUVEAU: Gestion du reasoning pour Groq GPT-OSS
@@ -2131,4 +2347,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-} 
+}

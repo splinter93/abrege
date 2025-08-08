@@ -1,12 +1,14 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { supabase } from '@/supabaseClient';
-import { simpleLogger as logger } from '@/utils/logger';
+import { logger } from '@/utils/logger';
 
 interface UseChatStreamingOptions {
   onToken?: (token: string) => void;
   onComplete?: (fullContent: string) => void;
   onError?: (error: string) => void;
   onReasoning?: (reasoning: string) => void;
+  onToolCalls?: (toolCalls: any[], toolName: string) => void;
+  onToolResult?: (toolName: string, result: any, success: boolean) => void;
 }
 
 interface UseChatStreamingReturn {
@@ -26,10 +28,10 @@ export function useChatStreaming(options: UseChatStreamingOptions = {}): UseChat
   const sessionIdRef = useRef<string>('');
   const retryCountRef = useRef(0);
   const maxRetries = 3;
-  const { onToken, onComplete, onError, onReasoning } = options;
+  const { onToken, onComplete, onError, onReasoning, onToolCalls, onToolResult } = options;
 
   const startStreaming = useCallback((channelId: string, sessionId: string) => {
-    logger.dev('[useChatStreaming] 🚀 Démarrage streaming:', { channelId, sessionId });
+    logger.debug('[useChatStreaming] 🚀 Démarrage streaming:', { channelId, sessionId });
     
     // Nettoyer l'état précédent
     setIsStreaming(false);
@@ -45,7 +47,7 @@ export function useChatStreaming(options: UseChatStreamingOptions = {}): UseChat
       .on('broadcast', { event: 'llm-token' }, (payload) => {
         // 🔧 OPTIMISATION: Log moins fréquent pour les tokens
         if (Math.random() < 0.05) { // Log seulement 5% du temps
-          logger.dev('[useChatStreaming] 📝 Token reçu:', payload);
+          logger.debug('[useChatStreaming] 📝 Token reçu:', payload);
         }
         try {
           const { token, sessionId: payloadSessionId } = payload.payload || {};
@@ -55,7 +57,7 @@ export function useChatStreaming(options: UseChatStreamingOptions = {}): UseChat
               const newContent = prev + token;
               // 🔧 OPTIMISATION: Log moins fréquent pour les mises à jour
               if (Math.random() < 0.01) { // Log seulement 1% du temps
-                logger.dev('[useChatStreaming] 📊 Contenu mis à jour:', newContent.length, 'chars');
+                logger.debug('[useChatStreaming] 📊 Contenu mis à jour', { chars: newContent.length });
               }
               return newContent;
             });
@@ -68,7 +70,7 @@ export function useChatStreaming(options: UseChatStreamingOptions = {}): UseChat
       .on('broadcast', { event: 'llm-token-batch' }, (payload) => {
         // 🔧 OPTIMISATION: Log moins fréquent pour les batches
         if (Math.random() < 0.1) { // Log seulement 10% du temps
-          logger.dev('[useChatStreaming] 📦 Batch de tokens reçu:', payload);
+          logger.debug('[useChatStreaming] 📦 Batch de tokens reçu:', payload);
         }
         try {
           const { tokens, sessionId: payloadSessionId } = payload.payload || {};
@@ -78,7 +80,7 @@ export function useChatStreaming(options: UseChatStreamingOptions = {}): UseChat
               const newContent = prev + tokens;
               // 🔧 OPTIMISATION: Log moins fréquent pour les mises à jour batch
               if (Math.random() < 0.05) { // Log seulement 5% du temps
-                logger.dev('[useChatStreaming] 📊 Contenu mis à jour (batch):', newContent.length, 'chars');
+                logger.debug('[useChatStreaming] 📊 Contenu mis à jour (batch)', { chars: newContent.length });
               }
               return newContent;
             });
@@ -94,7 +96,7 @@ export function useChatStreaming(options: UseChatStreamingOptions = {}): UseChat
       .on('broadcast', { event: 'llm-reasoning' }, (payload) => {
         // 🔧 OPTIMISATION: Log moins fréquent pour les reasoning
         if (Math.random() < 0.05) { // Log seulement 5% du temps
-          logger.dev('[useChatStreaming] 🧠 Reasoning reçu:', payload);
+          logger.debug('[useChatStreaming] 🧠 Reasoning reçu:', payload);
         }
         try {
           const { reasoning: reasoningToken, sessionId: payloadSessionId } = payload.payload || {};
@@ -104,7 +106,7 @@ export function useChatStreaming(options: UseChatStreamingOptions = {}): UseChat
               const newReasoning = prev + reasoningToken;
               // 🔧 OPTIMISATION: Log moins fréquent pour les mises à jour reasoning
               if (Math.random() < 0.01) { // Log seulement 1% du temps
-                logger.dev('[useChatStreaming] 🧠 Reasoning mis à jour:', newReasoning.length, 'chars');
+                logger.debug('[useChatStreaming] 🧠 Reasoning mis à jour', { chars: newReasoning.length });
               }
               return newReasoning;
             });
@@ -115,17 +117,17 @@ export function useChatStreaming(options: UseChatStreamingOptions = {}): UseChat
         }
       })
       .on('broadcast', { event: 'llm-complete' }, (payload) => {
-        logger.dev('[useChatStreaming] ✅ Complete reçu:', payload);
+        logger.debug('[useChatStreaming] ✅ Complete reçu:', payload);
         try {
           const { sessionId: payloadSessionId, fullResponse } = payload.payload || {};
-          logger.dev('[useChatStreaming] 🔍 Complete sessionId:', { 
+          logger.debug('[useChatStreaming] 🔍 Complete sessionId:', { 
             expected: sessionId, 
             received: payloadSessionId,
             hasResponse: !!fullResponse
           });
           
           if (payloadSessionId === sessionId && fullResponse) {
-            logger.dev('[useChatStreaming] 🎯 Completion traitée');
+            logger.debug('[useChatStreaming] 🎯 Completion traitée');
             setIsStreaming(false);
             setContent(fullResponse);
             // Ne pas reset le reasoning ici, il reste affiché séparément
@@ -136,7 +138,7 @@ export function useChatStreaming(options: UseChatStreamingOptions = {}): UseChat
           setIsStreaming(false);
           // Ne pas afficher l'erreur à l'utilisateur si c'est juste un problème de parsing
           if (error instanceof Error && error.message.includes('JSON')) {
-            logger.dev('[useChatStreaming] 🔧 Erreur de parsing JSON ignorée');
+            logger.debug('[useChatStreaming] 🔧 Erreur de parsing JSON ignorée');
           } else {
             onError?.('Erreur lors de la réception de la réponse');
           }
@@ -154,16 +156,38 @@ export function useChatStreaming(options: UseChatStreamingOptions = {}): UseChat
           setIsStreaming(false);
           // Ne pas afficher l'erreur à l'utilisateur si c'est juste un problème de parsing
           if (error instanceof Error && error.message.includes('JSON')) {
-            logger.dev('[useChatStreaming] 🔧 Erreur de parsing JSON ignorée');
+            logger.debug('[useChatStreaming] 🔧 Erreur de parsing JSON ignorée');
           } else {
             onError?.('Erreur lors du streaming');
           }
         }
       })
+      .on('broadcast', { event: 'llm-tool-calls' }, (payload) => {
+        try {
+          const { sessionId: payloadSessionId, tool_calls, tool_name } = payload.payload || {};
+          if (payloadSessionId === sessionId && tool_calls) {
+            logger.debug('[useChatStreaming] 🔧 Tool calls reçus:', { tool_calls, tool_name });
+            onToolCalls?.(tool_calls, tool_name);
+          }
+        } catch (error) {
+          logger.error('[useChatStreaming] ❌ Erreur tool calls event:', error);
+        }
+      })
+      .on('broadcast', { event: 'llm-tool-result' }, (payload) => {
+        try {
+          const { sessionId: payloadSessionId, tool_name, result, success } = payload.payload || {};
+          if (payloadSessionId === sessionId) {
+            logger.debug('[useChatStreaming] ✅ Tool result reçu:', { tool_name, success });
+            onToolResult?.(tool_name, result, success);
+          }
+        } catch (error) {
+          logger.error('[useChatStreaming] ❌ Erreur tool result event:', error);
+        }
+      })
       .subscribe((status) => {
         if (status === 'SUBSCRIBED') {
           setIsStreaming(true);
-          logger.dev('[useChatStreaming] ✅ Canal connecté');
+          logger.debug('[useChatStreaming] ✅ Canal connecté');
         } else if (status === 'CHANNEL_ERROR') {
           logger.error('[useChatStreaming] ❌ Erreur canal - Tentative de reconnexion...');
           setIsStreaming(false);
@@ -171,12 +195,12 @@ export function useChatStreaming(options: UseChatStreamingOptions = {}): UseChat
           // Logique de retry avec limite
           if (retryCountRef.current < maxRetries) {
             retryCountRef.current++;
-            logger.dev(`[useChatStreaming] 🔄 Tentative de reconnexion ${retryCountRef.current}/${maxRetries}`);
+            logger.debug(`[useChatStreaming] 🔄 Tentative de reconnexion ${retryCountRef.current}/${maxRetries}`);
             
             // Tentative de reconnexion automatique après 2 secondes
             setTimeout(() => {
               if (channelRef.current && sessionIdRef.current) {
-                logger.dev('[useChatStreaming] 🔄 Reconnexion en cours...');
+                logger.debug('[useChatStreaming] 🔄 Reconnexion en cours...');
                 // La reconnexion se fera automatiquement via le hook
               }
             }, 2000);
@@ -190,7 +214,7 @@ export function useChatStreaming(options: UseChatStreamingOptions = {}): UseChat
           setIsStreaming(false);
           // Timeout est moins critique, on peut continuer sans streaming
         } else if (status === 'CLOSED') {
-          logger.dev('[useChatStreaming] 🔒 Canal fermé');
+          logger.debug('[useChatStreaming] 🔒 Canal fermé');
           setIsStreaming(false);
         }
       });

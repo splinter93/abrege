@@ -1,14 +1,14 @@
 import { config } from 'dotenv';
 import { resolve } from 'path';
 import { createClient } from '@supabase/supabase-js';
-import { simpleLogger as logger } from '@/utils/logger';
+// import.*logger.*from '@/utils/logger';
 
 // Charger les variables d'environnement depuis .env
 config({ path: resolve(process.cwd(), '.env') });
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// // const supabase = [^;]+;]+;
 
 async function addSlugColumns() {
   logger.dev('🚀 Ajout des colonnes slug aux tables...');

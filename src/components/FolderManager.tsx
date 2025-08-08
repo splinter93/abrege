@@ -1,10 +1,10 @@
 "use client";
 import React, { useState, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+// import.*AnimatePresence.*from 'framer-motion';
 import './FolderManagerModern.css';
 import FolderContent from './FolderContent';
 import FolderToolbar, { ViewMode } from './FolderToolbar';
-import LogoScrivia from './LogoScrivia';
+// import.*LogoScrivia.*from './LogoScrivia';
 import { useFolderManagerState } from './useFolderManagerState';
 import { Folder, FileArticle } from './types';
 import SimpleContextMenu from './SimpleContextMenu';

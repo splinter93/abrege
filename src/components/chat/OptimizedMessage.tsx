@@ -1,34 +1,19 @@
+'use client';
 import React from 'react';
-import EnhancedMarkdownMessage from './EnhancedMarkdownMessage';
-import { type ChatMessage } from '@/store/useChatStore';
-
-interface OptimizedMessageProps {
-  message: ChatMessage;
-  index: number;
-}
+import { ChatMessage as ChatMessageType } from '@/types/chat';
 
 /**
- * Composant optimisé pour les messages avec React.memo
+ * Version optimisée du composant ChatMessage
  * Évite les re-renders inutiles pendant le streaming
  */
-const OptimizedMessage = React.memo<OptimizedMessageProps>(({ message, index }) => {
+const OptimizedMessage = React.memo(({ message, className }: { message: ChatMessageType; className?: string }) => {
   return (
-    <div 
-      className={`chat-message chat-message-${message.role}`}
-      role="article"
-      aria-label={`Message ${message.role === 'user' ? 'utilisateur' : 'assistant'}`}
-    >
-      <div className={`chat-message-bubble chat-message-bubble-${message.role}`}>
-        {message.role === 'assistant' ? (
-          <EnhancedMarkdownMessage content={message.content} />
-        ) : (
-          message.content
-        )}
-      </div>
+    <div className={`optimized-message ${className || ''}`}>
+      {message.content}
     </div>
   );
 });
 
 OptimizedMessage.displayName = 'OptimizedMessage';
 
-export default OptimizedMessage; 
+export default OptimizedMessage;

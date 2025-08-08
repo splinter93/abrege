@@ -1,7 +1,7 @@
 "use client";
 
-import { useSupabaseRealtime } from '@/hooks/useRealtime';
-import { useMemo } from 'react';
+// import.*useSupabaseRealtime.*from '@/hooks/useRealtime';
+// import.*useMemo.*from 'react';
 
 export default function RealtimeProvider({ children }: { children: React.ReactNode }) {
   // const { isConnected } = useSupabaseRealtime();

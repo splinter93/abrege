@@ -1,4 +1,4 @@
-import { simpleLogger as logger } from '@/utils/logger';
+// import { logger } from '@/utils/logger';
 
 /**
  * Interface pour les tools générés depuis OpenAPI
@@ -32,8 +32,8 @@ export class OpenAPIToolsGenerator {
     const tools: OpenAPITool[] = [];
     const endpoints = Object.keys(this.schema.paths);
 
-    logger.dev('[OpenAPIToolsGenerator] 🔧 Génération des tools depuis OpenAPI');
-    logger.dev(`[OpenAPIToolsGenerator] 📊 Endpoints trouvés: ${endpoints.length}`);
+    console.log('[OpenAPIToolsGenerator] 🔧 Génération des tools depuis OpenAPI');
+    console.log(`[OpenAPIToolsGenerator] 📊 Endpoints trouvés: ${endpoints.length}`);
 
     endpoints.forEach(endpoint => {
       const path = this.schema.paths[endpoint];
@@ -49,7 +49,7 @@ export class OpenAPIToolsGenerator {
       });
     });
 
-    logger.dev(`[OpenAPIToolsGenerator] ✅ ${tools.length} tools générés`);
+    console.log(`[OpenAPIToolsGenerator] ✅ ${tools.length} tools générés`);
     return tools;
   }
 
@@ -82,7 +82,7 @@ export class OpenAPIToolsGenerator {
         method: method.toUpperCase()
       };
     } catch (error) {
-      logger.error(`[OpenAPIToolsGenerator] ❌ Erreur lors de la création du tool ${endpoint}:`, error);
+      console.error(`[OpenAPIToolsGenerator] ❌ Erreur lors de la création du tool ${endpoint}:`, error);
       return null;
     }
   }
@@ -186,10 +186,7 @@ export class OpenAPIToolsGenerator {
    */
   private isToolUseful(operation: any, method: string): boolean {
     // Exclure les endpoints de lecture pure qui ne modifient rien
-    const readOnlyEndpoints = [
-      '/api/v1/note/{ref}/information',
-      '/api/v1/note/{ref}/statistics'
-    ];
+    // const readOnlyEndpoints = [^;]+;
 
     // Inclure tous les endpoints de modification et les endpoints de lecture utiles
     const usefulEndpoints = [
@@ -258,7 +255,7 @@ export async function loadOpenAPISchema(): Promise<any> {
     
     return schema;
   } catch (error) {
-    logger.error('[OpenAPIToolsGenerator] ❌ Erreur lors du chargement du schéma:', error);
+    console.error('[OpenAPIToolsGenerator] ❌ Erreur lors du chargement du schéma:', error);
     throw error;
   }
 }

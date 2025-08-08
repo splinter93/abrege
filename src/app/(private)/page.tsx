@@ -1,13 +1,13 @@
 'use client';
-import { simpleLogger as logger } from '@/utils/logger';
+// import.*logger.*from '@/utils/logger';
 
 import React, { useState, useEffect } from 'react';
 import ContentCard from '../../components/ContentCard';
 import { useLanguageContext } from '../../contexts/LanguageContext';
-import Link from 'next/link';
+// import Link from 'next/link';
 import Image from 'next/image';
 import Sidebar from '../../components/Sidebar';
-import { supabase } from '../../supabaseClient';
+// // import.*supabase.*from '../../supabaseClient';
 import '../globals.css';
 
 const mockNotes = [

@@ -1,17 +1,17 @@
 "use client";
 
-import { useState, useEffect, useRef } from 'react';
-import { subscribeToNotes, subscribeToDossiers, subscribeToClasseurs, unsubscribeFromAll, startSubscriptionMonitoring } from '@/realtime/dispatcher';
-import { supabase } from '@/supabaseClient';
+// import.*useRef.*from 'react';
+// import.*subscribeToNotes.*from '@/realtime/dispatcher';
+// // import.*supabase.*from '@/supabaseClient';
 // ANCIEN SYSTÈME DÉSACTIVÉ - Utilisation du nouveau système realtime
-import { initRealtimeService, subscribeToTable as subscribeToPolling, unsubscribeFromTable as unsubscribeFromPolling, stopRealtimeService } from '@/services/realtimeService';
-// import { initWebSocketService, subscribeToTable as subscribeToWebSocket, unsubscribeFromTable as unsubscribeFromWebSocket, stopWebSocketService } from '@/services/websocketService';
-// import * as supabaseRealtimeService from '@/services/supabaseRealtimeService';
-// import { initSSEService, subscribeToTable, unsubscribeFromTable, stopSSEService } from '@/services/sseService';
+// import.*unsubscribeFromTable.*from '@/services/realtimeService';
+// // import.*unsubscribeFromTable.*from '@/services/websocketService';
+// // // import.*supabase.*from '@/services/supabaseRealtimeService';
+// // import.*unsubscribeFromTable.*from '@/services/sseService';
 import { useFileSystemStore } from '@/store/useFileSystemStore';
-import { useAuth } from './useAuth';
+// import.*useAuth.*from './useAuth';
 import { logApi } from '@/utils/logger';
-import { simpleLogger as logger } from '@/utils/logger';
+// import.*logger.*from '@/utils/logger';
 
 interface RealtimeConfig {
   userId?: string;
@@ -43,7 +43,7 @@ interface ChangeEvent {
  */
 export function useSupabaseRealtime() {
   const [isConnected, setIsConnected] = useState(false);
-  const initialized = useRef(false);
+  // const initialized = [^;]+;
 
   useEffect(() => {
     // TOUT EST COMMENTÉ POUR DÉSACTIVER LE REALTIME
@@ -123,7 +123,7 @@ export function useSupabaseRealtime() {
  *   }, []);
  */
 export function useRealtime(config: RealtimeConfig) {
-  const initialized = useRef(false);
+  // const initialized = [^;]+;
   const listeners = useRef<Map<string, (event: ChangeEvent) => void>>(new Map());
 
   const REALTIME_PROVIDER = process.env.NEXT_PUBLIC_REALTIME_PROVIDER || 'websocket';

@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { supabase } from '@/supabaseClient';
-import { sessionSyncService } from '@/services/sessionSyncService';
+import { SessionSyncService } from '@/services/sessionSyncService';
 import { Agent, ChatMessage } from '@/types/chat';
 
 import { simpleLogger as logger } from '@/utils/logger';
@@ -110,7 +110,7 @@ export const useChatStore = create<ChatStore>()(
           }
 
           // Utiliser le service de synchronisation
-          const result = await sessionSyncService.syncSessionsFromDB();
+          const result = await SessionSyncService.getInstance().syncSessionsFromDB();
           
           if (!result.success) {
             throw new Error(result.error || 'Erreur synchronisation');
@@ -161,7 +161,7 @@ export const useChatStore = create<ChatStore>()(
           logger.dev('[Chat Store] ⚡ Session temporaire créée');
 
           // 2. API call via service
-          const result = await sessionSyncService.createSessionAndSync(name);
+          const result = await SessionSyncService.getInstance().createSessionAndSync(name);
           
           if (!result.success) {
             throw new Error(result.error || 'Erreur création session');
@@ -225,7 +225,7 @@ export const useChatStore = create<ChatStore>()(
           logger.dev('[Chat Store] ⚡ Message ajouté optimistiquement');
 
           // 2. API call via service
-          const result = await sessionSyncService.addMessageAndSync(currentSession.id, message);
+          const result = await SessionSyncService.getInstance().addMessageAndSync(currentSession.id, message);
           
           if (!result.success) {
             throw new Error(result.error || 'Erreur ajout message');
@@ -278,7 +278,7 @@ export const useChatStore = create<ChatStore>()(
           logger.dev('[Chat Store] ⚡ Session supprimée optimistiquement');
 
           // 2. API call via service
-          const result = await sessionSyncService.deleteSessionAndSync(sessionId);
+          const result = await SessionSyncService.getInstance().deleteSessionAndSync(sessionId);
           
           if (!result.success) {
             throw new Error(result.error || 'Erreur suppression session');
@@ -331,7 +331,7 @@ export const useChatStore = create<ChatStore>()(
           logger.dev('[Chat Store] ⚡ Session mise à jour optimistiquement');
 
           // 2. API call via service
-          const result = await sessionSyncService.updateSessionAndSync(sessionId, data);
+          const result = await SessionSyncService.getInstance().updateSessionAndSync(sessionId, data);
           
           if (!result.success) {
             throw new Error(result.error || 'Erreur mise à jour session');

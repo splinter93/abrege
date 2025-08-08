@@ -1,13 +1,13 @@
 'use client';
-import { simpleLogger as logger } from '@/utils/logger';
+// import.*logger.*from '@/utils/logger';
 
-import React, { useRef, useEffect, useState } from 'react';
-import { useChatStore, type ChatMessage } from '@/store/useChatStore';
+// import.*useRef.*from 'react';
+// import.*ChatMessage.*from '@/store/useChatStore';
 import { useSessionSync } from '@/hooks/useSessionSync';
 import ChatInput from './ChatInput';
 import EnhancedMarkdownMessage from './EnhancedMarkdownMessage';
 import ChatSidebar from './ChatSidebar';
-import { supabase } from '@/supabaseClient';
+// // import.*supabase.*from '@/supabaseClient';
 import './index.css';
 import './ChatWidget.css';
 

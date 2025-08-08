@@ -16,6 +16,7 @@ export interface ChatMessage {
     };
   }>;
   tool_call_id?: string; // Pour les messages tool
+  name?: string; // Pour les messages tool (nom de la fonction appelée)
 }
 
 export interface ChatSession {

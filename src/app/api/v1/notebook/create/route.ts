@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
-import { SlugGenerator } from '@/utils/slugGenerator';
-import { NextRequest, NextResponse } from 'next/server';
+// import.*SlugGenerator.*from '@/utils/slugGenerator';
+// import.*NextResponse.*from 'next/server';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -17,13 +17,7 @@ async function getAuthenticatedClient(req: NextRequest) {
   if (authHeader && authHeader.startsWith('Bearer ')) {
     userToken = authHeader.substring(7);
     
-    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-      global: {
-        headers: {
-          Authorization: `Bearer ${userToken}`
-        }
-      }
-    });
+    // // const supabase = [^;]+;]+;
     
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     
@@ -85,7 +79,7 @@ export async function POST(req: NextRequest): Promise<Response> {
     
     return new Response(JSON.stringify({ notebook }), { status: 201, headers: { "Content-Type": "application/json" } });
   } catch (err: unknown) {
-    const error = err as Error;
+    // const error = [^;]+;
     if (error.message === 'Token invalide ou expiré' || error.message === 'Authentification requise') {
       return new Response(JSON.stringify({ error: error.message }), { status: 401, headers: { "Content-Type": "application/json" } });
     }

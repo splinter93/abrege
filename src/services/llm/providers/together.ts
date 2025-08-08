@@ -1,6 +1,6 @@
 import type { LLMProvider, AppContext, ChatMessage } from '../types';
 import { Agent } from '@/types/chat';
-import { simpleLogger as logger } from '@/utils/logger';
+import { logger } from '@/utils/logger';
 
 export class TogetherProvider implements LLMProvider {
   name = 'Together AI';
@@ -28,12 +28,12 @@ export class TogetherProvider implements LLMProvider {
       // Préparer le payload
       const payload = this.preparePayload(messages, config);
       
-      logger.dev(`[${this.name} Provider] 📤 Payload:`, payload);
+      logger.debug(`[${this.name} Provider] 📤 Payload:`, payload);
 
       // Faire l'appel API
       const response = await this.makeApiCall(payload, config);
       
-      logger.dev(`[${this.name} Provider] ✅ Réponse reçue:`, response);
+      logger.debug(`[${this.name} Provider] ✅ Réponse reçue:`, response);
 
       return this.extractResponse(response);
 

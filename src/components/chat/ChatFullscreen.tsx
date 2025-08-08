@@ -1,9 +1,9 @@
 'use client';
-import { simpleLogger as logger } from '@/utils/logger';
+// import.*logger.*from '@/utils/logger';
 
-import React, { useRef, useEffect, useState, useCallback } from 'react';
+// import.*useRef.*from 'react';
 import { useChatStore } from '@/store/useChatStore';
-import { useAppContext } from '@/hooks/useAppContext';
+// import.*AppContext.*from '@/hooks/useAppContext';
 import { useLLMStore } from '@/store/useLLMStore';
 import { useMediaQuery } from '@/hooks/useMediaQuery'; // Import du nouveau hook
 import ChatInput from './ChatInput';
@@ -11,8 +11,8 @@ import EnhancedMarkdownMessage from './EnhancedMarkdownMessage';
 import ChatKebabMenu from './ChatKebabMenu';
 import ChatSidebar from './ChatSidebar';
 import './index.css';
-import { supabase } from '@/supabaseClient';
-import OptimizedMessage from './OptimizedMessage';
+// // import.*supabase.*from '@/supabaseClient';
+// import.*OptimizedMessage.*from './OptimizedMessage';
 
 const ChatFullscreen: React.FC = () => {
   const isDesktop = useMediaQuery('(min-width: 1024px)');

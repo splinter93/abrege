@@ -4,8 +4,8 @@ import { toast } from 'react-hot-toast';
 import { DropEventDetail } from '../components/types';
 import { useFileSystemStore } from '@/store/useFileSystemStore';
 import { clientPollingTrigger } from '@/services/clientPollingTrigger';
-import { optimizedApi } from '@/services/optimizedApi';
-import { simpleLogger as logger } from '@/utils/logger';
+// import.*optimizedApi.*from '@/services/optimizedApi';
+// import.*logger.*from '@/utils/logger';
 
 interface UseFolderDragAndDropProps {
   classeurId: string;
@@ -94,7 +94,7 @@ export const useFolderDragAndDrop = ({
         if (itemType === 'folder') {
           try {
             // Utiliser l'API optimisée pour le déplacement de dossier
-            const result = await optimizedApi.moveFolder(itemId, null, targetClasseurId);
+            // const result = [^;]+;
             refreshNow();
             toast.dismiss();
             toast.success('Déplacement terminé !');
@@ -108,7 +108,7 @@ export const useFolderDragAndDrop = ({
         } else {
           try {
             // Utiliser l'API optimisée pour le déplacement de note
-            const result = await optimizedApi.moveNote(itemId, null, targetClasseurId);
+            // const result = [^;]+;
             refreshNow();
             toast.dismiss();
             toast.success('Déplacement terminé !');

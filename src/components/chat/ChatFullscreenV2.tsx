@@ -154,6 +154,35 @@ const ChatFullscreenV2: React.FC = () => {
       if (Math.random() < 0.01) { // Log seulement 1% du temps
         logger.dev('[ChatFullscreenV2] 🧠 Reasoning token reçu:', reasoningToken);
       }
+    },
+    onToolCalls: async (toolCalls, toolName) => {
+      logger.dev('[ChatFullscreenV2] 🔧 Tool calls détectés:', { toolCalls, toolName });
+      
+      // Créer un message assistant avec les tool calls
+      const toolMessage = {
+        role: 'assistant' as const,
+        content: null,
+        tool_calls: toolCalls,
+        timestamp: new Date().toISOString()
+      };
+      
+      await addMessage(toolMessage);
+      scrollToBottom(true);
+    },
+    onToolResult: async (toolName, result, success) => {
+      logger.dev('[ChatFullscreenV2] ✅ Tool result reçu:', { toolName, success });
+      
+      // Créer un message tool avec le résultat
+      const toolResultMessage = {
+        role: 'tool' as const,
+        tool_call_id: `call_${Date.now()}`, // ID temporaire
+        name: toolName,
+        content: typeof result === 'string' ? result : JSON.stringify(result),
+        timestamp: new Date().toISOString()
+      };
+      
+      await addMessage(toolResultMessage);
+      scrollToBottom(true);
     }
   });
 
@@ -493,10 +522,7 @@ const ChatFullscreenV2: React.FC = () => {
               {messages.map((message, index) => (
                 <ChatMessage
                   key={message.id || index}
-                  content={message.content}
-                  role={message.role}
-                  tool_calls={message.tool_calls}
-                  tool_call_id={message.tool_call_id}
+                  message={message}
                 />
               ))}
               
@@ -511,8 +537,12 @@ const ChatFullscreenV2: React.FC = () => {
                   {/* Afficher le reasoning séparément s'il y en a */}
                   {streamingReasoning && (
                     <ChatMessage
-                      content={formatReasoningForQwen(streamingReasoning, selectedAgent?.model)}
-                      role="assistant"
+                      message={{
+                        id: 'streaming-reasoning',
+                        role: 'assistant',
+                        content: formatReasoningForQwen(streamingReasoning, selectedAgent?.model),
+                        timestamp: new Date().toISOString()
+                      }}
                       isStreaming={false}
                       className="reasoning-message"
                     />
@@ -521,8 +551,12 @@ const ChatFullscreenV2: React.FC = () => {
                   {/* Afficher la réponse normale */}
                   {streamingContent && (
                     <ChatMessage
-                      content={streamingContent}
-                      role="assistant"
+                      message={{
+                        id: 'streaming-content',
+                        role: 'assistant',
+                        content: streamingContent,
+                        timestamp: new Date().toISOString()
+                      }}
                       isStreaming={true}
                     />
                   )}

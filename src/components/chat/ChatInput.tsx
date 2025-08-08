@@ -1,5 +1,5 @@
-import React, { useRef, useEffect } from 'react';
-import { Send, Loader, Plus, Globe, Search, Mic, ArrowUp, Zap } from 'react-feather';
+import React, { useEffect } from 'react';
+import { Send, Plus, Zap, Globe, Search, Mic, Loader, ArrowUp } from 'react-feather';
 
 interface ChatInputProps {
   onSend: (message: string) => void;

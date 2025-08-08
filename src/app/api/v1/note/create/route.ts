@@ -1,9 +1,9 @@
 import { z } from 'zod';
-import { SlugGenerator } from '@/utils/slugGenerator';
-import { getSupabaseClient } from '@/services/supabaseService';
-import { NextRequest, NextResponse } from 'next/server';
+// import.*SlugGenerator.*from '@/utils/slugGenerator';
+// // import.*get.*from '@/services/supabaseService';
+// import.*NextResponse.*from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { simpleLogger as logger } from '@/utils/logger';
+// import.*logger.*from '@/utils/logger';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -26,13 +26,7 @@ export async function POST(request: NextRequest): Promise<Response> {
       userToken = authHeader.substring(7);
       
       // Créer un client Supabase avec le token d'authentification
-      const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-        global: {
-          headers: {
-            Authorization: `Bearer ${userToken}`
-          }
-        }
-      });
+      // // const supabase = [^;]+;]+;
       
       const { data: { user }, error: authError } = await supabase.auth.getUser();
       
@@ -94,13 +88,7 @@ export async function POST(request: NextRequest): Promise<Response> {
     }
     
     // Créer un client Supabase avec le token d'authentification pour les opérations DB
-    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-      global: {
-        headers: {
-          Authorization: `Bearer ${userToken}`
-        }
-      }
-    });
+    // // const supabase = [^;]+;]+;
     
     // Résolution slug → ID pour notebook_id
     let finalNotebookIdResolved = finalNotebookId;
@@ -202,7 +190,7 @@ export async function POST(request: NextRequest): Promise<Response> {
     
     return new Response(JSON.stringify({ note }), { status: 201, headers: { "Content-Type": "application/json" } });
   } catch (err: unknown) {
-    const error = err as Error;
+    // const error = [^;]+;
     logger.error("[Note Create API] ❌ Erreur:", error);
     return new Response(JSON.stringify({ error: error.message }), { status: 500, headers: { "Content-Type": "application/json" } });
   }

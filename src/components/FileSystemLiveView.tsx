@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { useRealtime } from '@/hooks/useRealtime';
-import { simpleLogger as logger } from '@/utils/logger';
-import { RealtimeEvent, isNoteCreatedEvent, isNoteDeletedEvent, isNoteRenamedEvent } from '@/types/events';
+// import.*useRealtime.*from '@/hooks/useRealtime';
+// import.*logger.*from '@/utils/logger';
+// import.*RealtimeEvent.*from '@/types/events';
 
 /**
  * FileSystemLiveView

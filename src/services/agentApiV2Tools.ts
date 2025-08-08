@@ -1,4 +1,3 @@
-import { simpleLogger as logger } from '@/utils/logger';
 import { V2DatabaseUtils } from '@/utils/v2DatabaseUtils';
 import { OpenAPIToolsGenerator } from './openApiToolsGenerator';
 
@@ -21,10 +20,13 @@ export class AgentApiV2Tools {
   constructor() {
     // Utiliser l'URL de base configurée ou l'URL par défaut
     this.baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://scrivia.app';
-    logger.dev(`[AgentApiV2Tools] 🚀 Initialisation avec baseUrl: ${this.baseUrl}`);
+    console.log(`[AgentApiV2Tools] 🚀 Initialisation avec baseUrl: ${this.baseUrl}`);
     this.initializeTools();
-    this.initializeOpenAPITools();
-    logger.dev(`[AgentApiV2Tools] ✅ Initialisation terminée, ${this.tools.size} tools chargés`);
+    // Initialiser les tools OpenAPI de manière asynchrone
+    this.initializeOpenAPITools().catch(error => {
+      console.error('[AgentApiV2Tools] ❌ Erreur lors de l\'initialisation OpenAPI:', error);
+    });
+    console.log(`[AgentApiV2Tools] ✅ Initialisation terminée, ${this.tools.size} tools chargés`);
   }
 
   /**
@@ -32,7 +34,7 @@ export class AgentApiV2Tools {
    */
   private async initializeOpenAPITools() {
     try {
-      logger.dev('[AgentApiV2Tools] 🔧 Initialisation des tools OpenAPI...');
+      console.log('[AgentApiV2Tools] 🔧 Initialisation des tools OpenAPI...');
       
       // Charger le schéma OpenAPI v2
       const openApiSchema = await this.loadOpenAPISchema();
@@ -41,7 +43,7 @@ export class AgentApiV2Tools {
         this.openApiGenerator = new OpenAPIToolsGenerator(openApiSchema);
         const openApiTools = this.openApiGenerator.generateToolsForFunctionCalling();
         
-        logger.dev(`[AgentApiV2Tools] 📊 ${openApiTools.length} tools OpenAPI générés`);
+        console.log(`[AgentApiV2Tools] 📊 ${openApiTools.length} tools OpenAPI générés`);
         
         // Ajouter les tools OpenAPI aux tools existants
         openApiTools.forEach(tool => {
@@ -56,14 +58,14 @@ export class AgentApiV2Tools {
                 return await this.executeOpenAPITool(toolName, params, jwtToken, userId);
               }
             });
-            logger.dev(`[AgentApiV2Tools] ✅ Tool OpenAPI ajouté: ${toolName}`);
+            console.log(`[AgentApiV2Tools] ✅ Tool OpenAPI ajouté: ${toolName}`);
           }
         });
         
-        logger.dev(`[AgentApiV2Tools] 🎉 Tools OpenAPI intégrés avec succès`);
+        console.log(`[AgentApiV2Tools] 🎉 Tools OpenAPI intégrés avec succès`);
       }
     } catch (error) {
-      logger.error('[AgentApiV2Tools] ❌ Erreur lors de l\'initialisation OpenAPI:', error);
+      console.error('[AgentApiV2Tools] ❌ Erreur lors de l\'initialisation OpenAPI:', error);
     }
   }
 
@@ -400,7 +402,7 @@ export class AgentApiV2Tools {
       
       return schema;
     } catch (error) {
-      logger.error('[AgentApiV2Tools] ❌ Erreur lors du chargement du schéma OpenAPI:', error);
+      console.error('[AgentApiV2Tools] ❌ Erreur lors du chargement du schéma OpenAPI:', error);
       return null;
     }
   }
@@ -412,7 +414,7 @@ export class AgentApiV2Tools {
     const context = { operation: `openapi_${toolName}`, component: 'AgentApiV2Tools' };
     
     try {
-      logger.dev(`[AgentApiV2Tools] 🚀 Exécution tool OpenAPI: ${toolName}`, params);
+      console.log(`[AgentApiV2Tools] 🚀 Exécution tool OpenAPI: ${toolName}`, params);
       
       // Mapping des tools OpenAPI vers les méthodes existantes
       switch (toolName) {
@@ -456,7 +458,7 @@ export class AgentApiV2Tools {
           throw new Error(`Tool OpenAPI non supporté: ${toolName}`);
       }
     } catch (error) {
-      logger.error(`[AgentApiV2Tools] ❌ Erreur lors de l'exécution du tool OpenAPI ${toolName}:`, error);
+      console.error(`[AgentApiV2Tools] ❌ Erreur lors de l'exécution du tool OpenAPI ${toolName}:`, error);
       throw error;
     }
   }
@@ -502,7 +504,7 @@ export class AgentApiV2Tools {
             return await this.executeOpenAPITool(toolName, params, jwtToken, userId);
           }
         });
-        logger.dev(`[AgentApiV2Tools] ✅ Tool OpenAPI ajouté: ${toolName}`);
+        console.log(`[AgentApiV2Tools] ✅ Tool OpenAPI ajouté: ${toolName}`);
       }
     });
   }
@@ -1089,9 +1091,9 @@ export class AgentApiV2Tools {
       };
 
       // Logs épurés pour le debug des tool calls
-      logger.dev(`[AgentApiV2Tools] 🔧 ${method} ${endpoint}`);
+      console.log(`[AgentApiV2Tools] 🔧 ${method} ${endpoint}`);
       if (Object.keys(data || {}).length > 0) {
-        logger.dev(`[AgentApiV2Tools] 📦 Payload:`, data);
+        console.log(`[AgentApiV2Tools] 📦 Payload:`, data);
       }
 
       const response = await fetch(url, config);
@@ -1102,11 +1104,11 @@ export class AgentApiV2Tools {
       }
 
       const result = await response.json();
-      logger.dev(`[AgentApiV2Tools] ✅ Réponse:`, result);
+      console.log(`[AgentApiV2Tools] ✅ Réponse:`, result);
       return result;
 
     } catch (error) {
-      logger.error(`[AgentApiV2Tools] ❌ Erreur:`, error);
+      console.error(`[AgentApiV2Tools] ❌ Erreur:`, error);
       throw error;
     }
   }
@@ -1115,8 +1117,8 @@ export class AgentApiV2Tools {
    * Obtenir la liste des outils disponibles pour function calling
    */
   getToolsForFunctionCalling(capabilities?: string[]): any[] {
-    logger.dev(`[AgentApiV2Tools] 🔧 Nombre de tools dans la Map: ${this.tools.size}`);
-    logger.dev(`[AgentApiV2Tools] 🔧 Tools disponibles: ${Array.from(this.tools.keys()).join(', ')}`);
+    console.log(`[AgentApiV2Tools] 🔧 Nombre de tools dans la Map: ${this.tools.size}`);
+    console.log(`[AgentApiV2Tools] 🔧 Tools disponibles: ${Array.from(this.tools.keys()).join(', ')}`);
     
     const allTools = Array.from(this.tools.values()).map(tool => ({
       type: 'function' as const,
@@ -1130,11 +1132,11 @@ export class AgentApiV2Tools {
     // Si des capacités spécifiques sont demandées, filtrer
     if (capabilities && capabilities.length > 0) {
       const filteredTools = allTools.filter(tool => capabilities.includes(tool.function.name));
-      logger.dev(`[AgentApiV2Tools] 🔧 Tools filtrés selon capacités: ${filteredTools.length}/${allTools.length}`);
+      console.log(`[AgentApiV2Tools] 🔧 Tools filtrés selon capacités: ${filteredTools.length}/${allTools.length}`);
       return filteredTools;
     }
     
-    logger.dev(`[AgentApiV2Tools] 🔧 Tools configurés pour function calling: ${allTools.length}`);
+    console.log(`[AgentApiV2Tools] 🔧 Tools configurés pour function calling: ${allTools.length}`);
     return allTools;
   }
 
@@ -1150,8 +1152,8 @@ export class AgentApiV2Tools {
         throw new Error(`Tool not found: ${toolName}`);
       }
 
-      logger.dev(`[AgentApiV2Tools] 🚀 Tool: ${toolName}`);
-      logger.dev(`[AgentApiV2Tools] 📦 Paramètres:`, parameters);
+      console.log(`[AgentApiV2Tools] 🚀 Tool: ${toolName}`);
+      console.log(`[AgentApiV2Tools] 📦 Paramètres:`, parameters);
 
       // Récupérer le userId à partir du JWT token
       const userId = await this.getUserIdFromToken(jwtToken);
@@ -1159,13 +1161,13 @@ export class AgentApiV2Tools {
       const result = await tool.execute(parameters, jwtToken, userId);
       
       const duration = Date.now() - startTime;
-      logger.dev(`[AgentApiV2Tools] ✅ ${toolName} (${duration}ms)`);
+      console.log(`[AgentApiV2Tools] ✅ ${toolName} (${duration}ms)`, { duration });
       
       return result;
     } catch (error) {
       const duration = Date.now() - startTime;
       const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
-      logger.error(`[AgentApiV2Tools] ❌ ${toolName} échoué (${duration}ms):`, errorMessage);
+      console.error(`[AgentApiV2Tools] ❌ ${toolName} échoué (${duration}ms):`, { error: errorMessage });
       
       // ✅ CORRECTION: Retourner l'erreur au lieu de la relancer
       return { 
@@ -1183,8 +1185,9 @@ export class AgentApiV2Tools {
       const { createClient } = await import('@supabase/supabase-js');
       const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
       const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-      const supabase = createClient(supabaseUrl, supabaseAnonKey);
+      // // const supabase = [^;]+;]+;
       
+      const supabase = createClient(supabaseUrl, supabaseAnonKey);
       const { data: { user }, error } = await supabase.auth.getUser(jwtToken);
       
       if (error || !user) {
@@ -1193,7 +1196,7 @@ export class AgentApiV2Tools {
       
       return user.id;
     } catch (error) {
-      logger.error(`[AgentApiV2Tools] ❌ Erreur extraction userId:`, error);
+      console.error(`[AgentApiV2Tools] ❌ Erreur extraction userId:`, error);
       throw new Error('Impossible d\'extraire l\'utilisateur du token');
     }
   }
@@ -1203,6 +1206,14 @@ export class AgentApiV2Tools {
    */
   getAvailableTools(): string[] {
     return Array.from(this.tools.keys());
+  }
+
+  /**
+   * Attendre que l'initialisation soit complète
+   */
+  async waitForInitialization(): Promise<void> {
+    // Attendre un peu pour que l'initialisation asynchrone se termine
+    await new Promise(resolve => setTimeout(resolve, 100));
   }
 }
 

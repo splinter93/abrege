@@ -3,9 +3,9 @@ import { z } from 'zod';
 import type { Article } from '@/types/supabase';
 import type { NextRequest } from 'next/server';
 import type { ApiContext } from '@/types/api';
-import { resolveNoteRef } from '@/middleware/resourceResolver';
-import { SlugGenerator } from '@/utils/slugGenerator';
-import { simpleLogger as logger } from '@/utils/logger';
+// import.*resolveNoteRef.*from '@/middleware/resourceResolver';
+// import.*SlugGenerator.*from '@/utils/slugGenerator';
+// import.*logger.*from '@/utils/logger';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -26,13 +26,7 @@ async function getAuthenticatedClient(req: NextRequest) {
   if (authHeader && authHeader.startsWith('Bearer ')) {
     userToken = authHeader.substring(7);
     
-    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-      global: {
-        headers: {
-          Authorization: `Bearer ${userToken}`
-        }
-      }
-    });
+    // // const supabase = [^;]+;]+;
     
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     
@@ -72,7 +66,7 @@ export async function GET(req: NextRequest, { params }: ApiContext): Promise<Res
     }
     return new Response(JSON.stringify({ note: data }), { status: 200, headers: { "Content-Type": "application/json" } });
   } catch (err: unknown) {
-    const error = err as Error;
+    // const error = [^;]+;
     if (error.message === 'Token invalide ou expiré' || error.message === 'Authentification requise') {
       return new Response(JSON.stringify({ error: error.message }), { status: 401, headers: { "Content-Type": "application/json" } });
     }
@@ -164,7 +158,7 @@ export async function PUT(req: NextRequest, { params }: ApiContext): Promise<Res
     
     return new Response(JSON.stringify({ note: data }), { status: 200, headers: { "Content-Type": "application/json" } });
   } catch (err: unknown) {
-    const error = err as Error;
+    // const error = [^;]+;
     if (error.message === 'Token invalide ou expiré' || error.message === 'Authentification requise') {
       return new Response(JSON.stringify({ error: error.message }), { status: 401, headers: { "Content-Type": "application/json" } });
     }
@@ -198,7 +192,7 @@ export async function DELETE(req: NextRequest, { params }: ApiContext): Promise<
     
     return new Response(JSON.stringify({ success: true }), { status: 200, headers: { "Content-Type": "application/json" } });
   } catch (err: unknown) {
-    const error = err as Error;
+    // const error = [^;]+;
     if (error.message === 'Token invalide ou expiré' || error.message === 'Authentification requise') {
       return new Response(JSON.stringify({ error: error.message }), { status: 401, headers: { "Content-Type": "application/json" } });
     }

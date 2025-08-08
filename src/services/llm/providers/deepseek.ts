@@ -1,14 +1,68 @@
-import type { LLMProvider, AppContext, ChatMessage } from '../types';
-import { Agent } from '@/types/chat';
-import { LLMProviderTemplate } from './template';
+import type { AppContext, ChatMessage, LLMProvider } from '../types';
+import type { Agent } from '@/types/chat';
+import { BaseProvider, type ProviderInfo, type ProviderConfig, type ProviderCapabilities } from './base/BaseProvider';
 
-export class DeepSeekProvider extends LLMProviderTemplate {
-  name = 'DeepSeek';
-  id = 'deepseek';
+export class DeepSeekProvider extends BaseProvider implements LLMProvider {
+  readonly info: ProviderInfo = {
+    id: 'deepseek',
+    name: 'DeepSeek',
+    version: '1.0.0',
+    description: 'DeepSeek LLM Provider',
+    capabilities: {
+      functionCalls: true,
+      streaming: true,
+      reasoning: true,
+      codeExecution: false,
+      webSearch: false,
+      structuredOutput: true
+    },
+    supportedModels: ['deepseek-reasoner', 'deepseek-coder'],
+    pricing: {
+      input: '$0.14/1M tokens',
+      output: '$0.28/1M tokens'
+    }
+  };
+
+  // Implémentation de LLMProvider
+  get name(): string {
+    return this.info.name;
+  }
+
+  get id(): string {
+    return this.info.id;
+  }
+
+  readonly config: ProviderConfig = {
+    apiKey: process.env.DEEPSEEK_API_KEY || '',
+    baseUrl: 'https://api.deepseek.com/v1',
+    timeout: 30000,
+    model: 'deepseek-reasoner',
+    temperature: 0.7,
+    maxTokens: 4000,
+    topP: 1.0,
+    supportsFunctionCalls: true,
+    supportsStreaming: true,
+    supportsReasoning: true,
+    enableLogging: true,
+    enableMetrics: true
+  };
 
   constructor() {
-    super('DEEPSEEK_API_KEY', 'https://api.deepseek.com/v1');
-    }
+    super();
+  }
+
+  isAvailable(): boolean {
+    return !!this.config.apiKey && this.validateConfig();
+  }
+
+  validateConfig(): boolean {
+    return this.validateApiKey() && this.validateBaseUrl() && this.validateBaseConfig();
+  }
+
+  async call(message: string, context: AppContext, history: ChatMessage[]): Promise<string> {
+    // Implémentation de base - à compléter selon les besoins
+    return `DeepSeek response to: ${message}`;
+  }
 
   /**
    * Configuration par défaut pour DeepSeek

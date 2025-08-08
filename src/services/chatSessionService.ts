@@ -7,7 +7,7 @@ import type {
   ChatSessionsListResponse 
 } from '@/types/chat';
 import { supabase } from '@/supabaseClient';
-import { simpleLogger as logger } from '@/utils/logger';
+import { logger } from '@/utils/logger';
 
 /**
  * Service pour gérer les sessions de chat
@@ -37,14 +37,14 @@ export class ChatSessionService {
     search?: string;
   }): Promise<ChatSessionsListResponse> {
     try {
-      logger.dev('[ChatSessionService] 🔄 Récupération sessions...');
+      logger.debug('[ChatSessionService] 🔄 Récupération sessions...');
       
       // Récupérer le token d'authentification
       const { data: { session } } = await supabase.auth.getSession();
       const token = session?.access_token;
       
       if (!token) {
-        logger.dev('[ChatSessionService] ❌ Pas de token, authentification requise');
+        logger.debug('[ChatSessionService] ❌ Pas de token, authentification requise');
         throw new Error('Authentification requise');
       }
 
@@ -84,7 +84,7 @@ export class ChatSessionService {
 
       return data;
     } catch (error) {
-      logger.error('Erreur ChatSessionService.getSessions:', error);
+      logger.error('Erreur ChatSessionService.getSessions', { error: { error: error instanceof Error ? error.message : 'Erreur inconnue' } });
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Erreur inconnue'
@@ -119,7 +119,7 @@ export class ChatSessionService {
 
       return data;
     } catch (error) {
-      logger.error('Erreur ChatSessionService.getSession:', error);
+      logger.error('Erreur ChatSessionService.getSession:', { error: error });
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Erreur inconnue'
@@ -165,7 +165,7 @@ export class ChatSessionService {
 
       return responseData;
     } catch (error) {
-      logger.error('Erreur ChatSessionService.createSession:', error);
+      logger.error('Erreur ChatSessionService.createSession:', { error: error });
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Erreur inconnue'
@@ -203,7 +203,7 @@ export class ChatSessionService {
 
       return responseData;
     } catch (error) {
-      logger.error('Erreur ChatSessionService.updateSession:', error);
+      logger.error('Erreur ChatSessionService.updateSession:', { error: error });
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Erreur inconnue'
@@ -216,7 +216,7 @@ export class ChatSessionService {
    */
   async deleteSession(sessionId: string): Promise<{ success: boolean; error?: string }> {
     try {
-      logger.dev('[ChatSessionService] 🗑️ deleteSession appelé pour:', sessionId);
+      logger.debug('[ChatSessionService] 🗑️ deleteSession appelé pour:', sessionId);
       
       // Récupérer le token d'authentification
       const { data: { session } } = await supabase.auth.getSession();
@@ -227,7 +227,7 @@ export class ChatSessionService {
         throw new Error('Authentification requise');
       }
 
-      logger.dev('[ChatSessionService] 🔧 Appel API DELETE:', `${this.baseUrl}/${sessionId}`);
+      logger.debug('[ChatSessionService] 🔧 Appel API DELETE:', `${this.baseUrl}/${sessionId}`);
 
       const response = await fetch(`${this.baseUrl}/${sessionId}`, {
         method: 'DELETE',
@@ -237,20 +237,20 @@ export class ChatSessionService {
         },
       });
 
-      logger.dev(`[ChatSessionService] 📋 Status réponse: ${response.status}`);
+      logger.debug(`[ChatSessionService] 📋 Status réponse: ${response.status}`);
 
       const data = await response.json();
-      logger.dev('[ChatSessionService] 📋 Données réponse:', data);
+      logger.debug('[ChatSessionService] 📋 Données réponse:', data);
 
       if (!response.ok) {
-        logger.error('[ChatSessionService] ❌ Erreur API:', response.status);
+        logger.error('[ChatSessionService] ❌ Erreur API:', { error: response.status });
         throw new Error(data.error || 'Erreur lors de la suppression de la session');
       }
 
-      logger.dev('[ChatSessionService] ✅ Suppression réussie');
+      logger.debug('[ChatSessionService] ✅ Suppression réussie');
       return { success: true };
     } catch (error) {
-      logger.error('[ChatSessionService] ❌ Erreur deleteSession:', error);
+      logger.error('[ChatSessionService] ❌ Erreur deleteSession:', { error: error });
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Erreur inconnue'
@@ -292,7 +292,7 @@ export class ChatSessionService {
 
       return data;
     } catch (error) {
-      logger.error('Erreur ChatSessionService.addMessage:', error);
+      logger.error('Erreur ChatSessionService.addMessage:', { error: error });
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Erreur inconnue'
@@ -326,7 +326,7 @@ export class ChatSessionService {
 
       return data;
     } catch (error) {
-      logger.error('Erreur ChatSessionService.addMessageWithToken:', error);
+      logger.error('Erreur ChatSessionService.addMessageWithToken:', { error: error });
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Erreur inconnue'
@@ -365,7 +365,7 @@ export class ChatSessionService {
 
       return data;
     } catch (error) {
-      logger.error('Erreur ChatSessionService.getMessages:', error);
+      logger.error('Erreur ChatSessionService.getMessages:', { error: error });
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Erreur inconnue'

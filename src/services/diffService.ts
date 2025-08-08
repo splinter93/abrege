@@ -1,5 +1,5 @@
 import { diffWords, diffLines, Change } from 'diff';
-import { simpleLogger as logger } from '@/utils/logger';
+// import.*logger.*from '@/utils/logger';
 
 interface DiffResult {
   changes: Change[];

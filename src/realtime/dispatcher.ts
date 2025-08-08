@@ -1,7 +1,7 @@
 import { useFileSystemStore } from '@/store/useFileSystemStore';
-import { handleEditorEvent } from './editor';
-import { supabase } from '@/supabaseClient';
-import { simpleLogger as logger } from '@/utils/logger';
+// import.*Edit.*from './editor';
+// // import.*supabase.*from '@/supabaseClient';
+// import.*logger.*from '@/utils/logger';
 
 /**
  * handleRealtimeEvent - Route les événements WebSocket vers le store Zustand useFileSystemStore
@@ -297,8 +297,8 @@ export function subscribeToNotes() {
   return notesChannel;
 }
 
-const dossierSubscriptionRetries = 0;
-const MAX_DOSSIER_RETRIES = 5;
+// const dossierSubscriptionRetries = [^;]+;
+// const MAX_DOSSIER_RETRIES = [^;]+;
 
 /**
  * S'abonner aux changements des dossiers via Supabase Realtime
@@ -435,8 +435,8 @@ export function subscribeToDossiers() {
   return dossiersChannel;
 }
 
-const classeurSubscriptionRetries = 0;
-const MAX_CLASSEUR_RETRIES = 5;
+// const classeurSubscriptionRetries = [^;]+;
+// const MAX_CLASSEUR_RETRIES = [^;]+;
 
 /**
  * S'abonner aux changements des classeurs via Supabase Realtime

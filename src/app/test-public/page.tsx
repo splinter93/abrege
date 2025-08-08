@@ -3,7 +3,7 @@ import PublicNoteContent from '@/app/[username]/[slug]/PublicNoteContent';
 import PublicPageHeader from '@/components/PublicPageHeader';
 import CraftedBadge from '@/components/CraftedBadge';
 import '@/styles/typography.css';
-import { simpleLogger as logger } from '@/utils/logger';
+// import.*logger.*from '@/utils/logger';
 
 export default function TestPublicPage() {
   // Données de test qui simulent une note publique

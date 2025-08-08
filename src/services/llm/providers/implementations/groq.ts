@@ -1,6 +1,6 @@
-import { BaseProvider, type ProviderInfo, type ProviderConfig, type ProviderCapabilities } from '../base/BaseProvider';
-import type { AppContext, ChatMessage, LLMProvider } from '../../types';
-import { simpleLogger as logger } from '@/utils/logger';
+import { BaseProvider, type ProviderCapabilities, type ProviderConfig, type ProviderInfo } from '../base/BaseProvider';
+import type { LLMProvider, AppContext, ChatMessage } from '../../types';
+import { logger } from '@/utils/logger';
 
 /**
  * Configuration spécifique à Groq
@@ -117,7 +117,7 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
       logger.warn(`[GroqProvider] ⚠️ Modèle ${this.config.model} non officiellement supporté`);
     }
 
-    logger.dev('[GroqProvider] ✅ Configuration validée');
+    logger.debug('[GroqProvider] ✅ Configuration validée');
     return true;
   }
 
@@ -130,7 +130,7 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
     }
 
     try {
-      logger.dev(`[GroqProvider] 🚀 Appel avec modèle: ${this.config.model}`);
+      logger.debug(`[GroqProvider] 🚀 Appel avec modèle: ${this.config.model}`);
 
       // ✅ Vérifier si le streaming est activé
       if (this.config.supportsStreaming) {
@@ -148,9 +148,9 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
       const response = await this.makeApiCall(payload);
       
       // Extraire la réponse
-      const result = this.extractResponse(response);
+      // const result = [^;]+;
       
-      logger.dev('[GroqProvider] ✅ Appel réussi');
+      logger.debug('[GroqProvider] ✅ Appel réussi');
       return result;
 
     } catch (error) {
@@ -206,7 +206,7 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
     if (tools && tools.length > 0) {
       payload.tools = tools;
       payload.tool_choice = 'auto'; // ✅ Permettre à Groq de choisir les tools automatiquement
-      logger.dev(`[GroqProvider] 🔧 ${tools.length} tools disponibles pour les function calls`);
+      logger.debug(`[GroqProvider] 🔧 ${tools.length} tools disponibles pour les function calls`);
     }
 
     // Ajouter les paramètres spécifiques à Groq
@@ -272,10 +272,10 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
     // ✅ Ajouter les tool calls si présents
     if (choice.message.tool_calls && choice.message.tool_calls.length > 0) {
       result.tool_calls = choice.message.tool_calls;
-      logger.dev(`[GroqProvider] 🔧 ${result.tool_calls.length} tool calls détectés`);
+      logger.debug(`[GroqProvider] 🔧 ${result.tool_calls.length} tool calls détectés`);
       
       result.tool_calls.forEach((toolCall: any, index: number) => {
-        logger.dev(`[GroqProvider] Tool call ${index + 1}: ${toolCall.function.name}`);
+        logger.debug(`[GroqProvider] Tool call ${index + 1}: ${toolCall.function.name}`);
       });
     }
 
@@ -328,7 +328,7 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
    */
   async testConnection(): Promise<boolean> {
     try {
-      logger.dev('[GroqProvider] 🧪 Test de connexion avec Groq...');
+      logger.debug('[GroqProvider] 🧪 Test de connexion avec Groq...');
       
       const response = await fetch(`${this.config.baseUrl}/models`, {
         method: 'GET',
@@ -343,14 +343,14 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
       }
 
       const models = await response.json();
-      logger.dev(`[GroqProvider] ✅ Connexion réussie - ${models.data.length} modèles disponibles`);
+      logger.debug(`[GroqProvider] ✅ Connexion réussie - ${models.data.length} modèles disponibles`);
       
       // Vérifier si GPT OSS est disponible
       const gptOssModels = models.data.filter((model: any) => 
         model.id.includes('gpt-oss')
       );
       
-      logger.dev(`[GroqProvider] 🎯 ${gptOssModels.length} modèles GPT OSS disponibles`);
+      logger.debug(`[GroqProvider] 🎯 ${gptOssModels.length} modèles GPT OSS disponibles`);
       
       return true;
     } catch (error) {
@@ -364,7 +364,7 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
    */
   async testFunctionCalls(tools: any[]): Promise<boolean> {
     try {
-      logger.dev('[GroqProvider] 🧪 Test d\'appel avec function calls...');
+      logger.debug('[GroqProvider] 🧪 Test d\'appel avec function calls...');
       
       const messages = [
         {
@@ -388,13 +388,13 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
       };
 
       const response = await this.makeApiCall(payload);
-      const result = this.extractResponse(response);
+      // const result = [^;]+;
       
       if (result.tool_calls && result.tool_calls.length > 0) {
-        logger.dev(`[GroqProvider] ✅ Function calls testés avec succès - ${result.tool_calls.length} tool calls`);
+        logger.debug(`[GroqProvider] ✅ Function calls testés avec succès - ${result.tool_calls.length} tool calls`);
         return true;
       } else {
-        logger.dev('[GroqProvider] ⚠️ Aucun tool call détecté dans la réponse');
+        logger.debug('[GroqProvider] ⚠️ Aucun tool call détecté dans la réponse');
         return false;
       }
     } catch (error) {

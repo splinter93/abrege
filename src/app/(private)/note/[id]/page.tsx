@@ -16,6 +16,7 @@ import { useParams } from 'next/navigation';
 import { optimizedApi } from '@/services/optimizedApi';
 import { getArticleById } from '@/services/supabase';
 import useEditorSave from '@/hooks/useEditorSave';
+import { extractTOCWithSlugs } from '@/utils/markdownTOC';
 // import { useEditorPersistence } from '@/hooks/useEditorPersistence';
 // import { UnsavedChangesIndicator } from '@/components/UnsavedChangesIndicator';
 import toast from 'react-hot-toast';
@@ -489,6 +490,14 @@ export default function NoteEditorPage() {
             setPublished(!!note.ispublished);
             editor.commands.setContent(note.markdown_content || '');
             setLastSavedContent(note.markdown_content || '');
+            
+            // Mettre à jour la TOC à partir du contenu
+            const toc = extractTOCWithSlugs(note.markdown_content || '');
+            setTocHeadings(toc.map(h => ({
+              id: h.slug,
+              text: h.title,
+              level: h.level
+            })));
         }
         setTimeout(() => {
           setIsUpdatingFromRealtime(false);
@@ -558,13 +567,21 @@ export default function NoteEditorPage() {
       autosaveTimeoutRef.current = setTimeout(async () => {
         // Éviter l'autosave si on vient de recevoir une mise à jour realtime
         if (isUpdatingFromRealtime) {
-          if (process.env.NODE_ENV === 'development') {
-            logger.dev('[autosave] Ignoré car mise à jour realtime en cours');
-          }
           return;
         }
         
         const currentContent = editor.storage.markdown.getMarkdown();
+        const currentTitle = title;
+        
+        // Mettre à jour la TOC à partir du contenu actuel
+        const toc = extractTOCWithSlugs(currentContent);
+        setTocHeadings(toc.map(h => ({
+          id: h.slug,
+          text: h.title,
+          level: h.level
+        })));
+        
+        // Vérifier s'il y a des changements à sauvegarder
         const titleChanged = title !== lastSavedTitleRef.current;
         const contentChanged = currentContent !== lastSavedContentRef.current;
         

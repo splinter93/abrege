@@ -1,14 +1,14 @@
 import { config } from 'dotenv';
 import { resolve } from 'path';
 import { createClient } from '@supabase/supabase-js';
-import { simpleLogger as logger } from '@/utils/logger';
+// import.*logger.*from '@/utils/logger';
 
 // Charger les variables d'environnement depuis .env
 config({ path: resolve(process.cwd(), '.env') });
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// // const supabase = [^;]+;]+;
 
 // 🚧 Temp: Authentification non implémentée
     // TODO: Remplacer USER_ID par l'authentification Supabase
@@ -190,7 +190,7 @@ async function main() {
     await checkIndexes();
     
     // Vérifier les données d'exemple
-    const _sampleData = await checkSampleData();
+    // const _sampleData = [^;]+;
     
     // Test de génération de slugs
     await testSlugGeneration();

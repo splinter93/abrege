@@ -1,5 +1,5 @@
 'use client';
-import { simpleLogger as logger } from '@/utils/logger';
+import { logger } from '@/utils/logger';
 
 import React, { useState } from 'react';
 import { useChatStore } from '@/store/useChatStore';
@@ -7,7 +7,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useAgents } from '@/hooks/useAgents';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { Edit, Trash2, LogOut, Settings, ChevronDown, ChevronRight, Plus } from 'react-feather';
+import { Edit, Plus, ChevronDown, ChevronRight, Trash2, Settings, LogOut } from 'react-feather';
 
 interface ChatSidebarProps {
   isOpen: boolean;
@@ -34,6 +34,9 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({ isOpen, isDesktop, onClose })
     
     if (!lastAssistantMessage) return '';
     
+    // 🔧 CORRECTION: Vérifier que content n'est pas null
+    if (!lastAssistantMessage.content) return '';
+    
     // Extraire les 2 premières lignes
     const lines = lastAssistantMessage.content.split('\n').filter((line: string) => line.trim());
     const preview = lines.slice(0, 2).join(' ');
@@ -57,7 +60,7 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({ isOpen, isDesktop, onClose })
   };
 
   const handleSelectAgent = (agent: any) => {
-    logger.dev(`[ChatSidebar] 🎯 Sélection de l'agent:`, {
+    logger.debug(`[ChatSidebar] 🎯 Sélection de l'agent:`, {
       id: agent.id,
       name: agent.name,
       model: agent.model,
@@ -68,9 +71,9 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({ isOpen, isDesktop, onClose })
       max_tokens: agent.max_tokens
     });
     setSelectedAgent(agent);
-    logger.dev(`[ChatSidebar] ✅ Agent sélectionné dans le store: ${agent.name} (${agent.model})`);
+    logger.debug(`[ChatSidebar] ✅ Agent sélectionné dans le store: ${agent.name} (${agent.model})`);
     if (agent.system_instructions) {
-      logger.dev(`[ChatSidebar] 📝 Instructions système (extrait):`, agent.system_instructions.substring(0, 100) + '...');
+      logger.debug(`[ChatSidebar] 📝 Instructions système (extrait):`, { instructions: agent.system_instructions.substring(0, 100) + '...' });
     }
     if (!isDesktop) {
       onClose();

@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { StateCreator } from 'zustand';
+// import.*StateCreator.*from 'zustand';
 import type { DiffResult } from '@/services/diffService';
 
 // Types de base - mis à jour pour correspondre aux types réels
