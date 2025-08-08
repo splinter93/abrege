@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useCallback } from 'react';
-// import.*AnimatePresence.*from 'framer-motion';
+import { motion } from 'framer-motion';
 import './FolderManagerModern.css';
 import FolderContent from './FolderContent';
 import FolderToolbar, { ViewMode } from './FolderToolbar';

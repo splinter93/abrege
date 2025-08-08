@@ -157,7 +157,7 @@ export class OptimizedApi {
       // Récupérer les headers d'authentification
       const headers = await this.getAuthHeaders();
       
-      // Appel API
+      // Appel API avec [ref] au lieu de noteId direct
       const response = await fetch(`/api/v1/note/${noteId}`, {
         method: 'PUT',
         headers,
@@ -165,7 +165,8 @@ export class OptimizedApi {
       });
 
       if (!response.ok) {
-        throw new Error(`Erreur mise à jour note: ${response.statusText}`);
+        const errorText = await response.text();
+        throw new Error(`Erreur mise à jour note: ${response.statusText} - ${errorText}`);
       }
 
       const result = await response.json();

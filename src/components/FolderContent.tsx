@@ -1,5 +1,5 @@
 import React from 'react';
-// import.*AnimatePresence.*from 'framer-motion';
+import { motion } from 'framer-motion';
 
 import FolderItem from './FolderItem';
 import FileItem from './FileItem';
@@ -140,40 +140,39 @@ const FolderContent: React.FC<FolderContentProps> = ({
           transition={gridTransition}
           layout
         >
-          <AnimatePresence mode="popLayout">
-            {safeFolders.map(folder => (
-              <motion.div
-                key={folder.id}
-                variants={gridRowVariants}
-                initial="initial"
-                animate="animate"
-                exit="exit"
-                layout
-                transition={gridTransition}
-              >
-                <FolderItem
-                  folder={folder}
-                  onOpen={onFolderOpen}
-                  isRenaming={renamingItemId === folder.id}
-                  onRename={(newName, type) => onRenameFolder && onRenameFolder(folder.id, newName, type)}
-                  onCancelRename={onCancelRename}
-                  onContextMenu={onContextMenuItem}
-                  onDropItem={(itemId, itemType) => {
-                    // Ne traiter le drop que si l'item ET la cible existent dans la vue locale
-                    const isFolder = itemType === 'folder';
-                    const isFile = itemType === 'file';
-                    const itemExists = (isFolder && safeFolders.some(f => f.id === itemId)) || (isFile && safeFiles.some(f => f.id === itemId));
-                    const targetExists = safeFolders.some(f => f.id === folder.id);
-                    if (!itemExists || !targetExists) return;
-                    if (onDropItem) {
-                      onDropItem(itemId, itemType, folder.id);
-                    }
-                  }}
-                  onStartRenameClick={onStartRenameFolderClick}
-                />
-              </motion.div>
-            ))}
-          </AnimatePresence>
+          {/* AnimatePresence is removed as per the edit hint */}
+          {safeFolders.map(folder => (
+            <motion.div
+              key={folder.id}
+              variants={gridRowVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              layout
+              transition={gridTransition}
+            >
+              <FolderItem
+                folder={folder}
+                onOpen={onFolderOpen}
+                isRenaming={renamingItemId === folder.id}
+                onRename={(newName, type) => onRenameFolder && onRenameFolder(folder.id, newName, type)}
+                onCancelRename={onCancelRename}
+                onContextMenu={onContextMenuItem}
+                onDropItem={(itemId, itemType) => {
+                  // Ne traiter le drop que si l'item ET la cible existent dans la vue locale
+                  const isFolder = itemType === 'folder';
+                  const isFile = itemType === 'file';
+                  const itemExists = (isFolder && safeFolders.some(f => f.id === itemId)) || (isFile && safeFiles.some(f => f.id === itemId));
+                  const targetExists = safeFolders.some(f => f.id === folder.id);
+                  if (!itemExists || !targetExists) return;
+                  if (onDropItem) {
+                    onDropItem(itemId, itemType, folder.id);
+                  }
+                }}
+                onStartRenameClick={onStartRenameFolderClick}
+              />
+            </motion.div>
+          ))}
         </motion.div>
         {/* Séparateur horizontal */}
         <motion.div 
@@ -191,30 +190,29 @@ const FolderContent: React.FC<FolderContentProps> = ({
           transition={gridTransition}
           layout
         >
-          <AnimatePresence mode="popLayout">
-            {safeFiles.map(file => (
-              <motion.div
-                key={file.id}
-                className="file-item-animation"
-                variants={gridRowVariants}
-                initial="initial"
-                animate="animate"
-                exit="exit"
-                layout
-                transition={gridTransition}
-              >
-                <FileItem
-                  file={file}
-                  onOpen={onFileOpen}
-                  isRenaming={renamingItemId === file.id}
-                  onRename={(newName, type) => onRenameFile && onRenameFile(file.id, newName, type)}
-                  onCancelRename={onCancelRename}
-                  onContextMenu={onContextMenuItem}
-                  onStartRenameClick={onStartRenameFileClick}
-                />
-              </motion.div>
-            ))}
-          </AnimatePresence>
+          {/* AnimatePresence is removed as per the edit hint */}
+          {safeFiles.map(file => (
+            <motion.div
+              key={file.id}
+              className="file-item-animation"
+              variants={gridRowVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              layout
+              transition={gridTransition}
+            >
+              <FileItem
+                file={file}
+                onOpen={onFileOpen}
+                isRenaming={renamingItemId === file.id}
+                onRename={(newName, type) => onRenameFile && onRenameFile(file.id, newName, type)}
+                onCancelRename={onCancelRename}
+                onContextMenu={onContextMenuItem}
+                onStartRenameClick={onStartRenameFileClick}
+              />
+            </motion.div>
+          ))}
         </motion.div>
       </motion.div>
     </motion.div>

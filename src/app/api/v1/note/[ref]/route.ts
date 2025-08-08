@@ -3,9 +3,8 @@ import { z } from 'zod';
 import type { Article } from '@/types/supabase';
 import type { NextRequest } from 'next/server';
 import type { ApiContext } from '@/types/api';
-// import.*resolveNoteRef.*from '@/middleware/resourceResolver';
-// import.*SlugGenerator.*from '@/utils/slugGenerator';
-// import.*logger.*from '@/utils/logger';
+import { resolveNoteRef } from '@/middleware/resourceResolver';
+import { SlugGenerator } from '@/utils/slugGenerator';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -26,7 +25,13 @@ async function getAuthenticatedClient(req: NextRequest) {
   if (authHeader && authHeader.startsWith('Bearer ')) {
     userToken = authHeader.substring(7);
     
-    // // const supabase = [^;]+;]+;
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      global: {
+        headers: {
+          Authorization: `Bearer ${userToken}`
+        }
+      }
+    });
     
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     
@@ -66,7 +71,7 @@ export async function GET(req: NextRequest, { params }: ApiContext): Promise<Res
     }
     return new Response(JSON.stringify({ note: data }), { status: 200, headers: { "Content-Type": "application/json" } });
   } catch (err: unknown) {
-    // const error = [^;]+;
+    const error = err as Error;
     if (error.message === 'Token invalide ou expiré' || error.message === 'Authentification requise') {
       return new Response(JSON.stringify({ error: error.message }), { status: 401, headers: { "Content-Type": "application/json" } });
     }
@@ -117,7 +122,7 @@ export async function PUT(req: NextRequest, { params }: ApiContext): Promise<Res
       const roundedOffset = Math.round(body.header_image_offset * 10) / 10;
       updateData.header_image_offset = roundedOffset;
       if (process.env.NODE_ENV === 'development') {
-        logger.dev('[API] Mise à jour header_image_offset:', roundedOffset);
+        console.log('[API] Mise à jour header_image_offset:', roundedOffset);
       }
     }
     if (body.header_image_blur !== undefined) {
@@ -158,7 +163,7 @@ export async function PUT(req: NextRequest, { params }: ApiContext): Promise<Res
     
     return new Response(JSON.stringify({ note: data }), { status: 200, headers: { "Content-Type": "application/json" } });
   } catch (err: unknown) {
-    // const error = [^;]+;
+    const error = err as Error;
     if (error.message === 'Token invalide ou expiré' || error.message === 'Authentification requise') {
       return new Response(JSON.stringify({ error: error.message }), { status: 401, headers: { "Content-Type": "application/json" } });
     }
@@ -192,7 +197,7 @@ export async function DELETE(req: NextRequest, { params }: ApiContext): Promise<
     
     return new Response(JSON.stringify({ success: true }), { status: 200, headers: { "Content-Type": "application/json" } });
   } catch (err: unknown) {
-    // const error = [^;]+;
+    const error = err as Error;
     if (error.message === 'Token invalide ou expiré' || error.message === 'Authentification requise') {
       return new Response(JSON.stringify({ error: error.message }), { status: 401, headers: { "Content-Type": "application/json" } });
     }

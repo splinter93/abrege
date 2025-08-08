@@ -1,6 +1,6 @@
 "use client";
-// import.*useRef.*from "react";
-// import.*AnimatePresence.*from 'framer-motion';
+import React, { useRef, useEffect, useState } from "react";
+import { motion, AnimatePresence } from 'framer-motion';
 import SimpleContextMenu from "./SimpleContextMenu";
 import ColorPalette from "./ColorPalette";
 import "./ClasseurTabs.css";
@@ -38,7 +38,7 @@ interface SortableTabProps {
   classeur: Classeur;
   isActive: boolean;
   onSelectClasseur: (id: string) => void;
-  onContextMenu: (e: MouseEvent<HTMLButtonElement>, classeur: Classeur) => void;
+  onContextMenu: (e: React.MouseEvent<HTMLButtonElement>, classeur: Classeur) => void;
   isDragging?: boolean;
   isOverlay?: boolean;
 }

@@ -1,6 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
 import type { NextRequest } from 'next/server';
-import { simpleLogger as logger } from '@/utils/logger';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -65,7 +64,7 @@ export async function GET(request: NextRequest) {
       .single();
 
     if (error) {
-      logger.error('Database error:', error);
+      console.error('Database error:', error);
       
       // Si l'utilisateur n'existe pas, créer un utilisateur par défaut
       if (error.code === 'PGRST116') {
@@ -86,7 +85,7 @@ export async function GET(request: NextRequest) {
           .single();
 
         if (createError) {
-          logger.error('Create user error:', createError);
+          console.error('Create user error:', createError);
           return new Response(JSON.stringify({ error: 'Failed to create user' }), { status: 500, headers: { "Content-Type": "application/json" } });
         }
 
@@ -126,7 +125,7 @@ export async function GET(request: NextRequest) {
       return new Response(JSON.stringify({ error: error.message }), { status: 401, headers: { "Content-Type": "application/json" } });
     }
     
-    logger.error('Unexpected error:', error);
+    console.error('Unexpected error:', error);
     return new Response(JSON.stringify({ error: 'Internal server error' }), { status: 500, headers: { "Content-Type": "application/json" } });
   }
 } 
