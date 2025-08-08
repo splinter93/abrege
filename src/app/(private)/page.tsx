@@ -1,13 +1,12 @@
 'use client';
-// import.*logger.*from '@/utils/logger';
 
 import React, { useState, useEffect } from 'react';
 import ContentCard from '../../components/ContentCard';
 import { useLanguageContext } from '../../contexts/LanguageContext';
-// import Link from 'next/link';
 import Image from 'next/image';
 import Sidebar from '../../components/Sidebar';
-// // import.*supabase.*from '../../supabaseClient';
+import { supabase } from '../../supabaseClient';
+import { logger } from '../../utils/logger';
 import '../globals.css';
 
 const mockNotes = [
@@ -51,7 +50,7 @@ export default function HomePage() {
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         
         if (sessionError || !session) {
-          logger.error('No session found:', sessionError);
+          logger.error('No session found:', { error: sessionError });
           setUsername('User.');
           return;
         }
@@ -72,13 +71,13 @@ export default function HomePage() {
             (userData.username || 'User').slice(1) + 
             '.';
           setUsername(formattedUsername);
-          logger.dev('User data received:', userData);
+          logger.debug('User data received:', { userData });
         } else {
-          logger.error('Error response:', response.status);
+          logger.error('Error response:', { status: response.status });
           setUsername('User.');
         }
       } catch (error) {
-        logger.error('Error fetching user:', error);
+        logger.error('Error fetching user:', { error });
         setUsername('User.');
       }
     };
