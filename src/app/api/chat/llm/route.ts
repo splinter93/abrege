@@ -7,6 +7,7 @@ import { agentApiV2Tools } from '@/services/agentApiV2Tools';
 
 import type { AppContext, ChatMessage } from '@/services/llm/types';
 import { simpleLogger as logger } from '@/utils/logger';
+import { buildObservation, computeToolCallHash } from '@/services/toolFlowUtils';
 
 // Instance singleton du LLM Manager
 const llmManager = new LLMProviderManager();
@@ -791,22 +792,16 @@ export async function POST(request: NextRequest) {
           // Réinjection et relance Groq pour la réponse finale (le modèle voit les erreurs JSON des tools et peut réagir)
           const cleanMessages = messages.filter(msg => !(msg.role === 'user' && 'tool_calls' in (msg as any)));
           const toolAssistantMsg = { role: 'assistant' as const, content: null, tool_calls: outgoingAssistantToolCalls };
-          const updatedMessages = [...cleanMessages, toolAssistantMsg, ...toolResultMessages];
+          const updatedMessagesBase = [...cleanMessages, toolAssistantMsg, ...toolResultMessages];
 
-          const hasFailedTool = toolResultMessages.some(msg => {
-            try {
-              const content = JSON.parse(msg.content);
-              return content.success === false;
-            } catch {
-              return false;
-            }
-          });
-
-          if (hasFailedTool) {
-            updatedMessages.unshift({
-              role: 'system',
-              content: "One of the tools you called failed. Inform the user about the failure in a natural, conversational way and ask for clarification or suggest an alternative. Do not attempt to call the same tool again with the same arguments. Always formulate a user-facing response."
-            });
+          // Flow post-échec: observation -> tentative réparation -> force texte
+          const anyFailed = toolResultMessages.some(m => { try { const c = JSON.parse(m.content); return c?.success === false; } catch { return false; } });
+          let updatedMessages = updatedMessagesBase;
+          if (anyFailed) {
+            // 1) Observation assistant
+            const firstFailed = toolResultMessages.find(m => { try { const c = JSON.parse(m.content); return c?.success === false; } catch { return false; } });
+            const obs = buildObservation(firstFailed?.name || 'unknown_tool', firstFailed?.content || '{}');
+            updatedMessages = [...updatedMessagesBase, { role: 'assistant' as const, content: obs.text }];
           }
 
           const relaunchPayload = {
@@ -878,6 +873,21 @@ export async function POST(request: NextRequest) {
           // Si un 2e tool_call a été demandé pendant la relance, l'exécuter puis relancer une dernière fois
           if (relaunchToolCallData && relaunchToolCallData.name) {
             try {
+              // Dédup une passe max
+              const callHash = computeToolCallHash(relaunchToolCallData.name, relaunchToolCallData.arguments || '{}');
+              // marquage simple (mémoire en cours de requête seulement)
+              const seen = new Set<string>();
+              if (seen.has(callHash)) {
+                // Forcer texte si doublon
+                const forcedMessages = [...updatedMessages, { role: 'assistant' as const, content: "Je ne peux pas relancer le même outil avec les mêmes arguments. Voici ce que je propose : expliquez ce qui manque ou proposez une alternative." }];
+                const payloadNone = { ...relaunchPayload, messages: forcedMessages, tools: undefined, tool_choice: 'none' as const };
+                const finalRespForced = await fetch('https://api.groq.com/openai/v1/chat/completions', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${process.env.GROQ_API_KEY}` }, body: JSON.stringify(payloadNone) });
+                const txt = await finalRespForced.text();
+                await channel.send({ type:'broadcast', event:'llm-token-batch', payload:{ tokens: txt, sessionId: context.sessionId } });
+                await channel.send({ type:'broadcast', event:'llm-complete', payload:{ sessionId: context.sessionId, fullResponse: txt } });
+                return NextResponse.json({ success: true, completed: true, response: txt });
+              }
+              seen.add(callHash);
               const toolCallId2 = relaunchToolCallData.tool_call_id || `call_${Date.now()}_2`;
               const toolMessage2 = { role: 'assistant' as const, content: null, tool_calls: [{ id: toolCallId2, type: 'function' as const, function: { name: relaunchToolCallData.name, arguments: relaunchToolCallData.arguments } }] };
               const toolResultMessage2: any = { role: 'tool' as const, tool_call_id: toolCallId2, name: relaunchToolCallData.name, content: '' };
@@ -896,6 +906,7 @@ export async function POST(request: NextRequest) {
               await persist(toolResultMessage2, `tool result ${relaunchToolCallData.name} (relaunch)`);
               // Relancer une dernière fois avec historique mis à jour
               const updatedMessages2 = [...updatedMessages, toolMessage2, toolResultMessage2];
+              // Si pas de texte ou échec, forcer texte
               const finalPayload2 = {
                 model: 'openai/gpt-oss-120b',
                 messages: updatedMessages2,
