@@ -121,12 +121,17 @@ export function useChatStreaming(options: UseChatStreamingOptions = {}): UseChat
         logger.debug('[useChatStreaming] ✅ Complete reçu:', payload);
         try {
           const { sessionId: payloadSessionId, fullResponse } = payload.payload || {};
-          logger.debug('[useChatStreaming] 🔍 Complete sessionId:', { expected: sessionId, received: payloadSessionId, hasResponse: !!fullResponse });
-          if (payloadSessionId === sessionId && fullResponse) {
-            logger.debug('[useChatStreaming] 🎯 Completion traitée');
+          logger.debug('[useChatStreaming] 🔍 Complete sessionId:', { expected: sessionId, received: payloadSessionId, hasResponse: typeof fullResponse === 'string' });
+          if (payloadSessionId === sessionId) {
+            // Toujours stopper le streaming, même si le texte est vide
             setIsStreaming(false);
-            setContent(fullResponse);
-            onComplete?.(fullResponse, reasoning);
+            if (channelRef.current) {
+              try { supabase.removeChannel(channelRef.current); } catch {}
+              channelRef.current = null;
+            }
+            const finalText = typeof fullResponse === 'string' ? fullResponse : '';
+            setContent(finalText);
+            onComplete?.(finalText, reasoning);
           }
         } catch (error) {
           logger.error('[useChatStreaming] ❌ Erreur completion:', error);
