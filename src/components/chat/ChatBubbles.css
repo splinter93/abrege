@@ -57,7 +57,7 @@
   border: none !important;
   outline: none !important;
   box-shadow: none !important;
-  padding: var(--chat-spacing-lg);
+  padding: var(--chat-spacing-lg) var(--chat-spacing-lg) var(--chat-spacing-lg) 0;
 }
 
 /* ========================================

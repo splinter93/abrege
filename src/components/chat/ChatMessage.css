@@ -71,6 +71,7 @@
   color: var(--chat-text-primary);
   border: 1px solid var(--chat-border-secondary);
   border-bottom-left-radius: var(--chat-radius-sm);
+  padding-left: 0;
 }
 
 .chat-message-bubble-tool {
