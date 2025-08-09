@@ -1,9 +1,10 @@
 import { createClient } from '@supabase/supabase-js';
 import { diffService, type DiffResult } from './diffService';
-// import.*logger.*from '@/utils/logger';
+import { simpleLogger as logger } from '@/utils/logger';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
 // // const supabase = [^;]+;]+;
 
 interface PollingConfig {
@@ -108,13 +109,13 @@ class RealtimeService {
 
     // Adapter la requête selon la table
     if (table === 'folders') {
-      // Pour les dossiers, on se base sur `created_at` car il n'y a pas `updated_at`
-      query = query.eq('user_id', this.config.userId).order('created_at', { ascending: false }).limit(50);
+      // Utiliser updated_at pour détecter les mises à jour de structure (parent_id, classeur_id, name)
+      query = query.eq('user_id', this.config.userId).order('updated_at', { ascending: false }).limit(50);
       if (lastTimestamp) {
-        query = query.gt('created_at', lastTimestamp);
+        query = query.gt('updated_at', lastTimestamp);
       }
     } else if (table === 'classeurs') {
-      // Pour les classeurs, on se base sur `created_at` car il n'y a pas `updated_at`
+      // Utiliser created_at faute de colonne updated_at sur classeurs
       query = query.eq('user_id', this.config.userId).order('created_at', { ascending: false }).limit(50);
       if (lastTimestamp) {
         query = query.gt('created_at', lastTimestamp);

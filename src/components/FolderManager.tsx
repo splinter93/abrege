@@ -22,9 +22,6 @@ interface FolderManagerProps {
   parentFolderId?: string;
   onFolderOpen: (folder: Folder) => void;
   onGoBack: () => void;
-  // Ajout des données filtrées
-  filteredFolders?: Folder[];
-  filteredNotes?: FileArticle[];
 }
 
 /**
@@ -38,8 +35,6 @@ const FolderManager: React.FC<FolderManagerProps> = ({
   parentFolderId, 
   onFolderOpen, 
   onGoBack,
-  filteredFolders,
-  filteredNotes
 }) => {
   // Optimisation : éviter les appels API redondants
   const [refreshKey, setRefreshKey] = useState(0);
@@ -55,21 +50,18 @@ const FolderManager: React.FC<FolderManagerProps> = ({
     deleteFolder,
     deleteFile,
     moveItem,
+    folders,
+    files,
   } = useFolderManagerState(classeurId, parentFolderId, refreshKey);
 
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const refreshNow = useCallback(() => setRefreshKey(k => k + 1), []);
 
-  // Hook pour filtrer et valider les données
-  const { safeFolders, safeFiles } = useFolderFilter({
-    folders: filteredFolders,
-    notes: filteredNotes
-  });
+  // Filtrage/validation de sécurité
+  const { safeFolders, safeFiles } = useFolderFilter({ folders, notes: files });
 
   // Hook pour la sélection et navigation
-  const { handleFileOpen } = useFolderSelection({
-    onFolderOpen
-  });
+  const { handleFileOpen } = useFolderSelection({ onFolderOpen });
 
   // Hook pour le menu contextuel
   const {
@@ -102,9 +94,7 @@ const FolderManager: React.FC<FolderManagerProps> = ({
   });
 
   // Hook pour les raccourcis clavier
-  useFolderKeyboard({
-    closeContextMenu
-  });
+  useFolderKeyboard({ closeContextMenu });
 
   // Handler pour déclencher le renommage inline au clic sur le nom
   const handleStartRenameFolderClick = useCallback((folder: Folder) => {

@@ -16,6 +16,7 @@ import { simpleLogger as logger } from '@/utils/logger';
 import './index.css';
 import './ReasoningMessage.css';
 import './ToolCallMessage.css';
+import Link from 'next/link';
 
 // 🔧 NOUVEAU: Fonction de formatage du reasoning pour Qwen 3
 const formatReasoningForQwen = (reasoning: string, model?: string): string => {
@@ -445,12 +446,12 @@ const ChatFullscreenV2: React.FC = () => {
       <div className="chat-header">
         <div className="chat-header-left">
           <div className="chat-logo">
-            <img src="/logo scrivia white.png" alt="Scrivia" className="chat-logo-img" />
+            <Link href="/" className="chat-logo-link" aria-label="Aller à l’accueil">
+              <img src="/logo scrivia white.png" alt="Scrivia" className="chat-logo-img" />
+            </Link>
           </div>
           <div className="chat-session-info">
-            <h2 className="chat-session-name">
-              {currentSession?.name || 'Nouvelle conversation'}
-            </h2>
+            {/* Removed session name per request */}
           </div>
         </div>
 

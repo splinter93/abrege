@@ -58,11 +58,15 @@
 .chat-message-bubble-user {
   background: var(--chat-bg-elevated);
   color: var(--chat-text-primary);
-  border: 1px solid var(--chat-border-secondary);
+  border: none;
+  box-shadow: none;
   border-bottom-right-radius: var(--chat-radius-sm);
 }
 
 .chat-message-bubble-assistant {
+  max-width: 100%;
+  width: 100%;
+  box-sizing: border-box;
   background: var(--chat-bg-elevated);
   color: var(--chat-text-primary);
   border: 1px solid var(--chat-border-secondary);

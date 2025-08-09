@@ -354,24 +354,7 @@ export function useFolderManagerState(classeurId: string, parentFolderId?: strin
       logger.dev('[UI] 📦 Déplacement item avec API...', { id, newParentId, type });
       }
       if (type === 'folder') {
-        const response = await fetch(`/api/v1/dossier/${id}/move`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            target_parent_id: newParentId,
-            target_classeur_id: activeClasseurId
-          })
-        });
-        if (!response.ok) {
-          throw new Error(`Erreur déplacement dossier: ${response.statusText}`);
-        }
-        const result = await response.json();
-        const store = useFileSystemStore.getState();
-        store.moveFolder(id, newParentId, activeClasseurId || undefined);
-        await clientPollingTrigger.triggerFoldersPolling('UPDATE');
-        if (process.env.NODE_ENV === 'development') {
-        logger.dev('[UI] ✅ Dossier déplacé:', result.folder?.name || id);
-        }
+        await optimizedApi.moveFolder(id, newParentId, activeClasseurId || undefined);
       } else {
         // Utiliser l'API optimisée pour le déplacement de note
         const result = await optimizedApi.moveNote(id, newParentId, activeClasseurId || undefined);

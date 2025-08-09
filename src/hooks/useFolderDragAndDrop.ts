@@ -4,8 +4,8 @@ import { toast } from 'react-hot-toast';
 import { DropEventDetail } from '../components/types';
 import { useFileSystemStore } from '@/store/useFileSystemStore';
 import { clientPollingTrigger } from '@/services/clientPollingTrigger';
-// import.*optimizedApi.*from '@/services/optimizedApi';
-// import.*logger.*from '@/utils/logger';
+import { OptimizedApi } from '@/services/optimizedApi';
+import { simpleLogger as logger } from '@/utils/logger';
 
 interface UseFolderDragAndDropProps {
   classeurId: string;
@@ -40,7 +40,7 @@ export const useFolderDragAndDrop = ({
   const handleDropItem = useCallback((itemId: string, itemType: 'folder' | 'file', targetFolderId: string) => {
     if (itemType === 'folder' && itemId === targetFolderId) {
       if (process.env.NODE_ENV === 'development') {
-      logger.warn('Action empêchée : un dossier ne peut pas être imbriqué dans lui-même.');
+        logger.warn('Action empêchée : un dossier ne peut pas être imbriqué dans lui-même.');
       }
       return;
     }
@@ -64,9 +64,9 @@ export const useFolderDragAndDrop = ({
       const data = JSON.parse(e.dataTransfer.getData('application/json'));
       if (data && data.id && data.type) {
         moveItem(data.id, null, data.type);
-        // Si on déplace le dossier courant, revenir à la racine
+        // Si on déplace le dossier courant, revenir à la racine (navigation gérée par le parent)
         if (data.type === 'folder' && data.id === parentFolderId) {
-          // Navigation gérée par le parent
+          // No-op here
         }
       }
     } catch {
@@ -80,48 +80,34 @@ export const useFolderDragAndDrop = ({
       const customEvent = e as CustomEvent<DropEventDetail>;
       const { classeurId: targetClasseurId, itemId, itemType } = customEvent.detail || {};
       if (!targetClasseurId || !itemId || !itemType) return;
-      
+
+      const api = OptimizedApi.getInstance();
       toast.loading('Déplacement en cours...');
-      
-      if (targetClasseurId === classeurId) {
-        // Si on drop sur le tab du classeur courant, ramener à la racine
-        await moveItem(itemId, null, itemType);
-        refreshNow();
+
+      try {
+        if (targetClasseurId === classeurId) {
+          // Drop sur le tab du classeur courant => move à la racine
+          await moveItem(itemId, null, itemType);
+          refreshNow();
+        } else {
+          // Cross-classeur: déplacer dans targetClasseurId et racine
+          if (itemType === 'folder') {
+            await api.moveFolder(itemId, null, targetClasseurId);
+          } else {
+            await api.moveNote(itemId, null, targetClasseurId);
+          }
+          // Pas besoin de modifier le store manuellement: OptimizedApi a déjà mis à jour Zustand
+          // On force un refresh local pour que l'item disparaisse du classeur courant
+          setRefreshKey((k) => k + 1);
+        }
         toast.dismiss();
         toast.success('Déplacement terminé !');
-      } else {
-        // Sinon, changer de classeur ET ramener à la racine
-        if (itemType === 'folder') {
-          try {
-            // Utiliser l'API optimisée pour le déplacement de dossier
-            // const result = [^;]+;
-            refreshNow();
-            toast.dismiss();
-            toast.success('Déplacement terminé !');
-          } catch (err) {
-            toast.dismiss();
-            toast.error('Erreur lors du déplacement du dossier.');
-            if (process.env.NODE_ENV === 'development') {
-              logger.error('[DnD] Déplacement dossier ERROR', err);
-            }
-          }
-        } else {
-          try {
-            // Utiliser l'API optimisée pour le déplacement de note
-            // const result = [^;]+;
-            refreshNow();
-            toast.dismiss();
-            toast.success('Déplacement terminé !');
-          } catch (err) {
-            toast.dismiss();
-            toast.error('Erreur lors du déplacement de la note.');
-            if (process.env.NODE_ENV === 'development') {
-              logger.error('[DnD] Déplacement note ERROR', err);
-            }
-          }
+      } catch (err) {
+        toast.dismiss();
+        toast.error('Erreur lors du déplacement.');
+        if (process.env.NODE_ENV === 'development') {
+          logger.error('[DnD] Déplacement ERROR', err);
         }
-        // Rafraîchir la vue du classeur courant pour que l'item disparaisse
-        setRefreshKey(k => k + 1);
       }
     };
 
