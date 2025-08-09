@@ -1,4 +1,4 @@
-import { S3Client, PutObjectCommand, DeleteObjectCommand, HeadObjectCommand } from '@aws-sdk/client-s3';
+import { S3Client, PutObjectCommand, DeleteObjectCommand, HeadObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { z } from 'zod';
 import { simpleLogger as logger } from '@/utils/logger';
@@ -40,6 +40,7 @@ export interface UploadOptions {
   fileType: string;
   maxSize?: number; // en bytes
   allowedTypes?: string[];
+  expiresIn?: number; // secondes
 }
 
 export interface S3UploadResult {
@@ -47,6 +48,8 @@ export interface S3UploadResult {
   publicUrl: string;
   key: string;
 }
+
+import crypto from 'node:crypto';
 
 export class S3Service {
   private client: S3Client;
@@ -86,7 +89,8 @@ export class S3Service {
         },
       });
 
-      const url = await getSignedUrl(this.client, command, { expiresIn: 3600 });
+      const expiresIn = typeof options.expiresIn === 'number' ? options.expiresIn : 900; // défaut 15 minutes
+      const url = await getSignedUrl(this.client, command, { expiresIn });
       const publicUrl = url.split('?')[0];
 
       return {
@@ -96,6 +100,50 @@ export class S3Service {
       };
     } catch (error) {
       throw this.handleS3Error(error, 'generateUploadUrl');
+    }
+  }
+
+  /**
+   * Génère une URL pré-signée pour un GET (lecture)
+   */
+  async generateGetUrl(key: string, ttlSeconds: number = 120): Promise<string> {
+    try {
+      const command = new GetObjectCommand({
+        Bucket: this.bucket,
+        Key: key,
+      });
+      return await getSignedUrl(this.client, command, { expiresIn: ttlSeconds });
+    } catch (error) {
+      throw this.handleS3Error(error, 'generateGetUrl');
+    }
+  }
+
+  /**
+   * Construit l'URL canonique (non signée) de l'objet S3
+   */
+  getObjectUrl(key: string): string {
+    const encodedKey = key.split('/').map(encodeURIComponent).join('/');
+    return `https://${this.bucket}.s3.${this.config.region}.amazonaws.com/${encodedKey}`;
+  }
+
+  /**
+   * Récupère les métadonnées d'un objet (HEAD)
+   */
+  async getHeadObject(key: string): Promise<{ contentType?: string; contentLength?: number; etag?: string }> {
+    try {
+      const command = new HeadObjectCommand({
+        Bucket: this.bucket,
+        Key: key,
+      });
+      const res = await this.client.send(command);
+      const etag = (res.ETag || '').replace(/"/g, '');
+      return {
+        contentType: res.ContentType || undefined,
+        contentLength: typeof res.ContentLength === 'number' ? res.ContentLength : undefined,
+        etag,
+      };
+    } catch (error) {
+      throw this.handleS3Error(error, 'getHeadObject');
     }
   }
 
@@ -134,12 +182,19 @@ export class S3Service {
   }
 
   /**
-   * Génère une clé unique pour un fichier
+   * Génère une clé structurée et unique pour un fichier
    */
-  generateKey(userId: string, fileName: string): string {
-    const timestamp = Date.now();
-    const sanitizedFileName = fileName.replace(/[^a-zA-Z0-9.-]/g, '_');
-    return `${userId}/${timestamp}_${sanitizedFileName}`;
+  generateStructuredKey(userId: string, originalName: string): string {
+    const now = new Date();
+    const yyyy = String(now.getFullYear());
+    const mm = String(now.getMonth() + 1).padStart(2, '0');
+    const dd = String(now.getDate()).padStart(2, '0');
+    const base = originalName.trim().toLowerCase().replace(/[^a-z0-9._-]+/g, '-');
+    const extMatch = base.match(/\.[a-z0-9]{1,8}$/);
+    const ext = extMatch ? extMatch[0] : '';
+    const nameOnly = ext ? base.slice(0, -ext.length) : base;
+    const random = crypto.randomUUID();
+    return `${userId}/${yyyy}/${mm}/${dd}/${random}-${nameOnly}${ext}`;
   }
 
   /**

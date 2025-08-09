@@ -32,6 +32,7 @@ import { OptimizedApi } from '@/services/optimizedApi';
 import { supabase } from '@/supabaseClient';
 import { toast } from 'react-hot-toast';
 import ImageMenu from '@/components/ImageMenu';
+import { uploadImageForNote } from '@/utils/fileUpload';
 
 /**
  * Full Editor – markdown is source of truth; HTML only for display.
@@ -53,6 +54,7 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
   const [headerOverlay, setHeaderOverlay] = React.useState<number>(0);
   const [titleInImage, setTitleInImage] = React.useState<boolean>(false);
   const [imageMenuOpen, setImageMenuOpen] = React.useState(false);
+  const [imageMenuTarget, setImageMenuTarget] = React.useState<'header' | 'content'>('header');
 
   // header actions state
   const [previewMode, setPreviewMode] = React.useState(false);
@@ -140,7 +142,7 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
       }
     },
     // Option read by CustomImage
-    handleOpenImageMenu: () => setImageMenuOpen(true),
+    handleOpenImageMenu: () => { setImageMenuTarget('content'); setImageMenuOpen(true); },
   } as any);
 
   // Open slash menu on '/'
@@ -283,6 +285,37 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
     } catch {}
   }, [noteId]);
 
+  React.useEffect(() => {
+    if (!editor || isReadonly) return;
+    const el = editor.view.dom as HTMLElement;
+
+    const onDrop = async (e: DragEvent) => {
+      try {
+        if (!e.dataTransfer) return;
+        const files = Array.from(e.dataTransfer.files || []);
+        if (!files.length) return;
+        const image = files.find(f => /^image\/(jpeg|png|webp|gif)$/.test(f.type));
+        if (!image) return;
+        e.preventDefault();
+        const { publicUrl } = await uploadImageForNote(image, noteId);
+        (editor as any).chain().focus().setImage({ src: publicUrl }).run();
+      } catch {}
+    };
+
+    const onDragOver = (e: DragEvent) => {
+      if (!e.dataTransfer) return;
+      const hasImage = Array.from(e.dataTransfer.items || []).some(it => it.kind === 'file');
+      if (hasImage) e.preventDefault();
+    };
+
+    el.addEventListener('drop', onDrop);
+    el.addEventListener('dragover', onDragOver);
+    return () => {
+      el.removeEventListener('drop', onDrop);
+      el.removeEventListener('dragover', onDragOver);
+    };
+  }, [editor, isReadonly, noteId]);
+
   if (!note) {
     return <div className="editor-flex-center editor-padding-standard">Chargement…</div>;
   }
@@ -336,7 +369,7 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
                     <div className="editor-add-header-image">
                       <button
                         className="editor-add-header-image-btn"
-                        onClick={() => setImageMenuOpen(true)}
+                        onClick={() => { setImageMenuTarget('header'); setImageMenuOpen(true); }}
                         aria-label="Ajouter une image d'en-tête"
                         title="Ajouter une image d'en-tête"
                       >
@@ -346,13 +379,7 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
                     </div>
                   </div>
                 </div>
-                <ImageMenu
-                  open={imageMenuOpen}
-                  onClose={() => setImageMenuOpen(false)}
-                  onInsertImage={handleHeaderChange as (src: string) => void}
-                  noteId={note.id}
-                  userId={userId}
-                />
+                {/* ImageMenu is rendered globally below */}
               </>
             )}
             <EditorHeaderImage
@@ -453,6 +480,21 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
             )}
           </EditorContent>
         )}
+      />
+      {/* Global ImageMenu for both header and content insertions */}
+      <ImageMenu
+        open={imageMenuOpen}
+        onClose={() => setImageMenuOpen(false)}
+        onInsertImage={(src: string) => {
+          if (imageMenuTarget === 'header') {
+            return handleHeaderChange(src);
+          }
+          if (editor) {
+            try { (editor as any).chain().focus().setImage({ src }).run(); } catch {}
+          }
+        }}
+        noteId={note.id}
+        userId={userId}
       />
     </>
   );
