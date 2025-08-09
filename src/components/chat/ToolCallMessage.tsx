@@ -38,7 +38,8 @@ const ToolCallMessage: React.FC<ToolCallMessageProps> = ({ toolCalls, toolResult
 
   const isSuccess = (toolCallId: string) => {
     const result = getToolResult(toolCallId);
-    return result?.success !== false; // Default to success if not specified
+    if (typeof result?.success === 'boolean') return result.success;
+    return true; // default to success only when success is not provided
   };
 
   return (
@@ -94,4 +95,4 @@ const ToolCallMessage: React.FC<ToolCallMessageProps> = ({ toolCalls, toolResult
   );
 };
 
-export default ToolCallMessage; 
+export default ToolCallMessage;

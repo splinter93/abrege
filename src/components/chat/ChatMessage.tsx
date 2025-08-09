@@ -21,6 +21,19 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, className, isStreami
   
   const { role, content, reasoning } = message;
 
+  const parseSuccessFromContent = (raw: string | null | undefined): boolean | undefined => {
+    if (!raw) return undefined;
+    try {
+      const data = JSON.parse(raw);
+      if (data && typeof data === 'object' && 'success' in data) {
+        return Boolean((data as any).success);
+      }
+    } catch {
+      // ignore non-JSON content
+    }
+    return undefined;
+  };
+
   // Pour les messages tool (résultats d'outils), créer un faux tool call pour l'affichage
   const getToolCallForToolMessage = () => {
     if (role === 'tool' && message.tool_call_id && message.name) {
@@ -38,11 +51,12 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, className, isStreami
 
   const getToolResultsForToolMessage = () => {
     if (role === 'tool' && message.tool_call_id && message.name && content) {
+      const derivedSuccess = parseSuccessFromContent(content);
       return [{
         tool_call_id: message.tool_call_id,
         name: message.name,
         content: content,
-        success: true // Par défaut, on considère que c'est un succès
+        success: derivedSuccess === undefined ? undefined : derivedSuccess
       }];
     }
     return message.tool_results;
@@ -60,7 +74,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, className, isStreami
             tool_call_id: msg.tool_call_id!,
             name: msg.name!,
             content: msg.content!,
-            success: true // Par défaut
+            success: parseSuccessFromContent(msg.content!)
           }));
       }
     }
