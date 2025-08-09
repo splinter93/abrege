@@ -934,17 +934,17 @@ export async function POST(request: NextRequest) {
               return NextResponse.json({ success: true, completed: true, response: '', error: true });
             }
           }
-          // Pas de 2e tool_call → réponse finale ou fallback
+          // ✅ Aucun 2e tool_call: terminer proprement en émettant llm-complete et persister la réponse
           const safeFinal = (finalAccum || '').trim();
           await channel.send({ type: 'broadcast', event: 'llm-complete', payload: { sessionId: context.sessionId, fullResponse: safeFinal } });
           if (safeFinal) {
             try {
               const { ChatSessionService } = await import('@/services/chatSessionService');
-              const css = ChatSessionService.getInstance();
-              await css.addMessageWithToken(context.sessionId, { role: 'assistant', content: safeFinal, timestamp: new Date().toISOString() } as any, userToken);
+              const css2 = ChatSessionService.getInstance();
+              await css2.addMessageWithToken(context.sessionId, { role: 'assistant', content: safeFinal, timestamp: new Date().toISOString() } as any, userToken);
             } catch {}
           }
-          return NextResponse.json({ success: true, completed: true, response: finalAccum });
+          return NextResponse.json({ success: true, completed: true, response: safeFinal });
         }
 
         // Si une fonction a été appelée, l'exécuter
