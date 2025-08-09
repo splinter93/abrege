@@ -35,6 +35,10 @@ export async function PUT(
   try {
     const body = await request.json();
 
+    // Récupérer le token d'authentification pour un client Supabase user-scoped
+    const authHeader = request.headers.get('Authorization');
+    const userToken = authHeader?.startsWith('Bearer ') ? authHeader.substring(7) : undefined;
+
     // Validation Zod V2
     const validationResult = validatePayload(updateClasseurV2Schema, body);
     if (!validationResult.success) {
@@ -44,8 +48,8 @@ export async function PUT(
 
     const validatedData = validationResult.data;
 
-    // Utiliser V2DatabaseUtils pour l'accès direct à la base de données
-    const result = await V2DatabaseUtils.updateClasseur(ref, validatedData, userId, context);
+    // Utiliser V2DatabaseUtils pour l'accès direct à la base de données (avec userToken pour RLS)
+    const result = await V2DatabaseUtils.updateClasseur(ref, validatedData, userId, context, userToken);
 
     const apiTime = Date.now() - startTime;
     logApi('v2_classeur_update', `✅ Classeur mis à jour en ${apiTime}ms`, context);

@@ -695,17 +695,32 @@ export class V2DatabaseUtils {
   /**
    * Mettre à jour un classeur
    */
-  static async updateClasseur(ref: string, data: UpdateClasseurData, userId: string, context: any) {
+  static async updateClasseur(ref: string, data: UpdateClasseurData, userId: string, context: any, userToken?: string) {
     logApi('v2_db_update_classeur', `🚀 Mise à jour classeur ${ref}`, context);
     
     try {
-      // Résoudre la référence (UUID ou slug)
-      const resolveResult = await V2ResourceResolver.resolveRef(ref, 'classeur', userId, context);
-      if (!resolveResult.success) {
-        throw new Error(resolveResult.error);
-      }
+      // Créer un client Supabase authentifié si un token est fourni (RLS)
+      const client = userToken
+        ? createClient(supabaseUrl, supabaseAnonKey, {
+            global: { headers: { Authorization: `Bearer ${userToken}` } }
+          })
+        : supabase;
 
-      const classeurId = resolveResult.id;
+      // Résoudre la référence (UUID ou slug)
+      let classeurId = ref;
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (!uuidRegex.test(ref)) {
+        const { data: found, error: resolveError } = await client
+          .from('classeurs')
+          .select('id')
+          .eq('slug', ref)
+          .eq('user_id', userId)
+          .single();
+        if (resolveError || !found?.id) {
+          throw new Error('Classeur non trouvé');
+        }
+        classeurId = found.id;
+      }
 
       // Préparer les données de mise à jour
       const updateData: any = {};
@@ -716,7 +731,7 @@ export class V2DatabaseUtils {
       updateData.updated_at = new Date().toISOString();
 
       // Mettre à jour le classeur
-      const { data: classeur, error: updateError } = await supabase
+      const { data: classeur, error: updateError } = await client
         .from('classeurs')
         .update(updateData)
         .eq('id', classeurId)
