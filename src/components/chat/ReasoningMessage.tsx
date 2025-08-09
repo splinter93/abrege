@@ -61,8 +61,14 @@ const ReasoningMessage: React.FC<ReasoningMessageProps> = ({ reasoning, model, c
         onClick={() => setCollapsed(prev => !prev)}
         aria-expanded={!collapsed}
       >
-        <span className="reasoning-title">Reasoning</span>
-        <span className="reasoning-toggle">{collapsed ? '▼' : '▲'}</span>
+        <div className="reasoning-title-group">
+          <svg className="reasoning-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M18 10h4v4h-4v-4zm-6-6h4v4h-4V4zm-6 6h4v4H6v-4z"/>
+            <path d="M6 18h12M12 4v2M12 10v4M12 16v2"/>
+          </svg>
+          <span className="reasoning-title">Raisonnement</span>
+        </div>
+        <svg className="reasoning-toggle" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m6 9 6 6 6-6"/></svg>
       </button>
       {!collapsed && (
         <div className="reasoning-content">

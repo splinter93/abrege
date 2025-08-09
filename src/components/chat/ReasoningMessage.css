@@ -1,13 +1,15 @@
 /* ========================================
-   REASONING MESSAGE - COMPOSANT DÉDIÉ
+   REASONING MESSAGE - MODERN DESIGN V2
    ======================================== */
 
 .reasoning-message {
-  margin-bottom: var(--chat-spacing-sm);
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  padding-top: 8px;
+  margin-top: 8px;
 }
 
 /* ========================================
-   HEADER DU REASONING (CLICABLE)
+   HEADER
    ======================================== */
 
 .reasoning-header {
@@ -15,60 +17,64 @@
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  border: 0;
   background: none;
-  padding: var(--chat-spacing-xs) 0;
+  border: none;
+  padding: 0;
   cursor: pointer;
   text-align: left;
-  color: var(--chat-text-tertiary);
 }
 
-.reasoning-header:hover {
+.reasoning-title-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.reasoning-icon {
+  width: 14px;
+  height: 14px;
   color: var(--chat-text-secondary);
 }
 
 .reasoning-title {
-  font-size: 0.75em;
+  font-size: 13px;
   font-weight: 500;
-  color: var(--chat-text-tertiary) !important;
+  color: var(--chat-text-secondary);
+  transition: color 0.2s ease;
+}
+
+.reasoning-header:hover .reasoning-title {
+  color: var(--chat-text-primary);
 }
 
 .reasoning-toggle {
-  font-size: 0.7em;
-  color: var(--chat-text-tertiary);
+  color: var(--chat-text-secondary);
+  transition: transform 0.2s ease;
+}
+
+.reasoning-header[aria-expanded="false"] .reasoning-toggle {
+  transform: rotate(-90deg);
 }
 
 /* ========================================
-   CONTENU DU REASONING
+   CONTENT
    ======================================== */
 
 .reasoning-content {
-  padding: var(--chat-spacing-xs) 0;
+  padding: 8px 0 4px;
 }
 
 .reasoning-content .chat-markdown {
-  color: var(--chat-text-quaternary);
-  font-size: 0.8em;
-  line-height: 1.4;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--chat-text-secondary);
 }
 
-.reasoning-content .chat-markdown p { margin: 0 0 6px 0; }
-.reasoning-content .chat-markdown p:last-child { margin-bottom: 0; }
+.reasoning-content .chat-markdown p {
+  margin: 0 0 8px 0;
+}
 
 .reasoning-content .chat-markdown strong {
-  color: var(--chat-text-tertiary);
-  font-weight: 600;
-}
-
-.reasoning-content .chat-markdown em {
-  color: var(--chat-text-quaternary);
-  font-style: italic;
-}
-
-/* ========================================
-   RESPONSIVE
-   ======================================== */
-
-@media (max-width: 768px) {
-  .reasoning-content { padding: var(--chat-spacing-xs) 0; }
+  color: var(--chat-text-primary);
+  font-weight: 500;
 } 
