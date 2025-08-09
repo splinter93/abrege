@@ -298,6 +298,7 @@ export async function POST(request: NextRequest) {
       throw new Error('Aucun provider LLM disponible');
     }
 
+    // Minimal logs only
     logger.dev("[LLM API] 🚀 Provider utilisé:", currentProvider.id);
 
     // Vérifier si c'est DeepSeek pour le streaming
@@ -306,14 +307,9 @@ export async function POST(request: NextRequest) {
       
       // Créer un canal unique pour le streaming
       const channelId = incomingChannelId || `llm-stream-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-      logger.dev("[LLM API] 📡 Canal utilisé:", channelId);
       
       // Utiliser le provider avec configuration d'agent
       const deepseekProvider = new DeepSeekProvider();
-      logger.dev("[LLM API] 🔧 Configuration avant merge:", {
-        defaultModel: deepseekProvider.getDefaultConfig().model,
-        defaultInstructions: deepseekProvider.getDefaultConfig().system_instructions?.substring(0, 50) + '...'
-      });
       
       const config = {
         model: agentConfig?.model || deepseekProvider.getDefaultConfig().model,
@@ -322,15 +318,9 @@ export async function POST(request: NextRequest) {
         top_p: agentConfig?.top_p || deepseekProvider.getDefaultConfig().top_p,
         system_instructions: agentConfig?.system_instructions || deepseekProvider.getDefaultConfig().system_instructions
       };
-      logger.dev("[LLM API] 🔧 Configuration après merge:", {
-        model: config.model,
-        temperature: config.temperature,
-        instructions: config.system_instructions?.substring(0, 100) + '...'
-      });
       
       // Préparer les messages avec la configuration dynamique
       const systemContent = `Assistant IA spécialisé dans l'aide et la conversation. Contexte: ${appContext.name}`;
-      logger.dev("[LLM API] 📝 Contenu système préparé:", systemContent.substring(0, 200) + '...');
       
       const messages = [
         {
@@ -338,14 +328,6 @@ export async function POST(request: NextRequest) {
           content: systemContent
         },
         ...sessionHistory.map((msg: ChatMessage) => {
-          // 🔍 DEBUG: Tracer la transmission du name
-          if ((msg as any).role === 'tool') {
-            logger.dev('[LLM API] 🔍 Transmission message tool:', {
-              originalName: (msg as any).name || '❌ MANQUE',
-              toolCallId: (msg as any).tool_call_id,
-              willIncludeName: !!(msg as any).name
-            });
-          }
           const mappedMsg: any = {
             role: msg.role as 'user' | 'assistant' | 'system' | 'tool',
             content: msg.content
@@ -374,6 +356,12 @@ export async function POST(request: NextRequest) {
         }
       ];
 
+      // Minimal structured log: payload + history snapshot
+      try {
+        const historySnapshot = messages.map(m => ({ role: m.role, contentLen: (m as any).content?.length || 0, hasTools: !!(m as any).tool_calls }));
+        logger.info('[LLM API] payload', { component: 'LLM_API', operation: 'payload' }, { model: config.model, messages: historySnapshot });
+      } catch {}
+      
       // 🔧 TOOLS: Accès complet à tous les endpoints pour tous les modèles
       const isGptOss = config.model.includes('gpt-oss');
       const isQwen = config.model.includes('Qwen');
@@ -431,7 +419,6 @@ export async function POST(request: NextRequest) {
       
       // Créer un canal unique pour le streaming
       const channelId = incomingChannelId || `llm-stream-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-      logger.dev("[LLM API] 📡 Canal utilisé:", channelId);
       
       // Préparer le canal et s'abonner pour s'assurer que les broadcasts partent
       const supabaseInit = createSupabaseAdmin();
@@ -442,10 +429,6 @@ export async function POST(request: NextRequest) {
       
       // Utiliser le provider avec configuration d'agent
       const groqProvider = new GroqProvider();
-      logger.dev("[LLM API] 🔧 Configuration avant merge:", {
-        defaultModel: groqProvider.config.model,
-        provider: groqProvider.id
-      });
       
       const config = {
         model: agentConfig?.model || groqProvider.config.model,
@@ -454,15 +437,9 @@ export async function POST(request: NextRequest) {
         top_p: agentConfig?.top_p || groqProvider.config.topP,
         system_instructions: agentConfig?.system_instructions || 'Assistant IA spécialisé dans l\'aide et la conversation.'
       };
-      logger.dev("[LLM API] 🔧 Configuration après merge:", {
-        model: config.model,
-        temperature: config.temperature,
-        instructions: config.system_instructions?.substring(0, 100) + '...'
-      });
       
       // Préparer les messages avec la configuration dynamique
       const systemContent = `Assistant IA spécialisé dans l'aide et la conversation. Contexte: ${appContext.name}`;
-      logger.dev("[LLM API] 📝 Contenu système préparé:", systemContent.substring(0, 200) + '...');
       
       const messages = [
         {
@@ -470,14 +447,6 @@ export async function POST(request: NextRequest) {
           content: systemContent
         },
         ...sessionHistory.map((msg: ChatMessage) => {
-          // 🔍 DEBUG: Tracer la transmission du name
-          if ((msg as any).role === 'tool') {
-            logger.dev('[LLM API] 🔍 Transmission message tool:', {
-              originalName: (msg as any).name || '❌ MANQUE',
-              toolCallId: (msg as any).tool_call_id,
-              willIncludeName: !!(msg as any).name
-            });
-          }
           const mappedMsg: any = {
             role: msg.role as 'user' | 'assistant' | 'system' | 'tool',
             content: msg.content
@@ -1527,25 +1496,14 @@ export async function POST(request: NextRequest) {
         
         // Créer un canal unique pour le streaming
         const channelId = incomingChannelId || `llm-stream-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-        logger.dev("[LLM API] 📡 Canal utilisé:", channelId);
         
         // Utiliser le provider avec configuration d'agent
         const togetherProvider = new TogetherProvider();
-        logger.dev("[LLM API] 🔧 Configuration avant merge:", {
-          defaultModel: togetherProvider.getDefaultConfig().model,
-          defaultInstructions: togetherProvider.getDefaultConfig().system_instructions?.substring(0, 50) + '...'
-        });
         
         const config = togetherProvider['mergeConfigWithAgent'](agentConfig || undefined);
-        logger.dev("[LLM API] 🔧 Configuration après merge:", {
-          model: config.model,
-          temperature: config.temperature,
-          instructions: config.system_instructions?.substring(0, 100) + '...'
-        });
         
         // Préparer les messages avec la configuration dynamique
         const systemContent = togetherProvider['formatContext'](appContext, config);
-        logger.dev("[LLM API] 📝 Contenu système préparé:", systemContent.substring(0, 200) + '...');
         
         const messages = [
           {
@@ -1553,14 +1511,6 @@ export async function POST(request: NextRequest) {
             content: systemContent
           },
           ...sessionHistory.map((msg: ChatMessage) => {
-          // 🔍 DEBUG: Tracer la transmission du name
-          if ((msg as any).role === 'tool') {
-            logger.dev('[LLM API] 🔍 Transmission message tool:', {
-              originalName: (msg as any).name || '❌ MANQUE',
-              toolCallId: (msg as any).tool_call_id,
-              willIncludeName: !!(msg as any).name
-            });
-          }
           const mappedMsg: any = {
             role: msg.role as 'user' | 'assistant' | 'system' | 'tool',
             content: msg.content
@@ -2369,7 +2319,6 @@ export async function POST(request: NextRequest) {
         
         // Créer un canal unique pour le streaming
         const channelId = incomingChannelId || `llm-stream-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-        logger.dev("[LLM API] 📡 Canal utilisé:", channelId);
         
         // Préparer le canal et s'abonner pour s'assurer que les broadcasts partent
         const supabaseInit = createSupabaseAdmin();
@@ -2380,10 +2329,6 @@ export async function POST(request: NextRequest) {
         
         // Utiliser le provider avec configuration d'agent
         const groqProvider = new GroqProvider();
-        logger.dev("[LLM API] 🔧 Configuration avant merge:", {
-          defaultModel: groqProvider.config.model,
-          provider: groqProvider.id
-        });
         
         const config = {
           model: agentConfig?.model || groqProvider.config.model,
@@ -2392,15 +2337,9 @@ export async function POST(request: NextRequest) {
           top_p: agentConfig?.top_p || groqProvider.config.topP,
           system_instructions: agentConfig?.system_instructions || 'Assistant IA spécialisé dans l\'aide et la conversation.'
         };
-        logger.dev("[LLM API] 🔧 Configuration après merge:", {
-          model: config.model,
-          temperature: config.temperature,
-          instructions: config.system_instructions?.substring(0, 100) + '...'
-        });
         
         // Préparer les messages avec la configuration dynamique
         const systemContent = `Assistant IA spécialisé dans l'aide et la conversation. Contexte: ${appContext.name}`;
-        logger.dev("[LLM API] 📝 Contenu système préparé:", systemContent.substring(0, 200) + '...');
         
         const messages = [
           {
@@ -2408,14 +2347,6 @@ export async function POST(request: NextRequest) {
             content: systemContent
           },
           ...sessionHistory.map((msg: ChatMessage) => {
-          // 🔍 DEBUG: Tracer la transmission du name
-          if ((msg as any).role === 'tool') {
-            logger.dev('[LLM API] 🔍 Transmission message tool:', {
-              originalName: (msg as any).name || '❌ MANQUE',
-              toolCallId: (msg as any).tool_call_id,
-              willIncludeName: !!(msg as any).name
-            });
-          }
           const mappedMsg: any = {
             role: msg.role as 'user' | 'assistant' | 'system' | 'tool',
             content: msg.content
