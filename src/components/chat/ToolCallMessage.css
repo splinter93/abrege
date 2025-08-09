@@ -1,15 +1,14 @@
 /* ========================================
-   TOOL CALL MESSAGE - MODERN DESIGN
+   TOOL CALL MESSAGE - MODERN DESIGN V2
    ======================================== */
 
 .tool-call-message {
-  border-radius: var(--chat-radius-lg);
-  background: transparent;
-  border: 0;
-  margin: var(--chat-spacing-xs) 0;
-  overflow: hidden;
+  margin: 8px 0;
   display: inline-block;
-  max-width: 85%;
+  max-width: 600px;
+  width: auto;
+  min-width: 250px;
+  text-align: left;
 }
 
 /* ========================================
@@ -20,39 +19,36 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  width: auto;
-  min-width: 280px;
-  border: 1px solid var(--chat-border-tertiary);
-  background: linear-gradient(180deg, rgba(255,255,255,0.02) 0%, rgba(255,255,255,0.0) 100%), var(--chat-bg-secondary);
-  padding: 6px 10px;
-  border-radius: 10px;
+  width: 100%;
+  background: var(--chat-bg-tertiary);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  padding: 8px 12px;
+  border-radius: 8px;
   cursor: pointer;
   text-align: left;
-  box-shadow: 0 1px 0 rgba(0,0,0,0.25) inset, 0 0 0 1px rgba(255,255,255,0.03);
-  transition: background var(--chat-transition-normal), border-color var(--chat-transition-normal), transform 0.15s ease;
+  transition: background 0.2s ease, border-color 0.2s ease;
 }
 
 .tool-call-header:hover {
-  background: var(--chat-bg-tertiary);
-  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
 }
 
 .tool-call-title-group {
   display: flex;
   align-items: center;
-  gap: var(--chat-spacing-sm);
+  gap: 8px;
 }
 
 .tool-call-icon {
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
   color: var(--chat-text-secondary);
 }
 
 .tool-call-title {
-  font-size: 0.9em;
-  font-weight: 600;
-  letter-spacing: 0.2px;
+  font-size: 13px;
+  font-weight: 500;
   color: var(--chat-text-primary);
 }
 
@@ -68,24 +64,22 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 999px;
-  border: 1px solid rgba(255,255,255,0.06);
-  box-shadow: 0 1px 0 rgba(0,0,0,0.25) inset;
+  border-radius: 50%;
+  background-color: transparent;
+  border: none;
 }
 
 .tool-call-indicator.success {
-  background-color: rgba(16, 185, 129, 0.15);
-  color: #10b981;
+  color: var(--chat-success);
 }
 
 .tool-call-indicator.error {
-  background-color: rgba(239, 68, 68, 0.15);
-  color: #ef4444;
+  color: var(--chat-error);
 }
 
 .tool-call-toggle {
-  color: var(--chat-text-tertiary);
-  transition: transform 0.2s;
+  color: var(--chat-text-secondary);
+  transition: transform 0.2s ease;
 }
 
 .tool-call-header[aria-expanded="false"] .tool-call-toggle {
@@ -97,83 +91,57 @@
    ======================================== */
 
 .tool-call-content {
-  padding: 8px 10px 8px;
-  border: 1px solid var(--chat-border-tertiary);
+  padding: 4px 12px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
   border-top: 0;
-  border-radius: 0 0 10px 10px;
+  border-radius: 0 0 8px 8px;
   background: var(--chat-bg-tertiary);
-  width: auto;
 }
 
 .tool-call-item {
-  border-top: 1px solid var(--chat-border-tertiary);
-  padding-top: var(--chat-spacing-sm);
-  margin-top: var(--chat-spacing-sm);
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  padding-top: 8px;
+  margin-top: 8px;
 }
 
 .tool-call-item:first-child {
-  margin-top: 0;
-  border-top: 0;
+  border-top: none;
   padding-top: 0;
+  margin-top: 0;
 }
 
 .tool-call-item-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: var(--chat-spacing-sm);
+  margin-bottom: 6px;
 }
 
 .tool-call-name {
-  font-size: 0.85em;
-  font-weight: 600;
+  font-size: 13px;
+  font-weight: 500;
   color: var(--chat-text-primary);
 }
 
-.tool-call-arguments {
-  margin-bottom: var(--chat-spacing-sm);
-}
-
-.tool-call-arguments-header {
-  font-size: 0.75em;
+.tool-call-arguments-header,
+.tool-call-result-header {
+  font-size: 11px;
   font-weight: 500;
-  color: var(--chat-text-tertiary);
-  margin-bottom: var(--chat-spacing-xs);
+  color: var(--chat-text-secondary);
   text-transform: uppercase;
+  margin-bottom: 4px;
   letter-spacing: 0.5px;
 }
 
-.tool-call-arguments-content pre {
-  background: var(--chat-bg-code);
-  border-radius: var(--chat-radius-md);
-  padding: var(--chat-spacing-sm);
-  font-size: 0.8em;
+.tool-call-arguments pre,
+.tool-call-result-content {
+  background: var(--chat-bg-primary);
+  border-radius: 6px;
+  padding: 8px;
+  font-size: 12px;
   color: var(--chat-text-secondary);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.tool-call-arguments pre {
   white-space: pre-wrap;
   word-break: break-word;
-}
-
-.tool-call-result {
-  margin-top: var(--chat-spacing-sm);
-}
-
-.tool-call-result-header {
-  font-size: 0.75em;
-  font-weight: 500;
-  color: var(--chat-text-tertiary);
-  margin-bottom: var(--chat-spacing-xs);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.tool-call-result-content {
-  background: var(--chat-bg-tertiary);
-  border-radius: 8px;
-  padding: 8px;
-  border: 1px solid var(--chat-border-tertiary);
-}
-
-.tool-call-result-content .chat-markdown {
-  font-size: 0.85em;
-  color: var(--chat-text-secondary);
+  font-family: monospace;
 } 

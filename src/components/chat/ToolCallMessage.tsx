@@ -59,7 +59,15 @@ const ToolCallMessage: React.FC<ToolCallMessageProps> = ({ toolCalls, toolResult
         <div className="tool-call-status-indicators">
           {toolCalls.map((toolCall) => (
             <div key={toolCall.id} className={`tool-call-indicator ${isSuccess(toolCall.id) ? 'success' : 'error'}`}>
-              {isSuccess(toolCall.id) ? '✓' : '✗'}
+              {isSuccess(toolCall.id) ? (
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M20 6L9 17l-5-5"/>
+                </svg>
+              ) : (
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M18 6L6 18M6 6l12 12"/>
+                </svg>
+              )}
             </div>
           ))}
         </div>
