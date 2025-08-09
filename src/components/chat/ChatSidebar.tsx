@@ -101,6 +101,9 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({ isOpen, isDesktop, onClose })
 
   const sidebarClass = `chat-sidebar ${isOpen ? 'open' : (isDesktop ? 'closed' : '')}`;
 
+  const displayName = (user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Utilisateur').trim();
+  const emailText = user?.email || '';
+
   return (
     <div className={sidebarClass}>
       <div className="sidebar-content-wrapper">
@@ -251,20 +254,22 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({ isOpen, isDesktop, onClose })
           <div className="user-menu">
             <div className="user-info">
               <img 
-                src={user?.user_metadata?.avatar_url || `https://api.dicebear.com/8.x/initials/svg?seed=${user?.email}`} 
-                alt="Avatar utilisateur" 
+                src={user?.user_metadata?.avatar_url || `https://api.dicebear.com/8.x/initials/svg?seed=${displayName}`} 
+                alt={displayName} 
                 className="user-avatar" 
+                loading="lazy"
+                referrerPolicy="no-referrer"
               />
               <div className="user-details">
-                <span className="user-name">{user?.user_metadata?.full_name || 'Utilisateur'}</span>
-                <span className="user-email">{user?.email}</span>
+                <span className="user-name" title={displayName}>{displayName}</span>
+                <span className="user-email" title={emailText}>{emailText}</span>
               </div>
             </div>
             <div className="user-actions">
-              <button className="sidebar-icon-btn" title="Paramètres">
+              <button className="sidebar-icon-btn" title="Paramètres" aria-label="Paramètres">
                 <Settings size={16} />
               </button>
-              <button onClick={signOut} className="sidebar-icon-btn" title="Déconnexion">
+              <button onClick={signOut} className="sidebar-icon-btn" title="Déconnexion" aria-label="Déconnexion">
                 <LogOut size={16} />
               </button>
             </div>
