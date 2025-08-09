@@ -21,6 +21,11 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, className, isStreami
   
   const { role, content, reasoning } = message;
 
+  // Ne pas afficher les messages 'tool' en tant que bulle dédiée
+  if (role === 'tool') {
+    return null;
+  }
+
   const parseSuccessFromContent = (raw: string | null | undefined): boolean | undefined => {
     if (!raw) return undefined;
     try {
@@ -32,34 +37,6 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, className, isStreami
       // ignore non-JSON content
     }
     return undefined;
-  };
-
-  // Pour les messages tool (résultats d'outils), créer un faux tool call pour l'affichage
-  const getToolCallForToolMessage = () => {
-    if (role === 'tool' && message.tool_call_id && message.name) {
-      return [{
-        id: message.tool_call_id,
-        type: 'function' as const,
-        function: {
-          name: message.name,
-          arguments: '{}'
-        }
-      }];
-    }
-    return message.tool_calls;
-  };
-
-  const getToolResultsForToolMessage = () => {
-    if (role === 'tool' && message.tool_call_id && message.name && content) {
-      const derivedSuccess = parseSuccessFromContent(content);
-      return [{
-        tool_call_id: message.tool_call_id,
-        name: message.name,
-        content: content,
-        success: derivedSuccess === undefined ? undefined : derivedSuccess
-      }];
-    }
-    return message.tool_results;
   };
 
   // Pour les messages assistant avec tool_calls, créer les tool_results
@@ -97,8 +74,8 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, className, isStreami
           />
         )}
 
-        {/* Contenu markdown normal (pas pour les messages tool) */}
-        {content && role !== 'tool' && (
+        {/* Contenu markdown normal */}
+        {content && (
           <EnhancedMarkdownMessage content={content} />
         )}
         
