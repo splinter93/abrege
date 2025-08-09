@@ -27,10 +27,11 @@ import Link from '@tiptap/extension-link';
 import CustomImage from '@/extensions/CustomImage';
 import EditorSlashMenu, { type EditorSlashMenuHandle } from '@/components/EditorSlashMenu';
 import { useRouter } from 'next/navigation';
-import { FiEye, FiX } from 'react-icons/fi';
+import { FiEye, FiX, FiImage } from 'react-icons/fi';
 import { OptimizedApi } from '@/services/optimizedApi';
 import { supabase } from '@/supabaseClient';
 import { toast } from 'react-hot-toast';
+import ImageMenu from '@/components/ImageMenu';
 
 /**
  * Full Editor – markdown is source of truth; HTML only for display.
@@ -68,11 +69,18 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
 
   const isReadonly = readonly || previewMode;
 
+  const handleHeaderChange = React.useCallback(async (url: string | null) => {
+    setHeaderImageUrl(url);
+    try {
+      const api = OptimizedApi.getInstance();
+      updateNote(noteId, { header_image: url } as any);
+      await api.updateNoteAppearance(noteId, { header_image: url ?? null });
+    } catch {}
+  }, [noteId, updateNote]);
+
   React.useEffect(() => {
-    if (kebabOpen && kebabBtnRef.current) {
-      const r = kebabBtnRef.current.getBoundingClientRect();
-      setKebabPos({ top: r.bottom + 8, left: r.right - 200 });
-    }
+    if (kebabOpen && kebabBtnRef.current)
+      setKebabPos({ top: kebabBtnRef.current.getBoundingClientRect().bottom + 8, left: kebabBtnRef.current.getBoundingClientRect().left });
   }, [kebabOpen]);
 
   // Ref to the element that contains .ProseMirror so TOC can scroll into view
@@ -320,21 +328,40 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
             >
               <EditorToolbar editor={isReadonly ? null : (editor as any)} setImageMenuOpen={setImageMenuOpen} onFontChange={handleFontChange} />
             </EditorHeader>
+            {/* Add header image CTA when no image is set */}
+            {!headerImageUrl && (
+              <>
+                <div className="editor-add-header-image-row editor-full-width" style={{ display: 'flex', justifyContent: 'center' }}>
+                  <div className="editor-container-width" style={{ maxWidth: 'var(--editor-content-width)', width: 'var(--editor-content-width)' }}>
+                    <div className="editor-add-header-image">
+                      <button
+                        className="editor-add-header-image-btn"
+                        onClick={() => setImageMenuOpen(true)}
+                        aria-label="Ajouter une image d'en-tête"
+                        title="Ajouter une image d'en-tête"
+                      >
+                        <FiImage size={16} />
+                        <span>Ajouter une image</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                <ImageMenu
+                  open={imageMenuOpen}
+                  onClose={() => setImageMenuOpen(false)}
+                  onInsertImage={handleHeaderChange as (src: string) => void}
+                  noteId={note.id}
+                  userId={userId}
+                />
+              </>
+            )}
             <EditorHeaderImage
               headerImageUrl={headerImageUrl}
               headerImageOffset={headerOffset}
               headerImageBlur={headerBlur}
               headerImageOverlay={headerOverlay}
               headerTitleInImage={titleInImage}
-              onHeaderChange={async (url) => {
-                setHeaderImageUrl(url);
-                try {
-                  const api = OptimizedApi.getInstance();
-                  // Optimistic update
-                  updateNote(noteId, { header_image: url });
-                  await api.updateNoteAppearance(noteId, { header_image: url ?? null });
-                } catch {}
-              }}
+              onHeaderChange={handleHeaderChange}
               onHeaderOffsetChange={async (offset) => {
                 setHeaderOffset(offset);
                 try {

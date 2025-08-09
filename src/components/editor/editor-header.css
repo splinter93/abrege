@@ -338,4 +338,39 @@
   color: var(--text-1);
 }
 
+/* Add Header Image CTA (shown when no header image) */
+.editor-add-header-image-row {
+  margin-top: 8px;
+}
+
+.editor-add-header-image {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.editor-add-header-image-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 32px;
+  padding: 0 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border-subtle);
+  background: var(--surface-2);
+  color: var(--text-2);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.editor-add-header-image-btn:hover {
+  background: var(--surface-hover);
+  color: var(--text-1);
+  border-color: var(--border);
+}
+
+.editor-add-header-image-btn span {
+  font-size: 13px;
+  font-weight: 500;
+}
+
  
