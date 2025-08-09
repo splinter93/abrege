@@ -1,5 +1,6 @@
 import { V2DatabaseUtils } from '@/utils/v2DatabaseUtils';
 import { OpenAPIToolsGenerator } from './openApiToolsGenerator';
+import { clientPollingTrigger } from '@/services/clientPollingTrigger';
 
 export interface ApiV2Tool {
   name: string;
@@ -557,7 +558,9 @@ export class AgentApiV2Tools {
         };
         
         const context = { operation: 'create_note', component: 'AgentApiV2Tools' };
-        return await V2DatabaseUtils.createNote(mappedParams, userId, context);
+        const res = await V2DatabaseUtils.createNote(mappedParams, userId, context);
+        try { await clientPollingTrigger.triggerArticlesPolling('INSERT'); } catch {}
+        return res;
       }
     });
 
@@ -590,7 +593,9 @@ export class AgentApiV2Tools {
         }
         const { ref: _ignore, id: _id, note_id: _noteId, slug: _slug, ...data } = params;
         const context = { operation: 'update_note', component: 'AgentApiV2Tools' };
-        return await V2DatabaseUtils.updateNote(ref, data, userId, context);
+        const res = await V2DatabaseUtils.updateNote(ref, data, userId, context);
+        try { await clientPollingTrigger.triggerArticlesPolling('UPDATE'); } catch {}
+        return res;
       }
     });
 
@@ -615,7 +620,9 @@ export class AgentApiV2Tools {
       execute: async (params, jwtToken, userId) => {
         const { ref, content } = params;
         const context = { operation: 'add_content_to_note', component: 'AgentApiV2Tools' };
-        return await V2DatabaseUtils.addContentToNote(ref, content, userId, context);
+        const res = await V2DatabaseUtils.addContentToNote(ref, content, userId, context);
+        try { await clientPollingTrigger.triggerArticlesPolling('UPDATE'); } catch {}
+        return res;
       }
     });
 
@@ -640,7 +647,9 @@ export class AgentApiV2Tools {
       execute: async (params, jwtToken, userId) => {
         const { ref, folder_id } = params;
         const context = { operation: 'move_note', component: 'AgentApiV2Tools' };
-        return await V2DatabaseUtils.moveNote(ref, folder_id, userId, context);
+        const res = await V2DatabaseUtils.moveNote(ref, folder_id, userId, context);
+        try { await clientPollingTrigger.triggerArticlesPolling('UPDATE'); } catch {}
+        return res;
       }
     });
 
@@ -661,7 +670,9 @@ export class AgentApiV2Tools {
       execute: async (params, jwtToken, userId) => {
         const { ref } = params;
         const context = { operation: 'delete_note', component: 'AgentApiV2Tools' };
-        return await V2DatabaseUtils.deleteNote(ref, userId, context);
+        const res = await V2DatabaseUtils.deleteNote(ref, userId, context);
+        try { await clientPollingTrigger.triggerArticlesPolling('DELETE'); } catch {}
+        return res;
       }
     });
 
@@ -689,7 +700,9 @@ export class AgentApiV2Tools {
       },
       execute: async (params, jwtToken, userId) => {
         const context = { operation: 'create_folder', component: 'AgentApiV2Tools' };
-        return await V2DatabaseUtils.createFolder(params, userId, context);
+        const res = await V2DatabaseUtils.createFolder(params, userId, context);
+        try { await clientPollingTrigger.triggerFoldersPolling('INSERT'); } catch {}
+        return res;
       }
     });
 
@@ -718,7 +731,9 @@ export class AgentApiV2Tools {
       execute: async (params, jwtToken, userId) => {
         const { ref, ...data } = params;
         const context = { operation: 'update_folder', component: 'AgentApiV2Tools' };
-        return await V2DatabaseUtils.updateFolder(ref, data, userId, context);
+        const res = await V2DatabaseUtils.updateFolder(ref, data, userId, context);
+        try { await clientPollingTrigger.triggerFoldersPolling('UPDATE'); } catch {}
+        return res;
       }
     });
 
@@ -739,7 +754,9 @@ export class AgentApiV2Tools {
       execute: async (params, jwtToken, userId) => {
         const { ref } = params;
         const context = { operation: 'delete_folder', component: 'AgentApiV2Tools' };
-        return await V2DatabaseUtils.deleteFolder(ref, userId, context);
+        const res = await V2DatabaseUtils.deleteFolder(ref, userId, context);
+        try { await clientPollingTrigger.triggerFoldersPolling('DELETE'); } catch {}
+        return res;
       }
     });
 
@@ -767,7 +784,9 @@ export class AgentApiV2Tools {
       },
       execute: async (params, jwtToken, userId) => {
         const context = { operation: 'create_notebook', component: 'AgentApiV2Tools' };
-        return await V2DatabaseUtils.createClasseur(params, userId, context);
+        const res = await V2DatabaseUtils.createClasseur(params, userId, context);
+        try { await clientPollingTrigger.triggerClasseursPolling('INSERT'); } catch {}
+        return res;
       }
     });
 
@@ -845,7 +864,9 @@ export class AgentApiV2Tools {
       execute: async (params, jwtToken, userId) => {
         const { ref, content, position } = params;
         const context = { operation: 'insert_content_to_note', component: 'AgentApiV2Tools' };
-        return await V2DatabaseUtils.insertContentToNote(ref, content, position, userId, context);
+        const res = await V2DatabaseUtils.insertContentToNote(ref, content, position, userId, context);
+        try { await clientPollingTrigger.triggerArticlesPolling('UPDATE'); } catch {}
+        return res;
       }
     });
 
@@ -1047,7 +1068,9 @@ export class AgentApiV2Tools {
       execute: async (params, jwtToken, userId) => {
         const { classeurs } = params;
         const context = { operation: 'reorder_notebooks', component: 'AgentApiV2Tools' };
-        return await V2DatabaseUtils.reorderClasseurs(classeurs, userId, context);
+        const res = await V2DatabaseUtils.reorderClasseurs(classeurs, userId, context);
+        try { await clientPollingTrigger.triggerClasseursPolling('UPDATE'); } catch {}
+        return res;
       }
     });
 
