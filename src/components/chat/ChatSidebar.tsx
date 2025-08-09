@@ -129,10 +129,13 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({ isOpen, isDesktop, onClose })
               <h3 className="section-title">Mes Agents</h3>
               <button 
                 onClick={() => setAgentsOpen(!agentsOpen)} 
-                className="section-toggle"
+                className={`section-toggle ${agentsOpen ? 'expanded' : ''}`}
                 aria-label={agentsOpen ? "Réduire les agents" : "Développer les agents"}
+                aria-expanded={agentsOpen}
               >
-                {agentsOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+                <svg className="section-toggle-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="m6 9 6 6 6-6"/>
+                </svg>
               </button>
             </div>
             {agentsOpen && (
