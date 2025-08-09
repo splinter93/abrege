@@ -16,7 +16,8 @@ export default async function Page(props: { params: Promise<{ username: string; 
     .from('users')
     .select('id')
     .eq('username', decodedUsername)
-    .single();
+    .limit(1)
+    .maybeSingle();
 
   if (userError || !user) {
     return (

@@ -17,6 +17,12 @@ export interface Note {
   content?: string; // Alias pour markdown_content (pour compatibilité éditeur)
   html_content?: string;
   header_image?: string | null;
+  header_image_offset?: number | null;
+  header_image_blur?: number | null;
+  header_image_overlay?: number | null;
+  header_title_in_image?: boolean | null;
+  wide_mode?: boolean | null;
+  font_family?: string | null;
   // Propriétés additionnelles pour l'état optimiste et le diff
   _optimistic?: boolean | 'deleting';
   _lastPatch?: any;

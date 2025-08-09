@@ -18,7 +18,8 @@ export async function generateMetadata({ params }: { params: Promise<{ username:
     .from('users')
     .select('id')
     .eq('username', decodedUsername)
-    .single();
+    .limit(1)
+    .maybeSingle();
   if (!user) return { title: 'Note introuvable – Scrivia' };
   // Chercher la note par slug et user_id, ispublished = true
   const { data: note } = await supabase
@@ -27,7 +28,8 @@ export async function generateMetadata({ params }: { params: Promise<{ username:
     .eq('slug', slug)
     .eq('user_id', user.id)
     .eq('ispublished', true)
-    .single();
+    .limit(1)
+    .maybeSingle();
   if (!note) return { title: 'Note introuvable – Scrivia' };
   
   const title = note.source_title + ' – Scrivia';
@@ -61,9 +63,10 @@ export default async function Page(props: { params: Promise<{ username: string; 
   // Chercher l'utilisateur par username
   const { data: user, error: userError } = await supabase
     .from('users')
-    .select('id')
+    .select('id, username')
     .eq('username', decodedUsername)
-    .single();
+    .limit(1)
+    .maybeSingle();
 
   if (userError || !user) {
     return (
@@ -79,15 +82,32 @@ export default async function Page(props: { params: Promise<{ username: string; 
   }
 
   // Chercher la note par slug et user_id, ispublished = true
-  const { data: note, error: noteError } = await supabase
+  const { data: noteBySlug } = await supabase
     .from('articles')
-    .select('source_title, html_content, markdown_content, header_image, header_image_offset, header_image_blur, header_image_overlay, header_title_in_image, wide_mode, font_family, created_at, updated_at')
+    .select('id, slug, source_title, html_content, markdown_content, header_image, header_image_offset, header_image_blur, header_image_overlay, header_title_in_image, wide_mode, font_family, created_at, updated_at')
     .eq('slug', slug)
     .eq('user_id', user.id)
     .eq('ispublished', true)
-    .single();
+    .limit(1)
+    .maybeSingle();
 
-  if (noteError || !note) {
+  if (!noteBySlug) {
+    // Slug peut avoir changé: essayer par public_url/id => récupérer la note publiée la plus récente et rediriger si trouvée
+    const { data: latestNote } = await supabase
+      .from('articles')
+      .select('id, slug')
+      .eq('user_id', user.id)
+      .eq('ispublished', true)
+      .order('updated_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (latestNote?.slug) {
+      // Redirection 301 vers le slug courant le plus probable (fallback simple)
+      const url = `/@${user.username}/${latestNote.slug}`;
+      return (await import('next/navigation')).redirect(url);
+    }
+
     return (
       <div style={{ padding: '2rem', textAlign: 'center' }}>
         <div style={{ marginLeft: '4px', display: 'inline-block' }}>
@@ -99,5 +119,11 @@ export default async function Page(props: { params: Promise<{ username: string; 
     );
   }
 
-  return <PublicNoteContent note={note} slug={slug} />;
+  // Canonical: si le slug en DB ne correspond pas à l'URL, rediriger 301 vers le bon slug
+  if (noteBySlug.slug !== slug) {
+    const url = `/@${user.username}/${noteBySlug.slug}`;
+    return (await import('next/navigation')).redirect(url);
+  }
+
+  return <PublicNoteContent note={noteBySlug} slug={slug} />;
 } 

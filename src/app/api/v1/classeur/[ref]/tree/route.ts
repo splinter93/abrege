@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient, type PostgrestError } from '@supabase/supabase-js';
 import { z } from 'zod';
 import type { NextRequest } from 'next/server';
 import { resolveClasseurRef } from '@/middleware/resourceResolver';
@@ -50,6 +50,11 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ ref:
         { status: 422 }
       );
     }
+
+    // Paramètres depth
+    const url = new URL(req.url);
+    const depthParam = url.searchParams.get('depth') || 'full';
+    const depth = depthParam === '0' ? 0 : depthParam === '1' ? 1 : 'full';
     
     // ✅ Authentification implémentée
     const { supabase, userId } = await getAuthenticatedClient(req);
@@ -58,69 +63,91 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ ref:
     // Récupérer le classeur
     const { data: classeur, error: classeurError } = await supabase
       .from('classeurs')
-      .select('id, name, emoji')
+      .select('id, slug, name, emoji')
       .eq('id', classeurId)
       .single();
     if (classeurError || !classeur) {
       return new Response(JSON.stringify({ error: classeurError?.message || 'Classeur non trouvé.' }), { status: 404, headers: { "Content-Type": "application/json" } });
     }
-    // Récupérer tous les dossiers du classeur
-    const { data: folders, error: foldersError } = await supabase
+
+    // Récupérer tous les dossiers du classeur (selon depth)
+    const { data: allFolders, error: foldersError } = await supabase
       .from('folders')
-      .select('id, name, parent_id, classeur_id')
+      .select('id, name, parent_id, classeur_id, updated_at')
       .eq('classeur_id', classeurId);
     if (foldersError) {
       return new Response(JSON.stringify({ error: foldersError.message }), { status: 500, headers: { "Content-Type": "application/json" } });
     }
-    // Récupérer toutes les notes du classeur (racine + dossiers)
-    const folderIds = (folders || []).map(f => f.id);
+
+    // Récupérer toutes les notes du classeur (selon depth)
+    const folderIds = (allFolders || []).map(f => f.id);
     let notes: Note[] = [];
-    let notesError = null;
+    let notesError: PostgrestError | null = null;
 
     // Notes à la racine
     const { data: rootNotes, error: rootNotesError } = await supabase
       .from('articles')
-      .select('id, source_title, header_image, created_at, folder_id, classeur_id')
+      .select('id, source_title, header_image, created_at, updated_at, folder_id, classeur_id')
       .eq('classeur_id', classeurId)
       .is('folder_id', null);
-    if (rootNotesError) notesError = rootNotesError;
-    else if (rootNotes) notes = notes.concat(rootNotes);
+    if (rootNotesError) notesError = rootNotesError; else if (rootNotes) notes = notes.concat(rootNotes as unknown as Note[]);
 
-    // Notes dans les dossiers
-    if (folderIds.length > 0) {
+    // Notes dans les dossiers (profondeur complète uniquement)
+    if (depth === 'full' && folderIds.length > 0) {
       const { data: folderNotes, error: folderNotesError } = await supabase
         .from('articles')
-        .select('id, source_title, header_image, created_at, folder_id, classeur_id')
+        .select('id, source_title, header_image, created_at, updated_at, folder_id, classeur_id')
         .eq('classeur_id', classeurId)
         .in('folder_id', folderIds);
-      if (folderNotesError) notesError = folderNotesError;
-      else if (folderNotes) notes = notes.concat(folderNotes);
+      if (folderNotesError) notesError = folderNotesError; else if (folderNotes) notes = notes.concat(folderNotes as unknown as Note[]);
     }
     if (notesError) {
       return new Response(JSON.stringify({ error: notesError.message }), { status: 500, headers: { "Content-Type": "application/json" } });
     }
-    // Notes à la racine (folder_id null)
-    const notes_at_root = (notes || [])
+
+    // Tri stable et ETAG simple
+    const sortedFolders = (allFolders || []).sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+    const sortedNotes = (notes || []).sort((a, b) => (a.source_title || '').localeCompare(b.source_title || ''));
+    const etagBase = JSON.stringify({
+      classeurId,
+      depth,
+      f: sortedFolders.map(f => `${f.id}:${(f as any).updated_at || ''}`).join(','),
+      n: sortedNotes.map(n => `${n.id}:${n.updated_at || ''}`).join(',')
+    });
+    const etag = `W/"${Buffer.from(etagBase).toString('base64').slice(0, 16)}"`;
+
+    // 304 If-None-Match
+    const ifNoneMatch = req.headers.get('if-none-match');
+    if (ifNoneMatch && ifNoneMatch === etag) {
+      return new Response(null, { status: 304, headers: { ETag: etag } });
+    }
+
+    // Notes à la racine (folder_id null) résumé
+    const notes_at_root = (sortedNotes || [])
       .filter(note => !note.folder_id)
-      .map(note => ({
-        id: note.id,
-        title: note.source_title,
-        header_image: note.header_image,
-        created_at: note.created_at,
-      }));
-    // Arbre de dossiers imbriqués
-    const foldersTree = buildFolderTree(folders || [], notes || []);
+      .map(note => ({ id: note.id, title: note.source_title, header_image: note.header_image, created_at: note.created_at }));
+
+    // Arbre selon depth
+    const foldersTree = depth === 0
+      ? []
+      : depth === 1
+        ? buildFolderTree(sortedFolders as unknown as Folder[], [], null)
+        : buildFolderTree(sortedFolders as unknown as Folder[], sortedNotes as unknown as Note[], null);
+
     return new Response(
       JSON.stringify({
+        success: true,
         classeur,
+        tree: foldersTree,
         notes_at_root,
-        folders: foldersTree,
+        etag,
+        generated_at: new Date().toISOString()
       }),
-      { status: 200 }
+      { status: 200, headers: { 'Cache-Control': 'private, max-age=0, must-revalidate', ETag: etag, 'Content-Type': 'application/json' } }
     );
   } catch (err: unknown) {
     const error = err as Error;
-    return new Response(JSON.stringify({ error: error.message }), { status: 500, headers: { "Content-Type": "application/json" } });
+    return new Response(JSON.stringify({ success: false, error: error.message }), { status: 500, headers: { "Content-Type": "application/json" } });
   }
 }
 
@@ -129,6 +156,7 @@ type Folder = {
   name: string;
   parent_id: string | null;
   classeur_id: string;
+  updated_at?: string;
 };
 
 type Note = {
@@ -136,6 +164,7 @@ type Note = {
   source_title: string;
   header_image: string | null;
   created_at: string;
+  updated_at?: string;
   folder_id: string | null;
   classeur_id: string;
 };

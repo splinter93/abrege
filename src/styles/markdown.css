@@ -15,59 +15,30 @@
   color: var(--editor-text-color);
   font-family: var(--editor-font-family);
   font-size: var(--editor-body-size);
-  line-height: 1.8;
+  line-height: 1.75; /* slightly tighter than 1.8 for better rhythm */
   background: none;
   margin: 0;
   padding: 0;
 }
 
-/* ==========================================================================
-   TITRES
-   ========================================================================== */
-
-.markdown-body h1 {
-  font-size: var(--editor-h1-size);
-  font-weight: 700;
-  margin: 2.2rem 0 1.2rem;
-  color: var(--editor-text-color);
-  letter-spacing: -0.02em;
-  margin-bottom: 0.7em;
+/* Headings tighten following paragraph spacing */
+.markdown-body h1 + p,
+.markdown-body h2 + p,
+.markdown-body h3 + p {
+  margin-top: 0.35em;
 }
 
-.markdown-body h1 + p {
-  margin-top: 0.2em;
-}
-
-.markdown-body h2 {
-  font-size: var(--editor-h2-size);
-  font-weight: 600;
-  margin: 1.7rem 0 1rem;
-  color: var(--editor-text-color);
-}
-
-.markdown-body h3 {
-  font-size: var(--editor-h3-size);
-  font-weight: 600;
-  margin: 1.3rem 0 0.8rem;
-  color: var(--editor-text-color);
-}
-
-/* ==========================================================================
-   PARAGRAPHES
-   ========================================================================== */
-
+/* Paragraphs: balanced spacing */
 .markdown-body p {
-  margin: 0 0 1.15rem 0;
+  margin: 0 0 0.9rem 0; /* slightly tighter */
+  line-height: 1.75;
 }
 
-/* ==========================================================================
-   LISTES
-   ========================================================================== */
-
+/* Lists: consistent vertical rhythm */
 .markdown-body ul,
 .markdown-body ol {
-  margin: 0.5em 0 0.5em 1.5em;
-  padding-left: 1.5em;
+  margin: 0.4em 0 0.6em 1.5em; /* lighter top, a bit more bottom */
+  padding-left: 1.4em;
 }
 
 .markdown-body ul {
@@ -79,8 +50,8 @@
 }
 
 .markdown-body li {
-  margin: 0.12em 0;
-  line-height: 1.5;
+  margin: 0.08em 0; /* tighter between items */
+  line-height: 1.6; /* list items slightly tighter than paragraphs */
   padding-left: 0.2rem;
 }
 
@@ -140,7 +111,21 @@
   font-size: 0.85em;
   font-family: 'JetBrains Mono', monospace;
   overflow-x: auto;
-  margin: 1.5rem 0;
+  margin: 1.25rem 0; /* unify vertical spacing for blocks */
+}
+
+/* Code blocks and blockquotes spacing */
+.markdown-body pre,
+.markdown-body blockquote,
+.markdown-body table {
+  margin: 1.25rem 0; /* unify vertical spacing for blocks */
+}
+
+/* HR spacing */
+.markdown-body hr {
+  border: none;
+  border-top: 1px solid var(--border-subtle);
+  margin: 1rem 0; /* a bit tighter */
 }
 
 /* ==========================================================================
@@ -180,6 +165,7 @@
   padding: 0.65em 0.9em;
   min-width: 0;
   max-width: none;
+  padding: 0.6em 0.85em;
 }
 
 .markdown-body th {
@@ -231,16 +217,6 @@
 
 .markdown-body blockquote::before {
   display: none;
-}
-
-/* ==========================================================================
-   SÉPARATEUR
-   ========================================================================== */
-
-.markdown-body hr {
-  border: none;
-  border-top: 1px solid var(--border-subtle);
-  margin: 1.2rem 0;
 }
 
 /* ==========================================================================
@@ -360,17 +336,6 @@ li[data-type="taskItem"] > div p {
 /* ==========================================================================
    CODE BLOCKS
    ========================================================================== */
-
-.markdown-body pre {
-  background: var(--surface-2);
-  color: var(--editor-text-color);
-  border-radius: 8px;
-  padding: 1.1em 1.3em;
-  font-size: 0.85em;
-  font-family: 'JetBrains Mono', monospace;
-  overflow-x: auto;
-  margin: 1.5rem 0;
-}
 
 .markdown-body pre:hover {
   background: var(--surface-hover);
@@ -803,6 +768,11 @@ li[data-type="taskItem"] > div p {
 .markdown-body table {
   margin-bottom: 2.5em;
 } 
+
+/* Tighten heading margins a touch */
+.markdown-body h1 { margin: 2.0rem 0 1.0rem; }
+.markdown-body h2 { margin: 1.5rem 0 0.9rem; }
+.markdown-body h3 { margin: 1.2rem 0 0.7rem; }
 
 /* ==========================================================================
    TASK LISTS - COUVERTURE COMPLÈTE TIPTAP

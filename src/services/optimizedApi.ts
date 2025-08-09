@@ -1,7 +1,7 @@
 import { useFileSystemStore } from '@/store/useFileSystemStore';
 import { clientPollingTrigger } from './clientPollingTrigger';
 import { ErrorHandler } from './errorHandler';
-import { logApi, logStore, logPolling } from '@/utils/logger';
+import { logApi, logStore, logPolling, logj } from '@/utils/logger';
 import { supabase } from '@/supabaseClient';
 import { simpleLogger as logger } from '@/utils/logger';
 
@@ -18,7 +18,7 @@ interface UpdateNoteData {
   source_title?: string;
   markdown_content?: string;
   html_content?: string;
-  header_image?: string;
+  header_image?: string | null;
   header_image_offset?: number;
   header_image_blur?: number;
   header_image_overlay?: number;
@@ -72,32 +72,153 @@ export class OptimizedApi {
 
   private constructor() {}
 
+  // Shadow flags
+  private get shadowEnabled(): boolean {
+    return process.env.NEXT_PUBLIC_SHADOW_V1 === '1';
+  }
+  private get useV1Only(): boolean {
+    return process.env.NEXT_PUBLIC_USE_V1_ONLY === '1';
+  }
+
+  // In-memory cache for ETag
+  private etagCache: Map<string, { etag: string; data: any }> = new Map();
+
+  // Utils
+  private async getAuthHeaders(): Promise<HeadersInit> {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const headers: HeadersInit = { 'Content-Type': 'application/json' };
+      if (session?.access_token) headers['Authorization'] = `Bearer ${session.access_token}`;
+      return headers;
+    } catch {
+      return { 'Content-Type': 'application/json' };
+    }
+  }
+
+  private async fetchWithEtag(url: string, headers: HeadersInit): Promise<{ ok: boolean; status: number; data?: any; etag?: string; etagHit?: boolean }> {
+    const cacheKey = url;
+    const cached = this.etagCache.get(cacheKey);
+    const h = { ...(headers || {}) } as Record<string, string>;
+    if (cached?.etag) h['If-None-Match'] = cached.etag;
+
+    const resp = await fetch(url, { headers: h });
+    const etag = resp.headers.get('ETag') || undefined;
+    if (resp.status === 304 && cached) {
+      return { ok: true, status: 304, data: cached.data, etag: etag || cached.etag, etagHit: true };
+    }
+    const data = await (async () => {
+      try { return await resp.json(); } catch { return undefined; }
+    })();
+    if (resp.ok && etag && data !== undefined) this.etagCache.set(cacheKey, { etag, data });
+    return { ok: resp.ok, status: resp.status, data, etag, etagHit: false };
+  }
+
+  private normalizeClasseurs(input: any[]): any[] {
+    return (Array.isArray(input) ? input : []).map(c => ({
+      id: c.id,
+      slug: c.slug ?? undefined,
+      name: c.name,
+      emoji: c.emoji ?? undefined,
+      color: c.color ?? undefined,
+      position: c.position ?? 0,
+      created_at: c.created_at ?? undefined,
+      updated_at: c.updated_at ?? undefined,
+    })).sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
+  }
+
+  private normalizeTree(input: any): any {
+    if (!input || !input.classeur) return input;
+    const stripVolatile = (x: any) => ({ ...x, generated_at: undefined });
+    return stripVolatile({
+      success: true,
+      classeur: {
+        id: input.classeur.id,
+        slug: input.classeur.slug ?? undefined,
+        name: input.classeur.name,
+        emoji: input.classeur.emoji ?? undefined,
+      },
+      tree: Array.isArray(input.tree) ? input.tree : [],
+      notes_at_root: Array.isArray(input.notes_at_root) ? input.notes_at_root : [],
+      etag: input.etag ?? undefined,
+    });
+  }
+
+  private shallowEqual(a: any, b: any): boolean {
+    try {
+      return JSON.stringify(a) === JSON.stringify(b);
+    } catch {
+      return false;
+    }
+  }
+
+  private hashShort(value: string): string {
+    try { return Buffer.from(value).toString('base64').slice(0, 8); } catch { return 'hash'; }
+  }
+
+  private async shadowRead<T>(label: string, legacyFn: () => Promise<T>, v1Fn: () => Promise<T>, normalizer: (d: any) => any): Promise<T> {
+    if (!this.shadowEnabled && !this.useV1Only) {
+      return legacyFn();
+    }
+
+    const headers = await this.getAuthHeaders();
+    const started = Date.now();
+
+    const runWithTimeout = async <R>(fn: () => Promise<R>): Promise<{ ok: boolean; data?: R; ms: number; size?: number }> => {
+      const t0 = Date.now();
+      try {
+        const r = await Promise.race([fn(), new Promise<never>((_, rej) => setTimeout(() => rej(new Error('timeout')), 4000))]);
+        const ms = Date.now() - t0;
+        const size = typeof r === 'string' ? r.length : JSON.stringify(r || {}).length;
+        return { ok: true, data: r, ms, size };
+      } catch {
+        return { ok: false, ms: Date.now() - t0 };
+      }
+    };
+
+    const legacyP = runWithTimeout(legacyFn);
+    const v1P = runWithTimeout(v1Fn);
+    const [legacyRes, v1Res] = await Promise.all([legacyP, v1P]);
+
+    const normalize = (d: any) => normalizer(d);
+    const legacyN = legacyRes.ok ? normalize(legacyRes.data) : undefined;
+    const v1N = v1Res.ok ? normalize(v1Res.data) : undefined;
+
+    const diff = (legacyN && v1N && !this.shallowEqual(legacyN, v1N)) ? 1 : 0;
+    const logObj = {
+      label: 'shadow.v1.generic',
+      ok: legacyRes.ok && v1Res.ok,
+      legacy_ms: legacyRes.ms,
+      v1_ms: v1Res.ms,
+      legacy_size: legacyRes.size,
+      v1_size: v1Res.size,
+      diff_count: diff,
+    };
+    try { logj(logObj as any); } catch {}
+
+    if (this.useV1Only && v1Res.ok && v1N !== undefined) return v1Res.data as T;
+    return legacyRes.data as T;
+  }
+
+  // v1 clients
+  private async getClasseursV1(): Promise<any[]> {
+    const headers = await this.getAuthHeaders();
+    const { ok, data } = await this.fetchWithEtag('/api/v1/classeurs', headers);
+    if (!ok) throw new Error('Classeurs v1 error');
+    return data;
+  }
+
+  private async getTreeV1(ref: string, depth: '0'|'1'|'full' = 'full'): Promise<any> {
+    const headers = await this.getAuthHeaders();
+    const { ok, data } = await this.fetchWithEtag(`/api/v1/classeur/${encodeURIComponent(ref)}/tree?depth=${depth}`, headers);
+    if (!ok) throw new Error('Tree v1 error');
+    return data;
+  }
+
   static getInstance(): OptimizedApi {
     if (!OptimizedApi.instance) {
       OptimizedApi.instance = new OptimizedApi();
     }
     return OptimizedApi.instance;
-  }
-
-  /**
-   * Récupère le token d'authentification pour les appels API
-   */
-  private async getAuthHeaders(): Promise<HeadersInit> {
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      const headers: HeadersInit = {
-        'Content-Type': 'application/json'
-      };
-      
-      if (session?.access_token) {
-        headers['Authorization'] = `Bearer ${session.access_token}`;
-      }
-      
-      return headers;
-    } catch (error) {
-      logger.error('[OptimizedApi] ❌ Erreur récupération token:', error);
-      return { 'Content-Type': 'application/json' };
-    }
   }
 
   /**
@@ -730,110 +851,60 @@ export class OptimizedApi {
    */
   async loadClasseursWithContent() {
     if (process.env.NODE_ENV === 'development') {
-    logger.dev('[OptimizedApi] 📚 Chargement classeurs avec contenu optimisé');
+      logger.dev('[OptimizedApi] 📚 Chargement classeurs avec contenu optimisé');
     }
     const startTime = Date.now();
     
     try {
-      // 1. Charger les classeurs via API v1 (sans authentification pour le moment)
-      const classeursResponse = await fetch('/api/v1/classeurs');
-      
-      if (!classeursResponse.ok) {
-        throw new Error(`Erreur chargement classeurs: ${classeursResponse.statusText}`);
-      }
-      
-      const classeursData = await classeursResponse.json();
+      // 1. Classeurs via shadow-read
+      const classeursLegacy = async () => {
+        const res = await fetch('/api/v1/classeurs');
+        if (!res.ok) throw new Error('legacy classeurs');
+        return res.json();
+      };
+      const classeurs = await this.shadowRead('classeurs', classeursLegacy, () => this.getClasseursV1(), d => this.normalizeClasseurs(d));
+
       const store = useFileSystemStore.getState();
-      store.setClasseurs(classeursData);
-      logger.dev('[OptimizedApi] ✅ Classeurs chargés via API v1:', classeursData.length);
-      logger.dev('[OptimizedApi] 📋 Données classeurs:', classeursData);
+      store.setClasseurs(classeurs);
 
-      // 2. Pour chaque classeur, charger les dossiers et notes
-      const classeurs = Object.values(useFileSystemStore.getState().classeurs);
-      logger.dev('[OptimizedApi] 🔍 Classeurs dans le store après setClasseurs:', classeurs.length);
-      
-      for (const classeur of classeurs) {
-        logger.dev(`[OptimizedApi] 📁 Chargement contenu pour classeur: ${classeur.name} (${classeur.id})`);
-        try {
-          // Charger les dossiers du classeur (sans authentification)
-          const foldersResponse = await fetch(`/api/v1/dossiers?classeurId=${classeur.id}`);
-          logger.dev(`[OptimizedApi] 📊 Réponse dossiers pour ${classeur.name}:`, foldersResponse.status, foldersResponse.statusText);
-          
-          if (foldersResponse.status === 304) {
-            logger.dev(`[OptimizedApi] ⏭️ Dossiers non modifiés (304) pour ${classeur.name}`);
-          } else if (foldersResponse.ok) {
-            const foldersData = await foldersResponse.json();
-            logger.dev(`[OptimizedApi] 📋 Données dossiers brutes pour ${classeur.name}:`, foldersData);
-            
-            if (foldersData.dossiers && Array.isArray(foldersData.dossiers)) {
-              // Fusionner avec l'état ACTUEL (toujours lire le state frais)
-              const currentFolders = Object.values(useFileSystemStore.getState().folders);
-              const existingIds = new Set(currentFolders.map(f => f.id));
-              const newFolders = foldersData.dossiers.filter((f: any) => !existingIds.has(f.id));
-              const allFolders = [...currentFolders, ...newFolders];
-              
-              useFileSystemStore.getState().setFolders(allFolders);
-              logger.dev(`[OptimizedApi] ✅ Dossiers chargés pour classeur ${classeur.name}:`, foldersData.dossiers.length);
-              logger.dev(`[OptimizedApi] 📊 Total dossiers dans le store après fusion:`, allFolders.length);
-            } else {
-              logger.warn(`[OptimizedApi] ⚠️ Pas de dossiers dans la réponse pour ${classeur.name}:`, foldersData);
-            }
-          } else {
-            const errorText = await foldersResponse.text();
-            logger.warn(`[OptimizedApi] ⚠️ Erreur chargement dossiers classeur ${classeur.name}:`, foldersResponse.status, errorText);
-          }
+      // 2. Pour chaque classeur, charger dossiers/notes via shadow tree (depth=1 pour UI)
+      const classeursArray = Object.values(useFileSystemStore.getState().classeurs);
+      for (const c of classeursArray) {
+        const legacyFolders = async () => {
+          const res = await fetch(`/api/v1/dossiers?classeurId=${c.id}`);
+          if (!res.ok) throw new Error('legacy dossiers');
+          const data = await res.json();
+          return { success: true, tree: [], notes_at_root: [], folders_legacy: data?.dossiers || [] };
+        };
+        const v1Tree = async () => this.getTreeV1(c.id, '1');
 
-          // Charger les notes du classeur (sans authentification)
-          const notesResponse = await fetch(`/api/v1/notes?classeurId=${classeur.id}`);
-          logger.dev(`[OptimizedApi] 📊 Réponse notes pour ${classeur.name}:`, notesResponse.status, notesResponse.statusText);
-          
-          if (notesResponse.status === 304) {
-            logger.dev(`[OptimizedApi] ⏭️ Notes non modifiées (304) pour ${classeur.name}`);
-          } else if (notesResponse.ok) {
-            const notesData = await notesResponse.json();
-            logger.dev(`[OptimizedApi] 📋 Données notes brutes pour ${classeur.name}:`, notesData);
-            
-            if (notesData.notes && Array.isArray(notesData.notes)) {
-              // Fusionner avec l'état ACTUEL (toujours lire le state frais)
-              const currentNotes = Object.values(useFileSystemStore.getState().notes);
-              const existingIds = new Set(currentNotes.map(n => n.id));
-              const newNotes = notesData.notes.filter((n: any) => !existingIds.has(n.id));
-              const allNotes = [...currentNotes, ...newNotes];
-              
-              useFileSystemStore.getState().setNotes(allNotes);
-              logger.dev(`[OptimizedApi] ✅ Notes chargées pour classeur ${classeur.name}:`, notesData.notes.length);
-              logger.dev(`[OptimizedApi] 📊 Total notes dans le store après fusion:`, allNotes.length);
-            } else {
-              logger.warn(`[OptimizedApi] ⚠️ Pas de notes dans la réponse pour ${classeur.name}:`, notesData);
-            }
-          } else {
-            const errorText = await notesResponse.text();
-            logger.warn(`[OptimizedApi] ⚠️ Erreur chargement notes classeur ${classeur.name}:`, notesResponse.status, errorText);
-          }
-        } catch (error) {
-          logger.error(`[OptimizedApi] ⚠️ Erreur chargement contenu classeur ${classeur.name}:`, error);
+        await this.shadowRead('tree', legacyFolders, v1Tree, d => this.normalizeTree(d));
+        // Pour l’UI actuelle, on continue à nourrir Zustand avec legacy + notes legacy
+        // TODO (cutover): peupler depuis v1 tree
+        const foldersLegacy = await legacyFolders();
+        const currentFolders = Object.values(useFileSystemStore.getState().folders);
+        const existingIds = new Set(currentFolders.map(f => f.id));
+        const newFolders = (foldersLegacy.folders_legacy || []).filter((f: any) => !existingIds.has(f.id));
+        const allFolders = [...currentFolders, ...newFolders];
+        useFileSystemStore.getState().setFolders(allFolders);
+
+        const notesResponse = await fetch(`/api/v1/notes?classeurId=${c.id}`);
+        if (notesResponse.ok) {
+          const notesData = await notesResponse.json();
+          const currentNotes = Object.values(useFileSystemStore.getState().notes);
+          const existingNoteIds = new Set(currentNotes.map(n => n.id));
+          const newNotes = (notesData.notes || []).filter((n: any) => !existingNoteIds.has(n.id));
+          const allNotes = [...currentNotes, ...newNotes];
+          useFileSystemStore.getState().setNotes(allNotes);
         }
       }
-
       const totalTime = Date.now() - startTime;
       if (process.env.NODE_ENV === 'development') {
-      logger.dev(`[OptimizedApi] ✅ Tous les classeurs et leur contenu chargés en ${totalTime}ms`);
+        logger.dev(`[OptimizedApi] ✅ Tous les classeurs et leur contenu chargés en ${totalTime}ms`);
       }
-      
-      // Log final de l'état du store
-      const finalStore = useFileSystemStore.getState();
-      logger.dev('[OptimizedApi] 📊 État final du store:', {
-        classeursCount: Object.values(finalStore.classeurs).length,
-        foldersCount: Object.values(finalStore.folders).length,
-        notesCount: Object.values(finalStore.notes).length,
-        classeurs: Object.values(finalStore.classeurs).map(c => ({ id: c.id, name: c.name })),
-        folders: Object.values(finalStore.folders).map(f => ({ id: f.id, name: f.name, classeur_id: f.classeur_id })),
-        notes: Object.values(finalStore.notes).map(n => ({ id: n.id, title: n.source_title, classeur_id: n.classeur_id }))
-      });
-      
-      return { success: true, classeursCount: classeurs.length };
+      return true;
     } catch (error) {
-      logger.error('[OptimizedApi] ❌ Erreur chargement classeurs avec contenu:', error);
+      logger.error('[OptimizedApi] ❌ Erreur loadClasseursWithContent (shadow):', error);
       throw error;
     }
   }
@@ -871,6 +942,36 @@ export class OptimizedApi {
       logApi('publish_note', `❌ Erreur publication: ${error}`, context);
       throw error;
     }
+  }
+
+  /**
+   * Mettre à jour l'apparence d'une note (patch partiel)
+   */
+  async updateNoteAppearance(noteId: string, patch: Partial<{
+    header_title_in_image: boolean;
+    header_image: string | null;
+    header_image_offset: number;
+    header_image_blur: number;
+    header_image_overlay: number; // UI may send 0..1 or 0..100; API will normalize
+    wide_mode: boolean;
+    font_family: string;
+  }>) {
+    const headers = await this.getAuthHeaders();
+    const resp = await fetch(`/api/v1/note/${encodeURIComponent(noteId)}/appearance`, {
+      method: 'PATCH',
+      headers,
+      body: JSON.stringify(patch)
+    });
+    if (!resp.ok) {
+      const t = await resp.text();
+      throw new Error(`Erreur update appearance: ${resp.status} ${resp.statusText} - ${t}`);
+    }
+    const json = await resp.json();
+    // reflect in store
+    if (json?.note) {
+      useFileSystemStore.getState().updateNote(noteId, json.note);
+    }
+    return json;
   }
 }
 

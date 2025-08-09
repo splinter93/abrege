@@ -47,9 +47,15 @@ export default function NotePage() {
             content: content.markdown || '',
             html_content: content.html || '',
             header_image: content.headerImage || null,
+            header_image_offset: content.headerImageOffset ?? 50,
+            header_image_blur: content.headerImageBlur ?? 0,
+            header_image_overlay: content.headerImageOverlay ?? 0,
+            header_title_in_image: content.headerTitleInImage ?? false,
+            wide_mode: content.wideMode ?? false,
+            font_family: content.fontFamily || null,
             updated_at: content.updatedAt,
             created_at: content.createdAt,
-          });
+          } as any);
         }
       } catch (e) {
         if (!cancelled) setError(e instanceof Error ? e.message : 'Unknown error');

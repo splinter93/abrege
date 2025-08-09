@@ -136,9 +136,27 @@ export class V2DatabaseUtils {
 
       const noteId = resolveResult.id;
 
+      // Charger l'état courant pour comparaison de titre
+      const { data: current, error: currErr } = await supabase
+        .from('articles')
+        .select('id, source_title, slug, ispublished, public_url')
+        .eq('id', noteId)
+        .eq('user_id', userId)
+        .single();
+      if (currErr) {
+        throw new Error(`Erreur lecture note: ${currErr.message}`);
+      }
+
       // Préparer les données de mise à jour
       const updateData: any = {};
-      if (data.source_title) updateData.source_title = data.source_title;
+      if (data.source_title !== undefined) {
+        const normalizedTitle = String(data.source_title).trim();
+        updateData.source_title = normalizedTitle;
+        if (normalizedTitle && current && normalizedTitle !== current.source_title) {
+          const newSlug = await SlugGenerator.generateSlug(normalizedTitle, 'note', userId, noteId);
+          updateData.slug = newSlug;
+        }
+      }
       if (data.markdown_content !== undefined) updateData.markdown_content = data.markdown_content;
       if (data.html_content !== undefined) updateData.html_content = data.html_content;
       if (data.header_image !== undefined) updateData.header_image = data.header_image;

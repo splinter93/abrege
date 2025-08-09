@@ -40,6 +40,16 @@
   overflow: visible;
 }
 
+.editor-content .ProseMirror,
+.editor-content .ProseMirror p,
+.editor-content .ProseMirror li,
+.editor-content .ProseMirror blockquote {
+  line-height: 1.7;
+}
+
+.editor-content .ProseMirror p { margin: 0 0 0.9rem 0; }
+.editor-content .ProseMirror li { margin: 0.08em 0; }
+
 /* ==========================================================================
    PLACEHOLDER ET ÉTATS VIDES
    ========================================================================== */

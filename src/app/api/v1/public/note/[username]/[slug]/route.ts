@@ -31,7 +31,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ user
       .from('users')
       .select('id')
       .eq('username', username)
-      .single();
+      .limit(1)
+      .maybeSingle();
     if (userError || !user) {
       return new Response(JSON.stringify({ error: 'Utilisateur non trouvé.' }), { status: 404, headers: { "Content-Type": "application/json" } });
     }
@@ -43,7 +44,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ user
       .eq('slug', slug)
       .eq('user_id', user.id)
       .eq('ispublished', true)
-      .single();
+      .limit(1)
+      .maybeSingle();
     if (noteError || !note) {
       return new Response(JSON.stringify({ error: 'Note non trouvée ou non publiée.' }), { status: 404, headers: { "Content-Type": "application/json" } });
     }

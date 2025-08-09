@@ -288,11 +288,8 @@ export class ChatSessionService {
         throw new Error('Authentification requise');
       }
 
-      // Construire une URL absolue (robuste SSR)
-      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL
-        || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : '')
-        || 'http://localhost:3000';
-      const url = `${siteUrl}${this.baseUrl}/${sessionId}/messages`;
+      // Utiliser une URL relative côté client pour éviter les problèmes de CORS
+      const url = `${this.baseUrl}/${sessionId}/messages`;
 
       const response = await fetch(url, {
         method: 'POST',
@@ -328,10 +325,10 @@ export class ChatSessionService {
     error?: string;
   }> {
     try {
-      // Construire une URL absolue (robuste SSR)
+      // Construire une URL absolue sécurisée côté serveur
       const siteUrl = process.env.NEXT_PUBLIC_SITE_URL
         || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : '')
-        || 'http://localhost:3000';
+        || 'https://www.scrivia.app';
       const url = `${siteUrl}${this.baseUrl}/${sessionId}/messages`;
 
       // 🔧 NOUVEAU: Log détaillé pour debug

@@ -91,7 +91,7 @@ export async function GET(
     // Récupérer le contenu de la note
     const { data: note, error: fetchError } = await supabase
       .from('articles')
-      .select('id, source_title, markdown_content, html_content, header_image, created_at, updated_at')
+      .select('id, source_title, markdown_content, html_content, header_image, header_image_offset, header_image_blur, header_image_overlay, header_title_in_image, wide_mode, font_family, created_at, updated_at')
       .eq('id', noteId)
       .single();
 
@@ -115,6 +115,12 @@ export async function GET(
         markdown: note.markdown_content,
         html: note.html_content,
         headerImage: note.header_image,
+        headerImageOffset: note.header_image_offset,
+        headerImageBlur: note.header_image_blur,
+        headerImageOverlay: note.header_image_overlay,
+        headerTitleInImage: note.header_title_in_image,
+        wideMode: note.wide_mode,
+        fontFamily: note.font_family,
         createdAt: note.created_at,
         updatedAt: note.updated_at
       }

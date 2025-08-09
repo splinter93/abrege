@@ -108,17 +108,25 @@ export async function PUT(req: NextRequest, { params }: ApiContext): Promise<Res
     
     const { supabase, userId } = await getAuthenticatedClient(req);
     const noteId = await resolveNoteRef(ref, userId);
+
+    // Charger l'état courant pour comparaison de titre
+    const { data: currentNote } = await supabase
+      .from('articles')
+      .select('id, source_title, slug, ispublished')
+      .eq('id', noteId)
+      .eq('user_id', userId)
+      .single();
     
     // Préparer les données à mettre à jour
     const updateData: Record<string, unknown> = {
       updated_at: new Date().toISOString()
     };
-    
+
+    // Normaliser et appliquer les champs
     if (body.header_image !== undefined) {
       updateData.header_image = body.header_image;
     }
     if (body.header_image_offset !== undefined) {
-      // Arrondir l'offset à 1 décimale pour éviter les valeurs trop précises
       const roundedOffset = Math.round(body.header_image_offset * 10) / 10;
       updateData.header_image_offset = roundedOffset;
       if (process.env.NODE_ENV === 'development') {
@@ -134,9 +142,17 @@ export async function PUT(req: NextRequest, { params }: ApiContext): Promise<Res
     if (body.header_title_in_image !== undefined) {
       updateData.header_title_in_image = body.header_title_in_image;
     }
+
+    // Titre + slug si changement
     if (body.source_title !== undefined) {
-      updateData.source_title = body.source_title;
+      const normalizedTitle = String(body.source_title).trim();
+      updateData.source_title = normalizedTitle;
+      if (normalizedTitle && currentNote && normalizedTitle !== currentNote.source_title) {
+        const newSlug = await SlugGenerator.generateSlug(normalizedTitle, 'note', userId, noteId);
+        updateData.slug = newSlug;
+      }
     }
+
     if (body.markdown_content !== undefined) {
       updateData.markdown_content = body.markdown_content;
     }

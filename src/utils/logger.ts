@@ -195,6 +195,17 @@ export const logStore = (operation: string, message: string, context?: LogContex
 export const logEditor = (operation: string, message: string, context?: LogContext, ...args: any[]) => 
   logger.editor(operation, message, context, ...args);
 
+// Fonction JSON unifiée
+export const logj = (o: Record<string, unknown>) => {
+  try {
+    const base = { ts: new Date().toISOString(), rid: (o as any).rid };
+    // Ne pas exposer de PII; hash/abrège côté appelant si nécessaire
+    console.log(JSON.stringify({ ...base, ...o }));
+  } catch {
+    // Fallback silencieux
+  }
+};
+
 // Fonction simplifiée pour le nettoyage des logs
 export const simpleLogger = {
   dev: (message: string, ...args: any[]) => {

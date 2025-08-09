@@ -24,12 +24,13 @@ import TableHeader from '@tiptap/extension-table-header';
 import TableCell from '@tiptap/extension-table-cell';
 import { Markdown } from 'tiptap-markdown';
 import Link from '@tiptap/extension-link';
-// @ts-ignore - custom JS extension
-import CustomImage from '@/extensions/CustomImage.js';
+import CustomImage from '@/extensions/CustomImage';
 import EditorSlashMenu, { type EditorSlashMenuHandle } from '@/components/EditorSlashMenu';
 import { useRouter } from 'next/navigation';
 import { FiEye, FiX } from 'react-icons/fi';
 import { OptimizedApi } from '@/services/optimizedApi';
+import { supabase } from '@/supabaseClient';
+import { toast } from 'react-hot-toast';
 
 /**
  * Full Editor – markdown is source of truth; HTML only for display.
@@ -60,6 +61,7 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
   const kebabBtnRef = React.useRef<HTMLButtonElement | null>(null);
   const [kebabPos, setKebabPos] = React.useState<{ top: number; left: number }>({ top: 0, left: 0 });
   const [published, setPublished] = React.useState(false);
+  const publishInitRef = React.useRef(false);
   const [a4Mode, setA4Mode] = React.useState(false);
   const [fullWidth, setFullWidth] = React.useState(false);
   const [slashLang, setSlashLang] = React.useState<'fr' | 'en'>('en');
@@ -79,6 +81,23 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
   React.useEffect(() => {
     if (note?.header_image) setHeaderImageUrl(note.header_image);
   }, [note?.header_image]);
+
+  // Hydrate appearance fields from note
+  React.useEffect(() => {
+    if (typeof note?.header_image_offset === 'number') setHeaderOffset(note.header_image_offset);
+  }, [note?.header_image_offset]);
+  React.useEffect(() => {
+    if (typeof note?.header_image_blur === 'number') setHeaderBlur(note.header_image_blur);
+  }, [note?.header_image_blur]);
+  React.useEffect(() => {
+    if (typeof note?.header_image_overlay === 'number') setHeaderOverlay(note.header_image_overlay as number);
+  }, [note?.header_image_overlay]);
+  React.useEffect(() => {
+    if (typeof note?.header_title_in_image === 'boolean') setTitleInImage(note.header_title_in_image);
+  }, [note?.header_title_in_image]);
+  React.useEffect(() => {
+    if (typeof note?.wide_mode === 'boolean') setFullWidth(note.wide_mode);
+  }, [note?.wide_mode]);
 
   const slashMenuRef = React.useRef<EditorSlashMenuHandle | null>(null);
 
@@ -170,6 +189,40 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
     }
   });
 
+  // Persist publish toggle to DB
+  React.useEffect(() => {
+    if (!publishInitRef.current) { publishInitRef.current = true; return; }
+    (async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        const token = session?.access_token;
+        if (!token) throw new Error('Authentification requise');
+        const res = await fetch(`/api/v1/note/${encodeURIComponent(noteId)}/publish`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          body: JSON.stringify({ ispublished: published })
+        });
+        const json = await res.json();
+        if (!res.ok) throw new Error(json?.error || 'Erreur publication');
+        if (json?.url) {
+          useFileSystemStore.getState().updateNote(noteId, { public_url: json.url } as any);
+        }
+        toast.success(published ? 'Note publiée' : 'Note dépubliée');
+      } catch (e) {
+        toast.error(e instanceof Error ? e.message : 'Erreur publication');
+      }
+    })();
+  }, [published, noteId]);
+
+  // Persist font changes via toolbar callback
+  const handleFontChange = React.useCallback(async (fontName: string) => {
+    try {
+      const api = OptimizedApi.getInstance();
+      await api.updateNoteAppearance(noteId, { font_family: fontName } as any);
+      useFileSystemStore.getState().updateNote(noteId, { font_family: fontName } as any);
+    } catch {}
+  }, [noteId]);
+
   // Ctrl/Cmd+S
   React.useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -199,6 +252,29 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
     return items.map(h => ({ id: h.id, text: h.text, level: h.level }));
   }, [html]);
 
+  const handlePreviewClick = React.useCallback(async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      let url: string | null = null;
+
+      // Try to use stored public_url if available
+      const n = useFileSystemStore.getState().notes[noteId];
+      const publicUrl = (n as any)?.public_url as string | null | undefined;
+      if (publicUrl) {
+        url = publicUrl;
+      } else {
+        // Fallback: fetch user to build /@username/id/[noteId]
+        const { data: { user } } = await supabase.auth.getUser();
+        const username = (user as any)?.user_metadata?.username;
+        if (username) {
+          url = `/@${username}/id/${noteId}`;
+        }
+      }
+      if (url) window.open(url, '_blank', 'noopener,noreferrer');
+    } catch {}
+  }, [noteId]);
+
   if (!note) {
     return <div className="editor-flex-center editor-padding-standard">Chargement…</div>;
   }
@@ -220,7 +296,7 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
                     className={`editor-header-preview${previewMode ? ' active' : ''}`}
                     aria-label="Aperçu"
                     title="Aperçu"
-                    onClick={() => setPreviewMode(v => !v)}
+                    onClick={handlePreviewClick}
                   >
                     <FiEye size={16} />
                   </button>
@@ -242,7 +318,7 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
                 </>
               )}
             >
-              <EditorToolbar editor={isReadonly ? null : (editor as any)} setImageMenuOpen={setImageMenuOpen} />
+              <EditorToolbar editor={isReadonly ? null : (editor as any)} setImageMenuOpen={setImageMenuOpen} onFontChange={handleFontChange} />
             </EditorHeader>
             <EditorHeaderImage
               headerImageUrl={headerImageUrl}
@@ -254,35 +330,41 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
                 setHeaderImageUrl(url);
                 try {
                   const api = OptimizedApi.getInstance();
-                  await api.updateNote(noteId, { header_image: url || '' });
+                  // Optimistic update
+                  updateNote(noteId, { header_image: url });
+                  await api.updateNoteAppearance(noteId, { header_image: url ?? null });
                 } catch {}
               }}
               onHeaderOffsetChange={async (offset) => {
                 setHeaderOffset(offset);
                 try {
                   const api = OptimizedApi.getInstance();
-                  await api.updateNote(noteId, { header_image_offset: offset });
+                  updateNote(noteId, { header_image_offset: offset } as any);
+                  await api.updateNoteAppearance(noteId, { header_image_offset: offset });
                 } catch {}
               }}
               onHeaderBlurChange={async (blur) => {
                 setHeaderBlur(blur);
                 try {
                   const api = OptimizedApi.getInstance();
-                  await api.updateNote(noteId, { header_image_blur: blur });
+                  updateNote(noteId, { header_image_blur: blur } as any);
+                  await api.updateNoteAppearance(noteId, { header_image_blur: blur });
                 } catch {}
               }}
               onHeaderOverlayChange={async (overlay) => {
                 setHeaderOverlay(overlay);
                 try {
                   const api = OptimizedApi.getInstance();
-                  await api.updateNote(noteId, { header_image_overlay: overlay });
+                  updateNote(noteId, { header_image_overlay: overlay } as any);
+                  await api.updateNoteAppearance(noteId, { header_image_overlay: overlay });
                 } catch {}
               }}
               onHeaderTitleInImageChange={async (v) => {
                 setTitleInImage(v);
                 try {
                   const api = OptimizedApi.getInstance();
-                  await api.updateNote(noteId, { header_title_in_image: v });
+                  updateNote(noteId, { header_title_in_image: v } as any);
+                  await api.updateNoteAppearance(noteId, { header_title_in_image: v });
                 } catch {}
               }}
               imageMenuOpen={imageMenuOpen}
