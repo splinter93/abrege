@@ -19,6 +19,12 @@ interface UpdateNoteData {
   markdown_content?: string;
   html_content?: string;
   header_image?: string;
+  header_image_offset?: number;
+  header_image_blur?: number;
+  header_image_overlay?: number;
+  header_title_in_image?: boolean;
+  wide_mode?: boolean;
+  font_family?: string;
   folder_id?: string | null;
 }
 

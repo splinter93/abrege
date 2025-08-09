@@ -29,6 +29,7 @@ import CustomImage from '@/extensions/CustomImage.js';
 import EditorSlashMenu, { type EditorSlashMenuHandle } from '@/components/EditorSlashMenu';
 import { useRouter } from 'next/navigation';
 import { FiEye, FiX } from 'react-icons/fi';
+import { OptimizedApi } from '@/services/optimizedApi';
 
 /**
  * Full Editor – markdown is source of truth; HTML only for display.
@@ -160,14 +161,12 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
   const { handleSave } = useEditorSave({
     editor: editor as any,
     onSave: async ({ title: newTitle, markdown_content, html_content }) => {
-      const { data: sessionData } = await (await import('@/supabaseClient')).supabase.auth.getSession();
-      const token = sessionData.session?.access_token;
-      if (!token) throw new Error('Authentication required');
-      const res = await fetch(`/api/v2/note/${encodeURIComponent(noteId)}/update`, {
-        method: 'PUT', headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json', 'X-Client-Type': 'web' },
-        body: JSON.stringify({ source_title: newTitle ?? title ?? 'Untitled', markdown_content, html_content })
+      const api = OptimizedApi.getInstance();
+      await api.updateNote(noteId, {
+        source_title: newTitle ?? title ?? 'Untitled',
+        markdown_content,
+        html_content,
       });
-      if (!res.ok) throw new Error(`Save failed ${res.status}`);
     }
   });
 
@@ -254,15 +253,38 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
               onHeaderChange={async (url) => {
                 setHeaderImageUrl(url);
                 try {
-                  const { data: sessionData } = await (await import('@/supabaseClient')).supabase.auth.getSession();
-                  const token = sessionData.session?.access_token; if (!token) return;
-                  await fetch(`/api/v2/note/${encodeURIComponent(noteId)}/update`, { method: 'PUT', headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json', 'X-Client-Type': 'web' }, body: JSON.stringify({ header_image: url }) });
+                  const api = OptimizedApi.getInstance();
+                  await api.updateNote(noteId, { header_image: url || '' });
                 } catch {}
               }}
-              onHeaderOffsetChange={setHeaderOffset}
-              onHeaderBlurChange={setHeaderBlur}
-              onHeaderOverlayChange={setHeaderOverlay}
-              onHeaderTitleInImageChange={setTitleInImage}
+              onHeaderOffsetChange={async (offset) => {
+                setHeaderOffset(offset);
+                try {
+                  const api = OptimizedApi.getInstance();
+                  await api.updateNote(noteId, { header_image_offset: offset });
+                } catch {}
+              }}
+              onHeaderBlurChange={async (blur) => {
+                setHeaderBlur(blur);
+                try {
+                  const api = OptimizedApi.getInstance();
+                  await api.updateNote(noteId, { header_image_blur: blur });
+                } catch {}
+              }}
+              onHeaderOverlayChange={async (overlay) => {
+                setHeaderOverlay(overlay);
+                try {
+                  const api = OptimizedApi.getInstance();
+                  await api.updateNote(noteId, { header_image_overlay: overlay });
+                } catch {}
+              }}
+              onHeaderTitleInImageChange={async (v) => {
+                setTitleInImage(v);
+                try {
+                  const api = OptimizedApi.getInstance();
+                  await api.updateNote(noteId, { header_title_in_image: v });
+                } catch {}
+              }}
               imageMenuOpen={imageMenuOpen}
               onImageMenuOpen={() => setImageMenuOpen(true)}
               onImageMenuClose={() => setImageMenuOpen(false)}
