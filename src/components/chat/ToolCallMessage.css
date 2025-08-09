@@ -6,8 +6,10 @@
   border-radius: var(--chat-radius-lg);
   background: transparent;
   border: 0;
-  margin: var(--chat-spacing-xs) 0 var(--chat-spacing-sm);
+  margin: var(--chat-spacing-xs) 0;
   overflow: hidden;
+  display: inline-block;
+  max-width: 85%;
 }
 
 /* ========================================
@@ -18,17 +20,21 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  width: 100%;
+  width: auto;
+  min-width: 280px;
   border: 1px solid var(--chat-border-tertiary);
-  background: var(--chat-bg-secondary);
-  padding: var(--chat-spacing-sm) var(--chat-spacing-md);
-  border-radius: var(--chat-radius-lg);
+  background: linear-gradient(180deg, rgba(255,255,255,0.02) 0%, rgba(255,255,255,0.0) 100%), var(--chat-bg-secondary);
+  padding: 6px 10px;
+  border-radius: 10px;
   cursor: pointer;
   text-align: left;
+  box-shadow: 0 1px 0 rgba(0,0,0,0.25) inset, 0 0 0 1px rgba(255,255,255,0.03);
+  transition: background var(--chat-transition-normal), border-color var(--chat-transition-normal), transform 0.15s ease;
 }
 
 .tool-call-header:hover {
   background: var(--chat-bg-tertiary);
+  transform: translateY(-1px);
 }
 
 .tool-call-title-group {
@@ -45,14 +51,15 @@
 
 .tool-call-title {
   font-size: 0.9em;
-  font-weight: 500;
+  font-weight: 600;
+  letter-spacing: 0.2px;
   color: var(--chat-text-primary);
 }
 
 .tool-call-status-indicators {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
 }
 
 .tool-call-indicator {
@@ -61,7 +68,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 50%;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.06);
+  box-shadow: 0 1px 0 rgba(0,0,0,0.25) inset;
 }
 
 .tool-call-indicator.success {
@@ -88,11 +97,12 @@
    ======================================== */
 
 .tool-call-content {
-  padding: var(--chat-spacing-sm) var(--chat-spacing-md) var(--chat-spacing-sm);
+  padding: 8px 10px 8px;
   border: 1px solid var(--chat-border-tertiary);
   border-top: 0;
-  border-radius: 0 0 var(--chat-radius-lg) var(--chat-radius-lg);
+  border-radius: 0 0 10px 10px;
   background: var(--chat-bg-tertiary);
+  width: auto;
 }
 
 .tool-call-item {
@@ -158,8 +168,9 @@
 
 .tool-call-result-content {
   background: var(--chat-bg-tertiary);
-  border-radius: var(--chat-radius-md);
-  padding: var(--chat-spacing-sm);
+  border-radius: 8px;
+  padding: 8px;
+  border: 1px solid var(--chat-border-tertiary);
 }
 
 .tool-call-result-content .chat-markdown {
