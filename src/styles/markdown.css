@@ -30,15 +30,15 @@
 
 /* Paragraphs: balanced spacing */
 .markdown-body p {
-  margin: 0 0 0.9rem 0; /* slightly tighter */
+  margin: 0 0 1em 0;
   line-height: 1.75;
 }
 
 /* Lists: consistent vertical rhythm */
 .markdown-body ul,
 .markdown-body ol {
-  margin: 0.4em 0 0.6em 1.5em; /* lighter top, a bit more bottom */
-  padding-left: 1.4em;
+  margin: 1em 0;
+  padding-left: 1.25em;
 }
 
 .markdown-body ul {
@@ -50,8 +50,8 @@
 }
 
 .markdown-body li {
-  margin: 0.08em 0; /* tighter between items */
-  line-height: 1.6; /* list items slightly tighter than paragraphs */
+  margin: 0.4em 0;
+  line-height: 1.7;
   padding-left: 0.2rem;
 }
 
@@ -769,10 +769,10 @@ li[data-type="taskItem"] > div p {
   margin-bottom: 2.5em;
 } 
 
-/* Tighten heading margins a touch */
-.markdown-body h1 { margin: 2.0rem 0 1.0rem; }
-.markdown-body h2 { margin: 1.5rem 0 0.9rem; }
-.markdown-body h3 { margin: 1.2rem 0 0.7rem; }
+/* Tighten heading margins a touch (ChatGPT-like) */
+.markdown-body h1 { margin: 2.0rem 0 0.8rem; line-height: 1.35; }
+.markdown-body h2 { margin: 1.6rem 0 0.7rem; line-height: 1.35; }
+.markdown-body h3 { margin: 1.3rem 0 0.6rem; line-height: 1.35; }
 
 /* ==========================================================================
    TASK LISTS - COUVERTURE COMPLÈTE TIPTAP

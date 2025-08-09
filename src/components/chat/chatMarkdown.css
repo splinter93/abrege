@@ -6,7 +6,7 @@
 .chat-enhanced-markdown {
   color: var(--chat-text-primary);
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
-  line-height: 2.0;
+  line-height: 1.75;
   font-size: 16px;
   font-weight: 400;
   letter-spacing: 0.01em;
@@ -21,11 +21,11 @@
    ======================================== */
 
 .chat-markdown p {
-  margin: 0 0 1.5em 0;
+  margin: 0 0 1em 0;
   color: var(--chat-text-primary) !important;
-  line-height: 2.0;
+  line-height: 1.75;
   /* Prévenir les layout shifts */
-  min-height: 2.0em;
+  min-height: 1.75em;
   display: block !important;
 }
 
@@ -45,44 +45,20 @@
 .chat-markdown h6 {
   color: var(--chat-text-primary) !important;
   font-weight: 600 !important;
-  line-height: 1.4 !important;
-  margin: 2em 0 1em 0 !important;
+  line-height: 1.35 !important;
+  margin: 1.6em 0 0.8em 0 !important;
   letter-spacing: -0.02em !important;
   display: block !important;
   /* Prévenir les layout shifts */
   contain: layout;
 }
 
-.chat-markdown h1 {
-  font-size: 1.8em !important;
-  font-weight: 700 !important;
-  margin-top: 2.5em !important;
-}
-
-.chat-markdown h2 {
-  font-size: 1.5em !important;
-  font-weight: 600 !important;
-  margin-top: 2.2em !important;
-}
-
-.chat-markdown h3 {
-  font-size: 1.3em !important;
-  font-weight: 600 !important;
-  margin-top: 2em !important;
-}
-
-.chat-markdown h4 {
-  font-size: 1.1em !important;
-  font-weight: 600 !important;
-  margin-top: 1.8em !important;
-}
-
+.chat-markdown h1 { font-size: 1.75em !important; font-weight: 700 !important; margin-top: 2em !important; }
+.chat-markdown h2 { font-size: 1.45em !important; font-weight: 600 !important; margin-top: 1.8em !important; }
+.chat-markdown h3 { font-size: 1.25em !important; font-weight: 600 !important; margin-top: 1.6em !important; }
+.chat-markdown h4 { font-size: 1.1em !important;  font-weight: 600 !important; margin-top: 1.4em !important; }
 .chat-markdown h5,
-.chat-markdown h6 {
-  font-size: 1em !important;
-  font-weight: 600 !important;
-  margin-top: 1.6em !important;
-}
+.chat-markdown h6 { font-size: 1em !important; font-weight: 600 !important; margin-top: 1.2em !important; }
 
 /* ========================================
    LISTES - ESPACEMENT GÉNÉREUX
@@ -90,25 +66,23 @@
 
 .chat-markdown ul,
 .chat-markdown ol {
-  margin: 1.5em 0;
-  padding-left: 1.5em;
+  margin: 1em 0;
+  padding-left: 1.25em;
   color: var(--chat-text-primary);
   /* Prévenir les layout shifts */
   contain: layout;
 }
 
 .chat-markdown li {
-  margin: 0.5em 0;
+  margin: 0.4em 0;
   color: var(--chat-text-primary);
-  line-height: 1.9;
+  line-height: 1.7;
   /* Prévenir les layout shifts */
-  min-height: 1.9em;
+  min-height: 1.7em;
 }
 
 .chat-markdown li > ul,
-.chat-markdown li > ol {
-  margin: 0.5em 0;
-}
+.chat-markdown li > ol { margin: 0.4em 0; }
 
 /* ========================================
    CODE - STYLE MODERNE
@@ -326,7 +300,7 @@
   .chat-markdown,
   .chat-enhanced-markdown {
     font-size: 15px;
-    line-height: 1.9;
+    line-height: 1.7;
   }
   
   .chat-markdown h1 {
@@ -334,7 +308,7 @@
   }
   
   .chat-markdown h2 {
-    font-size: 1.4em;
+    font-size: 1.35em;
   }
   
   .chat-markdown h3 {
@@ -343,16 +317,16 @@
   
   .chat-markdown pre {
     padding: 1em;
-    font-size: 0.85em;
+    font-size: 0.9em;
   }
   
   .chat-markdown table {
-    font-size: 0.85em;
+    font-size: 0.88em;
   }
   
   .chat-markdown ul,
   .chat-markdown ol {
-    padding-left: 1.2em;
+    padding-left: 1.15em;
   }
 } 
 
