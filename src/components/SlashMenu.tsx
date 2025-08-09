@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { SLASH_COMMANDS } from './slashCommands';
 
 interface SlashCommand {
@@ -27,14 +28,17 @@ const SlashMenu: React.FC<SlashMenuProps> = ({ open, search, setSearch, onSelect
   const [selectedIndex, setSelectedIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
-  // Décale le menu au-dessus du caret
-  let menuTop = (anchorRef.current?.top ?? 0) - 180; // Offset par défaut (180px)
-  if (menuRef.current) {
-    const height = menuRef.current.offsetHeight;
-    if (height && anchorRef.current?.top) {
-      menuTop = anchorRef.current.top - height - 10; // 10px de marge
-    }
-  }
+  const [coords, setCoords] = useState<{ left: number; top: number }>({ left: 0, top: 0 });
+
+  // Clamp position to viewport and prefer placing below caret like Notion
+  useEffect(() => {
+    if (!open) return;
+    const left = Math.max(8, Math.min((anchorRef.current?.left ?? 0), window.innerWidth - 320 - 8));
+    const topBelow = Math.min((anchorRef.current?.top ?? 0) + 16, window.innerHeight - 16);
+    const height = menuRef.current?.offsetHeight ?? 260;
+    const top = topBelow + height + 16 > window.innerHeight ? Math.max(8, (anchorRef.current?.top ?? 0) - height - 10) : topBelow;
+    setCoords({ left, top });
+  }, [open, anchorRef]);
 
   const langKey = (lang ?? 'fr') as 'fr' | 'en';
 
@@ -68,36 +72,17 @@ const SlashMenu: React.FC<SlashMenuProps> = ({ open, search, setSearch, onSelect
     } else if (e.key === 'Escape') {
       setSearch('');
       e.preventDefault();
+      anchorRef.current?.closeMenu && anchorRef.current.closeMenu();
     }
   };
 
   if (!open) return null;
 
-  return (
+  const menu = (
     <div
       ref={menuRef}
       className="slash-menu"
-      style={{
-        position: 'fixed',
-        left: anchorRef.current?.left ?? 0,
-        top: menuTop,
-        zIndex: 99999,
-        minWidth: 220,
-        maxWidth: 320,
-        background: 'rgba(28,28,32,0.92)',
-        backdropFilter: 'blur(12px)',
-        WebkitBackdropFilter: 'blur(12px)',
-        borderRadius: 10,
-        boxShadow: '0 4px 16px 0 rgba(0,0,0,0.10)',
-        padding: 0,
-        border: '1px solid #4446',
-        fontFamily: 'Noto Sans, Inter, Arial, sans-serif',
-        fontSize: 14,
-        transition: 'opacity 0.18s, transform 0.18s',
-        opacity: 1,
-        transform: 'scale(1)',
-        overflow: 'hidden',
-      }}
+      style={{ position: 'fixed', left: coords.left, top: coords.top }}
       tabIndex={-1}
       onKeyDown={handleKeyDown}
     >
@@ -110,25 +95,10 @@ const SlashMenu: React.FC<SlashMenuProps> = ({ open, search, setSearch, onSelect
         onBlur={() => {
           if (typeof anchorRef.current?.closeMenu === 'function') anchorRef.current.closeMenu();
         }}
-        style={{
-          width: '100%',
-          border: 'none',
-          outline: 'none',
-          background: 'transparent',
-          color: 'var(--accent-primary, #2994ff)',
-          fontSize: 15,
-          padding: '10px 14px 8px 14px',
-          borderBottom: '1px solid #4444',
-          borderRadius: '10px 10px 0 0',
-          fontWeight: 600,
-          letterSpacing: 0.01,
-          transition: 'background 0.15s, color 0.15s',
-          fontFamily: 'Noto Sans, Inter, Arial, sans-serif',
-        }}
       />
-      <div className="slash-menu-list" style={{ maxHeight: 260, overflowY: 'auto', padding: '2px 0', scrollbarWidth: 'thin', scrollbarColor: '#4446 #18181c' }}>
+      <div className="slash-menu-list">
         {filtered.length === 0 && (
-          <div style={{ padding: 12, color: 'var(--text-secondary)', textAlign: 'center', fontSize: 14 }}>
+          <div className="slash-menu-empty">
             {lang === 'fr' ? 'Aucune commande trouvée.' : 'No command found.'}
           </div>
         )}
@@ -137,37 +107,27 @@ const SlashMenu: React.FC<SlashMenuProps> = ({ open, search, setSearch, onSelect
             <div
               key={cmd.id}
               className={`slash-menu-item${i === selectedIndex ? ' selected' : ''}`}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                padding: i === selectedIndex ? '7px 14px' : '6px 14px',
-                background: i === selectedIndex ? 'rgba(255,255,255,0.03)' : 'transparent',
-                cursor: 'pointer',
-                borderLeft: 'none',
-                borderRadius: 6,
-                margin: '1px 4px',
-                color: i === selectedIndex ? 'var(--accent-primary)' : 'var(--text-primary)',
-                fontWeight: i === selectedIndex ? 700 : 500,
-                transition: 'background 0.13s, color 0.13s',
-                minHeight: 0,
-                boxShadow: 'none',
-              }}
               onMouseEnter={() => setSelectedIndex(i)}
               onClick={() => onSelect(cmd)}
               onMouseDown={e => e.preventDefault()}
             >
-              {/* Preview à gauche */}
               {cmd.preview && (
-                <span style={{ minWidth: 32, textAlign: 'center', color: 'var(--text-secondary)', opacity: 0.92, fontSize: 17, fontWeight: 700, marginRight: 14, display: 'inline-block' }} dangerouslySetInnerHTML={{ __html: cmd.preview }} />
+                <span className="slash-menu-preview" dangerouslySetInnerHTML={{ __html: cmd.preview }} />
               )}
-              {/* Label à droite, toujours visible */}
-              <span style={{ fontWeight: 500, fontSize: 15, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flex: 1 }}>{cmd.label[langKey]}</span>
+              <div className="slash-menu-texts">
+                <span className="slash-menu-label">{cmd.label[langKey]}</span>
+                {cmd.description?.[langKey] && (
+                  <span className="slash-menu-desc">{cmd.description[langKey]}</span>
+                )}
+              </div>
             </div>
           );
         })}
       </div>
     </div>
   );
+
+  return createPortal(menu, document.body);
 };
 
 export default SlashMenu; 

@@ -796,11 +796,40 @@ export class V2DatabaseUtils {
         throw new Error('notebook_id est requis');
       }
       
-      // Résoudre le notebook_id (peut être un UUID ou un slug)
+      // 🔧 NOUVEAU: Validation et correction de l'UUID
       let classeurId = notebookId;
       
-      // Si ce n'est pas un UUID, essayer de le résoudre comme un slug
-      if (!classeurId.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
+      // Vérifier si c'est un UUID valide
+      const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      const isValidUuid = uuidPattern.test(classeurId);
+      
+      if (!isValidUuid) {
+        logApi('v2_db_get_classeur_tree', `⚠️ UUID mal formaté: ${classeurId}`, context);
+        
+        // Essayer de corriger l'UUID si possible
+        if (classeurId.length === 35) {
+          // UUID avec un caractère manquant dans la 3ème section
+          const sections = classeurId.split('-');
+          if (sections.length === 5 && sections[2].length === 3) {
+            // Ajouter un 0 à la 3ème section
+            sections[2] = sections[2] + '0';
+            const correctedUuid = sections.join('-');
+            if (uuidPattern.test(correctedUuid)) {
+              logApi('v2_db_get_classeur_tree', `🔧 UUID corrigé: ${correctedUuid}`, context);
+              classeurId = correctedUuid;
+            } else {
+              throw new Error(`UUID mal formaté: ${notebookId}. Format attendu: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx`);
+            }
+          } else {
+            throw new Error(`UUID mal formaté: ${notebookId}. Format attendu: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx`);
+          }
+        } else {
+          throw new Error(`UUID mal formaté: ${notebookId}. Format attendu: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx`);
+        }
+      }
+      
+      // Si ce n'est pas un UUID valide, essayer de le résoudre comme un slug
+      if (!uuidPattern.test(classeurId)) {
         const { data: classeur, error: resolveError } = await supabase
           .from('classeurs')
           .select('id')

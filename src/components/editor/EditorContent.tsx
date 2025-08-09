@@ -11,8 +11,10 @@ interface EditorContentProps {
  */
 const EditorContent: React.FC<EditorContentProps> = ({ children }) => {
   return (
-    <div className="editor-content-wrapper markdown-body editor-container-width editor-text-left">
-      {children}
+    <div className="editor-content-wrapper markdown-body editor-container-width editor-text-left" style={{ maxWidth: 'var(--editor-content-width)', width: 'var(--editor-content-width)', margin: '0 auto' }}>
+      <div className="editor-content">
+        {children}
+      </div>
     </div>
   );
 };

@@ -25,7 +25,7 @@ export const useFolderSelection = ({
 
   // Handler pour ouvrir un fichier
   const handleFileOpen = useCallback((file: FileArticle) => {
-    router.push(`/note/${file.id}`);
+    router.push(`/private/note/${file.id}`);
   }, [router]);
 
   // Handler pour clic sur un élément

@@ -1,8 +1,8 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+const defaultClient = createClient(supabaseUrl, supabaseAnonKey);
 
 export type ResourceType = 'note' | 'folder' | 'classeur';
 
@@ -16,23 +16,26 @@ export class SlugGenerator {
   }
 
   private static async checkUniqueness(
+    supabase: SupabaseClient,
     slug: string, 
     type: ResourceType,
     userId: string,
     excludeId?: string
   ): Promise<boolean> {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from(this.getTableName(type))
       .select('id')
       .eq('slug', slug)
       .eq('user_id', userId);
-    
+
+    if (error) {
+      // Si erreur (RLS), considérer non-unique pour forcer une tentative suivante plutôt que planter
+      return false;
+    }
     if (!data) return true;
-    
     if (excludeId) {
       return !data.some(item => item.id !== excludeId);
     }
-    
     return data.length === 0;
   }
 
@@ -40,13 +43,15 @@ export class SlugGenerator {
     title: string,
     type: ResourceType,
     userId: string,
-    excludeId?: string
+    excludeId?: string,
+    clientOverride?: SupabaseClient
   ): Promise<string> {
+    const supabase = clientOverride ?? defaultClient;
     const baseSlug = this.slugify(title);
     let candidateSlug = baseSlug;
     let counter = 1;
     
-    while (!(await this.checkUniqueness(candidateSlug, type, userId, excludeId))) {
+    while (!(await this.checkUniqueness(supabase, candidateSlug, type, userId, excludeId))) {
       counter++;
       candidateSlug = `${baseSlug}-${counter}`;
     }
@@ -55,19 +60,15 @@ export class SlugGenerator {
   }
 
   private static slugify(text: string): string {
-    // ✅ Vérification pour éviter l'erreur undefined
     if (!text || typeof text !== 'string') {
       return 'untitled';
     }
-    
     return text
-      .toString()
       .normalize('NFD')
       .replace(/\p{Diacritic}/gu, '')
       .toLowerCase()
-      .replace(/[^a-z0-9\s-]/g, '')
-      .trim()
-      .replace(/\s+/g, '-')
-      .replace(/-+/g, '-');
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)/g, '')
+      .slice(0, 120);
   }
 } 

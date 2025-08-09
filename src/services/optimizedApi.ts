@@ -98,10 +98,10 @@ export class OptimizedApi {
    * Créer une note avec mise à jour directe de Zustand + polling côté client
    */
   async createNote(noteData: CreateNoteData) {
+    if (process.env.NODE_ENV === 'development') {
+    logger.dev('[OptimizedApi] 📝 Création note optimisée');
+    }
     const startTime = Date.now();
-    const context = { operation: 'create_note', component: 'OptimizedApi' };
-    
-    logApi('create_note', '🚀 Début création note', context);
     
     try {
       // Récupérer les headers d'authentification
@@ -115,31 +115,44 @@ export class OptimizedApi {
       });
 
       if (!response.ok) {
-        const error = new Error(`Erreur création note: ${response.statusText}`) as ApiError;
-        error.status = response.status;
-        error.statusText = response.statusText;
-        throw error;
+        const errorText = await response.text();
+        logger.error(`[OptimizedApi] ❌ Réponse API: ${response.status} ${response.statusText}`);
+        logger.error(`[OptimizedApi] ❌ Contenu erreur: ${errorText}`);
+        throw new Error(`Erreur création note: ${response.status} ${response.statusText} - ${errorText}`);
       }
 
       const result = await response.json();
       const apiTime = Date.now() - startTime;
-      logApi('create_note', `✅ API terminée en ${apiTime}ms`, context);
+      if (process.env.NODE_ENV === 'development') {
+      logger.dev(`[OptimizedApi] ✅ API terminée en ${apiTime}ms`);
+      logger.dev(`[OptimizedApi] 📋 Réponse API:`, result);
+      }
 
       // 🚀 Mise à jour directe de Zustand (instantanée)
-      const store = useFileSystemStore.getState();
-      store.addNote(result.note);
-      logStore('add_note', `Note ajoutée: ${result.note.source_title}`, context);
+      try {
+        const store = useFileSystemStore.getState();
+        if (process.env.NODE_ENV === 'development') {
+        logger.dev(`[OptimizedApi] 🔄 Ajout note à Zustand:`, result.note);
+        }
+        store.addNote(result.note);
+      } catch (storeError) {
+        logger.error('[OptimizedApi] ⚠️ Erreur accès store Zustand:', storeError);
+        if (process.env.NODE_ENV === 'development') {
+        logger.dev('[OptimizedApi] ⚠️ Store non disponible, mise à jour différée');
+        }
+      }
       
       // 🚀 Déclencher le polling côté client immédiatement
       await clientPollingTrigger.triggerArticlesPolling('INSERT');
-      logPolling('trigger', 'Polling INSERT déclenché', context);
       
       const totalTime = Date.now() - startTime;
-      logApi('create_note', `✅ Opération complète en ${totalTime}ms`, context);
+      if (process.env.NODE_ENV === 'development') {
+      logger.dev(`[OptimizedApi] ✅ Note ajoutée à Zustand + polling déclenché en ${totalTime}ms total`);
+      }
       
       return result;
     } catch (error) {
-      ErrorHandler.handleApiError(error, context);
+      logger.error('[OptimizedApi] ❌ Erreur création note:', error);
       throw error;
     }
   }
@@ -701,6 +714,120 @@ export class OptimizedApi {
       return result;
     } catch (error) {
       logger.error('[OptimizedApi] ❌ Erreur réorganisation classeurs:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Charger tous les classeurs avec leur contenu (dossiers et notes)
+   * Met à jour directement Zustand avec toutes les données
+   */
+  async loadClasseursWithContent() {
+    if (process.env.NODE_ENV === 'development') {
+    logger.dev('[OptimizedApi] 📚 Chargement classeurs avec contenu optimisé');
+    }
+    const startTime = Date.now();
+    
+    try {
+      // 1. Charger les classeurs via API v1 (sans authentification pour le moment)
+      const classeursResponse = await fetch('/api/v1/classeurs');
+      
+      if (!classeursResponse.ok) {
+        throw new Error(`Erreur chargement classeurs: ${classeursResponse.statusText}`);
+      }
+      
+      const classeursData = await classeursResponse.json();
+      const store = useFileSystemStore.getState();
+      store.setClasseurs(classeursData);
+      logger.dev('[OptimizedApi] ✅ Classeurs chargés via API v1:', classeursData.length);
+      logger.dev('[OptimizedApi] 📋 Données classeurs:', classeursData);
+
+      // 2. Pour chaque classeur, charger les dossiers et notes
+      const classeurs = Object.values(useFileSystemStore.getState().classeurs);
+      logger.dev('[OptimizedApi] 🔍 Classeurs dans le store après setClasseurs:', classeurs.length);
+      
+      for (const classeur of classeurs) {
+        logger.dev(`[OptimizedApi] 📁 Chargement contenu pour classeur: ${classeur.name} (${classeur.id})`);
+        try {
+          // Charger les dossiers du classeur (sans authentification)
+          const foldersResponse = await fetch(`/api/v1/dossiers?classeurId=${classeur.id}`);
+          logger.dev(`[OptimizedApi] 📊 Réponse dossiers pour ${classeur.name}:`, foldersResponse.status, foldersResponse.statusText);
+          
+          if (foldersResponse.status === 304) {
+            logger.dev(`[OptimizedApi] ⏭️ Dossiers non modifiés (304) pour ${classeur.name}`);
+          } else if (foldersResponse.ok) {
+            const foldersData = await foldersResponse.json();
+            logger.dev(`[OptimizedApi] 📋 Données dossiers brutes pour ${classeur.name}:`, foldersData);
+            
+            if (foldersData.dossiers && Array.isArray(foldersData.dossiers)) {
+              // Fusionner avec l'état ACTUEL (toujours lire le state frais)
+              const currentFolders = Object.values(useFileSystemStore.getState().folders);
+              const existingIds = new Set(currentFolders.map(f => f.id));
+              const newFolders = foldersData.dossiers.filter((f: any) => !existingIds.has(f.id));
+              const allFolders = [...currentFolders, ...newFolders];
+              
+              useFileSystemStore.getState().setFolders(allFolders);
+              logger.dev(`[OptimizedApi] ✅ Dossiers chargés pour classeur ${classeur.name}:`, foldersData.dossiers.length);
+              logger.dev(`[OptimizedApi] 📊 Total dossiers dans le store après fusion:`, allFolders.length);
+            } else {
+              logger.warn(`[OptimizedApi] ⚠️ Pas de dossiers dans la réponse pour ${classeur.name}:`, foldersData);
+            }
+          } else {
+            const errorText = await foldersResponse.text();
+            logger.warn(`[OptimizedApi] ⚠️ Erreur chargement dossiers classeur ${classeur.name}:`, foldersResponse.status, errorText);
+          }
+
+          // Charger les notes du classeur (sans authentification)
+          const notesResponse = await fetch(`/api/v1/notes?classeurId=${classeur.id}`);
+          logger.dev(`[OptimizedApi] 📊 Réponse notes pour ${classeur.name}:`, notesResponse.status, notesResponse.statusText);
+          
+          if (notesResponse.status === 304) {
+            logger.dev(`[OptimizedApi] ⏭️ Notes non modifiées (304) pour ${classeur.name}`);
+          } else if (notesResponse.ok) {
+            const notesData = await notesResponse.json();
+            logger.dev(`[OptimizedApi] 📋 Données notes brutes pour ${classeur.name}:`, notesData);
+            
+            if (notesData.notes && Array.isArray(notesData.notes)) {
+              // Fusionner avec l'état ACTUEL (toujours lire le state frais)
+              const currentNotes = Object.values(useFileSystemStore.getState().notes);
+              const existingIds = new Set(currentNotes.map(n => n.id));
+              const newNotes = notesData.notes.filter((n: any) => !existingIds.has(n.id));
+              const allNotes = [...currentNotes, ...newNotes];
+              
+              useFileSystemStore.getState().setNotes(allNotes);
+              logger.dev(`[OptimizedApi] ✅ Notes chargées pour classeur ${classeur.name}:`, notesData.notes.length);
+              logger.dev(`[OptimizedApi] 📊 Total notes dans le store après fusion:`, allNotes.length);
+            } else {
+              logger.warn(`[OptimizedApi] ⚠️ Pas de notes dans la réponse pour ${classeur.name}:`, notesData);
+            }
+          } else {
+            const errorText = await notesResponse.text();
+            logger.warn(`[OptimizedApi] ⚠️ Erreur chargement notes classeur ${classeur.name}:`, notesResponse.status, errorText);
+          }
+        } catch (error) {
+          logger.error(`[OptimizedApi] ⚠️ Erreur chargement contenu classeur ${classeur.name}:`, error);
+        }
+      }
+
+      const totalTime = Date.now() - startTime;
+      if (process.env.NODE_ENV === 'development') {
+      logger.dev(`[OptimizedApi] ✅ Tous les classeurs et leur contenu chargés en ${totalTime}ms`);
+      }
+      
+      // Log final de l'état du store
+      const finalStore = useFileSystemStore.getState();
+      logger.dev('[OptimizedApi] 📊 État final du store:', {
+        classeursCount: Object.values(finalStore.classeurs).length,
+        foldersCount: Object.values(finalStore.folders).length,
+        notesCount: Object.values(finalStore.notes).length,
+        classeurs: Object.values(finalStore.classeurs).map(c => ({ id: c.id, name: c.name })),
+        folders: Object.values(finalStore.folders).map(f => ({ id: f.id, name: f.name, classeur_id: f.classeur_id })),
+        notes: Object.values(finalStore.notes).map(n => ({ id: n.id, title: n.source_title, classeur_id: n.classeur_id }))
+      });
+      
+      return { success: true, classeursCount: classeurs.length };
+    } catch (error) {
+      logger.error('[OptimizedApi] ❌ Erreur chargement classeurs avec contenu:', error);
       throw error;
     }
   }

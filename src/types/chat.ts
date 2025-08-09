@@ -1,12 +1,11 @@
 // Types pour le système de sessions de chat
 
 export interface ChatMessage {
-  id: string;
+  id?: string;
   role: 'user' | 'assistant' | 'system' | 'tool';
   content: string | null;
+  reasoning?: string | null;
   timestamp: string;
-  isStreaming?: boolean; // Pour indiquer si le message est en cours de streaming
-  // Support pour les tool calls (format DeepSeek)
   tool_calls?: Array<{
     id: string;
     type: 'function';
@@ -15,8 +14,15 @@ export interface ChatMessage {
       arguments: string;
     };
   }>;
-  tool_call_id?: string; // Pour les messages tool
-  name?: string; // Pour les messages tool (nom de la fonction appelée)
+  tool_call_id?: string;
+  name?: string;
+  tool_results?: Array<{
+    tool_call_id: string;
+    name: string;
+    content: string;
+    success?: boolean;
+  }>;
+  isStreaming?: boolean; // Pour indiquer si le message est en cours de streaming
 }
 
 export interface ChatSession {

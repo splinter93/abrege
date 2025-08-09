@@ -2,6 +2,9 @@
 import React from 'react';
 import { ChatMessage as ChatMessageType } from '@/types/chat';
 import EnhancedMarkdownMessage from './EnhancedMarkdownMessage';
+import ReasoningMessage from './ReasoningMessage';
+import ToolCallMessage from './ToolCallMessage';
+import { useChatStore } from '@/store/useChatStore';
 
 interface ChatMessageProps {
   message: ChatMessageType;
@@ -16,55 +19,74 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, className, isStreami
     return null;
   }
   
-  const { role, content } = message;
+  const { role, content, reasoning } = message;
 
-  const renderToolCalls = () => {
-    if (!message.tool_calls || message.tool_calls.length === 0) return null;
-    
-    return (
-      <div className="chat-tool-calls">
-        {message.tool_calls.map((toolCall, index) => (
-          <div key={index} className="chat-tool-call">
-            <div className="chat-tool-call-header">
-              <span className="chat-tool-call-name">{toolCall.function?.name}</span>
-            </div>
-            <div className="chat-tool-call-args">
-              <pre>{JSON.stringify(toolCall.function?.arguments, null, 2)}</pre>
-            </div>
-          </div>
-        ))}
-      </div>
-    );
+  // Pour les messages tool (résultats d'outils), créer un faux tool call pour l'affichage
+  const getToolCallForToolMessage = () => {
+    if (role === 'tool' && message.tool_call_id && message.name) {
+      return [{
+        id: message.tool_call_id,
+        type: 'function' as const,
+        function: {
+          name: message.name,
+          arguments: '{}'
+        }
+      }];
+    }
+    return message.tool_calls;
   };
 
-  const renderToolResult = () => {
-    if (!message.tool_call_id) return null;
-    
-    return (
-      <div className="chat-tool-result">
-        <div className="chat-tool-result-header">
-          <span>Résultat de l'outil</span>
-        </div>
-        <div className="chat-tool-result-content">
-          {content}
-        </div>
-      </div>
-    );
+  const getToolResultsForToolMessage = () => {
+    if (role === 'tool' && message.tool_call_id && message.name && content) {
+      return [{
+        tool_call_id: message.tool_call_id,
+        name: message.name,
+        content: content,
+        success: true // Par défaut, on considère que c'est un succès
+      }];
+    }
+    return message.tool_results;
+  };
+
+  // Pour les messages assistant avec tool_calls, créer les tool_results
+  const getToolResultsForAssistant = () => {
+    if (role === 'assistant' && message.tool_calls && message.tool_calls.length > 0) {
+      // Chercher les messages tool correspondants dans le thread
+      const currentSession = useChatStore.getState().currentSession;
+      if (currentSession) {
+        return currentSession.thread
+          .filter(msg => msg.role === 'tool' && message.tool_calls?.some(tc => tc.id === msg.tool_call_id))
+          .map(msg => ({
+            tool_call_id: msg.tool_call_id!,
+            name: msg.name!,
+            content: msg.content!,
+            success: true // Par défaut
+          }));
+      }
+    }
+    return message.tool_results;
   };
 
   return (
     <div className={`chat-message chat-message-${role} ${className || ''}`}>
       <div className={`chat-message-bubble chat-message-bubble-${role}`}>
+        {/* Raisonnement (si présent) */}
+        {reasoning && (
+          <ReasoningMessage reasoning={reasoning} />
+        )}
+
+        {/* Tool calls - only for assistant messages to avoid duplicates */}
+        {role === 'assistant' && message.tool_calls && message.tool_calls.length > 0 && (
+          <ToolCallMessage
+            toolCalls={message.tool_calls}
+            toolResults={getToolResultsForAssistant() || []}
+          />
+        )}
+
         {/* Contenu markdown normal (pas pour les messages tool) */}
         {content && role !== 'tool' && (
           <EnhancedMarkdownMessage content={content} />
         )}
-        
-        {/* Tool calls (style ChatGPT) */}
-        {renderToolCalls()}
-        
-        {/* Résultat de tool call */}
-        {renderToolResult()}
         
         {/* Indicateur de frappe */}
         {isStreaming && (

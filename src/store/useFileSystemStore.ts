@@ -16,6 +16,7 @@ export interface Note {
   markdown_content?: string;
   content?: string; // Alias pour markdown_content (pour compatibilité éditeur)
   html_content?: string;
+  header_image?: string | null;
   // Propriétés additionnelles pour l'état optimiste et le diff
   _optimistic?: boolean | 'deleting';
   _lastPatch?: any;

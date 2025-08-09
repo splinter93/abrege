@@ -1,0 +1,168 @@
+/* ========================================
+   TOOL CALL MESSAGE - MODERN DESIGN
+   ======================================== */
+
+.tool-call-message {
+  border-radius: var(--chat-radius-lg);
+  background: transparent;
+  border: 0;
+  margin: var(--chat-spacing-xs) 0 var(--chat-spacing-sm);
+  overflow: hidden;
+}
+
+/* ========================================
+   HEADER
+   ======================================== */
+
+.tool-call-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  border: 1px solid var(--chat-border-tertiary);
+  background: var(--chat-bg-secondary);
+  padding: var(--chat-spacing-sm) var(--chat-spacing-md);
+  border-radius: var(--chat-radius-lg);
+  cursor: pointer;
+  text-align: left;
+}
+
+.tool-call-header:hover {
+  background: var(--chat-bg-tertiary);
+}
+
+.tool-call-title-group {
+  display: flex;
+  align-items: center;
+  gap: var(--chat-spacing-sm);
+}
+
+.tool-call-icon {
+  width: 16px;
+  height: 16px;
+  color: var(--chat-text-secondary);
+}
+
+.tool-call-title {
+  font-size: 0.9em;
+  font-weight: 500;
+  color: var(--chat-text-primary);
+}
+
+.tool-call-status-indicators {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.tool-call-indicator {
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+
+.tool-call-indicator.success {
+  background-color: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+}
+
+.tool-call-indicator.error {
+  background-color: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+}
+
+.tool-call-toggle {
+  color: var(--chat-text-tertiary);
+  transition: transform 0.2s;
+}
+
+.tool-call-header[aria-expanded="false"] .tool-call-toggle {
+  transform: rotate(-90deg);
+}
+
+/* ========================================
+   CONTENT
+   ======================================== */
+
+.tool-call-content {
+  padding: var(--chat-spacing-sm) var(--chat-spacing-md) var(--chat-spacing-sm);
+  border: 1px solid var(--chat-border-tertiary);
+  border-top: 0;
+  border-radius: 0 0 var(--chat-radius-lg) var(--chat-radius-lg);
+  background: var(--chat-bg-tertiary);
+}
+
+.tool-call-item {
+  border-top: 1px solid var(--chat-border-tertiary);
+  padding-top: var(--chat-spacing-sm);
+  margin-top: var(--chat-spacing-sm);
+}
+
+.tool-call-item:first-child {
+  margin-top: 0;
+  border-top: 0;
+  padding-top: 0;
+}
+
+.tool-call-item-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--chat-spacing-sm);
+}
+
+.tool-call-name {
+  font-size: 0.85em;
+  font-weight: 600;
+  color: var(--chat-text-primary);
+}
+
+.tool-call-arguments {
+  margin-bottom: var(--chat-spacing-sm);
+}
+
+.tool-call-arguments-header {
+  font-size: 0.75em;
+  font-weight: 500;
+  color: var(--chat-text-tertiary);
+  margin-bottom: var(--chat-spacing-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.tool-call-arguments-content pre {
+  background: var(--chat-bg-code);
+  border-radius: var(--chat-radius-md);
+  padding: var(--chat-spacing-sm);
+  font-size: 0.8em;
+  color: var(--chat-text-secondary);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.tool-call-result {
+  margin-top: var(--chat-spacing-sm);
+}
+
+.tool-call-result-header {
+  font-size: 0.75em;
+  font-weight: 500;
+  color: var(--chat-text-tertiary);
+  margin-bottom: var(--chat-spacing-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.tool-call-result-content {
+  background: var(--chat-bg-tertiary);
+  border-radius: var(--chat-radius-md);
+  padding: var(--chat-spacing-sm);
+}
+
+.tool-call-result-content .chat-markdown {
+  font-size: 0.85em;
+  color: var(--chat-text-secondary);
+} 

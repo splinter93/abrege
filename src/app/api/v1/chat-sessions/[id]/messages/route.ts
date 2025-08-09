@@ -25,6 +25,8 @@ const addMessageSchema = z.object({
   role: z.enum(['user', 'assistant', 'system', 'tool']),
   content: z.string().nullable().optional(),
   timestamp: z.string().optional().default(() => new Date().toISOString()),
+  // Support pour le reasoning
+  reasoning: z.string().nullable().optional(),
   // Support pour les tool calls (format DeepSeek)
   tool_calls: z.array(z.object({
     id: z.string(),
@@ -35,7 +37,14 @@ const addMessageSchema = z.object({
     })
   })).optional(),
   tool_call_id: z.string().optional(), // Pour les messages tool
-  name: z.string().optional() // 🔧 CORRECTION: Ajouter le name pour les messages tool
+  name: z.string().optional(), // 🔧 CORRECTION: Ajouter le name pour les messages tool
+  // Support pour les tool results
+  tool_results: z.array(z.object({
+    tool_call_id: z.string(),
+    name: z.string(),
+    content: z.string(),
+    success: z.boolean().optional()
+  })).optional()
 });
 
 // POST /api/v1/chat-sessions/[id]/messages - Ajouter un message à une session
@@ -74,9 +83,23 @@ export async function POST(
 
     const sessionId = id;
     const body = await request.json();
+    
+    // 🔧 NOUVEAU: Log détaillé pour debug
+    logger.dev('[Chat Messages API] 📋 Body reçu:', JSON.stringify(body, null, 2));
+    
+    try {
+      const validatedData = addMessageSchema.parse(body);
+      logger.dev('[Chat Messages API] ✅ Validation réussie:', validatedData);
+    } catch (validationError) {
+      logger.error('[Chat Messages API] ❌ Erreur validation:', validationError);
+      logger.error('[Chat Messages API] ❌ Body problématique:', JSON.stringify(body, null, 2));
+      return NextResponse.json(
+        { error: 'Données invalides', details: validationError instanceof Error ? validationError.message : 'Erreur de validation' },
+        { status: 400 }
+      );
+    }
+    
     const validatedData = addMessageSchema.parse(body);
-
-    logger.dev('[Chat Messages API] 📋 Données reçues:', validatedData);
 
     // Créer le nouveau message
     const newMessage = {
@@ -84,10 +107,24 @@ export async function POST(
       role: validatedData.role,
       content: validatedData.content,
       timestamp: validatedData.timestamp,
+      reasoning: validatedData.reasoning,
       tool_calls: validatedData.tool_calls,
       tool_call_id: validatedData.tool_call_id,
-      name: validatedData.name // 🔧 CORRECTION: Inclure le name pour les messages tool
+      name: validatedData.name, // 🔧 CORRECTION: Inclure le name pour les messages tool
+      tool_results: validatedData.tool_results
     };
+
+    // 🔧 NOUVEAU: Log détaillé du message créé
+    logger.dev('[Chat Messages API] 📝 Message créé:', {
+      id: newMessage.id,
+      role: newMessage.role,
+      hasContent: !!newMessage.content,
+      hasReasoning: !!newMessage.reasoning,
+      hasToolCalls: !!newMessage.tool_calls,
+      hasToolResults: !!newMessage.tool_results,
+      toolCallsCount: newMessage.tool_calls?.length || 0,
+      toolResultsCount: newMessage.tool_results?.length || 0
+    });
 
     // Créer un client avec le contexte d'authentification de l'utilisateur
     const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -112,6 +149,13 @@ export async function POST(
       .single();
 
     if (fetchError) {
+      logger.error('[Chat Messages API] ❌ Erreur récupération session:', {
+        error: fetchError,
+        sessionId,
+        userId,
+        hasToken: !!userToken
+      });
+      
       if (fetchError.code === 'PGRST116') {
         logger.error('[Chat Messages API] ❌ Session non trouvée:', sessionId);
         return NextResponse.json(
@@ -126,6 +170,21 @@ export async function POST(
         { status: 500 }
       );
     }
+
+    // 🔧 NOUVEAU: Vérifier que la session existe et appartient à l'utilisateur
+    if (!currentSession) {
+      logger.error('[Chat Messages API] ❌ Session non trouvée dans la DB:', sessionId);
+      return NextResponse.json(
+        { error: 'Session non trouvée' },
+        { status: 404 }
+      );
+    }
+
+    logger.dev('[Chat Messages API] ✅ Session trouvée:', {
+      sessionId,
+      threadLength: currentSession.thread?.length || 0,
+      historyLimit: currentSession.history_limit
+    });
 
     // Ajouter le nouveau message au thread
     const currentThread = currentSession.thread || [];

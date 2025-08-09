@@ -8,19 +8,35 @@
   z-index: 100;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 0.125rem 1rem;
+  justify-content: center;
+  padding: 0.25rem 1rem;
   border-bottom: 0.5px solid #2a2a2c;
   background: #141416;
   flex-shrink: 0;
-  min-height: 28px;
+  min-height: 36px;
   box-sizing: border-box;
+}
+
+.editor-header-right {
+  position: absolute;
+  right: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 /* Garantir que tous les éléments enfants sont centrés verticalement */
 .editor-header > * {
   display: flex;
   align-items: center;
+}
+
+/* Center container for toolbar */
+.editor-header-toolbar-center {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* Couleur par défaut pour tous les boutons du header */
@@ -108,8 +124,8 @@
   align-items: center;
   justify-content: center;
   padding: 0.5rem;
-  border-radius: 6px;
-  background: none;
+  border-radius: 0;
+  background: transparent;
   border: none;
   color: var(--text-2);
   transition: all 0.2s ease;
@@ -117,7 +133,7 @@
   position: relative;
 }
 .editor-header-kebab:hover {
-  background: var(--surface-hover);
+  background: transparent;
   color: var(--text-1);
 }
 

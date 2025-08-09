@@ -1,15 +1,18 @@
 'use client';
-// import.*logger.*from '@/utils/logger';
-
-// import.*useRef.*from 'react';
-// import.*ChatMessage.*from '@/store/useChatStore';
+import React, { useState, useRef, useEffect } from 'react';
 import { useSessionSync } from '@/hooks/useSessionSync';
+import { useChatStore } from '@/store/useChatStore';
+import { useLLMStore } from '@/store/useLLMStore';
+import { ChatMessage } from '@/types/chat';
+import { supabase } from '@/supabaseClient';
+import { simpleLogger as logger } from '@/utils/logger';
 import ChatInput from './ChatInput';
 import EnhancedMarkdownMessage from './EnhancedMarkdownMessage';
 import ChatSidebar from './ChatSidebar';
-// // import.*supabase.*from '@/supabaseClient';
+import ReasoningMessage from './ReasoningMessage';
 import './index.css';
 import './ChatWidget.css';
+import './ReasoningMessage.css';
 
 const ChatWidget: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);

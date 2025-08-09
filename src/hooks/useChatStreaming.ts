@@ -4,7 +4,7 @@ import { logger } from '@/utils/logger';
 
 interface UseChatStreamingOptions {
   onToken?: (token: string) => void;
-  onComplete?: (fullContent: string) => void;
+  onComplete?: (fullContent: string, fullReasoning: string) => void;
   onError?: (error: string) => void;
   onReasoning?: (reasoning: string) => void;
   onToolCalls?: (toolCalls: any[], toolName: string) => void;
@@ -130,8 +130,7 @@ export function useChatStreaming(options: UseChatStreamingOptions = {}): UseChat
             logger.debug('[useChatStreaming] 🎯 Completion traitée');
             setIsStreaming(false);
             setContent(fullResponse);
-            // Ne pas reset le reasoning ici, il reste affiché séparément
-            onComplete?.(fullResponse);
+            onComplete?.(fullResponse, reasoning);
           }
         } catch (error) {
           logger.error('[useChatStreaming] ❌ Erreur completion:', error);
@@ -220,7 +219,7 @@ export function useChatStreaming(options: UseChatStreamingOptions = {}): UseChat
       });
 
     channelRef.current = channel;
-  }, [onToken, onComplete, onError, onReasoning]);
+  }, [onToken, onComplete, onError, onReasoning, onToolCalls, onToolResult]);
 
   const stopStreaming = useCallback(() => {
     if (channelRef.current) {

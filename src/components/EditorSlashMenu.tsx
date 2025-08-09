@@ -19,28 +19,35 @@ export interface EditorSlashMenuProps {
 
 export interface EditorSlashMenuHandle {
   openMenu: (anchor: { left: number; top: number }) => void;
+  closeMenu: () => void;
 }
 
 const EditorSlashMenu = forwardRef<EditorSlashMenuHandle, EditorSlashMenuProps>(
   function EditorSlashMenu({ onInsert, lang = 'fr' }, ref) {
     const [slashOpen, setSlashOpen] = useState(false);
     const [slashSearch, setSlashSearch] = useState('');
-    const slashAnchorRef = useRef<{ left: number; top: number }>({ left: 0, top: 0 });
+    const slashAnchorRef = useRef<{ left: number; top: number; closeMenu?: () => void }>({ left: 0, top: 0 });
 
     // Fonction pour ouvrir le menu à une position donnée
     const openMenu = (anchor: { left: number; top: number }) => {
-      slashAnchorRef.current = anchor;
-      setSlashSearch('');
+      slashAnchorRef.current = {
+        ...anchor,
+        closeMenu: () => {
+          setSlashOpen(false);
+          setSlashSearch('');
+        },
+      };
+      setSlashSearch('/');
       setSlashOpen(true);
     };
-
-    useImperativeHandle(ref, () => ({ openMenu }), [openMenu]);
 
     // Fonction pour fermer le menu
     const closeMenu = () => {
       setSlashOpen(false);
       setSlashSearch('');
     };
+
+    useImperativeHandle(ref, () => ({ openMenu, closeMenu }), [openMenu]);
 
     // Fonction pour insérer un bloc
     const handleSelect = (cmd: SlashCommand) => {
@@ -60,9 +67,10 @@ const EditorSlashMenu = forwardRef<EditorSlashMenuHandle, EditorSlashMenuProps>(
 
     React.useEffect(() => {
       if (!slashOpen) return;
-      // Fermer si le champ de recherche ne commence plus par '/'
-      if (slashSearch && !slashSearch.startsWith('/')) {
+      // Ferme si la recherche ne commence plus par '/' OU si un espace suit immédiatement '/'
+      if (slashSearch && (!slashSearch.startsWith('/') || /^\/\s/.test(slashSearch))) {
         setSlashOpen(false);
+        setSlashSearch('');
       }
     }, [slashSearch, slashOpen]);
 

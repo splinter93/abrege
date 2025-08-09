@@ -1,0 +1,74 @@
+/* ========================================
+   REASONING MESSAGE - COMPOSANT DÉDIÉ
+   ======================================== */
+
+.reasoning-message {
+  margin-bottom: var(--chat-spacing-sm);
+}
+
+/* ========================================
+   HEADER DU REASONING (CLICABLE)
+   ======================================== */
+
+.reasoning-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  border: 0;
+  background: none;
+  padding: var(--chat-spacing-xs) 0;
+  cursor: pointer;
+  text-align: left;
+  color: var(--chat-text-tertiary);
+}
+
+.reasoning-header:hover {
+  color: var(--chat-text-secondary);
+}
+
+.reasoning-title {
+  font-size: 0.75em;
+  font-weight: 500;
+  color: var(--chat-text-tertiary) !important;
+}
+
+.reasoning-toggle {
+  font-size: 0.7em;
+  color: var(--chat-text-tertiary);
+}
+
+/* ========================================
+   CONTENU DU REASONING
+   ======================================== */
+
+.reasoning-content {
+  padding: var(--chat-spacing-xs) 0;
+}
+
+.reasoning-content .chat-markdown {
+  color: var(--chat-text-quaternary);
+  font-size: 0.8em;
+  line-height: 1.4;
+}
+
+.reasoning-content .chat-markdown p { margin: 0 0 6px 0; }
+.reasoning-content .chat-markdown p:last-child { margin-bottom: 0; }
+
+.reasoning-content .chat-markdown strong {
+  color: var(--chat-text-tertiary);
+  font-weight: 600;
+}
+
+.reasoning-content .chat-markdown em {
+  color: var(--chat-text-quaternary);
+  font-style: italic;
+}
+
+/* ========================================
+   RESPONSIVE
+   ======================================== */
+
+@media (max-width: 768px) {
+  .reasoning-content { padding: var(--chat-spacing-xs) 0; }
+} 

@@ -15,6 +15,7 @@ interface EditorKebabMenuProps {
   publishedUrl?: string;
   fullWidth: boolean;
   setFullWidth: (v: boolean) => void;
+
   isPublishing?: boolean;
 }
 
@@ -60,7 +61,7 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
     if (publishedUrl) {
       navigator.clipboard.writeText(publishedUrl);
       setCopyConfirmed(true);
-      setTimeout(() => setCopyConfirmed(false), 2000); // Reset après 2 secondes
+      setTimeout(() => setCopyConfirmed(false), 2000);
     }
   };
 
@@ -75,7 +76,6 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
     </svg>
   );
 
-  // Traductions
   const translations = {
     fr: {
       share: 'Partager',
@@ -95,7 +95,7 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
       publish: 'Publish',
       comingSoon: 'Coming Soon'
     }
-  };
+  } as const;
 
   const t = translations[slashLang];
 
@@ -104,14 +104,14 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
       id: 'share',
       label: t.share,
       icon: <FiShare2 size={18} />,
-      onClick: () => { onClose(); /* TODO: implémenter partage */ },
+      onClick: () => { onClose(); },
       color: '#D4D4D4'
     },
     {
       id: 'export',
       label: t.export,
       icon: <FiDownload size={18} />,
-      onClick: () => { onClose(); /* TODO: implémenter export */ },
+      onClick: () => { onClose(); },
       color: '#D4D4D4'
     },
     {
@@ -137,7 +137,6 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
       label: published ? t.published : t.publish,
       icon: <FiGlobe size={18} />,
       onClick: () => { 
-        // Éviter la boucle infinie en désactivant pendant la publication
         if (!isPublishing) {
           setPublished(!published); 
         }
@@ -147,195 +146,47 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
       showCopyButton: published && publishedUrl,
       disabled: isPublishing
     }
-  ];
+  ] as const;
 
   return (
     <>
       {/* Overlay pour fermer le menu */}
       <div 
-        style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          zIndex: 999
-        }}
+        className="editor-kebab-overlay"
         onClick={onClose}
+        aria-label="Fermer le menu"
       />
       
-      {/* Menu kebab */}
+      {/* Menu principal */}
       <div
+        className="editor-header-kebab-menu"
         ref={menuRef}
-        style={{
-          position: 'fixed',
-          top: position.top,
-          left: position.left,
-          background: '#1a1a1c',
-          border: '1px solid #2a2a2c',
-          borderRadius: 12,
-          padding: '4px 0',
-          minWidth: 200,
-          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)',
-          zIndex: 1000,
-          backdropFilter: 'blur(10px)'
-        }}
+        style={{ top: position.top, left: position.left, position: 'fixed' }}
       >
-        {menuOptions.map((option, index) => (
-          <div key={option.id}>
-            {option.type === 'switch' ? (
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  {option.icon}
-                  <span style={{ color: option.color, fontSize: '14px', fontFamily: 'Noto Sans, Inter, Arial, sans-serif' }}>
-                    {option.label}
-                  </span>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  {/* Bouton copier URL (seulement pour Published) */}
-                  {option.showCopyButton && (
+        {menuOptions.map((opt) => (
                     <button
-                      onClick={handleCopyUrl}
-                      style={{
-                        padding: '10px',
-                        background: 'transparent',
-                        border: 'none',
-                        color: copyConfirmed ? '#ff6b35' : '#D4D4D4',
-                        cursor: 'pointer',
-                        borderRadius: 4,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        transition: 'all 0.15s ease',
-                        marginLeft: '8px'
-                      }}
-                      onMouseEnter={(e) => {
-                        if (!copyConfirmed) {
-                          e.currentTarget.style.backgroundColor = '#2a2a2c';
-                          e.currentTarget.style.color = '#ff6b35';
-                        }
-                      }}
-                      onMouseLeave={(e) => {
-                        if (!copyConfirmed) {
-                          e.currentTarget.style.backgroundColor = 'transparent';
-                          e.currentTarget.style.color = '#D4D4D4';
-                        }
-                      }}
-                      title={copyConfirmed ? "URL copiée !" : "Copier l'URL"}
-                    >
-                      {copyConfirmed ? <FiCheck size={12} /> : <FiCopy size={12} />}
-                    </button>
-                  )}
-                  {/* Switch toggle */}
+            key={opt.id}
+            className="editor-header-kebab-menu-item"
+            onClick={opt.onClick}
+            disabled={(opt as any).disabled}
+            aria-label={opt.label}
+          >
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8, color: (opt as any).color }}>
+              {opt.icon}
+              {opt.label}
+            </span>
+            {opt.id === 'published' && publishedUrl && (
+              <span style={{ marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: 8 }}>
                   <button
-                    onClick={option.onClick}
-                    disabled={option.disabled}
-                    style={{
-                      width: 44,
-                      height: 24,
-                      background: option.id === 'a4Mode' ? (a4Mode ? '#10b981' : '#444') : (published ? '#ff6b35' : '#444'),
-                      border: 'none',
-                      borderRadius: 12,
-                      cursor: option.disabled ? 'not-allowed' : 'pointer',
-                      position: 'relative',
-                      transition: 'background-color 0.2s ease',
-                      display: 'flex',
-                      alignItems: 'center',
-                      padding: '2px',
-                      opacity: option.disabled ? 0.5 : 1
-                    }}
-                  >
-                    <div
-                      style={{
-                        width: 20,
-                        height: 20,
-                        background: '#fff',
-                        borderRadius: '50%',
-                        transition: 'transform 0.2s ease',
-                        transform: (option.id === 'a4Mode' ? a4Mode : published) ? 'translateX(20px)' : 'translateX(0px)',
-                        boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
-                      }}
-                    />
+                  className="editor-header-kebab-menu-item"
+                  style={{ padding: '0.4rem 0.6rem' }}
+                  onClick={(e) => { e.stopPropagation(); handleCopyUrl(); }}
+                >
+                  {copyConfirmed ? <FiCheck size={16} /> : <FiCopy size={16} />}
                   </button>
-                </div>
-              </div>
-            ) : option.type === 'coming-soon' ? (
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  {option.icon}
-                  <span style={{ color: option.color, fontSize: '14px', fontFamily: 'Noto Sans, Inter, Arial, sans-serif' }}>
-                    {option.label}
                   </span>
-                  <span style={{ 
-                    color: '#737373', 
-                    fontSize: '10px', 
-                    fontFamily: 'Noto Sans, Inter, Arial, sans-serif',
-                    fontStyle: 'italic',
-                    padding: '2px 6px',
-                    background: '#2a2a2c',
-                    borderRadius: '3px',
-                    border: '1px solid #444',
-                    marginLeft: '8px',
-                    cursor: 'default',
-                    transition: 'all 0.15s ease'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.color = '#ff6b35';
-                    e.currentTarget.style.borderColor = '#ff6b35';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.color = '#737373';
-                    e.currentTarget.style.borderColor = '#444';
-                  }}
-                  >
-                    {t.comingSoon}
-                  </span>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center' }}>
-                </div>
-              </div>
-            ) : (
-              <button
-                onClick={option.onClick}
-                style={{
-                  width: '100%',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 12,
-                  padding: '12px 16px',
-                  background: 'transparent',
-                  border: 'none',
-                  color: option.color,
-                  fontSize: '14px',
-                  cursor: 'pointer',
-                  transition: 'background-color 0.15s ease',
-                  fontFamily: 'Noto Sans, Inter, Arial, sans-serif',
-                  borderRadius: 0
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = '#2a2a2c';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = 'transparent';
-                }}
-              >
-                {option.icon}
-                {option.label}
-              </button>
             )}
-            
-            {/* Séparateur élégant entre les options (sauf pour la dernière) */}
-            {index < menuOptions.length - 1 && (
-              <div
-                style={{
-                  height: '1px',
-                  background: 'linear-gradient(90deg, transparent 0%, #2a2a2c 20%, #2a2a2c 80%, transparent 100%)',
-                  margin: '0 16px',
-                  opacity: 0.6
-                }}
-              />
-            )}
-          </div>
+          </button>
         ))}
       </div>
     </>

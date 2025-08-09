@@ -524,25 +524,25 @@ export class AgentApiV2Tools {
     // Tool: Créer une note
     this.tools.set('create_note', {
       name: 'create_note',
-      description: 'Créer une nouvelle note. IMPORTANT: Fournir UN SEUL objet JSON avec les paramètres suivants.',
+      description: 'Créer une nouvelle note dans un classeur. ATTENTION: Utiliser EXACTEMENT les noms de paramètres suivants: source_title, notebook_id, markdown_content, folder_id. Exemple: {"source_title": "Mon titre", "notebook_id": "uuid-du-classeur"}',
       parameters: {
         type: 'object',
         properties: {
           source_title: {
             type: 'string',
-            description: 'Titre de la note (obligatoire)'
+            description: 'Titre de la note (obligatoire) - utiliser EXACTEMENT ce nom'
           },
           notebook_id: {
             type: 'string',
-            description: 'ID ou slug du classeur (obligatoire)'
+            description: 'ID ou slug du classeur (obligatoire) - utiliser EXACTEMENT ce nom'
           },
           markdown_content: {
             type: 'string',
-            description: 'Contenu markdown de la note (optionnel)'
+            description: 'Contenu markdown de la note (optionnel) - utiliser EXACTEMENT ce nom'
           },
           folder_id: {
             type: 'string',
-            description: 'ID du dossier parent (optionnel)'
+            description: 'ID du dossier parent (optionnel) - utiliser EXACTEMENT ce nom'
           }
         },
         required: ['source_title', 'notebook_id']
@@ -564,27 +564,31 @@ export class AgentApiV2Tools {
     // Tool: Mettre à jour une note
     this.tools.set('update_note', {
       name: 'update_note',
-      description: 'Modifier une note existante. IMPORTANT: Fournir UN SEUL objet JSON avec les paramètres suivants.',
+      description: 'Modifier une note existante. ATTENTION: Utiliser EXACTEMENT les noms de paramètres suivants: ref, source_title, markdown_content. Exemple: {"ref": "uuid-de-la-note", "source_title": "Nouveau titre"}',
       parameters: {
         type: 'object',
         properties: {
           ref: {
             type: 'string',
-            description: 'ID ou slug de la note à modifier (obligatoire)'
+            description: 'ID ou slug de la note à modifier (obligatoire) - utiliser EXACTEMENT ce nom'
           },
           source_title: {
             type: 'string',
-            description: 'Nouveau titre de la note (optionnel)'
+            description: 'Nouveau titre de la note (optionnel) - utiliser EXACTEMENT ce nom'
           },
           markdown_content: {
             type: 'string',
-            description: 'Nouveau contenu markdown (optionnel)'
+            description: 'Nouveau contenu markdown (optionnel) - utiliser EXACTEMENT ce nom'
           }
         },
         required: ['ref']
       },
       execute: async (params, jwtToken, userId) => {
-        const { ref, ...data } = params;
+        const ref = params.ref || params.id || params.note_id || params.slug;
+        if (!ref) {
+          return { success: false, error: 'ref (ou id/note_id/slug) est requis' };
+        }
+        const { ref: _ignore, id: _id, note_id: _noteId, slug: _slug, ...data } = params;
         const context = { operation: 'update_note', component: 'AgentApiV2Tools' };
         return await V2DatabaseUtils.updateNote(ref, data, userId, context);
       }
@@ -593,17 +597,17 @@ export class AgentApiV2Tools {
     // Tool: Ajouter du contenu à une note
     this.tools.set('add_content_to_note', {
       name: 'add_content_to_note',
-      description: 'Ajouter du texte à la fin d\'une note. IMPORTANT: Fournir UN SEUL objet JSON avec les paramètres suivants.',
+      description: 'Ajouter du texte à la fin d\'une note. ATTENTION: Utiliser EXACTEMENT les noms de paramètres suivants: ref, content. Exemple: {"ref": "uuid-de-la-note", "content": "Nouveau contenu à ajouter"}',
       parameters: {
         type: 'object',
         properties: {
           ref: {
             type: 'string',
-            description: 'ID ou slug de la note (obligatoire)'
+            description: 'ID ou slug de la note (obligatoire) - utiliser EXACTEMENT ce nom'
           },
           content: {
             type: 'string',
-            description: 'Contenu à ajouter à la fin (obligatoire)'
+            description: 'Contenu à ajouter à la fin (obligatoire) - utiliser EXACTEMENT ce nom'
           }
         },
         required: ['ref', 'content']
@@ -664,21 +668,21 @@ export class AgentApiV2Tools {
     // Tool: Créer un dossier
     this.tools.set('create_folder', {
       name: 'create_folder',
-      description: 'Créer un nouveau dossier. IMPORTANT: Fournir UN SEUL objet JSON avec les paramètres suivants.',
+      description: 'Créer un nouveau dossier. ATTENTION: Utiliser EXACTEMENT les noms de paramètres suivants: name, notebook_id, parent_id. Exemple: {"name": "Mon dossier", "notebook_id": "uuid-du-classeur"}',
       parameters: {
         type: 'object',
         properties: {
           name: {
             type: 'string',
-            description: 'Nom du dossier (obligatoire)'
+            description: 'Nom du dossier (obligatoire) - utiliser EXACTEMENT ce nom'
           },
           notebook_id: {
             type: 'string',
-            description: 'ID du classeur où créer le dossier (obligatoire)'
+            description: 'ID du classeur où créer le dossier (obligatoire) - utiliser EXACTEMENT ce nom'
           },
           parent_id: {
             type: 'string',
-            description: 'ID du dossier parent (optionnel)'
+            description: 'ID du dossier parent (optionnel) - utiliser EXACTEMENT ce nom'
           }
         },
         required: ['name', 'notebook_id']
@@ -785,13 +789,13 @@ export class AgentApiV2Tools {
     // Tool: Récupérer l'arborescence
     this.tools.set('get_tree', {
       name: 'get_tree',
-      description: 'Récupérer l\'arborescence d\'un classeur. IMPORTANT: Fournir UN SEUL objet JSON avec les paramètres suivants.',
+      description: 'Récupérer l\'arborescence d\'un classeur. ATTENTION: Utiliser EXACTEMENT le nom de paramètre suivant: notebook_id. Le notebook_id doit être un UUID valide au format xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx (36 caractères). Exemple: {"notebook_id": "d35d755e-42a4-4100-b796-9c614b2b13bd"}',
       parameters: {
         type: 'object',
         properties: {
           notebook_id: {
             type: 'string',
-            description: 'ID du classeur (obligatoire)'
+            description: 'ID du classeur (obligatoire) - utiliser EXACTEMENT ce nom. Doit être un UUID valide au format xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx (36 caractères)'
           }
         },
         required: ['notebook_id']
@@ -799,8 +803,11 @@ export class AgentApiV2Tools {
       execute: async (params, jwtToken, userId) => {
         const context = { operation: 'get_tree', component: 'AgentApiV2Tools' };
         try {
-          // ✅ CORRECTION: Supporter slug ou notebook_id
-          const notebookId = params.notebook_id || params.slug;
+          // ✅ CORRECTION: Supporter plusieurs alias (slug, notebook_slug, notebook)
+          const notebookId = params.notebook_id || params.slug || params.notebook_slug || params.notebook;
+          if (!notebookId) {
+            return { success: false, error: 'notebook_id est requis' };
+          }
           return await V2DatabaseUtils.getClasseurTree(notebookId, userId, context);
         } catch (error) {
           // ✅ CORRECTION: Retourner l'erreur au lieu de planter

@@ -124,7 +124,7 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
   /**
    * Effectue un appel à l'API Groq avec support des function calls
    */
-  async call(message: string, context: AppContext, history: ChatMessage[], tools?: any[]): Promise<any> {
+  async call(message: string, context: AppContext, history: ChatMessage[], tools?: any[]): Promise<string> {
     if (!this.isAvailable()) {
       throw new Error('Groq provider non configuré');
     }
@@ -148,10 +148,10 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
       const response = await this.makeApiCall(payload);
       
       // Extraire la réponse
-      // const result = [^;]+;
+      const result = this.extractResponse(response);
       
       logger.debug('[GroqProvider] ✅ Appel réussi');
-      return result;
+      return result.content ?? '';
 
     } catch (error) {
       logger.error('[GroqProvider] ❌ Erreur lors de l\'appel:', error);
@@ -264,13 +264,13 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
 
     const choice = response.choices[0];
     const result: any = {
-      content: choice.message.content || '',
+      content: choice?.message?.content ?? '',
       model: response.model,
       usage: response.usage
     };
 
     // ✅ Ajouter les tool calls si présents
-    if (choice.message.tool_calls && choice.message.tool_calls.length > 0) {
+    if (choice?.message?.tool_calls && choice.message.tool_calls.length > 0) {
       result.tool_calls = choice.message.tool_calls;
       logger.debug(`[GroqProvider] 🔧 ${result.tool_calls.length} tool calls détectés`);
       
@@ -388,7 +388,7 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
       };
 
       const response = await this.makeApiCall(payload);
-      // const result = [^;]+;
+      const result = this.extractResponse(response);
       
       if (result.tool_calls && result.tool_calls.length > 0) {
         logger.debug(`[GroqProvider] ✅ Function calls testés avec succès - ${result.tool_calls.length} tool calls`);

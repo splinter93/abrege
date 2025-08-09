@@ -5,23 +5,25 @@ interface EditorLayoutProps {
   title?: React.ReactNode;
   content?: React.ReactNode;
   footer?: React.ReactNode;
+  layoutClassName?: string; // noteLayout variants: noImage | imageOnly | imageWithTitle
 }
 
 /**
- * Layout minimaliste : header en haut, padding, titre centré, padding, texte centré, footer optionnel.
+ * Layout minimaliste : header en haut, titre centré, contenu centré, footer optionnel.
  */
-const EditorLayout: React.FC<EditorLayoutProps> = ({ header, title, content, footer }) => {
+const EditorLayout: React.FC<EditorLayoutProps> = ({ header, title, content, footer, layoutClassName }) => {
+  const rootClass = layoutClassName ? layoutClassName : 'noteLayout noImage';
   return (
-    <div className="editor-layout editor-flex-column editor-flex-center editor-full-width editor-full-height editor-bg-surface-1">
+    <div className={`editor-layout editor-flex-column editor-flex-center editor-full-width editor-full-height editor-bg-surface-1 ${rootClass}`}>
       {header}
       {title && (
-        <div className="editor-full-width editor-flex-center editor-padding-top-large">
-          <div className="editor-container-width">{title}</div>
+        <div className="editor-full-width editor-flex-center noteLayout-title">
+          <div className="editor-container-width" style={{ maxWidth: 'var(--editor-content-width)' }}>{title}</div>
         </div>
       )}
       {content && (
-        <div className="editor-full-width editor-flex-center editor-padding-top-medium">
-          <div className="editor-container-width">{content}</div>
+        <div className="editor-full-width editor-flex-center noteLayout-content">
+          <div className="editor-container-width" style={{ maxWidth: 'var(--editor-content-width)', width: 'var(--editor-content-width)' }}>{content}</div>
         </div>
       )}
       {footer}

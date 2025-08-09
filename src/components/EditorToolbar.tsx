@@ -3,7 +3,7 @@ import { FiBold, FiItalic, FiUnderline, FiAlignLeft, FiAlignCenter, FiAlignRight
 import { AiOutlineOrderedList } from 'react-icons/ai';
 import { MdGridOn, MdFormatQuote } from 'react-icons/md';
 import { FiCode } from 'react-icons/fi';
-import Tooltip from './Tooltip';
+import Tooltip from '@/components/Tooltip';
 import { simpleLogger as logger } from '@/utils/logger';
 
 interface EditorToolbarProps {
@@ -29,18 +29,16 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor, setImageMenuOpen,
   const [searchTerm, setSearchTerm] = useState('');
   const searchInputRef = useRef<HTMLInputElement>(null);
   
-  if (!editor) return null;
-  
   const fonts: FontOption[] = [
-    // Polices système modernes (garanties de fonctionner)
+    { name: 'Noto Sans', label: 'Noto Sans', category: 'sans-serif', preview: 'AaBbCcDd' },
     { name: 'Inter', label: 'Inter', category: 'sans-serif', preview: 'AaBbCcDd' },
     { name: 'Open Sans', label: 'Open Sans', category: 'sans-serif', preview: 'AaBbCcDd' },
     { name: 'Roboto', label: 'Roboto', category: 'sans-serif', preview: 'AaBbCcDd' },
     { name: 'Lato', label: 'Lato', category: 'sans-serif', preview: 'AaBbCcDd' },
     { name: 'Source Sans 3', label: 'Source Sans 3', category: 'sans-serif', preview: 'AaBbCcDd' },
     { name: 'Work Sans', label: 'Work Sans', category: 'sans-serif', preview: 'AaBbCcDd' },
-    
-    // Polices système (fonctionnent toujours)
+    { name: 'EB Garamond', label: 'EB Garamond', category: 'serif', preview: 'AaBbCcDd' },
+    { name: 'Cormorant Garamond', label: 'Cormorant Garamond', category: 'serif', preview: 'AaBbCcDd' },
     { name: 'Arial', label: 'Arial', category: 'system', preview: 'AaBbCcDd' },
     { name: 'Helvetica', label: 'Helvetica', category: 'system', preview: 'AaBbCcDd' },
     { name: 'Verdana', label: 'Verdana', category: 'system', preview: 'AaBbCcDd' },
@@ -49,111 +47,62 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor, setImageMenuOpen,
     { name: 'Times New Roman', label: 'Times New Roman', category: 'system', preview: 'AaBbCcDd' },
   ];
   
-  // Fonction pour charger une police Google Fonts dynamiquement
   const loadGoogleFont = (fontName: string) => {
     return new Promise((resolve) => {
-      // Vérifier si la police est déjà chargée
       if (document.fonts.check(`12px "${fontName}"`)) {
         logger.dev('[Font] Police déjà chargée:', fontName);
         resolve(true);
         return;
       }
-
-      // Créer le lien pour charger la police
       const link = document.createElement('link');
       link.rel = 'stylesheet';
       link.href = `https://fonts.googleapis.com/css2?family=${fontName.replace(' ', '+')}:wght@400&display=swap`;
-      
-      link.onload = () => {
-        logger.dev('[Font] Police chargée avec succès:', fontName);
-        resolve(true);
-      };
-      
-      link.onerror = () => {
-        logger.dev('[Font] Erreur de chargement de la police:', fontName);
-        resolve(false);
-      };
-      
+      link.onload = () => { logger.dev('[Font] Police chargée avec succès:', fontName); resolve(true); };
+      link.onerror = () => { logger.dev('[Font] Erreur de chargement de la police:', fontName); resolve(false); };
       document.head.appendChild(link);
     });
   };
 
   const setFont = async (fontName: string) => {
-    // Log pour debug
     logger.dev('[Font] Application de la police:', fontName);
-    
-    // Charger la police Google Fonts si nécessaire
-    if (fontName !== 'Arial' && fontName !== 'Helvetica' && fontName !== 'Verdana' && 
-        fontName !== 'Georgia' && fontName !== 'Palatino' && fontName !== 'Times New Roman') {
+    if (!['Arial','Helvetica','Verdana','Georgia','Palatino','Times New Roman'].includes(fontName)) {
       logger.dev('[Font] Chargement de la police Google Fonts:', fontName);
       await loadGoogleFont(fontName);
     }
-    
-    // Vérifier si la police est chargée
     const testElement = document.createElement('div');
     testElement.style.fontFamily = fontName;
     testElement.style.position = 'absolute';
     testElement.style.visibility = 'hidden';
     testElement.textContent = 'Test';
     document.body.appendChild(testElement);
-    
     const computedFont = window.getComputedStyle(testElement).fontFamily;
     logger.dev('[Font] Police calculée:', computedFont);
-    
     document.body.removeChild(testElement);
-    
-    // Vérifier si la police est réellement chargée
-    const isFontLoaded = computedFont.includes(fontName);
-    logger.dev('[Font] Police chargée:', isFontLoaded);
-    
-    // MODIFIER LA VARIABLE CSS AU LIEU D'APPLIQUER DIRECTEMENT
     const fontWithFallback = `${fontName}, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif`;
-    
-    // Modifier la variable CSS globale
     document.documentElement.style.setProperty('--editor-font-family', fontWithFallback);
-    logger.dev('[Font] Variable CSS modifiée:', fontWithFallback);
-    
-    // CIBLER SPÉCIFIQUEMENT L'ÉDITEUR PROSEMIRROR
-    const editorElement = editor.view.dom;
-    if (editorElement) {
-      // Appliquer à l'élément principal de l'éditeur
+    if (editor?.view?.dom) {
+      const editorElement = editor.view.dom;
       editorElement.style.setProperty('font-family', fontWithFallback, 'important');
-      
-      // Appliquer à TOUS les éléments de l'éditeur
       const allElements = editorElement.querySelectorAll('*');
       allElements.forEach((element) => {
         if (element instanceof HTMLElement) {
           element.style.setProperty('font-family', fontWithFallback, 'important');
         }
       });
-      
       logger.dev('[Font] Police appliquée à tous les éléments ProseMirror:', fontWithFallback);
     }
-    
-    // Notifie le parent du changement de police
-    if (onFontChange) {
-      onFontChange(fontName);
-    }
-    
+    if (onFontChange) onFontChange(fontName);
     setFontMenuOpen(false);
     setSearchTerm('');
   };
   
-  // Filtre les polices selon la recherche
-  const filteredFonts = fonts.filter(font => 
-    font.label.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-  
-  // Groupe les polices par catégorie
+  const filteredFonts = fonts.filter(font => font.label.toLowerCase().includes(searchTerm.toLowerCase()));
   const groupedFonts = filteredFonts.reduce((acc, font) => {
-    if (!acc[font.category]) {
-      acc[font.category] = [];
-    }
+    if (!acc[font.category]) acc[font.category] = [];
     acc[font.category].push(font);
     return acc;
   }, {} as Record<string, FontOption[]>);
   
-  // Ferme le menu de police quand on clique ailleurs
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       const target = e.target as Element;
@@ -162,7 +111,6 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor, setImageMenuOpen,
         setSearchTerm('');
       }
     };
-    
     if (fontMenuOpen) {
       document.addEventListener('mousedown', handleClickOutside);
       return () => document.removeEventListener('mousedown', handleClickOutside);
@@ -170,28 +118,20 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor, setImageMenuOpen,
     return undefined;
   }, [fontMenuOpen]);
   
-  // Focus sur la recherche quand le menu s'ouvre
   useEffect(() => {
     if (fontMenuOpen && searchInputRef.current) {
       setTimeout(() => searchInputRef.current?.focus(), 100);
     }
   }, [fontMenuOpen]);
   
-  // Gestion des raccourcis clavier
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (!fontMenuOpen) return;
-      
-      if (e.key === 'Escape') {
-        setFontMenuOpen(false);
-        setSearchTerm('');
-      }
-      
+      if (e.key === 'Escape') { setFontMenuOpen(false); setSearchTerm(''); }
       if (e.key === 'Enter' && filteredFonts.length > 0) {
         setFont(filteredFonts[0].name);
       }
     };
-    
     if (fontMenuOpen) {
       document.addEventListener('keydown', handleKeyDown);
       return () => document.removeEventListener('keydown', handleKeyDown);
@@ -199,6 +139,22 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor, setImageMenuOpen,
     return undefined;
   }, [fontMenuOpen, filteredFonts]);
   
+  if (!editor) {
+    return (
+      <div className="editor-toolbar" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%' }}>
+        <div className="toolbar-group">
+          <div className="font-menu-container" style={{ position: 'relative' }}>
+            <Tooltip text="Police">
+              <button className="toolbar-button" aria-label="Police">
+                <FiType size={18} />
+              </button>
+            </Tooltip>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="editor-toolbar" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%' }}>
       <div className="toolbar-group">
@@ -214,7 +170,6 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor, setImageMenuOpen,
           </Tooltip>
           {fontMenuOpen && (
             <div className="font-menu-dropdown">
-              {/* Barre de recherche */}
               <div className="font-menu-search">
                 <FiSearch size={14} />
                 <input
@@ -226,14 +181,11 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor, setImageMenuOpen,
                   className="font-menu-search-input"
                 />
               </div>
-              
-              {/* Liste des polices */}
               <div className="font-menu-list">
                 {Object.entries(groupedFonts).map(([category, categoryFonts]) => (
                   <div key={category} className="font-menu-category">
                     <div className="font-menu-category-title">
-                      {category === 'sans-serif' ? 'Sans-serif' : 
-                       category === 'serif' ? 'Serif' : 'Système'}
+                      {category === 'sans-serif' ? 'Sans-serif' : category === 'serif' ? 'Serif' : 'Système'}
                     </div>
                     {categoryFonts.map((font) => {
                       const isSelected = font.name === currentFont;
@@ -251,11 +203,8 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor, setImageMenuOpen,
                     })}
                   </div>
                 ))}
-                
                 {filteredFonts.length === 0 && (
-                  <div className="font-menu-empty">
-                    Aucune police trouvée
-                  </div>
+                  <div className="font-menu-empty">Aucune police trouvée</div>
                 )}
               </div>
             </div>

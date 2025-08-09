@@ -4,7 +4,9 @@ import { logApi } from './logger';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-// // const supabase = [^;]+;]+;
+
+// Créer le client Supabase
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 export type PermissionRole = 'viewer' | 'editor' | 'owner';
 export type ResourceType = 'article' | 'folder' | 'classeur';

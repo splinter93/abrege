@@ -74,7 +74,7 @@ export class ChatSessionService {
       } catch (error) {
         // Si la réponse n'est pas du JSON, c'est probablement une erreur HTML
         const textResponse = await response.text();
-        logger.error('[ChatSessionService] ❌ Réponse non-JSON reçue:', textResponse.substring(0, 200));
+        logger.error('[ChatSessionService] ❌ Réponse non-JSON reçue', { preview: textResponse.substring(0, 200) });
         throw new Error(`Erreur serveur (${response.status}): Réponse non-JSON reçue`);
       }
 
@@ -155,7 +155,7 @@ export class ChatSessionService {
       } catch (error) {
         // Si la réponse n'est pas du JSON, c'est probablement une erreur HTML
         const textResponse = await response.text();
-        logger.error('[ChatSessionService] ❌ Réponse non-JSON reçue:', textResponse.substring(0, 200));
+        logger.error('[ChatSessionService] ❌ Réponse non-JSON reçue', { preview: textResponse.substring(0, 200) });
         throw new Error(`Erreur serveur (${response.status}): Réponse non-JSON reçue`);
       }
 
@@ -216,7 +216,7 @@ export class ChatSessionService {
    */
   async deleteSession(sessionId: string): Promise<{ success: boolean; error?: string }> {
     try {
-      logger.debug('[ChatSessionService] 🗑️ deleteSession appelé pour:', sessionId);
+      logger.debug('[ChatSessionService] 🗑️ deleteSession appelé pour:', { sessionId });
       
       // Récupérer le token d'authentification
       const { data: { session } } = await supabase.auth.getSession();
@@ -227,7 +227,7 @@ export class ChatSessionService {
         throw new Error('Authentification requise');
       }
 
-      logger.debug('[ChatSessionService] 🔧 Appel API DELETE:', `${this.baseUrl}/${sessionId}`);
+      logger.debug('[ChatSessionService] 🔧 Appel API DELETE:', { url: `${this.baseUrl}/${sessionId}` });
 
       const response = await fetch(`${this.baseUrl}/${sessionId}`, {
         method: 'DELETE',
@@ -239,18 +239,31 @@ export class ChatSessionService {
 
       logger.debug(`[ChatSessionService] 📋 Status réponse: ${response.status}`);
 
-      const data = await response.json();
-      logger.debug('[ChatSessionService] 📋 Données réponse:', data);
+      // 204 No Content => succès sans corps
+      if (response.status === 204) {
+        logger.debug('[ChatSessionService] ✅ Suppression réussie (204)');
+        return { success: true };
+      }
+
+      // Essayer de lire le corps JSON s'il existe
+      let data: any = null;
+      try {
+        data = await response.json();
+        logger.debug('[ChatSessionService] 📋 Données réponse:', { data });
+      } catch {
+        logger.debug('[ChatSessionService] ℹ️ Aucune réponse JSON (peut être vide)');
+      }
 
       if (!response.ok) {
-        logger.error('[ChatSessionService] ❌ Erreur API:', { error: response.status });
-        throw new Error(data.error || 'Erreur lors de la suppression de la session');
+        const message = data?.error || `Erreur lors de la suppression de la session (${response.status})`;
+        logger.error('[ChatSessionService] ❌ Erreur API:', { status: response.status, message });
+        throw new Error(message);
       }
 
       logger.debug('[ChatSessionService] ✅ Suppression réussie');
       return { success: true };
     } catch (error) {
-      logger.error('[ChatSessionService] ❌ Erreur deleteSession:', { error: error });
+      logger.error('[ChatSessionService] ❌ Erreur deleteSession:', { error: error instanceof Error ? error.message : error });
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Erreur inconnue'
@@ -275,7 +288,13 @@ export class ChatSessionService {
         throw new Error('Authentification requise');
       }
 
-      const response = await fetch(`${this.baseUrl}/${sessionId}/messages`, {
+      // Construire une URL absolue (robuste SSR)
+      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL
+        || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : '')
+        || 'http://localhost:3000';
+      const url = `${siteUrl}${this.baseUrl}/${sessionId}/messages`;
+
+      const response = await fetch(url, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -309,7 +328,16 @@ export class ChatSessionService {
     error?: string;
   }> {
     try {
-      const response = await fetch(`${this.baseUrl}/${sessionId}/messages`, {
+      // Construire une URL absolue (robuste SSR)
+      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL
+        || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : '')
+        || 'http://localhost:3000';
+      const url = `${siteUrl}${this.baseUrl}/${sessionId}/messages`;
+
+      // 🔧 NOUVEAU: Log détaillé pour debug
+      logger.debug('[ChatSessionService] 📋 Message à sauvegarder:', { message: JSON.stringify(message, null, 2), url });
+      
+      const response = await fetch(url, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${userToken}`,
@@ -321,12 +349,23 @@ export class ChatSessionService {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Erreur lors de l\'ajout du message');
+        logger.error('[ChatSessionService] ❌ Erreur API:', {
+          status: response.status,
+          statusText: response.statusText,
+          data: data
+        });
+        throw new Error(data.error || `Erreur HTTP ${response.status}: ${response.statusText}`);
       }
 
+      logger.debug('[ChatSessionService] ✅ Message sauvegardé avec succès');
       return data;
     } catch (error) {
-      logger.error('Erreur ChatSessionService.addMessageWithToken:', { error: error });
+      logger.error('Erreur ChatSessionService.addMessageWithToken:', { 
+        error: error instanceof Error ? error.message : String(error),
+        sessionId,
+        messageRole: message.role,
+        messageContent: message.content?.substring(0, 100) + '...'
+      });
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Erreur inconnue'

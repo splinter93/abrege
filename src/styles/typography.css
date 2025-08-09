@@ -180,6 +180,23 @@
   transition: all 0.2s ease;
 }
 
+/* Add editor H1 styling so typography applies when not using a textarea */
+.noteLayout-title h1 {
+  width: 100%;
+  max-width: var(--editor-content-width);
+  font-size: var(--editor-title-size);
+  font-weight: 700;
+  font-family: var(--editor-font-family);
+  color: var(--editor-text-color);
+  background: none;
+  border: none;
+  outline: none;
+  padding: var(--editor-title-padding);
+  margin: 0;
+  letter-spacing: var(--editor-title-letter-spacing);
+  line-height: var(--editor-title-line-height);
+}
+
 /* Padding typographique du contenu */
 .noteLayout-content .editor-content {
   padding: var(--editor-content-padding);
@@ -208,10 +225,10 @@
 /* 2. Image avec titre intégré */
 .noteLayout.imageWithTitle .noteLayout-title {
   position: absolute;
-  top: 160px; /* Moitié de la hauteur de l'image (300px) */
+  top: 190px; /* Centré verticalement pour une image de 300px */
   left: 50%;
   transform: translate(-50%, -50%);
-  width: auto;
+  width: 750px;
   max-width: 750px;
   padding: 0;
   box-sizing: border-box;
@@ -232,17 +249,12 @@
 .noteLayout.imageWithTitle .noteLayout-content {
   position: relative;
   top: 0;
-  margin-top: -32px; /* Ajustement pour remonter le contenu */
-  padding-top: 24px; /* Padding pour descendre le texte */
+  margin-top: -24px; /* remonte un peu moins pour coller au header */
+  padding-top: 12px; /* réduit l'espace au-dessus du texte */
 }
 
-.noteLayout.imageWithTitle .noteLayout-content .editor-content {
-  padding-top: 0; /* Supprime le padding-top */
-}
-
-.noteLayout.imageWithTitle .noteLayout-content .markdown-body {
-  padding-top: 0; /* Supprime le padding-top */
-}
+.noteLayout.imageWithTitle .noteLayout-content .editor-content { padding-top: 0; }
+.noteLayout.imageWithTitle .noteLayout-content .markdown-body { padding-top: 0; }
 
 /* 3. Image avec titre en dessous */
 .noteLayout.imageOnly .noteLayout-title {
@@ -262,6 +274,16 @@
     font-size: var(--editor-title-size-mobile);
   }
 } 
+
+/* Even tighter spacing and left alignment */
+.noteLayout .noteLayout-title { display: flex; justify-content: center; }
+.noteLayout .noteLayout-title > .editor-container-width { padding: 0 0 2px 0; }
+.noteLayout.noImage .noteLayout-title { padding-top: 6px; }
+.noteLayout.imageOnly .noteLayout-title { padding-top: 4px; }
+.noteLayout .noteLayout-content { margin-top: 2px; }
+
+/* Standard paddings for content area */
+.noteLayout .noteLayout-content .editor-content { padding: 2px 0 72px 0; }
 
 /* ==========================================================================
    STYLES PAGE PUBLIQUE

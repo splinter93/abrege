@@ -34,10 +34,6 @@
   box-shadow: none;
 }
 
-.chat-message-bubble-assistant {
-  max-width: 1000px;
-}
-
 /* ========================================
    BULLE UTILISATEUR
    ======================================== */
@@ -50,21 +46,19 @@
 }
 
 /* ========================================
-   BULLE ASSISTANT - SANS ENCADRÉ ET SANS BACKGROUND
+   BULLE ASSISTANT - PLEINE LARGEUR TRANSPARENTE
    ======================================== */
 
 .chat-message-bubble-assistant {
+  max-width: 100%;
+  width: 100%;
   background: transparent !important;
-  color: var(--chat-text-primary) !important;
+  color: var(--chat-text-primary);
   border: none !important;
   outline: none !important;
   box-shadow: none !important;
-  border-width: 0 !important;
-  border-style: none !important;
-  border-color: transparent !important;
+  padding: var(--chat-spacing-lg);
 }
-
-
 
 /* ========================================
    RESPONSIVE

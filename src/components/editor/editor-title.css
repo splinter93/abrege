@@ -4,51 +4,46 @@
   flex-grow: 1;
   border: none;
   background: none;
-  padding: 0.5rem 0 1.2rem 0;
+  padding: 0; /* pas d'espace interne, flush */
   margin: 0;
-  margin-right: 1rem;
-  font-size: var(--editor-h3-size);
-  font-weight: 600;
+  margin-right: 0;
+  font-size: var(--editor-title-size);
+  font-weight: 700;
   color: var(--editor-text-color);
   letter-spacing: -0.02em;
-  line-height: 1.2;
+  line-height: 1.1;
   cursor: text;
-  transform: scale(1);
+  transform: none;
   transform-origin: left center;
-  transition: font-size 0.2s ease, transform 0.2s ease;
+  transition: none;
   font-family: var(--editor-font-family);
 }
 
 .editor-title-field:focus {
   outline: none;
   box-shadow: none;
-  font-size: var(--editor-xxl-size);
-  transform: scale(1.02);
+  font-size: var(--editor-title-size);
+  transform: none;
 }
 
-.editor-title-span:hover {
-  transform: scale(1.01);
-}
+.editor-title-span:hover { transform: none; }
 
-.editor-title-field::placeholder {
-  color: var(--text-3);
-  opacity: 0.7;
-}
+.editor-title-field::placeholder { color: var(--text-3); opacity: 0.7; }
 
 .editor-title-wrapper {
   width: 100%;
-  max-width: 750px;
+  max-width: 750px; /* largeur max demandée */
   margin: 0 auto;
-  padding: 2.5rem 3rem 0.1rem 3rem;
+  padding: 0; /* à ras du texte */
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   min-height: 45px;
-  margin-bottom: 24px;
+  margin-bottom: 0; /* aucun espace sous le titre */
 }
 
 .editor-header.title-focused .editor-title-wrapper {
-  padding: 2rem 3rem 0.1rem 3rem;
+  padding: 4px 0 6px 0;
 }
 
 .editor-title-field:focus {
@@ -60,7 +55,7 @@
 .editor-title-span,
 textarea.editor-title-field {
   width: 100%;
-  max-width: 750px;
+  max-width: 750px; /* largeur max demandée */
   min-height: 45px;
   margin: 0 auto;
   display: block;
@@ -77,22 +72,5 @@ textarea.editor-title-field {
   word-break: break-word;
   overflow: visible;
   resize: none;
-  text-align: left;
-  transition: none;
-  /* Styles spécifiques pour textarea */
-  max-height: 200px;
-  height: auto;
-  font-family: inherit;
-  white-space: pre-line;
-}
-
-.editor-title-field {
-  margin-bottom: 0;
-  text-align: left;
-}
-
-.editor-title-field,
-.editor-title-span,
-textarea.editor-title-field {
   text-align: left;
 } 

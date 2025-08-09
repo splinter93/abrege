@@ -1,22 +1,21 @@
 'use client';
-import { simpleLogger as logger } from '@/utils/logger';
-
-import React, { useEffect, useState } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useChatStore } from '@/store/useChatStore';
-import { useAppContext } from '@/hooks/useAppContext';
 import { useLLMStore } from '@/store/useLLMStore';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
+import { useAppContext } from '@/hooks/useAppContext';
 import { useChatStreaming } from '@/hooks/useChatStreaming';
 import { useChatScroll } from '@/hooks/useChatScroll';
 import { supabase } from '@/supabaseClient';
-
 import ChatInput from './ChatInput';
 import ChatMessage from './ChatMessage';
 import ChatKebabMenu from './ChatKebabMenu';
 import ChatSidebar from './ChatSidebar';
-
+import ReasoningMessage from './ReasoningMessage';
+import { simpleLogger as logger } from '@/utils/logger';
 import './index.css';
-import './ChatFullscreenV2.css';
+import './ReasoningMessage.css';
+import './ToolCallMessage.css';
 
 // 🔧 NOUVEAU: Fonction de formatage du reasoning pour Qwen 3
 const formatReasoningForQwen = (reasoning: string, model?: string): string => {
@@ -131,10 +130,17 @@ const ChatFullscreenV2: React.FC = () => {
     startStreaming,
     stopStreaming
   } = useChatStreaming({
-    onComplete: async (fullContent) => {
+    onComplete: async (fullContent, fullReasoning) => {
+      const safeContent = (fullContent || '').trim();
+      // Ne pas persister un message assistant vide
+      if (!safeContent) {
+        scrollToBottom(true);
+        return;
+      }
       const finalMessage = {
         role: 'assistant' as const,
-        content: fullContent,
+        content: safeContent,
+        reasoning: fullReasoning,
         timestamp: new Date().toISOString()
       };
       await addMessage(finalMessage);
@@ -526,41 +532,18 @@ const ChatFullscreenV2: React.FC = () => {
                 />
               ))}
               
-              {/* Message en cours de streaming */}
-              {isStreaming && (streamingContent || streamingReasoning) && (
-                <>
-                  {logger.dev('[ChatFullscreenV2] 🎯 Affichage message streaming:', {
-                    contentLength: streamingContent.length,
-                    reasoningLength: streamingReasoning.length
-                  })}
-                  
-                  {/* Afficher le reasoning séparément s'il y en a */}
-                  {streamingReasoning && (
-                    <ChatMessage
-                      message={{
-                        id: 'streaming-reasoning',
-                        role: 'assistant',
-                        content: formatReasoningForQwen(streamingReasoning, selectedAgent?.model),
-                        timestamp: new Date().toISOString()
-                      }}
-                      isStreaming={false}
-                      className="reasoning-message"
-                    />
-                  )}
-                  
-                  {/* Afficher la réponse normale */}
-                  {streamingContent && (
-                    <ChatMessage
-                      message={{
-                        id: 'streaming-content',
-                        role: 'assistant',
-                        content: streamingContent,
-                        timestamp: new Date().toISOString()
-                      }}
-                      isStreaming={true}
-                    />
-                  )}
-                </>
+              {/* Message en cours de streaming (réponse finale temporaire) */}
+              {isStreaming && (
+                <ChatMessage
+                  message={{
+                    id: 'streaming-content',
+                    role: 'assistant',
+                    content: streamingContent,
+                    reasoning: streamingReasoning,
+                    timestamp: new Date().toISOString()
+                  }}
+                  isStreaming={true}
+                />
               )}
             </div>
             <div ref={messagesEndRef} />

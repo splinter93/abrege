@@ -51,11 +51,12 @@ const getAgentById = async (id: string) => {
   }
 };
 
-// Fonction pour récupérer l'historique des messages d'une session
-const getSessionHistory = async (sessionId: string, userToken: string) => {
+// Fonction pour récupérer l'historique des messages d'une session (sécurisée par user_id)
+const getSessionHistory = async (sessionId: string, userToken: string, userId: string) => {
   try {
-    const { supabaseUrl, supabaseServiceKey } = getSupabaseConfig();
-    const userClient = createClient(supabaseUrl, supabaseServiceKey, {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+    const userClient = createClient(supabaseUrl, supabaseAnonKey, {
       global: {
         headers: {
           Authorization: `Bearer ${userToken}`
@@ -68,6 +69,7 @@ const getSessionHistory = async (sessionId: string, userToken: string) => {
       .from('chat_sessions')
       .select('thread, history_limit')
       .eq('id', sessionId)
+      .eq('user_id', userId)
       .single();
 
     if (error) {
@@ -149,7 +151,37 @@ const cleanAndParseFunctionArgs = (rawArgs: string): any => {
   }
 };
 
+/**
+ * Helper pour persister un message avec plusieurs tentatives.
+ * @param persistFn - La fonction de persistance à exécuter.
+ * @param description - Description du message pour les logs.
+ */
+async function persistWithRetry(persistFn: () => Promise<any>, description: string) {
+  const MAX_RETRIES = 3;
+  const RETRY_DELAY = 100; // ms
+
+  for (let i = 0; i < MAX_RETRIES; i++) {
+    try {
+      const result = await persistFn();
+      if (result && !result.success) {
+        throw new Error(result.error || `La persistance a échoué mais n'a pas renvoyé d'erreur explicite.`);
+      }
+      logger.dev(`[LLM API] ✅ ${description} sauvegardé avec succès.`);
+      return; // Succès, on sort de la boucle
+    } catch (error) {
+      logger.error(`[LLM API] ❌ Tentative ${i + 1}/${MAX_RETRIES} échouée pour la sauvegarde de "${description}":`, error);
+      if (i === MAX_RETRIES - 1) {
+        logger.error(`[LLM API] ❌ Échec final de la sauvegarde de "${description}" après ${MAX_RETRIES} tentatives.`);
+        // Ne pas relancer l'erreur pour ne pas bloquer le flux principal, mais on pourrait le faire si la persistance est critique.
+      } else {
+        await new Promise(resolve => setTimeout(resolve, RETRY_DELAY * (i + 1)));
+      }
+    }
+  }
+}
+
 export async function POST(request: NextRequest) {
+  const MAX_TOOL_DEPTH = 5;
   logger.dev("[LLM API] 🚀 REQUÊTE REÇUE !");
   try {
     // Vérifier l'authentification
@@ -189,7 +221,7 @@ export async function POST(request: NextRequest) {
     let sessionHistory: ChatMessage[] = [];
     if (context?.sessionId) {
       logger.dev("[LLM API] 📚 Récupération historique pour session:", context.sessionId);
-      sessionHistory = await getSessionHistory(context.sessionId, userToken);
+      sessionHistory = await getSessionHistory(context.sessionId, userToken, userId);
       logger.dev("[LLM API] ✅ Historique récupéré:", sessionHistory.length, "messages");
       
       // 🔧 CORRECTION: Exclure le dernier message s'il correspond au message actuel
@@ -352,6 +384,9 @@ export async function POST(request: NextRequest) {
         logger.dev("[LLM API] ✅ Qwen détecté - Function calling supporté");
       }
       
+      // ✅ Attendre l'initialisation asynchrone des tools OpenAPI
+      await agentApiV2Tools.waitForInitialization();
+      
       // 🔧 ACCÈS COMPLET: GPT/Grok ont accès à TOUS les tools
       const tools = agentApiV2Tools.getToolsForFunctionCalling(); // Tous les tools disponibles // Tous les tools disponibles
 
@@ -396,6 +431,13 @@ export async function POST(request: NextRequest) {
       // Créer un canal unique pour le streaming
       const channelId = incomingChannelId || `llm-stream-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
       logger.dev("[LLM API] 📡 Canal utilisé:", channelId);
+      
+      // Préparer le canal et s'abonner pour s'assurer que les broadcasts partent
+      const supabaseInit = createSupabaseAdmin();
+      const channelInit = supabaseInit.channel(channelId);
+      try {
+        await channelInit.subscribe();
+      } catch {}
       
       // Utiliser le provider avec configuration d'agent
       const groqProvider = new GroqProvider();
@@ -474,6 +516,9 @@ export async function POST(request: NextRequest) {
         logger.dev("[LLM API] ✅ Qwen détecté - Function calling supporté");
       }
       
+      // ✅ Attendre l'initialisation asynchrone des tools OpenAPI
+      await agentApiV2Tools.waitForInitialization();
+      
       // 🔧 ACCÈS COMPLET: GPT/Grok ont accès à TOUS les tools
       const tools = agentApiV2Tools.getToolsForFunctionCalling(); // Tous les tools disponibles // Tous les tools disponibles
 
@@ -544,7 +589,10 @@ export async function POST(request: NextRequest) {
       }
 
       let accumulatedContent = '';
-      let functionCallData: any = null;
+      let pendingDataLine = '';
+      const toolCallMap: Record<string, { id: string; name: string; arguments: string }> = {};
+      const toolCallOrder: string[] = [];
+      let legacyFunctionCall: { name: string; arguments: string } | null = null;
       let tokenBuffer = '';
       let bufferSize = 0;
       const BATCH_SIZE = 5; // Envoyer par batch de 5 tokens
@@ -553,6 +601,7 @@ export async function POST(request: NextRequest) {
       // Créer le canal pour le broadcast
       const supabase = createSupabaseAdmin();
       const channel = supabase.channel(channelId);
+      try { await channel.subscribe(); } catch {}
 
       // Fonction pour envoyer le buffer de tokens
       const flushTokenBuffer = async () => {
@@ -583,7 +632,16 @@ export async function POST(request: NextRequest) {
             if (data === '[DONE]') break;
 
             try {
-              const parsed = JSON.parse(data);
+              const toParse = (pendingDataLine ? pendingDataLine : '') + data;
+              let parsed: any;
+              try {
+                parsed = JSON.parse(toParse);
+                pendingDataLine = '';
+              } catch (e) {
+                // Incomplet: bufferiser et continuer
+                pendingDataLine = toParse;
+                continue;
+              }
               
               logger.dev("[LLM API] 📥 Chunk complet:", JSON.stringify(parsed));
               
@@ -602,161 +660,70 @@ export async function POST(request: NextRequest) {
                   });
                 }
                 
-                // Gestion du function calling (ancien format)
-                if (delta.function_call) {
-                  if (!functionCallData) {
-                    functionCallData = {
-                      name: delta.function_call.name || '',
-                      arguments: delta.function_call.arguments || ''
-                    };
-                  } else {
-                    if (delta.function_call.name) {
-                      functionCallData.name = delta.function_call.name;
-                    }
-                    if (delta.function_call.arguments) {
-                      functionCallData.arguments += delta.function_call.arguments;
-                    }
-                  }
-                }
-                // Gestion du tool calling (nouveau format)
-                else if (delta.tool_calls) {
-                  logger.dev("[LLM API] 🔧 Tool calls détectés:", JSON.stringify(delta.tool_calls));
-                  
-                  for (const toolCall of delta.tool_calls) {
-                    logger.dev("[LLM API] 🔧 Tool call individuel:", {
-                      id: toolCall.id,
-                      type: toolCall.type,
-                      function: toolCall.function
-                    });
-                    
-                    if (!functionCallData) {
-                      functionCallData = {
-                        name: toolCall.function?.name || '',
-                        arguments: toolCall.function?.arguments || '',
-                        tool_call_id: toolCall.id // 🔧 NOUVEAU: Stocker l'ID du tool call
-                      };
-                    } else {
-                      if (toolCall.function?.name) {
-                        functionCallData.name = toolCall.function.name;
-                      }
-                      if (toolCall.function?.arguments) {
-                        functionCallData.arguments += toolCall.function.arguments;
-                      }
-                      // 🔧 NOUVEAU: Garder l'ID du tool call
-                      if (toolCall.id) {
-                        functionCallData.tool_call_id = toolCall.id;
-                      }
-                    }
-                  }
-                  
-                  // 🔧 NOUVEAU: Broadcast des tool calls au frontend
+                // ✅ Reasoning GPT-OSS (Groq): reasoning tokens on analysis channel
+                if (delta.reasoning && delta.channel === 'analysis') {
                   await channel.send({
                     type: 'broadcast',
-                    event: 'llm-tool-calls',
-                    payload: {
-                      sessionId: context.sessionId,
-                      tool_calls: delta.tool_calls,
-                      tool_name: functionCallData?.name || 'unknown_tool'
-                    }
+                    event: 'llm-reasoning',
+                    payload: { reasoning: delta.reasoning, sessionId: context.sessionId }
                   });
+                  continue;
+                }
+                
+                // Gestion du function calling (ancien format) → un seul appel
+                if (delta.function_call) {
+                  if (!legacyFunctionCall) {
+                    legacyFunctionCall = { name: delta.function_call.name || '', arguments: delta.function_call.arguments || '' };
+                  } else {
+                    if (delta.function_call.name) legacyFunctionCall.name = delta.function_call.name;
+                    if (delta.function_call.arguments) legacyFunctionCall.arguments += delta.function_call.arguments;
+                    }
+                    }
+                // Gestion du tool calling (nouveau format) → potentiellement plusieurs tool_calls
+                else if (delta.tool_calls) {
+                  logger.dev("[LLM API] 🔧 Tool calls détectés:", JSON.stringify(delta.tool_calls));
+                  for (const toolCall of delta.tool_calls) {
+                    const id = toolCall.id || `call_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+                    if (!toolCallMap[id]) {
+                      toolCallMap[id] = { id, name: toolCall.function?.name || '', arguments: toolCall.function?.arguments || '' };
+                      toolCallOrder.push(id);
+                    } else {
+                      if (toolCall.function?.name) toolCallMap[id].name = toolCall.function.name;
+                      if (toolCall.function?.arguments) toolCallMap[id].arguments += toolCall.function.arguments;
+                    }
+                  }
+                  // Broadcast des tool calls au frontend
+                  await channel.send({ type: 'broadcast', event: 'llm-tool-calls', payload: { sessionId: context.sessionId, tool_calls: delta.tool_calls } });
                 }
                 // Gestion du tool calling (format alternatif)
                 else if (delta.tool_call) {
                   logger.dev("[LLM API] 🔧 Tool call détecté (format alternatif):", JSON.stringify(delta.tool_call));
-                  
-                  if (!functionCallData) {
-                    functionCallData = {
-                      name: delta.tool_call.function?.name || '',
-                      arguments: delta.tool_call.function?.arguments || '',
-                      tool_call_id: delta.tool_call.id // 🔧 NOUVEAU: Stocker l'ID du tool call
-                    };
+                  const id = delta.tool_call.id || `call_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+                  if (!toolCallMap[id]) {
+                    toolCallMap[id] = { id, name: delta.tool_call.function?.name || '', arguments: delta.tool_call.function?.arguments || '' };
+                    toolCallOrder.push(id);
                   } else {
-                    if (delta.tool_call.function?.name) {
-                      functionCallData.name = delta.tool_call.function.name;
-                    }
-                    if (delta.tool_call.function?.arguments) {
-                      functionCallData.arguments += delta.tool_call.function.arguments;
-                    }
-                    // 🔧 NOUVEAU: Garder l'ID du tool call
-                    if (delta.tool_call.id) {
-                      functionCallData.tool_call_id = delta.tool_call.id;
-                    }
+                    if (delta.tool_call.function?.name) toolCallMap[id].name = delta.tool_call.function.name;
+                    if (delta.tool_call.function?.arguments) toolCallMap[id].arguments += delta.tool_call.function.arguments;
                   }
-                  
-                  // 🔧 NOUVEAU: Broadcast des tool calls au frontend
-                  await channel.send({
-                    type: 'broadcast',
-                    event: 'llm-tool-calls',
-                    payload: {
-                      sessionId: context.sessionId,
-                      tool_calls: [delta.tool_call],
-                      tool_name: functionCallData?.name || 'unknown_tool'
-                    }
-                  });
-                }
-                // Gestion spécifique Groq (format différent)
-                else if (delta.tool_calls && Array.isArray(delta.tool_calls)) {
-                  logger.dev("[LLM API] 🔧 Tool calls Groq détectés:", JSON.stringify(delta.tool_calls));
-                  
-                  for (const toolCall of delta.tool_calls) {
-                    logger.dev("[LLM API] 🔧 Tool call Groq individuel:", {
-                      id: toolCall.id,
-                      type: toolCall.type,
-                      function: toolCall.function
-                    });
-                    
-                    if (!functionCallData) {
-                      functionCallData = {
-                        name: toolCall.function?.name || '',
-                        arguments: toolCall.function?.arguments || '',
-                        tool_call_id: toolCall.id // 🔧 NOUVEAU: Stocker l'ID du tool call
-                      };
-                    } else {
-                      if (toolCall.function?.name) {
-                        functionCallData.name = toolCall.function.name;
-                      }
-                      if (toolCall.function?.arguments) {
-                        functionCallData.arguments += toolCall.function.arguments;
-                      }
-                      // 🔧 NOUVEAU: Garder l'ID du tool call
-                      if (toolCall.id) {
-                        functionCallData.tool_call_id = toolCall.id;
-                      }
-                    }
-                  }
-                  
-                  // 🔧 NOUVEAU: Broadcast des tool calls au frontend
-                  await channel.send({
-                    type: 'broadcast',
-                    event: 'llm-tool-calls',
-                    payload: {
-                      sessionId: context.sessionId,
-                      tool_calls: delta.tool_calls,
-                      tool_name: functionCallData?.name || 'unknown_tool'
-                    }
-                  });
                 }
                 else if (delta.content) {
-                  accumulatedContent += delta.content;
-                  tokenBuffer += delta.content;
-                  bufferSize++;
-                  
-                  // Log épuré pour le streaming
-                  logger.dev("[LLM API] 📤 Token ajouté au buffer:", bufferSize);
-                  
-                  // Envoyer le buffer si on atteint la taille ou le timeout
-                  if (bufferSize >= BATCH_SIZE) {
-                    try {
+                  const token = delta.content
+                    ?? delta.message?.content
+                    ?? (typeof delta.text === 'string' ? delta.text : undefined)
+                    ?? (typeof (delta as any).output_text === 'string' ? (delta as any).output_text : undefined);
+                  if (token) {
+                    accumulatedContent += token;
+                    tokenBuffer += token;
+                    bufferSize++;
+                    if (bufferSize >= BATCH_SIZE) {
                       await flushTokenBuffer();
-                      logger.dev("[LLM API] 📦 Batch envoyé");
-                    } catch (error) {
-                      logger.error("[LLM API] ❌ Erreur broadcast batch:", error);
                     }
                   }
                 }
               }
-            } catch (error) {
-              logger.error("[LLM API] ❌ Erreur parsing chunk:", error);
+            } catch (parseError) {
+              logger.dev("[LLM API] ⚠️ Chunk non-JSON ignoré:", data);
             }
           }
         }
@@ -765,13 +732,217 @@ export async function POST(request: NextRequest) {
               // Envoyer le buffer restant
         await flushTokenBuffer();
 
+        // ✅ Priorité: exécuter les tool_calls (nouveau format) s'ils existent
+        if (toolCallOrder.length > 0) {
+          logger.dev('[LLM API] 🔍 Tool calls détectés (nouveau format):', { count: toolCallOrder.length });
+          const outgoingAssistantToolCalls: Array<{ id: string; type: 'function'; function: { name: string; arguments: string } }> = [];
+          const toolResultMessages: any[] = [];
+
+          // Helper de persistance robuste (3 tentatives)
+          const persistWithRetry = async (msg: any, description: string = 'message') => {
+            try {
+              const { ChatSessionService } = await import('@/services/chatSessionService');
+              const css = ChatSessionService.getInstance();
+              let attempt = 0;
+              while (attempt < 3) {
+                try {
+                  const result = await css.addMessageWithToken(context.sessionId, msg, userToken);
+                  if (result && result.success === false) {
+                    throw new Error(result.error || 'addMessageWithToken returned success=false');
+                  }
+                  logger.dev('[LLM API] 💾 Persist OK:', { description, role: msg?.role, hasToolCalls: !!msg?.tool_calls, toolCallId: msg?.tool_call_id });
+                  return true;
+                } catch (e) {
+                  attempt++;
+                  logger.error('[LLM API] ❌ Persist attempt failed:', { attempt, description, error: e instanceof Error ? e.message : String(e) });
+                  if (attempt >= 3) throw e;
+                  await new Promise(r => setTimeout(r, 150 * attempt));
+                }
+              }
+            } catch (e) {
+              logger.error('[LLM API] ❌ Échec persistance message (tool/tool_calls) après retries:', { description, error: e instanceof Error ? e.message : String(e) });
+              return false;
+            }
+          };
+
+          for (const id of toolCallOrder) {
+            const call = toolCallMap[id];
+            if (!call?.name) continue;
+            const callId = call.id || id;
+            outgoingAssistantToolCalls.push({ id: callId, type: 'function', function: { name: call.name, arguments: call.arguments } });
+            const args = cleanAndParseFunctionArgs(call.arguments);
+            const result = await agentApiV2Tools.executeTool(call.name, args, userToken);
+            const isError = !!(result && typeof result === 'object' && result.success === false);
+            const contentStr = typeof result === 'string' ? ((): string => { try { JSON.parse(result); return result; } catch { return JSON.stringify(result); } })() : JSON.stringify(result);
+            toolResultMessages.push({ role: 'tool' as const, tool_call_id: callId, name: call.name, content: contentStr });
+            // 🔧 Broadcast immédiat du résultat (succès/erreur) pour que le frontend affiche et que l'agent voie le feedback
+            await channel.send({ type: 'broadcast', event: 'llm-tool-result', payload: { sessionId: context.sessionId, tool_name: call.name, tool_call_id: callId, result: result, success: !isError } });
+          }
+          // Sauvegarder assistant(tool_calls) dans l'historique (pour que le LLM voie les calls)
+          const assistantMessageToPersist = { role: 'assistant', content: null, tool_calls: outgoingAssistantToolCalls, timestamp: new Date().toISOString() };
+          await persistWithRetry(assistantMessageToPersist, 'assistant_tool_calls');
+
+          for (const toolMessage of toolResultMessages) {
+            await persistWithRetry({ ...toolMessage, timestamp: new Date().toISOString() } as any, `tool_result: ${toolMessage.name}`);
+          }
+          
+          logger.dev('[LLM API] ✅ Messages tool Groq sauvegardés (nouveau format)');
+
+          // Réinjection et relance Groq pour la réponse finale (le modèle voit les erreurs JSON des tools et peut réagir)
+          const cleanMessages = messages.filter(msg => !(msg.role === 'user' && 'tool_calls' in (msg as any)));
+          const toolAssistantMsg = { role: 'assistant' as const, content: null, tool_calls: outgoingAssistantToolCalls };
+          const updatedMessages = [...cleanMessages, toolAssistantMsg, ...toolResultMessages];
+
+          const hasFailedTool = toolResultMessages.some(msg => {
+            try {
+              const content = JSON.parse(msg.content);
+              return content.success === false;
+            } catch {
+              return false;
+            }
+          });
+
+          if (hasFailedTool) {
+            updatedMessages.unshift({
+              role: 'system',
+              content: "One of the tools you called failed. Inform the user about the failure in a natural, conversational way and ask for clarification or suggest an alternative. Do not attempt to call the same tool again with the same arguments. Always formulate a user-facing response."
+            });
+          }
+
+          const relaunchPayload = {
+            model: 'openai/gpt-oss-120b',
+            messages: updatedMessages,
+            stream: true,
+            temperature: config.temperature,
+            max_completion_tokens: config.max_tokens,
+            top_p: config.top_p,
+            reasoning_effort: agentConfig?.api_config?.reasoning_effort || 'medium'
+          };
+
+          const relaunchResp = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${process.env.GROQ_API_KEY}` },
+            body: JSON.stringify(relaunchPayload)
+          });
+
+          if (!relaunchResp.ok) {
+            const errTxt = await relaunchResp.text();
+            logger.error('[LLM API] ❌ Erreur relance Groq (nouveau format):', errTxt);
+            throw new Error(`Groq relaunch error: ${relaunchResp.status} - ${errTxt}`);
+          }
+
+          const relaunchReader = relaunchResp.body?.getReader();
+          if (!relaunchReader) throw new Error('Impossible de lire le stream de relance Groq');
+          let finalAccum = '';
+          let finalBuf = '';
+          let finalSize = 0;
+          const flushFinal = async () => { if (finalBuf.length > 0) { await channel.send({ type: 'broadcast', event: 'llm-token-batch', payload: { tokens: finalBuf, sessionId: context.sessionId } }); finalBuf = ''; finalSize = 0; } };
+          let doneR = false;
+          // Nouvelle détection d'un 2e tool call pendant la relance Groq
+          let relaunchToolCallData: { name: string; arguments: string; tool_call_id?: string } | null = null;
+          while (!doneR) {
+            const { done, value } = await relaunchReader.read();
+            if (done) { doneR = true; break; }
+            const c = new TextDecoder().decode(value);
+            const ls = c.split('\n');
+            for (const l of ls) {
+              if (!l.startsWith('data: ')) continue;
+              const d = l.slice(6);
+              if (d === '[DONE]') { doneR = true; break; }
+              try {
+                const p = JSON.parse(d);
+                const del = p.choices?.[0]?.delta;
+                // Détection d'un tool_call pendant la relance
+                if (del?.tool_calls && Array.isArray(del.tool_calls)) {
+                  for (const tc of del.tool_calls) {
+                    const nm = tc.function?.name || '';
+                    const args = tc.function?.arguments || '';
+                    const id = tc.id;
+                    if (!relaunchToolCallData) relaunchToolCallData = { name: nm, arguments: args, tool_call_id: id };
+                    else {
+                      if (nm) relaunchToolCallData.name = nm;
+                      if (args) relaunchToolCallData.arguments += args;
+                      if (id) relaunchToolCallData.tool_call_id = id;
+                    }
+                  }
+                  // Broadcast pour UI
+                  await channel.send({ type: 'broadcast', event: 'llm-tool-calls', payload: { sessionId: context.sessionId, tool_calls: del.tool_calls, tool_name: relaunchToolCallData?.name || 'unknown_tool' } });
+                  continue;
+                }
+                const t = del?.content ?? del?.message?.content ?? (typeof del?.text === 'string' ? del.text : undefined) ?? (typeof (del as any)?.output_text === 'string' ? (del as any).output_text : undefined);
+                if (t) { finalAccum += t; finalBuf += t; finalSize++; if (finalSize >= BATCH_SIZE) { await flushFinal(); } }
+              } catch {}
+            }
+          }
+          await flushFinal();
+          // Si un 2e tool_call a été demandé pendant la relance, l'exécuter puis relancer une dernière fois
+          if (relaunchToolCallData && relaunchToolCallData.name) {
+            try {
+              const toolCallId2 = relaunchToolCallData.tool_call_id || `call_${Date.now()}_2`;
+              const toolMessage2 = { role: 'assistant' as const, content: null, tool_calls: [{ id: toolCallId2, type: 'function' as const, function: { name: relaunchToolCallData.name, arguments: relaunchToolCallData.arguments } }] };
+              const toolResultMessage2: any = { role: 'tool' as const, tool_call_id: toolCallId2, name: relaunchToolCallData.name, content: '' };
+              const functionArgs2 = cleanAndParseFunctionArgs(relaunchToolCallData.arguments);
+              const result2 = await agentApiV2Tools.executeTool(relaunchToolCallData.name, functionArgs2, userToken);
+              // Sécuriser le content string
+              let content2 = '';
+              if (typeof result2 === 'string') { try { JSON.parse(result2); content2 = result2; } catch { content2 = JSON.stringify(result2); } }
+              else { content2 = JSON.stringify(result2); }
+              toolResultMessage2.content = content2;
+              // Persister tool_calls + result
+              const { ChatSessionService } = await import('@/services/chatSessionService');
+              const css = ChatSessionService.getInstance();
+              const persist = async (msg: any, desc: string) => { try { const r = await css.addMessageWithToken(context.sessionId, msg, userToken); if (r && r.success === false) throw new Error(r.error); } catch (e) { logger.error('[LLM API] ❌ Persist relaunch tool failed:', { desc, err: e instanceof Error ? e.message : String(e) }); } };
+              await persist(toolMessage2, 'assistant tool_calls (relaunch)');
+              await persist(toolResultMessage2, `tool result ${relaunchToolCallData.name} (relaunch)`);
+              // Relancer une dernière fois avec historique mis à jour
+              const updatedMessages2 = [...updatedMessages, toolMessage2, toolResultMessage2];
+              const finalPayload2 = {
+                model: 'openai/gpt-oss-120b',
+                messages: updatedMessages2,
+                stream: true,
+                temperature: config.temperature,
+                max_completion_tokens: config.max_tokens,
+                top_p: config.top_p,
+                reasoning_effort: agentConfig?.api_config?.reasoning_effort || 'medium'
+              };
+              const finalResp2 = await fetch('https://api.groq.com/openai/v1/chat/completions', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${process.env.GROQ_API_KEY}` }, body: JSON.stringify(finalPayload2) });
+              if (!finalResp2.ok) { const et = await finalResp2.text(); throw new Error(`Groq relaunch2 error: ${finalResp2.status} - ${et}`); }
+              const rr = finalResp2.body?.getReader(); if (!rr) throw new Error('Impossible de lire le stream de relance Groq (2)');
+              let acc2 = ''; let buf2=''; let size2=0; const flush2 = async ()=>{ if (buf2.length>0){ await channel.send({ type:'broadcast', event:'llm-token-batch', payload:{ tokens: buf2, sessionId: context.sessionId } }); buf2=''; size2=0; } };
+              let done2=false; while(!done2){ const {done, value}= await rr.read(); if (done){done2=true; break;} const ch = new TextDecoder().decode(value); const lines= ch.split('\n'); for(const line of lines){ if(!line.startsWith('data: ')) continue; const dd = line.slice(6); if (dd==='[DONE]'){done2=true; break;} try { const pp = JSON.parse(dd); const dl = pp.choices?.[0]?.delta; const tok = dl?.content ?? dl?.message?.content ?? (typeof dl?.text==='string'? dl.text: undefined) ?? (typeof (dl as any)?.output_text==='string' ? (dl as any).output_text : undefined); if (tok){ acc2+=tok; buf2+=tok; size2++; if(size2>=BATCH_SIZE){ await flush2(); } } } catch{} } }
+              await flush2();
+              const safe2 = (acc2 || '').trim();
+              await channel.send({ type:'broadcast', event:'llm-complete', payload:{ sessionId: context.sessionId, fullResponse: safe2 } });
+              if (safe2) {
+                try { const css2 = ChatSessionService.getInstance(); await css2.addMessageWithToken(context.sessionId, { role:'assistant', content: safe2, timestamp: new Date().toISOString() } as any, userToken); } catch {}
+              }
+              return NextResponse.json({ success: true, completed: true, response: safe2 });
+            } catch (err) {
+              logger.error(`❌ Error while chaining tool call: ${err instanceof Error ? err.message : String(err)}`);
+              await channel.send({ type:'broadcast', event:'llm-complete', payload:{ sessionId: context.sessionId, fullResponse: '' } });
+              return NextResponse.json({ success: true, completed: true, response: '', error: true });
+            }
+          }
+          // Pas de 2e tool_call → réponse finale ou fallback
+          const safeFinal = (finalAccum || '').trim();
+          await channel.send({ type: 'broadcast', event: 'llm-complete', payload: { sessionId: context.sessionId, fullResponse: safeFinal } });
+          if (safeFinal) {
+            try {
+              const { ChatSessionService } = await import('@/services/chatSessionService');
+              const css = ChatSessionService.getInstance();
+              await css.addMessageWithToken(context.sessionId, { role: 'assistant', content: safeFinal, timestamp: new Date().toISOString() } as any, userToken);
+            } catch {}
+          }
+          return NextResponse.json({ success: true, completed: true, response: finalAccum });
+        }
+
         // Si une fonction a été appelée, l'exécuter
-        logger.dev("[LLM API] 🔍 Function call détectée:", functionCallData);
-        logger.dev("[LLM API] 🔍 Function call name:", functionCallData?.name);
-        logger.dev("[LLM API] 🔍 Function call args:", functionCallData?.arguments);
+        logger.dev("[LLM API] 🔍 Function call détectée:", legacyFunctionCall);
+        logger.dev("[LLM API] 🔍 Function call name:", legacyFunctionCall?.name);
+        logger.dev("[LLM API] 🔍 Function call args:", legacyFunctionCall?.arguments);
         
-        // 🔧 SÉCURITÉ: Vérifier que functionCallData est valide
-        if (!functionCallData || !functionCallData.name) {
+        // 🔧 SÉCURITÉ: Vérifier que legacyFunctionCall est valide
+        if (!legacyFunctionCall || !legacyFunctionCall.name) {
           logger.dev("[LLM API] ❌ PAS DE FUNCTION CALL - Réponse normale");
           // Réponse normale sans function calling
           // Broadcast de completion
@@ -793,15 +964,15 @@ export async function POST(request: NextRequest) {
         }
         
         // 🔧 ANTI-BOUCLE: Limiter à une seule exécution de fonction par requête
-        if (functionCallData && functionCallData.name) {
-        logger.dev("[LLM API] 🚀 Exécution tool:", functionCallData.name);
+        if (legacyFunctionCall && legacyFunctionCall.name) {
+        logger.dev("[LLM API] 🚀 Exécution tool:", legacyFunctionCall.name);
         try {
           // 🔧 NOUVEAU: Nettoyer et valider les arguments JSON
-          const functionArgs = cleanAndParseFunctionArgs(functionCallData.arguments);
+          const functionArgs = cleanAndParseFunctionArgs(legacyFunctionCall.arguments);
           
           // Timeout de 15 secondes pour les tool calls
           const toolCallPromise = agentApiV2Tools.executeTool(
-            functionCallData.name, 
+            legacyFunctionCall.name, 
             functionArgs, 
             userToken
           );
@@ -823,7 +994,7 @@ export async function POST(request: NextRequest) {
           }
           
           // 🔧 NOUVEAU: ID stable du tool call (utilisé pour broadcast, DB et réinjection)
-          const toolCallId = functionCallData.tool_call_id || `call_${Date.now()}`;
+          const toolCallId = `call_${Date.now()}`;
 
           // 🔧 NOUVEAU: Broadcast du résultat du tool call au frontend
           await channel.send({
@@ -831,7 +1002,7 @@ export async function POST(request: NextRequest) {
             event: 'llm-tool-result',
             payload: {
               sessionId: context.sessionId,
-              tool_name: functionCallData.name,
+              tool_name: legacyFunctionCall.name,
               tool_call_id: toolCallId,
               result: safeResult,
               success: safeResult.success !== false
@@ -849,8 +1020,8 @@ export async function POST(request: NextRequest) {
               id: toolCallId, // 🔧 CORRECTION: ID réel du tool call
               type: 'function',
               function: {
-                name: functionCallData.name || 'unknown_tool', // 🔧 SÉCURITÉ: fallback
-                arguments: functionCallData.arguments
+                name: legacyFunctionCall.name || 'unknown_tool', // 🔧 SÉCURITÉ: fallback
+                arguments: legacyFunctionCall.arguments
               }
             }]
           };
@@ -910,7 +1081,7 @@ export async function POST(request: NextRequest) {
           const toolResultMessage = {
             role: 'tool' as const,
             tool_call_id: toolCallId, // 🔧 SÉCURITÉ: même ID
-            name: functionCallData.name || 'unknown_tool', // 🔧 SÉCURITÉ: même nom (fallback)
+            name: legacyFunctionCall.name || 'unknown_tool', // 🔧 SÉCURITÉ: même nom (fallback)
             content: toolContent // 🔧 SÉCURITÉ: JSON string
           };
 
@@ -940,65 +1111,38 @@ export async function POST(request: NextRequest) {
             toolResultMessage
           ];
 
-          // 🔧 NOUVEAU: Sauvegarder les messages tool dans la base de données
-          try {
-            // Utiliser directement l'API avec le token utilisateur
-            const response1 = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3000'}/api/v1/chat-sessions/${context.sessionId}/messages`, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${userToken}`
-              },
-              body: JSON.stringify({
-                role: 'assistant',
-                content: null,
-                tool_calls: [{
-                  id: toolCallId,
-                  type: 'function',
-                  function: {
-                    name: functionCallData.name,
-                    arguments: functionCallData.arguments
-                  }
-                }],
-                timestamp: new Date().toISOString()
-              })
-            });
-
-            if (!response1.ok) {
-              throw new Error(`Erreur sauvegarde message assistant: ${response1.status}`);
-            }
-
-            // Sauvegarder le message tool avec le résultat
-            const response2 = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3000'}/api/v1/chat-sessions/${context.sessionId}/messages`, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${userToken}`
-              },
-              body: JSON.stringify({
-                role: 'tool',
-                tool_call_id: toolCallId,
-                name: functionCallData.name,
-                content: toolContent,
-                timestamp: new Date().toISOString()
-              })
-            });
-
-            if (!response2.ok) {
-              throw new Error(`Erreur sauvegarde message tool: ${response2.status}`);
-            }
-
-            logger.dev("[LLM API] ✅ Messages tool sauvegardés dans l'historique");
-          } catch (saveError) {
-            logger.error("[LLM API] ❌ Erreur sauvegarde messages tool:", saveError);
-            // Continuer même si la sauvegarde échoue
-          }
-
-          // 3. Relancer le LLM avec l'historique complet SANS tools (anti-boucle infinie)
-          logger.dev("[LLM API] 🔧 Relance LLM SANS tools pour éviter la boucle infinie");
+          // 🔧 NOUVEAU: Sauvegarder les messages tool dans la base de données (NOUVEAU FORMAT)
+          const { ChatSessionService } = await import('@/services/chatSessionService');
+          const css = ChatSessionService.getInstance();
           
+          // 🔧 Persister le message de l'assistant contenant les tool calls
+          await persistWithRetry(
+            () => css.addMessageWithToken(context.sessionId, {
+              role: 'assistant',
+              content: null,
+              tool_calls: [{ id: toolCallId, type: 'function', function: { name: legacyFunctionCall.name, arguments: legacyFunctionCall.arguments } }],
+              timestamp: new Date().toISOString()
+            }, userToken),
+            "Message assistant avec tool_calls"
+          );
+
+          // Persister le résultat du tool call
+          await persistWithRetry(
+            () => css.addMessageWithToken(context.sessionId, {
+              role: 'tool',
+              tool_call_id: toolCallId,
+              name: legacyFunctionCall.name,
+              content: toolResultMessage.content,
+              timestamp: new Date().toISOString()
+            }, userToken),
+            `Résultat du tool ${legacyFunctionCall.name}`
+          );
+          
+          logger.dev("[LLM API] ✅ Cycle de persistance des tools terminé.");
+
+          // 3. Relancer le LLM avec l'historique complet (SANS tools)
           const finalPayload = useGroq ? {
-            // 🎯 Payload spécifique pour Groq (relance SANS tools)
+            // 🎯 Payload spécifique pour Groq (relance)
             model: 'openai/gpt-oss-120b',
             messages: updatedMessages,
             stream: true,
@@ -1006,16 +1150,15 @@ export async function POST(request: NextRequest) {
             max_completion_tokens: config.max_tokens,
             top_p: config.top_p,
             reasoning_effort: agentConfig?.api_config?.reasoning_effort || 'medium'
-            // 🔧 ANTI-BOUCLE: Pas de tools lors de la relance
           } : {
-            // 🎯 Payload pour Together AI (relance SANS tools)
+            // 🎯 Payload pour Together AI (relance)
             model: config.model,
             messages: updatedMessages,
             stream: true,
             temperature: config.temperature,
             max_tokens: config.max_tokens,
-            top_p: config.top_p
-            // 🔧 ANTI-BOUCLE: Pas de tools lors de la relance
+            top_p: config.top_p,
+            ...(tools && { tools, tool_choice: 'auto' })
           };
 
           logger.dev("[LLM API] 🔄 Relance LLM avec payload SANS tools:", JSON.stringify(finalPayload, null, 2));
@@ -1038,8 +1181,8 @@ export async function POST(request: NextRequest) {
 
           if (!finalResponse.ok) {
             const errorText = await finalResponse.text();
-            logger.error(`[LLM API] ❌ Erreur ${providerName} relance:`, errorText);
-            throw new Error(`${providerName} API error: ${finalResponse.status} - ${errorText}`);
+            logger.error("[LLM API] ❌ Erreur relance Together AI:", errorText);
+            throw new Error(`Together AI relance error: ${finalResponse.status} - ${errorText}`);
           }
 
           logger.dev("[LLM API] 🔄 LLM relancé avec historique complet SANS tools");
@@ -1138,15 +1281,15 @@ export async function POST(request: NextRequest) {
             success: false,
             error: true,
             message: `❌ ÉCHEC : ${errorMessage}`,
-            tool_name: functionCallData.name,
-            tool_args: functionCallData.arguments,
+            tool_name: legacyFunctionCall?.name,
+            tool_args: legacyFunctionCall?.arguments,
             timestamp: new Date().toISOString()
           };
           
           logger.dev("[LLM API] 🔧 Injection de l'erreur tool dans l'historique avec feedback structuré");
 
           // 1. Créer le message tool avec l'erreur
-          const toolCallId = functionCallData.tool_call_id || `call_${Date.now()}`; // 🔧 CORRECTION: Utiliser l'ID réel du tool call
+          const toolCallId = `call_${Date.now()}`; // 🔧 Générer un ID de tool call
           const toolMessage = {
             role: 'assistant' as const,
             content: null,
@@ -1154,8 +1297,8 @@ export async function POST(request: NextRequest) {
               id: toolCallId,
               type: 'function',
               function: {
-                name: functionCallData.name,
-                arguments: functionCallData.arguments
+                name: legacyFunctionCall.name,
+                arguments: legacyFunctionCall.arguments
               }
             }]
           };
@@ -1170,7 +1313,7 @@ export async function POST(request: NextRequest) {
           const toolResultMessage = {
             role: 'tool' as const,
             tool_call_id: toolCallId,
-            name: functionCallData.name || 'unknown_tool', // 🔧 SÉCURITÉ: fallback
+            name: legacyFunctionCall.name || 'unknown_tool', // 🔧 SÉCURITÉ: fallback
             content: errorContent
           };
           
@@ -1190,45 +1333,34 @@ export async function POST(request: NextRequest) {
             toolResultMessage
           ];
 
-          // 🔧 NOUVEAU: Sauvegarder les messages tool dans la base de données
-          try {
-            const { ChatSessionService } = await import('@/services/chatSessionService');
-            const chatSessionService = ChatSessionService.getInstance();
-            
-            // Sauvegarder le message assistant avec tool call
-            await chatSessionService.addMessage(context.sessionId, {
+          // 🔧 NOUVEAU: Sauvegarder les messages tool dans la base de données (NOUVEAU FORMAT)
+          const { ChatSessionService } = await import('@/services/chatSessionService');
+          const css = ChatSessionService.getInstance();
+          
+          // 🔧 Persister le message de l'assistant contenant les tool calls
+          await persistWithRetry(
+            () => css.addMessageWithToken(context.sessionId, {
               role: 'assistant',
               content: null,
-              tool_calls: [{
-                id: toolCallId,
-                type: 'function',
-                function: {
-                  name: functionCallData.name,
-                  arguments: functionCallData.arguments
-                }
-              }],
+              tool_calls: [{ id: toolCallId, type: 'function', function: { name: legacyFunctionCall.name, arguments: legacyFunctionCall.arguments } }],
               timestamp: new Date().toISOString()
-            });
+            }, userToken),
+            "Message assistant avec tool_calls"
+          );
 
-            // Sauvegarder le message tool avec le résultat
-            await chatSessionService.addMessage(context.sessionId, {
+          // Persister le résultat du tool call
+          await persistWithRetry(
+            () => css.addMessageWithToken(context.sessionId, {
               role: 'tool',
               tool_call_id: toolCallId,
-              name: functionCallData.name || 'unknown_tool', // 🔧 CORRECTION: Ajouter le name
-              content: JSON.stringify({ 
-                error: true, 
-                message: `❌ ÉCHEC : ${errorMessage}`,
-                success: false,
-                action: 'failed'
-              }),
+              name: legacyFunctionCall.name,
+              content: toolResultMessage.content,
               timestamp: new Date().toISOString()
-            });
-
-            logger.dev("[LLM API] ✅ Messages tool sauvegardés dans l'historique");
-          } catch (saveError) {
-            logger.error("[LLM API] ❌ Erreur sauvegarde messages tool:", saveError);
-            // Continuer même si la sauvegarde échoue
-          }
+            }, userToken),
+            `Résultat du tool ${legacyFunctionCall.name}`
+          );
+          
+          logger.dev("[LLM API] ✅ Cycle de persistance des tools terminé.");
 
           // 3. Relancer le LLM avec l'historique complet (SANS tools)
           const finalPayload = useGroq ? {
@@ -1237,10 +1369,9 @@ export async function POST(request: NextRequest) {
             messages: updatedMessages,
             stream: true,
             temperature: config.temperature,
-            max_completion_tokens: config.max_tokens, // ✅ Groq utilise max_completion_tokens
+            max_completion_tokens: config.max_tokens,
             top_p: config.top_p,
             reasoning_effort: agentConfig?.api_config?.reasoning_effort || 'medium'
-            // 🔧 ANTI-BOUCLE: Pas de tools lors de la relance
           } : {
             // 🎯 Payload pour Together AI (relance)
             model: config.model,
@@ -1248,8 +1379,8 @@ export async function POST(request: NextRequest) {
             stream: true,
             temperature: config.temperature,
             max_tokens: config.max_tokens,
-            top_p: config.top_p
-            // 🔧 ANTI-BOUCLE: Pas de tools lors de la relance
+            top_p: config.top_p,
+            ...(tools && { tools, tool_choice: 'auto' })
           };
 
           logger.dev("[LLM API] 🔄 Relance LLM avec erreur tool");
@@ -1266,8 +1397,8 @@ export async function POST(request: NextRequest) {
 
           if (!finalResponse.ok) {
             const errorText = await finalResponse.text();
-            logger.error(`[LLM API] ❌ Erreur ${providerName} relance:`, errorText);
-            throw new Error(`${providerName} API error: ${finalResponse.status} - ${errorText}`);
+            logger.error("[LLM API] ❌ Erreur relance Together AI:", errorText);
+            throw new Error(`Together AI relance error: ${finalResponse.status} - ${errorText}`);
           }
 
           logger.dev("[LLM API] 🔄 LLM relancé avec erreur tool");
@@ -1458,8 +1589,11 @@ export async function POST(request: NextRequest) {
           logger.dev("[LLM API] ✅ Qwen détecté - Function calling supporté");
         }
         
+        // ✅ Attendre l'initialisation asynchrone des tools OpenAPI
+        await agentApiV2Tools.waitForInitialization();
+        
         // 🔧 ACCÈS COMPLET: GPT/Grok ont accès à TOUS les tools
-      const tools = agentApiV2Tools.getToolsForFunctionCalling(); // Tous les tools disponibles // Tous les tools disponibles
+        const tools = agentApiV2Tools.getToolsForFunctionCalling(); // Tous les tools disponibles // Tous les tools disponibles
 
         logger.dev("[LLM API] 🔧 Capacités agent:", agentConfig?.api_v2_capabilities);
         logger.dev("[LLM API] 🔧 Support function calling:", supportsFunctionCalling);
@@ -1536,6 +1670,7 @@ export async function POST(request: NextRequest) {
         // Créer le canal pour le broadcast
         const supabase = createSupabaseAdmin();
         const channel = supabase.channel(channelId);
+        try { await channel.subscribe(); } catch {}
 
         // Fonction pour envoyer le buffer de tokens
         const flushTokenBuffer = async () => {
@@ -1660,18 +1795,16 @@ export async function POST(request: NextRequest) {
                   
                   // ✅ CORRECTION: Traitement du contenu normal (peut coexister avec reasoning)
                   if (delta.content) {
-                    const token = delta.content;
+                    const token = delta.content
+                      ?? delta.message?.content
+                      ?? (typeof delta.text === 'string' ? delta.text : undefined)
+                      ?? (typeof (delta as any).output_text === 'string' ? (delta as any).output_text : undefined);
+                    if (token) {
                     accumulatedContent += token;
                     tokenBuffer += token;
                     bufferSize++;
-                    
-                    // Envoyer le buffer si on atteint la taille
                     if (bufferSize >= BATCH_SIZE) {
-                      try {
                         await flushTokenBuffer();
-                        logger.dev("[LLM API] 📦 Batch Together AI envoyé");
-                      } catch (error) {
-                        logger.error("[LLM API] ❌ Erreur broadcast batch Together AI:", error);
                       }
                     }
                   }
@@ -1832,6 +1965,7 @@ export async function POST(request: NextRequest) {
             let finalTokenBuffer = '';
             let finalBufferSize = 0;
             let finalTokenCount = 0;
+            let secondFunctionCallData: any = null; // ✅ Détection d'un 2e tool call
 
             // Fonction pour envoyer le buffer final
             const flushFinalTokenBuffer = async () => {
@@ -1879,20 +2013,53 @@ export async function POST(request: NextRequest) {
                     const parsed = JSON.parse(data);
                     const delta = parsed.choices?.[0]?.delta;
                     
+                    if (delta?.tool_calls) {
+                      // ✅ Détecter un 2e tool call pendant la relance
+                      logger.dev("[LLM API] 🔧 Tool calls (2e passe) détectés:", JSON.stringify(delta.tool_calls));
+                      for (const toolCall of delta.tool_calls) {
+                        if (!secondFunctionCallData) {
+                          secondFunctionCallData = {
+                            name: toolCall.function?.name || '',
+                            arguments: toolCall.function?.arguments || '',
+                            tool_call_id: toolCall.id
+                          };
+                        } else {
+                          if (toolCall.function?.name) secondFunctionCallData.name = toolCall.function.name;
+                          if (toolCall.function?.arguments) secondFunctionCallData.arguments += toolCall.function.arguments;
+                          if (toolCall.id) secondFunctionCallData.tool_call_id = toolCall.id;
+                        }
+                      }
+
+                      // Broadcast des tool calls
+                      await channel.send({
+                        type: 'broadcast',
+                        event: 'llm-tool-calls',
+                        payload: {
+                          sessionId: context.sessionId,
+                          tool_calls: delta.tool_calls,
+                          tool_name: secondFunctionCallData?.name || 'unknown_tool'
+                        }
+                      });
+                    }
+                    
                     if (delta?.content) {
-                      const token = delta.content;
+                      const token = delta.content
+                        ?? delta.message?.content
+                        ?? (typeof delta.text === 'string' ? delta.text : undefined)
+                        ?? (typeof (delta as any).output_text === 'string' ? (delta as any).output_text : undefined);
+                      if (token) {
                       finalAccumulatedContent += token;
                       finalTokenBuffer += token;
                       finalBufferSize++;
                       finalTokenCount++;
                       
-                      // Envoyer le buffer si on atteint la taille
                       if (finalBufferSize >= BATCH_SIZE) {
                         try {
                           await flushFinalTokenBuffer();
                           logger.dev("[LLM API] 📦 Batch final Together AI envoyé");
                         } catch (error) {
                           logger.error("[LLM API] ❌ Erreur broadcast batch final Together AI:", error);
+                          }
                         }
                       }
                     }
@@ -1905,6 +2072,175 @@ export async function POST(request: NextRequest) {
 
             // Envoyer le buffer final restant
             await flushFinalTokenBuffer();
+
+            // ✅ Si un 2e tool call a été demandé, l'exécuter puis relancer une dernière fois
+            if (secondFunctionCallData && secondFunctionCallData.name) {
+              try {
+                const toolCallId2 = secondFunctionCallData.tool_call_id || `call_${Date.now()}_2`;
+
+                const toolMessage2 = {
+                  role: 'assistant' as const,
+                  content: null,
+                  tool_calls: [{
+                    id: toolCallId2,
+                    type: 'function',
+                    function: {
+                      name: secondFunctionCallData.name || 'unknown_tool',
+                      arguments: secondFunctionCallData.arguments
+                    }
+                  }]
+                };
+
+                const toolResultMessage2 = {
+                  role: 'tool' as const,
+                  tool_call_id: toolCallId2,
+                  name: secondFunctionCallData.name || 'unknown_tool',
+                  content: ''
+                };
+
+                // Nettoyer/valider les args
+                const functionArgs2 = cleanAndParseFunctionArgs(secondFunctionCallData.arguments);
+
+                const toolCallPromise2 = agentApiV2Tools.executeTool(
+                  secondFunctionCallData.name,
+                  functionArgs2,
+                  userToken
+                );
+
+                const timeoutPromise2 = new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout tool call (15s)')), 15000));
+                const result2 = await Promise.race([toolCallPromise2, timeoutPromise2]);
+
+                logger.dev("[LLM API] ✅ 2e tool exécuté:", result2);
+
+                // Securité: stringifier le résultat
+                let toolContent2: string;
+                if (typeof result2 === 'string') {
+                  try {
+                    JSON.parse(result2);
+                    toolContent2 = result2;
+                  } catch {
+                    toolContent2 = JSON.stringify(result2);
+                  }
+                } else {
+                  toolContent2 = JSON.stringify(result2);
+                }
+
+                toolResultMessage2.content = toolContent2;
+
+                const updatedMessages2 = [
+                  ...updatedMessages,
+                  toolMessage2,
+                  toolResultMessage2
+                ];
+
+                const finalPayload2 = {
+                  model: config.model,
+                  messages: updatedMessages2,
+                  stream: true,
+                  temperature: config.temperature,
+                  max_tokens: config.max_tokens,
+                  top_p: config.top_p
+                  // 🔧 Toujours sans tools pour éviter une boucle infinie
+                };
+
+                logger.dev("[LLM API] 📤 2e relance Together AI avec historique tool");
+
+                const finalResponse2 = await fetch('https://api.together.xyz/v1/chat/completions', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${process.env.TOGETHER_API_KEY}`
+                  },
+                  body: JSON.stringify(finalPayload2)
+                });
+
+                if (!finalResponse2.ok) {
+                  const errorText2 = await finalResponse2.text();
+                  logger.error("[LLM API] ❌ Erreur 2e relance Together AI:", errorText2);
+                  throw new Error(`Together AI 2e relance error: ${finalResponse2.status} - ${errorText2}`);
+                }
+
+                const finalReader2 = finalResponse2.body?.getReader();
+                if (!finalReader2) {
+                  throw new Error('Impossible de lire le stream de la 2e relance');
+                }
+
+                let final2Accumulated = '';
+                let final2Buffer = '';
+                let final2Size = 0;
+                let final2Count = 0;
+
+                const flushFinal2 = async () => {
+                  if (final2Buffer.length > 0) {
+                    try {
+                      await channel.send({
+                        type: 'broadcast',
+                        event: 'llm-token-batch',
+                        payload: { tokens: final2Buffer, sessionId: context.sessionId }
+                      });
+                      logger.dev("[LLM API] 📦 Batch final Together AI envoyé");
+                      final2Buffer = '';
+                      final2Size = 0;
+                    } catch (error) {
+                      logger.error("[LLM API] ❌ Erreur broadcast batch final Together AI:", error);
+                    }
+                  }
+                };
+
+                let done2 = false;
+                while (!done2) {
+                  const { done, value } = await finalReader2.read();
+                  if (done) { done2 = true; break; }
+                  const chunk2 = new TextDecoder().decode(value);
+                  const lines2 = chunk2.split('\n');
+                  for (const line of lines2) {
+                    if (line.startsWith('data: ')) {
+                      const data2 = line.slice(6);
+                      if (data2 === '[DONE]') { done2 = true; break; }
+                      try {
+                        const parsed2 = JSON.parse(data2);
+                        const delta2 = parsed2.choices?.[0]?.delta;
+                        if (delta2?.content) {
+                          final2Accumulated += delta2.content;
+                          final2Buffer += delta2.content;
+                          final2Size++;
+                          final2Count++;
+                          if (final2Size >= BATCH_SIZE) {
+                            await flushFinal2();
+                          }
+                        }
+                      } catch {
+                        logger.dev("[LLM API] ⚠️ Chunk final non-JSON ignoré:", data2);
+                      }
+                    }
+                  }
+                }
+
+                await flushFinal2();
+
+                try {
+                  await channel.send({
+                    type: 'broadcast',
+                    event: 'llm-complete',
+                    payload: { sessionId: context.sessionId, fullResponse: final2Accumulated }
+                  });
+                } catch (error) {
+                  logger.error("[LLM API] ❌ Erreur broadcast completion final:", error);
+                }
+
+                logger.dev("[LLM API] ✅ Streaming final Together AI terminé, contenu final:", final2Accumulated.substring(0, 100) + "...");
+
+                return NextResponse.json({ success: true, completed: true, response: final2Accumulated });
+              } catch (error) {
+                const errorMessage2 = error instanceof Error ? error.message : 'Erreur inconnue';
+                logger.error("[LLM API] ❌ Erreur exécution 2e tool Together AI:", errorMessage2);
+                const fallback2 = `❌ Erreur pendant l'enchaînement des actions: ${errorMessage2}`;
+                try {
+                  await channel.send({ type: 'broadcast', event: 'llm-complete', payload: { sessionId: context.sessionId, fullResponse: fallback2 } });
+                } catch {}
+                return NextResponse.json({ success: true, completed: true, response: fallback2, error: true });
+              }
+            }
 
             logger.dev("[LLM API] 📊 Statistiques streaming final:", {
               totalTokens: finalTokenCount,
@@ -1934,50 +2270,38 @@ export async function POST(request: NextRequest) {
               completed: true,
               response: finalAccumulatedContent 
             });
-
           } catch (error) {
             const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
             logger.error("[LLM API] ❌ Erreur exécution tool Together AI:", errorMessage);
 
-            // 🔧 NOUVEAU: Sauvegarder les messages tool dans la base de données
-            try {
-              const { ChatSessionService } = await import('@/services/chatSessionService');
-              const chatSessionService = ChatSessionService.getInstance();
-              
-              // Sauvegarder le message assistant avec tool call
-              await chatSessionService.addMessage(context.sessionId, {
+            // 🔧 NOUVEAU: Sauvegarder les messages tool dans la base de données (NOUVEAU FORMAT)
+            const { ChatSessionService } = await import('@/services/chatSessionService');
+            const css = ChatSessionService.getInstance();
+            
+            // 🔧 Persister le message de l'assistant contenant les tool calls
+            await persistWithRetry(
+              () => css.addMessageWithToken(context.sessionId, {
                 role: 'assistant',
                 content: null,
-                tool_calls: [{
-                  id: toolCallId,
-                  type: 'function',
-                  function: {
-                    name: functionCallData.name,
-                    arguments: functionCallData.arguments
-                  }
-                }],
+                tool_calls: [{ id: toolCallId, type: 'function', function: { name: functionCallData.name, arguments: functionCallData.arguments } }],
                 timestamp: new Date().toISOString()
-              });
+              }, userToken),
+              "Message assistant avec tool_calls"
+            );
 
-              // Sauvegarder le message tool avec le résultat
-              await chatSessionService.addMessage(context.sessionId, {
+            // Persister le résultat du tool call
+            await persistWithRetry(
+              () => css.addMessageWithToken(context.sessionId, {
                 role: 'tool',
                 tool_call_id: toolCallId,
-                name: functionCallData.name || 'unknown_tool', // 🔧 CORRECTION: Ajouter le name
-                content: JSON.stringify({ 
-                  error: true, 
-                  message: `❌ ÉCHEC : ${errorMessage}`,
-                  success: false,
-                  action: 'failed'
-                }),
+                name: functionCallData.name,
+                content: toolResultMessage.content,
                 timestamp: new Date().toISOString()
-              });
-
-              logger.dev("[LLM API] ✅ Messages tool Together AI sauvegardés dans l'historique");
-            } catch (saveError) {
-              logger.error("[LLM API] ❌ Erreur sauvegarde messages tool Together AI:", saveError);
-              // Continuer même si la sauvegarde échoue
-            }
+              }, userToken),
+              `Résultat du tool ${functionCallData.name}`
+            );
+            
+            logger.dev("[LLM API] ✅ Cycle de persistance des tools terminé.");
 
             // 🔧 NOUVEAU: Fallback - Réponse d'erreur simple
             logger.dev("[LLM API] 🔧 Fallback: Envoi d'une réponse d'erreur simple");
@@ -2035,6 +2359,13 @@ export async function POST(request: NextRequest) {
         // Créer un canal unique pour le streaming
         const channelId = incomingChannelId || `llm-stream-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
         logger.dev("[LLM API] 📡 Canal utilisé:", channelId);
+        
+        // Préparer le canal et s'abonner pour s'assurer que les broadcasts partent
+        const supabaseInit = createSupabaseAdmin();
+        const channelInit = supabaseInit.channel(channelId);
+        try {
+          await channelInit.subscribe();
+        } catch {}
         
         // Utiliser le provider avec configuration d'agent
         const groqProvider = new GroqProvider();
@@ -2113,8 +2444,11 @@ export async function POST(request: NextRequest) {
           logger.dev("[LLM API] ✅ Qwen détecté - Function calling supporté");
         }
         
+        // ✅ Attendre l'initialisation asynchrone des tools OpenAPI
+        await agentApiV2Tools.waitForInitialization();
+        
         // 🔧 ACCÈS COMPLET: GPT/Grok ont accès à TOUS les tools
-      const tools = agentApiV2Tools.getToolsForFunctionCalling(); // Tous les tools disponibles // Tous les tools disponibles
+        const tools = agentApiV2Tools.getToolsForFunctionCalling(); // Tous les tools disponibles // Tous les tools disponibles
 
         logger.dev("[LLM API] 🔧 Capacités agent:", agentConfig?.api_v2_capabilities);
         logger.dev("[LLM API] 🔧 Support function calling:", supportsFunctionCalling);
@@ -2191,6 +2525,7 @@ export async function POST(request: NextRequest) {
         // Créer le canal pour le broadcast
         const supabase = createSupabaseAdmin();
         const channel = supabase.channel(channelId);
+        try { await channel.subscribe(); } catch {}
 
         // Fonction pour envoyer le buffer de tokens
         const flushTokenBuffer = async () => {
@@ -2298,13 +2633,17 @@ export async function POST(request: NextRequest) {
                   }
                   
                   else if (delta.content) {
-                    accumulatedContent += delta.content;
-                    tokenBuffer += delta.content;
+                    const token = delta.content
+                      ?? delta.message?.content
+                      ?? (typeof delta.text === 'string' ? delta.text : undefined)
+                      ?? (typeof (delta as any).output_text === 'string' ? (delta as any).output_text : undefined);
+                    if (token) {
+                      accumulatedContent += token;
+                      tokenBuffer += token;
                     bufferSize++;
-                    
-                    // Envoyer le buffer si on atteint la taille
                     if (bufferSize >= BATCH_SIZE) {
                       await flushTokenBuffer();
+                      }
                     }
                   }
                 }
@@ -2317,6 +2656,245 @@ export async function POST(request: NextRequest) {
 
         // Envoyer le buffer final
         await flushTokenBuffer();
+
+        // Si une fonction a été appelée, l'exécuter puis relancer Groq
+        if (functionCallData && functionCallData.name) {
+          logger.dev("[LLM API] 🔍 Function call Groq détectée:", functionCallData);
+          const toolCallId = functionCallData.tool_call_id || `call_${Date.now()}`;
+
+          const toolMessage = {
+            role: 'assistant' as const,
+            content: null,
+            tool_calls: [{
+              id: toolCallId,
+              type: 'function',
+              function: {
+                name: functionCallData.name || 'unknown_tool',
+                arguments: functionCallData.arguments
+              }
+            }]
+          };
+
+          const toolResultMessage = {
+            role: 'tool' as const,
+            tool_call_id: toolCallId,
+            name: functionCallData.name || 'unknown_tool',
+            content: ''
+          };
+
+          const functionArgs = cleanAndParseFunctionArgs(functionCallData.arguments);
+          const toolResult = await agentApiV2Tools.executeTool(
+            functionCallData.name,
+            functionArgs,
+            userToken
+          );
+          logger.dev("[LLM API] ✅ Tool Groq exécuté:", toolResult);
+
+          let toolContent = '';
+          if (typeof toolResult === 'string') {
+            try { JSON.parse(toolResult); toolContent = toolResult; } catch { toolContent = JSON.stringify(toolResult); }
+          } else {
+            toolContent = JSON.stringify(toolResult);
+          }
+          toolResultMessage.content = toolContent;
+
+          try {
+            const { ChatSessionService } = await import('@/services/chatSessionService');
+            const css = ChatSessionService.getInstance();
+            await css.addMessageWithToken(context.sessionId, {
+              role: 'assistant',
+              content: null,
+              tool_calls: [{ id: toolCallId, type: 'function', function: { name: functionCallData.name, arguments: functionCallData.arguments } }],
+              timestamp: new Date().toISOString()
+            }, userToken);
+            await css.addMessageWithToken(context.sessionId, {
+              role: 'tool',
+              tool_call_id: toolCallId,
+              name: functionCallData.name,
+              content: toolResultMessage.content,
+              timestamp: new Date().toISOString()
+            } as any, userToken);
+            logger.dev("[LLM API] ✅ Messages tool Groq sauvegardés");
+          } catch (saveError) {
+            logger.error("[LLM API] ❌ Erreur sauvegarde messages tool (Groq):", saveError);
+          }
+
+          const cleanMessages = messages.filter(msg => !(msg.role === 'user' && 'tool_calls' in (msg as any)));
+          const updatedMessages = [
+            ...cleanMessages,
+            toolMessage,
+            toolResultMessage
+          ];
+
+          const finalPayloadGroq = {
+            model: 'openai/gpt-oss-120b',
+            messages: updatedMessages,
+            stream: true,
+            temperature: config.temperature,
+            max_completion_tokens: config.max_tokens,
+            top_p: config.top_p,
+            reasoning_effort: agentConfig?.api_config?.reasoning_effort || 'medium',
+            ...(tools && { tools, tool_choice: 'auto' })
+          };
+
+          const finalResponseGroq = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${process.env.GROQ_API_KEY}`
+            },
+            body: JSON.stringify(finalPayloadGroq)
+          });
+
+          if (!finalResponseGroq.ok) {
+            const errorText = await finalResponseGroq.text();
+            logger.error("[LLM API] ❌ Erreur relance Groq:", errorText);
+            throw new Error(`Groq relance error: ${finalResponseGroq.status} - ${errorText}`);
+          }
+
+          const finalReaderGroq = finalResponseGroq.body?.getReader();
+          if (!finalReaderGroq) {
+            throw new Error('Impossible de lire le stream final Groq');
+          }
+          let finalAccumulatedGroq = '';
+          let finalBufferGroq = '';
+          let finalSizeGroq = 0;
+          const flushFinalGroq = async () => {
+            if (finalBufferGroq.length > 0) {
+              await channel.send({ type: 'broadcast', event: 'llm-token-batch', payload: { tokens: finalBufferGroq, sessionId: context.sessionId } });
+              finalBufferGroq = '';
+              finalSizeGroq = 0;
+            }
+          };
+          let secondFnGroq: any = null;
+          let doneFinal = false;
+          while (!doneFinal) {
+            const { done, value } = await finalReaderGroq.read();
+            if (done) { doneFinal = true; break; }
+            const chunk2 = new TextDecoder().decode(value);
+            const lines2 = chunk2.split('\n');
+            for (const line of lines2) {
+              if (line.startsWith('data: ')) {
+                const data2 = line.slice(6);
+                if (data2 === '[DONE]') { doneFinal = true; break; }
+                try {
+                  const parsed2 = JSON.parse(data2);
+                  const delta2 = parsed2.choices?.[0]?.delta;
+                  if (delta2?.tool_calls) {
+                    logger.dev("[LLM API] 🔧 Tool calls (Groq 2e passe) détectés:", JSON.stringify(delta2.tool_calls));
+                    for (const toolCall of delta2.tool_calls) {
+                      if (!secondFnGroq) {
+                        secondFnGroq = { name: toolCall.function?.name || '', arguments: toolCall.function?.arguments || '', tool_call_id: toolCall.id };
+                      } else {
+                        if (toolCall.function?.name) secondFnGroq.name = toolCall.function.name;
+                        if (toolCall.function?.arguments) secondFnGroq.arguments += toolCall.function.arguments;
+                        if (toolCall.id) secondFnGroq.tool_call_id = toolCall.id;
+                      }
+                    }
+                    await channel.send({ type: 'broadcast', event: 'llm-tool-calls', payload: { sessionId: context.sessionId, tool_calls: delta2.tool_calls, tool_name: secondFnGroq?.name || 'unknown_tool' } });
+                  }
+                  if (delta2?.content) {
+                    const token2 = delta2?.content
+                      ?? delta2?.message?.content
+                      ?? (typeof delta2?.text === 'string' ? delta2.text : undefined)
+                      ?? (typeof (delta2 as any)?.output_text === 'string' ? (delta2 as any).output_text : undefined);
+                    if (token2) {
+                      finalAccumulatedGroq += token2;
+                      finalBufferGroq += token2;
+                    finalSizeGroq++;
+                    if (finalSizeGroq >= BATCH_SIZE) { await flushFinalGroq(); }
+                    }
+                  }
+                } catch {
+                  logger.dev('[LLM API] ⚠️ Chunk final non-JSON ignoré:', data2);
+                }
+              }
+            }
+          }
+          await flushFinalGroq();
+
+          if (secondFnGroq && secondFnGroq.name) {
+            try {
+              const toolCallId2 = secondFnGroq.tool_call_id || `call_${Date.now()}_2`;
+              const toolMessage2 = { role: 'assistant' as const, content: null, tool_calls: [{ id: toolCallId2, type: 'function', function: { name: secondFnGroq.name, arguments: secondFnGroq.arguments } }] };
+              const toolResultMessage2 = { role: 'tool' as const, tool_call_id: toolCallId2, name: secondFnGroq.name, content: '' };
+              const args2 = cleanAndParseFunctionArgs(secondFnGroq.arguments);
+              const res2 = await agentApiV2Tools.executeTool(secondFnGroq.name, args2, userToken);
+              toolResultMessage2.content = typeof res2 === 'string' ? ((): string => { try { JSON.parse(res2); return res2; } catch { return JSON.stringify(res2); } })() : JSON.stringify(res2);
+              const updatedMessages2 = [...updatedMessages, toolMessage2, toolResultMessage2];
+              const finalPayload2 = { model: 'openai/gpt-oss-120b', messages: updatedMessages2, stream: true, temperature: config.temperature, max_completion_tokens: config.max_tokens, top_p: config.top_p };
+              const finalResp2 = await fetch('https://api.groq.com/openai/v1/chat/completions', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${process.env.GROQ_API_KEY}` }, body: JSON.stringify(finalPayload2) });
+              if (!finalResp2.ok) {
+                const errTxt2 = await finalResp2.text();
+                logger.error('[LLM API] ❌ Erreur 2e relance Groq:', errTxt2);
+                throw new Error(`Groq 2e relance error: ${finalResp2.status} - ${errTxt2}`);
+              }
+              const reader2 = finalResp2.body?.getReader();
+              if (!reader2) { throw new Error('Impossible de lire le stream de la 2e relance Groq'); }
+              let acc2 = '';
+              let buf2 = '';
+              let size2 = 0;
+              const flush2 = async () => { if (buf2.length > 0) { await channel.send({ type: 'broadcast', event: 'llm-token-batch', payload: { tokens: buf2, sessionId: context.sessionId } }); buf2 = ''; size2 = 0; } };
+              let done2 = false;
+              while (!done2) {
+                const { done, value } = await reader2.read();
+                if (done) { done2 = true; break; }
+                const c = new TextDecoder().decode(value);
+                const ls = c.split('\n');
+                for (const l of ls) {
+                  if (l.startsWith('data: ')) {
+                    const d = l.slice(6);
+                    if (d === '[DONE]') { done2 = true; break; }
+                    try {
+                      const p = JSON.parse(d);
+                      const del = p.choices?.[0]?.delta;
+                      const t = del?.content ?? del?.message?.content ?? (typeof del?.text === 'string' ? del.text : undefined) ?? (typeof (del as any)?.output_text === 'string' ? (del as any).output_text : undefined);
+                      if (t) { acc2 += t; buf2 += t; size2++; if (size2 >= BATCH_SIZE) { await flush2(); } }
+                    } catch { logger.dev('[LLM API] ⚠️ Chunk final non-JSON ignoré:', d); }
+                  }
+                }
+              }
+              await flush2();
+              await channel.send({ type: 'broadcast', event: 'llm-complete', payload: { sessionId: context.sessionId, fullResponse: acc2 } });
+              logger.dev('[LLM API] ✅ Streaming final Groq terminé');
+              // ✅ Persister le message assistant final (2e passe)
+              try {
+                const { ChatSessionService } = await import('@/services/chatSessionService');
+                const css = ChatSessionService.getInstance();
+                await css.addMessageWithToken(context.sessionId, {
+                  role: 'assistant',
+                  content: acc2,
+                  timestamp: new Date().toISOString()
+                } as any, userToken);
+                logger.dev('[LLM API] 💾 Assistant final (2e passe) sauvegardé');
+              } catch (persistError) {
+                logger.error('[LLM API] ❌ Erreur de sauvegarde (2e passe) du message assistant final:', persistError);
+              }
+              return NextResponse.json({ success: true, completed: true, response: acc2 });
+            } catch (error) {
+              const msg = error instanceof Error ? error.message : 'Erreur inconnue';
+              const fb = `❌ Erreur pendant l'enchaînement des actions: ${msg}`;
+              await channel.send({ type: 'broadcast', event: 'llm-complete', payload: { sessionId: context.sessionId, fullResponse: fb } });
+              return NextResponse.json({ success: true, completed: true, response: fb, error: true });
+            }
+          }
+
+          await channel.send({ type: 'broadcast', event: 'llm-complete', payload: { sessionId: context.sessionId, fullResponse: finalAccumulatedGroq } });
+          // ✅ Persister le message assistant final (1re relance)
+          try {
+            const { ChatSessionService } = await import('@/services/chatSessionService');
+            const css = ChatSessionService.getInstance();
+            await css.addMessageWithToken(context.sessionId, {
+              role: 'assistant',
+              content: finalAccumulatedGroq,
+              timestamp: new Date().toISOString()
+            } as any, userToken);
+            logger.dev('[LLM API] 💾 Assistant final (1re relance) sauvegardé');
+          } catch (persistError) {
+            logger.error('[LLM API] ❌ Erreur de sauvegarde (1re relance) du message assistant final:', persistError);
+          }
+          return NextResponse.json({ success: true, completed: true, response: finalAccumulatedGroq });
+        }
 
         // Broadcast de completion avec le contenu accumulé
         await channel.send({

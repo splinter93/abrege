@@ -84,7 +84,10 @@ export const SLASH_COMMANDS = [
     label: { fr: 'Image', en: 'Image' },
     alias: { fr: '/image', en: '/image' },
     description: { fr: 'Ajouter une image', en: 'Add an image' },
-    action: (editor) => editor.chain().focus().setImage({ src: '' }).run(),
+    action: (editor) => {
+      if (editor?.options?.handleOpenImageMenu) return editor.options.handleOpenImageMenu();
+      return editor.chain().focus().setImage({ src: '' }).run();
+    },
     preview: '<img src="https://placehold.co/40x24" alt="Image" />',
   },
   {
