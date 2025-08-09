@@ -139,7 +139,7 @@
 .agent-option {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   padding: 6px 8px;
   background: transparent;
   border: 1px solid transparent;
@@ -174,14 +174,9 @@
 }
 
 .agent-name {
-  font-weight: 500;
+  font-weight: 600;
   color: var(--chat-text-primary);
   font-size: 14px;
-}
-
-.agent-model {
-  color: var(--chat-text-muted);
-  font-size: 12px;
 }
 
 .agent-selected-indicator {
