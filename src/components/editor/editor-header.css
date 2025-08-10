@@ -64,16 +64,13 @@
 }
 
 .editor-header-logo {
+  position: absolute;
+  left: 12px;
+  top: 0;
+  height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: var(--ui-font-size-2xl);
-  font-weight: 700;
-  color: var(--accent-primary);
-  letter-spacing: -0.02em;
-  gap: 0.7rem;
-  margin-left: 3px;
-  height: 100%;
 }
 
 .editor-header-toolbar {
@@ -340,20 +337,26 @@
 
 /* Add Header Image CTA (shown when no header image) */
 .editor-add-header-image-row {
-  margin-top: 8px;
+  margin-top: 0; /* no flow spacing since CTA is fixed */
+  height: 0;     /* collapse row height */
 }
 
 .editor-add-header-image {
   display: flex;
   justify-content: flex-end;
+  position: fixed;
+  top: calc(36px + 8px); /* 36px header min-height + 8px gap */
+  right: max(12px, env(safe-area-inset-right, 12px)); /* safe-area aware */
+  z-index: 90;
 }
 
 .editor-add-header-image-btn {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  justify-content: center;
+  width: 32px;
   height: 32px;
-  padding: 0 10px;
+  padding: 0; /* icon-only */
   border-radius: 8px;
   border: 1px solid var(--border-subtle);
   background: var(--surface-2);

@@ -441,7 +441,6 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
                         title="Ajouter une image d'en-tête"
                       >
                         <FiImage size={16} />
-                        <span>Ajouter une image</span>
                       </button>
                     </div>
                   </div>

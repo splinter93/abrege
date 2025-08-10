@@ -125,8 +125,8 @@
   --editor-list-margin-vertical: 1.25em;    /* Marge verticale pour les listes */
   --editor-list-item-margin-vertical: 0.35em; /* Marge entre les items de liste */
   
-  --editor-heading-margin-top: 2em;       /* Marge AU-DESSUS des titres */
-  --editor-heading-margin-bottom: 1em;    /* Marge SOUS les titres */
+  --editor-heading-margin-top: 1.1em;       /* Marge AU-DESSUS des titres (reduced from 2em) */
+  --editor-heading-margin-bottom: 0.6em;    /* Marge SOUS les titres (reduced from 1em) */
 
   /* ==========================================================================
      VARIABLES UI UNIFIÉES - POUR TOUS LES COMPOSANTS
@@ -265,7 +265,7 @@
 /* 2. Image avec titre intégré */
 .noteLayout.imageWithTitle .noteLayout-title {
   position: absolute;
-  top: 190px; /* Centré verticalement pour une image de 300px */
+  top: 200px; /* Slightly lowered for better visual balance on 300px image */
   left: 50%;
   transform: translate(-50%, -50%);
   width: 750px;
@@ -275,12 +275,17 @@
   text-align: center;
   z-index: 10;
 }
+.noteLayout.imageWithTitle .noteLayout-title > .editor-container-width {
+  width: 750px;
+  max-width: 750px;
+  margin: 0 auto;
+}
 
 .noteLayout.imageWithTitle .noteLayout-title textarea {
   color: white !important; /* Override pour le titre dans l'image */
   text-shadow: 0 2px 4px rgba(0,0,0,0.2);
   text-align: center;
-  width: auto !important; /* S'adapte à la largeur du texte */
+  width: 100% !important; /* Remplit la largeur de 750px du conteneur */
   max-width: 750px !important;
   padding: 0 0 4px 0 !important; /* Légère marge en bas */
   white-space: pre-wrap !important; /* Permet le retour à la ligne */
@@ -301,11 +306,15 @@
   padding-top: 8px; /* Espacement pour descendre le titre */
   text-align: left;
 }
+.noteLayout.imageOnly .noteLayout-title > .editor-container-width {
+  padding-bottom: 6px; /* Ajoute un léger espace sous le titre */
+}
 .noteLayout.imageOnly .noteLayout-title textarea {
   padding: 0; /* Supprime tout padding du textarea */
 }
 .noteLayout.imageOnly .noteLayout-content {
-  margin-top: 0px; /* Espacement nul entre le titre et le contenu */
+  margin-top: 0px; /* Pas de marge */
+  padding-top: 10px; /* Légère respiration entre le titre et le texte */
 }
 
 /* Responsive */
@@ -318,7 +327,7 @@
 /* Even tighter spacing and left alignment */
 .noteLayout .noteLayout-title { display: flex; justify-content: center; }
 .noteLayout .noteLayout-title > .editor-container-width { padding: 0 0 2px 0; }
-.noteLayout.noImage .noteLayout-title { padding-top: 6px; }
+.noteLayout.noImage .noteLayout-title { padding-top: 35px; }
 .noteLayout.imageOnly .noteLayout-title { padding-top: 4px; }
 .noteLayout .noteLayout-content { margin-top: 2px; }
 
@@ -775,3 +784,8 @@
   white-space: pre-wrap;
   overflow: visible;
 } 
+
+/* Match spacing between title and text for no-image layout to image-only layout */
+.noteLayout.noImage .noteLayout-title > .editor-container-width { padding-bottom: 6px; }
+.noteLayout.noImage .noteLayout-title textarea { padding-bottom: 0; }
+.noteLayout.noImage .noteLayout-content { margin-top: 0; padding-top: 10px; } 
