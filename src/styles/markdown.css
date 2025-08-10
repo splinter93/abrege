@@ -250,7 +250,7 @@
 .markdown-body img {
   max-width: 100%;
   border-radius: 10px; /* premium: increased from 8px for softer look */
-  margin: 1.4rem 0; /* premium: increased from 1.2rem for better separation */
+  margin: 0.6rem 0; /* further reduced and equal spacing */
   display: block;
   border: 1px solid var(--border-subtle); /* premium: subtle border */
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* premium: subtle shadow */
@@ -472,7 +472,7 @@ li[data-type="taskItem"] > div p {
 .markdown-body img {
   max-width: 100%;
   border-radius: 10px; /* premium: increased from 8px for softer look */
-  margin: 1.4rem 0; /* premium: increased from 1.2rem for better separation */
+  margin: 0.6rem 0; /* further reduced and equal spacing */
   display: block;
   border: 1px solid var(--border-subtle); /* premium: subtle border */
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* premium: subtle shadow */
@@ -1162,4 +1162,82 @@ li[data-type="taskItem"] > div p,
 /* Tighten label/text line-height to reduce visual baseline drift */
 .ProseMirror li[data-type="taskItem"] > label {
   line-height: 1.2;
+}
+
+/* ==========================================================================
+   IMAGES - PROSEMIRROR (UNIFIED WITH MARKDOWN PREVIEW)
+   ========================================================================== */
+.ProseMirror img {
+  max-width: 100%;
+  border-radius: 10px;
+  margin: 1.4rem 0;
+  display: block;
+  border: 1px solid var(--border-subtle);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.ProseMirror img:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+/* Optional caption/content under node-view images */
+.ProseMirror .editor-image-content {
+  text-align: center;
+  color: var(--text-3);
+  font-size: 0.875rem;
+  margin-top: 0.5rem;
+}
+
+/* ==========================================================================
+   IMAGES - TIPTAP NODE VIEW CLASSES (OVERRIDES)
+   ========================================================================== */
+.ProseMirror .editor-image-wrapper {
+  max-width: 100%;
+  margin: 1.4rem 0;
+}
+
+.ProseMirror .editor-image {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-width: 100% !important; /* override any fixed caps like 700px */
+  margin: 0 auto;
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  object-fit: contain;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.ProseMirror .editor-image:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+/* Normalize image spacing in editor body */
+.ProseMirror img,
+.ProseMirror .editor-image {
+  margin: 0.6rem 0; /* further reduced and equal spacing */
+}
+.ProseMirror .editor-image-wrapper {
+  margin: 0.6rem 0; /* align with image margin */
+}
+
+/* Prevent extra paragraph margins around images */
+.ProseMirror p:has(img),
+.ProseMirror p:has(.editor-image-wrapper) {
+  margin: 0; /* avoid double spacing */
+}
+
+/* Ensure node-view image takes full editor content width */
+.ProseMirror .editor-image-wrapper {
+  width: 100%;
+}
+
+/* Subtle drop cursor styling for better placement feedback */
+.ProseMirror-dropcursor {
+  border-top: 2px solid var(--accent-primary);
+  opacity: 0.6;
 }

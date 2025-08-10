@@ -100,8 +100,8 @@
   /* ==========================================================================
      LARGEURS TYPOGRAPHIQUES - PREMIUM
      ========================================================================== */
-  --editor-content-width-normal: 680px;   /* 680px - refined from 750px for better line length */
-  --editor-content-width-wide: 900px;     /* 900px - refined from 1000px */
+  --editor-content-width-normal: 750px;   /* default normal width */
+  --editor-content-width-wide: 1000px;    /* wide mode width */
   --editor-content-width: var(--editor-content-width-normal); /* Par défaut */
 
   /* ==========================================================================

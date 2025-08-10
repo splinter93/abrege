@@ -149,7 +149,7 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
       ((CodeBlockWithCopy as any).configure?.({ lowlight }) ?? (CodeBlockWithCopy as any)),
       Link.configure({ openOnClick: false, autolink: true, linkOnPaste: true }),
       // Custom image node view to hook our image menu
-      (CustomImage as any).configure?.({}) ?? (CustomImage as any),
+      (CustomImage as any).configure?.({ inline: false }) ?? (CustomImage as any),
       Markdown.configure({ html: false })
     ],
     content: content || '',
@@ -321,6 +321,32 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
         if (!image) return;
         e.preventDefault();
         const { publicUrl } = await uploadImageForNote(image, noteId);
+        // Determine drop position and replace image if dropping over one
+        const view = (editor as any).view;
+        const coords = { left: (e as any).clientX, top: (e as any).clientY } as { left: number; top: number };
+        const posAt = view.posAtCoords(coords);
+        if (posAt && typeof posAt.pos === 'number') {
+          const { state } = view;
+          const $pos = state.doc.resolve(posAt.pos);
+          const nodeHere = ($pos.nodeAfter && $pos.nodeAfter.type.name === 'image')
+            ? $pos.nodeAfter
+            : ($pos.nodeBefore && $pos.nodeBefore.type.name === 'image')
+              ? $pos.nodeBefore
+              : null;
+          if (nodeHere) {
+            // Select the image node at this position and update its src
+            const { NodeSelection } = require('prosemirror-state');
+            const imagePos = $pos.nodeAfter && $pos.nodeAfter.type.name === 'image' ? posAt.pos : (posAt.pos - (nodeHere?.nodeSize || 1));
+            const tr = state.tr.setSelection(NodeSelection.create(state.doc, imagePos));
+            view.dispatch(tr);
+            (editor as any).commands.updateAttributes('image', { src: publicUrl });
+            return;
+          }
+          // Otherwise, insert at the computed position
+          const { TextSelection } = require('prosemirror-state');
+          const tr = state.tr.setSelection(TextSelection.near(state.doc.resolve(posAt.pos)));
+          view.dispatch(tr);
+        }
         (editor as any).chain().focus().setImage({ src: publicUrl }).run();
       } catch {}
     };

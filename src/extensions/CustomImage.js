@@ -19,13 +19,8 @@ const CustomImage = Image.extend({
         img.className = 'editor-image';
         dom.appendChild(img);
       }
-      // Ajout du contentDOM pour permettre la mise en forme markdown sous l'image
-      const contentDOM = document.createElement('div');
-      contentDOM.className = 'editor-image-content';
-      dom.appendChild(contentDOM);
       return {
         dom,
-        contentDOM,
       };
     };
   },
