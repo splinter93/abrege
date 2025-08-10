@@ -35,25 +35,54 @@ export async function uploadImageForNote(file: File, noteRef: string): Promise<{
     throw new Error("Erreur lors de l'upload S3");
   }
 
-  // Register
-  const registerRes = await fetch('/api/v2/files/register', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...authHeader },
-    body: JSON.stringify({
-      key,
-      file_name: file.name,
-      file_type: file.type,
-      file_size: file.size,
-      scope: { note_ref: noteRef },
-      visibility_mode: 'inherit_note',
-    }),
-  });
-  if (!registerRes.ok) {
-    const err = await registerRes.json().catch(() => ({}));
-    throw new Error(err.error || 'Erreur register');
-  }
-  const { file: saved, signed_url, public_control_url } = await registerRes.json();
-  const publicUrl = signed_url || public_control_url || `/api/v1/public/file/${saved.id}${saved.etag ? `?v=${saved.etag}` : ''}`;
+  // Helper: suggest a unique filename by adding " (n)" before extension
+  const buildFileNameVariant = (originalName: string, index: number): string => {
+    if (index <= 1) return originalName;
+    const lastDotIndex = originalName.lastIndexOf('.');
+    if (lastDotIndex <= 0) {
+      return `${originalName} (${index})`;
+    }
+    const base = originalName.slice(0, lastDotIndex);
+    const ext = originalName.slice(lastDotIndex);
+    return `${base} (${index})${ext}`;
+  };
 
-  return { publicUrl, saved };
+  // Register with retry on duplicate filename
+  let attempt = 1;
+  const maxAttempts = 10;
+  // eslint-disable-next-line no-constant-condition
+  while (true) {
+    const candidateName = buildFileNameVariant(file.name, attempt);
+    const registerRes = await fetch('/api/v2/files/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...authHeader },
+      body: JSON.stringify({
+        key,
+        file_name: candidateName,
+        file_type: file.type,
+        file_size: file.size,
+        scope: { note_ref: noteRef },
+        visibility_mode: 'inherit_note',
+      }),
+    });
+
+    if (registerRes.ok) {
+      const { file: saved, signed_url, public_control_url } = await registerRes.json();
+      // Use the canonical AWS URL from the files table instead of signed_url
+      // The canonical URL is already stored in files.url and is the clean URL we want
+      const publicUrl = saved.url || `/api/v1/public/file/${saved.id}${saved.etag ? `?v=${saved.etag}` : ''}`;
+      return { publicUrl, saved };
+    }
+
+    const errJson = await registerRes.json().catch(() => ({} as any));
+    const message: string = errJson?.error || 'Erreur register';
+    const isDuplicate = /duplicate key value|files_user_id_filename_key/i.test(message);
+
+    if (isDuplicate && attempt < maxAttempts) {
+      attempt += 1;
+      continue;
+    }
+
+    throw new Error(message);
+  }
 } 

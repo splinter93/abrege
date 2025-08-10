@@ -66,10 +66,28 @@ const ImageMenu: React.FC<ImageMenuProps> = ({ open, onClose, onInsertImage, not
   };
 
   const getAuthHeader = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
+    console.log('🔍 [DEBUG] Getting auth header...');
+    const { data: { session }, error } = await supabase.auth.getSession();
+    console.log('🔍 [DEBUG] Session result:', { hasSession: !!session, error: error?.message });
+    if (error) {
+      console.log('🔍 [DEBUG] Auth error:', error);
+      throw error;
+    }
     const token = session?.access_token;
+    console.log('🔍 [DEBUG] Token:', token ? `${token.substring(0, 20)}...` : 'null');
     if (!token) throw new Error('Token manquant');
     return { Authorization: `Bearer ${token}` } as const;
+  };
+
+  const buildFileNameVariant = (originalName: string, index: number): string => {
+    if (index <= 1) return originalName;
+    const lastDotIndex = originalName.lastIndexOf('.');
+    if (lastDotIndex <= 0) {
+      return `${originalName} (${index})`;
+      }
+    const base = originalName.slice(0, lastDotIndex);
+    const ext = originalName.slice(lastDotIndex);
+    return `${base} (${index})${ext}`;
   };
 
   const handleUpload = async () => {
@@ -86,16 +104,35 @@ const ImageMenu: React.FC<ImageMenuProps> = ({ open, onClose, onInsertImage, not
       const { upload_url, key, headers } = await presignRes.json();
       const put = await fetch(upload_url, { method: 'PUT', headers: { 'Content-Type': file.type, ...(headers || {}) }, body: file });
       if (!put.ok) throw new Error("Erreur upload S3");
-      const registerRes = await fetch('/api/v2/files/register', {
-        method: 'POST', headers: { 'Content-Type': 'application/json', ...authHeader },
-        body: JSON.stringify({ key, file_name: file.name, file_type: file.type, file_size: file.size, scope: { note_ref: noteId }, visibility_mode: 'inherit_note' })
-      });
-      if (!registerRes.ok) throw new Error((await registerRes.json().catch(() => ({}))).error || 'Erreur register');
-      const { file: saved, signed_url, public_control_url } = await registerRes.json();
-      const renderUrl = signed_url || public_control_url || `/api/v1/public/file/${saved.id}${saved.etag ? `?v=${saved.etag}` : ''}`;
-      onInsertImage(renderUrl);
-      setFile(null);
-      onClose();
+
+      let attempt = 1;
+      const maxAttempts = 10;
+      // eslint-disable-next-line no-constant-condition
+      while (true) {
+        const candidateName = buildFileNameVariant(file.name, attempt);
+        const registerRes = await fetch('/api/v2/files/register', {
+          method: 'POST', headers: { 'Content-Type': 'application/json', ...authHeader },
+          body: JSON.stringify({ key, file_name: candidateName, file_type: file.type, file_size: file.size, scope: { note_ref: noteId }, visibility_mode: 'inherit_note' })
+        });
+        if (registerRes.ok) {
+          const { file: saved, signed_url, public_control_url } = await registerRes.json();
+          // Use the canonical AWS URL from the files table instead of signed_url
+          // The canonical URL is already stored in files.url and is the clean URL we want
+          const renderUrl = saved.url || `/api/v1/public/file/${saved.id}${saved.etag ? `?v=${saved.etag}` : ''}`;
+          onInsertImage(renderUrl);
+          setFile(null);
+          onClose();
+          break;
+        }
+        const errJson = await registerRes.json().catch(() => ({} as any));
+        const message: string = errJson?.error || 'Erreur register';
+        const isDuplicate = /duplicate key value|files_user_id_filename_key/i.test(message);
+        if (isDuplicate && attempt < maxAttempts) {
+          attempt += 1;
+          continue;
+        }
+        throw new Error(message);
+      }
     } catch (e: any) {
       if (process.env.NODE_ENV !== 'production') logger.error('Upload error', e);
       setError(e?.message || 'Erreur upload');

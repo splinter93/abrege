@@ -75,11 +75,29 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
   const isReadonly = readonly || previewMode;
 
   const handleHeaderChange = React.useCallback(async (url: string | null) => {
-    setHeaderImageUrl(url);
+    const normalize = (u: string | null): string | null => {
+      if (!u) return null;
+      try {
+        if (u.startsWith('/')) {
+          // Root-relative path → make absolute for API validation
+          const abs = new URL(u, window.location.origin).toString();
+          return abs;
+        }
+        // If it's already absolute, keep as is
+        // Will throw if invalid
+        // eslint-disable-next-line no-new
+        new URL(u);
+        return u;
+      } catch {
+        return u;
+      }
+    };
+    const normalized = normalize(url);
+    setHeaderImageUrl(normalized);
     try {
       const api = OptimizedApi.getInstance();
-      updateNote(noteId, { header_image: url } as any);
-      await api.updateNoteAppearance(noteId, { header_image: url ?? null });
+      updateNote(noteId, { header_image: normalized } as any);
+      await api.updateNoteAppearance(noteId, { header_image: normalized ?? null });
     } catch {}
   }, [noteId, updateNote]);
 
@@ -371,7 +389,25 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
               <>
                 <div className="editor-add-header-image-row editor-full-width" style={{ display: 'flex', justifyContent: 'center' }}>
                   <div className="editor-container-width" style={{ maxWidth: 'var(--editor-content-width)', width: 'var(--editor-content-width)' }}>
-                    <div className="editor-add-header-image">
+                    <div
+                      className="editor-add-header-image"
+                      onDragOver={(e) => {
+                        const items = Array.from(e.dataTransfer?.items || []);
+                        if (items.some(it => it.kind === 'file')) e.preventDefault();
+                      }}
+                      onDrop={async (e) => {
+                        try {
+                          if (!e.dataTransfer) return;
+                          const files = Array.from(e.dataTransfer.files || []);
+                          if (!files.length) return;
+                          const image = files.find(f => /^image\/(jpeg|png|webp|gif)$/.test(f.type));
+                          if (!image) return;
+                          e.preventDefault();
+                          const { publicUrl } = await uploadImageForNote(image, noteId);
+                          handleHeaderChange(publicUrl);
+                        } catch {}
+                      }}
+                    >
                       <button
                         className="editor-add-header-image-btn"
                         onClick={() => { setImageMenuTarget('header'); setImageMenuOpen(true); }}

@@ -4,6 +4,7 @@ import { LuMoon } from 'react-icons/lu';
 import { FiImage, FiDroplet } from 'react-icons/fi';
 import Tooltip from './Tooltip';
 import ImageMenu from './ImageMenu';
+import { uploadImageForNote } from '@/utils/fileUpload';
 
 interface EditorHeaderImageProps {
   headerImageUrl: string | null;
@@ -64,6 +65,7 @@ const EditorHeaderImage: React.FC<EditorHeaderImageProps> = ({
   const startY = useRef(0);
   const startOffsetY = useRef(headerImageOffset);
   const currentOffsetRef = useRef(headerImageOffset);
+  const [isDragActive, setIsDragActive] = useState(false);
 
   // Synchroniser avec headerImageOffset (seulement si on ne vient pas de drag)
   React.useEffect(() => {
@@ -117,6 +119,38 @@ const EditorHeaderImage: React.FC<EditorHeaderImageProps> = ({
     }, 500);
   };
 
+  // DnD handlers for replacing header image
+  const hasImageData = (e: React.DragEvent | DragEvent) => {
+    const items = Array.from(e.dataTransfer?.items || []);
+    return items.some(it => it.kind === 'file');
+  };
+  const onDragOver = (e: React.DragEvent) => {
+    if (!hasImageData(e)) return;
+    e.preventDefault();
+    setIsDragActive(true);
+  };
+  const onDragEnter = (e: React.DragEvent) => {
+    if (!hasImageData(e)) return;
+    e.preventDefault();
+    setIsDragActive(true);
+  };
+  const onDragLeave = () => {
+    setIsDragActive(false);
+  };
+  const onDrop = async (e: React.DragEvent) => {
+    try {
+      setIsDragActive(false);
+      if (!e.dataTransfer) return;
+      const files = Array.from(e.dataTransfer.files || []);
+      if (!files.length) return;
+      const image = files.find(f => /^image\/(jpeg|png|webp|gif)$/.test(f.type));
+      if (!image) return;
+      e.preventDefault();
+      const { publicUrl } = await uploadImageForNote(image, noteId);
+      onHeaderChange(publicUrl);
+    } catch {}
+  };
+
   const headerBtnStyle: React.CSSProperties = {
     background: 'none',
     border: 'none',
@@ -137,7 +171,18 @@ const EditorHeaderImage: React.FC<EditorHeaderImageProps> = ({
   if (!headerImageUrl) return null;
 
   return (
-    <div className="editor-header-image">
+    <div
+      className={`editor-header-image${isDragActive ? ' drag-active' : ''}`}
+      onDragOver={onDragOver}
+      onDragEnter={onDragEnter}
+      onDragLeave={onDragLeave}
+      onDrop={onDrop}
+    >
+      {isDragActive && (
+        <div className="editor-header-image-drop-hint">
+          <div className="hint">Déposez votre image ici</div>
+        </div>
+      )}
       <img
         src={headerImageUrl}
         alt="Header"

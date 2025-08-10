@@ -41,16 +41,53 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     return NextResponse.json({ error: 'Fichier non trouvé' }, { status: 404 });
   }
 
+  // Debug: log all cookies to see what's available
+  const allCookies = request.cookies.getAll();
+  console.log('🔍 [DEBUG] All cookies:', allCookies.map(c => ({ name: c.name, value: c.value?.substring(0, 20) + '...' })));
+
   // Optional auth: if requester is the owner, allow access regardless of publish state
   let requesterId: string | null = null;
+  let token: string | null = null;
+
   const authHeader = request.headers.get('Authorization');
   if (authHeader?.startsWith('Bearer ')) {
-    const token = authHeader.substring(7);
-    const { data: { user } } = await supabaseAuth.auth.getUser(token);
-    requesterId = user?.id || null;
+    token = authHeader.substring(7);
+    console.log('🔍 [DEBUG] Using Authorization header token');
+  }
+  
+  // Fallback to Supabase access token cookie for browser image requests
+  if (!token) {
+    // Try multiple possible cookie names
+    const cookieNames = ['sb-access-token', 'supabase-auth-token', 'sb-3223651c-5580-4471-affb-b3f4456bd729-auth-token'];
+    for (const name of cookieNames) {
+      const cookie = request.cookies.get(name);
+      if (cookie?.value) {
+        token = cookie.value;
+        console.log('🔍 [DEBUG] Using cookie token from:', name);
+        break;
+      }
+    }
+  }
+
+  if (token) {
+    try {
+      const { data: { user }, error } = await supabaseAuth.auth.getUser(token);
+      if (error) {
+        console.log('🔍 [DEBUG] Auth error:', error.message);
+      } else if (user) {
+        requesterId = user.id;
+        console.log('🔍 [DEBUG] Authenticated user:', user.id);
+      }
+    } catch (err) {
+      console.log('🔍 [DEBUG] Auth exception:', err);
+    }
+  } else {
+    console.log('🔍 [DEBUG] No token found');
   }
 
   const isOwner = requesterId && (requesterId === file.user_id || requesterId === file.owner_id);
+  console.log('🔍 [DEBUG] File owner:', file.user_id, 'Requester:', requesterId, 'IsOwner:', isOwner);
+  
   let isPublic = false;
 
   if (!isOwner) {
@@ -63,13 +100,17 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
         .eq('id', file.note_id)
         .maybeSingle();
       isPublic = !!note?.ispublished;
+      console.log('🔍 [DEBUG] Note published:', note?.ispublished, 'IsPublic:', isPublic);
     }
   }
 
   if (!isOwner && !isPublic) {
+    console.log('🔍 [DEBUG] Access denied - not owner and not public');
     return NextResponse.json({ error: 'Accès interdit' }, { status: 403 });
   }
 
+  console.log('🔍 [DEBUG] Access granted, redirecting to S3');
+  
   // Short-lived signed GET from S3
   const signed = await s3Service.generateGetUrl(file.s3_key, 120);
   const url = new URL(signed);
