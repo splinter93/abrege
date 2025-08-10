@@ -25,7 +25,10 @@ import TableCell from '@tiptap/extension-table-cell';
 import { Markdown } from 'tiptap-markdown';
 import Link from '@tiptap/extension-link';
 import CustomImage from '@/extensions/CustomImage';
+import CodeBlockWithCopy from '@/extensions/CodeBlockWithCopy';
+import lowlight from '@/utils/lowlightInstance';
 import EditorSlashMenu, { type EditorSlashMenuHandle } from '@/components/EditorSlashMenu';
+import TableControls from '@/components/editor/TableControls';
 import { useRouter } from 'next/navigation';
 import { FiEye, FiX, FiImage } from 'react-icons/fi';
 import { OptimizedApi } from '@/services/optimizedApi';
@@ -115,7 +118,7 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
   const editor = useEditor({
     editable: !isReadonly,
     extensions: [
-      StarterKit,
+      StarterKit.configure({ codeBlock: false }),
       Underline,
       TextAlign.configure({ types: ['heading', 'paragraph'] }),
       TaskList,
@@ -124,6 +127,8 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
       TableRow,
       TableHeader,
       TableCell,
+      // Code block with copy button and lowlight highlighting
+      ((CodeBlockWithCopy as any).configure?.({ lowlight }) ?? (CodeBlockWithCopy as any)),
       Link.configure({ openOnClick: false, autolink: true, linkOnPaste: true }),
       // Custom image node view to hook our image menu
       (CustomImage as any).configure?.({}) ?? (CustomImage as any),
@@ -448,6 +453,8 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
             {!isReadonly && (
               <div className="tiptap-editor-container" ref={editorContainerRef as any}>
                 <TiptapEditorContent editor={editor} />
+                {/* Table controls */}
+                <TableControls editor={editor as any} containerRef={editorContainerRef as any} />
                 {/* Slash commands menu */}
                 <EditorSlashMenu
                   ref={slashMenuRef}
@@ -476,7 +483,7 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
               </div>
             )}
             {isReadonly && (
-              <div className="markdown" dangerouslySetInnerHTML={{ __html: html }} />
+              <div className="markdown-body" dangerouslySetInnerHTML={{ __html: html }} />
             )}
           </EditorContent>
         )}

@@ -1,25 +1,20 @@
 /*
   DESIGN SYSTEM - DARK & LIGHT MODE CENTRALIZED
   --------------------------------------------------
-  Référence couleurs dark mode (éditeur) :
-    - Fond éditeur : #0b0b10 (modale), var(--surface-1) (#141414)
-    - Header éditeur : #141416
-    - Border header éditeur : #2a2a2c
-    - Texte principal : #f5f5f5
-    - Accent : #e55a2c (orange)
+  Référence couleurs dark mode (éditeur) :
+    - Fond éditeur : #0b0b10 (modale), var(--surface-1) (#141414)
+    - Header éditeur : #141416
+    - Border header éditeur : #2a2a2c
+    - Texte principal : #f5f5f5
+    - Accent : #e55a2c (orange)
+  
+  NOTE : Toutes les variables de typographie sont maintenant dans typography.css
 */
-
-
 
 :root {
   /* LIGHT THEME (par défaut) */
-  /* Typography */
-  --font-main: 'Noto Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-sans: 'Noto Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-serif: 'Ibarra Real Nova', serif;
-  --font-mono: 'JetBrains Mono', monospace;
-
-  /* Font Sizes */
+  
+  /* Font Sizes - Référence uniquement */
   --font-size-xs: 0.75rem;
   --font-size-sm: 0.875rem;
   --font-size-base: 1rem;

@@ -1,0 +1,44 @@
+.table-controls {
+  position: absolute;
+  z-index: 25;
+  display: inline-flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px;
+  border-radius: 10px;
+  background: rgba(20, 20, 24, 0.75);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+}
+
+.table-controls-row {
+  display: inline-flex;
+  gap: 6px;
+}
+
+.table-controls-btn {
+  appearance: none;
+  background: var(--surface-2);
+  color: var(--text-2);
+  border: 1px solid var(--border-subtle);
+  padding: 6px 8px;
+  border-radius: 8px;
+  font-size: var(--ui-font-size-xs);
+  line-height: var(--ui-line-height-tight);
+  cursor: pointer;
+  transition: background 0.18s, color 0.18s, border-color 0.18s, transform 0.12s;
+}
+
+.table-controls-btn:hover {
+  background: var(--surface-hover);
+  border-color: var(--border-hover);
+  color: var(--text-1);
+  transform: translateY(-1px);
+}
+
+.table-controls-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+} 

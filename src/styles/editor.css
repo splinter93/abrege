@@ -1,14 +1,16 @@
 /* ==========================================================================
    STYLES ÉDITEUR - VERSION ÉPURÉE
-   ========================================================================== */
+   ==========================================================================
+   Tous les styles de typographie sont maintenant centralisés dans typography.css
+   Ce fichier contient uniquement les utilitaires de layout et les styles spécifiques
+*/
 
-/* Styles généraux de l'éditeur - Les styles spécifiques aux composants 
-   ont été migrés vers leurs fichiers CSS dédiés */
+/* ==========================================================================
+   STYLES DE BASE DE L'ÉDITEUR - LAYOUT SEULE
+   ========================================================================== */
 
 /* Styles de base pour l'éditeur */
 .editor-base {
-  font-family: var(--editor-font-family);
-  color: var(--editor-text-color);
   background: var(--surface-1);
 }
 
@@ -105,22 +107,22 @@
 }
 
 .editor-margin-top-large {
-  margin-top: 2rem;
+  margin-top: 3rem;
 }
 
 .editor-margin-bottom-large {
-  margin-bottom: 2rem;
+  margin-bottom: 3rem;
 }
 
 .editor-margin-left-small {
-  margin-left: 0.25rem;
+  margin-left: 0.5rem;
 }
 
 .editor-margin-right-medium {
-  margin-right: 1.125rem;
+  margin-right: 1rem;
 }
 
-/* Typography utilities */
+/* Text alignment utilities */
 .editor-text-center {
   text-align: center;
 }
@@ -133,6 +135,7 @@
   text-align: right;
 }
 
+/* Font weight utilities */
 .editor-font-bold {
   font-weight: 700;
 }
@@ -141,11 +144,11 @@
   font-weight: 500;
 }
 
+/* Color utilities */
 .editor-text-white {
-  color: #ffffff;
+  color: var(--text-1);
 }
 
-/* Background utilities */
 .editor-bg-surface-1 {
   background: var(--surface-1);
 }
@@ -194,6 +197,3 @@
 .editor-z-2000 {
   z-index: 2000;
 }
-
-/* Variables de compatibilité pour les composants existants */
-/* Ces variables sont maintenant définies dans typography.css et design-system.css */

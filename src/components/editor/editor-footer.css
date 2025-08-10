@@ -12,8 +12,8 @@
   background: #141416;
   border-top: 0.5px solid #2a2a2c;
   color: var(--text-3);
-  font-size: 12px;
-  font-family: var(--font-main);
+  font-size: var(--ui-font-size-xs);
+  font-family: var(--editor-font-family);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -52,13 +52,13 @@
   background: #141416;
   border-top: 1px solid var(--border-subtle);
   color: var(--text-3);
-  font-size: 14px;
+  font-size: var(--ui-font-size-sm);
 }
 
 /* Classes utilitaires pour compatibilité */
 .editor-time {
   color: var(--text-3);
-  font-size: 14px;
+  font-size: var(--ui-font-size-sm);
 }
 
 .editor-stats {
@@ -66,7 +66,7 @@
   align-items: center;
   gap: 1rem;
   color: var(--text-2);
-  font-size: 14px;
+  font-size: var(--ui-font-size-sm);
 }
 
 .editor-stats span {
@@ -80,11 +80,11 @@
   gap: 1.2rem;
   align-items: center;
   color: var(--text-3);
-  font-size: 14px;
+  font-size: var(--ui-font-size-sm);
 }
 
 .editor-footer-time {
   color: var(--text-3);
-  font-size: 14px;
+  font-size: var(--ui-font-size-sm);
   margin-left: 1.2rem;
 } 

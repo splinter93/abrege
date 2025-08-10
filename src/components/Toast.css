@@ -43,7 +43,7 @@
 .toast-message {
   flex-grow: 1;
   color: var(--text-primary);
-  font-size: 14px;
+  font-size: var(--ui-font-size-sm);
   line-height: 1.5;
 }
 

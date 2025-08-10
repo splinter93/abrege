@@ -67,51 +67,91 @@
   
   /* Système et monospace */
   --font-system: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
-  --font-monospace: 'JetBrains Mono', 'Fira Code', 'Consolas', 'Monaco', monospace;
+  --font-monospace: 'JetBrains Mono', 'Noto Sans Mono', 'Fira Code', 'SFMono-Regular', 'Menlo', 'Consolas', 'Monaco', 'Liberation Mono', monospace;
 
   /* ==========================================================================
-     TAILLES HARMONISÉES
+     TAILLES HARMONISÉES - PREMIUM EDITOR
      ========================================================================== */
-  --editor-title-size: 2.25rem;      /* 36px */
-  --editor-body-size: 1.125rem;      /* 18px */
-  --editor-body-size-mobile: 1rem;   /* Ajouté pour editor-content.css */
-  --editor-h1-size: 2.25rem;         /* 36px */
-  --editor-h2-size: 1.75rem;         /* 28px */
-  --editor-h3-size: 1.375rem;        /* 22px */
-  --editor-h4-size: 1.125rem;        /* 18px */
-  --editor-h5-size: 1rem;            /* 16px */
-  --editor-h6-size: 0.875rem;        /* 14px */
+  --editor-title-size: 2.125rem;      /* 34px - refined from 36px */
+  --editor-body-size: 1rem;           /* 16px - premium size, was 18px */
+  --editor-body-size-mobile: 0.9375rem; /* 15px - mobile optimized */
+  --editor-h1-size: 2rem;             /* 32px - refined from 36px */
+  --editor-h2-size: 1.5rem;           /* 24px - refined from 28px */
+  --editor-h3-size: 1.25rem;          /* 20px - refined from 22px */
+  --editor-h4-size: 1.0625rem;        /* 17px - refined from 18px */
+  --editor-h5-size: 0.9375rem;        /* 15px - refined from 16px */
+  --editor-h6-size: 0.8125rem;        /* 13px - refined from 14px */
   
-  /* === TAILLES SPÉCIALISÉES === */
-  --editor-small-size: 0.875rem;     /* 14px */
-  --editor-medium-size: 0.95rem;     /* 15px */
-  --editor-large-size: 1.1rem;       /* 18px */
-  --editor-xl-size: 1.2rem;          /* 19px */
-  --editor-xxl-size: 1.5rem;         /* 24px */
+  /* === TAILLES SPÉCIALISÉES - PREMIUM === */
+  --editor-small-size: 0.8125rem;     /* 13px - refined from 14px */
+  --editor-medium-size: 0.875rem;     /* 14px - refined from 15px */
+  --editor-large-size: 1.125rem;      /* 18px - corrected from 16px */
+  --editor-xl-size: 1.25rem;          /* 20px - corrected from 18px */
+  --editor-xxl-size: 1.5rem;          /* 24px - corrected from 22px */
 
   /* ==========================================================================
-     RESPONSIVE TAILLES
+     RESPONSIVE TAILLES - PREMIUM
      ========================================================================== */
-  --editor-title-size-mobile: 1.875rem;  /* 30px */
-  --editor-h1-size-mobile: 1.875rem;     /* 30px */
-  --editor-h2-size-mobile: 1.5rem;       /* 24px */
-  --editor-h3-size-mobile: 1.25rem;      /* 20px */
+  --editor-title-size-mobile: 1.75rem;   /* 28px - refined from 30px */
+  --editor-h1-size-mobile: 1.75rem;      /* 28px - refined from 30px */
+  --editor-h2-size-mobile: 1.375rem;     /* 22px - refined from 24px */
+  --editor-h3-size-mobile: 1.125rem;     /* 18px - refined from 20px */
 
   /* ==========================================================================
-     LARGEURS TYPOGRAPHIQUES
+     LARGEURS TYPOGRAPHIQUES - PREMIUM
      ========================================================================== */
-  --editor-content-width-normal: 750px;
-  --editor-content-width-wide: 1000px;
+  --editor-content-width-normal: 680px;   /* 680px - refined from 750px for better line length */
+  --editor-content-width-wide: 900px;     /* 900px - refined from 1000px */
   --editor-content-width: var(--editor-content-width-normal); /* Par défaut */
 
   /* ==========================================================================
-     PADDINGS ET ESPACEMENTS TYPOGRAPHIQUES
+     PADDINGS ET ESPACEMENTS TYPOGRAPHIQUES - PREMIUM
      ========================================================================== */
-  --editor-title-padding: 0 0 24px 0;
-  --editor-content-padding: 12px 0 120px 0;
-  --editor-title-line-height: 1.15;
-  --editor-title-letter-spacing: -0.02em;
-  --editor-title-min-height: 45px;
+  --editor-title-padding: 0 0 20px 0;    /* 20px - refined from 24px */
+  --editor-content-padding: 10px 0 100px 0; /* 10px - refined from 12px */
+  --editor-title-line-height: 1.2;        /* 1.2 - refined from 1.15 for better title spacing */
+  --editor-title-letter-spacing: -0.025em; /* -0.025em - refined from -0.02em */
+  --editor-title-min-height: 40px;        /* 40px - refined from 45px */
+  
+  /* ==========================================================================
+     LINE-HEIGHTS ET ESPACEMENTS - PREMIUM (Optimisé 2.0)
+     ========================================================================== */
+  --editor-line-height-base: 1.75;       /* Line-height aéré pour le confort de lecture */
+  --editor-line-height-tight: 1.3;        /* Line-height pour les titres, plus compact */
+  --editor-line-height-mobile: 1.7;       /* Line-height mobile, légèrement plus dense */
+  
+  /* Rythme vertical basé sur 'em' pour une mise à l'échelle parfaite */
+  --editor-paragraph-margin-bottom: 1.25em; /* Marge SOUS les paragraphes */
+  --editor-list-margin-vertical: 1.25em;    /* Marge verticale pour les listes */
+  --editor-list-item-margin-vertical: 0.35em; /* Marge entre les items de liste */
+  
+  --editor-heading-margin-top: 2em;       /* Marge AU-DESSUS des titres */
+  --editor-heading-margin-bottom: 1em;    /* Marge SOUS les titres */
+
+  /* ==========================================================================
+     VARIABLES UI UNIFIÉES - POUR TOUS LES COMPOSANTS
+     ========================================================================== */
+  /* Tailles de police pour composants UI - centralisées et harmonisées */
+  --ui-font-size-xs: 0.75rem;      /* 12px - pour les labels, badges, etc. */
+  --ui-font-size-sm: 0.875rem;     /* 14px - pour le texte secondaire */
+  --ui-font-size-md: 1rem;         /* 16px - pour le texte principal */
+  --ui-font-size-lg: 1.125rem;     /* 18px - pour les sous-titres */
+  --ui-font-size-xl: 1.25rem;      /* 20px - pour les titres de section */
+  --ui-font-size-2xl: 1.5rem;      /* 24px - pour les titres principaux */
+  --ui-font-size-3xl: 1.875rem;    /* 30px - pour les grands titres */
+  --ui-font-size-4xl: 2.25rem;     /* 36px - pour les titres de page */
+
+  /* Line-heights pour composants UI - optimisés pour l'interface */
+  --ui-line-height-tight: 1.25;    /* Pour les titres et labels */
+  --ui-line-height-normal: 1.5;    /* Pour le texte de base */
+  --ui-line-height-relaxed: 1.75;  /* Pour le texte long */
+
+  /* Espacements pour composants UI - système harmonisé */
+  --ui-spacing-xs: 0.25rem;        /* 4px - espacement minimal */
+  --ui-spacing-sm: 0.5rem;         /* 8px - espacement petit */
+  --ui-spacing-md: 1rem;           /* 16px - espacement moyen */
+  --ui-spacing-lg: 1.5rem;         /* 24px - espacement grand */
+  --ui-spacing-xl: 2rem;           /* 32px - espacement très grand */
 }
 
 /* ==========================================================================
@@ -284,6 +324,150 @@
 
 /* Standard paddings for content area */
 .noteLayout .noteLayout-content .editor-content { padding: 2px 0 72px 0; }
+
+/* ==========================================================================
+   STYLES PAGE PUBLIQUE
+   ==========================================================================
+   Utilise les mêmes variables et logiques que l'éditeur
+*/
+
+/* ==========================================================================
+   TYPOGRAPHIE RESPONSIVE DE L'ÉDITEUR - CENTRALISÉE
+   ==========================================================================
+   Styles migrés depuis editor-content.css pour centralisation complète
+*/
+
+/* Styles de base pour le contenu de l'éditeur */
+.editor-content {
+  font-family: var(--editor-font-family);
+  font-size: var(--editor-body-size);
+  line-height: var(--editor-line-height-base);
+  color: var(--editor-text-color);
+}
+
+/* Styles pour les titres dans l'éditeur */
+.editor-content h1 {
+  font-size: var(--editor-h1-size);
+  line-height: var(--editor-line-height-tight);
+  margin: var(--editor-heading-margin-top) 0 var(--editor-heading-margin-bottom) 0;
+  font-weight: 700;
+  font-family: var(--editor-font-family);
+}
+
+.editor-content h2 {
+  font-size: var(--editor-h2-size);
+  line-height: var(--editor-line-height-tight);
+  margin: var(--editor-heading-margin-top) 0 var(--editor-heading-margin-bottom) 0;
+  font-weight: 600;
+  font-family: var(--editor-font-family);
+}
+
+.editor-content h3 {
+  font-size: var(--editor-h3-size);
+  line-height: var(--editor-line-height-tight);
+  margin: var(--editor-heading-margin-top) 0 var(--editor-heading-margin-bottom) 0;
+  font-weight: 600;
+  font-family: var(--editor-font-family);
+}
+
+/* Styles pour les paragraphes dans l'éditeur */
+.editor-content p {
+  margin: 0 0 var(--editor-paragraph-margin-bottom) 0;
+  line-height: var(--editor-line-height-base);
+  font-family: var(--editor-font-family);
+}
+
+/* Styles pour les listes dans l'éditeur */
+.editor-content ul,
+.editor-content ol {
+  margin: var(--editor-list-margin-vertical) 0;
+  padding-left: 1.4em;
+  font-family: var(--editor-font-family);
+}
+
+.editor-content li {
+  margin: var(--editor-list-item-margin-vertical) 0;
+  line-height: var(--editor-line-height-base);
+  font-family: var(--editor-font-family);
+}
+
+/* ==========================================================================
+   RESPONSIVE - PREMIUM TYPOGRAPHY MOBILE
+   ========================================================================== */
+
+@media (max-width: 768px) {
+  .editor-content {
+    font-size: var(--editor-body-size-mobile);
+    line-height: var(--editor-line-height-mobile);
+  }
+  
+  .editor-content h1 { 
+    font-size: var(--editor-h1-size-mobile); 
+    line-height: var(--editor-line-height-tight);
+    margin: var(--editor-heading-margin-top) 0 var(--editor-heading-margin-bottom) 0;
+  }
+  
+  .editor-content h2 { 
+    font-size: var(--editor-h2-size-mobile); 
+    line-height: var(--editor-line-height-tight);
+    margin: var(--editor-heading-margin-top) 0 var(--editor-heading-margin-bottom) 0;
+  }
+  
+  .editor-content h3 { 
+    font-size: var(--editor-h3-size-mobile); 
+    line-height: var(--editor-line-height-tight);
+    margin: var(--editor-heading-margin-top) 0 var(--editor-heading-margin-bottom) 0;
+  }
+  
+  /* Premium mobile spacing */
+  .editor-content p {
+    margin: 0 0 1em 0;
+    line-height: var(--editor-line-height-mobile);
+  }
+  
+  .editor-content ul,
+  .editor-content ol {
+    margin: 1em 0;
+    padding-left: 1.2em;
+  }
+  
+  .editor-content li {
+    margin: 0.4em 0;
+    line-height: var(--editor-line-height-mobile);
+  }
+}
+
+/* ==========================================================================
+   PROSEMIRROR TYPOGRAPHY - CENTRALISÉE
+   ========================================================================== */
+
+/* Styles de base pour ProseMirror */
+.ProseMirror.editor-content {
+  font-family: var(--editor-font-family);
+  font-size: var(--editor-body-size);
+  line-height: var(--editor-line-height-base);
+  color: var(--editor-text-color);
+}
+
+/* Suppression de la marge du premier paragraphe */
+.ProseMirror p:first-child {
+  margin-top: 0;
+}
+
+/* ==========================================================================
+   PLACEHOLDER ET ÉTATS VIDES - CENTRALISÉS
+   ========================================================================== */
+
+.editor-content .ProseMirror p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  color: var(--text-3);
+  pointer-events: none;
+  height: 0;
+  font-family: var(--editor-font-family);
+  font-size: var(--editor-body-size);
+  line-height: var(--editor-line-height-base);
+}
 
 /* ==========================================================================
    STYLES PAGE PUBLIQUE

@@ -5,6 +5,7 @@ const CodeBlockWithCopy = CodeBlockLowlight.extend({
     return ({ node }) => {
       const container = document.createElement('div');
       container.style.position = 'relative';
+      container.className = 'code-block-container';
 
       const pre = document.createElement('pre');
       const code = document.createElement('code');

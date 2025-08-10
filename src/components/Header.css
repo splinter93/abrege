@@ -32,7 +32,7 @@
   display: flex;
   align-items: center;
   gap: 0.7rem;
-  font-size: 1.5rem;
+  font-size: var(--ui-font-size-2xl);
   font-weight: 600;
   color: var(--text-primary);
   cursor: pointer;
@@ -57,7 +57,7 @@
   border: none;
   color: #b3a9a0;
   font-weight: 400;
-  font-size: 1.05rem;
+  font-size: var(--ui-font-size-lg);
   cursor: pointer;
   margin-right: 1.5rem;
   padding: 0;

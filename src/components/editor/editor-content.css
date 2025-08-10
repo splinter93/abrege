@@ -1,6 +1,8 @@
 /* ==========================================================================
    STYLES DU CONTENU DE L'ÉDITEUR - STRUCTURE SEULE
-   ========================================================================== */
+   ==========================================================================
+   Tous les styles de typographie sont maintenant centralisés dans typography.css
+*/
 
 .editor-content-wrapper {
   width: 100%;
@@ -40,41 +42,15 @@
   overflow: visible;
 }
 
-
 /* ==========================================================================
-   PLACEHOLDER ET ÉTATS VIDES
-   ========================================================================== */
-
-.editor-content .ProseMirror p.is-editor-empty:first-child::before {
-  content: attr(data-placeholder);
-  float: left;
-  color: var(--text-3);
-  pointer-events: none;
-  height: 0;
-}
-
-/* ==========================================================================
-   PROSEMIRROR SPÉCIFIQUE
+   PROSEMIRROR SPÉCIFIQUE - LAYOUT SEULE
    ========================================================================== */
 
 .ProseMirror.editor-content {
   outline: none;
 }
 
-.ProseMirror p:first-child {
-  margin-top: 0;
-}
-
 /* ==========================================================================
-   RESPONSIVE
+   PLACEHOLDER ET ÉTATS VIDES - RÉFÉRENCE TYPOGRAPHY.CSS
    ========================================================================== */
-
-@media (max-width: 768px) {
-  .editor-content {
-    font-size: var(--editor-body-size-mobile);
-  }
-  
-  .editor-content h1 { font-size: var(--editor-h1-size-mobile); }
-  .editor-content h2 { font-size: var(--editor-h2-size-mobile); }
-  .editor-content h3 { font-size: var(--editor-h3-size-mobile); }
-} 
+/* Les styles de placeholder sont maintenant dans typography.css */ 
