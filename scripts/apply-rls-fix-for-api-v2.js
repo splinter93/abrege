@@ -1,5 +1,8 @@
 #!/usr/bin/env node
 
+// Charger les variables d'environnement depuis .env.local
+require('dotenv').config({ path: '.env.local' });
+
 const { createClient } = require('@supabase/supabase-js');
 
 // Configuration Supabase
