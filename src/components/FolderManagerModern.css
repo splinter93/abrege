@@ -7,7 +7,7 @@
 */
 
 .folder-manager-wrapper {
-  padding: 0 2rem 2rem 2rem;
+  padding: 0 var(--spacing-xl) var(--spacing-xl) var(--spacing-xl);
   flex-grow: 1;
 }
 
@@ -21,7 +21,7 @@
 /* Content wrapper */
 .folder-manager-content {
   width: 100%;
-  padding: 0; /* Géré par le wrapper */
+  padding: 0;
   font-family: var(--font-main);
   background: transparent;
 }
@@ -31,7 +31,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1.5rem 0 0 0;
+  padding: var(--spacing-lg) 0 0 0;
   background: transparent;
   border-bottom: none;
 }
@@ -64,33 +64,33 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 4px 8px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 6px;
+  padding: var(--spacing-xs) var(--spacing-md);
+  background: var(--glass-bg-light);
+  border: 1px solid var(--glass-border-light);
+  border-radius: var(--radius-sm);
   color: var(--text-2);
   font-size: 0.9rem;
   cursor: pointer;
-  transition: background var(--transition-speed), border-color var(--transition-speed), color var(--transition-speed);
+  transition: var(--transition-normal);
 }
 
 .breadcrumb-item:hover {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.3);
+  background: var(--glass-bg-medium);
+  border-color: var(--glass-border-heavy);
   color: var(--text-1);
 }
 
 .view-controls {
   display: flex;
   align-items: center;
-  gap: 0.25rem;
+  gap: var(--spacing-xs);
 }
 
 /* Toolbar */
 .folder-toolbar {
   display: flex;
   align-items: center;
-  gap: 0.25rem;
+  gap: var(--spacing-xs);
 }
 
 .fm-control-btn {
@@ -99,17 +99,17 @@
   justify-content: center;
   width: 36px;
   height: 36px;
-  border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--glass-border-light);
   background: transparent;
   color: var(--text-2);
   cursor: pointer;
-  transition: background var(--transition-speed), border-color var(--transition-speed), color var(--transition-speed);
+  transition: var(--transition-normal);
 }
 
 .fm-control-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.3);
+  background: var(--glass-bg-medium);
+  border-color: var(--glass-border-heavy);
   color: var(--text-1);
 }
 
@@ -128,18 +128,18 @@
 .grid-view {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: 2rem; /* Espacement augmenté */
-  padding: 2rem 0;
+  gap: var(--spacing-xl);
+  padding: var(--spacing-xl) 0;
 }
 
 /* Grid items */
 .fm-grid-item {
   width: 100%;
   height: 160px;
-  padding: 1rem;
+  padding: var(--spacing-md);
   border-radius: 0;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: var(--transition-normal);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -151,8 +151,8 @@
 }
 
 .fm-grid-item:hover {
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 12px;
+  background: var(--glass-bg-light);
+  border-radius: var(--radius-lg);
   padding: 0.75rem;
 }
 
@@ -160,7 +160,7 @@
   width: 64px;
   height: 64px;
   color: var(--text-2);
-  transition: color 0.2s ease;
+  transition: color var(--transition-normal);
 }
 
 .fm-grid-item:hover svg {
@@ -180,7 +180,7 @@
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
-  transition: color 0.2s ease;
+  transition: color var(--transition-normal);
 }
 
 .fm-grid-item:hover .fm-item-name {
@@ -195,23 +195,23 @@
   color: var(--text-1);
   text-align: center;
   background: transparent;
-  border: 1px dashed rgba(255, 255, 255, 0.2);
+  border: 1px dashed var(--glass-border-medium);
   outline: none;
-  width: calc(100% - 1rem);
-  padding: 4px 6px;
-  border-radius: 6px;
+  width: calc(100% - var(--spacing-md));
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--radius-sm);
 }
 
 .fm-rename-input:focus {
   border-color: var(--accent-primary);
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--glass-bg-light);
 }
 
 /* Drag states - CLEAN */
 .fm-grid-item.drag-over {
-  background: rgba(255, 255, 255, 0.12);
+  background: var(--glass-bg-heavy);
   border: 2px dashed var(--accent-primary);
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
 }
 
 /* Item being dragged */
@@ -222,30 +222,30 @@
 
 /* Selection states - CLEAN */
 .fm-grid-item.selected {
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--glass-bg-light);
   border: 2px solid var(--accent-primary);
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
 }
 
 /* Responsive */
 @media (max-width: 768px) {
   .folder-manager-wrapper {
-    padding: 0 1rem 1rem 1rem;
+    padding: 0 var(--spacing-md) var(--spacing-md) var(--spacing-md);
   }
   .folder-manager-content { padding: 0; }
   .classeur-header-title { font-size: 1.1rem; }
   .classeur-name, .classeur-icon { font-size: 1.1rem; }
-  .grid-view { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 1rem; }
+  .grid-view { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: var(--spacing-md); }
   .fm-grid-item { height: 140px; }
   
   .folder-manager-separator {
-    margin: 0 0 1rem 0;
+    margin: 0 0 var(--spacing-md) 0;
   }
 }
 
 @media (max-width: 480px) {
   .folder-manager-wrapper {
-    padding: 0 0.5rem 0.5rem 0.5rem;
+    padding: 0 var(--spacing-sm) var(--spacing-sm) var(--spacing-sm);
   }
   .grid-view { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 0.75rem; }
   .fm-grid-item { height: 120px; }
@@ -265,14 +265,14 @@
   align-items: center;
   justify-content: center;
   min-height: 300px;
-  gap: 1rem;
+  gap: var(--spacing-md);
   text-align: center;
   color: var(--text-2);
   background-color: transparent;
-  border: 1px dashed rgba(255, 255, 255, 0.2);
-  border-radius: var(--border-radius-lg);
-  margin-top: 1.5rem;
-  padding: 2rem;
+  border: 1px dashed var(--glass-border-medium);
+  border-radius: var(--radius-lg);
+  margin-top: var(--spacing-lg);
+  padding: var(--spacing-xl);
 }
 
 .folder-loading-spinner {
@@ -299,7 +299,7 @@
 .folder-empty-subtitle {
   color: var(--text-2);
   font-size: 0.95rem;
-  max-width: 300px; /* Largeur ajustée */
+  max-width: 300px;
 }
 
 @keyframes spin {

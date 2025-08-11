@@ -8,15 +8,14 @@ body, .dossiers-page-wrapper {
 }
 
 body {
-  overflow-x: hidden; /* Prévenir tout scroll horizontal à la racine */
+  overflow-x: hidden;
 }
 
 .dossiers-page-wrapper {
   display: flex;
   height: 100vh;
   width: 100vw;
-  /* background-color: var(--surface-0); */
-  overflow: hidden; /* Empêche le scroll sur le conteneur principal */
+  overflow: hidden;
 }
 
 .dossiers-header-fixed {
@@ -24,39 +23,38 @@ body {
   top: 0;
   left: 0;
   right: 0;
-  height: 60px; /* Hauteur fixe pour le header */
+  height: 60px;
   background-color: transparent;
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid var(--glass-border-light);
   display: flex;
   align-items: center;
-  padding: 0 24px;
+  padding: 0 var(--spacing-xl);
   z-index: 1000;
 }
 
 .dossiers-sidebar-fixed {
   position: fixed;
-  top: 60px; /* Sous le header */
+  top: 60px;
   left: 0;
   bottom: 0;
   width: 260px;
   background-color: transparent;
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
-  border-right: 1px solid rgba(255, 255, 255, 0.1);
-  padding: 24px;
+  border-right: 1px solid var(--glass-border-light);
+  padding: var(--spacing-xl);
   box-sizing: border-box;
   z-index: 999;
 }
 
 .dossiers-content-area {
-  margin-left: 260px; /* Espace pour la sidebar */
-  margin-top: 60px; /* Espace pour le header */
+  margin-left: 260px;
+  margin-top: 60px;
   flex-grow: 1;
-  /* padding: 2rem; */ /* Le padding sera géré par les enfants */
-  overflow-y: auto; /* Permet le scroll uniquement sur la zone de contenu */
-  -webkit-overflow-scrolling: touch; /* Scroll fluide sur iOS */
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   display: flex;
   flex-direction: column;
   background: transparent;
@@ -84,14 +82,14 @@ body {
     height: auto;
     border-right: none;
     border-bottom: 1px solid var(--border);
-    top: 60px; /* Attaché sous le header */
-    z-index: 998; /* Juste en dessous du header */
-    padding: 1rem;
+    top: 60px;
+    z-index: 998;
+    padding: var(--spacing-md);
   }
 
   .dossiers-content-area {
     margin-left: 0;
-    margin-top: 0; /* Plus de marge de 60px car la sidebar est dans le flux */
-    padding: 1rem;
+    margin-top: 0;
+    padding: var(--spacing-md);
   }
 } 
