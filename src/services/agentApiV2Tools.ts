@@ -567,21 +567,61 @@ export class AgentApiV2Tools {
     // Tool: Mettre à jour une note
     this.tools.set('update_note', {
       name: 'update_note',
-      description: 'Modifier une note existante. ATTENTION: Utiliser EXACTEMENT les noms de paramètres suivants: ref, source_title, markdown_content. Exemple: {"ref": "uuid-de-la-note", "source_title": "Nouveau titre"}',
+      description: 'Modifier une note existante. Tous les paramètres sont optionnels - seuls les champs fournis seront modifiés.',
       parameters: {
         type: 'object',
         properties: {
           ref: {
             type: 'string',
-            description: 'ID ou slug de la note à modifier (obligatoire) - utiliser EXACTEMENT ce nom'
+            description: 'ID ou slug de la note à modifier (obligatoire)'
           },
           source_title: {
             type: 'string',
-            description: 'Nouveau titre de la note (optionnel) - utiliser EXACTEMENT ce nom'
+            description: 'Nouveau titre de la note (optionnel)'
           },
           markdown_content: {
             type: 'string',
-            description: 'Nouveau contenu markdown (optionnel) - utiliser EXACTEMENT ce nom'
+            description: 'Nouveau contenu markdown (optionnel)'
+          },
+          description: {
+            type: 'string',
+            description: 'Nouvelle description de la note (optionnel)'
+          },
+          notebook_id: {
+            type: 'string',
+            description: 'Nouveau classeur parent (optionnel)'
+          },
+          folder_id: {
+            type: 'string',
+            description: 'Nouveau dossier parent (optionnel, null pour dossier racine)'
+          },
+          header_image: {
+            type: 'string',
+            description: 'Nouvelle image de header (URL ou chemin, optionnel, null pour supprimer)'
+          },
+          header_image_offset: {
+            type: 'number',
+            description: 'Nouveau décalage vertical de l\'image de header en pixels (optionnel)'
+          },
+          header_image_blur: {
+            type: 'number',
+            description: 'Nouveau niveau de flou de l\'image de header (0-100, optionnel)'
+          },
+          header_image_overlay: {
+            type: 'number',
+            description: 'Nouveau niveau d\'overlay sombre sur l\'image (0-100, optionnel)'
+          },
+          header_title_in_image: {
+            type: 'boolean',
+            description: 'Afficher le titre dans l\'image de header (optionnel)'
+          },
+          wide_mode: {
+            type: 'boolean',
+            description: 'Mode large pour l\'affichage de la note (optionnel)'
+          },
+          font_family: {
+            type: 'string',
+            description: 'Nouvelle famille de police (optionnel)'
           }
         },
         required: ['ref']
@@ -805,31 +845,29 @@ export class AgentApiV2Tools {
       }
     });
 
-    // Tool: Récupérer l'arborescence
-    this.tools.set('get_tree', {
-      name: 'get_tree',
-      description: 'Récupérer l\'arborescence d\'un classeur. ATTENTION: Utiliser EXACTEMENT le nom de paramètre suivant: notebook_id. Le notebook_id doit être un UUID valide au format xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx (36 caractères). Exemple: {"notebook_id": "d35d755e-42a4-4100-b796-9c614b2b13bd"}',
+    // Tool: Récupérer l'arborescence d'un classeur
+    this.tools.set('get_notebook_tree', {
+      name: 'get_notebook_tree',
+      description: 'Récupérer l\'arborescence complète d\'un classeur avec tous ses dossiers et notes.',
       parameters: {
         type: 'object',
         properties: {
           notebook_id: {
             type: 'string',
-            description: 'ID du classeur (obligatoire) - utiliser EXACTEMENT ce nom. Doit être un UUID valide au format xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx (36 caractères)'
+            description: 'ID ou slug du classeur (obligatoire) - utiliser EXACTEMENT ce nom'
           }
         },
         required: ['notebook_id']
       },
       execute: async (params, jwtToken, userId) => {
-        const context = { operation: 'get_tree', component: 'AgentApiV2Tools' };
+        const context = { operation: 'get_notebook_tree', component: 'AgentApiV2Tools' };
         try {
-          // ✅ CORRECTION: Supporter plusieurs alias (slug, notebook_slug, notebook)
-          const notebookId = params.notebook_id || params.slug || params.notebook_slug || params.notebook;
+          const notebookId = params.notebook_id;
           if (!notebookId) {
             return { success: false, error: 'notebook_id est requis' };
           }
           return await V2DatabaseUtils.getClasseurTree(notebookId, userId, context);
         } catch (error) {
-          // ✅ CORRECTION: Retourner l'erreur au lieu de planter
           const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
           return { 
             success: false, 
@@ -895,7 +933,9 @@ export class AgentApiV2Tools {
       execute: async (params, jwtToken, userId) => {
         const { ref, sectionId, content } = params;
         const context = { operation: 'add_content_to_section', component: 'AgentApiV2Tools' };
-        return await V2DatabaseUtils.addContentToSection(ref, sectionId, content, userId, context);
+        const res = await V2DatabaseUtils.addContentToSection(ref, sectionId, content, userId, context);
+        try { await clientPollingTrigger.triggerArticlesPolling('UPDATE'); } catch {}
+        return res;
       }
     });
 
@@ -920,7 +960,9 @@ export class AgentApiV2Tools {
       execute: async (params, jwtToken, userId) => {
         const { ref, sectionId } = params;
         const context = { operation: 'clear_section', component: 'AgentApiV2Tools' };
-        return await V2DatabaseUtils.clearSection(ref, sectionId, userId, context);
+        const res = await V2DatabaseUtils.clearSection(ref, sectionId, userId, context);
+        try { await clientPollingTrigger.triggerArticlesPolling('UPDATE'); } catch {}
+        return res;
       }
     });
 
@@ -945,7 +987,9 @@ export class AgentApiV2Tools {
       execute: async (params, jwtToken, userId) => {
         const { ref, sectionId } = params;
         const context = { operation: 'erase_section', component: 'AgentApiV2Tools' };
-        return await V2DatabaseUtils.eraseSection(ref, sectionId, userId, context);
+        const res = await V2DatabaseUtils.eraseSection(ref, sectionId, userId, context);
+        try { await clientPollingTrigger.triggerArticlesPolling('UPDATE'); } catch {}
+        return res;
       }
     });
 
@@ -1012,7 +1056,9 @@ export class AgentApiV2Tools {
       execute: async (params, jwtToken, userId) => {
         const { ref, ispublished } = params;
         const context = { operation: 'publish_note', component: 'AgentApiV2Tools' };
-        return await V2DatabaseUtils.publishNote(ref, ispublished, userId, context);
+        const res = await V2DatabaseUtils.publishNote(ref, ispublished, userId, context);
+        try { await clientPollingTrigger.triggerArticlesPolling('UPDATE'); } catch {}
+        return res;
       }
     });
 
@@ -1097,6 +1143,203 @@ export class AgentApiV2Tools {
         const { text, type } = params;
         const context = { operation: 'generate_slug', component: 'AgentApiV2Tools' };
         return await V2DatabaseUtils.generateSlug(text, type, userId, context);
+      }
+    });
+
+    // Tool: Récupérer le contenu d'une note
+    this.tools.set('get_note_content', {
+      name: 'get_note_content',
+      description: 'Récupérer le contenu complet d\'une note (titre, contenu markdown, métadonnées).',
+      parameters: {
+        type: 'object',
+        properties: {
+          ref: {
+            type: 'string',
+            description: 'ID ou slug de la note (obligatoire)'
+          }
+        },
+        required: ['ref']
+      },
+      execute: async (params, jwtToken, userId) => {
+        const { ref } = params;
+        const context = { operation: 'get_note_content', component: 'AgentApiV2Tools' };
+        return await V2DatabaseUtils.getNoteContent(ref, userId, context);
+      }
+    });
+
+    // Tool: Récupérer les métadonnées d'une note
+    this.tools.set('get_note_metadata', {
+      name: 'get_note_metadata',
+      description: 'Récupérer les métadonnées d\'une note (titre, dates, statistiques, etc.) sans le contenu.',
+      parameters: {
+        type: 'object',
+        properties: {
+          ref: {
+            type: 'string',
+            description: 'ID ou slug de la note (obligatoire)'
+          }
+        },
+        required: ['ref']
+      },
+      execute: async (params, jwtToken, userId) => {
+        const { ref } = params;
+        const context = { operation: 'get_note_metadata', component: 'AgentApiV2Tools' };
+        // Utiliser getNoteContent et extraire les métadonnées
+        const result = await V2DatabaseUtils.getNoteContent(ref, userId, context);
+        if (result.success && result.note) {
+          const { markdown_content, ...metadata } = result.note;
+          return { success: true, metadata };
+        }
+        return result;
+      }
+    });
+
+    // Tool: Récupérer les insights d'une note
+    this.tools.set('get_note_insights', {
+      name: 'get_note_insights',
+      description: 'Récupérer les insights et analyses d\'une note.',
+      parameters: {
+        type: 'object',
+        properties: {
+          ref: {
+            type: 'string',
+            description: 'ID ou slug de la note (obligatoire)'
+          }
+        },
+        required: ['ref']
+      },
+      execute: async (params, jwtToken, userId) => {
+        const { ref } = params;
+        const context = { operation: 'get_note_insights', component: 'AgentApiV2Tools' };
+        // Utiliser getNoteContent pour l'instant (insights à implémenter plus tard)
+        return await V2DatabaseUtils.getNoteContent(ref, userId, context);
+      }
+    });
+
+    // Tool: Fusionner des notes
+    this.tools.set('merge_note', {
+      name: 'merge_note',
+      description: 'Fusionner le contenu d\'une note avec une autre note selon une stratégie spécifique.',
+      parameters: {
+        type: 'object',
+        properties: {
+          ref: {
+            type: 'string',
+            description: 'ID ou slug de la note source à fusionner (obligatoire)'
+          },
+          targetNoteId: {
+            type: 'string',
+            description: 'ID de la note cible qui recevra le contenu (obligatoire)'
+          },
+          mergeStrategy: {
+            type: 'string',
+            enum: ['append', 'prepend', 'replace'],
+            description: 'Stratégie de fusion : append (ajouter à la fin), prepend (ajouter au début), replace (remplacer)'
+          }
+        },
+        required: ['ref', 'targetNoteId', 'mergeStrategy']
+      },
+      execute: async (params, jwtToken, userId) => {
+        const { ref, targetNoteId, mergeStrategy } = params;
+        const context = { operation: 'merge_note', component: 'AgentApiV2Tools' };
+        // Utiliser l'API HTTP pour l'instant (mergeNote à implémenter dans V2DatabaseUtils plus tard)
+        const response = await fetch(`/api/v2/note/${ref}/merge`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ targetNoteId, mergeStrategy })
+        });
+        const res = await response.json();
+        try { await clientPollingTrigger.triggerArticlesPolling('UPDATE'); } catch {}
+        return res;
+      }
+    });
+
+    // Tool: Mettre à jour un classeur
+    this.tools.set('update_notebook', {
+      name: 'update_notebook',
+      description: 'Modifier les propriétés d\'un classeur existant (nom, description, icône, position). Seuls les champs fournis seront modifiés.',
+      parameters: {
+        type: 'object',
+        properties: {
+          ref: {
+            type: 'string',
+            description: 'ID ou slug du classeur à modifier (obligatoire)'
+          },
+          name: {
+            type: 'string',
+            description: 'Nouveau nom du classeur (optionnel)'
+          },
+          description: {
+            type: 'string',
+            description: 'Nouvelle description (optionnel)'
+          },
+          icon: {
+            type: 'string',
+            description: 'Nouvelle icône/emoji (optionnel)'
+          },
+          position: {
+            type: 'number',
+            description: 'Nouvelle position (optionnel)'
+          }
+        },
+        required: ['ref']
+      },
+      execute: async (params, jwtToken, userId) => {
+        const { ref, ...updateData } = params;
+        const context = { operation: 'update_notebook', component: 'AgentApiV2Tools' };
+        const res = await V2DatabaseUtils.updateClasseur(ref, updateData, userId, context);
+        try { await clientPollingTrigger.triggerClasseursPolling('UPDATE'); } catch {}
+        return res;
+      }
+    });
+
+    // Tool: Supprimer un classeur
+    this.tools.set('delete_notebook', {
+      name: 'delete_notebook',
+      description: 'Supprimer définitivement un classeur vide (sans dossiers ni notes). Cette action est irréversible.',
+      parameters: {
+        type: 'object',
+        properties: {
+          ref: {
+            type: 'string',
+            description: 'ID ou slug du classeur à supprimer (obligatoire)'
+          }
+        },
+        required: ['ref']
+      },
+      execute: async (params, jwtToken, userId) => {
+        const { ref } = params;
+        const context = { operation: 'delete_notebook', component: 'AgentApiV2Tools' };
+        const res = await V2DatabaseUtils.deleteClasseur(ref, userId, context);
+        try { await clientPollingTrigger.triggerClasseursPolling('DELETE'); } catch {}
+        return res;
+      }
+    });
+
+    // Tool: Déplacer un dossier
+    this.tools.set('move_folder', {
+      name: 'move_folder',
+      description: 'Déplacer un dossier vers un nouveau parent. Évite les boucles hiérarchiques.',
+      parameters: {
+        type: 'object',
+        properties: {
+          ref: {
+            type: 'string',
+            description: 'ID ou slug du dossier à déplacer (obligatoire)'
+          },
+          target_parent_id: {
+            type: 'string',
+            description: 'ID du nouveau dossier parent (null pour dossier racine)'
+          }
+        },
+        required: ['ref', 'target_parent_id']
+      },
+      execute: async (params, jwtToken, userId) => {
+        const { ref, target_parent_id } = params;
+        const context = { operation: 'move_folder', component: 'AgentApiV2Tools' };
+        const res = await V2DatabaseUtils.moveFolder(ref, target_parent_id, userId, context);
+        try { await clientPollingTrigger.triggerFoldersPolling('UPDATE'); } catch {}
+        return res;
       }
     });
   }
