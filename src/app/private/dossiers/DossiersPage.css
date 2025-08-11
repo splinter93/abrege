@@ -1,0 +1,86 @@
+/* ==========================================================================
+   DOSSIERS PAGE - LAYOUT & STYLES
+   ========================================================================== */
+body {
+  overflow-x: hidden; /* Prévenir tout scroll horizontal à la racine */
+}
+
+.dossiers-page-wrapper {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+  background-color: var(--surface-0);
+  overflow: hidden; /* Empêche le scroll sur le conteneur principal */
+}
+
+.dossiers-header-fixed {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 60px; /* Hauteur fixe pour le header */
+  background-color: var(--surface-2);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 0 24px;
+  z-index: 1000;
+}
+
+.dossiers-sidebar-fixed {
+  position: fixed;
+  top: 60px; /* Sous le header */
+  left: 0;
+  bottom: 0;
+  width: 260px;
+  background-color: var(--surface-1);
+  border-right: 1px solid var(--border);
+  padding: 24px;
+  box-sizing: border-box;
+  z-index: 999;
+}
+
+.dossiers-content-area {
+  margin-left: 260px; /* Espace pour la sidebar */
+  margin-top: 60px; /* Espace pour le header */
+  flex-grow: 1;
+  /* padding: 2rem; */ /* Le padding sera géré par les enfants */
+  overflow-y: auto; /* Permet le scroll uniquement sur la zone de contenu */
+  -webkit-overflow-scrolling: touch; /* Scroll fluide sur iOS */
+  display: flex;
+  flex-direction: column;
+}
+
+@media (max-width: 1024px) {
+  .dossiers-sidebar-fixed {
+    width: 220px;
+  }
+  .dossiers-content-area {
+    margin-left: 220px;
+  }
+}
+
+@media (max-width: 768px) {
+  .dossiers-page-wrapper {
+    flex-direction: column;
+    height: auto;
+    min-height: 100vh;
+  }
+
+  .dossiers-sidebar-fixed {
+    position: relative;
+    width: 100%;
+    height: auto;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+    top: 60px; /* Attaché sous le header */
+    z-index: 998; /* Juste en dessous du header */
+    padding: 1rem;
+  }
+
+  .dossiers-content-area {
+    margin-left: 0;
+    margin-top: 0; /* Plus de marge de 60px car la sidebar est dans le flux */
+    padding: 1rem;
+  }
+} 

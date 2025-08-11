@@ -3,17 +3,34 @@
 export interface Folder {
   id: string;
   name: string;
-  parent_id?: string | null;
-  classeur_id?: string; // Ajouté pour filtrage
+  parent_id: string | null;
+  classeur_id: string;
+  user_id: string;
+  created_at: string;
+  updated_at: string;
+  position: number;
 }
 
 export interface FileArticle {
   id: string;
   source_title: string;
-  source_type?: string;
-  updated_at?: string;
-  classeur_id?: string; // Ajouté pour filtrage
-  folder_id?: string | null;   // Ajouté pour navigation
+  folder_id: string | null;
+  classeur_id: string;
+  user_id: string;
+  created_at: string;
+  updated_at: string;
+  position: number;
+}
+
+export interface Classeur {
+  id: string;
+  name: string;
+  user_id: string;
+  created_at: string;
+  updated_at: string;
+  position: number;
+  emoji?: string;
+  color?: string;
 }
 
 export interface ItemProps {

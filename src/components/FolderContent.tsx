@@ -4,7 +4,8 @@ import { motion } from 'framer-motion';
 import FolderItem from './FolderItem';
 import FileItem from './FileItem';
 import { Folder, FileArticle } from './types';
-import './FoldersSystem.css';
+import './FolderContent.css';
+import './FolderGridItems.css';
 import { 
   contentVariants, 
   loadingVariants, 
@@ -122,9 +123,7 @@ const FolderContent: React.FC<FolderContentProps> = ({
             </div>
           ))}
         </div>
-        {/* Séparateur horizontal */}
-        <div className="folder-content-separator" />
-        {/* Grille fichiers rapprochée */}
+        {/* Grille fichiers */}
         <div className="folder-grid files">
           {safeFiles.map(file => (
             <div key={file.id} className="file-item-wrapper">

@@ -1,12 +1,16 @@
 import React from 'react';
 
-export default function LogoScrivia() {
+interface LogoScriviaProps {
+  width?: number;
+}
+
+export default function LogoScrivia({ width = 120 }: LogoScriviaProps) {
   return (
-    <div style={{ position: 'relative', display: 'inline-block', margin: '0 auto' }}>
+    <div style={{ position: 'relative', display: 'inline-block', margin: '0' }}>
       <img
         src="/logo%20scrivia.png"
         alt="Scrivia Logo"
-        style={{ height: '23px', maxHeight: '28px', width: 'auto', display: 'block' }}
+        style={{ height: 'auto', width: `${width}px`, display: 'block' }}
       />
     </div>
   );

@@ -114,80 +114,85 @@ const FolderManager: React.FC<FolderManagerProps> = ({
   };
 
   return (
-    <div 
-      className="folder-manager"
-      onDragOver={handleRootDragOver}
-      onDragLeave={handleRootDragLeave}
-      onDrop={handleRootDrop}
-    >
-      <div className="folder-manager-content">
-        {/* Header avec titre et contrôles */}
-        <header className="folder-manager-header">
-          <div>
-            <motion.h1 
-              className="classeur-header-title"
-              variants={classeurTabVariants}
-              initial="initial"
-              animate="animate"
-              exit="exit"
-              transition={classeurTabTransition}
-            >
-              {parentFolderId && (
-                <button onClick={onGoBack} className="breadcrumb-item">
-                  ◀
-                </button>
-              )}
-              <span className="classeur-icon">{classeurIcon || '📁'}</span>
-              <span className="classeur-name">{classeurName}</span>
-            </motion.h1>
-          </div>
-          <div className="view-controls">
-            <FolderToolbar
-              onCreateFolder={() => createFolder('Nouveau dossier')}
-              onCreateFile={handleCreateAndRenameFile}
-              onToggleView={setViewMode}
-              viewMode={viewMode}
+    <div className="folder-manager-wrapper">
+      <div 
+        className="folder-manager"
+        onDragOver={handleRootDragOver}
+        onDragLeave={handleRootDragLeave}
+        onDrop={handleRootDrop}
+      >
+        <div className="folder-manager-content">
+          {/* Header avec titre et contrôles */}
+          <header className="folder-manager-header">
+            <div>
+              <motion.h1 
+                className="classeur-header-title"
+                variants={classeurTabVariants}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+                transition={classeurTabTransition}
+              >
+                {parentFolderId && (
+                  <button onClick={onGoBack} className="breadcrumb-item">
+                    ◀
+                  </button>
+                )}
+                <span className="classeur-icon">{classeurIcon || '📁'}</span>
+                <span className="classeur-name">{classeurName}</span>
+              </motion.h1>
+            </div>
+            <div className="view-controls">
+              <FolderToolbar
+                onCreateFolder={() => createFolder('Nouveau dossier')}
+                onCreateFile={handleCreateAndRenameFile}
+                onToggleView={setViewMode}
+                viewMode={viewMode}
+              />
+            </div>
+          </header>
+          
+          {/* Séparateur sous le header */}
+          <div className="folder-manager-separator"></div>
+  
+          {/* Contenu principal */}
+          <main className="folder-manager-main">
+            <FolderContent
+              classeurName={classeurName}
+              folders={safeFolders}
+              files={safeFiles}
+              loading={loading}
+              error={error}
+              onFolderOpen={onFolderOpen}
+              onFileOpen={handleFileOpen}
+              renamingItemId={renamingItemId}
+              onRenameFile={(id, newName, type) => submitRename(id, newName, type)}
+              onRenameFolder={(id, newName, type) => submitRename(id, newName, type)}
+              onCancelRename={cancelRename}
+              onContextMenuItem={handleContextMenuItem}
+              onDropItem={handleDropItem}
+              onStartRenameFolderClick={handleStartRenameFolderClick}
+              onStartRenameFileClick={handleStartRenameFileClick}
+              isInFolder={!!parentFolderId}
             />
-          </div>
-        </header>
-
-        {/* Contenu principal */}
-        <main className="folder-manager-main">
-          <FolderContent
-            classeurName={classeurName}
-            folders={safeFolders}
-            files={safeFiles}
-            loading={loading}
-            error={error}
-            onFolderOpen={onFolderOpen}
-            onFileOpen={handleFileOpen}
-            renamingItemId={renamingItemId}
-            onRenameFile={(id, newName, type) => submitRename(id, newName, type)}
-            onRenameFolder={(id, newName, type) => submitRename(id, newName, type)}
-            onCancelRename={cancelRename}
-            onContextMenuItem={handleContextMenuItem}
-            onDropItem={handleDropItem}
-            onStartRenameFolderClick={handleStartRenameFolderClick}
-            onStartRenameFileClick={handleStartRenameFileClick}
-            isInFolder={!!parentFolderId}
+          </main>
+        </div>
+  
+        {/* Menu contextuel */}
+        {contextMenuState.visible && contextMenuState.item && (
+          <SimpleContextMenu
+            x={contextMenuState.x}
+            y={contextMenuState.y}
+            visible={contextMenuState.visible}
+            options={[
+              { label: 'Ouvrir', onClick: handleOpen },
+              { label: 'Renommer', onClick: handleRename },
+              { label: 'Supprimer', onClick: handleDelete }
+            ]}
+            onClose={closeContextMenu}
           />
-        </main>
+        )}
       </div>
-
-      {/* Menu contextuel */}
-      {contextMenuState.visible && contextMenuState.item && (
-        <SimpleContextMenu
-          x={contextMenuState.x}
-          y={contextMenuState.y}
-          visible={contextMenuState.visible}
-          options={[
-            { label: 'Ouvrir', onClick: handleOpen },
-            { label: 'Renommer', onClick: handleRename },
-            { label: 'Supprimer', onClick: handleDelete }
-          ]}
-          onClose={closeContextMenu}
-        />
-      )}
     </div>
   );
 };

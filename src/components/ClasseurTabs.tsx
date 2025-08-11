@@ -84,20 +84,19 @@ function SortableTab({ classeur, isActive, onSelectClasseur, onContextMenu, isDr
       {...sortable.listeners}
     >
       <button
-        className={`classeur-btn-glass${isActive ? " active" : ""}`}
+        className={`classeur-tab classeur-tab-button${isActive ? " active" : ""}`}
         onClick={() => onSelectClasseur(classeur.id)}
         onContextMenu={(e) => onContextMenu(e, classeur)}
-        style={{ fontFamily: "Inter, Noto Sans, Arial, sans-serif" }}
       >
         <span
-          style={{ fontSize: 18, verticalAlign: "middle", cursor: "pointer", display: "inline-block" }}
+          className="classeur-emoji"
           tabIndex={0}
           role="button"
           aria-label="Changer l'emoji"
         >
           {classeur.emoji && classeur.emoji.trim() !== "" ? classeur.emoji : "📁"}
         </span>
-        <span className="classeur-name">{classeur.name}</span>
+        <span className="classeur-name-text">{classeur.name}</span>
       </button>
     </div>
   );
@@ -233,8 +232,8 @@ const ClasseurTabs: React.FC<ClasseurTabsProps> = ({
   const safeClasseurs = Array.isArray(classeurs) ? classeurs : [];
 
   return (
-    <div className="classeur-tabs-glass-wrapper">
-      <div className="classeur-tabs-btn-list">
+    <div className="classeur-tabs-wrapper">
+      <div className="classeur-tabs">
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
           <SortableContext items={safeClasseurs.map((c) => c.id)} strategy={horizontalListSortingStrategy}>
             {safeClasseurs.map((classeur) => (
@@ -262,12 +261,13 @@ const ClasseurTabs: React.FC<ClasseurTabsProps> = ({
             ) : null}
           </DragOverlay>
         </DndContext>
-        <button className="add-classeur-btn-glass" onClick={onCreateClasseur}>+</button>
+        <button className="add-classeur-btn" onClick={onCreateClasseur}>+</button>
       </div>
       {isColorPickerVisible && contextMenu.item && (
         <ColorPalette
           colors={['#e55a2c', '#2994ff', '#f5f5f5', '#a3a3a3', '#bdbdbd']}
           onSelect={handleSelectColor}
+          className="classeur-context-menu"
           style={{ top: contextMenu.y + 10, left: contextMenu.x }}
           onSelectColor={handleSelectColor}
           onClose={() => setColorPickerVisible(false)}
@@ -286,49 +286,15 @@ const ClasseurTabs: React.FC<ClasseurTabsProps> = ({
       />
       {emojiPicker.visible && emojiPicker.classeur && (
         <div
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            width: "100vw",
-            height: "100vh",
-            background: "rgba(20,20,30,0.72)",
-            zIndex: 4000,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
+          className="classeur-emoji-picker-overlay"
           onClick={() => setEmojiPicker({ ...emojiPicker, visible: false })}
         >
           <div
-            style={{
-              background: "rgba(30,30,40,1)",
-              border: "1.5px solid rgba(255,255,255,0.13)",
-              borderRadius: 18,
-              boxShadow: "0 8px 48px rgba(0,0,0,0.22)",
-              padding: 32,
-              maxWidth: 520,
-              maxHeight: "70vh",
-              overflowY: "auto",
-              display: "grid",
-              gridTemplateColumns: "repeat(8, 1fr)",
-              gap: 12,
-              position: "relative",
-            }}
+            className="classeur-emoji-picker-container"
             onClick={e => e.stopPropagation()}
           >
             <button
-              style={{
-                position: "absolute",
-                top: 8,
-                right: 12,
-                background: "none",
-                border: "none",
-                color: "#fff",
-                fontSize: 22,
-                cursor: "pointer",
-                zIndex: 2,
-              }}
+              className="classeur-emoji-picker-close"
               onClick={() => setEmojiPicker({ ...emojiPicker, visible: false })}
               aria-label="Fermer"
             >
@@ -337,26 +303,12 @@ const ClasseurTabs: React.FC<ClasseurTabsProps> = ({
             {COMMON_EMOJIS.map((emoji, index) => (
               <button
                 key={index}
-                style={{
-                  background: "none",
-                  border: "none",
-                  fontSize: 24,
-                  cursor: "pointer",
-                  padding: 8,
-                  borderRadius: 8,
-                  // Pas de transition pour interface simple
-                }}
+                className="classeur-emoji-option"
                 onClick={() => {
                   if (emojiPicker.classeur) {
                     onUpdateClasseur(emojiPicker.classeur.id, { emoji });
                   }
                   setEmojiPicker({ ...emojiPicker, visible: false });
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = "rgba(255,255,255,0.1)";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = "none";
                 }}
               >
                 {emoji}

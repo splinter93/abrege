@@ -8,79 +8,39 @@
   padding: 0;
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: stretch; /* Aligner les enfants sur toute la largeur */
 }
 
-.folder-content-loading {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 240px;
-  color: var(--text-2);
-}
-
-.folder-content-error {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 240px;
-  color: #ef4444;
-  text-align: center;
-}
-
-.folder-content-empty {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 240px;
-  color: var(--text-2);
-  text-align: center;
-}
-
-.folder-content-empty-title {
-  font-weight: 500;
-  margin-bottom: 4px;
-}
-
-.folder-content-separator {
-  border-top: 1.5px solid rgba(255, 255, 255, 0.1);
-  width: 100%;
-  margin: 10px 0 10px 0;
-  align-self: flex-start;
-}
+/* 
+  NOTE: Les styles pour loading, error, et empty sont maintenant
+  gérés directement dans FolderManagerModern.css pour une meilleure
+  centralisation et cohérence.
+*/
 
 /* Container pour les grilles - style macOS */
 .folder-grid-container {
   width: 100%;
-  padding: 0;
-  padding-left: 3rem;
-  padding-right: 2rem; /* Added right padding to prevent overflow */
-  box-sizing: border-box; /* Ensure padding is included in width calculation */
+  padding: 0; /* Padding géré par le parent */
+  box-sizing: border-box;
 }
 
 /* Grilles responsives - UTILISÉES PAR FOLDERMANAGER */
 .folder-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(168px, 168px));
-  gap: 32px; /* Increased spacing between items */
-  justify-items: start;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); /* Utilise toute la largeur */
+  gap: 24px; 
+  justify-items: stretch; /* Les items prennent toute la largeur de leur cellule */
   width: 100%;
   padding: 0;
-  max-width: 100%; /* Ensure grid doesn't overflow container */
   box-sizing: border-box;
 }
 
 .folder-grid.files {
-  margin-top: 5px;
-  grid-template-columns: repeat(auto-fit, minmax(168px, 168px));
-  max-width: calc(168px * 8 + 32px * 7); /* Maximum 8 items per row with spacing */
+  margin-top: 24px;
 }
 
 /* Animation pour les fichiers */
 .file-item-animation {
-  width: 168px;
-  height: 132px;
+  width: 100%; /* S'adapte à la grille */
+  height: 100%;
 } 

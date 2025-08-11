@@ -1,0 +1,27 @@
+/* ==========================================================================
+   DOSSIERS PAGE - INDEX CSS
+   ========================================================================== 
+   
+   Ce fichier centralise tous les imports CSS nécessaires pour la page dossiers.
+   L'ordre des imports est important pour éviter les conflits de spécificité.
+*/
+
+/* 1. Variables et design system (priorité la plus basse) */
+@import '../../../styles/design-system.css';
+@import '../../../styles/typography.css';
+
+/* 2. Layout principal de la page */
+@import './DossiersPage.css';
+
+/* 3. Composants de navigation */
+@import '../../../components/ClasseurTabs.css';
+@import '../../../components/PrivateSidebar.css';
+
+/* 4. Gestionnaire de dossiers et contenu */
+@import '../../../components/FolderManagerModern.css';
+@import '../../../components/FolderContent.css';
+@import '../../../components/FolderGridItems.css';
+
+/* 5. Composants utilitaires */
+@import '../../../components/Toast.css';
+@import '../../../components/Tooltip.css'; 

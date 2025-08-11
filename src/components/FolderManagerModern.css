@@ -6,6 +6,11 @@
   - Subtle spacing and hover accents
 */
 
+.folder-manager-wrapper {
+  padding: 0 2rem 2rem 2rem;
+  flex-grow: 1;
+}
+
 /* Container */
 .folder-manager {
   width: 100%;
@@ -16,8 +21,7 @@
 /* Content wrapper */
 .folder-manager-content {
   width: 100%;
-  min-height: calc(100vh - 220px);
-  padding: 1rem 0.25rem;
+  padding: 0; /* Géré par le wrapper */
   font-family: var(--font-main);
   background: transparent;
 }
@@ -27,8 +31,17 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.5rem 0.25rem;
+  padding: 1.5rem 0;
   background: transparent;
+}
+
+/* Séparateur sous le header */
+.folder-manager-separator {
+  width: 100%;
+  height: 1px;
+  background: var(--border);
+  margin: 0 0 1.5rem 0;
+  opacity: 1;
 }
 
 .classeur-header-title {
@@ -118,45 +131,47 @@
 .grid-view {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-  gap: 1rem;
-  padding: 0.5rem 0.25rem;
+  gap: 1.5rem; /* Espacement augmenté */
+  padding: 0;
 }
 
 /* Grid items */
 .fm-grid-item {
   width: 100%;
-  height: 140px;
+  height: 160px;
   padding: 1rem;
-  border-radius: 10px;
+  border-radius: 12px; /* Bordures plus arrondies */
   cursor: pointer;
-  transition: background var(--transition-speed), color var(--transition-speed), transform var(--transition-speed);
+  transition: background 0.2s ease, transform 0.2s ease;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
-  background: transparent;
+  gap: 0.75rem; /* Espace entre icône et nom */
+  background: var(--surface-1);
+  border: 1px solid var(--border);
 }
 
 .fm-grid-item:hover {
-  background: var(--surface-hover);
+  background: var(--surface-2);
+  transform: translateY(-4px); /* Effet de lévitation subtil */
+  border-color: var(--border-strong);
 }
 
 .fm-grid-item svg {
-  width: 48px;
-  height: 48px;
+  width: 64px;
+  height: 64px;
   color: var(--text-2);
-  transition: color var(--transition-speed), transform var(--transition-speed), opacity var(--transition-speed);
-  opacity: 0.9;
+  transition: color 0.2s ease, transform 0.2s ease;
 }
 
 .fm-grid-item:hover svg {
   color: var(--accent-primary);
-  opacity: 1;
+  transform: scale(1.05);
 }
 
 .fm-item-name {
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   font-weight: 500;
   font-family: var(--font-main);
   color: var(--text-2);
@@ -168,7 +183,7 @@
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
-  transition: color var(--transition-speed);
+  transition: color 0.2s ease;
 }
 
 .fm-grid-item:hover .fm-item-name {
@@ -177,7 +192,7 @@
 
 /* Rename input */
 .fm-rename-input {
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   font-weight: 500;
   font-family: var(--font-main);
   color: var(--text-1);
@@ -185,8 +200,8 @@
   background: transparent;
   border: 1px dashed var(--border-subtle);
   outline: none;
-  width: 100%;
-  padding: 2px 4px;
+  width: calc(100% - 1rem); /* Largeur ajustée */
+  padding: 4px 6px;
   border-radius: 6px;
 }
 
@@ -200,54 +215,41 @@
   outline: 2px dashed var(--accent-primary);
   outline-offset: -6px;
   background: var(--accent-primary-faded);
+  transform: scale(1.02);
 }
 
 /* Responsive */
 @media (max-width: 768px) {
-  .folder-manager-content { padding: 0.5rem 0; }
+  .folder-manager-wrapper {
+    padding: 0 1rem 1rem 1rem;
+  }
+  .folder-manager-content { padding: 0; }
   .classeur-header-title { font-size: 1.1rem; }
   .classeur-name, .classeur-icon { font-size: 1.1rem; }
-  .grid-view { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 0.75rem; }
-  .fm-grid-item { height: 120px; }
+  .grid-view { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 1rem; }
+  .fm-grid-item { height: 140px; }
+  
+  .folder-manager-separator {
+    margin: 0 0 1rem 0;
+  }
 }
 
 @media (max-width: 480px) {
-  .grid-view { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 0.5rem; }
-  .fm-grid-item { height: 110px; }
-  .fm-item-name { font-size: 0.85rem; }
+  .folder-manager-wrapper {
+    padding: 0 0.5rem 0.5rem 0.5rem;
+  }
+  .grid-view { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 0.75rem; }
+  .fm-grid-item { height: 120px; }
+  .fm-item-name { font-size: 0.8rem; }
+  
+  .folder-manager-separator {
+    margin: 0 0 0.75rem 0;
+  }
 }
 
 /* États de chargement et d'erreur optimisés */
-.folder-content-loading {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 200px;
-  gap: 1rem;
-  color: var(--text-2);
-}
-
-.folder-loading-spinner {
-  font-size: 2rem;
-  animation: spin 1s linear infinite;
-}
-
-.folder-content-error {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 200px;
-  gap: 1rem;
-  color: var(--text-2);
-  text-align: center;
-}
-
-.folder-error-icon {
-  font-size: 2rem;
-}
-
+.folder-content-loading,
+.folder-content-error,
 .folder-content-empty {
   display: flex;
   flex-direction: column;
@@ -256,6 +258,22 @@
   min-height: 300px;
   gap: 1rem;
   text-align: center;
+  color: var(--text-2);
+  background-color: var(--surface-1);
+  border: 1px dashed var(--border);
+  border-radius: var(--border-radius-lg);
+  margin-top: 1.5rem;
+  padding: 2rem;
+}
+
+.folder-loading-spinner {
+  font-size: 2rem;
+  animation: spin 1s linear infinite;
+}
+
+.folder-error-icon {
+  font-size: 2.5rem;
+  color: var(--error);
 }
 
 .folder-empty-icon {
@@ -272,6 +290,7 @@
 .folder-empty-subtitle {
   color: var(--text-2);
   font-size: 0.95rem;
+  max-width: 300px; /* Largeur ajustée */
 }
 
 @keyframes spin {

@@ -1,193 +1,215 @@
+/* ==========================================================================
+   CLASSEUR TABS - STYLES PROFESSIONNELS
+   ========================================================================== */
+
+:root {
+  --classeur-font-family: "Noto Sans", "Inter", "Arial", sans-serif;
+}
+
+/* Styles professionnels pour ClasseurTabs */
+.classeur-tabs-wrapper {
+  padding: 1.5rem 2rem 0 2rem;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  background: var(--surface-0);
+  position: relative;
+  font-family: "Noto Sans", "Inter", "Arial", sans-serif !important;
+}
+
 .classeur-tabs-container {
   display: flex;
   align-items: center;
-  padding: 0 2.2rem;
-  border-bottom: none;
-  background: transparent;
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
-  border-radius: 18px 18px 0 0;
-  box-shadow: none;
-  margin-bottom: 0;
-  z-index: 2;
   position: relative;
-  font-family: var(--font-main);
+  font-family: "Noto Sans", "Inter", "Arial", sans-serif !important;
 }
 
 .classeur-tabs {
   display: flex;
   align-items: flex-end;
-  gap: 8px;
+  gap: 6px;
   overflow-x: auto;
-  padding: 8px 0 0 0;
+  padding-bottom: 0;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE 10+ */
+  min-height: 48px;
+  position: relative;
+  font-family: "Noto Sans", "Inter", "Arial", sans-serif !important;
+}
+
+.classeur-tabs::-webkit-scrollbar {
+  display: none; /* Safari and Chrome */
 }
 
 .classeur-tab {
-  padding: 13px 22px;
-  border: 1.5px solid rgba(255, 255, 255, 0.08); /* Increased border thickness */
+  padding: 12px 18px;
+  border: 1px solid transparent;
   border-bottom: none;
-  border-radius: 12px 12px 0 0;
-  background: rgba(30, 30, 36, 0.32);
-  color: #fff;
+  border-radius: 10px 10px 0 0;
+  background-color: var(--surface-1);
+  color: var(--text-2);
   cursor: pointer;
-  font-size: 1.04rem;
-  font-weight: 400;
+  font-size: 0.9rem;
+  font-weight: 500;
+  font-family: "Noto Sans", "Inter", "Arial", sans-serif !important;
   white-space: nowrap;
-  transition: background 0.18s, color 0.18s, border-color 0.18s, box-shadow 0.18s;
+  transition: all 0.2s ease;
   position: relative;
-  bottom: -1px;
+  bottom: -1px; /* Pour aligner avec la bordure du bas */
   display: flex;
   align-items: center;
-  gap: 0.2rem; /* Reduced gap around emoji */
-  backdrop-filter: blur(8px) saturate(120%);
-  -webkit-backdrop-filter: blur(8px) saturate(120%);
+  gap: 10px;
+  min-width: 120px;
+  justify-content: center;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  user-select: none;
 }
 
 .classeur-tab:hover {
-  background: rgba(255,255,255,0.25) !important;
-  color: #fff !important;
-  border: 1px solid rgba(255,255,255,0.85) !important;
+  background-color: var(--surface-2);
+  color: var(--text-1);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 
 .classeur-tab.active {
-  background: rgba(255,255,255,0.10) !important;
-  color: rgba(255,255,255,0.72) !important;
-  border: 1px solid rgba(255,255,255,0.38) !important;
-  filter: brightness(1.0) !important;
-  z-index: 3;
-  backdrop-filter: blur(8px) saturate(140%) !important;
-  -webkit-backdrop-filter: blur(8px) saturate(140%) !important;
-}
-
-.add-classeur-btn, .add-classeur-btn-glass {
-  background: rgba(255,255,255,0.10);
-  color: rgba(255,255,255,0.72);
-  border: 1px solid rgba(255,255,255,0.38);
-  transition: background 0.18s, color 0.18s, box-shadow 0.18s, border-color 0.18s;
-}
-
-.add-classeur-btn:hover, .add-classeur-btn-glass:hover {
-  background: rgba(255,255,255,0.4) !important;
-  color: #fff !important;
-  border: 1px solid rgba(255,255,255,1) !important;
-}
-
-.motion-tab-wrapper {
-  /* This class is used by the SortableTab wrapper div */
-}
-
-.motion-tab-wrapper.dragged {
-  border-radius: 12px;
-  cursor: grabbing;
-}
-
-/* Drag-over target indicator */
-.motion-tab-wrapper.drag-over-target {
-  border-left: 2px solid var(--accent-primary);
-}
-
-.classeur-tabs-glass-wrapper {
-  width: 100%;
-  background: transparent;
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
-  border-radius: 22px 22px 0 0;
-  box-shadow: none;
-  padding: 18px 1rem 0 0.3rem;
-  margin-bottom: 0;
-  z-index: 5;
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-}
-
-.classeur-tabs-btn-list {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 8px;
-  padding: 0 0 7px 0;
-  width: 100%;
+  background-color: var(--surface-2);
+  color: var(--text-1);
+  border-color: var(--border);
+  border-bottom-color: var(--surface-0);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
   z-index: 2;
 }
 
-.classeur-btn-glass {
+.add-classeur-btn {
+  margin-left: 12px;
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  color: var(--text-2);
+  padding: 12px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 1.2rem;
+  font-weight: 600;
+  font-family: "Noto Sans", "Inter", "Arial", sans-serif !important;
+  min-width: 48px;
+  height: 48px;
   display: flex;
   align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.add-classeur-btn:hover {
+  background-color: var(--surface-2);
+  color: var(--text-1);
+  border-color: var(--border-strong);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Styles pour les éléments internes des onglets */
+.classeur-tab-button {
+  font-family: "Noto Sans", "Inter", "Arial", sans-serif !important;
+  background: none;
+  border: none;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  justify-content: center;
+}
+
+.classeur-emoji {
+  font-size: 18px;
+  vertical-align: middle;
+  cursor: pointer;
+  display: inline-block;
+}
+
+.classeur-name-text {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: inherit;
+}
+
+/* Styles pour le menu contextuel et emoji picker */
+.classeur-context-menu {
+  position: fixed;
+  z-index: 1000;
+}
+
+.classeur-emoji-picker-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(20,20,30,0.72);
+  z-index: 4000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.classeur-emoji-picker-container {
+  background: rgba(30,30,40,1);
+  border: 1.5px solid rgba(255,255,255,0.13);
+  border-radius: 18px;
+  box-shadow: 0 8px 48px rgba(0,0,0,0.22);
+  padding: 32px;
+  max-width: 520px;
+  max-height: 70vh;
+  overflow-y: auto;
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
   gap: 12px;
-  padding: 10px 26px 10px 16px; /* Reduced left padding to match gap */
-  background: rgba(30, 30, 36, 0.22);
-  border: 1.5px solid rgba(255, 255, 255, 0.08); /* Increased border thickness */
-  border-radius: 14px;
-  color: var(--text-2);
-  font-size: 1.08rem;
-  font-weight: 400;
-  font-family: var(--font-main);
-  cursor: pointer;
-  backdrop-filter: blur(14px) saturate(150%);
-  -webkit-backdrop-filter: blur(14px) saturate(150%);
-  transition: background 0.18s, color 0.18s, border-color 0.18s, box-shadow 0.18s;
+  position: relative;
 }
 
-.classeur-btn-glass:hover {
-  background: rgba(255,255,255,0.2) !important;
-  color: var(--text-1) !important;
-  border: 1.5px solid rgba(255,255,255,1) !important;
-  box-shadow: 0 18px 40px 0 rgba(255,255,255,0.35) !important;
-}
-
-.classeur-btn-glass.active {
-  background: linear-gradient(90deg, rgba(255,255,255,0.08) 0%, rgba(30,30,36,0.22) 100%) !important;
-  color: var(--text-1) !important;
-  border: 1.5px solid rgba(255,255,255,0.38) !important;
-  filter: brightness(1.02) !important;
-  z-index: 3;
-  backdrop-filter: blur(18px) saturate(170%) !important;
-  -webkit-backdrop-filter: blur(18px) saturate(170%) !important;
-  box-shadow: 0 6px 24px 0 rgba(255,255,255,0.10) !important;
-}
-
-.add-classeur-btn-glass {
-  margin-left: 2px;
-  padding: 7px 12px;
-  border: 1.5px solid rgba(255, 255, 255, 0.08); /* Increased border thickness */
-  background: rgba(30, 30, 36, 0.32);
-  color: #ff6a00;
-  border-radius: 14px;
-  cursor: pointer;
-  font-size: 0.95rem;
-  font-weight: 400;
-  font-family: var(--font-main);
-  backdrop-filter: blur(8px) saturate(120%);
-  -webkit-backdrop-filter: blur(8px) saturate(120%);
-  transition: background 0.18s, color 0.18s, box-shadow 0.18s, border-color 0.18s;
-}
-
-.add-classeur-btn-glass:hover {
-  background: #ff6a00;
+.classeur-emoji-picker-close {
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  background: none;
+  border: none;
   color: #fff;
-  border-color: #ff6a00;
+  font-size: 22px;
+  cursor: pointer;
+  z-index: 2;
 }
 
-.classeur-btn-glass svg,
-.classeur-tab svg {
-  background: none !important;
-  box-shadow: none !important;
-  filter: none !important;
-  border-radius: 0 !important;
-  padding: 0 !important;
+.classeur-emoji-option {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 8px;
+  transition: background-color 0.2s ease;
 }
 
-.classeur-tab:hover svg,
-.classeur-btn-glass:hover svg {
-  background: rgba(40, 40, 50, 0.44);
-  box-shadow: 0 2px 8px 0 rgba(255,106,0,0.10);
+.classeur-emoji-option:hover {
+  background: rgba(255,255,255,0.1);
 }
 
-.classeur-tab.active svg,
-.classeur-btn-glass.active svg {
-  color: rgba(255,255,255,0.72) !important;
-  stroke: rgba(255,255,255,0.72) !important;
-  fill: none !important;
+/* Responsive */
+@media (max-width: 768px) {
+  .classeur-tabs-wrapper {
+    padding: 1rem 1rem 0 1rem;
+  }
+  
+  .classeur-tab {
+    min-width: 100px;
+    padding: 10px 14px;
+    font-size: 0.85rem;
+  }
+  
+  .add-classeur-btn {
+    min-width: 44px;
+    height: 44px;
+    padding: 10px 14px;
+  }
 } 
