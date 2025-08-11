@@ -24,4 +24,7 @@
 
 /* 5. Composants utilitaires */
 @import '../../../components/Toast.css';
-@import '../../../components/Tooltip.css'; 
+@import '../../../components/Tooltip.css';
+
+/* 6. Thème custom */
+@import './DossiersPage.glass.css'; 

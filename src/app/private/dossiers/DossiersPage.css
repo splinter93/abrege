@@ -1,6 +1,12 @@
 /* ==========================================================================
    DOSSIERS PAGE - LAYOUT & STYLES
    ========================================================================== */
+body, .dossiers-page-wrapper {
+  background-color: #121212;
+  background-image: radial-gradient(circle at 10% 20%, rgba(50, 50, 50, 0.1), transparent 50%),
+    radial-gradient(circle at 90% 80%, rgba(30, 30, 30, 0.1), transparent 50%);
+}
+
 body {
   overflow-x: hidden; /* Prévenir tout scroll horizontal à la racine */
 }
@@ -9,7 +15,7 @@ body {
   display: flex;
   height: 100vh;
   width: 100vw;
-  background-color: var(--surface-0);
+  /* background-color: var(--surface-0); */
   overflow: hidden; /* Empêche le scroll sur le conteneur principal */
 }
 
@@ -19,8 +25,10 @@ body {
   left: 0;
   right: 0;
   height: 60px; /* Hauteur fixe pour le header */
-  background-color: var(--surface-2);
-  border-bottom: 1px solid var(--border);
+  background-color: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   display: flex;
   align-items: center;
   padding: 0 24px;
@@ -33,8 +41,10 @@ body {
   left: 0;
   bottom: 0;
   width: 260px;
-  background-color: var(--surface-1);
-  border-right: 1px solid var(--border);
+  background-color: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
   padding: 24px;
   box-sizing: border-box;
   z-index: 999;
@@ -49,6 +59,7 @@ body {
   -webkit-overflow-scrolling: touch; /* Scroll fluide sur iOS */
   display: flex;
   flex-direction: column;
+  background: transparent;
 }
 
 @media (max-width: 1024px) {

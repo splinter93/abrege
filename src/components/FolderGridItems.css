@@ -50,23 +50,6 @@
   }
 }
 
-/* États de drag & drop améliorés */
-.folder-item-wrapper.drag-over .fm-grid-item,
-.file-item-wrapper.drag-over .fm-grid-item {
-  outline: 2px dashed var(--accent-primary);
-  outline-offset: -6px;
-  background: var(--accent-primary-faded);
-  transform: scale(1.02);
-}
-
-/* États de sélection */
-.folder-item-wrapper.selected .fm-grid-item,
-.file-item-wrapper.selected .fm-grid-item {
-  outline: 2px solid var(--accent-primary);
-  outline-offset: -4px;
-  background: var(--accent-primary-faded);
-}
-
 /* Responsive pour les éléments de grille */
 @media (max-width: 768px) {
   .folder-item-wrapper,

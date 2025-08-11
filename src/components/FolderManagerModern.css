@@ -31,23 +31,20 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1.5rem 0;
+  padding: 1.5rem 0 0 0;
   background: transparent;
+  border-bottom: none;
 }
 
 /* Séparateur sous le header */
 .folder-manager-separator {
-  width: 100%;
-  height: 1px;
-  background: var(--border);
-  margin: 0 0 1.5rem 0;
-  opacity: 1;
+  display: none;
 }
 
 .classeur-header-title {
   font-size: 1.25rem;
   font-weight: 600;
-  color: var(--text-1);
+  color: #FFF;
   margin: 0;
   display: flex;
   align-items: center;
@@ -68,8 +65,8 @@
   align-items: center;
   justify-content: center;
   padding: 4px 8px;
-  background: transparent;
-  border: 1px solid var(--border-subtle);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 6px;
   color: var(--text-2);
   font-size: 0.9rem;
@@ -78,8 +75,8 @@
 }
 
 .breadcrumb-item:hover {
-  background: var(--surface-hover);
-  border-color: var(--border-strong);
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.3);
   color: var(--text-1);
 }
 
@@ -103,7 +100,7 @@
   width: 36px;
   height: 36px;
   border-radius: 8px;
-  border: 1px solid var(--border-subtle);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   background: transparent;
   color: var(--text-2);
   cursor: pointer;
@@ -111,8 +108,8 @@
 }
 
 .fm-control-btn:hover {
-  background: var(--surface-hover);
-  border-color: var(--border-strong);
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.3);
   color: var(--text-1);
 }
 
@@ -130,9 +127,9 @@
 /* Grid */
 .grid-view {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-  gap: 1.5rem; /* Espacement augmenté */
-  padding: 0;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 2rem; /* Espacement augmenté */
+  padding: 2rem 0;
 }
 
 /* Grid items */
@@ -140,34 +137,34 @@
   width: 100%;
   height: 160px;
   padding: 1rem;
-  border-radius: 12px; /* Bordures plus arrondies */
+  border-radius: 0;
   cursor: pointer;
-  transition: background 0.2s ease, transform 0.2s ease;
+  transition: all 0.2s ease;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.75rem; /* Espace entre icône et nom */
-  background: var(--surface-1);
-  border: 1px solid var(--border);
+  gap: 0.75rem;
+  background: transparent;
+  border: none;
+  outline: none;
 }
 
 .fm-grid-item:hover {
-  background: var(--surface-2);
-  transform: translateY(-4px); /* Effet de lévitation subtil */
-  border-color: var(--border-strong);
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  padding: 0.75rem;
 }
 
 .fm-grid-item svg {
   width: 64px;
   height: 64px;
   color: var(--text-2);
-  transition: color 0.2s ease, transform 0.2s ease;
+  transition: color 0.2s ease;
 }
 
 .fm-grid-item:hover svg {
   color: var(--accent-primary);
-  transform: scale(1.05);
 }
 
 .fm-item-name {
@@ -187,7 +184,7 @@
 }
 
 .fm-grid-item:hover .fm-item-name {
-  color: var(--text-1);
+  color: var(--accent-primary);
 }
 
 /* Rename input */
@@ -198,24 +195,36 @@
   color: var(--text-1);
   text-align: center;
   background: transparent;
-  border: 1px dashed var(--border-subtle);
+  border: 1px dashed rgba(255, 255, 255, 0.2);
   outline: none;
-  width: calc(100% - 1rem); /* Largeur ajustée */
+  width: calc(100% - 1rem);
   padding: 4px 6px;
   border-radius: 6px;
 }
 
 .fm-rename-input:focus {
   border-color: var(--accent-primary);
-  background: var(--accent-primary-faded);
+  background: rgba(255, 255, 255, 0.05);
 }
 
-/* Drag states */
+/* Drag states - CLEAN */
 .fm-grid-item.drag-over {
-  outline: 2px dashed var(--accent-primary);
-  outline-offset: -6px;
-  background: var(--accent-primary-faded);
-  transform: scale(1.02);
+  background: rgba(255, 255, 255, 0.12);
+  border: 2px dashed var(--accent-primary);
+  border-radius: 12px;
+}
+
+/* Item being dragged */
+.fm-grid-item.dragging {
+  opacity: 0.5;
+  transform: scale(0.95);
+}
+
+/* Selection states - CLEAN */
+.fm-grid-item.selected {
+  background: rgba(255, 255, 255, 0.08);
+  border: 2px solid var(--accent-primary);
+  border-radius: 12px;
 }
 
 /* Responsive */
@@ -259,8 +268,8 @@
   gap: 1rem;
   text-align: center;
   color: var(--text-2);
-  background-color: var(--surface-1);
-  border: 1px dashed var(--border);
+  background-color: transparent;
+  border: 1px dashed rgba(255, 255, 255, 0.2);
   border-radius: var(--border-radius-lg);
   margin-top: 1.5rem;
   padding: 2rem;
@@ -283,7 +292,7 @@
 
 .folder-empty-title {
   font-weight: 600;
-  color: var(--text-1);
+  color: #FFF;
   font-size: 1.2rem;
 }
 
