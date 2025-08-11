@@ -58,10 +58,10 @@ export default function PrivateHomePage() {
       <main className="home-content">
         <header className="home-header">
           <div className="home-header-content">
-            <LogoScrivia width={120} />
+            {/* <LogoScrivia width={120} /> */}
             <div className="home-welcome">
               <h1>Bonjour, {user.email?.split('@')[0] || 'Utilisateur'} !</h1>
-              <p>Bienvenue dans votre espace personnel Scrivia</p>
+              <p>Bienvenue dans votre espace personnel Scrivia.</p>
             </div>
           </div>
         </header>
@@ -101,7 +101,7 @@ export default function PrivateHomePage() {
             
             <div className="stat-card">
               <div className="stat-icon">
-                <TrendingUp size={24} />
+                <Calendar size={24} />
               </div>
               <div className="stat-content">
                 <h3>12</h3>
@@ -110,42 +110,44 @@ export default function PrivateHomePage() {
             </div>
           </section>
 
-          {/* Quick Actions */}
-          <section className="home-actions">
-            <h2>Actions rapides</h2>
-            <div className="action-grid">
-              <button className="action-btn primary">
-                <Book size={20} />
-                <span>Nouveau classeur</span>
-              </button>
-              <button className="action-btn">
-                <FileText size={20} />
-                <span>Nouvelle note</span>
-              </button>
-              <button className="action-btn">
-                <MessageSquare size={20} />
-                <span>Ouvrir le chat</span>
-              </button>
-            </div>
-          </section>
+          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 'var(--spacing-2xl)' }}>
+            {/* Quick Actions */}
+            <section className="home-actions">
+              <h2>Actions rapides</h2>
+              <div className="action-grid">
+                <button className="action-btn primary">
+                  <Book size={20} />
+                  <span>Nouveau classeur</span>
+                </button>
+                <button className="action-btn">
+                  <FileText size={20} />
+                  <span>Nouvelle note</span>
+                </button>
+                <button className="action-btn">
+                  <MessageSquare size={20} />
+                  <span>Ouvrir le chat</span>
+                </button>
+              </div>
+            </section>
 
-          {/* Recent Activity */}
-          <section className="home-activity">
-            <h2>Activité récente</h2>
-            <div className="activity-list">
-              {stats.recentActivity.map((activity, index) => (
-                <div key={index} className="activity-item">
-                  <div className="activity-icon">
-                    {activity.type === 'note' ? <FileText size={16} /> : <Book size={16} />}
+            {/* Recent Activity */}
+            <section className="home-activity">
+              <h2>Activité récente</h2>
+              <div className="activity-list">
+                {stats.recentActivity.map((activity, index) => (
+                  <div key={index} className="activity-item">
+                    <div className="activity-icon">
+                      {activity.type === 'note' ? <FileText size={16} /> : <Book size={16} />}
+                    </div>
+                    <div className="activity-content">
+                      <span className="activity-title">{activity.title}</span>
+                      <span className="activity-time">{activity.time}</span>
+                    </div>
                   </div>
-                  <div className="activity-content">
-                    <span className="activity-title">{activity.title}</span>
-                    <span className="activity-time">{activity.time}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
+                ))}
+              </div>
+            </section>
+          </div>
         </div>
       </main>
     </div>
