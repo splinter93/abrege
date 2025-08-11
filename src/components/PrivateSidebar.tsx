@@ -2,10 +2,11 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Book, Share, Star, File, User, Settings, LogOut } from 'lucide-react';
+import { Home, Book, Share, Star, File, User, Settings, LogOut } from 'lucide-react';
 import './PrivateSidebar.css';
 
 const navItems = [
+  { href: '/private', icon: Home, label: 'Accueil' },
   { href: '/private/dossiers', icon: Book, label: 'Mes Classeurs' },
   { href: '/private/shared', icon: Share, label: 'Notes Partagées' },
   { href: '/private/favorites', icon: Star, label: 'Favoris' },
