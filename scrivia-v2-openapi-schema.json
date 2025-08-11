@@ -111,9 +111,10 @@
           "user_id": { "type": "string", "format": "uuid" },
           "slug": { "type": "string" },
           "created_at": { "type": "string", "format": "date-time" },
-          "updated_at": { "type": "string", "format": "date-time" }
+          "position": { "type": "number" },
+          "parent_id": { "type": "string", "format": "uuid", "nullable": true }
         },
-        "required": ["id", "name", "classeur_id", "user_id", "created_at", "updated_at"]
+        "required": ["id", "name", "classeur_id", "user_id", "created_at"]
       },
       "CreateFolderPayload": {
         "type": "object",

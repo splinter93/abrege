@@ -476,7 +476,8 @@ export class V2DatabaseUtils {
       const updateData: any = {};
       if (data.name) updateData.name = data.name;
       if (data.parent_id !== undefined) updateData.parent_id = data.parent_id;
-      updateData.updated_at = new Date().toISOString();
+      // Note: updated_at n'existe pas dans la table folders
+      // Les mises à jour sont tracées via la logique métier
 
       // Vérifier que le nouveau parent existe et appartient à l'utilisateur
       if (data.parent_id) {
@@ -570,8 +571,7 @@ export class V2DatabaseUtils {
       const { data: updatedFolder, error: updateError } = await supabase
         .from('folders')
         .update({
-          parent_id: targetParentId,
-          updated_at: new Date().toISOString()
+          parent_id: targetParentId
         })
         .eq('id', folderId)
         .select()

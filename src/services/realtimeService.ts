@@ -108,10 +108,11 @@ class RealtimeService {
 
     // Adapter la requête selon la table
     if (table === 'folders') {
-      // Utiliser updated_at pour détecter les mises à jour de structure (parent_id, classeur_id, name)
-      query = query.eq('user_id', this.config.userId).order('updated_at', { ascending: false }).limit(50);
+      // Pour les dossiers, utiliser created_at car il n'y a pas updated_at
+      // Les mises à jour structurelles (parent_id, classeur_id, name) sont détectées via d'autres mécanismes
+      query = query.eq('user_id', this.config.userId).order('created_at', { ascending: false }).limit(50);
       if (lastTimestamp) {
-        query = query.gt('updated_at', lastTimestamp);
+        query = query.gt('created_at', lastTimestamp);
       }
     } else if (table === 'classeurs') {
       // Utiliser created_at faute de colonne updated_at sur classeurs
