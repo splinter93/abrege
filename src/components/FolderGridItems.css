@@ -1,0 +1,83 @@
+/* ==========================================================================
+   FOLDER GRID ITEMS - STYLES COMPLÉMENTAIRES
+   ========================================================================== */
+
+/* Wrapper pour les éléments de grille */
+.folder-item-wrapper,
+.file-item-wrapper {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+/* Styles spécifiques pour les éléments de dossier */
+.folder-item-wrapper .fm-grid-item {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+/* Styles spécifiques pour les éléments de fichier */
+.file-item-wrapper .fm-grid-item {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+/* Animation pour les éléments de grille */
+.folder-item-wrapper,
+.file-item-wrapper {
+  animation: fadeInUp 0.3s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* États de drag & drop améliorés */
+.folder-item-wrapper.drag-over .fm-grid-item,
+.file-item-wrapper.drag-over .fm-grid-item {
+  outline: 2px dashed var(--accent-primary);
+  outline-offset: -6px;
+  background: var(--accent-primary-faded);
+  transform: scale(1.02);
+}
+
+/* États de sélection */
+.folder-item-wrapper.selected .fm-grid-item,
+.file-item-wrapper.selected .fm-grid-item {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: -4px;
+  background: var(--accent-primary-faded);
+}
+
+/* Responsive pour les éléments de grille */
+@media (max-width: 768px) {
+  .folder-item-wrapper,
+  .file-item-wrapper {
+    animation: fadeInUp 0.2s ease-out;
+  }
+}
+
+@media (max-width: 480px) {
+  .folder-item-wrapper,
+  .file-item-wrapper {
+    animation: fadeInUp 0.15s ease-out;
+  }
+} 

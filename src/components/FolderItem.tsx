@@ -61,7 +61,7 @@ const FolderItem: React.FC<FolderItemProps> = ({ folder, onOpen, isRenaming, onR
       }}
     >
       <motion.div
-        className={`fm-grid-item ${isDragOver ? ' drag-over' : ''}`}
+        className={`fm-grid-item folder-item-wrapper ${isDragOver ? ' drag-over' : ''}`}
         variants={folderItemVariants}
         initial="initial"
         animate="animate"
@@ -114,7 +114,6 @@ const FolderItem: React.FC<FolderItemProps> = ({ folder, onOpen, isRenaming, onR
             }
           }
         }}
-        style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start' }}
       >
               <FolderIcon size={60} />
         {isRenaming ? (

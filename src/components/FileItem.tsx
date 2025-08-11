@@ -65,7 +65,7 @@ const FileItem: React.FC<FileItemProps> = ({ file, onOpen, isRenaming, onRename,
         animate="animate"
         exit="exit"
         transition={fileItemTransition}
-        className="fm-grid-item"
+        className="fm-grid-item file-item-wrapper"
         onMouseDown={e => {
           if (e.button === 2) {
             // Clic droit

@@ -1,7 +1,7 @@
 .folders-panel {
   width: 0;
   height: 100%;
-  background-color: var(--bg-main);
+  background-color: var(--surface-1);
   border-right: 1px solid transparent;
   /* transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); */ /* Transition désactivée pour interface simple */
   flex-shrink: 0;
@@ -75,5 +75,5 @@
   font-size: var(--ui-font-size-md);
 }
 .folder-item:hover {
-  background-color: var(--bg-surface);
+  background-color: var(--surface-hover);
 } 

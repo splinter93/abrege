@@ -91,6 +91,12 @@
 
   /* Transitions */
   --transition-speed: 0s;
+  
+  /* Variables manquantes pour les composants de dossiers */
+  --font-main: var(--editor-font-family);
+  --surface-error: rgba(239, 68, 68, 0.1);
+  --text-error: var(--error);
+  --surface-2-rgb: 240, 240, 244;
 }
 
 .dark {
@@ -137,6 +143,10 @@
   --info: #3B82F6;
 
   --transition-speed: 0s;
+  
+  /* Variables manquantes pour les composants de dossiers (dark mode) */
+  --surface-error: rgba(239, 68, 68, 0.15);
+  --surface-2-rgb: 28, 28, 28;
 }
 
 /* Utilisation : ajouter la classe .dark sur <html> ou <body> pour activer le dark mode */

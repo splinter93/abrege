@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import FolderItem from './FolderItem';
 import FileItem from './FileItem';
 import { Folder, FileArticle } from './types';
-import './FolderContent.css';
+import './FoldersSystem.css';
 import { 
   contentVariants, 
   loadingVariants, 
