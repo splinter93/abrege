@@ -4,7 +4,7 @@ import { useMemo } from "react";
 import type { Folder, Classeur } from "@/components/types";
 import ClasseurTabs from "@/components/ClasseurTabs";
 import LogoScrivia from "@/components/LogoScrivia";
-import PrivateSidebar from "@/components/PrivateSidebar";
+import Sidebar from "@/components/Sidebar";
 import FolderManager from "@/components/FolderManager";
 import { useDossiersPage } from "@/hooks/useDossiersPage";
 import "./index.css";
@@ -40,7 +40,7 @@ export default function DossiersPage() {
       </header>
 
       <aside className="dossiers-sidebar-fixed">
-        <PrivateSidebar />
+        <Sidebar />
       </aside>
 
       <main className="dossiers-content-area">

@@ -224,3 +224,8 @@ body.chat-active {
   color: #fff !important;
   border-color: #ff6a00 !important;
 }
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}

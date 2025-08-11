@@ -57,38 +57,52 @@ export default function PrivateHomePage() {
       
       <main className="home-content">
         <header className="home-header">
-          <div className="home-welcome">
-            <h1>Bonjour, {user.email?.split('@')[0] || 'Utilisateur'} !</h1>
-            <p>Bienvenue dans votre espace personnel Scrivia.</p>
+          <div className="home-header-content">
+            <LogoScrivia width={120} />
+            <div className="home-welcome">
+              <h1>Bonjour, {user.email?.split('@')[0] || 'Utilisateur'} !</h1>
+              <p>Bienvenue dans votre espace personnel Scrivia</p>
+            </div>
           </div>
         </header>
 
         <div className="home-dashboard">
-          {/* Stats */}
+          {/* Stats Cards */}
           <section className="home-stats">
             <div className="stat-card">
-              <div className="stat-icon"><Book size={20} /></div>
+              <div className="stat-icon">
+                <Book size={24} />
+              </div>
               <div className="stat-content">
                 <h3>{stats.classeurs}</h3>
                 <p>Classeurs</p>
               </div>
             </div>
+            
             <div className="stat-card">
-              <div className="stat-icon"><FileText size={20} /></div>
+              <div className="stat-icon">
+                <FileText size={24} />
+              </div>
               <div className="stat-content">
                 <h3>{stats.notes}</h3>
                 <p>Notes</p>
               </div>
             </div>
+            
             <div className="stat-card">
-              <div className="stat-icon"><Star size={20} /></div>
+              <div className="stat-icon">
+                <Star size={24} />
+              </div>
               <div className="stat-content">
                 <h3>{stats.favorites}</h3>
                 <p>Favoris</p>
               </div>
             </div>
+            
             <div className="stat-card">
-              <div className="stat-icon"><Calendar size={20} /></div>
+              <div className="stat-icon">
+                <TrendingUp size={24} />
+              </div>
               <div className="stat-content">
                 <h3>12</h3>
                 <p>Cette semaine</p>
@@ -96,44 +110,42 @@ export default function PrivateHomePage() {
             </div>
           </section>
 
-          <div className="home-main-grid">
-            {/* Quick Actions */}
-            <section className="home-actions">
-              <h2>Actions rapides</h2>
-              <div className="action-grid">
-                <button className="action-btn primary">
-                  <Book size={18} />
-                  <span>Nouveau classeur</span>
-                </button>
-                <button className="action-btn">
-                  <FileText size={18} />
-                  <span>Nouvelle note</span>
-                </button>
-                <button className="action-btn">
-                  <MessageSquare size={18} />
-                  <span>Ouvrir le chat</span>
-                </button>
-              </div>
-            </section>
+          {/* Quick Actions */}
+          <section className="home-actions">
+            <h2>Actions rapides</h2>
+            <div className="action-grid">
+              <button className="action-btn primary">
+                <Book size={20} />
+                <span>Nouveau classeur</span>
+              </button>
+              <button className="action-btn">
+                <FileText size={20} />
+                <span>Nouvelle note</span>
+              </button>
+              <button className="action-btn">
+                <MessageSquare size={20} />
+                <span>Ouvrir le chat</span>
+              </button>
+            </div>
+          </section>
 
-            {/* Recent Activity */}
-            <section className="home-activity">
-              <h2>Activité récente</h2>
-              <div className="activity-list">
-                {stats.recentActivity.map((activity, index) => (
-                  <div key={index} className="activity-item">
-                    <div className="activity-item-main">
-                      <div className="activity-icon">
-                        {activity.type === 'note' ? <FileText size={16} /> : <Book size={16} />}
-                      </div>
-                      <span className="activity-title">{activity.title}</span>
-                    </div>
+          {/* Recent Activity */}
+          <section className="home-activity">
+            <h2>Activité récente</h2>
+            <div className="activity-list">
+              {stats.recentActivity.map((activity, index) => (
+                <div key={index} className="activity-item">
+                  <div className="activity-icon">
+                    {activity.type === 'note' ? <FileText size={16} /> : <Book size={16} />}
+                  </div>
+                  <div className="activity-content">
+                    <span className="activity-title">{activity.title}</span>
                     <span className="activity-time">{activity.time}</span>
                   </div>
-                ))}
-              </div>
-            </section>
-          </div>
+                </div>
+              ))}
+            </div>
+          </section>
         </div>
       </main>
     </div>

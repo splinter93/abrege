@@ -1,0 +1,108 @@
+/* ==========================================================================
+   SIDEBAR COMPONENT STYLES - DOSSIERS PAGE
+   ========================================================================== */
+
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.sidebar-main-content {
+  flex: 1;
+  padding: 0;
+}
+
+/* Logo supprimé */
+
+.sidebar-block {
+  margin-bottom: 24px;
+}
+
+.workspace-header {
+  margin-bottom: 15px;
+}
+
+.workspace-title {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: rgba(255, 255, 255, 0.4);
+  margin-bottom: 8px;
+}
+
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 6px;
+  color: rgba(255, 255, 255, 0.7);
+  text-decoration: none;
+  transition: all 0.2s ease;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.nav-link:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.95);
+  transform: translateX(2px);
+}
+
+.nav-link svg {
+  color: rgba(255, 255, 255, 0.5);
+  transition: color 0.2s ease;
+  flex-shrink: 0;
+}
+
+.nav-link:hover svg {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.sidebar-footer {
+  padding: 16px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  margin-top: auto;
+}
+
+.sidebar-footer .nav-link {
+  justify-content: flex-start;
+  padding: 10px 12px;
+  border-radius: 6px;
+  background: transparent;
+  border: none;
+}
+
+.sidebar-footer .nav-link:hover {
+  background: rgba(255, 255, 255, 0.08);
+  transform: translateX(2px);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .sidebar {
+    width: 100%;
+    height: auto;
+    border-right: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  }
+  
+  .sidebar-main-content {
+    padding: 15px;
+  }
+  
+  .sidebar-footer {
+    padding: 15px;
+  }
+} 

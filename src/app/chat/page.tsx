@@ -1,7 +1,7 @@
-import { redirect } from 'next/navigation';
+"use client";
 
-export const dynamic = 'force-dynamic';
+import ChatFullscreenV2 from '@/components/chat/ChatFullscreenV2';
 
 export default function ChatPage() {
-  redirect('/private/chat');
+  return <ChatFullscreenV2 />;
 } 
