@@ -58,7 +58,7 @@
   bottom: -1px;
   display: flex;
   align-items: center;
-  gap: var(--spacing-md);
+  gap: var(--spacing-sm);
   min-width: 120px;
   justify-content: center;
   box-shadow: none;
@@ -87,33 +87,33 @@
 }
 
 .add-classeur-btn {
-  margin-left: var(--spacing-md);
-  background: var(--glass-bg-light);
-  border: 1px solid var(--glass-border-light);
+  margin-left: var(--spacing-lg);
+  margin-top: 18px;
+  background: none;
+  border: none;
   color: var(--text-2);
   padding: 0;
-  border-radius: var(--radius-lg);
   cursor: pointer;
-  transition: var(--transition-normal);
-  font-size: 1.2rem;
-  font-weight: 500;
+  transition: all 0.2s ease;
+  font-size: 1.8rem;
+  font-weight: 400;
   font-family: var(--classeur-font-family);
-  width: 40px;
-  height: 40px;
+  width: auto;
+  height: auto;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
   align-self: center;
-  margin-bottom: var(--spacing-md);
 }
 
 .add-classeur-btn:hover {
-  background-color: var(--glass-bg-medium);
-  color: var(--text-1);
-  border-color: var(--glass-border-medium);
-  transform: scale(1.05);
-  box-shadow: none;
+  color: var(--accent-primary);
+  transform: scale(1.1);
+}
+
+.add-classeur-btn:active {
+  transform: scale(0.95);
 }
 
 /* Styles pour les éléments internes des onglets */
@@ -126,7 +126,7 @@
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: var(--spacing-md);
+  gap: var(--spacing-sm);
   justify-content: center;
 }
 
@@ -216,8 +216,7 @@
   }
   
   .add-classeur-btn {
-    min-width: 44px;
-    height: 44px;
-    padding: var(--spacing-md) var(--spacing-md);
+    font-size: 2rem;
+    margin-left: var(--spacing-md);
   }
 } 
