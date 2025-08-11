@@ -4,6 +4,7 @@ import { ChatMessage as ChatMessageType } from '@/types/chat';
 import EnhancedMarkdownMessage from './EnhancedMarkdownMessage';
 import ReasoningMessage from './ReasoningMessage';
 import ToolCallMessage from './ToolCallMessage';
+import CopyButton from './CopyButton';
 import { useChatStore } from '@/store/useChatStore';
 
 interface ChatMessageProps {
@@ -102,6 +103,18 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, className, isStreami
           </div>
         )}
       </div>
+      
+      {/* ✅ NOUVEAU: Bouton de copie pour les messages assistant */}
+      {role === 'assistant' && content && (
+        <div className="chat-message-actions">
+          <CopyButton 
+            content={content}
+            size="small"
+            variant="icon-only"
+            className="chat-copy-button"
+          />
+        </div>
+      )}
     </div>
   );
 };

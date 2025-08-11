@@ -258,17 +258,43 @@ export async function handleGroqGptOss120b(params: {
   const toolCallOrder: string[] = [];
   let tokenBuffer = '';
   let bufferSize = 0;
-  const BATCH_SIZE = 5;
+  const BATCH_SIZE = 20; // ✅ AUGMENTÉ: De 5 à 20 pour réduire les saccades
+  const MAX_FLUSH_RETRIES = 3; // ✅ NOUVEAU: Retry pour les flush échoués
 
-  const flushTokenBuffer = async () => {
+  const flushTokenBuffer = async (retryCount = 0) => {
     if (tokenBuffer.length > 0) {
       try {
-        await channel.send({ type: 'broadcast', event: 'llm-token-batch', payload: { tokens: tokenBuffer, sessionId } });
-      } catch (err) {
-        logger.error('[Groq OSS] ❌ channel.send failed:', err);
-      } finally {
+        await channel.send({ 
+          type: 'broadcast', 
+          event: 'llm-token-batch', 
+          payload: { tokens: tokenBuffer, sessionId } 
+        });
         tokenBuffer = '';
         bufferSize = 0;
+        logger.dev(`[Groq OSS] ✅ Buffer flushé avec succès (${retryCount > 0 ? `retry ${retryCount}` : 'première tentative'})`);
+      } catch (err) {
+        if (retryCount < MAX_FLUSH_RETRIES) {
+          logger.warn(`[Groq OSS] ⚠️ Flush échoué, retry ${retryCount + 1}/${MAX_FLUSH_RETRIES}:`, err);
+          // ✅ RETRY AVEC BACKOFF: Attendre avant de réessayer
+          setTimeout(() => flushTokenBuffer(retryCount + 1), 100 * Math.pow(2, retryCount));
+        } else {
+          logger.error('[Groq OSS] ❌ Flush définitivement échoué après tous les retry:', err);
+          // ✅ FALLBACK: Envoyer token par token en cas d'échec définitif
+          logger.warn('[Groq OSS] 🔄 Fallback: envoi token par token...');
+          for (const token of tokenBuffer) {
+            try {
+              await channel.send({ 
+                type: 'broadcast', 
+                event: 'llm-token', 
+                payload: { token, sessionId } 
+              });
+            } catch (tokenError) {
+              logger.error('[Groq OSS] ❌ Token individuel échoué:', tokenError);
+            }
+          }
+          tokenBuffer = '';
+          bufferSize = 0;
+        }
       }
     }
   };

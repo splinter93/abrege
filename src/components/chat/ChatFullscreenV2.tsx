@@ -126,7 +126,7 @@ const ChatFullscreenV2: React.FC = () => {
   // Flag pour éviter la double persistance quand des tools sont utilisés
   const toolFlowActiveRef = useRef(false);
 
-  // Hook de streaming optimisé
+  // ✅ AMÉLIORATION: Hook de streaming optimisé avec gestion des tokens individuels
   const {
     isStreaming,
     content: streamingContent,

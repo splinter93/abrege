@@ -190,11 +190,13 @@ export function useChatStreaming(options: UseChatStreamingOptions = {}): UseChat
           retryCountRef.current = 0; // reset retries on success
           logger.debug('[useChatStreaming] ✅ Canal connecté');
         } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
-          // Backoff exponentiel avec jitter
+          // ✅ AMÉLIORATION: Backoff exponentiel avec jitter et gestion des erreurs
           const attempt = retryCountRef.current + 1;
           if (attempt > maxRetries) {
             logger.error('[useChatStreaming] ❌ Nombre maximum de tentatives atteint');
             setIsStreaming(false);
+            // ✅ NOUVEAU: Notifier l'erreur pour permettre une récupération côté UI
+            onError?.('Connexion perdue après plusieurs tentatives. Veuillez rafraîchir la page.');
             return;
           }
           retryCountRef.current = attempt;
@@ -204,9 +206,16 @@ export function useChatStreaming(options: UseChatStreamingOptions = {}): UseChat
           logger.error('[useChatStreaming] ❌ Erreur canal - Tentative de reconnexion...', { attempt, delay });
 
           setIsStreaming(false);
+          // ✅ AMÉLIORATION: Délai plus intelligent et préservation des buffers
           setTimeout(() => {
-            // Re-subscribe without clearing buffers
-            attachAndSubscribe(channelIdRef.current, sessionIdRef.current, { preserveBuffers: true });
+            try {
+              // Re-subscribe without clearing buffers pour éviter la perte de données
+              attachAndSubscribe(channelIdRef.current, sessionIdRef.current, { preserveBuffers: true });
+            } catch (reconnectError) {
+              logger.error('[useChatStreaming] ❌ Erreur lors de la reconnexion:', reconnectError);
+              // ✅ NOUVEAU: Fallback en cas d'échec de reconnexion
+              onError?.('Impossible de se reconnecter. Veuillez rafraîchir la page.');
+            }
           }, delay);
         } else if (status === 'CLOSED') {
           logger.debug('[useChatStreaming] 🔒 Canal fermé');
