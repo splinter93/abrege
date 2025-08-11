@@ -288,22 +288,25 @@ const ChatWidget: React.FC = () => {
           <div className="chat-content">
             <div className="chat-messages-container" role="log" aria-live="polite" aria-label="Messages du chat">
               <div className="chat-message-list">
-                {messages.map((msg: ChatMessage, idx: number) => (
-                  <div 
-                    key={msg.id || idx} 
-                    className={`chat-message chat-message-${msg.role}`}
-                    role="article"
-                    aria-label={`Message ${msg.role === 'user' ? 'utilisateur' : 'assistant'}`}
-                  >
-                    <div className={`chat-message-bubble chat-message-bubble-${msg.role}`}>
-                      {msg.role === 'assistant' ? (
-                        <EnhancedMarkdownMessage content={msg.content} />
-                      ) : (
-                        msg.content
-                      )}
+                {messages
+                  .slice()
+                  .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
+                  .map((msg: ChatMessage) => (
+                    <div 
+                      key={msg.id || `${msg.role}-${msg.timestamp}-${(msg as any).tool_call_id || ''}`}
+                      className={`chat-message chat-message-${msg.role}`}
+                      role="article"
+                      aria-label={`Message ${msg.role === 'user' ? 'utilisateur' : 'assistant'}`}
+                    >
+                      <div className={`chat-message-bubble chat-message-bubble-${msg.role}`}>
+                        {msg.role === 'assistant' ? (
+                          <EnhancedMarkdownMessage content={msg.content || ''} />
+                        ) : (
+                          (msg.content || '')
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
               </div>
               {loading && (
                 <div className="loading-bubble">

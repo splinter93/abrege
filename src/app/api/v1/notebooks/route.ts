@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-// import.*NextResponse.*from 'next/server';
+import type { NextRequest } from 'next/server';
 import type { Classeur } from '@/types/supabase';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -16,7 +16,13 @@ async function getAuthenticatedClient(req: NextRequest) {
   if (authHeader && authHeader.startsWith('Bearer ')) {
     userToken = authHeader.substring(7);
     
-    // // const supabase = [^;]+;]+;
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      global: {
+        headers: {
+          Authorization: `Bearer ${userToken}`
+        }
+      }
+    });
     
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     
@@ -55,10 +61,10 @@ export async function GET(req: NextRequest): Promise<Response> {
     return new Response(JSON.stringify({ notebooks: data }), { status: 200, headers: { "Content-Type": "application/json" } });
   } catch (err: unknown) {
     // const error = [^;]+;
-    if (err instanceof Error && (error.message === 'Token invalide ou expiré' || error.message === 'Authentification requise')) {
-      return new Response(JSON.stringify({ error: error.message }), { status: 401, headers: { "Content-Type": "application/json" } });
+    if (err instanceof Error && (err.message === 'Token invalide ou expiré' || err.message === 'Authentification requise')) {
+      return new Response(JSON.stringify({ error: err.message }), { status: 401, headers: { "Content-Type": "application/json" } });
     }
-    return new Response(JSON.stringify({ error: err instanceof Error ? error.message : 'Erreur inconnue' }), { status: 500, headers: { "Content-Type": "application/json" } });
+    return new Response(JSON.stringify({ error: err instanceof Error ? err.message : 'Erreur inconnue' }), { status: 500, headers: { "Content-Type": "application/json" } });
   }
 }
 

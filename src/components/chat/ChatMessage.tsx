@@ -21,6 +21,10 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, className, isStreami
   
   const { role, content, reasoning } = message;
 
+  // Masquer les observations internes de l'assistant
+  if (role === 'assistant' && (message as any).name === 'observation') {
+    return null;
+  }
   // Ne pas afficher les messages 'tool' en tant que bulle dédiée
   if (role === 'tool') {
     return null;
@@ -30,8 +34,13 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, className, isStreami
     if (!raw) return undefined;
     try {
       const data = JSON.parse(raw);
-      if (data && typeof data === 'object' && 'success' in data) {
-        return Boolean((data as any).success);
+      if (data && typeof data === 'object') {
+        if ('success' in data) {
+          return Boolean((data as any).success);
+        }
+        if ('error' in data && (data as any).error) {
+          return false;
+        }
       }
     } catch {
       // ignore non-JSON content
@@ -39,10 +48,14 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, className, isStreami
     return undefined;
   };
 
-  // Pour les messages assistant avec tool_calls, créer les tool_results
+  // Pour les messages assistant avec tool_calls, utiliser tool_results directement
   const getToolResultsForAssistant = () => {
     if (role === 'assistant' && message.tool_calls && message.tool_calls.length > 0) {
-      // Chercher les messages tool correspondants dans le thread
+      // Utiliser d'abord les results attachés au message si présents
+      if (message.tool_results && message.tool_results.length > 0) {
+        return message.tool_results;
+      }
+      // Fallback: chercher les tool messages correspondants dans le thread courant
       const currentSession = useChatStore.getState().currentSession;
       if (currentSession) {
         return currentSession.thread
@@ -57,6 +70,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, className, isStreami
     }
     return message.tool_results;
   };
+
 
   return (
     <div className={`chat-message chat-message-${role} ${className || ''}`}>
@@ -76,7 +90,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, className, isStreami
 
         {/* Contenu markdown normal */}
         {content && (
-          <EnhancedMarkdownMessage content={content} />
+          <EnhancedMarkdownMessage content={content || ''} />
         )}
         
         {/* Indicateur de frappe */}

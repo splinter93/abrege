@@ -130,8 +130,10 @@ export function useChatStreaming(options: UseChatStreamingOptions = {}): UseChat
               channelRef.current = null;
             }
             const finalText = typeof fullResponse === 'string' ? fullResponse : '';
-            setContent(finalText);
-            onComplete?.(finalText, reasoning);
+            // Use current reasoning then clear it to avoid stale reasoning
+            const finalReasoning = reasoning;
+            onComplete?.(finalText, finalReasoning);
+            setReasoning('');
           }
         } catch (error) {
           logger.error('[useChatStreaming] ❌ Erreur completion:', error);

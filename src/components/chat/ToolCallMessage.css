@@ -77,6 +77,23 @@
   color: var(--chat-error);
 }
 
+/* Pending spinner */
+.tool-call-indicator.pending .spinner {
+  width: 14px;
+  height: 14px;
+  animation: spin 1s linear infinite;
+}
+
+.tool-call-indicator.pending .spinner .path {
+  stroke: var(--chat-text-secondary);
+  stroke-linecap: round;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
 .tool-call-toggle {
   color: var(--chat-text-secondary);
   transition: transform 0.2s ease;
@@ -144,4 +161,11 @@
   white-space: pre-wrap;
   word-break: break-word;
   font-family: monospace;
+}
+
+/* Error details */
+.tool-call-result-error-details {
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--chat-error);
 } 

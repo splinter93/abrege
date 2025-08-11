@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
       messages: [
         {
           role: 'system' as const,
-          content: 'Tu es un assistant utile.'
+          content: 'Tu es un assistant IA utile et bienveillant.'
         },
         {
           role: 'user' as const,

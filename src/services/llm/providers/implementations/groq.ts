@@ -1,6 +1,7 @@
 import { BaseProvider, type ProviderCapabilities, type ProviderConfig, type ProviderInfo } from '../base/BaseProvider';
 import type { LLMProvider, AppContext, ChatMessage } from '../../types';
 import { logger } from '@/utils/logger';
+import { getSystemMessage } from '../../templates';
 
 /**
  * Configuration spécifique à Groq
@@ -286,32 +287,12 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
    * Formate le message système avec le contexte
    */
   private formatSystemMessage(context: AppContext): string {
-    let systemMessage = 'Tu es un assistant IA utile et bienveillant.';
-
-    if (context.type) {
-      systemMessage += `\n\n## Contexte utilisateur\n- Type: ${context.type}`;
+    // Utiliser le système de templates
+    const message = getSystemMessage('assistant-contextual', { context });
+    if (!message) {
+      return 'Tu es un assistant IA utile et bienveillant.';
     }
-
-    if (context.name) {
-      systemMessage += `\n- Nom: ${context.name}`;
-    }
-
-    if (context.id) {
-      systemMessage += `\n- ID: ${context.id}`;
-    }
-
-    if (context.content) {
-      systemMessage += `\n- Contenu: ${context.content}`;
-    }
-
-    // ✅ Ajouter des instructions pour les function calls
-    systemMessage += `\n\n## Instructions pour les function calls
-- Tu peux utiliser les outils disponibles pour interagir avec l'API Scrivia
-- Choisis l'outil le plus approprié pour répondre à la demande
-- Fournis les paramètres requis pour chaque outil
-- Explique tes actions de manière claire`;
-
-    return systemMessage;
+    return message;
   }
 
   /**
@@ -369,7 +350,7 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
       const messages = [
         {
           role: 'system',
-          content: 'Tu es un assistant IA utile. Tu peux utiliser les outils disponibles pour interagir avec l\'API Scrivia.'
+          content: getSystemMessage('assistant-tools')
         },
         {
           role: 'user',

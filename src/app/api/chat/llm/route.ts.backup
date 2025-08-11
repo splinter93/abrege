@@ -1,0 +1,66 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { handleGroqGptOss120b } from '@/services/llm/groqGptOss120b';
+import { simpleLogger as logger } from '@/utils/logger';
+
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const { message, context, history, provider, channelId } = body;
+
+    // Validation des paramètres requis
+    if (!message || !context || !history || !channelId) {
+      return NextResponse.json(
+        { error: 'Paramètres manquants', required: ['message', 'context', 'history', 'channelId'] },
+        { status: 400 }
+      );
+    }
+
+    // Extraire le token d'authentification depuis le header Authorization
+    const authHeader = request.headers.get('authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return NextResponse.json(
+        { error: 'Token d\'authentification manquant ou invalide' },
+        { status: 401 }
+      );
+    }
+    
+    const userToken = authHeader.replace('Bearer ', '');
+    
+    // Extraire les valeurs nécessaires depuis le contexte
+    const { sessionId } = context;
+
+    if (!sessionId) {
+      return NextResponse.json(
+        { error: 'sessionId manquant dans le contexte' },
+        { status: 400 }
+      );
+    }
+
+    logger.info(`[LLM Route] 🚀 Démarrage pour session ${sessionId}`);
+
+    // Appel direct à la logique Groq OSS 120B
+    const result = await handleGroqGptOss120b({
+      message,
+      appContext: context, // Mappé depuis 'context'
+      sessionHistory: history, // Mappé depuis 'history'
+      agentConfig: { provider: provider }, // Mappé depuis 'provider'
+      incomingChannelId: channelId,
+      userToken,
+      sessionId
+    });
+
+    logger.info(`[LLM Route] ✅ Session ${sessionId} terminée avec succès`);
+    return result;
+
+  } catch (error) {
+    logger.error(`[LLM Route] ❌ Erreur fatale:`, error);
+
+    return NextResponse.json(
+      {
+        error: 'Erreur interne du serveur',
+        details: error instanceof Error ? error.message : 'Erreur inconnue'
+      },
+      { status: 500 }
+    );
+  }
+} 

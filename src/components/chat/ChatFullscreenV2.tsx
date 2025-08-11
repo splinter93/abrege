@@ -123,6 +123,9 @@ const ChatFullscreenV2: React.FC = () => {
 
   const { currentProvider } = useLLMStore();
 
+  // Flag pour éviter la double persistance quand des tools sont utilisés
+  const toolFlowActiveRef = useRef(false);
+
   // Hook de streaming optimisé
   const {
     isStreaming,
@@ -136,6 +139,7 @@ const ChatFullscreenV2: React.FC = () => {
       // Ne pas persister un message assistant vide
       if (!safeContent) {
         scrollToBottom(true);
+        toolFlowActiveRef.current = false;
         return;
       }
       const finalMessage = {
@@ -144,7 +148,13 @@ const ChatFullscreenV2: React.FC = () => {
         reasoning: fullReasoning,
         timestamp: new Date().toISOString()
       };
-      await addMessage(finalMessage);
+      // Si un tool flow a eu lieu, le serveur a déjà persisté la réponse finale
+      if (toolFlowActiveRef.current) {
+        await addMessage(finalMessage, { persist: false });
+      } else {
+        await addMessage(finalMessage);
+      }
+      toolFlowActiveRef.current = false;
       scrollToBottom(true);
     },
     onError: (errorMessage) => {
@@ -164,6 +174,7 @@ const ChatFullscreenV2: React.FC = () => {
     },
     onToolCalls: async (toolCalls, toolName) => {
       logger.dev('[ChatFullscreenV2] 🔧 Tool calls détectés:', { toolCalls, toolName });
+      toolFlowActiveRef.current = true;
       
       // Créer un message assistant avec les tool calls
       const toolMessage = {
@@ -173,6 +184,8 @@ const ChatFullscreenV2: React.FC = () => {
         timestamp: new Date().toISOString()
       };
       
+      // Noter: la persistance sera faite côté serveur pour éviter les doublons
+      // On ajoute coté client pour l'UI mais le serveur persiste immédiatement pour garantir l'ordre
       await addMessage(toolMessage, { persist: false });
       scrollToBottom(true);
     },
@@ -180,14 +193,45 @@ const ChatFullscreenV2: React.FC = () => {
       logger.dev('[ChatFullscreenV2] ✅ Tool result reçu:', { toolName, success });
       
       // Créer un message tool avec le résultat
-              const toolResultMessage = {
-          role: 'tool' as const,
-          tool_call_id: toolCallId || `call_${Date.now()}`,
-          name: toolName,
-          content: typeof result === 'string' ? result : JSON.stringify(result),
-          timestamp: new Date().toISOString()
-        };
+      const normalizeResultToJsonString = (res: unknown, ok: boolean): string => {
+        try {
+          if (typeof res === 'string') {
+            // Si c'est déjà du JSON, tenter de parser et injecter success si absent
+            try {
+              const parsed = JSON.parse(res);
+              if (parsed && typeof parsed === 'object' && !('success' in parsed)) {
+                return JSON.stringify({ success: !!ok, ...parsed });
+              }
+              return JSON.stringify(parsed);
+            } catch {
+              // Ce n'est pas du JSON: normaliser
+              return JSON.stringify({ success: !!ok, message: res });
+            }
+          }
+          if (res && typeof res === 'object') {
+            const obj = res as Record<string, unknown>;
+            if (!('success' in obj)) {
+              return JSON.stringify({ success: !!ok, ...obj });
+            }
+            return JSON.stringify(obj);
+          }
+          // Fallback pour les types primitifs
+          return JSON.stringify({ success: !!ok, value: res });
+        } catch (e) {
+          // Fallback ultime pour éviter de casser l'UI
+          return JSON.stringify({ success: !!ok, error: 'tool_result_serialization_error' });
+        }
+      };
+
+      const toolResultMessage = {
+        role: 'tool' as const,
+        tool_call_id: toolCallId || `call_${Date.now()}`,
+        name: toolName || 'unknown_tool',
+        content: normalizeResultToJsonString(result, !!success),
+        timestamp: new Date().toISOString()
+      };
       
+      // Laisser le serveur persister; ici on met juste à jour l'UI de façon optimiste
       await addMessage(toolResultMessage, { persist: false });
       scrollToBottom(true);
     }
@@ -450,40 +494,9 @@ const ChatFullscreenV2: React.FC = () => {
               <img src="/logo scrivia white.png" alt="Scrivia" className="chat-logo-img" />
             </Link>
           </div>
-          <div className="chat-session-info">
-            {/* Removed session name per request */}
-          </div>
+          <div className="chat-session-info" />
         </div>
-
         <div className="chat-actions">
-          {/* Bouton Stop pour arrêter le streaming */}
-          {isStreaming && (
-            <button
-              onClick={() => {
-                logger.dev('[ChatFullscreenV2] 🛑 Arrêt manuel du streaming');
-                stopStreaming();
-                setLoading(false);
-                
-                // Ajouter un message d'arrêt
-                const stopMessage = {
-                  role: 'assistant' as const,
-                  content: '**🛑 Génération arrêtée**\n\nLa génération a été interrompue manuellement.',
-                  timestamp: new Date().toISOString()
-                };
-                addMessage(stopMessage);
-                scrollToBottom(true);
-              }}
-              className="chat-stop-btn"
-              aria-label="Arrêter la génération"
-              title="Arrêter la génération"
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <rect x="6" y="6" width="12" height="12" rx="1" ry="1"></rect>
-              </svg>
-              <span>Stop</span>
-            </button>
-          )}
-          
           <ChatKebabMenu
             isWideMode={wideMode}
             isFullscreen={true}
@@ -495,20 +508,23 @@ const ChatFullscreenV2: React.FC = () => {
         </div>
       </div>
 
-      {/* Contenu principal */}
+      {/* Main content */}
       <div className="main-content-area">
         {/* Sidebar */}
-        {sidebarOpen && (
-          <ChatSidebar
-            isOpen={sidebarOpen}
-            isDesktop={isDesktop}
-            onClose={() => setSidebarOpen(false)}
-          />
+        <ChatSidebar
+          isOpen={sidebarOpen}
+          isDesktop={isDesktop}
+          onClose={() => setSidebarOpen(false)}
+        />
+
+        {/* Overlay (mobile/tablette) */}
+        {!isDesktop && sidebarOpen && (
+          <div className="chat-sidebar-overlay" onClick={() => setSidebarOpen(false)} />
         )}
 
-        {/* Container principal */}
+        {/* Content */}
         <div className="chat-content">
-          {/* Bouton sidebar quand fermée */}
+          {/* Sidebar toggle when closed */}
           {!sidebarOpen && (
             <button
               onClick={() => setSidebarOpen(true)}
@@ -516,24 +532,22 @@ const ChatFullscreenV2: React.FC = () => {
               aria-label="Ouvrir les conversations"
               title="Ouvrir les conversations"
             >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
                 <line x1="9" y1="3" x2="9" y2="21"></line>
               </svg>
             </button>
           )}
-          
+
           {/* Messages */}
           <div className="chat-messages-container">
             <div className="chat-message-list">
-              {messages.map((message, index) => (
-                <ChatMessage
-                  key={message.id || index}
-                  message={message}
-                />
-              ))}
-              
-              {/* Message en cours de streaming (réponse finale temporaire) */}
+              {messages
+                .slice()
+                .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
+                .map((message) => (
+                  <ChatMessage key={message.id || `${message.role}-${message.timestamp}-${(message as any).tool_call_id || ''}`} message={message} />
+                ))}
               {isStreaming && (
                 <ChatMessage
                   message={{
@@ -552,11 +566,7 @@ const ChatFullscreenV2: React.FC = () => {
 
           {/* Input */}
           <div className="chat-input-container">
-            <ChatInput
-              onSend={handleSendMessage}
-              loading={loading}
-              textareaRef={React.useRef<HTMLTextAreaElement>(null)}
-            />
+            <ChatInput onSend={handleSendMessage} loading={loading} textareaRef={useRef<HTMLTextAreaElement>(null)} />
           </div>
         </div>
       </div>
@@ -564,4 +574,4 @@ const ChatFullscreenV2: React.FC = () => {
   );
 };
 
-export default ChatFullscreenV2; 
+export default ChatFullscreenV2;

@@ -30,18 +30,20 @@ export default function HomePage() {
           background: 'var(--surface-2, #202124)',
           color: 'var(--text-1, #eaeaec)'
         }}>Browse Folders</Link>
-        <Link href="/private/chat" style={{
+        <Link href="/agents" style={{
           display: 'inline-block',
           padding: '10px 14px',
           borderRadius: 8,
           background: 'var(--surface-2, #202124)',
           color: 'var(--text-1, #eaeaec)'
-        }}>Private Chat</Link>
+        }}>🤖 Agents & Templates</Link>
       </nav>
 
       <section style={{ marginTop: 36, borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 24 }}>
         <h2 style={{ fontSize: 18, marginBottom: 8 }}>Quick links</h2>
         <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'grid', gap: 6 }}>
+          <li><Link href="/agents" style={{ color: 'var(--accent-hover, #5fb2ff)' }}>🤖 Agents & Templates</Link></li>
+          <li><Link href="/agents/demo" style={{ color: 'var(--accent-hover, #5fb2ff)' }}>🧪 Demo Templates</Link></li>
           <li><Link href="/test-streaming" style={{ color: 'var(--accent-hover, #5fb2ff)' }}>Test Streaming</Link></li>
           <li><Link href="/test-mermaid" style={{ color: 'var(--accent-hover, #5fb2ff)' }}>Test Mermaid</Link></li>
           <li><Link href="/test-public" style={{ color: 'var(--accent-hover, #5fb2ff)' }}>Public Note Preview</Link></li>

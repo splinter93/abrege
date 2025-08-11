@@ -1,0 +1,149 @@
+/* Styles pour la page de gestion des agents */
+
+.agents-page {
+  @apply min-h-screen bg-gray-50;
+}
+
+.agents-container {
+  @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8;
+}
+
+.agents-header {
+  @apply mb-8;
+}
+
+.agents-title {
+  @apply text-3xl font-bold text-gray-900 mb-2;
+}
+
+.agents-subtitle {
+  @apply text-lg text-gray-600;
+}
+
+.agents-grid {
+  @apply grid grid-cols-1 lg:grid-cols-3 gap-8;
+}
+
+.agents-sidebar {
+  @apply lg:col-span-1;
+}
+
+.agents-main {
+  @apply lg:col-span-2;
+}
+
+.agents-card {
+  @apply bg-white rounded-lg shadow-sm border border-gray-200 p-6;
+}
+
+.agents-card-title {
+  @apply text-xl font-semibold text-gray-900 mb-4;
+}
+
+.agent-item {
+  @apply w-full text-left p-3 rounded-lg border transition-colors;
+}
+
+.agent-item:hover {
+  @apply border-gray-300 bg-gray-50;
+}
+
+.agent-item.active {
+  @apply border-blue-500 bg-blue-50;
+}
+
+.agent-item-content {
+  @apply flex items-center space-x-3;
+}
+
+.agent-icon {
+  @apply text-2xl;
+}
+
+.agent-info {
+  @apply flex-1 min-w-0;
+}
+
+.agent-name {
+  @apply font-medium text-gray-900 truncate;
+}
+
+.agent-details {
+  @apply text-sm text-gray-500 truncate;
+}
+
+.agent-status {
+  @apply w-2 h-2 bg-green-500 rounded-full;
+}
+
+.agent-empty {
+  @apply text-center py-8;
+}
+
+.agent-empty-icon {
+  @apply text-gray-400 text-4xl mb-2;
+}
+
+.agent-empty-text {
+  @apply text-gray-500;
+}
+
+.agent-config {
+  @apply bg-white rounded-lg shadow-sm border border-gray-200 p-6;
+}
+
+.agent-config-header {
+  @apply mb-6;
+}
+
+.agent-config-title {
+  @apply text-xl font-semibold text-gray-900 mb-2;
+}
+
+.agent-config-subtitle {
+  @apply text-sm text-gray-600;
+}
+
+.agent-select-prompt {
+  @apply text-center py-12;
+}
+
+.agent-select-icon {
+  @apply text-gray-400 text-6xl mb-4;
+}
+
+.agent-select-title {
+  @apply text-lg font-medium text-gray-900 mb-2;
+}
+
+.agent-select-text {
+  @apply text-gray-500;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .agents-grid {
+    @apply grid-cols-1;
+  }
+  
+  .agents-sidebar {
+    @apply order-2;
+  }
+  
+  .agents-main {
+    @apply order-1;
+  }
+}
+
+/* Animations */
+.agent-item {
+  @apply transform transition-all duration-200;
+}
+
+.agent-item:hover {
+  @apply scale-[1.02];
+}
+
+.agent-item.active {
+  @apply scale-[1.01];
+} 

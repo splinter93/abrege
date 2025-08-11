@@ -5,7 +5,6 @@ import { simpleLogger as logger } from '@/utils/logger';
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
-// // const supabase = [^;]+;]+;
 
 interface PollingConfig {
   interval: number; // ms

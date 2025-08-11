@@ -128,4 +128,10 @@ export interface Agent {
   priority: number;
   // Capacités API v2
   api_v2_capabilities?: string[];
+  // Nouveaux paramètres LLM configurables
+  model_variant?: '120b' | '20b';
+  max_completion_tokens?: number;
+  stream?: boolean;
+  reasoning_effort?: 'low' | 'medium' | 'high';
+  stop_sequences?: string[];
 } 

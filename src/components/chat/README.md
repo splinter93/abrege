@@ -7,7 +7,7 @@ Système de chat premium avec interface moderne et fonctionnalités avancées.
 ## 🏗️ Architecture
 
 ### Composants principaux
-- `ChatFullscreen.tsx` - Chat plein écran
+- `ChatFullscreenV2.tsx` - Chat plein écran (version 2)
 - `ChatWidget.tsx` - Widget de chat
 - `ChatSidebar.tsx` - Sidebar des conversations
 - `ChatInput.tsx` - Zone de saisie

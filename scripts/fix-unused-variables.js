@@ -106,7 +106,6 @@ const FILES_TO_FIX = [
   'src/components/RealtimeProvider.tsx',
   'src/components/Sidebar.tsx',
   'src/components/chat/ChatExample.tsx',
-  'src/components/chat/ChatFullscreen.tsx',
   'src/components/chat/ChatFullscreenV2.tsx',
   'src/components/chat/ChatInput.tsx',
   'src/components/chat/ChatKebabMenu.tsx',

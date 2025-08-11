@@ -36,10 +36,51 @@ const ToolCallMessage: React.FC<ToolCallMessageProps> = ({ toolCalls, toolResult
     return toolResults.find(result => result.tool_call_id === toolCallId);
   };
 
-  const isSuccess = (toolCallId: string) => {
+  // Compute status: 'success' | 'error' | 'pending'
+  const getStatus = (toolCallId: string): 'success' | 'error' | 'pending' => {
     const result = getToolResult(toolCallId);
-    if (typeof result?.success === 'boolean') return result.success;
-    return true; // default to success only when success is not provided
+    if (!result) return 'pending';
+    if (typeof result.success === 'boolean') return result.success ? 'success' : 'error';
+    try {
+      const parsed = JSON.parse(result.content || '{}');
+      if (parsed && (parsed.success === false || parsed.error)) return 'error';
+      if (parsed && (parsed.success === true)) return 'success';
+    } catch {}
+    return 'success';
+  };
+
+  // Auto-expand when any tool call is pending to improve visibility during execution
+  const hasPending = toolCalls.some(tc => getStatus(tc.id) === 'pending');
+  React.useEffect(() => {
+    if (hasPending) setCollapsed(false);
+  }, [hasPending]);
+
+  const renderIndicator = (status: 'success' | 'error' | 'pending') => {
+    if (status === 'pending') {
+      return (
+        <div className="tool-call-indicator pending" aria-label="En cours">
+          <svg className="spinner" viewBox="0 0 50 50">
+            <circle className="path" cx="25" cy="25" r="20" fill="none" strokeWidth="5" />
+          </svg>
+        </div>
+      );
+    }
+    if (status === 'success') {
+      return (
+        <div className="tool-call-indicator success" aria-label="Succès">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M20 6L9 17l-5-5"/>
+          </svg>
+        </div>
+      );
+    }
+    return (
+      <div className="tool-call-indicator error" aria-label="Erreur">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M18 6L6 18M6 6l12 12"/>
+        </svg>
+      </div>
+    );
   };
 
   return (
@@ -58,16 +99,8 @@ const ToolCallMessage: React.FC<ToolCallMessageProps> = ({ toolCalls, toolResult
         </div>
         <div className="tool-call-status-indicators">
           {toolCalls.map((toolCall) => (
-            <div key={toolCall.id} className={`tool-call-indicator ${isSuccess(toolCall.id) ? 'success' : 'error'}`}>
-              {isSuccess(toolCall.id) ? (
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M20 6L9 17l-5-5"/>
-                </svg>
-              ) : (
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M18 6L6 18M6 6l12 12"/>
-                </svg>
-              )}
+            <div key={toolCall.id}>
+              {renderIndicator(getStatus(toolCall.id))}
             </div>
           ))}
         </div>
@@ -91,6 +124,20 @@ const ToolCallMessage: React.FC<ToolCallMessageProps> = ({ toolCalls, toolResult
                     <div className="tool-call-result-header">Result</div>
                     <div className="tool-call-result-content">
                       <EnhancedMarkdownMessage content={result.content} />
+                      {(() => {
+                        try {
+                          const parsed = JSON.parse(result.content || '{}');
+                          if ((parsed && parsed.success === false) || parsed?.error) {
+                            const errMsg = (parsed?.message || parsed?.error || 'Erreur').toString();
+                            return (
+                              <div className="tool-call-result-error-details">
+                                ❌ {errMsg}
+                              </div>
+                            );
+                          }
+                        } catch {}
+                        return null;
+                      })()}
                     </div>
                   </div>
                 )}

@@ -1,9 +1,8 @@
-// import.*NextResponse.*from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { logApi } from '@/utils/logger';
 import { createNoteV2Schema, validatePayload, createValidationErrorResponse } from '@/utils/v2ValidationSchemas';
-// import.*optimizedApi.*from '@/services/optimizedApi';
-// import.*get.*from '@/utils/authUtils';
 import { createSupabaseClient } from '@/utils/supabaseClient';
+import { getAuthenticatedUser } from '@/utils/authUtils';
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
   const startTime = Date.now();
@@ -16,9 +15,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
   logApi('v2_note_create', '🚀 Début création note v2', context);
 
-  // Initialiser Supabase
-  // // const supabase = [^;]+;]+;
-
   // 🔐 Authentification
   const authResult = await getAuthenticatedUser(request);
   if (!authResult.success) {
@@ -29,7 +25,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     );
   }
 
-  // const userId = [^;]+;
+  const userId = authResult.userId!;
+  const supabase = createSupabaseClient();
 
   try {
     const body = await request.json();
@@ -107,20 +104,17 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       );
     }
 
-    // const result = [^;]+;
-
     const apiTime = Date.now() - startTime;
     logApi('v2_note_create', `✅ Note créée en ${apiTime}ms`, context);
 
     return NextResponse.json({
       success: true,
       message: 'Note créée avec succès',
-      note: result.note
+      note: note
     });
 
   } catch (err: unknown) {
-    // const error = [^;]+;
-    logApi('v2_note_create', `❌ Erreur serveur: ${error}`, context);
+    logApi('v2_note_create', `❌ Erreur serveur: ${err}`, context);
     return NextResponse.json(
       { error: 'Erreur serveur' },
       { status: 500, headers: { "Content-Type": "application/json" } }

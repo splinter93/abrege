@@ -1215,7 +1215,6 @@ export class AgentApiV2Tools {
       const { createClient } = await import('@supabase/supabase-js');
       const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
       const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-      // // const supabase = [^;]+;]+;
       
       const supabase = createClient(supabaseUrl, supabaseAnonKey);
       const { data: { user }, error } = await supabase.auth.getUser(jwtToken);

@@ -23,7 +23,8 @@ const createSupabaseAdmin = () => {
 
 // Schéma de validation pour mettre à jour une session
 const updateSessionSchema = z.object({
-  name: z.string().min(1, 'Le nom ne peut pas être vide').max(255, 'Le nom est trop long')
+  name: z.string().min(1, 'Le nom ne peut pas être vide').max(255, 'Le nom est trop long').optional(),
+  history_limit: z.number().int().min(1).max(200).optional()
 });
 
 /**
@@ -94,7 +95,7 @@ export async function PUT(
     // Vérifier que la session existe et appartient à l'utilisateur
     const { data: existingSession, error: fetchError } = await userClient
       .from('chat_sessions')
-      .select('id, name')
+      .select('id, name, history_limit')
       .eq('id', sessionId)
       .eq('user_id', userId)
       .single();
@@ -115,13 +116,24 @@ export async function PUT(
       );
     }
 
-    // Mettre à jour le nom de la session
+    // Construire dynamiquement les champs à mettre à jour
+    const updatePayload: Record<string, any> = { updated_at: new Date().toISOString() };
+    if (typeof validatedData.name === 'string' && validatedData.name.trim().length > 0) {
+      updatePayload.name = validatedData.name.trim();
+    }
+    if (typeof validatedData.history_limit === 'number') {
+      updatePayload.history_limit = validatedData.history_limit;
+    }
+
+    if (Object.keys(updatePayload).length === 1) { // uniquement updated_at
+      logger.dev('[Chat Session API] ℹ️ Aucun champ pertinent à mettre à jour');
+      return NextResponse.json({ success: true, data: existingSession });
+    }
+
+    // Mettre à jour la session (nom et/ou history_limit)
     const { data: updatedSession, error: updateError } = await userClient
       .from('chat_sessions')
-      .update({ 
-        name: validatedData.name,
-        updated_at: new Date().toISOString()
-      })
+      .update(updatePayload)
       .eq('id', sessionId)
       .select()
       .single();

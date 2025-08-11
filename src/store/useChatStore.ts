@@ -61,7 +61,20 @@ export const useChatStore = create<ChatStore>()(
       error: null,
 
       // 🔄 Actions de base
-      setSessions: (sessions: ChatSession[]) => set({ sessions: Array.isArray(sessions) ? sessions : [] }),
+      setSessions: (sessions: ChatSession[]) => set({ sessions: Array.isArray(sessions) ? sessions.map((s) => {
+        // Normaliser le thread: IDs stables + tri chronologique
+        const normalizedThread = (s.thread || [])
+          .map((m, idx) => ({
+            ...m,
+            id: m.id || `${m.role}-${m.timestamp}-${(m as any).tool_call_id || ''}-${idx}`
+          }))
+          .sort((a, b) => {
+            const ta = new Date(a.timestamp).getTime();
+            const tb = new Date(b.timestamp).getTime();
+            return ta - tb;
+          });
+        return { ...s, thread: normalizedThread };
+      }) : [] }),
       setCurrentSession: (session: ChatSession | null) => set({ currentSession: session }),
       setSelectedAgent: (agent: Agent | null) => set({ 
         selectedAgent: agent,
@@ -214,7 +227,8 @@ export const useChatStore = create<ChatStore>()(
             id: `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
           };
 
-          const updatedThread = [...currentSession.thread, messageWithId];
+          const updatedThread = [...currentSession.thread, messageWithId]
+            .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
           const updatedSession = {
             ...currentSession,
             thread: updatedThread,
