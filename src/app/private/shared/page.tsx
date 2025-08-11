@@ -1,7 +1,7 @@
 "use client";
 
 import LogoScrivia from "@/components/LogoScrivia";
-import PrivateSidebar from "@/components/PrivateSidebar";
+import Sidebar from "@/components/Sidebar";
 
 export default function SharedNotesPage() {
   return (
@@ -11,7 +11,7 @@ export default function SharedNotesPage() {
       </header>
 
       <aside className="dossiers-sidebar-fixed">
-        <PrivateSidebar />
+        <Sidebar />
       </aside>
 
       <main className="dossiers-content-area">

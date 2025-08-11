@@ -17,7 +17,7 @@ src/app/private/dossiers/
 ```
 src/components/
 ├── ClasseurTabs.css       # Navigation des classeurs
-├── PrivateSidebar.css     # Sidebar de navigation
+├── Sidebar.css            # Sidebar de navigation
 ├── FolderManagerModern.css # Gestionnaire de dossiers
 └── FolderGridItems.css    # Styles des éléments de grille
 ```

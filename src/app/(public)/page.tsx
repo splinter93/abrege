@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import PrivateSidebar from '@/components/PrivateSidebar';
+import Sidebar from '@/components/Sidebar';
 import LogoScrivia from '@/components/LogoScrivia';
 import { Book, FileText, MessageSquare, Star, TrendingUp, Calendar } from 'lucide-react';
 import RecentActivityPrivate from '@/components/RecentActivityPrivate';
@@ -124,7 +124,7 @@ export default function HomePage() {
 
   return (
     <div className="home-page-wrapper">
-      <PrivateSidebar />
+              <Sidebar />
       
       <main className="home-content">
         <header className="home-header">

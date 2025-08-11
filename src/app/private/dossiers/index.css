@@ -15,7 +15,7 @@
 
 /* 3. Composants de navigation */
 @import '../../../components/ClasseurTabs.css';
-@import '../../../components/PrivateSidebar.css';
+
 
 /* 4. Gestionnaire de dossiers et contenu */
 @import '../../../components/FolderManagerModern.css';
