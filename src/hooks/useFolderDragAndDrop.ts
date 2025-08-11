@@ -44,7 +44,23 @@ export const useFolderDragAndDrop = ({
       }
       return;
     }
-    moveItem(itemId, targetFolderId, itemType);
+    
+    // Vérifier si le déplacement est nécessaire
+    const store = useFileSystemStore.getState();
+    let shouldMove = false;
+    
+    if (itemType === 'folder') {
+      const folder = store.folders[itemId];
+      shouldMove = folder && folder.parent_id !== targetFolderId;
+    } else if (itemType === 'file') {
+      const note = store.notes[itemId];
+      shouldMove = note && note.folder_id !== targetFolderId;
+    }
+    
+    // Ne déplacer que si nécessaire
+    if (shouldMove) {
+      moveItem(itemId, targetFolderId, itemType);
+    }
   }, [moveItem]);
 
   // Handler drop sur la racine
@@ -63,7 +79,23 @@ export const useFolderDragAndDrop = ({
     try {
       const data = JSON.parse(e.dataTransfer.getData('application/json'));
       if (data && data.id && data.type) {
-        moveItem(data.id, null, data.type);
+        // Vérifier si l'élément est déjà à la racine pour éviter les déplacements inutiles
+        const store = useFileSystemStore.getState();
+        let shouldMove = false;
+        
+        if (data.type === 'folder') {
+          const folder = store.folders[data.id];
+          shouldMove = folder && folder.parent_id !== null;
+        } else if (data.type === 'file') {
+          const note = store.notes[data.id];
+          shouldMove = note && note.folder_id !== null;
+        }
+        
+        // Ne déplacer que si nécessaire
+        if (shouldMove) {
+          moveItem(data.id, null, data.type);
+        }
+        
         // Si on déplace le dossier courant, revenir à la racine (navigation gérée par le parent)
         if (data.type === 'folder' && data.id === parentFolderId) {
           // No-op here

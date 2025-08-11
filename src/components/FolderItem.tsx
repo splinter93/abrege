@@ -20,7 +20,6 @@ const FolderItem: React.FC<FolderItemProps> = ({ folder, onOpen, isRenaming, onR
   const [inputValue, setInputValue] = React.useState(folder.name);
   const inputRef = React.useRef<HTMLInputElement>(null);
   const [isDragOver, setIsDragOver] = React.useState(false);
-  const [isDraggable, setIsDraggable] = React.useState(false);
   const lastWasRightClick = React.useRef(false);
 
   React.useEffect(() => {
@@ -51,23 +50,31 @@ const FolderItem: React.FC<FolderItemProps> = ({ folder, onOpen, isRenaming, onR
   };
 
   return (
-    <motion.div
-      className={`fm-grid-item ${isDragOver ? ' drag-over' : ''}`}
-      variants={folderItemVariants}
-      initial="initial"
-      animate="animate"
-      exit="exit"
-      transition={folderItemTransition}
+    <div
+      draggable={!isRenaming}
+      onDragStart={(e: React.DragEvent<HTMLDivElement>) => {
+        // Configuration simple du drag
+        e.dataTransfer.setData('itemId', folder.id);
+        e.dataTransfer.setData('itemType', 'folder');
+        e.dataTransfer.setData('application/json', JSON.stringify({ id: folder.id, type: 'folder' }));
+        e.dataTransfer.effectAllowed = 'move';
+      }}
     >
-      <div
+      <motion.div
+        className={`fm-grid-item ${isDragOver ? ' drag-over' : ''}`}
+        variants={folderItemVariants}
+        initial="initial"
+        animate="animate"
+        exit="exit"
+        transition={folderItemTransition}
         onMouseDown={e => {
           if (e.button === 2) {
+            // Clic droit
             e.preventDefault();
             lastWasRightClick.current = true;
-            setIsDraggable(false);
-          } else {
+          } else if (e.button === 0) {
+            // Clic gauche
             lastWasRightClick.current = false;
-            setIsDraggable(!isRenaming);
           }
         }}
         onClick={() => {
@@ -81,23 +88,11 @@ const FolderItem: React.FC<FolderItemProps> = ({ folder, onOpen, isRenaming, onR
           if (onContextMenu) {
             onContextMenu(e, folder);
           }
-          setIsDraggable(!isRenaming);
           lastWasRightClick.current = false;
         }}
         tabIndex={0}
         role="button"
         aria-label={folder.name}
-        draggable={isDraggable}
-        onDragStart={(e: React.DragEvent<HTMLDivElement>) => {
-          if (e.button !== 0) {
-            e.preventDefault();
-            return;
-          }
-          e.dataTransfer.setData('itemId', folder.id);
-          e.dataTransfer.setData('itemType', 'folder');
-          e.dataTransfer.setData('application/json', JSON.stringify({ id: folder.id, type: 'folder' }));
-          e.dataTransfer.effectAllowed = 'move';
-        }}
         onDragOver={(e: React.DragEvent<HTMLDivElement>) => {
           e.preventDefault();
           e.dataTransfer.dropEffect = 'move';
@@ -110,10 +105,7 @@ const FolderItem: React.FC<FolderItemProps> = ({ folder, onOpen, isRenaming, onR
           e.preventDefault();
           e.stopPropagation();
           setIsDragOver(false);
-          try {
-            const data = JSON.parse(e.dataTransfer.getData('application/json'));
-            if (data && data.target === 'tab') return; // Ignore drop venant d'un tab
-          } catch {}
+          
           if (onDropItem) {
             const itemId = e.dataTransfer.getData('itemId');
             const itemType = e.dataTransfer.getData('itemType') as 'folder' | 'file';
@@ -148,8 +140,8 @@ const FolderItem: React.FC<FolderItemProps> = ({ folder, onOpen, isRenaming, onR
             }}
           >{folder.name}</span>
         )}
-      </div>
-    </motion.div>
+      </motion.div>
+    </div>
   );
 };
 

@@ -846,7 +846,6 @@ export class OptimizedApi {
   }
 
   /**
-   * Charger tous les classeurs avec leur contenu (dossiers et notes)
    * Met à jour directement Zustand avec toutes les données
    */
   async loadClasseursWithContent() {
@@ -856,55 +855,57 @@ export class OptimizedApi {
     const startTime = Date.now();
     
     try {
-      // 1. Classeurs via shadow-read
-      const classeursLegacy = async () => {
-        const res = await fetch('/api/v1/classeurs');
-        if (!res.ok) throw new Error('legacy classeurs');
-        return res.json();
-      };
-      const classeurs = await this.shadowRead('classeurs', classeursLegacy, () => this.getClasseursV1(), d => this.normalizeClasseurs(d));
-
+      // 1. Classeurs via API simple (pas de shadow mode par défaut)
+      const classeurs = await this.getClasseursV1();
       const store = useFileSystemStore.getState();
       store.setClasseurs(classeurs);
 
-      // 2. Pour chaque classeur, charger dossiers/notes via shadow tree (depth=1 pour UI)
+      // 2. Chargement parallèle des dossiers et notes pour tous les classeurs
       const classeursArray = Object.values(useFileSystemStore.getState().classeurs);
-      for (const c of classeursArray) {
-        const legacyFolders = async () => {
-          const res = await fetch(`/api/v1/dossiers?classeurId=${c.id}`);
-          if (!res.ok) throw new Error('legacy dossiers');
-          const data = await res.json();
-          return { success: true, tree: [], notes_at_root: [], folders_legacy: data?.dossiers || [] };
-        };
-        const v1Tree = async () => this.getTreeV1(c.id, '1');
+      const loadPromises = classeursArray.map(async (c) => {
+        try {
+          // Charger dossiers et notes en parallèle
+          const [foldersResponse, notesResponse] = await Promise.all([
+            fetch(`/api/v1/dossiers?classeurId=${c.id}`),
+            fetch(`/api/v1/notes?classeurId=${c.id}`)
+          ]);
 
-        await this.shadowRead('tree', legacyFolders, v1Tree, d => this.normalizeTree(d));
-        // Pour l’UI actuelle, on continue à nourrir Zustand avec legacy + notes legacy
-        // TODO (cutover): peupler depuis v1 tree
-        const foldersLegacy = await legacyFolders();
-        const currentFolders = Object.values(useFileSystemStore.getState().folders);
-        const existingIds = new Set(currentFolders.map(f => f.id));
-        const newFolders = (foldersLegacy.folders_legacy || []).filter((f: any) => !existingIds.has(f.id));
-        const allFolders = [...currentFolders, ...newFolders];
-        useFileSystemStore.getState().setFolders(allFolders);
+          let folders = [];
+          let notes = [];
 
-        const notesResponse = await fetch(`/api/v1/notes?classeurId=${c.id}`);
-        if (notesResponse.ok) {
-          const notesData = await notesResponse.json();
-          const currentNotes = Object.values(useFileSystemStore.getState().notes);
-          const existingNoteIds = new Set(currentNotes.map(n => n.id));
-          const newNotes = (notesData.notes || []).filter((n: any) => !existingNoteIds.has(n.id));
-          const allNotes = [...currentNotes, ...newNotes];
-          useFileSystemStore.getState().setNotes(allNotes);
+          if (foldersResponse.ok) {
+            const foldersData = await foldersResponse.json();
+            folders = foldersData?.dossiers || [];
+          }
+
+          if (notesResponse.ok) {
+            const notesData = await notesResponse.json();
+            notes = notesData?.notes || [];
+          }
+
+          return { folders, notes };
+        } catch (error) {
+          logger.warn(`[OptimizedApi] Erreur chargement classeur ${c.id}:`, error);
+          return { folders: [], notes: [] };
         }
-      }
+      });
+
+      const results = await Promise.all(loadPromises);
+      
+      // Mettre à jour le store avec toutes les données
+      const allFolders = results.flatMap(r => r.folders);
+      const allNotes = results.flatMap(r => r.notes);
+      
+      store.setFolders(allFolders);
+      store.setNotes(allNotes);
+
       const totalTime = Date.now() - startTime;
       if (process.env.NODE_ENV === 'development') {
         logger.dev(`[OptimizedApi] ✅ Tous les classeurs et leur contenu chargés en ${totalTime}ms`);
       }
       return true;
     } catch (error) {
-      logger.error('[OptimizedApi] ❌ Erreur loadClasseursWithContent (shadow):', error);
+      logger.error('[OptimizedApi] ❌ Erreur loadClasseursWithContent:', error);
       throw error;
     }
   }

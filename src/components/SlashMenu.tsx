@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useMemo, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { SLASH_COMMANDS } from './slashCommands';
 
@@ -30,6 +30,22 @@ const SlashMenu: React.FC<SlashMenuProps> = ({ open, search, setSearch, onSelect
   const menuRef = useRef<HTMLDivElement>(null);
   const [coords, setCoords] = useState<{ left: number; top: number }>({ left: 0, top: 0 });
 
+  const langKey = (lang ?? 'fr') as 'fr' | 'en';
+
+  // Optimisation : utiliser useMemo pour le filtrage
+  const filtered = useMemo(() => {
+    if (!search) return SLASH_COMMANDS;
+    
+    const searchLower = search.toLowerCase();
+    return SLASH_COMMANDS.filter((cmd: SlashCommand) => {
+      const aliases = Array.isArray(cmd.alias[langKey]) ? cmd.alias[langKey] : [cmd.alias[langKey]];
+      return (
+        aliases.some(a => a && a.toLowerCase().includes(searchLower)) ||
+        cmd.label[langKey].toLowerCase().includes(searchLower)
+      );
+    });
+  }, [search, langKey]);
+
   // Clamp position to viewport and prefer placing below caret like Notion
   useEffect(() => {
     if (!open) return;
@@ -40,16 +56,6 @@ const SlashMenu: React.FC<SlashMenuProps> = ({ open, search, setSearch, onSelect
     setCoords({ left, top });
   }, [open, anchorRef]);
 
-  const langKey = (lang ?? 'fr') as 'fr' | 'en';
-
-  const filtered = SLASH_COMMANDS.filter((cmd: SlashCommand) => {
-    const aliases = Array.isArray(cmd.alias[langKey]) ? cmd.alias[langKey] : [cmd.alias[langKey]];
-    return (
-      aliases.some(a => a && a.toLowerCase().includes(search.toLowerCase())) ||
-      cmd.label[langKey].toLowerCase().includes(search.toLowerCase())
-    );
-  });
-
   useEffect(() => {
     setSelectedIndex(0);
   }, [search, open]);
@@ -58,7 +64,7 @@ const SlashMenu: React.FC<SlashMenuProps> = ({ open, search, setSearch, onSelect
     if (open && inputRef.current) inputRef.current.focus();
   }, [open]);
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLDivElement>) => {
     if (!open) return;
     if (e.key === 'ArrowDown') {
       setSelectedIndex(i => Math.min(i + 1, filtered.length - 1));
@@ -74,7 +80,15 @@ const SlashMenu: React.FC<SlashMenuProps> = ({ open, search, setSearch, onSelect
       e.preventDefault();
       anchorRef.current?.closeMenu && anchorRef.current.closeMenu();
     }
-  };
+  }, [open, filtered, selectedIndex, onSelect, setSearch, anchorRef]);
+
+  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearch(e.target.value);
+  }, [setSearch]);
+
+  const handleBlur = useCallback(() => {
+    if (typeof anchorRef.current?.closeMenu === 'function') anchorRef.current.closeMenu();
+  }, [anchorRef]);
 
   if (!open) return null;
 
@@ -90,11 +104,9 @@ const SlashMenu: React.FC<SlashMenuProps> = ({ open, search, setSearch, onSelect
         ref={inputRef}
         className="slash-search-input"
         value={search}
-        onChange={e => setSearch(e.target.value)}
+        onChange={handleSearchChange}
         placeholder={lang === 'fr' ? 'Rechercher une commande...' : 'Search a command...'}
-        onBlur={() => {
-          if (typeof anchorRef.current?.closeMenu === 'function') anchorRef.current.closeMenu();
-        }}
+        onBlur={handleBlur}
       />
       <div className="slash-menu-list">
         {filtered.length === 0 && (

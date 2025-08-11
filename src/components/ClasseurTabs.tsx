@@ -1,10 +1,8 @@
 "use client";
-import React, { useRef, useEffect, useState } from "react";
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useRef, useEffect, useState, useMemo, useCallback } from "react";
 import SimpleContextMenu from "./SimpleContextMenu";
 import ColorPalette from "./ColorPalette";
 import "./ClasseurTabs.css";
-import { classeurTabVariants, classeurTabTransition } from './FolderAnimation';
 import {
   DndContext,
   PointerSensor,
@@ -24,9 +22,13 @@ import {
 } from "@dnd-kit/sortable";
 import { useRouter } from 'next/navigation';
 
-
-const ALL_EMOJIS =
-  "😀😁😂🤣😃😄😅😆😉😊😋😎😍😘🥰😗😙😚🙂🤗🤩🤔🤨😐😑😶🙄😏😣😥😮🤐😯😪😫😴😌😛😜😝🤤😒😓😔😕🙃🤑😲☹️🙁😖😞😟😤😢😭😦😧😨😩🤯😬😰😱🥵🥶😳🤪😵😡😠🤬😷🤒🤕🤢🤮🤧😇🥳🥺🤠🤡🤥🤫🤭🧐🤓😈👿👹👺💀👻👽🤖💩😺😸😹😻😼😽🙀😿😾🐶🐱🐭🐹🐰🦊🐻🐼🐨🐯🦁🐮🐷🐽🐸🐵🙈🙉🙊🐒🐔🐧🐦🐤🐣🐥🦆🦅🦉🦇🐺🐗🐴🦄🐝🐛🦋🐌🐞🐜🦟🦗🕷️🕸️🐢🐍🦎🦂🦀🦞🦐🦑🐙🦑🦐🦞🦀🦋🐌🐛🐜🐝🦗🕷️🦂🦟🦠🐢🐍🦎🦖🦕🐙🦑🦐🦞🦀🐡🐠🐟🐬🐳🐋🦈🐊🐅🐆🦓🦍🦧🐘🦛🦏🐪🐫🦒🦘🦥🦦🦨🦡🐁🐀🐇🐿️🦔🐾🐉🐲🌵🎄🌲🌳🌴🌱🌿☘️🍀🎍🎋🍃🍂🍁🍄🌾💐🌷🌹🥀🌺🌸🌼🌻🌞🌝🌛🌜🌚🌕🌖🌗🌘🌑🌒🌓🌔🌙🌎🌍🌏💫⭐🌟✨⚡☄️💥🔥🌪️🌈☀️🌤️⛅🌥️🌦️🌧️🌨️🌩️🌪️🌫️🌬️🌀🌈🌂☂️☔⛱️⚽🏈⚾🥎🎾🏐🏉🥏🎱🏓🏸🥅🏒🏑🏏⛳🏹🎣🥊🥋🎽⛸️🥌🛷⛷️🏂🏋️🤼🤸⛹️🤺🤾🏌️🏇🧘🏄🏊🤽🚣🧗🚵🚴🏆🥇🥈🥉🏅🎖️��️🎗️🎫🎟️🎪🤹🎭🎨🎬🎤🎧🎼🎹🥁🎷🎺🎸🎻🎲🎯🎳🎮🎰🎲🧩🧸🪁🪀🪅🪆🪐🪁🪀🪅🪆🪐🪁🪀🪅🪆🪐".split("");
+// Emojis optimisés - seulement les plus utilisés
+const COMMON_EMOJIS = [
+  "📁", "📚", "📝", "🎯", "💡", "🔍", "📊", "📈", "📉", "📋", 
+  "📌", "📍", "🎨", "🎭", "🎪", "🎬", "🎤", "🎧", "🎼", "🎹",
+  "🏠", "🏢", "🏫", "🏥", "🏪", "🏨", "🏰", "🏯", "🏛️", "⛪",
+  "🌍", "🌎", "🌏", "🌐", "🌍", "🌎", "🌏", "🌐", "🌍", "🌎"
+];
 
 export interface Classeur {
   id: string;
@@ -50,30 +52,27 @@ function SortableTab({ classeur, isActive, onSelectClasseur, onContextMenu, isDr
   const droppable = useDroppable({ id: classeur.id });
   const isOverlayMode = !!isOverlay;
   
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    try {
+      const data = JSON.parse(e.dataTransfer.getData('application/json'));
+      if (data && data.id && data.type) {
+        window.dispatchEvent(new CustomEvent('drop-to-classeur', {
+          detail: { classeurId: classeur.id, itemId: data.id, itemType: data.type }
+        }));
+      }
+    } catch {}
+  }, [classeur.id]);
+  
   return (
-    <motion.div
+    <div
       ref={node => {
         sortable.setNodeRef(node);
         droppable.setNodeRef(node);
       }}
       className={`motion-tab-wrapper${(sortable.isDragging || isOverlayMode) ? ' dragged' : ''}${(droppable.isOver && !sortable.isDragging) ? ' drag-over-target' : ''}`}
-      variants={classeurTabVariants}
-      initial="initial"
-      animate="animate"
-      exit="exit"
-      transition={classeurTabTransition}
       onDragOver={e => e.preventDefault()}
-      onDrop={e => {
-        e.preventDefault();
-        try {
-          const data = JSON.parse(e.dataTransfer.getData('application/json'));
-          if (data && data.id && data.type) {
-            window.dispatchEvent(new CustomEvent('drop-to-classeur', {
-              detail: { classeurId: classeur.id, itemId: data.id, itemType: data.type }
-            }));
-          }
-        } catch {}
-      }}
+      onDrop={handleDrop}
       style={{
         display: "inline-block",
         opacity: 1,
@@ -98,9 +97,9 @@ function SortableTab({ classeur, isActive, onSelectClasseur, onContextMenu, isDr
         >
           {classeur.emoji && classeur.emoji.trim() !== "" ? classeur.emoji : "📁"}
         </span>
-        <span style={{ fontFamily: "inherit" }}>{classeur.name}</span>
+        <span className="classeur-name">{classeur.name}</span>
       </button>
-    </motion.div>
+    </div>
   );
 }
 
@@ -238,19 +237,17 @@ const ClasseurTabs: React.FC<ClasseurTabsProps> = ({
       <div className="classeur-tabs-btn-list">
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
           <SortableContext items={safeClasseurs.map((c) => c.id)} strategy={horizontalListSortingStrategy}>
-            <AnimatePresence mode="popLayout">
-              {safeClasseurs.map((classeur) => (
-                <SortableTab
-                  key={classeur.id}
-                  classeur={classeur}
-                  isActive={activeClasseurId === classeur.id}
-                  onSelectClasseur={handleSelectClasseur}
-                  onContextMenu={handleContextMenu}
-                  isDragging={false}
-                  isOverlay={false}
-                />
-              ))}
-            </AnimatePresence>
+            {safeClasseurs.map((classeur) => (
+              <SortableTab
+                key={classeur.id}
+                classeur={classeur}
+                isActive={activeClasseurId === classeur.id}
+                onSelectClasseur={handleSelectClasseur}
+                onContextMenu={handleContextMenu}
+                isDragging={false}
+                isOverlay={false}
+              />
+            ))}
           </SortableContext>
           <DragOverlay>
             {draggedClasseur ? (
@@ -337,7 +334,7 @@ const ClasseurTabs: React.FC<ClasseurTabsProps> = ({
             >
               ✕
             </button>
-            {ALL_EMOJIS.map((emoji, index) => (
+            {COMMON_EMOJIS.map((emoji, index) => (
               <button
                 key={index}
                 style={{

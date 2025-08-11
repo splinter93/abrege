@@ -48,16 +48,11 @@ const FileItem: React.FC<FileItemProps> = ({ file, onOpen, isRenaming, onRename,
     }
   };
 
-  // const info = file.updated_at ? new Date(file.updated_at).toLocaleDateString() : file.source_type;
   return (
     <div
-      draggable={isDraggable}
+      draggable={!isRenaming}
       onDragStart={(e: React.DragEvent<HTMLDivElement>) => {
-        // On ne gère que le clic gauche pour le drag
-        if (e.button !== 0) {
-          e.preventDefault();
-          return;
-        }
+        // Configuration simple du drag
         e.dataTransfer.setData('itemId', file.id);
         e.dataTransfer.setData('itemType', 'file');
         e.dataTransfer.setData('application/json', JSON.stringify({ id: file.id, type: 'file' }));
@@ -71,18 +66,21 @@ const FileItem: React.FC<FileItemProps> = ({ file, onOpen, isRenaming, onRename,
         exit="exit"
         transition={fileItemTransition}
         className="fm-grid-item"
-
         onMouseDown={e => {
           if (e.button === 2) {
+            // Clic droit
             e.preventDefault();
             lastWasRightClick.current = true;
-            setIsDraggable(false);
-          } else {
+          } else if (e.button === 0) {
+            // Clic gauche
             lastWasRightClick.current = false;
-            setIsDraggable(!isRenaming);
           }
         }}
         onClick={() => {
+          // Single-click: do not open; only clear right-click flag
+          lastWasRightClick.current = false;
+        }}
+        onDoubleClick={() => {
           if (!isRenaming && !lastWasRightClick.current) {
             onOpen(file);
           }
@@ -96,7 +94,6 @@ const FileItem: React.FC<FileItemProps> = ({ file, onOpen, isRenaming, onRename,
             e.preventDefault();
             onContextMenu(e, file);
           }
-          setIsDraggable(!isRenaming);
           lastWasRightClick.current = false;
         }}
       >

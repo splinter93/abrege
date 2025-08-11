@@ -39,6 +39,7 @@ import { uploadImageForNote } from '@/utils/fileUpload';
 
 /**
  * Full Editor – markdown is source of truth; HTML only for display.
+ * Optimisé pour les performances avec extensions réduites.
  */
 const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> = ({ noteId, readonly = false, userId = 'me' }) => {
   const router = useRouter();
@@ -98,7 +99,9 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
       const api = OptimizedApi.getInstance();
       updateNote(noteId, { header_image: normalized } as any);
       await api.updateNoteAppearance(noteId, { header_image: normalized ?? null });
-    } catch {}
+    } catch (error) {
+      console.error('Error updating header image:', error);
+    }
   }, [noteId, updateNote]);
 
   React.useEffect(() => {
@@ -136,7 +139,12 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
   const editor = useEditor({
     editable: !isReadonly,
     extensions: [
-      StarterKit.configure({ codeBlock: false }),
+      StarterKit.configure({ 
+        codeBlock: false,
+        // Désactiver les extensions non essentielles pour les performances
+        code: false,
+        horizontalRule: false
+      }),
       Underline,
       TextAlign.configure({ types: ['heading', 'paragraph'] }),
       TaskList,
@@ -153,7 +161,7 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
       Markdown.configure({ html: false })
     ],
     content: content || '',
-    onUpdate: ({ editor }) => {
+    onUpdate: React.useCallback(({ editor }) => {
       try {
         const md = (editor.storage as any)?.markdown?.getMarkdown?.() as string | undefined;
         const nextMarkdown = typeof md === 'string' ? md : content;
@@ -163,9 +171,12 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
       } catch {
         // ignore
       }
-    },
+    }, [content, noteId, updateNote]),
     // Option read by CustomImage
-    handleOpenImageMenu: () => { setImageMenuTarget('content'); setImageMenuOpen(true); },
+    handleOpenImageMenu: React.useCallback(() => { 
+      setImageMenuTarget('content'); 
+      setImageMenuOpen(true); 
+    }, []),
   } as any);
 
   // Open slash menu on '/'

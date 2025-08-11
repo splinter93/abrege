@@ -125,8 +125,9 @@ export function useFolderManagerState(classeurId: string, parentFolderId?: strin
       .map(toUIFile),
     [notes, classeurId, parentFolderId]
   );
-  // Supprimé : la navigation est contrôlée par le parent (FolderManager)
-  const [loading, setLoading] = useState<boolean>(true);
+  
+  // --- CHARGEMENT INITIAL OPTIMISÉ ---
+  const [loading, setLoading] = useState<boolean>(false); // Changé à false par défaut
   const [error, setError] = useState<string | null>(null);
 
   // --- RENOMMAGE ---
@@ -136,11 +137,22 @@ export function useFolderManagerState(classeurId: string, parentFolderId?: strin
   // --- CHARGEMENT INITIAL ---
   useEffect(() => {
     if (process.env.NODE_ENV === 'development') {
-    logger.dev('[EFFECT] useEffect triggered in useFolderManagerState (loading)', { classeurId, refreshKey });
+      logger.dev('[EFFECT] useEffect triggered in useFolderManagerState (loading)', { classeurId, refreshKey });
     }
-    setLoading(false); // On considère que le chargement Zustand est instantané
+    
+    // Chargement immédiat si les données sont déjà disponibles
+    const hasData = folders.length > 0 || notes.length > 0;
+    if (hasData) {
+      setLoading(false);
+    } else {
+      setLoading(true);
+      // Simuler un chargement rapide pour éviter le blocage
+      const timer = setTimeout(() => setLoading(false), 100);
+      return () => clearTimeout(timer);
+    }
+    
     setError(null);
-  }, [classeurId, refreshKey]); // parentFolderId retiré pour éviter toute boucle
+  }, [classeurId, refreshKey, folders.length, notes.length]); // Ajout des dépendances de données
 
   // --- SYNCHRO TEMPS RÉEL (Supabase Realtime) ---
   // Le RealtimeProvider gère déjà les souscriptions, pas besoin d'appeler useSupabaseRealtime ici
@@ -148,12 +160,12 @@ export function useFolderManagerState(classeurId: string, parentFolderId?: strin
 
   useEffect(() => {
     if (process.env.NODE_ENV === 'development') {
-    logger.dev('[EFFECT] useEffect triggered in useFolderManagerState (realtime status)', { 
-      classeurId, 
-      parentFolderId, 
-      refreshKey
-      // isConnected retiré car géré par RealtimeProvider
-    });
+      logger.dev('[EFFECT] useEffect triggered in useFolderManagerState (realtime status)', { 
+        classeurId, 
+        parentFolderId, 
+        refreshKey
+        // isConnected retiré car géré par RealtimeProvider
+      });
     }
   }, [classeurId, parentFolderId, refreshKey]);
 
@@ -172,7 +184,7 @@ export function useFolderManagerState(classeurId: string, parentFolderId?: strin
   const createFolder = useCallback(async (name: string): Promise<Folder | undefined> => {
     try {
       if (process.env.NODE_ENV === 'development') {
-      logger.dev('[UI] 📁 Création dossier avec API optimisée...', { name, classeurId, parentFolderId });
+        logger.dev('[UI] 📁 Création dossier avec API optimisée...', { name, classeurId, parentFolderId });
       }
       const result = await optimizedApi.createFolder({
         name,
@@ -180,7 +192,7 @@ export function useFolderManagerState(classeurId: string, parentFolderId?: strin
         parent_id: parentFolderId,
       });
       if (process.env.NODE_ENV === 'development') {
-      logger.dev('[UI] ✅ Dossier créé avec API optimisée:', result.folder.name);
+        logger.dev('[UI] ✅ Dossier créé avec API optimisée:', result.folder.name);
       }
       return toUIFolder(result.folder);
     } catch (err) {
@@ -198,7 +210,7 @@ export function useFolderManagerState(classeurId: string, parentFolderId?: strin
       const uniqueName = generateUniqueNoteName(filteredFiles);
       
       if (process.env.NODE_ENV === 'development') {
-      logger.dev('[UI] 📝 Création note, en attente du patch realtime...', { name: uniqueName, classeurId, parentFolderId });
+        logger.dev('[UI] 📝 Création note, en attente du patch realtime...', { name: uniqueName, classeurId, parentFolderId });
       }
       const payload: CreateNotePayload = {
         source_title: uniqueName,
@@ -210,11 +222,11 @@ export function useFolderManagerState(classeurId: string, parentFolderId?: strin
         payload.folder_id = parentFolderId;
       }
       if (process.env.NODE_ENV === 'development') {
-      logger.dev('Payload createNote optimisée', payload);
+        logger.dev('Payload createNote optimisée', payload);
       }
       const result = await optimizedApi.createNote(payload);
       if (process.env.NODE_ENV === 'development') {
-      logger.dev('[UI] ✅ Note créée avec API optimisée:', result.note.source_title);
+        logger.dev('[UI] ✅ Note créée avec API optimisée:', result.note.source_title);
       }
       return result.note;
     } catch (err) {
@@ -350,8 +362,27 @@ export function useFolderManagerState(classeurId: string, parentFolderId?: strin
   // --- IMBRICATION DnD ---
   const moveItem = useCallback(async (id: string, newParentId: string | null, type: 'folder' | 'file') => {
     try {
+      // Vérifier si le déplacement est nécessaire
+      let shouldMove = false;
+      
+      if (type === 'folder') {
+        const folder = folders.find(f => f.id === id);
+        shouldMove = folder ? folder.parent_id !== newParentId : false;
+      } else {
+        const note = notes.find(n => n.id === id);
+        shouldMove = note ? note.folder_id !== newParentId : false;
+      }
+      
+      // Ne déplacer que si nécessaire
+      if (!shouldMove) {
+        if (process.env.NODE_ENV === 'development') {
+          logger.dev('[UI] 📦 Déplacement ignoré : élément déjà à la bonne position', { id, newParentId, type });
+        }
+        return;
+      }
+      
       if (process.env.NODE_ENV === 'development') {
-      logger.dev('[UI] 📦 Déplacement item avec API...', { id, newParentId, type });
+        logger.dev('[UI] 📦 Déplacement item avec API...', { id, newParentId, type });
       }
       if (type === 'folder') {
         await optimizedApi.moveFolder(id, newParentId, activeClasseurId || undefined);
@@ -359,17 +390,17 @@ export function useFolderManagerState(classeurId: string, parentFolderId?: strin
         // Utiliser l'API optimisée pour le déplacement de note
         const result = await optimizedApi.moveNote(id, newParentId, activeClasseurId || undefined);
         if (process.env.NODE_ENV === 'development') {
-        logger.dev('[UI] ✅ Note déplacée avec API optimisée:', result.note?.source_title || id);
+          logger.dev('[UI] ✅ Note déplacée avec API optimisée:', result.note?.source_title || id);
         }
       }
       if (process.env.NODE_ENV === 'development') {
-      logger.dev('[UI] ✅ Item déplacé avec API + Zustand + polling');
+        logger.dev('[UI] ✅ Item déplacé avec API + Zustand + polling');
       }
     } catch (err) {
       logger.error('[UI] ❌ Erreur déplacement item:', err);
       setError('Erreur lors du déplacement de l\'élément.');
     }
-  }, [activeClasseurId]);
+  }, [activeClasseurId, folders, notes]);
 
   // --- EXPORT ---
   return {
