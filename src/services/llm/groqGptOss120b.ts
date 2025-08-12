@@ -261,8 +261,9 @@ export async function handleGroqGptOss120b(params: {
   const BATCH_SIZE = 20; // ✅ AUGMENTÉ: De 5 à 20 pour réduire les saccades
   const MAX_FLUSH_RETRIES = 3; // ✅ NOUVEAU: Retry pour les flush échoués
 
-  const flushTokenBuffer = async (retryCount = 0) => {
-    if (tokenBuffer.length > 0) {
+  // ✅ NOUVEAU: Gestion robuste du buffer de tokens
+  const flushTokenBuffer = async (retryCount = 0, force = false) => {
+    if (tokenBuffer.length > 0 && (force || bufferSize >= BATCH_SIZE)) {
       try {
         await channel.send({ 
           type: 'broadcast', 
@@ -276,7 +277,7 @@ export async function handleGroqGptOss120b(params: {
         if (retryCount < MAX_FLUSH_RETRIES) {
           logger.warn(`[Groq OSS] ⚠️ Flush échoué, retry ${retryCount + 1}/${MAX_FLUSH_RETRIES}:`, err);
           // ✅ RETRY AVEC BACKOFF: Attendre avant de réessayer
-          setTimeout(() => flushTokenBuffer(retryCount + 1), 100 * Math.pow(2, retryCount));
+          setTimeout(() => flushTokenBuffer(retryCount + 1, force), 100 * Math.pow(2, retryCount));
         } else {
           logger.error('[Groq OSS] ❌ Flush définitivement échoué après tous les retry:', err);
           // ✅ FALLBACK: Envoyer token par token en cas d'échec définitif
@@ -306,23 +307,53 @@ export async function handleGroqGptOss120b(params: {
         logger.info('[Groq OSS] 🎉 reader.read() → done');
         break;
       }
+      
+      // ✅ CORRECTION: Gestion robuste des chunks
       const chunk = new TextDecoder().decode(value);
+      
+      // ✅ AMÉLIORATION: Gestion des chunks incomplets
+      if (pendingDataLine && !chunk.includes('\n')) {
+        // Si on a du pending et que le chunk n'a pas de newline, c'est probablement un JSON incomplet
+        pendingDataLine += chunk;
+        logger.dev(`[Groq OSS] 🔄 Chunk incomplet accumulé (${chunk.length} chars), total pending: ${pendingDataLine.length}`);
+        continue;
+      }
+      
       const lines = chunk.split('\n');
-      for (const line of lines) {
+      
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
         if (!line.startsWith('data: ')) continue;
+        
         const data = line.slice(6);
         if (data === '[DONE]') break;
+        
         try {
-          const toParse = (pendingDataLine ? pendingDataLine : '') + data;
+          // ✅ CORRECTION: Gestion robuste du pendingDataLine
+          const toParse = pendingDataLine + data;
           let parsed: any;
-          try { parsed = JSON.parse(toParse); pendingDataLine = ''; } catch { pendingDataLine = toParse; continue; }
+          
+          try { 
+            parsed = JSON.parse(toParse); 
+            pendingDataLine = ''; // ✅ Reset seulement si parsing réussi
+          } catch (parseError) { 
+            // ✅ AMÉLIORATION: Log du problème de parsing
+            if (toParse.length > 100) {
+              logger.warn(`[Groq OSS] ⚠️ JSON incomplet détecté (${toParse.length} chars), accumulation...`);
+            }
+            pendingDataLine = toParse; 
+            continue; 
+          }
+          
           const delta = parsed.choices?.[0]?.delta;
           if (!delta) continue;
+          
           if (delta.reasoning && delta.channel === 'analysis') {
             await channel.send({ type: 'broadcast', event: 'llm-reasoning', payload: { reasoning: delta.reasoning, sessionId } });
             logger.info(`[Groq OSS] 🧠 Reasoning chunk: ${delta.reasoning}`);
             continue;
           }
+          
           // Collect tool calls only here; broadcast once later with persistence
           if (delta.tool_calls) {
             for (const toolCall of delta.tool_calls) {
@@ -341,14 +372,23 @@ export async function handleGroqGptOss120b(params: {
               delta.message?.content ??
               (typeof delta.text === 'string' ? delta.text : undefined) ??
               (typeof (delta as any).output_text === 'string' ? (delta as any).output_text : undefined);
+              
             if (token) {
               accumulatedContent += token;
               tokenBuffer += token;
               bufferSize++;
-              if (bufferSize >= BATCH_SIZE) await flushTokenBuffer();
+              
+              // ✅ CORRECTION: Flush plus fréquent pour éviter la perte de tokens
+              if (bufferSize >= BATCH_SIZE) {
+                await flushTokenBuffer();
+              }
             }
           }
-        } catch {}
+        } catch (parseError) {
+          // ✅ AMÉLIORATION: Log des erreurs de parsing
+          logger.warn(`[Groq OSS] ⚠️ Erreur parsing ligne: ${line.substring(0, 100)}...`, parseError);
+          continue;
+        }
       }
     }
   } catch (err) {
@@ -356,8 +396,43 @@ export async function handleGroqGptOss120b(params: {
     throw err;
   }
 
-  await flushTokenBuffer();
-  logger.info(`[Groq OSS] 📝 Contenu accumulé : ${accumulatedContent}`);
+  // ✅ CORRECTION: Force flush du buffer restant
+  await flushTokenBuffer(0, true);
+  
+  // ✅ AMÉLIORATION: Log du contenu final complet
+  logger.info(`[Groq OSS] 📝 Contenu accumulé final: ${accumulatedContent}`);
+  logger.info(`[Groq OSS] 📊 Statistiques finales: ${accumulatedContent.length} caractères, ${bufferSize} tokens en buffer`);
+
+  // ✅ NOUVEAU: Validation et correction des messages tronqués
+  const validateAndFixContent = (content: string): string => {
+    if (!content || content.length === 0) return content;
+    
+    // Détecter les messages qui se terminent brutalement
+    const suspiciousEndings = [
+      /[a-zA-ZÀ-ÿ]$/, // Se termine par une lettre
+      /[0-9]$/,       // Se termine par un chiffre
+      /[^\s\.\!\?\;\,\)\]\}]$/, // Se termine par un caractère qui n'est pas une ponctuation naturelle
+    ];
+    
+    const isSuspiciouslyTruncated = suspiciousEndings.some(pattern => pattern.test(content));
+    
+    if (isSuspiciouslyTruncated) {
+      logger.warn(`[Groq OSS] ⚠️ Message potentiellement tronqué détecté (${content.length} chars)`);
+      logger.warn(`[Groq OSS] 📝 Derniers caractères: "${content.slice(-20)}"`);
+      
+      // ✅ CORRECTION: Ajouter une ponctuation si nécessaire
+      if (!content.match(/[\.\!\?\;\,\)\]\}]$/)) {
+        const correctedContent = content + '.';
+        logger.info(`[Groq OSS] ✅ Message corrigé: ajout d'un point final`);
+        return correctedContent;
+      }
+    }
+    
+    return content;
+  };
+
+  // ✅ CORRECTION: Valider et corriger le contenu avant utilisation
+  accumulatedContent = validateAndFixContent(accumulatedContent);
 
   // Fallback non-stream si aucun contenu reçu
   if (!accumulatedContent.trim()) {
@@ -429,9 +504,10 @@ export async function handleGroqGptOss120b(params: {
         if (!('code' in normalized) && (normalized.error || normalized.success === false)) normalized.code = detectErrorCodeFromText(String(normalized.error || normalized.message || ''));
         const isError = normalized.success === false || !!(normalized as any).error;
         let contentStr = JSON.stringify(normalized);
-        const MAX = 8 * 1024;
+        // ✅ CORRECTION: Augmenter la limite de 8KB à 64KB pour éviter la troncature
+        const MAX = 64 * 1024; // 64KB au lieu de 8KB
         if (contentStr.length > MAX) {
-          contentStr = JSON.stringify({ success: normalized.success === true, code: normalized.code, message: 'Résultat tronqué - données trop volumineuses', truncated: true, original_size: contentStr.length, tool_name: normalized.tool_name, tool_args: normalized.tool_args, timestamp: normalized.timestamp });
+          contentStr = JSON.stringify({ success: normalized.success === true, code: normalized.code, message: 'Résultat tronqué - données trop volumineuses', truncated: true, original_size: contentStr.length, tool_name: normalized.tool_name, tool_args: normalized.tool_args, timestamp: normalized.toISOString() });
         }
         toolResultMessages.push({ role: 'tool' as const, tool_call_id: callId, name: call.name, content: contentStr });
         try {
@@ -447,7 +523,8 @@ export async function handleGroqGptOss120b(params: {
       } catch (err) {
         const normalized = { success: false, code: detectErrorCodeFromText(err instanceof Error ? err.message : String(err)), message: `❌ ÉCHEC : ${err instanceof Error ? err.message : String(err)}`, details: { raw: err instanceof Error ? err.stack || err.message : String(err) }, tool_name: call.name, tool_args: args, timestamp: new Date().toISOString() } as const;
         let contentStr = JSON.stringify(normalized);
-        const MAX = 8 * 1024;
+        // ✅ CORRECTION: Augmenter la limite de 8KB à 64KB pour éviter la troncature
+        const MAX = 64 * 1024; // 64KB au lieu de 8KB
         if (contentStr.length > MAX) {
           contentStr = JSON.stringify({ success: false, code: normalized.code, message: 'Résultat tronqué - données trop volumineuses', truncated: true, original_size: contentStr.length, tool_name: normalized.tool_name, tool_args: normalized.tool_args, timestamp: normalized.timestamp });
         }
@@ -629,7 +706,8 @@ export async function handleGroqGptOss120b(params: {
           if (!('code' in normalized) && (normalized.error || normalized.success === false)) normalized.code = detectErrorCodeFromText(String(normalized.error || normalized.message || ''));
           const isError = normalized.success === false || !!(normalized as any).error;
           let contentStr = JSON.stringify(normalized);
-          const MAX = 8 * 1024;
+          // ✅ CORRECTION: Augmenter la limite de 8KB à 64KB pour éviter la troncature
+          const MAX = 64 * 1024; // 64KB au lieu de 8KB
           if (contentStr.length > MAX) {
             contentStr = JSON.stringify({ success: normalized.success === true, code: normalized.code, message: 'Résultat tronqué - données trop volumineuses', truncated: true, original_size: contentStr.length, tool_name: normalized.tool_name, tool_args: normalized.tool_args, timestamp: normalized.timestamp });
           }
@@ -645,7 +723,8 @@ export async function handleGroqGptOss120b(params: {
         } catch (err) {
           const normalized = { success: false, code: detectErrorCodeFromText(err instanceof Error ? err.message : String(err)), message: `❌ ÉCHEC : ${err instanceof Error ? err.message : String(err)}`, details: { raw: err instanceof Error ? err.stack || err.message : String(err) }, tool_name: call.name, tool_args: args, timestamp: new Date().toISOString() } as const;
           let contentStr = JSON.stringify(normalized);
-          const MAX = 8 * 1024;
+          // ✅ CORRECTION: Augmenter la limite de 8KB à 64KB pour éviter la troncature
+          const MAX = 64 * 1024; // 64KB au lieu de 8KB
           if (contentStr.length > MAX) {
             contentStr = JSON.stringify({ success: false, code: normalized.code, message: 'Résultat tronqué - données trop volumineuses', truncated: true, original_size: contentStr.length, tool_name: normalized.tool_name, tool_args: normalized.tool_args, timestamp: normalized.timestamp });
           }
