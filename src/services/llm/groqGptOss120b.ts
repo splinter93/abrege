@@ -258,8 +258,8 @@ export async function handleGroqGptOss120b(params: {
   const toolCallOrder: string[] = [];
   let tokenBuffer = '';
   let bufferSize = 0;
-  const BATCH_SIZE = 20; // ✅ AUGMENTÉ: De 5 à 20 pour réduire les saccades
-  const MAX_FLUSH_RETRIES = 3; // ✅ NOUVEAU: Retry pour les flush échoués
+  const BATCH_SIZE = 50; // ✅ CORRECTION CRITIQUE: De 20 à 50 pour éliminer les saccades
+  const MAX_FLUSH_RETRIES = 5; // ✅ AUGMENTÉ: De 3 à 5 pour plus de robustesse
 
   // ✅ NOUVEAU: Gestion robuste du buffer de tokens
   const flushTokenBuffer = async (retryCount = 0, force = false) => {
