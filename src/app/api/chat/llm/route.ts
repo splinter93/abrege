@@ -15,9 +15,9 @@ export async function POST(request: NextRequest) {
     const { message, context, history, provider, channelId } = body;
 
     // Validation des paramètres requis
-    if (!message || !context || !history || !channelId) {
+    if (!message || !context || !history) {
       return NextResponse.json(
-        { error: 'Paramètres manquants', required: ['message', 'context', 'history', 'channelId'] },
+        { error: 'Paramètres manquants', required: ['message', 'context', 'history'] },
         { status: 400 }
       );
     }
@@ -120,7 +120,6 @@ export async function POST(request: NextRequest) {
       appContext: context,
       sessionHistory: history,
       agentConfig: agentConfig, // ✅ Récupéré depuis la base, par ID si fourni
-      incomingChannelId: channelId,
       userToken,
       sessionId
     });

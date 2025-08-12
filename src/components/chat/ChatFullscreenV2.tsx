@@ -394,7 +394,7 @@ const ChatFullscreenV2: React.FC = () => {
       
       // Démarrer le traitement via useChatResponse
       logger.dev('[ChatFullscreenV2] 🚀 Démarrage traitement avec sessionId:', currentSession.id);
-      await sendMessage(message, currentSession.id);
+      await sendMessage(message, currentSession.id, contextWithSessionId, limitedHistory);
 
     } catch (error) {
       logger.error('Erreur lors de l\'appel LLM:', error);

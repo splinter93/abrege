@@ -11,7 +11,7 @@ interface UseChatResponseReturn {
   isProcessing: boolean;
   content: string;
   reasoning: string;
-  sendMessage: (message: string, sessionId: string) => Promise<void>;
+  sendMessage: (message: string, sessionId: string, context?: any, history?: any[]) => Promise<void>;
   reset: () => void;
 }
 
@@ -22,7 +22,7 @@ export function useChatResponse(options: UseChatResponseOptions = {}): UseChatRe
   
   const { onComplete, onError, onToolCalls, onToolResult } = options;
 
-  const sendMessage = useCallback(async (message: string, sessionId: string) => {
+  const sendMessage = useCallback(async (message: string, sessionId: string, context?: any, history?: any[]) => {
     try {
       setIsProcessing(true);
       setContent('');
@@ -31,7 +31,11 @@ export function useChatResponse(options: UseChatResponseOptions = {}): UseChatRe
       const response = await fetch('/api/chat/llm', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message, sessionId })
+        body: JSON.stringify({ 
+          message, 
+          context: context || { sessionId }, 
+          history: history || [] 
+        })
       });
 
       if (!response.ok) {
