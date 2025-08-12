@@ -4,7 +4,9 @@ import { useChatStore } from '@/store/useChatStore';
 import { useLLMStore } from '@/store/useLLMStore';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { useAppContext } from '@/hooks/useAppContext';
-import { useChatStreaming } from '@/hooks/useChatStreaming';
+import { useChatResponse } from '@/hooks/useChatResponse';
+import { AnimatedMessage } from './AnimatedMessage';
+import { AnimatedReasoning } from './AnimatedReasoning';
 import { useChatScroll } from '@/hooks/useChatScroll';
 import { supabase } from '@/supabaseClient';
 import ChatInput from './ChatInput';
@@ -128,12 +130,12 @@ const ChatFullscreenV2: React.FC = () => {
 
   // ✅ AMÉLIORATION: Hook de streaming optimisé avec gestion des tokens individuels
   const {
-    isStreaming,
-    content: streamingContent,
-    reasoning: streamingReasoning,
-    startStreaming,
-    stopStreaming
-  } = useChatStreaming({
+    isProcessing,
+    content: responseContent,
+    reasoning: responseReasoning,
+    sendMessage,
+    reset
+  } = useChatResponse({
     onComplete: async (fullContent, fullReasoning) => {
       const safeContent = (fullContent || '').trim();
       // Ne pas persister un message assistant vide
@@ -165,13 +167,7 @@ const ChatFullscreenV2: React.FC = () => {
       };
       addMessage(errorMsg);
     },
-    onReasoning: (reasoningToken) => {
-      // Le reasoning est automatiquement accumulé dans le state streamingReasoning
-      // 🔧 OPTIMISATION: Log moins fréquent pour les reasoning tokens
-      if (Math.random() < 0.01) { // Log seulement 1% du temps
-        logger.dev('[ChatFullscreenV2] 🧠 Reasoning token reçu:', reasoningToken);
-      }
-    },
+
     onToolCalls: async (toolCalls, toolName) => {
       logger.dev('[ChatFullscreenV2] 🔧 Tool calls détectés:', { toolCalls, toolName });
       toolFlowActiveRef.current = true;
@@ -333,16 +329,16 @@ const ChatFullscreenV2: React.FC = () => {
     }
   }, [currentSession?.id, scrollToBottom]); // Se déclenche quand la session change
 
-  // Scroll intelligent pendant le streaming
+  // Scroll intelligent pendant le traitement
   useEffect(() => {
-    if (isStreaming && streamingContent) {
-      logger.dev('[ChatFullscreenV2] 📝 Streaming content:', streamingContent.length, 'chars');
+    if (isProcessing && responseContent) {
+      logger.dev('[ChatFullscreenV2] 📝 Response content:', responseContent.length, 'chars');
       // Scroll seulement si l'utilisateur est près du bas
       if (isNearBottom) {
         scrollToBottom();
       }
     }
-  }, [isStreaming, streamingContent, isNearBottom, scrollToBottom]);
+  }, [isProcessing, responseContent, isNearBottom, scrollToBottom]);
 
   const handleSendMessage = async (message: string) => {
     if (!message.trim() || loading) return;
@@ -396,65 +392,9 @@ const ChatFullscreenV2: React.FC = () => {
       // Limiter l'historique selon la configuration
       const limitedHistory = currentSession.thread.slice(-currentSession.history_limit);
       
-      // Générer un ID de canal unique
-      const channelId = `llm-stream-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-      
-      // Démarrer le streaming
-      logger.dev('[ChatFullscreenV2] 🚀 Démarrage streaming avec channelId:', channelId);
-      startStreaming(channelId, currentSession.id);
-
-      // Appeler l'API LLM
-      const response = await fetch('/api/chat/llm', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          message,
-          context: contextWithSessionId,
-          history: limitedHistory,
-          provider: currentProvider,
-          channelId
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: 'Erreur inconnue' }));
-        throw new Error(`Erreur API: ${response.status} - ${errorData.error || 'Erreur inconnue'}`);
-      }
-
-      // 🔧 CORRECTION: Gérer les deux types de réponses (stream et JSON)
-      const contentType = response.headers.get('content-type');
-      
-      if (contentType?.includes('text/plain')) {
-        // Réponse streaming - le contenu est géré par le hook useChatStreaming
-        logger.dev('[ChatFullscreenV2] 📡 Réponse streaming détectée - pas d\'ajout manuel');
-      } else {
-        // Réponse JSON normale
-        try {
-          const data = await response.json();
-          logger.dev('[ChatFullscreenV2] 📄 Réponse JSON détectée:', data);
-          
-          // 🔧 CORRECTION: Éviter le double ajout pour les messages sans tool call
-          // Le hook useChatStreaming gère déjà l'ajout via onComplete
-          if (data.response && !isStreaming && !data.completed) {
-            logger.dev('[ChatFullscreenV2] 📝 Ajout manuel du message (pas de streaming)');
-            const finalMessage = {
-              role: 'assistant' as const,
-              content: data.response,
-              timestamp: new Date().toISOString(),
-            };
-            await addMessage(finalMessage);
-          } else {
-            logger.dev('[ChatFullscreenV2] 📡 Message déjà géré par le streaming ou completed');
-          }
-        } catch (parseError) {
-          logger.error('[ChatFullscreenV2] ❌ Erreur parsing JSON:', parseError);
-          // Si on ne peut pas parser, c'est probablement un stream
-          logger.dev('[ChatFullscreenV2] 📡 Traitement comme stream');
-        }
-      }
+      // Démarrer le traitement via useChatResponse
+      logger.dev('[ChatFullscreenV2] 🚀 Démarrage traitement avec sessionId:', currentSession.id);
+      await sendMessage(message, currentSession.id);
 
     } catch (error) {
       logger.error('Erreur lors de l\'appel LLM:', error);
@@ -548,16 +488,22 @@ const ChatFullscreenV2: React.FC = () => {
                 .map((message) => (
                   <ChatMessage key={message.id || `${message.role}-${message.timestamp}-${(message as any).tool_call_id || ''}`} message={message} />
                 ))}
-              {isStreaming && (
-                <ChatMessage
-                  message={{
-                    id: 'streaming-content',
-                    role: 'assistant',
-                    content: streamingContent,
-                    reasoning: streamingReasoning,
-                    timestamp: new Date().toISOString()
+              {responseContent && (
+                <AnimatedMessage
+                  content={responseContent}
+                  speed={50}
+                  onComplete={() => {
+                    // Animation terminée
                   }}
-                  isStreaming={true}
+                />
+              )}
+              {responseReasoning && (
+                <AnimatedReasoning
+                  reasoning={responseReasoning}
+                  speed={30}
+                  onComplete={() => {
+                    // Animation terminée
+                  }}
                 />
               )}
             </div>

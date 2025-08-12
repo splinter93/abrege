@@ -78,7 +78,7 @@ const DEFAULT_CONFIG: LLMConfig = {
   
   tools: {
     enableFunctionCalls: true,
-    enableStreaming: true,
+    enableStreaming: false, // ✅ DÉSACTIVÉ : Plus de streaming
     maxToolCalls: 10
   },
   
