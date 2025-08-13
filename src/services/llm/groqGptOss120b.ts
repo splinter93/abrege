@@ -159,7 +159,7 @@ export async function handleGroqGptOss120b(params: {
   
   const apiConfig = agentConfig?.api_config || {};
   const payload = {
-    model: 'openai/groq/gpt-oss-120b',
+    model: 'openai/gpt-oss-120b',
     messages,
     stream: false, // ✅ DÉSACTIVÉ : Plus de streaming
     // ⭐ ANTI-SILENCE : Configuration optimisée pour la relance
