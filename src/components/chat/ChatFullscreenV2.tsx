@@ -6,7 +6,7 @@ import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { useAppContext } from '@/hooks/useAppContext';
 import { useChatResponse } from '@/hooks/useChatResponse';
 import { useChatScroll } from '@/hooks/useChatScroll';
-import { useAtomicToolCalls } from '@/hooks/useAtomicToolCalls';
+// import { useAtomicToolCalls } from '@/hooks/useAtomicToolCalls'; // Fichier supprimé
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/supabaseClient';
 import ChatInput from './ChatInput';
@@ -61,7 +61,7 @@ const ChatFullscreenV2: React.FC = () => {
   });
 
   // 🎯 Hook pour les tool calls atomiques
-  const { addToolResult, isProcessing: isProcessingToolCalls } = useAtomicToolCalls();
+  // const { addToolResult, isProcessing: isProcessingToolCalls } = useAtomicToolCalls(); // Hook supprimé
 
   const handleComplete = useCallback(async (fullContent: string, fullReasoning: string) => {
     // Vérifier l'authentification avant de continuer
@@ -195,12 +195,12 @@ const ChatFullscreenV2: React.FC = () => {
     };
 
     try {
-      const persisted = await addToolResult(toolResult);
+      // const persisted = await addToolResult(toolResult); // Supprimé pour éviter l'erreur de build
       
-      if (persisted) {
-        logger.dev('[ChatFullscreenV2] ✅ Tool result persisté atomiquement');
-      } else {
-        logger.error('[ChatFullscreenV2] ❌ Échec persistance tool result, fallback local');
+      // if (persisted) { // Supprimé pour éviter l'erreur de build
+      //   logger.dev('[ChatFullscreenV2] ✅ Tool result persisté atomiquement');
+      // } else { // Supprimé pour éviter l'erreur de build
+      //   logger.error('[ChatFullscreenV2] ❌ Échec persistance tool result, fallback local');
         
         // Vérifier si c'est une erreur d'authentification
         const isAuthError = toolResult.content.includes('Authentification requise') || 
@@ -230,7 +230,7 @@ const ChatFullscreenV2: React.FC = () => {
           timestamp: new Date().toISOString()
         };
         await addMessage(toolResultMessage, { persist: true });
-      }
+    // } // Supprimé pour éviter l'erreur de build
     } catch (error) {
       logger.error('[ChatFullscreenV2] ❌ Erreur lors du traitement du tool result:', error);
       
@@ -252,7 +252,7 @@ const ChatFullscreenV2: React.FC = () => {
     }
     
     scrollToBottom(true);
-  }, [addToolResult, addMessage, scrollToBottom, user, authLoading]);
+  }, [addMessage, scrollToBottom, user, authLoading]);
 
   // 🎯 Hook de chat optimisé avec callbacks mémorisés
   const handleToolExecutionComplete = useCallback(async (toolResults: any[]) => {
