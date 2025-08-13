@@ -521,6 +521,100 @@ logger.info(`[Groq OSS] 🔒 PRÉSERVATION CONTEXTE: Ne jamais perdre le fil de 
 
 ---
 
+## 🎯 **CORRECTION DU PROBLÈME DE FOCALISATION SUR LE MESSAGE ACTUEL**
+
+### **🚨 Problème Identifié (Plus Subtil)**
+Le LLM faisait le tool call **maintenant** mais répondait au message **précédent** :
+- **Exécution réussie** du tool pour la demande actuelle
+- **Réponse** au message précédent de l'historique
+- **Décalage temporel** dans sa compréhension
+- **Perte de synchronisation** entre l'action et la réponse
+
+### **🔧 Solution Implémentée**
+
+#### **1. Nouvelle Couche de Focalisation (PRIORITÉ ABSOLUE)**
+```typescript
+const focusCurrentMessageSystem = [
+  '🎯 FOCALISATION SUR LE MESSAGE ACTUEL - Instructions critiques :',
+  '',
+  'ATTENTION : Tu viens de recevoir une demande de l\'utilisateur ET tu viens d\'exécuter des tools pour y répondre.',
+  '',
+  'RÈGLES DE FOCALISATION :',
+  '',
+  '1. **MESSAGE ACTUEL = PRIORITÉ ABSOLUE** :',
+  '   - Le message utilisateur le plus récent est ta demande PRINCIPALE',
+  '   - Tu DOIS répondre à CE message, pas aux messages précédents',
+  '   - Ignore l\'historique ancien pour ta réponse',
+  '',
+  '2. **CONTEXTE IMMÉDIAT OBLIGATOIRE** :',
+  '   - Commence TOUJOURS par : "En réponse à votre demande de [action]..."',
+  '   - Confirme ce que tu viens de faire pour CETTE demande spécifique',
+  '   - Ne parle PAS des messages précédents',
+  '',
+  '🚨 **INTERDICTION TOTALE :** Ne réponds JAMAIS aux messages précédents !',
+  '🎯 **OBLIGATION :** Réponds UNIQUEMENT au message actuel !'
+];
+```
+
+#### **2. Réorganisation de l'Ordre des Messages**
+```typescript
+const relanceMessages = [
+  // 🎯 MESSAGE ACTUEL EN PREMIER (priorité absolue)
+  { role: 'user', content: `🎯 DEMANDE ACTUELLE À TRAITER : ${message}` },
+  { role: 'assistant', content: '', tool_calls: toolCalls },
+  ...toolResults,
+  // 📚 HISTORIQUE EN DERNIER (pour contexte seulement)
+  ...mappedHistoryForRelance
+];
+```
+
+#### **3. Structure de Réponse Imposée**
+```
+"En réponse à votre demande de [action], j'ai [action réalisée]."
+"Voici ce qui a été fait : [résumé]"
+"Prochaine étape : [suggestion dans le contexte]"
+```
+
+### **💡 Exemples de Correction du Problème**
+
+#### **Avant (Problématique) :**
+```
+User: "Crée un dossier Projets" (message actuel)
+Tool: ✅ Succès - Dossier créé
+LLM: "Je vais créer le dossier que vous avez demandé hier..." ❌ (répond au message précédent)
+```
+
+#### **Après (Corrigé) :**
+```
+User: "Crée un dossier Projets" (message actuel)
+Tool: ✅ Succès - Dossier créé
+LLM: "En réponse à votre demande de créer un dossier, j'ai créé le dossier *Projets*..." ✅ (répond au message actuel)
+```
+
+### **🎯 Bénéfices de la Correction**
+
+- **🎯 Focalisation absolue** : Répond UNIQUEMENT au message actuel
+- **🔄 Synchronisation parfaite** : Action et réponse alignées
+- **🚫 Pas de confusion** : Plus de réponse aux messages précédents
+- **📚 Contexte préservé** : L'historique reste disponible mais non prioritaire
+- **✅ Clarté totale** : L'utilisateur sait exactement à quoi correspond la réponse
+
+### **🔒 Règles de Focalisation Strictes**
+
+1. **MESSAGE ACTUEL = PRIORITÉ ABSOLUE**
+2. **CONTEXTE IMMÉDIAT OBLIGATOIRE**
+3. **STRUCTURE DE RÉPONSE IMPOSÉE**
+4. **INTERDICTION TOTALE** de répondre aux messages précédents
+
+### **📊 Logs de Confirmation**
+```typescript
+logger.info(`[Groq OSS] 🎯 COUCHE FOCALISATION MESSAGE ACTUEL: ${focusCurrentMessageSystem.length} caractères`);
+logger.info(`[Groq OSS] 🎯 MESSAGE ACTUEL (PRIORITÉ ABSOLUE): ${message.substring(0, 100)}...`);
+logger.info(`[Groq OSS] 🔒 FOCALISATION: Répondre UNIQUEMENT au message actuel, pas à l'historique`);
+```
+
+---
+
 ## 🛡️ **MÉCANISMES DE SÉCURITÉ**
 
 ### **1. Anti-Boucle Infinie**

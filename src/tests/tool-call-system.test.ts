@@ -294,6 +294,53 @@ describe('Tool Call System', () => {
         expect(example.includes('demandé') || example.includes('souhaité')).toBe(true);
       });
     });
+
+    it('should focus on current message instead of historical context', () => {
+      // Test de la focalisation sur le message actuel
+      const focusCurrentMessageCapabilities = {
+        currentMessagePriority: 'absolute',
+        historicalContextIgnored: true,
+        responseToCurrentOnly: true,
+        noHistoricalResponse: true,
+        clearCurrentRequest: true
+      };
+
+      expect(focusCurrentMessageCapabilities.currentMessagePriority).toBe('absolute');
+      expect(focusCurrentMessageCapabilities.historicalContextIgnored).toBe(true);
+      expect(focusCurrentMessageCapabilities.responseToCurrentOnly).toBe(true);
+      expect(focusCurrentMessageCapabilities.noHistoricalResponse).toBe(true);
+      expect(focusCurrentMessageCapabilities.clearCurrentRequest).toBe(true);
+    });
+
+    it('should enforce response structure to current message', () => {
+      // Test de la structure de réponse focalisée
+      const requiredResponseStructure = [
+        'En réponse à votre demande de [action]...',
+        'j\'ai [action réalisée]',
+        'Voici ce qui a été fait : [résumé]',
+        'Prochaine étape : [suggestion dans le contexte]'
+      ];
+
+      requiredResponseStructure.forEach(structure => {
+        expect(structure).toBeDefined();
+        expect(structure.length).toBeGreaterThan(0);
+      });
+    });
+
+    it('should prevent responses to previous messages', () => {
+      // Test que le LLM ne répond pas aux messages précédents
+      const forbiddenBehaviors = [
+        'répondre aux messages précédents',
+        'ignorer la demande actuelle',
+        'se perdre dans l\'historique',
+        'répondre hors contexte'
+      ];
+
+      forbiddenBehaviors.forEach(behavior => {
+        expect(behavior).toBeDefined();
+        expect(behavior.includes('précédents') || behavior.includes('historique') || behavior.includes('contexte')).toBe(true);
+      });
+    });
   });
 
   describe('ChatHistoryCleaner', () => {

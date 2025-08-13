@@ -490,17 +490,45 @@ export async function handleGroqGptOss120b(params: {
       '🔒 **RÈGLE D\'OR :** Si tu as réussi, confirme le succès. Si tu as échoué, explique l\'échec. MAIS garde TOUJOURS le contexte !'
     ].join('\n');
 
+    // 🧠 NOUVELLE COUCHE : Instructions de focalisation sur le message actuel
+    const focusCurrentMessageSystem = [
+      '🎯 FOCALISATION SUR LE MESSAGE ACTUEL - Instructions critiques :',
+      '',
+      'ATTENTION : Tu viens de recevoir une demande de l\'utilisateur ET tu viens d\'exécuter des tools pour y répondre.',
+      '',
+      'RÈGLES DE FOCALISATION :',
+      '',
+      '1. **MESSAGE ACTUEL = PRIORITÉ ABSOLUE** :',
+      '   - Le message utilisateur le plus récent est ta demande PRINCIPALE',
+      '   - Tu DOIS répondre à CE message, pas aux messages précédents',
+      '   - Ignore l\'historique ancien pour ta réponse',
+      '',
+      '2. **CONTEXTE IMMÉDIAT OBLIGATOIRE** :',
+      '   - Commence TOUJOURS par : "En réponse à votre demande de [action]..."',
+      '   - Confirme ce que tu viens de faire pour CETTE demande spécifique',
+      '   - Ne parle PAS des messages précédents',
+      '',
+      '3. **STRUCTURE DE RÉPONSE** :',
+      '   - "En réponse à votre demande de [action], j\'ai [action réalisée]."',
+      '   - "Voici ce qui a été fait : [résumé]"',
+      '   - "Prochaine étape : [suggestion dans le contexte]"',
+      '',
+      '🚨 **INTERDICTION TOTALE :** Ne réponds JAMAIS aux messages précédents !',
+      '🎯 **OBLIGATION :** Réponds UNIQUEMENT au message actuel !'
+    ].join('\n');
+
     const relanceMessages = [
       { role: 'system' as const, content: systemContent },
       // 🧠 Couche de préservation du contexte (PRIORITÉ MAXIMALE)
       { role: 'system' as const, content: contextPreservationSystem },
+      // 🎯 NOUVELLE COUCHE : Focalisation sur le message actuel
+      { role: 'system' as const, content: focusCurrentMessageSystem },
       // 🗣️ Guide conversationnel assoupli
       { role: 'system' as const, content: postToolsStyleSystem },
       // 🚨 Gestion d'erreur intelligente avec possibilité de correction
       { role: 'system' as const, content: errorHandlingSystem },
-      ...mappedHistoryForRelance,
-      // Message utilisateur qui a déclenché les tool calls
-      { role: 'user' as const, content: message },
+      // 🎯 MESSAGE ACTUEL EN PREMIER (priorité absolue)
+      { role: 'user' as const, content: `🎯 DEMANDE ACTUELLE À TRAITER : ${message}` },
       // Message assistant contenant les tool_calls retournés par le modèle
       { role: 'assistant' as const, content: '', tool_calls: toolCalls },
       // Messages tool correspondant aux résultats exécutés
@@ -510,7 +538,9 @@ export async function handleGroqGptOss120b(params: {
         name: result.name,
         content: (() => { try { return JSON.stringify(result.result); } catch { return String(result.result); } })(),
         timestamp: new Date().toISOString()
-      }))
+      })),
+      // 📚 HISTORIQUE EN DERNIER (pour contexte seulement)
+      ...mappedHistoryForRelance
     ];
     
     // 🔧 DÉCISION INTELLIGENTE : Réactiver les tools si des erreurs sont présentes
@@ -538,19 +568,20 @@ export async function handleGroqGptOss120b(params: {
     
     logger.info(`[Groq OSS] 🔄 RELANCE: Envoi du payload de relance...`);
     
-    // 🔧 LOGS DÉTAILLÉS DE LA RELANCE AVEC PRÉSERVATION DU CONTEXTE
-    logger.info(`[Groq OSS] 🔄 STRUCTURE DE LA RELANCE AVEC PRÉSERVATION DU CONTEXTE:`);
+    // 🔧 LOGS DÉTAILLÉS DE LA RELANCE AVEC FOCALISATION SUR LE MESSAGE ACTUEL
+    logger.info(`[Groq OSS] 🔄 STRUCTURE DE LA RELANCE AVEC FOCALISATION SUR LE MESSAGE ACTUEL:`);
     logger.info(`[Groq OSS]    1. System principal: ${systemContent.substring(0, 100)}...`);
     logger.info(`[Groq OSS]    2. 🧠 COUCHE PRÉSERVATION CONTEXTE (PRIORITÉ MAX): ${contextPreservationSystem.length} caractères`);
-    logger.info(`[Groq OSS]    3. 🗣️ GUIDE CONVERSATIONNEL ASSOUPLI: ${postToolsStyleSystem.length} caractères`);
-    logger.info(`[Groq OSS]    4. 🚨 GESTION D'ERREUR INTELLIGENTE: ${errorHandlingSystem.length} caractères`);
-    logger.info(`[Groq OSS]    5. Historique: ${sanitizedHistory.length} messages`);
-    logger.info(`[Groq OSS]    6. Message utilisateur: ${message.substring(0, 100)}...`);
+    logger.info(`[Groq OSS]    3. 🎯 COUCHE FOCALISATION MESSAGE ACTUEL: ${focusCurrentMessageSystem.length} caractères`);
+    logger.info(`[Groq OSS]    4. 🗣️ GUIDE CONVERSATIONNEL ASSOUPLI: ${postToolsStyleSystem.length} caractères`);
+    logger.info(`[Groq OSS]    5. 🚨 GESTION D'ERREUR INTELLIGENTE: ${errorHandlingSystem.length} caractères`);
+    logger.info(`[Groq OSS]    6. 🎯 MESSAGE ACTUEL (PRIORITÉ ABSOLUE): ${message.substring(0, 100)}...`);
     logger.info(`[Groq OSS]    7. Assistant tool_calls: ${toolCalls.length}`);
     logger.info(`[Groq OSS]    8. Résultats tools: ${toolResults.length} résultats`);
-    logger.info(`[Groq OSS]    9. 🔍 ANALYSE ERREURS: ${toolResults.filter(r => !r.success).length} erreurs détectées`);
-    logger.info(`[Groq OSS]    10. 🔧 DÉCISION TOOLS: ${shouldReactivateTools ? 'RÉACTIVATION' : 'DÉSACTIVATION'} des tools`);
-    logger.info(`[Groq OSS]    11. 🔒 PRÉSERVATION CONTEXTE: Ne jamais perdre le fil de la demande initiale`);
+    logger.info(`[Groq OSS]    9. 📚 HISTORIQUE (contexte seulement): ${sanitizedHistory.length} messages`);
+    logger.info(`[Groq OSS]    10. 🔍 ANALYSE ERREURS: ${toolResults.filter(r => !r.success).length} erreurs détectées`);
+    logger.info(`[Groq OSS]    11. 🔧 DÉCISION TOOLS: ${shouldReactivateTools ? 'RÉACTIVATION' : 'DÉSACTIVATION'} des tools`);
+    logger.info(`[Groq OSS]    12. 🔒 FOCALISATION: Répondre UNIQUEMENT au message actuel, pas à l'historique`);
     
     try {
       const relanceResponse = await fetch(apiUrl, {
