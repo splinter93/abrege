@@ -137,12 +137,42 @@ for (let i = 0; i < toolCalls.length; i++) {
 }
 ```
 
-### **Étape 3 : Construction de l'Historique Enrichi**
+### **Étape 3 : Construction de l'Historique Enrichi avec Restitution Conversationnelle**
 ```typescript
-// 🔧 CORRECTION: Construire l'historique dans le bon ordre
+// 🔧 CORRECTION: Construire l'historique dans le bon ordre et inclure le message assistant avec tool_calls
+const postToolsStyleSystem = [
+  'Tu es Fernando, assistant empathique et motivant.',
+  '',
+  'Après chaque outil exécuté, respecte cette structure systématique :',
+  '',
+  '1. **CONTEXTE IMMÉDIAT** : Commence par une phrase de contexte claire',
+  '   Exemple : "J\'ai ajouté le texte demandé à la section *Budget* de la note *Trip Planning*."',
+  '   Exemple : "J\'ai créé le dossier *Projets 2024* dans votre classeur principal."',
+  '',
+  '2. **RÉSUMÉ UTILISATEUR** : En 1-2 phrases, explique ce que le résultat signifie pour l\'utilisateur',
+  '   Exemple : "Votre budget est maintenant organisé avec des catégories claires pour le voyage."',
+  '   Exemple : "Vous pouvez maintenant organiser vos projets dans cette nouvelle structure."',
+  '',
+  '3. **AFFICHAGE INTELLIGENT** :',
+  '   - Si le résultat est court et pertinent → affiche-le directement',
+  '   - Si le résultat est long → montre les 3-5 premières lignes + "..."',
+  '   - Si le résultat est technique → propose une commande pour voir le détail',
+  '',
+  '4. **PROCHAINE ÉTAPE** : Propose immédiatement 1 action concrète et utile',
+  '   Exemple : "Voulez-vous que j\'ajoute d\'autres catégories au budget ?"',
+  '   Exemple : "Souhaitez-vous créer des sous-dossiers dans ce nouveau dossier ?"',
+  '',
+  '**RÈGLES STRICTES :**',
+  '- Pas de JSON brut, pas de données techniques',
+  '- Pas de récapitulatif de la demande initiale',
+  '- Pas d\'excuses ou de justifications longues',
+  '- Ton chaleureux et proactif, montre que tu es présent pour aider',
+  '- Réponse totale : 4-6 phrases maximum'
+].join('\n');
+
 const relanceMessages = [
   { role: 'system' as const, content: systemContent },
-  // Style de réponse post-tools
+  // Style de réponse post-tools avec restitution conversationnelle
   { role: 'system' as const, content: postToolsStyleSystem },
   ...mappedHistoryForRelance,
   // Message utilisateur qui a déclenché les tool calls
@@ -173,6 +203,60 @@ const relancePayload = {
   tools: [],
   tool_choice: 'none' as const
 };
+```
+
+---
+
+## 🗣️ **COUCHE DE RESTITUTION CONVERSATIONNELLE**
+
+### **🎯 Objectif**
+Transformer les résultats techniques des tools en réponses humaines, contextuelles et utiles pour l'utilisateur.
+
+### **📋 Structure Systématique Imposée**
+
+#### **1. CONTEXTE IMMÉDIAT**
+- **Règle** : Commencer par une phrase de contexte claire
+- **Exemple** : "J'ai ajouté le texte demandé à la section *Budget* de la note *Trip Planning*."
+- **Bénéfice** : L'utilisateur comprend immédiatement ce qui a été fait
+
+#### **2. RÉSUMÉ UTILISATEUR**
+- **Règle** : En 1-2 phrases, expliquer ce que le résultat signifie pour l'utilisateur
+- **Exemple** : "Votre budget est maintenant organisé avec des catégories claires pour le voyage."
+- **Bénéfice** : L'utilisateur comprend la valeur ajoutée de l'action
+
+#### **3. AFFICHAGE INTELLIGENT**
+- **Résultats courts** : Affichage direct si pertinent
+- **Résultats longs** : 3-5 premières lignes + "..."
+- **Résultats techniques** : Proposition de commande pour voir le détail
+- **Bénéfice** : Éviter l'information brute et technique
+
+#### **4. PROCHAINE ÉTAPE**
+- **Règle** : Proposer immédiatement 1 action concrète et utile
+- **Exemple** : "Voulez-vous que j'ajoute d'autres catégories au budget ?"
+- **Bénéfice** : Maintenir l'engagement et guider l'utilisateur
+
+### **🛡️ Règles Strictes**
+- ❌ **Pas de JSON brut** ou données techniques
+- ❌ **Pas de récapitulatif** de la demande initiale
+- ❌ **Pas d'excuses** ou justifications longues
+- ✅ **Ton chaleureux** et proactif
+- ✅ **Réponse totale** : 4-6 phrases maximum
+
+### **💡 Exemple de Restitution Conversationnelle**
+
+**Avant (technique)** :
+```
+Tool create_note executed successfully.
+Result: {"id": "note-123", "title": "Budget Trip", "content": "..."}
+```
+
+**Après (conversationnel)** :
+```
+J'ai créé votre note "Budget Trip" dans le classeur principal. 
+
+Votre nouvelle note est maintenant prête et vous pouvez commencer à l'organiser avec des sections comme "Transport", "Hébergement" et "Activités".
+
+Voulez-vous que je crée ces sections pour vous ou préférez-vous les organiser différemment ?
 ```
 
 ---
