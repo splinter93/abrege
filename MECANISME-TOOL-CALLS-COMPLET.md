@@ -426,6 +426,101 @@ const relancePayload = {
 
 ---
 
+## 🧠 **CORRECTION DU PROBLÈME DE PERTE DE CONTEXTE**
+
+### **🚨 Problème Identifié**
+Le LLM "oubliait" le contexte de la demande initiale après l'exécution des tools :
+- **Exécution réussie** du tool (ex: création de dossier)
+- **Réponse "désolé"** comme s'il avait échoué
+- **Perte du fil** de la conversation
+- **"Saut"** vers d'autres sujets non demandés
+
+### **🔧 Solution Implémentée**
+
+#### **1. Couche de Préservation du Contexte (PRIORITÉ MAXIMALE)**
+```typescript
+const contextPreservationSystem = [
+  '🧠 PRÉSERVATION DU CONTEXTE - Ne perds JAMAIS le fil de la conversation :',
+  '',
+  'RÈGLES STRICTES DE CONTEXTUALISATION :',
+  '',
+  '1. **GARDE LA DEMANDE INITIALE EN TÊTE** :',
+  '   - L\'utilisateur a demandé quelque chose de précis',
+  '   - Tu viens d\'exécuter des tools pour répondre à cette demande',
+  '   - Ta réponse DOIT être en lien DIRECT avec cette demande',
+  '',
+  '2. **CONFIRMATION CONTEXTUELLE OBLIGATOIRE** :',
+  '   - Commence TOUJOURS par confirmer ce que tu as fait',
+  '   - Utilise des phrases comme : "J\'ai [action] comme vous l\'avez demandé"',
+  '   - Ne dis JAMAIS "désolé" si tu as réussi !',
+  '',
+  '3. **SUITE LOGIQUE DANS LE CONTEXTE** :',
+  '   - Propose des actions qui font suite à ce qui vient d\'être fait',
+  '   - Reste dans le même domaine que la demande initiale',
+  '   - Ne "saute" JAMAIS vers un autre sujet',
+  '',
+  '🔒 **RÈGLE D\'OR :** Si tu as réussi, confirme le succès. Si tu as échoué, explique l\'échec. MAIS garde TOUJOURS le contexte !'
+];
+```
+
+#### **2. Guide Conversationnel Assoupli**
+- **Avant** : Instructions rigides qui écrasaient le contexte
+- **Maintenant** : Guide adaptatif qui préserve le contexte
+- **Focus** : Confirmation contextuelle + suite logique
+
+#### **3. Ordre de Priorité des Couches**
+```typescript
+const relanceMessages = [
+  { role: 'system', content: systemContent },
+  // 🧠 Couche de préservation du contexte (PRIORITÉ MAXIMALE)
+  { role: 'system', content: contextPreservationSystem },
+  // 🗣️ Guide conversationnel assoupli
+  { role: 'system', content: postToolsStyleSystem },
+  // 🚨 Gestion d'erreur intelligente
+  { role: 'system', content: errorHandlingSystem },
+  // ... autres messages
+];
+```
+
+### **💡 Exemples de Correction du Problème**
+
+#### **Avant (Problématique) :**
+```
+User: "Crée un dossier Projets"
+Tool: ✅ Succès - Dossier créé
+LLM: "Je suis désolé pour la création du dossier..." ❌
+```
+
+#### **Après (Corrigé) :**
+```
+User: "Crée un dossier Projets"
+Tool: ✅ Succès - Dossier créé
+LLM: "J'ai créé le dossier *Projets* comme vous l'avez demandé. Vous pouvez maintenant..." ✅
+```
+
+### **🎯 Bénéfices de la Correction**
+
+- **🔄 Continuité conversationnelle** : Plus de perte de fil
+- **✅ Confirmation claire** : L'utilisateur sait ce qui a été fait
+- **🎭 Expérience naturelle** : Réponses qui font sens dans le contexte
+- **🚫 Pas de "saut"** : Reste dans le domaine de la demande initiale
+- **🧠 Contexte préservé** : Le LLM se souvient de ce qui a été demandé
+
+### **🔒 Règles Strictes de Contextualisation**
+
+1. **GARDE LA DEMANDE INITIALE EN TÊTE**
+2. **CONFIRMATION CONTEXTUELLE OBLIGATOIRE**
+3. **SUITE LOGIQUE DANS LE CONTEXTE**
+4. **Ne JAMAIS "sauter" vers un autre sujet**
+
+### **📊 Logs de Confirmation**
+```typescript
+logger.info(`[Groq OSS] 🧠 COUCHE PRÉSERVATION CONTEXTE (PRIORITÉ MAX): ${contextPreservationSystem.length} caractères`);
+logger.info(`[Groq OSS] 🔒 PRÉSERVATION CONTEXTE: Ne jamais perdre le fil de la demande initiale`);
+```
+
+---
+
 ## 🛡️ **MÉCANISMES DE SÉCURITÉ**
 
 ### **1. Anti-Boucle Infinie**

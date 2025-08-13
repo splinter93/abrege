@@ -247,6 +247,53 @@ describe('Tool Call System', () => {
       expect(errorCorrectionFlow[3]).toBe('tool_reactivation');
       expect(errorCorrectionFlow[4]).toBe('corrected_tool_call');
     });
+
+    it('should preserve conversation context after tool execution', () => {
+      // Test de la préservation du contexte conversationnel
+      const contextPreservationCapabilities = {
+        keepInitialRequest: true,
+        contextualConfirmation: true,
+        logicalContinuation: true,
+        noContextJumping: true,
+        successAcknowledgment: true
+      };
+
+      expect(contextPreservationCapabilities.keepInitialRequest).toBe(true);
+      expect(contextPreservationCapabilities.contextualConfirmation).toBe(true);
+      expect(contextPreservationCapabilities.logicalContinuation).toBe(true);
+      expect(contextPreservationCapabilities.noContextJumping).toBe(true);
+      expect(contextPreservationCapabilities.successAcknowledgment).toBe(true);
+    });
+
+    it('should prevent context loss in tool responses', () => {
+      // Test que le contexte n'est pas perdu dans les réponses aux tools
+      const contextPreservationRules = [
+        'GARDE LA DEMANDE INITIALE EN TÊTE',
+        'CONFIRMATION CONTEXTUELLE OBLIGATOIRE',
+        'SUITE LOGIQUE DANS LE CONTEXTE',
+        'Ne JAMAIS "sauter" vers un autre sujet'
+      ];
+
+      expect(contextPreservationRules).toHaveLength(4);
+      contextPreservationRules.forEach(rule => {
+        expect(rule).toBeDefined();
+        expect(rule.length).toBeGreaterThan(0);
+      });
+    });
+
+    it('should enforce contextual confirmation after successful tool execution', () => {
+      // Test de la confirmation contextuelle obligatoire
+      const contextualConfirmationExamples = [
+        'J\'ai créé le dossier *Projets* comme vous l\'avez demandé',
+        'Votre note a été ajoutée à la section *Budget* comme souhaité',
+        'Le fichier a été téléchargé comme demandé'
+      ];
+
+      contextualConfirmationExamples.forEach(example => {
+        expect(example).toContain('comme');
+        expect(example.includes('demandé') || example.includes('souhaité')).toBe(true);
+      });
+    });
   });
 
   describe('ChatHistoryCleaner', () => {

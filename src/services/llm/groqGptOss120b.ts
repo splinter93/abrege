@@ -388,46 +388,42 @@ export async function handleGroqGptOss120b(params: {
       return mapped;
     });
 
-    // 🔧 INTÉGRATION OBLIGATOIRE: Couche de restitution conversationnelle avec gestion d'erreur intelligente
+    // 🔧 COUCHE DE RESTITUTION CONVERSATIONNELLE ASSOUPLIE - Préserve le contexte original
     const postToolsStyleSystem = [
-      '🚨 INSTRUCTION OBLIGATOIRE - Tu DOIS respecter cette structure EXACTEMENT :',
+      '🗣️ GUIDE CONVERSATIONNEL - Suis cette structure tout en préservant le contexte :',
       '',
-      'Après chaque résultat d\'outil, tu DOIS suivre ces 4 étapes dans l\'ordre :',
+      'Après chaque résultat d\'outil, utilise cette structure adaptative :',
       '',
-      '1. **CONTEXTE IMMÉDIAT** (OBLIGATOIRE) :',
-      '   Commence TOUJOURS par : "J\'ai [action] [détail] [contexte]."',
-      '   Exemple : "J\'ai ajouté le texte demandé à la section *Budget* de la note *Trip Planning*."',
-      '   Exemple : "J\'ai créé le dossier *Projets 2024* dans votre classeur principal."',
+      '1. **CONFIRMATION CONTEXTUELLE** :',
+      '   Confirme ce que tu viens de faire en lien DIRECT avec la demande de l\'utilisateur.',
+      '   Exemple : "J\'ai créé le dossier *Projets 2024* comme vous l\'avez demandé."',
+      '   Exemple : "Votre note a été ajoutée à la section *Budget* comme souhaité."',
+      '   IMPORTANT : Garde le lien avec la demande initiale !',
       '',
-      '2. **RÉSUMÉ UTILISATEUR** (OBLIGATOIRE) :',
-      '   En 1-2 phrases MAXIMUM, explique ce que cela change pour l\'utilisateur.',
-      '   Exemple : "Votre budget est maintenant organisé avec des catégories claires pour le voyage."',
+      '2. **RÉSUMÉ UTILISATEUR** :',
+      '   En 1-2 phrases, explique ce que cela change pour l\'utilisateur.',
       '   Exemple : "Vous pouvez maintenant organiser vos projets dans cette nouvelle structure."',
+      '   Exemple : "Votre budget est maintenant organisé et prêt à être utilisé."',
       '',
-      '3. **AFFICHAGE INTELLIGENT** (OBLIGATOIRE) :',
-      '   - Résultats courts → affiche DIRECTEMENT (pas de JSON)',
+      '3. **AFFICHAGE INTELLIGENT** :',
+      '   - Résultats courts → affiche directement (pas de JSON)',
       '   - Résultats longs → montre 3-5 premières lignes + "..."',
       '   - Résultats techniques → propose commande pour voir le détail',
-      '   INTERDICTION TOTALE : AUCUN JSON brut, AUCUNE donnée technique brute',
+      '   INTERDICTION : AUCUN JSON brut, AUCUNE donnée technique brute',
       '',
-      '4. **PROCHAINE ÉTAPE** (OBLIGATOIRE) :',
-      '   Propose IMMÉDIATEMENT 1 action concrète et utile.',
-      '   Exemple : "Voulez-vous que j\'ajoute d\'autres catégories au budget ?"',
-      '   Exemple : "Souhaitez-vous créer des sous-dossiers dans ce nouveau dossier ?"',
+      '4. **PROCHAINE ÉTAPE CONTEXTUELLE** :',
+      '   Propose 1 action qui fait suite logique à ce qui vient d\'être fait.',
+      '   Exemple : "Voulez-vous que j\'ajoute des sous-dossiers dans ce nouveau dossier ?"',
+      '   Exemple : "Souhaitez-vous que j\'ajoute d\'autres catégories au budget ?"',
+      '   IMPORTANT : Reste dans le contexte de la demande initiale !',
       '',
-      '🚨 **INTERDICTIONS ABSOLUES :**',
-      '- AUCUN JSON brut, AUCUNE donnée technique',
-      '- AUCUN récapitulatif de la demande initiale',
-      '- AUCUNE excuse ou justification longue',
-      '- AUCUNE réponse sans cette structure en 4 étapes',
-      '',
-      '✅ **TON OBLIGATOIRE :**',
+      '✅ **TON ET CONTEXTE :**',
       '- Chaleureux, empathique, proactif',
-      '- Montre que tu es présent pour aider',
+      '- Garde TOUJOURS le fil de la conversation originale',
       '- Réponse totale : 4-6 phrases maximum',
-      '- Structure : 1 phrase contexte + 1-2 phrases résumé + 1 phrase affichage + 1 phrase prochaine étape',
+      '- Structure : 1 confirmation contextuelle + 1-2 résumé + 1 affichage + 1 prochaine étape',
       '',
-      '🔒 **RAPPEL :** Cette structure est OBLIGATOIRE. Tu ne peux PAS y déroger.'
+      '🔒 **RÈGLE D\'OR :** Ne perds JAMAIS le fil de la demande initiale !'
     ].join('\n');
 
     // 🚨 NOUVELLE COUCHE : Gestion d'erreur intelligente avec possibilité de correction
@@ -465,11 +461,42 @@ export async function handleGroqGptOss120b(params: {
       '🎯 **OBJECTIF :** Maintenir le fil de la conversation, ne pas "sauter" vers autre chose !'
     ].join('\n');
 
+    // 🧠 NOUVELLE COUCHE : Préservation du contexte conversationnel
+    const contextPreservationSystem = [
+      '🧠 PRÉSERVATION DU CONTEXTE - Ne perds JAMAIS le fil de la conversation :',
+      '',
+      'RÈGLES STRICTES DE CONTEXTUALISATION :',
+      '',
+      '1. **GARDE LA DEMANDE INITIALE EN TÊTE** :',
+      '   - L\'utilisateur a demandé quelque chose de précis',
+      '   - Tu viens d\'exécuter des tools pour répondre à cette demande',
+      '   - Ta réponse DOIT être en lien DIRECT avec cette demande',
+      '',
+      '2. **CONFIRMATION CONTEXTUELLE OBLIGATOIRE** :',
+      '   - Commence TOUJOURS par confirmer ce que tu as fait',
+      '   - Utilise des phrases comme : "J\'ai [action] comme vous l\'avez demandé"',
+      '   - Ne dis JAMAIS "désolé" si tu as réussi !',
+      '',
+      '3. **SUITE LOGIQUE DANS LE CONTEXTE** :',
+      '   - Propose des actions qui font suite à ce qui vient d\'être fait',
+      '   - Reste dans le même domaine que la demande initiale',
+      '   - Ne "saute" JAMAIS vers un autre sujet',
+      '',
+      '4. **EXEMPLE DE BONNE CONTEXTUALISATION** :',
+      '   Demande : "Crée un dossier Projets"',
+      '   ✅ Bonne réponse : "J\'ai créé le dossier *Projets* comme vous l\'avez demandé. Vous pouvez maintenant..."',
+      '   ❌ Mauvaise réponse : "Je suis désolé pour la création du dossier..."',
+      '',
+      '🔒 **RÈGLE D\'OR :** Si tu as réussi, confirme le succès. Si tu as échoué, explique l\'échec. MAIS garde TOUJOURS le contexte !'
+    ].join('\n');
+
     const relanceMessages = [
       { role: 'system' as const, content: systemContent },
-      // 🗣️ Couche de restitution conversationnelle obligatoire
+      // 🧠 Couche de préservation du contexte (PRIORITÉ MAXIMALE)
+      { role: 'system' as const, content: contextPreservationSystem },
+      // 🗣️ Guide conversationnel assoupli
       { role: 'system' as const, content: postToolsStyleSystem },
-      // 🚨 NOUVELLE COUCHE : Gestion d'erreur intelligente avec possibilité de correction
+      // 🚨 Gestion d'erreur intelligente avec possibilité de correction
       { role: 'system' as const, content: errorHandlingSystem },
       ...mappedHistoryForRelance,
       // Message utilisateur qui a déclenché les tool calls
@@ -511,18 +538,19 @@ export async function handleGroqGptOss120b(params: {
     
     logger.info(`[Groq OSS] 🔄 RELANCE: Envoi du payload de relance...`);
     
-    // 🔧 LOGS DÉTAILLÉS DE LA RELANCE AVEC GESTION D'ERREUR INTELLIGENTE
-    logger.info(`[Groq OSS] 🔄 STRUCTURE DE LA RELANCE AVEC GESTION D'ERREUR INTELLIGENTE:`);
+    // 🔧 LOGS DÉTAILLÉS DE LA RELANCE AVEC PRÉSERVATION DU CONTEXTE
+    logger.info(`[Groq OSS] 🔄 STRUCTURE DE LA RELANCE AVEC PRÉSERVATION DU CONTEXTE:`);
     logger.info(`[Groq OSS]    1. System principal: ${systemContent.substring(0, 100)}...`);
-    logger.info(`[Groq OSS]    2. 🗣️ COUCHE CONVERSATIONNELLE OBLIGATOIRE: ${postToolsStyleSystem.length} caractères`);
-    logger.info(`[Groq OSS]    3. 🚨 COUCHE GESTION D'ERREUR INTELLIGENTE: ${errorHandlingSystem.length} caractères`);
-    logger.info(`[Groq OSS]    4. Historique: ${sanitizedHistory.length} messages`);
-    logger.info(`[Groq OSS]    5. Message utilisateur: ${message.substring(0, 100)}...`);
-    logger.info(`[Groq OSS]    6. Assistant tool_calls: ${toolCalls.length}`);
-    logger.info(`[Groq OSS]    7. Résultats tools: ${toolResults.length} résultats`);
-    logger.info(`[Groq OSS]    8. 🔍 ANALYSE ERREURS: ${toolResults.filter(r => !r.success).length} erreurs détectées`);
-    logger.info(`[Groq OSS]    9. 🔧 DÉCISION TOOLS: ${shouldReactivateTools ? 'RÉACTIVATION' : 'DÉSACTIVATION'} des tools`);
-    logger.info(`[Groq OSS]    10. 🔒 RESTITUTION FORCÉE: Structure 4-étapes obligatoire`);
+    logger.info(`[Groq OSS]    2. 🧠 COUCHE PRÉSERVATION CONTEXTE (PRIORITÉ MAX): ${contextPreservationSystem.length} caractères`);
+    logger.info(`[Groq OSS]    3. 🗣️ GUIDE CONVERSATIONNEL ASSOUPLI: ${postToolsStyleSystem.length} caractères`);
+    logger.info(`[Groq OSS]    4. 🚨 GESTION D'ERREUR INTELLIGENTE: ${errorHandlingSystem.length} caractères`);
+    logger.info(`[Groq OSS]    5. Historique: ${sanitizedHistory.length} messages`);
+    logger.info(`[Groq OSS]    6. Message utilisateur: ${message.substring(0, 100)}...`);
+    logger.info(`[Groq OSS]    7. Assistant tool_calls: ${toolCalls.length}`);
+    logger.info(`[Groq OSS]    8. Résultats tools: ${toolResults.length} résultats`);
+    logger.info(`[Groq OSS]    9. 🔍 ANALYSE ERREURS: ${toolResults.filter(r => !r.success).length} erreurs détectées`);
+    logger.info(`[Groq OSS]    10. 🔧 DÉCISION TOOLS: ${shouldReactivateTools ? 'RÉACTIVATION' : 'DÉSACTIVATION'} des tools`);
+    logger.info(`[Groq OSS]    11. 🔒 PRÉSERVATION CONTEXTE: Ne jamais perdre le fil de la demande initiale`);
     
     try {
       const relanceResponse = await fetch(apiUrl, {
