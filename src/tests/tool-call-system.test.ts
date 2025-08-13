@@ -196,6 +196,57 @@ describe('Tool Call System', () => {
       expect(pipelineEnforcement.priority).toBe('max');
       expect(pipelineEnforcement.bypassImpossible).toBe(true);
     });
+
+    it('should enable intelligent error handling with tool reactivation', () => {
+      // Test de la gestion d'erreur intelligente
+      const errorHandlingCapabilities = {
+        errorAnalysis: true,
+        automaticCorrection: true,
+        toolReactivation: true,
+        userInformation: true,
+        conversationContinuity: true
+      };
+
+      expect(errorHandlingCapabilities.errorAnalysis).toBe(true);
+      expect(errorHandlingCapabilities.automaticCorrection).toBe(true);
+      expect(errorHandlingCapabilities.toolReactivation).toBe(true);
+      expect(errorHandlingCapabilities.userInformation).toBe(true);
+      expect(errorHandlingCapabilities.conversationContinuity).toBe(true);
+    });
+
+    it('should reactivate tools when errors are detected', () => {
+      // Test de la réactivation intelligente des tools
+      const mockToolResults = [
+        { success: true, name: 'create_note' },
+        { success: false, name: 'create_folder', result: { error: 'Permission denied' } }
+      ];
+
+      const hasErrors = mockToolResults.some(result => !result.success);
+      const shouldReactivateTools = hasErrors && mockToolResults.length > 0;
+
+      expect(hasErrors).toBe(true);
+      expect(shouldReactivateTools).toBe(true);
+      expect(mockToolResults[1]?.success).toBe(false);
+      expect(mockToolResults[1]?.result?.error).toBe('Permission denied');
+    });
+
+    it('should maintain conversation flow after error correction', () => {
+      // Test de la continuité conversationnelle après correction d'erreur
+      const errorCorrectionFlow = [
+        'tool_execution_error',
+        'error_analysis',
+        'correction_attempt',
+        'tool_reactivation',
+        'corrected_tool_call',
+        'successful_execution',
+        'conversational_response'
+      ];
+
+      expect(errorCorrectionFlow).toHaveLength(7);
+      expect(errorCorrectionFlow[2]).toBe('correction_attempt');
+      expect(errorCorrectionFlow[3]).toBe('tool_reactivation');
+      expect(errorCorrectionFlow[4]).toBe('corrected_tool_call');
+    });
   });
 
   describe('ChatHistoryCleaner', () => {

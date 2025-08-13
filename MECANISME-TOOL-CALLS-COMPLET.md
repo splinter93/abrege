@@ -322,6 +322,110 @@ Voulez-vous que je crée ces sections pour vous ou préférez-vous les organiser
 
 ---
 
+## 🚨 **GESTION D'ERREUR INTELLIGENTE AVEC CORRECTION AUTOMATIQUE**
+
+### **🎯 Objectif**
+Permettre au LLM de **corriger automatiquement les erreurs** des tools et de **maintenir le fil de la conversation** au lieu de "sauter" vers une autre requête.
+
+### **🔧 Mécanisme de Correction Intelligente**
+
+#### **1. Détection Automatique des Erreurs**
+```typescript
+// 🔧 DÉCISION INTELLIGENTE : Réactiver les tools si des erreurs sont présentes
+const hasErrors = toolResults.some(result => !result.success);
+const shouldReactivateTools = hasErrors && toolResults.length > 0;
+```
+
+#### **2. Réactivation Conditionnelle des Tools**
+```typescript
+const relancePayload = {
+  // ... autres paramètres
+  // 🔧 GESTION INTELLIGENTE : Réactiver les tools si correction nécessaire
+  ...(shouldReactivateTools && { 
+    tools: agentApiV2Tools.getToolsForFunctionCalling(),
+    tool_choice: 'auto' as const
+  }),
+  // 🔧 ANTI-BOUCLE : Pas de tools si tout s'est bien passé
+  ...(!shouldReactivateTools && { 
+    tools: [],
+    tool_choice: 'none' as const
+  })
+};
+```
+
+### **📋 Couche de Gestion d'Erreur Intégrée**
+
+#### **🚨 Instructions OBLIGATOIRES pour le LLM :**
+
+**1. ANALYSER L'ERREUR**
+- Comprendre pourquoi le tool a échoué
+- Identifier les paramètres manquants ou invalides
+- Reconnaître les problèmes de permissions ou de ressources
+
+**2. DÉCIDER DE L'ACTION**
+- ✅ **SI correction possible** → Relancer le tool call avec les bons paramètres
+- ❌ **SI correction impossible** → Informer l'utilisateur clairement
+
+**3. CORRECTION AUTOMATIQUE (si possible)**
+- Ajouter des paramètres manquants
+- Corriger les valeurs invalides
+- Adapter aux permissions disponibles
+- Utiliser des alternatives valides
+
+**4. INFORMATION UTILISATEUR (si correction impossible)**
+- Expliquer l'erreur en termes simples
+- Proposer des solutions alternatives
+- Demander des informations supplémentaires
+
+### **💡 Exemples de Correction Automatique**
+
+#### **Erreur : Paramètre manquant**
+```
+❌ Premier appel : create_note sans notebook_id
+🔍 Analyse : "notebook_id manquant"
+✅ Correction : Relance avec notebook_id valide
+```
+
+#### **Erreur : Validation échouée**
+```
+❌ Premier appel : create_folder avec nom invalide
+🔍 Analyse : "Nom contient des caractères interdits"
+✅ Correction : Relance avec nom nettoyé
+```
+
+#### **Erreur : Permission refusée**
+```
+❌ Premier appel : create_note dans classeur protégé
+🔍 Analyse : "Permission refusée sur ce classeur"
+❌ Correction impossible → Information utilisateur
+```
+
+### **🔄 Flux de Correction Automatique**
+
+```
+1. Tool Call échoue → 2. Analyse de l'erreur → 3. Décision de correction
+                                    ↓
+4a. Correction possible → 5a. Relance du tool corrigé → 6a. Succès
+4b. Correction impossible → 5b. Information utilisateur → 6b. Demande d'aide
+```
+
+### **🎯 Bénéfices de la Correction Automatique**
+
+- **🔄 Continuité conversationnelle** : Pas de "saut" vers autre chose
+- **🔧 Auto-réparation** : Le LLM corrige lui-même les erreurs simples
+- **👤 Expérience utilisateur** : Moins d'interruptions et de répétitions
+- **📊 Efficacité** : Réduction des allers-retours utilisateur-assistant
+- **🛡️ Robustesse** : Gestion gracieuse des erreurs courantes
+
+### **🔒 Sécurité et Anti-Boucle**
+
+- **Réactivation conditionnelle** : Tools réactivés seulement si erreurs détectées
+- **Limite de correction** : Pas de boucle infinie de tentatives
+- **Logs détaillés** : Traçabilité complète des corrections
+- **Validation utilisateur** : Demande d'aide si correction impossible
+
+---
+
 ## 🛡️ **MÉCANISMES DE SÉCURITÉ**
 
 ### **1. Anti-Boucle Infinie**

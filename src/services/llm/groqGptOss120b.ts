@@ -388,7 +388,7 @@ export async function handleGroqGptOss120b(params: {
       return mapped;
     });
 
-    // 🔧 INTÉGRATION OBLIGATOIRE: Couche de restitution conversationnelle forcée dans le pipeline
+    // 🔧 INTÉGRATION OBLIGATOIRE: Couche de restitution conversationnelle avec gestion d'erreur intelligente
     const postToolsStyleSystem = [
       '🚨 INSTRUCTION OBLIGATOIRE - Tu DOIS respecter cette structure EXACTEMENT :',
       '',
@@ -430,10 +430,47 @@ export async function handleGroqGptOss120b(params: {
       '🔒 **RAPPEL :** Cette structure est OBLIGATOIRE. Tu ne peux PAS y déroger.'
     ].join('\n');
 
+    // 🚨 NOUVELLE COUCHE : Gestion d'erreur intelligente avec possibilité de correction
+    const errorHandlingSystem = [
+      '🚨 GESTION D\'ERREUR INTELLIGENTE - Tu PEUX relancer des tool calls corrigés :',
+      '',
+      'Si tu reçois des erreurs de tools, tu DOIS :',
+      '',
+      '1. **ANALYSER L\'ERREUR** : Comprendre pourquoi le tool a échoué',
+      '   - Paramètres manquants ou invalides ?',
+      '   - Permissions insuffisantes ?',
+      '   - Ressource introuvable ?',
+      '   - Validation échouée ?',
+      '',
+      '2. **DÉCIDER DE L\'ACTION** :',
+      '   ✅ SI tu peux corriger → Relance le tool call avec les bons paramètres',
+      '   ❌ SI tu ne peux pas corriger → Informe l\'utilisateur clairement',
+      '',
+      '3. **CORRECTION AUTOMATIQUE** (si possible) :',
+      '   - Ajouter des paramètres manquants',
+      '   - Corriger les valeurs invalides',
+      '   - Adapter aux permissions disponibles',
+      '   - Utiliser des alternatives valides',
+      '',
+      '4. **INFORMATION UTILISATEUR** (si correction impossible) :',
+      '   - Expliquer l\'erreur en termes simples',
+      '   - Proposer des solutions alternatives',
+      '   - Demander des informations supplémentaires',
+      '',
+      '🔧 **EXEMPLE DE CORRECTION :**',
+      'Erreur : "notebook_id manquant" → Relance avec notebook_id valide',
+      'Erreur : "permission refusée" → Informe l\'utilisateur des limitations',
+      'Erreur : "validation échouée" → Corrige les paramètres et relance',
+      '',
+      '🎯 **OBJECTIF :** Maintenir le fil de la conversation, ne pas "sauter" vers autre chose !'
+    ].join('\n');
+
     const relanceMessages = [
       { role: 'system' as const, content: systemContent },
-      // Style de réponse post-tools
+      // 🗣️ Couche de restitution conversationnelle obligatoire
       { role: 'system' as const, content: postToolsStyleSystem },
+      // 🚨 NOUVELLE COUCHE : Gestion d'erreur intelligente avec possibilité de correction
+      { role: 'system' as const, content: errorHandlingSystem },
       ...mappedHistoryForRelance,
       // Message utilisateur qui a déclenché les tool calls
       { role: 'user' as const, content: message },
@@ -449,6 +486,10 @@ export async function handleGroqGptOss120b(params: {
       }))
     ];
     
+    // 🔧 DÉCISION INTELLIGENTE : Réactiver les tools si des erreurs sont présentes
+    const hasErrors = toolResults.some(result => !result.success);
+    const shouldReactivateTools = hasErrors && toolResults.length > 0;
+    
     const relancePayload = {
       model: config.model,
       messages: relanceMessages,
@@ -456,22 +497,32 @@ export async function handleGroqGptOss120b(params: {
       temperature: 0.2, // Plus déterministe pour la relance
       max_completion_tokens: config.max_tokens,
       top_p: config.top_p,
-      // 🔧 ANTI-BOUCLE: Pas de tools pour la relance
-      tools: [],
-      tool_choice: 'none' as const
+      // 🔧 GESTION INTELLIGENTE : Réactiver les tools si correction nécessaire
+      ...(shouldReactivateTools && { 
+        tools: agentApiV2Tools.getToolsForFunctionCalling(),
+        tool_choice: 'auto' as const
+      }),
+      // 🔧 ANTI-BOUCLE : Pas de tools si tout s'est bien passé
+      ...(!shouldReactivateTools && { 
+        tools: [],
+        tool_choice: 'none' as const
+      })
     };
     
     logger.info(`[Groq OSS] 🔄 RELANCE: Envoi du payload de relance...`);
     
-    // 🔧 LOGS DÉTAILLÉS DE LA RELANCE AVEC COUCHE CONVERSATIONNELLE INTÉGRÉE
-    logger.info(`[Groq OSS] 🔄 STRUCTURE DE LA RELANCE AVEC RESTITUTION CONVERSATIONNELLE:`);
+    // 🔧 LOGS DÉTAILLÉS DE LA RELANCE AVEC GESTION D'ERREUR INTELLIGENTE
+    logger.info(`[Groq OSS] 🔄 STRUCTURE DE LA RELANCE AVEC GESTION D'ERREUR INTELLIGENTE:`);
     logger.info(`[Groq OSS]    1. System principal: ${systemContent.substring(0, 100)}...`);
     logger.info(`[Groq OSS]    2. 🗣️ COUCHE CONVERSATIONNELLE OBLIGATOIRE: ${postToolsStyleSystem.length} caractères`);
-    logger.info(`[Groq OSS]    3. Historique: ${sanitizedHistory.length} messages`);
-    logger.info(`[Groq OSS]    4. Message utilisateur: ${message.substring(0, 100)}...`);
-    logger.info(`[Groq OSS]    5. Assistant tool_calls: ${toolCalls.length}`);
-    logger.info(`[Groq OSS]    6. Résultats tools: ${toolResults.length} résultats`);
-    logger.info(`[Groq OSS]    7. 🔒 RESTITUTION FORCÉE: Structure 4-étapes obligatoire`);
+    logger.info(`[Groq OSS]    3. 🚨 COUCHE GESTION D'ERREUR INTELLIGENTE: ${errorHandlingSystem.length} caractères`);
+    logger.info(`[Groq OSS]    4. Historique: ${sanitizedHistory.length} messages`);
+    logger.info(`[Groq OSS]    5. Message utilisateur: ${message.substring(0, 100)}...`);
+    logger.info(`[Groq OSS]    6. Assistant tool_calls: ${toolCalls.length}`);
+    logger.info(`[Groq OSS]    7. Résultats tools: ${toolResults.length} résultats`);
+    logger.info(`[Groq OSS]    8. 🔍 ANALYSE ERREURS: ${toolResults.filter(r => !r.success).length} erreurs détectées`);
+    logger.info(`[Groq OSS]    9. 🔧 DÉCISION TOOLS: ${shouldReactivateTools ? 'RÉACTIVATION' : 'DÉSACTIVATION'} des tools`);
+    logger.info(`[Groq OSS]    10. 🔒 RESTITUTION FORCÉE: Structure 4-étapes obligatoire`);
     
     try {
       const relanceResponse = await fetch(apiUrl, {
