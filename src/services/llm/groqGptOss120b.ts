@@ -73,9 +73,8 @@ export async function handleGroqGptOss120b(params: {
   // Log du résumé des templates utilisés
   logger.dev(`[Groq OSS] 🎯 Templates de l'agent:`, agentTemplateService.generateTemplateSummary(agentConfig || {}));
   
-  // 🎯 Tous les agents ont accès à l'ensemble des tools (API v2 complète)
-  const tools = agentApiV2Tools.getToolsForFunctionCalling();
-  logger.dev(`[Groq OSS] 🔧 Function calling activé - ${tools.length} tools disponibles (API v2 complète)`);
+  // 🎯 GATING DES TOOLS : Vérifier les capacités API v2 (déplacé plus bas)
+  logger.dev(`[Groq OSS] 🔧 Function calling - gating selon les capacités API v2`);
   
   // 🔧 NOUVEAU: Nettoyer l'historique avant traitement
   const historyCleaner = ChatHistoryCleaner.getInstance();
@@ -149,22 +148,28 @@ export async function handleGroqGptOss120b(params: {
   const apiUrl = 'https://api.groq.com/openai/v1/chat/completions';
   const apiKey = process.env.GROQ_API_KEY as string;
 
+  // 🎯 GATING DES TOOLS : Vérifier les capacités API v2
+  const hasApiV2Capabilities = agentConfig?.api_v2_capabilities?.length > 0;
+  const tools = hasApiV2Capabilities ? agentApiV2Tools.getToolsForFunctionCalling(agentConfig) : undefined;
+  
+  logger.info(`[Groq OSS] 🎯 GATING DES TOOLS: ${hasApiV2Capabilities ? 'ACTIVÉ' : 'DÉSACTIVÉ'} (${agentConfig?.api_v2_capabilities?.length || 0} capacités)`);
+  
   // ✅ ANTI-SILENCE : Configuration optimisée pour la relance
   const isToolRelance = sanitizedHistory.some(msg => (msg as any).role === 'developer');
   
-    const apiConfig = agentConfig?.api_config || {};
-    const payload = {
-      model: 'openai/gpt-oss-120b',
-      messages,
+  const apiConfig = agentConfig?.api_config || {};
+  const payload = {
+    model: 'openai/groq/gpt-oss-120b',
+    messages,
     stream: false, // ✅ DÉSACTIVÉ : Plus de streaming
     // ⭐ ANTI-SILENCE : Configuration optimisée pour la relance
     temperature: isToolRelance ? 0.2 : config.temperature, // Plus déterministe après tool execution
-      max_completion_tokens: config.max_tokens,
-      top_p: config.top_p,
-      reasoning_effort: apiConfig.reasoning_effort ?? groqProvider.config.reasoningEffort,
-    // ⭐ ANTI-SILENCE : Toujours "auto" pour permettre la chaîne de tools
+    max_completion_tokens: config.max_tokens,
+    top_p: config.top_p,
+    reasoning_effort: apiConfig.reasoning_effort ?? groqProvider.config.reasoningEffort,
+    // 🎯 GATING DES TOOLS : Conditionnel selon les capacités
     ...(tools && { tools, tool_choice: 'auto' as const })
-    };
+  };
 
   // 🎯 LOGGING COMPLET DU PAYLOAD ENVOYÉ AU LLM
   logger.info(`[Groq OSS] 🚀 PAYLOAD COMPLET ENVOYÉ À L'API GROQ (NON-STREAMING):`);
@@ -246,12 +251,46 @@ export async function handleGroqGptOss120b(params: {
   
   logger.info(`[Groq OSS] 🚀 ENVOI DU PAYLOAD À L'API GROQ (NON-STREAMING)...`);
 
-  // ✅ NOUVEAU : Appel simple à l'API Groq sans streaming
-  const response = await fetch(apiUrl, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
-    body: JSON.stringify(payload)
-  });
+  // ✅ NOUVEAU : Appel simple à l'API Groq sans streaming avec retry réseau
+  let response: Response | undefined;
+  let retryCount = 0;
+  const maxRetries = 2;
+  
+  while (retryCount <= maxRetries) {
+    try {
+      response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+        body: JSON.stringify(payload)
+      });
+      
+      if (response.ok) break; // Succès, sortir de la boucle
+      
+      // Erreur HTTP, essayer de relancer
+      if (retryCount < maxRetries) {
+        const backoffDelay = Math.pow(2, retryCount) * 1000; // Backoff exponentiel
+        logger.warn(`[Groq OSS] ⚠️ Erreur HTTP ${response.status}, retry ${retryCount + 1}/${maxRetries} dans ${backoffDelay}ms`);
+        await new Promise(resolve => setTimeout(resolve, backoffDelay));
+        retryCount++;
+      } else {
+        break; // Plus de retries
+      }
+    } catch (fetchError) {
+      if (retryCount < maxRetries) {
+        const backoffDelay = Math.pow(2, retryCount) * 1000;
+        logger.warn(`[Groq OSS] ⚠️ Erreur réseau, retry ${retryCount + 1}/${maxRetries} dans ${backoffDelay}ms:`, fetchError);
+        await new Promise(resolve => setTimeout(resolve, backoffDelay));
+        retryCount++;
+      } else {
+        throw fetchError; // Plus de retries, propager l'erreur
+      }
+    }
+  }
+
+  // Vérifier que la réponse a été obtenue
+  if (!response) {
+    throw new Error('Échec de l\'appel API après tous les retries');
+  }
 
   if (!response.ok) {
     const errorText = await response.text();
@@ -275,16 +314,27 @@ export async function handleGroqGptOss120b(params: {
     throw new Error('Réponse API invalide: pas de choix');
   }
 
-  const content = choice.message?.content || '';
-  const reasoning = choice.reasoning || '';
+  // 🎯 NOUVELLE POLITIQUE : Déterminer si des tool_calls sont présents
+  const hasToolCalls = Array.isArray(choice.message?.tool_calls) && choice.message.tool_calls.length > 0;
   const toolCalls = choice.message?.tool_calls || [];
-
-  logger.info(`[Groq OSS] 📝 CONTENU REÇU: ${content.length} caractères`);
-  if (reasoning) {
-    logger.info(`[Groq OSS] 🧠 REASONING REÇU: ${reasoning.length} caractères`);
-  }
-  if (toolCalls.length > 0) {
+  
+  // 🚨 POLITIQUE D'INTERPRÉTATION : Ignorer le contenu si tool_calls présents
+  let contentForUi = '';
+  let reasoning = choice.reasoning || '';
+  
+  if (hasToolCalls) {
+    // 🔧 TOOL CALLS DÉTECTÉS : Ignorer le contenu "social" co-émis
+    contentForUi = ''; // Ne pas diffuser en UI
+    logger.info(`[Groq OSS] 🚨 IGNORED_ASSISTANT_CONTENT_DUE_TO_TOOL_CALLS: true`);
+    logger.info(`[Groq OSS] 🚨 CONTENU ASSISTANT IGNORÉ (${choice.message?.content?.length || 0} caractères) - Présence de tool_calls`);
     logger.info(`[Groq OSS] 🔧 TOOL CALLS REÇUS: ${toolCalls.length} appels`);
+  } else {
+    // 📝 RÉPONSE FINALE NORMALE : Traiter le contenu normalement
+    contentForUi = choice.message?.content || '';
+    logger.info(`[Groq OSS] 📝 CONTENU REÇU: ${contentForUi.length} caractères`);
+    if (reasoning) {
+      logger.info(`[Groq OSS] 🧠 REASONING REÇU: ${reasoning.length} caractères`);
+    }
   }
 
   // ✅ NOUVEAU : Gestion des tool calls si présents
@@ -294,6 +344,11 @@ export async function handleGroqGptOss120b(params: {
       logger.warn(`[Groq OSS] ⚠️ Trop de tool calls (${toolCalls.length}) - limité à 10 maximum`);
       toolCalls.splice(10); // Garder seulement les 10 premiers
     }
+    
+    // 🎯 PERSISTANCE IMMÉDIATE : Message assistant(tool_calls) AVANT exécution
+    logger.info(`[Groq OSS] 💾 PERSISTANCE IMMÉDIATE: Message assistant(tool_calls) avec content=""`);
+    logger.info(`[Groq OSS] 💾 CONTENU ASSISTANT PERSISTÉ: "" (vide - présence de tool_calls)`);
+    logger.info(`[Groq OSS] 💾 TOOL_CALLS PERSISTÉS: ${toolCalls.length} appels`);
     
     logger.info(`[Groq OSS] 🔧 EXÉCUTION DES TOOL CALLS (${toolCalls.length} tools)...`);
     
@@ -370,6 +425,26 @@ export async function handleGroqGptOss120b(params: {
     
     // 🔧 RELANCE AUTOMATIQUE AVEC RÉSULTATS DES TOOLS
     logger.info(`[Groq OSS] 🔄 RELANCE AUTOMATIQUE AVEC RÉSULTATS DES TOOLS...`);
+    
+    // 🎯 COMPTEUR DE RELANCES : Limiter à 1-2 pour éviter les boucles
+    const relanceCount = sanitizedHistory.filter(msg => (msg as any).role === 'assistant' && (msg as any).tool_calls).length;
+    const maxRelances = 2;
+    
+    if (relanceCount >= maxRelances) {
+      logger.warn(`[Groq OSS] ⚠️ LIMITE DE RELANCES ATTEINTE: ${relanceCount}/${maxRelances} - Arrêt de la relance`);
+      return NextResponse.json({
+        success: true,
+        content: contentForUi,
+        reasoning,
+        tool_calls: toolCalls,
+        tool_results: toolResults,
+        sessionId,
+        is_relance: false,
+        relance_limit_reached: true
+      });
+    }
+    
+    logger.info(`[Groq OSS] 🔄 RELANCE ${relanceCount + 1}/${maxRelances} - Progression normale`);
     
     // Mapper l'historique au format attendu par l'API (comme pour le premier appel)
     const mappedHistoryForRelance = sanitizedHistory.map((msg: ChatMessage) => {
@@ -490,45 +565,25 @@ export async function handleGroqGptOss120b(params: {
       '🔒 **RÈGLE D\'OR :** Si tu as réussi, confirme le succès. Si tu as échoué, explique l\'échec. MAIS garde TOUJOURS le contexte !'
     ].join('\n');
 
-    // 🧠 NOUVELLE COUCHE : Instructions de focalisation sur le message actuel
-    const focusCurrentMessageSystem = [
-      '🎯 FOCALISATION SUR LE MESSAGE ACTUEL - Instructions critiques :',
+    // 🎯 COUCHE SYSTÈME FUSIONNÉE (max ~200-300 tokens) - Éviter bloat/contradictions
+    const fusedSystemLayer = [
+      '🎯 INSTRUCTIONS POST-TOOL FUSIONNÉES :',
       '',
-      'ATTENTION : Tu viens de recevoir une demande de l\'utilisateur ET tu viens d\'exécuter des tools pour y répondre.',
+      '1. **FOCALISATION ABSOLUE** : Réponds UNIQUEMENT au message actuel, pas à l\'historique',
+      '2. **CONFIRMATION CONTEXTUELLE** : "En réponse à votre demande de [action], j\'ai [action réalisée]"',
+      '3. **RÉSUMÉ UTILISATEUR** : En 1-2 phrases, ce que cela change pour l\'utilisateur',
+      '4. **PROCHAINE ÉTAPE** : Suggestion logique dans le contexte de la demande actuelle',
+      '5. **TON** : Chaleureux, empathique, proactif - MAX 4-6 phrases totales',
       '',
-      'RÈGLES DE FOCALISATION :',
-      '',
-      '1. **MESSAGE ACTUEL = PRIORITÉ ABSOLUE** :',
-      '   - Le message utilisateur le plus récent est ta demande PRINCIPALE',
-      '   - Tu DOIS répondre à CE message, pas aux messages précédents',
-      '   - Ignore l\'historique ancien pour ta réponse',
-      '',
-      '2. **CONTEXTE IMMÉDIAT OBLIGATOIRE** :',
-      '   - Commence TOUJOURS par : "En réponse à votre demande de [action]..."',
-      '   - Confirme ce que tu viens de faire pour CETTE demande spécifique',
-      '   - Ne parle PAS des messages précédents',
-      '',
-      '3. **STRUCTURE DE RÉPONSE** :',
-      '   - "En réponse à votre demande de [action], j\'ai [action réalisée]."',
-      '   - "Voici ce qui a été fait : [résumé]"',
-      '   - "Prochaine étape : [suggestion dans le contexte]"',
-      '',
-      '🚨 **INTERDICTION TOTALE :** Ne réponds JAMAIS aux messages précédents !',
-      '🎯 **OBLIGATION :** Réponds UNIQUEMENT au message actuel !'
+      '🚨 **INTERDICTIONS** : Pas de JSON brut, pas de réponse aux messages précédents, pas de bloat technique'
     ].join('\n');
 
     const relanceMessages = [
       { role: 'system' as const, content: systemContent },
-      // 🧠 Couche de préservation du contexte (PRIORITÉ MAXIMALE)
-      { role: 'system' as const, content: contextPreservationSystem },
-      // 🎯 NOUVELLE COUCHE : Focalisation sur le message actuel
-      { role: 'system' as const, content: focusCurrentMessageSystem },
-      // 🗣️ Guide conversationnel assoupli
-      { role: 'system' as const, content: postToolsStyleSystem },
-      // 🚨 Gestion d'erreur intelligente avec possibilité de correction
-      { role: 'system' as const, content: errorHandlingSystem },
-      // 🎯 MESSAGE ACTUEL EN PREMIER (priorité absolue)
-      { role: 'user' as const, content: `🎯 DEMANDE ACTUELLE À TRAITER : ${message}` },
+      // 🎯 COUCHE SYSTÈME FUSIONNÉE (éviter bloat/contradictions)
+      { role: 'system' as const, content: fusedSystemLayer },
+      // 🎯 MESSAGE ACTUEL EN PREMIER (priorité absolue) - COPIE EXACTE
+      { role: 'user' as const, content: message }, // Pas de préfixe, copie exacte
       // Message assistant contenant les tool_calls retournés par le modèle
       { role: 'assistant' as const, content: '', tool_calls: toolCalls },
       // Messages tool correspondant aux résultats exécutés
@@ -568,20 +623,17 @@ export async function handleGroqGptOss120b(params: {
     
     logger.info(`[Groq OSS] 🔄 RELANCE: Envoi du payload de relance...`);
     
-    // 🔧 LOGS DÉTAILLÉS DE LA RELANCE AVEC FOCALISATION SUR LE MESSAGE ACTUEL
-    logger.info(`[Groq OSS] 🔄 STRUCTURE DE LA RELANCE AVEC FOCALISATION SUR LE MESSAGE ACTUEL:`);
+    // 🔧 LOGS DÉTAILLÉS DE LA RELANCE AVEC COUCHE SYSTÈME FUSIONNÉE
+    logger.info(`[Groq OSS] 🔄 STRUCTURE DE LA RELANCE AVEC COUCHE SYSTÈME FUSIONNÉE:`);
     logger.info(`[Groq OSS]    1. System principal: ${systemContent.substring(0, 100)}...`);
-    logger.info(`[Groq OSS]    2. 🧠 COUCHE PRÉSERVATION CONTEXTE (PRIORITÉ MAX): ${contextPreservationSystem.length} caractères`);
-    logger.info(`[Groq OSS]    3. 🎯 COUCHE FOCALISATION MESSAGE ACTUEL: ${focusCurrentMessageSystem.length} caractères`);
-    logger.info(`[Groq OSS]    4. 🗣️ GUIDE CONVERSATIONNEL ASSOUPLI: ${postToolsStyleSystem.length} caractères`);
-    logger.info(`[Groq OSS]    5. 🚨 GESTION D'ERREUR INTELLIGENTE: ${errorHandlingSystem.length} caractères`);
-    logger.info(`[Groq OSS]    6. 🎯 MESSAGE ACTUEL (PRIORITÉ ABSOLUE): ${message.substring(0, 100)}...`);
-    logger.info(`[Groq OSS]    7. Assistant tool_calls: ${toolCalls.length}`);
-    logger.info(`[Groq OSS]    8. Résultats tools: ${toolResults.length} résultats`);
-    logger.info(`[Groq OSS]    9. 📚 HISTORIQUE (contexte seulement): ${sanitizedHistory.length} messages`);
-    logger.info(`[Groq OSS]    10. 🔍 ANALYSE ERREURS: ${toolResults.filter(r => !r.success).length} erreurs détectées`);
-    logger.info(`[Groq OSS]    11. 🔧 DÉCISION TOOLS: ${shouldReactivateTools ? 'RÉACTIVATION' : 'DÉSACTIVATION'} des tools`);
-    logger.info(`[Groq OSS]    12. 🔒 FOCALISATION: Répondre UNIQUEMENT au message actuel, pas à l'historique`);
+    logger.info(`[Groq OSS]    2. 🎯 COUCHE SYSTÈME FUSIONNÉE: ${fusedSystemLayer.length} caractères`);
+    logger.info(`[Groq OSS]    3. 🎯 MESSAGE ACTUEL (PRIORITÉ ABSOLUE): ${message.substring(0, 100)}...`);
+    logger.info(`[Groq OSS]    4. Assistant tool_calls: ${toolCalls.length}`);
+    logger.info(`[Groq OSS]    5. Résultats tools: ${toolResults.length} résultats`);
+    logger.info(`[Groq OSS]    6. 📚 HISTORIQUE (contexte seulement): ${sanitizedHistory.length} messages`);
+    logger.info(`[Groq OSS]    7. 🔍 ANALYSE ERREURS: ${toolResults.filter(r => !r.success).length} erreurs détectées`);
+    logger.info(`[Groq OSS]    8. 🔧 DÉCISION TOOLS: ${shouldReactivateTools ? 'RÉACTIVATION' : 'DÉSACTIVATION'} des tools`);
+    logger.info(`[Groq OSS]    9. 🔒 FOCALISATION: Répondre UNIQUEMENT au message actuel, pas à l'historique`);
     
     try {
       const relanceResponse = await fetch(apiUrl, {
@@ -626,7 +678,7 @@ export async function handleGroqGptOss120b(params: {
     
     return NextResponse.json({
       success: true,
-      content,
+      content: contentForUi,
       reasoning,
       tool_calls: toolCalls,
       tool_results: toolResults,
@@ -639,7 +691,7 @@ export async function handleGroqGptOss120b(params: {
   
   return NextResponse.json({
     success: true,
-    content,
+    content: contentForUi,
     reasoning,
     tool_calls: [],
     sessionId

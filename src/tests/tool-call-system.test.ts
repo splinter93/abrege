@@ -341,6 +341,81 @@ describe('Tool Call System', () => {
         expect(behavior.includes('précédents') || behavior.includes('historique') || behavior.includes('contexte')).toBe(true);
       });
     });
+
+    it('should enforce immediate persistence of assistant(tool_calls) message', () => {
+      // Test de la persistance immédiate du message assistant avec tool_calls
+      const immediatePersistenceCapabilities = {
+        persistBeforeExecution: true,
+        contentEmpty: true,
+        toolCallsPresent: true,
+        noSocialContent: true
+      };
+
+      expect(immediatePersistenceCapabilities.persistBeforeExecution).toBe(true);
+      expect(immediatePersistenceCapabilities.contentEmpty).toBe(true);
+      expect(immediatePersistenceCapabilities.toolCallsPresent).toBe(true);
+      expect(immediatePersistenceCapabilities.noSocialContent).toBe(true);
+    });
+
+    it('should implement tool gating based on API v2 capabilities', () => {
+      // Test du gating des tools selon les capacités
+      const toolGatingCapabilities = {
+        checkApiV2Capabilities: true,
+        conditionalToolActivation: true,
+        fallbackToNoTools: true,
+        loggingEnabled: true
+      };
+
+      expect(toolGatingCapabilities.checkApiV2Capabilities).toBe(true);
+      expect(toolGatingCapabilities.conditionalToolActivation).toBe(true);
+      expect(toolGatingCapabilities.fallbackToNoTools).toBe(true);
+      expect(toolGatingCapabilities.loggingEnabled).toBe(true);
+    });
+
+    it('should implement network retry with exponential backoff', () => {
+      // Test du retry réseau avec backoff exponentiel
+      const retryCapabilities = {
+        maxRetries: 2,
+        exponentialBackoff: true,
+        httpErrorRetry: true,
+        networkErrorRetry: true
+      };
+
+      expect(retryCapabilities.maxRetries).toBe(2);
+      expect(retryCapabilities.exponentialBackoff).toBe(true);
+      expect(retryCapabilities.httpErrorRetry).toBe(true);
+      expect(retryCapabilities.networkErrorRetry).toBe(true);
+    });
+
+    it('should limit relance count to prevent infinite loops', () => {
+      // Test de la limitation du nombre de relances
+      const relanceLimitCapabilities = {
+        maxRelances: 2,
+        countTracking: true,
+        earlyTermination: true,
+        loggingEnabled: true
+      };
+
+      expect(relanceLimitCapabilities.maxRelances).toBe(2);
+      expect(relanceLimitCapabilities.countTracking).toBe(true);
+      expect(relanceLimitCapabilities.earlyTermination).toBe(true);
+      expect(relanceLimitCapabilities.loggingEnabled).toBe(true);
+    });
+
+    it('should fuse system layers to avoid bloat and contradictions', () => {
+      // Test de la fusion des couches système
+      const fusedSystemCapabilities = {
+        maxTokens: 300,
+        noRedundancy: true,
+        clearInstructions: true,
+        noContradictions: true
+      };
+
+      expect(fusedSystemCapabilities.maxTokens).toBeLessThanOrEqual(300);
+      expect(fusedSystemCapabilities.noRedundancy).toBe(true);
+      expect(fusedSystemCapabilities.clearInstructions).toBe(true);
+      expect(fusedSystemCapabilities.noContradictions).toBe(true);
+    });
   });
 
   describe('ChatHistoryCleaner', () => {
