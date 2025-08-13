@@ -477,32 +477,43 @@
   display: flex;
   justify-content: flex-start;
   align-items: center;
-  margin-top: 2px;
+  margin-top: 8px;
   margin-left: 0;
-  opacity: 0;
   transition: opacity 0.2s ease-in-out;
 }
 
-.chat-message-assistant:hover .chat-message-actions {
-  opacity: 1;
-}
-
 .chat-copy-button {
-  opacity: 0.5;
+  /* Reset des styles par défaut */
+  all: unset;
+  
+  /* Styles personnalisés */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  color: #9ca3af;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
   transition: all 0.2s ease-in-out;
-  background: transparent !important;
-  border: none !important;
-  padding: 2px !important;
-  color: #6b7280 !important;
-  font-size: 11px !important;
-  min-width: auto !important;
-  min-height: auto !important;
+  user-select: none;
 }
 
 .chat-copy-button:hover {
-  opacity: 1;
-  color: #9ca3af !important;
-  transform: none;
+  color: #d1d5db;
+  background: rgba(156, 163, 175, 0.1);
+}
+
+.chat-copy-button:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
+}
+
+.chat-copy-button svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
 }
 
 /* ========================================

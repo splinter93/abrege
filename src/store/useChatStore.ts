@@ -42,9 +42,13 @@ interface ChatStore {
   // ⚡ Actions optimisées avec optimistic updates
   syncSessions: () => Promise<void>;
   createSession: (name?: string) => Promise<void>;
-  addMessage: (message: Omit<ChatMessage, 'id'>, options?: { persist?: boolean }) => Promise<void>;
+  addMessage: (message: Omit<ChatMessage, 'id'>, options?: { persist?: boolean; updateExisting?: boolean }) => Promise<void>;
   deleteSession: (sessionId: string) => Promise<void>;
   updateSession: (sessionId: string, data: { name?: string; history_limit?: number }) => Promise<void>;
+  
+  // 🔧 Fonctions utilitaires pour la DB
+  saveMessageToDB: (sessionId: string, message: Omit<ChatMessage, 'id'>) => Promise<void>;
+  updateMessageInDB: (sessionId: string, message: ChatMessage) => Promise<void>;
 }
 
 export const useChatStore = create<ChatStore>()(
@@ -204,65 +208,155 @@ export const useChatStore = create<ChatStore>()(
       },
 
       /**
-       * 💬 Ajouter un message avec optimistic update et rollback sécurisé
+       * 💬 Ajouter un message à la session courante
+       * 🔧 CORRECTION: Éviter la duplication des messages
        */
-      addMessage: async (message: Omit<ChatMessage, 'id'>, options?: { persist?: boolean }) => {
-        const { currentSession, setCurrentSession, setError } = get();
-        
+      addMessage: async (message: Omit<ChatMessage, 'id'>, options?: { persist?: boolean; updateExisting?: boolean }) => {
+        const currentSession = get().currentSession;
         if (!currentSession) {
-          setError('Aucune session active');
+          get().setError('Aucune session active');
           return;
         }
 
-        // Sauvegarder l'état initial pour rollback
-        const initialState = {
-          thread: [...currentSession.thread],
-          updated_at: currentSession.updated_at
-        };
-
         try {
-          // 1. Optimistic update - ajouter le message immédiatement
-          const messageWithId: ChatMessage = {
-            ...message,
-            id: `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
-          };
+          // 🔧 ANTI-DUPLICATION: Vérifier si le message existe déjà
+          let existingMessageIndex = -1;
+          if (options?.updateExisting) {
+            existingMessageIndex = currentSession.thread.findIndex(msg => 
+              msg.role === message.role && 
+              Math.abs(new Date(msg.timestamp).getTime() - new Date(message.timestamp).getTime()) < 5000
+            );
+          }
 
-          const updatedThread = [...currentSession.thread, messageWithId]
-            .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
-          const updatedSession = {
-            ...currentSession,
-            thread: updatedThread,
-            updated_at: new Date().toISOString()
-          };
+          if (existingMessageIndex >= 0) {
+            // 🔧 MISE À JOUR: Modifier le message existant au lieu d'en créer un nouveau
+            const updatedThread = [...currentSession.thread];
+            updatedThread[existingMessageIndex] = {
+              ...updatedThread[existingMessageIndex],
+              ...message,
+              id: updatedThread[existingMessageIndex].id // Garder l'ID existant
+            };
 
-          setCurrentSession(updatedSession);
-          logger.dev('[Chat Store] ⚡ Message ajouté optimistiquement');
+            const updatedSession = {
+              ...currentSession,
+              thread: updatedThread,
+              updated_at: new Date().toISOString()
+            };
 
-          // 2. API call via service (sauf si persist=false)
-          if (options?.persist !== false) {
-            const result = await SessionSyncService.getInstance().addMessageAndSync(currentSession.id, message);
-            
-            if (!result.success) {
-              throw new Error(result.error || 'Erreur ajout message');
+            get().setCurrentSession(updatedSession);
+            logger.dev('[Chat Store] 🔧 Message existant mis à jour');
+
+            // Sauvegarder la mise à jour en DB
+            if (options?.persist !== false) {
+              await get().updateMessageInDB(currentSession.id, updatedThread[existingMessageIndex]);
             }
+          } else {
+            // 🔧 NOUVEAU MESSAGE: Créer un nouveau message avec ID unique
+            const messageWithId: ChatMessage = {
+              ...message,
+              id: `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+            };
+
+            // 🔧 GESTION HISTORIQUE: Appliquer la limite d'historique
+            const historyLimit = currentSession.history_limit || 10;
+            let updatedThread = [...currentSession.thread, messageWithId];
             
-            logger.dev('[Chat Store] ✅ Message sauvegardé en DB');
+            // Trier par timestamp et limiter l'historique
+            updatedThread = updatedThread
+              .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
+              .slice(-historyLimit);
+
+            const updatedSession = {
+              ...currentSession,
+              thread: updatedThread,
+              updated_at: new Date().toISOString()
+            };
+
+            get().setCurrentSession(updatedSession);
+            logger.dev('[Chat Store] ⚡ Nouveau message ajouté');
+
+            // Sauvegarder en DB
+            if (options?.persist !== false) {
+              await get().saveMessageToDB(currentSession.id, message);
+            }
           }
           
         } catch (error) {
           logger.error('[Chat Store] ❌ Erreur ajout message:', error);
-          setError('Erreur lors de l\'ajout du message');
-          
-          // Rollback sécurisé - restaurer l'état initial
-          const currentState = get();
-          if (currentState.currentSession) {
-            const rollbackSession = {
-              ...currentState.currentSession,
-              thread: initialState.thread,
-              updated_at: initialState.updated_at
-            };
-            setCurrentSession(rollbackSession);
+          get().setError('Erreur lors de l\'ajout du message');
+        }
+      },
+
+      /**
+       * 🔧 Fonction utilitaire pour sauvegarder un message en DB
+       */
+      saveMessageToDB: async (sessionId: string, message: Omit<ChatMessage, 'id'>) => {
+        try {
+          const { data: { session } } = await supabase.auth.getSession();
+          if (!session?.access_token) {
+            throw new Error('Authentification requise');
           }
+
+          const response = await fetch(`/api/v1/chat-sessions/${sessionId}/messages`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${session.access_token}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(message),
+          });
+
+          if (!response.ok) {
+            throw new Error('Erreur sauvegarde message');
+          }
+
+          logger.dev('[Chat Store] ✅ Message sauvegardé en DB');
+        } catch (error) {
+          logger.error('[Chat Store] ❌ Erreur sauvegarde DB:', error);
+          throw error;
+        }
+      },
+
+      /**
+       * 🔧 Fonction utilitaire pour mettre à jour un message en DB
+       */
+      updateMessageInDB: async (sessionId: string, message: ChatMessage) => {
+        try {
+          const { data: { session } } = await supabase.auth.getSession();
+          if (!session?.access_token) {
+            throw new Error('Authentification requise');
+          }
+
+          // Pour la mise à jour, on utilise la route PATCH si elle existe
+          const response = await fetch(`/api/v1/chat-sessions/${sessionId}/messages`, {
+            method: 'PATCH',
+            headers: {
+              'Authorization': `Bearer ${session.access_token}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(message),
+          });
+
+          if (!response.ok) {
+            // Fallback: utiliser POST si PATCH n'existe pas
+            const postResponse = await fetch(`/api/v1/chat-sessions/${sessionId}/messages`, {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${session.access_token}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify(message),
+            });
+
+            if (!postResponse.ok) {
+              throw new Error('Erreur mise à jour message');
+            }
+          }
+
+          logger.dev('[Chat Store] ✅ Message mis à jour en DB');
+        } catch (error) {
+          logger.error('[Chat Store] ❌ Erreur mise à jour DB:', error);
+          throw error;
         }
       },
 

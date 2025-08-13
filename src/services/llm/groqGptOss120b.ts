@@ -1,10 +1,13 @@
 import { NextResponse } from 'next/server';
 import { GroqProvider } from './providers';
-import type { AppContext, ChatMessage } from './types';
+import type { AppContext } from './types';
+import { ChatMessage } from '@/types/chat';
 import { agentApiV2Tools } from '@/services/agentApiV2Tools';
 import { buildObservation } from '@/services/toolFlowUtils';
 import { simpleLogger as logger } from '@/utils/logger';
 import { buildOneShotSystemInstruction } from './templates';
+import { ToolCallManager } from './toolCallManager';
+import { ChatHistoryCleaner } from '@/services/chatHistoryCleaner';
 
 function detectErrorCodeFromText(text: string): string {
   const t = (text || '').toLowerCase();
@@ -74,8 +77,28 @@ export async function handleGroqGptOss120b(params: {
   const tools = agentApiV2Tools.getToolsForFunctionCalling();
   logger.dev(`[Groq OSS] 🔧 Function calling activé - ${tools.length} tools disponibles (API v2 complète)`);
   
+  // 🔧 NOUVEAU: Nettoyer l'historique avant traitement
+  const historyCleaner = ChatHistoryCleaner.getInstance();
+  const cleanedHistory = historyCleaner.cleanHistory(sessionHistory, {
+    maxMessages: 30, // Limiter à 30 messages pour éviter les tokens excessifs
+    removeInvalidToolMessages: true,
+    removeDuplicateMessages: true,
+    removeEmptyMessages: true,
+    preserveSystemMessages: true
+  });
+
+  // 🔧 VALIDATION: Vérifier la cohérence des tool calls
+  const consistencyCheck = historyCleaner.validateToolCallConsistency(cleanedHistory);
+  if (!consistencyCheck.isValid) {
+    logger.warn(`[Groq OSS] ⚠️ Incohérences détectées dans l'historique:`, consistencyCheck.issues);
+  }
+
+  // 🔧 STATISTIQUES: Log des statistiques de l'historique
+  const historyStats = historyCleaner.getHistoryStats(cleanedHistory);
+  logger.info(`[Groq OSS] 📊 Statistiques de l'historique:`, historyStats);
+
   // 🔧 Sanitize l'historique: supprimer les messages tool invalides (sans name ou tool_call_id)
-  const sanitizedHistory = sessionHistory.filter((msg: ChatMessage) => {
+  const sanitizedHistory = cleanedHistory.filter((msg: ChatMessage) => {
     if (msg.role === 'tool') {
       const hasName = !!((msg as any).name || (msg as any).tool_name);
       const hasId = !!(msg as any).tool_call_id;
@@ -96,11 +119,26 @@ export async function handleGroqGptOss120b(params: {
         role: msg.role as 'user' | 'assistant' | 'system' | 'tool',
         content: msg.content ?? ''
       };
-      if (msg.role === 'assistant' && (msg as any).tool_calls) mappedMsg.tool_calls = (msg as any).tool_calls;
-      if ((msg as any).role === 'tool') {
-        if ((msg as any).tool_call_id) mappedMsg.tool_call_id = (msg as any).tool_call_id;
-        mappedMsg.name = (msg as any).name || (msg as any).tool_name || 'unknown_tool';
+      
+      // 🔧 CORRECTION: Transmettre TOUS les champs des tool calls pour les messages assistant
+      if (msg.role === 'assistant' && (msg as any).tool_calls) {
+        mappedMsg.tool_calls = (msg as any).tool_calls;
       }
+      
+      // 🔧 CORRECTION: Transmettre TOUS les champs pour les messages tool
+      if (msg.role === 'tool') {
+        if ((msg as any).tool_call_id) {
+          mappedMsg.tool_call_id = (msg as any).tool_call_id;
+        }
+        if ((msg as any).name) {
+          mappedMsg.name = (msg as any).name;
+        }
+        // 🔧 NOUVEAU: Transmettre aussi tool_name si présent
+        if ((msg as any).tool_name) {
+          mappedMsg.name = (msg as any).tool_name;
+        }
+      }
+      
       return mappedMsg;
     }),
     { role: 'user' as const, content: message }
@@ -111,18 +149,22 @@ export async function handleGroqGptOss120b(params: {
   const apiUrl = 'https://api.groq.com/openai/v1/chat/completions';
   const apiKey = process.env.GROQ_API_KEY as string;
 
-  // ✅ NOUVEAU : Configuration sans streaming
-  const apiConfig = agentConfig?.api_config || {};
-  const payload = {
-    model: 'openai/gpt-oss-120b',
-    messages,
+  // ✅ ANTI-SILENCE : Configuration optimisée pour la relance
+  const isToolRelance = sanitizedHistory.some(msg => (msg as any).role === 'developer');
+  
+    const apiConfig = agentConfig?.api_config || {};
+    const payload = {
+      model: 'openai/gpt-oss-120b',
+      messages,
     stream: false, // ✅ DÉSACTIVÉ : Plus de streaming
-    temperature: config.temperature,
-    max_completion_tokens: config.max_tokens,
-    top_p: config.top_p,
-    reasoning_effort: apiConfig.reasoning_effort ?? groqProvider.config.reasoningEffort,
-    ...(tools && { tools, tool_choice: apiConfig.tool_choice ?? 'auto' as const })
-  };
+    // ⭐ ANTI-SILENCE : Configuration optimisée pour la relance
+    temperature: isToolRelance ? 0.2 : config.temperature, // Plus déterministe après tool execution
+      max_completion_tokens: config.max_tokens,
+      top_p: config.top_p,
+      reasoning_effort: apiConfig.reasoning_effort ?? groqProvider.config.reasoningEffort,
+    // ⭐ ANTI-SILENCE : Toujours "auto" pour permettre la chaîne de tools
+    ...(tools && { tools, tool_choice: 'auto' as const })
+    };
 
   // 🎯 LOGGING COMPLET DU PAYLOAD ENVOYÉ AU LLM
   logger.info(`[Groq OSS] 🚀 PAYLOAD COMPLET ENVOYÉ À L'API GROQ (NON-STREAMING):`);
@@ -247,92 +289,196 @@ export async function handleGroqGptOss120b(params: {
 
   // ✅ NOUVEAU : Gestion des tool calls si présents
   if (toolCalls.length > 0) {
-    logger.info(`[Groq OSS] 🔧 EXÉCUTION DES TOOL CALLS...`);
+    // 🔧 LIMITE DE SÉCURITÉ: Maximum 10 tool calls par appel
+    if (toolCalls.length > 10) {
+      logger.warn(`[Groq OSS] ⚠️ Trop de tool calls (${toolCalls.length}) - limité à 10 maximum`);
+      toolCalls.splice(10); // Garder seulement les 10 premiers
+    }
     
+    logger.info(`[Groq OSS] 🔧 EXÉCUTION DES TOOL CALLS (${toolCalls.length} tools)...`);
+    
+    const toolCallManager = ToolCallManager.getInstance();
     const toolResults: Array<{
       tool_call_id: string;
       name: string;
       result: any;
       success: boolean;
     }> = [];
-    
-    for (const toolCall of toolCalls) {
-      const { id, function: func } = toolCall;
-      if (!func?.name) continue;
-      
+
+    // 🔧 DÉDOUPLICATION DANS LE BATCH: éviter d'exécuter deux fois le même tool (même nom+args)
+    const seenBatchSignatures = new Set<string>();
+    const makeSignature = (tc: any) => {
       try {
-        const args = (() => { 
-          try { 
-            return JSON.parse(func.arguments || '{}'); 
-          } catch { 
-            return {}; 
-          } 
-        })();
-        
-        logger.info(`[Groq OSS] 🔧 Exécution de ${func.name}...`);
-        
-        const toolCallPromise = agentApiV2Tools.executeTool(func.name, args, userToken);
-        const timeoutPromise = new Promise((resolve) => { 
-          setTimeout(() => resolve({ success: false, error: 'Timeout tool call (15s)' }), 15000); 
-        });
-        
-        const rawResult = await Promise.race([toolCallPromise, timeoutPromise]);
-        
-        const normalized = (() => {
-          try {
-            if (typeof rawResult === 'string') return { success: false, message: rawResult };
-            if (rawResult && typeof rawResult === 'object') {
-              const obj: any = rawResult;
-              if (!('success' in obj) && ('error' in obj)) return { success: false, ...obj };
-              return obj;
-            }
-            return { success: false, value: rawResult };
-          } catch { 
-            return { success: false, error: 'tool_result_normalization_error' }; 
-          }
-        })() as any;
-        
-        normalized.tool_name = func.name; 
-        normalized.tool_args = args; 
-        normalized.timestamp = new Date().toISOString();
-        
-        if (!('code' in normalized) && (normalized.error || normalized.success === false)) {
-          normalized.code = detectErrorCodeFromText(String(normalized.error || normalized.message || ''));
-        }
-        
+        const argsObj = typeof tc.function?.arguments === 'string' ? JSON.parse(tc.function.arguments) : (tc.function?.arguments || {});
+        const sorted = Object.keys(argsObj).sort().reduce((acc: any, k: string) => { acc[k] = argsObj[k]; return acc; }, {});
+        return `${tc.function?.name || 'unknown'}::${JSON.stringify(sorted)}`;
+      } catch {
+        return `${tc.function?.name || 'unknown'}::${String(tc.function?.arguments || '')}`;
+      }
+    };
+    
+    // 🔧 EXÉCUTION SÉQUENTIELLE DES TOOLS
+    const batchId = `batch-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    for (let i = 0; i < toolCalls.length; i++) {
+      const toolCall = toolCalls[i];
+      const sig = makeSignature(toolCall);
+      if (seenBatchSignatures.has(sig)) {
+        logger.warn(`[Groq OSS] ⚠️ Tool ${toolCall.function?.name} ignoré (doublon dans le batch)`);
         toolResults.push({
-          tool_call_id: id,
-          name: func.name,
-          result: normalized,
-          success: normalized.success !== false && !normalized.error
-        });
-        
-        logger.info(`[Groq OSS] ✅ Tool ${func.name} exécuté avec succès`);
-        
-      } catch (err) {
-        const normalized = { 
-          success: false, 
-          code: detectErrorCodeFromText(err instanceof Error ? err.message : String(err)), 
-          message: `❌ ÉCHEC : ${err instanceof Error ? err.message : String(err)}`, 
-          details: { raw: err instanceof Error ? err.stack || err.message : String(err) }, 
-          tool_name: func.name, 
-          tool_args: func.arguments, 
-          timestamp: new Date().toISOString() 
-        } as const;
-        
-        toolResults.push({
-          tool_call_id: id,
-          name: func.name,
-          result: normalized,
+          tool_call_id: toolCall.id,
+          name: toolCall.function?.name || 'unknown',
+          result: { success: false, error: 'Duplicate tool call in batch', code: 'DUPLICATE_IN_BATCH' },
           success: false
         });
+        continue;
+      }
+      seenBatchSignatures.add(sig);
+
+      logger.info(`[Groq OSS] 🔧 Exécution du tool ${i + 1}/${toolCalls.length}: ${toolCall.function?.name}`);
+      
+      try {
+        const result = await toolCallManager.executeToolCall(toolCall, userToken, 3, { batchId });
         
-        logger.error(`[Groq OSS] ❌ Échec de l'exécution du tool ${func.name}:`, err);
+        toolResults.push({
+          tool_call_id: result.tool_call_id,
+          name: result.name,
+          result: result.result,
+          success: result.success
+        });
+        
+        logger.info(`[Groq OSS] ✅ Tool ${result.name} (${i + 1}/${toolCalls.length}) exécuté avec succès`);
+        
+      } catch (err) {
+        logger.error(`[Groq OSS] ❌ Erreur lors de l'exécution du tool ${i + 1}/${toolCalls.length}:`, err);
+        
+        const fallbackResult = {
+          tool_call_id: toolCall.id,
+          name: toolCall.function?.name || 'unknown',
+          result: { 
+            success: false, 
+            error: 'Erreur ToolCallManager',
+            code: 'TOOL_MANAGER_ERROR'
+          },
+          success: false
+        };
+        
+        toolResults.push(fallbackResult);
       }
     }
     
-    // ✅ NOUVEAU : Retourner la réponse avec les résultats des tools
-    logger.info(`[Groq OSS] ✅ EXÉCUTION TERMINÉE AVEC TOOLS`);
+    logger.info(`[Groq OSS] 🔧 EXÉCUTION TERMINÉE: ${toolResults.length}/${toolCalls.length} tools traités`);
+    
+    // 🔧 RELANCE AUTOMATIQUE AVEC RÉSULTATS DES TOOLS
+    logger.info(`[Groq OSS] 🔄 RELANCE AUTOMATIQUE AVEC RÉSULTATS DES TOOLS...`);
+    
+    // Mapper l'historique au format attendu par l'API (comme pour le premier appel)
+    const mappedHistoryForRelance = sanitizedHistory.map((msg: ChatMessage) => {
+      const mapped: any = {
+        role: msg.role as 'user' | 'assistant' | 'system' | 'tool',
+        content: msg.content ?? ''
+      };
+      if (msg.role === 'assistant' && (msg as any).tool_calls) {
+        mapped.tool_calls = (msg as any).tool_calls;
+      }
+      if (msg.role === 'tool') {
+        if ((msg as any).tool_call_id) mapped.tool_call_id = (msg as any).tool_call_id;
+        if ((msg as any).name) mapped.name = (msg as any).name;
+        if ((msg as any).tool_name) mapped.name = (msg as any).tool_name;
+      }
+      return mapped;
+    });
+
+    // 🔧 CORRECTION: Construire l'historique dans le bon ordre et inclure le message assistant avec tool_calls
+    const postToolsStyleSystem = [
+      'Après exécution des outils, réponds de façon ULTRA concise (2–3 phrases max):',
+      '- Confirme uniquement les actions réalisées, sans réexpliquer la demande.',
+      '- Utilise des puces si plusieurs actions (✅ succès / ⚠️ échec).',
+      '- Enchaîne immédiatement par la prochaine étape concrète (propose 1 action utile).',
+      '- N’énumère pas les paramètres, ne cite pas les outils, pas d’excuses.',
+      '- Pas de blabla, pas de récap long, pas de conclusions générales.'
+    ].join('\n');
+
+    const relanceMessages = [
+      { role: 'system' as const, content: systemContent },
+      // Style de réponse post-tools
+      { role: 'system' as const, content: postToolsStyleSystem },
+      ...mappedHistoryForRelance,
+      // Message utilisateur qui a déclenché les tool calls
+      { role: 'user' as const, content: message },
+      // Message assistant contenant les tool_calls retournés par le modèle
+      { role: 'assistant' as const, content: '', tool_calls: toolCalls },
+      // Messages tool correspondant aux résultats exécutés
+      ...toolResults.map(result => ({
+        role: 'tool' as const,
+        tool_call_id: result.tool_call_id,
+        name: result.name,
+        content: (() => { try { return JSON.stringify(result.result); } catch { return String(result.result); } })(),
+        timestamp: new Date().toISOString()
+      }))
+    ];
+    
+    const relancePayload = {
+      model: config.model,
+      messages: relanceMessages,
+      stream: false,
+      temperature: 0.2, // Plus déterministe pour la relance
+      max_completion_tokens: config.max_tokens,
+      top_p: config.top_p,
+      // 🔧 ANTI-BOUCLE: Pas de tools pour la relance
+      tools: [],
+      tool_choice: 'none' as const
+    };
+    
+    logger.info(`[Groq OSS] 🔄 RELANCE: Envoi du payload de relance...`);
+    
+    // 🔧 LOGS DÉTAILLÉS DE LA RELANCE
+    logger.info(`[Groq OSS] 🔄 STRUCTURE DE LA RELANCE:`);
+    logger.info(`[Groq OSS]    1. System: ${systemContent.substring(0, 100)}...`);
+    logger.info(`[Groq OSS]    2. Historique: ${sanitizedHistory.length} messages`);
+    logger.info(`[Groq OSS]    3. Message utilisateur: ${message.substring(0, 100)}...`);
+    logger.info(`[Groq OSS]    4. Assistant tool_calls: ${toolCalls.length}`);
+    logger.info(`[Groq OSS]    5. Résultats tools: ${toolResults.length} résultats`);
+    
+    try {
+      const relanceResponse = await fetch(apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+        body: JSON.stringify(relancePayload)
+      });
+      
+      if (!relanceResponse.ok) {
+        const errorText = await relanceResponse.text();
+        logger.error(`[Groq OSS] ❌ Erreur relance API:`, errorText);
+        throw new Error(`Relance API error: ${relanceResponse.status} - ${errorText}`);
+      }
+      
+      const relanceData = await relanceResponse.json();
+      const relanceChoice = relanceData.choices?.[0];
+      
+      if (relanceChoice) {
+        const relanceContent = relanceChoice.message?.content || '';
+        const relanceReasoning = relanceChoice.reasoning || '';
+        
+        logger.info(`[Groq OSS] ✅ RELANCE RÉUSSIE: ${relanceContent.length} caractères`);
+        
+        return NextResponse.json({
+          success: true,
+          content: relanceContent,
+          reasoning: relanceReasoning,
+          tool_calls: toolCalls,
+          tool_results: toolResults,
+          sessionId,
+          is_relance: true
+        });
+      }
+      
+    } catch (relanceError) {
+      logger.error(`[Groq OSS] ❌ Erreur lors de la relance:`, relanceError);
+      // En cas d'erreur de relance, retourner quand même les résultats des tools
+    }
+    
+    // ✅ Retourner la réponse avec les résultats des tools (sans relance)
+    logger.info(`[Groq OSS] ✅ EXÉCUTION TERMINÉE AVEC TOOLS (SANS RELANCE)`);
     
     return NextResponse.json({
       success: true,

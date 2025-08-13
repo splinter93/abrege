@@ -1,5 +1,6 @@
 'use client';
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { ChatMessage as ChatMessageType } from '@/types/chat';
 import EnhancedMarkdownMessage from './EnhancedMarkdownMessage';
 import ReasoningMessage from './ReasoningMessage';
@@ -11,9 +12,18 @@ interface ChatMessageProps {
   message: ChatMessageType;
   className?: string;
   isStreaming?: boolean;
+  animateContent?: boolean; // Nouveau prop pour contrôler l'animation
 }
 
-const ChatMessage: React.FC<ChatMessageProps> = ({ message, className, isStreaming = false }) => {
+const ChatMessage: React.FC<ChatMessageProps> = ({ 
+  message, 
+  className, 
+  isStreaming = false,
+  animateContent = false 
+}) => {
+  const [displayedContent, setDisplayedContent] = useState('');
+  const [isAnimating, setIsAnimating] = useState(false);
+  
   // Vérification de sécurité
   if (!message) {
     console.warn('ChatMessage: message is undefined');
@@ -30,6 +40,31 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, className, isStreami
   if (role === 'tool') {
     return null;
   }
+
+  // Animation du contenu si demandé
+  useEffect(() => {
+    if (animateContent && content && role === 'assistant') {
+      setIsAnimating(true);
+      setDisplayedContent('');
+      
+      let currentIndex = 0;
+      const speed = 80; // Plus rapide : 80 caractères/seconde
+      
+      const interval = setInterval(() => {
+        if (currentIndex < content.length) {
+          setDisplayedContent(content.slice(0, currentIndex + 1));
+          currentIndex++;
+        } else {
+          clearInterval(interval);
+          setIsAnimating(false);
+        }
+      }, 1000 / speed);
+
+      return () => clearInterval(interval);
+    } else if (content) {
+      setDisplayedContent(content);
+    }
+  }, [content, animateContent, role]);
 
   const parseSuccessFromContent = (raw: string | null | undefined): boolean | undefined => {
     if (!raw) return undefined;
@@ -72,9 +107,13 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, className, isStreami
     return message.tool_results;
   };
 
-
   return (
-    <div className={`chat-message chat-message-${role} ${className || ''}`}>
+    <motion.div 
+      className={`chat-message chat-message-${role} ${className || ''}`}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+    >
       <div className={`chat-message-bubble chat-message-bubble-${role}`}>
         {/* Raisonnement (si présent) */}
         {reasoning && (
@@ -89,36 +128,46 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, className, isStreami
           />
         )}
 
-        {/* Contenu markdown normal */}
-        {content && (
-          <EnhancedMarkdownMessage content={content || ''} />
+        {/* Contenu markdown avec animation optionnelle */}
+        {displayedContent && (
+          <div className="chat-message-content">
+            <EnhancedMarkdownMessage content={displayedContent} />
+            {isAnimating && (
+              <motion.span
+                animate={{ opacity: [1, 0] }}
+                transition={{ duration: 0.8, repeat: Infinity }}
+                className="typing-cursor"
+                style={{ 
+                  display: 'inline-block',
+                  marginLeft: '2px',
+                  fontWeight: 'bold',
+                  color: 'var(--accent-primary)'
+                }}
+              >
+                |
+              </motion.span>
+            )}
+          </div>
         )}
         
-        {/* Indicateur de frappe */}
-        {isStreaming && (
+        {/* Indicateur de frappe pour le streaming */}
+        {isStreaming && !displayedContent && (
           <div className="chat-typing-indicator">
             <div className="chat-typing-dot"></div>
             <div className="chat-typing-dot"></div>
             <div className="chat-typing-dot"></div>
           </div>
         )}
+
+        {/* Bouton de copie - DÉPLACÉ À L'INTÉRIEUR DE LA BULLE */}
+        {role === 'assistant' && content && (
+          <div className="chat-message-actions">
+            <CopyButton content={content} />
+          </div>
+        )}
       </div>
-      
-      {/* ✅ NOUVEAU: Bouton de copie pour les messages assistant */}
-      {role === 'assistant' && content && (
-        <div className="chat-message-actions">
-          <CopyButton 
-            content={content}
-            size="small"
-            variant="icon-only"
-            className="chat-copy-button"
-          />
-        </div>
-      )}
-    </div>
+    </motion.div>
   );
 };
-
-ChatMessage.displayName = 'ChatMessage';
 
 export default ChatMessage;

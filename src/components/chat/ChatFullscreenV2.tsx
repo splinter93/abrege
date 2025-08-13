@@ -128,34 +128,77 @@ const ChatFullscreenV2: React.FC = () => {
   // Flag pour éviter la double persistance quand des tools sont utilisés
   const toolFlowActiveRef = useRef(false);
 
-  // ✅ AMÉLIORATION: Hook de streaming optimisé avec gestion des tokens individuels
+  // ✅ ANTI-SILENCE: Hook optimisé avec pattern anti-silence
   const {
     isProcessing,
-    content: responseContent,
-    reasoning: responseReasoning,
-    sendMessage,
-    reset
+    sendMessage
   } = useChatResponse({
+        onToolExecutionComplete: async (toolResults) => {
+      logger.dev('[ChatFullscreenV2] 🚀 Tous les tool calls terminés, relance automatique...');
+
+      try {
+        if (!currentSession) return;
+
+        const { data: { session } } = await supabase.auth.getSession();
+        const token = session?.access_token;
+
+        if (!token) {
+          throw new Error('Token d\'authentification manquant');
+        }
+
+        // ⭐ HISTORIQUE MINIMAL MAIS FONCTIONNEL : Juste ce qu'il faut
+        const minimalHistory = [
+          // Dernier message utilisateur (contexte de la demande)
+          currentSession.thread
+            .filter(msg => msg.role === 'user' && msg.content && msg.content.trim() !== '')
+            .slice(-1)[0],
+          // Résultats des tools (essentiel pour la réponse)
+          ...toolResults.map(result => ({
+            role: 'tool' as const,
+            tool_call_id: result.tool_call_id,
+            name: result.name,
+            content: JSON.stringify(result.result)
+          }))
+        ].filter(Boolean);
+
+        await sendMessage(
+          'Traite les résultats des outils et réponds à la demande de l\'utilisateur.',
+          currentSession.id,
+          { sessionId: currentSession.id },
+          minimalHistory, // ⭐ Historique minimal mais complet
+          token
+        );
+        
+      } catch (error) {
+        logger.error('[ChatFullscreenV2] ❌ Erreur lors de la relance:', error);
+        
+        const errorMessage = {
+          role: 'assistant' as const,
+          content: 'Désolé, une erreur est survenue lors de la génération de la réponse finale.',
+          timestamp: new Date().toISOString()
+        };
+        
+        await addMessage(errorMessage);
+      }
+    },
     onComplete: async (fullContent, fullReasoning) => {
       const safeContent = (fullContent || '').trim();
-      // Ne pas persister un message assistant vide
+      
+      // Si pas de contenu, ne rien faire
       if (!safeContent) {
         scrollToBottom(true);
-        toolFlowActiveRef.current = false;
         return;
       }
+      
+      // Créer le message final
       const finalMessage = {
         role: 'assistant' as const,
         content: safeContent,
         reasoning: fullReasoning,
         timestamp: new Date().toISOString()
       };
-      // Si un tool flow a eu lieu, le serveur a déjà persisté la réponse finale
-      if (toolFlowActiveRef.current) {
-        await addMessage(finalMessage, { persist: false });
-      } else {
-        await addMessage(finalMessage);
-      }
+      
+      await addMessage(finalMessage);
       toolFlowActiveRef.current = false;
       scrollToBottom(true);
     },
@@ -180,9 +223,8 @@ const ChatFullscreenV2: React.FC = () => {
         timestamp: new Date().toISOString()
       };
       
-      // Noter: la persistance sera faite côté serveur pour éviter les doublons
-      // On ajoute coté client pour l'UI mais le serveur persiste immédiatement pour garantir l'ordre
-      await addMessage(toolMessage, { persist: false });
+      // Ajouter le message avec les tool calls
+      await addMessage(toolMessage);
       scrollToBottom(true);
     },
     onToolResult: async (toolName, result, success, toolCallId) => {
@@ -331,14 +373,13 @@ const ChatFullscreenV2: React.FC = () => {
 
   // Scroll intelligent pendant le traitement
   useEffect(() => {
-    if (isProcessing && responseContent) {
-      logger.dev('[ChatFullscreenV2] 📝 Response content:', responseContent.length, 'chars');
+    if (isProcessing) {
       // Scroll seulement si l'utilisateur est près du bas
       if (isNearBottom) {
         scrollToBottom();
       }
     }
-  }, [isProcessing, responseContent, isNearBottom, scrollToBottom]);
+  }, [isProcessing, isNearBottom, scrollToBottom]);
 
   const handleSendMessage = async (message: string) => {
     if (!message.trim() || loading) return;
@@ -394,7 +435,7 @@ const ChatFullscreenV2: React.FC = () => {
       
       // Démarrer le traitement via useChatResponse
       logger.dev('[ChatFullscreenV2] 🚀 Démarrage traitement avec sessionId:', currentSession.id);
-      await sendMessage(message, currentSession.id, contextWithSessionId, limitedHistory);
+      await sendMessage(message, currentSession.id, contextWithSessionId, limitedHistory, token);
 
     } catch (error) {
       logger.error('Erreur lors de l\'appel LLM:', error);
@@ -486,26 +527,13 @@ const ChatFullscreenV2: React.FC = () => {
                 .slice()
                 .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
                 .map((message) => (
-                  <ChatMessage key={message.id || `${message.role}-${message.timestamp}-${(message as any).tool_call_id || ''}`} message={message} />
+                  <ChatMessage 
+                    key={message.id || `${message.role}-${message.timestamp}-${(message as any).tool_call_id || ''}`} 
+                    message={message}
+                    animateContent={message.role === 'assistant' && message.timestamp === new Date().toISOString().slice(0, -5) + 'Z'}
+                  />
                 ))}
-              {responseContent && (
-                <AnimatedMessage
-                  content={responseContent}
-                  speed={50}
-                  onComplete={() => {
-                    // Animation terminée
-                  }}
-                />
-              )}
-              {responseReasoning && (
-                <AnimatedReasoning
-                  reasoning={responseReasoning}
-                  speed={30}
-                  onComplete={() => {
-                    // Animation terminée
-                  }}
-                />
-              )}
+
             </div>
             <div ref={messagesEndRef} />
           </div>

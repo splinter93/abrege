@@ -43,6 +43,7 @@ export const useAppContext = (): AppContext | null => {
         type: 'chat_session',
         id: 'current',
         name: 'Session de chat',
+        content: 'Assistant de chat pour la gestion de notes et dossiers'
       };
     }
 

@@ -132,10 +132,10 @@ export class AgentTemplateService {
    */
   private renderContextTemplate(template: string, context: Record<string, any>): string {
     return template
-      .replace(/\{\{type\}\}/g, context.type || 'unknown')
-      .replace(/\{\{name\}\}/g, context.name || 'unknown')
-      .replace(/\{\{id\}\}/g, context.id || 'unknown')
-      .replace(/\{\{content\}\}/g, context.content || '');
+      .replace(/\{\{type\}\}/g, context.type || 'chat_session')
+      .replace(/\{\{name\}\}/g, context.name || 'Session de chat')
+      .replace(/\{\{id\}\}/g, context.id || 'current')
+      .replace(/\{\{content\}\}/g, context.content || 'Assistant de chat pour la gestion de notes et dossiers');
   }
 
   /**

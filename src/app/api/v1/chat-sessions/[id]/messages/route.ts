@@ -47,6 +47,21 @@ const addMessageSchema = z.object({
   })).optional()
 });
 
+// 🔧 VALIDATION RENFORCÉE: Vérifier que les messages tool ont les champs requis
+function validateToolMessage(message: any): boolean {
+  if (message.role === 'tool') {
+    if (!message.tool_call_id) {
+      logger.warn('[Chat Messages API] ⚠️ Message tool sans tool_call_id:', message);
+      return false;
+    }
+    if (!message.name && !message.tool_name) {
+      logger.warn('[Chat Messages API] ⚠️ Message tool sans name:', message);
+      return false;
+    }
+  }
+  return true;
+}
+
 // POST /api/v1/chat-sessions/[id]/messages - Ajouter un message à une session
 export async function POST(
   request: NextRequest,
@@ -126,6 +141,25 @@ export async function POST(
       toolResultsCount: newMessage.tool_results?.length || 0
     });
 
+    // Validation du message avec le schéma
+    const validationResult = addMessageSchema.safeParse(newMessage);
+    if (!validationResult.success) {
+      logger.error('[Chat Messages API] ❌ Validation échouée:', validationResult.error);
+      return NextResponse.json(
+        { error: 'Message invalide', details: validationResult.error },
+        { status: 400 }
+      );
+    }
+
+    // 🔧 VALIDATION RENFORCÉE: Vérifier les messages tool
+    if (!validateToolMessage(newMessage)) {
+      logger.error('[Chat Messages API] ❌ Message tool invalide:', newMessage);
+      return NextResponse.json(
+        { error: 'Message tool invalide - tool_call_id et name requis' },
+        { status: 400 }
+      );
+    }
+
     // Créer un client avec le contexte d'authentification de l'utilisateur
     const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
     if (!anonKey) {
@@ -190,22 +224,27 @@ export async function POST(
     const currentThread = currentSession.thread || [];
     const updatedThread = [...currentThread, newMessage];
 
-    // Appliquer la limite d'historique
+    // 🔧 CORRECTION: Appliquer la limite d'historique AVEC TRI par timestamp
     const historyLimit = currentSession.history_limit || 10;
-    const limitedThread = updatedThread.slice(-historyLimit);
+    
+    // Trier par timestamp PUIS limiter (cohérent avec le frontend)
+    const sortedAndLimitedThread = updatedThread
+      .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
+      .slice(-historyLimit);
 
     logger.dev('[Chat Messages API] 💾 Mise à jour du thread...', {
       ancienThread: currentThread.length,
       nouveauThread: updatedThread.length,
-      threadLimité: limitedThread.length,
-      limite: historyLimit
+      threadLimité: sortedAndLimitedThread.length,
+      limite: historyLimit,
+      trié: '✅ Par timestamp'
     });
 
-    // Mettre à jour la session avec le nouveau thread limité
+    // Mettre à jour la session avec le nouveau thread trié et limité
     const { data: updatedSession, error: updateError } = await userClient
       .from('chat_sessions')
       .update({ 
-        thread: limitedThread,
+        thread: sortedAndLimitedThread,
         updated_at: new Date().toISOString()
       })
       .eq('id', sessionId)
