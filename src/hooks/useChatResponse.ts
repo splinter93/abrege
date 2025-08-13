@@ -101,6 +101,12 @@ export function useChatResponse(options: UseChatResponseOptions = {}): UseChatRe
             }
           }
           
+          // 🎯 NOUVEAU: Informer si des tools ont échoué mais ont été gérés intelligemment
+          if (data.has_failed_tools) {
+            logger.dev('[useChatResponse] ⚠️ Des tools ont échoué mais le LLM a géré intelligemment');
+            // Optionnel: Ajouter un indicateur visuel pour l'utilisateur
+          }
+          
           // Appeler onComplete avec la réponse finale
           onComplete?.(data.content || '', data.reasoning || '');
           return;

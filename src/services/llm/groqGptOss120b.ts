@@ -70,7 +70,15 @@ export async function handleGroqGptOss120b(params: {
       systemContent = renderedTemplate.content;
     } catch (error) {
       logger.warn(`[Groq OSS] ⚠️ Impossible de charger le template, utilisation du fallback`);
-      systemContent = 'Tu es un assistant IA utile et bienveillant.';
+      systemContent = `Tu es un assistant IA utile et bienveillant. 
+
+IMPORTANT - Gestion des erreurs de tools :
+- Si des tools échouent, analyse l'erreur et explique ce qui s'est mal passé
+- Si tu comprends l'erreur et peux la corriger, propose une solution alternative ou retente
+- Si tu ne peux pas corriger l'erreur, donne une explication claire et des suggestions
+- Ne laisse jamais l'utilisateur sans réponse, même en cas d'échec de tools
+
+Sois toujours utile et constructif, même face aux erreurs.`;
     }
 
     // 🎯 Préparer les messages pour le premier appel
@@ -290,13 +298,49 @@ export async function handleGroqGptOss120b(params: {
     // 🎯 Vérifier s'il y a de nouveaux tool calls
     const newToolCalls = (secondResponse as any).tool_calls || [];
     
-    // 🎯 VÉRIFICATION DE SÉCURITÉ : Éviter les boucles infinies si les tools échouent
+    // 🎯 GESTION INTELLIGENTE DES ERREURS : Permettre au LLM de gérer les échecs
     const hasFailedTools = toolResults.some((result: any) => !result.success);
     const hasAuthErrors = toolResults.some((result: any) => 
       result.result?.error?.includes('Impossible d\'extraire l\'utilisateur') ||
       result.result?.error?.includes('Token invalide')
     );
     
+    // 🎯 NOUVEAU : Si des tools ont échoué, laisser le LLM décider
+    if (hasFailedTools && !hasAuthErrors) {
+      logger.info(`[Groq OSS] ⚠️ Tools échoués détectés, laisser le LLM gérer intelligemment`);
+      
+      // Le LLM peut soit expliquer l'erreur, soit retenter, soit continuer
+      if (newToolCalls.length > 0) {
+        logger.info(`[Groq OSS] 🔄 LLM a choisi de retenter/continuer après échec`);
+        return NextResponse.json({
+          success: true,
+          content: (secondResponse as any).content || '',
+          reasoning: (secondResponse as any).reasoning || '',
+          tool_calls: newToolCalls,
+          tool_results: toolResults,
+          sessionId,
+          is_relance: true,
+          has_new_tool_calls: true,
+          has_failed_tools: true
+        });
+      } else {
+        // Le LLM a choisi d'expliquer l'erreur ou de donner une solution alternative
+        logger.info(`[Groq OSS] ✅ LLM a géré les échecs intelligemment`);
+        return NextResponse.json({
+          success: true,
+          content: (secondResponse as any).content || 'Certains outils ont échoué, mais j\'ai pu traiter votre demande.',
+          reasoning: (secondResponse as any).reasoning || 'Gestion intelligente des échecs de tools',
+          tool_calls: [],
+          tool_results: toolResults,
+          sessionId,
+          is_relance: true,
+          has_new_tool_calls: false,
+          has_failed_tools: true
+        });
+      }
+    }
+    
+    // 🎯 CONTINUATION NORMALE : Nouveaux tool calls sans échecs
     if (newToolCalls.length > 0 && !hasAuthErrors) {
       logger.info(`[Groq OSS] 🔄 Nouveaux tool calls détectés, continuation du cycle`);
       
