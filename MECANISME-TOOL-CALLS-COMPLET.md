@@ -207,50 +207,103 @@ const relancePayload = {
 
 ---
 
-## 🗣️ **COUCHE DE RESTITUTION CONVERSATIONNELLE**
+## 🗣️ **COUCHE DE RESTITUTION CONVERSATIONNELLE INTÉGRÉE**
 
 ### **🎯 Objectif**
-Transformer les résultats techniques des tools en réponses humaines, contextuelles et utiles pour l'utilisateur.
+Transformer les résultats techniques des tools en réponses humaines, contextuelles et utiles pour l'utilisateur. **Cette couche est maintenant OBLIGATOIRE et intégrée dans le pipeline d'exécution.**
 
-### **📋 Structure Systématique Imposée**
+### **🔒 Intégration Obligatoire dans le Pipeline**
 
-#### **1. CONTEXTE IMMÉDIAT**
-- **Règle** : Commencer par une phrase de contexte claire
+#### **Position dans le Flux :**
+```
+1. User Input → 2. LLM avec Tools → 3. Tool Calls détectés → 4. Exécution des Tools → 
+5. 🗣️ INJECTION OBLIGATOIRE de la couche conversationnelle → 6. Relance du LLM → 7. Réponse finale structurée
+```
+
+#### **Injection Systématique :**
+```typescript
+const relanceMessages = [
+  { role: 'system', content: systemContent },
+  // 🗣️ COUCHE CONVERSATIONNELLE OBLIGATOIRE - Intégrée dans le pipeline
+  { role: 'system', content: postToolsStyleSystem },
+  ...mappedHistoryForRelance,
+  { role: 'user', content: message },
+  { role: 'assistant', content: '', tool_calls: toolCalls },
+  ...toolResultsMapped
+];
+```
+
+### **📋 Structure Systématique OBLIGATOIRE**
+
+#### **🚨 INSTRUCTION OBLIGATOIRE - Structure en 4 étapes :**
+
+**1. CONTEXTE IMMÉDIAT (OBLIGATOIRE)**
+- **Règle** : Commencer TOUJOURS par : "J'ai [action] [détail] [contexte]."
 - **Exemple** : "J'ai ajouté le texte demandé à la section *Budget* de la note *Trip Planning*."
 - **Bénéfice** : L'utilisateur comprend immédiatement ce qui a été fait
+- **Contrainte** : AUCUNE dérogation possible
 
-#### **2. RÉSUMÉ UTILISATEUR**
-- **Règle** : En 1-2 phrases, expliquer ce que le résultat signifie pour l'utilisateur
+**2. RÉSUMÉ UTILISATEUR (OBLIGATOIRE)**
+- **Règle** : En 1-2 phrases MAXIMUM, expliquer ce que le résultat signifie pour l'utilisateur
 - **Exemple** : "Votre budget est maintenant organisé avec des catégories claires pour le voyage."
 - **Bénéfice** : L'utilisateur comprend la valeur ajoutée de l'action
+- **Contrainte** : Structure imposée, pas de variation
 
-#### **3. AFFICHAGE INTELLIGENT**
-- **Résultats courts** : Affichage direct si pertinent
+**3. AFFICHAGE INTELLIGENT (OBLIGATOIRE)**
+- **Résultats courts** : Affichage DIRECT (pas de JSON)
 - **Résultats longs** : 3-5 premières lignes + "..."
 - **Résultats techniques** : Proposition de commande pour voir le détail
-- **Bénéfice** : Éviter l'information brute et technique
+- **INTERDICTION TOTALE** : AUCUN JSON brut, AUCUNE donnée technique brute
+- **Contrainte** : Formatage obligatoire selon le type de résultat
 
-#### **4. PROCHAINE ÉTAPE**
-- **Règle** : Proposer immédiatement 1 action concrète et utile
+**4. PROCHAINE ÉTAPE (OBLIGATOIRE)**
+- **Règle** : Proposer IMMÉDIATEMENT 1 action concrète et utile
 - **Exemple** : "Voulez-vous que j'ajoute d'autres catégories au budget ?"
 - **Bénéfice** : Maintenir l'engagement et guider l'utilisateur
+- **Contrainte** : Toujours une proposition d'action
 
-### **🛡️ Règles Strictes**
-- ❌ **Pas de JSON brut** ou données techniques
-- ❌ **Pas de récapitulatif** de la demande initiale
-- ❌ **Pas d'excuses** ou justifications longues
-- ✅ **Ton chaleureux** et proactif
-- ✅ **Réponse totale** : 4-6 phrases maximum
+### **🛡️ Interdictions Absolues (Pipeline-Enforced)**
 
-### **💡 Exemple de Restitution Conversationnelle**
+- ❌ **AUCUN JSON brut** ou données techniques
+- ❌ **AUCUN récapitulatif** de la demande initiale
+- ❌ **AUCUNE excuse** ou justification longue
+- ❌ **AUCUNE réponse** sans cette structure en 4 étapes
+- ❌ **AUCUNE dérogation** possible au format imposé
 
-**Avant (technique)** :
+### **✅ Ton Obligatoire (Pipeline-Enforced)**
+
+- **Chaleureux, empathique, proactif**
+- **Montre que tu es présent pour aider**
+- **Réponse totale** : 4-6 phrases maximum
+- **Structure imposée** : 1 phrase contexte + 1-2 phrases résumé + 1 phrase affichage + 1 phrase prochaine étape
+
+### **🔒 Mécanisme d'Enforcement**
+
+#### **1. Injection Systématique**
+- **À chaque relance** après tool calls
+- **Position fixe** dans le pipeline (étape 5)
+- **Message system** avec priorité maximale
+
+#### **2. Validation Forcée**
+- **Structure imposée** par le prompt system
+- **Exemples concrets** pour chaque étape
+- **Interdictions explicites** avec sanctions
+
+#### **3. Logs de Confirmation**
+```typescript
+logger.info(`[Groq OSS] 🗣️ COUCHE CONVERSATIONNELLE OBLIGATOIRE: ${postToolsStyleSystem.length} caractères`);
+logger.info(`[Groq OSS] 🔒 RESTITUTION FORCÉE: Structure 4-étapes obligatoire`);
+```
+
+### **💡 Exemple de Restitution Conversationnelle Forcée**
+
+**Avant (technique - maintenant IMPOSSIBLE) :**
 ```
 Tool create_note executed successfully.
 Result: {"id": "note-123", "title": "Budget Trip", "content": "..."}
 ```
 
-**Après (conversationnel)** :
+**Après (conversationnel - OBLIGATOIRE) :**
 ```
 J'ai créé votre note "Budget Trip" dans le classeur principal. 
 
@@ -258,6 +311,14 @@ Votre nouvelle note est maintenant prête et vous pouvez commencer à l'organise
 
 Voulez-vous que je crée ces sections pour vous ou préférez-vous les organiser différemment ?
 ```
+
+### **🎯 Bénéfices de l'Intégration Pipeline**
+
+- **🚀 Garantie absolue** : La structure est imposée, pas suggérée
+- **🔒 Cohérence totale** : Tous les tool calls suivent le même format
+- **📊 Traçabilité** : Logs détaillés de l'injection obligatoire
+- **🛡️ Sécurité** : Aucun risque de réponses techniques non formatées
+- **🎭 Expérience utilisateur** : Toujours des réponses humaines et contextuelles
 
 ---
 

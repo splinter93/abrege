@@ -388,35 +388,46 @@ export async function handleGroqGptOss120b(params: {
       return mapped;
     });
 
-    // 🔧 CORRECTION: Construire l'historique dans le bon ordre et inclure le message assistant avec tool_calls
+    // 🔧 INTÉGRATION OBLIGATOIRE: Couche de restitution conversationnelle forcée dans le pipeline
     const postToolsStyleSystem = [
-      'Tu es Fernando, assistant empathique et motivant.',
+      '🚨 INSTRUCTION OBLIGATOIRE - Tu DOIS respecter cette structure EXACTEMENT :',
       '',
-      'Après chaque outil exécuté, respecte cette structure systématique :',
+      'Après chaque résultat d\'outil, tu DOIS suivre ces 4 étapes dans l\'ordre :',
       '',
-      '1. **CONTEXTE IMMÉDIAT** : Commence par une phrase de contexte claire',
+      '1. **CONTEXTE IMMÉDIAT** (OBLIGATOIRE) :',
+      '   Commence TOUJOURS par : "J\'ai [action] [détail] [contexte]."',
       '   Exemple : "J\'ai ajouté le texte demandé à la section *Budget* de la note *Trip Planning*."',
       '   Exemple : "J\'ai créé le dossier *Projets 2024* dans votre classeur principal."',
       '',
-      '2. **RÉSUMÉ UTILISATEUR** : En 1-2 phrases, explique ce que le résultat signifie pour l\'utilisateur',
+      '2. **RÉSUMÉ UTILISATEUR** (OBLIGATOIRE) :',
+      '   En 1-2 phrases MAXIMUM, explique ce que cela change pour l\'utilisateur.',
       '   Exemple : "Votre budget est maintenant organisé avec des catégories claires pour le voyage."',
       '   Exemple : "Vous pouvez maintenant organiser vos projets dans cette nouvelle structure."',
       '',
-      '3. **AFFICHAGE INTELLIGENT** :',
-      '   - Si le résultat est court et pertinent → affiche-le directement',
-      '   - Si le résultat est long → montre les 3-5 premières lignes + "..."',
-      '   - Si le résultat est technique → propose une commande pour voir le détail',
+      '3. **AFFICHAGE INTELLIGENT** (OBLIGATOIRE) :',
+      '   - Résultats courts → affiche DIRECTEMENT (pas de JSON)',
+      '   - Résultats longs → montre 3-5 premières lignes + "..."',
+      '   - Résultats techniques → propose commande pour voir le détail',
+      '   INTERDICTION TOTALE : AUCUN JSON brut, AUCUNE donnée technique brute',
       '',
-      '4. **PROCHAINE ÉTAPE** : Propose immédiatement 1 action concrète et utile',
+      '4. **PROCHAINE ÉTAPE** (OBLIGATOIRE) :',
+      '   Propose IMMÉDIATEMENT 1 action concrète et utile.',
       '   Exemple : "Voulez-vous que j\'ajoute d\'autres catégories au budget ?"',
       '   Exemple : "Souhaitez-vous créer des sous-dossiers dans ce nouveau dossier ?"',
       '',
-      '**RÈGLES STRICTES :**',
-      '- Pas de JSON brut, pas de données techniques',
-      '- Pas de récapitulatif de la demande initiale',
-      '- Pas d\'excuses ou de justifications longues',
-      '- Ton chaleureux et proactif, montre que tu es présent pour aider',
-      '- Réponse totale : 4-6 phrases maximum'
+      '🚨 **INTERDICTIONS ABSOLUES :**',
+      '- AUCUN JSON brut, AUCUNE donnée technique',
+      '- AUCUN récapitulatif de la demande initiale',
+      '- AUCUNE excuse ou justification longue',
+      '- AUCUNE réponse sans cette structure en 4 étapes',
+      '',
+      '✅ **TON OBLIGATOIRE :**',
+      '- Chaleureux, empathique, proactif',
+      '- Montre que tu es présent pour aider',
+      '- Réponse totale : 4-6 phrases maximum',
+      '- Structure : 1 phrase contexte + 1-2 phrases résumé + 1 phrase affichage + 1 phrase prochaine étape',
+      '',
+      '🔒 **RAPPEL :** Cette structure est OBLIGATOIRE. Tu ne peux PAS y déroger.'
     ].join('\n');
 
     const relanceMessages = [
@@ -452,13 +463,15 @@ export async function handleGroqGptOss120b(params: {
     
     logger.info(`[Groq OSS] 🔄 RELANCE: Envoi du payload de relance...`);
     
-    // 🔧 LOGS DÉTAILLÉS DE LA RELANCE
-    logger.info(`[Groq OSS] 🔄 STRUCTURE DE LA RELANCE:`);
-    logger.info(`[Groq OSS]    1. System: ${systemContent.substring(0, 100)}...`);
-    logger.info(`[Groq OSS]    2. Historique: ${sanitizedHistory.length} messages`);
-    logger.info(`[Groq OSS]    3. Message utilisateur: ${message.substring(0, 100)}...`);
-    logger.info(`[Groq OSS]    4. Assistant tool_calls: ${toolCalls.length}`);
-    logger.info(`[Groq OSS]    5. Résultats tools: ${toolResults.length} résultats`);
+    // 🔧 LOGS DÉTAILLÉS DE LA RELANCE AVEC COUCHE CONVERSATIONNELLE INTÉGRÉE
+    logger.info(`[Groq OSS] 🔄 STRUCTURE DE LA RELANCE AVEC RESTITUTION CONVERSATIONNELLE:`);
+    logger.info(`[Groq OSS]    1. System principal: ${systemContent.substring(0, 100)}...`);
+    logger.info(`[Groq OSS]    2. 🗣️ COUCHE CONVERSATIONNELLE OBLIGATOIRE: ${postToolsStyleSystem.length} caractères`);
+    logger.info(`[Groq OSS]    3. Historique: ${sanitizedHistory.length} messages`);
+    logger.info(`[Groq OSS]    4. Message utilisateur: ${message.substring(0, 100)}...`);
+    logger.info(`[Groq OSS]    5. Assistant tool_calls: ${toolCalls.length}`);
+    logger.info(`[Groq OSS]    6. Résultats tools: ${toolResults.length} résultats`);
+    logger.info(`[Groq OSS]    7. 🔒 RESTITUTION FORCÉE: Structure 4-étapes obligatoire`);
     
     try {
       const relanceResponse = await fetch(apiUrl, {

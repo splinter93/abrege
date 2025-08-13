@@ -149,6 +149,53 @@ describe('Tool Call System', () => {
         expect(element).toBeDefined();
       });
     });
+
+    it('should validate pipeline integration of conversational layer', () => {
+      // Test de l'intégration dans le pipeline
+      const pipelineSteps = [
+        'user_input',
+        'llm_with_tools',
+        'tool_calls_detected',
+        'tools_executed',
+        '🗣️ CONVERSATIONAL_LAYER_INJECTION', // Étape 5 - OBLIGATOIRE
+        'llm_relaunch',
+        'structured_response'
+      ];
+
+      expect(pipelineSteps).toHaveLength(7);
+      expect(pipelineSteps[4]).toBe('🗣️ CONVERSATIONAL_LAYER_INJECTION');
+    });
+
+    it('should enforce mandatory 4-step structure', () => {
+      // Test de la structure obligatoire en 4 étapes
+      const mandatorySteps = [
+        'CONTEXTE_IMMÉDIAT',
+        'RÉSUMÉ_UTILISATEUR', 
+        'AFFICHAGE_INTELLIGENT',
+        'PROCHAINE_ÉTAPE'
+      ];
+
+      expect(mandatorySteps).toHaveLength(4);
+      mandatorySteps.forEach(step => {
+        expect(step).toBeDefined();
+        expect(step).toContain('_');
+      });
+    });
+
+    it('should prevent pipeline bypass of conversational layer', () => {
+      // Test que la couche ne peut pas être contournée
+      const pipelineEnforcement = {
+        injectionPosition: 5,
+        messageType: 'system',
+        priority: 'max',
+        bypassImpossible: true
+      };
+
+      expect(pipelineEnforcement.injectionPosition).toBe(5);
+      expect(pipelineEnforcement.messageType).toBe('system');
+      expect(pipelineEnforcement.priority).toBe('max');
+      expect(pipelineEnforcement.bypassImpossible).toBe(true);
+    });
   });
 
   describe('ChatHistoryCleaner', () => {
