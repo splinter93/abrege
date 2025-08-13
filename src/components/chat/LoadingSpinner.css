@@ -1,0 +1,169 @@
+/* ========================================
+   LOADING SPINNER - Composant standardisé
+   ======================================== */
+
+.loading-spinner-container {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ========================================
+   VARIANTE DÉFAUT - Icône rotative
+   ======================================== */
+
+.loading-default {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* ========================================
+   VARIANTE SPINNER - Cercle animé
+   ======================================== */
+
+.loading-spinner {
+  animation: spin 2s linear infinite;
+}
+
+/* ========================================
+   VARIANTE DOTS - Points qui clignotent
+   ======================================== */
+
+.loading-dots {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.loading-dots span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: currentColor;
+  animation: dots-pulse 1.4s ease-in-out infinite both;
+}
+
+.loading-dots span:nth-child(1) {
+  animation-delay: -0.32s;
+}
+
+.loading-dots span:nth-child(2) {
+  animation-delay: -0.16s;
+}
+
+.loading-dots span:nth-child(3) {
+  animation-delay: 0s;
+}
+
+@keyframes dots-pulse {
+  0%, 80%, 100% {
+    transform: scale(0.8);
+    opacity: 0.5;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* ========================================
+   VARIANTE PULSE - Cercle qui pulse
+   ======================================== */
+
+.loading-pulse {
+  position: relative;
+  width: 20px;
+  height: 20px;
+}
+
+.pulse-circle {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background-color: currentColor;
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(0.8);
+    opacity: 0.5;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(0.8);
+    opacity: 0.5;
+  }
+}
+
+/* ========================================
+   SIZES PRÉDÉFINIS
+   ======================================== */
+
+.loading-spinner-container.small {
+  transform: scale(0.75);
+}
+
+.loading-spinner-container.large {
+  transform: scale(1.5);
+}
+
+.loading-spinner-container.xlarge {
+  transform: scale(2);
+}
+
+/* ========================================
+   COULEURS THÉMATIQUES
+   ======================================== */
+
+.loading-spinner-container.primary {
+  color: var(--accent-primary, #3b82f6);
+}
+
+.loading-spinner-container.secondary {
+  color: var(--accent-secondary, #6b7280);
+}
+
+.loading-spinner-container.success {
+  color: var(--success-color, #22c55e);
+}
+
+.loading-spinner-container.warning {
+  color: var(--warning-color, #f59e0b);
+}
+
+.loading-spinner-container.error {
+  color: var(--error-color, #ef4444);
+}
+
+/* ========================================
+   ANIMATIONS D'ENTRÉE/SORTIE
+   ======================================== */
+
+.loading-spinner-container.fade-in {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.loading-spinner-container.fade-out {
+  animation: fadeOut 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.8); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes fadeOut {
+  from { opacity: 1; transform: scale(1); }
+  to { opacity: 0; transform: scale(0.8); }
+} 

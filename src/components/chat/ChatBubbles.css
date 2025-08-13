@@ -1,5 +1,5 @@
 /* ========================================
-   CHAT BUBBLES - FICHIER DÉDIÉ
+   CHAT BUBBLES - DESIGN MODERNE ET COHÉRENT
    ======================================== */
 
 /* ========================================
@@ -8,15 +8,18 @@
 
 .chat-message {
   display: flex;
-  margin-bottom: calc(var(--chat-spacing-lg) * 0.5);
+  margin-bottom: 24px;
+  position: relative;
 }
 
 .chat-message-user {
   justify-content: flex-end;
+  margin-left: 60px;
 }
 
 .chat-message-assistant {
   justify-content: flex-start;
+  margin-right: 60px;
 }
 
 /* ========================================
@@ -24,49 +27,297 @@
    ======================================== */
 
 .chat-message-bubble {
-  max-width: 80%;
-  padding: var(--chat-spacing-md);
-  border-radius: var(--chat-radius-xl);
+  max-width: 85%;
+  padding: 16px 20px;
+  border-radius: 18px;
   word-wrap: break-word;
   overflow-wrap: break-word;
+  line-height: 1.5;
+  font-size: 14px;
+  position: relative;
+  box-sizing: border-box;
+  transition: all 0.2s ease-in-out;
+}
+
+/* ========================================
+   BULLE UTILISATEUR - GRISE MODERNE
+   ======================================== */
+
+.chat-message-bubble-user {
+  background: #374151;
+  color: #ffffff;
   border: none;
-  outline: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  border-bottom-right-radius: 6px;
+  margin-left: auto;
+}
+
+.chat-message-bubble-user:hover {
+  background: #4b5563;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  transform: translateY(-1px);
+}
+
+/* ========================================
+   BULLE ASSISTANT - TRANSPARENTE SANS BORDURE
+   ======================================== */
+
+.chat-message-bubble-assistant {
+  background: transparent;
+  color: #e5e7eb;
+  border: none;
+  box-shadow: none;
+  border-bottom-left-radius: 6px;
+  backdrop-filter: none;
+}
+
+.chat-message-bubble-assistant:hover {
+  background: transparent;
+  border: none;
   box-shadow: none;
 }
 
 /* ========================================
-   BULLE UTILISATEUR
+   BULLE TOOL - STYLE SPÉCIAL
    ======================================== */
 
-.chat-message-bubble-user {
-  background: var(--chat-bg-secondary);
-  color: var(--chat-text-primary);
-  border: 2px solid var(--chat-border-primary);
-  box-shadow: var(--chat-shadow-sm);
+.chat-message-bubble-tool {
+  background: rgba(34, 197, 94, 0.1);
+  color: #22c55e;
+  border: 1px solid rgba(34, 197, 94, 0.2);
+  border-bottom-left-radius: 6px;
+  font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, monospace;
+  font-size: 13px;
+}
+
+.chat-message-bubble-tool:hover {
+  background: rgba(34, 197, 94, 0.15);
+  border-color: rgba(34, 197, 94, 0.3);
 }
 
 /* ========================================
-   BULLE ASSISTANT - PLEINE LARGEUR TRANSPARENTE
+   HEADER DES MESSAGES
    ======================================== */
 
-.chat-message-bubble-assistant {
-  max-width: 100%;
-  width: 100%;
-  background: transparent !important;
-  color: var(--chat-text-primary);
-  border: none !important;
-  outline: none !important;
-  box-shadow: none !important;
-  padding: var(--chat-spacing-lg) var(--chat-spacing-lg) var(--chat-spacing-lg) 0;
+.message-header {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  margin-bottom: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  opacity: 0.8;
+}
+
+.message-role {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.message-role::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
 }
 
 /* ========================================
-   RESPONSIVE
+   CONTENU DES MESSAGES
+   ======================================== */
+
+.message-content {
+  line-height: 1.6;
+}
+
+.message-content p {
+  margin: 0 0 12px 0;
+}
+
+.message-content p:last-child {
+  margin-bottom: 0;
+}
+
+/* ========================================
+   MESSAGES AVEC TOOL CALLS
+   ======================================== */
+
+.chat-message.tool-calls-message .chat-message-bubble {
+  background: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  color: #3b82f6;
+}
+
+.chat-message.tool-calls-message .message-role::before {
+  background: #3b82f6;
+}
+
+/* ========================================
+   MESSAGES D'ERREUR
+   ======================================== */
+
+.chat-message.error-message .chat-message-bubble {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+}
+
+.chat-message.error-message .message-role::before {
+  background: #ef4444;
+}
+
+/* ========================================
+   MESSAGES DE SUCCÈS
+   ======================================== */
+
+.chat-message.success-message .chat-message-bubble {
+  background: rgba(34, 197, 94, 0.1);
+  border: 1px solid rgba(34, 197, 94, 0.2);
+  color: #22c55e;
+}
+
+.chat-message.success-message .message-role::before {
+  background: #22c55e;
+}
+
+/* ========================================
+   MESSAGES VIDES
+   ======================================== */
+
+.no-content {
+  font-style: italic;
+  opacity: 0.6;
+  text-align: center;
+  padding: 20px;
+}
+
+/* ========================================
+   ANIMATIONS D'ENTRÉE
+   ======================================== */
+
+.chat-message {
+  animation: messageSlideIn 0.3s ease-out;
+}
+
+@keyframes messageSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ========================================
+   RESPONSIVE DESIGN
    ======================================== */
 
 @media (max-width: 768px) {
+  .chat-message {
+    margin-bottom: 16px;
+  }
+  
+  .chat-message-user {
+    margin-left: 20px;
+  }
+  
+  .chat-message-assistant {
+    margin-right: 20px;
+  }
+  
   .chat-message-bubble {
     max-width: 90%;
-    padding: var(--chat-spacing-md);
+    padding: 12px 16px;
+    font-size: 13px;
+  }
+  
+  .message-header {
+    font-size: 11px;
+  }
+}
+
+@media (max-width: 480px) {
+  .chat-message-bubble {
+    max-width: 95%;
+    padding: 10px 14px;
+    font-size: 12px;
+  }
+  
+  .chat-message-user {
+    margin-left: 10px;
+  }
+  
+  .chat-message-assistant {
+    margin-right: 10px;
+  }
+}
+
+/* ========================================
+   THÈME SOMBRE/CLAIR (VARIABLES CSS)
+   ======================================== */
+
+:root {
+  --chat-bubble-user-bg: #374151;
+  --chat-bubble-user-color: #ffffff;
+  --chat-bubble-user-shadow: rgba(0, 0, 0, 0.2);
+  
+  --chat-bubble-assistant-bg: transparent;
+  --chat-bubble-assistant-color: #e5e7eb;
+  --chat-bubble-assistant-border: transparent;
+  
+  --chat-bubble-tool-bg: rgba(34, 197, 94, 0.1);
+  --chat-bubble-tool-color: #22c55e;
+  --chat-bubble-tool-border: rgba(34, 197, 94, 0.2);
+}
+
+/* ========================================
+   ÉTATS INTERACTIFS
+   ======================================== */
+
+.chat-message-bubble:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+}
+
+.chat-message-bubble:active {
+  transform: translateY(0);
+}
+
+/* ========================================
+   ACCESSIBILITÉ
+   ======================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  .chat-message {
+    animation: none;
+  }
+  
+  .chat-message-bubble:hover {
+    transform: none;
+  }
+}
+
+/* ========================================
+   PRINT STYLES
+   ======================================== */
+
+@media print {
+  .chat-message-bubble {
+    box-shadow: none;
+    border: 1px solid #ccc;
+  }
+  
+  .chat-message-bubble-user {
+    background: #f0f0f0 !important;
+    color: #000 !important;
+  }
+  
+  .chat-message-bubble-assistant {
+    background: #ffffff !important;
+    color: #000 !important;
+    border-color: #ccc !important;
   }
 } 

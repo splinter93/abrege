@@ -1,110 +1,31 @@
 'use client';
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { useChatStore } from '@/store/useChatStore';
-import { useLLMStore } from '@/store/useLLMStore';
+
 import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { useAppContext } from '@/hooks/useAppContext';
 import { useChatResponse } from '@/hooks/useChatResponse';
-import { AnimatedMessage } from './AnimatedMessage';
-import { AnimatedReasoning } from './AnimatedReasoning';
 import { useChatScroll } from '@/hooks/useChatScroll';
 import { supabase } from '@/supabaseClient';
 import ChatInput from './ChatInput';
-import ChatMessage from './ChatMessage';
+import ChatMessageOptimized from './ChatMessageOptimized';
 import ChatKebabMenu from './ChatKebabMenu';
 import ChatSidebar from './ChatSidebar';
-import ReasoningMessage from './ReasoningMessage';
 import { simpleLogger as logger } from '@/utils/logger';
+
 import './index.css';
 import './ReasoningMessage.css';
 import './ToolCallMessage.css';
 import Link from 'next/link';
 
-// 🔧 NOUVEAU: Fonction de formatage du reasoning pour Qwen 3
-const formatReasoningForQwen = (reasoning: string, model?: string): string => {
-  if (!reasoning) return '';
-  
-  // Détecter si c'est Qwen 3
-  const isQwen3 = model?.includes('Qwen') || model?.includes('qwen');
-  
-  // Nettoyer le reasoning
-  let cleanedReasoning = reasoning.trim();
-  
-  // ✅ CORRECTION: Gestion spécifique des balises <think> et </think> de Qwen 3
-  if (isQwen3) {
-    // Extraire seulement le contenu entre <think> et </think>
-    const thinkMatch = cleanedReasoning.match(/<think>([\s\S]*?)<\/think>/);
-    
-    if (thinkMatch) {
-      // Prendre seulement le contenu entre les balises
-      cleanedReasoning = thinkMatch[1].trim();
-    } else {
-      // Si pas de balises, supprimer les balises partielles
-      cleanedReasoning = cleanedReasoning
-        .replace(/<think>/gi, '')
-        .replace(/<\/think>/gi, '')
-        .trim();
-    }
-    
-    // Nettoyer les espaces en début et fin
-    cleanedReasoning = cleanedReasoning.trim();
-    
-    // Formater avec une structure claire
-    const formattedReasoning = cleanedReasoning
-      .split('\n')
-      .map(line => line.trim())
-      .filter(line => line.length > 0)
-      .join('\n');
-    
-    // ✅ NOUVEAU: Formatage avec encadré et couleur grise
-    return `> **🧠 Raisonnement Qwen 3 :**
-> 
-> *${formattedReasoning}*
-> 
-> ---
-> *Ce raisonnement montre le processus de pensée du modèle avant de générer sa réponse finale.*`;
-  }
-  
-  // Pour les autres modèles, nettoyer les marqueurs de reasoning
-  const reasoningMarkers = [
-    '<|im_start|>reasoning\n',
-    '<|im_end|>\n',
-    'reasoning\n',
-    'Reasoning:\n',
-    'Raisonnement:\n'
-  ];
-  
-  for (const marker of reasoningMarkers) {
-    if (cleanedReasoning.startsWith(marker)) {
-      cleanedReasoning = cleanedReasoning.substring(marker.length);
-    }
-  }
-  
-  // Formater avec une structure claire
-  const formattedReasoning = cleanedReasoning
-    .split('\n')
-    .map(line => line.trim())
-    .filter(line => line.length > 0)
-    .join('\n');
-  
-  // Formatage générique pour les autres modèles
-  return `**🧠 Raisonnement :**
-
-${formattedReasoning}
-
----
-*Processus de pensée du modèle.*`;
-};
-
 const ChatFullscreenV2: React.FC = () => {
+  // 🎯 Hooks optimisés
   const isDesktop = useMediaQuery('(min-width: 1024px)');
-  
   const [sidebarOpen, setSidebarOpen] = useState(isDesktop);
   const [wideMode, setWideMode] = useState(false);
   
-  // Récupérer le contexte de l'app
+  // 🎯 Contexte et store
   const appContext = useAppContext();
-  
   const {
     sessions,
     currentSession,
@@ -123,184 +44,162 @@ const ChatFullscreenV2: React.FC = () => {
     updateSession
   } = useChatStore();
 
-  const { currentProvider } = useLLMStore();
 
-  // Flag pour éviter la double persistance quand des tools sont utilisés
+
+  // 🎯 Refs optimisées
   const toolFlowActiveRef = useRef(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // ✅ ANTI-SILENCE: Hook optimisé avec pattern anti-silence
-  const {
-    isProcessing,
-    sendMessage
-  } = useChatResponse({
-        onToolExecutionComplete: async (toolResults) => {
-      logger.dev('[ChatFullscreenV2] 🚀 Tous les tool calls terminés, relance automatique...');
-
-      try {
-        if (!currentSession) return;
-
-        const { data: { session } } = await supabase.auth.getSession();
-        const token = session?.access_token;
-
-        if (!token) {
-          throw new Error('Token d\'authentification manquant');
-        }
-
-        // ⭐ HISTORIQUE MINIMAL MAIS FONCTIONNEL : Juste ce qu'il faut
-        const minimalHistory = [
-          // Dernier message utilisateur (contexte de la demande)
-          currentSession.thread
-            .filter(msg => msg.role === 'user' && msg.content && msg.content.trim() !== '')
-            .slice(-1)[0],
-          // Résultats des tools (essentiel pour la réponse)
-          ...toolResults.map(result => ({
-            role: 'tool' as const,
-            tool_call_id: result.tool_call_id,
-            name: result.name,
-            content: JSON.stringify(result.result)
-          }))
-        ].filter(Boolean);
-
-        await sendMessage(
-          'Traite les résultats des outils et réponds à la demande de l\'utilisateur.',
-          currentSession.id,
-          { sessionId: currentSession.id },
-          minimalHistory, // ⭐ Historique minimal mais complet
-          token
-        );
-        
-      } catch (error) {
-        logger.error('[ChatFullscreenV2] ❌ Erreur lors de la relance:', error);
-        
-        const errorMessage = {
-          role: 'assistant' as const,
-          content: 'Désolé, une erreur est survenue lors de la génération de la réponse finale.',
-          timestamp: new Date().toISOString()
-        };
-        
-        await addMessage(errorMessage);
-      }
-    },
-    onComplete: async (fullContent, fullReasoning) => {
-      const safeContent = (fullContent || '').trim();
-      
-      // Si pas de contenu, ne rien faire
-      if (!safeContent) {
-        scrollToBottom(true);
-        return;
-      }
-      
-      // Créer le message final
-      const finalMessage = {
-        role: 'assistant' as const,
-        content: safeContent,
-        reasoning: fullReasoning,
-        timestamp: new Date().toISOString()
-      };
-      
-      await addMessage(finalMessage);
-      toolFlowActiveRef.current = false;
-      scrollToBottom(true);
-    },
-    onError: (errorMessage) => {
-      const errorMsg = {
-        role: 'assistant' as const,
-        content: `Erreur: ${errorMessage}`,
-        timestamp: new Date().toISOString()
-      };
-      addMessage(errorMsg);
-    },
-
-    onToolCalls: async (toolCalls, toolName) => {
-      logger.dev('[ChatFullscreenV2] 🔧 Tool calls détectés:', { toolCalls, toolName });
-      toolFlowActiveRef.current = true;
-      
-      // Créer un message assistant avec les tool calls
-      const toolMessage = {
-        role: 'assistant' as const,
-        content: null,
-        tool_calls: toolCalls,
-        timestamp: new Date().toISOString()
-      };
-      
-      // Ajouter le message avec les tool calls
-      await addMessage(toolMessage);
-      scrollToBottom(true);
-    },
-    onToolResult: async (toolName, result, success, toolCallId) => {
-      logger.dev('[ChatFullscreenV2] ✅ Tool result reçu:', { toolName, success });
-      
-      // Créer un message tool avec le résultat
-      const normalizeResultToJsonString = (res: unknown, ok: boolean): string => {
-        try {
-          if (typeof res === 'string') {
-            // Si c'est déjà du JSON, tenter de parser et injecter success si absent
-            try {
-              const parsed = JSON.parse(res);
-              if (parsed && typeof parsed === 'object' && !('success' in parsed)) {
-                return JSON.stringify({ success: !!ok, ...parsed });
-              }
-              return JSON.stringify(parsed);
-            } catch {
-              // Ce n'est pas du JSON: normaliser
-              return JSON.stringify({ success: !!ok, message: res });
-            }
-          }
-          if (res && typeof res === 'object') {
-            const obj = res as Record<string, unknown>;
-            if (!('success' in obj)) {
-              return JSON.stringify({ success: !!ok, ...obj });
-            }
-            return JSON.stringify(obj);
-          }
-          // Fallback pour les types primitifs
-          return JSON.stringify({ success: !!ok, value: res });
-        } catch (e) {
-          // Fallback ultime pour éviter de casser l'UI
-          return JSON.stringify({ success: !!ok, error: 'tool_result_serialization_error' });
-        }
-      };
-
-      const toolResultMessage = {
-        role: 'tool' as const,
-        tool_call_id: toolCallId || `call_${Date.now()}`,
-        name: toolName || 'unknown_tool',
-        content: normalizeResultToJsonString(result, !!success),
-        timestamp: new Date().toISOString()
-      };
-      
-      // Laisser le serveur persister; ici on met juste à jour l'UI de façon optimiste
-      await addMessage(toolResultMessage, { persist: false });
-      scrollToBottom(true);
-    }
-  });
-
-  // Hook de scroll intelligent
+  // 🎯 Hook de scroll optimisé
   const { messagesEndRef, scrollToBottom, isNearBottom } = useChatScroll({
     autoScroll: true,
     scrollThreshold: 150,
     scrollDelay: 100
   });
 
-  // Charger les sessions au montage
+  // 🎯 Hook de chat optimisé avec callbacks mémorisés
+  const handleToolExecutionComplete = useCallback(async (toolResults: any[]) => {
+    if (!currentSession) return;
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      
+      if (!token) throw new Error('Token d\'authentification manquant');
+
+      // Historique minimal mais fonctionnel
+      const minimalHistory = [
+        currentSession.thread
+          .filter(msg => msg.role === 'user' && msg.content?.trim())
+          .slice(-1)[0],
+        ...toolResults.map(result => ({
+          role: 'tool' as const,
+          tool_call_id: result.tool_call_id,
+          name: result.name,
+          content: JSON.stringify(result.result)
+        }))
+      ].filter(Boolean);
+
+      await sendMessage(
+        'Traite les résultats des outils et réponds à la demande de l\'utilisateur.',
+        currentSession.id,
+        { sessionId: currentSession.id },
+        minimalHistory,
+        token
+      );
+      
+    } catch (error) {
+      logger.error('[ChatFullscreenV2] ❌ Erreur lors de la relance:', error);
+      await addMessage({
+        role: 'assistant',
+        content: 'Désolé, une erreur est survenue lors de la génération de la réponse finale.',
+        timestamp: new Date().toISOString()
+      });
+    }
+  }, [currentSession]);
+
+  const handleComplete = useCallback(async (fullContent: string, fullReasoning: string) => {
+    const safeContent = fullContent?.trim();
+    if (!safeContent) {
+      scrollToBottom(true);
+      return;
+    }
+      
+    await addMessage({
+      role: 'assistant',
+      content: safeContent,
+      reasoning: fullReasoning,
+      timestamp: new Date().toISOString()
+    });
+    
+    toolFlowActiveRef.current = false;
+    scrollToBottom(true);
+  }, [addMessage, scrollToBottom]);
+
+  const handleError = useCallback((errorMessage: string) => {
+    addMessage({
+      role: 'assistant',
+      content: `Erreur: ${errorMessage}`,
+      timestamp: new Date().toISOString()
+    });
+  }, [addMessage]);
+
+  const handleToolCalls = useCallback(async (toolCalls: any[], toolName: string) => {
+    logger.dev('[ChatFullscreenV2] 🔧 Tool calls détectés:', { toolCalls, toolName });
+    toolFlowActiveRef.current = true;
+      
+    await addMessage({
+      role: 'assistant',
+      content: null,
+      tool_calls: toolCalls,
+      timestamp: new Date().toISOString()
+    });
+    
+    scrollToBottom(true);
+  }, [addMessage, scrollToBottom]);
+
+  const handleToolResult = useCallback(async (toolName: string, result: any, success: boolean, toolCallId?: string) => {
+    logger.dev('[ChatFullscreenV2] ✅ Tool result reçu:', { toolName, success });
+      
+    const normalizeResult = (res: unknown, ok: boolean): string => {
+      try {
+        if (typeof res === 'string') {
+          try {
+            const parsed = JSON.parse(res);
+            if (parsed && typeof parsed === 'object' && !('success' in parsed)) {
+              return JSON.stringify({ success: !!ok, ...parsed });
+            }
+            return JSON.stringify(parsed);
+          } catch {
+            return JSON.stringify({ success: !!ok, message: res });
+          }
+        }
+        if (res && typeof res === 'object') {
+          const obj = res as Record<string, unknown>;
+          if (!('success' in obj)) {
+            return JSON.stringify({ success: !!ok, ...obj });
+          }
+          return JSON.stringify(obj);
+        }
+        return JSON.stringify({ success: !!ok, value: res });
+      } catch (e) {
+        return JSON.stringify({ success: !!ok, error: 'tool_result_serialization_error' });
+      }
+    };
+
+    const toolResultMessage = {
+      role: 'tool' as const,
+      tool_call_id: toolCallId || `call_${Date.now()}`,
+      name: toolName || 'unknown_tool',
+      content: normalizeResult(result, !!success),
+      timestamp: new Date().toISOString()
+    };
+      
+    await addMessage(toolResultMessage, { persist: false });
+    scrollToBottom(true);
+  }, [addMessage, scrollToBottom]);
+
+  // 🎯 Hook de chat avec callbacks mémorisés
+  const { isProcessing, sendMessage } = useChatResponse({
+    onToolExecutionComplete: handleToolExecutionComplete,
+    onComplete: handleComplete,
+    onError: handleError,
+    onToolCalls: handleToolCalls,
+    onToolResult: handleToolResult
+  });
+
+  // 🎯 Messages triés et mémorisés
+  const sortedMessages = useMemo(() => {
+    if (!currentSession?.thread) return [];
+    return [...currentSession.thread].sort(
+      (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+    );
+  }, [currentSession?.thread]);
+
+  // 🎯 Effets optimisés
   useEffect(() => {
     syncSessions();
   }, [syncSessions]);
-
-  // Log de l'état du store
-  useEffect(() => {
-    logger.dev('[ChatFullscreenV2] 📊 État du store:', {
-      selectedAgent: selectedAgent ? {
-        id: selectedAgent.id,
-        name: selectedAgent.name,
-        model: selectedAgent.model,
-        provider: selectedAgent.provider
-      } : null,
-      selectedAgentId,
-      currentSession: currentSession?.id,
-      sessionsCount: sessions.length
-    });
-  }, [selectedAgent, selectedAgentId, currentSession, sessions.length]);
 
   // Restaurer l'agent sélectionné au montage
   useEffect(() => {
@@ -308,12 +207,12 @@ const ChatFullscreenV2: React.FC = () => {
       if (selectedAgentId && !selectedAgent) {
         try {
           logger.dev('[ChatFullscreenV2] 🔄 Restauration agent avec ID:', selectedAgentId);
-          // Récupérer l'agent depuis la DB
           const { data: agent, error } = await supabase
             .from('agents')
             .select('*')
             .eq('id', selectedAgentId)
             .single();
+            
           if (agent) {
             setSelectedAgent(agent);
             logger.dev('[ChatFullscreenV2] ✅ Agent restauré:', agent.name);
@@ -321,26 +220,22 @@ const ChatFullscreenV2: React.FC = () => {
             logger.dev('[ChatFullscreenV2] ⚠️ Agent non trouvé, suppression de l\'ID');
             setSelectedAgentId(null);
           }
-        } catch (error) {
-          logger.error('[ChatFullscreenV2] ❌ Erreur restauration agent:', error);
+        } catch (err) {
+          logger.error('[ChatFullscreenV2] ❌ Erreur restauration agent:', err);
         }
       }
     };
     
     restoreSelectedAgent();
-  }, [selectedAgentId, selectedAgent, setSelectedAgent]);
+  }, [selectedAgentId, selectedAgent, setSelectedAgent, setSelectedAgentId]);
 
   // Scroll initial après chargement des sessions
   useEffect(() => {
     if (sessions.length > 0 && currentSession?.thread && currentSession.thread.length > 0) {
-      // Attendre que tout soit chargé puis scroll
-      const timer = setTimeout(() => {
-        scrollToBottom(true);
-      }, 500);
-      
+      const timer = setTimeout(() => scrollToBottom(true), 500);
       return () => clearTimeout(timer);
     }
-  }, [sessions.length, currentSession?.thread?.length, scrollToBottom]);
+  }, [sessions.length, currentSession?.thread, scrollToBottom]);
 
   // S'assurer que la session la plus récente est sélectionnée
   useEffect(() => {
@@ -349,51 +244,34 @@ const ChatFullscreenV2: React.FC = () => {
     }
   }, [sessions, currentSession, setCurrentSession]);
 
-  // Scroll automatique quand de nouveaux messages sont ajoutés
+  // Scroll automatique pour nouveaux messages
   useEffect(() => {
     if (currentSession?.thread && currentSession.thread.length > 0) {
-      // Délai pour s'assurer que le DOM est rendu
-      setTimeout(() => {
-        scrollToBottom(true);
-      }, 100);
+      const timer = setTimeout(() => scrollToBottom(true), 100);
+      return () => clearTimeout(timer);
     }
   }, [currentSession?.thread, scrollToBottom]);
 
-  // Scroll initial au chargement de la page
-  useEffect(() => {
-    if (currentSession?.thread && currentSession.thread.length > 0) {
-      // Scroll immédiat au chargement avec délai pour s'assurer que le DOM est prêt
-      const timer = setTimeout(() => {
-        scrollToBottom(true);
-      }, 300);
-      
-      return () => clearTimeout(timer);
-    }
-  }, [currentSession?.id, scrollToBottom]); // Se déclenche quand la session change
-
   // Scroll intelligent pendant le traitement
   useEffect(() => {
-    if (isProcessing) {
-      // Scroll seulement si l'utilisateur est près du bas
-      if (isNearBottom) {
-        scrollToBottom();
-      }
+    if (isProcessing && isNearBottom) {
+      scrollToBottom();
     }
   }, [isProcessing, isNearBottom, scrollToBottom]);
 
-  const handleSendMessage = async (message: string) => {
+  // 🎯 Handlers optimisés
+  const handleSendMessage = useCallback(async (message: string) => {
     if (!message.trim() || loading) return;
     
     setLoading(true);
     
     try {
-      // Vérifier si on a une session courante
       if (!currentSession) {
         await createSession();
         return;
       }
 
-      // Ajouter le message utilisateur immédiatement
+      // Message utilisateur optimiste
       const userMessage = {
         role: 'user' as const,
         content: message,
@@ -401,58 +279,47 @@ const ChatFullscreenV2: React.FC = () => {
       };
       await addMessage(userMessage);
 
-      // Récupérer le token d'authentification
+      // Token d'authentification
       const { data: { session } } = await supabase.auth.getSession();
       const token = session?.access_token;
       
-      if (!token) {
-        throw new Error('Token d\'authentification manquant');
-      }
+      if (!token) throw new Error('Token d\'authentification manquant');
 
-      // Préparer le contexte pour l'API LLM
+      // Contexte optimisé
       const contextWithSessionId = {
         ...appContext,
         sessionId: currentSession.id,
-        agentId: selectedAgent?.id // Ajouter l'ID de l'agent sélectionné
+        agentId: selectedAgent?.id
       };
 
-      logger.dev('[ChatFullscreenV2] 🎯 Contexte préparé:', {
-        sessionId: currentSession.id,
-        agentId: selectedAgent?.id,
-        agentName: selectedAgent?.name,
-        agentModel: selectedAgent?.model,
-        agentProvider: selectedAgent?.provider,
-        agentInstructions: selectedAgent?.system_instructions ? '✅ Présentes' : '❌ Manquantes',
-        agentTemperature: selectedAgent?.temperature,
-        agentMaxTokens: selectedAgent?.max_tokens
-      });
-      if (selectedAgent?.system_instructions) {
-        logger.dev('[ChatFullscreenV2] 📝 Instructions système (extrait):', selectedAgent.system_instructions.substring(0, 100) + '...');
+      // Log optimisé
+      if (process.env.NODE_ENV === 'development') {
+        logger.dev('[ChatFullscreenV2] 🎯 Contexte:', {
+          sessionId: currentSession.id,
+          agentId: selectedAgent?.id,
+          agentName: selectedAgent?.name,
+          agentModel: selectedAgent?.model
+        });
       }
 
-      // Limiter l'historique selon la configuration
+      // Historique limité
       const limitedHistory = currentSession.thread.slice(-currentSession.history_limit);
       
-      // Démarrer le traitement via useChatResponse
-      logger.dev('[ChatFullscreenV2] 🚀 Démarrage traitement avec sessionId:', currentSession.id);
       await sendMessage(message, currentSession.id, contextWithSessionId, limitedHistory, token);
 
     } catch (error) {
       logger.error('Erreur lors de l\'appel LLM:', error);
-      
-      const errorMessage = {
-        role: 'assistant' as const,
+      await addMessage({
+        role: 'assistant',
         content: 'Désolé, une erreur est survenue lors du traitement de votre message. Veuillez réessayer.',
         timestamp: new Date().toISOString()
-      };
-      
-      await addMessage(errorMessage);
+      });
     } finally {
       setLoading(false);
     }
-  };
+  }, [loading, currentSession, createSession, addMessage, selectedAgent, appContext, sendMessage, setLoading]);
 
-  const handleHistoryLimitChange = async (newLimit: number) => {
+  const handleHistoryLimitChange = useCallback(async (newLimit: number) => {
     if (!currentSession) return;
     
     try {
@@ -461,18 +328,25 @@ const ChatFullscreenV2: React.FC = () => {
       logger.error('[ChatFullscreenV2] ❌ Erreur mise à jour history_limit:', error);
       setError('Erreur lors de la mise à jour de la limite d\'historique');
     }
-  };
+  }, [currentSession, updateSession, setError]);
 
-  const messages = currentSession?.thread || [];
+  const handleSidebarToggle = useCallback(() => {
+    setSidebarOpen(prev => !prev);
+  }, []);
 
+  const handleWideModeToggle = useCallback(() => {
+    setWideMode(prev => !prev);
+  }, []);
+
+  // 🎯 Rendu optimisé
   return (
     <div className={`chat-fullscreen-container ${wideMode ? 'wide-mode' : ''}`}>
-      {/* Header */}
+      {/* Header optimisé */}
       <div className="chat-header">
         <div className="chat-header-left">
           <div className="chat-logo">
-            <Link href="/" className="chat-logo-link" aria-label="Aller à l’accueil">
-              <img src="/logo scrivia white.png" alt="Scrivia" className="chat-logo-img" />
+            <Link href="/" className="chat-logo-link" aria-label="Aller à l'accueil">
+              <img src="/logo_scrivia_white.png" alt="Scrivia" className="chat-logo-img" />
             </Link>
           </div>
           <div className="chat-session-info" />
@@ -482,14 +356,14 @@ const ChatFullscreenV2: React.FC = () => {
             isWideMode={wideMode}
             isFullscreen={true}
             historyLimit={currentSession?.history_limit || 10}
-            onToggleWideMode={() => setWideMode(!wideMode)}
+            onToggleWideMode={handleWideModeToggle}
             onToggleFullscreen={() => {}}
             onHistoryLimitChange={handleHistoryLimitChange}
           />
         </div>
       </div>
 
-      {/* Main content */}
+      {/* Main content optimisé */}
       <div className="main-content-area">
         {/* Sidebar */}
         <ChatSidebar
@@ -498,17 +372,17 @@ const ChatFullscreenV2: React.FC = () => {
           onClose={() => setSidebarOpen(false)}
         />
 
-        {/* Overlay (mobile/tablette) */}
+        {/* Overlay mobile/tablette */}
         {!isDesktop && sidebarOpen && (
           <div className="chat-sidebar-overlay" onClick={() => setSidebarOpen(false)} />
         )}
 
-        {/* Content */}
+        {/* Content optimisé */}
         <div className="chat-content">
-          {/* Sidebar toggle when closed */}
+          {/* Sidebar toggle flottant */}
           {!sidebarOpen && (
             <button
-              onClick={() => setSidebarOpen(true)}
+              onClick={handleSidebarToggle}
               className="sidebar-toggle-btn-floating"
               aria-label="Ouvrir les conversations"
               title="Ouvrir les conversations"
@@ -520,27 +394,27 @@ const ChatFullscreenV2: React.FC = () => {
             </button>
           )}
 
-          {/* Messages */}
+          {/* Messages optimisés */}
           <div className="chat-messages-container">
             <div className="chat-message-list">
-              {messages
-                .slice()
-                .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
-                .map((message) => (
-                  <ChatMessage 
-                    key={message.id || `${message.role}-${message.timestamp}-${(message as any).tool_call_id || ''}`} 
-                    message={message}
-                    animateContent={message.role === 'assistant' && message.timestamp === new Date().toISOString().slice(0, -5) + 'Z'}
-                  />
-                ))}
-
+              {sortedMessages.map((message) => (
+                <ChatMessageOptimized 
+                  key={message.id || `${message.role}-${message.timestamp}-${(message as any).tool_call_id || ''}`} 
+                  message={message}
+                  animateContent={message.role === 'assistant' && message.timestamp === new Date().toISOString().slice(0, -5) + 'Z'}
+                />
+              ))}
             </div>
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Input */}
+          {/* Input optimisé */}
           <div className="chat-input-container">
-            <ChatInput onSend={handleSendMessage} loading={loading} textareaRef={useRef<HTMLTextAreaElement>(null)} />
+            <ChatInput 
+              onSend={handleSendMessage} 
+              loading={loading} 
+              textareaRef={textareaRef} 
+            />
           </div>
         </div>
       </div>

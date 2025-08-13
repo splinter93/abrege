@@ -22,7 +22,13 @@ export type ContentBlock = MermaidBlock | TextBlock;
  * - ```mermaid
  */
 export function detectMermaidBlocks(content: string): ContentBlock[] {
+  if (!content || typeof content !== 'string') {
+    return [{ type: 'text', content: '', startIndex: 0, endIndex: 0 }];
+  }
+
   const blocks: ContentBlock[] = [];
+  
+  // Regex amélioré pour détecter les blocs Mermaid
   const mermaidRegex = /```mermaid(?::\w+)?\s*\n([\s\S]*?)```/g;
   
   let lastIndex = 0;
@@ -35,31 +41,49 @@ export function detectMermaidBlocks(content: string): ContentBlock[] {
 
     // Ajouter le texte avant le bloc Mermaid
     if (startIndex > lastIndex) {
-      blocks.push({
-        type: 'text',
-        content: content.slice(lastIndex, startIndex),
-        startIndex: lastIndex,
-        endIndex: startIndex
-      });
+      const textContent = content.slice(lastIndex, startIndex);
+      if (textContent.trim()) {
+        blocks.push({
+          type: 'text',
+          content: textContent,
+          startIndex: lastIndex,
+          endIndex: startIndex
+        });
+      }
     }
 
     // Ajouter le bloc Mermaid
-    blocks.push({
-      type: 'mermaid',
-      content: mermaidContent.trim(),
-      startIndex,
-      endIndex
-    });
+    if (mermaidContent && mermaidContent.trim()) {
+      blocks.push({
+        type: 'mermaid',
+        content: mermaidContent.trim(),
+        startIndex,
+        endIndex
+      });
+    }
 
     lastIndex = endIndex;
   }
 
   // Ajouter le texte restant après le dernier bloc Mermaid
   if (lastIndex < content.length) {
+    const remainingContent = content.slice(lastIndex);
+    if (remainingContent.trim()) {
+      blocks.push({
+        type: 'text',
+        content: remainingContent,
+        startIndex: lastIndex,
+        endIndex: content.length
+      });
+    }
+  }
+
+  // Si aucun bloc trouvé, retourner le contenu entier comme texte
+  if (blocks.length === 0) {
     blocks.push({
       type: 'text',
-      content: content.slice(lastIndex),
-      startIndex: lastIndex,
+      content: content,
+      startIndex: 0,
       endIndex: content.length
     });
   }
@@ -69,21 +93,47 @@ export function detectMermaidBlocks(content: string): ContentBlock[] {
 
 /**
  * Valide si le contenu Mermaid est syntaxiquement correct.
- * On laisse Mermaid.js faire sa propre validation - notre validation était trop restrictive.
+ * Validation basique pour éviter les erreurs évidentes.
  */
 export function validateMermaidSyntax(content: string): { isValid: boolean; error?: string } {
   try {
-    if (!content.trim()) {
+    if (!content || typeof content !== 'string') {
+      return { isValid: false, error: 'Contenu invalide ou vide' };
+    }
+
+    const trimmedContent = content.trim();
+    if (!trimmedContent) {
       return { isValid: false, error: 'Contenu vide' };
     }
 
-    // On accepte tout contenu non-vide et on laisse Mermaid.js valider
-    // La validation précédente était trop restrictive et cassait des diagrammes valides
+    // Validation basique des types de diagrammes supportés
+    const supportedTypes = [
+      'flowchart', 'graph', 'sequenceDiagram', 'sequence', 'classDiagram', 'class',
+      'pie', 'gantt', 'gitGraph', 'journey', 'er', 'stateDiagram', 'state'
+    ];
+
+    const firstLine = trimmedContent.split('\n')[0].trim();
+    const hasValidType = supportedTypes.some(type => 
+      firstLine.toLowerCase().startsWith(type.toLowerCase())
+    );
+
+    if (!hasValidType) {
+      return { 
+        isValid: false, 
+        error: `Type de diagramme non supporté. Types supportés: ${supportedTypes.join(', ')}` 
+      };
+    }
+
+    // Validation de la structure minimale
+    if (trimmedContent.split('\n').length < 2) {
+      return { isValid: false, error: 'Diagramme trop court (minimum 2 lignes)' };
+    }
+
     return { isValid: true };
   } catch (error) {
     return { 
       isValid: false, 
-      error: error instanceof Error ? error.message : 'Erreur de validation' 
+      error: error instanceof Error ? error.message : 'Erreur de validation inconnue' 
     };
   }
 }
@@ -92,9 +142,80 @@ export function validateMermaidSyntax(content: string): { isValid: boolean; erro
  * Nettoie et formate le contenu Mermaid
  */
 export function cleanMermaidContent(content: string): string {
+  if (!content || typeof content !== 'string') {
+    return '';
+  }
+
   return content
     .trim()
     .replace(/^\s*```mermaid(?::\w+)?\s*\n?/, '') // Supprimer l'en-tête
     .replace(/\n?\s*```\s*$/, '') // Supprimer la fermeture
     .trim();
+}
+
+/**
+ * Extrait le type de diagramme Mermaid
+ */
+export function getMermaidDiagramType(content: string): string | null {
+  if (!content || typeof content !== 'string') {
+    return null;
+  }
+
+  const firstLine = content.trim().split('\n')[0].trim();
+  
+  // Mapping des types de diagrammes
+  const typeMapping: { [key: string]: string } = {
+    'flowchart': 'flowchart',
+    'graph': 'flowchart',
+    'sequencediagram': 'sequenceDiagram',
+    'sequence': 'sequenceDiagram',
+    'classdiagram': 'classDiagram',
+    'class': 'classDiagram',
+    'pie': 'pie',
+    'gantt': 'gantt',
+    'gitgraph': 'gitGraph',
+    'journey': 'journey',
+    'er': 'er',
+    'statediagram': 'stateDiagram',
+    'state': 'stateDiagram'
+  };
+
+  const detectedType = Object.keys(typeMapping).find(type => 
+    firstLine.toLowerCase().startsWith(type.toLowerCase())
+  );
+
+  return detectedType ? typeMapping[detectedType] : null;
+}
+
+/**
+ * Normalise le contenu Mermaid pour améliorer la compatibilité
+ */
+export function normalizeMermaidContent(content: string): string {
+  if (!content || typeof content !== 'string') {
+    return '';
+  }
+
+  let normalized = content.trim();
+
+  // Normaliser les types de diagrammes
+  const typeMapping: { [key: string]: string } = {
+    'graph': 'flowchart',
+    'sequencediagram': 'sequenceDiagram',
+    'classdiagram': 'classDiagram',
+    'gitgraph': 'gitGraph',
+    'statediagram': 'stateDiagram'
+  };
+
+  Object.entries(typeMapping).forEach(([oldType, newType]) => {
+    const regex = new RegExp(`^${oldType}\\s`, 'i');
+    if (regex.test(normalized)) {
+      normalized = normalized.replace(regex, `${newType} `);
+    }
+  });
+
+  // Ajouter des espaces après les flèches si manquants
+  normalized = normalized.replace(/([a-zA-Z0-9_])->/g, '$1 -->');
+  normalized = normalized.replace(/([a-zA-Z0-9_])-->/g, '$1 -->');
+
+  return normalized;
 } 

@@ -1,6 +1,7 @@
 'use client';
 import React from 'react';
 import EnhancedMarkdownMessage from './EnhancedMarkdownMessage';
+import LoadingSpinner from './LoadingSpinner';
 
 interface ToolCallMessageProps {
   toolCalls: Array<{
@@ -59,9 +60,7 @@ const ToolCallMessage: React.FC<ToolCallMessageProps> = ({ toolCalls, toolResult
     if (status === 'pending') {
       return (
         <div className="tool-call-indicator pending" aria-label="En cours">
-          <svg className="spinner" viewBox="0 0 50 50">
-            <circle className="path" cx="25" cy="25" r="20" fill="none" strokeWidth="5" />
-          </svg>
+          <LoadingSpinner size={16} variant="spinner" />
         </div>
       );
     }

@@ -1,5 +1,8 @@
+'use client';
 import React, { useEffect } from 'react';
-import { Send, Plus, Zap, Globe, Search, Mic, Loader, ArrowUp } from 'react-feather';
+import { Send, Plus, Zap, Globe, Search, Mic, ArrowUp } from 'react-feather';
+import LoadingSpinner from './LoadingSpinner';
+import './LoadingSpinner.css';
 
 interface ChatInputProps {
   onSend: (message: string) => void;
@@ -92,7 +95,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend, loading, textareaRef }) =
             aria-label="Microphone"
           >
             {loading ? (
-              <Loader size={16} className="loading-spinner" />
+              <LoadingSpinner size={16} variant="spinner" className="loading-spinner" />
             ) : (
               <Mic size={16} />
             )}
@@ -105,7 +108,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend, loading, textareaRef }) =
             aria-label="Envoyer le message"
           >
             {loading ? (
-              <Loader size={16} className="loading-spinner" />
+              <LoadingSpinner size={16} variant="spinner" className="loading-spinner" />
             ) : (
               <ArrowUp size={16} />
             )}

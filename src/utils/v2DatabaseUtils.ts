@@ -998,6 +998,8 @@ export class V2DatabaseUtils {
     logApi('v2_db_get_classeurs', '🚀 Récupération classeurs', context);
     
     try {
+      logApi('v2_db_get_classeurs', `🔍 User ID: ${userId}`, context);
+      
       const { data: classeurs, error } = await supabase
         .from('classeurs')
         .select('id, name, description, emoji, position, slug, created_at, updated_at')
@@ -1005,14 +1007,24 @@ export class V2DatabaseUtils {
         .order('position', { ascending: true })
         .order('created_at', { ascending: false });
 
+      logApi('v2_db_get_classeurs', `📊 Résultat Supabase:`, context);
+      logApi('v2_db_get_classeurs', `   - Data: ${JSON.stringify(classeurs)}`, context);
+      logApi('v2_db_get_classeurs', `   - Error: ${error ? JSON.stringify(error) : 'null'}`, context);
+      logApi('v2_db_get_classeurs', `   - Count: ${classeurs ? classeurs.length : 'undefined'}`, context);
+
       if (error) {
+        logApi('v2_db_get_classeurs', `❌ Erreur Supabase: ${error.message}`, context);
         throw new Error(`Erreur récupération classeurs: ${error.message}`);
       }
 
-      return {
+      const result = {
         success: true,
         classeurs: classeurs || []
       };
+      
+      logApi('v2_db_get_classeurs', `✅ Retour final: ${JSON.stringify(result)}`, context);
+      return result;
+      
     } catch (error) {
       logApi('v2_db_get_classeurs', `❌ Erreur: ${error}`, context);
       throw error;
