@@ -46,11 +46,11 @@ export async function handleGroqGptOss120b(params: {
 
     // 🎯 Nettoyer l'historique
     const cleanedHistory = historyCleaner.cleanHistory(sessionHistory, {
-      maxMessages: 30,
-      removeInvalidToolMessages: true,
-      removeDuplicateMessages: true,
-      removeEmptyMessages: true,
-      preserveSystemMessages: true
+      maxMessages: 40, // Augmenter pour plus de contexte
+      removeInvalidToolMessages: false, // Ne pas supprimer les messages tool invalides
+      removeDuplicateMessages: true, // Garder la suppression des doublons
+      removeEmptyMessages: true, // Garder la suppression des messages vides
+      preserveSystemMessages: true // Garder la préservation des messages système
     });
 
     // 🎯 Préparer le contenu système
@@ -177,15 +177,25 @@ Sois toujours utile et constructif, même face aux erreurs.`;
     // 🎯 RELANCE AVEC RÉSULTATS DES TOOLS
     logger.info(`[Groq OSS] 🔄 RELANCE AVEC RÉSULTATS DES TOOLS...`);
 
-    // 🔧 Construire les messages pour le second appel
+    // 🔧 CONSTRUCTION INTELLIGENTE DE L'HISTORIQUE
+    // Garder plus de contexte et préserver la logique de conversation
+    const contextMessages = cleanedHistory.slice(-25); // Augmenter le contexte
+    
+    // Construire l'historique de manière plus logique
     const secondCallMessages: any[] = [
+      // 1. Message système
       { role: 'system' as const, content: systemContent, timestamp: new Date().toISOString() },
-      ...cleanedHistory.slice(-15), // Garder moins de messages pour éviter les tokens excessifs
+      
+      // 2. Contexte de conversation (plus de messages pour maintenir le fil)
+      ...contextMessages,
+      
+      // 3. Message utilisateur actuel
       { role: 'user' as const, content: message, timestamp: new Date().toISOString() },
-      // 🎯 IMPORTANT: Ajouter le message assistant avec tool_calls du premier appel
+      
+      // 4. Message assistant avec tool calls (réponse du premier appel)
       {
         role: 'assistant' as const,
-        content: contentForUi,
+        content: contentForUi || null, // null si pas de contenu
         tool_calls: toolCalls,
         timestamp: new Date().toISOString()
       }
@@ -221,28 +231,25 @@ Sois toujours utile et constructif, même face aux erreurs.`;
       contentLength: msg.content?.length || 0
     })));
 
-    // 🔧 Insérer les messages tool après le message assistant avec tool_calls
-    const finalMessages: any[] = [];
+    // 🔧 CONSTRUCTION SIMPLIFIÉE ET LOGIQUE
+    // Ajouter directement les messages tool après le message assistant
+    const finalMessages = [...secondCallMessages];
     
-    for (const msg of secondCallMessages) {
-      finalMessages.push(msg);
+    // Insérer les messages tool immédiatement après le message assistant
+    if (toolMessages.length > 0) {
+      // Trouver l'index du message assistant avec tool_calls
+      const assistantIndex = finalMessages.findIndex(msg => 
+        msg.role === 'assistant' && msg.tool_calls && msg.tool_calls.length > 0
+      );
       
-      // Si c'est un message assistant avec tool_calls, insérer les résultats
-      if (isAssistantWithToolCalls(msg)) {
-        const relevantToolMessages = toolMessages.filter((tm: any) => 
-          (msg as any).tool_calls?.some((tc: any) => tc.id === tm.tool_call_id)
-        );
-        
-        // Validation supplémentaire avant d'ajouter
-        const validToolMessages = relevantToolMessages.filter(tm => {
-          if (!tm.tool_call_id || typeof tm.tool_call_id !== 'string') {
-            logger.warn(`[Groq OSS] ⚠️ Tool message ignoré dans finalMessages - tool_call_id invalide:`, tm);
-            return false;
-          }
-          return true;
-        });
-        
-        finalMessages.push(...validToolMessages);
+      if (assistantIndex !== -1) {
+        // Insérer les messages tool juste après
+        finalMessages.splice(assistantIndex + 1, 0, ...toolMessages);
+        logger.dev(`[Groq OSS] 🔧 Messages tool insérés à l'index ${assistantIndex + 1}`);
+      } else {
+        // Fallback: ajouter à la fin
+        finalMessages.push(...toolMessages);
+        logger.warn(`[Groq OSS] ⚠️ Message assistant avec tool_calls non trouvé, messages tool ajoutés à la fin`);
       }
     }
 
