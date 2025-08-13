@@ -1,4 +1,5 @@
-import type { AppContext, ChatMessage } from '../../types';
+import type { AppContext } from '../../types';
+import type { ChatMessage } from '@/types/chat';
 
 /**
  * Capacités supportées par un provider

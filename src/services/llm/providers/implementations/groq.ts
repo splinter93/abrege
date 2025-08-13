@@ -1,5 +1,6 @@
 import { BaseProvider, type ProviderCapabilities, type ProviderConfig, type ProviderInfo } from '../base/BaseProvider';
-import type { LLMProvider, AppContext, ChatMessage } from '../../types';
+import type { LLMProvider, AppContext } from '../../types';
+import type { ChatMessage } from '@/types/chat';
 import { logger } from '@/utils/logger';
 import { getSystemMessage } from '../../templates';
 
@@ -125,7 +126,7 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
   /**
    * Effectue un appel à l'API Groq avec support des function calls
    */
-  async call(message: string, context: AppContext, history: ChatMessage[], tools?: any[]): Promise<string> {
+  async call(message: string, context: AppContext, history: ChatMessage[], tools?: any[]): Promise<any> {
     if (!this.isAvailable()) {
       throw new Error('Groq provider non configuré');
     }
@@ -152,7 +153,13 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
       const result = this.extractResponse(response);
       
       logger.debug('[GroqProvider] ✅ Appel réussi');
-      return result.content ?? '';
+      
+      // 🎯 Retourner un objet avec content et tool_calls
+      return {
+        content: result.content || '',
+        reasoning: result.reasoning || '',
+        tool_calls: result.tool_calls || []
+      };
 
     } catch (error) {
       logger.error('[GroqProvider] ❌ Erreur lors de l\'appel:', error);
@@ -164,7 +171,7 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
    * Prépare les messages pour l'API
    */
   private prepareMessages(message: string, context: AppContext, history: ChatMessage[]) {
-    const messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }> = [];
+    const messages: Array<any> = [];
 
     // Message système avec contexte
     const systemContent = this.formatSystemMessage(context);
@@ -175,10 +182,30 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
 
     // Historique des messages
     for (const msg of history) {
-      messages.push({
-        role: msg.role as 'user' | 'assistant' | 'system',
+      const messageObj: any = {
+        role: msg.role as 'user' | 'assistant' | 'system' | 'tool',
         content: msg.content
-      });
+      };
+
+      // ✅ Gérer les tool calls pour les messages assistant
+      if (msg.role === 'assistant' && msg.tool_calls && msg.tool_calls.length > 0) {
+        messageObj.tool_calls = msg.tool_calls;
+      }
+
+      // ✅ Gérer les tool results pour les messages tool
+      if (msg.role === 'tool' && msg.tool_call_id) {
+        messageObj.tool_call_id = msg.tool_call_id;
+        if (msg.name) {
+          messageObj.name = msg.name;
+        }
+      }
+
+      // ✅ Gérer les tool results si présents
+      if (msg.tool_results && msg.tool_results.length > 0) {
+        messageObj.tool_results = msg.tool_results;
+      }
+
+      messages.push(messageObj);
     }
 
     // Message utilisateur actuel

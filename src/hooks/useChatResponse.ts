@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { simpleLogger as logger } from '@/utils/logger';
 
 interface UseChatResponseOptions {
   onComplete?: (fullContent: string, fullReasoning: string) => void;
@@ -49,10 +50,66 @@ export function useChatResponse(options: UseChatResponseOptions = {}): UseChatRe
       const data = await response.json();
 
       if (data.success) {
-        // Gérer les tool calls si présents
-        if (data.tool_calls && data.tool_calls.length > 0) {
+        // 🎯 Gérer le cas des nouveaux tool calls (continuation du cycle)
+        if (data.has_new_tool_calls && data.tool_calls && data.tool_calls.length > 0) {
+          logger.dev('[useChatResponse] 🔄 Nouveaux tool calls détectés, continuation du cycle');
+          
+          // Traiter les nouveaux tool calls
+          const toolCallIds = data.tool_calls.map((tc: any) => tc.id);
+          setPendingToolCalls(new Set(toolCallIds));
+          
+          onToolCalls?.(data.tool_calls, 'tool_chain');
+          
+          // Si on a des tool results, les traiter immédiatement
+          if (data.tool_results && data.tool_results.length > 0) {
+            for (const toolResult of data.tool_results) {
+              onToolResult?.(
+                toolResult.name,
+                toolResult.result,
+                toolResult.success,
+                toolResult.tool_call_id
+              );
+              
+              // Marquer ce tool call comme terminé
+              setPendingToolCalls(prev => {
+                const newSet = new Set(prev);
+                newSet.delete(toolResult.tool_call_id);
+                return newSet;
+              });
+            }
+          }
+          
+          // 🎯 IMPORTANT: Ne pas appeler onComplete ici car le cycle continue
+          // L'utilisateur doit attendre la réponse finale
+          return;
+        }
+        
+        // 🎯 Gérer le cas de la relance automatique (LLM a répondu après tool calls)
+        // PRIORITÉ: Vérifier is_relance AVANT de vérifier tool_calls
+        if (data.is_relance && !data.has_new_tool_calls) {
+          logger.dev('[useChatResponse] ✅ Relance automatique terminée, réponse finale reçue');
+          
+          // Traiter les tool results si présents
+          if (data.tool_results && data.tool_results.length > 0) {
+            for (const toolResult of data.tool_results) {
+              onToolResult?.(
+                toolResult.name,
+                toolResult.result,
+                toolResult.success,
+                toolResult.tool_call_id
+              );
+            }
+          }
+          
+          // Appeler onComplete avec la réponse finale
+          onComplete?.(data.content || '', data.reasoning || '');
+          return;
+        }
+        
+        // Gérer les tool calls normaux si présents (premier appel)
+        if (data.tool_calls && data.tool_calls.length > 0 && !data.is_relance) {
           // Initialiser le tracking des tool calls en attente
-          const toolCallIds = data.tool_calls.map(tc => tc.id);
+          const toolCallIds = data.tool_calls.map((tc: any) => tc.id);
           setPendingToolCalls(new Set(toolCallIds));
           
           onToolCalls?.(data.tool_calls, 'tool_chain');
@@ -81,7 +138,7 @@ export function useChatResponse(options: UseChatResponseOptions = {}): UseChatRe
             }
           }
         } else {
-          // Pas de tool calls, appeler onComplete directement
+          // Pas de tool calls ou réponse finale, appeler onComplete directement
           onComplete?.(data.content || '', data.reasoning || '');
         }
       } else {
@@ -89,6 +146,7 @@ export function useChatResponse(options: UseChatResponseOptions = {}): UseChatRe
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
+      logger.error('[useChatResponse] ❌ Erreur:', error);
       onError?.(errorMessage);
     } finally {
       setIsProcessing(false);
@@ -97,6 +155,7 @@ export function useChatResponse(options: UseChatResponseOptions = {}): UseChatRe
 
   const reset = useCallback(() => {
     setIsProcessing(false);
+    setPendingToolCalls(new Set());
   }, []);
 
   return {
