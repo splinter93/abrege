@@ -1,19 +1,25 @@
-// Composants principaux
-export { default as ChatFullscreen } from './ChatFullscreenV2';
+// Composants de base
+export { default as ChatFullscreenV2 } from './ChatFullscreenV2';
 export { default as ChatWidget } from './ChatWidget';
 export { default as ChatSidebar } from './ChatSidebar';
 export { default as ChatInput } from './ChatInput';
 export { default as ChatKebabMenu } from './ChatKebabMenu';
 
-// Composants de rendu
+// Composants de rendu des messages
 export { default as EnhancedMarkdownMessage } from './EnhancedMarkdownMessage';
 export { default as MermaidRenderer } from './MermaidRenderer';
 export { default as OptimizedMessage } from './OptimizedMessage';
-export { default as LoadingSpinner } from './LoadingSpinner';
+export { default as ToolCallMessage } from './ToolCallMessage';
+export { default as ToolCallDebugger } from './ToolCallDebugger';
+
+// Composants d'interface
+export { default as BubbleButtons } from './BubbleButtons';
+
+// Types et interfaces
+export type { ChatMessage, ChatSession } from '../../types/chat';
 
 // Store
 export { useChatStore } from '@/store/useChatStore';
-export type { ChatMessage, ChatSession } from '@/types/chat';
 
 // Services
 export { detectMermaidBlocks, validateMermaidSyntax, cleanMermaidContent } from './mermaidService';
