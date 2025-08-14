@@ -5,7 +5,7 @@ import { ChatMessage as ChatMessageType } from '@/types/chat';
 import EnhancedMarkdownMessage from './EnhancedMarkdownMessage';
 import ReasoningMessage from './ReasoningMessage';
 import ToolCallMessage from './ToolCallMessage';
-import CopyButton from './CopyButton';
+import BubbleButtons from './BubbleButtons';
 import { useChatStore } from '@/store/useChatStore';
 import { usePropsValidation, ChatMessageOptimizedPropsSchema } from './validators';
 
@@ -146,10 +146,17 @@ const ChatMessageOptimized: React.FC<ChatMessageProps> = memo(({
             <ReasoningMessage reasoning={reasoning} />
           )}
           
-          <div className="message-header">
-            <CopyButton content={JSON.stringify(validatedProps.message.tool_calls, null, 2)} />
-          </div>
+
         </div>
+        
+        {/* Boutons d'action sous la bulle */}
+        <BubbleButtons
+          content={JSON.stringify(validatedProps.message.tool_calls, null, 2)}
+          messageId={validatedProps.message.id}
+          onCopy={() => console.log('Tool calls copiés')}
+          onShare={() => console.log('Partage des tool calls')}
+          onMore={() => console.log('Plus d\'options pour tool calls')}
+        />
       </motion.div>
     );
   }
@@ -177,10 +184,19 @@ const ChatMessageOptimized: React.FC<ChatMessageProps> = memo(({
           <ReasoningMessage reasoning={reasoning} />
         )}
         
-        <div className="message-header">
-          {content && <CopyButton content={content} />}
-        </div>
+
       </div>
+      
+      {/* Boutons d'action sous la bulle */}
+      {role === 'assistant' && content && (
+        <BubbleButtons
+          content={content}
+          messageId={validatedProps.message.id}
+          onCopy={() => console.log('Message copié')}
+          onShare={() => console.log('Partage du message')}
+          onMore={() => console.log('Plus d\'options')}
+        />
+      )}
     </motion.div>
   );
 });

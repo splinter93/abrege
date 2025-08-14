@@ -5,7 +5,7 @@ import { ChatMessage as ChatMessageType } from '@/types/chat';
 import EnhancedMarkdownMessage from './EnhancedMarkdownMessage';
 import ReasoningMessage from './ReasoningMessage';
 import ToolCallMessage from './ToolCallMessage';
-import CopyButton from './CopyButton';
+import BubbleButtons from './BubbleButtons';
 import { useChatStore } from '@/store/useChatStore';
 
 interface ChatMessageProps {
@@ -158,14 +158,18 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
             <div className="chat-typing-dot"></div>
           </div>
         )}
-
-        {/* Bouton de copie - DÉPLACÉ À L'INTÉRIEUR DE LA BULLE */}
-        {role === 'assistant' && content && (
-          <div className="chat-message-actions">
-            <CopyButton content={content} />
-          </div>
-        )}
       </div>
+      
+      {/* Boutons d'action sous la bulle (comme ChatGPT) */}
+      {role === 'assistant' && content && (
+        <BubbleButtons
+          content={content}
+          messageId={message.id}
+          onCopy={() => console.log('Message copié')}
+          onShare={() => console.log('Partage du message')}
+          onMore={() => console.log('Plus d\'options')}
+        />
+      )}
     </motion.div>
   );
 };
