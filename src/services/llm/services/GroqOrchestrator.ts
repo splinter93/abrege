@@ -124,12 +124,35 @@ export class GroqOrchestrator {
 
     const configuredProvider = this.getConfiguredProvider(agentConfig);
 
-    return await configuredProvider.call(
+    // 🔍 DEBUG: Log des tools récupérés
+    logger.dev?.(`[GroqOrchestrator] 🔧 Tools récupérés pour callLLM:`, {
+      toolsCount: tools.length,
+      toolNames: tools.slice(0, 3).map(t => t.function?.name || 'unknown')
+    });
+
+    // Appeler le provider avec les tools
+    const response = await configuredProvider.call(
       message,
       { type: 'chat_session', name: `session-${sessionId}`, id: sessionId, content: '' },
       messages,
-      tools
+      tools // ✅ Passer les tools au provider
     );
+
+    // 🔍 DEBUG: Log de la réponse du provider
+    logger.dev?.(`[GroqOrchestrator] 📥 Réponse du provider:`, {
+      hasContent: !!response?.content,
+      contentLength: response?.content?.length || 0,
+      hasToolCalls: !!response?.tool_calls,
+      toolCallsCount: response?.tool_calls?.length || 0
+    });
+
+    // ✅ Retourner la structure complète avec les tool_calls du provider
+    return {
+      content: response?.content || '',
+      tool_calls: response?.tool_calls || [],
+      model: configuredProvider.config?.model,
+      usage: response?.usage || null
+    };
   }
 
   /** Gating strict + feature flag */
@@ -410,9 +433,19 @@ export class GroqOrchestrator {
 
   /** Success payload */
   private createSuccessResponse(response: any, toolResults: any[], sessionId: string): GroqRoundResult {
+    // Extraire le content correctement selon la structure de la réponse
+    let content = '';
+    if (response && typeof response === 'object') {
+      if (typeof response.content === 'string') {
+        content = response.content;
+      } else if (response.content && typeof response.content === 'object' && typeof response.content.content === 'string') {
+        content = response.content.content;
+      }
+    }
+    
     return {
       success: true,
-      content: response?.content || '',
+      content: content,
       reasoning: response?.reasoning || '',
       tool_calls: (response as any)?.tool_calls || [],
       tool_results: toolResults,

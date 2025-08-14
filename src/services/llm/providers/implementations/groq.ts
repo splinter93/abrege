@@ -5,6 +5,16 @@ import { logger } from '@/utils/logger';
 import { getSystemMessage } from '../../templates';
 
 /**
+ * Interface étendue pour le provider Groq qui retourne la structure attendue par l'orchestrateur
+ */
+interface GroqProviderResponse {
+  content: string;
+  tool_calls?: any[];
+  model?: string;
+  usage?: any;
+}
+
+/**
  * Configuration spécifique à Groq
  */
 interface GroqConfig extends ProviderConfig {
@@ -12,6 +22,11 @@ interface GroqConfig extends ProviderConfig {
   serviceTier?: 'auto' | 'on_demand' | 'flex' | 'performance';
   parallelToolCalls?: boolean;
   reasoningEffort?: 'none' | 'low' | 'medium' | 'high';
+  
+  // Audio/Whisper
+  audioModel?: 'whisper-large-v3' | 'whisper-large-v3-turbo';
+  audioResponseFormat?: 'json' | 'verbose_json' | 'text';
+  audioTimestampGranularities?: ('word' | 'segment')[];
 }
 
 /**
@@ -21,25 +36,31 @@ const GROQ_INFO: ProviderInfo = {
   id: 'groq',
   name: 'Groq',
   version: '1.0.0',
-  description: 'Ultra-fast inference platform with GPT-OSS 120B and other models',
+  description: 'Ultra-fast inference platform with GPT-OSS 120B, Whisper, and other models',
   capabilities: {
     functionCalls: true,
     streaming: true,
     reasoning: true,
     codeExecution: true,
     webSearch: false,
-    structuredOutput: true
+    structuredOutput: true,
+    audioTranscription: true, // ✅ Nouvelle capacité
+    audioTranslation: true    // ✅ Nouvelle capacité
   },
   supportedModels: [
     'openai/gpt-oss-20b', // ✅ Modèle plus stable
     'openai/gpt-oss-120b',
     'llama-3.1-8b-instant',
     'llama-3.1-70b-version',
-    'mixtral-8x7b-32768'
+    'mixtral-8x7b-32768',
+    // ✅ Modèles Whisper
+    'whisper-large-v3',
+    'whisper-large-v3-turbo'
   ],
   pricing: {
     input: '$0.15/1M tokens',
-    output: '$0.75/1M tokens'
+    output: '$0.75/1M tokens',
+    audio: '$0.04-0.111/hour' // ✅ Pricing audio
   }
 };
 
@@ -70,7 +91,12 @@ const DEFAULT_GROQ_CONFIG: GroqConfig = {
   // Groq spécifique
   serviceTier: 'on_demand', // ✅ Gratuit au lieu de 'auto' (payant)
   parallelToolCalls: true,
-  reasoningEffort: 'low' // ✅ Réduit le reasoning pour plus de réponses
+  reasoningEffort: 'low', // ✅ Réduit le reasoning pour plus de réponses
+  
+  // ✅ Configuration audio par défaut
+  audioModel: 'whisper-large-v3-turbo',
+  audioResponseFormat: 'verbose_json',
+  audioTimestampGranularities: ['word', 'segment']
 };
 
 /**
@@ -154,11 +180,12 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
       
       logger.debug('[GroqProvider] ✅ Appel réussi');
       
-      // 🎯 Retourner un objet avec content et tool_calls
+      // 🎯 Retourner l'objet complet avec la structure attendue par l'orchestrateur
       return {
         content: result.content || '',
-        reasoning: result.reasoning || '',
-        tool_calls: result.tool_calls || []
+        tool_calls: result.tool_calls || [],
+        model: result.model,
+        usage: result.usage
       };
 
     } catch (error) {
@@ -230,6 +257,13 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
       stream: false // ✅ Streaming désactivé dans le provider (géré par la route API)
     };
 
+    // 🔍 DEBUG: Log des tools reçus
+    logger.debug(`[GroqProvider] 🔍 Tools reçus:`, {
+      toolsCount: tools?.length || 0,
+      tools: tools?.slice(0, 2) || [], // Log des 2 premiers tools
+      hasTools: !!tools && tools.length > 0
+    });
+
     // Ajouter les tools si disponibles (avec validation moins stricte)
     if (tools && tools.length > 0) {
       // 🔧 VALIDATION DES TOOLS : s'assurer que les paramètres sont un schéma d'objet valide
@@ -277,6 +311,14 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
           description: validatedTools[0].function.description?.substring(0, 100) || 'Pas de description',
           hasParameters: !!validatedTools[0].function.parameters || 'Pas de paramètres'
         });
+        
+        // 🔍 DEBUG: Log du payload final avec tools
+        logger.debug(`[GroqProvider] 📤 Payload final avec tools:`, {
+          hasTools: !!payload.tools,
+          toolsCount: payload.tools?.length || 0,
+          toolChoice: payload.tool_choice,
+          parallelToolCalls: payload.parallel_tool_calls
+        });
       } else {
         logger.warn(`[GroqProvider] ⚠️ Aucun tool valide trouvé, appel sans tools`);
       }
@@ -300,7 +342,9 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
       payload.tool_choice = 'none';
       delete payload.parallel_tool_calls;
       delete payload.tools;
+      logger.debug(`[GroqProvider] 🔒 Aucun tool, function calls désactivés`);
     }
+    
     return payload;
   }
 
@@ -458,6 +502,263 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
       }
     } catch (error) {
       logger.error('[GroqProvider] ❌ Erreur lors du test des function calls:', error);
+      return false;
+    }
+  }
+
+  // ✅ MÉTHODES AUDIO WHISPER
+
+  /**
+   * Transcrit un fichier audio en texte
+   * @param file - Fichier audio (Buffer ou File)
+   * @param options - Options de transcription
+   */
+  async transcribeAudio(
+    file: Buffer | File,
+    options: {
+      language?: string;
+      prompt?: string;
+      responseFormat?: 'json' | 'verbose_json' | 'text';
+      timestampGranularities?: ('word' | 'segment')[];
+      temperature?: number;
+    } = {}
+  ): Promise<any> {
+    if (!this.isAvailable()) {
+      throw new Error('Groq provider non configuré');
+    }
+
+    try {
+      logger.debug(`[GroqProvider] 🎤 Transcription audio avec ${this.config.audioModel}`);
+
+      // Préparer le FormData
+      const formData = new FormData();
+      
+      // Ajouter le fichier audio
+      if (file instanceof Buffer) {
+        const blob = new Blob([file], { type: 'audio/m4a' });
+        formData.append('file', blob, 'audio.m4a');
+      } else {
+        formData.append('file', file);
+      }
+
+      // Ajouter les paramètres
+      formData.append('model', this.config.audioModel || 'whisper-large-v3-turbo');
+      formData.append('temperature', String(options.temperature || 0));
+      formData.append('response_format', options.responseFormat || this.config.audioResponseFormat || 'verbose_json');
+
+      if (options.language) {
+        formData.append('language', options.language);
+      }
+
+      if (options.prompt) {
+        formData.append('prompt', options.prompt);
+      }
+
+      if (options.timestampGranularities && options.timestampGranularities.length > 0) {
+        options.timestampGranularities.forEach(granularity => {
+          formData.append('timestamp_granularities[]', granularity);
+        });
+      }
+
+      // Effectuer l'appel API
+      const response = await fetch(`${this.config.baseUrl}/audio/transcriptions`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${this.config.apiKey}`
+        },
+        body: formData
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Erreur transcription: ${response.status} - ${errorText}`);
+      }
+
+      const result = await response.json();
+      logger.debug('[GroqProvider] ✅ Transcription audio réussie');
+      
+      return result;
+
+    } catch (error) {
+      logger.error('[GroqProvider] ❌ Erreur lors de la transcription audio:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Traduit un fichier audio en anglais
+   * @param file - Fichier audio (Buffer ou File)
+   * @param options - Options de traduction
+   */
+  async translateAudio(
+    file: Buffer | File,
+    options: {
+      prompt?: string;
+      responseFormat?: 'json' | 'verbose_json' | 'text';
+      timestampGranularities?: ('word' | 'segment')[];
+      temperature?: number;
+    } = {}
+  ): Promise<any> {
+    if (!this.isAvailable()) {
+      throw new Error('Groq provider non configuré');
+    }
+
+    try {
+      logger.debug(`[GroqProvider] 🌍 Traduction audio avec ${this.config.audioModel}`);
+
+      // Préparer le FormData
+      const formData = new FormData();
+      
+      // Ajouter le fichier audio
+      if (file instanceof Buffer) {
+        const blob = new Blob([file], { type: 'audio/m4a' });
+        formData.append('file', blob, 'audio.m4a');
+      } else {
+        formData.append('file', file);
+      }
+
+      // Ajouter les paramètres
+      formData.append('model', this.config.audioModel || 'whisper-large-v3');
+      formData.append('temperature', String(options.temperature || 0));
+      formData.append('response_format', options.responseFormat || this.config.audioResponseFormat || 'verbose_json');
+
+      if (options.prompt) {
+        formData.append('prompt', options.prompt);
+      }
+
+      if (options.timestampGranularities && options.timestampGranularities.length > 0) {
+        options.timestampGranularities.forEach(granularity => {
+          formData.append('timestamp_granularities[]', granularity);
+        });
+      }
+
+      // Effectuer l'appel API
+      const response = await fetch(`${this.config.baseUrl}/audio/translations`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${this.config.apiKey}`
+        },
+        body: formData
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Erreur traduction: ${response.status} - ${errorText}`);
+      }
+
+      const result = await response.json();
+      logger.debug('[GroqProvider] ✅ Traduction audio réussie');
+      
+      return result;
+
+    } catch (error) {
+      logger.error('[GroqProvider] ❌ Erreur lors de la traduction audio:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Transcrit un fichier audio depuis une URL
+   * @param url - URL du fichier audio
+   * @param options - Options de transcription
+   */
+  async transcribeAudioFromUrl(
+    url: string,
+    options: {
+      language?: string;
+      prompt?: string;
+      responseFormat?: 'json' | 'verbose_json' | 'text';
+      timestampGranularities?: ('word' | 'segment')[];
+      temperature?: number;
+    } = {}
+  ): Promise<any> {
+    if (!this.isAvailable()) {
+      throw new Error('Groq provider non configuré');
+    }
+
+    try {
+      logger.debug(`[GroqProvider] 🎤 Transcription audio depuis URL avec ${this.config.audioModel}`);
+
+      // Préparer le payload
+      const payload: any = {
+        model: this.config.audioModel || 'whisper-large-v3-turbo',
+        url: url,
+        temperature: options.temperature || 0,
+        response_format: options.responseFormat || this.config.audioResponseFormat || 'verbose_json'
+      };
+
+      if (options.language) {
+        payload.language = options.language;
+      }
+
+      if (options.prompt) {
+        payload.prompt = options.prompt;
+      }
+
+      if (options.timestampGranularities && options.timestampGranularities.length > 0) {
+        payload.timestamp_granularities = options.timestampGranularities;
+      }
+
+      // Effectuer l'appel API
+      const response = await fetch(`${this.config.baseUrl}/audio/transcriptions`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${this.config.apiKey}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Erreur transcription URL: ${response.status} - ${errorText}`);
+      }
+
+      const result = await response.json();
+      logger.debug('[GroqProvider] ✅ Transcription audio depuis URL réussie');
+      
+      return result;
+
+    } catch (error) {
+      logger.error('[GroqProvider] ❌ Erreur lors de la transcription audio depuis URL:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Test de connexion audio avec Whisper
+   */
+  async testAudioConnection(): Promise<boolean> {
+    try {
+      logger.debug('[GroqProvider] 🧪 Test de connexion audio avec Whisper...');
+      
+      // Créer un fichier audio de test minimal (silence)
+      const testAudioBuffer = Buffer.from([
+        0x52, 0x49, 0x46, 0x46, // RIFF
+        0x24, 0x00, 0x00, 0x00, // Size
+        0x57, 0x41, 0x56, 0x45, // WAVE
+        0x66, 0x6D, 0x74, 0x20, // fmt
+        0x10, 0x00, 0x00, 0x00, // fmt chunk size
+        0x01, 0x00, // Audio format (PCM)
+        0x01, 0x00, // Channels (mono)
+        0x44, 0xAC, 0x00, 0x00, // Sample rate (44100)
+        0x88, 0x58, 0x01, 0x00, // Byte rate
+        0x02, 0x00, // Block align
+        0x10, 0x00, // Bits per sample
+        0x64, 0x61, 0x74, 0x61, // data
+        0x00, 0x00, 0x00, 0x00  // data size (0 bytes)
+      ]);
+
+      const result = await this.transcribeAudio(testAudioBuffer, {
+        responseFormat: 'text',
+        temperature: 0
+      });
+
+      logger.debug('[GroqProvider] ✅ Connexion audio réussie');
+      return true;
+
+    } catch (error) {
+      logger.error('[GroqProvider] ❌ Erreur de connexion audio:', error);
       return false;
     }
   }
