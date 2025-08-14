@@ -8,17 +8,20 @@ interface ChatInputProps {
   onSend: (message: string) => void;
   loading: boolean;
   textareaRef: React.RefObject<HTMLTextAreaElement | null>;
+  disabled?: boolean;
+  placeholder?: string;
 }
 
-const ChatInput: React.FC<ChatInputProps> = ({ onSend, loading, textareaRef }) => {
+const ChatInput: React.FC<ChatInputProps> = ({ onSend, loading, textareaRef, disabled = false, placeholder = "Envoyer un message..." }) => {
   const [message, setMessage] = React.useState('');
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    if (disabled) return;
     setMessage(e.target.value);
   };
 
   const handleSend = () => {
-    if (message.trim() && !loading) {
+    if (message.trim() && !loading && !disabled) {
       onSend(message);
       setMessage('');
     }
@@ -56,9 +59,10 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend, loading, textareaRef }) =
             value={message}
             onChange={handleInputChange}
             onKeyDown={handleKeyDown}
-            placeholder="Envoyer un message..."
-            className="chat-input-textarea"
+            placeholder={placeholder}
+            className={`chat-input-textarea ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
             rows={1}
+            disabled={disabled}
           />
           
           <div className="chat-input-icons">
@@ -90,7 +94,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend, loading, textareaRef }) =
           
           <button 
             onClick={handleSend} 
-            disabled={!message.trim() || loading}
+            disabled={!message.trim() || loading || disabled}
             className="chat-input-mic"
             aria-label="Microphone"
           >
@@ -103,7 +107,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend, loading, textareaRef }) =
           
           <button 
             onClick={handleSend} 
-            disabled={!message.trim() || loading}
+            disabled={!message.trim() || loading || disabled}
             className="chat-input-send"
             aria-label="Envoyer le message"
           >

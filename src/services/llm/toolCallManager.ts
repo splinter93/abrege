@@ -29,10 +29,21 @@ export class ToolCallManager {
 
   /**
    * Normalise les arguments (objet, clés triées) et construit la signature logique
+   * EXCEPTION: Pour create_folder et create_note, on ignore le nom pour permettre la création avec le même nom
    */
   private buildSignature(funcName: string, argsInput: any): string {
     try {
       const args = this.parseArguments(argsInput);
+      
+      // 🔧 EXCEPTION: Pour create_folder et create_note, on ignore le nom pour permettre la création avec le même nom
+      if ((funcName === 'create_folder' || funcName === 'create_note') && args.name) {
+        const argsWithoutName = { ...args };
+        delete argsWithoutName.name;
+        const sorted = Object.keys(argsWithoutName).sort().reduce((acc: any, k: string) => { acc[k] = argsWithoutName[k]; return acc; }, {});
+        return `${funcName}::${JSON.stringify(sorted)}`;
+      }
+      
+      // Comportement normal pour les autres outils
       const sorted = Object.keys(args).sort().reduce((acc: any, k: string) => { acc[k] = args[k]; return acc; }, {});
       return `${funcName}::${JSON.stringify(sorted)}`;
     } catch {
@@ -56,7 +67,7 @@ export class ToolCallManager {
     }
 
     // 🔐 Sécurité: pression globale → nettoyage soft si trop d'entrées
-    if (this.executionHistory.size > 200) {
+    if (this.executionHistory.size > 100) { // Réduit de 200 à 100 pour plus de réactivité
       logger.warn(`[ToolCallManager] ⚠️ Trop d'entrées dans l'historique (${this.executionHistory.size}) - nettoyage partiel`);
       this.clearExecutionHistory();
     }
@@ -73,25 +84,24 @@ export class ToolCallManager {
       };
     }
 
-    // 🔧 ANTI-BOUCLE (TTL 30s): Empêcher la ré-exécution immédiate du même tool (même nom+args)
+    // 🔧 ANTI-BOUCLE (TTL 5s): Empêcher la ré-exécution immédiate du même tool (même nom+args)
     const signature = this.buildSignature(func.name, func.arguments);
     const now = Date.now();
-    const last = this.recentSignatureTimestamps.get(signature);
-    const TTL_MS = 30_000;
-    if (last && (now - last.ts < TTL_MS)) {
-      // Si le dernier appel avec cette signature est dans le même batch, on autorise
-      if (!options?.batchId || last.batchId !== options.batchId) {
-        logger.warn(`[ToolCallManager] ⚠️ Tool ${func.name} ignoré (signature récente <30s) - anti-boucle`);
+    const lastSig = this.recentSignatureTimestamps.get(signature);
+    const TTL_MS = 5_000; // 5s TTL entre mêmes signatures hors batch
+    if (lastSig && (now - lastSig.ts < TTL_MS)) {
+      // Si même batch, autoriser. Sinon anti-loop.
+      if (!options?.batchId || lastSig.batchId !== options.batchId) {
+        logger.warn(`[ToolCallManager] ⚠️ Tool ${func.name} ignoré (signature récente <${TTL_MS}ms) - anti-boucle`);
         return {
           tool_call_id: id,
           name: func.name,
-          result: { success: false, error: 'Signature exécutée très récemment (<30s)', code: 'ANTI_LOOP_SIGNATURE' },
+          result: { success: false, error: `Signature exécutée récemment (<${TTL_MS}ms)`, code: 'ANTI_LOOP_SIGNATURE' },
           success: false,
           timestamp: new Date().toISOString()
         };
       }
     }
-
     // Marquer ID et signature comme utilisés (avec batchId)
     this.executedCallIds.add(id);
     this.recentSignatureTimestamps.set(signature, { ts: now, batchId: options?.batchId });
@@ -109,16 +119,16 @@ export class ToolCallManager {
       // Ne pas supprimer si ré-écrite plus récemment
       const rec = this.recentSignatureTimestamps.get(signature);
       if (rec && rec.ts <= now) this.recentSignatureTimestamps.delete(signature);
-    }, TTL_MS + 500);
+    }, 30_000); // 30 secondes au lieu de TTL_MS + 500
 
     try {
       const args = this.parseArguments(func.arguments);
       logger.info(`[ToolCallManager] 🔧 Exécution de ${func.name}...`);
 
-      // Exécuter le tool avec timeout
+      // Exécuter le tool avec timeout optimisé (3s au lieu de 15s)
       const toolCallPromise = agentApiV2Tools.executeTool(func.name, args, userToken);
       const timeoutPromise = new Promise((resolve) => { 
-        setTimeout(() => resolve({ success: false, error: 'Timeout tool call (15s)' }), 15000); 
+        setTimeout(() => resolve({ success: false, error: 'Timeout tool call (3s)' }), 3000); 
       });
       const rawResult = await Promise.race([toolCallPromise, timeoutPromise]);
 

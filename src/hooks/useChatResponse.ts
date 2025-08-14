@@ -114,9 +114,14 @@ export function useChatResponse(options: UseChatResponseOptions = {}): UseChatRe
         
         // Gérer les tool calls normaux si présents (premier appel)
         if (data.tool_calls && data.tool_calls.length > 0 && !data.is_relance) {
-          // Initialiser le tracking des tool calls en attente
+          // 🔧 AMÉLIORATION: Gestion des multiples tool calls
           const toolCallIds = data.tool_calls.map((tc: any) => tc.id);
           setPendingToolCalls(new Set(toolCallIds));
+          
+          // 🔧 NOUVEAU: Log spécial pour les multiples tool calls
+          if (data.tool_calls.length > 10) {
+            logger.dev(`[useChatResponse] ⚡ Multiple tool calls détectés: ${data.tool_calls.length} tools`);
+          }
           
           onToolCalls?.(data.tool_calls, 'tool_chain');
           
@@ -138,9 +143,12 @@ export function useChatResponse(options: UseChatResponseOptions = {}): UseChatRe
               });
             }
 
-            // Si tous les tool calls sont terminés, déclencher la relance
+            // 🔧 AMÉLIORATION: Gestion intelligente de la relance pour multiples tools
             if (data.tool_results.length === data.tool_calls.length) {
+              logger.dev(`[useChatResponse] ✅ Tous les ${data.tool_calls.length} tool calls sont terminés`);
               onToolExecutionComplete?.(data.tool_results);
+            } else {
+              logger.dev(`[useChatResponse] ⏳ ${data.tool_results.length}/${data.tool_calls.length} tool calls terminés`);
             }
           }
         } else {

@@ -12,6 +12,7 @@ interface ChatKebabMenuProps {
   onToggleWideMode: () => void;
   onToggleFullscreen: () => void;
   onHistoryLimitChange: (limit: number) => void;
+  disabled?: boolean;
 }
 
 const ChatKebabMenu: React.FC<ChatKebabMenuProps> = ({ 
@@ -20,7 +21,8 @@ const ChatKebabMenu: React.FC<ChatKebabMenuProps> = ({
   historyLimit,
   onToggleWideMode, 
   onToggleFullscreen,
-  onHistoryLimitChange 
+  onHistoryLimitChange,
+  disabled = false
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -41,20 +43,24 @@ const ChatKebabMenu: React.FC<ChatKebabMenuProps> = ({
   }, []);
 
   const handleToggle = () => {
+    if (disabled) return;
     setIsOpen(!isOpen);
   };
 
   const handleWideModeToggle = () => {
+    if (disabled) return;
     onToggleWideMode();
     setIsOpen(false);
   };
 
   const handleFullscreenToggle = () => {
+    if (disabled) return;
     onToggleFullscreen();
     setIsOpen(false);
   };
 
   const handleHistoryLimitChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (disabled) return;
     const newLimit = parseInt(event.target.value);
     if (!isNaN(newLimit) && newLimit > 0 && newLimit <= 100) {
       onHistoryLimitChange(newLimit);
@@ -62,6 +68,7 @@ const ChatKebabMenu: React.FC<ChatKebabMenuProps> = ({
   };
 
   const handleProviderChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    if (disabled) return;
     const newProvider = event.target.value;
     setProvider(newProvider);
     logger.dev(`[ChatKebabMenu] 🔄 Provider changé: ${newProvider}`);
@@ -71,9 +78,10 @@ const ChatKebabMenu: React.FC<ChatKebabMenuProps> = ({
     <div className="chat-kebab-menu" ref={menuRef}>
       <button
         onClick={handleToggle}
-        className="kebab-button"
+        className={`kebab-button ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
         aria-label="Menu des options"
         aria-expanded={isOpen}
+        disabled={disabled}
       >
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <circle cx="5" cy="12" r="1" />
@@ -92,6 +100,7 @@ const ChatKebabMenu: React.FC<ChatKebabMenuProps> = ({
               onClick={handleWideModeToggle}
               className="kebab-option"
               aria-label={isWideMode ? "Passer en mode normal" : "Passer en mode large"}
+              disabled={disabled}
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 {isWideMode ? (
@@ -108,6 +117,7 @@ const ChatKebabMenu: React.FC<ChatKebabMenuProps> = ({
               onClick={handleFullscreenToggle}
               className="kebab-option"
               aria-label={isFullscreen ? "Quitter le mode plein écran" : "Passer en mode plein écran"}
+              disabled={disabled}
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 {isFullscreen ? (
@@ -134,6 +144,7 @@ const ChatKebabMenu: React.FC<ChatKebabMenuProps> = ({
                 min="1"
                 max="100"
                 placeholder="10"
+                disabled={disabled}
               />
             </div>
 
@@ -150,7 +161,7 @@ const ChatKebabMenu: React.FC<ChatKebabMenuProps> = ({
                 value={currentProvider} 
                 onChange={handleProviderChange}
                 className="kebab-select"
-                disabled={!!selectedAgent}
+                disabled={!!selectedAgent || disabled}
                 title={selectedAgent ? `Provider forcé par l'agent ${selectedAgent.name}` : 'Choisir le provider'}
               >
                 <option value="synesia">🤖 Synesia</option>
@@ -183,4 +194,4 @@ const ChatKebabMenu: React.FC<ChatKebabMenuProps> = ({
   );
 };
 
-export default ChatKebabMenu; 
+export default ChatKebabMenu;

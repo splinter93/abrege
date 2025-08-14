@@ -17,16 +17,20 @@ export class AgentApiV2Tools {
   private tools: Map<string, ApiV2Tool> = new Map();
   private baseUrl: string;
   private openApiGenerator: OpenAPIToolsGenerator | null = null;
+  private openApiInitialized: boolean = false;
 
   constructor() {
     // Utiliser l'URL de base configurée ou l'URL par défaut
     this.baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://scrivia.app';
     console.log(`[AgentApiV2Tools] 🚀 Initialisation avec baseUrl: ${this.baseUrl}`);
     this.initializeTools();
+    console.log(`[AgentApiV2Tools] 🔧 Tools de base chargés: ${this.tools.size}`);
+    
     // Initialiser les tools OpenAPI de manière asynchrone
     this.initializeOpenAPITools().catch(error => {
       console.error('[AgentApiV2Tools] ❌ Erreur lors de l\'initialisation OpenAPI:', error);
     });
+    
     console.log(`[AgentApiV2Tools] ✅ Initialisation terminée, ${this.tools.size} tools chargés`);
   }
 
@@ -64,11 +68,15 @@ export class AgentApiV2Tools {
         });
         
         console.log(`[AgentApiV2Tools] 🎉 Tools OpenAPI intégrés avec succès`);
+        this.openApiInitialized = true;
       }
     } catch (error) {
       console.error('[AgentApiV2Tools] ❌ Erreur lors de l\'initialisation OpenAPI:', error);
+      this.openApiInitialized = true; // Marquer comme terminé même en cas d'erreur
     }
   }
+
+
 
   /**
    * Charger le schéma OpenAPI
@@ -1390,8 +1398,12 @@ export class AgentApiV2Tools {
    * Obtenir la liste des outils disponibles pour function calling
    */
   getToolsForFunctionCalling(capabilities?: string[]): any[] {
-    console.log(`[AgentApiV2Tools] 🔧 Nombre de tools dans la Map: ${this.tools.size}`);
-    console.log(`[AgentApiV2Tools] 🔧 Tools disponibles: ${Array.from(this.tools.keys()).join(', ')}`);
+    // 🔍 DEBUG: Vérifier l'état des tools
+    console.log(`[AgentApiV2Tools] 🔍 État des tools:`, {
+      totalTools: this.tools.size,
+      toolNames: Array.from(this.tools.keys()),
+      hasOpenApiGenerator: !!this.openApiGenerator
+    });
     
     const allTools = Array.from(this.tools.values()).map(tool => ({
       type: 'function' as const,
@@ -1402,15 +1414,34 @@ export class AgentApiV2Tools {
       }
     }));
     
-    // Si des capacités spécifiques sont demandées, filtrer
-    if (capabilities && capabilities.length > 0) {
-      const filteredTools = allTools.filter(tool => capabilities.includes(tool.function.name));
-      console.log(`[AgentApiV2Tools] 🔧 Tools filtrés selon capacités: ${filteredTools.length}/${allTools.length}`);
-      return filteredTools;
+    console.log(`[AgentApiV2Tools] 🔧 Tools mappés: ${allTools.length}`);
+    
+    // 🔧 CORRECTION: Vérification robuste du type de capabilities
+    if (capabilities === undefined || capabilities === null || !Array.isArray(capabilities)) {
+      console.log(`[AgentApiV2Tools] 🔧 Pas de capacités valides (${typeof capabilities}), retour de tous les tools: ${allTools.length}`);
+      return allTools;
     }
     
-    console.log(`[AgentApiV2Tools] 🔧 Tools configurés pour function calling: ${allTools.length}`);
-    return allTools;
+    // Capabilities vide : exposer tous les outils (pas de restriction)
+    if (capabilities.length === 0) {
+      console.log(`[AgentApiV2Tools] 🔧 Capabilities vide, exposition de tous les tools: ${allTools.length}`);
+      return allTools;
+    }
+    
+    // 🔧 CORRECTION: Gestion intelligente des capacités
+    // Si les capacités contiennent des mots-clés spéciaux, exposer tous les tools
+    const specialCapabilities = ['function_calls', 'streaming', 'all', 'full_access'];
+    const hasSpecialCapability = capabilities.some(cap => specialCapabilities.includes(cap));
+    
+    if (hasSpecialCapability) {
+      console.log(`[AgentApiV2Tools] 🔧 Capacité spéciale détectée (${capabilities.join(', ')}), exposition de tous les tools: ${allTools.length}`);
+      return allTools;
+    }
+    
+    // Sinon, filtrer selon les noms d'outils demandés
+    const filteredTools = allTools.filter(tool => capabilities.includes(tool.function.name));
+    console.log(`[AgentApiV2Tools] 🔧 Tools filtrés selon capacités: ${filteredTools.length}/${allTools.length}`);
+    return filteredTools;
   }
 
   /**
@@ -1450,11 +1481,20 @@ export class AgentApiV2Tools {
     }
   }
 
+  // Cache du userId avec TTL de 5 minutes
+  private userIdCache = new Map<string, { userId: string; expiresAt: number }>();
+
   /**
-   * Extraire le userId à partir du JWT token
+   * Extraire le userId à partir du JWT token avec cache
    */
   private async getUserIdFromToken(jwtToken: string): Promise<string> {
     try {
+      // Vérifier le cache d'abord
+      const cached = this.userIdCache.get(jwtToken);
+      if (cached && cached.expiresAt > Date.now()) {
+        return cached.userId;
+      }
+
       const { createClient } = await import('@supabase/supabase-js');
       const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
       const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -1465,6 +1505,12 @@ export class AgentApiV2Tools {
       if (error || !user) {
         throw new Error('Token invalide ou expiré');
       }
+      
+      // Mettre en cache avec TTL de 5 minutes
+      this.userIdCache.set(jwtToken, {
+        userId: user.id,
+        expiresAt: Date.now() + 5 * 60 * 1000
+      });
       
       return user.id;
     } catch (error) {
@@ -1484,8 +1530,20 @@ export class AgentApiV2Tools {
    * Attendre que l'initialisation soit complète
    */
   async waitForInitialization(): Promise<void> {
-    // Attendre un peu pour que l'initialisation asynchrone se termine
-    await new Promise(resolve => setTimeout(resolve, 100));
+    // Attendre que l'initialisation OpenAPI soit terminée
+    let attempts = 0;
+    const maxAttempts = 50; // 5 secondes max (50 * 100ms)
+    
+    while (!this.openApiInitialized && attempts < maxAttempts) {
+      await new Promise(resolve => setTimeout(resolve, 100));
+      attempts++;
+    }
+    
+    if (!this.openApiInitialized) {
+      console.warn('[AgentApiV2Tools] ⚠️ Timeout d\'attente de l\'initialisation OpenAPI');
+    } else {
+      console.log(`[AgentApiV2Tools] ✅ Initialisation OpenAPI terminée après ${attempts * 100}ms`);
+    }
   }
 }
 

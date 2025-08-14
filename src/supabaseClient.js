@@ -14,9 +14,38 @@ if (process.env.NODE_ENV === 'development') {
   }
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// Validation des variables d'environnement
+if (!supabaseUrl) {
+  throw new Error('NEXT_PUBLIC_SUPABASE_URL is not defined');
+}
+
+if (!supabaseAnonKey) {
+  throw new Error('NEXT_PUBLIC_SUPABASE_ANON_KEY is not defined');
+}
+
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    autoRefreshToken: true,
+    persistSession: true,
+    detectSessionInUrl: true
+  }
+});
 
 // Test the connection
 if (process.env.NODE_ENV === 'development') {
   console.log('🔧 Supabase client created:', !!supabase);
+  
+  // Test de connexion
+  supabase.auth.getSession().then(({ data, error }) => {
+    if (error) {
+      console.error('❌ Erreur lors du test de connexion Supabase:', error);
+    } else {
+      console.log('✅ Test de connexion Supabase réussi');
+      if (data.session) {
+        console.log('🔐 Session existante trouvée');
+      } else {
+        console.log('🔓 Aucune session existante');
+      }
+    }
+  });
 } 

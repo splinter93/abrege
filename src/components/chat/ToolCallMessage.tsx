@@ -94,7 +94,14 @@ const ToolCallMessage: React.FC<ToolCallMessageProps> = ({ toolCalls, toolResult
             <path d="M12 2a2 2 0 00-2 2v2H8a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2V8a2 2 0 00-2-2h-2V4a2 2 0 00-2-2z"/>
             <path d="M9 14h6"/>
           </svg>
-          <span className="tool-call-title">Tool Calls</span>
+          <span className="tool-call-title">
+            Tool Calls ({toolCalls.length})
+            {toolCalls.length > 10 && (
+              <span className="tool-call-count-warning" title="Beaucoup de tool calls - exécution par batch">
+                ⚡
+              </span>
+            )}
+          </span>
         </div>
         <div className="tool-call-status-indicators">
           {toolCalls.map((toolCall) => (

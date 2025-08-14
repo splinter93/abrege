@@ -53,7 +53,7 @@ const DEFAULT_GROQ_CONFIG: GroqConfig = {
   timeout: 30000,
   
   // LLM
-  model: 'openai/gpt-oss-20b', // ✅ Modèle plus stable
+  model: 'openai/gpt-oss-120b', // 🚀 Modèle 120B pour plus de puissance
   temperature: 0.7,
   maxTokens: 8000, // ✅ Augmenté pour plus de réponses
   topP: 0.9,
@@ -230,11 +230,56 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
       stream: false // ✅ Streaming désactivé dans le provider (géré par la route API)
     };
 
-    // Ajouter les tools si disponibles
+    // Ajouter les tools si disponibles (avec validation moins stricte)
     if (tools && tools.length > 0) {
-      payload.tools = tools;
-      payload.tool_choice = 'auto'; // ✅ Permettre à Groq de choisir les tools automatiquement
-      logger.debug(`[GroqProvider] 🔧 ${tools.length} tools disponibles pour les function calls`);
+      // 🔧 VALIDATION DES TOOLS : s'assurer que les paramètres sont un schéma d'objet valide
+      const validatedTools = tools.filter((tool: any) => {
+        // Vérification de la structure de base
+        if (!tool || typeof tool !== 'object') {
+          logger.warn(`[GroqProvider] ⚠️ Tool invalide ignoré:`, tool);
+          return false;
+        }
+        
+        // Vérification de la structure function
+        if (!tool.function || typeof tool.function !== 'object') {
+          logger.warn(`[GroqProvider] ⚠️ Tool sans fonction ignoré:`, tool);
+          return false;
+        }
+        
+        if (!tool.function.name || typeof tool.function.name !== 'string') {
+          logger.warn(`[GroqProvider] ⚠️ Tool sans nom de fonction ignoré:`, tool);
+          return false;
+        }
+        // PARAMÈTRES OBLIGATOIRES : s'assurer qu'il s'agit d'un schéma JSON d'objet compréhensible
+        const params = tool.function.parameters;
+        if (!params || params.type !== 'object' || typeof params.properties !== 'object' || !Array.isArray(params.required)) {
+          logger.warn(`[GroqProvider] ⚠️ Tool avec paramètres invalides ignoré: ${tool.function.name}`, params);
+          return false;
+        }
+        
+        return true;
+      });
+      
+      if (validatedTools.length > 0) {
+        payload.tools = validatedTools;
+        payload.tool_choice = 'auto'; // ✅ Permettre à Groq de choisir les tools automatiquement
+        
+        // 🔧 CONFIGURATION OPTIMISÉE POUR MULTI-TOOL CALLS
+        payload.parallel_tool_calls = true; // ✅ Forcer l'activation des tool calls parallèles
+        payload.max_tokens = Math.max(this.config.maxTokens, 4000); // ✅ Augmenter les tokens pour les réponses avec tools
+        
+        logger.debug(`[GroqProvider] 🔧 ${validatedTools.length}/${tools.length} tools validés pour les function calls`);
+        logger.debug(`[GroqProvider] 🔧 Configuration multi-tools: parallel=${payload.parallel_tool_calls}, max_tokens=${payload.max_tokens}`);
+        
+        // 🔧 DÉBOGAGE: Log du premier tool validé
+        logger.debug(`[GroqProvider] 🔍 Premier tool validé:`, {
+          name: validatedTools[0].function.name,
+          description: validatedTools[0].function.description?.substring(0, 100) || 'Pas de description',
+          hasParameters: !!validatedTools[0].function.parameters || 'Pas de paramètres'
+        });
+      } else {
+        logger.warn(`[GroqProvider] ⚠️ Aucun tool valide trouvé, appel sans tools`);
+      }
     }
 
     // Ajouter les paramètres spécifiques à Groq
@@ -250,6 +295,12 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
       payload.reasoning_effort = this.config.reasoningEffort;
     }
 
+    // Si aucun tool valide, désactiver explicitement les function calls
+    if (!payload.tools || payload.tools.length === 0) {
+      payload.tool_choice = 'none';
+      delete payload.parallel_tool_calls;
+      delete payload.tools;
+    }
     return payload;
   }
 

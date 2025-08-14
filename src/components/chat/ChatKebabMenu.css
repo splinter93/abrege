@@ -32,6 +32,18 @@
   transform: translateY(-1px);
 }
 
+.kebab-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.kebab-button:disabled:hover {
+  background: none;
+  transform: none;
+  box-shadow: none;
+}
+
 .kebab-button[aria-expanded="true"] {
   color: var(--chat-text-primary);
   background: var(--chat-bg-tertiary);
@@ -128,6 +140,22 @@
   transform: scale(0.98);
 }
 
+.kebab-option:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.kebab-option:disabled:hover {
+  background: none;
+  transform: none;
+}
+
+.kebab-option:disabled:active {
+  background: none;
+  transform: none;
+}
+
 .kebab-option svg {
   flex-shrink: 0;
   color: var(--chat-text-secondary);
@@ -200,6 +228,17 @@
   background: var(--chat-bg-tertiary);
 }
 
+.kebab-input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: var(--chat-bg-quaternary);
+}
+
+.kebab-input:disabled:hover {
+  border-color: var(--chat-border-primary);
+  background: var(--chat-bg-quaternary);
+}
+
 .kebab-select {
   width: 100%;
   padding: 10px 12px;
@@ -230,6 +269,17 @@
 .kebab-select:hover {
   border-color: var(--chat-border-focus);
   background-color: var(--chat-bg-tertiary);
+}
+
+.kebab-select:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: var(--chat-bg-quaternary);
+}
+
+.kebab-select:disabled:hover {
+  border-color: var(--chat-border-primary);
+  background: var(--chat-bg-quaternary);
 }
 
 /* ========================================
