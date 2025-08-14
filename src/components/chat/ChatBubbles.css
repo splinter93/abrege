@@ -44,7 +44,7 @@
    ======================================== */
 
 .chat-message-bubble-user {
-  background: #374151;
+  background: var(--chat-bg-secondary);
   color: #ffffff;
   border: none;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
@@ -54,7 +54,7 @@
 }
 
 .chat-message-bubble-user:hover {
-  background: #4b5563;
+  background: var(--chat-bg-tertiary);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
   transform: translateY(-1px);
 }
@@ -264,7 +264,7 @@
    ======================================== */
 
 :root {
-  --chat-bubble-user-bg: #374151;
+  --chat-bubble-user-bg: var(--chat-bg-secondary);
   --chat-bubble-user-color: #ffffff;
   --chat-bubble-user-shadow: rgba(0, 0, 0, 0.2);
   
