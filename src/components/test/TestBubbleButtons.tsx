@@ -21,12 +21,8 @@ Et du **texte en gras** et *en italique*.`;
     console.log('Message copié !');
   };
 
-  const handleShare = () => {
-    console.log('Partage du message...');
-  };
-
-  const handleMore = () => {
-    console.log('Plus d\'options...');
+  const handleEdit = () => {
+    console.log('Édition du message...');
   };
 
   return (
@@ -37,7 +33,7 @@ Et du **texte en gras** et *en italique*.`;
       fontFamily: 'system-ui, -apple-system, sans-serif'
     }}>
       <h1 style={{ marginBottom: '40px', textAlign: 'center' }}>
-        🧪 Test BubbleButtons
+        🧪 Test BubbleButtons - Version Simplifiée
       </h1>
       
       <div style={{ maxWidth: '800px', margin: '0 auto' }}>
@@ -56,7 +52,7 @@ Et du **texte en gras** et *en italique*.`;
             maxWidth: '60%',
             wordWrap: 'break-word'
           }}>
-            Salut ! Peux-tu m'expliquer comment fonctionnent les boutons sous les bulles ?
+            Salut ! Peux-tu m'expliquer comment fonctionnent les nouveaux boutons ?
           </div>
         </div>
 
@@ -83,8 +79,7 @@ Et du **texte en gras** et *en italique*.`;
               content={sampleContent}
               messageId="test-1"
               onCopy={handleCopy}
-              onShare={handleShare}
-              onMore={handleMore}
+              onEdit={handleEdit}
             />
           </div>
         </div>
@@ -111,8 +106,7 @@ Et du **texte en gras** et *en italique*.`;
               content="Message simple pour tester les boutons."
               messageId="test-2"
               onCopy={handleCopy}
-              onShare={handleShare}
-              onMore={handleMore}
+              onEdit={handleEdit}
             />
           </div>
         </div>
@@ -128,9 +122,9 @@ Et du **texte en gras** et *en italique*.`;
         <h3>Instructions de test :</h3>
         <ul style={{ textAlign: 'left', display: 'inline-block' }}>
           <li>Survolez les bulles de messages pour voir apparaître les boutons</li>
-          <li>Cliquez sur "Copier" pour copier le contenu du message</li>
-          <li>Cliquez sur "Partager" pour voir l'action de partage</li>
-          <li>Cliquez sur "Plus" pour voir les options supplémentaires</li>
+          <li>Bouton <strong>📋 Copier</strong> : Copie le contenu du message</li>
+          <li>Bouton <strong>✏️ Éditer</strong> : Prêt pour l'édition du message</li>
+          <li>Design épuré : Pas de background, juste les icônes</li>
         </ul>
       </div>
     </div>

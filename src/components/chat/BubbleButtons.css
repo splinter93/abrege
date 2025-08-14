@@ -18,7 +18,7 @@
 
 .bubble-buttons-container {
   display: flex;
-  gap: 8px;
+  gap: 12px;
   align-items: center;
 }
 
@@ -29,30 +29,26 @@
 .bubble-button {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
-  background: var(--chat-bg-tertiary);
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: transparent;
   color: var(--chat-text-secondary);
-  border: 1px solid var(--chat-border-primary);
-  border-radius: var(--chat-radius-md);
-  font-size: var(--chat-font-size-xs);
-  font-weight: var(--chat-font-weight-medium);
+  border: none;
+  border-radius: 6px;
   cursor: pointer;
   transition: all var(--chat-transition-normal);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  padding: 0;
 }
 
 .bubble-button:hover {
-  background: var(--chat-bg-elevated);
+  background: var(--chat-bg-tertiary);
   color: var(--chat-text-primary);
-  border-color: var(--chat-border-secondary);
-  transform: translateY(-1px);
-  box-shadow: var(--chat-shadow-sm);
+  transform: scale(1.1);
 }
 
 .bubble-button:active {
-  transform: translateY(0);
+  transform: scale(0.95);
 }
 
 /* ========================================
@@ -60,9 +56,7 @@
    ======================================== */
 
 .copy-button.copied {
-  background: var(--chat-bg-success);
   color: var(--chat-text-success);
-  border-color: var(--chat-border-success);
 }
 
 .copy-button.copied:hover {
@@ -71,21 +65,12 @@
 }
 
 /* ========================================
-   ICÔNES ET TEXTE
+   ICÔNES
    ======================================== */
 
 .bubble-button svg {
   flex-shrink: 0;
   transition: transform var(--chat-transition-normal);
-}
-
-.bubble-button:hover svg {
-  transform: scale(1.1);
-}
-
-.button-text {
-  white-space: nowrap;
-  font-weight: var(--chat-font-weight-medium);
 }
 
 /* ========================================
@@ -98,22 +83,12 @@
   }
   
   .bubble-buttons-container {
-    gap: 6px;
+    gap: 8px;
   }
   
   .bubble-button {
-    padding: 5px 10px;
-    font-size: 11px;
-  }
-  
-  .button-text {
-    display: none; /* Cacher le texte sur mobile, garder juste les icônes */
-  }
-  
-  .bubble-button {
-    padding: 6px;
-    min-width: 32px;
-    justify-content: center;
+    width: 28px;
+    height: 28px;
   }
 }
 
@@ -123,12 +98,12 @@
   }
   
   .bubble-buttons-container {
-    gap: 4px;
+    gap: 6px;
   }
   
   .bubble-button {
-    padding: 4px 8px;
-    min-width: 28px;
+    width: 24px;
+    height: 24px;
   }
 }
 
@@ -171,23 +146,6 @@
 
 :root {
   --chat-text-success: #22c55e;
-  --chat-border-success: rgba(34, 197, 94, 0.3);
+  --chat-bg-success: rgba(34, 197, 94, 0.1);
   --chat-accent-primary: #3b82f6;
-}
-
-/* ========================================
-   ÉTATS DÉSACTIVÉS
-   ======================================== */
-
-.bubble-button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  pointer-events: none;
-}
-
-.bubble-button:disabled:hover {
-  background: var(--chat-bg-tertiary);
-  color: var(--chat-text-secondary);
-  transform: none;
-  box-shadow: none;
 } 

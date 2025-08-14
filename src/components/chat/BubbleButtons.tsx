@@ -1,12 +1,11 @@
 import React from 'react';
-import { FiCopy, FiCheck, FiShare2, FiMoreHorizontal } from 'react-icons/fi';
+import { FiCopy, FiCheck, FiEdit3 } from 'react-icons/fi';
 
 interface BubbleButtonsProps {
   content: string;
   messageId?: string;
   onCopy?: () => void;
-  onShare?: () => void;
-  onMore?: () => void;
+  onEdit?: () => void;
   className?: string;
 }
 
@@ -14,8 +13,7 @@ const BubbleButtons: React.FC<BubbleButtonsProps> = ({
   content,
   messageId,
   onCopy,
-  onShare,
-  onMore,
+  onEdit,
   className = ''
 }) => {
   const [copied, setCopied] = React.useState(false);
@@ -33,12 +31,8 @@ const BubbleButtons: React.FC<BubbleButtonsProps> = ({
     }
   };
 
-  const handleShare = () => {
-    onShare?.();
-  };
-
-  const handleMore = () => {
-    onMore?.();
+  const handleEdit = () => {
+    onEdit?.();
   };
 
   return (
@@ -50,30 +44,16 @@ const BubbleButtons: React.FC<BubbleButtonsProps> = ({
           title={copied ? 'Copié !' : 'Copier le message'}
           aria-label={copied ? 'Message copié' : 'Copier le message'}
         >
-          {copied ? <FiCheck size={14} /> : <FiCopy size={14} />}
-          <span className="button-text">
-            {copied ? 'Copié' : 'Copier'}
-          </span>
+          {copied ? <FiCheck size={16} /> : <FiCopy size={16} />}
         </button>
 
         <button
-          className="bubble-button share-button"
-          onClick={handleShare}
-          title="Partager le message"
-          aria-label="Partager le message"
+          className="bubble-button edit-button"
+          onClick={handleEdit}
+          title="Éditer le message"
+          aria-label="Éditer le message"
         >
-          <FiShare2 size={14} />
-          <span className="button-text">Partager</span>
-        </button>
-
-        <button
-          className="bubble-button more-button"
-          onClick={handleMore}
-          title="Plus d'options"
-          aria-label="Plus d'options"
-        >
-          <FiMoreHorizontal size={14} />
-          <span className="button-text">Plus</span>
+          <FiEdit3 size={16} />
         </button>
       </div>
     </div>

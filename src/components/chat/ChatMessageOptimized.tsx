@@ -154,8 +154,7 @@ const ChatMessageOptimized: React.FC<ChatMessageProps> = memo(({
           content={JSON.stringify(validatedProps.message.tool_calls, null, 2)}
           messageId={validatedProps.message.id}
           onCopy={() => console.log('Tool calls copiés')}
-          onShare={() => console.log('Partage des tool calls')}
-          onMore={() => console.log('Plus d\'options pour tool calls')}
+          onEdit={() => console.log('Édition des tool calls')}
         />
       </motion.div>
     );
@@ -193,8 +192,7 @@ const ChatMessageOptimized: React.FC<ChatMessageProps> = memo(({
           content={content}
           messageId={validatedProps.message.id}
           onCopy={() => console.log('Message copié')}
-          onShare={() => console.log('Partage du message')}
-          onMore={() => console.log('Plus d\'options')}
+          onEdit={() => console.log('Édition du message')}
         />
       )}
     </motion.div>
