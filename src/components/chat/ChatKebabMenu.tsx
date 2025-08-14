@@ -49,12 +49,6 @@ const ChatKebabMenu: React.FC<ChatKebabMenuProps> = ({
     setIsOpen(!isOpen);
   };
 
-  const handleWideModeToggle = () => {
-    if (disabled) return;
-    onToggleWideMode();
-    setIsOpen(false);
-  };
-
   const handleFullscreenToggle = () => {
     if (disabled) return;
     onToggleFullscreen();
@@ -67,19 +61,6 @@ const ChatKebabMenu: React.FC<ChatKebabMenuProps> = ({
     if (!isNaN(newLimit) && newLimit > 0 && newLimit <= 100) {
       onHistoryLimitChange(newLimit);
     }
-  };
-
-  const handleProviderChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    if (disabled) return;
-    const newProvider = event.target.value;
-    setProvider(newProvider);
-    logger.dev(`[ChatKebabMenu] 🔄 Provider changé: ${newProvider}`);
-  };
-
-  const handleToggleToolCallDebugger = () => {
-    if (disabled) return;
-    onToggleToolCallDebugger?.();
-    setIsOpen(false);
   };
 
   return (
@@ -100,119 +81,49 @@ const ChatKebabMenu: React.FC<ChatKebabMenuProps> = ({
 
       {isOpen && (
         <div className="kebab-dropdown">
-          {/* Section Affichage */}
-          <div className="kebab-section">
-            <div className="kebab-section-title">Affichage</div>
-            
-            <button
-              onClick={handleWideModeToggle}
-              className="kebab-option"
-              aria-label={isWideMode ? "Passer en mode normal" : "Passer en mode large"}
+          {/* Quitter Plein écran */}
+          <button
+            onClick={handleFullscreenToggle}
+            className="kebab-option"
+            aria-label="Quitter le mode plein écran"
+            disabled={disabled}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3" />
+            </svg>
+            <span>Quitter Plein écran</span>
+          </button>
+
+          {/* Historique des messages réglable */}
+          <div className="kebab-input-group">
+            <label className="kebab-input-label">Historique des messages réglable</label>
+            <input 
+              type="number"
+              value={historyLimit} 
+              onChange={handleHistoryLimitChange}
+              className="kebab-input"
+              min="1"
+              max="100"
+              placeholder="10"
               disabled={disabled}
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                {isWideMode ? (
-                  <path d="M4 6h16M4 12h16M4 18h16" />
-                ) : (
-                  <path d="M2 6h20M2 12h20M2 18h20" />
-                )}
-              </svg>
-              <span>{isWideMode ? "Mode Normal" : "Mode Large"}</span>
-              <div className="badge">{isWideMode ? "Normal" : "Large"}</div>
-            </button>
-            
-            <button
-              onClick={handleFullscreenToggle}
-              className="kebab-option"
-              aria-label={isFullscreen ? "Quitter le mode plein écran" : "Passer en mode plein écran"}
-              disabled={disabled}
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                {isFullscreen ? (
-                  <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3" />
-                ) : (
-                  <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 1 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
-                )}
-              </svg>
-              <span>{isFullscreen ? "Quitter Plein Écran" : "Plein Écran"}</span>
-            </button>
+            />
           </div>
 
-          {/* Section Configuration */}
-          <div className="kebab-section">
-            <div className="kebab-section-title">Configuration</div>
-            
-            <div className="kebab-input-group">
-              <label className="kebab-input-label">Limite d'historique</label>
-              <input 
-                type="number"
-                value={historyLimit} 
-                onChange={handleHistoryLimitChange}
-                className="kebab-input"
-                min="1"
-                max="100"
-                placeholder="10"
-                disabled={disabled}
-              />
-            </div>
-
-            <div className="kebab-input-group">
-              <label className="kebab-input-label">
-                Provider IA
-                {selectedAgent && (
-                  <span className="agent-override-indicator">
-                    (Agent: {selectedAgent.name})
-                  </span>
-                )}
-              </label>
-              <select 
-                value={currentProvider} 
-                onChange={handleProviderChange}
-                className="kebab-select"
-                disabled={!!selectedAgent || disabled}
-                title={selectedAgent ? `Provider forcé par l'agent ${selectedAgent.name}` : 'Choisir le provider'}
-              >
-                <option value="synesia">🤖 Synesia</option>
-                <option value="deepseek">🔍 DeepSeek</option>
-              </select>
-              {selectedAgent && (
-                <div className="agent-override-message">
-                  Provider forcé par l'agent sélectionné
-                </div>
-              )}
-            </div>
+          {/* Modèle */}
+          <div className="kebab-option">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M12 2a2 2 0 00-2 2v2H8a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2V8a2 2 0 00-2-2h-2V4a2 2 0 00-2-2z"/>
+            </svg>
+            <span>Modèle: {selectedAgent?.model || 'Non défini'}</span>
           </div>
 
-          {/* Section Debug */}
-          <div className="kebab-section">
-            <div className="kebab-section-title">Debug</div>
-            
-            <button
-              onClick={handleToggleToolCallDebugger}
-              className="kebab-option"
-              aria-label="Afficher/Masquer le debugger des tool calls"
-              disabled={disabled}
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M12 2a2 2 0 00-2 2v2H8a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2V8a2 2 0 00-2-2h-2V4a2 2 0 00-2-2z"/>
-                <path d="M9 14h6"/>
-              </svg>
-              <span>Tool Calls Debugger</span>
-            </button>
-          </div>
-
-          {/* Section Statut */}
-          <div className="kebab-section">
-            <div className="kebab-section-title">Statut</div>
-            
-            <div className="kebab-option">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <circle cx="12" cy="12" r="10" />
-                <path d="m9 12 2 2 4-4" />
-              </svg>
-              <span>Connecté</span>
-              <div className="status-indicator"></div>
-            </div>
+          {/* Provider */}
+          <div className="kebab-option">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="12" cy="12" r="10" />
+              <path d="m9 12 2 2 4-4" />
+            </svg>
+            <span>Provider: {selectedAgent?.provider || 'Non défini'}</span>
           </div>
         </div>
       )}
