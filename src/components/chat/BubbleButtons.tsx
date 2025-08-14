@@ -1,4 +1,5 @@
 import React from 'react';
+import './BubbleButtons.css';
 import { FiCopy, FiCheck, FiEdit3 } from 'react-icons/fi';
 
 interface BubbleButtonsProps {

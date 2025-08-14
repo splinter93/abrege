@@ -5,20 +5,13 @@
 .bubble-buttons {
   display: flex;
   justify-content: flex-start;
-  margin-top: 8px;
-  margin-bottom: 4px;
-  opacity: 0;
-  transition: opacity var(--chat-transition-normal);
-}
-
-/* Affichage des boutons au hover de la bulle */
-.chat-message:hover .bubble-buttons {
-  opacity: 1;
+  margin-top: 6px;
+  margin-bottom: 0;
 }
 
 .bubble-buttons-container {
   display: flex;
-  gap: 12px;
+  gap: 6px;
   align-items: center;
 }
 
@@ -27,28 +20,28 @@
    ======================================== */
 
 .bubble-button {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
+  width: 24px;
+  height: 24px;
   background: transparent;
   color: var(--chat-text-secondary);
   border: none;
-  border-radius: 6px;
+  border-radius: 4px;
   cursor: pointer;
-  transition: all var(--chat-transition-normal);
+  transition: color var(--chat-transition-normal), transform var(--chat-transition-fast);
   padding: 0;
 }
 
 .bubble-button:hover {
-  background: var(--chat-bg-tertiary);
+  background: transparent;
   color: var(--chat-text-primary);
-  transform: scale(1.1);
+  transform: none;
 }
 
 .bubble-button:active {
-  transform: scale(0.95);
+  transform: scale(0.92);
 }
 
 /* ========================================
@@ -79,16 +72,16 @@
 
 @media (max-width: 768px) {
   .bubble-buttons {
-    margin-top: 6px;
+    margin-top: 4px;
   }
   
   .bubble-buttons-container {
-    gap: 8px;
+    gap: 6px;
   }
   
   .bubble-button {
-    width: 28px;
-    height: 28px;
+    width: 22px;
+    height: 22px;
   }
 }
 
@@ -98,12 +91,12 @@
   }
   
   .bubble-buttons-container {
-    gap: 6px;
+    gap: 4px;
   }
   
   .bubble-button {
-    width: 24px;
-    height: 24px;
+    width: 20px;
+    height: 20px;
   }
 }
 
