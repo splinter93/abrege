@@ -618,18 +618,51 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
     return null;
   };
 
-  // Si le widget est fermé, afficher seulement le bouton flottant
-  if (!widgetOpen) {
+  // Rendu du bouton flottant avec createPortal
+  if (typeof document !== 'undefined' && !widgetOpen) {
+    const positionStyles = {
+      'bottom-right': { bottom: '20px', right: '20px' },
+      'bottom-left': { bottom: '20px', left: '20px' },
+      'top-right': { top: '20px', right: '20px' },
+      'top-left': { top: '20px', left: '20px' }
+    };
+
     return createPortal(
       <button
-        className="chat-widget-floating-btn"
+        className="chat-widget-toggle"
         onClick={handleToggle}
         aria-label="Ouvrir le chat"
+        style={{
+          position: 'fixed',
+          zIndex: 9999,
+          ...positionStyles[position],
+          width: '60px',
+          height: '60px',
+          borderRadius: '50%',
+          border: 'none',
+          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          color: 'white',
+          cursor: 'pointer',
+          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
+          transition: 'all 0.3s ease',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.transform = 'scale(1.1)';
+          e.currentTarget.style.boxShadow = '0 6px 25px rgba(0, 0, 0, 0.4)';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.transform = 'scale(1)';
+          e.currentTarget.style.boxShadow = '0 4px 20px rgba(0, 0, 0, 0.3)';
+        }}
       >
         <svg
-          fill="none"
-          stroke="currentColor"
+          width="24"
+          height="24"
           viewBox="0 0 24 24"
+          fill="none"
           xmlns="http://www.w3.org/2000/svg"
         >
           <path
@@ -637,6 +670,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
             strokeLinejoin="round"
             strokeWidth={2}
             d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+            opacity="0.8"
           />
           <path
             strokeLinecap="round"
