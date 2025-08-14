@@ -1,6 +1,7 @@
 // Composants de base
 export { default as ChatFullscreenV2 } from './ChatFullscreenV2';
 export { default as ChatWidget } from './ChatWidget';
+export { default as ChatModeToggle } from './ChatModeToggle';
 export { default as ChatSidebar } from './ChatSidebar';
 export { default as ChatInput } from './ChatInput';
 export { default as ChatKebabMenu } from './ChatKebabMenu';

@@ -81,9 +81,13 @@
   box-shadow: none;
   border-bottom-left-radius: 6px;
   backdrop-filter: none;
-  max-width: 1000px !important;
-  width: 1000px !important;
-  padding-left: 0 !important;
+  padding-left: 0;
+}
+
+/* Largeur spéciale seulement en plein écran, pas en widget */
+.chat-fullscreen-container:not(.chat-widget-mode) .chat-message-bubble-assistant {
+  max-width: 1000px;
+  width: 1000px;
 }
 
 .chat-message-bubble-assistant:hover {

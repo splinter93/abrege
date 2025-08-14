@@ -15,6 +15,7 @@ import ChatMessageOptimized from './ChatMessageOptimized';
 import ChatKebabMenu from './ChatKebabMenu';
 import ChatSidebar from './ChatSidebar';
 import ToolCallDebugger from './ToolCallDebugger';
+import ChatWidget from './ChatWidget';
 import { simpleLogger as logger } from '@/utils/logger';
 
 import './index.css';
@@ -27,6 +28,7 @@ const ChatFullscreenV2: React.FC = () => {
   const isDesktop = useMediaQuery('(min-width: 1024px)');
   const [sidebarOpen, setSidebarOpen] = useState(isDesktop);
   const [wideMode, setWideMode] = useState(false);
+  const [isWidgetMode, setIsWidgetMode] = useState(false);
   
   // 🎯 Contexte et store
   const appContext = useAppContext();
@@ -549,9 +551,41 @@ const ChatFullscreenV2: React.FC = () => {
     setWideMode(prev => !prev);
   }, [user, authLoading]);
 
+  const handleWidgetToggle = useCallback(() => {
+    // Vérifier l'authentification avant de continuer
+    if (authLoading) {
+      logger.dev('[ChatFullscreenV2] ⏳ Vérification de l\'authentification en cours...');
+      return;
+    }
+    
+    if (!user) {
+      logger.warn('[ChatFullscreenV2] ⚠️ Utilisateur non authentifié, impossible de passer en mode widget');
+      return;
+    }
+
+    setIsWidgetMode(true);
+  }, [user, authLoading]);
+
   // 🎯 Rendu optimisé
   return (
-    <div className={`chat-fullscreen-container ${wideMode ? 'wide-mode' : ''}`}>
+    <>
+      {/* Widget rendu en dehors du conteneur fullscreen */}
+      {isWidgetMode && (
+        <ChatWidget
+          isOpen={true}
+          onToggle={(isOpen) => {
+            if (!isOpen) {
+              setIsWidgetMode(false);
+            }
+          }}
+          onExpand={() => setIsWidgetMode(false)}
+          position="bottom-right"
+          size="medium"
+        />
+      )}
+
+      {/* Chat fullscreen (masqué quand en mode widget) */}
+      <div className={`chat-fullscreen-container ${wideMode ? 'wide-mode' : ''}`} style={{ display: isWidgetMode ? 'none' : 'flex' }}>
       {/* 🔧 Tool Call Debugger */}
       <ToolCallDebugger
         toolCalls={toolCalls}
@@ -578,6 +612,7 @@ const ChatFullscreenV2: React.FC = () => {
             onToggleFullscreen={() => {}}
             onHistoryLimitChange={handleHistoryLimitChange}
             onToggleToolCallDebugger={toggleDebugger}
+            onToggleWidget={handleWidgetToggle}
             disabled={!user || authLoading}
           />
         </div>
@@ -652,6 +687,7 @@ const ChatFullscreenV2: React.FC = () => {
         </div>
       </div>
     </div>
+    </>
   );
 };
 

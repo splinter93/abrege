@@ -14,6 +14,7 @@ interface ChatKebabMenuProps {
   onToggleFullscreen: () => void;
   onHistoryLimitChange: (limit: number) => void;
   onToggleToolCallDebugger?: () => void;
+  onToggleWidget?: () => void;
   disabled?: boolean;
 }
 
@@ -25,6 +26,7 @@ const ChatKebabMenu: React.FC<ChatKebabMenuProps> = ({
   onToggleFullscreen,
   onHistoryLimitChange,
   onToggleToolCallDebugger,
+  onToggleWidget,
   disabled = false
 }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -56,6 +58,12 @@ const ChatKebabMenu: React.FC<ChatKebabMenuProps> = ({
   const handleFullscreenToggle = () => {
     if (disabled) return;
     onToggleFullscreen();
+    setIsOpen(false);
+  };
+
+  const handleWidgetToggle = () => {
+    if (disabled) return;
+    onToggleWidget?.();
     setIsOpen(false);
   };
 
@@ -96,6 +104,19 @@ const ChatKebabMenu: React.FC<ChatKebabMenuProps> = ({
               <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3" />
             </svg>
             <span>Quitter Plein écran</span>
+          </button>
+
+          {/* Passer en mode Widget */}
+          <button
+            onClick={handleWidgetToggle}
+            className="kebab-option"
+            aria-label="Passer en mode widget"
+            disabled={disabled}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+            </svg>
+            <span>Mode Widget</span>
           </button>
 
           {/* Historique des messages réglable */}

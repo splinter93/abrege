@@ -1,340 +1,797 @@
 'use client';
-import React, { useState, useRef, useEffect } from 'react';
-import { useSessionSync } from '@/hooks/useSessionSync';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { useChatStore } from '@/store/useChatStore';
-import { useLLMStore } from '@/store/useLLMStore';
-import { ChatMessage } from '@/types/chat';
+import { useMediaQuery } from '@/hooks/useMediaQuery';
+import { useAppContext } from '@/hooks/useAppContext';
+import { useChatResponse } from '@/hooks/useChatResponse';
+import { useChatScroll } from '@/hooks/useChatScroll';
+import { useAuth } from '@/hooks/useAuth';
+import { useToolCallDebugger } from '@/hooks/useToolCallDebugger';
+import { useAgents } from '@/hooks/useAgents';
 import { supabase } from '@/supabaseClient';
-import { simpleLogger as logger } from '@/utils/logger';
 import ChatInput from './ChatInput';
-import EnhancedMarkdownMessage from './EnhancedMarkdownMessage';
-import ChatSidebar from './ChatSidebar';
-import ReasoningMessage from './ReasoningMessage';
-import MessageContainer from './MessageContainer';
-import './index.css';
+import ChatMessageOptimized from './ChatMessageOptimized';
+import { simpleLogger as logger } from '@/utils/logger';
 import './ChatWidget.css';
-import './ReasoningMessage.css';
 
-const ChatWidget: React.FC = () => {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [isOnChatPage, setIsOnChatPage] = useState(false);
+interface ChatWidgetProps {
+  isOpen?: boolean;
+  onToggle?: (isOpen: boolean) => void;
+  onExpand?: () => void;
+  position?: 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left';
+  size?: 'small' | 'medium' | 'large';
+}
+
+const ChatWidget: React.FC<ChatWidgetProps> = ({
+  isOpen = false,
+  onToggle,
+  onExpand,
+  position = 'bottom-right',
+  size = 'medium'
+}) => {
+  const [widgetOpen, setWidgetOpen] = useState(isOpen);
+  const [isMinimized, setIsMinimized] = useState(false);
   
+  // 🎯 Hooks optimisés (même que ChatFullscreenV2)
+  const isDesktop = useMediaQuery('(min-width: 1024px)');
+  const appContext = useAppContext();
+  const { user, loading: authLoading } = useAuth();
+  const { agents, loading: agentsLoading } = useAgents();
   const {
     sessions,
     currentSession,
+    selectedAgent,
+    selectedAgentId,
     loading,
     error,
-    isWidgetOpen,
     setCurrentSession,
+    setSelectedAgent,
+    setSelectedAgentId,
     setError,
     setLoading,
     syncSessions,
-    toggleWidget,
-    openFullscreen,
-    closeWidget
+    createSession,
+    addMessage,
+    updateSession
   } = useChatStore();
 
-  // Hook pour synchroniser les sessions
-  const { syncSessions: syncSessionsFromHook, createSession, addMessage } = useSessionSync();
-
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  // 🎯 Refs optimisées
+  const toolFlowActiveRef = useRef(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // Vérifier si on est sur la page chat
+  // 🎯 Hook de scroll personnalisé pour le widget
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const [isNearBottom, setIsNearBottom] = useState(true);
+  
+  // Scroll personnalisé pour le widget
+  const scrollToBottom = useCallback((force = false) => {
+    const container = messagesEndRef.current?.closest('.messages-container') as HTMLElement;
+    if (!container) return;
+    
+    const { scrollHeight, clientHeight } = container;
+    const extraOffset = 24; // scroll un peu plus bas que le dernier message
+    const targetScrollTop = Math.max(0, scrollHeight - clientHeight + extraOffset);
+    
+    container.scrollTo({
+      top: targetScrollTop,
+      behavior: force ? 'auto' : 'smooth'
+    });
+    
+    setIsNearBottom(true);
+  }, []);
+  
+  // Vérifier si l'utilisateur est près du bas
+  const checkScrollPosition = useCallback(() => {
+    const container = messagesEndRef.current?.closest('.messages-container') as HTMLElement;
+    if (!container) return;
+    
+    const { scrollTop, scrollHeight, clientHeight } = container;
+    const distanceFromBottom = scrollHeight - scrollTop - clientHeight;
+    const near = distanceFromBottom <= 150; // 150px threshold
+    
+    setIsNearBottom(near);
+  }, []);
+  
+  // Écouter le scroll pour détecter la position
   useEffect(() => {
-    const checkIfOnChatPage = () => {
-      setIsOnChatPage(window.location.pathname === '/chat');
+    const container = messagesEndRef.current?.closest('.messages-container') as HTMLElement;
+    if (!container) return;
+    
+    const handleScroll = () => {
+      checkScrollPosition();
     };
     
-    checkIfOnChatPage();
-    window.addEventListener('popstate', checkIfOnChatPage);
+    container.addEventListener('scroll', handleScroll, { passive: true });
+    checkScrollPosition(); // Vérifier la position initiale
     
     return () => {
-      window.removeEventListener('popstate', checkIfOnChatPage);
+      container.removeEventListener('scroll', handleScroll);
     };
+  }, [checkScrollPosition]);
+
+  // 🎯 Hook pour le debugger des tool calls
+  const {
+    toolCalls,
+    toolResults,
+    isDebuggerVisible,
+    addToolCalls,
+    addToolResult,
+    clearToolCalls,
+    toggleDebugger,
+    hideDebugger
+  } = useToolCallDebugger();
+
+  // 🎯 Callbacks mémorisés pour le hook de chat
+  const handleComplete = useCallback(async (fullContent: string, fullReasoning: string) => {
+    if (authLoading) {
+      logger.dev('[ChatWidget] ⏳ Vérification de l\'authentification en cours...');
+      return;
+    }
+    
+    if (!user) {
+      logger.warn('[ChatWidget] ⚠️ Utilisateur non authentifié, impossible de traiter la réponse finale');
+      return;
+    }
+
+    const safeContent = fullContent?.trim();
+    if (!safeContent) {
+      scrollToBottom(true);
+      return;
+    }
+      
+    await addMessage({
+      role: 'assistant',
+      content: safeContent,
+      reasoning: fullReasoning,
+      timestamp: new Date().toISOString()
+    });
+    
+    toolFlowActiveRef.current = false;
+    
+    // Scroll immédiat après la réponse complète
+    scrollToBottom(true);
+    setTimeout(() => scrollToBottom(true), 100);
+  }, [addMessage, scrollToBottom, user, authLoading]);
+
+  const handleError = useCallback((errorMessage: string) => {
+    if (authLoading) {
+      logger.dev('[ChatWidget] ⏳ Vérification de l\'authentification en cours...');
+      return;
+    }
+    
+    if (!user) {
+      logger.warn('[ChatWidget] ⚠️ Utilisateur non authentifié, impossible de traiter l\'erreur');
+      return;
+    }
+
+    addMessage({
+      role: 'assistant',
+      content: `Erreur: ${errorMessage}`,
+      timestamp: new Date().toISOString()
+    });
+    
+    // Scroll immédiat après l'erreur
+    scrollToBottom(true);
+    setTimeout(() => scrollToBottom(true), 100);
+  }, [addMessage, scrollToBottom, user, authLoading]);
+
+  const handleToolCalls = useCallback(async (toolCalls: any[], toolName: string) => {
+    if (authLoading) {
+      logger.dev('[ChatWidget] ⏳ Vérification de l\'authentification en cours...');
+      return;
+    }
+    
+    if (!user) {
+      logger.warn('[ChatWidget] ⚠️ Utilisateur non authentifié, impossible de traiter les tool calls');
+      await addMessage({
+        role: 'assistant',
+        content: '⚠️ Vous devez être connecté pour utiliser cette fonctionnalité.',
+        timestamp: new Date().toISOString()
+      }, { persist: false });
+      return;
+    }
+
+    logger.dev('[ChatWidget] 🔧 Tool calls détectés:', { toolCalls, toolName });
+    logger.tool('[ChatWidget] 🔧 Tool calls détectés:', { toolCalls, toolName });
+    
+    addToolCalls(toolCalls);
+    
+    toolFlowActiveRef.current = true;
+      
+    await addMessage({
+      role: 'assistant',
+      content: null,
+      tool_calls: toolCalls,
+      timestamp: new Date().toISOString()
+    });
+    
+    // Scroll immédiat après les tool calls
+    scrollToBottom(true);
+    setTimeout(() => scrollToBottom(true), 100);
+  }, [addMessage, scrollToBottom, user, authLoading, addToolCalls]);
+
+  const handleToolResult = useCallback(async (toolName: string, result: any, success: boolean, toolCallId?: string) => {
+    if (authLoading) {
+      logger.dev('[ChatWidget] ⏳ Vérification de l\'authentification en cours...');
+      return;
+    }
+    
+    if (!user) {
+      logger.warn('[ChatWidget] ⚠️ Utilisateur non authentifié, impossible de traiter le tool result');
+      await addMessage({
+        role: 'assistant',
+        content: '⚠️ Vous devez être connecté pour utiliser cette fonctionnalité.',
+        timestamp: new Date().toISOString()
+        }, { persist: false });
+      return;
+    }
+
+    logger.dev('[ChatWidget] ✅ Tool result reçu:', { toolName, success });
+    logger.tool('[ChatWidget] ✅ Tool result reçu:', { toolName, success });
+    
+    const toolResult = {
+      tool_call_id: toolCallId || `call_${Date.now()}`,
+      name: toolName || 'unknown_tool',
+      content: typeof result === 'string' ? result : JSON.stringify(result),
+      success: !!success
+    };
+    
+    addToolResult(toolResult);
+      
+    const normalizeResult = (res: unknown, ok: boolean): string => {
+      try {
+        if (typeof res === 'string') {
+          try {
+            const parsed = JSON.parse(res);
+            if (parsed && typeof parsed === 'object' && !('success' in parsed)) {
+              return JSON.stringify({ success: !!ok, ...parsed });
+            }
+            return JSON.stringify(parsed);
+          } catch {
+            return JSON.stringify({ success: !!ok, message: res });
+          }
+        }
+        if (res && typeof res === 'object') {
+          const obj = res as Record<string, unknown>;
+          if (!('success' in obj)) {
+            return JSON.stringify({ success: !!ok, ...obj });
+          }
+          return JSON.stringify(obj);
+        }
+        return JSON.stringify({ success: !!ok, value: res });
+      } catch (e) {
+        return JSON.stringify({ success: !!ok, error: 'tool_result_serialization_error' });
+      }
+    };
+
+    const normalizedToolResult = {
+      tool_call_id: toolCallId || `call_${Date.now()}`,
+      name: toolName || 'unknown_tool',
+      content: normalizeResult(result, !!success),
+      success: !!success
+    };
+
+    try {
+      const toolResultMessage = {
+        role: 'tool' as const,
+        ...normalizedToolResult,
+        timestamp: new Date().toISOString()
+      };
+      await addMessage(toolResultMessage, { persist: true });
+    } catch (error) {
+      logger.error('[ChatWidget] ❌ Erreur lors du traitement du tool result:', error);
+      
+      if (error instanceof Error && error.message.includes('Authentification')) {
+        await addMessage({
+          role: 'assistant',
+          content: '⚠️ Erreur d\'authentification. Veuillez vous reconnecter pour continuer.',
+          timestamp: new Date().toISOString()
+        }, { persist: false });
+      } else {
+        await addMessage({
+          role: 'assistant',
+          content: '❌ Erreur lors du traitement du résultat de l\'outil.',
+          timestamp: new Date().toISOString()
+        }, { persist: false });
+      }
+    }
+    
+    // Scroll immédiat après les tool results
+    scrollToBottom(true);
+    setTimeout(() => scrollToBottom(true), 100);
+  }, [addMessage, scrollToBottom, user, authLoading, addToolResult]);
+
+  const handleToolExecutionComplete = useCallback(async (toolResults: any[]) => {
+    logger.dev('[ChatWidget] ✅ Exécution des tools terminée, attente de la réponse automatique de l\'API');
+    
+    if (toolResults && toolResults.length > 0) {
+      for (const result of toolResults) {
+        if (result.success) {
+          logger.dev(`[ChatWidget] ✅ Tool ${result.name} exécuté avec succès`);
+        } else {
+          logger.warn(`[ChatWidget] ⚠️ Tool ${result.name} a échoué:`, result.result?.error || 'Erreur inconnue');
+        }
+      }
+    }
   }, []);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
+  // 🎯 Hook de chat avec callbacks mémorisés
+  const { isProcessing, sendMessage } = useChatResponse({
+    onComplete: handleComplete,
+    onError: handleError,
+    onToolCalls: handleToolCalls,
+    onToolResult: handleToolResult,
+    onToolExecutionComplete: handleToolExecutionComplete
+  });
 
-  useEffect(() => {
-    scrollToBottom();
+  // 🎯 Messages triés
+  const sortedMessages = useMemo(() => {
+    if (!currentSession?.thread) return [];
+    return [...currentSession.thread].sort((a, b) => 
+      new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+    );
   }, [currentSession?.thread]);
 
-  useEffect(() => {
-    syncSessionsFromHook();
-  }, [syncSessionsFromHook]);
-
-  const [isOnAuthPage, setIsOnAuthPage] = useState(false);
-
-  // Vérifier si on est sur une page d'auth
-  useEffect(() => {
-    const checkIfOnAuthPage = () => {
-      const pathname = window.location.pathname;
-      setIsOnAuthPage(
-        pathname.includes('/auth') || 
-        pathname.includes('/login') || 
-        pathname.includes('/signup')
-      );
-    };
+  // 🎯 Gestion des messages
+  const handleSendMessage = useCallback(async (content: string) => {
+    if (!content.trim() || loading) return;
     
-    checkIfOnAuthPage();
-    window.addEventListener('popstate', checkIfOnAuthPage);
+    // Vérifier l'authentification avant d'envoyer le message
+    if (!user) {
+      logger.warn('[ChatWidget] ⚠️ Utilisateur non authentifié, impossible d\'envoyer le message');
+      return;
+    }
     
-    return () => {
-      window.removeEventListener('popstate', checkIfOnAuthPage);
-    };
-  }, []);
-
-  // Masquer le widget si on est sur la page chat ou sur les pages d'auth
-  if (isOnChatPage || isOnAuthPage) {
-    return null;
-  }
-
-  const handleSendMessage = async (message: string) => {
-    if (!message.trim() || !currentSession) return;
-
-    const userMessage: ChatMessage = {
-      id: `user-${Date.now()}`,
-      role: 'user',
-      content: message,
-      timestamp: new Date().toISOString()
-    };
-
-    // Ajouter le message utilisateur
-    await addMessage(userMessage);
-
-    // Appeler l'API Synesia
+    setLoading(true);
+    
     try {
-      setLoading(true);
+      if (!currentSession) {
+        // Vérifier l'authentification avant de créer une session
+        if (!user) {
+          logger.warn('[ChatWidget] ⚠️ Utilisateur non authentifié, impossible de créer une session');
+          setLoading(false);
+          return;
+        }
+        
+        await createSession();
+        return;
+      }
+
+      // Message utilisateur optimiste
+      const userMessage = {
+        role: 'user' as const,
+        content: content.trim(),
+        timestamp: new Date().toISOString()
+      };
+      await addMessage(userMessage);
       
-      // Récupérer le token de session
+      // Scroll immédiat après le message utilisateur
+      scrollToBottom(true);
+      setTimeout(() => scrollToBottom(true), 100);
+
+      // Token d'authentification
       const { data: { session } } = await supabase.auth.getSession();
       const token = session?.access_token;
       
-      if (!token) {
-        throw new Error('Token d\'authentification manquant');
-      }
-      
-      const response = await fetch('/api/chat/synesia', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          message: message,
-          messages: currentSession.thread
-        }),
-      });
+      if (!token) throw new Error('Token d\'authentification manquant');
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(`Erreur API: ${response.status} - ${errorData.error || 'Erreur inconnue'}`);
-      }
-
-      const data = await response.json();
-      
-      const assistantMessage: ChatMessage = {
-        id: `assistant-${Date.now()}`,
-        role: 'assistant',
-        content: data.response || 'Désolé, je n\'ai pas pu traiter votre demande.',
-        timestamp: new Date().toISOString()
+      // Contexte optimisé
+      const contextWithSessionId = {
+        sessionId: currentSession.id,
+        agentId: selectedAgent?.id
       };
+
+      // Log optimisé
+      if (process.env.NODE_ENV === 'development') {
+        logger.dev('[ChatWidget] 🎯 Contexte:', {
+          sessionId: currentSession.id,
+          agentId: selectedAgent?.id,
+          agentName: selectedAgent?.name,
+          agentModel: selectedAgent?.model
+        });
+      }
+
+      // Historique limité
+      const limitedHistory = currentSession.thread.slice(-(currentSession.history_limit || 10));
       
-      await addMessage(assistantMessage);
+      await sendMessage(content.trim(), currentSession.id, contextWithSessionId, limitedHistory, token);
+
     } catch (error) {
-      logger.error('Erreur lors de l\'appel à Synesia:', error);
-      
-      const errorMessage: ChatMessage = {
-        id: `assistant-${Date.now()}`,
+      logger.error('Erreur lors de l\'appel LLM:', error);
+      await addMessage({
         role: 'assistant',
         content: 'Désolé, une erreur est survenue lors du traitement de votre message. Veuillez réessayer.',
         timestamp: new Date().toISOString()
-      };
-      
-      await addMessage(errorMessage);
+      });
     } finally {
       setLoading(false);
     }
+  }, [loading, currentSession, createSession, addMessage, selectedAgent, sendMessage, setLoading, user]);
+
+
+
+  // 🎯 Effets optimisés (même que ChatFullscreenV2)
+  useEffect(() => {
+    if (user && !authLoading) {
+      syncSessions();
+    }
+  }, [syncSessions, user, authLoading]);
+
+  // Restaurer l'agent sélectionné au montage
+  useEffect(() => {
+    if (!user || authLoading) return;
+    
+    const restoreSelectedAgent = async () => {
+      if (selectedAgentId && !selectedAgent) {
+        try {
+          logger.dev('[ChatWidget] 🔄 Restauration agent avec ID:', selectedAgentId);
+          const { data: agent, error } = await supabase
+            .from('agents')
+            .select('*')
+            .eq('id', selectedAgentId)
+            .single();
+            
+          if (agent) {
+            setSelectedAgent(agent);
+            logger.dev('[ChatWidget] ✅ Agent restauré:', agent.name);
+          } else {
+            logger.dev('[ChatWidget] ⚠️ Agent non trouvé, suppression de l\'ID');
+            setSelectedAgentId(null);
+          }
+        } catch (err) {
+          logger.error('[ChatWidget] ❌ Erreur restauration agent:', err);
+        }
+      }
+    };
+    
+    restoreSelectedAgent();
+  }, [selectedAgentId, selectedAgent, setSelectedAgent, setSelectedAgentId, user, authLoading]);
+
+  // Charger les agents si pas encore chargés
+  useEffect(() => {
+    if (user && !authLoading && agents.length === 0 && !agentsLoading) {
+      // Charger les agents via le hook useAgents
+      // Le hook se charge automatiquement, mais on peut forcer le rechargement si nécessaire
+    }
+  }, [user, authLoading, agents.length, agentsLoading]);
+
+  // Scroll initial après chargement des sessions
+  useEffect(() => {
+    if (user && !authLoading && sessions.length > 0 && currentSession?.thread && currentSession.thread.length > 0) {
+      const timer = setTimeout(() => scrollToBottom(true), 500);
+      return () => clearTimeout(timer);
+    }
+  }, [sessions.length, currentSession?.thread, scrollToBottom, user, authLoading]);
+
+  // S'assurer que la session la plus récente est sélectionnée
+  useEffect(() => {
+    if (user && !authLoading && sessions.length > 0 && !currentSession) {
+      setCurrentSession(sessions[0]);
+    }
+  }, [sessions, currentSession, setCurrentSession, user, authLoading]);
+
+  // Scroll automatique pour nouveaux messages
+  useEffect(() => {
+    if (user && !authLoading && currentSession?.thread && currentSession.thread.length > 0) {
+      const timer = setTimeout(() => scrollToBottom(true), 100);
+      return () => clearTimeout(timer);
+    }
+  }, [currentSession?.thread, scrollToBottom, user, authLoading]);
+
+  // Scroll intelligent pendant le traitement
+  useEffect(() => {
+    if (user && !authLoading && isProcessing && isNearBottom) {
+      scrollToBottom();
+    }
+  }, [isProcessing, isNearBottom, scrollToBottom, user, authLoading]);
+
+  // Scroll automatique après ajout de message (plus agressif pour le widget)
+  useEffect(() => {
+    if (user && !authLoading && currentSession?.thread && currentSession.thread.length > 0) {
+      // Scroll immédiat pour les nouveaux messages
+      scrollToBottom(true);
+      
+      // Scroll supplémentaire après un délai pour s'assurer que tout est visible
+      const timer = setTimeout(() => scrollToBottom(true), 100);
+      return () => clearTimeout(timer);
+    }
+  }, [currentSession?.thread?.length, scrollToBottom, user, authLoading]);
+
+  // Scroll automatique après tool calls (plus agressif pour le widget)
+  useEffect(() => {
+    if (toolCalls.length > 0) {
+      // Scroll immédiat
+      scrollToBottom(true);
+      
+      // Scroll supplémentaire après un délai
+      const timer = setTimeout(() => scrollToBottom(true), 100);
+      return () => clearTimeout(timer);
+    }
+  }, [toolCalls.length, scrollToBottom]);
+
+  // Scroll automatique après tool results (plus agressif pour le widget)
+  useEffect(() => {
+    if (toolResults.length > 0) {
+      // Scroll immédiat
+      scrollToBottom(true);
+      
+      // Scroll supplémentaire après un délai
+      const timer = setTimeout(() => scrollToBottom(true), 100);
+      return () => clearTimeout(timer);
+    }
+  }, [toolResults.length, scrollToBottom]);
+
+  // Synchroniser avec la prop isOpen
+  useEffect(() => {
+    setWidgetOpen(isOpen);
+    
+    // Scroll automatique quand le widget s'ouvre
+    if (isOpen && currentSession?.thread && currentSession.thread.length > 0) {
+      // Scroll immédiat
+      scrollToBottom(true);
+      // Scroll supplémentaire après un délai
+      setTimeout(() => scrollToBottom(true), 100);
+      // Scroll final pour s'assurer que tout est visible
+      setTimeout(() => scrollToBottom(true), 300);
+    }
+  }, [isOpen, currentSession?.thread, scrollToBottom]);
+
+  const handleToggle = () => {
+    const newState = !widgetOpen;
+    setWidgetOpen(newState);
+    onToggle?.(newState);
   };
 
-  const handleCreateNewSession = async () => {
-    await createSession();
+  const handleClose = () => {
+    setWidgetOpen(false);
+    onToggle?.(false);
   };
 
-  const handleSessionChange = (sessionId: string) => {
-    const session = sessions.find(s => s.id === sessionId);
-    if (session) {
-      setCurrentSession(session);
-      logger.dev('[Chat Widget] ✅ Session changée vers:', session.name);
+  const handleExpand = () => {
+    onExpand?.();
+  };
+
+  const handleMinimize = () => {
+    const newState = !isMinimized;
+    setIsMinimized(newState);
+    
+    // Scroll automatique quand le widget est déminimisé
+    if (!newState && currentSession?.thread && currentSession.thread.length > 0) {
+      setTimeout(() => scrollToBottom(true), 100);
     }
   };
 
-  const messages = currentSession?.thread || [];
-  const historySummary = currentSession ? 
-    `Historique: ${messages.length} messages (limite: ${currentSession.history_limit || 10})` : '';
+  // Déterminer les classes CSS selon la position et la taille
+  const getPositionClasses = () => {
+    const positionClasses = {
+      'bottom-right': 'chat-widget-bottom-right',
+      'bottom-left': 'chat-widget-bottom-left',
+      'top-right': 'chat-widget-top-right',
+      'top-left': 'chat-widget-top-left'
+    };
+    return positionClasses[position] || 'chat-widget-bottom-right';
+  };
+
+  const getSizeClasses = () => {
+    const sizeClasses = {
+      small: 'chat-widget-small',
+      medium: 'chat-widget-medium',
+      large: 'chat-widget-large'
+    };
+    return sizeClasses[size] || 'chat-widget-medium';
+  };
+
+  // 🎯 Affichage de l'état d'authentification (même que ChatFullscreenV2)
+  const renderAuthStatus = () => {
+    if (authLoading) {
+      return (
+        <div className="flex items-center justify-center p-4 text-sm text-gray-500">
+          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-400 mr-2"></div>
+          Vérification de l'authentification...
+        </div>
+      );
+    }
+    
+    if (!user) {
+      return (
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mx-4 mb-4">
+          <div className="flex items-center">
+            <div className="flex-shrink-0">
+              <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <h3 className="text-sm font-medium text-yellow-800">
+                Authentification requise
+              </h3>
+              <div className="mt-2 text-sm text-yellow-700">
+                <p>Vous devez être connecté pour utiliser le chat et les outils.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+    
+    return null;
+  };
+
+  // Si le widget est fermé, afficher seulement le bouton flottant
+  if (!widgetOpen) {
+    return createPortal(
+      <button
+        className="chat-widget-floating-btn"
+        onClick={handleToggle}
+        aria-label="Ouvrir le chat"
+      >
+        <svg
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+          />
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M12 8v8m-4-4h8"
+            opacity="0.8"
+          />
+        </svg>
+      </button>,
+      document.body
+    );
+  }
 
   return (
     <>
-      {/* Bouton flottant */}
-      <button
-        onClick={toggleWidget}
-        className="chat-widget-button"
-        aria-label="Ouvrir le chat"
+      {/* Widget du chat */}
+      <div
+        className={`chat-fullscreen-container chat-widget-mode ${getPositionClasses()} ${getSizeClasses()} ${
+          isMinimized ? 'chat-widget-minimized' : ''
+        }`}
       >
-        <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
-          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-        </svg>
-      </button>
-
-      {/* Bouton de sidebar flottant en haut à gauche */}
-      <button
-        onClick={() => setSidebarOpen(true)}
-        className="chat-sidebar-floating-button"
-        aria-label="Ouvrir les conversations"
-        title="Conversations"
-      >
-        <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
-          <path d="M3 3h18v18H3zM9 9h6M9 13h6M9 17h6"></path>
-        </svg>
-      </button>
-
-      {/* Widget chat */}
-      {isWidgetOpen && (
-        <div className="chat-widget-container">
-          <div className="chat-widget-header">
-            <div className="chat-title">
-              <img 
-                src="/logo-scrivia-white.png" 
-                alt="Scrivia" 
-                className="chat-logo"
+        {isMinimized ? (
+          <button
+            className="chat-widget-toggle"
+            onClick={handleMinimize}
+            aria-label="Agrandir le chat"
+          >
+            <svg
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
               />
-            </div>
-            <div className="chat-widget-actions">
-              <button
-                onClick={() => setSidebarOpen(true)}
-                className="chat-sidebar-toggle"
-                aria-label="Ouvrir les conversations"
-                title="Conversations"
-              >
-                <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
-                  <path d="M3 3h18v18H3zM9 9h6M9 13h6M9 17h6"></path>
-                </svg>
-              </button>
-              <button
-                onClick={openFullscreen}
-                className="chat-widget-expand"
-                aria-label="Agrandir le chat"
-                title="Passer en plein écran"
-              >
-                <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
-                  <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
-                </svg>
-              </button>
-              <button
-                onClick={closeWidget}
-                className="chat-widget-close"
-                aria-label="Fermer le chat"
-              >
-                <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
-                  <line x1="18" y1="6" x2="6" y2="18"></line>
-                  <line x1="6" y1="6" x2="18" y2="18"></line>
-                </svg>
-              </button>
-            </div>
-          </div>
-
-          {/* Sélecteur de sessions */}
-          {sessions.length > 0 && (
-            <div className="chat-sessions-selector">
-              <select 
-                value={currentSession?.id || ''} 
-                onChange={(e) => handleSessionChange(e.target.value)}
-                className="session-select"
-              >
-                {sessions.map(session => (
-                  <option key={session.id} value={session.id}>
-                    {session.name} {session.updated_at ? `(${new Date(session.updated_at).toLocaleDateString()})` : ''}
-                  </option>
-                ))}
-              </select>
-              <button 
-                onClick={handleCreateNewSession}
-                className="new-session-btn"
-                title="Créer une nouvelle conversation"
-              >
-                +
-              </button>
-            </div>
-          )}
-
-          {/* Informations sur l'historique */}
-          {currentSession && (
-            <div className="chat-history-info">
-              <span className="history-summary">{historySummary}</span>
-              <span className="context-complexity">Synesia AI</span>
-            </div>
-          )}
-
-          {/* Messages d'erreur */}
-          {error && (
-            <div className="chat-error">
-              {error}
-              <button onClick={() => setError(null)} className="error-close">×</button>
-            </div>
-          )}
-
-          <div className="chat-content">
-            <div className="chat-messages-container" role="log" aria-live="polite" aria-label="Messages du chat">
-              <div className="chat-message-list">
-                {messages
-                  .slice()
-                  .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
-                  .map((msg: ChatMessage) => (
-                    <MessageContainer
-                      key={msg.id || `${msg.role}-${msg.timestamp}-${(msg as any).tool_call_id || ''}`}
-                      message={msg}
-                      role={msg.role as 'user' | 'assistant'}
-                    >
-                      <div className={`chat-message-bubble chat-message-bubble-${msg.role}`}>
-                        {msg.role === 'assistant' ? (
-                          <EnhancedMarkdownMessage content={msg.content || ''} />
-                        ) : (
-                          (msg.content || '')
-                        )}
-                      </div>
-                    </MessageContainer>
-                  ))}
-              </div>
-              {loading && (
-                <div className="loading-bubble">
-                  <div className="typing-dot"></div>
-                  <div className="typing-dot"></div>
-                  <div className="typing-dot"></div>
+            </svg>
+          </button>
+                 ) : (
+           <>
+             {/* Header du widget */}
+             <div className="chat-header" style={{borderRadius: isMinimized ? '50%' : undefined}}>
+              <div className="chat-header-left">
+                {selectedAgent?.profile_picture ? (
+                  <img
+                    src={selectedAgent.profile_picture}
+                    alt={selectedAgent.name}
+                    className="chat-agent-avatar"
+                  />
+                ) : (
+                  <div className="chat-agent-avatar-placeholder">
+                    {selectedAgent?.name?.charAt(0) || 'A'}
+                  </div>
+                )}
+                <div className="chat-agent-info">
+                  <span className="chat-agent-name">
+                    {selectedAgent?.name || 'Assistant'}
+                  </span>
                 </div>
-              )}
-              <div ref={messagesEndRef} />
+              </div>
+              <div className="chat-actions">
+                <button
+                  className="chat-widget-close-btn"
+                  onClick={handleExpand}
+                  aria-label="Agrandir"
+                  title="Passer en mode plein écran"
+                >
+                  <svg
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"
+                    />
+                  </svg>
+                </button>
+                <button
+                  className="chat-widget-close-btn"
+                  onClick={handleMinimize}
+                  aria-label="Minimiser"
+                >
+                  <svg
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </svg>
+                </button>
+              </div>
             </div>
 
-            <ChatInput
-              onSend={handleSendMessage}
-              loading={loading}
-              textareaRef={textareaRef}
-            />
-          </div>
-        </div>
-      )}
-      
-      {/* Sidebar des conversations */}
-      <ChatSidebar 
-        isOpen={sidebarOpen}
-        onClose={() => setSidebarOpen(false)}
-        isDesktop={false} // Le widget est toujours considéré comme "mobile"
-      />
+            {/* Contenu du chat */}
+            <div className="chat-content">
+              {/* Messages */}
+              <div className="messages-container">
+                <div className="chat-message-list">
+                  {sortedMessages.map((message) => (
+                    <ChatMessageOptimized 
+                      key={message.id || `${message.role}-${message.timestamp}-${(message as any).tool_call_id || ''}`} 
+                      message={message}
+                      animateContent={message.role === 'assistant' && message.timestamp === new Date().toISOString().slice(0, -5) + 'Z'}
+                      isWaitingForResponse={loading || isProcessing}
+                    />
+                  ))}
+                </div>
+                <div ref={messagesEndRef} />
+              </div>
+
+              {/* Input */}
+              <div className="chat-input-container">
+                {renderAuthStatus()}
+                {error && (
+                  <div className="bg-red-50 border border-red-200 rounded-lg p-3 mx-4 mb-4">
+                    <div className="flex items-center">
+                      <div className="flex-shrink-0">
+                        <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                        </svg>
+                      </div>
+                      <div className="ml-3">
+                        <p className="text-sm text-red-800">{error}</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                <ChatInput 
+                  onSend={handleSendMessage} 
+                  loading={loading || isProcessing}
+                  textareaRef={textareaRef}
+                  disabled={!user || authLoading}
+                  placeholder={!user ? "Connectez-vous pour commencer..." : "Tapez votre message..."}
+                />
+              </div>
+            </div>
+          </>
+        )}
+      </div>
     </>
   );
 };
 
-export default ChatWidget;
+export default ChatWidget; 
