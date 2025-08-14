@@ -1,0 +1,390 @@
+/* ========================================
+   STREAMING LINE BY LINE DEMO - PAGE DE DÉMONSTRATION
+   ======================================== */
+
+.streaming-demo-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* ========================================
+   EN-TÊTE DE LA DÉMONSTRATION
+   ======================================== */
+
+.demo-header {
+  text-align: center;
+  margin-bottom: 32px;
+  padding: 24px;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(147, 51, 234, 0.1));
+  border-radius: 16px;
+  border: 1px solid rgba(59, 130, 246, 0.2);
+}
+
+.demo-header h1 {
+  margin: 0 0 12px 0;
+  font-size: 2.5rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #3b82f6, #9333ea);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.demo-header p {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+/* ========================================
+   CONTRÔLES DE LA DÉMONSTRATION
+   ======================================== */
+
+.demo-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  margin-bottom: 32px;
+  padding: 24px;
+  background: #ffffff;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.control-group {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.control-group label {
+  font-weight: 600;
+  color: #374151;
+  font-size: 0.95rem;
+}
+
+/* ========================================
+   BOUTONS DE SÉLECTION DE CONTENU
+   ======================================== */
+
+.demo-buttons {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.demo-buttons button {
+  padding: 8px 16px;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #6b7280;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.9rem;
+}
+
+.demo-buttons button:hover {
+  border-color: #3b82f6;
+  color: #3b82f6;
+  transform: translateY(-1px);
+}
+
+.demo-buttons button.active {
+  background: #3b82f6;
+  color: #ffffff;
+  border-color: #3b82f6;
+}
+
+/* ========================================
+   SLIDER DE DÉLAI
+   ======================================== */
+
+.delay-slider {
+  width: 100%;
+  height: 6px;
+  border-radius: 3px;
+  background: #e5e7eb;
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.delay-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #3b82f6;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  transition: all 0.2s ease;
+}
+
+.delay-slider::-webkit-slider-thumb:hover {
+  background: #2563eb;
+  transform: scale(1.1);
+}
+
+.delay-slider::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #3b82f6;
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* ========================================
+   BOUTONS D'ACTION
+   ======================================== */
+
+.control-group:last-child {
+  flex-direction: row;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.play-button,
+.reset-button {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.play-button {
+  background: #10b981;
+  color: #ffffff;
+}
+
+.play-button:hover:not(:disabled) {
+  background: #059669;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.play-button:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.reset-button {
+  background: #6b7280;
+  color: #ffffff;
+}
+
+.reset-button:hover {
+  background: #4b5563;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(107, 114, 128, 0.3);
+}
+
+/* ========================================
+   CONTENU DE LA DÉMONSTRATION
+   ======================================== */
+
+.demo-content {
+  margin-bottom: 32px;
+  padding: 24px;
+  background: #ffffff;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.demo-content h3 {
+  margin: 0 0 16px 0;
+  color: #374151;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.streaming-preview {
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 20px;
+  background: #f9fafb;
+  min-height: 200px;
+}
+
+.content-preview {
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 20px;
+  background: #f9fafb;
+  min-height: 200px;
+}
+
+.content-preview pre {
+  margin: 0;
+  white-space: pre-wrap;
+  font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, monospace;
+  font-size: 0.9rem;
+  color: #6b7280;
+  line-height: 1.5;
+}
+
+/* ========================================
+   INFORMATIONS DE LA DÉMONSTRATION
+   ======================================== */
+
+.demo-info {
+  padding: 20px;
+  background: #f8fafc;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+}
+
+.demo-info h4 {
+  margin: 0 0 16px 0;
+  color: #374151;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.demo-info ul {
+  margin: 0;
+  padding-left: 20px;
+  list-style: none;
+}
+
+.demo-info li {
+  margin-bottom: 8px;
+  color: #6b7280;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.demo-info li:last-child {
+  margin-bottom: 0;
+}
+
+.demo-info strong {
+  color: #374151;
+  font-weight: 600;
+}
+
+/* ========================================
+   STYLES SPÉCIAUX POUR LE STREAMING
+   ======================================== */
+
+.demo-streaming {
+  background: transparent;
+}
+
+.demo-streaming .streaming-line {
+  background: transparent;
+}
+
+/* ========================================
+   RESPONSIVE DESIGN
+   ======================================== */
+
+@media (max-width: 768px) {
+  .streaming-demo-container {
+    padding: 16px;
+  }
+  
+  .demo-header {
+    padding: 20px;
+    margin-bottom: 24px;
+  }
+  
+  .demo-header h1 {
+    font-size: 2rem;
+  }
+  
+  .demo-controls,
+  .demo-content {
+    padding: 20px;
+    margin-bottom: 24px;
+  }
+  
+  .control-group:last-child {
+    flex-direction: column;
+  }
+  
+  .demo-buttons {
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .demo-header h1 {
+    font-size: 1.75rem;
+  }
+  
+  .demo-header p {
+    font-size: 1rem;
+  }
+  
+  .demo-controls,
+  .demo-content {
+    padding: 16px;
+  }
+  
+  .demo-buttons button {
+    padding: 6px 12px;
+    font-size: 0.85rem;
+  }
+  
+  .play-button,
+  .reset-button {
+    padding: 10px 20px;
+    font-size: 0.9rem;
+  }
+}
+
+/* ========================================
+   ANIMATIONS ET TRANSITIONS
+   ======================================== */
+
+.streaming-demo-container * {
+  transition: all 0.2s ease;
+}
+
+.demo-controls,
+.demo-content,
+.demo-info {
+  transition: all 0.3s ease;
+}
+
+.demo-controls:hover,
+.demo-content:hover,
+.demo-info:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.1);
+}
+
+/* ========================================
+   THÈMES ET VARIABLES CSS
+   ======================================== */
+
+.streaming-demo-container {
+  --primary-color: #3b82f6;
+  --primary-hover: #2563eb;
+  --success-color: #10b981;
+  --success-hover: #059669;
+  --gray-100: #f3f4f6;
+  --gray-200: #e5e7eb;
+  --gray-300: #d1d5db;
+  --gray-500: #6b7280;
+  --gray-700: #374151;
+  --gray-900: #111827;
+} 

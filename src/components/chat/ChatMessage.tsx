@@ -1,12 +1,14 @@
 'use client';
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { ChatMessage as ChatMessageType } from '@/types/chat';
 import EnhancedMarkdownMessage from './EnhancedMarkdownMessage';
 import ReasoningMessage from './ReasoningMessage';
 import ToolCallMessage from './ToolCallMessage';
 import BubbleButtons from './BubbleButtons';
 import { useChatStore } from '@/store/useChatStore';
+import { useStreamingPreferences } from '@/hooks/useStreamingPreferences';
+import StreamingLineByLine from './StreamingLineByLine';
 
 interface ChatMessageProps {
   message: ChatMessageType;
@@ -23,6 +25,10 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
 }) => {
   const [displayedContent, setDisplayedContent] = useState('');
   const [isAnimating, setIsAnimating] = useState(false);
+  const [isStreamingComplete, setIsStreamingComplete] = useState(false);
+  
+  // Hook pour les préférences de streaming
+  const { preferences, getAdjustedDelay } = useStreamingPreferences();
   
   // Vérification de sécurité
   if (!message) {
@@ -41,9 +47,9 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
     return null;
   }
 
-  // Animation du contenu si demandé
+  // Animation du contenu si demandé (seulement si streaming désactivé)
   useEffect(() => {
-    if (animateContent && content && role === 'assistant') {
+    if (animateContent && content && role === 'assistant' && !preferences.enabled) {
       setIsAnimating(true);
       setDisplayedContent('');
       
@@ -61,10 +67,19 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
       }, 1000 / speed);
 
       return () => clearInterval(interval);
-    } else if (content) {
+    } else if (content && !preferences.enabled) {
       setDisplayedContent(content);
     }
-  }, [content, animateContent, role]);
+  }, [content, animateContent, role, preferences.enabled]);
+
+  // Gestion du streaming ligne par ligne
+  const handleStreamingComplete = () => {
+    setIsStreamingComplete(true);
+  };
+
+  // Déterminer si le streaming doit être utilisé
+  const shouldUseStreaming = preferences.enabled && role === 'assistant' && content && !isStreamingComplete;
+  const streamingDelay = getAdjustedDelay(content || '');
 
   const parseSuccessFromContent = (raw: string | null | undefined): boolean | undefined => {
     if (!raw) return undefined;
@@ -128,11 +143,22 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
           />
         )}
 
-        {/* Contenu markdown avec animation optionnelle */}
-        {displayedContent && (
+        {/* Contenu markdown avec streaming ligne par ligne ou animation optionnelle */}
+        {content && (
           <div className="chat-message-content">
-            <EnhancedMarkdownMessage content={displayedContent} />
-            {isAnimating && (
+            {shouldUseStreaming ? (
+              <StreamingLineByLine
+                content={content}
+                lineDelay={streamingDelay}
+                onComplete={handleStreamingComplete}
+                className="chat-streaming-content"
+              />
+            ) : (
+              <EnhancedMarkdownMessage content={content} />
+            )}
+            
+            {/* Curseur de frappe pour l'animation caractère par caractère (seulement si streaming désactivé) */}
+            {isAnimating && !shouldUseStreaming && (
               <motion.span
                 animate={{ opacity: [1, 0] }}
                 transition={{ duration: 0.8, repeat: Infinity }}

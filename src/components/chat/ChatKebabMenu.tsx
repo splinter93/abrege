@@ -2,6 +2,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useLLMStore } from '@/store/useLLMStore';
 import { useChatStore } from '@/store/useChatStore';
+import { useStreamingPreferences } from '@/hooks/useStreamingPreferences';
 import './ChatKebabMenu.css';
 import { simpleLogger as logger } from '@/utils/logger';
 
@@ -32,6 +33,9 @@ const ChatKebabMenu: React.FC<ChatKebabMenuProps> = ({
   // LLM Provider state
   const { currentProvider, availableProviders, setProvider } = useLLMStore();
   const { selectedAgent } = useChatStore();
+  
+  // Hook pour les préférences de streaming
+  const { preferences, toggleStreaming, setLineDelay, toggleAutoAdjust } = useStreamingPreferences();
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -124,6 +128,56 @@ const ChatKebabMenu: React.FC<ChatKebabMenuProps> = ({
               <path d="m9 12 2 2 4-4" />
             </svg>
             <span>Provider: {selectedAgent?.provider || 'Non défini'}</span>
+          </div>
+
+          {/* Section Streaming */}
+          <div className="kebab-section">
+            <div className="kebab-section-title">Streaming</div>
+            
+            {/* Toggle Streaming */}
+            <button
+              className="kebab-option"
+              onClick={toggleStreaming}
+            >
+              <div className="kebab-option-icon">
+                {preferences.enabled ? '⚡' : '⏸️'}
+              </div>
+              <span>Mode streaming</span>
+              <div className={`kebab-toggle ${preferences.enabled ? 'enabled' : 'disabled'}`}>
+                <div className="kebab-toggle-slider" />
+              </div>
+            </button>
+
+            {/* Vitesse de streaming (seulement si activé) */}
+            {preferences.enabled && (
+              <>
+                <div className="kebab-input-group">
+                  <label className="kebab-input-label">Vitesse d'affichage</label>
+                  <input
+                    type="range"
+                    min="200"
+                    max="1500"
+                    step="100"
+                    value={preferences.lineDelay}
+                    onChange={(e) => setLineDelay(Number(e.target.value))}
+                    className="kebab-range-slider"
+                  />
+                  <div className="kebab-range-value">{preferences.lineDelay}ms</div>
+                </div>
+
+                {/* Toggle Ajustement automatique */}
+                <button
+                  className="kebab-option"
+                  onClick={toggleAutoAdjust}
+                >
+                  <div className="kebab-option-icon">🎯</div>
+                  <span>Ajustement automatique</span>
+                  <div className={`kebab-toggle small ${preferences.autoAdjust ? 'enabled' : 'disabled'}`}>
+                    <div className="kebab-toggle-slider small" />
+                  </div>
+                </button>
+              </>
+            )}
           </div>
         </div>
       )}

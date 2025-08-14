@@ -21,7 +21,7 @@
 
 /* Assurer que les bulles sont bien visibles */
 .chat-message {
-  margin-bottom: 12px;
+  margin-bottom: 8px;
 }
 
 /* Styles spécifiques pour les messages d'erreur et de succès */

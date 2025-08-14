@@ -93,16 +93,11 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend, loading, textareaRef, dis
           </button>
           
           <button 
-            onClick={handleSend} 
-            disabled={!message.trim() || loading || disabled}
             className="chat-input-mic"
             aria-label="Microphone"
+            disabled={disabled}
           >
-            {loading ? (
-              <LoadingSpinner size={16} variant="spinner" className="loading-spinner" />
-            ) : (
-              <Mic size={16} />
-            )}
+            <Mic size={16} />
           </button>
           
           <button 

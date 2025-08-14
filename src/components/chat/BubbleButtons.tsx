@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import './BubbleButtons.css';
 import { FiCopy, FiCheck, FiEdit3 } from 'react-icons/fi';
 
@@ -39,29 +39,32 @@ const BubbleButtons: React.FC<BubbleButtonsProps> = ({
   };
 
   return (
-    <div className={`bubble-buttons ${className}`}>
-      <div className="bubble-buttons-container">
-        <button
-          className={`bubble-button copy-button ${copied ? 'copied' : ''}`}
-          onClick={handleCopy}
-          title={copied ? 'Copié !' : 'Copier le message'}
-          aria-label={copied ? 'Message copié' : 'Copier le message'}
-        >
-          {copied ? <FiCheck size={16} /> : <FiCopy size={16} />}
-        </button>
-
-        {showEditButton && (
+    <>
+      <div className={`bubble-buttons ${className}`}>
+        <div className="bubble-buttons-container">
           <button
-            className="bubble-button edit-button"
-            onClick={handleEdit}
-            title="Éditer le message"
-            aria-label="Éditer le message"
+            className={`bubble-button copy-button ${copied ? 'copied' : ''}`}
+            onClick={handleCopy}
+            title={copied ? 'Copié !' : 'Copier le message'}
+            aria-label={copied ? 'Message copié' : 'Copier le message'}
           >
-            <FiEdit3 size={16} />
+            {copied ? <FiCheck size={16} /> : <FiCopy size={16} />}
           </button>
-        )}
+
+          {showEditButton && (
+            <button
+              className="bubble-button edit-button"
+              onClick={handleEdit}
+              title="Éditer le message"
+              aria-label="Éditer le message"
+            >
+              <FiEdit3 size={16} />
+            </button>
+          )}
+
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 

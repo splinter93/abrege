@@ -12,6 +12,7 @@ interface ChatMessageProps {
   message: ChatMessageType;
   className?: string;
   animateContent?: boolean;
+  isWaitingForResponse?: boolean;
 }
 
 /**
@@ -21,7 +22,8 @@ interface ChatMessageProps {
 const ChatMessageOptimized: React.FC<ChatMessageProps> = memo(({
   message,
   className,
-  animateContent = false
+  animateContent = false,
+  isWaitingForResponse = false
 }) => {
   // Validation des props en développement
   const validatedProps = usePropsValidation(
@@ -168,6 +170,15 @@ const ChatMessageOptimized: React.FC<ChatMessageProps> = memo(({
         
         {reasoning && role === 'assistant' && (
           <ReasoningMessage reasoning={reasoning} />
+        )}
+        
+        {/* Indicateur de frappe quand on attend une réponse */}
+        {isWaitingForResponse && role === 'assistant' && !contentToDisplay && (
+          <div className="chat-typing-indicator">
+            <div className="chat-typing-dot"></div>
+            <div className="chat-typing-dot"></div>
+            <div className="chat-typing-dot"></div>
+          </div>
         )}
       </div>
     </MessageContainer>

@@ -631,6 +631,7 @@ const ChatFullscreenV2: React.FC = () => {
                   key={message.id || `${message.role}-${message.timestamp}-${(message as any).tool_call_id || ''}`} 
                   message={message}
                   animateContent={message.role === 'assistant' && message.timestamp === new Date().toISOString().slice(0, -5) + 'Z'}
+                  isWaitingForResponse={loading && message.role === 'assistant' && !message.content}
                 />
               ))}
             </div>
