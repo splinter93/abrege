@@ -55,14 +55,44 @@ const Header: React.FC = () => {
 
   const kebabMenuOptions = [
     {
-      id: 'fullWidth',
-      label: 'Pleine largeur',
-      icon: fullWidth ? <FiMinimize2 size={18} /> : <FiMaximize2 size={18} />,
-      onClick: () => { 
-        setFullWidth(!fullWidth); 
-        // Ne pas fermer le menu ici
+      id: 'fullScreen',
+      label: 'Quitter Plein écran',
+      icon: <FiMinimize2 size={18} />,
+      onClick: () => {
+        // Logique pour quitter le plein écran
+        console.log('Quitter plein écran');
       },
-      color: fullWidth ? '#10b981' : '#D4D4D4'
+      color: '#D4D4D4'
+    },
+    {
+      id: 'history',
+      label: 'Historique des messages réglable',
+      icon: <FiMoreHorizontal size={18} />,
+      onClick: () => {
+        // Logique pour l'historique des messages
+        console.log('Historique des messages');
+      },
+      color: '#D4D4D4'
+    },
+    {
+      id: 'model',
+      label: 'Modèle: Groq Mixtral 8x7B',
+      icon: <FiMoreHorizontal size={18} />,
+      onClick: () => {
+        // Logique pour afficher les détails du modèle
+        console.log('Détails du modèle');
+      },
+      color: '#D4D4D4'
+    },
+    {
+      id: 'provider',
+      label: 'Provider: Groq',
+      icon: <FiMoreHorizontal size={18} />,
+      onClick: () => {
+        // Logique pour afficher les détails du provider
+        console.log('Détails du provider');
+      },
+      color: '#D4D4D4'
     }
   ];
 
@@ -240,7 +270,6 @@ const Header: React.FC = () => {
                       {option.icon}
                       {option.label}
                     </div>
-                    {fullWidth && <FiCheck size={16} color="#10b981" />}
                   </button>
                   
                   {/* Séparateur élégant entre les options (sauf pour la dernière) */}

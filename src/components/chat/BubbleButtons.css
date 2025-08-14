@@ -7,6 +7,17 @@
   justify-content: flex-start;
   margin-top: 6px;
   margin-bottom: 0;
+  width: 60%;
+}
+
+.chat-message-user .bubble-buttons,
+.bubble-buttons-user {
+  justify-content: flex-end;
+}
+
+.chat-message-assistant .bubble-buttons {
+  justify-content: flex-start;
+  width: auto;
 }
 
 .bubble-buttons-container {

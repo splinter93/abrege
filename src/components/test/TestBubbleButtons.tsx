@@ -1,3 +1,5 @@
+'use client';
+
 import React from 'react';
 import BubbleButtons from '../chat/BubbleButtons';
 import '../chat/BubbleButtons.css';

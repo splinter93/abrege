@@ -160,15 +160,16 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
         )}
       </div>
       
-              {/* Boutons d'action sous la bulle (comme ChatGPT) */}
-        {role === 'assistant' && content && (
-          <BubbleButtons
-            content={content}
-            messageId={message.id}
-            onCopy={() => console.log('Message copié')}
-            onEdit={() => console.log('Édition du message')}
-          />
-        )}
+                    {/* Boutons d'action sous la bulle (comme ChatGPT) */}
+      {content && (
+        <BubbleButtons
+          content={content}
+          messageId={message.id}
+          onCopy={() => console.log('Message copié')}
+          onEdit={() => console.log('Édition du message')}
+          className={role === 'user' ? 'bubble-buttons-user' : ''}
+        />
+      )}
     </motion.div>
   );
 };
