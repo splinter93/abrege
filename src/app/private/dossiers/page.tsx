@@ -36,7 +36,7 @@ export default function DossiersPage() {
   return (
     <div className="dossiers-page-wrapper">
       <header className="dossiers-header-fixed">
-        <LogoScrivia width={100} />
+        <LogoScrivia width={130} />
       </header>
 
       <aside className="dossiers-sidebar-fixed">

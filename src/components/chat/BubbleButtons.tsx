@@ -7,6 +7,7 @@ interface BubbleButtonsProps {
   messageId?: string;
   onCopy?: () => void;
   onEdit?: () => void;
+  showEditButton?: boolean;
   className?: string;
 }
 
@@ -15,6 +16,7 @@ const BubbleButtons: React.FC<BubbleButtonsProps> = ({
   messageId,
   onCopy,
   onEdit,
+  showEditButton = true,
   className = ''
 }) => {
   const [copied, setCopied] = React.useState(false);
@@ -48,14 +50,16 @@ const BubbleButtons: React.FC<BubbleButtonsProps> = ({
           {copied ? <FiCheck size={16} /> : <FiCopy size={16} />}
         </button>
 
-        <button
-          className="bubble-button edit-button"
-          onClick={handleEdit}
-          title="Éditer le message"
-          aria-label="Éditer le message"
-        >
-          <FiEdit3 size={16} />
-        </button>
+        {showEditButton && (
+          <button
+            className="bubble-button edit-button"
+            onClick={handleEdit}
+            title="Éditer le message"
+            aria-label="Éditer le message"
+          >
+            <FiEdit3 size={16} />
+          </button>
+        )}
       </div>
     </div>
   );

@@ -238,6 +238,11 @@
     /* Optimisations de performance */
     will-change: transform;
     transform: translateZ(0);
+    /* Assurer que le contenu ne déborde pas */
+    width: 100%;
+    /* Protection contre le débordement */
+    overflow-x: auto;
+    overflow-y: visible;
   }
 
 /* ========================================

@@ -1,11 +1,10 @@
 'use client';
 import React, { useState, useEffect, memo } from 'react';
-import { motion } from 'framer-motion';
 import { ChatMessage as ChatMessageType } from '@/types/chat';
 import EnhancedMarkdownMessage from './EnhancedMarkdownMessage';
 import ReasoningMessage from './ReasoningMessage';
 import ToolCallMessage from './ToolCallMessage';
-import BubbleButtons from './BubbleButtons';
+import MessageContainer from './MessageContainer';
 import { useChatStore } from '@/store/useChatStore';
 import { usePropsValidation, ChatMessageOptimizedPropsSchema } from './validators';
 
@@ -128,13 +127,12 @@ const ChatMessageOptimized: React.FC<ChatMessageProps> = memo(({
     // Rendu conditionnel optimisé
   if (role === 'assistant' && validatedProps.message.tool_calls && validatedProps.message.tool_calls.length > 0) {
     return (
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
-        className={`chat-message assistant-message tool-calls-message ${className || ''}`}
+      <MessageContainer
+        message={validatedProps.message}
+        role={role as 'user' | 'assistant'}
+        className={`tool-calls-message ${className || ''}`}
       >
-        <div className="chat-message-bubble chat-message-bubble-assistant">
+        <div className={`chat-message-bubble chat-message-bubble-${role}`}>
           <div className="message-content">
             <ToolCallMessage 
               toolCalls={validatedProps.message.tool_calls}
@@ -145,28 +143,17 @@ const ChatMessageOptimized: React.FC<ChatMessageProps> = memo(({
           {reasoning && (
             <ReasoningMessage reasoning={reasoning} />
           )}
-          
-
         </div>
-        
-        {/* Boutons d'action sous la bulle */}
-        <BubbleButtons
-          content={JSON.stringify(validatedProps.message.tool_calls, null, 2)}
-          messageId={validatedProps.message.id}
-          onCopy={() => console.log('Tool calls copiés')}
-          onEdit={() => console.log('Édition des tool calls')}
-        />
-      </motion.div>
+      </MessageContainer>
     );
   }
 
   // Message normal
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-      className={`chat-message ${role}-message ${validatedProps.className || ''}`}
+    <MessageContainer
+      message={validatedProps.message}
+      role={role as 'user' | 'assistant'}
+      className={validatedProps.className || ''}
     >
       <div className={`chat-message-bubble chat-message-bubble-${role}`}>
         <div className="message-content">
@@ -182,21 +169,8 @@ const ChatMessageOptimized: React.FC<ChatMessageProps> = memo(({
         {reasoning && role === 'assistant' && (
           <ReasoningMessage reasoning={reasoning} />
         )}
-        
-
       </div>
-      
-      {/* Boutons d'action sous la bulle */}
-      {content && (
-        <BubbleButtons
-          content={content}
-          messageId={validatedProps.message.id}
-          onCopy={() => console.log('Message copié')}
-          onEdit={() => console.log('Édition du message')}
-          className={role === 'user' ? 'bubble-buttons-user' : ''}
-        />
-      )}
-    </motion.div>
+    </MessageContainer>
   );
 });
 

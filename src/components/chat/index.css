@@ -11,6 +11,7 @@
 @import './ChatSidebar.css';
 @import './ChatInput.css';
 @import './ChatMessage.css';
+@import './MessageContainer.css';
 @import './ChatMarkdown.css';
 @import './MermaidStyles.css';
 
@@ -20,7 +21,7 @@
 
 /* Assurer que les bulles sont bien visibles */
 .chat-message {
-  margin-bottom: 24px;
+  margin-bottom: 12px;
 }
 
 /* Styles spécifiques pour les messages d'erreur et de succès */

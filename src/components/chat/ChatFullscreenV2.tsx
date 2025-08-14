@@ -564,7 +564,7 @@ const ChatFullscreenV2: React.FC = () => {
         <div className="chat-header-left">
           <div className="chat-logo">
             <Link href="/" className="chat-logo-link" aria-label="Aller à l'accueil">
-              <img src="/logo_scrivia_white.png" alt="Scrivia" className="chat-logo-img" />
+                              <img src="/logo-scrivia-white.png" alt="Scrivia" className="chat-logo-img" />
             </Link>
           </div>
           <div className="chat-session-info" />

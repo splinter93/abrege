@@ -1,0 +1,156 @@
+/* ========================================
+   MESSAGE CONTAINER - STRUCTURE ORGANISÉE DES MESSAGES
+   ======================================== */
+
+.chat-message-container {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0;
+  margin-bottom: 12px;
+  position: relative;
+  width: 100%;
+}
+
+/* ========================================
+   ALIGNEMENT PAR RÔLE
+   ======================================== */
+
+.chat-message-container-user {
+  align-items: flex-end;
+  /* Assurer que le container ne déborde pas */
+  max-width: 100%;
+  /* Protection contre le débordement */
+  overflow: visible;
+  position: relative;
+}
+
+.chat-message-container-assistant {
+  align-items: flex-start;
+  margin-right: 60px;
+}
+
+/* ========================================
+   WRAPPER PRINCIPAL DU CONTENU
+   ======================================== */
+
+.chat-message-content-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  width: 100%;
+  max-width: 100%;
+}
+
+.chat-message-container-user .chat-message-content-wrapper {
+  align-items: flex-end;
+}
+
+.chat-message-container-assistant .chat-message-content-wrapper {
+  align-items: flex-start;
+}
+
+/* ========================================
+   WRAPPER DE LA BULLE
+   ======================================== */
+
+.chat-message-bubble-wrapper {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ========================================
+   WRAPPER DES ACTIONS (BOUTONS)
+   ======================================== */
+
+.chat-message-actions-wrapper {
+  display: flex;
+  justify-content: flex-start;
+  width: 100%;
+  padding-left: 0;
+  margin-top: 2px;
+}
+
+.chat-message-container-user .chat-message-actions-wrapper {
+  justify-content: flex-end;
+  padding-right: 0;
+}
+
+.chat-message-container-assistant .chat-message-actions-wrapper {
+  justify-content: flex-start;
+  padding-left: 0;
+}
+
+/* ========================================
+   RESPONSIVE DESIGN
+   ======================================== */
+
+@media (max-width: 768px) {
+  .chat-message-container {
+    margin-bottom: 10px;
+  }
+  
+  .chat-message-container-user {
+    margin-left: 40px;
+  }
+  
+  .chat-message-container-assistant {
+    margin-right: 40px;
+  }
+  
+  .chat-message-actions-wrapper {
+    margin-top: 2px;
+  }
+}
+
+@media (max-width: 480px) {
+  .chat-message-container {
+    margin-bottom: 8px;
+  }
+  
+  .chat-message-container-user {
+    margin-left: 20px;
+  }
+  
+  .chat-message-container-assistant {
+    margin-right: 20px;
+  }
+  
+  .chat-message-actions-wrapper {
+    margin-top: 1px;
+  }
+}
+
+/* ========================================
+   ANIMATIONS
+   ======================================== */
+
+.chat-message-content-wrapper {
+  animation: contentSlideIn 0.3s ease-out;
+}
+
+@keyframes contentSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ========================================
+   ACCESSIBILITÉ
+   ======================================== */
+
+.chat-message-container {
+  role: "article";
+  aria-label: "Message de l'utilisateur";
+}
+
+.chat-message-container-assistant {
+  aria-label: "Message de l'assistant";
+} 

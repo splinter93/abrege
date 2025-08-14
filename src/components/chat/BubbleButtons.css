@@ -5,14 +5,25 @@
 .bubble-buttons {
   display: flex;
   justify-content: flex-start;
-  margin-top: 6px;
+  margin-top: 2px;
   margin-bottom: 0;
   width: 60%;
+  opacity: 0;
+  transition: opacity var(--chat-transition-normal);
 }
 
 .chat-message-user .bubble-buttons,
 .bubble-buttons-user {
   justify-content: flex-end;
+}
+
+/* ========================================
+   AFFICHAGE AU HOVER
+   ======================================== */
+
+.chat-message-container:hover .bubble-buttons,
+.chat-message:hover .bubble-buttons {
+  opacity: 1;
 }
 
 .chat-message-assistant .bubble-buttons {
@@ -22,7 +33,7 @@
 
 .bubble-buttons-container {
   display: flex;
-  gap: 6px;
+  gap: 3px;
   align-items: center;
 }
 
@@ -34,8 +45,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 24px;
-  height: 24px;
+  width: 18px;
+  height: 18px;
   background: transparent;
   color: var(--chat-text-secondary);
   border: none;
@@ -83,22 +94,7 @@
 
 @media (max-width: 768px) {
   .bubble-buttons {
-    margin-top: 4px;
-  }
-  
-  .bubble-buttons-container {
-    gap: 6px;
-  }
-  
-  .bubble-button {
-    width: 22px;
-    height: 22px;
-  }
-}
-
-@media (max-width: 480px) {
-  .bubble-buttons {
-    margin-top: 4px;
+    margin-top: 2px;
   }
   
   .bubble-buttons-container {
@@ -106,8 +102,23 @@
   }
   
   .bubble-button {
-    width: 20px;
-    height: 20px;
+    width: 16px;
+    height: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .bubble-buttons {
+    margin-top: 1px;
+  }
+  
+  .bubble-buttons-container {
+    gap: 4px;
+  }
+  
+  .bubble-button {
+    width: 16px;
+    height: 16px;
   }
 }
 
@@ -116,18 +127,7 @@
    ======================================== */
 
 .bubble-buttons {
-  animation: buttonsSlideIn 0.2s ease-out;
-}
-
-@keyframes buttonsSlideIn {
-  from {
-    opacity: 0;
-    transform: translateY(4px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  /* Animation supprimée car les boutons sont cachés par défaut */
 }
 
 /* ========================================
@@ -136,12 +136,12 @@
 
 .bubble-button:focus {
   outline: none;
-  box-shadow: 0 0 0 2px var(--chat-accent-primary);
+  box-shadow: none;
 }
 
 .bubble-button:focus-visible {
-  outline: 2px solid var(--chat-accent-primary);
-  outline-offset: 2px;
+  outline: none;
+  box-shadow: none;
 }
 
 /* ========================================

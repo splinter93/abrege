@@ -10,6 +10,7 @@ import ChatInput from './ChatInput';
 import EnhancedMarkdownMessage from './EnhancedMarkdownMessage';
 import ChatSidebar from './ChatSidebar';
 import ReasoningMessage from './ReasoningMessage';
+import MessageContainer from './MessageContainer';
 import './index.css';
 import './ChatWidget.css';
 import './ReasoningMessage.css';
@@ -206,7 +207,7 @@ const ChatWidget: React.FC = () => {
           <div className="chat-widget-header">
             <div className="chat-title">
               <img 
-                src="/logo scrivia white.png" 
+                src="/logo-scrivia-white.png" 
                 alt="Scrivia" 
                 className="chat-logo"
               />
@@ -292,11 +293,10 @@ const ChatWidget: React.FC = () => {
                   .slice()
                   .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
                   .map((msg: ChatMessage) => (
-                    <div 
+                    <MessageContainer
                       key={msg.id || `${msg.role}-${msg.timestamp}-${(msg as any).tool_call_id || ''}`}
-                      className={`chat-message chat-message-${msg.role}`}
-                      role="article"
-                      aria-label={`Message ${msg.role === 'user' ? 'utilisateur' : 'assistant'}`}
+                      message={msg}
+                      role={msg.role as 'user' | 'assistant'}
                     >
                       <div className={`chat-message-bubble chat-message-bubble-${msg.role}`}>
                         {msg.role === 'assistant' ? (
@@ -305,7 +305,7 @@ const ChatWidget: React.FC = () => {
                           (msg.content || '')
                         )}
                       </div>
-                    </div>
+                    </MessageContainer>
                   ))}
               </div>
               {loading && (

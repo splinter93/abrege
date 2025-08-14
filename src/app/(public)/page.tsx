@@ -81,7 +81,7 @@ export default function HomePage() {
         textAlign: 'center'
       }}>
         <div style={{ marginBottom: 32 }}>
-          <LogoScrivia width={200} />
+          <LogoScrivia width={250} />
         </div>
         <h1 style={{ fontSize: 36, lineHeight: 1.2, margin: '0 0 24px 0' }}>
           Scrivia

@@ -16,7 +16,7 @@ const EditorHeader: React.FC<EditorHeaderProps> = ({ headerImageUrl, children, r
     <header className="editor-header" role="banner" aria-label="En-tête de l'éditeur">
       {/* Logo gauche → home */}
       <Link href="/" className="editor-header-logo" aria-label="Aller à l’accueil">
-        <img src="/logo scrivia white.png" alt="Scrivia" width={90} height={25} />
+        <img src="/logo-scrivia-white.png" alt="Scrivia" width={120} height={33} />
       </Link>
       {headerImageUrl && (
         <img
