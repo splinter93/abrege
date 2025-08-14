@@ -8,11 +8,13 @@ import { useChatResponse } from '@/hooks/useChatResponse';
 import { useChatScroll } from '@/hooks/useChatScroll';
 // import { useAtomicToolCalls } from '@/hooks/useAtomicToolCalls'; // Fichier supprimé
 import { useAuth } from '@/hooks/useAuth';
+import { useToolCallDebugger } from '@/hooks/useToolCallDebugger';
 import { supabase } from '@/supabaseClient';
 import ChatInput from './ChatInput';
 import ChatMessageOptimized from './ChatMessageOptimized';
 import ChatKebabMenu from './ChatKebabMenu';
 import ChatSidebar from './ChatSidebar';
+import ToolCallDebugger from './ToolCallDebugger';
 import { simpleLogger as logger } from '@/utils/logger';
 
 import './index.css';
@@ -59,6 +61,18 @@ const ChatFullscreenV2: React.FC = () => {
     scrollThreshold: 150,
     scrollDelay: 100
   });
+
+  // 🎯 Hook pour le debugger des tool calls
+  const {
+    toolCalls,
+    toolResults,
+    isDebuggerVisible,
+    addToolCalls,
+    addToolResult,
+    clearToolCalls,
+    toggleDebugger,
+    hideDebugger
+  } = useToolCallDebugger();
 
   // 🎯 Hook pour les tool calls atomiques
   // const { addToolResult, isProcessing: isProcessingToolCalls } = useAtomicToolCalls(); // Hook supprimé
@@ -129,6 +143,11 @@ const ChatFullscreenV2: React.FC = () => {
     }
 
     logger.dev('[ChatFullscreenV2] 🔧 Tool calls détectés:', { toolCalls, toolName });
+    logger.tool('[ChatFullscreenV2] 🔧 Tool calls détectés:', { toolCalls, toolName });
+    
+    // 🔧 NOUVEAU: Ajouter les tool calls au debugger
+    addToolCalls(toolCalls);
+    
     toolFlowActiveRef.current = true;
       
     await addMessage({
@@ -139,7 +158,7 @@ const ChatFullscreenV2: React.FC = () => {
     });
     
     scrollToBottom(true);
-  }, [addMessage, scrollToBottom, user, authLoading]);
+  }, [addMessage, scrollToBottom, user, authLoading, addToolCalls]);
 
   const handleToolResult = useCallback(async (toolName: string, result: any, success: boolean, toolCallId?: string) => {
     // Vérifier l'authentification avant de continuer
@@ -159,6 +178,17 @@ const ChatFullscreenV2: React.FC = () => {
     }
 
     logger.dev('[ChatFullscreenV2] ✅ Tool result reçu:', { toolName, success });
+    logger.tool('[ChatFullscreenV2] ✅ Tool result reçu:', { toolName, success });
+    
+    // 🔧 NOUVEAU: Ajouter le tool result au debugger
+    const toolResult = {
+      tool_call_id: toolCallId || `call_${Date.now()}`,
+      name: toolName || 'unknown_tool',
+      content: typeof result === 'string' ? result : JSON.stringify(result),
+      success: !!success
+    };
+    
+    addToolResult(toolResult);
       
     const normalizeResult = (res: unknown, ok: boolean): string => {
       try {
@@ -187,7 +217,7 @@ const ChatFullscreenV2: React.FC = () => {
     };
 
     // 🔧 CORRECTION: Utiliser le hook atomic pour persister les tool calls
-    const toolResult = {
+    const normalizedToolResult = {
       tool_call_id: toolCallId || `call_${Date.now()}`,
       name: toolName || 'unknown_tool',
       content: normalizeResult(result, !!success),
@@ -226,7 +256,7 @@ const ChatFullscreenV2: React.FC = () => {
         // Fallback: ajouter localement avec persistance
         const toolResultMessage = {
           role: 'tool' as const,
-          ...toolResult,
+          ...normalizedToolResult,
           timestamp: new Date().toISOString()
         };
         await addMessage(toolResultMessage, { persist: true });
@@ -252,7 +282,7 @@ const ChatFullscreenV2: React.FC = () => {
     }
     
     scrollToBottom(true);
-  }, [addMessage, scrollToBottom, user, authLoading]);
+  }, [addMessage, scrollToBottom, user, authLoading, addToolResult]);
 
   // 🎯 Hook de chat optimisé avec callbacks mémorisés
   const handleToolExecutionComplete = useCallback(async (toolResults: any[]) => {
@@ -522,6 +552,13 @@ const ChatFullscreenV2: React.FC = () => {
   // 🎯 Rendu optimisé
   return (
     <div className={`chat-fullscreen-container ${wideMode ? 'wide-mode' : ''}`}>
+      {/* 🔧 Tool Call Debugger */}
+      <ToolCallDebugger
+        toolCalls={toolCalls}
+        toolResults={toolResults}
+        isVisible={isDebuggerVisible}
+        onToggle={hideDebugger}
+      />
       {/* Header optimisé */}
       <div className="chat-header">
         <div className="chat-header-left">
@@ -540,6 +577,7 @@ const ChatFullscreenV2: React.FC = () => {
             onToggleWideMode={handleWideModeToggle}
             onToggleFullscreen={() => {}}
             onHistoryLimitChange={handleHistoryLimitChange}
+            onToggleToolCallDebugger={toggleDebugger}
             disabled={!user || authLoading}
           />
         </div>

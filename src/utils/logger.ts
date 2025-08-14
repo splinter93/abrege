@@ -223,5 +223,9 @@ export const simpleLogger = {
     if (process.env.NODE_ENV === 'development') {
       console.info(`[INFO] ${message}`, ...args);
     }
+  },
+  // 🔧 NOUVEAU: Logger qui fonctionne en production pour les tool calls
+  tool: (message: string, ...args: any[]) => {
+    console.log(`[TOOL] ${message}`, ...args);
   }
 }; 

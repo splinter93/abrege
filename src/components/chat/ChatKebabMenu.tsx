@@ -12,6 +12,7 @@ interface ChatKebabMenuProps {
   onToggleWideMode: () => void;
   onToggleFullscreen: () => void;
   onHistoryLimitChange: (limit: number) => void;
+  onToggleToolCallDebugger?: () => void;
   disabled?: boolean;
 }
 
@@ -22,6 +23,7 @@ const ChatKebabMenu: React.FC<ChatKebabMenuProps> = ({
   onToggleWideMode, 
   onToggleFullscreen,
   onHistoryLimitChange,
+  onToggleToolCallDebugger,
   disabled = false
 }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -72,6 +74,12 @@ const ChatKebabMenu: React.FC<ChatKebabMenuProps> = ({
     const newProvider = event.target.value;
     setProvider(newProvider);
     logger.dev(`[ChatKebabMenu] 🔄 Provider changé: ${newProvider}`);
+  };
+
+  const handleToggleToolCallDebugger = () => {
+    if (disabled) return;
+    onToggleToolCallDebugger?.();
+    setIsOpen(false);
   };
 
   return (
@@ -173,6 +181,24 @@ const ChatKebabMenu: React.FC<ChatKebabMenuProps> = ({
                 </div>
               )}
             </div>
+          </div>
+
+          {/* Section Debug */}
+          <div className="kebab-section">
+            <div className="kebab-section-title">Debug</div>
+            
+            <button
+              onClick={handleToggleToolCallDebugger}
+              className="kebab-option"
+              aria-label="Afficher/Masquer le debugger des tool calls"
+              disabled={disabled}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M12 2a2 2 0 00-2 2v2H8a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2V8a2 2 0 00-2-2h-2V4a2 2 0 00-2-2z"/>
+                <path d="M9 14h6"/>
+              </svg>
+              <span>Tool Calls Debugger</span>
+            </button>
           </div>
 
           {/* Section Statut */}

@@ -53,6 +53,7 @@ export function useChatResponse(options: UseChatResponseOptions = {}): UseChatRe
         // 🎯 Gérer le cas des nouveaux tool calls (continuation du cycle)
         if (data.has_new_tool_calls && data.tool_calls && data.tool_calls.length > 0) {
           logger.dev('[useChatResponse] 🔄 Nouveaux tool calls détectés, continuation du cycle');
+          logger.tool('[useChatResponse] 🔄 Nouveaux tool calls détectés, continuation du cycle');
           
           // Traiter les nouveaux tool calls
           const toolCallIds = data.tool_calls.map((tc: any) => tc.id);
@@ -88,6 +89,7 @@ export function useChatResponse(options: UseChatResponseOptions = {}): UseChatRe
         // PRIORITÉ: Vérifier is_relance AVANT de vérifier tool_calls
         if (data.is_relance && !data.has_new_tool_calls) {
           logger.dev('[useChatResponse] ✅ Relance automatique terminée, réponse finale reçue');
+          logger.tool('[useChatResponse] ✅ Relance automatique terminée, réponse finale reçue');
           
           // Traiter les tool results si présents
           if (data.tool_results && data.tool_results.length > 0) {
@@ -121,8 +123,10 @@ export function useChatResponse(options: UseChatResponseOptions = {}): UseChatRe
           // 🔧 NOUVEAU: Log spécial pour les multiples tool calls
           if (data.tool_calls.length > 10) {
             logger.dev(`[useChatResponse] ⚡ Multiple tool calls détectés: ${data.tool_calls.length} tools`);
+            logger.tool(`[useChatResponse] ⚡ Multiple tool calls détectés: ${data.tool_calls.length} tools`);
           }
           
+          logger.tool(`[useChatResponse] 🔧 Tool calls détectés: ${data.tool_calls.length} tools`);
           onToolCalls?.(data.tool_calls, 'tool_chain');
           
           // Si on a des tool results, les traiter immédiatement
