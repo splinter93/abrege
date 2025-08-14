@@ -50,6 +50,7 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
   border-bottom-right-radius: 6px;
   margin-left: auto;
+  max-width: 60% !important;
 }
 
 .chat-message-bubble-user:hover {
@@ -71,6 +72,7 @@
   backdrop-filter: none;
   max-width: 1000px !important;
   width: 1000px !important;
+  padding-left: 0 !important;
 }
 
 .chat-message-bubble-assistant:hover {
