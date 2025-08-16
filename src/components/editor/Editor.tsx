@@ -321,7 +321,13 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
       const n = useFileSystemStore.getState().notes[noteId];
       
                 // Vérifier si la note est accessible (pas privée)
-          if (n?.visibility === 'private') {
+          if (!n) {
+            toast.error('Note non trouvée. Rechargez la page et réessayez.');
+            return;
+          }
+          
+          // Si la note n'a pas de propriété visibility, utiliser ispublished comme fallback
+          if (n.visibility === 'private' || (!n.visibility && !n.ispublished)) {
             toast.error('Cette note est privée. Changez sa visibilité pour la prévisualiser.');
             return;
           }
