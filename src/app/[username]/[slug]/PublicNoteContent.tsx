@@ -48,23 +48,8 @@ export default function PublicNoteContent({ note, slug }: PublicNoteProps) {
     checkAuth();
   }, []);
 
-  // Si la note est privée et que l'utilisateur n'est pas le propriétaire
-  if (note.visibility === 'private' && (!currentUser || currentUser.id !== note.user_id)) {
-    return (
-      <div style={{ padding: '2rem', textAlign: 'center', backgroundColor: '#141414', color: '#F5F5DC' }}>
-        <div style={{ marginLeft: '4px', display: 'inline-block' }}>
-          <LogoHeader size="medium" position="center" />
-        </div>
-        <h1>Note privée</h1>
-        <p>Cette note est privée et n'est accessible qu'à son propriétaire.</p>
-        {!currentUser ? (
-          <p>Connectez-vous pour y accéder si vous en êtes le propriétaire.</p>
-        ) : (
-          <p>Vous n'êtes pas le propriétaire de cette note.</p>
-        )}
-      </div>
-    );
-  }
+  // Vérifier si l'accès est autorisé (après tous les hooks)
+  const isAccessAllowed = note.visibility !== 'private' || (currentUser && currentUser.id === note.user_id);
 
     React.useEffect(() => {
     // Appliquer le mode pleine largeur
@@ -101,6 +86,24 @@ export default function PublicNoteContent({ note, slug }: PublicNoteProps) {
     if (note.header_title_in_image) return 'noteLayout imageWithTitle';
     return 'noteLayout imageOnly';
   };
+
+  // Si l'accès n'est pas autorisé, afficher le message d'erreur
+  if (!isAccessAllowed) {
+    return (
+      <div style={{ padding: '2rem', textAlign: 'center', backgroundColor: '#141414', color: '#F5F5DC' }}>
+        <div style={{ marginLeft: '4px', display: 'inline-block' }}>
+          <LogoHeader size="medium" position="center" />
+        </div>
+        <h1>Note privée</h1>
+        <p>Cette note est privée et n'est accessible qu'à son propriétaire.</p>
+        {!currentUser ? (
+          <p>Connectez-vous pour y accéder si vous en êtes le propriétaire.</p>
+        ) : (
+          <p>Vous n'êtes pas le propriétaire de cette note.</p>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div 
