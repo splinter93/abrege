@@ -3,14 +3,13 @@
 import React from 'react';
 import Link from 'next/link';
 import LogoHeader from '@/components/LogoHeader';
-import { FiShare2, FiStar, FiMoreHorizontal, FiMaximize2, FiMinimize2, FiSearch } from 'react-icons/fi';
+import { FiStar, FiMoreHorizontal, FiMaximize2, FiMinimize2, FiSearch } from 'react-icons/fi';
 import { supabase } from '@/supabaseClient';
-// import ShareMenu from './ShareMenu'; // Désactivé sur les pages publiques
+import PublicShareButton from './PublicShareButton';
 import './PublicPageHeader.css';
 
 export default function PublicPageHeader() {
   const [isLoggedIn, setIsLoggedIn] = React.useState<boolean>(false);
-  // const [isShareMenuOpen, setIsShareMenuOpen] = React.useState<boolean>(false); // Désactivé
   const [isKebabMenuOpen, setIsKebabMenuOpen] = React.useState<boolean>(false);
   const [fullWidth, setFullWidth] = React.useState<boolean>(false);
   const [isFavorite, setIsFavorite] = React.useState<boolean>(false);
@@ -61,23 +60,12 @@ export default function PublicPageHeader() {
             Connexion
           </Link>
         )}
-        {/* Partager - Désactivé sur les pages publiques */}
-        {/* <button
-          onClick={() => setIsShareMenuOpen(!isShareMenuOpen)}
-          title="Partager cette page"
-          className="public-header-button"
-        >
-          <FiShare2 size={18} />
-        </button> */}
-        
-        {/* Menu de partage - Désactivé sur les pages publiques */}
-        {/* <ShareMenu
+        {/* Partager */}
+        <PublicShareButton
           url={typeof window !== 'undefined' ? window.location.href : ''}
           title="Note Scrivia"
           description="Découvrez cette note créée avec Scrivia"
-          isOpen={isShareMenuOpen}
-          onClose={() => setIsShareMenuOpen(false)}
-        /> */}
+        />
         {/* Favori */}
         <button
           title="Ajouter aux favoris"
