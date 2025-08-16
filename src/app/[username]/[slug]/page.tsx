@@ -23,7 +23,7 @@ export async function generateMetadata({ params }: { params: Promise<{ username:
   // Chercher la note par slug et user_id (toutes les notes, même privées)
   const { data: note } = await supabase
     .from('articles')
-    .select('source_title, summary, header_image, visibility')
+    .select('source_title, summary, header_image')
     .eq('slug', slug)
     .eq('user_id', user.id)
     .limit(1)
