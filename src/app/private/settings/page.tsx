@@ -1,13 +1,13 @@
 "use client";
 
-import LogoScrivia from "@/components/LogoScrivia";
+import LogoHeader from "@/components/LogoHeader";
 import Sidebar from "@/components/Sidebar";
 
 export default function SettingsPage() {
   return (
     <div className="dossiers-page-wrapper">
       <header className="dossiers-header-fixed">
-        <LogoScrivia width={130} />
+        <LogoHeader size="medium" position="left" />
       </header>
 
       <aside className="dossiers-sidebar-fixed">

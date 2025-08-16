@@ -3,7 +3,7 @@
 import { useMemo } from "react";
 import type { Folder, Classeur } from "@/components/types";
 import ClasseurTabs from "@/components/ClasseurTabs";
-import LogoScrivia from "@/components/LogoScrivia";
+import LogoHeader from "@/components/LogoHeader";
 import Sidebar from "@/components/Sidebar";
 import FolderManager from "@/components/FolderManager";
 import { useDossiersPage } from "@/hooks/useDossiersPage";
@@ -36,7 +36,7 @@ export default function DossiersPage() {
   return (
     <div className="dossiers-page-wrapper">
       <header className="dossiers-header-fixed">
-        <LogoScrivia width={130} />
+        <LogoHeader size="medium" position="left" />
       </header>
 
       <aside className="dossiers-sidebar-fixed">
