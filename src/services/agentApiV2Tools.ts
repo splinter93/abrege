@@ -376,9 +376,12 @@ export class AgentApiV2Tools {
             PublishNotePayload: {
               type: 'object',
               properties: {
-                ispublished: { type: 'boolean' }
+                visibility: { 
+                  type: 'string',
+                  enum: ['private', 'public', 'link-private', 'link-public', 'limited', 'scrivia']
+                }
               },
-              required: ['ispublished']
+              required: ['visibility']
             },
             CreateFolderPayload: {
               type: 'object',
@@ -1054,17 +1057,18 @@ export class AgentApiV2Tools {
             type: 'string',
             description: 'ID ou slug de la note (obligatoire)'
           },
-          ispublished: {
-            type: 'boolean',
-            description: 'Statut de publication (true = public, false = privé, obligatoire)'
+          visibility: {
+            type: 'string',
+            description: 'Niveau de visibilité de la note (private, public, link-private, link-public, limited, scrivia, obligatoire)',
+            enum: ['private', 'public', 'link-private', 'link-public', 'limited', 'scrivia']
           }
         },
-        required: ['ref', 'ispublished']
+        required: ['ref', 'visibility']
       },
       execute: async (params, jwtToken, userId) => {
-        const { ref, ispublished } = params;
+        const { ref, visibility } = params;
         const context = { operation: 'publish_note', component: 'AgentApiV2Tools' };
-        const res = await V2DatabaseUtils.publishNote(ref, ispublished, userId, context);
+        const res = await V2DatabaseUtils.publishNote(ref, visibility, userId, context);
         try { await clientPollingTrigger.triggerArticlesPolling('UPDATE'); } catch {}
         return res;
       }

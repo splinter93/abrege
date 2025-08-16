@@ -1337,8 +1337,8 @@ export class V2DatabaseUtils {
   /**
    * Publier une note
    */
-  static async publishNote(ref: string, ispublished: boolean, userId: string, context: any) {
-    logApi('v2_db_publish_note', `🚀 Publication note (${ispublished})`, context);
+  static async publishNote(ref: string, visibility: 'private' | 'public' | 'link-private' | 'link-public' | 'limited' | 'scrivia', userId: string, context: any) {
+    logApi('v2_db_publish_note', `🚀 Publication note (${visibility})`, context);
     
     try {
       // Résoudre la référence
@@ -1349,11 +1349,11 @@ export class V2DatabaseUtils {
 
       const noteId = resolveResult.id;
 
-      // Mettre à jour le statut de publication
+      // Mettre à jour le statut de visibilité
       const { error: updateError } = await supabase
         .from('articles')
         .update({ 
-          ispublished,
+          visibility,
           updated_at: new Date().toISOString()
         })
         .eq('id', noteId);
@@ -1364,7 +1364,7 @@ export class V2DatabaseUtils {
 
       return {
         success: true,
-        message: ispublished ? 'Note publiée avec succès' : 'Note rendue privée avec succès'
+        message: visibility !== 'private' ? 'Note publiée avec succès' : 'Note rendue privée avec succès'
       };
     } catch (error) {
       logApi('v2_db_publish_note', `❌ Erreur: ${error}`, context);

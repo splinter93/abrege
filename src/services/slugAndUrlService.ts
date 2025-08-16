@@ -94,7 +94,7 @@ export class SlugAndUrlService {
       // 1. Vérifier que la note existe et appartient à l'utilisateur
       const { data: note, error: fetchError } = await supabase
         .from('articles')
-        .select('id, source_title, slug, ispublished, public_url')
+        .select('id, source_title, slug, visibility, public_url')
         .eq('id', noteId)
         .eq('user_id', userId)
         .single();
@@ -174,7 +174,7 @@ export class SlugAndUrlService {
       // Récupérer toutes les notes de l'utilisateur
       const { data: notes, error: fetchError } = await this.supabase
         .from('articles')
-        .select('id, slug, source_title, public_url, ispublished')
+        .select('id, slug, source_title, public_url, visibility')
         .eq('user_id', userId);
 
       if (fetchError) {
