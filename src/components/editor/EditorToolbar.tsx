@@ -3,7 +3,8 @@ import { FiBold, FiItalic, FiUnderline, FiAlignLeft, FiAlignCenter, FiAlignRight
 import { AiOutlineOrderedList } from 'react-icons/ai';
 import { MdGridOn, MdFormatQuote } from 'react-icons/md';
 import { FiCode } from 'react-icons/fi';
-import Tooltip from './Tooltip';
+import Tooltip from '@/components/Tooltip';
+import AudioRecorder from '@/components/chat/AudioRecorder';
 
 interface EditorToolbarProps {
   editor: {
@@ -14,9 +15,10 @@ interface EditorToolbarProps {
   setImageMenuOpen: (open: boolean) => void;
   onFontChange?: (fontName: string) => void;
   currentFont?: string;
+  onTranscriptionComplete?: (text: string) => void;
 }
 
-const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor, setImageMenuOpen }) => {
+const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor, setImageMenuOpen, onTranscriptionComplete }) => {
   if (!editor) return null;
   return (
     <div className="editor-toolbar" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%' }}>
@@ -48,7 +50,13 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor, setImageMenuOpen 
       </div>
       <div className="toolbar-group">
         <Tooltip text="Image"><button className="toolbar-button" onClick={() => setImageMenuOpen(true)} aria-label="Image"><FiImage size={18} /></button></Tooltip>
-        <Tooltip text="Dictaphone IA"><button className="toolbar-button"><FiMic size={18} /></button></Tooltip>
+        <Tooltip text="Dictaphone IA">
+          <AudioRecorder
+            onTranscriptionComplete={onTranscriptionComplete || (() => {})}
+            onError={(error) => console.error('Erreur dictée:', error)}
+            disabled={!editor}
+          />
+        </Tooltip>
         <Tooltip text="Agent IA">
           <button className="toolbar-button ai-button">
             <FiZap size={18} />

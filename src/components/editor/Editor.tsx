@@ -297,6 +297,30 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
     handleSave(title || 'Untitled', content);
   }, [handleSave, title, content]);
 
+  // Gérer la transcription audio complétée
+  const handleTranscriptionComplete = React.useCallback((text: string) => {
+    if (!editor) return;
+    
+    try {
+      // Insérer le texte transcrit à la position du curseur
+      const { state, dispatch } = editor.view;
+      const from = state.selection.from;
+      
+      // Insérer le texte avec un espace avant si nécessaire
+      const insertText = from > 0 && state.doc.textBetween(from - 1, from) !== ' ' ? ` ${text}` : text;
+      
+      dispatch(state.tr.insertText(insertText, from));
+      
+      // Mettre le focus sur l'éditeur et placer le curseur après le texte inséré
+      editor.commands.focus();
+      editor.commands.setTextSelection(from + insertText.length);
+      
+      console.log(`[Editor] 🎤 Texte transcrit inséré: "${text}"`);
+    } catch (error) {
+      console.error('[Editor] ❌ Erreur lors de l\'insertion du texte transcrit:', error);
+    }
+  }, [editor]);
+
   // Build headings for TOC
   const headings = React.useMemo(() => {
     if (typeof document === 'undefined') return [] as { id: string; text: string; level: number }[];
@@ -487,7 +511,12 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
                 </>
               )}
             >
-              <EditorToolbar editor={isReadonly ? null : (editor as any)} setImageMenuOpen={setImageMenuOpen} onFontChange={handleFontChange} />
+              <EditorToolbar 
+          editor={isReadonly ? null : (editor as any)} 
+          setImageMenuOpen={setImageMenuOpen} 
+          onFontChange={handleFontChange}
+          onTranscriptionComplete={handleTranscriptionComplete}
+        />
             </EditorHeader>
             {/* Add header image CTA when no image is set */}
             {!headerImageUrl && (
