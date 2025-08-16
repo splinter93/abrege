@@ -5,6 +5,7 @@ import { MdGridOn, MdFormatQuote } from 'react-icons/md';
 import { FiCode } from 'react-icons/fi';
 import Tooltip from '@/components/Tooltip';
 import AudioRecorder from '@/components/chat/AudioRecorder';
+import './editor-toolbar.css';
 
 interface EditorToolbarProps {
   editor: {
@@ -55,6 +56,7 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor, setImageMenuOpen,
             onTranscriptionComplete={onTranscriptionComplete || (() => {})}
             onError={(error) => console.error('Erreur dictée:', error)}
             disabled={!editor}
+            variant="toolbar"
           />
         </Tooltip>
         <Tooltip text="Agent IA">

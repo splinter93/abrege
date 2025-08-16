@@ -8,6 +8,7 @@ interface AudioRecorderProps {
   onTranscriptionComplete: (text: string) => void;
   onError: (error: string) => void;
   disabled?: boolean;
+  variant?: 'chat' | 'toolbar';
 }
 
 interface RecordingState {
@@ -20,7 +21,8 @@ interface RecordingState {
 export default function AudioRecorder({ 
   onTranscriptionComplete, 
   onError, 
-  disabled = false
+  disabled = false,
+  variant = 'chat'
 }: AudioRecorderProps) {
   const [state, setState] = useState<RecordingState>({
     isRecording: false,
@@ -192,12 +194,14 @@ export default function AudioRecorder({
 
 
 
-  // Déterminer l'icône et la classe
+  // Déterminer l'icône et la classe selon le variant
   const getButtonState = () => {
+    const baseClass = variant === 'toolbar' ? 'toolbar-button' : 'chat-input-mic';
+    
     if (state.isProcessing) {
       return {
         icon: <Loader size={16} className="animate-spin" />,
-        className: 'chat-input-mic-processing',
+        className: variant === 'toolbar' ? 'toolbar-button processing' : 'chat-input-mic-processing',
         title: 'Traitement en cours...'
       };
     }
@@ -205,14 +209,14 @@ export default function AudioRecorder({
     if (state.isRecording) {
       return {
         icon: <Square size={16} />,
-        className: 'chat-input-mic-recording',
+        className: variant === 'toolbar' ? 'toolbar-button recording' : 'chat-input-mic-recording',
         title: 'Cliquer pour arrêter'
       };
     }
     
     return {
       icon: <Mic size={16} />,
-      className: 'chat-input-mic',
+      className: baseClass,
       title: 'Cliquer pour enregistrer'
     };
   };

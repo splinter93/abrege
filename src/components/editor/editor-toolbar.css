@@ -178,4 +178,51 @@
   .font-menu-label {
     font-size: 12px;
   }
+}
+
+/* ==========================================================================
+   TOOLBAR - BOUTON MICROPHONE
+   ========================================================================== */
+
+/* État de traitement du bouton microphone */
+.toolbar-button.processing {
+  background: var(--accent-primary) !important;
+  color: white !important;
+  animation: pulse-processing 1.5s infinite;
+}
+
+.toolbar-button.processing:hover {
+  background: var(--accent-primary) !important;
+  transform: none !important;
+}
+
+/* État d'enregistrement du bouton microphone */
+.toolbar-button.recording {
+  background: #ef4444 !important;
+  color: white !important;
+  animation: pulse-recording 2s infinite;
+}
+
+.toolbar-button.recording:hover {
+  background: #dc2626 !important;
+  color: white !important;
+}
+
+/* Animations pour la toolbar */
+@keyframes pulse-processing {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(59, 130, 246, 0);
+  }
+}
+
+@keyframes pulse-recording {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(239, 68, 68, 0);
+  }
 } 
