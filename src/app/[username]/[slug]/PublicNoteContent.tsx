@@ -4,6 +4,7 @@ import React from 'react';
 import PublicTOCClient from '@/components/PublicTOCClient';
 import CraftedBadge from '@/components/CraftedBadge';
 import '@/styles/typography.css'; // Importer le CSS typography
+import '@/styles/design-system.css'; // Importer le design system pour les variables
 
 interface PublicNoteProps {
   note: {
@@ -31,6 +32,16 @@ export default function PublicNoteContent({ note, slug }: PublicNoteProps) {
       '--editor-content-width',
       fullWidth ? 'var(--editor-content-width-wide)' : 'var(--editor-content-width-normal)'
     );
+    
+    // Forcer le thème sombre sur la page publique
+    document.documentElement.classList.add('public-note-page');
+    document.body.classList.add('public-note-page');
+    
+    // Cleanup lors du démontage
+    return () => {
+      document.documentElement.classList.remove('public-note-page');
+      document.body.classList.remove('public-note-page');
+    };
   }, [note.wide_mode]);
 
   // Déterminer la classe CSS selon la configuration
@@ -41,7 +52,14 @@ export default function PublicNoteContent({ note, slug }: PublicNoteProps) {
   };
 
   return (
-    <div className="public-note-container">
+    <div 
+      className="public-note-container"
+      style={{
+        backgroundColor: 'var(--bg-main)',
+        background: 'var(--bg-main)',
+        color: 'var(--editor-text-color)'
+      }}
+    >
       {/* Le Header est déjà injecté par AppMainContent */}
       
       {/* Image d'en-tête avec personnalisations */}
