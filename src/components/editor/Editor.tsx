@@ -3,7 +3,7 @@ import '@/styles/markdown.css';
 import EditorLayout from './EditorLayout';
 import EditorHeader from './EditorHeader';
 import EditorContent from './EditorContent';
-import EditorToolbar from '@/components/EditorToolbar';
+import EditorToolbar from './EditorToolbar';
 import EditorHeaderImage from '@/components/EditorHeaderImage';
 import EditorKebabMenu from '@/components/EditorKebabMenu';
 import EditorTitle from './EditorTitle';
