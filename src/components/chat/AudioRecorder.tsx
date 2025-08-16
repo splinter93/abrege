@@ -8,7 +8,6 @@ interface AudioRecorderProps {
   onTranscriptionComplete: (text: string) => void;
   onError: (error: string) => void;
   disabled?: boolean;
-  className?: string;
 }
 
 interface RecordingState {
@@ -21,8 +20,7 @@ interface RecordingState {
 export default function AudioRecorder({ 
   onTranscriptionComplete, 
   onError, 
-  disabled = false,
-  className = ''
+  disabled = false
 }: AudioRecorderProps) {
   const [state, setState] = useState<RecordingState>({
     isRecording: false,
@@ -192,19 +190,14 @@ export default function AudioRecorder({
     };
   }, []);
 
-  // Formatage de la durée
-  const formatDuration = (seconds: number): string => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-  };
+
 
   // Déterminer l'icône et la classe
   const getButtonState = () => {
     if (state.isProcessing) {
       return {
         icon: <Loader size={16} className="animate-spin" />,
-        className: 'audio-recorder-processing',
+        className: 'chat-input-mic-processing',
         title: 'Traitement en cours...'
       };
     }
@@ -212,14 +205,14 @@ export default function AudioRecorder({
     if (state.isRecording) {
       return {
         icon: <Square size={16} />,
-        className: 'audio-recorder-recording',
+        className: 'chat-input-mic-recording',
         title: 'Cliquer pour arrêter'
       };
     }
     
     return {
       icon: <Mic size={16} />,
-      className: 'audio-recorder-idle',
+      className: 'chat-input-mic',
       title: 'Cliquer pour enregistrer'
     };
   };
@@ -227,30 +220,14 @@ export default function AudioRecorder({
   const buttonState = getButtonState();
 
   return (
-    <div className={`audio-recorder ${className}`}>
-      <button
-        onClick={handleClick}
-        disabled={disabled || state.isProcessing}
-        className={`audio-recorder-button ${buttonState.className}`}
-        title={buttonState.title}
-        aria-label={buttonState.title}
-      >
-        {buttonState.icon}
-      </button>
-      
-      {/* Indicateur de durée */}
-      {state.isRecording && (
-        <div className="audio-recorder-duration">
-          {formatDuration(state.duration)}
-        </div>
-      )}
-      
-      {/* Indicateur de traitement */}
-      {state.isProcessing && (
-        <div className="audio-recorder-processing-text">
-          Transcription...
-        </div>
-      )}
-    </div>
+    <button
+      onClick={handleClick}
+      disabled={disabled || state.isProcessing}
+      className={buttonState.className}
+      title={buttonState.title}
+      aria-label={buttonState.title}
+    >
+      {buttonState.icon}
+    </button>
   );
 } 
