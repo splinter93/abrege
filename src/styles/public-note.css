@@ -37,9 +37,20 @@ html.public-note-page .public-note-container footer {
   padding-bottom: 64px;
 }
 
-/* S'assurer que le thème sombre est appliqué sur toute la page publique */
-.public-note-container,
-.public-note-container * {
+/* S'assurer que le thème sombre est appliqué sur la page publique */
+.public-note-container {
+  background-color: #141414 !important;
+  background: #141414 !important;
+}
+
+/* Appliquer le thème sombre seulement sur les éléments de contenu, pas sur les images */
+.public-note-container > div:not(.public-header-image),
+.public-note-container > section,
+.public-note-container > article,
+.public-note-container > main,
+.public-note-container > aside,
+.public-note-container > header,
+.public-note-container > footer {
   background-color: #141414 !important;
   background: #141414 !important;
 }
@@ -62,14 +73,7 @@ html.public-note-page .public-note-container footer {
   background-color: transparent !important;
 }
 
-/* Forcer le background sombre sur la page publique - plus spécifique */
-.public-note-container,
-.public-note-container *,
-.public-note-container html,
-.public-note-container body {
-  background-color: #141414 !important;
-  background: #141414 !important;
-}
+
 
 /* Styles spécifiques pour éviter le flash */
 .public-note-container {
@@ -108,6 +112,10 @@ html.public-note-page {
   object-fit: cover;
   border-radius: 0;
   transition: filter 0.2s;
+  
+  /* S'assurer que l'image reste visible */
+  background: none !important;
+  background-color: transparent !important;
 }
 
 /* Overlay avec la formule exacte de l'éditeur */
