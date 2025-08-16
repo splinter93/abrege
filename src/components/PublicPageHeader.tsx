@@ -6,7 +6,7 @@ import LogoHeader from '@/components/LogoHeader';
 import { FiShare2, FiStar, FiMoreHorizontal, FiMaximize2, FiMinimize2, FiSearch } from 'react-icons/fi';
 import { supabase } from '@/supabaseClient';
 import ShareMenu from './ShareMenu';
-import '@/styles/typography.css';
+import './PublicPageHeader.css';
 
 export default function PublicPageHeader() {
   const [isLoggedIn, setIsLoggedIn] = React.useState<boolean>(false);
