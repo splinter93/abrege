@@ -3,6 +3,8 @@
 import React from 'react';
 import PublicTOCClient from '@/components/PublicTOCClient';
 import CraftedBadge from '@/components/CraftedBadge';
+import LogoHeader from '@/components/LogoHeader';
+import { supabase } from '@/supabaseClient';
 import '@/styles/public-note.css'; // CSS spécifique page publique - PRIORITÉ MAXIMALE
 import '@/styles/typography.css'; // Importer le CSS typography
 import '@/styles/design-system.css'; // Importer le design system pour les variables
@@ -18,6 +20,8 @@ interface PublicNoteProps {
     header_title_in_image: boolean | null;
     wide_mode: boolean | null;
     font_family: string | null;
+    visibility: string;
+    user_id: string;
   };
   slug: string;
 }
@@ -25,6 +29,42 @@ interface PublicNoteProps {
 export default function PublicNoteContent({ note, slug }: PublicNoteProps) {
   const titleRef = React.useRef<HTMLHeadingElement>(null);
   const contentRef = React.useRef<HTMLDivElement>(null);
+  const [currentUser, setCurrentUser] = React.useState<any>(null);
+  const [isLoading, setIsLoading] = React.useState(true);
+
+  // Vérifier l'authentification côté client
+  React.useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        setCurrentUser(user);
+      } catch (error) {
+        console.error('Erreur d\'authentification:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    checkAuth();
+  }, []);
+
+  // Si la note est privée et que l'utilisateur n'est pas le propriétaire
+  if (note.visibility === 'private' && (!currentUser || currentUser.id !== note.user_id)) {
+    return (
+      <div style={{ padding: '2rem', textAlign: 'center', backgroundColor: '#141414', color: '#F5F5DC' }}>
+        <div style={{ marginLeft: '4px', display: 'inline-block' }}>
+          <LogoHeader size="medium" position="center" />
+        </div>
+        <h1>Note privée</h1>
+        <p>Cette note est privée et n'est accessible qu'à son propriétaire.</p>
+        {!currentUser ? (
+          <p>Connectez-vous pour y accéder si vous en êtes le propriétaire.</p>
+        ) : (
+          <p>Vous n'êtes pas le propriétaire de cette note.</p>
+        )}
+      </div>
+    );
+  }
 
     React.useEffect(() => {
     // Appliquer le mode pleine largeur

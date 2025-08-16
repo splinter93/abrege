@@ -121,24 +121,8 @@ export default async function Page(props: { params: Promise<{ username: string; 
     return redirect(url);
   }
 
-  // Vérifier l'authentification et les permissions
-  const { data: { user: currentUser } } = await supabase.auth.getUser();
-  
-  // Si la note est privée, vérifier que l'utilisateur actuel est le propriétaire
-  if (noteBySlug.visibility === 'private') {
-    if (!currentUser || currentUser.id !== noteBySlug.user_id) {
-      return (
-        <div style={{ padding: '2rem', textAlign: 'center' }}>
-          <div style={{ marginLeft: '4px', display: 'inline-block' }}>
-            <LogoHeader size="medium" position="center" />
-          </div>
-          <h1>Note privée</h1>
-          <p>Cette note est privée et n'est accessible qu'à son propriétaire.</p>
-          <p>Connectez-vous pour y accéder si vous en êtes le propriétaire.</p>
-        </div>
-      );
-    }
-  }
+  // Pour les notes privées, on laisse le composant client gérer l'authentification
+  // L'authentification sera vérifiée côté client pour une meilleure UX
 
   return <PublicNoteContent note={noteBySlug} slug={slug} />;
 } 
