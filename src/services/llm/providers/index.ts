@@ -3,4 +3,5 @@ export { BaseProvider, type IBaseProvider, type ProviderInfo, type ProviderConfi
 
 // Provider implementations
 export { SynesiaProvider } from './synesia';
-export { GroqProvider } from './implementations/groq'; 
+export { GroqProvider } from './implementations/groq';
+export { GroqResponsesProvider } from './implementations/groqResponses'; 

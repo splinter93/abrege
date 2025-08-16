@@ -110,6 +110,38 @@ export async function POST(request: NextRequest) {
           logger.warn(`[LLM Route] ⚠️ Aucun agent trouvé pour le provider: ${provider}`);
         }
       }
+
+      // 3) Fallback final : premier agent actif disponible
+      if (!agentConfig) {
+        logger.dev(`[LLM Route] 🔍 Récupération du premier agent actif disponible`);
+        const { data: defaultAgent, error: defaultAgentError } = await supabase
+          .from('agents')
+          .select('*')
+          .eq('is_active', true)
+          .order('priority', { ascending: false })
+          .limit(1)
+          .single();
+
+        if (defaultAgentError) {
+          logger.warn(`[LLM Route] ⚠️ Erreur récupération agent par défaut: ${defaultAgentError.message}`);
+        } else if (defaultAgent) {
+          agentConfig = defaultAgent;
+          const hasInstructions = !!(defaultAgent.system_instructions || (defaultAgent as any).instructions);
+          logger.dev(`[LLM Route] ✅ Agent par défaut récupéré: ${defaultAgent.name} (ID: ${defaultAgent.id})`);
+          logger.dev(`[LLM Route] 🎯 Configuration agent par défaut:`, {
+            model: defaultAgent.model,
+            temperature: defaultAgent.temperature,
+            max_tokens: defaultAgent.max_tokens,
+            instructions: hasInstructions ? '✅ Présentes' : '❌ Manquantes',
+            context_template: defaultAgent.context_template ? '✅ Présent' : '❌ Manquant',
+            api_config: defaultAgent.api_config ? '✅ Présent' : '❌ Manquant',
+            capabilities: defaultAgent.capabilities?.length || 0,
+            api_v2_capabilities: defaultAgent.api_v2_capabilities?.length || 0
+          });
+        } else {
+          logger.warn(`[LLM Route] ⚠️ Aucun agent actif trouvé dans la base de données`);
+        }
+      }
     } catch (error) {
       logger.error(`[LLM Route] ❌ Erreur lors de la récupération de l'agent: ${error}`);
     }

@@ -1,0 +1,339 @@
+/* ========================================
+   AUDIO RECORDER - COMPOSANT D'ENREGISTREMENT
+   ======================================== */
+
+.audio-recorder {
+  display: flex;
+  align-items: center;
+  gap: var(--chat-spacing-sm);
+  position: relative;
+}
+
+/* ========================================
+   BOUTON PRINCIPAL
+   ======================================== */
+
+.audio-recorder-button {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: var(--chat-radius-lg);
+  cursor: pointer;
+  transition: all var(--chat-transition-normal);
+  background: var(--chat-bg-tertiary);
+  color: var(--chat-text-secondary);
+  position: relative;
+  overflow: hidden;
+}
+
+.audio-recorder-button:hover:not(:disabled) {
+  background: var(--chat-bg-quaternary);
+  color: var(--chat-text-primary);
+  transform: scale(1.05);
+}
+
+.audio-recorder-button:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+.audio-recorder-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ========================================
+   ÉTATS DU BOUTON
+   ======================================== */
+
+/* État inactif */
+.audio-recorder-idle {
+  background: var(--chat-bg-tertiary);
+  color: var(--chat-text-secondary);
+}
+
+.audio-recorder-idle:hover:not(:disabled) {
+  background: var(--chat-bg-quaternary);
+  color: var(--chat-text-primary);
+}
+
+/* État d'enregistrement */
+.audio-recorder-recording {
+  background: #ef4444;
+  color: white;
+  animation: pulse-recording 2s infinite;
+}
+
+.audio-recorder-recording:hover:not(:disabled) {
+  background: #dc2626;
+  color: white;
+}
+
+@keyframes pulse-recording {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(239, 68, 68, 0);
+  }
+}
+
+/* État de traitement */
+.audio-recorder-processing {
+  background: var(--chat-accent-primary);
+  color: white;
+  animation: pulse-processing 1.5s infinite;
+}
+
+.audio-recorder-processing:hover:not(:disabled) {
+  background: var(--chat-accent-primary);
+  color: white;
+}
+
+@keyframes pulse-processing {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(59, 130, 246, 0);
+  }
+}
+
+/* ========================================
+   INDICATEURS
+   ======================================== */
+
+.audio-recorder-duration {
+  font-size: var(--chat-font-size-sm);
+  font-weight: var(--chat-font-weight-medium);
+  color: var(--chat-text-secondary);
+  background: var(--chat-bg-tertiary);
+  padding: var(--chat-spacing-xs) var(--chat-spacing-sm);
+  border-radius: var(--chat-radius-md);
+  min-width: 40px;
+  text-align: center;
+  animation: fade-in 0.3s ease-in-out;
+}
+
+.audio-recorder-processing-text {
+  font-size: var(--chat-font-size-sm);
+  font-weight: var(--chat-font-weight-medium);
+  color: var(--chat-accent-primary);
+  background: var(--chat-bg-tertiary);
+  padding: var(--chat-spacing-xs) var(--chat-spacing-sm);
+  border-radius: var(--chat-radius-md);
+  animation: fade-in 0.3s ease-in-out;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ========================================
+   ANIMATIONS DES ICÔNES
+   ======================================== */
+
+.audio-recorder-button svg {
+  transition: transform var(--chat-transition-normal);
+}
+
+.audio-recorder-recording svg {
+  animation: recording-pulse 1s infinite;
+}
+
+@keyframes recording-pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+.audio-recorder-processing svg {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ========================================
+   RESPONSIVE
+   ======================================== */
+
+@media (max-width: 768px) {
+  .audio-recorder-button {
+    width: 28px;
+    height: 28px;
+  }
+  
+  .audio-recorder-duration,
+  .audio-recorder-processing-text {
+    font-size: var(--chat-font-size-xs);
+    padding: 2px var(--chat-spacing-xs);
+  }
+}
+
+/* ========================================
+   INTÉGRATION AVEC LE CHAT
+   ======================================== */
+
+/* Style spécifique pour l'intégration dans ChatInput */
+.chat-input-actions .audio-recorder {
+  margin: 0;
+}
+
+.chat-input-actions .audio-recorder-button {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--chat-radius-lg);
+}
+
+/* Style pour le widget chat */
+.chat-fullscreen-container.chat-widget-mode .audio-recorder-button {
+  width: 24px;
+  height: 24px;
+}
+
+.chat-fullscreen-container.chat-widget-mode .audio-recorder-duration,
+.chat-fullscreen-container.chat-widget-mode .audio-recorder-processing-text {
+  font-size: 10px;
+  padding: 1px 4px;
+}
+
+/* ========================================
+   ACCESSIBILITÉ
+   ======================================== */
+
+.audio-recorder-button:focus {
+  outline: 2px solid var(--chat-accent-primary);
+  outline-offset: 2px;
+}
+
+.audio-recorder-button:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* ========================================
+   ÉTATS DE CHARGEMENT
+   ======================================== */
+
+.audio-recorder-button:disabled .animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+/* ========================================
+   TOOLTIPS (optionnel)
+   ======================================== */
+
+.audio-recorder-button[title]:hover::after {
+  content: attr(title);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--chat-bg-primary);
+  color: var(--chat-text-primary);
+  padding: var(--chat-spacing-xs) var(--chat-spacing-sm);
+  border-radius: var(--chat-radius-sm);
+  font-size: var(--chat-font-size-xs);
+  white-space: nowrap;
+  z-index: 1000;
+  margin-bottom: var(--chat-spacing-xs);
+  box-shadow: var(--chat-shadow-md);
+  border: 1px solid var(--chat-border-primary);
+}
+
+/* ========================================
+   MODE STANDALONE (page de test)
+   ======================================== */
+
+.audio-recorder-standalone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--chat-spacing-md);
+}
+
+.audio-recorder-standalone .audio-recorder-button {
+  width: 64px;
+  height: 64px;
+  border-radius: var(--chat-radius-full);
+  background: var(--chat-accent-primary);
+  color: white;
+  font-size: 24px;
+  transition: all var(--chat-transition-normal);
+}
+
+.audio-recorder-standalone .audio-recorder-button:hover:not(:disabled) {
+  background: var(--chat-accent-hover);
+  transform: scale(1.1);
+}
+
+.audio-recorder-standalone .audio-recorder-button:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+.audio-recorder-standalone .audio-recorder-duration,
+.audio-recorder-standalone .audio-recorder-processing-text {
+  display: block;
+  font-size: var(--chat-font-size-md);
+  font-weight: var(--chat-font-weight-semibold);
+  padding: var(--chat-spacing-sm) var(--chat-spacing-md);
+  border-radius: var(--chat-radius-lg);
+  background: var(--chat-bg-secondary);
+  border: 1px solid var(--chat-border-primary);
+  min-width: 80px;
+  text-align: center;
+}
+
+.audio-recorder-standalone .audio-recorder-duration {
+  color: var(--chat-text-primary);
+}
+
+.audio-recorder-standalone .audio-recorder-processing-text {
+  color: var(--chat-accent-primary);
+}
+
+/* Animation spéciale pour le mode standalone */
+.audio-recorder-standalone .audio-recorder-recording {
+  animation: pulse-recording-standalone 1.5s infinite;
+}
+
+@keyframes pulse-recording-standalone {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.8);
+  }
+  50% {
+    box-shadow: 0 0 0 16px rgba(239, 68, 68, 0);
+  }
+}
+
+.audio-recorder-standalone .audio-recorder-processing {
+  animation: pulse-processing-standalone 1s infinite;
+}
+
+@keyframes pulse-processing-standalone {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.8);
+  }
+  50% {
+    box-shadow: 0 0 0 12px rgba(59, 130, 246, 0);
+  }
+} 

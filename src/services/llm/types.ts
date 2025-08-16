@@ -29,6 +29,11 @@ export interface ChatMessage {
   }>;
   tool_call_id?: string; // Pour les messages tool
   name?: string; // Pour les messages tool (nom de la fonction appelée)
+  // Support pour les tool results (format Groq Responses API)
+  tool_results?: Array<{
+    tool_call_id: string;
+    output: string;
+  }>;
 }
 
 export interface LLMResponse {

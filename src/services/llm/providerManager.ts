@@ -1,5 +1,6 @@
-import type { LLMProvider, AppContext, ChatMessage } from './types';
-import { SynesiaProvider, GroqProvider } from './providers';
+import type { LLMProvider, AppContext } from './types';
+import type { ChatMessage } from '@/types/chat';
+import { SynesiaProvider, GroqProvider, GroqResponsesProvider } from './providers';
 import { logger } from '@/utils/logger';
 
 interface ProviderMetrics {
@@ -19,6 +20,7 @@ export class LLMProviderManager {
     // Enregistrer les providers par défaut
     this.registerProvider(new SynesiaProvider());
     this.registerProvider(new GroqProvider());
+    this.registerProvider(new GroqResponsesProvider());
     
     // Initialiser les métriques
     this.initializeMetrics();

@@ -157,6 +157,8 @@ export function useChatResponse(options: UseChatResponseOptions = {}): UseChatRe
           }
         } else {
           // Pas de tool calls ou réponse finale, appeler onComplete directement
+          logger.dev('[useChatResponse] ✅ Réponse simple sans tool calls, appel onComplete');
+          logger.dev('[useChatResponse] 📄 Contenu:', { content: data.content, contentLength: data.content?.length || 0 });
           onComplete?.(data.content || '', data.reasoning || '');
         }
       } else {

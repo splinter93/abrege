@@ -11,6 +11,9 @@ export interface ProviderCapabilities {
   codeExecution: boolean;
   webSearch: boolean;
   structuredOutput: boolean;
+  images?: boolean; // Support des inputs visuels
+  audioTranscription?: boolean; // ✅ Support de la transcription audio
+  audioTranslation?: boolean;   // ✅ Support de la traduction audio
 }
 
 /**
@@ -51,6 +54,7 @@ export interface ProviderInfo {
   pricing: {
     input: string;
     output: string;
+    audio?: string; // ✅ Pricing audio
   };
 }
 

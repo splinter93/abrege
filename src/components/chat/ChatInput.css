@@ -169,6 +169,88 @@
   transform: none;
 }
 
+/* ========================================
+   ÉTATS D'ENREGISTREMENT DU MICROPHONE
+   ======================================== */
+
+/* État d'enregistrement */
+.chat-input-mic-recording {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: var(--chat-button-md) !important;
+  height: var(--chat-button-md) !important;
+  border-radius: var(--chat-radius-full) !important;
+  background: #ef4444 !important;
+  border: none !important;
+  color: white !important;
+  cursor: pointer !important;
+  transition: all var(--chat-transition-normal) !important;
+  flex-shrink: 0 !important;
+  animation: pulse-recording 2s infinite;
+}
+
+.chat-input-mic-recording:hover:not(:disabled) {
+  background: #dc2626 !important;
+  color: white !important;
+  transform: scale(1.05) !important;
+}
+
+@keyframes pulse-recording {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(239, 68, 68, 0);
+  }
+}
+
+/* État de traitement */
+.chat-input-mic-processing {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: var(--chat-button-md) !important;
+  height: var(--chat-button-md) !important;
+  border-radius: var(--chat-radius-full) !important;
+  background: var(--chat-accent-primary) !important;
+  border: none !important;
+  color: white !important;
+  cursor: not-allowed !important;
+  transition: all var(--chat-transition-normal) !important;
+  flex-shrink: 0 !important;
+  animation: pulse-processing 1.5s infinite;
+}
+
+.chat-input-mic-processing:hover {
+  background: var(--chat-accent-primary) !important;
+  color: white !important;
+  transform: none !important;
+}
+
+@keyframes pulse-processing {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(59, 130, 246, 0);
+  }
+}
+
+/* Animation du spinner */
+.chat-input-mic-processing .animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .chat-input-send {
   display: flex;
   align-items: center;
@@ -208,4 +290,97 @@
   .chat-input-area {
     border-radius: var(--chat-radius-lg);
   }
+}
+
+/* ========================================
+   ERREURS AUDIO
+   ======================================== */
+
+.chat-input-audio-error {
+  position: absolute;
+  top: -60px;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  animation: slide-down 0.3s ease-out;
+}
+
+.chat-input-audio-error-content {
+  display: flex;
+  align-items: center;
+  gap: var(--chat-spacing-sm);
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: var(--chat-radius-lg);
+  padding: var(--chat-spacing-sm) var(--chat-spacing-md);
+  color: #dc2626;
+  font-size: var(--chat-font-size-sm);
+  box-shadow: var(--chat-shadow-sm);
+}
+
+.chat-input-audio-error-icon {
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.chat-input-audio-error-text {
+  flex: 1;
+  font-weight: var(--chat-font-weight-medium);
+}
+
+.chat-input-audio-error-close {
+  background: none;
+  border: none;
+  color: #dc2626;
+  cursor: pointer;
+  font-size: 18px;
+  font-weight: bold;
+  padding: 0;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--chat-radius-sm);
+  transition: background var(--chat-transition-normal);
+}
+
+.chat-input-audio-error-close:hover {
+  background: rgba(220, 38, 38, 0.1);
+}
+
+@keyframes slide-down {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+
+
+/* ========================================
+   WIDGET MODE
+   ======================================== */
+
+.chat-fullscreen-container.chat-widget-mode .chat-input-audio-error {
+  top: -50px;
+}
+
+.chat-fullscreen-container.chat-widget-mode .chat-input-audio-error-content {
+  padding: var(--chat-spacing-xs) var(--chat-spacing-sm);
+  font-size: var(--chat-font-size-xs);
+}
+
+.chat-fullscreen-container.chat-widget-mode .chat-input-audio-error-icon {
+  font-size: 14px;
+}
+
+.chat-fullscreen-container.chat-widget-mode .chat-input-audio-error-close {
+  width: 16px;
+  height: 16px;
+  font-size: 14px;
 } 
