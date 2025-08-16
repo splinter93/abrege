@@ -48,8 +48,10 @@ html.public-note-page .public-note-container footer {
 .public-note-container .public-header-image,
 .public-note-container .public-header-overlay,
 .public-note-container .stat-icon,
-.public-note-container .quick-btn.primary {
+.public-note-container .quick-btn.primary,
+.public-note-container a[href*="scrivia.app"] {
   background-color: inherit !important;
+  background: inherit !important;
 }
 
 /* Forcer le background sombre sur la page publique - plus spécifique */
