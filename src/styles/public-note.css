@@ -44,6 +44,87 @@ body.public-note-page {
 }
 
 /* ==========================================================================
+   CORRECTION SPÉCIFIQUE DES CHECKBOXES - PAGE PUBLIQUE
+   ==========================================================================
+   Ces styles corrigent l'affichage des checkboxes dans les notes publiques
+*/
+
+/* Styles spécifiques pour les checkboxes dans les pages publiques */
+.public-note-container .markdown-body input[type='checkbox'] {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  width: 1.2em !important;
+  height: 1.2em !important;
+  border: 2px solid #444 !important;
+  border-radius: 4px !important;
+  background: #2a2a2a !important;
+  display: inline-block !important;
+  vertical-align: middle !important;
+  position: relative !important;
+  transition: border-color 0.18s, background 0.18s !important;
+  cursor: pointer !important;
+  margin-right: 0.8em !important;
+  margin-top: 0 !important;
+  flex-shrink: 0 !important;
+}
+
+.public-note-container .markdown-body input[type='checkbox']:checked {
+  border-color: #ff6b35 !important;
+  background: #ff6b35 !important;
+}
+
+.public-note-container .markdown-body input[type='checkbox']:checked::after {
+  content: '✓' !important;
+  position: absolute !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  color: white !important;
+  font-size: 0.9em !important;
+  font-weight: bold !important;
+  line-height: 1 !important;
+  text-align: center !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.public-note-container .markdown-body input[type='checkbox']:focus {
+  outline: 2px solid #2994ff !important;
+  outline-offset: 2px !important;
+}
+
+/* Correction des listes avec checkboxes */
+.public-note-container .markdown-body li:has(> input[type="checkbox"]) {
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.5em !important;
+  list-style: none !important;
+  padding-left: 0 !important;
+  margin-left: 0 !important;
+}
+
+/* Contenu des éléments avec checkbox */
+.public-note-container .markdown-body li:has(> input[type="checkbox"]) > *:not(input) {
+  display: inline !important;
+  margin: 0 !important;
+}
+
+/* Paragraphes dans les éléments avec checkbox */
+.public-note-container .markdown-body li:has(> input[type="checkbox"]) p {
+  display: inline !important;
+  margin: 0 !important;
+}
+
+/* Alignement vertical des checkboxes */
+.public-note-container .markdown-body input[type='checkbox'] {
+  vertical-align: middle !important;
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+}
+
+/* ==========================================================================
    RESPECT TOTAL DE TYPOGRAPHY.CSS
    ==========================================================================
    Aucun style pour les éléments d'image - typography.css s'en charge

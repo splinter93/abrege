@@ -59,6 +59,14 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
   }, [open, onClose]);
 
   if (!open) return null;
+  
+  // Vérification de sécurité pour currentShareSettings
+  if (!currentShareSettings) {
+    console.warn('EditorKebabMenu: currentShareSettings is undefined, using default');
+    // Utiliser des valeurs par défaut au lieu de retourner null
+    const defaultSettings = getDefaultShareSettings();
+    currentShareSettings = defaultSettings;
+  }
 
   const handleCopyUrl = () => {
     if (publicUrl) {
@@ -111,8 +119,8 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
         setShareMenuOpen(true);
         onClose();
       },
-      color: currentShareSettings.visibility === 'private' ? '#D4D4D4' : '#ff6b35',
-      showCopyButton: currentShareSettings.visibility !== 'private' && publicUrl,
+      color: currentShareSettings?.visibility === 'private' ? '#D4D4D4' : '#ff6b35',
+      showCopyButton: currentShareSettings?.visibility !== 'private' && publicUrl,
     },
     {
       id: 'export',
