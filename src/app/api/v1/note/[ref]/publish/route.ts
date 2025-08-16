@@ -2,6 +2,7 @@ import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 import type { NextRequest } from 'next/server';
 import { resolveNoteRef } from '@/middleware/resourceResolver';
+import { SlugAndUrlService } from '@/services/slugAndUrlService';
 import type { ApiContext, NotePublishData } from '@/types/api';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -69,17 +70,24 @@ export async function POST(req: NextRequest, { params }: ApiContext): Promise<Re
     }
 
     // Mettre à jour ispublished et public_url
-    let url = null;
+    let url: string | null = null;
     if (ispublished) {
-      const { data: user, error: userError } = await supabase
-        .from('users')
-        .select('username')
-        .eq('id', userId)
-        .single();
-      if (userError || !user?.username) {
-        return new Response(JSON.stringify({ error: 'Utilisateur ou username introuvable.' }), { status: 500, headers: { "Content-Type": "application/json" } });
+      try {
+        // Utiliser le service centralisé pour construire l'URL publique
+        const { data: note, error: noteError } = await supabase
+          .from('articles')
+          .select('slug')
+          .eq('id', noteId)
+          .single();
+        
+        if (noteError || !note?.slug) {
+          return new Response(JSON.stringify({ error: 'Impossible de récupérer le slug de la note.' }), { status: 500, headers: { "Content-Type": "application/json" } });
+        }
+        
+        url = await SlugAndUrlService.buildPublicUrl(userId, note.slug);
+      } catch (error) {
+        return new Response(JSON.stringify({ error: 'Erreur lors de la génération de l\'URL publique.' }), { status: 500, headers: { "Content-Type": "application/json" } });
       }
-      url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/@${user.username}/id/${noteId}`;
     }
     
     const { data: updated, error } = await supabase

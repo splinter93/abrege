@@ -12,6 +12,8 @@ import { useFileSystemStore } from '@/store/useFileSystemStore';
 import type { FileSystemState } from '@/store/useFileSystemStore';
 import { useMarkdownRender } from '@/hooks/editor/useMarkdownRender';
 import useEditorSave from '@/hooks/useEditorSave';
+import type { ShareSettings } from '@/types/sharing';
+import { getDefaultShareSettings } from '@/types/sharing';
 import { useEditor, EditorContent as TiptapEditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Underline from '@tiptap/extension-underline';
@@ -67,11 +69,12 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
   const [kebabOpen, setKebabOpen] = React.useState(false);
   const kebabBtnRef = React.useRef<HTMLButtonElement | null>(null);
   const [kebabPos, setKebabPos] = React.useState<{ top: number; left: number }>({ top: 0, left: 0 });
-  const [published, setPublished] = React.useState(false);
-  const publishInitRef = React.useRef(false);
   const [a4Mode, setA4Mode] = React.useState(false);
   const [fullWidth, setFullWidth] = React.useState(false);
   const [slashLang, setSlashLang] = React.useState<'fr' | 'en'>('en');
+  
+  // Share settings state
+  const [shareSettings, setShareSettings] = React.useState<ShareSettings>(getDefaultShareSettings());
 
   const isReadonly = readonly || previewMode;
 
@@ -132,6 +135,8 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
   React.useEffect(() => {
     if (typeof note?.wide_mode === 'boolean') setFullWidth(note.wide_mode);
   }, [note?.wide_mode]);
+  
+
 
   const slashMenuRef = React.useRef<EditorSlashMenuHandle | null>(null);
 
@@ -233,30 +238,44 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
     }
   });
 
-  // Persist publish toggle to DB
+  // Initialize share settings from note data
   React.useEffect(() => {
-    if (!publishInitRef.current) { publishInitRef.current = true; return; }
-    (async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        const token = session?.access_token;
-        if (!token) throw new Error('Authentification requise');
-        const res = await fetch(`/api/v1/note/${encodeURIComponent(noteId)}/publish`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-          body: JSON.stringify({ ispublished: published })
-        });
+    if (note?.share_settings) {
+      setShareSettings(note.share_settings);
+    }
+  }, [note?.share_settings]);
+
+  // Handle share settings changes
+  const handleShareSettingsChange = React.useCallback(async (newSettings: ShareSettings) => {
+    try {
+      // Update local state
+      setShareSettings(newSettings);
+      
+      // Update note in store
+      updateNote(noteId, { share_settings: newSettings } as any);
+      
+      // Call API to update share settings
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      if (!token) throw new Error('Authentification requise');
+      
+      const res = await fetch(`/api/v2/note/${encodeURIComponent(noteId)}/share`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify(newSettings)
+      });
+      
+      if (!res.ok) {
         const json = await res.json();
-        if (!res.ok) throw new Error(json?.error || 'Erreur publication');
-        if (json?.url) {
-          useFileSystemStore.getState().updateNote(noteId, { public_url: json.url } as any);
-        }
-        toast.success(published ? 'Note publiée' : 'Note dépubliée');
-      } catch (e) {
-        toast.error(e instanceof Error ? e.message : 'Erreur publication');
+        throw new Error(json?.error || 'Erreur mise à jour partage');
       }
-    })();
-  }, [published, noteId]);
+      
+      toast.success('Paramètres de partage mis à jour !');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Erreur mise à jour partage');
+      console.error('Erreur partage:', error);
+    }
+  }, [noteId, updateNote]);
 
   // Persist font changes via toolbar callback
   const handleFontChange = React.useCallback(async (fontName: string) => {
@@ -298,25 +317,71 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
 
   const handlePreviewClick = React.useCallback(async () => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      const token = session?.access_token;
-      let url: string | null = null;
-
-      // Try to use stored public_url if available
+      // Récupérer la note depuis le store
       const n = useFileSystemStore.getState().notes[noteId];
-      const publicUrl = (n as any)?.public_url as string | null | undefined;
-      if (publicUrl) {
-        url = publicUrl;
-      } else {
-        // Fallback: fetch user to build /@username/id/[noteId]
-        const { data: { user } } = await supabase.auth.getUser();
-        const username = (user as any)?.user_metadata?.username;
-        if (username) {
-          url = `/@${username}/id/${noteId}`;
-        }
+      
+      // Vérifier si la note est publiée
+      if (!n?.ispublished) {
+        toast.error('Cette note n\'est pas encore publiée. Publiez-la d\'abord pour la prévisualiser.');
+        return;
       }
-      if (url) window.open(url, '_blank', 'noopener,noreferrer');
-    } catch {}
+
+      // Vérifier si la note a un slug
+      if (!n?.slug) {
+        toast.error('Cette note n\'a pas de slug. Publiez à nouveau la note.');
+        return;
+      }
+
+      // Construire l'URL avec le slug (priorité sur l'URL stockée qui peut être incorrecte)
+      let url: string | null = null;
+      
+      try {
+        // Récupérer l'utilisateur connecté
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+          toast.error('Vous devez être connecté pour prévisualiser cette note.');
+          return;
+        }
+
+        // Récupérer le username depuis la base de données
+        const { data: userData, error: userError } = await supabase
+          .from('users')
+          .select('username')
+          .eq('id', user.id)
+          .single();
+
+        if (userError || !userData?.username) {
+          toast.error('Impossible de récupérer votre nom d\'utilisateur.');
+          return;
+        }
+
+        // Construire l'URL correcte avec le format /@username/slug
+        url = `https://scrivia.app/@${userData.username}/${n.slug}`;
+        
+        console.log('URL construite:', url);
+        
+      } catch (error) {
+        console.error('Erreur lors de la construction de l\'URL:', error);
+        toast.error('Erreur lors de la construction de l\'URL publique.');
+        return;
+      }
+
+      if (url) {
+        // Vérifier que l'URL est valide
+        try {
+          new URL(url);
+          console.log('Ouverture de l\'URL:', url);
+          window.open(url, '_blank', 'noopener,noreferrer');
+        } catch {
+          toast.error('URL publique invalide. Publiez à nouveau la note.');
+        }
+      } else {
+        toast.error('Impossible de générer l\'URL publique. Publiez à nouveau la note.');
+      }
+    } catch (error) {
+      console.error('Erreur lors de l\'ouverture de la prévisualisation:', error);
+      toast.error('Erreur lors de l\'ouverture de la prévisualisation');
+    }
   }, [noteId]);
 
   React.useEffect(() => {
@@ -512,10 +577,12 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
               setA4Mode={setA4Mode}
               slashLang={slashLang}
               setSlashLang={setSlashLang}
-              published={published}
-              setPublished={setPublished}
               fullWidth={fullWidth}
               setFullWidth={setFullWidth}
+              noteId={noteId}
+              currentShareSettings={shareSettings}
+              onShareSettingsChange={handleShareSettingsChange}
+              publicUrl={note?.public_url || undefined}
             />
           </>
         )}

@@ -4,7 +4,8 @@ import type { Article } from '@/types/supabase';
 import type { NextRequest } from 'next/server';
 import type { ApiContext } from '@/types/api';
 import { resolveNoteRef } from '@/middleware/resourceResolver';
-import { SlugGenerator } from '@/utils/slugGenerator';
+import { SlugAndUrlService } from '@/services/slugAndUrlService';
+import { simpleLogger as logger } from '@/utils/logger';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -143,13 +144,24 @@ export async function PUT(req: NextRequest, { params }: ApiContext): Promise<Res
       updateData.header_title_in_image = body.header_title_in_image;
     }
 
-    // Titre + slug si changement
+    // Titre + slug + URL publique si changement
     if (body.source_title !== undefined) {
       const normalizedTitle = String(body.source_title).trim();
       updateData.source_title = normalizedTitle;
       if (normalizedTitle && currentNote && normalizedTitle !== currentNote.source_title) {
-        const newSlug = await SlugGenerator.generateSlug(normalizedTitle, 'note', userId, noteId);
-        updateData.slug = newSlug;
+        try {
+          const { slug: newSlug, publicUrl } = await SlugAndUrlService.updateNoteSlugAndUrl(
+            noteId,
+            normalizedTitle,
+            userId,
+            supabase
+          );
+          updateData.slug = newSlug;
+          updateData.public_url = publicUrl;
+        } catch (error) {
+          logger.error(`Erreur lors de la mise à jour du slug/URL pour la note ${noteId}:`, error);
+          // Continuer sans mettre à jour le slug en cas d'erreur
+        }
       }
     }
 

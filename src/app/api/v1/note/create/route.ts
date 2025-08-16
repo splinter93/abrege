@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { SlugGenerator } from '@/utils/slugGenerator';
+import { SlugAndUrlService } from '@/services/slugAndUrlService';
 import { simpleLogger as logger } from '@/utils/logger';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -102,13 +102,17 @@ export async function POST(request: NextRequest): Promise<Response> {
       }
     }
 
-    // Génération du slug
+    // Génération du slug et de l'URL publique
     let slug: string;
+    let publicUrl: string | null = null;
     try {
-      slug = await SlugGenerator.generateSlug(source_title, 'note', userId, undefined, supabase);
+      const result = await SlugAndUrlService.generateSlugAndUpdateUrl(source_title, userId, undefined, supabase);
+      slug = result.slug;
+      publicUrl = result.publicUrl;
     } catch (e) {
       // Fallback minimal en cas d'échec
       slug = `${source_title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')}-${Date.now().toString(36)}`.slice(0, 120);
+      logger.warn(`Fallback slug utilisé pour la note: ${slug}`);
     }
 
     // Insertion de la note
@@ -124,6 +128,7 @@ export async function POST(request: NextRequest): Promise<Response> {
         folder_id: finalFolderId,
         user_id: userId,
         slug,
+        public_url: publicUrl,
         position: 0,
       })
       .select()

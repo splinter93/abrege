@@ -1,22 +1,24 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { FiShare2, FiDownload, FiCopy, FiMaximize2, FiMinimize2, FiGlobe, FiCheck } from 'react-icons/fi';
 import './editor-kebab-menu.css';
+import ShareMenu from './ShareMenu';
+import type { ShareSettings } from '@/types/sharing';
+import { getDefaultShareSettings } from '@/types/sharing';
 
 interface EditorKebabMenuProps {
   open: boolean;
   position: { top: number; left: number };
   onClose: () => void;
   a4Mode: boolean;
-    setA4Mode: (v: boolean) => void;
+  setA4Mode: (v: boolean) => void;
   slashLang: 'fr' | 'en';
   setSlashLang: (lang: 'fr' | 'en') => void;
-  published: boolean;
-  setPublished: (v: boolean) => void;
-  publishedUrl?: string;
   fullWidth: boolean;
   setFullWidth: (v: boolean) => void;
-
-  isPublishing?: boolean;
+  noteId: string;
+  currentShareSettings: ShareSettings;
+  onShareSettingsChange: (settings: ShareSettings) => Promise<void>;
+  publicUrl?: string;
 }
 
 const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
@@ -27,15 +29,16 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
   setA4Mode,
   slashLang,
   setSlashLang,
-  published,
-  setPublished,
-  publishedUrl,
   fullWidth,
   setFullWidth,
-  isPublishing = false,
+  noteId,
+  currentShareSettings,
+  onShareSettingsChange,
+  publicUrl,
 }) => {
   const menuRef = useRef<HTMLDivElement>(null);
   const [copyConfirmed, setCopyConfirmed] = useState(false);
+  const [shareMenuOpen, setShareMenuOpen] = useState(false);
 
   useEffect(() => {
     if (!open) return;
@@ -58,8 +61,8 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
   if (!open) return null;
 
   const handleCopyUrl = () => {
-    if (publishedUrl) {
-      navigator.clipboard.writeText(publishedUrl);
+    if (publicUrl) {
+      navigator.clipboard.writeText(publicUrl);
       setCopyConfirmed(true);
       setTimeout(() => setCopyConfirmed(false), 2000);
     }
@@ -104,15 +107,20 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
       id: 'share',
       label: t.share,
       icon: <FiShare2 size={18} />,
-      onClick: () => { onClose(); },
-      color: '#D4D4D4'
+      onClick: () => { 
+        setShareMenuOpen(true);
+        onClose();
+      },
+      color: currentShareSettings.visibility === 'private' ? '#D4D4D4' : '#ff6b35',
+      showCopyButton: currentShareSettings.visibility !== 'private' && publicUrl,
     },
     {
       id: 'export',
       label: t.export,
       icon: <FiDownload size={18} />,
       onClick: () => { onClose(); },
-      color: '#D4D4D4'
+      color: '#D4D4D4',
+      showCopyButton: false,
     },
     {
       id: 'fullWidth',
@@ -122,7 +130,8 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
         setFullWidth(!fullWidth); 
         onClose(); 
       },
-      color: fullWidth ? '#10b981' : '#D4D4D4'
+      color: fullWidth ? '#10b981' : '#D4D4D4',
+      showCopyButton: false,
     },
     {
       id: 'a4Mode',
@@ -130,21 +139,8 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
       icon: <A4Icon />,
       onClick: () => { setA4Mode(!a4Mode); },
       color: a4Mode ? '#10b981' : '#D4D4D4',
-      type: 'coming-soon' as const
-    },
-    {
-      id: 'published',
-      label: published ? t.published : t.publish,
-      icon: <FiGlobe size={18} />,
-      onClick: () => { 
-        if (!isPublishing) {
-          setPublished(!published); 
-        }
-      },
-      color: published ? '#ff6b35' : '#D4D4D4',
-      type: 'switch' as const,
-      showCopyButton: published && publishedUrl,
-      disabled: isPublishing
+      type: 'coming-soon' as const,
+      showCopyButton: false,
     }
   ] as const;
 
@@ -175,7 +171,7 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
               {opt.icon}
               {opt.label}
             </span>
-            {opt.id === 'published' && publishedUrl && (
+            {opt.id === 'share' && opt.showCopyButton && (
               <span style={{ marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: 8 }}>
                   <button
                   className="editor-header-kebab-menu-item"
@@ -189,6 +185,16 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
           </button>
         ))}
       </div>
+      
+      {/* ShareMenu intégré */}
+      <ShareMenu
+        noteId={noteId}
+        currentSettings={currentShareSettings}
+        publicUrl={publicUrl}
+        onSettingsChange={onShareSettingsChange}
+        isOpen={shareMenuOpen}
+        onClose={() => setShareMenuOpen(false)}
+      />
     </>
   );
 };
