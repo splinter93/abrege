@@ -206,7 +206,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend, loading, textareaRef, dis
       });
 
       // Appeler l'API Whisper
-      const response = await fetch('/api/v2/whisper/transcribe', {
+      const response = await fetch('/api/v1/whisper/transcribe', {
         method: 'POST',
         body: formData
         // Ne pas ajouter de headers Content-Type, laissez le navigateur le faire automatiquement

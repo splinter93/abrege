@@ -1,8 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
+import { redirect } from 'next/navigation';
 import '@/styles/markdown.css';
 import LogoHeader from '@/components/LogoHeader';
-
-
 import type { Metadata } from 'next';
 import PublicNoteContent from './PublicNoteContent';
 
@@ -105,7 +104,7 @@ export default async function Page(props: { params: Promise<{ username: string; 
     if (latestNote?.slug) {
       // Redirection 301 vers le slug courant le plus probable (fallback simple)
       const url = `/@${user.username}/${latestNote.slug}`;
-      return (await import('next/navigation')).redirect(url);
+      return redirect(url);
     }
 
     return (
@@ -122,7 +121,7 @@ export default async function Page(props: { params: Promise<{ username: string; 
   // Canonical: si le slug en DB ne correspond pas à l'URL, rediriger 301 vers le bon slug
   if (noteBySlug.slug !== slug) {
     const url = `/@${user.username}/${noteBySlug.slug}`;
-    return (await import('next/navigation')).redirect(url);
+    return redirect(url);
   }
 
   return <PublicNoteContent note={noteBySlug} slug={slug} />;
