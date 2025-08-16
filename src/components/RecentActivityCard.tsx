@@ -217,7 +217,7 @@ export default function RecentActivityCard({
                   style={{
                     fontSize: compact ? '12px' : '14px',
                     fontWeight: '500',
-                    color: note.visibility !== 'private' ? 'var(--accent-hover, #5fb2ff)' : 'var(--text-1, #eaeaec)',
+                    color: note?.visibility !== 'private' ? 'var(--accent-hover, #5fb2ff)' : 'var(--text-1, #eaeaec)',
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
                     whiteSpace: 'nowrap',
@@ -238,7 +238,7 @@ export default function RecentActivityCard({
                 >
                   {note.title}
                 </Link>
-                {note.visibility !== 'private' && (
+                {note?.visibility !== 'private' && (
                   <span style={{
                     fontSize: '10px',
                     padding: '1px 4px',
@@ -248,7 +248,7 @@ export default function RecentActivityCard({
                     border: '1px solid rgba(95, 178, 255, 0.2)',
                     flexShrink: 0
                   }}>
-                    {note.visibility === 'public' ? 'Public' : 'Partagé'}
+                    {note?.visibility === 'public' ? 'Public' : 'Partagé'}
                   </span>
                 )}
               </div>
