@@ -347,11 +347,8 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
         return;
       }
       
-      // Vérifier la visibilité de la note
-      if (n.visibility === 'private') {
-        toast.error('Cette note est privée. Changez sa visibilité pour la prévisualiser.');
-        return;
-      }
+      // Toutes les notes peuvent être prévisualisées, même les privées
+      // La visibilité contrôle l'accès public, pas la possibilité de preview
 
       // Vérifier si la note a un slug
       if (!n?.slug) {
