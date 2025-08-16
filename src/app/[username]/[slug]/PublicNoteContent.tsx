@@ -5,6 +5,7 @@ import PublicTOCClient from '@/components/PublicTOCClient';
 import CraftedBadge from '@/components/CraftedBadge';
 import LogoHeader from '@/components/LogoHeader';
 import { supabase } from '@/supabaseClient';
+import { useNoteData } from '@/contexts/NoteDataContext';
 import '@/styles/public-note.css'; // CSS spécifique page publique - PRIORITÉ MAXIMALE
 import '@/styles/typography.css'; // Importer le CSS typography
 import '@/styles/design-system.css'; // Importer le design system pour les variables
@@ -31,6 +32,7 @@ export default function PublicNoteContent({ note, slug }: PublicNoteProps) {
   const contentRef = React.useRef<HTMLDivElement>(null);
   const [currentUser, setCurrentUser] = React.useState<any>(null);
   const [isLoading, setIsLoading] = React.useState(true);
+  const { setNoteData } = useNoteData();
 
   // Vérifier l'authentification côté client
   React.useEffect(() => {
@@ -47,6 +49,24 @@ export default function PublicNoteContent({ note, slug }: PublicNoteProps) {
     
     checkAuth();
   }, []);
+
+  // Mettre à jour le contexte avec les données de la note pour le partage social
+  React.useEffect(() => {
+    // Extraire le username de l'URL actuelle
+    const pathSegments = window.location.pathname.split('/');
+    const username = pathSegments[1]?.replace('@', '') || '';
+    
+    setNoteData({
+      source_title: note.source_title,
+      summary: '', // Pas de summary dans les props actuelles
+      header_image: note.header_image,
+      header_image_blur: note.header_image_blur,
+      header_image_overlay: note.header_image_overlay,
+      header_title_in_image: note.header_title_in_image,
+      slug: slug,
+      username: username
+    });
+  }, [note, slug, setNoteData]);
 
   // Vérifier si l'accès est autorisé (après tous les hooks)
   const isAccessAllowed = note.visibility !== 'private' || (currentUser && currentUser.id === note.user_id);

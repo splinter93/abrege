@@ -6,6 +6,7 @@ import LogoHeader from '@/components/LogoHeader';
 import { FiShare2, FiStar, FiMoreHorizontal, FiMaximize2, FiMinimize2, FiSearch } from 'react-icons/fi';
 import { supabase } from '@/supabaseClient';
 import SocialShareMenu from './SocialShareMenu';
+import { useNoteData } from '@/contexts/NoteDataContext';
 import './PublicPageHeader.css';
 
 export default function PublicPageHeader() {
@@ -14,6 +15,7 @@ export default function PublicPageHeader() {
   const [isKebabMenuOpen, setIsKebabMenuOpen] = React.useState<boolean>(false);
   const [fullWidth, setFullWidth] = React.useState<boolean>(false);
   const [isFavorite, setIsFavorite] = React.useState<boolean>(false);
+  const { noteData } = useNoteData();
 
   React.useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
@@ -73,8 +75,8 @@ export default function PublicPageHeader() {
         {/* Menu de partage social */}
         <SocialShareMenu
           url={typeof window !== 'undefined' ? window.location.href : ''}
-          title="Note Scrivia"
-          description="Découvrez cette note créée avec Scrivia"
+          title={noteData?.source_title || "Note Scrivia"}
+          description={noteData?.summary || "Découvrez cette note créée avec Scrivia"}
           isOpen={isShareMenuOpen}
           onClose={() => setIsShareMenuOpen(false)}
         />
