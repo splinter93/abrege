@@ -85,7 +85,7 @@ export default function PublicNoteContent({ note, slug }: PublicNoteProps) {
             }}
             draggable={false}
           />
-          {/* Overlay avec la bonne formule */}
+          {/* Overlay avec la formule exacte de l'éditeur */}
           {note.header_image_overlay && note.header_image_overlay > 0 && (
             <div 
               className="public-header-overlay"
