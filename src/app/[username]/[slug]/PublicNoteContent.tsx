@@ -81,7 +81,8 @@ export default function PublicNoteContent({ note, slug }: PublicNoteProps) {
             alt="Header"
             style={{ 
               filter: `blur(${note.header_image_blur ?? 0}px)`,
-              objectPosition: `center ${note.header_image_offset ?? 50}%`
+              objectPosition: `center ${note.header_image_offset ?? 50}%`,
+              transition: 'filter 0.2s'
             }}
             draggable={false}
           />
