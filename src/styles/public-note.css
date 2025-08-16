@@ -47,13 +47,19 @@ html.public-note-page .public-note-container footer {
 /* Exception pour les éléments qui doivent garder leur background spécifique */
 .public-note-container .public-header-image,
 .public-note-container .public-header-overlay,
-.public-note-container .public-header-title,
-.public-note-container .public-header-title h1,
 .public-note-container .stat-icon,
 .public-note-container .quick-btn.primary,
 .public-note-container a[href*="scrivia.app"] {
   background-color: transparent !important;
   background: transparent !important;
+}
+
+/* Le titre dans l'image doit utiliser exactement les styles de typography.css */
+.public-note-container .public-header-title,
+.public-note-container .public-header-title h1 {
+  /* Pas de background forcé - laisse typography.css gérer */
+  background: none !important;
+  background-color: transparent !important;
 }
 
 /* Forcer le background sombre sur la page publique - plus spécifique */
@@ -123,32 +129,4 @@ html.public-note-page {
   background: transparent !important;
 }
 
-/* Titre dans l'image - respect strict de typography.css */
-.public-note-container .public-header-title {
-  /* Utilise exactement les styles de typography.css */
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: auto;
-  max-width: 750px;
-  padding: 0;
-  box-sizing: border-box;
-  text-align: center;
-  z-index: 10;
-}
-
-.public-note-container .public-header-title h1 {
-  /* Respect strict des styles de typography.css */
-  color: white;
-  text-shadow: 0 2px 4px rgba(0,0,0,0.2);
-  font-size: var(--editor-title-size);
-  font-weight: 700;
-  margin: 0;
-  text-align: center;
-  width: auto;
-  max-width: 750px;
-  padding: 0 0 4px 0;
-  white-space: pre-wrap;
-  overflow: visible;
-} 
+ 
