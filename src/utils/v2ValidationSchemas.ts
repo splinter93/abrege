@@ -97,7 +97,7 @@ export const updateContentV2Schema = z.object({
  * Schéma pour publier une note V2
  */
 export const publishNoteV2Schema = z.object({
-  ispublished: z.boolean(),
+  visibility: z.enum(['private', 'public', 'link-private', 'link-public', 'limited', 'scrivia']),
 });
 
 // ============================================================================

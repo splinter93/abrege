@@ -115,7 +115,7 @@ export async function POST(
     }
 
     // Mettre à jour la visibilité
-    const newVisibility = validatedData.ispublished ? 'public' : 'private';
+    const newVisibility = validatedData.visibility;
     
     const { data: updatedNote, error: updateError } = await supabase
       .from('articles')
@@ -139,13 +139,14 @@ export async function POST(
     clientPollingTrigger.triggerArticlesPolling('UPDATE');
 
     const apiTime = Date.now() - startTime;
-    logApi('v2_note_publish', `✅ Note ${validatedData.ispublished ? 'publiée' : 'dépubliée'} en ${apiTime}ms`, context);
+    const isPublic = validatedData.visibility !== 'private';
+    logApi('v2_note_publish', `✅ Note ${isPublic ? 'publiée' : 'rendue privée'} en ${apiTime}ms`, context);
 
     return NextResponse.json({
       success: true,
-      message: validatedData.ispublished ? 'Note publiée avec succès' : 'Note dépubliée avec succès',
+      message: isPublic ? 'Note publiée avec succès' : 'Note rendue privée avec succès',
       note: updatedNote,
-      isPublished: validatedData.ispublished
+      visibility: validatedData.visibility
     });
 
   } catch (err: unknown) {
