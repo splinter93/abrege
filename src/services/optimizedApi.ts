@@ -911,9 +911,9 @@ export class OptimizedApi {
   }
 
   /**
-   * Publier/dépublier une note
+   * Changer la visibilité d'une note
    */
-  async publishNoteREST(noteId: string, isPublished: boolean): Promise<PublishNoteResponse> {
+  async publishNoteREST(noteId: string, visibility: 'private' | 'public' | 'link-private' | 'link-public' | 'limited' | 'scrivia'): Promise<PublishNoteResponse> {
     const startTime = Date.now();
     const context = { operation: 'publish_note', component: 'OptimizedApi' };
     
@@ -924,7 +924,7 @@ export class OptimizedApi {
       const response = await fetch(`/api/v1/note/${noteId}/publish`, {
         method: 'POST',
         headers,
-        body: JSON.stringify({ ispublished: isPublished })
+        body: JSON.stringify({ visibility })
       });
 
       if (!response.ok) {

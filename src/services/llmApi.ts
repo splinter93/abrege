@@ -413,11 +413,11 @@ export class LLMApi {
   }
 
   /**
-   * Publier/dépublier une note via API LLM (supporte UUID ou slug)
+   * Changer la visibilité d'une note via API LLM (supporte UUID ou slug)
    * @param noteRef - UUID ou slug de la note
-   * @param isPublished - Statut de publication
+   * @param visibility - Niveau de visibilité
    */
-  async publishNote(noteRef: string, isPublished: boolean) {
+  async publishNote(noteRef: string, visibility: 'private' | 'public' | 'link-private' | 'link-public' | 'limited' | 'scrivia') {
     const startTime = Date.now();
     const context = { operation: 'v2_llm_note_publish', component: 'LLMApi', noteRef };
     
@@ -430,7 +430,7 @@ export class LLMApi {
           'Content-Type': 'application/json',
           'X-Client-Type': 'llm'
         },
-        body: JSON.stringify({ ispublished: isPublished })
+        body: JSON.stringify({ visibility })
       });
 
       if (!response.ok) {
