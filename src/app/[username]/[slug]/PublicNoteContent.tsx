@@ -3,6 +3,7 @@
 import React from 'react';
 import PublicTOCClient from '@/components/PublicTOCClient';
 import CraftedBadge from '@/components/CraftedBadge';
+import '@/styles/public-note.css'; // CSS spécifique page publique - PRIORITÉ MAXIMALE
 import '@/styles/typography.css'; // Importer le CSS typography
 import '@/styles/design-system.css'; // Importer le design system pour les variables
 
@@ -33,14 +34,24 @@ export default function PublicNoteContent({ note, slug }: PublicNoteProps) {
       fullWidth ? 'var(--editor-content-width-wide)' : 'var(--editor-content-width-normal)'
     );
     
-    // Forcer le thème sombre sur la page publique
+    // Forcer le thème sombre sur la page publique - IMMÉDIATEMENT
     document.documentElement.classList.add('public-note-page');
     document.body.classList.add('public-note-page');
+    
+    // Forcer le background sombre directement sur le DOM
+    document.documentElement.style.backgroundColor = '#141414';
+    document.documentElement.style.background = '#141414';
+    document.body.style.backgroundColor = '#141414';
+    document.body.style.background = '#141414';
     
     // Cleanup lors du démontage
     return () => {
       document.documentElement.classList.remove('public-note-page');
       document.body.classList.remove('public-note-page');
+      document.documentElement.style.backgroundColor = '';
+      document.documentElement.style.background = '';
+      document.body.style.backgroundColor = '';
+      document.body.style.background = '';
     };
   }, [note.wide_mode]);
 
@@ -55,9 +66,9 @@ export default function PublicNoteContent({ note, slug }: PublicNoteProps) {
     <div 
       className="public-note-container"
       style={{
-        backgroundColor: 'var(--bg-main)',
-        background: 'var(--bg-main)',
-        color: 'var(--editor-text-color)'
+        backgroundColor: '#141414',
+        background: '#141414',
+        color: '#F5F5DC'
       }}
     >
       {/* Le Header est déjà injecté par AppMainContent */}
