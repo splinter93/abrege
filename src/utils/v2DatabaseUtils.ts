@@ -143,7 +143,7 @@ export class V2DatabaseUtils {
       // Charger l'état courant pour comparaison de titre
       const { data: current, error: currErr } = await supabase
         .from('articles')
-        .select('id, source_title, slug, ispublished, public_url')
+        .select('id, source_title, slug, public_url')
         .eq('id', noteId)
         .eq('user_id', userId)
         .single();

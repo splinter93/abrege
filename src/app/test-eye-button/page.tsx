@@ -33,11 +33,11 @@ export default function TestEyeButton() {
                   <div style={{ fontSize: '0.9rem', color: '#666' }}>
                     <p><strong>ID:</strong> {noteId}</p>
                     <p><strong>Slug:</strong> {note?.slug || 'Aucun slug'}</p>
-                    <p><strong>Publiée:</strong> {note?.ispublished ? '✅ Oui' : '❌ Non'}</p>
+                    <p><strong>Visibilité:</strong> {note?.visibility || 'Non définie'}</p>
                     <p><strong>URL publique:</strong> {note?.public_url || 'Aucune URL'}</p>
                   </div>
                   
-                  {note?.ispublished && note?.public_url && (
+                  {note?.visibility !== 'private' && note?.public_url && (
                     <div style={{ marginTop: '1rem' }}>
                       <a 
                         href={note.public_url} 
@@ -69,14 +69,14 @@ export default function TestEyeButton() {
           <li>Ouvrez une note dans l'éditeur</li>
           <li>Cliquez sur le bouton œil (👁️) dans l'en-tête</li>
           <li>Vérifiez que l'URL publique s'ouvre correctement</li>
-          <li>Si la note n'est pas publiée, vous devriez voir un message d'erreur</li>
+          <li>Si la note est privée, vous devriez voir un message d'erreur</li>
         </ol>
       </div>
 
       <div style={{ marginBottom: '2rem' }}>
         <h2>🔧 Fonctionnalités du bouton œil :</h2>
         <ul>
-          <li>✅ Vérifie que la note est publiée</li>
+          <li>✅ Vérifie que la note est accessible (visibility !== 'private')</li>
           <li>✅ Utilise l'URL publique stockée si disponible</li>
           <li>✅ Construit l'URL avec le slug si nécessaire</li>
           <li>✅ Valide l'URL avant l'ouverture</li>

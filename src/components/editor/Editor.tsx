@@ -326,8 +326,8 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
             return;
           }
           
-          // Si la note n'a pas de propriété visibility, utiliser ispublished comme fallback
-          if (n.visibility === 'private' || (!n.visibility && !n.ispublished)) {
+          // Vérifier la visibilité de la note
+          if (n.visibility === 'private') {
             toast.error('Cette note est privée. Changez sa visibilité pour la prévisualiser.');
             return;
           }

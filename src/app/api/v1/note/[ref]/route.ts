@@ -113,7 +113,7 @@ export async function PUT(req: NextRequest, { params }: ApiContext): Promise<Res
     // Charger l'état courant pour comparaison de titre
     const { data: currentNote } = await supabase
       .from('articles')
-      .select('id, source_title, slug, ispublished')
+      .select('id, source_title, slug')
       .eq('id', noteId)
       .eq('user_id', userId)
       .single();
