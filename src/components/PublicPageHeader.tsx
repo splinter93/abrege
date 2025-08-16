@@ -5,7 +5,7 @@ import Link from 'next/link';
 import LogoHeader from '@/components/LogoHeader';
 import { FiShare2, FiStar, FiMoreHorizontal, FiMaximize2, FiMinimize2, FiSearch } from 'react-icons/fi';
 import { supabase } from '@/supabaseClient';
-import ShareMenu from './ShareMenu';
+import SocialShareMenu from './SocialShareMenu';
 import './PublicPageHeader.css';
 
 export default function PublicPageHeader() {
@@ -70,17 +70,11 @@ export default function PublicPageHeader() {
           <FiShare2 size={18} />
         </button>
         
-        {/* Menu de partage */}
-        <ShareMenu
-          noteId="public-note"
-          currentSettings={{
-            visibility: 'link-public',
-            invited_users: [],
-            allow_edit: false,
-            allow_comments: false
-          }}
-          publicUrl={typeof window !== 'undefined' ? window.location.href : ''}
-          onSettingsChange={async () => {}}
+        {/* Menu de partage social */}
+        <SocialShareMenu
+          url={typeof window !== 'undefined' ? window.location.href : ''}
+          title="Note Scrivia"
+          description="Découvrez cette note créée avec Scrivia"
           isOpen={isShareMenuOpen}
           onClose={() => setIsShareMenuOpen(false)}
         />
