@@ -47,11 +47,13 @@ html.public-note-page .public-note-container footer {
 /* Exception pour les éléments qui doivent garder leur background spécifique */
 .public-note-container .public-header-image,
 .public-note-container .public-header-overlay,
+.public-note-container .public-header-title,
+.public-note-container .public-header-title h1,
 .public-note-container .stat-icon,
 .public-note-container .quick-btn.primary,
 .public-note-container a[href*="scrivia.app"] {
-  background-color: inherit !important;
-  background: inherit !important;
+  background-color: transparent !important;
+  background: transparent !important;
 }
 
 /* Forcer le background sombre sur la page publique - plus spécifique */
