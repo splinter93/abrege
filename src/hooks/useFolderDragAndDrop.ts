@@ -4,7 +4,7 @@ import { toast } from 'react-hot-toast';
 import { DropEventDetail } from '../components/types';
 import { useFileSystemStore } from '@/store/useFileSystemStore';
 import { clientPollingTrigger } from '@/services/clientPollingTrigger';
-import { OptimizedApi } from '@/services/optimizedApi';
+import { v2UnifiedApi } from '@/services/V2UnifiedApi';
 import { simpleLogger as logger } from '@/utils/logger';
 
 interface UseFolderDragAndDropProps {
@@ -13,6 +13,7 @@ interface UseFolderDragAndDropProps {
   moveItem: (itemId: string, targetFolderId: string | null, itemType: 'folder' | 'file') => Promise<void>;
   refreshNow: () => void;
   setRefreshKey: (updater: (key: number) => number) => void;
+  userId: string;
 }
 
 interface UseFolderDragAndDropReturn {
@@ -32,7 +33,8 @@ export const useFolderDragAndDrop = ({
   parentFolderId,
   moveItem,
   refreshNow,
-  setRefreshKey
+  setRefreshKey,
+  userId
 }: UseFolderDragAndDropProps): UseFolderDragAndDropReturn => {
   const [isRootDropActive, setIsRootDropActive] = useState(false);
 
@@ -113,7 +115,6 @@ export const useFolderDragAndDrop = ({
       const { classeurId: targetClasseurId, itemId, itemType } = customEvent.detail || {};
       if (!targetClasseurId || !itemId || !itemType) return;
 
-      const api = OptimizedApi.getInstance();
       toast.loading('Déplacement en cours...');
 
       try {
@@ -124,11 +125,11 @@ export const useFolderDragAndDrop = ({
         } else {
           // Cross-classeur: déplacer dans targetClasseurId et racine
           if (itemType === 'folder') {
-            await api.moveFolder(itemId, null, targetClasseurId);
+            await v2UnifiedApi.moveFolder(itemId, null, userId);
           } else {
-            await api.moveNote(itemId, null, targetClasseurId);
+            await v2UnifiedApi.moveNote(itemId, null, userId);
           }
-          // Pas besoin de modifier le store manuellement: OptimizedApi a déjà mis à jour Zustand
+          // Pas besoin de modifier le store manuellement: V2UnifiedApi a déjà mis à jour Zustand
           // On force un refresh local pour que l'item disparaisse du classeur courant
           setRefreshKey((k) => k + 1);
         }

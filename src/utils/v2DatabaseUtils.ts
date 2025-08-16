@@ -104,7 +104,7 @@ export class V2DatabaseUtils {
           html_content: data.markdown_content || '', // Pour l'instant, on met le même contenu
           header_image: data.header_image,
           folder_id: data.folder_id,
-          classeur_id: classeurId,
+          classeur_id: classeurId, // 🔧 CORRECTION TEMPORAIRE: Utiliser uniquement classeur_id
           user_id: userId,
           slug,
           description: data.description
@@ -440,7 +440,7 @@ export class V2DatabaseUtils {
         .from('folders')
         .insert({
           name: data.name,
-          classeur_id: classeurId,
+          classeur_id: classeurId, // 🔧 CORRECTION TEMPORAIRE: Utiliser uniquement classeur_id
           parent_id: data.parent_id,
           user_id: userId,
           slug
@@ -956,19 +956,21 @@ export class V2DatabaseUtils {
         throw new Error('Certains classeurs n\'existent pas ou ne vous appartiennent pas');
       }
 
-      // Mettre à jour les positions
-      const updates = classeurs.map(classeur => ({
-        id: classeur.id,
-        position: classeur.position,
-        updated_at: new Date().toISOString()
-      }));
+      // 🔧 CORRECTION: Mettre à jour uniquement la position et updated_at
+      // Ne pas utiliser upsert qui essaie de mettre à jour tous les champs
+      for (const classeur of classeurs) {
+        const { error: updateError } = await supabase
+          .from('classeurs')
+          .update({
+            position: classeur.position,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', classeur.id)
+          .eq('user_id', userId);
 
-      const { error: updateError } = await supabase
-        .from('classeurs')
-        .upsert(updates, { onConflict: 'id' });
-
-      if (updateError) {
-        throw new Error(`Erreur mise à jour positions: ${updateError.message}`);
+        if (updateError) {
+          throw new Error(`Erreur mise à jour position classeur ${classeur.id}: ${updateError.message}`);
+        }
       }
 
       // Récupérer les classeurs mis à jour

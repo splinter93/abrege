@@ -15,11 +15,12 @@ export class V2ResourceResolver {
     ref: string, 
     type: ResourceType,
     userId: string,
-    context: { operation: string; component: string }
+    context: { operation: string; component: string },
+    userToken?: string
   ): Promise<{ success: true; id: string } | { success: false; error: string; status: number }> {
     
     try {
-      const resolvedId = await ResourceResolver.resolveRef(ref, type, userId);
+      const resolvedId = await ResourceResolver.resolveRef(ref, type, userId, userToken);
       
       if (!resolvedId) {
         logApi('v2_resource_resolve', `❌ Référence non trouvée: ${ref} (type: ${type})`, context);

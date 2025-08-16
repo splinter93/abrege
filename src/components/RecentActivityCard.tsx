@@ -40,7 +40,7 @@ export default function RecentActivityCard({
         if (limit) params.append('limit', limit.toString());
         if (username) params.append('username', username);
         
-        const response = await fetch(`/api/v1/notes/recent?${params}`);
+        const response = await fetch(`/api/v2/notes/recent?${params}`);
         if (!response.ok) {
           throw new Error('Failed to fetch recent notes');
         }

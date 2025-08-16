@@ -1,15 +1,18 @@
 "use client";
 
 import { useMemo } from "react";
-import type { Folder, Classeur } from "@/components/types";
+import type { Folder } from "@/components/types";
+import type { Classeur } from "@/store/useFileSystemStore";
 import ClasseurTabs from "@/components/ClasseurTabs";
 import LogoHeader from "@/components/LogoHeader";
 import Sidebar from "@/components/Sidebar";
 import FolderManager from "@/components/FolderManager";
 import { useDossiersPage } from "@/hooks/useDossiersPage";
+import { useAuth } from "@/hooks/useAuth";
 import "./index.css";
 
 export default function DossiersPage() {
+  const { user } = useAuth();
   const {
     loading,
     error,
@@ -26,7 +29,10 @@ export default function DossiersPage() {
     handleUpdateClasseurPositions,
     handleFolderOpen,
     handleGoBack,
-  } = useDossiersPage();
+    handleGoToRoot, // 🔧 NOUVEAU: Navigation vers la racine
+    handleGoToFolder, // 🔧 NOUVEAU: Navigation directe vers un dossier
+    folderPath, // 🔧 NOUVEAU: Chemin de navigation pour le breadcrumb
+  } = useDossiersPage(user?.id || '');
 
   const activeClasseur = useMemo(
     () => classeurs.find((c) => c.id === activeClasseurId),
@@ -45,7 +51,12 @@ export default function DossiersPage() {
 
       <main className="dossiers-content-area">
         <ClasseurTabs
-          classeurs={classeurs.map((c: Classeur) => ({ id: c.id, name: c.name, emoji: c.emoji, color: c.color }))}
+          classeurs={classeurs.map((c: Classeur) => ({ 
+            id: c.id, 
+            name: c.name, 
+            emoji: c.emoji, 
+            color: '#e55a2c' // Couleur par défaut
+          }))}
           setClasseurs={setClasseurs}
           activeClasseurId={activeClasseurId || null}
           onSelectClasseur={(id) => {
@@ -70,6 +81,9 @@ export default function DossiersPage() {
             parentFolderId={currentFolderId}
             onFolderOpen={handleFolderOpen}
             onGoBack={handleGoBack}
+            onGoToRoot={handleGoToRoot} // 🔧 NOUVEAU: Navigation vers la racine
+            onGoToFolder={handleGoToFolder} // 🔧 NOUVEAU: Navigation directe vers un dossier
+            folderPath={folderPath} // 🔧 NOUVEAU: Chemin de navigation pour le breadcrumb
           />
         )}
 

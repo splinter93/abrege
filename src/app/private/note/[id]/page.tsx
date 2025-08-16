@@ -55,6 +55,9 @@ export default function NotePage() {
             font_family: content.fontFamily || null,
             updated_at: content.updatedAt,
             created_at: content.createdAt,
+            slug: content.slug,
+            public_url: content.publicUrl,
+            visibility: content.visibility
           } as any);
         }
       } catch (e) {

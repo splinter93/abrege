@@ -4,7 +4,7 @@ import { Folder, FileArticle } from './types';
 import {
   updateItemPositions
 } from '../services/supabase';
-import { optimizedApi } from '@/services/optimizedApi';
+import { v2UnifiedApi } from '@/services/V2UnifiedApi';
 import { clientPollingTrigger } from '@/services/clientPollingTrigger';
 import { simpleLogger as logger } from '@/utils/logger';
 
@@ -12,6 +12,7 @@ import { useRealtime } from '@/hooks/useRealtime';
 import { useFileSystemStore } from '@/store/useFileSystemStore';
 import type { FileSystemState, Note } from '@/store/useFileSystemStore';
 import { generateUniqueNoteName } from '@/utils/generateUniqueName';
+
 
 const selectFoldersData = (s: FileSystemState) => s.folders;
 const selectNotesData = (s: FileSystemState) => s.notes;
@@ -104,7 +105,7 @@ function toUIFile(n: ZustandNote): FileArticle {
   };
 }
 
-export function useFolderManagerState(classeurId: string, parentFolderId?: string, refreshKey?: number): FolderManagerResult {
+export function useFolderManagerState(classeurId: string, userId: string, parentFolderId?: string, refreshKey?: number): FolderManagerResult {
   // --- ÉTAT PRINCIPAL ---
   const foldersMap = useFileSystemStore(selectFoldersData);
   const folders = useMemo(() => Object.values(foldersMap), [foldersMap]);
@@ -186,11 +187,11 @@ export function useFolderManagerState(classeurId: string, parentFolderId?: strin
       if (process.env.NODE_ENV === 'development') {
         logger.dev('[UI] 📁 Création dossier avec API optimisée...', { name, classeurId, parentFolderId });
       }
-      const result = await optimizedApi.createFolder({
+      const result = await v2UnifiedApi.createFolder({
         name,
         notebook_id: classeurId,
         parent_id: parentFolderId,
-      });
+      }, userId);
       if (process.env.NODE_ENV === 'development') {
         logger.dev('[UI] ✅ Dossier créé avec API optimisée:', result.folder.name);
       }
@@ -224,7 +225,7 @@ export function useFolderManagerState(classeurId: string, parentFolderId?: strin
       if (process.env.NODE_ENV === 'development') {
         logger.dev('Payload createNote optimisée', payload);
       }
-      const result = await optimizedApi.createNote(payload);
+      const result = await v2UnifiedApi.createNote(payload, userId);
       if (process.env.NODE_ENV === 'development') {
         logger.dev('[UI] ✅ Note créée avec API optimisée:', result.note.source_title);
       }
@@ -241,7 +242,7 @@ export function useFolderManagerState(classeurId: string, parentFolderId?: strin
       if (process.env.NODE_ENV === 'development') {
       logger.dev('[UI] 🗑️ Suppression dossier avec API optimisée...', { id });
       }
-      await optimizedApi.deleteFolder(id);
+      await v2UnifiedApi.deleteFolder(id, userId);
       if (process.env.NODE_ENV === 'development') {
       logger.dev('[UI] ✅ Dossier supprimé avec API optimisée');
       }
@@ -262,7 +263,7 @@ export function useFolderManagerState(classeurId: string, parentFolderId?: strin
     useFileSystemStore.getState().updateNoteOptimistic(id, { source_title: name });
 
     try {
-      await optimizedApi.updateNote(id, { source_title: name });
+      await v2UnifiedApi.updateNote(id, { source_title: name }, userId);
     } catch (error) {
       logger.error('Erreur renommage note:', error);
       useFileSystemStore.getState().updateNote(id, { source_title: originalNote.source_title });
@@ -276,7 +277,7 @@ export function useFolderManagerState(classeurId: string, parentFolderId?: strin
     useFileSystemStore.getState().updateFolder(id, { name });
 
     try {
-      await optimizedApi.updateFolder(id, { name });
+      await v2UnifiedApi.updateFolder(id, { name }, userId);
     } catch (error) {
       logger.error('Erreur renommage dossier:', error);
       useFileSystemStore.getState().updateFolder(id, { name: originalFolder.name });
@@ -288,7 +289,7 @@ export function useFolderManagerState(classeurId: string, parentFolderId?: strin
       if (process.env.NODE_ENV === 'development') {
       logger.dev('[UI] 🗑️ Suppression note avec API optimisée...', { id });
       }
-      await optimizedApi.deleteNote(id);
+      await v2UnifiedApi.deleteNote(id, userId);
       if (process.env.NODE_ENV === 'development') {
       logger.dev('[UI] ✅ Note supprimée avec API optimisée');
       }
@@ -305,9 +306,9 @@ export function useFolderManagerState(classeurId: string, parentFolderId?: strin
       logger.dev('[UI] ✏️ Renommage item avec API optimisée...', { id, newName, type });
       }
       if (type === 'file') {
-        await optimizedApi.updateNote(id, { source_title: newName });
+        await v2UnifiedApi.updateNote(id, { source_title: newName }, userId);
       } else {
-        await optimizedApi.updateFolder(id, { name: newName });
+        await v2UnifiedApi.updateFolder(id, { name: newName }, userId);
       }
       if (process.env.NODE_ENV === 'development') {
       logger.dev('[UI] ✅ Item renommé avec API optimisée');
@@ -385,12 +386,12 @@ export function useFolderManagerState(classeurId: string, parentFolderId?: strin
         logger.dev('[UI] 📦 Déplacement item avec API...', { id, newParentId, type });
       }
       if (type === 'folder') {
-        await optimizedApi.moveFolder(id, newParentId, activeClasseurId || undefined);
+        await v2UnifiedApi.moveFolder(id, newParentId, userId);
       } else {
-        // Utiliser l'API optimisée pour le déplacement de note
-        const result = await optimizedApi.moveNote(id, newParentId, activeClasseurId || undefined);
+        // Utiliser l'API unifiée V2 pour le déplacement de note
+        const result = await v2UnifiedApi.moveNote(id, newParentId, userId);
         if (process.env.NODE_ENV === 'development') {
-          logger.dev('[UI] ✅ Note déplacée avec API optimisée:', result.note?.source_title || id);
+          logger.dev('[UI] ✅ Note déplacée avec API unifiée V2:', result.note?.source_title || id);
         }
       }
       if (process.env.NODE_ENV === 'development') {

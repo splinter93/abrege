@@ -149,12 +149,32 @@ export const useFileSystemStore = create<FileSystemState>()((set, get) => ({
     } 
   })),
   
-  moveNote: (id: string, folder_id: string | null, classeur_id?: string) => set(state => ({ 
-    notes: { 
-      ...state.notes, 
-      [id]: { ...state.notes[id], folder_id, classeur_id } 
-    } 
-  })),
+  moveNote: (id: string, folder_id: string | null, classeur_id?: string) => set(state => {
+    // 🔧 CORRECTION: S'assurer que classeur_id est défini
+    const targetClasseurId = classeur_id || state.notes[id]?.classeur_id;
+    
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[Store] 🔄 moveNote:', { id, folder_id, classeur_id, targetClasseurId });
+      console.log('[Store] 📝 Note avant:', state.notes[id]);
+    }
+    
+    const updatedNote = { 
+      ...state.notes[id], 
+      folder_id, 
+      classeur_id: targetClasseurId 
+    };
+    
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[Store] 📝 Note après:', updatedNote);
+    }
+    
+    return {
+      notes: { 
+        ...state.notes, 
+        [id]: updatedNote
+      } 
+    };
+  }),
   
   updateNoteContent: (noteId: string, patch: EditorPatch) => set(state => {
     if (!state.notes[noteId]) return {};
@@ -195,12 +215,32 @@ export const useFileSystemStore = create<FileSystemState>()((set, get) => ({
     } 
   })),
   
-  moveFolder: (id: string, parent_id: string | null, classeur_id?: string) => set(state => ({ 
-    folders: { 
-      ...state.folders, 
-      [id]: { ...state.folders[id], parent_id, classeur_id } 
-    } 
-  })),
+  moveFolder: (id: string, parent_id: string | null, classeur_id?: string) => set(state => {
+    // 🔧 CORRECTION: S'assurer que classeur_id est défini
+    const targetClasseurId = classeur_id || state.folders[id]?.classeur_id;
+    
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[Store] 🔄 moveFolder:', { id, parent_id, classeur_id, targetClasseurId });
+      console.log('[Store] 📁 Dossier avant:', state.folders[id]);
+    }
+    
+    const updatedFolder = { 
+      ...state.folders[id], 
+      parent_id, 
+      classeur_id: targetClasseurId 
+    };
+    
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[Store] 📁 Dossier après:', updatedFolder);
+    }
+    
+    return {
+      folders: { 
+        ...state.folders, 
+        [id]: updatedFolder
+      } 
+    };
+  }),
   
   // Classeurs - MUTATIONS LOCALES
   addClasseur: (classeur: Classeur) => set(state => ({ 

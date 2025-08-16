@@ -91,7 +91,7 @@ export async function GET(
     // Récupérer le contenu de la note
     const { data: note, error: fetchError } = await supabase
       .from('articles')
-      .select('id, source_title, markdown_content, html_content, header_image, header_image_offset, header_image_blur, header_image_overlay, header_title_in_image, wide_mode, font_family, created_at, updated_at')
+      .select('id, source_title, markdown_content, html_content, header_image, header_image_offset, header_image_blur, header_image_overlay, header_title_in_image, wide_mode, font_family, created_at, updated_at, slug, public_url, visibility')
       .eq('id', noteId)
       .single();
 
@@ -122,7 +122,10 @@ export async function GET(
         wideMode: note.wide_mode,
         fontFamily: note.font_family,
         createdAt: note.created_at,
-        updatedAt: note.updated_at
+        updatedAt: note.updated_at,
+        slug: note.slug,
+        publicUrl: note.public_url,
+        visibility: note.visibility
       }
     });
 

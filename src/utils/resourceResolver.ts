@@ -22,21 +22,40 @@ export class ResourceResolver {
   public static async resolveRef(
     ref: string, 
     type: ResourceType,
-    userId: string
+    userId: string,
+    userToken?: string
   ): Promise<string | null> {
     // Si c'est un UUID, retourner directement
     if (this.isUUID(ref)) {
       return ref;
     }
     
-    // Sinon, chercher par slug
-    const { data } = await supabase
-      .from(this.getTableName(type))
-      .select('id')
-      .eq('slug', ref)
-      .eq('user_id', userId)
-      .single();
-    
-    return data?.id || null;
+    // Sinon, chercher par slug avec authentification
+    try {
+      let supabaseClient = supabase;
+      
+      // Si on a un token, créer un client authentifié
+      if (userToken) {
+        supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
+          global: {
+            headers: {
+              Authorization: `Bearer ${userToken}`
+            }
+          }
+        });
+      }
+      
+      const { data } = await supabaseClient
+        .from(this.getTableName(type))
+        .select('id')
+        .eq('slug', ref)
+        .eq('user_id', userId)
+        .single();
+      
+      return data?.id || null;
+    } catch (error) {
+      console.error('Erreur lors de la résolution de référence:', error);
+      return null;
+    }
   }
 } 

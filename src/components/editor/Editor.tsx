@@ -33,7 +33,7 @@ import EditorSlashMenu, { type EditorSlashMenuHandle } from '@/components/Editor
 import TableControls from '@/components/editor/TableControls';
 import { useRouter } from 'next/navigation';
 import { FiEye, FiX, FiImage } from 'react-icons/fi';
-import { OptimizedApi } from '@/services/optimizedApi';
+import { v2UnifiedApi } from '@/services/V2UnifiedApi';
 import { supabase } from '@/supabaseClient';
 import { toast } from 'react-hot-toast';
 import ImageMenu from '@/components/ImageMenu';
@@ -99,9 +99,8 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
     const normalized = normalize(url);
     setHeaderImageUrl(normalized);
     try {
-      const api = OptimizedApi.getInstance();
       updateNote(noteId, { header_image: normalized } as any);
-      await api.updateNoteAppearance(noteId, { header_image: normalized ?? null });
+      await v2UnifiedApi.updateNote(noteId, { header_image: normalized ?? null }, userId);
     } catch (error) {
       console.error('Error updating header image:', error);
     }
@@ -229,12 +228,11 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
   const { handleSave } = useEditorSave({
     editor: editor as any,
     onSave: async ({ title: newTitle, markdown_content, html_content }) => {
-      const api = OptimizedApi.getInstance();
-      await api.updateNote(noteId, {
+      await v2UnifiedApi.updateNote(noteId, {
         source_title: newTitle ?? title ?? 'Untitled',
         markdown_content,
         html_content,
-      });
+      }, userId);
     }
   });
 
@@ -280,8 +278,7 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
   // Persist font changes via toolbar callback
   const handleFontChange = React.useCallback(async (fontName: string) => {
     try {
-      const api = OptimizedApi.getInstance();
-      await api.updateNoteAppearance(noteId, { font_family: fontName } as any);
+      await v2UnifiedApi.updateNote(noteId, { font_family: fontName } as any, userId);
       useFileSystemStore.getState().updateNote(noteId, { font_family: fontName } as any);
     } catch {}
   }, [noteId]);
@@ -320,17 +317,17 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
       // Récupérer la note depuis le store
       const n = useFileSystemStore.getState().notes[noteId];
       
-                // Vérifier si la note est accessible (pas privée)
-          if (!n) {
-            toast.error('Note non trouvée. Rechargez la page et réessayez.');
-            return;
-          }
-          
-          // Vérifier la visibilité de la note
-          if (n.visibility === 'private') {
-            toast.error('Cette note est privée. Changez sa visibilité pour la prévisualiser.');
-            return;
-          }
+      // Vérifier si la note est accessible (pas privée)
+      if (!n) {
+        toast.error('Note non trouvée. Rechargez la page et réessayez.');
+        return;
+      }
+      
+      // Vérifier la visibilité de la note
+      if (n.visibility === 'private') {
+        toast.error('Cette note est privée. Changez sa visibilité pour la prévisualiser.');
+        return;
+      }
 
       // Vérifier si la note a un slug
       if (!n?.slug) {
@@ -540,33 +537,29 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
               onHeaderOffsetChange={async (offset) => {
                 setHeaderOffset(offset);
                 try {
-                  const api = OptimizedApi.getInstance();
                   updateNote(noteId, { header_image_offset: offset } as any);
-                  await api.updateNoteAppearance(noteId, { header_image_offset: offset });
+                  await v2UnifiedApi.updateNote(noteId, { header_image_offset: offset }, userId);
                 } catch {}
               }}
               onHeaderBlurChange={async (blur) => {
                 setHeaderBlur(blur);
                 try {
-                  const api = OptimizedApi.getInstance();
                   updateNote(noteId, { header_image_blur: blur } as any);
-                  await api.updateNoteAppearance(noteId, { header_image_blur: blur });
+                  await v2UnifiedApi.updateNote(noteId, { header_image_blur: blur }, userId);
                 } catch {}
               }}
               onHeaderOverlayChange={async (overlay) => {
                 setHeaderOverlay(overlay);
                 try {
-                  const api = OptimizedApi.getInstance();
                   updateNote(noteId, { header_image_overlay: overlay } as any);
-                  await api.updateNoteAppearance(noteId, { header_image_overlay: overlay });
+                  await v2UnifiedApi.updateNote(noteId, { header_image_overlay: overlay }, userId);
                 } catch {}
               }}
               onHeaderTitleInImageChange={async (v) => {
                 setTitleInImage(v);
                 try {
-                  const api = OptimizedApi.getInstance();
                   updateNote(noteId, { header_title_in_image: v } as any);
-                  await api.updateNoteAppearance(noteId, { header_title_in_image: v });
+                  await v2UnifiedApi.updateNote(noteId, { header_title_in_image: v }, userId);
                 } catch {}
               }}
               imageMenuOpen={imageMenuOpen}

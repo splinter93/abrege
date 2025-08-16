@@ -1,5 +1,7 @@
 import { createSupabaseClient } from '@/utils/supabaseClient';
 import { logApi } from '@/utils/logger';
+import { SlugGenerator } from '@/utils/slugGenerator';
+import { SlugAndUrlService } from '@/services/slugAndUrlService';
 
 /**
  * Fonctions directes pour les API v2 (sans passer par HTTP)
@@ -54,6 +56,24 @@ export async function createNoteDirect(params: CreateNoteParams, userId: string)
     logApi('v2_note_create_direct', `✅ Slug résolu: ${params.notebook_id} -> ${classeurId}`, context);
   }
 
+  // Générer le slug et l'URL publique
+  let slug: string;
+  let publicUrl: string | null = null;
+  try {
+    const result = await SlugAndUrlService.generateSlugAndUpdateUrl(
+      params.source_title,
+      userId,
+      undefined, // Pas de noteId pour la création
+      supabase
+    );
+    slug = result.slug;
+    publicUrl = result.publicUrl;
+  } catch (e) {
+    // Fallback minimal en cas d'échec
+    slug = `${params.source_title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')}-${Date.now().toString(36)}`.slice(0, 120);
+    logApi('v2_note_create_direct', `⚠️ Fallback slug utilisé: ${slug}`, context);
+  }
+
   // Créer la note avec timeout
   const createPromise = supabase
     .from('articles')
@@ -64,7 +84,9 @@ export async function createNoteDirect(params: CreateNoteParams, userId: string)
       header_image: params.header_image,
       folder_id: params.folder_id,
       classeur_id: classeurId,
-      user_id: userId
+      user_id: userId,
+      slug,
+      public_url: publicUrl
     })
     .select()
     .single();

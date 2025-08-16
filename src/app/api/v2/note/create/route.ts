@@ -3,6 +3,7 @@ import { logApi } from '@/utils/logger';
 import { createNoteV2Schema, validatePayload, createValidationErrorResponse } from '@/utils/v2ValidationSchemas';
 import { createSupabaseClient } from '@/utils/supabaseClient';
 import { getAuthenticatedUser } from '@/utils/authUtils';
+import { SlugAndUrlService } from '@/services/slugAndUrlService';
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
   const startTime = Date.now();
@@ -81,6 +82,24 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       logApi('v2_note_create', `✅ Slug résolu: ${validatedData.notebook_id} -> ${classeurId}`, context);
     }
 
+    // Générer le slug et l'URL publique
+    let slug: string;
+    let publicUrl: string | null = null;
+    try {
+      const result = await SlugAndUrlService.generateSlugAndUpdateUrl(
+        validatedData.source_title,
+        userId,
+        undefined, // Pas de noteId pour la création
+        supabase
+      );
+      slug = result.slug;
+      publicUrl = result.publicUrl;
+    } catch (e) {
+      // Fallback minimal en cas d'échec
+      slug = `${validatedData.source_title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')}-${Date.now().toString(36)}`.slice(0, 120);
+      logApi('v2_note_create', `⚠️ Fallback slug utilisé: ${slug}`, context);
+    }
+
     // Créer la note directement dans la base de données
     const { data: note, error: createError } = await supabase
       .from('articles')
@@ -90,8 +109,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         html_content: validatedData.markdown_content || '', // Pour l'instant, on met le même contenu
         header_image: validatedData.header_image,
         folder_id: validatedData.folder_id,
-        classeur_id: classeurId,
-        user_id: userId
+        classeur_id: classeurId, // 🔧 CORRECTION TEMPORAIRE: Utiliser uniquement classeur_id
+        user_id: userId,
+        slug,
+        public_url: publicUrl
       })
       .select()
       .single();

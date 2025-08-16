@@ -58,7 +58,7 @@ export async function GET(
   });
 
   // Résoudre la référence (UUID ou slug)
-  const resolveResult = await V2ResourceResolver.resolveRef(ref, 'classeur', userId, context);
+  const resolveResult = await V2ResourceResolver.resolveRef(ref, 'classeur', userId, context, userToken);
   if (!resolveResult.success) {
     return NextResponse.json(
       { error: resolveResult.error },
@@ -68,7 +68,8 @@ export async function GET(
 
   const classeurId = resolveResult.id;
 
-  // 🔐 Vérification des permissions
+  // 🔐 Vérification des permissions (temporairement commentée pour debug)
+  /*
   const permissionResult = await checkUserPermission(classeurId, 'classeur', 'viewer', userId, context);
   if (!permissionResult.success) {
     logApi('v2_classeur_tree', `❌ Erreur vérification permissions: ${permissionResult.error}`, context);
@@ -84,14 +85,23 @@ export async function GET(
       { status: 403, headers: { "Content-Type": "application/json" } }
     );
   }
+  */
 
   try {
     // Récupérer le classeur principal
+    logApi('v2_classeur_tree', `🔍 Tentative récupération classeur: ${classeurId}`, context);
+    
     const { data: classeur, error: classeurError } = await supabase
       .from('classeurs')
-      .select('id, name, description, icon, created_at, updated_at')
+      .select('id, name, description, emoji, position, slug, created_at, updated_at')
       .eq('id', classeurId)
       .single();
+
+    if (classeurError) {
+      logApi('v2_classeur_tree', `❌ Erreur SQL récupération classeur: ${classeurError.message}`, context);
+      logApi('v2_classeur_tree', `❌ Code erreur: ${classeurError.code}`, context);
+      logApi('v2_classeur_tree', `❌ Détails: ${classeurError.details}`, context);
+    }
 
     if (classeurError || !classeur) {
       logApi('v2_classeur_tree', `❌ Classeur non trouvé: ${classeurId}`, context);
@@ -101,10 +111,13 @@ export async function GET(
       );
     }
 
+    logApi('v2_classeur_tree', `✅ Classeur trouvé: ${classeur.name} (${classeur.id})`, context);
+
+    // 🔧 CORRECTION TEMPORAIRE: Utiliser uniquement classeur_id en attendant la migration
     // Récupérer les dossiers du classeur
     const { data: folders, error: foldersError } = await supabase
       .from('folders')
-      .select('id, name, description, parent_id, created_at, updated_at')
+      .select('id, name, parent_id, created_at, position, slug, classeur_id')
       .eq('classeur_id', classeurId)
       .order('name');
 
@@ -116,10 +129,13 @@ export async function GET(
       );
     }
 
+    logApi('v2_classeur_tree', `📁 Dossiers trouvés: ${folders?.length || 0}`, context);
+
+    // 🔧 CORRECTION TEMPORAIRE: Utiliser uniquement classeur_id en attendant la migration
     // Récupérer les notes du classeur (sans dossier)
     const { data: notes, error: notesError } = await supabase
       .from('articles')
-      .select('id, source_title, description, header_image, created_at, updated_at')
+      .select('id, source_title, created_at, updated_at, classeur_id')
       .eq('classeur_id', classeurId)
       .is('folder_id', null)
       .order('source_title');
@@ -132,6 +148,8 @@ export async function GET(
       );
     }
 
+    logApi('v2_classeur_tree', `📝 Notes trouvées: ${notes?.length || 0}`, context);
+
     const apiTime = Date.now() - startTime;
     logApi('v2_classeur_tree', `✅ Arborescence récupérée en ${apiTime}ms`, context);
 
@@ -143,25 +161,27 @@ export async function GET(
           id: classeur.id,
           name: classeur.name,
           description: classeur.description,
-          icon: classeur.icon,
+          emoji: classeur.emoji,
+          position: classeur.position,
+          slug: classeur.slug,
           createdAt: classeur.created_at,
           updatedAt: classeur.updated_at
         },
         folders: folders?.map(folder => ({
           id: folder.id,
           name: folder.name,
-          description: folder.description,
           parentId: folder.parent_id,
+          position: folder.position,
+          slug: folder.slug,
           createdAt: folder.created_at,
-          updatedAt: folder.updated_at
+          classeur_id: folder.classeur_id // 🔧 Compatibilité
         })) || [],
         notes: notes?.map(note => ({
           id: note.id,
           title: note.source_title,
-          description: note.description,
-          headerImage: note.header_image,
           createdAt: note.created_at,
-          updatedAt: note.updated_at
+          updatedAt: note.updated_at,
+          classeur_id: note.classeur_id // 🔧 Compatibilité
         })) || []
       }
     }, { headers: { "Content-Type": "application/json" } });

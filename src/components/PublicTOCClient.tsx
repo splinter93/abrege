@@ -17,7 +17,7 @@ const PublicTOCClient: React.FC<PublicTOCClientProps> = ({ slug }) => {
   useEffect(() => {
     const fetchTOC = async () => {
       try {
-        const res = await fetch(`/api/v1/note/${slug}/table-of-contents`);
+        const res = await fetch(`/api/v2/note/${slug}/table-of-contents`);
         if (!res.ok) {
           throw new Error(`TOC non disponible (${res.status})`);
         }

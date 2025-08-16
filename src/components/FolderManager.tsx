@@ -6,6 +6,7 @@ import FolderContent from './FolderContent';
 import FolderToolbar, { ViewMode } from './FolderToolbar';
 // import.*LogoScrivia.*from './LogoScrivia';
 import { useFolderManagerState } from './useFolderManagerState';
+import { useAuth } from '@/hooks/useAuth';
 import { Folder, FileArticle } from './types';
 import SimpleContextMenu from './SimpleContextMenu';
 import { useFolderDragAndDrop } from '../hooks/useFolderDragAndDrop';
@@ -14,6 +15,7 @@ import { useFolderSelection } from '../hooks/useFolderSelection';
 import { useFolderFilter } from '../hooks/useFolderFilter';
 import { useFolderKeyboard } from '../hooks/useFolderKeyboard';
 import { classeurTabVariants, classeurTabTransition } from './FolderAnimation';
+import FolderBreadcrumb from './FolderBreadcrumb'; // 🔧 NOUVEAU: Import du breadcrumb
 
 interface FolderManagerProps {
   classeurId: string;
@@ -22,6 +24,9 @@ interface FolderManagerProps {
   parentFolderId?: string;
   onFolderOpen: (folder: Folder) => void;
   onGoBack: () => void;
+  onGoToRoot: () => void; // 🔧 NOUVEAU: Navigation vers la racine
+  onGoToFolder: (folderId: string) => void; // 🔧 NOUVEAU: Navigation directe vers un dossier
+  folderPath: Folder[]; // 🔧 NOUVEAU: Chemin de navigation pour le breadcrumb
 }
 
 /**
@@ -35,9 +40,13 @@ const FolderManager: React.FC<FolderManagerProps> = ({
   parentFolderId, 
   onFolderOpen, 
   onGoBack,
+  onGoToRoot, // 🔧 NOUVEAU: Navigation vers la racine
+  onGoToFolder, // 🔧 NOUVEAU: Navigation directe vers un dossier
+  folderPath, // 🔧 NOUVEAU: Chemin de navigation pour le breadcrumb
 }) => {
   // Optimisation : éviter les appels API redondants
   const [refreshKey, setRefreshKey] = useState(0);
+  const { user } = useAuth();
   const {
     loading,
     error,
@@ -52,7 +61,7 @@ const FolderManager: React.FC<FolderManagerProps> = ({
     moveItem,
     folders,
     files,
-  } = useFolderManagerState(classeurId, parentFolderId, refreshKey);
+  } = useFolderManagerState(classeurId, user?.id || '', parentFolderId, refreshKey);
 
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const refreshNow = useCallback(() => setRefreshKey(k => k + 1), []);
@@ -90,7 +99,8 @@ const FolderManager: React.FC<FolderManagerProps> = ({
     parentFolderId,
     moveItem,
     refreshNow,
-    setRefreshKey
+    setRefreshKey,
+    userId: user?.id || ''
   });
 
   // Hook pour les raccourcis clavier
@@ -122,35 +132,50 @@ const FolderManager: React.FC<FolderManagerProps> = ({
         onDrop={handleRootDrop}
       >
         <div className="folder-manager-content">
-          {/* Header avec titre et contrôles */}
-          <header className="folder-manager-header">
-            <div>
-              <motion.h1 
-                className="classeur-header-title"
-                variants={classeurTabVariants}
-                initial="initial"
-                animate="animate"
-                exit="exit"
-                transition={classeurTabTransition}
+          {/* Header avec nom du classeur et bouton retour */}
+          <div className="folder-manager-header">
+            <div className="folder-manager-title">
+              <span className="folder-manager-icon">{classeurIcon || '📚'}</span>
+              <h2 className="folder-manager-name">{classeurName}</h2>
+            </div>
+            
+            {/* 🔧 NOUVEAU: Breadcrumb pour la navigation hiérarchique */}
+            <FolderBreadcrumb
+              folderPath={folderPath}
+              classeurName={classeurName}
+              onGoToRoot={onGoToRoot}
+              onGoToFolder={onGoToFolder}
+            />
+            
+            {/* 🔧 NOUVEAU: Barre d'outils pour créer dossiers et fichiers */}
+            <div className="folder-manager-toolbar">
+              <button
+                className="toolbar-btn create-folder-btn"
+                onClick={() => createFolder('Nouveau dossier')}
+                title="Créer un nouveau dossier"
               >
-                {parentFolderId && (
-                  <button onClick={onGoBack} className="breadcrumb-item">
-                    ◀
-                  </button>
-                )}
-                <span className="classeur-icon">{classeurIcon || '📁'}</span>
-                <span className="classeur-name">{classeurName}</span>
-              </motion.h1>
+                📁 Nouveau dossier
+              </button>
+              <button
+                className="toolbar-btn create-file-btn"
+                onClick={handleCreateAndRenameFile}
+                title="Créer une nouvelle note"
+              >
+                📝 Nouvelle note
+              </button>
             </div>
-            <div className="view-controls">
-              <FolderToolbar
-                onCreateFolder={() => createFolder('Nouveau dossier')}
-                onCreateFile={handleCreateAndRenameFile}
-                onToggleView={setViewMode}
-                viewMode={viewMode}
-              />
-            </div>
-          </header>
+            
+            {/* Bouton retour (seulement si on est dans un dossier) */}
+            {parentFolderId && (
+              <button
+                className="folder-manager-back-btn"
+                onClick={onGoBack}
+                title="Retour au dossier parent"
+              >
+                ← Retour
+              </button>
+            )}
+          </div>
           
           {/* Séparateur sous le header */}
           <div className="folder-manager-separator"></div>
