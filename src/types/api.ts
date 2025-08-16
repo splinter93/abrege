@@ -35,7 +35,7 @@ export interface NoteCreateData {
 }
 
 export interface NotePublishData {
-  ispublished: boolean;
+  visibility: 'private' | 'public' | 'link-private' | 'link-public' | 'limited' | 'scrivia';
 }
 
 export interface NoteAddContentData {

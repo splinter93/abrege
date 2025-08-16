@@ -42,8 +42,8 @@ async function getAuthenticatedClient(req: NextRequest) {
 
 /**
  * POST /api/v1/note/[ref]/publish
- * Publie ou dépublie une note
- * Body: { ispublished: boolean }
+ * Change la visibilité d'une note
+ * Body: { visibility: 'private' | 'public' | 'link-private' | 'link-public' | 'limited' | 'scrivia' }
  * Réponse: { success: true, url?: string } ou { error: string }
  */
 export async function POST(req: NextRequest, { params }: ApiContext): Promise<Response> {
@@ -53,7 +53,7 @@ export async function POST(req: NextRequest, { params }: ApiContext): Promise<Re
     
     const body = await req.json() as NotePublishData;
     const schema = z.object({
-      ispublished: z.boolean(),
+      visibility: z.enum(['private', 'public', 'link-private', 'link-public', 'limited', 'scrivia']),
     });
     const parseResult = schema.safeParse(body);
     if (!parseResult.success) {
@@ -62,16 +62,16 @@ export async function POST(req: NextRequest, { params }: ApiContext): Promise<Re
         { status: 422 }
       );
     }
-    const { ispublished } = parseResult.data;
+    const { visibility } = parseResult.data;
 
     const noteId = await resolveNoteRef(ref, userId);
     if (!noteId) {
       return new Response(JSON.stringify({ error: 'Note non trouvée.' }), { status: 404, headers: { "Content-Type": "application/json" } });
     }
 
-    // Mettre à jour ispublished et public_url
+    // Mettre à jour visibility et public_url
     let url: string | null = null;
-    if (ispublished) {
+    if (visibility !== 'private') {
       try {
         // Utiliser le service centralisé pour construire l'URL publique
         const { data: note, error: noteError } = await supabase
@@ -93,8 +93,8 @@ export async function POST(req: NextRequest, { params }: ApiContext): Promise<Re
     const { data: updated, error } = await supabase
       .from('articles')
       .update({
-        ispublished: ispublished,
-        public_url: ispublished ? url : null
+        visibility: visibility,
+        public_url: visibility !== 'private' ? url : null
       })
       .eq('id', noteId)
       .eq('user_id', userId)

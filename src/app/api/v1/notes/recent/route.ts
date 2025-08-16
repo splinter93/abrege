@@ -41,7 +41,7 @@ export async function GET(req: NextRequest): Promise<Response> {
         header_image,
         created_at,
         updated_at,
-        ispublished,
+        visibility,
         user_id
       `)
       .order('updated_at', { ascending: false })
@@ -68,9 +68,9 @@ export async function GET(req: NextRequest): Promise<Response> {
       headerImage: note.header_image,
       createdAt: note.created_at,
       updatedAt: note.updated_at,
-      isPublished: note.ispublished,
+      visibility: note.visibility || 'private',
       username: `user_${note.user_id?.slice(0, 8) || 'unknown'}`,
-      url: note.ispublished ? `/public/user_${note.user_id?.slice(0, 8) || 'unknown'}/${note.slug}` : null
+      url: note.visibility !== 'private' ? `/public/user_${note.user_id?.slice(8) || 'unknown'}/${note.slug}` : null
     })) || [];
     
     return new Response(
