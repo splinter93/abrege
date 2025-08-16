@@ -135,7 +135,7 @@ export async function GET(
     // Récupérer les notes du classeur (sans dossier)
     const { data: notes, error: notesError } = await supabase
       .from('articles')
-      .select('id, source_title, created_at, updated_at, classeur_id')
+      .select('id, source_title, markdown_content, html_content, image_url, folder_id, created_at, updated_at, classeur_id')
       .eq('classeur_id', classeurId)
       .is('folder_id', null)
       .order('source_title');
@@ -148,7 +148,30 @@ export async function GET(
       );
     }
 
-    logApi('v2_classeur_tree', `📝 Notes trouvées: ${notes?.length || 0}`, context);
+    // 🔧 CORRECTION: Récupérer AUSSI les notes dans les dossiers
+    const folderIds = folders?.map(f => f.id) || [];
+    let notesInFolders: any[] = [];
+    
+    if (folderIds.length > 0) {
+      const { data: folderNotes, error: folderNotesError } = await supabase
+        .from('articles')
+        .select('id, source_title, markdown_content, html_content, image_url, folder_id, created_at, updated_at, classeur_id')
+        .eq('classeur_id', classeurId)
+        .in('folder_id', folderIds)
+        .order('source_title');
+
+      if (folderNotesError) {
+        logApi('v2_classeur_tree', `❌ Erreur récupération notes dans dossiers: ${folderNotesError.message}`, context);
+        // Ne pas échouer complètement, continuer avec les notes à la racine
+      } else {
+        notesInFolders = folderNotes || [];
+        logApi('v2_classeur_tree', `📝 Notes dans dossiers trouvées: ${notesInFolders.length}`, context);
+      }
+    }
+
+    // 🔧 CORRECTION: Combiner toutes les notes
+    const allNotes = [...(notes || []), ...notesInFolders];
+    logApi('v2_classeur_tree', `📝 Total notes trouvées: ${allNotes.length}`, context);
 
     const apiTime = Date.now() - startTime;
     logApi('v2_classeur_tree', `✅ Arborescence récupérée en ${apiTime}ms`, context);
@@ -176,9 +199,13 @@ export async function GET(
           createdAt: folder.created_at,
           classeur_id: folder.classeur_id // 🔧 Compatibilité
         })) || [],
-        notes: notes?.map(note => ({
+        notes: allNotes?.map(note => ({
           id: note.id,
           title: note.source_title,
+          markdown_content: note.markdown_content,
+          html_content: note.html_content,
+          image_url: note.image_url,
+          folder_id: note.folder_id,
           createdAt: note.created_at,
           updatedAt: note.updated_at,
           classeur_id: note.classeur_id // 🔧 Compatibilité
