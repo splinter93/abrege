@@ -96,11 +96,11 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     } else if (file.visibility_mode === 'inherit_note' && file.note_id) {
       const { data: note } = await supabase
         .from('articles')
-        .select('ispublished')
+        .select('visibility')
         .eq('id', file.note_id)
         .maybeSingle();
-      isPublic = !!note?.ispublished;
-      console.log('🔍 [DEBUG] Note published:', note?.ispublished, 'IsPublic:', isPublic);
+      isPublic = note?.visibility !== 'private';
+      console.log('🔍 [DEBUG] Note visibility:', note?.visibility, 'IsPublic:', isPublic);
     }
   }
 

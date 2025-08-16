@@ -28,13 +28,13 @@ export default async function Page(props: { params: Promise<{ username: string; 
     );
   }
 
-  // Chercher la note par ID et user_id, ispublished = true
+  // Chercher la note par ID et user_id, visibility != 'private'
   const { data: note, error: noteError } = await supabase
     .from('articles')
     .select('slug')
     .eq('id', noteId)
     .eq('user_id', user.id)
-    .eq('ispublished', true)
+    .neq('visibility', 'private')
     .single();
 
   if (noteError || !note) {

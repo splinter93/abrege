@@ -21,13 +21,13 @@ export async function generateMetadata({ params }: { params: Promise<{ username:
     .limit(1)
     .maybeSingle();
   if (!user) return { title: 'Note introuvable – Scrivia' };
-  // Chercher la note par slug et user_id, ispublished = true
+  // Chercher la note par slug et user_id, visibility != 'private'
   const { data: note } = await supabase
     .from('articles')
     .select('source_title, summary, header_image')
     .eq('slug', slug)
     .eq('user_id', user.id)
-    .eq('ispublished', true)
+    .neq('visibility', 'private')
     .limit(1)
     .maybeSingle();
   if (!note) return { title: 'Note introuvable – Scrivia' };
@@ -81,23 +81,23 @@ export default async function Page(props: { params: Promise<{ username: string; 
     );
   }
 
-  // Chercher la note par slug et user_id, ispublished = true
+  // Chercher la note par slug et user_id, visibility != 'private'
   const { data: noteBySlug } = await supabase
     .from('articles')
     .select('id, slug, source_title, html_content, markdown_content, header_image, header_image_offset, header_image_blur, header_image_overlay, header_title_in_image, wide_mode, font_family, created_at, updated_at')
     .eq('slug', slug)
     .eq('user_id', user.id)
-    .eq('ispublished', true)
+    .neq('visibility', 'private')
     .limit(1)
     .maybeSingle();
 
   if (!noteBySlug) {
-    // Slug peut avoir changé: essayer par public_url/id => récupérer la note publiée la plus récente et rediriger si trouvée
+    // Slug peut avoir changé: essayer par public_url/id => récupérer la note accessible la plus récente et rediriger si trouvée
     const { data: latestNote } = await supabase
       .from('articles')
       .select('id, slug')
       .eq('user_id', user.id)
-      .eq('ispublished', true)
+      .neq('visibility', 'private')
       .order('updated_at', { ascending: false })
       .limit(1)
       .maybeSingle();
