@@ -491,39 +491,16 @@ body.public-note-page {
   color: var(--editor-text-color) !important;
 }
 
-/* Forcer le background sombre sur la page publique - plus spécifique */
-.public-note-container,
-.public-note-container *,
-.public-note-container html,
-.public-note-container body {
-  background-color: var(--bg-main) !important;
-  background: var(--bg-main) !important;
-}
-
-
-
 /* Container principal de la page publique */
 .public-note-container {
   width: 100vw;
   min-height: 100vh;
-  background: var(--bg-main) !important;
+  background: var(--bg-main);
   color: var(--editor-text-color);
   padding-bottom: 64px;
 }
 
-/* S'assurer que le thème sombre est appliqué sur toute la page publique */
-.public-note-container,
-.public-note-container * {
-  background-color: var(--bg-main) !important;
-}
 
-/* Exception pour les éléments qui doivent garder leur background spécifique */
-.public-note-container .public-header-image,
-.public-note-container .public-header-overlay,
-.public-note-container .stat-icon,
-.public-note-container .quick-btn.primary {
-  background-color: inherit !important;
-}
 
 
 
