@@ -1,140 +1,57 @@
 /* ==========================================================================
-   STYLES SPÉCIFIQUES PAGE PUBLIQUE - PRIORITÉ MAXIMALE
+   CSS PROPRE POUR PAGES PUBLIQUES - RESPECT TOTAL DE TYPOGRAPHY.CSS
    ==========================================================================
-   Ce fichier doit être chargé EN DERNIER pour éviter le flash blanc
-   Utilise une spécificité très élevée pour écraser tous les autres styles
+   Ce fichier contient UNIQUEMENT les styles nécessaires pour éviter le flash blanc
+   et forcer le thème sombre sur la page publique.
    
-   IMPORTANT: Les paramètres de blur et overlay doivent respecter strictement
-   la logique de typography.css pour éviter les effets indésirables
+   TOUS les autres styles (image, titre, overlay, etc.) sont gérés par typography.css
 */
 
-/* Forcer le thème sombre sur TOUTE la page publique - spécificité maximale */
-html.public-note-page,
-html.public-note-page body,
-html.public-note-page .public-note-container,
-html.public-note-page .public-note-container *,
-html.public-note-page .public-note-container html,
-html.public-note-page .public-note-container body,
-html.public-note-page .public-note-container div,
-html.public-note-page .public-note-container section,
-html.public-note-page .public-note-container article,
-html.public-note-page .public-note-container main,
-html.public-note-page .public-note-container aside,
-html.public-note-page .public-note-container header,
-html.public-note-page .public-note-container footer {
-  background-color: #141414 !important;
-  background: #141414 !important;
-  color: #F5F5DC !important;
-}
+/* ==========================================================================
+   THÈME SOMBRE FORCÉ - PAGE PUBLIQUE
+   ==========================================================================
+   Seulement pour éviter le flash blanc, pas pour interférer avec typography.css
+*/
 
-/* Container principal de la page publique */
+/* Forcer le thème sombre sur le container principal */
 .public-note-container {
+  background: #141414;
+  background-color: #141414;
+  color: #F5F5DC;
   width: 100vw;
   min-height: 100vh;
-  background: #141414 !important;
-  background-color: #141414 !important;
-  color: #F5F5DC !important;
   padding-bottom: 64px;
 }
 
-/* S'assurer que le thème sombre est appliqué sur la page publique */
-.public-note-container {
-  background-color: #141414 !important;
-  background: #141414 !important;
-}
-
-/* Appliquer le thème sombre seulement sur les éléments de contenu, pas sur les images */
-.public-note-container > div:not(.public-header-image),
-.public-note-container > section,
-.public-note-container > article,
-.public-note-container > main,
-.public-note-container > aside,
-.public-note-container > header,
-.public-note-container > footer {
-  background-color: #141414 !important;
-  background: #141414 !important;
-}
-
-/* Exception pour les éléments qui doivent garder leur background spécifique */
-.public-note-container .public-header-image,
-.public-note-container .public-header-overlay,
-.public-note-container .stat-icon,
-.public-note-container .quick-btn.primary,
-.public-note-container a[href*="scrivia.app"] {
-  background-color: transparent !important;
-  background: transparent !important;
-}
-
-/* Le titre dans l'image doit utiliser exactement les styles de typography.css */
-.public-note-container .public-header-title,
-.public-note-container .public-header-title h1 {
-  /* Pas de background forcé - laisse typography.css gérer */
-  background: none !important;
-  background-color: transparent !important;
-}
-
-
-
-/* Styles spécifiques pour éviter le flash */
-.public-note-container {
-  background: #141414 !important;
-  background-color: #141414 !important;
-}
-
-/* Override complet du body pour la page publique */
+/* Forcer le thème sombre sur html et body de la page publique */
+html.public-note-page,
 body.public-note-page {
-  background: #141414 !important;
-  background-color: #141414 !important;
-  color: #F5F5DC !important;
-}
-
-/* Override du html pour la page publique */
-html.public-note-page {
-  background: #141414 !important;
-  background-color: #141414 !important;
+  background: #141414;
+  background-color: #141414;
+  color: #F5F5DC;
 }
 
 /* ==========================================================================
-   GESTION CORRECTE DES PARAMÈTRES D'IMAGE D'EN-TÊTE
+   EXCEPTIONS POUR ÉLÉMENTS SPÉCIAUX
    ==========================================================================
-   Respect strict des paramètres de typography.css
+   Ces éléments doivent garder leur apparence originale
 */
 
-/* Image d'en-tête avec blur contrôlé */
-.public-note-container .public-header-image img {
-  /* Le blur est appliqué via les styles inline du composant */
-  /* Pas de CSS qui puisse entrer en conflit */
-  filter: none; /* Reset pour éviter les conflits */
-  
-  /* Respecter strictement les styles de typography.css */
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: 0;
-  transition: filter 0.2s;
-  
-  /* S'assurer que l'image reste visible */
-  background: none !important;
-  background-color: transparent !important;
+/* Badge "Crafted with Scrivia" - garder son gradient */
+.public-note-container a[href*="scrivia.app"] {
+  background: inherit !important;
+  background-color: inherit !important;
 }
 
-/* Overlay avec la formule exacte de l'éditeur */
-.public-note-container .public-header-overlay {
-  /* Position et comportement de base - respect strict de typography.css */
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  pointer-events: none;
-  transition: background 0.2s;
-  
-  /* L'opacité est calculée via les styles inline du composant */
-  /* Formule exacte de l'éditeur: rgba(24,24,24,${0.08 + 0.14 * headerImageOverlay}) */
-  background-color: transparent; /* Reset pour éviter les conflits */
-  
-  /* S'assurer que les styles inline ne sont pas écrasés */
-  background: transparent !important;
-}
+/* ==========================================================================
+   RESPECT TOTAL DE TYPOGRAPHY.CSS
+   ==========================================================================
+   Aucun style pour les éléments d'image - typography.css s'en charge
+   
+   Les paramètres de blur, overlay, titre, etc. sont gérés par :
+   1. Les styles inline du composant React
+   2. Le CSS de typography.css
+   3. Aucune interférence de ce fichier
+*/
 
  
