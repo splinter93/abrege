@@ -1,5 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
+import LogoHeader from '@/components/LogoHeader';
 import './editor-header.css';
 
 interface EditorHeaderProps {
@@ -15,9 +16,9 @@ const EditorHeader: React.FC<EditorHeaderProps> = ({ headerImageUrl, children, r
   return (
     <header className="editor-header" role="banner" aria-label="En-tête de l'éditeur">
       {/* Logo gauche → home */}
-      <Link href="/" className="editor-header-logo" aria-label="Aller à l’accueil">
-        <img src="/logo-scrivia-white.png" alt="Scrivia" width={80} height={22} />
-      </Link>
+      <div className="editor-header-logo" aria-label="Aller à l'accueil">
+        <LogoHeader size="small" position="left" />
+      </div>
       {headerImageUrl && (
         <img
           src={headerImageUrl}

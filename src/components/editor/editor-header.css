@@ -73,6 +73,18 @@
   justify-content: center;
 }
 
+/* Intégration avec le composant LogoHeader */
+.editor-header-logo .logo-header {
+  height: 100%;
+  padding: 0;
+  margin: 0;
+}
+
+.editor-header-logo .logo-header img {
+  height: 20px;
+  max-width: 120px;
+}
+
 .editor-header-toolbar {
   display: flex;
   align-items: center;

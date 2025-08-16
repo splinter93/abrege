@@ -1,0 +1,129 @@
+/* ==========================================================================
+   LOGO HEADER - COMPOSANT RÉUTILISABLE POUR TOUS LES HEADERS
+   ==========================================================================
+   Styles optimisés pour l'affichage du logo dans les headers
+   Facilement maintenable et cohérent sur toutes les pages
+*/
+
+.logo-header {
+  /* Position et layout */
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  text-decoration: none;
+  
+  /* Taille optimisée pour les headers */
+  height: 32px;
+  width: auto;
+  
+  /* Espacement et padding optimaux */
+  padding: 4px 8px;
+  margin: 0;
+  
+  /* Transitions fluides */
+  transition: all 0.2s ease;
+  
+  /* Éviter la sélection de texte */
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+.logo-header:hover {
+  /* Effet hover subtil */
+  transform: translateY(-1px);
+  filter: brightness(1.1);
+}
+
+.logo-header:active {
+  /* Effet de clic */
+  transform: translateY(0);
+  filter: brightness(0.95);
+}
+
+.logo-header img {
+  /* Image du logo */
+  height: 24px;
+  width: auto;
+  max-width: 140px;
+  display: block;
+  
+  /* Qualité d'image optimale */
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+  
+  /* Éviter le débordement */
+  object-fit: contain;
+}
+
+/* Variantes de taille */
+.logo-header.size-small img {
+  height: 20px;
+  max-width: 120px;
+}
+
+.logo-header.size-medium img {
+  height: 24px;
+  max-width: 140px;
+}
+
+.logo-header.size-large img {
+  height: 28px;
+  max-width: 160px;
+}
+
+.logo-header.size-xl img {
+  height: 32px;
+  max-width: 180px;
+}
+
+/* Variantes de position dans le header */
+.logo-header.position-left {
+  margin-right: auto;
+}
+
+.logo-header.position-center {
+  margin: 0 auto;
+}
+
+.logo-header.position-right {
+  margin-left: auto;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .logo-header {
+    height: 28px;
+    padding: 3px 6px;
+  }
+  
+  .logo-header img {
+    height: 20px;
+    max-width: 120px;
+  }
+  
+  .logo-header.size-large img {
+    height: 24px;
+    max-width: 140px;
+  }
+  
+  .logo-header.size-xl img {
+    height: 28px;
+    max-width: 160px;
+  }
+}
+
+@media (max-width: 480px) {
+  .logo-header {
+    height: 24px;
+    padding: 2px 4px;
+  }
+  
+  .logo-header img {
+    height: 18px;
+    max-width: 100px;
+  }
+} 
