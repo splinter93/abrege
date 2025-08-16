@@ -320,11 +320,11 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
       // Récupérer la note depuis le store
       const n = useFileSystemStore.getState().notes[noteId];
       
-      // Vérifier si la note est publiée
-      if (!n?.ispublished) {
-        toast.error('Cette note n\'est pas encore publiée. Publiez-la d\'abord pour la prévisualiser.');
-        return;
-      }
+                // Vérifier si la note est accessible (pas privée)
+          if (n?.visibility === 'private') {
+            toast.error('Cette note est privée. Changez sa visibilité pour la prévisualiser.');
+            return;
+          }
 
       // Vérifier si la note a un slug
       if (!n?.slug) {
