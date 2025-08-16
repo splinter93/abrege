@@ -21,7 +21,6 @@ import "../components/editor/editor-modal.css";
 
 
 import { LanguageProvider } from "../contexts/LanguageContext";
-import { NoteDataProvider } from "../contexts/NoteDataContext";
 import { Toaster } from "react-hot-toast";
 
 const geistSans = Geist({
@@ -66,10 +65,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className={`${notoSans.className} ${geistSans.variable} ${geistMono.variable} app-container`}>
         <LanguageProvider>
-          <NoteDataProvider>
-            <Toaster position="top-right" />
-            {children}
-          </NoteDataProvider>
+          <Toaster position="top-right" />
+          {children}
         </LanguageProvider>
       </body>
     </html>
