@@ -14,7 +14,6 @@ export type Article = {
   html_content: string | null;
   id: string;
   insight: string | null;
-  ispublished: boolean | null;
   markdown_content: string | null;
   podcast_url: string | null;
   position: number | null;
@@ -28,7 +27,7 @@ export type Article = {
   updated_at: string | null;
   user_id: string | null;
   view_count: number;
-  visibility: 'private' | 'shared' | 'members' | 'public';
+  visibility: 'private' | 'public' | 'link-private' | 'link-public' | 'limited' | 'scrivia';
   wide_mode: boolean | null;
   font_family: string | null;
 };
@@ -74,7 +73,6 @@ export type SharedNote = {
   html_content: string | null;
   id: string;
   insight: string | null;
-  ispublished: boolean | null;
   markdown_content: string | null;
   original_user_id: string; // Auteur original
   podcast_url: string | null;
@@ -89,7 +87,7 @@ export type SharedNote = {
   updated_at: string | null;
   user_id: string; // Utilisateur qui a reçu la note
   view_count: number;
-  visibility: 'private' | 'shared' | 'members' | 'public';
+  visibility: 'private' | 'public' | 'link-private' | 'link-public' | 'limited' | 'scrivia';
   wide_mode: boolean | null;
   font_family: string | null;
 };

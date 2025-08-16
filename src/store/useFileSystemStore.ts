@@ -23,8 +23,7 @@ export interface Note {
   header_title_in_image?: boolean | null;
   wide_mode?: boolean | null;
   font_family?: string | null;
-          ispublished?: boolean | null; // Statut de publication de la note (legacy)
-        public_url?: string | null; // URL publique si publiée
+          public_url?: string | null; // URL publique si publiée
         slug?: string | null; // Slug unique de la note pour les URLs
         visibility?: 'private' | 'public' | 'link-private' | 'link-public' | 'limited' | 'scrivia'; // Niveau de visibilité de la note
   share_settings?: any; // Configuration de partage (nouveau système)
