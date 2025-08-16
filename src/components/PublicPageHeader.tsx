@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import LogoScrivia from '@/components/LogoScrivia';
+import LogoHeader from '@/components/LogoHeader';
 import { FiShare2, FiStar, FiMoreHorizontal, FiMaximize2, FiMinimize2, FiSearch } from 'react-icons/fi';
 import { supabase } from '@/supabaseClient';
 import ShareMenu from './ShareMenu';
@@ -42,9 +42,9 @@ export default function PublicPageHeader() {
     <header className="public-page-header">
 
       <div className="public-header-left">
-        <Link href="/" className="public-header-logo">
-          <LogoScrivia />
-        </Link>
+        <div className="public-header-logo">
+          <LogoHeader size="small" position="left" />
+        </div>
         <div className="public-header-search">
           <FiSearch size={15} className="public-header-search-icon" />
           <input

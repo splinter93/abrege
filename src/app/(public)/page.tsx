@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import Sidebar from '@/components/Sidebar';
-import LogoScrivia from '@/components/LogoScrivia';
+import LogoHeader from '@/components/LogoHeader';
 import { Book, FileText, MessageSquare, Star, TrendingUp, Calendar } from 'lucide-react';
 import RecentActivityPrivate from '@/components/RecentActivityPrivate';
 import './home.css';
@@ -81,7 +81,7 @@ export default function HomePage() {
         textAlign: 'center'
       }}>
         <div style={{ marginBottom: 32 }}>
-          <LogoScrivia width={250} />
+          <LogoHeader size="xl" position="center" />
         </div>
         <h1 style={{ fontSize: 36, lineHeight: 1.2, margin: '0 0 24px 0' }}>
           Scrivia

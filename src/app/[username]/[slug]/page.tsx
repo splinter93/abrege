@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import '@/styles/markdown.css';
-import LogoScrivia from '@/components/LogoScrivia';
+import LogoHeader from '@/components/LogoHeader';
 
 
 import type { Metadata } from 'next';
@@ -72,7 +72,7 @@ export default async function Page(props: { params: Promise<{ username: string; 
     return (
       <div style={{ padding: '2rem', textAlign: 'center' }}>
         <div style={{ marginLeft: '4px', display: 'inline-block' }}>
-          <LogoScrivia />
+          <LogoHeader size="medium" position="center" />
         </div>
         <h1>Utilisateur non trouvé</h1>
         <p>Vérifiez l&apos;URL ou contactez l&apos;auteur.</p>
@@ -111,7 +111,7 @@ export default async function Page(props: { params: Promise<{ username: string; 
     return (
       <div style={{ padding: '2rem', textAlign: 'center' }}>
         <div style={{ marginLeft: '4px', display: 'inline-block' }}>
-          <LogoScrivia />
+          <LogoHeader size="medium" position="center" />
         </div>
         <h1>Note non trouvée ou non publiée</h1>
         <p>Vérifiez l&apos;URL ou contactez l&apos;auteur.</p>
