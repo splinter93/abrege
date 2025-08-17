@@ -45,10 +45,14 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
     const handleClick = (e: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
         onClose();
+        setShareMenuOpen(false); // Fermer aussi le ShareMenu
       }
     };
     const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
+      if (e.key === 'Escape') {
+        onClose();
+        setShareMenuOpen(false); // Fermer aussi le ShareMenu
+      }
     };
     document.addEventListener('mousedown', handleClick);
     document.addEventListener('keydown', handleEsc);
@@ -117,7 +121,7 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
       icon: <FiShare2 size={18} />,
       onClick: () => { 
         setShareMenuOpen(true);
-        onClose();
+        // Ne pas fermer le menu kebab, le ShareMenu se superposera
       },
       color: currentShareSettings?.visibility === 'private' ? '#D4D4D4' : '#ff6b35',
       showCopyButton: currentShareSettings?.visibility !== 'private' && publicUrl,
@@ -165,7 +169,12 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
       <div
         className="editor-header-kebab-menu"
         ref={menuRef}
-        style={{ top: position.top, left: position.left, position: 'fixed' }}
+        style={{ 
+          top: position.top, 
+          left: position.left, 
+          position: 'fixed',
+          zIndex: shareMenuOpen ? 999 : 1000 // Plus bas que ShareMenu quand il est ouvert
+        }}
       >
         {menuOptions.map((opt) => (
           <div
