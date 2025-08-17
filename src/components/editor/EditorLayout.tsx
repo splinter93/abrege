@@ -18,7 +18,7 @@ const EditorLayout: React.FC<EditorLayoutProps> = ({ header, title, content, foo
       {header}
       {title && (
         <div className="editor-full-width editor-flex-center noteLayout-title">
-          <div className="editor-container-width" style={{ maxWidth: 'var(--editor-content-width)' }}>{title}</div>
+          <div className="editor-container-width" style={{ maxWidth: 'var(--editor-content-width)', width: 'var(--editor-content-width)' }}>{title}</div>
         </div>
       )}
       {content && (

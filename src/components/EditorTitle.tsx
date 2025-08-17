@@ -42,7 +42,7 @@ const EditorTitle: React.FC<EditorTitleProps> = ({
       spellCheck={true}
       autoFocus
       style={{
-        width: style?.width || '750px',
+        width: 'var(--editor-content-width)',
         height: '45px',
         minHeight: '45px',
         maxHeight: '45px',

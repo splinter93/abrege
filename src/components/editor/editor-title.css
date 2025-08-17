@@ -32,7 +32,7 @@
 
 .editor-title-wrapper {
   width: 100%;
-  max-width: 750px; /* largeur max demandée */
+  max-width: var(--editor-content-width); /* largeur dynamique */
   margin: 0 auto;
   padding: 0; /* à ras du texte */
   display: flex;
@@ -55,7 +55,7 @@
 .editor-title-span,
 textarea.editor-title-field {
   width: 100%;
-  max-width: 750px; /* largeur max demandée */
+  max-width: var(--editor-content-width); /* largeur dynamique */
   min-height: 45px;
   margin: 0 auto;
   display: block;
