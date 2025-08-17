@@ -4,28 +4,14 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import Sidebar from '@/components/Sidebar';
 import LogoHeader from '@/components/LogoHeader';
-import { Book, FileText, MessageSquare, Star, TrendingUp, Calendar } from 'lucide-react';
+import { Book, FileText, MessageSquare, Plus } from 'lucide-react';
 import RecentActivityPrivate from '@/components/RecentActivityPrivate';
 import './home.css';
 
 export default function HomePage() {
   const { user, loading } = useAuth();
-  const [stats, setStats] = useState({
-    classeurs: 0,
-    notes: 0,
-    favorites: 0
-  });
   const [isDragOver, setIsDragOver] = useState(false);
   const [urlInput, setUrlInput] = useState('');
-
-  useEffect(() => {
-    // Simuler des stats (à remplacer par de vraies données)
-    setStats({
-      classeurs: 3,
-      notes: 24,
-      favorites: 8
-    });
-  }, []);
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -124,7 +110,7 @@ export default function HomePage() {
 
   return (
     <div className="home-page-wrapper">
-              <Sidebar />
+      <Sidebar />
       
       <main className="home-content">
         <header className="home-header">
@@ -136,19 +122,19 @@ export default function HomePage() {
 
         <div className="dashboard-grid">
           <div className="dashboard-main">
-            <section className="quick-access">
-              <h2>Accès rapide</h2>
-              <div className="quick-access-grid">
-                <button className="quick-btn primary">
-                  <Book size={18} />
+            <section className="quick-actions">
+              <h2>Actions rapides</h2>
+              <div className="quick-actions-grid">
+                <button className="action-btn primary">
+                  <Plus size={18} />
                   <span>Nouveau classeur</span>
                 </button>
-                <button className="quick-btn">
+                <button className="action-btn">
                   <FileText size={18} />
                   <span>Nouvelle note</span>
                 </button>
                 <button 
-                  className="quick-btn"
+                  className="action-btn"
                   onClick={() => window.location.href = '/chat'}
                 >
                   <MessageSquare size={18} />
@@ -157,10 +143,10 @@ export default function HomePage() {
               </div>
             </section>
 
-            <section className="input-zone">
-              <h2>Ajouter du contenu</h2>
-              <div className="input-container">
-                <div className="url-input">
+            <section className="content-import">
+              <h2>Importer du contenu</h2>
+              <div className="import-container">
+                <div className="url-input-section">
                   <input 
                     type="text" 
                     placeholder="Coller une URL ou saisir du texte..."
@@ -169,8 +155,8 @@ export default function HomePage() {
                     onChange={(e) => setUrlInput(e.target.value)}
                     onKeyPress={handleKeyPress}
                   />
-                  <button className="add-btn" onClick={handleUrlSubmit}>
-                    Ajouter
+                  <button className="import-btn" onClick={handleUrlSubmit}>
+                    Importer
                   </button>
                 </div>
                 <div 
@@ -187,44 +173,13 @@ export default function HomePage() {
                 </div>
               </div>
             </section>
-
-            <section className="home-stats">
-              <div className="stat-card">
-                <div className="stat-icon"><Book size={20} /></div>
-                <div className="stat-content">
-                  <h3>{stats.classeurs}</h3>
-                  <p>Classeurs</p>
-                </div>
-              </div>
-              <div className="stat-card">
-                <div className="stat-icon"><FileText size={20} /></div>
-                <div className="stat-content">
-                  <h3>{stats.notes}</h3>
-                  <p>Notes</p>
-                </div>
-              </div>
-              <div className="stat-card">
-                <div className="stat-icon"><Star size={20} /></div>
-                <div className="stat-content">
-                  <h3>{stats.favorites}</h3>
-                  <p>Favoris</p>
-                </div>
-              </div>
-              <div className="stat-card">
-                <div className="stat-icon"><Calendar size={20} /></div>
-                <div className="stat-content">
-                  <h3>12</h3>
-                  <p>Cette semaine</p>
-                </div>
-              </div>
-            </section>
           </div>
           
           <div className="dashboard-sidebar">
             <section className="home-activity">
               <h2>Activité récente</h2>
               <RecentActivityPrivate 
-                limit={10} 
+                limit={8} 
                 compact={false}
                 showHeader={false}
               />
