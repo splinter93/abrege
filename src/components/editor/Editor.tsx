@@ -259,30 +259,72 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
   // Handle share settings changes
   const handleShareSettingsChange = React.useCallback(async (newSettings: ShareSettings) => {
     try {
+      console.log('🚨 [EDITOR] ===== DÉBUT HANDLESHARESETTINGSCHANGE =====');
+      console.log('🚨 [EDITOR] noteId:', noteId);
+      console.log('🚨 [EDITOR] newSettings:', newSettings);
+      
       // Update local state
-      setShareSettings(newSettings);
+      setShareSettings(newSettings as ShareSettings);
+      console.log('🚨 [EDITOR] ✅ État local mis à jour');
       
       // Update note in store
-      updateNote(noteId, { share_settings: newSettings } as any);
+      updateNote(noteId, { 
+        share_settings: newSettings
+      } as any);
+      console.log('🚨 [EDITOR] ✅ Store mis à jour');
       
       // Call API to update share settings
+      console.log('🚨 [EDITOR] Début appel API...');
       const { data: { session } } = await supabase.auth.getSession();
-      const token = session?.access_token;
-      if (!token) throw new Error('Authentification requise');
+      console.log('🚨 [EDITOR] Session récupérée:', session ? 'PRÉSENTE' : 'ABSENTE');
       
-      const res = await fetch(`/api/v2/note/${encodeURIComponent(noteId)}/share`, {
+      const token = session?.access_token;
+      console.log('🚨 [EDITOR] Token extrait:', token ? 'PRÉSENT' : 'ABSENT');
+      
+      if (!token) {
+        console.log('🚨 [EDITOR] ❌ Pas de token, erreur authentification');
+        throw new Error('Authentification requise');
+      }
+      
+      const apiUrl = `/api/v2/note/${encodeURIComponent(noteId)}/share`;
+      console.log('🚨 [EDITOR] URL API:', apiUrl);
+      console.log('🚨 [EDITOR] Méthode: PATCH');
+      console.log('🚨 [EDITOR] Headers:', { 
+        'Content-Type': 'application/json', 
+        'Authorization': `Bearer ${token.substring(0, 20)}...` 
+      });
+      console.log('🚨 [EDITOR] Body:', JSON.stringify(newSettings));
+      
+      const res = await fetch(apiUrl, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify(newSettings)
       });
       
+      console.log('🚨 [EDITOR] Réponse reçue:', {
+        status: res.status,
+        statusText: res.statusText,
+        ok: res.ok,
+        headers: Object.fromEntries(res.headers.entries())
+      });
+      
       if (!res.ok) {
         const json = await res.json();
+        console.log('🚨 [EDITOR] ❌ Erreur API:', json);
         throw new Error(json?.error || 'Erreur mise à jour partage');
       }
       
+      const responseData = await res.json();
+      console.log('🚨 [EDITOR] ✅ Données de réponse:', responseData);
+      
       toast.success('Paramètres de partage mis à jour !');
+      console.log('🚨 [EDITOR] ===== FIN HANDLESHARESETTINGSCHANGE SUCCÈS =====');
+      
     } catch (error) {
+      console.log('🚨 [EDITOR] ❌ ERREUR dans handleShareSettingsChange:', error);
+      console.log('🚨 [EDITOR] Stack trace:', error instanceof Error ? error.stack : 'Pas de stack trace');
+      console.log('🚨 [EDITOR] ===== FIN HANDLESHARESETTINGSCHANGE ERREUR =====');
+      
       toast.error(error instanceof Error ? error.message : 'Erreur mise à jour partage');
       console.error('Erreur partage:', error);
     }
