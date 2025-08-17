@@ -1,5 +1,4 @@
 import { createClient } from '@supabase/supabase-js';
-import { ResourceResolver } from './resourceResolver';
 import type { ResourceType } from './slugGenerator';
 import { logApi } from './logger';
 
@@ -26,7 +25,8 @@ export class V2ResourceResolver {
       // ✅ LOGGING DÉTAILLÉ pour debug
       logApi('v2_resource_resolve', `🔍 Tentative de résolution: ${ref} (type: ${type}, userId: ${userId})`, context);
       
-      const resolvedId = await ResourceResolver.resolveRef(ref, type, userId, userToken);
+      // Utiliser directement le service role key au lieu de ResourceResolver
+      const resolvedId = await this.resolveRefDirect(ref, type, userId);
       
       if (!resolvedId) {
         logApi('v2_resource_resolve', `❌ Référence non trouvée: ${ref} (type: ${type})`, context);
@@ -47,6 +47,49 @@ export class V2ResourceResolver {
         error: 'Erreur lors de la résolution de la référence',
         status: 500
       };
+    }
+  }
+
+  /**
+   * Résout directement une référence en utilisant le service role key
+   */
+  private static async resolveRefDirect(
+    ref: string, 
+    type: ResourceType,
+    userId: string
+  ): Promise<string | null> {
+    const tableName = this.getTableName(type);
+    
+    // Si c'est un UUID, vérifier qu'il existe et appartient à l'utilisateur
+    if (this.isUUID(ref)) {
+      try {
+        const { data } = await supabase
+          .from(tableName)
+          .select('id')
+          .eq('id', ref)
+          .eq('user_id', userId)
+          .single();
+        
+        return data?.id || null;
+      } catch (error) {
+        console.error(`[V2ResourceResolver] Erreur validation UUID ${ref}:`, error);
+        return null;
+      }
+    }
+    
+    // Sinon, chercher par slug
+    try {
+      const { data } = await supabase
+        .from(tableName)
+        .select('id')
+        .eq('slug', ref)
+        .eq('user_id', userId)
+        .single();
+      
+      return data?.id || null;
+    } catch (error) {
+      console.error(`[V2ResourceResolver] Erreur résolution slug ${ref}:`, error);
+      return null;
     }
   }
 
@@ -97,6 +140,11 @@ export class V2ResourceResolver {
         status: 500
       };
     }
+  }
+
+  private static isUUID(str: string): boolean {
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    return uuidRegex.test(str);
   }
 
   private static getTableName(type: ResourceType): string {

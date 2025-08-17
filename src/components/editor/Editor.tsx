@@ -109,8 +109,13 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
   }, [noteId, updateNote]);
 
   React.useEffect(() => {
-    if (kebabOpen && kebabBtnRef.current)
-      setKebabPos({ top: kebabBtnRef.current.getBoundingClientRect().bottom + 8, left: kebabBtnRef.current.getBoundingClientRect().left });
+    if (kebabOpen && kebabBtnRef.current) {
+      const rect = kebabBtnRef.current.getBoundingClientRect();
+      setKebabPos({ 
+        top: rect.bottom + 3, 
+        left: rect.left - 150 // Décaler vers la gauche pour centrer le menu sur le bouton
+      });
+    }
   }, [kebabOpen]);
 
   // Ref to the element that contains .ProseMirror so TOC can scroll into view
@@ -549,9 +554,9 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
                   </button>
                   <button ref={kebabBtnRef} className="editor-header-kebab" aria-label="Options" title="Options" onClick={() => setKebabOpen(v => !v)}>
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <circle cx="12" cy="5" r="2" fill="currentColor" />
+                      <circle cx="5" cy="12" r="2" fill="currentColor" />
                       <circle cx="12" cy="12" r="2" fill="currentColor" />
-                      <circle cx="12" cy="19" r="2" fill="currentColor" />
+                      <circle cx="19" cy="12" r="2" fill="currentColor" />
                     </svg>
                   </button>
                   <button

@@ -108,7 +108,7 @@ export class SlugAndUrlService {
         logger.dev(`Titre inchangé pour la note ${noteId}, pas de mise à jour du slug`);
         return { 
           slug: note.slug!, 
-          publicUrl: note.public_url || this.buildPublicUrl(userId, note.slug!)
+          publicUrl: note.public_url || await this.buildPublicUrl(userId, note.slug!, supabase)
         };
       }
 
@@ -146,10 +146,13 @@ export class SlugAndUrlService {
    * Construit l'URL publique pour une note
    * @param userId - L'ID de l'utilisateur
    * @param slug - Le slug de la note
+   * @param clientOverride - Client Supabase personnalisé (optionnel)
    * @returns L'URL publique
    */
-  static async buildPublicUrl(userId: string, slug: string): Promise<string> {
-    const { data: user, error: userError } = await this.supabase
+  static async buildPublicUrl(userId: string, slug: string, clientOverride?: any): Promise<string> {
+    const supabase = clientOverride || this.supabase;
+    
+    const { data: user, error: userError } = await supabase
       .from('users')
       .select('username')
       .eq('id', userId)

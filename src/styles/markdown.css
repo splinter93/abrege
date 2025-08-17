@@ -374,10 +374,18 @@ li[data-type="taskItem"] > div p {
 }
 
 /* Premium focus states */
-.markdown-body *:focus {
+.markdown-body *:focus:not(textarea):not(input):not([contenteditable="true"]) {
   outline: 2px solid var(--accent-primary);
   outline-offset: 2px;
   border-radius: 4px;
+}
+
+/* S'assurer que les champs de saisie n'ont jamais d'outline */
+.markdown-body textarea:focus,
+.markdown-body input:focus,
+.markdown-body [contenteditable="true"]:focus {
+  outline: none !important;
+  box-shadow: none !important;
 }
 
 /* Premium link focus */

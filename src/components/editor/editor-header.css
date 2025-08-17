@@ -149,7 +149,7 @@
 .editor-header-kebab-menu {
   position: absolute;
   top: 100%;
-  left: 0;  /* Changé de right: 0 à left: 0 */
+  left: 0;  /* Sera remplacé par le positionnement dynamique du composant */
   min-width: 180px;
   background: var(--surface-2);
   border-radius: 10px;
