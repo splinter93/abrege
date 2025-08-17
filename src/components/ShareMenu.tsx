@@ -31,6 +31,21 @@ const ShareMenu: React.FC<ShareMenuProps> = ({
     }
   }, [currentSettings?.visibility]);
 
+  // Gérer la fermeture en cliquant à l'extérieur
+  React.useEffect(() => {
+    if (!isOpen) return;
+    
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as Element;
+      if (!target.closest('.share-menu')) {
+        onClose();
+      }
+    };
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isOpen, onClose]);
+
   const visibilityOptions = [
     {
       value: 'private',
@@ -101,8 +116,7 @@ const ShareMenu: React.FC<ShareMenuProps> = ({
 
   return (
     <>
-      <div className="share-menu-overlay" onClick={onClose} />
-      <div className="share-menu" onClick={(e) => e.stopPropagation()}>
+      <div className="share-menu">
         {/* Header */}
         <div className="share-menu-header">
           <h3>Partager cette note</h3>
