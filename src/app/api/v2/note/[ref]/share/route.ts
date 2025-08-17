@@ -42,8 +42,9 @@ export async function GET(
   const userId = authResult.userId!;
 
   try {
-    // Résoudre la référence (UUID ou slug)
-    const resolveResult = await V2ResourceResolver.resolveRef(ref, 'note', userId, context);
+    // ✅ CORRECTION : Résoudre la référence avec le token utilisateur
+    const userToken = request.headers.get('Authorization')?.substring(7);
+    const resolveResult = await V2ResourceResolver.resolveRef(ref, 'note', userId, context, userToken);
     if (!resolveResult.success) {
       return NextResponse.json(
         { error: resolveResult.error },
@@ -150,8 +151,9 @@ export async function PATCH(
   const userId = authResult.userId!;
 
   try {
-    // Résoudre la référence (UUID ou slug)
-    const resolveResult = await V2ResourceResolver.resolveRef(ref, 'note', userId, context);
+    // ✅ CORRECTION : Résoudre la référence avec le token utilisateur
+    const userToken = request.headers.get('Authorization')?.substring(7);
+    const resolveResult = await V2ResourceResolver.resolveRef(ref, 'note', userId, context, userToken);
     if (!resolveResult.success) {
       return NextResponse.json(
         { error: resolveResult.error },

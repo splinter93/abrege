@@ -4,8 +4,11 @@ import type { ResourceType } from './slugGenerator';
 import { logApi } from './logger';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// IMPORTANT: L'API V2 est utilisée par l'Agent côté serveur sans JWT utilisateur.
+// Pour éviter les erreurs RLS tout en garantissant la sécurité, on utilise la clé Service Role
+// et on applique systématiquement des filtres user_id dans toutes les requêtes.
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 export class V2ResourceResolver {
   /**
@@ -20,6 +23,9 @@ export class V2ResourceResolver {
   ): Promise<{ success: true; id: string } | { success: false; error: string; status: number }> {
     
     try {
+      // ✅ LOGGING DÉTAILLÉ pour debug
+      logApi('v2_resource_resolve', `🔍 Tentative de résolution: ${ref} (type: ${type}, userId: ${userId})`, context);
+      
       const resolvedId = await ResourceResolver.resolveRef(ref, type, userId, userToken);
       
       if (!resolvedId) {

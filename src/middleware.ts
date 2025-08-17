@@ -5,7 +5,17 @@ export function middleware(req: NextRequest) {
   const resRid = req.headers.get('x-request-id') ?? crypto.randomUUID();
 
   // Public paths to allow without auth check (home, public notes, assets)
-  const PUBLIC_PREFIXES = ['/_next', '/favicon', '/public', '/@', '/api/v1/public'];
+  const PUBLIC_PREFIXES = ['/_next', '/favicon', '/public', '/api/v1/public'];
+  
+  // ✅ SÉCURITÉ : Traitement spécial pour les pages publiques avec logging
+  if (url.pathname.startsWith('/@')) {
+    // Log des tentatives d'accès aux pages publiques pour monitoring
+    console.log(`🔍 [MIDDLEWARE] Tentative d'accès à la page publique: ${url.pathname}`);
+    
+    const res = NextResponse.next();
+    res.headers.set('x-request-id', resRid);
+    return res;
+  }
 
   if (PUBLIC_PREFIXES.some(p => url.pathname.startsWith(p))) {
     const res = NextResponse.next();

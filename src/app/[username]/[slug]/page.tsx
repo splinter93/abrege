@@ -20,12 +20,13 @@ export async function generateMetadata({ params }: { params: Promise<{ username:
     .limit(1)
     .maybeSingle();
   if (!user) return { title: 'Note introuvable – Scrivia' };
-  // Chercher la note par slug et user_id (toutes les notes, même privées)
+  // Chercher la note par slug et user_id, SEULEMENT si elle est accessible publiquement
   const { data: note } = await supabase
     .from('articles')
     .select('source_title, summary, header_image')
     .eq('slug', slug)
     .eq('user_id', user.id)
+    .not('share_settings->>visibility', 'eq', 'private') // ✅ SÉCURITÉ : Bloquer l'accès aux notes privées
     .limit(1)
     .maybeSingle();
   if (!note) return { title: 'Note introuvable – Scrivia' };
@@ -79,12 +80,13 @@ export default async function Page(props: { params: Promise<{ username: string; 
     );
   }
 
-  // Chercher la note par slug et user_id (toutes les notes, même privées)
+  // Chercher la note par slug et user_id, SEULEMENT si elle est accessible publiquement
   const { data: noteBySlug } = await supabase
     .from('articles')
     .select('id, slug, source_title, html_content, markdown_content, header_image, header_image_offset, header_image_blur, header_image_overlay, header_title_in_image, wide_mode, font_family, created_at, updated_at, share_settings, user_id')
     .eq('slug', slug)
     .eq('user_id', user.id)
+    .not('share_settings->>visibility', 'eq', 'private') // ✅ SÉCURITÉ : Bloquer l'accès aux notes privées
     .limit(1)
     .maybeSingle();
 
@@ -102,13 +104,24 @@ export default async function Page(props: { params: Promise<{ username: string; 
     );
   }
 
-  // Vérifier que le slug correspond (pour la sécurité, mais sans redirection)
+  // ✅ SÉCURITÉ : Vérification supplémentaire du slug
   if (noteBySlug.slug !== slug) {
     console.warn(`Slug mismatch: URL=${slug}, DB=${noteBySlug.slug}`);
   }
 
-  // Pour les notes privées, on laisse le composant client gérer l'authentification
-  // L'authentification sera vérifiée côté client pour une meilleure UX
+  // ✅ SÉCURITÉ : Double vérification côté serveur
+  if (noteBySlug.share_settings?.visibility === 'private') {
+    console.warn(`🔒 Tentative d'accès à une note privée: ${slug} par ${user.username}`);
+    return (
+      <div style={{ padding: '2rem', textAlign: 'center' }}>
+        <div style={{ marginLeft: '4px', display: 'inline-block' }}>
+          <LogoHeader size="medium" position="center" />
+        </div>
+        <h1>Note privée</h1>
+        <p>Cette note est privée et n'est pas accessible publiquement.</p>
+      </div>
+    );
+  }
 
   return <PublicNoteContent note={noteBySlug} slug={slug} />;
 } 

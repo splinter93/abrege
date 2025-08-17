@@ -27,7 +27,39 @@ export class ResourceResolver {
   ): Promise<string | null> {
     // Si c'est un UUID, retourner directement
     if (this.isUUID(ref)) {
-      return ref;
+      // ✅ VÉRIFICATION SUPPLÉMENTAIRE : Valider que l'UUID existe et appartient à l'utilisateur
+      try {
+        let supabaseClient = supabase;
+        
+        // Si on a un token, créer un client authentifié
+        if (userToken) {
+          supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
+            global: {
+              headers: {
+                Authorization: `Bearer ${userToken}`
+              }
+            }
+          });
+        }
+        
+        // Vérifier que l'UUID existe et appartient à l'utilisateur
+        const { data } = await supabaseClient
+          .from(this.getTableName(type))
+          .select('id')
+          .eq('id', ref)
+          .eq('user_id', userId)
+          .single();
+        
+        if (!data) {
+          console.warn(`[ResourceResolver] UUID ${ref} non trouvé ou n'appartient pas à l'utilisateur ${userId}`);
+          return null;
+        }
+        
+        return ref;
+      } catch (error) {
+        console.error(`[ResourceResolver] Erreur validation UUID ${ref}:`, error);
+        return null;
+      }
     }
     
     // Sinon, chercher par slug avec authentification

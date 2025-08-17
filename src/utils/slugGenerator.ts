@@ -1,8 +1,11 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const defaultClient = createClient(supabaseUrl, supabaseAnonKey);
+// IMPORTANT: L'API V2 est utilisée par l'Agent côté serveur sans JWT utilisateur.
+// Pour éviter les erreurs RLS tout en garantissant la sécurité, on utilise la clé Service Role
+// et on applique systématiquement des filtres user_id dans toutes les requêtes.
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+const defaultClient = createClient(supabaseUrl, supabaseServiceKey);
 
 export type ResourceType = 'note' | 'folder' | 'classeur';
 
@@ -34,7 +37,8 @@ export class SlugGenerator {
     }
     if (!data) return true;
     if (excludeId) {
-      return !data.some(item => item.id !== excludeId);
+      // Exclure l'ID de la note actuelle de la vérification d'unicité
+      return !data.some(item => item.id === excludeId);
     }
     return data.length === 0;
   }

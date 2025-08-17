@@ -2,6 +2,7 @@ import { createClient } from '@supabase/supabase-js';
 import { logApi } from './logger';
 import { V2ResourceResolver } from './v2ResourceResolver';
 import { SlugGenerator } from './slugGenerator';
+import { SlugAndUrlService } from '@/services/slugAndUrlService';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 // IMPORTANT: L'API V2 est utilisée par l'Agent côté serveur sans JWT utilisateur.
@@ -164,9 +165,26 @@ export class V2DatabaseUtils {
       if (data.source_title !== undefined) {
         const normalizedTitle = String(data.source_title).trim();
         updateData.source_title = normalizedTitle;
-        if (normalizedTitle && current && normalizedTitle !== current.source_title) {
-          const newSlug = await SlugGenerator.generateSlug(normalizedTitle, 'note', userId, noteId);
-          updateData.slug = newSlug;
+        
+        // TOUJOURS mettre à jour le slug quand le titre change (comme l'API V1)
+        if (normalizedTitle) {
+          try {
+            const { slug: newSlug, publicUrl } = await SlugAndUrlService.updateNoteSlugAndUrl(
+              noteId,
+              normalizedTitle,
+              userId,
+              supabase
+            );
+            updateData.slug = newSlug;
+            updateData.public_url = publicUrl;
+            
+            if (process.env.NODE_ENV === 'development') {
+              console.log(`[V2DatabaseUtils] Mise à jour slug via SlugAndUrlService: "${current?.source_title}" → "${normalizedTitle}" → "${newSlug}"`);
+            }
+          } catch (error) {
+            logApi('v2_db_update_note', `❌ Erreur mise à jour slug/URL pour la note ${noteId}: ${error}`, context);
+            // Continuer sans mettre à jour le slug en cas d'erreur
+          }
         }
       }
       if (data.markdown_content !== undefined) updateData.markdown_content = data.markdown_content;

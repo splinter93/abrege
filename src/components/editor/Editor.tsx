@@ -109,18 +109,8 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
   }, [noteId, updateNote]);
 
   React.useEffect(() => {
-    if (kebabOpen && kebabBtnRef.current) {
-      const rect = kebabBtnRef.current.getBoundingClientRect();
-      const menuWidth = 180; // Largeur du menu kebab
-      
-      // Positionner le menu à gauche du bouton pour éviter qu'il soit coupé
-      const left = Math.max(8, rect.left - menuWidth + 40); // 40px = largeur du bouton kebab
-      
-      setKebabPos({ 
-        top: rect.bottom + 2, // ✅ Réduit de 8px à 2px pour coller au header
-        left: left 
-      });
-    }
+    if (kebabOpen && kebabBtnRef.current)
+      setKebabPos({ top: kebabBtnRef.current.getBoundingClientRect().bottom + 8, left: kebabBtnRef.current.getBoundingClientRect().left });
   }, [kebabOpen]);
 
   // Ref to the element that contains .ProseMirror so TOC can scroll into view
