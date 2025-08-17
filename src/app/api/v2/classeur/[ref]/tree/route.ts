@@ -113,12 +113,12 @@ export async function GET(
 
     logApi('v2_classeur_tree', `✅ Classeur trouvé: ${classeur.name} (${classeur.id})`, context);
 
-    // 🔧 CORRECTION TEMPORAIRE: Utiliser uniquement classeur_id en attendant la migration
+    // 🔧 CORRECTION: Utiliser classeur_id ET notebook_id pour compatibilité
     // Récupérer les dossiers du classeur
     const { data: folders, error: foldersError } = await supabase
       .from('folders')
-      .select('id, name, parent_id, created_at, position, slug, classeur_id')
-      .eq('classeur_id', classeurId)
+      .select('id, name, parent_id, created_at, position, slug, classeur_id, notebook_id')
+      .or(`classeur_id.eq.${classeurId},notebook_id.eq.${classeurId}`)
       .order('name');
 
     if (foldersError) {
@@ -131,12 +131,12 @@ export async function GET(
 
     logApi('v2_classeur_tree', `📁 Dossiers trouvés: ${folders?.length || 0}`, context);
 
-    // 🔧 CORRECTION TEMPORAIRE: Utiliser uniquement classeur_id en attendant la migration
+    // 🔧 CORRECTION: Utiliser classeur_id ET notebook_id pour compatibilité
     // Récupérer les notes du classeur (sans dossier)
     const { data: notes, error: notesError } = await supabase
       .from('articles')
-      .select('id, source_title, markdown_content, html_content, image_url, folder_id, created_at, updated_at, classeur_id')
-      .eq('classeur_id', classeurId)
+      .select('id, source_title, markdown_content, html_content, header_image, folder_id, created_at, updated_at, classeur_id, notebook_id')
+      .or(`classeur_id.eq.${classeurId},notebook_id.eq.${classeurId}`)
       .is('folder_id', null)
       .order('source_title');
 
@@ -155,8 +155,8 @@ export async function GET(
     if (folderIds.length > 0) {
       const { data: folderNotes, error: folderNotesError } = await supabase
         .from('articles')
-        .select('id, source_title, markdown_content, html_content, image_url, folder_id, created_at, updated_at, classeur_id')
-        .eq('classeur_id', classeurId)
+        .select('id, source_title, markdown_content, html_content, header_image, folder_id, created_at, updated_at, classeur_id, notebook_id')
+        .or(`classeur_id.eq.${classeurId},notebook_id.eq.${classeurId}`)
         .in('folder_id', folderIds)
         .order('source_title');
 
@@ -197,18 +197,20 @@ export async function GET(
           position: folder.position,
           slug: folder.slug,
           createdAt: folder.created_at,
-          classeur_id: folder.classeur_id // 🔧 Compatibilité
+          classeur_id: folder.classeur_id, // 🔧 Compatibilité
+          notebook_id: folder.notebook_id // 🔧 Nouvelle colonne
         })) || [],
         notes: allNotes?.map(note => ({
           id: note.id,
           title: note.source_title,
           markdown_content: note.markdown_content,
           html_content: note.html_content,
-          image_url: note.image_url,
+          header_image: note.header_image,
           folder_id: note.folder_id,
           createdAt: note.created_at,
           updatedAt: note.updated_at,
-          classeur_id: note.classeur_id // 🔧 Compatibilité
+          classeur_id: note.classeur_id, // 🔧 Compatibilité
+          notebook_id: note.notebook_id // 🔧 Nouvelle colonne
         })) || []
       }
     }, { headers: { "Content-Type": "application/json" } });
