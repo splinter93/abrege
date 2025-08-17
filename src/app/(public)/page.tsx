@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import Sidebar from '@/components/Sidebar';
 import LogoHeader from '@/components/LogoHeader';
-import { Book, FileText, MessageSquare, Plus } from 'lucide-react';
+import { Book, FileText, MessageSquare, Plus, Search, Upload, Link as LinkIcon, Sparkles } from 'lucide-react';
 import RecentActivityPrivate from '@/components/RecentActivityPrivate';
 import './home.css';
 
@@ -12,6 +12,8 @@ export default function HomePage() {
   const { user, loading } = useAuth();
   const [isDragOver, setIsDragOver] = useState(false);
   const [urlInput, setUrlInput] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isSearching, setIsSearching] = useState(false);
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -26,25 +28,33 @@ export default function HomePage() {
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragOver(false);
-    
     const files = Array.from(e.dataTransfer.files);
     if (files.length > 0) {
-      // TODO: Traiter les fichiers déposés
       console.log('Fichiers déposés:', files);
+      // TODO: Traiter les fichiers
     }
   };
 
   const handleUrlSubmit = () => {
     if (urlInput.trim()) {
-      // TODO: Traiter l'URL saisie
       console.log('URL saisie:', urlInput);
       setUrlInput('');
+      // TODO: Traiter l'URL
     }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
       handleUrlSubmit();
+    }
+  };
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      setIsSearching(true);
+      // TODO: Implémenter la recherche
+      setTimeout(() => setIsSearching(false), 2000);
     }
   };
 
@@ -115,71 +125,122 @@ export default function HomePage() {
       <main className="home-content">
         <header className="home-header">
           <div className="home-welcome">
-            <h1>Bonjour, {user.email?.split('@')[0] || 'Utilisateur'} !</h1>
-            <p>Bienvenue dans votre espace personnel Scrivia.</p>
+            <h1>
+              <Sparkles size={32} style={{ marginRight: 12, display: 'inline', verticalAlign: 'middle' }} />
+              Bonjour, {user.email?.split('@')[0] || 'Utilisateur'} !
+            </h1>
+            <p>Prêt à organiser vos idées ?</p>
           </div>
         </header>
 
-        <div className="dashboard-grid">
-          <div className="dashboard-main">
-            <section className="quick-actions">
-              <h2>Actions rapides</h2>
-              <div className="quick-actions-grid">
-                <button className="action-btn primary">
-                  <Plus size={18} />
-                  <span>Nouveau classeur</span>
-                </button>
-                <button className="action-btn">
-                  <FileText size={18} />
-                  <span>Nouvelle note</span>
-                </button>
-                <button 
-                  className="action-btn"
-                  onClick={() => window.location.href = '/chat'}
-                >
-                  <MessageSquare size={18} />
-                  <span>Ouvrir le chat</span>
-                </button>
-              </div>
+        <div className="main-dashboard">
+          {/* Colonne Principale */}
+          <div className="dashboard-content">
+            
+            <section className="hero-search">
+              <form onSubmit={handleSearch} className="search-container">
+                <Search size={22} className="search-icon" />
+                <input 
+                  type="text" 
+                  placeholder="Rechercher une note, un classeur..."
+                  className="search-field"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+                {searchQuery && (
+                  <button 
+                    type="submit" 
+                    className="search-btn"
+                    disabled={isSearching}
+                  >
+                    {isSearching ? 'Recherche...' : 'Rechercher'}
+                  </button>
+                )}
+              </form>
             </section>
 
-            <section className="content-import">
-              <h2>Importer du contenu</h2>
-              <div className="import-container">
-                <div className="url-input-section">
-                  <input 
-                    type="text" 
-                    placeholder="Coller une URL ou saisir du texte..."
-                    className="url-field"
-                    value={urlInput}
-                    onChange={(e) => setUrlInput(e.target.value)}
-                    onKeyPress={handleKeyPress}
-                  />
-                  <button className="import-btn" onClick={handleUrlSubmit}>
-                    Importer
-                  </button>
-                </div>
-                <div 
-                  className={`drop-zone ${isDragOver ? 'drag-over' : ''}`}
-                  onDragOver={handleDragOver}
-                  onDragLeave={handleDragLeave}
-                  onDrop={handleDrop}
-                >
-                  <div className="drop-content">
-                    <FileText size={24} />
-                    <p>Glissez-déposez un fichier ici</p>
-                    <span>ou cliquez pour parcourir</span>
+            <section className="creation-hub">
+              <h2>Actions Rapides</h2>
+              <div className="creation-actions">
+                <button className="action-btn primary">
+                  <Plus size={18} />
+                  <span>Nouvelle note</span>
+                </button>
+                <button className="action-btn">
+                  <MessageSquare size={18} />
+                  <span>Résumé Youtube</span>
+                </button>
+              </div>
+              
+              <div className="import-section">
+                <h3>Importer du contenu</h3>
+                <div className="import-content">
+                  <div className="url-input-section">
+                    <input 
+                      type="text" 
+                      placeholder="Coller une URL à archiver..."
+                      className="url-field"
+                      value={urlInput}
+                      onChange={(e) => setUrlInput(e.target.value)}
+                      onKeyPress={handleKeyPress}
+                    />
+                    <button 
+                      className="import-btn" 
+                      onClick={handleUrlSubmit}
+                      disabled={!urlInput.trim()}
+                    >
+                      Importer
+                    </button>
+                  </div>
+                  
+                  <div className="separator">
+                    <span>ou</span>
+                  </div>
+                  
+                  <div 
+                    className={`drop-zone ${isDragOver ? 'drag-over' : ''}`}
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
+                    onClick={() => document.getElementById('file-input')?.click()}
+                  >
+                    <input 
+                      id="file-input"
+                      type="file" 
+                      style={{ display: 'none' }}
+                      onChange={(e) => {
+                        if (e.target.files?.length) {
+                          console.log('Fichier sélectionné:', e.target.files[0]);
+                        }
+                      }}
+                    />
+                    <div className="drop-content">
+                      <Upload size={28} />
+                      <p>Glissez-déposez un fichier</p>
+                      <span>ou cliquez pour parcourir</span>
+                    </div>
                   </div>
                 </div>
               </div>
             </section>
+            
+            <section className="utility-actions">
+               <button 
+                  className="utility-btn"
+                  onClick={() => window.location.href = '/chat'}
+                >
+                  <MessageSquare size={18} />
+                  <span>Ouvrir l'assistant IA</span>
+                </button>
+            </section>
           </div>
           
+          {/* Colonne Latérale */}
           <div className="dashboard-sidebar">
-            <section className="home-activity">
-              <h2>Activité récente</h2>
+            <section className="home-activity card">
+              <h2>Activité Récente</h2>
               <RecentActivityPrivate 
-                limit={8} 
+                limit={10} 
                 compact={false}
                 showHeader={false}
               />

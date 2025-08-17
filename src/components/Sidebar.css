@@ -1,19 +1,27 @@
 /* ==========================================================================
-   SIDEBAR COMPONENT STYLES - HOME PAGE
+   SIDEBAR GLASSMORPHISM - DESIGN COHÉRENT AVEC LE DASHBOARD
    ========================================================================== */
+
+/* Police Noto Sans pour la sidebar */
+.sidebar {
+  font-family: 'Noto Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
 
 .sidebar {
   display: flex;
   flex-direction: column;
   width: 280px;
   height: 100vh;
-  background: var(--surface-2, #1a1a1a);
-  border-right: 1px solid var(--surface-3, #2a2a2a);
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
   flex-shrink: 0;
   position: fixed;
   left: 0;
   top: 0;
   z-index: 100;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
 }
 
 .sidebar-main-content {
@@ -36,7 +44,7 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: var(--text-3, #666);
+  color: #94a3b8;
   margin-bottom: 12px;
 }
 
@@ -51,52 +59,53 @@
   align-items: center;
   gap: 14px;
   padding: 14px 16px;
-  border-radius: 8px;
-  color: var(--text-2, #b0b0b0);
+  border-radius: 12px;
+  color: #e2e8f0;
   text-decoration: none;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
   font-size: 15px;
   font-weight: 500;
   border: 1px solid transparent;
+  background: transparent;
 }
 
 .nav-link:hover {
-  background: var(--surface-3, #2a2a2a);
-  color: var(--text-1, #eaeaec);
+  background: rgba(255, 255, 255, 0.08);
+  color: #f8fafc;
   transform: translateX(4px);
-  border-color: var(--accent-primary-faded, #2994ff4d);
+  border-color: rgba(249, 115, 22, 0.3);
 }
 
 .nav-link svg {
-  color: var(--text-3, #666);
-  transition: color 0.2s ease;
+  color: #94a3b8;
+  transition: color 0.3s ease;
   flex-shrink: 0;
   width: 20px;
   height: 20px;
 }
 
 .nav-link:hover svg {
-  color: var(--accent-primary, #2994ff);
+  color: #f97316;
 }
 
 .sidebar-footer {
   padding: 24px 0;
-  border-top: 1px solid var(--surface-3, #2a2a2a);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
   margin-top: auto;
 }
 
 .sidebar-footer .nav-link {
   justify-content: flex-start;
   padding: 14px 16px;
-  border-radius: 8px;
+  border-radius: 12px;
   background: transparent;
   border: 1px solid transparent;
 }
 
 .sidebar-footer .nav-link:hover {
-  background: var(--surface-3, #2a2a2a);
+  background: rgba(255, 255, 255, 0.08);
   transform: translateX(4px);
-  border-color: var(--accent-primary-faded, #2994ff4d);
+  border-color: rgba(249, 115, 22, 0.3);
 }
 
 /* Responsive */
@@ -116,7 +125,7 @@
     height: auto;
     position: relative;
     border-right: none;
-    border-bottom: 1px solid var(--surface-3, #2a2a2a);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   }
   
   .sidebar-main-content {
