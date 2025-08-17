@@ -400,11 +400,38 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
 
   const handlePreviewClick = React.useCallback(async () => {
     try {
-      // Récupérer la note depuis le store
-      const n = useFileSystemStore.getState().notes[noteId];
+      // Récupérer la note directement depuis l'API V2 au lieu du store local
+      let noteData: any = null;
       
-      // Vérifier si la note est accessible (pas privée)
-      if (!n) {
+      try {
+        // Essayer d'abord de récupérer depuis l'API V2
+        const { data: { session } } = await supabase.auth.getSession();
+        const token = session?.access_token;
+        if (!token) throw new Error('Authentification requise');
+        
+        const res = await fetch(`/api/v2/note/${encodeURIComponent(noteId)}/metadata`, {
+          method: 'GET',
+          headers: { 
+            'Content-Type': 'application/json', 
+            'Authorization': `Bearer ${token}` 
+          }
+        });
+        
+        if (res.ok) {
+          const data = await res.json();
+          noteData = data.note;
+        } else {
+          // Fallback sur le store local
+          noteData = useFileSystemStore.getState().notes[noteId];
+        }
+      } catch (error) {
+        console.warn('Erreur API V2, fallback sur store local:', error);
+        // Fallback sur le store local
+        noteData = useFileSystemStore.getState().notes[noteId];
+      }
+      
+      // Vérifier si la note est accessible
+      if (!noteData) {
         toast.error('Note non trouvée. Rechargez la page et réessayez.');
         return;
       }
@@ -413,7 +440,7 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
       // La visibilité contrôle l'accès public, pas la possibilité de preview
 
       // Vérifier si la note a un slug
-      if (!n?.slug) {
+      if (!noteData?.slug) {
         toast.error('Cette note n\'a pas de slug. Publiez à nouveau la note.');
         return;
       }
@@ -442,7 +469,7 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
         }
 
         // Construire l'URL correcte avec le format /@username/slug
-        url = `https://scrivia.app/@${userData.username}/${n.slug}`;
+        url = `https://scrivia.app/@${userData.username}/${noteData.slug}`;
         
         console.log('URL construite:', url);
         

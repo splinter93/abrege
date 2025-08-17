@@ -42,17 +42,24 @@ export async function GET(
   const userId = authResult.userId!;
 
   try {
-    // ✅ CORRECTION : Résoudre la référence avec le token utilisateur
-    const userToken = request.headers.get('Authorization')?.substring(7);
-    const resolveResult = await V2ResourceResolver.resolveRef(ref, 'note', userId, context, userToken);
-    if (!resolveResult.success) {
-      return NextResponse.json(
-        { error: resolveResult.error },
-        { status: resolveResult.status, headers: { "Content-Type": "application/json" } }
-      );
+    // ✅ SIMPLIFICATION : Utiliser directement l'ID si c'est un UUID valide
+    let noteId: string;
+    
+    // Vérifier si c'est un UUID valide
+    if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(ref)) {
+      noteId = ref;
+    } else {
+      // Sinon, essayer de résoudre par slug
+      const userToken = request.headers.get('Authorization')?.substring(7);
+      const resolveResult = await V2ResourceResolver.resolveRef(ref, 'note', userId, context, userToken);
+      if (!resolveResult.success) {
+        return NextResponse.json(
+          { error: resolveResult.error },
+          { status: resolveResult.status, headers: { "Content-Type": "application/json" } }
+        );
+      }
+      noteId = resolveResult.id;
     }
-
-    const noteId = resolveResult.id;
 
     // 🔐 Vérification des permissions
     const permissionResult = await checkUserPermission(noteId, 'article', 'viewer', userId, context);
@@ -151,17 +158,24 @@ export async function PATCH(
   const userId = authResult.userId!;
 
   try {
-    // ✅ CORRECTION : Résoudre la référence avec le token utilisateur
-    const userToken = request.headers.get('Authorization')?.substring(7);
-    const resolveResult = await V2ResourceResolver.resolveRef(ref, 'note', userId, context, userToken);
-    if (!resolveResult.success) {
-      return NextResponse.json(
-        { error: resolveResult.error },
-        { status: resolveResult.status, headers: { "Content-Type": "application/json" } }
-      );
+    // ✅ SIMPLIFICATION : Utiliser directement l'ID si c'est un UUID valide
+    let noteId: string;
+    
+    // Vérifier si c'est un UUID valide
+    if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(ref)) {
+      noteId = ref;
+    } else {
+      // Sinon, essayer de résoudre par slug
+      const userToken = request.headers.get('Authorization')?.substring(7);
+      const resolveResult = await V2ResourceResolver.resolveRef(ref, 'note', userId, context, userToken);
+      if (!resolveResult.success) {
+        return NextResponse.json(
+          { error: resolveResult.error },
+          { status: resolveResult.status, headers: { "Content-Type": "application/json" } }
+        );
+      }
+      noteId = resolveResult.id;
     }
-
-    const noteId = resolveResult.id;
 
     // 🔐 Vérification des permissions (seul le propriétaire peut modifier le partage)
     const permissionResult = await checkUserPermission(noteId, 'article', 'owner', userId, context);
