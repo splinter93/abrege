@@ -25,8 +25,12 @@ export interface Note {
   font_family?: string | null;
           public_url?: string | null; // URL publique si publiée
         slug?: string | null; // Slug unique de la note pour les URLs
-        visibility?: 'private' | 'public' | 'link-private' | 'link-public' | 'limited' | 'scrivia'; // Niveau de visibilité de la note
-  share_settings?: any; // Configuration de partage (nouveau système)
+        share_settings?: {
+          visibility: 'private' | 'link-private' | 'link-public' | 'limited' | 'scrivia';
+          invited_users?: string[];
+          allow_edit?: boolean;
+          allow_comments?: boolean;
+        }; // Configuration de partage (nouveau système)
   // Propriétés additionnelles pour l'état optimiste et le diff
   _optimistic?: boolean | 'deleting';
   _lastPatch?: any;

@@ -181,8 +181,8 @@ export async function PATCH(
     // Récupérer et valider le body
     const body = await request.json() as ShareSettingsUpdate;
     
-    // Validation basique
-    if (body.visibility && !['private', 'link', 'limited', 'scrivia'].includes(body.visibility)) {
+    // Validation basique - CORRIGÉE pour accepter les nouvelles options
+    if (body.visibility && !['private', 'link', 'link-private', 'link-public', 'limited', 'scrivia'].includes(body.visibility)) {
       return NextResponse.json(
         { error: 'Niveau de visibilité invalide' },
         { status: 400, headers: { "Content-Type": "application/json" } }

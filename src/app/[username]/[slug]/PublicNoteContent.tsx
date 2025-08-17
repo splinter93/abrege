@@ -5,7 +5,6 @@ import PublicTOCClient from '@/components/PublicTOCClient';
 import CraftedBadge from '@/components/CraftedBadge';
 import LogoHeader from '@/components/LogoHeader';
 import { supabase } from '@/supabaseClient';
-
 import '@/styles/public-note.css'; // CSS spécifique page publique - PRIORITÉ MAXIMALE
 import '@/styles/typography.css'; // Importer le CSS typography
 import '@/styles/design-system.css'; // Importer le design system pour les variables
@@ -21,7 +20,9 @@ interface PublicNoteProps {
     header_title_in_image: boolean | null;
     wide_mode: boolean | null;
     font_family: string | null;
-    visibility: string;
+    share_settings: {
+      visibility: 'private' | 'link-private' | 'link-public' | 'limited' | 'scrivia';
+    };
     user_id: string;
   };
   slug: string;
@@ -32,7 +33,6 @@ export default function PublicNoteContent({ note, slug }: PublicNoteProps) {
   const contentRef = React.useRef<HTMLDivElement>(null);
   const [currentUser, setCurrentUser] = React.useState<any>(null);
   const [isLoading, setIsLoading] = React.useState(true);
-
 
   // Vérifier l'authentification côté client
   React.useEffect(() => {
@@ -50,10 +50,8 @@ export default function PublicNoteContent({ note, slug }: PublicNoteProps) {
     checkAuth();
   }, []);
 
-
-
   // Vérifier si l'accès est autorisé (après tous les hooks)
-  const isAccessAllowed = note.visibility !== 'private' || (currentUser && currentUser.id === note.user_id);
+  const isAccessAllowed = note.share_settings.visibility !== 'private' || (currentUser && currentUser.id === note.user_id);
 
     React.useEffect(() => {
     // Appliquer le mode pleine largeur

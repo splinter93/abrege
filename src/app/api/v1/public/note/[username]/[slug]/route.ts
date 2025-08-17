@@ -37,13 +37,13 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ user
       return new Response(JSON.stringify({ error: 'Utilisateur non trouvé.' }), { status: 404, headers: { "Content-Type": "application/json" } });
     }
 
-    // Chercher la note par slug et user_id, visibility != 'private'
+    // Chercher la note par slug et user_id, share_settings.visibility != 'private'
     const { data: note, error: noteError } = await supabase
       .from('articles')
-      .select('id, source_title, html_content, header_image, header_image_offset, header_image_blur, header_image_overlay, header_title_in_image, wide_mode, font_family, created_at, updated_at')
+      .select('id, source_title, html_content, header_image, header_image_offset, header_image_blur, header_image_overlay, header_title_in_image, wide_mode, font_family, created_at, updated_at, share_settings')
       .eq('slug', slug)
       .eq('user_id', user.id)
-      .neq('visibility', 'private')
+      .not('share_settings->>visibility', 'eq', 'private')
       .limit(1)
       .maybeSingle();
     if (noteError || !note) {

@@ -33,11 +33,11 @@ export default function TestEyeButton() {
                   <div style={{ fontSize: '0.9rem', color: '#666' }}>
                     <p><strong>ID:</strong> {noteId}</p>
                     <p><strong>Slug:</strong> {note?.slug || 'Aucun slug'}</p>
-                    <p><strong>Visibilité:</strong> {note?.visibility || 'Non définie'}</p>
+                    <p><strong>Visibilité:</strong> {note?.share_settings?.visibility || 'Non définie'}</p>
                     <p><strong>URL publique:</strong> {note?.public_url || 'Aucune URL'}</p>
                   </div>
                   
-                  {note?.visibility !== 'private' && note?.public_url && (
+                  {note?.share_settings?.visibility !== 'private' && note?.public_url && (
                     <div style={{ marginTop: '1rem' }}>
                       <a 
                         href={note.public_url} 

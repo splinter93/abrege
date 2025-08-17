@@ -75,11 +75,11 @@ export async function GET(
     // Vérifier si l'article est public
     const { data: article } = await supabase
       .from('articles')
-      .select('visibility')
+      .select('share_settings')
       .eq('id', noteId)
       .single();
     
-    if (!article || article.visibility !== 'public') {
+    if (!article || article.share_settings?.visibility === 'private') {
       logApi('v2_note_table_of_contents', `❌ Accès refusé pour note ${noteId}`, context);
       return NextResponse.json(
         { error: 'Accès refusé' },

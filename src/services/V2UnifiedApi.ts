@@ -22,6 +22,8 @@ export interface UpdateNoteData {
   header_image_overlay?: number;
   header_title_in_image?: boolean;
   wide_mode?: boolean;
+  a4_mode?: boolean;
+  slash_lang?: 'fr' | 'en';
   font_family?: string;
   folder_id?: string | null;
   description?: string;

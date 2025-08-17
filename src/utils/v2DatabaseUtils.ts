@@ -26,7 +26,15 @@ export interface UpdateNoteData {
   source_title?: string;
   markdown_content?: string;
   html_content?: string;
-  header_image?: string;
+  header_image?: string | null;
+  header_image_offset?: number;
+  header_image_blur?: number;
+  header_image_overlay?: number;
+  header_title_in_image?: boolean;
+  wide_mode?: boolean;
+  a4_mode?: boolean;
+  slash_lang?: 'fr' | 'en';
+  font_family?: string;
   folder_id?: string | null;
   description?: string;
 }
@@ -164,6 +172,20 @@ export class V2DatabaseUtils {
       if (data.markdown_content !== undefined) updateData.markdown_content = data.markdown_content;
       if (data.html_content !== undefined) updateData.html_content = data.html_content;
       if (data.header_image !== undefined) updateData.header_image = data.header_image;
+      if (data.header_image_offset !== undefined) {
+        const roundedOffset = Math.round(data.header_image_offset * 10) / 10;
+        updateData.header_image_offset = roundedOffset;
+        if (process.env.NODE_ENV === 'development') {
+          console.log('[V2DatabaseUtils] Mise à jour header_image_offset:', roundedOffset);
+        }
+      }
+      if (data.header_image_blur !== undefined) updateData.header_image_blur = data.header_image_blur;
+      if (data.header_image_overlay !== undefined) updateData.header_image_overlay = data.header_image_overlay;
+      if (data.header_title_in_image !== undefined) updateData.header_title_in_image = data.header_title_in_image;
+      if (data.wide_mode !== undefined) updateData.wide_mode = data.wide_mode;
+      if (data.a4_mode !== undefined) updateData.a4_mode = data.a4_mode;
+      if (data.slash_lang !== undefined) updateData.slash_lang = data.slash_lang;
+      if (data.font_family !== undefined) updateData.font_family = data.font_family;
       if (data.folder_id !== undefined) updateData.folder_id = data.folder_id;
       if (data.description !== undefined) updateData.description = data.description;
       updateData.updated_at = new Date().toISOString();

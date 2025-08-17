@@ -19,10 +19,46 @@ interface EditorToolbarProps {
   onTranscriptionComplete?: (text: string) => void;
 }
 
-const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor, setImageMenuOpen, onTranscriptionComplete }) => {
+const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor, setImageMenuOpen, onFontChange, currentFont = 'Noto Sans', onTranscriptionComplete }) => {
   const isReadonly = !editor;
+  
+  // Options de police disponibles
+  const fontOptions = [
+    'Noto Sans',
+    'Inter',
+    'Roboto',
+    'Open Sans',
+    'Lato',
+    'Poppins',
+    'Source Sans Pro',
+    'Ubuntu',
+    'Montserrat',
+    'Raleway'
+  ];
+
   return (
     <div className="editor-toolbar" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%' }}>
+      {/* Menu de sélection de police */}
+      {onFontChange && (
+        <div className="toolbar-group font-selector">
+          <Tooltip text="Changer la police">
+            <select
+              className="font-select"
+              value={currentFont}
+              onChange={(e) => onFontChange(e.target.value)}
+              disabled={isReadonly}
+              aria-label="Sélectionner une police"
+            >
+              {fontOptions.map(font => (
+                <option key={font} value={font} style={{ fontFamily: font }}>
+                  {font}
+                </option>
+              ))}
+            </select>
+          </Tooltip>
+        </div>
+      )}
+      
       <div className="toolbar-group">
         <Tooltip text="Gras (Ctrl+B)"><button className="toolbar-button" disabled={isReadonly} onClick={() => editor?.chain().focus().toggleBold().run()} aria-label="Gras"><FiBold size={18} /></button></Tooltip>
         <Tooltip text="Italique (Ctrl+I)"><button className="toolbar-button" disabled={isReadonly} onClick={() => editor?.chain().focus().toggleItalic().run()} aria-label="Italique"><FiItalic size={18} /></button></Tooltip>

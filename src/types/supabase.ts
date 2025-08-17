@@ -27,7 +27,12 @@ export type Article = {
   updated_at: string | null;
   user_id: string | null;
   view_count: number;
-  visibility: 'private' | 'public' | 'link-private' | 'link-public' | 'limited' | 'scrivia';
+  share_settings: {
+    visibility: 'private' | 'link-private' | 'link-public' | 'limited' | 'scrivia';
+    invited_users?: string[];
+    allow_edit?: boolean;
+    allow_comments?: boolean;
+  };
   wide_mode: boolean | null;
   font_family: string | null;
 };
@@ -87,7 +92,12 @@ export type SharedNote = {
   updated_at: string | null;
   user_id: string; // Utilisateur qui a reçu la note
   view_count: number;
-  visibility: 'private' | 'public' | 'link-private' | 'link-public' | 'limited' | 'scrivia';
+  share_settings: {
+    visibility: 'private' | 'link-private' | 'link-public' | 'limited' | 'scrivia';
+    invited_users?: string[];
+    allow_edit?: boolean;
+    allow_comments?: boolean;
+  };
   wide_mode: boolean | null;
   font_family: string | null;
 };

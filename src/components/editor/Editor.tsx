@@ -12,6 +12,8 @@ import { useFileSystemStore } from '@/store/useFileSystemStore';
 import type { FileSystemState } from '@/store/useFileSystemStore';
 import { useMarkdownRender } from '@/hooks/editor/useMarkdownRender';
 import useEditorSave from '@/hooks/useEditorSave';
+import { useFontManager } from '@/hooks/useFontManager';
+import { useWideModeManager } from '@/hooks/useWideModeManager';
 import type { ShareSettings } from '@/types/sharing';
 import { getDefaultShareSettings } from '@/types/sharing';
 import { useEditor, EditorContent as TiptapEditorContent } from '@tiptap/react';
@@ -107,8 +109,18 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
   }, [noteId, updateNote]);
 
   React.useEffect(() => {
-    if (kebabOpen && kebabBtnRef.current)
-      setKebabPos({ top: kebabBtnRef.current.getBoundingClientRect().bottom + 8, left: kebabBtnRef.current.getBoundingClientRect().left });
+    if (kebabOpen && kebabBtnRef.current) {
+      const rect = kebabBtnRef.current.getBoundingClientRect();
+      const menuWidth = 180; // Largeur du menu kebab
+      
+      // Positionner le menu à gauche du bouton pour éviter qu'il soit coupé
+      const left = Math.max(8, rect.left - menuWidth + 40); // 40px = largeur du bouton kebab
+      
+      setKebabPos({ 
+        top: rect.bottom + 2, // ✅ Réduit de 8px à 2px pour coller au header
+        left: left 
+      });
+    }
   }, [kebabOpen]);
 
   // Ref to the element that contains .ProseMirror so TOC can scroll into view
@@ -236,6 +248,12 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
     }
   });
 
+  // Gestionnaire de police avec changement CSS automatique
+  const { changeFont } = useFontManager(note?.font_family || 'Noto Sans');
+
+  // Gestionnaire de mode large avec changement CSS automatique
+  const { changeWideMode } = useWideModeManager(note?.wide_mode || false);
+
   // Initialize share settings from note data
   React.useEffect(() => {
     if (note?.share_settings) {
@@ -278,10 +296,59 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
   // Persist font changes via toolbar callback
   const handleFontChange = React.useCallback(async (fontName: string) => {
     try {
+      // Changer la police en temps réel dans le CSS
+      changeFont(fontName);
+      
+      // Sauvegarder en base de données
       await v2UnifiedApi.updateNote(noteId, { font_family: fontName } as any, userId);
       useFileSystemStore.getState().updateNote(noteId, { font_family: fontName } as any);
+      
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`[Editor] 🎨 Police changée et persistée: ${fontName}`);
+      }
+    } catch (error) {
+      console.error('[Editor] ❌ Erreur lors du changement de police:', error);
+    }
+  }, [noteId, changeFont]);
+
+  // Persist fullWidth changes
+  const handleFullWidthChange = React.useCallback(async (value: boolean) => {
+    try {
+      // Changer la largeur en temps réel dans le CSS
+      changeWideMode(value);
+      
+      // Mettre à jour l'état local
+      setFullWidth(value);
+      
+      // Sauvegarder en base de données
+      updateNote(noteId, { wide_mode: value } as any);
+      await v2UnifiedApi.updateNote(noteId, { wide_mode: value }, userId);
+      
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`[Editor] 📏 Mode large changé et persisté: ${value ? 'ON' : 'OFF'}`);
+      }
+    } catch (error) {
+      console.error('[Editor] ❌ Erreur lors du changement de mode large:', error);
+    }
+  }, [noteId, updateNote, changeWideMode]);
+
+  // Persist a4Mode changes
+  const handleA4ModeChange = React.useCallback(async (value: boolean) => {
+    try {
+      setA4Mode(value);
+      updateNote(noteId, { a4_mode: value } as any);
+      await v2UnifiedApi.updateNote(noteId, { a4_mode: value }, userId);
     } catch {}
-  }, [noteId]);
+  }, [noteId, updateNote]);
+
+  // Persist slashLang changes
+  const handleSlashLangChange = React.useCallback(async (value: 'fr' | 'en') => {
+    try {
+      setSlashLang(value);
+      updateNote(noteId, { slash_lang: value } as any);
+      await v2UnifiedApi.updateNote(noteId, { slash_lang: value }, userId);
+    } catch {}
+  }, [noteId, updateNote]);
 
   // Ctrl/Cmd+S
   React.useEffect(() => {
@@ -512,6 +579,7 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
           editor={isReadonly ? null : (editor as any)} 
           setImageMenuOpen={setImageMenuOpen} 
           onFontChange={handleFontChange}
+          currentFont={note?.font_family || 'Noto Sans'}
           onTranscriptionComplete={handleTranscriptionComplete}
         />
             </EditorHeader>
@@ -599,11 +667,11 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
               position={kebabPos}
               onClose={() => setKebabOpen(false)}
               a4Mode={a4Mode}
-              setA4Mode={setA4Mode}
+              setA4Mode={handleA4ModeChange}
               slashLang={slashLang}
-              setSlashLang={setSlashLang}
+              setSlashLang={handleSlashLangChange}
               fullWidth={fullWidth}
-              setFullWidth={setFullWidth}
+              setFullWidth={handleFullWidthChange}
               noteId={noteId}
               currentShareSettings={shareSettings}
               onShareSettingsChange={handleShareSettingsChange}

@@ -72,7 +72,7 @@ export async function GET(
   try {
     const { data: article, error: articleError } = await supabase
       .from('articles')
-      .select('user_id, visibility')
+      .select('user_id, share_settings')
       .eq('id', noteId)
       .single();
     
@@ -86,8 +86,8 @@ export async function GET(
 
     // ✅ ACCÈS AUTORISÉ si :
     // 1. L'utilisateur est le propriétaire de la note
-    // 2. OU la note est publique
-    if (article.user_id === userId || article.visibility === 'public') {
+    // 2. OU la note est accessible via lien
+    if (article.user_id === userId || article.share_settings?.visibility !== 'private') {
       logApi('v2_note_content', `✅ Accès autorisé pour note ${noteId}`, context);
     } else {
       logApi('v2_note_content', `❌ Accès refusé pour note ${noteId}`, context);
@@ -108,7 +108,7 @@ export async function GET(
     // Récupérer le contenu de la note
     const { data: note, error: fetchError } = await supabase
       .from('articles')
-      .select('id, source_title, markdown_content, html_content, header_image, header_image_offset, header_image_blur, header_image_overlay, header_title_in_image, wide_mode, font_family, created_at, updated_at, slug, public_url, visibility')
+      .select('id, source_title, markdown_content, html_content, header_image, header_image_offset, header_image_blur, header_image_overlay, header_title_in_image, wide_mode, font_family, created_at, updated_at, slug, public_url, share_settings')
       .eq('id', noteId)
       .single();
 
@@ -142,7 +142,7 @@ export async function GET(
         updatedAt: note.updated_at,
         slug: note.slug,
         publicUrl: note.public_url,
-        visibility: note.visibility
+        share_settings: note.share_settings
       }
     });
 

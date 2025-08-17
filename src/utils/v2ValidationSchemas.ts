@@ -23,7 +23,15 @@ export const updateNoteV2Schema = z.object({
   source_title: z.string().min(1, 'source_title requis').max(255, 'source_title trop long').optional(),
   markdown_content: z.string().optional(),
   html_content: z.string().optional(),
-  header_image: z.string().url('header_image doit être une URL valide').optional(),
+  header_image: z.string().url('header_image doit être une URL valide').optional().nullable(),
+  header_image_offset: z.number().min(0).max(100).optional(), // Accepte les décimales
+  header_image_blur: z.number().int().min(0).max(5).optional(),
+  header_image_overlay: z.number().int().min(0).max(5).optional(),
+  header_title_in_image: z.boolean().optional(),
+  wide_mode: z.boolean().optional(),
+  a4_mode: z.boolean().optional(),
+  slash_lang: z.enum(['fr', 'en']).optional(),
+  font_family: z.string().optional(),
   folder_id: z.string().uuid('folder_id doit être un UUID valide').optional(),
   description: z.string().max(500, 'description trop longue').optional(),
 });

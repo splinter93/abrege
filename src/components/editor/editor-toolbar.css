@@ -1,4 +1,46 @@
 /* ==========================================================================
+   SÉLECTEUR DE POLICE SIMPLE - TOOLBAR
+   ========================================================================== */
+
+.font-selector {
+  margin-right: 16px;
+}
+
+.font-select {
+  background: var(--bg-2);
+  border: 1px solid var(--border-1);
+  border-radius: 6px;
+  color: var(--text-1);
+  font-size: 13px;
+  padding: 6px 12px;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.2s ease;
+  min-width: 140px;
+}
+
+.font-select:hover {
+  border-color: var(--accent-hover);
+  background: var(--bg-3);
+}
+
+.font-select:focus {
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 2px rgba(255, 107, 53, 0.2);
+}
+
+.font-select:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.font-select option {
+  background: var(--bg-2);
+  color: var(--text-1);
+  padding: 8px;
+}
+
+/* ==========================================================================
    MENU DES POLICES - ÉDITEUR
    ========================================================================== */
 

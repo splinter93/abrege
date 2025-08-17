@@ -102,7 +102,7 @@ export async function POST(
     // Vérifier que la note existe
     const { data: existingNote, error: fetchError } = await supabase
       .from('articles')
-      .select('id, user_id, visibility')
+      .select('id, user_id, share_settings')
       .eq('id', noteId)
       .single();
 
@@ -120,7 +120,12 @@ export async function POST(
     const { data: updatedNote, error: updateError } = await supabase
       .from('articles')
       .update({
-        visibility: newVisibility,
+        share_settings: {
+          visibility: newVisibility,
+          invited_users: [],
+          allow_edit: false,
+          allow_comments: false
+        },
         updated_at: new Date().toISOString()
       })
       .eq('id', noteId)

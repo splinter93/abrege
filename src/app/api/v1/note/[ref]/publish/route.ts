@@ -93,7 +93,12 @@ export async function POST(req: NextRequest, { params }: ApiContext): Promise<Re
     const { data: updated, error } = await supabase
       .from('articles')
       .update({
-        visibility: visibility,
+        share_settings: {
+          visibility: visibility,
+          invited_users: [],
+          allow_edit: false,
+          allow_comments: false
+        },
         public_url: visibility !== 'private' ? url : null
       })
       .eq('id', noteId)

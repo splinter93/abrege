@@ -82,43 +82,29 @@ export default async function Page(props: { params: Promise<{ username: string; 
   // Chercher la note par slug et user_id (toutes les notes, même privées)
   const { data: noteBySlug } = await supabase
     .from('articles')
-    .select('id, slug, source_title, html_content, markdown_content, header_image, header_image_offset, header_image_blur, header_image_overlay, header_title_in_image, wide_mode, font_family, created_at, updated_at, visibility, user_id')
+    .select('id, slug, source_title, html_content, markdown_content, header_image, header_image_offset, header_image_blur, header_image_overlay, header_title_in_image, wide_mode, font_family, created_at, updated_at, share_settings, user_id')
     .eq('slug', slug)
     .eq('user_id', user.id)
     .limit(1)
     .maybeSingle();
 
   if (!noteBySlug) {
-    // Slug peut avoir changé: essayer par public_url/id => récupérer la note accessible la plus récente et rediriger si trouvée
-    const { data: latestNote } = await supabase
-      .from('articles')
-      .select('id, slug')
-      .eq('user_id', user.id)
-      .order('updated_at', { ascending: false })
-      .limit(1)
-      .maybeSingle();
-
-    if (latestNote?.slug) {
-      // Redirection 301 vers le slug courant le plus probable (fallback simple)
-      const url = `/@${user.username}/${latestNote.slug}`;
-      return redirect(url);
-    }
-
+    // Note non trouvée - afficher une erreur au lieu de rediriger
     return (
       <div style={{ padding: '2rem', textAlign: 'center' }}>
         <div style={{ marginLeft: '4px', display: 'inline-block' }}>
           <LogoHeader size="medium" position="center" />
         </div>
-        <h1>Note non trouvée ou non publiée</h1>
-        <p>Vérifiez l&apos;URL ou contactez l&apos;auteur.</p>
+        <h1>Note non trouvée</h1>
+        <p>Cette note n'existe pas ou n'est pas accessible.</p>
+        <p>Vérifiez l'URL ou contactez l'auteur.</p>
       </div>
     );
   }
 
-  // Canonical: si le slug en DB ne correspond pas à l'URL, rediriger 301 vers le bon slug
+  // Vérifier que le slug correspond (pour la sécurité, mais sans redirection)
   if (noteBySlug.slug !== slug) {
-    const url = `/@${user.username}/${noteBySlug.slug}`;
-    return redirect(url);
+    console.warn(`Slug mismatch: URL=${slug}, DB=${noteBySlug.slug}`);
   }
 
   // Pour les notes privées, on laisse le composant client gérer l'authentification

@@ -6,7 +6,6 @@ import LogoHeader from '@/components/LogoHeader';
 import { FiShare2, FiStar, FiMoreHorizontal, FiMaximize2, FiMinimize2, FiSearch } from 'react-icons/fi';
 import { supabase } from '@/supabaseClient';
 import SocialShareMenu from './SocialShareMenu';
-
 import './PublicPageHeader.css';
 
 export default function PublicPageHeader() {
@@ -15,7 +14,6 @@ export default function PublicPageHeader() {
   const [isKebabMenuOpen, setIsKebabMenuOpen] = React.useState<boolean>(false);
   const [fullWidth, setFullWidth] = React.useState<boolean>(false);
   const [isFavorite, setIsFavorite] = React.useState<boolean>(false);
-
 
   React.useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {

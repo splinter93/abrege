@@ -168,12 +168,20 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
         style={{ top: position.top, left: position.left, position: 'fixed' }}
       >
         {menuOptions.map((opt) => (
-                    <button
+          <div
             key={opt.id}
             className="editor-header-kebab-menu-item"
             onClick={opt.onClick}
-            disabled={(opt as any).disabled}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                opt.onClick();
+              }
+            }}
             aria-label={opt.label}
+            style={{ cursor: 'pointer' }}
           >
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8, color: (opt as any).color }}>
               {opt.icon}
@@ -181,16 +189,17 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
             </span>
             {opt.id === 'share' && opt.showCopyButton && (
               <span style={{ marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-                  <button
+                <button
                   className="editor-header-kebab-menu-item"
                   style={{ padding: '0.4rem 0.6rem' }}
                   onClick={(e) => { e.stopPropagation(); handleCopyUrl(); }}
+                  aria-label="Copier l'URL"
                 >
                   {copyConfirmed ? <FiCheck size={16} /> : <FiCopy size={16} />}
-                  </button>
-                  </span>
+                </button>
+              </span>
             )}
-          </button>
+          </div>
         ))}
       </div>
       

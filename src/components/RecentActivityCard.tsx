@@ -10,7 +10,9 @@ interface RecentNote {
   headerImage?: string;
   createdAt: string;
   updatedAt: string;
-  visibility: 'private' | 'public' | 'link-private' | 'link-public' | 'limited' | 'scrivia';
+  share_settings: {
+    visibility: 'private' | 'link-private' | 'link-public' | 'limited' | 'scrivia';
+  };
   username: string;
   url?: string;
 }
@@ -217,7 +219,7 @@ export default function RecentActivityCard({
                   style={{
                     fontSize: compact ? '12px' : '14px',
                     fontWeight: '500',
-                    color: note?.visibility !== 'private' ? 'var(--accent-hover, #5fb2ff)' : 'var(--text-1, #eaeaec)',
+                    color: note?.share_settings?.visibility !== 'private' ? 'var(--accent-hover, #5fb2ff)' : 'var(--text-1, #eaeaec)',
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
                     whiteSpace: 'nowrap',
@@ -238,7 +240,7 @@ export default function RecentActivityCard({
                 >
                   {note.title}
                 </Link>
-                {note?.visibility !== 'private' && (
+                {note?.share_settings?.visibility !== 'private' && (
                   <span style={{
                     fontSize: '10px',
                     padding: '1px 4px',
@@ -248,7 +250,7 @@ export default function RecentActivityCard({
                     border: '1px solid rgba(95, 178, 255, 0.2)',
                     flexShrink: 0
                   }}>
-                    {note?.visibility === 'public' ? 'Public' : 'Partagé'}
+                    {note?.share_settings?.visibility === 'link-public' ? 'Public' : 'Partagé'}
                   </span>
                 )}
               </div>

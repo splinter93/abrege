@@ -149,7 +149,7 @@
 .editor-header-kebab-menu {
   position: absolute;
   top: 100%;
-  right: 0;
+  left: 0;  /* Changé de right: 0 à left: 0 */
   min-width: 180px;
   background: var(--surface-2);
   border-radius: 10px;
@@ -159,6 +159,7 @@
   display: flex;
   flex-direction: column;
   gap: 0;
+  margin-top: 2px; /* ✅ Réduit de 8px à 2px pour coller au header */
 }
 .editor-header-kebab-menu-item {
   padding: 0.7rem 1.2rem;
@@ -170,6 +171,18 @@
   cursor: pointer;
   transition: background 0.15s, color 0.15s;
 }
+
+/* Styles pour les éléments div avec role="button" */
+.editor-header-kebab-menu-item[role="button"] {
+  outline: none;
+  user-select: none;
+}
+
+.editor-header-kebab-menu-item[role="button"]:focus {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+}
+
 .editor-header-kebab-menu-item:hover {
   background: var(--surface-hover);
   color: var(--accent-primary);

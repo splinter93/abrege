@@ -58,7 +58,7 @@ export async function GET(req: NextRequest): Promise<Response> {
         header_image,
         created_at,
         updated_at,
-        visibility,
+        share_settings,
         user_id
       `)
       .order('updated_at', { ascending: false })
@@ -87,18 +87,39 @@ export async function GET(req: NextRequest): Promise<Response> {
     
     logger.debug('[Notes Recent API v2] 📊 Notes récupérées', { count: notes?.length || 0 });
     
+    // Récupérer les usernames pour tous les user_ids
+    const userIds = notes?.map(note => note.user_id).filter(Boolean) || [];
+    let usernames: Record<string, string> = {};
+    
+    if (userIds.length > 0) {
+      const { data: users, error: usersError } = await supabase
+        .from('users')
+        .select('id, username')
+        .in('id', userIds);
+      
+      if (!usersError && users) {
+        usernames = users.reduce((acc, user) => {
+          acc[user.id] = user.username;
+          return acc;
+        }, {} as Record<string, string>);
+      }
+    }
+    
     // Formater les données pour l'affichage
-    const formattedNotes = notes?.map(note => ({
-      id: note.id,
-      title: note.source_title,
-      slug: note.slug,
-      headerImage: note.header_image,
-      createdAt: note.created_at,
-      updatedAt: note.updated_at,
-      visibility: note.visibility || 'private',
-      username: `user_${note.user_id?.slice(0, 8) || 'unknown'}`,
-      url: note.visibility !== 'private' ? `/public/user_${note.user_id?.slice(8) || 'unknown'}/${note.slug}` : null
-    })) || [];
+    const formattedNotes = notes?.map(note => {
+      const username = usernames[note.user_id!] || `user_${note.user_id?.slice(0, 8) || 'unknown'}`;
+      return {
+        id: note.id,
+        title: note.source_title,
+        slug: note.slug,
+        headerImage: note.header_image,
+        createdAt: note.created_at,
+        updatedAt: note.updated_at,
+        share_settings: note.share_settings || { visibility: 'private' },
+        username: username,
+        url: note.share_settings?.visibility !== 'private' ? `/@${username}/${note.slug}` : null
+      };
+    }) || [];
     
     logger.info('[Notes Recent API v2] ✅ Notes récentes récupérées avec succès');
     
