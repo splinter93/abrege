@@ -43,9 +43,23 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
   useEffect(() => {
     if (!open) return;
     const handleClick = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+      const target = e.target as Element;
+      
+      // Si le ShareMenu est ouvert, ne pas fermer le menu kebab
+      if (shareMenuOpen) {
+        // Vérifier si le clic est dans le ShareMenu
+        if (target.closest('.share-menu')) {
+          return; // Clic dans le ShareMenu, ne rien faire
+        }
+        // Clic à l'extérieur du ShareMenu, fermer les deux
         onClose();
-        setShareMenuOpen(false); // Fermer aussi le ShareMenu
+        setShareMenuOpen(false);
+        return;
+      }
+      
+      // ShareMenu fermé, logique normale
+      if (menuRef.current && !menuRef.current.contains(target)) {
+        onClose();
       }
     };
     const handleEsc = (e: KeyboardEvent) => {
@@ -60,7 +74,7 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
       document.removeEventListener('mousedown', handleClick);
       document.removeEventListener('keydown', handleEsc);
     };
-  }, [open, onClose]);
+  }, [open, onClose, shareMenuOpen]);
 
   if (!open) return null;
   
