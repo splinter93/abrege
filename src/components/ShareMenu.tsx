@@ -24,6 +24,13 @@ const ShareMenu: React.FC<ShareMenuProps> = ({
   const [isUpdating, setIsUpdating] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
 
+  // Synchroniser l'état local avec les props quand elles changent
+  React.useEffect(() => {
+    if (currentSettings?.visibility) {
+      setVisibility(currentSettings.visibility);
+    }
+  }, [currentSettings?.visibility]);
+
   const visibilityOptions = [
     {
       value: 'private',
@@ -109,7 +116,7 @@ const ShareMenu: React.FC<ShareMenuProps> = ({
           <h4>Qui peut voir cette note ?</h4>
           <div className="visibility-options">
             {visibilityOptions.map((option) => (
-              <label key={option.value} className="visibility-option">
+              <label key={option.value} className="visibility-option" onClick={(e) => e.stopPropagation()}>
                 <input
                   type="radio"
                   name="visibility"
