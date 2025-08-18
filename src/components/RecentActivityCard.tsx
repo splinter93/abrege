@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { FileText, Clock, User, Globe, Lock, Link as LinkIcon, Calendar, Eye } from 'lucide-react';
 
 interface RecentNote {
   id: string;
@@ -86,31 +87,38 @@ export default function RecentActivityCard({
     }
   };
 
+  const getVisibilityIcon = (visibility: string) => {
+    switch (visibility) {
+      case 'private':
+        return <Lock size={12} />;
+      case 'link-public':
+        return <Globe size={12} />;
+      case 'link-private':
+        return <LinkIcon size={12} />;
+      default:
+        return <Lock size={12} />;
+    }
+  };
+
+  const getVisibilityColor = (visibility: string) => {
+    switch (visibility) {
+      case 'private':
+        return 'var(--accent-orange, #f97316)';
+      case 'link-public':
+        return 'var(--accent-amber, #f59e0b)';
+      case 'link-private':
+        return 'var(--accent-yellow, #eab308)';
+      default:
+        return 'var(--accent-orange, #f97316)';
+    }
+  };
+
   if (loading) {
     return (
-      <div style={{ 
-        padding: compact ? '12px' : '16px',
-        background: 'rgba(255, 255, 255, 0.02)',
-        border: '1px solid rgba(255, 255, 255, 0.06)',
-        borderRadius: '8px'
-      }}>
-        <div style={{ 
-          display: 'flex', 
-          alignItems: 'center', 
-          gap: '8px',
-          opacity: 0.7 
-        }}>
-          <div style={{
-            width: '16px',
-            height: '16px',
-            border: '2px solid transparent',
-            borderTop: '2px solid currentColor',
-            borderRadius: '50%',
-            animation: 'spin 1s linear infinite'
-          }} />
-          <span style={{ fontSize: compact ? '12px' : '14px' }}>
-            Chargement...
-          </span>
+      <div className="activity-loading">
+        <div className="loading-spinner">
+          <div className="spinner"></div>
+          <span>Chargement...</span>
         </div>
       </div>
     );
@@ -118,166 +126,92 @@ export default function RecentActivityCard({
 
   if (error) {
     return (
-      <div style={{ 
-        padding: compact ? '12px' : '16px',
-        background: 'rgba(255, 255, 255, 0.02)',
-        border: '1px solid rgba(255, 255, 255, 0.06)',
-        borderRadius: '8px',
-        opacity: 0.7
-      }}>
-        <span style={{ fontSize: compact ? '12px' : '14px' }}>
-          Erreur lors du chargement
-        </span>
+      <div className="activity-error">
+        <div className="error-content">
+          <span>⚠️ Erreur lors du chargement</span>
+        </div>
       </div>
     );
   }
 
   if (notes.length === 0) {
     return (
-      <div style={{ 
-        padding: compact ? '12px' : '16px',
-        background: 'rgba(255, 255, 255, 0.02)',
-        border: '1px solid rgba(255, 255, 255, 0.06)',
-        borderRadius: '8px',
-        opacity: 0.7
-      }}>
-        <span style={{ fontSize: compact ? '12px' : '14px' }}>
-          Aucune activité récente
-        </span>
+      <div className="activity-empty">
+        <div className="empty-content">
+          <FileText size={24} />
+          <span>Aucune activité récente</span>
+          <p>Commencez par créer votre première note !</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div style={{ 
-      background: 'rgba(255, 255, 255, 0.02)',
-      border: '1px solid rgba(255, 255, 255, 0.06)',
-      borderRadius: '8px',
-      overflow: 'hidden'
-    }}>
-      {showHeader && (
-        <div style={{
-          padding: compact ? '12px 12px 8px 12px' : '16px 16px 12px 16px',
-          borderBottom: '1px solid rgba(255, 255, 255, 0.06)',
-          background: 'rgba(255, 255, 255, 0.02)'
-        }}>
-          <h3 style={{ 
-            fontSize: compact ? '14px' : '16px', 
-            margin: 0,
-            fontWeight: '500',
-            opacity: 0.9
-          }}>
-            Activité récente
-          </h3>
+    <div className="activity-container">
+      <div className="activity-header">
+        <div className="header-content">
+          <Clock size={16} />
+          <h3>Activité Récente</h3>
         </div>
-      )}
+        <div className="header-actions">
+          <Link href="/private/notes" className="view-all-link">
+            <Eye size={14} />
+            <span>Voir tout</span>
+          </Link>
+        </div>
+      </div>
       
-      <div style={{ padding: compact ? '8px' : '12px' }}>
+      <div className="activity-list">
         {notes.map((note, index) => (
-          <div key={note.id} style={{
-            display: 'flex',
-            alignItems: 'flex-start',
-            gap: compact ? '8px' : '12px',
-            padding: compact ? '6px' : '8px',
-            borderRadius: '6px',
-            transition: 'all 0.2s ease',
-            ...(index < notes.length - 1 && {
-              borderBottom: '1px solid rgba(255, 255, 255, 0.04)',
-              marginBottom: compact ? '4px' : '6px'
-            })
-          }}>
-            {note.headerImage && (
-              <div style={{
-                width: compact ? '32px' : '40px',
-                height: compact ? '32px' : '40px',
-                borderRadius: '4px',
-                overflow: 'hidden',
-                flexShrink: 0,
-                background: 'rgba(255, 255, 255, 0.05)'
-              }}>
-                <img 
-                  src={note.headerImage} 
-                  alt=""
-                  style={{
-                    width: '100%',
-                    height: '100%',
-                    objectFit: 'cover'
-                  }}
-                />
-              </div>
-            )}
+          <div key={note.id} className={`activity-item ${index === notes.length - 1 ? 'last-item' : ''}`}>
+            <div className="item-icon">
+              {note.headerImage ? (
+                <div className="note-thumbnail">
+                  <img src={note.headerImage} alt="" />
+                </div>
+              ) : (
+                <div className="note-icon">
+                  <FileText size={16} />
+                </div>
+              )}
+            </div>
             
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                gap: '6px',
-                marginBottom: '2px'
-              }}>
+            <div className="item-content">
+              <div className="item-header">
                 <Link 
                   href={`/private/note/${note.id}`}
-                  style={{
-                    fontSize: compact ? '12px' : '14px',
-                    fontWeight: '500',
-                    color: note?.share_settings?.visibility !== 'private' ? 'var(--accent-hover, #5fb2ff)' : 'var(--text-1, #eaeaec)',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
-                    textDecoration: 'none',
-                    cursor: 'pointer',
-                    flex: 1,
-                    transition: 'all 0.2s ease'
-                  }}
+                  className="note-title"
                   title={`Ouvrir la note: ${note.title}`}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.opacity = '0.8';
-                    e.currentTarget.style.transform = 'translateY(-1px)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.opacity = '1';
-                    e.currentTarget.style.transform = 'translateY(0)';
-                  }}
                 >
                   {note.title}
                 </Link>
-                {note?.share_settings?.visibility !== 'private' && (
-                  <span style={{
-                    fontSize: '10px',
-                    padding: '1px 4px',
-                    borderRadius: '8px',
-                    background: 'rgba(95, 178, 255, 0.1)',
-                    color: 'var(--accent-hover, #5fb2ff)',
-                    border: '1px solid rgba(95, 178, 255, 0.2)',
-                    flexShrink: 0
-                  }}>
-                    {note?.share_settings?.visibility === 'link-public' ? 'Public' : 'Partagé'}
-                  </span>
-                )}
+                <div 
+                  className="visibility-badge"
+                  style={{ color: getVisibilityColor(note.share_settings.visibility) }}
+                >
+                  {getVisibilityIcon(note.share_settings.visibility)}
+                </div>
               </div>
               
-              <div style={{
-                fontSize: compact ? '10px' : '12px',
-                opacity: 0.7,
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                flexWrap: 'wrap'
-              }}>
-                <span>@{note.username}</span>
-                <span>•</span>
-                <span>{formatDate(note.updatedAt)}</span>
+              <div className="item-meta">
+                <div className="meta-item">
+                  <User size={12} />
+                  <span>@{note.username}</span>
+                </div>
+                <div className="meta-separator">•</div>
+                <div className="meta-item">
+                  <Calendar size={12} />
+                  <span>{formatDate(note.updatedAt)}</span>
+                </div>
                 {note.url && (
                   <>
-                    <span>•</span>
+                    <div className="meta-separator">•</div>
                     <Link 
                       href={note.url}
-                      style={{
-                        color: 'var(--accent-hover, #5fb2ff)',
-                        textDecoration: 'none',
-                        fontSize: compact ? '10px' : '12px'
-                      }}
+                      className="meta-link"
                     >
-                      Voir
+                      <LinkIcon size={12} />
+                      <span>Source</span>
                     </Link>
                   </>
                 )}
