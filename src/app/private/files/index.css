@@ -1,0 +1,211 @@
+/* Files Page CSS - Réutilise la structure de la page dossiers */
+
+/* Wrapper principal */
+.dossiers-page-wrapper {
+  display: grid;
+  grid-template-areas:
+    "header header"
+    "sidebar main";
+  grid-template-columns: 280px 1fr;
+  grid-template-rows: 80px 1fr;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* Header fixe */
+.dossiers-header-fixed {
+  grid-area: header;
+  background: var(--surface-primary);
+  border-bottom: 1px solid var(--border-subtle);
+  display: flex;
+  align-items: center;
+  padding: 0 24px;
+  z-index: 100;
+}
+
+.header-content {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* Sidebar fixe */
+.dossiers-sidebar-fixed {
+  grid-area: sidebar;
+  background: var(--surface-secondary);
+  border-right: 1px solid var(--border-subtle);
+  overflow-y: auto;
+  z-index: 50;
+}
+
+/* Zone de contenu principal */
+.dossiers-content-area {
+  grid-area: main;
+  background: var(--surface-background);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Section des fichiers */
+.files-section {
+  background: var(--surface-primary);
+  border-bottom: 1px solid var(--border-subtle);
+  padding: 24px;
+}
+
+.files-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.files-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.files-icon {
+  font-size: 2rem;
+}
+
+.files-title {
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.files-stats {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+/* Section de contenu des fichiers */
+.files-content-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.files-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+/* États de chargement et d'erreur */
+.loading-state,
+.error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 300px;
+  text-align: center;
+  color: var(--text-secondary);
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--border-subtle);
+  border-top: 3px solid var(--accent-primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 16px;
+}
+
+.error-icon {
+  font-size: 3rem;
+  margin-bottom: 16px;
+}
+
+.error-state h3 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: var(--text-primary);
+}
+
+.error-state p {
+  font-size: 1rem;
+  color: var(--text-secondary);
+  max-width: 400px;
+}
+
+/* Animation de rotation */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .dossiers-page-wrapper {
+    grid-template-columns: 240px 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .dossiers-page-wrapper {
+    grid-template-areas:
+      "header"
+      "main";
+    grid-template-columns: 1fr;
+    grid-template-rows: 80px 1fr;
+  }
+
+  .dossiers-sidebar-fixed {
+    display: none;
+  }
+
+  .dossiers-header-fixed {
+    padding: 0 16px;
+  }
+
+  .files-section {
+    padding: 16px;
+  }
+
+  .files-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .files-info {
+    gap: 8px;
+  }
+
+  .files-icon {
+    font-size: 1.5rem;
+  }
+
+  .files-title {
+    font-size: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .dossiers-header-fixed {
+    padding: 0 12px;
+  }
+
+  .files-section {
+    padding: 12px;
+  }
+
+  .files-title {
+    font-size: 1.25rem;
+  }
+} 
