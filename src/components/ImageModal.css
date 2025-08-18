@@ -202,6 +202,80 @@
   background: transparent;
 }
 
+/* Boutons de navigation */
+.image-modal-nav-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 56px;
+  height: 56px;
+  border: none;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+  backdrop-filter: blur(12px);
+  color: var(--text-primary, rgba(255, 255, 255, 0.9));
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 10;
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.1),
+    0 4px 16px rgba(0, 0, 0, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.image-modal-nav-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), transparent);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.image-modal-nav-btn:hover {
+  transform: translateY(-50%) scale(1.1);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.08));
+  box-shadow: 
+    0 12px 40px rgba(0, 0, 0, 0.15),
+    0 6px 20px rgba(0, 0, 0, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+.image-modal-nav-btn:hover::before {
+  opacity: 1;
+}
+
+.image-modal-nav-btn:active {
+  transform: translateY(-50%) scale(0.95);
+}
+
+.nav-prev {
+  left: 24px;
+}
+
+.nav-next {
+  right: 24px;
+}
+
+/* Container de l'image */
+.image-container {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  max-width: calc(100% - 120px);
+  height: 100%;
+}
+
 .image-modal-image {
   max-width: 100%;
   max-height: 70vh;
@@ -290,6 +364,24 @@
   .image-modal-image {
     max-height: 60vh;
   }
+
+  /* Boutons de navigation responsive */
+  .image-modal-nav-btn {
+    width: 48px;
+    height: 48px;
+  }
+
+  .nav-prev {
+    left: 16px;
+  }
+
+  .nav-next {
+    right: 16px;
+  }
+
+  .image-container {
+    max-width: calc(100% - 96px);
+  }
 }
 
 @media (max-width: 480px) {
@@ -313,5 +405,23 @@
 
   .image-modal-body {
     padding: 16px;
+  }
+
+  /* Boutons de navigation très petits écrans */
+  .image-modal-nav-btn {
+    width: 40px;
+    height: 40px;
+  }
+
+  .nav-prev {
+    left: 12px;
+  }
+
+  .nav-next {
+    right: 12px;
+  }
+
+  .image-container {
+    max-width: calc(100% - 80px);
   }
 } 

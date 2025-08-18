@@ -98,10 +98,12 @@ const FilesContent: React.FC<FilesContentProps> = ({
     isOpen: boolean;
     imageUrl: string;
     imageName: string;
+    currentIndex: number;
   }>({
     isOpen: false,
     imageUrl: '',
     imageName: '',
+    currentIndex: 0,
   });
 
   // Robustesse : toujours un tableau pour éviter les erreurs React
@@ -157,10 +159,13 @@ const FilesContent: React.FC<FilesContentProps> = ({
   const handleFileClick = (file: FileItem) => {
     // Si c'est une image, ouvrir la modal
     if (file.mime_type?.startsWith('image/')) {
+      const imageFiles = safeFiles.filter(f => f.mime_type?.startsWith('image/'));
+      const currentIndex = imageFiles.findIndex(f => f.id === file.id);
       setImageModal({
         isOpen: true,
         imageUrl: file.url,
         imageName: file.filename || 'Image',
+        currentIndex,
       });
     } else {
       // Pour les autres types de fichiers, utiliser le comportement par défaut
@@ -179,6 +184,30 @@ const FilesContent: React.FC<FilesContentProps> = ({
 
   const handleOpenImageInNewTab = () => {
     window.open(imageModal.imageUrl, '_blank');
+  };
+
+  const handlePreviousImage = () => {
+    const imageFiles = safeFiles.filter(f => f.mime_type?.startsWith('image/'));
+    const newIndex = imageModal.currentIndex > 0 ? imageModal.currentIndex - 1 : imageFiles.length - 1;
+    const newFile = imageFiles[newIndex];
+    setImageModal({
+      isOpen: true,
+      imageUrl: newFile.url,
+      imageName: newFile.filename || 'Image',
+      currentIndex: newIndex,
+    });
+  };
+
+  const handleNextImage = () => {
+    const imageFiles = safeFiles.filter(f => f.mime_type?.startsWith('image/'));
+    const newIndex = imageModal.currentIndex < imageFiles.length - 1 ? imageModal.currentIndex + 1 : 0;
+    const newFile = imageFiles[newIndex];
+    setImageModal({
+      isOpen: true,
+      imageUrl: newFile.url,
+      imageName: newFile.filename || 'Image',
+      currentIndex: newIndex,
+    });
   };
 
   return (
@@ -307,6 +336,10 @@ const FilesContent: React.FC<FilesContentProps> = ({
         imageUrl={imageModal.imageUrl}
         imageName={imageModal.imageName}
         onOpenInNewTab={handleOpenImageInNewTab}
+        onPrevious={handlePreviousImage}
+        onNext={handleNextImage}
+        hasPrevious={safeFiles.filter(f => f.mime_type?.startsWith('image/')).length > 1}
+        hasNext={safeFiles.filter(f => f.mime_type?.startsWith('image/')).length > 1}
       />
     </motion.div>
   );

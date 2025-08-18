@@ -8,6 +8,10 @@ interface ImageModalProps {
   imageUrl: string;
   imageName: string;
   onOpenInNewTab: () => void;
+  onPrevious?: () => void;
+  onNext?: () => void;
+  hasPrevious?: boolean;
+  hasNext?: boolean;
 }
 
 // Icône SVG pour agrandir
@@ -36,32 +40,66 @@ const CloseIcon = () => (
   </svg>
 );
 
+// Icône SVG pour précédent
+const PreviousIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path 
+      d="M15 18L9 12L15 6" 
+      stroke="currentColor" 
+      strokeWidth="2" 
+      strokeLinecap="round" 
+      strokeLinejoin="round"
+    />
+  </svg>
+);
+
+// Icône SVG pour suivant
+const NextIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path 
+      d="M9 18L15 12L9 6" 
+      stroke="currentColor" 
+      strokeWidth="2" 
+      strokeLinecap="round" 
+      strokeLinejoin="round"
+    />
+  </svg>
+);
+
 const ImageModal: React.FC<ImageModalProps> = ({
   isOpen,
   onClose,
   imageUrl,
   imageName,
   onOpenInNewTab,
+  onPrevious,
+  onNext,
+  hasPrevious = false,
+  hasNext = false,
 }) => {
-  // Fermer la modal avec la touche Escape
+  // Gestion des touches clavier
   useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
+    const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         onClose();
+      } else if (e.key === 'ArrowLeft' && hasPrevious && onPrevious) {
+        onPrevious();
+      } else if (e.key === 'ArrowRight' && hasNext && onNext) {
+        onNext();
       }
     };
 
     if (isOpen) {
-      document.addEventListener('keydown', handleEscape);
+      document.addEventListener('keydown', handleKeyDown);
       // Empêcher le scroll du body
       document.body.style.overflow = 'hidden';
     }
 
     return () => {
-      document.removeEventListener('keydown', handleEscape);
+      document.removeEventListener('keydown', handleKeyDown);
       document.body.style.overflow = 'unset';
     };
-  }, [isOpen, onClose]);
+  }, [isOpen, onClose, onPrevious, onNext, hasPrevious, hasNext]);
 
   if (!isOpen) return null;
 
@@ -106,22 +144,47 @@ const ImageModal: React.FC<ImageModalProps> = ({
             </div>
           </div>
 
-          {/* Contenu de l'image */}
+          {/* Contenu de l'image avec boutons de navigation */}
           <div className="image-modal-body">
-            <img
-              src={imageUrl}
-              alt={imageName}
-              className="image-modal-image"
-              onError={(e) => {
-                const target = e.target as HTMLImageElement;
-                target.style.display = 'none';
-                target.nextElementSibling?.classList.remove('hidden');
-              }}
-            />
-            <div className="image-error-message hidden">
-              <div className="error-icon">🖼️</div>
-              <p>Impossible de charger l&apos;image</p>
+            {/* Bouton précédent */}
+            {hasPrevious && onPrevious && (
+              <button
+                className="image-modal-nav-btn nav-prev"
+                onClick={onPrevious}
+                title="Image précédente"
+              >
+                <PreviousIcon />
+              </button>
+            )}
+
+            {/* Image centrale */}
+            <div className="image-container">
+              <img
+                src={imageUrl}
+                alt={imageName}
+                className="image-modal-image"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  target.style.display = 'none';
+                  target.nextElementSibling?.classList.remove('hidden');
+                }}
+              />
+              <div className="image-error-message hidden">
+                <div className="error-icon">🖼️</div>
+                <p>Impossible de charger l&apos;image</p>
+              </div>
             </div>
+
+            {/* Bouton suivant */}
+            {hasNext && onNext && (
+              <button
+                className="image-modal-nav-btn nav-next"
+                onClick={onNext}
+                title="Image suivante"
+              >
+                <NextIcon />
+              </button>
+            )}
           </div>
         </motion.div>
       </motion.div>
