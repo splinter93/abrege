@@ -56,7 +56,7 @@ export function useFilesPage(): UseFilesPageResult {
         throw new Error('Utilisateur non authentifié');
       }
 
-      // Récupérer les fichiers avec les nouvelles colonnes de sécurité
+      // Récupérer les fichiers avec compatibilité pour les anciennes et nouvelles colonnes
       const { data: filesData, error: filesError } = await supabase
         .from('files')
         .select(`
@@ -75,25 +75,25 @@ export function useFilesPage(): UseFilesPageResult {
           folder_id,
           notebook_id,
           created_at,
-          updated_at,
-          status,
-          sha256,
-          request_id,
-          deleted_at,
-          etag
+          updated_at
         `)
         .eq('user_id', user.id)
-        .is('deleted_at', null) // Seulement les fichiers non supprimés
         .order('created_at', { ascending: false });
 
       if (filesError) {
         throw new Error(`Erreur lors de la récupération des fichiers: ${filesError.message}`);
       }
 
-      // Filtrer les fichiers avec statut 'ready' ou 'failed' (pas 'uploading' ou 'processing')
-      const validFiles = (filesData || []).filter(file => 
-        file.status === 'ready' || file.status === 'failed'
-      ) as FileItem[];
+      // Pour l'instant, tous les fichiers sont considérés comme valides
+      // Une fois la migration appliquée, on pourra filtrer par status
+      const validFiles = (filesData || []).map(file => ({
+        ...file,
+        status: 'ready' as const, // Valeur par défaut
+        sha256: undefined,
+        request_id: undefined,
+        deleted_at: undefined,
+        etag: undefined
+      })) as FileItem[];
 
       setFiles(validFiles);
       
@@ -137,13 +137,10 @@ export function useFilesPage(): UseFilesPageResult {
         throw new Error('Fichier non trouvé ou accès non autorisé');
       }
 
-      // Soft delete en base de données
+      // Suppression directe (sera remplacée par soft delete après migration)
       const { error: deleteError } = await supabase
         .from('files')
-        .update({ 
-          deleted_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        })
+        .delete()
         .eq('id', id)
         .eq('user_id', user.id);
 
@@ -212,7 +209,6 @@ export function useFilesPage(): UseFilesPageResult {
         .select('filename, original_name')
         .eq('id', id)
         .eq('user_id', user.id)
-        .is('deleted_at', null)
         .single();
 
       if (fetchError || !existingFile) {
@@ -224,8 +220,7 @@ export function useFilesPage(): UseFilesPageResult {
         .from('files')
         .update({ 
           filename: newName,
-          original_name: newName,
-          updated_at: new Date().toISOString()
+          original_name: newName
         })
         .eq('id', id)
         .eq('user_id', user.id);
@@ -270,24 +265,25 @@ export function useFilesPage(): UseFilesPageResult {
         return;
       }
 
-      const { data: quotaData, error: quotaError } = await supabase
-        .from('storage_usage')
-        .select('used_bytes, quota_bytes')
-        .eq('user_id', user.id)
-        .single();
+      // Calculer l'usage actuel depuis les fichiers existants
+      const { data: filesData, error: filesError } = await supabase
+        .from('files')
+        .select('size_bytes')
+        .eq('user_id', user.id);
 
-      if (quotaError) {
-        logger.warn(`⚠️ Erreur récupération quota: ${quotaError.message}`, { userId: user.id });
+      if (filesError) {
+        logger.warn(`⚠️ Erreur calcul usage: ${filesError.message}`, { userId: user.id });
         return;
       }
 
-      if (quotaData) {
-        setQuotaInfo({
-          usedBytes: quotaData.used_bytes,
-          quotaBytes: quotaData.quota_bytes,
-          remainingBytes: quotaData.quota_bytes - quotaData.used_bytes
-        });
-      }
+      const usedBytes = (filesData || []).reduce((sum, file) => sum + (file.size_bytes || 0), 0);
+      const quotaBytes = 1073741824; // 1GB par défaut
+
+      setQuotaInfo({
+        usedBytes,
+        quotaBytes,
+        remainingBytes: quotaBytes - usedBytes
+      });
 
     } catch (err) {
       logger.warn(`⚠️ Erreur refresh quota: ${err}`, { error: err });
