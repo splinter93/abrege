@@ -1,10 +1,26 @@
 /* ==========================================================================
-   DOSSIERS PAGE - LAYOUT & STYLES
+   DOSSIERS PAGE - LAYOUT & STYLES MODERNES
    ========================================================================== */
+
+/* Variables CSS personnalisées */
+:root {
+  --dossiers-primary: #f97316;
+  --dossiers-primary-light: rgba(249, 115, 22, 0.1);
+  --dossiers-surface: rgba(255, 255, 255, 0.02);
+  --dossiers-border: rgba(255, 255, 255, 0.1);
+  --dossiers-text-primary: #f8fafc;
+  --dossiers-text-secondary: #94a3b8;
+  --dossiers-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  --dossiers-radius: 16px;
+  --dossiers-spacing: 24px;
+}
+
 body, .dossiers-page-wrapper {
   background-color: #121212;
-  background-image: radial-gradient(circle at 10% 20%, rgba(50, 50, 50, 0.1), transparent 50%),
+  background-image: 
+    radial-gradient(circle at 10% 20%, rgba(50, 50, 50, 0.1), transparent 50%),
     radial-gradient(circle at 90% 80%, rgba(30, 30, 30, 0.1), transparent 50%);
+  font-family: 'Noto Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
 body {
@@ -18,54 +34,245 @@ body {
   overflow: hidden;
 }
 
+/* ==========================================================================
+   HEADER MODERNE
+   ========================================================================== */
 .dossiers-header-fixed {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
-  height: 60px;
-  background-color: transparent;
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
-  border-bottom: 1px solid var(--glass-border-light);
+  height: 70px;
+  background: rgba(18, 18, 18, 0.8);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--dossiers-border);
   display: flex;
   align-items: center;
-  padding: 0 0 0 4px;
-  z-index: 1000;
+  padding: 0 var(--dossiers-spacing);
+  z-index: 1001;
+  box-shadow: var(--dossiers-shadow);
 }
 
+.header-content {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* ==========================================================================
+   SIDEBAR FIXE
+   ========================================================================== */
 .dossiers-sidebar-fixed {
   position: fixed;
-  top: 60px;
+  top: 70px;
   left: 0;
   bottom: 0;
-  width: 260px;
-  background-color: transparent;
+  width: 280px;
+  background: transparent;
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
-  border-right: 1px solid var(--glass-border-light);
-  padding: var(--spacing-xl);
+  border-right: none;
+  padding: 0;
   box-sizing: border-box;
   z-index: 999;
+  box-shadow: none;
 }
 
+/* ==========================================================================
+   ZONE DE CONTENU PRINCIPAL
+   ========================================================================== */
 .dossiers-content-area {
-  margin-left: 260px;
-  margin-top: 60px;
+  margin-left: 280px;
+  margin-top: 70px;
   flex-grow: 1;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   display: flex;
   flex-direction: column;
   background: transparent;
+  padding: var(--dossiers-spacing);
 }
 
-@media (max-width: 1024px) {
+/* ==========================================================================
+   SECTION DES CLASSEURS
+   ========================================================================== */
+.classeurs-section {
+  margin-bottom: 0;
+}
+
+/* ==========================================================================
+   SECTION DES DOSSIERS
+   ========================================================================== */
+.folders-section {
+  flex: 1;
+}
+
+.folder-content {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 0 0 var(--dossiers-radius) var(--dossiers-radius);
+  padding: var(--dossiers-spacing);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  margin-top: 0;
+}
+
+.folder-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.folder-info {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.folder-icon {
+  font-size: 32px;
+  opacity: 0.8;
+}
+
+.folder-title {
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--dossiers-text-primary);
+  margin: 0;
+  font-family: 'Noto Sans', sans-serif;
+}
+
+.folder-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.action-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.02);
+  color: var(--dossiers-text-primary);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: 'Noto Sans', sans-serif;
+}
+
+.action-btn:hover {
+  background: rgba(255, 255, 255, 0.04);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.action-btn.primary {
+  background: rgba(249, 115, 22, 0.15);
+  color: #f97316;
+  border-color: rgba(249, 115, 22, 0.3);
+}
+
+.action-btn.primary:hover {
+  background: rgba(249, 115, 22, 0.2);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.2);
+}
+
+.action-btn.secondary {
+  background: rgba(255, 255, 255, 0.02);
+  color: var(--dossiers-text-primary);
+  border-color: rgba(255, 255, 255, 0.06);
+}
+
+/* ==========================================================================
+   ÉTATS DE CHARGEMENT ET D'ERREUR
+   ========================================================================== */
+.loading-state,
+.error-state,
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 40px;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: var(--dossiers-radius);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid transparent;
+  border-top: 3px solid #f97316;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 24px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading-state p {
+  font-size: 16px;
+  color: var(--dossiers-text-secondary);
+  margin: 0;
+  font-family: 'Noto Sans', sans-serif;
+}
+
+.error-icon,
+.empty-icon {
+  font-size: 48px;
+  margin-bottom: 24px;
+  opacity: 0.7;
+}
+
+.error-state h3,
+.empty-state h2 {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--dossiers-text-primary);
+  margin: 0 0 12px 0;
+  font-family: 'Noto Sans', sans-serif;
+}
+
+.error-state p,
+.empty-state p {
+  font-size: 16px;
+  color: var(--dossiers-text-secondary);
+  margin: 0 0 24px 0;
+  font-family: 'Noto Sans', sans-serif;
+  max-width: 400px;
+  line-height: 1.5;
+}
+
+/* ==========================================================================
+   RESPONSIVE DESIGN
+   ========================================================================== */
+@media (max-width: 1200px) {
   .dossiers-sidebar-fixed {
-    width: 220px;
+    width: 260px;
   }
   .dossiers-content-area {
-    margin-left: 220px;
+    margin-left: 260px;
   }
 }
 
@@ -76,20 +283,40 @@ body {
     min-height: 100vh;
   }
 
+  .dossiers-header-fixed {
+    height: 60px;
+    padding: 0 16px;
+  }
+
   .dossiers-sidebar-fixed {
     position: relative;
     width: 100%;
     height: auto;
     border-right: none;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid var(--dossiers-border);
     top: 60px;
     z-index: 998;
-    padding: var(--spacing-md);
   }
 
   .dossiers-content-area {
     margin-left: 0;
     margin-top: 0;
-    padding: var(--spacing-md);
+    padding: 16px;
+  }
+
+  .folder-content {
+    padding: 20px;
+  }
+
+  .folder-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .loading-state,
+  .error-state,
+  .empty-state {
+    padding: 60px 20px;
   }
 } 

@@ -1,0 +1,146 @@
+/* ==========================================================================
+   CLASSEUR BANDEAU - GLASSMORPHISM ÉPURÉ
+   ========================================================================== */
+
+.classeur-bandeau {
+  width: 100%;
+  height: 56px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px 16px 0 0;
+  margin-bottom: 0;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.bandeau-content {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 20px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.bandeau-content::-webkit-scrollbar {
+  display: none;
+}
+
+/* Pills des classeurs - Style épuré */
+.classeur-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.02);
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  font-family: 'Noto Sans', sans-serif;
+  min-height: 36px;
+}
+
+.classeur-pill:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.9);
+  border-color: rgba(255, 255, 255, 0.12);
+  transform: translateY(-1px);
+}
+
+.classeur-pill.active {
+  background: rgba(249, 115, 22, 0.15);
+  color: #f97316;
+  border-color: rgba(249, 115, 22, 0.3);
+  box-shadow: 0 2px 8px rgba(249, 115, 22, 0.2);
+}
+
+.classeur-pill.active:hover {
+  background: rgba(249, 115, 22, 0.2);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.25);
+}
+
+/* Emoji des classeurs */
+.classeur-emoji {
+  font-size: 16px;
+  opacity: 0.8;
+  flex-shrink: 0;
+}
+
+/* Nom des classeurs */
+.classeur-name {
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+
+/* Bouton d'ajout - Style discret */
+.classeur-pill.add-classeur {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.6);
+  padding: 8px 12px;
+  min-width: 36px;
+  justify-content: center;
+}
+
+.classeur-pill.add-classeur:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.8);
+  border-color: rgba(255, 255, 255, 0.12);
+  transform: translateY(-1px);
+}
+
+.add-icon {
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .classeur-bandeau {
+    height: 48px;
+    border-radius: 12px 12px 0 0;
+  }
+  
+  .bandeau-content {
+    padding: 0 16px;
+    gap: 10px;
+  }
+  
+  .classeur-pill {
+    padding: 6px 12px;
+    font-size: 13px;
+    min-height: 32px;
+  }
+  
+  .classeur-emoji {
+    font-size: 14px;
+  }
+  
+  .add-icon {
+    font-size: 16px;
+  }
+}
+
+/* Animation d'entrée subtile */
+.classeur-bandeau {
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+} 

@@ -15,7 +15,6 @@ import { useFolderSelection } from '../hooks/useFolderSelection';
 import { useFolderFilter } from '../hooks/useFolderFilter';
 import { useFolderKeyboard } from '../hooks/useFolderKeyboard';
 import { classeurTabVariants, classeurTabTransition } from './FolderAnimation';
-import FolderBreadcrumb from './FolderBreadcrumb'; // 🔧 NOUVEAU: Import du breadcrumb
 
 interface FolderManagerProps {
   classeurId: string;
@@ -132,54 +131,6 @@ const FolderManager: React.FC<FolderManagerProps> = ({
         onDrop={handleRootDrop}
       >
         <div className="folder-manager-content">
-          {/* Header avec nom du classeur et bouton retour */}
-          <div className="folder-manager-header">
-            <div className="folder-manager-title">
-              <span className="folder-manager-icon">{classeurIcon || '📚'}</span>
-              <h2 className="folder-manager-name">{classeurName}</h2>
-            </div>
-            
-            {/* 🔧 NOUVEAU: Breadcrumb pour la navigation hiérarchique */}
-            <FolderBreadcrumb
-              folderPath={folderPath}
-              classeurName={classeurName}
-              onGoToRoot={onGoToRoot}
-              onGoToFolder={onGoToFolder}
-            />
-            
-            {/* 🔧 NOUVEAU: Barre d'outils pour créer dossiers et fichiers */}
-            <div className="folder-manager-toolbar">
-              <button
-                className="toolbar-btn create-folder-btn"
-                onClick={() => createFolder('Nouveau dossier')}
-                title="Créer un nouveau dossier"
-              >
-                📁 Nouveau dossier
-              </button>
-              <button
-                className="toolbar-btn create-file-btn"
-                onClick={handleCreateAndRenameFile}
-                title="Créer une nouvelle note"
-              >
-                📝 Nouvelle note
-              </button>
-            </div>
-            
-            {/* Bouton retour (seulement si on est dans un dossier) */}
-            {parentFolderId && (
-              <button
-                className="folder-manager-back-btn"
-                onClick={onGoBack}
-                title="Retour au dossier parent"
-              >
-                ← Retour
-              </button>
-            )}
-          </div>
-          
-          {/* Séparateur sous le header */}
-          <div className="folder-manager-separator"></div>
-  
           {/* Contenu principal */}
           <main className="folder-manager-main">
             <FolderContent

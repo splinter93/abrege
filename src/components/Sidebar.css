@@ -1,5 +1,5 @@
 /* ==========================================================================
-   SIDEBAR GLASSMORPHISM - DESIGN COHÉRENT AVEC LE DASHBOARD
+   SIDEBAR GLASSMORPHISM - DESIGN ÉPURÉ ET MODERNE
    ========================================================================== */
 
 /* Police Noto Sans pour la sidebar */
@@ -12,16 +12,22 @@
   flex-direction: column;
   width: 280px;
   height: 100vh;
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.02);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border-right: 1px solid rgba(255, 255, 255, 0.1);
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
   flex-shrink: 0;
   position: fixed;
   left: 0;
   top: 0;
   z-index: 100;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+/* Ajustement pour la page dossiers */
+.dossiers-page-wrapper .sidebar {
+  top: 60px;
+  height: calc(100vh - 60px);
 }
 
 .sidebar-main-content {
@@ -44,7 +50,7 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: #94a3b8;
+  color: rgba(255, 255, 255, 0.5);
   margin-bottom: 12px;
 }
 
@@ -60,9 +66,9 @@
   gap: 14px;
   padding: 14px 16px;
   border-radius: 12px;
-  color: #e2e8f0;
+  color: rgba(255, 255, 255, 0.7);
   text-decoration: none;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
   font-size: 15px;
   font-weight: 500;
   border: 1px solid transparent;
@@ -70,15 +76,15 @@
 }
 
 .nav-link:hover {
-  background: rgba(255, 255, 255, 0.08);
-  color: #f8fafc;
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(255, 255, 255, 0.9);
   transform: translateX(4px);
-  border-color: rgba(249, 115, 22, 0.3);
+  border-color: rgba(249, 115, 22, 0.2);
 }
 
 .nav-link svg {
-  color: #94a3b8;
-  transition: color 0.3s ease;
+  color: rgba(255, 255, 255, 0.5);
+  transition: color 0.2s ease;
   flex-shrink: 0;
   width: 20px;
   height: 20px;
@@ -90,7 +96,7 @@
 
 .sidebar-footer {
   padding: 24px 0;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
   margin-top: auto;
 }
 
@@ -98,14 +104,6 @@
   justify-content: flex-start;
   padding: 14px 16px;
   border-radius: 12px;
-  background: transparent;
-  border: 1px solid transparent;
-}
-
-.sidebar-footer .nav-link:hover {
-  background: rgba(255, 255, 255, 0.08);
-  transform: translateX(4px);
-  border-color: rgba(249, 115, 22, 0.3);
 }
 
 /* Responsive */
