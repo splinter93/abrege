@@ -70,6 +70,8 @@ export default function DossiersPage() {
               setCurrentFolderId(undefined);
             }}
             onCreateClasseur={handleCreateClasseur}
+            onRenameClasseur={handleRenameClasseur}
+            onDeleteClasseur={handleDeleteClasseur}
           />
         </section>
 

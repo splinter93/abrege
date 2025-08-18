@@ -16,11 +16,21 @@
 }
 
 body, .dossiers-page-wrapper {
-  background-color: #121212;
-  background-image: 
-    radial-gradient(circle at 10% 20%, rgba(50, 50, 50, 0.1), transparent 50%),
-    radial-gradient(circle at 90% 80%, rgba(30, 30, 30, 0.1), transparent 50%);
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
   font-family: 'Noto Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.dossiers-page-wrapper::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(circle at 20% 80%, rgba(249, 115, 22, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(245, 158, 11, 0.1) 0%, transparent 50%);
+  pointer-events: none;
 }
 
 body {
@@ -32,6 +42,7 @@ body {
   height: 100vh;
   width: 100vw;
   overflow: hidden;
+  position: relative;
 }
 
 /* ==========================================================================
@@ -42,16 +53,16 @@ body {
   top: 0;
   left: 0;
   right: 0;
-  height: 70px;
-  background: rgba(18, 18, 18, 0.8);
+  height: 56px;
+  background: rgba(255, 255, 255, 0.03);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border-bottom: 1px solid var(--dossiers-border);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
   display: flex;
   align-items: center;
-  padding: 0 var(--dossiers-spacing);
+  padding: 0 0 0 0;
   z-index: 1001;
-  box-shadow: var(--dossiers-shadow);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
 }
 
 .header-content {
@@ -59,8 +70,9 @@ body {
   align-items: center;
   justify-content: flex-start;
   width: 100%;
-  max-width: 1400px;
-  margin: 0 auto;
+  max-width: none;
+  margin: 0;
+  padding-left: 0;
 }
 
 /* ==========================================================================
@@ -68,7 +80,7 @@ body {
    ========================================================================== */
 .dossiers-sidebar-fixed {
   position: fixed;
-  top: 70px;
+  top: 56px;
   left: 0;
   bottom: 0;
   width: 280px;
@@ -87,7 +99,7 @@ body {
    ========================================================================== */
 .dossiers-content-area {
   margin-left: 280px;
-  margin-top: 70px;
+  margin-top: 56px;
   flex-grow: 1;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
@@ -113,7 +125,8 @@ body {
 
 .folder-content {
   background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-top: none;
   border-radius: 0 0 var(--dossiers-radius) var(--dossiers-radius);
   padding: var(--dossiers-spacing);
   backdrop-filter: blur(20px);
@@ -284,7 +297,7 @@ body {
   }
 
   .dossiers-header-fixed {
-    height: 60px;
+    height: 48px;
     padding: 0 16px;
   }
 
@@ -306,6 +319,7 @@ body {
 
   .folder-content {
     padding: 20px;
+    border-radius: 0 0 12px 12px;
   }
 
   .folder-header {

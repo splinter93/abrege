@@ -12,41 +12,43 @@ interface SimpleContextMenuProps {
 const menuStyle: React.CSSProperties = {
   position: 'fixed',
   zIndex: 2000,
-  width: '100px !important',
-  maxWidth: '100px !important',
-  background: 'rgba(28,28,32,0.98)',
-  border: '1px solid rgba(255,140,0,0.10)',
-  borderRadius: 8,
-  boxShadow: '0 6px 24px 0 rgba(0,0,0,0.15)',
-  padding: '4px 0',
+  minWidth: '120px',
+  background: 'rgba(30,30,35,0.95)',
+  border: '1px solid rgba(255,255,255,0.08)',
+  borderRadius: 10,
+  boxShadow: '0 8px 32px rgba(0,0,0,0.2)',
+  padding: '6px 0',
   color: '#fff',
   fontFamily: 'Noto Sans, Inter, Arial, sans-serif',
-  fontSize: 14,
+  fontSize: 13,
+  fontWeight: 400,
   userSelect: 'none',
-  animation: 'fadeInMenu 0.13s',
-  backdropFilter: 'blur(10px)',
-  WebkitBackdropFilter: 'blur(10px)',
+  animation: 'fadeInMenu 0.15s ease-out',
+  backdropFilter: 'blur(12px)',
+  WebkitBackdropFilter: 'blur(12px)',
 };
 
 const itemStyle: React.CSSProperties = {
-  padding: '6px 18px 6px 14px',
+  padding: '8px 16px',
   cursor: 'pointer',
   border: 'none',
   background: 'none',
   width: '100%',
   textAlign: 'left',
-  fontSize: 14,
-  borderRadius: 4,
-  transition: 'background 0.13s, color 0.13s',
+  fontSize: 13,
+  fontWeight: 400,
+  borderRadius: 6,
+  transition: 'all 0.15s ease',
   whiteSpace: 'nowrap',
   overflow: 'hidden',
   textOverflow: 'ellipsis',
   display: 'block',
+  color: 'rgba(255,255,255,0.9)',
 };
 
 const itemHoverStyle: React.CSSProperties = {
-  background: 'rgba(255,140,0,0.18)',
-  color: '#ff9800',
+  background: 'rgba(255,255,255,0.08)',
+  color: '#fff',
 };
 
 const SimpleContextMenu: React.FC<SimpleContextMenuProps> = ({ x, y, visible, options, onClose }) => {
@@ -82,8 +84,14 @@ const SimpleContextMenu: React.FC<SimpleContextMenuProps> = ({ x, y, visible, op
       ))}
       <style>{`
         @keyframes fadeInMenu {
-          from { opacity: 0; transform: scale(0.97); }
-          to { opacity: 1; transform: scale(1); }
+          from { 
+            opacity: 0; 
+            transform: scale(0.95) translateY(-2px); 
+          }
+          to { 
+            opacity: 1; 
+            transform: scale(1) translateY(0); 
+          }
         }
       `}</style>
     </div>,

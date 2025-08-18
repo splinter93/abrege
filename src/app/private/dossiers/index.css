@@ -13,18 +13,14 @@
 /* 2. Layout principal de la page */
 @import './DossiersPage.css';
 
-/* 3. Composants de navigation */
-@import '../../../components/ClasseurTabs.css';
-
-
-/* 4. Gestionnaire de dossiers et contenu */
+/* 3. Gestionnaire de dossiers et contenu */
 @import '../../../components/FolderManagerModern.css';
 @import '../../../components/FolderContent.css';
 @import '../../../components/FolderGridItems.css';
 
-/* 5. Composants utilitaires */
+/* 4. Composants utilitaires */
 @import '../../../components/Toast.css';
 @import '../../../components/Tooltip.css';
 
-/* 6. Thème custom */
+/* 5. Thème custom */
 @import './DossiersPage.glass.css'; 

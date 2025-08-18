@@ -163,6 +163,13 @@ const ClasseurTabs: React.FC<ClasseurTabsProps> = ({
   
   const closeContextMenu = () => setContextMenu({ ...contextMenu, visible: false });
   
+  const handleOpen = () => {
+    if (contextMenu.item) {
+      handleSelectClasseur(contextMenu.item.id);
+    }
+    closeContextMenu();
+  };
+  
   const handleRename = () => {
     if (contextMenu.item) {
       const newName = prompt("Nouveau nom du classeur :", contextMenu.item.name);
@@ -278,8 +285,8 @@ const ClasseurTabs: React.FC<ClasseurTabsProps> = ({
         x={contextMenu.x}
         y={contextMenu.y}
         options={[
+          { label: "Ouvrir", onClick: handleOpen },
           { label: "Renommer", onClick: handleRename },
-          { label: "Changer la couleur", onClick: openColorPicker },
           { label: "Supprimer", onClick: handleDelete },
         ]}
         onClose={closeContextMenu}

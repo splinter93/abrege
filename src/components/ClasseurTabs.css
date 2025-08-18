@@ -50,7 +50,7 @@
   color: var(--text-2);
   cursor: pointer;
   font-size: 0.9rem;
-  font-weight: 500;
+  font-weight: 400;
   font-family: var(--classeur-font-family);
   white-space: nowrap;
   transition: var(--transition-normal);
@@ -139,7 +139,7 @@
 
 .classeur-name-text {
   font-size: 0.9rem;
-  font-weight: 500;
+  font-weight: 400;
   color: inherit;
 }
 
