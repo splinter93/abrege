@@ -1,115 +1,332 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/supabaseClient';
+import { FileItem, FileStatus } from '@/types/files';
+import { simpleLogger as logger } from '@/utils/logger';
 
-export interface FileItem {
-  id: string;
-  filename: string;
-  mime_type: string;
-  size_bytes: number;
-  url: string;
-  thumbnail_url?: string;
-  created_at: string;
-  updated_at: string;
-  user_id: string;
-  note_id?: string;
-  folder_id?: string;
-  notebook_id?: string;
+// ========================================
+// TYPES LOCAUX
+// ========================================
+
+interface UseFilesPageState {
+  files: FileItem[];
+  loading: boolean;
+  error: string | null;
+  quotaInfo: {
+    usedBytes: number;
+    quotaBytes: number;
+    remainingBytes: number;
+  } | null;
 }
 
-export function useFilesPage(userId: string) {
+interface UseFilesPageActions {
+  fetchFiles: () => Promise<void>;
+  deleteFile: (id: string) => Promise<void>;
+  renameFile: (id: string, newName: string) => Promise<void>;
+  refreshQuota: () => Promise<void>;
+  clearError: () => void;
+}
+
+type UseFilesPageResult = UseFilesPageState & UseFilesPageActions;
+
+// ========================================
+// HOOK PRINCIPAL
+// ========================================
+
+export function useFilesPage(): UseFilesPageResult {
+  const [files, setFiles] = useState<FileItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [files, setFiles] = useState<FileItem[]>([]);
+  const [quotaInfo, setQuotaInfo] = useState<UseFilesPageState['quotaInfo']>(null);
 
-  // Fonction pour récupérer les fichiers de l'utilisateur
+  // ========================================
+  // FONCTIONS UTILITAIRES
+  // ========================================
+
+  /**
+   * Récupération des fichiers de l'utilisateur
+   */
   const fetchFiles = useCallback(async () => {
-    if (!userId) return;
-
-    setLoading(true);
-    setError(null);
-
     try {
-      const { data, error } = await supabase
-        .from('files')
-        .select('*')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false });
+      setLoading(true);
+      setError(null);
 
-      if (error) {
-        throw error;
+      // Récupérer l'utilisateur authentifié
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      if (authError || !user) {
+        throw new Error('Utilisateur non authentifié');
       }
 
-      setFiles(data || []);
+      // Récupérer les fichiers avec les nouvelles colonnes de sécurité
+      const { data: filesData, error: filesError } = await supabase
+        .from('files')
+        .select(`
+          id,
+          filename,
+          original_name,
+          mime_type,
+          size_bytes,
+          s3_key,
+          s3_bucket,
+          s3_region,
+          url,
+          thumbnail_url,
+          user_id,
+          note_id,
+          folder_id,
+          notebook_id,
+          created_at,
+          updated_at,
+          status,
+          sha256,
+          request_id,
+          deleted_at,
+          etag
+        `)
+        .eq('user_id', user.id)
+        .is('deleted_at', null) // Seulement les fichiers non supprimés
+        .order('created_at', { ascending: false });
+
+      if (filesError) {
+        throw new Error(`Erreur lors de la récupération des fichiers: ${filesError.message}`);
+      }
+
+      // Filtrer les fichiers avec statut 'ready' ou 'failed' (pas 'uploading' ou 'processing')
+      const validFiles = (filesData || []).filter(file => 
+        file.status === 'ready' || file.status === 'failed'
+      ) as FileItem[];
+
+      setFiles(validFiles);
+      
+      logger.info(`📁 ${validFiles.length} fichiers récupérés`, {
+        userId: user.id,
+        totalFiles: filesData?.length || 0,
+        validFiles: validFiles.length
+      });
+
     } catch (err) {
-      console.error('Erreur lors du chargement des fichiers:', err);
-      setError(err instanceof Error ? err.message : 'Erreur inconnue');
+      const errorMessage = err instanceof Error ? err.message : 'Erreur inconnue';
+      setError(errorMessage);
+      logger.error(`❌ Erreur récupération fichiers: ${errorMessage}`, { error: err });
     } finally {
       setLoading(false);
     }
-  }, [userId]);
+  }, []);
 
-  // Fonction pour supprimer un fichier
-  const deleteFile = useCallback(async (fileId: string) => {
-    if (!userId) return;
-
+  /**
+   * Suppression sécurisée d'un fichier
+   */
+  const deleteFile = useCallback(async (id: string) => {
     try {
-      const { error } = await supabase
-        .from('files')
-        .delete()
-        .eq('id', fileId)
-        .eq('user_id', userId);
+      setError(null);
 
-      if (error) {
-        throw error;
+      // Récupérer l'utilisateur authentifié
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      if (authError || !user) {
+        throw new Error('Utilisateur non authentifié');
       }
 
-      // Mettre à jour la liste locale
-      setFiles(prev => prev.filter(file => file.id !== fileId));
-    } catch (err) {
-      console.error('Erreur lors de la suppression du fichier:', err);
-      throw err;
-    }
-  }, [userId]);
-
-  // Fonction pour renommer un fichier
-  const renameFile = useCallback(async (fileId: string, newName: string) => {
-    if (!userId) return;
-
-    try {
-      const { error } = await supabase
+      // Récupérer les informations du fichier avant suppression
+      const { data: fileData, error: fetchError } = await supabase
         .from('files')
-        .update({ filename: newName })
-        .eq('id', fileId)
-        .eq('user_id', userId);
+        .select('s3_key, filename')
+        .eq('id', id)
+        .eq('user_id', user.id)
+        .single();
 
-      if (error) {
-        throw error;
+      if (fetchError || !fileData) {
+        throw new Error('Fichier non trouvé ou accès non autorisé');
       }
 
-      // Mettre à jour la liste locale
-      setFiles(prev => prev.map(file => 
-        file.id === fileId 
-          ? { ...file, filename: newName }
-          : file
-      ));
+      // Soft delete en base de données
+      const { error: deleteError } = await supabase
+        .from('files')
+        .update({ 
+          deleted_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', id)
+        .eq('user_id', user.id);
+
+      if (deleteError) {
+        throw new Error(`Erreur lors de la suppression: ${deleteError.message}`);
+      }
+
+      // Supprimer de S3 (optionnel - peut être fait par un job de nettoyage)
+      try {
+        // Note: La suppression S3 sera gérée par le service sécurisé
+        // await secureS3Service.secureDelete(fileData.s3_key, user.id);
+      } catch (s3Error) {
+        logger.warn(`⚠️ Erreur suppression S3 (ignorée): ${s3Error}`, {
+          fileId: id,
+          s3Key: fileData.s3_key
+        });
+      }
+
+      // Mettre à jour l'état local
+      setFiles(prevFiles => prevFiles.filter(file => file.id !== id));
+
+      // Mettre à jour l'usage de stockage
+      await refreshQuota();
+
+      logger.info(`🗑️ Fichier supprimé: ${fileData.filename}`, {
+        userId: user.id,
+        fileId: id
+      });
+
     } catch (err) {
-      console.error('Erreur lors du renommage du fichier:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Erreur inconnue';
+      setError(errorMessage);
+      logger.error(`❌ Erreur suppression fichier: ${errorMessage}`, { 
+        fileId: id, 
+        error: err 
+      });
       throw err;
     }
-  }, [userId]);
+  }, []);
 
-  // Charger les fichiers au montage et quand userId change
+  /**
+   * Renommage sécurisé d'un fichier
+   */
+  const renameFile = useCallback(async (id: string, newName: string) => {
+    try {
+      setError(null);
+
+      // Validation du nouveau nom
+      if (!newName || newName.trim().length === 0) {
+        throw new Error('Le nom de fichier ne peut pas être vide');
+      }
+
+      if (newName.length > 255) {
+        throw new Error('Le nom de fichier est trop long (max 255 caractères)');
+      }
+
+      // Récupérer l'utilisateur authentifié
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      if (authError || !user) {
+        throw new Error('Utilisateur non authentifié');
+      }
+
+      // Vérifier que le fichier existe et appartient à l'utilisateur
+      const { data: existingFile, error: fetchError } = await supabase
+        .from('files')
+        .select('filename, original_name')
+        .eq('id', id)
+        .eq('user_id', user.id)
+        .is('deleted_at', null)
+        .single();
+
+      if (fetchError || !existingFile) {
+        throw new Error('Fichier non trouvé ou accès non autorisé');
+      }
+
+      // Mettre à jour le nom en base de données
+      const { error: updateError } = await supabase
+        .from('files')
+        .update({ 
+          filename: newName,
+          original_name: newName,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', id)
+        .eq('user_id', user.id);
+
+      if (updateError) {
+        throw new Error(`Erreur lors du renommage: ${updateError.message}`);
+      }
+
+      // Mettre à jour l'état local
+      setFiles(prevFiles => 
+        prevFiles.map(file => 
+          file.id === id 
+            ? { ...file, filename: newName, original_name: newName }
+            : file
+        )
+      );
+
+      logger.info(`✏️ Fichier renommé: ${existingFile.filename} → ${newName}`, {
+        userId: user.id,
+        fileId: id
+      });
+
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Erreur inconnue';
+      setError(errorMessage);
+      logger.error(`❌ Erreur renommage fichier: ${errorMessage}`, { 
+        fileId: id, 
+        newName,
+        error: err 
+      });
+      throw err;
+    }
+  }, []);
+
+  /**
+   * Récupération des informations de quota
+   */
+  const refreshQuota = useCallback(async () => {
+    try {
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      if (authError || !user) {
+        return;
+      }
+
+      const { data: quotaData, error: quotaError } = await supabase
+        .from('storage_usage')
+        .select('used_bytes, quota_bytes')
+        .eq('user_id', user.id)
+        .single();
+
+      if (quotaError) {
+        logger.warn(`⚠️ Erreur récupération quota: ${quotaError.message}`, { userId: user.id });
+        return;
+      }
+
+      if (quotaData) {
+        setQuotaInfo({
+          usedBytes: quotaData.used_bytes,
+          quotaBytes: quotaData.quota_bytes,
+          remainingBytes: quotaData.quota_bytes - quotaData.used_bytes
+        });
+      }
+
+    } catch (err) {
+      logger.warn(`⚠️ Erreur refresh quota: ${err}`, { error: err });
+    }
+  }, []);
+
+  /**
+   * Effacement des erreurs
+   */
+  const clearError = useCallback(() => {
+    setError(null);
+  }, []);
+
+  // ========================================
+  // EFFETS
+  // ========================================
+
+  // Chargement initial
   useEffect(() => {
     fetchFiles();
-  }, [fetchFiles]);
+    refreshQuota();
+  }, [fetchFiles, refreshQuota]);
+
+  // ========================================
+  // RETOUR
+  // ========================================
 
   return {
+    // État
+    files,
     loading,
     error,
-    files,
-    setFiles,
+    quotaInfo,
+    
+    // Actions
     fetchFiles,
     deleteFile,
     renameFile,
+    refreshQuota,
+    clearError
   };
 } 

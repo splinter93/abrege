@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { FileItem } from "@/hooks/useFilesPage";
+import { FileItem } from "@/types/files";
 import { useFilesPage } from "@/hooks/useFilesPage";
 import { useAuth } from "@/hooks/useAuth";
 import LogoHeader from "@/components/LogoHeader";
@@ -16,10 +16,13 @@ export default function FilesPage() {
     loading,
     error,
     files,
+    quotaInfo,
     fetchFiles,
     deleteFile,
     renameFile,
-  } = useFilesPage(user?.id || '');
+    refreshQuota,
+    clearError,
+  } = useFilesPage();
 
   // État local pour la gestion de l'interface
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
@@ -166,7 +169,6 @@ export default function FilesPage() {
                 loading={loading}
                 error={error}
                 onFileOpen={handleFileOpen}
-                onFileDelete={handleFileDelete}
                 onFileRename={handleFileRename}
                 renamingItemId={renamingItemId}
                 onCancelRename={handleCancelRename}

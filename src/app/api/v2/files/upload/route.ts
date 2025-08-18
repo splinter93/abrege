@@ -1,159 +1,345 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { logApi } from '@/utils/logger';
+import { z } from 'zod';
+import { supabase } from '@/supabaseClient';
+import { secureS3Service, generateRequestId } from '@/services/secureS3Service';
 import { getAuthenticatedUser } from '@/utils/authUtils';
-import { createSupabaseClient } from '@/utils/supabaseClient';
+import { logApi } from '@/utils/logger';
+
+// ========================================
+// SCHEMAS DE VALIDATION
+// ========================================
+
+const uploadSchema = z.object({
+  fileName: z.string().min(1, 'Nom de fichier requis').max(255, 'Nom de fichier trop long'),
+  fileType: z.string().min(1, 'Type de fichier requis'),
+  fileSize: z.number().int().positive('Taille de fichier invalide'),
+  folderId: z.string().uuid().optional(),
+  notebookId: z.string().uuid().optional(),
+});
+
+// ========================================
+// TYPES
+// ========================================
+
+interface UploadRequest {
+  fileName: string;
+  fileType: string;
+  fileSize: number;
+  folderId?: string;
+  notebookId?: string;
+}
+
+interface UploadResponse {
+  success: boolean;
+  file: any;
+  uploadUrl: string;
+  expiresAt: Date;
+  requestId: string;
+}
+
+// ========================================
+// FONCTIONS UTILITAIRES
+// ========================================
+
+/**
+ * Validation du Content-Type côté serveur
+ */
+function validateContentType(fileType: string): boolean {
+  const allowedTypes = [
+    // Images
+    'image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml',
+    // Documents
+    'application/pdf', 'text/plain', 'text/markdown', 'application/json',
+    // Archives
+    'application/zip', 'application/x-rar-compressed',
+    // Autres
+    'application/octet-stream'
+  ];
+  
+  return allowedTypes.includes(fileType);
+}
+
+/**
+ * Audit trail pour les actions sur les fichiers
+ */
+async function logFileEvent(params: {
+  fileId: string;
+  userId: string;
+  eventType: string;
+  requestId: string;
+  ipAddress?: string;
+  userAgent?: string;
+  metadata?: Record<string, any>;
+}): Promise<void> {
+  try {
+    await supabase.from('file_events').insert({
+      file_id: params.fileId,
+      user_id: params.userId,
+      event_type: params.eventType,
+      request_id: params.requestId,
+      ip_address: params.ipAddress,
+      user_agent: params.userAgent,
+      metadata: params.metadata || {}
+    });
+  } catch (error) {
+    // Log l'erreur mais ne pas faire échouer l'upload
+    logApi('file_audit', `⚠️ Erreur audit trail: ${error.message}`, {
+      fileId: params.fileId,
+      userId: params.userId,
+      eventType: params.eventType,
+      requestId: params.requestId
+    });
+  }
+}
+
+/**
+ * Mise à jour de l'usage de stockage
+ */
+async function updateStorageUsage(userId: string): Promise<void> {
+  try {
+    await supabase.rpc('update_user_storage_usage', { user_uuid: userId });
+  } catch (error) {
+    logApi('storage_usage', `⚠️ Erreur mise à jour usage: ${error.message}`, { userId });
+  }
+}
+
+// ========================================
+// HANDLER PRINCIPAL
+// ========================================
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
   const startTime = Date.now();
-  const clientType = request.headers.get('X-Client-Type') || 'unknown';
-  const context = {
-    operation: 'v2_files_upload',
-    component: 'API_V2',
-    clientType
-  };
-
-  logApi('v2_files_upload', '🚀 Début upload fichier v2', context);
-
-  // 🔐 Authentification
-  const authResult = await getAuthenticatedUser(request);
-  if (!authResult.success) {
-    logApi('v2_files_upload', `❌ Authentification échouée: ${authResult.error}`, context);
-    return NextResponse.json(
-      { error: authResult.error },
-      { status: authResult.status || 401, headers: { "Content-Type": "application/json" } }
-    );
-  }
-
-  const userId = authResult.userId!;
-  const supabase = createSupabaseClient();
-
+  const requestId = generateRequestId();
+  
   try {
-    // Vérifier que c'est une requête multipart
-    const contentType = request.headers.get('content-type');
-    if (!contentType || !contentType.includes('multipart/form-data')) {
-      logApi('v2_files_upload', '❌ Content-Type incorrect', context);
+    // ========================================
+    // 1. AUTHENTIFICATION
+    // ========================================
+    
+    const authResult = await getAuthenticatedUser(request);
+    if (!authResult.success || !authResult.userId) {
+      logApi('v2_files_upload', `❌ Authentification échouée: ${authResult.error}`, { requestId });
       return NextResponse.json(
-        { error: 'Content-Type doit être multipart/form-data' },
-        { status: 400, headers: { "Content-Type": "application/json" } }
+        { error: authResult.error || 'Authentification requise' }, 
+        { status: authResult.status || 401 }
       );
     }
 
-    const formData = await request.formData();
-    const file = formData.get('file') as File;
-    const folderId = formData.get('folder_id') as string | null;
-    const classeurId = formData.get('classeur_id') as string | null;
+    const userId = authResult.userId;
 
-    if (!file) {
-      logApi('v2_files_upload', '❌ Aucun fichier fourni', context);
-      return NextResponse.json(
-        { error: 'Aucun fichier fourni' },
-        { status: 400, headers: { "Content-Type": "application/json" } }
-      );
-    }
+    // ========================================
+    // 2. EXTRACTION ET VALIDATION DES DONNÉES
+    // ========================================
+    
+    let uploadData: UploadRequest;
+    
+    try {
+      const body = await request.json();
+      uploadData = uploadSchema.parse(body);
+         } catch (error) {
+       logApi('v2_files_upload', `❌ Validation des données échouée: ${error.message}`, { 
+         requestId, 
+         userId 
+       });
+       return NextResponse.json(
+         { error: `Données invalides: ${error.message}` }, 
+         { status: 400 }
+       );
+     }
 
-    // Validation du fichier
-    const maxSize = 10 * 1024 * 1024; // 10MB
-    if (file.size > maxSize) {
-      logApi('v2_files_upload', `❌ Fichier trop volumineux: ${file.size} bytes`, context);
-      return NextResponse.json(
-        { error: 'Fichier trop volumineux (max 10MB)' },
-        { status: 400, headers: { "Content-Type": "application/json" } }
-      );
-    }
+     // ========================================
+     // 3. VALIDATION SÉCURITÉ SUPPLÉMENTAIRE
+     // ========================================
+     
+     // Validation du Content-Type côté serveur
+     if (!validateContentType(uploadData.fileType)) {
+       logApi('v2_files_upload', `❌ Type de fichier non autorisé: ${uploadData.fileType}`, { 
+         requestId, 
+         userId 
+       });
+       return NextResponse.json(
+         { error: `Type de fichier non autorisé: ${uploadData.fileType}` }, 
+         { status: 400 }
+       );
+     }
 
-    // Types de fichiers autorisés
-    const allowedTypes = [
-      'image/jpeg', 'image/png', 'image/gif', 'image/webp',
-      'application/pdf', 'text/plain', 'text/markdown',
-      'application/json', 'application/xml'
-    ];
+     // Validation de la taille maximale (100MB)
+     const maxSize = 100 * 1024 * 1024;
+     if (uploadData.fileSize > maxSize) {
+       logApi('v2_files_upload', `❌ Fichier trop volumineux: ${uploadData.fileSize} bytes`, { 
+         requestId, 
+         userId 
+       });
+       return NextResponse.json(
+         { error: `Fichier trop volumineux (max: 100MB)` }, 
+         { status: 400 }
+       );
+     }
 
-    if (!allowedTypes.includes(file.type)) {
-      logApi('v2_files_upload', `❌ Type de fichier non autorisé: ${file.type}`, context);
-      return NextResponse.json(
-        { error: 'Type de fichier non autorisé' },
-        { status: 400, headers: { "Content-Type": "application/json" } }
-      );
-    }
+     // ========================================
+     // 4. UPLOAD SÉCURISÉ VERS S3
+     // ========================================
+     
+     const s3Result = await secureS3Service.secureUpload({
+       fileName: uploadData.fileName,
+       fileType: uploadData.fileType,
+       fileSize: uploadData.fileSize,
+       userId,
+       folderId: uploadData.folderId,
+       notebookId: uploadData.notebookId,
+       requestId
+     });
 
-    // Générer un nom unique pour le fichier
-    const timestamp = Date.now();
-    const randomSuffix = Math.random().toString(36).substring(2, 8);
-    const fileExtension = file.name.split('.').pop() || '';
-    const fileName = `${file.name.replace(/\.[^/.]+$/, '')}_${timestamp}_${randomSuffix}.${fileExtension}`;
+     // ========================================
+     // 5. ENREGISTREMENT EN BASE DE DONNÉES
+     // ========================================
+     
+     const { data: fileRecord, error: dbError } = await supabase
+       .from('files')
+       .insert({
+         filename: uploadData.fileName,
+         original_name: uploadData.fileName,
+         mime_type: uploadData.fileType,
+         size_bytes: uploadData.fileSize,
+         s3_key: s3Result.key,
+         s3_bucket: process.env.AWS_S3_BUCKET,
+         s3_region: process.env.AWS_REGION,
+         user_id: userId,
+         folder_id: uploadData.folderId || null,
+         notebook_id: uploadData.notebookId || null,
+         status: 'uploading',
+         request_id: requestId,
+         sha256: s3Result.sha256,
+         url: '', // Sera mis à jour après upload complet
+         created_at: new Date().toISOString(),
+         updated_at: new Date().toISOString()
+       })
+       .select()
+       .single();
 
-    // Upload vers Supabase Storage
-    const { data: uploadData, error: uploadError } = await supabase.storage
-      .from('files')
-      .upload(`${userId}/${fileName}`, file, {
-        cacheControl: '3600',
-        upsert: false
-      });
+     if (dbError) {
+       // Rollback S3 en cas d'erreur DB
+       logApi('v2_files_upload', `❌ Erreur DB, rollback S3: ${dbError.message}`, { 
+         requestId, 
+         userId,
+         key: s3Result.key
+       });
+       
+       try {
+         await secureS3Service.secureDelete(s3Result.key, userId);
+       } catch (rollbackError) {
+         logApi('v2_files_upload', `⚠️ Erreur rollback S3: ${rollbackError.message}`, { 
+           requestId, 
+           userId,
+           key: s3Result.key
+         });
+       }
+       
+       return NextResponse.json(
+         { error: `Erreur base de données: ${dbError.message}` }, 
+         { status: 500 }
+       );
+     }
 
-    if (uploadError) {
-      logApi('v2_files_upload', `❌ Erreur upload storage: ${uploadError.message}`, context);
-      return NextResponse.json(
-        { error: `Erreur upload: ${uploadError.message}` },
-        { status: 500, headers: { "Content-Type": "application/json" } }
-      );
-    }
+     // ========================================
+     // 6. AUDIT TRAIL
+     // ========================================
+     
+     await logFileEvent({
+       fileId: fileRecord.id,
+       userId,
+       eventType: 'upload_initiated',
+       requestId,
+       ipAddress: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || undefined,
+       userAgent: request.headers.get('user-agent') || undefined,
+       metadata: {
+         fileName: uploadData.fileName,
+         fileSize: uploadData.fileSize,
+         fileType: uploadData.fileType,
+         s3Key: s3Result.key
+       }
+     });
 
-    // Récupérer l'URL publique
-    const { data: { publicUrl } } = supabase.storage
-      .from('files')
-      .getPublicUrl(`${userId}/${fileName}`);
+     // ========================================
+     // 7. MISE À JOUR USAGE STOCKAGE
+     // ========================================
+     
+     await updateStorageUsage(userId);
 
-    // Enregistrer dans la base de données
-    const { data: fileRecord, error: dbError } = await supabase
-      .from('files')
-      .insert({
-        name: file.name,
-        original_name: file.name,
-        size: file.size,
-        type: file.type,
-        url: publicUrl,
-        storage_path: `${userId}/${fileName}`,
-        folder_id: folderId,
-        classeur_id: classeurId,
-        user_id: userId
-      })
-      .select()
-      .single();
-
-    if (dbError) {
-      logApi('v2_files_upload', `❌ Erreur base de données: ${dbError.message}`, context);
-      // Nettoyer le fichier uploadé en cas d'erreur DB
-      await supabase.storage.from('files').remove([`${userId}/${fileName}`]);
-      return NextResponse.json(
-        { error: `Erreur base de données: ${dbError.message}` },
-        { status: 500, headers: { "Content-Type": "application/json" } }
-      );
-    }
-
+    // ========================================
+    // 8. RÉPONSE SUCCÈS
+    // ========================================
+    
     const apiTime = Date.now() - startTime;
-    logApi('v2_files_upload', `✅ Fichier uploadé en ${apiTime}ms`, context);
-
-    return NextResponse.json({
+    const response: UploadResponse = {
       success: true,
-      message: 'Fichier uploadé avec succès',
-      file: {
-        id: fileRecord.id,
-        name: fileRecord.name,
-        size: fileRecord.size,
-        type: fileRecord.type,
-        url: fileRecord.url,
-        folder_id: fileRecord.folder_id,
-        classeur_id: fileRecord.classeur_id,
-        created_at: fileRecord.created_at
-      }
-    }, { headers: { "Content-Type": "application/json" } });
+      file: fileRecord,
+      uploadUrl: s3Result.uploadUrl,
+      expiresAt: s3Result.expiresAt,
+      requestId
+    };
 
-  } catch (err: unknown) {
-    const error = err as Error;
-    logApi('v2_files_upload', `❌ Erreur serveur: ${error}`, context);
+         logApi('v2_files_upload', `✅ Upload initié avec succès en ${apiTime}ms`, { 
+       requestId, 
+       userId,
+       fileId: fileRecord.id,
+       fileSize: uploadData.fileSize,
+       duration: apiTime
+     });
+
+    return NextResponse.json(response, {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Request-ID': requestId,
+        'X-Upload-Expires-At': s3Result.expiresAt.toISOString()
+      }
+    });
+
+  } catch (error: any) {
+    // ========================================
+    // 9. GESTION D'ERREURS GLOBALES
+    // ========================================
+    
+    const apiTime = Date.now() - startTime;
+    const errorMessage = error.message || 'Erreur inconnue';
+    
+    logApi('v2_files_upload', `❌ Erreur upload: ${errorMessage}`, { 
+      requestId, 
+      duration: apiTime,
+      error: errorMessage,
+      stack: error.stack
+    });
+
     return NextResponse.json(
-      { error: 'Erreur serveur' },
-      { status: 500, headers: { "Content-Type": "application/json" } }
+      { 
+        error: 'Erreur lors de l\'upload',
+        details: errorMessage,
+        requestId
+      }, 
+      { 
+        status: 500,
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Request-ID': requestId
+        }
+      }
     );
   }
+}
+
+// ========================================
+// MÉTHODES HTTP SUPPORTÉES
+// ========================================
+
+export async function OPTIONS(request: NextRequest): Promise<NextResponse> {
+  return new NextResponse(null, {
+    status: 200,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Request-ID',
+      'Access-Control-Max-Age': '86400',
+    },
+  });
 } 
