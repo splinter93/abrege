@@ -62,7 +62,6 @@ export function useFilesPage(): UseFilesPageResult {
         .select(`
           id,
           filename,
-          original_name,
           mime_type,
           size_bytes,
           s3_key,
@@ -88,6 +87,7 @@ export function useFilesPage(): UseFilesPageResult {
       // Une fois la migration appliquée, on pourra filtrer par status
       const validFiles = (filesData || []).map(file => ({
         ...file,
+        original_name: file.filename, // Utiliser filename comme original_name
         status: 'ready' as const, // Valeur par défaut
         sha256: undefined,
         request_id: undefined,
@@ -206,7 +206,7 @@ export function useFilesPage(): UseFilesPageResult {
       // Vérifier que le fichier existe et appartient à l'utilisateur
       const { data: existingFile, error: fetchError } = await supabase
         .from('files')
-        .select('filename, original_name')
+        .select('filename')
         .eq('id', id)
         .eq('user_id', user.id)
         .single();
@@ -219,8 +219,7 @@ export function useFilesPage(): UseFilesPageResult {
       const { error: updateError } = await supabase
         .from('files')
         .update({ 
-          filename: newName,
-          original_name: newName
+          filename: newName
         })
         .eq('id', id)
         .eq('user_id', user.id);
@@ -233,7 +232,7 @@ export function useFilesPage(): UseFilesPageResult {
       setFiles(prevFiles => 
         prevFiles.map(file => 
           file.id === id 
-            ? { ...file, filename: newName, original_name: newName }
+            ? { ...file, filename: newName }
             : file
         )
       );

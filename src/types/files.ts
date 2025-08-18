@@ -5,7 +5,7 @@
 export interface FileItem {
   id: string;
   filename: string;
-  original_name: string;
+  original_name?: string; // Optionnel car peut ne pas exister dans la DB actuelle
   mime_type: string;
   size_bytes: number;
   s3_key: string;
@@ -20,8 +20,8 @@ export interface FileItem {
   created_at: string;
   updated_at: string;
   
-  // Nouvelles colonnes de sécurité
-  status: FileStatus;
+  // Nouvelles colonnes de sécurité (optionnelles avant migration)
+  status?: FileStatus;
   sha256?: string;
   request_id?: string;
   deleted_at?: string;
