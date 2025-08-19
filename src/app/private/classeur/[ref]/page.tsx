@@ -9,7 +9,6 @@ import FolderManager from '@/components/FolderManager';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import AuthGuard from '@/components/AuthGuard';
 import type { Folder } from '@/components/types';
-import './index.css';
 
 export default function ClasseurDeepLinkPage() {
   return (
