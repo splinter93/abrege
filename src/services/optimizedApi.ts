@@ -1,3 +1,4 @@
+import type { SafeUnknown, SafeRecord, SafeError } from '@/types/quality';
 import { useFileSystemStore } from '@/store/useFileSystemStore';
 import { clientPollingTrigger } from './clientPollingTrigger';
 import { ErrorHandler } from './errorHandler';
@@ -81,7 +82,7 @@ export class OptimizedApi {
   }
 
   // In-memory cache for ETag
-  private etagCache: Map<string, { etag: string; data: any }> = new Map();
+  private etagCache: Map<string, { etag: string; data: unknown }> = new Map();
 
   // Utils
   private async getAuthHeaders(): Promise<HeadersInit> {
@@ -95,7 +96,7 @@ export class OptimizedApi {
     }
   }
 
-  private async fetchWithEtag(url: string, headers: HeadersInit): Promise<{ ok: boolean; status: number; data?: any; etag?: string; etagHit?: boolean }> {
+  private async fetchWithEtag(url: string, headers: HeadersInit): Promise<{ ok: boolean; status: number; data?: unknown; etag?: string; etagHit?: boolean }> {
     const cacheKey = url;
     const cached = this.etagCache.get(cacheKey);
     const h = { ...(headers || {}) } as Record<string, string>;
@@ -113,7 +114,7 @@ export class OptimizedApi {
     return { ok: resp.ok, status: resp.status, data, etag, etagHit: false };
   }
 
-  private normalizeClasseurs(input: any[]): any[] {
+  private normalizeClasseurs(input: unknown[]): unknown[] {
     return (Array.isArray(input) ? input : []).map(c => ({
       id: c.id,
       slug: c.slug ?? undefined,
@@ -126,9 +127,9 @@ export class OptimizedApi {
     })).sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
   }
 
-  private normalizeTree(input: any): any {
+  private normalizeTree(input: unknown): unknown {
     if (!input || !input.classeur) return input;
-    const stripVolatile = (x: any) => ({ ...x, generated_at: undefined });
+    const stripVolatile = (x: unknown) => ({ ...x, generated_at: undefined });
     return stripVolatile({
       success: true,
       classeur: {
@@ -143,7 +144,7 @@ export class OptimizedApi {
     });
   }
 
-  private shallowEqual(a: any, b: any): boolean {
+  private shallowEqual(a: unknown, b: unknown): boolean {
     try {
       return JSON.stringify(a) === JSON.stringify(b);
     } catch {
@@ -155,7 +156,7 @@ export class OptimizedApi {
     try { return Buffer.from(value).toString('base64').slice(0, 8); } catch { return 'hash'; }
   }
 
-  private async shadowRead<T>(label: string, legacyFn: () => Promise<T>, v1Fn: () => Promise<T>, normalizer: (d: any) => any): Promise<T> {
+  private async shadowRead<T>(label: string, legacyFn: () => Promise<T>, v1Fn: () => Promise<T>, normalizer: (d: unknown) => any): Promise<T> {
     if (!this.shadowEnabled && !this.useV1Only) {
       return legacyFn();
     }
@@ -179,7 +180,7 @@ export class OptimizedApi {
     const v1P = runWithTimeout(v1Fn);
     const [legacyRes, v1Res] = await Promise.all([legacyP, v1P]);
 
-    const normalize = (d: any) => normalizer(d);
+    const normalize = (d: unknown) => normalizer(d);
     const legacyN = legacyRes.ok ? normalize(legacyRes.data) : undefined;
     const v1N = v1Res.ok ? normalize(v1Res.data) : undefined;
 
@@ -207,7 +208,7 @@ export class OptimizedApi {
     return data;
   }
 
-  private async getTreeV1(ref: string, depth: '0'|'1'|'full' = 'full'): Promise<any> {
+  private async getTreeV1(ref: string, depth: '0'|'1'|'full' = 'full'): Promise<unknown> {
     const headers = await this.getAuthHeaders();
     const { ok, data } = await this.fetchWithEtag(`/api/v1/classeur/${encodeURIComponent(ref)}/tree?depth=${depth}`, headers);
     if (!ok) throw new Error('Tree v1 error');
@@ -540,7 +541,7 @@ export class OptimizedApi {
       const headers = await this.getAuthHeaders();
       
       // Préparer le payload
-      const payload: any = {};
+      const payload: unknown = {};
       if (targetFolderId !== undefined) payload.target_folder_id = targetFolderId;
       if (targetClasseurId) payload.target_classeur_id = targetClasseurId;
       
@@ -594,7 +595,7 @@ export class OptimizedApi {
       const headers = await this.getAuthHeaders();
       
       // Préparer le payload
-      const payload: any = {};
+      const payload: unknown = {};
       if (targetParentId !== undefined) payload.target_parent_id = targetParentId;
       if (targetClasseurId) payload.target_classeur_id = targetClasseurId;
       

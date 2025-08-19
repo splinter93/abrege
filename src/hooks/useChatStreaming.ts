@@ -1,3 +1,4 @@
+import type { SafeUnknown, SafeRecord, SafeError } from '@/types/quality';
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { supabase } from '@/supabaseClient';
 import { logger } from '@/utils/logger';
@@ -7,8 +8,8 @@ interface UseChatStreamingOptions {
   onComplete?: (fullContent: string, fullReasoning: string) => void;
   onError?: (error: string) => void;
   onReasoning?: (reasoning: string) => void;
-  onToolCalls?: (toolCalls: any[], toolName: string) => void;
-  onToolResult?: (toolName: string, result: any, success: boolean, toolCallId?: string) => void;
+  onToolCalls?: (toolCalls: unknown[], toolName: string) => void;
+  onToolResult?: (toolName: string, result: unknown, success: boolean, toolCallId?: string) => void;
 }
 
 interface UseChatStreamingReturn {

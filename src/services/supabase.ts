@@ -1,3 +1,4 @@
+import type { SafeUnknown, SafeRecord, SafeError } from '@/types/quality';
 import { supabase } from '../supabaseClient';
 import { simpleLogger as logger } from '@/utils/logger';
 
@@ -13,7 +14,7 @@ export const getClasseurs = async (): Promise<any[]> => {
   return selectData;
 };
 
-export const createClasseur = async (classeurData: any): Promise<any> => {
+export const createClasseur = async (classeurData: unknown): Promise<unknown> => {
   const user = await supabase.auth.getUser();
   if (!user.data?.user) throw new Error('User not authenticated');
 
@@ -27,7 +28,7 @@ export const createClasseur = async (classeurData: any): Promise<any> => {
   return insertData;
 };
 
-export const updateClasseur = async (classeurId: string, updates: any): Promise<any> => {
+export const updateClasseur = async (classeurId: string, updates: unknown): Promise<unknown> => {
   const { data: updateData, error } = await supabase
     .from('classeurs')
     .update(updates)
@@ -39,7 +40,7 @@ export const updateClasseur = async (classeurId: string, updates: any): Promise<
   return updateData;
 };
 
-export const deleteClasseur = async (classeurId: string): Promise<any> => {
+export const deleteClasseur = async (classeurId: string): Promise<unknown> => {
   const { error } = await supabase
     .from('classeurs')
     .delete()
@@ -50,7 +51,7 @@ export const deleteClasseur = async (classeurId: string): Promise<any> => {
 };
 
 // Folders Operations
-export const createFolder = async (data: any): Promise<any> => {
+export const createFolder = async (data: unknown): Promise<unknown> => {
   const user = await supabase.auth.getUser();
   if (!user.data?.user) throw new Error('User not authenticated');
   if (!data.classeurId) throw new Error('Classeur ID is required');
@@ -69,11 +70,11 @@ export const createFolder = async (data: any): Promise<any> => {
   return insertData;
 };
 
-export const updateFolder = async (folderId: string, updates: any): Promise<any> => {
+export const updateFolder = async (folderId: string, updates: unknown): Promise<unknown> => {
   // Filtrer les champs pour ne garder que ceux qui existent dans la table folders
   // Champs valides : id, user_id, name, parent_id, created_at, position, classeur_id, slug
   const validFields = ['name', 'parent_id', 'position', 'classeur_id', 'slug'];
-  const filteredUpdates = Object.keys(updates).reduce((acc: any, key) => {
+  const filteredUpdates = Object.keys(updates).reduce((acc: unknown, key) => {
     if (validFields.includes(key)) {
       acc[key] = updates[key];
     }
@@ -90,7 +91,7 @@ export const updateFolder = async (folderId: string, updates: any): Promise<any>
   return updateData;
 };
 
-export const deleteFolder = async (folderId: string): Promise<any> => {
+export const deleteFolder = async (folderId: string): Promise<unknown> => {
   const { error } = await supabase
     .from('folders')
     .delete()
@@ -114,7 +115,7 @@ export const getFolders = async (classeurId: string, parentId?: string): Promise
   return selectData;
 };
 
-export const getFolderById = async (folderId: string): Promise<any> => {
+export const getFolderById = async (folderId: string): Promise<unknown> => {
   if (!folderId) return null;
 
   const { data: selectData, error } = await supabase
@@ -128,7 +129,7 @@ export const getFolderById = async (folderId: string): Promise<any> => {
 };
 
 // Articles Operations
-export const createArticle = async (data: any): Promise<any> => {
+export const createArticle = async (data: unknown): Promise<unknown> => {
   const { data: userResponse } = await supabase.auth.getUser();
   const user = userResponse.user;
 
@@ -138,7 +139,7 @@ export const createArticle = async (data: any): Promise<any> => {
   }
 
   // Convert camelCase keys from articleData to snake_case for the database
-  const dbData = Object.entries(data).reduce((acc: { [key: string]: any }, [key, value]) => {
+  const dbData = Object.entries(data).reduce((acc: { [key: string]: unknown }, [key, value]) => {
     const snakeKey = key.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
     acc[snakeKey] = value;
     return acc;
@@ -162,9 +163,9 @@ export const createArticle = async (data: any): Promise<any> => {
   return insertData;
 };
 
-export const updateArticle = async (id: string, updates: any): Promise<any> => {
+export const updateArticle = async (id: string, updates: unknown): Promise<unknown> => {
   // Convert camelCase to snake_case for database columns
-  const dbUpdates = Object.entries(updates).reduce((acc: { [key: string]: any }, [key, value]) => {
+  const dbUpdates = Object.entries(updates).reduce((acc: { [key: string]: unknown }, [key, value]) => {
     const snakeKey = key.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
     acc[snakeKey] = value;
     return acc;
@@ -181,7 +182,7 @@ export const updateArticle = async (id: string, updates: any): Promise<any> => {
   return updateData;
 };
 
-export const deleteArticle = async (articleId: string): Promise<any> => {
+export const deleteArticle = async (articleId: string): Promise<unknown> => {
   const { error } = await supabase
     .from('articles')
     .delete()
@@ -205,7 +206,7 @@ export const getArticles = async (classeurId: string, folderId?: string): Promis
   return selectData;
 };
 
-export const getArticleById = async (articleId: string): Promise<any> => {
+export const getArticleById = async (articleId: string): Promise<unknown> => {
   if (!articleId) throw new Error('Article ID is required');
 
   const { data: selectData, error } = await supabase
@@ -218,7 +219,7 @@ export const getArticleById = async (articleId: string): Promise<any> => {
   return selectData;
 };
 
-export const updateItemPositions = async (items: any[]): Promise<any> => {
+export const updateItemPositions = async (items: unknown[]): Promise<unknown> => {
   // Use a transaction to update all positions at once
   const { error } = await supabase.rpc('bulk_update_item_positions', {
     items: items.map(item => ({
@@ -233,7 +234,7 @@ export const updateItemPositions = async (items: any[]): Promise<any> => {
 };
 
 // Drag & Drop Operations
-export const moveItem = async (id: string, newParentId: string): Promise<any> => {
+export const moveItem = async (id: string, newParentId: string): Promise<unknown> => {
   if (!id) throw new Error('Item ID is required for moving items.');
 
   logger.dev('moveItem: Calling Supabase RPC with:', { p_item_id: id, p_target_folder_id: newParentId });
@@ -252,7 +253,7 @@ export const moveItem = async (id: string, newParentId: string): Promise<any> =>
   return true;
 };
 
-export const renameItem = async (id: string, type: 'folder' | 'file', newName: string): Promise<any> => {
+export const renameItem = async (id: string, type: 'folder' | 'file', newName: string): Promise<unknown> => {
   const tableName = type === 'folder' ? 'folders' : 'articles';
   const nameColumn = type === 'folder' ? 'name' : 'source_title';
 
@@ -269,7 +270,7 @@ export const renameItem = async (id: string, type: 'folder' | 'file', newName: s
   return data[0];
 };
 
-export const updateClasseurPositions = async (classeurs: any[]): Promise<any> => {
+export const updateClasseurPositions = async (classeurs: unknown[]): Promise<unknown> => {
   const { error } = await supabase.rpc('update_classeur_positions', {
     items: classeurs.map(item => ({
       id: item.id,
@@ -291,7 +292,7 @@ export const moveItemUniversal = async (
   id: string,
   newParentId: string | null,
   type: 'folder' | 'file'
-): Promise<any> => {
+): Promise<unknown> => {
   logger.dev('[DND] moveItemUniversal', { id, newParentId, type });
   if (!id) throw new Error('Item ID is required for moving items.');
   if (!type) throw new Error('Type is required (folder/file)');
@@ -331,7 +332,7 @@ export const moveItemUniversal = async (
  * S'abonne à tous les changements (insert, update, delete) sur articles, folders, classeurs.
  * @param onEvent Callback appelé à chaque event (payload: { table, eventType, new, old })
  */
-export function subscribeToAllChanges(onEvent: (payload: any) => void) {
+export function subscribeToAllChanges(onEvent: (payload: unknown) => void) {
   // Articles (notes)
   supabase.channel('articles-all')
     .on('postgres_changes', { event: '*', schema: 'public', table: 'articles' }, payload => {

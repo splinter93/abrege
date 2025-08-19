@@ -1,5 +1,6 @@
 "use client";
 
+import type { SafeUnknown, SafeRecord, SafeError } from '@/types/quality';
 import { useRef, useState, useEffect, useCallback } from 'react';
 import { useFileSystemStore } from '@/store/useFileSystemStore';
 
@@ -10,17 +11,17 @@ interface RealtimeConfig {
   wsUrl?: string; // pour websocket
   token?: string; // pour websocket sécurisé
   debug?: boolean;
-  onError?: (err: any) => void;
+  onError?: (err: unknown) => void;
   onEvent?: (event: { type: string, payload: unknown, timestamp: number }) => void;
 }
 
 interface ChangeEvent {
   table: string;
   eventType: 'INSERT' | 'UPDATE' | 'DELETE';
-  new: any;
-  old: any;
+  new: unknown;
+  old: unknown;
   timestamp: number;
-  diff?: any;
+  diff?: unknown;
 }
 
 /**

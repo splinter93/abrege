@@ -1,4 +1,5 @@
 'use client';
+import type { SafeUnknown, SafeRecord, SafeError } from '@/types/quality';
 import { logger } from '@/utils/logger';
 
 import React, { useState } from 'react';
@@ -24,13 +25,13 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({ isOpen, isDesktop, onClose })
   const [agentsOpen, setAgentsOpen] = useState(true);
 
   // Fonction pour extraire l'aperçu de la dernière réponse
-  const getLastResponsePreview = (session: any) => {
+  const getLastResponsePreview = (session: unknown) => {
     if (!session.thread || session.thread.length === 0) return '';
     
     // Trouver le dernier message de l'assistant
     const lastAssistantMessage = [...session.thread]
       .reverse()
-      .find((msg: any) => msg.role === 'assistant');
+      .find((msg: unknown) => msg.role === 'assistant');
     
     if (!lastAssistantMessage) return '';
     
@@ -52,14 +53,14 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({ isOpen, isDesktop, onClose })
     }
   };
 
-  const handleSelectSession = (session: any) => {
+  const handleSelectSession = (session: unknown) => {
     setCurrentSession(session);
     if (!isDesktop) {
       onClose();
     }
   };
 
-  const handleSelectAgent = (agent: any) => {
+  const handleSelectAgent = (agent: unknown) => {
     logger.debug(`[ChatSidebar] 🎯 Sélection de l'agent:`, {
       id: agent.id,
       name: agent.name,
@@ -80,7 +81,7 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({ isOpen, isDesktop, onClose })
     }
   };
 
-  const startRenaming = (session: any) => {
+  const startRenaming = (session: unknown) => {
     setRenamingSessionId(session.id);
     setNewName(session.name);
   };
