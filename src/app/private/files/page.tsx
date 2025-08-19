@@ -8,9 +8,23 @@ import LogoHeader from "@/components/LogoHeader";
 import Sidebar from "@/components/Sidebar";
 import FilesContent from "@/components/FilesContent";
 import FilesToolbar, { ViewMode } from "@/components/FilesToolbar";
+import FileUploader from "@/components/FileUploader";
+import ErrorBoundary from "@/components/ErrorBoundary";
+import AuthGuard from "@/components/AuthGuard";
+import { useSecureErrorHandler } from "@/components/SecureErrorHandler";
 import "./index.css";
 
 export default function FilesPage() {
+  return (
+    <ErrorBoundary>
+      <AuthGuard>
+        <FilesPageContent />
+      </AuthGuard>
+    </ErrorBoundary>
+  );
+}
+
+function FilesPageContent() {
   const { user } = useAuth();
   const {
     loading,
@@ -24,11 +38,19 @@ export default function FilesPage() {
     clearError,
   } = useFilesPage();
 
+  // Gestionnaire d'erreur sécurisé
+  const { handleError } = useSecureErrorHandler({
+    context: 'FilesPage',
+    operation: 'gestion_fichiers',
+    userId: user?.id
+  });
+
   // État local pour la gestion de l'interface
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFiles, setSelectedFiles] = useState<Set<string>>(new Set());
   const [renamingItemId, setRenamingItemId] = useState<string | null>(null);
+  const [showUploader, setShowUploader] = useState(false);
 
   // Filtrer les fichiers selon la recherche
   const filteredFiles = files.filter(file =>
@@ -51,23 +73,33 @@ export default function FilesPage() {
         return newSet;
       });
     } catch (error) {
-      console.error('Erreur lors de la suppression:', error);
+      handleError(error, 'suppression fichier');
     }
-  }, [deleteFile]);
+  }, [deleteFile, handleError]);
 
   const handleFileRename = useCallback(async (fileId: string, newName: string) => {
     try {
       await renameFile(fileId, newName);
       setRenamingItemId(null);
     } catch (error) {
-      console.error('Erreur lors du renommage:', error);
+      handleError(error, 'renommage fichier');
     }
-  }, [renameFile]);
+  }, [renameFile, handleError]);
 
   const handleUploadFile = useCallback(() => {
-    // TODO: Implémenter l'upload de fichier
-    console.log('Upload de fichier à implémenter');
-  }, []);
+    setShowUploader(!showUploader);
+  }, [showUploader]);
+
+  const handleUploadComplete = useCallback((file: FileItem) => {
+    // Rafraîchir la liste des fichiers
+    fetchFiles();
+    // Masquer l'uploader
+    setShowUploader(false);
+  }, [fetchFiles]);
+
+  const handleUploadError = useCallback((error: string) => {
+    handleError(error, 'upload fichier');
+  }, [handleError]);
 
   const handleRefresh = useCallback(() => {
     fetchFiles();
@@ -82,10 +114,10 @@ export default function FilesPage() {
         await Promise.all(promises);
         setSelectedFiles(new Set());
       } catch (error) {
-        console.error('Erreur lors de la suppression multiple:', error);
+        handleError(error, 'suppression multiple fichiers');
       }
     }
-  }, [selectedFiles, deleteFile]);
+  }, [selectedFiles, deleteFile, handleError]);
 
   const handleRenameSelected = useCallback(() => {
     if (selectedFiles.size === 1) {
@@ -97,7 +129,10 @@ export default function FilesPage() {
   const handleContextMenuItem = useCallback((e: React.MouseEvent, file: FileItem) => {
     e.preventDefault();
     // TODO: Implémenter le menu contextuel
-    console.log('Menu contextuel pour:', file);
+    // Log sécurisé en développement uniquement
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Menu contextuel pour:', file.filename);
+    }
   }, []);
 
   const handleCancelRename = useCallback(() => {
@@ -129,6 +164,11 @@ export default function FilesPage() {
             </div>
             <div className="files-stats">
               <span>{filteredFiles.length} fichier{filteredFiles.length > 1 ? 's' : ''}</span>
+              {quotaInfo && (
+                <span className="quota-info">
+                  {Math.round((quotaInfo.usedBytes / quotaInfo.quotaBytes) * 100)}% utilisé
+                </span>
+              )}
             </div>
           </div>
         </section>
@@ -163,6 +203,29 @@ export default function FilesPage() {
                 searchQuery={searchQuery}
                 onSearchChange={setSearchQuery}
               />
+              
+              {/* Composant d'upload */}
+              {showUploader && (
+                <div className="uploader-section">
+                  <FileUploader
+                    onUploadComplete={handleUploadComplete}
+                    onUploadError={handleUploadError}
+                    maxFileSize={100 * 1024 * 1024} // 100MB
+                    allowedTypes={[
+                      'image/*',
+                      'application/pdf',
+                      'text/*',
+                      'application/msword',
+                      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                      'application/vnd.ms-excel',
+                      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                      'application/vnd.ms-powerpoint',
+                      'application/vnd.openxmlformats-officedocument.presentationml.presentation'
+                    ]}
+                    multiple={true}
+                  />
+                </div>
+              )}
               
               <FilesContent
                 files={filteredFiles}

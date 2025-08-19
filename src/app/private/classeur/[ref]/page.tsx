@@ -6,9 +6,22 @@ import useSWR from 'swr';
 import { supabase } from '@/supabaseClient';
 import { fetchJsonV1 } from '@/lib/fetcherV1';
 import FolderManager from '@/components/FolderManager';
+import ErrorBoundary from '@/components/ErrorBoundary';
+import AuthGuard from '@/components/AuthGuard';
 import type { Folder } from '@/components/types';
+import './index.css';
 
 export default function ClasseurDeepLinkPage() {
+  return (
+    <ErrorBoundary>
+      <AuthGuard>
+        <ClasseurDeepLinkPageContent />
+      </AuthGuard>
+    </ErrorBoundary>
+  );
+}
+
+function ClasseurDeepLinkPageContent() {
   const params = useParams();
   const router = useRouter();
   const ref = params?.ref as string;
@@ -35,7 +48,16 @@ export default function ClasseurDeepLinkPage() {
     const result: Folder[] = [];
     function walk(nodes: any[]) {
       for (const n of nodes) {
-        result.push({ id: n.id, name: n.name, parent_id: n.parent_id ?? null, classeur_id: payload?.classeur?.id });
+        result.push({ 
+          id: n.id, 
+          name: n.name, 
+          parent_id: n.parent_id ?? null, 
+          classeur_id: payload?.classeur?.id || '',
+          user_id: payload?.classeur?.user_id || '',
+          created_at: n.created_at || new Date().toISOString(),
+          updated_at: n.updated_at || new Date().toISOString(),
+          position: n.position || 0
+        });
         if (Array.isArray(n.children) && n.children.length > 0) walk(n.children);
       }
     }
@@ -48,8 +70,11 @@ export default function ClasseurDeepLinkPage() {
       id: n.id,
       source_title: n.title,
       folder_id: null,
-      classeur_id: payload?.classeur?.id,
-      updated_at: undefined,
+      classeur_id: payload?.classeur?.id || '',
+      user_id: payload?.classeur?.user_id || '',
+      created_at: n.created_at || new Date().toISOString(),
+      updated_at: n.updated_at || new Date().toISOString(),
+      position: n.position || 0
     })) : [];
   }, [payload]);
 
@@ -88,10 +113,11 @@ export default function ClasseurDeepLinkPage() {
           classeurName={classeurName}
           classeurIcon={classeurEmoji}
           parentFolderId={currentFolderId}
-          filteredFolders={shownFolders}
-          filteredNotes={shownFiles}
           onFolderOpen={handleFolderOpen}
           onGoBack={handleGoBack}
+          onGoToRoot={() => setCurrentFolderId(undefined)}
+          onGoToFolder={(folderId) => setCurrentFolderId(folderId)}
+          folderPath={[]}
         />
       </div>
     </main>

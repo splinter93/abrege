@@ -1,17 +1,33 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import type { Folder } from "@/components/types";
 import type { Classeur } from "@/store/useFileSystemStore";
 import ClasseurBandeau from "@/components/ClasseurBandeau";
 import LogoHeader from "@/components/LogoHeader";
 import Sidebar from "@/components/Sidebar";
 import FolderManager from "@/components/FolderManager";
+import FolderToolbar, { ViewMode } from "@/components/FolderToolbar";
+import ErrorBoundary from "@/components/ErrorBoundary";
+import AuthGuard from "@/components/AuthGuard";
 import { useDossiersPage } from "@/hooks/useDossiersPage";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/supabaseClient";
+import { v2UnifiedApi } from "@/services/V2UnifiedApi";
+import { useSecureErrorHandler } from "@/components/SecureErrorHandler";
 import "./index.css";
 
 export default function DossiersPage() {
+  return (
+    <ErrorBoundary>
+      <AuthGuard>
+        <DossiersPageContent />
+      </AuthGuard>
+    </ErrorBoundary>
+  );
+}
+
+function DossiersPageContent() {
   const { user } = useAuth();
   const {
     loading,
@@ -29,15 +45,65 @@ export default function DossiersPage() {
     handleUpdateClasseurPositions,
     handleFolderOpen,
     handleGoBack,
-    handleGoToRoot, // 🔧 NOUVEAU: Navigation vers la racine
-    handleGoToFolder, // 🔧 NOUVEAU: Navigation directe vers un dossier
-    folderPath, // 🔧 NOUVEAU: Chemin de navigation pour le breadcrumb
+    handleGoToRoot,
+    handleGoToFolder,
+    folderPath,
   } = useDossiersPage(user?.id || '');
+
+  // Gestionnaire d'erreur sécurisé
+  const { handleError } = useSecureErrorHandler({
+    context: 'DossiersPage',
+    operation: 'gestion_dossiers',
+    userId: user?.id
+  });
 
   const activeClasseur = useMemo(
     () => classeurs.find((c) => c.id === activeClasseurId),
     [classeurs, activeClasseurId]
   );
+
+  // État pour le mode de vue
+  const [viewMode, setViewMode] = useState<ViewMode>('grid');
+
+  // Handlers pour la création
+  const handleCreateFolder = async () => {
+    if (!activeClasseur || !user?.id) return;
+    
+    try {
+      const result = await v2UnifiedApi.createFolder({
+        name: "Nouveau dossier",
+        notebook_id: activeClasseur.id,
+        parent_id: currentFolderId || null
+      }, user.id);
+      
+      // Recharger les données
+      await v2UnifiedApi.loadClasseursWithContent(user.id);
+    } catch (e) {
+      handleError(e, 'création dossier');
+    }
+  };
+
+  const handleCreateNote = async () => {
+    if (!activeClasseur || !user?.id) return;
+    
+    try {
+      const result = await v2UnifiedApi.createNote({
+        source_title: "Nouvelle note",
+        notebook_id: activeClasseur.id,
+        folder_id: currentFolderId || null,
+        markdown_content: ""
+      }, user.id);
+      
+      // Recharger les données
+      await v2UnifiedApi.loadClasseursWithContent(user.id);
+    } catch (e) {
+      handleError(e, 'création note');
+    }
+  };
+
+  const handleToggleView = (mode: ViewMode) => {
+    setViewMode(mode);
+  };
 
   return (
     <div className="dossiers-page-wrapper">
@@ -99,13 +165,14 @@ export default function DossiersPage() {
                   <span className="folder-icon">{(activeClasseur as any).emoji}</span>
                   <h2 className="folder-title">{activeClasseur.name}</h2>
                 </div>
+                {/* Remplacer les anciens boutons par la FolderToolbar */}
                 <div className="folder-actions">
-                  <button className="action-btn primary">
-                    <span>Nouvelle note</span>
-                  </button>
-                  <button className="action-btn secondary">
-                    <span>Nouveau dossier</span>
-                  </button>
+                  <FolderToolbar
+                    onCreateFolder={handleCreateFolder}
+                    onCreateFile={handleCreateNote}
+                    onToggleView={handleToggleView}
+                    viewMode={viewMode}
+                  />
                 </div>
               </div>
               
