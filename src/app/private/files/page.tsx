@@ -8,7 +8,7 @@ import LogoHeader from "@/components/LogoHeader";
 import Sidebar from "@/components/Sidebar";
 import FilesContent from "@/components/FilesContent";
 import FilesToolbar, { ViewMode } from "@/components/FilesToolbar";
-import FileUploader from "@/components/FileUploader";
+import FileUploader from "../../../components/FileUploader";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import AuthGuard from "@/components/AuthGuard";
 import { useSecureErrorHandler } from "@/components/SecureErrorHandler";
