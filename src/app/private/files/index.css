@@ -79,9 +79,21 @@
 }
 
 .files-stats {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
   font-size: 0.9rem;
   color: var(--text-secondary);
   font-weight: 500;
+}
+
+.quota-info {
+  font-size: 0.8rem;
+  padding: 4px 8px;
+  background: var(--accent-hover);
+  border-radius: 4px;
+  color: var(--accent-primary);
 }
 
 /* Section de contenu des fichiers */
@@ -99,6 +111,13 @@
   min-height: 0;
 }
 
+/* Section d'upload */
+.uploader-section {
+  padding: 24px;
+  background: var(--surface-secondary);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
 /* États de chargement et d'erreur */
 .loading-state,
 .error-state {
@@ -106,9 +125,8 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: 300px;
+  padding: 48px 24px;
   text-align: center;
-  color: var(--text-secondary);
 }
 
 .loading-spinner {
@@ -121,91 +139,68 @@
   margin-bottom: 16px;
 }
 
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
 .error-icon {
   font-size: 3rem;
   margin-bottom: 16px;
 }
 
 .error-state h3 {
-  font-size: 1.5rem;
-  font-weight: 600;
-  margin-bottom: 8px;
+  margin: 0 0 8px 0;
   color: var(--text-primary);
 }
 
 .error-state p {
-  font-size: 1rem;
+  margin: 0;
   color: var(--text-secondary);
-  max-width: 400px;
 }
 
-/* Animation de rotation */
-@keyframes spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-/* Responsive */
-@media (max-width: 1024px) {
-  .dossiers-page-wrapper {
-    grid-template-columns: 240px 1fr;
-  }
-}
-
+/* Responsive design */
 @media (max-width: 768px) {
   .dossiers-page-wrapper {
+    grid-template-columns: 1fr;
     grid-template-areas:
       "header"
       "main";
-    grid-template-columns: 1fr;
-    grid-template-rows: 80px 1fr;
   }
-
+  
   .dossiers-sidebar-fixed {
     display: none;
   }
-
-  .dossiers-header-fixed {
-    padding: 0 16px;
-  }
-
+  
   .files-section {
     padding: 16px;
   }
-
+  
   .files-header {
     flex-direction: column;
     align-items: flex-start;
-    gap: 8px;
+    gap: 12px;
   }
-
-  .files-info {
-    gap: 8px;
+  
+  .files-stats {
+    align-items: flex-start;
   }
-
-  .files-icon {
-    font-size: 1.5rem;
-  }
-
-  .files-title {
-    font-size: 1.5rem;
+  
+  .uploader-section {
+    padding: 16px;
   }
 }
 
 @media (max-width: 480px) {
-  .dossiers-header-fixed {
-    padding: 0 12px;
-  }
-
   .files-section {
     padding: 12px;
   }
-
+  
   .files-title {
-    font-size: 1.25rem;
+    font-size: 1.5rem;
+  }
+  
+  .uploader-section {
+    padding: 12px;
   }
 } 

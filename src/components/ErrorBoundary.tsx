@@ -1,3 +1,5 @@
+"use client";
+
 import React, { Component, ReactNode, ErrorInfo } from 'react';
 import { simpleLogger as logger } from '@/utils/logger';
 import './ErrorBoundary.css';

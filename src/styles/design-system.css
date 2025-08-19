@@ -79,6 +79,7 @@
   --spacing-md: 16px;
   --spacing-lg: 24px;
   --spacing-xl: 32px;
+  --spacing-xxl: 48px;
   --main-content-padding: 2rem;
   --card-padding: 1.5rem;
 
@@ -105,6 +106,19 @@
   --ui-font-size-lg: 1.125rem;
   --ui-font-size-xl: 1.25rem;
   --ui-font-size-2xl: 1.5rem;
+
+  /* Variables Glassmorphism pour les composants de dossiers */
+  --glass-bg-light: rgba(255, 255, 255, 0.05);
+  --glass-bg-medium: rgba(255, 255, 255, 0.1);
+  --glass-bg-heavy: rgba(255, 255, 255, 0.15);
+  --glass-bg-accent: rgba(229, 90, 44, 0.1);
+  --glass-bg-accent-hover: rgba(229, 90, 44, 0.2);
+  
+  --glass-border-light: rgba(255, 255, 255, 0.1);
+  --glass-border-medium: rgba(255, 255, 255, 0.15);
+  --glass-border-heavy: rgba(255, 255, 255, 0.2);
+  --glass-border-accent: rgba(229, 90, 44, 0.3);
+  --glass-border-accent-hover: rgba(229, 90, 44, 0.5);
 }
 
 .dark {
@@ -163,9 +177,22 @@
   --ui-font-size-lg: 1.125rem;
   --ui-font-size-xl: 1.25rem;
   --ui-font-size-2xl: 1.5rem;
+
+  /* Variables Glassmorphism pour les composants de dossiers (dark mode) */
+  --glass-bg-light: rgba(255, 255, 255, 0.05);
+  --glass-bg-medium: rgba(255, 255, 255, 0.1);
+  --glass-bg-heavy: rgba(255, 255, 255, 0.15);
+  --glass-bg-accent: rgba(229, 90, 44, 0.1);
+  --glass-bg-accent-hover: rgba(229, 90, 44, 0.2);
+  
+  --glass-border-light: rgba(255, 255, 255, 0.1);
+  --glass-border-medium: rgba(255, 255, 255, 0.15);
+  --glass-border-heavy: rgba(255, 255, 255, 0.2);
+  --glass-border-accent: rgba(229, 90, 44, 0.3);
+  --glass-border-accent-hover: rgba(229, 90, 44, 0.5);
 }
 
-/* Utilisation : ajouter la classe .dark sur <html> ou <body> pour activer le dark mode */
+/* Utilisation : ajouter la classe .dark sur <html> ou <body> pour activer le dark mode */
 
 .app-layout {
   display: flex;

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { FileItem } from '@/hooks/useFilesPage';
+import { FileItem } from '@/types/files';
 import ImageModal from './ImageModal';
 import './FilesContent.css';
 import './FolderGridItems.css';
@@ -263,7 +263,7 @@ const FilesContent: React.FC<FilesContentProps> = ({
                   )}
                 </div>
                 <div className="file-meta">
-                  <span className="file-size">{formatFileSize(file.size_bytes || 0)}</span>
+                  <span className="file-size">{formatFileSize(file.size || 0)}</span>
                   <span className="file-date">
                     {new Date(file.created_at || Date.now()).toLocaleDateString()}
                   </span>
@@ -317,7 +317,7 @@ const FilesContent: React.FC<FilesContentProps> = ({
                   )}
                 </div>
                 <div className="file-meta">
-                  <span className="file-size">{formatFileSize(file.size_bytes || 0)}</span>
+                  <span className="file-size">{formatFileSize(file.size || 0)}</span>
                   <span className="file-type">{file.mime_type || 'Type inconnu'}</span>
                   <span className="file-date">
                     {new Date(file.created_at || Date.now()).toLocaleDateString()}

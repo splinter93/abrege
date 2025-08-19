@@ -13,7 +13,7 @@ export const createNoteV2Schema = z.object({
   notebook_id: z.string().min(1, 'notebook_id OBLIGATOIRE'),
   markdown_content: z.string().optional().default(''),
   header_image: z.string().url('header_image doit être une URL valide').optional(),
-  folder_id: z.string().uuid('folder_id doit être un UUID valide').optional(),
+  folder_id: z.string().uuid('folder_id doit être un UUID valide').nullable().optional(),
 });
 
 /**
@@ -32,7 +32,7 @@ export const updateNoteV2Schema = z.object({
   a4_mode: z.boolean().optional(),
   slash_lang: z.enum(['fr', 'en']).optional(),
   font_family: z.string().optional(),
-  folder_id: z.string().uuid('folder_id doit être un UUID valide').optional(),
+  folder_id: z.string().uuid('folder_id doit être un UUID valide').nullable().optional(),
   description: z.string().max(500, 'description trop longue').optional(),
 });
 
@@ -40,7 +40,7 @@ export const updateNoteV2Schema = z.object({
  * Schéma pour déplacer une note V2
  */
 export const moveNoteV2Schema = z.object({
-  folder_id: z.string().uuid('folder_id doit être un UUID valide').nullable(),
+  folder_id: z.string().uuid('folder_id doit être un UUID valide').nullable().optional(),
 });
 
 /**
@@ -118,7 +118,7 @@ export const publishNoteV2Schema = z.object({
 export const createFolderV2Schema = z.object({
   name: z.string().min(1, 'name requis').max(255, 'name trop long'),
   notebook_id: z.string().min(1, 'notebook_id OBLIGATOIRE'),
-  parent_id: z.string().uuid('parent_id doit être un UUID valide').optional(),
+  parent_id: z.string().uuid('parent_id doit être un UUID valide').nullable().optional(),
 });
 
 /**
@@ -126,7 +126,7 @@ export const createFolderV2Schema = z.object({
  */
 export const updateFolderV2Schema = z.object({
   name: z.string().min(1, 'name requis').max(255, 'name trop long').optional(),
-  parent_id: z.string().uuid('parent_id doit être un UUID valide').optional(),
+  parent_id: z.string().uuid('parent_id doit être un UUID valide').nullable().optional(),
 });
 
 /**

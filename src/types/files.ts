@@ -4,28 +4,29 @@
 
 export interface FileItem {
   id: string;
-  filename: string;
-  original_name?: string; // Optionnel car peut ne pas exister dans la DB actuelle
-  mime_type: string;
-  size_bytes: number;
-  s3_key: string;
-  s3_bucket: string;
-  s3_region: string;
-  url: string;
-  thumbnail_url?: string;
   user_id: string;
   note_id?: string;
   folder_id?: string;
-  notebook_id?: string;
+  filename: string;
+  slug?: string;
+  mime_type: string;
+  size: number; // ✅ Correspond à la colonne 'size' de la DB
+  url: string;
+  preview_url?: string;
+  extension?: string;
+  description?: string;
   created_at: string;
   updated_at: string;
-  
-  // Nouvelles colonnes de sécurité (optionnelles avant migration)
-  status?: FileStatus;
+  is_deleted?: boolean;
+  visibility?: 'private' | 'public' | 'targeted';
+  s3_key: string;
+  etag?: string;
+  visibility_mode: 'inherit_note' | 'private' | 'public';
+  owner_id: string;
+  deleted_at?: string;
+  status: FileStatus; // ✅ Colonne obligatoire
   sha256?: string;
   request_id?: string;
-  deleted_at?: string;
-  etag?: string;
 }
 
 export type FileStatus = 'uploading' | 'processing' | 'ready' | 'failed';
@@ -218,7 +219,7 @@ export interface FileFilters {
 }
 
 export interface FileSortOptions {
-  field: 'filename' | 'size_bytes' | 'created_at' | 'updated_at';
+  field: 'filename' | 'size' | 'created_at' | 'updated_at';
   direction: 'asc' | 'desc';
 }
 

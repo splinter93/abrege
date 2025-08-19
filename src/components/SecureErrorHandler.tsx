@@ -10,17 +10,10 @@ interface SecureErrorHandlerProps {
   userId?: string;
 }
 
-/**
- * Hook pour gérer les erreurs de manière sécurisée
- * - Log les erreurs côté serveur uniquement
- * - Affiche des messages génériques aux utilisateurs
- * - Ne révèle jamais d'informations sensibles
- */
 export function useSecureErrorHandler({ context, operation, userId }: SecureErrorHandlerProps) {
   const { handleApiError } = useErrorNotifier();
 
   const handleError = useCallback((error: unknown, userContext?: string) => {
-    // Log sécurisé côté serveur (jamais en production)
     if (process.env.NODE_ENV === 'development') {
       logger.error(`[${context}] Erreur ${operation}:`, {
         error: error instanceof Error ? error.message : String(error),
@@ -29,17 +22,23 @@ export function useSecureErrorHandler({ context, operation, userId }: SecureErro
         userContext
       });
     }
-
-    // En production, log minimal sans informations sensibles
     if (process.env.NODE_ENV === 'production') {
       logger.error(`[${context}] Erreur ${operation} pour l'utilisateur ${userId ? userId.slice(0, 8) + '...' : 'unknown'}`);
     }
-
-    // Notification utilisateur sécurisée
     handleApiError(error, operation);
   }, [context, operation, userId, handleApiError]);
 
-  return {
-    handleError
-  };
+  const handleAsyncError = useCallback(async <T>(
+    asyncOperation: () => Promise<T>,
+    userContext?: string
+  ): Promise<T | null> => {
+    try {
+      return await asyncOperation();
+    } catch (error) {
+      handleError(error, userContext);
+      return null;
+    }
+  }, [handleError]);
+
+  return { handleError, handleAsyncError };
 } 

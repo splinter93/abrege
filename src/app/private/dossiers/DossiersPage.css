@@ -98,101 +98,178 @@ body {
    ZONE DE CONTENU PRINCIPAL
    ========================================================================== */
 .dossiers-content-area {
+  flex: 1;
   margin-left: 280px;
   margin-top: 56px;
-  flex-grow: 1;
+  padding: 0;
   overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-  display: flex;
-  flex-direction: column;
+  overflow-x: hidden;
   background: transparent;
-  padding: var(--dossiers-spacing);
+  position: relative;
 }
 
 /* ==========================================================================
    SECTION DES CLASSEURS
    ========================================================================== */
 .classeurs-section {
-  margin-bottom: 0;
+  padding: 24px 32px 0 32px;
+  background: transparent;
 }
 
 /* ==========================================================================
    SECTION DES DOSSIERS
    ========================================================================== */
 .folders-section {
-  flex: 1;
+  padding: 24px 32px 32px 32px;
+  background: transparent;
 }
 
+/* ==========================================================================
+   CONTENU DES DOSSIERS
+   ========================================================================== */
 .folder-content {
   background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.04);
-  border-top: none;
-  border-radius: 0 0 var(--dossiers-radius) var(--dossiers-radius);
-  padding: var(--dossiers-spacing);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: var(--dossiers-radius);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  margin-top: 0;
+  box-shadow: var(--dossiers-shadow);
+  overflow: hidden;
 }
 
+/* ==========================================================================
+   HEADER DES DOSSIERS
+   ========================================================================== */
 .folder-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 24px;
-  padding-bottom: 20px;
+  padding: 24px 32px;
+  background: rgba(255, 255, 255, 0.02);
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .folder-info {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
 }
 
 .folder-icon {
-  font-size: 32px;
+  font-size: 24px;
   opacity: 0.8;
 }
 
 .folder-title {
-  font-size: 24px;
+  font-size: 20px;
   font-weight: 600;
   color: var(--dossiers-text-primary);
   margin: 0;
   font-family: 'Noto Sans', sans-serif;
 }
 
+/* ==========================================================================
+   ACTIONS DES DOSSIERS - FOLDER TOOLBAR
+   ========================================================================== */
 .folder-actions {
   display: flex;
   align-items: center;
   gap: 12px;
 }
 
-.action-btn {
+/* Styles pour la FolderToolbar intégrée */
+.folder-actions .folder-toolbar {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 10px 18px;
-  border-radius: 10px;
+  gap: 12px;
+  padding: 0;
+  background: transparent;
+  border: none;
+}
+
+.folder-actions .fm-control-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.8);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.9rem;
+  backdrop-filter: blur(10px);
+}
+
+.folder-actions .fm-control-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 1);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.folder-actions .fm-control-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.folder-actions .fm-control-btn.active {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.3);
+  color: rgba(255, 255, 255, 1);
+}
+
+/* Boutons spéciaux pour création - Style accentué */
+.folder-actions .fm-control-btn:has(svg[data-lucide="folder-plus"]),
+.folder-actions .fm-control-btn:has(svg[data-lucide="pencil"]) {
+  background: rgba(249, 115, 22, 0.1);
+  border-color: rgba(249, 115, 22, 0.3);
+  color: #f97316;
+}
+
+.folder-actions .fm-control-btn:has(svg[data-lucide="folder-plus"]):hover,
+.folder-actions .fm-control-btn:has(svg[data-lucide="pencil"]):hover {
+  background: rgba(249, 115, 22, 0.2);
+  border-color: rgba(249, 115, 22, 0.5);
+  color: #f97316;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(249, 115, 22, 0.2);
+}
+
+/* ==========================================================================
+   BOUTONS D'ACTION (pour les états vides)
+   ========================================================================== */
+.action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 24px;
   border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
   background: rgba(255, 255, 255, 0.02);
   color: var(--dossiers-text-primary);
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
+  text-decoration: none;
   font-family: 'Noto Sans', sans-serif;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
 .action-btn:hover {
-  background: rgba(255, 255, 255, 0.04);
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
   transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .action-btn.primary {
-  background: rgba(249, 115, 22, 0.15);
+  background: rgba(249, 115, 22, 0.1);
   color: #f97316;
   border-color: rgba(249, 115, 22, 0.3);
 }
@@ -326,6 +403,16 @@ body {
     flex-direction: column;
     align-items: flex-start;
     gap: 16px;
+  }
+
+  .folder-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .folder-actions .fm-control-btn {
+    width: 36px;
+    height: 36px;
   }
 
   .loading-state,

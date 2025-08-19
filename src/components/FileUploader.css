@@ -1,0 +1,377 @@
+/* ========================================
+   FILE UPLOADER - STYLES MODERNES
+   ======================================== */
+
+.file-uploader {
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+/* ========================================
+   ZONE DE DRAG & DROP
+   ======================================== */
+
+.upload-zone {
+  border: 2px dashed var(--border-subtle, #e1e5e9);
+  border-radius: 12px;
+  padding: 40px 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: var(--surface-primary, #ffffff);
+  position: relative;
+  overflow: hidden;
+}
+
+.upload-zone:hover {
+  border-color: var(--accent-primary, #007bff);
+  background: var(--surface-secondary, #f8f9fa);
+}
+
+.upload-zone.drag-over {
+  border-color: var(--accent-primary, #007bff);
+  background: var(--accent-hover, #e3f2fd);
+  transform: scale(1.02);
+}
+
+.upload-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.upload-icon {
+  font-size: 3rem;
+  opacity: 0.7;
+}
+
+.upload-text h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-primary, #212529);
+}
+
+.upload-text p {
+  margin: 4px 0 0 0;
+  font-size: 0.9rem;
+  color: var(--text-secondary, #6c757d);
+}
+
+.upload-info {
+  margin-top: 8px;
+  padding: 12px 16px;
+  background: var(--surface-secondary, #f8f9fa);
+  border-radius: 8px;
+  font-size: 0.8rem;
+  color: var(--text-secondary, #6c757d);
+}
+
+.upload-info p {
+  margin: 4px 0;
+}
+
+/* ========================================
+   LISTE DES UPLOADS
+   ======================================== */
+
+.uploads-list {
+  margin-top: 24px;
+  padding: 20px;
+  background: var(--surface-primary, #ffffff);
+  border-radius: 12px;
+  border: 1px solid var(--border-subtle, #e1e5e9);
+}
+
+.uploads-list h4 {
+  margin: 0 0 16px 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary, #212529);
+}
+
+.upload-item {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  margin-bottom: 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border-subtle, #e1e5e9);
+  background: var(--surface-secondary, #f8f9fa);
+  transition: all 0.2s ease;
+}
+
+.upload-item:last-child {
+  margin-bottom: 0;
+}
+
+.upload-item.complete {
+  border-color: var(--success, #28a745);
+  background: var(--success-bg, #d4edda);
+}
+
+.upload-item.error {
+  border-color: var(--error, #dc3545);
+  background: var(--error-bg, #f8d7da);
+}
+
+.upload-item-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.upload-item-name {
+  font-weight: 500;
+  color: var(--text-primary, #212529);
+  flex: 1;
+}
+
+.upload-item-status {
+  font-size: 0.9rem;
+  color: var(--text-secondary, #6c757d);
+  white-space: nowrap;
+}
+
+/* ========================================
+   BARRE DE PROGRESSION
+   ======================================== */
+
+.upload-progress {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.progress-bar {
+  flex: 1;
+  height: 8px;
+  background: var(--border-subtle, #e1e5e9);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent-primary, #007bff), var(--accent-hover, #0056b3));
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.progress-text {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--text-secondary, #6c757d);
+  min-width: 40px;
+  text-align: right;
+}
+
+/* ========================================
+   MESSAGES D'ERREUR
+   ======================================== */
+
+.upload-error {
+  padding: 8px 12px;
+  background: var(--error-bg, #f8d7da);
+  border: 1px solid var(--error, #dc3545);
+  border-radius: 6px;
+  color: var(--error, #dc3545);
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+/* ========================================
+   RESPONSIVE DESIGN
+   ======================================== */
+
+@media (max-width: 768px) {
+  .upload-zone {
+    padding: 30px 16px;
+  }
+  
+  .upload-icon {
+    font-size: 2.5rem;
+  }
+  
+  .upload-text h3 {
+    font-size: 1.1rem;
+  }
+  
+  .upload-text p {
+    font-size: 0.85rem;
+  }
+  
+  .upload-info {
+    font-size: 0.75rem;
+    padding: 10px 12px;
+  }
+  
+  .uploads-list {
+    padding: 16px;
+  }
+  
+  .upload-item {
+    padding: 12px;
+  }
+  
+  .upload-item-info {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .upload-item-status {
+    align-self: flex-end;
+  }
+}
+
+@media (max-width: 480px) {
+  .upload-zone {
+    padding: 24px 12px;
+  }
+  
+  .upload-icon {
+    font-size: 2rem;
+  }
+  
+  .upload-text h3 {
+    font-size: 1rem;
+  }
+  
+  .upload-text p {
+    font-size: 0.8rem;
+  }
+  
+  .uploads-list {
+    padding: 12px;
+  }
+  
+  .upload-item {
+    padding: 10px;
+  }
+}
+
+/* ========================================
+   ANIMATIONS
+   ======================================== */
+
+.upload-zone {
+  animation: fadeIn 0.3s ease;
+}
+
+.upload-item {
+  animation: slideIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* ========================================
+   ÉTATS DE CHARGEMENT
+   ======================================== */
+
+.upload-zone:active {
+  transform: scale(0.98);
+}
+
+.upload-item.uploading {
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+/* ========================================
+   ACCESSIBILITÉ
+   ======================================== */
+
+.upload-zone:focus {
+  outline: 2px solid var(--accent-primary, #007bff);
+  outline-offset: 2px;
+}
+
+.upload-zone:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* ========================================
+   THÈMES SOMBRES
+   ======================================== */
+
+@media (prefers-color-scheme: dark) {
+  .upload-zone {
+    background: var(--surface-primary-dark, #1a1a1a);
+    border-color: var(--border-subtle-dark, #404040);
+  }
+  
+  .upload-zone:hover {
+    background: var(--surface-secondary-dark, #2a2a2a);
+  }
+  
+  .upload-zone.drag-over {
+    background: var(--accent-hover-dark, #1a3a4a);
+  }
+  
+  .upload-text h3 {
+    color: var(--text-primary-dark, #ffffff);
+  }
+  
+  .upload-text p {
+    color: var(--text-secondary-dark, #b0b0b0);
+  }
+  
+  .upload-info {
+    background: var(--surface-secondary-dark, #2a2a2a);
+    color: var(--text-secondary-dark, #b0b0b0);
+  }
+  
+  .uploads-list {
+    background: var(--surface-primary-dark, #1a1a1a);
+    border-color: var(--border-subtle-dark, #404040);
+  }
+  
+  .uploads-list h4 {
+    color: var(--text-primary-dark, #ffffff);
+  }
+  
+  .upload-item {
+    background: var(--surface-secondary-dark, #2a2a2a);
+    border-color: var(--border-subtle-dark, #404040);
+  }
+  
+  .upload-item-name {
+    color: var(--text-primary-dark, #ffffff);
+  }
+  
+  .upload-item-status {
+    color: var(--text-secondary-dark, #b0b0b0);
+  }
+} 

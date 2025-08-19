@@ -3,8 +3,6 @@ import React, { useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import './FolderManagerModern.css';
 import FolderContent from './FolderContent';
-import FolderToolbar, { ViewMode } from './FolderToolbar';
-// import.*LogoScrivia.*from './LogoScrivia';
 import { useFolderManagerState } from './useFolderManagerState';
 import { useAuth } from '@/hooks/useAuth';
 import { Folder, FileArticle } from './types';
@@ -62,7 +60,6 @@ const FolderManager: React.FC<FolderManagerProps> = ({
     files,
   } = useFolderManagerState(classeurId, user?.id || '', parentFolderId, refreshKey);
 
-  const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const refreshNow = useCallback(() => setRefreshKey(k => k + 1), []);
 
   // Filtrage/validation de sécurité
@@ -113,14 +110,6 @@ const FolderManager: React.FC<FolderManagerProps> = ({
   const handleStartRenameFileClick = useCallback((file: FileArticle) => {
     startRename(file.id, 'file');
   }, [startRename]);
-
-  // Handler pour créer et renommer un fichier
-  const handleCreateAndRenameFile = async () => {
-    const newFile = await createFile('', parentFolderId || null); // Le nom sera généré automatiquement
-    if (newFile && newFile.id) {
-      startRename(newFile.id, 'file');
-    }
-  };
 
   return (
     <div className="folder-manager-wrapper">

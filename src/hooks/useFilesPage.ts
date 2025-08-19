@@ -56,43 +56,69 @@ export function useFilesPage(): UseFilesPageResult {
         throw new Error('Utilisateur non authentifié');
       }
 
-      // Récupérer les fichiers avec compatibilité pour les anciennes et nouvelles colonnes
+      // Récupérer les fichiers avec les vraies colonnes de la table
       const { data: filesData, error: filesError } = await supabase
         .from('files')
         .select(`
           id,
-          filename,
-          mime_type,
-          size_bytes,
-          s3_key,
-          s3_bucket,
-          s3_region,
-          url,
-          thumbnail_url,
           user_id,
           note_id,
           folder_id,
-          notebook_id,
+          filename,
+          slug,
+          mime_type,
+          size,
+          url,
+          preview_url,
+          extension,
+          description,
           created_at,
-          updated_at
+          updated_at,
+          is_deleted,
+          visibility,
+          s3_key,
+          etag,
+          visibility_mode,
+          owner_id,
+          deleted_at,
+          status,
+          sha256,
+          request_id
         `)
         .eq('user_id', user.id)
+        .is('deleted_at', null) // Seulement les fichiers non supprimés
         .order('created_at', { ascending: false });
 
       if (filesError) {
         throw new Error(`Erreur lors de la récupération des fichiers: ${filesError.message}`);
       }
 
-      // Pour l'instant, tous les fichiers sont considérés comme valides
-      // Une fois la migration appliquée, on pourra filtrer par status
+      // Mapper les données de la DB vers le format attendu par l'interface
       const validFiles = (filesData || []).map(file => ({
-        ...file,
-        original_name: file.filename, // Utiliser filename comme original_name
-        status: 'ready' as const, // Valeur par défaut
-        sha256: undefined,
-        request_id: undefined,
-        deleted_at: undefined,
-        etag: undefined
+        id: file.id,
+        user_id: file.user_id,
+        note_id: file.note_id,
+        folder_id: file.folder_id,
+        filename: file.filename,
+        slug: file.slug,
+        mime_type: file.mime_type,
+        size: file.size, // ✅ Utilise directement la colonne 'size'
+        url: file.url,
+        preview_url: file.preview_url,
+        extension: file.extension,
+        description: file.description,
+        created_at: file.created_at,
+        updated_at: file.updated_at,
+        is_deleted: file.is_deleted,
+        visibility: file.visibility,
+        s3_key: file.s3_key,
+        etag: file.etag,
+        visibility_mode: file.visibility_mode,
+        owner_id: file.owner_id,
+        deleted_at: file.deleted_at,
+        status: file.status as FileStatus,
+        sha256: file.sha256,
+        request_id: file.request_id
       })) as FileItem[];
 
       setFiles(validFiles);
@@ -128,7 +154,7 @@ export function useFilesPage(): UseFilesPageResult {
       // Récupérer les informations du fichier avant suppression
       const { data: fileData, error: fetchError } = await supabase
         .from('files')
-        .select('s3_key, filename')
+        .select('s3_key, filename, size')
         .eq('id', id)
         .eq('user_id', user.id)
         .single();
@@ -137,10 +163,13 @@ export function useFilesPage(): UseFilesPageResult {
         throw new Error('Fichier non trouvé ou accès non autorisé');
       }
 
-      // Suppression directe (sera remplacée par soft delete après migration)
+      // Soft delete : marquer comme supprimé
       const { error: deleteError } = await supabase
         .from('files')
-        .delete()
+        .update({ 
+          deleted_at: new Date().toISOString(),
+          is_deleted: true
+        })
         .eq('id', id)
         .eq('user_id', user.id);
 
@@ -209,6 +238,7 @@ export function useFilesPage(): UseFilesPageResult {
         .select('filename')
         .eq('id', id)
         .eq('user_id', user.id)
+        .is('deleted_at', null)
         .single();
 
       if (fetchError || !existingFile) {
@@ -219,7 +249,8 @@ export function useFilesPage(): UseFilesPageResult {
       const { error: updateError } = await supabase
         .from('files')
         .update({ 
-          filename: newName
+          filename: newName,
+          updated_at: new Date().toISOString()
         })
         .eq('id', id)
         .eq('user_id', user.id);
@@ -232,7 +263,7 @@ export function useFilesPage(): UseFilesPageResult {
       setFiles(prevFiles => 
         prevFiles.map(file => 
           file.id === id 
-            ? { ...file, filename: newName }
+            ? { ...file, filename: newName, updated_at: new Date().toISOString() }
             : file
         )
       );
@@ -264,25 +295,42 @@ export function useFilesPage(): UseFilesPageResult {
         return;
       }
 
-      // Calculer l'usage actuel depuis les fichiers existants
-      const { data: filesData, error: filesError } = await supabase
-        .from('files')
-        .select('size_bytes')
-        .eq('user_id', user.id);
+      // Récupérer l'usage depuis la table storage_usage
+      const { data: storageData, error: storageError } = await supabase
+        .from('storage_usage')
+        .select('used_bytes, quota_bytes')
+        .eq('user_id', user.id)
+        .single();
 
-      if (filesError) {
-        logger.warn(`⚠️ Erreur calcul usage: ${filesError.message}`, { userId: user.id });
-        return;
+      if (storageError) {
+        // Fallback : calculer depuis les fichiers si storage_usage n'existe pas
+        const { data: filesData, error: filesError } = await supabase
+          .from('files')
+          .select('size')
+          .eq('user_id', user.id)
+          .is('deleted_at', null);
+
+        if (filesError) {
+          logger.warn(`⚠️ Erreur calcul usage: ${filesError.message}`, { userId: user.id });
+          return;
+        }
+
+        const usedBytes = (filesData || []).reduce((sum, file) => sum + (file.size || 0), 0);
+        const quotaBytes = 1073741824; // 1GB par défaut
+
+        setQuotaInfo({
+          usedBytes,
+          quotaBytes,
+          remainingBytes: quotaBytes - usedBytes
+        });
+      } else {
+        // Utiliser les données de storage_usage
+        setQuotaInfo({
+          usedBytes: storageData.used_bytes || 0,
+          quotaBytes: storageData.quota_bytes || 1073741824,
+          remainingBytes: (storageData.quota_bytes || 1073741824) - (storageData.used_bytes || 0)
+        });
       }
-
-      const usedBytes = (filesData || []).reduce((sum, file) => sum + (file.size_bytes || 0), 0);
-      const quotaBytes = 1073741824; // 1GB par défaut
-
-      setQuotaInfo({
-        usedBytes,
-        quotaBytes,
-        remainingBytes: quotaBytes - usedBytes
-      });
 
     } catch (err) {
       logger.warn(`⚠️ Erreur refresh quota: ${err}`, { error: err });
