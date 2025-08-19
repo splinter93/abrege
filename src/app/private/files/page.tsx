@@ -8,7 +8,7 @@ import LogoHeader from "@/components/LogoHeader";
 import Sidebar from "@/components/Sidebar";
 import FilesContent from "@/components/FilesContent";
 import FilesToolbar, { ViewMode } from "@/components/FilesToolbar";
-import FileUploader from "../../../components/FileUploader";
+import FileUploaderWrapper from "./FileUploaderWrapper";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import AuthGuard from "@/components/AuthGuard";
 import { useSecureErrorHandler } from "@/components/SecureErrorHandler";
@@ -207,7 +207,7 @@ function FilesPageContent() {
               {/* Composant d'upload */}
               {showUploader && (
                 <div className="uploader-section">
-                  <FileUploader
+                  <FileUploaderWrapper
                     onUploadComplete={handleUploadComplete}
                     onUploadError={handleUploadError}
                     maxFileSize={100 * 1024 * 1024} // 100MB
