@@ -31,20 +31,80 @@ export function useDossiersPage(userId: string) {
         
         logger.dev('[useDossiersPage] 🚀 Début chargement des données');
         
-        // 🔧 TEMPORAIRE : Utiliser directement l'ancien système pour restaurer le fonctionnement
-        logger.dev('[useDossiersPage] 🔧 Utilisation de l\'ancien système pour restaurer les classeurs');
-        await v2UnifiedApi.loadClasseursWithContent(userId);
-        logger.dev('[useDossiersPage] ✅ Ancien système: classeurs chargés avec succès');
+        // 🔍 DIAGNOSTIC COMPLET : Tester les deux systèmes avec métriques
+        const startTime = Date.now();
         
-        // TODO: Réactiver le service optimisé une fois qu'il fonctionne
-        // try {
-        //   const result = await optimizedClasseurService.loadClasseursWithContentOptimized(userId);
-        //   logger.dev(`[useDossiersPage] ✅ Service optimisé: ${result.length} classeurs chargés`);
-        // } catch (optimizedError) {
-        //   logger.warn('[useDossiersPage] ⚠️ Service optimisé échoué, fallback vers l\'ancien système');
-        //   await v2UnifiedApi.loadClasseursWithContent(userId);
-        //   logger.dev('[useDossiersPage] ✅ Fallback réussi avec l\'ancien système');
-        // }
+        // 🧪 Test 1: Service optimisé avec diagnostic complet
+        logger.dev('[useDossiersPage] 🧪 Test 1: Service optimisé avec diagnostic complet');
+        try {
+          const optimizedStart = Date.now();
+          const result = await optimizedClasseurService.loadClasseursWithContentOptimized(userId);
+          const optimizedTime = Date.now() - optimizedStart;
+          
+          logger.dev(`[useDossiersPage] ✅ Service optimisé: ${result.length} classeurs chargés en ${optimizedTime}ms`);
+          
+          // Vérifier que les données sont bien dans le store
+          const store = useFileSystemStore.getState();
+          const storeClasseurs = store.classeurs;
+          const storeFolders = store.folders;
+          const storeNotes = store.notes;
+          
+          logger.dev(`[useDossiersPage] 📊 Vérification store:`, {
+            classeurs: Object.keys(storeClasseurs).length,
+            folders: Object.keys(storeFolders).length,
+            notes: Object.keys(storeNotes).length
+          });
+          
+          if (storeClasseurs && Object.keys(storeClasseurs).length > 0) {
+            logger.dev('[useDossiersPage] 🎯 Service optimisé fonctionne parfaitement !');
+            return; // Succès, on sort
+          } else {
+            logger.warn('[useDossiersPage] ⚠️ Service optimisé retourne des données mais store vide');
+          }
+          
+        } catch (optimizedError) {
+          const optimizedTime = Date.now() - startTime;
+          logger.error(`[useDossiersPage] ❌ Service optimisé échoué en ${optimizedTime}ms:`, optimizedError);
+          
+          // 🔍 Diagnostic détaillé de l'erreur
+          if (optimizedError instanceof Error) {
+            logger.error('[useDossiersPage] 🔍 Détails de l\'erreur:', {
+              message: optimizedError.message,
+              stack: optimizedError.stack?.substring(0, 500),
+              name: optimizedError.name
+            });
+          }
+        }
+        
+        // 🧪 Test 2: Ancien système comme fallback
+        logger.dev('[useDossiersPage] 🧪 Test 2: Ancien système comme fallback');
+        try {
+          const fallbackStart = Date.now();
+          await v2UnifiedApi.loadClasseursWithContent(userId);
+          const fallbackTime = Date.now() - fallbackStart;
+          
+          logger.dev(`[useDossiersPage] ✅ Fallback réussi en ${fallbackTime}ms`);
+          
+          // Vérifier que les données sont bien dans le store
+          const store = useFileSystemStore.getState();
+          const storeClasseurs = store.classeurs;
+          const storeFolders = store.folders;
+          const storeNotes = store.notes;
+          
+          logger.dev(`[useDossiersPage] 📊 Vérification store après fallback:`, {
+            classeurs: Object.keys(storeClasseurs).length,
+            folders: Object.keys(storeFolders).length,
+            notes: Object.keys(storeNotes).length
+          });
+          
+        } catch (fallbackError) {
+          const fallbackTime = Date.now() - startTime;
+          logger.error(`[useDossiersPage] ❌ Fallback échoué en ${fallbackTime}ms:`, fallbackError);
+          throw fallbackError; // Erreur fatale
+        }
+        
+        const totalTime = Date.now() - startTime;
+        logger.dev(`[useDossiersPage] 🎯 Temps total de diagnostic: ${totalTime}ms`);
         
       } catch (e) {
         const errorMessage = e instanceof Error ? e.message : 'Erreur inconnue lors du chargement';
