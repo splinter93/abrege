@@ -3,6 +3,7 @@
 import React, { useState, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FileItem } from '@/types/files';
+import { STORAGE_CONFIG, formatBytes } from '@/config/storage';
 import './FileUploaderLocal.css';
 
 interface FileUploaderLocalProps {
@@ -28,8 +29,8 @@ const FileUploaderLocal: React.FC<FileUploaderLocalProps> = ({
   onUploadError,
   folderId,
   notebookId,
-  maxFileSize = 100 * 1024 * 1024, // 100MB par défaut
-  allowedTypes = ['image/*', 'application/pdf', 'text/*'],
+  maxFileSize = STORAGE_CONFIG.FILE_LIMITS.MAX_FILE_SIZE, // Utilise la config centralisée
+  allowedTypes = STORAGE_CONFIG.FILE_LIMITS.ALLOWED_MIME_TYPES, // Utilise la config centralisée
   multiple = false
 }) => {
   const [isDragOver, setIsDragOver] = useState(false);
@@ -44,7 +45,7 @@ const FileUploaderLocal: React.FC<FileUploaderLocalProps> = ({
   const validateFile = useCallback((file: File): string | null => {
     // Vérifier la taille
     if (file.size > maxFileSize) {
-      return `Fichier trop volumineux (max: ${formatFileSize(maxFileSize)})`;
+      return `Fichier trop volumineux (max: ${formatBytes(maxFileSize)})`;
     }
 
     // Vérifier le type
@@ -215,14 +216,6 @@ const FileUploaderLocal: React.FC<FileUploaderLocalProps> = ({
 
   const generateFileId = () => `upload_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
-  const formatFileSize = (bytes: number): string => {
-    if (bytes === 0) return '0 B';
-    const k = 1024;
-    const sizes = ['B', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
-  };
-
   const openFileDialog = () => {
     fileInputRef.current?.click();
   };
@@ -251,7 +244,7 @@ const FileUploaderLocal: React.FC<FileUploaderLocalProps> = ({
           </div>
           <div className="upload-info">
             <p>Types autorisés: {allowedTypes.join(', ')}</p>
-            <p>Taille max: {formatFileSize(maxFileSize)}</p>
+            <p>Taille max: {formatBytes(maxFileSize)}</p>
           </div>
         </div>
 

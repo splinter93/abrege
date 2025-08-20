@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/supabaseClient';
 import { FileItem, FileStatus } from '@/types/files';
 import { simpleLogger as logger } from '@/utils/logger';
+import { STORAGE_CONFIG, calculateUsagePercentage, getUsageAlertLevel } from '@/config/storage';
 
 // ========================================
 // TYPES LOCAUX
@@ -316,7 +317,7 @@ export function useFilesPage(): UseFilesPageResult {
         }
 
         const usedBytes = (filesData || []).reduce((sum, file) => sum + (file.size || 0), 0);
-        const quotaBytes = 1073741824; // 1GB par défaut
+        const quotaBytes = STORAGE_CONFIG.DEFAULT_QUOTA_BYTES; // Utilise la config centralisée
 
         setQuotaInfo({
           usedBytes,
@@ -325,10 +326,14 @@ export function useFilesPage(): UseFilesPageResult {
         });
       } else {
         // Utiliser les données de storage_usage
+        const usedBytes = storageData.used_bytes || 0;
+        const quotaBytes = storageData.quota_bytes || STORAGE_CONFIG.DEFAULT_QUOTA_BYTES;
+        const remainingBytes = quotaBytes - usedBytes;
+        
         setQuotaInfo({
-          usedBytes: storageData.used_bytes || 0,
-          quotaBytes: storageData.quota_bytes || 1073741824,
-          remainingBytes: (storageData.quota_bytes || 1073741824) - (storageData.used_bytes || 0)
+          usedBytes,
+          quotaBytes,
+          remainingBytes
         });
       }
 

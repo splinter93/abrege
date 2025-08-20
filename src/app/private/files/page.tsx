@@ -12,6 +12,7 @@ import FileUploaderLocal from "./FileUploaderLocal";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import AuthGuard from "@/components/AuthGuard";
 import { useSecureErrorHandler } from "@/components/SecureErrorHandler";
+import { STORAGE_CONFIG } from "@/config/storage";
 import "./index.css";
 import "./page.css"; // CSS critique pour éviter le flash
 
@@ -211,18 +212,8 @@ function FilesPageContent() {
                   <FileUploaderLocal
                     onUploadComplete={handleUploadComplete}
                     onUploadError={handleUploadError}
-                    maxFileSize={100 * 1024 * 1024} // 100MB
-                    allowedTypes={[
-                      'image/*',
-                      'application/pdf',
-                      'text/*',
-                      'application/msword',
-                      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-                      'application/vnd.ms-excel',
-                      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-                      'application/vnd.ms-powerpoint',
-                      'application/vnd.openxmlformats-officedocument.presentationml.presentation'
-                    ]}
+                    maxFileSize={STORAGE_CONFIG.FILE_LIMITS.MAX_FILE_SIZE} // Utilise la config centralisée
+                    allowedTypes={[...STORAGE_CONFIG.FILE_LIMITS.ALLOWED_MIME_TYPES]} // Copie mutable pour éviter l'erreur de type
                     multiple={true}
                   />
                 </div>
