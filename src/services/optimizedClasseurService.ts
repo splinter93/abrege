@@ -172,7 +172,7 @@ export class OptimizedClasseurService {
    */
   private async getDossiersForClasseur(classeurId: string) {
     const { data, error } = await supabase
-      .from('dossiers')
+      .from('folders')
       .select('id, name, position, parent_id, created_at, updated_at')
       .eq('notebook_id', classeurId)
       .order('position', { ascending: true });
