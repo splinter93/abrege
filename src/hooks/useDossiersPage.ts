@@ -43,23 +43,30 @@ export function useDossiersPage(userId: string) {
           
           logger.dev(`[useDossiersPage] ✅ Service optimisé: ${result.length} classeurs chargés en ${optimizedTime}ms`);
           
-          // Vérifier que les données sont bien dans le store
-          const store = useFileSystemStore.getState();
-          const storeClasseurs = store.classeurs;
-          const storeFolders = store.folders;
-          const storeNotes = store.notes;
-          
-          logger.dev(`[useDossiersPage] 📊 Vérification store:`, {
-            classeurs: Object.keys(storeClasseurs).length,
-            folders: Object.keys(storeFolders).length,
-            notes: Object.keys(storeNotes).length
+          // 🔍 DIAGNOSTIC DÉTAILLÉ DU STORE APRÈS OPTIMISATION
+          const storeAfterOptimized = useFileSystemStore.getState();
+          logger.dev(`[useDossiersPage] 🔍 Store APRÈS optimisation:`, {
+            classeurs: Object.keys(storeAfterOptimized.classeurs).length,
+            folders: Object.keys(storeAfterOptimized.folders).length,
+            notes: Object.keys(storeAfterOptimized.notes).length,
+            classeursIds: Object.keys(storeAfterOptimized.classeurs),
+            foldersIds: Object.keys(storeAfterOptimized.folders),
+            notesIds: Object.keys(storeAfterOptimized.notes)
           });
           
-          if (storeClasseurs && Object.keys(storeClasseurs).length > 0) {
+          // 🔍 Vérifier si les données sont bien dans le store
+          if (Object.keys(storeAfterOptimized.classeurs).length > 0) {
             logger.dev('[useDossiersPage] 🎯 Service optimisé fonctionne parfaitement !');
+            
+            // 🔍 Vérifier que les données sont bien dans le state local
+            logger.dev(`[useDossiersPage] 🔍 State local après optimisation:`, {
+              classeursLength: result.length,
+              resultClasseurs: result.map(c => ({ id: c.id, name: c.name, dossiers: c.dossiers.length, notes: c.notes.length }))
+            });
+            
             return; // Succès, on sort
           } else {
-            logger.warn('[useDossiersPage] ⚠️ Service optimisé retourne des données mais store vide');
+            logger.warn('[useDossiersPage] ⚠️ Service optimisé retourne des données mais store vide - PROBLÈME IDENTIFIÉ !');
           }
           
         } catch (optimizedError) {
@@ -85,16 +92,12 @@ export function useDossiersPage(userId: string) {
           
           logger.dev(`[useDossiersPage] ✅ Fallback réussi en ${fallbackTime}ms`);
           
-          // Vérifier que les données sont bien dans le store
-          const store = useFileSystemStore.getState();
-          const storeClasseurs = store.classeurs;
-          const storeFolders = store.folders;
-          const storeNotes = store.notes;
-          
+          // 🔍 Vérifier que les données sont bien dans le store
+          const storeAfterFallback = useFileSystemStore.getState();
           logger.dev(`[useDossiersPage] 📊 Vérification store après fallback:`, {
-            classeurs: Object.keys(storeClasseurs).length,
-            folders: Object.keys(storeFolders).length,
-            notes: Object.keys(storeNotes).length
+            classeurs: Object.keys(storeAfterFallback.classeurs).length,
+            folders: Object.keys(storeAfterFallback.folders).length,
+            notes: Object.keys(storeAfterFallback.notes).length
           });
           
         } catch (fallbackError) {
