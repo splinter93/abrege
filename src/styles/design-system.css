@@ -1,113 +1,205 @@
 /*
-  DESIGN SYSTEM - DARK & LIGHT MODE CENTRALIZED
-  --------------------------------------------------
-  Référence couleurs dark mode (éditeur) :
-    - Fond éditeur : #0b0b10 (modale), var(--surface-1) (#141414)
-    - Header éditeur : #141416
-    - Border header éditeur : #2a2a2c
-    - Texte principal : #f5f5f5
-    - Accent : #e55a2c (orange)
-  
-  NOTE : Toutes les variables de typographie sont maintenant dans typography.css
+  DESIGN SYSTEM - ARCHITECTURE PROFESSIONNELLE
+  ===========================================
+  Système de design centralisé avec architecture en couches
+  - Couche 1 : Couleurs de base
+  - Couche 2 : Sémantique des composants
+  - Couche 3 : Variables d'interface
 */
 
 :root {
-  /* LIGHT THEME (par défaut) */
+  /* ==========================================================================
+     COUCHE 1 : COULEURS DE BASE (LIGHT THEME)
+     ========================================================================== */
   
-  /* Font Sizes - Référence uniquement */
-  --font-size-xs: 0.75rem;
-  --font-size-sm: 0.875rem;
-  --font-size-base: 1rem;
-  --font-size-lg: 1.125rem;
-  --font-size-xl: 1.25rem;
-  --font-size-2xl: 1.5rem;
-  --font-size-3xl: 1.875rem;
-  --font-size-4xl: 2.25rem;
-
-  /* Colors - LIGHT */
-  --bg-main: #f7f7f9;
-  --bg-base: #ffffff;
-  --bg-surface: #f7f7f9;
-  --bg-elevated: #f0f0f4;
-  --bg-hover: rgba(0, 0, 0, 0.04);
-  --bg-surface-hover: #ececf0;
-  --bg-contrast: #141414;
-
-  /* Text Colors */
-  --text-1: #222226;
-  --text-2: #6b6b6b;
-  --text-3: #b0b0b7;
-  --text-primary: var(--text-1);
-  --text-secondary: var(--text-2);
-  --text-on-contrast: #ffffff;
-  --text-disabled: #cccccc;
-
-  /* Surface Colors */
-  --surface-0: var(--bg-main);
-  --surface-1: var(--bg-surface);
-  --surface-2: var(--bg-elevated);
-  --surface-3: #e5e5ea;
-  --surface-hover: var(--bg-hover);
-
-  /* Border Colors */
-  --border-subtle: #e0e0e0;
-  --border-strong: #cccccc;
-  --border-color: var(--border-subtle);
-
-  /* Accent Colors */
-  --accent-primary: #e55a2c;
-  --accent-primary-rgb: 229, 90, 44;
-  --accent-hover: #ff6b3d;
-  --accent-secondary: #3b82f6;
-  --accent-purple: #9b59b6;
-  --accent-subtle: rgba(229, 90, 44, 0.10);
-  --accent-primary-faded: rgba(229, 90, 44, 0.07);
-  --accent-text: #e55a2c;
-
-  /* Background Colors */
-  --background-hover: var(--bg-surface-hover);
-
-  /* Toast Colors */
-  --success: #10B981;
-  --error: #EF4444;
-  --info: #3B82F6;
-
-  /* Spacing */
-  --spacing-unit: 8px;
-  --spacing-xs: 4px;
-  --spacing-sm: 8px;
-  --spacing-md: 16px;
-  --spacing-lg: 24px;
-  --spacing-xl: 32px;
-  --spacing-xxl: 48px;
-  --main-content-padding: 2rem;
-  --card-padding: 1.5rem;
-
-  /* Border Radius */
-  --border-radius: 12px;
-  --border-radius-sm: 4px;
-  --border-radius-md: 8px;
-  --border-radius-lg: 12px;
-  --border-radius-xl: 16px;
-
+  /* Couleurs primaires */
+  --color-primary: #e55a2c;
+  --color-primary-rgb: 229, 90, 44;
+  --color-primary-light: #ff6b3d;
+  --color-primary-dark: #d44a1a;
+  
+  /* Couleurs secondaires */
+  --color-secondary: #3b82f6;
+  --color-secondary-rgb: 59, 130, 246;
+  --color-purple: #9b59b6;
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-error: #ef4444;
+  --color-info: #3b82f6;
+  
+  /* Couleurs neutres */
+  --color-white: #ffffff;
+  --color-black: #000000;
+  --color-gray-50: #f9fafb;
+  --color-gray-100: #f3f4f6;
+  --color-gray-200: #e5e7eb;
+  --color-gray-300: #d1d5db;
+  --color-gray-400: #9ca3af;
+  --color-gray-500: #6b7280;
+  --color-gray-600: #4b5563;
+  --color-gray-700: #374151;
+  --color-gray-800: #1f2937;
+  --color-gray-900: #111827;
+  
+  /* ==========================================================================
+     COUCHE 2 : SÉMANTIQUE DES COMPOSANTS (LIGHT THEME)
+     ========================================================================== */
+  
+  /* Surfaces */
+  --surface-primary: var(--color-white);
+  --surface-secondary: var(--color-gray-50);
+  --surface-tertiary: var(--color-gray-100);
+  --surface-elevated: var(--color-gray-100);
+  --surface-background: var(--color-gray-50);
+  --surface-hover: var(--color-gray-200);
+  
+  /* Textes */
+  --text-primary: var(--color-gray-900);
+  --text-secondary: var(--color-gray-600);
+  --text-tertiary: var(--color-gray-500);
+  --text-disabled: var(--color-gray-400);
+  --text-on-primary: var(--color-white);
+  --text-on-accent: var(--color-white);
+  
+  /* Bordures */
+  --border-subtle: var(--color-gray-200);
+  --border-medium: var(--color-gray-300);
+  --border-strong: var(--color-gray-400);
+  --border-accent: var(--color-primary);
+  
+  /* Accents */
+  --accent-primary: var(--color-primary);
+  --accent-primary-rgb: var(--color-primary-rgb);
+  --accent-hover: var(--color-primary-light);
+  --accent-subtle: rgba(229, 90, 44, 0.1);
+  --accent-faded: rgba(229, 90, 44, 0.07);
+  
+  /* ==========================================================================
+     COUCHE 3 : VARIABLES D'INTERFACE (LIGHT THEME)
+     ========================================================================== */
+  
+  /* Typographie */
+  --font-family-base: 'Noto Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+  --font-family-mono: 'JetBrains Mono', 'Fira Code', 'SFMono-Regular', 'Menlo', 'Consolas', monospace;
+  
+  /* Tailles de police */
+  --font-size-xs: 0.75rem;    /* 12px */
+  --font-size-sm: 0.875rem;   /* 14px */
+  --font-size-base: 1rem;     /* 16px */
+  --font-size-lg: 1.125rem;   /* 18px */
+  --font-size-xl: 1.25rem;    /* 20px */
+  --font-size-2xl: 1.5rem;    /* 24px */
+  --font-size-3xl: 1.875rem;  /* 30px */
+  --font-size-4xl: 2.25rem;   /* 36px */
+  
+  /* Line heights */
+  --line-height-tight: 1.25;
+  --line-height-normal: 1.5;
+  --line-height-relaxed: 1.75;
+  
+  /* Espacements */
+  --spacing-xs: 0.25rem;      /* 4px */
+  --spacing-sm: 0.5rem;       /* 8px */
+  --spacing-md: 1rem;         /* 16px */
+  --spacing-lg: 1.5rem;       /* 24px */
+  --spacing-xl: 2rem;         /* 32px */
+  --spacing-2xl: 3rem;        /* 48px */
+  
+  /* Border radius */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-2xl: 24px;
+  
   /* Transitions */
-  --transition-speed: 0s;
+  --transition-fast: 0.15s ease;
+  --transition-normal: 0.2s ease;
+  --transition-slow: 0.3s ease;
   
-  /* Variables manquantes pour les composants de dossiers */
-  --font-main: var(--editor-font-family);
+  /* Ombres */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+  --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.15);
+  
+  /* Z-index */
+  --z-dropdown: 1000;
+  --z-sidebar: 1001;
+  --z-modal: 1002;
+  --z-overlay: 999;
+  
+  /* ==========================================================================
+     COMPATIBILITÉ - ANCIENNES VARIABLES (À SUPPRIMER PROGRESSIVEMENT)
+     ========================================================================== */
+  
+  /* Variables legacy pour compatibilité */
+  --bg-main: var(--surface-background);
+  --bg-base: var(--surface-primary);
+  --bg-surface: var(--surface-secondary);
+  --bg-elevated: var(--surface-elevated);
+  --bg-hover: var(--surface-hover);
+  --bg-surface-hover: var(--surface-hover);
+  --bg-contrast: var(--color-black);
+  
+  --text-1: var(--text-primary);
+  --text-2: var(--text-secondary);
+  --text-3: var(--text-tertiary);
+  --text-on-contrast: var(--text-on-primary);
+  
+  --surface-0: var(--surface-background);
+  --surface-1: var(--surface-primary);
+  --surface-2: var(--surface-secondary);
+  --surface-3: var(--surface-tertiary);
+  
+  --border-color: var(--border-subtle);
+  --border-strong: var(--border-medium);
+  
+  --accent-primary: var(--color-primary);
+  --accent-primary-rgb: var(--color-primary-rgb);
+  --accent-hover: var(--color-primary-light);
+  --accent-secondary: var(--color-secondary);
+  --accent-purple: var(--color-purple);
+  --accent-subtle: rgba(229, 90, 44, 0.1);
+  --accent-primary-faded: rgba(229, 90, 44, 0.07);
+  --accent-text: var(--color-primary);
+  
+  --background-hover: var(--surface-hover);
+  
+  --success: var(--color-success);
+  --error: var(--color-error);
+  --info: var(--color-info);
+  
+  --spacing-unit: var(--spacing-sm);
+  --main-content-padding: var(--spacing-xl);
+  --card-padding: var(--spacing-lg);
+  
+  --border-radius: var(--radius-lg);
+  --border-radius-sm: var(--radius-sm);
+  --border-radius-md: var(--radius-md);
+  --border-radius-lg: var(--radius-lg);
+  --border-radius-xl: var(--radius-xl);
+  
+  --transition-speed: var(--transition-normal);
+  
   --surface-error: rgba(239, 68, 68, 0.1);
-  --text-error: var(--error);
+  --text-error: var(--color-error);
   --surface-2-rgb: 240, 240, 244;
   
-  /* Variables de taille de police pour l'UI */
-  --ui-font-size-xs: 0.75rem;
-  --ui-font-size-sm: 0.875rem;
-  --ui-font-size-md: 1rem;
-  --ui-font-size-lg: 1.125rem;
-  --ui-font-size-xl: 1.25rem;
-  --ui-font-size-2xl: 1.5rem;
-
-  /* Variables Glassmorphism pour les composants de dossiers */
+  --surface-primary: var(--surface-primary);
+  --surface-secondary: var(--surface-secondary);
+  --surface-background: var(--surface-background);
+  --text-primary: var(--text-primary);
+  --text-secondary: var(--text-secondary);
+  --text-tertiary: var(--text-tertiary);
+  
+  --ui-font-size-xs: var(--font-size-xs);
+  --ui-font-size-sm: var(--font-size-sm);
+  --ui-font-size-md: var(--font-size-base);
+  --ui-font-size-lg: var(--font-size-lg);
+  --ui-font-size-xl: var(--font-size-xl);
+  --ui-font-size-2xl: var(--font-size-2xl);
+  
   --glass-bg-light: rgba(255, 255, 255, 0.05);
   --glass-bg-medium: rgba(255, 255, 255, 0.1);
   --glass-bg-heavy: rgba(255, 255, 255, 0.15);
@@ -119,66 +211,104 @@
   --glass-border-heavy: rgba(255, 255, 255, 0.2);
   --glass-border-accent: rgba(229, 90, 44, 0.3);
   --glass-border-accent-hover: rgba(229, 90, 44, 0.5);
+  
+  --font-main: var(--font-family-base);
+  --editor-font-family: var(--font-family-base);
 }
 
+/* ==========================================================================
+   THÈME SOMBRE
+   ========================================================================== */
 .dark {
-  /* DARK THEME */
-  --bg-main: #141414;
-  --bg-base: #141414;
-  --bg-surface: #141414;
-  --bg-elevated: #1c1c1c;
-  --bg-hover: rgba(255, 255, 255, 0.08);
-  --bg-surface-hover: #212121;
-  --bg-contrast: #ffffff;
-
-  --text-1: #f5f5f5;
-  --text-2: #a3a3a3;
-  --text-3: #737373;
-  --text-primary: var(--text-1);
-  --text-secondary: var(--text-2);
-  --text-on-contrast: #121212;
+  /* Couleurs de base (dark theme) */
+  --color-primary: #e55a2c;
+  --color-primary-rgb: 229, 90, 44;
+  --color-primary-light: #ff6b3d;
+  --color-primary-dark: #d44a1a;
+  
+  /* Surfaces (dark theme) */
+  --surface-primary: #141414;
+  --surface-secondary: #1c1c1c;
+  --surface-tertiary: #212121;
+  --surface-elevated: #1c1c1c;
+  --surface-background: #141414;
+  --surface-hover: #212121;
+  
+  /* Textes (dark theme) */
+  --text-primary: #f5f5f5;
+  --text-secondary: #a3a3a3;
+  --text-tertiary: #737373;
   --text-disabled: #666666;
-
-  --surface-0: var(--bg-main);
-  --surface-1: var(--bg-surface);
-  --surface-2: var(--bg-elevated);
-  --surface-3: #1f1f21;
-  --surface-hover: var(--bg-hover);
-
+  --text-on-primary: #121212;
+  --text-on-accent: #ffffff;
+  
+  /* Bordures (dark theme) */
   --border-subtle: #2a2a2c;
-  --border-strong: #3a3a3c;
-  --border-color: var(--border-subtle);
-
+  --border-medium: #3a3a3c;
+  --border-strong: #4a4a4c;
+  --border-accent: #e55a2c;
+  
+  /* Accents (dark theme) */
   --accent-primary: #e55a2c;
   --accent-primary-rgb: 229, 90, 44;
   --accent-hover: #ff6b3d;
-  --accent-secondary: #3b82f6;
-  --accent-purple: #9b59b6;
+  --accent-subtle: rgba(229, 90, 44, 0.15);
+  --accent-faded: rgba(229, 90, 44, 0.1);
+  
+  /* Variables legacy pour compatibilité (dark theme) */
+  --bg-main: var(--surface-background);
+  --bg-base: var(--surface-primary);
+  --bg-surface: var(--surface-primary);
+  --bg-elevated: var(--surface-secondary);
+  --bg-hover: var(--surface-hover);
+  --bg-surface-hover: var(--surface-hover);
+  --bg-contrast: var(--color-white);
+  
+  --text-1: var(--text-primary);
+  --text-2: var(--text-secondary);
+  --text-3: var(--text-tertiary);
+  --text-on-contrast: var(--text-on-primary);
+  
+  --surface-0: var(--surface-background);
+  --surface-1: var(--surface-primary);
+  --surface-2: var(--surface-secondary);
+  --surface-3: var(--surface-tertiary);
+  
+  --border-color: var(--border-subtle);
+  --border-strong: var(--border-medium);
+  
+  --accent-primary: var(--color-primary);
+  --accent-primary-rgb: var(--color-primary-rgb);
+  --accent-hover: var(--color-primary-light);
+  --accent-secondary: var(--color-secondary);
+  --accent-purple: var(--color-purple);
   --accent-subtle: rgba(229, 90, 44, 0.15);
   --accent-primary-faded: rgba(229, 90, 44, 0.1);
-  --accent-text: #e55a2c;
-
-  --background-hover: var(--bg-surface-hover);
-
-  --success: #10B981;
-  --error: #EF4444;
-  --info: #3B82F6;
-
-  --transition-speed: 0s;
+  --accent-text: var(--color-primary);
   
-  /* Variables manquantes pour les composants de dossiers (dark mode) */
+  --background-hover: var(--surface-hover);
+  
+  --success: var(--color-success);
+  --error: var(--color-error);
+  --info: var(--color-info);
+  
   --surface-error: rgba(239, 68, 68, 0.15);
   --surface-2-rgb: 28, 28, 28;
   
-  /* Variables de taille de police pour l'UI (dark mode) */
-  --ui-font-size-xs: 0.75rem;
-  --ui-font-size-sm: 0.875rem;
-  --ui-font-size-md: 1rem;
-  --ui-font-size-lg: 1.125rem;
-  --ui-font-size-xl: 1.25rem;
-  --ui-font-size-2xl: 1.5rem;
-
-  /* Variables Glassmorphism pour les composants de dossiers (dark mode) */
+  --surface-primary: var(--surface-primary);
+  --surface-secondary: var(--surface-secondary);
+  --surface-background: var(--surface-background);
+  --text-primary: var(--text-primary);
+  --text-secondary: var(--text-secondary);
+  --text-tertiary: var(--text-tertiary);
+  
+  --ui-font-size-xs: var(--font-size-xs);
+  --ui-font-size-sm: var(--font-size-sm);
+  --ui-font-size-md: var(--font-size-base);
+  --ui-font-size-lg: var(--font-size-lg);
+  --ui-font-size-xl: var(--font-size-xl);
+  --ui-font-size-2xl: var(--font-size-2xl);
+  
   --glass-bg-light: rgba(255, 255, 255, 0.05);
   --glass-bg-medium: rgba(255, 255, 255, 0.1);
   --glass-bg-heavy: rgba(255, 255, 255, 0.15);
@@ -190,15 +320,20 @@
   --glass-border-heavy: rgba(255, 255, 255, 0.2);
   --glass-border-accent: rgba(229, 90, 44, 0.3);
   --glass-border-accent-hover: rgba(229, 90, 44, 0.5);
+  
+  --font-main: var(--font-family-base);
+  --editor-font-family: var(--font-family-base);
 }
 
-/* Utilisation : ajouter la classe .dark sur <html> ou <body> pour activer le dark mode */
+/* ==========================================================================
+   CLASSES UTILITAIRES
+   ========================================================================== */
 
 .app-layout {
   display: flex;
   min-height: 100vh;
   width: 100vw;
-  background: var(--bg-main);
+  background: var(--surface-background);
 }
 
 .app-main-content {
@@ -207,7 +342,7 @@
   flex-direction: column;
   min-width: 0;
   min-height: 100vh;
-  background: var(--bg-main);
+  background: var(--surface-background);
 }
 
 .active-flash {

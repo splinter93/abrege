@@ -13,6 +13,7 @@ import ErrorBoundary from "@/components/ErrorBoundary";
 import AuthGuard from "@/components/AuthGuard";
 import { useSecureErrorHandler } from "@/components/SecureErrorHandler";
 import "./index.css";
+import "./page.css"; // CSS critique pour éviter le flash
 
 export default function FilesPage() {
   return (

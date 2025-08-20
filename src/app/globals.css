@@ -2,8 +2,15 @@
 @import '../styles/chat-design-system-v2.css';
 
 :root {
-  --background: var(--bg-main);
-  --foreground: var(--text-1);
+  /* FALLBACKS - Éviter le flash blanc */
+  --background: #141414;
+  --foreground: #f5f5f5;
+}
+
+/* Réassigner après chargement complet */
+:root {
+  --background: var(--bg-main, #141414);
+  --foreground: var(--text-1, #f5f5f5);
 }
 
 @theme inline {
@@ -15,15 +22,15 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: var(--bg-main);
-    --foreground: var(--text-1);
+    --background: var(--bg-main, #141414);
+    --foreground: var(--text-1, #f5f5f5);
   }
 }
 
 body {
-  background: var(--bg-main) !important;
-  color: var(--text-1);
-  font-family: var(--font-main);
+  background: var(--bg-main, #141414) !important;
+  color: var(--text-1, #f5f5f5);
+  font-family: var(--font-main, 'Noto Sans', sans-serif);
   margin: 0;
   padding: 0;
   min-height: 100vh;

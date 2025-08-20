@@ -69,6 +69,9 @@
   --font-system: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
   --font-monospace: 'JetBrains Mono', 'Noto Sans Mono', 'Fira Code', 'SFMono-Regular', 'Menlo', 'Consolas', 'Monaco', 'Liberation Mono', monospace;
 
+  /* FALLBACK GLOBAL FONT - Éviter les undefined */
+  --font-main: var(--editor-font-family, 'Noto Sans', sans-serif);
+
   /* ==========================================================================
      TAILLES HARMONISÉES - PREMIUM EDITOR
      ========================================================================== */

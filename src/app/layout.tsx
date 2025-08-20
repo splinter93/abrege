@@ -2,13 +2,14 @@ import type { Metadata } from "next";
 // import type { ReactNode } from "react";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Noto_Sans } from "next/font/google";
-import "./globals.css";
-// import Sidebar from '../components/Sidebar';
+// Ordre critique : variables de base en premier
 import "../styles/design-system.css";
+import "../styles/themes.css";
+import "../styles/typography.css";
+import "./globals.css";
 import "../styles/markdown.css";
 import "../styles/chat-design-system-v2.css";
 import "../styles/editor.css";
-import "../styles/typography.css";
 import "../components/editor/editor-header.css";
 import "../components/editor/editor-title.css";
 import "../components/editor/editor-content.css";
@@ -47,7 +48,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en" className="dark theme-dark">
       <head>
         <link rel="icon" href="/feather.svg" type="image/svg+xml" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -62,6 +63,17 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&display=swap" />
         <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&display=swap" />
         <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&display=swap" />
+        <style dangerouslySetInnerHTML={{ __html: `
+          /* CRITICAL CSS - Éviter le flash de couleur */
+          html, body { 
+            background: #141414 !important; 
+            color: #f5f5f5 !important; 
+            font-family: 'Noto Sans', sans-serif !important;
+            margin: 0;
+            padding: 0;
+          }
+          * { box-sizing: border-box; }
+        ` }} />
       </head>
       <body className={`${notoSans.className} ${geistSans.variable} ${geistMono.variable} app-container`}>
         <LanguageProvider>

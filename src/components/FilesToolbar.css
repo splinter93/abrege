@@ -1,170 +1,215 @@
-/* FilesToolbar.css - Styles pour la barre d'outils des fichiers */
+/* ==========================================================================
+   FILES TOOLBAR - MÊME STYLE QUE LES CLASSEURS
+   ==========================================================================
+   Utilise exactement le même style que la page des classeurs
+   pour une cohérence parfaite
+*/
+
+/* ==========================================================================
+   TOOLBAR PRINCIPALE
+   ========================================================================== */
 
 .files-toolbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 24px;
-  background: var(--surface-primary);
-  border-bottom: 1px solid var(--border-subtle);
-  gap: 16px;
+  padding: var(--spacing-md) var(--spacing-lg);
+  background: var(--files-surface);
+  border: 1px solid var(--files-border);
+  border-radius: var(--files-radius);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: var(--files-shadow);
+  gap: var(--spacing-md);
   min-height: 72px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
-/* Section gauche - Actions principales */
+/* ==========================================================================
+   SECTION GAUCHE - ACTIONS PRINCIPALES
+   ========================================================================== */
+
 .toolbar-left {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--spacing-md);
 }
 
-/* Section centrale - Recherche */
+/* ==========================================================================
+   SECTION CENTRALE - RECHERCHE
+   ========================================================================== */
+
 .toolbar-center {
   flex: 1;
   max-width: 400px;
-  margin: 0 16px;
+  margin: 0 var(--spacing-md);
 }
 
 .search-container {
   position: relative;
   display: flex;
   align-items: center;
-  background: var(--surface-secondary);
-  border: 1px solid var(--border-subtle);
-  border-radius: 8px;
-  padding: 8px 12px;
-  transition: all 0.2s ease;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--files-border);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-sm) var(--spacing-md);
+  transition: all var(--transition-normal);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
 .search-container.focused {
-  border-color: var(--accent-primary);
-  box-shadow: 0 0 0 2px rgba(var(--accent-primary-rgb), 0.1);
+  border-color: var(--files-primary);
+  box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.2);
 }
 
 .search-icon {
-  font-size: 1rem;
-  color: var(--text-secondary);
-  margin-right: 8px;
+  font-size: var(--font-size-base);
+  color: var(--files-text-secondary);
+  margin-right: var(--spacing-sm);
 }
 
 .search-input {
   flex: 1;
   border: none;
   background: transparent;
-  font-size: 0.9rem;
-  color: var(--text-primary);
+  font-size: var(--font-size-sm);
+  color: var(--files-text-primary);
   outline: none;
+  font-family: 'Noto Sans', sans-serif;
 }
 
 .search-input::placeholder {
-  color: var(--text-secondary);
+  color: var(--files-text-secondary);
 }
 
 .search-clear {
   background: none;
   border: none;
-  color: var(--text-secondary);
+  color: var(--files-text-secondary);
   cursor: pointer;
-  padding: 4px;
-  border-radius: 4px;
-  font-size: 0.8rem;
-  transition: all 0.2s ease;
+  padding: var(--spacing-xs);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-xs);
+  transition: all var(--transition-normal);
 }
 
 .search-clear:hover {
-  background: var(--surface-hover);
-  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--files-text-primary);
 }
 
-/* Section droite - Actions et vue */
+/* ==========================================================================
+   SECTION DROITE - ACTIONS ET VUE
+   ========================================================================== */
+
 .toolbar-right {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: var(--spacing-md);
 }
 
 /* Actions sur sélection */
 .selection-actions {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 8px 12px;
-  background: var(--surface-secondary);
-  border-radius: 8px;
-  border: 1px solid var(--accent-primary);
+  gap: var(--spacing-md);
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--files-primary-light);
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(249, 115, 22, 0.3);
 }
 
 .selection-count {
-  font-size: 0.8rem;
-  color: var(--text-secondary);
+  font-size: var(--font-size-xs);
+  color: var(--files-text-secondary);
   font-weight: 500;
+  font-family: 'Noto Sans', sans-serif;
 }
 
-/* Boutons génériques */
+/* ==========================================================================
+   BOUTONS GÉNÉRIQUES
+   ========================================================================== */
+
 .toolbar-btn {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 8px 12px;
-  border: 1px solid var(--border-subtle);
-  border-radius: 6px;
-  background: var(--surface-primary);
-  color: var(--text-primary);
-  font-size: 0.9rem;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-sm) var(--spacing-md);
+  border: 1px solid var(--files-border);
+  border-radius: var(--radius-sm);
+  background: var(--files-surface);
+  color: var(--files-text-primary);
+  font-size: var(--font-size-sm);
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-normal);
   white-space: nowrap;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  font-family: 'Noto Sans', sans-serif;
 }
 
 .toolbar-btn:hover {
-  border-color: var(--accent-primary);
-  background: var(--surface-hover);
+  border-color: var(--files-primary);
+  background: rgba(255, 255, 255, 0.05);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
 }
 
 .toolbar-btn.primary {
-  background: var(--accent-primary);
-  color: white;
-  border-color: var(--accent-primary);
+  background: var(--files-primary-light);
+  color: var(--files-primary);
+  border-color: rgba(249, 115, 22, 0.3);
 }
 
 .toolbar-btn.primary:hover {
-  background: var(--accent-hover);
-  border-color: var(--accent-hover);
+  background: rgba(249, 115, 22, 0.2);
+  border-color: rgba(249, 115, 22, 0.5);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(249, 115, 22, 0.2);
 }
 
 .toolbar-btn.secondary {
-  background: var(--surface-secondary);
-  color: var(--text-primary);
+  background: var(--files-surface);
+  color: var(--files-text-primary);
 }
 
 .toolbar-btn.danger {
-  background: var(--danger-primary);
-  color: white;
-  border-color: var(--danger-primary);
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  border-color: rgba(239, 68, 68, 0.3);
 }
 
 .toolbar-btn.danger:hover {
-  background: var(--danger-hover);
-  border-color: var(--danger-hover);
+  background: rgba(239, 68, 68, 0.2);
+  border-color: rgba(239, 68, 68, 0.5);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 20px rgba(239, 68, 68, 0.2);
 }
 
 .btn-icon {
-  font-size: 1rem;
+  font-size: var(--font-size-base);
 }
 
 .btn-text {
-  font-size: 0.9rem;
+  font-size: var(--font-size-sm);
 }
 
-/* Boutons de vue */
+/* ==========================================================================
+   BOUTONS DE VUE
+   ========================================================================== */
+
 .view-toggle {
   display: flex;
   align-items: center;
-  background: var(--surface-secondary);
-  border: 1px solid var(--border-subtle);
-  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--files-border);
+  border-radius: var(--radius-sm);
   padding: 2px;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
 .view-btn {
@@ -175,33 +220,37 @@
   height: 32px;
   border: none;
   background: transparent;
-  color: var(--text-secondary);
+  color: var(--files-text-secondary);
   cursor: pointer;
-  border-radius: 4px;
-  transition: all 0.2s ease;
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-normal);
 }
 
 .view-btn:hover {
-  background: var(--surface-hover);
-  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--files-text-primary);
 }
 
 .view-btn.active {
-  background: var(--accent-primary);
-  color: white;
+  background: var(--files-primary-light);
+  color: var(--files-primary);
 }
 
 .view-icon {
-  font-size: 1rem;
+  font-size: var(--font-size-base);
   font-weight: bold;
 }
 
-/* Responsive */
+/* ==========================================================================
+   RESPONSIVE
+   ========================================================================== */
+
 @media (max-width: 768px) {
   .files-toolbar {
     flex-direction: column;
-    gap: 12px;
-    padding: 12px 16px;
+    gap: var(--spacing-md);
+    padding: var(--spacing-md);
+    margin: var(--spacing-md);
   }
 
   .toolbar-left,
@@ -225,21 +274,22 @@
   }
 
   .toolbar-btn {
-    padding: 8px;
+    padding: var(--spacing-sm);
   }
 }
 
 @media (max-width: 480px) {
   .files-toolbar {
-    padding: 8px 12px;
+    padding: var(--spacing-sm) var(--spacing-md);
+    margin: var(--spacing-sm);
   }
 
   .toolbar-left {
-    gap: 8px;
+    gap: var(--spacing-sm);
   }
 
   .toolbar-btn {
-    padding: 6px 8px;
-    font-size: 0.8rem;
+    padding: var(--spacing-xs) var(--spacing-sm);
+    font-size: var(--font-size-xs);
   }
 } 

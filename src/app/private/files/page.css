@@ -1,5 +1,5 @@
 /* ==========================================================================
-   FILES PAGE - MÊME STYLE QUE LES CLASSEURS
+   PAGE FILES - MÊME STYLE QUE LES CLASSEURS
    ==========================================================================
    Utilise exactement le même background et les mêmes couleurs
    que la page des classeurs pour une cohérence parfaite
@@ -19,6 +19,17 @@
   --files-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
   --files-radius: 16px;
   --files-spacing: 24px;
+  
+  /* Variables spécifiques à la page files */
+  --files-spacing-header: var(--spacing-lg);
+  --files-spacing-section: var(--spacing-xl);
+  --files-spacing-content: var(--spacing-lg);
+  --files-spacing-item: var(--spacing-md);
+  
+  /* Z-index spécifiques */
+  --files-z-header: 1001;
+  --files-z-sidebar: 1000;
+  --files-z-content: 999;
 }
 
 /* ==========================================================================
@@ -67,8 +78,8 @@
   border-bottom: 1px solid var(--files-border);
   display: flex;
   align-items: center;
-  padding: 0 var(--spacing-lg);
-  z-index: 100;
+  padding: 0 var(--files-spacing-header);
+  z-index: var(--files-z-header);
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
   position: relative;
 }
@@ -91,7 +102,7 @@
   -webkit-backdrop-filter: none;
   border-right: none;
   overflow-y: auto;
-  z-index: 50;
+  z-index: var(--files-z-sidebar);
   position: relative;
   padding: 0;
 }
@@ -106,13 +117,14 @@
   overflow-y: auto;
   display: flex;
   flex-direction: column;
+  z-index: var(--files-z-content);
   position: relative;
   padding: 0;
   margin: 0;
 }
 
 /* ==========================================================================
-   SECTION FICHIERS - STYLE CLASSEURS
+   SECTIONS - STYLE CLASSEURS
    ========================================================================== */
 
 .files-section {
@@ -122,8 +134,8 @@
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   box-shadow: var(--files-shadow);
-  padding: var(--spacing-xl);
-  margin: var(--spacing-xl);
+  padding: var(--files-spacing-section);
+  margin: var(--files-spacing-section);
   position: relative;
 }
 
@@ -173,7 +185,7 @@
 }
 
 /* ==========================================================================
-   SECTION CONTENU
+   SECTION DE CONTENU
    ========================================================================== */
 
 .files-content-section {
@@ -181,8 +193,8 @@
   display: flex;
   flex-direction: column;
   min-height: 0;
-  padding: 0 var(--spacing-xl);
-  margin-bottom: var(--spacing-xl);
+  padding: 0 var(--files-spacing-section);
+  margin-bottom: var(--files-spacing-section);
 }
 
 .files-content {
@@ -198,7 +210,7 @@
    ========================================================================== */
 
 .uploader-section {
-  padding: var(--spacing-lg);
+  padding: var(--files-spacing-content);
   background: var(--files-surface);
   border: 1px solid var(--files-border);
   border-radius: var(--files-radius);
@@ -219,7 +231,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: var(--spacing-2xl) var(--spacing-lg);
+  padding: var(--spacing-2xl) var(--files-spacing-content);
   text-align: center;
   background: var(--files-surface);
   border: 1px solid var(--files-border);

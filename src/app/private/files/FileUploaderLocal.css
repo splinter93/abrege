@@ -1,6 +1,13 @@
-/* ========================================
-   FILE UPLOADER LOCAL - STYLES MODERNES
-   ======================================== */
+/* ==========================================================================
+   FILE UPLOADER LOCAL - MÊME STYLE QUE LES CLASSEURS
+   ==========================================================================
+   Utilise exactement le même style que la page des classeurs
+   pour une cohérence parfaite
+*/
+
+/* ==========================================================================
+   CONTAINER PRINCIPAL
+   ========================================================================== */
 
 .file-uploader {
   width: 100%;
@@ -8,30 +15,34 @@
   margin: 0 auto;
 }
 
-/* ========================================
+/* ==========================================================================
    ZONE DE DRAG & DROP
-   ======================================== */
+   ========================================================================== */
 
 .upload-zone {
-  border: 2px dashed var(--border-subtle, #e1e5e9);
-  border-radius: 12px;
-  padding: 40px 20px;
+  border: 2px dashed var(--files-border);
+  border-radius: var(--files-radius);
+  padding: var(--spacing-2xl) var(--spacing-lg);
   text-align: center;
   cursor: pointer;
-  transition: all 0.2s ease;
-  background: var(--surface-primary, #ffffff);
+  transition: all var(--transition-normal);
+  background: var(--files-surface);
   position: relative;
   overflow: hidden;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: var(--files-shadow);
 }
 
 .upload-zone:hover {
-  border-color: var(--accent-primary, #007bff);
-  background: var(--surface-secondary, #f8f9fa);
+  border-color: var(--files-primary);
+  background: rgba(255, 255, 255, 0.05);
+  transform: scale(1.02);
 }
 
 .upload-zone.drag-over {
-  border-color: var(--accent-primary, #007bff);
-  background: var(--accent-hover, #e3f2fd);
+  border-color: var(--files-primary);
+  background: var(--files-primary-light);
   transform: scale(1.02);
 }
 
@@ -39,69 +50,81 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 16px;
+  gap: var(--spacing-md);
 }
 
 .upload-icon {
-  font-size: 3rem;
+  font-size: var(--font-size-3xl);
   opacity: 0.7;
+  color: var(--files-text-secondary);
 }
 
 .upload-text h3 {
   margin: 0;
-  font-size: 1.25rem;
+  font-size: var(--font-size-lg);
   font-weight: 600;
-  color: var(--text-primary, #212529);
+  color: var(--files-text-primary);
+  font-family: 'Noto Sans', sans-serif;
 }
 
 .upload-text p {
-  margin: 4px 0 0 0;
-  font-size: 0.9rem;
-  color: var(--text-secondary, #6c757d);
+  margin: var(--spacing-xs) 0 0 0;
+  font-size: var(--font-size-sm);
+  color: var(--files-text-secondary);
+  font-family: 'Noto Sans', sans-serif;
 }
 
 .upload-info {
-  margin-top: 8px;
-  padding: 12px 16px;
-  background: var(--surface-secondary, #f8f9fa);
-  border-radius: 8px;
-  font-size: 0.8rem;
-  color: var(--text-secondary, #6c757d);
+  margin-top: var(--spacing-sm);
+  padding: var(--spacing-md);
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-xs);
+  color: var(--files-text-secondary);
+  border: 1px solid var(--files-border);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
 .upload-info p {
-  margin: 4px 0;
+  margin: var(--spacing-xs) 0;
 }
 
-/* ========================================
+/* ==========================================================================
    LISTE DES UPLOADS
-   ======================================== */
+   ========================================================================== */
 
 .uploads-list {
-  margin-top: 24px;
-  padding: 20px;
-  background: var(--surface-primary, #ffffff);
-  border-radius: 12px;
-  border: 1px solid var(--border-subtle, #e1e5e9);
+  margin-top: var(--spacing-lg);
+  padding: var(--spacing-lg);
+  background: var(--files-surface);
+  border-radius: var(--files-radius);
+  border: 1px solid var(--files-border);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: var(--files-shadow);
 }
 
 .uploads-list h4 {
-  margin: 0 0 16px 0;
-  font-size: 1rem;
+  margin: 0 0 var(--spacing-md) 0;
+  font-size: var(--font-size-base);
   font-weight: 600;
-  color: var(--text-primary, #212529);
+  color: var(--files-text-primary);
+  font-family: 'Noto Sans', sans-serif;
 }
 
 .upload-item {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  padding: 16px;
-  margin-bottom: 12px;
-  border-radius: 8px;
-  border: 1px solid var(--border-subtle, #e1e5e9);
-  background: var(--surface-secondary, #f8f9fa);
-  transition: all 0.2s ease;
+  gap: var(--spacing-md);
+  padding: var(--spacing-md);
+  margin-bottom: var(--spacing-md);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--files-border);
+  background: rgba(255, 255, 255, 0.05);
+  transition: all var(--transition-normal);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
 .upload-item:last-child {
@@ -109,13 +132,13 @@
 }
 
 .upload-item.complete {
-  border-color: var(--success, #28a745);
-  background: var(--success-bg, #d4edda);
+  border-color: #10b981;
+  background: rgba(16, 185, 129, 0.1);
 }
 
 .upload-item.error {
-  border-color: var(--error, #dc3545);
-  background: var(--error-bg, #f8d7da);
+  border-color: #ef4444;
+  background: rgba(239, 68, 68, 0.1);
 }
 
 .upload-item-info {
@@ -126,101 +149,105 @@
 
 .upload-item-name {
   font-weight: 500;
-  color: var(--text-primary, #212529);
+  color: var(--files-text-primary);
   flex: 1;
+  font-family: 'Noto Sans', sans-serif;
 }
 
 .upload-item-status {
-  font-size: 0.9rem;
-  color: var(--text-secondary, #6c757d);
+  font-size: var(--font-size-sm);
+  color: var(--files-text-secondary);
   white-space: nowrap;
+  font-family: 'Noto Sans', sans-serif;
 }
 
-/* ========================================
+/* ==========================================================================
    BARRE DE PROGRESSION
-   ======================================== */
+   ========================================================================== */
 
 .upload-progress {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--spacing-md);
 }
 
 .progress-bar {
   flex: 1;
   height: 8px;
-  background: var(--border-subtle, #e1e5e9);
-  border-radius: 4px;
+  background: var(--files-border);
+  border-radius: var(--radius-sm);
   overflow: hidden;
 }
 
 .progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, var(--accent-primary, #007bff), var(--accent-hover, #0056b3));
-  border-radius: 4px;
-  transition: width 0.3s ease;
+  background: linear-gradient(90deg, var(--files-primary), #ff6b3d);
+  border-radius: var(--radius-sm);
+  transition: width var(--transition-slow);
 }
 
 .progress-text {
-  font-size: 0.8rem;
+  font-size: var(--font-size-xs);
   font-weight: 500;
-  color: var(--text-secondary, #6c757d);
+  color: var(--files-text-secondary);
   min-width: 40px;
   text-align: right;
+  font-family: 'Noto Sans', sans-serif;
 }
 
-/* ========================================
+/* ==========================================================================
    MESSAGES D'ERREUR
-   ======================================== */
+   ========================================================================== */
 
 .upload-error {
-  padding: 8px 12px;
-  background: var(--error-bg, #f8d7da);
-  border: 1px solid var(--error, #dc3545);
-  border-radius: 6px;
-  color: var(--error, #dc3545);
-  font-size: 0.85rem;
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: var(--radius-sm);
+  color: #ef4444;
+  font-size: var(--font-size-sm);
   font-weight: 500;
+  font-family: 'Noto Sans', sans-serif;
 }
 
-/* ========================================
+/* ==========================================================================
    RESPONSIVE DESIGN
-   ======================================== */
+   ========================================================================== */
 
 @media (max-width: 768px) {
   .upload-zone {
-    padding: 30px 16px;
+    padding: var(--spacing-xl) var(--spacing-md);
   }
   
   .upload-icon {
-    font-size: 2.5rem;
+    font-size: var(--font-size-2xl);
   }
   
   .upload-text h3 {
-    font-size: 1.1rem;
+    font-size: var(--font-size-lg);
   }
   
   .upload-text p {
-    font-size: 0.85rem;
+    font-size: var(--font-size-sm);
   }
   
   .upload-info {
-    font-size: 0.75rem;
-    padding: 10px 12px;
+    font-size: var(--font-size-xs);
+    padding: var(--spacing-sm);
   }
   
   .uploads-list {
-    padding: 16px;
+    padding: var(--spacing-md);
   }
   
   .upload-item {
-    padding: 12px;
+    padding: var(--spacing-md);
   }
   
   .upload-item-info {
     flex-direction: column;
     align-items: flex-start;
-    gap: 8px;
+    gap: var(--spacing-sm);
   }
   
   .upload-item-status {
@@ -230,40 +257,40 @@
 
 @media (max-width: 480px) {
   .upload-zone {
-    padding: 24px 12px;
+    padding: var(--spacing-lg) var(--spacing-md);
   }
   
   .upload-icon {
-    font-size: 2rem;
+    font-size: var(--font-size-xl);
   }
   
   .upload-text h3 {
-    font-size: 1rem;
+    font-size: var(--font-size-base);
   }
   
   .upload-text p {
-    font-size: 0.8rem;
+    font-size: var(--font-size-xs);
   }
   
   .uploads-list {
-    padding: 12px;
+    padding: var(--spacing-md);
   }
   
   .upload-item {
-    padding: 10px;
+    padding: var(--spacing-sm);
   }
 }
 
-/* ========================================
+/* ==========================================================================
    ANIMATIONS
-   ======================================== */
+   ========================================================================== */
 
 .upload-zone {
-  animation: fadeIn 0.3s ease;
+  animation: fadeIn var(--transition-slow) ease;
 }
 
 .upload-item {
-  animation: slideIn 0.3s ease;
+  animation: slideIn var(--transition-slow) ease;
 }
 
 @keyframes fadeIn {
@@ -288,9 +315,9 @@
   }
 }
 
-/* ========================================
+/* ==========================================================================
    ÉTATS DE CHARGEMENT
-   ======================================== */
+   ========================================================================== */
 
 .upload-zone:active {
   transform: scale(0.98);
@@ -309,69 +336,15 @@
   }
 }
 
-/* ========================================
+/* ==========================================================================
    ACCESSIBILITÉ
-   ======================================== */
+   ========================================================================== */
 
 .upload-zone:focus {
-  outline: 2px solid var(--accent-primary, #007bff);
+  outline: 2px solid var(--files-primary);
   outline-offset: 2px;
 }
 
 .upload-zone:focus:not(:focus-visible) {
   outline: none;
-}
-
-/* ========================================
-   THÈMES SOMBRES
-   ======================================== */
-
-@media (prefers-color-scheme: dark) {
-  .upload-zone {
-    background: var(--surface-primary-dark, #1a1a1a);
-    border-color: var(--border-subtle-dark, #404040);
-  }
-  
-  .upload-zone:hover {
-    background: var(--surface-secondary-dark, #2a2a2a);
-  }
-  
-  .upload-zone.drag-over {
-    background: var(--accent-hover-dark, #1a3a4a);
-  }
-  
-  .upload-text h3 {
-    color: var(--text-primary-dark, #ffffff);
-  }
-  
-  .upload-text p {
-    color: var(--text-secondary-dark, #b0b0b0);
-  }
-  
-  .upload-info {
-    background: var(--surface-secondary-dark, #2a2a2a);
-    color: var(--text-secondary-dark, #b0b0b0);
-  }
-  
-  .uploads-list {
-    background: var(--surface-primary-dark, #1a1a1a);
-    border-color: var(--border-subtle-dark, #404040);
-  }
-  
-  .uploads-list h4 {
-    color: var(--text-primary-dark, #ffffff);
-  }
-  
-  .upload-item {
-    background: var(--surface-secondary-dark, #2a2a2a);
-    border-color: var(--border-subtle-dark, #404040);
-  }
-  
-  .upload-item-name {
-    color: var(--text-primary-dark, #ffffff);
-  }
-  
-  .upload-item-status {
-    color: var(--text-secondary-dark, #b0b0b0);
-  }
 } 
