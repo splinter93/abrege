@@ -16,6 +16,7 @@
     "test-llm-friendly": "tsx scripts/test-llm-friendly-endpoints.ts",
     "migrate-to-notebooks": "tsx scripts/migrate-to-notebooks.ts",
     "update-quotas": "tsx scripts/update-storage-quotas.ts",
+    "test-subscriptions": "tsx scripts/test-subscription-system.ts",
     "test": "vitest",
     "test:watch": "vitest --watch",
     "test:coverage": "vitest --coverage"

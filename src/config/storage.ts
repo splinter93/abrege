@@ -4,17 +4,21 @@
  * 
  * Ce fichier centralise toutes les limites de stockage pour faciliter
  * la modification et la maintenance.
+ * 
+ * ⚠️  IMPORTANT : Les quotas sont maintenant gérés dynamiquement
+ *     via le système d'abonnements en base de données.
+ *     Cette configuration sert de fallback et de référence.
  */
 
 // ==========================================================================
-// QUOTAS DE STOCKAGE PAR DÉFAUT
+// QUOTAS DE STOCKAGE PAR DÉFAUT (FALLBACK)
 // ==========================================================================
 
 export const STORAGE_CONFIG = {
-  // Quota par défaut pour tous les utilisateurs (en octets)
+  // Quota par défaut pour tous les utilisateurs (en octets) - FALLBACK
   DEFAULT_QUOTA_BYTES: 1073741824, // 1 GB
   
-  // Quotas par type d'utilisateur (si nécessaire)
+  // Quotas par type d'utilisateur (si nécessaire) - FALLBACK
   USER_TIERS: {
     FREE: 1073741824,        // 1 GB
     BASIC: 5368709120,       // 5 GB  
@@ -22,7 +26,7 @@ export const STORAGE_CONFIG = {
     ENTERPRISE: 107374182400 // 100 GB
   },
   
-  // Limites par fichier
+  // Limites par fichier (FALLBACK)
   FILE_LIMITS: {
     MAX_FILE_SIZE: 100 * 1024 * 1024, // 100 MB par fichier
     MAX_FILES_PER_UPLOAD: 10,          // 10 fichiers max par upload
@@ -46,6 +50,51 @@ export const STORAGE_CONFIG = {
     BLOCK: 100      // Blocage à 100%
   }
 } as const;
+
+// ==========================================================================
+// TYPES D'ABONNEMENT
+// ==========================================================================
+
+export type SubscriptionPlanType = 'free' | 'basic' | 'premium' | 'enterprise' | 'custom';
+
+export interface SubscriptionPlan {
+  id: string;
+  name: string;
+  type: SubscriptionPlanType;
+  displayName: string;
+  description?: string;
+  storageQuotaBytes: number;
+  maxFileSizeBytes: number;
+  maxFilesPerUpload: number;
+  features: Record<string, any>;
+  priceMonthly?: number;
+  priceYearly?: number;
+  currency: string;
+  isActive: boolean;
+  isDefault: boolean;
+}
+
+export interface UserSubscription {
+  id: string;
+  userId: string;
+  planId: string;
+  status: 'active' | 'trialing' | 'past_due' | 'canceled' | 'expired';
+  startedAt: string;
+  expiresAt?: string;
+  canceledAt?: string;
+  billingProvider?: string;
+  externalSubscriptionId?: string;
+  metadata: Record<string, any>;
+}
+
+export interface StorageQuota {
+  usedBytes: number;
+  quotaBytes: number;
+  remainingBytes: number;
+  usagePercentage: number;
+  alertLevel: AlertLevel;
+  currentPlan?: SubscriptionPlan;
+}
 
 // ==========================================================================
 // FONCTIONS UTILITAIRES
@@ -94,12 +143,4 @@ export function getUsageAlertLevel(usedBytes: number, quotaBytes: number): 'safe
 // ==========================================================================
 
 export type UserTier = keyof typeof STORAGE_CONFIG.USER_TIERS;
-export type AlertLevel = ReturnType<typeof getUsageAlertLevel>;
-
-export interface StorageQuota {
-  usedBytes: number;
-  quotaBytes: number;
-  remainingBytes: number;
-  usagePercentage: number;
-  alertLevel: AlertLevel;
-} 
+export type AlertLevel = ReturnType<typeof getUsageAlertLevel>; 

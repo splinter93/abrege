@@ -3,6 +3,7 @@ import { supabase } from '@/supabaseClient';
 import { FileItem, FileStatus } from '@/types/files';
 import { simpleLogger as logger } from '@/utils/logger';
 import { STORAGE_CONFIG, calculateUsagePercentage, getUsageAlertLevel } from '@/config/storage';
+import SubscriptionService from '@/services/subscriptionService';
 
 // ========================================
 // TYPES LOCAUX
@@ -296,15 +297,17 @@ export function useFilesPage(): UseFilesPageResult {
         return;
       }
 
-      // Récupérer l'usage depuis la table storage_usage
-      const { data: storageData, error: storageError } = await supabase
-        .from('storage_usage')
-        .select('used_bytes, quota_bytes')
-        .eq('user_id', user.id)
-        .single();
-
-      if (storageError) {
-        // Fallback : calculer depuis les fichiers si storage_usage n'existe pas
+      // Utiliser le service d'abonnements pour récupérer le quota dynamique
+      const quotaInfo = await SubscriptionService.getUserStorageQuota(user.id);
+      
+      if (quotaInfo) {
+        setQuotaInfo({
+          usedBytes: quotaInfo.usedBytes,
+          quotaBytes: quotaInfo.quotaBytes,
+          remainingBytes: quotaInfo.remainingBytes
+        });
+      } else {
+        // Fallback : calculer depuis les fichiers si le service échoue
         const { data: filesData, error: filesError } = await supabase
           .from('files')
           .select('size')
@@ -323,17 +326,6 @@ export function useFilesPage(): UseFilesPageResult {
           usedBytes,
           quotaBytes,
           remainingBytes: quotaBytes - usedBytes
-        });
-      } else {
-        // Utiliser les données de storage_usage
-        const usedBytes = storageData.used_bytes || 0;
-        const quotaBytes = storageData.quota_bytes || STORAGE_CONFIG.DEFAULT_QUOTA_BYTES;
-        const remainingBytes = quotaBytes - usedBytes;
-        
-        setQuotaInfo({
-          usedBytes,
-          quotaBytes,
-          remainingBytes
         });
       }
 
