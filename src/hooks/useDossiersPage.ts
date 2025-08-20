@@ -1,15 +1,19 @@
 "use client";
 
-import { useEffect, useState, useMemo, useCallback } from "react";
+import { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import { useFileSystemStore } from "@/store/useFileSystemStore";
 import { optimizedClasseurService } from "@/services/optimizedClasseurService";
-import { v2UnifiedApi } from "@/services/V2UnifiedApi";
 import { simpleLogger as logger } from "@/utils/logger";
 import type { Classeur } from "@/store/useFileSystemStore";
 
 export function useDossiersPage(userId: string) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
+  
+  // 🔧 OPTIMISATION: Référence pour éviter les fuites mémoire
+  const abortControllerRef = useRef<AbortController | null>(null);
+  const loadingRef = useRef(false);
   
   // Correction: Lire le store directement et mémoiser le résultat
   const classeursStore = useFileSystemStore((state) => state.classeurs);
@@ -30,84 +34,109 @@ export function useDossiersPage(userId: string) {
   const [activeClasseurId, setActiveClasseurId] = useState<string | undefined>();
   const [currentFolderId, setCurrentFolderId] = useState<string | undefined>();
 
-  useEffect(() => {
-    async function loadInitialData() {
-      if (!userId) return;
+  // 🔧 OPTIMISATION: Fonction de chargement avec gestion d'erreurs robuste
+  const loadInitialData = useCallback(async (signal?: AbortSignal) => {
+    if (!userId || loadingRef.current) return;
+    
+    try {
+      loadingRef.current = true;
+      setLoading(true);
+      setError(null);
+      
+      logger.dev('[useDossiersPage] 🚀 Début chargement des données');
+      
+      const startTime = Date.now();
       
       try {
-        setLoading(true);
-        setError(null);
+        const result = await optimizedClasseurService.loadClasseursWithContentOptimized(userId);
         
-        logger.dev('[useDossiersPage] 🚀 Début chargement des données');
-        
-        // 🔍 DIAGNOSTIC COMPLET : Tester les deux systèmes avec métriques
-        const startTime = Date.now();
-        
-        // 🧪 Test 1: Service optimisé avec diagnostic complet
-        logger.dev('[useDossiersPage] 🧪 Test 1: Service optimisé avec diagnostic complet');
-        try {
-          const optimizedStart = Date.now();
-          const result = await optimizedClasseurService.loadClasseursWithContentOptimized(userId);
-          const optimizedTime = Date.now() - optimizedStart;
-          
-          logger.dev(`[useDossiersPage] ✅ Service optimisé: ${result.length} classeurs chargés en ${optimizedTime}ms`);
-          
-          // 🔍 DIAGNOSTIC DÉTAILLÉ DU STORE APRÈS OPTIMISATION
-          logger.dev(`[useDossiersPage] 🔍 Store APRÈS optimisation:`, {
-            classeurs: Object.keys(classeursStore).length,
-            folders: Object.keys(useFileSystemStore.getState().folders).length,
-            notes: Object.keys(useFileSystemStore.getState().notes).length,
-            classeursIds: Object.keys(classeursStore),
-            foldersIds: Object.keys(useFileSystemStore.getState().folders),
-            notesIds: Object.keys(useFileSystemStore.getState().notes)
-          });
-          
-          // 🔍 Vérifier si les données sont bien dans le store
-          if (Object.keys(classeursStore).length > 0) {
-            logger.dev('[useDossiersPage] 🎯 Service optimisé fonctionne parfaitement !');
-            
-            // 🔍 Vérifier que les données sont bien dans le state local
-            logger.dev(`[useDossiersPage] 🔍 State local après optimisation:`, {
-              classeursLength: result.length,
-              resultClasseurs: result.map(c => ({ id: c.id, name: c.name, dossiers: c.dossiers.length, notes: c.notes.length }))
-            });
-            
-            return; // Succès, on sort
-          } else {
-            logger.warn('[useDossiersPage] ⚠️ Service optimisé retourne des données mais store vide - PROBLÈME IDENTIFIÉ !');
-          }
-          
-        } catch (optimizedError) {
-          const optimizedTime = Date.now() - startTime;
-          logger.error(`[useDossiersPage] ❌ Service optimisé échoué en ${optimizedTime}ms:`, optimizedError);
-          
-          // 🔍 Diagnostic détaillé de l'erreur
-          if (optimizedError instanceof Error) {
-            logger.error('[useDossiersPage] 🔍 Détails de l\'erreur:', {
-              message: optimizedError.message,
-              stack: optimizedError.stack?.substring(0, 500),
-              name: optimizedError.name
-            });
-          }
+        // 🔧 OPTIMISATION: Vérifier si l'opération a été annulée
+        if (signal?.aborted) {
+          logger.dev('[useDossiersPage] ⏹️ Chargement annulé');
+          return;
         }
         
-        // 🎯 Service optimisé fonctionne parfaitement, pas besoin de fallback !
-        logger.dev('[useDossiersPage] 🎯 Service optimisé fonctionne parfaitement, pas de fallback nécessaire');
+        const totalTime = Date.now() - startTime;
+        
+        logger.dev(`[useDossiersPage] ✅ Service optimisé: ${result.length} classeurs chargés en ${totalTime}ms`);
+        
+        // 🔍 Vérifier que les données sont bien dans le store
+        const storeState = useFileSystemStore.getState();
+        if (Object.keys(storeState.classeurs).length > 0) {
+          logger.dev('[useDossiersPage] 🎯 Service optimisé fonctionne parfaitement !');
+          logger.dev(`[useDossiersPage] 🔍 Store final:`, {
+            classeurs: Object.keys(storeState.classeurs).length,
+            folders: Object.keys(storeState.folders).length,
+            notes: Object.keys(storeState.notes).length
+          });
+          
+          // 🔧 OPTIMISATION: Réinitialiser le compteur de retry en cas de succès
+          setRetryCount(0);
+        } else {
+          logger.warn('[useDossiersPage] ⚠️ Service optimisé retourne des données mais store vide - PROBLÈME IDENTIFIÉ !');
+          setError('Erreur: Les données ont été chargées mais ne sont pas disponibles dans l\'interface');
+        }
+        
+      } catch (optimizedError) {
+        // 🔧 OPTIMISATION: Vérifier si l'opération a été annulée
+        if (signal?.aborted) {
+          logger.dev('[useDossiersPage] ⏹️ Chargement annulé');
+          return;
+        }
         
         const totalTime = Date.now() - startTime;
-        logger.dev(`[useDossiersPage] 🎯 Temps total de diagnostic: ${totalTime}ms`);
+        logger.error(`[useDossiersPage] ❌ Service optimisé échoué en ${totalTime}ms:`, optimizedError);
         
-      } catch (e) {
-        const errorMessage = e instanceof Error ? e.message : 'Erreur inconnue lors du chargement';
-        logger.error('[useDossiersPage] ❌ Erreur chargement:', e);
-        setError(`Erreur lors du chargement des données: ${errorMessage}`);
-      } finally {
+        // 🔍 Diagnostic détaillé de l'erreur
+        if (optimizedError instanceof Error) {
+          logger.error('[useDossiersPage] 🔍 Détails de l\'erreur:', {
+            message: optimizedError.message,
+            stack: optimizedError.stack?.substring(0, 500),
+            name: optimizedError.name
+          });
+        }
+        
+        setError(`Erreur lors du chargement des classeurs: ${optimizedError instanceof Error ? optimizedError.message : 'Erreur inconnue'}`);
+        
+        // 🔧 OPTIMISATION: Incrémenter le compteur de retry
+        setRetryCount(prev => prev + 1);
+      }
+      
+    } catch (e) {
+      // 🔧 OPTIMISATION: Vérifier si l'opération a été annulée
+      if (signal?.aborted) {
+        logger.dev('[useDossiersPage] ⏹️ Chargement annulé');
+        return;
+      }
+      
+      const errorMessage = e instanceof Error ? e.message : 'Erreur inconnue lors du chargement';
+      logger.error('[useDossiersPage] ❌ Erreur chargement:', e);
+      setError(`Erreur lors du chargement des données: ${errorMessage}`);
+      
+      // 🔧 OPTIMISATION: Incrémenter le compteur de retry
+      setRetryCount(prev => prev + 1);
+    } finally {
+      if (!signal?.aborted) {
         setLoading(false);
+        loadingRef.current = false;
       }
     }
-    
-    loadInitialData();
   }, [userId]);
+
+  useEffect(() => {
+    // 🔧 OPTIMISATION: Créer un nouveau contrôleur d'annulation
+    abortControllerRef.current = new AbortController();
+    const signal = abortControllerRef.current.signal;
+    
+    loadInitialData(signal);
+    
+    // 🔧 OPTIMISATION: Nettoyage à la destruction du composant
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
+  }, [loadInitialData]);
   
   // Auto-select the first classeur when available
   useEffect(() => {
@@ -116,6 +145,24 @@ export function useDossiersPage(userId: string) {
       setCurrentFolderId(undefined);
     }
   }, [classeurs, activeClasseurId]);
+
+  // 🔧 OPTIMISATION: Fonction de retry avec backoff exponentiel
+  const retryWithBackoff = useCallback(async () => {
+    if (retryCount >= 3) {
+      setError('Nombre maximum de tentatives atteint. Veuillez recharger la page.');
+      return;
+    }
+    
+    const delay = Math.min(1000 * Math.pow(2, retryCount), 10000); // Max 10 secondes
+    
+    logger.dev(`[useDossiersPage] 🔄 Retry dans ${delay}ms (tentative ${retryCount + 1}/3)`);
+    
+    setTimeout(() => {
+      if (abortControllerRef.current) {
+        loadInitialData(abortControllerRef.current.signal);
+      }
+    }, delay);
+  }, [retryCount, loadInitialData]);
 
   const handleCreateClasseur = useCallback(async (name: string, emoji?: string) => {
     try {
@@ -207,20 +254,43 @@ export function useDossiersPage(userId: string) {
     return path;
   }, [currentFolderId]);
 
-  // Fonction pour recharger les données (utile pour les mises à jour)
+  // 🔧 OPTIMISATION: Fonction pour recharger les données avec gestion d'erreurs
   const refreshData = useCallback(async () => {
     try {
       setLoading(true);
+      setError(null);
+      setRetryCount(0);
+      
       // Invalider le cache pour forcer un rechargement
       optimizedClasseurService.invalidateCache(userId);
-      await optimizedClasseurService.loadClasseursWithContentOptimized(userId);
+      
+      if (abortControllerRef.current) {
+        await loadInitialData(abortControllerRef.current.signal);
+      }
     } catch (error) {
       console.error('Erreur rechargement données:', error);
       setError("Erreur lors du rechargement des données.");
-    } finally {
-      setLoading(false);
     }
-  }, [userId]);
+  }, [userId, loadInitialData]);
+
+  // 🔧 OPTIMISATION: Fonction pour forcer un rechargement complet
+  const forceReload = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      setRetryCount(0);
+      
+      // Vider complètement le cache
+      optimizedClasseurService.clearAllCache();
+      
+      if (abortControllerRef.current) {
+        await loadInitialData(abortControllerRef.current.signal);
+      }
+    } catch (error) {
+      console.error('Erreur rechargement forcé:', error);
+      setError("Erreur lors du rechargement forcé des données.");
+    }
+  }, [loadInitialData]);
 
   return {
     loading,
@@ -241,6 +311,10 @@ export function useDossiersPage(userId: string) {
     handleGoToRoot,
     handleGoToFolder,
     folderPath,
-    refreshData // Nouvelle fonction pour recharger les données
+    refreshData,
+    forceReload, // 🔧 NOUVEAU: Rechargement forcé
+    retryWithBackoff, // 🔧 NOUVEAU: Retry avec backoff
+    retryCount, // 🔧 NOUVEAU: Compteur de tentatives
+    canRetry: retryCount < 3 // 🔧 NOUVEAU: Indicateur de possibilité de retry
   };
 } 

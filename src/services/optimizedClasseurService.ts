@@ -1,6 +1,7 @@
 import { supabase } from '@/supabaseClient';
 import { simpleLogger as logger } from '@/utils/logger';
 import { useFileSystemStore } from '@/store/useFileSystemStore';
+import type { Classeur, Folder, Note } from '@/store/useFileSystemStore';
 
 // ==========================================================================
 // TYPES
@@ -39,14 +40,34 @@ interface PerformanceMetrics {
   storeUpdateTime: number;
 }
 
+interface CacheEntry {
+  data: ClasseurWithContent[];
+  timestamp: number;
+  loading: boolean;
+  error?: string;
+}
+
 // ==========================================================================
-// SERVICE OPTIMISÉ
+// SERVICE OPTIMISÉ - VERSION PRODUCTION
 // ==========================================================================
 
 export class OptimizedClasseurService {
   private static instance: OptimizedClasseurService;
-  private cache = new Map<string, { data: ClasseurWithContent[]; timestamp: number }>();
+  private cache = new Map<string, CacheEntry>();
   private readonly CACHE_TTL = 30000; // 30 secondes
+  private readonly MAX_CACHE_SIZE = 100; // Limite de taille du cache
+  private readonly RETRY_ATTEMPTS = 3;
+  private readonly RETRY_DELAY = 1000; // 1 seconde
+
+  constructor() {
+    // 🔧 OPTIMISATION: Nettoyage automatique du cache toutes les 5 minutes
+    setInterval(() => this.cleanupExpiredCache(), 5 * 60 * 1000);
+    
+    // 🔧 OPTIMISATION: Nettoyage au démarrage
+    this.cleanupExpiredCache();
+    
+    logger.dev('[OptimizedClasseurService] 🚀 Service initialisé avec nettoyage automatique');
+  }
 
   static getInstance(): OptimizedClasseurService {
     if (!OptimizedClasseurService.instance) {
@@ -56,95 +77,345 @@ export class OptimizedClasseurService {
   }
 
   /**
+   * 🔧 OPTIMISATION: Validation des données avant traitement
+   */
+  private validateClasseurData(data: any): data is ClasseurWithContent[] {
+    // Vérifier que c'est un tableau
+    if (!Array.isArray(data)) {
+      logger.warn('[OptimizedClasseurService] ⚠️ Données reçues ne sont pas un tableau:', typeof data);
+      return false;
+    }
+
+    // Vérifier chaque classeur individuellement
+    return data.every((classeur, index) => {
+      // Vérifier la structure de base du classeur
+      if (!classeur || typeof classeur.id !== 'string' || typeof classeur.name !== 'string') {
+        logger.warn(`[OptimizedClasseurService] ⚠️ Classeur ${index} invalide:`, classeur);
+        return false;
+      }
+
+      // Vérifier que dossiers et notes sont des tableaux (même vides)
+      if (!Array.isArray(classeur.dossiers) || !Array.isArray(classeur.notes)) {
+        logger.warn(`[OptimizedClasseurService] ⚠️ Classeur ${classeur.id} a des dossiers/notes invalides:`, {
+          dossiers: typeof classeur.dossiers,
+          notes: typeof classeur.notes
+        });
+        return false;
+      }
+
+      // Vérifier chaque dossier s'il y en a
+      if (classeur.dossiers.length > 0) {
+        const invalidDossiers = classeur.dossiers.filter(d => !d || typeof d.id !== 'string' || typeof d.name !== 'string');
+        if (invalidDossiers.length > 0) {
+          logger.warn(`[OptimizedClasseurService] ⚠️ Classeur ${classeur.id} a des dossiers invalides:`, invalidDossiers);
+          return false;
+        }
+      }
+
+      // Vérifier chaque note s'il y en a
+      if (classeur.notes.length > 0) {
+        const invalidNotes = classeur.notes.filter(n => !n || typeof n.id !== 'string' || typeof n.source_title !== 'string');
+        if (invalidNotes.length > 0) {
+          logger.warn(`[OptimizedClasseurService] ⚠️ Classeur ${classeur.id} a des notes invalides:`, invalidNotes);
+          return false;
+        }
+      }
+
+      return true;
+    });
+  }
+
+  /**
+   * 🔧 OPTIMISATION: Système de retry automatique
+   */
+  private async withRetry<T>(
+    operation: () => Promise<T>, 
+    operationName: string,
+    maxAttempts: number = this.RETRY_ATTEMPTS
+  ): Promise<T> {
+    let lastError: Error;
+    
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        return await operation();
+      } catch (error) {
+        lastError = error instanceof Error ? error : new Error(String(error));
+        
+        if (attempt === maxAttempts) {
+          logger.error(`[OptimizedClasseurService] ❌ ${operationName} échoué après ${maxAttempts} tentatives:`, lastError);
+          throw lastError;
+        }
+        
+        logger.warn(`[OptimizedClasseurService] ⚠️ ${operationName} échoué (tentative ${attempt}/${maxAttempts}), retry dans ${this.RETRY_DELAY}ms:`, lastError);
+        
+        // Attendre avant de réessayer
+        await new Promise(resolve => setTimeout(resolve, this.RETRY_DELAY * attempt));
+      }
+    }
+    
+    throw lastError!;
+  }
+
+  /**
+   * 🔧 OPTIMISATION: Protection contre les race conditions
+   */
+  private isUserLoading(userId: string): boolean {
+    const entry = this.cache.get(`classeurs_${userId}`);
+    return entry?.loading || false;
+  }
+
+  private setUserLoading(userId: string, loading: boolean): void {
+    const cacheKey = `classeurs_${userId}`;
+    const existing = this.cache.get(cacheKey);
+    
+    if (existing) {
+      existing.loading = loading;
+    } else if (loading) {
+      this.cache.set(cacheKey, {
+        data: [],
+        timestamp: Date.now(),
+        loading: true
+      });
+    }
+  }
+
+  /**
    * Chargement ultra-optimisé des classeurs avec tout leur contenu
-   * Utilise des requêtes parallèles et de la mise en cache
+   * Version production avec toutes les optimisations
    */
   async loadClasseursWithContentOptimized(userId: string): Promise<ClasseurWithContent[]> {
     const startTime = Date.now();
     const cacheKey = `classeurs_${userId}`;
     
+    // 🔧 OPTIMISATION: Vérifier si un chargement est déjà en cours
+    if (this.isUserLoading(userId)) {
+      logger.dev(`[OptimizedClasseurService] ⏳ Chargement déjà en cours pour ${userId}, attente...`);
+      
+      // Attendre que le chargement se termine
+      let attempts = 0;
+      const maxWaitAttempts = 30; // 3 secondes max
+      
+      while (this.isUserLoading(userId) && attempts < maxWaitAttempts) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+        attempts++;
+      }
+      
+      // Vérifier le cache après attente
+      const cached = this.cache.get(cacheKey);
+      if (cached && !cached.loading && (Date.now() - cached.timestamp) < this.CACHE_TTL) {
+        logger.dev(`[OptimizedClasseurService] 🚀 Données récupérées du cache après attente`);
+        return cached.data;
+      }
+    }
+    
     // 🔍 Vérifier le cache
     const cached = this.cache.get(cacheKey);
-    if (cached && (Date.now() - cached.timestamp) < this.CACHE_TTL) {
+    if (cached && !cached.loading && (Date.now() - cached.timestamp) < this.CACHE_TTL) {
       logger.dev('[OptimizedClasseurService] 🚀 Données récupérées du cache');
       return cached.data;
     }
 
+    // 🔧 OPTIMISATION: Marquer comme en cours de chargement
+    this.setUserLoading(userId, true);
+
     try {
       logger.dev('[OptimizedClasseurService] 🚀 Début chargement optimisé des classeurs');
 
-      // 🚀 Étape 1: Récupérer tous les classeurs en une seule requête
-      const classeursStart = Date.now();
-      const { data: classeurs, error: classeursError } = await supabase
-        .from('classeurs')
-        .select('id, name, description, emoji, position, slug, created_at, updated_at')
-        .eq('user_id', userId)
-        .order('position', { ascending: true });
+      // 🔧 OPTIMISATION: Utiliser le système de retry
+      const result = await this.withRetry(
+        () => this.performClasseurLoading(userId, startTime),
+        'Chargement des classeurs'
+      );
 
-      if (classeursError) {
-        throw new Error(`Erreur récupération classeurs: ${classeursError.message}`);
-      }
-
-      const classeursTime = Date.now() - classeursStart;
-      logger.dev(`[OptimizedClasseurService] ✅ ${classeurs?.length || 0} classeurs récupérés en ${classeursTime}ms`);
-
-      if (!classeurs || classeurs.length === 0) {
-        return [];
-      }
-
-      // 🚀 Étape 2: Chargement parallèle de tout le contenu
-      const contentStart = Date.now();
-      logger.dev(`[OptimizedClasseurService] 🚀 Chargement contenu pour ${classeurs.length} classeurs...`);
-      
-      const contentPromises = classeurs.map(async (classeur) => {
-        try {
-          logger.dev(`[OptimizedClasseurService] 🔍 Chargement classeur ${classeur.id} (${classeur.name})...`);
-          
-          // Charger dossiers et notes en parallèle pour chaque classeur
-          const [dossiersResult, notesResult] = await Promise.all([
-            this.getDossiersForClasseur(classeur.id),
-            this.getNotesForClasseur(classeur.id)
-          ]);
-
-          logger.dev(`[OptimizedClasseurService] ✅ Classeur ${classeur.id}: ${dossiersResult.length} dossiers, ${notesResult.length} notes`);
-
-          return {
-            ...classeur,
-            dossiers: dossiersResult,
-            notes: notesResult
-          };
-        } catch (error) {
-          logger.warn(`[OptimizedClasseurService] ⚠️ Erreur chargement classeur ${classeur.id}:`, error);
-          return {
-            ...classeur,
-            dossiers: [],
-            notes: []
-          };
-        }
+      // 🔧 OPTIMISATION: Mettre en cache avec validation
+      logger.dev('[OptimizedClasseurService] 🔍 Validation des données reçues...');
+      logger.dev('[OptimizedClasseurService] 📊 Données reçues:', {
+        type: typeof result,
+        isArray: Array.isArray(result),
+        length: Array.isArray(result) ? result.length : 'N/A',
+        sample: Array.isArray(result) && result.length > 0 ? result[0] : 'Aucun'
       });
+      
+      if (this.validateClasseurData(result)) {
+        logger.dev('[OptimizedClasseurService] ✅ Validation réussie, mise en cache...');
+        this.cache.set(cacheKey, {
+          data: result,
+          timestamp: Date.now(),
+          loading: false
+        });
+        
+        // 🔧 OPTIMISATION: Nettoyer le cache si nécessaire
+        this.ensureCacheSizeLimit();
+      } else {
+        logger.error('[OptimizedClasseurService] ❌ Données invalides après chargement');
+        logger.error('[OptimizedClasseurService] 🔍 Détails des données invalides:', result);
+        throw new Error('Données invalides reçues du serveur');
+      }
 
-      const classeursWithContent = await Promise.all(contentPromises);
-      const contentTime = Date.now() - contentStart;
+      return result;
 
-      // 🚀 Étape 3: Mise à jour du store Zustand
-      const storeStart = Date.now();
+    } catch (error) {
+      // 🔧 OPTIMISATION: Mettre en cache l'erreur pour éviter les retry inutiles
+      this.cache.set(cacheKey, {
+        data: [],
+        timestamp: Date.now(),
+        loading: false,
+        error: error instanceof Error ? error.message : 'Erreur inconnue'
+      });
+      
+      logger.error('[OptimizedClasseurService] ❌ Erreur chargement optimisé:', error);
+      throw error;
+    } finally {
+      // 🔧 OPTIMISATION: Toujours marquer comme terminé
+      this.setUserLoading(userId, false);
+    }
+  }
+
+  /**
+   * 🔧 OPTIMISATION: Logique de chargement séparée pour le retry
+   */
+  private async performClasseurLoading(userId: string, startTime: number): Promise<ClasseurWithContent[]> {
+    // 🚀 Étape 1: Récupérer tous les classeurs
+    const classeursStart = Date.now();
+    const { data: classeurs, error: classeursError } = await supabase
+      .from('classeurs')
+      .select('id, name, description, emoji, position, slug, created_at, updated_at')
+      .eq('user_id', userId)
+      .order('position', { ascending: true });
+
+    if (classeursError) {
+      throw new Error(`Erreur récupération classeurs: ${classeursError.message}`);
+    }
+
+    const classeursTime = Date.now() - classeursStart;
+    logger.dev(`[OptimizedClasseurService] ✅ ${classeurs?.length || 0} classeurs récupérés en ${classeursTime}ms`);
+
+    if (!classeurs || classeurs.length === 0) {
+      // 🔧 OPTIMISATION: Mettre à jour le store même si aucun classeur
+      this.updateStoreSafely([], [], []);
+      return [];
+    }
+
+    // 🚀 Étape 2: Chargement parallèle de tout le contenu
+    const contentStart = Date.now();
+    logger.dev(`[OptimizedClasseurService] 🚀 Chargement contenu pour ${classeurs.length} classeurs...`);
+    
+    const contentPromises = classeurs.map(async (classeur) => {
+      try {
+        logger.dev(`[OptimizedClasseurService] 🔍 Chargement classeur ${classeur.id} (${classeur.name})...`);
+        
+        // Charger dossiers et notes en parallèle pour chaque classeur
+        const [dossiersResult, notesResult] = await Promise.all([
+          this.getDossiersForClasseur(classeur.id),
+          this.getNotesForClasseur(classeur.id)
+        ]);
+
+        logger.dev(`[OptimizedClasseurService] ✅ Classeur ${classeur.id}: ${dossiersResult.length} dossiers, ${notesResult.length} notes`);
+
+        return {
+          ...classeur,
+          dossiers: dossiersResult,
+          notes: notesResult
+        };
+      } catch (error) {
+        logger.warn(`[OptimizedClasseurService] ⚠️ Erreur chargement classeur ${classeur.id}:`, error);
+        return {
+          ...classeur,
+          dossiers: [],
+          notes: []
+        };
+      }
+    });
+
+    const classeursWithContent = await Promise.all(contentPromises);
+    const contentTime = Date.now() - contentStart;
+
+    // 🚀 Étape 3: Mise à jour du store Zustand
+    const storeStart = Date.now();
+    
+    logger.dev(`[OptimizedClasseurService] 🔍 Store AVANT mise à jour:`, {
+      classeurs: Object.keys(useFileSystemStore.getState().classeurs).length,
+      folders: Object.keys(useFileSystemStore.getState().folders).length,
+      notes: Object.keys(useFileSystemStore.getState().notes).length
+    });
+    
+    // 🔧 OPTIMISATION: Mapper et valider les données
+    const { mappedClasseurs, mappedFolders, mappedNotes } = this.mapDataForStore(classeursWithContent);
+    
+    // 🔧 OPTIMISATION: Mise à jour sécurisée du store
+    this.updateStoreSafely(mappedClasseurs, mappedFolders, mappedNotes);
+    
+    const storeUpdateTime = Date.now() - storeStart;
+
+    // 📊 Métriques de performance
+    const totalTime = Date.now() - startTime;
+    const metrics: PerformanceMetrics = {
+      totalTime,
+      classeursTime,
+      contentTime,
+      storeUpdateTime
+    };
+
+    logger.dev(`[OptimizedClasseurService] 🎯 Performance:`, {
+      total: `${totalTime}ms`,
+      classeurs: `${classeursTime}ms`,
+      content: `${contentTime}ms`,
+      store: `${storeUpdateTime}ms`
+    });
+
+    return classeursWithContent;
+  }
+
+  /**
+   * 🔧 OPTIMISATION: Mapping sécurisé des données
+   */
+  private mapDataForStore(classeursWithContent: ClasseurWithContent[]) {
+    const mappedClasseurs: Classeur[] = classeursWithContent.map(c => ({
+      id: c.id,
+      name: c.name,
+      description: c.description,
+      emoji: c.emoji,
+      position: c.position,
+      created_at: c.created_at
+    }));
+
+    const mappedFolders: Folder[] = classeursWithContent.flatMap(c => 
+      c.dossiers.map(d => ({
+        id: d.id,
+        name: d.name,
+        position: d.position,
+        parent_id: d.parent_id,
+        classeur_id: c.id,
+        created_at: d.created_at
+      }))
+    );
+
+    const mappedNotes: Note[] = classeursWithContent.flatMap(c => 
+      c.notes.map(n => ({
+        id: n.id,
+        source_title: n.source_title,
+        folder_id: n.folder_id,
+        classeur_id: c.id,
+        created_at: n.created_at,
+        updated_at: n.updated_at,
+        slug: n.slug
+      }))
+    );
+
+    return { mappedClasseurs, mappedFolders, mappedNotes };
+  }
+
+  /**
+   * 🔧 OPTIMISATION: Mise à jour sécurisée du store
+   */
+  private updateStoreSafely(classeurs: Classeur[], folders: Folder[], notes: Note[]) {
+    try {
       const store = useFileSystemStore.getState();
       
-      logger.dev(`[OptimizedClasseurService] 🔍 Store AVANT mise à jour:`, {
-        classeurs: Object.keys(store.classeurs).length,
-        folders: Object.keys(store.folders).length,
-        notes: Object.keys(store.notes).length
-      });
-      
-      // Mettre à jour les classeurs
-      store.setClasseurs(classeursWithContent);
-      
-      // Extraire et mettre à jour tous les dossiers et notes
-      const allDossiers = classeursWithContent.flatMap(c => c.dossiers);
-      const allNotes = classeursWithContent.flatMap(c => c.notes);
-      
-      store.setFolders(allDossiers);
-      store.setNotes(allNotes);
+      // Mise à jour atomique du store
+      store.setClasseurs(classeurs);
+      store.setFolders(folders);
+      store.setNotes(notes);
       
       logger.dev(`[OptimizedClasseurService] 🔍 Store APRÈS mise à jour:`, {
         classeurs: Object.keys(store.classeurs).length,
@@ -154,79 +425,89 @@ export class OptimizedClasseurService {
         foldersIds: Object.keys(store.folders),
         notesIds: Object.keys(store.notes)
       });
-      
-      const storeUpdateTime = Date.now() - storeStart;
-
-      // 📊 Métriques de performance
-      const totalTime = Date.now() - startTime;
-      const metrics: PerformanceMetrics = {
-        totalTime,
-        classeursTime,
-        contentTime,
-        storeUpdateTime
-      };
-
-      logger.dev(`[OptimizedClasseurService] 🎯 Performance:`, {
-        total: `${totalTime}ms`,
-        classeurs: `${classeursTime}ms`,
-        content: `${contentTime}ms`,
-        store: `${storeUpdateTime}ms`
-      });
-
-      // 💾 Mettre en cache
-      this.cache.set(cacheKey, {
-        data: classeursWithContent,
-        timestamp: Date.now()
-      });
-
-      return classeursWithContent;
-
     } catch (error) {
-      logger.error('[OptimizedClasseurService] ❌ Erreur chargement optimisé:', error);
-      throw error;
+      logger.error('[OptimizedClasseurService] ❌ Erreur mise à jour store:', error);
+      throw new Error('Erreur lors de la mise à jour de l\'interface');
     }
   }
 
   /**
-   * Récupérer les dossiers d'un classeur spécifique
+   * Récupérer les dossiers d'un classeur spécifique avec retry
    */
   private async getDossiersForClasseur(classeurId: string) {
     logger.dev(`[OptimizedClasseurService] 🔍 Récupération dossiers pour classeur ${classeurId}...`);
     
-    const { data, error } = await supabase
-      .from('folders')
-      .select('id, name, position, parent_id, created_at')
-      .eq('notebook_id', classeurId)
-      .order('position', { ascending: true });
+    return this.withRetry(async () => {
+      const { data, error } = await supabase
+        .from('folders')
+        .select('id, name, position, parent_id, created_at')
+        .eq('classeur_id', classeurId)
+        .order('position', { ascending: true });
 
-    if (error) {
-      logger.warn(`[OptimizedClasseurService] ⚠️ Erreur dossiers classeur ${classeurId}:`, error);
-      return [];
-    }
+      if (error) {
+        throw new Error(`Erreur dossiers classeur ${classeurId}: ${error.message}`);
+      }
 
-    logger.dev(`[OptimizedClasseurService] ✅ ${data?.length || 0} dossiers récupérés pour classeur ${classeurId}`);
-    return data || [];
+      logger.dev(`[OptimizedClasseurService] ✅ ${data?.length || 0} dossiers récupérés pour classeur ${classeurId}`);
+      return data || [];
+    }, `Récupération dossiers classeur ${classeurId}`);
   }
 
   /**
-   * Récupérer les notes d'un classeur spécifique
+   * Récupérer les notes d'un classeur spécifique avec retry
    */
   private async getNotesForClasseur(classeurId: string) {
     logger.dev(`[OptimizedClasseurService] 🔍 Récupération notes pour classeur ${classeurId}...`);
     
-    const { data, error } = await supabase
-      .from('articles')
-      .select('id, source_title, folder_id, created_at, updated_at, slug')
-      .or(`classeur_id.eq.${classeurId},notebook_id.eq.${classeurId}`)
-      .order('created_at', { ascending: false });
+    return this.withRetry(async () => {
+      const { data, error } = await supabase
+        .from('articles')
+        .select('id, source_title, folder_id, created_at, updated_at, slug')
+        .eq('classeur_id', classeurId)
+        .order('created_at', { ascending: false });
 
-    if (error) {
-      logger.warn(`[OptimizedClasseurService] ⚠️ Erreur notes classeur ${classeurId}:`, error);
-      return [];
+      if (error) {
+        throw new Error(`Erreur notes classeur ${classeurId}: ${error.message}`);
+      }
+
+      logger.dev(`[OptimizedClasseurService] ✅ ${data?.length || 0} notes récupérées pour classeur ${classeurId}`);
+      return data || [];
+    }, `Récupération notes classeur ${classeurId}`);
+  }
+
+  /**
+   * 🔧 OPTIMISATION: Nettoyage automatique du cache expiré
+   */
+  private cleanupExpiredCache() {
+    const now = Date.now();
+    let cleanedCount = 0;
+    
+    for (const [key, value] of this.cache.entries()) {
+      if ((now - value.timestamp) > this.CACHE_TTL) {
+        this.cache.delete(key);
+        cleanedCount++;
+      }
     }
+    
+    if (cleanedCount > 0) {
+      logger.dev(`[OptimizedClasseurService] 🗑️ Cache nettoyé: ${cleanedCount} entrées expirées supprimées`);
+    }
+  }
 
-    logger.dev(`[OptimizedClasseurService] ✅ ${data?.length || 0} notes récupérées pour classeur ${classeurId}`);
-    return data || [];
+  /**
+   * 🔧 OPTIMISATION: Contrôle de la taille du cache
+   */
+  private ensureCacheSizeLimit() {
+    if (this.cache.size > this.MAX_CACHE_SIZE) {
+      // Supprimer les entrées les plus anciennes
+      const entries = Array.from(this.cache.entries());
+      entries.sort((a, b) => a[1].timestamp - b[1].timestamp);
+      
+      const toRemove = entries.slice(0, this.cache.size - this.MAX_CACHE_SIZE);
+      toRemove.forEach(([key]) => this.cache.delete(key));
+      
+      logger.dev(`[OptimizedClasseurService] 🗑️ Cache limité: ${toRemove.length} entrées anciennes supprimées`);
+    }
   }
 
   /**
@@ -239,24 +520,66 @@ export class OptimizedClasseurService {
   }
 
   /**
-   * Nettoyer le cache expiré
+   * 🔧 OPTIMISATION: Nettoyer tout le cache
    */
-  private cleanupExpiredCache() {
-    const now = Date.now();
-    for (const [key, value] of this.cache.entries()) {
-      if ((now - value.timestamp) > this.CACHE_TTL) {
-        this.cache.delete(key);
-      }
-    }
+  clearAllCache() {
+    const size = this.cache.size;
+    this.cache.clear();
+    logger.dev(`[OptimizedClasseurService] ��️ Cache complet vidé: ${size} entrées supprimées`);
   }
 
   /**
    * Obtenir les statistiques du cache
    */
   getCacheStats() {
+    const now = Date.now();
+    let expiredCount = 0;
+    let loadingCount = 0;
+    let errorCount = 0;
+    
+    for (const [_, value] of this.cache.entries()) {
+      if ((now - value.timestamp) > this.CACHE_TTL) expiredCount++;
+      if (value.loading) loadingCount++;
+      if (value.error) errorCount++;
+    }
+    
     return {
-      totalCacheSize: this.cache.size
+      totalCacheSize: this.cache.size,
+      expiredEntries: expiredCount,
+      loadingEntries: loadingCount,
+      errorEntries: errorCount,
+      maxCacheSize: this.MAX_CACHE_SIZE,
+      cacheTTL: this.CACHE_TTL
     };
+  }
+
+  /**
+   * 🔧 OPTIMISATION: Vérifier la santé du service
+   */
+  async healthCheck(): Promise<{ healthy: boolean; details: any }> {
+    try {
+      const stats = this.getCacheStats();
+      const hasErrors = stats.errorEntries > 0;
+      const isOverloaded = stats.totalCacheSize > this.MAX_CACHE_SIZE * 0.8;
+      
+      return {
+        healthy: !hasErrors && !isOverloaded,
+        details: {
+          ...stats,
+          hasErrors,
+          isOverloaded,
+          timestamp: new Date().toISOString()
+        }
+      };
+    } catch (error) {
+      return {
+        healthy: false,
+        details: {
+          error: error instanceof Error ? error.message : 'Erreur inconnue',
+          timestamp: new Date().toISOString()
+        }
+      };
+    }
   }
 }
 

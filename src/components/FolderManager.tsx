@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import './FolderManagerModern.css';
 import FolderContent from './FolderContent';
@@ -24,6 +24,10 @@ interface FolderManagerProps {
   onGoToRoot: () => void; // 🔧 NOUVEAU: Navigation vers la racine
   onGoToFolder: (folderId: string) => void; // 🔧 NOUVEAU: Navigation directe vers un dossier
   folderPath: Folder[]; // 🔧 NOUVEAU: Chemin de navigation pour le breadcrumb
+  // 🔧 NOUVEAU: Données préchargées pour éviter les appels API redondants
+  preloadedFolders?: { [key: string]: any };
+  preloadedNotes?: { [key: string]: any };
+  skipApiCalls?: boolean;
 }
 
 /**
@@ -40,10 +44,25 @@ const FolderManager: React.FC<FolderManagerProps> = ({
   onGoToRoot, // 🔧 NOUVEAU: Navigation vers la racine
   onGoToFolder, // 🔧 NOUVEAU: Navigation directe vers un dossier
   folderPath, // 🔧 NOUVEAU: Chemin de navigation pour le breadcrumb
+  preloadedFolders, // 🔧 NOUVEAU: Données préchargées
+  preloadedNotes, // 🔧 NOUVEAU: Données préchargées
+  skipApiCalls = false, // 🔧 NOUVEAU: Éviter les appels API
 }) => {
+  // 🔧 OPTIMISATION: Utiliser les données préchargées si disponibles
+  const usePreloadedData = skipApiCalls && preloadedFolders && preloadedNotes;
+  
   // Optimisation : éviter les appels API redondants
   const [refreshKey, setRefreshKey] = useState(0);
   const { user } = useAuth();
+  
+  // 🔧 OPTIMISATION: Conditionner l'utilisation du hook selon les données préchargées
+  const folderManagerState = useFolderManagerState(
+    classeurId, 
+    user?.id || '', 
+    parentFolderId, 
+    usePreloadedData ? 0 : refreshKey // 🔧 FIX: Pas de refresh si données préchargées
+  );
+  
   const {
     loading,
     error,
@@ -56,9 +75,48 @@ const FolderManager: React.FC<FolderManagerProps> = ({
     deleteFolder,
     deleteFile,
     moveItem,
-    folders,
-    files,
-  } = useFolderManagerState(classeurId, user?.id || '', parentFolderId, refreshKey);
+    folders: apiFolders,
+    files: apiFiles,
+  } = folderManagerState;
+
+  // 🔧 OPTIMISATION: Utiliser les données préchargées ou les données de l'API
+  const folders = usePreloadedData ? Object.values(preloadedFolders || {}) : apiFolders;
+  const files = usePreloadedData ? Object.values(preloadedNotes || {}) : apiFiles;
+  
+  // 🔧 OPTIMISATION: Filtrer les données par classeur actif
+  const filteredFolders = usePreloadedData 
+    ? Object.values(preloadedFolders || {}).filter((f: any) => f.classeur_id === classeurId)
+    : folders;
+  const filteredFiles = usePreloadedData 
+    ? Object.values(preloadedNotes || {}).filter((n: any) => n.classeur_id === classeurId)
+    : files;
+  
+  // 🔧 OPTIMISATION: Logs pour tracer le changement de classeur
+  useEffect(() => {
+    if (usePreloadedData) {
+      console.log(`[FolderManager] 🔄 Changement de classeur: ${classeurId}`);
+      console.log(`[FolderManager] 📊 Données préchargées:`, {
+        totalFolders: Object.keys(preloadedFolders || {}).length,
+        totalNotes: Object.keys(preloadedNotes || {}).length,
+        filteredFolders: filteredFolders.length,
+        filteredFiles: filteredFiles.length
+      });
+    }
+  }, [classeurId, usePreloadedData, preloadedFolders, preloadedNotes, filteredFolders, filteredFiles]);
+  
+  // 🔧 OPTIMISATION: Pas de loading si données préchargées
+  const effectiveLoading = usePreloadedData ? false : loading;
+  const effectiveError = usePreloadedData ? null : error;
+  
+  // 🔧 OPTIMISATION: Fonctions conditionnelles selon le mode
+  const effectiveStartRename = usePreloadedData ? () => {} : startRename;
+  const effectiveSubmitRename = usePreloadedData ? async () => {} : submitRename;
+  const effectiveCancelRename = usePreloadedData ? () => {} : cancelRename;
+  const effectiveCreateFolder = usePreloadedData ? async () => {} : createFolder;
+  const effectiveCreateFile = usePreloadedData ? async () => {} : createFile;
+  const effectiveDeleteFolder = usePreloadedData ? async () => {} : deleteFolder;
+  const effectiveDeleteFile = usePreloadedData ? async () => {} : deleteFile;
+  const effectiveMoveItem = usePreloadedData ? async () => {} : moveItem;
 
   const refreshNow = useCallback(() => setRefreshKey(k => k + 1), []);
 
@@ -79,9 +137,9 @@ const FolderManager: React.FC<FolderManagerProps> = ({
   } = useContextMenuManager({
     onFolderOpen,
     onFileOpen: handleFileOpen,
-    startRename,
-    deleteFolder,
-    deleteFile
+    startRename: effectiveStartRename,
+    deleteFolder: effectiveDeleteFolder,
+    deleteFile: effectiveDeleteFile
   });
 
   // Hook pour le drag & drop
@@ -93,7 +151,7 @@ const FolderManager: React.FC<FolderManagerProps> = ({
   } = useFolderDragAndDrop({
     classeurId,
     parentFolderId,
-    moveItem,
+    moveItem: effectiveMoveItem,
     refreshNow,
     setRefreshKey,
     userId: user?.id || ''
@@ -104,12 +162,12 @@ const FolderManager: React.FC<FolderManagerProps> = ({
 
   // Handler pour déclencher le renommage inline au clic sur le nom
   const handleStartRenameFolderClick = useCallback((folder: Folder) => {
-    startRename(folder.id, 'folder');
-  }, [startRename]);
+    effectiveStartRename(folder.id, 'folder');
+  }, [effectiveStartRename]);
 
   const handleStartRenameFileClick = useCallback((file: FileArticle) => {
-    startRename(file.id, 'file');
-  }, [startRename]);
+    effectiveStartRename(file.id, 'file');
+  }, [effectiveStartRename]);
 
   return (
     <div className="folder-manager-wrapper">
@@ -124,16 +182,16 @@ const FolderManager: React.FC<FolderManagerProps> = ({
           <main className="folder-manager-main">
             <FolderContent
               classeurName={classeurName}
-              folders={safeFolders}
-              files={safeFiles}
-              loading={loading}
-              error={error}
+              folders={filteredFolders}
+              files={filteredFiles}
+              loading={effectiveLoading}
+              error={effectiveError}
               onFolderOpen={onFolderOpen}
               onFileOpen={handleFileOpen}
               renamingItemId={renamingItemId}
-              onRenameFile={(id, newName, type) => submitRename(id, newName, type)}
-              onRenameFolder={(id, newName, type) => submitRename(id, newName, type)}
-              onCancelRename={cancelRename}
+              onRenameFile={(id, newName, type) => effectiveSubmitRename(id, newName, type)}
+              onRenameFolder={(id, newName, type) => effectiveSubmitRename(id, newName, type)}
+              onCancelRename={effectiveCancelRename}
               onContextMenuItem={handleContextMenuItem}
               onDropItem={handleDropItem}
               onStartRenameFolderClick={handleStartRenameFolderClick}

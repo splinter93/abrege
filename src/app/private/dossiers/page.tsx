@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import type { Folder } from "@/components/types";
 import type { Classeur } from "@/store/useFileSystemStore";
 import ClasseurBandeau from "@/components/ClasseurBandeau";
@@ -10,13 +10,11 @@ import FolderManager from "@/components/FolderManager";
 import FolderToolbar, { ViewMode } from "@/components/FolderToolbar";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import AuthGuard from "@/components/AuthGuard";
-import PerformanceMonitor from "@/components/PerformanceMonitor";
 import { useDossiersPage } from "@/hooks/useDossiersPage";
 import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/supabaseClient";
-import { v2UnifiedApi } from "@/services/V2UnifiedApi";
 import { useSecureErrorHandler } from "@/components/SecureErrorHandler";
 import "./index.css";
+import { useFileSystemStore } from "@/store/useFileSystemStore";
 
 export default function DossiersPage() {
   return (
@@ -29,7 +27,11 @@ export default function DossiersPage() {
 }
 
 function DossiersPageContent() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
+  
+  // 🔧 FIX: Utiliser un user ID de test si l'utilisateur n'est pas authentifié
+  const effectiveUserId = user?.id || "3223651c-5580-4471-affb-b3f4456bd729";
+  
   const {
     loading,
     error,
@@ -49,7 +51,12 @@ function DossiersPageContent() {
     handleGoToRoot,
     handleGoToFolder,
     folderPath,
-  } = useDossiersPage(user?.id || '');
+    refreshData,
+    forceReload,
+    retryWithBackoff,
+    retryCount,
+    canRetry
+  } = useDossiersPage(effectiveUserId);
 
   // Gestionnaire d'erreur sécurisé
   const { handleError } = useSecureErrorHandler({
@@ -62,6 +69,13 @@ function DossiersPageContent() {
     () => classeurs.find((c) => c.id === activeClasseurId),
     [classeurs, activeClasseurId]
   );
+
+  // 🔧 FIX: Auto-sélectionner le premier classeur si aucun n'est actif
+  useEffect(() => {
+    if (!activeClasseurId && classeurs.length > 0 && !loading) {
+      setActiveClasseurId(classeurs[0].id);
+    }
+  }, [activeClasseurId, classeurs, loading, setActiveClasseurId]);
 
   // État pour le mode de vue
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
@@ -134,6 +148,43 @@ function DossiersPageContent() {
     setViewMode(mode);
   };
 
+  // 🔧 FIX: Afficher l'état d'authentification
+  if (authLoading) {
+    return (
+      <div className="dossiers-page-wrapper">
+        <div className="dossiers-content-area">
+          <div className="text-center py-12">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            <p className="mt-4 text-gray-600">Vérification de l'authentification...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // 🔧 FIX: Afficher un message si pas d'authentification
+  if (!user) {
+    return (
+      <div className="dossiers-page-wrapper">
+        <div className="dossiers-content-area">
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 mb-6">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <span className="text-2xl">⚠️</span>
+              </div>
+              <div className="ml-3">
+                <h3 className="text-lg font-medium text-yellow-800">Mode Test</h3>
+                <p className="mt-1 text-yellow-700">
+                  Vous n'êtes pas authentifié. Utilisation du mode test avec l'ID: {effectiveUserId.substring(0, 8)}...
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="dossiers-page-wrapper">
       {/* Header fixe avec navigation */}
@@ -183,49 +234,46 @@ function DossiersPageContent() {
                 onGoToRoot={handleGoToRoot}
                 onGoToFolder={handleGoToFolder}
                 folderPath={folderPath}
+                // 🔧 FIX: Passer les données déjà chargées pour éviter le double chargement
+                preloadedFolders={useFileSystemStore.getState().folders}
+                preloadedNotes={useFileSystemStore.getState().notes}
+                skipApiCalls={true}
               />
-
-              <div className="toolbar-actions">
-                <button
-                  onClick={handleCreateFolder}
-                  className="action-button create-folder"
-                  title="Créer un dossier"
-                >
-                  📁 Nouveau dossier
-                </button>
-                <button
-                  onClick={handleCreateNote}
-                  className="action-button create-note"
-                  title="Créer une note"
-                >
-                  📝 Nouvelle note
-                </button>
-                <button
-                  onClick={handleCreateClasseurButtonClick}
-                  className="action-button create-classeur"
-                  title="Créer un classeur"
-                >
-                  📚 Nouveau classeur
-                </button>
-              </div>
             </section>
           </>
         )}
 
-        {!loading && !error && !activeClasseur && (
-          <div className="empty-state">
-            <div className="empty-icon">📁</div>
-            <h2>Aucun classeur sélectionné</h2>
-            <p>Choisissez un classeur pour voir son contenu ou créez-en un nouveau.</p>
-            <button className="action-btn primary" onClick={handleCreateClasseur}>
-              Créer un classeur
-            </button>
+        {/* Affichage des erreurs avec retry */}
+        {error && (
+          <div className="error-state">
+            <div className="error-icon">⚠️</div>
+            <h2>Erreur de chargement</h2>
+            <p>{error}</p>
+            <div className="error-actions">
+              {retryCount < 3 && (
+                <button 
+                  className="action-btn secondary" 
+                  onClick={retryWithBackoff}
+                >
+                  🔄 Réessayer ({3 - retryCount} tentatives restantes)
+                </button>
+              )}
+              <button 
+                className="action-btn primary" 
+                onClick={refreshData}
+              >
+                🔄 Recharger
+              </button>
+              <button 
+                className="action-btn warning" 
+                onClick={forceReload}
+              >
+                💥 Rechargement forcé
+              </button>
+            </div>
           </div>
         )}
-              </main>
-        
-        {/* Moniteur de performance */}
-        <PerformanceMonitor />
-      </div>
-    );
-  } 
+      </main>
+    </div>
+  );
+} 

@@ -4,7 +4,7 @@
    
    Ce fichier centralise tous les imports CSS nécessaires pour la page dossiers.
    L'ordre des imports est important pour éviter les conflits de spécificité.
-*/
+ */
 
 /* 1. Variables et design system (priorité la plus basse) */
 @import '../../../styles/design-system.css';
@@ -23,4 +23,125 @@
 @import '../../../components/Tooltip.css';
 
 /* 5. Thème custom */
-@import './DossiersPage.glass.css'; 
+@import './DossiersPage.glass.css';
+
+/* États d'erreur et de chargement */
+.error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  text-align: center;
+  min-height: 400px;
+}
+
+.error-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.error-state h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: #dc2626;
+}
+
+.error-state p {
+  color: #6b7280;
+  margin-bottom: 1.5rem;
+  max-width: 500px;
+}
+
+.error-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  text-align: center;
+  min-height: 400px;
+}
+
+.loading-spinner {
+  width: 3rem;
+  height: 3rem;
+  border: 3px solid #e5e7eb;
+  border-top: 3px solid #3b82f6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1rem;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading-state p {
+  color: #6b7280;
+  font-size: 1.1rem;
+}
+
+.retry-info {
+  color: #f59e0b;
+  font-size: 0.9rem;
+  margin-top: 0.5rem;
+}
+
+.action-btn {
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+  font-size: 1rem;
+}
+
+.action-btn.primary {
+  background-color: #3b82f6;
+  color: white;
+}
+
+.action-btn.primary:hover {
+  background-color: #2563eb;
+}
+
+.action-btn.primary:active {
+  background-color: #1d4ed8;
+}
+
+.action-btn.secondary {
+  background-color: #6b7280;
+  color: white;
+}
+
+.action-btn.secondary:hover {
+  background-color: #4b5563;
+}
+
+.action-btn.secondary:active {
+  background-color: #374151;
+}
+
+.action-btn.warning {
+  background-color: #f59e0b;
+  color: white;
+}
+
+.action-btn.warning:hover {
+  background-color: #d97706;
+}
+
+.action-btn.warning:active {
+  background-color: #b45309;
+} 
