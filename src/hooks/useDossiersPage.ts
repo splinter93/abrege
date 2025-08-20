@@ -31,17 +31,20 @@ export function useDossiersPage(userId: string) {
         
         logger.dev('[useDossiersPage] 🚀 Début chargement des données');
         
-        // 🚀 Essayer d'abord le service optimisé
-        try {
-          const result = await optimizedClasseurService.loadClasseursWithContentOptimized(userId);
-          logger.dev(`[useDossiersPage] ✅ Service optimisé: ${result.length} classeurs chargés`);
-        } catch (optimizedError) {
-          logger.warn('[useDossiersPage] ⚠️ Service optimisé échoué, fallback vers l\'ancien système');
-          
-          // 🔄 Fallback vers l'ancien système
-          await v2UnifiedApi.loadClasseursWithContent(userId);
-          logger.dev('[useDossiersPage] ✅ Fallback réussi avec l\'ancien système');
-        }
+        // 🔧 TEMPORAIRE : Utiliser directement l'ancien système pour restaurer le fonctionnement
+        logger.dev('[useDossiersPage] 🔧 Utilisation de l\'ancien système pour restaurer les classeurs');
+        await v2UnifiedApi.loadClasseursWithContent(userId);
+        logger.dev('[useDossiersPage] ✅ Ancien système: classeurs chargés avec succès');
+        
+        // TODO: Réactiver le service optimisé une fois qu'il fonctionne
+        // try {
+        //   const result = await optimizedClasseurService.loadClasseursWithContentOptimized(userId);
+        //   logger.dev(`[useDossiersPage] ✅ Service optimisé: ${result.length} classeurs chargés`);
+        // } catch (optimizedError) {
+        //   logger.warn('[useDossiersPage] ⚠️ Service optimisé échoué, fallback vers l\'ancien système');
+        //   await v2UnifiedApi.loadClasseursWithContent(userId);
+        //   logger.dev('[useDossiersPage] ✅ Fallback réussi avec l\'ancien système');
+        // }
         
       } catch (e) {
         const errorMessage = e instanceof Error ? e.message : 'Erreur inconnue lors du chargement';
