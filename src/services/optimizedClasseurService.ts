@@ -130,6 +130,12 @@ export class OptimizedClasseurService {
       const storeStart = Date.now();
       const store = useFileSystemStore.getState();
       
+      logger.dev(`[OptimizedClasseurService] 🔍 Store AVANT mise à jour:`, {
+        classeurs: Object.keys(store.classeurs).length,
+        folders: Object.keys(store.folders).length,
+        notes: Object.keys(store.notes).length
+      });
+      
       // Mettre à jour les classeurs
       store.setClasseurs(classeursWithContent);
       
@@ -139,6 +145,15 @@ export class OptimizedClasseurService {
       
       store.setFolders(allDossiers);
       store.setNotes(allNotes);
+      
+      logger.dev(`[OptimizedClasseurService] 🔍 Store APRÈS mise à jour:`, {
+        classeurs: Object.keys(store.classeurs).length,
+        folders: Object.keys(store.folders).length,
+        notes: Object.keys(store.notes).length,
+        classeursIds: Object.keys(store.classeurs),
+        foldersIds: Object.keys(store.folders),
+        notesIds: Object.keys(store.notes)
+      });
       
       const storeUpdateTime = Date.now() - storeStart;
 
