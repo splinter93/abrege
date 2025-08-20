@@ -68,39 +68,20 @@ export async function GET(
 
   const noteId = resolveResult.id;
 
-  // 🔐 VÉRIFICATION SIMPLIFIÉE : Si l'utilisateur est authentifié, vérifier juste qu'il est propriétaire
-  try {
-    const { data: article, error: articleError } = await supabase
-      .from('articles')
-      .select('user_id, share_settings')
-      .eq('id', noteId)
-      .single();
-    
-    if (articleError || !article) {
-      logApi('v2_note_content', `❌ Note non trouvée: ${noteId}`, context);
-      return NextResponse.json(
-        { error: 'Note non trouvée' },
-        { status: 404, headers: { "Content-Type": "application/json" } }
-      );
-    }
-
-    // ✅ ACCÈS AUTORISÉ si :
-    // 1. L'utilisateur est le propriétaire de la note
-    // 2. OU la note est accessible via lien
-    if (article.user_id === userId || article.share_settings?.visibility !== 'private') {
-      logApi('v2_note_content', `✅ Accès autorisé pour note ${noteId}`, context);
-    } else {
-      logApi('v2_note_content', `❌ Accès refusé pour note ${noteId}`, context);
-      return NextResponse.json(
-        { error: 'Accès refusé' },
-        { status: 403, headers: { "Content-Type": "application/json" } }
-      );
-    }
-  } catch (error) {
-    logApi('v2_note_content', `❌ Erreur vérification accès: ${error}`, context);
+  // 🔐 Vérification des permissions avec le client authentifié
+  const permissionResult = await checkUserPermission(noteId, 'article', 'viewer', userId, context, supabase);
+  if (!permissionResult.success) {
+    logApi('v2_note_content', `❌ Erreur vérification permissions: ${permissionResult.error}`, context);
     return NextResponse.json(
-      { error: 'Erreur lors de la vérification des permissions' },
-      { status: 500, headers: { "Content-Type": "application/json" } }
+      { error: permissionResult.error },
+      { status: permissionResult.status || 500, headers: { "Content-Type": "application/json" } }
+    );
+  }
+  if (!permissionResult.hasPermission) {
+    logApi('v2_note_content', `❌ Accès refusé pour note ${noteId}`, context);
+    return NextResponse.json(
+      { error: 'Accès refusé' },
+      { status: 403, headers: { "Content-Type": "application/json" } }
     );
   }
 

@@ -209,11 +209,21 @@ export async function PATCH(
 
     console.log('🚨 [DEBUG] NoteId final:', noteId);
 
+    // Créer le client Supabase authentifié
+    const userToken = request.headers.get('Authorization')?.substring(7);
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      global: {
+        headers: {
+          Authorization: `Bearer ${userToken}`
+        }
+      }
+    });
+
     // 🔐 Vérification des permissions (seul le propriétaire peut modifier le partage)
     console.log('🚨 [DEBUG] Début vérification des permissions...');
     console.log('🚨 [DEBUG] Appel checkUserPermission avec:', { noteId, resourceType: 'article', requiredRole: 'owner', userId });
     
-    const permissionResult = await checkUserPermission(noteId, 'article', 'owner', userId, context);
+    const permissionResult = await checkUserPermission(noteId, 'article', 'owner', userId, context, supabase);
     console.log('🚨 [DEBUG] Résultat checkUserPermission:', permissionResult);
     
     if (!permissionResult.success) {
@@ -252,14 +262,7 @@ export async function PATCH(
     console.log('🚨 [DEBUG] ✅ Validation du body réussie');
 
     // Mettre à jour les paramètres de partage
-    console.log('🚨 [DEBUG] Création du client Supabase...');
-    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-      global: {
-        headers: {
-          Authorization: `Bearer ${request.headers.get('Authorization')?.substring(7)}`
-        }
-      }
-    });
+    console.log('🚨 [DEBUG] Client Supabase déjà créé, utilisation...');
 
     // Construire la mise à jour
     const updateData: any = {

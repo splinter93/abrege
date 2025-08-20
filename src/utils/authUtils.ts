@@ -108,22 +108,27 @@ export async function checkUserPermission(
   resourceType: ResourceType,
   requiredRole: PermissionRole,
   userId: string,
-  context: { operation: string; component: string }
+  context: { operation: string; component: string },
+  authenticatedSupabaseClient?: any
 ): Promise<PermissionResult> {
   try {
     console.log('🚨 [DEBUG] ===== DÉBUT CHECKUSERPERMISSION =====');
     console.log('🚨 [DEBUG] Paramètres reçus:', { resourceId, resourceType, requiredRole, userId, context });
     
+    // Utiliser le client authentifié si fourni, sinon utiliser le client par défaut
+    const client = authenticatedSupabaseClient || supabase;
+    console.log('🚨 [DEBUG] Client Supabase utilisé:', authenticatedSupabaseClient ? 'AUTHENTIFIÉ' : 'ANON');
+    
     // 1. Vérifier si l'utilisateur est le propriétaire
     console.log('🚨 [DEBUG] Étape 1: Vérification propriétaire...');
     console.log('🚨 [DEBUG] Table à interroger:', getTableName(resourceType));
     console.log('🚨 [DEBUG] Requête: SELECT user_id FROM', getTableName(resourceType), 'WHERE id =', resourceId);
-    console.log('🚨 [DEBUG] Client Supabase configuré:', !!supabase);
+    console.log('🚨 [DEBUG] Client Supabase configuré:', !!client);
     
     // Test de connexion Supabase
     console.log('🚨 [DEBUG] Test de connexion Supabase...');
     try {
-      const { data: testData, error: testError } = await supabase
+      const { data: testData, error: testError } = await client
         .from('articles')
         .select('id')
         .limit(1);
@@ -132,7 +137,7 @@ export async function checkUserPermission(
       console.log('🚨 [DEBUG] ❌ Exception test connexion:', testException);
     }
     
-    const { data: resource, error: fetchError } = await supabase
+    const { data: resource, error: fetchError } = await client
       .from(getTableName(resourceType))
       .select('user_id')
       .eq('id', resourceId)

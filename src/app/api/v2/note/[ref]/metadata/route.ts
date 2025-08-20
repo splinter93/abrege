@@ -69,7 +69,7 @@ export async function GET(
   const noteId = resolveResult.id;
 
   // 🔐 Vérification des permissions ou visibilité publique
-  const isPublic = await checkUserPermission(noteId, 'article', 'viewer', userId, context);
+  const isPublic = await checkUserPermission(noteId, 'article', 'viewer', userId, context, supabase);
   if (!isPublic.success || !isPublic.hasPermission) {
     // Vérifier si l'article est public
     const { data: article } = await supabase

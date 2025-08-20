@@ -69,16 +69,16 @@ export async function GET(
   const noteId = resolveResult.id;
 
   // 🔐 Vérification des permissions ou visibilité publique
-  const isPublic = await checkUserPermission(noteId, 'article', 'viewer', userId, context);
+  const isPublic = await checkUserPermission(noteId, 'article', 'viewer', userId, context, supabase);
   if (!isPublic.success || !isPublic.hasPermission) {
     // Vérifier si l'article est public
     const { data: article } = await supabase
       .from('articles')
-      .select('visibility')
+      .select('share_settings')
       .eq('id', noteId)
       .single();
     
-    if (!article || article.visibility !== 'public') {
+    if (!article || article.share_settings?.visibility === 'private') {
       logApi('v2_note_statistics', `❌ Accès refusé pour note ${noteId}`, context);
       return NextResponse.json(
         { error: 'Accès refusé' },

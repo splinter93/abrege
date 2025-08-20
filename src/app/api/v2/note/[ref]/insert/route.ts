@@ -72,7 +72,7 @@ export async function POST(
   const noteId = resolveResult.id;
 
   // 🔐 Vérification des permissions
-  const permissionResult = await checkUserPermission(noteId, 'article', 'editor', userId, context);
+  const permissionResult = await checkUserPermission(noteId, 'article', 'editor', userId, context, supabase);
   if (!permissionResult.success) {
     logApi('v2_note_insert', `❌ Erreur vérification permissions: ${permissionResult.error}`, context);
     return NextResponse.json(
