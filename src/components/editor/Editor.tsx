@@ -447,101 +447,40 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
 
   const handlePreviewClick = React.useCallback(async () => {
     try {
-      // Récupérer la note directement depuis l'API V2 au lieu du store local
-      let noteData: any = null;
+      // 🎯 SIMPLE : Prendre le slug depuis le store local
+      const noteData = useFileSystemStore.getState().notes[noteId];
       
-      try {
-        // Essayer d'abord de récupérer depuis l'API V2
-        const { data: { session } } = await supabase.auth.getSession();
-        const token = session?.access_token;
-        if (!token) throw new Error('Authentification requise');
-        
-        const res = await fetch(`/api/v2/note/${encodeURIComponent(noteId)}/metadata`, {
-          method: 'GET',
-          headers: { 
-            'Content-Type': 'application/json', 
-            'Authorization': `Bearer ${token}` 
-          }
-        });
-        
-        if (res.ok) {
-          const data = await res.json();
-          noteData = data.note;
-        } else {
-          // Fallback sur le store local
-          noteData = useFileSystemStore.getState().notes[noteId];
-        }
-      } catch (error) {
-        console.warn('Erreur API V2, fallback sur store local:', error);
-        // Fallback sur le store local
-        noteData = useFileSystemStore.getState().notes[noteId];
-      }
-      
-      // Vérifier si la note est accessible
-      if (!noteData) {
-        toast.error('Note non trouvée. Rechargez la page et réessayez.');
-        return;
-      }
-      
-      // Toutes les notes peuvent être prévisualisées, même les privées
-      // La visibilité contrôle l'accès public, pas la possibilité de preview
-
-      // Vérifier si la note a un slug
       if (!noteData?.slug) {
-        toast.error('Cette note n\'a pas de slug. Publiez à nouveau la note.');
+        toast.error('Cette note n\'a pas de slug. Publiez-la d\'abord.');
         return;
       }
 
-      // Construire l'URL avec le slug (priorité sur l'URL stockée qui peut être incorrecte)
-      let url: string | null = null;
+      // 🎯 SIMPLE : Construire l'URL publique avec le username actuel
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error('Vous devez être connecté.');
+        return;
+      }
+
+      // 🎯 SIMPLE : Récupérer le username
+      const { data: userData } = await supabase
+        .from('users')
+        .select('username')
+        .eq('id', user.id)
+        .single();
+
+      if (!userData?.username) {
+        toast.error('Username non trouvé.');
+        return;
+      }
+
+      // 🎯 SIMPLE : Construire et ouvrir l'URL
+      const url = `${window.location.origin}/@${userData.username}/${noteData.slug}`;
+      console.log('🎯 Ouverture de l\'URL publique:', url);
+      window.open(url, '_blank', 'noopener,noreferrer');
       
-      try {
-        // Récupérer l'utilisateur connecté
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) {
-          toast.error('Vous devez être connecté pour prévisualiser cette note.');
-          return;
-        }
-
-        // Récupérer le username depuis la base de données
-        const { data: userData, error: userError } = await supabase
-          .from('users')
-          .select('username')
-          .eq('id', user.id)
-          .single();
-
-        if (userError || !userData?.username) {
-          toast.error('Impossible de récupérer votre nom d\'utilisateur.');
-          return;
-        }
-
-        // Construire l'URL correcte avec le format /@username/slug
-        // Utiliser l'URL de base de l'environnement actuel
-        const baseUrl = window.location.origin;
-        url = `${baseUrl}/@${userData.username}/${noteData.slug}`;
-        
-        console.log('URL construite:', url);
-        
-      } catch (error) {
-        console.error('Erreur lors de la construction de l\'URL:', error);
-        toast.error('Erreur lors de la construction de l\'URL publique.');
-        return;
-      }
-
-      if (url) {
-        // Vérifier que l'URL est valide
-        try {
-          new URL(url);
-          console.log('Ouverture de l\'URL:', url);
-          window.open(url, '_blank', 'noopener,noreferrer');
-        } catch {
-          toast.error('URL publique invalide. Publiez à nouveau la note.');
-        }
-      } else {
-        toast.error('Impossible de générer l\'URL publique. Publiez à nouveau la note.');
-      }
     } catch (error) {
-      console.error('Erreur lors de l\'ouverture de la prévisualisation:', error);
+      console.error('❌ Erreur bouton œil:', error);
       toast.error('Erreur lors de l\'ouverture de la prévisualisation');
     }
   }, [noteId]);
