@@ -223,6 +223,15 @@ export class OptimizedClasseurService {
       }
     }
   }
+
+  /**
+   * Obtenir les statistiques du cache
+   */
+  getCacheStats() {
+    return {
+      totalCacheSize: this.cache.size
+    };
+  }
 }
 
 // ==========================================================================

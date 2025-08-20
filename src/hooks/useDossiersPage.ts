@@ -3,6 +3,8 @@
 import { useEffect, useState, useMemo, useCallback } from "react";
 import { useFileSystemStore } from "@/store/useFileSystemStore";
 import { optimizedClasseurService } from "@/services/optimizedClasseurService";
+import { v2UnifiedApi } from "@/services/V2UnifiedApi";
+import { simpleLogger as logger } from "@/utils/logger";
 import type { Classeur } from "@/store/useFileSystemStore";
 
 export function useDossiersPage(userId: string) {
@@ -21,27 +23,36 @@ export function useDossiersPage(userId: string) {
 
   useEffect(() => {
     async function loadInitialData() {
+      if (!userId) return;
+      
       try {
         setLoading(true);
         setError(null);
         
-        // 🚀 Utiliser le service optimisé pour un chargement ultra-rapide
-        await optimizedClasseurService.loadClasseursWithContentOptimized(userId);
+        logger.dev('[useDossiersPage] 🚀 Début chargement des données');
         
-        // Le store Zustand sera automatiquement mis à jour par le service
-        // Pas besoin de faire setClasseurs manuellement
+        // 🚀 Essayer d'abord le service optimisé
+        try {
+          const result = await optimizedClasseurService.loadClasseursWithContentOptimized(userId);
+          logger.dev(`[useDossiersPage] ✅ Service optimisé: ${result.length} classeurs chargés`);
+        } catch (optimizedError) {
+          logger.warn('[useDossiersPage] ⚠️ Service optimisé échoué, fallback vers l\'ancien système');
+          
+          // 🔄 Fallback vers l'ancien système
+          await v2UnifiedApi.loadClasseursWithContent(userId);
+          logger.dev('[useDossiersPage] ✅ Fallback réussi avec l\'ancien système');
+        }
         
       } catch (e) {
-        setError("Erreur lors du chargement des données.");
-        console.error(e);
+        const errorMessage = e instanceof Error ? e.message : 'Erreur inconnue lors du chargement';
+        logger.error('[useDossiersPage] ❌ Erreur chargement:', e);
+        setError(`Erreur lors du chargement des données: ${errorMessage}`);
       } finally {
         setLoading(false);
       }
     }
     
-    if (userId) {
-      loadInitialData();
-    }
+    loadInitialData();
   }, [userId]);
   
   // Auto-select the first classeur when available
