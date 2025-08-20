@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { optimizedNoteService } from '@/services/optimizedNoteService';
 import { useFileSystemStore } from '@/store/useFileSystemStore';
 import { supabase } from '@/supabaseClient';
+import { retryWithBackoff } from '@/utils/retryUtils';
+import { noteConcurrencyManager } from '@/utils/concurrencyManager';
 
 interface UseOptimizedNoteLoaderProps {
   noteRef: string;
@@ -23,7 +25,8 @@ interface UseOptimizedNoteLoaderReturn {
  * - Chargement en deux phases : métadonnées puis contenu
  * - Cache intelligent avec OptimizedNoteService
  * - Préchargement des notes liées
- * - Gestion d'erreur robuste
+ * - Gestion d'erreur robuste avec retry
+ * - Gestion de concurrence pour éviter les chargements multiples
  */
 export const useOptimizedNoteLoader = ({
   noteRef,
@@ -43,7 +46,7 @@ export const useOptimizedNoteLoader = ({
   const loadingRef = useRef(false);
   const cancelledRef = useRef(false);
 
-  // 🔧 Fonction de chargement optimisé en deux phases
+  // 🔧 Fonction de chargement optimisé en deux phases avec retry
   const loadNote = useCallback(async () => {
     if (loadingRef.current) return;
     
@@ -61,9 +64,12 @@ export const useOptimizedNoteLoader = ({
       }
       const userId = sessionData.session.user.id;
 
-      // Phase 1 : Charger les métadonnées (rapide)
+      // Phase 1 : Charger les métadonnées (rapide) avec retry
       console.log('[useOptimizedNoteLoader] 📖 Phase 1: Chargement métadonnées...');
-      const metadata = await optimizedNoteService.getNoteMetadata(noteRef, userId);
+      const metadata = await retryWithBackoff(
+        () => optimizedNoteService.getNoteMetadata(noteRef, userId),
+        { maxRetries: 2, baseDelay: 500 }
+      );
       console.log('[useOptimizedNoteLoader] ✅ Métadonnées récupérées:', metadata);
       
       // Créer la note avec les métadonnées
@@ -95,11 +101,19 @@ export const useOptimizedNoteLoader = ({
         addNote(noteData as any);
       }
 
-      // Phase 2 : Charger le contenu si demandé
+      // Phase 2 : Charger le contenu si demandé avec gestion de concurrence
       if (preloadContent && !cancelledRef.current) {
         console.log('[useOptimizedNoteLoader] 📖 Phase 2: Chargement contenu...');
         try {
-          const content = await optimizedNoteService.getNoteContent(noteRef, userId);
+          // 🔧 Utiliser le gestionnaire de concurrence pour éviter les chargements multiples
+          const content = await noteConcurrencyManager.getOrCreateLoadingPromise(
+            `note_content_${noteRef}_${userId}`,
+            () => retryWithBackoff(
+              () => optimizedNoteService.getNoteContent(noteRef, userId),
+              { maxRetries: 2, baseDelay: 1000 }
+            )
+          );
+          
           console.log('[useOptimizedNoteLoader] ✅ Contenu récupéré:', {
             id: content.id,
             markdown_length: content.markdown_content?.length || 0,
@@ -161,8 +175,14 @@ export const useOptimizedNoteLoader = ({
         if (preloadContent) {
           console.log('[useOptimizedNoteLoader] 🚀 Chargement asynchrone du contenu...');
           
-          // Charger le contenu en arrière-plan sans bloquer
-          optimizedNoteService.getNoteContent(noteRef, userId)
+          // Charger le contenu en arrière-plan sans bloquer avec retry
+          noteConcurrencyManager.getOrCreateLoadingPromise(
+            `note_content_async_${noteRef}_${userId}`,
+            () => retryWithBackoff(
+              () => optimizedNoteService.getNoteContent(noteRef, userId),
+              { maxRetries: 2, baseDelay: 1000 }
+            )
+          )
             .then(content => {
               console.log('[useOptimizedNoteLoader] ✅ Contenu chargé asynchronement:', {
                 id: content.id,
@@ -208,7 +228,7 @@ export const useOptimizedNoteLoader = ({
     }
   }, [noteRef, preloadContent, addNote, updateNote, existingNote]);
 
-  // 🔄 Fonction de rafraîchissement
+  // 🔄 Fonction de rafraîchissement avec retry
   const refreshNote = useCallback(async () => {
     // Invalider le cache pour forcer le rechargement
     const { data: sessionData } = await supabase.auth.getSession();

@@ -6,6 +6,7 @@ import Sidebar from '@/components/Sidebar';
 import LogoHeader from '@/components/LogoHeader';
 import { Book, FileText, MessageSquare, Plus, Search, Upload, Link as LinkIcon, Sparkles } from 'lucide-react';
 import RecentActivityPrivate from '@/components/RecentActivityPrivate';
+import PerformanceMonitor from '@/components/PerformanceMonitor';
 import './home.css';
 
 export default function HomePage() {
@@ -234,6 +235,9 @@ export default function HomePage() {
           </div>
         </div>
       </main>
+      
+      {/* 🔧 Monitoring des performances en temps réel */}
+      <PerformanceMonitor visible={false} />
     </div>
   );
 } 

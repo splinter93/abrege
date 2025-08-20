@@ -1,254 +1,213 @@
 import React, { useState, useEffect } from 'react';
-import { optimizedClasseurService } from '@/services/optimizedClasseurService';
+import { noteConcurrencyManager } from '@/utils/concurrencyManager';
 import { optimizedNoteService } from '@/services/optimizedNoteService';
-import { v2UnifiedApi } from '@/services/V2UnifiedApi';
-import { useFileSystemStore } from '@/store/useFileSystemStore';
-import { simpleLogger as logger } from '@/utils/logger';
-import { useAuth } from '@/hooks/useAuth';
 
-interface PerformanceStats {
-  classeurCacheSize: number;
-  noteMetadataCacheSize: number;
-  noteContentCacheSize: number;
-  totalCacheSize: number;
-  storeStats: {
-    classeurs: number;
-    folders: number;
-    notes: number;
+interface PerformanceMetrics {
+  cacheStats: {
+    metadataCacheSize: number;
+    contentCacheSize: number;
+    totalCacheSize: number;
   };
-  lastLoadTime: number;
-  loadStatus: 'idle' | 'loading' | 'success' | 'error';
-  lastError?: string;
+  concurrencyStats: {
+    activePromises: number;
+    totalKeys: number;
+    oldestPromise: number;
+  };
+  loadingKeys: string[];
 }
 
-export const PerformanceMonitor: React.FC = () => {
-  const [stats, setStats] = useState<PerformanceStats>({
-    classeurCacheSize: 0,
-    noteMetadataCacheSize: 0,
-    noteContentCacheSize: 0,
-    totalCacheSize: 0,
-    storeStats: { classeurs: 0, folders: 0, notes: 0 },
-    lastLoadTime: 0,
-    loadStatus: 'idle'
-  });
-  const [isVisible, setIsVisible] = useState(false);
-  const [isTesting, setIsTesting] = useState(false);
-  const [testResults, setTestResults] = useState<string[]>([]);
+/**
+ * Composant de monitoring des performances en temps réel
+ * Affiche les métriques du cache et de la concurrence
+ */
+const PerformanceMonitor: React.FC<{ visible?: boolean }> = ({ visible = false }) => {
+  const [metrics, setMetrics] = useState<PerformanceMetrics | null>(null);
+  const [isVisible, setIsVisible] = useState(visible);
 
-  // 🔧 Récupérer l'utilisateur réel connecté
-  const { user } = useAuth();
-
-  // Pas besoin d'utiliser le hook, on accède directement au store
-
+  // Mettre à jour les métriques toutes les 2 secondes
   useEffect(() => {
-    const interval = setInterval(() => {
-      try {
-        const classeurStats = (optimizedClasseurService as any).getCacheStats?.() || { totalCacheSize: 0 };
-        const noteStats = optimizedNoteService.getCacheStats();
-        const storeState = useFileSystemStore.getState();
-        
-        setStats({
-          classeurCacheSize: classeurStats.totalCacheSize || 0,
-          noteMetadataCacheSize: noteStats.metadataCacheSize || 0,
-          noteContentCacheSize: noteStats.contentCacheSize || 0,
-          totalCacheSize: (classeurStats.totalCacheSize || 0) + (noteStats.metadataCacheSize || 0) + (noteStats.contentCacheSize || 0),
-          storeStats: {
-            classeurs: Object.keys(storeState.classeurs).length,
-            folders: Object.keys(storeState.folders).length,
-            notes: Object.keys(storeState.notes).length
-          },
-          lastLoadTime: stats.lastLoadTime,
-          loadStatus: stats.loadStatus
-        });
-      } catch (error) {
-        console.error('Erreur mise à jour stats:', error);
-      }
-    }, 2000);
+    if (!isVisible) return;
+
+    const updateMetrics = () => {
+      const cacheStats = optimizedNoteService.getCacheStats();
+      const concurrencyStats = noteConcurrencyManager.getStats();
+      const loadingKeys = noteConcurrencyManager.getLoadingKeys();
+
+      setMetrics({
+        cacheStats,
+        concurrencyStats,
+        loadingKeys
+      });
+    };
+
+    updateMetrics();
+    const interval = setInterval(updateMetrics, 2000);
 
     return () => clearInterval(interval);
-  }, [stats.lastLoadTime, stats.loadStatus]);
-
-  const clearAllCache = () => {
-    try {
-      optimizedClasseurService.invalidateCache('all');
-      optimizedNoteService.invalidateAllCache();
-      setStats(prev => ({ ...prev, loadStatus: 'idle' }));
-      addTestResult('🗑️ Cache vidé avec succès');
-    } catch (error) {
-      addTestResult(`❌ Erreur vidage cache: ${error}`);
-    }
-  };
-
-  const addTestResult = (message: string) => {
-    setTestResults(prev => [...prev.slice(-9), `${new Date().toLocaleTimeString()}: ${message}`]);
-  };
-
-  const runDiagnosticTest = async () => {
-    setIsTesting(true);
-    setTestResults([]);
-    addTestResult('🧪 Début du diagnostic complet...');
-
-    // 🔧 Vérifier que l'utilisateur est connecté
-    if (!user?.id) {
-      addTestResult('❌ Aucun utilisateur connecté pour le diagnostic');
-      setIsTesting(false);
-      return;
-    }
-
-    try {
-      // Test 1: Service optimisé avec l'utilisateur réel
-      addTestResult(`🧪 Test 1: Service optimisé des classeurs (user: ${user.id.substring(0, 8)}...)`);
-      const startTime = Date.now();
-      
-      try {
-        const result = await optimizedClasseurService.loadClasseursWithContentOptimized(user.id);
-        const duration = Date.now() - startTime;
-        addTestResult(`✅ Service optimisé: ${result.length} classeurs en ${duration}ms`);
-      } catch (error) {
-        const duration = Date.now() - startTime;
-        addTestResult(`❌ Service optimisé échoué en ${duration}ms: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
-      }
-
-      // Test 2: Ancien système avec l'utilisateur réel
-      addTestResult(`🧪 Test 2: Ancien système V2UnifiedApi (user: ${user.id.substring(0, 8)}...)`);
-      const fallbackStart = Date.now();
-      
-      try {
-        await v2UnifiedApi.loadClasseursWithContent(user.id);
-        const duration = Date.now() - fallbackStart;
-        addTestResult(`✅ Ancien système: succès en ${duration}ms`);
-      } catch (error) {
-        const duration = Date.now() - fallbackStart;
-        addTestResult(`❌ Ancien système échoué en ${duration}ms: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
-      }
-
-      // Test 3: Vérification store
-      addTestResult('🧪 Test 3: Vérification du store Zustand');
-      const storeState = useFileSystemStore.getState();
-      addTestResult(`📊 Store: ${Object.keys(storeState.classeurs).length} classeurs, ${Object.keys(storeState.folders).length} dossiers, ${Object.keys(storeState.notes).length} notes`);
-
-      addTestResult('🎯 Diagnostic terminé');
-
-    } catch (error) {
-      addTestResult(`💥 Erreur critique: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
-    } finally {
-      setIsTesting(false);
-    }
-  };
+  }, [isVisible]);
 
   if (!isVisible) {
     return (
       <button
         onClick={() => setIsVisible(true)}
-        className="performance-monitor-toggle"
-        title="Ouvrir le moniteur de performance"
+        style={{
+          position: 'fixed',
+          bottom: '20px',
+          right: '20px',
+          zIndex: 1000,
+          padding: '8px 12px',
+          backgroundColor: 'rgba(0, 0, 0, 0.8)',
+          color: 'white',
+          border: 'none',
+          borderRadius: '20px',
+          fontSize: '12px',
+          cursor: 'pointer'
+        }}
       >
-        📊
+        📊 Perf
       </button>
     );
   }
 
   return (
-    <div className="performance-monitor">
-      <div className="performance-monitor-header">
-        <h3>📊 Moniteur de Performance</h3>
-        <button onClick={() => setIsVisible(false)} className="close-btn">×</button>
+    <div style={{
+      position: 'fixed',
+      bottom: '20px',
+      right: '20px',
+      zIndex: 1000,
+      backgroundColor: 'rgba(0, 0, 0, 0.9)',
+      color: 'white',
+      padding: '16px',
+      borderRadius: '12px',
+      fontSize: '12px',
+      fontFamily: 'monospace',
+      minWidth: '280px',
+      maxHeight: '400px',
+      overflow: 'auto'
+    }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+        <h3 style={{ margin: 0, fontSize: '14px' }}>📊 Performance Monitor</h3>
+        <button
+          onClick={() => setIsVisible(false)}
+          style={{
+            background: 'none',
+            border: 'none',
+            color: 'white',
+            cursor: 'pointer',
+            fontSize: '16px'
+          }}
+        >
+          ✕
+        </button>
       </div>
 
-      <div className="performance-monitor-content">
-        <div className="stats-section">
-          <h4>📈 Statistiques en temps réel</h4>
-          <div className="stats-grid">
-            <div className="stat-item">
-              <span className="stat-label">Cache Classeurs:</span>
-              <span className="stat-value">{stats.classeurCacheSize}</span>
-            </div>
-            <div className="stat-item">
-              <span className="stat-label">Cache Notes (meta):</span>
-              <span className="stat-value">{stats.noteMetadataCacheSize}</span>
-            </div>
-            <div className="stat-item">
-              <span className="stat-label">Cache Notes (contenu):</span>
-              <span className="stat-value">{stats.noteContentCacheSize}</span>
-            </div>
-            <div className="stat-item">
-              <span className="stat-label">Total Cache:</span>
-              <span className="stat-value">{stats.totalCacheSize}</span>
-            </div>
-          </div>
-
-          <div className="store-stats">
-            <h5>🏪 État du Store Zustand</h5>
-            <div className="stats-grid">
-              <div className="stat-item">
-                <span className="stat-label">Classeurs:</span>
-                <span className="stat-value">{stats.storeStats.classeurs}</span>
+      {metrics && (
+        <>
+          {/* Cache Stats */}
+          <div style={{ marginBottom: '16px' }}>
+            <h4 style={{ margin: '0 0 8px 0', fontSize: '12px', color: '#888' }}>💾 Cache</h4>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+              <div>
+                <span style={{ color: '#888' }}>Métadonnées:</span>
+                <span style={{ float: 'right', color: '#4ade80' }}>{metrics.cacheStats.metadataCacheSize}</span>
               </div>
-              <div className="stat-item">
-                <span className="stat-label">Dossiers:</span>
-                <span className="stat-value">{stats.storeStats.folders}</span>
+              <div>
+                <span style={{ color: '#888' }}>Contenu:</span>
+                <span style={{ float: 'right', color: '#4ade80' }}>{metrics.cacheStats.contentCacheSize}</span>
               </div>
-              <div className="stat-item">
-                <span className="stat-label">Notes:</span>
-                <span className="stat-value">{stats.storeStats.notes}</span>
+              <div style={{ gridColumn: '1 / -1', borderTop: '1px solid #333', paddingTop: '4px' }}>
+                <span style={{ color: '#888' }}>Total:</span>
+                <span style={{ float: 'right', color: '#4ade80' }}>{metrics.cacheStats.totalCacheSize}</span>
               </div>
             </div>
           </div>
 
-          <div className="status-info">
-            <h5>🔄 Statut du chargement</h5>
-            <div className="status-item">
-              <span className="status-label">Statut:</span>
-              <span className={`status-value status-${stats.loadStatus}`}>
-                {stats.loadStatus === 'idle' && '🟡 En attente'}
-                {stats.loadStatus === 'loading' && '🔄 Chargement...'}
-                {stats.loadStatus === 'success' && '✅ Succès'}
-                {stats.loadStatus === 'error' && '❌ Erreur'}
-              </span>
+          {/* Concurrency Stats */}
+          <div style={{ marginBottom: '16px' }}>
+            <h4 style={{ margin: '0 0 8px 0', fontSize: '12px', color: '#888' }}>🔄 Concurrence</h4>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+              <div>
+                <span style={{ color: '#888' }}>Promesses actives:</span>
+                <span style={{ float: 'right', color: '#fbbf24' }}>{metrics.concurrencyStats.activePromises}</span>
+              </div>
+              <div>
+                <span style={{ color: '#888' }}>Clés totales:</span>
+                <span style={{ float: 'right', color: '#fbbf24' }}>{metrics.concurrencyStats.totalKeys}</span>
+              </div>
+              <div>
+                <span style={{ color: '#888' }}>Plus ancienne:</span>
+                <span style={{ float: 'right', color: '#fbbf24' }}>{(metrics.concurrencyStats.oldestPromise / 1000).toFixed(1)}s</span>
+              </div>
             </div>
-            {stats.lastLoadTime > 0 && (
-              <div className="status-item">
-                <span className="status-label">Dernier chargement:</span>
-                <span className="status-value">{new Date(stats.lastLoadTime).toLocaleTimeString()}</span>
-              </div>
-            )}
-            {stats.lastError && (
-              <div className="status-item">
-                <span className="status-label">Dernière erreur:</span>
-                <span className="status-value error">{stats.lastError}</span>
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div className="actions-section">
-          <h4>🛠️ Actions</h4>
-          <div className="action-buttons">
-            <button 
-              onClick={runDiagnosticTest} 
-              disabled={isTesting}
-              className="action-btn primary"
-            >
-              {isTesting ? '🧪 Test en cours...' : '🧪 Lancer diagnostic'}
-            </button>
-            <button onClick={clearAllCache} className="action-btn danger">
-              🗑️ Vider le cache
-            </button>
           </div>
 
-          {testResults.length > 0 && (
-            <div className="test-results">
-              <h5>📋 Résultats des tests</h5>
-              <div className="test-results-list">
-                {testResults.map((result, index) => (
-                  <div key={index} className="test-result-item">
-                    {result}
+          {/* Loading Keys */}
+          {metrics.loadingKeys.length > 0 && (
+            <div style={{ marginBottom: '16px' }}>
+              <h4 style={{ margin: '0 0 8px 0', fontSize: '12px', color: '#888' }}>⏳ Chargements en cours</h4>
+              <div style={{ maxHeight: '100px', overflow: 'auto' }}>
+                {metrics.loadingKeys.map((key, index) => (
+                  <div key={index} style={{ 
+                    fontSize: '10px', 
+                    color: '#ccc', 
+                    marginBottom: '2px',
+                    wordBreak: 'break-all'
+                  }}>
+                    {key}
                   </div>
                 ))}
               </div>
             </div>
           )}
-        </div>
+
+          {/* Actions */}
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <button
+              onClick={() => {
+                optimizedNoteService.invalidateAllCache();
+                console.log('[PerformanceMonitor] 🗑️ Cache vidé');
+              }}
+              style={{
+                padding: '4px 8px',
+                fontSize: '10px',
+                backgroundColor: '#dc2626',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer'
+              }}
+            >
+              Vider Cache
+            </button>
+            <button
+              onClick={() => {
+                noteConcurrencyManager.abortAll();
+                console.log('[PerformanceMonitor] ⏹️ Toutes les promesses annulées');
+              }}
+              style={{
+                padding: '4px 8px',
+                fontSize: '10px',
+                backgroundColor: '#ea580c',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer'
+              }}
+            >
+              Annuler Tout
+            </button>
+          </div>
+        </>
+      )}
+
+      <div style={{ 
+        marginTop: '12px', 
+        paddingTop: '8px', 
+        borderTop: '1px solid #333', 
+        fontSize: '10px', 
+        color: '#666' 
+      }}>
+        Mise à jour: {new Date().toLocaleTimeString()}
       </div>
     </div>
   );
