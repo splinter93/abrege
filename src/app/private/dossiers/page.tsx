@@ -10,6 +10,7 @@ import FolderManager from "@/components/FolderManager";
 import FolderToolbar, { ViewMode } from "@/components/FolderToolbar";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import AuthGuard from "@/components/AuthGuard";
+import PerformanceMonitor from "@/components/PerformanceMonitor";
 import { useDossiersPage } from "@/hooks/useDossiersPage";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/supabaseClient";
@@ -70,14 +71,9 @@ function DossiersPageContent() {
     if (!activeClasseur || !user?.id) return;
     
     try {
-      const result = await v2UnifiedApi.createFolder({
-        name: "Nouveau dossier",
-        notebook_id: activeClasseur.id,
-        parent_id: currentFolderId || null
-      }, user.id);
-      
-      // Recharger les données
-      await v2UnifiedApi.loadClasseursWithContent(user.id);
+      // TODO: Implémenter la création via le service optimisé
+      // Pour l'instant, on recharge tout
+      await handleUpdateClasseur(activeClasseur.id, {}); // Recharger les données
     } catch (e) {
       handleError(e, 'création dossier');
     }
@@ -87,18 +83,51 @@ function DossiersPageContent() {
     if (!activeClasseur || !user?.id) return;
     
     try {
-      const result = await v2UnifiedApi.createNote({
-        source_title: "Nouvelle note",
-        notebook_id: activeClasseur.id,
-        folder_id: currentFolderId || null,
-        markdown_content: ""
-      }, user.id);
-      
-      // Recharger les données
-      await v2UnifiedApi.loadClasseursWithContent(user.id);
+      // TODO: Implémenter la création via le service optimisé
+      // Pour l'instant, on recharge tout
+      await handleUpdateClasseur(activeClasseur.id, {}); // Recharger les données
     } catch (e) {
       handleError(e, 'création note');
     }
+  };
+
+  // Handlers pour les classeurs
+  const handleCreateClasseurClick = async () => {
+    if (!user?.id) return;
+    
+    try {
+      await handleCreateClasseur("Nouveau classeur", "📚");
+    } catch (e) {
+      handleError(e, 'création classeur');
+    }
+  };
+
+  const handleCreateClasseurButtonClick = () => {
+    handleCreateClasseurClick();
+  };
+
+  const handleRenameClasseurClick = async (id: string, newName: string) => {
+    if (!user?.id) return;
+    
+    try {
+      await handleRenameClasseur(id, newName);
+    } catch (e) {
+      handleError(e, 'renommage classeur');
+    }
+  };
+
+  const handleDeleteClasseurClick = async (id: string) => {
+    if (!user?.id) return;
+    
+    try {
+      await handleDeleteClasseur(id);
+    } catch (e) {
+      handleError(e, 'suppression classeur');
+    }
+  };
+
+  const handleFolderOpenClick = (folder: any) => {
+    handleFolderOpen(folder.id);
   };
 
   const handleToggleView = (mode: ViewMode) => {
@@ -122,86 +151,81 @@ function DossiersPageContent() {
       {/* Zone de contenu principal */}
       <main className="dossiers-content-area">
         {/* Section des classeurs avec navigation */}
-        <section className="classeurs-section">
-          <ClasseurBandeau
-            classeurs={classeurs.map((c: Classeur) => ({ 
-              id: c.id, 
-              name: c.name, 
-              emoji: c.emoji, 
-              color: '#e55a2c'
-            }))}
-            activeClasseurId={activeClasseurId || null}
-            onSelectClasseur={(id) => {
-              setActiveClasseurId(id);
-              setCurrentFolderId(undefined);
-            }}
-            onCreateClasseur={handleCreateClasseur}
-            onRenameClasseur={handleRenameClasseur}
-            onDeleteClasseur={handleDeleteClasseur}
-          />
-        </section>
+        {activeClasseur && (
+          <>
+            <section className="classeurs-section">
+              <ClasseurBandeau
+                classeurs={classeurs.map((c: Classeur) => ({ 
+                  id: c.id, 
+                  name: c.name, 
+                  emoji: c.emoji, 
+                  color: '#e55a2c'
+                }))}
+                activeClasseurId={activeClasseurId || null}
+                onSelectClasseur={(id) => {
+                  setActiveClasseurId(id);
+                  setCurrentFolderId(undefined);
+                }}
+                onCreateClasseur={handleCreateClasseurClick}
+                onRenameClasseur={handleRenameClasseurClick}
+                onDeleteClasseur={handleDeleteClasseurClick}
+              />
+            </section>
 
-        {/* Section de contenu des dossiers */}
-        <section className="folders-section">
-          {loading && (
-            <div className="loading-state">
-              <div className="loading-spinner"></div>
-              <p>Chargement des dossiers...</p>
-            </div>
-          )}
-          
-          {error && (
-            <div className="error-state">
-              <div className="error-icon">⚠️</div>
-              <h3>Erreur de chargement</h3>
-              <p>{error}</p>
-            </div>
-          )}
-          
-          {!loading && !error && activeClasseur && (
-            <div className="folder-content">
-              <div className="folder-header">
-                <div className="folder-info">
-                  <span className="folder-icon">{(activeClasseur as any).emoji}</span>
-                  <h2 className="folder-title">{activeClasseur.name}</h2>
-                </div>
-                {/* Remplacer les anciens boutons par la FolderToolbar */}
-                <div className="folder-actions">
-                  <FolderToolbar
-                    onCreateFolder={handleCreateFolder}
-                    onCreateFile={handleCreateNote}
-                    onToggleView={handleToggleView}
-                    viewMode={viewMode}
-                  />
-                </div>
-              </div>
-              
+            <section className="content-section">
               <FolderManager
                 classeurId={activeClasseur.id}
                 classeurName={activeClasseur.name}
-                classeurIcon={(activeClasseur as any).emoji}
+                classeurIcon={activeClasseur.emoji}
                 parentFolderId={currentFolderId}
-                onFolderOpen={handleFolderOpen}
+                onFolderOpen={handleFolderOpenClick}
                 onGoBack={handleGoBack}
                 onGoToRoot={handleGoToRoot}
                 onGoToFolder={handleGoToFolder}
                 folderPath={folderPath}
               />
-            </div>
-          )}
 
-          {!loading && !error && !activeClasseur && (
-            <div className="empty-state">
-              <div className="empty-icon">📁</div>
-              <h2>Aucun classeur sélectionné</h2>
-              <p>Choisissez un classeur pour voir son contenu ou créez-en un nouveau.</p>
-              <button className="action-btn primary" onClick={handleCreateClasseur}>
-                Créer un classeur
-              </button>
-            </div>
-          )}
-        </section>
-      </main>
-    </div>
-  );
-} 
+              <div className="toolbar-actions">
+                <button
+                  onClick={handleCreateFolder}
+                  className="action-button create-folder"
+                  title="Créer un dossier"
+                >
+                  📁 Nouveau dossier
+                </button>
+                <button
+                  onClick={handleCreateNote}
+                  className="action-button create-note"
+                  title="Créer une note"
+                >
+                  📝 Nouvelle note
+                </button>
+                <button
+                  onClick={handleCreateClasseurButtonClick}
+                  className="action-button create-classeur"
+                  title="Créer un classeur"
+                >
+                  📚 Nouveau classeur
+                </button>
+              </div>
+            </section>
+          </>
+        )}
+
+        {!loading && !error && !activeClasseur && (
+          <div className="empty-state">
+            <div className="empty-icon">📁</div>
+            <h2>Aucun classeur sélectionné</h2>
+            <p>Choisissez un classeur pour voir son contenu ou créez-en un nouveau.</p>
+            <button className="action-btn primary" onClick={handleCreateClasseur}>
+              Créer un classeur
+            </button>
+          </div>
+        )}
+              </main>
+        
+        {/* Moniteur de performance */}
+        <PerformanceMonitor />
+      </div>
+    );
+  } 
