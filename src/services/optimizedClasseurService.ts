@@ -95,13 +95,19 @@ export class OptimizedClasseurService {
 
       // 🚀 Étape 2: Chargement parallèle de tout le contenu
       const contentStart = Date.now();
+      logger.dev(`[OptimizedClasseurService] 🚀 Chargement contenu pour ${classeurs.length} classeurs...`);
+      
       const contentPromises = classeurs.map(async (classeur) => {
         try {
+          logger.dev(`[OptimizedClasseurService] 🔍 Chargement classeur ${classeur.id} (${classeur.name})...`);
+          
           // Charger dossiers et notes en parallèle pour chaque classeur
           const [dossiersResult, notesResult] = await Promise.all([
             this.getDossiersForClasseur(classeur.id),
             this.getNotesForClasseur(classeur.id)
           ]);
+
+          logger.dev(`[OptimizedClasseurService] ✅ Classeur ${classeur.id}: ${dossiersResult.length} dossiers, ${notesResult.length} notes`);
 
           return {
             ...classeur,
@@ -171,6 +177,8 @@ export class OptimizedClasseurService {
    * Récupérer les dossiers d'un classeur spécifique
    */
   private async getDossiersForClasseur(classeurId: string) {
+    logger.dev(`[OptimizedClasseurService] 🔍 Récupération dossiers pour classeur ${classeurId}...`);
+    
     const { data, error } = await supabase
       .from('folders')
       .select('id, name, position, parent_id, created_at, updated_at')
@@ -182,6 +190,7 @@ export class OptimizedClasseurService {
       return [];
     }
 
+    logger.dev(`[OptimizedClasseurService] ✅ ${data?.length || 0} dossiers récupérés pour classeur ${classeurId}`);
     return data || [];
   }
 
@@ -189,6 +198,8 @@ export class OptimizedClasseurService {
    * Récupérer les notes d'un classeur spécifique
    */
   private async getNotesForClasseur(classeurId: string) {
+    logger.dev(`[OptimizedClasseurService] 🔍 Récupération notes pour classeur ${classeurId}...`);
+    
     const { data, error } = await supabase
       .from('articles')
       .select('id, source_title, folder_id, created_at, updated_at, slug')
@@ -200,6 +211,7 @@ export class OptimizedClasseurService {
       return [];
     }
 
+    logger.dev(`[OptimizedClasseurService] ✅ ${data?.length || 0} notes récupérées pour classeur ${classeurId}`);
     return data || [];
   }
 
