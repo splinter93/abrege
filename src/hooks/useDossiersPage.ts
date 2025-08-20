@@ -17,6 +17,15 @@ export function useDossiersPage(userId: string) {
   
   // Mémoiser la conversion en array pour éviter les re-renders
   const classeurs = useMemo(() => Object.values(classeursStore), [classeursStore]);
+  
+  // 🔍 Debug: Log quand le store change
+  useEffect(() => {
+    logger.dev(`[useDossiersPage] 🔍 Store mis à jour:`, {
+      classeurs: Object.keys(classeursStore).length,
+      classeursIds: Object.keys(classeursStore),
+      classeursArray: classeurs.length
+    });
+  }, [classeursStore, classeurs]);
 
   const [activeClasseurId, setActiveClasseurId] = useState<string | undefined>();
   const [currentFolderId, setCurrentFolderId] = useState<string | undefined>();
@@ -44,18 +53,17 @@ export function useDossiersPage(userId: string) {
           logger.dev(`[useDossiersPage] ✅ Service optimisé: ${result.length} classeurs chargés en ${optimizedTime}ms`);
           
           // 🔍 DIAGNOSTIC DÉTAILLÉ DU STORE APRÈS OPTIMISATION
-          const storeAfterOptimized = useFileSystemStore.getState();
           logger.dev(`[useDossiersPage] 🔍 Store APRÈS optimisation:`, {
-            classeurs: Object.keys(storeAfterOptimized.classeurs).length,
-            folders: Object.keys(storeAfterOptimized.folders).length,
-            notes: Object.keys(storeAfterOptimized.notes).length,
-            classeursIds: Object.keys(storeAfterOptimized.classeurs),
-            foldersIds: Object.keys(storeAfterOptimized.folders),
-            notesIds: Object.keys(storeAfterOptimized.notes)
+            classeurs: Object.keys(classeursStore).length,
+            folders: Object.keys(useFileSystemStore.getState().folders).length,
+            notes: Object.keys(useFileSystemStore.getState().notes).length,
+            classeursIds: Object.keys(classeursStore),
+            foldersIds: Object.keys(useFileSystemStore.getState().folders),
+            notesIds: Object.keys(useFileSystemStore.getState().notes)
           });
           
           // 🔍 Vérifier si les données sont bien dans le store
-          if (Object.keys(storeAfterOptimized.classeurs).length > 0) {
+          if (Object.keys(classeursStore).length > 0) {
             logger.dev('[useDossiersPage] 🎯 Service optimisé fonctionne parfaitement !');
             
             // 🔍 Vérifier que les données sont bien dans le state local
