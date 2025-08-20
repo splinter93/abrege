@@ -17,6 +17,37 @@ export default function NotePage() {
     preloadContent: true
   });
 
+  // 🔍 DEBUG : Vérifier le contenu de la note
+  React.useEffect(() => {
+    if (note) {
+      console.log('[NotePage] 📝 Note chargée:', {
+        id: note.id,
+        title: note.source_title,
+        hasMarkdown: !!note.markdown_content,
+        markdownLength: note.markdown_content?.length || 0,
+        hasContent: !!note.content,
+        contentLength: note.content?.length || 0,
+        hasHtml: !!note.html_content,
+        htmlLength: note.html_content?.length || 0
+      });
+    }
+  }, [note]);
+
+  // 🔍 DEBUG : Surveiller les changements du store
+  const noteFromStore = useFileSystemStore(s => s.notes[noteId || '']);
+  React.useEffect(() => {
+    if (noteFromStore) {
+      console.log('[NotePage] 🔄 Note mise à jour dans le store:', {
+        id: noteFromStore.id,
+        title: noteFromStore.source_title,
+        hasMarkdown: !!noteFromStore.markdown_content,
+        markdownLength: noteFromStore.markdown_content?.length || 0,
+        hasContent: !!noteFromStore.content,
+        contentLength: noteFromStore.content?.length || 0
+      });
+    }
+  }, [noteFromStore]);
+
   if (!noteId) {
     return <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>ID de note non valide.</div>;
   }

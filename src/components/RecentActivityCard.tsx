@@ -23,13 +23,15 @@ interface RecentActivityCardProps {
   username?: string;
   showHeader?: boolean;
   compact?: boolean;
+  onError?: () => void;
 }
 
 export default function RecentActivityCard({ 
   limit = 3, 
   username, 
   showHeader = true,
-  compact = false 
+  compact = false,
+  onError
 }: RecentActivityCardProps) {
   const [notes, setNotes] = useState<RecentNote[]>([]);
   const [loading, setLoading] = useState(true);
@@ -55,7 +57,9 @@ export default function RecentActivityCard({
           throw new Error(data.error || 'Unknown error');
         }
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'An error occurred');
+        const errorMessage = err instanceof Error ? err.message : 'An error occurred';
+        setError(errorMessage);
+        onError?.(); // Appeler le callback d'erreur si fourni
       } finally {
         setLoading(false);
       }

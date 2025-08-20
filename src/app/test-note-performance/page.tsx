@@ -76,9 +76,17 @@ export default function TestNotePerformancePage() {
     // Test 3 : Chargement du contenu
     const start3 = performance.now();
     try {
-      await optimizedNoteService.getNoteContent(testNoteId, userId);
+      const content = await optimizedNoteService.getNoteContent(testNoteId, userId);
       const time3 = performance.now() - start3;
       results.push({ test: 'Contenu complet', time: time3.toFixed(2) });
+      
+      // 🔍 DEBUG : Vérifier le contenu récupéré
+      console.log('[Test] Contenu récupéré:', {
+        id: content.id,
+        markdownLength: content.markdown_content?.length || 0,
+        htmlLength: content.html_content?.length || 0,
+        markdownPreview: content.markdown_content?.substring(0, 100) + '...'
+      });
     } catch (error) {
       results.push({ test: 'Contenu complet', time: 'Erreur', error: error.message });
     }
@@ -86,9 +94,17 @@ export default function TestNotePerformancePage() {
     // Test 4 : Note complète
     const start4 = performance.now();
     try {
-      await optimizedNoteService.getNoteComplete(testNoteId, userId);
+      const completeNote = await optimizedNoteService.getNoteComplete(testNoteId, userId);
       const time4 = performance.now() - start4;
       results.push({ test: 'Note complète', time: time4.toFixed(2) });
+      
+      // 🔍 DEBUG : Vérifier la note complète
+      console.log('[Test] Note complète récupérée:', {
+        id: completeNote.id,
+        title: completeNote.source_title,
+        markdownLength: completeNote.markdown_content?.length || 0,
+        htmlLength: completeNote.html_content?.length || 0
+      });
     } catch (error) {
       results.push({ test: 'Note complète', time: 'Erreur', error: error.message });
     }

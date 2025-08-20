@@ -15,8 +15,10 @@ export default function RecentActivityPrivate({
   compact = true,
   showHeader = false 
 }: RecentActivityPrivateProps) {
+  
   const { user } = useAuth();
   const [username, setUsername] = useState<string | undefined>();
+  const [hasError, setHasError] = useState(false);
 
   useEffect(() => {
     if (user?.email) {
@@ -26,6 +28,23 @@ export default function RecentActivityPrivate({
       setUsername(emailUsername);
     }
   }, [user]);
+
+  // Fallback en cas d'erreur
+  if (hasError) {
+    return (
+      <div style={{ 
+        padding: compact ? '12px' : '16px',
+        background: 'rgba(255, 255, 255, 0.02)',
+        border: '1px solid rgba(255, 255, 255, 0.06)',
+        borderRadius: '8px',
+        opacity: 0.7
+      }}>
+        <span style={{ fontSize: compact ? '12px' : '14px' }}>
+          Erreur de chargement de l'activité récente
+        </span>
+      </div>
+    );
+  }
 
   if (!user) {
     return (
@@ -49,6 +68,7 @@ export default function RecentActivityPrivate({
       compact={compact}
       showHeader={showHeader}
       username={username}
+      onError={() => setHasError(true)}
     />
   );
 } 

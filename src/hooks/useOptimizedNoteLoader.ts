@@ -32,11 +32,13 @@ export const useOptimizedNoteLoader = ({
 }: UseOptimizedNoteLoaderProps): UseOptimizedNoteLoaderReturn => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [note, setNote] = useState<any>(null);
   
   const addNote = useFileSystemStore(s => s.addNote);
   const updateNote = useFileSystemStore(s => s.updateNote);
   const existingNote = useFileSystemStore(s => s.notes[noteRef]);
+  
+  // 🔧 Utiliser la note du store Zustand comme source de vérité
+  const note = existingNote;
   
   const loadingRef = useRef(false);
   const cancelledRef = useRef(false);
@@ -50,6 +52,8 @@ export const useOptimizedNoteLoader = ({
       setLoading(true);
       setError(null);
 
+      console.log('[useOptimizedNoteLoader] 🚀 Début chargement note:', { noteRef, preloadContent });
+
       // Vérifier l'authentification
       const { data: sessionData } = await supabase.auth.getSession();
       if (!sessionData.session?.user?.id) {
@@ -58,7 +62,9 @@ export const useOptimizedNoteLoader = ({
       const userId = sessionData.session.user.id;
 
       // Phase 1 : Charger les métadonnées (rapide)
+      console.log('[useOptimizedNoteLoader] 📖 Phase 1: Chargement métadonnées...');
       const metadata = await optimizedNoteService.getNoteMetadata(noteRef, userId);
+      console.log('[useOptimizedNoteLoader] ✅ Métadonnées récupérées:', metadata);
       
       // Créer la note avec les métadonnées
       const noteData = {
@@ -78,7 +84,8 @@ export const useOptimizedNoteLoader = ({
         created_at: metadata.created_at,
         slug: metadata.slug,
         public_url: '',
-        visibility: 'private'
+        visibility: 'private',
+        folder_id: metadata.folder_id
       };
 
       // Ajouter/mettre à jour la note dans le store
@@ -87,14 +94,21 @@ export const useOptimizedNoteLoader = ({
       } else {
         addNote(noteData as any);
       }
-      
-      setNote(noteData);
 
       // Phase 2 : Charger le contenu si demandé
       if (preloadContent && !cancelledRef.current) {
-        const content = await optimizedNoteService.getNoteContent(noteRef, userId);
-        
-        if (!cancelledRef.current) {
+        console.log('[useOptimizedNoteLoader] 📖 Phase 2: Chargement contenu...');
+        try {
+          const content = await optimizedNoteService.getNoteContent(noteRef, userId);
+          console.log('[useOptimizedNoteLoader] ✅ Contenu récupéré:', {
+            id: content.id,
+            markdown_length: content.markdown_content?.length || 0,
+            html_length: content.html_content?.length || 0,
+            markdown_preview: content.markdown_content?.substring(0, 100) + '...'
+          });
+          
+          // 🔧 IMPORTANT : Mettre à jour le store Zustand IMMÉDIATEMENT
+          // Ne pas dépendre de cancelledRef.current pour cette mise à jour critique
           const updatedNoteData = {
             ...noteData,
             markdown_content: content.markdown_content,
@@ -102,13 +116,80 @@ export const useOptimizedNoteLoader = ({
             html_content: content.html_content || ''
           };
 
+          console.log('[useOptimizedNoteLoader] 🔄 Mise à jour note avec contenu:', {
+            id: noteRef,
+            markdown_length: updatedNoteData.markdown_content?.length || 0,
+            content_length: updatedNoteData.content?.length || 0,
+            markdown_preview: updatedNoteData.markdown_content?.substring(0, 100) + '...'
+          });
+
+          // 🔧 Mise à jour IMMÉDIATE du store Zustand
           if (existingNote) {
+            console.log('[useOptimizedNoteLoader] 🔄 Mise à jour note existante dans le store');
             updateNote(noteRef, updatedNoteData);
           } else {
+            console.log('[useOptimizedNoteLoader] ➕ Ajout nouvelle note dans le store');
             addNote(updatedNoteData as any);
           }
           
-          setNote(updatedNoteData);
+          // 🔍 Vérifier que la note est bien dans le store après mise à jour
+          setTimeout(() => {
+            const store = useFileSystemStore.getState();
+            const noteInStore = store.notes[noteRef];
+            console.log('[useOptimizedNoteLoader] 🔍 Vérification store après mise à jour:', {
+              noteInStore: !!noteInStore,
+              hasMarkdown: !!noteInStore?.markdown_content,
+              markdownLength: noteInStore?.markdown_content?.length || 0,
+              hasContent: !!noteInStore?.content,
+              contentLength: noteInStore?.content?.length || 0
+            });
+          }, 100);
+          
+          console.log('[useOptimizedNoteLoader] ✅ Note mise à jour dans le store:', {
+            id: noteRef,
+            markdown_length: updatedNoteData.markdown_content?.length || 0,
+            content_length: updatedNoteData.content?.length || 0
+          });
+          
+        } catch (contentError) {
+          console.error('[useOptimizedNoteLoader] ❌ Erreur Phase 2 (contenu):', contentError);
+        }
+      } else {
+        console.log('[useOptimizedNoteLoader] ⏭️ Phase 2 ignorée:', { preloadContent, cancelled: cancelledRef.current });
+        
+        // 🔧 CHARGEMENT ASYNCHRONE : Charger le contenu même si le composant se démonte
+        if (preloadContent) {
+          console.log('[useOptimizedNoteLoader] 🚀 Chargement asynchrone du contenu...');
+          
+          // Charger le contenu en arrière-plan sans bloquer
+          optimizedNoteService.getNoteContent(noteRef, userId)
+            .then(content => {
+              console.log('[useOptimizedNoteLoader] ✅ Contenu chargé asynchronement:', {
+                id: content.id,
+                markdown_length: content.markdown_content?.length || 0
+              });
+              
+              // Mettre à jour le store même si le composant n'existe plus
+              const updatedNoteData = {
+                ...noteData,
+                markdown_content: content.markdown_content,
+                content: content.markdown_content,
+                html_content: content.html_content || ''
+              };
+              
+              // Utiliser directement le store Zustand
+              const store = useFileSystemStore.getState();
+              if (store.notes[noteRef]) {
+                store.updateNote(noteRef, updatedNoteData);
+                console.log('[useOptimizedNoteLoader] ✅ Store mis à jour asynchronement');
+              } else {
+                store.addNote(updatedNoteData as any);
+                console.log('[useOptimizedNoteLoader] ✅ Note ajoutée asynchronement au store');
+              }
+            })
+            .catch(error => {
+              console.error('[useOptimizedNoteLoader] ❌ Erreur chargement asynchrone:', error);
+            });
         }
       }
 
@@ -116,12 +197,13 @@ export const useOptimizedNoteLoader = ({
       if (!cancelledRef.current) {
         const errorMessage = e instanceof Error ? e.message : 'Unknown error';
         setError(errorMessage);
-        console.error('[useOptimizedNoteLoader] Error loading note:', e);
+        console.error('[useOptimizedNoteLoader] ❌ Erreur chargement note:', e);
       }
     } finally {
       if (!cancelledRef.current) {
         setLoading(false);
         loadingRef.current = false;
+        console.log('[useOptimizedNoteLoader] 🏁 Chargement terminé');
       }
     }
   }, [noteRef, preloadContent, addNote, updateNote, existingNote]);
