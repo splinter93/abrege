@@ -190,6 +190,19 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
     }, []),
   } as any);
 
+  // 🔧 FORCER la mise à jour du contenu de l'éditeur quand la note change
+  React.useEffect(() => {
+    if (editor && content && content !== editor.getHTML()) {
+      try {
+        // Mettre à jour le contenu de l'éditeur avec le contenu de la note
+        editor.commands.setContent(content);
+        console.log('[Editor] 🔧 Contenu mis à jour:', content.substring(0, 100) + '...');
+      } catch (error) {
+        console.error('[Editor] ❌ Erreur mise à jour contenu:', error);
+      }
+    }
+  }, [editor, content]);
+
   // Open slash menu on '/'
   React.useEffect(() => {
     if (!editor || isReadonly) return;
