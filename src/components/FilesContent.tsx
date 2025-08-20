@@ -72,15 +72,6 @@ const ImagePreview = ({ file }: { file: FileItem }) => {
   );
 };
 
-// Fonction pour formater la taille du fichier
-const formatFileSize = (bytes: number): string => {
-  if (bytes === 0) return '0 B';
-  const k = 1024;
-  const sizes = ['B', 'KB', 'MB', 'GB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
-};
-
 const FilesContent: React.FC<FilesContentProps> = ({
   files,
   loading,
@@ -262,12 +253,7 @@ const FilesContent: React.FC<FilesContentProps> = ({
                     file.filename || 'Fichier sans nom'
                   )}
                 </div>
-                <div className="file-meta">
-                  <span className="file-size">{formatFileSize(file.size || 0)}</span>
-                  <span className="file-date">
-                    {new Date(file.created_at || Date.now()).toLocaleDateString()}
-                  </span>
-                </div>
+                {/* Suppression de file-meta pour gagner de l'espace vertical */}
               </div>
             </motion.div>
           ))}
@@ -316,13 +302,7 @@ const FilesContent: React.FC<FilesContentProps> = ({
                     file.filename || 'Fichier sans nom'
                   )}
                 </div>
-                <div className="file-meta">
-                  <span className="file-size">{formatFileSize(file.size || 0)}</span>
-                  <span className="file-type">{file.mime_type || 'Type inconnu'}</span>
-                  <span className="file-date">
-                    {new Date(file.created_at || Date.now()).toLocaleDateString()}
-                  </span>
-                </div>
+                {/* Suppression de file-meta pour gagner de l'espace vertical */}
               </div>
             </motion.div>
           ))}

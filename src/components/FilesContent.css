@@ -96,7 +96,7 @@
   flex-direction: column;
   align-items: center;
   text-align: center;
-  min-height: 120px;
+  min-height: 100px; /* Réduit de 120px à 100px */
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   box-shadow: var(--files-shadow);
@@ -110,8 +110,12 @@
 
 .file-grid-item .file-icon {
   font-size: var(--font-size-2xl);
-  margin-bottom: var(--spacing-md);
+  margin-bottom: var(--spacing-sm); /* Réduit de var(--spacing-md) à var(--spacing-sm) */
   opacity: 0.8;
+}
+
+.file-grid-item .file-info {
+  width: 100%;
 }
 
 /* ==========================================================================
@@ -120,8 +124,8 @@
 
 .file-image-preview {
   width: 100%;
-  height: 120px;
-  margin-bottom: var(--spacing-md);
+  height: 100px; /* Réduit de 120px à 100px */
+  margin-bottom: var(--spacing-sm); /* Réduit de var(--spacing-md) à var(--spacing-sm) */
   border-radius: var(--radius-md);
   overflow: hidden;
   background: rgba(255, 255, 255, 0.05);
@@ -159,28 +163,17 @@
   animation: spin 1s linear infinite;
 }
 
-.file-grid-item .file-info {
-  width: 100%;
-}
-
 .file-grid-item .file-name {
   font-weight: 500;
   font-size: var(--font-size-sm);
-  margin-bottom: var(--spacing-sm);
+  margin-bottom: 0; /* Supprimé car plus de métadonnées en dessous */
   color: var(--files-text-primary);
   word-break: break-word;
   line-height: var(--line-height-tight);
   font-family: 'Noto Sans', sans-serif;
 }
 
-.file-grid-item .file-meta {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-xs);
-  font-size: var(--font-size-xs);
-  color: var(--files-text-secondary);
-  font-family: 'Noto Sans', sans-serif;
-}
+/* Suppression de .file-grid-item .file-meta car plus utilisé */
 
 /* ==========================================================================
    VUE LISTE
@@ -195,7 +188,7 @@
 .file-list-item {
   display: flex;
   align-items: center;
-  padding: var(--spacing-md);
+  padding: var(--spacing-sm) var(--spacing-md); /* Réduit le padding vertical */
   background: var(--files-surface);
   border: 1px solid var(--files-border);
   border-radius: var(--files-radius);
@@ -204,6 +197,7 @@
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   box-shadow: var(--files-shadow);
+  min-height: 48px; /* Hauteur minimale réduite */
 }
 
 .file-list-item:hover {
@@ -262,7 +256,7 @@
 .file-list-item .file-name {
   font-weight: 500;
   font-size: var(--font-size-base);
-  margin-bottom: var(--spacing-xs);
+  margin-bottom: 0; /* Supprimé car plus de métadonnées */
   color: var(--files-text-primary);
   white-space: nowrap;
   overflow: hidden;
@@ -270,13 +264,7 @@
   font-family: 'Noto Sans', sans-serif;
 }
 
-.file-list-item .file-meta {
-  display: flex;
-  gap: var(--spacing-md);
-  font-size: var(--font-size-sm);
-  color: var(--files-text-secondary);
-  font-family: 'Noto Sans', sans-serif;
-}
+/* Suppression de .file-list-item .file-meta car plus utilisé */
 
 /* ==========================================================================
    CHAMPS DE SAISIE
@@ -315,17 +303,16 @@
   }
   
   .file-grid-item {
-    padding: var(--spacing-md);
-    min-height: 100px;
+    padding: var(--spacing-sm); /* Réduit de var(--spacing-md) à var(--spacing-sm) */
+    min-height: 80px; /* Réduit de 100px à 80px sur mobile */
   }
   
   .file-grid-item .file-icon {
     font-size: var(--font-size-xl);
   }
   
-  .file-list-item .file-meta {
-    flex-direction: column;
-    gap: var(--spacing-xs);
+  .file-image-preview {
+    height: 80px; /* Réduit de 100px à 80px sur mobile */
   }
 }
 
