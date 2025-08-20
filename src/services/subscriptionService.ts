@@ -25,7 +25,7 @@ import { simpleLogger as logger } from '@/utils/logger';
 export interface SubscriptionServiceError {
   code: string;
   message: string;
-  details?: any;
+  details?: unknown;
 }
 
 export interface PlanChangeResult {

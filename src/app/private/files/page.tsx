@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { FileItem } from "@/types/files";
 import { useFilesPage } from "@/hooks/useFilesPage";
 import { useAuth } from "@/hooks/useAuth";
@@ -31,13 +31,13 @@ function FilesPageContent() {
   const {
     loading,
     error,
-    files,
     quotaInfo,
     fetchFiles,
     deleteFile,
     renameFile,
-    refreshQuota,
-    clearError,
+    filteredFiles,
+    searchTerm,
+    viewMode: hookViewMode
   } = useFilesPage();
 
   // Gestionnaire d'erreur sécurisé
@@ -54,8 +54,18 @@ function FilesPageContent() {
   const [renamingItemId, setRenamingItemId] = useState<string | null>(null);
   const [showUploader, setShowUploader] = useState(false);
 
+  // Synchroniser la recherche avec le hook
+  useEffect(() => {
+    setSearchQuery(searchTerm);
+  }, [searchTerm]);
+
+  // Synchroniser le mode d'affichage avec le hook
+  useEffect(() => {
+    setViewMode(hookViewMode);
+  }, [hookViewMode]);
+
   // Filtrer les fichiers selon la recherche
-  const filteredFiles = files.filter(file =>
+  const displayFiles = filteredFiles.filter(file =>
     (file.filename?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
     (file.mime_type?.toLowerCase() || '').includes(searchQuery.toLowerCase())
   );
@@ -63,21 +73,12 @@ function FilesPageContent() {
   // Gestion des actions sur les fichiers
   const handleFileOpen = useCallback((file: FileItem) => {
     // Ouvrir le fichier dans un nouvel onglet
-    window.open(file.url, '_blank');
+    if (file.url) {
+      window.open(file.url, '_blank');
+    }
   }, []);
 
-  const handleFileDelete = useCallback(async (fileId: string) => {
-    try {
-      await deleteFile(fileId);
-      setSelectedFiles(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(fileId);
-        return newSet;
-      });
-    } catch (error) {
-      handleError(error, 'suppression fichier');
-    }
-  }, [deleteFile, handleError]);
+
 
   const handleFileRename = useCallback(async (fileId: string, newName: string) => {
     try {
@@ -92,7 +93,7 @@ function FilesPageContent() {
     setShowUploader(!showUploader);
   }, [showUploader]);
 
-  const handleUploadComplete = useCallback((file: FileItem) => {
+  const handleUploadComplete = useCallback(() => {
     // Rafraîchir la liste des fichiers
     fetchFiles();
     // Masquer l'uploader
@@ -111,13 +112,19 @@ function FilesPageContent() {
     if (selectedFiles.size === 0) return;
     
     if (confirm(`Voulez-vous vraiment supprimer ${selectedFiles.size} fichier(s) ?`)) {
-      const promises = Array.from(selectedFiles).map(fileId => deleteFile(fileId));
-      try {
-        await Promise.all(promises);
-        setSelectedFiles(new Set());
-      } catch (error) {
-        handleError(error, 'suppression multiple fichiers');
-      }
+      const promises = Array.from(selectedFiles).map(async (fileId) => {
+        try {
+          await deleteFile(fileId);
+          setSelectedFiles(prev => {
+            const newSet = new Set(prev);
+            newSet.delete(fileId);
+            return newSet;
+          });
+        } catch (error) {
+          handleError(error, 'suppression fichier');
+        }
+      });
+      await Promise.all(promises);
     }
   }, [selectedFiles, deleteFile, handleError]);
 
@@ -128,13 +135,9 @@ function FilesPageContent() {
     }
   }, [selectedFiles]);
 
-  const handleContextMenuItem = useCallback((e: React.MouseEvent, file: FileItem) => {
+  const handleContextMenuItem = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
     // TODO: Implémenter le menu contextuel
-    // Log sécurisé en développement uniquement
-    if (process.env.NODE_ENV === 'development') {
-      console.log('Menu contextuel pour:', file.filename);
-    }
   }, []);
 
   const handleCancelRename = useCallback(() => {
@@ -165,7 +168,7 @@ function FilesPageContent() {
               <h2 className="files-title">Mes Fichiers</h2>
             </div>
             <div className="files-stats">
-              <span>{filteredFiles.length} fichier{filteredFiles.length > 1 ? 's' : ''}</span>
+              <span>{displayFiles.length} fichier{displayFiles.length > 1 ? 's' : ''}</span>
               {quotaInfo && (
                 <span className="quota-info">
                   {Math.round((quotaInfo.usedBytes / quotaInfo.quotaBytes) * 100)}% utilisé
@@ -220,7 +223,7 @@ function FilesPageContent() {
               )}
               
               <FilesContent
-                files={filteredFiles}
+                files={displayFiles}
                 loading={loading}
                 error={error}
                 onFileOpen={handleFileOpen}

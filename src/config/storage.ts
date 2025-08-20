@@ -66,7 +66,7 @@ export interface SubscriptionPlan {
   storageQuotaBytes: number;
   maxFileSizeBytes: number;
   maxFilesPerUpload: number;
-  features: Record<string, any>;
+  features: Record<string, unknown>;
   priceMonthly?: number;
   priceYearly?: number;
   currency: string;
@@ -84,7 +84,7 @@ export interface UserSubscription {
   canceledAt?: string;
   billingProvider?: string;
   externalSubscriptionId?: string;
-  metadata: Record<string, any>;
+  metadata: Record<string, unknown>;
 }
 
 export interface StorageQuota {
