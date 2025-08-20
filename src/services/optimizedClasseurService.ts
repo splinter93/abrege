@@ -21,7 +21,6 @@ interface ClasseurWithContent {
     position: number;
     parent_id?: string;
     created_at: string;
-    updated_at: string;
   }>;
   notes: Array<{
     id: string;
@@ -181,7 +180,7 @@ export class OptimizedClasseurService {
     
     const { data, error } = await supabase
       .from('folders')
-      .select('id, name, position, parent_id, created_at, updated_at')
+      .select('id, name, position, parent_id, created_at')
       .eq('notebook_id', classeurId)
       .order('position', { ascending: true });
 
