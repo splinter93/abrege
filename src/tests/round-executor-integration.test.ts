@@ -14,7 +14,7 @@ const TEST_CONFIG = {
 
 // 🎯 Mock provider pour les tests
 class MockProvider extends OpenAiLikeAdapter {
-  private responses: any[] = [];
+  private responses: unknown[] = [];
   private callCount = 0;
 
   constructor() {
@@ -32,11 +32,11 @@ class MockProvider extends OpenAiLikeAdapter {
     });
   }
 
-  setResponses(responses: any[]): void {
+  setResponses(responses: unknown[]): void {
     this.responses = responses;
   }
 
-  protected async executeCall(payload: any, timeout: number): Promise<any> {
+  protected async executeCall(payload: unknown, timeout: number): Promise<unknown> {
     this.callCount++;
     
     if (this.callCount > this.responses.length) {

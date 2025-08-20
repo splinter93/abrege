@@ -14,7 +14,7 @@ import { useMarkdownRender } from '@/hooks/editor/useMarkdownRender';
 import useEditorSave from '@/hooks/useEditorSave';
 import { useFontManager } from '@/hooks/useFontManager';
 import { useWideModeManager } from '@/hooks/useWideModeManager';
-import type { ShareSettings } from '@/types/sharing';
+import type { ShareSettings, ShareSettingsUpdate } from '@/types/sharing';
 import { getDefaultShareSettings } from '@/types/sharing';
 import { useEditor, EditorContent as TiptapEditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
@@ -257,14 +257,19 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
   }, [note?.share_settings]);
 
   // Handle share settings changes
-  const handleShareSettingsChange = React.useCallback(async (newSettings: ShareSettings) => {
+  const handleShareSettingsChange = React.useCallback(async (newSettings: ShareSettingsUpdate) => {
     try {
       console.log('🚨 [EDITOR] ===== DÉBUT HANDLESHARESETTINGSCHANGE =====');
       console.log('🚨 [EDITOR] noteId:', noteId);
       console.log('🚨 [EDITOR] newSettings:', newSettings);
       
       // Update local state
-      setShareSettings(newSettings as ShareSettings);
+      setShareSettings({
+        visibility: newSettings.visibility || 'private',
+        invited_users: newSettings.invited_users || [],
+        allow_edit: newSettings.allow_edit || false,
+        allow_comments: newSettings.allow_comments || false
+      } as ShareSettings);
       console.log('🚨 [EDITOR] ✅ État local mis à jour');
       
       // Update note in store
@@ -511,7 +516,9 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
         }
 
         // Construire l'URL correcte avec le format /@username/slug
-        url = `https://scrivia.app/@${userData.username}/${noteData.slug}`;
+        // Utiliser l'URL de base de l'environnement actuel
+        const baseUrl = window.location.origin;
+        url = `${baseUrl}/@${userData.username}/${noteData.slug}`;
         
         console.log('URL construite:', url);
         

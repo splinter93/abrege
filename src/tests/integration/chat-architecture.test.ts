@@ -22,7 +22,7 @@ vi.mock('@/store/useChatStore', () => ({
 }));
 
 describe('Chat Architecture Integration', () => {
-  let mockSessionSyncService: any;
+  let mockSessionSyncService: unknown;
 
   beforeEach(() => {
     vi.clearAllMocks();

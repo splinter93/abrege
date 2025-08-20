@@ -1,131 +1,160 @@
-# 🚨 GUIDE DE RÉSOLUTION RAPIDE - Notes Invisibles dans les Classeurs
+# 🚨 GUIDE DE RÉSOLUTION RAPIDE - PROBLÈME "NOTE NON TROUVÉE"
 
-## 🎯 Problème Identifié
+## 🎯 **PROBLÈME IDENTIFIÉ**
 
-**Les notes ne s'affichent plus dans les classeurs** à cause d'une **incohérence entre les colonnes de base de données** :
-- `classeur_id` : Utilisée par l'API V2 et le store Zustand
-- `notebook_id` : Créée par les migrations mais pas synchronisée
+**Toutes les pages publiques affichent "Note non trouvée"** à cause de **politiques RLS (Row Level Security) trop restrictives** qui bloquent l'accès public aux notes partagées.
 
-## ✅ Solution Immédiate
-
-### **Étape 1: Appliquer le Script SQL**
-
-Copier-coller ce script dans **Supabase SQL Editor** :
-
-```sql
--- Script de correction de l'incohérence notebook_id vs classeur_id
--- À exécuter dans Supabase SQL Editor
-
--- 1. Ajouter notebook_id à la table articles si elle n'existe pas
-DO $$ 
-BEGIN
-    IF NOT EXISTS (
-        SELECT 1 FROM information_schema.columns 
-        WHERE table_name = 'articles' AND column_name = 'notebook_id'
-    ) THEN
-        ALTER TABLE articles ADD COLUMN notebook_id UUID REFERENCES notebooks(id) ON DELETE CASCADE;
-        RAISE NOTICE 'Colonne notebook_id ajoutée à articles';
-    ELSE
-        RAISE NOTICE 'Colonne notebook_id existe déjà dans articles';
-    END IF;
-END $$;
-
--- 2. Ajouter notebook_id à la table folders si elle n'existe pas
-DO $$ 
-BEGIN
-    IF NOT EXISTS (
-        SELECT 1 FROM information_schema.columns 
-        WHERE table_name = 'folders' AND column_name = 'notebook_id'
-    ) THEN
-        ALTER TABLE folders ADD COLUMN notebook_id UUID REFERENCES notebooks(id) ON DELETE CASCADE;
-        RAISE NOTICE 'Colonne notebook_id ajoutée à folders';
-    ELSE
-        RAISE NOTICE 'Colonne notebook_id existe déjà dans folders';
-    END IF;
-END $$;
-
--- 3. Synchroniser les données existantes
-UPDATE articles 
-SET notebook_id = classeur_id 
-WHERE classeur_id IS NOT NULL AND notebook_id IS NULL;
-
-UPDATE folders 
-SET notebook_id = classeur_id 
-WHERE classeur_id IS NOT NULL AND notebook_id IS NULL;
-
--- 4. Créer des index pour les performances
-CREATE INDEX IF NOT EXISTS idx_articles_notebook_id ON articles(notebook_id) WHERE notebook_id IS NOT NULL;
-CREATE INDEX IF NOT EXISTS idx_folders_notebook_id ON folders(notebook_id) WHERE notebook_id IS NOT NULL;
-
--- 5. Vérifier le résultat
-SELECT 
-    'articles' as table_name,
-    COUNT(*) as total_rows,
-    COUNT(notebook_id) as rows_with_notebook_id,
-    COUNT(classeur_id) as rows_with_classeur_id
-FROM articles
-UNION ALL
-SELECT 
-    'folders' as table_name,
-    COUNT(*) as total_rows,
-    COUNT(notebook_id) as rows_with_notebook_id,
-    COUNT(classeur_id) as rows_with_classeur_id
-FROM folders;
-```
-
-### **Étape 2: Redémarrer l'Application**
-
-1. **Arrêter** le serveur de développement (`Ctrl+C`)
-2. **Redémarrer** avec `npm run dev`
-3. **Aller sur** `/private/dossiers`
-
-### **Étape 3: Vérifier la Résolution**
-
-✅ **Les classeurs s'affichent**  
-✅ **Les dossiers sont visibles**  
-✅ **Les notes sont visibles**  
-✅ **La création fonctionne**
-
-## 🔧 Corrections Déjà Appliquées
-
-### **API Tree Corrigée** (`/api/v2/classeur/[ref]/tree/route.ts`)
-
-- ✅ Support `classeur_id` ET `notebook_id`
-- ✅ Requêtes avec `OR` pour compatibilité
-- ✅ Retour des deux colonnes
-
-### **V2UnifiedApi Corrigé**
-
-- ✅ Chargement des classeurs avec contenu
-- ✅ Mise à jour du store Zustand
-- ✅ Polling intelligent
-
-## 🚨 Points d'Attention
-
-- **Le script SQL doit être appliqué manuellement** dans Supabase
-- **Redémarrer l'application** après application du script
-- **Vérifier les logs** pour confirmer la synchronisation
-
-## 📊 Vérification
-
-Après application du script, vous devriez voir :
-
-```
-table_name | total_rows | rows_with_notebook_id | rows_with_classeur_id
------------|------------|----------------------|----------------------
-articles   | X          | X                    | X
-folders    | Y          | Y                    | Y
-```
-
-**Tous les compteurs doivent être identiques** pour confirmer la synchronisation.
-
-## 🎯 Résultat Attendu
-
-- ✅ **Notes visibles** dans tous les classeurs
-- ✅ **Dossiers fonctionnels** avec navigation
-- ✅ **Création d'éléments** opérationnelle
-- ✅ **Système stable** et cohérent
+### **Symptômes observés :**
+- ❌ Toutes les pages publiques affichent "Note non trouvée"
+- ❌ L'audit retourne 0 articles (alors qu'il y en a 10)
+- ❌ Les politiques RLS bloquent l'accès aux données
+- ❌ Le système de partage est inutilisable
 
 ---
 
-**💡 Conseil** : Si le problème persiste après le script SQL, vérifiez les logs de l'API dans la console du navigateur. 
+## ✅ **SOLUTION IMMÉDIATE**
+
+### **Étape 1: Appliquer la correction RLS manuellement**
+
+1. **Allez sur [Supabase Dashboard](https://supabase.com/dashboard)**
+2. **Sélectionnez votre projet**
+3. **Allez dans SQL Editor**
+4. **Copiez-collez le contenu de `scripts/fix-rls-manual.sql`**
+5. **Cliquez sur "Run" pour exécuter le script**
+
+### **Étape 2: Vérifier la correction**
+
+```bash
+# Test 1: Vérifier l'accès aux données
+node scripts/test-public-access.js
+
+# Test 2: Vérifier l'audit du système
+npx tsx scripts/audit-sharing-system.ts
+```
+
+**Résultats attendus :**
+- ✅ Total articles > 0 (au lieu de 0)
+- ✅ Notes publiques accessibles
+- ✅ URLs publiques fonctionnelles
+
+---
+
+## 🔧 **DÉTAIL DE LA CORRECTION**
+
+### **Politiques RLS créées :**
+
+```sql
+-- Accès public aux notes partagées + privé aux notes personnelles
+CREATE POLICY "Public access to shared articles and private access to own articles"
+ON public.articles
+FOR SELECT
+USING (
+  -- Notes publiques (accessibles à tous)
+  (share_settings->>'visibility' != 'private') OR
+  -- Notes privées (accessibles uniquement au propriétaire)
+  (share_settings->>'visibility' = 'private' AND auth.uid() = user_id) OR
+  -- Fallback si share_settings est NULL (anciennes notes)
+  (share_settings IS NULL AND auth.uid() = user_id)
+);
+```
+
+**Cette politique permet :**
+- 🌐 **Accès public** aux notes avec `visibility != 'private'`
+- 🔒 **Accès privé** aux notes avec `visibility = 'private'` (propriétaire uniquement)
+- 🔄 **Compatibilité** avec les anciennes notes sans `share_settings`
+
+---
+
+## 🧪 **TESTS DE VALIDATION**
+
+### **Test 1: Vérification des données**
+```bash
+# Doit retourner > 0 articles
+node scripts/test-public-access.js
+```
+
+### **Test 2: Test des pages publiques**
+1. **Trouvez une note publique** (via l'audit)
+2. **Accédez à l'URL** : `/{username}/{slug}`
+3. **Vérifiez** que le contenu s'affiche
+
+### **Test 3: Test de l'API publique**
+```bash
+# Test de l'endpoint public
+curl "https://votre-app.com/api/v1/public/note/{username}/{slug}"
+```
+
+---
+
+## 🚨 **PROBLÈMES POTENTIELS ET SOLUTIONS**
+
+### **Problème 1: Erreur "exec_sql not available"**
+**Solution :** Appliquer le script SQL manuellement dans Supabase
+
+### **Problème 2: Politiques RLS toujours bloquantes**
+**Solution :** Vérifier que les anciennes politiques ont été supprimées
+
+### **Problème 3: Notes sans share_settings**
+**Solution :** Le fallback dans la politique RLS gère ce cas
+
+---
+
+## 📋 **CHECKLIST DE RÉSOLUTION**
+
+- [ ] **Audit exécuté** et problème RLS identifié
+- [ ] **Script SQL appliqué** manuellement dans Supabase
+- [ ] **Tests de validation** passés avec succès
+- [ ] **Pages publiques** accessibles
+- [ ] **API publique** fonctionnelle
+- [ ] **Sécurité maintenue** pour les notes privées
+
+---
+
+## 🔍 **DIAGNOSTIC COMPLET**
+
+### **1. Audit du système (déjà exécuté)**
+```bash
+npx tsx scripts/audit-sharing-system.ts
+```
+
+**Résultats révélés :**
+- ✅ Colonne slug : OUI
+- ✅ Colonne share_settings : OUI  
+- ✅ Colonne notebook_id : OUI
+- ❌ **Problème RLS** : Les politiques bloquent l'accès aux données
+
+### **2. Test d'accès public**
+```bash
+node scripts/test-public-access.js
+```
+
+**Résultats :**
+- ✅ **Total articles** : 10 (au lieu de 0)
+- ✅ **Notes publiques** : 2 notes accessibles
+- ✅ **Structure des données** : Complète et valide
+
+---
+
+## 🎯 **CAUSE RACINE**
+
+Le problème vient du fait que les **politiques RLS sont trop restrictives** et bloquent même l'accès aux notes qui devraient être publiques. Le système de partage fonctionne correctement, mais les politiques de sécurité empêchent l'accès aux données.
+
+---
+
+## 💡 **PRÉVENTION FUTURE**
+
+1. **Tester les politiques RLS** après chaque modification
+2. **Utiliser des requêtes de test** pour valider l'accès
+3. **Maintenir un audit régulier** du système de partage
+4. **Documenter les changements** de politiques RLS
+
+---
+
+## 📞 **SUPPORT**
+
+Si le problème persiste après l'application de la correction :
+
+1. **Vérifiez les logs** dans Supabase Dashboard
+2. **Testez les requêtes SQL** directement dans l'éditeur
+3. **Vérifiez les politiques RLS** dans l'interface Supabase
+4. **Contactez l'équipe** avec les détails de l'erreur 

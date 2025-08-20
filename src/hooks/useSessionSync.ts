@@ -76,7 +76,7 @@ export const useSessionSync = () => {
   /**
    * 💬 Ajouter un message
    */
-  const addMessage = useCallback(async (sessionId: string, message: any) => {
+  const addMessage = useCallback(async (sessionId: string, message: unknown) => {
     try {
       const result = await sessionSyncService.addMessageAndSync(sessionId, message);
       if (!result.success) {

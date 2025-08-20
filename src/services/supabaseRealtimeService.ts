@@ -13,9 +13,9 @@ export interface SupabaseRealtimeEvent {
 type Handler = (event: SupabaseRealtimeEvent) => void;
 
 const listeners: Record<string, Set<Handler>> = {};
-const subscriptions: Record<string, any> = {};
+const subscriptions: Record<string, unknown> = {};
 
-function getEventType(table: SupabaseTable, event: SupabaseEventType, payload?: any): string {
+function getEventType(table: SupabaseTable, event: SupabaseEventType, payload?: unknown): string {
   // Pour compatibilité descendante, fallback sur l'ancien comportement si pas d'info
   if (!payload || !payload.old || !payload.new || event === 'INSERT' || event === 'DELETE') {
     switch (table) {

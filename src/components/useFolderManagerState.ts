@@ -28,7 +28,7 @@ interface ZustandFolder {
   name: string;
   parent_id?: string | null;
   classeur_id?: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 interface ZustandNote {
@@ -39,7 +39,7 @@ interface ZustandNote {
   updated_at?: string;
   classeur_id?: string;
   folder_id?: string | null;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 interface CreateNotePayload {

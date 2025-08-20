@@ -21,7 +21,7 @@ vi.mock('@/store/useChatStore', () => ({
 }));
 
 describe('useSessionSync', () => {
-  let mockSessionSyncService: any;
+  let mockSessionSyncService: unknown;
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -161,7 +161,7 @@ describe('useSessionSync', () => {
       const { result } = renderHook(() => useSessionSync());
 
       await act(async () => {
-        const response = await result.current.addMessage(message);
+        const response = await result.current.addMessage("test-session", message);
         expect(response.success).toBe(true);
       });
 
@@ -188,7 +188,7 @@ describe('useSessionSync', () => {
       const { result } = renderHook(() => useSessionSync());
 
       await act(async () => {
-        const response = await result.current.addMessage(message);
+        const response = await result.current.addMessage("test-session", message);
         expect(response.success).toBe(false);
         expect(response.error).toBe('Aucune session active');
       });

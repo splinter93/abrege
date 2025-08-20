@@ -1,4 +1,4 @@
-// import.*logger.*from '@/utils/logger';
+// import.*console.*from '@/utils/logger';
 
 /**
  * Représente un appel d'outil en cours de parsing.
@@ -36,7 +36,7 @@ function safeParseArgs(raw: string): Record<string, unknown> | undefined {
   }
 
   // 🔧 AMÉLIORATION: Détecter et corriger les JSON malformés
-  logger.dev(`[ToolCallsParser] 🔍 Parsing arguments bruts: ${candidate.substring(0, 200)}...`);
+  console.dev(`[ToolCallsParser] 🔍 Parsing arguments bruts: ${candidate.substring(0, 200)}...`);
 
   // Gère les cas où les arguments sont une chaîne JSON échappée
   if (candidate.startsWith('"') && candidate.endsWith('"')) {
@@ -49,7 +49,7 @@ function safeParseArgs(raw: string): Record<string, unknown> | undefined {
 
   // 🔧 NOUVEAU: Détecter les JSON malformés avec duplication
   if (candidate.includes('}{')) {
-    logger.dev(`[ToolCallsParser] ⚠️ JSON malformé détecté avec duplication`);
+    console.dev(`[ToolCallsParser] ⚠️ JSON malformé détecté avec duplication`);
     
     // Essayer de récupérer le premier objet JSON valide
     const firstBrace = candidate.indexOf('{');
@@ -59,17 +59,17 @@ function safeParseArgs(raw: string): Record<string, unknown> | undefined {
       const potentialJson = candidate.substring(firstBrace, lastBrace + 1);
       try {
         const parsed = JSON.parse(potentialJson);
-        logger.dev(`[ToolCallsParser] ✅ JSON récupéré après nettoyage:`, parsed);
+        console.dev(`[ToolCallsParser] ✅ JSON récupéré après nettoyage:`, parsed);
         return parsed;
       } catch (error) {
-        logger.error(`[ToolCallsParser] ❌ Impossible de parser le JSON nettoyé:`, error);
+        console.error(`[ToolCallsParser] ❌ Impossible de parser le JSON nettoyé:`, error);
       }
     }
   }
 
   // 🔧 NOUVEAU: Détecter les arguments avec des objets concaténés
   if (candidate.includes(',{"')) {
-    logger.dev(`[ToolCallsParser] ⚠️ Arguments avec objets concaténés détectés`);
+    console.dev(`[ToolCallsParser] ⚠️ Arguments avec objets concaténés détectés`);
     
     // Essayer de récupérer le premier objet JSON
     const firstBrace = candidate.indexOf('{');
@@ -79,10 +79,10 @@ function safeParseArgs(raw: string): Record<string, unknown> | undefined {
       const potentialJson = candidate.substring(firstBrace, firstClosingBrace + 1);
       try {
         const parsed = JSON.parse(potentialJson);
-        logger.dev(`[ToolCallsParser] ✅ Premier objet JSON récupéré:`, parsed);
+        console.dev(`[ToolCallsParser] ✅ Premier objet JSON récupéré:`, parsed);
         return parsed;
       } catch (error) {
-        logger.error(`[ToolCallsParser] ❌ Impossible de parser le premier objet:`, error);
+        console.error(`[ToolCallsParser] ❌ Impossible de parser le premier objet:`, error);
       }
     }
   }
@@ -97,10 +97,10 @@ function safeParseArgs(raw: string): Record<string, unknown> | undefined {
 
   try {
     const parsed = JSON.parse(candidate);
-    logger.dev(`[ToolCallsParser] ✅ Arguments parsés avec succès:`, parsed);
+    console.dev(`[ToolCallsParser] ✅ Arguments parsés avec succès:`, parsed);
     return parsed;
   } catch (error) {
-    logger.error(`[ToolCallsParser] ❌ safeParseArgs a échoué pour: ${candidate}`, error);
+    console.error(`[ToolCallsParser] ❌ safeParseArgs a échoué pour: ${candidate}`, error);
     return undefined;
   }
 }
@@ -216,7 +216,7 @@ export class ToolCallsParser {
    * Ingère un chunk JSON (déjà parsé) depuis le stream du LLM.
    * @param chunk Le chunk de réponse de l'API.
    */
-  feed(chunk: any): void {
+  feed(chunk: unknown): void {
     const delta = chunk?.choices?.[0]?.delta;
     if (!delta) return;
 
@@ -226,16 +226,16 @@ export class ToolCallsParser {
     }
 
     // 2. Accumuler le reasoning (SECONDAIRE - seulement pour les modèles qui le supportent)
-    if (typeof (delta as any).reasoning_content === 'string') {
-      this.reasoningBuffer += (delta as any).reasoning_content;
-    } else if (typeof (delta as any).reasoning === 'string') {
-      this.reasoningBuffer += (delta as any).reasoning;
+    if (typeof (delta as unknown).reasoning_content === 'string') {
+      this.reasoningBuffer += (delta as unknown).reasoning_content;
+    } else if (typeof (delta as unknown).reasoning === 'string') {
+      this.reasoningBuffer += (delta as unknown).reasoning;
     }
 
     // 3. Traiter les tool_calls
     if (Array.isArray(delta.tool_calls)) {
-      delta.tool_calls.forEach((toolCallChunk: any) => {
-        // const index = [^;]+;
+      delta.tool_calls.forEach((toolCallChunk: unknown) => {
+        // let index = [^;]+;
         if (typeof index !== 'number') return;
 
         let call = this.toolCallMap.get(index);
@@ -278,7 +278,7 @@ export class ToolCallsParser {
           call.args = parsedArgs;
           call.completed = true;
         } else {
-          logger.error(`[ToolCallsParser] ❌ Impossible de parser les arguments finaux pour l'outil: ${call.name}`, { rawArgs: call.rawArgs });
+          console.error(`[ToolCallsParser] ❌ Impossible de parser les arguments finaux pour l'outil: ${call.name}`, { rawArgs: call.rawArgs });
         }
       }
     });

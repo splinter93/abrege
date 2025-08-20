@@ -28,17 +28,5 @@ export function useSecureErrorHandler({ context, operation, userId }: SecureErro
     handleApiError(error, operation);
   }, [context, operation, userId, handleApiError]);
 
-  const handleAsyncError = useCallback(async <T>(
-    asyncOperation: () => Promise<T>,
-    userContext?: string
-  ): Promise<T | null> => {
-    try {
-      return await asyncOperation();
-    } catch (error) {
-      handleError(error, userContext);
-      return null;
-    }
-  }, [handleError]);
-
-  return { handleError, handleAsyncError };
+  return { handleError };
 } 

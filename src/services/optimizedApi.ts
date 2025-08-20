@@ -194,7 +194,7 @@ export class OptimizedApi {
       v1_size: v1Res.size,
       diff_count: diff,
     };
-    try { logj(logObj as any); } catch {}
+    try { logj(logObj as unknown); } catch {}
 
     if (this.useV1Only && v1Res.ok && v1N !== undefined) return v1Res.data as T;
     return legacyRes.data as T;
