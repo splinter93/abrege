@@ -11,6 +11,42 @@
   align-items: stretch; /* Aligner les enfants sur toute la largeur */
 }
 
+/* Header avec titre du classeur et toolbar */
+.folder-content-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px 0 32px 0;
+  border-bottom: 1px solid var(--border-color, #e5e7eb);
+  margin-bottom: 32px;
+}
+
+.folder-content-title {
+  flex: 1;
+}
+
+.classeur-title {
+  font-size: 28px;
+  font-weight: 600;
+  color: var(--text-primary, #111827);
+  margin: 0;
+  line-height: 1.2;
+}
+
+/* Responsive pour le header */
+@media (max-width: 768px) {
+  .folder-content-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 20px 0 24px 0;
+  }
+  
+  .classeur-title {
+    font-size: 24px;
+  }
+}
+
 /* 
   NOTE: Les styles pour loading, error, et empty sont maintenant
   gérés directement dans FolderManagerModern.css pour une meilleure

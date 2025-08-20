@@ -78,7 +78,7 @@ function DossiersPageContent() {
   }, [activeClasseurId, classeurs, loading, setActiveClasseurId]);
 
   // État pour le mode de vue
-  const [viewMode, setViewMode] = useState<ViewMode>('grid');
+  const [viewMode, setViewMode] = useState<'list' | 'grid'>('grid');
 
   // Handlers pour la création
   const handleCreateFolder = async () => {
@@ -144,7 +144,7 @@ function DossiersPageContent() {
     handleFolderOpen(folder.id);
   };
 
-  const handleToggleView = (mode: ViewMode) => {
+  const handleToggleView = (mode: 'list' | 'grid') => {
     setViewMode(mode);
   };
 
@@ -238,6 +238,10 @@ function DossiersPageContent() {
                 preloadedFolders={useFileSystemStore.getState().folders}
                 preloadedNotes={useFileSystemStore.getState().notes}
                 skipApiCalls={true}
+                viewMode={viewMode}
+                onToggleView={handleToggleView}
+                onCreateFolder={handleCreateFolder}
+                onCreateFile={handleCreateNote}
               />
             </section>
           </>

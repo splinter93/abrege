@@ -28,6 +28,10 @@ interface FolderManagerProps {
   preloadedFolders?: { [key: string]: any };
   preloadedNotes?: { [key: string]: any };
   skipApiCalls?: boolean;
+  onCreateFolder?: () => void;
+  onCreateFile?: () => void;
+  onToggleView?: (mode: 'list' | 'grid') => void;
+  viewMode?: 'list' | 'grid';
 }
 
 /**
@@ -47,6 +51,10 @@ const FolderManager: React.FC<FolderManagerProps> = ({
   preloadedFolders, // 🔧 NOUVEAU: Données préchargées
   preloadedNotes, // 🔧 NOUVEAU: Données préchargées
   skipApiCalls = false, // 🔧 NOUVEAU: Éviter les appels API
+  onCreateFolder,
+  onCreateFile,
+  onToggleView,
+  viewMode = 'grid',
 }) => {
   // 🔧 OPTIMISATION: Utiliser les données préchargées si disponibles
   const usePreloadedData = skipApiCalls && preloadedFolders && preloadedNotes;
@@ -197,6 +205,10 @@ const FolderManager: React.FC<FolderManagerProps> = ({
               onStartRenameFolderClick={handleStartRenameFolderClick}
               onStartRenameFileClick={handleStartRenameFileClick}
               isInFolder={!!parentFolderId}
+              onCreateFolder={onCreateFolder}
+              onCreateFile={onCreateFile}
+              onToggleView={onToggleView}
+              viewMode={viewMode}
             />
           </main>
         </div>

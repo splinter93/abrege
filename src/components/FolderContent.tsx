@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 
 import FolderItem from './FolderItem';
 import FileItem from './FileItem';
+import FolderToolbar, { ViewMode } from './FolderToolbar';
 import { Folder, FileArticle } from './types';
 import './FolderContent.css';
 import './FolderGridItems.css';
@@ -41,6 +42,10 @@ interface FolderContentProps {
   onStartRenameFolderClick?: (folder: Folder) => void;
   onStartRenameFileClick?: (file: FileArticle) => void;
   isInFolder?: boolean; /* New prop to detect folder context */
+  onCreateFolder?: () => void;
+  onCreateFile?: () => void;
+  onToggleView?: (mode: ViewMode) => void;
+  viewMode?: ViewMode;
 }
 
 const FolderContent: React.FC<FolderContentProps> = ({
@@ -61,10 +66,15 @@ const FolderContent: React.FC<FolderContentProps> = ({
   onStartRenameFileClick,
   classeurName,
   isInFolder,
+  onCreateFolder,
+  onCreateFile,
+  onToggleView,
+  viewMode = 'grid',
 }) => {
   // Robustesse : toujours un tableau pour éviter les erreurs React #310
   const safeFolders = Array.isArray(folders) ? folders : [];
   const safeFiles = Array.isArray(files) ? files : [];
+  
   if (loading) {
     return (
       <div className="folder-content-loading">
@@ -73,6 +83,7 @@ const FolderContent: React.FC<FolderContentProps> = ({
       </div>
     );
   }
+  
   if (error) {
     return (
       <div className="folder-content-error">
@@ -81,65 +92,82 @@ const FolderContent: React.FC<FolderContentProps> = ({
       </div>
     );
   }
-  if (safeFolders.length === 0 && safeFiles.length === 0) {
-    return (
-      emptyMessage ? (
-        emptyMessage
-      ) : (
-        <div className="folder-content-empty">
-          <div className="folder-empty-icon">📁</div>
-          <div className="folder-empty-title">
-            {isInFolder ? 'Ce dossier est vide.' : 'Ce classeur est vide.'}
-          </div>
-          <div className="folder-empty-subtitle">Créez votre premier dossier ou note avec la barre d&apos;outils.</div>
-        </div>
-      )
-    );
-  }
+
   return (
     <div className="folder-content-container">
-      {/* Container pour les grilles - style macOS */}
-      <div className="folder-grid-container">
-        {/* Grille dossiers */}
-        <div className="folder-grid">
-          {safeFolders.map(folder => (
-            <div key={folder.id} className="folder-item-wrapper">
-              <FolderItem
-                folder={folder}
-                onOpen={onFolderOpen}
-                isRenaming={renamingItemId === folder.id}
-                onRename={(newName, type) => onRenameFolder && onRenameFolder(folder.id, newName, type)}
-                onCancelRename={onCancelRename}
-                onContextMenu={onContextMenuItem}
-                onDropItem={(itemId, itemType) => {
-                  // Validation simplifiée : permettre le drop si onDropItem existe
-                  // La validation complète se fait au niveau de l'API
-                  if (onDropItem) {
-                    onDropItem(itemId, itemType, folder.id);
-                  }
-                }}
-                onStartRenameClick={onStartRenameFolderClick}
-              />
-            </div>
-          ))}
+      {/* Header avec titre du classeur et toolbar */}
+      <div className="folder-content-header">
+        <div className="folder-content-title">
+          <h1 className="classeur-title">{classeurName}</h1>
         </div>
-        {/* Grille fichiers */}
-        <div className="folder-grid files">
-          {safeFiles.map(file => (
-            <div key={file.id} className="file-item-wrapper">
-              <FileItem
-                file={file}
-                onOpen={onFileOpen}
-                isRenaming={renamingItemId === file.id}
-                onRename={(newName, type) => onRenameFile && onRenameFile(file.id, newName, type)}
-                onCancelRename={onCancelRename}
-                onContextMenu={onContextMenuItem}
-                onStartRenameClick={onStartRenameFileClick}
-              />
-            </div>
-          ))}
-        </div>
+        
+        {/* Toolbar avec boutons de création et changement de vue */}
+        {onCreateFolder && onCreateFile && onToggleView && (
+          <FolderToolbar
+            onCreateFolder={onCreateFolder}
+            onCreateFile={onCreateFile}
+            onToggleView={onToggleView}
+            viewMode={viewMode}
+          />
+        )}
       </div>
+
+      {safeFolders.length === 0 && safeFiles.length === 0 ? (
+        emptyMessage ? (
+          emptyMessage
+        ) : (
+          <div className="folder-content-empty">
+            <div className="folder-empty-icon">📁</div>
+            <div className="folder-empty-title">
+              {isInFolder ? 'Ce dossier est vide.' : 'Ce classeur est vide.'}
+            </div>
+            <div className="folder-empty-subtitle">Créez votre premier dossier ou note avec la barre d&apos;outils.</div>
+          </div>
+        )
+      ) : (
+        /* Container pour les grilles - style macOS */
+        <div className="folder-grid-container">
+          {/* Grille dossiers */}
+          <div className="folder-grid">
+            {safeFolders.map(folder => (
+              <div key={folder.id} className="folder-item-wrapper">
+                <FolderItem
+                  folder={folder}
+                  onOpen={onFolderOpen}
+                  isRenaming={renamingItemId === folder.id}
+                  onRename={(newName, type) => onRenameFolder && onRenameFolder(folder.id, newName, type)}
+                  onCancelRename={onCancelRename}
+                  onContextMenu={onContextMenuItem}
+                  onDropItem={(itemId, itemType) => {
+                    // Validation simplifiée : permettre le drop si onDropItem existe
+                    // La validation complète se fait au niveau de l'API
+                    if (onDropItem) {
+                      onDropItem(itemId, itemType, folder.id);
+                    }
+                  }}
+                  onStartRenameClick={onStartRenameFolderClick}
+                />
+              </div>
+            ))}
+          </div>
+          {/* Grille fichiers */}
+          <div className="folder-grid files">
+            {safeFiles.map(file => (
+              <div key={file.id} className="file-item-wrapper">
+                <FileItem
+                  file={file}
+                  onOpen={onFileOpen}
+                  isRenaming={renamingItemId === file.id}
+                  onRename={(newName, type) => onRenameFile && onRenameFile(file.id, newName, type)}
+                  onCancelRename={onCancelRename}
+                  onContextMenu={onContextMenuItem}
+                  onStartRenameClick={onStartRenameFileClick}
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
