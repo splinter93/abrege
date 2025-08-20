@@ -4,6 +4,7 @@ import { optimizedNoteService } from '@/services/optimizedNoteService';
 import { v2UnifiedApi } from '@/services/V2UnifiedApi';
 import { useFileSystemStore } from '@/store/useFileSystemStore';
 import { simpleLogger as logger } from '@/utils/logger';
+import { useAuth } from '@/hooks/useAuth';
 
 interface PerformanceStats {
   classeurCacheSize: number;
@@ -33,6 +34,9 @@ export const PerformanceMonitor: React.FC = () => {
   const [isVisible, setIsVisible] = useState(false);
   const [isTesting, setIsTesting] = useState(false);
   const [testResults, setTestResults] = useState<string[]>([]);
+
+  // 🔧 Récupérer l'utilisateur réel connecté
+  const { user } = useAuth();
 
   // Pas besoin d'utiliser le hook, on accède directement au store
 
@@ -84,13 +88,20 @@ export const PerformanceMonitor: React.FC = () => {
     setTestResults([]);
     addTestResult('🧪 Début du diagnostic complet...');
 
+    // 🔧 Vérifier que l'utilisateur est connecté
+    if (!user?.id) {
+      addTestResult('❌ Aucun utilisateur connecté pour le diagnostic');
+      setIsTesting(false);
+      return;
+    }
+
     try {
-      // Test 1: Service optimisé
-      addTestResult('🧪 Test 1: Service optimisé des classeurs');
+      // Test 1: Service optimisé avec l'utilisateur réel
+      addTestResult(`🧪 Test 1: Service optimisé des classeurs (user: ${user.id.substring(0, 8)}...)`);
       const startTime = Date.now();
       
       try {
-        const result = await optimizedClasseurService.loadClasseursWithContentOptimized('test-user');
+        const result = await optimizedClasseurService.loadClasseursWithContentOptimized(user.id);
         const duration = Date.now() - startTime;
         addTestResult(`✅ Service optimisé: ${result.length} classeurs en ${duration}ms`);
       } catch (error) {
@@ -98,12 +109,12 @@ export const PerformanceMonitor: React.FC = () => {
         addTestResult(`❌ Service optimisé échoué en ${duration}ms: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
       }
 
-      // Test 2: Ancien système
-      addTestResult('🧪 Test 2: Ancien système V2UnifiedApi');
+      // Test 2: Ancien système avec l'utilisateur réel
+      addTestResult(`🧪 Test 2: Ancien système V2UnifiedApi (user: ${user.id.substring(0, 8)}...)`);
       const fallbackStart = Date.now();
       
       try {
-        await v2UnifiedApi.loadClasseursWithContent('test-user');
+        await v2UnifiedApi.loadClasseursWithContent(user.id);
         const duration = Date.now() - fallbackStart;
         addTestResult(`✅ Ancien système: succès en ${duration}ms`);
       } catch (error) {
@@ -113,7 +124,7 @@ export const PerformanceMonitor: React.FC = () => {
 
       // Test 3: Vérification store
       addTestResult('🧪 Test 3: Vérification du store Zustand');
-             const storeState = useFileSystemStore.getState();
+      const storeState = useFileSystemStore.getState();
       addTestResult(`📊 Store: ${Object.keys(storeState.classeurs).length} classeurs, ${Object.keys(storeState.folders).length} dossiers, ${Object.keys(storeState.notes).length} notes`);
 
       addTestResult('🎯 Diagnostic terminé');
