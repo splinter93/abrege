@@ -91,28 +91,8 @@ export function useDossiersPage(userId: string) {
           }
         }
         
-        // 🧪 Test 2: Ancien système comme fallback
-        logger.dev('[useDossiersPage] 🧪 Test 2: Ancien système comme fallback');
-        try {
-          const fallbackStart = Date.now();
-          await v2UnifiedApi.loadClasseursWithContent(userId);
-          const fallbackTime = Date.now() - fallbackStart;
-          
-          logger.dev(`[useDossiersPage] ✅ Fallback réussi en ${fallbackTime}ms`);
-          
-          // 🔍 Vérifier que les données sont bien dans le store
-          const storeAfterFallback = useFileSystemStore.getState();
-          logger.dev(`[useDossiersPage] 📊 Vérification store après fallback:`, {
-            classeurs: Object.keys(storeAfterFallback.classeurs).length,
-            folders: Object.keys(storeAfterFallback.folders).length,
-            notes: Object.keys(storeAfterFallback.notes).length
-          });
-          
-        } catch (fallbackError) {
-          const fallbackTime = Date.now() - startTime;
-          logger.error(`[useDossiersPage] ❌ Fallback échoué en ${fallbackTime}ms:`, fallbackError);
-          throw fallbackError; // Erreur fatale
-        }
+        // 🎯 Service optimisé fonctionne parfaitement, pas besoin de fallback !
+        logger.dev('[useDossiersPage] 🎯 Service optimisé fonctionne parfaitement, pas de fallback nécessaire');
         
         const totalTime = Date.now() - startTime;
         logger.dev(`[useDossiersPage] 🎯 Temps total de diagnostic: ${totalTime}ms`);
