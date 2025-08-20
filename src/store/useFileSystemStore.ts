@@ -277,16 +277,16 @@ export const useFileSystemStore = create<FileSystemState>()((set, get) => ({
   },
   
   // Actions globales d'hydratation
-  setFolders: (folders: Folder[]) => set(() => ({ 
-    folders: Object.fromEntries(folders.map(f => [f.id, f])) 
+  setFolders: (folders: Folder[]) => set((state) => ({ 
+    folders: { ...state.folders, ...Object.fromEntries(folders.map(f => [f.id, f])) }
   })),
   
-  setClasseurs: (classeurs: Classeur[]) => set(() => ({ 
-    classeurs: Object.fromEntries(classeurs.map(c => [c.id, c])) 
+  setClasseurs: (classeurs: Classeur[]) => set((state) => ({ 
+    classeurs: { ...state.classeurs, ...Object.fromEntries(classeurs.map(c => [c.id, c])) }
   })),
   
-  setNotes: (notes: Note[]) => set(() => ({ 
-    notes: Object.fromEntries(notes.map(n => [n.id, n])) 
+  setNotes: (notes: Note[]) => set((state) => ({ 
+    notes: { ...state.notes, ...Object.fromEntries(notes.map(n => [n.id, n])) }
   })),
 
   // --- ACTIONS OPTIMISTES ---
