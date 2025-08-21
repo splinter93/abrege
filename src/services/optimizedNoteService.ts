@@ -13,6 +13,10 @@ interface NoteMetadata {
   updated_at: string;
   slug?: string;
   header_image?: string;
+  header_image_offset?: number;
+  header_image_blur?: number;
+  header_image_overlay?: number;
+  header_title_in_image?: boolean;
   wide_mode?: boolean;
   font_family?: string;
 }
@@ -73,7 +77,7 @@ export class OptimizedNoteService {
       // Récupérer seulement les métadonnées (pas le contenu)
       const { data: note, error } = await supabase
         .from('articles')
-        .select('id, source_title, folder_id, created_at, updated_at, slug, header_image, wide_mode, font_family')
+        .select('id, source_title, folder_id, created_at, updated_at, slug, header_image, header_image_offset, header_image_blur, header_image_overlay, header_title_in_image, wide_mode, font_family')
         .eq('id', noteId)
         .eq('user_id', userId)
         .single();
@@ -90,6 +94,10 @@ export class OptimizedNoteService {
         updated_at: note.updated_at,
         slug: note.slug,
         header_image: note.header_image,
+        header_image_offset: note.header_image_offset,
+        header_image_blur: note.header_image_blur,
+        header_image_overlay: note.header_image_overlay,
+        header_title_in_image: note.header_title_in_image,
         wide_mode: note.wide_mode,
         font_family: note.font_family
       };

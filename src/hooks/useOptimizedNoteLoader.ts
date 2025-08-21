@@ -12,7 +12,7 @@ interface UseOptimizedNoteLoaderProps {
 }
 
 interface UseOptimizedNoteLoaderReturn {
-  note: any;
+  note: any; // TODO: Remplacer par le type Note approprié
   loading: boolean;
   error: string | null;
   loadNote: () => Promise<void>;
@@ -80,10 +80,10 @@ export const useOptimizedNoteLoader = ({
         content: existingNote?.content || '',
         html_content: existingNote?.html_content || '',
         header_image: metadata.header_image || null,
-        header_image_offset: 50,
-        header_image_blur: 0,
-        header_image_overlay: 0,
-        header_title_in_image: false,
+        header_image_offset: metadata.header_image_offset ?? 50,
+        header_image_blur: metadata.header_image_blur ?? 0,
+        header_image_overlay: metadata.header_image_overlay ?? 0,
+        header_title_in_image: metadata.header_title_in_image ?? false,
         wide_mode: metadata.wide_mode || false,
         font_family: metadata.font_family || null,
         updated_at: metadata.updated_at,

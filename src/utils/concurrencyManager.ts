@@ -108,7 +108,6 @@ export class ConcurrencyManager {
    * Nettoyage des promesses expirées
    */
   private cleanup(): void {
-    const now = Date.now();
     let cleanedCount = 0;
     
     for (const [key, loadingPromise] of this.loadingPromises.entries()) {
@@ -159,9 +158,8 @@ export class ConcurrencyManager {
    * Obtient la liste des clés en cours de chargement
    */
   getLoadingKeys(): string[] {
-    const now = Date.now();
     return Array.from(this.loadingPromises.entries())
-      .filter(([_, loadingPromise]) => 
+      .filter(([, loadingPromise]) => 
         !this.isExpired(loadingPromise, this.maxAge) && !loadingPromise.aborted
       )
       .map(([key]) => key);
