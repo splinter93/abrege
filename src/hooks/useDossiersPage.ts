@@ -10,29 +10,28 @@ export function useDossiersPage(userId: string) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
+  const [activeClasseurId, setActiveClasseurId] = useState<string | undefined>();
+  const [currentFolderId, setCurrentFolderId] = useState<string | undefined>();
   
   // 🔧 OPTIMISATION: Référence pour éviter les fuites mémoire
   const abortControllerRef = useRef<AbortController | null>(null);
   const loadingRef = useRef(false);
   
-  // Correction: Lire le store directement et mémoiser le résultat
-  const classeursStore = useFileSystemStore((state) => state.classeurs);
+  // 🔧 FIX: Utiliser des sélecteurs individuels pour éviter l'infinite loop
+  const classeurs = useFileSystemStore((state) => state.classeurs);
   const setClasseurs = useFileSystemStore((state) => state.setClasseurs);
   
   // Mémoiser la conversion en array pour éviter les re-renders
-  const classeurs = useMemo(() => Object.values(classeursStore), [classeursStore]);
+  const classeursArray = useMemo(() => Object.values(classeurs), [classeurs]);
   
   // 🔍 Debug: Log quand le store change
   useEffect(() => {
     logger.dev(`[useDossiersPage] 🔍 Store mis à jour:`, {
-      classeurs: Object.keys(classeursStore).length,
-      classeursIds: Object.keys(classeursStore),
-      classeursArray: classeurs.length
+      classeurs: Object.keys(classeurs).length,
+      classeursIds: Object.keys(classeurs),
+      classeursArray: classeursArray.length
     });
-  }, [classeursStore, classeurs]);
-
-  const [activeClasseurId, setActiveClasseurId] = useState<string | undefined>();
-  const [currentFolderId, setCurrentFolderId] = useState<string | undefined>();
+  }, [classeurs, classeursArray]);
 
   // 🔧 OPTIMISATION: Fonction de chargement avec gestion d'erreurs robuste
   const loadInitialData = useCallback(async (signal?: AbortSignal) => {
@@ -61,13 +60,13 @@ export function useDossiersPage(userId: string) {
         logger.dev(`[useDossiersPage] ✅ Service optimisé: ${result.length} classeurs chargés en ${totalTime}ms`);
         
         // 🔍 Vérifier que les données sont bien dans le store
-        const storeState = useFileSystemStore.getState();
-        if (Object.keys(storeState.classeurs).length > 0) {
+        const currentStoreState = useFileSystemStore.getState();
+        if (Object.keys(currentStoreState.classeurs).length > 0) {
           logger.dev('[useDossiersPage] 🎯 Service optimisé fonctionne parfaitement !');
           logger.dev(`[useDossiersPage] 🔍 Store final:`, {
-            classeurs: Object.keys(storeState.classeurs).length,
-            folders: Object.keys(storeState.folders).length,
-            notes: Object.keys(storeState.notes).length
+            classeurs: Object.keys(currentStoreState.classeurs).length,
+            folders: Object.keys(currentStoreState.folders).length,
+            notes: Object.keys(currentStoreState.notes).length
           });
           
           // 🔧 OPTIMISATION: Réinitialiser le compteur de retry en cas de succès
@@ -140,11 +139,11 @@ export function useDossiersPage(userId: string) {
   
   // Auto-select the first classeur when available
   useEffect(() => {
-    if (!activeClasseurId && classeurs.length > 0) {
-      setActiveClasseurId(classeurs[0].id);
+    if (!activeClasseurId && classeursArray.length > 0) {
+      setActiveClasseurId(classeursArray[0].id);
       setCurrentFolderId(undefined);
     }
-  }, [classeurs, activeClasseurId]);
+  }, [classeursArray, activeClasseurId]);
 
   // 🔧 OPTIMISATION: Fonction de retry avec backoff exponentiel
   const retryWithBackoff = useCallback(async () => {
@@ -295,8 +294,8 @@ export function useDossiersPage(userId: string) {
   return {
     loading,
     error,
-    classeurs,
-    setClasseurs,
+    classeurs: classeursArray, // 🔧 FIX: Retourner l'array mémoisé
+    setClasseurs: setClasseurs,
     activeClasseurId,
     currentFolderId,
     setActiveClasseurId,
