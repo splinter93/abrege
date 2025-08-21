@@ -282,17 +282,38 @@ export function useFolderManagerState(classeurId: string, userId: string, parent
   const deleteFile = useCallback(async (id: string): Promise<void> => {
     try {
       if (process.env.NODE_ENV === 'development') {
-      logger.dev('[UI] 🗑️ Suppression note avec API optimisée...', { id });
+        logger.dev('[UI] 🗑️ Suppression note avec API optimisée...', { id, userId });
       }
-      await v2UnifiedApi.deleteNote(id, userId);
+      
+      // Vérifier que l'utilisateur est connecté
+      if (!userId || userId.trim() === '') {
+        logger.error('[UI] ❌ Utilisateur non connecté:', { userId });
+        setError('Vous devez être connecté pour supprimer une note.');
+        return;
+      }
+      
+      // Vérifier que la note existe dans le store local
+      const note = Object.values(notes).find(n => n.id === id);
+      if (!note) {
+        logger.error('[UI] ❌ Note non trouvée dans le store local:', { id, availableNotes: Object.values(notes).map(n => ({ id: n.id, title: n.source_title })) });
+        setError('Note non trouvée dans l\'interface.');
+        return;
+      }
+      
       if (process.env.NODE_ENV === 'development') {
-      logger.dev('[UI] ✅ Note supprimée avec API optimisée');
+        logger.dev('[UI] 🔍 Note trouvée dans le store:', { id, title: note.source_title });
+      }
+      
+      await v2UnifiedApi.deleteNote(id, userId);
+      
+      if (process.env.NODE_ENV === 'development') {
+        logger.dev('[UI] ✅ Note supprimée avec API optimisée');
       }
     } catch (err) {
       logger.error('[UI] ❌ Erreur suppression note:', err);
       setError('Erreur lors de la suppression du fichier.');
     }
-  }, []);
+  }, [notes, userId]);
 
   // --- RENOMMAGE ---
   const submitRename = useCallback(async (id: string, newName: string, type: 'folder' | 'file') => {
