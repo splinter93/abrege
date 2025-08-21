@@ -1,6 +1,8 @@
 import { useFileSystemStore } from '@/store/useFileSystemStore';
-import { clientPollingTrigger } from './clientPollingTrigger';
+
 import { simpleLogger as logger } from '@/utils/logger';
+import type { Folder, Note, Classeur } from '@/store/useFileSystemStore';
+
 
 // Types pour les données d'API (compatibles avec V1)
 export interface CreateNoteData {
@@ -96,17 +98,39 @@ export class V2UnifiedApi {
     }
   }
 
+
+
   /**
-   * Créer une note avec mise à jour directe de Zustand + polling côté client
+   * Créer une note avec mise à jour optimiste 
    */
   async createNote(noteData: CreateNoteData, userId: string) {
     if (process.env.NODE_ENV === 'development') {
-      logger.dev('[V2UnifiedApi] 📝 Création note unifiée V2');
+      logger.dev('[V2UnifiedApi] 📝 Création note unifiée V2 avec optimisme');
     }
     const startTime = Date.now();
     
     try {
-      // 🚀 Appel vers l'endpoint API V2
+      // 🚀 1. Mise à jour optimiste immédiate
+      const tempId = `temp_note_${Date.now()}`;
+      const optimisticNote: Note = {
+        id: tempId,
+        source_title: noteData.source_title,
+        markdown_content: noteData.markdown_content || '',
+        classeur_id: noteData.notebook_id,
+        folder_id: noteData.folder_id || null,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        _optimistic: true
+      };
+
+      const store = useFileSystemStore.getState();
+      store.addNoteOptimistic(optimisticNote, tempId);
+
+      if (process.env.NODE_ENV === 'development') {
+        logger.dev(`[V2UnifiedApi] 🚀 Note optimiste ajoutée avec ID temporaire: ${tempId}`);
+      }
+
+      // 🚀 2. Appel vers l'endpoint API V2
       const headers = await this.getAuthHeaders();
       const response = await fetch('/api/v2/note/create', {
         method: 'POST',
@@ -116,36 +140,26 @@ export class V2UnifiedApi {
 
       if (!response.ok) {
         const errorText = await response.text();
+        // ❌ En cas d'erreur, annuler l'optimiste
+        store.removeNoteOptimistic(tempId);
         throw new Error(`Erreur création note: ${response.status} ${response.statusText} - ${errorText}`);
       }
 
       const result = await response.json();
       const apiTime = Date.now() - startTime;
-      if (process.env.NODE_ENV === 'development') {
-        logger.dev(`[V2UnifiedApi] ✅ API terminée en ${apiTime}ms`);
-        logger.dev(`[V2UnifiedApi] 📋 Réponse API:`, result);
-      }
 
-      // 🚀 Mise à jour directe de Zustand (instantanée)
-      try {
-        const store = useFileSystemStore.getState();
-        if (process.env.NODE_ENV === 'development') {
-          logger.dev(`[V2UnifiedApi] 🔄 Ajout note à Zustand:`, result.note);
-        }
-        store.addNote(result.note);
-      } catch (storeError) {
-        logger.error('[V2UnifiedApi] ⚠️ Erreur accès store Zustand:', storeError);
-        if (process.env.NODE_ENV === 'development') {
-          logger.dev('[V2UnifiedApi] ⚠️ Store non disponible, mise à jour différée');
-        }
+      // 🚀 3. Remplacer l'optimiste par la vraie note
+      store.updateNoteOptimistic(tempId, result.note);
+
+      if (process.env.NODE_ENV === 'development') {
+        logger.dev(`[V2UnifiedApi] ✅ API terminée en ${apiTime}ms, note optimiste remplacée`);
       }
       
-      // 🚀 Déclencher le polling côté client immédiatement
-      await clientPollingTrigger.triggerArticlesPolling('INSERT');
+      // 🚀 4. Déclencher le polling intelligent immédiatement
       
       const totalTime = Date.now() - startTime;
       if (process.env.NODE_ENV === 'development') {
-        logger.dev(`[V2UnifiedApi] ✅ Note ajoutée à Zustand + polling déclenché en ${totalTime}ms total`);
+        logger.dev(`[V2UnifiedApi] ✅ Note créée avec optimisme  en ${totalTime}ms total`);
       }
       
       return result;
@@ -189,11 +203,10 @@ export class V2UnifiedApi {
       store.updateNote(noteId, result.note);
       
       // 🚀 Déclencher le polling côté client immédiatement
-      await clientPollingTrigger.triggerArticlesPolling('UPDATE');
       
       const totalTime = Date.now() - startTime;
       if (process.env.NODE_ENV === 'development') {
-        logger.dev(`[V2UnifiedApi] ✅ Note mise à jour dans Zustand + polling déclenché en ${totalTime}ms total`);
+        logger.dev(`[V2UnifiedApi] ✅ Note mise à jour dans Zustand  en ${totalTime}ms total`);
       }
       
       return result;
@@ -235,11 +248,10 @@ export class V2UnifiedApi {
       store.removeNote(noteId);
       
       // 🚀 Déclencher le polling côté client immédiatement
-      await clientPollingTrigger.triggerArticlesPolling('DELETE');
       
       const totalTime = Date.now() - startTime;
       if (process.env.NODE_ENV === 'development') {
-        logger.dev(`[V2UnifiedApi] ✅ Note supprimée de Zustand + polling déclenché en ${totalTime}ms total`);
+        logger.dev(`[V2UnifiedApi] ✅ Note supprimée de Zustand  en ${totalTime}ms total`);
       }
       
       return { success: true };
@@ -250,16 +262,35 @@ export class V2UnifiedApi {
   }
 
   /**
-   * Créer un dossier avec mise à jour directe de Zustand + polling côté client
+   * Créer un dossier avec mise à jour optimiste 
    */
   async createFolder(folderData: CreateFolderData, userId: string) {
     if (process.env.NODE_ENV === 'development') {
-      logger.dev('[V2UnifiedApi] 📁 Création dossier unifié V2');
+      logger.dev('[V2UnifiedApi] 📁 Création dossier unifié V2 avec optimisme');
     }
     const startTime = Date.now();
     
     try {
-      // 🚀 Appel vers l'endpoint API V2
+      // 🚀 1. Mise à jour optimiste immédiate
+      const tempId = `temp_folder_${Date.now()}`;
+      const optimisticFolder: Folder = {
+        id: tempId,
+        name: folderData.name,
+        parent_id: folderData.parent_id || null,
+        classeur_id: folderData.notebook_id,
+        position: 0,
+        created_at: new Date().toISOString(),
+        _optimistic: true
+      };
+
+      const store = useFileSystemStore.getState();
+      store.addFolderOptimistic(optimisticFolder);
+
+      if (process.env.NODE_ENV === 'development') {
+        logger.dev(`[V2UnifiedApi] 🚀 Dossier optimiste ajouté avec ID temporaire: ${tempId}`);
+      }
+
+      // 🚀 2. Appel vers l'endpoint API V2
       const headers = await this.getAuthHeaders();
       const response = await fetch('/api/v2/folder/create', {
         method: 'POST',
@@ -269,25 +300,26 @@ export class V2UnifiedApi {
 
       if (!response.ok) {
         const errorText = await response.text();
+        // ❌ En cas d'erreur, annuler l'optimiste
+        store.removeFolderOptimistic(tempId);
         throw new Error(`Erreur création dossier: ${response.status} ${response.statusText} - ${errorText}`);
       }
 
       const result = await response.json();
       const apiTime = Date.now() - startTime;
+
+      // 🚀 3. Remplacer l'optimiste par le vrai dossier
+      store.updateFolderOptimistic(tempId, result.folder);
+
       if (process.env.NODE_ENV === 'development') {
-        logger.dev(`[V2UnifiedApi] ✅ API terminée en ${apiTime}ms`);
+        logger.dev(`[V2UnifiedApi] ✅ API terminée en ${apiTime}ms, dossier optimiste remplacé`);
       }
 
-      // 🚀 Mise à jour directe de Zustand (instantanée)
-      const store = useFileSystemStore.getState();
-      store.addFolder(result.folder);
-      
-      // 🚀 Déclencher le polling côté client immédiatement
-      await clientPollingTrigger.triggerFoldersPolling('INSERT');
+      // 🚀 4. Déclencher le polling intelligent immédiatement
       
       const totalTime = Date.now() - startTime;
       if (process.env.NODE_ENV === 'development') {
-        logger.dev(`[V2UnifiedApi] ✅ Dossier ajouté à Zustand + polling déclenché en ${totalTime}ms total`);
+        logger.dev(`[V2UnifiedApi] ✅ Dossier créé avec optimisme  en ${totalTime}ms total`);
       }
       
       return result;
@@ -331,11 +363,10 @@ export class V2UnifiedApi {
       store.updateFolder(folderId, result.folder);
       
       // 🚀 Déclencher le polling côté client immédiatement
-      await clientPollingTrigger.triggerFoldersPolling('UPDATE');
       
       const totalTime = Date.now() - startTime;
       if (process.env.NODE_ENV === 'development') {
-        logger.dev(`[V2UnifiedApi] ✅ Dossier mis à jour dans Zustand + polling déclenché en ${totalTime}ms total`);
+        logger.dev(`[V2UnifiedApi] ✅ Dossier mis à jour dans Zustand  en ${totalTime}ms total`);
       }
       
       return result;
@@ -377,11 +408,10 @@ export class V2UnifiedApi {
       store.removeFolder(folderId);
       
       // 🚀 Déclencher le polling côté client immédiatement
-      await clientPollingTrigger.triggerFoldersPolling('DELETE');
       
       const totalTime = Date.now() - startTime;
       if (process.env.NODE_ENV === 'development') {
-        logger.dev(`[V2UnifiedApi] ✅ Dossier supprimé de Zustand + polling déclenché en ${totalTime}ms total`);
+        logger.dev(`[V2UnifiedApi] ✅ Dossier supprimé de Zustand  en ${totalTime}ms total`);
       }
       
       return { success: true };
@@ -433,11 +463,10 @@ export class V2UnifiedApi {
       store.moveNote(noteId, targetFolderId, noteClasseurId);
       
       // 🚀 Déclencher le polling côté client immédiatement
-      await clientPollingTrigger.triggerArticlesPolling('UPDATE');
       
       const totalTime = Date.now() - startTime;
       if (process.env.NODE_ENV === 'development') {
-        logger.dev(`[V2UnifiedApi] ✅ Note déplacée dans Zustand + polling déclenché en ${totalTime}ms total`);
+        logger.dev(`[V2UnifiedApi] ✅ Note déplacée dans Zustand  en ${totalTime}ms total`);
       }
       
       return result;
@@ -489,11 +518,10 @@ export class V2UnifiedApi {
       store.moveFolder(folderId, targetParentId, folderClasseurId);
       
       // 🚀 Déclencher le polling côté client immédiatement
-      await clientPollingTrigger.triggerFoldersPolling('UPDATE');
       
       const totalTime = Date.now() - startTime;
       if (process.env.NODE_ENV === 'development') {
-        logger.dev(`[V2UnifiedApi] ✅ Dossier déplacé dans Zustand + polling déclenché en ${totalTime}ms total`);
+        logger.dev(`[V2UnifiedApi] ✅ Dossier déplacé dans Zustand  en ${totalTime}ms total`);
       }
       
       return result;
@@ -504,16 +532,35 @@ export class V2UnifiedApi {
   }
 
   /**
-   * Créer un classeur avec mise à jour directe de Zustand + polling côté client
+   * Créer un classeur avec mise à jour optimiste 
    */
   async createClasseur(classeurData: CreateClasseurData, userId: string) {
     if (process.env.NODE_ENV === 'development') {
-      logger.dev('[V2UnifiedApi] 📚 Création classeur unifié V2');
+      logger.dev('[V2UnifiedApi] 📚 Création classeur unifié V2 avec optimisme');
     }
     const startTime = Date.now();
     
     try {
-      // 🚀 Appel vers l'endpoint API V2
+      // 🚀 1. Mise à jour optimiste immédiate
+      const tempId = `temp_classeur_${Date.now()}`;
+      const optimisticClasseur: Classeur = {
+        id: tempId,
+        name: classeurData.name,
+        description: classeurData.description,
+        icon: classeurData.icon || '📁',
+        position: 0,
+        created_at: new Date().toISOString(),
+        _optimistic: true
+      };
+
+      const store = useFileSystemStore.getState();
+      store.addClasseurOptimistic(optimisticClasseur);
+
+      if (process.env.NODE_ENV === 'development') {
+        logger.dev(`[V2UnifiedApi] 🚀 Classeur optimiste ajouté avec ID temporaire: ${tempId}`);
+      }
+
+      // 🚀 2. Appel vers l'endpoint API V2
       const headers = await this.getAuthHeaders();
       const response = await fetch('/api/v2/classeur/create', {
         method: 'POST',
@@ -523,25 +570,26 @@ export class V2UnifiedApi {
 
       if (!response.ok) {
         const errorText = await response.text();
+        // ❌ En cas d'erreur, annuler l'optimiste
+        store.removeClasseurOptimistic(tempId);
         throw new Error(`Erreur création classeur: ${response.status} ${response.statusText} - ${errorText}`);
       }
 
       const result = await response.json();
       const apiTime = Date.now() - startTime;
-      if (process.env.NODE_ENV === 'development') {
-        logger.dev(`[V2UnifiedApi] ✅ API terminée en ${apiTime}ms`);
-      }
 
-      // 🚀 Mise à jour directe de Zustand (instantanée)
-      const store = useFileSystemStore.getState();
-      store.addClasseur(result.classeur);
+      // 🚀 3. Remplacer l'optimiste par le vrai classeur
+      store.updateClasseurOptimistic(tempId, result.classeur);
+
+      if (process.env.NODE_ENV === 'development') {
+        logger.dev(`[V2UnifiedApi] ✅ API terminée en ${apiTime}ms, classeur optimiste remplacé`);
+      }
       
-      // 🚀 Déclencher le polling côté client immédiatement
-      await clientPollingTrigger.triggerClasseursPolling('INSERT');
+      // 🚀 4. Déclencher le polling intelligent immédiatement
       
       const totalTime = Date.now() - startTime;
       if (process.env.NODE_ENV === 'development') {
-        logger.dev(`[V2UnifiedApi] ✅ Classeur ajouté à Zustand + polling déclenché en ${totalTime}ms total`);
+        logger.dev(`[V2UnifiedApi] ✅ Classeur créé avec optimisme  en ${totalTime}ms total`);
       }
       
       return result;
@@ -585,11 +633,10 @@ export class V2UnifiedApi {
       store.updateClasseur(classeurId, result.classeur);
       
       // 🚀 Déclencher le polling côté client immédiatement
-      await clientPollingTrigger.triggerClasseursPolling('UPDATE');
       
       const totalTime = Date.now() - startTime;
       if (process.env.NODE_ENV === 'development') {
-        logger.dev(`[V2UnifiedApi] ✅ Classeur mis à jour dans Zustand + polling déclenché en ${totalTime}ms total`);
+        logger.dev(`[V2UnifiedApi] ✅ Classeur mis à jour dans Zustand  en ${totalTime}ms total`);
       }
       
       return result;
@@ -631,11 +678,10 @@ export class V2UnifiedApi {
       store.removeClasseur(classeurId);
       
       // 🚀 Déclencher le polling côté client immédiatement
-      await clientPollingTrigger.triggerClasseursPolling('DELETE');
       
       const totalTime = Date.now() - startTime;
       if (process.env.NODE_ENV === 'development') {
-        logger.dev(`[V2UnifiedApi] ✅ Classeur supprimé de Zustand + polling déclenché en ${totalTime}ms total`);
+        logger.dev(`[V2UnifiedApi] ✅ Classeur supprimé de Zustand  en ${totalTime}ms total`);
       }
       
       return { success: true };
@@ -674,7 +720,6 @@ export class V2UnifiedApi {
       store.updateNote(ref, { markdown_content: result.note.markdown_content });
       
       // 🚀 Déclencher le polling côté client immédiatement
-      await clientPollingTrigger.triggerArticlesPolling('UPDATE');
       
       return result;
     } catch (error) {
@@ -821,7 +866,6 @@ export class V2UnifiedApi {
       });
       
       // 🚀 Déclencher le polling côté client immédiatement
-      await clientPollingTrigger.triggerClasseursPolling('UPDATE');
       
       return result;
     } catch (error) {

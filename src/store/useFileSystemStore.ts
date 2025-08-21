@@ -44,6 +44,7 @@ export interface Folder {
   classeur_id?: string;
   position?: number;
   created_at?: string;
+  _optimistic?: boolean | 'deleting';
 }
 
 export interface Classeur {
@@ -54,6 +55,7 @@ export interface Classeur {
   emoji?: string;
   position?: number;
   created_at?: string;
+  _optimistic?: boolean | 'deleting';
 }
 
 export interface EditorPatch {
@@ -105,6 +107,16 @@ export interface FileSystemState {
   addNoteOptimistic: (note: Note, tempId: string) => void;
   updateNoteOptimistic: (id: string, patch: Partial<Note>) => void;
   removeNoteOptimistic: (id: string) => void;
+  
+  // Actions optimistes pour dossiers
+  addFolderOptimistic: (folder: Folder) => void;
+  updateFolderOptimistic: (tempId: string, realFolder: Folder) => void;
+  removeFolderOptimistic: (tempId: string) => void;
+  
+  // Actions optimistes pour classeurs
+  addClasseurOptimistic: (classeur: Classeur) => void;
+  updateClasseurOptimistic: (tempId: string, realClasseur: Classeur) => void;
+  removeClasseurOptimistic: (tempId: string) => void;
 
   // Action pour le diff
   applyDiff: (noteId: string, diff: DiffResult) => void;
@@ -272,7 +284,6 @@ export const useFileSystemStore = create<FileSystemState>()((set, get) => ({
   })),
   
   setActiveClasseurId: (id: string | null) => {
-    // TODO: Remplacer par l'authentification Supabase quand elle sera implémentée
     set({ activeClasseurId: id });
   },
   
@@ -317,6 +328,58 @@ export const useFileSystemStore = create<FileSystemState>()((set, get) => ({
           [id]: { ...state.notes[id], _optimistic: 'deleting' }
         }
       };
+    });
+  },
+
+  // --- ACTIONS OPTIMISTES POUR DOSSIERS ---
+  addFolderOptimistic: (folder: Folder) => {
+    set(state => ({
+      folders: { ...state.folders, [folder.id]: { ...folder, _optimistic: true } }
+    }));
+  },
+
+  updateFolderOptimistic: (tempId: string, realFolder: Folder) => {
+    set(state => {
+      const { [tempId]: removed, ...otherFolders } = state.folders;
+      return {
+        folders: {
+          ...otherFolders,
+          [realFolder.id]: realFolder
+        }
+      };
+    });
+  },
+
+  removeFolderOptimistic: (tempId: string) => {
+    set(state => {
+      const { [tempId]: removed, ...otherFolders } = state.folders;
+      return { folders: otherFolders };
+    });
+  },
+
+  // --- ACTIONS OPTIMISTES POUR CLASSEURS ---
+  addClasseurOptimistic: (classeur: Classeur) => {
+    set(state => ({
+      classeurs: { ...state.classeurs, [classeur.id]: { ...classeur, _optimistic: true } }
+    }));
+  },
+
+  updateClasseurOptimistic: (tempId: string, realClasseur: Classeur) => {
+    set(state => {
+      const { [tempId]: removed, ...otherClasseurs } = state.classeurs;
+      return {
+        classeurs: {
+          ...otherClasseurs,
+          [realClasseur.id]: realClasseur
+        }
+      };
+    });
+  },
+
+  removeClasseurOptimistic: (tempId: string) => {
+    set(state => {
+      const { [tempId]: removed, ...otherClasseurs } = state.classeurs;
+      return { classeurs: otherClasseurs };
     });
   },
 

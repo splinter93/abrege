@@ -1,6 +1,6 @@
 import type { SafeUnknown, SafeRecord, SafeError } from '@/types/quality';
 import { useFileSystemStore } from '@/store/useFileSystemStore';
-import { clientPollingTrigger } from './clientPollingTrigger';
+
 import { ErrorHandler } from './errorHandler';
 import { logApi, logStore, logPolling, logj } from '@/utils/logger';
 import { supabase } from '@/supabaseClient';
@@ -223,7 +223,7 @@ export class OptimizedApi {
   }
 
   /**
-   * Créer une note avec mise à jour directe de Zustand + polling côté client
+   * Créer une note avec mise à jour directe de Zustand 
    */
   async createNote(noteData: CreateNoteData) {
     if (process.env.NODE_ENV === 'development') {
@@ -270,12 +270,11 @@ export class OptimizedApi {
         }
       }
       
-      // 🚀 Déclencher le polling côté client immédiatement
-      await clientPollingTrigger.triggerArticlesPolling('INSERT');
+      // 
       
       const totalTime = Date.now() - startTime;
       if (process.env.NODE_ENV === 'development') {
-      logger.dev(`[OptimizedApi] ✅ Note ajoutée à Zustand + polling déclenché en ${totalTime}ms total`);
+      logger.dev(`[OptimizedApi] ✅ Note ajoutée à Zustand  en ${totalTime}ms total`);
       }
       
       return result;
@@ -286,7 +285,7 @@ export class OptimizedApi {
   }
 
   /**
-   * Mettre à jour une note avec mise à jour directe de Zustand + polling côté client
+   * Mettre à jour une note avec mise à jour directe de Zustand 
    */
   async updateNote(noteId: string, updateData: UpdateNoteData) {
     if (process.env.NODE_ENV === 'development') {
@@ -320,12 +319,11 @@ export class OptimizedApi {
       const store = useFileSystemStore.getState();
       store.updateNote(noteId, result.note);
       
-      // 🚀 Déclencher le polling côté client immédiatement
-      await clientPollingTrigger.triggerArticlesPolling('UPDATE');
+      // 
       
       const totalTime = Date.now() - startTime;
       if (process.env.NODE_ENV === 'development') {
-      logger.dev(`[OptimizedApi] ✅ Note mise à jour dans Zustand + polling déclenché en ${totalTime}ms total`);
+      logger.dev(`[OptimizedApi] ✅ Note mise à jour dans Zustand  en ${totalTime}ms total`);
       }
       
       return result;
@@ -336,7 +334,7 @@ export class OptimizedApi {
   }
 
   /**
-   * Supprimer une note avec mise à jour directe de Zustand + polling côté client
+   * Supprimer une note avec mise à jour directe de Zustand 
    */
   async deleteNote(noteId: string) {
     if (process.env.NODE_ENV === 'development') {
@@ -367,12 +365,11 @@ export class OptimizedApi {
       const store = useFileSystemStore.getState();
       store.removeNote(noteId);
       
-      // 🚀 Déclencher le polling côté client immédiatement
-      await clientPollingTrigger.triggerArticlesPolling('DELETE');
+      // 
       
       const totalTime = Date.now() - startTime;
       if (process.env.NODE_ENV === 'development') {
-      logger.dev(`[OptimizedApi] ✅ Note supprimée de Zustand + polling déclenché en ${totalTime}ms total`);
+      logger.dev(`[OptimizedApi] ✅ Note supprimée de Zustand  en ${totalTime}ms total`);
       }
       
       return { success: true };
@@ -383,7 +380,7 @@ export class OptimizedApi {
   }
 
   /**
-   * Créer un dossier avec mise à jour directe de Zustand + polling côté client
+   * Créer un dossier avec mise à jour directe de Zustand 
    */
   async createFolder(folderData: CreateFolderData) {
     if (process.env.NODE_ENV === 'development') {
@@ -416,12 +413,11 @@ export class OptimizedApi {
       const store = useFileSystemStore.getState();
       store.addFolder(result.folder);
       
-      // 🚀 Déclencher le polling côté client immédiatement
-      await clientPollingTrigger.triggerFoldersPolling('INSERT');
+      // 
       
       const totalTime = Date.now() - startTime;
       if (process.env.NODE_ENV === 'development') {
-      logger.dev(`[OptimizedApi] ✅ Dossier ajouté à Zustand + polling déclenché en ${totalTime}ms total`);
+      logger.dev(`[OptimizedApi] ✅ Dossier ajouté à Zustand  en ${totalTime}ms total`);
       }
       
       return result;
@@ -432,7 +428,7 @@ export class OptimizedApi {
   }
 
   /**
-   * Mettre à jour un dossier avec mise à jour directe de Zustand + polling côté client
+   * Mettre à jour un dossier avec mise à jour directe de Zustand 
    */
   async updateFolder(folderId: string, updateData: UpdateFolderData) {
     if (process.env.NODE_ENV === 'development') {
@@ -465,12 +461,11 @@ export class OptimizedApi {
       const store = useFileSystemStore.getState();
       store.updateFolder(folderId, result.folder);
       
-      // 🚀 Déclencher le polling côté client immédiatement
-      await clientPollingTrigger.triggerFoldersPolling('UPDATE');
+      // 
       
       const totalTime = Date.now() - startTime;
       if (process.env.NODE_ENV === 'development') {
-      logger.dev(`[OptimizedApi] ✅ Dossier mis à jour dans Zustand + polling déclenché en ${totalTime}ms total`);
+      logger.dev(`[OptimizedApi] ✅ Dossier mis à jour dans Zustand  en ${totalTime}ms total`);
       }
       
       return result;
@@ -481,7 +476,7 @@ export class OptimizedApi {
   }
 
   /**
-   * Supprimer un dossier avec mise à jour directe de Zustand + polling côté client
+   * Supprimer un dossier avec mise à jour directe de Zustand 
    */
   async deleteFolder(folderId: string) {
     if (process.env.NODE_ENV === 'development') {
@@ -512,12 +507,11 @@ export class OptimizedApi {
       const store = useFileSystemStore.getState();
       store.removeFolder(folderId);
       
-      // 🚀 Déclencher le polling côté client immédiatement
-      await clientPollingTrigger.triggerFoldersPolling('DELETE');
+      // 
       
       const totalTime = Date.now() - startTime;
       if (process.env.NODE_ENV === 'development') {
-      logger.dev(`[OptimizedApi] ✅ Dossier supprimé de Zustand + polling déclenché en ${totalTime}ms total`);
+      logger.dev(`[OptimizedApi] ✅ Dossier supprimé de Zustand  en ${totalTime}ms total`);
       }
       
       return { success: true };
@@ -528,7 +522,7 @@ export class OptimizedApi {
   }
 
   /**
-   * Déplacer une note avec mise à jour directe de Zustand + polling côté client
+   * Déplacer une note avec mise à jour directe de Zustand 
    */
   async moveNote(noteId: string, targetFolderId: string | null, targetClasseurId?: string) {
     if (process.env.NODE_ENV === 'development') {
@@ -566,12 +560,11 @@ export class OptimizedApi {
       const store = useFileSystemStore.getState();
       store.moveNote(noteId, targetFolderId, targetClasseurId);
       
-      // 🚀 Déclencher le polling côté client immédiatement
-      await clientPollingTrigger.triggerArticlesPolling('UPDATE');
+      // 
       
       const totalTime = Date.now() - startTime;
       if (process.env.NODE_ENV === 'development') {
-      logger.dev(`[OptimizedApi] ✅ Note déplacée dans Zustand + polling déclenché en ${totalTime}ms total`);
+      logger.dev(`[OptimizedApi] ✅ Note déplacée dans Zustand  en ${totalTime}ms total`);
       }
       
       return result;
@@ -582,7 +575,7 @@ export class OptimizedApi {
   }
 
   /**
-   * Déplacer un dossier avec mise à jour directe de Zustand + polling côté client
+   * Déplacer un dossier avec mise à jour directe de Zustand 
    */
   async moveFolder(folderId: string, targetParentId: string | null, targetClasseurId?: string) {
     if (process.env.NODE_ENV === 'development') {
@@ -620,12 +613,11 @@ export class OptimizedApi {
       const store = useFileSystemStore.getState();
       store.moveFolder(folderId, targetParentId, targetClasseurId);
       
-      // 🚀 Déclencher le polling côté client immédiatement
-      await clientPollingTrigger.triggerFoldersPolling('UPDATE');
+      // 
       
       const totalTime = Date.now() - startTime;
       if (process.env.NODE_ENV === 'development') {
-      logger.dev(`[OptimizedApi] ✅ Dossier déplacé dans Zustand + polling déclenché en ${totalTime}ms total`);
+      logger.dev(`[OptimizedApi] ✅ Dossier déplacé dans Zustand  en ${totalTime}ms total`);
       }
       
       return result;
@@ -636,7 +628,7 @@ export class OptimizedApi {
   }
 
   /**
-   * Créer un classeur avec mise à jour directe de Zustand + polling côté client
+   * Créer un classeur avec mise à jour directe de Zustand 
    */
   async createClasseur(classeurData: CreateClasseurData) {
     if (process.env.NODE_ENV === 'development') {
@@ -683,12 +675,11 @@ export class OptimizedApi {
         }
       }
       
-      // 🚀 Déclencher le polling côté client immédiatement
-      await clientPollingTrigger.triggerClasseursPolling('INSERT');
+      // 
       
       const totalTime = Date.now() - startTime;
       if (process.env.NODE_ENV === 'development') {
-      logger.dev(`[OptimizedApi] ✅ Classeur ajouté à Zustand + polling déclenché en ${totalTime}ms total`);
+      logger.dev(`[OptimizedApi] ✅ Classeur ajouté à Zustand  en ${totalTime}ms total`);
       }
       
       return result;
@@ -699,7 +690,7 @@ export class OptimizedApi {
   }
 
   /**
-   * Mettre à jour un classeur avec mise à jour directe de Zustand + polling côté client
+   * Mettre à jour un classeur avec mise à jour directe de Zustand 
    */
   async updateClasseur(classeurId: string, updateData: UpdateClasseurData) {
     if (process.env.NODE_ENV === 'development') {
@@ -732,12 +723,11 @@ export class OptimizedApi {
       const store = useFileSystemStore.getState();
       store.updateClasseur(classeurId, result.classeur);
       
-      // 🚀 Déclencher le polling côté client immédiatement
-      await clientPollingTrigger.triggerClasseursPolling('UPDATE');
+      // 
       
       const totalTime = Date.now() - startTime;
       if (process.env.NODE_ENV === 'development') {
-      logger.dev(`[OptimizedApi] ✅ Classeur mis à jour dans Zustand + polling déclenché en ${totalTime}ms total`);
+      logger.dev(`[OptimizedApi] ✅ Classeur mis à jour dans Zustand  en ${totalTime}ms total`);
       }
       
       return result;
@@ -748,7 +738,7 @@ export class OptimizedApi {
   }
 
   /**
-   * Supprimer un classeur avec mise à jour directe de Zustand + polling côté client
+   * Supprimer un classeur avec mise à jour directe de Zustand 
    */
   async deleteClasseur(classeurId: string) {
     if (process.env.NODE_ENV === 'development') {
@@ -779,12 +769,11 @@ export class OptimizedApi {
       const store = useFileSystemStore.getState();
       store.removeClasseur(classeurId);
       
-      // 🚀 Déclencher le polling côté client immédiatement
-      await clientPollingTrigger.triggerClasseursPolling('DELETE');
+      // 
       
       const totalTime = Date.now() - startTime;
       if (process.env.NODE_ENV === 'development') {
-      logger.dev(`[OptimizedApi] ✅ Classeur supprimé de Zustand + polling déclenché en ${totalTime}ms total`);
+      logger.dev(`[OptimizedApi] ✅ Classeur supprimé de Zustand  en ${totalTime}ms total`);
       }
       
       return { success: true };
@@ -795,7 +784,7 @@ export class OptimizedApi {
   }
 
   /**
-   * Réorganiser les classeurs avec mise à jour directe de Zustand + polling côté client
+   * Réorganiser les classeurs avec mise à jour directe de Zustand 
    */
   async reorderClasseurs(updatedClasseurs: { id: string; position: number }[]) {
     if (process.env.NODE_ENV === 'development') {
@@ -831,12 +820,11 @@ export class OptimizedApi {
         }
       });
       
-      // 🚀 Déclencher le polling côté client immédiatement
-      await clientPollingTrigger.triggerClasseursPolling('UPDATE');
+      // 
       
       const totalTime = Date.now() - startTime;
       if (process.env.NODE_ENV === 'development') {
-      logger.dev(`[OptimizedApi] ✅ Classeurs réorganisés dans Zustand + polling déclenché en ${totalTime}ms total`);
+      logger.dev(`[OptimizedApi] ✅ Classeurs réorganisés dans Zustand  en ${totalTime}ms total`);
       }
       
       return result;

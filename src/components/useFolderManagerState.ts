@@ -1,14 +1,11 @@
 "use client";
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Folder, FileArticle } from './types';
-import {
-  updateItemPositions
-} from '../services/supabase';
 import { v2UnifiedApi } from '@/services/V2UnifiedApi';
-import { clientPollingTrigger } from '@/services/clientPollingTrigger';
+
 import { simpleLogger as logger } from '@/utils/logger';
 
-import { useRealtime } from '@/hooks/useRealtime';
+
 import { useFileSystemStore } from '@/store/useFileSystemStore';
 import type { FileSystemState, Note } from '@/store/useFileSystemStore';
 import { generateUniqueNoteName } from '@/utils/generateUniqueName';
@@ -88,8 +85,8 @@ function toUIFolder(f: ZustandFolder): Folder {
   return {
     id: f.id,
     name: f.name,
-    parent_id: f.parent_id === null ? undefined : f.parent_id,
-    classeur_id: f.classeur_id, // Ajouté pour le filtrage correct
+    parent_id: f.parent_id || null,
+    classeur_id: f.classeur_id || '', // Ajouté pour le filtrage correct
   };
 }
 
@@ -98,10 +95,8 @@ function toUIFile(n: ZustandNote): FileArticle {
   return {
     id: n.id,
     source_title: n.source_title || n.title || '',
-    source_type: n.source_type,
-    updated_at: n.updated_at,
-    classeur_id: n.classeur_id, // Ajouté pour le filtrage correct
-    folder_id: n.folder_id,     // Ajouté pour la navigation
+    classeur_id: n.classeur_id || '',
+    folder_id: n.folder_id || null,
   };
 }
 
@@ -329,35 +324,13 @@ export function useFolderManagerState(classeurId: string, userId: string, parent
 
   // --- DnD ---
   const reorderFolders = useCallback(async (newOrder: Folder[]) => {
-    // setFolders(newOrder); // Supprimé
-    try {
-      if (process.env.NODE_ENV === 'development') {
-      logger.dev('[UI] 🔄 Réordonnancement dossiers, en attente du patch realtime...', newOrder.length);
-      }
-      await updateItemPositions(newOrder.map((item, idx) => ({ id: item.id, position: idx, type: 'folder' })));
-      if (process.env.NODE_ENV === 'development') {
-      logger.dev('[UI] ✅ Dossiers réordonnés via API, patch realtime attendu...');
-      }
-    } catch (err) {
-      logger.error('[UI] ❌ Erreur réordonnancement dossiers:', err);
-      setError('Erreur lors du réordonnancement des dossiers.');
-    }
+    // TODO: Implémenter avec V2UnifiedApi
+    logger.dev('[UI] 🔄 Réordonnancement dossiers - Fonctionnalité temporairement désactivée');
   }, []);
 
   const reorderFiles = useCallback(async (newOrder: FileArticle[]) => {
-    // setFiles(newOrder); // Supprimé
-    try {
-      if (process.env.NODE_ENV === 'development') {
-      logger.dev('[UI] 🔄 Réordonnancement notes, en attente du patch realtime...', newOrder.length);
-      }
-      await updateItemPositions(newOrder.map((item, idx) => ({ id: item.id, position: idx, type: 'file' })));
-      if (process.env.NODE_ENV === 'development') {
-      logger.dev('[UI] ✅ Notes réordonnées via API, patch realtime attendu...');
-      }
-    } catch (err) {
-      logger.error('[UI] ❌ Erreur réordonnancement notes:', err);
-      setError('Erreur lors du réordonnancement des fichiers.');
-    }
+    // TODO: Implémenter avec V2UnifiedApi
+    logger.dev('[UI] 🔄 Réordonnancement notes - Fonctionnalité temporairement désactivée');
   }, []);
 
   // --- IMBRICATION DnD ---
@@ -395,7 +368,7 @@ export function useFolderManagerState(classeurId: string, userId: string, parent
         }
       }
       if (process.env.NODE_ENV === 'development') {
-        logger.dev('[UI] ✅ Item déplacé avec API + Zustand + polling');
+        logger.dev('[UI] ✅ Item déplacé avec API + Zustand');
       }
     } catch (err) {
       logger.error('[UI] ❌ Erreur déplacement item:', err);

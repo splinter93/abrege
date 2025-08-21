@@ -14,14 +14,15 @@ interface PollingEvent {
 }
 
 export default function PollingTest() {
-  const [events, setEvents] = useState<PollingEvent[]>([]);
+  const [userId, setUserId] = useState<string>('');
   const [isConnected, setIsConnected] = useState(false);
+  const [events, setEvents] = useState<PollingEvent[]>([]);
+  const [debugInfo, setDebugInfo] = useState<string[]>([]);
+  const [serviceStatus, setServiceStatus] = useState<string>('Initial');
 
   const { subscribe, unsubscribe } = useRealtime({
-    userId: "3223651c-5580-4471-affb-b3f4456bd729",
     type: 'polling',
-    interval: 3000,
-    debug: true
+    userId: userId
   });
 
   useEffect(() => {
@@ -51,6 +52,43 @@ export default function PollingTest() {
       setIsConnected(false);
     };
   }, [subscribe, unsubscribe]);
+
+  const testDirectService = () => {
+    addDebugInfo('🧪 Test direct du service...');
+    try {
+      const service = getRealtimeService();
+      if (service) {
+        const result = service.testService();
+        addDebugInfo(`✅ Service testé: ${JSON.stringify(result)}`);
+        setServiceStatus('✅ Service testé');
+      } else {
+        addDebugInfo('❌ Aucun service disponible');
+        setServiceStatus('❌ Aucun service');
+      }
+    } catch (error) {
+      addDebugInfo(`❌ Erreur test: ${error}`);
+      setServiceStatus('❌ Erreur test');
+    }
+  };
+
+  const forceServiceInit = () => {
+    addDebugInfo('🔧 Forçage de l\'initialisation du service...');
+    if (!userId) {
+      addDebugInfo('❌ userId manquant, impossible d\'initialiser');
+      return;
+    }
+    try {
+      const service = initRealtimeService(userId);
+      addDebugInfo(`Service après forçage: ${service ? 'OUI' : 'NON'}`);
+      
+      if (service) {
+        setServiceStatus('✅ Service forcé');
+        addDebugInfo('✅ Service initialisé de force');
+      }
+    } catch (error) {
+      addDebugInfo(`❌ Erreur lors du forçage: ${error}`);
+    }
+  };
 
   return (
     <div style={{ 

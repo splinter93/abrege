@@ -1,6 +1,6 @@
 import { V2DatabaseUtils } from '@/utils/v2DatabaseUtils';
 import { OpenAPIToolsGenerator } from './openApiToolsGenerator';
-import { clientPollingTrigger } from '@/services/clientPollingTrigger';
+
 
 export interface ApiV2Tool {
   name: string;
@@ -570,7 +570,6 @@ export class AgentApiV2Tools {
         
         const context = { operation: 'create_note', component: 'AgentApiV2Tools' };
         const res = await V2DatabaseUtils.createNote(mappedParams, userId, context);
-        try { await clientPollingTrigger.triggerArticlesPolling('INSERT'); } catch {}
         return res;
       }
     });
@@ -645,7 +644,6 @@ export class AgentApiV2Tools {
         const { ref: _ignore, id: _id, note_id: _noteId, slug: _slug, ...data } = params;
         const context = { operation: 'update_note', component: 'AgentApiV2Tools' };
         const res = await V2DatabaseUtils.updateNote(ref, data, userId, context);
-        try { await clientPollingTrigger.triggerArticlesPolling('UPDATE'); } catch {}
         return res;
       }
     });
@@ -672,7 +670,6 @@ export class AgentApiV2Tools {
         const { ref, content } = params;
         const context = { operation: 'add_content_to_note', component: 'AgentApiV2Tools' };
         const res = await V2DatabaseUtils.addContentToNote(ref, content, userId, context);
-        try { await clientPollingTrigger.triggerArticlesPolling('UPDATE'); } catch {}
         return res;
       }
     });
@@ -699,7 +696,6 @@ export class AgentApiV2Tools {
         const { ref, folder_id } = params;
         const context = { operation: 'move_note', component: 'AgentApiV2Tools' };
         const res = await V2DatabaseUtils.moveNote(ref, folder_id, userId, context);
-        try { await clientPollingTrigger.triggerArticlesPolling('UPDATE'); } catch {}
         return res;
       }
     });
@@ -722,7 +718,6 @@ export class AgentApiV2Tools {
         const { ref } = params;
         const context = { operation: 'delete_note', component: 'AgentApiV2Tools' };
         const res = await V2DatabaseUtils.deleteNote(ref, userId, context);
-        try { await clientPollingTrigger.triggerArticlesPolling('DELETE'); } catch {}
         return res;
       }
     });
@@ -752,7 +747,6 @@ export class AgentApiV2Tools {
       execute: async (params, jwtToken, userId) => {
         const context = { operation: 'create_folder', component: 'AgentApiV2Tools' };
         const res = await V2DatabaseUtils.createFolder(params, userId, context);
-        try { await clientPollingTrigger.triggerFoldersPolling('INSERT'); } catch {}
         return res;
       }
     });
@@ -783,7 +777,6 @@ export class AgentApiV2Tools {
         const { ref, ...data } = params;
         const context = { operation: 'update_folder', component: 'AgentApiV2Tools' };
         const res = await V2DatabaseUtils.updateFolder(ref, data, userId, context);
-        try { await clientPollingTrigger.triggerFoldersPolling('UPDATE'); } catch {}
         return res;
       }
     });
@@ -806,7 +799,6 @@ export class AgentApiV2Tools {
         const { ref } = params;
         const context = { operation: 'delete_folder', component: 'AgentApiV2Tools' };
         const res = await V2DatabaseUtils.deleteFolder(ref, userId, context);
-        try { await clientPollingTrigger.triggerFoldersPolling('DELETE'); } catch {}
         return res;
       }
     });
@@ -836,7 +828,6 @@ export class AgentApiV2Tools {
       execute: async (params, jwtToken, userId) => {
         const context = { operation: 'create_notebook', component: 'AgentApiV2Tools' };
         const res = await V2DatabaseUtils.createClasseur(params, userId, context);
-        try { await clientPollingTrigger.triggerClasseursPolling('INSERT'); } catch {}
         return res;
       }
     });
@@ -914,7 +905,6 @@ export class AgentApiV2Tools {
         const { ref, content, position } = params;
         const context = { operation: 'insert_content_to_note', component: 'AgentApiV2Tools' };
         const res = await V2DatabaseUtils.insertContentToNote(ref, content, position, userId, context);
-        try { await clientPollingTrigger.triggerArticlesPolling('UPDATE'); } catch {}
         return res;
       }
     });
@@ -945,7 +935,6 @@ export class AgentApiV2Tools {
         const { ref, sectionId, content } = params;
         const context = { operation: 'add_content_to_section', component: 'AgentApiV2Tools' };
         const res = await V2DatabaseUtils.addContentToSection(ref, sectionId, content, userId, context);
-        try { await clientPollingTrigger.triggerArticlesPolling('UPDATE'); } catch {}
         return res;
       }
     });
@@ -972,7 +961,6 @@ export class AgentApiV2Tools {
         const { ref, sectionId } = params;
         const context = { operation: 'clear_section', component: 'AgentApiV2Tools' };
         const res = await V2DatabaseUtils.clearSection(ref, sectionId, userId, context);
-        try { await clientPollingTrigger.triggerArticlesPolling('UPDATE'); } catch {}
         return res;
       }
     });
@@ -999,7 +987,6 @@ export class AgentApiV2Tools {
         const { ref, sectionId } = params;
         const context = { operation: 'erase_section', component: 'AgentApiV2Tools' };
         const res = await V2DatabaseUtils.eraseSection(ref, sectionId, userId, context);
-        try { await clientPollingTrigger.triggerArticlesPolling('UPDATE'); } catch {}
         return res;
       }
     });
@@ -1069,7 +1056,6 @@ export class AgentApiV2Tools {
         const { ref, visibility } = params;
         const context = { operation: 'publish_note', component: 'AgentApiV2Tools' };
         const res = await V2DatabaseUtils.publishNote(ref, visibility, userId, context);
-        try { await clientPollingTrigger.triggerArticlesPolling('UPDATE'); } catch {}
         return res;
       }
     });
@@ -1127,7 +1113,6 @@ export class AgentApiV2Tools {
         const { classeurs } = params;
         const context = { operation: 'reorder_notebooks', component: 'AgentApiV2Tools' };
         const res = await V2DatabaseUtils.reorderClasseurs(classeurs, userId, context);
-        try { await clientPollingTrigger.triggerClasseursPolling('UPDATE'); } catch {}
         return res;
       }
     });
@@ -1261,7 +1246,6 @@ export class AgentApiV2Tools {
           body: JSON.stringify({ targetNoteId, mergeStrategy })
         });
         const res = await response.json();
-        try { await clientPollingTrigger.triggerArticlesPolling('UPDATE'); } catch {}
         return res;
       }
     });
@@ -1300,7 +1284,6 @@ export class AgentApiV2Tools {
         const { ref, ...updateData } = params;
         const context = { operation: 'update_notebook', component: 'AgentApiV2Tools' };
         const res = await V2DatabaseUtils.updateClasseur(ref, updateData, userId, context);
-        try { await clientPollingTrigger.triggerClasseursPolling('UPDATE'); } catch {}
         return res;
       }
     });
@@ -1323,7 +1306,6 @@ export class AgentApiV2Tools {
         const { ref } = params;
         const context = { operation: 'delete_notebook', component: 'AgentApiV2Tools' };
         const res = await V2DatabaseUtils.deleteClasseur(ref, userId, context);
-        try { await clientPollingTrigger.triggerClasseursPolling('DELETE'); } catch {}
         return res;
       }
     });
@@ -1350,7 +1332,6 @@ export class AgentApiV2Tools {
         const { ref, target_parent_id } = params;
         const context = { operation: 'move_folder', component: 'AgentApiV2Tools' };
         const res = await V2DatabaseUtils.moveFolder(ref, target_parent_id, userId, context);
-        try { await clientPollingTrigger.triggerFoldersPolling('UPDATE'); } catch {}
         return res;
       }
     });

@@ -13,7 +13,7 @@ import AuthGuard from "@/components/AuthGuard";
 import { useDossiersPage } from "@/hooks/useDossiersPage";
 import { useAuth } from "@/hooks/useAuth";
 import { useSecureErrorHandler } from "@/components/SecureErrorHandler";
-import PollingMonitor from "@/components/PollingMonitor";
+
 import "./index.css";
 import { useFileSystemStore } from "@/store/useFileSystemStore";
 
@@ -195,10 +195,7 @@ function AuthenticatedDossiersContent({ user }: { user: any }) {
 
       {/* Zone de contenu principal */}
       <main className="dossiers-content-area">
-        {/* 🔍 MONITORING: Indicateur de polling en haut à droite */}
-        <div style={{ position: 'fixed', top: 20, right: 20, zIndex: 1000 }}>
-          <PollingMonitor />
-        </div>
+
         
         {/* Section des classeurs avec navigation */}
         {activeClasseur && (

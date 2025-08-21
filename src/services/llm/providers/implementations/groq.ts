@@ -81,7 +81,7 @@ const DEFAULT_GROQ_CONFIG: GroqConfig = {
   
   // Features
   supportsFunctionCalls: true,
-  supportsStreaming: false, // ✅ DÉSACTIVÉ : Plus de streaming
+  supportsStreaming: false, // Streaming géré par la route API
   supportsReasoning: true,
   
   // Monitoring
