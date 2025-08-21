@@ -157,12 +157,20 @@ export class V2UnifiedApi {
       }
       
       // 🚀 4. Déclencher le polling intelligent immédiatement
-      await triggerIntelligentPolling({
-        entityType: 'notes',
-        operation: 'CREATE',
-        entityId: result.note.id,
-        delay: 1000 // 1 seconde pour laisser la base se synchroniser
-      });
+      // ✅ CORRECTION: Vérifier si la note est déjà dans le store avant de poller
+      const currentStore = useFileSystemStore.getState();
+      if (!currentStore.notes[result.note.id]) {
+        await triggerIntelligentPolling({
+          entityType: 'notes',
+          operation: 'CREATE',
+          entityId: result.note.id,
+          delay: 1000 // 1 seconde pour laisser la base se synchroniser
+        });
+      } else {
+        if (process.env.NODE_ENV === 'development') {
+          logger.dev('[V2UnifiedApi] ✅ Note déjà dans le store, polling ignoré');
+        }
+      }
       
       const totalTime = Date.now() - startTime;
       if (process.env.NODE_ENV === 'development') {

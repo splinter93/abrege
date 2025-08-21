@@ -1,4 +1,6 @@
 import { useFileSystemStore } from '@/store/useFileSystemStore';
+import { supabase } from '@/supabaseClient';
+import { logger } from '@/utils/logger';
 // import.*Edit.*from './editor';
 // // import.*supabase.*from '@/supabaseClient';
 // import.*logger.*from '@/utils/logger';
@@ -22,7 +24,8 @@ export function handleRealtimeEvent(event: { type: string, payload: any, timesta
   const { type, payload } = event;
   // Route tous les événements editor.* vers handleEditorEvent
   if (type.startsWith('editor.')) {
-    handleEditorEvent(event);
+    // TODO: Implémenter handleEditorEvent
+    // handleEditorEvent(event);
     return;
   }
   switch (type) {
@@ -41,8 +44,8 @@ export function handleRealtimeEvent(event: { type: string, payload: any, timesta
       break;
     case 'note.updated':
       if (debug) {
-        logger.dev('[Realtime] note.updated - Payload complet:', payload);
-        logger.dev('[Realtime] note.updated - header_image_offset:', payload.header_image_offset);
+        logger.debug('[Realtime] note.updated - Payload complet:', { payload });
+        logger.debug('[Realtime] note.updated - header_image_offset:', { header_image_offset: payload.header_image_offset });
       }
       store.updateNote(payload.id, payload);
       break;
@@ -76,7 +79,7 @@ export function handleRealtimeEvent(event: { type: string, payload: any, timesta
       store.updateClasseur(payload.id, payload);
       break;
     default:
-      if (debug) logger.warn('[Realtime] Event ignoré :', type, payload);
+      if (debug) logger.warn('[Realtime] Event ignoré :', { type, payload });
       break;
   }
 }
@@ -85,7 +88,7 @@ export function handleRealtimeEvent(event: { type: string, payload: any, timesta
  * logEventToConsole - Affiche l'event WebSocket dans la console (debug)
  */
 export function logEventToConsole(event: { type: string, payload: any, timestamp: number }) {
-  logger.dev('[Realtime] Event reçu :', event.type, event.payload, new Date(event.timestamp).toLocaleTimeString());
+  logger.debug('[Realtime] Event reçu :', { type: event.type, payload: event.payload, time: new Date(event.timestamp).toLocaleTimeString() });
 }
 
 // ===== NOUVELLES FONCTIONS DE SOUSCRIPTION SUPABASE REALTIME =====
@@ -126,31 +129,44 @@ export function startSubscriptionMonitoring() {
   // 🚧 Temp: Authentification non implémentée
   // TODO: Remplacer USER_ID par l'authentification Supabase
   
-  logger.dev('[REALTIME] 🔍 Démarrage du monitoring des souscriptions...');
+  logger.debug('[REALTIME] 🔍 Démarrage du monitoring des souscriptions...');
   
   // Nettoyer l'interval précédent s'il existe
   if (monitoringInterval) {
     clearInterval(monitoringInterval);
   }
   
+  // 🔧 DEBUG: Démarrer immédiatement les souscriptions
+  logger.debug('[REALTIME] 🚀 Démarrage immédiat des souscriptions...');
+  subscribeToNotes();
+  subscribeToDossiers();
+  subscribeToClasseurs();
+  
   // Vérifier toutes les 30 secondes si les souscriptions sont actives
   monitoringInterval = setInterval(() => {
     // Réinitialiser les compteurs de tentatives pour permettre de nouvelles tentatives
     if (!notesSubscriptionActive) {
-      logger.dev('[REALTIME] 🔄 Monitoring: Redémarrage des souscriptions notes...');
+      logger.debug('[REALTIME] 🔄 Monitoring: Redémarrage des souscriptions notes...');
       notesRetryCount = 0;
       subscribeToNotes();
     }
     if (!dossiersSubscriptionActive) {
-      logger.dev('[REALTIME] 🔄 Monitoring: Redémarrage des souscriptions dossiers...');
+      logger.debug('[REALTIME] 🔄 Monitoring: Redémarrage des souscriptions dossiers...');
       dossiersRetryCount = 0;
       subscribeToDossiers();
     }
     if (!classeursSubscriptionActive) {
-      logger.dev('[REALTIME] 🔄 Monitoring: Redémarrage des souscriptions classeurs...');
+      logger.debug('[REALTIME] 🔄 Monitoring: Redémarrage des souscriptions classeurs...');
       classeursRetryCount = 0;
       subscribeToClasseurs();
     }
+    
+    // 🔧 DEBUG: Log de l'état des souscriptions
+    logger.debug('[REALTIME] 📊 État des souscriptions:', {
+      notes: notesSubscriptionActive,
+      dossiers: dossiersSubscriptionActive,
+      classeurs: classeursSubscriptionActive
+    });
   }, 30000); // 30 secondes
 }
 
@@ -168,18 +184,18 @@ export function subscribeToNotes() {
   // Vérifier le délai minimum entre les tentatives
   const now = Date.now();
   if (now - lastNotesRetry < MIN_RETRY_INTERVAL) {
-    logger.dev(`[REALTIME] ⏳ Attente avant nouvelle tentative notes (${Math.ceil((MIN_RETRY_INTERVAL - (now - lastNotesRetry)) / 1000)}s restantes)`);
+    logger.debug(`[REALTIME] ⏳ Attente avant nouvelle tentative notes (${Math.ceil((MIN_RETRY_INTERVAL - (now - lastNotesRetry)) / 1000)}s restantes)`);
     return null;
   }
   
   // Si un canal existe déjà, ne pas en créer un nouveau
   if (notesChannel && notesSubscriptionActive) {
-    logger.dev('[REALTIME] 📝 Canal notes déjà actif, pas de nouvelle souscription');
+    logger.debug('[REALTIME] 📝 Canal notes déjà actif, pas de nouvelle souscription');
     return notesChannel;
   }
   
   lastNotesRetry = now;
-  logger.dev(`[REALTIME] 📝 Démarrage de l'abonnement aux notes... (tentative ${notesRetryCount + 1}/${MAX_RETRIES})`);
+  logger.debug(`[REALTIME] 📝 Démarrage de l'abonnement aux notes... (tentative ${notesRetryCount + 1}/${MAX_RETRIES})`);
   
   notesChannel = supabase
     .channel('public:articles')
@@ -190,7 +206,7 @@ export function subscribeToNotes() {
         // Logs réduits - seulement les événements importants
         if (payload.eventType === 'INSERT' || payload.eventType === 'DELETE') {
           const title = (payload.new as any)?.source_title || (payload.old as any)?.source_title;
-          logger.dev('[REALTIME] 📝', payload.eventType, title);
+          logger.debug('[REALTIME] 📝', { eventType: payload.eventType, title });
         }
         
         // Déduplication pour éviter les boucles infinies
@@ -199,7 +215,7 @@ export function subscribeToNotes() {
         const lastProcessed = lastProcessedEvents.get(eventKey);
         
         if (lastProcessed && (now - lastProcessed) < DEDUPLICATION_WINDOW) {
-          logger.dev('[REALTIME] ⏭️ Événement ignoré (déduplication):', eventKey);
+          logger.debug('[REALTIME] ⏭️ Événement ignoré (déduplication):', eventKey);
           return;
         }
         
@@ -219,7 +235,7 @@ export function subscribeToNotes() {
         
         switch (payload.eventType) {
           case 'INSERT':
-            logger.dev('[REALTIME] ➕ Ajout d\'une note:', payload.new.id);
+            logger.debug('[REALTIME] ➕ Ajout d\'une note:', payload.new.id);
             // Convertir les données Supabase vers le type Note
             const newNote = {
               id: payload.new.id,
@@ -236,7 +252,7 @@ export function subscribeToNotes() {
             break;
             
           case 'UPDATE':
-            logger.dev('[REALTIME] ✏️ Mise à jour d\'une note:', payload.new.id);
+            logger.debug('[REALTIME] ✏️ Mise à jour d\'une note:', payload.new.id);
             // Convertir les données Supabase vers le type Note
             const updatedNote = {
               id: payload.new.id,
@@ -253,12 +269,12 @@ export function subscribeToNotes() {
             break;
             
           case 'DELETE':
-            logger.dev('[REALTIME] 🗑️ Suppression d\'une note:', payload.old.id);
+            logger.debug('[REALTIME] 🗑️ Suppression d\'une note:', payload.old.id);
             store.removeNote(payload.old.id);
             break;
             
           default:
-            logger.dev('[REALTIME] ❓ Événement inconnu:', (payload as any).eventType);
+            logger.debug('[REALTIME] ❓ Événement inconnu:', (payload as any).eventType);
             break;
         }
       }
@@ -267,7 +283,7 @@ export function subscribeToNotes() {
       if (status === 'SUBSCRIBED') {
         notesSubscriptionActive = true;
         notesRetryCount = 0; // Reset du compteur de tentatives
-        logger.dev('[REALTIME] ✅ Canal notes connecté avec succès');
+        logger.debug('[REALTIME] ✅ Canal notes connecté avec succès');
       } else if (status === 'CLOSED' || status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
         notesSubscriptionActive = false;
         notesChannel = null;
@@ -284,7 +300,7 @@ export function subscribeToNotes() {
         if (notesRetryCount < MAX_RETRIES) {
           setTimeout(() => {
             if (!notesSubscriptionActive) {
-              logger.dev(`[REALTIME] 🔄 Reconnexion notes... (tentative ${notesRetryCount + 1}/${MAX_RETRIES})`);
+              logger.debug(`[REALTIME] 🔄 Reconnexion notes... (tentative ${notesRetryCount + 1}/${MAX_RETRIES})`);
               subscribeToNotes();
             }
           }, RETRY_DELAY);
@@ -314,18 +330,18 @@ export function subscribeToDossiers() {
   // Vérifier le délai minimum entre les tentatives
   const now = Date.now();
   if (now - lastDossiersRetry < MIN_RETRY_INTERVAL) {
-    logger.dev(`[REALTIME] ⏳ Attente avant nouvelle tentative dossiers (${Math.ceil((MIN_RETRY_INTERVAL - (now - lastDossiersRetry)) / 1000)}s restantes)`);
+    logger.debug(`[REALTIME] ⏳ Attente avant nouvelle tentative dossiers (${Math.ceil((MIN_RETRY_INTERVAL - (now - lastDossiersRetry)) / 1000)}s restantes)`);
     return null;
   }
   
   // Si un canal existe déjà, ne pas en créer un nouveau
   if (dossiersChannel && dossiersSubscriptionActive) {
-    logger.dev('[REALTIME] 📁 Canal dossiers déjà actif, pas de nouvelle souscription');
+    logger.debug('[REALTIME] 📁 Canal dossiers déjà actif, pas de nouvelle souscription');
     return dossiersChannel;
   }
   
   lastDossiersRetry = now;
-  logger.dev(`[REALTIME] 📁 Démarrage de l'abonnement aux dossiers... (tentative ${dossiersRetryCount + 1}/${MAX_RETRIES})`);
+  logger.debug(`[REALTIME] 📁 Démarrage de l'abonnement aux dossiers... (tentative ${dossiersRetryCount + 1}/${MAX_RETRIES})`);
   
   dossiersChannel = supabase
     .channel('folders')
@@ -336,7 +352,7 @@ export function subscribeToDossiers() {
         // Logs réduits - seulement les événements importants
         if (payload.eventType === 'INSERT' || payload.eventType === 'DELETE') {
           const name = (payload.new as any)?.name || (payload.old as any)?.name;
-          logger.dev('[REALTIME] 📁', payload.eventType, name);
+          logger.debug('[REALTIME] 📁', payload.eventType, name);
         }
         
         // Déduplication pour éviter les boucles infinies
@@ -345,7 +361,7 @@ export function subscribeToDossiers() {
         const lastProcessed = lastProcessedEvents.get(eventKey);
         
         if (lastProcessed && (now - lastProcessed) < DEDUPLICATION_WINDOW) {
-          logger.dev('[REALTIME] ⏭️ Événement ignoré (déduplication):', eventKey);
+          logger.debug('[REALTIME] ⏭️ Événement ignoré (déduplication):', eventKey);
           return;
         }
         
@@ -365,7 +381,7 @@ export function subscribeToDossiers() {
         
         switch (payload.eventType) {
           case 'INSERT':
-            logger.dev('[REALTIME] ➕ Ajout d\'un dossier:', payload.new.id);
+            logger.debug('[REALTIME] ➕ Ajout d\'un dossier:', payload.new.id);
             // Convertir les données Supabase vers le type Folder
             const newFolder = {
               id: payload.new.id,
@@ -378,7 +394,7 @@ export function subscribeToDossiers() {
             break;
             
           case 'UPDATE':
-            logger.dev('[REALTIME] ✏️ Mise à jour d\'un dossier:', payload.new.id);
+            logger.debug('[REALTIME] ✏️ Mise à jour d\'un dossier:', payload.new.id);
             // Convertir les données Supabase vers le type Folder
             const updatedFolder = {
               id: payload.new.id,
@@ -391,12 +407,12 @@ export function subscribeToDossiers() {
             break;
             
           case 'DELETE':
-            logger.dev('[REALTIME] 🗑️ Suppression d\'un dossier:', payload.old.id);
+            logger.debug('[REALTIME] 🗑️ Suppression d\'un dossier:', payload.old.id);
             store.removeFolder(payload.old.id);
             break;
             
           default:
-            logger.dev('[REALTIME] ❓ Événement inconnu:', (payload as any).eventType);
+            logger.debug('[REALTIME] ❓ Événement inconnu:', (payload as any).eventType);
             break;
         }
       }
@@ -405,7 +421,7 @@ export function subscribeToDossiers() {
       if (status === 'SUBSCRIBED') {
         dossiersSubscriptionActive = true;
         dossiersRetryCount = 0; // Reset du compteur de tentatives
-        logger.dev('[REALTIME] ✅ Canal dossiers connecté avec succès');
+        logger.debug('[REALTIME] ✅ Canal dossiers connecté avec succès');
       } else if (status === 'CLOSED' || status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
         dossiersSubscriptionActive = false;
         dossiersChannel = null;
@@ -422,7 +438,7 @@ export function subscribeToDossiers() {
         if (dossiersRetryCount < MAX_RETRIES) {
           setTimeout(() => {
             if (!dossiersSubscriptionActive) {
-              logger.dev(`[REALTIME] 🔄 Reconnexion dossiers... (tentative ${dossiersRetryCount + 1}/${MAX_RETRIES})`);
+              logger.debug(`[REALTIME] 🔄 Reconnexion dossiers... (tentative ${dossiersRetryCount + 1}/${MAX_RETRIES})`);
               subscribeToDossiers();
             }
           }, RETRY_DELAY);
@@ -452,18 +468,18 @@ export function subscribeToClasseurs() {
   // Vérifier le délai minimum entre les tentatives
   const now = Date.now();
   if (now - lastClasseursRetry < MIN_RETRY_INTERVAL) {
-    logger.dev(`[REALTIME] ⏳ Attente avant nouvelle tentative classeurs (${Math.ceil((MIN_RETRY_INTERVAL - (now - lastClasseursRetry)) / 1000)}s restantes)`);
+    logger.debug(`[REALTIME] ⏳ Attente avant nouvelle tentative classeurs (${Math.ceil((MIN_RETRY_INTERVAL - (now - lastClasseursRetry)) / 1000)}s restantes)`);
     return null;
   }
   
   // Si un canal existe déjà, ne pas en créer un nouveau
   if (classeursChannel && classeursSubscriptionActive) {
-    logger.dev('[REALTIME] 📚 Canal classeurs déjà actif, pas de nouvelle souscription');
+    logger.debug('[REALTIME] 📚 Canal classeurs déjà actif, pas de nouvelle souscription');
     return classeursChannel;
   }
   
   lastClasseursRetry = now;
-  logger.dev(`[REALTIME] 📚 Démarrage de l'abonnement aux classeurs... (tentative ${classeursRetryCount + 1}/${MAX_RETRIES})`);
+  logger.debug(`[REALTIME] 📚 Démarrage de l'abonnement aux classeurs... (tentative ${classeursRetryCount + 1}/${MAX_RETRIES})`);
   
   classeursChannel = supabase
     .channel('classeurs')
@@ -474,7 +490,7 @@ export function subscribeToClasseurs() {
         // Logs réduits - seulement les événements importants
         if (payload.eventType === 'INSERT' || payload.eventType === 'DELETE') {
           const name = (payload.new as any)?.name || (payload.old as any)?.name;
-          logger.dev('[REALTIME] 📚', payload.eventType, name);
+          logger.debug('[REALTIME] 📚', payload.eventType, name);
         }
         
         // Déduplication pour éviter les boucles infinies
@@ -483,7 +499,7 @@ export function subscribeToClasseurs() {
         const lastProcessed = lastProcessedEvents.get(eventKey);
         
         if (lastProcessed && (now - lastProcessed) < DEDUPLICATION_WINDOW) {
-          logger.dev('[REALTIME] ⏭️ Événement ignoré (déduplication):', eventKey);
+          logger.debug('[REALTIME] ⏭️ Événement ignoré (déduplication):', eventKey);
           return;
         }
         
@@ -503,7 +519,7 @@ export function subscribeToClasseurs() {
         
         switch (payload.eventType) {
           case 'INSERT':
-            logger.dev('[REALTIME] ➕ Ajout d\'un classeur:', payload.new.id);
+            logger.debug('[REALTIME] ➕ Ajout d\'un classeur:', payload.new.id);
             // Convertir les données Supabase vers le type Classeur
             const newClasseur = {
               id: payload.new.id,
@@ -514,7 +530,7 @@ export function subscribeToClasseurs() {
             break;
             
           case 'UPDATE':
-            logger.dev('[REALTIME] ✏️ Mise à jour d\'un classeur:', payload.new.id);
+            logger.debug('[REALTIME] ✏️ Mise à jour d\'un classeur:', payload.new.id);
             // Convertir les données Supabase vers le type Classeur
             const updatedClasseur = {
               id: payload.new.id,
@@ -525,12 +541,12 @@ export function subscribeToClasseurs() {
             break;
             
           case 'DELETE':
-            logger.dev('[REALTIME] 🗑️ Suppression d\'un classeur:', payload.old.id);
+            logger.debug('[REALTIME] 🗑️ Suppression d\'un classeur:', payload.old.id);
             store.removeClasseur(payload.old.id);
             break;
             
           default:
-            logger.dev('[REALTIME] ❓ Événement inconnu:', (payload as any).eventType);
+            logger.debug('[REALTIME] ❓ Événement inconnu:', (payload as any).eventType);
             break;
         }
       }
@@ -539,7 +555,7 @@ export function subscribeToClasseurs() {
       if (status === 'SUBSCRIBED') {
         classeursSubscriptionActive = true;
         classeursRetryCount = 0; // Reset du compteur de tentatives
-        logger.dev('[REALTIME] ✅ Canal classeurs connecté avec succès');
+        logger.debug('[REALTIME] ✅ Canal classeurs connecté avec succès');
       } else if (status === 'CLOSED' || status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
         classeursSubscriptionActive = false;
         classeursChannel = null;
@@ -556,7 +572,7 @@ export function subscribeToClasseurs() {
         if (classeursRetryCount < MAX_RETRIES) {
           setTimeout(() => {
             if (!classeursSubscriptionActive) {
-              logger.dev(`[REALTIME] 🔄 Reconnexion classeurs... (tentative ${classeursRetryCount + 1}/${MAX_RETRIES})`);
+              logger.debug(`[REALTIME] 🔄 Reconnexion classeurs... (tentative ${classeursRetryCount + 1}/${MAX_RETRIES})`);
               subscribeToClasseurs();
             }
           }, RETRY_DELAY);
@@ -573,13 +589,13 @@ export function subscribeToClasseurs() {
  * Se désabonner de tous les canaux realtime
  */
 export function unsubscribeFromAll() {
-  logger.dev('[REALTIME] 🛑 Désabonnement de tous les canaux...');
+  logger.debug('[REALTIME] 🛑 Désabonnement de tous les canaux...');
   
   // Nettoyer l'interval de monitoring
   if (monitoringInterval) {
     clearInterval(monitoringInterval);
     monitoringInterval = null;
-    logger.dev('[REALTIME] 🛑 Monitoring arrêté');
+    logger.debug('[REALTIME] 🛑 Monitoring arrêté');
   }
   
   // Désabonner de tous les canaux
@@ -600,5 +616,5 @@ export function unsubscribeFromAll() {
   dossiersRetryCount = 0;
   classeursRetryCount = 0;
   
-  logger.dev('[REALTIME] ✅ Tous les canaux désabonnés');
+  logger.debug('[REALTIME] ✅ Tous les canaux désabonnés');
 } 

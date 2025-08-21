@@ -1,3 +1,4 @@
+
 import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 import type { NextRequest } from 'next/server';
@@ -9,20 +10,18 @@ const supabase = createClient(supabaseUrl, supabaseAnonKey);
 /**
  * GET /api/v1/notes/recent
  * Récupère les notes récentes triées par updated_at
- * Paramètres optionnels : limit (défaut: 10), username (pour filtrer par utilisateur)
+ * Paramètres optionnels : limit (défaut: 50)
  */
 export async function GET(req: NextRequest): Promise<Response> {
   try {
     const { searchParams } = new URL(req.url);
     const limit = searchParams.get('limit') || undefined;
-    const username = searchParams.get('username') || undefined;
     
     const schema = z.object({
-      limit: z.string().optional().transform(val => val ? parseInt(val, 10) : 10),
-      username: z.string().optional()
+      limit: z.string().optional().transform(val => val ? parseInt(val, 10) : 50)
     });
     
-    const parseResult = schema.safeParse({ limit, username });
+    const parseResult = schema.safeParse({ limit });
     if (!parseResult.success) {
       return new Response(
         JSON.stringify({ error: 'Paramètres invalides', details: parseResult.error.errors.map(e => e.message) }),
@@ -30,8 +29,9 @@ export async function GET(req: NextRequest): Promise<Response> {
       );
     }
     
-    const { limit: limitNum, username: usernameParam } = parseResult.data;
+    const { limit: limitNum } = parseResult.data;
     
+    // 🔧 CORRECTION: Requête simplifiée comme pour les dossiers
     let query = supabase
       .from('articles')
       .select(`
@@ -43,64 +43,47 @@ export async function GET(req: NextRequest): Promise<Response> {
         updated_at,
         share_settings,
         user_id,
-
+        classeur_id,
+        folder_id,
+        markdown_content,
+        html_content
       `)
       .order('updated_at', { ascending: false })
       .limit(limitNum);
     
-    // Filtrer par username si spécifié
-    // Note: Pour l'instant, on ne peut pas filtrer par username car la table users n'est pas accessible
-    // TODO: Implémenter un système de résolution username -> user_id si nécessaire
-    
     const { data: notes, error } = await query;
     
     if (error) {
+      console.error('[API V1 Notes Recent] Erreur Supabase:', error);
       return new Response(
-        JSON.stringify({ error: error.message }),
+        JSON.stringify({ error: 'Erreur lors de la récupération des notes', details: error.message }),
         { status: 500, headers: { "Content-Type": "application/json" } }
       );
     }
     
-    // Récupérer les usernames pour tous les user_ids
-    const userIds = notes?.map(note => note.user_id).filter(Boolean) || [];
-    let usernames: Record<string, string> = {};
+    // �� CORRECTION: Format compatible avec Zustand (source_title au lieu de title)
+    const formattedNotes = notes?.map(note => ({
+      id: note.id,
+      source_title: note.source_title || 'Sans titre', // ← CORRECTION: source_title au lieu de title
+      slug: note.slug,
+      header_image: note.header_image, // ← CORRECTION: header_image au lieu de headerImage
+      created_at: note.created_at, // ← CORRECTION: created_at au lieu de createdAt
+      updated_at: note.updated_at, // ← CORRECTION: updated_at au lieu de updatedAt
+      share_settings: note.share_settings || { visibility: 'private' },
+      user_id: note.user_id,
+      classeur_id: note.classeur_id,
+      folder_id: note.folder_id,
+      markdown_content: note.markdown_content,
+      html_content: note.html_content
+    })) || [];
     
-    if (userIds.length > 0) {
-      const { data: users, error: usersError } = await supabase
-        .from('users')
-        .select('id, username')
-        .in('id', userIds);
-      
-      if (!usersError && users) {
-        usernames = users.reduce((acc, user) => {
-          acc[user.id] = user.username;
-          return acc;
-        }, {} as Record<string, string>);
-      }
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`[API V1 Notes Recent] ✅ ${formattedNotes.length} notes récupérées (comme les dossiers)`);
     }
     
-    // Formater les données pour l'affichage
-    const formattedNotes = notes?.map(note => {
-      const username = usernames[note.user_id!] || `user_${note.user_id?.slice(0, 8) || 'unknown'}`;
-      return {
-        id: note.id,
-        title: note.source_title,
-        slug: note.slug,
-        headerImage: note.header_image,
-        createdAt: note.created_at,
-        updatedAt: note.updated_at,
-        share_settings: note.share_settings || { visibility: 'private' },
-        username: username,
-        url: note.share_settings?.visibility !== 'private' ? `/@${username}/${note.slug}` : null
-      };
-    }) || [];
-    
+    // 🔧 CORRECTION: Retourner directement le tableau pour compatibilité avec Zustand
     return new Response(
-      JSON.stringify({ 
-        success: true,
-        notes: formattedNotes,
-        total: formattedNotes.length
-      }),
+      JSON.stringify(formattedNotes), // ← Retour direct du tableau, pas d'objet wrapper
       { 
         status: 200, 
         headers: { "Content-Type": "application/json" } 
@@ -109,8 +92,9 @@ export async function GET(req: NextRequest): Promise<Response> {
     
   } catch (err: unknown) {
     const error = err as Error;
+    console.error('[API V1 Notes Recent] Erreur inattendue:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: 'Erreur interne du serveur', details: error.message }),
       { status: 500, headers: { "Content-Type": "application/json" } }
     );
   }

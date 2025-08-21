@@ -1,55 +1,39 @@
-import { createClient } from '@supabase/supabase-js';
-import { z } from 'zod';
-import type { NextRequest } from 'next/server';
-import { logger } from '@/utils/logger';
+import { NextRequest, NextResponse } from 'next/server';
+import { logApi } from '@/utils/logger';
+import { getAuthenticatedUser } from '@/utils/authUtils';
+import { createSupabaseClient } from '@/utils/supabaseClient';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+export async function GET(request: NextRequest): Promise<NextResponse> {
+  const startTime = Date.now();
+  const clientType = request.headers.get('X-Client-Type') || 'unknown';
+  const context = {
+    operation: 'v2_notes_recent',
+    component: 'API_V2',
+    clientType
+  };
 
-/**
- * GET /api/v2/notes/recent
- * Récupère les notes récentes triées par updated_at
- * 
- * Paramètres optionnels : 
- * - limit (défaut: 10) 
- * - username (pour filtrer par utilisateur)
- * 
- * Cet endpoint est compatible LLM et peut être utilisé dans les tools OpenAPI
- */
-export async function GET(req: NextRequest): Promise<Response> {
+  logApi('v2_notes_recent', '🚀 Début récupération notes récentes V2', context);
+
+  // 🔐 Authentification V2
+  const authResult = await getAuthenticatedUser(request);
+  if (!authResult.success) {
+    logApi('v2_notes_recent', `❌ Authentification échouée: ${authResult.error}`, context);
+    return NextResponse.json(
+      { error: authResult.error },
+      { status: authResult.status || 401, headers: { "Content-Type": "application/json" } }
+    );
+  }
+
+  const userId = authResult.userId!;
+  const supabase = createSupabaseClient();
+
   try {
-    logger.info('[Notes Recent API v2] 📝 Récupération des notes récentes');
-    
-    const { searchParams } = new URL(req.url);
-    const limit = searchParams.get('limit') || undefined;
-    const username = searchParams.get('username') || undefined;
-    
-    logger.debug('[Notes Recent API v2] 📋 Paramètres reçus', { limit, username });
-    
-    const schema = z.object({
-      limit: z.string().optional().transform(val => val ? parseInt(val, 10) : 10),
-      username: z.string().optional()
-    });
-    
-    const parseResult = schema.safeParse({ limit, username });
-    if (!parseResult.success) {
-      logger.error('[Notes Recent API v2] ❌ Paramètres invalides:', parseResult.error.errors);
-      return new Response(
-        JSON.stringify({ 
-          error: 'Paramètres invalides', 
-          details: parseResult.error.errors.map(e => e.message),
-          api_version: 'v2'
-        }),
-        { status: 422, headers: { "Content-Type": "application/json" } }
-      );
-    }
-    
-    const { limit: limitNum, username: usernameParam } = parseResult.data;
-    
-    logger.debug('[Notes Recent API v2] 🔍 Construction de la requête', { limit: limitNum, username: usernameParam });
-    
-    let query = supabase
+    const { searchParams } = new URL(request.url);
+    const limit = searchParams.get('limit') || '50';
+    const limitNum = parseInt(limit, 10);
+
+    // ✅ Récupération sécurisée des notes de l'utilisateur uniquement
+    const { data: notes, error } = await supabase
       .from('articles')
       .select(`
         id,
@@ -59,99 +43,53 @@ export async function GET(req: NextRequest): Promise<Response> {
         created_at,
         updated_at,
         share_settings,
-        user_id
+        user_id,
+        classeur_id,
+        folder_id,
+        markdown_content,
+        html_content
       `)
+      .eq('user_id', userId)
       .order('updated_at', { ascending: false })
       .limit(limitNum);
-    
-    // Filtrer par username si spécifié
-    // Note: Pour l'instant, on ne peut pas filtrer par username car la table users n'est pas accessible
-    // TODO: Implémenter un système de résolution username -> user_id si nécessaire
-    if (usernameParam) {
-      logger.debug('[Notes Recent API v2] 🔍 Filtrage par username', { username: usernameParam });
-      // TODO: Implémenter le filtrage par username
-    }
-    
-    const { data: notes, error } = await query;
-    
+
     if (error) {
-      logger.error('[Notes Recent API v2] ❌ Erreur Supabase:', error);
-      return new Response(
-        JSON.stringify({ 
-          error: error.message,
-          api_version: 'v2'
-        }),
+      logApi('v2_notes_recent', `❌ Erreur Supabase: ${error.message}`, context);
+      return NextResponse.json(
+        { error: 'Erreur lors de la récupération des notes', details: error.message },
         { status: 500, headers: { "Content-Type": "application/json" } }
       );
     }
-    
-    logger.debug('[Notes Recent API v2] 📊 Notes récupérées', { count: notes?.length || 0 });
-    
-    // Récupérer les usernames pour tous les user_ids
-    const userIds = notes?.map(note => note.user_id).filter(Boolean) || [];
-    let usernames: Record<string, string> = {};
-    
-    if (userIds.length > 0) {
-      const { data: users, error: usersError } = await supabase
-        .from('users')
-        .select('id, username')
-        .in('id', userIds);
-      
-      if (!usersError && users) {
-        usernames = users.reduce((acc, user) => {
-          acc[user.id] = user.username;
-          return acc;
-        }, {} as Record<string, string>);
-      }
-    }
-    
-    // Formater les données pour l'affichage
-    const formattedNotes = notes?.map(note => {
-      const username = usernames[note.user_id!] || `user_${note.user_id?.slice(0, 8) || 'unknown'}`;
-      return {
-        id: note.id,
-        title: note.source_title,
-        slug: note.slug,
-        headerImage: note.header_image,
-        createdAt: note.created_at,
-        updatedAt: note.updated_at,
-        share_settings: note.share_settings || { visibility: 'private' },
-        username: username,
-        url: note.share_settings?.visibility !== 'private' ? `/@${username}/${note.slug}` : null
-      };
-    }) || [];
-    
-    logger.info('[Notes Recent API v2] ✅ Notes récentes récupérées avec succès');
-    
-    return new Response(
-      JSON.stringify({ 
-        success: true,
-        notes: formattedNotes,
-        total: formattedNotes.length,
-        metadata: {
-          api_version: 'v2',
-          limit: limitNum,
-          username_filter: usernameParam || null,
-          timestamp: new Date().toISOString()
-        }
-      }),
-      { 
-        status: 200, 
-        headers: { "Content-Type": "application/json" } 
-      }
-    );
-    
+
+    // ✅ Format compatible avec Zustand
+    const formattedNotes = notes?.map(note => ({
+      id: note.id,
+      source_title: note.source_title || 'Sans titre',
+      slug: note.slug,
+      header_image: note.header_image,
+      created_at: note.created_at,
+      updated_at: note.updated_at,
+      share_settings: note.share_settings || { visibility: 'private' },
+      user_id: note.user_id,
+      classeur_id: note.classeur_id,
+      folder_id: note.folder_id,
+      markdown_content: note.markdown_content,
+      html_content: note.html_content
+    })) || [];
+
+    const apiTime = Date.now() - startTime;
+    logApi('v2_notes_recent', `✅ ${formattedNotes.length} notes récupérées en ${apiTime}ms`, context);
+
+    return NextResponse.json({
+      success: true,
+      notes: formattedNotes
+    });
+
   } catch (err: unknown) {
     const error = err as Error;
-    logger.error('[Notes Recent API v2] ❌ Erreur inattendue:', error);
-    logger.error('[Notes Recent API v2] ❌ Stack trace:', { stack: error.stack });
-    
-    return new Response(
-      JSON.stringify({ 
-        error: error.message,
-        api_version: 'v2',
-        timestamp: new Date().toISOString()
-      }),
+    logApi('v2_notes_recent', `❌ Erreur serveur: ${error}`, context);
+    return NextResponse.json(
+      { error: 'Erreur interne du serveur', details: error.message },
       { status: 500, headers: { "Content-Type": "application/json" } }
     );
   }

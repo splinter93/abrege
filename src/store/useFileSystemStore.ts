@@ -289,15 +289,22 @@ export const useFileSystemStore = create<FileSystemState>()((set, get) => ({
   
   // Actions globales d'hydratation
   setFolders: (folders: Folder[]) => set((state) => ({ 
+    // ✅ CORRECTION: Merger au lieu de remplacer
     folders: { ...state.folders, ...Object.fromEntries(folders.map(f => [f.id, f])) }
   })),
   
   setClasseurs: (classeurs: Classeur[]) => set((state) => ({ 
+    // ✅ CORRECTION: Merger au lieu de remplacer
     classeurs: { ...state.classeurs, ...Object.fromEntries(classeurs.map(c => [c.id, c])) }
   })),
   
   setNotes: (notes: Note[]) => set((state) => ({ 
-    notes: { ...state.notes, ...Object.fromEntries(notes.map(n => [n.id, n])) }
+    // ✅ CORRECTION: Merger au lieu de remplacer complètement
+    // Cela permet de conserver les notes existantes et d'ajouter les nouvelles
+    notes: { 
+      ...state.notes, 
+      ...Object.fromEntries(notes.map(n => [n.id, n])) 
+    }
   })),
 
   // --- ACTIONS OPTIMISTES ---
@@ -307,13 +314,17 @@ export const useFileSystemStore = create<FileSystemState>()((set, get) => ({
     }));
   },
 
-  updateNoteOptimistic: (id: string, patch: Partial<Note>) => {
+  updateNoteOptimistic: (tempId: string, realNote: Note) => {
     set(state => {
-      if (!state.notes[id]) return {};
+      if (!state.notes[tempId]) return {};
+      
+      // ✅ CORRECTION: Remplacer complètement la note temporaire par la vraie note
+      const { [tempId]: removed, ...otherNotes } = state.notes;
+      
       return {
         notes: {
-          ...state.notes,
-          [id]: { ...state.notes[id], ...patch, _optimistic: true }
+          ...otherNotes,
+          [realNote.id]: realNote // Utiliser l'ID réel de la note
         }
       };
     });

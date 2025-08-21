@@ -3,8 +3,9 @@
 import { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import { useFileSystemStore } from "@/store/useFileSystemStore";
 import { optimizedClasseurService } from "@/services/optimizedClasseurService";
+import { DossierService } from "@/services/dossierService";
 import { simpleLogger as logger } from "@/utils/logger";
-import type { Classeur } from "@/store/useFileSystemStore";
+import type { Classeur, Folder } from "@/store/useFileSystemStore";
 
 export function useDossiersPage(userId: string) {
   const [loading, setLoading] = useState(true);
@@ -163,60 +164,82 @@ export function useDossiersPage(userId: string) {
     }, delay);
   }, [retryCount, loadInitialData]);
 
+  // 🚀 IMPLÉMENTATION COMPLÈTE: Utiliser le DossierService
+  const dossierService = DossierService.getInstance();
+
   const handleCreateClasseur = useCallback(async (name: string, emoji?: string) => {
     try {
-      // TODO: Implémenter la création via le service optimisé
-      // Pour l'instant, on recharge tout
-      await optimizedClasseurService.loadClasseursWithContentOptimized(userId);
+      logger.dev('[useDossiersPage] 🚀 Création classeur via service:', { name, emoji });
+      
+      const newClasseur = await dossierService.createClasseur({
+        name,
+        emoji,
+        description: `Classeur ${name}`
+      }, userId);
+      
+      logger.dev('[useDossiersPage] ✅ Classeur créé avec succès:', newClasseur.id);
+      return newClasseur;
     } catch (error) {
-      console.error('Erreur création classeur:', error);
+      logger.error('[useDossiersPage] ❌ Erreur création classeur:', error);
       throw error;
     }
-  }, [userId]);
+  }, [userId, dossierService]);
 
   const handleRenameClasseur = useCallback(async (id: string, newName: string) => {
     try {
-      // TODO: Implémenter la modification via le service optimisé
-      // Pour l'instant, on recharge tout
-      await optimizedClasseurService.loadClasseursWithContentOptimized(userId);
+      logger.dev('[useDossiersPage] 🔄 Renommage classeur via service:', { id, newName });
+      
+      const updatedClasseur = await dossierService.updateClasseur(id, {
+        name: newName
+      }, userId);
+      
+      logger.dev('[useDossiersPage] ✅ Classeur renommé avec succès:', id);
+      return updatedClasseur;
     } catch (error) {
-      console.error('Erreur renommage classeur:', error);
+      logger.error('[useDossiersPage] ❌ Erreur renommage classeur:', error);
       throw error;
     }
-  }, [userId]);
+  }, [userId, dossierService]);
 
   const handleDeleteClasseur = useCallback(async (id: string) => {
     try {
-      // TODO: Implémenter la modification via le service optimisé
-      // Pour l'instant, on recharge tout
-      await optimizedClasseurService.loadClasseursWithContentOptimized(userId);
+      logger.dev('[useDossiersPage] 🗑️ Suppression classeur via service:', id);
+      
+      await dossierService.deleteClasseur(id, userId);
+      
+      logger.dev('[useDossiersPage] ✅ Classeur supprimé avec succès:', id);
     } catch (error) {
-      console.error('Erreur suppression classeur:', error);
+      logger.error('[useDossiersPage] ❌ Erreur suppression classeur:', error);
       throw error;
     }
-  }, [userId]);
+  }, [userId, dossierService]);
 
   const handleUpdateClasseur = useCallback(async (id: string, updates: Partial<Classeur>) => {
     try {
-      // TODO: Implémenter la modification via le service optimisé
-      // Pour l'instant, on recharge tout
-      await optimizedClasseurService.loadClasseursWithContentOptimized(userId);
+      logger.dev('[useDossiersPage] 🔄 Mise à jour classeur via service:', { id, updates });
+      
+      const updatedClasseur = await dossierService.updateClasseur(id, updates, userId);
+      
+      logger.dev('[useDossiersPage] ✅ Classeur mis à jour avec succès:', id);
+      return updatedClasseur;
     } catch (error) {
-      console.error('Erreur modification classeur:', error);
+      logger.error('[useDossiersPage] ❌ Erreur mise à jour classeur:', error);
       throw error;
     }
-  }, [userId]);
+  }, [userId, dossierService]);
 
   const handleUpdateClasseurPositions = useCallback(async (updatedClasseurs: Array<{ id: string; position: number }>) => {
     try {
-      // TODO: Implémenter la modification des positions via le service optimisé
-      // Pour l'instant, on recharge tout
-      await optimizedClasseurService.loadClasseursWithContentOptimized(userId);
+      logger.dev('[useDossiersPage] 🔄 Mise à jour positions classeurs via service:', updatedClasseurs);
+      
+      await dossierService.updateClasseurPositions(updatedClasseurs, userId);
+      
+      logger.dev('[useDossiersPage] ✅ Positions classeurs mises à jour avec succès');
     } catch (error) {
-      console.error('Erreur modification positions classeurs:', error);
+      logger.error('[useDossiersPage] ❌ Erreur mise à jour positions classeurs:', error);
       throw error;
     }
-  }, [userId]);
+  }, [userId, dossierService]);
 
   const handleFolderOpen = useCallback((folderId: string) => {
     setCurrentFolderId(folderId);
@@ -238,7 +261,7 @@ export function useDossiersPage(userId: string) {
   const folderPath = useMemo(() => {
     if (!currentFolderId) return [];
     
-    const path: any[] = [];
+    const path: Folder[] = [];
     let currentFolder = useFileSystemStore.getState().folders[currentFolderId];
     
     while (currentFolder) {
@@ -267,7 +290,7 @@ export function useDossiersPage(userId: string) {
         await loadInitialData(abortControllerRef.current.signal);
       }
     } catch (error) {
-      console.error('Erreur rechargement données:', error);
+      logger.error('[useDossiersPage] ❌ Erreur rechargement données:', error);
       setError("Erreur lors du rechargement des données.");
     }
   }, [userId, loadInitialData]);
@@ -286,7 +309,7 @@ export function useDossiersPage(userId: string) {
         await loadInitialData(abortControllerRef.current.signal);
       }
     } catch (error) {
-      console.error('Erreur rechargement forcé:', error);
+      logger.error('[useDossiersPage] ❌ Erreur rechargement forcé:', error);
       setError("Erreur lors du rechargement forcé des données.");
     }
   }, [loadInitialData]);

@@ -25,6 +25,10 @@ interface ZustandFolder {
   name: string;
   parent_id?: string | null;
   classeur_id?: string;
+  user_id?: string;
+  created_at?: string;
+  updated_at?: string;
+  position?: number;
   [key: string]: unknown;
 }
 
@@ -36,6 +40,9 @@ interface ZustandNote {
   updated_at?: string;
   classeur_id?: string;
   folder_id?: string | null;
+  user_id?: string;
+  created_at?: string;
+  position?: number;
   [key: string]: unknown;
 }
 
@@ -81,22 +88,30 @@ interface FolderManagerResult {
 }
 
 // Adaptateur pour convertir les Folder Zustand en Folder UI
-function toUIFolder(f: ZustandFolder): Folder {
+function toUIFolder(f: Folder): Folder {
   return {
     id: f.id,
     name: f.name,
     parent_id: f.parent_id || null,
     classeur_id: f.classeur_id || '', // Ajouté pour le filtrage correct
+    user_id: 'unknown', // Valeur par défaut car pas dans le type Zustand
+    created_at: f.created_at || new Date().toISOString(), // Valeur par défaut si manquante
+    updated_at: f.updated_at || new Date().toISOString(), // Valeur par défaut si manquante
+    position: f.position || 0, // Valeur par défaut si manquante
   };
 }
 
 // Adaptateur pour convertir les notes Zustand en FileArticle UI
-function toUIFile(n: ZustandNote): FileArticle {
+function toUIFile(n: Note): FileArticle {
   return {
     id: n.id,
     source_title: n.source_title || n.title || '',
     classeur_id: n.classeur_id || '',
     folder_id: n.folder_id || null,
+    user_id: 'unknown', // Valeur par défaut car pas dans le type Zustand
+    created_at: n.created_at || new Date().toISOString(), // Valeur par défaut si manquante
+    updated_at: n.updated_at || new Date().toISOString(), // Valeur par défaut si manquante
+    position: n.position || 0, // Valeur par défaut si manquante
   };
 }
 
@@ -111,13 +126,13 @@ export function useFolderManagerState(classeurId: string, userId: string, parent
   // Correction : filtrage par classeurId et parentFolderId
   const filteredFolders: Folder[] = useMemo(
     () => folders
-      .filter((f: ZustandFolder) => f.classeur_id === classeurId && (f.parent_id === parentFolderId || (!f.parent_id && !parentFolderId)))
+      .filter((f: Folder) => f.classeur_id === classeurId && (f.parent_id === parentFolderId || (!f.parent_id && !parentFolderId)))
       .map(toUIFolder),
     [folders, classeurId, parentFolderId]
   );
   const filteredFiles: FileArticle[] = useMemo(
     () => notes
-      .filter((n: ZustandNote) => n.classeur_id === classeurId && (n.folder_id === parentFolderId || (!n.folder_id && !parentFolderId)))
+      .filter((n: Note) => n.classeur_id === classeurId && (n.folder_id === parentFolderId || (!n.folder_id && !parentFolderId)))
       .map(toUIFile),
     [notes, classeurId, parentFolderId]
   );
@@ -201,13 +216,41 @@ export function useFolderManagerState(classeurId: string, userId: string, parent
   const DEFAULT_HEADER_IMAGE = 'https://images.unsplash.com/photo-1443890484047-5eaa67d1d630?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D';
 
   const createFile = useCallback(async (name: string, parentFolderId: string | null): Promise<Note | undefined> => {
+    // 🔧 CORRECTION: Déclarer tempId au niveau de la fonction
+    let tempId: string = '';
+    
     try {
       // Générer un nom unique pour la note
       const uniqueName = generateUniqueNoteName(filteredFiles);
       
       if (process.env.NODE_ENV === 'development') {
-        logger.dev('[UI] 📝 Création note, en attente du patch realtime...', { name: uniqueName, classeurId, parentFolderId });
+        logger.dev('[UI] 📝 Création note avec optimistic update...', { name: uniqueName, classeurId, parentFolderId });
       }
+
+      // 🔧 CORRECTION: Créer une note optimiste immédiatement
+      tempId = `temp_note_${Date.now()}`;
+      const optimisticNote: Note = {
+        id: tempId,
+        source_title: uniqueName,
+        markdown_content: '',
+        html_content: '',
+        header_image: DEFAULT_HEADER_IMAGE,
+        classeur_id: classeurId,
+        folder_id: parentFolderId,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        position: 0,
+        _optimistic: true
+      };
+
+      // Ajouter la note optimiste au store immédiatement
+      const store = useFileSystemStore.getState();
+      store.addNoteOptimistic(optimisticNote, tempId);
+
+      if (process.env.NODE_ENV === 'development') {
+        logger.dev('[UI] 🚀 Note optimiste ajoutée au store:', tempId);
+      }
+
       const payload: CreateNotePayload = {
         source_title: uniqueName,
         notebook_id: classeurId,
@@ -217,68 +260,143 @@ export function useFolderManagerState(classeurId: string, userId: string, parent
       if (parentFolderId) {
         payload.folder_id = parentFolderId;
       }
-      if (process.env.NODE_ENV === 'development') {
-        logger.dev('Payload createNote optimisée', payload);
-      }
+
       const result = await v2UnifiedApi.createNote(payload, userId);
+      
       if (process.env.NODE_ENV === 'development') {
         logger.dev('[UI] ✅ Note créée avec API optimisée:', result.note.source_title);
       }
+
+      // 🔧 CORRECTION: Remplacer la note optimiste par la vraie note
+      store.updateNoteOptimistic(tempId, result.note);
+      
+      if (process.env.NODE_ENV === 'development') {
+        logger.dev('[UI] ✅ Note optimiste remplacée par la vraie note');
+      }
+
       return result.note;
     } catch (err) {
       logger.error('[UI] ❌ Erreur création note:', err);
+      
+      // 🔧 CORRECTION: Rollback en cas d'erreur
+      if (tempId) {
+        const store = useFileSystemStore.getState();
+        store.removeNoteOptimistic(tempId);
+        
+        if (process.env.NODE_ENV === 'development') {
+          logger.dev('[UI] 🔄 Rollback: Note optimiste supprimée du store');
+        }
+      }
+      
       setError('Erreur lors de la création du fichier.');
       return undefined;
     }
-  }, [classeurId, parentFolderId, filteredFiles]);
+  }, [classeurId, parentFolderId, filteredFiles, userId]);
 
   const deleteFolder = useCallback(async (id: string) => {
     try {
       if (process.env.NODE_ENV === 'development') {
-      logger.dev('[UI] 🗑️ Suppression dossier avec API optimisée...', { id });
+        logger.dev('[UI] 🗑️ Suppression dossier avec API optimisée...', { id });
       }
-            await v2UnifiedApi.deleteFolder(id, userId);
+      
+      // 🔧 CORRECTION: Mise à jour optimiste immédiate du store
+      const store = useFileSystemStore.getState();
+      const originalFolder = folders.find(f => f.id === id);
+      if (!originalFolder) {
+        logger.error('[UI] ❌ Dossier non trouvé dans le store local:', { id });
+        setError('Dossier non trouvé dans l\'interface.');
+        return;
+      }
+      
+      // Suppression optimiste immédiate
+      store.removeFolder(id);
+      
+      if (process.env.NODE_ENV === 'development') {
+        logger.dev('[UI] 🚀 Dossier supprimé du store (optimiste)');
+      }
+      
+      // Appel API
+      await v2UnifiedApi.deleteFolder(id, userId);
       
       if (process.env.NODE_ENV === 'development') {
         logger.dev('[UI] ✅ Dossier supprimé avec API optimisée');
       }
+      
+      // Gestion du dossier actuel si supprimé
       if (parentFolderId === id) {
         // setCurrentFolderId(null); // Supprimé
         // setCurrentFolder(null); // Supprimé
       }
     } catch (err) {
       logger.error('[UI] ❌ Erreur suppression dossier:', err);
+      
+      // 🔧 CORRECTION: Rollback en cas d'erreur
+      const store = useFileSystemStore.getState();
+      const originalFolder = folders.find(f => f.id === id);
+      if (originalFolder) {
+        store.addFolder(originalFolder);
+        if (process.env.NODE_ENV === 'development') {
+          logger.dev('[UI] 🔄 Rollback: Dossier restauré dans le store');
+        }
+      }
+      
       setError('Erreur lors de la suppression du dossier.');
     }
-  }, [parentFolderId]);
+  }, [parentFolderId, folders]);
 
   const updateFile = useCallback(async (id: string, name: string): Promise<void> => {
     const originalNote = notes.find(n => n.id === id);
     if (!originalNote) return;
 
-    useFileSystemStore.getState().updateNoteOptimistic(id, { source_title: name });
+    // 🔧 CORRECTION: Mise à jour optimiste immédiate
+    const store = useFileSystemStore.getState();
+    store.updateNote(id, { source_title: name });
 
     try {
       await v2UnifiedApi.updateNote(id, { source_title: name }, userId);
+      
+      if (process.env.NODE_ENV === 'development') {
+        logger.dev('[UI] ✅ Note renommée avec succès:', { id, newName: name });
+      }
     } catch (error) {
-      logger.error('Erreur renommage note:', error);
-      useFileSystemStore.getState().updateNote(id, { source_title: originalNote.source_title });
+      logger.error('[UI] ❌ Erreur renommage note:', error);
+      
+      // 🔧 CORRECTION: Rollback en cas d'erreur
+      store.updateNote(id, { source_title: originalNote.source_title });
+      if (process.env.NODE_ENV === 'development') {
+        logger.dev('[UI] 🔄 Rollback: Nom de note restauré');
+      }
+      
+      setError('Erreur lors du renommage de la note.');
     }
-  }, [notes]);
+  }, [notes, userId]);
 
   const updateFolder = useCallback(async (id: string, name: string): Promise<void> => {
     const originalFolder = folders.find(f => f.id === id);
     if (!originalFolder) return;
 
-    useFileSystemStore.getState().updateFolder(id, { name });
+    // 🔧 CORRECTION: Mise à jour optimiste immédiate
+    const store = useFileSystemStore.getState();
+    store.updateFolder(id, { name });
 
     try {
       await v2UnifiedApi.updateFolder(id, { name }, userId);
+      
+      if (process.env.NODE_ENV === 'development') {
+        logger.dev('[UI] ✅ Dossier renommé avec succès:', { id, newName: name });
+      }
     } catch (error) {
-      logger.error('Erreur renommage dossier:', error);
-      useFileSystemStore.getState().updateFolder(id, { name: originalFolder.name });
+      logger.error('[UI] ❌ Erreur renommage dossier:', error);
+      
+      // 🔧 CORRECTION: Rollback en cas d'erreur
+      store.updateFolder(id, { name: originalFolder.name });
+      if (process.env.NODE_ENV === 'development') {
+        logger.dev('[UI] 🔄 Rollback: Nom de dossier restauré');
+      }
+      
+      setError('Erreur lors du renommage du dossier.');
     }
-  }, [folders]);
+  }, [folders, userId]);
 
   const deleteFile = useCallback(async (id: string): Promise<void> => {
     try {
@@ -305,6 +423,15 @@ export function useFolderManagerState(classeurId: string, userId: string, parent
         logger.dev('[UI] 🔍 Note trouvée dans le store:', { id, title: note.source_title });
       }
       
+      // 🔧 CORRECTION: Mise à jour optimiste immédiate du store
+      const store = useFileSystemStore.getState();
+      store.removeNote(id);
+      
+      if (process.env.NODE_ENV === 'development') {
+        logger.dev('[UI] 🚀 Note supprimée du store (optimiste)');
+      }
+      
+      // Appel API
       await v2UnifiedApi.deleteNote(id, userId);
       
       if (process.env.NODE_ENV === 'development') {
@@ -312,6 +439,17 @@ export function useFolderManagerState(classeurId: string, userId: string, parent
       }
     } catch (err) {
       logger.error('[UI] ❌ Erreur suppression note:', err);
+      
+      // 🔧 CORRECTION: Rollback en cas d'erreur
+      const store = useFileSystemStore.getState();
+      const originalNote = Object.values(notes).find(n => n.id === id);
+      if (originalNote) {
+        store.addNote(originalNote);
+        if (process.env.NODE_ENV === 'development') {
+          logger.dev('[UI] 🔄 Rollback: Note restaurée dans le store');
+        }
+      }
+      
       setError('Erreur lors de la suppression du fichier.');
     }
   }, [notes, userId]);
@@ -320,24 +458,83 @@ export function useFolderManagerState(classeurId: string, userId: string, parent
   const submitRename = useCallback(async (id: string, newName: string, type: 'folder' | 'file') => {
     try {
       if (process.env.NODE_ENV === 'development') {
-      logger.dev('[UI] ✏️ Renommage item avec API optimisée...', { id, newName, type });
+        logger.dev('[UI] ✏️ Renommage item avec API optimisée...', { id, newName, type });
       }
+      
+      // 🔧 CORRECTION: Mise à jour optimiste immédiate selon le type
+      const store = useFileSystemStore.getState();
+      
       if (type === 'file') {
+        // Récupérer la note originale pour le rollback
+        const originalNote = notes.find(n => n.id === id);
+        if (!originalNote) {
+          logger.error('[UI] ❌ Note non trouvée pour renommage:', { id });
+          setError('Note non trouvée.');
+          return;
+        }
+        
+        // Mise à jour optimiste immédiate
+        store.updateNote(id, { source_title: newName });
+        
+        // Appel API
         await v2UnifiedApi.updateNote(id, { source_title: newName }, userId);
+        
+        if (process.env.NODE_ENV === 'development') {
+          logger.dev('[UI] ✅ Note renommée avec succès:', { id, newName });
+        }
       } else {
+        // Récupérer le dossier original pour le rollback
+        const originalFolder = folders.find(f => f.id === id);
+        if (!originalFolder) {
+          logger.error('[UI] ❌ Dossier non trouvé pour renommage:', { id });
+          setError('Dossier non trouvé.');
+          return;
+        }
+        
+        // Mise à jour optimiste immédiate
+        store.updateFolder(id, { name: newName });
+        
+        // Appel API
         await v2UnifiedApi.updateFolder(id, { name: newName }, userId);
+        
+        if (process.env.NODE_ENV === 'development') {
+          logger.dev('[UI] ✅ Dossier renommé avec succès:', { id, newName });
+        }
       }
+      
       if (process.env.NODE_ENV === 'development') {
-      logger.dev('[UI] ✅ Item renommé avec API optimisée');
+        logger.dev('[UI] ✅ Item renommé avec API optimisée');
       }
     } catch (err) {
       logger.error('[UI] ❌ Erreur renommage:', err);
+      
+      // 🔧 CORRECTION: Rollback en cas d'erreur
+      const store = useFileSystemStore.getState();
+      
+      if (type === 'file') {
+        const originalNote = notes.find(n => n.id === id);
+        if (originalNote) {
+          store.updateNote(id, { source_title: originalNote.source_title });
+          if (process.env.NODE_ENV === 'development') {
+            logger.dev('[UI] 🔄 Rollback: Nom de note restauré');
+          }
+        }
+      } else {
+        const originalFolder = folders.find(f => f.id === id);
+        if (originalFolder) {
+          store.updateFolder(id, { name: originalFolder.name });
+          if (process.env.NODE_ENV === 'development') {
+            logger.dev('[UI] 🔄 Rollback: Nom de dossier restauré');
+          }
+        }
+      }
+      
       setError('Erreur lors du renommage.');
     } finally {
       setRenamingItemId(null);
       setRenamingType(null);
     }
-  }, []);
+  }, [notes, folders, userId]);
 
   const cancelRename = useCallback(() => {
     setRenamingItemId(null);
