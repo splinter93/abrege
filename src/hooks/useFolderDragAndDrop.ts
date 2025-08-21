@@ -3,7 +3,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
 import { DropEventDetail } from '../components/types';
 import { useFileSystemStore } from '@/store/useFileSystemStore';
-import { clientPollingTrigger } from '@/services/clientPollingTrigger';
+
 import { v2UnifiedApi } from '@/services/V2UnifiedApi';
 import { simpleLogger as logger } from '@/utils/logger';
 

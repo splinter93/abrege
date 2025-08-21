@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
-import { useRealtimeInit } from '@/hooks/useRealtimeInit';
+
 import { simpleLogger as logger } from '@/utils/logger';
 import './AuthGuard.css';
 
@@ -26,8 +26,7 @@ export default function AuthGuard({
   const router = useRouter();
   const [isRedirecting, setIsRedirecting] = useState(false);
   
-  // Initialiser le service realtime quand l'utilisateur est authentifié
-  useRealtimeInit();
+
 
   useEffect(() => {
     if (!loading && !user) {

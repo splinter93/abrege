@@ -4,7 +4,7 @@ import { updateArticleInsight } from '@/utils/insightUpdater';
 import { logApi } from '@/utils/logger';
 import { clearSectionV2Schema, validatePayload, createValidationErrorResponse } from '@/utils/v2ValidationSchemas';
 import { V2ResourceResolver } from '@/utils/v2ResourceResolver';
-import { clientPollingTrigger } from '@/services/clientPollingTrigger';
+
 import { getAuthenticatedUser, checkUserPermission } from '@/utils/authUtils';
 import { clearSection, extractTOCWithSlugs, appendToSection } from '@/utils/markdownTOC';
 
@@ -158,8 +158,7 @@ export async function DELETE(
     // Mettre à jour l'insight
     await updateArticleInsight(noteId);
 
-    // Déclencher le polling côté client
-    clientPollingTrigger.triggerArticlesPolling('UPDATE');
+
 
     const apiTime = Date.now() - startTime;
     logApi('v2_note_clear_section', `✅ Section "${validatedData.sectionId}" vidée en ${apiTime}ms`, context);

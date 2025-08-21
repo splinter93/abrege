@@ -3,7 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 import { logApi } from '@/utils/logger';
 import { publishNoteV2Schema, validatePayload, createValidationErrorResponse } from '@/utils/v2ValidationSchemas';
 import { V2ResourceResolver } from '@/utils/v2ResourceResolver';
-import { clientPollingTrigger } from '@/services/clientPollingTrigger';
+
 import { getAuthenticatedUser, checkUserPermission } from '@/utils/authUtils';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -140,8 +140,7 @@ export async function POST(
       );
     }
 
-    // Déclencher le polling côté client
-    clientPollingTrigger.triggerArticlesPolling('UPDATE');
+
 
     const apiTime = Date.now() - startTime;
     const isPublic = validatedData.visibility !== 'private';

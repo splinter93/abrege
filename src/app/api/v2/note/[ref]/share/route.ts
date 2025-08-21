@@ -3,7 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 import { logApi } from '@/utils/logger';
 import { getAuthenticatedUser, checkUserPermission } from '@/utils/authUtils';
 import { V2ResourceResolver } from '@/utils/v2ResourceResolver';
-import { clientPollingTrigger } from '@/services/clientPollingTrigger';
+
 import type { ShareSettingsUpdate } from '@/types/sharing';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -320,8 +320,7 @@ export async function PATCH(
 
     console.log('🚨 [DEBUG] ✅ Mise à jour réussie');
 
-    // Déclencher le polling côté client
-    clientPollingTrigger.triggerArticlesPolling('UPDATE');
+
 
     const apiTime = Date.now() - startTime;
     logApi('v2_note_share_update', `✅ Paramètres de partage mis à jour en ${apiTime}ms`, context);

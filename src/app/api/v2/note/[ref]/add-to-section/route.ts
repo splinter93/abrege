@@ -4,7 +4,7 @@ import { updateArticleInsight } from '@/utils/insightUpdater';
 import { logApi } from '@/utils/logger';
 import { addToSectionV2Schema, validatePayload, createValidationErrorResponse } from '@/utils/v2ValidationSchemas';
 import { V2ResourceResolver } from '@/utils/v2ResourceResolver';
-import { clientPollingTrigger } from '@/services/clientPollingTrigger';
+
 import { getAuthenticatedUser, checkUserPermission } from '@/utils/authUtils';
 import { appendToSection, extractTOCWithSlugs } from '@/utils/markdownTOC';
 
@@ -158,8 +158,7 @@ export async function POST(
     // Mettre à jour l'insight
     await updateArticleInsight(noteId);
 
-    // Déclencher le polling côté client
-    clientPollingTrigger.triggerArticlesPolling('UPDATE');
+
 
     const apiTime = Date.now() - startTime;
     logApi('v2_note_add_to_section', `✅ Contenu ajouté à la section "${validatedData.sectionId}" en ${apiTime}ms`, context);

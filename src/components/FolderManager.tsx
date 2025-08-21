@@ -12,7 +12,7 @@ import { useContextMenuManager } from '../hooks/useContextMenuManager';
 import { useFolderSelection } from '../hooks/useFolderSelection';
 import { useFolderFilter } from '../hooks/useFolderFilter';
 import { useFolderKeyboard } from '../hooks/useFolderKeyboard';
-import { useDataReload } from '@/hooks/useDataReload';
+
 import { classeurTabVariants, classeurTabTransition } from './FolderAnimation';
 import { useFileSystemStore } from '@/store/useFileSystemStore';
 
@@ -227,8 +227,7 @@ const FolderManager: React.FC<FolderManagerProps> = ({
     setRefreshKey(k => k + 1);
   }, [storeFolders, storeNotes, filteredFolders, filteredFiles]);
 
-  // Hook pour écouter les événements de rechargement des données
-  const { reloadFolders, reloadArticles } = useDataReload();
+
 
 
 
