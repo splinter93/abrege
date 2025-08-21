@@ -256,8 +256,13 @@ export class V2UnifiedApi {
         logger.dev(`[V2UnifiedApi] ✅ API terminée en ${apiTime}ms`);
       }
 
-      // 🚀 Note: La suppression du store est maintenant gérée par le composant UI
-      // pour assurer la cohérence avec l'interface utilisateur
+      // 🚀 Mise à jour immédiate du store Zustand (instantanée)
+      const store = useFileSystemStore.getState();
+      store.removeNote(noteId);
+      
+      if (process.env.NODE_ENV === 'development') {
+        logger.dev(`[V2UnifiedApi] ✅ Store mis à jour immédiatement`);
+      }
       
       // 🚀 Déclencher le polling intelligent immédiatement
       await triggerIntelligentPolling({
@@ -269,7 +274,7 @@ export class V2UnifiedApi {
       
       const totalTime = Date.now() - startTime;
       if (process.env.NODE_ENV === 'development') {
-        logger.dev(`[V2UnifiedApi] ✅ Note supprimée de Zustand  en ${totalTime}ms total`);
+        logger.dev(`[V2UnifiedApi] ✅ Note supprimée en ${totalTime}ms total`);
       }
       
       return { success: true };
@@ -433,8 +438,13 @@ export class V2UnifiedApi {
         logger.dev(`[V2UnifiedApi] ✅ API terminée en ${apiTime}ms`);
       }
 
-      // 🚀 Note: La suppression du store est maintenant gérée par le composant UI
-      // pour assurer la cohérence avec l'interface utilisateur
+      // 🚀 Mise à jour immédiate du store Zustand (instantanée)
+      const store = useFileSystemStore.getState();
+      store.removeFolder(folderId);
+      
+      if (process.env.NODE_ENV === 'development') {
+        logger.dev(`[V2UnifiedApi] ✅ Store mis à jour immédiatement`);
+      }
       
       // 🚀 Déclencher le polling intelligent immédiatement
       await triggerIntelligentPolling({
@@ -446,7 +456,7 @@ export class V2UnifiedApi {
       
       const totalTime = Date.now() - startTime;
       if (process.env.NODE_ENV === 'development') {
-        logger.dev(`[V2UnifiedApi] ✅ Dossier supprimé de Zustand  en ${totalTime}ms total`);
+        logger.dev(`[V2UnifiedApi] ✅ Dossier supprimé en ${totalTime}ms total`);
       }
       
       return { success: true };

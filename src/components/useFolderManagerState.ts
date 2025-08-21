@@ -239,12 +239,8 @@ export function useFolderManagerState(classeurId: string, userId: string, parent
       }
             await v2UnifiedApi.deleteFolder(id, userId);
       
-      // 🚀 Mise à jour immédiate du store Zustand pour le temps réel
-      const store = useFileSystemStore.getState();
-      store.removeFolder(id);
-      
       if (process.env.NODE_ENV === 'development') {
-        logger.dev('[UI] ✅ Dossier supprimé avec API optimisée + store mis à jour');
+        logger.dev('[UI] ✅ Dossier supprimé avec API optimisée');
       }
       if (parentFolderId === id) {
         // setCurrentFolderId(null); // Supprimé
@@ -311,12 +307,8 @@ export function useFolderManagerState(classeurId: string, userId: string, parent
       
       await v2UnifiedApi.deleteNote(id, userId);
       
-      // 🚀 Mise à jour immédiate du store Zustand pour le temps réel
-      const store = useFileSystemStore.getState();
-      store.removeNote(id);
-      
       if (process.env.NODE_ENV === 'development') {
-        logger.dev('[UI] ✅ Note supprimée avec API optimisée + store mis à jour');
+        logger.dev('[UI] ✅ Note supprimée avec API optimisée');
       }
     } catch (err) {
       logger.error('[UI] ❌ Erreur suppression note:', err);
