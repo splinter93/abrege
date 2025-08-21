@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { logApi } from '@/utils/logger';
 import { getAuthenticatedUser } from '@/utils/authUtils';
-import { V2DatabaseUtils } from '@/utils/v2DatabaseUtils';
+import { createClient } from '@supabase/supabase-js';
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
 export async function DELETE(
   request: NextRequest,
@@ -30,10 +33,86 @@ export async function DELETE(
   }
 
   const userId = authResult.userId!;
+  
+  // Récupérer le token d'authentification
+  const authHeader = request.headers.get('Authorization');
+  const userToken = authHeader?.substring(7);
+  
+  if (!userToken) {
+    logApi('v2_note_delete', '❌ Token manquant', context);
+    return NextResponse.json(
+      { error: 'Token d\'authentification manquant' },
+      { status: 401, headers: { "Content-Type": "application/json" } }
+    );
+  }
 
   try {
-    // Utiliser V2DatabaseUtils pour l'accès direct à la base de données
-    const result = await V2DatabaseUtils.deleteNote(ref, userId, context);
+    // Créer un client Supabase authentifié
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      global: {
+        headers: {
+          Authorization: `Bearer ${userToken}`
+        }
+      }
+    });
+
+    let noteId = ref;
+    
+    // Si ce n'est pas un UUID, essayer de le résoudre comme un slug
+    if (!noteId.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
+      logApi('v2_note_delete', `🔍 Résolution slug: ${ref}`, context);
+      
+      const { data: note, error: resolveError } = await supabase
+        .from('articles')
+        .select('id')
+        .eq('slug', ref)
+        .eq('user_id', userId)
+        .single();
+
+      if (resolveError || !note) {
+        logApi('v2_note_delete', `❌ Note non trouvée par slug: ${ref}`, context);
+        return NextResponse.json(
+          { error: 'Note non trouvée' },
+          { status: 404, headers: { "Content-Type": "application/json" } }
+        );
+      }
+      
+      noteId = note.id;
+      logApi('v2_note_delete', `✅ Slug résolu: ${ref} → ${noteId}`, context);
+    }
+
+    // Vérifier que la note existe et appartient à l'utilisateur
+    const { data: existingNote, error: fetchError } = await supabase
+      .from('articles')
+      .select('id, source_title')
+      .eq('id', noteId)
+      .eq('user_id', userId)
+      .single();
+
+    if (fetchError || !existingNote) {
+      logApi('v2_note_delete', `❌ Note non trouvée ou accès refusé: ${noteId}`, context);
+      return NextResponse.json(
+        { error: 'Note non trouvée ou accès refusé' },
+        { status: 404, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
+    logApi('v2_note_delete', `🔍 Suppression note: ${existingNote.source_title} (${noteId})`, context);
+
+    // Supprimer la note
+    const { error: deleteError } = await supabase
+      .from('articles')
+      .delete()
+      .eq('id', noteId)
+      .eq('user_id', userId);
+
+    if (deleteError) {
+      logApi('v2_note_delete', `❌ Erreur suppression: ${deleteError.message}`, context);
+      return NextResponse.json(
+        { error: `Erreur lors de la suppression: ${deleteError.message}` },
+        { status: 500, headers: { "Content-Type": "application/json" } }
+      );
+    }
 
     const apiTime = Date.now() - startTime;
     logApi('v2_note_delete', `✅ Note supprimée en ${apiTime}ms`, context);
@@ -45,9 +124,9 @@ export async function DELETE(
 
   } catch (err: unknown) {
     const error = err as Error;
-    logApi('v2_note_delete', `❌ Erreur serveur: ${error}`, context);
+    logApi('v2_note_delete', `❌ Erreur serveur: ${error.message}`, context);
     return NextResponse.json(
-      { error: 'Erreur serveur' },
+      { error: `Erreur serveur: ${error.message}` },
       { status: 500, headers: { "Content-Type": "application/json" } }
     );
   }
