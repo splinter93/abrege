@@ -2,6 +2,7 @@ import { useFileSystemStore } from '@/store/useFileSystemStore';
 
 import { simpleLogger as logger } from '@/utils/logger';
 import type { Folder, Note, Classeur } from '@/store/useFileSystemStore';
+import { triggerIntelligentPolling } from './intelligentPollingService';
 
 
 // Types pour les données d'API (compatibles avec V1)
@@ -156,6 +157,12 @@ export class V2UnifiedApi {
       }
       
       // 🚀 4. Déclencher le polling intelligent immédiatement
+      await triggerIntelligentPolling({
+        entityType: 'notes',
+        operation: 'CREATE',
+        entityId: result.note.id,
+        delay: 1000 // 1 seconde pour laisser la base se synchroniser
+      });
       
       const totalTime = Date.now() - startTime;
       if (process.env.NODE_ENV === 'development') {
@@ -202,7 +209,13 @@ export class V2UnifiedApi {
       const store = useFileSystemStore.getState();
       store.updateNote(noteId, result.note);
       
-      // 🚀 Déclencher le polling côté client immédiatement
+      // 🚀 Déclencher le polling intelligent immédiatement
+      await triggerIntelligentPolling({
+        entityType: 'notes',
+        operation: 'UPDATE',
+        entityId: noteId,
+        delay: 1000
+      });
       
       const totalTime = Date.now() - startTime;
       if (process.env.NODE_ENV === 'development') {
@@ -247,7 +260,13 @@ export class V2UnifiedApi {
       const store = useFileSystemStore.getState();
       store.removeNote(noteId);
       
-      // 🚀 Déclencher le polling côté client immédiatement
+      // 🚀 Déclencher le polling intelligent immédiatement
+      await triggerIntelligentPolling({
+        entityType: 'notes',
+        operation: 'DELETE',
+        entityId: noteId,
+        delay: 1000
+      });
       
       const totalTime = Date.now() - startTime;
       if (process.env.NODE_ENV === 'development') {
@@ -316,6 +335,12 @@ export class V2UnifiedApi {
       }
 
       // 🚀 4. Déclencher le polling intelligent immédiatement
+      await triggerIntelligentPolling({
+        entityType: 'folders',
+        operation: 'CREATE',
+        entityId: result.folder.id,
+        delay: 1000
+      });
       
       const totalTime = Date.now() - startTime;
       if (process.env.NODE_ENV === 'development') {
@@ -362,7 +387,13 @@ export class V2UnifiedApi {
       const store = useFileSystemStore.getState();
       store.updateFolder(folderId, result.folder);
       
-      // 🚀 Déclencher le polling côté client immédiatement
+      // 🚀 Déclencher le polling intelligent immédiatement
+      await triggerIntelligentPolling({
+        entityType: 'folders',
+        operation: 'UPDATE',
+        entityId: folderId,
+        delay: 1000
+      });
       
       const totalTime = Date.now() - startTime;
       if (process.env.NODE_ENV === 'development') {
@@ -407,7 +438,13 @@ export class V2UnifiedApi {
       const store = useFileSystemStore.getState();
       store.removeFolder(folderId);
       
-      // 🚀 Déclencher le polling côté client immédiatement
+      // 🚀 Déclencher le polling intelligent immédiatement
+      await triggerIntelligentPolling({
+        entityType: 'folders',
+        operation: 'DELETE',
+        entityId: folderId,
+        delay: 1000
+      });
       
       const totalTime = Date.now() - startTime;
       if (process.env.NODE_ENV === 'development') {
@@ -462,7 +499,13 @@ export class V2UnifiedApi {
       // 🚀 Mise à jour directe de Zustand (instantanée)
       store.moveNote(noteId, targetFolderId, noteClasseurId);
       
-      // 🚀 Déclencher le polling côté client immédiatement
+      // 🚀 Déclencher le polling intelligent immédiatement
+      await triggerIntelligentPolling({
+        entityType: 'notes',
+        operation: 'MOVE',
+        entityId: noteId,
+        delay: 1000
+      });
       
       const totalTime = Date.now() - startTime;
       if (process.env.NODE_ENV === 'development') {
@@ -517,7 +560,13 @@ export class V2UnifiedApi {
       // 🚀 Mise à jour directe de Zustand (instantanée)
       store.moveFolder(folderId, targetParentId, folderClasseurId);
       
-      // 🚀 Déclencher le polling côté client immédiatement
+      // 🚀 Déclencher le polling intelligent immédiatement
+      await triggerIntelligentPolling({
+        entityType: 'folders',
+        operation: 'MOVE',
+        entityId: folderId,
+        delay: 1000
+      });
       
       const totalTime = Date.now() - startTime;
       if (process.env.NODE_ENV === 'development') {
@@ -586,6 +635,12 @@ export class V2UnifiedApi {
       }
       
       // 🚀 4. Déclencher le polling intelligent immédiatement
+      await triggerIntelligentPolling({
+        entityType: 'classeurs',
+        operation: 'CREATE',
+        entityId: result.classeur.id,
+        delay: 1000
+      });
       
       const totalTime = Date.now() - startTime;
       if (process.env.NODE_ENV === 'development') {
@@ -632,7 +687,13 @@ export class V2UnifiedApi {
       const store = useFileSystemStore.getState();
       store.updateClasseur(classeurId, result.classeur);
       
-      // 🚀 Déclencher le polling côté client immédiatement
+      // 🚀 Déclencher le polling intelligent immédiatement
+      await triggerIntelligentPolling({
+        entityType: 'classeurs',
+        operation: 'UPDATE',
+        entityId: classeurId,
+        delay: 1000
+      });
       
       const totalTime = Date.now() - startTime;
       if (process.env.NODE_ENV === 'development') {
@@ -677,7 +738,13 @@ export class V2UnifiedApi {
       const store = useFileSystemStore.getState();
       store.removeClasseur(classeurId);
       
-      // 🚀 Déclencher le polling côté client immédiatement
+      // 🚀 Déclencher le polling intelligent immédiatement
+      await triggerIntelligentPolling({
+        entityType: 'classeurs',
+        operation: 'DELETE',
+        entityId: classeurId,
+        delay: 1000
+      });
       
       const totalTime = Date.now() - startTime;
       if (process.env.NODE_ENV === 'development') {
