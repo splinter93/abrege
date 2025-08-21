@@ -237,9 +237,14 @@ export function useFolderManagerState(classeurId: string, userId: string, parent
       if (process.env.NODE_ENV === 'development') {
       logger.dev('[UI] 🗑️ Suppression dossier avec API optimisée...', { id });
       }
-      await v2UnifiedApi.deleteFolder(id, userId);
+            await v2UnifiedApi.deleteFolder(id, userId);
+      
+      // 🚀 Mise à jour immédiate du store Zustand pour le temps réel
+      const store = useFileSystemStore.getState();
+      store.removeFolder(id);
+      
       if (process.env.NODE_ENV === 'development') {
-      logger.dev('[UI] ✅ Dossier supprimé avec API optimisée');
+        logger.dev('[UI] ✅ Dossier supprimé avec API optimisée + store mis à jour');
       }
       if (parentFolderId === id) {
         // setCurrentFolderId(null); // Supprimé
@@ -306,8 +311,12 @@ export function useFolderManagerState(classeurId: string, userId: string, parent
       
       await v2UnifiedApi.deleteNote(id, userId);
       
+      // 🚀 Mise à jour immédiate du store Zustand pour le temps réel
+      const store = useFileSystemStore.getState();
+      store.removeNote(id);
+      
       if (process.env.NODE_ENV === 'development') {
-        logger.dev('[UI] ✅ Note supprimée avec API optimisée');
+        logger.dev('[UI] ✅ Note supprimée avec API optimisée + store mis à jour');
       }
     } catch (err) {
       logger.error('[UI] ❌ Erreur suppression note:', err);

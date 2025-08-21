@@ -256,9 +256,8 @@ export class V2UnifiedApi {
         logger.dev(`[V2UnifiedApi] ✅ API terminée en ${apiTime}ms`);
       }
 
-      // 🚀 Mise à jour directe de Zustand (instantanée)
-      const store = useFileSystemStore.getState();
-      store.removeNote(noteId);
+      // 🚀 Note: La suppression du store est maintenant gérée par le composant UI
+      // pour assurer la cohérence avec l'interface utilisateur
       
       // 🚀 Déclencher le polling intelligent immédiatement
       await triggerIntelligentPolling({
@@ -434,9 +433,8 @@ export class V2UnifiedApi {
         logger.dev(`[V2UnifiedApi] ✅ API terminée en ${apiTime}ms`);
       }
 
-      // 🚀 Mise à jour directe de Zustand (instantanée)
-      const store = useFileSystemStore.getState();
-      store.removeFolder(folderId);
+      // 🚀 Note: La suppression du store est maintenant gérée par le composant UI
+      // pour assurer la cohérence avec l'interface utilisateur
       
       // 🚀 Déclencher le polling intelligent immédiatement
       await triggerIntelligentPolling({
