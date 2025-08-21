@@ -216,39 +216,12 @@ export function useFolderManagerState(classeurId: string, userId: string, parent
   const DEFAULT_HEADER_IMAGE = 'https://images.unsplash.com/photo-1443890484047-5eaa67d1d630?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D';
 
   const createFile = useCallback(async (name: string, parentFolderId: string | null): Promise<Note | undefined> => {
-    // 🔧 CORRECTION: Déclarer tempId au niveau de la fonction
-    let tempId: string = '';
-    
     try {
       // Générer un nom unique pour la note
       const uniqueName = generateUniqueNoteName(filteredFiles);
       
       if (process.env.NODE_ENV === 'development') {
-        logger.dev('[UI] 📝 Création note avec optimistic update...', { name: uniqueName, classeurId, parentFolderId });
-      }
-
-      // 🔧 CORRECTION: Créer une note optimiste immédiatement
-      tempId = `temp_note_${Date.now()}`;
-      const optimisticNote: Note = {
-        id: tempId,
-        source_title: uniqueName,
-        markdown_content: '',
-        html_content: '',
-        header_image: DEFAULT_HEADER_IMAGE,
-        classeur_id: classeurId,
-        folder_id: parentFolderId,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        position: 0,
-        _optimistic: true
-      };
-
-      // Ajouter la note optimiste au store immédiatement
-      const store = useFileSystemStore.getState();
-      store.addNoteOptimistic(optimisticNote, tempId);
-
-      if (process.env.NODE_ENV === 'development') {
-        logger.dev('[UI] 🚀 Note optimiste ajoutée au store:', tempId);
+        logger.dev('[UI] 📝 Création note avec V2UnifiedApi uniquement...', { name: uniqueName, classeurId, parentFolderId });
       }
 
       const payload: CreateNotePayload = {
@@ -261,33 +234,16 @@ export function useFolderManagerState(classeurId: string, userId: string, parent
         payload.folder_id = parentFolderId;
       }
 
+      // ✅ NETTOYAGE COMPLET: Laisser V2UnifiedApi gérer entièrement l'optimisme
       const result = await v2UnifiedApi.createNote(payload, userId);
       
       if (process.env.NODE_ENV === 'development') {
-        logger.dev('[UI] ✅ Note créée avec API optimisée:', result.note.source_title);
-      }
-
-      // 🔧 CORRECTION: Remplacer la note optimiste par la vraie note
-      store.updateNoteOptimistic(tempId, result.note);
-      
-      if (process.env.NODE_ENV === 'development') {
-        logger.dev('[UI] ✅ Note optimiste remplacée par la vraie note');
+        logger.dev('[UI] ✅ Note créée avec V2UnifiedApi uniquement:', result.note.source_title);
       }
 
       return result.note;
     } catch (err) {
       logger.error('[UI] ❌ Erreur création note:', err);
-      
-      // 🔧 CORRECTION: Rollback en cas d'erreur
-      if (tempId) {
-        const store = useFileSystemStore.getState();
-        store.removeNoteOptimistic(tempId);
-        
-        if (process.env.NODE_ENV === 'development') {
-          logger.dev('[UI] 🔄 Rollback: Note optimiste supprimée du store');
-        }
-      }
-      
       setError('Erreur lors de la création du fichier.');
       return undefined;
     }

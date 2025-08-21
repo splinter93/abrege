@@ -156,25 +156,18 @@ export class V2UnifiedApi {
         logger.dev(`[V2UnifiedApi] ✅ API terminée en ${apiTime}ms, note optimiste remplacée`);
       }
       
-      // 🚀 4. Déclencher le polling intelligent immédiatement
-      // ✅ CORRECTION: Vérifier si la note est déjà dans le store avant de poller
-      const currentStore = useFileSystemStore.getState();
-      if (!currentStore.notes[result.note.id]) {
-        await triggerIntelligentPolling({
-          entityType: 'notes',
-          operation: 'CREATE',
-          entityId: result.note.id,
-          delay: 1000 // 1 seconde pour laisser la base se synchroniser
-        });
-      } else {
-        if (process.env.NODE_ENV === 'development') {
-          logger.dev('[V2UnifiedApi] ✅ Note déjà dans le store, polling ignoré');
-        }
-      }
+      // 🚀 4. Déclencher le polling intelligent pour synchronisation
+      // ✅ NETTOYAGE: Maintenant que la double création est éliminée, le polling est utile pour la sync
+      await triggerIntelligentPolling({
+        entityType: 'notes',
+        operation: 'CREATE',
+        entityId: result.note.id,
+        delay: 2000 // 2 secondes pour laisser la base se synchroniser
+      });
       
       const totalTime = Date.now() - startTime;
       if (process.env.NODE_ENV === 'development') {
-        logger.dev(`[V2UnifiedApi] ✅ Note créée avec optimisme  en ${totalTime}ms total`);
+        logger.dev(`[V2UnifiedApi] ✅ Note créée avec optimisme en ${totalTime}ms total`);
       }
       
       return result;
@@ -346,17 +339,18 @@ export class V2UnifiedApi {
         logger.dev(`[V2UnifiedApi] ✅ API terminée en ${apiTime}ms, dossier optimiste remplacé`);
       }
 
-      // 🚀 4. Déclencher le polling intelligent immédiatement
+      // 🚀 4. Déclencher le polling intelligent pour synchronisation
+      // ✅ NETTOYAGE: Maintenant que la double création est éliminée, le polling est utile pour la sync
       await triggerIntelligentPolling({
         entityType: 'folders',
         operation: 'CREATE',
         entityId: result.folder.id,
-        delay: 1000
+        delay: 2000 // 2 secondes pour laisser la base se synchroniser
       });
       
       const totalTime = Date.now() - startTime;
       if (process.env.NODE_ENV === 'development') {
-        logger.dev(`[V2UnifiedApi] ✅ Dossier créé avec optimisme  en ${totalTime}ms total`);
+        logger.dev(`[V2UnifiedApi] ✅ Dossier créé avec optimisme en ${totalTime}ms total`);
       }
       
       return result;
