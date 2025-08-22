@@ -23,13 +23,13 @@ export class V2ResourceResolver {
     
     try {
       // ✅ LOGGING DÉTAILLÉ pour debug
-      logApi('v2_resource_resolve', `🔍 Tentative de résolution: ${ref} (type: ${type}, userId: ${userId})`, context);
+      logApi.info(`🔍 Tentative de résolution: ${ref} (type: ${type}, userId: ${userId})`, context);
       
       // Utiliser directement le service role key au lieu de ResourceResolver
       const resolvedId = await this.resolveRefDirect(ref, type, userId);
       
       if (!resolvedId) {
-        logApi('v2_resource_resolve', `❌ Référence non trouvée: ${ref} (type: ${type})`, context);
+        logApi.error(`❌ Référence non trouvée: ${ref} (type: ${type})`, context);
         return {
           success: false,
           error: `${type === 'note' ? 'Note' : type === 'folder' ? 'Dossier' : 'Classeur'} non trouvé`,
@@ -37,11 +37,11 @@ export class V2ResourceResolver {
         };
       }
 
-      logApi('v2_resource_resolve', `✅ Référence résolue: ${ref} → ${resolvedId}`, context);
+      logApi.info(`✅ Référence résolue: ${ref} → ${resolvedId}`, context);
       return { success: true, id: resolvedId };
 
     } catch (error) {
-      logApi('v2_resource_resolve', `❌ Erreur résolution: ${error}`, context);
+      logApi.error(`❌ Erreur résolution: ${error}`, context);
       return {
         success: false,
         error: 'Erreur lors de la résolution de la référence',
@@ -112,7 +112,7 @@ export class V2ResourceResolver {
         .single();
 
       if (error || !data) {
-        logApi('v2_resource_validate', `❌ Ressource non trouvée: ${id}`, context);
+        logApi.error(`❌ Ressource non trouvée: ${id}`, context);
         return {
           success: false,
           error: `${type === 'note' ? 'Note' : type === 'folder' ? 'Dossier' : 'Classeur'} non trouvé`,
@@ -121,7 +121,7 @@ export class V2ResourceResolver {
       }
 
       if (data.user_id !== userId) {
-        logApi('v2_resource_validate', `❌ Accès refusé: ${id}`, context);
+        logApi.error(`❌ Accès refusé: ${id}`, context);
         return {
           success: false,
           error: 'Accès refusé',
@@ -129,11 +129,11 @@ export class V2ResourceResolver {
         };
       }
 
-      logApi('v2_resource_validate', `✅ Ressource validée: ${id}`, context);
+      logApi.info(`✅ Ressource validée: ${id}`, context);
       return { success: true, data };
 
     } catch (error) {
-      logApi('v2_resource_validate', `❌ Erreur validation: ${error}`, context);
+      logApi.error(`❌ Erreur validation: ${error}`, context);
       return {
         success: false,
         error: 'Erreur lors de la validation',

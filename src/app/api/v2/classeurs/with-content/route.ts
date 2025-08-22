@@ -12,12 +12,12 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     clientType
   };
 
-  logApi('v2_classeurs_with_content', '🚀 Début récupération classeurs avec contenu V2', context);
+  logApi.info('🚀 Début récupération classeurs avec contenu V2', context);
 
   // 🔐 Authentification V2
   const authResult = await getAuthenticatedUser(request);
   if (!authResult.success) {
-    logApi('v2_classeurs_with_content', `❌ Authentification échouée: ${authResult.error}`, context);
+    logApi.error(`❌ Authentification échouée: ${authResult.error}`, context);
     return NextResponse.json(
       { error: authResult.error },
       { status: authResult.status || 401, headers: { "Content-Type": "application/json" } }
@@ -36,7 +36,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       .order('position', { ascending: true });
 
     if (classeursError) {
-      logApi('v2_classeurs_with_content', `❌ Erreur récupération classeurs: ${classeursError.message}`, context);
+      logApi.error(`❌ Erreur récupération classeurs: ${classeursError.message}`, context);
       return NextResponse.json(
         { error: 'Erreur lors de la récupération des classeurs' },
         { status: 500 }
@@ -45,7 +45,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
     if (!classeurs || classeurs.length === 0) {
       const apiTime = Date.now() - startTime;
-      logApi('v2_classeurs_with_content', `✅ Aucun classeur trouvé en ${apiTime}ms`, context);
+      logApi.info(`✅ Aucun classeur trouvé en ${apiTime}ms`, context);
       return NextResponse.json({
         success: true,
         classeurs: [],
@@ -77,7 +77,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
           notes: notesResult.data || []
         };
       } catch (error) {
-        logApi('v2_classeurs_with_content', `⚠️ Erreur chargement classeur ${classeur.id}:`, error);
+        logApi.warn(`⚠️ Erreur chargement classeur ${classeur.id}:`, error);
         return {
           ...classeur,
           dossiers: [],
@@ -113,7 +113,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     );
 
     const apiTime = Date.now() - startTime;
-    logApi('v2_classeurs_with_content', `✅ ${classeurs.length} classeurs, ${allFolders.length} dossiers, ${allNotes.length} notes récupérés en ${apiTime}ms`, context);
+    logApi.info(`✅ ${classeurs.length} classeurs, ${allFolders.length} dossiers, ${allNotes.length} notes récupérés en ${apiTime}ms`, context);
 
     return NextResponse.json({
       success: true,
@@ -133,7 +133,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
   } catch (err: unknown) {
     const error = err as Error;
-    logApi('v2_classeurs_with_content', `❌ Erreur serveur: ${error}`, context);
+    logApi.error(`❌ Erreur serveur: ${error}`, context);
     return NextResponse.json(
       { error: 'Erreur serveur' },
       { status: 500, headers: { "Content-Type": "application/json" } }

@@ -180,7 +180,7 @@ export class V2UnifiedApi {
   /**
    * Mettre à jour une note avec mise à jour directe de Zustand + polling côté client
    */
-  async updateNote(noteId: string, updateData: UpdateNoteData) {
+  async updateNote(noteId: string, updateData: UpdateNoteData, userId?: string) {
     if (process.env.NODE_ENV === 'development') {
       logger.dev('[V2UnifiedApi] 🔄 Mise à jour note unifiée V2');
     }

@@ -2,7 +2,7 @@ import type { SafeUnknown, SafeRecord, SafeError } from '@/types/quality';
 import { useFileSystemStore } from '@/store/useFileSystemStore';
 
 import { ErrorHandler } from './errorHandler';
-import { logApi, logStore, logPolling, logj } from '@/utils/logger';
+import { logApi } from '@/utils/logger';
 import { supabase } from '@/supabaseClient';
 import { simpleLogger as logger } from '@/utils/logger';
 

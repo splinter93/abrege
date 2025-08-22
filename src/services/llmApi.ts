@@ -80,7 +80,7 @@ export class LLMApi {
     const startTime = Date.now();
     const context = { operation: 'v2_llm_note_create', component: 'LLMApi' };
     
-    logApi('v2_llm_note_create', '🚀 Début création note LLM', context);
+    logApi.info('🚀 Début création note LLM', context);
     
     try {
       const response = await fetch('/api/v2/note/create', {
@@ -101,11 +101,11 @@ export class LLMApi {
 
       const result = await response.json();
       const apiTime = Date.now() - startTime;
-      logApi('v2_llm_note_create', `✅ Note LLM créée en ${apiTime}ms`, context);
+      logApi.info(`✅ Note LLM créée en ${apiTime}ms`, context);
       
       return result;
     } catch (error) {
-      logApi('v2_llm_note_create', `❌ Erreur création note LLM: ${error}`, context);
+      logApi.error(`❌ Erreur création note LLM: ${error}`, context);
       throw error;
     }
   }
@@ -118,7 +118,7 @@ export class LLMApi {
     const startTime = Date.now();
     const context = { operation: 'v2_llm_note_update', component: 'LLMApi', noteRef };
     
-    logApi('v2_llm_note_update', `🚀 Début mise à jour note LLM ${noteRef}`, context);
+    logApi.info(`🚀 Début mise à jour note LLM ${noteRef}`, context);
     
     try {
       const response = await fetch(`/api/v2/note/${noteRef}/update`, {
@@ -139,11 +139,11 @@ export class LLMApi {
 
       const result = await response.json();
       const apiTime = Date.now() - startTime;
-      logApi('v2_llm_note_update', `✅ Note LLM mise à jour en ${apiTime}ms`, context);
+      logApi.info(`✅ Note LLM mise à jour en ${apiTime}ms`, context);
       
       return result;
     } catch (error) {
-      logApi('v2_llm_note_update', `❌ Erreur mise à jour note LLM: ${error}`, context);
+      logApi.error(`❌ Erreur mise à jour note LLM: ${error}`, context);
       throw error;
     }
   }
@@ -156,7 +156,7 @@ export class LLMApi {
     const startTime = Date.now();
     const context = { operation: 'v2_llm_note_delete', component: 'LLMApi', noteRef };
     
-    logApi('v2_llm_note_delete', `🚀 Début suppression note LLM ${noteRef}`, context);
+    logApi.info(`🚀 Début suppression note LLM ${noteRef}`, context);
     
     try {
       const response = await fetch(`/api/v2/note/${noteRef}/delete`, {
@@ -173,11 +173,11 @@ export class LLMApi {
 
       const result = await response.json();
       const apiTime = Date.now() - startTime;
-      logApi('v2_llm_note_delete', `✅ Note LLM supprimée en ${apiTime}ms`, context);
+      logApi.info(`✅ Note LLM supprimée en ${apiTime}ms`, context);
 
       return result;
     } catch (error) {
-      logApi('v2_llm_note_delete', `❌ Erreur suppression note LLM: ${error}`, context);
+      logApi.error(`❌ Erreur suppression note LLM: ${error}`, context);
       throw error;
     }
   }
@@ -191,7 +191,7 @@ export class LLMApi {
     const startTime = Date.now();
     const context = { operation: 'v2_llm_note_move', component: 'LLMApi', noteRef };
     
-    logApi('v2_llm_note_move', `🚀 Début déplacement note LLM ${noteRef}`, context);
+    logApi.info(`🚀 Début déplacement note LLM ${noteRef}`, context);
     
     try {
       const response = await fetch(`/api/v2/note/${noteRef}/move`, {
@@ -212,11 +212,11 @@ export class LLMApi {
 
       const result = await response.json();
       const apiTime = Date.now() - startTime;
-      logApi('v2_llm_note_move', `✅ Note LLM déplacée en ${apiTime}ms`, context);
+      logApi.info(`✅ Note LLM déplacée en ${apiTime}ms`, context);
 
       return result;
     } catch (error) {
-      logApi('v2_llm_note_move', `❌ Erreur déplacement note LLM: ${error}`, context);
+      logApi.error(`❌ Erreur déplacement note LLM: ${error}`, context);
       throw error;
     }
   }
@@ -230,7 +230,7 @@ export class LLMApi {
     const startTime = Date.now();
     const context = { operation: 'v2_llm_note_merge', component: 'LLMApi', sourceNoteRef };
     
-    logApi('v2_llm_note_merge', `🚀 Début fusion note LLM ${sourceNoteRef}`, context);
+    logApi.info(`🚀 Début fusion note LLM ${sourceNoteRef}`, context);
     
     try {
       const response = await fetch(`/api/v2/note/${sourceNoteRef}/merge`, {
@@ -251,11 +251,11 @@ export class LLMApi {
 
       const result = await response.json();
       const apiTime = Date.now() - startTime;
-      logApi('v2_llm_note_merge', `✅ Note LLM fusionnée en ${apiTime}ms`, context);
+      logApi.info(`✅ Note LLM fusionnée en ${apiTime}ms`, context);
 
       return result;
     } catch (error) {
-      logApi('v2_llm_note_merge', `❌ Erreur fusion note LLM: ${error}`, context);
+      logApi.error(`❌ Erreur fusion note LLM: ${error}`, context);
       throw error;
     }
   }
@@ -269,7 +269,7 @@ export class LLMApi {
     const startTime = Date.now();
     const context = { operation: 'v2_llm_note_add_content', component: 'LLMApi', noteRef };
     
-    logApi('v2_llm_note_add_content', `🚀 Début ajout contenu note LLM ${noteRef}`, context);
+    logApi.info(`🚀 Début ajout contenu note LLM ${noteRef}`, context);
     
     try {
       const response = await fetch(`/api/v2/note/${noteRef}/add-content`, {
@@ -290,11 +290,11 @@ export class LLMApi {
 
       const result = await response.json();
       const apiTime = Date.now() - startTime;
-      logApi('v2_llm_note_add_content', `✅ Contenu ajouté en ${apiTime}ms`, context);
+      logApi.info(`✅ Contenu ajouté en ${apiTime}ms`, context);
 
       return result;
     } catch (error) {
-      logApi('v2_llm_note_add_content', `❌ Erreur ajout contenu note LLM: ${error}`, context);
+      logApi.error(`❌ Erreur ajout contenu note LLM: ${error}`, context);
       throw error;
     }
   }
@@ -306,7 +306,7 @@ export class LLMApi {
     const startTime = Date.now();
     const context = { operation: 'v2_llm_note_add_to_section', component: 'LLMApi' };
     
-    logApi('v2_llm_note_add_to_section', `🚀 Début ajout section LLM ${noteId}`, context);
+    logApi.info(`🚀 Début ajout section LLM ${noteId}`, context);
     
     try {
       const response = await fetch(`/api/v2/note/${noteId}/add-to-section`, {
@@ -327,11 +327,11 @@ export class LLMApi {
 
       const result = await response.json();
       const apiTime = Date.now() - startTime;
-      logApi('v2_llm_note_add_to_section', `✅ Section LLM ajoutée en ${apiTime}ms`, context);
+      logApi.info(`✅ Section LLM ajoutée en ${apiTime}ms`, context);
 
       return result;
     } catch (error) {
-      logApi('v2_llm_note_add_to_section', `❌ Erreur ajout section LLM: ${error}`, context);
+      logApi.error(`❌ Erreur ajout section LLM: ${error}`, context);
       throw error;
     }
   }
@@ -343,7 +343,7 @@ export class LLMApi {
     const startTime = Date.now();
     const context = { operation: 'v2_llm_note_clear_section', component: 'LLMApi' };
     
-    logApi('v2_llm_note_clear_section', `🚀 Début vidage section LLM ${noteId}`, context);
+    logApi.info(`🚀 Début vidage section LLM ${noteId}`, context);
     
     try {
       const response = await fetch(`/api/v2/note/${noteId}/clear-section`, {
@@ -364,11 +364,11 @@ export class LLMApi {
 
       const result = await response.json();
       const apiTime = Date.now() - startTime;
-      logApi('v2_llm_note_clear_section', `✅ Section LLM vidée en ${apiTime}ms`, context);
+      logApi.info(`✅ Section LLM vidée en ${apiTime}ms`, context);
 
       return result;
     } catch (error) {
-      logApi('v2_llm_note_clear_section', `❌ Erreur vidage section LLM: ${error}`, context);
+      logApi.error(`❌ Erreur vidage section LLM: ${error}`, context);
       throw error;
     }
   }
@@ -382,7 +382,7 @@ export class LLMApi {
     const startTime = Date.now();
     const context = { operation: 'v2_llm_note_content_update', component: 'LLMApi', noteRef };
     
-    logApi('v2_llm_note_content_update', `🚀 Début mise à jour contenu note LLM ${noteRef}`, context);
+    logApi.info(`🚀 Début mise à jour contenu note LLM ${noteRef}`, context);
     
     try {
       const response = await fetch(`/api/v2/note/${noteRef}/content/update`, {
@@ -403,11 +403,11 @@ export class LLMApi {
 
       const result = await response.json();
       const apiTime = Date.now() - startTime;
-      logApi('v2_llm_note_content_update', `✅ Contenu mis à jour en ${apiTime}ms`, context);
+      logApi.info(`✅ Contenu mis à jour en ${apiTime}ms`, context);
 
       return result;
     } catch (error) {
-      logApi('v2_llm_note_content_update', `❌ Erreur mise à jour contenu note LLM: ${error}`, context);
+      logApi.error(`❌ Erreur mise à jour contenu note LLM: ${error}`, context);
       throw error;
     }
   }
@@ -421,7 +421,7 @@ export class LLMApi {
     const startTime = Date.now();
     const context = { operation: 'v2_llm_note_publish', component: 'LLMApi', noteRef };
     
-    logApi('v2_llm_note_publish', `🚀 Début publication note LLM ${noteRef}`, context);
+    logApi.info(`🚀 Début publication note LLM ${noteRef}`, context);
     
     try {
       const response = await fetch(`/api/v2/note/${noteRef}/publish`, {
@@ -442,11 +442,11 @@ export class LLMApi {
 
       const result = await response.json();
       const apiTime = Date.now() - startTime;
-      logApi('v2_llm_note_publish', `✅ Note LLM publiée en ${apiTime}ms`, context);
+      logApi.info(`✅ Note LLM publiée en ${apiTime}ms`, context);
 
       return result;
     } catch (error) {
-      logApi('v2_llm_note_publish', `❌ Erreur publication note LLM: ${error}`, context);
+      logApi.error(`❌ Erreur publication note LLM: ${error}`, context);
       throw error;
     }
   }
@@ -458,7 +458,7 @@ export class LLMApi {
     const startTime = Date.now();
     const context = { operation: 'v2_llm_folder_create', component: 'LLMApi' };
     
-    logApi('v2_llm_folder_create', '🚀 Début création dossier LLM', context);
+    logApi.info(`🚀 Début création dossier LLM`, context);
     
     try {
       const response = await fetch('/api/v2/folder/create', {
@@ -479,11 +479,11 @@ export class LLMApi {
 
       const result = await response.json();
       const apiTime = Date.now() - startTime;
-      logApi('v2_llm_folder_create', `✅ Dossier LLM créé en ${apiTime}ms`, context);
+      logApi.info(`✅ Dossier LLM créé en ${apiTime}ms`, context);
 
       return result;
     } catch (error) {
-      logApi('v2_llm_folder_create', `❌ Erreur création dossier LLM: ${error}`, context);
+      logApi.error(`❌ Erreur création dossier LLM: ${error}`, context);
       throw error;
     }
   }
@@ -496,7 +496,7 @@ export class LLMApi {
     const startTime = Date.now();
     const context = { operation: 'v2_llm_folder_update', component: 'LLMApi', folderRef };
     
-    logApi('v2_llm_folder_update', `🚀 Début mise à jour dossier LLM ${folderRef}`, context);
+    logApi.info(`🚀 Début mise à jour dossier LLM ${folderRef}`, context);
     
     try {
       const response = await fetch(`/api/v2/folder/${folderRef}/update`, {
@@ -517,11 +517,11 @@ export class LLMApi {
 
       const result = await response.json();
       const apiTime = Date.now() - startTime;
-      logApi('v2_llm_folder_update', `✅ Dossier LLM mis à jour en ${apiTime}ms`, context);
+      logApi.info(`✅ Dossier LLM mis à jour en ${apiTime}ms`, context);
 
       return result;
     } catch (error) {
-      logApi('v2_llm_folder_update', `❌ Erreur mise à jour dossier LLM: ${error}`, context);
+      logApi.error(`❌ Erreur mise à jour dossier LLM: ${error}`, context);
       throw error;
     }
   }
@@ -534,7 +534,7 @@ export class LLMApi {
     const startTime = Date.now();
     const context = { operation: 'v2_llm_folder_delete', component: 'LLMApi', folderRef };
     
-    logApi('v2_llm_folder_delete', `🚀 Début suppression dossier LLM ${folderRef}`, context);
+    logApi.info(`🚀 Début suppression dossier LLM ${folderRef}`, context);
     
     try {
       const response = await fetch(`/api/v2/folder/${folderRef}/delete`, {
@@ -551,11 +551,11 @@ export class LLMApi {
 
       const result = await response.json();
       const apiTime = Date.now() - startTime;
-      logApi('v2_llm_folder_delete', `✅ Dossier LLM supprimé en ${apiTime}ms`, context);
+      logApi.info(`✅ Dossier LLM supprimé en ${apiTime}ms`, context);
 
       return result;
     } catch (error) {
-      logApi('v2_llm_folder_delete', `❌ Erreur suppression dossier LLM: ${error}`, context);
+      logApi.error(`❌ Erreur suppression dossier LLM: ${error}`, context);
       throw error;
     }
   }
@@ -569,7 +569,7 @@ export class LLMApi {
     const startTime = Date.now();
     const context = { operation: 'v2_llm_folder_move', component: 'LLMApi', folderRef };
     
-    logApi('v2_llm_folder_move', `🚀 Début déplacement dossier LLM ${folderRef}`, context);
+    logApi.info(`🚀 Début déplacement dossier LLM ${folderRef}`, context);
     
     try {
       const response = await fetch(`/api/v2/folder/${folderRef}/move`, {
@@ -590,11 +590,11 @@ export class LLMApi {
 
       const result = await response.json();
       const apiTime = Date.now() - startTime;
-      logApi('v2_llm_folder_move', `✅ Dossier LLM déplacé en ${apiTime}ms`, context);
+      logApi.info(`✅ Dossier LLM déplacé en ${apiTime}ms`, context);
 
       return result;
     } catch (error) {
-      logApi('v2_llm_folder_move', `❌ Erreur déplacement dossier LLM: ${error}`, context);
+      logApi.error(`❌ Erreur déplacement dossier LLM: ${error}`, context);
       throw error;
     }
   }
@@ -606,7 +606,7 @@ export class LLMApi {
     const startTime = Date.now();
     const context = { operation: 'v2_llm_classeur_create', component: 'LLMApi' };
     
-    logApi('v2_llm_classeur_create', '🚀 Début création classeur LLM', context);
+    logApi.info(`🚀 Début création classeur LLM`, context);
     
     try {
       const response = await fetch('/api/v2/classeur/create', {
@@ -627,11 +627,11 @@ export class LLMApi {
 
       const result = await response.json();
       const apiTime = Date.now() - startTime;
-      logApi('v2_llm_classeur_create', `✅ Classeur LLM créé en ${apiTime}ms`, context);
+      logApi.info(`✅ Classeur LLM créé en ${apiTime}ms`, context);
 
       return result;
     } catch (error) {
-      logApi('v2_llm_classeur_create', `❌ Erreur création classeur LLM: ${error}`, context);
+      logApi.error(`❌ Erreur création classeur LLM: ${error}`, context);
       throw error;
     }
   }
@@ -644,7 +644,7 @@ export class LLMApi {
     const startTime = Date.now();
     const context = { operation: 'v2_llm_classeur_update', component: 'LLMApi', classeurRef };
     
-    logApi('v2_llm_classeur_update', `🚀 Début mise à jour classeur LLM ${classeurRef}`, context);
+    logApi.info(`🚀 Début mise à jour classeur LLM ${classeurRef}`, context);
     
     try {
       const response = await fetch(`/api/v2/classeur/${classeurRef}/update`, {
@@ -665,11 +665,11 @@ export class LLMApi {
 
       const result = await response.json();
       const apiTime = Date.now() - startTime;
-      logApi('v2_llm_classeur_update', `✅ Classeur LLM mis à jour en ${apiTime}ms`, context);
+      logApi.info(`✅ Classeur LLM mis à jour en ${apiTime}ms`, context);
 
       return result;
     } catch (error) {
-      logApi('v2_llm_classeur_update', `❌ Erreur mise à jour classeur LLM: ${error}`, context);
+      logApi.error(`❌ Erreur mise à jour classeur LLM: ${error}`, context);
       throw error;
     }
   }
@@ -682,7 +682,7 @@ export class LLMApi {
     const startTime = Date.now();
     const context = { operation: 'v2_llm_classeur_delete', component: 'LLMApi', classeurRef };
     
-    logApi('v2_llm_classeur_delete', `🚀 Début suppression classeur LLM ${classeurRef}`, context);
+    logApi.info(`🚀 Début suppression classeur LLM ${classeurRef}`, context);
     
     try {
       const response = await fetch(`/api/v2/classeur/${classeurRef}/delete`, {
@@ -699,11 +699,11 @@ export class LLMApi {
 
       const result = await response.json();
       const apiTime = Date.now() - startTime;
-      logApi('v2_llm_classeur_delete', `✅ Classeur LLM supprimé en ${apiTime}ms`, context);
+      logApi.info(`✅ Classeur LLM supprimé en ${apiTime}ms`, context);
 
       return result;
     } catch (error) {
-      logApi('v2_llm_classeur_delete', `❌ Erreur suppression classeur LLM: ${error}`, context);
+      logApi.error(`❌ Erreur suppression classeur LLM: ${error}`, context);
       throw error;
     }
   }
@@ -715,7 +715,7 @@ export class LLMApi {
     const startTime = Date.now();
     const context = { operation: 'v2_llm_classeur_reorder', component: 'LLMApi' };
     
-    logApi('v2_llm_classeur_reorder', '🚀 Début réorganisation classeurs LLM', context);
+    logApi.info(`🚀 Début réorganisation classeurs LLM`, context);
     
     try {
       const response = await fetch('/api/v2/classeur/reorder', {
@@ -736,11 +736,11 @@ export class LLMApi {
 
       const result = await response.json();
       const apiTime = Date.now() - startTime;
-      logApi('v2_llm_classeur_reorder', `✅ Classeurs LLM réorganisés en ${apiTime}ms`, context);
+      logApi.info(`✅ Classeurs LLM réorganisés en ${apiTime}ms`, context);
 
       return result;
     } catch (error) {
-      logApi('v2_llm_classeur_reorder', `❌ Erreur réorganisation classeurs LLM: ${error}`, context);
+      logApi.error(`❌ Erreur réorganisation classeurs LLM: ${error}`, context);
       throw error;
     }
   }
@@ -757,7 +757,7 @@ export class LLMApi {
     const startTime = Date.now();
     const context = { operation: 'v2_llm_note_content_get', component: 'LLMApi', noteRef };
     
-    logApi('v2_llm_note_content_get', `🚀 Début récupération contenu note LLM ${noteRef}`, context);
+    logApi.info(`🚀 Début récupération contenu note LLM ${noteRef}`, context);
     
     try {
       const response = await fetch(`/api/v2/note/${noteRef}/content`, {
@@ -774,11 +774,11 @@ export class LLMApi {
 
       const result = await response.json();
       const apiTime = Date.now() - startTime;
-      logApi('v2_llm_note_content_get', `✅ Contenu note LLM récupéré en ${apiTime}ms`, context);
+      logApi.info(`✅ Contenu note LLM récupéré en ${apiTime}ms`, context);
 
       return result;
     } catch (error) {
-      logApi('v2_llm_note_content_get', `❌ Erreur récupération contenu note LLM: ${error}`, context);
+      logApi.error(`❌ Erreur récupération contenu note LLM: ${error}`, context);
       throw error;
     }
   }
@@ -791,7 +791,7 @@ export class LLMApi {
     const startTime = Date.now();
     const context = { operation: 'v2_llm_note_metadata_get', component: 'LLMApi', noteRef };
     
-    logApi('v2_llm_note_metadata_get', `🚀 Début récupération métadonnées note LLM ${noteRef}`, context);
+    logApi.info(`🚀 Début récupération métadonnées note LLM ${noteRef}`, context);
     
     try {
       const response = await fetch(`/api/v2/note/${noteRef}/metadata`, {
@@ -808,11 +808,11 @@ export class LLMApi {
 
       const result = await response.json();
       const apiTime = Date.now() - startTime;
-      logApi('v2_llm_note_metadata_get', `✅ Métadonnées note LLM récupérées en ${apiTime}ms`, context);
+      logApi.info(`✅ Métadonnées note LLM récupérées en ${apiTime}ms`, context);
 
       return result;
     } catch (error) {
-      logApi('v2_llm_note_metadata_get', `❌ Erreur récupération métadonnées note LLM: ${error}`, context);
+      logApi.error(`❌ Erreur récupération métadonnées note LLM: ${error}`, context);
       throw error;
     }
   }
@@ -825,7 +825,7 @@ export class LLMApi {
     const startTime = Date.now();
     const context = { operation: 'v2_llm_note_insights_get', component: 'LLMApi', noteRef };
     
-    logApi('v2_llm_note_insights_get', `🚀 Début récupération insights note LLM ${noteRef}`, context);
+    logApi.info(`🚀 Début récupération insights note LLM ${noteRef}`, context);
     
     try {
       const response = await fetch(`/api/v2/note/${noteRef}/insights`, {
@@ -842,11 +842,11 @@ export class LLMApi {
 
       const result = await response.json();
       const apiTime = Date.now() - startTime;
-      logApi('v2_llm_note_insights_get', `✅ Insights note LLM récupérés en ${apiTime}ms`, context);
+      logApi.info(`✅ Insights note LLM récupérés en ${apiTime}ms`, context);
 
       return result;
     } catch (error) {
-      logApi('v2_llm_note_insights_get', `❌ Erreur récupération insights note LLM: ${error}`, context);
+      logApi.error(`❌ Erreur récupération insights note LLM: ${error}`, context);
       throw error;
     }
   }
@@ -859,7 +859,7 @@ export class LLMApi {
     const startTime = Date.now();
     const context = { operation: 'v2_llm_folder_tree_get', component: 'LLMApi', folderRef };
     
-    logApi('v2_llm_folder_tree_get', `🚀 Début récupération arborescence dossier LLM ${folderRef}`, context);
+    logApi.info(`🚀 Début récupération arborescence dossier LLM ${folderRef}`, context);
     
     try {
       const response = await fetch(`/api/v2/folder/${folderRef}/tree`, {
@@ -876,11 +876,11 @@ export class LLMApi {
 
       const result = await response.json();
       const apiTime = Date.now() - startTime;
-      logApi('v2_llm_folder_tree_get', `✅ Arborescence dossier LLM récupérée en ${apiTime}ms`, context);
+      logApi.info(`✅ Arborescence dossier LLM récupérée en ${apiTime}ms`, context);
 
       return result;
     } catch (error) {
-      logApi('v2_llm_folder_tree_get', `❌ Erreur récupération arborescence dossier LLM: ${error}`, context);
+      logApi.error(`❌ Erreur récupération arborescence dossier LLM: ${error}`, context);
       throw error;
     }
   }
@@ -893,7 +893,7 @@ export class LLMApi {
     const startTime = Date.now();
     const context = { operation: 'v2_llm_classeur_tree_get', component: 'LLMApi', classeurRef };
     
-    logApi('v2_llm_classeur_tree_get', `🚀 Début récupération arborescence classeur LLM ${classeurRef}`, context);
+    logApi.info(`🚀 Début récupération arborescence classeur LLM ${classeurRef}`, context);
     
     try {
       const response = await fetch(`/api/v2/classeur/${classeurRef}/tree`, {
@@ -910,11 +910,11 @@ export class LLMApi {
 
       const result = await response.json();
       const apiTime = Date.now() - startTime;
-      logApi('v2_llm_classeur_tree_get', `✅ Arborescence classeur LLM récupérée en ${apiTime}ms`, context);
+      logApi.info(`✅ Arborescence classeur LLM récupérée en ${apiTime}ms`, context);
 
       return result;
     } catch (error) {
-      logApi('v2_llm_classeur_tree_get', `❌ Erreur récupération arborescence classeur LLM: ${error}`, context);
+      logApi.error(`❌ Erreur récupération arborescence classeur LLM: ${error}`, context);
       throw error;
     }
   }
@@ -931,7 +931,7 @@ export class LLMApi {
     const startTime = Date.now();
     const context = { operation: 'v2_llm_user_notes_get', component: 'LLMApi', userId };
     
-    logApi('v2_llm_user_notes_get', `🚀 Début récupération notes utilisateur LLM ${userId}`, context);
+    logApi.info(`🚀 Début récupération notes utilisateur LLM ${userId}`, context);
     
     try {
       const { data, error } = await supabase
@@ -945,11 +945,11 @@ export class LLMApi {
       }
 
       const apiTime = Date.now() - startTime;
-      logApi('v2_llm_user_notes_get', `✅ Notes utilisateur LLM récupérées en ${apiTime}ms`, context);
+      logApi.info(`✅ Notes utilisateur LLM récupérées en ${apiTime}ms`, context);
 
       return { success: true, notes: data };
     } catch (error) {
-      logApi('v2_llm_user_notes_get', `❌ Erreur récupération notes utilisateur LLM: ${error}`, context);
+      logApi.error(`❌ Erreur récupération notes utilisateur LLM: ${error}`, context);
       throw error;
     }
   }
@@ -962,7 +962,7 @@ export class LLMApi {
     const startTime = Date.now();
     const context = { operation: 'v2_llm_user_folders_get', component: 'LLMApi', userId };
     
-    logApi('v2_llm_user_folders_get', `🚀 Début récupération dossiers utilisateur LLM ${userId}`, context);
+    logApi.info(`🚀 Début récupération dossiers utilisateur LLM ${userId}`, context);
     
     try {
       const { data, error } = await supabase
@@ -976,11 +976,11 @@ export class LLMApi {
       }
 
       const apiTime = Date.now() - startTime;
-      logApi('v2_llm_user_folders_get', `✅ Dossiers utilisateur LLM récupérés en ${apiTime}ms`, context);
+      logApi.info(`✅ Dossiers utilisateur LLM récupérés en ${apiTime}ms`, context);
 
       return { success: true, folders: data };
     } catch (error) {
-      logApi('v2_llm_user_folders_get', `❌ Erreur récupération dossiers utilisateur LLM: ${error}`, context);
+      logApi.error(`❌ Erreur récupération dossiers utilisateur LLM: ${error}`, context);
       throw error;
     }
   }

@@ -1,8 +1,26 @@
 import { createClient } from '@supabase/supabase-js';
-import { logApi } from './logger';
+import { logApi as originalLogApi } from './logger';
 import { V2ResourceResolver } from './v2ResourceResolver';
 import { SlugGenerator } from './slugGenerator';
 import { SlugAndUrlService } from '@/services/slugAndUrlService';
+
+// Wrapper temporaire pour logApi pour accepter 3 arguments
+const logApi = {
+  info: (operation: string, message?: string, context?: any) => {
+    if (message) {
+      originalLogApi.info(message);
+    } else {
+      originalLogApi.info(operation);
+    }
+  },
+  error: (operation: string, message?: string, context?: any) => {
+    if (message) {
+      originalLogApi.error(message);
+    } else {
+      originalLogApi.error(operation);
+    }
+  }
+};
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 // IMPORTANT: L'API V2 est utilisée par l'Agent côté serveur sans JWT utilisateur.
@@ -74,7 +92,7 @@ export class V2DatabaseUtils {
    * Créer une note
    */
   static async createNote(data: CreateNoteData, userId: string, context: any) {
-    logApi('v2_db_create_note', '🚀 Création note directe DB', context);
+          logApi.info('🚀 Création note directe DB', context);
     
     try {
       // Résoudre le notebook_id (peut être un UUID ou un slug)
@@ -125,11 +143,11 @@ export class V2DatabaseUtils {
         throw new Error(`Erreur création note: ${createError.message}`);
       }
 
-      logApi('v2_db_create_note', '✅ Note créée avec succès', context);
+      logApi.info(`✅ Note créée avec succès`, context);
       return { success: true, note };
       
     } catch (error) {
-      logApi('v2_db_create_note', `❌ Erreur création note: ${error}`, context);
+      logApi.info(`❌ Erreur création note: ${error}`, context);
       throw error;
     }
   }
@@ -138,7 +156,7 @@ export class V2DatabaseUtils {
    * Mettre à jour une note
    */
   static async updateNote(ref: string, data: UpdateNoteData, userId: string, context: any) {
-    logApi('v2_db_update_note', `🚀 Mise à jour note ${ref}`, context);
+    logApi.info(`🚀 Mise à jour note ${ref}`, context);
     
     try {
       // Résoudre la référence (UUID ou slug)
@@ -162,6 +180,27 @@ export class V2DatabaseUtils {
 
       // Préparer les données de mise à jour
       const updateData: any = {};
+      
+      // 🔧 CORRECTION : Charger d'abord l'état complet de la note pour préserver les valeurs existantes
+      const { data: currentNote, error: currentError } = await supabase
+        .from('articles')
+        .select('wide_mode, a4_mode, slash_lang, font_family, folder_id, description, source_title')
+        .eq('id', noteId)
+        .eq('user_id', userId)
+        .single();
+      
+      if (currentError) {
+        throw new Error(`Erreur lecture note courante: ${currentError.message}`);
+      }
+      
+      // 🔧 CORRECTION : Préserver les valeurs existantes par défaut
+      updateData.wide_mode = currentNote.wide_mode;
+      updateData.a4_mode = currentNote.a4_mode;
+      updateData.slash_lang = currentNote.slash_lang;
+      updateData.font_family = currentNote.font_family;
+      updateData.folder_id = currentNote.folder_id;
+      updateData.description = currentNote.description;
+      
       if (data.source_title !== undefined) {
         const normalizedTitle = String(data.source_title).trim();
         updateData.source_title = normalizedTitle;
@@ -179,10 +218,10 @@ export class V2DatabaseUtils {
             updateData.public_url = publicUrl;
             
             if (process.env.NODE_ENV === 'development') {
-              console.log(`[V2DatabaseUtils] Mise à jour slug via SlugAndUrlService: "${current?.source_title}" → "${normalizedTitle}" → "${newSlug}"`);
+              console.log(`[V2DatabaseUtils] Mise à jour slug via SlugAndUrlService: "${currentNote?.source_title || 'N/A'}" → "${normalizedTitle}" → "${newSlug}"`);
             }
           } catch (error) {
-            logApi('v2_db_update_note', `❌ Erreur mise à jour slug/URL pour la note ${noteId}: ${error}`, context);
+            logApi.error(`❌ Erreur mise à jour slug/URL pour la note ${noteId}: ${error}`);
             // Continuer sans mettre à jour le slug en cas d'erreur
           }
         }
@@ -200,12 +239,15 @@ export class V2DatabaseUtils {
       if (data.header_image_blur !== undefined) updateData.header_image_blur = data.header_image_blur;
       if (data.header_image_overlay !== undefined) updateData.header_image_overlay = data.header_image_overlay;
       if (data.header_title_in_image !== undefined) updateData.header_title_in_image = data.header_title_in_image;
+      
+      // 🔧 CORRECTION : Mettre à jour seulement si explicitement fourni
       if (data.wide_mode !== undefined) updateData.wide_mode = data.wide_mode;
       if (data.a4_mode !== undefined) updateData.a4_mode = data.a4_mode;
       if (data.slash_lang !== undefined) updateData.slash_lang = data.slash_lang;
       if (data.font_family !== undefined) updateData.font_family = data.font_family;
       if (data.folder_id !== undefined) updateData.folder_id = data.folder_id;
       if (data.description !== undefined) updateData.description = data.description;
+      
       updateData.updated_at = new Date().toISOString();
 
       // Mettre à jour la note
@@ -221,11 +263,11 @@ export class V2DatabaseUtils {
         throw new Error(`Erreur mise à jour note: ${updateError.message}`);
       }
 
-      logApi('v2_db_update_note', '✅ Note mise à jour avec succès', context);
+      logApi.info('✅ Note mise à jour avec succès', context);
       return { success: true, note };
       
     } catch (error) {
-      logApi('v2_db_update_note', `❌ Erreur mise à jour note: ${error}`, context);
+      logApi.error(`❌ Erreur mise à jour note: ${error}`, context);
       throw error;
     }
   }
@@ -234,7 +276,7 @@ export class V2DatabaseUtils {
    * Supprimer une note
    */
   static async deleteNote(ref: string, userId: string, context: any) {
-    logApi('v2_db_delete_note', `🚀 Suppression note ${ref}`, context);
+    logApi.info(`🚀 Suppression note ${ref}`, context);
     
     try {
       // Résoudre la référence (UUID ou slug)
@@ -256,11 +298,11 @@ export class V2DatabaseUtils {
         throw new Error(`Erreur suppression note: ${deleteError.message}`);
       }
 
-      logApi('v2_db_delete_note', '✅ Note supprimée avec succès', context);
+      logApi.info('✅ Note supprimée avec succès', context);
       return { success: true };
       
     } catch (error) {
-      logApi('v2_db_delete_note', `❌ Erreur suppression note: ${error}`, context);
+      logApi.error(`❌ Erreur suppression note: ${error}`, context);
       throw error;
     }
   }
@@ -269,7 +311,7 @@ export class V2DatabaseUtils {
    * Récupérer le contenu d'une note
    */
   static async getNoteContent(ref: string, userId: string, context: any) {
-    logApi('v2_db_get_note_content', '🚀 Récupération contenu note directe DB', context);
+    logApi.info('🚀 Récupération contenu note directe DB', context);
     
     try {
       // Résoudre la référence (peut être un UUID ou un slug)
@@ -303,11 +345,11 @@ export class V2DatabaseUtils {
         throw new Error(`Note non trouvée: ${noteId}`);
       }
 
-      logApi('v2_db_get_note_content', '✅ Contenu récupéré avec succès', context);
+      logApi.info(`✅ Contenu récupéré avec succès`, context);
       return { success: true, note };
       
     } catch (error) {
-      logApi('v2_db_get_note_content', `❌ Erreur récupération contenu: ${error}`, context);
+      logApi.info(`❌ Erreur récupération contenu: ${error}`, context);
       throw error;
     }
   }
@@ -316,7 +358,7 @@ export class V2DatabaseUtils {
    * Ajouter du contenu à une note
    */
   static async addContentToNote(ref: string, content: string, userId: string, context: any) {
-    logApi('v2_db_add_content_to_note', '🚀 Ajout contenu note directe DB', context);
+    logApi.info(`🚀 Ajout contenu note directe DB`, context);
     
     try {
       // Résoudre la référence (peut être un UUID ou un slug)
@@ -369,11 +411,11 @@ export class V2DatabaseUtils {
         throw new Error(`Erreur mise à jour note: ${updateError.message}`);
       }
 
-      logApi('v2_db_add_content_to_note', '✅ Contenu ajouté avec succès', context);
+      logApi.info(`✅ Contenu ajouté avec succès`, context);
       return { success: true, note: updatedNote };
       
     } catch (error) {
-      logApi('v2_db_add_content_to_note', `❌ Erreur ajout contenu: ${error}`, context);
+      logApi.info(`❌ Erreur ajout contenu: ${error}`, context);
       throw error;
     }
   }
@@ -382,7 +424,7 @@ export class V2DatabaseUtils {
    * Déplacer une note
    */
   static async moveNote(ref: string, targetFolderId: string | null, userId: string, context: any) {
-    logApi('v2_db_move_note', `🚀 Déplacement note ${ref} vers folder ${targetFolderId}`, context);
+    logApi.info(`🚀 Déplacement note ${ref} vers folder ${targetFolderId}`, context);
     
     try {
       // Résoudre la référence de la note
@@ -423,11 +465,11 @@ export class V2DatabaseUtils {
         throw new Error(`Erreur déplacement note: ${moveError.message}`);
       }
 
-      logApi('v2_db_move_note', '✅ Note déplacée avec succès', context);
+      logApi.info(`✅ Note déplacée avec succès`, context);
       return { success: true, note };
       
     } catch (error) {
-      logApi('v2_db_move_note', `❌ Erreur déplacement note: ${error}`, context);
+      logApi.info(`❌ Erreur déplacement note: ${error}`, context);
       throw error;
     }
   }
@@ -436,7 +478,7 @@ export class V2DatabaseUtils {
    * Créer un dossier
    */
   static async createFolder(data: CreateFolderData, userId: string, context: any) {
-    logApi('v2_db_create_folder', '🚀 Création dossier directe DB', context);
+    logApi.info(`🚀 Création dossier directe DB`, context);
     
     try {
       // Résoudre le notebook_id (peut être un UUID ou un slug)
@@ -492,11 +534,11 @@ export class V2DatabaseUtils {
         throw new Error(`Erreur création dossier: ${createError.message}`);
       }
 
-      logApi('v2_db_create_folder', '✅ Dossier créé avec succès', context);
+      logApi.info(`✅ Dossier créé avec succès`, context);
       return { success: true, folder };
       
     } catch (error) {
-      logApi('v2_db_create_folder', `❌ Erreur création dossier: ${error}`, context);
+      logApi.info(`❌ Erreur création dossier: ${error}`, context);
       throw error;
     }
   }
@@ -505,7 +547,7 @@ export class V2DatabaseUtils {
    * Mettre à jour un dossier
    */
   static async updateFolder(ref: string, data: UpdateFolderData, userId: string, context: any) {
-    logApi('v2_db_update_folder', `🚀 Mise à jour dossier ${ref}`, context);
+    logApi.info(`🚀 Mise à jour dossier ${ref}`, context);
     
     try {
       // Résoudre la référence (UUID ou slug)
@@ -550,11 +592,11 @@ export class V2DatabaseUtils {
         throw new Error(`Erreur mise à jour dossier: ${updateError.message}`);
       }
 
-      logApi('v2_db_update_folder', '✅ Dossier mis à jour avec succès', context);
+      logApi.info(`✅ Dossier mis à jour avec succès`, context);
       return { success: true, folder };
       
     } catch (error) {
-      logApi('v2_db_update_folder', `❌ Erreur mise à jour dossier: ${error}`, context);
+      logApi.info(`❌ Erreur mise à jour dossier: ${error}`, context);
       throw error;
     }
   }
@@ -563,7 +605,7 @@ export class V2DatabaseUtils {
    * Déplacer un dossier
    */
   static async moveFolder(ref: string, targetParentId: string | null, userId: string, context: any) {
-    logApi('v2_db_move_folder', `🚀 Déplacement dossier ${ref}`, context);
+    logApi.info(`🚀 Déplacement dossier ${ref}`, context);
     
     try {
       // Résoudre la référence (UUID ou slug)
@@ -625,11 +667,11 @@ export class V2DatabaseUtils {
         throw new Error(`Erreur mise à jour dossier: ${updateError.message}`);
       }
 
-      logApi('v2_db_move_folder', '✅ Dossier déplacé avec succès', context);
+      logApi.info(`✅ Dossier déplacé avec succès`, context);
       return { success: true, folder: updatedFolder };
 
     } catch (error) {
-      logApi('v2_db_move_folder', `❌ Erreur déplacement dossier: ${error}`, context);
+      logApi.info(`❌ Erreur déplacement dossier: ${error}`, context);
       throw error;
     }
   }
@@ -638,7 +680,7 @@ export class V2DatabaseUtils {
    * Supprimer un dossier
    */
   static async deleteFolder(ref: string, userId: string, context: any) {
-    logApi('v2_db_delete_folder', `🚀 Suppression dossier ${ref}`, context);
+    logApi.info(`🚀 Suppression dossier ${ref}`, context);
     
     try {
       // Résoudre la référence (UUID ou slug)
@@ -690,11 +732,11 @@ export class V2DatabaseUtils {
         throw new Error(`Erreur suppression dossier: ${deleteError.message}`);
       }
 
-      logApi('v2_db_delete_folder', '✅ Dossier supprimé avec succès', context);
+      logApi.info(`✅ Dossier supprimé avec succès`, context);
       return { success: true };
       
     } catch (error) {
-      logApi('v2_db_delete_folder', `❌ Erreur suppression dossier: ${error}`, context);
+      logApi.info(`❌ Erreur suppression dossier: ${error}`, context);
       throw error;
     }
   }
@@ -703,7 +745,7 @@ export class V2DatabaseUtils {
    * Créer un classeur
    */
   static async createClasseur(data: CreateClasseurData, userId: string, context: any) {
-    logApi('v2_db_create_classeur', '🚀 Création classeur directe DB', context);
+    logApi.info(`🚀 Création classeur directe DB`, context);
     
     try {
       // Générer un slug unique
@@ -727,11 +769,11 @@ export class V2DatabaseUtils {
         throw new Error(`Erreur création classeur: ${createError.message}`);
       }
 
-      logApi('v2_db_create_classeur', '✅ Classeur créé avec succès', context);
+      logApi.info(`✅ Classeur créé avec succès`, context);
       return { success: true, classeur };
       
     } catch (error) {
-      logApi('v2_db_create_classeur', `❌ Erreur création classeur: ${error}`, context);
+      logApi.info(`❌ Erreur création classeur: ${error}`, context);
       throw error;
     }
   }
@@ -740,7 +782,7 @@ export class V2DatabaseUtils {
    * Mettre à jour un classeur
    */
   static async updateClasseur(ref: string, data: UpdateClasseurData, userId: string, context: any, userToken?: string) {
-    logApi('v2_db_update_classeur', `🚀 Mise à jour classeur ${ref}`, context);
+    logApi.info(`🚀 Mise à jour classeur ${ref}`, context);
     
     try {
       // Créer un client Supabase authentifié si un token est fourni (RLS)
@@ -787,11 +829,11 @@ export class V2DatabaseUtils {
         throw new Error(`Erreur mise à jour classeur: ${updateError.message}`);
       }
 
-      logApi('v2_db_update_classeur', '✅ Classeur mis à jour avec succès', context);
+      logApi.info(`✅ Classeur mis à jour avec succès`, context);
       return { success: true, classeur };
       
     } catch (error) {
-      logApi('v2_db_update_classeur', `❌ Erreur mise à jour classeur: ${error}`, context);
+      logApi.info(`❌ Erreur mise à jour classeur: ${error}`, context);
       throw error;
     }
   }
@@ -800,7 +842,7 @@ export class V2DatabaseUtils {
    * Supprimer un classeur
    */
   static async deleteClasseur(ref: string, userId: string, context: any) {
-    logApi('v2_db_delete_classeur', `🚀 Suppression classeur ${ref}`, context);
+    logApi.info(`🚀 Suppression classeur ${ref}`, context);
     
     try {
       // Résoudre la référence (UUID ou slug)
@@ -852,11 +894,11 @@ export class V2DatabaseUtils {
         throw new Error(`Erreur suppression classeur: ${deleteError.message}`);
       }
 
-      logApi('v2_db_delete_classeur', '✅ Classeur supprimé avec succès', context);
+      logApi.info(`✅ Classeur supprimé avec succès`, context);
       return { success: true };
       
     } catch (error) {
-      logApi('v2_db_delete_classeur', `❌ Erreur suppression classeur: ${error}`, context);
+      logApi.info(`❌ Erreur suppression classeur: ${error}`, context);
       throw error;
     }
   }
@@ -865,7 +907,7 @@ export class V2DatabaseUtils {
    * Récupérer l'arbre d'un classeur
    */
   static async getClasseurTree(notebookId: string, userId: string, context: any) {
-    logApi('v2_db_get_classeur_tree', '🚀 Récupération arbre classeur directe DB', context);
+    logApi.info(`🚀 Récupération arbre classeur directe DB`, context);
     
     try {
       // ✅ CORRECTION: Vérifier que notebookId n'est pas undefined
@@ -881,7 +923,7 @@ export class V2DatabaseUtils {
       const isValidUuid = uuidPattern.test(classeurId);
       
       if (!isValidUuid) {
-        logApi('v2_db_get_classeur_tree', `⚠️ UUID mal formaté: ${classeurId}`, context);
+        logApi.info(`⚠️ UUID mal formaté: ${classeurId}`, context);
         
         // Essayer de corriger l'UUID si possible
         if (classeurId.length === 35) {
@@ -892,7 +934,7 @@ export class V2DatabaseUtils {
             sections[2] = sections[2] + '0';
             const correctedUuid = sections.join('-');
             if (uuidPattern.test(correctedUuid)) {
-              logApi('v2_db_get_classeur_tree', `🔧 UUID corrigé: ${correctedUuid}`, context);
+              logApi.info(`🔧 UUID corrigé: ${correctedUuid}`, context);
               classeurId = correctedUuid;
             } else {
               throw new Error(`UUID mal formaté: ${notebookId}. Format attendu: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx`);
@@ -964,11 +1006,11 @@ export class V2DatabaseUtils {
         notes: notes || []
       };
 
-      logApi('v2_db_get_classeur_tree', '✅ Arbre classeur récupéré avec succès', context);
+      logApi.info(`✅ Arbre classeur récupéré avec succès`, context);
       return { success: true, classeur: classeurComplet };
       
     } catch (error) {
-      logApi('v2_db_get_classeur_tree', `❌ Erreur récupération arbre: ${error}`, context);
+      logApi.info(`❌ Erreur récupération arbre: ${error}`, context);
       throw error;
     }
   }
@@ -977,7 +1019,7 @@ export class V2DatabaseUtils {
    * Réorganiser les classeurs
    */
   static async reorderClasseurs(classeurs: Array<{ id: string; position: number }>, userId: string, context: any) {
-    logApi('v2_db_reorder_classeurs', '🚀 Réorganisation classeurs directe DB', context);
+    logApi.info(`🚀 Réorganisation classeurs directe DB`, context);
     
     try {
       // Vérifier que tous les classeurs appartiennent à l'utilisateur
@@ -1024,11 +1066,11 @@ export class V2DatabaseUtils {
         throw new Error(`Erreur récupération classeurs mis à jour: ${fetchUpdatedError.message}`);
       }
 
-      logApi('v2_db_reorder_classeurs', '✅ Classeurs réorganisés avec succès', context);
+      logApi.info(`✅ Classeurs réorganisés avec succès`, context);
       return { success: true, classeurs: updatedClasseurs || [] };
       
     } catch (error) {
-      logApi('v2_db_reorder_classeurs', `❌ Erreur réorganisation classeurs: ${error}`, context);
+      logApi.info(`❌ Erreur réorganisation classeurs: ${error}`, context);
       throw error;
     }
   }
@@ -1037,10 +1079,10 @@ export class V2DatabaseUtils {
    * Obtenir la liste des classeurs
    */
   static async getClasseurs(userId: string, context: any) {
-    logApi('v2_db_get_classeurs', '🚀 Récupération classeurs', context);
+    logApi.info(`🚀 Récupération classeurs`, context);
     
     try {
-      logApi('v2_db_get_classeurs', `🔍 User ID: ${userId}`, context);
+      logApi.info(`🔍 User ID: ${userId}`, context);
       
       const { data: classeurs, error } = await supabase
         .from('classeurs')
@@ -1049,13 +1091,13 @@ export class V2DatabaseUtils {
         .order('position', { ascending: true })
         .order('created_at', { ascending: false });
 
-      logApi('v2_db_get_classeurs', `📊 Résultat Supabase:`, context);
-      logApi('v2_db_get_classeurs', `   - Data: ${JSON.stringify(classeurs)}`, context);
-      logApi('v2_db_get_classeurs', `   - Error: ${error ? JSON.stringify(error) : 'null'}`, context);
-      logApi('v2_db_get_classeurs', `   - Count: ${classeurs ? classeurs.length : 'undefined'}`, context);
+      logApi.info(`📊 Résultat Supabase:`, context);
+      logApi.info(`   - Data: ${JSON.stringify(classeurs)}`, context);
+      logApi.info(`   - Error: ${error ? JSON.stringify(error) : 'null'}`, context);
+      logApi.info(`   - Count: ${classeurs ? classeurs.length : 'undefined'}`, context);
 
       if (error) {
-        logApi('v2_db_get_classeurs', `❌ Erreur Supabase: ${error.message}`, context);
+        logApi.info(`❌ Erreur Supabase: ${error.message}`, context);
         throw new Error(`Erreur récupération classeurs: ${error.message}`);
       }
 
@@ -1064,11 +1106,11 @@ export class V2DatabaseUtils {
         classeurs: classeurs || []
       };
       
-      logApi('v2_db_get_classeurs', `✅ Retour final: ${JSON.stringify(result)}`, context);
+      logApi.info(`✅ Retour final: ${JSON.stringify(result)}`, context);
       return result;
       
     } catch (error) {
-      logApi('v2_db_get_classeurs', `❌ Erreur: ${error}`, context);
+      logApi.info(`❌ Erreur: ${error}`, context);
       throw error;
     }
   }
@@ -1077,7 +1119,7 @@ export class V2DatabaseUtils {
    * Insérer du contenu à une position spécifique
    */
   static async insertContentToNote(ref: string, content: string, position: number, userId: string, context: any) {
-    logApi('v2_db_insert_content', `🚀 Insertion contenu à position ${position}`, context);
+    logApi.info(`🚀 Insertion contenu à position ${position}`, context);
     
     try {
       // Résoudre la référence
@@ -1122,7 +1164,7 @@ export class V2DatabaseUtils {
         message: 'Contenu inséré avec succès'
       };
     } catch (error) {
-      logApi('v2_db_insert_content', `❌ Erreur: ${error}`, context);
+      logApi.info(`❌ Erreur: ${error}`, context);
       throw error;
     }
   }
@@ -1131,7 +1173,7 @@ export class V2DatabaseUtils {
    * Ajouter du contenu à une section spécifique
    */
   static async addContentToSection(ref: string, sectionId: string, content: string, userId: string, context: any) {
-    logApi('v2_db_add_content_to_section', `🚀 Ajout contenu à section ${sectionId}`, context);
+    logApi.info(`🚀 Ajout contenu à section ${sectionId}`, context);
     
     try {
       // Résoudre la référence
@@ -1175,7 +1217,7 @@ export class V2DatabaseUtils {
         message: 'Contenu ajouté à la section avec succès'
       };
     } catch (error) {
-      logApi('v2_db_add_content_to_section', `❌ Erreur: ${error}`, context);
+      logApi.info(`❌ Erreur: ${error}`, context);
       throw error;
     }
   }
@@ -1184,7 +1226,7 @@ export class V2DatabaseUtils {
    * Vider une section
    */
   static async clearSection(ref: string, sectionId: string, userId: string, context: any) {
-    logApi('v2_db_clear_section', `🚀 Vidage section ${sectionId}`, context);
+    logApi.info(`🚀 Vidage section ${sectionId}`, context);
     
     try {
       // Résoudre la référence
@@ -1228,7 +1270,7 @@ export class V2DatabaseUtils {
         message: 'Section vidée avec succès'
       };
     } catch (error) {
-      logApi('v2_db_clear_section', `❌ Erreur: ${error}`, context);
+      logApi.info(`❌ Erreur: ${error}`, context);
       throw error;
     }
   }
@@ -1237,7 +1279,7 @@ export class V2DatabaseUtils {
    * Supprimer une section
    */
   static async eraseSection(ref: string, sectionId: string, userId: string, context: any) {
-    logApi('v2_db_erase_section', `🚀 Suppression section ${sectionId}`, context);
+    logApi.info(`🚀 Suppression section ${sectionId}`, context);
     
     try {
       // Résoudre la référence
@@ -1281,7 +1323,7 @@ export class V2DatabaseUtils {
         message: 'Section supprimée avec succès'
       };
     } catch (error) {
-      logApi('v2_db_erase_section', `❌ Erreur: ${error}`, context);
+      logApi.info(`❌ Erreur: ${error}`, context);
       throw error;
     }
   }
@@ -1290,7 +1332,7 @@ export class V2DatabaseUtils {
    * Récupérer la table des matières
    */
   static async getTableOfContents(ref: string, userId: string, context: any) {
-    logApi('v2_db_get_toc', '🚀 Récupération table des matières', context);
+    logApi.info(`🚀 Récupération table des matières`, context);
     
     try {
       // Résoudre la référence
@@ -1321,7 +1363,7 @@ export class V2DatabaseUtils {
         toc: toc
       };
     } catch (error) {
-      logApi('v2_db_get_toc', `❌ Erreur: ${error}`, context);
+      logApi.info(`❌ Erreur: ${error}`, context);
       throw error;
     }
   }
@@ -1330,7 +1372,7 @@ export class V2DatabaseUtils {
    * Récupérer les statistiques d'une note
    */
   static async getNoteStatistics(ref: string, userId: string, context: any) {
-    logApi('v2_db_get_statistics', '🚀 Récupération statistiques', context);
+    logApi.info(`🚀 Récupération statistiques`, context);
     
     try {
       // Résoudre la référence
@@ -1371,7 +1413,7 @@ export class V2DatabaseUtils {
         }
       };
     } catch (error) {
-      logApi('v2_db_get_statistics', `❌ Erreur: ${error}`, context);
+      logApi.info(`❌ Erreur: ${error}`, context);
       throw error;
     }
   }
@@ -1380,7 +1422,7 @@ export class V2DatabaseUtils {
    * Publier une note
    */
   static async publishNote(ref: string, visibility: 'private' | 'public' | 'link-private' | 'link-public' | 'limited' | 'scrivia', userId: string, context: any) {
-    logApi('v2_db_publish_note', `🚀 Publication note (${visibility})`, context);
+    logApi.info(`🚀 Publication note (${visibility})`, context);
     
     try {
       // Résoudre la référence
@@ -1409,7 +1451,7 @@ export class V2DatabaseUtils {
         message: visibility !== 'private' ? 'Note publiée avec succès' : 'Note rendue privée avec succès'
       };
     } catch (error) {
-      logApi('v2_db_publish_note', `❌ Erreur: ${error}`, context);
+      logApi.info(`❌ Erreur: ${error}`, context);
       throw error;
     }
   }
@@ -1418,7 +1460,7 @@ export class V2DatabaseUtils {
    * Récupérer l'arborescence d'un dossier
    */
   static async getFolderTree(ref: string, userId: string, context: any) {
-    logApi('v2_db_get_folder_tree', '🚀 Récupération arborescence dossier', context);
+    logApi.info(`🚀 Récupération arborescence dossier`, context);
     
     try {
       // Résoudre la référence
@@ -1475,7 +1517,7 @@ export class V2DatabaseUtils {
         }
       };
     } catch (error) {
-      logApi('v2_db_get_folder_tree', `❌ Erreur: ${error}`, context);
+      logApi.info(`❌ Erreur: ${error}`, context);
       throw error;
     }
   }
@@ -1484,7 +1526,7 @@ export class V2DatabaseUtils {
    * Générer un slug
    */
   static async generateSlug(text: string, type: 'note' | 'classeur' | 'folder', userId: string, context: any) {
-    logApi('v2_db_generate_slug', `🚀 Génération slug pour ${type}`, context);
+    logApi.info(`🚀 Génération slug pour ${type}`, context);
     
     try {
       const slug = await SlugGenerator.generateSlug(text, type, userId);
@@ -1495,7 +1537,7 @@ export class V2DatabaseUtils {
         original: text
       };
     } catch (error) {
-      logApi('v2_db_generate_slug', `❌ Erreur: ${error}`, context);
+      logApi.info(`❌ Erreur: ${error}`, context);
       throw error;
     }
   }

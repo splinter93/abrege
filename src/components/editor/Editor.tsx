@@ -187,18 +187,38 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
     }, [content, noteId, updateNote]),
   });
 
-  // 🔧 FORCER la mise à jour du contenu de l'éditeur quand la note change
+  // 🔧 Mise à jour intelligente du contenu de l'éditeur quand la note change
+  const [isUpdatingFromStore, setIsUpdatingFromStore] = React.useState(false);
+  
   React.useEffect(() => {
-    if (editor && content && content !== editor.getHTML()) {
-      try {
-        // Mettre à jour le contenu de l'éditeur avec le contenu de la note
-        editor.commands.setContent(content);
-        logger.debug(LogCategory.EDITOR, 'Contenu mis à jour:', content.substring(0, 100) + '...');
-      } catch (error) {
-        logger.error(LogCategory.EDITOR, 'Erreur mise à jour contenu:', error);
+    if (editor && content && !isUpdatingFromStore) {
+      const editorContent = editor.storage?.markdown?.getMarkdown?.() || '';
+      
+      // Ne mettre à jour que si le contenu est vraiment différent (éviter les boucles)
+      if (content !== editorContent) {
+        try {
+          setIsUpdatingFromStore(true);
+          
+          // Sauvegarder la position actuelle du curseur
+          const currentPos = editor.state.selection.from;
+          
+          // Mettre à jour le contenu de l'éditeur avec le contenu de la note
+          editor.commands.setContent(content);
+          
+          // Restaurer la position du curseur si elle est toujours valide
+          if (currentPos <= editor.state.doc.content.size) {
+            editor.commands.setTextSelection(currentPos);
+          }
+          
+          logger.debug(LogCategory.EDITOR, 'Contenu mis à jour depuis la note: ' + content.substring(0, 100) + '...');
+        } catch (error) {
+          logger.error(LogCategory.EDITOR, 'Erreur mise à jour contenu: ' + error);
+        } finally {
+          setIsUpdatingFromStore(false);
+        }
       }
     }
-  }, [editor, content]);
+  }, [editor, content, isUpdatingFromStore]);
 
   // Open slash menu on '/'
   React.useEffect(() => {
@@ -347,66 +367,117 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
 
   // Persist font changes via toolbar callback
   const handleFontChange = React.useCallback(async (fontName: string) => {
+    // Sauvegarder l'ancienne valeur pour rollback en cas d'échec
+    const oldFontName = note?.font_family || 'Noto Sans';
+    
     try {
-      // Changer la police en temps réel dans le CSS
-      changeFont(fontName);
-      
-      // Sauvegarder en base de données
+      // 1. Appeler l'API en premier
       await v2UnifiedApi.updateNote(noteId, { font_family: fontName }, userId);
+      
+      // 2. Si l'API réussit, changer la police en temps réel et mettre à jour l'état
+      changeFont(fontName);
       useFileSystemStore.getState().updateNote(noteId, { font_family: fontName });
       
       if (process.env.NODE_ENV === 'development') {
         logger.debug(LogCategory.EDITOR, `Police changée et persistée: ${fontName}`);
       }
     } catch (error) {
+      // 3. En cas d'échec, restaurer l'ancienne valeur
       logger.error(LogCategory.EDITOR, 'Erreur lors du changement de police', error);
+      
+      // Rollback : restaurer l'ancienne police
+      changeFont(oldFontName);
+      
+      // Optionnel : afficher un message d'erreur à l'utilisateur
+      toast.error('Erreur lors de la sauvegarde de la police');
     }
-  }, [noteId, changeFont, userId]);
+  }, [noteId, changeFont, userId, note?.font_family]);
 
   // Persist fullWidth changes
   const handleFullWidthChange = React.useCallback(async (value: boolean) => {
+    // Sauvegarder l'ancienne valeur pour rollback en cas d'échec
+    const oldValue = fullWidth;
+    
     try {
-      // Changer la largeur en temps réel dans le CSS
-      changeWideMode(value);
-      
-      // Mettre à jour l'état local
-      setFullWidth(value);
-      
-      // Sauvegarder en base de données
-      updateNote(noteId, { wide_mode: value });
+      // 1. Appeler l'API en premier
       await v2UnifiedApi.updateNote(noteId, { wide_mode: value }, userId);
+      
+      // 2. Si l'API réussit, mettre à jour l'état local et le CSS
+      updateNote(noteId, { wide_mode: value });
+      setFullWidth(value);
+      changeWideMode(value);
       
       if (process.env.NODE_ENV === 'development') {
         logger.debug(LogCategory.EDITOR, `Mode large changé et persisté: ${value ? 'ON' : 'OFF'}`);
       }
     } catch (error) {
+      // 3. En cas d'échec, restaurer l'ancienne valeur
       logger.error(LogCategory.EDITOR, 'Erreur lors du changement de mode large', error);
+      
+      // Rollback : restaurer l'état local et le CSS
+      setFullWidth(oldValue);
+      changeWideMode(oldValue);
+      
+      // Optionnel : afficher un message d'erreur à l'utilisateur
+      toast.error('Erreur lors de la sauvegarde du mode large');
     }
-  }, [noteId, updateNote, changeWideMode, userId]);
+  }, [noteId, updateNote, changeWideMode, userId, fullWidth]);
 
   // Persist a4Mode changes
   const handleA4ModeChange = React.useCallback(async (value: boolean) => {
+    // Sauvegarder l'ancienne valeur pour rollback en cas d'échec
+    const oldValue = a4Mode;
+    
     try {
-      setA4Mode(value);
-      // Note: a4_mode n'est pas dans le type Note, on l'ajoute dynamiquement
-      updateNote(noteId, { a4_mode: value } as Record<string, unknown>);
+      // 1. Appeler l'API en premier
       await v2UnifiedApi.updateNote(noteId, { a4_mode: value }, userId);
+      
+      // 2. Si l'API réussit, mettre à jour l'état local
+      setA4Mode(value);
+      updateNote(noteId, { a4_mode: value } as Record<string, unknown>);
+      
+      if (process.env.NODE_ENV === 'development') {
+        logger.debug(LogCategory.EDITOR, `Mode A4 changé et persisté: ${value ? 'ON' : 'OFF'}`);
+      }
     } catch (error) {
+      // 3. En cas d'échec, restaurer l'ancienne valeur
       logger.error(LogCategory.EDITOR, 'Erreur lors du changement de mode A4', error);
+      
+      // Rollback : restaurer l'état local
+      setA4Mode(oldValue);
+      
+      // Optionnel : afficher un message d'erreur à l'utilisateur
+      toast.error('Erreur lors de la sauvegarde du mode A4');
     }
-  }, [noteId, updateNote, userId]);
+  }, [noteId, updateNote, userId, a4Mode]);
 
   // Persist slashLang changes
   const handleSlashLangChange = React.useCallback(async (value: 'fr' | 'en') => {
+    // Sauvegarder l'ancienne valeur pour rollback en cas d'échec
+    const oldValue = slashLang;
+    
     try {
-      setSlashLang(value);
-      // Note: slash_lang n'est pas dans le type Note, on l'ajoute dynamiquement
-      updateNote(noteId, { slash_lang: value } as Record<string, unknown>);
+      // 1. Appeler l'API en premier
       await v2UnifiedApi.updateNote(noteId, { slash_lang: value }, userId);
+      
+      // 2. Si l'API réussit, mettre à jour l'état local
+      setSlashLang(value);
+      updateNote(noteId, { slash_lang: value } as Record<string, unknown>);
+      
+      if (process.env.NODE_ENV === 'development') {
+        logger.debug(LogCategory.EDITOR, `Langue slash changée et persistée: ${value}`);
+      }
     } catch (error) {
+      // 3. En cas d'échec, restaurer l'ancienne valeur
       logger.error(LogCategory.EDITOR, 'Erreur lors du changement de langue slash', error);
+      
+      // Rollback : restaurer l'état local
+      setSlashLang(oldValue);
+      
+      // Optionnel : afficher un message d'erreur à l'utilisateur
+      toast.error('Erreur lors de la sauvegarde de la langue slash');
     }
-  }, [noteId, updateNote, userId]);
+  }, [noteId, updateNote, userId, slashLang]);
 
   // Ctrl/Cmd+S
   React.useEffect(() => {
@@ -655,32 +726,64 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
               headerTitleInImage={titleInImage}
               onHeaderChange={handleHeaderChange}
               onHeaderOffsetChange={async (offset) => {
-                setHeaderOffset(offset);
+                const oldOffset = headerOffset;
                 try {
-                  updateNote(noteId, { header_image_offset: offset });
+                  // 1. Appeler l'API en premier
                   await v2UnifiedApi.updateNote(noteId, { header_image_offset: offset }, userId);
-                } catch {}
+                  
+                  // 2. Si l'API réussit, mettre à jour l'état local
+                  setHeaderOffset(offset);
+                  updateNote(noteId, { header_image_offset: offset });
+                } catch (error) {
+                  // 3. En cas d'échec, restaurer l'ancienne valeur
+                  logger.error(LogCategory.EDITOR, 'Erreur lors de la sauvegarde de l\'offset d\'image', error);
+                  setHeaderOffset(oldOffset);
+                }
               }}
               onHeaderBlurChange={async (blur) => {
-                setHeaderBlur(blur);
+                const oldBlur = headerBlur;
                 try {
-                  updateNote(noteId, { header_image_blur: blur });
+                  // 1. Appeler l'API en premier
                   await v2UnifiedApi.updateNote(noteId, { header_image_blur: blur }, userId);
-                } catch {}
+                  
+                  // 2. Si l'API réussit, mettre à jour l'état local
+                  setHeaderBlur(blur);
+                  updateNote(noteId, { header_image_blur: blur });
+                } catch (error) {
+                  // 3. En cas d'échec, restaurer l'ancienne valeur
+                  logger.error(LogCategory.EDITOR, 'Erreur lors de la sauvegarde du flou d\'image', error);
+                  setHeaderBlur(oldBlur);
+                }
               }}
               onHeaderOverlayChange={async (overlay) => {
-                setHeaderOverlay(overlay);
+                const oldOverlay = headerOverlay;
                 try {
-                  updateNote(noteId, { header_image_overlay: overlay });
+                  // 1. Appeler l'API en premier
                   await v2UnifiedApi.updateNote(noteId, { header_image_overlay: overlay }, userId);
-                } catch {}
+                  
+                  // 2. Si l'API réussit, mettre à jour l'état local
+                  setHeaderOverlay(overlay);
+                  updateNote(noteId, { header_image_overlay: overlay });
+                } catch (error) {
+                  // 3. En cas d'échec, restaurer l'ancienne valeur
+                  logger.error(LogCategory.EDITOR, 'Erreur lors de la sauvegarde de l\'overlay d\'image', error);
+                  setHeaderOverlay(oldOverlay);
+                }
               }}
               onHeaderTitleInImageChange={async (v) => {
-                setTitleInImage(v);
+                const oldValue = titleInImage;
                 try {
-                  updateNote(noteId, { header_title_in_image: v });
+                  // 1. Appeler l'API en premier
                   await v2UnifiedApi.updateNote(noteId, { header_title_in_image: v }, userId);
-                } catch {}
+                  
+                  // 2. Si l'API réussit, mettre à jour l'état local
+                  setTitleInImage(v);
+                  updateNote(noteId, { header_title_in_image: v });
+                } catch (error) {
+                  // 3. En cas d'échec, restaurer l'ancienne valeur
+                  logger.error(LogCategory.EDITOR, 'Erreur lors de la sauvegarde du titre dans l\'image', error);
+                  setTitleInImage(oldValue);
+                }
               }}
               imageMenuOpen={imageMenuOpen}
               onImageMenuOpen={() => setImageMenuOpen(true)}

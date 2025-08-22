@@ -18,12 +18,12 @@ export async function PUT(
     clientType
   };
 
-  logApi('v2_note_update', `🚀 Début mise à jour note v2 ${ref}`, context);
+  logApi.info(`🚀 Début mise à jour note v2 ${ref}`);
 
   // 🔐 Authentification
   const authResult = await getAuthenticatedUser(request);
   if (!authResult.success) {
-    logApi('v2_note_update', `❌ Authentification échouée: ${authResult.error}`, context);
+    logApi.error(`❌ Authentification échouée: ${authResult.error}`);
     return NextResponse.json(
       { error: authResult.error },
       { status: authResult.status || 401, headers: { "Content-Type": "application/json" } }
@@ -38,7 +38,7 @@ export async function PUT(
     // Validation Zod V2
     const validationResult = validatePayload(updateNoteV2Schema, body);
     if (!validationResult.success) {
-      logApi('v2_note_update', '❌ Validation échouée', context);
+      logApi.error('❌ Validation échouée');
       return createValidationErrorResponse(validationResult);
     }
 
@@ -48,7 +48,7 @@ export async function PUT(
     const result = await V2DatabaseUtils.updateNote(ref, validatedData, userId, context);
 
     const apiTime = Date.now() - startTime;
-    logApi('v2_note_update', `✅ Note mise à jour en ${apiTime}ms`, context);
+    logApi.info(`✅ Note mise à jour en ${apiTime}ms`);
 
     return NextResponse.json({
       success: true,
@@ -58,7 +58,7 @@ export async function PUT(
 
   } catch (err: unknown) {
     const error = err as Error;
-    logApi('v2_note_update', `❌ Erreur serveur: ${error}`, context);
+    logApi.error(`❌ Erreur serveur: ${error}`);
     return NextResponse.json(
       { error: 'Erreur serveur' },
       { status: 500, headers: { "Content-Type": "application/json" } }
