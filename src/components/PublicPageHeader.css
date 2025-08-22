@@ -44,9 +44,20 @@
 .public-header-logo {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 10px;
   text-decoration: none;
   height: 100%;
+}
+
+/* Intégration avec le composant LogoHeader */
+.public-header-logo .logo-header {
+  height: 100%;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* ==========================================================================
