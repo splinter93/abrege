@@ -106,23 +106,7 @@
   margin: 1rem 0;
 }
 
-.editor-margin-top-large {
-  margin-top: 3rem;
-}
-
-.editor-margin-bottom-large {
-  margin-bottom: 3rem;
-}
-
-.editor-margin-left-small {
-  margin-left: 0.5rem;
-}
-
-.editor-margin-right-medium {
-  margin-right: 1rem;
-}
-
-/* Text alignment utilities */
+/* Typography utilities */
 .editor-text-center {
   text-align: center;
 }
@@ -135,7 +119,6 @@
   text-align: right;
 }
 
-/* Font weight utilities */
 .editor-font-bold {
   font-weight: 700;
 }
@@ -144,11 +127,7 @@
   font-weight: 500;
 }
 
-/* Color utilities */
-.editor-text-white {
-  color: var(--text-1);
-}
-
+/* Background & Borders utilities */
 .editor-bg-surface-1 {
   background: var(--surface-1);
 }
@@ -157,24 +136,18 @@
   background: var(--surface-2);
 }
 
-.editor-bg-transparent {
-  background: transparent;
-}
-
-/* Border utilities */
 .editor-border-bottom {
-  border-bottom: 1px solid var(--border-subtle);
+  border-bottom: 1px solid var(--border-color);
 }
 
 .editor-border-top {
-  border-top: 1px solid var(--border-subtle);
+  border-top: 1px solid var(--border-color);
 }
 
-/* Position utilities */
+/* Position & Z-index utilities */
 .editor-sticky-top {
   position: sticky;
   top: 0;
-  z-index: 100;
 }
 
 .editor-relative {
@@ -185,7 +158,10 @@
   position: absolute;
 }
 
-/* Z-index utilities */
+.editor-fixed {
+  position: fixed;
+}
+
 .editor-z-100 {
   z-index: 100;
 }
@@ -196,4 +172,124 @@
 
 .editor-z-2000 {
   z-index: 2000;
+}
+
+/* ==========================================================================
+   NOUVELLES CLASSES POUR ÉLIMINER LES STYLES INLINE RESTANTS
+   ========================================================================== */
+
+/* Positionnement fixe pour la TOC */
+.editor-toc-fixed {
+  position: fixed;
+  right: 8px;
+  top: 383px;
+  z-index: 30;
+}
+
+/* Centrage des éléments d'ajout d'image */
+.editor-add-image-center {
+  display: flex;
+  justify-content: center;
+}
+
+/* Largeur du conteneur d'image */
+.editor-image-container-width {
+  max-width: var(--editor-content-width);
+  width: var(--editor-content-width);
+}
+
+/* Styles pour les boutons de la toolbar */
+.editor-toolbar-button-rounded {
+  border-radius: 4px;
+}
+
+/* Styles pour les menus déroulants */
+.editor-dropdown-menu {
+  position: absolute;
+  z-index: 1000;
+}
+
+/* Styles pour les modales */
+.editor-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 2000;
+}
+
+/* Styles pour les tooltips */
+.editor-tooltip {
+  position: absolute;
+  z-index: 1500;
+}
+
+/* ==========================================================================
+   UTILITAIRES DE RESPONSIVE
+   ========================================================================== */
+
+@media (max-width: 768px) {
+  .editor-padding-standard {
+    padding: 1rem 1.5rem;
+  }
+  
+  .editor-container-width {
+    max-width: 100%;
+    padding: 0 1rem;
+  }
+  
+  .editor-content-width {
+    max-width: 100%;
+    padding: 0 1rem;
+  }
+}
+
+/* ==========================================================================
+   UTILITAIRES D'ACCESSIBILITÉ
+   ========================================================================== */
+
+.editor-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.editor-focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+}
+
+/* ==========================================================================
+   UTILITAIRES DE PERFORMANCE
+   ========================================================================== */
+
+.editor-will-change-transform {
+  will-change: transform;
+}
+
+.editor-will-change-opacity {
+  will-change: opacity;
+}
+
+.editor-transform-gpu {
+  transform: translateZ(0);
+}
+
+/* ==========================================================================
+   UTILITAIRES DE DEBUG (UNIQUEMENT EN DÉVELOPPEMENT)
+   ========================================================================== */
+
+.editor-debug-outline {
+  outline: 1px solid red;
+}
+
+.editor-debug-outline * {
+  outline: 1px solid blue;
 }

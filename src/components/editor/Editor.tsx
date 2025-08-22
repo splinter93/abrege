@@ -40,6 +40,8 @@ import { supabase } from '@/supabaseClient';
 import { toast } from 'react-hot-toast';
 import ImageMenu from '@/components/ImageMenu';
 import { uploadImageForNote } from '@/utils/fileUpload';
+import { logger, LogCategory } from '@/utils/logger';
+import type { FullEditorInstance, CustomImageExtension, CodeBlockWithCopyExtension } from '@/types/editor';
 
 /**
  * Full Editor – markdown is source of truth; HTML only for display.
@@ -101,12 +103,12 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
     const normalized = normalize(url);
     setHeaderImageUrl(normalized);
     try {
-      updateNote(noteId, { header_image: normalized } as any);
+      updateNote(noteId, { header_image: normalized });
       await v2UnifiedApi.updateNote(noteId, { header_image: normalized ?? null }, userId);
     } catch (error) {
-      console.error('Error updating header image:', error);
+      logger.error(LogCategory.EDITOR, 'Error updating header image');
     }
-  }, [noteId, updateNote]);
+  }, [noteId, updateNote, userId]);
 
   React.useEffect(() => {
     if (kebabOpen && kebabBtnRef.current) {
@@ -165,16 +167,16 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
       TableHeader,
       TableCell,
       // Code block with copy button and lowlight highlighting
-      ((CodeBlockWithCopy as any).configure?.({ lowlight }) ?? (CodeBlockWithCopy as any)),
+      CodeBlockWithCopy.configure({ lowlight }),
       Link.configure({ openOnClick: false, autolink: true, linkOnPaste: true }),
       // Custom image node view to hook our image menu
-      (CustomImage as any).configure?.({ inline: false }) ?? (CustomImage as any),
+      CustomImage.configure({ inline: false }),
       Markdown.configure({ html: false })
     ],
     content: content || '',
     onUpdate: React.useCallback(({ editor }) => {
       try {
-        const md = (editor.storage as any)?.markdown?.getMarkdown?.() as string | undefined;
+        const md = editor.storage?.markdown?.getMarkdown?.() as string | undefined;
         const nextMarkdown = typeof md === 'string' ? md : content;
         if (nextMarkdown !== content) {
           updateNote(noteId, { content: nextMarkdown, markdown_content: nextMarkdown });
@@ -183,12 +185,7 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
         // ignore
       }
     }, [content, noteId, updateNote]),
-    // Option read by CustomImage
-    handleOpenImageMenu: React.useCallback(() => { 
-      setImageMenuTarget('content'); 
-      setImageMenuOpen(true); 
-    }, []),
-  } as any);
+  });
 
   // 🔧 FORCER la mise à jour du contenu de l'éditeur quand la note change
   React.useEffect(() => {
@@ -196,9 +193,9 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
       try {
         // Mettre à jour le contenu de l'éditeur avec le contenu de la note
         editor.commands.setContent(content);
-        console.log('[Editor] 🔧 Contenu mis à jour:', content.substring(0, 100) + '...');
+        logger.debug(LogCategory.EDITOR, 'Contenu mis à jour:', content.substring(0, 100) + '...');
       } catch (error) {
-        console.error('[Editor] ❌ Erreur mise à jour contenu:', error);
+        logger.error(LogCategory.EDITOR, 'Erreur mise à jour contenu:', error);
       }
     }
   }, [editor, content]);
@@ -209,7 +206,7 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
     const el = editor.view.dom as HTMLElement;
     const onKeyDown = (e: KeyboardEvent) => {
       // If user types a space right after '/', close menu but do not delete any text
-      if (e.key === ' ' && (editor as any)) {
+      if (e.key === ' ' && editor) {
         try {
           const { state } = editor.view;
           const pos = state.selection.from;
@@ -246,7 +243,7 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
 
   // Save hook
   const { handleSave } = useEditorSave({
-    editor: editor as any,
+    editor: editor as FullEditorInstance,
     onSave: async ({ title: newTitle, markdown_content, html_content }) => {
       await v2UnifiedApi.updateNote(noteId, {
         source_title: newTitle ?? title ?? 'Untitled',
@@ -272,46 +269,46 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
   // Handle share settings changes
   const handleShareSettingsChange = React.useCallback(async (newSettings: ShareSettingsUpdate) => {
     try {
-      console.log('🚨 [EDITOR] ===== DÉBUT HANDLESHARESETTINGSCHANGE =====');
-      console.log('🚨 [EDITOR] noteId:', noteId);
-      console.log('🚨 [EDITOR] newSettings:', newSettings);
+      logger.info(LogCategory.EDITOR, 'Début de handleShareSettingsChange');
+      logger.debug(LogCategory.EDITOR, 'handleShareSettingsChange - newSettings', newSettings);
       
-      // Update local state
-      setShareSettings({
+      // Update local state with proper type casting
+      const updatedSettings: ShareSettings = {
         visibility: newSettings.visibility || 'private',
         invited_users: newSettings.invited_users || [],
         allow_edit: newSettings.allow_edit || false,
         allow_comments: newSettings.allow_comments || false
-      } as ShareSettings);
-      console.log('🚨 [EDITOR] ✅ État local mis à jour');
+      };
+      setShareSettings(updatedSettings);
+      logger.info(LogCategory.EDITOR, 'État local mis à jour');
       
       // Update note in store
       updateNote(noteId, { 
-        share_settings: newSettings
-      } as any);
-      console.log('🚨 [EDITOR] ✅ Store mis à jour');
+        share_settings: updatedSettings
+      });
+      logger.info(LogCategory.EDITOR, 'Store mis à jour');
       
       // Call API to update share settings
-      console.log('🚨 [EDITOR] Début appel API...');
+      logger.info(LogCategory.EDITOR, 'Début appel API...');
       const { data: { session } } = await supabase.auth.getSession();
-      console.log('🚨 [EDITOR] Session récupérée:', session ? 'PRÉSENTE' : 'ABSENTE');
+      logger.info(LogCategory.EDITOR, 'Session récupérée:', session ? 'PRÉSENTE' : 'ABSENTE');
       
       const token = session?.access_token;
-      console.log('🚨 [EDITOR] Token extrait:', token ? 'PRÉSENT' : 'ABSENT');
+      logger.info(LogCategory.EDITOR, 'Token extrait:', token ? 'PRÉSENT' : 'ABSENT');
       
       if (!token) {
-        console.log('🚨 [EDITOR] ❌ Pas de token, erreur authentification');
+        logger.error(LogCategory.EDITOR, 'Pas de token, erreur authentification');
         throw new Error('Authentification requise');
       }
       
       const apiUrl = `/api/v2/note/${encodeURIComponent(noteId)}/share`;
-      console.log('🚨 [EDITOR] URL API:', apiUrl);
-      console.log('🚨 [EDITOR] Méthode: PATCH');
-      console.log('🚨 [EDITOR] Headers:', { 
+      logger.info(LogCategory.EDITOR, 'URL API:', apiUrl);
+      logger.info(LogCategory.EDITOR, 'Méthode: PATCH');
+      logger.debug(LogCategory.EDITOR, 'Headers:', { 
         'Content-Type': 'application/json', 
         'Authorization': `Bearer ${token.substring(0, 20)}...` 
       });
-      console.log('🚨 [EDITOR] Body:', JSON.stringify(newSettings));
+      logger.debug(LogCategory.EDITOR, 'Body:', JSON.stringify(newSettings));
       
       const res = await fetch(apiUrl, {
         method: 'PATCH',
@@ -319,7 +316,7 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
         body: JSON.stringify(newSettings)
       });
       
-      console.log('🚨 [EDITOR] Réponse reçue:', {
+      logger.info(LogCategory.EDITOR, 'Réponse reçue:', {
         status: res.status,
         statusText: res.statusText,
         ok: res.ok,
@@ -328,20 +325,20 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
       
       if (!res.ok) {
         const json = await res.json();
-        console.log('🚨 [EDITOR] ❌ Erreur API:', json);
+        logger.error(LogCategory.EDITOR, 'Erreur API:', json);
         throw new Error(json?.error || 'Erreur mise à jour partage');
       }
       
       const responseData = await res.json();
-      console.log('🚨 [EDITOR] ✅ Données de réponse:', responseData);
+      logger.info(LogCategory.EDITOR, 'Données de réponse:', responseData);
       
       toast.success('Paramètres de partage mis à jour !');
-      console.log('🚨 [EDITOR] ===== FIN HANDLESHARESETTINGSCHANGE SUCCÈS =====');
+      logger.info(LogCategory.EDITOR, 'Fin de handleShareSettingsChange avec succès');
       
     } catch (error) {
-      console.log('🚨 [EDITOR] ❌ ERREUR dans handleShareSettingsChange:', error);
-      console.log('🚨 [EDITOR] Stack trace:', error instanceof Error ? error.stack : 'Pas de stack trace');
-      console.log('🚨 [EDITOR] ===== FIN HANDLESHARESETTINGSCHANGE ERREUR =====');
+      logger.error(LogCategory.EDITOR, 'ERREUR dans handleShareSettingsChange', error);
+      logger.error(LogCategory.EDITOR, 'Stack trace:', error instanceof Error ? error.stack : 'Pas de stack trace');
+      logger.info(LogCategory.EDITOR, 'Fin de handleShareSettingsChange avec erreur');
       
       toast.error(error instanceof Error ? error.message : 'Erreur mise à jour partage');
       console.error('Erreur partage:', error);
@@ -355,16 +352,16 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
       changeFont(fontName);
       
       // Sauvegarder en base de données
-      await v2UnifiedApi.updateNote(noteId, { font_family: fontName } as any, userId);
-      useFileSystemStore.getState().updateNote(noteId, { font_family: fontName } as any);
+      await v2UnifiedApi.updateNote(noteId, { font_family: fontName }, userId);
+      useFileSystemStore.getState().updateNote(noteId, { font_family: fontName });
       
       if (process.env.NODE_ENV === 'development') {
-        console.log(`[Editor] 🎨 Police changée et persistée: ${fontName}`);
+        logger.debug(LogCategory.EDITOR, `Police changée et persistée: ${fontName}`);
       }
     } catch (error) {
-      console.error('[Editor] ❌ Erreur lors du changement de police:', error);
+      logger.error(LogCategory.EDITOR, 'Erreur lors du changement de police', error);
     }
-  }, [noteId, changeFont]);
+  }, [noteId, changeFont, userId]);
 
   // Persist fullWidth changes
   const handleFullWidthChange = React.useCallback(async (value: boolean) => {
@@ -376,34 +373,40 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
       setFullWidth(value);
       
       // Sauvegarder en base de données
-      updateNote(noteId, { wide_mode: value } as any);
+      updateNote(noteId, { wide_mode: value });
       await v2UnifiedApi.updateNote(noteId, { wide_mode: value }, userId);
       
       if (process.env.NODE_ENV === 'development') {
-        console.log(`[Editor] 📏 Mode large changé et persisté: ${value ? 'ON' : 'OFF'}`);
+        logger.debug(LogCategory.EDITOR, `Mode large changé et persisté: ${value ? 'ON' : 'OFF'}`);
       }
     } catch (error) {
-      console.error('[Editor] ❌ Erreur lors du changement de mode large:', error);
+      logger.error(LogCategory.EDITOR, 'Erreur lors du changement de mode large', error);
     }
-  }, [noteId, updateNote, changeWideMode]);
+  }, [noteId, updateNote, changeWideMode, userId]);
 
   // Persist a4Mode changes
   const handleA4ModeChange = React.useCallback(async (value: boolean) => {
     try {
       setA4Mode(value);
-      updateNote(noteId, { a4_mode: value } as any);
+      // Note: a4_mode n'est pas dans le type Note, on l'ajoute dynamiquement
+      updateNote(noteId, { a4_mode: value } as Record<string, unknown>);
       await v2UnifiedApi.updateNote(noteId, { a4_mode: value }, userId);
-    } catch {}
-  }, [noteId, updateNote]);
+    } catch (error) {
+      logger.error(LogCategory.EDITOR, 'Erreur lors du changement de mode A4', error);
+    }
+  }, [noteId, updateNote, userId]);
 
   // Persist slashLang changes
   const handleSlashLangChange = React.useCallback(async (value: 'fr' | 'en') => {
     try {
       setSlashLang(value);
-      updateNote(noteId, { slash_lang: value } as any);
+      // Note: slash_lang n'est pas dans le type Note, on l'ajoute dynamiquement
+      updateNote(noteId, { slash_lang: value } as Record<string, unknown>);
       await v2UnifiedApi.updateNote(noteId, { slash_lang: value }, userId);
-    } catch {}
-  }, [noteId, updateNote]);
+    } catch (error) {
+      logger.error(LogCategory.EDITOR, 'Erreur lors du changement de langue slash', error);
+    }
+  }, [noteId, updateNote, userId]);
 
   // Ctrl/Cmd+S
   React.useEffect(() => {
@@ -437,9 +440,9 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
       editor.commands.focus();
       editor.commands.setTextSelection(from + insertText.length);
       
-      console.log(`[Editor] 🎤 Texte transcrit inséré: "${text}"`);
+      logger.debug(LogCategory.EDITOR, `Texte transcrit inséré: "${text}"`);
     } catch (error) {
-      console.error('[Editor] ❌ Erreur lors de l\'insertion du texte transcrit:', error);
+      logger.error(LogCategory.EDITOR, 'Erreur lors de l\'insertion du texte transcrit:', error);
     }
   }, [editor]);
 
@@ -489,11 +492,11 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
 
       // 🎯 SIMPLE : Construire et ouvrir l'URL
       const url = `${window.location.origin}/@${userData.username}/${noteData.slug}`;
-      console.log('🎯 Ouverture de l\'URL publique:', url);
+      logger.debug(LogCategory.EDITOR, 'Ouverture de l\'URL publique:', url);
       window.open(url, '_blank', 'noopener,noreferrer');
       
     } catch (error) {
-      console.error('❌ Erreur bouton œil:', error);
+      logger.error(LogCategory.EDITOR, 'Erreur bouton œil:', error);
       toast.error('Erreur lors de l\'ouverture de la prévisualisation');
     }
   }, [noteId]);
@@ -512,8 +515,8 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
         e.preventDefault();
         const { publicUrl } = await uploadImageForNote(image, noteId);
         // Determine drop position and replace image if dropping over one
-        const view = (editor as any).view;
-        const coords = { left: (e as any).clientX, top: (e as any).clientY } as { left: number; top: number };
+        const view = editor.view;
+        const coords = { left: e.clientX, top: e.clientY };
         const posAt = view.posAtCoords(coords);
         if (posAt && typeof posAt.pos === 'number') {
           const { state } = view;
@@ -529,7 +532,7 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
             const imagePos = $pos.nodeAfter && $pos.nodeAfter.type.name === 'image' ? posAt.pos : (posAt.pos - (nodeHere?.nodeSize || 1));
             const tr = state.tr.setSelection(NodeSelection.create(state.doc, imagePos));
             view.dispatch(tr);
-            (editor as any).commands.updateAttributes('image', { src: publicUrl });
+            editor.commands.updateAttributes('image', { src: publicUrl });
             return;
           }
           // Otherwise, insert at the computed position
@@ -537,7 +540,7 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
           const tr = state.tr.setSelection(TextSelection.near(state.doc.resolve(posAt.pos)));
           view.dispatch(tr);
         }
-        (editor as any).chain().focus().setImage({ src: publicUrl }).run();
+        editor.chain().focus().setImage({ src: publicUrl }).run();
       } catch {}
     };
 
@@ -561,8 +564,8 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
 
   return (
     <>
-      <div style={{ position: 'fixed', right: 8, top: 383, zIndex: 30 }}>
-        <PublicTableOfContents headings={headings as any} containerRef={editorContainerRef as any} />
+      <div className="editor-toc-fixed">
+        <PublicTableOfContents headings={headings} containerRef={editorContainerRef} />
       </div>
       <EditorLayout
         layoutClassName={headerImageUrl ? (titleInImage ? 'noteLayout imageWithTitle' : 'noteLayout imageOnly') : 'noteLayout noImage'}
@@ -599,18 +602,18 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
               )}
             >
               <EditorToolbar 
-          editor={isReadonly ? null : (editor as any)} 
-          setImageMenuOpen={setImageMenuOpen} 
-          onFontChange={handleFontChange}
-          currentFont={note?.font_family || 'Noto Sans'}
-          onTranscriptionComplete={handleTranscriptionComplete}
-        />
+                editor={isReadonly ? null : editor} 
+                setImageMenuOpen={setImageMenuOpen} 
+                onFontChange={handleFontChange}
+                currentFont={note?.font_family || 'Noto Sans'}
+                onTranscriptionComplete={handleTranscriptionComplete}
+              />
             </EditorHeader>
             {/* Add header image CTA when no image is set */}
             {!headerImageUrl && (
               <>
-                <div className="editor-add-header-image-row editor-full-width" style={{ display: 'flex', justifyContent: 'center' }}>
-                  <div className="editor-container-width" style={{ maxWidth: 'var(--editor-content-width)', width: 'var(--editor-content-width)' }}>
+                <div className="editor-add-header-image-row editor-full-width editor-add-image-center">
+                  <div className="editor-container-width editor-image-container-width">
                     <div
                       className="editor-add-header-image"
                       onDragOver={(e) => {
@@ -654,28 +657,28 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
               onHeaderOffsetChange={async (offset) => {
                 setHeaderOffset(offset);
                 try {
-                  updateNote(noteId, { header_image_offset: offset } as any);
+                  updateNote(noteId, { header_image_offset: offset });
                   await v2UnifiedApi.updateNote(noteId, { header_image_offset: offset }, userId);
                 } catch {}
               }}
               onHeaderBlurChange={async (blur) => {
                 setHeaderBlur(blur);
                 try {
-                  updateNote(noteId, { header_image_blur: blur } as any);
+                  updateNote(noteId, { header_image_blur: blur });
                   await v2UnifiedApi.updateNote(noteId, { header_image_blur: blur }, userId);
                 } catch {}
               }}
               onHeaderOverlayChange={async (overlay) => {
                 setHeaderOverlay(overlay);
                 try {
-                  updateNote(noteId, { header_image_overlay: overlay } as any);
+                  updateNote(noteId, { header_image_overlay: overlay });
                   await v2UnifiedApi.updateNote(noteId, { header_image_overlay: overlay }, userId);
                 } catch {}
               }}
               onHeaderTitleInImageChange={async (v) => {
                 setTitleInImage(v);
                 try {
-                  updateNote(noteId, { header_title_in_image: v } as any);
+                  updateNote(noteId, { header_title_in_image: v });
                   await v2UnifiedApi.updateNote(noteId, { header_title_in_image: v }, userId);
                 } catch {}
               }}
@@ -706,10 +709,10 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
         content={(
           <EditorContent>
             {!isReadonly && (
-              <div className="tiptap-editor-container" ref={editorContainerRef as any}>
+              <div className="tiptap-editor-container" ref={editorContainerRef}>
                 <TiptapEditorContent editor={editor} />
                 {/* Table controls */}
-                <TableControls editor={editor as any} containerRef={editorContainerRef as any} />
+                <TableControls editor={editor} containerRef={editorContainerRef} />
                 {/* Slash commands menu */}
                 <EditorSlashMenu
                   ref={slashMenuRef}
@@ -731,7 +734,7 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
                     } catch {}
                     // Execute command action
                     if (typeof cmd.action === 'function') {
-                      (cmd.action as any)(editor);
+                      cmd.action(editor);
                     }
                   }}
                 />
@@ -752,7 +755,7 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
             return handleHeaderChange(src);
           }
           if (editor) {
-            try { (editor as any).chain().focus().setImage({ src }).run(); } catch {}
+            try { editor.chain().focus().setImage({ src }).run(); } catch {}
           }
         }}
         noteId={note.id}

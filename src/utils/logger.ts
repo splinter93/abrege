@@ -1,231 +1,226 @@
 /**
- * Utilitaire de logging centralisé
- * Remplace les console.log dispersés par un système unifié
+ * Système de logging professionnel pour l'éditeur
+ * Configurable par environnement et niveau de log
  */
 
-export interface LogLevel {
-  DEBUG: 0;
-  INFO: 1;
-  WARN: 2;
-  ERROR: 3;
+export enum LogLevel {
+  ERROR = 0,
+  WARN = 1,
+  INFO = 2,
+  DEBUG = 3,
+  TRACE = 4
 }
 
-export const LOG_LEVELS: LogLevel = {
-  DEBUG: 0,
-  INFO: 1,
-  WARN: 2,
-  ERROR: 3,
-};
-
-export interface LogContext {
-  component?: string;
-  operation?: string;
-  userId?: string;
-  noteId?: string;
-  folderId?: string;
-  classeurId?: string;
-  [key: string]: any;
+export enum LogCategory {
+  EDITOR = 'EDITOR',
+  SLASH_COMMANDS = 'SLASH_COMMANDS',
+  TOOLBAR = 'TOOLBAR',
+  EXTENSIONS = 'EXTENSIONS',
+  API = 'API',
+  PERFORMANCE = 'PERFORMANCE'
 }
 
-export class Logger {
-  private static instance: Logger;
-  private logLevel: number;
+interface LogEntry {
+  timestamp: string;
+  level: LogLevel;
+  category: LogCategory;
+  message: string;
+  data?: unknown;
+  error?: Error;
+}
+
+class Logger {
+  private logLevel: LogLevel;
+  private isDevelopment: boolean;
+  private logBuffer: LogEntry[] = [];
+  private maxBufferSize = 100;
 
   constructor() {
-    // Définir le niveau de log selon l'environnement
-    this.logLevel = process.env.NODE_ENV === 'development' 
-      ? LOG_LEVELS.DEBUG 
-      : LOG_LEVELS.ERROR;
+    this.isDevelopment = process.env.NODE_ENV === 'development';
+    this.logLevel = this.isDevelopment ? LogLevel.DEBUG : LogLevel.ERROR;
   }
 
-  static getInstance(): Logger {
-    if (!Logger.instance) {
-      Logger.instance = new Logger();
-    }
-    return Logger.instance;
-  }
-
-  /**
-   * Logger de debug (seulement en développement)
-   */
-  debug(message: string, context?: LogContext, ...args: any[]): void {
-    if (this.logLevel <= LOG_LEVELS.DEBUG) {
-      this.log('DEBUG', message, context, ...args);
-    }
-  }
-
-  /**
-   * Logger d'information
-   */
-  info(message: string, context?: LogContext, ...args: any[]): void {
-    if (this.logLevel <= LOG_LEVELS.INFO) {
-      this.log('INFO', message, context, ...args);
-    }
-  }
-
-  /**
-   * Logger d'avertissement
-   */
-  warn(message: string, context?: LogContext, ...args: any[]): void {
-    if (this.logLevel <= LOG_LEVELS.WARN) {
-      this.log('WARN', message, context, ...args);
-    }
-  }
-
-  /**
-   * Logger d'erreur (toujours affiché)
-   */
-  error(message: string, context?: LogContext, ...args: any[]): void {
-    if (this.logLevel <= LOG_LEVELS.ERROR) {
-      this.log('ERROR', message, context, ...args);
-    }
-  }
-
-  /**
-   * Logger pour les opérations API
-   */
-  api(operation: string, message: string, context?: LogContext, ...args: any[]): void {
-    this.info(`[API] ${operation}: ${message}`, { ...context, operation }, ...args);
-  }
-
-  /**
-   * Logger pour les opérations de polling
-   */
-  polling(operation: string, message: string, context?: LogContext, ...args: any[]): void {
-    this.debug(`[POLLING] ${operation}: ${message}`, { ...context, operation }, ...args);
-  }
-
-  /**
-   * Logger pour les opérations de store Zustand
-   */
-  store(operation: string, message: string, context?: LogContext, ...args: any[]): void {
-    this.debug(`[STORE] ${operation}: ${message}`, { ...context, operation }, ...args);
-    }
-
-  /**
-   * Logger pour les opérations d'éditeur
-   */
-  editor(operation: string, message: string, context?: LogContext, ...args: any[]): void {
-    this.debug(`[EDITOR] ${operation}: ${message}`, { ...context, operation }, ...args);
-  }
-
-  /**
-   * Méthode privée pour formater et afficher les logs
-   */
-  private log(level: string, message: string, context?: LogContext, ...args: any[]): void {
-    const timestamp = new Date().toISOString();
-    const contextStr = context ? ` [${this.formatContext(context)}]` : '';
+  private formatMessage(entry: LogEntry): string {
+    const timestamp = entry.timestamp;
+    const level = LogLevel[entry.level];
+    const category = entry.category;
+    const message = entry.message;
     
-    const logMessage = `[${timestamp}] ${level}${contextStr}: ${message}`;
-    
-    switch (level) {
-      case 'ERROR':
-        console.error(logMessage, ...args);
-        break;
-      case 'WARN':
-        console.warn(logMessage, ...args);
-        break;
-      case 'INFO':
-        console.info(logMessage, ...args);
-        break;
-      case 'DEBUG':
-        console.log(logMessage, ...args);
-        break;
-      default:
-        console.log(logMessage, ...args);
+    return `[${timestamp}] [${level}] [${category}] ${message}`;
+  }
+
+  private shouldLog(level: LogLevel): boolean {
+    return level <= this.logLevel;
+  }
+
+  private log(level: LogLevel, category: LogCategory, message: string, data?: unknown, error?: Error): void {
+    if (!this.shouldLog(level)) return;
+
+    const entry: LogEntry = {
+      timestamp: new Date().toISOString(),
+      level,
+      category,
+      message,
+      data,
+      error
+    };
+
+    // Ajouter au buffer
+    this.logBuffer.push(entry);
+    if (this.logBuffer.length > this.maxBufferSize) {
+      this.logBuffer.shift();
+    }
+
+    // En développement, afficher dans la console
+    if (this.isDevelopment) {
+      const formattedMessage = this.formatMessage(entry);
+      
+      switch (level) {
+        case LogLevel.ERROR:
+          console.error(formattedMessage, data || '', error || '');
+          break;
+        case LogLevel.WARN:
+          console.warn(formattedMessage, data || '');
+          break;
+        case LogLevel.INFO:
+          console.info(formattedMessage, data || '');
+          break;
+        case LogLevel.DEBUG:
+          console.debug(formattedMessage, data || '');
+          break;
+        case LogLevel.TRACE:
+          console.trace(formattedMessage, data || '');
+          break;
+      }
+    }
+
+    // En production, envoyer les erreurs critiques à un service de monitoring
+    if (level === LogLevel.ERROR && !this.isDevelopment) {
+      this.sendToMonitoring(entry);
     }
   }
 
-  /**
-   * Formater le contexte pour l'affichage
-   */
-  private formatContext(context: LogContext): string {
-    const parts: string[] = [];
-    
-    if (context.component) parts.push(`component:${context.component}`);
-    if (context.operation) parts.push(`op:${context.operation}`);
-    if (context.userId) parts.push(`user:${context.userId.slice(0, 8)}...`);
-    if (context.noteId) parts.push(`note:${context.noteId.slice(0, 8)}...`);
-    if (context.folderId) parts.push(`folder:${context.folderId.slice(0, 8)}...`);
-    if (context.classeurId) parts.push(`classeur:${context.classeurId.slice(0, 8)}...`);
-    
-    return parts.join(' | ');
+  private sendToMonitoring(entry: LogEntry): void {
+    // TODO: Implémenter l'envoi vers un service de monitoring (Sentry, LogRocket, etc.)
+    // Pour l'instant, on ne fait rien en production
   }
 
-  /**
-   * Définir le niveau de log dynamiquement
-   */
-  setLogLevel(level: number): void {
+  // Méthodes publiques
+  error(category: LogCategory, message: string, data?: unknown, error?: Error): void {
+    this.log(LogLevel.ERROR, category, message, data, error);
+  }
+
+  warn(category: LogCategory, message: string, data?: unknown): void {
+    this.log(LogLevel.WARN, category, message, data);
+  }
+
+  info(category: LogCategory, message: string, data?: unknown): void {
+    this.log(LogLevel.INFO, category, message, data);
+  }
+
+  debug(category: LogCategory, message: string, data?: unknown): void {
+    this.log(LogLevel.DEBUG, category, message, data);
+  }
+
+  trace(category: LogCategory, message: string, data?: unknown): void {
+    this.log(LogLevel.TRACE, category, message, data);
+  }
+
+  // Méthodes spécialisées pour l'éditeur
+  editorError(message: string, data?: unknown, error?: Error): void {
+    this.error(LogCategory.EDITOR, message, data, error);
+  }
+
+  editorInfo(message: string, data?: unknown): void {
+    this.info(LogCategory.EDITOR, message, data);
+  }
+
+  editorDebug(message: string, data?: unknown): void {
+    this.debug(LogCategory.EDITOR, message, data);
+  }
+
+  apiError(message: string, data?: unknown, error?: Error): void {
+    this.error(LogCategory.API, message, data, error);
+  }
+
+  apiInfo(message: string, data?: unknown): void {
+    this.info(LogCategory.API, message, data);
+  }
+
+  performance(category: LogCategory, operation: string, duration: number): void {
+    this.info(LogCategory.PERFORMANCE, `${operation} completed in ${duration}ms`);
+  }
+
+  // Récupérer les logs pour le debugging
+  getLogs(): LogEntry[] {
+    return [...this.logBuffer];
+  }
+
+  // Vider le buffer
+  clearLogs(): void {
+    this.logBuffer = [];
+  }
+
+  // Changer le niveau de log dynamiquement
+  setLogLevel(level: LogLevel): void {
     this.logLevel = level;
-  }
-
-  /**
-   * Activer/désactiver les logs de debug
-   */
-  setDebugMode(enabled: boolean): void {
-    this.logLevel = enabled ? LOG_LEVELS.DEBUG : LOG_LEVELS.ERROR;
   }
 }
 
-// Export de l'instance singleton
-export const logger = Logger.getInstance();
+// Instance singleton
+export const logger = new Logger();
 
-// Fonctions utilitaires pour un usage plus simple
-export const logDebug = (message: string, context?: LogContext, ...args: any[]) => 
-  logger.debug(message, context, ...args);
+// Export des méthodes principales pour faciliter l'utilisation
+export const {
+  error,
+  warn,
+  info,
+  debug,
+  trace,
+  editorError,
+  editorInfo,
+  editorDebug,
+  apiError,
+  apiInfo,
+  performance
+} = logger;
 
-export const logInfo = (message: string, context?: LogContext, ...args: any[]) => 
-  logger.info(message, context, ...args);
-
-export const logWarn = (message: string, context?: LogContext, ...args: any[]) => 
-  logger.warn(message, context, ...args);
-
-export const logError = (message: string, context?: LogContext, ...args: any[]) => 
-  logger.error(message, context, ...args);
-
-export const logApi = (operation: string, message: string, context?: LogContext, ...args: any[]) => 
-  logger.api(operation, message, context, ...args);
-
-export const logPolling = (operation: string, message: string, context?: LogContext, ...args: any[]) => 
-  logger.polling(operation, message, context, ...args);
-
-export const logStore = (operation: string, message: string, context?: LogContext, ...args: any[]) => 
-  logger.store(operation, message, context, ...args);
-
-export const logEditor = (operation: string, message: string, context?: LogContext, ...args: any[]) => 
-  logger.editor(operation, message, context, ...args);
-
-// Fonction JSON unifiée
-export const logj = (o: Record<string, unknown>) => {
-  try {
-    const base = { ts: new Date().toISOString(), rid: (o as any).rid };
-    // Ne pas exposer de PII; hash/abrège côté appelant si nécessaire
-    console.log(JSON.stringify({ ...base, ...o }));
-  } catch {
-    // Fallback silencieux
+// Compatibilité avec l'ancien simpleLogger pour éviter les erreurs d'import
+export const simpleLogger = {
+  dev: (message: string, ...args: unknown[]) => {
+    if (process.env.NODE_ENV === 'development') {
+      logger.debug(LogCategory.EDITOR, message, args);
+    }
+  },
+  error: (message: string, error?: unknown) => {
+    logger.error(LogCategory.EDITOR, message, error);
+  },
+  warn: (message: string, ...args: unknown[]) => {
+    logger.warn(LogCategory.EDITOR, message, args);
+  },
+  info: (message: string, ...args: unknown[]) => {
+    if (process.env.NODE_ENV === 'development') {
+      logger.info(LogCategory.EDITOR, message, args);
+    }
+  },
+  // Méthode pour les tool calls (compatible avec l'ancien système)
+  tool: (message: string, ...args: unknown[]) => {
+    logger.info(LogCategory.EDITOR, message, args);
   }
 };
 
-// Fonction simplifiée pour le nettoyage des logs
-export const simpleLogger = {
-  dev: (message: string, ...args: any[]) => {
-    if (process.env.NODE_ENV === 'development') {
-      console.log(`[DEV] ${message}`, ...args);
-    }
+// Export de logApi pour compatibilité avec l'ancien système
+export const logApi = {
+  error: (message: string, error?: unknown) => {
+    logger.error(LogCategory.API, message, error);
   },
-  error: (message: string, error?: any) => {
-    console.error(`[ERROR] ${message}`, error);
+  info: (message: string, data?: unknown) => {
+    logger.info(LogCategory.API, message, data);
   },
-  warn: (message: string, ...args: any[]) => {
-    console.warn(`[WARN] ${message}`, ...args);
+  warn: (message: string, data?: unknown) => {
+    logger.warn(LogCategory.API, message, data);
   },
-  info: (message: string, ...args: any[]) => {
-    if (process.env.NODE_ENV === 'development') {
-      console.info(`[INFO] ${message}`, ...args);
-    }
-  },
-  // 🔧 NOUVEAU: Logger qui fonctionne en production pour les tool calls
-  tool: (message: string, ...args: any[]) => {
-    console.log(`[TOOL] ${message}`, ...args);
+  debug: (message: string, data?: unknown) => {
+    logger.debug(LogCategory.API, message, data);
   }
 }; 

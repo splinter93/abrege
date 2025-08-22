@@ -1,5 +1,5 @@
 import { supabase } from '@/supabaseClient';
-import { simpleLogger as logger } from '@/utils/logger';
+import { simpleLogger } from '@/utils/logger';
 import { useFileSystemStore } from '@/store/useFileSystemStore';
 import type { Classeur, Folder, Note } from '@/store/useFileSystemStore';
 
@@ -66,7 +66,7 @@ export class OptimizedClasseurService {
     // 🔧 OPTIMISATION: Nettoyage au démarrage
     this.cleanupExpiredCache();
     
-    logger.dev('[OptimizedClasseurService] 🚀 Service initialisé avec nettoyage automatique');
+    simpleLogger.dev('[OptimizedClasseurService] 🚀 Service initialisé avec nettoyage automatique');
   }
 
   static getInstance(): OptimizedClasseurService {
@@ -82,7 +82,7 @@ export class OptimizedClasseurService {
   private validateClasseurData(data: any): data is ClasseurWithContent[] {
     // Vérifier que c'est un tableau
     if (!Array.isArray(data)) {
-      logger.warn('[OptimizedClasseurService] ⚠️ Données reçues ne sont pas un tableau:', typeof data);
+      simpleLogger.warn('[OptimizedClasseurService] ⚠️ Données reçues ne sont pas un tableau:', typeof data);
       return false;
     }
 
@@ -90,13 +90,13 @@ export class OptimizedClasseurService {
     return data.every((classeur, index) => {
       // Vérifier la structure de base du classeur
       if (!classeur || typeof classeur.id !== 'string' || typeof classeur.name !== 'string') {
-        logger.warn(`[OptimizedClasseurService] ⚠️ Classeur ${index} invalide:`, classeur);
+        simpleLogger.warn(`[OptimizedClasseurService] ⚠️ Classeur ${index} invalide:`, classeur);
         return false;
       }
 
       // Vérifier que dossiers et notes sont des tableaux (même vides)
       if (!Array.isArray(classeur.dossiers) || !Array.isArray(classeur.notes)) {
-        logger.warn(`[OptimizedClasseurService] ⚠️ Classeur ${classeur.id} a des dossiers/notes invalides:`, {
+        simpleLogger.warn(`[OptimizedClasseurService] ⚠️ Classeur ${classeur.id} a des dossiers/notes invalides:`, {
           dossiers: typeof classeur.dossiers,
           notes: typeof classeur.notes
         });
@@ -107,7 +107,7 @@ export class OptimizedClasseurService {
       if (classeur.dossiers.length > 0) {
         const invalidDossiers = classeur.dossiers.filter(d => !d || typeof d.id !== 'string' || typeof d.name !== 'string');
         if (invalidDossiers.length > 0) {
-          logger.warn(`[OptimizedClasseurService] ⚠️ Classeur ${classeur.id} a des dossiers invalides:`, invalidDossiers);
+          simpleLogger.warn(`[OptimizedClasseurService] ⚠️ Classeur ${classeur.id} a des dossiers invalides:`, invalidDossiers);
           return false;
         }
       }
@@ -116,7 +116,7 @@ export class OptimizedClasseurService {
       if (classeur.notes.length > 0) {
         const invalidNotes = classeur.notes.filter(n => !n || typeof n.id !== 'string' || typeof n.source_title !== 'string');
         if (invalidNotes.length > 0) {
-          logger.warn(`[OptimizedClasseurService] ⚠️ Classeur ${classeur.id} a des notes invalides:`, invalidNotes);
+          simpleLogger.warn(`[OptimizedClasseurService] ⚠️ Classeur ${classeur.id} a des notes invalides:`, invalidNotes);
           return false;
         }
       }
@@ -142,11 +142,11 @@ export class OptimizedClasseurService {
         lastError = error instanceof Error ? error : new Error(String(error));
         
         if (attempt === maxAttempts) {
-          logger.error(`[OptimizedClasseurService] ❌ ${operationName} échoué après ${maxAttempts} tentatives:`, lastError);
+          simpleLogger.error(`[OptimizedClasseurService] ❌ ${operationName} échoué après ${maxAttempts} tentatives:`, lastError);
           throw lastError;
         }
         
-        logger.warn(`[OptimizedClasseurService] ⚠️ ${operationName} échoué (tentative ${attempt}/${maxAttempts}), retry dans ${this.RETRY_DELAY}ms:`, lastError);
+        simpleLogger.warn(`[OptimizedClasseurService] ⚠️ ${operationName} échoué (tentative ${attempt}/${maxAttempts}), retry dans ${this.RETRY_DELAY}ms:`, lastError);
         
         // Attendre avant de réessayer
         await new Promise(resolve => setTimeout(resolve, this.RETRY_DELAY * attempt));
@@ -189,7 +189,7 @@ export class OptimizedClasseurService {
     
     // 🔧 OPTIMISATION: Vérifier si un chargement est déjà en cours
     if (this.isUserLoading(userId)) {
-      logger.dev(`[OptimizedClasseurService] ⏳ Chargement déjà en cours pour ${userId}, attente...`);
+      simpleLogger.dev(`[OptimizedClasseurService] ⏳ Chargement déjà en cours pour ${userId}, attente...`);
       
       // Attendre que le chargement se termine
       let attempts = 0;
@@ -203,7 +203,7 @@ export class OptimizedClasseurService {
       // Vérifier le cache après attente
       const cached = this.cache.get(cacheKey);
       if (cached && !cached.loading && (Date.now() - cached.timestamp) < this.CACHE_TTL) {
-        logger.dev(`[OptimizedClasseurService] 🚀 Données récupérées du cache après attente`);
+        simpleLogger.dev(`[OptimizedClasseurService] 🚀 Données récupérées du cache après attente`);
         return cached.data;
       }
     }
@@ -211,7 +211,7 @@ export class OptimizedClasseurService {
     // 🔍 Vérifier le cache
     const cached = this.cache.get(cacheKey);
     if (cached && !cached.loading && (Date.now() - cached.timestamp) < this.CACHE_TTL) {
-      logger.dev('[OptimizedClasseurService] 🚀 Données récupérées du cache');
+      simpleLogger.dev('[OptimizedClasseurService] 🚀 Données récupérées du cache');
       return cached.data;
     }
 
@@ -219,7 +219,7 @@ export class OptimizedClasseurService {
     this.setUserLoading(userId, true);
 
     try {
-      logger.dev('[OptimizedClasseurService] 🚀 Début chargement optimisé des classeurs');
+      simpleLogger.dev('[OptimizedClasseurService] 🚀 Début chargement optimisé des classeurs');
 
       // 🔧 OPTIMISATION: Utiliser le système de retry
       const result = await this.withRetry(
@@ -228,8 +228,8 @@ export class OptimizedClasseurService {
       );
 
       // 🔧 OPTIMISATION: Mettre en cache avec validation
-      logger.dev('[OptimizedClasseurService] 🔍 Validation des données reçues...');
-      logger.dev('[OptimizedClasseurService] 📊 Données reçues:', {
+      simpleLogger.dev('[OptimizedClasseurService] 🔍 Validation des données reçues...');
+      simpleLogger.dev('[OptimizedClasseurService] 📊 Données reçues:', {
         type: typeof result,
         isArray: Array.isArray(result),
         length: Array.isArray(result) ? result.length : 'N/A',
@@ -237,7 +237,7 @@ export class OptimizedClasseurService {
       });
       
       if (this.validateClasseurData(result)) {
-        logger.dev('[OptimizedClasseurService] ✅ Validation réussie, mise en cache...');
+        simpleLogger.dev('[OptimizedClasseurService] ✅ Validation réussie, mise en cache...');
         this.cache.set(cacheKey, {
           data: result,
           timestamp: Date.now(),
@@ -247,8 +247,8 @@ export class OptimizedClasseurService {
         // 🔧 OPTIMISATION: Nettoyer le cache si nécessaire
         this.ensureCacheSizeLimit();
       } else {
-        logger.error('[OptimizedClasseurService] ❌ Données invalides après chargement');
-        logger.error('[OptimizedClasseurService] 🔍 Détails des données invalides:', result);
+        simpleLogger.error('[OptimizedClasseurService] ❌ Données invalides après chargement');
+        simpleLogger.error('[OptimizedClasseurService] 🔍 Détails des données invalides:', result);
         throw new Error('Données invalides reçues du serveur');
       }
 
@@ -263,7 +263,7 @@ export class OptimizedClasseurService {
         error: error instanceof Error ? error.message : 'Erreur inconnue'
       });
       
-      logger.error('[OptimizedClasseurService] ❌ Erreur chargement optimisé:', error);
+      simpleLogger.error('[OptimizedClasseurService] ❌ Erreur chargement optimisé:', error);
       throw error;
     } finally {
       // 🔧 OPTIMISATION: Toujours marquer comme terminé
@@ -288,7 +288,7 @@ export class OptimizedClasseurService {
     }
 
     const classeursTime = Date.now() - classeursStart;
-    logger.dev(`[OptimizedClasseurService] ✅ ${classeurs?.length || 0} classeurs récupérés en ${classeursTime}ms`);
+    simpleLogger.dev(`[OptimizedClasseurService] ✅ ${classeurs?.length || 0} classeurs récupérés en ${classeursTime}ms`);
 
     if (!classeurs || classeurs.length === 0) {
       // 🔧 OPTIMISATION: Mettre à jour le store même si aucun classeur
@@ -298,11 +298,11 @@ export class OptimizedClasseurService {
 
     // 🚀 Étape 2: Chargement parallèle de tout le contenu
     const contentStart = Date.now();
-    logger.dev(`[OptimizedClasseurService] 🚀 Chargement contenu pour ${classeurs.length} classeurs...`);
+    simpleLogger.dev(`[OptimizedClasseurService] 🚀 Chargement contenu pour ${classeurs.length} classeurs...`);
     
     const contentPromises = classeurs.map(async (classeur) => {
       try {
-        logger.dev(`[OptimizedClasseurService] 🔍 Chargement classeur ${classeur.id} (${classeur.name})...`);
+        simpleLogger.dev(`[OptimizedClasseurService] 🔍 Chargement classeur ${classeur.id} (${classeur.name})...`);
         
         // Charger dossiers et notes en parallèle pour chaque classeur
         const [dossiersResult, notesResult] = await Promise.all([
@@ -310,7 +310,7 @@ export class OptimizedClasseurService {
           this.getNotesForClasseur(classeur.id)
         ]);
 
-        logger.dev(`[OptimizedClasseurService] ✅ Classeur ${classeur.id}: ${dossiersResult.length} dossiers, ${notesResult.length} notes`);
+        simpleLogger.dev(`[OptimizedClasseurService] ✅ Classeur ${classeur.id}: ${dossiersResult.length} dossiers, ${notesResult.length} notes`);
 
         return {
           ...classeur,
@@ -318,7 +318,7 @@ export class OptimizedClasseurService {
           notes: notesResult
         };
       } catch (error) {
-        logger.warn(`[OptimizedClasseurService] ⚠️ Erreur chargement classeur ${classeur.id}:`, error);
+        simpleLogger.warn(`[OptimizedClasseurService] ⚠️ Erreur chargement classeur ${classeur.id}:`, error);
         return {
           ...classeur,
           dossiers: [],
@@ -333,7 +333,7 @@ export class OptimizedClasseurService {
     // 🚀 Étape 3: Mise à jour du store Zustand
     const storeStart = Date.now();
     
-    logger.dev(`[OptimizedClasseurService] 🔍 Store AVANT mise à jour:`, {
+    simpleLogger.dev(`[OptimizedClasseurService] 🔍 Store AVANT mise à jour:`, {
       classeurs: Object.keys(useFileSystemStore.getState().classeurs).length,
       folders: Object.keys(useFileSystemStore.getState().folders).length,
       notes: Object.keys(useFileSystemStore.getState().notes).length
@@ -356,7 +356,7 @@ export class OptimizedClasseurService {
       storeUpdateTime
     };
 
-    logger.dev(`[OptimizedClasseurService] 🎯 Performance:`, {
+    simpleLogger.dev(`[OptimizedClasseurService] 🎯 Performance:`, {
       total: `${totalTime}ms`,
       classeurs: `${classeursTime}ms`,
       content: `${contentTime}ms`,
@@ -417,7 +417,7 @@ export class OptimizedClasseurService {
       store.setFolders(folders);
       store.setNotes(notes);
       
-      logger.dev(`[OptimizedClasseurService] 🔍 Store APRÈS mise à jour:`, {
+      simpleLogger.dev(`[OptimizedClasseurService] 🔍 Store APRÈS mise à jour:`, {
         classeurs: Object.keys(store.classeurs).length,
         folders: Object.keys(store.folders).length,
         notes: Object.keys(store.notes).length,
@@ -426,7 +426,7 @@ export class OptimizedClasseurService {
         notesIds: Object.keys(store.notes)
       });
     } catch (error) {
-      logger.error('[OptimizedClasseurService] ❌ Erreur mise à jour store:', error);
+      simpleLogger.error('[OptimizedClasseurService] ❌ Erreur mise à jour store:', error);
       throw new Error('Erreur lors de la mise à jour de l\'interface');
     }
   }
@@ -435,7 +435,7 @@ export class OptimizedClasseurService {
    * Récupérer les dossiers d'un classeur spécifique avec retry
    */
   private async getDossiersForClasseur(classeurId: string) {
-    logger.dev(`[OptimizedClasseurService] 🔍 Récupération dossiers pour classeur ${classeurId}...`);
+    simpleLogger.dev(`[OptimizedClasseurService] 🔍 Récupération dossiers pour classeur ${classeurId}...`);
     
     return this.withRetry(async () => {
       const { data, error } = await supabase
@@ -448,7 +448,7 @@ export class OptimizedClasseurService {
         throw new Error(`Erreur dossiers classeur ${classeurId}: ${error.message}`);
       }
 
-      logger.dev(`[OptimizedClasseurService] ✅ ${data?.length || 0} dossiers récupérés pour classeur ${classeurId}`);
+      simpleLogger.dev(`[OptimizedClasseurService] ✅ ${data?.length || 0} dossiers récupérés pour classeur ${classeurId}`);
       return data || [];
     }, `Récupération dossiers classeur ${classeurId}`);
   }
@@ -457,7 +457,7 @@ export class OptimizedClasseurService {
    * Récupérer les notes d'un classeur spécifique avec retry
    */
   private async getNotesForClasseur(classeurId: string) {
-    logger.dev(`[OptimizedClasseurService] 🔍 Récupération notes pour classeur ${classeurId}...`);
+    simpleLogger.dev(`[OptimizedClasseurService] 🔍 Récupération notes pour classeur ${classeurId}...`);
     
     return this.withRetry(async () => {
       const { data, error } = await supabase
@@ -470,7 +470,7 @@ export class OptimizedClasseurService {
         throw new Error(`Erreur notes classeur ${classeurId}: ${error.message}`);
       }
 
-      logger.dev(`[OptimizedClasseurService] ✅ ${data?.length || 0} notes récupérées pour classeur ${classeurId}`);
+      simpleLogger.dev(`[OptimizedClasseurService] ✅ ${data?.length || 0} notes récupérées pour classeur ${classeurId}`);
       return data || [];
     }, `Récupération notes classeur ${classeurId}`);
   }
@@ -490,7 +490,7 @@ export class OptimizedClasseurService {
     }
     
     if (cleanedCount > 0) {
-      logger.dev(`[OptimizedClasseurService] 🗑️ Cache nettoyé: ${cleanedCount} entrées expirées supprimées`);
+      simpleLogger.dev(`[OptimizedClasseurService] 🗑️ Cache nettoyé: ${cleanedCount} entrées expirées supprimées`);
     }
   }
 
@@ -506,7 +506,7 @@ export class OptimizedClasseurService {
       const toRemove = entries.slice(0, this.cache.size - this.MAX_CACHE_SIZE);
       toRemove.forEach(([key]) => this.cache.delete(key));
       
-      logger.dev(`[OptimizedClasseurService] 🗑️ Cache limité: ${toRemove.length} entrées anciennes supprimées`);
+      simpleLogger.dev(`[OptimizedClasseurService] 🗑️ Cache limité: ${toRemove.length} entrées anciennes supprimées`);
     }
   }
 
@@ -516,7 +516,7 @@ export class OptimizedClasseurService {
   invalidateCache(userId: string) {
     const cacheKey = `classeurs_${userId}`;
     this.cache.delete(cacheKey);
-    logger.dev('[OptimizedClasseurService] 🗑️ Cache invalidé pour:', userId);
+    simpleLogger.dev('[OptimizedClasseurService] 🗑️ Cache invalidé pour:', userId);
   }
 
   /**
@@ -525,7 +525,7 @@ export class OptimizedClasseurService {
   clearAllCache() {
     const size = this.cache.size;
     this.cache.clear();
-    logger.dev(`[OptimizedClasseurService] ��️ Cache complet vidé: ${size} entrées supprimées`);
+    simpleLogger.dev(`[OptimizedClasseurService] 🗑️ Cache complet vidé: ${size} entrées supprimées`);
   }
 
   /**

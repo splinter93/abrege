@@ -1,115 +1,156 @@
-import React from 'react';
-import type { Editor } from '@tiptap/react';
+import React, { useEffect, useState, useRef } from 'react';
+import { FiPlus, FiTrash2 } from 'react-icons/fi';
 import './table-controls.css';
+import type { FullEditorInstance } from '@/types/editor';
+import { logger, LogCategory } from '@/utils/logger';
 
-type TableControlsProps = {
-  editor: Editor | null;
+interface TableControlsProps {
+  editor: FullEditorInstance | null;
   containerRef: React.RefObject<HTMLElement>;
-  hidden?: boolean;
-};
-
-function getClosestCell(el: Node | null): HTMLElement | null {
-  let node: any = el instanceof HTMLElement ? el : (el as any)?.nodeType ? (el as any) : null;
-  if (!node && (el as any) && (el as any).node) node = (el as any).node as Node;
-  while (node && node.nodeType === 3) node = node.parentElement; // text → element
-  let cur: HTMLElement | null = node instanceof HTMLElement ? node : null;
-  while (cur) {
-    if (cur.tagName === 'TD' || cur.tagName === 'TH') return cur;
-    cur = cur.parentElement;
-  }
-  return null;
 }
 
-export default function TableControls({ editor, containerRef, hidden }: TableControlsProps) {
-  const [visible, setVisible] = React.useState(false);
-  const [pos, setPos] = React.useState<{ top: number; left: number }>({ top: 0, left: 0 });
+interface Position {
+  top: number;
+  left: number;
+}
 
-  const updatePosition = React.useCallback(() => {
-    if (!editor || !containerRef.current) { setVisible(false); return; }
-    const view = (editor as any).view as import('prosemirror-view').EditorView;
-    const { state } = view;
-    const sel = state.selection;
-    // find DOM node at current selection
-    let domAt: any = null;
-    try { domAt = view.domAtPos(sel.from); } catch {}
-    const containerRect = containerRef.current.getBoundingClientRect();
-    const cell = getClosestCell(domAt ? (domAt.node as Node) : null);
-    if (!cell) { setVisible(false); return; }
-    const tableWrapper = cell.closest('.tableWrapper') || cell.closest('table');
-    if (!tableWrapper) { setVisible(false); return; }
-    const rect = (tableWrapper as HTMLElement).getBoundingClientRect();
-    // position near top-right of the table wrapper
-    const top = rect.top - containerRect.top - 10;  // 10px above
-    const left = rect.right - containerRect.left - 10 - 160; // width ~160px including padding
-    setPos({ top: Math.max(top, 0), left: Math.max(left, 0) });
-    setVisible(true);
-  }, [editor, containerRef]);
+const TableControls: React.FC<TableControlsProps> = ({ editor, containerRef }) => {
+  const [pos, setPos] = useState<Position>({ top: 0, left: 0 });
+  const [isVisible, setIsVisible] = useState(false);
+  const controlsRef = useRef<HTMLDivElement>(null);
 
-  React.useEffect(() => {
+  // Find table element at cursor position
+  const findTableAtCursor = (el: Element | null): Element | null => {
+    if (!el) return null;
+    let node: Element | null = el instanceof HTMLElement ? el : null;
+    if (!node && el && (el as unknown as { node?: Element }).node) {
+      node = (el as unknown as { node: Element }).node;
+    }
+    
+    // Walk up the DOM tree to find a table
+    while (node && node !== containerRef.current) {
+      if (node.nodeType === Node.ELEMENT_NODE && node.tagName === 'TABLE') {
+        return node;
+      }
+      node = node.parentElement;
+    }
+    return null;
+  };
+
+  // Update position when selection changes
+  const updatePosition = () => {
+    if (!editor || !containerRef.current) return;
+
+    try {
+      const view = editor.view;
+      const { from } = view.state.selection;
+      const coords = view.coordsAtPos(from);
+      
+      if (coords) {
+        const table = findTableAtCursor(view.dom.querySelector('.ProseMirror-selectednode'));
+        if (table) {
+          const rect = table.getBoundingClientRect();
+          const containerRect = containerRef.current.getBoundingClientRect();
+          
+          setPos({
+            top: rect.top - containerRect.top - 40,
+            left: rect.left - containerRect.left + rect.width / 2 - 60
+          });
+          setIsVisible(true);
+        } else {
+          setIsVisible(false);
+        }
+      }
+    } catch (error) {
+      logger.error(LogCategory.EDITOR, 'Erreur lors de la mise à jour de la position des contrôles de tableau', error);
+    }
+  };
+
+  // Subscribe to editor events
+  useEffect(() => {
     if (!editor) return;
-    const off1 = (editor as any).on?.('selectionUpdate', updatePosition);
-    const off2 = (editor as any).on?.('transaction', updatePosition);
-    const off3 = (editor as any).on?.('update', updatePosition);
-    updatePosition();
-    const onScroll = () => updatePosition();
-    window.addEventListener('scroll', onScroll, true);
-    window.addEventListener('resize', onScroll);
+
+    const off1 = editor.on?.('selectionUpdate', updatePosition);
+    const off2 = editor.on?.('transaction', updatePosition);
+    const off3 = editor.on?.('update', updatePosition);
+
     return () => {
-      if (typeof off1 === 'function') off1();
-      if (typeof off2 === 'function') off2();
-      if (typeof off3 === 'function') off3();
-      window.removeEventListener('scroll', onScroll, true);
-      window.removeEventListener('resize', onScroll);
+      off1?.();
+      off2?.();
+      off3?.();
     };
-  }, [editor, updatePosition]);
+  }, [editor]);
 
-  if (!editor || hidden) return null;
-  if (!visible) return null;
+  // Check if operations are possible
+  const canAddRowBefore = !!editor && !!editor.can?.().chain().focus().addRowBefore().run();
+  const canAddRowAfter = !!editor && !!editor.can?.().chain().focus().addRowAfter().run();
+  const canAddColBefore = !!editor && !!editor.can?.().chain().focus().addColumnBefore().run();
+  const canAddColAfter = !!editor && !!editor.can?.().chain().focus().addColumnAfter().run();
 
-  const canAddRowBefore = !!editor && !!(editor as any).can?.().chain().focus().addRowBefore().run();
-  const canAddRowAfter = !!editor && !!(editor as any).can?.().chain().focus().addRowAfter().run();
-  const canAddColBefore = !!editor && !!(editor as any).can?.().chain().focus().addColumnBefore().run();
-  const canAddColAfter = !!editor && !!(editor as any).can?.().chain().focus().addColumnAfter().run();
+  // Table operations
+  const addRowAbove = () => {
+    if (editor) {
+      editor.chain().focus().addRowBefore().run();
+    }
+  };
+  const addRowBelow = () => {
+    if (editor) {
+      editor.chain().focus().addRowAfter().run();
+    }
+  };
+  const addColLeft = () => {
+    if (editor) {
+      editor.chain().focus().addColumnBefore().run();
+    }
+  };
+  const addColRight = () => {
+    if (editor) {
+      editor.chain().focus().addColumnAfter().run();
+    }
+  };
 
-  const addRowAbove = () => (editor as any).chain().focus().addRowBefore().run();
-  const addRowBelow = () => (editor as any).chain().focus().addRowAfter().run();
-  const addColLeft = () => (editor as any).chain().focus().addColumnBefore().run();
-  const addColRight = () => (editor as any).chain().focus().addColumnAfter().run();
+  if (!isVisible || !editor) return null;
 
   return (
     <div className="table-controls" style={{ top: pos.top, left: pos.left }}>
       <div className="table-controls-row">
         <button
-          type="button"
-          className="table-controls-btn"
+          className="table-control-btn"
           onClick={addRowAbove}
           disabled={!canAddRowBefore}
           title="Ajouter une ligne au-dessus"
-        >+ ligne ↑</button>
+        >
+          <FiPlus size={14} />
+        </button>
         <button
-          type="button"
-          className="table-controls-btn"
+          className="table-control-btn"
           onClick={addRowBelow}
           disabled={!canAddRowAfter}
-          title="Ajouter une ligne en dessous"
-        >+ ligne ↓</button>
+          title="Ajouter une ligne en-dessous"
+        >
+          <FiPlus size={14} />
+        </button>
       </div>
-      <div className="table-controls-row">
+      <div className="table-controls-col">
         <button
-          type="button"
-          className="table-controls-btn"
+          className="table-control-btn"
           onClick={addColLeft}
           disabled={!canAddColBefore}
           title="Ajouter une colonne à gauche"
-        >+ col ←</button>
+        >
+          <FiPlus size={14} />
+        </button>
         <button
-          type="button"
-          className="table-controls-btn"
+          className="table-control-btn"
           onClick={addColRight}
           disabled={!canAddColAfter}
           title="Ajouter une colonne à droite"
-        >+ col →</button>
+        >
+          <FiPlus size={14} />
+        </button>
       </div>
     </div>
   );
-} 
+};
+
+export default TableControls; 
