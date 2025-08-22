@@ -20,12 +20,12 @@ export async function DELETE(
     clientType
   };
 
-  logApi('v2_note_delete', `🚀 Début suppression note v2 ${ref}`, context);
+  logApi.info(`🚀 Début suppression note v2 ${ref}`, context);
 
   // 🔐 Authentification
   const authResult = await getAuthenticatedUser(request);
   if (!authResult.success) {
-    logApi('v2_note_delete', `❌ Authentification échouée: ${authResult.error}`, context);
+    logApi.error(`❌ Authentification échouée: ${authResult.error}`, context);
     return NextResponse.json(
       { error: authResult.error },
       { status: authResult.status || 401, headers: { "Content-Type": "application/json" } }
@@ -39,7 +39,7 @@ export async function DELETE(
   const userToken = authHeader?.substring(7);
   
   if (!userToken) {
-    logApi('v2_note_delete', '❌ Token manquant', context);
+    logApi.error('❌ Token manquant', context);
     return NextResponse.json(
       { error: 'Token d\'authentification manquant' },
       { status: 401, headers: { "Content-Type": "application/json" } }
@@ -60,7 +60,7 @@ export async function DELETE(
     
     // Si ce n'est pas un UUID, essayer de le résoudre comme un slug
     if (!noteId.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
-      logApi('v2_note_delete', `🔍 Résolution slug: ${ref}`, context);
+      logApi.info(`🔍 Résolution slug: ${ref}`, context);
       
       const { data: note, error: resolveError } = await supabase
         .from('articles')
@@ -70,7 +70,7 @@ export async function DELETE(
         .single();
 
       if (resolveError || !note) {
-        logApi('v2_note_delete', `❌ Note non trouvée par slug: ${ref}`, context);
+        logApi.error(`❌ Note non trouvée par slug: ${ref}`, context);
         return NextResponse.json(
           { error: 'Note non trouvée' },
           { status: 404, headers: { "Content-Type": "application/json" } }
@@ -78,7 +78,7 @@ export async function DELETE(
       }
       
       noteId = note.id;
-      logApi('v2_note_delete', `✅ Slug résolu: ${ref} → ${noteId}`, context);
+      logApi.info(`✅ Slug résolu: ${ref} → ${noteId}`, context);
     }
 
     // Vérifier que la note existe et appartient à l'utilisateur
@@ -90,14 +90,14 @@ export async function DELETE(
       .single();
 
     if (fetchError || !existingNote) {
-      logApi('v2_note_delete', `❌ Note non trouvée ou accès refusé: ${noteId}`, context);
+      logApi.error(`❌ Note non trouvée ou accès refusé: ${noteId}`, context);
       return NextResponse.json(
         { error: 'Note non trouvée ou accès refusé' },
         { status: 404, headers: { "Content-Type": "application/json" } }
       );
     }
 
-    logApi('v2_note_delete', `🔍 Suppression note: ${existingNote.source_title} (${noteId})`, context);
+    logApi.info(`🔍 Suppression note: ${existingNote.source_title} (${noteId})`, context);
 
     // Supprimer la note
     const { error: deleteError } = await supabase
@@ -107,7 +107,7 @@ export async function DELETE(
       .eq('user_id', userId);
 
     if (deleteError) {
-      logApi('v2_note_delete', `❌ Erreur suppression: ${deleteError.message}`, context);
+      logApi.error(`❌ Erreur suppression: ${deleteError.message}`, context);
       return NextResponse.json(
         { error: `Erreur lors de la suppression: ${deleteError.message}` },
         { status: 500, headers: { "Content-Type": "application/json" } }
@@ -115,7 +115,7 @@ export async function DELETE(
     }
 
     const apiTime = Date.now() - startTime;
-    logApi('v2_note_delete', `✅ Note supprimée en ${apiTime}ms`, context);
+    logApi.info(`✅ Note supprimée en ${apiTime}ms`, context);
 
     return NextResponse.json({
       success: true,
@@ -124,7 +124,7 @@ export async function DELETE(
 
   } catch (err: unknown) {
     const error = err as Error;
-    logApi('v2_note_delete', `❌ Erreur serveur: ${error.message}`, context);
+    logApi.error(`❌ Erreur serveur: ${error.message}`, context);
     return NextResponse.json(
       { error: `Erreur serveur: ${error.message}` },
       { status: 500, headers: { "Content-Type": "application/json" } }

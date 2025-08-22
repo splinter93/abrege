@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/supabaseClient';
-import { logApi } from '@/utils/logger';
+// Temporairement désactivé pour éviter les erreurs
+// import { logApi } from '@/utils/logger';
 
 export interface User {
   id: string;
@@ -26,21 +27,21 @@ export function useAuth() {
       const { data: { session }, error } = await supabase.auth.getSession();
       
       if (error) {
-        logApi('auth', 'Erreur récupération session', { error: error.message });
+        console.log('🔧 Auth: Erreur récupération session', { error: error.message });
         setUser(null);
         setLoading(false);
         return;
       }
 
       if (session?.user) {
-        logApi('auth', 'Session utilisateur trouvée');
+        console.log('🔧 Auth: Session utilisateur trouvée');
         setUser(session.user);
       } else {
-        logApi('auth', 'Aucune session utilisateur');
+        console.log('🔧 Auth: Aucune session utilisateur');
         setUser(null);
       }
     } catch (error) {
-      logApi('auth', 'Erreur inattendue lors de la récupération de session');
+      console.log('🔧 Auth: Erreur inattendue lors de la récupération de session', error);
       setUser(null);
     } finally {
       setLoading(false);
@@ -53,13 +54,13 @@ export function useAuth() {
     // Écouter les changements d'authentification
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        logApi('auth', `Changement d'état d'authentification: ${event}`);
+        console.log(`🔧 Auth: Changement d'état d'authentification: ${event}`);
         
         if (event === 'SIGNED_IN' && session?.user) {
-          logApi('auth', 'Session utilisateur trouvée');
+          console.log('🔧 Auth: Session utilisateur trouvée');
           setUser(session.user);
         } else if (event === 'SIGNED_OUT') {
-          logApi('auth', 'Aucune session utilisateur');
+          console.log('🔧 Auth: Aucune session utilisateur');
           setUser(null);
         }
       }
@@ -81,15 +82,15 @@ export function useAuth() {
       });
 
       if (error) {
-        logApi('auth', 'Erreur connexion', { error: error.message });
+        console.log('🔧 Auth: Erreur connexion', { error: error.message });
         setError(error.message);
         return { error: error.message };
       }
 
-      logApi('auth', 'Connexion réussie', { userId: data.user?.id });
+      console.log('🔧 Auth: Connexion réussie', { userId: data.user?.id });
       return { user: data.user };
     } catch (error) {
-      logApi('auth', 'Erreur inattendue lors de la connexion', { error });
+      console.log('🔧 Auth: Erreur inattendue lors de la connexion', { error });
       setError('Erreur inattendue');
       return { error: 'Erreur inattendue' };
     } finally {
@@ -113,15 +114,15 @@ export function useAuth() {
       });
 
       if (error) {
-        logApi('auth', 'Erreur inscription', { error: error.message });
+        console.log('🔧 Auth: Erreur inscription', { error: error.message });
         setError(error.message);
         return { error: error.message };
       }
 
-      logApi('auth', 'Inscription réussie', { userId: data.user?.id });
+      console.log('🔧 Auth: Inscription réussie', { userId: data.user?.id });
       return { user: data.user };
     } catch (error) {
-      logApi('auth', 'Erreur inattendue lors de l\'inscription', { error });
+      console.log('🔧 Auth: Erreur inattendue lors de l\'inscription', { error });
       setError('Erreur inattendue');
       return { error: 'Erreur inattendue' };
     } finally {
@@ -136,15 +137,15 @@ export function useAuth() {
       const { error } = await supabase.auth.signOut();
       
       if (error) {
-        logApi('auth', 'Erreur déconnexion', { error: error.message });
+        console.log('🔧 Auth: Erreur déconnexion', { error: error.message });
         setError(error.message);
         return { error: error.message };
       }
 
-      logApi('auth', 'Déconnexion réussie');
+      console.log('🔧 Auth: Déconnexion réussie');
       return { success: true };
     } catch (error) {
-      logApi('auth', 'Erreur inattendue lors de la déconnexion', { error });
+      console.log('🔧 Auth: Erreur inattendue lors de la déconnexion', { error });
       setError('Erreur inattendue');
       return { error: 'Erreur inattendue' };
     } finally {

@@ -201,7 +201,7 @@ export function useFolderManagerState(classeurId: string, userId: string, parent
         name,
         notebook_id: classeurId,
         parent_id: parentFolderId,
-      }, userId);
+      });
       if (process.env.NODE_ENV === 'development') {
         logger.dev('[UI] ✅ Dossier créé avec API optimisée:', result.folder.name);
       }
@@ -235,7 +235,7 @@ export function useFolderManagerState(classeurId: string, userId: string, parent
       }
 
       // ✅ NETTOYAGE COMPLET: Laisser V2UnifiedApi gérer entièrement l'optimisme
-      const result = await v2UnifiedApi.createNote(payload, userId);
+      const result = await v2UnifiedApi.createNote(payload);
       
       if (process.env.NODE_ENV === 'development') {
         logger.dev('[UI] ✅ Note créée avec V2UnifiedApi uniquement:', result.note.source_title);
@@ -264,7 +264,7 @@ export function useFolderManagerState(classeurId: string, userId: string, parent
       }
       
       // ✅ NETTOYAGE: Laisser V2UnifiedApi gérer entièrement la suppression optimiste
-      await v2UnifiedApi.deleteFolder(id, userId);
+      await v2UnifiedApi.deleteFolder(id);
       
       if (process.env.NODE_ENV === 'development') {
         logger.dev('[UI] ✅ Dossier supprimé avec V2UnifiedApi uniquement');
@@ -289,7 +289,7 @@ export function useFolderManagerState(classeurId: string, userId: string, parent
     store.updateNote(id, { source_title: name });
 
     try {
-      await v2UnifiedApi.updateNote(id, { source_title: name }, userId);
+      await v2UnifiedApi.updateNote(id, { source_title: name });
       
       if (process.env.NODE_ENV === 'development') {
         logger.dev('[UI] ✅ Note renommée avec succès:', { id, newName: name });
@@ -316,7 +316,7 @@ export function useFolderManagerState(classeurId: string, userId: string, parent
     store.updateFolder(id, { name });
 
     try {
-      await v2UnifiedApi.updateFolder(id, { name }, userId);
+      await v2UnifiedApi.updateFolder(id, { name });
       
       if (process.env.NODE_ENV === 'development') {
         logger.dev('[UI] ✅ Dossier renommé avec succès:', { id, newName: name });
@@ -360,7 +360,7 @@ export function useFolderManagerState(classeurId: string, userId: string, parent
       }
       
       // ✅ NETTOYAGE: Laisser V2UnifiedApi gérer entièrement la suppression optimiste
-      await v2UnifiedApi.deleteNote(id, userId);
+      await v2UnifiedApi.deleteNote(id);
       
       if (process.env.NODE_ENV === 'development') {
         logger.dev('[UI] ✅ Note supprimée avec V2UnifiedApi uniquement');
@@ -394,7 +394,7 @@ export function useFolderManagerState(classeurId: string, userId: string, parent
         store.updateNote(id, { source_title: newName });
         
         // Appel API
-        await v2UnifiedApi.updateNote(id, { source_title: newName }, userId);
+        await v2UnifiedApi.updateNote(id, { source_title: newName });
         
         if (process.env.NODE_ENV === 'development') {
           logger.dev('[UI] ✅ Note renommée avec succès:', { id, newName });
@@ -412,7 +412,7 @@ export function useFolderManagerState(classeurId: string, userId: string, parent
         store.updateFolder(id, { name: newName });
         
         // Appel API
-        await v2UnifiedApi.updateFolder(id, { name: newName }, userId);
+        await v2UnifiedApi.updateFolder(id, { name: newName });
         
         if (process.env.NODE_ENV === 'development') {
           logger.dev('[UI] ✅ Dossier renommé avec succès:', { id, newName });
@@ -495,10 +495,10 @@ export function useFolderManagerState(classeurId: string, userId: string, parent
         logger.dev('[UI] 📦 Déplacement item avec API...', { id, newParentId, type });
       }
       if (type === 'folder') {
-        await v2UnifiedApi.moveFolder(id, newParentId, userId);
+        await v2UnifiedApi.moveFolder(id, newParentId);
       } else {
         // Utiliser l'API unifiée V2 pour le déplacement de note
-        const result = await v2UnifiedApi.moveNote(id, newParentId, userId);
+        const result = await v2UnifiedApi.moveNote(id, newParentId);
         if (process.env.NODE_ENV === 'development') {
           logger.dev('[UI] ✅ Note déplacée avec API unifiée V2:', result.note?.source_title || id);
         }

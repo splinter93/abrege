@@ -70,14 +70,16 @@ const TableControls: React.FC<TableControlsProps> = ({ editor, containerRef }) =
   useEffect(() => {
     if (!editor) return;
 
-    const off1 = editor.on?.('selectionUpdate', updatePosition);
-    const off2 = editor.on?.('transaction', updatePosition);
-    const off3 = editor.on?.('update', updatePosition);
+    // Use a more efficient polling approach
+    const interval = setInterval(() => {
+      // Only update position if editor is focused and has selection
+      if (editor.isFocused && editor.state.selection) {
+        updatePosition();
+      }
+    }, 200); // Check every 200ms when focused
 
     return () => {
-      off1?.();
-      off2?.();
-      off3?.();
+      clearInterval(interval);
     };
   }, [editor]);
 

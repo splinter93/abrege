@@ -16,6 +16,8 @@ export default function HomePage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
 
+
+
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragOver(true);
@@ -69,32 +71,28 @@ export default function HomePage() {
   }
 
   if (!user) {
+    // Afficher directement la page d'authentification au lieu de rediriger
     return (
-      <main style={{
-        padding: '48px 24px',
-        maxWidth: 880,
-        margin: '0 auto',
-        color: 'var(--text-1, #eaeaec)',
-        textAlign: 'center'
+      <div style={{
+        height: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%)',
+        color: 'white'
       }}>
-        <div style={{ marginBottom: 32 }}>
-          <LogoHeader size="xl" position="center" />
-        </div>
-        <h1 style={{ fontSize: 36, lineHeight: 1.2, margin: '0 0 24px 0' }}>
-          Scrivia
-        </h1>
-        <p style={{ opacity: 0.8, marginBottom: 32, fontSize: 18 }}>
-          A minimalist, LLM-friendly markdown knowledge base. Organize, write, and publish with clean URLs and a focused UI.
-        </p>
-        
-        <div style={{ marginBottom: 32 }}>
+        <div style={{ textAlign: 'center' }}>
+          <h1 style={{ fontSize: '2rem', marginBottom: '1rem' }}>Scrivia</h1>
+          <p style={{ marginBottom: '2rem', opacity: 0.8 }}>
+            A minimalist, LLM-friendly markdown knowledge base
+          </p>
           <button 
-            onClick={() => window.location.href = '/auth/signin'}
+            onClick={() => window.location.href = '/auth'}
             style={{
               padding: '12px 24px',
               fontSize: 16,
               borderRadius: 8,
-              background: 'var(--accent-primary, #2994ff)',
+              background: '#2994ff',
               color: 'white',
               border: 'none',
               cursor: 'pointer',
@@ -104,18 +102,7 @@ export default function HomePage() {
             Se connecter
           </button>
         </div>
-        
-        <div style={{ 
-          marginTop: 48, 
-          paddingTop: 24, 
-          borderTop: '1px solid rgba(255,255,255,0.1)',
-          opacity: 0.7
-        }}>
-          <p style={{ fontSize: 14 }}>
-            Connectez-vous pour accéder à votre espace personnel et voir votre activité récente.
-          </p>
-        </div>
-      </main>
+      </div>
     );
   }
 

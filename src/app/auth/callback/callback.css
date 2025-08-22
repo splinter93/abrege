@@ -1,0 +1,173 @@
+/* Page de callback d'authentification */
+
+.auth-callback-page {
+  min-height: 100vh;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
+  padding: 2rem;
+  font-family: 'Noto Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  box-sizing: border-box;
+}
+
+.auth-callback-container {
+  width: 100%;
+  max-width: 420px;
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  padding: 2.5rem;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  text-align: center;
+}
+
+.auth-callback-header {
+  margin-bottom: 2rem;
+}
+
+.auth-callback-title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 1rem 0 0 0;
+  letter-spacing: -0.02em;
+}
+
+.auth-callback-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+/* Spinner de chargement large */
+.loading-spinner-large {
+  width: 48px;
+  height: 48px;
+  border: 3px solid rgba(255, 255, 255, 0.1);
+  border-top: 3px solid var(--accent-primary, #2994ff);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Messages */
+.auth-callback-message {
+  font-size: 1.1rem;
+  color: rgba(255, 255, 255, 0.8);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.auth-callback-message.success {
+  color: #10b981;
+}
+
+.auth-callback-message.error {
+  color: #ef4444;
+}
+
+/* Icônes */
+.success-icon,
+.error-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.5rem;
+}
+
+.success-icon {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+}
+
+.error-icon {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+}
+
+.success-icon svg,
+.error-icon svg {
+  width: 32px;
+  height: 32px;
+}
+
+/* Bouton de retry */
+.auth-callback-retry-btn {
+  padding: 0.75rem 1.5rem;
+  background: var(--accent-primary, #2994ff);
+  border: none;
+  border-radius: 8px;
+  color: #ffffff;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.auth-callback-retry-btn:hover {
+  background: var(--accent-hover, #1a7fdb);
+  transform: translateY(-1px);
+}
+
+.auth-callback-retry-btn:active {
+  transform: translateY(0);
+}
+
+/* Animation d'entrée */
+.auth-callback-container {
+  animation: slideUp 0.6s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .auth-callback-page {
+    padding: 1rem;
+  }
+  
+  .auth-callback-container {
+    padding: 2rem 1.5rem;
+  }
+  
+  .auth-callback-title {
+    font-size: 1.5rem;
+  }
+  
+  .loading-spinner-large {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .success-icon,
+  .error-icon {
+    width: 56px;
+    height: 56px;
+  }
+  
+  .success-icon svg,
+  .error-icon svg {
+    width: 28px;
+    height: 28px;
+  }
+} 
