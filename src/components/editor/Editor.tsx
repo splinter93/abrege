@@ -55,11 +55,11 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
   const content = note?.content || note?.markdown_content || '';
   const { html } = useMarkdownRender({ content });
 
-  // 🚨 ÉTAT DE CHARGEMENT : Forcer la régénération de la TOC
+  // État de chargement : Forcer la régénération de la TOC
   const [noteLoaded, setNoteLoaded] = React.useState(false);
   const [forceTOCUpdate, setForceTOCUpdate] = React.useState(0);
 
-  // 🚨 FORCER la mise à jour de la TOC quand la note arrive
+  // Forcer la mise à jour de la TOC quand la note arrive
   React.useEffect(() => {
     if (note && content && !noteLoaded) {
       setNoteLoaded(true);
@@ -199,10 +199,10 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
     }, [content, noteId, updateNote]),
   });
 
-  // 🔧 Mise à jour intelligente du contenu de l'éditeur quand la note change
+  // Mise à jour intelligente du contenu de l'éditeur quand la note change
   const [isUpdatingFromStore, setIsUpdatingFromStore] = React.useState(false);
   
-  // 🚨 ÉCOUTEUR TEMPS RÉEL : Mettre à jour la TOC quand l'éditeur change
+  // Écouteur temps réel : Mettre à jour la TOC quand l'éditeur change
   React.useEffect(() => {
     if (!editor) return;
     
@@ -270,12 +270,9 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
         } catch {}
       }
       if (e.key === '/') {
-        console.log('🔍 [SLASH] Slash détecté!');
         // Ouvrir le menu slash pour tous les slashes (test)
         e.preventDefault();
         const coords = editor.view.coordsAtPos(editor.state.selection.from);
-        console.log('🔍 [SLASH] Coords:', coords);
-        console.log('🔍 [SLASH] slashMenuRef.current:', slashMenuRef.current);
         slashMenuRef.current?.openMenu({ left: coords.left, top: coords.top });
       }
     };
@@ -360,7 +357,7 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
         body: JSON.stringify(newSettings)
       });
       
-      // 🔧 CORRECTION : Ajouter plus de logs pour le debugging
+      // Ajouter plus de logs pour le debugging
       logger.debug(LogCategory.EDITOR, 'Réponse fetch reçue', {
         status: res.status,
         statusText: res.statusText,
@@ -368,8 +365,6 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
         url: apiUrl,
         method: 'PATCH'
       });
-      
-
       
       logger.info(LogCategory.EDITOR, 'Réponse reçue:', {
         status: res.status,
@@ -379,7 +374,7 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
       });
       
       if (!res.ok) {
-        // 🔧 CORRECTION : Ne pas appeler res.json() ici pour éviter le double appel
+        // Ne pas appeler res.json() ici pour éviter le double appel
         const errorText = await res.text();
         let errorData;
         try {
@@ -388,16 +383,7 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
           errorData = { error: errorText || 'Erreur mise à jour partage' };
         }
         
-        // 🔧 DEBUG : Vérifier ce qui est reçu de l'API
-        console.log('🔧 DEBUG - API Error Response:', {
-          status: res.status,
-          statusText: res.statusText,
-          errorText,
-          errorData,
-          parsedErrorData: errorData
-        });
-        
-        // 🔧 CORRECTION : Améliorer la gestion des erreurs pour éviter les objets vides
+        // Améliorer la gestion des erreurs pour éviter les objets vides
         const errorMessage = errorData?.error || errorData?.message || errorText || 'Erreur mise à jour partage';
         
         // Créer des détails d'erreur significatifs
@@ -406,13 +392,11 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
           errorDetails = { ...errorDetails, ...errorData };
         }
         
-        console.log('🔧 DEBUG - Error Details:', errorDetails);
-        
         logger.error(LogCategory.EDITOR, `Erreur API (${res.status}): ${errorMessage}`, errorDetails);
         throw new Error(errorMessage);
       }
       
-      // 🔧 CORRECTION : Vérifier que la réponse a du contenu avant de parser
+      // Vérifier que la réponse a du contenu avant de parser
       const responseText = await res.text();
       let responseData;
       
@@ -433,18 +417,9 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
       logger.info(LogCategory.EDITOR, 'Fin de handleShareSettingsChange avec succès');
       
     } catch (error) {
-      // 🔧 CORRECTION : Améliorer la gestion des erreurs pour éviter les objets vides
+      // Améliorer la gestion des erreurs pour éviter les objets vides
       const errorMessage = error instanceof Error ? error.message : String(error);
       const errorStack = error instanceof Error ? error.stack : 'Pas de stack trace';
-      
-      // 🔧 DEBUG : Vérifier l'erreur reçue
-      console.log('🔧 DEBUG - Catch Block Error:', {
-        error,
-        errorType: typeof error,
-        isError: error instanceof Error,
-        errorMessage,
-        errorStack
-      });
       
       // Créer un objet d'erreur structuré pour le logger
       const errorDetails = {
@@ -455,13 +430,6 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
         errorType: typeof error,
         errorString: String(error)
       };
-      
-      console.log('🔧 DEBUG - Error Details for Logger:', errorDetails);
-      console.log('🔧 DEBUG - Calling logger.error with:', {
-        category: LogCategory.EDITOR,
-        message: `ERREUR dans handleShareSettingsChange: ${errorMessage}`,
-        data: errorDetails
-      });
       
       logger.error(LogCategory.EDITOR, `ERREUR dans handleShareSettingsChange: ${errorMessage}`, errorDetails);
       logger.info(LogCategory.EDITOR, 'Fin de handleShareSettingsChange avec erreur');
@@ -623,12 +591,12 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
     }
   }, [editor]);
 
-  // Build headings for TOC - 🚨 DIRECTEMENT depuis l'éditeur Tiptap
+  // Build headings for TOC - DIRECTEMENT depuis l'éditeur Tiptap
   const headings = React.useMemo(() => {
-    // 🚨 PRIORITÉ 1 : Éditeur Tiptap (si disponible)
+    // PRIORITÉ 1 : Éditeur Tiptap (si disponible)
     if (editor) {
       try {
-        // 🎯 SOURCE DE VÉRITÉ : Utiliser directement l'éditeur Tiptap
+        // SOURCE DE VÉRITÉ : Utiliser directement l'éditeur Tiptap
         const doc = editor.state.doc;
         const items: { id: string; text: string; level: number }[] = [];
         
@@ -653,7 +621,7 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
       }
     }
     
-    // 🚨 PRIORITÉ 2 : Fallback markdown brut (pour chargement initial et erreurs)
+    // PRIORITÉ 2 : Fallback markdown brut (pour chargement initial et erreurs)
     if (content && content.trim()) {
       const markdownLines = content.split('\n');
       const fallbackItems: { id: string; text: string; level: number }[] = [];
@@ -674,16 +642,16 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
       return fallbackItems;
     }
     
-    // 🚨 AUCUN CONTENU : Retourner tableau vide
+    // AUCUN CONTENU : Retourner tableau vide
     return [];
-  }, [editor, content, note, noteId, forceTOCUpdate]); // 🚨 Ajout de forceTOCUpdate pour forcer la régénération
+  }, [editor, content, note, noteId, forceTOCUpdate]); // Ajout de forceTOCUpdate pour forcer la régénération
 
   const handlePreviewClick = React.useCallback(async () => {
     try {
-      // 🎯 SIMPLE : Prendre le slug depuis le store local
+      // Prendre le slug depuis le store local
       const noteData = useFileSystemStore.getState().notes[noteId];
       
-      // 🔒 VÉRIFICATION CRITIQUE : Vérifier la visibilité AVANT le slug
+      // Vérifier la visibilité AVANT le slug
       if (noteData?.share_settings?.visibility === 'private') {
         toast.error('Cette note est privée. Changez sa visibilité pour la prévisualiser.');
         return;
@@ -694,14 +662,14 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
         return;
       }
 
-      // 🎯 SIMPLE : Construire l'URL publique avec le username actuel
+      // Construire l'URL publique avec le username actuel
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         toast.error('Vous devez être connecté.');
         return;
       }
 
-      // 🎯 SIMPLE : Récupérer le username
+      // Récupérer le username
       const { data: userData } = await supabase
         .from('users')
         .select('username')
@@ -713,7 +681,7 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
         return;
       }
 
-      // 🎯 SIMPLE : Construire et ouvrir l'URL
+      // Construire et ouvrir l'URL
       const url = `${window.location.origin}/@${userData.username}/${noteData.slug}`;
       logger.debug(LogCategory.EDITOR, 'Ouverture de l\'URL publique:', url);
       window.open(url, '_blank', 'noopener,noreferrer');
@@ -973,13 +941,8 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
                   ref={slashMenuRef}
                   lang={slashLang}
                   onInsert={(cmd) => {
-                    console.log('🎯 [SLASH] Commande sélectionnée:', cmd);
-                    console.log('🎯 [SLASH] Editor disponible:', !!editor);
-                    console.log('🎯 [SLASH] Editor type:', typeof editor);
-                    console.log('🎯 [SLASH] Editor methods:', Object.keys(editor || {}));
-                    
                     if (!editor) {
-                      console.error('❌ [SLASH] Editor non disponible');
+                      console.error('Editor non disponible pour slash command');
                       return;
                     }
                     
@@ -996,20 +959,18 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
                         dispatch(state.tr.delete(deleteFrom, from));
                       }
                     } catch (error) {
-                      console.error('❌ [SLASH] Erreur suppression slash:', error);
+                      console.error('Erreur suppression slash:', error);
                     }
                     
                     // Execute command action
                     if (typeof cmd.action === 'function') {
-                      console.log('🎯 [SLASH] Exécution de la commande:', cmd.id);
                       try {
-                        const result = cmd.action(editor);
-                        console.log('🎯 [SLASH] Résultat de la commande:', result);
+                        cmd.action(editor);
                       } catch (error) {
-                        console.error('❌ [SLASH] Erreur exécution commande:', error);
+                        console.error('Erreur exécution commande:', error);
                       }
                     } else {
-                      console.error('❌ [SLASH] Action non définie pour la commande:', cmd.id);
+                      console.error('Action non définie pour la commande:', cmd.id);
                     }
                   }}
                 />
