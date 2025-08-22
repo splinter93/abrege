@@ -12,12 +12,12 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     clientType
   };
 
-  logApi('v2_notes_recent', '🚀 Début récupération notes récentes V2', context);
+  logApi.info('🚀 Début récupération notes récentes V2', context);
 
   // 🔐 Authentification V2
   const authResult = await getAuthenticatedUser(request);
   if (!authResult.success) {
-    logApi('v2_notes_recent', `❌ Authentification échouée: ${authResult.error}`, context);
+    logApi.info(`❌ Authentification échouée: ${authResult.error}`, context);
     return NextResponse.json(
       { error: authResult.error },
       { status: authResult.status || 401, headers: { "Content-Type": "application/json" } }
@@ -54,7 +54,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       .limit(limitNum);
 
     if (error) {
-      logApi('v2_notes_recent', `❌ Erreur Supabase: ${error.message}`, context);
+      logApi.info(`❌ Erreur Supabase: ${error.message}`, context);
       return NextResponse.json(
         { error: 'Erreur lors de la récupération des notes', details: error.message },
         { status: 500, headers: { "Content-Type": "application/json" } }
@@ -78,7 +78,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     })) || [];
 
     const apiTime = Date.now() - startTime;
-    logApi('v2_notes_recent', `✅ ${formattedNotes.length} notes récupérées en ${apiTime}ms`, context);
+    logApi.info(`✅ ${formattedNotes.length} notes récupérées en ${apiTime}ms`, context);
 
     return NextResponse.json({
       success: true,
@@ -87,7 +87,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
   } catch (err: unknown) {
     const error = err as Error;
-    logApi('v2_notes_recent', `❌ Erreur serveur: ${error}`, context);
+    logApi.info(`❌ Erreur serveur: ${error}`, context);
     return NextResponse.json(
       { error: 'Erreur interne du serveur', details: error.message },
       { status: 500, headers: { "Content-Type": "application/json" } }

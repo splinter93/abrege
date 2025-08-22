@@ -13,12 +13,12 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     clientType
   };
 
-  logApi('v2_folder_create', '🚀 Début création dossier v2', context);
+  logApi.info('🚀 Début création dossier v2', context);
 
   // 🔐 Authentification
   const authResult = await getAuthenticatedUser(request);
   if (!authResult.success) {
-    logApi('v2_folder_create', `❌ Authentification échouée: ${authResult.error}`, context);
+    logApi.error(`❌ Authentification échouée: ${authResult.error}`, authResult);
     return NextResponse.json(
       { error: authResult.error },
       { status: authResult.status || 401, headers: { "Content-Type": "application/json" } }
@@ -33,7 +33,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     // Validation Zod V2
     const validationResult = validatePayload(createFolderV2Schema, body);
     if (!validationResult.success) {
-      logApi('v2_folder_create', '❌ Validation échouée', context);
+      logApi.error('❌ Validation échouée', validationResult);
       return createValidationErrorResponse(validationResult);
     }
 
@@ -43,7 +43,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const result = await V2DatabaseUtils.createFolder(validatedData, userId, context);
 
     const apiTime = Date.now() - startTime;
-    logApi('v2_folder_create', `✅ Dossier créé en ${apiTime}ms`, context);
+    logApi.info(`✅ Dossier créé en ${apiTime}ms`, context);
 
     return NextResponse.json({
       success: true,
@@ -53,7 +53,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
   } catch (err: unknown) {
     const error = err as Error;
-    logApi('v2_folder_create', `❌ Erreur serveur: ${error}`, context);
+    logApi.error(`❌ Erreur serveur: ${error}`, error);
     return NextResponse.json(
       { error: 'Erreur serveur' },
       { status: 500, headers: { "Content-Type": "application/json" } }

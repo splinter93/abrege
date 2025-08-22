@@ -22,12 +22,12 @@ export async function GET(
     clientType
   };
 
-  logApi('v2_classeur_tree', `🚀 Début récupération arborescence classeur v2 ${ref}`, context);
+  logApi.info(`🚀 Début récupération arborescence classeur v2 ${ref}`, context);
 
   // 🔐 Authentification
   const authResult = await getAuthenticatedUser(request);
   if (!authResult.success) {
-    logApi('v2_classeur_tree', `❌ Authentification échouée: ${authResult.error}`, context);
+    logApi.info(`❌ Authentification échouée: ${authResult.error}`, context);
     return NextResponse.json(
       { error: authResult.error },
       { status: authResult.status || 401 }
@@ -41,7 +41,7 @@ export async function GET(
   const userToken = authHeader?.substring(7);
   
   if (!userToken) {
-    logApi('v2_tree', '❌ Token manquant', context);
+    logApi.info('❌ Token manquant', context);
     return NextResponse.json(
       { error: 'Token d\'authentification manquant' },
       { status: 401, headers: { "Content-Type": "application/json" } }
@@ -72,14 +72,14 @@ export async function GET(
   /*
   const permissionResult = await checkUserPermission(classeurId, 'classeur', 'viewer', userId, context);
   if (!permissionResult.success) {
-    logApi('v2_classeur_tree', `❌ Erreur vérification permissions: ${permissionResult.error}`, context);
+    logApi.info(`❌ Erreur vérification permissions: ${permissionResult.error}`, context);
     return NextResponse.json(
       { error: permissionResult.error },
       { status: permissionResult.status || 500 }
     );
   }
   if (!permissionResult.hasPermission) {
-    logApi('v2_classeur_tree', `❌ Permissions insuffisantes pour classeur ${classeurId}`, context);
+    logApi.info(`❌ Permissions insuffisantes pour classeur ${classeurId}`, context);
     return NextResponse.json(
       { error: 'Permissions insuffisantes pour accéder à ce classeur' },
       { status: 403, headers: { "Content-Type": "application/json" } }
@@ -89,7 +89,7 @@ export async function GET(
 
   try {
     // Récupérer le classeur principal
-    logApi('v2_classeur_tree', `🔍 Tentative récupération classeur: ${classeurId}`, context);
+    logApi.info(`🔍 Tentative récupération classeur: ${classeurId}`, context);
     
     const { data: classeur, error: classeurError } = await supabase
       .from('classeurs')
@@ -98,20 +98,20 @@ export async function GET(
       .single();
 
     if (classeurError) {
-      logApi('v2_classeur_tree', `❌ Erreur SQL récupération classeur: ${classeurError.message}`, context);
-      logApi('v2_classeur_tree', `❌ Code erreur: ${classeurError.code}`, context);
-      logApi('v2_classeur_tree', `❌ Détails: ${classeurError.details}`, context);
+      logApi.info(`❌ Erreur SQL récupération classeur: ${classeurError.message}`, context);
+      logApi.info(`❌ Code erreur: ${classeurError.code}`, context);
+      logApi.info(`❌ Détails: ${classeurError.details}`, context);
     }
 
     if (classeurError || !classeur) {
-      logApi('v2_classeur_tree', `❌ Classeur non trouvé: ${classeurId}`, context);
+      logApi.info(`❌ Classeur non trouvé: ${classeurId}`, context);
       return NextResponse.json(
         { error: 'Classeur non trouvé' },
         { status: 404, headers: { "Content-Type": "application/json" } }
       );
     }
 
-    logApi('v2_classeur_tree', `✅ Classeur trouvé: ${classeur.name} (${classeur.id})`, context);
+    logApi.info(`✅ Classeur trouvé: ${classeur.name} (${classeur.id})`, context);
 
     // 🔧 CORRECTION: Utiliser classeur_id ET notebook_id pour compatibilité
     // Récupérer les dossiers du classeur
@@ -122,14 +122,14 @@ export async function GET(
       .order('name');
 
     if (foldersError) {
-      logApi('v2_classeur_tree', `❌ Erreur récupération dossiers: ${foldersError.message}`, context);
+      logApi.info(`❌ Erreur récupération dossiers: ${foldersError.message}`, context);
       return NextResponse.json(
         { error: 'Erreur lors de la récupération des dossiers' },
         { status: 500, headers: { "Content-Type": "application/json" } }
       );
     }
 
-    logApi('v2_classeur_tree', `📁 Dossiers trouvés: ${folders?.length || 0}`, context);
+    logApi.info(`📁 Dossiers trouvés: ${folders?.length || 0}`, context);
 
     // 🔧 CORRECTION: Utiliser classeur_id ET notebook_id pour compatibilité
     // Récupérer les notes du classeur (sans dossier)
@@ -141,7 +141,7 @@ export async function GET(
       .order('source_title');
 
     if (notesError) {
-      logApi('v2_classeur_tree', `❌ Erreur récupération notes: ${notesError.message}`, context);
+      logApi.info(`❌ Erreur récupération notes: ${notesError.message}`, context);
       return NextResponse.json(
         { error: 'Erreur lors de la récupération des notes' },
         { status: 500, headers: { "Content-Type": "application/json" } }
@@ -161,20 +161,20 @@ export async function GET(
         .order('source_title');
 
       if (folderNotesError) {
-        logApi('v2_classeur_tree', `❌ Erreur récupération notes dans dossiers: ${folderNotesError.message}`, context);
+        logApi.info(`❌ Erreur récupération notes dans dossiers: ${folderNotesError.message}`, context);
         // Ne pas échouer complètement, continuer avec les notes à la racine
       } else {
         notesInFolders = folderNotes || [];
-        logApi('v2_classeur_tree', `📝 Notes dans dossiers trouvées: ${notesInFolders.length}`, context);
+        logApi.info(`📝 Notes dans dossiers trouvées: ${notesInFolders.length}`, context);
       }
     }
 
     // 🔧 CORRECTION: Combiner toutes les notes
     const allNotes = [...(notes || []), ...notesInFolders];
-    logApi('v2_classeur_tree', `📝 Total notes trouvées: ${allNotes.length}`, context);
+    logApi.info(`📝 Total notes trouvées: ${allNotes.length}`, context);
 
     const apiTime = Date.now() - startTime;
-    logApi('v2_classeur_tree', `✅ Arborescence récupérée en ${apiTime}ms`, context);
+    logApi.info(`✅ Arborescence récupérée en ${apiTime}ms`, context);
 
     return NextResponse.json({
       success: true,
@@ -217,7 +217,7 @@ export async function GET(
 
   } catch (err: unknown) {
     const error = err as Error;
-    logApi('v2_classeur_tree', `❌ Erreur serveur: ${error}`, context);
+    logApi.info(`❌ Erreur serveur: ${error}`, context);
     return NextResponse.json(
       { error: 'Erreur serveur' },
       { status: 500, headers: { "Content-Type": "application/json" } }

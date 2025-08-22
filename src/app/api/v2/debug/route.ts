@@ -15,12 +15,12 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     clientType
   };
 
-  logApi('v2_debug', '🚀 Début debug base de données', context);
+  logApi.info('🚀 Début debug base de données', context);
 
   // 🔐 Authentification
   const authResult = await getAuthenticatedUser(request);
   if (!authResult.success) {
-    logApi('v2_debug', `❌ Authentification échouée: ${authResult.error}`, context);
+    logApi.info(`❌ Authentification échouée: ${authResult.error}`, context);
     return NextResponse.json(
       { error: authResult.error },
       { status: authResult.status || 401, headers: { "Content-Type": "application/json" } }
@@ -34,7 +34,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   const userToken = authHeader?.substring(7);
   
   if (!userToken) {
-    logApi('v2_debug', '❌ Token manquant', context);
+    logApi.info('❌ Token manquant', context);
     return NextResponse.json(
       { error: 'Token d\'authentification manquant' },
       { status: 401, headers: { "Content-Type": "application/json" } }
@@ -106,7 +106,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     }
 
     const apiTime = Date.now() - startTime;
-    logApi('v2_debug', `✅ Debug terminé en ${apiTime}ms`, context);
+    logApi.info(`✅ Debug terminé en ${apiTime}ms`, context);
 
     return NextResponse.json({
       success: true,
@@ -115,7 +115,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
   } catch (err: unknown) {
     const error = err as Error;
-    logApi('v2_debug', `❌ Erreur serveur: ${error}`, context);
+    logApi.info(`❌ Erreur serveur: ${error}`, context);
     return NextResponse.json(
       { error: 'Erreur serveur' },
       { status: 500, headers: { "Content-Type": "application/json" } }

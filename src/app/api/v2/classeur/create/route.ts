@@ -17,12 +17,12 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     clientType
   };
 
-  logApi('v2_classeur_create', '🚀 Début création classeur v2', context);
+  logApi.info('🚀 Début création classeur v2', context);
 
   // 🔐 Authentification
   const authResult = await getAuthenticatedUser(request);
   if (!authResult.success) {
-    logApi('v2_classeur_create', `❌ Authentification échouée: ${authResult.error}`, context);
+    logApi.info(`❌ Authentification échouée: ${authResult.error}`, context);
     return NextResponse.json(
       { error: authResult.error },
       { status: authResult.status || 401, headers: { "Content-Type": "application/json" } }
@@ -36,7 +36,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   const userToken = authHeader?.substring(7);
   
   if (!userToken) {
-    logApi('v2_classeur_create', '❌ Token manquant', context);
+    logApi.info('❌ Token manquant', context);
     return NextResponse.json(
       { error: 'Token d\'authentification manquant' },
       { status: 401, headers: { "Content-Type": "application/json" } }
@@ -58,7 +58,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     // Validation Zod V2
     const validationResult = validatePayload(createClasseurV2Schema, body);
     if (!validationResult.success) {
-      logApi('v2_classeur_create', '❌ Validation échouée', context);
+      logApi.info('❌ Validation échouée', context);
       return createValidationErrorResponse(validationResult);
     }
 
@@ -82,7 +82,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       .single();
 
     if (createError) {
-      logApi('v2_classeur_create', `❌ Erreur création classeur: ${createError.message}`, context);
+      logApi.info(`❌ Erreur création classeur: ${createError.message}`, context);
       return NextResponse.json(
         { error: `Erreur création classeur: ${createError.message}` },
         { status: 500 }
@@ -95,7 +95,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     };
 
     const apiTime = Date.now() - startTime;
-    logApi('v2_classeur_create', `✅ Classeur créé en ${apiTime}ms`, context);
+    logApi.info(`✅ Classeur créé en ${apiTime}ms`, context);
 
     return NextResponse.json({
       success: true,
@@ -105,7 +105,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
   } catch (err: unknown) {
     const error = err as Error;
-    logApi('v2_classeur_create', `❌ Erreur serveur: ${error}`, context);
+    logApi.info(`❌ Erreur serveur: ${error}`, context);
     return NextResponse.json(
       { error: 'Erreur serveur' },
       { status: 500, headers: { "Content-Type": "application/json" } }

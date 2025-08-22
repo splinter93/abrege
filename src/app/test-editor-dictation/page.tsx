@@ -10,6 +10,7 @@ export default function TestEditorDictation() {
 
   const editor = useEditor({
     extensions: [StarterKit],
+    immediatelyRender: false, // Éviter les erreurs de SSR/hydration
     content: '<p>Cliquez sur le bouton microphone dans la toolbar pour tester la dictée vocale ! 🎤</p><p>Placez votre curseur où vous voulez insérer le texte dicté.</p>',
   });
 

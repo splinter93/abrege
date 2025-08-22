@@ -166,6 +166,7 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
   // Real Tiptap editor instance (Markdown as source of truth)
   const editor = useEditor({
     editable: !isReadonly,
+    immediatelyRender: false, // Éviter les erreurs de SSR/hydration
     extensions: [
       StarterKit.configure({ 
         codeBlock: false,

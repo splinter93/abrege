@@ -22,12 +22,12 @@ export async function GET(
     clientType
   };
 
-  logApi('v2_note_metadata', `🚀 Début récupération métadonnées note v2 ${ref}`, context);
+  logApi.info(`🚀 Début récupération métadonnées note v2 ${ref}`, context);
 
   // 🔐 Authentification
   const authResult = await getAuthenticatedUser(request);
   if (!authResult.success) {
-    logApi('v2_note_metadata', `❌ Authentification échouée: ${authResult.error}`, context);
+    logApi.info(`❌ Authentification échouée: ${authResult.error}`, context);
     return NextResponse.json(
       { error: authResult.error },
       { status: authResult.status || 401, headers: { "Content-Type": "application/json" } }
@@ -41,7 +41,7 @@ export async function GET(
   const userToken = authHeader?.substring(7);
   
   if (!userToken) {
-    logApi('v2_metadata', '❌ Token manquant', context);
+    logApi.info('❌ Token manquant', context);
     return NextResponse.json(
       { error: 'Token d\'authentification manquant' },
       { status: 401, headers: { "Content-Type": "application/json" } }
@@ -78,7 +78,7 @@ export async function GET(
       .single();
     
     if (articleError || !article) {
-      logApi('v2_note_metadata', `❌ Note non trouvée: ${noteId}`, context);
+      logApi.info(`❌ Note non trouvée: ${noteId}`, context);
       return NextResponse.json(
         { error: 'Note non trouvée' },
         { status: 404, headers: { "Content-Type": "application/json" } }
@@ -92,16 +92,16 @@ export async function GET(
     const isAccessible = article.share_settings?.visibility !== 'private';
     
     if (!isOwner && !isAccessible) {
-      logApi('v2_note_metadata', `❌ Accès refusé pour note ${noteId}`, context);
+      logApi.info(`❌ Accès refusé pour note ${noteId}`, context);
       return NextResponse.json(
         { error: 'Accès refusé' },
         { status: 403, headers: { "Content-Type": "application/json" } }
       );
     }
 
-    logApi('v2_note_metadata', `✅ Accès autorisé pour note ${noteId} (propriétaire: ${isOwner}, accessible: ${isAccessible})`, context);
+    logApi.info(`✅ Accès autorisé pour note ${noteId} (propriétaire: ${isOwner}, accessible: ${isAccessible})`, context);
   } catch (error) {
-    logApi('v2_note_metadata', `❌ Erreur vérification accès: ${error}`, context);
+    logApi.info(`❌ Erreur vérification accès: ${error}`, context);
     return NextResponse.json(
       { error: 'Erreur lors de la vérification des permissions' },
       { status: 500, headers: { "Content-Type": "application/json" } }
@@ -129,7 +129,7 @@ export async function GET(
       .single();
 
     if (fetchError || !note) {
-      logApi('v2_note_metadata', `❌ Note non trouvée: ${noteId}`, context);
+      logApi.info(`❌ Note non trouvée: ${noteId}`, context);
       return NextResponse.json(
         { error: 'Note non trouvée' },
         { status: 404 }
@@ -159,7 +159,7 @@ export async function GET(
     }
 
     const apiTime = Date.now() - startTime;
-    logApi('v2_note_metadata', `✅ Métadonnées récupérées en ${apiTime}ms`, context);
+    logApi.info(`✅ Métadonnées récupérées en ${apiTime}ms`, context);
 
     return NextResponse.json({
       success: true,
@@ -181,7 +181,7 @@ export async function GET(
 
   } catch (err: unknown) {
     const error = err as Error;
-    logApi('v2_note_metadata', `❌ Erreur serveur: ${error}`, context);
+    logApi.info(`❌ Erreur serveur: ${error}`, context);
     return NextResponse.json(
       { error: 'Erreur serveur' },
       { status: 500 }

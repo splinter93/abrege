@@ -16,6 +16,7 @@ export default function TestEditorCursor() {
 
   const editor = useEditor({
     extensions: [StarterKit, Markdown.configure({ html: false })],
+    immediatelyRender: false, // Éviter les erreurs de SSR/hydration
     content: content,
     onUpdate: ({ editor }) => {
       const md = editor.storage?.markdown?.getMarkdown?.() || '';

@@ -17,12 +17,12 @@ export async function DELETE(
     clientType
   };
 
-  logApi('v2_folder_delete', `🚀 Début suppression dossier v2 ${ref}`, context);
+  logApi.info(`🚀 Début suppression dossier v2 ${ref}`, context);
 
   // 🔐 Authentification
   const authResult = await getAuthenticatedUser(request);
   if (!authResult.success) {
-    logApi('v2_folder_delete', `❌ Authentification échouée: ${authResult.error}`, context);
+    logApi.info(`❌ Authentification échouée: ${authResult.error}`, context);
     return NextResponse.json(
       { error: authResult.error },
       { status: authResult.status || 401, headers: { "Content-Type": "application/json" } }
@@ -36,7 +36,7 @@ export async function DELETE(
     const result = await V2DatabaseUtils.deleteFolder(ref, userId, context);
 
     const apiTime = Date.now() - startTime;
-    logApi('v2_folder_delete', `✅ Dossier supprimé en ${apiTime}ms`, context);
+    logApi.info(`✅ Dossier supprimé en ${apiTime}ms`, context);
 
     return NextResponse.json({
       success: true,
@@ -45,7 +45,7 @@ export async function DELETE(
 
   } catch (err: unknown) {
     const error = err as Error;
-    logApi('v2_folder_delete', `❌ Erreur serveur: ${error}`, context);
+    logApi.info(`❌ Erreur serveur: ${error}`, context);
     return NextResponse.json(
       { error: 'Erreur serveur' },
       { status: 500, headers: { "Content-Type": "application/json" } }

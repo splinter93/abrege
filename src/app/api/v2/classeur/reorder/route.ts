@@ -13,12 +13,12 @@ export async function PUT(request: NextRequest): Promise<NextResponse> {
     clientType
   };
 
-  logApi('v2_classeur_reorder', '🚀 Début réorganisation classeurs v2', context);
+  logApi.info('🚀 Début réorganisation classeurs v2', context);
 
   // 🔐 Authentification
   const authResult = await getAuthenticatedUser(request);
   if (!authResult.success) {
-    logApi('v2_classeur_reorder', `❌ Authentification échouée: ${authResult.error}`, context);
+    logApi.info(`❌ Authentification échouée: ${authResult.error}`, context);
     return NextResponse.json(
       { error: authResult.error },
       { status: authResult.status || 401, headers: { "Content-Type": "application/json" } }
@@ -33,7 +33,7 @@ export async function PUT(request: NextRequest): Promise<NextResponse> {
     // Validation Zod V2
     const validationResult = validatePayload(reorderClasseursV2Schema, body);
     if (!validationResult.success) {
-      logApi('v2_classeur_reorder', '❌ Validation échouée', context);
+      logApi.info('❌ Validation échouée', context);
       return createValidationErrorResponse(validationResult);
     }
 
@@ -43,7 +43,7 @@ export async function PUT(request: NextRequest): Promise<NextResponse> {
     const result = await V2DatabaseUtils.reorderClasseurs(validatedData.classeurs, userId, context);
 
     const apiTime = Date.now() - startTime;
-    logApi('v2_classeur_reorder', `✅ Classeurs réorganisés en ${apiTime}ms`, context);
+    logApi.info(`✅ Classeurs réorganisés en ${apiTime}ms`, context);
 
     return NextResponse.json({
       success: true,
@@ -53,7 +53,7 @@ export async function PUT(request: NextRequest): Promise<NextResponse> {
 
   } catch (err: unknown) {
     const error = err as Error;
-    logApi('v2_classeur_reorder', `❌ Erreur serveur: ${error}`, context);
+    logApi.info(`❌ Erreur serveur: ${error}`, context);
     return NextResponse.json(
       { error: 'Erreur serveur' },
       { status: 500, headers: { "Content-Type": "application/json" } }

@@ -18,12 +18,12 @@ export async function PUT(
     clientType
   };
 
-  logApi('v2_folder_update', `🚀 Début mise à jour dossier v2 ${ref}`, context);
+  logApi.info(`🚀 Début mise à jour dossier v2 ${ref}`, context);
 
   // 🔐 Authentification
   const authResult = await getAuthenticatedUser(request);
   if (!authResult.success) {
-    logApi('v2_folder_update', `❌ Authentification échouée: ${authResult.error}`, context);
+    logApi.info(`❌ Authentification échouée: ${authResult.error}`, context);
     return NextResponse.json(
       { error: authResult.error },
       { status: authResult.status || 401, headers: { "Content-Type": "application/json" } }
@@ -38,7 +38,7 @@ export async function PUT(
     // Validation Zod V2
     const validationResult = validatePayload(updateFolderV2Schema, body);
     if (!validationResult.success) {
-      logApi('v2_folder_update', '❌ Validation échouée', context);
+      logApi.info('❌ Validation échouée', context);
       return createValidationErrorResponse(validationResult);
     }
 
@@ -48,7 +48,7 @@ export async function PUT(
     const result = await V2DatabaseUtils.updateFolder(ref, validatedData, userId, context);
 
     const apiTime = Date.now() - startTime;
-    logApi('v2_folder_update', `✅ Dossier mis à jour en ${apiTime}ms`, context);
+    logApi.info(`✅ Dossier mis à jour en ${apiTime}ms`, context);
 
     return NextResponse.json({
       success: true,
@@ -58,7 +58,7 @@ export async function PUT(
 
   } catch (err: unknown) {
     const error = err as Error;
-    logApi('v2_folder_update', `❌ Erreur serveur: ${error}`, context);
+    logApi.info(`❌ Erreur serveur: ${error}`, context);
     return NextResponse.json(
       { error: 'Erreur serveur' },
       { status: 500, headers: { "Content-Type": "application/json" } }

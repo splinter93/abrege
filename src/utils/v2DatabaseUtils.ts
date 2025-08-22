@@ -558,12 +558,45 @@ export class V2DatabaseUtils {
 
       const folderId = resolveResult.id;
 
+      // Charger l'état courant pour comparaison de nom
+      const { data: currentFolder, error: currentError } = await supabase
+        .from('folders')
+        .select('id, name, slug')
+        .eq('id', folderId)
+        .eq('user_id', userId)
+        .single();
+
+      if (currentError) {
+        throw new Error(`Erreur lecture dossier: ${currentError.message}`);
+      }
+
       // Préparer les données de mise à jour
       const updateData: any = {};
       if (data.name) updateData.name = data.name;
       if (data.parent_id !== undefined) updateData.parent_id = data.parent_id;
-      // Note: updated_at n'existe pas dans la table folders
-      // Les mises à jour sont tracées via la logique métier
+
+      // 🔧 NOUVEAU : Mise à jour automatique du slug si le nom change
+      if (data.name && data.name !== currentFolder.name) {
+        try {
+          // Importer SlugGenerator dynamiquement pour éviter les dépendances circulaires
+          const { SlugGenerator } = await import('@/utils/slugGenerator');
+          const newSlug = await SlugGenerator.generateSlug(
+            data.name,
+            'folder',
+            userId,
+            folderId,
+            supabase
+          );
+          updateData.slug = newSlug;
+          
+          if (process.env.NODE_ENV === 'development') {
+            console.log(`[V2DatabaseUtils] Mise à jour slug dossier: "${currentFolder.name}" → "${data.name}" → "${newSlug}"`);
+          }
+        } catch (error) {
+          logApi.error(`❌ Erreur mise à jour slug pour le dossier ${folderId}: ${error}`);
+          // Continuer sans mettre à jour le slug en cas d'erreur
+        }
+      }
 
       // Vérifier que le nouveau parent existe et appartient à l'utilisateur
       if (data.parent_id) {
@@ -808,6 +841,18 @@ export class V2DatabaseUtils {
         classeurId = found.id;
       }
 
+      // Charger l'état courant pour comparaison de nom
+      const { data: currentClasseur, error: currentError } = await client
+        .from('classeurs')
+        .select('id, name, slug')
+        .eq('id', classeurId)
+        .eq('user_id', userId)
+        .single();
+
+      if (currentError) {
+        throw new Error(`Erreur lecture classeur: ${currentError.message}`);
+      }
+
       // Préparer les données de mise à jour
       const updateData: any = {};
       if (data.name) updateData.name = data.name;
@@ -815,6 +860,29 @@ export class V2DatabaseUtils {
       if (data.icon !== undefined) updateData.emoji = data.icon;
       if (data.position !== undefined) updateData.position = data.position;
       updateData.updated_at = new Date().toISOString();
+
+      // 🔧 NOUVEAU : Mise à jour automatique du slug si le nom change
+      if (data.name && data.name !== currentClasseur.name) {
+        try {
+          // Importer SlugGenerator dynamiquement pour éviter les dépendances circulaires
+          const { SlugGenerator } = await import('@/utils/slugGenerator');
+          const newSlug = await SlugGenerator.generateSlug(
+            data.name,
+            'classeur',
+            userId,
+            classeurId,
+            client
+          );
+          updateData.slug = newSlug;
+          
+          if (process.env.NODE_ENV === 'development') {
+            console.log(`[V2DatabaseUtils] Mise à jour slug classeur: "${currentClasseur.name}" → "${data.name}" → "${newSlug}"`);
+          }
+        } catch (error) {
+          logApi.error(`❌ Erreur mise à jour slug pour le classeur ${classeurId}: ${error}`);
+          // Continuer sans mettre à jour le slug en cas d'erreur
+        }
+      }
 
       // Mettre à jour le classeur
       const { data: classeur, error: updateError } = await client

@@ -22,12 +22,12 @@ export async function GET(
     clientType
   };
 
-  logApi('v2_folder_tree', `🚀 Début récupération arborescence dossier v2 ${ref}`, context);
+  logApi.info(`🚀 Début récupération arborescence dossier v2 ${ref}`, context);
 
   // 🔐 Authentification
   const authResult = await getAuthenticatedUser(request);
   if (!authResult.success) {
-    logApi('v2_folder_tree', `❌ Authentification échouée: ${authResult.error}`, context);
+    logApi.info(`❌ Authentification échouée: ${authResult.error}`, context);
     return NextResponse.json(
       { error: authResult.error },
       { status: authResult.status || 401, headers: { "Content-Type": "application/json" } }
@@ -41,7 +41,7 @@ export async function GET(
   const userToken = authHeader?.substring(7);
   
   if (!userToken) {
-    logApi('v2_tree', '❌ Token manquant', context);
+    logApi.info('❌ Token manquant', context);
     return NextResponse.json(
       { error: 'Token d\'authentification manquant' },
       { status: 401, headers: { "Content-Type": "application/json" } }
@@ -71,14 +71,14 @@ export async function GET(
   // 🔐 Vérification des permissions
   const permissionResult = await checkUserPermission(folderId, 'folder', 'viewer', userId, context);
   if (!permissionResult.success) {
-    logApi('v2_folder_tree', `❌ Erreur vérification permissions: ${permissionResult.error}`, context);
+    logApi.info(`❌ Erreur vérification permissions: ${permissionResult.error}`, context);
     return NextResponse.json(
       { error: permissionResult.error },
       { status: permissionResult.status || 500, headers: { "Content-Type": "application/json" } }
     );
   }
   if (!permissionResult.hasPermission) {
-    logApi('v2_folder_tree', `❌ Permissions insuffisantes pour dossier ${folderId}`, context);
+    logApi.info(`❌ Permissions insuffisantes pour dossier ${folderId}`, context);
     return NextResponse.json(
       { error: 'Permissions insuffisantes pour accéder à ce dossier' },
       { status: 403, headers: { "Content-Type": "application/json" } }
@@ -94,7 +94,7 @@ export async function GET(
       .single();
 
     if (folderError || !folder) {
-      logApi('v2_folder_tree', `❌ Dossier non trouvé: ${folderId}`, context);
+      logApi.info(`❌ Dossier non trouvé: ${folderId}`, context);
       return NextResponse.json(
         { error: 'Dossier non trouvé' },
         { status: 404, headers: { "Content-Type": "application/json" } }
@@ -109,7 +109,7 @@ export async function GET(
       .order('name');
 
     if (subfoldersError) {
-      logApi('v2_folder_tree', `❌ Erreur récupération sous-dossiers: ${subfoldersError.message}`, context);
+      logApi.info(`❌ Erreur récupération sous-dossiers: ${subfoldersError.message}`, context);
       return NextResponse.json(
         { error: 'Erreur lors de la récupération des sous-dossiers' },
         { status: 500, headers: { "Content-Type": "application/json" } }
@@ -124,7 +124,7 @@ export async function GET(
       .order('source_title');
 
     if (notesError) {
-      logApi('v2_folder_tree', `❌ Erreur récupération notes: ${notesError.message}`, context);
+      logApi.info(`❌ Erreur récupération notes: ${notesError.message}`, context);
       return NextResponse.json(
         { error: 'Erreur lors de la récupération des notes' },
         { status: 500, headers: { "Content-Type": "application/json" } }
@@ -132,7 +132,7 @@ export async function GET(
     }
 
     const apiTime = Date.now() - startTime;
-    logApi('v2_folder_tree', `✅ Arborescence récupérée en ${apiTime}ms`, context);
+    logApi.info(`✅ Arborescence récupérée en ${apiTime}ms`, context);
 
     return NextResponse.json({
       success: true,
@@ -167,7 +167,7 @@ export async function GET(
 
   } catch (err: unknown) {
     const error = err as Error;
-    logApi('v2_folder_tree', `❌ Erreur serveur: ${error}`, context);
+    logApi.info(`❌ Erreur serveur: ${error}`, context);
     return NextResponse.json(
       { error: 'Erreur serveur' },
       { status: 500, headers: { "Content-Type": "application/json" } }

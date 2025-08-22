@@ -29,12 +29,12 @@ export async function PATCH(
     clientType
   };
 
-  logApi('v2_note_appearance_update', `🚀 Début mise à jour apparence note v2 ${ref}`, context);
+  logApi.info(`🚀 Début mise à jour apparence note v2 ${ref}`, context);
 
   // 🔐 Authentification
   const authResult = await getAuthenticatedUser(request);
   if (!authResult.success) {
-    logApi('v2_note_appearance_update', `❌ Authentification échouée: ${authResult.error}`, context);
+    logApi.info(`❌ Authentification échouée: ${authResult.error}`, context);
     return NextResponse.json(
       { error: authResult.error },
       { status: authResult.status || 401, headers: { "Content-Type": "application/json" } }
@@ -49,7 +49,7 @@ export async function PATCH(
     // Validation Zod
     const validationResult = appearanceUpdateSchema.safeParse(body);
     if (!validationResult.success) {
-      logApi('v2_note_appearance_update', '❌ Validation échouée', context);
+      logApi.info('❌ Validation échouée', context);
       return NextResponse.json(
         { error: 'Payload invalide', details: validationResult.error.errors.map(e => e.message) },
         { status: 422, headers: { "Content-Type": "application/json" } }
@@ -62,7 +62,7 @@ export async function PATCH(
     const result = await V2DatabaseUtils.updateNote(ref, validatedData, userId, context);
 
     const apiTime = Date.now() - startTime;
-    logApi('v2_note_appearance_update', `✅ Apparence note mise à jour en ${apiTime}ms`, context);
+    logApi.info(`✅ Apparence note mise à jour en ${apiTime}ms`, context);
 
     return NextResponse.json({
       success: true,
@@ -72,7 +72,7 @@ export async function PATCH(
 
   } catch (err: unknown) {
     const error = err as Error;
-    logApi('v2_note_appearance_update', `❌ Erreur serveur: ${error}`, context);
+    logApi.info(`❌ Erreur serveur: ${error}`, context);
     return NextResponse.json(
       { error: 'Erreur serveur' },
       { status: 500, headers: { "Content-Type": "application/json" } }

@@ -83,7 +83,7 @@ async function logFileEvent(params: {
     });
   } catch (error) {
     // Log l'erreur mais ne pas faire échouer l'upload
-    logApi('file_audit', `⚠️ Erreur audit trail: ${error.message}`, {
+    logApi.info(`⚠️ Erreur audit trail: ${error.message}`, {
       fileId: params.fileId,
       userId: params.userId,
       eventType: params.eventType,
@@ -99,7 +99,7 @@ async function updateStorageUsage(userId: string): Promise<void> {
   try {
     await supabase.rpc('update_user_storage_usage', { user_uuid: userId });
   } catch (error) {
-    logApi('storage_usage', `⚠️ Erreur mise à jour usage: ${error.message}`, { userId });
+    logApi.info(`⚠️ Erreur mise à jour usage: ${error.message}`, { userId });
   }
 }
 
@@ -118,7 +118,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     
     const authResult = await getAuthenticatedUser(request);
     if (!authResult.success || !authResult.userId) {
-      logApi('v2_files_upload', `❌ Authentification échouée: ${authResult.error}`, { requestId });
+      logApi.info(`❌ Authentification échouée: ${authResult.error}`, { requestId });
       return NextResponse.json(
         { error: authResult.error || 'Authentification requise' }, 
         { status: authResult.status || 401 }
@@ -137,7 +137,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       const body = await request.json();
       uploadData = uploadSchema.parse(body);
          } catch (error) {
-       logApi('v2_files_upload', `❌ Validation des données échouée: ${error.message}`, { 
+       logApi.info(`❌ Validation des données échouée: ${error.message}`, { 
          requestId, 
          userId 
        });
@@ -153,7 +153,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
      
      // Validation du Content-Type côté serveur
      if (!validateContentType(uploadData.fileType)) {
-       logApi('v2_files_upload', `❌ Type de fichier non autorisé: ${uploadData.fileType}`, { 
+       logApi.info(`❌ Type de fichier non autorisé: ${uploadData.fileType}`, { 
          requestId, 
          userId 
        });
@@ -166,7 +166,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
      // Validation de la taille maximale (100MB)
      const maxSize = 100 * 1024 * 1024;
      if (uploadData.fileSize > maxSize) {
-       logApi('v2_files_upload', `❌ Fichier trop volumineux: ${uploadData.fileSize} bytes`, { 
+       logApi.info(`❌ Fichier trop volumineux: ${uploadData.fileSize} bytes`, { 
          requestId, 
          userId 
        });
@@ -219,7 +219,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
      if (dbError) {
        // Rollback S3 en cas d'erreur DB
-       logApi('v2_files_upload', `❌ Erreur DB, rollback S3: ${dbError.message}`, { 
+       logApi.info(`❌ Erreur DB, rollback S3: ${dbError.message}`, { 
          requestId, 
          userId,
          key: s3Result.key
@@ -228,7 +228,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
        try {
          await secureS3Service.secureDelete(s3Result.key, userId);
        } catch (rollbackError) {
-         logApi('v2_files_upload', `⚠️ Erreur rollback S3: ${rollbackError.message}`, { 
+         logApi.info(`⚠️ Erreur rollback S3: ${rollbackError.message}`, { 
            requestId, 
            userId,
            key: s3Result.key
@@ -279,7 +279,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       requestId
     };
 
-         logApi('v2_files_upload', `✅ Upload initié avec succès en ${apiTime}ms`, { 
+         logApi.info(`✅ Upload initié avec succès en ${apiTime}ms`, { 
        requestId, 
        userId,
        fileId: fileRecord.id,
@@ -304,7 +304,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const apiTime = Date.now() - startTime;
     const errorMessage = error.message || 'Erreur inconnue';
     
-    logApi('v2_files_upload', `❌ Erreur upload: ${errorMessage}`, { 
+    logApi.info(`❌ Erreur upload: ${errorMessage}`, { 
       requestId, 
       duration: apiTime,
       error: errorMessage,

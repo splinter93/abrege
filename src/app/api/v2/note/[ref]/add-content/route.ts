@@ -25,12 +25,12 @@ export async function POST(
     clientType
   };
 
-  logApi('v2_note_add_content', `🚀 Début ajout contenu note v2 ${ref}`, context);
+  logApi.info(`🚀 Début ajout contenu note v2 ${ref}`, context);
 
   // 🔐 Authentification
   const authResult = await getAuthenticatedUser(request);
   if (!authResult.success) {
-    logApi('v2_note_add_content', `❌ Authentification échouée: ${authResult.error}`, context);
+    logApi.info(`❌ Authentification échouée: ${authResult.error}`, context);
     return NextResponse.json(
       { error: authResult.error },
       { status: authResult.status || 401, headers: { "Content-Type": "application/json" } }
@@ -44,7 +44,7 @@ export async function POST(
   const userToken = authHeader?.substring(7);
   
   if (!userToken) {
-    logApi('v2_add-content', '❌ Token manquant', context);
+    logApi.info('❌ Token manquant', context);
     return NextResponse.json(
       { error: 'Token d\'authentification manquant' },
       { status: 401, headers: { "Content-Type": "application/json" } }
@@ -74,14 +74,14 @@ export async function POST(
   // 🔐 Vérification des permissions
   const permissionResult = await checkUserPermission(noteId, 'article', 'editor', userId, context);
   if (!permissionResult.success) {
-    logApi('v2_note_add_content', `❌ Erreur vérification permissions: ${permissionResult.error}`, context);
+    logApi.info(`❌ Erreur vérification permissions: ${permissionResult.error}`, context);
     return NextResponse.json(
       { error: permissionResult.error },
       { status: permissionResult.status || 500, headers: { "Content-Type": "application/json" } }
     );
   }
   if (!permissionResult.hasPermission) {
-    logApi('v2_note_add_content', `❌ Permissions insuffisantes pour note ${noteId}`, context);
+    logApi.info(`❌ Permissions insuffisantes pour note ${noteId}`, context);
     return NextResponse.json(
       { error: 'Permissions insuffisantes pour modifier cette note' },
       { status: 403, headers: { "Content-Type": "application/json" } }
@@ -94,7 +94,7 @@ export async function POST(
     // Validation Zod V2
     const validationResult = validatePayload(addContentV2Schema, body);
     if (!validationResult.success) {
-      logApi('v2_note_add_content', '❌ Validation échouée', context);
+      logApi.info('❌ Validation échouée', context);
       return createValidationErrorResponse(validationResult);
     }
 
@@ -108,7 +108,7 @@ export async function POST(
       .single();
 
     if (fetchError || !currentNote) {
-      logApi('v2_note_add_content', `❌ Note non trouvée: ${noteId}`, context);
+      logApi.info(`❌ Note non trouvée: ${noteId}`, context);
       return NextResponse.json(
         { error: 'Note non trouvée' },
         { status: 404, headers: { "Content-Type": "application/json" } }
@@ -130,7 +130,7 @@ export async function POST(
       .single();
 
     if (updateError) {
-      logApi('v2_note_add_content', `❌ Erreur mise à jour: ${updateError.message}`, context);
+      logApi.info(`❌ Erreur mise à jour: ${updateError.message}`, context);
       return NextResponse.json(
         { error: 'Erreur lors de la mise à jour' },
         { status: 500, headers: { "Content-Type": "application/json" } }
@@ -143,7 +143,7 @@ export async function POST(
 
 
     const apiTime = Date.now() - startTime;
-    logApi('v2_note_add_content', `✅ Contenu ajouté en ${apiTime}ms`, context);
+    logApi.info(`✅ Contenu ajouté en ${apiTime}ms`, context);
 
     return NextResponse.json({
       success: true,
@@ -153,7 +153,7 @@ export async function POST(
 
   } catch (err: unknown) {
     const error = err as Error;
-    logApi('v2_note_add_content', `❌ Erreur serveur: ${error}`, context);
+    logApi.info(`❌ Erreur serveur: ${error}`, context);
     return NextResponse.json(
       { error: 'Erreur serveur' },
       { status: 500, headers: { "Content-Type": "application/json" } }

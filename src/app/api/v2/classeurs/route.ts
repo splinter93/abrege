@@ -15,12 +15,12 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     clientType
   };
 
-  logApi('v2_classeurs_list', '🚀 Début récupération liste classeurs v2', context);
+  logApi.info('🚀 Début récupération liste classeurs v2', context);
 
   // 🔐 Authentification
   const authResult = await getAuthenticatedUser(request);
   if (!authResult.success) {
-    logApi('v2_classeurs_list', `❌ Authentification échouée: ${authResult.error}`, context);
+    logApi.info(`❌ Authentification échouée: ${authResult.error}`, context);
     return NextResponse.json(
       { error: authResult.error },
       { status: authResult.status || 401, headers: { "Content-Type": "application/json" } }
@@ -34,7 +34,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   const userToken = authHeader?.substring(7);
   
   if (!userToken) {
-    logApi('v2_classeurs_list', '❌ Token manquant', context);
+    logApi.info('❌ Token manquant', context);
     return NextResponse.json(
       { error: 'Token d\'authentification manquant' },
       { status: 401, headers: { "Content-Type": "application/json" } }
@@ -60,7 +60,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       .order('created_at', { ascending: false });
 
     if (fetchError) {
-      logApi('v2_classeurs_list', `❌ Erreur récupération classeurs: ${fetchError.message}`, context);
+      logApi.info(`❌ Erreur récupération classeurs: ${fetchError.message}`, context);
       return NextResponse.json(
         { error: 'Erreur lors de la récupération des classeurs' },
         { status: 500 }
@@ -68,7 +68,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     }
 
     const apiTime = Date.now() - startTime;
-    logApi('v2_classeurs_list', `✅ ${classeurs?.length || 0} classeurs récupérés en ${apiTime}ms`, context);
+    logApi.info(`✅ ${classeurs?.length || 0} classeurs récupérés en ${apiTime}ms`, context);
 
     return NextResponse.json({
       success: true,
@@ -77,7 +77,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
   } catch (err: unknown) {
     const error = err as Error;
-    logApi('v2_classeurs_list', `❌ Erreur serveur: ${error}`, context);
+    logApi.info(`❌ Erreur serveur: ${error}`, context);
     return NextResponse.json(
       { error: 'Erreur serveur' },
       { status: 500, headers: { "Content-Type": "application/json" } }

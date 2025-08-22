@@ -22,12 +22,12 @@ export async function GET(
     clientType
   };
 
-  logApi('v2_note_statistics', `🚀 Début récupération statistiques note v2 ${ref}`, context);
+  logApi.info(`🚀 Début récupération statistiques note v2 ${ref}`, context);
 
   // 🔐 Authentification
   const authResult = await getAuthenticatedUser(request);
   if (!authResult.success) {
-    logApi('v2_note_statistics', `❌ Authentification échouée: ${authResult.error}`, context);
+    logApi.info(`❌ Authentification échouée: ${authResult.error}`, context);
     return NextResponse.json(
       { error: authResult.error },
       { status: authResult.status || 401, headers: { "Content-Type": "application/json" } }
@@ -41,7 +41,7 @@ export async function GET(
   const userToken = authHeader?.substring(7);
   
   if (!userToken) {
-    logApi('v2_statistics', '❌ Token manquant', context);
+    logApi.info('❌ Token manquant', context);
     return NextResponse.json(
       { error: 'Token d\'authentification manquant' },
       { status: 401, headers: { "Content-Type": "application/json" } }
@@ -79,7 +79,7 @@ export async function GET(
       .single();
     
     if (!article || article.share_settings?.visibility === 'private') {
-      logApi('v2_note_statistics', `❌ Accès refusé pour note ${noteId}`, context);
+      logApi.info(`❌ Accès refusé pour note ${noteId}`, context);
       return NextResponse.json(
         { error: 'Accès refusé' },
         { status: 403, headers: { "Content-Type": "application/json" } }
@@ -96,7 +96,7 @@ export async function GET(
       .single();
 
     if (fetchError || !note) {
-      logApi('v2_note_statistics', `❌ Note non trouvée: ${noteId}`, context);
+      logApi.info(`❌ Note non trouvée: ${noteId}`, context);
       return NextResponse.json(
         { error: 'Note non trouvée' },
         { status: 404, headers: { "Content-Type": "application/json" } }
@@ -123,7 +123,7 @@ export async function GET(
     const lists = content.match(/^[\s]*[-*+]\s+/gm)?.length || 0;
 
     const apiTime = Date.now() - startTime;
-    logApi('v2_note_statistics', `✅ Statistiques récupérées en ${apiTime}ms`, context);
+    logApi.info(`✅ Statistiques récupérées en ${apiTime}ms`, context);
 
     return NextResponse.json({
       success: true,
@@ -149,7 +149,7 @@ export async function GET(
 
   } catch (err: unknown) {
     const error = err as Error;
-    logApi('v2_note_statistics', `❌ Erreur serveur: ${error}`, context);
+    logApi.info(`❌ Erreur serveur: ${error}`, context);
     return NextResponse.json(
       { error: 'Erreur serveur' },
       { status: 500, headers: { "Content-Type": "application/json" } }
