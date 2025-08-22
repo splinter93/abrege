@@ -152,9 +152,12 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
   React.useEffect(() => {
     if (typeof note?.header_title_in_image === 'boolean') setTitleInImage(note.header_title_in_image);
   }, [note?.header_title_in_image]);
+  // Initialisation du wide mode depuis la note (seulement au chargement initial)
   React.useEffect(() => {
-    if (typeof note?.wide_mode === 'boolean') setFullWidth(note.wide_mode);
-  }, [note?.wide_mode]);
+    if (typeof note?.wide_mode === 'boolean' && !fullWidth) {
+      setFullWidth(note.wide_mode);
+    }
+  }, [note?.wide_mode, fullWidth]);
   
 
 
