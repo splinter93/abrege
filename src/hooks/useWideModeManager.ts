@@ -22,7 +22,7 @@ export const useWideModeManager = (isWideMode: boolean | null | undefined) => {
     }
   }, []);
 
-  // Appliquer le mode actuel au chargement
+  // Appliquer le mode actuel au chargement et quand il change
   useEffect(() => {
     if (typeof isWideMode === 'boolean') {
       changeWideMode(isWideMode);

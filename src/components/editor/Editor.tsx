@@ -299,7 +299,8 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
   const { changeFont } = useFontManager(note?.font_family || 'Noto Sans');
 
   // Gestionnaire de mode large avec changement CSS automatique
-  const { changeWideMode } = useWideModeManager(note?.wide_mode || false);
+  // Utiliser l'état local fullWidth au lieu de note?.wide_mode pour éviter les conflits
+  const { changeWideMode } = useWideModeManager(fullWidth);
 
   // Initialize share settings from note data
   React.useEffect(() => {
