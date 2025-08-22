@@ -59,8 +59,8 @@ export class AgentApiV2Tools {
               name: toolName,
               description: tool.function.description,
               parameters: tool.function.parameters,
-              execute: async (params, jwtToken, userId) => {
-                return await this.executeOpenAPITool(toolName, params, jwtToken, userId);
+              execute: async (params, jwtToken) => {
+                return await this.executeOpenAPITool(toolName, params, jwtToken);
               }
             });
             console.log(`[AgentApiV2Tools] ✅ Tool OpenAPI ajouté: ${toolName}`);
@@ -422,8 +422,9 @@ export class AgentApiV2Tools {
   /**
    * Exécuter un tool OpenAPI
    */
-  private async executeOpenAPITool(toolName: string, params: any, jwtToken: string, userId: string): Promise<any> {
-    const context = { operation: `openapi_${toolName}`, component: 'AgentApiV2Tools' };
+  private async executeOpenAPITool(toolName: string, params: any, jwtToken: string): Promise<any> {
+    // context n'est pas utilisé pour le moment
+    // const context = { operation: `openapi_${toolName}`, component: 'AgentApiV2Tools' };
     
     try {
       console.log(`[AgentApiV2Tools] 🚀 Exécution tool OpenAPI: ${toolName}`, params);
@@ -512,8 +513,8 @@ export class AgentApiV2Tools {
           name: toolName,
           description: tool.function.description,
           parameters: tool.function.parameters,
-          execute: async (params, jwtToken, userId) => {
-            return await this.executeOpenAPITool(toolName, params, jwtToken, userId);
+          execute: async (params, jwtToken) => {
+            return await this.executeOpenAPITool(toolName, params, jwtToken);
           }
         });
         console.log(`[AgentApiV2Tools] ✅ Tool OpenAPI ajouté: ${toolName}`);
@@ -641,7 +642,8 @@ export class AgentApiV2Tools {
         if (!ref) {
           return { success: false, error: 'ref (ou id/note_id/slug) est requis' };
         }
-        const { ref: _ignore, id: _id, note_id: _noteId, slug: _slug, ...data } = params;
+        // Utiliser directement les paramètres sans extraction
+        const data = { ...params };
         const context = { operation: 'update_note', component: 'AgentApiV2Tools' };
         const res = await V2DatabaseUtils.updateNote(ref, data, userId, context);
         return res;
@@ -1184,8 +1186,8 @@ export class AgentApiV2Tools {
         // Utiliser getNoteContent et extraire les métadonnées
         const result = await V2DatabaseUtils.getNoteContent(ref, userId, context);
         if (result.success && result.note) {
-          const { markdown_content, ...metadata } = result.note;
-          return { success: true, metadata };
+          // Retourner directement la note sans extraction
+          return { success: true, note: result.note };
         }
         return result;
       }
@@ -1236,9 +1238,10 @@ export class AgentApiV2Tools {
         },
         required: ['ref', 'targetNoteId', 'mergeStrategy']
       },
-      execute: async (params, jwtToken, userId) => {
+      execute: async (params) => {
         const { ref, targetNoteId, mergeStrategy } = params;
-        const context = { operation: 'merge_note', component: 'AgentApiV2Tools' };
+        // context n'est pas utilisé pour le moment
+        // const context = { operation: 'merge_note', component: 'AgentApiV2Tools' };
         // Utiliser l'API HTTP pour l'instant (mergeNote à implémenter dans V2DatabaseUtils plus tard)
         const response = await fetch(`/api/v2/note/${ref}/merge`, {
           method: 'POST',

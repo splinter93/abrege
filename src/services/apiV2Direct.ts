@@ -1,6 +1,6 @@
 import { createSupabaseClient } from '@/utils/supabaseClient';
 import { logApi } from '@/utils/logger';
-import { SlugGenerator } from '@/utils/slugGenerator';
+// import { SlugGenerator } from '@/utils/slugGenerator';
 import { SlugAndUrlService } from '@/services/slugAndUrlService';
 
 /**
@@ -68,7 +68,7 @@ export async function createNoteDirect(params: CreateNoteParams, userId: string)
     );
     slug = result.slug;
     publicUrl = result.publicUrl;
-  } catch (e) {
+  } catch {
     // Fallback minimal en cas d'échec
     slug = `${params.source_title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')}-${Date.now().toString(36)}`.slice(0, 120);
     logApi('v2_note_create_direct', `⚠️ Fallback slug utilisé: ${slug}`, context);

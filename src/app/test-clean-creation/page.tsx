@@ -189,6 +189,44 @@ export default function TestCleanCreation() {
     }
   };
 
+  const testImmediateDeletion = async () => {
+    setIsLoading(true);
+    try {
+      addLog('🧪 Test suppression immédiate (0ms delay)...');
+      
+      // Créer une note d'abord
+      const noteData = {
+        source_title: `Note Suppression Immédiate ${Date.now()}`,
+        notebook_id: 'test-notebook',
+        markdown_content: 'Cette note va être supprimée immédiatement'
+      };
+
+      addLog('📝 1. Création note...');
+      const result = await v2UnifiedApi.createNote(noteData, 'test-user');
+      addLog(`✅ Note créée: ${result.note.source_title}`);
+      
+      // Attendre un peu
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Supprimer la note
+      addLog('🗑️ 2. Suppression note (doit être immédiate)...');
+      const startDelete = Date.now();
+      await v2UnifiedApi.deleteNote(result.note.id, 'test-user');
+      const deleteTime = Date.now() - startDelete;
+      
+      if (deleteTime < 100) {
+        addLog(`🎯 SUCCÈS: Suppression immédiate en ${deleteTime}ms !`);
+      } else {
+        addLog(`⚠️ Suppression encore lente: ${deleteTime}ms (devrait être < 100ms)`);
+      }
+      
+    } catch (error) {
+      addLog(`❌ Erreur: ${error}`);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const showCurrentState = () => {
     const notesCount = Object.keys(notes).length;
     const foldersCount = Object.keys(folders).length;
@@ -264,6 +302,14 @@ export default function TestCleanCreation() {
           className="bg-red-500 text-white px-4 py-3 rounded disabled:opacity-50 hover:bg-red-600 font-medium"
         >
           {isLoading ? '⏳ Test...' : '🗑️ Test Vitesse Suppression'}
+        </button>
+        
+        <button
+          onClick={testImmediateDeletion}
+          disabled={isLoading}
+          className="bg-orange-500 text-white px-4 py-3 rounded disabled:opacity-50 hover:bg-orange-600 font-medium"
+        >
+          {isLoading ? '⏳ Test...' : '🗑️ Test Suppression Immédiate'}
         </button>
         
         <button

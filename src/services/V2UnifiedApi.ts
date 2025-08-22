@@ -104,7 +104,7 @@ export class V2UnifiedApi {
   /**
    * Créer une note avec mise à jour optimiste 
    */
-  async createNote(noteData: CreateNoteData, userId: string) {
+  async createNote(noteData: CreateNoteData) {
     if (process.env.NODE_ENV === 'development') {
       logger.dev('[V2UnifiedApi] 📝 Création note unifiée V2 avec optimisme');
     }
@@ -180,7 +180,7 @@ export class V2UnifiedApi {
   /**
    * Mettre à jour une note avec mise à jour directe de Zustand + polling côté client
    */
-  async updateNote(noteId: string, updateData: UpdateNoteData, userId: string) {
+  async updateNote(noteId: string, updateData: UpdateNoteData) {
     if (process.env.NODE_ENV === 'development') {
       logger.dev('[V2UnifiedApi] 🔄 Mise à jour note unifiée V2');
     }
@@ -233,7 +233,7 @@ export class V2UnifiedApi {
   /**
    * Supprimer une note avec mise à jour directe de Zustand + polling côté client
    */
-  async deleteNote(noteId: string, userId: string) {
+  async deleteNote(noteId: string) {
     if (process.env.NODE_ENV === 'development') {
       logger.dev('[V2UnifiedApi] 🗑️ Suppression note unifiée V2');
     }
@@ -288,7 +288,7 @@ export class V2UnifiedApi {
   /**
    * Créer un dossier avec mise à jour optimiste 
    */
-  async createFolder(folderData: CreateFolderData, userId: string) {
+  async createFolder(folderData: CreateFolderData) {
     if (process.env.NODE_ENV === 'development') {
       logger.dev('[V2UnifiedApi] 📁 Création dossier unifié V2 avec optimisme');
     }
@@ -363,7 +363,7 @@ export class V2UnifiedApi {
   /**
    * Mettre à jour un dossier avec mise à jour directe de Zustand + polling côté client
    */
-  async updateFolder(folderId: string, updateData: UpdateFolderData, userId: string) {
+  async updateFolder(folderId: string, updateData: UpdateFolderData) {
     if (process.env.NODE_ENV === 'development') {
       logger.dev('[V2UnifiedApi] 🔄 Mise à jour dossier unifié V2');
     }
@@ -416,7 +416,7 @@ export class V2UnifiedApi {
   /**
    * Supprimer un dossier avec mise à jour directe de Zustand + polling côté client
    */
-  async deleteFolder(folderId: string, userId: string) {
+  async deleteFolder(folderId: string) {
     if (process.env.NODE_ENV === 'development') {
       logger.dev('[V2UnifiedApi] 🗑️ Suppression dossier unifié V2');
     }
@@ -471,7 +471,7 @@ export class V2UnifiedApi {
   /**
    * Déplacer une note avec mise à jour directe de Zustand + polling côté client
    */
-  async moveNote(noteId: string, targetFolderId: string | null, userId: string) {
+  async moveNote(noteId: string, targetFolderId: string | null) {
     if (process.env.NODE_ENV === 'development') {
       logger.dev('[V2UnifiedApi] 📦 Déplacement note unifié V2');
     }
@@ -532,7 +532,7 @@ export class V2UnifiedApi {
   /**
    * Déplacer un dossier avec mise à jour directe de Zustand + polling côté client
    */
-  async moveFolder(folderId: string, targetParentId: string | null, userId: string) {
+  async moveFolder(folderId: string, targetParentId: string | null) {
     if (process.env.NODE_ENV === 'development') {
       logger.dev('[V2UnifiedApi] 📦 Déplacement dossier unifié V2');
     }
@@ -593,7 +593,7 @@ export class V2UnifiedApi {
   /**
    * Créer un classeur avec mise à jour optimiste 
    */
-  async createClasseur(classeurData: CreateClasseurData, userId: string) {
+  async createClasseur(classeurData: CreateClasseurData) {
     if (process.env.NODE_ENV === 'development') {
       logger.dev('[V2UnifiedApi] 📚 Création classeur unifié V2 avec optimisme');
     }
@@ -667,7 +667,7 @@ export class V2UnifiedApi {
   /**
    * Mettre à jour un classeur avec mise à jour directe de Zustand + polling côté client
    */
-  async updateClasseur(classeurId: string, updateData: UpdateClasseurData, userId: string) {
+  async updateClasseur(classeurId: string, updateData: UpdateClasseurData) {
     if (process.env.NODE_ENV === 'development') {
       logger.dev('[V2UnifiedApi] 🔄 Mise à jour classeur unifié V2');
     }
@@ -720,7 +720,7 @@ export class V2UnifiedApi {
   /**
    * Supprimer un classeur avec mise à jour directe de Zustand + polling côté client
    */
-  async deleteClasseur(classeurId: string, userId: string) {
+  async deleteClasseur(classeurId: string) {
     if (process.env.NODE_ENV === 'development') {
       logger.dev('[V2UnifiedApi] 🗑️ Suppression classeur unifié V2');
     }
@@ -771,7 +771,7 @@ export class V2UnifiedApi {
   /**
    * Ajouter du contenu à une note
    */
-  async addContentToNote(ref: string, content: string, userId: string) {
+  async addContentToNote(ref: string, content: string) {
     if (process.env.NODE_ENV === 'development') {
       logger.dev('[V2UnifiedApi] ➕ Ajout contenu note unifié V2');
     }
@@ -808,7 +808,7 @@ export class V2UnifiedApi {
   /**
    * Récupérer le contenu d'une note
    */
-  async getNoteContent(ref: string, userId: string) {
+  async getNoteContent(ref: string) {
     if (process.env.NODE_ENV === 'development') {
       logger.dev('[V2UnifiedApi] 📖 Récupération contenu note unifié V2');
     }
@@ -837,10 +837,10 @@ export class V2UnifiedApi {
   /**
    * Récupérer l'arbre d'un classeur
    */
-  async getClasseurTree(classeurId: string, userId: string) {
+  async getClasseurTree(classeurId: string) {
     if (process.env.NODE_ENV === 'development') {
       logger.dev('[V2UnifiedApi] 🌳 Récupération arbre classeur unifié V2');
-      logger.dev(`[V2UnifiedApi] 📋 Paramètres: classeurId=${classeurId}, userId=${userId}`);
+      logger.dev(`[V2UnifiedApi] 📋 Paramètres: classeurId=${classeurId}`);
     }
     
     try {
@@ -886,7 +886,7 @@ export class V2UnifiedApi {
   /**
    * Récupérer la liste des classeurs
    */
-  async getClasseurs(userId: string) {
+  async getClasseurs() {
     if (process.env.NODE_ENV === 'development') {
       logger.dev('[V2UnifiedApi] 📚 Récupération classeurs unifié V2');
     }
@@ -915,7 +915,7 @@ export class V2UnifiedApi {
   /**
    * Réorganiser les classeurs
    */
-  async reorderClasseurs(classeurs: Array<{ id: string; position: number }>, userId: string) {
+  async reorderClasseurs(classeurs: Array<{ id: string; position: number }>) {
     if (process.env.NODE_ENV === 'development') {
       logger.dev('[V2UnifiedApi] 🔄 Réorganisation classeurs unifié V2');
     }
@@ -954,14 +954,14 @@ export class V2UnifiedApi {
   /**
    * Charger les classeurs avec leur contenu (remplace loadClasseursWithContent de V1)
    */
-  async loadClasseursWithContent(userId: string) {
+  async loadClasseursWithContent() {
     if (process.env.NODE_ENV === 'development') {
       logger.dev('[V2UnifiedApi] 📚 Chargement classeurs avec contenu unifié V2');
     }
     
     try {
       // 🚀 Récupérer les classeurs
-      const classeursResult = await this.getClasseurs(userId);
+      const classeursResult = await this.getClasseurs();
       
       if (process.env.NODE_ENV === 'development') {
         logger.dev(`[V2UnifiedApi] 📊 ${classeursResult.classeurs?.length || 0} classeurs récupérés`);
@@ -991,7 +991,7 @@ export class V2UnifiedApi {
           }
           
           // 🚀 Utiliser l'ID du classeur pour l'endpoint tree
-          const treeResult = await this.getClasseurTree(classeur.id, userId);
+          const treeResult = await this.getClasseurTree(classeur.id);
           
           // 🚀 Accumuler les dossiers et notes de ce classeur
           if (treeResult.success && treeResult.tree) {

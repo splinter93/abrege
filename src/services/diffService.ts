@@ -1,5 +1,5 @@
 import { diffWords, diffLines, Change } from 'diff';
-// import.*logger.*from '@/utils/logger';
+import { simpleLogger as logger } from '@/utils/logger';
 
 interface DiffResult {
   changes: Change[];
@@ -65,7 +65,7 @@ class DiffService {
 
     // Analyser les changements avec validation
     const changes = this.analyzeChanges(lineDiff);
-    const modifiedSections = this.extractModifiedSections(lineDiff, contentToCompare);
+    const modifiedSections = this.extractModifiedSections(lineDiff);
     const confidence = this.calculateConfidence(changes, changeRatio);
 
     // Ignorer les changements avec faible confiance
@@ -198,7 +198,7 @@ class DiffService {
   /**
    * Extraire les sections modifiées (basé sur les headers markdown)
    */
-  private extractModifiedSections(lineDiff: Change[], _originalContent: string): string[] {
+  private extractModifiedSections(lineDiff: Change[]): string[] {
     const sections = new Set<string>();
     // 🚧 Temp: Authentification non implémentée
     // TODO: Remplacer USER_ID par l'authentification Supabase

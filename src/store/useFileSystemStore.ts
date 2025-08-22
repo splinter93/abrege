@@ -134,7 +134,7 @@ export interface FileSystemState {
  *   const addNote = useFileSystemStore(s => s.addNote);
  *   ...
  */
-export const useFileSystemStore = create<FileSystemState>()((set, get) => ({
+export const useFileSystemStore = create<FileSystemState>()((set) => ({
   notes: {},
   folders: {},
   classeurs: {},
@@ -170,6 +170,7 @@ export const useFileSystemStore = create<FileSystemState>()((set, get) => ({
     const targetClasseurId = classeur_id || state.notes[id]?.classeur_id;
     
     if (process.env.NODE_ENV === 'development') {
+      // Logger au lieu de console.log pour production
       console.log('[Store] 🔄 moveNote:', { id, folder_id, classeur_id, targetClasseurId });
       console.log('[Store] 📝 Note avant:', state.notes[id]);
     }
@@ -302,7 +303,6 @@ export const useFileSystemStore = create<FileSystemState>()((set, get) => ({
     
     // Merger les nouveaux classeurs avec les existants
     const newClasseurs = { ...state.classeurs };
-    const incomingIds = new Set(classeurs.map(c => c.id));
     
     // Ajouter/mettre à jour les classeurs entrants
     classeurs.forEach(c => {
@@ -333,7 +333,8 @@ export const useFileSystemStore = create<FileSystemState>()((set, get) => ({
       if (!state.notes[tempId]) return {};
       
       // ✅ CORRECTION: Remplacer complètement la note temporaire par la vraie note
-      const { [tempId]: removed, ...otherNotes } = state.notes;
+      const otherNotes = { ...state.notes };
+      delete otherNotes[tempId];
       
       return {
         notes: {
@@ -365,7 +366,8 @@ export const useFileSystemStore = create<FileSystemState>()((set, get) => ({
 
   updateFolderOptimistic: (tempId: string, realFolder: Folder) => {
     set(state => {
-      const { [tempId]: removed, ...otherFolders } = state.folders;
+      const otherFolders = { ...state.folders };
+      delete otherFolders[tempId];
       return {
         folders: {
           ...otherFolders,
@@ -377,7 +379,8 @@ export const useFileSystemStore = create<FileSystemState>()((set, get) => ({
 
   removeFolderOptimistic: (tempId: string) => {
     set(state => {
-      const { [tempId]: removed, ...otherFolders } = state.folders;
+      const otherFolders = { ...state.folders };
+      delete otherFolders[tempId];
       return { folders: otherFolders };
     });
   },
@@ -391,7 +394,8 @@ export const useFileSystemStore = create<FileSystemState>()((set, get) => ({
 
   updateClasseurOptimistic: (tempId: string, realClasseur: Classeur) => {
     set(state => {
-      const { [tempId]: removed, ...otherClasseurs } = state.classeurs;
+      const otherClasseurs = { ...state.classeurs };
+      delete otherClasseurs[tempId];
       return {
         classeurs: {
           ...otherClasseurs,
@@ -403,7 +407,8 @@ export const useFileSystemStore = create<FileSystemState>()((set, get) => ({
 
   removeClasseurOptimistic: (tempId: string) => {
     set(state => {
-      const { [tempId]: removed, ...otherClasseurs } = state.classeurs;
+      const otherClasseurs = { ...state.classeurs };
+      delete otherClasseurs[tempId];
       return { classeurs: otherClasseurs };
     });
   },

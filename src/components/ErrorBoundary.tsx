@@ -30,10 +30,24 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
       logger.error('ErrorBoundary caught:', error);
     }
     
-    // En production, on peut envoyer l'erreur à un service de monitoring
+    // En production, envoyer l'erreur à un service de monitoring
     if (process.env.NODE_ENV === 'production') {
-      // TODO: Implémenter l'envoi vers un service de monitoring
-      console.error('Production error caught by ErrorBoundary:', error);
+      // Envoyer vers un service de monitoring (Sentry, LogRocket, etc.)
+      if (typeof window !== 'undefined' && (window as any).gtag) {
+        (window as any).gtag('event', 'exception', {
+          description: error.message,
+          fatal: false
+        });
+      }
+      
+      // Log structuré pour les services de monitoring
+      logger.error('Production error caught by ErrorBoundary:', {
+        message: error.message,
+        stack: error.stack,
+        componentStack: errorInfo.componentStack,
+        timestamp: new Date().toISOString(),
+        userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : 'unknown'
+      });
     }
   }
 

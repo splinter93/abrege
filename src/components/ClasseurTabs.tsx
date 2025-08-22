@@ -1,5 +1,5 @@
 "use client";
-import React, { useRef, useEffect, useState, useMemo, useCallback } from "react";
+import React, { useRef, useEffect, useState, useCallback } from "react";
 import SimpleContextMenu from "./SimpleContextMenu";
 import ColorPalette from "./ColorPalette";
 import "./ClasseurTabs.css";
@@ -104,7 +104,6 @@ function SortableTab({ classeur, isActive, onSelectClasseur, onContextMenu, isDr
 
 interface ClasseurTabsProps {
   classeurs: Classeur[];
-  setClasseurs: (classeurs: Classeur[]) => void;
   activeClasseurId: string | null;
   onSelectClasseur: (id: string) => void;
   onCreateClasseur: () => void;
@@ -116,7 +115,6 @@ interface ClasseurTabsProps {
 
 const ClasseurTabs: React.FC<ClasseurTabsProps> = ({
   classeurs,
-  setClasseurs,
   activeClasseurId,
   onSelectClasseur,
   onCreateClasseur,
@@ -189,10 +187,7 @@ const ClasseurTabs: React.FC<ClasseurTabsProps> = ({
     closeContextMenu();
   };
   
-  const openColorPicker = () => {
-    setColorPickerVisible(true);
-    setContextMenu({ ...contextMenu, visible: false });
-  };
+
   
   const handleSelectClasseur = (id: string) => {
     if (deeplinks) {

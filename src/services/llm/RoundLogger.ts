@@ -32,7 +32,7 @@ export interface RoundEvent {
   timestamp: string;
   level: RoundLogLevel;
   message: string;
-  data?: any;
+  data?: Record<string, unknown>;
   duration?: number;
   error?: string;
 }
@@ -78,7 +78,7 @@ export class RoundLogger {
   private config: RoundLoggerConfig;
   private activeRounds: Map<string, RoundMetrics> = new Map();
   private eventHistory: RoundEvent[] = [];
-  private sanitizationRules: Map<string, (value: any) => any> = new Map();
+  private sanitizationRules: Map<string, (value: unknown) => unknown> = new Map();
 
   private constructor(config?: Partial<RoundLoggerConfig>) {
     this.config = {
@@ -472,7 +472,7 @@ export class RoundLogger {
       }
       
       if (typeof data === 'object') {
-        const sanitized: any = {};
+        const sanitized: Record<string, unknown> = {};
         for (const [key, value] of Object.entries(data)) {
           sanitized[key] = this.sanitizeData(value);
         }
@@ -480,7 +480,7 @@ export class RoundLogger {
       }
       
       return data;
-    } catch (error) {
+    } catch {
       return '[Erreur de sanitisation]';
     }
   }
@@ -496,7 +496,7 @@ export class RoundLogger {
   /**
    * 🧹 Sanitiser un payload API
    */
-  private sanitizePayload(payload?: any): any {
+  private sanitizePayload(payload?: unknown): unknown {
     if (!payload) return payload;
     return this.sanitizationRules.get('payload')?.(payload) || payload;
   }
@@ -504,7 +504,7 @@ export class RoundLogger {
   /**
    * 🧹 Sanitiser une réponse API
    */
-  private sanitizeResponse(response?: any): any {
+  private sanitizeResponse(response?: unknown): unknown {
     if (!response) return response;
     return this.sanitizationRules.get('response')?.(response) || response;
   }
@@ -512,7 +512,7 @@ export class RoundLogger {
   /**
    * 🧹 Sanitiser un résultat de tool
    */
-  private sanitizeToolResult(result?: any): any {
+  private sanitizeToolResult(result?: Record<string, unknown>): Record<string, unknown> | string | undefined {
     if (!result) return result;
     
     try {

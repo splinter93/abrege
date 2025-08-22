@@ -193,7 +193,7 @@ export class BatchMessageService {
         try {
           errorData = await response.json();
           logger.dev('[BatchMessageService] 🔧 Données d\'erreur parsées:', errorData);
-        } catch (parseError) {
+        } catch {
           try {
             errorText = await response.text();
             logger.dev('[BatchMessageService] 🔧 Texte d\'erreur brut:', errorText);
@@ -203,7 +203,7 @@ export class BatchMessageService {
               logger.error('[BatchMessageService] ❌ L\'API a retourné une page HTML au lieu de JSON');
               errorText = 'L\'API a retourné une page HTML - possible erreur de routage ou de serveur';
             }
-          } catch (textError) {
+          } catch {
             logger.warn('[BatchMessageService] ⚠️ Impossible de lire le contenu de la réponse d\'erreur');
           }
         }

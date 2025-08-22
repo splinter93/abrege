@@ -198,7 +198,7 @@ export class SlugAndUrlService {
       for (const note of notes) {
         if (!note.slug) {
           logger.warn(`Note ${note.id} sans slug, génération d'un nouveau slug`);
-          const { slug } = await this.generateSlugAndUpdateUrl(
+          await this.generateSlugAndUpdateUrl(
             note.source_title,
             userId,
             note.id,
