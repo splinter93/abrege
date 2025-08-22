@@ -352,11 +352,24 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
       });
       logger.debug(LogCategory.EDITOR, 'Body:', JSON.stringify(newSettings));
       
+
+      
       const res = await fetch(apiUrl, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify(newSettings)
       });
+      
+      // 🔧 CORRECTION : Ajouter plus de logs pour le debugging
+      logger.debug(LogCategory.EDITOR, 'Réponse fetch reçue', {
+        status: res.status,
+        statusText: res.statusText,
+        ok: res.ok,
+        url: apiUrl,
+        method: 'PATCH'
+      });
+      
+
       
       logger.info(LogCategory.EDITOR, 'Réponse reçue:', {
         status: res.status,
@@ -366,23 +379,94 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
       });
       
       if (!res.ok) {
-        const json = await res.json();
-        logger.error(LogCategory.EDITOR, 'Erreur API:', json);
-        throw new Error(json?.error || 'Erreur mise à jour partage');
+        // 🔧 CORRECTION : Ne pas appeler res.json() ici pour éviter le double appel
+        const errorText = await res.text();
+        let errorData;
+        try {
+          errorData = JSON.parse(errorText);
+        } catch {
+          errorData = { error: errorText || 'Erreur mise à jour partage' };
+        }
+        
+        // 🔧 DEBUG : Vérifier ce qui est reçu de l'API
+        console.log('🔧 DEBUG - API Error Response:', {
+          status: res.status,
+          statusText: res.statusText,
+          errorText,
+          errorData,
+          parsedErrorData: errorData
+        });
+        
+        // 🔧 CORRECTION : Améliorer la gestion des erreurs pour éviter les objets vides
+        const errorMessage = errorData?.error || errorData?.message || errorText || 'Erreur mise à jour partage';
+        
+        // Créer des détails d'erreur significatifs
+        let errorDetails: any = { status: res.status, statusText: res.statusText };
+        if (errorData && Object.keys(errorData).length > 0) {
+          errorDetails = { ...errorDetails, ...errorData };
+        }
+        
+        console.log('🔧 DEBUG - Error Details:', errorDetails);
+        
+        logger.error(LogCategory.EDITOR, `Erreur API (${res.status}): ${errorMessage}`, errorDetails);
+        throw new Error(errorMessage);
       }
       
-      const responseData = await res.json();
-      logger.info(LogCategory.EDITOR, 'Données de réponse:', responseData);
+      // 🔧 CORRECTION : Vérifier que la réponse a du contenu avant de parser
+      const responseText = await res.text();
+      let responseData;
+      
+      if (responseText.trim()) {
+        try {
+          responseData = JSON.parse(responseText);
+          logger.info(LogCategory.EDITOR, 'Données de réponse:', responseData);
+        } catch (parseError) {
+          logger.warn(LogCategory.EDITOR, 'Réponse non-JSON reçue:', responseText);
+          responseData = { message: responseText };
+        }
+      } else {
+        logger.info(LogCategory.EDITOR, 'Réponse vide reçue');
+        responseData = { message: 'Succès' };
+      }
       
       toast.success('Paramètres de partage mis à jour !');
       logger.info(LogCategory.EDITOR, 'Fin de handleShareSettingsChange avec succès');
       
     } catch (error) {
-      logger.error(LogCategory.EDITOR, 'ERREUR dans handleShareSettingsChange', error);
-      logger.error(LogCategory.EDITOR, 'Stack trace:', error instanceof Error ? error.stack : 'Pas de stack trace');
+      // 🔧 CORRECTION : Améliorer la gestion des erreurs pour éviter les objets vides
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorStack = error instanceof Error ? error.stack : 'Pas de stack trace';
+      
+      // 🔧 DEBUG : Vérifier l'erreur reçue
+      console.log('🔧 DEBUG - Catch Block Error:', {
+        error,
+        errorType: typeof error,
+        isError: error instanceof Error,
+        errorMessage,
+        errorStack
+      });
+      
+      // Créer un objet d'erreur structuré pour le logger
+      const errorDetails = {
+        error: errorMessage,
+        stack: errorStack,
+        noteId,
+        userId,
+        errorType: typeof error,
+        errorString: String(error)
+      };
+      
+      console.log('🔧 DEBUG - Error Details for Logger:', errorDetails);
+      console.log('🔧 DEBUG - Calling logger.error with:', {
+        category: LogCategory.EDITOR,
+        message: `ERREUR dans handleShareSettingsChange: ${errorMessage}`,
+        data: errorDetails
+      });
+      
+      logger.error(LogCategory.EDITOR, `ERREUR dans handleShareSettingsChange: ${errorMessage}`, errorDetails);
       logger.info(LogCategory.EDITOR, 'Fin de handleShareSettingsChange avec erreur');
       
-      toast.error(error instanceof Error ? error.message : 'Erreur mise à jour partage');
+      toast.error(errorMessage);
       console.error('Erreur partage:', error);
     }
   }, [noteId, updateNote]);
@@ -598,6 +682,12 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
     try {
       // 🎯 SIMPLE : Prendre le slug depuis le store local
       const noteData = useFileSystemStore.getState().notes[noteId];
+      
+      // 🔒 VÉRIFICATION CRITIQUE : Vérifier la visibilité AVANT le slug
+      if (noteData?.share_settings?.visibility === 'private') {
+        toast.error('Cette note est privée. Changez sa visibilité pour la prévisualiser.');
+        return;
+      }
       
       if (!noteData?.slug) {
         toast.error('Cette note n\'a pas de slug. Publiez-la d\'abord.');

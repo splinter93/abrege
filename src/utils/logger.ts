@@ -77,7 +77,20 @@ class Logger {
       
       switch (level) {
         case LogLevel.ERROR:
-          console.error(formattedMessage, data || '', error || '');
+          // 🔧 CORRECTION : Éviter d'afficher des objets vides ou des chaînes vides
+          const errorData = data && Object.keys(data).length > 0 ? data : undefined;
+          const errorObj = error && error instanceof Error ? error : undefined;
+          
+          // Ne passer que les paramètres non-vides à console.error
+          if (errorData && errorObj) {
+            console.error(formattedMessage, errorData, errorObj);
+          } else if (errorData) {
+            console.error(formattedMessage, errorData);
+          } else if (errorObj) {
+            console.error(formattedMessage, errorObj);
+          } else {
+            console.error(formattedMessage);
+          }
           break;
         case LogLevel.WARN:
           console.warn(formattedMessage, data || '');
@@ -107,6 +120,13 @@ class Logger {
 
   // Méthodes publiques
   error(category: LogCategory, message: string, data?: unknown, error?: Error): void {
+    // 🔧 DEBUG : Vérifier ce qui est reçu par la méthode error
+    console.log('🔧 DEBUG - Logger.error reçoit:', { 
+      category, 
+      message, 
+      data: JSON.stringify(data), 
+      error: error ? String(error) : 'undefined' 
+    });
     this.log(LogLevel.ERROR, category, message, data, error);
   }
 

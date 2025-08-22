@@ -53,7 +53,7 @@ END;
 -- 7. Créer des contraintes de validation
 ALTER TABLE articles ADD CONSTRAINT check_visibility_values 
   CHECK (
-    share_settings->>'visibility' IN ('private', 'link', 'limited', 'scrivia')
+    share_settings->>'visibility' IN ('private', 'link', 'link-private', 'link-public', 'limited', 'scrivia')
   );
 
 -- 8. Commentaires pour documenter le nouveau système

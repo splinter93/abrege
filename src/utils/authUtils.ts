@@ -91,7 +91,7 @@ export async function getAuthenticatedUser(request: NextRequest): Promise<AuthRe
     console.log('🚨 [AUTH] ❌ EXCEPTION dans getAuthenticatedUser:', error);
     console.log('🚨 [AUTH] Stack trace:', error instanceof Error ? error.stack : 'Pas de stack trace');
     
-    logApi('auth_utils', `❌ Erreur authentification: ${error}`, { component: 'AuthUtils' });
+    logApi.error(`❌ Erreur authentification: ${error}`, { component: 'AuthUtils', error });
     return {
       success: false,
       error: 'Erreur lors de l\'authentification',
@@ -102,6 +102,35 @@ export async function getAuthenticatedUser(request: NextRequest): Promise<AuthRe
 
 /**
  * Vérifie les permissions d'un utilisateur sur une ressource
+ * 
+ * Cette fonction implémente un système de permissions hiérarchique :
+ * 1. Vérifie si l'utilisateur est le propriétaire direct de la ressource
+ * 2. Vérifie les permissions spécifiques accordées à l'utilisateur
+ * 3. Vérifie les permissions héritées depuis les ressources parentes
+ * 
+ * @param resourceId - ID unique de la ressource à vérifier
+ * @param resourceType - Type de ressource ('article', 'folder', 'classeur')
+ * @param requiredRole - Rôle minimum requis pour l'accès
+ * @param userId - ID de l'utilisateur dont on vérifie les permissions
+ * @param context - Contexte de l'opération pour le logging
+ * @param authenticatedSupabaseClient - Client Supabase authentifié optionnel
+ * 
+ * @returns Promise<PermissionResult> - Résultat de la vérification des permissions
+ * 
+ * @example
+ * ```typescript
+ * const result = await checkUserPermission(
+ *   'note-123', 
+ *   'article', 
+ *   'editor', 
+ *   'user-456', 
+ *   { operation: 'update_note', component: 'API' }
+ * );
+ * 
+ * if (result.hasPermission) {
+ *   // L'utilisateur peut modifier la note
+ * }
+ * ```
  */
 export async function checkUserPermission(
   resourceId: string,
@@ -112,51 +141,59 @@ export async function checkUserPermission(
   authenticatedSupabaseClient?: any
 ): Promise<PermissionResult> {
   try {
-    console.log('🚨 [DEBUG] ===== DÉBUT CHECKUSERPERMISSION =====');
-    console.log('🚨 [DEBUG] Paramètres reçus:', { resourceId, resourceType, requiredRole, userId, context });
-    
+    // Validation des paramètres d'entrée
+    if (!resourceId || !resourceType || !requiredRole || !userId) {
+      logApi.error('❌ Paramètres invalides pour checkUserPermission', { 
+        resourceId, resourceType, requiredRole, userId 
+      });
+      return {
+        success: false,
+        hasPermission: false,
+        error: 'Paramètres invalides pour la vérification des permissions',
+        status: 400
+      };
+    }
+
+    // Validation du type de ressource
+    if (!['article', 'folder', 'classeur'].includes(resourceType)) {
+      logApi.error('❌ Type de ressource invalide', { resourceType });
+      return {
+        success: false,
+        hasPermission: false,
+        error: 'Type de ressource invalide',
+        status: 400
+      };
+    }
+
     // Utiliser le client authentifié si fourni, sinon utiliser le client par défaut
     const client = authenticatedSupabaseClient || supabase;
-    console.log('🚨 [DEBUG] Client Supabase utilisé:', authenticatedSupabaseClient ? 'AUTHENTIFIÉ' : 'ANON');
     
     // 1. Vérifier si l'utilisateur est le propriétaire
-    console.log('🚨 [DEBUG] Étape 1: Vérification propriétaire...');
-    console.log('🚨 [DEBUG] Table à interroger:', getTableName(resourceType));
-    console.log('🚨 [DEBUG] Requête: SELECT user_id FROM', getTableName(resourceType), 'WHERE id =', resourceId);
-    console.log('🚨 [DEBUG] Client Supabase configuré:', !!client);
-    
-    // Test de connexion Supabase
-    console.log('🚨 [DEBUG] Test de connexion Supabase...');
-    try {
-      const { data: testData, error: testError } = await client
-        .from('articles')
-        .select('id')
-        .limit(1);
-      console.log('🚨 [DEBUG] Test connexion Supabase:', { testData, testError });
-    } catch (testException) {
-      console.log('🚨 [DEBUG] ❌ Exception test connexion:', testException);
-    }
-    
     const { data: resource, error: fetchError } = await client
       .from(getTableName(resourceType))
       .select('user_id')
       .eq('id', resourceId)
       .single();
 
-    console.log('🚨 [DEBUG] Résultat requête propriétaire:', { resource, fetchError });
-    console.log('🚨 [DEBUG] Requête exécutée avec succès:', !fetchError);
-    console.log('🚨 [DEBUG] Données retournées:', !!resource);
-    
     if (fetchError || !resource) {
-      console.log('🚨 [DEBUG] ❌ Ressource non trouvée ou erreur:', { fetchError, resource });
-      console.log('🚨 [DEBUG] Détails erreur:', fetchError ? {
-        message: fetchError.message,
-        code: fetchError.code,
-        details: fetchError.details,
-        hint: fetchError.hint
-      } : 'Pas d\'erreur mais pas de ressource');
+      // Gestion spécifique des erreurs de base de données
+      if (fetchError) {
+        logApi.error(`❌ Erreur base de données lors de la vérification des permissions`, { 
+          resourceId, resourceType, userId, error: fetchError 
+        });
+        
+        // Erreurs de connexion ou de permissions
+        if (fetchError.code === 'PGRST116' || fetchError.code === '42501') {
+          return {
+            success: false,
+            hasPermission: false,
+            error: 'Erreur d\'accès à la base de données',
+            status: 500
+          };
+        }
+      }
       
-      logApi('permission_check', `❌ Ressource non trouvée: ${resourceId}`, context);
+      logApi.error(`❌ Ressource non trouvée: ${resourceId}`, { resourceId, resourceType, userId });
       return {
         success: false,
         hasPermission: false,
@@ -165,14 +202,8 @@ export async function checkUserPermission(
       };
     }
 
-    console.log('🚨 [DEBUG] ✅ Ressource trouvée:', resource);
-    console.log('🚨 [DEBUG] user_id de la ressource:', resource.user_id);
-    console.log('🚨 [DEBUG] userId de l\'utilisateur:', userId);
-    console.log('🚨 [DEBUG] Comparaison:', resource.user_id === userId ? 'ÉGAL' : 'DIFFÉRENT');
-
     // Si l'utilisateur est le propriétaire, il a tous les droits
     if (resource.user_id === userId) {
-      console.log('🚨 [DEBUG] ✅ Utilisateur est propriétaire, permissions accordées');
       return {
         success: true,
         hasPermission: true,
@@ -180,10 +211,7 @@ export async function checkUserPermission(
       };
     }
 
-    console.log('🚨 [DEBUG] ❌ Utilisateur n\'est PAS propriétaire, vérification autres permissions...');
-
     // 2. Vérifier les permissions spécifiques
-    console.log('🚨 [DEBUG] Étape 2: Vérification permissions spécifiques...');
     const { data: specificPermissions, error: specificError } = await supabase
       .from(`${resourceType}_permissions`)
       .select('role')
@@ -191,11 +219,8 @@ export async function checkUserPermission(
       .eq('user_id', userId)
       .single();
 
-    console.log('🚨 [DEBUG] Résultat permissions spécifiques:', { specificPermissions, specificError });
-
     if (specificPermissions) {
       const hasPermission = checkRolePermission(specificPermissions.role as PermissionRole, requiredRole);
-      console.log('🚨 [DEBUG] ✅ Permissions spécifiques trouvées:', { role: specificPermissions.role, hasPermission });
       return {
         success: true,
         hasPermission,
@@ -203,46 +228,35 @@ export async function checkUserPermission(
       };
     }
 
-    console.log('🚨 [DEBUG] ❌ Aucune permission spécifique trouvée');
-
     // 3. Vérifier les permissions héritées du dossier parent (pour les articles)
     if (resourceType === 'article') {
-      console.log('🚨 [DEBUG] Étape 3: Vérification permissions héritées (article)...');
       const { data: article, error: articleError } = await supabase
         .from('articles')
         .select('folder_id, classeur_id')
         .eq('id', resourceId)
         .single();
 
-      console.log('🚨 [DEBUG] Résultat récupération article:', { article, articleError });
-
       if (article?.folder_id) {
-        console.log('🚨 [DEBUG] Vérification permissions dossier parent:', article.folder_id);
         const folderPermission = await checkInheritedPermission(
           article.folder_id, 
           'folder', 
           userId, 
           requiredRole
         );
-        console.log('🚨 [DEBUG] Résultat permissions dossier:', folderPermission);
         if (folderPermission.hasPermission) {
-          console.log('🚨 [DEBUG] ✅ Permissions héritées du dossier accordées');
           return folderPermission;
         }
       }
 
       // 4. Vérifier les permissions héritées du classeur
       if (article?.classeur_id) {
-        console.log('🚨 [DEBUG] Vérification permissions classeur parent:', article.classeur_id);
         const classeurPermission = await checkInheritedPermission(
           article.classeur_id, 
           'classeur', 
           userId, 
           requiredRole
         );
-        console.log('🚨 [DEBUG] Résultat permissions classeur:', classeurPermission);
         if (classeurPermission.hasPermission) {
-          console.log('🚨 [DEBUG] ✅ Permissions héritées du classeur accordées');
           return classeurPermission;
         }
       }
@@ -250,35 +264,26 @@ export async function checkUserPermission(
 
     // 5. Vérifier les permissions héritées du classeur parent (pour les dossiers)
     if (resourceType === 'folder') {
-      console.log('🚨 [DEBUG] Étape 4: Vérification permissions héritées (dossier)...');
       const { data: folder, error: folderError } = await supabase
         .from('folders')
         .select('classeur_id')
         .eq('id', resourceId)
         .single();
 
-      console.log('🚨 [DEBUG] Résultat récupération dossier:', { folder, folderError });
-
       if (folder?.classeur_id) {
-        console.log('🚨 [DEBUG] Vérification permissions classeur parent:', folder.classeur_id);
         const classeurPermission = await checkInheritedPermission(
           folder.classeur_id, 
           'classeur', 
           userId, 
           requiredRole
         );
-        console.log('🚨 [DEBUG] Résultat permissions classeur:', classeurPermission);
         if (classeurPermission.hasPermission) {
-          console.log('🚨 [DEBUG] ✅ Permissions héritées du classeur accordées');
           return classeurPermission;
         }
       }
     }
 
     // Aucune permission trouvée
-    console.log('🚨 [DEBUG] ❌ Aucune permission trouvée, accès refusé');
-    console.log('🚨 [DEBUG] ===== FIN CHECKUSERPERMISSION - ACCÈS REFUSÉ =====');
-    
     return {
       success: true,
       hasPermission: false,
@@ -286,10 +291,7 @@ export async function checkUserPermission(
     };
 
   } catch (error) {
-    console.log('🚨 [DEBUG] ❌ EXCEPTION dans checkUserPermission:', error);
-    console.log('🚨 [DEBUG] Stack trace:', error instanceof Error ? error.stack : 'Pas de stack trace');
-    
-    logApi('permission_check', `❌ Erreur vérification permissions: ${error}`, context);
+    logApi.error(`❌ Erreur vérification permissions: ${error}`, { resourceId, resourceType, userId, error });
     return {
       success: false,
       hasPermission: false,
