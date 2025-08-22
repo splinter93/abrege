@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { s3Service } from '@/services/s3Service';
 import { getAuthenticatedUser } from '@/utils/authUtils';
 import { V2ResourceResolver } from '@/utils/v2ResourceResolver';
-import { logApi } from '@/utils/logger';
+import { logger, LogCategory } from '@/utils/logger';
 import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -23,7 +23,7 @@ const schema = z.object({
 export async function POST(request: NextRequest): Promise<NextResponse> {
   const clientType = request.headers.get('X-Client-Type') || 'unknown';
   const context = { operation: 'v2_files_register', component: 'API_V2', clientType };
-  logApi(context.operation, '🚀 Début register fichier', context);
+  logger.info(LogCategory.API, '🚀 Début register fichier', context);
 
   const auth = await getAuthenticatedUser(request);
   if (!auth.success) {
@@ -75,7 +75,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       .maybeSingle();
 
     if (checkError) {
-      logApi(context.operation, `❌ DB check error: ${checkError.message}`, context);
+      logger.error(LogCategory.API, `❌ DB check error: ${checkError.message}`, { ...context, error: checkError });
       return NextResponse.json({ error: `Erreur DB: ${checkError.message}` }, { status: 500 });
     }
 
@@ -105,7 +105,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
       if (insertError || !created) {
         const msg = insertError?.message || 'Insertion échouée';
-        logApi(context.operation, `❌ DB insert error: ${msg}`, context);
+        logger.error(LogCategory.API, `❌ DB insert error: ${msg}`, { ...context, error: insertError });
         return NextResponse.json({ error: `Erreur DB: ${msg}` }, { status: 500 });
       }
       row = created;
@@ -116,7 +116,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
     return NextResponse.json({ file: row, signed_url: signedUrl, public_control_url: publicControlUrl }, { status: 200 });
   } catch (error: any) {
-    logApi(context.operation, `❌ Erreur register: ${error?.message || error}`, context);
+    logger.error(LogCategory.API, `❌ Erreur register: ${error?.message || error}`, { ...context, error });
     return NextResponse.json({ error: 'Erreur register' }, { status: 500 });
   }
 } 

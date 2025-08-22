@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { s3Service } from '@/services/s3Service';
 import { getAuthenticatedUser } from '@/utils/authUtils';
 import { V2ResourceResolver } from '@/utils/v2ResourceResolver';
-import { logApi } from '@/utils/logger';
+import { logger, LogCategory } from '@/utils/logger';
 
 const schema = z.object({
   file_name: z.string().min(1),
@@ -18,7 +18,7 @@ const schema = z.object({
 export async function POST(request: NextRequest): Promise<NextResponse> {
   const clientType = request.headers.get('X-Client-Type') || 'unknown';
   const context = { operation: 'v2_files_presign_upload', component: 'API_V2', clientType };
-  logApi(context.operation, '🚀 Début presign upload', context);
+  logger.info(LogCategory.API, '🚀 Début presign upload', context);
 
   // Auth
   const auth = await getAuthenticatedUser(request);
@@ -67,7 +67,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       headers: { 'Content-Type': file_type },
     }, { status: 200 });
   } catch (error: any) {
-    logApi(context.operation, `❌ Erreur presign: ${error?.message || error}`, context);
+    logger.error(LogCategory.API, `❌ Erreur presign: ${error?.message || error}`, { ...context, error });
     return NextResponse.json({ error: 'Erreur presign' }, { status: 500 });
   }
 } 

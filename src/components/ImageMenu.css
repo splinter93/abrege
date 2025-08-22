@@ -1,0 +1,424 @@
+/* ==========================================================================
+   IMAGE MENU - DESIGN MODERNE ET UX AMÉLIORÉE
+   ========================================================================== */
+
+/* Backdrop avec effet de flou */
+.image-menu-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 1999;
+  animation: imageMenuBackdropFadeIn 0.2s ease-out;
+}
+
+@keyframes imageMenuBackdropFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Modal principal */
+.image-menu-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 90%;
+  max-width: 480px;
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.2),
+    0 2px 8px rgba(0, 0, 0, 0.1);
+  z-index: 2000;
+  overflow: hidden;
+  animation: imageMenuModalSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes imageMenuModalSlideIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.9) translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1) translateY(0);
+  }
+}
+
+/* Header avec onglets */
+.image-menu-tabs {
+  display: flex;
+  background: rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  position: relative;
+}
+
+/* Boutons d'onglets */
+.image-menu-tabs button {
+  flex: 1;
+  padding: 16px 20px;
+  border: none;
+  background: none;
+  color: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: 'Noto Sans', Inter, Arial, sans-serif;
+  letter-spacing: 0.01em;
+  position: relative;
+  overflow: hidden;
+}
+
+.image-menu-tabs button:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.9);
+  transform: translateY(-1px);
+}
+
+.image-menu-tabs button:hover {
+  color: rgba(255, 255, 255, 0.9);
+  transform: translateY(-1px);
+}
+
+.image-menu-tabs button.active {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.12);
+  position: relative;
+}
+
+.image-menu-tabs button.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--accent-primary, #2994ff);
+  border-radius: 1px;
+}
+
+/* Bouton de fermeture */
+.image-menu-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.image-menu-close:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.25);
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+.image-menu-close:active {
+  transform: translateY(0);
+}
+
+/* Contenu principal */
+.image-menu-content {
+  padding: 24px;
+}
+
+/* Sections d'upload et URL */
+.image-menu-upload,
+.image-menu-url {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Zone de sélection de fichier */
+.image-menu-upload-zone {
+  border: 2px dashed rgba(255, 255, 255, 0.25);
+  border-radius: 10px;
+  padding: 28px 20px;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.03);
+  transition: all 0.2s ease;
+  cursor: pointer;
+  position: relative;
+}
+
+.image-menu-upload-zone:hover {
+  border-color: var(--accent-primary, #2994ff);
+  background: rgba(255, 255, 255, 0.06);
+  transform: translateY(-1px);
+}
+
+.image-menu-upload-zone.dragover {
+  border-color: var(--accent-primary, #2994ff);
+  background: rgba(41, 148, 255, 0.1);
+  transform: scale(1.02);
+}
+
+/* Icône d'upload */
+.image-menu-upload-icon {
+  width: 44px;
+  height: 44px;
+  margin: 0 auto 16px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 22px;
+}
+
+/* Texte d'upload */
+.image-menu-upload-text {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.image-menu-upload-hint {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+/* Fichier sélectionné */
+.image-menu-file-selected {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  padding: 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  animation: imageMenuFileSlideIn 0.3s ease-out;
+}
+
+@keyframes imageMenuFileSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.image-menu-file-icon {
+  width: 32px;
+  height: 32px;
+  background: var(--accent-primary, #2994ff);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 16px;
+}
+
+.image-menu-file-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.image-menu-file-name {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.image-menu-file-size {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 12px;
+}
+
+/* Boutons d'action */
+.image-menu-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.image-menu-btn {
+  flex: 1;
+  padding: 10px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.9);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: 'Noto Sans', Inter, Arial, sans-serif;
+}
+
+.image-menu-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.25);
+  transform: translateY(-1px);
+}
+
+.image-menu-btn:active {
+  transform: translateY(0);
+}
+
+.image-menu-btn.primary {
+  background: var(--accent-primary, #2994ff);
+  border-color: var(--accent-primary, #2994ff);
+  color: white;
+  box-shadow: 0 2px 8px rgba(41, 148, 255, 0.2);
+}
+
+.image-menu-btn.primary:hover {
+  background: var(--accent-hover, #1a7fdb);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(41, 148, 255, 0.3);
+}
+
+.image-menu-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+/* Input URL */
+.image-menu-url-input {
+  padding: 14px 18px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 15px;
+  font-family: 'Noto Sans', Inter, Arial, sans-serif;
+  transition: all 0.2s ease;
+}
+
+.image-menu-url-input::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.image-menu-url-input:focus {
+  outline: none;
+  border-color: var(--accent-primary, #2994ff);
+  background: rgba(255, 255, 255, 0.06);
+  box-shadow: 0 0 0 2px rgba(41, 148, 255, 0.1);
+}
+
+/* Messages d'erreur */
+.image-menu-error {
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: 6px;
+  padding: 10px 14px;
+  color: #fca5a5;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  animation: imageMenuErrorShake 0.5s ease-out;
+}
+
+@keyframes imageMenuErrorShake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+}
+
+.image-menu-error::before {
+  content: '⚠️';
+  font-size: 16px;
+}
+
+/* Indicateur de chargement */
+.image-menu-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 14px;
+  padding: 16px;
+}
+
+.image-menu-spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-top-color: var(--accent-primary, #2994ff);
+  border-radius: 50%;
+  animation: imageMenuSpin 1s linear infinite;
+}
+
+@keyframes imageMenuSpin {
+  to { transform: rotate(360deg); }
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .image-menu-modal {
+    width: 95%;
+    max-width: none;
+    margin: 20px;
+  }
+  
+  .image-menu-content {
+    padding: 20px;
+  }
+  
+  .image-menu-tabs button {
+    padding: 14px 16px;
+    font-size: 13px;
+  }
+  
+  .image-menu-actions {
+    flex-direction: column;
+  }
+}
+
+/* Support du drag & drop */
+.image-menu-drag-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(41, 148, 255, 0.1);
+  border: 2px dashed var(--accent-primary, #2994ff);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent-primary, #2994ff);
+  font-size: 18px;
+  font-weight: 600;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+.image-menu-drag-overlay.active {
+  opacity: 1;
+} 
