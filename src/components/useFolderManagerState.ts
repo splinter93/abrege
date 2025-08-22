@@ -252,11 +252,10 @@ export function useFolderManagerState(classeurId: string, userId: string, parent
   const deleteFolder = useCallback(async (id: string) => {
     try {
       if (process.env.NODE_ENV === 'development') {
-        logger.dev('[UI] 🗑️ Suppression dossier avec API optimisée...', { id });
+        logger.dev('[UI] 🗑️ Suppression dossier avec V2UnifiedApi uniquement...', { id });
       }
       
-      // 🔧 CORRECTION: Mise à jour optimiste immédiate du store
-      const store = useFileSystemStore.getState();
+      // Vérifier que le dossier existe
       const originalFolder = folders.find(f => f.id === id);
       if (!originalFolder) {
         logger.error('[UI] ❌ Dossier non trouvé dans le store local:', { id });
@@ -264,41 +263,22 @@ export function useFolderManagerState(classeurId: string, userId: string, parent
         return;
       }
       
-      // Suppression optimiste immédiate
-      store.removeFolder(id);
-      
-      if (process.env.NODE_ENV === 'development') {
-        logger.dev('[UI] 🚀 Dossier supprimé du store (optimiste)');
-      }
-      
-      // Appel API
+      // ✅ NETTOYAGE: Laisser V2UnifiedApi gérer entièrement la suppression optimiste
       await v2UnifiedApi.deleteFolder(id, userId);
       
       if (process.env.NODE_ENV === 'development') {
-        logger.dev('[UI] ✅ Dossier supprimé avec API optimisée');
+        logger.dev('[UI] ✅ Dossier supprimé avec V2UnifiedApi uniquement');
       }
       
       // Gestion du dossier actuel si supprimé
       if (parentFolderId === id) {
-        // setCurrentFolderId(null); // Supprimé
-        // setCurrentFolder(null); // Supprimé
+        // Navigation gérée par le parent
       }
     } catch (err) {
       logger.error('[UI] ❌ Erreur suppression dossier:', err);
-      
-      // 🔧 CORRECTION: Rollback en cas d'erreur
-      const store = useFileSystemStore.getState();
-      const originalFolder = folders.find(f => f.id === id);
-      if (originalFolder) {
-        store.addFolder(originalFolder);
-        if (process.env.NODE_ENV === 'development') {
-          logger.dev('[UI] 🔄 Rollback: Dossier restauré dans le store');
-        }
-      }
-      
       setError('Erreur lors de la suppression du dossier.');
     }
-  }, [parentFolderId, folders]);
+  }, [folders, parentFolderId, userId]);
 
   const updateFile = useCallback(async (id: string, name: string): Promise<void> => {
     const originalNote = notes.find(n => n.id === id);
@@ -357,7 +337,7 @@ export function useFolderManagerState(classeurId: string, userId: string, parent
   const deleteFile = useCallback(async (id: string): Promise<void> => {
     try {
       if (process.env.NODE_ENV === 'development') {
-        logger.dev('[UI] 🗑️ Suppression note avec API optimisée...', { id, userId });
+        logger.dev('[UI] 🗑️ Suppression note avec V2UnifiedApi uniquement...', { id, userId });
       }
       
       // Vérifier que l'utilisateur est connecté
@@ -370,7 +350,7 @@ export function useFolderManagerState(classeurId: string, userId: string, parent
       // Vérifier que la note existe dans le store local
       const note = Object.values(notes).find(n => n.id === id);
       if (!note) {
-        logger.error('[UI] ❌ Note non trouvée dans le store local:', { id, availableNotes: Object.values(notes).map(n => ({ id: n.id, title: n.source_title })) });
+        logger.error('[UI] ❌ Note non trouvée dans le store local:', { id });
         setError('Note non trouvée dans l\'interface.');
         return;
       }
@@ -379,33 +359,14 @@ export function useFolderManagerState(classeurId: string, userId: string, parent
         logger.dev('[UI] 🔍 Note trouvée dans le store:', { id, title: note.source_title });
       }
       
-      // 🔧 CORRECTION: Mise à jour optimiste immédiate du store
-      const store = useFileSystemStore.getState();
-      store.removeNote(id);
-      
-      if (process.env.NODE_ENV === 'development') {
-        logger.dev('[UI] 🚀 Note supprimée du store (optimiste)');
-      }
-      
-      // Appel API
+      // ✅ NETTOYAGE: Laisser V2UnifiedApi gérer entièrement la suppression optimiste
       await v2UnifiedApi.deleteNote(id, userId);
       
       if (process.env.NODE_ENV === 'development') {
-        logger.dev('[UI] ✅ Note supprimée avec API optimisée');
+        logger.dev('[UI] ✅ Note supprimée avec V2UnifiedApi uniquement');
       }
     } catch (err) {
       logger.error('[UI] ❌ Erreur suppression note:', err);
-      
-      // 🔧 CORRECTION: Rollback en cas d'erreur
-      const store = useFileSystemStore.getState();
-      const originalNote = Object.values(notes).find(n => n.id === id);
-      if (originalNote) {
-        store.addNote(originalNote);
-        if (process.env.NODE_ENV === 'development') {
-          logger.dev('[UI] 🔄 Rollback: Note restaurée dans le store');
-        }
-      }
-      
       setError('Erreur lors de la suppression du fichier.');
     }
   }, [notes, userId]);

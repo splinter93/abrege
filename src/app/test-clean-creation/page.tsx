@@ -147,6 +147,48 @@ export default function TestCleanCreation() {
     }
   };
 
+  const testDeletionSpeed = async () => {
+    setIsLoading(true);
+    try {
+      addLog('🧪 Test vitesse suppression vs création...');
+      
+      // Créer une note d'abord
+      const noteData = {
+        source_title: `Note à Supprimer ${Date.now()}`,
+        notebook_id: 'test-notebook',
+        markdown_content: 'Cette note va être supprimée'
+      };
+
+      addLog('📝 1. Création note...');
+      const startCreate = Date.now();
+      const result = await v2UnifiedApi.createNote(noteData, 'test-user');
+      const createTime = Date.now() - startCreate;
+      addLog(`✅ Note créée en ${createTime}ms`);
+      
+      // Attendre un peu
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Supprimer la note
+      addLog('🗑️ 2. Suppression note...');
+      const startDelete = Date.now();
+      await v2UnifiedApi.deleteNote(result.note.id, 'test-user');
+      const deleteTime = Date.now() - startDelete;
+      addLog(`✅ Note supprimée en ${deleteTime}ms`);
+      
+      // Comparaison
+      if (deleteTime <= createTime + 100) {
+        addLog(`🎯 SUCCÈS: Suppression aussi rapide que création (${deleteTime}ms vs ${createTime}ms)`);
+      } else {
+        addLog(`⚠️ Suppression plus lente: ${deleteTime}ms vs ${createTime}ms (diff: +${deleteTime - createTime}ms)`);
+      }
+      
+    } catch (error) {
+      addLog(`❌ Erreur: ${error}`);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const showCurrentState = () => {
     const notesCount = Object.keys(notes).length;
     const foldersCount = Object.keys(folders).length;
@@ -214,6 +256,14 @@ export default function TestCleanCreation() {
           className="bg-purple-500 text-white px-4 py-3 rounded disabled:opacity-50 hover:bg-purple-600 font-medium"
         >
           {isLoading ? '⏳ Test...' : '🚀 Test Création Rapide'}
+        </button>
+        
+        <button
+          onClick={testDeletionSpeed}
+          disabled={isLoading}
+          className="bg-red-500 text-white px-4 py-3 rounded disabled:opacity-50 hover:bg-red-600 font-medium"
+        >
+          {isLoading ? '⏳ Test...' : '🗑️ Test Vitesse Suppression'}
         </button>
         
         <button
