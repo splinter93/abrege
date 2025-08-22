@@ -110,14 +110,19 @@ class IntelligentPollingServiceV2 {
     const config = this.pollingQueue.shift()!;
 
     try {
-      // Attendre un délai pour laisser le temps à la base de se synchroniser
-      const delay = config.delay || 1000; // 1 seconde par défaut
+      // 🚀 SUPPRESSIONS IMMÉDIATES, CRÉATIONS AVEC DÉLAI
+      const delay = config.operation === 'DELETE' ? 0 : (config.delay || 1000);
       
-      if (process.env.NODE_ENV === 'development') {
-        logger.dev(`[IntelligentPollingV2] ⏳ Attente ${delay}ms avant polling ${config.entityType}`);
+      if (delay > 0) {
+        if (process.env.NODE_ENV === 'development') {
+          logger.dev(`[IntelligentPollingV2] ⏳ Attente ${delay}ms avant polling ${config.entityType} (${config.operation})`);
+        }
+        await new Promise(resolve => setTimeout(resolve, delay));
+      } else {
+        if (process.env.NODE_ENV === 'development') {
+          logger.dev(`[IntelligentPollingV2] 🚀 Polling immédiat pour ${config.entityType} (${config.operation})`);
+        }
       }
-
-      await new Promise(resolve => setTimeout(resolve, delay));
 
       // Effectuer le polling avec retry
       const result = await this.performPollingWithRetry(config);
@@ -376,16 +381,52 @@ class IntelligentPollingServiceV2 {
       const { useFileSystemStore } = await import('@/store/useFileSystemStore');
       const store = useFileSystemStore.getState();
       
-      // Mise à jour atomique de tous les stores
-      store.setClasseurs(classeurs);
-      store.setFolders(folders);
-      store.setNotes(notes);
+      // ✅ CORRECTION: Ne mettre à jour que si les données ne sont pas vides
+      // Cela évite de vider le store quand l'API retourne des tableaux vides
+      const currentStoreState = {
+        classeurs: Object.keys(store.classeurs).length,
+        folders: Object.keys(store.folders).length,
+        notes: Object.keys(store.notes).length
+      };
+      
+      if (process.env.NODE_ENV === 'development') {
+        logger.dev(`[IntelligentPollingV2] 🔍 État avant mise à jour:`, {
+          store: currentStoreState,
+          incoming: { classeurs: classeurs.length, folders: folders.length, notes: notes.length }
+        });
+      }
+      
+      if (classeurs.length > 0) {
+        store.setClasseurs(classeurs);
+      }
+      if (folders.length > 0) {
+        store.setFolders(folders);
+      }
+      if (notes.length > 0) {
+        store.setNotes(notes);
+      }
+      
+      // Vérifier l'état après mise à jour
+      const finalStoreState = {
+        classeurs: Object.keys(store.classeurs).length,
+        folders: Object.keys(store.folders).length,
+        notes: Object.keys(store.notes).length
+      };
+      
+      if (process.env.NODE_ENV === 'development') {
+        logger.dev(`[IntelligentPollingV2] 🔍 État après mise à jour:`, finalStoreState);
+      }
       
       if (process.env.NODE_ENV === 'development') {
         logger.dev(`[IntelligentPollingV2] ✅ Store complet mis à jour:`, {
           classeurs: classeurs.length,
           folders: folders.length,
-          notes: notes.length
+          notes: notes.length,
+          storeUpdated: {
+            classeurs: classeurs.length > 0,
+            folders: folders.length > 0,
+            notes: notes.length > 0
+          }
         });
       }
     } catch (error) {

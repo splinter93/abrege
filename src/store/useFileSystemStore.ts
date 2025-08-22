@@ -293,10 +293,24 @@ export const useFileSystemStore = create<FileSystemState>()((set, get) => ({
     folders: { ...state.folders, ...Object.fromEntries(folders.map(f => [f.id, f])) }
   })),
   
-  setClasseurs: (classeurs: Classeur[]) => set((state) => ({ 
-    // ✅ CORRECTION: Merger au lieu de remplacer
-    classeurs: { ...state.classeurs, ...Object.fromEntries(classeurs.map(c => [c.id, c])) }
-  })),
+  setClasseurs: (classeurs: Classeur[]) => set((state) => {
+    // ✅ CORRECTION: Mise à jour intelligente qui gère les ajouts ET les suppressions
+    if (classeurs.length === 0) {
+      // Si le tableau est vide, ne pas modifier le store (évite de vider accidentellement)
+      return state;
+    }
+    
+    // Merger les nouveaux classeurs avec les existants
+    const newClasseurs = { ...state.classeurs };
+    const incomingIds = new Set(classeurs.map(c => c.id));
+    
+    // Ajouter/mettre à jour les classeurs entrants
+    classeurs.forEach(c => {
+      newClasseurs[c.id] = c;
+    });
+    
+    return { classeurs: newClasseurs };
+  }),
   
   setNotes: (notes: Note[]) => set((state) => ({ 
     // ✅ CORRECTION: Merger au lieu de remplacer complètement

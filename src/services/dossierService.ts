@@ -119,6 +119,7 @@ export class DossierService {
    */
   async deleteClasseur(classeurId: string, userId: string): Promise<void> {
     let currentClasseur: Classeur | undefined;
+    let wasActiveClasseur = false;
     
     try {
       logger.dev('[DossierService] 🗑️ Suppression classeur:', classeurId);
@@ -126,9 +127,24 @@ export class DossierService {
       // Mise à jour optimiste immédiate
       const store = useFileSystemStore.getState();
       currentClasseur = store.classeurs[classeurId];
+      wasActiveClasseur = store.activeClasseurId === classeurId;
       
       if (currentClasseur) {
         store.removeClasseur(classeurId);
+        
+        // ✅ CORRECTION: Gérer le classeur actif si c'est celui qui est supprimé
+        if (wasActiveClasseur) {
+          const remainingClasseurs = Object.values(store.classeurs);
+          if (remainingClasseurs.length > 0) {
+            // Sélectionner le premier classeur restant
+            store.setActiveClasseurId(remainingClasseurs[0].id);
+            logger.dev('[DossierService] ✅ Classeur actif mis à jour:', remainingClasseurs[0].id);
+          } else {
+            // Aucun classeur restant
+            store.setActiveClasseurId(null);
+            logger.dev('[DossierService] ℹ️ Aucun classeur restant, activeClasseurId mis à null');
+          }
+        }
       }
 
       // Appel API
@@ -140,6 +156,11 @@ export class DossierService {
       if (currentClasseur) {
         const store = useFileSystemStore.getState();
         store.addClasseur(currentClasseur);
+        
+        // Restaurer aussi l'état actif si nécessaire
+        if (wasActiveClasseur) {
+          store.setActiveClasseurId(classeurId);
+        }
       }
       
       logger.error('[DossierService] ❌ Erreur suppression classeur:', error);
