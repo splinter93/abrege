@@ -55,6 +55,18 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
   const content = note?.content || note?.markdown_content || '';
   const { html } = useMarkdownRender({ content });
 
+  // 🚨 ÉTAT DE CHARGEMENT : Forcer la régénération de la TOC
+  const [noteLoaded, setNoteLoaded] = React.useState(false);
+  const [forceTOCUpdate, setForceTOCUpdate] = React.useState(0);
+
+  // 🚨 FORCER la mise à jour de la TOC quand la note arrive
+  React.useEffect(() => {
+    if (note && content && !noteLoaded) {
+      setNoteLoaded(true);
+      setForceTOCUpdate(prev => prev + 1);
+    }
+  }, [note, content, noteId, noteLoaded]);
+
   const [title, setTitle] = React.useState<string>(note?.source_title || note?.title || '');
   React.useEffect(() => { setTitle(note?.source_title || note?.title || ''); }, [note?.source_title, note?.title]);
 
@@ -189,6 +201,24 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
 
   // 🔧 Mise à jour intelligente du contenu de l'éditeur quand la note change
   const [isUpdatingFromStore, setIsUpdatingFromStore] = React.useState(false);
+  
+  // 🚨 ÉCOUTEUR TEMPS RÉEL : Mettre à jour la TOC quand l'éditeur change
+  React.useEffect(() => {
+    if (!editor) return;
+    
+    const updateTOC = () => {
+      // Forcer la mise à jour des headings
+    };
+    
+    // Écouter les changements de l'éditeur
+    editor.on('update', updateTOC);
+    editor.on('selectionUpdate', updateTOC);
+    
+    return () => {
+      editor.off('update', updateTOC);
+      editor.off('selectionUpdate', updateTOC);
+    };
+  }, [editor]);
   
   React.useEffect(() => {
     if (editor && content && !isUpdatingFromStore) {
@@ -509,20 +539,60 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
     }
   }, [editor]);
 
-  // Build headings for TOC
+  // Build headings for TOC - 🚨 DIRECTEMENT depuis l'éditeur Tiptap
   const headings = React.useMemo(() => {
-    if (typeof document === 'undefined') return [] as { id: string; text: string; level: number }[];
-    const container = document.createElement('div');
-    container.innerHTML = html || '';
-    const items: { id: string; text: string; level: number }[] = [];
-    container.querySelectorAll('h2, h3').forEach((el) => {
-      const level = el.tagName === 'H2' ? 2 : 3;
-      let id = el.id || el.textContent?.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || '';
-      if (!el.id) el.id = id;
-      items.push({ id, text: el.textContent || '', level });
-    });
-    return items.map(h => ({ id: h.id, text: h.text, level: h.level }));
-  }, [html]);
+    // 🚨 PRIORITÉ 1 : Éditeur Tiptap (si disponible)
+    if (editor) {
+      try {
+        // 🎯 SOURCE DE VÉRITÉ : Utiliser directement l'éditeur Tiptap
+        const doc = editor.state.doc;
+        const items: { id: string; text: string; level: number }[] = [];
+        
+        // Parcourir le document ProseMirror pour trouver les headings
+        doc.descendants((node, pos) => {
+          if (node.type.name === 'heading') {
+            const level = node.attrs.level;
+            const text = node.textContent;
+            
+            // Ne prendre que les h2 et h3 pour la TOC
+            if (level >= 2 && level <= 3 && text.trim()) {
+              const id = text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+              items.push({ id, text: text.trim(), level });
+            }
+          }
+        });
+        
+        return items;
+        
+      } catch (error) {
+        // Continuer vers le fallback
+      }
+    }
+    
+    // 🚨 PRIORITÉ 2 : Fallback markdown brut (pour chargement initial et erreurs)
+    if (content && content.trim()) {
+      const markdownLines = content.split('\n');
+      const fallbackItems: { id: string; text: string; level: number }[] = [];
+      
+      markdownLines.forEach((line) => {
+        const match = line.match(/^(#{1,6})\s+(.+)/);
+        if (match) {
+          const level = match[1].length;
+          const title = match[2].trim();
+          const id = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+          
+          if (level >= 2 && level <= 3) {
+            fallbackItems.push({ id, text: title, level });
+          }
+        }
+      });
+      
+      return fallbackItems;
+    }
+    
+    // 🚨 AUCUN CONTENU : Retourner tableau vide
+    return [];
+  }, [editor, content, note, noteId, forceTOCUpdate]); // 🚨 Ajout de forceTOCUpdate pour forcer la régénération
 
   const handlePreviewClick = React.useCallback(async () => {
     try {

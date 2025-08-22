@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 
 interface Heading {
   id: string;
@@ -17,39 +17,40 @@ interface TableOfContentsProps {
 
 export default function TableOfContents({ headings = [], currentId, containerRef }: TableOfContentsProps) {
   const [hovered, setHovered] = useState(false);
-  const [show, setShow] = useState(true);
+  // 🚨 SUPPRIMÉ : La TOC doit toujours être visible, pas de logique responsive
+  // const [show, setShow] = useState(true);
   const tocRef = useRef<HTMLDivElement>(null);
 
-  // Responsive : masquée si largeur < 900px (évite SSR mismatch)
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const handleResize = () => {
-        // Utiliser requestAnimationFrame pour éviter les conflits de layout
-        requestAnimationFrame(() => {
-          const newShow = window.innerWidth >= 900;
-          // Éviter les changements d'état inutiles qui causent le clignotement
-          if (newShow !== show) {
-            setShow(newShow);
-          }
-        });
-      };
-      
-      // Délai initial pour éviter les faux positifs lors du premier rendu
-      const timer = setTimeout(handleResize, 100);
-      
-      window.addEventListener('resize', handleResize);
-      return () => {
-        clearTimeout(timer);
-        window.removeEventListener('resize', handleResize);
-      };
-    }
-  }, [show]);
+  // 🚨 SUPPRIMÉ : Plus de logique responsive qui masque la TOC
+  // useEffect(() => {
+  //   if (typeof window !== 'undefined') {
+  //     const handleResize = () => {
+  //       requestAnimationFrame(() => {
+  //         const newShow = window.innerWidth >= 900;
+  //         if (newShow !== show) {
+  //           setShow(newShow);
+  //         }
+  //       });
+  //     };
+  //     
+  //     const timer = setTimeout(handleResize, 100);
+  //     
+  //     window.addEventListener('resize', handleResize);
+  //     return () => {
+  //       clearTimeout(timer);
+  //       window.removeEventListener('resize', handleResize);
+  //     };
+  //   }
+  // }, [show]);
   
-  // Ne pas masquer la TOC si elle a des headings, même en mode responsive
-  const shouldShow = show || headings.length > 0;
-  if (!shouldShow) return null;
+  // 🚨 SUPPRIMÉ : La TOC ne doit JAMAIS être masquée
+  // const shouldShow = show || headings.length > 0;
+  // if (!shouldShow) return null;
 
   const isCollapsed = !hovered;
+
+  // Si pas de headings, afficher un état vide mais garder la TOC visible
+  const hasHeadings = headings && headings.length > 0;
 
   const tocContainerStyle: React.CSSProperties = isCollapsed
     ? {
@@ -192,7 +193,32 @@ export default function TableOfContents({ headings = [], currentId, containerRef
       onMouseLeave={() => setHovered(false)}
     >
       <div style={{ display: 'flex', flexDirection: 'column', gap: 0, width: '100%' }}>
-        {isCollapsed ? (
+        {!hasHeadings ? (
+          // 🚨 État vide : TOC visible mais sans contenu
+          <div style={{ 
+            padding: '20px', 
+            textAlign: 'center', 
+            color: 'var(--text-3)', 
+            fontSize: '14px',
+            fontStyle: 'italic',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '8px'
+          }}>
+            {isCollapsed ? (
+              <div style={{ height: 12, margin: '12px 0' }} />
+            ) : (
+              <>
+                <div>📝</div>
+                <div>Aucun titre trouvé</div>
+                <div style={{ fontSize: '12px', opacity: 0.7 }}>
+                  Ajoutez des titres # pour voir la table des matières
+                </div>
+              </>
+            )}
+          </div>
+        ) : isCollapsed ? (
           headings.map((h, idx) => {
             if (h.level === 2) {
               return <div key={h.id || `toc-bar-${idx}`} style={{ height: 3, width: 24, background: 'var(--editor-text-color)', borderRadius: 6, margin: '12px 0', marginLeft: 'auto', marginRight: 10, opacity: 0.95 }} />;
