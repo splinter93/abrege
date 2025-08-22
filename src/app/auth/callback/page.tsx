@@ -1,12 +1,12 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '@/supabaseClient';
 import LogoHeader from '@/components/LogoHeader';
 import './callback.css';
 
-export default function AuthCallbackPage() {
+function AuthCallbackContent() {
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [error, setError] = useState('');
   const router = useRouter();
@@ -73,6 +73,53 @@ export default function AuthCallbackPage() {
   }, [searchParams, router]);
 
   return (
+    <div className="auth-callback-content">
+      {status === 'loading' && (
+        <>
+          <div className="loading-spinner-large" />
+          <p className="auth-callback-message">
+            Finalisation de votre connexion...
+          </p>
+        </>
+      )}
+
+      {status === 'success' && (
+        <>
+          <div className="success-icon">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M9 12l2 2 4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </div>
+          <p className="auth-callback-message success">
+            Connexion réussie ! Redirection en cours...
+          </p>
+        </>
+      )}
+
+      {status === 'error' && (
+        <>
+          <div className="error-icon">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </div>
+          <p className="auth-callback-message error">
+            {error}
+          </p>
+          <button
+            className="auth-callback-retry-btn"
+            onClick={() => router.push('/auth')}
+          >
+            Réessayer
+          </button>
+        </>
+      )}
+    </div>
+  );
+}
+
+export default function AuthCallbackPage() {
+  return (
     <div className="auth-callback-page">
       <div className="auth-callback-container">
         <div className="auth-callback-header">
@@ -80,48 +127,16 @@ export default function AuthCallbackPage() {
           <h1 className="auth-callback-title">Authentification</h1>
         </div>
 
-        <div className="auth-callback-content">
-          {status === 'loading' && (
-            <>
-              <div className="loading-spinner-large" />
-              <p className="auth-callback-message">
-                Finalisation de votre connexion...
-              </p>
-            </>
-          )}
-
-          {status === 'success' && (
-            <>
-              <div className="success-icon">
-                <svg viewBox="0 0 24 24" fill="none">
-                  <path d="M9 12l2 2 4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </div>
-              <p className="auth-callback-message success">
-                Connexion réussie ! Redirection en cours...
-              </p>
-            </>
-          )}
-
-          {status === 'error' && (
-            <>
-              <div className="error-icon">
-                <svg viewBox="0 0 24 24" fill="none">
-                  <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </div>
-              <p className="auth-callback-message error">
-                {error}
-              </p>
-              <button
-                className="auth-callback-retry-btn"
-                onClick={() => router.push('/auth')}
-              >
-                Réessayer
-              </button>
-            </>
-          )}
-        </div>
+        <Suspense fallback={
+          <div className="auth-callback-content">
+            <div className="loading-spinner-large" />
+            <p className="auth-callback-message">
+              Chargement...
+            </p>
+          </div>
+        }>
+          <AuthCallbackContent />
+        </Suspense>
       </div>
     </div>
   );
