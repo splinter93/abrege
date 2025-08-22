@@ -1,5 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
-import type { Heading } from '../types/editor';
+
+interface Heading {
+  id: string;
+  text: string;
+  level: number;
+}
 
 interface TableOfContentsProps {
   headings?: Heading[];
@@ -15,16 +20,34 @@ export default function TableOfContents({ headings = [], currentId, containerRef
   const [show, setShow] = useState(true);
   const tocRef = useRef<HTMLDivElement>(null);
 
-  // Responsive : masquée si largeur < 900px (évite SSR mismatch)
+  // Responsive : masquée si largeur < 900px (évite SSR mismatch)
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const handleResize = () => setShow(window.innerWidth >= 900);
-      handleResize();
+      const handleResize = () => {
+        // Utiliser requestAnimationFrame pour éviter les conflits de layout
+        requestAnimationFrame(() => {
+          const newShow = window.innerWidth >= 900;
+          // Éviter les changements d'état inutiles qui causent le clignotement
+          if (newShow !== show) {
+            setShow(newShow);
+          }
+        });
+      };
+      
+      // Délai initial pour éviter les faux positifs lors du premier rendu
+      const timer = setTimeout(handleResize, 100);
+      
       window.addEventListener('resize', handleResize);
-      return () => window.removeEventListener('resize', handleResize);
+      return () => {
+        clearTimeout(timer);
+        window.removeEventListener('resize', handleResize);
+      };
     }
-  }, []);
-  if (!show) return null;
+  }, [show]);
+  
+  // Ne pas masquer la TOC si elle a des headings, même en mode responsive
+  const shouldShow = show || headings.length > 0;
+  if (!shouldShow) return null;
 
   const isCollapsed = !hovered;
 

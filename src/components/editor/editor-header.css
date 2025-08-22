@@ -65,7 +65,7 @@
 
 .editor-header-logo {
   position: absolute;
-  left: 4px;
+  left: 10px;
   top: 0;
   height: 100%;
   display: flex;
@@ -78,11 +78,6 @@
   height: 100%;
   padding: 0;
   margin: 0;
-}
-
-.editor-header-logo .logo-header img {
-  height: 20px;
-  max-width: 120px;
 }
 
 .editor-header-toolbar {
