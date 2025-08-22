@@ -43,7 +43,7 @@ export default function PublicPageHeader() {
 
       <div className="public-header-left">
         <div className="public-header-logo">
-          <LogoHeader size="small" position="left" />
+          <LogoHeader size="medium" position="left" />
         </div>
         <div className="public-header-search">
           <FiSearch size={15} className="public-header-search-icon" />
