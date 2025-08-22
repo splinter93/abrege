@@ -240,21 +240,13 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
         } catch {}
       }
       if (e.key === '/') {
-        // Only open if at start of block or after whitespace
-        const { state } = editor.view;
-        const pos = state.selection.from;
-        const $pos = state.doc.resolve(pos);
-        const indexInParent = $pos.parentOffset;
-        let shouldOpen = indexInParent === 0;
-        if (!shouldOpen && indexInParent > 0) {
-          const charBefore = $pos.parent.textBetween(indexInParent - 1, indexInParent, undefined, '\uFFFC');
-          if (!charBefore || /\s/.test(charBefore)) shouldOpen = true;
-        }
-        if (shouldOpen) {
-          e.preventDefault();
-          const coords = editor.view.coordsAtPos(state.selection.from);
-          slashMenuRef.current?.openMenu({ left: coords.left, top: coords.top });
-        }
+        console.log('🔍 [SLASH] Slash détecté!');
+        // Ouvrir le menu slash pour tous les slashes (test)
+        e.preventDefault();
+        const coords = editor.view.coordsAtPos(editor.state.selection.from);
+        console.log('🔍 [SLASH] Coords:', coords);
+        console.log('🔍 [SLASH] slashMenuRef.current:', slashMenuRef.current);
+        slashMenuRef.current?.openMenu({ left: coords.left, top: coords.top });
       }
     };
     el.addEventListener('keydown', onKeyDown);
@@ -821,7 +813,16 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
                   ref={slashMenuRef}
                   lang={slashLang}
                   onInsert={(cmd) => {
-                    if (!editor) return;
+                    console.log('🎯 [SLASH] Commande sélectionnée:', cmd);
+                    console.log('🎯 [SLASH] Editor disponible:', !!editor);
+                    console.log('🎯 [SLASH] Editor type:', typeof editor);
+                    console.log('🎯 [SLASH] Editor methods:', Object.keys(editor || {}));
+                    
+                    if (!editor) {
+                      console.error('❌ [SLASH] Editor non disponible');
+                      return;
+                    }
+                    
                     try {
                       // Remove any preceding slash token if present
                       const { state, dispatch } = editor.view;
@@ -834,10 +835,21 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
                         const deleteFrom = start + $pos.parentOffset - match[0].length;
                         dispatch(state.tr.delete(deleteFrom, from));
                       }
-                    } catch {}
+                    } catch (error) {
+                      console.error('❌ [SLASH] Erreur suppression slash:', error);
+                    }
+                    
                     // Execute command action
                     if (typeof cmd.action === 'function') {
-                      cmd.action(editor);
+                      console.log('🎯 [SLASH] Exécution de la commande:', cmd.id);
+                      try {
+                        const result = cmd.action(editor);
+                        console.log('🎯 [SLASH] Résultat de la commande:', result);
+                      } catch (error) {
+                        console.error('❌ [SLASH] Erreur exécution commande:', error);
+                      }
+                    } else {
+                      console.error('❌ [SLASH] Action non définie pour la commande:', cmd.id);
                     }
                   }}
                 />

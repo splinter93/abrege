@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState, useMemo, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { SLASH_COMMANDS } from './slashCommands';
+import { SLASH_COMMANDS } from './slashCommands.js';
 
 interface SlashCommand {
   id: string;
