@@ -20,16 +20,16 @@ export class AutoSlugUpdateService {
   /**
    * Met à jour automatiquement le slug d'une ressource si son nom a changé
    */
-  static async updateSlugIfNameChanged(
-    resourceType: ResourceType,
-    resourceId: string,
-    newName: string,
-    userId: string,
-    supabase: SupabaseClient,
-    context?: any
-  ): Promise<SlugUpdateResult> {
+        static async updateSlugIfNameChanged(
+        resourceType: ResourceType,
+        resourceId: string,
+        newName: string,
+        userId: string,
+        supabase: SupabaseClient,
+        _context?: any
+      ): Promise<SlugUpdateResult> {
     try {
-      logApi.info(`🔄 Vérification mise à jour slug pour ${resourceType} ${resourceId}`, context);
+              logApi.info(`🔄 Vérification mise à jour slug pour ${resourceType} ${resourceId}`, _context);
       
       // 1. Récupérer l'état courant de la ressource
       const currentResource = await this.getCurrentResource(resourceType, resourceId, userId, supabase);
@@ -43,7 +43,7 @@ export class AutoSlugUpdateService {
       
       // 2. Vérifier si le nom a réellement changé
       if (currentResource.name === newName) {
-        logApi.info(`✅ Nom inchangé pour ${resourceType} ${resourceId}, pas de mise à jour du slug`, context);
+        logApi.info(`✅ Nom inchangé pour ${resourceType} ${resourceId}, pas de mise à jour du slug`, _context);
               return {
         success: true,
         newSlug: currentResource.slug || '',
@@ -70,7 +70,7 @@ export class AutoSlugUpdateService {
       );
       
       if (updateResult.success) {
-        logApi.info(`✅ Slug mis à jour pour ${resourceType} ${resourceId}: "${currentResource.slug}" → "${newSlug}"`, context);
+        logApi.info(`✅ Slug mis à jour pour ${resourceType} ${resourceId}: "${currentResource.slug}" → "${newSlug}"`, _context);
         return {
           success: true,
           newSlug,
