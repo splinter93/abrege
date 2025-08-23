@@ -3,6 +3,7 @@ import { logApi } from '@/utils/logger';
 import { updateClasseurV2Schema, validatePayload, createValidationErrorResponse } from '@/utils/v2ValidationSchemas';
 import { getAuthenticatedUser } from '@/utils/authUtils';
 import { V2DatabaseUtils } from '@/utils/v2DatabaseUtils';
+import { V2ResourceResolver } from '@/utils/v2ResourceResolver';
 
 export async function PUT(
   request: NextRequest,
@@ -48,8 +49,21 @@ export async function PUT(
 
     const validatedData = validationResult.data;
 
+    // Résoudre la référence (UUID ou slug) en ID
+    const resolveResult = await V2ResourceResolver.resolveRef(ref, 'classeur', userId, context, userToken);
+    if (!resolveResult.success) {
+      logApi.info(`❌ Erreur résolution référence: ${resolveResult.error}`, context);
+      return NextResponse.json(
+        { error: resolveResult.error },
+        { status: resolveResult.status || 400, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
+    const classeurId = resolveResult.id;
+    logApi.info(`✅ Référence résolue: ${ref} → ${classeurId}`, context);
+
     // Utiliser V2DatabaseUtils pour l'accès direct à la base de données (avec userToken pour RLS)
-    const result = await V2DatabaseUtils.updateClasseur(ref, validatedData, userId, context, userToken);
+    const result = await V2DatabaseUtils.updateClasseur(classeurId, validatedData, userId, context, userToken);
 
     const apiTime = Date.now() - startTime;
     logApi.info(`✅ Classeur mis à jour en ${apiTime}ms`, context);

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { logApi } from '@/utils/logger';
 import { getAuthenticatedUser } from '@/utils/authUtils';
 import { V2DatabaseUtils } from '@/utils/v2DatabaseUtils';
+import { V2ResourceResolver } from '@/utils/v2ResourceResolver';
 
 export async function DELETE(
   request: NextRequest,
@@ -32,8 +33,25 @@ export async function DELETE(
   const userId = authResult.userId!;
 
   try {
+    // Récupérer le token d'authentification pour un client Supabase user-scoped
+    const authHeader = request.headers.get('Authorization');
+    const userToken = authHeader?.startsWith('Bearer ') ? authHeader.substring(7) : undefined;
+
+    // Résoudre la référence (UUID ou slug) en ID
+    const resolveResult = await V2ResourceResolver.resolveRef(ref, 'classeur', userId, context, userToken);
+    if (!resolveResult.success) {
+      logApi.info(`❌ Erreur résolution référence: ${resolveResult.error}`, context);
+      return NextResponse.json(
+        { error: resolveResult.error },
+        { status: resolveResult.status || 400, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
+    const classeurId = resolveResult.id;
+    logApi.info(`✅ Référence résolue: ${ref} → ${classeurId}`, context);
+
     // Utiliser V2DatabaseUtils pour l'accès direct à la base de données
-    const result = await V2DatabaseUtils.deleteClasseur(ref, userId, context);
+    const result = await V2DatabaseUtils.deleteClasseur(classeurId, userId, context);
 
     const apiTime = Date.now() - startTime;
     logApi.info(`✅ Classeur supprimé en ${apiTime}ms`, context);
