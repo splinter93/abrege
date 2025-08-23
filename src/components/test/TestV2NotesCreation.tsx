@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { v2UnifiedApi } from '@/services/V2UnifiedApi';
 import { useFileSystemStore } from '@/store/useFileSystemStore';
-import { triggerIntelligentPolling, getPollingStatus } from '@/services/intelligentPollingService';
+import { triggerUnifiedPolling, getUnifiedPollingStatus } from '@/services/unifiedPollingService';
 import { simpleLogger as logger } from '@/utils/logger';
 
 /**
@@ -58,7 +58,7 @@ export default function TestV2NotesCreation() {
     try {
       addLog('🔄 Test polling V2 manuel...');
       
-      const result = await triggerIntelligentPolling({
+      const result = await triggerUnifiedPolling({
         entityType: 'notes',
         operation: 'CREATE',
         entityId: 'test-polling',
@@ -82,7 +82,7 @@ export default function TestV2NotesCreation() {
     try {
       addLog('📁 Test polling dossiers V2...');
       
-      const result = await triggerIntelligentPolling({
+      const result = await triggerUnifiedPolling({
         entityType: 'folders',
         operation: 'CREATE',
         entityId: 'test-polling-folders',
@@ -100,7 +100,7 @@ export default function TestV2NotesCreation() {
   };
 
   const showPollingStatus = () => {
-    const status = getPollingStatus();
+    const status = getUnifiedPollingStatus();
     addLog(`📊 Status Polling V2:`);
     addLog(`  - Polling actif: ${status.isPolling ? 'Oui' : 'Non'}`);
     addLog(`  - Queue: ${status.queueLength} éléments`);

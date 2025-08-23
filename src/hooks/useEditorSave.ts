@@ -1,6 +1,12 @@
 import { useState, useCallback } from 'react';
 import { toast } from 'react-hot-toast';
-import type { NoteData } from '../types/editor';
+// Type pour les données de sauvegarde
+interface NoteData {
+  title: string;
+  markdown_content: string;
+  html_content: string;
+  titleAlign?: 'left' | 'center' | 'right';
+}
 import { simpleLogger as logger } from '@/utils/logger';
 
 
@@ -58,7 +64,7 @@ export default function useEditorSave({ onSave, editor, titleAlign }: UseEditorS
     } else {
       toast.error('Erreur : impossible de sauvegarder (éditeur ou callback manquant)');
     }
-  }, [onSave, editor, titleAlign]);
+  }, [onSave, editor]);
 
   return {
     isSaving,

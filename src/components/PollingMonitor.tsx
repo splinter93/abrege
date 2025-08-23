@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { getPollingStatus, stopPollingService } from '@/services/intelligentPollingService';
+import { getUnifiedPollingStatus, stopUnifiedPollingService } from '@/services/unifiedPollingService';
 
 /**
  * Composant de monitoring pour le système de polling intelligent V2
@@ -12,7 +12,7 @@ export default function PollingMonitor() {
 
   useEffect(() => {
     const interval = setInterval(() => {
-      const currentStatus = getPollingStatus();
+      const currentStatus = getUnifiedPollingStatus();
       setStatus(currentStatus);
     }, 1000);
 
@@ -83,7 +83,7 @@ export default function PollingMonitor() {
 
           <div className="border-t pt-2">
             <button
-              onClick={stopPollingService}
+              onClick={stopUnifiedPollingService}
               className="w-full bg-red-500 text-white text-xs py-1 px-2 rounded hover:bg-red-600 transition-colors"
             >
               🛑 Arrêter le service

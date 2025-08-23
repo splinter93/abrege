@@ -3,7 +3,7 @@ import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { Send, Plus, Zap, Globe, Search, ArrowUp } from 'react-feather';
 import LoadingSpinner from './LoadingSpinner';
 import AudioRecorder from './AudioRecorder';
-import { logger } from '@/utils/logger';
+import { logger, LogCategory } from '@/utils/logger';
 import './LoadingSpinner.css';
 
 interface ChatInputProps {
@@ -24,7 +24,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend, loading, textareaRef, dis
   };
 
   const handleSend = () => {
-    logger.debug('[ChatInput] 🚀 Tentative d\'envoi:', { 
+    logger.debug(LogCategory.API, '🚀 Tentative d\'envoi:', { 
       message: message.trim(), 
       loading, 
       disabled,
@@ -32,11 +32,11 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend, loading, textareaRef, dis
     });
     
     if (message.trim() && !loading && !disabled) {
-      logger.debug('[ChatInput] ✅ Envoi du message');
+      logger.debug(LogCategory.API, '✅ Envoi du message');
       onSend(message);
       setMessage('');
     } else {
-      logger.debug('[ChatInput] ❌ Envoi bloqué:', { 
+      logger.debug(LogCategory.API, '❌ Envoi bloqué:', { 
         hasMessage: !!message.trim(), 
         loading, 
         disabled 
@@ -136,14 +136,6 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend, loading, textareaRef, dis
         </div>
         
         <div className="chat-input-actions">
-          <button className="chat-input-speaker" aria-label="Haut-parleur">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
-              <path d="M15.54 8.46a5 0 0 1 0 7.07"></path>
-              <path d="M19.07 4.93a10 0 0 1 0 14.14"></path>
-            </svg>
-          </button>
-          
           {/* Composant AudioRecorder isolé et propre */}
           <AudioRecorder 
             onTranscriptionComplete={handleTranscriptionComplete}

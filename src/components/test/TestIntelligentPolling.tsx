@@ -6,8 +6,8 @@ import { useFileSystemStore } from '@/store/useFileSystemStore';
 import { simpleLogger as logger } from '@/utils/logger';
 
 /**
- * Composant de test pour le système de polling intelligent
- * Teste toutes les opérations CRUD avec polling intelligent
+ * Composant de test pour le système de polling unifié
+ * Teste toutes les opérations CRUD avec polling unifié
  */
 export default function TestIntelligentPolling() {
   const [isLoading, setIsLoading] = useState(false);
@@ -31,7 +31,7 @@ export default function TestIntelligentPolling() {
         markdown_content: 'Contenu de test'
       };
 
-      const result = await v2UnifiedApi.createNote(noteData, 'test-user');
+      const result = await v2UnifiedApi.createNote(noteData);
       addLog(`✅ Note créée: ${result.note.source_title}`);
       addLog(`🔄 Polling intelligent déclenché pour notes`);
       
@@ -52,7 +52,7 @@ export default function TestIntelligentPolling() {
         notebook_id: 'test-notebook'
       };
 
-      const result = await v2UnifiedApi.createFolder(folderData, 'test-user');
+      const result = await v2UnifiedApi.createFolder(folderData);
       addLog(`✅ Dossier créé: ${result.folder.name}`);
       addLog(`🔄 Polling intelligent déclenché pour dossiers`);
       
@@ -73,7 +73,7 @@ export default function TestIntelligentPolling() {
         description: 'Description de test'
       };
 
-      const result = await v2UnifiedApi.createClasseur(classeurData, 'test-user');
+      const result = await v2UnifiedApi.createClasseur(classeurData);
       addLog(`✅ Classeur créé: ${result.classeur.name}`);
       addLog(`🔄 Polling intelligent déclenché pour classeurs`);
       
@@ -97,7 +97,7 @@ export default function TestIntelligentPolling() {
       
       addLog(`🧪 Test déplacement note "${note.source_title}" avec polling intelligent...`);
       
-      await v2UnifiedApi.moveNote(noteId, null, 'test-user');
+      await v2UnifiedApi.moveNote(noteId, null);
       addLog(`✅ Note déplacée vers la racine`);
       addLog(`🔄 Polling intelligent déclenché pour notes`);
       
@@ -121,7 +121,7 @@ export default function TestIntelligentPolling() {
       
       addLog(`🧪 Test suppression note "${note.source_title}" avec polling intelligent...`);
       
-      await v2UnifiedApi.deleteNote(noteId, 'test-user');
+      await v2UnifiedApi.deleteNote(noteId);
       addLog(`✅ Note supprimée`);
       addLog(`🔄 Polling intelligent déclenché pour notes`);
       

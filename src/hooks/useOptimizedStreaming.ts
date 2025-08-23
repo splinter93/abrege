@@ -2,7 +2,6 @@ import { useRef, useState, useCallback, useEffect } from 'react';
 
 interface UseOptimizedStreamingOptions {
   onUpdate: (content: string) => void;
-  onComplete?: () => void;
   batchSize?: number;
   throttleMs?: number;
 }
@@ -19,7 +18,7 @@ interface UseOptimizedStreamingReturn {
  * Utilise le batching et requestAnimationFrame pour un rendu fluide
  */
 export function useOptimizedStreaming(options: UseOptimizedStreamingOptions): UseOptimizedStreamingReturn {
-  const { onUpdate, onComplete, batchSize = 3, throttleMs = 16 } = options;
+  const { onUpdate, batchSize = 3, throttleMs = 16 } = options;
   
   const [pendingTokens, setPendingTokens] = useState<string[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);

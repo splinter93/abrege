@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { triggerIntelligentPolling, getPollingStatus, stopPollingService } from '@/services/intelligentPollingService';
+import { triggerUnifiedPolling, getUnifiedPollingStatus, stopUnifiedPollingService } from '@/services/unifiedPollingService';
 import { useFileSystemStore } from '@/store/useFileSystemStore';
 
 /**
@@ -22,7 +22,7 @@ export default function TestPollingSystem() {
   // Monitoring en temps réel du statut
   useEffect(() => {
     const interval = setInterval(() => {
-      const currentStatus = getPollingStatus();
+      const currentStatus = getUnifiedPollingStatus();
       setStatus(currentStatus);
     }, 500);
 
@@ -38,30 +38,31 @@ export default function TestPollingSystem() {
     try {
       // Test 1: Polling des notes
       addLog('📝 Test 1: Polling des notes...');
-      const notesResult = await triggerIntelligentPolling({
+      const notesResult = await triggerUnifiedPolling({
         entityType: 'notes',
         operation: 'CREATE',
-        entityId: 'test-notes',
+        entityId: 'test-notes', userId: 'test-user',
+        userId: 'test-user',
         delay: 1000
       });
       addLog(`✅ Notes: ${notesResult.success ? 'Succès' : 'Échec'} - ${notesResult.dataCount || 0} éléments`);
       
       // Test 2: Polling des dossiers
       addLog('📁 Test 2: Polling des dossiers...');
-      const foldersResult = await triggerIntelligentPolling({
+      const foldersResult = await triggerUnifiedPolling({
         entityType: 'folders',
         operation: 'CREATE',
-        entityId: 'test-folders',
+        entityId: 'test-folders', userId: 'test-user',
         delay: 1000
       });
       addLog(`✅ Dossiers: ${foldersResult.success ? 'Succès' : 'Échec'} - ${foldersResult.dataCount || 0} éléments`);
       
       // Test 3: Polling des classeurs
       addLog('📚 Test 3: Polling des classeurs...');
-      const classeursResult = await triggerIntelligentPolling({
+      const classeursResult = await triggerUnifiedPolling({
         entityType: 'classeurs',
         operation: 'CREATE',
-        entityId: 'test-classeurs',
+        entityId: 'test-classeurs', userId: 'test-user',
         delay: 1000
       });
       addLog(`✅ Classeurs: ${classeursResult.success ? 'Succès' : 'Échec'} - ${classeursResult.dataCount || 0} éléments`);
@@ -69,9 +70,9 @@ export default function TestPollingSystem() {
       // Test 4: Polling simultané
       addLog('⚡ Test 4: Polling simultané...');
       const promises = [
-        triggerIntelligentPolling({ entityType: 'notes', operation: 'UPDATE', delay: 500 }),
-        triggerIntelligentPolling({ entityType: 'folders', operation: 'UPDATE', delay: 500 }),
-        triggerIntelligentPolling({ entityType: 'classeurs', operation: 'UPDATE', delay: 500 })
+        triggerUnifiedPolling({ entityType: 'notes', operation: 'UPDATE', userId: 'test-user', delay: 500 }),
+        triggerUnifiedPolling({ entityType: 'folders', operation: 'UPDATE', userId: 'test-user', delay: 500 }),
+        triggerUnifiedPolling({ entityType: 'classeurs', operation: 'UPDATE', userId: 'test-user', delay: 500 })
       ];
       
       const results = await Promise.all(promises);
@@ -101,7 +102,7 @@ export default function TestPollingSystem() {
     
     for (const op of operations) {
       addLog(`📋 Ajout: ${op.entityType} ${op.operation} (${op.priority})`);
-      triggerIntelligentPolling({
+      triggerUnifiedPolling({
         entityType: op.entityType as any,
         operation: op.operation as any,
         entityId: `test-${op.entityType}`,
@@ -118,7 +119,7 @@ export default function TestPollingSystem() {
   };
 
   const stopService = () => {
-    stopPollingService();
+    stopUnifiedPollingService();
     addLog('🛑 Service de polling arrêté');
   };
 

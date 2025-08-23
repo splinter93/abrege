@@ -9,11 +9,12 @@ import FolderManager from "@/components/FolderManager";
 import DossierErrorBoundary from "@/components/DossierErrorBoundary";
 import { DossierLoadingState, DossierErrorState } from "@/components/DossierLoadingStates";
 import AuthGuard from "@/components/AuthGuard";
-import RealtimeInitializer from "@/components/RealtimeInitializer";
+
 import { useDossiersPage } from "@/hooks/useDossiersPage";
 import { useAuth } from "@/hooks/useAuth";
 import { useSecureErrorHandler } from "@/components/SecureErrorHandler";
 import type { AuthenticatedUser } from "@/types/dossiers";
+import UnifiedRealtimeManager from "@/components/UnifiedRealtimeManager";
 
 import "./index.css";
 import "@/components/DossierErrorBoundary.css";
@@ -23,10 +24,10 @@ import { useFileSystemStore } from "@/store/useFileSystemStore";
 export default function DossiersPage() {
   return (
     <DossierErrorBoundary>
-      <AuthGuard>
-        <RealtimeInitializer />
-        <DossiersPageContent />
-      </AuthGuard>
+              <AuthGuard>
+          <UnifiedRealtimeManager />
+          <DossiersPageContent />
+        </AuthGuard>
     </DossierErrorBoundary>
   );
 }

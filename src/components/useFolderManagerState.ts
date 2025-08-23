@@ -13,7 +13,6 @@ import { generateUniqueNoteName } from '@/utils/generateUniqueName';
 
 const selectFoldersData = (s: FileSystemState) => s.folders;
 const selectNotesData = (s: FileSystemState) => s.notes;
-const selectClasseursData = (s: FileSystemState) => s.classeurs;
 const selectActiveClasseurId = (s: FileSystemState) => s.activeClasseurId;
 
 // Types pour le renommage
@@ -28,20 +27,6 @@ interface ZustandFolder {
   user_id?: string;
   created_at?: string;
   updated_at?: string;
-  position?: number;
-  [key: string]: unknown;
-}
-
-interface ZustandNote {
-  id: string;
-  source_title?: string;
-  title?: string;
-  source_type?: string;
-  updated_at?: string;
-  classeur_id?: string;
-  folder_id?: string | null;
-  user_id?: string;
-  created_at?: string;
   position?: number;
   [key: string]: unknown;
 }
@@ -459,12 +444,12 @@ export function useFolderManagerState(classeurId: string, userId: string, parent
   }, []);
 
   // --- DnD ---
-  const reorderFolders = useCallback(async (newOrder: Folder[]) => {
+  const reorderFolders = useCallback(async (_newOrder: Folder[]) => {
     // TODO: Implémenter avec V2UnifiedApi
     logger.dev('[UI] 🔄 Réordonnancement dossiers - Fonctionnalité temporairement désactivée');
   }, []);
 
-  const reorderFiles = useCallback(async (newOrder: FileArticle[]) => {
+  const reorderFiles = useCallback(async (_newOrder: FileArticle[]) => {
     // TODO: Implémenter avec V2UnifiedApi
     logger.dev('[UI] 🔄 Réordonnancement notes - Fonctionnalité temporairement désactivée');
   }, []);

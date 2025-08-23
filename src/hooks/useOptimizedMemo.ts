@@ -82,8 +82,10 @@ export function useConditionalMemo<T>(
   deps: React.DependencyList,
   shouldMemoize: boolean
 ): T {
+  const memoizedValue = useMemo(factory, shouldMemoize ? deps : []);
+  
   if (shouldMemoize) {
-    return useMemo(factory, deps);
+    return memoizedValue;
   }
   
   return factory();

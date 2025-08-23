@@ -4,14 +4,14 @@ import { simpleLogger as logger } from '@/utils/logger';
 interface UseChatResponseOptions {
   onComplete?: (fullContent: string, fullReasoning: string) => void;
   onError?: (error: string) => void;
-  onToolCalls?: (toolCalls: any[], toolName: string) => void;
-  onToolResult?: (toolName: string, result: any, success: boolean, toolCallId?: string) => void;
-  onToolExecutionComplete?: (toolResults: any[]) => void;
+  onToolCalls?: (toolCalls: Array<{ id: string; name: string; arguments: Record<string, unknown> }>, toolName: string) => void;
+  onToolResult?: (toolName: string, result: unknown, success: boolean, toolCallId?: string) => void;
+  onToolExecutionComplete?: (toolResults: Array<{ name: string; result: unknown; success: boolean; tool_call_id: string }>) => void;
 }
 
 interface UseChatResponseReturn {
   isProcessing: boolean;
-  sendMessage: (message: string, sessionId: string, context?: any, history?: any[], token?: string) => Promise<void>;
+  sendMessage: (message: string, sessionId: string, context?: Record<string, unknown>, history?: unknown[], token?: string) => Promise<void>;
   reset: () => void;
 }
 
@@ -21,7 +21,7 @@ export function useChatResponse(options: UseChatResponseOptions = {}): UseChatRe
 
   const { onComplete, onError, onToolCalls, onToolResult, onToolExecutionComplete } = options;
 
-  const sendMessage = useCallback(async (message: string, sessionId: string, context?: any, history?: any[], token?: string) => {
+  const sendMessage = useCallback(async (message: string, sessionId: string, context?: Record<string, unknown>, history?: unknown[], token?: string) => {
     try {
       setIsProcessing(true);
 
@@ -56,7 +56,7 @@ export function useChatResponse(options: UseChatResponseOptions = {}): UseChatRe
           logger.tool('[useChatResponse] 🔄 Nouveaux tool calls détectés, continuation du cycle');
           
           // Traiter les nouveaux tool calls
-          const toolCallIds = data.tool_calls.map((tc: any) => tc.id);
+          const toolCallIds = data.tool_calls.map((tc: { id: string }) => tc.id);
           setPendingToolCalls(new Set(toolCallIds));
           
           onToolCalls?.(data.tool_calls, 'tool_chain');
@@ -117,7 +117,7 @@ export function useChatResponse(options: UseChatResponseOptions = {}): UseChatRe
         // Gérer les tool calls normaux si présents (premier appel)
         if (data.tool_calls && data.tool_calls.length > 0 && !data.is_relance) {
           // 🔧 AMÉLIORATION: Gestion des multiples tool calls
-          const toolCallIds = data.tool_calls.map((tc: any) => tc.id);
+          const toolCallIds = data.tool_calls.map((tc: { id: string }) => tc.id);
           setPendingToolCalls(new Set(toolCallIds));
           
           // 🔧 NOUVEAU: Log spécial pour les multiples tool calls

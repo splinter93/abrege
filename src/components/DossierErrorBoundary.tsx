@@ -39,9 +39,9 @@ export class DossierErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    // Log de l'erreur
-    logger.error('[DossierErrorBoundary] ❌ Erreur capturée:', {
-      error: error.message,
+    // Log de l'erreur avec simpleLogger
+    logger.error('[DossierErrorBoundary] ❌ Erreur capturée', {
+      message: error.message,
       stack: error.stack,
       componentStack: errorInfo.componentStack
     });

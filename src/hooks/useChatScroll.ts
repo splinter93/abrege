@@ -1,7 +1,6 @@
 import { useRef, useState, useCallback, useEffect } from 'react';
 
 interface UseChatScrollOptions {
-  autoScroll?: boolean;
   scrollThreshold?: number;
   scrollDelay?: number;
 }
@@ -14,7 +13,6 @@ interface UseChatScrollReturn {
 
 export function useChatScroll(options: UseChatScrollOptions = {}): UseChatScrollReturn {
   const { 
-    autoScroll = true, 
     scrollThreshold = 150, 
     scrollDelay = 100
   } = options;

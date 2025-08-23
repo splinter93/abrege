@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { v2UnifiedApi } from '@/services/V2UnifiedApi';
 import { useFileSystemStore } from '@/store/useFileSystemStore';
-import { triggerIntelligentPolling, getPollingStatus } from '@/services/intelligentPollingService';
+import { triggerUnifiedPolling, getUnifiedPollingStatus } from '@/services/unifiedPollingService';
 import { simpleLogger as logger } from '@/utils/logger';
 
 /**
@@ -91,7 +91,7 @@ export default function TestNoteDeletion() {
     try {
       addLog('🔄 Test polling manuel pour notes...');
       
-      const result = await triggerIntelligentPolling({
+      const result = await triggerUnifiedPolling({
         entityType: 'notes',
         operation: 'DELETE',
         entityId: 'test-polling',
@@ -126,7 +126,7 @@ export default function TestNoteDeletion() {
   };
 
   const showPollingStatus = () => {
-    const status = getPollingStatus();
+    const status = getUnifiedPollingStatus();
     addLog(`📊 Status Polling V2:`);
     addLog(`   - Polling actif: ${status.isPolling ? 'Oui' : 'Non'}`);
     addLog(`   - Queue: ${status.queueLength} éléments`);

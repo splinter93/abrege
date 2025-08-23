@@ -2,7 +2,7 @@ import { useFileSystemStore } from '@/store/useFileSystemStore';
 
 import { simpleLogger as logger } from '@/utils/logger';
 import type { Folder, Note, Classeur } from '@/store/useFileSystemStore';
-import { triggerIntelligentPolling } from './intelligentPollingService';
+import { triggerUnifiedPolling } from './unifiedPollingService';
 
 
 // Types pour les données d'API (compatibles avec V1)
@@ -158,7 +158,7 @@ export class V2UnifiedApi {
       
       // 🚀 4. Déclencher le polling intelligent pour synchronisation
       // ✅ NETTOYAGE: Maintenant que la double création est éliminée, le polling est utile pour la sync
-      await triggerIntelligentPolling({
+      await triggerUnifiedPolling({
         entityType: 'notes',
         operation: 'CREATE',
         entityId: result.note.id,
@@ -211,7 +211,7 @@ export class V2UnifiedApi {
       store.updateNote(noteId, result.note);
       
       // 🚀 Déclencher le polling intelligent immédiatement
-      await triggerIntelligentPolling({
+      await triggerUnifiedPolling({
         entityType: 'notes',
         operation: 'UPDATE',
         entityId: noteId,
@@ -266,7 +266,7 @@ export class V2UnifiedApi {
       }
       
       // 🚀 Déclencher le polling intelligent immédiatement
-      await triggerIntelligentPolling({
+      await triggerUnifiedPolling({
         entityType: 'notes',
         operation: 'DELETE',
         entityId: noteId,
@@ -341,7 +341,7 @@ export class V2UnifiedApi {
 
       // 🚀 4. Déclencher le polling intelligent pour synchronisation
       // ✅ NETTOYAGE: Maintenant que la double création est éliminée, le polling est utile pour la sync
-      await triggerIntelligentPolling({
+      await triggerUnifiedPolling({
         entityType: 'folders',
         operation: 'CREATE',
         entityId: result.folder.id,
@@ -394,7 +394,7 @@ export class V2UnifiedApi {
       store.updateFolder(folderId, result.folder);
       
       // 🚀 Déclencher le polling intelligent immédiatement
-      await triggerIntelligentPolling({
+      await triggerUnifiedPolling({
         entityType: 'folders',
         operation: 'UPDATE',
         entityId: folderId,
@@ -449,7 +449,7 @@ export class V2UnifiedApi {
       }
       
       // 🚀 Déclencher le polling intelligent immédiatement
-      await triggerIntelligentPolling({
+      await triggerUnifiedPolling({
         entityType: 'folders',
         operation: 'DELETE',
         entityId: folderId,
@@ -510,7 +510,7 @@ export class V2UnifiedApi {
       store.moveNote(noteId, targetFolderId, noteClasseurId);
       
       // 🚀 Déclencher le polling intelligent immédiatement
-      await triggerIntelligentPolling({
+      await triggerUnifiedPolling({
         entityType: 'notes',
         operation: 'MOVE',
         entityId: noteId,
@@ -571,7 +571,7 @@ export class V2UnifiedApi {
       store.moveFolder(folderId, targetParentId, folderClasseurId);
       
       // 🚀 Déclencher le polling intelligent immédiatement
-      await triggerIntelligentPolling({
+      await triggerUnifiedPolling({
         entityType: 'folders',
         operation: 'MOVE',
         entityId: folderId,
@@ -645,7 +645,7 @@ export class V2UnifiedApi {
       }
       
       // 🚀 4. Déclencher le polling intelligent immédiatement
-      await triggerIntelligentPolling({
+      await triggerUnifiedPolling({
         entityType: 'classeurs',
         operation: 'CREATE',
         entityId: result.classeur.id,
@@ -698,7 +698,7 @@ export class V2UnifiedApi {
       store.updateClasseur(classeurId, result.classeur);
       
       // 🚀 Déclencher le polling intelligent immédiatement
-      await triggerIntelligentPolling({
+      await triggerUnifiedPolling({
         entityType: 'classeurs',
         operation: 'UPDATE',
         entityId: classeurId,
@@ -749,7 +749,7 @@ export class V2UnifiedApi {
       store.removeClasseur(classeurId);
       
       // 🚀 Déclencher le polling intelligent immédiatement
-      await triggerIntelligentPolling({
+      await triggerUnifiedPolling({
         entityType: 'classeurs',
         operation: 'DELETE',
         entityId: classeurId,

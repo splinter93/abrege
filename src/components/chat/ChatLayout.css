@@ -217,7 +217,7 @@
   overflow-y: auto;
   overflow-x: hidden;
   padding: var(--chat-spacing-xl);
-  padding-bottom: 16rem;
+  padding-bottom: 10rem;
   background: var(--chat-bg-primary);
   min-height: 0; /* Important pour que flex fonctionne correctement */
   /* Amélioration du scroll */

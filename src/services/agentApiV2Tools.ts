@@ -1,5 +1,6 @@
 import { V2DatabaseUtils } from '@/utils/v2DatabaseUtils';
 import { OpenAPIToolsGenerator } from './openApiToolsGenerator';
+import { triggerUnifiedPolling } from './unifiedPollingService';
 
 
 export interface ApiV2Tool {
@@ -1455,6 +1456,20 @@ export class AgentApiV2Tools {
       const duration = Date.now() - startTime;
       console.log(`[AgentApiV2Tools] ✅ ${toolName} (${duration}ms)`, { duration });
       
+      // 🔄 Déclencher le polling intelligent après l'exécution du tool
+      try {
+        const pollingConfig = this.getPollingConfigForTool(toolName, result, userId);
+        if (pollingConfig) {
+          // ✅ CORRECTION: Ajouter le token d'authentification au polling
+          pollingConfig.authToken = jwtToken;
+          await triggerUnifiedPolling(pollingConfig);
+          console.log(`[AgentApiV2Tools] 🔄 Polling intelligent déclenché: ${pollingConfig.entityType} ${pollingConfig.operation}`);
+        }
+      } catch (pollingError) {
+        console.warn(`[AgentApiV2Tools] ⚠️ Erreur lors du déclenchement du polling:`, pollingError);
+        // Ne pas faire échouer l'exécution du tool à cause du polling
+      }
+      
       return result;
     } catch (error) {
       const duration = Date.now() - startTime;
@@ -1512,6 +1527,69 @@ export class AgentApiV2Tools {
    */
   getAvailableTools(): string[] {
     return Array.from(this.tools.keys());
+  }
+
+  /**
+   * Obtenir la configuration de polling pour un tool spécifique
+   */
+  private getPollingConfigForTool(toolName: string, result: any, userId: string): any {
+    // Mapping des tools vers les types d'entités et opérations
+    const toolMapping: Record<string, { entityType: string; operation: string; delay?: number; priority?: number }> = {
+      // Notes
+      'create_note': { entityType: 'notes', operation: 'CREATE', delay: 1000, priority: 4 },
+      'update_note': { entityType: 'notes', operation: 'UPDATE', delay: 500, priority: 2 },
+      'delete_note': { entityType: 'notes', operation: 'DELETE', delay: 0, priority: 1 },
+      'add_content_to_note': { entityType: 'notes', operation: 'UPDATE', delay: 300, priority: 2 },
+      'insert_content_to_note': { entityType: 'notes', operation: 'UPDATE', delay: 300, priority: 2 },
+      'add_content_to_section': { entityType: 'notes', operation: 'UPDATE', delay: 300, priority: 2 },
+      'clear_section': { entityType: 'notes', operation: 'UPDATE', delay: 300, priority: 2 },
+      'erase_section': { entityType: 'notes', operation: 'UPDATE', delay: 300, priority: 2 },
+      'merge_note': { entityType: 'notes', operation: 'UPDATE', delay: 800, priority: 2 },
+      'move_note': { entityType: 'notes', operation: 'MOVE', delay: 500, priority: 3 },
+      'publish_note': { entityType: 'notes', operation: 'UPDATE', delay: 1000, priority: 2 },
+      
+      // Dossiers
+      'create_folder': { entityType: 'folders', operation: 'CREATE', delay: 1000, priority: 4 },
+      'update_folder': { entityType: 'folders', operation: 'UPDATE', delay: 500, priority: 2 },
+      'delete_folder': { entityType: 'folders', operation: 'DELETE', delay: 0, priority: 1 },
+      'move_folder': { entityType: 'folders', operation: 'MOVE', delay: 500, priority: 3 },
+      
+      // Classeurs
+      'create_notebook': { entityType: 'classeurs', operation: 'CREATE', delay: 1500, priority: 4 },
+      'update_notebook': { entityType: 'classeurs', operation: 'UPDATE', delay: 800, priority: 2 },
+      'delete_notebook': { entityType: 'classeurs', operation: 'DELETE', delay: 0, priority: 1 },
+      'reorder_notebooks': { entityType: 'classeurs', operation: 'UPDATE', delay: 500, priority: 2 },
+      
+      // Fichiers
+      'upload_file': { entityType: 'files', operation: 'CREATE', delay: 2000, priority: 4 },
+      'delete_file': { entityType: 'files', operation: 'DELETE', delay: 0, priority: 1 },
+      'move_file': { entityType: 'files', operation: 'MOVE', delay: 500, priority: 3 },
+      'rename_file': { entityType: 'files', operation: 'RENAME', delay: 300, priority: 3 }
+    };
+
+    const mapping = toolMapping[toolName];
+    if (!mapping) {
+      return null; // Pas de polling pour ce tool
+    }
+
+    // Extraire l'ID de l'entité depuis le résultat si possible
+    let entityId: string | undefined;
+    if (result && typeof result === 'object') {
+      if (result.note?.id) entityId = result.note.id;
+      else if (result.folder?.id) entityId = result.folder.id;
+      else if (result.notebook?.id) entityId = result.notebook.id;
+      else if (result.file?.id) entityId = result.file.id;
+      else if (result.id) entityId = result.id;
+    }
+
+    return {
+      entityType: mapping.entityType,
+      operation: mapping.operation,
+      entityId,
+      userId,
+      delay: mapping.delay,
+      priority: mapping.priority
+    };
   }
 
   /**
