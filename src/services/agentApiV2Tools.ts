@@ -1,6 +1,6 @@
 import { V2DatabaseUtils } from '@/utils/v2DatabaseUtils';
 import { OpenAPIToolsGenerator } from './openApiToolsGenerator';
-import { triggerUnifiedPolling } from './unifiedPollingService';
+import { triggerUnifiedRealtimePolling, type EntityType, type OperationType } from './unifiedRealtimeService';
 
 
 export interface ApiV2Tool {
@@ -1360,12 +1360,6 @@ export class AgentApiV2Tools {
         ...(method !== 'GET' && { body: JSON.stringify(data) })
       };
 
-      // Logs épurés pour le debug des tool calls
-      console.log(`[AgentApiV2Tools] 🔧 ${method} ${endpoint}`);
-      if (Object.keys(data || {}).length > 0) {
-        console.log(`[AgentApiV2Tools] 📦 Payload:`, data);
-      }
-
       const response = await fetch(url, config);
       
       if (!response.ok) {
@@ -1374,11 +1368,9 @@ export class AgentApiV2Tools {
       }
 
       const result = await response.json();
-      console.log(`[AgentApiV2Tools] ✅ Réponse:`, result);
       return result;
 
     } catch (error) {
-      console.error(`[AgentApiV2Tools] ❌ Erreur:`, error);
       throw error;
     }
   }
@@ -1387,14 +1379,24 @@ export class AgentApiV2Tools {
    * Obtenir la liste des outils disponibles pour function calling
    */
   getToolsForFunctionCalling(capabilities?: string[]): any[] {
-    // 🔍 DEBUG: Vérifier l'état des tools
-    console.log(`[AgentApiV2Tools] 🔍 État des tools:`, {
-      totalTools: this.tools.size,
-      toolNames: Array.from(this.tools.keys()),
-      hasOpenApiGenerator: !!this.openApiGenerator
-    });
+    const allTools = Array.from(this.tools.values());
     
-    const allTools = Array.from(this.tools.values()).map(tool => ({
+    if (!capabilities || capabilities.length === 0) {
+      return allTools.map(tool => ({
+        type: 'function' as const,
+        function: {
+          name: tool.name,
+          description: tool.description,
+          parameters: tool.parameters
+        }
+      }));
+    }
+
+    const filteredTools = allTools.filter(tool => 
+      capabilities.includes(tool.name)
+    );
+
+    return filteredTools.map(tool => ({
       type: 'function' as const,
       function: {
         name: tool.name,
@@ -1402,35 +1404,6 @@ export class AgentApiV2Tools {
         parameters: tool.parameters
       }
     }));
-    
-    console.log(`[AgentApiV2Tools] 🔧 Tools mappés: ${allTools.length}`);
-    
-    // 🔧 CORRECTION: Vérification robuste du type de capabilities
-    if (capabilities === undefined || capabilities === null || !Array.isArray(capabilities)) {
-      console.log(`[AgentApiV2Tools] 🔧 Pas de capacités valides (${typeof capabilities}), retour de tous les tools: ${allTools.length}`);
-      return allTools;
-    }
-    
-    // Capabilities vide : exposer tous les outils (pas de restriction)
-    if (capabilities.length === 0) {
-      console.log(`[AgentApiV2Tools] 🔧 Capabilities vide, exposition de tous les tools: ${allTools.length}`);
-      return allTools;
-    }
-    
-    // 🔧 CORRECTION: Gestion intelligente des capacités
-    // Si les capacités contiennent des mots-clés spéciaux, exposer tous les tools
-    const specialCapabilities = ['function_calls', 'streaming', 'all', 'full_access'];
-    const hasSpecialCapability = capabilities.some(cap => specialCapabilities.includes(cap));
-    
-    if (hasSpecialCapability) {
-      console.log(`[AgentApiV2Tools] 🔧 Capacité spéciale détectée (${capabilities.join(', ')}), exposition de tous les tools: ${allTools.length}`);
-      return allTools;
-    }
-    
-    // Sinon, filtrer selon les noms d'outils demandés
-    const filteredTools = allTools.filter(tool => capabilities.includes(tool.function.name));
-    console.log(`[AgentApiV2Tools] 🔧 Tools filtrés selon capacités: ${filteredTools.length}/${allTools.length}`);
-    return filteredTools;
   }
 
   /**
@@ -1460,9 +1433,7 @@ export class AgentApiV2Tools {
       try {
         const pollingConfig = this.getPollingConfigForTool(toolName, result, userId);
         if (pollingConfig) {
-          // ✅ CORRECTION: Ajouter le token d'authentification au polling
-          pollingConfig.authToken = jwtToken;
-          await triggerUnifiedPolling(pollingConfig);
+          await triggerUnifiedRealtimePolling(pollingConfig.entityType, pollingConfig.operation, jwtToken);
           console.log(`[AgentApiV2Tools] 🔄 Polling intelligent déclenché: ${pollingConfig.entityType} ${pollingConfig.operation}`);
         }
       } catch (pollingError) {
@@ -1532,64 +1503,42 @@ export class AgentApiV2Tools {
   /**
    * Obtenir la configuration de polling pour un tool spécifique
    */
-  private getPollingConfigForTool(toolName: string, result: any, userId: string): any {
-    // Mapping des tools vers les types d'entités et opérations
-    const toolMapping: Record<string, { entityType: string; operation: string; delay?: number; priority?: number }> = {
+  private getPollingConfigForTool(toolName: string, result: any, userId: string): { entityType: EntityType; operation: OperationType } | null {
+    // Mapping simplifié des tools vers les types d'entités et opérations
+    const toolMapping: Record<string, { entityType: EntityType; operation: OperationType }> = {
       // Notes
-      'create_note': { entityType: 'notes', operation: 'CREATE', delay: 1000, priority: 4 },
-      'update_note': { entityType: 'notes', operation: 'UPDATE', delay: 500, priority: 2 },
-      'delete_note': { entityType: 'notes', operation: 'DELETE', delay: 0, priority: 1 },
-      'add_content_to_note': { entityType: 'notes', operation: 'UPDATE', delay: 300, priority: 2 },
-      'insert_content_to_note': { entityType: 'notes', operation: 'UPDATE', delay: 300, priority: 2 },
-      'add_content_to_section': { entityType: 'notes', operation: 'UPDATE', delay: 300, priority: 2 },
-      'clear_section': { entityType: 'notes', operation: 'UPDATE', delay: 300, priority: 2 },
-      'erase_section': { entityType: 'notes', operation: 'UPDATE', delay: 300, priority: 2 },
-      'merge_note': { entityType: 'notes', operation: 'UPDATE', delay: 800, priority: 2 },
-      'move_note': { entityType: 'notes', operation: 'MOVE', delay: 500, priority: 3 },
-      'publish_note': { entityType: 'notes', operation: 'UPDATE', delay: 1000, priority: 2 },
+      'create_note': { entityType: 'notes', operation: 'CREATE' },
+      'update_note': { entityType: 'notes', operation: 'UPDATE' },
+      'delete_note': { entityType: 'notes', operation: 'DELETE' },
+      'add_content_to_note': { entityType: 'notes', operation: 'UPDATE' },
+      'insert_content_to_note': { entityType: 'notes', operation: 'UPDATE' },
+      'add_content_to_section': { entityType: 'notes', operation: 'UPDATE' },
+      'clear_section': { entityType: 'notes', operation: 'UPDATE' },
+      'erase_section': { entityType: 'notes', operation: 'UPDATE' },
+      'merge_note': { entityType: 'notes', operation: 'UPDATE' },
+      'move_note': { entityType: 'notes', operation: 'MOVE' },
+      'publish_note': { entityType: 'notes', operation: 'UPDATE' },
       
       // Dossiers
-      'create_folder': { entityType: 'folders', operation: 'CREATE', delay: 1000, priority: 4 },
-      'update_folder': { entityType: 'folders', operation: 'UPDATE', delay: 500, priority: 2 },
-      'delete_folder': { entityType: 'folders', operation: 'DELETE', delay: 0, priority: 1 },
-      'move_folder': { entityType: 'folders', operation: 'MOVE', delay: 500, priority: 3 },
+      'create_folder': { entityType: 'folders', operation: 'CREATE' },
+      'update_folder': { entityType: 'folders', operation: 'UPDATE' },
+      'delete_folder': { entityType: 'folders', operation: 'DELETE' },
+      'move_folder': { entityType: 'folders', operation: 'MOVE' },
       
       // Classeurs
-      'create_notebook': { entityType: 'classeurs', operation: 'CREATE', delay: 1500, priority: 4 },
-      'update_notebook': { entityType: 'classeurs', operation: 'UPDATE', delay: 800, priority: 2 },
-      'delete_notebook': { entityType: 'classeurs', operation: 'DELETE', delay: 0, priority: 1 },
-      'reorder_notebooks': { entityType: 'classeurs', operation: 'UPDATE', delay: 500, priority: 2 },
+      'create_notebook': { entityType: 'classeurs', operation: 'CREATE' },
+      'update_notebook': { entityType: 'classeurs', operation: 'UPDATE' },
+      'delete_notebook': { entityType: 'classeurs', operation: 'DELETE' },
+      'reorder_notebooks': { entityType: 'classeurs', operation: 'UPDATE' },
       
-      // Fichiers
-      'upload_file': { entityType: 'files', operation: 'CREATE', delay: 2000, priority: 4 },
-      'delete_file': { entityType: 'files', operation: 'DELETE', delay: 0, priority: 1 },
-      'move_file': { entityType: 'files', operation: 'MOVE', delay: 500, priority: 3 },
-      'rename_file': { entityType: 'files', operation: 'RENAME', delay: 300, priority: 3 }
+      // Fichiers (non supportés par le service unifié pour l'instant)
+      // 'upload_file': { entityType: 'files', operation: 'CREATE' },
+      // 'delete_file': { entityType: 'files', operation: 'DELETE' },
+      // 'move_file': { entityType: 'files', operation: 'MOVE' },
+      // 'rename_file': { entityType: 'files', operation: 'RENAME' }
     };
 
-    const mapping = toolMapping[toolName];
-    if (!mapping) {
-      return null; // Pas de polling pour ce tool
-    }
-
-    // Extraire l'ID de l'entité depuis le résultat si possible
-    let entityId: string | undefined;
-    if (result && typeof result === 'object') {
-      if (result.note?.id) entityId = result.note.id;
-      else if (result.folder?.id) entityId = result.folder.id;
-      else if (result.notebook?.id) entityId = result.notebook.id;
-      else if (result.file?.id) entityId = result.file.id;
-      else if (result.id) entityId = result.id;
-    }
-
-    return {
-      entityType: mapping.entityType,
-      operation: mapping.operation,
-      entityId,
-      userId,
-      delay: mapping.delay,
-      priority: mapping.priority
-    };
+    return toolMapping[toolName] || null;
   }
 
   /**

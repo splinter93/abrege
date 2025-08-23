@@ -1,7 +1,7 @@
 import { BaseProvider, type ProviderCapabilities, type ProviderConfig, type ProviderInfo } from '../base/BaseProvider';
 import type { LLMProvider, AppContext } from '../../types';
 import type { ChatMessage } from '@/types/chat';
-import { logger } from '@/utils/logger';
+import { simpleLogger as logger } from '@/utils/logger';
 import { getSystemMessage } from '../../templates';
 
 /**
@@ -145,7 +145,7 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
       logger.warn(`[GroqProvider] ⚠️ Modèle ${this.config.model} non officiellement supporté`);
     }
 
-    logger.debug('[GroqProvider] ✅ Configuration validée');
+    logger.dev('[GroqProvider] ✅ Configuration validée');
     return true;
   }
 
@@ -158,7 +158,7 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
     }
 
     try {
-      logger.debug(`[GroqProvider] 🚀 Appel avec modèle: ${this.config.model}`);
+      logger.dev(`[GroqProvider] 🚀 Appel avec modèle: ${this.config.model}`);
 
       // ✅ Vérifier si le streaming est activé
       if (this.config.supportsStreaming) {
@@ -169,7 +169,7 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
       const messages = this.prepareMessages(message, context, history);
       
       // Préparer le payload (sans streaming)
-      const payload = this.preparePayload(messages, tools);
+      const payload = await this.preparePayload(messages, tools);
       payload.stream = false; // Forcer le mode non-streaming
       
       // Effectuer l'appel API
@@ -178,7 +178,7 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
       // Extraire la réponse
       const result = this.extractResponse(response);
       
-      logger.debug('[GroqProvider] ✅ Appel réussi');
+      logger.dev('[GroqProvider] ✅ Appel réussi');
       
       // 🎯 Retourner l'objet complet avec la structure attendue par l'orchestrateur
       return {
@@ -247,7 +247,7 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
   /**
    * Prépare le payload pour l'API Groq avec support des tools
    */
-  private preparePayload(messages: any[], tools?: any[]) {
+  private async preparePayload(messages: any[], tools?: any[]) {
     const payload: any = {
       model: this.config.model,
       messages,
@@ -258,7 +258,7 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
     };
 
     // 🔍 DEBUG: Log des tools reçus
-    logger.debug(`[GroqProvider] 🔍 Tools reçus:`, {
+    logger.dev(`[GroqProvider] 🔍 Tools reçus:`, {
       toolsCount: tools?.length || 0,
       tools: tools?.slice(0, 2) || [], // Log des 2 premiers tools
       hasTools: !!tools && tools.length > 0
@@ -302,18 +302,18 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
         payload.parallel_tool_calls = true; // ✅ Forcer l'activation des tool calls parallèles
         payload.max_tokens = Math.max(this.config.maxTokens, 4000); // ✅ Augmenter les tokens pour les réponses avec tools
         
-        logger.debug(`[GroqProvider] 🔧 ${validatedTools.length}/${tools.length} tools validés pour les function calls`);
-        logger.debug(`[GroqProvider] 🔧 Configuration multi-tools: parallel=${payload.parallel_tool_calls}, max_tokens=${payload.max_tokens}`);
+        logger.dev(`[GroqProvider] 🔧 ${validatedTools.length}/${tools.length} tools validés pour les function calls`);
+        logger.dev(`[GroqProvider] 🔧 Configuration multi-tools: parallel=${payload.parallel_tool_calls}, max_tokens=${payload.max_tokens}`);
         
         // 🔧 DÉBOGAGE: Log du premier tool validé
-        logger.debug(`[GroqProvider] 🔍 Premier tool validé:`, {
+        logger.dev(`[GroqProvider] 🔍 Premier tool validé:`, {
           name: validatedTools[0].function.name,
           description: validatedTools[0].function.description?.substring(0, 100) || 'Pas de description',
           hasParameters: !!validatedTools[0].function.parameters || 'Pas de paramètres'
         });
         
         // 🔍 DEBUG: Log du payload final avec tools
-        logger.debug(`[GroqProvider] 📤 Payload final avec tools:`, {
+        logger.dev(`[GroqProvider] 📤 Payload final avec tools:`, {
           hasTools: !!payload.tools,
           toolsCount: payload.tools?.length || 0,
           toolChoice: payload.tool_choice,
@@ -339,10 +339,77 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
 
     // Si aucun tool valide, désactiver explicitement les function calls
     if (!payload.tools || payload.tools.length === 0) {
-      payload.tool_choice = 'none';
-      delete payload.parallel_tool_calls;
-      delete payload.tools;
-      logger.debug(`[GroqProvider] 🔒 Aucun tool, function calls désactivés`);
+      // 🔧 CORRECTION: Vérifier si FORCE_TOOLS_ON est activé
+      const forceToolsOn = process.env.FORCE_TOOLS_ON === 'true';
+      
+      if (forceToolsOn) {
+        // ✅ FORCER l'activation des tools même sans tools fournis
+        logger.warn(`[GroqProvider] ⚠️ FORCE_TOOLS_ON=true - Forcer l'activation des tools sans validation`);
+        payload.tool_choice = 'auto'; // Permettre au modèle de choisir automatiquement
+        
+        // 🔧 CORRECTION: Fournir des tools réels au lieu d'un tool factice
+        // Importer et utiliser les tools depuis AgentApiV2Tools
+        try {
+          const { agentApiV2Tools } = await import('@/services/agentApiV2Tools');
+          await agentApiV2Tools.waitForInitialization();
+          
+          // Récupérer tous les tools disponibles
+          const allTools = agentApiV2Tools.getToolsForFunctionCalling([]);
+          
+          if (allTools && allTools.length > 0) {
+            payload.tools = allTools;
+            logger.dev(`[GroqProvider] 🔧 ${allTools.length} tools réels chargés pour FORCE_TOOLS_ON`);
+          } else {
+            // Fallback: créer un tool factice mais plus réaliste
+            payload.tools = [{
+              type: 'function',
+              function: {
+                name: 'list_classeurs',
+                description: 'Lister tous les classeurs disponibles',
+                parameters: {
+                  type: 'object',
+                  properties: {
+                    query: {
+                      type: 'string',
+                      description: 'Terme de recherche pour filtrer les classeurs'
+                    },
+                    top_n: {
+                      type: 'number',
+                      description: 'Nombre maximum de classeurs à retourner',
+                      default: 10
+                    }
+                  },
+                  required: []
+                }
+              }
+            }];
+            logger.dev(`[GroqProvider] 🔧 Tool factice créé pour FORCE_TOOLS_ON`);
+          }
+        } catch (error) {
+          logger.warn(`[GroqProvider] ⚠️ Erreur lors du chargement des tools: ${error}`);
+          // Fallback: tool factice minimal
+          payload.tools = [{
+            type: 'function',
+            function: {
+              name: 'force_tools_enabled',
+              description: 'Tool factice pour forcer l\'activation des function calls',
+              parameters: {
+                type: 'object',
+                properties: {},
+                required: []
+              }
+            }
+          }];
+        }
+        
+        logger.dev(`[GroqProvider] 🔧 Tools forcés activés avec ${payload.tools.length} tools`);
+      } else {
+        // Comportement normal : désactiver les function calls
+        payload.tool_choice = 'none';
+        delete payload.parallel_tool_calls;
+        delete payload.tools;
+        logger.dev(`[GroqProvider] 🔒 Aucun tool, function calls désactivés`);
+      }
     }
     
     return payload;
@@ -395,10 +462,10 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
     // ✅ Ajouter les tool calls si présents
     if (choice?.message?.tool_calls && choice.message.tool_calls.length > 0) {
       result.tool_calls = choice.message.tool_calls;
-      logger.debug(`[GroqProvider] 🔧 ${result.tool_calls.length} tool calls détectés`);
+      logger.dev(`[GroqProvider] 🔧 ${result.tool_calls.length} tool calls détectés`);
       
       result.tool_calls.forEach((toolCall: any, index: number) => {
-        logger.debug(`[GroqProvider] Tool call ${index + 1}: ${toolCall.function.name}`);
+        logger.dev(`[GroqProvider] Tool call ${index + 1}: ${toolCall.function.name}`);
       });
     }
 
@@ -431,7 +498,7 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
    */
   async testConnection(): Promise<boolean> {
     try {
-      logger.debug('[GroqProvider] 🧪 Test de connexion avec Groq...');
+      logger.dev('[GroqProvider] 🧪 Test de connexion avec Groq...');
       
       const response = await fetch(`${this.config.baseUrl}/models`, {
         method: 'GET',
@@ -446,14 +513,14 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
       }
 
       const models = await response.json();
-      logger.debug(`[GroqProvider] ✅ Connexion réussie - ${models.data.length} modèles disponibles`);
+      logger.dev(`[GroqProvider] ✅ Connexion réussie - ${models.data.length} modèles disponibles`);
       
       // Vérifier si GPT OSS est disponible
       const gptOssModels = models.data.filter((model: any) => 
         model.id.includes('gpt-oss')
       );
       
-      logger.debug(`[GroqProvider] 🎯 ${gptOssModels.length} modèles GPT OSS disponibles`);
+      logger.dev(`[GroqProvider] 🎯 ${gptOssModels.length} modèles GPT OSS disponibles`);
       
       return true;
     } catch (error) {
@@ -467,7 +534,7 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
    */
   async testFunctionCalls(tools: any[]): Promise<boolean> {
     try {
-      logger.debug('[GroqProvider] 🧪 Test d\'appel avec function calls...');
+      logger.dev('[GroqProvider] 🧪 Test d\'appel avec function calls...');
       
       const messages = [
         {
@@ -494,10 +561,10 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
       const result = this.extractResponse(response);
       
       if (result.tool_calls && result.tool_calls.length > 0) {
-        logger.debug(`[GroqProvider] ✅ Function calls testés avec succès - ${result.tool_calls.length} tool calls`);
+        logger.dev(`[GroqProvider] ✅ Function calls testés avec succès - ${result.tool_calls.length} tool calls`);
         return true;
       } else {
-        logger.debug('[GroqProvider] ⚠️ Aucun tool call détecté dans la réponse');
+        logger.dev('[GroqProvider] ⚠️ Aucun tool call détecté dans la réponse');
         return false;
       }
     } catch (error) {
@@ -528,7 +595,7 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
     }
 
     try {
-      logger.debug(`[GroqProvider] 🎤 Transcription audio avec ${this.config.audioModel}`);
+      logger.dev(`[GroqProvider] 🎤 Transcription audio avec ${this.config.audioModel}`);
 
       // Préparer le FormData
       const formData = new FormData();
@@ -575,7 +642,7 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
       }
 
       const result = await response.json();
-      logger.debug('[GroqProvider] ✅ Transcription audio réussie');
+      logger.dev('[GroqProvider] ✅ Transcription audio réussie');
       
       return result;
 
@@ -604,7 +671,7 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
     }
 
     try {
-      logger.debug(`[GroqProvider] 🌍 Traduction audio avec ${this.config.audioModel}`);
+      logger.dev(`[GroqProvider] 🌍 Traduction audio avec ${this.config.audioModel}`);
 
       // Préparer le FormData
       const formData = new FormData();
@@ -647,7 +714,7 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
       }
 
       const result = await response.json();
-      logger.debug('[GroqProvider] ✅ Traduction audio réussie');
+      logger.dev('[GroqProvider] ✅ Traduction audio réussie');
       
       return result;
 
@@ -677,7 +744,7 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
     }
 
     try {
-      logger.debug(`[GroqProvider] 🎤 Transcription audio depuis URL avec ${this.config.audioModel}`);
+      logger.dev(`[GroqProvider] 🎤 Transcription audio depuis URL avec ${this.config.audioModel}`);
 
       // Préparer le payload
       const payload: any = {
@@ -715,7 +782,7 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
       }
 
       const result = await response.json();
-      logger.debug('[GroqProvider] ✅ Transcription audio depuis URL réussie');
+      logger.dev('[GroqProvider] ✅ Transcription audio depuis URL réussie');
       
       return result;
 
@@ -730,7 +797,7 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
    */
   async testAudioConnection(): Promise<boolean> {
     try {
-      logger.debug('[GroqProvider] 🧪 Test de connexion audio avec Whisper...');
+      logger.dev('[GroqProvider] 🧪 Test de connexion audio avec Whisper...');
       
       // Créer un fichier audio de test minimal (silence)
       const testAudioBuffer = Buffer.from([
@@ -754,7 +821,7 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
         temperature: 0
       });
 
-      logger.debug('[GroqProvider] ✅ Connexion audio réussie');
+      logger.dev('[GroqProvider] ✅ Connexion audio réussie');
       return true;
 
     } catch (error) {

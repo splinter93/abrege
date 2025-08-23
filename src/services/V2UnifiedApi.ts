@@ -2,7 +2,7 @@ import { useFileSystemStore } from '@/store/useFileSystemStore';
 
 import { simpleLogger as logger } from '@/utils/logger';
 import type { Folder, Note, Classeur } from '@/store/useFileSystemStore';
-import { triggerUnifiedPolling } from './unifiedPollingService';
+import { triggerUnifiedRealtimePolling } from './unifiedRealtimeService';
 
 
 // Types pour les données d'API (compatibles avec V1)
@@ -47,12 +47,14 @@ export interface CreateClasseurData {
   name: string;
   description?: string;
   icon?: string;
+  emoji?: string; // Ajouter le support pour emoji pour la compatibilité
 }
 
 export interface UpdateClasseurData {
   name?: string;
   description?: string;
   icon?: string;
+  emoji?: string; // Ajouter le support pour emoji pour la compatibilité
   position?: number;
 }
 
@@ -99,39 +101,29 @@ export class V2UnifiedApi {
     }
   }
 
-
+  /**
+   * 🔧 HELPER: Déclencher le polling intelligent pour une entité
+   */
+  private async triggerPolling(
+    entityType: 'notes' | 'folders' | 'classeurs',
+    operation: 'CREATE' | 'UPDATE' | 'DELETE' | 'MOVE' | 'RENAME'
+  ) {
+    try {
+      await triggerUnifiedRealtimePolling(entityType, operation);
+    } catch (error) {
+      // Ignorer les erreurs de polling pour ne pas impacter l'opération principale
+      logger.dev(`[V2UnifiedApi] Polling ${entityType}.${operation} ignoré:`, error);
+    }
+  }
 
   /**
-   * Créer une note avec mise à jour optimiste 
+   * Créer une note
    */
   async createNote(noteData: CreateNoteData) {
-    if (process.env.NODE_ENV === 'development') {
-      logger.dev('[V2UnifiedApi] 📝 Création note unifiée V2 avec optimisme');
-    }
     const startTime = Date.now();
     
     try {
-      // 🚀 1. Mise à jour optimiste immédiate
-      const tempId = `temp_note_${Date.now()}`;
-      const optimisticNote: Note = {
-        id: tempId,
-        source_title: noteData.source_title,
-        markdown_content: noteData.markdown_content || '',
-        classeur_id: noteData.notebook_id,
-        folder_id: noteData.folder_id || null,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        _optimistic: true
-      };
-
-      const store = useFileSystemStore.getState();
-      store.addNoteOptimistic(optimisticNote, tempId);
-
-      if (process.env.NODE_ENV === 'development') {
-        logger.dev(`[V2UnifiedApi] 🚀 Note optimiste ajoutée avec ID temporaire: ${tempId}`);
-      }
-
-      // 🚀 2. Appel vers l'endpoint API V2
+      // 🚀 Appel vers l'endpoint API V2
       const headers = await this.getAuthHeaders();
       const response = await fetch('/api/v2/note/create', {
         method: 'POST',
@@ -140,54 +132,54 @@ export class V2UnifiedApi {
       });
 
       if (!response.ok) {
-        const errorText = await response.text();
-        // ❌ En cas d'erreur, annuler l'optimiste
-        store.removeNoteOptimistic(tempId);
-        throw new Error(`Erreur création note: ${response.status} ${response.statusText} - ${errorText}`);
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
 
       const result = await response.json();
-      const apiTime = Date.now() - startTime;
 
-      // 🚀 3. Remplacer l'optimiste par la vraie note
-      store.updateNoteOptimistic(tempId, result.note);
+      if (!result.success) {
+        throw new Error(result.error || 'Erreur lors de la création de la note');
+      }
 
-      if (process.env.NODE_ENV === 'development') {
-        logger.dev(`[V2UnifiedApi] ✅ API terminée en ${apiTime}ms, note optimiste remplacée`);
-      }
-      
-      // 🚀 4. Déclencher le polling intelligent pour synchronisation
-      // ✅ NETTOYAGE: Maintenant que la double création est éliminée, le polling est utile pour la sync
-      await triggerUnifiedPolling({
-        entityType: 'notes',
-        operation: 'CREATE',
-        entityId: result.note.id,
-        delay: 2000 // 2 secondes pour laisser la base se synchroniser
-      });
-      
-      const totalTime = Date.now() - startTime;
-      if (process.env.NODE_ENV === 'development') {
-        logger.dev(`[V2UnifiedApi] ✅ Note créée avec optimisme en ${totalTime}ms total`);
-      }
-      
-      return result;
+      // 🚀 Déclencher le polling intelligent pour synchronisation
+      await this.triggerPolling('notes', 'CREATE');
+
+      const duration = Date.now() - startTime;
+      return {
+        success: true,
+        note: result.note,
+        duration
+      };
+
     } catch (error) {
-      logger.error('[V2UnifiedApi] ❌ Erreur création note:', error);
-      throw error;
+      const duration = Date.now() - startTime;
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Erreur inconnue',
+        duration
+      };
     }
   }
 
   /**
-   * Mettre à jour une note avec mise à jour directe de Zustand + polling côté client
+   * Mettre à jour une note avec mise à jour optimiste
    */
   async updateNote(noteId: string, updateData: UpdateNoteData, _userId?: string) {
-    if (process.env.NODE_ENV === 'development') {
-      logger.dev('[V2UnifiedApi] 🔄 Mise à jour note unifiée V2');
-    }
     const startTime = Date.now();
     
     try {
-      // 🚀 Appel vers l'endpoint API V2
+      // 🚀 1. Mise à jour optimiste immédiate
+      const store = useFileSystemStore.getState();
+      const currentNote = store.notes[noteId];
+      
+      if (!currentNote) {
+        throw new Error('Note non trouvée');
+      }
+
+      const updatedNote = { ...currentNote, ...updateData, updated_at: new Date().toISOString() };
+      store.updateNote(noteId, updatedNote);
+
+      // 🚀 2. Appel vers l'endpoint API V2
       const headers = await this.getAuthHeaders();
       const response = await fetch(`/api/v2/note/${noteId}/update`, {
         method: 'PUT',
@@ -196,51 +188,62 @@ export class V2UnifiedApi {
       });
 
       if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Erreur mise à jour note: ${response.status} ${response.statusText} - ${errorText}`);
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
 
       const result = await response.json();
-      const apiTime = Date.now() - startTime;
-      if (process.env.NODE_ENV === 'development') {
-        logger.dev(`[V2UnifiedApi] ✅ API terminée en ${apiTime}ms`);
+
+      if (!result.success) {
+        throw new Error(result.error || 'Erreur lors de la mise à jour de la note');
       }
 
-      // 🚀 Mise à jour directe de Zustand (instantanée)
-      const store = useFileSystemStore.getState();
-      store.updateNote(noteId, result.note);
-      
-      // 🚀 Déclencher le polling intelligent immédiatement
-      await triggerUnifiedPolling({
-        entityType: 'notes',
-        operation: 'UPDATE',
-        entityId: noteId,
-        delay: 1000
-      });
-      
-      const totalTime = Date.now() - startTime;
-      if (process.env.NODE_ENV === 'development') {
-        logger.dev(`[V2UnifiedApi] ✅ Note mise à jour dans Zustand  en ${totalTime}ms total`);
-      }
-      
-      return result;
+      // 🚀 3. Déclencher le polling intelligent immédiatement
+      await this.triggerPolling('notes', 'UPDATE');
+
+      const duration = Date.now() - startTime;
+      return {
+        success: true,
+        note: result.note,
+        duration
+      };
+
     } catch (error) {
-      logger.error('[V2UnifiedApi] ❌ Erreur mise à jour note:', error);
-      throw error;
+      // En cas d'erreur, restaurer l'état précédent
+      const store = useFileSystemStore.getState();
+      const currentNote = store.notes[noteId];
+      if (currentNote) {
+        store.updateNote(noteId, currentNote);
+      }
+
+      const duration = Date.now() - startTime;
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Erreur inconnue',
+        duration
+      };
     }
   }
 
   /**
-   * Supprimer une note avec mise à jour directe de Zustand + polling côté client
+   * Supprimer une note avec mise à jour optimiste
    */
   async deleteNote(noteId: string) {
-    if (process.env.NODE_ENV === 'development') {
-      logger.dev('[V2UnifiedApi] 🗑️ Suppression note unifiée V2');
-    }
     const startTime = Date.now();
+    let noteToDelete: Note | null = null;
     
     try {
-      // 🚀 Appel vers l'endpoint API V2
+      // 🚀 1. Mise à jour optimiste immédiate
+      const store = useFileSystemStore.getState();
+      noteToDelete = store.notes[noteId];
+      
+      if (!noteToDelete) {
+        throw new Error('Note non trouvée');
+      }
+
+      // Sauvegarder la note pour restauration en cas d'erreur
+      store.removeNote(noteId);
+
+      // 🚀 2. Appel vers l'endpoint API V2
       const headers = await this.getAuthHeaders();
       const response = await fetch(`/api/v2/note/${noteId}/delete`, {
         method: 'DELETE',
@@ -248,73 +251,48 @@ export class V2UnifiedApi {
       });
 
       if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Erreur suppression note: ${response.status} ${response.statusText} - ${errorText}`);
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
 
-      const apiTime = Date.now() - startTime;
-      if (process.env.NODE_ENV === 'development') {
-        logger.dev(`[V2UnifiedApi] ✅ API terminée en ${apiTime}ms`);
+      const result = await response.json();
+
+      if (!result.success) {
+        throw new Error(result.error || 'Erreur lors de la suppression de la note');
       }
 
-      // 🚀 Mise à jour immédiate du store Zustand (instantanée)
-      const store = useFileSystemStore.getState();
-      store.removeNote(noteId);
-      
-      if (process.env.NODE_ENV === 'development') {
-        logger.dev(`[V2UnifiedApi] ✅ Store mis à jour immédiatement`);
-      }
-      
-      // 🚀 Déclencher le polling intelligent immédiatement
-      await triggerUnifiedPolling({
-        entityType: 'notes',
-        operation: 'DELETE',
-        entityId: noteId,
-        delay: 1000
-      });
-      
-      const totalTime = Date.now() - startTime;
-      if (process.env.NODE_ENV === 'development') {
-        logger.dev(`[V2UnifiedApi] ✅ Note supprimée en ${totalTime}ms total`);
-      }
-      
-      return { success: true };
+      // 🚀 3. Déclencher le polling intelligent immédiatement
+      await this.triggerPolling('notes', 'DELETE');
+
+      const duration = Date.now() - startTime;
+      return {
+        success: true,
+        duration
+      };
+
     } catch (error) {
-      logger.error('[V2UnifiedApi] ❌ Erreur suppression note:', error);
-      throw error;
+      // En cas d'erreur, restaurer la note
+      const store = useFileSystemStore.getState();
+      if (noteToDelete) {
+        store.addNote(noteToDelete);
+      }
+
+      const duration = Date.now() - startTime;
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Erreur inconnue',
+        duration
+      };
     }
   }
 
   /**
-   * Créer un dossier avec mise à jour optimiste 
+   * Créer un dossier
    */
   async createFolder(folderData: CreateFolderData) {
-    if (process.env.NODE_ENV === 'development') {
-      logger.dev('[V2UnifiedApi] 📁 Création dossier unifié V2 avec optimisme');
-    }
     const startTime = Date.now();
     
     try {
-      // 🚀 1. Mise à jour optimiste immédiate
-      const tempId = `temp_folder_${Date.now()}`;
-      const optimisticFolder: Folder = {
-        id: tempId,
-        name: folderData.name,
-        parent_id: folderData.parent_id || null,
-        classeur_id: folderData.notebook_id,
-        position: 0,
-        created_at: new Date().toISOString(),
-        _optimistic: true
-      };
-
-      const store = useFileSystemStore.getState();
-      store.addFolderOptimistic(optimisticFolder);
-
-      if (process.env.NODE_ENV === 'development') {
-        logger.dev(`[V2UnifiedApi] 🚀 Dossier optimiste ajouté avec ID temporaire: ${tempId}`);
-      }
-
-      // 🚀 2. Appel vers l'endpoint API V2
+      // 🚀 Appel vers l'endpoint API V2
       const headers = await this.getAuthHeaders();
       const response = await fetch('/api/v2/folder/create', {
         method: 'POST',
@@ -323,40 +301,32 @@ export class V2UnifiedApi {
       });
 
       if (!response.ok) {
-        const errorText = await response.text();
-        // ❌ En cas d'erreur, annuler l'optimiste
-        store.removeFolderOptimistic(tempId);
-        throw new Error(`Erreur création dossier: ${response.status} ${response.statusText} - ${errorText}`);
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
 
       const result = await response.json();
-      const apiTime = Date.now() - startTime;
 
-      // 🚀 3. Remplacer l'optimiste par le vrai dossier
-      store.updateFolderOptimistic(tempId, result.folder);
-
-      if (process.env.NODE_ENV === 'development') {
-        logger.dev(`[V2UnifiedApi] ✅ API terminée en ${apiTime}ms, dossier optimiste remplacé`);
+      if (!result.success) {
+        throw new Error(result.error || 'Erreur lors de la création du dossier');
       }
 
-      // 🚀 4. Déclencher le polling intelligent pour synchronisation
-      // ✅ NETTOYAGE: Maintenant que la double création est éliminée, le polling est utile pour la sync
-      await triggerUnifiedPolling({
-        entityType: 'folders',
-        operation: 'CREATE',
-        entityId: result.folder.id,
-        delay: 2000 // 2 secondes pour laisser la base se synchroniser
-      });
-      
-      const totalTime = Date.now() - startTime;
-      if (process.env.NODE_ENV === 'development') {
-        logger.dev(`[V2UnifiedApi] ✅ Dossier créé avec optimisme en ${totalTime}ms total`);
-      }
-      
-      return result;
+      // 🚀 Déclencher le polling intelligent pour synchronisation
+      await this.triggerPolling('folders', 'CREATE');
+
+      const duration = Date.now() - startTime;
+      return {
+        success: true,
+        folder: result.folder,
+        duration
+      };
+
     } catch (error) {
-      logger.error('[V2UnifiedApi] ❌ Erreur création dossier:', error);
-      throw error;
+      const duration = Date.now() - startTime;
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Erreur inconnue',
+        duration
+      };
     }
   }
 
@@ -394,12 +364,7 @@ export class V2UnifiedApi {
       store.updateFolder(folderId, result.folder);
       
       // 🚀 Déclencher le polling intelligent immédiatement
-      await triggerUnifiedPolling({
-        entityType: 'folders',
-        operation: 'UPDATE',
-        entityId: folderId,
-        delay: 1000
-      });
+      await this.triggerPolling('folders', 'UPDATE');
       
       const totalTime = Date.now() - startTime;
       if (process.env.NODE_ENV === 'development') {
@@ -449,12 +414,7 @@ export class V2UnifiedApi {
       }
       
       // 🚀 Déclencher le polling intelligent immédiatement
-      await triggerUnifiedPolling({
-        entityType: 'folders',
-        operation: 'DELETE',
-        entityId: folderId,
-        delay: 1000
-      });
+      await this.triggerPolling('folders', 'DELETE');
       
       const totalTime = Date.now() - startTime;
       if (process.env.NODE_ENV === 'development') {
@@ -509,13 +469,8 @@ export class V2UnifiedApi {
       // 🚀 Mise à jour directe de Zustand (instantanée)
       store.moveNote(noteId, targetFolderId, noteClasseurId);
       
-      // 🚀 Déclencher le polling intelligent immédiatement
-      await triggerUnifiedPolling({
-        entityType: 'notes',
-        operation: 'MOVE',
-        entityId: noteId,
-        delay: 1000
-      });
+      // 🚀 5. Déclencher le polling intelligent immédiatement
+      await this.triggerPolling('notes', 'UPDATE');
       
       const totalTime = Date.now() - startTime;
       if (process.env.NODE_ENV === 'development') {
@@ -571,12 +526,7 @@ export class V2UnifiedApi {
       store.moveFolder(folderId, targetParentId, folderClasseurId);
       
       // 🚀 Déclencher le polling intelligent immédiatement
-      await triggerUnifiedPolling({
-        entityType: 'folders',
-        operation: 'MOVE',
-        entityId: folderId,
-        delay: 1000
-      });
+      await this.triggerPolling('folders', 'UPDATE');
       
       const totalTime = Date.now() - startTime;
       if (process.env.NODE_ENV === 'development') {
@@ -591,35 +541,13 @@ export class V2UnifiedApi {
   }
 
   /**
-   * Créer un classeur avec mise à jour optimiste 
+   * Créer un classeur
    */
   async createClasseur(classeurData: CreateClasseurData) {
-    if (process.env.NODE_ENV === 'development') {
-      logger.dev('[V2UnifiedApi] 📚 Création classeur unifié V2 avec optimisme');
-    }
     const startTime = Date.now();
     
     try {
-      // 🚀 1. Mise à jour optimiste immédiate
-      const tempId = `temp_classeur_${Date.now()}`;
-      const optimisticClasseur: Classeur = {
-        id: tempId,
-        name: classeurData.name,
-        description: classeurData.description,
-        icon: classeurData.icon || '📁',
-        position: 0,
-        created_at: new Date().toISOString(),
-        _optimistic: true
-      };
-
-      const store = useFileSystemStore.getState();
-      store.addClasseurOptimistic(optimisticClasseur);
-
-      if (process.env.NODE_ENV === 'development') {
-        logger.dev(`[V2UnifiedApi] 🚀 Classeur optimiste ajouté avec ID temporaire: ${tempId}`);
-      }
-
-      // 🚀 2. Appel vers l'endpoint API V2
+      // 🚀 Appel vers l'endpoint API V2
       const headers = await this.getAuthHeaders();
       const response = await fetch('/api/v2/classeur/create', {
         method: 'POST',
@@ -628,39 +556,32 @@ export class V2UnifiedApi {
       });
 
       if (!response.ok) {
-        const errorText = await response.text();
-        // ❌ En cas d'erreur, annuler l'optimiste
-        store.removeClasseurOptimistic(tempId);
-        throw new Error(`Erreur création classeur: ${response.status} ${response.statusText} - ${errorText}`);
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
 
       const result = await response.json();
-      const apiTime = Date.now() - startTime;
 
-      // 🚀 3. Remplacer l'optimiste par le vrai classeur
-      store.updateClasseurOptimistic(tempId, result.classeur);
+      if (!result.success) {
+        throw new Error(result.error || 'Erreur lors de la création du classeur');
+      }
 
-      if (process.env.NODE_ENV === 'development') {
-        logger.dev(`[V2UnifiedApi] ✅ API terminée en ${apiTime}ms, classeur optimiste remplacé`);
-      }
-      
-      // 🚀 4. Déclencher le polling intelligent immédiatement
-      await triggerUnifiedPolling({
-        entityType: 'classeurs',
-        operation: 'CREATE',
-        entityId: result.classeur.id,
-        delay: 1000
-      });
-      
-      const totalTime = Date.now() - startTime;
-      if (process.env.NODE_ENV === 'development') {
-        logger.dev(`[V2UnifiedApi] ✅ Classeur créé avec optimisme  en ${totalTime}ms total`);
-      }
-      
-      return result;
+      // 🚀 Déclencher le polling intelligent pour synchronisation
+      await this.triggerPolling('classeurs', 'CREATE');
+
+      const duration = Date.now() - startTime;
+      return {
+        success: true,
+        classeur: result.classeur,
+        duration
+      };
+
     } catch (error) {
-      logger.error('[V2UnifiedApi] ❌ Erreur création classeur:', error);
-      throw error;
+      const duration = Date.now() - startTime;
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Erreur inconnue',
+        duration
+      };
     }
   }
 
@@ -674,12 +595,18 @@ export class V2UnifiedApi {
     const startTime = Date.now();
     
     try {
+      // 🔧 CORRECTION: Mapper emoji vers icon si nécessaire
+      const mappedData = {
+        ...updateData,
+        icon: updateData.icon || updateData.emoji
+      };
+
       // 🚀 Appel vers l'endpoint API V2
       const headers = await this.getAuthHeaders();
       const response = await fetch(`/api/v2/classeur/${classeurId}/update`, {
         method: 'PUT',
         headers,
-        body: JSON.stringify(updateData)
+        body: JSON.stringify(mappedData)
       });
 
       if (!response.ok) {
@@ -697,20 +624,15 @@ export class V2UnifiedApi {
       const store = useFileSystemStore.getState();
       store.updateClasseur(classeurId, result.classeur);
       
-      // 🚀 Déclencher le polling intelligent immédiatement
-      await triggerUnifiedPolling({
-        entityType: 'classeurs',
-        operation: 'UPDATE',
-        entityId: classeurId,
-        delay: 1000
-      });
-      
-      const totalTime = Date.now() - startTime;
-      if (process.env.NODE_ENV === 'development') {
-        logger.dev(`[V2UnifiedApi] ✅ Classeur mis à jour dans Zustand  en ${totalTime}ms total`);
-      }
-      
-      return result;
+      // 🚀 4. Déclencher le polling intelligent immédiatement
+      await this.triggerPolling('classeurs', 'UPDATE');
+
+      const duration = Date.now() - startTime;
+      return {
+        success: true,
+        classeur: result.classeur,
+        duration
+      };
     } catch (error) {
       logger.error('[V2UnifiedApi] ❌ Erreur mise à jour classeur:', error);
       throw error;
@@ -749,12 +671,7 @@ export class V2UnifiedApi {
       store.removeClasseur(classeurId);
       
       // 🚀 Déclencher le polling intelligent immédiatement
-      await triggerUnifiedPolling({
-        entityType: 'classeurs',
-        operation: 'DELETE',
-        entityId: classeurId,
-        delay: 1000
-      });
+      await this.triggerPolling('classeurs', 'DELETE');
       
       const totalTime = Date.now() - startTime;
       if (process.env.NODE_ENV === 'development') {
@@ -796,7 +713,8 @@ export class V2UnifiedApi {
       const store = useFileSystemStore.getState();
       store.updateNote(ref, { markdown_content: result.note.markdown_content });
       
-      // 🚀 Déclencher le polling côté client immédiatement
+      // 🚀 Déclencher le polling intelligent immédiatement
+      await this.triggerPolling('notes', 'UPDATE');
       
       return result;
     } catch (error) {
@@ -943,6 +861,7 @@ export class V2UnifiedApi {
       });
       
       // 🚀 Déclencher le polling côté client immédiatement
+      await this.triggerPolling('classeurs', 'UPDATE');
       
       return result;
     } catch (error) {

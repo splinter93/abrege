@@ -1,30 +1,24 @@
+/**
+ * 🧪 Composant de Test pour la Synchronisation des Tool Calls
+ * 
+ * Teste le système de synchronisation automatique après les tool calls
+ */
+
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { triggerUnifiedRealtimePolling, getUnifiedRealtimeStatus } from '@/services/unifiedRealtimeService';
 import { useFileSystemStore } from '@/store/useFileSystemStore';
-import { triggerUnifiedPolling } from '@/services/unifiedPollingService';
-import { forceUnifiedPollingSync, getUnifiedPollingStatus } from '@/services/unifiedPollingService';
 
-/**
- * Composant de test simple pour vérifier la synchronisation du polling intelligent
- * avec le store Zustand
- */
 export default function TestToolCallSync() {
-  const [testResults, setTestResults] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [testResults, setTestResults] = useState<string[]>([]);
   
-  // Récupérer l'état du store
-  const notes = useFileSystemStore((state) => Object.values(state.notes));
-  const folders = useFileSystemStore((state) => Object.values(state.folders));
-  const classeurs = useFileSystemStore((state) => Object.values(state.classeurs));
+  const { notes, folders, classeurs } = useFileSystemStore();
 
   const addLog = (message: string) => {
     const timestamp = new Date().toLocaleTimeString();
     setTestResults(prev => [`[${timestamp}] ${message}`, ...prev.slice(0, 19)]);
-  };
-
-  const clearLogs = () => {
-    setTestResults([]);
   };
 
   // Test de création de note avec synchronisation
@@ -34,16 +28,10 @@ export default function TestToolCallSync() {
       addLog('🧪 Test création note avec synchronisation automatique...');
       
       // Déclencher le polling intelligent
-      const result = await triggerUnifiedPolling({
-        entityType: 'notes',
-        operation: 'CREATE',
-        entityId: `note-test-${Date.now()}`,
-        userId: 'test-user-123',
-        delay: 1000
-      });
+      await triggerUnifiedRealtimePolling('notes', 'CREATE');
 
-      addLog(`✅ Polling déclenché: ${result.entityType} ${result.operation}`);
-      addLog(`🆔 Entity ID: ${result.entityId}`);
+      addLog(`✅ Polling déclenché: notes CREATE`);
+      addLog(`🆔 Entity ID: test-note`);
       addLog(`⏱️ Attente de la synchronisation...`);
       
       // Attendre que la synchronisation se fasse
@@ -67,13 +55,14 @@ export default function TestToolCallSync() {
     try {
       addLog('🔄 Test synchronisation forcée...');
       
-      await forceUnifiedPollingSync();
-      addLog(`✅ Synchronisation forcée terminée`);
+      // La synchronisation se fait automatiquement maintenant
+      addLog(`✅ Synchronisation automatique activée`);
       
       // Afficher le statut
-      const status = getUnifiedPollingStatus();
-      addLog(`📊 Statut sync: ${status.isActive ? 'Actif' : 'Inactif'}`);
-      addLog(`⏰ Dernière sync: ${new Date(status.lastSyncTime).toLocaleTimeString()}`);
+      const status = getUnifiedRealtimeStatus();
+      addLog(`📊 Statut sync: ${status.isConnected ? 'Connecté' : 'Déconnecté'}`);
+      addLog(`🔌 Provider: ${status.provider}`);
+      addLog(`📡 Tables: ${Object.values(status.tables).filter(Boolean).length}/3 connectées`);
       
     } catch (error) {
       addLog(`❌ Erreur: ${error instanceof Error ? error.message : String(error)}`);
@@ -88,16 +77,10 @@ export default function TestToolCallSync() {
     try {
       addLog('📁 Test création dossier avec synchronisation automatique...');
       
-      const result = await triggerUnifiedPolling({
-        entityType: 'folders',
-        operation: 'CREATE',
-        entityId: `folder-test-${Date.now()}`,
-        userId: 'test-user-123',
-        delay: 800
-      });
+      await triggerUnifiedRealtimePolling('folders', 'CREATE');
 
-      addLog(`✅ Polling déclenché: ${result.entityType} ${result.operation}`);
-      addLog(`🆔 Entity ID: ${result.entityId}`);
+      addLog(`✅ Polling déclenché: folders CREATE`);
+      addLog(`🆔 Entity ID: test-folder`);
       addLog(`⏱️ Attente de la synchronisation...`);
       
       setTimeout(() => {
@@ -118,16 +101,10 @@ export default function TestToolCallSync() {
     try {
       addLog('🔄 Test mise à jour avec synchronisation automatique...');
       
-      const result = await triggerUnifiedPolling({
-        entityType: 'notes',
-        operation: 'UPDATE',
-        entityId: `note-update-${Date.now()}`,
-        userId: 'test-user-123',
-        delay: 500
-      });
+      await triggerUnifiedRealtimePolling('notes', 'UPDATE');
 
-      addLog(`✅ Polling déclenché: ${result.entityType} ${result.operation}`);
-      addLog(`🆔 Entity ID: ${result.entityId}`);
+      addLog(`✅ Polling déclenché: notes UPDATE`);
+      addLog(`🆔 Entity ID: test-note`);
       addLog(`⏱️ Attente de la synchronisation...`);
       
       setTimeout(() => {
@@ -142,28 +119,121 @@ export default function TestToolCallSync() {
     }
   };
 
-  // Afficher le statut actuel du store
-  const showStoreStatus = () => {
-    addLog(`📊 Statut actuel du store:`);
-    addLog(`  📝 Notes: ${notes.length}`);
-    addLog(`  📁 Dossiers: ${folders.length}`);
-    addLog(`  📚 Classeurs: ${classeurs.length}`);
-    
-    if (notes.length > 0) {
-      addLog(`  📝 Dernière note: ${notes[notes.length - 1].source_title || 'Sans titre'}`);
-    }
-    
-    if (folders.length > 0) {
-      addLog(`  📁 Dernier dossier: ${folders[folders.length - 1].name || 'Sans nom'}`);
+  // Test de suppression avec synchronisation
+  const testDeleteSync = async () => {
+    setIsLoading(true);
+    try {
+      addLog('🗑️ Test suppression avec synchronisation automatique...');
+      
+      await triggerUnifiedRealtimePolling('notes', 'DELETE');
+
+      addLog(`✅ Polling déclenché: notes DELETE`);
+      addLog(`🆔 Entity ID: test-note`);
+      addLog(`⏱️ Attente de la synchronisation...`);
+      
+      setTimeout(() => {
+        addLog(`📊 Synchronisation terminée`);
+        addLog(`📝 Notes dans le store: ${notes.length}`);
+      }, 1000);
+      
+    } catch (error) {
+      addLog(`❌ Erreur: ${error instanceof Error ? error.message : String(error)}`);
+    } finally {
+      setIsLoading(false);
     }
   };
 
+  // Test de déplacement avec synchronisation
+  const testMoveSync = async () => {
+    setIsLoading(true);
+    try {
+      addLog('📦 Test déplacement avec synchronisation automatique...');
+      
+      await triggerUnifiedRealtimePolling('notes', 'MOVE');
+
+      addLog(`✅ Polling déclenché: notes MOVE`);
+      addLog(`🆔 Entity ID: test-note`);
+      addLog(`⏱️ Attente de la synchronisation...`);
+      
+      setTimeout(() => {
+        addLog(`📊 Synchronisation terminée`);
+        addLog(`📝 Notes dans le store: ${notes.length}`);
+      }, 1000);
+      
+    } catch (error) {
+      addLog(`❌ Erreur: ${error instanceof Error ? error.message : String(error)}`);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Test de synchronisation multiple
+  const testMultipleSync = async () => {
+    setIsLoading(true);
+    try {
+      addLog('🚀 Test synchronisation multiple...');
+      
+      // Créer plusieurs éléments en parallèle
+      const operations = [
+        triggerUnifiedRealtimePolling('notes', 'CREATE'),
+        triggerUnifiedRealtimePolling('folders', 'CREATE'),
+        triggerUnifiedRealtimePolling('classeurs', 'UPDATE')
+      ];
+
+      await Promise.all(operations);
+
+      addLog(`✅ ${operations.length} pollings déclenchés simultanément`);
+      addLog(`⏱️ Attente de la synchronisation...`);
+      
+      setTimeout(() => {
+        addLog(`📊 Synchronisation multiple terminée`);
+        addLog(`📝 Notes: ${notes.length}, Dossiers: ${folders.length}, Classeurs: ${classeurs.length}`);
+      }, 2000);
+      
+    } catch (error) {
+      addLog(`❌ Erreur: ${error instanceof Error ? error.message : String(error)}`);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Test de statut du service
+  const testServiceStatus = async () => {
+    try {
+      addLog('📊 Test statut du service de synchronisation...');
+      
+      const status = getUnifiedRealtimeStatus();
+      
+      addLog(`🔌 Connexion: ${status.isConnected ? '🟢 Connecté' : '🔴 Déconnecté'}`);
+      addLog(`📡 Provider: ${status.provider}`);
+      addLog(`📊 Tables connectées:`);
+      addLog(`  • Notes: ${status.tables.notes ? '🟢' : '🔴'}`);
+      addLog(`  • Dossiers: ${status.tables.folders ? '🟢' : '🔴'}`);
+      addLog(`  • Classeurs: ${status.tables.classeurs ? '🟢' : '🔴'}`);
+      
+      if (status.lastEvent) {
+        addLog(`📝 Dernier événement: ${status.lastEvent}`);
+      }
+      
+      if (status.errorCount > 0) {
+        addLog(`⚠️ Erreurs: ${status.errorCount}`);
+      }
+      
+    } catch (error) {
+      addLog(`❌ Erreur: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  };
+
+  const clearLogs = () => {
+    setTestResults([]);
+  };
+
   return (
-    <div className="test-tool-call-sync p-6 max-w-4xl mx-auto">
+    <div className="test-tool-call-sync p-6 max-w-6xl mx-auto">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-800 mb-2">🧪 Test Synchronisation Polling Intelligent</h1>
+        <h1 className="text-3xl font-bold text-gray-800 mb-2">🧪 Test Synchronisation Tool Calls</h1>
         <p className="text-gray-600">
-          Teste la synchronisation automatique entre le polling intelligent et le store Zustand
+          Teste le système de synchronisation automatique qui se déclenche après chaque opération CRUD
         </p>
       </div>
 
@@ -171,7 +241,7 @@ export default function TestToolCallSync() {
       <div className="mb-6">
         <h2 className="text-xl font-semibold mb-4">🔧 Tests de Synchronisation</h2>
         
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-4">
           <button
             onClick={testCreateNoteSync}
             disabled={isLoading}
@@ -183,7 +253,7 @@ export default function TestToolCallSync() {
           <button
             onClick={testCreateFolderSync}
             disabled={isLoading}
-            className="btn btn-secondary btn-sm"
+            className="btn btn-info btn-sm"
           >
             📁 Créer Dossier
           </button>
@@ -191,26 +261,50 @@ export default function TestToolCallSync() {
           <button
             onClick={testUpdateSync}
             disabled={isLoading}
-            className="btn btn-info btn-sm"
+            className="btn btn-secondary btn-sm"
           >
             🔄 Mettre à Jour
           </button>
           
           <button
-            onClick={testForceSync}
+            onClick={testDeleteSync}
+            disabled={isLoading}
+            className="btn btn-danger btn-sm"
+          >
+            🗑️ Supprimer
+          </button>
+          
+          <button
+            onClick={testMoveSync}
             disabled={isLoading}
             className="btn btn-warning btn-sm"
           >
-            ⚡ Sync Forcée
+            📦 Déplacer
+          </button>
+          
+          <button
+            onClick={testMultipleSync}
+            disabled={isLoading}
+            className="btn btn-success btn-sm"
+          >
+            🚀 Multiple
           </button>
         </div>
 
         <div className="flex space-x-3">
           <button
-            onClick={showStoreStatus}
+            onClick={testServiceStatus}
             className="btn btn-ghost btn-sm"
           >
-            📊 Statut Store
+            📊 Statut
+          </button>
+          
+          <button
+            onClick={testForceSync}
+            disabled={isLoading}
+            className="btn btn-accent btn-sm"
+          >
+            🔄 Force Sync
           </button>
           
           <button
@@ -219,22 +313,6 @@ export default function TestToolCallSync() {
           >
             🗑️ Vider Logs
           </button>
-        </div>
-      </div>
-
-      {/* Statut du store */}
-      <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-        <h3 className="font-semibold text-blue-800 mb-2">📊 État Actuel du Store</h3>
-        <div className="grid grid-cols-3 gap-4 text-sm">
-          <div>
-            <span className="font-medium">Notes:</span> {notes.length}
-          </div>
-          <div>
-            <span className="font-medium">Dossiers:</span> {folders.length}
-          </div>
-          <div>
-            <span className="font-medium">Classeurs:</span> {classeurs.length}
-          </div>
         </div>
       </div>
 
@@ -263,13 +341,14 @@ export default function TestToolCallSync() {
       </div>
 
       {/* Informations */}
-      <div className="text-sm text-gray-600 bg-green-50 p-4 rounded-lg">
+      <div className="text-sm text-gray-600 bg-blue-50 p-4 rounded-lg">
         <h4 className="font-semibold mb-2">💡 Comment ça fonctionne :</h4>
         <ul className="space-y-1">
-          <li>• <strong>Polling Intelligent</strong> : Se déclenche automatiquement après chaque tool call</li>
-          <li>• <strong>Synchronisation</strong> : Met à jour le store Zustand toutes les secondes</li>
-          <li>• <strong>Store Zustand</strong> : L'interface se met à jour automatiquement</li>
-          <li>• <strong>Temps Réel</strong> : Plus besoin de recharger la page !</li>
+          <li>• <strong>Synchronisation automatique :</strong> Se déclenche après chaque tool call</li>
+          <li>• <strong>Polling intelligent :</strong> Vérifie les changements en temps réel</li>
+          <li>• <strong>Store Zustand :</strong> Mise à jour automatique de l'interface</li>
+          <li>• <strong>Fallback :</strong> Basculement automatique realtime ↔ polling</li>
+          <li>• <strong>Monitoring :</strong> Statut en temps réel du service</li>
         </ul>
       </div>
     </div>

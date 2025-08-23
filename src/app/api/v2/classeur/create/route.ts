@@ -73,7 +73,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       .insert({
         name: validatedData.name,
         description: validatedData.description,
-        emoji: validatedData.icon || '📁',
+        emoji: validatedData.icon || validatedData.emoji || '📁', // 🔧 CORRECTION: Gérer icon et emoji
         position: 0,
         user_id: userId,
         slug
@@ -96,6 +96,15 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
     const apiTime = Date.now() - startTime;
     logApi.info(`✅ Classeur créé en ${apiTime}ms`, context);
+
+    // 🚀 DÉCLENCHER LE POLLING AUTOMATIQUEMENT
+    try {
+      const { triggerUnifiedRealtimePolling } = await import('@/services/unifiedRealtimeService');
+      await triggerUnifiedRealtimePolling('classeurs', 'CREATE');
+      logApi.info('✅ Polling déclenché pour classeurs', context);
+    } catch (pollingError) {
+      logApi.warn('⚠️ Erreur lors du déclenchement du polling', pollingError);
+    }
 
     return NextResponse.json({
       success: true,

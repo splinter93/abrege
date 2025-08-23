@@ -444,14 +444,14 @@ export function useFolderManagerState(classeurId: string, userId: string, parent
   }, []);
 
   // --- DnD ---
-  const reorderFolders = useCallback(async (_newOrder: Folder[]) => {
+  const reorderFolders = useCallback(async (newOrder: Folder[]) => {
     // TODO: Implémenter avec V2UnifiedApi
-    logger.dev('[UI] 🔄 Réordonnancement dossiers - Fonctionnalité temporairement désactivée');
+    logger.dev('[UI] 🔄 Réordonnancement dossiers - Fonctionnalité en cours de développement');
   }, []);
 
-  const reorderFiles = useCallback(async (_newOrder: FileArticle[]) => {
+  const reorderFiles = useCallback(async (newOrder: FileArticle[]) => {
     // TODO: Implémenter avec V2UnifiedApi
-    logger.dev('[UI] 🔄 Réordonnancement notes - Fonctionnalité temporairement désactivée');
+    logger.dev('[UI] 🔄 Réordonnancement notes - Fonctionnalité en cours de développement');
   }, []);
 
   // --- IMBRICATION DnD ---

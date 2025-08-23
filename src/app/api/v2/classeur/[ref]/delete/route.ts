@@ -56,9 +56,19 @@ export async function DELETE(
     const apiTime = Date.now() - startTime;
     logApi.info(`✅ Classeur supprimé en ${apiTime}ms`, context);
 
+    // 🚀 DÉCLENCHER LE POLLING AUTOMATIQUEMENT
+    try {
+      const { triggerUnifiedRealtimePolling } = await import('@/services/unifiedRealtimeService');
+      await triggerUnifiedRealtimePolling('classeurs', 'DELETE', userToken);
+      logApi.info('✅ Polling déclenché pour classeurs', context);
+    } catch (pollingError) {
+      logApi.warn('⚠️ Erreur lors du déclenchement du polling', pollingError);
+    }
+
     return NextResponse.json({
       success: true,
-      message: 'Classeur supprimé avec succès'
+      message: 'Classeur supprimé avec succès',
+      deletedClasseurId: classeurId
     });
 
   } catch (err: unknown) {

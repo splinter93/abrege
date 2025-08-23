@@ -44,11 +44,24 @@ export function useChatResponse(options: UseChatResponseOptions = {}): UseChatRe
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        const errorText = await response.text();
+        let errorData;
+        try {
+          errorData = JSON.parse(errorText);
+        } catch {
+          errorData = { error: `HTTP ${response.status}: ${response.statusText}` };
+        }
+        throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
       }
 
       const data = await response.json();
 
+      // 🔧 AMÉLIORATION: Validation de base de la réponse
+      if (!data) {
+        throw new Error('Réponse vide du serveur');
+      }
+
+      // ✅ RESTAURATION: Logique originale qui fonctionnait
       if (data.success) {
         // 🎯 Gérer le cas des nouveaux tool calls (continuation du cycle)
         if (data.has_new_tool_calls && data.tool_calls && data.tool_calls.length > 0) {
@@ -162,11 +175,33 @@ export function useChatResponse(options: UseChatResponseOptions = {}): UseChatRe
           onComplete?.(data.content || '', data.reasoning || '');
         }
       } else {
-        throw new Error(data.error || 'Erreur inconnue');
+        // 🔧 AMÉLIORATION: Gestion des erreurs serveur
+        if (data.error) {
+          const errorMessage = data.error || data.details || 'Erreur inconnue du serveur';
+          logger.warn('[useChatResponse] ⚠️ Réponse d\'erreur du serveur:', { error: errorMessage, data });
+          throw new Error(errorMessage);
+        } else {
+          // Fallback pour les réponses invalides
+          logger.warn('[useChatResponse] ⚠️ Réponse invalide du serveur:', data);
+          throw new Error('Format de réponse invalide');
+        }
       }
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
-      logger.error('[useChatResponse] ❌ Erreur:', error);
+      // 🔧 AMÉLIORATION: Gestion d'erreur plus robuste
+      let errorMessage: string;
+      
+      if (error instanceof Error) {
+        errorMessage = error.message;
+        logger.error('[useChatResponse] ❌ Erreur Error:', error);
+      } else if (typeof error === 'string') {
+        errorMessage = error;
+        logger.error('[useChatResponse] ❌ Erreur string:', error);
+      } else {
+        errorMessage = 'Erreur inconnue';
+        logger.error('[useChatResponse] ❌ Erreur inconnue:', error);
+      }
+      
+      // Appeler le callback d'erreur si disponible
       onError?.(errorMessage);
     } finally {
       setIsProcessing(false);

@@ -5,36 +5,29 @@ import type { DiffResult } from '@/services/diffService';
 // Types de base - mis à jour pour correspondre aux types réels
 export interface Note {
   id: string;
-  source_title: string; // Correspond à FileArticle
-  title?: string; // Alias pour source_title (pour compatibilité)
-  source_type?: string;
-  updated_at?: string;
-  created_at?: string;
-  classeur_id?: string;
-  folder_id?: string | null;
-  position?: number;
-  markdown_content?: string;
-  content?: string; // Alias pour markdown_content (pour compatibilité éditeur)
-  html_content?: string;
-  header_image?: string | null;
-  header_image_offset?: number | null;
-  header_image_blur?: number | null;
-  header_image_overlay?: number | null;
-  header_title_in_image?: boolean | null;
-  wide_mode?: boolean | null;
-  font_family?: string | null;
-          public_url?: string | null; // URL publique si publiée
-        slug?: string | null; // Slug unique de la note pour les URLs
-        share_settings?: {
-          visibility: 'private' | 'link-private' | 'link-public' | 'limited' | 'scrivia';
-          invited_users?: string[];
-          allow_edit?: boolean;
-          allow_comments?: boolean;
-        }; // Configuration de partage (nouveau système)
-  // Propriétés additionnelles pour l'état optimiste et le diff
-  _optimistic?: boolean | 'deleting';
-  _lastPatch?: any;
-  _lastDiff?: DiffResult;
+  source_title: string;
+  markdown_content: string;
+  folder_id: string | null;
+  classeur_id: string;
+  position: number;
+  created_at: string;
+  updated_at: string;
+  slug: string;
+  is_published?: boolean;
+  public_url?: string;
+  header_image?: string;
+  header_image_offset?: number;
+  header_image_blur?: number;
+  header_image_overlay?: string;
+  header_title_in_image?: boolean;
+  wide_mode?: boolean;
+  font_family?: string;
+  share_settings?: {
+    visibility?: string;
+    invited_users?: string[];
+    allow_edit?: boolean;
+    allow_comments?: boolean;
+  };
 }
 
 export interface Folder {
@@ -44,7 +37,6 @@ export interface Folder {
   classeur_id?: string;
   position?: number;
   created_at?: string;
-  _optimistic?: boolean | 'deleting';
 }
 
 export interface Classeur {
@@ -55,7 +47,6 @@ export interface Classeur {
   emoji?: string;
   position?: number;
   created_at?: string;
-  _optimistic?: boolean | 'deleting';
 }
 
 export interface EditorPatch {
@@ -102,21 +93,6 @@ export interface FileSystemState {
   setFolders: (folders: Folder[]) => void;
   setClasseurs: (classeurs: Classeur[]) => void;
   setNotes: (notes: Note[]) => void;
-
-  // Actions optimistes
-  addNoteOptimistic: (note: Note, tempId: string) => void;
-  updateNoteOptimistic: (id: string, patch: Partial<Note>) => void;
-  removeNoteOptimistic: (id: string) => void;
-  
-  // Actions optimistes pour dossiers
-  addFolderOptimistic: (folder: Folder) => void;
-  updateFolderOptimistic: (tempId: string, realFolder: Folder) => void;
-  removeFolderOptimistic: (tempId: string) => void;
-  
-  // Actions optimistes pour classeurs
-  addClasseurOptimistic: (classeur: Classeur) => void;
-  updateClasseurOptimistic: (tempId: string, realClasseur: Classeur) => void;
-  removeClasseurOptimistic: (tempId: string) => void;
 
   // Action pour le diff
   applyDiff: (noteId: string, diff: DiffResult) => void;
@@ -290,157 +266,38 @@ export const useFileSystemStore = create<FileSystemState>()((set) => ({
   
   // Actions globales d'hydratation
   setFolders: (folders: Folder[]) => set((state) => ({ 
-    // ✅ CORRECTION: Merger au lieu de remplacer
-    folders: { ...state.folders, ...Object.fromEntries(folders.map(f => [f.id, f])) }
+    // ✅ CORRECTION: Remplacer complètement pour gérer les suppressions
+    folders: Object.fromEntries(folders.map(f => [f.id, f]))
   })),
   
   setClasseurs: (classeurs: Classeur[]) => set((state) => {
-    // ✅ CORRECTION: Mise à jour intelligente qui gère les ajouts ET les suppressions
-    if (classeurs.length === 0) {
-      // Si le tableau est vide, ne pas modifier le store (évite de vider accidentellement)
-      return state;
-    }
-    
-    // Merger les nouveaux classeurs avec les existants
-    const newClasseurs = { ...state.classeurs };
-    
-    // Ajouter/mettre à jour les classeurs entrants
+    // ✅ CORRECTION: Remplacer complètement pour gérer les suppressions
+    const newClasseurs = {};
     classeurs.forEach(c => {
       newClasseurs[c.id] = c;
     });
-    
     return { classeurs: newClasseurs };
   }),
   
   setNotes: (notes: Note[]) => set((state) => ({ 
-    // ✅ CORRECTION: Merger au lieu de remplacer complètement
-    // Cela permet de conserver les notes existantes et d'ajouter les nouvelles
-    notes: { 
-      ...state.notes, 
-      ...Object.fromEntries(notes.map(n => [n.id, n])) 
-    }
+    // ✅ CORRECTION: Remplacer complètement pour gérer les suppressions
+    notes: Object.fromEntries(notes.map(n => [n.id, n]))
   })),
 
-  // --- ACTIONS OPTIMISTES ---
-  addNoteOptimistic: (note: Note, tempId: string) => {
-    set(state => ({
-      notes: { ...state.notes, [tempId]: { ...note, id: tempId, _optimistic: true } }
-    }));
-  },
-
-  updateNoteOptimistic: (tempId: string, realNote: Note) => {
-    set(state => {
-      if (!state.notes[tempId]) return {};
-      
-      // ✅ CORRECTION: Remplacer complètement la note temporaire par la vraie note
-      const otherNotes = { ...state.notes };
-      delete otherNotes[tempId];
-      
-      return {
-        notes: {
-          ...otherNotes,
-          [realNote.id]: realNote // Utiliser l'ID réel de la note
+  // Action pour le diff
+  applyDiff: (noteId: string, diff: DiffResult) => set(state => {
+    if (!state.notes[noteId]) return {};
+    
+    const currentNote = state.notes[noteId];
+    
+    return {
+      notes: {
+        ...state.notes,
+        [noteId]: {
+          ...currentNote,
+          updated_at: new Date().toISOString()
         }
-      };
-    });
-  },
-
-  removeNoteOptimistic: (id: string) => {
-    set(state => {
-      if (!state.notes[id]) return {};
-      return {
-        notes: {
-          ...state.notes,
-          [id]: { ...state.notes[id], _optimistic: 'deleting' }
-        }
-      };
-    });
-  },
-
-  // --- ACTIONS OPTIMISTES POUR DOSSIERS ---
-  addFolderOptimistic: (folder: Folder) => {
-    set(state => ({
-      folders: { ...state.folders, [folder.id]: { ...folder, _optimistic: true } }
-    }));
-  },
-
-  updateFolderOptimistic: (tempId: string, realFolder: Folder) => {
-    set(state => {
-      const otherFolders = { ...state.folders };
-      delete otherFolders[tempId];
-      return {
-        folders: {
-          ...otherFolders,
-          [realFolder.id]: realFolder
-        }
-      };
-    });
-  },
-
-  removeFolderOptimistic: (tempId: string) => {
-    set(state => {
-      const otherFolders = { ...state.folders };
-      delete otherFolders[tempId];
-      return { folders: otherFolders };
-    });
-  },
-
-  // --- ACTIONS OPTIMISTES POUR CLASSEURS ---
-  addClasseurOptimistic: (classeur: Classeur) => {
-    set(state => ({
-      classeurs: { ...state.classeurs, [classeur.id]: { ...classeur, _optimistic: true } }
-    }));
-  },
-
-  updateClasseurOptimistic: (tempId: string, realClasseur: Classeur) => {
-    set(state => {
-      const otherClasseurs = { ...state.classeurs };
-      delete otherClasseurs[tempId];
-      return {
-        classeurs: {
-          ...otherClasseurs,
-          [realClasseur.id]: realClasseur
-        }
-      };
-    });
-  },
-
-  removeClasseurOptimistic: (tempId: string) => {
-    set(state => {
-      const otherClasseurs = { ...state.classeurs };
-      delete otherClasseurs[tempId];
-      return { classeurs: otherClasseurs };
-    });
-  },
-
-  // --- ACTION POUR APPLIQUER UN DIFF ---
-  applyDiff: (noteId: string, diff: DiffResult) => {
-    set(state => {
-      const note = state.notes[noteId];
-      if (!note || !note.markdown_content) return {};
-
-      // Logique d'application du diff (simplifiée)
-      const newContent = diff.changes.map(change => {
-        if (change.added) {
-          return change.value;
-        }
-        if (change.removed) {
-          return '';
-        }
-        return change.value;
-      }).join('');
-
-
-      return {
-        notes: {
-          ...state.notes,
-          [noteId]: {
-            ...note,
-            markdown_content: newContent,
-            _lastDiff: diff, // Pour debug
-          }
-        }
-      };
-    });
-  },
+      }
+    };
+  })
 })); 

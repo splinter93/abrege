@@ -157,6 +157,15 @@ export async function POST(
     const apiTime = Date.now() - startTime;
     logApi.info(`✅ Contenu inséré en ${apiTime}ms`, context);
 
+    // 🚀 DÉCLENCHER LE POLLING AUTOMATIQUEMENT
+    try {
+      const { triggerUnifiedRealtimePolling } = await import('@/services/unifiedRealtimeService');
+      await triggerUnifiedRealtimePolling('notes', 'UPDATE');
+      logApi.info('✅ Polling déclenché pour notes', context);
+    } catch (pollingError) {
+      logApi.warn('⚠️ Erreur lors du déclenchement du polling', pollingError);
+    }
+
     return NextResponse.json({
       success: true,
       message: 'Contenu inséré avec succès',

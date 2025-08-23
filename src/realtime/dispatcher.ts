@@ -3,11 +3,10 @@
  * 
  * Ce fichier contient uniquement la logique de dispatch des événements
  * vers le store Zustand. La gestion des souscriptions est maintenant
- * dans UnifiedRealtimeManager.
+ * dans le service unifié.
  */
 
 import { useFileSystemStore } from '@/store/useFileSystemStore';
-import { logger } from '@/utils/logger';
 
 /**
  * handleRealtimeEvent - Route les événements WebSocket vers le store Zustand
@@ -23,7 +22,7 @@ export function handleRealtimeEvent(event: { type: string, payload: any, timesta
   
   // Route tous les événements editor.* vers handleEditorEvent
   if (type.startsWith('editor.')) {
-    // TODO: Implémenter handleEditorEvent
+    handleEditorEvent(event);
     return;
   }
   
@@ -44,7 +43,6 @@ export function handleRealtimeEvent(event: { type: string, payload: any, timesta
     case 'note.updated':
       if (debug) {
         console.log('[Realtime] note.updated - Payload complet:', { payload });
-        console.log('[Realtime] note.updated - header_image_offset:', { header_image_offset: payload.header_image_offset });
       }
       store.updateNote(payload.id, payload);
       break;
@@ -99,9 +97,8 @@ export function logEventToConsole(event: { type: string, payload: any, timestamp
 
 /**
  * handleEditorEvent - Gère les événements spécifiques à l'éditeur
- * TODO: Implémenter selon les besoins
  */
 export function handleEditorEvent(event: { type: string, payload: any, timestamp: number }) {
   console.log('[Realtime] Event éditeur reçu :', event);
-  // TODO: Implémenter la logique spécifique à l'éditeur
+  // TODO: Implémenter la logique spécifique à l'éditeur selon les besoins
 } 

@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation';
 import { useFileSystemStore } from '@/store/useFileSystemStore';
 import Editor from '@/components/editor/Editor';
 import { useOptimizedNoteLoader } from '@/hooks/useOptimizedNoteLoader';
+import UnifiedRealtimeManager from '@/components/UnifiedRealtimeManager';
 
 export default function NotePage() {
   const params = useParams();
@@ -68,6 +69,7 @@ export default function NotePage() {
   // Render only the real Editor (which includes its own header/toolbar/kebab/TOC)
   return (
     <div style={{ width: '100vw', minHeight: '100vh' }}>
+      <UnifiedRealtimeManager />
       <Editor noteId={noteId} />
     </div>
   );

@@ -45,33 +45,32 @@ const FolderManager: React.FC<FolderManagerProps> = ({
   classeurId, 
   classeurName, 
   classeurIcon,
-  parentFolderId, 
+  parentFolderId,
   onFolderOpen, 
   onGoBack,
-  onGoToRoot, // 🔧 NOUVEAU: Navigation vers la racine
-  onGoToFolder, // 🔧 NOUVEAU: Navigation directe vers un dossier
-  folderPath, // 🔧 NOUVEAU: Chemin de navigation pour le breadcrumb
-  preloadedFolders, // 🔧 NOUVEAU: Données préchargées
-  preloadedNotes, // 🔧 NOUVEAU: Données préchargées
-  skipApiCalls = false, // 🔧 NOUVEAU: Éviter les appels API
+  onGoToRoot,
+  onGoToFolder,
+  folderPath,
+  preloadedFolders,
+  preloadedNotes,
+  skipApiCalls = false,
   onCreateFolder,
   onCreateFile,
   onToggleView,
-  viewMode = 'grid',
+  viewMode = 'grid'
 }) => {
-  // 🔧 OPTIMISATION: Utiliser les données préchargées si disponibles
-  const usePreloadedData = skipApiCalls && preloadedFolders && preloadedNotes;
-  
   // Optimisation : éviter les appels API redondants
   const [refreshKey, setRefreshKey] = useState(0);
   const { user } = useAuth();
   
-  // 🔧 OPTIMISATION: Conditionner l'utilisation du hook selon les données préchargées
+  // Conditionner l'utilisation du hook selon les données préchargées
+  const usePreloadedData = skipApiCalls && preloadedFolders && preloadedNotes;
+  
   const folderManagerState = useFolderManagerState(
     classeurId, 
     user?.id || '', 
     parentFolderId, 
-    usePreloadedData ? 0 : refreshKey // 🔧 FIX: Pas de refresh si données préchargées
+    usePreloadedData ? 0 : refreshKey
   );
   
   const {
@@ -90,15 +89,15 @@ const FolderManager: React.FC<FolderManagerProps> = ({
     files: apiFiles,
   } = folderManagerState;
 
-  // 🔧 OPTIMISATION: Utiliser les données préchargées ou les données de l'API
+  // Utiliser les données préchargées ou les données de l'API
   const folders = usePreloadedData ? Object.values(preloadedFolders || {}) : apiFolders;
   const files = usePreloadedData ? Object.values(preloadedNotes || {}) : apiFiles;
   
-  // 🔧 CORRECTION: Écouter les changements du store Zustand pour les mises à jour temps réel
+  // Écouter les changements du store Zustand pour les mises à jour temps réel
   const storeFolders = useFileSystemStore((state) => state.folders);
   const storeNotes = useFileSystemStore((state) => state.notes);
   
-  // 🔧 CORRECTION: Fusion intelligente des données pour éviter les doublons
+  // Fusion intelligente des données pour éviter les doublons
   const mergeData = useCallback((preloaded: any[], store: Record<string, any>) => {
     const storeArray = Object.values(store);
     
@@ -132,7 +131,7 @@ const FolderManager: React.FC<FolderManagerProps> = ({
     return Array.from(merged.values());
   }, []);
   
-  // 🔧 CORRECTION: Utiliser la fusion intelligente
+  // Utiliser la fusion intelligente
   const effectiveFolders = mergeData(
     usePreloadedData ? Object.values(preloadedFolders || {}) : [],
     storeFolders
@@ -142,39 +141,15 @@ const FolderManager: React.FC<FolderManagerProps> = ({
     storeNotes
   );
   
-  // 🔧 OPTIMISATION: Filtrer les données par classeur actif
+  // Filtrer les données par classeur actif
   const filteredFolders = effectiveFolders.filter((f: any) => f.classeur_id === classeurId);
   const filteredFiles = effectiveFiles.filter((n: any) => n.classeur_id === classeurId);
   
-  // 🔧 OPTIMISATION: Logs pour tracer le changement de classeur
-  useEffect(() => {
-    if (usePreloadedData) {
-      console.log(`[FolderManager] 🔄 Changement de classeur: ${classeurId}`);
-      console.log(`[FolderManager] 📊 Données préchargées:`, {
-        totalFolders: Object.keys(preloadedFolders || {}).length,
-        totalNotes: Object.keys(preloadedNotes || {}).length,
-        filteredFolders: filteredFolders.length,
-        filteredFiles: filteredFiles.length
-      });
-    }
-  }, [classeurId, usePreloadedData, preloadedFolders, preloadedNotes, filteredFolders, filteredFiles]);
-
-  // 🔧 NOUVEAU: Logs pour tracer les mises à jour du store
-  useEffect(() => {
-    console.log(`[FolderManager] 🔄 Store mis à jour:`, {
-      storeFoldersCount: Object.keys(storeFolders).length,
-      storeNotesCount: Object.keys(storeNotes).length,
-      filteredFoldersCount: filteredFolders.length,
-      filteredFilesCount: filteredFiles.length
-    });
-  }, [storeFolders, storeNotes, filteredFolders, filteredFiles]);
-  
-  // 🔧 OPTIMISATION: Pas de loading si données préchargées
+  // Pas de loading si données préchargées
   const effectiveLoading = usePreloadedData ? false : loading;
   const effectiveError = usePreloadedData ? null : error;
   
-  // 🔧 IMPORTANT: Garder les handlers actifs même avec données préchargées
-  // Cela permet aux boutons (créer, renommer, supprimer, déplacer) de fonctionner
+  // Garder les handlers actifs même avec données préchargées
   const effectiveStartRename = startRename;
   const effectiveSubmitRename = submitRename;
   const effectiveCancelRename = cancelRename;
@@ -184,7 +159,6 @@ const FolderManager: React.FC<FolderManagerProps> = ({
   const effectiveDeleteFile = deleteFile;
   const effectiveMoveItem = moveItem;
 
-  // 🔧 FIX: Ajouter les handlers de création connectés
   const handleCreateFolder = useCallback(async () => {
     if (!user?.id) return;
     
@@ -212,24 +186,6 @@ const FolderManager: React.FC<FolderManagerProps> = ({
   }, [user?.id, effectiveCreateFile, parentFolderId]);
 
   const refreshNow = useCallback(() => setRefreshKey(k => k + 1), []);
-
-  // 🔧 NOUVEAU: Test de mise à jour du store
-  const testStoreUpdate = useCallback(() => {
-    console.log('[FolderManager] 🧪 Test de mise à jour du store...');
-    console.log('[FolderManager] 📊 État actuel:', {
-      storeFolders: Object.keys(storeFolders).length,
-      storeNotes: Object.keys(storeNotes).length,
-      filteredFolders: filteredFolders.length,
-      filteredFiles: filteredFiles.length
-    });
-    
-    // Forcer une mise à jour du composant
-    setRefreshKey(k => k + 1);
-  }, [storeFolders, storeNotes, filteredFolders, filteredFiles]);
-
-
-
-
 
   // Filtrage/validation de sécurité
   const { safeFolders, safeFiles } = useFolderFilter({ folders, notes: files });
@@ -279,35 +235,6 @@ const FolderManager: React.FC<FolderManagerProps> = ({
   const handleStartRenameFileClick = useCallback((file: FileArticle) => {
     effectiveStartRename(file.id, 'file');
   }, [effectiveStartRename]);
-
-  const [events, setEvents] = useState<string[]>([]);
-  const [debugInfo, setDebugInfo] = useState<string[]>([]);
-  const [serviceStatus, setServiceStatus] = useState<string>('Initial');
-
-  const addDebugInfo = (message: string) => {
-    setDebugInfo(prev => [...prev, message]);
-  };
-
-  const clearEvents = () => {
-    setEvents([]);
-    setDebugInfo([]);
-  };
-
-  const forceServiceInit = () => {
-    addDebugInfo('🔧 Forçage de l\'initialisation du service...');
-    try {
-      // Assuming initRealtimeService is defined elsewhere or needs to be imported
-      // For now, we'll just add a placeholder message
-      addDebugInfo('✅ Service forcé');
-      
-      // if (service) { // This line was commented out in the original file, so it's commented out here
-      //   setServiceStatus('✅ Service forcé');
-      //   addDebugInfo('✅ Service initialisé de force');
-      // }
-    } catch (error) {
-      addDebugInfo(`❌ Erreur lors du forçage: ${error}`);
-    }
-  };
 
   return (
     <div className="folder-manager-wrapper">

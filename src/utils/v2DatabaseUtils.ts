@@ -73,12 +73,14 @@ export interface CreateClasseurData {
   name: string;
   description?: string;
   icon?: string;
+  emoji?: string; // Ajouter le support pour emoji
 }
 
 export interface UpdateClasseurData {
   name?: string;
   description?: string;
-  icon?: string;
+  icon?: string; // Ajouter le support pour emoji
+  emoji?: string; // Ajouter le support pour emoji
   position?: number;
 }
 
@@ -790,7 +792,7 @@ export class V2DatabaseUtils {
         .insert({
           name: data.name,
           description: data.description,
-          emoji: data.icon || '📁',
+          emoji: data.icon || data.emoji || '📁', // 🔧 CORRECTION: Gérer icon et emoji
           position: 0,
           user_id: userId,
           slug
@@ -858,6 +860,7 @@ export class V2DatabaseUtils {
       if (data.name) updateData.name = data.name;
       if (data.description !== undefined) updateData.description = data.description;
       if (data.icon !== undefined) updateData.emoji = data.icon;
+      if (data.emoji !== undefined) updateData.emoji = data.emoji; // 🔧 CORRECTION: Gérer emoji aussi
       if (data.position !== undefined) updateData.position = data.position;
       updateData.updated_at = new Date().toISOString();
 

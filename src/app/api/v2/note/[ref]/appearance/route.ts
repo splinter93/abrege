@@ -62,7 +62,16 @@ export async function PATCH(
     const result = await V2DatabaseUtils.updateNote(ref, validatedData, userId, context);
 
     const apiTime = Date.now() - startTime;
-    logApi.info(`✅ Apparence note mise à jour en ${apiTime}ms`, context);
+    logApi.info(`✅ Apparence de la note mise à jour en ${apiTime}ms`, context);
+
+    // 🚀 DÉCLENCHER LE POLLING AUTOMATIQUEMENT
+    try {
+      const { triggerUnifiedRealtimePolling } = await import('@/services/unifiedRealtimeService');
+      await triggerUnifiedRealtimePolling('notes', 'UPDATE');
+      logApi.info('✅ Polling déclenché pour notes', context);
+    } catch (pollingError) {
+      logApi.warn('⚠️ Erreur lors du déclenchement du polling', pollingError);
+    }
 
     return NextResponse.json({
       success: true,

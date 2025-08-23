@@ -143,14 +143,21 @@ export async function POST(
 
 
     const apiTime = Date.now() - startTime;
-    const isPublic = validatedData.visibility !== 'private';
-    logApi.info(`✅ Note ${isPublic ? 'publiée' : 'rendue privée'} en ${apiTime}ms`, context);
+    logApi.info(`✅ Note publiée en ${apiTime}ms`, context);
+
+    // 🚀 DÉCLENCHER LE POLLING AUTOMATIQUEMENT
+    try {
+      const { triggerUnifiedRealtimePolling } = await import('@/services/unifiedRealtimeService');
+      await triggerUnifiedRealtimePolling('notes', 'UPDATE');
+      logApi.info('✅ Polling déclenché pour notes', context);
+    } catch (pollingError) {
+      logApi.warn('⚠️ Erreur lors du déclenchement du polling', pollingError);
+    }
 
     return NextResponse.json({
       success: true,
-      message: isPublic ? 'Note publiée avec succès' : 'Note rendue privée avec succès',
-      note: updatedNote,
-      visibility: validatedData.visibility
+      message: 'Note publiée avec succès',
+      note: updatedNote
     });
 
   } catch (err: unknown) {

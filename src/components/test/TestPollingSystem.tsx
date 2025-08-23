@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { triggerUnifiedPolling, getUnifiedPollingStatus, stopUnifiedPollingService } from '@/services/unifiedPollingService';
+import { triggerUnifiedRealtimePolling, getUnifiedRealtimeStatus, stopUnifiedRealtimeService } from '@/services/unifiedRealtimeService';
 import { useFileSystemStore } from '@/store/useFileSystemStore';
 
 /**
@@ -22,7 +22,7 @@ export default function TestPollingSystem() {
   // Monitoring en temps réel du statut
   useEffect(() => {
     const interval = setInterval(() => {
-      const currentStatus = getUnifiedPollingStatus();
+      const currentStatus = getUnifiedRealtimeStatus();
       setStatus(currentStatus);
     }, 500);
 
@@ -38,41 +38,25 @@ export default function TestPollingSystem() {
     try {
       // Test 1: Polling des notes
       addLog('📝 Test 1: Polling des notes...');
-      const notesResult = await triggerUnifiedPolling({
-        entityType: 'notes',
-        operation: 'CREATE',
-        entityId: 'test-notes', userId: 'test-user',
-        userId: 'test-user',
-        delay: 1000
-      });
+      const notesResult = await triggerUnifiedRealtimePolling('notes', 'CREATE');
       addLog(`✅ Notes: ${notesResult.success ? 'Succès' : 'Échec'} - ${notesResult.dataCount || 0} éléments`);
       
       // Test 2: Polling des dossiers
       addLog('📁 Test 2: Polling des dossiers...');
-      const foldersResult = await triggerUnifiedPolling({
-        entityType: 'folders',
-        operation: 'CREATE',
-        entityId: 'test-folders', userId: 'test-user',
-        delay: 1000
-      });
+      const foldersResult = await triggerUnifiedRealtimePolling('folders', 'CREATE');
       addLog(`✅ Dossiers: ${foldersResult.success ? 'Succès' : 'Échec'} - ${foldersResult.dataCount || 0} éléments`);
       
       // Test 3: Polling des classeurs
       addLog('📚 Test 3: Polling des classeurs...');
-      const classeursResult = await triggerUnifiedPolling({
-        entityType: 'classeurs',
-        operation: 'CREATE',
-        entityId: 'test-classeurs', userId: 'test-user',
-        delay: 1000
-      });
+      const classeursResult = await triggerUnifiedRealtimePolling('classeurs', 'CREATE');
       addLog(`✅ Classeurs: ${classeursResult.success ? 'Succès' : 'Échec'} - ${classeursResult.dataCount || 0} éléments`);
       
       // Test 4: Polling simultané
       addLog('⚡ Test 4: Polling simultané...');
       const promises = [
-        triggerUnifiedPolling({ entityType: 'notes', operation: 'UPDATE', userId: 'test-user', delay: 500 }),
-        triggerUnifiedPolling({ entityType: 'folders', operation: 'UPDATE', userId: 'test-user', delay: 500 }),
-        triggerUnifiedPolling({ entityType: 'classeurs', operation: 'UPDATE', userId: 'test-user', delay: 500 })
+        triggerUnifiedRealtimePolling('notes', 'UPDATE'),
+        triggerUnifiedRealtimePolling('folders', 'UPDATE'),
+        triggerUnifiedRealtimePolling('classeurs', 'UPDATE')
       ];
       
       const results = await Promise.all(promises);
@@ -102,7 +86,7 @@ export default function TestPollingSystem() {
     
     for (const op of operations) {
       addLog(`📋 Ajout: ${op.entityType} ${op.operation} (${op.priority})`);
-      triggerUnifiedPolling({
+      triggerUnifiedRealtimePolling({
         entityType: op.entityType as any,
         operation: op.operation as any,
         entityId: `test-${op.entityType}`,
@@ -119,7 +103,7 @@ export default function TestPollingSystem() {
   };
 
   const stopService = () => {
-    stopUnifiedPollingService();
+    stopUnifiedRealtimeService();
     addLog('🛑 Service de polling arrêté');
   };
 

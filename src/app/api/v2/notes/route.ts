@@ -57,7 +57,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   try {
     let query = supabase
       .from('articles')
-      .select('id, title, slug, folder_id, classeur_id, created_at, updated_at, is_published')
+      .select('id, source_title, slug, folder_id, classeur_id, created_at, updated_at, is_published, markdown_content')
       .eq('user_id', userId);
 
     // Si un ID spécifique est demandé, filtrer par cet ID

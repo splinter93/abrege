@@ -147,6 +147,7 @@ export const createClasseurV2Schema = z.object({
   name: z.string().min(1, 'name requis').max(255, 'name trop long'),
   description: z.string().max(500, 'description trop longue').optional(),
   icon: z.string().optional(),
+  emoji: z.string().optional(), // Ajouter le support pour emoji
 });
 
 /**
@@ -156,6 +157,7 @@ export const updateClasseurV2Schema = z.object({
   name: z.string().min(1, 'name requis').max(255, 'name trop long').optional(),
   description: z.string().max(500, 'description trop longue').optional(),
   icon: z.string().optional(),
+  emoji: z.string().optional(), // Ajouter le support pour emoji
   position: z.number().int('position doit être un entier').min(0, 'position doit être >= 0').optional(),
 });
 

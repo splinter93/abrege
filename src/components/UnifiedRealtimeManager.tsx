@@ -1,22 +1,23 @@
 /**
- * 🔄 Gestionnaire Unifié Realtime + Polling
+ * 🔄 Gestionnaire Realtime Unifié Simplifié
  * 
- * Ce composant remplace RealtimeInitializer + UnifiedPollingInitializer
- * avec une logique intelligente qui utilise Supabase Realtime en priorité
- * et bascule vers le polling unifié en cas de problème.
+ * Ce composant utilise le service unifié pour gérer realtime + polling
+ * avec une logique simple et efficace.
  */
 
 "use client";
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { useFileSystemStore } from '@/store/useFileSystemStore';
-import { setUnifiedPollingAuthToken, clearUnifiedPollingAuthToken } from '@/services/unifiedPollingService';
+import { 
+  initializeUnifiedRealtime, 
+  getUnifiedRealtimeStatus, 
+  stopUnifiedRealtimeService 
+} from '@/services/unifiedRealtimeService';
 
 export default function UnifiedRealtimeManager() {
   const { user } = useAuth();
-  const [realtimeStatus, setRealtimeStatus] = useState<'connecting' | 'connected' | 'failed' | 'fallback'>('connecting');
-  const [pollingActive, setPollingActive] = useState(false);
+  const [status, setStatus] = useState(getUnifiedRealtimeStatus());
 
   useEffect(() => {
     if (!user?.id) {
@@ -25,45 +26,27 @@ export default function UnifiedRealtimeManager() {
 
     const initializeRealtime = async () => {
       try {
-        console.log('[UnifiedRealtimeManager] 🚀 Initialisation de la synchronisation temps réel...');
-        
-        // Importer Supabase dynamiquement
-        const { createClient } = await import('@supabase/supabase-js');
-        const supabase = createClient(
-          process.env.NEXT_PUBLIC_SUPABASE_URL!,
-          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-        );
-        
-        // Récupérer la session
-        const { data: { session }, error } = await supabase.auth.getSession();
-        
-        if (error || !session?.access_token) {
-          console.error('[UnifiedRealtimeManager] ❌ Erreur récupération session:', error);
-          setRealtimeStatus('failed');
-          return;
-        }
+        const success = await initializeUnifiedRealtime({
+          supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          supabaseKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+          userId: user.id,
+          debug: process.env.NODE_ENV === 'development'
+        });
 
-        console.log('[UnifiedRealtimeManager] ✅ Session récupérée, activation Supabase Realtime...');
-        
-        // Configurer le token pour le polling de fallback
-        setUnifiedPollingAuthToken(session.access_token);
-        
-        // Essayer Supabase Realtime en premier
-        const realtimeSuccess = await setupSupabaseRealtime(supabase, session.access_token);
-        
-        if (realtimeSuccess) {
-          setRealtimeStatus('connected');
-          console.log('[UnifiedRealtimeManager] ✅ Supabase Realtime activé avec succès');
-        } else {
-          setRealtimeStatus('fallback');
-          setPollingActive(true);
-          console.log('[UnifiedRealtimeManager] 🔄 Basculement vers le polling unifié');
+        if (success) {
+          // Mettre à jour le statut
+          setStatus(getUnifiedRealtimeStatus());
+          
+          // Surveiller les changements de statut
+          const statusInterval = setInterval(() => {
+            setStatus(getUnifiedRealtimeStatus());
+          }, 1000);
+
+          return () => clearInterval(statusInterval);
         }
         
       } catch (error) {
-        console.error('[UnifiedRealtimeManager] ❌ Erreur initialisation:', error);
-        setRealtimeStatus('failed');
-        setPollingActive(true);
+        console.error('[RealtimeManager] Erreur d\'initialisation:', error);
       }
     };
 
@@ -71,159 +54,44 @@ export default function UnifiedRealtimeManager() {
 
     // Cleanup
     return () => {
-      console.log('[UnifiedRealtimeManager] 🛑 Arrêt de la synchronisation');
-      clearUnifiedPollingAuthToken();
-      setRealtimeStatus('connecting');
-      setPollingActive(false);
+      stopUnifiedRealtimeService();
     };
   }, [user?.id]);
 
-  /**
-   * Configurer Supabase Realtime
-   */
-  const setupSupabaseRealtime = async (supabase: any, token: string): Promise<boolean> => {
-    try {
-      const store = useFileSystemStore.getState();
-      
-      // Canal pour les classeurs
-      const classeursChannel = supabase
-        .channel('classeurs-changes')
-        .on(
-          'postgres_changes',
-          {
-            event: '*',
-            schema: 'public',
-            table: 'classeurs'
-          },
-          (payload: any) => {
-            console.log('[UnifiedRealtimeManager] 📚 Changement classeur:', payload);
-            
-            switch (payload.eventType) {
-              case 'INSERT':
-                store.addClasseur(payload.new);
-                break;
-              case 'UPDATE':
-                store.updateClasseur(payload.new.id, payload.new);
-                break;
-              case 'DELETE':
-                store.removeClasseur(payload.old.id);
-                break;
-            }
-          }
-        )
-        .subscribe((status: any) => {
-          if (status === 'SUBSCRIBED') {
-            console.log('[UnifiedRealtimeManager] ✅ Canal classeurs activé');
-          } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
-            console.warn('[UnifiedRealtimeManager] ⚠️ Problème canal classeurs:', status);
-            return false; // Échec
-          }
-        });
-
-      // Canal pour les dossiers
-      const dossiersChannel = supabase
-        .channel('dossiers-changes')
-        .on(
-          'postgres_changes',
-          {
-            event: '*',
-            schema: 'public',
-            table: 'folders'
-          },
-          (payload: any) => {
-            console.log('[UnifiedRealtimeManager] 📁 Changement dossier:', payload);
-            
-            switch (payload.eventType) {
-              case 'INSERT':
-                store.addFolder(payload.new);
-                break;
-              case 'UPDATE':
-                store.updateFolder(payload.new.id, payload.new);
-                break;
-              case 'DELETE':
-                store.removeFolder(payload.old.id);
-                break;
-            }
-          }
-        )
-        .subscribe((status: any) => {
-          if (status === 'SUBSCRIBED') {
-            console.log('[UnifiedRealtimeManager] ✅ Canal dossiers activé');
-          } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
-            console.warn('[UnifiedRealtimeManager] ⚠️ Problème canal dossiers:', status);
-            return false; // Échec
-          }
-        });
-
-      // Canal pour les notes
-      const notesChannel = supabase
-        .channel('notes-changes')
-        .on(
-          'postgres_changes',
-          {
-            event: '*',
-            schema: 'public',
-            table: 'articles'
-          },
-          (payload: any) => {
-            console.log('[UnifiedRealtimeManager] 📝 Changement note:', payload);
-            
-            switch (payload.eventType) {
-              case 'INSERT':
-                store.addNote(payload.new);
-                break;
-              case 'UPDATE':
-                store.updateNote(payload.new.id, payload.new);
-                break;
-              case 'DELETE':
-                store.removeNote(payload.old.id);
-                break;
-            }
-          }
-        )
-        .subscribe((status: any) => {
-          if (status === 'SUBSCRIBED') {
-            console.log('[UnifiedRealtimeManager] ✅ Canal notes activé');
-          } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
-            console.warn('[UnifiedRealtimeManager] ⚠️ Problème canal notes:', status);
-            return false; // Échec
-          }
-        });
-
-      // Attendre un peu pour vérifier que les canaux sont stables
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      return true; // Succès
-      
-    } catch (error) {
-      console.error('[UnifiedRealtimeManager] ❌ Erreur Supabase Realtime:', error);
-      return false; // Échec
-    }
-  };
-
-  // Indicateur visuel du statut (optionnel, pour le debug)
+  // Indicateur visuel du statut (dev uniquement)
   if (process.env.NODE_ENV === 'development') {
     return (
       <div className="fixed top-4 right-4 z-50 bg-white border rounded-lg shadow-lg p-3 text-xs">
         <div className="flex items-center gap-2">
           <div 
             className={`w-3 h-3 rounded-full ${
-              realtimeStatus === 'connected' ? 'bg-green-500' :
-              realtimeStatus === 'fallback' ? 'bg-yellow-500' :
-              realtimeStatus === 'failed' ? 'bg-red-500' :
-              'bg-gray-400'
+              status.isConnected ? 'bg-green-500' :
+              status.provider === 'polling' ? 'bg-yellow-500' :
+              'bg-red-500'
             }`}
           />
           <span>
-            {realtimeStatus === 'connected' ? '🟢 Realtime' :
-             realtimeStatus === 'fallback' ? '🟡 Polling' :
-             realtimeStatus === 'failed' ? '🔴 Échec' :
-             '⚪ Connexion...'}
+            {status.isConnected ? '🟢 Realtime' :
+             status.provider === 'polling' ? '🟡 Polling' :
+             '🔴 Échec'}
           </span>
         </div>
-        {pollingActive && (
+        
+        {status.provider === 'polling' && (
           <div className="mt-1 text-gray-500">
-            Polling actif
+            Polling actif (5s)
+          </div>
+        )}
+        
+        {status.lastEvent && (
+          <div className="mt-1 text-gray-400 text-xs">
+            Dernier: {status.lastEvent}
+          </div>
+        )}
+        
+        {status.errorCount > 0 && (
+          <div className="mt-1 text-red-500 text-xs">
+            Erreurs: {status.errorCount}
           </div>
         )}
       </div>

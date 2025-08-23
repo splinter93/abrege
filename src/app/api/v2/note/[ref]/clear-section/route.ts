@@ -118,8 +118,8 @@ export async function DELETE(
 
     // Extraire la table des matières pour vérifier la section
     const toc = extractTOCWithSlugs(currentNote.markdown_content || '');
-    logApi.info(`🔍 Sections disponibles:`, toc.map(t => ({ title: t.title, slug: t.slug })), context);
-    logApi.info(`🔍 Section recherchée: "${validatedData.sectionId}"`, context);
+    logApi.info(`🔍 Sections disponibles:`, toc.map(t => ({ title: t.title, slug: t.slug })));
+    logApi.info(`🔍 Section recherchée: "${validatedData.sectionId}"`);
 
     // Vérifier si la section existe
     const sectionExists = toc.find(t => t.title === validatedData.sectionId || t.slug === validatedData.sectionId);
@@ -161,11 +161,20 @@ export async function DELETE(
 
 
     const apiTime = Date.now() - startTime;
-    logApi.info(`✅ Section "${validatedData.sectionId}" vidée en ${apiTime}ms`, context);
+    logApi.info(`✅ Section nettoyée en ${apiTime}ms`, context);
+
+    // 🚀 DÉCLENCHER LE POLLING AUTOMATIQUEMENT
+    try {
+      const { triggerUnifiedRealtimePolling } = await import('@/services/unifiedRealtimeService');
+      await triggerUnifiedRealtimePolling('notes', 'UPDATE');
+      logApi.info('✅ Polling déclenché pour notes', context);
+    } catch (pollingError) {
+      logApi.warn('⚠️ Erreur lors du déclenchement du polling', pollingError);
+    }
 
     return NextResponse.json({
       success: true,
-      message: 'Section vidée avec succès',
+      message: 'Section nettoyée avec succès',
       note: updatedNote
     }, { headers: { "Content-Type": "application/json" } });
 

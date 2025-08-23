@@ -43,11 +43,20 @@ export async function PUT(request: NextRequest): Promise<NextResponse> {
     const result = await V2DatabaseUtils.reorderClasseurs(validatedData.classeurs, userId, context);
 
     const apiTime = Date.now() - startTime;
-    logApi.info(`✅ Classeurs réorganisés en ${apiTime}ms`, context);
+    logApi.info(`✅ Classeurs réordonnancés en ${apiTime}ms`, context);
+
+    // 🚀 DÉCLENCHER LE POLLING AUTOMATIQUEMENT
+    try {
+      const { triggerUnifiedRealtimePolling } = await import('@/services/unifiedRealtimeService');
+      await triggerUnifiedRealtimePolling('classeurs', 'UPDATE');
+      logApi.info('✅ Polling déclenché pour classeurs', context);
+    } catch (pollingError) {
+      logApi.warn('⚠️ Erreur lors du déclenchement du polling', pollingError);
+    }
 
     return NextResponse.json({
       success: true,
-      message: 'Classeurs réorganisés avec succès',
+      message: 'Classeurs réordonnancés avec succès',
       classeurs: result.classeurs
     });
 

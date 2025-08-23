@@ -42,6 +42,7 @@ import ImageMenu from '@/components/ImageMenu';
 import { uploadImageForNote } from '@/utils/fileUpload';
 import { logger, LogCategory } from '@/utils/logger';
 import type { FullEditorInstance, CustomImageExtension, CodeBlockWithCopyExtension } from '@/types/editor';
+import TestEditorRealtime from '@/components/test/TestEditorRealtime';
 
 /**
  * Full Editor – markdown is source of truth; HTML only for display.
@@ -1002,6 +1003,9 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
         noteId={note.id}
         userId={userId}
       />
+      
+      {/* Composant de test pour vérifier le temps réel */}
+      {process.env.NODE_ENV === 'development' && <TestEditorRealtime />}
     </>
   );
 };

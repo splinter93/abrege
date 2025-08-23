@@ -14,7 +14,7 @@ import { useDossiersPage } from "@/hooks/useDossiersPage";
 import { useAuth } from "@/hooks/useAuth";
 import { useSecureErrorHandler } from "@/components/SecureErrorHandler";
 import type { AuthenticatedUser } from "@/types/dossiers";
-import UnifiedRealtimeManager from "@/components/UnifiedRealtimeManager";
+import { useUnifiedRealtime } from "@/hooks/useUnifiedRealtime";
 
 import "./index.css";
 import "@/components/DossierErrorBoundary.css";
@@ -24,10 +24,9 @@ import { useFileSystemStore } from "@/store/useFileSystemStore";
 export default function DossiersPage() {
   return (
     <DossierErrorBoundary>
-              <AuthGuard>
-          <UnifiedRealtimeManager />
-          <DossiersPageContent />
-        </AuthGuard>
+      <AuthGuard>
+        <DossiersPageContent />
+      </AuthGuard>
     </DossierErrorBoundary>
   );
 }
@@ -48,6 +47,12 @@ function DossiersPageContent() {
 function AuthenticatedDossiersContent({ user }: { user: AuthenticatedUser }) {
   // État pour le mode de vue
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('grid');
+  
+  // Utiliser le nouveau hook unifié pour le realtime
+  const { isConnected, provider, status, triggerPolling } = useUnifiedRealtime({
+    autoInitialize: true,
+    debug: process.env.NODE_ENV === 'development'
+  });
   
   // Appeler useDossiersPage maintenant que nous avons un user.id valide
   const {

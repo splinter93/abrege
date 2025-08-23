@@ -30,6 +30,18 @@ export async function DELETE(
   }
 
   const userId = authResult.userId!;
+  
+  // Récupérer le token d'authentification
+  const authHeader = request.headers.get('Authorization');
+  const userToken = authHeader?.substring(7);
+  
+  if (!userToken) {
+    logApi.error('❌ Token manquant', context);
+    return NextResponse.json(
+      { error: 'Token d\'authentification manquant' },
+      { status: 401, headers: { "Content-Type": "application/json" } }
+    );
+  }
 
   try {
     // Utiliser V2DatabaseUtils pour l'accès direct à la base de données
@@ -38,9 +50,19 @@ export async function DELETE(
     const apiTime = Date.now() - startTime;
     logApi.info(`✅ Dossier supprimé en ${apiTime}ms`, context);
 
+    // 🚀 DÉCLENCHER LE POLLING AUTOMATIQUEMENT
+    try {
+      const { triggerUnifiedRealtimePolling } = await import('@/services/unifiedRealtimeService');
+      await triggerUnifiedRealtimePolling('folders', 'DELETE', userToken);
+      logApi.info('✅ Polling déclenché pour folders', context);
+    } catch (pollingError) {
+      logApi.warn('⚠️ Erreur lors du déclenchement du polling', pollingError);
+    }
+
     return NextResponse.json({
       success: true,
-      message: 'Dossier supprimé avec succès'
+      message: 'Dossier supprimé avec succès',
+      deletedFolderId: ref
     });
 
   } catch (err: unknown) {

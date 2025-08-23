@@ -1,74 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-import { llmManager } from '@/services/llm';
-import type { AppContext } from '@/services/llm/types';
-import { simpleLogger as logger } from '@/utils/logger';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
-export async function POST(request: NextRequest) {
-  try {
-    // Vérifier l'authentification
-    const authHeader = request.headers.get('authorization');
-    let userId: string;
-
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-      const userToken = authHeader.substring(7);
-      const { data: { user }, error: authError } = await supabase.auth.getUser(userToken);
-      
-      if (authError || !user) {
-        logger.dev("[Chat API] ❌ Token invalide ou expiré");
-        return NextResponse.json(
-          { error: 'Token invalide ou expiré' },
-          { status: 401 }
-        );
-      }
-      userId = user.id;
-      logger.dev("[Chat API] ✅ Utilisateur authentifié:", userId);
-    } else {
-      logger.dev("[Chat API] ❌ Token d'authentification manquant");
-      return NextResponse.json(
-        { error: 'Authentification requise' },
-        { status: 401 }
-      );
+export async function GET(request: NextRequest): Promise<NextResponse> {
+  return NextResponse.json({
+    success: true,
+    message: 'Endpoint chat - utilisez POST pour les conversations',
+    endpoints: {
+      '/api/chat/llm': 'Chat avec LLM',
+      '/api/v1/chat-sessions': 'Gestion des sessions de chat',
     }
+  });
+}
 
-    const { message, messages, context, provider } = await request.json();
-    
-    logger.dev("[Chat API] 🚀 Début de la requête");
-    logger.dev("[Chat API] 👤 Utilisateur:", userId);
-    logger.dev("[Chat API] 📦 Body reçu:", { message, messages, context, provider });
-
-    // Changer de provider si spécifié
-    if (provider && provider !== llmManager.getCurrentProviderId()) {
-      llmManager.setProvider(provider);
-    }
-
-    // Préparer le contexte par défaut si non fourni
-    const appContext: AppContext = context || {
-      type: 'chat_session',
-      id: 'default',
-      name: 'Chat général'
-    };
-
-    // Appeler le LLM via le manager
-    const response = await llmManager.call(message, appContext, messages);
-
-    logger.dev("[Chat API] ✅ Réponse LLM reçue");
-
-    return NextResponse.json({
-      response,
-      success: true,
-      provider: llmManager.getCurrentProviderId()
-    });
-
-  } catch (error) {
-    logger.error("[Chat API] ❌ Erreur:", error);
-    return NextResponse.json(
-      { error: "Erreur interne du serveur" },
-      { status: 500 }
-    );
-  }
+export async function POST(request: NextRequest): Promise<NextResponse> {
+  return NextResponse.json({
+    error: 'Utilisez /api/chat/llm pour les conversations avec l\'IA',
+    redirectTo: '/api/chat/llm'
+  }, { status: 400 });
 } 

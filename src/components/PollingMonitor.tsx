@@ -12,7 +12,7 @@ export default function PollingMonitor() {
 
   useEffect(() => {
     const interval = setInterval(() => {
-      const currentStatus = getUnifiedPollingStatus();
+      const currentStatus = getUnifiedRealtimeStatus();
       setStatus(currentStatus);
     }, 1000);
 
