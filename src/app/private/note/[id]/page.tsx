@@ -5,7 +5,6 @@ import { useParams } from 'next/navigation';
 import { useFileSystemStore } from '@/store/useFileSystemStore';
 import Editor from '@/components/editor/Editor';
 import { useOptimizedNoteLoader } from '@/hooks/useOptimizedNoteLoader';
-import UnifiedRealtimeManager from '@/components/UnifiedRealtimeManager';
 
 export default function NotePage() {
   const params = useParams();
@@ -26,8 +25,6 @@ export default function NotePage() {
         title: note.source_title,
         hasMarkdown: !!note.markdown_content,
         markdownLength: note.markdown_content?.length || 0,
-        hasContent: !!note.content,
-        contentLength: note.content?.length || 0,
         hasHtml: !!note.html_content,
         htmlLength: note.html_content?.length || 0
       });
@@ -42,9 +39,7 @@ export default function NotePage() {
         id: noteFromStore.id,
         title: noteFromStore.source_title,
         hasMarkdown: !!noteFromStore.markdown_content,
-        markdownLength: noteFromStore.markdown_content?.length || 0,
-        hasContent: !!noteFromStore.content,
-        contentLength: noteFromStore.content?.length || 0
+        markdownLength: noteFromStore.markdown_content?.length || 0
       });
     }
   }, [noteFromStore]);
@@ -69,7 +64,6 @@ export default function NotePage() {
   // Render only the real Editor (which includes its own header/toolbar/kebab/TOC)
   return (
     <div style={{ width: '100vw', minHeight: '100vh' }}>
-      <UnifiedRealtimeManager />
       <Editor noteId={noteId} />
     </div>
   );

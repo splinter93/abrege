@@ -42,7 +42,6 @@ import ImageMenu from '@/components/ImageMenu';
 import { uploadImageForNote } from '@/utils/fileUpload';
 import { logger, LogCategory } from '@/utils/logger';
 import type { FullEditorInstance, CustomImageExtension, CodeBlockWithCopyExtension } from '@/types/editor';
-import TestEditorRealtime from '@/components/test/TestEditorRealtime';
 
 /**
  * Full Editor – markdown is source of truth; HTML only for display.
@@ -53,7 +52,7 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
   const selectNote = React.useCallback((s: FileSystemState) => s.notes[noteId], [noteId]);
   const note = useFileSystemStore(selectNote);
   const updateNote = useFileSystemStore(s => s.updateNote);
-  const content = note?.content || note?.markdown_content || '';
+  const content = note?.markdown_content || '';
   const { html } = useMarkdownRender({ content });
 
   // État de chargement : Forcer la régénération de la TOC
@@ -68,13 +67,13 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
     }
   }, [note, content, noteId, noteLoaded]);
 
-  const [title, setTitle] = React.useState<string>(note?.source_title || note?.title || '');
-  React.useEffect(() => { setTitle(note?.source_title || note?.title || ''); }, [note?.source_title, note?.title]);
+  const [title, setTitle] = React.useState<string>(note?.source_title || '');
+  React.useEffect(() => { setTitle(note?.source_title || ''); }, [note?.source_title]);
 
   const [headerImageUrl, setHeaderImageUrl] = React.useState<string | null>(note?.header_image || null);
   const [headerOffset, setHeaderOffset] = React.useState<number>(50);
   const [headerBlur, setHeaderBlur] = React.useState<number>(0);
-  const [headerOverlay, setHeaderOverlay] = React.useState<number>(0);
+  const [headerOverlay, setHeaderOverlay] = React.useState<string>('0');
   const [titleInImage, setTitleInImage] = React.useState<boolean>(false);
   const [imageMenuOpen, setImageMenuOpen] = React.useState(false);
   const [imageMenuTarget, setImageMenuTarget] = React.useState<'header' | 'content'>('header');
@@ -116,8 +115,8 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
     const normalized = normalize(url);
     setHeaderImageUrl(normalized);
     try {
-      updateNote(noteId, { header_image: normalized });
-      await v2UnifiedApi.updateNote(noteId, { header_image: normalized ?? null }, userId);
+      updateNote(noteId, { header_image: normalized || undefined });
+      await v2UnifiedApi.updateNote(noteId, { header_image: normalized || undefined }, userId);
     } catch (error) {
       logger.error(LogCategory.EDITOR, 'Error updating header image');
     }
@@ -134,7 +133,7 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
   }, [kebabOpen]);
 
   // Ref to the element that contains .ProseMirror so TOC can scroll into view
-  const editorContainerRef = React.useRef<HTMLElement | null>(null);
+  const editorContainerRef = React.useRef<HTMLDivElement>(null);
 
   React.useEffect(() => {
     if (note?.header_image) setHeaderImageUrl(note.header_image);
@@ -148,7 +147,7 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
     if (typeof note?.header_image_blur === 'number') setHeaderBlur(note.header_image_blur);
   }, [note?.header_image_blur]);
   React.useEffect(() => {
-    if (typeof note?.header_image_overlay === 'number') setHeaderOverlay(note.header_image_overlay as number);
+    if (typeof note?.header_image_overlay === 'string') setHeaderOverlay(note.header_image_overlay);
   }, [note?.header_image_overlay]);
   React.useEffect(() => {
     if (typeof note?.header_title_in_image === 'boolean') setTitleInImage(note.header_title_in_image);
@@ -196,7 +195,7 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
         const md = editor.storage?.markdown?.getMarkdown?.() as string | undefined;
         const nextMarkdown = typeof md === 'string' ? md : content;
         if (nextMarkdown !== content) {
-          updateNote(noteId, { content: nextMarkdown, markdown_content: nextMarkdown });
+          updateNote(noteId, { markdown_content: nextMarkdown });
         }
       } catch {
         // ignore
@@ -207,7 +206,7 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
   // Mise à jour intelligente du contenu de l'éditeur quand la note change
   const [isUpdatingFromStore, setIsUpdatingFromStore] = React.useState(false);
   
-  // Écouteur temps réel : Mettre à jour la TOC quand l'éditeur change
+  // Mettre à jour la TOC quand l'éditeur change
   React.useEffect(() => {
     if (!editor) return;
     
@@ -287,7 +286,10 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
 
   // Save hook
   const { handleSave } = useEditorSave({
-    editor: editor as FullEditorInstance,
+    editor: editor ? {
+      getHTML: () => editor.getHTML(),
+      storage: { markdown: { getMarkdown: () => editor.storage.markdown?.getMarkdown?.() || '' } }
+    } : undefined,
     onSave: async ({ title: newTitle, markdown_content, html_content }) => {
       await v2UnifiedApi.updateNote(noteId, {
         source_title: newTitle ?? title ?? 'Untitled',
@@ -307,7 +309,14 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
   // Initialize share settings from note data
   React.useEffect(() => {
     if (note?.share_settings) {
-      setShareSettings(note.share_settings);
+      const shareSettings = note.share_settings;
+      setShareSettings(prev => ({
+        ...prev,
+        visibility: shareSettings.visibility as any || prev.visibility,
+        invited_users: shareSettings.invited_users || prev.invited_users,
+        allow_edit: shareSettings.allow_edit || prev.allow_edit,
+        allow_comments: shareSettings.allow_comments || prev.allow_comments
+      }));
     }
   }, [note?.share_settings]);
 
@@ -848,7 +857,7 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
               headerImageUrl={headerImageUrl}
               headerImageOffset={headerOffset}
               headerImageBlur={headerBlur}
-              headerImageOverlay={headerOverlay}
+              headerImageOverlay={parseFloat(headerOverlay) || 0}
               headerTitleInImage={titleInImage}
               onHeaderChange={handleHeaderChange}
               onHeaderOffsetChange={async (offset) => {
@@ -885,11 +894,11 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
                 const oldOverlay = headerOverlay;
                 try {
                   // 1. Appeler l'API en premier
-                  await v2UnifiedApi.updateNote(noteId, { header_image_overlay: overlay }, userId);
+                  await v2UnifiedApi.updateNote(noteId, { header_image_overlay: overlay.toString() }, userId);
                   
                   // 2. Si l'API réussit, mettre à jour l'état local
-                  setHeaderOverlay(overlay);
-                  updateNote(noteId, { header_image_overlay: overlay });
+                  setHeaderOverlay(overlay.toString());
+                  updateNote(noteId, { header_image_overlay: overlay.toString() });
                 } catch (error) {
                   // 3. En cas d'échec, restaurer l'ancienne valeur
                   logger.error(LogCategory.EDITOR, 'Erreur lors de la sauvegarde de l\'overlay d\'image', error);
@@ -941,7 +950,7 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
               <div className="tiptap-editor-container" ref={editorContainerRef}>
                 <TiptapEditorContent editor={editor} />
                 {/* Table controls */}
-                <TableControls editor={editor} containerRef={editorContainerRef} />
+                <TableControls editor={editor} containerRef={editorContainerRef as React.RefObject<HTMLElement>} />
                 {/* Slash commands menu */}
                 <EditorSlashMenu
                   ref={slashMenuRef}
@@ -1004,8 +1013,6 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
         userId={userId}
       />
       
-      {/* Composant de test pour vérifier le temps réel */}
-      {process.env.NODE_ENV === 'development' && <TestEditorRealtime />}
     </>
   );
 };
