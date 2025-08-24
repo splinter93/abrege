@@ -100,19 +100,36 @@ export class ToolCallPersistenceService {
    */
   private async persistMessage(message: ToolCallMessage | ToolResultMessage): Promise<void> {
     try {
-      // Pour l'instant, on va juste logger le message au lieu de le persister
-      // car fetch() côté serveur avec URL relative ne fonctionne pas
-      logger.info(`[ToolCallPersistence] 📝 Message à persister:`, {
+      // 🔧 CORRECTION: Activer la vraie persistance via l'API interne
+      logger.dev(`[ToolCallPersistence] 🔧 Tentative persistance:`, {
         role: message.role,
         sessionId: this.sessionId,
-        hasContent: !!message.content,
-        contentLength: message.content?.length || 0,
-        toolCallId: (message as any).tool_call_id,
-        toolName: (message as any).name
+        hasToken: !!this.userToken,
+        messageContent: JSON.stringify(message, null, 2)
       });
+
+      // Utiliser l'API interne pour persister le message
+      const { chatSessionService } = await import('../../chatSessionService');
       
-      // TODO: Implémenter la vraie persistance via l'API interne
-      // Pour l'instant, on skip pour éviter de casser le flow
+      // Convertir le message au format ChatMessage attendu par l'API
+      const chatMessage = {
+        role: message.role,
+        content: message.content,
+        timestamp: message.timestamp,
+        // Ajouter les champs spécifiques selon le type de message
+        ...(message.role === 'assistant' && 'tool_calls' in message && { tool_calls: message.tool_calls }),
+        ...(message.role === 'tool' && 'tool_call_id' in message && { tool_call_id: message.tool_call_id }),
+        ...(message.role === 'tool' && 'name' in message && { name: message.name })
+      };
+
+      // Persister via l'API avec le token utilisateur
+      const result = await chatSessionService.addMessageWithToken(this.sessionId, chatMessage, this.userToken);
+      
+      if (result.success) {
+        logger.info(`[ToolCallPersistence] ✅ Message persisté avec succès: ${message.role}`);
+      } else {
+        logger.warn(`[ToolCallPersistence] ⚠️ Échec persistance: ${result.error}`);
+      }
       
     } catch (error) {
       logger.error(`[ToolCallPersistence] ❌ Erreur persistance message:`, error);
