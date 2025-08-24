@@ -84,7 +84,7 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    const { name = 'Nouvelle conversation', history_limit = 10 } = body;
+    const { name = 'Nouvelle conversation', history_limit = 30 } = body;
 
     logger.dev('[Chat Sessions API] 📋 Données reçues:', { name, history_limit });
 
@@ -228,22 +228,18 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Appliquer la limite d'historique à chaque session
-    const sessionsWithLimitedHistory = sessions.map(session => {
-      const historyLimit = session.history_limit || 10;
-      const limitedThread = session.thread ? session.thread.slice(-historyLimit) : [];
-      
-      return {
-        ...session,
-        thread: limitedThread
-      };
-    });
+    // ✅ NOUVEAU: Afficher TOUS les messages pour l'utilisateur
+    // La limitation history_limit est uniquement pour l'API LLM, pas pour l'affichage
+    const sessionsWithFullHistory = sessions.map(session => ({
+      ...session,
+      thread: session.thread || [] // ✅ Thread complet, pas de limitation
+    }));
 
-    logger.dev('[Chat Sessions API] ✅ Sessions récupérées:', sessionsWithLimitedHistory.length);
+    logger.dev('[Chat Sessions API] ✅ Sessions récupérées:', sessionsWithFullHistory.length);
 
     return NextResponse.json({
       success: true,
-      data: sessionsWithLimitedHistory,
+      data: sessionsWithFullHistory,
       message: 'Sessions récupérées avec succès'
     });
 

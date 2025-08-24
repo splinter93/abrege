@@ -188,7 +188,7 @@
 .chat-fullscreen-container.chat-widget-mode .chat-message-bubble h1,
 .chat-fullscreen-container.chat-widget-mode .chat-message-bubble h2,
 .chat-fullscreen-container.chat-widget-mode .chat-message-bubble h3 {
-  font-size: 14px;
+  font-size: 15px;
   margin: 8px 0 4px 0;
 }
 
@@ -202,7 +202,7 @@
 /* Réduire la taille des paragraphes */
 .chat-fullscreen-container.chat-widget-mode .chat-message-bubble p {
   margin: 4px 0;
-  font-size: 13px;
+  font-size: 14px;
   word-wrap: break-word;
   overflow-wrap: break-word;
 }
@@ -227,7 +227,7 @@
 
 .chat-fullscreen-container.chat-widget-mode .chat-message-bubble li {
   margin: 2px 0;
-  font-size: 13px;
+  font-size: 14px;
 }
 
 /* Réduire la taille du code */
@@ -272,7 +272,7 @@
   min-height: 18px;
   max-height: 60px;
   padding: 6px 3px 3px 0;
-  font-size: 13px;
+  font-size: 14px;
 }
 
 .chat-fullscreen-container.chat-widget-mode .chat-input-icons {
@@ -555,7 +555,7 @@
 }
 
 .chat-widget-large .chat-message-bubble {
-  font-size: 14px;
+  font-size: 15px;
   padding: 8px 12px;
   max-width: calc(100% - 30px);
 }
@@ -571,7 +571,7 @@
 }
 
 .chat-widget-large .chat-input {
-  font-size: 14px;
+  font-size: 15px;
   min-height: 40px;
 }
 

@@ -451,10 +451,14 @@ const ChatFullscreenV2: React.FC = () => {
         });
       }
 
-      // Historique limité
-      const limitedHistory = currentSession.thread.slice(-currentSession.history_limit);
+      // ✅ NOUVEAU: Historique complet pour l'utilisateur
+      // La limitation history_limit est uniquement pour l'API LLM, pas pour l'affichage
+      const fullHistory = currentSession.thread;
       
-      await sendMessage(message, currentSession.id, contextWithSessionId, limitedHistory, token);
+      // Pour l'API LLM, on peut limiter à history_limit pour la performance
+      const limitedHistoryForLLM = fullHistory.slice(-(currentSession.history_limit || 30));
+      
+      await sendMessage(message, currentSession.id, contextWithSessionId, limitedHistoryForLLM, token);
 
     } catch (error) {
       logger.error('Erreur lors de l\'appel LLM:', error);
@@ -576,7 +580,7 @@ const ChatFullscreenV2: React.FC = () => {
           <ChatKebabMenu
             isWideMode={wideMode}
             isFullscreen={true}
-            historyLimit={currentSession?.history_limit || 10}
+            historyLimit={currentSession?.history_limit || 30}
             onToggleWideMode={handleWideModeToggle}
             onToggleFullscreen={() => {}}
             onHistoryLimitChange={handleHistoryLimitChange}

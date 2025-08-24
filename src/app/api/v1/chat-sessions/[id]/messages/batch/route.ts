@@ -324,27 +324,29 @@ export async function POST(
     const currentThread = currentSession.thread || [];
     const updatedThread = [...currentThread, ...newMessages];
 
-    // 🔧 APPLIQUER LA LIMITE D'HISTORIQUE avec tri par timestamp
-    const historyLimit = currentSession.history_limit || 10;
-    const sortedAndLimitedThread = updatedThread
-      .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
-      .slice(-historyLimit);
+    // ✅ NOUVEAU: Garder TOUS les messages pour l'utilisateur
+    // La limitation history_limit est uniquement pour l'API LLM, pas pour la persistance
+    const historyLimit = currentSession.history_limit || 30;
+    const sortedFullThread = updatedThread
+      .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+    // ✅ Pas de .slice(-historyLimit) - on garde TOUT !
 
     logger.dev('[Chat Messages Batch API] 💾 Mise à jour du thread...', {
       ancienThread: currentThread.length,
       nouveauxMessages: newMessages.length,
-      threadLimité: sortedAndLimitedThread.length,
+      threadComplet: sortedFullThread.length,
       limite: historyLimit,
       doublonsFiltrés: messages.length - deduplicatedMessages.length,
       operation_id,
-      relance_index
+      relance_index,
+      note: '✅ TOUS les messages conservés (pas de limitation)'
     });
 
-    // 🔧 MISE À JOUR ATOMIQUE: Update du thread et updated_at
+    // 🔧 MISE À JOUR ATOMIQUE: Update du thread COMPLET et updated_at
     const { data: updatedSession, error: updateError } = await userClient
       .from('chat_sessions')
       .update({ 
-        thread: sortedAndLimitedThread,
+        thread: sortedFullThread,
         updated_at: new Date().toISOString()
       })
       .eq('id', sessionId)
@@ -362,7 +364,7 @@ export async function POST(
     logger.dev('[Chat Messages Batch API] ✅ Batch de messages ajouté avec succès:', {
       sessionId,
       messagesAjoutés: newMessages.length,
-      totalThread: sortedAndLimitedThread.length,
+      totalThread: sortedFullThread.length,
       operation_id,
       relance_index
     });

@@ -49,7 +49,7 @@ describe('SessionSyncService', () => {
               timestamp: new Date('2024-01-01T10:00:00Z'),
             },
           ],
-          history_limit: 10,
+          history_limit: 30,
           created_at: '2024-01-01T10:00:00Z',
           updated_at: '2024-01-01T10:00:00Z',
         },
@@ -100,7 +100,7 @@ describe('SessionSyncService', () => {
               timestamp: new Date('2024-01-01T10:00:00Z'),
             },
           ],
-          history_limit: 10,
+          history_limit: 30,
           created_at: '2024-01-01T10:00:00Z',
           updated_at: '2024-01-01T10:00:00Z',
         },
@@ -127,7 +127,7 @@ describe('SessionSyncService', () => {
         id: 'new-session',
         name: 'New Session',
         thread: [],
-        history_limit: 10,
+        history_limit: 30,
         created_at: '2024-01-01T10:00:00Z',
         updated_at: '2024-01-01T10:00:00Z',
       };
@@ -151,7 +151,7 @@ describe('SessionSyncService', () => {
       expect(result.session!.name).toBe('New Session');
       expect(mockChatSessionService.createSession).toHaveBeenCalledWith({
         name: 'New Session',
-        history_limit: 10,
+        history_limit: 30,
       });
     });
 

@@ -224,27 +224,29 @@ export async function POST(
     const currentThread = currentSession.thread || [];
     const updatedThread = [...currentThread, newMessage];
 
-    // 🔧 CORRECTION: Appliquer la limite d'historique AVEC TRI par timestamp
-    const historyLimit = currentSession.history_limit || 10;
+    // ✅ NOUVEAU: Garder TOUS les messages pour l'utilisateur
+    // La limitation history_limit est uniquement pour l'API LLM, pas pour la persistance
+    const historyLimit = currentSession.history_limit || 30;
     
-    // Trier par timestamp PUIS limiter (cohérent avec le frontend)
-    const sortedAndLimitedThread = updatedThread
-      .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
-      .slice(-historyLimit);
+    // Trier par timestamp PUIS garder TOUS les messages (pas de limitation)
+    const sortedFullThread = updatedThread
+      .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+    // ✅ Pas de .slice(-historyLimit) - on garde TOUT !
 
     logger.dev('[Chat Messages API] 💾 Mise à jour du thread...', {
       ancienThread: currentThread.length,
       nouveauThread: updatedThread.length,
-      threadLimité: sortedAndLimitedThread.length,
+      threadComplet: sortedFullThread.length,
       limite: historyLimit,
-      trié: '✅ Par timestamp'
+      trié: '✅ Par timestamp',
+      note: '✅ TOUS les messages conservés (pas de limitation)'
     });
 
-    // Mettre à jour la session avec le nouveau thread trié et limité
+    // Mettre à jour la session avec le nouveau thread trié et COMPLET
     const { data: updatedSession, error: updateError } = await userClient
       .from('chat_sessions')
       .update({ 
-        thread: sortedAndLimitedThread,
+        thread: sortedFullThread,
         updated_at: new Date().toISOString()
       })
       .eq('id', sessionId)

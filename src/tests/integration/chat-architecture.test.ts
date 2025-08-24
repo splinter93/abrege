@@ -14,7 +14,7 @@ vi.mock('@/store/useChatStore', () => ({
       id: 'session-1',
       name: 'Test Session',
       thread: [],
-      history_limit: 10,
+      history_limit: 30,
       created_at: '2024-01-01T10:00:00Z',
       updated_at: '2024-01-01T10:00:00Z',
     },
@@ -37,7 +37,7 @@ describe('Chat Architecture Integration', () => {
           id: 'session-1',
           name: 'Session 1',
           thread: [],
-          history_limit: 10,
+          history_limit: 30,
           created_at: '2024-01-01T10:00:00Z',
           updated_at: '2024-01-01T10:00:00Z',
         },
@@ -50,14 +50,14 @@ describe('Chat Architecture Integration', () => {
 
       mockSessionSyncService.createSessionAndSync.mockResolvedValue({
         success: true,
-        session: {
-          id: 'new-session',
-          name: 'New Session',
-          thread: [],
-          history_limit: 10,
-          created_at: '2024-01-01T11:00:00Z',
-          updated_at: '2024-01-01T11:00:00Z',
-        },
+                  session: {
+            id: 'new-session',
+            name: 'New Session',
+            thread: [],
+            history_limit: 30,
+            created_at: '2024-01-01T11:00:00Z',
+            updated_at: '2024-01-01T11:00:00Z',
+          },
       });
 
       mockSessionSyncService.addMessageAndSync.mockResolvedValue({
@@ -154,7 +154,7 @@ describe('Chat Architecture Integration', () => {
               timestamp: new Date('2024-01-01T10:00:00Z'),
             },
           ],
-          history_limit: 10,
+          history_limit: 30,
           created_at: '2024-01-01T10:00:00Z',
           updated_at: '2024-01-01T10:00:00Z',
         },
@@ -219,14 +219,14 @@ describe('Chat Architecture Integration', () => {
       // Set sessions
       act(() => {
         result.current.setSessions([
-          {
-            id: '1',
-            name: 'Session 1',
-            thread: [],
-            history_limit: 10,
-            created_at: '2024-01-01T10:00:00Z',
-            updated_at: '2024-01-01T10:00:00Z',
-          },
+                      {
+              id: '1',
+              name: 'Session 1',
+              thread: [],
+              history_limit: 30,
+              created_at: '2024-01-01T10:00:00Z',
+              updated_at: '2024-01-01T10:00:00Z',
+            },
         ]);
       });
 
@@ -239,7 +239,7 @@ describe('Chat Architecture Integration', () => {
           id: '1',
           name: 'Session 1',
           thread: [],
-          history_limit: 10,
+          history_limit: 30,
           created_at: '2024-01-01T10:00:00Z',
           updated_at: '2024-01-01T10:00:00Z',
         });

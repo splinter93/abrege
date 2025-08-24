@@ -392,10 +392,14 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
         });
       }
 
-      // Historique limité
-      const limitedHistory = currentSession.thread.slice(-(currentSession.history_limit || 10));
+      // ✅ NOUVEAU: Historique complet pour l'utilisateur
+      // La limitation history_limit est uniquement pour l'API LLM, pas pour l'affichage
+      const fullHistory = currentSession.thread;
       
-      await sendMessage(content.trim(), currentSession.id, contextWithSessionId, limitedHistory, token);
+      // Pour l'API LLM, on peut limiter à history_limit pour la performance
+      const limitedHistoryForLLM = fullHistory.slice(-(currentSession.history_limit || 30));
+      
+      await sendMessage(content.trim(), currentSession.id, contextWithSessionId, limitedHistoryForLLM, token);
 
     } catch (error) {
       logger.error('Erreur lors de l\'appel LLM:', error);

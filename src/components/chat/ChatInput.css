@@ -104,7 +104,7 @@
   border: none;
   outline: none;
   color: var(--chat-text-primary);
-  font-size: 14px;
+  font-size: 15px;
   line-height: var(--chat-line-height-normal);
   resize: none;
   padding: var(--chat-spacing-sm) var(--chat-spacing-sm) 4px 0.125rem;
@@ -122,7 +122,7 @@
   color: rgba(142, 142, 160, 0.7);
   font-weight: 400;
   font-family: var(--chat-font-family-inter);
-  font-size: 14px;
+  font-size: 15px;
 }
 
 /* ========================================

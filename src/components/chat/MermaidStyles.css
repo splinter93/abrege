@@ -37,7 +37,7 @@
   align-items: center;
   gap: 12px;
   color: #9ca3af;
-  font-size: 14px;
+  font-size: 15px;
 }
 
 .mermaid-spinner {
@@ -151,7 +151,7 @@
   color: #ffffff;
   border: none;
   border-radius: 6px;
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -173,7 +173,7 @@
 .mermaid-error-details summary {
   cursor: pointer;
   color: #667eea;
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 500;
   margin-bottom: 12px;
   padding: 8px 0;
@@ -314,7 +314,7 @@
   }
   
   .mermaid-error-header {
-    font-size: 14px;
+    font-size: 15px;
   }
   
   .mermaid-error-message {

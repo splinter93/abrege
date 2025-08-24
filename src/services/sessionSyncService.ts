@@ -43,7 +43,7 @@ export class SessionSyncService {
         id: session.id,
         name: session.name,
         thread: session.thread || [],
-        history_limit: session.history_limit || 10,
+        history_limit: session.history_limit || 30,
         created_at: session.created_at,
         updated_at: session.updated_at
       }));
@@ -81,7 +81,7 @@ export class SessionSyncService {
         id: response.data.id,
         name: response.data.name,
         thread: response.data.thread || [],
-        history_limit: response.data.history_limit || 10,
+        history_limit: response.data.history_limit || 30,
         created_at: response.data.created_at,
         updated_at: response.data.updated_at
       };

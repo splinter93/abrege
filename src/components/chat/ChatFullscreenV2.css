@@ -11,7 +11,7 @@
   color: white;
   border: none;
   border-radius: 8px;
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -33,7 +33,7 @@
 }
 
 .chat-stop-btn span {
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 500;
 }
 

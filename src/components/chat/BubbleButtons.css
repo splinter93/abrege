@@ -158,7 +158,7 @@
   color: var(--chat-text-primary, #111827);
   cursor: pointer;
   transition: all 0.15s ease;
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 500;
   text-align: left;
   position: relative;
