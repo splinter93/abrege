@@ -38,18 +38,18 @@ export default function TestPollingSystem() {
     try {
       // Test 1: Polling des notes
       addLog('📝 Test 1: Polling des notes...');
-      const notesResult = await triggerUnifiedRealtimePolling('notes', 'CREATE');
-      addLog(`✅ Notes: ${notesResult.success ? 'Succès' : 'Échec'} - ${notesResult.dataCount || 0} éléments`);
+      await triggerUnifiedRealtimePolling('notes', 'CREATE');
+      addLog('✅ Notes: Polling déclenché');
       
       // Test 2: Polling des dossiers
       addLog('📁 Test 2: Polling des dossiers...');
-      const foldersResult = await triggerUnifiedRealtimePolling('folders', 'CREATE');
-      addLog(`✅ Dossiers: ${foldersResult.success ? 'Succès' : 'Échec'} - ${foldersResult.dataCount || 0} éléments`);
+      await triggerUnifiedRealtimePolling('folders', 'CREATE');
+      addLog('✅ Dossiers: Polling déclenché');
       
       // Test 3: Polling des classeurs
       addLog('📚 Test 3: Polling des classeurs...');
-      const classeursResult = await triggerUnifiedRealtimePolling('classeurs', 'CREATE');
-      addLog(`✅ Classeurs: ${classeursResult.success ? 'Succès' : 'Échec'} - ${classeursResult.dataCount || 0} éléments`);
+      await triggerUnifiedRealtimePolling('classeurs', 'CREATE');
+      addLog('✅ Classeurs: Polling déclenché');
       
       // Test 4: Polling simultané
       addLog('⚡ Test 4: Polling simultané...');
@@ -59,11 +59,8 @@ export default function TestPollingSystem() {
         triggerUnifiedRealtimePolling('classeurs', 'UPDATE')
       ];
       
-      const results = await Promise.all(promises);
-      results.forEach((result, index) => {
-        const types = ['notes', 'dossiers', 'classeurs'];
-        addLog(`✅ ${types[index]} simultané: ${result.success ? 'Succès' : 'Échec'}`);
-      });
+      await Promise.all(promises);
+      addLog('✅ Polling simultané terminé');
       
       addLog('🎉 Test complet terminé avec succès !');
       
@@ -74,27 +71,82 @@ export default function TestPollingSystem() {
     }
   };
 
-  const testQueuePriority = async () => {
-    addLog('🎯 Test de priorité de la queue...');
+  const testDeleteRealtime = async () => {
+    if (isRunning) return;
     
-    // Ajouter des opérations dans un ordre spécifique
-    const operations = [
-      { entityType: 'notes', operation: 'CREATE', priority: 'Basse' },
-      { entityType: 'folders', operation: 'UPDATE', priority: 'Moyenne' },
-      { entityType: 'classeurs', operation: 'DELETE', priority: 'Haute' }
-    ];
+    setIsRunning(true);
+    addLog('🧪 Test suppression temps réel...');
     
-    for (const op of operations) {
-      addLog(`📋 Ajout: ${op.entityType} ${op.operation} (${op.priority})`);
-      triggerUnifiedRealtimePolling({
-        entityType: op.entityType as any,
-        operation: op.operation as any,
-        entityId: `test-${op.entityType}`,
-        delay: 100
+    try {
+      // Créer d'abord une note de test
+      const testNote = {
+        source_title: `Test Delete ${Date.now()}`,
+        notebook_id: Object.keys(classeurs)[0] || 'test',
+        markdown_content: 'Note de test pour suppression'
+      };
+      
+      addLog('📝 Création note de test...');
+      const createResult = await fetch('/api/v2/note/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(testNote)
       });
+      
+      if (!createResult.ok) {
+        addLog('❌ Erreur création note de test');
+        setIsRunning(false);
+        return;
+      }
+      
+      const createdNote = await createResult.json();
+      addLog(`✅ Note créée: ${createdNote.note.id}`);
+      
+      // Attendre que la note apparaisse dans le store
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      const noteId = createdNote.note.id;
+      const startCount = Object.keys(notes).length;
+      addLog(`📊 Notes avant suppression: ${startCount}`);
+      
+      // Supprimer la note
+      addLog('🗑️ Suppression de la note...');
+      const deleteResult = await fetch(`/api/v2/note/${noteId}/delete`, {
+        method: 'DELETE'
+      });
+      
+      if (!deleteResult.ok) {
+        addLog('❌ Erreur suppression note');
+        setIsRunning(false);
+        return;
+      }
+      
+      addLog('✅ Note supprimée via API');
+      
+      // Vérifier que la suppression est visible en temps réel
+      let checks = 0;
+      const maxChecks = 10;
+      const checkInterval = setInterval(() => {
+        checks++;
+        const currentCount = Object.keys(notes).length;
+        const noteStillExists = notes[noteId];
+        
+        addLog(`🔍 Vérification ${checks}/${maxChecks} - Notes: ${currentCount}, Note existe: ${noteStillExists ? 'OUI' : 'NON'}`);
+        
+        if (!noteStillExists && currentCount < startCount) {
+          addLog('🎯 SUPPRESSION DÉTECTÉE EN TEMPS RÉEL !');
+          clearInterval(checkInterval);
+          setIsRunning(false);
+        } else if (checks >= maxChecks) {
+          addLog('⏰ Timeout - Suppression non détectée');
+          clearInterval(checkInterval);
+          setIsRunning(false);
+        }
+      }, 500);
+      
+    } catch (error) {
+      addLog(`❌ Erreur test suppression: ${error}`);
+      setIsRunning(false);
     }
-    
-    addLog('⏳ Attente du traitement de la queue...');
   };
 
   const clearLogs = () => {
@@ -122,11 +174,11 @@ export default function TestPollingSystem() {
         </button>
         
         <button
-          onClick={testQueuePriority}
+          onClick={testDeleteRealtime}
           disabled={isRunning}
-          className="bg-blue-500 text-white px-4 py-2 rounded disabled:opacity-50 hover:bg-blue-600"
+          className="bg-purple-500 text-white px-4 py-2 rounded disabled:opacity-50 hover:bg-purple-600"
         >
-          🎯 Test Priorité Queue
+          🧪 Test Suppression Temps Réel
         </button>
         
         <button
@@ -153,22 +205,22 @@ export default function TestPollingSystem() {
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
                 <span>Status:</span>
-                <span className={`font-mono ${status.isPolling ? 'text-green-600' : 'text-gray-600'}`}>
-                  {status.isPolling ? '🟢 Polling actif' : '⚪ En attente'}
+                <span className={`font-mono ${status.isConnected ? 'text-green-600' : 'text-gray-600'}`}>
+                  {status.isConnected ? '🟢 Connecté' : '⚪ Déconnecté'}
                 </span>
               </div>
               
               <div className="flex justify-between">
-                <span>Queue:</span>
+                <span>Provider:</span>
                 <span className="font-mono bg-gray-100 px-2 py-1 rounded">
-                  {status.queueLength} éléments
+                  {status.provider}
                 </span>
               </div>
               
               <div className="flex justify-between">
-                <span>Résultats:</span>
+                <span>Dernier événement:</span>
                 <span className="font-mono bg-gray-100 px-2 py-1 rounded">
-                  {status.lastResults.size} entités
+                  {status.lastEvent || 'Aucun'}
                 </span>
               </div>
             </div>
@@ -203,33 +255,6 @@ export default function TestPollingSystem() {
         </div>
       </div>
 
-      {/* Derniers résultats de polling */}
-      {status && status.lastResults.size > 0 && (
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
-          <h3 className="font-semibold text-yellow-800 mb-3">📈 Derniers Résultats de Polling</h3>
-          <div className="grid grid-cols-3 gap-4">
-            {Array.from(status.lastResults.entries()).map(([key, result]: [string, any]) => (
-              <div key={key} className="bg-white p-3 rounded border">
-                <div className="font-medium capitalize text-sm">{key}</div>
-                <div className={`text-lg ${result.success ? 'text-green-600' : 'text-red-600'}`}>
-                  {result.success ? '✅' : '❌'}
-                </div>
-                {result.dataCount !== undefined && (
-                  <div className="text-xs text-gray-600">
-                    {result.dataCount} éléments
-                  </div>
-                )}
-                {result.error && (
-                  <div className="text-xs text-red-600 truncate" title={result.error}>
-                    {result.error}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
       {/* Logs de test */}
       <div className="bg-white border rounded-lg p-4">
         <div className="flex justify-between items-center mb-3">
@@ -254,4 +279,4 @@ export default function TestPollingSystem() {
       </div>
     </div>
   );
-} 
+}

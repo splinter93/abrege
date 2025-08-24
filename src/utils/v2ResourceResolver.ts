@@ -23,13 +23,27 @@ export class V2ResourceResolver {
     
     try {
       // ✅ LOGGING DÉTAILLÉ pour debug
+      console.log('🔍 [V2ResourceResolver] Tentative de résolution:', {
+        ref,
+        type,
+        userId,
+        hasUserToken: !!userToken,
+        context
+      });
+      
       logApi.info(`🔍 Tentative de résolution: ${ref} (type: ${type}, userId: ${userId})`, context);
       
       // Utiliser directement le service role key au lieu de ResourceResolver
       const resolvedId = await this.resolveRefDirect(ref, type, userId);
+      console.log('🔍 [V2ResourceResolver] Résultat résolution directe:', {
+        resolvedId,
+        hasResolvedId: !!resolvedId
+      });
       
       if (!resolvedId) {
-        logApi.error(`❌ Référence non trouvée: ${ref} (type: ${type})`, context);
+        const errorMsg = `❌ Référence non trouvée: ${ref} (type: ${type})`;
+        console.error(errorMsg, { ref, type, userId, context });
+        logApi.error(errorMsg, context);
         return {
           success: false,
           error: `${type === 'note' ? 'Note' : type === 'folder' ? 'Dossier' : 'Classeur'} non trouvé`,
@@ -37,11 +51,19 @@ export class V2ResourceResolver {
         };
       }
 
+      console.log('✅ [V2ResourceResolver] Référence résolue avec succès:', {
+        ref,
+        resolvedId,
+        type
+      });
+      
       logApi.info(`✅ Référence résolue: ${ref} → ${resolvedId}`, context);
       return { success: true, id: resolvedId };
 
     } catch (error) {
-      logApi.error(`❌ Erreur résolution: ${error}`, context);
+      const errorMsg = `❌ Erreur résolution: ${error}`;
+      console.error(errorMsg, { error, ref, type, userId, context });
+      logApi.error(errorMsg, context);
       return {
         success: false,
         error: 'Erreur lors de la résolution de la référence',
@@ -60,35 +82,66 @@ export class V2ResourceResolver {
   ): Promise<string | null> {
     const tableName = this.getTableName(type);
     
-    // Si c'est un UUID, vérifier qu'il existe et appartient à l'utilisateur
-    if (this.isUUID(ref)) {
+    console.log('🔍 [V2ResourceResolver] Résolution directe:', {
+      ref,
+      type,
+      tableName,
+      userId
+    });
+    
+    // ✅ 1. Nettoyer l'ID (remplacer les tirets longs par des tirets courts)
+    const cleanRef = ref.replace(/‑/g, '-'); // Remplace les em-dash (‑) par des hyphens (-)
+    console.log('🧹 [V2ResourceResolver] Référence nettoyée:', {
+      original: ref,
+      cleaned: cleanRef,
+      hasEmDash: ref.includes('‑'),
+      hasHyphen: ref.includes('-')
+    });
+    
+    // ✅ 2. Si c'est un UUID, vérifier qu'il existe et appartient à l'utilisateur
+    if (this.isUUID(cleanRef)) {
+      console.log('🔍 [V2ResourceResolver] Référence est un UUID, validation...');
+      
       try {
         const { data } = await supabase
           .from(tableName)
           .select('id')
-          .eq('id', ref)
+          .eq('id', cleanRef)
           .eq('user_id', userId)
           .single();
         
+        console.log('✅ [V2ResourceResolver] UUID validé:', {
+          found: !!data,
+          id: data?.id || null
+        });
+        
         return data?.id || null;
       } catch (error) {
-        console.error(`[V2ResourceResolver] Erreur validation UUID ${ref}:`, error);
+        console.error(`❌ [V2ResourceResolver] Erreur validation UUID ${cleanRef}:`, error);
         return null;
       }
     }
     
-    // Sinon, chercher par slug
+    // ✅ 3. Sinon, chercher par slug (utiliser la référence originale pour le slug)
+    console.log('🔍 [V2ResourceResolver] Référence n\'est pas un UUID, recherche par slug...');
+    
     try {
       const { data } = await supabase
         .from(tableName)
         .select('id')
-        .eq('slug', ref)
+        .eq('slug', ref) // Utiliser ref original pour le slug
         .eq('user_id', userId)
         .single();
       
+      console.log('✅ [V2ResourceResolver] Slug résolu:', {
+        slug: ref,
+        found: !!data,
+        id: data?.id || null
+      });
+      
       return data?.id || null;
     } catch (error) {
-      console.error(`[V2ResourceResolver] Erreur résolution slug ${ref}:`, error);
+      console.error(`❌ [V2ResourceResolver] Erreur résolution slug ${ref}:`, error);
       return null;
     }
   }
@@ -104,11 +157,14 @@ export class V2ResourceResolver {
   ): Promise<{ success: true; data: any } | { success: false; error: string; status: number }> {
     
     try {
+      // ✅ 1. Nettoyer l'ID (remplacer les tirets longs par des tirets courts)
+      const cleanId = id.replace(/‑/g, '-'); // Remplace les em-dash (‑) par des hyphens (-)
+      
       const tableName = this.getTableName(type);
       const { data, error } = await supabase
         .from(tableName)
         .select('id, user_id')
-        .eq('id', id)
+        .eq('id', cleanId)
         .single();
 
       if (error || !data) {

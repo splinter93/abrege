@@ -22,7 +22,7 @@ export interface UpdateNoteData {
   header_image?: string | null;
   header_image_offset?: number;
   header_image_blur?: number;
-  header_image_overlay?: number;
+  header_image_overlay?: string; // 🔧 CORRECTION: Changer de number à string pour correspondre au type Note
   header_title_in_image?: boolean;
   wide_mode?: boolean;
   a4_mode?: boolean;
@@ -67,8 +67,34 @@ export interface UpdateClasseurData {
  */
 export class V2UnifiedApi {
   private static instance: V2UnifiedApi;
+  private baseUrl: string;
 
-  private constructor() {}
+  private constructor() {
+    // 🔧 CORRECTION : Construire l'URL de base pour les appels fetch
+    if (typeof window !== 'undefined') {
+      // Côté client : utiliser l'origin de la page
+      this.baseUrl = window.location.origin;
+    } else {
+      // Côté serveur : utiliser les variables d'environnement ou un fallback
+      if (process.env.NEXT_PUBLIC_APP_URL) {
+        this.baseUrl = process.env.NEXT_PUBLIC_APP_URL;
+      } else if (process.env.VERCEL_URL) {
+        this.baseUrl = `https://${process.env.VERCEL_URL}`;
+      } else {
+        this.baseUrl = 'http://localhost:3000'; // Fallback pour le développement local
+      }
+    }
+    
+    console.log('🔧 [V2UnifiedApi] Base URL configurée:', {
+      baseUrl: this.baseUrl,
+      isClient: typeof window !== 'undefined',
+      env: {
+        NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
+        VERCEL_URL: process.env.VERCEL_URL,
+        NODE_ENV: process.env.NODE_ENV
+      }
+    });
+  }
 
   static getInstance(): V2UnifiedApi {
     if (!V2UnifiedApi.instance) {
@@ -78,41 +104,98 @@ export class V2UnifiedApi {
   }
 
   /**
-   * Récupérer les headers d'authentification
+   * Construire une URL absolue à partir d'un chemin relatif
+   * @param path Le chemin relatif (ex: /api/v2/note/create)
+   * @returns L'URL absolue
    */
-  private async getAuthHeaders(): Promise<HeadersInit> {
-    try {
-      // Utiliser le client Supabase côté client
-      const { supabase } = await import('@/supabaseClient');
-      const { data: { session } } = await supabase.auth.getSession();
-      const headers: HeadersInit = { 
-        'Content-Type': 'application/json',
-        'X-Client-Type': 'V2UnifiedApi'
-      };
-      if (session?.access_token) {
-        headers['Authorization'] = `Bearer ${session.access_token}`;
-      }
-      return headers;
-    } catch {
-      return { 
-        'Content-Type': 'application/json',
-        'X-Client-Type': 'V2UnifiedApi'
-      };
-    }
+  private buildUrl(path: string): string {
+    const fullUrl = `${this.baseUrl}${path}`;
+    console.log('🔗 [V2UnifiedApi] buildUrl:', { path, baseUrl: this.baseUrl, fullUrl });
+    return fullUrl;
   }
 
   /**
-   * 🔧 HELPER: Déclencher le polling intelligent pour une entité
+   * Nettoyer et valider un ID (remplacer les tirets longs par des tirets courts)
+   * @param id L'ID à nettoyer et valider
+   * @param resourceType Le type de ressource (pour les messages d'erreur)
+   * @returns L'ID nettoyé
    */
-  private async triggerPolling(
-    entityType: 'notes' | 'folders' | 'classeurs',
-    operation: 'CREATE' | 'UPDATE' | 'DELETE' | 'MOVE' | 'RENAME'
-  ) {
+  private cleanAndValidateId(id: string, resourceType: string): string {
+    // ✅ 1. Nettoyer l'ID (remplacer les tirets longs par des tirets courts)
+    const cleanId = id.replace(/‑/g, '-'); // Remplace les em-dash (‑) par des hyphens (-)
+    
+    // ✅ 2. Valider que c'est un UUID valide
+    if (!this.isUUID(cleanId)) {
+      throw new Error(`ID de ${resourceType} invalide: ${id}`);
+    }
+    
+    return cleanId;
+  }
+
+  /**
+   * Vérifie si un ID est un UUID valide.
+   * @param id L'ID à vérifier.
+   * @returns true si c'est un UUID, false sinon.
+   */
+  private isUUID(id: string): boolean {
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+  }
+
+  /**
+   * Récupère les headers d'authentification
+   */
+  private async getAuthHeaders(): Promise<HeadersInit> {
     try {
-      await triggerUnifiedRealtimePolling(entityType, operation);
+      console.log('🔐 [V2UnifiedApi] Début récupération headers...');
+      
+      const { supabase } = await import('@/supabaseClient');
+      console.log('✅ [V2UnifiedApi] Supabase importé');
+      
+      const { data: { session } } = await supabase.auth.getSession();
+      console.log('📋 [V2UnifiedApi] Session récupérée:', {
+        hasSession: !!session,
+        hasAccessToken: !!session?.access_token,
+        tokenLength: session?.access_token?.length || 0,
+        tokenStart: session?.access_token ? session.access_token.substring(0, 20) + '...' : 'N/A'
+      });
+      
+      const headers: HeadersInit = { 
+        'Content-Type': 'application/json',
+        'X-Client-Type': 'v2_unified_api'
+      };
+      
+      // Ajouter le token d'authentification si disponible
+      if (session?.access_token) {
+        headers['Authorization'] = `Bearer ${session.access_token}`;
+        console.log('✅ [V2UnifiedApi] Token ajouté aux headers');
+      } else {
+        console.warn('⚠️ [V2UnifiedApi] Pas de token disponible - authentification échouera probablement');
+      }
+      
+      console.log('🔐 [V2UnifiedApi] Headers finaux:', {
+        hasContentType: !!headers['Content-Type'],
+        hasClientType: !!headers['X-Client-Type'],
+        hasAuth: !!headers['Authorization'],
+        authHeader: headers['Authorization'] ? 'Bearer ***' : 'ABSENT'
+      });
+      
+      return headers;
+      
     } catch (error) {
-      // Ignorer les erreurs de polling pour ne pas impacter l'opération principale
-      logger.dev(`[V2UnifiedApi] Polling ${entityType}.${operation} ignoré:`, error);
+      console.error('❌ [V2UnifiedApi] Erreur récupération headers:', {
+        error,
+        message: error instanceof Error ? error.message : 'Erreur inconnue',
+        stack: error instanceof Error ? error.stack : 'Pas de stack trace'
+      });
+      
+      // En cas d'erreur, retourner les headers de base
+      const fallbackHeaders = { 
+        'Content-Type': 'application/json',
+        'X-Client-Type': 'v2_unified_api'
+      };
+      
+      console.log('🔄 [V2UnifiedApi] Utilisation headers de fallback:', fallbackHeaders);
+      return fallbackHeaders;
     }
   }
 
@@ -125,7 +208,7 @@ export class V2UnifiedApi {
     try {
       // 🚀 Appel vers l'endpoint API V2
       const headers = await this.getAuthHeaders();
-      const response = await fetch('/api/v2/note/create', {
+      const response = await fetch(this.buildUrl('/api/v2/note/create'), {
         method: 'POST',
         headers,
         body: JSON.stringify(noteData)
@@ -142,7 +225,7 @@ export class V2UnifiedApi {
       }
 
       // 🚀 Déclencher le polling intelligent pour synchronisation
-      await this.triggerPolling('notes', 'CREATE');
+      await triggerUnifiedRealtimePolling('notes', 'CREATE');
 
       const duration = Date.now() - startTime;
       return {
@@ -168,20 +251,31 @@ export class V2UnifiedApi {
     const startTime = Date.now();
     
     try {
-      // 🚀 1. Mise à jour optimiste immédiate
+      // ✅ 1. Nettoyer et valider l'ID
+      const cleanNoteId = this.cleanAndValidateId(noteId, 'note');
+      
+      // 🚀 2. Mise à jour optimiste immédiate
       const store = useFileSystemStore.getState();
-      const currentNote = store.notes[noteId];
+      const currentNote = store.notes[cleanNoteId];
       
       if (!currentNote) {
         throw new Error('Note non trouvée');
       }
 
-      const updatedNote = { ...currentNote, ...updateData, updated_at: new Date().toISOString() };
-      store.updateNote(noteId, updatedNote);
+      // 🔧 CORRECTION: Nettoyer les données avant mise à jour
+      const sanitizedUpdateData = {
+        ...updateData,
+        header_image: updateData.header_image === null ? undefined : updateData.header_image,
+        // S'assurer que header_image_overlay est une string
+        header_image_overlay: updateData.header_image_overlay !== undefined ? String(updateData.header_image_overlay) : undefined
+      };
+      
+      const updatedNote = { ...currentNote, ...sanitizedUpdateData, updated_at: new Date().toISOString() };
+      store.updateNote(cleanNoteId, updatedNote);
 
-      // 🚀 2. Appel vers l'endpoint API V2
+      // 🚀 4. Appel vers l'endpoint API V2
       const headers = await this.getAuthHeaders();
-      const response = await fetch(`/api/v2/note/${noteId}/update`, {
+      const response = await fetch(this.buildUrl(`/api/v2/note/${cleanNoteId}/update`), {
         method: 'PUT',
         headers,
         body: JSON.stringify(updateData)
@@ -198,7 +292,7 @@ export class V2UnifiedApi {
       }
 
       // 🚀 3. Déclencher le polling intelligent immédiatement
-      await this.triggerPolling('notes', 'UPDATE');
+      await triggerUnifiedRealtimePolling('notes', 'UPDATE');
 
       const duration = Date.now() - startTime;
       return {
@@ -225,58 +319,111 @@ export class V2UnifiedApi {
   }
 
   /**
-   * Supprimer une note avec mise à jour optimiste
+   * Supprimer une note
    */
-  async deleteNote(noteId: string) {
+  async deleteNote(noteId: string, externalToken?: string) {
     const startTime = Date.now();
-    let noteToDelete: Note | null = null;
-    
+
+    console.log('🚀 [V2UnifiedApi] Début suppression note:', { noteId, hasExternalToken: !!externalToken });
+
     try {
-      // 🚀 1. Mise à jour optimiste immédiate
-      const store = useFileSystemStore.getState();
-      noteToDelete = store.notes[noteId];
-      
-      if (!noteToDelete) {
-        throw new Error('Note non trouvée');
+      // ✅ 1. Nettoyer et valider l'ID (supporte UUID ET slug)
+      console.log('🧹 [V2UnifiedApi] Nettoyage et validation ID...');
+
+      let cleanNoteId = noteId;
+
+      // 🔧 CORRECTION : Nettoyer le ref (enlever les slashes au début/fin)
+      cleanNoteId = cleanNoteId.replace(/^\/+|\/+$/g, '');
+      console.log('🧹 [V2UnifiedApi] Ref nettoyé:', { original: noteId, cleaned: cleanNoteId });
+
+      // Si c'est un UUID, le nettoyer et valider
+      if (this.isUUID(cleanNoteId)) {
+        cleanNoteId = this.cleanAndValidateId(cleanNoteId, 'note');
+        console.log('✅ [V2UnifiedApi] UUID nettoyé et validé:', { original: noteId, cleaned: cleanNoteId });
+      } else {
+        // Si c'est un slug, l'utiliser tel quel
+        console.log('✅ [V2UnifiedApi] Slug détecté, utilisation directe:', cleanNoteId);
       }
 
-      // Sauvegarder la note pour restauration en cas d'erreur
-      store.removeNote(noteId);
-
-      // 🚀 2. Appel vers l'endpoint API V2
-      const headers = await this.getAuthHeaders();
-      const response = await fetch(`/api/v2/note/${noteId}/delete`, {
+      // ✅ 2. Appel vers l'endpoint API V2 DIRECT (pas de modification du store)
+      console.log('📡 [V2UnifiedApi] Appel endpoint DELETE...');
+      
+      let headers: HeadersInit;
+      if (externalToken) {
+        // 🔧 CORRECTION : Utiliser le token externe fourni
+        console.log('🔐 [V2UnifiedApi] Utilisation token externe');
+        headers = {
+          'Content-Type': 'application/json',
+          'X-Client-Type': 'v2_unified_api',
+          'Authorization': `Bearer ${externalToken}`
+        };
+      } else {
+        // Fallback vers getAuthHeaders si pas de token externe
+        console.log('🔐 [V2UnifiedApi] Fallback vers getAuthHeaders');
+        headers = await this.getAuthHeaders();
+      }
+      
+      console.log('🔐 [V2UnifiedApi] Headers préparés:', {
+        hasContentType: !!headers['Content-Type'],
+        hasAuth: !!headers['Authorization'],
+        hasClientType: !!headers['X-Client-Type']
+      });
+      
+      const deleteUrl = this.buildUrl(`/api/v2/note/${cleanNoteId}/delete`);
+      console.log('🔗 [V2UnifiedApi] URL construite:', deleteUrl);
+      
+      const response = await fetch(deleteUrl, {
         method: 'DELETE',
         headers
       });
 
+      console.log('📥 [V2UnifiedApi] Réponse reçue:', {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok
+      });
+
       if (!response.ok) {
+        const errorText = await response.text();
+        console.error('❌ [V2UnifiedApi] Erreur HTTP:', {
+          status: response.status,
+          statusText: response.statusText,
+          errorText,
+          containsFailedToParse: errorText.includes('Failed to parse'),
+          containsURL: errorText.includes('URL')
+        });
+        
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
 
       const result = await response.json();
+      console.log('✅ [V2UnifiedApi] Réponse JSON:', result);
 
       if (!result.success) {
         throw new Error(result.error || 'Erreur lors de la suppression de la note');
       }
 
-      // 🚀 3. Déclencher le polling intelligent immédiatement
-      await this.triggerPolling('notes', 'DELETE');
+      // ✅ 2. Pas de polling manuel (le realtime naturel s'en charge)
+      // ✅ 3. Pas de restauration complexe (pas de modification du store)
 
       const duration = Date.now() - startTime;
+      console.log('✅ [V2UnifiedApi] Suppression réussie en', duration, 'ms');
+      
       return {
         success: true,
         duration
       };
 
     } catch (error) {
-      // En cas d'erreur, restaurer la note
-      const store = useFileSystemStore.getState();
-      if (noteToDelete) {
-        store.addNote(noteToDelete);
-      }
-
       const duration = Date.now() - startTime;
+      console.error('💥 [V2UnifiedApi] Erreur complète:', {
+        error,
+        message: error instanceof Error ? error.message : 'Erreur inconnue',
+        stack: error instanceof Error ? error.stack : 'Pas de stack trace',
+        noteId,
+        duration
+      });
+      
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Erreur inconnue',
@@ -294,7 +441,7 @@ export class V2UnifiedApi {
     try {
       // 🚀 Appel vers l'endpoint API V2
       const headers = await this.getAuthHeaders();
-      const response = await fetch('/api/v2/folder/create', {
+      const response = await fetch(this.buildUrl('/api/v2/folder/create'), {
         method: 'POST',
         headers,
         body: JSON.stringify(folderData)
@@ -311,7 +458,7 @@ export class V2UnifiedApi {
       }
 
       // 🚀 Déclencher le polling intelligent pour synchronisation
-      await this.triggerPolling('folders', 'CREATE');
+      await triggerUnifiedRealtimePolling('folders', 'CREATE');
 
       const duration = Date.now() - startTime;
       return {
@@ -340,9 +487,12 @@ export class V2UnifiedApi {
     const startTime = Date.now();
     
     try {
-      // 🚀 Appel vers l'endpoint API V2
+      // ✅ 1. Nettoyer et valider l'ID
+      const cleanFolderId = this.cleanAndValidateId(folderId, 'folder');
+      
+      // 🚀 2. Appel vers l'endpoint API V2
       const headers = await this.getAuthHeaders();
-      const response = await fetch(`/api/v2/folder/${folderId}/update`, {
+      const response = await fetch(this.buildUrl(`/api/v2/folder/${cleanFolderId}/update`), {
         method: 'PUT',
         headers,
         body: JSON.stringify(updateData)
@@ -361,10 +511,10 @@ export class V2UnifiedApi {
 
       // 🚀 Mise à jour directe de Zustand (instantanée)
       const store = useFileSystemStore.getState();
-      store.updateFolder(folderId, result.folder);
+      store.updateFolder(cleanFolderId, result.folder);
       
       // 🚀 Déclencher le polling intelligent immédiatement
-      await this.triggerPolling('folders', 'UPDATE');
+      await triggerUnifiedRealtimePolling('folders', 'UPDATE');
       
       const totalTime = Date.now() - startTime;
       if (process.env.NODE_ENV === 'development') {
@@ -379,7 +529,7 @@ export class V2UnifiedApi {
   }
 
   /**
-   * Supprimer un dossier avec mise à jour directe de Zustand + polling côté client
+   * Supprimer un dossier (version simplifiée)
    */
   async deleteFolder(folderId: string) {
     if (process.env.NODE_ENV === 'development') {
@@ -388,9 +538,12 @@ export class V2UnifiedApi {
     const startTime = Date.now();
     
     try {
-      // 🚀 Appel vers l'endpoint API V2
+      // ✅ 1. Nettoyer et valider l'ID
+      const cleanFolderId = this.cleanAndValidateId(folderId, 'folder');
+      
+      // ✅ 2. Appel vers l'endpoint API V2 DIRECT (pas de modification du store)
       const headers = await this.getAuthHeaders();
-      const response = await fetch(`/api/v2/folder/${folderId}/delete`, {
+      const response = await fetch(this.buildUrl(`/api/v2/folder/${cleanFolderId}/delete`), {
         method: 'DELETE',
         headers
       });
@@ -405,16 +558,8 @@ export class V2UnifiedApi {
         logger.dev(`[V2UnifiedApi] ✅ API terminée en ${apiTime}ms`);
       }
 
-      // 🚀 Mise à jour immédiate du store Zustand (instantanée)
-      const store = useFileSystemStore.getState();
-      store.removeFolder(folderId);
-      
-      if (process.env.NODE_ENV === 'development') {
-        logger.dev(`[V2UnifiedApi] ✅ Store mis à jour immédiatement`);
-      }
-      
-      // 🚀 Déclencher le polling intelligent immédiatement
-      await this.triggerPolling('folders', 'DELETE');
+      // ✅ 2. Pas de modification du store (le realtime naturel s'en charge)
+      // ✅ 3. Pas de polling manuel (le realtime naturel s'en charge)
       
       const totalTime = Date.now() - startTime;
       if (process.env.NODE_ENV === 'development') {
@@ -438,9 +583,12 @@ export class V2UnifiedApi {
     const startTime = Date.now();
     
     try {
-      // 🚀 Appel vers l'endpoint API V2
+      // ✅ 1. Nettoyer et valider l'ID
+      const cleanNoteId = this.cleanAndValidateId(noteId, 'note');
+      
+      // 🚀 2. Appel vers l'endpoint API V2
       const headers = await this.getAuthHeaders();
-      const response = await fetch(`/api/v2/note/${noteId}/move`, {
+      const response = await fetch(this.buildUrl(`/api/v2/note/${cleanNoteId}/move`), {
         method: 'PUT',
         headers,
         body: JSON.stringify({ folder_id: targetFolderId }) // 🔧 CORRECTION: Utiliser folder_id au lieu de target_folder_id
@@ -459,18 +607,18 @@ export class V2UnifiedApi {
 
       // 🔧 CORRECTION: Récupérer le classeur_id de la note avant de la déplacer
       const store = useFileSystemStore.getState();
-      const currentNote = store.notes[noteId];
+      const currentNote = store.notes[cleanNoteId];
       const noteClasseurId = currentNote?.classeur_id;
       
       if (process.env.NODE_ENV === 'development') {
-        logger.dev(`[V2UnifiedApi] 📝 Note ${noteId} - classeur_id: ${noteClasseurId}, targetFolderId: ${targetFolderId}`);
+        logger.dev(`[V2UnifiedApi] 📝 Note ${cleanNoteId} - classeur_id: ${noteClasseurId}, targetFolderId: ${targetFolderId}`);
       }
 
       // 🚀 Mise à jour directe de Zustand (instantanée)
-      store.moveNote(noteId, targetFolderId, noteClasseurId);
+      store.moveNote(cleanNoteId, targetFolderId, noteClasseurId);
       
       // 🚀 5. Déclencher le polling intelligent immédiatement
-      await this.triggerPolling('notes', 'UPDATE');
+      await triggerUnifiedRealtimePolling('notes', 'UPDATE');
       
       const totalTime = Date.now() - startTime;
       if (process.env.NODE_ENV === 'development') {
@@ -494,9 +642,12 @@ export class V2UnifiedApi {
     const startTime = Date.now();
     
     try {
-      // 🚀 Appel vers l'endpoint API V2
+      // ✅ 1. Nettoyer et valider l'ID
+      const cleanFolderId = this.cleanAndValidateId(folderId, 'folder');
+      
+      // 🚀 2. Appel vers l'endpoint API V2
       const headers = await this.getAuthHeaders();
-      const response = await fetch(`/api/v2/folder/${folderId}/move`, {
+      const response = await fetch(this.buildUrl(`/api/v2/folder/${cleanFolderId}/move`), {
         method: 'PUT',
         headers,
         body: JSON.stringify({ parent_id: targetParentId }) // 🔧 CORRECTION: Utiliser parent_id au lieu de target_parent_id
@@ -515,18 +666,18 @@ export class V2UnifiedApi {
 
       // 🔧 CORRECTION: Récupérer le classeur_id du dossier avant de le déplacer
       const store = useFileSystemStore.getState();
-      const currentFolder = store.folders[folderId];
+      const currentFolder = store.folders[cleanFolderId];
       const folderClasseurId = currentFolder?.classeur_id;
       
       if (process.env.NODE_ENV === 'development') {
-        logger.dev(`[V2UnifiedApi] 📁 Dossier ${folderId} - classeur_id: ${folderClasseurId}, targetParentId: ${targetParentId}`);
+        logger.dev(`[V2UnifiedApi] 📁 Dossier ${cleanFolderId} - classeur_id: ${folderClasseurId}, targetParentId: ${targetParentId}`);
       }
 
       // 🚀 Mise à jour directe de Zustand (instantanée)
-      store.moveFolder(folderId, targetParentId, folderClasseurId);
+      store.moveFolder(cleanFolderId, targetParentId, folderClasseurId);
       
       // 🚀 Déclencher le polling intelligent immédiatement
-      await this.triggerPolling('folders', 'UPDATE');
+      await triggerUnifiedRealtimePolling('folders', 'UPDATE');
       
       const totalTime = Date.now() - startTime;
       if (process.env.NODE_ENV === 'development') {
@@ -549,7 +700,7 @@ export class V2UnifiedApi {
     try {
       // 🚀 Appel vers l'endpoint API V2
       const headers = await this.getAuthHeaders();
-      const response = await fetch('/api/v2/classeur/create', {
+      const response = await fetch(this.buildUrl('/api/v2/classeur/create'), {
         method: 'POST',
         headers,
         body: JSON.stringify(classeurData)
@@ -566,7 +717,7 @@ export class V2UnifiedApi {
       }
 
       // 🚀 Déclencher le polling intelligent pour synchronisation
-      await this.triggerPolling('classeurs', 'CREATE');
+      await triggerUnifiedRealtimePolling('classeurs', 'CREATE');
 
       const duration = Date.now() - startTime;
       return {
@@ -595,15 +746,18 @@ export class V2UnifiedApi {
     const startTime = Date.now();
     
     try {
+      // ✅ 1. Nettoyer et valider l'ID
+      const cleanClasseurId = this.cleanAndValidateId(classeurId, 'classeur');
+      
       // 🔧 CORRECTION: Mapper emoji vers icon si nécessaire
       const mappedData = {
         ...updateData,
         icon: updateData.icon || updateData.emoji
       };
 
-      // 🚀 Appel vers l'endpoint API V2
+      // 🚀 2. Appel vers l'endpoint API V2
       const headers = await this.getAuthHeaders();
-      const response = await fetch(`/api/v2/classeur/${classeurId}/update`, {
+      const response = await fetch(this.buildUrl(`/api/v2/classeur/${cleanClasseurId}/update`), {
         method: 'PUT',
         headers,
         body: JSON.stringify(mappedData)
@@ -622,10 +776,10 @@ export class V2UnifiedApi {
 
       // 🚀 Mise à jour directe de Zustand (instantanée)
       const store = useFileSystemStore.getState();
-      store.updateClasseur(classeurId, result.classeur);
+      store.updateClasseur(cleanClasseurId, result.classeur);
       
       // 🚀 4. Déclencher le polling intelligent immédiatement
-      await this.triggerPolling('classeurs', 'UPDATE');
+      await triggerUnifiedRealtimePolling('classeurs', 'UPDATE');
 
       const duration = Date.now() - startTime;
       return {
@@ -640,7 +794,7 @@ export class V2UnifiedApi {
   }
 
   /**
-   * Supprimer un classeur avec mise à jour directe de Zustand + polling côté client
+   * Supprimer un classeur (version simplifiée)
    */
   async deleteClasseur(classeurId: string) {
     if (process.env.NODE_ENV === 'development') {
@@ -649,9 +803,12 @@ export class V2UnifiedApi {
     const startTime = Date.now();
     
     try {
-      // 🚀 Appel vers l'endpoint API V2
+      // ✅ 1. Nettoyer et valider l'ID
+      const cleanClasseurId = this.cleanAndValidateId(classeurId, 'classeur');
+      
+      // ✅ 2. Appel vers l'endpoint API V2 DIRECT (pas de modification du store)
       const headers = await this.getAuthHeaders();
-      const response = await fetch(`/api/v2/classeur/${classeurId}/delete`, {
+      const response = await fetch(this.buildUrl(`/api/v2/classeur/${cleanClasseurId}/delete`), {
         method: 'DELETE',
         headers
       });
@@ -666,16 +823,12 @@ export class V2UnifiedApi {
         logger.dev(`[V2UnifiedApi] ✅ API terminée en ${apiTime}ms`);
       }
 
-      // 🚀 Mise à jour directe de Zustand (instantanée)
-      const store = useFileSystemStore.getState();
-      store.removeClasseur(classeurId);
-      
-      // 🚀 Déclencher le polling intelligent immédiatement
-      await this.triggerPolling('classeurs', 'DELETE');
+      // ✅ 2. Pas de modification du store (le realtime naturel s'en charge)
+      // ✅ 3. Pas de polling manuel (le realtime naturel s'en charge)
       
       const totalTime = Date.now() - startTime;
       if (process.env.NODE_ENV === 'development') {
-        logger.dev(`[V2UnifiedApi] ✅ Classeur supprimé de Zustand  en ${totalTime}ms total`);
+        logger.dev(`[V2UnifiedApi] ✅ Classeur supprimé en ${totalTime}ms total`);
       }
       
       return { success: true };
@@ -694,9 +847,12 @@ export class V2UnifiedApi {
     }
     
     try {
-      // 🚀 Appel vers l'endpoint API V2
+      // ✅ 1. Nettoyer et valider l'ID
+      const cleanRef = this.cleanAndValidateId(ref, 'note');
+      
+      // 🚀 2. Appel vers l'endpoint API V2
       const headers = await this.getAuthHeaders();
-      const response = await fetch(`/api/v2/note/${ref}/add-content`, {
+      const response = await fetch(this.buildUrl(`/api/v2/note/${cleanRef}/add-content`), {
         method: 'POST',
         headers,
         body: JSON.stringify({ content })
@@ -711,10 +867,10 @@ export class V2UnifiedApi {
       
       // 🚀 Mise à jour directe de Zustand (instantanée)
       const store = useFileSystemStore.getState();
-      store.updateNote(ref, { markdown_content: result.note.markdown_content });
+      store.updateNote(cleanRef, { markdown_content: result.note.markdown_content });
       
       // 🚀 Déclencher le polling intelligent immédiatement
-      await this.triggerPolling('notes', 'UPDATE');
+      await triggerUnifiedRealtimePolling('notes', 'UPDATE');
       
       return result;
     } catch (error) {
@@ -732,9 +888,12 @@ export class V2UnifiedApi {
     }
     
     try {
-      // 🚀 Appel vers l'endpoint API V2
+      // ✅ 1. Nettoyer et valider l'ID
+      const cleanRef = this.cleanAndValidateId(ref, 'note');
+      
+      // 🚀 2. Appel vers l'endpoint API V2
       const headers = await this.getAuthHeaders();
-      const response = await fetch(`/api/v2/note/${ref}/content`, {
+      const response = await fetch(this.buildUrl(`/api/v2/note/${cleanRef}/content`), {
         method: 'GET',
         headers
       });
@@ -762,16 +921,19 @@ export class V2UnifiedApi {
     }
     
     try {
-      // 🚀 Appel vers l'endpoint API V2
+      // ✅ 1. Nettoyer et valider l'ID
+      const cleanClasseurId = this.cleanAndValidateId(classeurId, 'classeur');
+      
+      // 🚀 2. Appel vers l'endpoint API V2
       const headers = await this.getAuthHeaders();
-      const url = `/api/v2/classeur/${classeurId}/tree`;
+      const url = `/api/v2/classeur/${cleanClasseurId}/tree`;
       
       if (process.env.NODE_ENV === 'development') {
         logger.dev(`[V2UnifiedApi] 🌐 Appel API: ${url}`);
         logger.dev(`[V2UnifiedApi] 🔑 Headers:`, headers);
       }
       
-      const response = await fetch(url, {
+      const response = await fetch(this.buildUrl(url), {
         method: 'GET',
         headers
       });
@@ -812,7 +974,7 @@ export class V2UnifiedApi {
     try {
       // 🚀 Appel vers l'endpoint API V2
       const headers = await this.getAuthHeaders();
-      const response = await fetch('/api/v2/classeurs', {
+      const response = await fetch(this.buildUrl('/api/v2/classeurs'), {
         method: 'GET',
         headers
       });
@@ -841,7 +1003,7 @@ export class V2UnifiedApi {
     try {
       // 🚀 Appel vers l'endpoint API V2
       const headers = await this.getAuthHeaders();
-      const response = await fetch('/api/v2/classeur/reorder', {
+      const response = await fetch(this.buildUrl('/api/v2/classeur/reorder'), {
         method: 'PUT',
         headers,
         body: JSON.stringify({ classeurs })
@@ -861,7 +1023,7 @@ export class V2UnifiedApi {
       });
       
       // 🚀 Déclencher le polling côté client immédiatement
-      await this.triggerPolling('classeurs', 'UPDATE');
+      await triggerUnifiedRealtimePolling('classeurs', 'UPDATE');
       
       return result;
     } catch (error) {

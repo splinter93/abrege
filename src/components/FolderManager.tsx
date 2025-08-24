@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import './FolderManagerModern.css';
 import FolderContent from './FolderContent';
@@ -15,6 +15,7 @@ import { useFolderKeyboard } from '../hooks/useFolderKeyboard';
 
 import { classeurTabVariants, classeurTabTransition } from './FolderAnimation';
 import { useFileSystemStore } from '@/store/useFileSystemStore';
+import UnifiedRealtimeManager from './UnifiedRealtimeManager';
 
 
 interface FolderManagerProps {
@@ -238,6 +239,9 @@ const FolderManager: React.FC<FolderManagerProps> = ({
 
   return (
     <div className="folder-manager-wrapper">
+      {/* 🔧 CORRECTION : Ajouter le composant de polling manquant */}
+      <UnifiedRealtimeManager />
+      
       <div 
         className="folder-manager"
         onDragOver={handleRootDragOver}

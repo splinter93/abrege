@@ -29,7 +29,7 @@ export interface RealtimeStatus {
 }
 
 export type EntityType = 'notes' | 'folders' | 'classeurs';
-export type OperationType = 'CREATE' | 'UPDATE' | 'DELETE' | 'MOVE' | 'RENAME';
+export type OperationType = 'CREATE' | 'UPDATE' | 'DELETE' | 'MOVE' | 'RENAME' | 'CONFIRM_DELETE';
 
 class UnifiedRealtimeService {
   private supabase: SupabaseClient | null = null;
@@ -351,31 +351,94 @@ class UnifiedRealtimeService {
       switch (table) {
         case 'notes':
           if (data.notes && Array.isArray(data.notes)) {
-            store.setNotes(data.notes);
+            // 🔧 CORRECTION : Merge intelligent au lieu de remplacement
+            this.mergeNotes(store, data.notes);
           }
           break;
         case 'folders':
           if (data.folders && Array.isArray(data.folders)) {
-            store.setFolders(data.folders);
+            // 🔧 CORRECTION : Merge intelligent au lieu de remplacement
+            this.mergeFolders(store, data.folders);
           }
           break;
         case 'classeurs':
           // ✅ CORRECTION: Gérer la structure de l'endpoint with-content
           if (data.classeurs && Array.isArray(data.classeurs)) {
-            store.setClasseurs(data.classeurs);
+            // 🔧 CORRECTION : Merge intelligent au lieu de remplacement
+            this.mergeClasseurs(store, data.classeurs);
           }
           // Mettre à jour aussi les folders et notes si présents
           if (data.folders && Array.isArray(data.folders)) {
-            store.setFolders(data.folders);
+            this.mergeFolders(store, data.folders);
           }
           if (data.notes && Array.isArray(data.notes)) {
-            store.setNotes(data.notes);
+            this.mergeNotes(store, data.notes);
           }
           break;
       }
     } catch (error) {
       // Ignorer les erreurs de mise à jour du store
     }
+  }
+
+  /**
+   * 🔧 NOUVEAU : Merge intelligent des notes (gère les suppressions)
+   */
+  private mergeNotes(store: any, newNotes: any[]): void {
+    const currentNotes = store.notes;
+    const newNotesMap = new Map(newNotes.map(note => [note.id, note]));
+    
+    // Supprimer les notes qui ne sont plus dans la liste
+    Object.keys(currentNotes).forEach(noteId => {
+      if (!newNotesMap.has(noteId)) {
+        store.removeNote(noteId);
+      }
+    });
+    
+    // Mettre à jour/ajouter les nouvelles notes
+    newNotes.forEach(note => {
+      store.updateNote(note.id, note);
+    });
+  }
+
+  /**
+   * 🔧 NOUVEAU : Merge intelligent des dossiers (gère les suppressions)
+   */
+  private mergeFolders(store: any, newFolders: any[]): void {
+    const currentFolders = store.folders;
+    const newFoldersMap = new Map(newFolders.map(folder => [folder.id, folder]));
+    
+    // Supprimer les dossiers qui ne sont plus dans la liste
+    Object.keys(currentFolders).forEach(folderId => {
+      if (!newFoldersMap.has(folderId)) {
+        store.removeFolder(folderId);
+      }
+    });
+    
+    // Mettre à jour/ajouter les nouveaux dossiers
+    newFolders.forEach(folder => {
+      store.updateFolder(folder.id, folder);
+    });
+  }
+
+  /**
+   * 🔧 NOUVEAU : Merge intelligent des classeurs (gère les suppressions)
+   */
+  private mergeClasseurs(store: any, newClasseurs: any[]): void {
+    const currentClasseurs = store.classeurs;
+    const newClasseursMap = new Map(newClasseurs.map(classeur => [classeur.id, classeur]));
+    
+    // Supprimer les classeurs qui ne sont plus dans la liste
+    Object.keys(currentClasseurs).forEach(classeurId => {
+      if (!newClasseursMap.has(classeurId)) {
+        store.removeClasseur(classeurId);
+      }
+    });
+    
+    // Mettre à jour/ajouter les nouveaux classeurs
+    newClasseurs.forEach(classeur => {
+      store.updateClasseur(classeur.id, classeur);
+    });
   }
 
   /**
@@ -400,6 +463,14 @@ class UnifiedRealtimeService {
     }
 
     try {
+      // 🔧 CORRECTION : Gestion spéciale pour CONFIRM_DELETE
+      if (operation === 'CONFIRM_DELETE') {
+        await this.confirmDeletion(entityType);
+        return;
+      }
+      
+      // 🔧 CORRECTION : Forcer le polling immédiat pour toutes les opérations
+      console.log(`[Realtime] 🔄 Polling immédiat forcé ${entityType} (${operation})`);
       await this.pollTable(entityType);
       
       if (this.config?.debug) {
@@ -407,6 +478,30 @@ class UnifiedRealtimeService {
       }
     } catch (error) {
       console.error(`[Realtime] Erreur polling immédiat ${entityType}:`, error);
+    }
+  }
+
+  /**
+   * 🔧 NOUVEAU : Confirmer une suppression via polling
+   */
+  private async confirmDeletion(entityType: EntityType): Promise<void> {
+    if (!this.config) return;
+
+    try {
+      if (this.config.debug) {
+        console.log(`[Realtime] 🔍 Confirmation suppression ${entityType}`);
+      }
+
+      // 🔧 CORRECTION : Forcer le polling immédiat pour confirmer la suppression
+      await this.pollTable(entityType);
+      
+      if (this.config.debug) {
+        console.log(`[Realtime] ✅ Suppression ${entityType} confirmée via polling`);
+      }
+    } catch (error) {
+      if (this.config.debug) {
+        console.error(`[Realtime] ❌ Erreur confirmation suppression ${entityType}:`, error);
+      }
     }
   }
 

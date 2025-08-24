@@ -16,7 +16,7 @@ import ChatKebabMenu from './ChatKebabMenu';
 import ChatSidebar from './ChatSidebar';
 import ToolCallDebugger from './ToolCallDebugger';
 import ChatWidget from './ChatWidget';
-import { simpleLogger as logger } from '@/utils/logger';
+import { simpleLogger as logger, LogCategory } from '@/utils/logger';
 
 import './index.css';
 import './ReasoningMessage.css';
@@ -59,7 +59,6 @@ const ChatFullscreenV2: React.FC = () => {
 
   // 🎯 Hook de scroll optimisé
   const { messagesEndRef, scrollToBottom, isNearBottom } = useChatScroll({
-    autoScroll: true,
     scrollThreshold: 150,
     scrollDelay: 100
   });
@@ -163,106 +162,76 @@ const ChatFullscreenV2: React.FC = () => {
   }, [addMessage, scrollToBottom, user, authLoading, addToolCalls]);
 
   const handleToolResult = useCallback(async (toolName: string, result: any, success: boolean, toolCallId?: string) => {
-    // Vérifier l'authentification avant de continuer
-    if (authLoading) {
-      logger.dev('[ChatFullscreenV2] ⏳ Vérification de l\'authentification en cours...');
-      return;
-    }
-    
-    if (!user) {
-      logger.warn('[ChatFullscreenV2] ⚠️ Utilisateur non authentifié, impossible de traiter le tool result');
-      await addMessage({
-        role: 'assistant',
-        content: '⚠️ Vous devez être connecté pour utiliser cette fonctionnalité.',
-        timestamp: new Date().toISOString()
-      }, { persist: false });
-      return;
-    }
-
-    logger.dev('[ChatFullscreenV2] ✅ Tool result reçu:', { toolName, success });
-    logger.tool('[ChatFullscreenV2] ✅ Tool result reçu:', { toolName, success });
-    
-    // 🔧 NOUVEAU: Ajouter le tool result au debugger
-    const toolResult = {
-      tool_call_id: toolCallId || `call_${Date.now()}`,
-      name: toolName || 'unknown_tool',
-      content: typeof result === 'string' ? result : JSON.stringify(result),
-      success: !!success
-    };
-    
-    addToolResult(toolResult);
-      
-    const normalizeResult = (res: unknown, ok: boolean): string => {
-      try {
-        if (typeof res === 'string') {
-          try {
-            const parsed = JSON.parse(res);
-            if (parsed && typeof parsed === 'object' && !('success' in parsed)) {
-              return JSON.stringify({ success: !!ok, ...parsed });
-            }
-            return JSON.stringify(parsed);
-          } catch {
-            return JSON.stringify({ success: !!ok, message: res });
-          }
-        }
-        if (res && typeof res === 'object') {
-          const obj = res as Record<string, unknown>;
-          if (!('success' in obj)) {
-            return JSON.stringify({ success: !!ok, ...obj });
-          }
-          return JSON.stringify(obj);
-        }
-        return JSON.stringify({ success: !!ok, value: res });
-      } catch (e) {
-        return JSON.stringify({ success: !!ok, error: 'tool_result_serialization_error' });
-      }
-    };
-
-    // 🔧 CORRECTION: Utiliser le hook atomic pour persister les tool calls
-    const normalizedToolResult = {
-      tool_call_id: toolCallId || `call_${Date.now()}`,
-      name: toolName || 'unknown_tool',
-      content: normalizeResult(result, !!success),
-      success: !!success
-    };
-
     try {
-      // const persisted = await addToolResult(toolResult); // Supprimé pour éviter l'erreur de build
+      // Vérifier l'authentification avant de continuer
+      if (authLoading) {
+        logger.dev('[ChatFullscreenV2] ⏳ Vérification de l\'authentification en cours...');
+        return;
+      }
       
-      // if (persisted) { // Supprimé pour éviter l'erreur de build
-      //   logger.dev('[ChatFullscreenV2] ✅ Tool result persisté atomiquement');
-      // } else { // Supprimé pour éviter l'erreur de build
-      //   logger.error('[ChatFullscreenV2] ❌ Échec persistance tool result, fallback local');
-        
-        // Vérifier si c'est une erreur d'authentification
-        const isAuthError = toolResult.content.includes('Authentification requise') || 
-                           toolResult.content.includes('Problème d\'authentification');
-        
-        if (isAuthError) {
-          // Afficher un message d'erreur d'authentification à l'utilisateur
-          await addMessage({
-            role: 'assistant',
-            content: '⚠️ Erreur d\'authentification. Veuillez vous reconnecter pour continuer.',
-            timestamp: new Date().toISOString()
-          }, { persist: false });
-          
-          // Optionnel: rediriger vers la page de connexion après un délai
-          setTimeout(() => {
-            // window.location.href = '/auth/login';
-            logger.warn('[ChatFullscreenV2] ⚠️ Redirection vers la page de connexion recommandée');
-          }, 3000);
-          
-          return;
-        }
-        
-        // Fallback: ajouter localement avec persistance
-        const toolResultMessage = {
-          role: 'tool' as const,
-          ...normalizedToolResult,
+      if (!user) {
+        logger.warn('[ChatFullscreenV2] ⚠️ Utilisateur non authentifié, impossible de traiter le tool result');
+        await addMessage({
+          role: 'assistant',
+          content: '⚠️ Vous devez être connecté pour utiliser cette fonctionnalité.',
           timestamp: new Date().toISOString()
-        };
-        await addMessage(toolResultMessage, { persist: true });
-    // } // Supprimé pour éviter l'erreur de build
+        }, { persist: false });
+        return;
+      }
+
+      logger.dev('[ChatFullscreenV2] ✅ Tool result reçu:', { toolName, success });
+      logger.tool('[ChatFullscreenV2] ✅ Tool result reçu:', { toolName, success });
+      
+      // Normaliser le résultat du tool
+      const normalizeResult = (res: unknown, ok: boolean): string => {
+        try {
+          if (typeof res === 'string') {
+            try {
+              const parsed = JSON.parse(res);
+              if (parsed && typeof parsed === 'object' && !('success' in parsed)) {
+                return JSON.stringify({ success: !!ok, ...parsed });
+              }
+              return JSON.stringify(parsed);
+            } catch {
+              return JSON.stringify({ success: !!ok, message: res });
+            }
+          }
+          if (res && typeof res === 'object') {
+            const obj = res as Record<string, unknown>;
+            if (!('success' in obj)) {
+              return JSON.stringify({ success: !!ok, ...obj });
+            }
+            return JSON.stringify(obj);
+          }
+          return JSON.stringify({ success: !!ok, value: res });
+        } catch (e) {
+          return JSON.stringify({ success: !!ok, error: 'tool_result_serialization_error' });
+        }
+      };
+
+      // Créer le tool result normalisé
+      const normalizedToolResult = {
+        tool_call_id: toolCallId || `call_${Date.now()}`,
+        name: toolName || 'unknown_tool',
+        content: normalizeResult(result, !!success),
+        success: !!success
+      };
+
+      // Ajouter au debugger
+      addToolResult(normalizedToolResult);
+      
+      // Créer le message à afficher
+      const toolResultMessage = {
+        role: 'tool' as const,
+        ...normalizedToolResult,
+        timestamp: new Date().toISOString()
+      };
+
+      // Ajouter le message à l'interface
+      await addMessage(toolResultMessage, { persist: true });
+      
+      logger.dev('[ChatFullscreenV2] ✅ Tool result traité et affiché avec succès');
+      
     } catch (error) {
       logger.error('[ChatFullscreenV2] ❌ Erreur lors du traitement du tool result:', error);
       

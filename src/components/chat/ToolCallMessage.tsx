@@ -56,6 +56,30 @@ const ToolCallMessage: React.FC<ToolCallMessageProps> = ({ toolCalls, toolResult
     if (hasPending) setCollapsed(false);
   }, [hasPending]);
 
+  // Get the main endpoint name (most common or first one)
+  const getMainEndpointName = () => {
+    if (toolCalls.length === 0) return 'Tool Call';
+    
+    // If all tool calls use the same function, show that name
+    const firstFunctionName = toolCalls[0].function.name;
+    const allSameFunction = toolCalls.every(tc => tc.function.name === firstFunctionName);
+    
+    if (allSameFunction) {
+      return firstFunctionName;
+    }
+    
+    // If multiple different functions, show the most common one
+    const functionCounts = toolCalls.reduce((acc, tc) => {
+      acc[tc.function.name] = (acc[tc.function.name] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+    
+    const mostCommonFunction = Object.entries(functionCounts)
+      .sort(([,a], [,b]) => b - a)[0][0];
+    
+    return mostCommonFunction;
+  };
+
   const renderIndicator = (status: 'success' | 'error' | 'pending') => {
     if (status === 'pending') {
       return (
@@ -82,6 +106,9 @@ const ToolCallMessage: React.FC<ToolCallMessageProps> = ({ toolCalls, toolResult
     );
   };
 
+  const mainEndpointName = getMainEndpointName();
+  const hasMultipleFunctions = toolCalls.some(tc => tc.function.name !== mainEndpointName);
+
   return (
     <div className={`tool-call-message ${className}`}>
       <button
@@ -95,7 +122,12 @@ const ToolCallMessage: React.FC<ToolCallMessageProps> = ({ toolCalls, toolResult
             <path d="M9 14h6"/>
           </svg>
           <span className="tool-call-title">
-            Tool Calls ({toolCalls.length})
+            {mainEndpointName}
+            {hasMultipleFunctions && (
+              <span className="tool-call-multiple-functions" title={`${toolCalls.length} tool calls`}>
+                +{toolCalls.length - 1}
+              </span>
+            )}
             {toolCalls.length > 10 && (
               <span className="tool-call-count-warning" title="Beaucoup de tool calls - exécution par batch">
                 ⚡

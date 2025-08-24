@@ -66,6 +66,8 @@ interface ApiError extends Error {
 export class LLMApi {
   private static instance: LLMApi;
 
+  private constructor() {}
+
   static getInstance(): LLMApi {
     if (!LLMApi.instance) {
       LLMApi.instance = new LLMApi();
@@ -74,7 +76,67 @@ export class LLMApi {
   }
 
   /**
+   * Récupère les headers d'authentification pour les appels API LLM
+   * @private
+   */
+  private async getAuthHeaders(): Promise<HeadersInit> {
+    try {
+      console.log('🔐 [LLM AUTH] Début récupération headers...');
+      
+      const { supabase } = await import('@/supabaseClient');
+      console.log('✅ [LLM AUTH] Supabase importé');
+      
+      const { data: { session } } = await supabase.auth.getSession();
+      console.log('📋 [LLM AUTH] Session récupérée:', {
+        hasSession: !!session,
+        hasAccessToken: !!session?.access_token,
+        tokenLength: session?.access_token?.length || 0,
+        tokenStart: session?.access_token ? session.access_token.substring(0, 20) + '...' : 'N/A'
+      });
+      
+      const headers: HeadersInit = { 
+        'Content-Type': 'application/json',
+        'X-Client-Type': 'llm'
+      };
+      
+      // ✅ Ajouter le token d'authentification si disponible
+      if (session?.access_token) {
+        headers['Authorization'] = `Bearer ${session.access_token}`;
+        console.log('✅ [LLM AUTH] Token ajouté aux headers');
+      } else {
+        console.warn('⚠️ [LLM AUTH] Pas de token disponible - authentification échouera probablement');
+      }
+      
+      console.log('🔐 [LLM AUTH] Headers finaux:', {
+        hasContentType: !!headers['Content-Type'],
+        hasClientType: !!headers['X-Client-Type'],
+        hasAuth: !!headers['Authorization'],
+        authHeader: headers['Authorization'] ? 'Bearer ***' : 'ABSENT'
+      });
+      
+      return headers;
+      
+    } catch (error) {
+      console.error('❌ [LLM AUTH] Erreur récupération headers:', {
+        error,
+        message: error instanceof Error ? error.message : 'Erreur inconnue',
+        stack: error instanceof Error ? error.stack : 'Pas de stack trace'
+      });
+      
+      // En cas d'erreur, retourner les headers de base
+      const fallbackHeaders = { 
+        'Content-Type': 'application/json',
+        'X-Client-Type': 'llm'
+      };
+      
+      console.log('🔄 [LLM AUTH] Utilisation headers de fallback:', fallbackHeaders);
+      return fallbackHeaders;
+    }
+  }
+
+  /**
    * Créer une note via API LLM
+   * @param noteData - Données de la note à créer
    */
   async createNote(noteData: CreateNoteData) {
     const startTime = Date.now();
@@ -83,12 +145,11 @@ export class LLMApi {
     logApi.info('🚀 Début création note LLM', context);
     
     try {
+      const headers = await this.getAuthHeaders();
+
       const response = await fetch('/api/v2/note/create', {
         method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'X-Client-Type': 'llm'
-        },
+        headers,
         body: JSON.stringify(noteData)
       });
 
@@ -121,12 +182,11 @@ export class LLMApi {
     logApi.info(`🚀 Début mise à jour note LLM ${noteRef}`, context);
     
     try {
+      const headers = await this.getAuthHeaders();
+
       const response = await fetch(`/api/v2/note/${noteRef}/update`, {
         method: 'PUT',
-        headers: { 
-          'Content-Type': 'application/json',
-          'X-Client-Type': 'llm'
-        },
+        headers,
         body: JSON.stringify(updateData)
       });
 
@@ -159,12 +219,69 @@ export class LLMApi {
     logApi.info(`🚀 Début suppression note LLM ${noteRef}`, context);
     
     try {
-      const response = await fetch(`/api/v2/note/${noteRef}/delete`, {
+      // ✅ DEBUG: Vérifier la référence reçue
+      console.log('🔍 [LLM DELETE] Référence reçue:', {
+        noteRef,
+        type: typeof noteRef,
+        length: noteRef?.length,
+        isUUID: noteRef?.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i) ? 'OUI' : 'NON'
+      });
+      
+      const headers = await this.getAuthHeaders();
+      
+      // ✅ DEBUG: Vérifier les headers d'authentification
+      console.log('🔐 [LLM DELETE] Headers préparés:', {
+        hasContentType: !!headers['Content-Type'],
+        hasClientType: !!headers['X-Client-Type'],
+        hasAuth: !!headers['Authorization'],
+        authToken: headers['Authorization'] ? 
+          `${headers['Authorization'].toString().substring(0, 20)}...` : 
+          'ABSENT'
+      });
+      
+      // ✅ DEBUG: Construire l'URL et vérifier sa validité
+      const deleteUrl = `/api/v2/note/${noteRef}/delete`;
+      console.log('🔗 [LLM DELETE] URL construite:', {
+        url: deleteUrl,
+        isValid: deleteUrl.includes(noteRef),
+        noteRefInUrl: deleteUrl.split('/').includes(noteRef)
+      });
+      
+      // ✅ DEBUG: Vérifier que l'URL est valide
+      try {
+        new URL(deleteUrl, window.location.origin);
+        console.log('✅ [LLM DELETE] URL valide');
+      } catch (urlError) {
+        console.error('❌ [LLM DELETE] URL invalide:', urlError);
+        throw new Error(`URL invalide: ${deleteUrl}`);
+      }
+
+      console.log('📡 [LLM DELETE] Envoi requête DELETE...');
+      const response = await fetch(deleteUrl, {
         method: 'DELETE',
-        headers: { 'X-Client-Type': 'llm' }
+        headers
+      });
+
+      // ✅ DEBUG: Analyser la réponse
+      console.log('📥 [LLM DELETE] Réponse reçue:', {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok,
+        headers: Object.fromEntries(response.headers.entries())
       });
 
       if (!response.ok) {
+        // ✅ DEBUG: Analyser l'erreur en détail
+        const errorText = await response.text();
+        console.error('❌ [LLM DELETE] Erreur HTTP:', {
+          status: response.status,
+          statusText: response.statusText,
+          errorText,
+          containsFailedToParse: errorText.includes('Failed to parse'),
+          containsURL: errorText.includes('URL'),
+          containsParse: errorText.includes('parse')
+        });
+        
         const error = new Error(`Erreur suppression note LLM: ${response.statusText}`) as ApiError;
         error.status = response.status;
         error.statusText = response.statusText;
@@ -173,10 +290,26 @@ export class LLMApi {
 
       const result = await response.json();
       const apiTime = Date.now() - startTime;
+      
+      // ✅ DEBUG: Succès
+      console.log('✅ [LLM DELETE] Note supprimée avec succès:', {
+        result,
+        apiTime: `${apiTime}ms`
+      });
+      
       logApi.info(`✅ Note LLM supprimée en ${apiTime}ms`, context);
-
       return result;
+      
     } catch (error) {
+      // ✅ DEBUG: Erreur complète
+      console.error('💥 [LLM DELETE] Erreur complète:', {
+        error,
+        message: error instanceof Error ? error.message : 'Erreur inconnue',
+        stack: error instanceof Error ? error.stack : 'Pas de stack trace',
+        noteRef,
+        context
+      });
+      
       logApi.error(`❌ Erreur suppression note LLM: ${error}`, context);
       throw error;
     }
@@ -194,12 +327,10 @@ export class LLMApi {
     logApi.info(`🚀 Début déplacement note LLM ${noteRef}`, context);
     
     try {
+      const headers = await this.getAuthHeaders();
       const response = await fetch(`/api/v2/note/${noteRef}/move`, {
         method: 'PUT',
-        headers: { 
-          'Content-Type': 'application/json',
-          'X-Client-Type': 'llm'
-        },
+        headers,
         body: JSON.stringify({ folder_id: targetFolderRef })
       });
 
@@ -233,12 +364,10 @@ export class LLMApi {
     logApi.info(`🚀 Début fusion note LLM ${sourceNoteRef}`, context);
     
     try {
+      const headers = await this.getAuthHeaders();
       const response = await fetch(`/api/v2/note/${sourceNoteRef}/merge`, {
         method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'X-Client-Type': 'llm'
-        },
+        headers,
         body: JSON.stringify(mergeData)
       });
 
@@ -272,12 +401,10 @@ export class LLMApi {
     logApi.info(`🚀 Début ajout contenu note LLM ${noteRef}`, context);
     
     try {
+      const headers = await this.getAuthHeaders();
       const response = await fetch(`/api/v2/note/${noteRef}/add-content`, {
         method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'X-Client-Type': 'llm'
-        },
+        headers,
         body: JSON.stringify({ content })
       });
 
@@ -309,12 +436,10 @@ export class LLMApi {
     logApi.info(`🚀 Début ajout section LLM ${noteId}`, context);
     
     try {
+      const headers = await this.getAuthHeaders();
       const response = await fetch(`/api/v2/note/${noteId}/add-to-section`, {
         method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'X-Client-Type': 'llm'
-        },
+        headers,
         body: JSON.stringify({ sectionId, content })
       });
 
@@ -346,12 +471,10 @@ export class LLMApi {
     logApi.info(`🚀 Début vidage section LLM ${noteId}`, context);
     
     try {
+      const headers = await this.getAuthHeaders();
       const response = await fetch(`/api/v2/note/${noteId}/clear-section`, {
         method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'X-Client-Type': 'llm'
-        },
+        headers,
         body: JSON.stringify({ sectionId })
       });
 
@@ -385,12 +508,10 @@ export class LLMApi {
     logApi.info(`🚀 Début mise à jour contenu note LLM ${noteRef}`, context);
     
     try {
+      const headers = await this.getAuthHeaders();
       const response = await fetch(`/api/v2/note/${noteRef}/content/update`, {
         method: 'PUT',
-        headers: { 
-          'Content-Type': 'application/json',
-          'X-Client-Type': 'llm'
-        },
+        headers,
         body: JSON.stringify({ content })
       });
 
@@ -424,12 +545,10 @@ export class LLMApi {
     logApi.info(`🚀 Début publication note LLM ${noteRef}`, context);
     
     try {
+      const headers = await this.getAuthHeaders();
       const response = await fetch(`/api/v2/note/${noteRef}/publish`, {
         method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'X-Client-Type': 'llm'
-        },
+        headers,
         body: JSON.stringify({ visibility })
       });
 
@@ -461,12 +580,10 @@ export class LLMApi {
     logApi.info(`🚀 Début création dossier LLM`, context);
     
     try {
+      const headers = await this.getAuthHeaders();
       const response = await fetch('/api/v2/folder/create', {
         method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'X-Client-Type': 'llm'
-        },
+        headers,
         body: JSON.stringify(folderData)
       });
 
@@ -499,12 +616,10 @@ export class LLMApi {
     logApi.info(`🚀 Début mise à jour dossier LLM ${folderRef}`, context);
     
     try {
+      const headers = await this.getAuthHeaders();
       const response = await fetch(`/api/v2/folder/${folderRef}/update`, {
         method: 'PUT',
-        headers: { 
-          'Content-Type': 'application/json',
-          'X-Client-Type': 'llm'
-        },
+        headers,
         body: JSON.stringify(updateData)
       });
 
@@ -537,9 +652,10 @@ export class LLMApi {
     logApi.info(`🚀 Début suppression dossier LLM ${folderRef}`, context);
     
     try {
+      const headers = await this.getAuthHeaders();
       const response = await fetch(`/api/v2/folder/${folderRef}/delete`, {
         method: 'DELETE',
-        headers: { 'X-Client-Type': 'llm' }
+        headers
       });
 
       if (!response.ok) {
@@ -572,12 +688,10 @@ export class LLMApi {
     logApi.info(`🚀 Début déplacement dossier LLM ${folderRef}`, context);
     
     try {
+      const headers = await this.getAuthHeaders();
       const response = await fetch(`/api/v2/folder/${folderRef}/move`, {
         method: 'PUT',
-        headers: { 
-          'Content-Type': 'application/json',
-          'X-Client-Type': 'llm'
-        },
+        headers,
         body: JSON.stringify({ parent_id: targetParentRef })
       });
 
@@ -609,12 +723,10 @@ export class LLMApi {
     logApi.info(`🚀 Début création classeur LLM`, context);
     
     try {
+      const headers = await this.getAuthHeaders();
       const response = await fetch('/api/v2/classeur/create', {
         method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'X-Client-Type': 'llm'
-        },
+        headers,
         body: JSON.stringify(classeurData)
       });
 
@@ -647,12 +759,10 @@ export class LLMApi {
     logApi.info(`🚀 Début mise à jour classeur LLM ${classeurRef}`, context);
     
     try {
+      const headers = await this.getAuthHeaders();
       const response = await fetch(`/api/v2/classeur/${classeurRef}/update`, {
         method: 'PUT',
-        headers: { 
-          'Content-Type': 'application/json',
-          'X-Client-Type': 'llm'
-        },
+        headers,
         body: JSON.stringify(updateData)
       });
 
@@ -685,9 +795,10 @@ export class LLMApi {
     logApi.info(`🚀 Début suppression classeur LLM ${classeurRef}`, context);
     
     try {
+      const headers = await this.getAuthHeaders();
       const response = await fetch(`/api/v2/classeur/${classeurRef}/delete`, {
         method: 'DELETE',
-        headers: { 'X-Client-Type': 'llm' }
+        headers
       });
 
       if (!response.ok) {
@@ -718,12 +829,10 @@ export class LLMApi {
     logApi.info(`🚀 Début réorganisation classeurs LLM`, context);
     
     try {
+      const headers = await this.getAuthHeaders();
       const response = await fetch('/api/v2/classeur/reorder', {
         method: 'PUT',
-        headers: { 
-          'Content-Type': 'application/json',
-          'X-Client-Type': 'llm'
-        },
+        headers,
         body: JSON.stringify({ classeurs: updatedClasseurs })
       });
 
@@ -760,9 +869,10 @@ export class LLMApi {
     logApi.info(`🚀 Début récupération contenu note LLM ${noteRef}`, context);
     
     try {
+      const headers = await this.getAuthHeaders();
       const response = await fetch(`/api/v2/note/${noteRef}/content`, {
         method: 'GET',
-        headers: { 'X-Client-Type': 'llm' }
+        headers
       });
 
       if (!response.ok) {
@@ -794,9 +904,10 @@ export class LLMApi {
     logApi.info(`🚀 Début récupération métadonnées note LLM ${noteRef}`, context);
     
     try {
+      const headers = await this.getAuthHeaders();
       const response = await fetch(`/api/v2/note/${noteRef}/metadata`, {
         method: 'GET',
-        headers: { 'X-Client-Type': 'llm' }
+        headers
       });
 
       if (!response.ok) {
@@ -828,9 +939,10 @@ export class LLMApi {
     logApi.info(`🚀 Début récupération insights note LLM ${noteRef}`, context);
     
     try {
+      const headers = await this.getAuthHeaders();
       const response = await fetch(`/api/v2/note/${noteRef}/insights`, {
         method: 'GET',
-        headers: { 'X-Client-Type': 'llm' }
+        headers
       });
 
       if (!response.ok) {
@@ -862,9 +974,10 @@ export class LLMApi {
     logApi.info(`🚀 Début récupération arborescence dossier LLM ${folderRef}`, context);
     
     try {
+      const headers = await this.getAuthHeaders();
       const response = await fetch(`/api/v2/folder/${folderRef}/tree`, {
         method: 'GET',
-        headers: { 'X-Client-Type': 'llm' }
+        headers
       });
 
       if (!response.ok) {
@@ -896,9 +1009,10 @@ export class LLMApi {
     logApi.info(`🚀 Début récupération arborescence classeur LLM ${classeurRef}`, context);
     
     try {
+      const headers = await this.getAuthHeaders();
       const response = await fetch(`/api/v2/classeur/${classeurRef}/tree`, {
         method: 'GET',
-        headers: { 'X-Client-Type': 'llm' }
+        headers
       });
 
       if (!response.ok) {

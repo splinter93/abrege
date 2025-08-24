@@ -278,17 +278,32 @@ export class V2DatabaseUtils {
    * Supprimer une note
    */
   static async deleteNote(ref: string, userId: string, context: any) {
+    console.log('🚀 [V2DatabaseUtils] Début suppression note:', { ref, userId, context });
     logApi.info(`🚀 Suppression note ${ref}`, context);
     
     try {
+      console.log('🔍 [V2DatabaseUtils] Résolution référence via V2ResourceResolver...');
+      
       // Résoudre la référence (UUID ou slug)
       const resolveResult = await V2ResourceResolver.resolveRef(ref, 'note', userId, context);
+      console.log('🔍 [V2DatabaseUtils] Résultat résolution:', {
+        success: resolveResult.success,
+        id: resolveResult.success ? resolveResult.id : 'N/A',
+        error: !resolveResult.success ? resolveResult.error : 'N/A',
+        status: !resolveResult.success ? resolveResult.status : 'N/A'
+      });
+      
       if (!resolveResult.success) {
+        const errorMsg = `❌ Échec résolution référence: ${resolveResult.error}`;
+        console.error(errorMsg, { resolveResult, ref, userId, context });
         throw new Error(resolveResult.error);
       }
 
       const noteId = resolveResult.id;
+      console.log('✅ [V2DatabaseUtils] Référence résolue:', { ref, noteId });
 
+      console.log('🗑️ [V2DatabaseUtils] Suppression note de la base...');
+      
       // Supprimer la note
       const { error: deleteError } = await supabase
         .from('articles')
@@ -297,14 +312,19 @@ export class V2DatabaseUtils {
         .eq('user_id', userId);
 
       if (deleteError) {
-        throw new Error(`Erreur suppression note: ${deleteError.message}`);
+        const errorMsg = `❌ Erreur suppression note: ${deleteError.message}`;
+        console.error(errorMsg, { deleteError, noteId, userId, context });
+        throw new Error(errorMsg);
       }
 
+      console.log('✅ [V2DatabaseUtils] Note supprimée avec succès de la base');
       logApi.info('✅ Note supprimée avec succès', context);
       return { success: true };
       
     } catch (error) {
-      logApi.error(`❌ Erreur suppression note: ${error}`, context);
+      const errorMsg = `❌ Erreur suppression note: ${error}`;
+      console.error(errorMsg, { error, ref, userId, context });
+      logApi.error(errorMsg, context);
       throw error;
     }
   }

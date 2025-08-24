@@ -15,6 +15,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useSecureErrorHandler } from "@/components/SecureErrorHandler";
 import type { AuthenticatedUser } from "@/types/dossiers";
 import { useUnifiedRealtime } from "@/hooks/useUnifiedRealtime";
+import UnifiedRealtimeManager from "@/components/UnifiedRealtimeManager";
 
 import "./index.css";
 import "@/components/DossierErrorBoundary.css";
@@ -197,6 +198,9 @@ function AuthenticatedDossiersContent({ user }: { user: AuthenticatedUser }) {
 
   return (
     <div className="dossiers-page-wrapper">
+      {/* 🔧 CORRECTION : Ajouter le composant de polling manquant */}
+      <UnifiedRealtimeManager />
+      
       {/* Header fixe avec navigation */}
       <header className="dossiers-header-fixed">
         <div className="header-content">

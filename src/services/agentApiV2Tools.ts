@@ -459,6 +459,9 @@ export class AgentApiV2Tools {
         case 'get_notebook_tree':
           return await this.callApiV2('GET', `/api/v2/classeur/${params.ref}/tree`, null, jwtToken);
           
+        case 'delete_note':
+          return await this.callApiV2('DELETE', `/api/v2/note/${params.ref}/delete`, null, jwtToken);
+          
         case 'reorder_notebook':
           return await this.callApiV2('PUT', `/api/v2/classeur/${params.ref}/reorder`, params, jwtToken);
           
@@ -489,6 +492,7 @@ export class AgentApiV2Tools {
       'get_note_statistics': { method: 'GET', path: `/api/v2/note/${params.ref}/statistics` },
       'merge_note': { method: 'POST', path: `/api/v2/note/${params.ref}/merge` },
       'publish_note': { method: 'POST', path: `/api/v2/note/${params.ref}/publish` },
+      'delete_note': { method: 'DELETE', path: `/api/v2/note/${params.ref}/delete` },
       'move_folder': { method: 'PUT', path: `/api/v2/folder/${params.ref}/move` },
       'get_notebook_tree': { method: 'GET', path: `/api/v2/classeur/${params.ref}/tree` },
       'reorder_notebook': { method: 'PUT', path: `/api/v2/classeur/${params.ref}/reorder` }
@@ -720,8 +724,56 @@ export class AgentApiV2Tools {
       execute: async (params, jwtToken, userId) => {
         const { ref } = params;
         const context = { operation: 'delete_note', component: 'AgentApiV2Tools' };
-        const res = await V2DatabaseUtils.deleteNote(ref, userId, context);
-        return res;
+        
+        console.log('🚀 [AgentApiV2Tools] Début suppression note:', {
+          ref,
+          jwtToken: !!jwtToken,
+          userId,
+          params
+        });
+        
+        // 🔧 CORRECTION : Utiliser V2UnifiedApi pour la synchronisation temps réel
+        try {
+          console.log('🔧 [AgentApiV2Tools] Tentative via V2UnifiedApi...');
+          
+          console.log('📦 [AgentApiV2Tools] AVANT import de V2UnifiedApi...');
+          const { V2UnifiedApi } = await import('@/services/V2UnifiedApi');
+          console.log('✅ [AgentApiV2Tools] V2UnifiedApi importé avec succès');
+          
+          console.log('🏭 [AgentApiV2Tools] Création instance V2UnifiedApi...');
+          const v2Api = V2UnifiedApi.getInstance();
+          console.log('✅ [AgentApiV2Tools] Instance V2UnifiedApi créée');
+          
+          console.log('🗑️ [AgentApiV2Tools] Appel deleteNote...');
+          // ✅ V2UnifiedApi gère automatiquement la suppression du store et le polling
+          const result = await v2Api.deleteNote(ref, jwtToken);
+          
+          console.log('✅ [AgentApiV2Tools] Résultat V2UnifiedApi:', result);
+          
+          if (result.success) {
+            return { success: true, message: 'Note supprimée avec succès' };
+          } else {
+            console.error('❌ [AgentApiV2Tools] V2UnifiedApi a échoué:', result.error);
+            return { success: false, error: result.error };
+          }
+        } catch (error) {
+          console.error('❌ [AgentApiV2Tools] Erreur V2UnifiedApi:', error);
+          
+          // Fallback vers V2DatabaseUtils si V2UnifiedApi échoue
+          console.log('🔄 [AgentApiV2Tools] Fallback vers V2DatabaseUtils...');
+          
+          try {
+            const res = await V2DatabaseUtils.deleteNote(ref, userId, context);
+            console.log('✅ [AgentApiV2Tools] Résultat V2DatabaseUtils:', res);
+            return res;
+          } catch (fallbackError) {
+            console.error('❌ [AgentApiV2Tools] Erreur V2DatabaseUtils aussi:', fallbackError);
+            return { 
+              success: false, 
+              error: `Échec suppression: ${fallbackError instanceof Error ? fallbackError.message : 'Erreur inconnue'}` 
+            };
+          }
+        }
       }
     });
 
@@ -801,8 +853,25 @@ export class AgentApiV2Tools {
       execute: async (params, jwtToken, userId) => {
         const { ref } = params;
         const context = { operation: 'delete_folder', component: 'AgentApiV2Tools' };
-        const res = await V2DatabaseUtils.deleteFolder(ref, userId, context);
-        return res;
+        
+        // 🔧 CORRECTION : Utiliser V2UnifiedApi pour la synchronisation temps réel
+        try {
+          const { V2UnifiedApi } = await import('@/services/V2UnifiedApi');
+          const v2Api = V2UnifiedApi.getInstance();
+          
+          // ✅ V2UnifiedApi gère automatiquement la suppression du store et le polling
+          const result = await v2Api.deleteFolder(ref);
+          
+          if (result.success) {
+            return { success: true, message: 'Dossier supprimé avec succès' };
+          } else {
+            return { success: false, error: 'Erreur lors de la suppression du dossier' };
+          }
+        } catch (error) {
+          // Fallback vers V2DatabaseUtils si V2UnifiedApi échoue
+          const res = await V2DatabaseUtils.deleteFolder(ref, userId, context);
+          return res;
+        }
       }
     });
 
@@ -1309,8 +1378,25 @@ export class AgentApiV2Tools {
       execute: async (params, jwtToken, userId) => {
         const { ref } = params;
         const context = { operation: 'delete_notebook', component: 'AgentApiV2Tools' };
-        const res = await V2DatabaseUtils.deleteClasseur(ref, userId, context);
-        return res;
+        
+        // 🔧 CORRECTION : Utiliser V2UnifiedApi pour la synchronisation temps réel
+        try {
+          const { V2UnifiedApi } = await import('@/services/V2UnifiedApi');
+          const v2Api = V2UnifiedApi.getInstance();
+          
+          // ✅ V2UnifiedApi gère automatiquement la suppression du store et le polling
+          const result = await v2Api.deleteClasseur(ref);
+          
+          if (result.success) {
+            return { success: true, message: 'Classeur supprimé avec succès' };
+          } else {
+            return { success: false, error: 'Erreur lors de la suppression du classeur' };
+          }
+        } catch (error) {
+          // Fallback vers V2DatabaseUtils si V2UnifiedApi échoue
+          const res = await V2DatabaseUtils.deleteClasseur(ref, userId, context);
+          return res;
+        }
       }
     });
 

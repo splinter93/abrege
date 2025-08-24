@@ -1,356 +1,249 @@
-/**
- * 🧪 Composant de Test pour la Synchronisation des Tool Calls
- * 
- * Teste le système de synchronisation automatique après les tool calls
- */
+'use client';
+import React, { useState, useEffect } from 'react';
+import { useToolCallSync } from '@/hooks/useToolCallSync';
+import { useChatStore } from '@/store/useChatStore';
+import { simpleLogger as logger } from '@/utils/logger';
 
-"use client";
-
-import { useState } from 'react';
-import { triggerUnifiedRealtimePolling, getUnifiedRealtimeStatus } from '@/services/unifiedRealtimeService';
-import { useFileSystemStore } from '@/store/useFileSystemStore';
-
-export default function TestToolCallSync() {
+const TestToolCallSync: React.FC = () => {
+  const [testResult, setTestResult] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
-  const [testResults, setTestResults] = useState<string[]>([]);
-  
-  const { notes, folders, classeurs } = useFileSystemStore();
+  const [syncStatus, setSyncStatus] = useState<string>('En attente...');
+  const { currentSession } = useChatStore();
 
-  const addLog = (message: string) => {
-    const timestamp = new Date().toLocaleTimeString();
-    setTestResults(prev => [`[${timestamp}] ${message}`, ...prev.slice(0, 19)]);
-  };
-
-  // Test de création de note avec synchronisation
-  const testCreateNoteSync = async () => {
-    setIsLoading(true);
-    try {
-      addLog('🧪 Test création note avec synchronisation automatique...');
-      
-      // Déclencher le polling intelligent
-      await triggerUnifiedRealtimePolling('notes', 'CREATE');
-
-      addLog(`✅ Polling déclenché: notes CREATE`);
-      addLog(`🆔 Entity ID: test-note`);
-      addLog(`⏱️ Attente de la synchronisation...`);
-      
-      // Attendre que la synchronisation se fasse
-      setTimeout(() => {
-        addLog(`📊 Synchronisation terminée`);
-        addLog(`📝 Notes dans le store: ${notes.length}`);
-        addLog(`📁 Dossiers dans le store: ${folders.length}`);
-        addLog(`📚 Classeurs dans le store: ${classeurs.length}`);
-      }, 2000);
-      
-    } catch (error) {
-      addLog(`❌ Erreur: ${error instanceof Error ? error.message : String(error)}`);
-    } finally {
-      setIsLoading(false);
+  // Hook de synchronisation des tool calls
+  const { 
+    syncToolCalls, 
+    startAutoSync, 
+    stopAutoSync, 
+    checkPendingSync, 
+    isAutoSyncing 
+  } = useToolCallSync({
+    autoSync: false, // Désactiver la synchronisation automatique pour le test
+    onToolCallsSynced: (toolCalls, toolResults) => {
+      logger.info('[TestToolCallSync] 🔄 Tool calls synchronisés:', { toolCalls, toolResults });
+      setTestResult(`✅ Synchronisation réussie: ${toolCalls.length} tool calls, ${toolResults.length} résultats`);
     }
-  };
+  });
 
-  // Test de synchronisation forcée
-  const testForceSync = async () => {
+  const testManualSync = async () => {
     setIsLoading(true);
+    setTestResult('');
+    setSyncStatus('Synchronisation manuelle en cours...');
+
     try {
-      addLog('🔄 Test synchronisation forcée...');
+      logger.info('[TestToolCallSync] 🧪 Test de synchronisation manuelle...');
       
-      // La synchronisation se fait automatiquement maintenant
-      addLog(`✅ Synchronisation automatique activée`);
-      
-      // Afficher le statut
-      const status = getUnifiedRealtimeStatus();
-      addLog(`📊 Statut sync: ${status.isConnected ? 'Connecté' : 'Déconnecté'}`);
-      addLog(`🔌 Provider: ${status.provider}`);
-      addLog(`📡 Tables: ${Object.values(status.tables).filter(Boolean).length}/3 connectées`);
-      
-    } catch (error) {
-      addLog(`❌ Erreur: ${error instanceof Error ? error.message : String(error)}`);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Test de création de dossier avec synchronisation
-  const testCreateFolderSync = async () => {
-    setIsLoading(true);
-    try {
-      addLog('📁 Test création dossier avec synchronisation automatique...');
-      
-      await triggerUnifiedRealtimePolling('folders', 'CREATE');
-
-      addLog(`✅ Polling déclenché: folders CREATE`);
-      addLog(`🆔 Entity ID: test-folder`);
-      addLog(`⏱️ Attente de la synchronisation...`);
-      
-      setTimeout(() => {
-        addLog(`📊 Synchronisation terminée`);
-        addLog(`📁 Dossiers dans le store: ${folders.length}`);
-      }, 1500);
-      
-    } catch (error) {
-      addLog(`❌ Erreur: ${error instanceof Error ? error.message : String(error)}`);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Test de mise à jour avec synchronisation
-  const testUpdateSync = async () => {
-    setIsLoading(true);
-    try {
-      addLog('🔄 Test mise à jour avec synchronisation automatique...');
-      
-      await triggerUnifiedRealtimePolling('notes', 'UPDATE');
-
-      addLog(`✅ Polling déclenché: notes UPDATE`);
-      addLog(`🆔 Entity ID: test-note`);
-      addLog(`⏱️ Attente de la synchronisation...`);
-      
-      setTimeout(() => {
-        addLog(`📊 Synchronisation terminée`);
-        addLog(`📝 Notes dans le store: ${notes.length}`);
-      }, 1000);
-      
-    } catch (error) {
-      addLog(`❌ Erreur: ${error instanceof Error ? error.message : String(error)}`);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Test de suppression avec synchronisation
-  const testDeleteSync = async () => {
-    setIsLoading(true);
-    try {
-      addLog('🗑️ Test suppression avec synchronisation automatique...');
-      
-      await triggerUnifiedRealtimePolling('notes', 'DELETE');
-
-      addLog(`✅ Polling déclenché: notes DELETE`);
-      addLog(`🆔 Entity ID: test-note`);
-      addLog(`⏱️ Attente de la synchronisation...`);
-      
-      setTimeout(() => {
-        addLog(`📊 Synchronisation terminée`);
-        addLog(`📝 Notes dans le store: ${notes.length}`);
-      }, 1000);
-      
-    } catch (error) {
-      addLog(`❌ Erreur: ${error instanceof Error ? error.message : String(error)}`);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Test de déplacement avec synchronisation
-  const testMoveSync = async () => {
-    setIsLoading(true);
-    try {
-      addLog('📦 Test déplacement avec synchronisation automatique...');
-      
-      await triggerUnifiedRealtimePolling('notes', 'MOVE');
-
-      addLog(`✅ Polling déclenché: notes MOVE`);
-      addLog(`🆔 Entity ID: test-note`);
-      addLog(`⏱️ Attente de la synchronisation...`);
-      
-      setTimeout(() => {
-        addLog(`📊 Synchronisation terminée`);
-        addLog(`📝 Notes dans le store: ${notes.length}`);
-      }, 1000);
-      
-    } catch (error) {
-      addLog(`❌ Erreur: ${error instanceof Error ? error.message : String(error)}`);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Test de synchronisation multiple
-  const testMultipleSync = async () => {
-    setIsLoading(true);
-    try {
-      addLog('🚀 Test synchronisation multiple...');
-      
-      // Créer plusieurs éléments en parallèle
-      const operations = [
-        triggerUnifiedRealtimePolling('notes', 'CREATE'),
-        triggerUnifiedRealtimePolling('folders', 'CREATE'),
-        triggerUnifiedRealtimePolling('classeurs', 'UPDATE')
-      ];
-
-      await Promise.all(operations);
-
-      addLog(`✅ ${operations.length} pollings déclenchés simultanément`);
-      addLog(`⏱️ Attente de la synchronisation...`);
-      
-      setTimeout(() => {
-        addLog(`📊 Synchronisation multiple terminée`);
-        addLog(`📝 Notes: ${notes.length}, Dossiers: ${folders.length}, Classeurs: ${classeurs.length}`);
-      }, 2000);
-      
-    } catch (error) {
-      addLog(`❌ Erreur: ${error instanceof Error ? error.message : String(error)}`);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Test de statut du service
-  const testServiceStatus = async () => {
-    try {
-      addLog('📊 Test statut du service de synchronisation...');
-      
-      const status = getUnifiedRealtimeStatus();
-      
-      addLog(`🔌 Connexion: ${status.isConnected ? '🟢 Connecté' : '🔴 Déconnecté'}`);
-      addLog(`📡 Provider: ${status.provider}`);
-      addLog(`📊 Tables connectées:`);
-      addLog(`  • Notes: ${status.tables.notes ? '🟢' : '🔴'}`);
-      addLog(`  • Dossiers: ${status.tables.folders ? '🟢' : '🔴'}`);
-      addLog(`  • Classeurs: ${status.tables.classeurs ? '🟢' : '🔴'}`);
-      
-      if (status.lastEvent) {
-        addLog(`📝 Dernier événement: ${status.lastEvent}`);
+      if (!currentSession?.id) {
+        throw new Error('Aucune session active');
       }
+
+      const result = await syncToolCalls();
       
-      if (status.errorCount > 0) {
-        addLog(`⚠️ Erreurs: ${status.errorCount}`);
+      if (result.success) {
+        setTestResult(`✅ Synchronisation manuelle réussie: ${result.toolCalls?.length || 0} tool calls, ${result.toolResults?.length || 0} résultats`);
+        setSyncStatus('Synchronisation manuelle terminée');
+      } else {
+        setTestResult(`❌ Échec synchronisation: ${result.error}`);
+        setSyncStatus('Échec synchronisation');
       }
-      
     } catch (error) {
-      addLog(`❌ Erreur: ${error instanceof Error ? error.message : String(error)}`);
+      const errorMsg = error instanceof Error ? error.message : 'Erreur inconnue';
+      setTestResult(`❌ Erreur: ${errorMsg}`);
+      setSyncStatus('Erreur');
+      logger.error('[TestToolCallSync] ❌ Erreur test synchronisation:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const clearLogs = () => {
-    setTestResults([]);
+  const testAutoSync = async () => {
+    setIsLoading(true);
+    setTestResult('');
+
+    try {
+      logger.info('[TestToolCallSync] 🧪 Test de synchronisation automatique...');
+      
+      if (!currentSession?.id) {
+        throw new Error('Aucune session active');
+      }
+
+      if (isAutoSyncing) {
+        stopAutoSync();
+        setTestResult('🛑 Synchronisation automatique arrêtée');
+        setSyncStatus('Synchronisation automatique arrêtée');
+      } else {
+        startAutoSync();
+        setTestResult('🚀 Synchronisation automatique démarrée');
+        setSyncStatus('Synchronisation automatique active');
+      }
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : 'Erreur inconnue';
+      setTestResult(`❌ Erreur: ${errorMsg}`);
+      logger.error('[TestToolCallSync] ❌ Erreur test auto-sync:', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
+
+  const testCheckPending = async () => {
+    setIsLoading(true);
+    setTestResult('');
+
+    try {
+      logger.info('[TestToolCallSync] 🧪 Test de vérification des données en attente...');
+      
+      if (!currentSession?.id) {
+        throw new Error('Aucune session active');
+      }
+
+      const hasPending = await checkPendingSync();
+      
+      if (hasPending) {
+        setTestResult('🔍 Données en attente de synchronisation détectées');
+        setSyncStatus('Données en attente');
+      } else {
+        setTestResult('🔍 Aucune donnée en attente de synchronisation');
+        setSyncStatus('Aucune donnée en attente');
+      }
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : 'Erreur inconnue';
+      setTestResult(`❌ Erreur: ${errorMsg}`);
+      logger.error('[TestToolCallSync] ❌ Erreur vérification:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const testFullSync = async () => {
+    setIsLoading(true);
+    setTestResult('');
+    setSyncStatus('Synchronisation complète en cours...');
+
+    try {
+      logger.info('[TestToolCallSync] 🧪 Test de synchronisation complète...');
+      
+      if (!currentSession?.id) {
+        throw new Error('Aucune session active');
+      }
+
+      // 1. Vérifier s'il y a des données en attente
+      const hasPending = await checkPendingSync();
+      
+      if (hasPending) {
+        // 2. Synchroniser manuellement
+        const result = await syncToolCalls();
+        
+        if (result.success) {
+          setTestResult(`✅ Synchronisation complète réussie: ${result.toolCalls?.length || 0} tool calls, ${result.toolResults?.length || 0} résultats`);
+          setSyncStatus('Synchronisation complète terminée');
+        } else {
+          setTestResult(`❌ Échec synchronisation complète: ${result.error}`);
+          setSyncStatus('Échec synchronisation complète');
+        }
+      } else {
+        setTestResult('🔍 Aucune donnée à synchroniser');
+        setSyncStatus('Aucune donnée à synchroniser');
+      }
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : 'Erreur inconnue';
+      setTestResult(`❌ Erreur: ${errorMsg}`);
+      setSyncStatus('Erreur');
+      logger.error('[TestToolCallSync] ❌ Erreur synchronisation complète:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Effet pour mettre à jour le statut
+  useEffect(() => {
+    if (isAutoSyncing) {
+      setSyncStatus('Synchronisation automatique active');
+    }
+  }, [isAutoSyncing]);
 
   return (
-    <div className="test-tool-call-sync p-6 max-w-6xl mx-auto">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-800 mb-2">🧪 Test Synchronisation Tool Calls</h1>
-        <p className="text-gray-600">
-          Teste le système de synchronisation automatique qui se déclenche après chaque opération CRUD
-        </p>
-      </div>
+    <div className="max-w-4xl mx-auto p-6 bg-white rounded-lg shadow-lg">
+      <h1 className="text-2xl font-bold text-gray-900 mb-6">
+        🧪 Test de Synchronisation des Tool Calls
+      </h1>
 
-      {/* Boutons de test */}
-      <div className="mb-6">
-        <h2 className="text-xl font-semibold mb-4">🔧 Tests de Synchronisation</h2>
-        
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-4">
-          <button
-            onClick={testCreateNoteSync}
-            disabled={isLoading}
-            className="btn btn-primary btn-sm"
-          >
-            📝 Créer Note
-          </button>
-          
-          <button
-            onClick={testCreateFolderSync}
-            disabled={isLoading}
-            className="btn btn-info btn-sm"
-          >
-            📁 Créer Dossier
-          </button>
-          
-          <button
-            onClick={testUpdateSync}
-            disabled={isLoading}
-            className="btn btn-secondary btn-sm"
-          >
-            🔄 Mettre à Jour
-          </button>
-          
-          <button
-            onClick={testDeleteSync}
-            disabled={isLoading}
-            className="btn btn-danger btn-sm"
-          >
-            🗑️ Supprimer
-          </button>
-          
-          <button
-            onClick={testMoveSync}
-            disabled={isLoading}
-            className="btn btn-warning btn-sm"
-          >
-            📦 Déplacer
-          </button>
-          
-          <button
-            onClick={testMultipleSync}
-            disabled={isLoading}
-            className="btn btn-success btn-sm"
-          >
-            🚀 Multiple
-          </button>
-        </div>
-
-        <div className="flex space-x-3">
-          <button
-            onClick={testServiceStatus}
-            className="btn btn-ghost btn-sm"
-          >
-            📊 Statut
-          </button>
-          
-          <button
-            onClick={testForceSync}
-            disabled={isLoading}
-            className="btn btn-accent btn-sm"
-          >
-            🔄 Force Sync
-          </button>
-          
-          <button
-            onClick={clearLogs}
-            className="btn btn-ghost btn-sm"
-          >
-            🗑️ Vider Logs
-          </button>
+      <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+        <h2 className="text-lg font-semibold text-blue-800 mb-2">📋 Informations de Session</h2>
+        <div className="text-sm text-blue-700">
+          <p><strong>Session active:</strong> {currentSession?.id || 'Aucune'}</p>
+          <p><strong>Nom session:</strong> {currentSession?.name || 'N/A'}</p>
+          <p><strong>Messages dans le thread:</strong> {currentSession?.thread?.length || 0}</p>
+          <p><strong>Statut synchronisation:</strong> {syncStatus}</p>
+          <p><strong>Auto-sync:</strong> {isAutoSyncing ? '🟢 Actif' : '🔴 Inactif'}</p>
         </div>
       </div>
 
-      {/* Logs de test */}
-      <div className="mb-4">
-        <div className="flex justify-between items-center mb-2">
-          <h3 className="text-lg font-semibold">📋 Logs de Test</h3>
-          <span className="text-sm text-gray-500">
-            {testResults.length} messages
-          </span>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        <button
+          onClick={testManualSync}
+          disabled={isLoading || !currentSession?.id}
+          className="bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 text-white px-4 py-2 rounded-lg transition-colors"
+        >
+          {isLoading ? '⏳ Test en cours...' : '🔄 Test Synchronisation Manuelle'}
+        </button>
+
+        <button
+          onClick={testAutoSync}
+          disabled={isLoading || !currentSession?.id}
+          className="bg-green-500 hover:bg-green-600 disabled:bg-gray-400 text-white px-4 py-2 rounded-lg transition-colors"
+        >
+          {isLoading ? '⏳ Test en cours...' : (isAutoSyncing ? '🛑 Arrêter Auto-Sync' : '🚀 Démarrer Auto-Sync')}
+        </button>
+
+        <button
+          onClick={testCheckPending}
+          disabled={isLoading || !currentSession?.id}
+          className="bg-purple-500 hover:bg-purple-600 disabled:bg-gray-400 text-white px-4 py-2 rounded-lg transition-colors"
+        >
+          {isLoading ? '⏳ Test en cours...' : '🔍 Vérifier Données en Attente'}
+        </button>
+
+        <button
+          onClick={testFullSync}
+          disabled={isLoading || !currentSession?.id}
+          className="bg-orange-500 hover:bg-orange-600 disabled:bg-gray-400 text-white px-4 py-2 rounded-lg transition-colors"
+        >
+          {isLoading ? '⏳ Test en cours...' : '🎯 Test Synchronisation Complète'}
+        </button>
+      </div>
+
+      {testResult && (
+        <div className="mb-6 p-4 bg-gray-50 border border-gray-200 rounded-lg">
+          <h2 className="text-lg font-semibold text-gray-800 mb-2">📊 Résultat du Test</h2>
+          <div className="text-sm text-gray-700 whitespace-pre-wrap">{testResult}</div>
         </div>
-        
-        <div className="bg-gray-100 p-4 rounded-lg h-64 overflow-y-auto">
-          {testResults.length === 0 ? (
-            <p className="text-gray-500 text-center mt-8">
-              Aucun test effectué. Cliquez sur un bouton pour commencer.
-            </p>
-          ) : (
-            testResults.map((log, index) => (
-              <div key={index} className="text-sm font-mono mb-1">
-                {log}
-              </div>
-            ))
-          )}
+      )}
+
+      <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+        <h2 className="text-lg font-semibold text-yellow-800 mb-2">ℹ️ Instructions</h2>
+        <div className="text-sm text-yellow-700">
+          <ul className="list-disc list-inside space-y-1">
+            <li><strong>Créez d'abord une session de chat</strong> pour tester la synchronisation</li>
+            <li><strong>Utilisez des tool calls</strong> dans le chat pour générer des données à synchroniser</li>
+            <li><strong>Testez la synchronisation manuelle</strong> pour récupérer les tool calls depuis la DB</li>
+            <li><strong>Activez l'auto-sync</strong> pour une synchronisation continue en arrière-plan</li>
+            <li><strong>Vérifiez les données en attente</strong> pour détecter les nouvelles données</li>
+          </ul>
         </div>
       </div>
 
-      {/* Informations */}
-      <div className="text-sm text-gray-600 bg-blue-50 p-4 rounded-lg">
-        <h4 className="font-semibold mb-2">💡 Comment ça fonctionne :</h4>
-        <ul className="space-y-1">
-          <li>• <strong>Synchronisation automatique :</strong> Se déclenche après chaque tool call</li>
-          <li>• <strong>Polling intelligent :</strong> Vérifie les changements en temps réel</li>
-          <li>• <strong>Store Zustand :</strong> Mise à jour automatique de l'interface</li>
-          <li>• <strong>Fallback :</strong> Basculement automatique realtime ↔ polling</li>
-          <li>• <strong>Monitoring :</strong> Statut en temps réel du service</li>
-        </ul>
+      <div className="mt-6 p-4 bg-gray-50 border border-gray-200 rounded-lg">
+        <h2 className="text-lg font-semibold text-gray-800 mb-2">🔧 Fonctionnalités Testées</h2>
+        <div className="text-sm text-gray-700">
+          <p><strong>✅ Synchronisation manuelle</strong> - Récupère les tool calls depuis la DB</p>
+          <p><strong>✅ Synchronisation automatique</strong> - Met à jour en arrière-plan</p>
+          <p><strong>✅ Détection des données en attente</strong> - Vérifie s'il y a de nouvelles données</p>
+          <p><strong>✅ Synchronisation complète</strong> - Vérifie puis synchronise si nécessaire</p>
+          <p><strong>✅ Non-intrusif</strong> - N'altère PAS la logique d'exécution LLM</p>
+        </div>
       </div>
     </div>
   );
-} 
+};
+
+export default TestToolCallSync; 

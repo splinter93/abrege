@@ -1,10 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { logApi } from '@/utils/logger';
 import { getAuthenticatedUser } from '@/utils/authUtils';
-import { createClient } from '@supabase/supabase-js';
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+import { V2DatabaseUtils } from '@/utils/v2DatabaseUtils';
 
 export async function DELETE(
   request: NextRequest,
@@ -20,12 +17,31 @@ export async function DELETE(
     clientType
   };
 
+  // ✅ DEBUG: Logs détaillés pour identifier le problème
+  console.log('🚀 [DELETE ENDPOINT] Début suppression note:', {
+    ref,
+    clientType,
+    url: request.url,
+    method: request.method,
+    headers: Object.fromEntries(request.headers.entries())
+  });
+
   logApi.info(`🚀 Début suppression note v2 ${ref}`, context);
 
   // 🔐 Authentification
+  console.log('🔐 [DELETE ENDPOINT] Vérification authentification...');
   const authResult = await getAuthenticatedUser(request);
+  console.log('🔐 [DELETE ENDPOINT] Résultat authentification:', {
+    success: authResult.success,
+    userId: authResult.userId,
+    error: authResult.error,
+    status: authResult.status
+  });
+  
   if (!authResult.success) {
-    logApi.error(`❌ Authentification échouée: ${authResult.error}`, context);
+    const errorMsg = `❌ Authentification échouée: ${authResult.error}`;
+    console.error(errorMsg, { authResult, context });
+    logApi.error(errorMsg, context);
     return NextResponse.json(
       { error: authResult.error },
       { status: authResult.status || 401, headers: { "Content-Type": "application/json" } }
@@ -33,110 +49,49 @@ export async function DELETE(
   }
 
   const userId = authResult.userId!;
-  
-  // Récupérer le token d'authentification
-  const authHeader = request.headers.get('Authorization');
-  const userToken = authHeader?.substring(7);
-  
-  if (!userToken) {
-    logApi.error('❌ Token manquant', context);
-    return NextResponse.json(
-      { error: 'Token d\'authentification manquant' },
-      { status: 401, headers: { "Content-Type": "application/json" } }
-    );
-  }
+  console.log('✅ [DELETE ENDPOINT] Utilisateur authentifié:', userId);
 
   try {
-    // Créer un client Supabase authentifié
-    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-      global: {
-        headers: {
-          Authorization: `Bearer ${userToken}`
-        }
-      }
-    });
-
-    let noteId = ref;
+    console.log('🔍 [DELETE ENDPOINT] Résolution référence via V2DatabaseUtils...');
     
-    // Si ce n'est pas un UUID, essayer de le résoudre comme un slug
-    if (!noteId.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
-      logApi.info(`🔍 Résolution slug: ${ref}`, context);
-      
-      const { data: note, error: resolveError } = await supabase
-        .from('articles')
-        .select('id')
-        .eq('slug', ref)
-        .eq('user_id', userId)
-        .single();
-
-      if (resolveError || !note) {
-        logApi.error(`❌ Note non trouvée par slug: ${ref}`, context);
-        return NextResponse.json(
-          { error: 'Note non trouvée' },
-          { status: 404, headers: { "Content-Type": "application/json" } }
-        );
-      }
-      
-      noteId = note.id;
-      logApi.info(`✅ Slug résolu: ${ref} → ${noteId}`, context);
-    }
-
-    // Vérifier que la note existe et appartient à l'utilisateur
-    const { data: existingNote, error: fetchError } = await supabase
-      .from('articles')
-      .select('id, source_title')
-      .eq('id', noteId)
-      .eq('user_id', userId)
-      .single();
-
-    if (fetchError || !existingNote) {
-      logApi.error(`❌ Note non trouvée ou accès refusé: ${noteId}`, context);
-      return NextResponse.json(
-        { error: 'Note non trouvée ou accès refusé' },
-        { status: 404, headers: { "Content-Type": "application/json" } }
-      );
-    }
-
-    logApi.info(`🔍 Suppression note: ${existingNote.source_title} (${noteId})`, context);
-
-    // Supprimer la note
-    const { error: deleteError } = await supabase
-      .from('articles')
-      .delete()
-      .eq('id', noteId)
-      .eq('user_id', userId);
-
-    if (deleteError) {
-      logApi.error(`❌ Erreur suppression: ${deleteError.message}`, context);
-      return NextResponse.json(
-        { error: `Erreur lors de la suppression: ${deleteError.message}` },
-        { status: 500, headers: { "Content-Type": "application/json" } }
-      );
-    }
+    // ✅ Utiliser V2DatabaseUtils pour la suppression (gère automatiquement UUID et slug)
+    const result = await V2DatabaseUtils.deleteNote(ref, userId, context);
+    
+    console.log('✅ [DELETE ENDPOINT] Résultat suppression:', result);
 
     const apiTime = Date.now() - startTime;
     logApi.info(`✅ Note supprimée en ${apiTime}ms`, context);
 
-    // 🚀 DÉCLENCHER LE POLLING AUTOMATIQUEMENT
-    try {
-      const { triggerUnifiedRealtimePolling } = await import('@/services/unifiedRealtimeService');
-      await triggerUnifiedRealtimePolling('notes', 'DELETE', userToken);
-      logApi.info('✅ Polling déclenché pour notes', context);
-    } catch (pollingError) {
-      logApi.warn('⚠️ Erreur lors du déclenchement du polling', pollingError);
-    }
+    // ✅ Pas de polling manuel (le realtime naturel s'en charge)
+    logApi.info('✅ Suppression terminée, realtime naturel gère la synchronisation', context);
 
-    return NextResponse.json({
+    const response = {
       success: true,
       message: 'Note supprimée avec succès',
-      deletedNoteId: noteId
-    });
+      deletedNoteRef: ref
+    };
+    
+    console.log('✅ [DELETE ENDPOINT] Réponse finale:', response);
+    return NextResponse.json(response);
 
   } catch (err: unknown) {
     const error = err as Error;
-    logApi.error(`❌ Erreur serveur: ${error.message}`, context);
+    const errorMsg = `❌ Erreur serveur: ${error.message}`;
+    
+    console.error(errorMsg, {
+      error,
+      message: error.message,
+      stack: error.stack,
+      ref,
+      userId,
+      context
+    });
+    
+    logApi.error(errorMsg, context);
+    
+    // ✅ Gestion d'erreur cohérente avec les autres endpoints
     return NextResponse.json(
-      { error: `Erreur serveur: ${error.message}` },
+      { error: error.message },
       { status: 500, headers: { "Content-Type": "application/json" } }
     );
   }
