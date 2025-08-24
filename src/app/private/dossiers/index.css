@@ -1,5 +1,5 @@
 /* ==========================================================================
-   DOSSIERS PAGE - INDEX CSS
+   DOSSIERS PAGE - GLASSMORPHISM MODERNE ET ÉPURÉ
    ========================================================================== 
    
    Ce fichier centralise tous les imports CSS nécessaires pour la page dossiers.
@@ -22,126 +22,144 @@
 @import '../../../components/Toast.css';
 @import '../../../components/Tooltip.css';
 
-/* 5. Thème custom */
-@import './DossiersPage.glass.css';
-
-/* États d'erreur et de chargement */
-.error-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 4rem 2rem;
-  text-align: center;
-  min-height: 400px;
+/* ==========================================================================
+   VARIABLES SPÉCIFIQUES AUX DOSSIERS
+   ========================================================================== */
+:root {
+  /* Couleurs principales */
+  --dossiers-primary: #e55a2c;
+  --dossiers-primary-light: rgba(229, 90, 44, 0.15);
+  --dossiers-primary-hover: #d1451f;
+  
+  /* Couleurs glassmorphism */
+  --glass-bg-primary: rgba(255, 255, 255, 0.08);
+  --glass-bg-secondary: rgba(255, 255, 255, 0.05);
+  --glass-bg-tertiary: rgba(255, 255, 255, 0.03);
+  --glass-bg-hover: rgba(255, 255, 255, 0.12);
+  
+  /* Bordures glassmorphism */
+  --glass-border-primary: rgba(255, 255, 255, 0.12);
+  --glass-border-secondary: rgba(255, 255, 255, 0.08);
+  --glass-border-hover: rgba(255, 255, 255, 0.18);
+  
+  /* Ombres glassmorphism */
+  --glass-shadow-subtle: 0 4px 20px rgba(0, 0, 0, 0.1);
+  --glass-shadow-medium: 0 8px 32px rgba(0, 0, 0, 0.15);
+  --glass-shadow-strong: 0 16px 48px rgba(0, 0, 0, 0.2);
+  
+  /* Couleurs de texte */
+  --dossiers-text-primary: #f8fafc;
+  --dossiers-text-secondary: #94a3b8;
+  --dossiers-text-muted: #64748b;
+  
+  /* Espacements */
+  --dossiers-spacing-xs: 8px;
+  --dossiers-spacing-sm: 12px;
+  --dossiers-spacing-md: 16px;
+  --dossiers-spacing-lg: 24px;
+  --dossiers-spacing-xl: 32px;
+  --dossiers-spacing-2xl: 48px;
+  
+  /* Rayons de bordure */
+  --dossiers-radius-sm: 8px;
+  --dossiers-radius-md: 12px;
+  --dossiers-radius-lg: 16px;
+  --dossiers-radius-xl: 20px;
+  
+  /* Transitions */
+  --dossiers-transition-fast: 0.15s ease;
+  --dossiers-transition-normal: 0.25s ease;
+  --dossiers-transition-slow: 0.4s ease;
+  
+  /* Z-index */
+  --dossiers-z-header: 1001;
+  --dossiers-z-sidebar: 1000;
+  --dossiers-z-content: 999;
+  --dossiers-z-modal: 1002;
 }
 
-.error-icon {
-  font-size: 3rem;
-  margin-bottom: 1rem;
+/* ==========================================================================
+   STYLES GLOBAUX POUR LA PAGE DOSSIERS
+   ========================================================================== */
+
+/* Suppression des styles redondants - maintenant dans DossiersPage.css */
+.dossiers-page-wrapper,
+.dossiers-sidebar-fixed,
+.dossiers-content-area {
+  /* Styles définis dans DossiersPage.css */
 }
 
-.error-state h2 {
-  font-size: 1.5rem;
-  font-weight: 600;
-  margin-bottom: 0.5rem;
-  color: #dc2626;
+/* ==========================================================================
+   OVERRIDES POUR LA COHÉRENCE AVEC LES NOUVEAUX STYLES
+   ========================================================================== */
+
+/* Assurer que les composants utilisent les bonnes variables */
+.classeur-bandeau {
+  --bandeau-bg: var(--glass-bg-secondary);
+  --bandeau-border: var(--glass-border-secondary);
+  --bandeau-shadow: var(--glass-shadow-subtle);
 }
 
-.error-state p {
-  color: #6b7280;
-  margin-bottom: 1.5rem;
-  max-width: 500px;
+.folder-manager {
+  --manager-bg: transparent;
+  --manager-border: none;
+  --manager-shadow: none;
 }
 
-.error-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
-  justify-content: center;
+/* ==========================================================================
+   ANIMATIONS GLOBALES
+   ========================================================================== */
+
+/* Animation d'entrée pour la page */
+@keyframes pageFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-.loading-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 4rem 2rem;
-  text-align: center;
-  min-height: 400px;
+.dossiers-page-wrapper {
+  animation: pageFadeIn 0.6s ease-out;
 }
 
-.loading-spinner {
-  width: 3rem;
-  height: 3rem;
-  border: 3px solid #e5e7eb;
-  border-top: 3px solid #3b82f6;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin-bottom: 1rem;
+/* ==========================================================================
+   UTILITAIRES GLASSMORPHISM
+   ========================================================================== */
+
+.glass-effect {
+  background: var(--glass-bg-primary);
+  border: 1px solid var(--glass-border-primary);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: var(--glass-shadow-subtle);
 }
 
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+.glass-effect-hover:hover {
+  background: var(--glass-bg-hover);
+  border-color: var(--glass-border-hover);
+  box-shadow: var(--glass-shadow-medium);
+  transform: translateY(-2px);
+  transition: all var(--dossiers-transition-normal);
 }
 
-.loading-state p {
-  color: #6b7280;
-  font-size: 1.1rem;
+/* ==========================================================================
+   RESPONSIVE UTILITIES
+   ========================================================================== */
+
+@media (max-width: 768px) {
+  .dossiers-page-wrapper {
+    --dossiers-spacing-xl: 16px;
+    --dossiers-spacing-2xl: 32px;
+  }
 }
 
-.retry-info {
-  color: #f59e0b;
-  font-size: 0.9rem;
-  margin-top: 0.5rem;
-}
-
-.action-btn {
-  padding: 0.75rem 1.5rem;
-  border-radius: 0.5rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
-  border: none;
-  font-size: 1rem;
-}
-
-.action-btn.primary {
-  background-color: #3b82f6;
-  color: white;
-}
-
-.action-btn.primary:hover {
-  background-color: #2563eb;
-}
-
-.action-btn.primary:active {
-  background-color: #1d4ed8;
-}
-
-.action-btn.secondary {
-  background-color: #6b7280;
-  color: white;
-}
-
-.action-btn.secondary:hover {
-  background-color: #4b5563;
-}
-
-.action-btn.secondary:active {
-  background-color: #374151;
-}
-
-.action-btn.warning {
-  background-color: #f59e0b;
-  color: white;
-}
-
-.action-btn.warning:hover {
-  background-color: #d97706;
-}
-
-.action-btn.warning:active {
-  background-color: #b45309;
+@media (max-width: 480px) {
+  .dossiers-page-wrapper {
+    --dossiers-spacing-lg: 16px;
+    --dossiers-spacing-xl: 12px;
+  }
 } 

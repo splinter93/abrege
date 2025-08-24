@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import type { Classeur, Folder } from "@/store/useFileSystemStore";
 import ClasseurBandeau from "@/components/ClasseurBandeau";
 import Sidebar from "@/components/Sidebar";
@@ -207,37 +208,44 @@ function AuthenticatedDossiersContent({ user }: { user: AuthenticatedUser }) {
 
       {/* Zone de contenu principal */}
       <main className="dossiers-content-area">
-        {/* Titre de la page */}
-        <div className="dossiers-page-title">
-          <h1>Mes Classeurs</h1>
-        </div>
+        {/* Titre de la page avec design glassmorphism */}
+        <motion.div 
+          className="dossiers-page-title-glass"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, ease: "easeOut" }}
+        >
+          <div className="title-content">
+            <motion.div 
+              className="title-icon-container"
+              whileHover={{ scale: 1.1, rotate: 5 }}
+              transition={{ type: "spring", stiffness: 300 }}
+            >
+              <span className="title-icon">📚</span>
+            </motion.div>
+            <div className="title-section">
+              <h1 className="page-title">Mes Classeurs</h1>
+              <p className="page-subtitle">Organisez et gérez vos connaissances</p>
+            </div>
+            <div className="title-stats">
+              <div className="stats-item">
+                <span className="stats-number">{classeurs.length}</span>
+                <span className="stats-label">classeur{classeurs.length > 1 ? 's' : ''}</span>
+              </div>
+            </div>
+          </div>
+        </motion.div>
 
-        {/* Section des classeurs avec navigation */}
+        {/* Section des classeurs avec navigation glassmorphism */}
         {activeClasseur && (
           <>
-            <section className="classeurs-section">
-              <div className="classeurs-container">
-                <ClasseurBandeau
-                  classeurs={classeurs.map((c: Classeur) => ({ 
-                    id: c.id, 
-                    name: c.name, 
-                    emoji: c.emoji, 
-                    color: '#e55a2c'
-                  }))}
-                  activeClasseurId={activeClasseurId || null}
-                  onSelectClasseur={(id) => {
-                    setActiveClasseurId(id);
-                    setCurrentFolderId(undefined);
-                  }}
-                  onCreateClasseur={handleCreateClasseurClick}
-                  onRenameClasseur={handleRenameClasseurClick}
-                  onDeleteClasseur={handleDeleteClasseurClick}
-                />
-              </div>
-            </section>
-
-            <section className="content-section">
-              <div className="content-main-container">
+            <motion.section 
+              className="content-section-glass"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
+            >
+              <div className="content-main-container-glass">
                 <FolderManager
                   classeurId={activeClasseur.id}
                   classeurName={activeClasseur.name}
@@ -265,9 +273,24 @@ function AuthenticatedDossiersContent({ user }: { user: AuthenticatedUser }) {
                   onToggleView={handleToggleView}
                   onCreateFolder={handleCreateFolder}
                   onCreateFile={handleCreateNote}
+                  // 🔧 NOUVEAU: Props pour le ClasseurBandeau intégré
+                  classeurs={classeurs.map((c: Classeur) => ({ 
+                    id: c.id, 
+                    name: c.name, 
+                    emoji: c.emoji || '📁', 
+                    color: '#e55a2c'
+                  }))}
+                  activeClasseurId={activeClasseurId || null}
+                  onSelectClasseur={(id) => {
+                    setActiveClasseurId(id);
+                    setCurrentFolderId(undefined);
+                  }}
+                  onCreateClasseur={handleCreateClasseurClick}
+                  onRenameClasseur={handleRenameClasseurClick}
+                  onDeleteClasseur={handleDeleteClasseurClick}
                 />
               </div>
-            </section>
+            </motion.section>
           </>
         )}
       </main>

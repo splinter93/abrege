@@ -5,6 +5,7 @@ import FolderItem from './FolderItem';
 import FileItem from './FileItem';
 import FolderToolbar, { ViewMode } from './FolderToolbar';
 import FolderBreadcrumb from './FolderBreadcrumb';
+import ClasseurBandeau from './ClasseurBandeau';
 import { Folder, FileArticle } from './types';
 import './FolderContent.css';
 import './FolderGridItems.css';
@@ -54,6 +55,13 @@ interface FolderContentProps {
   onGoToRoot?: () => void;
   onGoToFolder?: (folderId: string) => void;
   folderPath?: Folder[];
+  // 🔧 NOUVEAU: Props pour le ClasseurBandeau intégré
+  classeurs?: Array<{ id: string; name: string; emoji: string; color?: string }>;
+  activeClasseurId?: string | null;
+  onSelectClasseur?: (id: string) => void;
+  onCreateClasseur?: () => void;
+  onRenameClasseur?: (id: string, newName: string) => void;
+  onDeleteClasseur?: (id: string) => void;
 }
 
 const FolderContent: React.FC<FolderContentProps> = ({
@@ -84,6 +92,13 @@ const FolderContent: React.FC<FolderContentProps> = ({
   onGoToRoot,
   onGoToFolder,
   folderPath = [],
+  // 🔧 NOUVEAU: Props pour le ClasseurBandeau intégré
+  classeurs,
+  activeClasseurId,
+  onSelectClasseur,
+  onCreateClasseur,
+  onRenameClasseur,
+  onDeleteClasseur,
 }) => {
   // Robustness: always use arrays to avoid React #310 errors
   const safeFolders = Array.isArray(folders) ? folders : [];
@@ -117,6 +132,20 @@ const FolderContent: React.FC<FolderContentProps> = ({
           onGoToRoot={onGoToRoot}
           onGoToFolder={onGoToFolder}
         />
+      )}
+
+      {/* 🔧 NOUVEAU: ClasseurBandeau intégré tout en haut */}
+      {classeurs && onSelectClasseur && onCreateClasseur && (
+        <div className="folder-classeur-bandeau">
+          <ClasseurBandeau
+            classeurs={classeurs}
+            activeClasseurId={activeClasseurId || null}
+            onSelectClasseur={onSelectClasseur}
+            onCreateClasseur={onCreateClasseur}
+            onRenameClasseur={onRenameClasseur}
+            onDeleteClasseur={onDeleteClasseur}
+          />
+        </div>
       )}
 
       {/* Header with classeur title and toolbar */}

@@ -1,93 +1,90 @@
 /* ==========================================================================
-   PAGE FILES - GLASSMORPHISM ÉPURÉ IDENTIQUE AUX DOSSIERS
+   PAGE FILES - GLASSMORPHISM MODERNE ET ÉPURÉ
    ========================================================================== */
 
 /* ==========================================================================
-   VARIABLES SPÉCIFIQUES AUX FILES (style classeurs)
+   VARIABLES GLASSMORPHISM
    ========================================================================== */
 :root {
-  /* Couleurs identiques aux classeurs */
+  /* Couleurs principales */
   --files-primary: #f97316;
-  --files-primary-light: rgba(249, 115, 22, 0.1);
-  --files-surface: rgba(255, 255, 255, 0.02);
-  --files-border: rgba(255, 255, 255, 0.06);
+  --files-primary-light: rgba(249, 115, 22, 0.15);
+  --files-primary-hover: #ea580c;
+  
+  /* Couleurs glassmorphism */
+  --glass-bg-primary: rgba(255, 255, 255, 0.08);
+  --glass-bg-secondary: rgba(255, 255, 255, 0.05);
+  --glass-bg-tertiary: rgba(255, 255, 255, 0.03);
+  --glass-bg-hover: rgba(255, 255, 255, 0.12);
+  
+  /* Bordures glassmorphism */
+  --glass-border-primary: rgba(255, 255, 255, 0.12);
+  --glass-border-secondary: rgba(255, 255, 255, 0.08);
+  --glass-border-hover: rgba(255, 255, 255, 0.18);
+  
+  /* Ombres glassmorphism */
+  --glass-shadow-subtle: 0 4px 20px rgba(0, 0, 0, 0.1);
+  --glass-shadow-medium: 0 8px 32px rgba(0, 0, 0, 0.15);
+  --glass-shadow-strong: 0 16px 48px rgba(0, 0, 0, 0.2);
+  
+  /* Couleurs de texte */
   --files-text-primary: #f8fafc;
   --files-text-secondary: #94a3b8;
-  --files-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-  --files-radius: 16px;
-  --files-spacing: 24px;
+  --files-text-muted: #64748b;
   
-  /* Variables spécifiques à la page files */
-  --files-spacing-header: var(--spacing-lg);
-  --files-spacing-section: var(--spacing-xl);
-  --files-spacing-content: var(--spacing-lg);
-  --files-spacing-item: var(--spacing-md);
+  /* Espacements */
+  --files-spacing-xs: 8px;
+  --files-spacing-sm: 12px;
+  --files-spacing-md: 16px;
+  --files-spacing-lg: 24px;
+  --files-spacing-xl: 32px;
+  --files-spacing-2xl: 48px;
   
-  /* Z-index spécifiques */
+  /* Rayons de bordure */
+  --files-radius-sm: 8px;
+  --files-radius-md: 12px;
+  --files-radius-lg: 16px;
+  --files-radius-xl: 20px;
+  
+  /* Transitions */
+  --files-transition-fast: 0.15s ease;
+  --files-transition-normal: 0.25s ease;
+  --files-transition-slow: 0.4s ease;
+  
+  /* Z-index */
   --files-z-header: 1001;
   --files-z-sidebar: 1000;
   --files-z-content: 999;
-  
-  /* Nouvelles variables glassmorphism */
-  --glass-bg-subtle: rgba(255, 255, 255, 0.03);
-  --glass-bg-light: rgba(255, 255, 255, 0.05);
-  --glass-bg-medium: rgba(255, 255, 255, 0.08);
-  --glass-border-subtle: rgba(255, 255, 255, 0.06);
-  --glass-border-light: rgba(255, 255, 255, 0.1);
-  --glass-shadow-subtle: 0 4px 20px rgba(0, 0, 0, 0.08);
-  --glass-shadow-medium: 0 8px 32px rgba(0, 0, 0, 0.12);
+  --files-z-modal: 1002;
 }
 
 /* ==========================================================================
-   BACKGROUND IDENTIQUE AUX CLASSEURS
+   BACKGROUND PRINCIPAL
    ========================================================================== */
-
-.dossiers-page-wrapper {
+.files-page-wrapper {
   background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
-  color: var(--files-text-primary);
-  display: grid;
-  grid-template-areas:
-    "header header"
-    "sidebar main";
-  grid-template-columns: 280px 1fr;
-  grid-template-rows: 80px 1fr;
-  height: 100vh;
-  width: 100vw;
-  overflow: hidden;
+  min-height: 100vh;
   position: relative;
+  overflow-x: hidden;
 }
 
-/* Effet de gradient radial identique aux classeurs */
-.dossiers-page-wrapper::before {
-  content: '';
-  position: absolute;
+/* ==========================================================================
+   HEADER FIXE
+   ========================================================================== */
+.files-header-fixed {
+  position: fixed;
   top: 0;
   left: 0;
   right: 0;
-  bottom: 0;
-  background: 
-    radial-gradient(circle at 20% 80%, rgba(249, 115, 22, 0.08) 0%, transparent 50%),
-    radial-gradient(circle at 80% 20%, rgba(245, 158, 11, 0.08) 0%, transparent 50%);
-  pointer-events: none;
-  z-index: -1;
-}
-
-/* ==========================================================================
-   HEADER - STYLE CLASSEURS GLASSMORPHISM
-   ========================================================================== */
-
-.dossiers-header-fixed {
-  grid-area: header;
-  background: var(--glass-bg-subtle);
+  height: 80px;
+  background: rgba(15, 23, 42, 0.8);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border-bottom: 1px solid var(--glass-border-subtle);
+  border-bottom: 1px solid var(--glass-border-primary);
+  z-index: var(--files-z-header);
   display: flex;
   align-items: center;
-  padding: 0 var(--files-spacing-header);
-  z-index: var(--files-z-header);
-  box-shadow: var(--glass-shadow-subtle);
-  position: relative;
+  padding: 0 var(--files-spacing-xl);
 }
 
 .header-content {
@@ -98,439 +95,353 @@
 }
 
 /* ==========================================================================
-   SIDEBAR - STYLE CLASSEURS
+   SIDEBAR FIXE
    ========================================================================== */
-
-.dossiers-sidebar-fixed {
-  grid-area: sidebar;
-  background: transparent;
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
-  border-right: none;
-  overflow-y: auto;
+.files-sidebar-fixed {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 280px;
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-right: 1px solid var(--glass-border-primary);
   z-index: var(--files-z-sidebar);
-  position: relative;
-  padding: 0;
-}
-
-/* ==========================================================================
-   CONTENU PRINCIPAL - STYLE CLASSEURS
-   ========================================================================== */
-
-.dossiers-content-area {
-  grid-area: main;
-  background: transparent;
   overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  z-index: var(--files-z-content);
-  position: relative;
-  padding: 0;
-  margin: 0;
 }
 
 /* ==========================================================================
-   SECTION FICHIERS - GLASSMORPHISM ÉPURÉ
+   ZONE DE CONTENU PRINCIPAL
    ========================================================================== */
-
-.files-section {
-  background: transparent;
-  border: none;
-  border-radius: 0;
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
-  box-shadow: none;
-  padding: var(--files-spacing-section);
-  margin: var(--files-spacing-section);
-  position: relative;
+.files-content-area {
+  margin-left: 280px;
+  padding: var(--files-spacing-xl);
+  min-height: 100vh;
+  padding-top: var(--files-spacing-xl);
 }
 
-.files-header {
+/* ==========================================================================
+   SECTION HEADER GLASSMORPHISM
+   ========================================================================== */
+.files-section {
+  margin-bottom: var(--files-spacing-2xl);
+}
+
+.files-header-glass {
+  background: var(--glass-bg-primary);
+  border: 1px solid var(--glass-border-primary);
+  border-radius: var(--files-radius-xl);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: var(--glass-shadow-medium);
+  padding: var(--files-spacing-xl);
+  transition: all var(--files-transition-normal);
+}
+
+.files-header-glass:hover {
+  background: var(--glass-bg-hover);
+  border-color: var(--glass-border-hover);
+  box-shadow: var(--glass-shadow-strong);
+  transform: translateY(-2px);
+}
+
+.files-header-content {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 28px 32px;
-  background: var(--glass-bg-subtle);
-  border: 1px solid var(--glass-border-subtle);
-  border-radius: 16px;
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  box-shadow: var(--glass-shadow-subtle);
-  position: relative;
-  margin-bottom: 24px;
+  gap: var(--files-spacing-xl);
+}
+
+/* ==========================================================================
+   INFOS DES FICHIERS
+   ========================================================================== */
+.files-info {
+  display: flex;
+  align-items: center;
+  gap: var(--files-spacing-lg);
+}
+
+.files-icon-container {
+  width: 64px;
+  height: 64px;
+  background: var(--files-primary-light);
+  border: 2px solid var(--files-primary);
+  border-radius: var(--files-radius-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.files-icon {
+  font-size: 28px;
+  filter: brightness(1.2);
+}
+
+.files-title-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--files-spacing-xs);
 }
 
 .files-title {
-  font-size: 22px;
-  font-weight: 600;
+  font-size: 32px;
+  font-weight: 700;
   color: var(--files-text-primary);
   margin: 0;
   font-family: 'Noto Sans', sans-serif;
   letter-spacing: -0.02em;
 }
 
-.files-actions {
+.files-subtitle {
+  font-size: 16px;
+  color: var(--files-text-secondary);
+  margin: 0;
+  font-family: 'Noto Sans', sans-serif;
+  font-weight: 400;
+}
+
+/* ==========================================================================
+   STATISTIQUES GLASSMORPHISM
+   ========================================================================== */
+.files-stats-glass {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: var(--files-spacing-xl);
 }
 
-/* ==========================================================================
-   GRID DES FICHIERS - SANS CONTAINER VISIBLE
-   ========================================================================== */
-
-.files-grid {
-  background: transparent;
-  border: none;
-  box-shadow: none;
-  padding: 0;
-  margin: 0;
-  gap: 20px;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-}
-
-/* ==========================================================================
-   ÉLÉMENTS DE FICHIERS - GLASSMORPHISM ÉPURÉ
-   ========================================================================== */
-
-/* Éléments de fichiers - Glassmorphism épuré SANS BORDURE ET SANS BACKGROUND */
-.fm-grid-item {
-  background: transparent !important; /* SUPPRIMÉ LE BACKGROUND */
-  border: none !important; /* SUPPRIMÉ L'ENCADRÉ */
-  border-radius: 16px !important;
-  backdrop-filter: none !important; /* SUPPRIMÉ LE FLU */
-  -webkit-backdrop-filter: none !important;
-  box-shadow: none !important; /* SUPPRIMÉ L'OMBRE */
-  padding: 20px !important;
-  cursor: pointer !important;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-  position: relative !important;
-  overflow: hidden !important;
-  min-height: 120px !important;
-  display: flex !important;
-  flex-direction: column !important;
-  align-items: center !important;
-  justify-content: flex-start !important;
-}
-
-/* Effet de lueur subtile sur les éléments */
-.fm-grid-item::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(135deg, 
-    rgba(255, 255, 255, 0.02) 0%, 
-    rgba(255, 255, 255, 0.01) 50%, 
-    rgba(255, 255, 255, 0.02) 100%);
-  opacity: 0;
-  transition: opacity 0.3s ease;
-  border-radius: 16px;
-}
-
-/* Hover des éléments - Glassmorphism amélioré */
-.fm-grid-item:hover {
-  background: var(--glass-bg-light) !important;
-  border-color: var(--glass-border-light) !important;
-  transform: translateY(-4px) !important;
-  box-shadow: var(--glass-shadow-medium) !important;
-}
-
-.fm-grid-item:hover::before {
-  opacity: 1;
-}
-
-/* ==========================================================================
-   ICÔNES ET CONTENU DES FICHIERS - AFFINÉES ET OPTIMISÉES
-   ========================================================================== */
-
-/* Icônes des fichiers - Style affiné et optimisé */
-.fm-grid-item .file-icon {
-  margin-bottom: 16px !important;
-  display: flex !important;
-  justify-content: center !important;
-  align-items: center !important;
-  width: 100% !important;
-  height: 44px !important; /* Hauteur légèrement augmentée */
-  /* Optimisations pour la netteté */
-  -webkit-font-smoothing: antialiased !important;
-  -moz-osx-font-smoothing: grayscale !important;
-  font-smooth: never !important;
-}
-
-/* Hover des icônes - Effet affiné et fluide */
-.fm-grid-item:hover .file-icon {
-  transform: scale(1.08) !important; /* Scale légèrement plus prononcé */
-  transition: transform 0.2s ease-out !important; /* Transition plus rapide */
-}
-
-
-
-.fm-grid-item .fm-item-name {
-  font-size: 14px !important;
-  font-weight: 500 !important;
-  color: var(--files-text-primary) !important;
-  text-align: center !important;
-  line-height: 1.4 !important;
-  font-family: 'Noto Sans', sans-serif !important;
-  word-break: break-word !important;
-  max-width: 100% !important;
-  margin: 0 !important;
-  
-  /* Limitation stricte à 2 lignes avec "..." - SOLUTION QUI MARCHE */
-  display: block !important;
-  overflow: hidden !important;
-  text-overflow: ellipsis !important;
-  
-  /* Hauteur fixe pour exactement 2 lignes */
-  height: 2.8em !important; /* 2 lignes × 1.4 line-height */
-  min-height: 2.8em !important;
-  max-height: 2.8em !important;
-  
-  /* Centrage horizontal PARFAIT */
-  align-self: center !important;
-  justify-self: center !important;
-  text-align: center !important;
-  width: 100% !important;
-  
-  /* Assurer le centrage parfait */
-  position: relative !important;
-  left: 50% !important;
-  transform: translateX(-50%) !important;
-}
-
-/* ==========================================================================
-   APERÇUS D'IMAGES - GLASSMORPHISM
-   ========================================================================== */
-
-.file-image-preview {
-  width: 100% !important;
-  height: 80px !important;
-  margin-bottom: 12px !important;
-  border-radius: 12px !important;
-  overflow: hidden !important;
-  background: var(--glass-bg-light) !important;
-  border: 1px solid var(--glass-border-subtle) !important;
-  backdrop-filter: blur(10px) !important;
-  -webkit-backdrop-filter: blur(10px) !important;
-}
-
-.preview-image {
-  width: 100% !important;
-  height: 100% !important;
-  object-fit: cover !important;
-  border-radius: 12px !important;
-}
-
-/* ==========================================================================
-   VUE LISTE - GLASSMORPHISM
-   ========================================================================== */
-
-.fm-grid-item.file-list-item {
-  flex-direction: row !important;
-  align-items: center !important;
-  justify-content: flex-start !important;
-  text-align: left !important;
-  min-height: 60px !important;
-  padding: 16px 20px !important;
-}
-
-.fm-grid-item.file-list-item .file-icon {
-  margin-bottom: 0 !important;
-  margin-right: 16px !important;
-  font-size: 24px !important;
-}
-
-.fm-grid-item.file-list-item .file-info {
-  flex: 1;
+.files-count {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
+  gap: var(--files-spacing-xs);
+  padding: var(--files-spacing-md);
+  background: var(--glass-bg-secondary);
+  border: 1px solid var(--glass-border-secondary);
+  border-radius: var(--files-radius-md);
+  min-width: 80px;
 }
 
-.fm-grid-item.file-list-item .file-name {
-  text-align: left !important;
-  font-size: 14px !important;
-  margin-bottom: 4px !important;
-  /* Réinitialiser les propriétés de ligne pour la vue liste */
-  display: block !important;
-  -webkit-line-clamp: unset !important;
-  -webkit-box-orient: unset !important;
-  height: auto !important;
-  min-height: auto !important;
-  /* Réinitialiser le centrage pour la vue liste */
-  position: static !important;
-  left: auto !important;
-  transform: none !important;
+.count-number {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--files-primary);
+  font-family: 'Noto Sans', sans-serif;
+}
+
+.count-label {
+  font-size: 12px;
+  color: var(--files-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 500;
+}
+
+.quota-info-glass {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--files-spacing-sm);
+  padding: var(--files-spacing-md);
+  background: var(--glass-bg-secondary);
+  border: 1px solid var(--glass-border-secondary);
+  border-radius: var(--files-radius-md);
+  min-width: 120px;
+}
+
+.quota-bar-container {
+  display: flex;
+  align-items: center;
+  gap: var(--files-spacing-sm);
+  width: 100%;
+}
+
+.quota-bar {
+  flex: 1;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+  overflow: hidden;
+  position: relative;
+}
+
+.quota-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--files-primary) 0%, #fb923c 100%);
+  border-radius: 3px;
+  transition: all var(--files-transition-normal);
+}
+
+.quota-fill.warning {
+  background: linear-gradient(90deg, #f59e0b 0%, #fbbf24 100%);
+}
+
+.quota-percentage {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--files-text-primary);
+  min-width: 35px;
+  text-align: right;
+}
+
+.quota-label {
+  font-size: 11px;
+  color: var(--files-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 500;
 }
 
 /* ==========================================================================
-   ÉTATS SPÉCIAUX - GLASSMORPHISM
+   SECTION CONTENU
    ========================================================================== */
-
-/* Éléments en cours de renommage */
-.fm-grid-item.renaming {
-  background: var(--glass-bg-medium) !important;
-  border-color: var(--files-primary) !important;
-  box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.2) !important;
+.files-content-section {
+  background: var(--glass-bg-secondary);
+  border: 1px solid var(--glass-border-secondary);
+  border-radius: var(--files-radius-xl);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: var(--glass-shadow-subtle);
+  padding: var(--files-spacing-xl);
+  transition: all var(--files-transition-normal);
 }
 
-/* Éléments en cours de drag */
-.fm-grid-item.dragging {
-  opacity: 0.5 !important;
-  transform: rotate(5deg) scale(0.95) !important;
-}
-
-/* Zone de drop */
-.fm-grid-item.drag-over {
-  background: var(--glass-bg-medium) !important;
-  border-color: var(--files-primary) !important;
-  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.3) !important;
+.files-content-section:hover {
+  border-color: var(--glass-border-hover);
+  box-shadow: var(--glass-shadow-medium);
 }
 
 /* ==========================================================================
-   INPUTS DE RENOMMAGE - GLASSMORPHISM
+   ÉTATS DE CHARGEMENT ET D'ERREUR
    ========================================================================== */
-
-.fm-grid-item input {
-  background: var(--glass-bg-medium) !important;
-  border: 1px solid var(--glass-border-light) !important;
-  border-radius: 8px !important;
-  color: var(--files-text-primary) !important;
-  padding: 8px 12px !important;
-  font-size: 14px !important;
-  font-family: 'Noto Sans', sans-serif !important;
-  text-align: center !important;
-  width: 100% !important;
-  max-width: 150px !important;
-  backdrop-filter: blur(10px) !important;
-  -webkit-backdrop-filter: blur(10px) !important;
+.loading-state-glass,
+.error-state-glass {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--files-spacing-2xl);
+  text-align: center;
+  background: var(--glass-bg-tertiary);
+  border: 1px solid var(--glass-border-secondary);
+  border-radius: var(--files-radius-lg);
+  margin: var(--files-spacing-lg) 0;
 }
 
-.fm-grid-item input:focus {
-  outline: none !important;
-  border-color: var(--files-primary) !important;
-  box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.2) !important;
-  background: var(--glass-bg-light) !important;
+.loading-spinner-glass {
+  width: 48px;
+  height: 48px;
+  border: 3px solid var(--glass-border-secondary);
+  border-top: 3px solid var(--files-primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: var(--files-spacing-lg);
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading-state-glass p,
+.error-state-glass p {
+  color: var(--files-text-secondary);
+  font-size: 16px;
+  margin: var(--files-spacing-md) 0 0 0;
+  font-family: 'Noto Sans', sans-serif;
+}
+
+.error-state-glass h3 {
+  color: var(--files-text-primary);
+  font-size: 20px;
+  margin: var(--files-spacing-md) 0;
+  font-family: 'Noto Sans', sans-serif;
+  font-weight: 600;
+}
+
+.error-icon {
+  font-size: 48px;
+  margin-bottom: var(--files-spacing-lg);
+  opacity: 0.8;
 }
 
 /* ==========================================================================
-   ANIMATIONS ET TRANSITIONS
+   SECTION UPLOADER
    ========================================================================== */
-
-/* Animation d'entrée pour les éléments */
-.fm-grid-item {
-  animation: fadeInUp 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+.uploader-section-glass {
+  background: var(--glass-bg-tertiary);
+  border: 1px solid var(--glass-border-secondary);
+  border-radius: var(--files-radius-lg);
+  padding: var(--files-spacing-lg);
+  margin: var(--files-spacing-lg) 0;
+  overflow: hidden;
 }
-
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* Animation de stagger pour les grilles */
-.files-grid .fm-grid-item:nth-child(1) { animation-delay: 0.1s; }
-.files-grid .fm-grid-item:nth-child(2) { animation-delay: 0.2s; }
-.files-grid .fm-grid-item:nth-child(3) { animation-delay: 0.3s; }
-.files-grid .fm-grid-item:nth-child(4) { animation-delay: 0.4s; }
-.files-grid .fm-grid-item:nth-child(5) { animation-delay: 0.5s; }
-.files-grid .fm-grid-item:nth-child(6) { animation-delay: 0.6s; }
 
 /* ==========================================================================
    RESPONSIVE DESIGN
    ========================================================================== */
-
 @media (max-width: 1200px) {
-  .dossiers-page-wrapper {
-    grid-template-columns: 260px 1fr;
+  .files-content-area {
+    padding: var(--files-spacing-lg);
   }
   
-  .files-section {
-    padding: var(--files-spacing-lg);
-    margin: var(--files-spacing-lg);
+  .files-header-content {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--files-spacing-lg);
+  }
+  
+  .files-stats-glass {
+    width: 100%;
+    justify-content: space-between;
   }
 }
 
 @media (max-width: 768px) {
-  .dossiers-page-wrapper {
-    grid-template-areas:
-      "header"
-      "sidebar"
-      "main";
-    grid-template-columns: 1fr;
-    grid-template-rows: auto auto 1fr;
-    height: auto;
-    min-height: 100vh;
+  .files-sidebar-fixed {
+    transform: translateX(-100%);
+    transition: transform var(--files-transition-normal);
   }
-
-  .dossiers-sidebar-fixed {
-    border-bottom: 1px solid var(--glass-border-subtle);
-  }
-
-  .files-section {
+  
+  .files-content-area {
+    margin-left: 0;
     padding: var(--files-spacing-md);
-    margin: var(--files-spacing-md);
-  }
-
-  .files-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 20px;
-    padding: 24px 24px;
-  }
-
-  .files-actions {
-    width: 100%;
-    justify-content: flex-start;
-  }
-
-  .fm-grid-item {
-    min-height: 100px !important;
-    padding: 16px !important;
-    border-radius: 12px !important;
   }
   
-  .fm-grid-item .file-icon {
-    font-size: 28px !important;
-    margin-bottom: 12px !important;
+  .files-header-glass {
+    padding: var(--files-spacing-lg);
   }
   
-  .fm-grid-item .file-name {
-    font-size: 13px !important;
-    height: 2.6em !important; /* Ajusté pour 2 lignes */
-    min-height: 2.6em !important;
+  .files-title {
+    font-size: 24px;
+  }
+  
+  .files-icon-container {
+    width: 48px;
+    height: 48px;
+  }
+  
+  .files-icon {
+    font-size: 20px;
   }
 }
 
 @media (max-width: 480px) {
-  .fm-grid-item {
-    min-height: 90px !important;
-    padding: 14px !important;
-    border-radius: 10px !important;
+  .files-header-fixed {
+    padding: 0 var(--files-spacing-md);
   }
   
-  .fm-grid-item .file-icon {
-    font-size: 24px !important;
-    margin-bottom: 10px !important;
+  .files-content-area {
+    padding: var(--files-spacing-sm);
   }
   
-  .fm-grid-item .file-name {
-    font-size: 12px !important;
-    height: 2.4em !important; /* Ajusté pour 2 lignes */
-    min-height: 2.4em !important;
+  .files-header-glass {
+    padding: var(--files-spacing-md);
   }
   
-  .files-grid {
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-    gap: 16px;
+  .files-stats-glass {
+    flex-direction: column;
+    gap: var(--files-spacing-md);
   }
 } 

@@ -1,426 +1,325 @@
 /* ==========================================================================
-   DOSSIERS PAGE - DESIGN GLASSMORPHISM ÉPURÉ
+   PAGE DOSSIERS - GLASSMORPHISM MODERNE ET ÉPURÉ
    ========================================================================== */
 
-/* Variables CSS personnalisées */
+/* ==========================================================================
+   VARIABLES GLASSMORPHISM
+   ========================================================================== */
 :root {
-  --dossiers-primary: #f97316;
-  --dossiers-primary-light: rgba(249, 115, 22, 0.1);
-  --dossiers-surface: rgba(255, 255, 255, 0.02);
-  --dossiers-border: rgba(255, 255, 255, 0.1);
+  /* Couleurs principales */
+  --dossiers-primary: #e55a2c;
+  --dossiers-primary-light: rgba(229, 90, 44, 0.15);
+  --dossiers-primary-hover: #d1451f;
+  
+  /* Couleurs glassmorphism */
+  --glass-bg-primary: rgba(255, 255, 255, 0.08);
+  --glass-bg-secondary: rgba(255, 255, 255, 0.05);
+  --glass-bg-tertiary: rgba(255, 255, 255, 0.03);
+  --glass-bg-hover: rgba(255, 255, 255, 0.12);
+  
+  /* Bordures glassmorphism */
+  --glass-border-primary: rgba(255, 255, 255, 0.12);
+  --glass-border-secondary: rgba(255, 255, 255, 0.08);
+  --glass-border-hover: rgba(255, 255, 255, 0.18);
+  
+  /* Ombres glassmorphism */
+  --glass-shadow-subtle: 0 4px 20px rgba(0, 0, 0, 0.1);
+  --glass-shadow-medium: 0 8px 32px rgba(0, 0, 0, 0.15);
+  --glass-shadow-strong: 0 16px 48px rgba(0, 0, 0, 0.2);
+  
+  /* Couleurs de texte */
   --dossiers-text-primary: #f8fafc;
   --dossiers-text-secondary: #94a3b8;
-  --dossiers-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-  --dossiers-radius: 16px;
-  --dossiers-spacing: 24px;
-  --dossiers-sidebar-width: 280px;
+  --dossiers-text-muted: #64748b;
   
-  /* Nouvelles variables glassmorphism */
-  --glass-bg-subtle: rgba(255, 255, 255, 0.03);
-  --glass-bg-light: rgba(255, 255, 255, 0.05);
-  --glass-bg-medium: rgba(255, 255, 255, 0.08);
-  --glass-border-subtle: rgba(255, 255, 255, 0.06);
-  --glass-border-light: rgba(255, 255, 255, 0.1);
-  --glass-shadow-subtle: 0 4px 20px rgba(0, 0, 0, 0.08);
-  --glass-shadow-medium: 0 8px 32px rgba(0, 0, 0, 0.12);
-}
-
-body, .dossiers-page-wrapper {
-  background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
-  font-family: 'Noto Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-}
-
-.dossiers-page-wrapper::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: 
-    radial-gradient(circle at 20% 80%, rgba(249, 115, 22, 0.08) 0%, transparent 50%),
-    radial-gradient(circle at 80% 20%, rgba(245, 158, 11, 0.08) 0%, transparent 50%);
-  pointer-events: none;
-  z-index: -1;
-}
-
-body {
-  overflow-x: hidden;
-}
-
-.dossiers-page-wrapper {
-  display: flex;
-  height: 100vh;
-  width: 100vw;
-  overflow: hidden;
-  position: relative;
+  /* Espacements */
+  --dossiers-spacing-xs: 8px;
+  --dossiers-spacing-sm: 12px;
+  --dossiers-spacing-md: 16px;
+  --dossiers-spacing-lg: 24px;
+  --dossiers-spacing-xl: 32px;
+  --dossiers-spacing-2xl: 48px;
+  
+  /* Rayons de bordure */
+  --dossiers-radius-sm: 8px;
+  --dossiers-radius-md: 12px;
+  --dossiers-radius-lg: 16px;
+  --dossiers-radius-xl: 20px;
+  
+  /* Transitions */
+  --dossiers-transition-fast: 0.15s ease;
+  --dossiers-transition-normal: 0.25s ease;
+  --dossiers-transition-slow: 0.4s ease;
+  
+  /* Z-index */
+  --dossiers-z-header: 1001;
+  --dossiers-z-sidebar: 1000;
+  --dossiers-z-content: 999;
+  --dossiers-z-modal: 1002;
 }
 
 /* ==========================================================================
-   SIDEBAR FIXE - MONTE JUSQU'EN HAUT
+   BACKGROUND PRINCIPAL
+   ========================================================================== */
+.dossiers-page-wrapper {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
+  min-height: 100vh;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* ==========================================================================
+   SIDEBAR FIXE
    ========================================================================== */
 .dossiers-sidebar-fixed {
   position: fixed;
   top: 0;
   left: 0;
   bottom: 0;
-  width: var(--dossiers-sidebar-width);
-  background: transparent;
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
-  border-right: none;
-  padding: 0;
-  box-sizing: border-box;
-  z-index: 999;
-  box-shadow: none;
+  width: 280px;
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-right: 1px solid var(--glass-border-primary);
+  z-index: var(--dossiers-z-sidebar);
+  overflow-y: auto;
 }
 
 /* ==========================================================================
-   ZONE DE CONTENU PRINCIPAL - SANS MARGES SUPERFLUES
+   ZONE DE CONTENU PRINCIPAL
    ========================================================================== */
 .dossiers-content-area {
-  flex: 1;
-  margin-left: var(--dossiers-sidebar-width);
-  margin-top: 0;
-  padding: 0;
-  overflow-y: auto;
-  overflow-x: hidden;
-  background: transparent;
-  position: relative;
-  display: flex;
-  flex-direction: column;
+  margin-left: 280px;
+  padding: var(--dossiers-spacing-xl);
+  min-height: 100vh;
 }
 
 /* ==========================================================================
-   TITRE DE LA PAGE - STYLE GLASSMORPHISM ÉPURÉ
+   TITRE DE LA PAGE - GLASSMORPHISM
    ========================================================================== */
-.dossiers-page-title {
-  padding: 32px 40px 24px 40px;
-  background: transparent;
-  position: relative;
+.dossiers-page-title-glass {
+  background: var(--glass-bg-primary);
+  border: 1px solid var(--glass-border-primary);
+  border-radius: var(--dossiers-radius-xl);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: var(--glass-shadow-medium);
+  padding: var(--dossiers-spacing-xl);
+  margin-bottom: var(--dossiers-spacing-2xl);
+  transition: all var(--dossiers-transition-normal);
 }
 
-.dossiers-page-title h1 {
+.dossiers-page-title-glass:hover {
+  background: var(--glass-bg-hover);
+  border-color: var(--glass-border-hover);
+  box-shadow: var(--glass-shadow-strong);
+  transform: translateY(-2px);
+}
+
+.title-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--dossiers-spacing-xl);
+}
+
+.title-icon-container {
+  width: 64px;
+  height: 64px;
+  background: var(--dossiers-primary-light);
+  border: 2px solid var(--dossiers-primary);
+  border-radius: var(--dossiers-radius-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.title-icon {
+  font-size: 28px;
+  filter: brightness(1.2);
+}
+
+.title-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--dossiers-spacing-xs);
+  flex: 1;
+}
+
+.page-title {
   font-size: 32px;
   font-weight: 700;
   color: var(--dossiers-text-primary);
   margin: 0;
   font-family: 'Noto Sans', sans-serif;
   letter-spacing: -0.02em;
-  line-height: 1.2;
-  position: relative;
 }
 
-.dossiers-page-title h1::after {
-  display: none; /* SUPPRIMÉ LE SOULIGNAGE ORANGE */
-}
-
-/* ==========================================================================
-   SECTION DES CLASSEURS - GLASSMORPHISM SUBTIL
-   ========================================================================== */
-.classeurs-section {
-  padding: 0 40px 16px 40px; /* RÉDUIT le padding bottom de 24px à 16px */
-  background: transparent;
-  position: relative;
-}
-
-/* Container pour le bandeau des classeurs - Glassmorphism épuré et FIN avec bordure propre */
-.classeurs-container {
-  background: var(--glass-bg-subtle);
-  border: 1px solid var(--glass-border-subtle);
-  border-radius: 20px;
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  box-shadow: var(--glass-shadow-subtle);
-  padding: 12px 32px; /* RÉDUIT de 24px à 12px pour plus de finesse */
-  position: relative;
-  overflow: hidden;
-}
-
-/* ==========================================================================
-   SECTION DU CONTENU PRINCIPAL - SANS CONTAINER VISIBLE
-   ========================================================================== */
-.content-section {
-  flex: 1;
-  padding: 0 40px 40px 40px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px; /* RÉDUIT au minimum pour rapprocher au maximum le header de la grille */
-}
-
-/* Container principal pour le contenu - Transparent */
-.content-main-container {
-  background: transparent;
-  border: none;
-  border-radius: 0;
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
-  box-shadow: none;
-  overflow: visible;
-  position: relative;
-  flex: 1;
-}
-
-/* ==========================================================================
-   HEADER DES DOSSIERS - STYLE GLASSMORPHISM SUBTIL ET REMONTÉ AU MAXIMUM
-   ========================================================================== */
-.folder-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16px 32px; /* RÉDUIT encore plus pour plus de finesse */
-  background: var(--glass-bg-subtle);
-  border: 1px solid var(--glass-border-subtle);
-  border-radius: 16px;
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  box-shadow: var(--glass-shadow-subtle);
-  position: relative;
-  margin-bottom: 4px; /* RÉDUIT au minimum pour rapprocher au maximum de la grille */
-}
-
-.folder-info {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-.folder-icon {
-  font-size: 28px;
-  opacity: 0.9;
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
-}
-
-.folder-title {
-  font-size: 22px;
-  font-weight: 600;
-  color: var(--dossiers-text-primary);
+.page-subtitle {
+  font-size: 16px;
+  color: var(--dossiers-text-secondary);
   margin: 0;
   font-family: 'Noto Sans', sans-serif;
-  letter-spacing: -0.02em;
+  font-weight: 400;
+}
+
+.title-stats {
+  display: flex;
+  align-items: center;
+  gap: var(--dossiers-spacing-lg);
+}
+
+.stats-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--dossiers-spacing-xs);
+  padding: var(--dossiers-spacing-md);
+  background: var(--glass-bg-secondary);
+  border: 1px solid var(--glass-border-secondary);
+  border-radius: var(--dossiers-radius-md);
+  min-width: 80px;
+}
+
+.stats-number {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--dossiers-primary);
+  font-family: 'Noto Sans', sans-serif;
+}
+
+.stats-label {
+  font-size: 12px;
+  color: var(--dossiers-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 500;
 }
 
 /* ==========================================================================
-   ACTIONS DES DOSSIERS - TOOLBAR GLASSMORPHISM
+   SECTION CLASSEURS - GLASSMORPHISM
    ========================================================================== */
-.folder-actions {
-  display: flex;
-  align-items: center;
-  gap: 16px;
+.classeurs-section-glass {
+  margin-bottom: var(--dossiers-spacing-2xl);
 }
 
-/* Styles pour la FolderToolbar intégrée */
-.folder-actions .folder-toolbar {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 0;
-  background: transparent;
-  border: none;
+.classeurs-container-glass {
+  background: var(--glass-bg-secondary);
+  border: 1px solid var(--glass-border-secondary);
+  border-radius: var(--dossiers-radius-xl);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: var(--glass-shadow-subtle);
+  padding: var(--dossiers-spacing-lg);
+  transition: all var(--dossiers-transition-normal);
 }
 
-.folder-actions .fm-control-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 44px;
-  height: 44px;
-  border: 1px solid var(--glass-border-light);
-  border-radius: 12px;
-  background: var(--glass-bg-light);
-  color: rgba(255, 255, 255, 0.8);
-  cursor: pointer;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  font-size: 0.9rem;
-  backdrop-filter: blur(10px);
-  position: relative;
-  overflow: hidden;
-}
-
-.folder-actions .fm-control-btn::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(135deg, 
-    rgba(255, 255, 255, 0.02) 0%, 
-    rgba(255, 255, 255, 0.01) 100%);
-  opacity: 0;
-  transition: opacity 0.25s ease;
-}
-
-.folder-actions .fm-control-btn:hover {
-  background: var(--glass-bg-medium);
-  border-color: var(--glass-border-light);
-  color: rgba(255, 255, 255, 1);
-  transform: translateY(-2px);
+.classeurs-container-glass:hover {
+  border-color: var(--glass-border-hover);
   box-shadow: var(--glass-shadow-medium);
 }
 
-.folder-actions .fm-control-btn:hover::before {
-  opacity: 1;
-}
-
-.folder-actions .fm-control-btn:active {
-  transform: translateY(0);
-}
-
 /* ==========================================================================
-   ÉTATS DE CHARGEMENT ET D'ERREUR - GLASSMORPHISM
+   SECTION CONTENU - GLASSMORPHISM
    ========================================================================== */
-.loading-state,
-.error-state,
-.empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 80px 32px;
-  margin: 24px;
-  background: var(--glass-bg-subtle);
-  border: 1px solid var(--glass-border-subtle);
-  border-radius: 20px;
+.content-section-glass {
+  background: var(--glass-bg-secondary);
+  border: 1px solid var(--glass-border-secondary);
+  border-radius: var(--dossiers-radius-xl);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   box-shadow: var(--glass-shadow-subtle);
-  text-align: center;
+  padding: var(--dossiers-spacing-xl);
+  transition: all var(--dossiers-transition-normal);
 }
 
-.loading-spinner {
-  width: 48px;
-  height: 48px;
-  border: 3px solid transparent;
-  border-top: 3px solid var(--dossiers-primary);
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin-bottom: 28px;
-  filter: drop-shadow(0 2px 4px rgba(249, 115, 22, 0.2));
+.content-section-glass:hover {
+  border-color: var(--glass-border-hover);
+  box-shadow: var(--glass-shadow-medium);
 }
 
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-.loading-state p {
-  font-size: 16px;
-  color: var(--dossiers-text-secondary);
-  margin: 0;
-  font-family: 'Noto Sans', sans-serif;
-}
-
-.error-icon,
-.empty-icon {
-  font-size: 56px;
-  margin-bottom: 28px;
-  opacity: 0.8;
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
-}
-
-.error-state h3,
-.empty-state h2 {
-  font-size: 22px;
-  font-weight: 600;
-  color: var(--dossiers-text-primary);
-  margin: 0 0 16px 0;
-  font-family: 'Noto Sans', sans-serif;
-  letter-spacing: -0.02em;
-}
-
-.error-state p,
-.empty-state p {
-  font-size: 16px;
-  color: var(--dossiers-text-secondary);
-  margin: 0 0 28px 0;
-  font-family: 'Noto Sans', sans-serif;
-  max-width: 450px;
-  line-height: 1.6;
+.content-main-container-glass {
+  width: 100%;
+  height: 100%;
 }
 
 /* ==========================================================================
-   RESPONSIVE DESIGN - ADAPTÉ AU NOUVEAU DESIGN
+   RESPONSIVE DESIGN
    ========================================================================== */
 @media (max-width: 1200px) {
-  .dossiers-sidebar-fixed {
-    width: 260px;
-  }
   .dossiers-content-area {
-    margin-left: 260px;
+    padding: var(--dossiers-spacing-lg);
   }
   
-  .dossiers-page-title,
-  .classeurs-section,
-  .content-section {
-    padding-left: 32px;
-    padding-right: 32px;
+  .title-content {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--dossiers-spacing-lg);
+  }
+  
+  .title-stats {
+    width: 100%;
+    justify-content: space-between;
   }
 }
 
 @media (max-width: 768px) {
-  .dossiers-page-wrapper {
-    flex-direction: column;
-    height: auto;
-    min-height: 100vh;
-  }
-
   .dossiers-sidebar-fixed {
-    position: relative;
-    width: 100%;
-    height: auto;
-    border-right: none;
-    border-bottom: 1px solid var(--dossiers-border);
-    top: 0;
-    z-index: 998;
+    transform: translateX(-100%);
+    transition: transform var(--dossiers-transition-normal);
   }
-
+  
   .dossiers-content-area {
     margin-left: 0;
-    margin-top: 0;
-    padding: 16px;
+    padding: var(--dossiers-spacing-md);
   }
-
-  .dossiers-page-title {
-    padding: 24px 16px 20px 16px;
+  
+  .dossiers-page-title-glass {
+    padding: var(--dossiers-spacing-lg);
   }
-
-  .dossiers-page-title h1 {
-    font-size: 28px;
+  
+  .page-title {
+    font-size: 24px;
   }
-
-  .classeurs-section,
-  .content-section {
-    padding: 20px 16px;
+  
+  .title-icon-container {
+    width: 48px;
+    height: 48px;
   }
-
-  .classeurs-container {
-    padding: 20px 24px;
-    border-radius: 16px;
+  
+  .title-icon {
+    font-size: 20px;
   }
+  
+  .classeurs-container-glass {
+    padding: var(--dossiers-spacing-md);
+  }
+  
+  .content-section-glass {
+    padding: var(--dossiers-spacing-lg);
+  }
+}
 
-  .folder-header {
+@media (max-width: 480px) {
+  .dossiers-content-area {
+    padding: var(--dossiers-spacing-sm);
+  }
+  
+  .dossiers-page-title-glass {
+    padding: var(--dossiers-spacing-md);
+  }
+  
+  .title-stats {
     flex-direction: column;
-    align-items: flex-start;
-    gap: 20px;
-    padding: 24px 24px;
+    gap: var(--dossiers-spacing-md);
   }
-
-  .folder-actions {
-    width: 100%;
-    justify-content: flex-start;
+  
+  .classeurs-container-glass {
+    padding: var(--dossiers-spacing-sm);
   }
-
-  .folder-actions .fm-control-btn {
-    width: 40px;
-    height: 40px;
-  }
-
-  .loading-state,
-  .error-state,
-  .empty-state {
-    padding: 60px 24px;
-    margin: 16px;
-    border-radius: 16px;
+  
+  .content-section-glass {
+    padding: var(--dossiers-spacing-md);
   }
 } 

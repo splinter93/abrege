@@ -1,5 +1,5 @@
 /* ==========================================================================
-   FILES PAGE - GLASSMORPHISM ÉPURÉ IDENTIQUE AUX DOSSIERS
+   FILES PAGE - GLASSMORPHISM MODERNE ET ÉPURÉ
    ========================================================================== */
 
 /* ==========================================================================
@@ -25,16 +25,56 @@
    VARIABLES SPÉCIFIQUES AUX FILES
    ========================================================================== */
 :root {
-  /* Couleurs identiques aux classeurs */
+  /* Couleurs principales */
   --files-primary: #f97316;
-  --files-primary-light: rgba(249, 115, 22, 0.1);
-  --files-surface: rgba(255, 255, 255, 0.02);
-  --files-border: rgba(255, 255, 255, 0.06);
+  --files-primary-light: rgba(249, 115, 22, 0.15);
+  --files-primary-hover: #ea580c;
+  
+  /* Couleurs glassmorphism */
+  --glass-bg-primary: rgba(255, 255, 255, 0.08);
+  --glass-bg-secondary: rgba(255, 255, 255, 0.05);
+  --glass-bg-tertiary: rgba(255, 255, 255, 0.03);
+  --glass-bg-hover: rgba(255, 255, 255, 0.12);
+  
+  /* Bordures glassmorphism */
+  --glass-border-primary: rgba(255, 255, 255, 0.12);
+  --glass-border-secondary: rgba(255, 255, 255, 0.08);
+  --glass-border-hover: rgba(255, 255, 255, 0.18);
+  
+  /* Ombres glassmorphism */
+  --glass-shadow-subtle: 0 4px 20px rgba(0, 0, 0, 0.1);
+  --glass-shadow-medium: 0 8px 32px rgba(0, 0, 0, 0.15);
+  --glass-shadow-strong: 0 16px 48px rgba(0, 0, 0, 0.2);
+  
+  /* Couleurs de texte */
   --files-text-primary: #f8fafc;
   --files-text-secondary: #94a3b8;
-  --files-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-  --files-radius: 16px;
-  --files-spacing: 24px;
+  --files-text-muted: #64748b;
+  
+  /* Espacements */
+  --files-spacing-xs: 8px;
+  --files-spacing-sm: 12px;
+  --files-spacing-md: 16px;
+  --files-spacing-lg: 24px;
+  --files-spacing-xl: 32px;
+  --files-spacing-2xl: 48px;
+  
+  /* Rayons de bordure */
+  --files-radius-sm: 8px;
+  --files-radius-md: 12px;
+  --files-radius-lg: 16px;
+  --files-radius-xl: 20px;
+  
+  /* Transitions */
+  --files-transition-fast: 0.15s ease;
+  --files-transition-normal: 0.25s ease;
+  --files-transition-slow: 0.4s ease;
+  
+  /* Z-index */
+  --files-z-header: 1001;
+  --files-z-sidebar: 1000;
+  --files-z-content: 999;
+  --files-z-modal: 1002;
 }
 
 /* ==========================================================================
@@ -42,150 +82,84 @@
    ========================================================================== */
 
 /* Suppression des styles redondants - maintenant dans page.css */
-.dossiers-page-wrapper,
-.dossiers-header-fixed,
-.dossiers-sidebar-fixed,
-.dossiers-content-area {
+.files-page-wrapper,
+.files-header-fixed,
+.files-sidebar-fixed,
+.files-content-area {
   /* Styles définis dans page.css */
 }
 
 /* ==========================================================================
-   ÉTATS D'ERREUR ET DE CHARGEMENT - GLASSMORPHISM
+   OVERRIDES POUR LA COHÉRENCE AVEC LES NOUVEAUX STYLES
    ========================================================================== */
 
-.error-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 4rem 2rem;
-  text-align: center;
-  min-height: 400px;
-  background: var(--glass-bg-subtle);
-  border: 1px solid var(--glass-border-subtle);
-  border-radius: 20px;
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  box-shadow: var(--glass-shadow-subtle);
+/* Assurer que les composants utilisent les bonnes variables */
+.files-toolbar {
+  --toolbar-bg: var(--glass-bg-secondary);
+  --toolbar-border: var(--glass-border-secondary);
+  --toolbar-shadow: var(--glass-shadow-subtle);
 }
 
-.error-icon {
-  font-size: 3rem;
-  margin-bottom: 1rem;
-  opacity: 0.7;
-}
-
-.error-state h2 {
-  font-size: 1.5rem;
-  font-weight: 600;
-  margin-bottom: 0.5rem;
-  color: var(--files-text-primary);
-}
-
-.error-state p {
-  color: var(--files-text-secondary);
-  margin-bottom: 1.5rem;
-  max-width: 500px;
-}
-
-.error-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
-  justify-content: center;
-}
-
-.loading-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 4rem 2rem;
-  text-align: center;
-  min-height: 400px;
-  background: var(--glass-bg-subtle);
-  border: 1px solid var(--glass-border-subtle);
-  border-radius: 20px;
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  box-shadow: var(--glass-shadow-subtle);
-}
-
-.loading-spinner {
-  width: 3rem;
-  height: 3rem;
-  border: 3px solid transparent;
-  border-top: 3px solid var(--files-primary);
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin-bottom: 1rem;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-.loading-state p {
-  color: var(--files-text-secondary);
-  font-size: 1.1rem;
-}
-
-.retry-info {
-  color: var(--files-primary);
-  font-size: 0.9rem;
-  margin-top: 0.5rem;
-}
-
-.action-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1.5rem;
-  background: var(--files-primary);
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-size: 0.9rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  text-decoration: none;
-  outline: none;
-}
-
-.action-btn:hover {
-  background: var(--files-primary-light);
-  transform: translateY(-1px);
-}
-
-.action-btn:active {
-  transform: translateY(0);
-}
-
-.action-btn:focus-visible {
-  outline: 2px solid var(--files-primary);
-  outline-offset: 2px;
+.files-content-container {
+  --content-bg: transparent;
+  --content-border: none;
+  --content-shadow: none;
 }
 
 /* ==========================================================================
-   RESPONSIVE DESIGN
+   ANIMATIONS GLOBALES
+   ========================================================================== */
+
+/* Animation d'entrée pour la page */
+@keyframes pageFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.files-page-wrapper {
+  animation: pageFadeIn 0.6s ease-out;
+}
+
+/* ==========================================================================
+   UTILITAIRES GLASSMORPHISM
+   ========================================================================== */
+
+.glass-effect {
+  background: var(--glass-bg-primary);
+  border: 1px solid var(--glass-border-primary);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: var(--glass-shadow-subtle);
+}
+
+.glass-effect-hover:hover {
+  background: var(--glass-bg-hover);
+  border-color: var(--glass-border-hover);
+  box-shadow: var(--glass-shadow-medium);
+  transform: translateY(-2px);
+  transition: all var(--files-transition-normal);
+}
+
+/* ==========================================================================
+   RESPONSIVE UTILITIES
    ========================================================================== */
 
 @media (max-width: 768px) {
-  .error-state,
-  .loading-state {
-    padding: 3rem 1.5rem;
-    margin: 1rem;
-    border-radius: 16px;
+  .files-page-wrapper {
+    --files-spacing-xl: 16px;
+    --files-spacing-2xl: 32px;
   }
-  
-  .error-state h2 {
-    font-size: 1.25rem;
-  }
-  
-  .loading-spinner {
-    width: 2.5rem;
-    height: 2.5rem;
+}
+
+@media (max-width: 480px) {
+  .files-page-wrapper {
+    --files-spacing-lg: 16px;
+    --files-spacing-xl: 12px;
   }
 } 

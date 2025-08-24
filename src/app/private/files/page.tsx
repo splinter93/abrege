@@ -15,6 +15,8 @@ import { useSecureErrorHandler } from "@/components/SecureErrorHandler";
 import { STORAGE_CONFIG } from "@/config/storage";
 import "./index.css";
 import "./page.css"; // CSS critique pour éviter le flash
+import { motion } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
 
 export default function FilesPage() {
   return (
@@ -144,55 +146,97 @@ function FilesPageContent() {
     setRenamingItemId(null);
   }, []);
 
-  return (
-    <div className="dossiers-page-wrapper">
-      {/* Header fixe avec navigation */}
-      <header className="dossiers-header-fixed">
-        <div className="header-content">
-          <LogoHeader size="medium" position="left" />
-        </div>
-      </header>
+  const usagePercentage = quotaInfo ? Math.round((quotaInfo.usedBytes / quotaInfo.quotaBytes) * 100) : 0;
 
+  return (
+    <div className="files-page-wrapper">
       {/* Sidebar fixe */}
-      <aside className="dossiers-sidebar-fixed">
+      <aside className="files-sidebar-fixed">
         <Sidebar />
       </aside>
 
       {/* Zone de contenu principal */}
-      <main className="dossiers-content-area">
-        {/* Section des fichiers avec header */}
-        <section className="files-section">
-          <div className="files-header">
-            <div className="files-info">
-              <span className="files-icon">📁</span>
-              <h2 className="files-title">Mes Fichiers</h2>
-            </div>
-            <div className="files-stats">
-              <span>{displayFiles.length} fichier{displayFiles.length > 1 ? 's' : ''}</span>
-              {quotaInfo && (
-                <span className="quota-info">
-                  {Math.round((quotaInfo.usedBytes / quotaInfo.quotaBytes) * 100)}% utilisé
-                </span>
-              )}
+      <main className="files-content-area">
+        {/* Section des fichiers avec header glassmorphism */}
+        <motion.section 
+          className="files-section"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" }}
+        >
+          <div className="files-header-glass">
+            <div className="files-header-content">
+              <div className="files-info">
+                <motion.div 
+                  className="files-icon-container"
+                  whileHover={{ scale: 1.1, rotate: 5 }}
+                  transition={{ type: "spring", stiffness: 300 }}
+                >
+                  <span className="files-icon">📁</span>
+                </motion.div>
+                <div className="files-title-section">
+                  <h2 className="files-title">Mes Fichiers</h2>
+                  <p className="files-subtitle">Gérez et organisez vos documents</p>
+                </div>
+              </div>
+              
+              <div className="files-stats-glass">
+                <div className="files-count">
+                  <span className="count-number">{displayFiles.length}</span>
+                  <span className="count-label">fichier{displayFiles.length > 1 ? 's' : ''}</span>
+                </div>
+                
+                {quotaInfo && (
+                  <div className="quota-info-glass">
+                    <div className="quota-bar-container">
+                      <div className="quota-bar">
+                        <motion.div 
+                          className={`quota-fill ${usagePercentage > 80 ? 'warning' : ''}`}
+                          initial={{ width: 0 }}
+                          animate={{ width: `${usagePercentage}%` }}
+                          transition={{ duration: 1, delay: 0.5, ease: "easeOut" }}
+                        />
+                      </div>
+                      <span className="quota-percentage">{usagePercentage}%</span>
+                    </div>
+                    <span className="quota-label">utilisé</span>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
-        </section>
+        </motion.section>
 
         {/* Section de contenu des fichiers */}
-        <section className="files-content-section">
+        <motion.section 
+          className="files-content-section"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
+        >
           {loading && (
-            <div className="loading-state">
-              <div className="loading-spinner"></div>
+            <motion.div 
+              className="loading-state-glass"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.4 }}
+            >
+              <div className="loading-spinner-glass"></div>
               <p>Chargement des fichiers...</p>
-            </div>
+            </motion.div>
           )}
           
           {error && (
-            <div className="error-state">
+            <motion.div 
+              className="error-state-glass"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.4 }}
+            >
               <div className="error-icon">⚠️</div>
               <h3>Erreur de chargement</h3>
               <p>{error}</p>
-            </div>
+            </motion.div>
           )}
           
           {!loading && !error && (
@@ -209,18 +253,26 @@ function FilesPageContent() {
                 onSearchChange={setSearchQuery}
               />
               
-              {/* Composant d'upload */}
-              {showUploader && (
-                <div className="uploader-section">
-                  <FileUploaderLocal
-                    onUploadComplete={handleUploadComplete}
-                    onUploadError={handleUploadError}
-                    maxFileSize={STORAGE_CONFIG.FILE_LIMITS.MAX_FILE_SIZE} // Utilise la config centralisée
-                    allowedTypes={[...STORAGE_CONFIG.FILE_LIMITS.ALLOWED_MIME_TYPES]} // Copie mutable pour éviter l'erreur de type
-                    multiple={true}
-                  />
-                </div>
-              )}
+              {/* Composant d'upload avec animation */}
+              <AnimatePresence>
+                {showUploader && (
+                  <motion.div 
+                    className="uploader-section-glass"
+                    initial={{ opacity: 0, height: 0, y: -20 }}
+                    animate={{ opacity: 1, height: "auto", y: 0 }}
+                    exit={{ opacity: 0, height: 0, y: -20 }}
+                    transition={{ duration: 0.4, ease: "easeInOut" }}
+                  >
+                    <FileUploaderLocal
+                      onUploadComplete={handleUploadComplete}
+                      onUploadError={handleUploadError}
+                      maxFileSize={STORAGE_CONFIG.FILE_LIMITS.MAX_FILE_SIZE}
+                      allowedTypes={[...STORAGE_CONFIG.FILE_LIMITS.ALLOWED_MIME_TYPES]}
+                      multiple={true}
+                    />
+                  </motion.div>
+                )}
+              </AnimatePresence>
               
               <FilesContent
                 files={displayFiles}
@@ -235,7 +287,7 @@ function FilesPageContent() {
               />
             </div>
           )}
-        </section>
+        </motion.section>
       </main>
     </div>
   );

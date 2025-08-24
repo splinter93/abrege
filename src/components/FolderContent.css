@@ -137,3 +137,78 @@
   width: 100%; /* S'adapte à la grille */
   height: 100%;
 } 
+
+/* ==========================================================================
+   CLASSEUR BANDEAU INTÉGRÉ
+   ========================================================================== */
+
+.folder-classeur-bandeau {
+  margin-bottom: var(--spacing-lg);
+  padding: var(--spacing-md) 0;
+  border-bottom: 1px solid var(--glass-border-secondary);
+}
+
+.folder-classeur-bandeau .classeur-bandeau {
+  background: transparent;
+  border: none;
+  margin-bottom: 0;
+}
+
+.folder-classeur-bandeau .bandeau-content {
+  justify-content: flex-start;
+  gap: var(--spacing-sm);
+}
+
+.folder-classeur-bandeau .classeur-pill {
+  background: var(--glass-bg-tertiary);
+  border: 1px solid var(--glass-border-secondary);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  box-shadow: var(--glass-shadow-subtle);
+}
+
+.folder-classeur-bandeau .classeur-pill:hover {
+  background: var(--glass-bg-hover);
+  border-color: var(--glass-border-hover);
+  box-shadow: var(--glass-shadow-medium);
+}
+
+.folder-classeur-bandeau .classeur-pill.active {
+  background: var(--dossiers-primary-light);
+  border-color: var(--dossiers-primary);
+  color: var(--dossiers-primary);
+  box-shadow: 0 4px 16px rgba(229, 90, 44, 0.2);
+}
+
+/* ==========================================================================
+   AMÉLIORATIONS POUR ÉLÉMENTS SANS BACKGROUND
+   ========================================================================== */
+
+/* Améliorer la lisibilité des icônes */
+.fm-grid-item .file-icon {
+  filter: brightness(1.1);
+  transition: filter var(--files-transition-normal);
+}
+
+.fm-grid-item:hover .file-icon {
+  filter: brightness(1.3);
+}
+
+/* Améliorer la lisibilité du texte */
+.fm-grid-item .file-name {
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  transition: text-shadow var(--files-transition-normal);
+}
+
+.fm-grid-item:hover .file-name {
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+}
+
+/* Espacement plus généreux entre les éléments */
+.folder-grid {
+  gap: 24px;
+}
+
+.folder-grid.files {
+  margin-top: 20px;
+} 

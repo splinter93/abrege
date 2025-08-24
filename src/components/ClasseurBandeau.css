@@ -1,5 +1,5 @@
 /* ==========================================================================
-   CLASSEUR BANDEAU - DESIGN MODERNE ÉPURÉ V3
+   CLASSEUR BANDEAU - GLASSMORPHISM MODERNE
    ========================================================================== */
 
 .classeur-bandeau {
@@ -13,38 +13,42 @@
 .bandeau-content {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: var(--dossiers-spacing-md);
   overflow-x: auto;
   scrollbar-width: none;
   -ms-overflow-style: none;
-  padding: 4px 0;
+  padding: var(--dossiers-spacing-xs) 0;
 }
 
 .bandeau-content::-webkit-scrollbar {
   display: none;
 }
 
-/* Pills des classeurs - Style intégré sans encadrés */
+/* ==========================================================================
+   PILLS DES CLASSEURS - GLASSMORPHISM
+   ========================================================================== */
+
 .classeur-pill {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 12px 20px;
-  border-radius: 14px;
-  border: none; /* Supprimé la bordure */
-  background: rgba(255, 255, 255, 0.04); /* Background plus subtil */
-  color: rgba(255, 255, 255, 0.75);
+  gap: var(--dossiers-spacing-sm);
+  padding: var(--dossiers-spacing-sm) var(--dossiers-spacing-lg);
+  border-radius: var(--dossiers-radius-md);
+  border: 1px solid var(--glass-border-secondary);
+  background: var(--glass-bg-tertiary);
+  color: var(--dossiers-text-secondary);
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all var(--dossiers-transition-normal);
   white-space: nowrap;
   font-family: 'Noto Sans', sans-serif;
   min-height: 44px;
   position: relative;
   overflow: hidden;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  box-shadow: var(--glass-shadow-subtle);
 }
 
 .classeur-pill::before {
@@ -55,19 +59,20 @@
   right: 0;
   bottom: 0;
   background: linear-gradient(135deg, 
-    rgba(255, 255, 255, 0.03) 0%, 
-    rgba(255, 255, 255, 0.01) 100%);
+    rgba(255, 255, 255, 0.05) 0%, 
+    rgba(255, 255, 255, 0.02) 50%, 
+    rgba(255, 255, 255, 0.05) 100%);
   opacity: 0;
-  transition: opacity 0.3s ease;
+  transition: opacity var(--dossiers-transition-normal);
+  border-radius: var(--dossiers-radius-md);
 }
 
 .classeur-pill:hover {
-  background: rgba(255, 255, 255, 0.08);
-  color: rgba(255, 255, 255, 0.9);
+  background: var(--glass-bg-hover);
+  border-color: var(--glass-border-hover);
+  color: var(--dossiers-text-primary);
   transform: translateY(-2px);
-  box-shadow: 
-    0 8px 20px rgba(0, 0, 0, 0.15),
-    0 2px 8px rgba(255, 255, 255, 0.05);
+  box-shadow: var(--glass-shadow-medium);
 }
 
 .classeur-pill:hover::before {
@@ -75,129 +80,160 @@
 }
 
 .classeur-pill.active {
-  background: rgba(249, 115, 22, 0.15);
-  color: #f97316;
-  box-shadow: 
-    0 4px 16px rgba(249, 115, 22, 0.2),
-    0 1px 4px rgba(249, 115, 22, 0.1);
+  background: var(--dossiers-primary-light);
+  border-color: var(--dossiers-primary);
+  color: var(--dossiers-primary);
+  box-shadow: 0 4px 16px rgba(229, 90, 44, 0.2);
 }
 
 .classeur-pill.active::before {
   background: linear-gradient(135deg, 
-    rgba(249, 115, 22, 0.05) 0%, 
-    rgba(249, 115, 22, 0.02) 100%);
+    rgba(229, 90, 44, 0.05) 0%, 
+    rgba(229, 90, 44, 0.02) 50%, 
+    rgba(229, 90, 44, 0.05) 100%);
   opacity: 1;
 }
 
 .classeur-pill.active:hover {
-  background: rgba(249, 115, 22, 0.2);
+  background: rgba(229, 90, 44, 0.2);
   transform: translateY(-3px);
-  box-shadow: 
-    0 12px 24px rgba(249, 115, 22, 0.25),
-    0 4px 12px rgba(249, 115, 22, 0.15);
+  box-shadow: 0 12px 24px rgba(229, 90, 44, 0.25);
 }
+
+/* ==========================================================================
+   ÉLÉMENTS DES PILLS
+   ========================================================================== */
 
 .classeur-emoji {
   font-size: 18px;
-  opacity: 0.9;
-  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
-  flex-shrink: 0;
+  filter: brightness(1.1);
+  transition: transform var(--dossiers-transition-fast);
+}
+
+.classeur-pill:hover .classeur-emoji {
+  transform: scale(1.1);
 }
 
 .classeur-name {
   font-weight: 500;
-  letter-spacing: -0.01em;
+  letter-spacing: 0.02em;
+  transition: color var(--dossiers-transition-fast);
 }
 
-/* Bouton d'ajout de classeur - Style accentué mais intégré */
+/* ==========================================================================
+   PILL D'AJOUT - GLASSMORPHISM
+   ========================================================================== */
+
 .classeur-pill.add-classeur {
-  background: rgba(249, 115, 22, 0.1);
-  color: #f97316;
+  background: var(--glass-bg-secondary);
+  border: 2px dashed var(--glass-border-secondary);
+  color: var(--dossiers-text-secondary);
   min-width: 44px;
-  padding: 12px;
   justify-content: center;
+  padding: var(--dossiers-spacing-sm);
 }
 
 .classeur-pill.add-classeur:hover {
-  background: rgba(249, 115, 22, 0.2);
-  transform: translateY(-3px);
-  box-shadow: 
-    0 12px 24px rgba(249, 115, 22, 0.25),
-    0 4px 12px rgba(249, 115, 22, 0.15);
+  background: var(--glass-bg-hover);
+  border-color: var(--dossiers-primary);
+  color: var(--dossiers-primary);
+  transform: translateY(-2px);
+  box-shadow: var(--glass-shadow-medium);
 }
 
-.classeur-pill.add-classeur .add-icon {
+.add-icon {
   font-size: 20px;
   font-weight: 600;
-  line-height: 1;
+  transition: transform var(--dossiers-transition-fast);
 }
 
-/* Animation d'entrée pour les nouveaux classeurs */
-.classeur-pill {
-  animation: slideInUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+.classeur-pill.add-classeur:hover .add-icon {
+  transform: scale(1.2);
 }
 
-@keyframes slideInUp {
+/* ==========================================================================
+   ANIMATIONS ET TRANSITIONS
+   ========================================================================== */
+
+@keyframes pillFadeIn {
   from {
     opacity: 0;
-    transform: translateY(20px);
+    transform: translateY(10px) scale(0.95);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
   }
 }
 
-/* Responsive design */
-@media (max-width: 768px) {
+.classeur-pill {
+  animation: pillFadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Animation de stagger pour les pills */
+.classeur-pill:nth-child(1) { animation-delay: 0.1s; }
+.classeur-pill:nth-child(2) { animation-delay: 0.2s; }
+.classeur-pill:nth-child(3) { animation-delay: 0.3s; }
+.classeur-pill:nth-child(4) { animation-delay: 0.4s; }
+.classeur-pill:nth-child(5) { animation-delay: 0.5s; }
+.classeur-pill:nth-child(6) { animation-delay: 0.6s; }
+
+/* ==========================================================================
+   RESPONSIVE DESIGN
+   ========================================================================== */
+
+@media (max-width: 1200px) {
   .bandeau-content {
-    gap: 12px;
-    padding: 2px 0;
+    gap: var(--dossiers-spacing-sm);
   }
   
   .classeur-pill {
-    padding: 10px 16px;
+    padding: var(--dossiers-spacing-sm) var(--dossiers-spacing-md);
     min-height: 40px;
+  }
+}
+
+@media (max-width: 768px) {
+  .bandeau-content {
+    gap: var(--dossiers-spacing-xs);
+    padding: var(--dossiers-spacing-xs) 0;
+  }
+  
+  .classeur-pill {
+    padding: var(--dossiers-spacing-xs) var(--dossiers-spacing-sm);
+    min-height: 36px;
     font-size: 13px;
-    gap: 10px;
   }
   
   .classeur-emoji {
     font-size: 16px;
   }
   
-  .classeur-pill.add-classeur {
-    min-width: 40px;
-    padding: 10px;
-  }
-  
-  .classeur-pill.add-classeur .add-icon {
+  .add-icon {
     font-size: 18px;
   }
 }
 
 @media (max-width: 480px) {
   .bandeau-content {
-    gap: 8px;
+    gap: var(--dossiers-spacing-xs);
   }
   
   .classeur-pill {
-    padding: 8px 12px;
-    min-height: 36px;
+    padding: var(--dossiers-spacing-xs);
+    min-height: 32px;
     font-size: 12px;
-    gap: 8px;
   }
   
   .classeur-emoji {
     font-size: 14px;
   }
   
-  .classeur-pill.add-classeur {
-    min-width: 36px;
-    padding: 8px;
+  .add-icon {
+    font-size: 16px;
   }
   
-  .classeur-pill.add-classeur .add-icon {
-    font-size: 16px;
+  .classeur-name {
+    display: none;
   }
 } 
