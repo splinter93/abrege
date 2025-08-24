@@ -85,10 +85,10 @@
   padding: var(--spacing-sm);
 }
 
-.file-grid-item {
-  background: var(--files-surface);
-  border: 1px solid var(--files-border);
-  border-radius: var(--files-radius);
+.fm-grid-item {
+  background: transparent;
+  border: none;
+  border-radius: 0;
   padding: var(--spacing-md);
   cursor: pointer;
   transition: all var(--transition-normal);
@@ -97,24 +97,24 @@
   align-items: center;
   text-align: center;
   min-height: 100px; /* Réduit de 120px à 100px */
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  box-shadow: var(--files-shadow);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-shadow: none;
 }
 
-.file-grid-item:hover {
-  border-color: var(--files-primary);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
-  transform: translateY(-2px);
+.fm-grid-item:hover {
+  border-color: transparent;
+  box-shadow: none;
+  transform: none;
 }
 
-.file-grid-item .file-icon {
+.fm-grid-item .file-icon {
   font-size: var(--font-size-2xl);
   margin-bottom: var(--spacing-sm); /* Réduit de var(--spacing-md) à var(--spacing-sm) */
   opacity: 0.8;
 }
 
-.file-grid-item .file-info {
+.fm-grid-item .file-info {
   width: 100%;
 }
 
@@ -126,9 +126,9 @@
   width: 100%;
   height: 100px; /* Réduit de 120px à 100px */
   margin-bottom: var(--spacing-sm); /* Réduit de var(--spacing-md) à var(--spacing-sm) */
-  border-radius: var(--radius-md);
+  border-radius: 0;
   overflow: hidden;
-  background: rgba(255, 255, 255, 0.05);
+  background: transparent;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -163,7 +163,7 @@
   animation: spin 1s linear infinite;
 }
 
-.file-grid-item .file-name {
+.fm-grid-item .file-name {
   font-weight: 500;
   font-size: var(--font-size-sm);
   margin-bottom: 0; /* Supprimé car plus de métadonnées en dessous */
@@ -185,29 +185,29 @@
   gap: var(--spacing-sm);
 }
 
-.file-list-item {
+.fm-grid-item.file-list-item {
   display: flex;
   align-items: center;
   padding: var(--spacing-sm) var(--spacing-md); /* Réduit le padding vertical */
-  background: var(--files-surface);
-  border: 1px solid var(--files-border);
-  border-radius: var(--files-radius);
+  background: transparent;
+  border: none;
+  border-radius: 0;
   cursor: pointer;
   transition: all var(--transition-normal);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  box-shadow: var(--files-shadow);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-shadow: none;
   min-height: 48px; /* Hauteur minimale réduite */
 }
 
-.file-list-item:hover {
-  border-color: var(--files-primary);
-  background: rgba(255, 255, 255, 0.05);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+.fm-grid-item.file-list-item:hover {
+  border-color: transparent;
+  background: transparent;
+  transform: none;
+  box-shadow: none;
 }
 
-.file-list-item .file-icon {
+.fm-grid-item.file-list-item .file-icon {
   font-size: var(--font-size-lg);
   margin-right: var(--spacing-md);
   flex-shrink: 0;
@@ -215,13 +215,13 @@
 }
 
 /* Aperçu d'image pour la vue liste */
-.file-list-item .file-image-preview {
+.fm-grid-item.file-list-item .file-image-preview {
   width: 48px;
   height: 48px;
   margin-right: var(--spacing-md);
-  border-radius: var(--radius-sm);
+  border-radius: 0;
   overflow: hidden;
-  background: rgba(255, 255, 255, 0.05);
+  background: transparent;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -229,7 +229,7 @@
   flex-shrink: 0;
 }
 
-.file-list-item .preview-image {
+.fm-grid-item.file-list-item .preview-image {
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -237,23 +237,23 @@
   transition: opacity var(--transition-slow);
 }
 
-.file-list-item .preview-image.loaded {
+.fm-grid-item.file-list-item .preview-image.loaded {
   opacity: 1;
 }
 
-.file-list-item .preview-loading .loading-spinner {
+.fm-grid-item.file-list-item .preview-loading .loading-spinner {
   width: 16px;
   height: 16px;
   border: 1px solid transparent;
   border-top: 1px solid var(--files-primary);
 }
 
-.file-list-item .file-info {
+.fm-grid-item.file-list-item .file-info {
   flex: 1;
   min-width: 0;
 }
 
-.file-list-item .file-name {
+.fm-grid-item.file-list-item .file-name {
   font-weight: 500;
   font-size: var(--font-size-base);
   margin-bottom: 0; /* Supprimé car plus de métadonnées */
@@ -270,8 +270,8 @@
    CHAMPS DE SAISIE
    ========================================================================== */
 
-.file-grid-item input,
-.file-list-item input {
+.fm-grid-item input,
+.fm-grid-item.file-list-item input {
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid var(--files-primary);
   border-radius: var(--radius-sm);
@@ -286,8 +286,8 @@
   -webkit-backdrop-filter: blur(10px);
 }
 
-.file-grid-item input:focus,
-.file-list-item input:focus {
+.fm-grid-item input:focus,
+.fm-grid-item.file-list-item input:focus {
   border-color: var(--files-primary);
   box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.2);
 }
@@ -302,12 +302,12 @@
     gap: var(--spacing-md);
   }
   
-  .file-grid-item {
+  .fm-grid-item {
     padding: var(--spacing-sm); /* Réduit de var(--spacing-md) à var(--spacing-sm) */
     min-height: 80px; /* Réduit de 100px à 80px sur mobile */
   }
   
-  .file-grid-item .file-icon {
+  .fm-grid-item .file-icon {
     font-size: var(--font-size-xl);
   }
   

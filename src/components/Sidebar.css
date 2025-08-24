@@ -24,11 +24,11 @@
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
 }
 
-/* Ajustement pour la page dossiers */
-.dossiers-page-wrapper .sidebar {
+/* SUPPRIMÉ: Ajustement pour la page dossiers - La sidebar monte maintenant jusqu'en haut */
+/* .dossiers-page-wrapper .sidebar {
   top: 60px;
   height: calc(100vh - 60px);
-}
+} */
 
 .sidebar-main-content {
   flex: 1;

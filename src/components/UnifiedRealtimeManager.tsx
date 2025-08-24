@@ -30,6 +30,7 @@ export default function UnifiedRealtimeManager() {
           supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL!,
           supabaseKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
           userId: user.id,
+          userToken: '', // Token vide pour l'instant, sera géré par le service
           debug: process.env.NODE_ENV === 'development'
         });
 
@@ -58,46 +59,7 @@ export default function UnifiedRealtimeManager() {
     };
   }, [user?.id]);
 
-  // Indicateur visuel du statut (dev uniquement)
-  if (process.env.NODE_ENV === 'development') {
-    return (
-      <div className="fixed top-4 right-4 z-50 bg-white border rounded-lg shadow-lg p-3 text-xs">
-        <div className="flex items-center gap-2">
-          <div 
-            className={`w-3 h-3 rounded-full ${
-              status.isConnected ? 'bg-green-500' :
-              status.provider === 'polling' ? 'bg-yellow-500' :
-              'bg-red-500'
-            }`}
-          />
-          <span>
-            {status.isConnected ? '🟢 Realtime' :
-             status.provider === 'polling' ? '🟡 Polling' :
-             '🔴 Échec'}
-          </span>
-        </div>
-        
-        {status.provider === 'polling' && (
-          <div className="mt-1 text-gray-500">
-            Polling actif (5s)
-          </div>
-        )}
-        
-        {status.lastEvent && (
-          <div className="mt-1 text-gray-400 text-xs">
-            Dernier: {status.lastEvent}
-          </div>
-        )}
-        
-        {status.errorCount > 0 && (
-          <div className="mt-1 text-red-500 text-xs">
-            Erreurs: {status.errorCount}
-          </div>
-        )}
-      </div>
-    );
-  }
-
-  // En production, ne rien afficher
+  // En production et en développement, ne rien afficher visuellement
+  // Le composant fonctionne en arrière-plan pour la synchronisation
   return null;
 } 

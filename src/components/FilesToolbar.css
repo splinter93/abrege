@@ -14,12 +14,12 @@
   align-items: center;
   justify-content: space-between;
   padding: var(--spacing-md) var(--spacing-lg);
-  background: var(--files-surface);
-  border: 1px solid var(--files-border);
-  border-radius: var(--files-radius);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  box-shadow: var(--files-shadow);
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-shadow: none;
   gap: var(--spacing-md);
   min-height: 72px;
   width: 100%;

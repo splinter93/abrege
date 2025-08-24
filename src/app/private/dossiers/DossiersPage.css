@@ -1,5 +1,5 @@
 /* ==========================================================================
-   DOSSIERS PAGE - LAYOUT & STYLES MODERNES
+   DOSSIERS PAGE - DESIGN GLASSMORPHISM ÉPURÉ
    ========================================================================== */
 
 /* Variables CSS personnalisées */
@@ -13,6 +13,16 @@
   --dossiers-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
   --dossiers-radius: 16px;
   --dossiers-spacing: 24px;
+  --dossiers-sidebar-width: 280px;
+  
+  /* Nouvelles variables glassmorphism */
+  --glass-bg-subtle: rgba(255, 255, 255, 0.03);
+  --glass-bg-light: rgba(255, 255, 255, 0.05);
+  --glass-bg-medium: rgba(255, 255, 255, 0.08);
+  --glass-border-subtle: rgba(255, 255, 255, 0.06);
+  --glass-border-light: rgba(255, 255, 255, 0.1);
+  --glass-shadow-subtle: 0 4px 20px rgba(0, 0, 0, 0.08);
+  --glass-shadow-medium: 0 8px 32px rgba(0, 0, 0, 0.12);
 }
 
 body, .dossiers-page-wrapper {
@@ -28,9 +38,10 @@ body, .dossiers-page-wrapper {
   right: 0;
   bottom: 0;
   background: 
-    radial-gradient(circle at 20% 80%, rgba(249, 115, 22, 0.1) 0%, transparent 50%),
-    radial-gradient(circle at 80% 20%, rgba(245, 158, 11, 0.1) 0%, transparent 50%);
+    radial-gradient(circle at 20% 80%, rgba(249, 115, 22, 0.08) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(245, 158, 11, 0.08) 0%, transparent 50%);
   pointer-events: none;
+  z-index: -1;
 }
 
 body {
@@ -46,44 +57,14 @@ body {
 }
 
 /* ==========================================================================
-   HEADER MODERNE
-   ========================================================================== */
-.dossiers-header-fixed {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 56px;
-  background: rgba(255, 255, 255, 0.03);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-  display: flex;
-  align-items: center;
-  padding: 0 0 0 0;
-  z-index: 1001;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-}
-
-.header-content {
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  width: 100%;
-  max-width: none;
-  margin: 0;
-  padding-left: 0;
-}
-
-/* ==========================================================================
-   SIDEBAR FIXE
+   SIDEBAR FIXE - MONTE JUSQU'EN HAUT
    ========================================================================== */
 .dossiers-sidebar-fixed {
   position: fixed;
-  top: 56px;
+  top: 0;
   left: 0;
   bottom: 0;
-  width: 280px;
+  width: var(--dossiers-sidebar-width);
   background: transparent;
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
@@ -95,86 +76,137 @@ body {
 }
 
 /* ==========================================================================
-   ZONE DE CONTENU PRINCIPAL
+   ZONE DE CONTENU PRINCIPAL - SANS MARGES SUPERFLUES
    ========================================================================== */
 .dossiers-content-area {
   flex: 1;
-  margin-left: 280px;
-  margin-top: 56px;
+  margin-left: var(--dossiers-sidebar-width);
+  margin-top: 0;
   padding: 0;
   overflow-y: auto;
   overflow-x: hidden;
   background: transparent;
   position: relative;
+  display: flex;
+  flex-direction: column;
 }
 
 /* ==========================================================================
-   SECTION DES CLASSEURS
+   TITRE DE LA PAGE - STYLE GLASSMORPHISM ÉPURÉ
+   ========================================================================== */
+.dossiers-page-title {
+  padding: 32px 40px 24px 40px;
+  background: transparent;
+  position: relative;
+}
+
+.dossiers-page-title h1 {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--dossiers-text-primary);
+  margin: 0;
+  font-family: 'Noto Sans', sans-serif;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  position: relative;
+}
+
+.dossiers-page-title h1::after {
+  display: none; /* SUPPRIMÉ LE SOULIGNAGE ORANGE */
+}
+
+/* ==========================================================================
+   SECTION DES CLASSEURS - GLASSMORPHISM SUBTIL
    ========================================================================== */
 .classeurs-section {
-  padding: 24px 32px 0 32px;
+  padding: 0 40px 16px 40px; /* RÉDUIT le padding bottom de 24px à 16px */
   background: transparent;
+  position: relative;
 }
 
-/* ==========================================================================
-   SECTION DES DOSSIERS
-   ========================================================================== */
-.folders-section {
-  padding: 24px 32px 32px 32px;
-  background: transparent;
-}
-
-/* ==========================================================================
-   CONTENU DES DOSSIERS
-   ========================================================================== */
-.folder-content {
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: var(--dossiers-radius);
+/* Container pour le bandeau des classeurs - Glassmorphism épuré et FIN avec bordure propre */
+.classeurs-container {
+  background: var(--glass-bg-subtle);
+  border: 1px solid var(--glass-border-subtle);
+  border-radius: 20px;
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  box-shadow: var(--dossiers-shadow);
+  box-shadow: var(--glass-shadow-subtle);
+  padding: 12px 32px; /* RÉDUIT de 24px à 12px pour plus de finesse */
+  position: relative;
   overflow: hidden;
 }
 
 /* ==========================================================================
-   HEADER DES DOSSIERS
+   SECTION DU CONTENU PRINCIPAL - SANS CONTAINER VISIBLE
+   ========================================================================== */
+.content-section {
+  flex: 1;
+  padding: 0 40px 40px 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px; /* RÉDUIT au minimum pour rapprocher au maximum le header de la grille */
+}
+
+/* Container principal pour le contenu - Transparent */
+.content-main-container {
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-shadow: none;
+  overflow: visible;
+  position: relative;
+  flex: 1;
+}
+
+/* ==========================================================================
+   HEADER DES DOSSIERS - STYLE GLASSMORPHISM SUBTIL ET REMONTÉ AU MAXIMUM
    ========================================================================== */
 .folder-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 24px 32px;
-  background: rgba(255, 255, 255, 0.02);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 16px 32px; /* RÉDUIT encore plus pour plus de finesse */
+  background: var(--glass-bg-subtle);
+  border: 1px solid var(--glass-border-subtle);
+  border-radius: 16px;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: var(--glass-shadow-subtle);
+  position: relative;
+  margin-bottom: 4px; /* RÉDUIT au minimum pour rapprocher au maximum de la grille */
 }
 
 .folder-info {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 16px;
 }
 
 .folder-icon {
-  font-size: 24px;
-  opacity: 0.8;
+  font-size: 28px;
+  opacity: 0.9;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
 }
 
 .folder-title {
-  font-size: 20px;
+  font-size: 22px;
   font-weight: 600;
   color: var(--dossiers-text-primary);
   margin: 0;
   font-family: 'Noto Sans', sans-serif;
+  letter-spacing: -0.02em;
 }
 
 /* ==========================================================================
-   ACTIONS DES DOSSIERS - FOLDER TOOLBAR
+   ACTIONS DES DOSSIERS - TOOLBAR GLASSMORPHISM
    ========================================================================== */
 .folder-actions {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 16px;
 }
 
 /* Styles pour la FolderToolbar intégrée */
@@ -191,103 +223,52 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.05);
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--glass-border-light);
+  border-radius: 12px;
+  background: var(--glass-bg-light);
   color: rgba(255, 255, 255, 0.8);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   font-size: 0.9rem;
   backdrop-filter: blur(10px);
+  position: relative;
+  overflow: hidden;
+}
+
+.folder-actions .fm-control-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.02) 0%, 
+    rgba(255, 255, 255, 0.01) 100%);
+  opacity: 0;
+  transition: opacity 0.25s ease;
 }
 
 .folder-actions .fm-control-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.2);
+  background: var(--glass-bg-medium);
+  border-color: var(--glass-border-light);
   color: rgba(255, 255, 255, 1);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+  box-shadow: var(--glass-shadow-medium);
+}
+
+.folder-actions .fm-control-btn:hover::before {
+  opacity: 1;
 }
 
 .folder-actions .fm-control-btn:active {
   transform: translateY(0);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
-}
-
-.folder-actions .fm-control-btn.active {
-  background: rgba(255, 255, 255, 0.15);
-  border-color: rgba(255, 255, 255, 0.3);
-  color: rgba(255, 255, 255, 1);
-}
-
-/* Boutons spéciaux pour création - Style accentué */
-.folder-actions .fm-control-btn:has(svg[data-lucide="folder-plus"]),
-.folder-actions .fm-control-btn:has(svg[data-lucide="pencil"]) {
-  background: rgba(249, 115, 22, 0.1);
-  border-color: rgba(249, 115, 22, 0.3);
-  color: #f97316;
-}
-
-.folder-actions .fm-control-btn:has(svg[data-lucide="folder-plus"]):hover,
-.folder-actions .fm-control-btn:has(svg[data-lucide="pencil"]):hover {
-  background: rgba(249, 115, 22, 0.2);
-  border-color: rgba(249, 115, 22, 0.5);
-  color: #f97316;
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(249, 115, 22, 0.2);
 }
 
 /* ==========================================================================
-   BOUTONS D'ACTION (pour les états vides)
-   ========================================================================== */
-.action-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 12px 24px;
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.02);
-  color: var(--dossiers-text-primary);
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  text-decoration: none;
-  font-family: 'Noto Sans', sans-serif;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-}
-
-.action-btn:hover {
-  background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(255, 255, 255, 0.1);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.action-btn.primary {
-  background: rgba(249, 115, 22, 0.1);
-  color: #f97316;
-  border-color: rgba(249, 115, 22, 0.3);
-}
-
-.action-btn.primary:hover {
-  background: rgba(249, 115, 22, 0.2);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.2);
-}
-
-.action-btn.secondary {
-  background: rgba(255, 255, 255, 0.02);
-  color: var(--dossiers-text-primary);
-  border-color: rgba(255, 255, 255, 0.06);
-}
-
-/* ==========================================================================
-   ÉTATS DE CHARGEMENT ET D'ERREUR
+   ÉTATS DE CHARGEMENT ET D'ERREUR - GLASSMORPHISM
    ========================================================================== */
 .loading-state,
 .error-state,
@@ -296,24 +277,26 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 80px 40px;
-  text-align: center;
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: var(--dossiers-radius);
+  padding: 80px 32px;
+  margin: 24px;
+  background: var(--glass-bg-subtle);
+  border: 1px solid var(--glass-border-subtle);
+  border-radius: 20px;
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--glass-shadow-subtle);
+  text-align: center;
 }
 
 .loading-spinner {
-  width: 40px;
-  height: 40px;
+  width: 48px;
+  height: 48px;
   border: 3px solid transparent;
-  border-top: 3px solid #f97316;
+  border-top: 3px solid var(--dossiers-primary);
   border-radius: 50%;
   animation: spin 1s linear infinite;
-  margin-bottom: 24px;
+  margin-bottom: 28px;
+  filter: drop-shadow(0 2px 4px rgba(249, 115, 22, 0.2));
 }
 
 @keyframes spin {
@@ -330,32 +313,34 @@ body {
 
 .error-icon,
 .empty-icon {
-  font-size: 48px;
-  margin-bottom: 24px;
-  opacity: 0.7;
+  font-size: 56px;
+  margin-bottom: 28px;
+  opacity: 0.8;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
 }
 
 .error-state h3,
 .empty-state h2 {
-  font-size: 20px;
+  font-size: 22px;
   font-weight: 600;
   color: var(--dossiers-text-primary);
-  margin: 0 0 12px 0;
+  margin: 0 0 16px 0;
   font-family: 'Noto Sans', sans-serif;
+  letter-spacing: -0.02em;
 }
 
 .error-state p,
 .empty-state p {
   font-size: 16px;
   color: var(--dossiers-text-secondary);
-  margin: 0 0 24px 0;
+  margin: 0 0 28px 0;
   font-family: 'Noto Sans', sans-serif;
-  max-width: 400px;
-  line-height: 1.5;
+  max-width: 450px;
+  line-height: 1.6;
 }
 
 /* ==========================================================================
-   RESPONSIVE DESIGN
+   RESPONSIVE DESIGN - ADAPTÉ AU NOUVEAU DESIGN
    ========================================================================== */
 @media (max-width: 1200px) {
   .dossiers-sidebar-fixed {
@@ -363,6 +348,13 @@ body {
   }
   .dossiers-content-area {
     margin-left: 260px;
+  }
+  
+  .dossiers-page-title,
+  .classeurs-section,
+  .content-section {
+    padding-left: 32px;
+    padding-right: 32px;
   }
 }
 
@@ -373,18 +365,13 @@ body {
     min-height: 100vh;
   }
 
-  .dossiers-header-fixed {
-    height: 48px;
-    padding: 0 16px;
-  }
-
   .dossiers-sidebar-fixed {
     position: relative;
     width: 100%;
     height: auto;
     border-right: none;
     border-bottom: 1px solid var(--dossiers-border);
-    top: 60px;
+    top: 0;
     z-index: 998;
   }
 
@@ -394,15 +381,29 @@ body {
     padding: 16px;
   }
 
-  .folder-content {
-    padding: 20px;
-    border-radius: 0 0 12px 12px;
+  .dossiers-page-title {
+    padding: 24px 16px 20px 16px;
+  }
+
+  .dossiers-page-title h1 {
+    font-size: 28px;
+  }
+
+  .classeurs-section,
+  .content-section {
+    padding: 20px 16px;
+  }
+
+  .classeurs-container {
+    padding: 20px 24px;
+    border-radius: 16px;
   }
 
   .folder-header {
     flex-direction: column;
     align-items: flex-start;
-    gap: 16px;
+    gap: 20px;
+    padding: 24px 24px;
   }
 
   .folder-actions {
@@ -411,13 +412,15 @@ body {
   }
 
   .folder-actions .fm-control-btn {
-    width: 36px;
-    height: 36px;
+    width: 40px;
+    height: 40px;
   }
 
   .loading-state,
   .error-state,
   .empty-state {
-    padding: 60px 20px;
+    padding: 60px 24px;
+    margin: 16px;
+    border-radius: 16px;
   }
 } 

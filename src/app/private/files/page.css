@@ -1,9 +1,6 @@
 /* ==========================================================================
-   PAGE FILES - MÊME STYLE QUE LES CLASSEURS
-   ==========================================================================
-   Utilise exactement le même background et les mêmes couleurs
-   que la page des classeurs pour une cohérence parfaite
-*/
+   PAGE FILES - GLASSMORPHISM ÉPURÉ IDENTIQUE AUX DOSSIERS
+   ========================================================================== */
 
 /* ==========================================================================
    VARIABLES SPÉCIFIQUES AUX FILES (style classeurs)
@@ -30,6 +27,15 @@
   --files-z-header: 1001;
   --files-z-sidebar: 1000;
   --files-z-content: 999;
+  
+  /* Nouvelles variables glassmorphism */
+  --glass-bg-subtle: rgba(255, 255, 255, 0.03);
+  --glass-bg-light: rgba(255, 255, 255, 0.05);
+  --glass-bg-medium: rgba(255, 255, 255, 0.08);
+  --glass-border-subtle: rgba(255, 255, 255, 0.06);
+  --glass-border-light: rgba(255, 255, 255, 0.1);
+  --glass-shadow-subtle: 0 4px 20px rgba(0, 0, 0, 0.08);
+  --glass-shadow-medium: 0 8px 32px rgba(0, 0, 0, 0.12);
 }
 
 /* ==========================================================================
@@ -60,27 +66,27 @@
   right: 0;
   bottom: 0;
   background: 
-    radial-gradient(circle at 20% 80%, rgba(249, 115, 22, 0.1) 0%, transparent 50%),
-    radial-gradient(circle at 80% 20%, rgba(245, 158, 11, 0.1) 0%, transparent 50%);
+    radial-gradient(circle at 20% 80%, rgba(249, 115, 22, 0.08) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(245, 158, 11, 0.08) 0%, transparent 50%);
   pointer-events: none;
   z-index: -1;
 }
 
 /* ==========================================================================
-   HEADER - STYLE CLASSEURS
+   HEADER - STYLE CLASSEURS GLASSMORPHISM
    ========================================================================== */
 
 .dossiers-header-fixed {
   grid-area: header;
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--glass-bg-subtle);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border-bottom: 1px solid var(--files-border);
+  border-bottom: 1px solid var(--glass-border-subtle);
   display: flex;
   align-items: center;
   padding: 0 var(--files-spacing-header);
   z-index: var(--files-z-header);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--glass-shadow-subtle);
   position: relative;
 }
 
@@ -124,16 +130,16 @@
 }
 
 /* ==========================================================================
-   SECTIONS - STYLE CLASSEURS
+   SECTION FICHIERS - GLASSMORPHISM ÉPURÉ
    ========================================================================== */
 
 .files-section {
-  background: var(--files-surface);
-  border: 1px solid var(--files-border);
-  border-radius: var(--files-radius);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  box-shadow: var(--files-shadow);
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-shadow: none;
   padding: var(--files-spacing-section);
   margin: var(--files-spacing-section);
   position: relative;
@@ -143,198 +149,388 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  width: 100%;
-}
-
-.files-info {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-md);
-}
-
-.files-icon {
-  font-size: var(--font-size-2xl);
-  opacity: 0.8;
+  padding: 28px 32px;
+  background: var(--glass-bg-subtle);
+  border: 1px solid var(--glass-border-subtle);
+  border-radius: 16px;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: var(--glass-shadow-subtle);
+  position: relative;
+  margin-bottom: 24px;
 }
 
 .files-title {
-  font-size: var(--font-size-xl);
+  font-size: 22px;
   font-weight: 600;
   color: var(--files-text-primary);
   margin: 0;
   font-family: 'Noto Sans', sans-serif;
+  letter-spacing: -0.02em;
 }
 
-.files-stats {
+.files-actions {
   display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: var(--spacing-xs);
-  font-size: var(--font-size-sm);
-  color: var(--files-text-secondary);
-  font-weight: 500;
-}
-
-.quota-info {
-  font-size: var(--font-size-xs);
-  padding: var(--spacing-xs) var(--spacing-sm);
-  background: var(--files-primary-light);
-  border-radius: var(--radius-sm);
-  color: var(--files-primary);
-  border: 1px solid rgba(249, 115, 22, 0.3);
-}
-
-/* ==========================================================================
-   SECTION DE CONTENU
-   ========================================================================== */
-
-.files-content-section {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-  padding: 0 var(--files-spacing-section);
-  margin-bottom: var(--files-spacing-section);
-}
-
-.files-content {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-  gap: var(--spacing-lg);
-}
-
-/* ==========================================================================
-   SECTION UPLOAD - STYLE CLASSEURS
-   ========================================================================== */
-
-.uploader-section {
-  padding: var(--files-spacing-content);
-  background: var(--files-surface);
-  border: 1px solid var(--files-border);
-  border-radius: var(--files-radius);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  box-shadow: var(--files-shadow);
-  width: 100%;
-  box-sizing: border-box;
-}
-
-/* ==========================================================================
-   ÉTATS - STYLE CLASSEURS
-   ========================================================================== */
-
-.loading-state,
-.error-state {
-  display: flex;
-  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  padding: var(--spacing-2xl) var(--files-spacing-content);
-  text-align: center;
-  background: var(--files-surface);
-  border: 1px solid var(--files-border);
-  border-radius: var(--files-radius);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  box-shadow: var(--files-shadow);
-  width: 100%;
-  box-sizing: border-box;
+  gap: 16px;
 }
 
-.loading-spinner {
-  width: 40px;
-  height: 40px;
-  border: 3px solid transparent;
-  border-top: 3px solid var(--files-primary);
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin-bottom: var(--spacing-md);
-}
+/* ==========================================================================
+   GRID DES FICHIERS - SANS CONTAINER VISIBLE
+   ========================================================================== */
 
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-.error-icon {
-  font-size: var(--font-size-3xl);
-  margin-bottom: var(--spacing-md);
-  opacity: 0.7;
-}
-
-.error-state h3 {
-  margin: 0 0 var(--spacing-sm) 0;
-  color: var(--files-text-primary);
-  font-size: var(--font-size-lg);
-  font-family: 'Noto Sans', sans-serif;
-}
-
-.error-state p {
+.files-grid {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 0;
   margin: 0;
-  color: var(--files-text-secondary);
-  font-size: var(--font-size-base);
-  font-family: 'Noto Sans', sans-serif;
+  gap: 20px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
 }
+
+/* ==========================================================================
+   ÉLÉMENTS DE FICHIERS - GLASSMORPHISM ÉPURÉ
+   ========================================================================== */
+
+/* Éléments de fichiers - Glassmorphism épuré SANS BORDURE ET SANS BACKGROUND */
+.fm-grid-item {
+  background: transparent !important; /* SUPPRIMÉ LE BACKGROUND */
+  border: none !important; /* SUPPRIMÉ L'ENCADRÉ */
+  border-radius: 16px !important;
+  backdrop-filter: none !important; /* SUPPRIMÉ LE FLU */
+  -webkit-backdrop-filter: none !important;
+  box-shadow: none !important; /* SUPPRIMÉ L'OMBRE */
+  padding: 20px !important;
+  cursor: pointer !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  position: relative !important;
+  overflow: hidden !important;
+  min-height: 120px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+}
+
+/* Effet de lueur subtile sur les éléments */
+.fm-grid-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.02) 0%, 
+    rgba(255, 255, 255, 0.01) 50%, 
+    rgba(255, 255, 255, 0.02) 100%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  border-radius: 16px;
+}
+
+/* Hover des éléments - Glassmorphism amélioré */
+.fm-grid-item:hover {
+  background: var(--glass-bg-light) !important;
+  border-color: var(--glass-border-light) !important;
+  transform: translateY(-4px) !important;
+  box-shadow: var(--glass-shadow-medium) !important;
+}
+
+.fm-grid-item:hover::before {
+  opacity: 1;
+}
+
+/* ==========================================================================
+   ICÔNES ET CONTENU DES FICHIERS - AFFINÉES ET OPTIMISÉES
+   ========================================================================== */
+
+/* Icônes des fichiers - Style affiné et optimisé */
+.fm-grid-item .file-icon {
+  margin-bottom: 16px !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  width: 100% !important;
+  height: 44px !important; /* Hauteur légèrement augmentée */
+  /* Optimisations pour la netteté */
+  -webkit-font-smoothing: antialiased !important;
+  -moz-osx-font-smoothing: grayscale !important;
+  font-smooth: never !important;
+}
+
+/* Hover des icônes - Effet affiné et fluide */
+.fm-grid-item:hover .file-icon {
+  transform: scale(1.08) !important; /* Scale légèrement plus prononcé */
+  transition: transform 0.2s ease-out !important; /* Transition plus rapide */
+}
+
+
+
+.fm-grid-item .fm-item-name {
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  color: var(--files-text-primary) !important;
+  text-align: center !important;
+  line-height: 1.4 !important;
+  font-family: 'Noto Sans', sans-serif !important;
+  word-break: break-word !important;
+  max-width: 100% !important;
+  margin: 0 !important;
+  
+  /* Limitation stricte à 2 lignes avec "..." - SOLUTION QUI MARCHE */
+  display: block !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  
+  /* Hauteur fixe pour exactement 2 lignes */
+  height: 2.8em !important; /* 2 lignes × 1.4 line-height */
+  min-height: 2.8em !important;
+  max-height: 2.8em !important;
+  
+  /* Centrage horizontal PARFAIT */
+  align-self: center !important;
+  justify-self: center !important;
+  text-align: center !important;
+  width: 100% !important;
+  
+  /* Assurer le centrage parfait */
+  position: relative !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+}
+
+/* ==========================================================================
+   APERÇUS D'IMAGES - GLASSMORPHISM
+   ========================================================================== */
+
+.file-image-preview {
+  width: 100% !important;
+  height: 80px !important;
+  margin-bottom: 12px !important;
+  border-radius: 12px !important;
+  overflow: hidden !important;
+  background: var(--glass-bg-light) !important;
+  border: 1px solid var(--glass-border-subtle) !important;
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+}
+
+.preview-image {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  border-radius: 12px !important;
+}
+
+/* ==========================================================================
+   VUE LISTE - GLASSMORPHISM
+   ========================================================================== */
+
+.fm-grid-item.file-list-item {
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  text-align: left !important;
+  min-height: 60px !important;
+  padding: 16px 20px !important;
+}
+
+.fm-grid-item.file-list-item .file-icon {
+  margin-bottom: 0 !important;
+  margin-right: 16px !important;
+  font-size: 24px !important;
+}
+
+.fm-grid-item.file-list-item .file-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.fm-grid-item.file-list-item .file-name {
+  text-align: left !important;
+  font-size: 14px !important;
+  margin-bottom: 4px !important;
+  /* Réinitialiser les propriétés de ligne pour la vue liste */
+  display: block !important;
+  -webkit-line-clamp: unset !important;
+  -webkit-box-orient: unset !important;
+  height: auto !important;
+  min-height: auto !important;
+  /* Réinitialiser le centrage pour la vue liste */
+  position: static !important;
+  left: auto !important;
+  transform: none !important;
+}
+
+/* ==========================================================================
+   ÉTATS SPÉCIAUX - GLASSMORPHISM
+   ========================================================================== */
+
+/* Éléments en cours de renommage */
+.fm-grid-item.renaming {
+  background: var(--glass-bg-medium) !important;
+  border-color: var(--files-primary) !important;
+  box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.2) !important;
+}
+
+/* Éléments en cours de drag */
+.fm-grid-item.dragging {
+  opacity: 0.5 !important;
+  transform: rotate(5deg) scale(0.95) !important;
+}
+
+/* Zone de drop */
+.fm-grid-item.drag-over {
+  background: var(--glass-bg-medium) !important;
+  border-color: var(--files-primary) !important;
+  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.3) !important;
+}
+
+/* ==========================================================================
+   INPUTS DE RENOMMAGE - GLASSMORPHISM
+   ========================================================================== */
+
+.fm-grid-item input {
+  background: var(--glass-bg-medium) !important;
+  border: 1px solid var(--glass-border-light) !important;
+  border-radius: 8px !important;
+  color: var(--files-text-primary) !important;
+  padding: 8px 12px !important;
+  font-size: 14px !important;
+  font-family: 'Noto Sans', sans-serif !important;
+  text-align: center !important;
+  width: 100% !important;
+  max-width: 150px !important;
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+}
+
+.fm-grid-item input:focus {
+  outline: none !important;
+  border-color: var(--files-primary) !important;
+  box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.2) !important;
+  background: var(--glass-bg-light) !important;
+}
+
+/* ==========================================================================
+   ANIMATIONS ET TRANSITIONS
+   ========================================================================== */
+
+/* Animation d'entrée pour les éléments */
+.fm-grid-item {
+  animation: fadeInUp 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Animation de stagger pour les grilles */
+.files-grid .fm-grid-item:nth-child(1) { animation-delay: 0.1s; }
+.files-grid .fm-grid-item:nth-child(2) { animation-delay: 0.2s; }
+.files-grid .fm-grid-item:nth-child(3) { animation-delay: 0.3s; }
+.files-grid .fm-grid-item:nth-child(4) { animation-delay: 0.4s; }
+.files-grid .fm-grid-item:nth-child(5) { animation-delay: 0.5s; }
+.files-grid .fm-grid-item:nth-child(6) { animation-delay: 0.6s; }
 
 /* ==========================================================================
    RESPONSIVE DESIGN
    ========================================================================== */
 
-@media (max-width: 768px) {
+@media (max-width: 1200px) {
   .dossiers-page-wrapper {
-    grid-template-columns: 1fr;
-    grid-template-areas:
-      "header"
-      "main";
-  }
-  
-  .dossiers-sidebar-fixed {
-    display: none;
+    grid-template-columns: 260px 1fr;
   }
   
   .files-section {
-    padding: var(--spacing-lg);
-    margin: var(--spacing-lg);
+    padding: var(--files-spacing-lg);
+    margin: var(--files-spacing-lg);
   }
-  
+}
+
+@media (max-width: 768px) {
+  .dossiers-page-wrapper {
+    grid-template-areas:
+      "header"
+      "sidebar"
+      "main";
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto 1fr;
+    height: auto;
+    min-height: 100vh;
+  }
+
+  .dossiers-sidebar-fixed {
+    border-bottom: 1px solid var(--glass-border-subtle);
+  }
+
+  .files-section {
+    padding: var(--files-spacing-md);
+    margin: var(--files-spacing-md);
+  }
+
   .files-header {
     flex-direction: column;
     align-items: flex-start;
-    gap: var(--spacing-md);
+    gap: 20px;
+    padding: 24px 24px;
+  }
+
+  .files-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .fm-grid-item {
+    min-height: 100px !important;
+    padding: 16px !important;
+    border-radius: 12px !important;
   }
   
-  .files-stats {
-    align-items: flex-start;
+  .fm-grid-item .file-icon {
+    font-size: 28px !important;
+    margin-bottom: 12px !important;
   }
   
-  .files-content-section {
-    padding: 0 var(--spacing-lg);
-    margin-bottom: var(--spacing-lg);
-  }
-  
-  .uploader-section {
-    padding: var(--spacing-lg);
+  .fm-grid-item .file-name {
+    font-size: 13px !important;
+    height: 2.6em !important; /* Ajusté pour 2 lignes */
+    min-height: 2.6em !important;
   }
 }
 
 @media (max-width: 480px) {
-  .files-section {
-    padding: var(--spacing-md);
-    margin: var(--spacing-md);
+  .fm-grid-item {
+    min-height: 90px !important;
+    padding: 14px !important;
+    border-radius: 10px !important;
   }
   
-  .files-title {
-    font-size: var(--font-size-lg);
+  .fm-grid-item .file-icon {
+    font-size: 24px !important;
+    margin-bottom: 10px !important;
   }
   
-  .files-content-section {
-    padding: 0 var(--spacing-md);
-    margin-bottom: var(--spacing-md);
+  .fm-grid-item .file-name {
+    font-size: 12px !important;
+    height: 2.4em !important; /* Ajusté pour 2 lignes */
+    min-height: 2.4em !important;
   }
   
-  .uploader-section {
-    padding: var(--spacing-md);
+  .files-grid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 16px;
   }
 } 

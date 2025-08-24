@@ -1,46 +1,431 @@
 /* ==========================================================================
-   DOSSIERS PAGE - GLASSMORPHISM THEME
-   ========================================================================== 
-   
-   Ce fichier contient tous les styles pour le thème glassmorphism.
-*/
+   DOSSIERS PAGE - GLASSMORPHISM ÉPURÉ
+   ========================================================================== */
 
-:root {
-  /* Transitions harmonisées */
-  --transition-fast: all 0.15s ease;
-  --transition-normal: all 0.2s ease;
-  --transition-slow: all 0.3s ease;
-  
-  /* Espacements cohérents */
-  --spacing-xs: 0.25rem;
-  --spacing-sm: 0.5rem;
-  --spacing-md: 1rem;
-  --spacing-lg: 1.5rem;
-  --spacing-xl: 2rem;
-  --spacing-2xl: 3rem;
-  
-  /* Border radius harmonisés */
-  --radius-sm: 6px;
-  --radius-md: 8px;
-  --radius-lg: 12px;
-  --radius-xl: 16px;
-  
-  /* Couleurs glassmorphism */
-  --glass-bg-light: rgba(255, 255, 255, 0.05);
-  --glass-bg-medium: rgba(255, 255, 255, 0.1);
-  --glass-bg-heavy: rgba(255, 255, 255, 0.12);
-  --glass-border-light: rgba(255, 255, 255, 0.1);
-  --glass-border-medium: rgba(255, 255, 255, 0.2);
-  --glass-border-heavy: rgba(255, 255, 255, 0.3);
+/* ==========================================================================
+   STYLES GLOBAUX GLASSMORPHISM
+   ========================================================================== */
+
+/* Suppression de tous les containers visibles */
+.folder-manager-wrapper,
+.folder-manager,
+.folder-manager-content,
+.folder-content-container {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
 
-/* Appliquer les transitions harmonisées globalement */
-* {
-  transition: var(--transition-normal);
+/* ==========================================================================
+   HEADER ET TOOLBAR - GLASSMORPHISM SUBTIL
+   ========================================================================== */
+
+.folder-manager-header {
+  background: var(--glass-bg-subtle) !important;
+  border: 1px solid var(--glass-border-subtle) !important;
+  border-radius: 16px !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  box-shadow: var(--glass-shadow-subtle) !important;
+  padding: 24px 32px !important;
+  margin-bottom: 24px !important;
 }
 
-/* Éléments qui ne doivent pas avoir de transition */
-.no-transition,
-.no-transition * {
-  transition: none !important;
+.folder-toolbar-container {
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+.folder-toolbar {
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+/* ==========================================================================
+   GRID DES DOSSIERS ET FICHIERS - SANS CONTAINER VISIBLE
+   ========================================================================== */
+
+.folder-grid,
+.folder-list,
+.folder-grid-container {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  gap: 20px !important;
+}
+
+/* ==========================================================================
+   ÉLÉMENTS INDIVIDUELS - GLASSMORPHISM ÉPURÉ
+   ========================================================================== */
+
+/* Wrapper des éléments - Transparent */
+.folder-item-wrapper,
+.file-item-wrapper {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+/* Éléments de grille - Glassmorphism subtil SANS BORDURE ET SANS BACKGROUND */
+.fm-grid-item {
+  background: transparent !important; /* SUPPRIMÉ LE BACKGROUND */
+  border: none !important; /* SUPPRIMÉ L'ENCADRÉ */
+  border-radius: 16px !important;
+  backdrop-filter: none !important; /* SUPPRIMÉ LE FLU */
+  -webkit-backdrop-filter: none !important;
+  box-shadow: none !important; /* SUPPRIMÉ L'OMBRE */
+  padding: 20px !important;
+  cursor: pointer !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  position: relative !important;
+  overflow: hidden !important;
+  min-height: 120px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+}
+
+/* Effet de lueur subtile sur les éléments */
+.fm-grid-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.02) 0%, 
+    rgba(255, 255, 255, 0.01) 50%, 
+    rgba(255, 255, 255, 0.02) 100%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  border-radius: 16px;
+}
+
+/* Hover des éléments - Glassmorphism amélioré */
+.fm-grid-item:hover {
+  background: var(--glass-bg-light) !important;
+  border-color: var(--glass-border-light) !important;
+  transform: translateY(-4px) !important;
+  box-shadow: var(--glass-shadow-medium) !important;
+}
+
+.fm-grid-item:hover::before {
+  opacity: 1;
+}
+
+/* ==========================================================================
+   ICÔNES DES DOSSIERS ET FICHIERS - AFFINÉES ET OPTIMISÉES
+   ========================================================================== */
+
+/* Icônes des dossiers - Style affiné et optimisé */
+.fm-grid-item .folder-icon {
+  margin-bottom: 16px !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  width: 100% !important;
+  height: 44px !important; /* Hauteur légèrement augmentée */
+  /* Optimisations pour la netteté */
+  -webkit-font-smoothing: antialiased !important;
+  -moz-osx-font-smoothing: grayscale !important;
+  font-smooth: never !important;
+}
+
+/* Icônes des fichiers - Style affiné et optimisé */
+.fm-grid-item .file-icon {
+  margin-bottom: 16px !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  width: 100% !important;
+  height: 44px !important; /* Hauteur légèrement augmentée */
+  /* Optimisations pour la netteté */
+  -webkit-font-smoothing: antialiased !important;
+  -moz-osx-font-smoothing: grayscale !important;
+  font-smooth: never !important;
+}
+
+/* Hover des icônes - Effet affiné et fluide */
+.fm-grid-item:hover .folder-icon {
+  transform: scale(1.08) !important; /* Scale légèrement plus prononcé */
+  transition: transform 0.2s ease-out !important; /* Transition plus rapide */
+}
+
+.fm-grid-item:hover .file-icon {
+  transform: scale(1.08) !important; /* Scale légèrement plus prononcé */
+  transition: transform 0.2s ease-out !important; /* Transition plus rapide */
+}
+
+
+
+/* Noms des éléments - PARFAITEMENT centrés sous l'icône */
+.fm-grid-item .fm-item-name {
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  color: var(--dossiers-text-primary) !important;
+  text-align: center !important;
+  line-height: 1.4 !important;
+  font-family: 'Noto Sans', sans-serif !important;
+  word-break: break-word !important;
+  max-width: 100% !important;
+  margin: 0 !important;
+  
+  /* Limitation stricte à 2 lignes avec "..." - SOLUTION QUI MARCHE */
+  display: block !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  
+  /* Hauteur fixe pour exactement 2 lignes */
+  height: 2.8em !important; /* 2 lignes × 1.4 line-height */
+  min-height: 2.8em !important;
+  max-height: 2.8em !important;
+  
+  /* Centrage horizontal PARFAIT */
+  align-self: center !important;
+  justify-self: center !important;
+  text-align: center !important;
+  width: 100% !important;
+  
+  /* Assurer le centrage parfait */
+  position: relative !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+}
+
+/* ==========================================================================
+   APERÇUS D'IMAGES - GLASSMORPHISM
+   ========================================================================== */
+
+.file-image-preview {
+  width: 100% !important;
+  height: 80px !important;
+  margin-bottom: 12px !important;
+  border-radius: 12px !important;
+  overflow: hidden !important;
+  background: var(--glass-bg-light) !important;
+  border: 1px solid var(--glass-border-subtle) !important;
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+}
+
+.preview-image {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  border-radius: 12px !important;
+}
+
+/* ==========================================================================
+   ÉTATS SPÉCIAUX - GLASSMORPHISM
+   ========================================================================== */
+
+/* Éléments en cours de renommage */
+.fm-grid-item.renaming {
+  background: var(--glass-bg-medium) !important;
+  border-color: var(--dossiers-primary) !important;
+  box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.2) !important;
+}
+
+/* Éléments en cours de drag */
+.fm-grid-item.dragging {
+  opacity: 0.5 !important;
+  transform: rotate(5deg) scale(0.95) !important;
+}
+
+/* Zone de drop */
+.fm-grid-item.drag-over {
+  background: var(--glass-bg-medium) !important;
+  border-color: var(--dossiers-primary) !important;
+  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.3) !important;
+}
+
+/* ==========================================================================
+   INPUTS DE RENOMMAGE - GLASSMORPHISM
+   ========================================================================== */
+
+.fm-grid-item input {
+  background: var(--glass-bg-medium) !important;
+  border: 1px solid var(--glass-border-light) !important;
+  border-radius: 8px !important;
+  color: var(--dossiers-text-primary) !important;
+  padding: 8px 12px !important;
+  font-size: 14px !important;
+  font-family: 'Noto Sans', sans-serif !important;
+  text-align: center !important;
+  width: 100% !important;
+  max-width: 150px !important;
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+}
+
+.fm-grid-item input:focus {
+  outline: none !important;
+  border-color: var(--dossiers-primary) !important;
+  box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.2) !important;
+  background: var(--glass-bg-light) !important;
+}
+
+/* ==========================================================================
+   BREADCRUMB - GLASSMORPHISM
+   ========================================================================== */
+
+.folder-breadcrumb {
+  background: transparent !important;
+  border: none !important;
+  padding: 0 0 24px 0 !important;
+  margin: 0 !important;
+}
+
+.breadcrumb-item {
+  background: var(--glass-bg-subtle) !important;
+  border: 1px solid var(--glass-border-subtle) !important;
+  border-radius: 8px !important;
+  backdrop-filter: blur(15px) !important;
+  -webkit-backdrop-filter: blur(15px) !important;
+  box-shadow: var(--glass-shadow-subtle) !important;
+  transition: all 0.3s ease !important;
+}
+
+.breadcrumb-item:hover {
+  background: var(--glass-bg-light) !important;
+  border-color: var(--glass-border-light) !important;
+  transform: translateY(-2px) !important;
+}
+
+/* ==========================================================================
+   ÉTATS VIDE ET ERREUR - GLASSMORPHISM
+   ========================================================================== */
+
+.folder-content-empty {
+  background: var(--glass-bg-subtle) !important;
+  border: 1px solid var(--glass-border-subtle) !important;
+  border-radius: 20px !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  box-shadow: var(--glass-shadow-subtle) !important;
+  padding: 60px 32px !important;
+  margin: 24px !important;
+}
+
+.folder-empty-icon {
+  font-size: 48px !important;
+  margin-bottom: 20px !important;
+  opacity: 0.7 !important;
+}
+
+.folder-empty-title {
+  font-size: 20px !important;
+  font-weight: 600 !important;
+  color: var(--dossiers-text-primary) !important;
+  margin-bottom: 12px !important;
+}
+
+.folder-empty-subtitle {
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  color: var(--dossiers-text-secondary) !important;
+  opacity: 0.8 !important;
+}
+
+/* ==========================================================================
+   ANIMATIONS ET TRANSITIONS
+   ========================================================================== */
+
+/* Animation d'entrée pour les éléments */
+.folder-item-wrapper,
+.file-item-wrapper {
+  animation: fadeInUp 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Animation de stagger pour les grilles */
+.folder-grid .folder-item-wrapper:nth-child(1) { animation-delay: 0.1s; }
+.folder-grid .folder-item-wrapper:nth-child(2) { animation-delay: 0.2s; }
+.folder-grid .folder-item-wrapper:nth-child(3) { animation-delay: 0.3s; }
+.folder-grid .folder-item-wrapper:nth-child(4) { animation-delay: 0.4s; }
+.folder-grid .folder-item-wrapper:nth-child(5) { animation-delay: 0.5s; }
+.folder-grid .folder-item-wrapper:nth-child(6) { animation-delay: 0.6s; }
+
+.folder-grid.files .file-item-wrapper:nth-child(1) { animation-delay: 0.1s; }
+.folder-grid.files .file-item-wrapper:nth-child(2) { animation-delay: 0.2s; }
+.folder-grid.files .file-item-wrapper:nth-child(3) { animation-delay: 0.3s; }
+.folder-grid.files .file-item-wrapper:nth-child(4) { animation-delay: 0.4s; }
+.folder-grid.files .file-item-wrapper:nth-child(5) { animation-delay: 0.5s; }
+.folder-grid.files .file-item-wrapper:nth-child(6) { animation-delay: 0.6s; }
+
+/* ==========================================================================
+   RESPONSIVE DESIGN
+   ========================================================================== */
+
+@media (max-width: 768px) {
+  .fm-grid-item {
+    min-height: 100px !important;
+    padding: 16px !important;
+    border-radius: 12px !important;
+  }
+  
+  .fm-grid-item .folder-icon,
+  .fm-grid-item .file-icon {
+    font-size: 28px !important;
+    margin-bottom: 12px !important;
+  }
+  
+  .fm-grid-item .folder-name,
+  .fm-grid-item .file-name {
+    font-size: 13px !important;
+    height: 2.6em !important; /* Ajusté pour 2 lignes */
+    min-height: 2.6em !important;
+  }
+  
+  .folder-breadcrumb {
+    padding: 0 0 20px 0 !important;
+  }
+  
+  .folder-content-empty {
+    padding: 40px 24px !important;
+    margin: 16px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .fm-grid-item {
+    min-height: 90px !important;
+    padding: 14px !important;
+    border-radius: 10px !important;
+  }
+  
+  .fm-grid-item .folder-icon,
+  .fm-grid-item .file-icon {
+    font-size: 24px !important;
+    margin-bottom: 10px !important;
+  }
+  
+  .fm-grid-item .folder-name,
+  .fm-grid-item .file-name {
+    font-size: 12px !important;
+    height: 2.4em !important; /* Ajusté pour 2 lignes */
+    min-height: 2.4em !important;
+  }
 } 

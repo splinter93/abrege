@@ -23,6 +23,9 @@
 
 .folder-content-title {
   flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 16px;
 }
 
 .classeur-title {
@@ -31,6 +34,50 @@
   color: var(--text-primary, #111827);
   margin: 0;
   line-height: 1.2;
+}
+
+/* 🔧 NOUVEAU: Styles pour le bouton retour */
+.folder-back-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: var(--accent-primary, #3b82f6);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  outline: none;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.folder-back-button:hover {
+  background: var(--accent-hover, #2563eb);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.folder-back-button:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.folder-back-button:focus-visible {
+  outline: 2px solid var(--accent-primary, #3b82f6);
+  outline-offset: 2px;
+}
+
+.back-button-icon {
+  font-size: 16px;
+  line-height: 1;
+}
+
+.back-button-text {
+  white-space: nowrap;
 }
 
 /* Responsive pour le header */
@@ -42,8 +89,18 @@
     padding: 20px 0 24px 0;
   }
   
+  .folder-content-title {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  
   .classeur-title {
     font-size: 24px;
+  }
+  
+  .folder-back-button {
+    align-self: flex-start;
   }
 }
 
@@ -64,7 +121,7 @@
 .folder-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); /* Utilise toute la largeur */
-  gap: 24px; 
+  gap: 16px; /* RÉDUIT de 24px à 16px pour rapprocher les éléments */
   justify-items: stretch; /* Les items prennent toute la largeur de leur cellule */
   width: 100%;
   padding: 0;
@@ -72,7 +129,7 @@
 }
 
 .folder-grid.files {
-  margin-top: 24px;
+  margin-top: 12px; /* RÉDUIT de 24px à 12px pour rapprocher les grilles */
 }
 
 /* Animation pour les fichiers */

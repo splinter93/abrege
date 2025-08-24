@@ -249,25 +249,22 @@
   background: transparent;
 }
 
-.folder-grid-item,
-.folder-list-item {
-  background: var(--glass-bg-light, rgba(255, 255, 255, 0.05));
-  border: 1px solid var(--glass-border-light, rgba(255, 255, 255, 0.1));
-  border-radius: var(--radius-md, 8px);
+.fm-grid-item {
+  background: transparent;
+  border: none;
+  border-radius: 0;
   transition: all 0.2s ease;
 }
 
-.folder-grid-item:hover,
-.folder-list-item:hover {
-  background: var(--glass-bg-medium, rgba(255, 255, 255, 0.1));
-  border-color: var(--glass-border-heavy, rgba(255, 255, 255, 0.2));
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+.fm-grid-item:hover {
+  background: transparent;
+  border-color: transparent;
+  transform: none;
+  box-shadow: none;
 }
 
 /* Renaming input */
-.folder-grid-item input,
-.folder-list-item input {
+.fm-grid-item input {
   background: var(--glass-bg-heavy, rgba(255, 255, 255, 0.15));
   border: 1px solid var(--glass-border-heavy, rgba(255, 255, 255, 0.3));
   border-radius: var(--radius-sm, 4px);
@@ -276,8 +273,7 @@
   font-size: 0.9rem;
 }
 
-.folder-grid-item input:focus,
-.folder-list-item input:focus {
+.fm-grid-item input:focus {
   outline: none;
   border-color: var(--accent-primary, #007bff);
   box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.2);

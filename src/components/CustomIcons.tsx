@@ -9,27 +9,23 @@ export const FolderIcon: React.FC<{ size?: number; className?: string }> = ({ si
     xmlns="http://www.w3.org/2000/svg"
     className={className}
   >
-    <defs>
-      <linearGradient id="folderGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#e55a2c" />
-        <stop offset="100%" stopColor="#d14a1c" />
-      </linearGradient>
-    </defs>
-    {/* Dossier macOS style */}
+    {/* Dossier avec design moderne */}
     <path
-      d="M3 7a2 2 0 0 1 2-2h4l2 3h8a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"
-      fill="url(#folderGradient)"
-      stroke="url(#folderGradient)"
-      strokeWidth="1"
-      strokeLinejoin="round"
-    />
-    {/* Détail du pli */}
-    <path
-      d="M9 5l2 3h8"
-      stroke="url(#folderGradient)"
-      strokeWidth="1"
+      d="M3 7a2 2 0 0 1 2-2h4.586a2 2 0 0 1 1.414.586L12 7h5a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"
+      stroke="#fb923c"
+      strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
+      fill="none"
+    />
+    {/* Ligne de pliure du dossier */}
+    <path
+      d="M7 5l5 2h5"
+      stroke="#fb923c"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      fill="none"
     />
   </svg>
 );
@@ -43,21 +39,48 @@ export const FileIcon: React.FC<{ size?: number; className?: string }> = ({ size
     xmlns="http://www.w3.org/2000/svg"
     className={className}
   >
-    {/* Page principale horizontale */}
-    <rect x="3" y="4" width="18" height="16" rx="2.5" fill="#232323" stroke="#222" strokeWidth="1.2" />
-    {/* Plume orange en petit, coin supérieur droit */}
-    <g transform="translate(17 6) scale(0.4)">
-      <defs>
-        <linearGradient id="logoGradientFile" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="var(--accent-hover)" />
-          <stop offset="100%" stopColor="var(--accent-primary)" />
-        </linearGradient>
-      </defs>
-      <path d="M20.62,2.62a1,1,0,0,0-1.41,0L3,18.83l-1.41-1.42a1,1,0,0,0-1.42,1.42l3.54,3.53a1,1,0,0,0,1.41,0L20.62,4A1,1,0,0,0,20.62,2.62ZM6.22,21.22l-1-1,10-10,1,1Z" fill="url(#logoGradientFile)" />
-    </g>
-    {/* Lignes d'écriture horizontales */}
-    <rect x="6" y="8" width="12" height="1.1" rx="0.55" fill="#fff" fillOpacity="0.18" />
-    <rect x="6" y="10" width="9" height="1.1" rx="0.55" fill="#fff" fillOpacity="0.18" />
-    <rect x="6" y="12" width="7" height="1.1" rx="0.55" fill="#fff" fillOpacity="0.18" />
+    {/* Fichier avec design moderne */}
+    <path
+      d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z"
+      stroke="#64748b"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      fill="none"
+    />
+    {/* Coin plié du fichier */}
+    <path
+      d="M14 2v6h6"
+      stroke="#64748b"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      fill="none"
+    />
+    {/* Lignes de contenu du fichier */}
+    <path
+      d="M16 13H8"
+      stroke="#64748b"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      fill="none"
+    />
+    <path
+      d="M16 17H8"
+      stroke="#64748b"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      fill="none"
+    />
+    <path
+      d="M10 9H8"
+      stroke="#64748b"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      fill="none"
+    />
   </svg>
 ); 

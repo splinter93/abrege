@@ -3,7 +3,6 @@
 import { useMemo, useState, useEffect } from "react";
 import type { Classeur, Folder } from "@/store/useFileSystemStore";
 import ClasseurBandeau from "@/components/ClasseurBandeau";
-import LogoHeader from "@/components/LogoHeader";
 import Sidebar from "@/components/Sidebar";
 import FolderManager from "@/components/FolderManager";
 import DossierErrorBoundary from "@/components/DossierErrorBoundary";
@@ -15,12 +14,12 @@ import { useAuth } from "@/hooks/useAuth";
 import { useSecureErrorHandler } from "@/components/SecureErrorHandler";
 import type { AuthenticatedUser } from "@/types/dossiers";
 import { useUnifiedRealtime } from "@/hooks/useUnifiedRealtime";
+import { useFileSystemStore } from "@/store/useFileSystemStore";
 import UnifiedRealtimeManager from "@/components/UnifiedRealtimeManager";
 
 import "./index.css";
 import "@/components/DossierErrorBoundary.css";
 import "@/components/DossierLoadingStates.css";
-import { useFileSystemStore } from "@/store/useFileSystemStore";
 
 export default function DossiersPage() {
   return (
@@ -198,16 +197,9 @@ function AuthenticatedDossiersContent({ user }: { user: AuthenticatedUser }) {
 
   return (
     <div className="dossiers-page-wrapper">
-      {/* 🔧 CORRECTION : Ajouter le composant de polling manquant */}
+      {/* Gestionnaire realtime unifié pour la synchronisation */}
       <UnifiedRealtimeManager />
       
-      {/* Header fixe avec navigation */}
-      <header className="dossiers-header-fixed">
-        <div className="header-content">
-          <LogoHeader size="medium" position="left" />
-        </div>
-      </header>
-
       {/* Sidebar fixe */}
       <aside className="dossiers-sidebar-fixed">
         <Sidebar />
@@ -215,57 +207,66 @@ function AuthenticatedDossiersContent({ user }: { user: AuthenticatedUser }) {
 
       {/* Zone de contenu principal */}
       <main className="dossiers-content-area">
+        {/* Titre de la page */}
+        <div className="dossiers-page-title">
+          <h1>Mes Classeurs</h1>
+        </div>
+
         {/* Section des classeurs avec navigation */}
         {activeClasseur && (
           <>
             <section className="classeurs-section">
-              <ClasseurBandeau
-                classeurs={classeurs.map((c: Classeur) => ({ 
-                  id: c.id, 
-                  name: c.name, 
-                  emoji: c.emoji, 
-                  color: '#e55a2c'
-                }))}
-                activeClasseurId={activeClasseurId || null}
-                onSelectClasseur={(id) => {
-                  setActiveClasseurId(id);
-                  setCurrentFolderId(undefined);
-                }}
-                onCreateClasseur={handleCreateClasseurClick}
-                onRenameClasseur={handleRenameClasseurClick}
-                onDeleteClasseur={handleDeleteClasseurClick}
-              />
+              <div className="classeurs-container">
+                <ClasseurBandeau
+                  classeurs={classeurs.map((c: Classeur) => ({ 
+                    id: c.id, 
+                    name: c.name, 
+                    emoji: c.emoji, 
+                    color: '#e55a2c'
+                  }))}
+                  activeClasseurId={activeClasseurId || null}
+                  onSelectClasseur={(id) => {
+                    setActiveClasseurId(id);
+                    setCurrentFolderId(undefined);
+                  }}
+                  onCreateClasseur={handleCreateClasseurClick}
+                  onRenameClasseur={handleRenameClasseurClick}
+                  onDeleteClasseur={handleDeleteClasseurClick}
+                />
+              </div>
             </section>
 
             <section className="content-section">
-              <FolderManager
-                classeurId={activeClasseur.id}
-                classeurName={activeClasseur.name}
-                classeurIcon={activeClasseur.emoji}
-                parentFolderId={currentFolderId}
-                onFolderOpen={handleFolderOpenClick}
-                onGoBack={handleGoBack}
-                onGoToRoot={handleGoToRoot}
-                onGoToFolder={handleGoToFolder}
-                folderPath={folderPath.map(folder => ({
-                  id: folder.id,
-                  name: folder.name,
-                  parent_id: folder.parent_id || null,
-                  classeur_id: folder.classeur_id || '',
-                  position: folder.position || 0,
-                  created_at: folder.created_at || '',
-                  updated_at: new Date().toISOString(),
-                  user_id: user.id
-                }))}
-                // 🔧 FIX: Passer les données déjà chargées pour éviter le double chargement
-                preloadedFolders={useFileSystemStore.getState().folders}
-                preloadedNotes={useFileSystemStore.getState().notes}
-                skipApiCalls={true}
-                viewMode={viewMode}
-                onToggleView={handleToggleView}
-                onCreateFolder={handleCreateFolder}
-                onCreateFile={handleCreateNote}
-              />
+              <div className="content-main-container">
+                <FolderManager
+                  classeurId={activeClasseur.id}
+                  classeurName={activeClasseur.name}
+                  classeurIcon={activeClasseur.emoji}
+                  parentFolderId={currentFolderId}
+                  onFolderOpen={handleFolderOpenClick}
+                  onGoBack={handleGoBack}
+                  onGoToRoot={handleGoToRoot}
+                  onGoToFolder={handleGoToFolder}
+                  folderPath={folderPath.map(folder => ({
+                    id: folder.id,
+                    name: folder.name,
+                    parent_id: folder.parent_id || null,
+                    classeur_id: folder.classeur_id || '',
+                    position: folder.position || 0,
+                    created_at: folder.created_at || '',
+                    updated_at: new Date().toISOString(),
+                    user_id: user.id
+                  }))}
+                  // 🔧 FIX: Passer les données déjà chargées pour éviter le double chargement
+                  preloadedFolders={useFileSystemStore.getState().folders}
+                  preloadedNotes={useFileSystemStore.getState().notes}
+                  skipApiCalls={true}
+                  viewMode={viewMode}
+                  onToggleView={handleToggleView}
+                  onCreateFolder={handleCreateFolder}
+                  onCreateFile={handleCreateNote}
+                />
+              </div>
             </section>
           </>
         )}

@@ -142,9 +142,15 @@ const FolderManager: React.FC<FolderManagerProps> = ({
     storeNotes
   );
   
-  // Filtrer les données par classeur actif
-  const filteredFolders = effectiveFolders.filter((f: any) => f.classeur_id === classeurId);
-  const filteredFiles = effectiveFiles.filter((n: any) => n.classeur_id === classeurId);
+  // Filtrer les données par classeur actif ET par dossier parent
+  const filteredFolders = effectiveFolders.filter((f: any) => 
+    f.classeur_id === classeurId && 
+    (f.parent_id === parentFolderId || (!f.parent_id && !parentFolderId))
+  );
+  const filteredFiles = effectiveFiles.filter((n: any) => 
+    n.classeur_id === classeurId && 
+    (n.folder_id === parentFolderId || (!n.folder_id && !parentFolderId))
+  );
   
   // Pas de loading si données préchargées
   const effectiveLoading = usePreloadedData ? false : loading;
@@ -239,7 +245,7 @@ const FolderManager: React.FC<FolderManagerProps> = ({
 
   return (
     <div className="folder-manager-wrapper">
-      {/* 🔧 CORRECTION : Ajouter le composant de polling manquant */}
+      {/* Gestionnaire realtime unifié pour la synchronisation */}
       <UnifiedRealtimeManager />
       
       <div 
@@ -272,10 +278,16 @@ const FolderManager: React.FC<FolderManagerProps> = ({
               onCreateFile={handleCreateFile}
               onToggleView={onToggleView}
               viewMode={viewMode}
+              // 🔧 NOUVEAU: Passer les props de navigation
+              parentFolderId={parentFolderId}
+              onGoBack={onGoBack}
+              onGoToRoot={onGoToRoot}
+              onGoToFolder={onGoToFolder}
+              folderPath={folderPath}
             />
           </main>
         </div>
-  
+    
         {/* Menu contextuel */}
         {contextMenuState.visible && contextMenuState.item && (
           <SimpleContextMenu

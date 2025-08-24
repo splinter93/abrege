@@ -1,12 +1,28 @@
 /* ==========================================================================
-   FILES PAGE - MÊME STYLE QUE LES CLASSEURS
-   ==========================================================================
-   Utilise exactement le même background et les mêmes couleurs
-   que la page des classeurs pour une cohérence parfaite
-*/
+   FILES PAGE - GLASSMORPHISM ÉPURÉ IDENTIQUE AUX DOSSIERS
+   ========================================================================== */
 
 /* ==========================================================================
-   VARIABLES SPÉCIFIQUES AUX FILES (style classeurs)
+   IMPORTS CSS
+   ========================================================================== */
+
+/* 1. Variables et design system */
+@import '../../../styles/design-system.css';
+@import '../../../styles/typography.css';
+
+/* 2. Layout principal de la page */
+@import './page.css';
+
+/* 3. Composants de fichiers */
+@import '../../../components/FilesContent.css';
+@import '../../../components/FolderGridItems.css';
+
+/* 4. Composants utilitaires */
+@import '../../../components/Toast.css';
+@import '../../../components/Tooltip.css';
+
+/* ==========================================================================
+   VARIABLES SPÉCIFIQUES AUX FILES
    ========================================================================== */
 :root {
   /* Couleurs identiques aux classeurs */
@@ -22,223 +38,87 @@
 }
 
 /* ==========================================================================
-   BACKGROUND IDENTIQUE AUX CLASSEURS
+   STYLES GLOBAUX POUR LA PAGE FILES
    ========================================================================== */
 
-.dossiers-page-wrapper {
-  background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
-  color: var(--files-text-primary);
-  display: grid;
-  grid-template-areas:
-    "header header"
-    "sidebar main";
-  grid-template-columns: 280px 1fr;
-  grid-template-rows: 80px 1fr;
-  height: 100vh;
-  width: 100vw;
-  overflow: hidden;
-  position: relative;
-}
-
-/* Effet de gradient radial identique aux classeurs */
-.dossiers-page-wrapper::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: 
-    radial-gradient(circle at 20% 80%, rgba(249, 115, 22, 0.1) 0%, transparent 50%),
-    radial-gradient(circle at 80% 20%, rgba(245, 158, 11, 0.1) 0%, transparent 50%);
-  pointer-events: none;
-  z-index: -1;
-}
-
-/* ==========================================================================
-   HEADER - STYLE CLASSEURS
-   ========================================================================== */
-
-.dossiers-header-fixed {
-  grid-area: header;
-  background: rgba(255, 255, 255, 0.03);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-bottom: 1px solid var(--files-border);
-  display: flex;
-  align-items: center;
-  padding: 0 var(--spacing-lg);
-  z-index: 100;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  position: relative;
-}
-
-.header-content {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-/* ==========================================================================
-   SIDEBAR - STYLE CLASSEURS
-   ========================================================================== */
-
-.dossiers-sidebar-fixed {
-  grid-area: sidebar;
-  background: transparent;
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
-  border-right: none;
-  overflow-y: auto;
-  z-index: 50;
-  position: relative;
-  padding: 0;
-}
-
-/* ==========================================================================
-   CONTENU PRINCIPAL - STYLE CLASSEURS
-   ========================================================================== */
-
+/* Suppression des styles redondants - maintenant dans page.css */
+.dossiers-page-wrapper,
+.dossiers-header-fixed,
+.dossiers-sidebar-fixed,
 .dossiers-content-area {
-  grid-area: main;
-  background: transparent;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  position: relative;
-  padding: 0;
-  margin: 0;
+  /* Styles définis dans page.css */
 }
 
 /* ==========================================================================
-   SECTION FICHIERS - STYLE CLASSEURS
+   ÉTATS D'ERREUR ET DE CHARGEMENT - GLASSMORPHISM
    ========================================================================== */
 
-.files-section {
-  background: var(--files-surface);
-  border: 1px solid var(--files-border);
-  border-radius: var(--files-radius);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  box-shadow: var(--files-shadow);
-  padding: var(--spacing-xl);
-  margin: var(--spacing-xl);
-  position: relative;
-}
-
-.files-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-}
-
-.files-info {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-md);
-}
-
-.files-icon {
-  font-size: var(--font-size-2xl);
-  opacity: 0.8;
-}
-
-.files-title {
-  font-size: var(--font-size-xl);
-  font-weight: 600;
-  color: var(--files-text-primary);
-  margin: 0;
-  font-family: 'Noto Sans', sans-serif;
-}
-
-.files-stats {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: var(--spacing-xs);
-  font-size: var(--font-size-sm);
-  color: var(--files-text-secondary);
-  font-weight: 500;
-}
-
-.quota-info {
-  font-size: var(--font-size-xs);
-  padding: var(--spacing-xs) var(--spacing-sm);
-  background: var(--files-primary-light);
-  border-radius: var(--radius-sm);
-  color: var(--files-primary);
-  border: 1px solid rgba(249, 115, 22, 0.3);
-}
-
-/* ==========================================================================
-   SECTION CONTENU
-   ========================================================================== */
-
-.files-content-section {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-  padding: 0 var(--spacing-xl);
-  margin-bottom: var(--spacing-xl);
-}
-
-.files-content {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-  gap: var(--spacing-lg);
-}
-
-/* ==========================================================================
-   SECTION UPLOAD - STYLE CLASSEURS
-   ========================================================================== */
-
-.uploader-section {
-  padding: var(--spacing-lg);
-  background: var(--files-surface);
-  border: 1px solid var(--files-border);
-  border-radius: var(--files-radius);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  box-shadow: var(--files-shadow);
-  width: 100%;
-  box-sizing: border-box;
-}
-
-/* ==========================================================================
-   ÉTATS - STYLE CLASSEURS
-   ========================================================================== */
-
-.loading-state,
 .error-state {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: var(--spacing-2xl) var(--spacing-lg);
+  padding: 4rem 2rem;
   text-align: center;
-  background: var(--files-surface);
-  border: 1px solid var(--files-border);
-  border-radius: var(--files-radius);
+  min-height: 400px;
+  background: var(--glass-bg-subtle);
+  border: 1px solid var(--glass-border-subtle);
+  border-radius: 20px;
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  box-shadow: var(--files-shadow);
-  width: 100%;
-  box-sizing: border-box;
+  box-shadow: var(--glass-shadow-subtle);
+}
+
+.error-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  opacity: 0.7;
+}
+
+.error-state h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: var(--files-text-primary);
+}
+
+.error-state p {
+  color: var(--files-text-secondary);
+  margin-bottom: 1.5rem;
+  max-width: 500px;
+}
+
+.error-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  text-align: center;
+  min-height: 400px;
+  background: var(--glass-bg-subtle);
+  border: 1px solid var(--glass-border-subtle);
+  border-radius: 20px;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: var(--glass-shadow-subtle);
 }
 
 .loading-spinner {
-  width: 40px;
-  height: 40px;
+  width: 3rem;
+  height: 3rem;
   border: 3px solid transparent;
   border-top: 3px solid var(--files-primary);
   border-radius: 50%;
   animation: spin 1s linear infinite;
-  margin-bottom: var(--spacing-md);
+  margin-bottom: 1rem;
 }
 
 @keyframes spin {
@@ -246,24 +126,46 @@
   100% { transform: rotate(360deg); }
 }
 
-.error-icon {
-  font-size: var(--font-size-3xl);
-  margin-bottom: var(--spacing-md);
-  opacity: 0.7;
-}
-
-.error-state h3 {
-  margin: 0 0 var(--spacing-sm) 0;
-  color: var(--files-text-primary);
-  font-size: var(--font-size-lg);
-  font-family: 'Noto Sans', sans-serif;
-}
-
-.error-state p {
-  margin: 0;
+.loading-state p {
   color: var(--files-text-secondary);
-  font-size: var(--font-size-base);
-  font-family: 'Noto Sans', sans-serif;
+  font-size: 1.1rem;
+}
+
+.retry-info {
+  color: var(--files-primary);
+  font-size: 0.9rem;
+  margin-top: 0.5rem;
+}
+
+.action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: var(--files-primary);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  outline: none;
+}
+
+.action-btn:hover {
+  background: var(--files-primary-light);
+  transform: translateY(-1px);
+}
+
+.action-btn:active {
+  transform: translateY(0);
+}
+
+.action-btn:focus-visible {
+  outline: 2px solid var(--files-primary);
+  outline-offset: 2px;
 }
 
 /* ==========================================================================
@@ -271,58 +173,19 @@
    ========================================================================== */
 
 @media (max-width: 768px) {
-  .dossiers-page-wrapper {
-    grid-template-columns: 1fr;
-    grid-template-areas:
-      "header"
-      "main";
+  .error-state,
+  .loading-state {
+    padding: 3rem 1.5rem;
+    margin: 1rem;
+    border-radius: 16px;
   }
   
-  .dossiers-sidebar-fixed {
-    display: none;
+  .error-state h2 {
+    font-size: 1.25rem;
   }
   
-  .files-section {
-    padding: var(--spacing-lg);
-    margin: var(--spacing-lg);
-  }
-  
-  .files-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: var(--spacing-md);
-  }
-  
-  .files-stats {
-    align-items: flex-start;
-  }
-  
-  .files-content-section {
-    padding: 0 var(--spacing-lg);
-    margin-bottom: var(--spacing-lg);
-  }
-  
-  .uploader-section {
-    padding: var(--spacing-lg);
-  }
-}
-
-@media (max-width: 480px) {
-  .files-section {
-    padding: var(--spacing-md);
-    margin: var(--spacing-md);
-  }
-  
-  .files-title {
-    font-size: var(--font-size-lg);
-  }
-  
-  .files-content-section {
-    padding: 0 var(--spacing-md);
-    margin-bottom: var(--spacing-md);
-  }
-  
-  .uploader-section {
-    padding: var(--spacing-md);
+  .loading-spinner {
+    width: 2.5rem;
+    height: 2.5rem;
   }
 } 

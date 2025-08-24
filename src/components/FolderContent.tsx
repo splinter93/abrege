@@ -4,9 +4,11 @@ import { motion } from 'framer-motion';
 import FolderItem from './FolderItem';
 import FileItem from './FileItem';
 import FolderToolbar, { ViewMode } from './FolderToolbar';
+import FolderBreadcrumb from './FolderBreadcrumb';
 import { Folder, FileArticle } from './types';
 import './FolderContent.css';
 import './FolderGridItems.css';
+import './FolderBreadcrumb.css';
 import { 
   contentVariants, 
   loadingVariants, 
@@ -46,6 +48,12 @@ interface FolderContentProps {
   onCreateFile?: () => void;
   onToggleView?: (mode: ViewMode) => void;
   viewMode?: ViewMode;
+  // Navigation props for folder hierarchy
+  parentFolderId?: string;
+  onGoBack?: () => void;
+  onGoToRoot?: () => void;
+  onGoToFolder?: (folderId: string) => void;
+  folderPath?: Folder[];
 }
 
 const FolderContent: React.FC<FolderContentProps> = ({
@@ -70,16 +78,22 @@ const FolderContent: React.FC<FolderContentProps> = ({
   onCreateFile,
   onToggleView,
   viewMode = 'grid',
+  // Navigation props for folder hierarchy
+  parentFolderId,
+  onGoBack,
+  onGoToRoot,
+  onGoToFolder,
+  folderPath = [],
 }) => {
-  // Robustesse : toujours un tableau pour éviter les erreurs React #310
+  // Robustness: always use arrays to avoid React #310 errors
   const safeFolders = Array.isArray(folders) ? folders : [];
   const safeFiles = Array.isArray(files) ? files : [];
-  
+
   if (loading) {
     return (
       <div className="folder-content-loading">
         <div className="folder-loading-spinner">⏳</div>
-        <span>Chargement…</span>
+        <span>Loading...</span>
       </div>
     );
   }
@@ -88,20 +102,42 @@ const FolderContent: React.FC<FolderContentProps> = ({
     return (
       <div className="folder-content-error">
         <span className="folder-error-icon">😕</span>
-        <span>Une erreur est survenue lors du chargement du classeur.</span>
+        <span>An error occurred while loading the classeur.</span>
       </div>
     );
   }
 
   return (
     <div className="folder-content-container">
-      {/* Header avec titre du classeur et toolbar */}
+      {/* Breadcrumb navigation when inside a folder */}
+      {isInFolder && onGoToRoot && onGoToFolder && (
+        <FolderBreadcrumb
+          folderPath={folderPath}
+          classeurName={classeurName}
+          onGoToRoot={onGoToRoot}
+          onGoToFolder={onGoToFolder}
+        />
+      )}
+
+      {/* Header with classeur title and toolbar */}
       <div className="folder-content-header">
         <div className="folder-content-title">
           <h1 className="classeur-title">{classeurName}</h1>
+          
+          {/* Back button when inside a folder */}
+          {isInFolder && onGoBack && (
+            <button
+              className="folder-back-button"
+              onClick={onGoBack}
+              title="Retour au niveau précédent"
+            >
+              <span className="back-button-icon">←</span>
+              <span className="back-button-text">Retour</span>
+            </button>
+          )}
         </div>
         
-        {/* Toolbar avec boutons de création et changement de vue */}
+        {/* Toolbar with creation buttons and view toggle */}
         {onCreateFolder && onCreateFile && onToggleView && (
           <FolderToolbar
             onCreateFolder={onCreateFolder}
@@ -119,15 +155,15 @@ const FolderContent: React.FC<FolderContentProps> = ({
           <div className="folder-content-empty">
             <div className="folder-empty-icon">📁</div>
             <div className="folder-empty-title">
-              {isInFolder ? 'Ce dossier est vide.' : 'Ce classeur est vide.'}
+              {isInFolder ? 'This folder is empty.' : 'This classeur is empty.'}
             </div>
-            <div className="folder-empty-subtitle">Créez votre premier dossier ou note avec la barre d&apos;outils.</div>
+            <div className="folder-empty-subtitle">Create your first folder or note using the toolbar.</div>
           </div>
         )
       ) : (
-        /* Container pour les grilles - style macOS */
+        /* Container for grids - macOS style */
         <div className="folder-grid-container">
-          {/* Grille dossiers */}
+          {/* Grid for folders */}
           <div className="folder-grid">
             {safeFolders.map(folder => (
               <div key={folder.id} className="folder-item-wrapper">
@@ -139,8 +175,8 @@ const FolderContent: React.FC<FolderContentProps> = ({
                   onCancelRename={onCancelRename}
                   onContextMenu={onContextMenuItem}
                   onDropItem={(itemId, itemType) => {
-                    // Validation simplifiée : permettre le drop si onDropItem existe
-                    // La validation complète se fait au niveau de l'API
+                    // Simplified validation: allow drop if onDropItem exists
+                    // Complete validation is done at API level
                     if (onDropItem) {
                       onDropItem(itemId, itemType, folder.id);
                     }
@@ -150,7 +186,7 @@ const FolderContent: React.FC<FolderContentProps> = ({
               </div>
             ))}
           </div>
-          {/* Grille fichiers */}
+          {/* Grid for files */}
           <div className="folder-grid files">
             {safeFiles.map(file => (
               <div key={file.id} className="file-item-wrapper">
