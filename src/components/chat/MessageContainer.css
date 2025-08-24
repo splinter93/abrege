@@ -7,7 +7,7 @@
   flex-direction: column;
   align-items: flex-start;
   gap: 0;
-  margin-bottom: 8px; /* Réduit l'espacement entre les bulles */
+  margin-bottom: 2px; /* Réduit encore plus l'espacement entre les bulles */
   position: relative;
   width: 100%;
 }

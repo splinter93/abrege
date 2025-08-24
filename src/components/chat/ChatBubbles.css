@@ -10,8 +10,8 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 6px;
-  margin-bottom: 24px;
+  gap: 4px;
+  margin-bottom: 8px;
   position: relative;
 }
 
@@ -258,7 +258,7 @@
 
 @media (max-width: 768px) {
   .chat-message {
-    margin-bottom: 16px;
+    margin-bottom: 6px;
   }
   
   .chat-message-user {
