@@ -92,22 +92,22 @@ function TrashPageContent() {
             <h1 className="page-title">Corbeille</h1>
             <p className="page-subtitle">Gérez vos éléments supprimés et restaurez ce qui est important</p>
           </div>
-          <div className="title-stats">
-            <div className="title-stats-item">
-              <span className="title-stats-number">{stats.total}</span>
-              <span className="title-stats-label">Total</span>
+          <div className="page-title-stats">
+            <div className="page-title-stats-item">
+              <span className="page-title-stats-number">{stats.total}</span>
+              <span className="page-title-stats-label">Total</span>
             </div>
-            <div className="title-stats-item">
-              <span className="title-stats-number">{stats.notes}</span>
-              <span className="title-stats-label">Notes</span>
+            <div className="page-title-stats-item">
+              <span className="page-title-stats-number">{stats.notes}</span>
+              <span className="page-title-stats-label">Notes</span>
             </div>
-            <div className="title-stats-item">
-              <span className="title-stats-number">{stats.folders}</span>
-              <span className="title-stats-label">Dossiers</span>
+            <div className="page-title-stats-item">
+              <span className="page-title-stats-number">{stats.folders}</span>
+              <span className="page-title-stats-label">Dossiers</span>
             </div>
-            <div className="title-stats-item">
-              <span className="title-stats-number">{stats.files}</span>
-              <span className="title-stats-label">Fichiers</span>
+            <div className="page-title-stats-item">
+              <span className="page-title-stats-number">{stats.files}</span>
+              <span className="page-title-stats-label">Fichiers</span>
             </div>
           </div>
         </div>
