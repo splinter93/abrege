@@ -2,21 +2,133 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
+import { useRouter } from 'next/navigation';
 import Sidebar from '@/components/Sidebar';
 import LogoHeader from '@/components/LogoHeader';
-import { Book, FileText, MessageSquare, Plus, Search, Upload, Link as LinkIcon, Sparkles, FolderOpen, Clock, TrendingUp, Zap, Eye } from 'lucide-react';
+import { Book, FileText, MessageSquare, Plus, Search, Upload, Link as LinkIcon, Sparkles, FolderOpen, Clock, TrendingUp, Zap, Eye, X } from 'lucide-react';
 import RecentActivityPrivate from '@/components/RecentActivityPrivate';
 import PerformanceMonitor from '@/components/PerformanceMonitor';
 import { motion } from 'framer-motion';
 import './home.css';
 import Link from 'next/link';
 
+// Composant modal pour créer une nouvelle note
+const CreateNoteModal = ({ isOpen, onClose, onCreateNote }: { 
+  isOpen: boolean; 
+  onClose: () => void; 
+  onCreateNote: (title: string) => void; 
+}) => {
+  const [noteTitle, setNoteTitle] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!noteTitle.trim()) return;
+
+    setIsLoading(true);
+    setError('');
+    
+    try {
+      await onCreateNote(noteTitle.trim());
+      setNoteTitle('');
+      onClose();
+    } catch (error) {
+      console.error('Erreur création note:', error);
+      setError('Une erreur est survenue lors de la création de la note. Veuillez réessayer.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleClose = () => {
+    setError('');
+    setNoteTitle('');
+    onClose();
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <motion.div 
+        className="bg-white rounded-lg p-6 w-full max-w-md mx-4 shadow-xl"
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.9 }}
+      >
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-lg font-semibold text-gray-900">Créer une nouvelle note</h3>
+          <button 
+            onClick={handleClose}
+            className="text-gray-500 hover:text-gray-700 transition-colors"
+            aria-label="Fermer"
+          >
+            <X size={20} />
+          </button>
+        </div>
+        
+        {error && (
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+            <p className="text-red-700 text-sm">{error}</p>
+          </div>
+        )}
+        
+        <form onSubmit={handleSubmit}>
+          <div className="mb-4">
+            <label htmlFor="note-title" className="block text-sm font-medium text-gray-700 mb-2">
+              Titre de la note
+            </label>
+            <input
+              id="note-title"
+              type="text"
+              value={noteTitle}
+              onChange={(e) => setNoteTitle(e.target.value)}
+              placeholder="Ex: Ma première note..."
+              className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+              autoFocus
+              disabled={isLoading}
+            />
+          </div>
+          
+          <div className="flex gap-3">
+            <button
+              type="button"
+              onClick={handleClose}
+              className="flex-1 px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
+              disabled={isLoading}
+            >
+              Annuler
+            </button>
+            <button
+              type="submit"
+              disabled={!noteTitle.trim() || isLoading}
+              className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              {isLoading ? (
+                <span className="flex items-center justify-center">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Création...
+                </span>
+              ) : (
+                'Créer'
+              )}
+            </button>
+          </div>
+        </form>
+      </motion.div>
+    </div>
+  );
+};
+
 export default function HomePage() {
   const { user, loading } = useAuth();
+  const router = useRouter();
   const [isDragOver, setIsDragOver] = useState(false);
   const [urlInput, setUrlInput] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
+  const [isCreateNoteModalOpen, setIsCreateNoteModalOpen] = useState(false);
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -59,6 +171,25 @@ export default function HomePage() {
       // TODO: Implémenter la recherche
       setTimeout(() => setIsSearching(false), 2000);
     }
+  };
+
+  const handleCreateNote = async (title: string) => {
+    if (!user) {
+      throw new Error('Utilisateur non connecté');
+    }
+
+    try {
+      // Rediriger vers la page des dossiers pour créer la note
+      // L'utilisateur pourra créer la note dans le contexte approprié
+      router.push('/private/dossiers');
+    } catch (error) {
+      console.error('Erreur lors de la création de la note:', error);
+      throw error; // Remonter l'erreur pour l'afficher dans le modal
+    }
+  };
+
+  const handleOpenChat = () => {
+    router.push('/chat');
   };
 
   if (loading) {
@@ -215,6 +346,7 @@ export default function HomePage() {
                     whileHover={{ scale: 1.02, y: -2 }}
                     whileTap={{ scale: 0.98 }}
                     transition={{ type: "spring", stiffness: 300 }}
+                    onClick={() => setIsCreateNoteModalOpen(true)}
                   >
                     <Plus size={18} />
                     <span>Nouvelle note</span>
@@ -233,6 +365,7 @@ export default function HomePage() {
                     whileHover={{ scale: 1.02, y: -2 }}
                     whileTap={{ scale: 0.98 }}
                     transition={{ type: "spring", stiffness: 300 }}
+                    onClick={handleOpenChat}
                   >
                     <Zap size={18} />
                     <span>IA Assistant</span>
@@ -321,6 +454,13 @@ export default function HomePage() {
       
       {/* 🔧 Monitoring des performances en temps réel */}
       <PerformanceMonitor visible={false} />
+
+      {/* Modal de création de note */}
+      <CreateNoteModal
+        isOpen={isCreateNoteModalOpen}
+        onClose={() => setIsCreateNoteModalOpen(false)}
+        onCreateNote={handleCreateNote}
+      />
     </div>
   );
 } 
