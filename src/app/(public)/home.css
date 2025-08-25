@@ -222,6 +222,7 @@
 
 .main-dashboard {
   margin-top: var(--dashboard-spacing-xl);
+  width: 100%;
 }
 
 .dashboard-grid {
@@ -229,12 +230,43 @@
   grid-template-columns: 1fr 320px; /* Largeur fixe pour l'activité récente */
   gap: var(--dashboard-spacing-xl);
   align-items: start;
+  width: 100%;
+  max-width: 100%;
 }
 
 .dashboard-left-column {
   display: flex;
   flex-direction: column;
   gap: var(--dashboard-spacing-xl);
+  width: 100%;
+  min-width: 0; /* Permet au contenu de se rétrécir */
+  flex: 1;
+  max-width: none;
+}
+
+/* Amélioration de l'utilisation de l'espace sur grands écrans */
+@media (min-width: 1400px) {
+  .dashboard-left-column {
+    gap: var(--dashboard-spacing-2xl);
+  }
+  
+  .hero-search-glass,
+  .creation-hub-glass {
+    padding: var(--dashboard-spacing-2xl);
+  }
+  
+  .creation-actions {
+    gap: var(--dashboard-spacing-lg);
+  }
+  
+  .action-btn-glass {
+    padding: var(--dashboard-spacing-lg);
+    font-size: 16px;
+  }
+  
+  .action-btn-glass span {
+    font-size: 16px;
+  }
 }
 
 .dashboard-right-column {
@@ -242,6 +274,8 @@
   flex-direction: column;
   position: sticky;
   top: var(--dashboard-spacing-xl);
+  width: 320px;
+  flex-shrink: 0;
 }
 
 /* ==========================================================================
@@ -1759,17 +1793,65 @@
 /* Support des écrans très larges */
 @media (min-width: 1600px) {
   .home-content {
-    max-width: 1400px;
+    max-width: none;
     margin: 0 auto 0 280px;
+    padding: var(--dashboard-spacing-2xl);
   }
   
   .dashboard-grid {
     grid-template-columns: 1fr 400px;
     gap: var(--dashboard-spacing-2xl);
+    max-width: none;
   }
   
   .home-activity-glass {
     width: 400px;
     max-width: 400px;
+  }
+  
+  .dashboard-left-column {
+    max-width: none;
+  }
+}
+
+/* Support des écrans ultra-larges */
+@media (min-width: 1920px) {
+  .home-content {
+    padding: var(--dashboard-spacing-2xl);
+  }
+  
+  .dashboard-grid {
+    grid-template-columns: 1fr 450px;
+    gap: var(--dashboard-spacing-2xl);
+  }
+  
+  .home-activity-glass {
+    width: 450px;
+    max-width: 450px;
+  }
+  
+  .dashboard-right-column {
+    width: 450px;
+  }
+}
+
+/* Support des écrans 4K et plus */
+@media (min-width: 2560px) {
+  .home-content {
+    padding: var(--dashboard-spacing-2xl);
+  }
+  
+  .dashboard-grid {
+    grid-template-columns: 1fr 500px;
+    gap: var(--dashboard-spacing-2xl);
+  }
+  
+  .home-activity-glass {
+    width: 500px;
+    max-width: 500px;
+  }
+  
+  .dashboard-right-column {
+    width: 500px;
   }
 } 
