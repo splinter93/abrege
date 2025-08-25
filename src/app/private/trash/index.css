@@ -1,0 +1,118 @@
+/* ==========================================================================
+   TRASH PAGE - GLASSMORPHISM MODERNE ET ÉPURÉ
+   ========================================================================== 
+   
+   Ce fichier centralise tous les imports CSS nécessaires pour la page corbeille.
+   L'ordre des imports est important pour éviter les conflits de spécificité.
+ */
+
+/* 1. Variables et design system (priorité la plus basse) */
+@import '../../../styles/design-system.css';
+@import '../../../styles/typography.css';
+
+/* 2. Layout principal de la page */
+@import './TrashPage.css';
+
+/* 3. Composants utilitaires */
+@import '../../../components/Toast.css';
+@import '../../../components/Tooltip.css';
+
+/* ==========================================================================
+   VARIABLES SPÉCIFIQUES À LA CORBEILLE
+   ========================================================================== */
+:root {
+  /* Couleurs principales */
+  --trash-primary: #dc2626;
+  --trash-primary-light: rgba(220, 38, 38, 0.15);
+  --trash-primary-hover: #b91c1c;
+  
+  /* Couleurs glassmorphism */
+  --glass-bg-primary: rgba(255, 255, 255, 0.08);
+  --glass-bg-secondary: rgba(255, 255, 255, 0.05);
+  --glass-bg-tertiary: rgba(255, 255, 255, 0.03);
+  --glass-bg-hover: rgba(255, 255, 255, 0.12);
+  
+  /* Bordures glassmorphism */
+  --glass-border-primary: rgba(255, 255, 255, 0.12);
+  --glass-border-secondary: rgba(255, 255, 255, 0.08);
+  --glass-border-hover: rgba(255, 255, 255, 0.18);
+  
+  /* Ombres glassmorphism */
+  --glass-shadow-subtle: 0 4px 20px rgba(0, 0, 0, 0.1);
+  --glass-shadow-medium: 0 8px 32px rgba(0, 0, 0, 0.15);
+  --glass-shadow-strong: 0 16px 48px rgba(0, 0, 0, 0.2);
+  
+  /* Couleurs de texte */
+  --trash-text-primary: #f8fafc;
+  --trash-text-secondary: #94a3b8;
+  --trash-text-muted: #64748b;
+  
+  /* Espacements */
+  --trash-spacing-xs: 8px;
+  --trash-spacing-sm: 12px;
+  --trash-spacing-md: 16px;
+  --trash-spacing-lg: 24px;
+  --trash-spacing-xl: 32px;
+  --trash-spacing-2xl: 48px;
+  
+  /* Rayons de bordure */
+  --trash-radius-sm: 8px;
+  --trash-radius-md: 12px;
+  --trash-radius-lg: 16px;
+  --trash-radius-xl: 20px;
+  
+  /* Transitions */
+  --trash-transition-fast: 0.15s ease;
+  --trash-transition-normal: 0.25s ease;
+  --trash-transition-slow: 0.4s ease;
+  
+  /* Z-index */
+  --trash-z-header: 1001;
+  --trash-z-sidebar: 1000;
+  --trash-z-content: 999;
+  --trash-z-modal: 1002;
+}
+
+/* ==========================================================================
+   STYLES GLOBAUX POUR LA PAGE CORBEILLE
+   ========================================================================== */
+
+/* Suppression des styles redondants - maintenant dans TrashPage.css */
+.trash-page-wrapper,
+.trash-sidebar-fixed,
+.trash-content-area {
+  /* Styles définis dans TrashPage.css */
+}
+
+/* ==========================================================================
+   OVERRIDES POUR LA COHÉRENCE AVEC LES NOUVEAUX STYLES
+   ========================================================================== */
+
+/* Assurer que les composants utilisent les bonnes variables */
+.trash-item {
+  --item-bg: var(--glass-bg-secondary);
+  --item-border: var(--glass-border-secondary);
+  --item-shadow: var(--glass-shadow-subtle);
+}
+
+/* ==========================================================================
+   RESPONSIVE GLOBAL
+   ========================================================================== */
+
+@media (max-width: 1024px) {
+  .trash-content-area {
+    padding: var(--trash-spacing-lg);
+  }
+}
+
+@media (max-width: 768px) {
+  .trash-content-area {
+    padding: var(--trash-spacing-md);
+  }
+}
+
+@media (max-width: 480px) {
+  .trash-content-area {
+    padding: var(--trash-spacing-sm);
+  }
+} 

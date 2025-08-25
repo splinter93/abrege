@@ -1,72 +1,60 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React from 'react';
+import { motion } from 'framer-motion';
 import { Trash2, Archive, Clock, AlertCircle, FileText, Folder, RotateCcw, Trash } from 'react-feather';
-import { useAuth } from '@/hooks/useAuth';
-import type { AuthenticatedUser } from '@/types/dossiers';
-import AuthGuard from '@/components/AuthGuard';
-import './index.css';
 
-// Types pour les éléments de la corbeille
-interface TrashItem {
-  id: string;
-  type: 'note' | 'folder' | 'file';
-  name: string;
-  deletedAt: Date;
-  expiresAt: Date;
-  size?: number;
-  originalPath?: string;
-}
-
-export default function TrashPage() {
-  return (
-    <AuthGuard>
-      <TrashPageContent />
-    </AuthGuard>
-  );
-}
-
-function TrashPageContent() {
-  const { user } = useAuth();
-  
-  // État simulé pour la démonstration
-  const [trashItems, setTrashItems] = useState<TrashItem[]>([]);
-  const [loading, setLoading] = useState(false);
-
-  // Simuler le chargement des éléments de la corbeille
-  useEffect(() => {
-    setLoading(true);
-    // Simulation d'un délai de chargement
-    const timer = setTimeout(() => {
-      setLoading(false);
-    }, 1000);
-    
-    return () => clearTimeout(timer);
-  }, []);
+// Composant de test pour la page corbeille
+export default function TestTrashPage() {
+  // Données de test
+  const testTrashItems = [
+    {
+      id: '1',
+      type: 'note' as const,
+      name: 'Note de test importante',
+      deletedAt: new Date(Date.now() - 24 * 60 * 60 * 1000), // Il y a 1 jour
+      expiresAt: new Date(Date.now() + 29 * 24 * 60 * 60 * 1000), // Dans 29 jours
+      size: 1024,
+      originalPath: '/Mes Classeurs/Notes importantes'
+    },
+    {
+      id: '2',
+      type: 'folder' as const,
+      name: 'Dossier projet',
+      deletedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // Il y a 2 jours
+      expiresAt: new Date(Date.now() + 28 * 24 * 60 * 60 * 1000), // Dans 28 jours
+      originalPath: '/Mes Classeurs/Projets'
+    },
+    {
+      id: '3',
+      type: 'file' as const,
+      name: 'document.pdf',
+      deletedAt: new Date(Date.now() - 12 * 60 * 60 * 1000), // Il y a 12 heures
+      expiresAt: new Date(Date.now() + 29.5 * 24 * 60 * 60 * 1000), // Dans 29.5 jours
+      size: 2048576, // 2MB
+      originalPath: '/Mes Fichiers/Documents'
+    }
+  ];
 
   // Calculer les statistiques
   const stats = {
-    total: trashItems.length,
-    notes: trashItems.filter(item => item.type === 'note').length,
-    folders: trashItems.filter(item => item.type === 'folder').length,
-    files: trashItems.filter(item => item.type === 'file').length
+    total: testTrashItems.length,
+    notes: testTrashItems.filter(item => item.type === 'note').length,
+    folders: testTrashItems.filter(item => item.type === 'folder').length,
+    files: testTrashItems.filter(item => item.type === 'file').length
   };
 
   // Fonctions de gestion
   const handleRestore = (id: string) => {
-    // Logique de restauration
-    console.log('Restaurer:', id);
+    console.log('🔄 Restaurer:', id);
+    alert(`Restauration de l'élément ${id}`);
   };
 
   const handlePermanentDelete = (id: string) => {
-    // Logique de suppression définitive
-    console.log('Supprimer définitivement:', id);
-  };
-
-  const handleEmptyTrash = () => {
-    // Logique de vidage de la corbeille
-    console.log('Vider la corbeille');
+    console.log('🗑️ Supprimer définitivement:', id);
+    if (confirm(`Êtes-vous sûr de vouloir supprimer définitivement l'élément ${id} ?`)) {
+      alert(`Suppression définitive de l'élément ${id}`);
+    }
   };
 
   return (
@@ -83,8 +71,8 @@ function TrashPageContent() {
             <span className="title-icon">🗑️</span>
           </div>
           <div className="title-section">
-            <h1>Corbeille</h1>
-            <p>Gérez vos éléments supprimés et restaurez ce qui est important</p>
+            <h1>Corbeille - Mode Test</h1>
+            <p>Page de test avec données simulées pour vérifier le design</p>
           </div>
           <div className="title-stats">
             <div className="title-stats-item">
@@ -114,61 +102,17 @@ function TrashPageContent() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
       >
-        <AnimatePresence mode="wait">
-          {loading ? (
-            <motion.div
-              key="loading"
-              className="trash-empty-state"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-            >
-              <div className="empty-state-icon">
-                <div className="loading-spinner"></div>
-              </div>
-              <h2 className="empty-state-title">Chargement...</h2>
-              <p className="empty-state-description">
-                Récupération des éléments de la corbeille
-              </p>
-            </motion.div>
-          ) : trashItems.length === 0 ? (
-            <motion.div
-              key="empty"
-              className="trash-empty-state"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-            >
-              <div className="empty-state-icon">
-                <Archive size={64} />
-              </div>
-              <h2 className="empty-state-title">Corbeille vide</h2>
-              <p className="empty-state-description">
-                Aucun élément n'a été supprimé pour le moment. 
-                Les éléments supprimés apparaîtront ici.
-              </p>
-            </motion.div>
-          ) : (
-            <motion.div
-              key="content"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-            >
-              {/* Liste des éléments de la corbeille */}
-              <div className="trash-items-list">
-                {trashItems.map((item) => (
-                  <TrashItemCard
-                    key={item.id}
-                    item={item}
-                    onRestore={handleRestore}
-                    onDelete={handlePermanentDelete}
-                  />
-                ))}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {/* Liste des éléments de la corbeille */}
+        <div className="trash-items-list">
+          {testTrashItems.map((item) => (
+            <TrashItemCard
+              key={item.id}
+              item={item}
+              onRestore={handleRestore}
+              onDelete={handlePermanentDelete}
+            />
+          ))}
+        </div>
 
         {/* Informations sur la corbeille */}
         <div className="trash-info-section">
@@ -207,7 +151,7 @@ function TrashItemCard({
   onRestore, 
   onDelete 
 }: { 
-  item: TrashItem; 
+  item: any; 
   onRestore: (id: string) => void; 
   onDelete: (id: string) => void; 
 }) {
@@ -254,6 +198,13 @@ function TrashItemCard({
     return diffDays;
   };
 
+  const formatSize = (bytes?: number) => {
+    if (!bytes) return '';
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  };
+
   return (
     <motion.div
       className="trash-item"
@@ -276,6 +227,16 @@ function TrashItemCard({
           <p className="trash-item-expiry">
             Expire dans {getDaysUntilExpiry()} jour{getDaysUntilExpiry() > 1 ? 's' : ''}
           </p>
+          {item.size && (
+            <p className="trash-item-size">
+              Taille : {formatSize(item.size)}
+            </p>
+          )}
+          {item.originalPath && (
+            <p className="trash-item-path">
+              Chemin : {item.originalPath}
+            </p>
+          )}
         </div>
         <div className="trash-item-actions">
           <button
