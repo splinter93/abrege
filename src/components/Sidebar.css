@@ -79,8 +79,8 @@
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  /* Empêcher le scroll et le débordement */
-  overflow: hidden;
+  /* Permettre le débordement pour les effets de hover */
+  overflow: visible;
   min-height: 0;
   /* S'assurer que le contenu s'adapte à la hauteur disponible */
   height: 100%;
@@ -91,8 +91,8 @@
    ========================================================================== */
 .sidebar-block {
   margin-bottom: 32px;
-  /* Empêcher le débordement */
-  overflow: hidden;
+  /* Permettre le débordement pour les effets de hover */
+  overflow: visible;
   /* S'assurer que le contenu s'adapte */
   min-height: 0;
   flex-shrink: 0;
@@ -129,7 +129,7 @@
   flex-direction: column;
   gap: 8px;
   /* Empêcher le débordement */
-  overflow: hidden;
+  overflow: visible;
   /* S'assurer que la navigation s'adapte */
   min-height: 0;
   flex-shrink: 0;
@@ -149,13 +149,18 @@
   border: 1px solid transparent;
   background: transparent;
   white-space: nowrap;
+  /* Éviter le tronquage du hover */
+  overflow: visible;
+  position: relative;
 }
 
 .nav-link:hover {
   background: rgba(255, 255, 255, 0.04);
   color: rgba(255, 255, 255, 0.9);
-  transform: translateX(4px);
+  transform: translateX(2px);
   border-color: rgba(249, 115, 22, 0.2);
+  /* S'assurer que le hover n'est pas tronqué */
+  z-index: 10;
 }
 
 .nav-link svg {
