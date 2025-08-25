@@ -10,15 +10,18 @@
 @import '../../../styles/design-system.css';
 @import '../../../styles/typography.css';
 
-/* 2. Layout principal de la page */
+/* 2. Containers de titre uniformes (priorité basse) */
+@import '../../../styles/page-title-containers.css';
+
+/* 3. Layout principal de la page */
 @import './DossiersPage.css';
 
-/* 3. Gestionnaire de dossiers et contenu */
+/* 4. Gestionnaire de dossiers et contenu */
 @import '../../../components/FolderManagerModern.css';
 @import '../../../components/FolderContent.css';
 @import '../../../components/FolderGridItems.css';
 
-/* 4. Composants utilitaires */
+/* 5. Composants utilitaires */
 @import '../../../components/Toast.css';
 @import '../../../components/Tooltip.css';
 

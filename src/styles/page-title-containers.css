@@ -6,6 +6,37 @@
 */
 
 /* ==========================================================================
+   VARIABLES CSS SPÉCIFIQUES POUR LA PAGE DOSSIERS
+   ========================================================================== */
+
+/* Variables spécifiques pour éviter les conflits avec la page dossiers */
+:root {
+  /* Couleurs spécifiques pour les containers de titre */
+  --page-title-bg: rgba(255, 255, 255, 0.08);
+  --page-title-border: rgba(255, 255, 255, 0.12);
+  --page-title-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  --page-title-bg-hover: rgba(255, 255, 255, 0.12);
+  --page-title-border-hover: rgba(255, 255, 255, 0.18);
+  --page-title-shadow-hover: 0 16px 48px rgba(0, 0, 0, 0.2);
+  
+  /* Couleurs pour l'icône */
+  --page-title-icon-bg: rgba(229, 90, 44, 0.15);
+  --page-title-icon-border: #e55a2c;
+  --page-title-icon-bg-hover: rgba(229, 90, 44, 0.25);
+  --page-title-icon-color: #e55a2c;
+  
+  /* Couleurs pour le texte */
+  --page-title-text-color: #ffffff;
+  --page-title-subtitle-color: rgba(255, 255, 255, 0.7);
+  
+  /* Couleurs pour les statistiques */
+  --page-title-stats-color: #e55a2c;
+  --page-title-stats-hover-color: #ff6b35;
+  --page-title-stats-label-color: rgba(255, 255, 255, 0.6);
+  --page-title-stats-label-hover-color: rgba(255, 255, 255, 0.8);
+}
+
+/* ==========================================================================
    CONTAINER DE TITRE UNIFORME - CLASSE COMMUNE
    ========================================================================== */
 
@@ -16,14 +47,14 @@
   padding: 24px;
   
   /* Style glassmorphism uniforme */
-  background: var(--glass-bg-primary, rgba(255, 255, 255, 0.08));
-  border: 1px solid var(--glass-border-primary, rgba(255, 255, 255, 0.12));
+  background: var(--page-title-bg);
+  border: 1px solid var(--page-title-border);
   border-radius: 20px;
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   
   /* Ombres uniformes */
-  box-shadow: var(--glass-shadow-medium, 0 8px 32px rgba(0, 0, 0, 0.15));
+  box-shadow: var(--page-title-shadow);
   
   /* ESPACEMENT UNIFORME FIXE */
   margin-top: 32px; /* Espace fixe en haut */
@@ -37,9 +68,9 @@
 
 /* Hover uniforme pour tous les containers */
 .page-title-container-glass:hover {
-  background: var(--glass-bg-hover, rgba(255, 255, 255, 0.12));
-  border-color: var(--glass-border-hover, rgba(255, 255, 255, 0.18));
-  box-shadow: var(--glass-shadow-strong, 0 16px 48px rgba(0, 0, 0, 0.2));
+  background: var(--page-title-bg-hover);
+  border-color: var(--page-title-border-hover);
+  box-shadow: var(--page-title-shadow-hover);
   transform: translateY(-2px);
 }
 
@@ -149,8 +180,8 @@
   align-items: center;
   gap: 4px; /* Espacement uniforme entre nombre et label */
   padding: 16px; /* Padding uniforme */
-  background: var(--glass-bg-secondary, rgba(255, 255, 255, 0.04));
-  border: 1px solid var(--glass-border-secondary, rgba(255, 255, 255, 0.08));
+  background: var(--page-title-bg-hover);
+  border: 1px solid var(--page-title-border);
   border-radius: 12px;
   min-width: 80px;
   transition: all 0.25s ease;
@@ -159,29 +190,29 @@
 }
 
 .page-title-stats-item:hover {
-  background: var(--glass-bg-hover, rgba(255, 255, 255, 0.08));
-  border-color: var(--glass-border-hover, rgba(255, 255, 255, 0.16));
+  background: var(--page-title-bg-hover);
+  border-color: var(--page-title-border-hover);
   transform: translateY(-1px);
-  box-shadow: var(--glass-shadow-subtle, 0 4px 16px rgba(0, 0, 0, 0.1));
+  box-shadow: var(--page-title-shadow);
 }
 
 /* Nombre de la statistique */
 .page-title-stats-number {
   font-size: 24px;
   font-weight: 700;
-  color: var(--page-title-stats-color, #e55a2c);
+  color: var(--page-title-stats-color);
   font-family: 'Noto Sans', sans-serif;
   transition: color 0.25s ease;
 }
 
 .page-title-stats-item:hover .page-title-stats-number {
-  color: var(--page-title-stats-hover-color, #ff6b35);
+  color: var(--page-title-stats-hover-color);
 }
 
 /* Label de la statistique */
 .page-title-stats-label {
   font-size: 12px;
-  color: var(--page-title-stats-label-color, rgba(255, 255, 255, 0.6));
+  color: var(--page-title-stats-label-color);
   text-transform: uppercase;
   letter-spacing: 0.05em;
   font-weight: 500;
@@ -189,7 +220,7 @@
 }
 
 .page-title-stats-item:hover .page-title-stats-label {
-  color: var(--page-title-stats-label-hover-color, rgba(255, 255, 255, 0.8));
+  color: var(--page-title-stats-label-hover-color);
 }
 
 /* ==========================================================================
