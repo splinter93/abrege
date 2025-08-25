@@ -17,17 +17,17 @@
   justify-content: space-between;
   align-items: center;
   padding: var(--spacing-xs) 0 var(--spacing-md) 0; /* Réduit le padding en haut */
-  border-bottom: 1px solid var(--glass-border-secondary); /* Harmonise avec le ClasseurBandeau */
+  border-bottom: none; /* Supprimé le border-bottom */
   margin-bottom: var(--spacing-lg);
   margin-top: calc(-1 * var(--spacing-sm)); /* Remonte le header */
   background: transparent; /* Supprimé le background */
   position: relative;
 }
 
-.folder-content-header::before {
+.folder-content-header::after {
   content: '';
   position: absolute;
-  top: 0;
+  bottom: 0;
   left: 0;
   right: 0;
   height: 1px;
