@@ -68,7 +68,7 @@
 
 /* Padding spécifique pour la page des dossiers */
 .dossiers-content-area {
-  padding: var(--dossiers-spacing-xl) var(--dossiers-spacing-xl) var(--dossiers-spacing-xl) var(--dossiers-spacing-xl); /* Padding ajouté en haut pour uniformiser */
+  padding: 0; /* Pas de padding - géré par le container titre */
   flex: 1;
   display: flex;
   flex-direction: column;

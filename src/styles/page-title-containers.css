@@ -12,8 +12,8 @@
 /* Classe commune pour tous les containers de titre */
 .page-title-container-glass {
   /* Dimensions uniformes */
-  min-height: 100px; /* Hauteur minimale réduite */
-  padding: 24px; /* Padding réduit */
+  min-height: 100px;
+  padding: 24px;
   
   /* Style glassmorphism uniforme */
   background: var(--glass-bg-primary, rgba(255, 255, 255, 0.08));
@@ -25,9 +25,8 @@
   /* Ombres uniformes */
   box-shadow: var(--glass-shadow-medium, 0 8px 32px rgba(0, 0, 0, 0.15));
   
-  /* Espacement uniforme */
-  margin-top: 0px; /* Pas de remontée pour uniformiser avec dossiers */
-  margin-bottom: 24px; /* Marge réduite */
+  /* ESPACEMENT UNIFORME FIXE */
+  margin: 32px 32px 32px 32px; /* Espace fixe partout */
   
   /* Transitions uniformes */
   transition: all 0.25s ease;

@@ -94,7 +94,7 @@
 
 /* Padding spécifique pour la page des fichiers */
 .files-content-area {
-  padding: var(--files-spacing-xl) var(--files-spacing-xl) var(--files-spacing-xl) var(--files-spacing-xl); /* Padding ajouté en haut pour uniformiser avec dossiers */
+  padding: 0; /* Pas de padding - géré par le container titre */
 }
 
 /* ==========================================================================
