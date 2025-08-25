@@ -98,7 +98,7 @@ const FileItem: React.FC<FileItemProps> = ({ file, onOpen, isRenaming, onRename,
         }}
       >
         <div className="file-icon">
-          <FileIcon size={48} />
+          <FileIcon size={64} />
         </div>
         {isRenaming ? (
           <input

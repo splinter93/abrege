@@ -17,12 +17,13 @@
   flex-direction: column;
   align-items: center;
   text-align: center;
-  min-height: 120px;
+  min-height: 140px; /* Augmenté de 120px à 140px pour accommoder les icônes plus grandes */
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
   box-shadow: none;
   position: relative;
   overflow: hidden;
+  justify-content: flex-start; /* Aligne le contenu en haut */
 }
 
 .fm-grid-item::before {
@@ -61,21 +62,24 @@
    ICÔNES ET CONTENU DES DOSSIERS
    ========================================================================== */
 
-.fm-grid-item .file-icon {
-  margin-bottom: var(--files-spacing-sm);
+.fm-grid-item .file-icon,
+.fm-grid-item .folder-icon {
+  margin-bottom: var(--files-spacing-md); /* Augmenté de sm à md pour plus d'espace */
   display: flex;
   justify-content: center;
   align-items: center;
   width: 100%;
-  height: 40px;
+  height: 64px; /* Augmenté de 40px à 64px pour correspondre à la taille des icônes */
   font-size: 28px;
   transition: transform var(--files-transition-fast);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  flex-shrink: 0; /* Empêche la réduction de taille */
 }
 
-.fm-grid-item:hover .file-icon {
-  transform: scale(1.1);
+.fm-grid-item:hover .file-icon,
+.fm-grid-item:hover .folder-icon {
+  transform: scale(1.05); /* Réduit de 1.1 à 1.05 pour un effet plus subtil */
 }
 
 .fm-grid-item .file-info {
@@ -83,11 +87,13 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start; /* Aligne le contenu en haut */
   width: 100%;
+  min-height: 0; /* Permet la réduction de taille */
 }
 
-.fm-grid-item .file-name {
+.fm-grid-item .file-name,
+.fm-grid-item .fm-item-name {
   font-size: 14px;
   font-weight: 500;
   color: var(--files-text-primary);
@@ -109,6 +115,10 @@
   height: 2.8em;
   min-height: 2.8em;
   max-height: 2.8em;
+  
+  /* Amélioration de l'alignement */
+  align-self: center;
+  width: 100%;
 }
 
 /* ==========================================================================
@@ -120,15 +130,17 @@
   align-items: center !important;
   justify-content: flex-start !important;
   text-align: left !important;
-  min-height: 60px !important;
+  min-height: 80px !important; /* Augmenté de 60px à 80px pour les icônes plus grandes */
   padding: var(--files-spacing-md) var(--files-spacing-lg) !important;
 }
 
-.fm-grid-item.file-list-item .file-icon {
+.fm-grid-item.file-list-item .file-icon,
+.fm-grid-item.file-list-item .folder-icon {
   margin-bottom: 0 !important;
   margin-right: var(--files-spacing-md) !important;
   font-size: 24px !important;
-  height: 32px !important;
+  height: 48px !important; /* Augmenté de 32px à 48px pour la vue liste */
+  flex-shrink: 0 !important;
 }
 
 .fm-grid-item.file-list-item .file-info {
@@ -136,9 +148,11 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+  justify-content: center;
 }
 
-.fm-grid-item.file-list-item .file-name {
+.fm-grid-item.file-list-item .file-name,
+.fm-grid-item.file-list-item .fm-item-name {
   text-align: left !important;
   font-size: 14px !important;
   margin-bottom: var(--files-spacing-xs) !important;
@@ -149,6 +163,9 @@
   height: auto !important;
   min-height: auto !important;
   max-height: auto !important;
+  /* Amélioration de l'alignement */
+  align-self: flex-start !important;
+  width: auto !important;
 }
 
 /* ==========================================================================
@@ -236,25 +253,32 @@
 
 @media (max-width: 1200px) {
   .fm-grid-item {
-    min-height: 110px;
+    min-height: 130px; /* Ajusté de 110px à 130px */
     padding: var(--files-spacing-md);
+  }
+  
+  .fm-grid-item .file-icon,
+  .fm-grid-item .folder-icon {
+    height: 56px; /* Réduit de 64px à 56px sur les écrans moyens */
   }
 }
 
 @media (max-width: 768px) {
   .fm-grid-item {
-    min-height: 100px;
+    min-height: 120px; /* Ajusté de 100px à 120px */
     padding: var(--files-spacing-md);
     border-radius: var(--files-radius-md);
   }
   
-  .fm-grid-item .file-icon {
+  .fm-grid-item .file-icon,
+  .fm-grid-item .folder-icon {
     font-size: 28px;
     margin-bottom: var(--files-spacing-sm);
-    height: 40px;
+    height: 48px; /* Réduit de 64px à 48px sur mobile */
   }
   
-  .fm-grid-item .file-name {
+  .fm-grid-item .file-name,
+  .fm-grid-item .fm-item-name {
     font-size: 13px;
     height: 2.6em;
     min-height: 2.6em;
@@ -264,18 +288,20 @@
 
 @media (max-width: 480px) {
   .fm-grid-item {
-    min-height: 90px;
+    min-height: 110px; /* Ajusté de 90px à 110px */
     padding: var(--files-spacing-sm);
     border-radius: var(--files-radius-sm);
   }
   
-  .fm-grid-item .file-icon {
+  .fm-grid-item .file-icon,
+  .fm-grid-item .folder-icon {
     font-size: 24px;
     margin-bottom: var(--files-spacing-xs);
-    height: 36px;
+    height: 40px; /* Réduit de 64px à 40px sur très petit écran */
   }
   
-  .fm-grid-item .file-name {
+  .fm-grid-item .file-name,
+  .fm-grid-item .fm-item-name {
     font-size: 12px;
     height: 2.4em;
     min-height: 2.4em;

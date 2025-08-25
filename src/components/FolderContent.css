@@ -140,7 +140,7 @@
 .folder-grid {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
-  gap: 16px; /* RÉDUIT de 24px à 16px pour rapprocher les éléments */
+  gap: 20px; /* Augmenté de 16px à 20px pour plus d'espace entre les items */
   justify-items: stretch; /* Les items prennent toute la largeur de leur cellule */
   width: 100%;
   padding: 0;
@@ -148,7 +148,7 @@
 }
 
 .folder-grid.files {
-  margin-top: 12px; /* RÉDUIT de 24px à 12px pour rapprocher les grilles */
+  margin-top: 16px; /* Augmenté de 12px à 16px pour plus d'espace entre les grilles */
 }
 
 /* Animation pour les fichiers */

@@ -1,0 +1,149 @@
+/* ==========================================================================
+   TRASH PAGE - STYLES INTÉGRÉS AVEC LE DESIGN EXISTANT
+   ========================================================================== */
+
+/* Utilise les styles existants de la page dossiers */
+/* Les classes .dossiers-content-area, .dossiers-page-title-glass, etc. 
+   sont déjà définies dans DossiersPage.css */
+
+/* ==========================================================================
+   ÉTAT VIDE - STYLES SPÉCIFIQUES À LA CORBEILLE
+   ========================================================================== */
+
+.trash-empty-state {
+  text-align: center;
+  padding: 64px 24px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 16px;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  margin-bottom: 32px;
+}
+
+.trash-empty-icon {
+  margin-bottom: 24px;
+  color: #ef4444;
+  opacity: 0.6;
+}
+
+.trash-empty-state h2 {
+  font-size: 24px;
+  font-weight: 600;
+  margin: 0 0 16px 0;
+  color: #ffffff;
+}
+
+.trash-empty-state p {
+  font-size: 16px;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.7);
+  margin: 0 0 32px 0;
+  max-width: 500px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* ==========================================================================
+   STATISTIQUES
+   ========================================================================== */
+
+.trash-stats {
+  display: flex;
+  justify-content: center;
+  gap: 32px;
+  margin-top: 32px;
+}
+
+.stat-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.stat-item svg {
+  color: #64748b;
+}
+
+/* ==========================================================================
+   INFORMATIONS
+   ========================================================================== */
+
+.trash-info {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 16px;
+  padding: 32px;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+.trash-info h3 {
+  font-size: 20px;
+  font-weight: 600;
+  margin: 0 0 20px 0;
+  color: #ffffff;
+}
+
+.trash-info ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.trash-info li {
+  position: relative;
+  padding-left: 24px;
+  color: rgba(255, 255, 255, 0.8);
+  line-height: 1.6;
+  font-size: 15px;
+}
+
+.trash-info li::before {
+  content: '•';
+  position: absolute;
+  left: 0;
+  color: #ef4444;
+  font-weight: bold;
+  font-size: 18px;
+}
+
+/* ==========================================================================
+   RESPONSIVE DESIGN
+   ========================================================================== */
+
+@media (max-width: 768px) {
+  .trash-empty-state {
+    padding: 48px 20px;
+  }
+  
+  .trash-stats {
+    flex-direction: column;
+    gap: 16px;
+    align-items: center;
+  }
+  
+  .trash-info {
+    padding: 24px 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .trash-empty-state h2 {
+    font-size: 20px;
+  }
+  
+  .trash-empty-state p {
+    font-size: 14px;
+  }
+} 
