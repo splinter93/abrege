@@ -19,11 +19,7 @@
   padding: var(--spacing-md) 0 var(--spacing-lg) 0; /* Réduit le padding en haut */
   border-bottom: 1px solid var(--glass-border-secondary); /* Harmonise avec le ClasseurBandeau */
   margin-bottom: var(--spacing-lg);
-  background: linear-gradient(
-    180deg,
-    transparent 0%,
-    rgba(255, 255, 255, 0.01) 100%
-  );
+  background: transparent; /* Supprimé le background */
   position: relative;
 }
 
@@ -169,12 +165,7 @@
   margin-bottom: 0; /* Réduit de var(--spacing-lg) à 0 */
   padding: var(--spacing-lg) 0 var(--spacing-md) 0; /* Plus d'espace en haut, moins en bas */
   border-bottom: 1px solid var(--glass-border-secondary);
-  background: linear-gradient(
-    180deg,
-    rgba(255, 255, 255, 0.02) 0%,
-    rgba(255, 255, 255, 0.01) 50%,
-    transparent 100%
-  );
+  background: transparent; /* Supprimé le background */
   position: relative;
 }
 
@@ -319,20 +310,11 @@
    ========================================================================== */
 
 .folder-classeur-bandeau:hover {
-  background: linear-gradient(
-    180deg,
-    rgba(255, 255, 255, 0.03) 0%,
-    rgba(255, 255, 255, 0.02) 50%,
-    rgba(255, 255, 255, 0.01) 100%
-  );
+  background: transparent; /* Supprimé l'effet de hover */
 }
 
 .folder-content-header:hover {
-  background: linear-gradient(
-    180deg,
-    rgba(255, 255, 255, 0.02) 0%,
-    rgba(255, 255, 255, 0.01) 100%
-  );
+  background: transparent; /* Supprimé l'effet de hover */
 } 
 
 /* ==========================================================================
