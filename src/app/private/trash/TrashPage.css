@@ -20,7 +20,7 @@
 .trash-content-area {
   flex: 1;
   margin-left: 280px; /* Largeur de la sidebar */
-  padding: 0; /* Pas de padding - géré par le container titre */
+  padding: 0 32px 0 32px; /* Padding horizontal seulement */
   min-height: 100vh;
   overflow-x: hidden;
 }

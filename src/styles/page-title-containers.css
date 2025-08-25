@@ -26,7 +26,10 @@
   box-shadow: var(--glass-shadow-medium, 0 8px 32px rgba(0, 0, 0, 0.15));
   
   /* ESPACEMENT UNIFORME FIXE */
-  margin: 32px 32px 32px 32px; /* Espace fixe partout */
+  margin-top: 32px; /* Espace fixe en haut */
+  margin-bottom: 32px; /* Espace fixe en bas */
+  margin-left: 0; /* Pas de marge à gauche */
+  margin-right: 0; /* Pas de marge à droite */
   
   /* Transitions uniformes */
   transition: all 0.25s ease;
