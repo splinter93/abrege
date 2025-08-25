@@ -34,19 +34,8 @@ const FilesToolbar: React.FC<FilesToolbarProps> = ({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
     >
-      {/* Section gauche - Actions principales */}
+      {/* Section gauche - Barre de recherche */}
       <div className="toolbar-left">
-        <button 
-          className="toolbar-btn primary"
-          onClick={onUploadFile}
-        >
-          <span className="btn-icon">📁</span>
-          <span className="btn-text">Uploader un fichier</span>
-        </button>
-      </div>
-
-      {/* Section centrale - Recherche */}
-      <div className="toolbar-center">
         <div className={`search-container ${isSearchFocused ? 'focused' : ''}`}>
           <span className="search-icon">🔍</span>
           <input
@@ -67,6 +56,17 @@ const FilesToolbar: React.FC<FilesToolbarProps> = ({
             </button>
           )}
         </div>
+      </div>
+
+      {/* Section centrale - Bouton upload */}
+      <div className="toolbar-center">
+        <button 
+          className="toolbar-btn primary upload-btn"
+          onClick={onUploadFile}
+        >
+          <span className="btn-icon">📁</span>
+          <span className="btn-text">Upload</span>
+        </button>
       </div>
 
       {/* Section droite - Actions sur sélection et vue */}

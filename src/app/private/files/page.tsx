@@ -184,17 +184,7 @@ function FilesPageContent() {
                 
                 {quotaInfo && (
                   <div className="quota-info-glass">
-                    <div className="quota-bar-container">
-                      <div className="quota-bar">
-                        <motion.div 
-                          className={`quota-fill ${usagePercentage > 80 ? 'warning' : ''}`}
-                          initial={{ width: 0 }}
-                          animate={{ width: `${usagePercentage}%` }}
-                          transition={{ duration: 1, delay: 0.5, ease: "easeOut" }}
-                        />
-                      </div>
-                      <span className="quota-percentage">{usagePercentage}%</span>
-                    </div>
+                    <div className="quota-percentage">{usagePercentage}%</div>
                     <span className="quota-label">utilisé</span>
                   </div>
                 )}

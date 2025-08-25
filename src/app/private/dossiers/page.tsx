@@ -91,6 +91,11 @@ function AuthenticatedDossiersContent({ user }: { user: AuthenticatedUser }) {
     [classeurs, activeClasseurId]
   );
 
+  // 🔧 NOUVEAU: Calculer le nombre total de notes
+  const totalNotes = useMemo(() => {
+    return Object.values(useFileSystemStore.getState().notes).length;
+  }, []);
+
   // Auto-sélectionner le premier classeur si aucun n'est actif
   useEffect(() => {
     if (!activeClasseurId && classeurs.length > 0 && !loading) {
@@ -231,6 +236,10 @@ function AuthenticatedDossiersContent({ user }: { user: AuthenticatedUser }) {
               <div className="stats-item">
                 <span className="stats-number">{classeurs.length}</span>
                 <span className="stats-label">classeur{classeurs.length > 1 ? 's' : ''}</span>
+              </div>
+              <div className="stats-item">
+                <span className="stats-number">{totalNotes}</span>
+                <span className="stats-label">note{totalNotes > 1 ? 's' : ''}</span>
               </div>
             </div>
           </div>
