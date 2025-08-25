@@ -3,6 +3,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Trash2, Archive, Clock, AlertCircle, FileText, Folder, RotateCcw, Trash } from 'react-feather';
+import PageLoading from '@/components/PageLoading';
 
 // Composant de test pour la page corbeille
 export default function TestTrashPage() {

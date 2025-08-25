@@ -213,33 +213,33 @@ function AuthenticatedDossiersContent({ user }: { user: AuthenticatedUser }) {
 
       {/* Zone de contenu principal */}
       <main className="dossiers-content-area">
-        {/* Titre de la page avec design glassmorphism */}
+        {/* Titre de la page avec design glassmorphism uniforme */}
         <motion.div 
-          className="dossiers-page-title-glass"
+          className="page-title-container-glass"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease: "easeOut" }}
         >
-          <div className="title-content">
+          <div className="page-title-content">
             <motion.div 
-              className="title-icon-container"
-              whileHover={{ scale: 1.1, rotate: 5 }}
+              className="page-title-icon-container"
+              whileHover={{ scale: 1.05 }}
               transition={{ type: "spring", stiffness: 300 }}
             >
-              <span className="title-icon">📚</span>
+              <span className="page-title-icon">📚</span>
             </motion.div>
-            <div className="title-section">
+            <div className="page-title-section">
               <h1 className="page-title">Mes Classeurs</h1>
               <p className="page-subtitle">Organisez et gérez vos connaissances</p>
             </div>
-            <div className="title-stats">
-              <div className="stats-item">
-                <span className="stats-number">{classeurs.length}</span>
-                <span className="stats-label">classeur{classeurs.length > 1 ? 's' : ''}</span>
+            <div className="page-title-stats">
+              <div className="page-title-stats-item">
+                <span className="page-title-stats-number">{classeurs.length}</span>
+                <span className="page-title-stats-label">classeur{classeurs.length > 1 ? 's' : ''}</span>
               </div>
-              <div className="stats-item">
-                <span className="stats-number">{totalNotes}</span>
-                <span className="stats-label">note{totalNotes > 1 ? 's' : ''}</span>
+              <div className="page-title-stats-item">
+                <span className="page-title-stats-number">{totalNotes}</span>
+                <span className="page-title-stats-label">note{totalNotes > 1 ? 's' : ''}</span>
               </div>
             </div>
           </div>

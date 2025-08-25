@@ -20,78 +20,27 @@
 .trash-content-area {
   flex: 1;
   margin-left: 280px; /* Largeur de la sidebar */
-  padding: var(--trash-spacing-xl);
-  padding-top: var(--trash-spacing-xl);
+  padding: 0 var(--trash-spacing-xl) var(--trash-spacing-xl) var(--trash-spacing-xl); /* Padding supprimé en haut pour uniformiser */
   min-height: 100vh;
   overflow-x: hidden;
 }
 
 /* ==========================================================================
-   TITRE DE LA PAGE - GLASSMORPHISM
+   TITRE DE LA PAGE - STYLE UNIFORME
    ========================================================================== */
-.trash-page-title-glass {
-  background: var(--glass-bg-primary);
-  border: 1px solid var(--glass-border-primary);
-  border-radius: var(--trash-radius-xl);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  box-shadow: var(--glass-shadow-medium);
-  padding: var(--trash-spacing-xl);
-  margin-bottom: var(--trash-spacing-2xl);
-  transition: all var(--trash-transition-normal);
-}
-
-.trash-page-title-glass:hover {
-  background: var(--glass-bg-hover);
-  border-color: var(--glass-border-hover);
-  box-shadow: var(--glass-shadow-strong);
-  transform: translateY(-2px);
-}
-
+/* Suppression des styles redondants - maintenant dans page-title-containers.css */
+.trash-page-title-glass,
 .title-content {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--trash-spacing-xl);
+  /* Styles définis dans page-title-containers.css */
 }
 
-.title-icon-container {
-  width: 64px;
-  height: 64px;
-  background: var(--trash-primary-light);
-  border: 2px solid var(--trash-primary);
-  border-radius: var(--trash-radius-lg);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-}
-
-.title-icon {
-  font-size: 28px;
-  filter: brightness(1.2);
-}
-
-.title-section {
-  flex: 1;
-}
-
-.title-section h1 {
-  font-size: 32px;
-  font-weight: 700;
-  color: var(--trash-text-primary);
-  margin: 0 0 8px 0;
-  font-family: 'Noto Sans', sans-serif;
-  letter-spacing: -0.02em;
-}
-
+/* Suppression des styles redondants - maintenant dans page-title-containers.css */
+.title-icon-container,
+.title-icon,
+.title-section,
+.title-section h1,
 .title-section p {
-  font-size: 16px;
-  color: var(--trash-text-secondary);
-  margin: 0;
-  font-family: 'Noto Sans', sans-serif;
-  font-weight: 400;
-  line-height: 1.5;
+  /* Styles définis dans page-title-containers.css */
 }
 
 .title-stats {

@@ -1,0 +1,320 @@
+/* ==========================================================================
+   LOADING PAGE - COMPOSANT STANDARDISÉ POUR TOUTES LES PAGES
+   ========================================================================== */
+
+/* ==========================================================================
+   BASE DU COMPOSANT
+   ========================================================================== */
+.loading-page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  min-height: 400px;
+}
+
+.loading-page-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 24px;
+}
+
+/* ==========================================================================
+   ROUE DE CHARGEMENT
+   ========================================================================== */
+.loading-spinner-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.loading-spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid rgba(255, 255, 255, 0.1);
+  border-top: 4px solid #3b82f6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* ==========================================================================
+   MESSAGE DE CHARGEMENT
+   ========================================================================== */
+.loading-message {
+  font-family: 'Noto Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 16px;
+  font-weight: 500;
+  color: #6b7280;
+  margin: 0;
+  text-align: center;
+  line-height: 1.5;
+}
+
+/* ==========================================================================
+   VARIANTES DE TAILLE
+   ========================================================================== */
+.loading-page-small {
+  min-height: 200px;
+}
+
+.loading-page-small .loading-spinner {
+  width: 32px;
+  height: 32px;
+  border-width: 3px;
+}
+
+.loading-page-small .loading-message {
+  font-size: 14px;
+}
+
+.loading-page-small .loading-page-content {
+  gap: 16px;
+}
+
+.loading-page-medium {
+  min-height: 400px;
+}
+
+.loading-page-medium .loading-spinner {
+  width: 48px;
+  height: 48px;
+  border-width: 4px;
+}
+
+.loading-page-medium .loading-message {
+  font-size: 16px;
+}
+
+.loading-page-medium .loading-page-content {
+  gap: 24px;
+}
+
+.loading-page-large {
+  min-height: 600px;
+}
+
+.loading-page-large .loading-spinner {
+  width: 64px;
+  height: 64px;
+  border-width: 5px;
+}
+
+.loading-page-large .loading-message {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.loading-page-large .loading-page-content {
+  gap: 32px;
+}
+
+/* ==========================================================================
+   VARIANTES DE STYLE
+   ========================================================================== */
+.loading-page-default {
+  background: transparent;
+}
+
+.loading-page-default .loading-message {
+  color: #374151;
+}
+
+.loading-page-default .loading-spinner {
+  border-color: rgba(55, 65, 81, 0.1);
+  border-top-color: #3b82f6;
+}
+
+.loading-page-minimal {
+  background: transparent;
+}
+
+.loading-page-minimal .loading-spinner {
+  border-color: rgba(107, 114, 128, 0.2);
+  border-top-color: #6b7280;
+}
+
+.loading-page-minimal .loading-message {
+  color: #9ca3af;
+  font-weight: 400;
+}
+
+.loading-page-glassmorphism {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 48px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+.loading-page-glassmorphism .loading-spinner {
+  border-color: rgba(255, 255, 255, 0.1);
+  border-top-color: #3b82f6;
+}
+
+.loading-page-glassmorphism .loading-message {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+/* ==========================================================================
+   VARIANTES THÉMATIQUES
+   ========================================================================== */
+.loading-page.primary .loading-spinner {
+  border-top-color: #3b82f6;
+}
+
+.loading-page.secondary .loading-spinner {
+  border-top-color: #6b7280;
+}
+
+.loading-page.success .loading-spinner {
+  border-top-color: #10b981;
+}
+
+.loading-page.warning .loading-spinner {
+  border-top-color: #f59e0b;
+}
+
+.loading-page.error .loading-spinner {
+  border-top-color: #ef4444;
+}
+
+.loading-page.dossiers .loading-spinner {
+  border-top-color: #e55a2c;
+}
+
+.loading-page.files .loading-spinner {
+  border-top-color: #f97316;
+}
+
+.loading-page.trash .loading-spinner {
+  border-top-color: #dc2626;
+}
+
+/* ==========================================================================
+   ANIMATIONS AVANCÉES
+   ========================================================================== */
+.loading-page.animated .loading-spinner {
+  animation: spin 1s linear infinite, pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { 
+    transform: rotate(0deg) scale(1);
+    opacity: 1;
+  }
+  50% { 
+    transform: rotate(180deg) scale(1.1);
+    opacity: 0.8;
+  }
+}
+
+.loading-page.bounce .loading-spinner {
+  animation: spin 1s linear infinite, bounce 2s ease-in-out infinite;
+}
+
+@keyframes bounce {
+  0%, 20%, 50%, 80%, 100% { 
+    transform: rotate(0deg) translateY(0);
+  }
+  40% { 
+    transform: rotate(180deg) translateY(-8px);
+  }
+  60% { 
+    transform: rotate(360deg) translateY(-4px);
+  }
+}
+
+/* ==========================================================================
+   RESPONSIVE DESIGN
+   ========================================================================== */
+@media (max-width: 768px) {
+  .loading-page-medium {
+    min-height: 300px;
+  }
+  
+  .loading-page-large {
+    min-height: 400px;
+  }
+  
+  .loading-page-glassmorphism {
+    padding: 32px 24px;
+    margin: 16px;
+  }
+  
+  .loading-page-medium .loading-spinner {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .loading-page-large .loading-spinner {
+    width: 56px;
+    height: 56px;
+  }
+}
+
+@media (max-width: 480px) {
+  .loading-page-medium {
+    min-height: 250px;
+  }
+  
+  .loading-page-large {
+    min-height: 350px;
+  }
+  
+  .loading-page-glassmorphism {
+    padding: 24px 16px;
+    margin: 12px;
+  }
+  
+  .loading-page-medium .loading-spinner {
+    width: 36px;
+    height: 36px;
+    border-width: 3px;
+  }
+  
+  .loading-page-large .loading-spinner {
+    width: 48px;
+    height: 48px;
+    border-width: 4px;
+  }
+  
+  .loading-page-medium .loading-message {
+    font-size: 15px;
+  }
+  
+  .loading-page-large .loading-message {
+    font-size: 16px;
+  }
+}
+
+/* ==========================================================================
+   MODE SOMBRE
+   ========================================================================== */
+@media (prefers-color-scheme: dark) {
+  .loading-page-default .loading-message {
+    color: #d1d5db;
+  }
+  
+  .loading-page-default .loading-spinner {
+    border-color: rgba(209, 213, 219, 0.1);
+  }
+  
+  .loading-page-minimal .loading-message {
+    color: #9ca3af;
+  }
+  
+  .loading-page-minimal .loading-spinner {
+    border-color: rgba(156, 163, 175, 0.2);
+  }
+} 

@@ -159,39 +159,39 @@ function FilesPageContent() {
 
       {/* Zone de contenu principal */}
       <main className="files-content-area">
-        {/* Section des fichiers avec header glassmorphism */}
+        {/* Section des fichiers avec header glassmorphism uniforme */}
         <motion.section 
           className="files-section"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" }}
         >
-          <div className="files-header-glass">
-            <div className="files-header-content">
+          <div className="page-title-container-glass">
+            <div className="page-title-content">
               <div className="files-info">
                 <motion.div 
-                  className="files-icon-container"
-                  whileHover={{ scale: 1.1, rotate: 5 }}
+                  className="page-title-icon-container"
+                  whileHover={{ scale: 1.05 }}
                   transition={{ type: "spring", stiffness: 300 }}
                 >
-                  <span className="files-icon">📁</span>
+                  <span className="page-title-icon">📁</span>
                 </motion.div>
-                <div className="files-title-section">
-                  <h2 className="files-title">Mes Fichiers</h2>
-                  <p className="files-subtitle">Gérez et organisez vos documents</p>
+                <div className="page-title-section">
+                  <h2 className="page-title">Mes Fichiers</h2>
+                  <p className="page-subtitle">Gérez et organisez vos documents</p>
                 </div>
               </div>
               
-              <div className="files-stats-glass">
-                <div className="files-count">
-                  <span className="count-number">{displayFiles.length}</span>
-                  <span className="count-label">fichier{displayFiles.length > 1 ? 's' : ''}</span>
+              <div className="page-title-stats">
+                <div className="page-title-stats-item">
+                  <span className="page-title-stats-number">{displayFiles.length}</span>
+                  <span className="page-title-stats-label">fichier{displayFiles.length > 1 ? 's' : ''}</span>
                 </div>
                 
                 {quotaInfo && (
-                  <div className="quota-info-glass">
-                    <div className="quota-percentage">{usagePercentage}%</div>
-                    <span className="quota-label">utilisé</span>
+                  <div className="page-title-stats-item">
+                    <div className="page-title-stats-number">{usagePercentage}%</div>
+                    <span className="page-title-stats-label">utilisé</span>
                   </div>
                 )}
               </div>

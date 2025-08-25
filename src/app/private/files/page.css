@@ -94,89 +94,33 @@
 
 /* Padding spécifique pour la page des fichiers */
 .files-content-area {
-  padding: var(--files-spacing-xl);
-  padding-top: var(--files-spacing-xl);
+  padding: 0 var(--files-spacing-xl) var(--files-spacing-xl) var(--files-spacing-xl); /* Padding supprimé en haut pour uniformiser */
 }
 
 /* ==========================================================================
-   SECTION HEADER GLASSMORPHISM
+   SECTION HEADER GLASSMORPHISM - STYLE UNIFORME
    ========================================================================== */
 .files-section {
-  margin-bottom: var(--files-spacing-2xl);
+  margin-bottom: 24px; /* Espacement uniforme */
 }
 
-.files-header-glass {
-  background: var(--glass-bg-primary);
-  border: 1px solid var(--glass-border-primary);
-  border-radius: var(--files-radius-xl);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  box-shadow: var(--glass-shadow-medium);
-  padding: var(--files-spacing-xl);
-  transition: all var(--files-transition-normal);
-}
-
-.files-header-glass:hover {
-  background: var(--glass-bg-hover);
-  border-color: var(--glass-border-hover);
-  box-shadow: var(--glass-shadow-strong);
-  transform: translateY(-2px);
-}
-
+/* Suppression des styles redondants - maintenant dans page-title-containers.css */
+.files-header-glass,
 .files-header-content {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--files-spacing-xl);
+  /* Styles définis dans page-title-containers.css */
 }
 
 /* ==========================================================================
-   INFOS DES FICHIERS
+   INFOS DES FICHIERS - STYLE UNIFORME
    ========================================================================== */
-.files-info {
-  display: flex;
-  align-items: center;
-  gap: var(--files-spacing-lg);
-}
-
-.files-icon-container {
-  width: 64px;
-  height: 64px;
-  background: var(--files-primary-light);
-  border: 2px solid var(--files-primary);
-  border-radius: var(--files-radius-lg);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-}
-
-.files-icon {
-  font-size: 28px;
-  filter: brightness(1.2);
-}
-
-.files-title-section {
-  display: flex;
-  flex-direction: column;
-  gap: var(--files-spacing-xs);
-}
-
-.files-title {
-  font-size: 32px;
-  font-weight: 700;
-  color: var(--files-text-primary);
-  margin: 0;
-  font-family: 'Noto Sans', sans-serif;
-  letter-spacing: -0.02em;
-}
-
+/* Suppression des styles redondants - maintenant dans page-title-containers.css */
+.files-info,
+.files-icon-container,
+.files-icon,
+.files-title-section,
+.files-title,
 .files-subtitle {
-  font-size: 16px;
-  color: var(--files-text-secondary);
-  margin: 0;
-  font-family: 'Noto Sans', sans-serif;
-  font-weight: 400;
+  /* Styles définis dans page-title-containers.css */
 }
 
 /* ==========================================================================

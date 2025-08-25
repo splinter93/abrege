@@ -1,0 +1,142 @@
+/* ==========================================================================
+   PAGE LOADING - COMPOSANT MINIMALISTE POUR LES PAGES
+   ========================================================================== */
+
+/* ==========================================================================
+   BASE DU COMPOSANT
+   ========================================================================== */
+.page-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  min-height: 400px;
+  padding: 2rem;
+}
+
+.page-loading-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 24px;
+}
+
+/* ==========================================================================
+   ROUE DE CHARGEMENT
+   ========================================================================== */
+.page-loading-spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid rgba(255, 255, 255, 0.1);
+  border-top: 4px solid #3b82f6;
+  border-radius: 50%;
+}
+
+/* ==========================================================================
+   MESSAGE DE CHARGEMENT
+   ========================================================================== */
+.page-loading-message {
+  font-family: 'Noto Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 16px;
+  font-weight: 500;
+  color: #6b7280;
+  margin: 0;
+  text-align: center;
+  line-height: 1.5;
+}
+
+/* ==========================================================================
+   THÈMES PAR PAGE
+   ========================================================================== */
+.page-loading-dossiers .page-loading-spinner {
+  border-top-color: #e55a2c;
+}
+
+.page-loading-dossiers .page-loading-message {
+  color: #e55a2c;
+}
+
+.page-loading-files .page-loading-spinner {
+  border-top-color: #f97316;
+}
+
+.page-loading-files .page-loading-message {
+  color: #f97316;
+}
+
+.page-loading-trash .page-loading-spinner {
+  border-top-color: #dc2626;
+}
+
+.page-loading-trash .page-loading-message {
+  color: #dc2626;
+}
+
+.page-loading-default .page-loading-spinner {
+  border-top-color: #3b82f6;
+}
+
+.page-loading-default .page-loading-message {
+  color: #3b82f6;
+}
+
+/* ==========================================================================
+   RESPONSIVE DESIGN
+   ========================================================================== */
+@media (max-width: 768px) {
+  .page-loading {
+    min-height: 300px;
+    padding: 1.5rem;
+  }
+  
+  .page-loading-spinner {
+    width: 40px;
+    height: 40px;
+    border-width: 3px;
+  }
+  
+  .page-loading-message {
+    font-size: 15px;
+  }
+  
+  .page-loading-content {
+    gap: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .page-loading {
+    min-height: 250px;
+    padding: 1rem;
+  }
+  
+  .page-loading-spinner {
+    width: 36px;
+    height: 36px;
+    border-width: 3px;
+  }
+  
+  .page-loading-message {
+    font-size: 14px;
+  }
+  
+  .page-loading-content {
+    gap: 16px;
+  }
+}
+
+/* ==========================================================================
+   MODE SOMBRE
+   ========================================================================== */
+@media (prefers-color-scheme: dark) {
+  .page-loading-message {
+    color: #9ca3af;
+  }
+  
+  .page-loading .page-loading-spinner {
+    border-color: rgba(156, 163, 175, 0.1);
+  }
+} 

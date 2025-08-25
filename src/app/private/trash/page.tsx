@@ -6,6 +6,7 @@ import { Trash2, Archive, Clock, AlertCircle, FileText, Folder, RotateCcw, Trash
 import { useAuth } from '@/hooks/useAuth';
 import type { AuthenticatedUser } from '@/types/dossiers';
 import AuthGuard from '@/components/AuthGuard';
+import PageLoading from '@/components/PageLoading';
 import './index.css';
 
 // Types pour les éléments de la corbeille
@@ -69,22 +70,27 @@ function TrashPageContent() {
     console.log('Vider la corbeille');
   };
 
+  // Afficher l'état de chargement
+  if (loading) {
+    return <PageLoading theme="trash" message="Chargement" />;
+  }
+
   return (
     <>
       {/* Titre de la page avec design glassmorphism uniforme */}
       <motion.section 
-        className="trash-page-title-glass"
+        className="page-title-container-glass"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, ease: "easeOut" }}
       >
-        <div className="title-content">
-          <div className="title-icon-container">
-            <span className="title-icon">🗑️</span>
+        <div className="page-title-content">
+          <div className="page-title-icon-container">
+            <span className="page-title-icon">🗑️</span>
           </div>
-          <div className="title-section">
-            <h1>Corbeille</h1>
-            <p>Gérez vos éléments supprimés et restaurez ce qui est important</p>
+          <div className="page-title-section">
+            <h1 className="page-title">Corbeille</h1>
+            <p className="page-subtitle">Gérez vos éléments supprimés et restaurez ce qui est important</p>
           </div>
           <div className="title-stats">
             <div className="title-stats-item">
@@ -115,23 +121,7 @@ function TrashPageContent() {
         transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
       >
         <AnimatePresence mode="wait">
-          {loading ? (
-            <motion.div
-              key="loading"
-              className="trash-empty-state"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-            >
-              <div className="empty-state-icon">
-                <div className="loading-spinner"></div>
-              </div>
-              <h2 className="empty-state-title">Chargement...</h2>
-              <p className="empty-state-description">
-                Récupération des éléments de la corbeille
-              </p>
-            </motion.div>
-          ) : trashItems.length === 0 ? (
+          {trashItems.length === 0 ? (
             <motion.div
               key="empty"
               className="trash-empty-state"

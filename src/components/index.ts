@@ -26,3 +26,19 @@ export { default as AgentTemplateDemo } from './agents/AgentTemplateDemo';
 // Composants de test
 export { default as APITester } from './APITester';
 export { default as TestErrorComponent } from './TestErrorComponent'; 
+
+// ==========================================================================
+// COMPOSANTS DE CHARGEMENT STANDARDISÉS
+// ==========================================================================
+
+// Composant de chargement principal pour les pages
+export { default as PageLoading } from './PageLoading';
+
+// Composant de chargement avancé avec variantes
+export { default as LoadingPage } from './LoadingPage';
+
+// Composants de chargement spécifiques aux dossiers
+export { DossierLoadingState, DossierErrorState, DossierEmptyState } from './DossierLoadingStates';
+
+// Composant de chargement pour le chat
+export { default as LoadingSpinner } from './chat/LoadingSpinner'; 

@@ -10,6 +10,7 @@ import "./globals.css";
 import "../styles/markdown.css";
 import "../styles/chat-design-system-v2.css";
 import "../styles/editor.css";
+import "../styles/page-title-containers.css";
 import "../components/editor/editor-header.css";
 import "../components/editor/editor-title.css";
 import "../components/editor/editor-content.css";

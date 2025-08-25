@@ -246,55 +246,40 @@ export default function HomePage() {
       <Sidebar />
       
       <main className="home-content">
-        {/* Header avec glassmorphism moderne */}
+        {/* Header avec glassmorphism uniforme */}
         <motion.header 
-          className="home-header-glass"
+          className="page-title-container-glass"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease: "easeOut" }}
         >
-          <div className="header-content">
+          <div className="page-title-content">
             <div className="welcome-section">
               <motion.div 
-                className="welcome-icon"
-                whileHover={{ scale: 1.1, rotate: 5 }}
+                className="page-title-icon-container"
+                whileHover={{ scale: 1.05 }}
                 transition={{ type: "spring", stiffness: 300 }}
               >
-                <Sparkles size={32} />
+                <Sparkles className="page-title-icon" />
               </motion.div>
-              <div className="welcome-text">
-                <h1>Bonjour, {user.email?.split('@')[0] || 'Utilisateur'} !</h1>
-                <p>Prêt à organiser vos idées ?</p>
+              <div className="page-title-section">
+                <h1 className="page-title">Bonjour, {user.email?.split('@')[0] || 'Utilisateur'} !</h1>
+                <p className="page-subtitle">Prêt à organiser vos idées ?</p>
               </div>
             </div>
             
-            <div className="quick-stats">
-              <div className="stat-item">
-                <div className="stat-icon">
-                  <FolderOpen size={20} />
-                </div>
-                <div className="stat-content">
-                  <div className="stat-number">12</div>
-                  <div className="stat-label">Classeurs</div>
-                </div>
+            <div className="page-title-stats">
+              <div className="page-title-stats-item">
+                <div className="page-title-stats-number">12</div>
+                <div className="page-title-stats-label">Classeurs</div>
               </div>
-              <div className="stat-item">
-                <div className="stat-icon">
-                  <FileText size={20} />
-                </div>
-                <div className="stat-content">
-                  <div className="stat-number">48</div>
-                  <div className="stat-label">Notes</div>
-                </div>
+              <div className="page-title-stats-item">
+                <div className="page-title-stats-number">48</div>
+                <div className="page-title-stats-label">Notes</div>
               </div>
-              <div className="stat-item">
-                <div className="stat-icon">
-                  <Clock size={20} />
-                </div>
-                <div className="stat-content">
-                  <div className="stat-number">3</div>
-                  <div className="stat-label">Récents</div>
-                </div>
+              <div className="page-title-stats-item">
+                <div className="page-title-stats-number">3</div>
+                <div className="page-title-stats-label">Récents</div>
               </div>
             </div>
           </div>

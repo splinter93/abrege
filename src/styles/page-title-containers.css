@@ -1,0 +1,283 @@
+/* ==========================================================================
+   CONTAINERS DE TITRE UNIFORMES - TOUTES LES PAGES
+   ==========================================================================
+   Ce fichier définit un style uniforme pour tous les containers de titre
+   des pages avec des proportions et hauteurs identiques
+*/
+
+/* ==========================================================================
+   CONTAINER DE TITRE UNIFORME - CLASSE COMMUNE
+   ========================================================================== */
+
+/* Classe commune pour tous les containers de titre */
+.page-title-container-glass {
+  /* Dimensions uniformes */
+  min-height: 100px; /* Hauteur minimale réduite */
+  padding: 24px; /* Padding réduit */
+  
+  /* Style glassmorphism uniforme */
+  background: var(--glass-bg-primary, rgba(255, 255, 255, 0.08));
+  border: 1px solid var(--glass-border-primary, rgba(255, 255, 255, 0.12));
+  border-radius: 20px;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  
+  /* Ombres uniformes */
+  box-shadow: var(--glass-shadow-medium, 0 8px 32px rgba(0, 0, 0, 0.15));
+  
+  /* Espacement uniforme */
+  margin-top: -16px; /* Remonte le container plus agressivement */
+  margin-bottom: 24px; /* Marge réduite */
+  
+  /* Transitions uniformes */
+  transition: all 0.25s ease;
+}
+
+/* Hover uniforme pour tous les containers */
+.page-title-container-glass:hover {
+  background: var(--glass-bg-hover, rgba(255, 255, 255, 0.12));
+  border-color: var(--glass-border-hover, rgba(255, 255, 255, 0.18));
+  box-shadow: var(--glass-shadow-strong, 0 16px 48px rgba(0, 0, 0, 0.2));
+  transform: translateY(-2px);
+}
+
+/* ==========================================================================
+   CONTENU INTERNE UNIFORME
+   ========================================================================== */
+
+/* Layout du contenu interne */
+.page-title-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px; /* Espacement réduit entre les éléments */
+  height: 100%;
+  min-height: 52px; /* Hauteur minimale réduite */
+}
+
+/* ==========================================================================
+   ICÔNE UNIFORME
+   ========================================================================== */
+
+/* Container de l'icône */
+.page-title-icon-container {
+  width: 56px; /* Taille réduite */
+  height: 56px; /* Taille réduite */
+  background: var(--page-title-icon-bg, rgba(229, 90, 44, 0.15));
+  border: 2px solid var(--page-title-icon-border, #e55a2c);
+  border-radius: 14px; /* Rayon réduit */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  flex-shrink: 0; /* Empêche la réduction de taille */
+}
+
+.page-title-icon-container:hover {
+  background: var(--page-title-icon-bg-hover, rgba(229, 90, 44, 0.25));
+  transform: scale(1.05);
+}
+
+/* Icône elle-même */
+.page-title-icon {
+  font-size: 24px; /* Taille réduite */
+  filter: brightness(1.2);
+  color: var(--page-title-icon-color, #e55a2c);
+}
+
+/* ==========================================================================
+   SECTION TITRE UNIFORME
+   ========================================================================== */
+
+/* Container du titre et sous-titre */
+.page-title-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px; /* Espacement réduit entre titre et sous-titre */
+  flex: 1; /* Prend l'espace disponible */
+  min-height: 52px; /* Hauteur minimale réduite pour aligner avec l'icône */
+  justify-content: center; /* Centre verticalement le contenu */
+}
+
+/* Titre principal */
+.page-title {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--page-title-text-color, #ffffff);
+  margin: 0;
+  font-family: 'Noto Sans', sans-serif;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+/* Sous-titre */
+.page-subtitle {
+  font-size: 16px;
+  color: var(--page-title-subtitle-color, rgba(255, 255, 255, 0.7));
+  margin: 0;
+  font-family: 'Noto Sans', sans-serif;
+  font-weight: 400;
+  line-height: 1.4;
+}
+
+/* ==========================================================================
+   STATISTIQUES UNIFORMES
+   ========================================================================== */
+
+/* Container des statistiques */
+.page-title-stats {
+  display: flex;
+  align-items: center;
+  gap: 16px; /* Espacement uniforme entre les stats */
+  flex-shrink: 0; /* Empêche la réduction de taille */
+}
+
+/* Item de statistique individuel */
+.page-title-stats-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px; /* Espacement uniforme entre nombre et label */
+  padding: 16px; /* Padding uniforme */
+  background: var(--glass-bg-secondary, rgba(255, 255, 255, 0.04));
+  border: 1px solid var(--glass-border-secondary, rgba(255, 255, 255, 0.08));
+  border-radius: 12px;
+  min-width: 80px;
+  transition: all 0.25s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.page-title-stats-item:hover {
+  background: var(--glass-bg-hover, rgba(255, 255, 255, 0.08));
+  border-color: var(--glass-border-hover, rgba(255, 255, 255, 0.16));
+  transform: translateY(-1px);
+  box-shadow: var(--glass-shadow-subtle, 0 4px 16px rgba(0, 0, 0, 0.1));
+}
+
+/* Nombre de la statistique */
+.page-title-stats-number {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--page-title-stats-color, #e55a2c);
+  font-family: 'Noto Sans', sans-serif;
+  transition: color 0.25s ease;
+}
+
+.page-title-stats-item:hover .page-title-stats-number {
+  color: var(--page-title-stats-hover-color, #ff6b35);
+}
+
+/* Label de la statistique */
+.page-title-stats-label {
+  font-size: 12px;
+  color: var(--page-title-stats-label-color, rgba(255, 255, 255, 0.6));
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 500;
+  transition: color 0.25s ease;
+}
+
+.page-title-stats-item:hover .page-title-stats-label {
+  color: var(--page-title-stats-label-hover-color, rgba(255, 255, 255, 0.8));
+}
+
+/* ==========================================================================
+   APPLICATIONS SPÉCIFIQUES PAR PAGE
+   ========================================================================== */
+
+/* Toutes les pages utilisent maintenant page-title-container-glass directement */
+/* Style uniforme appliqué partout */
+
+/* ==========================================================================
+   RESPONSIVE
+   ========================================================================== */
+
+@media (max-width: 768px) {
+  .page-title-container-glass {
+    min-height: 100px;
+    padding: 24px;
+  }
+  
+  .page-title-content {
+    gap: 20px;
+    min-height: 52px;
+  }
+  
+  .page-title-icon-container {
+    width: 56px;
+    height: 56px;
+  }
+  
+  .page-title-icon {
+    font-size: 24px;
+  }
+  
+  .page-title {
+    font-size: 28px;
+  }
+  
+  .page-subtitle {
+    font-size: 14px;
+  }
+  
+  .page-title-stats {
+    gap: 12px;
+  }
+  
+  .page-title-stats-item {
+    padding: 12px;
+    min-width: 70px;
+  }
+  
+  .page-title-stats-number {
+    font-size: 20px;
+  }
+  
+  .page-title-stats-label {
+    font-size: 11px;
+  }
+}
+
+@media (max-width: 480px) {
+  .page-title-container-glass {
+    min-height: 90px;
+    padding: 20px;
+  }
+  
+  .page-title-content {
+    flex-direction: column;
+    gap: 16px;
+    align-items: flex-start;
+    min-height: auto;
+  }
+  
+  .page-title-icon-container {
+    width: 48px;
+    height: 48px;
+  }
+  
+  .page-title-icon {
+    font-size: 20px;
+  }
+  
+  .page-title {
+    font-size: 24px;
+  }
+  
+  .page-subtitle {
+    font-size: 13px;
+  }
+  
+  .page-title-stats {
+    width: 100%;
+    justify-content: space-between;
+  }
+  
+  .page-title-stats-item {
+    flex: 1;
+    padding: 10px;
+    min-width: auto;
+  }
+} 
