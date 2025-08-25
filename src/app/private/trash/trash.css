@@ -10,31 +10,17 @@
    LAYOUT PRINCIPAL
    ========================================================================== */
 
-.trash-page-wrapper {
-  background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
-  min-height: 100vh;
-  position: relative;
-  overflow-x: hidden;
-}
+/* ==========================================================================
+   BACKGROUND PRINCIPAL - STYLE UNIFIÉ DANS Sidebar.css
+   ========================================================================== */
 
-.trash-sidebar-fixed {
-  position: fixed;
-  top: 0;
-  left: 0;
-  bottom: 0;
-  width: 280px;
-  background: rgba(15, 23, 42, 0.6);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-right: 1px solid rgba(255, 255, 255, 0.12);
-  z-index: 1000;
-  overflow-y: auto;
-}
+/* ==========================================================================
+   SIDEBAR ET CONTENU - STYLES UNIFIÉS DANS Sidebar.css
+   ========================================================================== */
 
+/* Padding spécifique pour la page corbeille */
 .trash-content-area {
-  margin-left: 280px;
   padding: 32px;
-  min-height: 100vh;
 }
 
 /* ==========================================================================

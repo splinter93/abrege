@@ -8,9 +8,20 @@
 }
 
 /* ==========================================================================
+   SIDEBAR UNIFIÉE POUR TOUTES LES PAGES PRINCIPALES
+   ========================================================================== */
+
+/* ==========================================================================
    SIDEBAR PRINCIPALE - BASE
    ========================================================================== */
-.sidebar {
+.sidebar,
+.dossiers-sidebar-fixed,
+.files-sidebar-fixed,
+.trash-sidebar-fixed,
+.shared-sidebar-fixed,
+.settings-sidebar-fixed,
+.favorites-sidebar-fixed,
+.account-sidebar-fixed {
   display: flex;
   flex-direction: column;
   width: 280px;
@@ -25,7 +36,7 @@
   top: 0;
   z-index: 100;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  /* Empêcher le scroll */
+  /* Empêcher le scroll - UNIFIÉ POUR TOUTES LES PAGES */
   overflow: hidden;
   /* S'assurer que la sidebar reste fixe */
   will-change: transform;
@@ -397,4 +408,41 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
+} 
+
+/* ==========================================================================
+   ZONES DE CONTENU UNIFIÉES POUR TOUTES LES PAGES
+   ========================================================================== */
+
+/* Zones de contenu principales - UNIFIÉES */
+.dossiers-content-area,
+.files-content-area,
+.trash-content-area,
+.shared-content-area,
+.settings-content-area,
+.favorites-content-area,
+.account-content-area {
+  margin-left: 280px;
+  min-height: 100vh;
+  /* Styles de base unifiés */
+  box-sizing: border-box;
+  position: relative;
+}
+
+/* ==========================================================================
+   WRAPPERS DE PAGES UNIFIÉS
+   ========================================================================== */
+
+/* Wrappers de pages - UNIFIÉS */
+.dossiers-page-wrapper,
+.files-page-wrapper,
+.trash-page-wrapper,
+.shared-page-wrapper,
+.settings-page-wrapper,
+.favorites-page-wrapper,
+.account-page-wrapper {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
+  min-height: 100vh;
+  position: relative;
+  overflow-x: hidden;
 } 

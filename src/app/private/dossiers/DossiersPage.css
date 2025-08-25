@@ -59,39 +59,16 @@
 }
 
 /* ==========================================================================
-   BACKGROUND PRINCIPAL
+   BACKGROUND PRINCIPAL - STYLE UNIFIÉ DANS Sidebar.css
    ========================================================================== */
-.dossiers-page-wrapper {
-  background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
-  min-height: 100vh;
-  position: relative;
-  overflow-x: hidden;
-}
 
 /* ==========================================================================
-   SIDEBAR FIXE
+   SIDEBAR ET CONTENU - STYLES UNIFIÉS DANS Sidebar.css
    ========================================================================== */
-.dossiers-sidebar-fixed {
-  position: fixed;
-  top: 0;
-  left: 0;
-  bottom: 0;
-  width: 280px;
-  background: rgba(15, 23, 42, 0.6);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-right: 1px solid var(--glass-border-primary);
-  z-index: var(--dossiers-z-sidebar);
-  overflow-y: auto;
-}
 
-/* ==========================================================================
-   ZONE DE CONTENU PRINCIPAL
-   ========================================================================== */
+/* Padding spécifique pour la page des dossiers */
 .dossiers-content-area {
-  margin-left: 280px;
   padding: var(--dossiers-spacing-xl);
-  min-height: 100vh;
 }
 
 /* ==========================================================================
