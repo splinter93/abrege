@@ -125,6 +125,7 @@
    SECTION CONTENU - GLASSMORPHISM
    ========================================================================== */
 .content-section-glass {
+  margin-top: 24px; /* Espace entre le titre et le contenu */
   background: var(--glass-bg-secondary);
   border: 1px solid var(--glass-border-secondary);
   border-radius: var(--dossiers-radius-xl);

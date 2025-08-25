@@ -221,16 +221,18 @@ function AuthenticatedDossiersContent({ user }: { user: AuthenticatedUser }) {
           transition={{ duration: 0.6, ease: "easeOut" }}
         >
           <div className="page-title-content">
-            <motion.div 
-              className="page-title-icon-container"
-              whileHover={{ scale: 1.05 }}
-              transition={{ type: "spring", stiffness: 300 }}
-            >
-              <span className="page-title-icon">📚</span>
-            </motion.div>
-            <div className="page-title-section">
-              <h1 className="page-title">Mes Classeurs</h1>
-              <p className="page-subtitle">Organisez et gérez vos connaissances</p>
+            <div className="page-title-left-section">
+              <motion.div 
+                className="page-title-icon-container"
+                whileHover={{ scale: 1.05 }}
+                transition={{ type: "spring", stiffness: 300 }}
+              >
+                <span className="page-title-icon">📚</span>
+              </motion.div>
+              <div className="page-title-section">
+                <h1 className="page-title">Mes Classeurs</h1>
+                <p className="page-subtitle">Organisez et gérez vos connaissances</p>
+              </div>
             </div>
             <div className="page-title-stats">
               <div className="page-title-stats-item">

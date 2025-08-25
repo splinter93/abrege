@@ -168,7 +168,7 @@ function FilesPageContent() {
         >
           <div className="page-title-container-glass">
             <div className="page-title-content">
-              <div className="files-info">
+              <div className="page-title-left-section">
                 <motion.div 
                   className="page-title-icon-container"
                   whileHover={{ scale: 1.05 }}

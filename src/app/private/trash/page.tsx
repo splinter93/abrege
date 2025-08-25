@@ -85,12 +85,14 @@ function TrashPageContent() {
         transition={{ duration: 0.6, ease: "easeOut" }}
       >
         <div className="page-title-content">
-          <div className="page-title-icon-container">
-            <span className="page-title-icon">🗑️</span>
-          </div>
-          <div className="page-title-section">
-            <h1 className="page-title">Corbeille</h1>
-            <p className="page-subtitle">Gérez vos éléments supprimés et restaurez ce qui est important</p>
+          <div className="page-title-left-section">
+            <div className="page-title-icon-container">
+              <span className="page-title-icon">🗑️</span>
+            </div>
+            <div className="page-title-section">
+              <h1 className="page-title">Corbeille</h1>
+              <p className="page-subtitle">Gérez vos éléments supprimés et restaurez ce qui est important</p>
+            </div>
           </div>
           <div className="page-title-stats">
             <div className="page-title-stats-item">

@@ -101,7 +101,12 @@
    SECTION HEADER GLASSMORPHISM - STYLE UNIFORME
    ========================================================================== */
 .files-section {
-  margin-bottom: 24px; /* Espacement uniforme */
+  margin-bottom: 0; /* Pas d'espacement en bas pour la page fichiers */
+}
+
+/* Override du margin-bottom du title container pour la page fichiers */
+.page-title-container-glass {
+  margin-bottom: 0; /* Pas d'espacement en bas pour la page fichiers */
 }
 
 /* Suppression des styles redondants - maintenant dans page-title-containers.css */
@@ -127,7 +132,20 @@
    SECTION DE CONTENU DES FICHIERS
    ========================================================================== */
 .files-content-section {
-  margin-top: var(--files-spacing-xl);
+  margin-top: 28px; /* Espace réduit entre le titre et le contenu */
+  background: var(--glass-bg-primary);
+  border: 1px solid var(--glass-border-primary);
+  border-radius: var(--files-radius-xl);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: var(--glass-shadow-medium);
+  padding: var(--files-spacing-xl);
+  transition: all var(--files-transition-normal);
+}
+
+.files-content-section:hover {
+  border-color: var(--glass-border-hover);
+  box-shadow: var(--glass-shadow-strong);
 }
 
 .files-content {

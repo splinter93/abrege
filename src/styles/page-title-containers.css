@@ -57,6 +57,14 @@
   min-height: 52px; /* Hauteur minimale réduite */
 }
 
+/* Container pour l'icône et le titre ensemble */
+.page-title-left-section {
+  display: flex;
+  align-items: center;
+  gap: 20px; /* Espacement entre l'icône et le titre */
+  flex: 1; /* Prend l'espace disponible */
+}
+
 /* ==========================================================================
    ICÔNE UNIFORME
    ========================================================================== */
@@ -97,7 +105,6 @@
   display: flex;
   flex-direction: column;
   gap: 6px; /* Espacement réduit entre titre et sous-titre */
-  flex: 1; /* Prend l'espace disponible */
   min-height: 52px; /* Hauteur minimale réduite pour aligner avec l'icône */
   justify-content: center; /* Centre verticalement le contenu */
 }
