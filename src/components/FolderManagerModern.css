@@ -40,9 +40,10 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: var(--spacing-lg) 0 0 0;
+  padding: 16px 0 16px 0; /* Padding uniforme et fixe */
   background: transparent;
   border-bottom: none;
+  margin: 0; /* Supprimé les marges */
 }
 
 /* Séparateur sous le header */

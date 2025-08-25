@@ -18,10 +18,10 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: var(--spacing-sm) 0 var(--spacing-md) 0; /* Augmenté le padding en haut */
+  padding: 16px 0 16px 0; /* Padding uniforme et fixe */
   border-bottom: none; /* Supprimé le border-bottom */
   margin-bottom: var(--spacing-lg);
-  margin-top: calc(-1 * var(--spacing-md)); /* Remonte le header */
+  margin-top: 0; /* Supprimé le margin-top négatif */
   background: transparent; /* Supprimé le background */
   position: relative;
 }
@@ -57,25 +57,6 @@
   margin: 0;
   line-height: 1.2;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-/* 🔧 NOUVEAU: Styles pour l'icône du classeur */
-.classeur-icon {
-  font-size: 32px;
-  line-height: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.classeur-name {
-  font-size: 28px;
-  font-weight: 600;
-  color: var(--text-primary, #111827);
-  line-height: 1.2;
 }
 
 /* 🔧 NOUVEAU: Styles pour le breadcrumb intégré dans le titre */
@@ -172,7 +153,7 @@
     flex-direction: column;
     align-items: flex-start;
     gap: 16px;
-    padding: 20px 0 24px 0;
+    padding: 16px 0 16px 0; /* Padding uniforme sur tablette */
   }
   
   .folder-content-title {
@@ -187,6 +168,21 @@
   
   .folder-back-button {
     align-self: flex-start;
+  }
+}
+
+@media (max-width: 480px) {
+  .folder-content-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 0 12px 0; /* Padding uniforme sur mobile */
+  }
+  
+  .folder-content-title {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
   }
 }
 
@@ -379,13 +375,13 @@
   gap: 0; /* Supprime l'espacement par défaut */
 }
 
-/* Espacement personnalisé entre les sections */
+/* Espacement uniforme entre les sections */
 .folder-classeur-bandeau + .folder-content-header {
-  margin-top: -8px; /* Remonte encore plus le header */
+  margin-top: 0; /* Espacement uniforme et fixe */
 }
 
 .folder-content-header + .folder-grid-container {
-  margin-top: 6px; /* Espacement encore plus réduit après le header */
+  margin-top: 6px; /* Espacement uniforme après le header */
 }
 
 /* ==========================================================================
@@ -394,20 +390,20 @@
 
 @media (max-width: 768px) {
   .folder-classeur-bandeau {
-    padding: 16px 0 8px 0; /* Valeurs fixes */
+    padding: 16px 0 8px 0; /* Valeurs fixes et uniformes */
   }
   
   .folder-content-header {
-    padding: 12px 0 16px 0; /* Valeurs fixes */
+    padding: 12px 0 16px 0; /* Valeurs fixes et uniformes */
     margin-bottom: 16px;
   }
   
   .folder-classeur-bandeau + .folder-content-header {
-    margin-top: 8px; /* Espacement réduit sur mobile */
+    margin-top: 0; /* Espacement uniforme sur tablette */
   }
   
   .folder-content-header + .folder-grid-container {
-    margin-top: 6px; /* Espacement encore plus réduit */
+    margin-top: 6px; /* Espacement uniforme après le header */
   }
 
   /* 🔧 NOUVEAU: Styles responsives pour le breadcrumb intégré */
@@ -432,38 +428,24 @@
     font-size: 14px;
     margin: 0 1px;
   }
-
-  /* 🔧 NOUVEAU: Styles responsives pour l'icône du classeur */
-  .classeur-title {
-    font-size: 24px;
-    gap: 10px;
-  }
-  
-  .classeur-icon {
-    font-size: 28px;
-  }
-  
-  .classeur-name {
-    font-size: 24px;
-  }
 }
 
 @media (max-width: 480px) {
   .folder-classeur-bandeau {
-    padding: 12px 0 8px 0; /* Valeurs fixes */
+    padding: 12px 0 8px 0; /* Valeurs fixes et uniformes */
   }
   
   .folder-content-header {
-    padding: 8px 0 12px 0; /* Valeurs fixes */
+    padding: 8px 0 12px 0; /* Valeurs fixes et uniformes */
     margin-bottom: 12px;
   }
   
   .folder-classeur-bandeau + .folder-content-header {
-    margin-top: 4px; /* Espacement encore plus réduit */
+    margin-top: 0; /* Espacement uniforme sur mobile */
   }
   
   .folder-content-header + .folder-grid-container {
-    margin-top: 4px; /* Espacement minimal */
+    margin-top: 6px; /* Espacement uniforme après le header */
   }
 
   /* 🔧 NOUVEAU: Styles responsives pour le breadcrumb intégré sur mobile */
@@ -487,19 +469,5 @@
   .classeur-title-with-breadcrumb .breadcrumb-separator {
     font-size: 13px;
     margin: 0 1px;
-  }
-
-  /* 🔧 NOUVEAU: Styles responsives pour l'icône du classeur sur mobile */
-  .classeur-title {
-    font-size: 20px;
-    gap: 8px;
-  }
-  
-  .classeur-icon {
-    font-size: 24px;
-  }
-  
-  .classeur-name {
-    font-size: 20px;
   }
 } 
