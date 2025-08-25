@@ -9,6 +9,8 @@
   display: flex;
   flex-direction: column;
   align-items: stretch; /* Aligner les enfants sur toute la largeur */
+  flex: 1;
+  min-height: calc(100vh - 700px); /* Hauteur minimale adaptée à l'écran */
 }
 
 /* Header avec titre du classeur et toolbar */

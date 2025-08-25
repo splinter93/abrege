@@ -9,6 +9,9 @@
 .folder-manager-wrapper {
   padding: 0 var(--spacing-xl) var(--spacing-xl) var(--spacing-xl);
   flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100vh - 600px); /* Hauteur minimale adaptée à l'écran */
 }
 
 /* Container */
@@ -16,6 +19,9 @@
   width: 100%;
   position: relative;
   box-sizing: border-box;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 
 /* Content wrapper */
@@ -24,6 +30,9 @@
   padding: 0;
   font-family: var(--font-main);
   background: transparent;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 
 /* Header */
@@ -175,6 +184,9 @@
 /* Main content area */
 .folder-manager-main {
   background: transparent;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 
 /* Content container */

@@ -69,6 +69,9 @@
 /* Padding spécifique pour la page des dossiers */
 .dossiers-content-area {
   padding: var(--dossiers-spacing-xl);
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 
 /* ==========================================================================
@@ -249,6 +252,10 @@
   box-shadow: var(--glass-shadow-subtle);
   padding: var(--dossiers-spacing-xl);
   transition: all var(--dossiers-transition-normal);
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: calc(100vh - 500px); /* Hauteur minimale adaptée à l'écran */
 }
 
 .content-section-glass:hover {
@@ -258,7 +265,10 @@
 
 .content-main-container-glass {
   width: 100%;
-  height: 100%;
+  flex: 1;
+  min-height: calc(100vh - 400px); /* Hauteur minimale adaptée à l'écran */
+  display: flex;
+  flex-direction: column;
 }
 
 /* ==========================================================================

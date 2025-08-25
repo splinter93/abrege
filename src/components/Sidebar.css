@@ -428,10 +428,13 @@
 .favorites-content-area,
 .account-content-area {
   margin-left: 280px;
-  min-height: 100vh;
+  flex: 1;
+  min-height: calc(100vh - 80px); /* Hauteur minimale adaptée à l'écran */
   /* Styles de base unifiés */
   box-sizing: border-box;
   position: relative;
+  display: flex;
+  flex-direction: column;
 }
 
 /* ==========================================================================
@@ -450,4 +453,6 @@
   min-height: 100vh;
   position: relative;
   overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
 } 
