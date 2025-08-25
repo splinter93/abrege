@@ -318,11 +318,11 @@
 
 /* Espacement personnalisé entre les sections */
 .folder-classeur-bandeau + .folder-content-header {
-  margin-top: calc(-1 * var(--spacing-sm)); /* Remonte encore plus le header */
+  margin-top: -8px; /* Remonte encore plus le header */
 }
 
 .folder-content-header + .folder-grid-container {
-  margin-top: var(--spacing-md); /* Espacement réduit après le header */
+  margin-top: 6px; /* Espacement encore plus réduit après le header */
 }
 
 /* ==========================================================================
@@ -331,38 +331,38 @@
 
 @media (max-width: 768px) {
   .folder-classeur-bandeau {
-    padding: var(--spacing-md) 0 var(--spacing-xs) 0;
+    padding: 16px 0 8px 0; /* Valeurs fixes */
   }
   
   .folder-content-header {
-    padding: var(--spacing-sm) 0 var(--spacing-md) 0;
-    margin-bottom: var(--spacing-md);
+    padding: 12px 0 16px 0; /* Valeurs fixes */
+    margin-bottom: 16px;
   }
   
   .folder-classeur-bandeau + .folder-content-header {
-    margin-top: var(--spacing-xs); /* Espacement réduit sur mobile */
+    margin-top: 8px; /* Espacement réduit sur mobile */
   }
   
   .folder-content-header + .folder-grid-container {
-    margin-top: var(--spacing-sm);
+    margin-top: 6px; /* Espacement encore plus réduit */
   }
 }
 
 @media (max-width: 480px) {
   .folder-classeur-bandeau {
-    padding: var(--spacing-sm) 0 var(--spacing-xs) 0;
+    padding: 12px 0 8px 0; /* Valeurs fixes */
   }
   
   .folder-content-header {
-    padding: var(--spacing-sm) 0;
-    margin-bottom: var(--spacing-sm);
+    padding: 12px 0; /* Valeurs fixes */
+    margin-bottom: 12px;
   }
   
   .folder-classeur-bandeau + .folder-content-header {
-    margin-top: var(--spacing-xs); /* Espacement minimal sur petit mobile */
+    margin-top: 8px; /* Espacement minimal sur petit mobile */
   }
   
   .folder-content-header + .folder-grid-container {
-    margin-top: var(--spacing-sm);
+    margin-top: 4px; /* Espacement minimal encore plus réduit */
   }
 } 

@@ -9,10 +9,10 @@
 .fm-grid-item {
   background: transparent;
   border: none;
-  border-radius: var(--files-radius-lg);
-  padding: var(--files-spacing-md); /* Réduit de lg à md pour resserrer */
+  border-radius: 16px; /* Valeur fixe au lieu de var(--files-radius-lg) */
+  padding: 16px; /* Valeur fixe au lieu de var(--files-spacing-md) */
   cursor: pointer;
-  transition: all var(--files-transition-normal);
+  transition: all 0.25s ease; /* Valeur fixe au lieu de var(--files-transition-normal) */
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -39,8 +39,8 @@
     rgba(255, 255, 255, 0.01) 50%, 
     rgba(255, 255, 255, 0.02) 100%);
   opacity: 0;
-  transition: opacity var(--files-transition-normal);
-  border-radius: var(--files-radius-lg);
+  transition: opacity 0.25s ease; /* Valeur fixe au lieu de var(--files-transition-normal) */
+  border-radius: 16px; /* Valeur fixe au lieu de var(--files-radius-lg) */
 }
 
 .fm-grid-item:hover {
@@ -56,7 +56,7 @@
 
 .fm-grid-item:active {
   transform: translateY(-1px);
-  transition: transform var(--files-transition-fast);
+  transition: transform 0.15s ease; /* Valeur fixe au lieu de var(--files-transition-fast) */
 }
 
 /* ==========================================================================
@@ -65,14 +65,14 @@
 
 .fm-grid-item .file-icon,
 .fm-grid-item .folder-icon {
-  margin-bottom: var(--files-spacing-sm); /* Réduit de md à sm pour plus de compacité */
+  margin-bottom: 12px; /* Valeur fixe au lieu de var(--files-spacing-sm) */
   display: flex;
   justify-content: center;
   align-items: center;
   width: 100%;
   height: 48px; /* Réduit de 64px à 48px pour plus de compacité */
   font-size: 24px; /* Réduit de 28px à 24px pour plus de compacité */
-  transition: transform var(--files-transition-fast);
+  transition: transform 0.15s ease; /* Valeur fixe au lieu de var(--files-transition-fast) */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   flex-shrink: 0; /* Empêche la réduction de taille */
@@ -120,6 +120,10 @@
   /* Amélioration de l'alignement */
   align-self: center;
   width: 100%;
+  
+  /* Optimisations pour éviter les bugs sur tablette */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 /* ==========================================================================
@@ -132,13 +136,13 @@
   justify-content: flex-start !important;
   text-align: left !important;
   min-height: 80px !important; /* Augmenté de 60px à 80px pour les icônes plus grandes */
-  padding: var(--files-spacing-md) var(--files-spacing-lg) !important;
+  padding: 16px 24px !important; /* Valeurs fixes au lieu de variables */
 }
 
 .fm-grid-item.file-list-item .file-icon,
 .fm-grid-item.file-list-item .folder-icon {
   margin-bottom: 0 !important;
-  margin-right: var(--files-spacing-md) !important;
+  margin-right: 16px !important; /* Valeur fixe au lieu de variable */
   font-size: 24px !important;
   height: 48px !important; /* Augmenté de 32px à 48px pour la vue liste */
   flex-shrink: 0 !important;
@@ -156,7 +160,7 @@
 .fm-grid-item.file-list-item .fm-item-name {
   text-align: left !important;
   font-size: 14px !important;
-  margin-bottom: var(--files-spacing-xs) !important;
+  margin-bottom: 8px !important; /* Valeur fixe au lieu de variable */
   /* Réinitialiser les propriétés de ligne pour la vue liste */
   display: block !important;
   -webkit-line-clamp: unset !important;
@@ -227,6 +231,7 @@
 /* Animation d'entrée pour les éléments */
 .fm-grid-item {
   animation: fadeInUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform, opacity; /* Optimisation pour les animations */
 }
 
 @keyframes fadeInUp {
@@ -254,28 +259,29 @@
 
 @media (max-width: 1200px) {
   .fm-grid-item {
-    min-height: 130px; /* Ajusté de 110px à 130px */
-    padding: var(--files-spacing-md);
+    min-height: 120px; /* Hauteur cohérente avec le design principal */
+    padding: 16px; /* Valeur fixe */
   }
   
   .fm-grid-item .file-icon,
   .fm-grid-item .folder-icon {
-    height: 56px; /* Réduit de 64px à 56px sur les écrans moyens */
+    height: 48px; /* Hauteur cohérente avec le design principal */
+    font-size: 24px;
   }
 }
 
 @media (max-width: 768px) {
   .fm-grid-item {
-    min-height: 120px; /* Ajusté de 100px à 120px */
-    padding: var(--files-spacing-md);
-    border-radius: var(--files-radius-md);
+    min-height: 110px; /* Hauteur réduite pour tablette */
+    padding: 12px; /* Valeur fixe */
+    border-radius: 12px; /* Valeur fixe */
   }
   
   .fm-grid-item .file-icon,
   .fm-grid-item .folder-icon {
-    font-size: 28px;
-    margin-bottom: var(--files-spacing-sm);
-    height: 48px; /* Réduit de 64px à 48px sur mobile */
+    font-size: 22px;
+    margin-bottom: 8px; /* Valeur fixe */
+    height: 44px; /* Hauteur optimisée pour tablette */
   }
   
   .fm-grid-item .file-name,
@@ -284,28 +290,60 @@
     height: 2.6em;
     min-height: 2.6em;
     max-height: 2.6em;
+    line-height: 1.3; /* Optimisé pour tablette */
   }
 }
 
 @media (max-width: 480px) {
   .fm-grid-item {
-    min-height: 110px; /* Ajusté de 90px à 110px */
-    padding: var(--files-spacing-sm);
-    border-radius: var(--files-radius-sm);
+    min-height: 100px; /* Hauteur minimale pour mobile */
+    padding: 8px; /* Valeur fixe */
+    border-radius: 8px; /* Valeur fixe */
   }
   
   .fm-grid-item .file-icon,
   .fm-grid-item .folder-icon {
-    font-size: 24px;
-    margin-bottom: var(--files-spacing-xs);
-    height: 40px; /* Réduit de 64px à 40px sur très petit écran */
+    font-size: 20px;
+    margin-bottom: 8px; /* Valeur fixe */
+    height: 36px; /* Hauteur minimale pour mobile */
   }
   
   .fm-grid-item .file-name,
-  .fm-grid-item .fm-item-name {
+  .fm-item-name {
     font-size: 12px;
     height: 2.4em;
     min-height: 2.4em;
     max-height: 2.4em;
+    line-height: 1.2; /* Optimisé pour mobile */
+  }
+}
+
+/* ==========================================================================
+   BREAKPOINT SPÉCIAL POUR TABLETTE - CORRECTION DES BUGS
+   ========================================================================== */
+
+@media (min-width: 481px) and (max-width: 1024px) {
+  .fm-grid-item {
+    /* Forcer l'affichage sur tablette */
+    display: flex !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    transform: none !important;
+  }
+  
+  .fm-grid-item .file-icon,
+  .fm-grid-item .folder-icon {
+    /* Forcer l'affichage des icônes */
+    display: flex !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+  }
+  
+  .fm-grid-item .file-name,
+  .fm-grid-item .fm-item-name {
+    /* Forcer l'affichage du texte */
+    display: -webkit-box !important;
+    opacity: 1 !important;
+    visibility: visible !important;
   }
 } 
