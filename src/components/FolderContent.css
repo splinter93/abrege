@@ -143,8 +143,8 @@
 /* Grilles responsives - UTILISÉES PAR FOLDERMANAGER */
 .folder-grid {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 20px; /* Augmenté de 16px à 20px pour plus d'espace entre les items */
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); /* Largeur minimale réduite */
+  gap: 12px; /* Réduit de 20px à 12px pour resserrer la grille */
   justify-items: stretch; /* Les items prennent toute la largeur de leur cellule */
   width: 100%;
   padding: 0;
@@ -152,7 +152,7 @@
 }
 
 .folder-grid.files {
-  margin-top: 16px; /* Augmenté de 12px à 16px pour plus d'espace entre les grilles */
+  margin-top: 12px; /* Réduit de 16px à 12px pour resserrer l'espacement */
 }
 
 /* Animation pour les fichiers */
@@ -231,9 +231,9 @@
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
 }
 
-/* Espacement plus généreux entre les éléments */
+/* Espacement optimisé entre les éléments */
 .folder-grid {
-  gap: 24px;
+  gap: 12px; /* Réduit de 24px à 12px pour resserrer la grille */
 }
 
 .folder-grid.files {
@@ -246,26 +246,26 @@
 
 @media (max-width: 1200px) {
   .folder-grid {
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); /* Largeur réduite sur écrans moyens */
   }
 }
 
 @media (max-width: 1024px) {
   .folder-grid {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); /* Largeur encore plus réduite */
   }
 }
 
 @media (max-width: 768px) {
   .folder-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); /* Largeur minimale sur tablette */
+    gap: 10px;
   }
 }
 
 @media (max-width: 480px) {
   .folder-grid {
-    grid-template-columns: repeat(1, 1fr);
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); /* Largeur très compacte sur mobile */
     gap: 8px;
   }
 } 

@@ -10,14 +10,15 @@
   background: transparent;
   border: none;
   border-radius: var(--files-radius-lg);
-  padding: var(--files-spacing-lg);
+  padding: var(--files-spacing-md); /* Réduit de lg à md pour resserrer */
   cursor: pointer;
   transition: all var(--files-transition-normal);
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
-  min-height: 140px; /* Augmenté de 120px à 140px pour accommoder les icônes plus grandes */
+  min-height: 120px; /* Réduit de 140px à 120px pour plus de compacité */
+  max-width: 200px; /* Largeur maximale pour éviter les items trop larges */
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
   box-shadow: none;
@@ -64,13 +65,13 @@
 
 .fm-grid-item .file-icon,
 .fm-grid-item .folder-icon {
-  margin-bottom: var(--files-spacing-md); /* Augmenté de sm à md pour plus d'espace */
+  margin-bottom: var(--files-spacing-sm); /* Réduit de md à sm pour plus de compacité */
   display: flex;
   justify-content: center;
   align-items: center;
   width: 100%;
-  height: 64px; /* Augmenté de 40px à 64px pour correspondre à la taille des icônes */
-  font-size: 28px;
+  height: 48px; /* Réduit de 64px à 48px pour plus de compacité */
+  font-size: 24px; /* Réduit de 28px à 24px pour plus de compacité */
   transition: transform var(--files-transition-fast);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
