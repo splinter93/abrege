@@ -48,6 +48,23 @@ export function useAuth() {
     }
   }, []);
 
+  // Fonction pour récupérer le token d'authentification
+  const getAccessToken = useCallback(async (): Promise<string | null> => {
+    try {
+      const { data: { session }, error } = await supabase.auth.getSession();
+      
+      if (error || !session?.access_token) {
+        console.log('🔧 Auth: Impossible de récupérer le token', { error: error?.message });
+        return null;
+      }
+      
+      return session.access_token;
+    } catch (error) {
+      console.log('🔧 Auth: Erreur lors de la récupération du token', error);
+      return null;
+    }
+  }, []);
+
   useEffect(() => {
     getSession();
 
@@ -166,5 +183,6 @@ export function useAuth() {
     signUp,
     signOut,
     getFallbackUserId,
+    getAccessToken, // Nouvelle méthode pour récupérer le token
   };
 } 
