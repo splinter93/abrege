@@ -16,10 +16,10 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: var(--spacing-xs) 0 var(--spacing-md) 0; /* Réduit le padding en haut */
+  padding: var(--spacing-sm) 0 var(--spacing-md) 0; /* Augmenté le padding en haut */
   border-bottom: none; /* Supprimé le border-bottom */
   margin-bottom: var(--spacing-lg);
-  margin-top: calc(-1 * var(--spacing-sm)); /* Remonte le header */
+  margin-top: calc(-1 * var(--spacing-md)); /* Remonte le header */
   background: transparent; /* Supprimé le background */
   position: relative;
 }
@@ -38,6 +38,7 @@
     var(--glass-border-secondary) 80%,
     transparent 100%
   );
+  opacity: 0.8;
 }
 
 .folder-content-title {
@@ -164,26 +165,10 @@
 
 .folder-classeur-bandeau {
   margin-bottom: 0; /* Réduit de var(--spacing-lg) à 0 */
-  padding: var(--spacing-lg) 0 var(--spacing-md) 0; /* Plus d'espace en haut, moins en bas */
-  border-bottom: 1px solid var(--glass-border-secondary);
+  padding: var(--spacing-md) 0 var(--spacing-sm) 0; /* Réduit le padding en haut et en bas */
+  margin-top: calc(-1 * var(--spacing-lg)); /* Remonte le bandeau */
   background: transparent; /* Supprimé le background */
   position: relative;
-}
-
-.folder-classeur-bandeau::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    var(--glass-border-secondary) 20%,
-    var(--glass-border-secondary) 80%,
-    transparent 100%
-  );
 }
 
 .folder-classeur-bandeau .classeur-bandeau {
@@ -331,7 +316,7 @@
 
 /* Espacement personnalisé entre les sections */
 .folder-classeur-bandeau + .folder-content-header {
-  margin-top: 0; /* Pas d'espacement supplémentaire */
+  margin-top: calc(-1 * var(--spacing-sm)); /* Remonte encore plus le header */
 }
 
 .folder-content-header + .folder-grid-container {
@@ -344,12 +329,16 @@
 
 @media (max-width: 768px) {
   .folder-classeur-bandeau {
-    padding: var(--spacing-md) 0 var(--spacing-sm) 0;
+    padding: var(--spacing-md) 0 var(--spacing-xs) 0;
   }
   
   .folder-content-header {
     padding: var(--spacing-sm) 0 var(--spacing-md) 0;
     margin-bottom: var(--spacing-md);
+  }
+  
+  .folder-classeur-bandeau + .folder-content-header {
+    margin-top: var(--spacing-xs); /* Espacement réduit sur mobile */
   }
   
   .folder-content-header + .folder-grid-container {
@@ -359,12 +348,16 @@
 
 @media (max-width: 480px) {
   .folder-classeur-bandeau {
-    padding: var(--spacing-sm) 0;
+    padding: var(--spacing-sm) 0 var(--spacing-xs) 0;
   }
   
   .folder-content-header {
     padding: var(--spacing-sm) 0;
     margin-bottom: var(--spacing-sm);
+  }
+  
+  .folder-classeur-bandeau + .folder-content-header {
+    margin-top: var(--spacing-xs); /* Espacement minimal sur petit mobile */
   }
   
   .folder-content-header + .folder-grid-container {

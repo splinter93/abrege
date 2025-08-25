@@ -18,23 +18,7 @@
   position: relative;
 }
 
-/* Ligne de séparation subtile */
-.files-toolbar::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    var(--glass-border-secondary) 20%,
-    var(--glass-border-secondary) 80%,
-    transparent 100%
-  );
-  opacity: 0.6;
-}
+
 
 /* Section gauche - Barre de recherche (plus large) */
 .toolbar-left {
