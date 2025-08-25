@@ -106,10 +106,6 @@ function FilesPageContent() {
     handleError(error, 'upload fichier');
   }, [handleError]);
 
-  const handleRefresh = useCallback(() => {
-    fetchFiles();
-  }, [fetchFiles]);
-
   const handleDeleteSelected = useCallback(async () => {
     if (selectedFiles.size === 0) return;
     
@@ -245,7 +241,6 @@ function FilesPageContent() {
                 viewMode={viewMode}
                 onViewModeChange={setViewMode}
                 onUploadFile={handleUploadFile}
-                onRefresh={handleRefresh}
                 selectedFilesCount={selectedFiles.size}
                 onDeleteSelected={handleDeleteSelected}
                 onRenameSelected={handleRenameSelected}

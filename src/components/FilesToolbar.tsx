@@ -8,7 +8,6 @@ interface FilesToolbarProps {
   viewMode: ViewMode;
   onViewModeChange: (mode: ViewMode) => void;
   onUploadFile: () => void;
-  onRefresh: () => void;
   selectedFilesCount: number;
   onDeleteSelected: () => void;
   onRenameSelected: () => void;
@@ -20,7 +19,6 @@ const FilesToolbar: React.FC<FilesToolbarProps> = ({
   viewMode,
   onViewModeChange,
   onUploadFile,
-  onRefresh,
   selectedFilesCount,
   onDeleteSelected,
   onRenameSelected,
@@ -44,14 +42,6 @@ const FilesToolbar: React.FC<FilesToolbarProps> = ({
         >
           <span className="btn-icon">📁</span>
           <span className="btn-text">Uploader un fichier</span>
-        </button>
-
-        <button 
-          className="toolbar-btn secondary"
-          onClick={onRefresh}
-        >
-          <span className="btn-icon">🔄</span>
-          <span className="btn-text">Actualiser</span>
         </button>
       </div>
 
