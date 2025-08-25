@@ -16,13 +16,13 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: var(--spacing-md) 0 var(--spacing-lg) 0; /* RÉDUIT: padding supérieur réduit pour rapprocher du bandeau */
-  border-bottom: 1px solid var(--glass-border-secondary); /* HARMONISÉ: utilise la même couleur que le système glassmorphism */
-  margin-bottom: var(--spacing-lg); /* RÉDUIT: moins d'espace avec le contenu */
+  padding: var(--spacing-md) 0 var(--spacing-lg) 0; /* Réduit le padding en haut */
+  border-bottom: 1px solid var(--glass-border-secondary); /* Harmonise avec le ClasseurBandeau */
+  margin-bottom: var(--spacing-lg);
   background: linear-gradient(
-    to bottom,
-    rgba(255, 255, 255, 0.01) 0%,
-    transparent 100%
+    180deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.01) 100%
   );
   position: relative;
 }
@@ -35,13 +35,12 @@
   right: 0;
   height: 1px;
   background: linear-gradient(
-    to right,
+    90deg,
     transparent 0%,
     var(--glass-border-secondary) 20%,
     var(--glass-border-secondary) 80%,
     transparent 100%
   );
-  opacity: 0.6;
 }
 
 .folder-content-title {
@@ -57,6 +56,7 @@
   color: var(--text-primary, #111827);
   margin: 0;
   line-height: 1.2;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 /* 🔧 NOUVEAU: Styles pour le bouton retour */
@@ -109,8 +109,7 @@
     flex-direction: column;
     align-items: flex-start;
     gap: 16px;
-    padding: var(--spacing-sm) 0 var(--spacing-md) 0; /* RÉDUIT: padding adaptatif */
-    margin-bottom: var(--spacing-md); /* RÉDUIT: moins d'espace sur mobile */
+    padding: 20px 0 24px 0;
   }
   
   .folder-content-title {
@@ -125,11 +124,6 @@
   
   .folder-back-button {
     align-self: flex-start;
-  }
-  
-  /* Ajuster l'espacement du bandeau sur mobile */
-  .folder-classeur-bandeau {
-    padding: var(--spacing-md) 0 var(--spacing-sm) 0;
   }
 }
 
@@ -155,11 +149,10 @@
   width: 100%;
   padding: 0;
   box-sizing: border-box;
-  margin-top: 0; /* SUPPRIMÉ: plus d'espacement avec le header */
 }
 
 .folder-grid.files {
-  margin-top: 0; /* SUPPRIMÉ: plus d'espacement avec le header */
+  margin-top: 12px; /* RÉDUIT de 24px à 12px pour rapprocher les grilles */
 }
 
 /* Animation pour les fichiers */
@@ -169,17 +162,34 @@
 } 
 
 /* ==========================================================================
-   CLASSEUR BANDEAU INTÉGRÉ
+   CLASSEUR BANDEAU INTÉGRÉ - OPTIMISÉ
    ========================================================================== */
 
 .folder-classeur-bandeau {
-  margin-bottom: 0; /* SUPPRIMÉ: plus d'espacement avec le header */
-  padding: var(--spacing-lg) 0 var(--spacing-md) 0; /* AUGMENTÉ: plus d'espace en haut, réduit en bas */
-  border-bottom: none; /* SUPPRIMÉ: laisse le header gérer la séparation */
+  margin-bottom: 0; /* Réduit de var(--spacing-lg) à 0 */
+  padding: var(--spacing-lg) 0 var(--spacing-md) 0; /* Plus d'espace en haut, moins en bas */
+  border-bottom: 1px solid var(--glass-border-secondary);
   background: linear-gradient(
-    to bottom,
+    180deg,
     rgba(255, 255, 255, 0.02) 0%,
     rgba(255, 255, 255, 0.01) 50%,
+    transparent 100%
+  );
+  position: relative;
+}
+
+.folder-classeur-bandeau::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--glass-border-secondary) 20%,
+    var(--glass-border-secondary) 80%,
     transparent 100%
   );
 }
@@ -201,12 +211,14 @@
   backdrop-filter: blur(15px);
   -webkit-backdrop-filter: blur(15px);
   box-shadow: var(--glass-shadow-subtle);
+  transition: all var(--files-transition-normal);
 }
 
 .folder-classeur-bandeau .classeur-pill:hover {
   background: var(--glass-bg-hover);
   border-color: var(--glass-border-hover);
   box-shadow: var(--glass-shadow-medium);
+  transform: translateY(-1px);
 }
 
 .folder-classeur-bandeau .classeur-pill.active {
@@ -280,46 +292,99 @@
 } 
 
 /* ==========================================================================
-   TRANSITIONS ET EFFETS VISUELS
+   ANIMATIONS ET TRANSITIONS
    ========================================================================== */
 
-.folder-content-container {
-  position: relative;
-}
-
-/* Effet de transition entre bandeau et header */
 .folder-classeur-bandeau {
-  position: relative;
-  z-index: 2;
+  animation: slideInFromTop 0.6s ease-out;
 }
 
 .folder-content-header {
-  position: relative;
-  z-index: 1;
-  transition: all var(--files-transition-normal);
+  animation: slideInFromTop 0.6s ease-out 0.1s both;
 }
 
-/* Effet de profondeur subtil */
-.folder-content-header:hover {
-  background: linear-gradient(
-    to bottom,
-    rgba(255, 255, 255, 0.02) 0%,
-    transparent 100%
-  );
-}
-
-/* Animation d'entrée pour le header */
-.folder-content-header {
-  animation: headerSlideIn 0.6s ease-out;
-}
-
-@keyframes headerSlideIn {
+@keyframes slideInFromTop {
   from {
     opacity: 0;
-    transform: translateY(-10px);
+    transform: translateY(-20px);
   }
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+/* ==========================================================================
+   HOVER EFFECTS HARMONISÉS
+   ========================================================================== */
+
+.folder-classeur-bandeau:hover {
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.03) 0%,
+    rgba(255, 255, 255, 0.02) 50%,
+    rgba(255, 255, 255, 0.01) 100%
+  );
+}
+
+.folder-content-header:hover {
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.02) 0%,
+    rgba(255, 255, 255, 0.01) 100%
+  );
+} 
+
+/* ==========================================================================
+   ESPACEMENT OPTIMISÉ
+   ========================================================================== */
+
+.folder-content-container {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0; /* Supprime l'espacement par défaut */
+}
+
+/* Espacement personnalisé entre les sections */
+.folder-classeur-bandeau + .folder-content-header {
+  margin-top: 0; /* Pas d'espacement supplémentaire */
+}
+
+.folder-content-header + .folder-grid-container {
+  margin-top: var(--spacing-md); /* Espacement réduit après le header */
+}
+
+/* ==========================================================================
+   RESPONSIVE DESIGN OPTIMISÉ
+   ========================================================================== */
+
+@media (max-width: 768px) {
+  .folder-classeur-bandeau {
+    padding: var(--spacing-md) 0 var(--spacing-sm) 0;
+  }
+  
+  .folder-content-header {
+    padding: var(--spacing-sm) 0 var(--spacing-md) 0;
+    margin-bottom: var(--spacing-md);
+  }
+  
+  .folder-content-header + .folder-grid-container {
+    margin-top: var(--spacing-sm);
+  }
+}
+
+@media (max-width: 480px) {
+  .folder-classeur-bandeau {
+    padding: var(--spacing-sm) 0;
+  }
+  
+  .folder-content-header {
+    padding: var(--spacing-sm) 0;
+    margin-bottom: var(--spacing-sm);
+  }
+  
+  .folder-content-header + .folder-grid-container {
+    margin-top: var(--spacing-sm);
   }
 } 
