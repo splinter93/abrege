@@ -124,16 +124,6 @@ const FolderContent: React.FC<FolderContentProps> = ({
 
   return (
     <div className="folder-content-container">
-      {/* Breadcrumb navigation when inside a folder */}
-      {isInFolder && onGoToRoot && onGoToFolder && (
-        <FolderBreadcrumb
-          folderPath={folderPath}
-          classeurName={classeurName}
-          onGoToRoot={onGoToRoot}
-          onGoToFolder={onGoToFolder}
-        />
-      )}
-
       {/* 🔧 NOUVEAU: ClasseurBandeau intégré tout en haut */}
       {classeurs && onSelectClasseur && onCreateClasseur && (
         <div className="folder-classeur-bandeau">
@@ -151,18 +141,18 @@ const FolderContent: React.FC<FolderContentProps> = ({
       {/* Header with classeur title and toolbar */}
       <div className="folder-content-header">
         <div className="folder-content-title">
-          <h1 className="classeur-title">{classeurName}</h1>
-          
-          {/* Back button when inside a folder */}
-          {isInFolder && onGoBack && (
-            <button
-              className="folder-back-button"
-              onClick={onGoBack}
-              title="Retour au niveau précédent"
-            >
-              <span className="back-button-icon">←</span>
-              <span className="back-button-text">Retour</span>
-            </button>
+          {/* 🔧 NOUVEAU: Breadcrumb intégré dans le titre */}
+          {isInFolder && onGoToRoot && onGoToFolder ? (
+            <div className="classeur-title-with-breadcrumb">
+              <FolderBreadcrumb
+                folderPath={folderPath}
+                classeurName={classeurName}
+                onGoToRoot={onGoToRoot}
+                onGoToFolder={onGoToFolder}
+              />
+            </div>
+          ) : (
+            <h1 className="classeur-title">{classeurName}</h1>
           )}
         </div>
         

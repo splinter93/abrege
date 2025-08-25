@@ -59,48 +59,92 @@
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
-/* 🔧 NOUVEAU: Styles pour le bouton retour */
-.folder-back-button {
+/* 🔧 NOUVEAU: Styles pour le breadcrumb intégré dans le titre */
+.classeur-title-with-breadcrumb {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
-  background: var(--accent-primary, #3b82f6);
-  color: white;
+}
+
+.classeur-title-with-breadcrumb .folder-breadcrumb {
+  margin: 0;
+  padding: 0;
+}
+
+.classeur-title-with-breadcrumb .breadcrumb-container {
+  background: transparent;
   border: none;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  text-decoration: none;
-  outline: none;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 0;
+  margin: 0;
+  gap: 4px;
+  backdrop-filter: none;
 }
 
-.folder-back-button:hover {
-  background: var(--accent-hover, #2563eb);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-}
-
-.folder-back-button:active {
-  transform: translateY(0);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.folder-back-button:focus-visible {
-  outline: 2px solid var(--accent-primary, #3b82f6);
-  outline-offset: 2px;
-}
-
-.back-button-icon {
+.classeur-title-with-breadcrumb .breadcrumb-item {
+  padding: 4px 8px;
   font-size: 16px;
+  font-weight: 500;
+  background: transparent;
+  border: none;
+  color: var(--text-primary, #111827);
+  transition: all 0.2s ease;
+}
+
+.classeur-title-with-breadcrumb .breadcrumb-item:hover:not(:disabled) {
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 6px;
+  transform: none;
+}
+
+.classeur-title-with-breadcrumb .breadcrumb-root {
+  color: var(--accent-primary, #3b82f6);
+  font-weight: 600;
+  font-size: 18px;
+}
+
+.classeur-title-with-breadcrumb .breadcrumb-root:hover:not(:disabled) {
+  background: rgba(59, 130, 246, 0.1);
+}
+
+.classeur-title-with-breadcrumb .breadcrumb-link {
+  color: var(--text-secondary, #6b7280);
+  font-size: 16px;
+}
+
+.classeur-title-with-breadcrumb .breadcrumb-link:hover:not(:disabled) {
+  color: var(--text-primary, #111827);
+}
+
+.classeur-title-with-breadcrumb .breadcrumb-current {
+  color: var(--text-primary, #111827);
+  font-weight: 600;
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 6px;
+  font-size: 16px;
+}
+
+.classeur-title-with-breadcrumb .breadcrumb-icon {
+  font-size: 18px;
   line-height: 1;
 }
 
-.back-button-text {
+.classeur-title-with-breadcrumb .breadcrumb-text {
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 150px;
+}
+
+.classeur-title-with-breadcrumb .breadcrumb-separator {
+  color: var(--text-tertiary, #9ca3af);
+  font-size: 16px;
+  font-weight: 300;
+  user-select: none;
+  margin: 0 2px;
+}
+
+/* 🔧 NOUVEAU: Styles pour le bouton retour - SUPPRIMÉ */
+.folder-back-button {
+  display: none;
 }
 
 /* Responsive pour le header */
@@ -346,6 +390,29 @@
   .folder-content-header + .folder-grid-container {
     margin-top: 6px; /* Espacement encore plus réduit */
   }
+
+  /* 🔧 NOUVEAU: Styles responsives pour le breadcrumb intégré */
+  .classeur-title-with-breadcrumb .breadcrumb-item {
+    padding: 3px 6px;
+    font-size: 14px;
+  }
+  
+  .classeur-title-with-breadcrumb .breadcrumb-root {
+    font-size: 16px;
+  }
+  
+  .classeur-title-with-breadcrumb .breadcrumb-icon {
+    font-size: 16px;
+  }
+  
+  .classeur-title-with-breadcrumb .breadcrumb-text {
+    max-width: 100px;
+  }
+  
+  .classeur-title-with-breadcrumb .breadcrumb-separator {
+    font-size: 14px;
+    margin: 0 1px;
+  }
 }
 
 @media (max-width: 480px) {
@@ -354,15 +421,38 @@
   }
   
   .folder-content-header {
-    padding: 12px 0; /* Valeurs fixes */
+    padding: 8px 0 12px 0; /* Valeurs fixes */
     margin-bottom: 12px;
   }
   
   .folder-classeur-bandeau + .folder-content-header {
-    margin-top: 8px; /* Espacement minimal sur petit mobile */
+    margin-top: 4px; /* Espacement encore plus réduit */
   }
   
   .folder-content-header + .folder-grid-container {
-    margin-top: 4px; /* Espacement minimal encore plus réduit */
+    margin-top: 4px; /* Espacement minimal */
+  }
+
+  /* 🔧 NOUVEAU: Styles responsives pour le breadcrumb intégré sur mobile */
+  .classeur-title-with-breadcrumb .breadcrumb-item {
+    padding: 2px 4px;
+    font-size: 13px;
+  }
+  
+  .classeur-title-with-breadcrumb .breadcrumb-root {
+    font-size: 15px;
+  }
+  
+  .classeur-title-with-breadcrumb .breadcrumb-icon {
+    font-size: 14px;
+  }
+  
+  .classeur-title-with-breadcrumb .breadcrumb-text {
+    max-width: 80px;
+  }
+  
+  .classeur-title-with-breadcrumb .breadcrumb-separator {
+    font-size: 13px;
+    margin: 0 1px;
   }
 } 
