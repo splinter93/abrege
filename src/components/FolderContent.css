@@ -158,15 +158,42 @@
 } 
 
 /* ==========================================================================
-   CLASSEUR BANDEAU INTÉGRÉ - OPTIMISÉ
+   CLASSEUR BANDEAU INTÉGRÉ - OPTIMISÉ AVEC ENCADRÉ GLASSMORPHISM
    ========================================================================== */
 
 .folder-classeur-bandeau {
   margin-bottom: 0; /* Réduit de var(--spacing-lg) à 0 */
-  padding: var(--spacing-lg) 0 var(--spacing-md) 0; /* Plus d'espace en haut, moins en bas */
+  padding: var(--spacing-lg) var(--spacing-lg) var(--spacing-md) var(--spacing-lg); /* Ajout de padding horizontal */
   border-bottom: 1px solid var(--glass-border-secondary);
-  background: transparent; /* Supprimé le background */
+  background: rgba(255, 255, 255, 0.05); /* Fond glassmorphism subtil */
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border-secondary);
+  border-radius: var(--files-radius-lg);
+  box-shadow: 
+    0 4px 20px rgba(0, 0, 0, 0.1),
+    0 2px 8px rgba(0, 0, 0, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
   position: relative;
+  margin: 0 var(--spacing-sm) var(--spacing-md) var(--spacing-sm); /* Marges horizontales pour l'encadré */
+}
+
+.folder-classeur-bandeau::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.1) 0%,
+    rgba(255, 255, 255, 0.05) 50%,
+    rgba(255, 255, 255, 0.02) 100%
+  );
+  border-radius: var(--files-radius-lg);
+  opacity: 0.6;
+  pointer-events: none;
 }
 
 .folder-classeur-bandeau::after {
@@ -183,32 +210,43 @@
     var(--glass-border-secondary) 80%,
     transparent 100%
   );
+  border-radius: 0 0 var(--files-radius-lg) var(--files-radius-lg);
 }
 
 .folder-classeur-bandeau .classeur-bandeau {
   background: transparent;
   border: none;
   margin-bottom: 0;
+  position: relative;
+  z-index: 1;
 }
 
 .folder-classeur-bandeau .bandeau-content {
   justify-content: flex-start;
   gap: var(--spacing-sm);
+  position: relative;
+  z-index: 1;
 }
 
 .folder-classeur-bandeau .classeur-pill {
-  background: var(--glass-bg-tertiary);
-  border: 1px solid var(--glass-border-secondary);
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   backdrop-filter: blur(15px);
   -webkit-backdrop-filter: blur(15px);
-  box-shadow: var(--glass-shadow-subtle);
+  box-shadow: 
+    0 2px 8px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
   transition: all var(--files-transition-normal);
+  position: relative;
+  z-index: 1;
 }
 
 .folder-classeur-bandeau .classeur-pill:hover {
-  background: var(--glass-bg-hover);
-  border-color: var(--glass-border-hover);
-  box-shadow: var(--glass-shadow-medium);
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.3);
+  box-shadow: 
+    0 4px 16px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
   transform: translateY(-1px);
 }
 
@@ -216,7 +254,9 @@
   background: var(--dossiers-primary-light);
   border-color: var(--dossiers-primary);
   color: var(--dossiers-primary);
-  box-shadow: 0 4px 16px rgba(229, 90, 44, 0.2);
+  box-shadow: 
+    0 4px 16px rgba(229, 90, 44, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 
 /* ==========================================================================
@@ -310,7 +350,13 @@
    ========================================================================== */
 
 .folder-classeur-bandeau:hover {
-  background: transparent; /* Supprimé l'effet de hover */
+  background: rgba(255, 255, 255, 0.07); /* Légèrement plus lumineux au hover */
+  box-shadow: 
+    0 6px 25px rgba(0, 0, 0, 0.12),
+    0 3px 10px rgba(0, 0, 0, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  transform: translateY(-1px);
+  transition: all var(--files-transition-normal);
 }
 
 .folder-content-header:hover {
