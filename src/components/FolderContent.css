@@ -16,9 +16,32 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 24px 0 32px 0;
-  border-bottom: 1px solid var(--border-color, #e5e7eb);
-  margin-bottom: 32px;
+  padding: var(--spacing-md) 0 var(--spacing-lg) 0; /* RÉDUIT: padding supérieur réduit pour rapprocher du bandeau */
+  border-bottom: 1px solid var(--glass-border-secondary); /* HARMONISÉ: utilise la même couleur que le système glassmorphism */
+  margin-bottom: var(--spacing-lg); /* RÉDUIT: moins d'espace avec le contenu */
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.01) 0%,
+    transparent 100%
+  );
+  position: relative;
+}
+
+.folder-content-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(
+    to right,
+    transparent 0%,
+    var(--glass-border-secondary) 20%,
+    var(--glass-border-secondary) 80%,
+    transparent 100%
+  );
+  opacity: 0.6;
 }
 
 .folder-content-title {
@@ -86,7 +109,8 @@
     flex-direction: column;
     align-items: flex-start;
     gap: 16px;
-    padding: 20px 0 24px 0;
+    padding: var(--spacing-sm) 0 var(--spacing-md) 0; /* RÉDUIT: padding adaptatif */
+    margin-bottom: var(--spacing-md); /* RÉDUIT: moins d'espace sur mobile */
   }
   
   .folder-content-title {
@@ -101,6 +125,11 @@
   
   .folder-back-button {
     align-self: flex-start;
+  }
+  
+  /* Ajuster l'espacement du bandeau sur mobile */
+  .folder-classeur-bandeau {
+    padding: var(--spacing-md) 0 var(--spacing-sm) 0;
   }
 }
 
@@ -126,10 +155,11 @@
   width: 100%;
   padding: 0;
   box-sizing: border-box;
+  margin-top: 0; /* SUPPRIMÉ: plus d'espacement avec le header */
 }
 
 .folder-grid.files {
-  margin-top: 12px; /* RÉDUIT de 24px à 12px pour rapprocher les grilles */
+  margin-top: 0; /* SUPPRIMÉ: plus d'espacement avec le header */
 }
 
 /* Animation pour les fichiers */
@@ -143,9 +173,15 @@
    ========================================================================== */
 
 .folder-classeur-bandeau {
-  margin-bottom: var(--spacing-lg);
-  padding: var(--spacing-md) 0;
-  border-bottom: 1px solid var(--glass-border-secondary);
+  margin-bottom: 0; /* SUPPRIMÉ: plus d'espacement avec le header */
+  padding: var(--spacing-lg) 0 var(--spacing-md) 0; /* AUGMENTÉ: plus d'espace en haut, réduit en bas */
+  border-bottom: none; /* SUPPRIMÉ: laisse le header gérer la séparation */
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.02) 0%,
+    rgba(255, 255, 255, 0.01) 50%,
+    transparent 100%
+  );
 }
 
 .folder-classeur-bandeau .classeur-bandeau {
@@ -240,5 +276,50 @@
   .folder-grid {
     grid-template-columns: repeat(1, 1fr);
     gap: 8px;
+  }
+} 
+
+/* ==========================================================================
+   TRANSITIONS ET EFFETS VISUELS
+   ========================================================================== */
+
+.folder-content-container {
+  position: relative;
+}
+
+/* Effet de transition entre bandeau et header */
+.folder-classeur-bandeau {
+  position: relative;
+  z-index: 2;
+}
+
+.folder-content-header {
+  position: relative;
+  z-index: 1;
+  transition: all var(--files-transition-normal);
+}
+
+/* Effet de profondeur subtil */
+.folder-content-header:hover {
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.02) 0%,
+    transparent 100%
+  );
+}
+
+/* Animation d'entrée pour le header */
+.folder-content-header {
+  animation: headerSlideIn 0.6s ease-out;
+}
+
+@keyframes headerSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 } 
