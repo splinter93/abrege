@@ -2,97 +2,107 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Trash2, FileText, Folder } from 'react-feather';
+import { Trash2, FileText, Folder, Archive, Clock, AlertCircle } from 'react-feather';
 import { useAuth } from '@/hooks/useAuth';
 import type { AuthenticatedUser } from '@/types/dossiers';
+import './trash.css';
 
 export default function TrashPage() {
   const { user } = useAuth();
-
+  
   if (!user) {
     return (
-      <div className="dossiers-content-area">
-        <div className="dossiers-loading">Chargement...</div>
+      <div className="dossiers-loading">
+        <div className="loading-spinner"></div>
+        <p>Chargement...</p>
       </div>
     );
   }
 
   return (
-    <div className="dossiers-content-area">
-      {/* Titre de la page avec design glassmorphism */}
+    <div className="trash-content-area">
+      {/* Titre de la page avec glassmorphism */}
       <motion.div 
-        className="dossiers-page-title-glass"
-        initial={{ opacity: 0, y: -20 }}
+        className="trash-page-title-glass"
+        initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, ease: "easeOut" }}
       >
         <div className="title-content">
-          <motion.div 
-            className="title-icon-container"
-            whileHover={{ scale: 1.1, rotate: 5 }}
-            transition={{ type: "spring", stiffness: 300 }}
-          >
-            <span className="title-icon">🗑️</span>
-          </motion.div>
+          <div className="title-icon-container">
+            <Trash2 className="title-icon" />
+          </div>
+          
           <div className="title-section">
             <h1 className="page-title">Corbeille</h1>
-            <p className="page-subtitle">Gérez vos éléments supprimés</p>
+            <p className="page-subtitle">
+              Gérez vos éléments supprimés et restaurez ce qui est important
+            </p>
           </div>
+          
           <div className="title-stats">
             <div className="stats-item">
-              <span className="stats-number">0</span>
-              <span className="stats-label">élément{0 > 1 ? 's' : ''} supprimé{0 > 1 ? 's' : ''}</span>
+              <div className="stats-number">0</div>
+              <div className="stats-label">Éléments</div>
+            </div>
+            <div className="stats-item">
+              <div className="stats-number">0</div>
+              <div className="stats-label">Notes</div>
+            </div>
+            <div className="stats-item">
+              <div className="stats-number">0</div>
+              <div className="stats-label">Dossiers</div>
             </div>
           </div>
         </div>
       </motion.div>
 
-      {/* Section principale avec design glassmorphism */}
-      <motion.section 
-        className="content-section-glass"
+      {/* Contenu principal */}
+      <motion.div 
+        className="trash-content-section"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
+        transition={{ duration: 0.6, ease: "easeOut", delay: 0.2 }}
       >
-        <div className="content-main-container-glass">
-          {/* État vide */}
-          <div className="trash-empty-state">
-            <div className="trash-empty-icon">
-              <Trash2 size={64} />
+        {/* État vide avec design moderne */}
+        <div className="trash-empty-state">
+          <div className="empty-state-icon">
+            <Archive size={64} />
+          </div>
+          <h2 className="empty-state-title">Corbeille vide</h2>
+          <p className="empty-state-description">
+            Aucun élément n'a été supprimé pour le moment. 
+            Les éléments supprimés apparaîtront ici.
+          </p>
+        </div>
+
+        {/* Informations sur la corbeille */}
+        <div className="trash-info-section">
+          <div className="info-card">
+            <div className="info-icon">
+              <Clock size={20} />
             </div>
-            <h2>Votre corbeille est vide</h2>
-            <p>Les éléments supprimés apparaîtront ici. Ils seront définitivement supprimés après 30 jours.</p>
-            
-            {/* Statistiques */}
-            <div className="trash-stats">
-              <div className="stat-item">
-                <Folder size={20} />
-                <span>0 dossiers supprimés</span>
-              </div>
-              <div className="stat-item">
-                <FileText size={20} />
-                <span>0 notes supprimées</span>
-              </div>
+            <div className="info-content">
+              <h3 className="info-title">Conservation automatique</h3>
+              <p className="info-text">
+                Les éléments supprimés sont conservés pendant 30 jours avant d'être définitivement supprimés.
+              </p>
             </div>
           </div>
-
-          {/* Informations sur la corbeille */}
-          <motion.div 
-            className="trash-info"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.6, delay: 0.4, ease: "easeOut" }}
-          >
-            <h3>Comment fonctionne la corbeille ?</h3>
-            <ul>
-              <li>Les éléments supprimés sont conservés pendant 30 jours</li>
-              <li>Vous pouvez les restaurer à tout moment pendant cette période</li>
-              <li>Après 30 jours, ils sont définitivement supprimés</li>
-              <li>La corbeille se vide automatiquement</li>
-            </ul>
-          </motion.div>
+          
+          <div className="info-card">
+            <div className="info-icon">
+              <AlertCircle size={20} />
+            </div>
+            <div className="info-content">
+              <h3 className="info-title">Restauration possible</h3>
+              <p className="info-text">
+                Vous pouvez restaurer n'importe quel élément supprimé en cliquant sur le bouton "Restaurer".
+              </p>
+            </div>
+          </div>
         </div>
-      </motion.section>
+      </motion.div>
     </div>
   );
 } 

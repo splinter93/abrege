@@ -9,11 +9,11 @@ export default function TrashLayout({
 }) {
   return (
     <AuthGuard>
-      <div className="dossiers-page-wrapper">
-        <aside className="dossiers-sidebar-fixed">
+      <div className="trash-page-wrapper">
+        <aside className="trash-sidebar-fixed">
           <Sidebar />
         </aside>
-        <main className="dossiers-content-area">
+        <main className="trash-content-area">
           {children}
         </main>
       </div>

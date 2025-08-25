@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import { FileItem } from "@/types/files";
 import { useFilesPage } from "@/hooks/useFilesPage";
 import { useAuth } from "@/hooks/useAuth";
@@ -67,10 +67,16 @@ function FilesPageContent() {
   }, [hookViewMode]);
 
   // Filtrer les fichiers selon la recherche
-  const displayFiles = filteredFiles.filter(file =>
-    (file.filename?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
-    (file.mime_type?.toLowerCase() || '').includes(searchQuery.toLowerCase())
-  );
+  const displayFiles = useMemo(() => {
+    if (!searchQuery.trim()) {
+      return filteredFiles;
+    }
+    
+    return filteredFiles.filter(file =>
+      (file.filename?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
+      (file.mime_type?.toLowerCase() || '').includes(searchQuery.toLowerCase())
+    );
+  }, [filteredFiles, searchQuery]);
 
   // Gestion des actions sur les fichiers
   const handleFileOpen = useCallback((file: FileItem) => {
