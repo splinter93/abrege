@@ -3,6 +3,62 @@
    ========================================================================== */
 
 /* ==========================================================================
+   VARIABLES GLASSMORPHISM
+   ========================================================================== */
+:root {
+  /* Couleurs principales */
+  --trash-primary: #ef4444;
+  --trash-primary-light: rgba(239, 68, 68, 0.15);
+  --trash-primary-hover: #dc2626;
+  
+  /* Couleurs glassmorphism */
+  --glass-bg-primary: rgba(255, 255, 255, 0.08);
+  --glass-bg-secondary: rgba(255, 255, 255, 0.05);
+  --glass-bg-tertiary: rgba(255, 255, 255, 0.03);
+  --glass-bg-hover: rgba(255, 255, 255, 0.12);
+  
+  /* Bordures glassmorphism */
+  --glass-border-primary: rgba(255, 255, 255, 0.12);
+  --glass-border-secondary: rgba(255, 255, 255, 0.08);
+  --glass-border-hover: rgba(255, 255, 255, 0.18);
+  
+  /* Ombres glassmorphism */
+  --glass-shadow-subtle: 0 4px 20px rgba(0, 0, 0, 0.1);
+  --glass-shadow-medium: 0 8px 32px rgba(0, 0, 0, 0.15);
+  --glass-shadow-strong: 0 16px 48px rgba(0, 0, 0, 0.2);
+  
+  /* Couleurs de texte */
+  --trash-text-primary: #f8fafc;
+  --trash-text-secondary: #94a3b8;
+  --trash-text-muted: #64748b;
+  
+  /* Espacements */
+  --trash-spacing-xs: 8px;
+  --trash-spacing-sm: 12px;
+  --trash-spacing-md: 16px;
+  --trash-spacing-lg: 24px;
+  --trash-spacing-xl: 32px;
+  --trash-spacing-2xl: 48px;
+  
+  /* Rayons de bordure */
+  --trash-radius-sm: 8px;
+  --trash-radius-md: 12px;
+  --trash-radius-lg: 16px;
+  --trash-radius-xl: 20px;
+  
+  /* Transitions */
+  --trash-transition-fast: 0.15s ease;
+  --trash-transition-normal: 0.25s ease;
+  --trash-transition-slow: 0.4s ease;
+  
+  /* Z-index */
+  --trash-z-header: 1001;
+  --trash-z-sidebar: 1000;
+  --trash-z-content: 999;
+  --trash-z-modal: 1002;
+}
+
+/* ==========================================================================
    WRAPPER PRINCIPAL
    ========================================================================== */
 .trash-page-wrapper {
@@ -30,20 +86,12 @@
    ========================================================================== */
 /* Suppression des styles redondants - maintenant dans page-title-containers.css */
 .trash-page-title-glass,
-.title-content {
-  /* Styles définis dans page-title-containers.css */
-}
-
-/* Suppression des styles redondants - maintenant dans page-title-containers.css */
+.title-content,
 .title-icon-container,
 .title-icon,
 .title-section,
 .title-section h1,
-.title-section p {
-  /* Styles définis dans page-title-containers.css */
-}
-
-/* Suppression des styles redondants - maintenant dans page-title-containers.css */
+.title-section p,
 .title-stats,
 .title-stats-item,
 .title-stats-number,
@@ -99,17 +147,15 @@
   color: var(--trash-text-primary);
   margin: 0 0 var(--trash-spacing-md) 0;
   font-family: 'Noto Sans', sans-serif;
-  letter-spacing: -0.02em;
 }
 
 .empty-state-description {
   font-size: 16px;
   color: var(--trash-text-secondary);
-  margin: 0;
-  max-width: 500px;
   line-height: 1.6;
+  max-width: 400px;
+  margin: 0;
   font-family: 'Noto Sans', sans-serif;
-  font-weight: 400;
 }
 
 /* ==========================================================================
@@ -119,229 +165,141 @@
   display: flex;
   flex-direction: column;
   gap: var(--trash-spacing-md);
-  margin-bottom: var(--trash-spacing-2xl);
 }
 
-.trash-item {
-  background: var(--glass-bg-primary);
-  border: 1px solid var(--glass-border-primary);
-  border-radius: var(--trash-radius-lg);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  box-shadow: var(--glass-shadow-medium);
-  transition: all var(--trash-transition-normal);
-  overflow: hidden;
-}
-
-.trash-item:hover {
-  background: var(--glass-bg-hover);
-  border-color: var(--glass-border-hover);
-  box-shadow: var(--glass-shadow-strong);
-}
-
-.trash-item-content {
-  display: flex;
-  align-items: center;
-  gap: var(--trash-spacing-lg);
-  padding: var(--trash-spacing-lg);
-}
-
-.trash-item-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 48px;
-  height: 48px;
+.trash-item-card {
   background: var(--glass-bg-secondary);
   border: 1px solid var(--glass-border-secondary);
   border-radius: var(--trash-radius-md);
-  color: var(--trash-text-secondary);
-  flex-shrink: 0;
+  padding: var(--trash-spacing-lg);
+  transition: all var(--trash-transition-normal);
 }
 
-.trash-item-details {
-  flex: 1;
-  min-width: 0;
+.trash-item-card:hover {
+  background: var(--glass-bg-hover);
+  border-color: var(--glass-border-hover);
+  transform: translateY(-1px);
+  box-shadow: var(--glass-shadow-subtle);
 }
 
-.trash-item-name {
+.trash-item-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--trash-spacing-md);
+}
+
+.trash-item-info {
+  display: flex;
+  align-items: center;
+  gap: var(--trash-spacing-md);
+}
+
+.trash-item-icon {
+  width: 40px;
+  height: 40px;
+  background: var(--trash-primary-light);
+  border: 1px solid var(--trash-primary);
+  border-radius: var(--trash-radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--trash-primary);
+  font-size: 18px;
+}
+
+.trash-item-details h3 {
   font-size: 18px;
   font-weight: 600;
   color: var(--trash-text-primary);
   margin: 0 0 var(--trash-spacing-xs) 0;
   font-family: 'Noto Sans', sans-serif;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
-.trash-item-type {
+.trash-item-details p {
   font-size: 14px;
-  color: var(--trash-primary);
-  margin: 0 0 var(--trash-spacing-xs) 0;
-  font-family: 'Noto Sans', sans-serif;
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.trash-item-date,
-.trash-item-expiry,
-.trash-item-size,
-.trash-item-path {
-  font-size: 13px;
   color: var(--trash-text-secondary);
-  margin: 0 0 var(--trash-spacing-xs) 0;
+  margin: 0;
   font-family: 'Noto Sans', sans-serif;
-  font-weight: 400;
-}
-
-.trash-item-expiry {
-  color: var(--trash-primary);
-  font-weight: 500;
-}
-
-.trash-item-size {
-  color: var(--trash-text-muted);
-  font-style: italic;
-}
-
-.trash-item-path {
-  color: var(--trash-text-muted);
-  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-  font-size: 12px;
-  background: var(--glass-bg-tertiary);
-  padding: 2px 6px;
-  border-radius: 4px;
-  display: inline-block;
-  max-width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .trash-item-actions {
   display: flex;
   gap: var(--trash-spacing-sm);
-  flex-shrink: 0;
 }
 
 .trash-action-btn {
-  display: flex;
-  align-items: center;
-  gap: var(--trash-spacing-xs);
   padding: var(--trash-spacing-sm) var(--trash-spacing-md);
-  border: none;
+  border: 1px solid var(--glass-border-secondary);
   border-radius: var(--trash-radius-sm);
-  font-family: 'Noto Sans', sans-serif;
+  background: var(--glass-bg-secondary);
+  color: var(--trash-text-secondary);
   font-size: 14px;
-  font-weight: 500;
   cursor: pointer;
   transition: all var(--trash-transition-normal);
-  text-decoration: none;
+  font-family: 'Noto Sans', sans-serif;
 }
 
-.restore-btn {
-  background: var(--glass-bg-secondary);
-  color: var(--trash-text-primary);
-  border: 1px solid var(--glass-border-secondary);
-}
-
-.restore-btn:hover {
+.trash-action-btn:hover {
   background: var(--glass-bg-hover);
   border-color: var(--glass-border-hover);
-  transform: translateY(-1px);
+  color: var(--trash-text-primary);
 }
 
-.delete-btn {
-  background: rgba(220, 38, 38, 0.1);
+.trash-action-btn.restore {
+  border-color: var(--trash-primary);
+  color: var(--trash-primary);
+}
+
+.trash-action-btn.restore:hover {
+  background: var(--trash-primary);
+  color: white;
+}
+
+.trash-action-btn.delete {
+  border-color: #dc2626;
   color: #dc2626;
-  border: 1px solid rgba(220, 38, 38, 0.3);
 }
 
-.delete-btn:hover {
-  background: rgba(220, 38, 38, 0.2);
-  border-color: rgba(220, 38, 38, 0.5);
-  transform: translateY(-1px);
+.trash-action-btn.delete:hover {
+  background: #dc2626;
+  color: white;
 }
 
 /* ==========================================================================
-   SECTION D'INFORMATIONS
+   INFORMATIONS SUR LA CORBEILLE
    ========================================================================== */
 .trash-info-section {
+  margin-top: var(--trash-spacing-2xl);
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: var(--trash-spacing-lg);
 }
 
 .info-card {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--trash-spacing-lg);
+  background: var(--glass-bg-secondary);
+  border: 1px solid var(--glass-border-secondary);
+  border-radius: var(--trash-radius-md);
   padding: var(--trash-spacing-lg);
-  background: var(--glass-bg-primary);
-  border: 1px solid var(--glass-border-primary);
-  border-radius: var(--trash-radius-xl);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  box-shadow: var(--glass-shadow-medium);
   transition: all var(--trash-transition-normal);
-  position: relative;
-  overflow: hidden;
-}
-
-.info-card::before {
-  content: '';
-  position: absolute;
-  top: -1px;
-  left: -1px;
-  right: -1px;
-  bottom: -1px;
-  background: linear-gradient(135deg, 
-    rgba(255, 255, 255, 0.1) 0%, 
-    rgba(255, 255, 255, 0.05) 25%, 
-    rgba(255, 255, 255, 0.02) 50%, 
-    rgba(255, 255, 255, 0.05) 75%, 
-    rgba(255, 255, 255, 0.1) 100%);
-  border-radius: var(--trash-radius-xl);
-  z-index: -1;
-  opacity: 0;
-  transition: opacity var(--trash-transition-normal);
-}
-
-.info-card:hover::before {
-  opacity: 1;
 }
 
 .info-card:hover {
-  background: var(--glass-bg-hover);
   border-color: var(--glass-border-hover);
-  box-shadow: var(--glass-shadow-strong);
-  transform: translateY(-2px);
+  box-shadow: var(--glass-shadow-subtle);
 }
 
 .info-icon {
+  width: 40px;
+  height: 40px;
+  background: var(--trash-primary-light);
+  border: 1px solid var(--trash-primary);
+  border-radius: var(--trash-radius-sm);
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 48px;
-  height: 48px;
-  background: var(--trash-primary-light);
-  border: 2px solid var(--trash-primary);
-  border-radius: var(--trash-radius-md);
   color: var(--trash-primary);
-  flex-shrink: 0;
-  transition: all var(--trash-transition-normal);
-}
-
-.info-card:hover .info-icon {
-  background: var(--trash-primary);
-  color: white;
-  transform: scale(1.05);
-}
-
-.info-content {
-  flex: 1;
+  margin-bottom: var(--trash-spacing-md);
 }
 
 .info-title {
@@ -350,73 +308,54 @@
   color: var(--trash-text-primary);
   margin: 0 0 var(--trash-spacing-sm) 0;
   font-family: 'Noto Sans', sans-serif;
-  letter-spacing: -0.01em;
 }
 
 .info-text {
   font-size: 14px;
   color: var(--trash-text-secondary);
-  margin: 0;
   line-height: 1.6;
+  margin: 0;
   font-family: 'Noto Sans', sans-serif;
-  font-weight: 400;
 }
 
 /* ==========================================================================
-   SPINNER DE CHARGEMENT
+   RESPONSIVE DESIGN
    ========================================================================== */
-.loading-spinner {
-  width: 64px;
-  height: 64px;
-  border: 3px solid var(--glass-border-secondary);
-  border-top: 3px solid var(--trash-primary);
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-/* ==========================================================================
-   RESPONSIVE
-   ========================================================================== */
-@media (max-width: 1024px) {
+@media (max-width: 768px) {
+  .trash-content-area {
+    margin-left: 0;
+    padding: 0 20px 0 20px;
+  }
+  
   .trash-info-section {
     grid-template-columns: 1fr;
+    gap: var(--trash-spacing-md);
   }
   
-  .title-content {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: var(--trash-spacing-lg);
-  }
-  
-  .title-stats {
-    align-self: stretch;
-    justify-content: space-around;
-  }
-  
-  .trash-item-content {
+  .trash-item-header {
     flex-direction: column;
     align-items: flex-start;
     gap: var(--trash-spacing-md);
   }
   
   .trash-item-actions {
-    align-self: stretch;
-    justify-content: space-between;
+    width: 100%;
+    justify-content: stretch;
+  }
+  
+  .trash-action-btn {
+    flex: 1;
+    text-align: center;
   }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 480px) {
   .trash-content-area {
-    padding: var(--trash-spacing-lg);
+    padding: 0 16px 0 16px;
   }
   
   .trash-empty-state {
-    padding: 60px 30px;
+    padding: 60px 20px;
   }
   
   .empty-state-title {
@@ -427,96 +366,13 @@
     font-size: 14px;
   }
   
-  .info-card {
-    padding: var(--trash-spacing-md);
-    gap: var(--trash-spacing-md);
-  }
-  
-  .info-icon {
-    width: 40px;
-    height: 40px;
-  }
-  
-  .info-title {
-    font-size: 16px;
-  }
-  
-  .info-text {
-    font-size: 13px;
-  }
-  
-  .trash-item-content {
+  .trash-item-card {
     padding: var(--trash-spacing-md);
   }
   
-  .trash-item-icon {
-    width: 40px;
-    height: 40px;
-  }
-  
-  .trash-item-name {
-    font-size: 16px;
-  }
-  
-  .trash-item-path {
-    font-size: 11px;
-    padding: 1px 4px;
-  }
-}
-
-@media (max-width: 480px) {
-  .trash-content-area {
-    padding: var(--trash-spacing-md);
-  }
-  
-  .trash-empty-state {
-    padding: 40px 20px;
-  }
-  
-  .empty-state-title {
-    font-size: 20px;
-  }
-  
-  .empty-state-description {
-    font-size: 13px;
-  }
-  
-  .info-card {
+  .trash-item-info {
     flex-direction: column;
-    text-align: center;
-    padding: var(--trash-spacing-sm);
-  }
-  
-  .info-icon {
-    width: 36px;
-    height: 36px;
-    margin: 0 auto var(--trash-spacing-sm) auto;
-  }
-  
-  .title-icon-container {
-    width: 48px;
-    height: 48px;
-  }
-  
-  .title-icon {
-    font-size: 20px;
-  }
-  
-  .title-section h1 {
-    font-size: 24px;
-  }
-  
-  .trash-action-btn {
-    padding: var(--trash-spacing-xs) var(--trash-spacing-sm);
-    font-size: 13px;
-  }
-  
-  .trash-action-btn span {
-    display: none;
-  }
-  
-  .trash-item-path {
-    font-size: 10px;
-    padding: 1px 3px;
+    align-items: flex-start;
+    gap: var(--trash-spacing-sm);
   }
 } 
