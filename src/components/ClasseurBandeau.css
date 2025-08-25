@@ -179,21 +179,85 @@
 .classeur-pill:nth-child(6) { animation-delay: 0.6s; }
 
 /* ==========================================================================
-   RESPONSIVE DESIGN
+   RESPONSIVE DESIGN - ADAPTATION COMPLÈTE
    ========================================================================== */
 
-@media (max-width: 1200px) {
+/* ==========================================================================
+   ÉCRANS LARGES (1400px+)
+   ========================================================================== */
+@media (min-width: 1400px) {
+  .bandeau-content {
+    gap: var(--dossiers-spacing-lg);
+    padding: var(--dossiers-spacing-md) 0;
+  }
+  
+  .classeur-pill {
+    padding: var(--dossiers-spacing-md) var(--dossiers-spacing-xl);
+    min-height: 48px;
+    font-size: 15px;
+  }
+  
+  .classeur-emoji {
+    font-size: 20px;
+  }
+  
+  .add-icon {
+    font-size: 22px;
+  }
+}
+
+/* ==========================================================================
+   DESKTOP STANDARD (1200px - 1399px)
+   ========================================================================== */
+@media (max-width: 1399px) and (min-width: 1200px) {
+  .bandeau-content {
+    gap: var(--dossiers-spacing-md);
+    padding: var(--dossiers-spacing-sm) 0;
+  }
+  
+  .classeur-pill {
+    padding: var(--dossiers-spacing-sm) var(--dossiers-spacing-lg);
+    min-height: 44px;
+    font-size: 14px;
+  }
+  
+  .classeur-emoji {
+    font-size: 18px;
+  }
+  
+  .add-icon {
+    font-size: 20px;
+  }
+}
+
+/* ==========================================================================
+   TABLETTE LARGE (1024px - 1199px)
+   ========================================================================== */
+@media (max-width: 1199px) and (min-width: 1024px) {
   .bandeau-content {
     gap: var(--dossiers-spacing-sm);
+    padding: var(--dossiers-spacing-sm) 0;
   }
   
   .classeur-pill {
     padding: var(--dossiers-spacing-sm) var(--dossiers-spacing-md);
     min-height: 40px;
+    font-size: 14px;
+  }
+  
+  .classeur-emoji {
+    font-size: 16px;
+  }
+  
+  .add-icon {
+    font-size: 18px;
   }
 }
 
-@media (max-width: 768px) {
+/* ==========================================================================
+   TABLETTE STANDARD (768px - 1023px)
+   ========================================================================== */
+@media (max-width: 1023px) and (min-width: 768px) {
   .bandeau-content {
     gap: var(--dossiers-spacing-xs);
     padding: var(--dossiers-spacing-xs) 0;
@@ -214,13 +278,17 @@
   }
 }
 
-@media (max-width: 480px) {
+/* ==========================================================================
+   TABLETTE PETITE (600px - 767px)
+   ========================================================================== */
+@media (max-width: 767px) and (min-width: 600px) {
   .bandeau-content {
     gap: var(--dossiers-spacing-xs);
+    padding: var(--dossiers-spacing-xs) 0;
   }
   
   .classeur-pill {
-    padding: var(--dossiers-spacing-xs);
+    padding: var(--dossiers-spacing-xs) var(--dossiers-spacing-sm);
     min-height: 32px;
     font-size: 12px;
   }
@@ -232,8 +300,146 @@
   .add-icon {
     font-size: 16px;
   }
+}
+
+/* ==========================================================================
+   MOBILE LARGE (480px - 599px)
+   ========================================================================== */
+@media (max-width: 599px) and (min-width: 480px) {
+  .bandeau-content {
+    gap: var(--dossiers-spacing-xs);
+    padding: var(--dossiers-spacing-xs) 0;
+    /* Permettre le scroll horizontal sur mobile */
+    overflow-x: auto;
+    scrollbar-width: thin;
+    -webkit-overflow-scrolling: touch;
+  }
   
-  .classeur-name {
-    display: none;
+  .bandeau-content::-webkit-scrollbar {
+    height: 4px;
+  }
+  
+  .bandeau-content::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 2px;
+  }
+  
+  .bandeau-content::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 2px;
+  }
+  
+  .classeur-pill {
+    padding: var(--dossiers-spacing-xs) var(--dossiers-spacing-sm);
+    min-height: 32px;
+    font-size: 12px;
+    flex-shrink: 0;
+  }
+  
+  .classeur-emoji {
+    font-size: 14px;
+  }
+  
+  .add-icon {
+    font-size: 16px;
+  }
+}
+
+/* ==========================================================================
+   MOBILE STANDARD (320px - 479px)
+   ========================================================================== */
+@media (max-width: 479px) {
+  .bandeau-content {
+    gap: var(--dossiers-spacing-xs);
+    padding: var(--dossiers-spacing-xs) 0;
+    /* Permettre le scroll horizontal sur mobile */
+    overflow-x: auto;
+    scrollbar-width: thin;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .bandeau-content::-webkit-scrollbar {
+    height: 3px;
+  }
+  
+  .bandeau-content::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 2px;
+  }
+  
+  .bandeau-content::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 2px;
+  }
+  
+  .classeur-pill {
+    padding: var(--dossiers-spacing-xs) var(--dossiers-spacing-sm);
+    min-height: 28px;
+    font-size: 11px;
+    flex-shrink: 0;
+  }
+  
+  .classeur-emoji {
+    font-size: 12px;
+  }
+  
+  .add-icon {
+    font-size: 14px;
+  }
+}
+
+/* ==========================================================================
+   ORIENTATION PAYSAGE SUR TABLETTE
+   ========================================================================== */
+@media (max-width: 1023px) and (min-width: 768px) and (orientation: landscape) {
+  .bandeau-content {
+    gap: var(--dossiers-spacing-xs);
+    padding: var(--dossiers-spacing-xs) 0;
+  }
+  
+  .classeur-pill {
+    padding: var(--dossiers-spacing-xs) var(--dossiers-spacing-sm);
+    min-height: 32px;
+    font-size: 12px;
+  }
+  
+  .classeur-emoji {
+    font-size: 14px;
+  }
+  
+  .add-icon {
+    font-size: 16px;
+  }
+}
+
+/* ==========================================================================
+   ÉCRANS HAUTE DENSITÉ (RETINA, 4K)
+   ========================================================================== */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .classeur-pill {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+/* ==========================================================================
+   ACCESSIBILITÉ
+   ========================================================================== */
+@media (prefers-reduced-motion: reduce) {
+  .classeur-pill {
+    transition: none;
+    animation: none;
+  }
+  
+  .classeur-pill:hover {
+    transform: none;
+  }
+  
+  .add-icon {
+    transition: none;
+  }
+  
+  .classeur-pill.add-classeur:hover .add-icon {
+    transform: none;
   }
 } 
