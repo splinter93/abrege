@@ -6,10 +6,10 @@
   /* ========================================
      COULEURS DE BASE
      ======================================== */
-  --chat-bg-primary: #1a1a1a;
-  --chat-bg-secondary: #2a2a2a;
-  --chat-bg-tertiary: #3a3a3a;
-  --chat-bg-elevated: #2a2a30;
+  --chat-bg-primary: var(--surface-1, #141414);
+  --chat-bg-secondary: #1c1c1c;
+  --chat-bg-tertiary: #212121;
+  --chat-bg-elevated: #1c1c1c;
   
   /* ========================================
      COULEURS DE TEXTE

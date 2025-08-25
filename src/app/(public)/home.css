@@ -999,13 +999,318 @@
 }
 
 /* ==========================================================================
-   RESPONSIVE DESIGN
+   MODAL DE CRÉATION DE NOTE - RESPONSIVE
    ========================================================================== */
 
-@media (max-width: 1200px) {
+/* Styles de base du modal */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+  padding: 1rem;
+}
+
+.modal-container {
+  background: white;
+  border-radius: 0.75rem;
+  width: 100%;
+  max-width: 28rem;
+  margin: 0 auto;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  overflow: hidden;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.modal-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #111827;
+  margin: 0;
+}
+
+.modal-close-btn {
+  color: #6b7280;
+  background: none;
+  border: none;
+  padding: 0.25rem;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-close-btn:hover {
+  color: #374151;
+  background-color: #f3f4f6;
+}
+
+.modal-content {
+  padding: 1rem 1.5rem;
+}
+
+.modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.form-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+}
+
+.form-input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  transition: all 0.2s ease;
+  outline: none;
+}
+
+.form-input:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.form-input::placeholder {
+  color: #9ca3af;
+}
+
+.modal-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.modal-btn {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+  border: none;
+  cursor: pointer;
+  min-height: 2.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-btn-secondary {
+  background-color: white;
+  color: #374151;
+  border: 1px solid #d1d5db;
+}
+
+.modal-btn-secondary:hover {
+  background-color: #f9fafb;
+  border-color: #9ca3af;
+}
+
+.modal-btn-primary {
+  background-color: #3b82f6;
+  color: white;
+}
+
+.modal-btn-primary:hover:not(:disabled) {
+  background-color: #2563eb;
+}
+
+.modal-btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.modal-btn-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.spinner {
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid transparent;
+  border-top: 2px solid currentColor;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Responsive du modal */
+@media (max-width: 640px) {
+  .modal-overlay {
+    padding: 0.5rem;
+  }
+  
+  .modal-container {
+    max-width: none;
+    margin: 0;
+    border-radius: 0.5rem;
+  }
+  
+  .modal-header {
+    padding: 1rem;
+  }
+  
+  .modal-content {
+    padding: 1rem;
+  }
+  
+  .modal-title {
+    font-size: 1rem;
+  }
+  
+  .modal-actions {
+    flex-direction: column;
+  }
+  
+  .modal-btn {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .modal-overlay {
+    padding: 0.25rem;
+  }
+  
+  .modal-container {
+    border-radius: 0.375rem;
+  }
+  
+  .modal-header {
+    padding: 0.75rem;
+  }
+  
+  .modal-content {
+    padding: 0.75rem;
+  }
+  
+  .form-input {
+    padding: 0.625rem;
+    font-size: 0.875rem;
+  }
+  
+  .modal-btn {
+    padding: 0.625rem 0.875rem;
+    font-size: 0.8125rem;
+  }
+}
+
+/* Optimisations pour les écrans tactiles */
+@media (hover: none) and (pointer: coarse) {
+  .modal-btn {
+    min-height: 3rem;
+  }
+  
+  .modal-close-btn {
+    min-height: 2.5rem;
+    min-width: 2.5rem;
+  }
+}
+
+/* Support de l'orientation paysage sur mobile */
+@media (max-width: 767px) and (orientation: landscape) {
+  .modal-overlay {
+    padding: 0.5rem;
+  }
+  
+  .modal-container {
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+}
+
+/* ==========================================================================
+   RESPONSIVE DESIGN - MOBILE FIRST ET ADAPTATIF
+   ========================================================================== */
+
+/* ==========================================================================
+   BREAKPOINTS PRINCIPAUX
+   ========================================================================== */
+
+/* Large Desktop (1400px+) */
+@media (min-width: 1400px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr 380px;
+    gap: var(--dashboard-spacing-2xl);
+  }
+  
+  .home-activity-glass {
+    width: 380px;
+    max-width: 380px;
+  }
+  
+  .home-content {
+    padding: var(--dashboard-spacing-2xl);
+  }
+}
+
+/* Desktop Standard (1200px - 1399px) */
+@media (max-width: 1399px) and (min-width: 1200px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr 340px;
+    gap: var(--dashboard-spacing-xl);
+  }
+  
+  .home-activity-glass {
+    width: 340px;
+    max-width: 340px;
+  }
+}
+
+/* Desktop Small (1024px - 1199px) */
+@media (max-width: 1199px) and (min-width: 1024px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr 320px;
+    gap: var(--dashboard-spacing-lg);
+  }
+  
+  .home-activity-glass {
+    width: 320px;
+    max-width: 320px;
+  }
+  
+  .home-content {
+    padding: var(--dashboard-spacing-lg);
+  }
+}
+
+/* Tablet Large (900px - 1023px) */
+@media (max-width: 1023px) and (min-width: 900px) {
   .dashboard-grid {
     grid-template-columns: 1fr;
-    gap: var(--dashboard-spacing-lg);
+    gap: var(--dashboard-spacing-xl);
   }
   
   .dashboard-right-column {
@@ -1013,8 +1318,7 @@
     order: -1;
   }
   
-  .home-activity-glass,
-  .dashboard-activity-fallback {
+  .home-activity-glass {
     width: 100%;
     max-width: none;
   }
@@ -1027,30 +1331,115 @@
   
   .quick-stats {
     justify-content: center;
+    flex-wrap: wrap;
+  }
+  
+  .creation-actions {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--dashboard-spacing-md);
   }
 }
 
-@media (max-width: 768px) {
+/* Tablet Medium (768px - 899px) */
+@media (max-width: 899px) and (min-width: 768px) {
   .home-content {
     margin-left: 0;
     padding: var(--dashboard-spacing-lg);
   }
   
-  .creation-actions {
+  .dashboard-grid {
     grid-template-columns: 1fr;
+    gap: var(--dashboard-spacing-lg);
+  }
+  
+  .dashboard-right-column {
+    position: static;
+    order: -1;
+  }
+  
+  .home-activity-glass {
+    width: 100%;
+    max-width: none;
+  }
+  
+  .header-content {
+    flex-direction: column;
+    gap: var(--dashboard-spacing-lg);
+    text-align: center;
+  }
+  
+  .quick-stats {
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  
+  .creation-actions {
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: var(--dashboard-spacing-md);
   }
   
   .url-input-section {
     flex-direction: column;
+    gap: var(--dashboard-spacing-md);
+  }
+  
+  .import-btn-glass {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* Mobile Large (600px - 767px) */
+@media (max-width: 767px) and (min-width: 600px) {
+  .home-content {
+    margin-left: 0;
+    padding: var(--dashboard-spacing-lg);
+  }
+  
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+    gap: var(--dashboard-spacing-lg);
+  }
+  
+  .dashboard-right-column {
+    position: static;
+    order: -1;
+  }
+  
+  .home-activity-glass {
+    width: 100%;
+    max-width: none;
+  }
+  
+  .header-content {
+    flex-direction: column;
+    gap: var(--dashboard-spacing-lg);
+    text-align: center;
   }
   
   .quick-stats {
     flex-direction: column;
     gap: var(--dashboard-spacing-md);
+    align-items: center;
   }
   
   .stat-item {
-    min-width: auto;
+    min-width: 200px;
+    justify-content: center;
+  }
+  
+  .creation-actions {
+    grid-template-columns: 1fr;
+    gap: var(--dashboard-spacing-md);
+  }
+  
+  .url-input-section {
+    flex-direction: column;
+    gap: var(--dashboard-spacing-md);
+  }
+  
+  .import-btn-glass {
+    width: 100%;
     justify-content: center;
   }
   
@@ -1062,34 +1451,144 @@
     width: 56px;
     height: 56px;
   }
+  
+  .drop-zone-glass {
+    padding: var(--dashboard-spacing-xl);
+  }
 }
 
-@media (max-width: 480px) {
+/* Mobile Medium (480px - 599px) */
+@media (max-width: 599px) and (min-width: 480px) {
   .home-content {
+    margin-left: 0;
     padding: var(--dashboard-spacing-md);
+  }
+  
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+    gap: var(--dashboard-spacing-lg);
+  }
+  
+  .dashboard-right-column {
+    position: static;
+    order: -1;
+  }
+  
+  .home-activity-glass {
+    width: 100%;
+    max-width: none;
   }
   
   .home-header-glass,
   .hero-search-glass,
   .creation-hub-glass,
-  .home-activity-glass,
-  .dashboard-activity-fallback {
+  .home-activity-glass {
     padding: var(--dashboard-spacing-lg);
+  }
+  
+  .header-content {
+    flex-direction: column;
+    gap: var(--dashboard-spacing-lg);
+    text-align: center;
+  }
+  
+  .quick-stats {
+    flex-direction: column;
+    gap: var(--dashboard-spacing-md);
+    align-items: center;
+  }
+  
+  .stat-item {
+    min-width: 180px;
+    justify-content: center;
+  }
+  
+  .creation-actions {
+    grid-template-columns: 1fr;
+    gap: var(--dashboard-spacing-sm);
+  }
+  
+  .action-btn-glass {
+    padding: var(--dashboard-spacing-md);
+    font-size: 14px;
+  }
+  
+  .url-input-section {
+    flex-direction: column;
+    gap: var(--dashboard-spacing-md);
+  }
+  
+  .import-btn-glass {
+    width: 100%;
+    justify-content: center;
   }
   
   .welcome-text h1 {
     font-size: 24px;
   }
   
-  .creation-actions {
-    gap: var(--dashboard-spacing-sm);
+  .welcome-icon {
+    width: 48px;
+    height: 48px;
   }
   
-  .action-btn-glass {
+  .drop-zone-glass {
+    padding: var(--dashboard-spacing-lg);
+  }
+  
+  .drop-content p {
+    font-size: 14px;
+  }
+  
+  .drop-content span {
+    font-size: 12px;
+  }
+}
+
+/* Mobile Small (320px - 479px) */
+@media (max-width: 479px) {
+  .home-content {
+    margin-left: 0;
+    padding: var(--dashboard-spacing-sm);
+  }
+  
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+    gap: var(--dashboard-spacing-md);
+  }
+  
+  .dashboard-right-column {
+    position: static;
+    order: -1;
+  }
+  
+  .home-activity-glass {
+    width: 100%;
+    max-width: none;
+  }
+  
+  .home-header-glass,
+  .hero-search-glass,
+  .creation-hub-glass,
+  .home-activity-glass {
     padding: var(--dashboard-spacing-md);
   }
   
+  .header-content {
+    flex-direction: column;
+    gap: var(--dashboard-spacing-md);
+    text-align: center;
+  }
+  
+  .quick-stats {
+    flex-direction: column;
+    gap: var(--dashboard-spacing-sm);
+    align-items: center;
+  }
+  
   .stat-item {
+    min-width: 160px;
+    justify-content: center;
     padding: var(--dashboard-spacing-sm);
   }
   
@@ -1099,5 +1598,178 @@
   
   .stat-label {
     font-size: 11px;
+  }
+  
+  .creation-actions {
+    grid-template-columns: 1fr;
+    gap: var(--dashboard-spacing-sm);
+  }
+  
+  .action-btn-glass {
+    padding: var(--dashboard-spacing-sm);
+    font-size: 13px;
+    min-height: 48px;
+  }
+  
+  .action-btn-glass span {
+    font-size: 13px;
+  }
+  
+  .url-input-section {
+    flex-direction: column;
+    gap: var(--dashboard-spacing-sm);
+  }
+  
+  .import-btn-glass {
+    width: 100%;
+    justify-content: center;
+    padding: var(--dashboard-spacing-sm);
+    font-size: 13px;
+  }
+  
+  .welcome-text h1 {
+    font-size: 22px;
+  }
+  
+  .welcome-text p {
+    font-size: 14px;
+  }
+  
+  .welcome-icon {
+    width: 44px;
+    height: 44px;
+  }
+  
+  .drop-zone-glass {
+    padding: var(--dashboard-spacing-md);
+  }
+  
+  .drop-content p {
+    font-size: 13px;
+  }
+  
+  .drop-content span {
+    font-size: 11px;
+  }
+  
+  .hub-header h2 {
+    font-size: 18px;
+  }
+  
+  .hub-header p {
+    font-size: 13px;
+  }
+  
+  .import-section-glass h3 {
+    font-size: 16px;
+  }
+}
+
+/* ==========================================================================
+   OPTIMISATIONS SPÉCIFIQUES MOBILE
+   ========================================================================== */
+
+/* Amélioration de la navigation mobile */
+@media (max-width: 768px) {
+  .home-page-wrapper {
+    overflow-x: hidden;
+  }
+  
+  .home-content {
+    overflow-x: hidden;
+    width: 100%;
+  }
+  
+  /* Optimisation des animations pour mobile */
+  .home-header-glass,
+  .hero-search-glass,
+  .creation-hub-glass,
+  .home-activity-glass {
+    transform: none !important;
+    will-change: auto;
+  }
+  
+  /* Amélioration de la lisibilité sur petits écrans */
+  .search-field-glass {
+    font-size: 16px; /* Évite le zoom sur iOS */
+  }
+  
+  /* Optimisation des boutons tactiles */
+  .action-btn-glass,
+  .import-btn-glass,
+  .search-btn-glass {
+    min-height: 44px; /* Taille minimale recommandée pour le touch */
+    touch-action: manipulation;
+  }
+}
+
+/* ==========================================================================
+   ORIENTATION PAYSAGE SUR MOBILE
+   ========================================================================== */
+
+@media (max-width: 767px) and (orientation: landscape) {
+  .home-content {
+    padding: var(--dashboard-spacing-sm);
+  }
+  
+  .home-header-glass {
+    padding: var(--dashboard-spacing-md);
+  }
+  
+  .quick-stats {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--dashboard-spacing-sm);
+  }
+  
+  .stat-item {
+    min-width: 120px;
+  }
+}
+
+/* ==========================================================================
+   ACCESSIBILITÉ ET PERFORMANCE
+   ========================================================================== */
+
+/* Réduction des animations sur les appareils qui préfèrent moins de mouvement */
+@media (prefers-reduced-motion: reduce) {
+  .home-header-glass,
+  .hero-search-glass,
+  .creation-hub-glass,
+  .home-activity-glass,
+  .action-btn-glass {
+    transition: none;
+    animation: none;
+  }
+  
+  .welcome-icon {
+    transition: none;
+  }
+}
+
+/* Optimisation pour les écrans haute densité */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .glass-border-primary,
+  .glass-border-secondary {
+    border-width: 0.5px;
+  }
+}
+
+/* Support des écrans très larges */
+@media (min-width: 1600px) {
+  .home-content {
+    max-width: 1400px;
+    margin: 0 auto 0 280px;
+  }
+  
+  .dashboard-grid {
+    grid-template-columns: 1fr 400px;
+    gap: var(--dashboard-spacing-2xl);
+  }
+  
+  .home-activity-glass {
+    width: 400px;
+    max-width: 400px;
   }
 } 

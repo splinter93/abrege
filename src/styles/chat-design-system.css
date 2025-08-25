@@ -7,10 +7,10 @@
    ======================================== */
 :root {
   /* Couleurs de base */
-  --chat-color-primary: #222222;
-  --chat-color-secondary: #333333;
-  --chat-color-tertiary: #444444;
-  --chat-color-elevated: #33333a;
+  --chat-color-primary: var(--surface-1, #141414);
+  --chat-color-secondary: #1c1c1c;
+  --chat-color-tertiary: #212121;
+  --chat-color-elevated: #1c1c1c;
   
   /* Couleurs de texte */
   --chat-color-text-primary: #ececf1;

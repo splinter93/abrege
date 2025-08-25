@@ -50,72 +50,77 @@ const CreateNoteModal = ({ isOpen, onClose, onCreateNote }: {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <motion.div 
-        className="bg-white rounded-lg p-6 w-full max-w-md mx-4 shadow-xl"
+        className="bg-white rounded-lg w-full max-w-md mx-auto shadow-xl"
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.9 }}
       >
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-semibold text-gray-900">Créer une nouvelle note</h3>
+        {/* Header du modal */}
+        <div className="flex justify-between items-center p-4 sm:p-6 border-b border-gray-200">
+          <h3 className="text-lg sm:text-xl font-semibold text-gray-900">Créer une nouvelle note</h3>
           <button 
             onClick={handleClose}
-            className="text-gray-500 hover:text-gray-700 transition-colors"
+            className="text-gray-500 hover:text-gray-700 transition-colors p-1 rounded-full hover:bg-gray-100"
             aria-label="Fermer"
           >
             <X size={20} />
           </button>
         </div>
         
-        {error && (
-          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-            <p className="text-red-700 text-sm">{error}</p>
-          </div>
-        )}
-        
-        <form onSubmit={handleSubmit}>
-          <div className="mb-4">
-            <label htmlFor="note-title" className="block text-sm font-medium text-gray-700 mb-2">
-              Titre de la note
-            </label>
-            <input
-              id="note-title"
-              type="text"
-              value={noteTitle}
-              onChange={(e) => setNoteTitle(e.target.value)}
-              placeholder="Ex: Ma première note..."
-              className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-              autoFocus
-              disabled={isLoading}
-            />
-          </div>
+        {/* Contenu du modal */}
+        <div className="p-4 sm:p-6">
+          {error && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-red-700 text-sm">{error}</p>
+            </div>
+          )}
           
-          <div className="flex gap-3">
-            <button
-              type="button"
-              onClick={handleClose}
-              className="flex-1 px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
-              disabled={isLoading}
-            >
-              Annuler
-            </button>
-            <button
-              type="submit"
-              disabled={!noteTitle.trim() || isLoading}
-              className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-              {isLoading ? (
-                <span className="flex items-center justify-center">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  Création...
-                </span>
-              ) : (
-                'Créer'
-              )}
-            </button>
-          </div>
-        </form>
+          <form onSubmit={handleSubmit}>
+            <div className="mb-4">
+              <label htmlFor="note-title" className="block text-sm font-medium text-gray-700 mb-2">
+                Titre de la note
+              </label>
+              <input
+                id="note-title"
+                type="text"
+                value={noteTitle}
+                onChange={(e) => setNoteTitle(e.target.value)}
+                placeholder="Ex: Ma première note..."
+                className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-base"
+                autoFocus
+                disabled={isLoading}
+              />
+            </div>
+            
+            {/* Boutons d'action */}
+            <div className="flex flex-col sm:flex-row gap-3">
+              <button
+                type="button"
+                onClick={handleClose}
+                className="flex-1 px-4 py-3 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 font-medium"
+                disabled={isLoading}
+              >
+                Annuler
+              </button>
+              <button
+                type="submit"
+                disabled={!noteTitle.trim() || isLoading}
+                className="flex-1 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium min-h-[44px]"
+              >
+                {isLoading ? (
+                  <span className="flex items-center justify-center">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    Création...
+                  </span>
+                ) : (
+                  'Créer'
+                )}
+              </button>
+            </div>
+          </form>
+        </div>
       </motion.div>
     </div>
   );
