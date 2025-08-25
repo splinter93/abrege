@@ -62,13 +62,13 @@
    ========================================================================== */
 
 .fm-grid-item .file-icon {
-  margin-bottom: var(--files-spacing-md);
+  margin-bottom: var(--files-spacing-sm);
   display: flex;
   justify-content: center;
   align-items: center;
   width: 100%;
-  height: 48px;
-  font-size: 32px;
+  height: 40px;
+  font-size: 28px;
   transition: transform var(--files-transition-fast);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;

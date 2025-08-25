@@ -120,7 +120,7 @@
 /* Grilles responsives - UTILISÉES PAR FOLDERMANAGER */
 .folder-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); /* Utilise toute la largeur */
+  grid-template-columns: repeat(5, 1fr);
   gap: 16px; /* RÉDUIT de 24px à 16px pour rapprocher les éléments */
   justify-items: stretch; /* Les items prennent toute la largeur de leur cellule */
   width: 100%;
@@ -211,4 +211,34 @@
 
 .folder-grid.files {
   margin-top: 20px;
+} 
+
+/* ==========================================================================
+   RESPONSIVE DESIGN
+   ========================================================================== */
+
+@media (max-width: 1200px) {
+  .folder-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+@media (max-width: 1024px) {
+  .folder-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .folder-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .folder-grid {
+    grid-template-columns: repeat(1, 1fr);
+    gap: 8px;
+  }
 } 
