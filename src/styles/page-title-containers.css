@@ -26,7 +26,7 @@
   box-shadow: var(--glass-shadow-medium, 0 8px 32px rgba(0, 0, 0, 0.15));
   
   /* Espacement uniforme */
-  margin-top: -16px; /* Remonte le container plus agressivement */
+  margin-top: 0px; /* Pas de remontée pour uniformiser avec dossiers */
   margin-bottom: 24px; /* Marge réduite */
   
   /* Transitions uniformes */
