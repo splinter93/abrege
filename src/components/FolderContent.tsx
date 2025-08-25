@@ -28,6 +28,7 @@ import {
 
 interface FolderContentProps {
   classeurName: string;
+  classeurIcon?: string; // 🔧 NOUVEAU: Icône du classeur
   toolbar?: React.ReactNode;
   folders: Folder[];
   files: FileArticle[];
@@ -81,6 +82,7 @@ const FolderContent: React.FC<FolderContentProps> = ({
   onStartRenameFolderClick,
   onStartRenameFileClick,
   classeurName,
+  classeurIcon, // 🔧 NOUVEAU: Icône du classeur
   isInFolder,
   onCreateFolder,
   onCreateFile,
@@ -147,12 +149,16 @@ const FolderContent: React.FC<FolderContentProps> = ({
               <FolderBreadcrumb
                 folderPath={folderPath}
                 classeurName={classeurName}
+                classeurIcon={classeurIcon}
                 onGoToRoot={onGoToRoot}
                 onGoToFolder={onGoToFolder}
               />
             </div>
           ) : (
-            <h1 className="classeur-title">{classeurName}</h1>
+            <h1 className="classeur-title">
+              {classeurIcon && <span className="classeur-icon">{classeurIcon}</span>}
+              <span className="classeur-name">{classeurName}</span>
+            </h1>
           )}
         </div>
         

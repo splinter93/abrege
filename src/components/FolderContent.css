@@ -57,6 +57,25 @@
   margin: 0;
   line-height: 1.2;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* 🔧 NOUVEAU: Styles pour l'icône du classeur */
+.classeur-icon {
+  font-size: 32px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.classeur-name {
+  font-size: 28px;
+  font-weight: 600;
+  color: var(--text-primary, #111827);
+  line-height: 1.2;
 }
 
 /* 🔧 NOUVEAU: Styles pour le breadcrumb intégré dans le titre */
@@ -413,6 +432,20 @@
     font-size: 14px;
     margin: 0 1px;
   }
+
+  /* 🔧 NOUVEAU: Styles responsives pour l'icône du classeur */
+  .classeur-title {
+    font-size: 24px;
+    gap: 10px;
+  }
+  
+  .classeur-icon {
+    font-size: 28px;
+  }
+  
+  .classeur-name {
+    font-size: 24px;
+  }
 }
 
 @media (max-width: 480px) {
@@ -454,5 +487,19 @@
   .classeur-title-with-breadcrumb .breadcrumb-separator {
     font-size: 13px;
     margin: 0 1px;
+  }
+
+  /* 🔧 NOUVEAU: Styles responsives pour l'icône du classeur sur mobile */
+  .classeur-title {
+    font-size: 20px;
+    gap: 8px;
+  }
+  
+  .classeur-icon {
+    font-size: 24px;
+  }
+  
+  .classeur-name {
+    font-size: 20px;
   }
 } 

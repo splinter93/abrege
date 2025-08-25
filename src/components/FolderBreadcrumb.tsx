@@ -5,6 +5,7 @@ import './FolderBreadcrumb.css';
 interface FolderBreadcrumbProps {
   folderPath: Folder[];
   classeurName: string;
+  classeurIcon?: string; // 🔧 NOUVEAU: Icône du classeur
   onGoToRoot: () => void;
   onGoToFolder: (folderId: string) => void;
 }
@@ -12,6 +13,7 @@ interface FolderBreadcrumbProps {
 const FolderBreadcrumb: React.FC<FolderBreadcrumbProps> = ({
   folderPath,
   classeurName,
+  classeurIcon, // 🔧 NOUVEAU: Icône du classeur
   onGoToRoot,
   onGoToFolder,
 }) => {
@@ -28,7 +30,9 @@ const FolderBreadcrumb: React.FC<FolderBreadcrumbProps> = ({
           onClick={onGoToRoot}
           title="Retour à la racine"
         >
-          <span className="breadcrumb-icon">🏠</span>
+          <span className="breadcrumb-icon">
+            {classeurIcon || '🏠'}
+          </span>
           <span className="breadcrumb-text">{classeurName}</span>
         </button>
 
