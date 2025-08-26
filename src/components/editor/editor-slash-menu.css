@@ -324,16 +324,16 @@
 }
 
 /* ===== ULTRA HIGH SPECIFICITY OVERRIDES ===== */
-/* Force our styles with maximum specificity and very visible colors */
+/* Force our styles with maximum specificity and authentic Notion design */
 body .slash-menu,
 html .slash-menu,
 #root .slash-menu,
 [data-reactroot] .slash-menu,
 div[class*="slash-menu"],
 div.slash-menu {
-  background: #ff6b6b !important; /* ROUGE VIF POUR FORCER */
-  border: 3px solid #4ecdc4 !important; /* TURQUOISE VIF POUR FORCER */
-  color: #2c3e50 !important;
+  background: #fafafa !important; /* Light gray Notion background */
+  border: 1px solid #e3e2e0 !important; /* Subtle Notion border */
+  color: #37352f !important; /* Notion text color */
 }
 
 /* Force background on all slash-menu elements */
@@ -342,48 +342,48 @@ html div.slash-menu,
 #root div.slash-menu,
 [data-reactroot] div.slash-menu,
 div.slash-menu[class*="slash-menu"] {
-  background: #ff6b6b !important; /* ROUGE VIF POUR FORCER */
+  background: #fafafa !important; /* Light gray Notion background */
 }
 
 /* Force background with attribute selectors */
 div[class*="slash-menu"] {
-  background: #ff6b6b !important; /* ROUGE VIF POUR FORCER */
+  background: #fafafa !important; /* Light gray Notion background */
 }
 
 /* Force background with multiple class selectors */
 .slash-menu.slash-menu {
-  background: #ff6b6b !important; /* ROUGE VIF POUR FORCER */
+  background: #fafafa !important; /* Light gray Notion background */
 }
 
 /* Force background with ID-like specificity */
 div.slash-menu.slash-menu {
-  background: #ff6b6b !important; /* ROUGE VIF POUR FORCER */
+  background: #fafafa !important; /* Light gray Notion background */
 }
 
 /* Force background with universal selector */
 * .slash-menu {
-  background: #ff6b6b !important; /* ROUGE VIF POUR FORCER */
+  background: #fafafa !important; /* Light gray Notion background */
 }
 
 /* Force background with direct child selector */
 body > div.slash-menu,
 html > div.slash-menu {
-  background: #ff6b6b !important; /* ROUGE VIF POUR FORCER */
+  background: #fafafa !important; /* Light gray Notion background */
 }
 
 /* Force background with adjacent sibling selector */
 div + .slash-menu {
-  background: #ff6b6b !important; /* ROUGE VIF POUR FORCER */
+  background: #fafafa !important; /* Light gray Notion background */
 }
 
 /* Force background with general sibling selector */
 div ~ .slash-menu {
-  background: #ff6b6b !important; /* ROUGE VIF POUR FORCER */
+  background: #fafafa !important; /* Light gray Notion background */
 }
 
 /* Force background with pseudo-classes */
 .slash-menu:not([style*="background"]) {
-  background: #ff6b6b !important; /* ROUGE VIF POUR FORCER */
+  background: #fafafa !important; /* Light gray Notion background */
 }
 
 /* Force background with pseudo-elements */
@@ -394,47 +394,47 @@ div ~ .slash-menu {
   left: 0;
   right: 0;
   bottom: 0;
-  background: #ff6b6b !important; /* ROUGE VIF POUR FORCER */
+  background: #fafafa !important; /* Light gray Notion background */
   z-index: -1;
 }
 
 /* Force background with CSS custom properties */
 .slash-menu {
-  --forced-bg: #ff6b6b !important; /* ROUGE VIF POUR FORCER */
+  --forced-bg: #fafafa !important; /* Light gray Notion background */
   background: var(--forced-bg) !important;
 }
 
 /* Force background with CSS layers */
 @layer critical {
   .slash-menu {
-    background: #ff6b6b !important; /* ROUGE VIF POUR FORCER */
+    background: #fafafa !important; /* Light gray Notion background */
   }
 }
 
 /* Force background with CSS supports */
-@supports (background: #ff6b6b) {
+@supports (background: #fafafa) {
   .slash-menu {
-    background: #ff6b6b !important; /* ROUGE VIF POUR FORCER */
+    background: #fafafa !important; /* Light gray Notion background */
   }
 }
 
 /* Force background with CSS media queries */
 @media all {
   .slash-menu {
-    background: #ff6b6b !important; /* ROUGE VIF POUR FORCER */
+    background: #fafafa !important; /* Light gray Notion background */
   }
 }
 
 /* Force background with CSS print */
 @media print {
   .slash-menu {
-    background: #ff6b6b !important; /* ROUGE VIF POUR FORCER */
+    background: #fafafa !important; /* Light gray Notion background */
   }
 }
 
 /* Force background with CSS screen */
 @media screen {
   .slash-menu {
-    background: #ff6b6b !important; /* ROUGE VIF POUR FORCER */
+    background: #fafafa !important; /* Light gray Notion background */
   }
 } 
