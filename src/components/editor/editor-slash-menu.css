@@ -1,261 +1,343 @@
-/* Notion-Style Slash Command Menu - Clean & Minimal */
+/**
+ * NOTION-STYLE SLASH COMMAND MENU
+ * Authentic Notion design with impeccable code quality
+ * 
+ * Design Principles:
+ * - Clean, minimal, professional
+ * - Subtle interactions and smooth transitions
+ * - Authentic Notion colors and typography
+ * - High specificity to prevent style conflicts
+ */
 
-:root {
-  --notion-bg: #ffffff;
-  --notion-bg-hover: #f7f6f3;
-  --notion-border: #e3e2e0;
-  --notion-border-hover: #d1d0ce;
-  --notion-text: #37352f;
-  --notion-text-muted: #787774;
-  --notion-text-secondary: #9b9a97;
-  --notion-accent: #2e75cc;
-  --notion-accent-light: #f1f5f9;
-  --notion-shadow: 
+/* ===== ROOT STYLES ===== */
+.slash-menu {
+  /* Positioning & Layout */
+  position: fixed !important;
+  min-width: 320px !important;
+  max-width: 440px !important;
+  z-index: 99999 !important;
+  overflow: hidden !important;
+  
+  /* Visual Design - Authentic Notion */
+  background: #ffffff !important;
+  border: 1px solid #e3e2e0 !important;
+  border-radius: 6px !important;
+  box-shadow: 
     0 0 0 1px rgba(55, 53, 47, 0.09),
-    0 2px 8px 0 rgba(55, 53, 47, 0.09);
-  --notion-shadow-hover: 
-    0 0 0 1px rgba(55, 53, 47, 0.09),
-    0 4px 12px 0 rgba(55, 53, 47, 0.12);
+    0 2px 8px 0 rgba(55, 53, 47, 0.09) !important;
+  
+  /* Typography - Notion System Font */
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, 'Apple Color Emoji', Arial, sans-serif, 'Segoe UI Emoji', 'Segoe UI Symbol' !important;
+  font-size: 14px !important;
+  line-height: 1.4 !important;
+  
+  /* Animations */
+  animation: slashMenuEnter 150ms ease-out !important;
+  transition: box-shadow 150ms ease !important;
 }
 
-@keyframes menuEnter {
+/* Hover state for entire menu */
+.slash-menu:hover {
+  box-shadow: 
+    0 0 0 1px rgba(55, 53, 47, 0.09),
+    0 4px 12px 0 rgba(55, 53, 47, 0.12) !important;
+}
+
+/* ===== SEARCH INPUT ===== */
+.slash-menu .slash-search-input {
+  /* Layout */
+  width: 100% !important;
+  border: none !important;
+  outline: none !important;
+  background: transparent !important;
+  
+  /* Typography */
+  color: #37352f !important;
+  font-size: 16px !important;
+  font-weight: 400 !important;
+  letter-spacing: -0.01em !important;
+  
+  /* Spacing & Borders */
+  padding: 12px 16px !important;
+  border-bottom: 1px solid #e3e2e0 !important;
+  
+  /* Interactions */
+  caret-color: #2e75cc !important;
+  transition: border-color 150ms ease !important;
+}
+
+.slash-menu .slash-search-input:focus {
+  border-bottom-color: #2e75cc !important;
+}
+
+.slash-menu .slash-search-input::placeholder {
+  color: #9b9a97 !important;
+  font-weight: 400 !important;
+}
+
+/* ===== MENU LIST CONTAINER ===== */
+.slash-menu .slash-menu-list {
+  /* Layout */
+  max-height: 320px !important;
+  overflow-y: auto !important;
+  padding: 6px !important;
+  
+  /* Scrollbar Styling */
+  scrollbar-width: thin !important;
+  scrollbar-color: #e3e2e0 transparent !important;
+}
+
+/* Webkit Scrollbar */
+.slash-menu .slash-menu-list::-webkit-scrollbar {
+  width: 4px !important;
+}
+
+.slash-menu .slash-menu-list::-webkit-scrollbar-track {
+  background: transparent !important;
+}
+
+.slash-menu .slash-menu-list::-webkit-scrollbar-thumb {
+  background: #e3e2e0 !important;
+  border-radius: 2px !important;
+}
+
+.slash-menu .slash-menu-list::-webkit-scrollbar-thumb:hover {
+  background: #d1d0ce !important;
+}
+
+/* ===== EMPTY STATE ===== */
+.slash-menu .slash-menu-empty {
+  padding: 20px 16px !important;
+  color: #9b9a97 !important;
+  text-align: center !important;
+  font-size: 14px !important;
+  font-weight: 400 !important;
+}
+
+/* ===== MENU ITEMS ===== */
+.slash-menu .slash-menu-item {
+  /* Layout */
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  padding: 8px 12px !important;
+  margin: 1px 0 !important;
+  
+  /* Visual Design */
+  background: transparent !important;
+  color: #37352f !important;
+  border-radius: 4px !important;
+  
+  /* Interactions */
+  cursor: pointer !important;
+  transition: background-color 150ms ease !important;
+  
+  /* Positioning */
+  position: relative !important;
+  overflow: hidden !important;
+}
+
+/* Hover state */
+.slash-menu .slash-menu-item:hover {
+  background: #f7f6f3 !important;
+}
+
+/* Selected state */
+.slash-menu .slash-menu-item.selected {
+  background: #f1f5f9 !important;
+}
+
+/* ===== SELECTION INDICATOR ===== */
+.slash-menu .slash-menu-selection-indicator {
+  /* Layout */
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 16px !important;
+  height: 16px !important;
+  
+  /* Visual Design */
+  color: #2e75cc !important;
+  opacity: 0.8 !important;
+  flex-shrink: 0 !important;
+  
+  /* Animation */
+  animation: slashMenuFadeIn 150ms ease !important;
+}
+
+/* ===== TEXT CONTENT ===== */
+.slash-menu .slash-menu-texts {
+  /* Layout */
+  display: flex !important;
+  flex-direction: column !important;
+  min-width: 0 !important;
+  flex: 1 !important;
+  order: 1 !important;
+}
+
+/* Label */
+.slash-menu .slash-menu-label {
+  /* Typography */
+  font-weight: 500 !important;
+  font-size: 14px !important;
+  line-height: 1.4 !important;
+  color: #37352f !important;
+  
+  /* Layout */
+  margin-bottom: 1px !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  
+  /* Transitions */
+  transition: color 150ms ease !important;
+}
+
+/* Selected label */
+.slash-menu .slash-menu-item.selected .slash-menu-label {
+  color: #2e75cc !important;
+  font-weight: 600 !important;
+}
+
+/* Description */
+.slash-menu .slash-menu-desc {
+  /* Typography */
+  font-weight: 400 !important;
+  font-size: 12px !important;
+  line-height: 1.3 !important;
+  color: #9b9a97 !important;
+  
+  /* Layout */
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  
+  /* Transitions */
+  transition: color 150ms ease !important;
+}
+
+/* Selected description */
+.slash-menu .slash-menu-item.selected .slash-menu-desc {
+  color: #2e75cc !important;
+  opacity: 0.8 !important;
+}
+
+/* ===== PREVIEW BADGE ===== */
+.slash-menu .slash-menu-preview {
+  /* Layout */
+  min-width: 32px !important;
+  height: 24px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 8px !important;
+  
+  /* Visual Design */
+  background: #f7f6f3 !important;
+  color: #787774 !important;
+  border: 1px solid #e3e2e0 !important;
+  border-radius: 4px !important;
+  
+  /* Typography */
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  
+  /* Positioning */
+  flex-shrink: 0 !important;
+  order: 2 !important;
+  margin-left: auto !important;
+  
+  /* Transitions */
+  transition: all 150ms ease !important;
+}
+
+/* Hover state for preview */
+.slash-menu .slash-menu-item:hover .slash-menu-preview {
+  background: #ffffff !important;
+  border-color: #d1d0ce !important;
+}
+
+/* Selected state for preview */
+.slash-menu .slash-menu-item.selected .slash-menu-preview {
+  background: #f1f5f9 !important;
+  border-color: #2e75cc !important;
+  color: #2e75cc !important;
+}
+
+/* ===== FOCUS STATES ===== */
+.slash-menu .slash-menu-item:focus-visible {
+  outline: 2px solid #2e75cc !important;
+  outline-offset: 2px !important;
+}
+
+/* ===== ANIMATIONS ===== */
+@keyframes slashMenuEnter {
   0% { 
-    opacity: 0; 
-    transform: translateY(4px); 
+    opacity: 0 !important; 
+    transform: translateY(4px) !important; 
   }
   100% { 
-    opacity: 1; 
-    transform: translateY(0); 
+    opacity: 1 !important; 
+    transform: translateY(0) !important; 
   }
 }
 
-.slash-menu {
-  position: fixed;
-  min-width: 320px;
-  max-width: 440px;
-  background: var(--notion-bg);
-  border-radius: 6px;
-  box-shadow: var(--notion-shadow);
-  z-index: 99999;
-  padding: 0;
-  border: 1px solid var(--notion-border);
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, 'Apple Color Emoji', Arial, sans-serif, 'Segoe UI Emoji', 'Segoe UI Symbol';
-  font-size: 14px;
-  overflow: hidden;
-  animation: menuEnter 150ms ease-out;
-  transition: box-shadow 150ms ease;
+@keyframes slashMenuFadeIn {
+  from { 
+    opacity: 0 !important; 
+    transform: scale(0.8) !important; 
+  }
+  to { 
+    opacity: 0.8 !important; 
+    transform: scale(1) !important; 
+  }
 }
 
-.slash-menu:hover {
-  box-shadow: var(--notion-shadow-hover);
-}
-
-/* Search Input */
-.slash-search-input {
-  width: 100%;
-  border: none;
-  outline: none;
-  background: transparent;
-  color: var(--notion-text);
-  font-size: 16px;
-  padding: 12px 16px;
-  border-bottom: 1px solid var(--notion-border);
-  font-weight: 400;
-  letter-spacing: -0.01em;
-  caret-color: var(--notion-accent);
-  transition: border-color 150ms ease;
-}
-
-.slash-search-input:focus {
-  border-bottom-color: var(--notion-accent);
-}
-
-.slash-search-input::placeholder {
-  color: var(--notion-text-secondary);
-  font-weight: 400;
-}
-
-/* List Container */
-.slash-menu-list {
-  max-height: 320px;
-  overflow-y: auto;
-  padding: 6px;
-  scrollbar-width: thin;
-  scrollbar-color: var(--notion-border) transparent;
-}
-
-.slash-menu-list::-webkit-scrollbar {
-  width: 4px;
-}
-
-.slash-menu-list::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.slash-menu-list::-webkit-scrollbar-thumb {
-  background: var(--notion-border);
-  border-radius: 2px;
-}
-
-.slash-menu-list::-webkit-scrollbar-thumb:hover {
-  background: var(--notion-border-hover);
-}
-
-.slash-menu-empty {
-  padding: 20px 16px;
-  color: var(--notion-text-secondary);
-  text-align: center;
-  font-size: 14px;
-  font-weight: 400;
-}
-
-/* Menu Items */
-.slash-menu-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 8px 12px;
-  margin: 1px 0;
-  background: transparent;
-  color: var(--notion-text);
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background-color 150ms ease;
-  position: relative;
-  overflow: hidden;
-}
-
-.slash-menu-item:hover {
-  background: var(--notion-bg-hover);
-}
-
-.slash-menu-item.selected {
-  background: var(--notion-accent-light);
-}
-
-/* Selection Indicator */
-.slash-menu-selection-indicator {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 16px;
-  height: 16px;
-  color: var(--notion-accent);
-  opacity: 0.8;
-  flex-shrink: 0;
-  animation: fadeIn 150ms ease;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: scale(0.8); }
-  to { opacity: 0.8; transform: scale(1); }
-}
-
-/* Text Content - Left side */
-.slash-menu-texts {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-  flex: 1;
-  order: 1;
-}
-
-.slash-menu-label {
-  font-weight: 500;
-  font-size: 14px;
-  line-height: 1.4;
-  color: var(--notion-text);
-  margin-bottom: 1px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  transition: color 150ms ease;
-}
-
-.slash-menu-item.selected .slash-menu-label {
-  color: var(--notion-accent);
-  font-weight: 600;
-}
-
-.slash-menu-desc {
-  font-weight: 400;
-  font-size: 12px;
-  line-height: 1.3;
-  color: var(--notion-text-secondary);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  transition: color 150ms ease;
-}
-
-.slash-menu-item.selected .slash-menu-desc {
-  color: var(--notion-accent);
-  opacity: 0.8;
-}
-
-/* Preview Badge - Right side */
-.slash-menu-preview {
-  min-width: 32px;
-  height: 24px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0 8px;
-  border-radius: 4px;
-  background: var(--notion-bg-hover);
-  color: var(--notion-text-muted);
-  font-size: 11px;
-  font-weight: 500;
-  border: 1px solid var(--notion-border);
-  transition: all 150ms ease;
-  flex-shrink: 0;
-  order: 2;
-  margin-left: auto;
-}
-
-.slash-menu-item:hover .slash-menu-preview {
-  background: var(--notion-bg);
-  border-color: var(--notion-border-hover);
-}
-
-.slash-menu-item.selected .slash-menu-preview {
-  background: var(--notion-accent-light);
-  border-color: var(--notion-accent);
-  color: var(--notion-accent);
-}
-
-/* Focus states for accessibility */
-.slash-menu-item:focus-visible {
-  outline: 2px solid var(--notion-accent);
-  outline-offset: 2px;
-}
-
-/* Responsive adjustments */
+/* ===== RESPONSIVE DESIGN ===== */
 @media (max-width: 480px) {
   .slash-menu {
-    min-width: 280px;
-    max-width: calc(100vw - 32px);
-    margin: 0 16px;
+    min-width: 280px !important;
+    max-width: calc(100vw - 32px) !important;
+    margin: 0 16px !important;
   }
   
-  .slash-search-input {
-    padding: 10px 14px;
-    font-size: 15px;
+  .slash-menu .slash-search-input {
+    padding: 10px 14px !important;
+    font-size: 15px !important;
   }
   
-  .slash-menu-item {
-    padding: 6px 10px;
-    gap: 10px;
+  .slash-menu .slash-menu-item {
+    padding: 6px 10px !important;
+    gap: 10px !important;
   }
   
-  .slash-menu-preview {
-    min-width: 28px;
-    height: 22px;
-    font-size: 10px;
+  .slash-menu .slash-menu-preview {
+    min-width: 28px !important;
+    height: 22px !important;
+    font-size: 10px !important;
   }
   
-  .slash-menu-selection-indicator {
-    width: 14px;
-    height: 14px;
+  .slash-menu .slash-menu-selection-indicator {
+    width: 14px !important;
+    height: 14px !important;
   }
+}
+
+/* ===== HIGH SPECIFICITY OVERRIDES ===== */
+/* Ensure our styles take precedence over any conflicting CSS */
+body .slash-menu,
+html .slash-menu,
+#root .slash-menu,
+[data-reactroot] .slash-menu {
+  background: #ffffff !important;
+  border: 1px solid #e3e2e0 !important;
+  color: #37352f !important;
+}
+
+/* Force Notion colors on all child elements */
+body .slash-menu *,
+html .slash-menu *,
+#root .slash-menu *,
+[data-reactroot] .slash-menu * {
+  color: inherit !important;
 } 
