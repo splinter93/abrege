@@ -85,9 +85,8 @@ export const SLASH_COMMANDS = [
     alias: { fr: ['/image', '/img', '/photo'], en: ['/image', '/img', '/photo'] },
     description: { fr: 'Insérer une image dans le document', en: 'Insert an image into the document' },
     action: (editor) => {
-      if (editor?.options?.handleOpenImageMenu) {
-        return editor.options.handleOpenImageMenu();
-      }
+      // Cette action sera gérée spécialement par EditorSlashMenu
+      // pour ouvrir le menu image de la toolbar
       return false;
     },
     preview: '<div style="display:flex;align-items:center;justify-content:center;width:40px;height:24px;background:linear-gradient(135deg,#f1f5f9,#e2e8f0);border:1px solid #cbd5e1;border-radius:6px;color:#64748b;font-size:12px;">🖼️</div>',

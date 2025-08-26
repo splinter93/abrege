@@ -24,6 +24,111 @@ interface SlashMenuProps {
   lang?: string;
 }
 
+// Icônes pour chaque type de commande
+const getCommandIcon = (commandId: string) => {
+  const icons: Record<string, React.ReactNode> = {
+    h1: (
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <path d="M8 3v10M3 8h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+        <path d="M3 3h10v10H3z" stroke="currentColor" strokeWidth="1.5" fill="none"/>
+      </svg>
+    ),
+    h2: (
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <path d="M3 3h10v3H3zM3 8h10v5H3z" stroke="currentColor" strokeWidth="1.5" fill="none"/>
+      </svg>
+    ),
+    h3: (
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <path d="M3 3h10v2H3zM3 6h10v2H3zM3 9h10v4H3z" stroke="currentColor" strokeWidth="1.5" fill="none"/>
+      </svg>
+    ),
+    paragraph: (
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <path d="M3 4h10M3 8h10M3 12h6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+      </svg>
+    ),
+    bulletList: (
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <circle cx="3" cy="4" r="1" fill="currentColor"/>
+        <circle cx="3" cy="8" r="1" fill="currentColor"/>
+        <circle cx="3" cy="12" r="1" fill="currentColor"/>
+        <path d="M6 4h8M6 8h8M6 12h8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+      </svg>
+    ),
+    numberedList: (
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <path d="M3 4h1v8H3zM6 4h8M6 8h8M6 12h8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+        <text x="2" y="6" fontSize="8" fill="currentColor" textAnchor="middle">1</text>
+        <text x="2" y="10" fontSize="8" fill="currentColor" textAnchor="middle">2</text>
+        <text x="2" y="14" fontSize="8" fill="currentColor" textAnchor="middle">3</text>
+      </svg>
+    ),
+    checklist: (
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <rect x="2" y="2" width="12" height="12" rx="2" stroke="currentColor" strokeWidth="1.5" fill="none"/>
+        <path d="M5 8l2 2 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+      </svg>
+    ),
+    quote: (
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <path d="M4 4h8v8H4z" stroke="currentColor" strokeWidth="1.5" fill="none"/>
+        <path d="M6 6h4M6 8h4M6 10h2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+      </svg>
+    ),
+    code: (
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <path d="M6 4L2 8l4 4M10 4l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+      </svg>
+    ),
+    separator: (
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <path d="M2 8h12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+      </svg>
+    ),
+    image: (
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <rect x="2" y="2" width="12" height="12" rx="2" stroke="currentColor" strokeWidth="1.5" fill="none"/>
+        <circle cx="6" cy="6" r="1.5" fill="currentColor"/>
+        <path d="M2 12l3-3 2 2 3-3 4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+      </svg>
+    ),
+    video: (
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <rect x="2" y="4" width="12" height="8" rx="2" stroke="currentColor" strokeWidth="1.5" fill="none"/>
+        <path d="M6 6l4 2-4 2z" fill="currentColor"/>
+      </svg>
+    ),
+    table: (
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <path d="M2 2h12v12H2z" stroke="currentColor" strokeWidth="1.5" fill="none"/>
+        <path d="M2 6h12M2 10h12M6 2v12" stroke="currentColor" strokeWidth="1.5"/>
+      </svg>
+    ),
+    callout: (
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <path d="M8 2l6 4v4l-6 4-6-4V6l6-4z" stroke="currentColor" strokeWidth="1.5" fill="none"/>
+        <path d="M8 6v4M6 8h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+      </svg>
+    ),
+    toggle: (
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <rect x="2" y="2" width="12" height="12" rx="6" stroke="currentColor" strokeWidth="1.5" fill="none"/>
+        <circle cx="6" cy="8" r="1.5" fill="currentColor"/>
+        <path d="M8 8h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+      </svg>
+    ),
+    default: (
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <rect x="2" y="2" width="12" height="12" rx="2" stroke="currentColor" strokeWidth="1.5" fill="none"/>
+        <path d="M6 6h4M6 8h4M6 10h2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+      </svg>
+    )
+  };
+  
+  return icons[commandId] || icons.default;
+};
+
 const SlashMenu: React.FC<SlashMenuProps> = ({ open, search, setSearch, onSelect, anchorRef, lang = 'fr' }) => {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -136,12 +241,20 @@ const SlashMenu: React.FC<SlashMenuProps> = ({ open, search, setSearch, onSelect
               aria-selected={isSelected}
               aria-label={`${cmd.label[langKey]} - ${cmd.description?.[langKey] || ''}`}
             >
+              {/* Icône de la commande */}
+              <div className="slash-menu-icon">
+                {getCommandIcon(cmd.id)}
+              </div>
+              
+              {/* Contenu textuel */}
               <div className="slash-menu-texts">
                 <span className="slash-menu-label">{cmd.label[langKey]}</span>
                 {cmd.description?.[langKey] && (
                   <span className="slash-menu-desc">{cmd.description[langKey]}</span>
                 )}
               </div>
+              
+              {/* Preview de la commande */}
               {cmd.preview && (
                 <span 
                   className="slash-menu-preview" 
@@ -149,6 +262,8 @@ const SlashMenu: React.FC<SlashMenuProps> = ({ open, search, setSearch, onSelect
                   aria-hidden="true"
                 />
               )}
+              
+              {/* Indicateur de sélection */}
               {isSelected && (
                 <div className="slash-menu-selection-indicator" aria-hidden="true">
                   <svg width="16" height="16" viewBox="0 0 16 16" fill="none">

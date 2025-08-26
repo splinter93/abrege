@@ -15,6 +15,7 @@ type SlashCommand = {
 export interface EditorSlashMenuProps {
   onInsert: (cmd: SlashCommand) => void;
   lang?: string;
+  onOpenImageMenu?: () => void;
 }
 
 export interface EditorSlashMenuHandle {
@@ -23,7 +24,7 @@ export interface EditorSlashMenuHandle {
 }
 
 const EditorSlashMenu = forwardRef<EditorSlashMenuHandle, EditorSlashMenuProps>(
-  function EditorSlashMenu({ onInsert, lang = 'fr' }, ref) {
+  function EditorSlashMenu({ onInsert, lang = 'fr', onOpenImageMenu }, ref) {
     const [slashOpen, setSlashOpen] = useState(false);
     const [slashSearch, setSlashSearch] = useState('');
     const slashAnchorRef = useRef<{ left: number; top: number; closeMenu?: () => void }>({ left: 0, top: 0 });
@@ -51,6 +52,13 @@ const EditorSlashMenu = forwardRef<EditorSlashMenuHandle, EditorSlashMenuProps>(
 
     // Fonction pour insérer un bloc
     const handleSelect = (cmd: SlashCommand) => {
+      // Gestion spéciale pour la commande image
+      if (cmd.id === 'image' && onOpenImageMenu) {
+        onOpenImageMenu();
+        closeMenu();
+        return;
+      }
+      
       onInsert(cmd);
       closeMenu();
     };

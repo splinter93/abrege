@@ -998,6 +998,7 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
                 <EditorSlashMenu
                   ref={slashMenuRef}
                   lang={slashLang}
+                  onOpenImageMenu={() => { setImageMenuTarget('content'); setImageMenuOpen(true); }}
                   onInsert={(cmd) => {
                     if (!editor) {
                       console.error('Editor non disponible pour slash command');

@@ -3,9 +3,9 @@
 .editor-toc,
 .editor-toc-uncollapsed {
   width: 220px;
-  background: var(--surface-2);
+  background: #1a1a1a;
   border-radius: 16px;
-  color: var(--text-2);
+  color: #ededed;
   overflow-y: auto;
   font-family: inherit;
   display: flex;
@@ -16,7 +16,7 @@
   max-height: 56vh;
   transition: box-shadow 0.18s, background 0.18s, width 0.22s cubic-bezier(0.2,0.8,0.4,1);
   scrollbar-width: thin;
-  scrollbar-color: var(--accent-primary) var(--surface-2);
+  scrollbar-color: #6b7280 #1a1a1a;
 }
 
 .editor-toc::-webkit-scrollbar,
@@ -25,19 +25,19 @@
 }
 .editor-toc::-webkit-scrollbar-thumb,
 .editor-toc-uncollapsed::-webkit-scrollbar-thumb {
-  background: var(--accent-primary);
+  background: #6b7280;
   border-radius: 8px;
 }
 .editor-toc::-webkit-scrollbar-track,
 .editor-toc-uncollapsed::-webkit-scrollbar-track {
-  background: var(--surface-2);
+  background: #1a1a1a;
   border-radius: 8px;
 }
 
 .editor-toc-collapsed {
   width: 48px;
   min-width: 48px;
-  background: var(--surface-2);
+  background: #1a1a1a;
   border-radius: 16px;
   display: flex;
   flex-direction: column;
@@ -51,7 +51,7 @@
 
 .editor-toc-item {
   padding: 8px 18px;
-  color: var(--text-2);
+  color: #ededed;
   font-size: var(--ui-font-size-md);
   background: none;
   border: none;
@@ -62,15 +62,15 @@
   opacity: 0.8;
 }
 .editor-toc-item:hover {
-  background: var(--surface-hover);
-  color: var(--accent-primary);
+  background: rgba(107, 114, 128, 0.1);
+  color: #6b7280;
   opacity: 1;
 }
 .editor-toc-item-active {
-  color: var(--accent-primary);
+  color: #6b7280;
   font-weight: 700;
-  background: var(--surface-1);
-  border-left: 3px solid var(--accent-primary);
+  background: rgba(107, 114, 128, 0.15);
+  border-left: 3px solid #6b7280;
   opacity: 1;
 }
 .editor-toc-item-h2 {
@@ -80,16 +80,28 @@
 }
 .editor-toc-item-h3 {
   font-size: var(--ui-font-size-md);
-  margin-left: 18px;
+  margin-left: 16px;
   font-weight: 400;
   opacity: 0.7;
+}
+
+/* Séparateurs entre les H2 */
+.editor-toc-item-h2:not(:last-child) {
+  border-bottom: 1px solid rgba(107, 114, 128, 0.2);
+  margin-bottom: 8px;
+  padding-bottom: 12px;
+}
+
+/* Espacement après le dernier H2 pour éviter le séparateur */
+.editor-toc-item-h2:last-child {
+  margin-bottom: 8px;
 }
 .editor-toc-toggle {
   width: 32px;
   height: 32px;
   background: none;
   border: none;
-  color: var(--text-2);
+  color: #ededed;
   border-radius: 8px;
   display: flex;
   align-items: center;
@@ -99,6 +111,6 @@
   transition: background 0.15s, color 0.15s;
 }
 .editor-toc-toggle:hover {
-  background: var(--surface-hover);
-  color: var(--accent-primary);
+  background: rgba(107, 114, 128, 0.1);
+  color: #6b7280;
 } 
