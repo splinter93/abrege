@@ -1,8 +1,8 @@
-/* Modern Glassmorphism Slash Command Menu - Stylish & Sophisticated */
+/* Modern Dark Slash Command Menu - Stylish & Sophisticated */
 
 :root {
-  --slash-bg: rgba(15, 23, 42, 0.85);
-  --slash-bg-hover: rgba(30, 41, 59, 0.95);
+  --slash-bg: rgba(15, 23, 42, 0.95);
+  --slash-bg-hover: rgba(30, 41, 59, 0.98);
   --slash-border: rgba(148, 163, 184, 0.2);
   --slash-border-hover: rgba(148, 163, 184, 0.4);
   --slash-text: #f1f5f9;
