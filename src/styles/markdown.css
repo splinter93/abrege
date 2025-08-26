@@ -63,8 +63,8 @@ html {
    ========================================================================== */
 
 .markdown-body h1 {
-  font-size: 2.25rem;
-  font-weight: 900;
+  font-size: 2.25rem !important;
+  font-weight: 900 !important;
   line-height: 1.15;
   margin: 3rem 0 1.5rem 0;
   color: var(--editor-text-color);
@@ -77,8 +77,8 @@ html {
   /* H1 underline removed */
   
 .markdown-body h2 {
-  font-size: 1.75rem;
-  font-weight: 900;
+  font-size: 1.75rem !important;
+  font-weight: 900 !important;
   line-height: 1.2;
   margin: 2.5rem 0 1.25rem 0;
   color: var(--editor-text-color);
@@ -91,8 +91,8 @@ html {
   /* H2 underline removed */
   
 .markdown-body h3 {
-  font-size: 1.5rem;
-  font-weight: 900;
+  font-size: 1.5rem !important;
+  font-weight: 900 !important;
   line-height: 1.25;
   margin: 2rem 0 1rem 0;
   color: var(--editor-text-color);
@@ -787,9 +787,9 @@ html {
       font-size: 0.95rem;
       line-height: 1.7;
     }
-    .markdown-body h1 { font-size: 1.875rem; margin: 2.5rem 0 1.25rem 0; }
-    .markdown-body h2 { font-size: 1.5rem; margin: 2rem 0 1rem 0; }
-    .markdown-body h3 { font-size: 1.25rem; margin: 1.75rem 0 0.875rem 0; }
+    .markdown-body h1 { margin: 2.5rem 0 1.25rem 0; }
+    .markdown-body h2 { margin: 2rem 0 1rem 0; }
+    .markdown-body h3 { margin: 1.75rem 0 0.875rem 0; }
     .markdown-body p { margin: 0 0 1.25rem 0; line-height: 1.7; }
     .markdown-body ul, .markdown-body ol { margin: 1.25rem 0; padding-left: 1.5em; }
     .markdown-body li { margin: 0.625rem 0; }
