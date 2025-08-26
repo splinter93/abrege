@@ -18,8 +18,8 @@
   z-index: 99999 !important;
   overflow: hidden !important;
   
-  /* Visual Design - Authentic Notion */
-  background: #ffffff !important;
+  /* Visual Design - Authentic Notion with visible background */
+  background: #fafafa !important;
   border: 1px solid #e3e2e0 !important;
   border-radius: 6px !important;
   box-shadow: 
@@ -123,7 +123,7 @@
   padding: 8px 12px !important;
   margin: 1px 0 !important;
   
-  /* Visual Design - Authentic Notion */
+  /* Visual Design - Authentic Notion with visible background */
   background: transparent !important;
   color: #37352f !important;
   border-radius: 4px !important;
@@ -139,12 +139,12 @@
 
 /* Hover state */
 .slash-menu .slash-menu-item:hover {
-  background: #f7f6f3 !important;
+  background: #f0f0f0 !important;
 }
 
 /* Selected state */
 .slash-menu .slash-menu-item.selected {
-  background: #f1f5f9 !important;
+  background: #e8f2ff !important;
 }
 
 /* ===== SELECTION INDICATOR ===== */
@@ -232,8 +232,8 @@
   justify-content: center !important;
   padding: 0 8px !important;
   
-  /* Visual Design - Authentic Notion */
-  background: #f7f6f3 !important;
+  /* Visual Design - Authentic Notion with visible background */
+  background: #f0f0f0 !important;
   color: #787774 !important;
   border: 1px solid #e3e2e0 !important;
   border-radius: 4px !important;
@@ -253,13 +253,13 @@
 
 /* Hover state for preview */
 .slash-menu .slash-menu-item:hover .slash-menu-preview {
-  background: #ffffff !important;
+  background: #e8e8e8 !important;
   border-color: #d1d0ce !important;
 }
 
 /* Selected state for preview */
 .slash-menu .slash-menu-item.selected .slash-menu-preview {
-  background: #f1f5f9 !important;
+  background: #e8f2ff !important;
   border-color: #2e75cc !important;
   color: #2e75cc !important;
 }
@@ -329,7 +329,7 @@ body .slash-menu,
 html .slash-menu,
 #root .slash-menu,
 [data-reactroot] .slash-menu {
-  background: #ffffff !important;
+  background: #fafafa !important;
   border: 1px solid #e3e2e0 !important;
   color: #37352f !important;
 }
