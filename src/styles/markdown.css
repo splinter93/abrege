@@ -18,325 +18,327 @@
   background: none;
   margin: 0;
   padding: 0;
-    font-feature-settings: "kern" 1, "liga" 1, "calt" 1, "ss01" 1;
+  font-feature-settings: "kern" 1, "liga" 1, "calt" 1, "ss01" 1;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-    letter-spacing: -0.005em; /* adouci pour la lisibilité */
-    color-scheme: light dark;
-    /* FORCER l'alignement à gauche sur tous les éléments */
-    text-align: left !important;
-  }
-  
-  /* Bords de conteneur propres */
-  .markdown-body > :first-child { margin-top: 0; }
-  .markdown-body > :last-child { margin-bottom: 0; }
-  
+  letter-spacing: -0.005em; /* adouci pour la lisibilité */
+  color-scheme: light dark;
   /* FORCER l'alignement à gauche sur tous les éléments */
-  .markdown-body * {
-    text-align: left !important;
-    text-align-last: left !important;
-  }
-  
-  /* Exceptions pour les éléments qui doivent rester centrés */
-  .markdown-body img,
-  .markdown-body .center,
-  .markdown-body [align="center"] {
-    text-align: center !important;
-  }
-  
-  .markdown-body [align="right"] {
-    text-align: right !important;
+  text-align: left !important;
+}
+
+/* Bords de conteneur propres */
+.markdown-body > :first-child { margin-top: 0; }
+.markdown-body > :last-child { margin-bottom: 0; }
+
+/* FORCE left alignment on base elements */
+.markdown-body h1, .markdown-body h2, .markdown-body h3, .markdown-body h4, .markdown-body h5, .markdown-body h6,
+.markdown-body p, .markdown-body li, .markdown-body blockquote, .markdown-body pre, .markdown-body code,
+.markdown-body table, .markdown-body th, .markdown-body td {
+  text-align: left !important;
+  text-align-last: left !important;
+}
+
+/* Exceptions for elements that should remain centered */
+.markdown-body img,
+.markdown-body .center,
+.markdown-body [align="center"] {
+  text-align: center !important;
+}
+
+.markdown-body [align="right"] {
+  text-align: right !important;
 }
 
 /* ==========================================================================
      HEADINGS - TYPOGRAPHIE PREMIUM CHATGPT
    ========================================================================== */
 
-  .markdown-body h1 {
-    font-size: 2.25rem;
-    font-weight: 800;
-    line-height: 1.15;
-    margin: 3rem 0 1.5rem 0;
-    color: var(--editor-text-color);
-    letter-spacing: -0.02em;
-    font-family: var(--editor-font-family);
-    position: relative;
-    scroll-margin-top: 6rem; /* ancrage propre */
-  }
-  
-  /* Suppression du soulignement H1 */
+.markdown-body h1 {
+  font-size: 2.25rem;
+  font-weight: 800;
+  line-height: 1.15;
+  margin: 3rem 0 1.5rem 0;
+  color: var(--editor-text-color);
+  letter-spacing: -0.02em;
+  font-family: var(--editor-font-family);
+  position: relative;
+  scroll-margin-top: 6rem; /* clean anchor positioning */
+}
+
+  /* H1 underline removed */
   
   .markdown-body h2 {
-    font-size: 1.75rem;
-    font-weight: 700;
-    line-height: 1.2;
-    margin: 2.5rem 0 1.25rem 0;
+  font-size: 1.75rem;
+  font-weight: 700;
+  line-height: 1.2;
+  margin: 2.5rem 0 1.25rem 0;
   color: var(--editor-text-color);
-    letter-spacing: -0.015em;
-    font-family: var(--editor-font-family);
-    position: relative;
-    scroll-margin-top: 6rem;
-  }
-  
-  /* Suppression du soulignement H2 */
+  letter-spacing: -0.015em;
+  font-family: var(--editor-font-family);
+  position: relative;
+  scroll-margin-top: 6rem;
+}
+
+  /* H2 underline removed */
   
   .markdown-body h3 {
-    font-size: 1.5rem;
-    font-weight: 700;
-    line-height: 1.25;
-    margin: 2rem 0 1rem 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.25;
+  margin: 2rem 0 1rem 0;
   color: var(--editor-text-color);
-    letter-spacing: -0.01em;
-    font-family: var(--editor-font-family);
-    position: relative;
-    scroll-margin-top: 6rem;
-  }
-  
-  /* Suppression du soulignement H3 */
+  letter-spacing: -0.01em;
+  font-family: var(--editor-font-family);
+  position: relative;
+  scroll-margin-top: 6rem;
+}
+
+  /* H3 underline removed */
   
   .markdown-body h4 {
-    font-size: 1.25rem;
-    font-weight: 600;
-    line-height: 1.3;
-    margin: 1.75rem 0 0.875rem 0;
-    color: var(--editor-text-color);
-    letter-spacing: -0.005em;
-    font-family: var(--editor-font-family);
-    scroll-margin-top: 6rem;
-  }
-  
-  .markdown-body h5 {
-    font-size: 1.125rem;
-    font-weight: 600;
-    line-height: 1.35;
-    margin: 1.5rem 0 0.75rem 0;
-    color: var(--editor-text-color);
-    font-family: var(--editor-font-family);
-    scroll-margin-top: 6rem;
-  }
-  
-  .markdown-body h6 {
-    font-size: 1rem;
+  font-size: 1.25rem;
   font-weight: 600;
-    line-height: 1.4;
-    margin: 1.25rem 0 0.625rem 0;
-    color: var(--editor-text-color);
-    font-family: var(--editor-font-family);
+  line-height: 1.3;
+  margin: 1.75rem 0 0.875rem 0;
+  color: var(--editor-text-color);
+  letter-spacing: -0.005em;
+  font-family: var(--editor-font-family);
+  scroll-margin-top: 6rem;
+}
+
+.markdown-body h5 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  line-height: 1.35;
+  margin: 1.5rem 0 0.75rem 0;
+  color: var(--editor-text-color);
+  font-family: var(--editor-font-family);
+  scroll-margin-top: 6rem;
+}
+
+.markdown-body h6 {
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.4;
+  margin: 1.25rem 0 0.625rem 0;
+  color: var(--editor-text-color);
+  font-family: var(--editor-font-family);
   text-transform: uppercase;
   letter-spacing: 0.05em;
-    scroll-margin-top: 6rem;
+  scroll-margin-top: 6rem;
 }
 
 /* ==========================================================================
      PARAGRAPHES - ESPACEMENTS PARFAITS
    ========================================================================== */
 
-  .markdown-body p {
-    margin: 0 0 1.5rem 0;
-    line-height: 1.8;
-    text-align: left !important;
-    text-align-last: left !important;
-    hyphens: auto;
-    word-break: break-word;
-    max-width: 100%;
-  }
-  
-  .markdown-body p:last-child { margin-bottom: 0; }
-  
-  /* Espacement spécial après les titres */
+.markdown-body p {
+  margin: 0 0 1.5rem 0;
+  line-height: 1.8;
+  text-align: left !important;
+  text-align-last: left !important;
+  hyphens: auto;
+  word-break: break-word;
+  max-width: 100%;
+}
+
+.markdown-body p:last-child { margin-bottom: 0; }
+
+  /* Special spacing after headings */
   .markdown-body h1 + p,
-  .markdown-body h2 + p,
-  .markdown-body h3 + p { margin-top: 0.5rem; }
+.markdown-body h2 + p,
+.markdown-body h3 + p { margin-top: 0.5rem; }
 
 /* ==========================================================================
      LISTES - HIÉRARCHIE VISUELLE PARFAITE
    ========================================================================== */
    
-  .markdown-body ul,
+.markdown-body ul,
 .markdown-body ol {
-    margin: 1.5rem 0;
-    padding-left: 1.75em;
-    line-height: 1.8;
-    text-align: left !important;
+  margin: 1.5rem 0;
+  padding-left: 1.75em;
+  line-height: 1.8;
+  text-align: left !important;
 }
-  
-  .markdown-body ul { list-style-type: disc; }
-  .markdown-body ol { list-style-type: decimal; }
+
+.markdown-body ul { list-style-type: disc; }
+.markdown-body ol { list-style-type: decimal; }
 
 .markdown-body li {
-    margin: 0.75rem 0;
-    line-height: 1.8;
-    padding-left: 0.5em;
+  margin: 0.75rem 0;
+  line-height: 1.8;
+  padding-left: 0.5em;
   position: relative;
-    text-align: left !important;
-  }
+  text-align: left !important;
+}
   
-  /* SUPPRIMER les bullets des listes qui contiennent des checkboxes */
-  .markdown-body ul li:has(> input[type="checkbox"]),
-  .markdown-body ol li:has(> input[type="checkbox"]) {
-    list-style: none !important;
-    list-style-type: none !important;
-    padding-left: 0 !important;
-    margin-left: 0 !important;
-  }
+/* SUPPRIMER les bullets des listes qui contiennent des checkboxes */
+.markdown-body ul li:has(> input[type="checkbox"]),
+.markdown-body ol li:has(> input[type="checkbox"]) {
+  list-style: none !important;
+  list-style-type: none !important;
+  padding-left: 0 !important;
+  margin-left: 0 !important;
+}
+
+/* Aligner correctement le texte avec les checkboxes */
+.markdown-body li:has(> input[type="checkbox"]) {
+  display: flex !important;
+  align-items: flex-start !important;
+  gap: 0.6em !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+  width: 100% !important;
+}
+
+.markdown-body li:has(> input[type="checkbox"]) > *:not(input) {
+  flex: 1 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  min-width: 0 !important;
+  display: inline !important;
+}
+
+/* Règle de fallback pour les navigateurs qui ne supportent pas :has() */
+.markdown-body li input[type="checkbox"] {
+  margin-left: -1.5em; /* Décaler vers la gauche pour compenser le padding de la liste */
+}
+
+/* Supprimer les bullets de tous les éléments avec checkbox (méthode alternative) */
+.markdown-body ul li:has(input[type="checkbox"]),
+.markdown-body ol li:has(input[type="checkbox"]) {
+  list-style: none !important;
+}
   
-  /* Aligner correctement le texte avec les checkboxes */
-  .markdown-body li:has(> input[type="checkbox"]) {
-    display: flex !important;
-    align-items: flex-start !important;
-    gap: 0.6em !important;
-    flex-direction: row !important;
-    flex-wrap: nowrap !important;
-    width: 100% !important;
-  }
+/* STYLES SPÉCIFIQUES POUR TIPTAP TASK ITEMS */
+/* Cibler les éléments TaskItem de Tiptap */
+.ProseMirror li[data-type="taskItem"],
+.ProseMirror .task-list-item {
+  list-style: none !important;
+  list-style-type: none !important;
+  padding-left: 0 !important;
+  margin-left: 0 !important;
+  display: flex !important;
+  align-items: flex-start !important;
+  gap: 0.6em !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+  width: 100% !important;
+}
+
+/* Supprimer les pseudo-éléments des TaskItem */
+.ProseMirror li[data-type="taskItem"]::before,
+.ProseMirror li[data-type="taskItem"]::after,
+.ProseMirror .task-list-item::before,
+.ProseMirror .task-list-item::after {
+  content: none !important;
+  display: none !important;
+}
+
+/* Aligner le contenu des TaskItem */
+.ProseMirror li[data-type="taskItem"] > *:not(input),
+.ProseMirror .task-list-item > *:not(input) {
+  flex: 1 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  min-width: 0 !important;
+  display: inline !important;
+}
+
+/* Styles spécifiques pour les checkboxes dans les TaskItem */
+.ProseMirror li[data-type="taskItem"] input[type="checkbox"],
+.ProseMirror .task-list-item input[type="checkbox"] {
+  margin: 0 !important;
+  margin-top: 0.1em !important;
+  flex-shrink: 0 !important;
+  flex-grow: 0 !important;
+  order: -1 !important;
+}
   
-  .markdown-body li:has(> input[type="checkbox"]) > *:not(input) {
-    flex: 1 !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    min-width: 0 !important;
-    display: inline !important;
-  }
+/* RÈGLES ULTRA-AGRESSIVES pour forcer l'alignement horizontal */
+.markdown-body li:has(> input[type="checkbox"]),
+.ProseMirror li[data-type="taskItem"],
+.ProseMirror .task-list-item {
+  white-space: nowrap !important;
+  overflow: visible !important;
+}
+
+/* Forcer la checkbox à rester sur la même ligne */
+.markdown-body li:has(> input[type="checkbox"]) input[type="checkbox"],
+.ProseMirror li[data-type="taskItem"] input[type="checkbox"],
+.ProseMirror .task-list-item input[type="checkbox"] {
+  order: -1 !important;
+  flex-shrink: 0 !important;
+  flex-grow: 0 !important;
+}
+
+/* Forcer le contenu à rester sur la même ligne */
+.markdown-body li:has(> input[type="checkbox"]) > *:not(input),
+.ProseMirror li[data-type="taskItem"] > *:not(input),
+.ProseMirror .task-list-item > *:not(input) {
+  order: 1 !important;
+  flex-shrink: 1 !important;
+  white-space: normal !important;
+}
+
+/* APPROCHE ALTERNATIVE : Styles universels pour TOUS les inputs checkbox */
+.markdown-body input[type="checkbox"],
+.ProseMirror input[type="checkbox"] {
+  float: left !important;
+  margin: 0.1em 0.6em 0 0 !important;
+  clear: both !important;
+}
+
+/* Positionner la checkbox en absolu si le flexbox ne marche pas */
+.markdown-body li:has(input[type="checkbox"]) {
+  padding-left: 1.2em !important;
+  position: relative !important;
+  margin-left: -1em !important;
+}
+
+.markdown-body li:has(input[type="checkbox"]) input[type="checkbox"] {
+  position: absolute !important;
+  left: -0.8em !important;
+  top: 0.2em !important;
+}
   
-  /* Règle de fallback pour les navigateurs qui ne supportent pas :has() */
-  .markdown-body li input[type="checkbox"] {
-    margin-left: -1.5em; /* Décaler vers la gauche pour compenser le padding de la liste */
-  }
-  
-  /* Supprimer les bullets de tous les éléments avec checkbox (méthode alternative) */
-  .markdown-body ul li:has(input[type="checkbox"]),
-  .markdown-body ol li:has(input[type="checkbox"]) {
-    list-style: none !important;
-  }
-  
-  /* STYLES SPÉCIFIQUES POUR TIPTAP TASK ITEMS */
-  /* Cibler les éléments TaskItem de Tiptap */
-  .ProseMirror li[data-type="taskItem"],
-  .ProseMirror .task-list-item {
-    list-style: none !important;
-    list-style-type: none !important;
-    padding-left: 0 !important;
-    margin-left: 0 !important;
-    display: flex !important;
-    align-items: flex-start !important;
-    gap: 0.6em !important;
-    flex-direction: row !important;
-    flex-wrap: nowrap !important;
-    width: 100% !important;
-  }
-  
-  /* Supprimer les pseudo-éléments des TaskItem */
-  .ProseMirror li[data-type="taskItem"]::before,
-  .ProseMirror li[data-type="taskItem"]::after,
-  .ProseMirror .task-list-item::before,
-  .ProseMirror .task-list-item::after {
-    content: none !important;
-    display: none !important;
-  }
-  
-  /* Aligner le contenu des TaskItem */
-  .ProseMirror li[data-type="taskItem"] > *:not(input),
-  .ProseMirror .task-list-item > *:not(input) {
-    flex: 1 !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    min-width: 0 !important;
-    display: inline !important;
-  }
-  
-  /* Styles spécifiques pour les checkboxes dans les TaskItem */
-  .ProseMirror li[data-type="taskItem"] input[type="checkbox"],
-  .ProseMirror .task-list-item input[type="checkbox"] {
-    margin: 0 !important;
-    margin-top: 0.1em !important;
-    flex-shrink: 0 !important;
-    flex-grow: 0 !important;
-    order: -1 !important;
-  }
-  
-  /* RÈGLES ULTRA-AGRESSIVES pour forcer l'alignement horizontal */
-  .markdown-body li:has(> input[type="checkbox"]),
-  .ProseMirror li[data-type="taskItem"],
-  .ProseMirror .task-list-item {
-    white-space: nowrap !important;
-    overflow: visible !important;
-  }
-  
-  /* Forcer la checkbox à rester sur la même ligne */
-  .markdown-body li:has(> input[type="checkbox"]) input[type="checkbox"],
-  .ProseMirror li[data-type="taskItem"] input[type="checkbox"],
-  .ProseMirror .task-list-item input[type="checkbox"] {
-    order: -1 !important;
-    flex-shrink: 0 !important;
-    flex-grow: 0 !important;
-  }
-  
-  /* Forcer le contenu à rester sur la même ligne */
-  .markdown-body li:has(> input[type="checkbox"]) > *:not(input),
-  .ProseMirror li[data-type="taskItem"] > *:not(input),
-  .ProseMirror .task-list-item > *:not(input) {
-    order: 1 !important;
-    flex-shrink: 1 !important;
-    white-space: normal !important;
-  }
-  
-  /* APPROCHE ALTERNATIVE : Styles universels pour TOUS les inputs checkbox */
-  .markdown-body input[type="checkbox"],
-  .ProseMirror input[type="checkbox"] {
-    float: left !important;
-    margin: 0.1em 0.6em 0 0 !important;
-    clear: both !important;
-  }
-  
-      /* Positionner la checkbox en absolu si le flexbox ne marche pas */
-    .markdown-body li:has(input[type="checkbox"]) {
-      padding-left: 1.2em !important;
-      position: relative !important;
-      margin-left: -1em !important;
-    }
-    
-    .markdown-body li:has(input[type="checkbox"]) input[type="checkbox"] {
-      position: absolute !important;
-      left: -0.8em !important;
-      top: 0.2em !important;
-    }
-  
-  /* RESTAURER les bullets normales pour les listes SANS checkboxes */
-  .markdown-body ul li:not(:has(input[type="checkbox"])) {
-    list-style-type: disc !important;
-    padding-left: 0 !important;
-    margin-left: 0 !important;
-  }
-  
-  .markdown-body ol li:not(:has(input[type="checkbox"])) {
-    list-style-type: decimal !important;
-    padding-left: 0 !important;
-    margin-left: 0 !important;
-  }
-  
-  /* Nested lists normales (sans checkboxes) */
-  .markdown-body ul ul li:not(:has(input[type="checkbox"])) {
-    list-style-type: circle !important;
-  }
-  
-  .markdown-body ol ol li:not(:has(input[type="checkbox"])) {
-    list-style-type: lower-alpha !important;
-  }
-  
-  .markdown-body ol ol ol li:not(:has(input[type="checkbox"])) {
-    list-style-type: lower-roman !important;
-  }
-  
-  /* Nested lists */
-  .markdown-body ul ul,
-  .markdown-body ul ol,
-  .markdown-body ol ul,
-  .markdown-body ol ol { margin: 0.75rem 0 0.75rem 1.5em; }
-  
-  .markdown-body ul ul { list-style-type: circle; }
-  .markdown-body ol ol { list-style-type: lower-alpha; }
-  .markdown-body ol ol ol { list-style-type: lower-roman; }
+/* RESTAURER les bullets normales pour les listes SANS checkboxes */
+.markdown-body ul li:not(:has(input[type="checkbox"])) {
+  list-style-type: disc !important;
+  padding-left: 0 !important;
+  margin-left: 0 !important;
+}
+
+.markdown-body ol li:not(:has(input[type="checkbox"])) {
+  list-style-type: decimal !important;
+  padding-left: 0 !important;
+  margin-left: 0 !important;
+}
+
+/* Nested lists normales (sans checkboxes) */
+.markdown-body ul ul li:not(:has(input[type="checkbox"])) {
+  list-style-type: circle !important;
+}
+
+.markdown-body ol ol li:not(:has(input[type="checkbox"])) {
+  list-style-type: lower-alpha !important;
+}
+
+.markdown-body ol ol ol li:not(:has(input[type="checkbox"])) {
+  list-style-type: lower-roman !important;
+}
+
+/* Nested lists */
+.markdown-body ul ul,
+.markdown-body ul ol,
+.markdown-body ol ul,
+.markdown-body ol ol { margin: 0.75rem 0 0.75rem 1.5em; }
+
+.markdown-body ul ul { list-style-type: circle; }
+.markdown-body ol ol { list-style-type: lower-alpha; }
+.markdown-body ol ol ol { list-style-type: lower-roman; }
 
 /* ==========================================================================
      LIENS - DESIGN PREMIUM ACCESSIBLE
@@ -557,42 +559,48 @@
 }
 
 /* ==========================================================================
-     CHECKBOXES - STYLES PRÉSERVÉS (NE PAS MODIFIER)
+     CHECKBOXES - STYLES UNIFIÉS ET OPTIMISÉS
    ========================================================================== */
 
+/* Styles de base pour toutes les checkboxes */
 .markdown-body input[type='checkbox'],
-.editor-content input[type='checkbox'] {
+.editor-content input[type='checkbox'],
+.ProseMirror input[type='checkbox'] {
   appearance: none;
-    width: 1.6em;
-    height: 1.6em;
+  width: 1.6em;
+  height: 1.6em;
   border: 2px solid var(--border-subtle);
   border-radius: 6px;
   background: var(--surface-1);
   display: inline-block;
-    vertical-align: top;
+  vertical-align: top;
   position: relative;
   transition: border-color 0.18s, background 0.18s;
   cursor: pointer;
   margin-right: 0.8em;
-    margin-top: 0.1em; /* Légèrement décalé vers le bas pour l'alignement */
-    flex-shrink: 0; /* Empêcher la réduction de taille */
+  margin-top: 0.1em; /* Légèrement décalé vers le bas pour l'alignement */
+  flex-shrink: 0; /* Empêcher la réduction de taille */
 }
 
+/* État checked */
 .markdown-body input[type='checkbox']:checked,
-.editor-content input[type='checkbox']:checked {
+.editor-content input[type='checkbox']:checked,
+.ProseMirror input[type='checkbox']:checked {
   border-color: var(--accent-primary);
   background: var(--accent-primary);
 }
 
+/* Symbole de validation */
 .markdown-body input[type='checkbox']:checked::after,
-.editor-content input[type='checkbox']:checked::after {
-    content: '✓' !important;
+.editor-content input[type='checkbox']:checked::after,
+.ProseMirror input[type='checkbox']:checked::after {
+  content: '✓' !important;
   position: absolute !important;
   top: 50% !important;
   left: 50% !important;
   transform: translate(-50%, -50%) !important;
   color: white !important;
-    font-size: 1em !important;
+  font-size: 1em !important;
   font-weight: bold !important;
   line-height: 1 !important;
   text-align: center !important;
@@ -601,8 +609,10 @@
   justify-content: center !important;
 }
 
+/* État focus */
 .markdown-body input[type='checkbox']:focus,
-.editor-content input[type='checkbox']:focus {
+.editor-content input[type='checkbox']:focus,
+.ProseMirror input[type='checkbox']:focus {
   outline: 2px solid var(--accent-primary);
   outline-offset: 1px;
 }
