@@ -1,59 +1,53 @@
-/* Modern Dark Slash Command Menu - Elegant & Subtle */
+/* Notion-Style Slash Command Menu - Clean & Minimal */
 
 :root {
-  --slash-bg: #1a1a1a;
-  --slash-bg-hover: #2a2a2a;
-  --slash-border: #333333;
-  --slash-border-hover: #404040;
-  --slash-text: #e5e5e5;
-  --slash-text-muted: #a0a0a0;
-  --slash-text-secondary: #808080;
-  --slash-accent: #3b82f6;
-  --slash-accent-light: rgba(59, 130, 246, 0.15);
-  --slash-accent-hover: rgba(59, 130, 246, 0.25);
-  --slash-shadow: 
-    0 4px 6px -1px rgba(0, 0, 0, 0.3),
-    0 2px 4px -1px rgba(0, 0, 0, 0.2);
-  --slash-shadow-hover: 
-    0 10px 15px -3px rgba(0, 0, 0, 0.4),
-    0 4px 6px -2px rgba(0, 0, 0, 0.3);
+  --notion-bg: #ffffff;
+  --notion-bg-hover: #f7f6f3;
+  --notion-border: #e3e2e0;
+  --notion-border-hover: #d1d0ce;
+  --notion-text: #37352f;
+  --notion-text-muted: #787774;
+  --notion-text-secondary: #9b9a97;
+  --notion-accent: #2e75cc;
+  --notion-accent-light: #f1f5f9;
+  --notion-shadow: 
+    0 0 0 1px rgba(55, 53, 47, 0.09),
+    0 2px 8px 0 rgba(55, 53, 47, 0.09);
+  --notion-shadow-hover: 
+    0 0 0 1px rgba(55, 53, 47, 0.09),
+    0 4px 12px 0 rgba(55, 53, 47, 0.12);
 }
 
-@keyframes slashMenuEnter {
+@keyframes menuEnter {
   0% { 
     opacity: 0; 
-    transform: translateY(8px) scale(0.96); 
+    transform: translateY(4px); 
   }
   100% { 
     opacity: 1; 
-    transform: translateY(0) scale(1); 
+    transform: translateY(0); 
   }
-}
-
-@keyframes itemHover {
-  0% { transform: translateX(0); }
-  100% { transform: translateX(2px); }
 }
 
 .slash-menu {
   position: fixed;
   min-width: 320px;
   max-width: 440px;
-  background: var(--slash-bg);
-  border-radius: 12px;
-  box-shadow: var(--slash-shadow);
+  background: var(--notion-bg);
+  border-radius: 6px;
+  box-shadow: var(--notion-shadow);
   z-index: 99999;
   padding: 0;
-  border: 1px solid var(--slash-border);
-  font-family: 'Noto Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  border: 1px solid var(--notion-border);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, 'Apple Color Emoji', Arial, sans-serif, 'Segoe UI Emoji', 'Segoe UI Symbol';
   font-size: 14px;
   overflow: hidden;
-  animation: slashMenuEnter 200ms cubic-bezier(0.16, 1, 0.3, 1);
-  transition: box-shadow 200ms ease;
+  animation: menuEnter 150ms ease-out;
+  transition: box-shadow 150ms ease;
 }
 
 .slash-menu:hover {
-  box-shadow: var(--slash-shadow-hover);
+  box-shadow: var(--notion-shadow-hover);
 }
 
 /* Search Input */
@@ -62,23 +56,22 @@
   border: none;
   outline: none;
   background: transparent;
-  color: var(--slash-text);
+  color: var(--notion-text);
   font-size: 16px;
-  padding: 16px 20px 14px 20px;
-  border-bottom: 1px solid var(--slash-border);
-  border-radius: 12px 12px 0 0;
-  font-weight: 500;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--notion-border);
+  font-weight: 400;
   letter-spacing: -0.01em;
-  caret-color: var(--slash-accent);
-  transition: border-color 200ms ease;
+  caret-color: var(--notion-accent);
+  transition: border-color 150ms ease;
 }
 
 .slash-search-input:focus {
-  border-bottom-color: var(--slash-accent);
+  border-bottom-color: var(--notion-accent);
 }
 
 .slash-search-input::placeholder {
-  color: var(--slash-text-secondary);
+  color: var(--notion-text-secondary);
   font-weight: 400;
 }
 
@@ -86,13 +79,13 @@
 .slash-menu-list {
   max-height: 320px;
   overflow-y: auto;
-  padding: 8px;
+  padding: 6px;
   scrollbar-width: thin;
-  scrollbar-color: var(--slash-border) transparent;
+  scrollbar-color: var(--notion-border) transparent;
 }
 
 .slash-menu-list::-webkit-scrollbar {
-  width: 6px;
+  width: 4px;
 }
 
 .slash-menu-list::-webkit-scrollbar-track {
@@ -100,76 +93,44 @@
 }
 
 .slash-menu-list::-webkit-scrollbar-thumb {
-  background: var(--slash-border);
-  border-radius: 3px;
-  border: 1px solid transparent;
-  background-clip: content-box;
+  background: var(--notion-border);
+  border-radius: 2px;
 }
 
 .slash-menu-list::-webkit-scrollbar-thumb:hover {
-  background: var(--slash-border-hover);
+  background: var(--notion-border-hover);
 }
 
 .slash-menu-empty {
-  padding: 24px 20px;
-  color: var(--slash-text-secondary);
+  padding: 20px 16px;
+  color: var(--notion-text-secondary);
   text-align: center;
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 400;
 }
 
 /* Menu Items */
 .slash-menu-item {
   display: flex;
   align-items: center;
-  gap: 16px;
-  padding: 12px 16px;
-  margin: 2px 0;
+  gap: 12px;
+  padding: 8px 12px;
+  margin: 1px 0;
   background: transparent;
-  color: var(--slash-text);
-  border-radius: 8px;
+  color: var(--notion-text);
+  border-radius: 4px;
   cursor: pointer;
-  transition: all 200ms ease;
+  transition: background-color 150ms ease;
   position: relative;
   overflow: hidden;
-  border: 1px solid transparent;
-}
-
-.slash-menu-item::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 3px;
-  background: var(--slash-accent);
-  transform: scaleY(0);
-  transition: transform 200ms ease;
 }
 
 .slash-menu-item:hover {
-  background: var(--slash-bg-hover);
-  transform: translateX(2px);
-  border-color: var(--slash-border-hover);
-}
-
-.slash-menu-item:hover::before {
-  transform: scaleY(1);
+  background: var(--notion-bg-hover);
 }
 
 .slash-menu-item.selected {
-  background: var(--slash-accent-light);
-  border-color: var(--slash-accent);
-  color: var(--slash-accent);
-  transform: translateX(2px);
-}
-
-.slash-menu-item.selected::before {
-  transform: scaleY(1);
-}
-
-.slash-menu-item.selected:hover {
-  background: var(--slash-accent-hover);
+  background: var(--notion-accent-light);
 }
 
 /* Selection Indicator */
@@ -177,12 +138,12 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 20px;
-  height: 20px;
-  color: var(--slash-accent);
+  width: 16px;
+  height: 16px;
+  color: var(--notion-accent);
   opacity: 0.8;
   flex-shrink: 0;
-  animation: fadeIn 200ms ease;
+  animation: fadeIn 150ms ease;
 }
 
 @keyframes fadeIn {
@@ -190,7 +151,7 @@
   to { opacity: 0.8; transform: scale(1); }
 }
 
-/* Text Content - Now on the left */
+/* Text Content - Left side */
 .slash-menu-texts {
   display: flex;
   flex-direction: column;
@@ -200,81 +161,72 @@
 }
 
 .slash-menu-label {
-  font-weight: 600;
-  font-size: 15px;
+  font-weight: 500;
+  font-size: 14px;
   line-height: 1.4;
-  color: var(--slash-text);
-  margin-bottom: 2px;
+  color: var(--notion-text);
+  margin-bottom: 1px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  transition: color 200ms ease;
-}
-
-.slash-menu-item:hover .slash-menu-label {
-  color: var(--slash-text);
+  transition: color 150ms ease;
 }
 
 .slash-menu-item.selected .slash-menu-label {
-  color: var(--slash-accent);
-  font-weight: 700;
+  color: var(--notion-accent);
+  font-weight: 600;
 }
 
 .slash-menu-desc {
   font-weight: 400;
-  font-size: 13px;
+  font-size: 12px;
   line-height: 1.3;
-  color: var(--slash-text-secondary);
+  color: var(--notion-text-secondary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  transition: color 200ms ease;
-}
-
-.slash-menu-item:hover .slash-menu-desc {
-  color: var(--slash-text-muted);
+  transition: color 150ms ease;
 }
 
 .slash-menu-item.selected .slash-menu-desc {
-  color: var(--slash-accent);
+  color: var(--notion-accent);
   opacity: 0.8;
 }
 
-/* Preview Badge - Now on the right */
+/* Preview Badge - Right side */
 .slash-menu-preview {
-  min-width: 36px;
-  height: 28px;
+  min-width: 32px;
+  height: 24px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0 10px;
-  border-radius: 6px;
-  background: #2a2a2a;
-  color: var(--slash-text);
-  font-size: 12px;
-  font-weight: 600;
-  border: 1px solid var(--slash-border);
-  transition: all 200ms ease;
+  padding: 0 8px;
+  border-radius: 4px;
+  background: var(--notion-bg-hover);
+  color: var(--notion-text-muted);
+  font-size: 11px;
+  font-weight: 500;
+  border: 1px solid var(--notion-border);
+  transition: all 150ms ease;
   flex-shrink: 0;
   order: 2;
   margin-left: auto;
 }
 
 .slash-menu-item:hover .slash-menu-preview {
-  background: #333333;
-  border-color: var(--slash-border-hover);
-  transform: scale(1.05);
+  background: var(--notion-bg);
+  border-color: var(--notion-border-hover);
 }
 
 .slash-menu-item.selected .slash-menu-preview {
-  background: var(--slash-accent-light);
-  border-color: var(--slash-accent);
-  color: var(--slash-accent);
+  background: var(--notion-accent-light);
+  border-color: var(--notion-accent);
+  color: var(--notion-accent);
 }
 
 /* Focus states for accessibility */
 .slash-menu-item:focus-visible {
-  outline: 2px solid var(--slash-accent);
+  outline: 2px solid var(--notion-accent);
   outline-offset: 2px;
 }
 
@@ -287,23 +239,23 @@
   }
   
   .slash-search-input {
-    padding: 14px 16px 12px 16px;
+    padding: 10px 14px;
     font-size: 15px;
   }
   
   .slash-menu-item {
-    padding: 10px 14px;
-    gap: 14px;
+    padding: 6px 10px;
+    gap: 10px;
   }
   
   .slash-menu-preview {
-    min-width: 32px;
-    height: 26px;
-    font-size: 11px;
+    min-width: 28px;
+    height: 22px;
+    font-size: 10px;
   }
   
   .slash-menu-selection-indicator {
-    width: 18px;
-    height: 18px;
+    width: 14px;
+    height: 14px;
   }
 } 
