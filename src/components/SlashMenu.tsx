@@ -104,7 +104,7 @@ const SlashMenu: React.FC<SlashMenuProps> = ({ open, search, setSearch, onSelect
     <div
       ref={menuRef}
       className="slash-menu"
-      style={{ position: 'fixed', left: coords.left, top: coords.top }}
+      style={{ left: coords.left, top: coords.top }}
       tabIndex={-1}
       onKeyDown={handleKeyDown}
     >
