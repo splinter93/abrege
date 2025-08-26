@@ -67,7 +67,11 @@ html {
 .markdown-body .markdown-body h1,
 .ProseMirror .markdown-body h1,
 .editor-content .markdown-body h1,
-.chat-markdown .markdown-body h1 {
+.chat-markdown .markdown-body h1,
+/* DIRECT OVERRIDE OF TYPOGRAPHY.CSS CONFLICTS */
+.editor-content h1,
+.ProseMirror.editor-content h1,
+.editor-content .ProseMirror h1 {
   font-size: 2.25rem !important;
   font-weight: 900 !important;
   line-height: 1.15;
@@ -86,7 +90,11 @@ html {
 .markdown-body .markdown-body h2,
 .ProseMirror .markdown-body h2,
 .editor-content .markdown-body h2,
-.chat-markdown .markdown-body h2 {
+.chat-markdown .markdown-body h2,
+/* DIRECT OVERRIDE OF TYPOGRAPHY.CSS CONFLICTS */
+.editor-content h2,
+.ProseMirror.editor-content h2,
+.editor-content .ProseMirror h2 {
   font-size: 1.75rem !important;
   font-weight: 900 !important;
   line-height: 1.2;
@@ -105,7 +113,11 @@ html {
 .markdown-body .markdown-body h3,
 .ProseMirror .markdown-body h3,
 .editor-content .markdown-body h3,
-.chat-markdown .markdown-body h3 {
+.chat-markdown .markdown-body h3,
+/* DIRECT OVERRIDE OF TYPOGRAPHY.CSS CONFLICTS */
+.editor-content h3,
+.ProseMirror.editor-content h3,
+.editor-content .ProseMirror h3 {
   font-size: 1.5rem !important;
   font-weight: 900 !important;
   line-height: 1.25;
