@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import SimpleContextMenu from "./SimpleContextMenu";
 import "./ClasseurBandeau.css";
 
@@ -29,6 +29,10 @@ const ClasseurBandeau: React.FC<ClasseurBandeauProps> = ({
   onDeleteClasseur,
 }) => {
   const [contextMenu, setContextMenu] = useState<{ visible: boolean; x: number; y: number; item: Classeur | null }>({ visible: false, x: 0, y: 0, item: null });
+  /**
+   * État pour le drag over visuel sur les icônes des classeurs
+   */
+  const [dragOverClasseurId, setDragOverClasseurId] = useState<string | null>(null);
 
   const handleContextMenu = (e: React.MouseEvent<HTMLButtonElement>, classeur: Classeur) => {
     e.preventDefault();
@@ -62,6 +66,61 @@ const ClasseurBandeau: React.FC<ClasseurBandeauProps> = ({
     }
     closeContextMenu();
   };
+
+  /**
+   * Handler pour le drop sur les icônes des classeurs
+   * Gère le déplacement cross-classeur des dossiers et notes
+   */
+  const handleDrop = useCallback((e: React.DragEvent, classeur: Classeur) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // Réinitialiser l'état de drag over
+    setDragOverClasseurId(null);
+    
+    try {
+      const data = JSON.parse(e.dataTransfer.getData('application/json'));
+      if (data && data.id && data.type) {
+        // Déclencher l'événement custom pour le drop sur classeur
+        window.dispatchEvent(new CustomEvent('drop-to-classeur', {
+          detail: { 
+            classeurId: classeur.id, 
+            itemId: data.id, 
+            itemType: data.type 
+          }
+        }));
+      }
+    } catch (error) {
+      // Fallback pour les données non-JSON (compatibilité)
+      const itemId = e.dataTransfer.getData('itemId');
+      const itemType = e.dataTransfer.getData('itemType') as 'folder' | 'file';
+      
+      if (itemId && itemType) {
+        window.dispatchEvent(new CustomEvent('drop-to-classeur', {
+          detail: { 
+            classeurId: classeur.id, 
+            itemId: itemId, 
+            itemType: itemType 
+          }
+        }));
+      }
+    }
+  }, []);
+
+  /**
+   * Handlers pour l'état visuel de drag over
+   * Améliore l'expérience utilisateur avec des indicateurs visuels
+   */
+  const handleDragOver = useCallback((e: React.DragEvent, classeur: Classeur) => {
+    e.preventDefault();
+    setDragOverClasseurId(classeur.id);
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setDragOverClasseurId(null);
+  }, []);
+
   return (
     <div className="classeur-bandeau">
       <div className="bandeau-content">
@@ -71,8 +130,17 @@ const ClasseurBandeau: React.FC<ClasseurBandeauProps> = ({
             className={`classeur-pill ${activeClasseurId === classeur.id ? 'active' : ''}`}
             onClick={() => onSelectClasseur(classeur.id)}
             onContextMenu={(e) => handleContextMenu(e, classeur)}
+            onDragOver={(e) => handleDragOver(e, classeur)}
+            onDragLeave={handleDragLeave}
+            onDrop={(e) => handleDrop(e, classeur)}
+            draggable={false}
           >
-            <span className="classeur-emoji">
+            <span 
+              className={`classeur-emoji ${dragOverClasseurId === classeur.id ? 'drag-over' : ''}`}
+              onDragOver={(e) => handleDragOver(e, classeur)}
+              onDragLeave={handleDragLeave}
+              onDrop={(e) => handleDrop(e, classeur)}
+            >
               {classeur.emoji && classeur.emoji.trim() !== "" ? classeur.emoji : "📁"}
             </span>
             <span className="classeur-name">{classeur.name}</span>

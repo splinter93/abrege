@@ -35,7 +35,7 @@ export async function PUT(
   try {
     const body = await request.json();
 
-    // Validation Zod V2
+    // Validation Zod V2 pour le déplacement de dossier uniquement
     const validationResult = validatePayload(moveNoteV2Schema, body);
     if (!validationResult.success) {
       logApi.info('❌ Validation échouée', context);
@@ -45,7 +45,7 @@ export async function PUT(
     const validatedData = validationResult.data;
 
     // Utiliser V2DatabaseUtils pour l'accès direct à la base de données
-    const result = await V2DatabaseUtils.moveNote(ref, validatedData.folder_id, userId, context);
+    const result = await V2DatabaseUtils.moveNote(ref, validatedData.folder_id || null, userId, context);
 
     const apiTime = Date.now() - startTime;
     logApi.info(`✅ Note déplacée en ${apiTime}ms`, context);

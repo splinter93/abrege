@@ -22,7 +22,7 @@ export interface UpdateNoteData {
   header_image?: string | null;
   header_image_offset?: number;
   header_image_blur?: number;
-  header_image_overlay?: string; // 🔧 CORRECTION: Changer de number à string pour correspondre au type Note
+  header_image_overlay?: string; // Type string pour correspondre au type Note
   header_title_in_image?: boolean;
   wide_mode?: boolean;
   a4_mode?: boolean;
@@ -70,30 +70,22 @@ export class V2UnifiedApi {
   private baseUrl: string;
 
   private constructor() {
-    // 🔧 CORRECTION : Construire l'URL de base pour les appels fetch
+    // Construire l'URL de base pour les appels fetch
     if (typeof window !== 'undefined') {
       // Côté client : utiliser l'origin de la page
       this.baseUrl = window.location.origin;
     } else {
       // Côté serveur : utiliser les variables d'environnement ou un fallback
-      if (process.env.NEXT_PUBLIC_APP_URL) {
-        this.baseUrl = process.env.NEXT_PUBLIC_APP_URL;
-      } else if (process.env.VERCEL_URL) {
+      if (process.env.VERCEL_URL) {
         this.baseUrl = `https://${process.env.VERCEL_URL}`;
       } else {
         this.baseUrl = 'http://localhost:3000'; // Fallback pour le développement local
       }
     }
     
-    console.log('🔧 [V2UnifiedApi] Base URL configurée:', {
-      baseUrl: this.baseUrl,
-      isClient: typeof window !== 'undefined',
-      env: {
-        NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
-        VERCEL_URL: process.env.VERCEL_URL,
-        NODE_ENV: process.env.NODE_ENV
-      }
-    });
+    if (process.env.NODE_ENV === 'development') {
+      logger.dev(`[V2UnifiedApi] Base URL configurée: ${this.baseUrl}`);
+    }
   }
 
   static getInstance(): V2UnifiedApi {
@@ -104,29 +96,34 @@ export class V2UnifiedApi {
   }
 
   /**
-   * Construire une URL absolue à partir d'un chemin relatif
-   * @param path Le chemin relatif (ex: /api/v2/note/create)
-   * @returns L'URL absolue
+   * Construire l'URL complète pour les appels API
+   * Gère automatiquement les slashes et la base URL
    */
   private buildUrl(path: string): string {
-    const fullUrl = `${this.baseUrl}${path}`;
-    console.log('🔗 [V2UnifiedApi] buildUrl:', { path, baseUrl: this.baseUrl, fullUrl });
+    // Nettoyer le chemin (enlever les slashes au début/fin)
+    const cleanPath = path.replace(/^\/+|\/+$/g, '');
+    
+    // Construire l'URL complète
+    const fullUrl = `${this.baseUrl}/${cleanPath}`;
+    
+    if (process.env.NODE_ENV === 'development') {
+      logger.dev(`[V2UnifiedApi] buildUrl: ${path} -> ${fullUrl}`);
+    }
+    
     return fullUrl;
   }
 
   /**
-   * Nettoyer et valider un ID (remplacer les tirets longs par des tirets courts)
-   * @param id L'ID à nettoyer et valider
-   * @param resourceType Le type de ressource (pour les messages d'erreur)
-   * @returns L'ID nettoyé
+   * Nettoyer et valider un ID ou slug
+   * Supprime les slashes au début/fin et valide le format
    */
-  private cleanAndValidateId(id: string, resourceType: string): string {
+  private cleanAndValidateId(id: string, type: 'note' | 'folder' | 'classeur'): string {
     // ✅ 1. Nettoyer l'ID (remplacer les tirets longs par des tirets courts)
     const cleanId = id.replace(/‑/g, '-'); // Remplace les em-dash (‑) par des hyphens (-)
     
     // ✅ 2. Valider que c'est un UUID valide
     if (!this.isUUID(cleanId)) {
-      throw new Error(`ID de ${resourceType} invalide: ${id}`);
+      throw new Error(`ID de ${type} invalide: ${id}`);
     }
     
     return cleanId;
@@ -142,59 +139,97 @@ export class V2UnifiedApi {
   }
 
   /**
-   * Récupère les headers d'authentification
+   * Récupérer les headers d'authentification pour les appels API
+   * Gère automatiquement l'importation de Supabase et la récupération de session
    */
   private async getAuthHeaders(): Promise<HeadersInit> {
     try {
-      console.log('🔐 [V2UnifiedApi] Début récupération headers...');
-      
-      const { supabase } = await import('@/supabaseClient');
-      console.log('✅ [V2UnifiedApi] Supabase importé');
-      
-      const { data: { session } } = await supabase.auth.getSession();
-      console.log('📋 [V2UnifiedApi] Session récupérée:', {
-        hasSession: !!session,
-        hasAccessToken: !!session?.access_token,
-        tokenLength: session?.access_token?.length || 0,
-        tokenStart: session?.access_token ? session.access_token.substring(0, 20) + '...' : 'N/A'
-      });
-      
-      const headers: HeadersInit = { 
-        'Content-Type': 'application/json',
-        'X-Client-Type': 'v2_unified_api'
-      };
-      
-      // Ajouter le token d'authentification si disponible
-      if (session?.access_token) {
-        headers['Authorization'] = `Bearer ${session.access_token}`;
-        console.log('✅ [V2UnifiedApi] Token ajouté aux headers');
-      } else {
-        console.warn('⚠️ [V2UnifiedApi] Pas de token disponible - authentification échouera probablement');
+      if (process.env.NODE_ENV === 'development') {
+        logger.dev(`[V2UnifiedApi] Début récupération headers...`);
       }
       
-      console.log('🔐 [V2UnifiedApi] Headers finaux:', {
-        hasContentType: !!headers['Content-Type'],
-        hasClientType: !!headers['X-Client-Type'],
-        hasAuth: !!headers['Authorization'],
-        authHeader: headers['Authorization'] ? 'Bearer ***' : 'ABSENT'
-      });
+      // Importer Supabase dynamiquement (évite les erreurs SSR)
+      const { createClient } = await import('@supabase/supabase-js');
       
-      return headers;
+      if (process.env.NODE_ENV === 'development') {
+        logger.dev(`[V2UnifiedApi] Supabase importé`);
+      }
       
-    } catch (error) {
-      console.error('❌ [V2UnifiedApi] Erreur récupération headers:', {
-        error,
-        message: error instanceof Error ? error.message : 'Erreur inconnue',
-        stack: error instanceof Error ? error.stack : 'Pas de stack trace'
-      });
+      // Récupérer la session depuis le localStorage (côté client uniquement)
+      if (typeof window !== 'undefined') {
+        const supabase = createClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+        );
+        
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (process.env.NODE_ENV === 'development') {
+          logger.dev(`[V2UnifiedApi] Session récupérée:`, {
+            hasSession: !!session,
+            userId: session?.user?.id,
+            email: session?.user?.email
+          });
+        }
+        
+        if (session?.access_token) {
+          // Ajouter le token d'authentification si disponible
+          const headers: HeadersInit = {
+            'Content-Type': 'application/json',
+            'X-Client-Type': 'v2_unified_api',
+            'Authorization': `Bearer ${session.access_token}`
+          };
+          
+          if (process.env.NODE_ENV === 'development') {
+            logger.dev(`[V2UnifiedApi] Token ajouté aux headers`);
+          }
+          
+          if (process.env.NODE_ENV === 'development') {
+            logger.dev(`[V2UnifiedApi] Headers finaux:`, {
+              hasContentType: !!headers['Content-Type'],
+              hasAuth: !!headers['Authorization'],
+              hasClientType: !!headers['X-Client-Type']
+            });
+          }
+          
+          return headers;
+        } else {
+          if (process.env.NODE_ENV === 'development') {
+            logger.warn(`[V2UnifiedApi] Pas de token disponible - authentification échouera probablement`);
+          }
+        }
+      }
       
       // En cas d'erreur, retourner les headers de base
-      const fallbackHeaders = { 
+      const fallbackHeaders: HeadersInit = {
         'Content-Type': 'application/json',
         'X-Client-Type': 'v2_unified_api'
       };
       
-      console.log('🔄 [V2UnifiedApi] Utilisation headers de fallback:', fallbackHeaders);
+      if (process.env.NODE_ENV === 'development') {
+        logger.dev(`[V2UnifiedApi] Utilisation headers de fallback:`, fallbackHeaders);
+      }
+      
+      return fallbackHeaders;
+    } catch (error) {
+      if (process.env.NODE_ENV === 'development') {
+        logger.error(`[V2UnifiedApi] Erreur récupération headers:`, {
+          error,
+          message: error instanceof Error ? error.message : 'Erreur inconnue',
+          stack: error instanceof Error ? error.stack : 'Pas de stack trace'
+        });
+      }
+      
+      // En cas d'erreur, retourner les headers de base
+      const fallbackHeaders: HeadersInit = {
+        'Content-Type': 'application/json',
+        'X-Client-Type': 'v2_unified_api'
+      };
+      
+      if (process.env.NODE_ENV === 'development') {
+        logger.dev(`[V2UnifiedApi] Utilisation headers de fallback:`, fallbackHeaders);
+      }
+      
       return fallbackHeaders;
     }
   }
@@ -254,20 +289,22 @@ export class V2UnifiedApi {
       // ✅ 1. Nettoyer et valider l'ID
       const cleanNoteId = this.cleanAndValidateId(noteId, 'note');
       
+      // Nettoyer les données avant mise à jour (supprimer les champs undefined)
+      const cleanData = Object.fromEntries(
+        Object.entries(updateData).filter(([_, value]) => value !== undefined)
+      );
+      
       // 🚀 2. Mise à jour optimiste immédiate
       const store = useFileSystemStore.getState();
       const currentNote = store.notes[cleanNoteId];
+      const previousNote = { ...currentNote };
       
-      if (!currentNote) {
-        throw new Error('Note non trouvée');
-      }
-
-      // 🔧 CORRECTION: Nettoyer les données avant mise à jour
+      // Nettoyer les données avant mise à jour
       const sanitizedUpdateData = {
-        ...updateData,
-        header_image: updateData.header_image === null ? undefined : updateData.header_image,
+        ...cleanData,
+        header_image: cleanData.header_image === null ? undefined : cleanData.header_image,
         // S'assurer que header_image_overlay est une string
-        header_image_overlay: updateData.header_image_overlay !== undefined ? String(updateData.header_image_overlay) : undefined
+        header_image_overlay: cleanData.header_image_overlay !== undefined ? String(cleanData.header_image_overlay) : undefined
       };
       
       const updatedNote = { ...currentNote, ...sanitizedUpdateData, updated_at: new Date().toISOString() };
@@ -278,7 +315,7 @@ export class V2UnifiedApi {
       const response = await fetch(this.buildUrl(`/api/v2/note/${cleanNoteId}/update`), {
         method: 'PUT',
         headers,
-        body: JSON.stringify(updateData)
+        body: JSON.stringify(cleanData)
       });
 
       if (!response.ok) {
@@ -319,39 +356,33 @@ export class V2UnifiedApi {
   }
 
   /**
-   * Supprimer une note
+   * Supprimer une note (version simplifiée)
    */
   async deleteNote(noteId: string, externalToken?: string) {
+    if (process.env.NODE_ENV === 'development') {
+      logger.dev('[V2UnifiedApi] 🗑️ Suppression note unifié V2');
+    }
     const startTime = Date.now();
-
-    console.log('🚀 [V2UnifiedApi] Début suppression note:', { noteId, hasExternalToken: !!externalToken });
-
+    
     try {
-      // ✅ 1. Nettoyer et valider l'ID (supporte UUID ET slug)
-      console.log('🧹 [V2UnifiedApi] Nettoyage et validation ID...');
-
-      let cleanNoteId = noteId;
-
-      // 🔧 CORRECTION : Nettoyer le ref (enlever les slashes au début/fin)
-      cleanNoteId = cleanNoteId.replace(/^\/+|\/+$/g, '');
-      console.log('🧹 [V2UnifiedApi] Ref nettoyé:', { original: noteId, cleaned: cleanNoteId });
-
-      // Si c'est un UUID, le nettoyer et valider
-      if (this.isUUID(cleanNoteId)) {
-        cleanNoteId = this.cleanAndValidateId(cleanNoteId, 'note');
-        console.log('✅ [V2UnifiedApi] UUID nettoyé et validé:', { original: noteId, cleaned: cleanNoteId });
-      } else {
-        // Si c'est un slug, l'utiliser tel quel
-        console.log('✅ [V2UnifiedApi] Slug détecté, utilisation directe:', cleanNoteId);
+      // ✅ 1. Nettoyer et valider l'ID
+      const cleanNoteId = this.cleanAndValidateId(noteId, 'note');
+      
+      if (process.env.NODE_ENV === 'development') {
+        logger.dev(`[V2UnifiedApi] 🧹 ID nettoyé:`, { original: noteId, cleaned: cleanNoteId });
       }
 
       // ✅ 2. Appel vers l'endpoint API V2 DIRECT (pas de modification du store)
-      console.log('📡 [V2UnifiedApi] Appel endpoint DELETE...');
+      if (process.env.NODE_ENV === 'development') {
+        logger.dev(`[V2UnifiedApi] 📡 Appel endpoint DELETE...`);
+      }
       
       let headers: HeadersInit;
       if (externalToken) {
-        // 🔧 CORRECTION : Utiliser le token externe fourni
-        console.log('🔐 [V2UnifiedApi] Utilisation token externe');
+        // Utiliser le token externe fourni
+        if (process.env.NODE_ENV === 'development') {
+          logger.dev(`[V2UnifiedApi] 🔐 Utilisation token externe`);
+        }
         headers = {
           'Content-Type': 'application/json',
           'X-Client-Type': 'v2_unified_api',
@@ -359,45 +390,57 @@ export class V2UnifiedApi {
         };
       } else {
         // Fallback vers getAuthHeaders si pas de token externe
-        console.log('🔐 [V2UnifiedApi] Fallback vers getAuthHeaders');
+        if (process.env.NODE_ENV === 'development') {
+          logger.dev(`[V2UnifiedApi] 🔐 Fallback vers getAuthHeaders`);
+        }
         headers = await this.getAuthHeaders();
       }
       
-      console.log('🔐 [V2UnifiedApi] Headers préparés:', {
-        hasContentType: !!headers['Content-Type'],
-        hasAuth: !!headers['Authorization'],
-        hasClientType: !!headers['X-Client-Type']
-      });
+      if (process.env.NODE_ENV === 'development') {
+        logger.dev(`[V2UnifiedApi] 🔐 Headers préparés:`, {
+          hasContentType: !!headers['Content-Type'],
+          hasAuth: !!headers['Authorization'],
+          hasClientType: !!headers['X-Client-Type']
+        });
+      }
       
       const deleteUrl = this.buildUrl(`/api/v2/note/${cleanNoteId}/delete`);
-      console.log('🔗 [V2UnifiedApi] URL construite:', deleteUrl);
+      if (process.env.NODE_ENV === 'development') {
+        logger.dev(`[V2UnifiedApi] 🔗 URL construite:`, deleteUrl);
+      }
       
       const response = await fetch(deleteUrl, {
         method: 'DELETE',
         headers
       });
 
-      console.log('📥 [V2UnifiedApi] Réponse reçue:', {
-        status: response.status,
-        statusText: response.statusText,
-        ok: response.ok
-      });
+      if (process.env.NODE_ENV === 'development') {
+        logger.dev(`[V2UnifiedApi] 📥 Réponse reçue:`, {
+          status: response.status,
+          statusText: response.statusText,
+          ok: response.ok
+        });
+      }
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('❌ [V2UnifiedApi] Erreur HTTP:', {
-          status: response.status,
-          statusText: response.statusText,
-          errorText,
-          containsFailedToParse: errorText.includes('Failed to parse'),
-          containsURL: errorText.includes('URL')
-        });
+        if (process.env.NODE_ENV === 'development') {
+          logger.error(`[V2UnifiedApi] ❌ Erreur HTTP:`, {
+            status: response.status,
+            statusText: response.statusText,
+            errorText,
+            containsFailedToParse: errorText.includes('Failed to parse'),
+            containsURL: errorText.includes('URL')
+          });
+        }
         
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
 
       const result = await response.json();
-      console.log('✅ [V2UnifiedApi] Réponse JSON:', result);
+      if (process.env.NODE_ENV === 'development') {
+        logger.dev(`[V2UnifiedApi] ✅ Réponse JSON:`, result);
+      }
 
       if (!result.success) {
         throw new Error(result.error || 'Erreur lors de la suppression de la note');
@@ -407,7 +450,9 @@ export class V2UnifiedApi {
       // ✅ 3. Pas de restauration complexe (pas de modification du store)
 
       const duration = Date.now() - startTime;
-      console.log('✅ [V2UnifiedApi] Suppression réussie en', duration, 'ms');
+      if (process.env.NODE_ENV === 'development') {
+        logger.dev(`[V2UnifiedApi] ✅ Suppression réussie en ${duration}ms`);
+      }
       
       return {
         success: true,
@@ -416,13 +461,15 @@ export class V2UnifiedApi {
 
     } catch (error) {
       const duration = Date.now() - startTime;
-      console.error('💥 [V2UnifiedApi] Erreur complète:', {
-        error,
-        message: error instanceof Error ? error.message : 'Erreur inconnue',
-        stack: error instanceof Error ? error.stack : 'Pas de stack trace',
-        noteId,
-        duration
-      });
+      if (process.env.NODE_ENV === 'development') {
+        logger.error(`[V2UnifiedApi] 💥 Erreur complète:`, {
+          error,
+          message: error instanceof Error ? error.message : 'Erreur inconnue',
+          stack: error instanceof Error ? error.stack : 'Pas de stack trace',
+          noteId,
+          duration
+        });
+      }
       
       return {
         success: false,
@@ -576,7 +623,7 @@ export class V2UnifiedApi {
   /**
    * Déplacer une note avec mise à jour directe de Zustand + polling côté client
    */
-  async moveNote(noteId: string, targetFolderId: string | null) {
+  async moveNote(noteId: string, targetFolderId: string | null, targetClasseurId?: string) {
     if (process.env.NODE_ENV === 'development') {
       logger.dev('[V2UnifiedApi] 📦 Déplacement note unifié V2');
     }
@@ -586,12 +633,86 @@ export class V2UnifiedApi {
       // ✅ 1. Nettoyer et valider l'ID
       const cleanNoteId = this.cleanAndValidateId(noteId, 'note');
       
+      /**
+       * Utilise l'API V1 directement pour les déplacements cross-classeur
+       * Évite la complexité de redirection entre APIs
+       */
+      if (targetClasseurId) {
+        if (process.env.NODE_ENV === 'development') {
+          logger.dev(`[V2UnifiedApi] 🚀 Déplacement cross-classeur via API V1: ${targetClasseurId}`);
+        }
+        
+        // Utiliser l'API V1 directement pour le déplacement cross-classeur
+        const headers = await this.getAuthHeaders();
+        if (process.env.NODE_ENV === 'development') {
+          logger.dev(`[V2UnifiedApi] 🔧 Appel API V1: /api/v1/note/${cleanNoteId}/move`);
+          logger.dev(`[V2UnifiedApi] 🔧 Payload:`, { target_classeur_id: targetClasseurId, target_folder_id: targetFolderId });
+        }
+        
+        const response = await fetch(this.buildUrl(`/api/v1/note/${cleanNoteId}/move`), {
+          method: 'PATCH', // Utilise PATCH pour l'API V1 (méthode correcte)
+          headers,
+          body: JSON.stringify({
+            target_classeur_id: targetClasseurId,
+            target_folder_id: targetFolderId
+          })
+        });
+
+        if (process.env.NODE_ENV === 'development') {
+          logger.dev(`[V2UnifiedApi] 🔧 Réponse API V1: ${response.status} ${response.statusText}`);
+        }
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          if (process.env.NODE_ENV === 'development') {
+            logger.dev(`[V2UnifiedApi] ❌ Erreur API V1: ${errorText}`);
+          }
+          throw new Error(`Erreur déplacement cross-classeur: ${response.status} ${response.statusText} - ${errorText}`);
+        }
+
+        const result = await response.json();
+        const apiTime = Date.now() - startTime;
+        if (process.env.NODE_ENV === 'development') {
+          logger.dev(`[V2UnifiedApi] ✅ API V1 terminée en ${apiTime}ms`);
+        }
+
+        /**
+         * Récupérer le classeur_id de la note avant de la déplacer
+         * Assure la cohérence des données dans Zustand
+         */
+        const store = useFileSystemStore.getState();
+        const currentNote = store.notes[cleanNoteId];
+        const noteClasseurId = targetClasseurId || currentNote?.classeur_id;
+        
+        if (process.env.NODE_ENV === 'development') {
+          logger.dev(`[V2UnifiedApi] 📝 Note ${cleanNoteId} - classeur_id: ${noteClasseurId}, targetFolderId: ${targetFolderId}`);
+        }
+
+        // 🚀 Mise à jour directe de Zustand (instantanée)
+        store.moveNote(cleanNoteId, targetFolderId, noteClasseurId);
+        
+        // 🚀 5. Déclencher le polling intelligent immédiatement
+        await triggerUnifiedRealtimePolling('notes', 'UPDATE');
+        
+        const totalTime = Date.now() - startTime;
+        if (process.env.NODE_ENV === 'development') {
+          logger.dev(`[V2UnifiedApi] ✅ Note déplacée cross-classeur dans Zustand en ${totalTime}ms total`);
+        }
+        
+        return result;
+      }
+      
+      // Déplacement de dossier uniquement - utiliser l'API V2
+      if (process.env.NODE_ENV === 'development') {
+        logger.dev(`[V2UnifiedApi] 🚀 Déplacement de dossier: ${targetFolderId}`);
+      }
+      
       // 🚀 2. Appel vers l'endpoint API V2
       const headers = await this.getAuthHeaders();
       const response = await fetch(this.buildUrl(`/api/v2/note/${cleanNoteId}/move`), {
         method: 'PUT',
         headers,
-        body: JSON.stringify({ folder_id: targetFolderId }) // 🔧 CORRECTION: Utiliser folder_id au lieu de target_folder_id
+        body: JSON.stringify({ folder_id: targetFolderId })
       });
 
       if (!response.ok) {
@@ -602,10 +723,13 @@ export class V2UnifiedApi {
       const result = await response.json();
       const apiTime = Date.now() - startTime;
       if (process.env.NODE_ENV === 'development') {
-        logger.dev(`[V2UnifiedApi] ✅ API terminée en ${apiTime}ms`);
+        logger.dev(`[V2UnifiedApi] ✅ API V2 terminée en ${apiTime}ms`);
       }
 
-      // 🔧 CORRECTION: Récupérer le classeur_id de la note avant de la déplacer
+      /**
+       * Récupérer le classeur_id de la note avant de la déplacer
+       * Assure la cohérence des données dans Zustand
+       */
       const store = useFileSystemStore.getState();
       const currentNote = store.notes[cleanNoteId];
       const noteClasseurId = currentNote?.classeur_id;
@@ -650,7 +774,7 @@ export class V2UnifiedApi {
       const response = await fetch(this.buildUrl(`/api/v2/folder/${cleanFolderId}/move`), {
         method: 'PUT',
         headers,
-        body: JSON.stringify({ parent_id: targetParentId }) // 🔧 CORRECTION: Utiliser parent_id au lieu de target_parent_id
+        body: JSON.stringify({ parent_id: targetParentId }) // Utilise parent_id (format correct de l'API V2)
       });
 
       if (!response.ok) {
@@ -664,7 +788,10 @@ export class V2UnifiedApi {
         logger.dev(`[V2UnifiedApi] ✅ API terminée en ${apiTime}ms`);
       }
 
-      // 🔧 CORRECTION: Récupérer le classeur_id du dossier avant de le déplacer
+      /**
+       * Récupérer le classeur_id du dossier avant de le déplacer
+       * Assure la cohérence des données dans Zustand
+       */
       const store = useFileSystemStore.getState();
       const currentFolder = store.folders[cleanFolderId];
       const folderClasseurId = currentFolder?.classeur_id;
@@ -716,16 +843,38 @@ export class V2UnifiedApi {
         throw new Error(result.error || 'Erreur lors de la création du classeur');
       }
 
-      // 🚀 Déclencher le polling intelligent pour synchronisation
-      await triggerUnifiedRealtimePolling('classeurs', 'CREATE');
+      if (result.classeur) {
+        // Mapper emoji vers icon si nécessaire pour la compatibilité
+        const mappedClasseur = {
+          ...result.classeur,
+          icon: result.classeur.icon || result.classeur.emoji || '📁'
+        };
+        
+        // 🚀 Mise à jour directe de Zustand (instantanée)
+        const store = useFileSystemStore.getState();
+        store.addClasseur(mappedClasseur);
+        
+        // 🚀 Déclencher le polling intelligent immédiatement
+        await triggerUnifiedRealtimePolling('classeurs', 'CREATE');
+        
+        const totalTime = Date.now() - startTime;
+        if (process.env.NODE_ENV === 'development') {
+          logger.dev(`[V2UnifiedApi] ✅ Classeur ajouté dans Zustand en ${totalTime}ms total`);
+        }
+        
+        return {
+          success: true,
+          classeur: mappedClasseur,
+          duration: totalTime
+        };
+      }
 
       const duration = Date.now() - startTime;
       return {
-        success: true,
-        classeur: result.classeur,
+        success: false,
+        error: 'Aucun classeur retourné par l\'API',
         duration
       };
-
     } catch (error) {
       const duration = Date.now() - startTime;
       return {
@@ -749,7 +898,7 @@ export class V2UnifiedApi {
       // ✅ 1. Nettoyer et valider l'ID
       const cleanClasseurId = this.cleanAndValidateId(classeurId, 'classeur');
       
-      // 🔧 CORRECTION: Mapper emoji vers icon si nécessaire
+      // Mapper emoji vers icon si nécessaire pour la compatibilité
       const mappedData = {
         ...updateData,
         icon: updateData.icon || updateData.emoji

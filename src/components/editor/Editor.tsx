@@ -187,7 +187,11 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
       Link.configure({ openOnClick: false, autolink: true, linkOnPaste: true }),
       // Custom image node view to hook our image menu
       CustomImage.configure({ inline: false }),
-      Markdown.configure({ html: false })
+      Markdown.configure({ 
+        html: false,
+        transformPastedText: true,
+        transformCopiedText: true
+      })
     ],
     content: content || '',
     onUpdate: React.useCallback(({ editor }) => {
@@ -195,13 +199,36 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
         const md = editor.storage?.markdown?.getMarkdown?.() as string | undefined;
         const nextMarkdown = typeof md === 'string' ? md : content;
         if (nextMarkdown !== content) {
-          updateNote(noteId, { markdown_content: nextMarkdown });
+          // 🔧 CORRECTION : Nettoyer le Markdown échappé avant sauvegarde
+          const cleanMarkdown = cleanEscapedMarkdown(nextMarkdown);
+          updateNote(noteId, { markdown_content: cleanMarkdown });
         }
       } catch {
         // ignore
       }
     }, [content, noteId, updateNote]),
   });
+
+  // 🔧 FONCTION UTILITAIRE : Nettoyer le Markdown échappé
+  const cleanEscapedMarkdown = (markdown: string): string => {
+    return markdown
+      .replace(/\\\*/g, '*')           // Supprimer l'échappement des *
+      .replace(/\\_/g, '_')            // Supprimer l'échappement des _
+      .replace(/\\`/g, '`')            // Supprimer l'échappement des `
+      .replace(/\\\[/g, '[')           // Supprimer l'échappement des [
+      .replace(/\\\]/g, ']')           // Supprimer l'échappement des [
+      .replace(/\\\(/g, '(')           // Supprimer l'échappement des (
+      .replace(/\\\)/g, ')')           // Supprimer l'échappement des )
+      .replace(/\\>/g, '>')            // Supprimer l'échappement des >
+      .replace(/\\-/g, '-')            // Supprimer l'échappement des -
+      .replace(/\\\|/g, '|')           // Supprimer l'échappement des |
+      .replace(/\\~/g, '~')            // Supprimer l'échappement des ~
+      .replace(/\\=/g, '=')            // Supprimer l'échappement des =
+      .replace(/\\#/g, '#')            // Supprimer l'échappement des #
+      .replace(/&gt;/g, '>')           // Supprimer l'échappement HTML des >
+      .replace(/&lt;/g, '<')           // Supprimer l'échappement HTML des <
+      .replace(/&amp;/g, '&');         // Supprimer l'échappement HTML des &
+  };
 
   // Mise à jour intelligente du contenu de l'éditeur quand la note change
   const [isUpdatingFromStore, setIsUpdatingFromStore] = React.useState(false);
