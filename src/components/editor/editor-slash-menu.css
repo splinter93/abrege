@@ -1,6 +1,6 @@
 /**
- * NOTION-STYLE SLASH COMMAND MENU
- * Authentic Notion design with impeccable code quality
+ * NOTION-STYLE SLASH COMMAND MENU - TEST VERSION
+ * Testing with highly visible colors to diagnose CSS loading issues
  * 
  * Design Principles:
  * - Clean, minimal, professional
@@ -18,9 +18,9 @@
   z-index: 99999 !important;
   overflow: hidden !important;
   
-  /* Visual Design - Authentic Notion */
-  background: #ffffff !important;
-  border: 1px solid #e3e2e0 !important;
+  /* Visual Design - TEST COLORS (HIGHLY VISIBLE) */
+  background: #ff0000 !important; /* ROUGE VIF POUR TEST */
+  border: 3px solid #0000ff !important; /* BLEU VIF POUR TEST */
   border-radius: 6px !important;
   box-shadow: 
     0 0 0 1px rgba(55, 53, 47, 0.09),
@@ -123,8 +123,8 @@
   padding: 8px 12px !important;
   margin: 1px 0 !important;
   
-  /* Visual Design */
-  background: transparent !important;
+  /* Visual Design - TEST COLORS */
+  background: #00ff00 !important; /* VERT VIF POUR TEST */
   color: #37352f !important;
   border-radius: 4px !important;
   
@@ -139,12 +139,12 @@
 
 /* Hover state */
 .slash-menu .slash-menu-item:hover {
-  background: #f7f6f3 !important;
+  background: #ffff00 !important; /* JAUNE VIF POUR TEST */
 }
 
 /* Selected state */
 .slash-menu .slash-menu-item.selected {
-  background: #f1f5f9 !important;
+  background: #ff00ff !important; /* MAGENTA VIF POUR TEST */
 }
 
 /* ===== SELECTION INDICATOR ===== */
@@ -232,10 +232,10 @@
   justify-content: center !important;
   padding: 0 8px !important;
   
-  /* Visual Design */
-  background: #f7f6f3 !important;
-  color: #787774 !important;
-  border: 1px solid #e3e2e0 !important;
+  /* Visual Design - TEST COLORS */
+  background: #00ffff !important; /* CYAN VIF POUR TEST */
+  color: #37352f !important;
+  border: 2px solid #ff8000 !important; /* ORANGE VIF POUR TEST */
   border-radius: 4px !important;
   
   /* Typography */
@@ -253,13 +253,13 @@
 
 /* Hover state for preview */
 .slash-menu .slash-menu-item:hover .slash-menu-preview {
-  background: #ffffff !important;
-  border-color: #d1d0ce !important;
+  background: #8000ff !important; /* VIOLET VIF POUR TEST */
+  border-color: #ff0080 !important; /* ROSE VIF POUR TEST */
 }
 
 /* Selected state for preview */
 .slash-menu .slash-menu-item.selected .slash-menu-preview {
-  background: #f1f5f9 !important;
+  background: #ff8000 !important; /* ORANGE VIF POUR TEST */
   border-color: #2e75cc !important;
   color: #2e75cc !important;
 }
@@ -329,8 +329,8 @@ body .slash-menu,
 html .slash-menu,
 #root .slash-menu,
 [data-reactroot] .slash-menu {
-  background: #ffffff !important;
-  border: 1px solid #e3e2e0 !important;
+  background: #ff0000 !important; /* ROUGE VIF POUR TEST */
+  border: 3px solid #0000ff !important; /* BLEU VIF POUR TEST */
   color: #37352f !important;
 }
 
