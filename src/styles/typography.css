@@ -75,7 +75,7 @@
   /* ==========================================================================
      TAILLES HARMONISÉES - PREMIUM EDITOR
      ========================================================================== */
-  --editor-title-size: 2.5rem;      /* 40px - increased for better prominence */
+  --editor-title-size: 2.25rem;      /* 36px - optimal size for balance */
   --editor-body-size: 1rem;           /* 16px - premium size, was 18px */
   --editor-body-size-mobile: 0.9375rem; /* 15px - mobile optimized */
   --editor-h1-size: 2rem;             /* 32px - refined from 36px */
