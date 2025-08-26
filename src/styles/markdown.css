@@ -1,13 +1,13 @@
 /*
   ===============================
-  STYLES MARKDOWN ULTRA-PREMIUM - NIVEAU CHATGPT (révisé)
+  STYLES MARKDOWN ULTRA-PREMIUM - CHATGPT LEVEL (revised)
   ===============================
-  Typographie impeccable + accessibilité + robustesse ProseMirror
-  Racine : .markdown-body
+  Impeccable typography + accessibility + ProseMirror robustness
+  Root: .markdown-body
 */
 
 /* ==========================================================================
-   BASE STYLES - TYPOGRAPHIE PREMIUM
+   BASE STYLES - PREMIUM TYPOGRAPHY
    ========================================================================== */
 
 .markdown-body {
@@ -22,13 +22,13 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  letter-spacing: -0.005em; /* adouci pour la lisibilité */
+  letter-spacing: -0.005em; /* softened for readability */
   color-scheme: light dark;
-  /* FORCER l'alignement à gauche sur tous les éléments */
+  /* FORCE left alignment on all elements */
   text-align: left !important;
 }
 
-/* Bords de conteneur propres */
+/* Clean container borders */
 .markdown-body > :first-child { margin-top: 0; }
 .markdown-body > :last-child { margin-bottom: 0; }
 
@@ -52,7 +52,7 @@
 }
 
 /* ==========================================================================
-     HEADINGS - TYPOGRAPHIE PREMIUM CHATGPT
+   HEADINGS - PREMIUM CHATGPT TYPOGRAPHY
    ========================================================================== */
 
 .markdown-body h1 {
@@ -69,7 +69,7 @@
 
   /* H1 underline removed */
   
-  .markdown-body h2 {
+.markdown-body h2 {
   font-size: 1.75rem;
   font-weight: 700;
   line-height: 1.2;
@@ -83,7 +83,7 @@
 
   /* H2 underline removed */
   
-  .markdown-body h3 {
+.markdown-body h3 {
   font-size: 1.5rem;
   font-weight: 700;
   line-height: 1.25;
