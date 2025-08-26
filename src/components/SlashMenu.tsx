@@ -64,7 +64,7 @@ const SlashMenu: React.FC<SlashMenuProps> = ({ open, search, setSearch, onSelect
     if (open && inputRef.current) inputRef.current.focus();
   }, [open]);
 
-  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLDivElement>) => {
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (!open) return;
     if (e.key === 'ArrowDown') {
       setSelectedIndex(i => Math.min(i + 1, filtered.length - 1));
@@ -87,8 +87,16 @@ const SlashMenu: React.FC<SlashMenuProps> = ({ open, search, setSearch, onSelect
   }, [setSearch]);
 
   const handleBlur = useCallback(() => {
-    if (typeof anchorRef.current?.closeMenu === 'function') anchorRef.current.closeMenu();
+    anchorRef.current?.closeMenu && anchorRef.current.closeMenu();
   }, [anchorRef]);
+
+  const handleItemClick = useCallback((cmd: SlashCommand) => {
+    onSelect(cmd);
+  }, [onSelect]);
+
+  const handleItemMouseEnter = useCallback((index: number) => {
+    setSelectedIndex(index);
+  }, []);
 
   if (!open) return null;
 
@@ -115,23 +123,42 @@ const SlashMenu: React.FC<SlashMenuProps> = ({ open, search, setSearch, onSelect
           </div>
         )}
         {filtered.map((cmd, i) => {
+          const isSelected = i === selectedIndex;
           return (
             <div
               key={cmd.id}
-              className={`slash-menu-item${i === selectedIndex ? ' selected' : ''}`}
-              onMouseEnter={() => setSelectedIndex(i)}
-              onClick={() => onSelect(cmd)}
+              className={`slash-menu-item${isSelected ? ' selected' : ''}`}
+              onMouseEnter={() => handleItemMouseEnter(i)}
+              onClick={() => handleItemClick(cmd)}
               onMouseDown={e => e.preventDefault()}
+              role="button"
+              tabIndex={0}
+              aria-selected={isSelected}
+              aria-label={`${cmd.label[langKey]} - ${cmd.description?.[langKey] || ''}`}
             >
-              {cmd.preview && (
-                <span className="slash-menu-preview" dangerouslySetInnerHTML={{ __html: cmd.preview }} />
-              )}
               <div className="slash-menu-texts">
                 <span className="slash-menu-label">{cmd.label[langKey]}</span>
                 {cmd.description?.[langKey] && (
                   <span className="slash-menu-desc">{cmd.description[langKey]}</span>
                 )}
               </div>
+              {cmd.preview && (
+                <span 
+                  className="slash-menu-preview" 
+                  dangerouslySetInnerHTML={{ __html: cmd.preview }} 
+                  aria-hidden="true"
+                />
+              )}
+              {isSelected && (
+                <div className="slash-menu-selection-indicator" aria-hidden="true">
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    <path 
+                      d="M13.854 3.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0z" 
+                      fill="currentColor"
+                    />
+                  </svg>
+                </div>
+              )}
             </div>
           );
         })}
