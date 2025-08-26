@@ -62,20 +62,8 @@ html {
    HEADINGS - ULTRA-PREMIUM CHATGPT TYPOGRAPHY (OVERRIDE ALL CONFLICTS)
    ========================================================================== */
 
-/* ULTRA-SPECIFIC SELECTORS TO OVERRIDE ALL CONFLICTS */
-.markdown-body h1,
-.markdown-body .markdown-body h1,
-.ProseMirror .markdown-body h1,
-.editor-content .markdown-body h1,
-.chat-markdown .markdown-body h1,
-/* DIRECT OVERRIDE OF TYPOGRAPHY.CSS CONFLICTS */
-.editor-content h1,
-.ProseMirror.editor-content h1,
-.editor-content .ProseMirror h1,
-/* TIPTAP EDITOR DIRECT TARGETING */
-.tiptap-editor-container h1,
-.ProseMirror h1,
-.ProseMirror.editor-content h1 {
+/* ULTRA-BOLD HEADINGS - UNIVERSAL SELECTORS (NO MORE DUPLICATION!) */
+h1 {
   font-size: 2.25rem !important;
   font-weight: 900 !important;
   line-height: 1.15;
@@ -89,20 +77,8 @@ html {
 
   /* H1 underline removed */
   
-/* ULTRA-SPECIFIC SELECTORS TO OVERRIDE ALL CONFLICTS */
-.markdown-body h2,
-.markdown-body .markdown-body h2,
-.ProseMirror .markdown-body h2,
-.editor-content .markdown-body h2,
-.chat-markdown .markdown-body h2,
-/* DIRECT OVERRIDE OF TYPOGRAPHY.CSS CONFLICTS */
-.editor-content h2,
-.ProseMirror.editor-content h2,
-.editor-content .ProseMirror h2,
-/* TIPTAP EDITOR DIRECT TARGETING */
-.tiptap-editor-container h2,
-.ProseMirror h2,
-.ProseMirror.editor-content h2 {
+/* ULTRA-BOLD HEADINGS - UNIVERSAL SELECTORS (NO MORE DUPLICATION!) */
+h2 {
   font-size: 1.75rem !important;
   font-weight: 900 !important;
   line-height: 1.2;
@@ -116,20 +92,8 @@ html {
 
   /* H2 underline removed */
   
-/* ULTRA-SPECIFIC SELECTORS TO OVERRIDE ALL CONFLICTS */
-.markdown-body h3,
-.markdown-body .markdown-body h3,
-.ProseMirror .markdown-body h3,
-.editor-content .markdown-body h3,
-.chat-markdown .markdown-body h3,
-/* DIRECT OVERRIDE OF TYPOGRAPHY.CSS CONFLICTS */
-.editor-content h3,
-.ProseMirror.editor-content h3,
-.editor-content .ProseMirror h3,
-/* TIPTAP EDITOR DIRECT TARGETING */
-.tiptap-editor-container h3,
-.ProseMirror h3,
-.ProseMirror.editor-content h3 {
+/* ULTRA-BOLD HEADINGS - UNIVERSAL SELECTORS (NO MORE DUPLICATION!) */
+h3 {
   font-size: 1.5rem !important;
   font-weight: 900 !important;
   line-height: 1.25;
@@ -143,12 +107,8 @@ html {
 
   /* H3 underline removed */
   
-/* ULTRA-SPECIFIC SELECTORS TO OVERRIDE ALL CONFLICTS */
-.markdown-body h4,
-.markdown-body .markdown-body h4,
-.ProseMirror .markdown-body h4,
-.editor-content .markdown-body h4,
-.chat-markdown .markdown-body h4 {
+/* ULTRA-BOLD HEADINGS - UNIVERSAL SELECTORS (NO MORE DUPLICATION!) */
+h4 {
   font-size: 1.25rem !important;
   font-weight: 800 !important;
   line-height: 1.3;
@@ -159,12 +119,8 @@ html {
   scroll-margin-top: 6rem;
 }
 
-/* ULTRA-SPECIFIC SELECTORS TO OVERRIDE ALL CONFLICTS */
-.markdown-body h5,
-.markdown-body .markdown-body h5,
-.ProseMirror .markdown-body h5,
-.editor-content .markdown-body h5,
-.chat-markdown .markdown-body h5 {
+/* ULTRA-BOLD HEADINGS - UNIVERSAL SELECTORS (NO MORE DUPLICATION!) */
+h5 {
   font-size: 1.125rem !important;
   font-weight: 800 !important;
   line-height: 1.35;
@@ -174,12 +130,8 @@ html {
   scroll-margin-top: 6rem;
 }
 
-/* ULTRA-SPECIFIC SELECTORS TO OVERRIDE ALL CONFLICTS */
-.markdown-body h6,
-.markdown-body .markdown-body h6,
-.ProseMirror .markdown-body h6,
-.editor-content .markdown-body h6,
-.chat-markdown .markdown-body h6 {
+/* ULTRA-BOLD HEADINGS - UNIVERSAL SELECTORS (NO MORE DUPLICATION!) */
+h6 {
   font-size: 1rem !important;
   font-weight: 800 !important;
   line-height: 1.4;
