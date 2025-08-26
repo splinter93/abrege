@@ -1,440 +1,373 @@
-/**
- * NOTION-STYLE SLASH COMMAND MENU
- * Authentic Notion design with impeccable code quality
- * 
- * Design Principles:
- * - Clean, minimal, professional
- * - Subtle interactions and smooth transitions
- * - Authentic Notion colors and typography
- * - High specificity to prevent style conflicts
- */
-
-/* ===== ROOT STYLES ===== */
-.slash-menu {
-  /* Positioning & Layout */
-  position: fixed !important;
-  min-width: 320px !important;
-  max-width: 440px !important;
-  z-index: 99999 !important;
-  overflow: hidden !important;
-  
-  /* Visual Design - Authentic Notion with visible background */
-  background: #fafafa !important;
-  border: 1px solid #e3e2e0 !important;
-  border-radius: 6px !important;
-  box-shadow: 
-    0 0 0 1px rgba(55, 53, 47, 0.09),
-    0 2px 8px 0 rgba(55, 53, 47, 0.09) !important;
-  
-  /* Typography - Notion System Font */
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, 'Apple Color Emoji', Arial, sans-serif, 'Segoe UI Emoji', 'Segoe UI Symbol' !important;
-  font-size: 14px !important;
-  line-height: 1.4 !important;
-  
-  /* Animations */
-  animation: slashMenuEnter 150ms ease-out !important;
-  transition: box-shadow 150ms ease !important;
-}
-
-/* Hover state for entire menu */
-.slash-menu:hover {
-  box-shadow: 
-    0 0 0 1px rgba(55, 53, 47, 0.09),
-    0 4px 12px 0 rgba(55, 53, 47, 0.12) !important;
-}
-
-/* ===== SEARCH INPUT ===== */
-.slash-menu .slash-search-input {
-  /* Layout */
-  width: 100% !important;
-  border: none !important;
-  outline: none !important;
-  background: transparent !important;
-  
-  /* Typography */
-  color: #37352f !important;
-  font-size: 16px !important;
-  font-weight: 400 !important;
-  letter-spacing: -0.01em !important;
-  
-  /* Spacing & Borders */
-  padding: 12px 16px !important;
-  border-bottom: 1px solid #e3e2e0 !important;
-  
-  /* Interactions */
-  caret-color: #2e75cc !important;
-  transition: border-color 150ms ease !important;
-}
-
-.slash-menu .slash-search-input:focus {
-  border-bottom-color: #2e75cc !important;
-}
-
-.slash-menu .slash-search-input::placeholder {
-  color: #9b9a97 !important;
-  font-weight: 400 !important;
-}
-
-/* ===== MENU LIST CONTAINER ===== */
-.slash-menu .slash-menu-list {
-  /* Layout */
-  max-height: 320px !important;
-  overflow-y: auto !important;
-  padding: 6px !important;
-  
-  /* Scrollbar Styling */
-  scrollbar-width: thin !important;
-  scrollbar-color: #e3e2e0 transparent !important;
-}
-
-/* Webkit Scrollbar */
-.slash-menu .slash-menu-list::-webkit-scrollbar {
-  width: 4px !important;
-}
-
-.slash-menu .slash-menu-list::-webkit-scrollbar-track {
-  background: transparent !important;
-}
-
-.slash-menu .slash-menu-list::-webkit-scrollbar-thumb {
-  background: #e3e2e0 !important;
-  border-radius: 2px !important;
-}
-
-.slash-menu .slash-menu-list::-webkit-scrollbar-thumb:hover {
-  background: #d1d0ce !important;
-}
-
-/* ===== EMPTY STATE ===== */
-.slash-menu .slash-menu-empty {
-  padding: 20px 16px !important;
-  color: #9b9a97 !important;
-  text-align: center !important;
-  font-size: 14px !important;
-  font-weight: 400 !important;
-}
-
-/* ===== MENU ITEMS ===== */
-.slash-menu .slash-menu-item {
-  /* Layout */
-  display: flex !important;
-  align-items: center !important;
-  gap: 12px !important;
-  padding: 8px 12px !important;
-  margin: 1px 0 !important;
-  
-  /* Visual Design - Authentic Notion with visible background */
-  background: transparent !important;
-  color: #37352f !important;
-  border-radius: 4px !important;
-  
-  /* Interactions */
-  cursor: pointer !important;
-  transition: background-color 150ms ease !important;
-  
-  /* Positioning */
-  position: relative !important;
-  overflow: hidden !important;
-}
-
-/* Hover state */
-.slash-menu .slash-menu-item:hover {
-  background: #f0f0f0 !important;
-}
-
-/* Selected state */
-.slash-menu .slash-menu-item.selected {
-  background: #e8f2ff !important;
-}
-
-/* ===== SELECTION INDICATOR ===== */
-.slash-menu .slash-menu-selection-indicator {
-  /* Layout */
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  width: 16px !important;
-  height: 16px !important;
-  
-  /* Visual Design */
-  color: #2e75cc !important;
-  opacity: 0.8 !important;
-  flex-shrink: 0 !important;
-  
-  /* Animation */
-  animation: slashMenuFadeIn 150ms ease !important;
-}
-
-/* ===== TEXT CONTENT ===== */
-.slash-menu .slash-menu-texts {
-  /* Layout */
-  display: flex !important;
-  flex-direction: column !important;
-  min-width: 0 !important;
-  flex: 1 !important;
-  order: 1 !important;
-}
-
-/* Label */
-.slash-menu .slash-menu-label {
-  /* Typography */
-  font-weight: 500 !important;
-  font-size: 14px !important;
-  line-height: 1.4 !important;
-  color: #37352f !important;
-  
-  /* Layout */
-  margin-bottom: 1px !important;
-  white-space: nowrap !important;
-  overflow: hidden !important;
-  text-overflow: ellipsis !important;
-  
-  /* Transitions */
-  transition: color 150ms ease !important;
-}
-
-/* Selected label */
-.slash-menu .slash-menu-item.selected .slash-menu-label {
-  color: #2e75cc !important;
-  font-weight: 600 !important;
-}
-
-/* Description */
-.slash-menu .slash-menu-desc {
-  /* Typography */
-  font-weight: 400 !important;
-  font-size: 12px !important;
-  line-height: 1.3 !important;
-  color: #9b9a97 !important;
-  
-  /* Layout */
-  white-space: nowrap !important;
-  overflow: hidden !important;
-  text-overflow: ellipsis !important;
-  
-  /* Transitions */
-  transition: color 150ms ease !important;
-}
-
-/* Selected description */
-.slash-menu .slash-menu-item.selected .slash-menu-desc {
-  color: #2e75cc !important;
-  opacity: 0.8 !important;
-}
-
-/* ===== PREVIEW BADGE ===== */
-.slash-menu .slash-menu-preview {
-  /* Layout */
-  min-width: 32px !important;
-  height: 24px !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  padding: 0 8px !important;
-  
-  /* Visual Design - Authentic Notion with visible background */
-  background: #f0f0f0 !important;
-  color: #787774 !important;
-  border: 1px solid #e3e2e0 !important;
-  border-radius: 4px !important;
-  
-  /* Typography */
-  font-size: 11px !important;
-  font-weight: 500 !important;
-  
-  /* Positioning */
-  flex-shrink: 0 !important;
-  order: 2 !important;
-  margin-left: auto !important;
-  
-  /* Transitions */
-  transition: all 150ms ease !important;
-}
-
-/* Hover state for preview */
-.slash-menu .slash-menu-item:hover .slash-menu-preview {
-  background: #e8e8e8 !important;
-  border-color: #d1d0ce !important;
-}
-
-/* Selected state for preview */
-.slash-menu .slash-menu-item.selected .slash-menu-preview {
-  background: #e8f2ff !important;
-  border-color: #2e75cc !important;
-  color: #2e75cc !important;
-}
-
-/* ===== FOCUS STATES ===== */
-.slash-menu .slash-menu-item:focus-visible {
-  outline: 2px solid #2e75cc !important;
-  outline-offset: 2px !important;
-}
-
-/* ===== ANIMATIONS ===== */
-@keyframes slashMenuEnter {
-  0% { 
-    opacity: 0 !important; 
-    transform: translateY(4px) !important; 
+/* =========================
+   SLASH MENU - DARK NOTION STYLE
+   ========================= */
+   .slash-menu {
+    /* Couleurs mode sombre Notion */
+    --sm-bg: #1a1a1a;
+    --sm-border: rgba(255, 255, 255, 0.09);
+    --sm-text-primary: #ededed;
+    --sm-text-secondary: #a0a0a0;
+    --sm-text-tertiary: #6b6b6b;
+    --sm-hover-bg: rgba(107, 114, 128, 0.1);
+    --sm-selected-bg: rgba(107, 114, 128, 0.15);
+    --sm-selected-border: rgba(107, 114, 128, 0.3);
+    
+    /* Accent Gray (Notion-like) */
+    --sm-accent: #6b7280;
+    --sm-accent-hover: #9ca3af;
+    
+    /* Spacing & Sizing */
+    --sm-radius: 8px;
+    --sm-item-radius: 6px;
+    --sm-padding: 14px;
+    --sm-item-padding: 10px 14px;
+    --sm-gap: 6px;
+    
+    /* Typography */
+    --sm-font: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif;
+    --sm-font-size: 14px;
+    --sm-line-height: 1.5;
+    
+    /* Shadows & Effects - Plus subtils comme Notion */
+    --sm-shadow: 
+      0 2px 8px rgba(0, 0, 0, 0.3),
+      0 1px 2px rgba(0, 0, 0, 0.2);
+    --sm-shadow-hover: 
+      0 4px 12px rgba(0, 0, 0, 0.4),
+      0 2px 4px rgba(0, 0, 0, 0.3);
+    
+    /* Animations */
+    --sm-ease: cubic-bezier(0.16, 1, 0.3, 1);
+    --sm-duration: 200ms;
   }
-  100% { 
-    opacity: 1 !important; 
-    transform: translateY(0) !important; 
-  }
-}
-
-@keyframes slashMenuFadeIn {
-  from { 
-    opacity: 0 !important; 
-    transform: scale(0.8) !important; 
-  }
-  to { 
-    opacity: 0.8 !important; 
-    transform: scale(1) !important; 
-  }
-}
-
-/* ===== RESPONSIVE DESIGN ===== */
-@media (max-width: 480px) {
+  
+  /* =========================
+     ROOT CONTAINER - STYLE NOTION
+     ========================= */
   .slash-menu {
-    min-width: 280px !important;
-    max-width: calc(100vw - 32px) !important;
-    margin: 0 16px !important;
+    position: fixed;
+    z-index: 9999;
+    min-width: 280px;
+    max-width: 360px;
+    max-height: 70vh;
+    overflow: hidden;
+    
+    font-family: var(--sm-font);
+    font-size: var(--sm-font-size);
+    line-height: var(--sm-line-height);
+    color: var(--sm-text-primary);
+    
+    background: var(--sm-bg);
+    border: 1px solid var(--sm-border);
+    border-radius: var(--sm-radius);
+    box-shadow: var(--sm-shadow);
+    
+    /* Animation d'entrée plus subtile */
+    animation: slash-menu-enter var(--sm-duration) var(--sm-ease);
+    transition: 
+      box-shadow var(--sm-duration) var(--sm-ease),
+      border-color var(--sm-duration) var(--sm-ease);
   }
   
+  .slash-menu:hover {
+    box-shadow: var(--sm-shadow-hover);
+    border-color: rgba(107, 114, 128, 0.12);
+  }
+  
+  /* =========================
+     SEARCH INPUT - STYLE NOTION
+     ========================= */
   .slash-menu .slash-search-input {
-    padding: 10px 14px !important;
-    font-size: 15px !important;
+    width: 100%;
+    border: none;
+    outline: none;
+    background: transparent;
+    
+    color: var(--sm-text-primary);
+    font-family: var(--sm-font);
+    font-size: 15px;
+    font-weight: 400;
+    line-height: 1.4;
+    
+    padding: var(--sm-padding);
+    padding-bottom: 12px;
+    margin-bottom: 4px;
+    border-bottom: 1px solid var(--sm-border);
+    
+    caret-color: var(--sm-accent);
+    transition: border-color var(--sm-duration) var(--sm-ease);
   }
   
+  .slash-menu .slash-search-input::placeholder {
+    color: var(--sm-text-tertiary);
+    font-weight: 400;
+  }
+  
+  .slash-menu .slash-search-input:focus {
+    border-bottom-color: var(--sm-accent);
+  }
+  
+  /* =========================
+     LIST CONTAINER
+     ========================= */
+  .slash-menu .slash-menu-list {
+    max-height: 360px;
+    overflow-y: auto;
+    padding: var(--sm-gap);
+    
+    /* Scrollbar style Notion */
+    scrollbar-width: thin;
+    scrollbar-color: var(--sm-text-tertiary) transparent;
+  }
+  
+  .slash-menu .slash-menu-list::-webkit-scrollbar {
+    width: 4px;
+  }
+  
+  .slash-menu .slash-menu-list::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  .slash-menu .slash-menu-list::-webkit-scrollbar-thumb {
+    background: var(--sm-text-tertiary);
+    border-radius: 2px;
+  }
+  
+  .slash-menu .slash-menu-list::-webkit-scrollbar-thumb:hover {
+    background: var(--sm-text-secondary);
+  }
+  
+  /* =========================
+     EMPTY STATE
+     ========================= */
+  .slash-menu .slash-menu-empty {
+    padding: 32px 16px;
+    color: var(--sm-text-tertiary);
+    text-align: center;
+    font-size: 14px;
+    font-weight: 400;
+  }
+  
+  /* =========================
+     MENU ITEMS - STYLE NOTION
+     ========================= */
   .slash-menu .slash-menu-item {
-    padding: 6px 10px !important;
-    gap: 10px !important;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    
+    padding: var(--sm-item-padding);
+    margin: 2px 0;
+    border-radius: var(--sm-item-radius);
+    
+    color: var(--sm-text-primary);
+    background: transparent;
+    cursor: pointer;
+    
+    transition: 
+      background-color var(--sm-duration) var(--sm-ease);
   }
   
+  .slash-menu .slash-menu-item:hover {
+    background: var(--sm-hover-bg);
+  }
+  
+  .slash-menu .slash-menu-item.selected {
+    background: var(--sm-selected-bg);
+  }
+  
+  .slash-menu .slash-menu-item:focus-visible {
+    outline: 2px solid var(--sm-accent);
+    outline-offset: 2px;
+  }
+  
+  /* =========================
+     COMMAND ICONS - STYLE NOTION
+     ========================= */
+  .slash-menu .slash-menu-icon {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    
+    width: 28px;
+    height: 28px;
+    border-radius: 4px;
+    
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--sm-text-secondary);
+    
+    transition: 
+      background-color var(--sm-duration) var(--sm-ease),
+      color var(--sm-duration) var(--sm-ease);
+  }
+  
+  .slash-menu .slash-menu-item:hover .slash-menu-icon {
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--sm-text-primary);
+  }
+  
+  .slash-menu .slash-menu-item.selected .slash-menu-icon {
+    background: var(--sm-accent);
+    color: white;
+  }
+  
+  /* =========================
+     ITEM CONTENT
+     ========================= */
+  .slash-menu .slash-menu-texts {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  
+  .slash-menu .slash-menu-label {
+    font-weight: 500;
+    font-size: 14px;
+    line-height: 1.4;
+    color: var(--sm-text-primary);
+    
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  .slash-menu .slash-menu-desc {
+    font-weight: 400;
+    font-size: 12px;
+    line-height: 1.3;
+    color: var(--sm-text-secondary);
+    
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  /* =========================
+     PREVIEW - STYLE NOTION
+     ========================= */
   .slash-menu .slash-menu-preview {
-    min-width: 28px !important;
-    height: 22px !important;
-    font-size: 10px !important;
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    
+    height: 26px;
+    min-width: 40px;
+    max-width: 80px;
+    padding: 0 10px;
+    
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--sm-text-secondary);
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    border-radius: 4px;
+    
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    line-height: 1;
+    
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    
+    transition: all var(--sm-duration) var(--sm-ease);
+    
+    /* Force l'utilisation de nos variables CSS */
+    --preview-bg: rgba(255, 255, 255, 0.05);
+    --preview-border: rgba(255, 255, 255, 0.09);
+    --preview-text: var(--sm-text-secondary);
   }
   
+  .slash-menu .slash-menu-item:hover .slash-menu-preview {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.12);
+    color: var(--sm-text-primary);
+  }
+  
+  .slash-menu .slash-menu-item.selected .slash-menu-preview {
+    background: var(--sm-accent) !important;
+    border-color: var(--sm-accent) !important;
+    color: white !important;
+  }
+  
+  /* Force les styles des previews sélectionnées */
+  .slash-menu .slash-menu-item.selected .slash-menu-preview * {
+    color: white !important;
+    background: transparent !important;
+  }
+  
+  /* =========================
+     SELECTION INDICATOR
+     ========================= */
   .slash-menu .slash-menu-selection-indicator {
-    width: 14px !important;
-    height: 14px !important;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    
+    width: 18px;
+    height: 18px;
+    color: var(--sm-accent);
+    
+    opacity: 0;
+    transition: opacity var(--sm-duration) var(--sm-ease);
   }
-}
-
-/* ===== ULTRA HIGH SPECIFICITY OVERRIDES ===== */
-/* Force our styles with maximum specificity and authentic Notion design */
-body .slash-menu,
-html .slash-menu,
-#root .slash-menu,
-[data-reactroot] .slash-menu,
-div[class*="slash-menu"],
-div.slash-menu {
-  background: #fafafa !important; /* Light gray Notion background */
-  border: 1px solid #e3e2e0 !important; /* Subtle Notion border */
-  color: #37352f !important; /* Notion text color */
-}
-
-/* Force background on all slash-menu elements */
-body div.slash-menu,
-html div.slash-menu,
-#root div.slash-menu,
-[data-reactroot] div.slash-menu,
-div.slash-menu[class*="slash-menu"] {
-  background: #fafafa !important; /* Light gray Notion background */
-}
-
-/* Force background with attribute selectors */
-div[class*="slash-menu"] {
-  background: #fafafa !important; /* Light gray Notion background */
-}
-
-/* Force background with multiple class selectors */
-.slash-menu.slash-menu {
-  background: #fafafa !important; /* Light gray Notion background */
-}
-
-/* Force background with ID-like specificity */
-div.slash-menu.slash-menu {
-  background: #fafafa !important; /* Light gray Notion background */
-}
-
-/* Force background with universal selector */
-* .slash-menu {
-  background: #fafafa !important; /* Light gray Notion background */
-}
-
-/* Force background with direct child selector */
-body > div.slash-menu,
-html > div.slash-menu {
-  background: #fafafa !important; /* Light gray Notion background */
-}
-
-/* Force background with adjacent sibling selector */
-div + .slash-menu {
-  background: #fafafa !important; /* Light gray Notion background */
-}
-
-/* Force background with general sibling selector */
-div ~ .slash-menu {
-  background: #fafafa !important; /* Light gray Notion background */
-}
-
-/* Force background with pseudo-classes */
-.slash-menu:not([style*="background"]) {
-  background: #fafafa !important; /* Light gray Notion background */
-}
-
-/* Force background with pseudo-elements */
-.slash-menu::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: #fafafa !important; /* Light gray Notion background */
-  z-index: -1;
-}
-
-/* Force background with CSS custom properties */
-.slash-menu {
-  --forced-bg: #fafafa !important; /* Light gray Notion background */
-  background: var(--forced-bg) !important;
-}
-
-/* Force background with CSS layers */
-@layer critical {
-  .slash-menu {
-    background: #fafafa !important; /* Light gray Notion background */
+  
+  .slash-menu .slash-menu-item.selected .slash-menu-selection-indicator {
+    opacity: 1;
   }
-}
-
-/* Force background with CSS supports */
-@supports (background: #fafafa) {
-  .slash-menu {
-    background: #fafafa !important; /* Light gray Notion background */
+  
+  .slash-menu .slash-menu-selection-indicator svg {
+    width: 14px;
+    height: 14px;
   }
-}
-
-/* Force background with CSS media queries */
-@media all {
-  .slash-menu {
-    background: #fafafa !important; /* Light gray Notion background */
+  
+  /* =========================
+     ANIMATIONS
+     ========================= */
+  @keyframes slash-menu-enter {
+    from {
+      opacity: 0;
+      transform: translateY(4px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
-}
-
-/* Force background with CSS print */
-@media print {
-  .slash-menu {
-    background: #fafafa !important; /* Light gray Notion background */
+  
+  /* =========================
+     RESPONSIVE DESIGN
+     ========================= */
+  @media (max-width: 480px) {
+    .slash-menu {
+      min-width: 260px;
+      max-width: calc(100vw - 32px);
+      margin: 0 16px;
+    }
+    
+    .slash-menu .slash-search-input {
+      padding: 12px 14px;
+      font-size: 16px;
+    }
+    
+    .slash-menu .slash-menu-item {
+      padding: 8px 12px;
+      gap: 10px;
+    }
+    
+    .slash-menu .slash-menu-icon {
+      width: 24px;
+      height: 24px;
+    }
+    
+    .slash-menu .slash-menu-preview {
+      height: 24px;
+      min-width: 36px;
+      max-width: 70px;
+      font-size: 10px;
+    }
   }
-}
-
-/* Force background with CSS screen */
-@media screen {
-  .slash-menu {
-    background: #fafafa !important; /* Light gray Notion background */
-  }
-} 
