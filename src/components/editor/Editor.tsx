@@ -20,6 +20,9 @@ import { useEditor, EditorContent as TiptapEditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Underline from '@tiptap/extension-underline';
 import TextAlign from '@tiptap/extension-text-align';
+import BulletList from '@tiptap/extension-bullet-list';
+import OrderedList from '@tiptap/extension-ordered-list';
+import ListItem from '@tiptap/extension-list-item';
 import TaskList from '@tiptap/extension-task-list';
 import TaskItem from '@tiptap/extension-task-item';
 import Table from '@tiptap/extension-table';
@@ -30,6 +33,7 @@ import { Markdown } from 'tiptap-markdown';
 import Link from '@tiptap/extension-link';
 import CustomImage from '@/extensions/CustomImage';
 import CodeBlockWithCopy from '@/extensions/CodeBlockWithCopy';
+import { NoAutoListConversion } from '@/extensions/NoAutoListConversion';
 import lowlight from '@/utils/lowlightInstance';
 import EditorSlashMenu, { type EditorSlashMenuHandle } from '@/components/EditorSlashMenu';
 import TableControls from '@/components/editor/TableControls';
@@ -172,12 +176,24 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
         codeBlock: false,
         // Désactiver les extensions non essentielles pour les performances
         code: false,
-        horizontalRule: false
+        // Garder horizontalRule pour les slash commands
+        horizontalRule: {},
+        // Désactiver la conversion automatique des tirets en listes
+        bulletList: false,
+        orderedList: false,
+        // Désactiver complètement la conversion automatique
+        listItem: false
       }),
       Underline,
       TextAlign.configure({ types: ['heading', 'paragraph'] }),
+      // Listes avec conversion manuelle uniquement (pas de conversion automatique des tirets)
+      BulletList,
+      OrderedList,
+      ListItem,
       TaskList,
       TaskItem,
+      // Désactiver la conversion automatique des tirets en listes
+      NoAutoListConversion,
       Table.configure({ resizable: true }),
       TableRow,
       TableHeader,

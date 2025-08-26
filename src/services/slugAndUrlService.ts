@@ -80,27 +80,38 @@ export class SlugAndUrlService {
    * @param newTitle - Le nouveau titre
    * @param userId - L'ID de l'utilisateur
    * @param clientOverride - Client Supabase personnalisé (optionnel)
+   * @param currentNote - Données actuelles de la note (optionnel, pour éviter une requête supplémentaire)
    * @returns Le nouveau slug et l'URL publique
    */
   static async updateNoteSlugAndUrl(
     noteId: string,
     newTitle: string,
     userId: string,
-    clientOverride?: any
+    clientOverride?: any,
+    currentNote?: { id: string; source_title: string; slug: string; visibility?: string; public_url?: string | null }
   ): Promise<{ slug: string; publicUrl: string }> {
     try {
       const supabase = clientOverride || this.supabase;
 
       // 1. Vérifier que la note existe et appartient à l'utilisateur
-      const { data: note, error: fetchError } = await supabase
-        .from('articles')
-        .select('id, source_title, slug, visibility, public_url')
-        .eq('id', noteId)
-        .eq('user_id', userId)
-        .single();
+      let note: { id: string; source_title: string; slug: string; visibility?: string; public_url?: string | null };
+      
+      if (currentNote) {
+        // Utiliser les données passées en paramètre pour éviter une requête supplémentaire
+        note = currentNote;
+      } else {
+        // Fallback: récupérer la note depuis la base de données
+        const { data: fetchedNote, error: fetchError } = await supabase
+          .from('articles')
+          .select('id, source_title, slug, visibility, public_url')
+          .eq('id', noteId)
+          .eq('user_id', userId)
+          .single();
 
-      if (fetchError || !note) {
-        throw new Error(`Note non trouvée ou accès refusé: ${noteId}`);
+        if (fetchError || !fetchedNote) {
+          throw new Error(`Note non trouvée ou accès refusé: ${noteId}`);
+        }
+        note = fetchedNote;
       }
 
       // 2. Vérifier si le titre a réellement changé

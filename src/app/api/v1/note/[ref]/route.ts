@@ -154,7 +154,8 @@ export async function PUT(req: NextRequest, { params }: ApiContext): Promise<Res
             noteId,
             normalizedTitle,
             userId,
-            supabase
+            supabase,
+            currentNote // Passer les données actuelles pour éviter une requête supplémentaire
           );
           updateData.slug = newSlug;
           updateData.public_url = publicUrl;

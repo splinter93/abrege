@@ -44,7 +44,7 @@ export const NoteHeaderLayout: React.FC<NoteHeaderLayoutProps> = ({
   }, [fullWidth]);
 
   return (
-    <div className={layoutClass}>
+    <div className={`${layoutClass} ${fullWidth ? 'wide-mode' : ''}`}>
       {/* Zone du titre */}
       <div className="noteLayout-title">
         {title}

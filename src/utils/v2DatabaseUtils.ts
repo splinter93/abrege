@@ -207,14 +207,15 @@ export class V2DatabaseUtils {
         const normalizedTitle = String(data.source_title).trim();
         updateData.source_title = normalizedTitle;
         
-        // TOUJOURS mettre à jour le slug quand le titre change (comme l'API V1)
-        if (normalizedTitle) {
+        // Mettre à jour le slug seulement si le titre a réellement changé (comme l'API V1)
+        if (normalizedTitle && currentNote && normalizedTitle !== currentNote.source_title) {
           try {
             const { slug: newSlug, publicUrl } = await SlugAndUrlService.updateNoteSlugAndUrl(
               noteId,
               normalizedTitle,
               userId,
-              supabase
+              supabase,
+              currentNote // Passer les données actuelles pour éviter une requête supplémentaire
             );
             updateData.slug = newSlug;
             updateData.public_url = publicUrl;
