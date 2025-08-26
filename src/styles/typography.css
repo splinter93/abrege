@@ -357,30 +357,8 @@
   color: var(--editor-text-color);
 }
 
-/* Styles pour les titres dans l'éditeur */
-.editor-content h1 {
-  font-size: var(--editor-h1-size);
-  line-height: var(--editor-line-height-tight);
-  margin: var(--editor-heading-margin-top) 0 var(--editor-heading-margin-bottom) 0;
-  font-weight: 700;
-  font-family: var(--editor-font-family);
-}
-
-.editor-content h2 {
-  font-size: var(--editor-h2-size);
-  line-height: var(--editor-line-height-tight);
-  margin: var(--editor-heading-margin-top) 0 var(--editor-heading-margin-bottom) 0;
-  font-weight: 600;
-  font-family: var(--editor-font-family);
-}
-
-.editor-content h3 {
-  font-size: var(--editor-h3-size);
-  line-height: var(--editor-line-height-tight);
-  margin: var(--editor-heading-margin-top) 0 var(--editor-heading-margin-bottom) 0;
-  font-weight: 600;
-  font-family: var(--editor-font-family);
-}
+/* Styles pour les titres dans l'éditeur - REMOVED TO AVOID CONFLICTS WITH MARKDOWN.CSS */
+/* .editor-content h1, h2, h3 are now handled by markdown.css with ultra-specific selectors */
 
 /* Styles pour les paragraphes dans l'éditeur */
 .editor-content p {
@@ -413,23 +391,7 @@
     line-height: var(--editor-line-height-mobile);
   }
   
-  .editor-content h1 { 
-    font-size: var(--editor-h1-size-mobile); 
-    line-height: var(--editor-line-height-tight);
-    margin: var(--editor-heading-margin-top) 0 var(--editor-heading-margin-bottom) 0;
-  }
-  
-  .editor-content h2 { 
-    font-size: var(--editor-h2-size-mobile); 
-    line-height: var(--editor-line-height-tight);
-    margin: var(--editor-heading-margin-top) 0 var(--editor-heading-margin-bottom) 0;
-  }
-  
-  .editor-content h3 { 
-    font-size: var(--editor-h3-size-mobile); 
-    line-height: var(--editor-line-height-tight);
-    margin: var(--editor-heading-margin-top) 0 var(--editor-heading-margin-bottom) 0;
-  }
+  /* .editor-content h1, h2, h3 styles removed to avoid conflicts with markdown.css */
   
   /* Premium mobile spacing */
   .editor-content p {
