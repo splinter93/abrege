@@ -71,7 +71,11 @@ html {
 /* DIRECT OVERRIDE OF TYPOGRAPHY.CSS CONFLICTS */
 .editor-content h1,
 .ProseMirror.editor-content h1,
-.editor-content .ProseMirror h1 {
+.editor-content .ProseMirror h1,
+/* TIPTAP EDITOR DIRECT TARGETING */
+.tiptap-editor-container h1,
+.ProseMirror h1,
+.ProseMirror.editor-content h1 {
   font-size: 2.25rem !important;
   font-weight: 900 !important;
   line-height: 1.15;
@@ -94,7 +98,11 @@ html {
 /* DIRECT OVERRIDE OF TYPOGRAPHY.CSS CONFLICTS */
 .editor-content h2,
 .ProseMirror.editor-content h2,
-.editor-content .ProseMirror h2 {
+.editor-content .ProseMirror h2,
+/* TIPTAP EDITOR DIRECT TARGETING */
+.tiptap-editor-container h2,
+.ProseMirror h2,
+.ProseMirror.editor-content h2 {
   font-size: 1.75rem !important;
   font-weight: 900 !important;
   line-height: 1.2;
@@ -117,7 +125,11 @@ html {
 /* DIRECT OVERRIDE OF TYPOGRAPHY.CSS CONFLICTS */
 .editor-content h3,
 .ProseMirror.editor-content h3,
-.editor-content .ProseMirror h3 {
+.editor-content .ProseMirror h3,
+/* TIPTAP EDITOR DIRECT TARGETING */
+.tiptap-editor-container h3,
+.ProseMirror h3,
+.ProseMirror.editor-content h3 {
   font-size: 1.5rem !important;
   font-weight: 900 !important;
   line-height: 1.25;
