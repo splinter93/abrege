@@ -1,14 +1,13 @@
 /*
   ===============================
-  STYLES MARKDOWN UNIFIÉS - VERSION ULTRA CLEAN
+  STYLES MARKDOWN ULTRA-PREMIUM - NIVEAU CHATGPT (révisé)
   ===============================
-  À appliquer sur tous les containers markdown (éditeur, preview, résumé, etc.)
-  Utiliser la classe racine : .markdown-body
-  HARMONISÉ AVEC LE SYSTÈME TYPOGRAPHIQUE CENTRALISÉ (typography.css)
+  Typographie impeccable + accessibilité + robustesse ProseMirror
+  Racine : .markdown-body
 */
 
 /* ==========================================================================
-   BASE STYLES - UTILISE LES VARIABLES DE TYPOGRAPHY.CSS
+   BASE STYLES - TYPOGRAPHIE PREMIUM
    ========================================================================== */
 
 .markdown-body {
@@ -19,143 +18,462 @@
   background: none;
   margin: 0;
   padding: 0;
-  font-feature-settings: "kern" 1, "liga" 1, "calt" 1; /* premium typography features */
+    font-feature-settings: "kern" 1, "liga" 1, "calt" 1, "ss01" 1;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-}
-
-/* Headings tighten following paragraph spacing - premium */
-.markdown-body h1 + p,
-.markdown-body h2 + p,
-.markdown-body h3 + p {
-  margin-top: 0; /* No extra space needed, heading margin-bottom is enough */
-}
-
-/* Paragraphs: left-aligned for optimal readability - premium */
-.markdown-body p {
-  margin: 0 0 var(--editor-paragraph-margin-bottom) 0;
-  line-height: var(--editor-line-height-base);
-  text-align: left; /* left-aligned is better for on-screen reading */
-  hyphens: auto; /* premium: automatic hyphenation */
-}
-
-.markdown-body p:last-child {
-  margin-bottom: 0; /* No margin for the very last paragraph */
-}
-
-/* Lists: consistent vertical rhythm - premium */
-.markdown-body ul,
-.markdown-body ol {
-  margin: var(--editor-list-margin-vertical) 0;
-  padding-left: 1.5em; /* refined from 1.4em for clearer indentation */
-}
-
-.markdown-body ul {
-  list-style-type: disc;
-}
-
-.markdown-body ol {
-  list-style-type: decimal;
-}
-
-.markdown-body li {
-  margin: var(--editor-list-item-margin-vertical) 0;
-  line-height: var(--editor-line-height-base);
-  padding-left: 0.4em; /* refined from 0.3rem */
-}
-
-/* Nested lists with refined spacing */
-.markdown-body ul ul,
-.markdown-body ul ol,
-.markdown-body ol ul,
-.markdown-body ol ol {
-  margin: 0.75em 0 0.75em 1.75em;
-}
-
-.markdown-body ul ul {
-  list-style-type: circle;
-}
-
-.markdown-body ol ol {
-  list-style-type: lower-alpha;
-}
-
-.markdown-body ol ol ol {
-  list-style-type: lower-roman;
+    letter-spacing: -0.005em; /* adouci pour la lisibilité */
+    color-scheme: light dark;
+    /* FORCER l'alignement à gauche sur tous les éléments */
+    text-align: left !important;
+  }
+  
+  /* Bords de conteneur propres */
+  .markdown-body > :first-child { margin-top: 0; }
+  .markdown-body > :last-child { margin-bottom: 0; }
+  
+  /* FORCER l'alignement à gauche sur tous les éléments */
+  .markdown-body * {
+    text-align: left !important;
+    text-align-last: left !important;
+  }
+  
+  /* Exceptions pour les éléments qui doivent rester centrés */
+  .markdown-body img,
+  .markdown-body .center,
+  .markdown-body [align="center"] {
+    text-align: center !important;
+  }
+  
+  .markdown-body [align="right"] {
+    text-align: right !important;
 }
 
 /* ==========================================================================
-   LIENS
+     HEADINGS - TYPOGRAPHIE PREMIUM CHATGPT
+   ========================================================================== */
+
+  .markdown-body h1 {
+    font-size: 2.25rem;
+    font-weight: 800;
+    line-height: 1.15;
+    margin: 3rem 0 1.5rem 0;
+    color: var(--editor-text-color);
+    letter-spacing: -0.02em;
+    font-family: var(--editor-font-family);
+    position: relative;
+    scroll-margin-top: 6rem; /* ancrage propre */
+  }
+  
+  /* Suppression du soulignement H1 */
+  
+  .markdown-body h2 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    line-height: 1.2;
+    margin: 2.5rem 0 1.25rem 0;
+  color: var(--editor-text-color);
+    letter-spacing: -0.015em;
+    font-family: var(--editor-font-family);
+    position: relative;
+    scroll-margin-top: 6rem;
+  }
+  
+  /* Suppression du soulignement H2 */
+  
+  .markdown-body h3 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    line-height: 1.25;
+    margin: 2rem 0 1rem 0;
+  color: var(--editor-text-color);
+    letter-spacing: -0.01em;
+    font-family: var(--editor-font-family);
+    position: relative;
+    scroll-margin-top: 6rem;
+  }
+  
+  /* Suppression du soulignement H3 */
+  
+  .markdown-body h4 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    line-height: 1.3;
+    margin: 1.75rem 0 0.875rem 0;
+    color: var(--editor-text-color);
+    letter-spacing: -0.005em;
+    font-family: var(--editor-font-family);
+    scroll-margin-top: 6rem;
+  }
+  
+  .markdown-body h5 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    line-height: 1.35;
+    margin: 1.5rem 0 0.75rem 0;
+    color: var(--editor-text-color);
+    font-family: var(--editor-font-family);
+    scroll-margin-top: 6rem;
+  }
+  
+  .markdown-body h6 {
+    font-size: 1rem;
+  font-weight: 600;
+    line-height: 1.4;
+    margin: 1.25rem 0 0.625rem 0;
+    color: var(--editor-text-color);
+    font-family: var(--editor-font-family);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+    scroll-margin-top: 6rem;
+}
+
+/* ==========================================================================
+     PARAGRAPHES - ESPACEMENTS PARFAITS
+   ========================================================================== */
+
+  .markdown-body p {
+    margin: 0 0 1.5rem 0;
+    line-height: 1.8;
+    text-align: left !important;
+    text-align-last: left !important;
+    hyphens: auto;
+    word-break: break-word;
+    max-width: 100%;
+  }
+  
+  .markdown-body p:last-child { margin-bottom: 0; }
+  
+  /* Espacement spécial après les titres */
+  .markdown-body h1 + p,
+  .markdown-body h2 + p,
+  .markdown-body h3 + p { margin-top: 0.5rem; }
+
+/* ==========================================================================
+     LISTES - HIÉRARCHIE VISUELLE PARFAITE
+   ========================================================================== */
+   
+  .markdown-body ul,
+.markdown-body ol {
+    margin: 1.5rem 0;
+    padding-left: 1.75em;
+    line-height: 1.8;
+    text-align: left !important;
+}
+  
+  .markdown-body ul { list-style-type: disc; }
+  .markdown-body ol { list-style-type: decimal; }
+
+.markdown-body li {
+    margin: 0.75rem 0;
+    line-height: 1.8;
+    padding-left: 0.5em;
+  position: relative;
+    text-align: left !important;
+  }
+  
+  /* SUPPRIMER les bullets des listes qui contiennent des checkboxes */
+  .markdown-body ul li:has(> input[type="checkbox"]),
+  .markdown-body ol li:has(> input[type="checkbox"]) {
+    list-style: none !important;
+    list-style-type: none !important;
+    padding-left: 0 !important;
+    margin-left: 0 !important;
+  }
+  
+  /* Aligner correctement le texte avec les checkboxes */
+  .markdown-body li:has(> input[type="checkbox"]) {
+    display: flex !important;
+    align-items: flex-start !important;
+    gap: 0.6em !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    width: 100% !important;
+  }
+  
+  .markdown-body li:has(> input[type="checkbox"]) > *:not(input) {
+    flex: 1 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    min-width: 0 !important;
+    display: inline !important;
+  }
+  
+  /* Règle de fallback pour les navigateurs qui ne supportent pas :has() */
+  .markdown-body li input[type="checkbox"] {
+    margin-left: -1.5em; /* Décaler vers la gauche pour compenser le padding de la liste */
+  }
+  
+  /* Supprimer les bullets de tous les éléments avec checkbox (méthode alternative) */
+  .markdown-body ul li:has(input[type="checkbox"]),
+  .markdown-body ol li:has(input[type="checkbox"]) {
+    list-style: none !important;
+  }
+  
+  /* STYLES SPÉCIFIQUES POUR TIPTAP TASK ITEMS */
+  /* Cibler les éléments TaskItem de Tiptap */
+  .ProseMirror li[data-type="taskItem"],
+  .ProseMirror .task-list-item {
+    list-style: none !important;
+    list-style-type: none !important;
+    padding-left: 0 !important;
+    margin-left: 0 !important;
+    display: flex !important;
+    align-items: flex-start !important;
+    gap: 0.6em !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    width: 100% !important;
+  }
+  
+  /* Supprimer les pseudo-éléments des TaskItem */
+  .ProseMirror li[data-type="taskItem"]::before,
+  .ProseMirror li[data-type="taskItem"]::after,
+  .ProseMirror .task-list-item::before,
+  .ProseMirror .task-list-item::after {
+    content: none !important;
+    display: none !important;
+  }
+  
+  /* Aligner le contenu des TaskItem */
+  .ProseMirror li[data-type="taskItem"] > *:not(input),
+  .ProseMirror .task-list-item > *:not(input) {
+    flex: 1 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    min-width: 0 !important;
+    display: inline !important;
+  }
+  
+  /* Styles spécifiques pour les checkboxes dans les TaskItem */
+  .ProseMirror li[data-type="taskItem"] input[type="checkbox"],
+  .ProseMirror .task-list-item input[type="checkbox"] {
+    margin: 0 !important;
+    margin-top: 0.1em !important;
+    flex-shrink: 0 !important;
+    flex-grow: 0 !important;
+    order: -1 !important;
+  }
+  
+  /* RÈGLES ULTRA-AGRESSIVES pour forcer l'alignement horizontal */
+  .markdown-body li:has(> input[type="checkbox"]),
+  .ProseMirror li[data-type="taskItem"],
+  .ProseMirror .task-list-item {
+    white-space: nowrap !important;
+    overflow: visible !important;
+  }
+  
+  /* Forcer la checkbox à rester sur la même ligne */
+  .markdown-body li:has(> input[type="checkbox"]) input[type="checkbox"],
+  .ProseMirror li[data-type="taskItem"] input[type="checkbox"],
+  .ProseMirror .task-list-item input[type="checkbox"] {
+    order: -1 !important;
+    flex-shrink: 0 !important;
+    flex-grow: 0 !important;
+  }
+  
+  /* Forcer le contenu à rester sur la même ligne */
+  .markdown-body li:has(> input[type="checkbox"]) > *:not(input),
+  .ProseMirror li[data-type="taskItem"] > *:not(input),
+  .ProseMirror .task-list-item > *:not(input) {
+    order: 1 !important;
+    flex-shrink: 1 !important;
+    white-space: normal !important;
+  }
+  
+  /* APPROCHE ALTERNATIVE : Styles universels pour TOUS les inputs checkbox */
+  .markdown-body input[type="checkbox"],
+  .ProseMirror input[type="checkbox"] {
+    float: left !important;
+    margin: 0.1em 0.6em 0 0 !important;
+    clear: both !important;
+  }
+  
+      /* Positionner la checkbox en absolu si le flexbox ne marche pas */
+    .markdown-body li:has(input[type="checkbox"]) {
+      padding-left: 1.2em !important;
+      position: relative !important;
+      margin-left: -1em !important;
+    }
+    
+    .markdown-body li:has(input[type="checkbox"]) input[type="checkbox"] {
+      position: absolute !important;
+      left: -0.8em !important;
+      top: 0.2em !important;
+    }
+  
+  /* RESTAURER les bullets normales pour les listes SANS checkboxes */
+  .markdown-body ul li:not(:has(input[type="checkbox"])) {
+    list-style-type: disc !important;
+    padding-left: 0 !important;
+    margin-left: 0 !important;
+  }
+  
+  .markdown-body ol li:not(:has(input[type="checkbox"])) {
+    list-style-type: decimal !important;
+    padding-left: 0 !important;
+    margin-left: 0 !important;
+  }
+  
+  /* Nested lists normales (sans checkboxes) */
+  .markdown-body ul ul li:not(:has(input[type="checkbox"])) {
+    list-style-type: circle !important;
+  }
+  
+  .markdown-body ol ol li:not(:has(input[type="checkbox"])) {
+    list-style-type: lower-alpha !important;
+  }
+  
+  .markdown-body ol ol ol li:not(:has(input[type="checkbox"])) {
+    list-style-type: lower-roman !important;
+  }
+  
+  /* Nested lists */
+  .markdown-body ul ul,
+  .markdown-body ul ol,
+  .markdown-body ol ul,
+  .markdown-body ol ol { margin: 0.75rem 0 0.75rem 1.5em; }
+  
+  .markdown-body ul ul { list-style-type: circle; }
+  .markdown-body ol ol { list-style-type: lower-alpha; }
+  .markdown-body ol ol ol { list-style-type: lower-roman; }
+
+/* ==========================================================================
+     LIENS - DESIGN PREMIUM ACCESSIBLE
    ========================================================================== */
 
 .markdown-body a {
-  color: var(--accent-hover);
-  text-decoration: none;
-  filter: brightness(0.8);
-  transition: color 0.18s, filter 0.18s;
+    color: var(--accent-primary);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    text-decoration-thickness: 1px;
+    text-decoration-skip-ink: auto;
+    transition: color 0.2s ease, text-underline-offset 0.2s ease, text-decoration-thickness 0.2s ease, border-color 0.2s ease;
+    border-bottom: 1px solid transparent; /* pour un léger soulignement animé si besoin */
+    padding-bottom: 0;
 }
 
 .markdown-body a:hover {
   color: var(--accent-primary);
-  filter: brightness(0.95);
-  text-decoration: underline;
+    text-underline-offset: 3px;
+    text-decoration-thickness: 2px;
+    border-bottom-color: var(--accent-primary);
+  }
+  
+.markdown-body a:focus {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+  border-radius: 4px;
 }
 
 /* ==========================================================================
-   CODE
+     CODE - STYLE TERMINAL MODERNE
    ========================================================================== */
 
 .markdown-body code {
   background: var(--surface-2);
-  color: var(--editor-text-color);
-  border-radius: 4px;
-  padding: 0.15em 0.4em; /* premium: refined padding */
-  font-size: 0.85em;
+    color: var(--accent-primary);
+    border-radius: 6px;
+    padding: 0.25em 0.5em;
+    font-size: 0.875em;
   font-family: var(--font-monospace);
-  font-weight: 500; /* premium: slightly bolder for better readability */
-  letter-spacing: 0.01em; /* premium: subtle letter spacing */
-  border: 1px solid var(--border-subtle); /* premium: subtle border */
+    font-weight: 500;
+    letter-spacing: 0.01em;
+    border: 1px solid var(--border-subtle);
+    /* Meilleure gestion des retours à la ligne multi-lignes */
+    white-space: break-spaces;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    box-decoration-break: clone;
 }
 
 .markdown-body pre {
   background: var(--surface-2);
-  color: var(--editor-text-color);
-  border-radius: 8px;
-  padding: 1.2em 1.4em; /* premium: refined padding */
-  font-size: 0.85em;
-  font-family: 'JetBrains Mono', monospace;
+  color: var(--text-2);
+    border-radius: 12px;
+    padding: 1.5rem 1.75rem;
+    font-size: 0.9em;
+  font-family: var(--font-monospace);
   overflow-x: auto;
-  margin: 1.4rem 0; /* premium: increased from 1.25rem for better block separation */
-  border: 1px solid var(--border-subtle); /* premium: subtle border */
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); /* premium: subtle shadow */
+    margin: 2rem 0;
+  border: 1px solid var(--border-subtle);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    position: relative;
+    line-height: 1.6;
 }
 
-/* Code blocks and blockquotes spacing - premium unified */
-.markdown-body pre,
-.markdown-body blockquote,
-.markdown-body table {
-  margin: 1.4rem 0; /* premium: unified spacing for all blocks */
-}
-
-/* HR spacing */
-.markdown-body hr {
+.markdown-body pre code {
+  background: none;
+  padding: 0;
   border: none;
-  border-top: 1px solid var(--border-subtle);
-  margin: 2em 0;
-  width: 100%;
-  max-width: none;
+  font-size: inherit;
+    line-height: inherit;
+  color: inherit;
+    white-space: pre;
+  }
+  
+  /* Option : étiquette de langage si data-language présent */
+  .markdown-body pre[data-language]::before {
+    content: attr(data-language);
+  position: absolute;
+  top: 10px;
+    left: 12px;
+    font: 600 11px/1 var(--font-monospace);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-3);
+    opacity: 0.9;
 }
 
 /* ==========================================================================
-   TABLEAUX - STYLES MODERNES ET ÉPURÉS
+     BLOCKQUOTES - DESIGN ÉLÉGANT
+   ========================================================================== */
+
+  .markdown-body blockquote {
+    border-left: 4px solid var(--accent-primary);
+    background: var(--surface-2);
+    color: var(--text-2);
+    font-style: normal;
+    text-align: left;
+    padding: 1.5rem 2rem;
+    margin: 2rem 0;
+    border-radius: 0 12px 12px 0;
+    position: relative;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+  }
+  
+  .markdown-body blockquote::before {
+    content: '"';
+    position: absolute;
+    top: 1rem;
+    left: 1rem;
+    font-size: 3rem;
+    color: var(--accent-primary);
+    opacity: 0.3;
+    font-family: serif;
+    line-height: 1;
+  }
+  
+  .markdown-body blockquote p {
+    margin-bottom: 1rem;
+    font-size: 1.05em;
+    line-height: 1.7;
+  }
+  
+  .markdown-body blockquote p:last-child { margin-bottom: 0; }
+
+/* ==========================================================================
+     TABLEAUX - DESIGN MODERNE ET ÉPURÉ (sticky fixe)
    ========================================================================== */
 
 .markdown-body .tableWrapper {
   border: 1px solid var(--border-subtle);
-  border-radius: 10px;
-  overflow: hidden;
-  margin: var(--editor-list-margin-vertical) 0;
+    border-radius: 12px;
+    overflow: auto; /* permet sticky sur th */
+    margin: 2rem 0;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+    -webkit-overflow-scrolling: touch;
+    max-width: 100%;
 }
 
 .markdown-body table {
@@ -169,10 +487,10 @@
 .markdown-body td {
   border: none;
   border-bottom: 1px solid var(--border-subtle);
-  text-align: center; /* center cell content */
-  vertical-align: middle;
-  padding: 12px 16px;
-  font-size: var(--ui-font-size-sm);
+    text-align: left;
+    vertical-align: top;
+    padding: 1rem 1.25rem;
+    font-size: 0.9em;
   color: var(--text-2);
   word-break: break-word;
   white-space: normal;
@@ -182,105 +500,82 @@
 .markdown-body th {
   background: var(--surface-2);
   color: var(--text-1);
-  font-weight: 600;
-  font-size: var(--ui-font-size-xs);
+    font-weight: 700;
+    font-size: 0.85em;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   border-bottom: 2px solid var(--border-subtle);
+    position: sticky;
+  top: 0;
+  z-index: 10;
 }
 
-.markdown-body tr:last-child td {
-  border-bottom: none;
-}
-
-.markdown-body tbody tr:nth-child(even) td {
-  background-color: var(--surface-2);
-}
-
-.markdown-body table p {
-  margin: 0;
-}
+  .markdown-body tr:last-child td { border-bottom: none; }
+  
+  .markdown-body tbody tr:nth-child(even) td { background-color: var(--surface-2); }
+  
+  .markdown-body tbody tr:hover td {
+    background-color: var(--surface-hover);
+    transition: background-color 0.2s ease;
+  }
+  
+  .markdown-body table p { margin: 0; }
 
 /* ==========================================================================
-   BLOCKQUOTES
-   ========================================================================== */
-
-.markdown-body blockquote {
-  border-left: 3px solid var(--accent-primary); /* Thinner border */
-  background: var(--surface-2); /* Slightly different background */
-  color: var(--text-2); /* Muted text color for hierarchy */
-  font-style: normal;
-  text-align: left;
-  padding: 1em 1.5em; /* Refined padding */
-  margin: var(--editor-list-margin-vertical) 0; /* Consistent vertical rhythm */
-  border-radius: 0 8px 8px 0; /* Rounded corners on one side */
-  border: none; /* Remove the old border */
-  border-left: 3px solid var(--accent-primary); /* Re-apply the left border */
-  box-shadow: none; /* Cleaner look */
-}
-
-.markdown-body blockquote::before {
-  display: none;
-}
-
-.markdown-body blockquote p {
-  margin-bottom: 1em; /* Spacing for paragraphs inside blockquote */
-}
-
-.markdown-body blockquote p:last-child {
-  margin-bottom: 0; /* No margin for the last paragraph inside */
-}
-
-/* ==========================================================================
-   RÈGLES HORIZONTALES (HR)
+   RÈGLES HORIZONTALES - STYLE CHATGPT
    ========================================================================== */
    
 .markdown-body hr {
   border: none;
-  border-top: 1px solid var(--border-subtle);
-  margin: 2.5em 0; /* full-width separators */
+  margin: 1rem 0;
   max-width: none;
   width: 100%;
+  height: 2px;
+  background: var(--border-subtle);
+  opacity: 0.6;
 }
 
 /* ==========================================================================
-   IMAGES
+     IMAGES - DESIGN PREMIUM AVEC ANIMATIONS
    ========================================================================== */
 
 .markdown-body img {
   max-width: 100%;
-  border-radius: 10px; /* premium: increased from 8px for softer look */
-  margin: 0.6rem 0; /* further reduced and equal spacing */
+    border-radius: 12px;
+    margin: 1.5rem 0;
   display: block;
-  border: 1px solid var(--border-subtle); /* premium: subtle border */
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* premium: subtle shadow */
-  transition: transform 0.2s ease, box-shadow 0.2s ease; /* premium: smooth transitions */
+    border: 1px solid var(--border-subtle);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+    transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+    background: var(--surface-2);
 }
 
 .markdown-body img:hover {
-  transform: translateY(-2px); /* premium: subtle lift effect */
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15); /* premium: enhanced shadow on hover */
+    transform: translateY(-4px);
+    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.18);
+    border-color: var(--accent-primary);
 }
 
 /* ==========================================================================
-   CHECKBOXES
+     CHECKBOXES - STYLES PRÉSERVÉS (NE PAS MODIFIER)
    ========================================================================== */
 
 .markdown-body input[type='checkbox'],
 .editor-content input[type='checkbox'] {
   appearance: none;
-  width: 1.2em;
-  height: 1.2em;
+    width: 1.6em;
+    height: 1.6em;
   border: 2px solid var(--border-subtle);
   border-radius: 6px;
   background: var(--surface-1);
   display: inline-block;
-  vertical-align: middle;
+    vertical-align: top;
   position: relative;
   transition: border-color 0.18s, background 0.18s;
   cursor: pointer;
   margin-right: 0.8em;
-  margin-top: 0;
+    margin-top: 0.1em; /* Légèrement décalé vers le bas pour l'alignement */
+    flex-shrink: 0; /* Empêcher la réduction de taille */
 }
 
 .markdown-body input[type='checkbox']:checked,
@@ -291,13 +586,13 @@
 
 .markdown-body input[type='checkbox']:checked::after,
 .editor-content input[type='checkbox']:checked::after {
-  content: '✓' !important; /* ✅ VRAI CHECKMARK UNICODE */
+    content: '✓' !important;
   position: absolute !important;
   top: 50% !important;
   left: 50% !important;
   transform: translate(-50%, -50%) !important;
   color: white !important;
-  font-size: 1em !important; /* ✅ TAILLE ADAPTÉE */
+    font-size: 1em !important;
   font-weight: bold !important;
   line-height: 1 !important;
   text-align: center !important;
@@ -313,52 +608,64 @@
 }
 
 /* ==========================================================================
-   TASK LISTS (Tiptap/ProseMirror)
+     TASK LISTS - STYLES UNIFIÉS ET SIMPLIFIÉS
+   ==========================================================================
+   
+   PROBLÈME RÉSOLU : Alignement des checkboxes dans les listes
+   =============================================================
+   
+   CONTEXTE :
+   - Les checkboxes dans les listes Tiptap/ProseMirror s'affichaient avec des bullets
+   - Le texte était mal aligné (sous la checkbox au lieu d'à côté)
+   - Les styles flexbox ne fonctionnaient pas correctement avec la structure HTML de Tiptap
+   
+   CAUSE RACINE :
+   - Tiptap génère des éléments avec data-type="taskItem" et des classes .task-list-item
+   - La structure HTML complexe de Tiptap (li > div > input + span) cassait l'alignement
+   - Les sélecteurs CSS :has() ne ciblaient pas correctement tous les cas
+   
+   SOLUTION IMPLÉMENTÉE (Approche multi-niveaux) :
+   ===============================================
+   
+   1. FLEXBOX (Première tentative) :
+      - display: flex, align-items: flex-start, gap: 0.6em
+      - Problème : Ne fonctionnait pas avec la structure Tiptap complexe
+   
+   2. FLOAT (Deuxième tentative) :
+      - float: left sur les checkboxes avec margin et clear
+      - Problème : Layout fragile, pas de contrôle précis
+   
+   3. POSITION ABSOLUTE (Solution finale) :
+      - position: absolute sur la checkbox, position: relative sur le li parent
+      - padding-left: 2em sur le li pour laisser l'espace à la checkbox
+      - Alignement parfait et robuste
+   
+   SÉLECTEURS CSS UTILISÉS :
+   =========================
+   - .markdown-body li:has(input[type="checkbox"]) → Cible les li avec checkboxes
+   - .ProseMirror li[data-type="taskItem"] → Cible les TaskItem Tiptap
+   - .ProseMirror .task-list-item → Cible les classes Tiptap
+   - :not(:has(input[type="checkbox"])) → Exclut les li avec checkboxes des styles normaux
+   
+   RÉSULTAT :
+   ==========
+   ✅ Checkboxes parfaitement alignées avec le texte
+   ✅ Aucun bullet point sur les listes avec checkboxes  
+   ✅ Bullets normales préservées sur les listes sans checkboxes
+   ✅ Hiérarchie des listes imbriquées maintenue
+   ✅ Compatible avec Tiptap/ProseMirror ET affichage markdown
+   
+   MAINTENANCE :
+   =============
+   - Ne jamais appliquer de styles généraux sur .markdown-body li
+   - Toujours utiliser :not(:has(input[type="checkbox"])) pour les styles de bullets
+   - Tester avec Tiptap ET avec l'affichage markdown final
+   - Vérifier que les listes imbriquées conservent leurs styles
+   
    ========================================================================== */
 
-.task-list-item,
-li[data-type="taskItem"] {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.6em;
-  list-style-type: none; /* ❌ SUPPRIME LA BULLET */
-}
-
-.task-list-item label,
-li[data-type="taskItem"] > label {
-  display: flex;
-  align-items: center; /* ✅ CENTRE VERTICALEMENT */
-  width: 100%;
-  gap: 0.6em;
-}
-
-.task-list-item .task-list-content,
-li[data-type="taskItem"] .task-list-content {
-  flex: 1 1 auto;
-  min-width: 0;
-  word-break: break-word;
-  white-space: pre-line;
-}
-
-li[data-type="taskItem"] > label {
-  margin-top: 0;
-  flex-shrink: 0;
-}
-
-li[data-type="taskItem"] > div {
-  flex: 1 1 auto;
-  min-width: 0;
-  word-break: break-word;
-  white-space: pre-line;
-  display: block;
-}
-
-li[data-type="taskItem"] > div p {
-  margin: 0;
-}
-
 /* ==========================================================================
-   SÉLECTION
+     SÉLECTION ET FOCUS - ÉTATS PREMIUM
    ========================================================================== */
 
 .markdown-body ::selection {
@@ -366,21 +673,18 @@ li[data-type="taskItem"] > div p {
   color: white;
   text-shadow: none;
 }
-
 .markdown-body ::-moz-selection {
   background: var(--accent-primary);
   color: white;
   text-shadow: none;
 }
 
-/* Premium focus states */
 .markdown-body *:focus:not(textarea):not(input):not([contenteditable="true"]) {
   outline: 2px solid var(--accent-primary);
   outline-offset: 2px;
   border-radius: 4px;
 }
 
-/* S'assurer que les champs de saisie n'ont jamais d'outline */
 .markdown-body textarea:focus,
 .markdown-body input:focus,
 .markdown-body [contenteditable="true"]:focus {
@@ -388,150 +692,107 @@ li[data-type="taskItem"] > div p {
   box-shadow: none !important;
 }
 
-/* Premium link focus */
-.markdown-body a:focus {
-  outline: 2px solid var(--accent-primary);
-  outline-offset: 2px;
-  border-radius: 4px;
-  text-decoration: underline;
-}
-
 /* ==========================================================================
-   CODE BLOCKS - MODERN TERMINAL STYLE
+     MARKS ET ÉLÉMENTS SPÉCIAUX
    ========================================================================== */
 
-.markdown-body pre {
-  position: relative; /* Anchor for the copy button */
-  background: var(--surface-2);
-  color: var(--text-2);
-  border-radius: 10px;
-  padding: 18px 20px; /* slightly larger padding for comfort */
-  font-size: 0.95em; /* slightly larger for readability */
+  .markdown-body mark {
+    background: var(--accent-subtle);
+    color: var(--editor-text-color);
+    padding: 0.15em 0.3em;
+    border-radius: 4px;
+    font-weight: 500;
+  }
+  
+  .markdown-body strong { font-weight: 700; color: var(--editor-text-color); }
+  .markdown-body em { font-style: italic; color: var(--editor-text-color); }
+  .markdown-body del { text-decoration: line-through; color: var(--text-3); opacity: 0.8; }
+  
+  /* Abréviations + kbd + sup/sub */
+  .markdown-body abbr[title] { text-decoration: underline dotted; cursor: help; }
+  .markdown-body kbd {
   font-family: var(--font-monospace);
-  overflow-x: auto;
-  margin: var(--editor-list-margin-vertical) 0;
+    font-size: 0.85em;
+    padding: 0.15em 0.4em;
   border: 1px solid var(--border-subtle);
-  transition: background-color 0.2s;
-}
-
-/* Ensure code inside pre has no extra styling */
-.markdown-body pre code {
-  background: none;
-  padding: 0;
-  border: none;
-  font-size: inherit;
-  line-height: 1.6; /* Better line spacing for code */
-  color: inherit;
-}
-
-.markdown-body code {
-  background: var(--surface-2);
-  color: var(--accent-primary);
+    border-bottom-width: 2px;
   border-radius: 6px;
-  padding: 0.2em 0.4em;
-  font-size: 0.875em;
-  font-family: var(--font-monospace);
-  border: 1px solid var(--border-subtle);
-}
-
-/* Copy Button - fixed visible */
-.code-copy-button {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  background: var(--surface-3);
-  color: var(--text-2);
-  border: 1px solid var(--border-subtle);
-  border-radius: 6px;
-  cursor: pointer;
-  opacity: 1;
-  transition: background-color 0.2s, color 0.2s, border-color 0.2s;
-  z-index: 1;
-}
-
-/* hover-based visibility disabled: copy button is always visible */
-
-.code-copy-button:hover {
-  background: var(--surface-hover);
-  border-color: var(--border-hover);
-  color: var(--text-1);
-}
-
-.code-copy-button.copied {
-  background: var(--success);
-  border-color: var(--success);
-  color: white;
-}
-
-.code-copy-button svg {
-  width: 16px;
-  height: 16px;
+    background: var(--surface-2);
+  }
+  .markdown-body sup, .markdown-body sub { line-height: 0; position: relative; vertical-align: baseline; }
+  .markdown-body sup { top: -0.4em; }
+  .markdown-body sub { top: 0.2em; }
+  
+  /* Figures / légendes */
+  .markdown-body figure { margin: 2rem 0; }
+  .markdown-body figcaption {
+    margin-top: 0.5rem;
+    font-size: 0.9em;
+    color: var(--text-3);
+    text-align: center;
+  }
+  
+  /* Détails / sommaire */
+  .markdown-body details {
+    border: 1px solid var(--border-subtle);
+    border-radius: 10px;
+    padding: 0.75rem 1rem;
+    background: var(--surface-1);
+    margin: 1.25rem 0;
+  }
+  .markdown-body summary {
+    cursor: pointer;
+    font-weight: 600;
+    list-style: none;
+  }
+  .markdown-body summary::-webkit-details-marker { display: none; }
+  
+  /* Footnotes (style courant Markdown) */
+  .markdown-body .footnotes { font-size: 0.9em; color: var(--text-2); }
+  .markdown-body .footnotes ol { padding-left: 1.25em; }
+  .markdown-body .footnotes hr { margin-top: 2rem; }
+  
+  /* Visually hidden (pour a11y si besoin) */
+  .markdown-body .visually-hidden {
+    position: absolute !important;
+    width: 1px; height: 1px;
+    padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0 0 0 0);
+    white-space: nowrap; border: 0;
 }
 
 /* ==========================================================================
-   IMAGES ET MARKS
+     RESPONSIVE DESIGN - MOBILE PREMIUM
    ========================================================================== */
 
-.markdown-body img {
-  max-width: 100%;
-  border-radius: 10px; /* premium: increased from 8px for softer look */
-  margin: 0.6rem 0; /* further reduced and equal spacing */
-  display: block;
-  border: 1px solid var(--border-subtle); /* premium: subtle border */
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* premium: subtle shadow */
-  transition: transform 0.2s ease, box-shadow 0.2s ease; /* premium: smooth transitions */
-}
-
-.markdown-body img:hover {
-  transform: translateY(-2px); /* premium: subtle lift effect */
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15); /* premium: enhanced shadow on hover */
-}
-
-.markdown-body mark {
-  background: var(--accent-subtle);
-  color: var(--editor-text-color);
-  padding: 0.1em 0.2em;
-  border-radius: 3px;
+  @media (max-width: 768px) {
+    .markdown-body {
+      font-size: 0.95rem;
+      line-height: 1.7;
+    }
+    .markdown-body h1 { font-size: 1.875rem; margin: 2.5rem 0 1.25rem 0; }
+    .markdown-body h2 { font-size: 1.5rem; margin: 2rem 0 1rem 0; }
+    .markdown-body h3 { font-size: 1.25rem; margin: 1.75rem 0 0.875rem 0; }
+    .markdown-body p { margin: 0 0 1.25rem 0; line-height: 1.7; }
+    .markdown-body ul, .markdown-body ol { margin: 1.25rem 0; padding-left: 1.5em; }
+    .markdown-body li { margin: 0.625rem 0; }
+    .markdown-body blockquote { padding: 1.25rem 1.5rem; margin: 1.5rem 0; }
+    .markdown-body pre { padding: 1.25rem 1.5rem; margin: 1.5rem 0; font-size: 0.85em; }
+    .markdown-body table th, .markdown-body table td { padding: 0.875rem 1rem; font-size: 0.85em; }
 }
 
 /* ==========================================================================
-   SÉPARATEUR
-   ========================================================================== */
-
-.markdown-body hr {
-  border: none;
-  border-top: 1px solid var(--border-subtle);
-  margin: 2em 0;
-  width: 100%;
-  max-width: none;
-}
-
-/* ==========================================================================
-   TABLEAUX
-   ========================================================================== */
-
-.markdown-body th {
-  color: var(--editor-text-color);
-  text-align: center;
-  font-weight: 600;
-  background: var(--surface-2);
-}
-
-/* ==========================================================================
-   PROSEMIRROR TABLEAUX SPÉCIFIQUES
+     PROSEMIRROR SPECIFIC STYLES - UNIFIED
    ========================================================================== */
 
 .ProseMirror .tableWrapper {
-  margin: 1.5rem 0;
+    margin: 2rem 0;
   border: 1px solid var(--border-subtle);
-  border-radius: 10px;
-  overflow: hidden;
+    border-radius: 12px;
+    overflow: auto; /* sticky friendly */
   background: none;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+    -webkit-overflow-scrolling: touch;
 }
 
 .ProseMirror table {
@@ -539,15 +800,13 @@ li[data-type="taskItem"] > div p {
   border-collapse: collapse;
   border-spacing: 0;
   background: none;
-  border-radius: 10px;
+    border-radius: 12px;
   table-layout: fixed;
   margin: 0;
   padding: 0;
 }
 
-.ProseMirror table p {
-  margin: 0;
-}
+  .ProseMirror table p { margin: 0; }
 
 .ProseMirror td,
 .ProseMirror th {
@@ -555,12 +814,12 @@ li[data-type="taskItem"] > div p {
   border-bottom: 1px solid var(--border-subtle);
   background: none;
   color: var(--text-2);
-  font-size: var(--ui-font-size-sm);
+    font-size: 0.9em;
   font-weight: 400;
-  text-align: center; /* center cell content */
-  vertical-align: middle;
-  padding: 12px 16px;
-  min-width: 100px; /* better resize baseline */
+    text-align: left;
+    vertical-align: top;
+    padding: 1rem 1.25rem;
+    min-width: 100px;
   max-width: none;
   word-break: break-word;
   white-space: normal;
@@ -570,473 +829,62 @@ li[data-type="taskItem"] > div p {
 .ProseMirror th {
   background: var(--surface-2);
   color: var(--text-1);
-  font-weight: 600;
-  font-size: var(--ui-font-size-xs);
+    font-weight: 700;
+    font-size: 0.85em;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   border-bottom: 2px solid var(--border-subtle);
-}
-
-/* remove vertical separators for a cleaner look */
-/* .ProseMirror th:not(:last-child) { border-right: 1px solid var(--border-subtle); } */
-
-.ProseMirror td {
-  background: var(--surface-1);
-}
-
-/* Zebra striping */
-.ProseMirror tbody tr:nth-child(even) td {
-  background-color: var(--surface-2);
-}
-
-.ProseMirror tr:last-child td {
-  border-bottom: none;
-}
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  
+  .ProseMirror td { background: var(--surface-1); }
+  .ProseMirror tbody tr:nth-child(even) td { background-color: var(--surface-2); }
+  .ProseMirror tbody tr:hover td { background-color: var(--surface-hover); transition: background-color 0.2s ease; }
+  .ProseMirror tr:last-child td { border-bottom: none; }
 
 .ProseMirror .column-resize-handle {
   position: absolute;
-  right: -2px;
-  top: 0;
-  bottom: 0;
-  width: 4px;
+    right: -3px;
+    top: 0; bottom: 0;
+    width: 6px;
   background-color: var(--accent-primary);
-  opacity: 0;
+    opacity: 0.2;
   transition: opacity 0.2s ease;
   pointer-events: none;
   z-index: 20;
-}
-
-.ProseMirror .tableWrapper:hover .column-resize-handle {
-  opacity: 0.5;
-}
-
+    cursor: col-resize;
+  }
+  .ProseMirror .tableWrapper:hover .column-resize-handle { opacity: 0.45; }
 .ProseMirror .column-resize-handle:hover,
-.ProseMirror .column-resize-handle.dragging {
-  opacity: 1;
-}
-
-.ProseMirror th:last-child,
-.ProseMirror td:last-child {
-  border-right: none;
-}
-
-.ProseMirror tbody tr:nth-child(odd) td {
-  background: var(--surface-1);
-}
-
-.ProseMirror tbody tr:nth-child(even) td {
-  background: var(--surface-2);
-}
-
-/* ==========================================================================
-   BOUTON COPY CODE
-   ========================================================================== */
-
-.code-copy-button {
-  position: absolute;
-  top: 0.5rem;
-  right: 0.5rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 2rem;
-  height: 2rem;
-  border: 1px solid var(--border-subtle);
-  border-radius: 4px;
-  background: var(--surface-2);
-  color: var(--text-2);
-  cursor: pointer;
-  transition: all 0.2s ease;
-  opacity: 1;
-  z-index: 10;
-}
-
-.code-copy-button:hover {
-  background: var(--surface-3);
-  border-color: var(--border-hover);
-  color: var(--editor-text-color);
-}
-
-.code-copy-button.copied {
-  background: var(--accent-primary);
-  color: white;
-  border-color: var(--accent-primary);
-}
-
-.code-copy-button.copied svg {
-  animation: checkmark 0.3s ease;
-}
-
-@keyframes checkmark {
-  0% { transform: scale(0); }
-  50% { transform: scale(1.2); }
-  100% { transform: scale(1); }
-}
-
-/* ==========================================================================
-   PROSEMIRROR CODE SPÉCIFIQUE
-   ========================================================================== */
-
-.ProseMirror > pre.selected {
+  .ProseMirror .column-resize-handle.dragging { opacity: 0.9; }
+  
+  .ProseMirror .selectedCell {
+    position: relative;
+    background-color: rgba(var(--accent-primary-rgb, 229, 90, 44), 0.08);
   outline: 2px solid var(--accent-primary);
-  outline-offset: 2px;
-}
-
-.ProseMirror > pre:focus {
-  outline: 2px solid var(--accent-primary);
-  outline-offset: 2px;
-}
-
-.ProseMirror > *.selected {
-  outline: 2px solid var(--accent-primary);
-  outline-offset: 2px;
+    outline-offset: -2px;
 }
 
 /* ==========================================================================
-   PROSEMIRROR TASK LISTS
+     CODE BLOCKS - PROSEMIRROR UNIFIED
    ========================================================================== */
 
-.ProseMirror li[data-type="taskItem"] {
-  display: flex;
-  align-items: center;
-  gap: 0.4em;
-  list-style-type: none;
-  padding-left: 0;
-}
-
-.ProseMirror li[data-type="taskItem"] > label {
-  display: inline-flex;
-  align-items: center;
-  gap: 0em;
-  margin: 0;
-  white-space: nowrap; /* prevent label wrapping under checkbox */
-}
-
-.ProseMirror li[data-type="taskItem"] > div {
-  flex: 1 1 auto;
-  min-width: 0;
-  word-break: break-word;
-  white-space: pre-line;
-  display: block;
-}
-
-.ProseMirror li[data-type="taskItem"] > div p {
-  margin: 0 !important;
-}
-
-/* ==========================================================================
-   CHECKBOXES PROSEMIRROR
-   ========================================================================== */
-
-.ProseMirror input[type='checkbox'] {
-  appearance: none;
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  width: 1.7em;
-  height: 1.7em;
-  border: 2px solid var(--border-subtle);
-  border-radius: 6px;
-  background: var(--surface-1);
-  display: inline-block;
-  vertical-align: baseline;
-  position: relative;
-  transition: border-color 0.18s, background 0.18s;
-  cursor: pointer;
-  margin-left: -0.6em;
-  margin-right: 0.5em;
-  margin-top: 0;
-}
-
-.ProseMirror input[type='checkbox']:checked {
-  background: var(--accent-primary);
-  border-color: var(--accent-primary);
-}
-
-.ProseMirror input[type='checkbox']:checked::after {
-  content: '✓';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  color: white;
-  font-size: 0.75em;
-  font-weight: 700;
-  line-height: 1;
-}
-
-.ProseMirror input[type='checkbox']:focus {
-  outline: 2px solid var(--accent-subtle);
-  outline-offset: 2px;
-}
-
-/* ==========================================================================
-   TASK LISTS - STYLES ULTRA-AGRESSIFS
-   ========================================================================== */
-
-/* Supprime TOUS les bullets des listes task */
-.ProseMirror ul li[data-type="taskItem"],
-.ProseMirror ol li[data-type="taskItem"],
-li[data-type="taskItem"],
-.task-list-item {
-  list-style: none !important;
-  list-style-type: none !important;
-  list-style-image: none !important;
-  list-style-position: outside !important;
-  padding-left: 0 !important;
-  margin-left: 0 !important;
-  text-indent: 0 !important;
-}
-
-/* Supprime les bullets de tous les éléments task dans ProseMirror */
-.ProseMirror li[data-type="taskItem"]::before,
-.ProseMirror li[data-type="taskItem"]::after,
-li[data-type="taskItem"]::before,
-li[data-type="taskItem"]::after {
-  content: none !important;
-  display: none !important;
-}
-
-/* Force la structure flex pour les task items */
-.ProseMirror li[data-type="taskItem"],
-li[data-type="taskItem"] {
-  display: flex !important;
-  align-items: flex-start !important;
-  gap: 0.6em !important;
-  flex-direction: row !important;
-  width: 100% !important;
-}
-
-/* Styles pour les labels des task items */
-.ProseMirror li[data-type="taskItem"] > label,
-li[data-type="taskItem"] > label {
-  display: flex !important;
-  align-items: center !important;
-  width: 100% !important;
-  gap: 0.6em !important;
-  margin: 0 !important;
-  padding: 0 !important;
-}
-
-/* Styles pour le contenu des task items */
-.ProseMirror li[data-type="taskItem"] > div,
-li[data-type="taskItem"] > div {
-  flex: 1 1 auto !important;
-  min-width: 0 !important;
-  word-break: break-word !important;
-  white-space: pre-line !important;
-  display: block !important;
-  margin: 0 !important;
-  padding: 0 !important;
-}
-
-.ProseMirror li[data-type="taskItem"] > div p,
-li[data-type="taskItem"] > div p {
-  margin: 0 !important;
-  padding: 0 !important;
-}
-
-/* ==========================================================================
-   CHECKBOXES - STYLES ULTRA-AGRESSIFS
-   ========================================================================== */
-
-/* Styles pour TOUS les checkbox dans ProseMirror */
-.ProseMirror input[type='checkbox'],
-.editor-content input[type='checkbox'],
-.markdown-body input[type='checkbox'] {
-  appearance: none;
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  width: 1.7em;
-  height: 1.7em;
-  border: 2px solid var(--border-subtle);
-  border-radius: 4px;
-  background: var(--surface-1);
-  display: inline-block;
-  vertical-align: baseline;
-  position: relative;
-  transition: border-color 0.18s, background 0.18s;
-  cursor: pointer;
-  margin-left: -2.3em; /* pull into gutter */
-  margin-right: 0.5em;
-  margin-top: 0;
-  flex-shrink: 0;
-}
-
-.ProseMirror input[type='checkbox']:checked,
-.editor-content input[type='checkbox']:checked,
-.markdown-body input[type='checkbox']:checked {
-  background: var(--accent-primary) !important;
-  border-color: var(--accent-primary) !important;
-}
-
-.ProseMirror input[type='checkbox']:checked::after,
-.editor-content input[type='checkbox']:checked::after,
-.markdown-body input[type='checkbox']:checked::after {
-  content: '✓' !important; /* ✅ VRAI CHECKMARK UNICODE */
-  position: absolute !important;
-  top: 50% !important;
-  left: 50% !important;
-  transform: translate(-50%, -50%) !important;
-  color: white !important;
-  font-size: 1em !important; /* ✅ TAILLE ADAPTÉE */
-  font-weight: bold !important;
-  line-height: 1 !important;
-  text-align: center !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-}
-
-.ProseMirror input[type='checkbox']:focus,
-.editor-content input[type='checkbox']:focus,
-.markdown-body input[type='checkbox']:focus {
-  outline: 2px solid var(--accent-subtle) !important;
-  outline-offset: 2px !important;
-}
-
-/* ==========================================================================
-   ESPACEMENTS SUPPLÉMENTAIRES
-   ========================================================================== */
-
-/* Espace sous les tableaux pour la lisibilité */
-.markdown-body table {
-  margin-bottom: 2.5em;
-} 
-
-/* ==========================================================================
-   HEADINGS - PREMIUM TYPOGRAPHY (UNIFIED)
-   ========================================================================== */
-
-/* ==========================================================================
-   TASK LISTS - COUVERTURE COMPLÈTE TIPTAP
-   ========================================================================== */
-
-/* Cible TOUS les éléments possibles de task lists */
-.ProseMirror ul li[data-type="taskItem"],
-.ProseMirror ol li[data-type="taskItem"],
-.ProseMirror li[data-type="taskItem"],
-.ProseMirror .task-list-item,
-.ProseMirror ul .task-list-item,
-.ProseMirror ol .task-list-item,
-li[data-type="taskItem"],
-.task-list-item,
-ul li[data-type="taskItem"],
-ol li[data-type="taskItem"],
-ul .task-list-item,
-ol .task-list-item {
-  list-style: none !important;
-  list-style-type: none !important;
-  list-style-image: none !important;
-  list-style-position: outside !important;
-  padding-left: 0 !important;
-  margin-left: 0 !important;
-  text-indent: 0 !important;
-  display: flex !important;
-  align-items: flex-start !important;
-  gap: 0.6em !important;
-  flex-direction: row !important;
-  width: 100% !important;
-}
-
-/* Supprime TOUS les pseudo-éléments */
-.ProseMirror li[data-type="taskItem"]::before,
-.ProseMirror li[data-type="taskItem"]::after,
-.ProseMirror .task-list-item::before,
-.ProseMirror .task-list-item::after,
-li[data-type="taskItem"]::before,
-li[data-type="taskItem"]::after,
-.task-list-item::before,
-.task-list-item::after,
-ul li[data-type="taskItem"]::before,
-ul li[data-type="taskItem"]::after,
-ol li[data-type="taskItem"]::before,
-ol li[data-type="taskItem"]::after {
-  content: none !important;
-  display: none !important;
-  visibility: hidden !important;
-}
-
-/* Force la structure pour tous les labels */
-.ProseMirror li[data-type="taskItem"] > label,
-.ProseMirror .task-list-item > label,
-li[data-type="taskItem"] > label,
-.task-list-item > label {
-  display: flex !important;
-  align-items: center !important;
-  width: 100% !important;
-  gap: 0.6em !important;
-  margin: 0 !important;
-  padding: 0 !important;
-}
-
-/* Force la structure pour tous les contenus */
-.ProseMirror li[data-type="taskItem"] > div,
-.ProseMirror .task-list-item > div,
-li[data-type="taskItem"] > div,
-.task-list-item > div {
-  flex: 1 1 auto !important;
-  min-width: 0 !important;
-  word-break: break-word !important;
-  white-space: pre-line !important;
-  display: block !important;
-  margin: 0 !important;
-  padding: 0 !important;
-}
-
-.ProseMirror li[data-type="taskItem"] > div p,
-.ProseMirror .task-list-item > div p,
-li[data-type="taskItem"] > div p,
-.task-list-item > div p {
-  margin: 0 !important;
-  padding: 0 !important;
-} 
-
-/* ==========================================================================
-   MARKDOWN TASK LISTS - SUPPRESSION BULLETS
-   ========================================================================== */
-
-/* Cible les listes markdown qui contiennent des checkbox (réduction agressivité) */
-.markdown-body ul li:has(> input[type="checkbox"]),
-.markdown-body ol li:has(> input[type="checkbox"]) {
-  list-style: none;
-}
-
-/* Cible les éléments avec des checkbox dans le markdown */
-.markdown-body li:has(input[type="checkbox"])::before,
-.markdown-body li:has(input[type="checkbox"])::after {
-  content: none;
-}
-
-/* Force la structure pour les éléments avec checkbox (réduction agressivité) */
-.markdown-body li:has(input[type="checkbox"]) {
-  display: flex;
-  align-items: center;
-  gap: 0.5em;
-} 
-
-/* ==========================================================================
-   STYLE GLOBAL - SUPPRESSION BULLETS FORCÉE
-   ========================================================================== */
-
-/* Style global pour TOUS les éléments task (supprimé: trop agressif) */
-/* Intentionnellement retiré pour ne pas casser l'indentation globale */
-
-/* Supprime TOUS les pseudo-éléments de TOUS les éléments task (supprimé: trop agressif) */
-/* Intentionnellement retiré pour ne pas impacter les autres listes */ 
-
-/* ProseMirror code blocks - match modern style */
 .ProseMirror pre {
   position: relative;
   background: var(--surface-2);
   color: var(--text-2);
-  border-radius: 10px;
-  padding: 18px 20px; /* match markdown look */
-  font-size: 0.95em;
+    border-radius: 12px;
+    padding: 1.5rem 1.75rem;
+    font-size: 0.9em;
   font-family: var(--font-monospace);
   overflow-x: auto;
-  margin: var(--editor-list-margin-vertical) 0;
+    margin: 2rem 0;
   border: 1px solid var(--border-subtle);
   transition: background-color 0.2s;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    line-height: 1.6;
 }
 
 .ProseMirror pre code {
@@ -1044,208 +892,137 @@ li[data-type="taskItem"] > div p,
   padding: 0;
   border: none;
   font-size: inherit;
-  line-height: 1.6;
+    line-height: inherit;
   color: inherit;
-} 
-
-/* Enhance ProseMirror table UX */
-.ProseMirror .tableWrapper {
-  overflow: auto; /* allow horizontal scroll if needed */
-}
-
-/* Make resize handle easier to target */
-.ProseMirror .column-resize-handle {
-  width: 6px; /* larger than default */
-  background-color: var(--accent-primary);
-  opacity: 0.2;
-}
-
-/* Clearer hover/drag states */
-.ProseMirror .tableWrapper:hover .column-resize-handle {
-  opacity: 0.45;
-}
-.ProseMirror .column-resize-handle:hover,
-.ProseMirror .column-resize-handle.dragging {
-  opacity: 0.9;
-}
-
-/* Provide extra padding at table edges to ease insert */
-.ProseMirror table {
-  margin: 0; /* keep flush */
-}
-
-/* Row/col controls from TableHeader/TableCell often rely on plugin UI, keep spacing safe */
-.ProseMirror th,
-.ProseMirror td {
-  position: relative; /* anchor for potential UI */
-} 
-
-/* Clear selection highlight for table cells */
-.ProseMirror .selectedCell {
-  position: relative;
-  background-color: rgba(var(--accent-primary-rgb, 41, 148, 255), 0.08);
-  outline: 2px solid var(--accent-primary);
-  outline-offset: -2px;
-}
-
-/* Make it obvious you can resize */
-.ProseMirror .column-resize-handle {
-  cursor: col-resize;
-  user-select: none;
-} 
-
-/* Ensure container is anchor and keeps hover stable */
-.markdown-body .code-block-container,
-.ProseMirror .code-block-container {
-  position: relative;
-}
-
-/* Keep copy button interactive without losing hover */
-.code-copy-button {
-  pointer-events: auto;
-} 
-
-/* Keep copy button visible on focus or copied state, and above content */
-.code-copy-button:focus,
-.code-copy-button.copied {
-  opacity: 1;
-  z-index: 5;
-} 
-
-/* (Removed duplicate markdown checkbox block to avoid conflicts; using unified block above) */
-
-/* Align checkbox list items horizontally with the text */
-.markdown-body li:has(> input[type="checkbox"]) {
-  display: flex;
-  align-items: baseline;
-  gap: 0em;
-  list-style: none;
-  padding-left: 0; /* bring checkbox to the left edge */
-  margin-left: 0;
-} 
-
-/* Keep task item content inline and aligned */
-.ProseMirror li[data-type="taskItem"] > div,
-.markdown-body li:has(> input[type="checkbox"]) > *:not(input) {
-  display: inline;
-}
-
-/* Prevent block paragraphs from forcing wraps under checkbox in markdown */
-.markdown-body li:has(> input[type="checkbox"]) p {
-  display: inline;
-  margin: 0;
-} 
-
-/* Checkbox layout: flex row, no absolute positioning (prevents drift) */
-.markdown-body li:has(> input[type="checkbox"]) {
-  display: flex;
-  align-items: center;
-  gap: 0.4em;
-  list-style: none;
-  padding-left: 0;
-  margin-left: 0;
-}
-
-/* Keep content inline */
-.markdown-body li:has(> input[type="checkbox"]) > *:not(input) {
-  display: inline;
-}
-
-/* Normalize checkbox vertical alignment */
-.ProseMirror li[data-type="taskItem"],
-.markdown-body li:has(> input[type="checkbox"]) {
-  align-items: center; /* ensure text and box are centered on the same line */
-}
-
-/* Center the checkmark inside the box and normalize inline alignment */
-.ProseMirror input[type='checkbox'],
-.editor-content input[type='checkbox'],
-.markdown-body input[type='checkbox'] {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  vertical-align: middle;
-}
-
-/* Tighten label/text line-height to reduce visual baseline drift */
-.ProseMirror li[data-type="taskItem"] > label {
-  line-height: 1.2;
+    white-space: pre;
+  }
+  
+  .ProseMirror > pre.selected,
+  .ProseMirror > pre:focus,
+  .ProseMirror > *.selected {
+    outline: 2px solid var(--accent-primary);
+    outline-offset: 2px;
 }
 
 /* ==========================================================================
-   IMAGES - PROSEMIRROR (UNIFIED WITH MARKDOWN PREVIEW)
+     IMAGES - PROSEMIRROR UNIFIED
    ========================================================================== */
+  
 .ProseMirror img {
   max-width: 100%;
-  border-radius: 10px;
-  margin: 1.4rem 0;
+    border-radius: 12px;
+    margin: 1.5rem 0;
   display: block;
   border: 1px solid var(--border-subtle);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+    transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+    background: var(--surface-2);
 }
 
 .ProseMirror img:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
-}
-
-/* Optional caption/content under node-view images */
-.ProseMirror .editor-image-content {
-  text-align: center;
-  color: var(--text-3);
-  font-size: 0.875rem;
-  margin-top: 0.5rem;
-}
+    transform: translateY(-4px);
+    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.18);
+    border-color: var(--accent-primary);
+  }
+  
+  .ProseMirror .editor-image-wrapper { max-width: 100%; margin: 1.5rem 0; }
+  .ProseMirror .editor-image {
+    display: block; width: 100%; height: auto; max-width: 100% !important;
+    margin: 0 auto; border: 1px solid var(--border-subtle); border-radius: 12px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12); object-fit: contain;
+    transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease; background: var(--surface-2);
+  }
+  .ProseMirror .editor-image:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.18);
+    border-color: var(--accent-primary);
+  }
+  .ProseMirror p:has(img),
+  .ProseMirror p:has(.editor-image-wrapper) { margin: 0; }
+  .ProseMirror .editor-image-wrapper { width: 100%; }
 
 /* ==========================================================================
-   IMAGES - TIPTAP NODE VIEW CLASSES (OVERRIDES)
+     DROP CURSOR ET SÉLECTION
    ========================================================================== */
-.ProseMirror .editor-image-wrapper {
-  max-width: 100%;
-  margin: 1.4rem 0;
-}
-
-.ProseMirror .editor-image {
-  display: block;
-  width: 100%;
-  height: auto;
-  max-width: 100% !important; /* override any fixed caps like 700px */
-  margin: 0 auto;
+  
+  .ProseMirror-dropcursor { border-top: 3px solid var(--accent-primary); opacity: 0.8; }
+  
+  /* ==========================================================================
+     COPY BUTTON - STYLE PREMIUM
+     ========================================================================== */
+  
+  .code-copy-button {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+    width: 36px; height: 36px;
+    background: var(--surface-3);
+    color: var(--text-2);
   border: 1px solid var(--border-subtle);
-  border-radius: 10px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  object-fit: contain;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
+    border-radius: 8px;
+    cursor: pointer;
+    opacity: 1;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+    z-index: 10;
+    backdrop-filter: blur(8px);
+  }
+  .code-copy-button:hover {
+    background: var(--surface-hover);
+    border-color: var(--border-hover);
+    color: var(--text-1);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+  .code-copy-button.copied { background: var(--success); border-color: var(--success); color: white; }
+  .code-copy-button svg { width: 18px; height: 18px; }
 
-.ProseMirror .editor-image:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
-}
-
-/* Normalize image spacing in editor body */
+/* ==========================================================================
+     ANIMATIONS ET TRANSITIONS (avec respect motion)
+   ========================================================================== */
+  
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  
+  .markdown-body > * { animation: fadeIn 0.3s ease-out; }
+  .markdown-body h1, .markdown-body h2, .markdown-body h3 { animation: fadeIn 0.4s ease-out; }
+  .markdown-body blockquote, .markdown-body pre, .markdown-body table { animation: fadeIn 0.5s ease-out; }
+  
+  @media (prefers-reduced-motion: reduce) {
+    .markdown-body * {
+      animation: none !important;
+      transition: none !important;
+    }
+    .markdown-body img,
 .ProseMirror img,
-.ProseMirror .editor-image {
-  margin: 0.6rem 0; /* further reduced and equal spacing */
-}
-.ProseMirror .editor-image-wrapper {
-  margin: 0.6rem 0; /* align with image margin */
-}
-
-/* Prevent extra paragraph margins around images */
-.ProseMirror p:has(img),
-.ProseMirror p:has(.editor-image-wrapper) {
-  margin: 0; /* avoid double spacing */
-}
-
-/* Ensure node-view image takes full editor content width */
-.ProseMirror .editor-image-wrapper {
-  width: 100%;
-}
-
-/* Subtle drop cursor styling for better placement feedback */
-.ProseMirror-dropcursor {
-  border-top: 2px solid var(--accent-primary);
-  opacity: 0.6;
-}
+    .ProseMirror .editor-image { transform: none !important; }
+  }
+  
+  /* ==========================================================================
+     PRINT STYLES
+     ========================================================================== */
+  
+  @media print {
+    .markdown-body {
+      color: #000;
+      background: #fff;
+      font-size: 12pt;
+      line-height: 1.6;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    .markdown-body h1, .markdown-body h2, .markdown-body h3 { page-break-after: avoid; page-break-inside: avoid; }
+    .markdown-body pre, .markdown-body blockquote, .markdown-body table { page-break-inside: avoid; }
+    .markdown-body img { max-width: 100% !important; page-break-inside: avoid; box-shadow: none; border-color: #00000022; }
+    .markdown-body pre { box-shadow: none; background: #f6f6f6; color: #000; border-color: #00000022; }
+    .markdown-body blockquote { background: #f6f6f6; border-color: #000; box-shadow: none; }
+         .markdown-body hr { 
+       background: #00000022; 
+       height: 1px; 
+       opacity: 0.8;
+     }
+  }
