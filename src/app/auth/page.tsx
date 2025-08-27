@@ -155,6 +155,19 @@ function AuthPageContent() {
               }
             </p>
             
+            {/* Debug: Affichage temporaire des paramètres OAuth */}
+            {process.env.NODE_ENV === 'development' && (
+              <div style={{ background: '#f0f0f0', padding: '10px', margin: '10px 0', borderRadius: '5px', fontSize: '12px' }}>
+                <strong>Debug OAuth:</strong><br/>
+                client_id: {clientId}<br/>
+                redirect_uri: {redirectUri}<br/>
+                response_type: {responseType}<br/>
+                scope: {scope}<br/>
+                state: {state}<br/>
+                isExternalOAuth: {isExternalOAuth ? 'true' : 'false'}
+              </div>
+            )}
+            
             {isExternalOAuth && (
               <div className="auth-oauth-info">
                 <p><strong>Application :</strong> {clientId}</p>
