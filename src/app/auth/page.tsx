@@ -29,16 +29,6 @@ function AuthPageContent() {
   
   const isExternalOAuth = clientId && redirectUri && responseType === 'code';
 
-  // Debug: Log des paramètres OAuth
-  console.log('🔍 Debug OAuth:', {
-    clientId,
-    redirectUri,
-    scope,
-    state,
-    responseType,
-    isExternalOAuth
-  });
-
   useEffect(() => {
     checkSession();
   }, []);
@@ -47,17 +37,13 @@ function AuthPageContent() {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       
-      console.log('🔍 Session trouvée:', !!session, 'isExternalOAuth:', isExternalOAuth);
-      
       if (session) {
         setSessionStatus('Session trouvée, redirection...');
         
         // Si c'est un flux OAuth externe, rediriger vers le callback avec le code
         if (isExternalOAuth && clientId && redirectUri) {
-          console.log('🔍 Flux OAuth externe détecté, appel de handleExternalOAuthCallback');
           await handleExternalOAuthCallback(session);
         } else {
-          console.log('🔍 Flux OAuth interne, redirection vers /');
           router.push('/');
         }
       } else {
@@ -105,20 +91,10 @@ function AuthPageContent() {
    */
   const handleExternalOAuthCallback = async (session: any) => {
     try {
-      console.log('🔍 handleExternalOAuthCallback appelé avec:', {
-        clientId,
-        redirectUri,
-        scope,
-        state,
-        userId: session.user.id
-      });
-
       if (!clientId || !redirectUri) {
         console.error('🔍 Paramètres manquants:', { clientId, redirectUri });
         return;
       }
-      
-      console.log('🔍 Appel de /api/auth/create-code...');
       
       // Créer un vrai code d'autorisation OAuth
       const response = await fetch('/api/auth/create-code', {
@@ -135,8 +111,6 @@ function AuthPageContent() {
         })
       });
 
-      console.log('🔍 Réponse /api/auth/create-code:', response.status, response.ok);
-
       if (!response.ok) {
         const errorText = await response.text();
         console.error('🔍 Erreur réponse:', errorText);
@@ -144,7 +118,6 @@ function AuthPageContent() {
       }
 
       const { code } = await response.json();
-      console.log('🔍 Code OAuth généré:', code);
       
       // Construire l'URL de redirection avec le code
       const callbackUrl = new URL(redirectUri);
@@ -152,8 +125,6 @@ function AuthPageContent() {
       if (state) {
         callbackUrl.searchParams.set('state', state);
       }
-      
-      console.log('🔍 Redirection vers:', callbackUrl.toString());
       
       // Rediriger vers l'application externe
       window.location.href = callbackUrl.toString();
