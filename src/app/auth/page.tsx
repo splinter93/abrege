@@ -1,10 +1,10 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '@/supabaseClient';
 
-export default function AuthEntryPage() {
+function AuthEntryPageContent() {
   const router = useRouter();
   const sp = useSearchParams();
 
@@ -116,5 +116,23 @@ export default function AuthEntryPage() {
         </ul>
       </div>
     </div>
+  );
+}
+
+// Composant principal avec Suspense pour Next.js 15
+export default function AuthEntryPage() {
+  return (
+    <Suspense fallback={
+      <div style={{ 
+        padding: 24, 
+        textAlign: 'center',
+        fontFamily: 'system-ui, -apple-system, sans-serif'
+      }}>
+        <h2>🔐 Initialisation...</h2>
+        <p>Chargement de la page d'authentification...</p>
+      </div>
+    }>
+      <AuthEntryPageContent />
+    </Suspense>
   );
 } 

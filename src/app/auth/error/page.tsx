@@ -1,9 +1,9 @@
 'use client';
 
 import { useSearchParams, useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 
-export default function AuthErrorPage() {
+function AuthErrorPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [errorDetails, setErrorDetails] = useState<any>(null);
@@ -239,5 +239,23 @@ export default function AuthErrorPage() {
         </ul>
       </div>
     </div>
+  );
+}
+
+// Composant principal avec Suspense pour Next.js 15
+export default function AuthErrorPage() {
+  return (
+    <Suspense fallback={
+      <div style={{ 
+        padding: 24, 
+        textAlign: 'center',
+        fontFamily: 'system-ui, -apple-system, sans-serif'
+      }}>
+        <h2>Chargement...</h2>
+        <p>Initialisation de la page d'erreur...</p>
+      </div>
+    }>
+      <AuthErrorPageContent />
+    </Suspense>
   );
 }
