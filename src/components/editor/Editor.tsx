@@ -210,7 +210,7 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
         transformCopiedText: true
       }),
       Placeholder.configure({
-        placeholder: 'Écrivez quelque chose d\'incroyable',
+        placeholder: 'Écrivez quelque chose d\'incroyable...',
         showOnlyWhenEditable: true,
       })
     ],
