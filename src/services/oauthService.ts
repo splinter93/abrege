@@ -242,7 +242,7 @@ export class OAuthService {
         .select('*')
         .eq('code', code)
         .eq('client_id', clientId)
-        .eq('used_at', null)
+        .is('used_at', null)  // Utiliser .is() au lieu de .eq() pour NULL
         .gt('expires_at', new Date().toISOString())
         .single();
 
@@ -321,7 +321,7 @@ export class OAuthService {
         .from('oauth_access_tokens')
         .select('user_id, scopes, client_id')
         .eq('token_hash', tokenHash)
-        .eq('revoked_at', null)
+        .is('revoked_at', null)  // Utiliser .is() au lieu de .eq() pour NULL
         .gt('expires_at', new Date().toISOString())
         .single();
 
@@ -386,7 +386,7 @@ export class OAuthService {
         .select('*, oauth_access_tokens(*)')
         .eq('token_hash', refreshTokenHash)
         .eq('client_id', clientId)
-        .eq('revoked_at', null)
+        .is('revoked_at', null)  // Utiliser .is() au lieu de .eq() pour NULL
         .gt('expires_at', new Date().toISOString())
         .single();
 
