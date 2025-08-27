@@ -30,8 +30,11 @@ function AuthPageContent() {
   const isExternalOAuth = clientId && redirectUri && responseType === 'code';
 
   useEffect(() => {
-    checkSession();
-  }, []);
+    // Attendre que les paramètres OAuth soient disponibles
+    if (searchParams) {
+      checkSession();
+    }
+  }, [searchParams]);
 
   const checkSession = async () => {
     try {
