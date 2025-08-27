@@ -24,8 +24,8 @@ export async function GET(request: NextRequest) {
       state: searchParams.get('state'),
     });
 
-    // Vérifier que le client_id est valide et actif
-    const client = await oauthService.validateClientCredentials(authorizeRequest.client_id, 'dummy-secret');
+    // Vérifier que le client_id est valide et actif (sans valider le secret)
+    const client = await oauthService.getClientById(authorizeRequest.client_id);
     if (!client) {
       return NextResponse.json(
         { error: 'unauthorized_client', error_description: 'Invalid client ID' },

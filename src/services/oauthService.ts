@@ -143,7 +143,17 @@ export class OAuthService {
         return false;
       }
 
-      return client.redirect_uris.some(uri => redirectUri.startsWith(uri));
+      return client.redirect_uris.some(uri => {
+        // Si l'URI contient un wildcard (*), on le traite comme un pattern
+        if (uri.includes('*')) {
+          // Convertir le pattern en regex
+          const pattern = uri.replace(/\*/g, '.*');
+          const regex = new RegExp(`^${pattern}$`);
+          return regex.test(redirectUri);
+        }
+        // Sinon, validation exacte ou startsWith
+        return redirectUri.startsWith(uri);
+      });
     } catch (error) {
       console.error('Erreur validation redirect_uri:', error);
       return false;
