@@ -105,6 +105,29 @@ export class OAuthService {
   }
 
   /**
+   * Récupère un client OAuth par son ID
+   */
+  async getClientById(clientId: string): Promise<OAuthClient | null> {
+    try {
+      const { data: client, error } = await this.supabase
+        .from('oauth_clients')
+        .select('*')
+        .eq('client_id', clientId)
+        .eq('is_active', true)
+        .single();
+
+      if (error || !client) {
+        return null;
+      }
+
+      return client;
+    } catch (error) {
+      console.error('Erreur récupération client:', error);
+      return null;
+    }
+  }
+
+  /**
    * Vérifie si un redirect_uri est autorisé pour un client
    */
   async validateRedirectUri(clientId: string, redirectUri: string): Promise<boolean> {

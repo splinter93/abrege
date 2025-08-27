@@ -28,11 +28,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Valider le client OAuth
-    const client = await oauthService.validateClientCredentials(createCodeRequest.clientId, 'dummy-secret');
-    if (!client) {
+    // Valider que le client OAuth existe et est actif
+    const client = await oauthService.getClientById(createCodeRequest.clientId);
+    if (!client || !client.is_active) {
       return NextResponse.json(
-        { error: 'unauthorized_client', error_description: 'Invalid client ID' },
+        { error: 'unauthorized_client', error_description: 'Invalid or inactive client ID' },
         { status: 400 }
       );
     }
