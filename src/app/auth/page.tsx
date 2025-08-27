@@ -186,11 +186,12 @@ function AuthPageContent() {
         validScopes.push('notes:read'); // Scope minimal par défaut
       }
       
-      // Créer un vrai code d'autorisation OAuth
+      // ✅ AJOUTER LE HEADER D'AUTHENTIFICATION
       const response = await fetch('/api/auth/create-code', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}` // ✅ Token d'authentification ajouté
         },
         body: JSON.stringify({
           clientId,

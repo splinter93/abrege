@@ -59,9 +59,18 @@ async function createChatGPTOAuthCode(userId: string, params: OAuthParams): Prom
     validScopes.push('notes:read'); // Scope minimal par défaut
   }
 
+  // ✅ RÉCUPÉRER LE TOKEN D'AUTHENTIFICATION
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session?.access_token) {
+    throw new Error('Token d\'authentification manquant');
+  }
+
   const response = await fetch('/api/auth/create-code', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${session.access_token}` // ✅ Token d'authentification ajouté
+    },
     body: JSON.stringify({
       clientId: params.client_id,
       userId,
