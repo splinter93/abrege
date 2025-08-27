@@ -109,9 +109,30 @@ function AuthPageContent() {
         // Stocker les paramètres OAuth dans le sessionStorage
         sessionStorage.setItem('oauth_external_params', JSON.stringify(oauthParams));
         console.log('🔍 Paramètres OAuth stockés:', oauthParams);
+        
+        // POUR CHATGPT : Rediriger directement vers Google OAuth avec le bon redirect_uri
+        if (isChatGPT && provider === 'google') {
+          console.log('🤖 Flux ChatGPT détecté, redirection directe vers Google OAuth');
+          
+          // Construire l'URL Google OAuth avec le redirect_uri de ChatGPT
+          const googleOAuthUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');
+          googleOAuthUrl.searchParams.set('client_id', process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID!);
+          googleOAuthUrl.searchParams.set('redirect_uri', `${window.location.origin}/auth/callback`);
+          googleOAuthUrl.searchParams.set('response_type', 'code');
+          googleOAuthUrl.searchParams.set('scope', 'email profile');
+          googleOAuthUrl.searchParams.set('access_type', 'offline');
+          googleOAuthUrl.searchParams.set('prompt', 'consent');
+          
+          // Stocker un flag pour identifier que c'est un flux ChatGPT
+          sessionStorage.setItem('chatgpt_oauth_flow', 'true');
+          
+          // Rediriger vers Google OAuth
+          window.location.href = googleOAuthUrl.toString();
+          return;
+        }
       }
       
-      // Lancer la connexion OAuth
+      // Lancer la connexion OAuth standard pour les autres cas
       await signInWithOAuth(provider);
     } catch (error) {
       console.error('Erreur connexion OAuth:', error);

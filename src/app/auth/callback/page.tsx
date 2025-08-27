@@ -74,27 +74,19 @@ function AuthCallbackContent() {
             }
           }
           
-          // DÉTECTION AUTOMATIQUE CHATGPT VIA REFERER
-          const referer = document.referrer;
-          const isFromChatGPT = referer.includes('chat.openai.com');
+          // DÉTECTION FLUX CHATGPT
+          const isChatGPTFlow = sessionStorage.getItem('chatgpt_oauth_flow') === 'true';
           
-          if (isFromChatGPT) {
-            console.log('🤖 Détection automatique ChatGPT, création du code OAuth...');
+          if (isChatGPTFlow) {
+            console.log('🤖 Flux ChatGPT détecté, redirection vers l\'endpoint OAuth...');
             
-            // Créer un code OAuth pour ChatGPT
-            // createChatGPTOAuthCode(data.session.user.id).then((code) => { // This function is not defined in the original file
-            //   if (code) {
-            //     // Rediriger vers ChatGPT avec le code
-            //     const chatgptCallback = 'https://chat.openai.com/aip/g-011f24575c8d3b9d5d69e124bafa1364ae3badf9/oauth/callback';
-            //     const redirectUrl = `${chatgptCallback}?code=${code}&state=success`;
-            //     console.log('🔄 Redirection vers ChatGPT avec le code OAuth');
-            //     window.location.href = redirectUrl;
-            //   } else {
-            //     console.error('❌ Erreur création code OAuth ChatGPT');
-            //     router.push('/');
-            //   }
-            // });
-            // return;
+            // Nettoyer le flag
+            sessionStorage.removeItem('chatgpt_oauth_flow');
+            
+            // Rediriger vers l'endpoint OAuth ChatGPT qui gère tout
+            const oauthUrl = `/api/auth/chatgpt-oauth?code=${searchParams.get('code')}`;
+            window.location.href = oauthUrl;
+            return;
           }
           
           // Si pas de flux OAuth externe, redirection normale
