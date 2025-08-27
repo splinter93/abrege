@@ -87,7 +87,15 @@ function AuthPageContent() {
   };
 
   // Use OAuth hook for OAuth sign-in
-  const { signIn: signInWithOAuth, loading: oauthLoading, error: oauthError } = useOAuth();
+  const { signIn: signInWithOAuth, loading: oauthLoading, error: oauthError } = useOAuth(
+    isExternalOAuth ? {
+      clientId: clientId!,
+      redirectUri: redirectUri!,
+      scope: scope || undefined,
+      state: state || undefined,
+      responseType: responseType || undefined
+    } : undefined
+  );
 
   /**
    * Gère le callback OAuth pour les applications externes

@@ -3,6 +3,7 @@
 import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '@/supabaseClient';
+import { oauthService } from '@/services/oauthService';
 import LogoHeader from '@/components/LogoHeader';
 import './callback.css';
 
