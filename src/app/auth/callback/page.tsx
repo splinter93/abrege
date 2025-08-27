@@ -35,10 +35,29 @@ function sanitizeState(s?: string) {
 }
 
 async function createChatGPTOAuthCode(userId: string, params: OAuthParams): Promise<string> {
-  const scopes =
-    params.scope
-      ? params.scope.split(/[,\s]+/).map((s) => s.trim()).filter(Boolean)
-      : [];
+  // Filtrer les scopes pour ne garder que ceux autorisés
+  const allowedScopes = [
+    'notes:read', 'notes:write', 
+    'dossiers:read', 'dossiers:write', 
+    'classeurs:read', 'classeurs:write'
+  ];
+  
+  const scopes = params.scope
+    ? params.scope.split(/[,\s]+/).map((s) => s.trim()).filter(Boolean)
+    : [];
+  
+  // Filtrer pour ne garder que les scopes autorisés
+  const validScopes = scopes.filter(scope => allowedScopes.includes(scope));
+  
+  // Log des scopes pour debug
+  console.log('🔍 [OAuth] Scopes demandés:', scopes);
+  console.log('🔍 [OAuth] Scopes autorisés:', validScopes);
+  console.log('🔍 [OAuth] Scopes rejetés:', scopes.filter(scope => !allowedScopes.includes(scope)));
+  
+  if (validScopes.length === 0) {
+    console.warn('⚠️ [OAuth] Aucun scope valide, utilisation des scopes par défaut');
+    validScopes.push('notes:read'); // Scope minimal par défaut
+  }
 
   const response = await fetch('/api/auth/create-code', {
     method: 'POST',
@@ -47,7 +66,7 @@ async function createChatGPTOAuthCode(userId: string, params: OAuthParams): Prom
       clientId: params.client_id,
       userId,
       redirectUri: params.redirect_uri,
-      scopes,
+      scopes: validScopes,
       state: sanitizeState(params.state),
     }),
   });

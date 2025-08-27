@@ -166,6 +166,26 @@ function AuthPageContent() {
         return;
       }
       
+      // Filtrer les scopes pour ne garder que ceux autorisés
+      const allowedScopes = [
+        'notes:read', 'notes:write', 
+        'dossiers:read', 'dossiers:write', 
+        'classeurs:read', 'classeurs:write'
+      ];
+      
+      const requestedScopes = scope ? scope.split(' ').filter(s => s.trim()) : [];
+      const validScopes = requestedScopes.filter(scope => allowedScopes.includes(scope));
+      
+      // Log des scopes pour debug
+      console.log('🔍 [OAuth] Scopes demandés:', requestedScopes);
+      console.log('🔍 [OAuth] Scopes autorisés:', validScopes);
+      console.log('🔍 [OAuth] Scopes rejetés:', requestedScopes.filter(scope => !allowedScopes.includes(scope)));
+      
+      if (validScopes.length === 0) {
+        console.warn('⚠️ [OAuth] Aucun scope valide, utilisation des scopes par défaut');
+        validScopes.push('notes:read'); // Scope minimal par défaut
+      }
+      
       // Créer un vrai code d'autorisation OAuth
       const response = await fetch('/api/auth/create-code', {
         method: 'POST',
@@ -176,7 +196,7 @@ function AuthPageContent() {
           clientId,
           userId: session.user.id,
           redirectUri,
-          scopes: scope ? scope.split(' ').filter(s => s.trim()) : [],
+          scopes: validScopes,
           state
         })
       });
