@@ -13,7 +13,7 @@ type OAuthParams = {
   state?: string;
 };
 
-const ALLOWED_REDIRECT_HOSTS = ['chat.openai.com', 'openai.com'];
+const ALLOWED_REDIRECT_HOSTS = ['chat.openai.com', 'openai.com', 'chatgpt.com'];
 const MAX_STATE_LEN = 512;
 
 function isAllowedRedirect(uri: string) {
@@ -121,11 +121,21 @@ function AuthCallbackContent() {
             ? window.sessionStorage.getItem('chatgpt_oauth_flow') === 'true'
             : false;
 
+        console.log('🔍 [Callback] Vérification flux ChatGPT:', {
+          isChatGPTFlow,
+          sessionStorage: typeof window !== 'undefined' ? {
+            chatgpt_oauth_flow: window.sessionStorage.getItem('chatgpt_oauth_flow'),
+            chatgpt_oauth_params: window.sessionStorage.getItem('chatgpt_oauth_params')
+          } : 'N/A'
+        });
+
         if (isChatGPTFlow) {
           const raw = window.sessionStorage.getItem('chatgpt_oauth_params');
           // Nettoyage systématique
           window.sessionStorage.removeItem('chatgpt_oauth_flow');
           window.sessionStorage.removeItem('chatgpt_oauth_params');
+
+          console.log('🔍 [Callback] Paramètres OAuth ChatGPT récupérés:', raw);
 
           if (!raw) {
             console.error('❌ Paramètres OAuth ChatGPT manquants');
@@ -136,6 +146,7 @@ function AuthCallbackContent() {
           let params: OAuthParams;
           try {
             params = JSON.parse(raw) as OAuthParams;
+            console.log('🔍 [Callback] Paramètres OAuth ChatGPT parsés:', params);
           } catch {
             console.error('❌ Paramètres OAuth ChatGPT invalides (JSON)');
             router.push('/');
@@ -150,12 +161,18 @@ function AuthCallbackContent() {
           }
 
           try {
+            console.log('🔍 [Callback] Création du code OAuth ChatGPT pour utilisateur:', data.session.user.id);
             const code = await createChatGPTOAuthCode(data.session.user.id, params);
             if (abortRef.current) return;
+
+            console.log('🔍 [Callback] Code OAuth créé avec succès:', code);
 
             const redirect = new URL(params.redirect_uri);
             redirect.searchParams.set('code', code);
             redirect.searchParams.set('state', sanitizeState(params.state));
+
+            console.log('🔍 [Callback] URL de redirection construite:', redirect.toString());
+            console.log('🔍 [Callback] Redirection vers ChatGPT...');
 
             window.location.href = redirect.toString();
           } catch (e) {

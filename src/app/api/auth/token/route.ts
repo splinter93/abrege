@@ -14,7 +14,7 @@ const tokenRequestSchema = z.object({
 // Schema de validation pour la réponse OAuth
 const tokenResponseSchema = z.object({
   access_token: z.string(),
-  token_type: z.literal('Bearer'),
+  token_type: z.literal('bearer'),
   expires_in: z.number(),
   refresh_token: z.string().optional(),
   scope: z.string().optional(),
