@@ -441,7 +441,7 @@ export class OAuthService {
 
       return {
         access_token: accessToken,
-        token_type: 'Bearer',
+        token_type: 'bearer',
         expires_in: 3600, // 1 heure
         scope: refreshTokenData.oauth_access_tokens.scopes.join(' '),
         refresh_token: newRefreshToken
