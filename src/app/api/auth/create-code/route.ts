@@ -17,22 +17,15 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const createCodeRequest = createCodeRequestSchema.parse(body);
     
-    // CAS SPÉCIAL CHATGPT : Pas d'authentification stricte
-    const isChatGPT = createCodeRequest.clientId === 'scrivia-custom-gpt';
+    // ✅ TOUJOURS exiger l'authentification, même pour ChatGPT
+    const user = await getCurrentUser(request);
     
-    if (!isChatGPT) {
-      // Vérifier l'authentification de l'utilisateur pour les autres clients
-      const user = await getCurrentUser(request);
-      
-      // Vérifier que l'utilisateur correspond à celui demandé
-      if (user.id !== createCodeRequest.userId) {
-        return NextResponse.json(
-          { error: 'forbidden', error_description: 'Access denied' },
-          { status: 403 }
-        );
-      }
-    } else {
-      console.log('🤖 Requête ChatGPT détectée, authentification contournée');
+    // Vérifier que l'utilisateur correspond à celui demandé
+    if (user.id !== createCodeRequest.userId) {
+      return NextResponse.json(
+        { error: 'forbidden', error_description: 'Access denied' },
+        { status: 403 }
+      );
     }
 
     // Valider que le client OAuth existe et est actif
