@@ -10,7 +10,16 @@ export function useOAuth() {
     setLoading(true);
     setError(null);
     try {
-      const redirectTo = `${window.location.origin}/auth/callback`;
+      // Vérifier si c'est un flux OAuth externe
+      const urlParams = new URLSearchParams(window.location.search);
+      const isExternalOAuth = urlParams.get('client_id') && urlParams.get('redirect_uri');
+      
+      // Si c'est un flux OAuth externe, rediriger vers la page d'auth pour gérer le callback
+      // Sinon, utiliser le callback normal
+      const redirectTo = isExternalOAuth 
+        ? `${window.location.origin}/auth${window.location.search}`
+        : `${window.location.origin}/auth/callback`;
+      
       const { error: oauthError } = await supabase.auth.signInWithOAuth({
         provider,
         options: { redirectTo }
