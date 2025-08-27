@@ -16,6 +16,8 @@ export interface AuthResult {
   userId?: string;
   error?: string;
   status?: number;
+  scopes?: string[];
+  authType?: 'oauth' | 'jwt';
 }
 
 export interface PermissionResult {
@@ -28,6 +30,7 @@ export interface PermissionResult {
 
 /**
  * Récupère l'utilisateur authentifié depuis la requête
+ * Supporte à la fois les tokens OAuth et les JWT Supabase
  */
 export async function getAuthenticatedUser(request: NextRequest): Promise<AuthResult> {
   try {
@@ -50,41 +53,68 @@ export async function getAuthenticatedUser(request: NextRequest): Promise<AuthRe
     console.log('🚨 [AUTH] Token extrait:', token ? 'PRÉSENT' : 'ABSENT');
     console.log('🚨 [AUTH] Longueur token:', token.length);
     
-    // SOLUTION ALTERNATIVE : Créer un client Supabase avec le token
-    console.log('🚨 [AUTH] Création client Supabase avec token...');
-    const supabaseWithToken = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        global: {
-          headers: {
-            Authorization: `Bearer ${token}`
+    // ✅ ESSAYER D'ABORD LE TOKEN OAUTH
+    try {
+      console.log('🚨 [AUTH] Test authentification OAuth...');
+      const { oauthService } = await import('@/services/oauthService');
+      const oauthUser = await oauthService.validateAccessToken(token);
+      
+      if (oauthUser) {
+        console.log('🚨 [AUTH] ✅ Utilisateur authentifié via OAuth:', oauthUser.user_id);
+        console.log('🚨 [AUTH] Scopes OAuth:', oauthUser.scopes);
+        console.log('🚨 [AUTH] ===== FIN GETAUTHENTICATEDUSER OAUTH SUCCÈS =====');
+        
+        return {
+          success: true,
+          userId: oauthUser.user_id,
+          scopes: oauthUser.scopes,
+          authType: 'oauth'
+        };
+      }
+    } catch (oauthError) {
+      console.log('🚨 [AUTH] ❌ Token OAuth invalide, essai JWT Supabase...');
+    }
+    
+    // ✅ ESSAYER LE JWT SUPABASE (fallback)
+    try {
+      console.log('🚨 [AUTH] Test authentification JWT Supabase...');
+      const supabaseWithToken = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        {
+          global: {
+            headers: {
+              Authorization: `Bearer ${token}`
+            }
           }
         }
+      );
+      
+      const { data: { user }, error } = await supabaseWithToken.auth.getUser();
+      
+      if (error || !user) {
+        console.log('🚨 [AUTH] ❌ JWT Supabase invalide');
+        throw new Error('JWT invalide');
       }
-    );
-    
-    // Tester l'authentification en récupérant l'utilisateur
-    console.log('🚨 [AUTH] Test authentification avec client tokenisé...');
-    const { data: { user }, error } = await supabaseWithToken.auth.getUser();
-    
-    console.log('🚨 [AUTH] Résultat authentification:', { user: !!user, error: error?.message || 'Aucune erreur' });
-    
-    if (error || !user) {
-      console.log('🚨 [AUTH] ❌ Authentification échouée:', error?.message || 'Pas d\'utilisateur');
+
+      console.log('🚨 [AUTH] ✅ Utilisateur authentifié via JWT Supabase:', user.id);
+      console.log('🚨 [AUTH] ===== FIN GETAUTHENTICATEDUSER JWT SUCCÈS =====');
+
       return {
-        success: false,
-        error: 'Token d\'authentification invalide',
-        status: 401
+        success: true,
+        userId: user.id,
+        authType: 'jwt'
       };
+    } catch (jwtError) {
+      console.log('🚨 [AUTH] ❌ JWT Supabase échoué aussi');
     }
-
-    console.log('🚨 [AUTH] ✅ Utilisateur authentifié:', user.id);
-    console.log('🚨 [AUTH] ===== FIN GETAUTHENTICATEDUSER SUCCÈS =====');
-
+    
+    // ❌ AUCUNE AUTHENTIFICATION VALIDE
+    console.log('🚨 [AUTH] ❌ Aucune méthode d\'authentification valide');
     return {
-      success: true,
-      userId: user.id
+      success: false,
+      error: 'Token d\'authentification invalide (OAuth et JWT)',
+      status: 401
     };
 
   } catch (error) {
