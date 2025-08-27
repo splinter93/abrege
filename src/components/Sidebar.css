@@ -456,3 +456,43 @@
   display: flex;
   flex-direction: column;
 } 
+
+/* ==========================================================================
+   BOUTON DE DÉCONNEXION
+   ========================================================================== */
+
+.logout-button {
+  background: transparent !important;
+  border: none !important;
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  color: rgba(255, 255, 255, 0.7) !important;
+  transition: all 0.2s ease;
+}
+
+.logout-button:hover {
+  background: rgba(239, 68, 68, 0.1) !important;
+  color: rgba(239, 68, 68, 0.9) !important;
+  border-color: rgba(239, 68, 68, 0.3) !important;
+}
+
+.logout-button:hover svg {
+  color: rgba(239, 68, 68, 0.9) !important;
+}
+
+.logout-button:active {
+  transform: translateX(2px) scale(0.98);
+}
+
+/* Animation de sortie pour le bouton de déconnexion */
+.logout-button svg {
+  transition: all 0.2s ease;
+}
+
+.logout-button:hover svg {
+  transform: translateX(2px);
+} 

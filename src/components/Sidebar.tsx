@@ -2,6 +2,8 @@
 import React, { useRef, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
+import { createClient } from '@supabase/supabase-js';
 import './Sidebar.css';
 
 // Icônes SVG
@@ -48,6 +50,14 @@ const AccountIcon = () => (
   </svg>
 );
 
+const LogoutIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+    <polyline points="16,17 21,12 16,7"/>
+    <line x1="21" y1="12" x2="9" y2="12"/>
+  </svg>
+);
+
 const TrashIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M3 6h18"/>
@@ -71,6 +81,7 @@ interface SidebarProps {
 
 const Sidebar: React.FC<SidebarProps> = ({ onToggleFoldersPanel = () => {} }) => {
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const router = useRouter();
 
   useEffect(() => {
     return () => {
@@ -79,6 +90,28 @@ const Sidebar: React.FC<SidebarProps> = ({ onToggleFoldersPanel = () => {} }) =>
       }
     };
   }, []);
+
+  const handleLogout = async () => {
+    try {
+      // Créer le client Supabase
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+      const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+      const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+      // Déconnexion
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) {
+        console.error('Erreur lors de la déconnexion:', error);
+      } else {
+        console.log('Déconnexion réussie');
+        // Rediriger vers la page d'accueil
+        router.push('/');
+      }
+    } catch (error) {
+      console.error('Erreur lors de la déconnexion:', error);
+    }
+  };
 
   return (
     <aside className="sidebar">
@@ -132,6 +165,10 @@ const Sidebar: React.FC<SidebarProps> = ({ onToggleFoldersPanel = () => {} }) =>
               <AccountIcon />
               <span>Mon Compte</span>
             </Link>
+            <button onClick={handleLogout} className="nav-link logout-button">
+              <LogoutIcon />
+              <span>Déconnexion</span>
+            </button>
           </nav>
         </div>
       </div>
