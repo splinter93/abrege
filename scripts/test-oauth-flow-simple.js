@@ -44,7 +44,7 @@ function testOAuthConfig() {
   const oauthParams = {
     client_id: 'scrivia-custom-gpt',
     redirect_uri: 'https://chat.openai.com/aip/g-011f24575c8d3b9d5d69e124bafa1364ae3badf9/oauth/callback',
-    scope: 'notes:read notes:write dossiers:read dossiers:write classeurs:read classeurs:write profile:read',
+    scope: 'notes:read notes:write dossiers:read dossiers:write classeurs:read classeurs:write',
     response_type: 'code',
     state: 'test-state-' + Date.now()
   };

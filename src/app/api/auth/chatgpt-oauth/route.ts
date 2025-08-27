@@ -62,7 +62,7 @@ async function createChatGPTOAuthCode(userId: string): Promise<string | null> {
         p_client_id: 'scrivia-custom-gpt',
         p_user_id: userId,
         p_redirect_uri: 'https://chat.openai.com/aip/g-011f24575c8d3b9d5d69e124bafa1364ae3badf9/oauth/callback',
-        p_scopes: ['notes:read', 'notes:write', 'dossiers:read', 'dossiers:write', 'classeurs:read', 'classeurs:write', 'profile:read'],
+        p_scopes: ['notes:read', 'notes:write', 'dossiers:read', 'dossiers:write', 'classeurs:read', 'classeurs:write'],
         p_state: 'chatgpt-oauth'
       })
     });
