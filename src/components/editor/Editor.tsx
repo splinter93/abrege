@@ -34,6 +34,7 @@ import Link from '@tiptap/extension-link';
 import CustomImage from '@/extensions/CustomImage';
 import CodeBlockWithCopy from '@/extensions/CodeBlockWithCopy';
 import { NoAutoListConversion } from '@/extensions/NoAutoListConversion';
+import Placeholder from '@tiptap/extension-placeholder';
 import lowlight from '@/utils/lowlightInstance';
 import EditorSlashMenu, { type EditorSlashMenuHandle } from '@/components/EditorSlashMenu';
 import TableControls from '@/components/editor/TableControls';
@@ -207,6 +208,10 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
         html: false,
         transformPastedText: true,
         transformCopiedText: true
+      }),
+      Placeholder.configure({
+        placeholder: 'Écrivez quelque chose d\'incroyable',
+        showOnlyWhenEditable: true,
       })
     ],
     content: content || '',
