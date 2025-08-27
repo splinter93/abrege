@@ -150,6 +150,7 @@ h6 {
 .markdown-body p {
   margin: 0 0 1.5rem 0;
   line-height: 1.8;
+  font-weight: 450;
   text-align: left !important;
   text-align-last: left !important;
   hyphens: auto;
@@ -182,6 +183,7 @@ h6 {
 .markdown-body li {
   margin: 0.75rem 0;
   line-height: 1.8;
+  font-weight: 400;
   padding-left: 0.5em;
   position: relative;
   text-align: left !important;
@@ -516,9 +518,8 @@ h6 {
   background: var(--surface-2);
   color: var(--text-1);
     font-weight: 700;
-    font-size: 0.85em;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+    font-size: 1.05em !important;
+  letter-spacing: 0.02em;
   border-bottom: 2px solid var(--border-subtle);
     position: sticky;
   top: 0;
@@ -527,7 +528,7 @@ h6 {
 
   .markdown-body tr:last-child td { border-bottom: none; }
   
-  .markdown-body tbody tr:nth-child(even) td { background-color: var(--surface-2); }
+  .markdown-body tbody tr:nth-child(odd) td { background-color: rgba(28, 28, 28, 0.4); }
   
   .markdown-body tbody tr:hover td {
     background-color: var(--surface-hover);
@@ -796,7 +797,7 @@ h6 {
     .markdown-body h1 { font-size: 1.875rem; margin: 2.5rem 0 1.25rem 0; }
     .markdown-body h2 { font-size: 1.5rem; margin: 2rem 0 1rem 0; }
     .markdown-body h3 { font-size: 1.25rem; margin: 1.75rem 0 0.875rem 0; }
-    .markdown-body p { margin: 0 0 1.25rem 0; line-height: 1.7; }
+    .markdown-body p { margin: 0 0 1.25rem 0; line-height: 1.7; font-weight: 450; }
     .markdown-body ul, .markdown-body ol { margin: 1.25rem 0; padding-left: 1.5em; }
     .markdown-body li { margin: 0.625rem 0; }
     .markdown-body blockquote { padding: 1.25rem 1.5rem; margin: 1.5rem 0; }
@@ -853,9 +854,8 @@ h6 {
   background: var(--surface-2);
   color: var(--text-1);
     font-weight: 700;
-    font-size: 0.85em;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+    font-size: 1.05em !important;
+  letter-spacing: 0.02em;
   border-bottom: 2px solid var(--border-subtle);
     position: sticky;
     top: 0;
@@ -863,7 +863,7 @@ h6 {
   }
   
   .ProseMirror td { background: var(--surface-1); }
-  .ProseMirror tbody tr:nth-child(even) td { background-color: var(--surface-2); }
+  .ProseMirror tbody tr:nth-child(odd) td { background-color: rgba(28, 28, 28, 0.4); }
   .ProseMirror tbody tr:hover td { background-color: var(--surface-hover); transition: background-color 0.2s ease; }
   .ProseMirror tr:last-child td { border-bottom: none; }
 
@@ -948,12 +948,24 @@ h6 {
     border-color: var(--accent-primary);
   }
   
-  .ProseMirror .editor-image-wrapper { max-width: 100%; margin: 1.5rem 0; }
+  .ProseMirror .editor-image-wrapper { 
+    max-width: 100% !important; 
+    width: 100% !important; 
+    margin: 1.5rem 0; 
+    display: block;
+  }
   .ProseMirror .editor-image {
-    display: block; width: 100%; height: auto; max-width: 100% !important;
-    margin: 0 auto; border: 1px solid var(--border-subtle); border-radius: 12px;
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12); object-fit: contain;
-    transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease; background: var(--surface-2);
+    display: block; 
+    width: 100% !important; 
+    height: auto; 
+    max-width: 100% !important;
+    margin: 0 auto; 
+    border: 1px solid var(--border-subtle); 
+    border-radius: 12px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12); 
+    object-fit: contain;
+    transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease; 
+    background: var(--surface-2);
   }
   .ProseMirror .editor-image:hover {
     transform: translateY(-4px);
@@ -961,8 +973,27 @@ h6 {
     border-color: var(--accent-primary);
   }
   .ProseMirror p:has(img),
-  .ProseMirror p:has(.editor-image-wrapper) { margin: 0; }
-  .ProseMirror .editor-image-wrapper { width: 100%; }
+  .ProseMirror p:has(.editor-image-wrapper) { 
+    margin: 0; 
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+  
+  /* Forcer la largeur complète pour tous les conteneurs d'images */
+  .ProseMirror .editor-image-wrapper { 
+    width: 100% !important; 
+    max-width: 100% !important;
+    display: block;
+  }
+  
+  /* S'assurer que les images prennent toute la largeur disponible */
+  .ProseMirror .editor-image,
+  .ProseMirror img {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto;
+    display: block;
+  }
 
 /* ==========================================================================
      DROP CURSOR ET SÉLECTION
