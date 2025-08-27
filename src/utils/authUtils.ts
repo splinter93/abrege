@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextRequest } from 'next/server';
 import { logApi } from './logger';
+import { oauthService } from '@/services/oauthService'; // ✅ Import statique corrigé
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -56,7 +57,6 @@ export async function getAuthenticatedUser(request: NextRequest): Promise<AuthRe
     // ✅ ESSAYER D'ABORD LE TOKEN OAUTH
     try {
       console.log('🚨 [AUTH] Test authentification OAuth...');
-      const { oauthService } = await import('@/services/oauthService');
       const oauthUser = await oauthService.validateAccessToken(token);
       
       if (oauthUser) {

@@ -16,6 +16,7 @@ function AuthPageContent() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [sessionStatus, setSessionStatus] = useState<string>('Vérification...');
+  const [currentSession, setCurrentSession] = useState<any>(null); // ✅ Ajouter l'état de session
   const { t } = useLanguageContext();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -27,7 +28,7 @@ function AuthPageContent() {
   const state = searchParams?.get('state') || null;
   const responseType = searchParams?.get('response_type') || null;
   
-  // Détection automatique de ChatGPT
+    // Détection automatique de ChatGPT
   const isChatGPT = redirectUri?.includes('chat.openai.com') || clientId === 'scrivia-custom-gpt';
   const isExternalOAuth = clientId && redirectUri && responseType === 'code';
 
@@ -43,20 +44,25 @@ function AuthPageContent() {
       const { data: { session } } = await supabase.auth.getSession();
       
       if (session) {
-        setSessionStatus('Session trouvée, redirection...');
+        // ✅ STOCKER LA SESSION
+        setCurrentSession(session);
         
-        // Si c'est un flux OAuth externe, rediriger vers le callback avec le code
+        // ✅ POUR L'OAUTH EXTERNE, NE PAS REDIRIGER AUTOMATIQUEMENT
         if (isExternalOAuth && clientId && redirectUri) {
-          await handleExternalOAuthCallback(session);
+          setSessionStatus('Session trouvée, authentification OAuth en cours...');
+          // ❌ NE PAS APPELER handleExternalOAuthCallback AUTOMATIQUEMENT
         } else {
+          setSessionStatus('Session trouvée, redirection...');
           router.push('/');
         }
       } else {
         setSessionStatus('Aucune session');
+        setCurrentSession(null);
       }
     } catch (error) {
       console.error('Erreur vérification session:', error);
       setSessionStatus('Erreur lors de la vérification de session');
+      setCurrentSession(null);
     }
   };
 
@@ -336,6 +342,19 @@ function AuthPageContent() {
 
           {isExternalOAuth && (
             <div className="auth-oauth-actions">
+              {/* ✅ BOUTON POUR LANCER L'OAUTH MANUELLEMENT */}
+              {currentSession && (
+                <div className="auth-oauth-session-info">
+                  <p>✅ Vous êtes connecté avec {currentSession.user?.email}</p>
+                  <button
+                    onClick={() => handleExternalOAuthCallback(currentSession)}
+                    className="auth-button primary"
+                  >
+                    Autoriser l'application {clientId}
+                  </button>
+                </div>
+              )}
+              
               <button
                 onClick={() => handleOAuthSignIn('google')}
                 disabled={oauthLoading}
