@@ -1478,6 +1478,21 @@ export class AgentApiV2Tools {
       }));
     }
 
+    // 🔧 CORRECTION: Si les capacités incluent 'function_calls', retourner tous les outils
+    // au lieu de filtrer strictement par nom d'outil
+    if (capabilities.includes('function_calls')) {
+      console.log('[AgentApiV2Tools] 🔧 Capacité function_calls détectée, tous les outils disponibles');
+      return allTools.map(tool => ({
+        type: 'function' as const,
+        function: {
+          name: tool.name,
+          description: tool.description,
+          parameters: tool.parameters
+        }
+      }));
+    }
+
+    // Filtrage strict par nom d'outil (pour les capacités spécifiques)
     const filteredTools = allTools.filter(tool => 
       capabilities.includes(tool.name)
     );
