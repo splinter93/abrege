@@ -93,6 +93,25 @@ const Sidebar: React.FC<SidebarProps> = ({ onToggleFoldersPanel = () => {} }) =>
 
   const handleLogout = async () => {
     try {
+      // Vérifier d'abord s'il y a une session active
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError) {
+        console.log('🔧 Déconnexion: Erreur lors de la vérification de session:', sessionError.message);
+        // Même en cas d'erreur, rediriger vers la page d'accueil
+        router.push('/');
+        return;
+      }
+
+      if (!session) {
+        console.log('🔧 Déconnexion: Aucune session active, redirection directe');
+        // Pas de session active, rediriger directement
+        router.push('/');
+        return;
+      }
+
+      console.log('🔧 Déconnexion: Session trouvée, tentative de déconnexion...');
+      
       // Créer le client Supabase
       const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
       const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -102,14 +121,20 @@ const Sidebar: React.FC<SidebarProps> = ({ onToggleFoldersPanel = () => {} }) =>
       const { error } = await supabase.auth.signOut();
       
       if (error) {
-        console.error('Erreur lors de la déconnexion:', error);
+        console.error('🔧 Déconnexion: Erreur lors de la déconnexion:', error.message);
+        // Même en cas d'erreur, rediriger vers la page d'accueil
+        // car l'utilisateur ne devrait plus avoir accès à l'interface
       } else {
-        console.log('Déconnexion réussie');
-        // Rediriger vers la page d'accueil
-        router.push('/');
+        console.log('🔧 Déconnexion: Déconnexion réussie');
       }
+      
+      // Rediriger vers la page d'accueil dans tous les cas
+      router.push('/');
+      
     } catch (error) {
-      console.error('Erreur lors de la déconnexion:', error);
+      console.error('🔧 Déconnexion: Erreur inattendue:', error);
+      // En cas d'erreur fatale, rediriger quand même
+      router.push('/');
     }
   };
 
