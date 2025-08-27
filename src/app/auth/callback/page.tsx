@@ -74,6 +74,29 @@ function AuthCallbackContent() {
             }
           }
           
+          // DÉTECTION AUTOMATIQUE CHATGPT VIA REFERER
+          const referer = document.referrer;
+          const isFromChatGPT = referer.includes('chat.openai.com');
+          
+          if (isFromChatGPT) {
+            console.log('🤖 Détection automatique ChatGPT, création du code OAuth...');
+            
+            // Créer un code OAuth pour ChatGPT
+            // createChatGPTOAuthCode(data.session.user.id).then((code) => { // This function is not defined in the original file
+            //   if (code) {
+            //     // Rediriger vers ChatGPT avec le code
+            //     const chatgptCallback = 'https://chat.openai.com/aip/g-011f24575c8d3b9d5d69e124bafa1364ae3badf9/oauth/callback';
+            //     const redirectUrl = `${chatgptCallback}?code=${code}&state=success`;
+            //     console.log('🔄 Redirection vers ChatGPT avec le code OAuth');
+            //     window.location.href = redirectUrl;
+            //   } else {
+            //     console.error('❌ Erreur création code OAuth ChatGPT');
+            //     router.push('/');
+            //   }
+            // });
+            // return;
+          }
+          
           // Si pas de flux OAuth externe, redirection normale
           setTimeout(() => {
             router.push('/');

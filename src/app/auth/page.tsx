@@ -27,6 +27,8 @@ function AuthPageContent() {
   const state = searchParams?.get('state') || null;
   const responseType = searchParams?.get('response_type') || null;
   
+  // Détection automatique de ChatGPT
+  const isChatGPT = redirectUri?.includes('chat.openai.com') || clientId === 'scrivia-custom-gpt';
   const isExternalOAuth = clientId && redirectUri && responseType === 'code';
 
   useEffect(() => {

@@ -101,6 +101,61 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- Fonction RPC pour créer un code OAuth (utilisée par l'API)
+CREATE OR REPLACE FUNCTION create_oauth_code(
+    p_client_id TEXT,
+    p_user_id UUID,
+    p_redirect_uri TEXT,
+    p_scopes TEXT[],
+    p_state TEXT DEFAULT NULL
+)
+RETURNS TEXT AS $$
+DECLARE
+    v_code TEXT;
+    v_client_id TEXT;
+BEGIN
+    -- Vérifier que le client existe et est actif
+    SELECT client_id INTO v_client_id
+    FROM oauth_clients
+    WHERE client_id = p_client_id AND is_active = true;
+    
+    IF v_client_id IS NULL THEN
+        RAISE EXCEPTION 'Client OAuth invalide ou inactif';
+    END IF;
+    
+    -- Vérifier que le redirect_uri est autorisé
+    IF NOT EXISTS (
+        SELECT 1 FROM oauth_clients 
+        WHERE client_id = p_client_id 
+        AND p_redirect_uri = ANY(redirect_uris)
+    ) THEN
+        RAISE EXCEPTION 'Redirect URI non autorisé';
+    END IF;
+    
+    -- Vérifier que les scopes sont autorisés
+    IF NOT EXISTS (
+        SELECT 1 FROM oauth_clients 
+        WHERE client_id = p_client_id 
+        AND p_scopes <@ scopes
+    ) THEN
+        RAISE EXCEPTION 'Scopes non autorisés';
+    END IF;
+    
+    -- Générer un code unique
+    v_code := encode(gen_random_bytes(32), 'hex');
+    
+    -- Insérer le code d'autorisation
+    INSERT INTO oauth_authorization_codes (
+        code, client_id, user_id, redirect_uri, scopes, state, expires_at
+    ) VALUES (
+        v_code, p_client_id, p_user_id, p_redirect_uri, p_scopes, p_state, 
+        NOW() + INTERVAL '10 minutes'
+    );
+    
+    RETURN v_code;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
 -- Insérer les clients OAuth par défaut
 INSERT INTO oauth_clients (client_id, client_secret_hash, name, description, redirect_uris, scopes) VALUES
 (
