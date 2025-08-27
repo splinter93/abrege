@@ -12,100 +12,121 @@ function AuthCallbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
+  // Fonction pour créer un code OAuth ChatGPT
+  const createChatGPTOAuthCode = async (
+    userId: string,
+    params: { client_id: string; redirect_uri: string; scope?: string; state?: string }
+  ): Promise<string | null> => {
+    try {
+      const response = await fetch('/api/auth/create-code', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          clientId: params.client_id,
+          userId: userId,
+          redirectUri: params.redirect_uri,
+          scopes: params.scope ? params.scope.split(' ') : [],
+          state: params.state,
+        }),
+      });
+
+      if (!response.ok) {
+        console.error('❌ Erreur création code OAuth:', response.status);
+        return null;
+      }
+
+      const { code } = await response.json();
+      console.log('✅ Code OAuth ChatGPT créé:', code);
+      return code;
+    } catch (error) {
+      console.error('❌ Erreur création code OAuth ChatGPT:', error);
+      return null;
+    }
+  };
+
   useEffect(() => {
-    const handleAuthCallback = async () => {
+    const error = searchParams?.get('error');
+    if (error) {
+      setError(`Erreur OAuth: ${error}`);
+      setStatus('error');
+      return;
+    }
+
+    // Ici on ne traite plus le `code` directement → Supabase s’en occupe déjà
+    const checkSession = async () => {
       try {
-        setStatus('loading');
-        
-        // Récupérer les paramètres de l'URL
-        if (!searchParams) {
-          setError('Paramètres de recherche manquants');
-          setStatus('error');
-          return;
-        }
-        
-        const code = searchParams.get('code');
-        const error = searchParams.get('error');
-        const errorDescription = searchParams.get('error_description');
+        const { data, error: sessionError } = await supabase.auth.getSession();
 
-        if (error) {
-          console.error('OAuth error:', error, errorDescription);
-          setError(errorDescription || 'Erreur lors de l\'authentification');
+        if (sessionError || !data.session) {
+          console.error('❌ Pas de session Supabase trouvée:', sessionError);
+          setError('Impossible de récupérer la session');
           setStatus('error');
           return;
         }
 
-        if (!code) {
-          setError('Vous êtes arrivé sur cette page sans passer par l\'authentification. Retournez à la page de connexion.');
-          setStatus('error');
-          return;
-        }
+        const session = data.session;
+        setStatus('success');
 
-        // Échanger le code contre une session
-        const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
-        
-        if (exchangeError) {
-          console.error('Session exchange error:', exchangeError);
-          setError('Erreur lors de l\'échange de session');
-          setStatus('error');
-          return;
-        }
+        // Vérifier si flux OAuth externe classique
+        const oauthParams = sessionStorage.getItem('oauth_external_params');
+        if (oauthParams) {
+          try {
+            const params = JSON.parse(oauthParams);
+            console.log('🔍 Flux OAuth externe détecté, redirection vers /auth avec paramètres');
+            sessionStorage.removeItem('oauth_external_params');
 
-        if (data.session) {
-          setStatus('success');
-          
-          // Vérifier si c'est un flux OAuth externe (paramètres stockés en sessionStorage)
-          const oauthParams = sessionStorage.getItem('oauth_external_params');
-          
-          if (oauthParams) {
-            try {
-              const params = JSON.parse(oauthParams);
-              console.log('🔍 Flux OAuth externe détecté, redirection vers /auth avec paramètres');
-              
-              // Nettoyer les paramètres stockés
-              sessionStorage.removeItem('oauth_external_params');
-              
-              // Rediriger vers la page d'auth avec les paramètres OAuth
-              const authUrl = `/auth?${new URLSearchParams(params).toString()}`;
-              router.push(authUrl);
-              return;
-            } catch (err) {
-              console.error('Erreur parsing paramètres OAuth:', err);
-            }
+            const authUrl = `/auth?${new URLSearchParams(params).toString()}`;
+            router.push(authUrl);
+            return;
+          } catch (err) {
+            console.error('Erreur parsing paramètres OAuth externes:', err);
           }
-          
-          // DÉTECTION FLUX CHATGPT
-          const isChatGPTFlow = sessionStorage.getItem('chatgpt_oauth_flow') === 'true';
-          
-          if (isChatGPTFlow) {
-            console.log('🤖 Flux ChatGPT détecté, redirection vers l\'endpoint OAuth...');
-            
-            // Nettoyer le flag
-            sessionStorage.removeItem('chatgpt_oauth_flow');
-            
-            // Rediriger vers l'endpoint OAuth ChatGPT qui gère tout
-            const oauthUrl = `/api/auth/chatgpt-oauth?code=${searchParams.get('code')}`;
-            window.location.href = oauthUrl;
+        }
+
+        // Vérifier si flux ChatGPT
+        const isChatGPTFlow = sessionStorage.getItem('chatgpt_oauth_flow') === 'true';
+        if (isChatGPTFlow) {
+          console.log('🤖 Flux ChatGPT détecté, récupération des paramètres OAuth...');
+          const oauthParams = sessionStorage.getItem('chatgpt_oauth_params');
+          if (!oauthParams) {
+            console.error('❌ Paramètres OAuth ChatGPT manquants');
+            router.push('/');
             return;
           }
-          
-          // Si pas de flux OAuth externe, redirection normale
-          setTimeout(() => {
-            router.push('/');
-          }, 1500);
-        } else {
-          setError('Aucune session créée');
-          setStatus('error');
+
+          const params = JSON.parse(oauthParams);
+          sessionStorage.removeItem('chatgpt_oauth_flow');
+          sessionStorage.removeItem('chatgpt_oauth_params');
+
+          // Créer un code OAuth pour ChatGPT
+          createChatGPTOAuthCode(session.user.id, params).then((code) => {
+            if (code) {
+              const redirectUrl = `${params.redirect_uri}?code=${code}&state=${params.state || 'success'}`;
+              console.log('🔄 Redirection vers ChatGPT avec le code OAuth:', code);
+              console.log('🔗 URL de redirection:', redirectUrl);
+              window.location.href = redirectUrl;
+            } else {
+              console.error('❌ Erreur création code OAuth ChatGPT');
+              router.push('/');
+            }
+          });
+          return;
         }
 
+        // Sinon, login classique → redirection home
+        setTimeout(() => {
+          router.push('/');
+        }, 1500);
       } catch (err) {
-        console.error('Unexpected error:', err);
-        setError('Erreur inattendue');
+        console.error('Erreur inattendue lors de la récupération session:', err);
+        setError('Erreur inattendue lors de la récupération session');
         setStatus('error');
       }
     };
 
-    handleAuthCallback();
+    checkSession();
   }, [searchParams, router]);
 
   return (
@@ -132,7 +153,7 @@ function AuthCallbackContent() {
         </>
       )}
 
-              {status === 'error' && (
+      {status === 'error' && (
         <>
           <div className="error-icon">
             <svg viewBox="0 0 24 24" fill="none">
@@ -165,4 +186,4 @@ export default function AuthCallbackPage() {
       </div>
     </div>
   );
-} 
+}

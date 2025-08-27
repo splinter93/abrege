@@ -123,8 +123,24 @@ function AuthPageContent() {
           googleOAuthUrl.searchParams.set('access_type', 'offline');
           googleOAuthUrl.searchParams.set('prompt', 'consent');
           
+          // Ajouter les paramètres OAuth ChatGPT pour les récupérer après
+          googleOAuthUrl.searchParams.set('state', `chatgpt_${state || 'default'}`);
+          googleOAuthUrl.searchParams.set('oauth_client_id', clientId);
+          googleOAuthUrl.searchParams.set('oauth_redirect_uri', redirectUri);
+          googleOAuthUrl.searchParams.set('oauth_scope', scope || '');
+          googleOAuthUrl.searchParams.set('oauth_response_type', responseType || '');
+          
           // Stocker un flag pour identifier que c'est un flux ChatGPT
           sessionStorage.setItem('chatgpt_oauth_flow', 'true');
+          sessionStorage.setItem('chatgpt_oauth_params', JSON.stringify({
+            client_id: clientId,
+            redirect_uri: redirectUri,
+            scope: scope || '',
+            state: state || '',
+            response_type: responseType || ''
+          }));
+          
+          console.log('🔗 URL Google OAuth:', googleOAuthUrl.toString());
           
           // Rediriger vers Google OAuth
           window.location.href = googleOAuthUrl.toString();
