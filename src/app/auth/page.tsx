@@ -1,14 +1,15 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useOAuth } from '@/hooks/useOAuth';
 import { authProviders } from '@/config/authProviders';
 import { useLanguageContext } from '@/contexts/LanguageContext';
 import LogoHeader from '@/components/LogoHeader';
+import { supabase } from '@/supabaseClient';
 import './auth.css';
 
-export default function AuthPage() {
+function AuthPageContent() {
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -17,6 +18,14 @@ export default function AuthPage() {
   const [sessionStatus, setSessionStatus] = useState<string>('Vérification...');
   const { t } = useLanguageContext();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  
+  // Paramètres OAuth externe
+  const isExternalOAuth = searchParams?.get('client_id') && searchParams?.get('redirect_uri');
+  const clientId = searchParams?.get('client_id');
+  const redirectUri = searchParams?.get('redirect_uri');
+  const scope = searchParams?.get('scope');
+  const state = searchParams?.get('state');
 
   // Vérifier si l'utilisateur est déjà connecté
   useEffect(() => {
@@ -27,7 +36,13 @@ export default function AuthPage() {
         
         if (session) {
           setSessionStatus('Session trouvée, redirection...');
-          router.push('/');
+          
+          // Si c'est un flux OAuth externe, rediriger vers le callback avec le code
+          if (isExternalOAuth && clientId && redirectUri) {
+            await handleExternalOAuthCallback(session);
+          } else {
+            router.push('/');
+          }
         } else {
           setSessionStatus('Aucune session');
         }
@@ -73,6 +88,50 @@ export default function AuthPage() {
   // Use OAuth hook for OAuth sign-in
   const { signIn: signInWithOAuth, loading: oauthLoading, error: oauthError } = useOAuth();
 
+  /**
+   * Gère le callback OAuth pour les applications externes
+   */
+  const handleExternalOAuthCallback = async (session: any) => {
+    try {
+      if (!clientId || !redirectUri) return;
+      
+      // Créer un vrai code d'autorisation OAuth
+      const response = await fetch('/api/auth/create-code', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          clientId,
+          userId: session.user.id,
+          redirectUri,
+          scopes: scope ? scope.split(' ').filter(s => s.trim()) : [],
+          state
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Erreur lors de la création du code OAuth');
+      }
+
+      const { code } = await response.json();
+      
+      // Construire l'URL de redirection avec le code
+      const callbackUrl = new URL(redirectUri);
+      callbackUrl.searchParams.set('code', code);
+      if (state) {
+        callbackUrl.searchParams.set('state', state);
+      }
+      
+      // Rediriger vers l'application externe
+      window.location.href = callbackUrl.toString();
+      
+    } catch (error) {
+      console.error('Erreur callback OAuth externe:', error);
+      setError('Erreur lors de la redirection OAuth');
+    }
+  };
+
   return (
     <div className="auth-page">
       <div className="auth-container">
@@ -82,8 +141,19 @@ export default function AuthPage() {
             {isSignUp ? 'Créer un compte' : 'Se connecter'}
           </h1>
           <p className="auth-subtitle">
-            {isSignUp ? 'Rejoignez Scrivia pour organiser vos connaissances' : 'Accédez à votre espace personnel'}
+            {isExternalOAuth 
+              ? `Autoriser l'accès à ${clientId}`
+              : (isSignUp ? 'Rejoignez Scrivia pour organiser vos connaissances' : 'Accédez à votre espace personnel')
+            }
           </p>
+          
+          {isExternalOAuth && (
+            <div className="auth-oauth-info">
+              <p><strong>Application :</strong> {clientId}</p>
+              <p><strong>Permissions :</strong> {scope || 'Aucune permission spécifique'}</p>
+            </div>
+          )}
+          
           <div className="auth-session-status">
             {sessionStatus}
           </div>
