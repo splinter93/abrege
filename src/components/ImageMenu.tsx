@@ -10,13 +10,7 @@ interface ImageMenuProps {
   noteId: string;
 }
 
-const TABS = [
-  { id: 'upload', label: 'Télécharger', icon: FiUpload },
-  { id: 'url', label: 'URL', icon: FiLink }
-];
-
 const ImageMenu: React.FC<ImageMenuProps> = ({ open, onClose, onInsertImage, noteId, userId }) => {
-  const [tab, setTab] = useState<'upload' | 'url'>('upload');
   const [file, setFile] = useState<File | null>(null);
   const [url, setUrl] = useState('');
   const [loading, setLoading] = useState(false);
@@ -54,9 +48,8 @@ const ImageMenu: React.FC<ImageMenuProps> = ({ open, onClose, onInsertImage, not
 
   useEffect(() => { 
     setError(null); 
-  }, [tab]);
+  }, [file, url]);
 
-  
   useEffect(() => {
     if (!open) {
       setFile(null);
@@ -277,109 +270,26 @@ const ImageMenu: React.FC<ImageMenuProps> = ({ open, onClose, onInsertImage, not
   return (
     <div className="image-menu-backdrop">
       <div className="image-menu-modal" ref={modalRef} onMouseDown={e => e.stopPropagation()}>
-        {/* Header avec onglets */}
-        <div className="image-menu-tabs">
-          {TABS.map(t => {
-            const Icon = t.icon;
-            return (
-              <button 
-                key={t.id} 
-                className={tab === t.id ? 'active' : ''} 
-                onClick={() => setTab(t.id as 'upload' | 'url')}
-              >
-                <Icon size={16} style={{ marginRight: 8 }} />
-                {t.label}
-              </button>
-            );
-          })}
+        {/* Header avec titre et bouton de fermeture */}
+        <div className="image-menu-header">
+          <div className="image-menu-title">
+            <FiImage size={18} />
+            <span>Insérer une image</span>
+          </div>
           <button className="image-menu-close" onClick={onClose} aria-label="Fermer">
             <FiX size={16} />
           </button>
         </div>
 
-        {/* Contenu principal */}
+        {/* Contenu principal - un seul onglet */}
         <div className="image-menu-content">
-          {tab === 'upload' && (
-            <div className="image-menu-upload">
-              {/* Zone de drag & drop */}
-              <div 
-                className={`image-menu-upload-zone ${dragOver ? 'dragover' : ''}`}
-                onDragOver={handleDragOver}
-                onDragLeave={handleDragLeave}
-                onDrop={handleDrop}
-                onClick={() => fileInputRef.current?.click()}
-              >
-                <input 
-                  type="file" 
-                  accept="image/*" 
-                  ref={fileInputRef} 
-                  style={{ display: 'none' }} 
-                  onChange={handleFileChange} 
-                />
-                
-                {!file ? (
-                  <>
-                    <div className="image-menu-upload-icon">
-                      <FiUpload size={24} />
-                    </div>
-                    <div className="image-menu-upload-text">
-                      Cliquez ou déposez une image ici
-                    </div>
-                    <div className="image-menu-upload-hint">
-                      Formats supportés: JPEG, PNG, GIF, WebP • Taille max: 8MB
-                    </div>
-                  </>
-                ) : (
-                  <div className="image-menu-file-selected">
-                    <div className="image-menu-file-icon">
-                      <FiFile size={16} />
-                    </div>
-                    <div className="image-menu-file-info">
-                      <div className="image-menu-file-name">{file.name}</div>
-                      <div className="image-menu-file-size">{formatFileSize(file.size)}</div>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Boutons d'action */}
-              {file && (
-                <div className="image-menu-actions">
-                  <button 
-                    onClick={() => setFile(null)} 
-                    className="image-menu-btn"
-                  >
-                    Changer
-                  </button>
-                  <button 
-                    onClick={handleUpload} 
-                    disabled={loading} 
-                    className="image-menu-btn primary"
-                  >
-                    {loading ? (
-                      <>
-                        <div className="image-menu-spinner" />
-                        Envoi...
-                      </>
-                    ) : (
-                      'Insérer l\'image'
-                    )}
-                  </button>
-                </div>
-              )}
-
-              {/* Message d'erreur */}
-              {error && (
-                <div className="image-menu-error">
-                  <FiAlertCircle size={16} />
-                  {error}
-                </div>
-              )}
+          {/* Barre d'URL en haut */}
+          <div className="image-menu-url-section">
+            <div className="image-menu-url-label">
+              <FiLink size={16} />
+              <span>URL de l'image</span>
             </div>
-          )}
-
-          {tab === 'url' && (
-            <div className="image-menu-url">
+            <div className="image-menu-url-row">
               <input 
                 type="text" 
                 placeholder="https://example.com/image.jpg" 
@@ -393,18 +303,96 @@ const ImageMenu: React.FC<ImageMenuProps> = ({ open, onClose, onInsertImage, not
                 onClick={handleInsertUrl} 
                 disabled={!url.trim() || loading} 
                 className="image-menu-btn primary"
-                style={{ marginTop: 16 }}
               >
-                Insérer l'image
+                Insérer
               </button>
+            </div>
+          </div>
 
-              {/* Message d'erreur */}
-              {error && (
-                <div className="image-menu-error">
-                  <FiAlertCircle size={16} />
-                  {error}
+          {/* Séparateur */}
+          <div className="image-menu-separator">
+            <span>ou</span>
+          </div>
+
+          {/* Zone de drop en bas */}
+          <div className="image-menu-upload-section">
+            <div className="image-menu-upload-label">
+              <FiUpload size={16} />
+              <span>Télécharger une image</span>
+            </div>
+            
+            <div 
+              className={`image-menu-upload-zone ${dragOver ? 'dragover' : ''}`}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <input 
+                type="file" 
+                accept="image/*" 
+                ref={fileInputRef} 
+                style={{ display: 'none' }} 
+                onChange={handleFileChange} 
+              />
+              
+              {!file ? (
+                <>
+                  <div className="image-menu-upload-icon">
+                    <FiUpload size={24} />
+                  </div>
+                  <div className="image-menu-upload-text">
+                    Cliquez ou déposez une image ici
+                  </div>
+                  <div className="image-menu-upload-hint">
+                    Formats supportés: JPEG, PNG, GIF, WebP • Taille max: 8MB
+                  </div>
+                </>
+              ) : (
+                <div className="image-menu-file-selected">
+                  <div className="image-menu-file-icon">
+                    <FiFile size={16} />
+                  </div>
+                  <div className="image-menu-file-info">
+                    <div className="image-menu-file-name">{file.name}</div>
+                    <div className="image-menu-file-size">{formatFileSize(file.size)}</div>
+                  </div>
                 </div>
               )}
+            </div>
+
+            {/* Boutons d'action */}
+            {file && (
+              <div className="image-menu-actions">
+                <button 
+                  onClick={() => setFile(null)} 
+                  className="image-menu-btn"
+                >
+                  Changer
+                </button>
+                <button 
+                  onClick={handleUpload} 
+                  disabled={loading} 
+                  className="image-menu-btn primary"
+                >
+                  {loading ? (
+                    <>
+                      <div className="image-menu-spinner" />
+                      Envoi...
+                    </>
+                  ) : (
+                    'Insérer l\'image'
+                  )}
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Message d'erreur */}
+          {error && (
+            <div className="image-menu-error">
+              <FiAlertCircle size={16} />
+              {error}
             </div>
           )}
         </div>

@@ -1,8 +1,49 @@
-/* ==========================================================================
-   IMAGE MENU - DESIGN MODERNE ET UX AMÉLIORÉE
-   ========================================================================== */
+/* =========================
+   IMAGE MENU - DARK NOTION STYLE (même style que slash menu)
+   ========================= */
+.image-menu-backdrop {
+  /* Couleurs mode sombre Notion */
+  --im-bg: #1a1a1a;
+  --im-border: rgba(255, 255, 255, 0.09);
+  --im-text-primary: #ededed;
+  --im-text-secondary: #a0a0a0;
+  --im-text-tertiary: #6b6b6b;
+  --im-hover-bg: rgba(107, 114, 128, 0.1);
+  --im-selected-bg: rgba(107, 114, 128, 0.15);
+  --im-selected-border: rgba(107, 114, 128, 0.3);
+  
+  /* Accent Gray (Notion-like) */
+  --im-accent: #6b7280;
+  --im-accent-hover: #9ca3af;
+  
+  /* Spacing & Sizing */
+  --im-radius: 8px;
+  --im-item-radius: 6px;
+  --im-padding: 14px;
+  --im-item-padding: 10px 14px;
+  --im-gap: 6px;
+  
+  /* Typography */
+  --im-font: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif;
+  --im-font-size: 14px;
+  --im-line-height: 1.5;
+  
+  /* Shadows & Effects - Plus subtils comme Notion */
+  --im-shadow: 
+    0 2px 8px rgba(0, 0, 0, 0.3),
+    0 1px 2px rgba(0, 0, 0, 0.2);
+  --im-shadow-hover: 
+    0 4px 12px rgba(0, 0, 0, 0.4),
+    0 2px 4px rgba(0, 0, 0, 0.3);
+  
+  /* Animations */
+  --im-ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --im-duration: 200ms;
+}
 
-/* Backdrop avec effet de flou */
+/* =========================
+   ROOT CONTAINER - STYLE NOTION
+   ========================= */
 .image-menu-backdrop {
   position: fixed;
   top: 0;
@@ -13,7 +54,7 @@
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
   z-index: 1999;
-  animation: imageMenuBackdropFadeIn 0.2s ease-out;
+  animation: imageMenuBackdropFadeIn var(--im-duration) var(--im-ease);
 }
 
 @keyframes imageMenuBackdropFadeIn {
@@ -29,195 +70,285 @@
   transform: translate(-50%, -50%);
   width: 90%;
   max-width: 480px;
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
-  box-shadow: 
-    0 8px 32px rgba(0, 0, 0, 0.2),
-    0 2px 8px rgba(0, 0, 0, 0.1);
-  z-index: 2000;
+  max-height: 80vh;
   overflow: hidden;
-  animation: imageMenuModalSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  
+  font-family: var(--im-font);
+  font-size: var(--im-font-size);
+  line-height: var(--im-line-height);
+  color: var(--im-text-primary);
+  
+  background: var(--im-bg);
+  border: 1px solid var(--im-border);
+  border-radius: var(--im-radius);
+  box-shadow: var(--im-shadow);
+  
+  /* Animation d'entrée plus subtile */
+  animation: imageMenuModalEnter var(--im-duration) var(--im-ease);
+  transition: 
+    box-shadow var(--im-duration) var(--im-ease),
+    border-color var(--im-duration) var(--im-ease);
 }
 
-@keyframes imageMenuModalSlideIn {
+.image-menu-modal:hover {
+  box-shadow: var(--im-shadow-hover);
+  border-color: rgba(107, 114, 128, 0.12);
+}
+
+@keyframes imageMenuModalEnter {
   from {
     opacity: 0;
-    transform: translate(-50%, -50%) scale(0.9) translateY(20px);
+    transform: translate(-50%, -50%) scale(0.95);
   }
   to {
     opacity: 1;
-    transform: translate(-50%, -50%) scale(1) translateY(0);
+    transform: translate(-50%, -50%) scale(1);
   }
 }
 
-/* Header avec onglets */
-.image-menu-tabs {
+/* =========================
+   HEADER - STYLE NOTION
+   ========================= */
+.image-menu-header {
   display: flex;
-  background: rgba(255, 255, 255, 0.08);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  position: relative;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--im-padding);
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--im-border);
+  margin-bottom: 4px;
 }
 
-/* Boutons d'onglets */
-.image-menu-tabs button {
-  flex: 1;
-  padding: 16px 20px;
-  border: none;
-  background: none;
-  color: rgba(255, 255, 255, 0.7);
-  cursor: pointer;
-  transition: all 0.2s ease;
-  font-size: 14px;
+.image-menu-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--im-text-primary);
   font-weight: 600;
-  font-family: 'Noto Sans', Inter, Arial, sans-serif;
-  letter-spacing: 0.01em;
-  position: relative;
-  overflow: hidden;
+  font-size: 15px;
 }
 
-.image-menu-tabs button:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: rgba(255, 255, 255, 0.9);
-  transform: translateY(-1px);
-}
-
-.image-menu-tabs button:hover {
-  color: rgba(255, 255, 255, 0.9);
-  transform: translateY(-1px);
-}
-
-.image-menu-tabs button.active {
-  color: #fff;
-  background: rgba(255, 255, 255, 0.12);
-  position: relative;
-}
-
-.image-menu-tabs button.active::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background: var(--accent-primary, #2994ff);
-  border-radius: 1px;
+.image-menu-title svg {
+  color: var(--im-accent);
 }
 
 /* Bouton de fermeture */
 .image-menu-close {
-  position: absolute;
-  top: 16px;
-  right: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 6px;
-  background: rgba(255, 255, 255, 0.08);
-  color: rgba(255, 255, 255, 0.7);
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--im-text-secondary);
+  border-radius: 4px;
   cursor: pointer;
-  transition: all 0.2s ease;
-  font-size: 16px;
-  font-weight: 600;
+  transition: all var(--im-duration) var(--im-ease);
 }
 
 .image-menu-close:hover {
-  background: rgba(255, 255, 255, 0.15);
-  border-color: rgba(255, 255, 255, 0.25);
-  color: #fff;
-  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--im-text-primary);
 }
 
-.image-menu-close:active {
-  transform: translateY(0);
-}
-
-/* Contenu principal */
+/* =========================
+   CONTENT CONTAINER
+   ========================= */
 .image-menu-content {
-  padding: 24px;
+  padding: var(--im-padding);
+  max-height: 400px;
+  overflow-y: auto;
+  
+  /* Scrollbar style Notion */
+  scrollbar-width: thin;
+  scrollbar-color: var(--im-text-tertiary) transparent;
 }
 
-/* Sections d'upload et URL */
-.image-menu-upload,
-.image-menu-url {
+.image-menu-content::-webkit-scrollbar {
+  width: 4px;
+}
+
+.image-menu-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.image-menu-content::-webkit-scrollbar-thumb {
+  background: var(--im-text-tertiary);
+  border-radius: 2px;
+}
+
+.image-menu-content::-webkit-scrollbar-thumb:hover {
+  background: var(--im-text-secondary);
+}
+
+/* =========================
+   URL SECTION - STYLE NOTION
+   ========================= */
+.image-menu-url-section {
+  margin-bottom: 20px;
+}
+
+.image-menu-url-label {
   display: flex;
-  flex-direction: column;
-  gap: 20px;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  color: var(--im-text-secondary);
+  font-size: 13px;
+  font-weight: 500;
 }
 
-/* Zone de sélection de fichier */
+.image-menu-url-label svg {
+  color: var(--im-accent);
+}
+
+/* Row pour aligner input et bouton */
+.image-menu-url-row {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+}
+
+/* Input URL */
+.image-menu-url-input {
+  flex: 1;
+  padding: 10px 12px;
+  border: 1px solid var(--im-border);
+  border-radius: var(--im-item-radius);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--im-text-primary);
+  font-family: var(--im-font);
+  font-size: 14px;
+  transition: all var(--im-duration) var(--im-ease);
+}
+
+.image-menu-url-input::placeholder {
+  color: var(--im-text-tertiary);
+}
+
+.image-menu-url-input:focus {
+  outline: none;
+  border-color: var(--im-accent);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+/* Bouton Insérer spécifique pour la section URL - TAILLE RÉDUITE */
+.image-menu-url-row .image-menu-btn.primary {
+  flex: 0 0 auto;
+  padding: 8px 16px;
+  min-width: 80px;
+  white-space: nowrap;
+}
+
+/* =========================
+   SEPARATOR
+   ========================= */
+.image-menu-separator {
+  display: flex;
+  align-items: center;
+  margin: 20px 0;
+  color: var(--im-text-tertiary);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.image-menu-separator::before,
+.image-menu-separator::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--im-border);
+  margin: 0 12px;
+}
+
+/* =========================
+   UPLOAD SECTION - STYLE NOTION
+   ========================= */
+.image-menu-upload-section {
+  margin-bottom: 20px;
+}
+
+.image-menu-upload-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  color: var(--im-text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.image-menu-upload-label svg {
+  color: var(--im-accent);
+}
+
+/* Zone de drag & drop */
 .image-menu-upload-zone {
-  border: 2px dashed rgba(255, 255, 255, 0.25);
-  border-radius: 10px;
-  padding: 28px 20px;
+  border: 2px dashed var(--im-border);
+  border-radius: var(--im-item-radius);
+  padding: 24px 16px;
   text-align: center;
-  background: rgba(255, 255, 255, 0.03);
-  transition: all 0.2s ease;
+  background: rgba(255, 255, 255, 0.02);
+  transition: all var(--im-duration) var(--im-ease);
   cursor: pointer;
-  position: relative;
+  margin-bottom: 12px;
 }
 
 .image-menu-upload-zone:hover {
-  border-color: var(--accent-primary, #2994ff);
-  background: rgba(255, 255, 255, 0.06);
-  transform: translateY(-1px);
+  border-color: var(--im-accent);
+  background: rgba(255, 255, 255, 0.04);
 }
 
 .image-menu-upload-zone.dragover {
-  border-color: var(--accent-primary, #2994ff);
-  background: rgba(41, 148, 255, 0.1);
-  transform: scale(1.02);
+  border-color: var(--im-accent);
+  background: rgba(107, 114, 128, 0.1);
+  transform: scale(1.01);
 }
 
 /* Icône d'upload */
 .image-menu-upload-icon {
-  width: 44px;
-  height: 44px;
-  margin: 0 auto 16px;
-  background: rgba(255, 255, 255, 0.08);
-  border-radius: 10px;
+  width: 40px;
+  height: 40px;
+  margin: 0 auto 12px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: rgba(255, 255, 255, 0.8);
-  font-size: 22px;
+  color: var(--im-text-secondary);
 }
 
 /* Texte d'upload */
 .image-menu-upload-text {
-  color: rgba(255, 255, 255, 0.9);
-  font-size: 16px;
-  font-weight: 600;
-  margin-bottom: 8px;
+  color: var(--im-text-primary);
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 6px;
 }
 
 .image-menu-upload-hint {
-  color: rgba(255, 255, 255, 0.6);
-  font-size: 14px;
+  color: var(--im-text-tertiary);
+  font-size: 12px;
   line-height: 1.4;
 }
 
 /* Fichier sélectionné */
 .image-menu-file-selected {
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 10px;
-  padding: 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--im-border);
+  border-radius: var(--im-item-radius);
+  padding: 12px;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   animation: imageMenuFileSlideIn 0.3s ease-out;
 }
 
 @keyframes imageMenuFileSlideIn {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(8px);
   }
   to {
     opacity: 1;
@@ -226,15 +357,15 @@
 }
 
 .image-menu-file-icon {
-  width: 32px;
-  height: 32px;
-  background: var(--accent-primary, #2994ff);
-  border-radius: 8px;
+  width: 28px;
+  height: 28px;
+  background: var(--im-accent);
+  border-radius: 4px;
   display: flex;
   align-items: center;
   justify-content: center;
   color: white;
-  font-size: 16px;
+  font-size: 14px;
 }
 
 .image-menu-file-info {
@@ -243,101 +374,74 @@
 }
 
 .image-menu-file-name {
-  color: rgba(255, 255, 255, 0.9);
-  font-size: 14px;
-  font-weight: 600;
-  margin-bottom: 4px;
+  color: var(--im-text-primary);
+  font-size: 13px;
+  font-weight: 500;
+  margin-bottom: 2px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .image-menu-file-size {
-  color: rgba(255, 255, 255, 0.6);
-  font-size: 12px;
+  color: var(--im-text-tertiary);
+  font-size: 11px;
 }
 
-/* Boutons d'action */
+/* =========================
+   ACTIONS - STYLE NOTION
+   ========================= */
 .image-menu-actions {
   display: flex;
-  gap: 10px;
-  margin-top: 8px;
+  gap: 8px;
 }
 
+/* Boutons */
 .image-menu-btn {
   flex: 1;
-  padding: 10px 16px;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 6px;
-  background: rgba(255, 255, 255, 0.06);
-  color: rgba(255, 255, 255, 0.9);
+  padding: 8px 12px;
+  border: 1px solid var(--im-border);
+  border-radius: var(--im-item-radius);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--im-text-primary);
   cursor: pointer;
-  transition: all 0.2s ease;
-  font-size: 14px;
-  font-weight: 600;
-  font-family: 'Noto Sans', Inter, Arial, sans-serif;
+  transition: all var(--im-duration) var(--im-ease);
+  font-size: 13px;
+  font-weight: 500;
+  font-family: var(--im-font);
 }
 
 .image-menu-btn:hover {
-  background: rgba(255, 255, 255, 0.12);
-  border-color: rgba(255, 255, 255, 0.25);
-  transform: translateY(-1px);
-}
-
-.image-menu-btn:active {
-  transform: translateY(0);
+  background: var(--im-hover-bg);
+  border-color: rgba(107, 114, 128, 0.2);
 }
 
 .image-menu-btn.primary {
-  background: var(--accent-primary, #2994ff);
-  border-color: var(--accent-primary, #2994ff);
+  background: var(--im-accent);
+  border-color: var(--im-accent);
   color: white;
-  box-shadow: 0 2px 8px rgba(41, 148, 255, 0.2);
 }
 
 .image-menu-btn.primary:hover {
-  background: var(--accent-hover, #1a7fdb);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(41, 148, 255, 0.3);
+  background: var(--im-accent-hover);
+  border-color: var(--im-accent-hover);
 }
 
 .image-menu-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
-  transform: none !important;
 }
 
-/* Input URL */
-.image-menu-url-input {
-  padding: 14px 18px;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.04);
-  color: rgba(255, 255, 255, 0.9);
-  font-size: 15px;
-  font-family: 'Noto Sans', Inter, Arial, sans-serif;
-  transition: all 0.2s ease;
-}
-
-.image-menu-url-input::placeholder {
-  color: rgba(255, 255, 255, 0.5);
-}
-
-.image-menu-url-input:focus {
-  outline: none;
-  border-color: var(--accent-primary, #2994ff);
-  background: rgba(255, 255, 255, 0.06);
-  box-shadow: 0 0 0 2px rgba(41, 148, 255, 0.1);
-}
-
-/* Messages d'erreur */
+/* =========================
+   ERROR MESSAGE - STYLE NOTION
+   ========================= */
 .image-menu-error {
   background: rgba(239, 68, 68, 0.08);
   border: 1px solid rgba(239, 68, 68, 0.2);
-  border-radius: 6px;
-  padding: 10px 14px;
+  border-radius: var(--im-item-radius);
+  padding: 10px 12px;
   color: #fca5a5;
-  font-size: 13px;
+  font-size: 12px;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -346,41 +450,31 @@
 
 @keyframes imageMenuErrorShake {
   0%, 100% { transform: translateX(0); }
-  25% { transform: translateX(-4px); }
-  75% { transform: translateX(4px); }
+  25% { transform: translateX(-3px); }
+  75% { transform: translateX(3px); }
 }
 
-.image-menu-error::before {
-  content: '⚠️';
-  font-size: 16px;
-}
-
-/* Indicateur de chargement */
-.image-menu-loading {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  color: rgba(255, 255, 255, 0.8);
-  font-size: 14px;
-  padding: 16px;
-}
-
+/* =========================
+   SPINNER - STYLE NOTION
+   ========================= */
 .image-menu-spinner {
-  width: 20px;
-  height: 20px;
+  width: 16px;
+  height: 16px;
   border: 2px solid rgba(255, 255, 255, 0.2);
-  border-top-color: var(--accent-primary, #2994ff);
+  border-top-color: white;
   border-radius: 50%;
   animation: imageMenuSpin 1s linear infinite;
+  margin-right: 6px;
 }
 
 @keyframes imageMenuSpin {
   to { transform: rotate(360deg); }
 }
 
-/* Responsive */
-@media (max-width: 640px) {
+/* =========================
+   RESPONSIVE DESIGN
+   ========================= */
+@media (max-width: 480px) {
   .image-menu-modal {
     width: 95%;
     max-width: none;
@@ -388,37 +482,18 @@
   }
   
   .image-menu-content {
-    padding: 20px;
+    padding: 12px;
   }
   
-  .image-menu-tabs button {
-    padding: 14px 16px;
-    font-size: 13px;
+  .image-menu-header {
+    padding: 12px;
+  }
+  
+  .image-menu-upload-zone {
+    padding: 20px 12px;
   }
   
   .image-menu-actions {
     flex-direction: column;
   }
-}
-
-/* Support du drag & drop */
-.image-menu-drag-overlay {
-  position: absolute;
-  inset: 0;
-  background: rgba(41, 148, 255, 0.1);
-  border: 2px dashed var(--accent-primary, #2994ff);
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--accent-primary, #2994ff);
-  font-size: 18px;
-  font-weight: 600;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.2s ease;
-}
-
-.image-menu-drag-overlay.active {
-  opacity: 1;
 } 
