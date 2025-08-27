@@ -53,7 +53,28 @@ function AuthCallbackContent() {
 
         if (data.session) {
           setStatus('success');
-          // Rediriger vers la page d'accueil après un court délai
+          
+          // Vérifier si c'est un flux OAuth externe (paramètres stockés en sessionStorage)
+          const oauthParams = sessionStorage.getItem('oauth_external_params');
+          
+          if (oauthParams) {
+            try {
+              const params = JSON.parse(oauthParams);
+              console.log('🔍 Flux OAuth externe détecté, redirection vers /auth avec paramètres');
+              
+              // Nettoyer les paramètres stockés
+              sessionStorage.removeItem('oauth_external_params');
+              
+              // Rediriger vers la page d'auth avec les paramètres OAuth
+              const authUrl = `/auth?${new URLSearchParams(params).toString()}`;
+              router.push(authUrl);
+              return;
+            } catch (err) {
+              console.error('Erreur parsing paramètres OAuth:', err);
+            }
+          }
+          
+          // Si pas de flux OAuth externe, redirection normale
           setTimeout(() => {
             router.push('/');
           }, 1500);
@@ -96,7 +117,7 @@ function AuthCallbackContent() {
         </>
       )}
 
-      {status === 'error' && (
+              {status === 'error' && (
         <>
           <div className="error-icon">
             <svg viewBox="0 0 24 24" fill="none">
@@ -106,11 +127,11 @@ function AuthCallbackContent() {
           <p className="auth-callback-message error">
             {error}
           </p>
-          <button
-            className="auth-callback-retry-btn"
+          <button 
             onClick={() => router.push('/auth')}
+            className="auth-callback-button"
           >
-            Réessayer
+            Retour à la connexion
           </button>
         </>
       )}
@@ -120,21 +141,10 @@ function AuthCallbackContent() {
 
 export default function AuthCallbackPage() {
   return (
-    <div className="auth-callback-page">
+    <div className="auth-callback-layout">
+      <LogoHeader />
       <div className="auth-callback-container">
-        <div className="auth-callback-header">
-          <LogoHeader size="large" position="center" />
-          <h1 className="auth-callback-title">Authentification</h1>
-        </div>
-
-        <Suspense fallback={
-          <div className="auth-callback-content">
-            <div className="loading-spinner-large" />
-            <p className="auth-callback-message">
-              Chargement...
-            </p>
-          </div>
-        }>
+        <Suspense fallback={<div>Chargement...</div>}>
           <AuthCallbackContent />
         </Suspense>
       </div>

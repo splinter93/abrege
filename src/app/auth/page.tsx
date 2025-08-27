@@ -90,6 +90,34 @@ function AuthPageContent() {
   const { signIn: signInWithOAuth, loading: oauthLoading, error: oauthError } = useOAuth();
 
   /**
+   * Gère la connexion OAuth en stockant les paramètres externes si nécessaire
+   */
+  const handleOAuthSignIn = async (provider: 'google' | 'apple' | 'github') => {
+    try {
+      // Si c'est un flux OAuth externe, stocker les paramètres
+      if (isExternalOAuth && clientId && redirectUri) {
+        const oauthParams = {
+          client_id: clientId,
+          redirect_uri: redirectUri,
+          scope: scope || '',
+          state: state || '',
+          response_type: responseType || ''
+        };
+        
+        // Stocker les paramètres OAuth dans le sessionStorage
+        sessionStorage.setItem('oauth_external_params', JSON.stringify(oauthParams));
+        console.log('🔍 Paramètres OAuth stockés:', oauthParams);
+      }
+      
+      // Lancer la connexion OAuth
+      await signInWithOAuth(provider);
+    } catch (error) {
+      console.error('Erreur connexion OAuth:', error);
+      setError('Erreur lors de la connexion OAuth');
+    }
+  };
+
+  /**
    * Gère le callback OAuth pour les applications externes
    */
   const handleExternalOAuthCallback = async (session: any) => {
@@ -224,7 +252,7 @@ function AuthPageContent() {
                 {authProviders.map((provider) => (
                   <button
                     key={provider.provider}
-                    onClick={() => signInWithOAuth(provider.provider)}
+                    onClick={() => handleOAuthSignIn(provider.provider as 'google' | 'apple' | 'github')}
                     disabled={oauthLoading}
                     className={`oauth-button ${provider.provider}`}
                   >
@@ -249,14 +277,14 @@ function AuthPageContent() {
           {isExternalOAuth && (
             <div className="auth-oauth-actions">
               <button
-                onClick={() => signInWithOAuth('google')}
+                onClick={() => handleOAuthSignIn('google')}
                 disabled={oauthLoading}
                 className="oauth-button google"
               >
                 {oauthLoading ? 'Chargement...' : 'Se connecter avec Google'}
               </button>
               <button
-                onClick={() => signInWithOAuth('github')}
+                onClick={() => handleOAuthSignIn('github')}
                 disabled={oauthLoading}
                 className="oauth-button github"
               >

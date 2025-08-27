@@ -10,19 +10,13 @@ export function useOAuth() {
     setLoading(true);
     setError(null);
     try {
-      // Vérifier si c'est un flux OAuth externe
-      const urlParams = new URLSearchParams(window.location.search);
-      const isExternalOAuth = urlParams.get('client_id') && urlParams.get('redirect_uri');
-      
-      // Si c'est un flux OAuth externe, rediriger vers la page d'auth pour gérer le callback
-      // Sinon, utiliser le callback normal
-      const redirectTo = isExternalOAuth 
-        ? `${window.location.origin}/auth${window.location.search}`
-        : `${window.location.origin}/auth/callback`;
-      
+      // Toujours utiliser le callback Supabase standard
+      // Supabase gère automatiquement la redirection vers notre app
       const { error: oauthError } = await supabase.auth.signInWithOAuth({
         provider,
-        options: { redirectTo }
+        options: { 
+          redirectTo: `${window.location.origin}/auth/callback`
+        }
       });
       if (oauthError) {
         throw oauthError;
