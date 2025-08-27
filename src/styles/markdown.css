@@ -1009,29 +1009,42 @@ h6 {
     position: absolute;
     top: 12px;
     right: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-    width: 36px; height: 36px;
-    background: var(--surface-3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px; 
+    height: 36px;
+    background: transparent;
     color: var(--text-2);
-  border: 1px solid var(--border-subtle);
+    border: none;
     border-radius: 8px;
     cursor: pointer;
-    opacity: 1;
-    transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
     z-index: 10;
-    backdrop-filter: blur(8px);
+    outline: none !important;
   }
+  
   .code-copy-button:hover {
-    background: var(--surface-hover);
-    border-color: var(--border-hover);
     color: var(--text-1);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   }
-  .code-copy-button.copied { background: var(--success); border-color: var(--success); color: white; }
-  .code-copy-button svg { width: 18px; height: 18px; }
+  
+  .code-copy-button:focus {
+    outline: none !important;
+    box-shadow: none !important;
+  }
+  
+  .code-copy-button.copied { 
+    background: var(--success) !important; 
+    color: white !important; 
+    border-radius: 8px;
+    padding: 8px;
+    min-width: 36px;
+    min-height: 36px;
+  }
+  
+  .code-copy-button svg { 
+    width: 18px; 
+    height: 18px; 
+  }
 
 /* ==========================================================================
      ANIMATIONS ET TRANSITIONS (avec respect motion)
