@@ -147,7 +147,7 @@ async function applyOAuthMigration() {
         .from('oauth_clients')
         .update({ 
           redirect_uris: [
-            'https://chat.openai.com/aip/g-011f24575c8d3b9d5d69e124bafa1364ae3badf9/oauth/callback',
+            'https://chat.openai.com/aip/g-369c00bd47b6f501275b414d19d5244ac411097b/oauth/callback',
             'https://scrivia.app/auth/callback'
           ],
           scopes: ['notes:read', 'notes:write', 'dossiers:read', 'dossiers:write', 'classeurs:read', 'classeurs:write', 'profile:read'],
@@ -175,7 +175,7 @@ async function applyOAuthMigration() {
           name: 'Scrivia ChatGPT Action',
           description: 'Action personnalisée ChatGPT pour interagir avec l\'API Scrivia',
           redirect_uris: [
-            'https://chat.openai.com/aip/g-011f24575c8d3b9d5d69e124bafa1364ae3badf9/oauth/callback',
+            'https://chat.openai.com/aip/g-369c00bd47b6f501275b414d19d5244ac411097b/oauth/callback',
             'https://scrivia.app/auth/callback'
           ],
           scopes: [

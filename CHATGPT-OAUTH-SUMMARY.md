@@ -13,7 +13,7 @@
 - ✅ **Client ID** : `scrivia-custom-gpt`
 - ✅ **Client Secret** : `scrivia-gpt-secret-2024`
 - ✅ **Redirect URIs** configurés :
-  - `https://chat.openai.com/aip/g-011f24575c8d3b9d5d69e124bafa1364ae3badf9/oauth/callback`
+  - `https://chat.openai.com/aip/g-369c00bd47b6f501275b414d19d5244ac411097b/oauth/callback`
   - `https://scrivia.app/auth/callback`
 - ✅ **Scopes** autorisés :
   - `notes:read`, `notes:write`
@@ -77,7 +77,7 @@ http://localhost:3000/auth/callback
 {
   "client_id": "scrivia-custom-gpt",
   "client_secret": "scrivia-gpt-secret-2024",
-  "redirect_uri": "https://chat.openai.com/aip/g-011f24575c8d3b9d5d69e124bafa1364ae3badf9/oauth/callback",
+  "redirect_uri": "https://chat.openai.com/aip/g-369c00bd47b6f501275b414d19d5244ac411097b/oauth/callback",
   "scopes": "notes:read notes:write dossiers:read dossiers:write classeurs:read classeurs:write profile:read"
 }
 ```

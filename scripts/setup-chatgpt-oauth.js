@@ -67,7 +67,7 @@ async function setupChatGPTOAuth() {
       
       // Mettre à jour les redirect_uris si nécessaire
       const expectedUris = [
-        'https://chat.openai.com/aip/g-011f24575c8d3b9d5d69e124bafa1364ae3badf9/oauth/callback',
+        'https://chat.openai.com/aip/g-369c00bd47b6f501275b414d19d5244ac411097b/oauth/callback',
         'https://scrivia.app/auth/callback'
       ];
       
@@ -103,7 +103,7 @@ async function setupChatGPTOAuth() {
           name: 'Scrivia ChatGPT Action',
           description: 'Action personnalisée ChatGPT pour interagir avec l\'API Scrivia',
           redirect_uris: [
-            'https://chat.openai.com/aip/g-011f24575c8d3b9d5d69e124bafa1364ae3badf9/oauth/callback',
+            'https://chat.openai.com/aip/g-369c00bd47b6f501275b414d19d5244ac411097b/oauth/callback',
             'https://scrivia.app/auth/callback'
           ],
           scopes: [
@@ -157,7 +157,7 @@ async function setupChatGPTOAuth() {
     console.log('1. Dans ChatGPT, utilisez ces paramètres OAuth:');
     console.log(`   - Client ID: ${clientId}`);
     console.log(`   - Client Secret: ${clientSecret}`);
-    console.log(`   - Redirect URI: https://chat.openai.com/aip/g-011f24575c8d3b9d5d69e124bafa1364ae3badf9/oauth/callback`);
+    console.log(`   - Redirect URI: https://chat.openai.com/aip/g-369c00bd47b6f501275b414d19d5244ac411097b/oauth/callback`);
     console.log('2. Assurez-vous que l\'URL de callback est bien configurée dans Google Cloud Console');
     console.log('3. Testez la connexion OAuth depuis ChatGPT');
 

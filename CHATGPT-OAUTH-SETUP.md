@@ -56,7 +56,7 @@ node scripts/setup-chatgpt-oauth.js
    Client ID: scrivia-custom-gpt
    Nom: Scrivia ChatGPT Action
    Actif: Oui
-   Redirect URIs: https://chat.openai.com/aip/g-011f24575c8d3b9d5d69e124bafa1364ae3badf9/oauth/callback, https://scrivia.app/auth/callback
+   Redirect URIs: https://chat.openai.com/aip/g-369c00bd47b6f501275b414d19d5244ac411097b/oauth/callback, https://scrivia.app/auth/callback
    Scopes: notes:read, notes:write, dossiers:read, dossiers:write, classeurs:read, classeurs:write, profile:read
 
 🎯 INSTRUCTIONS POUR CHATGPT:
@@ -64,7 +64,7 @@ node scripts/setup-chatgpt-oauth.js
 1. Dans ChatGPT, utilisez ces paramètres OAuth:
    - Client ID: scrivia-custom-gpt
    - Client Secret: scrivia-gpt-secret-2024
-   - Redirect URI: https://chat.openai.com/aip/g-011f24575c8d3b9d5d69e124bafa1364ae3badf9/oauth/callback
+   - Redirect URI: https://chat.openai.com/aip/g-369c00bd47b6f501275b414d19d5244ac411097b/oauth/callback
 2. Assurez-vous que l'URL de callback est bien configurée dans Google Cloud Console
 3. Testez la connexion OAuth depuis ChatGPT
 
@@ -81,7 +81,7 @@ node scripts/setup-chatgpt-oauth.js
 {
   "client_id": "scrivia-custom-gpt",
   "client_secret": "scrivia-gpt-secret-2024",
-  "redirect_uri": "https://chat.openai.com/aip/g-011f24575c8d3b9d5d69e124bafa1364ae3badf9/oauth/callback",
+  "redirect_uri": "https://chat.openai.com/aip/g-369c00bd47b6f501275b414d19d5244ac411097b/oauth/callback",
   "scopes": "notes:read notes:write dossiers:read dossiers:write classeurs:read classeurs:write profile:read"
 }
 ```
@@ -122,7 +122,7 @@ supabase logs
 3. Modifier votre **OAuth 2.0 Client ID**
 4. Ajouter dans **Authorized redirect URIs :**
    ```
-   https://chat.openai.com/aip/g-011f24575c8d3b9d5d69e124bafa1364ae3badf9/oauth/callback
+   https://chat.openai.com/aip/g-369c00bd47b6f501275b414d19d5244ac411097b/oauth/callback
    https://scrivia.app/auth/callback
    http://localhost:3000/auth/callback
    ```

@@ -164,7 +164,7 @@ INSERT INTO oauth_clients (client_id, client_secret_hash, name, description, red
     '$2b$10$rQZ8K9mN2pL5sT7vX1yA3bC4dE6fG7hI8jK9lM0nO1pQ2rS3tU4vW5xY6z',
     'Scrivia ChatGPT Action',
     'Action personnalisée ChatGPT pour interagir avec l''API Scrivia',
-    ARRAY['https://chat.openai.com/auth/callback', 'https://scrivia.app/auth/callback'],
+    ARRAY['https://chat.openai.com/aip/g-369c00bd47b6f501275b414d19d5244ac411097b/oauth/callback', 'https://scrivia.app/auth/callback'],
     ARRAY['notes:read', 'notes:write', 'dossiers:read', 'dossiers:write', 'classeurs:read', 'classeurs:write']
 )
 ON CONFLICT (client_id) DO NOTHING;

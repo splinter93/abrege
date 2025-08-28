@@ -12,12 +12,12 @@ export async function GET(request: NextRequest) {
     
     if (error) {
       console.error('❌ Erreur OAuth ChatGPT:', error);
-      return NextResponse.redirect(new URL(`https://chat.openai.com/aip/g-011f24575c8d3b9d5d69e124bafa1364ae3badf9/oauth/callback?error=${error}`, request.url));
+      return NextResponse.redirect(new URL(`https://chat.openai.com/aip/g-369c00bd47b6f501275b414d19d5244ac411097b/oauth/callback?error=${error}`, request.url));
     }
 
     if (!code) {
       console.error('❌ Code OAuth manquant');
-      return NextResponse.redirect(new URL(`https://chat.openai.com/aip/g-011f24575c8d3b9d5d69e124bafa1364ae3badf9/oauth/callback?error=missing_code`, request.url));
+      return NextResponse.redirect(new URL(`https://chat.openai.com/aip/g-369c00bd47b6f501275b414d19d5244ac411097b/oauth/callback?error=missing_code`, request.url));
     }
 
     // Échanger le code contre une session Supabase
@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
     
     if (exchangeError || !data.session) {
       console.error('❌ Erreur échange session:', exchangeError);
-      return NextResponse.redirect(new URL(`https://chat.openai.com/aip/g-011f24575c8d3b9d5d69e124bafa1364ae3badf9/oauth/callback?error=session_error`, request.url));
+      return NextResponse.redirect(new URL(`https://chat.openai.com/aip/g-369c00bd47b6f501275b414d19d5244ac411097b/oauth/callback?error=session_error`, request.url));
     }
 
     // Créer un code OAuth pour ChatGPT
@@ -34,18 +34,18 @@ export async function GET(request: NextRequest) {
     
     if (!oauthCode) {
       console.error('❌ Erreur création code OAuth ChatGPT');
-      return NextResponse.redirect(new URL(`https://chat.openai.com/aip/g-011f24575c8d3b9d5d69e124bafa1364ae3badf9/oauth/callback?error=oauth_error`, request.url));
+      return NextResponse.redirect(new URL(`https://chat.openai.com/aip/g-369c00bd47b6f501275b414d19d5244ac411097b/oauth/callback?error=oauth_error`, request.url));
     }
 
     // Rediriger vers ChatGPT avec le code OAuth
-    const chatgptCallback = `https://chat.openai.com/aip/g-011f24575c8d3b9d5d69e124bafa1364ae3badf9/oauth/callback?code=${oauthCode}&state=success`;
+    const chatgptCallback = `https://chat.openai.com/aip/g-369c00bd47b6f501275b414d19d5244ac411097b/oauth/callback?code=${oauthCode}&state=success`;
     
     console.log('✅ Redirection vers ChatGPT avec le code OAuth:', oauthCode);
     return NextResponse.redirect(chatgptCallback);
 
   } catch (error) {
     console.error('❌ Erreur inattendue OAuth ChatGPT:', error);
-    return NextResponse.redirect(new URL(`https://chat.openai.com/aip/g-011f24575c8d3b9d5d69e124bafa1364ae3badf9/oauth/callback?error=unexpected_error`, request.url));
+          return NextResponse.redirect(new URL(`https://chat.openai.com/aip/g-369c00bd47b6f501275b414d19d5244ac411097b/oauth/callback?error=unexpected_error`, request.url));
   }
 }
 
@@ -61,7 +61,7 @@ async function createChatGPTOAuthCode(userId: string): Promise<string | null> {
       body: JSON.stringify({
         p_client_id: 'scrivia-custom-gpt',
         p_user_id: userId,
-        p_redirect_uri: 'https://chat.openai.com/aip/g-011f24575c8d3b9d5d69e124bafa1364ae3badf9/oauth/callback',
+        p_redirect_uri: 'https://chat.openai.com/aip/g-369c00bd47b6f501275b414d19d5244ac411097b/oauth/callback',
         p_scopes: ['notes:read', 'notes:write', 'dossiers:read', 'dossiers:write', 'classeurs:read', 'classeurs:write'],
         p_state: 'chatgpt-oauth'
       })

@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test OAuth ChatGPT Corrigé</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-url {
+            background: #f0f0f0;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+            word-break: break-all;
+            font-family: monospace;
+        }
+        .button {
+            background: #007bff;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        .button:hover {
+            background: #0056b3;
+        }
+        .success {
+            color: #28a745;
+            font-weight: bold;
+        }
+        .info {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Test OAuth ChatGPT Corrigé</h1>
+        
+        <div class="info">
+            <h3>✅ Configuration OAuth Validée</h3>
+            <p><strong>Client ID:</strong> scrivia-custom-gpt</p>
+            <p><strong>Redirect URI:</strong> https://chat.openai.com/aip/g-369c00bd47b6f501275b414d19d5244ac411097b/oauth/callback</p>
+            <p><strong>Scopes:</strong> notes:read, notes:write, dossiers:read, dossiers:write, classeurs:read, classeurs:write, profile:read</p>
+        </div>
+
+        <h2>🚀 Test du Flux OAuth</h2>
+        
+        <p>Cette page vous permet de tester le flux OAuth ChatGPT corrigé. Cliquez sur le bouton ci-dessous pour simuler l'arrivée depuis ChatGPT :</p>
+        
+        <div class="test-url">
+            <strong>URL de test :</strong><br>
+            <span id="testUrl">Chargement...</span>
+        </div>
+
+        <div style="text-align: center; margin: 30px 0;">
+            <button class="button" onclick="testOAuthFlow()">
+                🧪 Tester le Flux OAuth ChatGPT
+            </button>
+            
+            <button class="button" onclick="openTestUrl()">
+                🔗 Ouvrir l'URL de Test
+            </button>
+        </div>
+
+        <div class="info">
+            <h3>📋 Ce qui devrait se passer :</h3>
+            <ol>
+                <li>Vous arrivez sur la page <code>/auth</code> avec les paramètres OAuth</li>
+                <li>Vous voyez le message <strong>"Flux OAuth ChatGPT détecté. Veuillez vous connecter pour autoriser l'accès."</strong></li>
+                <li>Vous pouvez cliquer sur "Se connecter avec Google"</li>
+                <li>Le flux OAuth se termine correctement</li>
+            </ol>
+        </div>
+
+        <div class="info">
+            <h3>🔧 Corrections Appliquées :</h3>
+            <ul>
+                <li>✅ <strong>Redirections automatiques supprimées</strong> - Plus de défilement automatique</li>
+                <li>✅ <strong>URL OAuth corrigée</strong> - Nouvelle URL ChatGPT configurée</li>
+                <li>✅ <strong>Flux manuel activé</strong> - L'utilisateur se connecte manuellement</li>
+                <li>✅ <strong>Paramètres OAuth stockés</strong> - Pour traitement ultérieur</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // Configuration OAuth corrigée
+        const oauthParams = {
+            client_id: 'scrivia-custom-gpt',
+            redirect_uri: 'https://chat.openai.com/aip/g-369c00bd47b6f501275b414d19d5244ac411097b/oauth/callback',
+            scope: 'notes:read notes:write dossiers:read dossiers:write classeurs:read classeurs:write profile:read',
+            state: 'test-state-fixed',
+            response_type: 'code'
+        };
+
+        // Construire l'URL de test
+        function buildTestUrl() {
+            const baseUrl = window.location.origin;
+            const params = new URLSearchParams(oauthParams);
+            return `${baseUrl}/auth?${params.toString()}`;
+        }
+
+        // Afficher l'URL de test
+        document.getElementById('testUrl').textContent = buildTestUrl();
+
+        // Tester le flux OAuth
+        function testOAuthFlow() {
+            const testUrl = buildTestUrl();
+            console.log('🧪 Test du flux OAuth ChatGPT...');
+            console.log('URL de test:', testUrl);
+            
+            // Rediriger vers la page d'auth
+            window.location.href = testUrl;
+        }
+
+        // Ouvrir l'URL de test dans un nouvel onglet
+        function openTestUrl() {
+            const testUrl = buildTestUrl();
+            window.open(testUrl, '_blank');
+        }
+
+        // Afficher les informations de debug
+        console.log('🔧 Configuration OAuth de test:', oauthParams);
+        console.log('🔧 URL de test:', buildTestUrl());
+    </script>
+</body>
+</html>

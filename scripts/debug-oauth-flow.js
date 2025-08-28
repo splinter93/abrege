@@ -61,7 +61,7 @@ async function testOAuthFlow() {
     console.log('\n2️⃣ Test de l\'endpoint de création de code...');
     
     const testUserId = 'test-user-id';
-    const testRedirectUri = 'https://chat.openai.com/aip/g-011f24575c8d3b9d5d69e124bafa1364ae3badf9/oauth/callback';
+    const testRedirectUri = 'https://chat.openai.com/aip/g-369c00bd47b6f501275b414d19d5244ac411097b/oauth/callback';
     
     const createCodeResponse = await fetch('http://localhost:3000/api/auth/create-code', {
       method: 'POST',

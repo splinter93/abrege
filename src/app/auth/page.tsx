@@ -43,13 +43,13 @@ function AuthPageContent() {
         if (session) {
           setCurrentSession(session);
 
-          // ✅ OPTIMISATION : Flux ChatGPT → redirection vers callback pour traitement
+          // ✅ CORRECTION : Flux ChatGPT → attente de connexion manuelle
           if (isExternalOAuth && clientId && redirectUri && !didRunExternalCallbackRef.current) {
-            console.log('🔍 [Auth] Session trouvée, redirection vers callback pour traitement OAuth');
+            console.log('🔍 [Auth] Flux OAuth ChatGPT détecté, attente de connexion manuelle');
             didRunExternalCallbackRef.current = true;
-            setSessionStatus('Session trouvée, redirection vers le traitement OAuth...');
+            setSessionStatus('Flux OAuth ChatGPT détecté. Veuillez vous connecter pour autoriser l\'accès.');
             
-            // ✅ OPTIMISATION : Stocker les paramètres et rediriger vers callback
+            // ✅ CORRECTION : Stocker les paramètres pour plus tard
             const oauthParams = {
               client_id: clientId,
               redirect_uri: redirectUri,
@@ -61,8 +61,7 @@ function AuthPageContent() {
               window.sessionStorage.setItem('oauth_external_params', JSON.stringify(oauthParams));
             }
             
-            // Rediriger vers callback pour traitement OAuth
-            router.push('/auth/callback');
+            // ❌ NE PAS rediriger automatiquement - laisser l'utilisateur se connecter
             return;
           }
 

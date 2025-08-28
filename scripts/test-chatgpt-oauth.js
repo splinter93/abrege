@@ -53,7 +53,7 @@ async function testChatGPTOAuth() {
     // 3. Vérifier les redirect_uris
     console.log('\n2️⃣ Test des redirect_uris...');
     const expectedUris = [
-      'https://chat.openai.com/aip/g-011f24575c8d3b9d5d69e124bafa1364ae3badf9/oauth/callback',
+      'https://chat.openai.com/aip/g-369c00bd47b6f501275b414d19d5244ac411097b/oauth/callback',
       'https://scrivia.app/auth/callback'
     ];
 
@@ -99,7 +99,7 @@ async function testChatGPTOAuth() {
 
     // 5. Test de validation des redirect_uris
     console.log('\n4️⃣ Test de validation des redirect_uris...');
-    const testUri = 'https://chat.openai.com/aip/g-011f24575c8d3b9d5d69e124bafa1364ae3badf9/oauth/callback';
+    const testUri = 'https://chat.openai.com/aip/g-369c00bd47b6f501275b414d19d5244ac411097b/oauth/callback';
     
     const isValid = chatgptClient.redirect_uris.some(uri => {
       if (uri.includes('*')) {
