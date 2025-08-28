@@ -47,10 +47,16 @@ function AuthPageContent() {
         // ✅ STOCKER LA SESSION
         setCurrentSession(session);
         
-        // ✅ POUR L'OAUTH EXTERNE, NE PAS REDIRIGER AUTOMATIQUEMENT
+        // ✅ POUR L'OAUTH EXTERNE, REDIRIGER AUTOMATIQUEMENT SI SESSION EXISTE
         if (isExternalOAuth && clientId && redirectUri) {
           setSessionStatus('Session trouvée, authentification OAuth en cours...');
-          // ❌ NE PAS APPELER handleExternalOAuthCallback AUTOMATIQUEMENT
+          // ✅ CORRECTION : Appeler automatiquement le callback OAuth
+          if (currentSession) {
+            console.log('🔍 [OAuth] Session existante, lancement automatique du callback OAuth');
+            setTimeout(() => {
+              handleExternalOAuthCallback(currentSession);
+            }, 1000); // Délai pour laisser l'UI se mettre à jour
+          }
         } else {
           setSessionStatus('Session trouvée, redirection...');
           router.push('/');
@@ -120,6 +126,21 @@ function AuthPageContent() {
         if (isChatGPT && provider === 'google') {
           console.log('🤖 Flux ChatGPT détecté, redirection directe vers Google OAuth');
           
+          // ✅ CORRECTION : Stocker les paramètres AVANT la redirection
+          const chatgptParams = {
+            client_id: clientId,
+            redirect_uri: redirectUri,
+            scope: scope || '',
+            state: state || '',
+            response_type: responseType || ''
+          };
+          
+          // Stocker un flag pour identifier que c'est un flux ChatGPT
+          sessionStorage.setItem('chatgpt_oauth_flow', 'true');
+          sessionStorage.setItem('chatgpt_oauth_params', JSON.stringify(chatgptParams));
+          
+          console.log('🔍 [ChatGPT] Paramètres stockés:', chatgptParams);
+          
           // Construire l'URL Google OAuth avec le redirect_uri de ChatGPT
           const googleOAuthUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');
           googleOAuthUrl.searchParams.set('client_id', process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID!);
@@ -135,16 +156,6 @@ function AuthPageContent() {
           googleOAuthUrl.searchParams.set('oauth_redirect_uri', redirectUri);
           googleOAuthUrl.searchParams.set('oauth_scope', scope || '');
           googleOAuthUrl.searchParams.set('oauth_response_type', responseType || '');
-          
-          // Stocker un flag pour identifier que c'est un flux ChatGPT
-          sessionStorage.setItem('chatgpt_oauth_flow', 'true');
-          sessionStorage.setItem('chatgpt_oauth_params', JSON.stringify({
-            client_id: clientId,
-            redirect_uri: redirectUri,
-            scope: scope || '',
-            state: state || '',
-            response_type: responseType || ''
-          }));
           
           console.log('🔗 URL Google OAuth:', googleOAuthUrl.toString());
           
@@ -167,6 +178,14 @@ function AuthPageContent() {
    */
   const handleExternalOAuthCallback = async (session: any) => {
     try {
+      console.log('🔍 [OAuth] Début du callback externe avec session:', {
+        userId: session.user?.id,
+        clientId,
+        redirectUri,
+        scope,
+        state
+      });
+      
       if (!clientId || !redirectUri) {
         console.error('🔍 Paramètres manquants:', { clientId, redirectUri });
         return;
@@ -222,6 +241,9 @@ function AuthPageContent() {
       if (state) {
         callbackUrl.searchParams.set('state', state);
       }
+      
+      console.log('🔍 [OAuth] Redirection vers:', callbackUrl.toString());
+      console.log('🔍 [OAuth] Code généré:', code);
       
       // Rediriger vers l'application externe
       window.location.href = callbackUrl.toString();

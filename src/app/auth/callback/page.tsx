@@ -159,14 +159,37 @@ function AuthCallbackContent() {
 
         if (isChatGPTFlow) {
           const raw = window.sessionStorage.getItem('chatgpt_oauth_params');
-          // Nettoyage systématique
-          window.sessionStorage.removeItem('chatgpt_oauth_flow');
-          window.sessionStorage.removeItem('chatgpt_oauth_params');
-
+          
           console.log('🔍 [Callback] Paramètres OAuth ChatGPT récupérés:', raw);
 
           if (!raw) {
             console.error('❌ Paramètres OAuth ChatGPT manquants');
+            // ✅ CORRECTION : Rediriger vers la page d'auth avec les paramètres OAuth
+            const searchParams = new URLSearchParams(window.location.search);
+            const oauthParams = {
+              client_id: searchParams.get('oauth_client_id'),
+              redirect_uri: searchParams.get('oauth_redirect_uri'),
+              scope: searchParams.get('oauth_scope'),
+              state: searchParams.get('state')?.replace('chatgpt_', ''),
+              response_type: searchParams.get('oauth_response_type')
+            };
+            
+            if (oauthParams.client_id && oauthParams.redirect_uri) {
+              console.log('🔍 [Callback] Tentative de récupération depuis URL:', oauthParams);
+              // ✅ CORRECTION : Créer un objet avec des types stricts
+              const filteredParams: Record<string, string> = {};
+              if (oauthParams.client_id) filteredParams.client_id = oauthParams.client_id;
+              if (oauthParams.redirect_uri) filteredParams.redirect_uri = oauthParams.redirect_uri;
+              if (oauthParams.scope) filteredParams.scope = oauthParams.scope;
+              if (oauthParams.state) filteredParams.state = oauthParams.state;
+              if (oauthParams.response_type) filteredParams.response_type = oauthParams.response_type;
+              
+              const authUrl = `/auth?${new URLSearchParams(filteredParams).toString()}`;
+              router.push(authUrl);
+              return;
+            }
+            
+            console.error('❌ Aucun paramètre OAuth trouvé, redirection vers home');
             router.push('/');
             return;
           }
@@ -180,6 +203,10 @@ function AuthCallbackContent() {
             router.push('/');
             return;
           }
+          
+          // ✅ CORRECTION : Nettoyage APRÈS avoir utilisé les paramètres
+          window.sessionStorage.removeItem('chatgpt_oauth_flow');
+          window.sessionStorage.removeItem('chatgpt_oauth_params');
 
           if (!isAllowedRedirect(params.redirect_uri)) {
             console.error('❌ redirect_uri non autorisée:', params.redirect_uri);
@@ -202,7 +229,10 @@ function AuthCallbackContent() {
             console.log('🔍 [Callback] URL de redirection construite:', redirect.toString());
             console.log('🔍 [Callback] Redirection vers ChatGPT...');
 
-            window.location.href = redirect.toString();
+            // ✅ CORRECTION : Ajouter un délai pour laisser l'UI se mettre à jour
+            setTimeout(() => {
+              window.location.href = redirect.toString();
+            }, 1000);
           } catch (e) {
             console.error('❌ Erreur création code OAuth ChatGPT:', e);
             setError('Erreur lors de la création du code OAuth');
