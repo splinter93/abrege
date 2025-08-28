@@ -78,8 +78,9 @@ function AuthPageContent() {
 
           // Flux normal
           if (!isExternalOAuth) {
-            setSessionStatus('Session trouvée, redirection…');
-            router.push('/');
+            setSessionStatus('Session trouvée');
+            // ❌ SUPPRIMÉ : Redirection automatique
+            // router.push('/');
           }
         } else {
           setSessionStatus('Aucune session');
@@ -108,7 +109,8 @@ function AuthPageContent() {
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
-        router.push('/');
+        // ❌ SUPPRIMÉ : Redirection automatique après connexion
+        // router.push('/');
       }
     } catch (err: any) {
       setError(err?.message || 'Erreur de connexion');
@@ -147,8 +149,8 @@ function AuthPageContent() {
         window.sessionStorage.setItem('oauth_external_params', JSON.stringify(oauthParams));
       }
       
-      // Rediriger vers callback pour traitement OAuth
-      router.push('/auth/callback');
+      // ❌ SUPPRIMÉ : Redirection automatique vers callback
+      // router.push('/auth/callback');
     }
   };
 
@@ -252,7 +254,7 @@ function AuthPageContent() {
                 <div className="auth-oauth-session-info">
                   <p>✅ Connecté en tant que {currentSession.user?.email}</p>
                   {/* ✅ NOUVEAU : Bouton de redirection manuelle pour gérer l'ancienne action ID */}
-                  <p>🔄 Redirection automatique en cours...</p>
+                  <p>✅ Vous êtes connecté et pouvez rester sur cette page</p>
                   
                   <button
                     onClick={() => handleManualOAuthRedirect()}
