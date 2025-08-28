@@ -150,7 +150,7 @@ export async function PATCH(
     const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
     // Résoudre la référence de la note
-    const resolveResult = await V2ResourceResolver.resolveRef(ref, 'note', userId, context, userToken);
+    const resolveResult = await V2ResourceResolver.resolveRef(ref, 'note', userId, context, undefined);
     if (!resolveResult.success) {
       return NextResponse.json(
         { error: resolveResult.error },
