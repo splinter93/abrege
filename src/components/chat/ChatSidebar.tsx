@@ -23,6 +23,7 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({ isOpen, isDesktop, onClose })
   const [renamingSessionId, setRenamingSessionId] = useState<string | null>(null);
   const [newName, setNewName] = useState('');
   const [agentsOpen, setAgentsOpen] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Fonction pour extraire l'aperçu de la dernière réponse
   const getLastResponsePreview = (session: unknown) => {
@@ -101,8 +102,19 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({ isOpen, isDesktop, onClose })
   // ✅ CORRECTION : Utiliser useMemo pour éviter les erreurs de hoisting en production
   const sortedSessions = useMemo(() => {
     if (!sessions || sessions.length === 0) return [];
-    return [...sessions].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-  }, [sessions]);
+    
+    let filteredSessions = [...sessions];
+    
+    // Filtrer par recherche si un terme est saisi
+    if (searchQuery.trim()) {
+      filteredSessions = filteredSessions.filter(session => 
+        session.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        getLastResponsePreview(session).toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+    
+    return filteredSessions.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+  }, [sessions, searchQuery]);
 
   const displayName = (user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Utilisateur').trim();
   const emailText = user?.email || '';
@@ -110,20 +122,32 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({ isOpen, isDesktop, onClose })
   return (
     <div className={`chat-sidebar ${isOpen ? 'open' : (isDesktop ? 'closed' : '')}`}>
       <div className="sidebar-content-wrapper">
-        {/* Header de la sidebar */}
-        <div className="sidebar-header">
-          <div className="sidebar-header-content">
-            <h2 className="sidebar-title">Mon Chat</h2>
-            <div className="sidebar-actions">
-              <button onClick={handleCreateNewSession} className="sidebar-icon-btn" title="Nouvelle conversation">
-                <Plus size={16} />
-              </button>
-              <button onClick={onClose} className="sidebar-icon-btn" title="Fermer la sidebar">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="3" x2="9" y2="21"></line>
-                </svg>
-              </button>
+        {/* Actions de la sidebar */}
+        <div className="sidebar-actions-container">
+          <div className="sidebar-actions">
+            {/* Barre de recherche */}
+            <div className="sidebar-search">
+              <svg className="sidebar-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="11" cy="11" r="8"></circle>
+                <path d="m21 21-4.35-4.35"></path>
+              </svg>
+              <input
+                type="text"
+                placeholder="Rechercher..."
+                className="sidebar-search-input"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
             </div>
+            
+            <button onClick={handleCreateNewSession} className="sidebar-icon-btn" title="Nouvelle conversation">
+              <Plus size={20} />
+            </button>
+            <button onClick={onClose} className="sidebar-icon-btn" title="Fermer la sidebar">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="3" x2="9" y2="21"></line>
+              </svg>
+            </button>
           </div>
         </div>
 
@@ -208,6 +232,7 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({ isOpen, isDesktop, onClose })
                         }}
                         autoFocus
                         className="rename-input"
+                        placeholder="Nom de la conversation"
                       />
                     ) : (
                       <div className="conversation-content">
@@ -230,7 +255,7 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({ isOpen, isDesktop, onClose })
                               className="delete-btn"
                               title="Supprimer la conversation"
                             >
-                              <Trash2 size={14} />
+                              <Trash2 size={16} />
                             </button>
                           )}
                         </div>
