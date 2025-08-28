@@ -91,7 +91,31 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ re
       }
     });
 
-    const noteId = await resolveNoteRef(ref, userId);
+    // Résoudre la référence de la note avec gestion d'erreur améliorée
+    let noteId: string;
+    try {
+      noteId = await resolveNoteRef(ref, userId);
+    } catch (error) {
+      logger.error(`[Move Note API] ❌ Note non trouvée: ${ref}`, { 
+        noteRef: ref, 
+        userId, 
+        error: error.message 
+      });
+      
+      // Retourner une erreur 404 avec plus de détails
+      return new Response(
+        JSON.stringify({ 
+          error: 'Note non trouvée', 
+          details: [
+            `La note avec la référence '${ref}' n'existe pas ou n'appartient pas à l'utilisateur`,
+            'Cette erreur peut survenir si la note a été supprimée ou déplacée',
+            'Veuillez rafraîchir l\'interface et réessayer'
+          ]
+        }),
+        { status: 404, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+    
     // Résoudre les références de destination
     let targetClasseurId: string | undefined;
     let targetFolderId: string | null | undefined;
