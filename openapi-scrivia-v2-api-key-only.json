@@ -1,0 +1,478 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Scrivia API V2 - Clé API",
+    "description": "API REST pour la gestion des notes, classeurs et dossiers avec authentification par clé API uniquement",
+    "version": "2.0.0"
+  },
+  "servers": [
+    {
+      "url": "https://scrivia.app/api/v2",
+      "description": "Serveur de production Scrivia"
+    }
+  ],
+  "security": [
+    {
+      "ApiKeyAuth": []
+    }
+  ],
+  "tags": [
+    { 
+      "name": "Authentification", 
+      "description": "Gestion de l'authentification et profil utilisateur" 
+    },
+    { 
+      "name": "Classeurs", 
+      "description": "Gestion des classeurs (organisateurs de notes)" 
+    },
+    { 
+      "name": "Notes", 
+      "description": "Gestion des notes et articles" 
+    },
+    { 
+      "name": "Dossiers", 
+      "description": "Gestion des dossiers et arborescences" 
+    }
+  ],
+  "paths": {
+    "/me": {
+      "get": {
+        "summary": "Récupérer l'utilisateur authentifié",
+        "description": "Récupère les informations du profil de l'utilisateur authentifié par clé API",
+        "tags": ["Authentification"],
+        "operationId": "getAuthenticatedUserV2",
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Profil utilisateur récupéré avec succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { 
+                      "type": "boolean",
+                      "example": true,
+                      "description": "Indique si l'opération a réussi"
+                    },
+                    "user": { 
+                      "$ref": "#/components/schemas/User",
+                      "description": "Informations du profil utilisateur"
+                    }
+                  },
+                  "required": ["success", "user"]
+                }
+              }
+            }
+          },
+          "401": { 
+            "$ref": "#/components/responses/Unauthorized",
+            "description": "Authentification requise - Clé API manquante/invalide"
+          },
+          "500": { "$ref": "#/components/responses/ServerError" }
+        }
+      }
+    },
+    "/classeurs": {
+      "get": {
+        "summary": "Lister tous les classeurs de l'utilisateur",
+        "description": "Récupère la liste complète des classeurs appartenant à l'utilisateur authentifié par clé API",
+        "tags": ["Classeurs"],
+        "operationId": "listClasseursV2",
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Liste des classeurs récupérée avec succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { 
+                      "type": "boolean",
+                      "example": true,
+                      "description": "Indique si l'opération a réussi"
+                    },
+                    "classeurs": { 
+                      "type": "array", 
+                      "items": { "$ref": "#/components/schemas/Classeur" },
+                      "description": "Liste des classeurs de l'utilisateur"
+                    }
+                  },
+                  "required": ["success", "classeurs"]
+                }
+              }
+            }
+          },
+          "401": { 
+            "$ref": "#/components/responses/Unauthorized",
+            "description": "Authentification requise - Clé API manquante/invalide"
+          },
+          "403": { 
+            "$ref": "#/components/responses/Forbidden",
+            "description": "Permissions insuffisantes pour accéder aux classeurs"
+          },
+          "500": { 
+            "$ref": "#/components/responses/ServerError" 
+          }
+        }
+      }
+    },
+    "/notes": {
+      "get": {
+        "summary": "Lister toutes les notes de l'utilisateur",
+        "description": "Récupère la liste complète des notes appartenant à l'utilisateur authentifié par clé API",
+        "tags": ["Notes"],
+        "operationId": "listNotesV2",
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "description": "ID spécifique d'une note à récupérer",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Liste des notes récupérée avec succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { 
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "notes": { 
+                      "type": "array", 
+                      "items": { "$ref": "#/components/schemas/Note" }
+                    }
+                  },
+                  "required": ["success", "notes"]
+                }
+              }
+            }
+          },
+          "401": { 
+            "$ref": "#/components/responses/Unauthorized",
+            "description": "Authentification requise - Clé API manquante/invalide"
+          },
+          "500": { "$ref": "#/components/responses/ServerError" }
+        }
+      }
+    },
+    "/folders": {
+      "get": {
+        "summary": "Lister tous les dossiers de l'utilisateur",
+        "description": "Récupère la liste complète des dossiers appartenant à l'utilisateur authentifié par clé API",
+        "tags": ["Dossiers"],
+        "operationId": "listFoldersV2",
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Liste des dossiers récupérée avec succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { 
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "folders": { 
+                      "type": "array", 
+                      "items": { "$ref": "#/components/schemas/Folder" }
+                    }
+                  },
+                  "required": ["success", "folders"]
+                }
+              }
+            }
+          },
+          "401": { 
+            "$ref": "#/components/responses/Unauthorized",
+            "description": "Authentification requise - Clé API manquante/invalide"
+          },
+          "500": { "$ref": "#/components/responses/ServerError" }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "ApiKeyAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-API-Key",
+        "description": "Clé API pour l'authentification. Cette clé doit être incluse dans l'en-tête X-API-Key de chaque requête."
+      }
+    },
+    "schemas": {
+      "User": {
+        "type": "object",
+        "description": "Profil utilisateur authentifié",
+        "required": ["id", "email", "created_at"],
+        "properties": {
+          "id": { 
+            "type": "string", 
+            "format": "uuid",
+            "description": "Identifiant unique de l'utilisateur"
+          },
+          "email": { 
+            "type": "string",
+            "format": "email",
+            "description": "Adresse email de l'utilisateur",
+            "example": "user@example.com"
+          },
+          "first_name": { 
+            "type": "string",
+            "description": "Prénom de l'utilisateur"
+          },
+          "last_name": { 
+            "type": "string",
+            "description": "Nom de famille de l'utilisateur"
+          },
+          "username": { 
+            "type": "string",
+            "description": "Nom d'utilisateur unique"
+          },
+          "avatar_url": { 
+            "type": "string",
+            "format": "uri",
+            "description": "URL de l'avatar de l'utilisateur"
+          },
+          "is_active": { 
+            "type": "boolean",
+            "description": "Indique si le compte est actif"
+          },
+          "created_at": { 
+            "type": "string", 
+            "format": "date-time",
+            "description": "Date de création du compte"
+          },
+          "updated_at": { 
+            "type": "string", 
+            "format": "date-time",
+            "description": "Date de dernière modification du profil"
+          }
+        }
+      },
+      "Classeur": {
+        "type": "object",
+        "description": "Un classeur est un organisateur de notes et dossiers",
+        "required": ["id", "name", "created_at", "updated_at"],
+        "properties": {
+          "id": { 
+            "type": "string", 
+            "format": "uuid",
+            "description": "Identifiant unique du classeur"
+          },
+          "name": { 
+            "type": "string", 
+            "maxLength": 255,
+            "description": "Nom du classeur",
+            "example": "Mes Notes"
+          },
+          "slug": { 
+            "type": "string",
+            "description": "Slug URL-friendly du classeur",
+            "example": "mes-notes"
+          },
+          "description": { 
+            "type": "string", 
+            "maxLength": 500,
+            "description": "Description optionnelle du classeur"
+          },
+          "emoji": { 
+            "type": "string",
+            "description": "Emoji représentant le classeur",
+            "example": "📝"
+          },
+          "color": { 
+            "type": "string",
+            "description": "Couleur d'accent du classeur",
+            "example": "#2994ff"
+          },
+          "position": { 
+            "type": "integer", 
+            "minimum": 0,
+            "description": "Position d'ordre du classeur"
+          },
+          "created_at": { 
+            "type": "string", 
+            "format": "date-time",
+            "description": "Date de création du classeur"
+          },
+          "updated_at": { 
+            "type": "string", 
+            "format": "date-time",
+            "description": "Date de dernière modification"
+          }
+        }
+      },
+      "Note": {
+        "type": "object",
+        "description": "Une note ou article dans le système",
+        "required": ["id", "source_title", "created_at", "updated_at"],
+        "properties": {
+          "id": { 
+            "type": "string", 
+            "format": "uuid" 
+          },
+          "source_title": { 
+            "type": "string",
+            "description": "Titre de la note"
+          },
+          "slug": { 
+            "type": "string",
+            "description": "Slug URL-friendly de la note"
+          },
+          "folder_id": { 
+            "type": "string", 
+            "format": "uuid",
+            "description": "ID du dossier parent"
+          },
+          "classeur_id": { 
+            "type": "string", 
+            "format": "uuid",
+            "description": "ID du classeur parent"
+          },
+          "markdown_content": { 
+            "type": "string",
+            "description": "Contenu de la note en format Markdown"
+          },
+          "is_published": { 
+            "type": "boolean",
+            "description": "Indique si la note est publiée"
+          },
+          "created_at": { 
+            "type": "string", 
+            "format": "date-time" 
+          },
+          "updated_at": { 
+            "type": "string", 
+            "format": "date-time" 
+          }
+        }
+      },
+      "Folder": {
+        "type": "object",
+        "description": "Un dossier organisateur dans l'arborescence",
+        "required": ["id", "name", "created_at", "updated_at"],
+        "properties": {
+          "id": { 
+            "type": "string", 
+            "format": "uuid" 
+          },
+          "name": { 
+            "type": "string",
+            "description": "Nom du dossier"
+          },
+          "slug": { 
+            "type": "string",
+            "description": "Slug URL-friendly du dossier"
+          },
+          "parent_id": { 
+            "type": "string", 
+            "format": "uuid",
+            "description": "ID du dossier parent (null pour la racine)"
+          },
+          "classeur_id": { 
+            "type": "string", 
+            "format": "uuid",
+            "description": "ID du classeur parent"
+          },
+          "position": { 
+            "type": "integer",
+            "description": "Position d'ordre dans le dossier parent"
+          },
+          "created_at": { 
+            "type": "string", 
+            "format": "date-time" 
+          },
+          "updated_at": { 
+            "type": "string", 
+            "format": "date-time" 
+          }
+        }
+      }
+    },
+    "responses": {
+      "Unauthorized": { 
+        "description": "Authentification requise - Clé API manquante/invalide",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "error": {
+                  "type": "string",
+                  "example": "Authentification requise - Clé API valide nécessaire"
+                },
+                "code": {
+                  "type": "string",
+                  "example": "AUTH_REQUIRED"
+                }
+              }
+            }
+          }
+        }
+      },
+      "Forbidden": { 
+        "description": "Permissions insuffisantes pour cette ressource",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "error": {
+                  "type": "string",
+                  "example": "Permissions insuffisantes"
+                }
+              }
+            }
+          }
+        }
+      },
+      "ServerError": { 
+        "description": "Erreur interne du serveur",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "error": {
+                  "type": "string",
+                  "example": "Erreur lors de la récupération des données"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
