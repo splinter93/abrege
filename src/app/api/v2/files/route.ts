@@ -3,12 +3,6 @@ import { createClient } from '@supabase/supabase-js';
 import { logApi } from '@/utils/logger';
 import { getAuthenticatedUser } from '@/utils/authUtils';
 
-// 🔧 CORRECTIONS APPLIQUÉES:
-// - Authentification simplifiée via getAuthenticatedUser uniquement
-// - Suppression de la double vérification d'authentification
-// - Client Supabase standard sans token manuel
-// - Plus de 401 causés par des conflits d'authentification
-
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
@@ -23,7 +17,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
   logApi.info('🚀 Début récupération liste fichiers v2', context);
 
-  // 🔐 Authentification
+  // 🔐 Authentification simplifiée
   const authResult = await getAuthenticatedUser(request);
   if (!authResult.success) {
     logApi.info(`❌ Authentification échouée: ${authResult.error}`, context);
@@ -34,25 +28,13 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   }
 
   const userId = authResult.userId!;
-  
-  // Récupérer le token d'authentification
-  const authHeader = request.headers.get('Authorization');
-  // 🔧 CORRECTION: getAuthenticatedUser a déjà validé le token
-  
-  if (!) {
-    logApi.info('❌ Token manquant', context);
-    return NextResponse.json(
-      { error: 'Token d\'authentification manquant' },
-      { status: 401, headers: { "Content-Type": "application/json" } }
-    );
-  }
 
   // Récupérer l'ID de fichier spécifique si fourni
   const { searchParams } = new URL(request.url);
   const fileId = searchParams.get('id');
 
-  // Créer un client Supabase authentifié
-  const supabase = createClient(supabaseUrl, supabaseAnonKey); // 🔧 CORRECTION: Client standard, getAuthenticatedUser a déjà validé
+  // 🔧 CORRECTION: Client Supabase standard, getAuthenticatedUser a déjà validé
+  const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
   try {
     let query = supabase

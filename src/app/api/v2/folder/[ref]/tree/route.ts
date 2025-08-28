@@ -4,15 +4,8 @@ import { logApi } from '@/utils/logger';
 import { V2ResourceResolver } from '@/utils/v2ResourceResolver';
 import { getAuthenticatedUser, checkUserPermission } from '@/utils/authUtils';
 
-// 🔧 CORRECTIONS APPLIQUÉES:
-// - Authentification simplifiée via getAuthenticatedUser uniquement
-// - Suppression de la double vérification d'authentification
-// - Client Supabase standard sans token manuel
-// - Plus de 401 causés par des conflits d'authentification
-
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-
 
 export async function GET(
   request: NextRequest,
@@ -30,7 +23,7 @@ export async function GET(
 
   logApi.info(`🚀 Début récupération arborescence dossier v2 ${ref}`, context);
 
-  // 🔐 Authentification
+  // 🔐 Authentification simplifiée
   const authResult = await getAuthenticatedUser(request);
   if (!authResult.success) {
     logApi.info(`❌ Authentification échouée: ${authResult.error}`, context);
@@ -41,21 +34,9 @@ export async function GET(
   }
 
   const userId = authResult.userId!;
-  
-  // Récupérer le token d'authentification
-  const authHeader = request.headers.get('Authorization');
-  // 🔧 CORRECTION: getAuthenticatedUser a déjà validé le token
-  
-  if (!) {
-    logApi.info('❌ Token manquant', context);
-    return NextResponse.json(
-      { error: 'Token d\'authentification manquant' },
-      { status: 401, headers: { "Content-Type": "application/json" } }
-    );
-  }
 
-  // Créer un client Supabase authentifié
-  const supabase = createClient(supabaseUrl, supabaseAnonKey); // 🔧 CORRECTION: Client standard, getAuthenticatedUser a déjà validé
+  // 🔧 CORRECTION: Client Supabase standard, getAuthenticatedUser a déjà validé
+  const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
   // Résoudre la référence (UUID ou slug)
   const resolveResult = await V2ResourceResolver.resolveRef(ref, 'folder', userId, context);
@@ -142,34 +123,21 @@ export async function GET(
           id: folder.id,
           name: folder.name,
           description: folder.description,
-          parentId: folder.parent_id,
-          createdAt: folder.created_at,
-          updatedAt: folder.updated_at
+          parent_id: folder.parent_id,
+          created_at: folder.created_at,
+          updated_at: folder.updated_at
         },
-        subfolders: subfolders?.map(sub => ({
-          id: sub.id,
-          name: sub.name,
-          description: sub.description,
-          parentId: sub.parent_id,
-          createdAt: sub.created_at,
-          updatedAt: sub.updated_at
-        })) || [],
-        notes: notes?.map(note => ({
-          id: note.id,
-          title: note.source_title,
-          description: note.description,
-          headerImage: note.header_image,
-          createdAt: note.created_at,
-          updatedAt: note.updated_at
-        })) || []
+        subfolders: subfolders || [],
+        notes: notes || []
       }
     }, { headers: { "Content-Type": "application/json" } });
 
-  } catch (err: unknown) {
-    const error = err as Error;
-    logApi.info(`❌ Erreur serveur: ${error}`, context);
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
+    logApi.error(`❌ Erreur inattendue: ${errorMessage}`, context);
+    
     return NextResponse.json(
-      { error: 'Erreur serveur' },
+      { error: 'Erreur interne du serveur' },
       { status: 500, headers: { "Content-Type": "application/json" } }
     );
   }

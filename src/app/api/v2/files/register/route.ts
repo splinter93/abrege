@@ -1,29 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { s3Service } from '@/services/s3Service';
+import { createClient } from '@supabase/supabase-js';
 import { getAuthenticatedUser } from '@/utils/authUtils';
 import { V2ResourceResolver } from '@/utils/v2ResourceResolver';
+import { s3Service } from '@/services/s3Service';
 import { logger, LogCategory } from '@/utils/logger';
-import { createClient } from '@supabase/supabase-js';
-
-// 🔧 CORRECTIONS APPLIQUÉES:
-// - Authentification simplifiée via getAuthenticatedUser uniquement
-// - Suppression de la double vérification d'authentification
-// - Client Supabase standard sans token manuel
-// - Plus de 401 causés par des conflits d'authentification
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
 const schema = z.object({
-  key: z.string().min(1),
-  file_name: z.string().min(1),
-  file_type: z.string().min(1),
-  file_size: z.number().int().positive(),
+  key: z.string(),
+  file_name: z.string(),
+  file_type: z.string(),
+  file_size: z.number(),
   scope: z.object({
-    note_ref: z.string().min(1).optional(),
+    note_ref: z.string().optional()
   }).optional(),
-  visibility_mode: z.enum(['inherit_note', 'private', 'public']).default('inherit_note'),
+  visibility_mode: z.enum(['private', 'public']).default('private')
 });
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
@@ -37,14 +31,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   }
   const userId = auth.userId!;
 
-  const authHeader = request.headers.get('Authorization');
-  // 🔧 CORRECTION: getAuthenticatedUser a déjà validé le token
-  if (!) {
-    return NextResponse.json({ error: 'Token manquant' }, { status: 401 });
-  }
-  const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-    global: { headers: { Authorization: `Bearer ${}` } },
-  });
+  // 🔧 CORRECTION: Client Supabase standard, getAuthenticatedUser a déjà validé
+  const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
   const body = await request.json();
   const parsed = schema.safeParse(body);

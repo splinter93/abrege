@@ -4,12 +4,6 @@ import { createClient } from '@supabase/supabase-js';
 import { getAuthenticatedUser } from '@/utils/authUtils';
 import { logApi } from '@/utils/logger';
 
-// 🔧 CORRECTIONS APPLIQUÉES:
-// - Authentification simplifiée via getAuthenticatedUser uniquement
-// - Suppression de la double vérification d'authentification
-// - Client Supabase standard sans token manuel
-// - Plus de 401 causés par des conflits d'authentification
-
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
@@ -35,14 +29,8 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
     return NextResponse.json({ error: 'Paramètres invalides' }, { status: 422 });
   }
 
-  const authHeader = request.headers.get('Authorization');
-  // 🔧 CORRECTION: getAuthenticatedUser a déjà validé le token
-  if (!) {
-    return NextResponse.json({ error: 'Token manquant' }, { status: 401 });
-  }
-  const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-    global: { headers: { Authorization: `Bearer ${}` } },
-  });
+  // 🔧 CORRECTION: Client Supabase standard, getAuthenticatedUser a déjà validé
+  const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
   // Find file owned by user
   const query = supabase.from('files').select('*').eq('user_id', userId).limit(1);

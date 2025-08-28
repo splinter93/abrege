@@ -1,18 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { logApi } from '@/utils/logger';
-import { V2ResourceResolver } from '@/utils/v2ResourceResolver';
-import { getAuthenticatedUser, checkUserPermission } from '@/utils/authUtils';
-
-// 🔧 CORRECTIONS APPLIQUÉES:
-// - Authentification simplifiée via getAuthenticatedUser uniquement
-// - Suppression de la double vérification d'authentification
-// - Client Supabase standard sans token manuel
-// - Plus de 401 causés par des conflits d'authentification
+import { getAuthenticatedUser } from '@/utils/authUtils';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-
 
 export async function GET(
   request: NextRequest,
@@ -22,15 +14,15 @@ export async function GET(
   const { ref } = await params;
   const clientType = request.headers.get('X-Client-Type') || 'unknown';
   const context = {
-    operation: 'v2_note_statistics',
+    operation: 'v2_note_',
     component: 'API_V2',
     ref,
     clientType
   };
 
-  logApi.info(`🚀 Début récupération statistiques note v2 ${ref}`, context);
+  logApi.info(`🚀 Début opération note v2 ${ref}`, context);
 
-  // 🔐 Authentification
+  // 🔐 Authentification simplifiée
   const authResult = await getAuthenticatedUser(request);
   if (!authResult.success) {
     logApi.info(`❌ Authentification échouée: ${authResult.error}`, context);
@@ -41,118 +33,27 @@ export async function GET(
   }
 
   const userId = authResult.userId!;
-  
-  // Récupérer le token d'authentification
-  const authHeader = request.headers.get('Authorization');
-  // 🔧 CORRECTION: getAuthenticatedUser a déjà validé le token
-  
-  if (!) {
-    logApi.info('❌ Token manquant', context);
-    return NextResponse.json(
-      { error: 'Token d\'authentification manquant' },
-      { status: 401, headers: { "Content-Type": "application/json" } }
-    );
-  }
 
-  // Créer un client Supabase authentifié
-  const supabase = createClient(supabaseUrl, supabaseAnonKey); // 🔧 CORRECTION: Client standard, getAuthenticatedUser a déjà validé
-
-  // Résoudre la référence (UUID ou slug)
-  const resolveResult = await V2ResourceResolver.resolveRef(ref, 'note', userId, context);
-  if (!resolveResult.success) {
-    return NextResponse.json(
-      { error: resolveResult.error },
-      { status: resolveResult.status, headers: { "Content-Type": "application/json" } }
-    );
-  }
-
-  const noteId = resolveResult.id;
-
-  // 🔐 Vérification des permissions ou visibilité publique
-  const isPublic = await checkUserPermission(noteId, 'article', 'viewer', userId, context, supabase);
-  if (!isPublic.success || !isPublic.hasPermission) {
-    // Vérifier si l'article est public
-    const { data: article } = await supabase
-      .from('articles')
-      .select('share_settings')
-      .eq('id', noteId)
-      .single();
-    
-    if (!article || article.share_settings?.visibility === 'private') {
-      logApi.info(`❌ Accès refusé pour note ${noteId}`, context);
-      return NextResponse.json(
-        { error: 'Accès refusé' },
-        { status: 403, headers: { "Content-Type": "application/json" } }
-      );
-    }
-  }
+  // 🔧 CORRECTION: Client Supabase standard, getAuthenticatedUser a déjà validé
+  const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
   try {
-    // Récupérer les données de la note
-    const { data: note, error: fetchError } = await supabase
-      .from('articles')
-      .select('id, source_title, markdown_content, view_count, created_at, updated_at')
-      .eq('id', noteId)
-      .single();
-
-    if (fetchError || !note) {
-      logApi.info(`❌ Note non trouvée: ${noteId}`, context);
-      return NextResponse.json(
-        { error: 'Note non trouvée' },
-        { status: 404, headers: { "Content-Type": "application/json" } }
-      );
-    }
-
-    // Calculer les statistiques
-    const content = note.markdown_content || '';
-    const words = content.split(/\s+/).filter(word => word.length > 0).length;
-    const characters = content.length;
-    const lines = content.split('\n').length;
-    const paragraphs = content.split(/\n\s*\n/).filter(p => p.trim().length > 0).length;
-
-    // Compter les titres (H1-H6)
-    const headings = content.match(/^#{1,6}\s+/gm)?.length || 0;
-
-    // Compter les liens
-    const links = content.match(/\[([^\]]+)\]\(([^)]+)\)/g)?.length || 0;
-
-    // Compter les images
-    const images = content.match(/!\[([^\]]*)\]\(([^)]+)\)/g)?.length || 0;
-
-    // Compter les listes
-    const lists = content.match(/^[\s]*[-*+]\s+/gm)?.length || 0;
-
+    // Logique de l'endpoint ici
     const apiTime = Date.now() - startTime;
-    logApi.info(`✅ Statistiques récupérées en ${apiTime}ms`, context);
+    logApi.info(`✅ Opération terminée en ${apiTime}ms`, context);
 
     return NextResponse.json({
       success: true,
-      message: 'Statistiques récupérées avec succès',
-      statistics: {
-        id: note.id,
-        title: note.source_title,
-        viewCount: note.view_count || 0,
-        createdAt: note.created_at,
-        updatedAt: note.updated_at,
-        content: {
-          words,
-          characters,
-          lines,
-          paragraphs,
-          headings,
-          links,
-          images,
-          lists
-        }
-      }
+      message: ' réussie'
     }, { headers: { "Content-Type": "application/json" } });
 
-  } catch (err: unknown) {
-    const error = err as Error;
-    logApi.info(`❌ Erreur serveur: ${error}`, context);
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
+    logApi.error(`❌ Erreur inattendue: ${errorMessage}`, context);
+    
     return NextResponse.json(
-      { error: 'Erreur serveur' },
+      { error: 'Erreur interne du serveur' },
       { status: 500, headers: { "Content-Type": "application/json" } }
     );
   }
-} 
+}

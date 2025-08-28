@@ -19,7 +19,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
   logApi.info('🚀 Début création classeur v2', context);
 
-  // 🔐 Authentification
+  // 🔐 Authentification simplifiée
   const authResult = await getAuthenticatedUser(request);
   if (!authResult.success) {
     logApi.info(`❌ Authentification échouée: ${authResult.error}`, context);
@@ -30,12 +30,51 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   }
 
   const userId = authResult.userId!;
-  
-  // Récupérer le token d'authentification
-  const authHeader = request.headers.get('Authorization');
-  // 🔧 CORRECTION: getAuthenticatedUser a déjà validé le token
-  
-  // 🔧 CORRECTION: getAuthenticatedUser a déjà validé le token, pas besoin de vérification manuelle
+
+  try {
+    const body = await request.json();
+
+    // Validation Zod V2
+    const validationResult = validatePayload(createClasseurV2Schema, body);
+    if (!validationResult.success) {
+      logApi.info('❌ Validation échouée', context);
+      return createValidationErrorResponse(validationResult);
+    }
+
+    const validatedData = validationResult.data;
+
+    // 🔧 CORRECTION: Client Supabase standard, getAuthenticatedUser a déjà validé
+    const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+    // Générer un slug unique si non fourni
+    let slug = validatedData.slug;
+    if (!slug) {
+      slug = await SlugGenerator.generateUniqueSlug(validatedData.title, 'classeurs', userId);
+    }
+
+    // Créer le classeur
+    const { data: classeur, error: createError } = await supabase
+      .from('classeurs')
+      .insert({
+        title: validatedData.title,
+        description: validatedData.description,
+        slug: slug,
+        user_id: userId,
+        color: validatedData.color || '#3B82F6',
+        icon: validatedData.icon || '📚',
+        is_public: validatedData.is_public || false,
+        sort_order: validatedData.sort_order || 0
+      })
+      .select()
+      .single();
+
+    if (createError || !classeur) {
+      logApi.error(`❌ Erreur création classeur: ${createError?.message}`, context);
+      return NextResponse.json(
+        { error: 'Erreur lors de la création du classeur' },
+        { status: 500, headers: { "Content-Type": "application/json" } }
+      );
+    }
 
     const apiTime = Date.now() - startTime;
     logApi.info(`✅ Classeur créé en ${apiTime}ms`, context);
@@ -43,12 +82,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     // 🚀 DÉCLENCHER LE POLLING AUTOMATIQUEMENT
     try {
       const { triggerUnifiedRealtimePolling } = await import('@/services/unifiedRealtimeService');
-
-// 🔧 CORRECTIONS APPLIQUÉES:
-// - Authentification simplifiée via getAuthenticatedUser uniquement
-// - Suppression de la double vérification d'authentification
-// - Client Supabase standard sans token manuel
-// - Plus de 401 causés par des conflits d'authentification
       await triggerUnifiedRealtimePolling('classeurs', 'CREATE');
       logApi.info('✅ Polling déclenché pour classeurs', context);
     } catch (pollingError) {
@@ -58,7 +91,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json({
       success: true,
       message: 'Classeur créé avec succès',
-      classeur: result.classeur
+      classeur: classeur
     });
 
   } catch (err: unknown) {
