@@ -29,30 +29,12 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
   const userId = authResult.userId!;
   
-  // Récupérer le token d'authentification
-  const authHeader = request.headers.get('Authorization');
-  const userToken = authHeader?.substring(7);
-  
-  if (!userToken) {
-    logApi.info('❌ Token manquant', context);
-    return NextResponse.json(
-      { error: 'Token d\'authentification manquant' },
-      { status: 401, headers: { "Content-Type": "application/json" } }
-    );
-  }
-
   // Récupérer l'ID de dossier spécifique si fourni
   const { searchParams } = new URL(request.url);
   const folderId = searchParams.get('id');
 
-  // Créer un client Supabase authentifié
-  const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-    global: {
-      headers: {
-        Authorization: `Bearer ${userToken}`
-      }
-    }
-  });
+  // Créer un client Supabase standard (l'authentification est déjà validée)
+  const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
   try {
     let query = supabase

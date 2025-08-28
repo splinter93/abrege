@@ -10,12 +10,12 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   const startTime = Date.now();
   const clientType = request.headers.get('X-Client-Type') || 'unknown';
   const context = {
-    operation: 'v2_notes_list',
+    operation: 'v2_me_profile',
     component: 'API_V2',
     clientType
   };
 
-  logApi.info('🚀 Début récupération liste notes v2', context);
+  logApi.info('🚀 Début récupération profil utilisateur v2', context);
 
   // 🔐 Authentification
   const authResult = await getAuthenticatedUser(request);
@@ -29,41 +29,49 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
   const userId = authResult.userId!;
   
-  // Récupérer l'ID de note spécifique si fourni
-  const { searchParams } = new URL(request.url);
-  const noteId = searchParams.get('id');
-
   // Créer un client Supabase standard (l'authentification est déjà validée)
   const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
   try {
-    let query = supabase
-      .from('articles')
-      .select('id, source_title, slug, folder_id, classeur_id, created_at, updated_at, is_published, markdown_content')
-      .eq('user_id', userId);
-
-    // Si un ID spécifique est demandé, filtrer par cet ID
-    if (noteId) {
-      query = query.eq('id', noteId);
-    }
-
-    const { data: notes, error: fetchError } = await query
-      .order('updated_at', { ascending: false });
+    // Récupérer le profil utilisateur
+    const { data: userProfile, error: fetchError } = await supabase
+      .from('users')
+      .select('id, email, username, first_name, last_name, avatar_url, is_active, created_at, updated_at')
+      .eq('id', userId)
+      .single();
 
     if (fetchError) {
-      logApi.info(`❌ Erreur récupération notes: ${fetchError.message}`, context);
+      logApi.info(`❌ Erreur récupération profil: ${fetchError.message}`, context);
       return NextResponse.json(
-        { error: 'Erreur lors de la récupération des notes' },
+        { error: 'Erreur lors de la récupération du profil utilisateur' },
         { status: 500 }
       );
     }
 
+    if (!userProfile) {
+      logApi.info('❌ Profil utilisateur non trouvé', context);
+      return NextResponse.json(
+        { error: 'Profil utilisateur non trouvé' },
+        { status: 404 }
+      );
+    }
+
     const apiTime = Date.now() - startTime;
-    logApi.info(`✅ ${notes?.length || 0} notes récupérées en ${apiTime}ms`, context);
+    logApi.info(`✅ Profil utilisateur récupéré en ${apiTime}ms`, context);
 
     return NextResponse.json({
       success: true,
-      notes: notes || []
+      user: {
+        id: userProfile.id,
+        email: userProfile.email,
+        username: userProfile.username,
+        first_name: userProfile.first_name,
+        last_name: userProfile.last_name,
+        avatar_url: userProfile.avatar_url,
+        is_active: userProfile.is_active,
+        created_at: userProfile.created_at,
+        updated_at: userProfile.updated_at
+      }
     });
 
   } catch (err: unknown) {
@@ -74,4 +82,4 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       { status: 500, headers: { "Content-Type": "application/json" } }
     );
   }
-} 
+}

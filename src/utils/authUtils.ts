@@ -2,6 +2,7 @@ import { createClient } from '@supabase/supabase-js';
 import { NextRequest } from 'next/server';
 import { logApi } from './logger';
 import { oauthService } from '@/services/oauthService'; // ✅ Import statique corrigé
+import { ApiKeyService } from '@/services/apiKeyService'; // ✅ Import du nouveau service
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -18,7 +19,7 @@ export interface AuthResult {
   error?: string;
   status?: number;
   scopes?: string[];
-  authType?: 'oauth' | 'jwt';
+  authType?: 'oauth' | 'jwt' | 'api_key';
 }
 
 export interface PermissionResult {
@@ -31,89 +32,105 @@ export interface PermissionResult {
 
 /**
  * Récupère l'utilisateur authentifié depuis la requête
- * Supporte à la fois les tokens OAuth et les JWT Supabase
+ * Supporte à la fois les tokens OAuth, les JWT Supabase et les API Keys
  */
 export async function getAuthenticatedUser(request: NextRequest): Promise<AuthResult> {
   try {
     console.log('🚨 [AUTH] ===== DÉBUT GETAUTHENTICATEDUSER =====');
     
-    // Récupérer le token d'authentification depuis les headers
-    const authHeader = request.headers.get('Authorization');
-    console.log('🚨 [AUTH] Header Authorization reçu:', authHeader ? 'PRÉSENT' : 'ABSENT');
-    
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      console.log('🚨 [AUTH] ❌ Header Authorization manquant ou invalide');
-      return {
-        success: false,
-        error: 'Token d\'authentification manquant',
-        status: 401
-      };
-    }
-
-    const token = authHeader.substring(7);
-    console.log('🚨 [AUTH] Token extrait:', token ? 'PRÉSENT' : 'ABSENT');
-    console.log('🚨 [AUTH] Longueur token:', token.length);
-    
-    // ✅ ESSAYER D'ABORD LE TOKEN OAUTH
-    try {
-      console.log('🚨 [AUTH] Test authentification OAuth...');
-      const oauthUser = await oauthService.validateAccessToken(token);
-      
-      if (oauthUser) {
-        console.log('🚨 [AUTH] ✅ Utilisateur authentifié via OAuth:', oauthUser.user_id);
-        console.log('🚨 [AUTH] Scopes OAuth:', oauthUser.scopes);
-        console.log('🚨 [AUTH] ===== FIN GETAUTHENTICATEDUSER OAUTH SUCCÈS =====');
-        
-        return {
-          success: true,
-          userId: oauthUser.user_id,
-          scopes: oauthUser.scopes,
-          authType: 'oauth'
-        };
+    // ✅ ESSAYER D'ABORD L'API KEY
+    const apiKey = request.headers.get('X-API-Key');
+    if (apiKey) {
+      console.log('🚨 [AUTH] API Key détectée, validation...');
+      try {
+        const apiKeyUser = await validateApiKey(apiKey);
+        if (apiKeyUser) {
+          console.log('🚨 [AUTH] ✅ Utilisateur authentifié via API Key:', apiKeyUser.user_id);
+          console.log('🚨 [AUTH] ===== FIN GETAUTHENTICATEDUSER API KEY SUCCÈS =====');
+          
+          return {
+            success: true,
+            userId: apiKeyUser.user_id,
+            scopes: apiKeyUser.scopes || ['notes:read', 'classeurs:read', 'dossiers:read'],
+            authType: 'api_key'
+          };
+        }
+      } catch (apiKeyError) {
+        console.log('🚨 [AUTH] ❌ API Key invalide, essai OAuth...');
       }
-    } catch (oauthError) {
-      console.log('🚨 [AUTH] ❌ Token OAuth invalide, essai JWT Supabase...');
     }
     
-    // ✅ ESSAYER LE JWT SUPABASE (fallback)
-    try {
-      console.log('🚨 [AUTH] Test authentification JWT Supabase...');
-      const supabaseWithToken = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-        {
-          global: {
-            headers: {
-              Authorization: `Bearer ${token}`
+    // ✅ ESSAYER LE TOKEN OAUTH
+    const authHeader = request.headers.get('Authorization');
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      console.log('🚨 [AUTH] Header Authorization reçu:', 'PRÉSENT');
+      
+      const token = authHeader.substring(7);
+      console.log('🚨 [AUTH] Token extrait:', token ? 'PRÉSENT' : 'ABSENT');
+      console.log('🚨 [AUTH] Longueur token:', token.length);
+      
+      try {
+        console.log('🚨 [AUTH] Test authentification OAuth...');
+        const oauthUser = await oauthService.validateAccessToken(token);
+        
+        if (oauthUser) {
+          console.log('🚨 [AUTH] ✅ Utilisateur authentifié via OAuth:', oauthUser.user_id);
+          console.log('🚨 [AUTH] Scopes OAuth:', oauthUser.scopes);
+          console.log('🚨 [AUTH] ===== FIN GETAUTHENTICATEDUSER OAUTH SUCCÈS =====');
+          
+          return {
+            success: true,
+            userId: oauthUser.user_id,
+            scopes: oauthUser.scopes,
+            authType: 'oauth'
+          };
+        }
+      } catch (oauthError) {
+        console.log('🚨 [AUTH] ❌ Token OAuth invalide, essai JWT Supabase...');
+      }
+      
+      // ✅ ESSAYER LE JWT SUPABASE (fallback)
+      try {
+        console.log('🚨 [AUTH] Test authentification JWT Supabase...');
+        const supabaseWithToken = createClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+          {
+            global: {
+              headers: {
+                Authorization: `Bearer ${token}`
+              }
             }
           }
+        );
+        
+        const { data: { user }, error } = await supabaseWithToken.auth.getUser();
+        
+        if (error || !user) {
+          console.log('🚨 [AUTH] ❌ JWT Supabase invalide');
+          throw new Error('JWT invalide');
         }
-      );
-      
-      const { data: { user }, error } = await supabaseWithToken.auth.getUser();
-      
-      if (error || !user) {
-        console.log('🚨 [AUTH] ❌ JWT Supabase invalide');
-        throw new Error('JWT invalide');
+
+        console.log('🚨 [AUTH] ✅ Utilisateur authentifié via JWT Supabase:', user.id);
+        console.log('🚨 [AUTH] ===== FIN GETAUTHENTICATEDUSER JWT SUCCÈS =====');
+
+        return {
+          success: true,
+          userId: user.id,
+          authType: 'jwt'
+        };
+      } catch (jwtError) {
+        console.log('🚨 [AUTH] ❌ JWT Supabase échoué aussi');
       }
-
-      console.log('🚨 [AUTH] ✅ Utilisateur authentifié via JWT Supabase:', user.id);
-      console.log('🚨 [AUTH] ===== FIN GETAUTHENTICATEDUSER JWT SUCCÈS =====');
-
-      return {
-        success: true,
-        userId: user.id,
-        authType: 'jwt'
-      };
-    } catch (jwtError) {
-      console.log('🚨 [AUTH] ❌ JWT Supabase échoué aussi');
+    } else {
+      console.log('🚨 [AUTH] Header Authorization reçu:', 'ABSENT');
     }
     
     // ❌ AUCUNE AUTHENTIFICATION VALIDE
     console.log('🚨 [AUTH] ❌ Aucune méthode d\'authentification valide');
     return {
       success: false,
-      error: 'Token d\'authentification invalide (OAuth et JWT)',
+      error: 'Authentification requise - API Key, OAuth ou JWT valide nécessaire',
       status: 401
     };
 
@@ -416,5 +433,37 @@ export async function isArticlePublic(articleId: string): Promise<boolean> {
     return article?.visibility === 'public';
   } catch (error) {
     return false;
+  }
+} 
+
+/**
+ * Valide une API Key et retourne les informations utilisateur associées
+ */
+async function validateApiKey(apiKey: string): Promise<{ user_id: string; scopes?: string[] } | null> {
+  try {
+    console.log('🚨 [AUTH] Validation API Key via service...');
+    console.log('🚨 [AUTH] API Key reçue (longueur):', apiKey ? apiKey.length : 'NULL');
+    console.log('🚨 [AUTH] API Key début:', apiKey ? apiKey.substring(0, 10) + '...' : 'NULL');
+    
+    // Utiliser le nouveau service pour valider l'API Key
+    const apiKeyInfo = await ApiKeyService.validateApiKey(apiKey);
+    
+    if (!apiKeyInfo) {
+      console.log('🚨 [AUTH] API Key invalide via service');
+      return null;
+    }
+    
+    console.log('🚨 [AUTH] ✅ API Key valide via service pour utilisateur:', apiKeyInfo.user_id);
+    console.log('🚨 [AUTH] Scopes API Key:', apiKeyInfo.scopes);
+    
+    return {
+      user_id: apiKeyInfo.user_id,
+      scopes: apiKeyInfo.scopes
+    };
+    
+  } catch (error) {
+    console.log('🚨 [AUTH] ❌ Erreur validation API Key via service:', error);
+    console.log('🚨 [AUTH] Stack trace:', error.stack);
+    return null;
   }
 } 
