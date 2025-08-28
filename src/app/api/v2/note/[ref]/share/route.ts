@@ -146,6 +146,9 @@ export async function PATCH(
 
     const validatedData = validationResult.data;
 
+    // 🔧 CORRECTION: Créer le client Supabase pour cette fonction
+    const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
     // Résoudre la référence de la note
     const resolveResult = await V2ResourceResolver.resolveRef(ref, 'note', userId, context);
     if (!resolveResult.success) {
