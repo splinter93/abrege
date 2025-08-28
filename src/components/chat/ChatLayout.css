@@ -37,7 +37,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0 var(--chat-spacing-lg);
+  padding: 0 var(--chat-spacing-xl);
   height: var(--chat-height-header);
   background: var(--chat-bg-primary);
   border-bottom: 1px solid var(--chat-border-primary);
@@ -83,7 +83,8 @@
 .chat-logo {
   display: flex;
   align-items: center;
-  margin-right: var(--chat-spacing-lg);
+  margin-right: var(--chat-spacing-md);
+  margin-left: calc(-1 * var(--chat-spacing-sm));
 }
 
 .chat-logo-link {
@@ -98,7 +99,7 @@
 }
 
 .chat-logo-img {
-  height: 20px;
+  height: 24px;
   width: auto;
   object-fit: contain;
 }
