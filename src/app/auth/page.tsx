@@ -34,6 +34,7 @@ function AuthPageContent() {
   // Empêche les doubles callbacks auto
   const didRunExternalCallbackRef = useRef(false);
 
+  // ✅ CORRECTION : Vérification de session avec gestion du flux OAuth externe
   useEffect(() => {
     (async () => {
       try {
@@ -43,13 +44,20 @@ function AuthPageContent() {
 
           // Flux externe (ChatGPT) → générer le code et rediriger automatiquement
           if (isExternalOAuth && clientId && redirectUri && !didRunExternalCallbackRef.current) {
-            didRunExternalCallbackRef.current = true; // lock anti double-run
-            setSessionStatus('Session trouvée, authentification OAuth en cours...');
-            await handleExternalOAuthCallback(session);
-            return;
+            // ✅ CORRECTION : Vérifier d'abord si on a des paramètres OAuth stockés
+            const oauthParams = sessionStorage.getItem('oauth_external_params');
+            if (oauthParams) {
+              console.log('🔍 [Auth] Paramètres OAuth externes trouvés, lancement du callback');
+              didRunExternalCallbackRef.current = true; // lock anti double-run
+              setSessionStatus('Session trouvée, authentification OAuth en cours...');
+              await handleExternalOAuthCallback(session);
+              return;
+            } else {
+              console.log('🔍 [Auth] Pas de paramètres OAuth externes, flux normal');
+            }
           }
 
-          // Flux normal → entrer dans l’app
+          // Flux normal → entrer dans l'app
           setSessionStatus('Session trouvée, redirection…');
           router.push('/');
         } else {
@@ -62,7 +70,7 @@ function AuthPageContent() {
         setCurrentSession(null);
       }
     })();
-    // Recalc si les params changent (nouvelle tentative d’OAuth externe)
+    // Recalc si les params changent (nouvelle tentative d'OAuth externe)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams, isExternalOAuth, clientId, redirectUri]);
 
