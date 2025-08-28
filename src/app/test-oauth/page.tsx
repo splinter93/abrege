@@ -18,7 +18,7 @@ export default function TestOAuthPage() {
     // Simuler les paramètres ChatGPT
     const oauthParams = {
       client_id: 'scrivia-custom-gpt',
-      redirect_uri: 'https://chat.openai.com/aip/g-011f24575c8d3b9d5d69e124bafa1364ae3badf9/oauth/callback',
+      redirect_uri: 'https://chat.openai.com/aip/g-369c00bd47b6f501275b414d19d5244ac411097b/oauth/callback',
       scope: 'notes:read dossiers:read',
       state: 'test-state-123',
       response_type: 'code'
@@ -69,6 +69,61 @@ export default function TestOAuthPage() {
     }
   };
 
+
+
+  const testCreateCodeWithRealAuth = async () => {
+    addResult('🧪 Test de l\'API create-code avec authentification réelle...');
+    
+    try {
+      // Récupérer la session Supabase actuelle
+      const { createClient } = await import('@supabase/supabase-js');
+      const supabase = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+      );
+      
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError || !session) {
+        addResult('❌ Pas de session Supabase active');
+        addResult('💡 Connectez-vous d\'abord via OAuth');
+        return;
+      }
+      
+      addResult(`✅ Session trouvée pour: ${session.user.email}`);
+      addResult(`🔑 Token présent: ${session.access_token ? 'OUI' : 'NON'}`);
+      
+      // Tester l'API avec le vrai token
+      const response = await fetch('/api/auth/create-code', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({
+          clientId: 'scrivia-custom-gpt',
+          userId: session.user.id,
+          redirectUri: 'https://chat.openai.com/aip/g-369c00bd47b6f501275b414d19d5244ac411097b/oauth/callback',
+          scopes: ['notes:read', 'dossiers:read'],
+          state: 'test-state-real'
+        })
+      });
+
+      addResult(`📡 Réponse API: ${response.status} ${response.statusText}`);
+      
+      if (response.ok) {
+        const data = await response.json();
+        addResult(`✅ Code OAuth créé: ${data.code ? 'OUI' : 'NON'}`);
+        addResult(`🔑 Code: ${data.code || 'AUCUN'}`);
+      } else {
+        const error = await response.text();
+        addResult(`❌ Erreur API: ${error}`);
+      }
+    } catch (error) {
+      addResult(`💥 Exception: ${error}`);
+    }
+  };
+
   const clearResults = () => {
     setTestResults([]);
   };
@@ -91,6 +146,10 @@ export default function TestOAuthPage() {
             
             <button onClick={testCreateCodeAPI} className="auth-button">
               📡 Tester l'API create-code
+            </button>
+            
+            <button onClick={testCreateCodeWithRealAuth} className="auth-button">
+              🔑 Tester l'API create-code avec authentification réelle
             </button>
             
             <button onClick={clearResults} className="auth-button">
@@ -136,7 +195,7 @@ export default function TestOAuthPage() {
           }}>
             <h3 style={{ margin: '0 0 1rem 0', color: '#fff' }}>ℹ️ Informations de debug:</h3>
             <p style={{ margin: '0.5rem 0', color: 'rgba(255,255,255,0.8)' }}><strong>Client OAuth:</strong> scrivia-custom-gpt</p>
-            <p style={{ margin: '0.5rem 0', color: 'rgba(255,255,255,0.8)' }}><strong>Redirect URI:</strong> https://chat.openai.com/aip/g-011f24575c8d3b9d5d69e124bafa1364ae3badf9/oauth/callback</p>
+            <p style={{ margin: '0.5rem 0', color: 'rgba(255,255,255,0.8)' }}><strong>Redirect URI:</strong> https://chat.openai.com/aip/g-369c00bd47b6f501275b414d19d5244ac411097b/oauth/callback</p>
             <p style={{ margin: '0.5rem 0', color: 'rgba(255,255,255,0.8)' }}><strong>Scopes:</strong> notes:read, dossiers:read</p>
             <p style={{ margin: '0.5rem 0', color: 'rgba(255,255,255,0.8)' }}><strong>URL de test:</strong> /auth?client_id=scrivia-custom-gpt&redirect_uri=...</p>
           </div>
