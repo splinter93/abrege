@@ -119,10 +119,14 @@ function AuthPageContent() {
    */
   const handleExternalOAuthCallback = async (session: any) => {
     try {
+      console.log('🔍 [OAuth] Début handleExternalOAuthCallback avec session:', session.user.email);
+      
       if (!clientId || !redirectUri) {
-        console.error('Paramètres manquants:', { clientId, redirectUri });
+        console.error('❌ [OAuth] Paramètres manquants:', { clientId, redirectUri });
         return;
       }
+
+      console.log('🔍 [OAuth] Paramètres OAuth externes:', { clientId, redirectUri, scope, state });
 
       // Scopes autorisés (filtrage souple)
       const allowedScopes = [
@@ -134,12 +138,15 @@ function AuthPageContent() {
       const validScopes = requested.filter(s => allowedScopes.includes(s));
       const finalScopes = validScopes.length > 0 ? validScopes : ['notes:read'];
 
-      // Demande de code d’autorisation Scrivia
+      console.log('🔍 [OAuth] Scopes traités:', { requested, validScopes, finalScopes });
+
+      // Demande de code d'autorisation Scrivia
+      console.log('🔍 [OAuth] Appel API create-code...');
       const res = await fetch('/api/auth/create-code', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          // Bearer = session Scrivia (Supabase), côté backend on identifie l’utilisateur
+          // Bearer = session Scrivia (Supabase), côté backend on identifie l'utilisateur
           'Authorization': `Bearer ${session.access_token}`
         },
         body: JSON.stringify({
@@ -151,23 +158,31 @@ function AuthPageContent() {
         })
       });
 
+      console.log('🔍 [OAuth] Réponse API create-code:', res.status, res.statusText);
+
       if (!res.ok) {
         const text = await res.text();
-        console.error('Erreur /api/auth/create-code:', res.status, text);
+        console.error('❌ [OAuth] Erreur /api/auth/create-code:', res.status, text);
         throw new Error(`create-code failed ${res.status}`);
       }
 
       const { code } = await res.json();
+      console.log('🔍 [OAuth] Code OAuth reçu:', code ? 'PRÉSENT' : 'ABSENT');
 
       // Redirection vers le callback ChatGPT
       const callbackUrl = new URL(redirectUri);
       callbackUrl.searchParams.set('code', code);
       if (state) callbackUrl.searchParams.set('state', state);
 
-      console.log('🔁 Redirection finale →', callbackUrl.toString());
-      window.location.href = callbackUrl.toString();
+      console.log('🔁 [OAuth] Redirection finale →', callbackUrl.toString());
+      console.log('🔁 [OAuth] Redirection vers ChatGPT dans 2 secondes...');
+      
+      // ✅ CORRECTION : Délai pour laisser l'UI se mettre à jour
+      setTimeout(() => {
+        window.location.href = callbackUrl.toString();
+      }, 2000);
     } catch (e) {
-      console.error('Erreur callback OAuth externe:', e);
+      console.error('❌ [OAuth] Erreur callback OAuth externe:', e);
       setError('Erreur lors de la redirection OAuth');
       setSessionStatus('Erreur OAuth externe');
       // Permettre un retry manuel si besoin

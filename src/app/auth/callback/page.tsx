@@ -143,53 +143,26 @@ function AuthCallbackContent() {
           }
         }
 
-        // 2) Flux ChatGPT personnalisé
-        const isChatGPTFlow =
-          typeof window !== 'undefined'
-            ? window.sessionStorage.getItem('chatgpt_oauth_flow') === 'true'
-            : false;
+        // 2) Flux OAuth externe (ChatGPT) - ✅ CORRECTION : Utiliser la même clé que page.tsx
+        const oauthExternalParamsRaw = typeof window !== 'undefined'
+          ? window.sessionStorage.getItem('oauth_external_params')
+          : null;
 
-        console.log('🔍 [Callback] Vérification flux ChatGPT:', {
-          isChatGPTFlow,
+        console.log('🔍 [Callback] Vérification flux OAuth externe:', {
+          oauthExternalParams: oauthExternalParamsRaw ? 'PRÉSENT' : 'ABSENT',
           sessionStorage: typeof window !== 'undefined' ? {
-            chatgpt_oauth_flow: window.sessionStorage.getItem('chatgpt_oauth_flow'),
-            chatgpt_oauth_params: window.sessionStorage.getItem('chatgpt_oauth_params')
+            oauth_external_params: window.sessionStorage.getItem('oauth_external_params')
           } : 'N/A'
         });
 
-        if (isChatGPTFlow) {
-          const raw = window.sessionStorage.getItem('chatgpt_oauth_params');
+        if (oauthExternalParamsRaw) {
+          const raw = oauthExternalParamsRaw;
           
           console.log('🔍 [Callback] Paramètres OAuth ChatGPT récupérés:', raw);
 
           if (!raw) {
-            console.error('❌ Paramètres OAuth ChatGPT manquants');
-            // ✅ CORRECTION : Rediriger vers la page d'auth avec les paramètres OAuth
-            const searchParams = new URLSearchParams(window.location.search);
-            const oauthParams = {
-              client_id: searchParams.get('oauth_client_id'),
-              redirect_uri: searchParams.get('oauth_redirect_uri'),
-              scope: searchParams.get('oauth_scope'),
-              state: searchParams.get('state')?.replace('chatgpt_', ''),
-              response_type: searchParams.get('oauth_response_type')
-            };
-            
-            if (oauthParams.client_id && oauthParams.redirect_uri) {
-              console.log('🔍 [Callback] Tentative de récupération depuis URL:', oauthParams);
-              // ✅ CORRECTION : Créer un objet avec des types stricts
-              const filteredParams: Record<string, string> = {};
-              if (oauthParams.client_id) filteredParams.client_id = oauthParams.client_id;
-              if (oauthParams.redirect_uri) filteredParams.redirect_uri = oauthParams.redirect_uri;
-              if (oauthParams.scope) filteredParams.scope = oauthParams.scope;
-              if (oauthParams.state) filteredParams.state = oauthParams.state;
-              if (oauthParams.response_type) filteredParams.response_type = oauthParams.response_type;
-              
-              const authUrl = `/auth?${new URLSearchParams(filteredParams).toString()}`;
-              router.push(authUrl);
-              return;
-            }
-            
-            console.error('❌ Aucun paramètre OAuth trouvé, redirection vers home');
+            console.error('❌ Paramètres OAuth externes manquants');
+            console.error('❌ Redirection vers home car pas de paramètres OAuth');
             router.push('/');
             return;
           }
@@ -205,8 +178,7 @@ function AuthCallbackContent() {
           }
           
           // ✅ CORRECTION : Nettoyage APRÈS avoir utilisé les paramètres
-          window.sessionStorage.removeItem('chatgpt_oauth_flow');
-          window.sessionStorage.removeItem('chatgpt_oauth_params');
+          window.sessionStorage.removeItem('oauth_external_params');
 
           if (!isAllowedRedirect(params.redirect_uri)) {
             console.error('❌ redirect_uri non autorisée:', params.redirect_uri);

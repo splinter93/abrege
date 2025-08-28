@@ -109,6 +109,8 @@ export class OAuthService {
    */
   async getClientById(clientId: string): Promise<OAuthClient | null> {
     try {
+      console.log('🔍 [OAuthService] Récupération client par ID:', clientId);
+      
       const { data: client, error } = await this.supabase
         .from('oauth_clients')
         .select('*')
@@ -117,12 +119,21 @@ export class OAuthService {
         .single();
 
       if (error || !client) {
+        console.error('❌ [OAuthService] Client non trouvé ou inactif:', { error, client });
         return null;
       }
 
+      console.log('🔍 [OAuthService] Client trouvé:', { 
+        id: client.id, 
+        name: client.name, 
+        is_active: client.is_active,
+        scopes_count: client.scopes?.length || 0,
+        redirect_uris_count: client.redirect_uris?.length || 0
+      });
+
       return client;
     } catch (error) {
-      console.error('Erreur récupération client:', error);
+      console.error('❌ [OAuthService] Erreur récupération client:', error);
       return null;
     }
   }
@@ -132,6 +143,8 @@ export class OAuthService {
    */
   async validateRedirectUri(clientId: string, redirectUri: string): Promise<boolean> {
     try {
+      console.log('🔍 [OAuthService] Validation redirect_uri:', { clientId, redirectUri });
+      
       const { data: client, error } = await this.supabase
         .from('oauth_clients')
         .select('redirect_uris')
@@ -140,22 +153,31 @@ export class OAuthService {
         .single();
 
       if (error || !client) {
+        console.error('❌ [OAuthService] Client non trouvé pour validation redirect_uri:', { error, client });
         return false;
       }
 
-      return client.redirect_uris.some(uri => {
-        // Si l'URI contient un wildcard (*), on le traite comme un pattern
+      console.log('🔍 [OAuthService] URIs autorisées:', client.redirect_uris);
+      
+      const isValid = client.redirect_uris.some(uri => {
+        // Support des wildcards
         if (uri.includes('*')) {
-          // Convertir le pattern en regex
           const pattern = uri.replace(/\*/g, '.*');
           const regex = new RegExp(`^${pattern}$`);
-          return regex.test(redirectUri);
+          const matches = regex.test(redirectUri);
+          console.log(`🔍 [OAuthService] Pattern ${uri} -> ${pattern}: ${matches ? '✅' : '❌'}`);
+          return matches;
         }
         // Sinon, validation exacte ou startsWith
-        return redirectUri.startsWith(uri);
+        const matches = redirectUri.startsWith(uri);
+        console.log(`🔍 [OAuthService] URI ${uri}: ${matches ? '✅' : '❌'}`);
+        return matches;
       });
+
+      console.log('🔍 [OAuthService] Résultat validation redirect_uri:', isValid);
+      return isValid;
     } catch (error) {
-      console.error('Erreur validation redirect_uri:', error);
+      console.error('❌ [OAuthService] Erreur validation redirect_uri:', error);
       return false;
     }
   }
@@ -165,6 +187,8 @@ export class OAuthService {
    */
   async validateScopes(clientId: string, requestedScopes: string[]): Promise<boolean> {
     try {
+      console.log('🔍 [OAuthService] Validation des scopes:', { clientId, requestedScopes });
+      
       const { data: client, error } = await this.supabase
         .from('oauth_clients')
         .select('scopes')
@@ -173,12 +197,22 @@ export class OAuthService {
         .single();
 
       if (error || !client) {
+        console.error('❌ [OAuthService] Client non trouvé ou inactif:', { error, client });
         return false;
       }
 
-      return requestedScopes.every(scope => client.scopes.includes(scope));
+      console.log('🔍 [OAuthService] Client trouvé avec scopes:', client.scopes);
+      
+      const allScopesValid = requestedScopes.every(scope => {
+        const isValid = client.scopes.includes(scope);
+        console.log(`🔍 [OAuthService] Scope ${scope}: ${isValid ? '✅' : '❌'}`);
+        return isValid;
+      });
+
+      console.log('🔍 [OAuthService] Résultat validation scopes:', allScopesValid);
+      return allScopesValid;
     } catch (error) {
-      console.error('Erreur validation scopes:', error);
+      console.error('❌ [OAuthService] Erreur validation scopes:', error);
       return false;
     }
   }
