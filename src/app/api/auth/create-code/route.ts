@@ -14,20 +14,40 @@ const createCodeRequestSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
-    console.log('🔍 [Create-Code] Début de la requête POST');
+    console.log('🔍 [Create-Code] ===== DÉBUT REQUÊTE POST =====');
     
-    const body = await request.json();
-    console.log('🔍 [Create-Code] Body reçu:', { 
-      clientId: body.clientId, 
-      userId: body.userId, 
-      redirectUri: body.redirectUri,
-      scopes: body.scopes 
+    // ✅ LOGS COMPLETS : Capturer tous les headers et détails de la requête
+    console.log('🔍 [Create-Code] URL complète:', request.url);
+    console.log('🔍 [Create-Code] Méthode:', request.method);
+    console.log('🔍 [Create-Code] Headers reçus:');
+    
+    // Lister tous les headers
+    const allHeaders: Record<string, string> = {};
+    request.headers.forEach((value, key) => {
+      allHeaders[key] = value;
+      console.log(`   ${key}: ${value}`);
     });
+    
+    console.log('🔍 [Create-Code] Headers complets:', JSON.stringify(allHeaders, null, 2));
+    
+    // Vérifier spécifiquement l'Authorization
+    const authHeader = request.headers.get('authorization');
+    console.log('🔍 [Create-Code] Header Authorization:', authHeader ? `"${authHeader}"` : 'ABSENT');
+    
+    if (authHeader) {
+      console.log('🔍 [Create-Code] Type Authorization:', authHeader.startsWith('Bearer ') ? 'Bearer Token' : 'Autre format');
+      console.log('🔍 [Create-Code] Longueur token:', authHeader.replace('Bearer ', '').length);
+    }
+    
+    // Capturer le body complet
+    const body = await request.json();
+    console.log('🔍 [Create-Code] Body complet reçu:', JSON.stringify(body, null, 2));
     
     const createCodeRequest = createCodeRequestSchema.parse(body);
     console.log('🔍 [Create-Code] Validation Zod réussie');
     
     // ✅ TOUJOURS exiger l'authentification, même pour ChatGPT
+    console.log('🔍 [Create-Code] Tentative d\'authentification...');
     const user = await getCurrentUser(request);
     console.log('🔍 [Create-Code] Utilisateur authentifié:', { id: user.id, email: user.email });
     
@@ -100,10 +120,12 @@ export async function POST(request: NextRequest) {
     );
     
     console.log('✅ [Create-Code] Code OAuth créé avec succès:', { codeLength: code.length });
+    console.log('🔍 [Create-Code] ===== FIN REQUÊTE POST =====');
 
     return NextResponse.json({ code });
 
   } catch (error) {
+    console.error('❌ [Create-Code] ===== ERREUR REQUÊTE POST =====');
     console.error('❌ [Create-Code] Erreur création code OAuth:', error);
     
     if (error instanceof z.ZodError) {
