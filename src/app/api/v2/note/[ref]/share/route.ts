@@ -7,6 +7,7 @@ import { z } from 'zod';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
 // Schéma de validation pour la mise à jour des paramètres de partage
 const shareSettingsUpdateSchema = z.object({
@@ -45,8 +46,8 @@ export async function GET(
 
   const userId = authResult.userId!;
 
-  // 🔧 CORRECTION: Client Supabase standard, getAuthenticatedUser a déjà validé
-  const supabase = createClient(supabaseUrl, supabaseAnonKey);
+  // 🔧 CORRECTION: Utiliser le même client Supabase que V2ResourceResolver (service role)
+  const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
   try {
     // Résoudre la référence de la note
@@ -146,8 +147,8 @@ export async function PATCH(
 
     const validatedData = validationResult.data;
 
-    // 🔧 CORRECTION: Créer le client Supabase pour cette fonction
-    const supabase = createClient(supabaseUrl, supabaseAnonKey);
+    // 🔧 CORRECTION: Utiliser le même client Supabase que V2ResourceResolver (service role)
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // Résoudre la référence de la note
     const resolveResult = await V2ResourceResolver.resolveRef(ref, 'note', userId, context, undefined);
