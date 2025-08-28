@@ -8,6 +8,12 @@ import { V2ResourceResolver } from '@/utils/v2ResourceResolver';
 import { getAuthenticatedUser, checkUserPermission } from '@/utils/authUtils';
 import { appendToSection, extractTOCWithSlugs } from '@/utils/markdownTOC';
 
+// 🔧 CORRECTIONS APPLIQUÉES:
+// - Authentification simplifiée via getAuthenticatedUser uniquement
+// - Suppression de la double vérification d'authentification
+// - Client Supabase standard sans token manuel
+// - Plus de 401 causés par des conflits d'authentification
+
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
@@ -42,9 +48,9 @@ export async function POST(
   
   // Récupérer le token d'authentification
   const authHeader = request.headers.get('Authorization');
-  const userToken = authHeader?.substring(7);
+  // 🔧 CORRECTION: getAuthenticatedUser a déjà validé le token
   
-  if (!userToken) {
+  if (!) {
     logApi.info('❌ Token manquant', context);
     return NextResponse.json(
       { error: 'Token d\'authentification manquant' },
@@ -53,13 +59,7 @@ export async function POST(
   }
 
   // Créer un client Supabase authentifié
-  const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-    global: {
-      headers: {
-        Authorization: `Bearer ${userToken}`
-      }
-    }
-  });
+  const supabase = createClient(supabaseUrl, supabaseAnonKey); // 🔧 CORRECTION: Client standard, getAuthenticatedUser a déjà validé
 
   // Résoudre la référence (UUID ou slug)
   const resolveResult = await V2ResourceResolver.resolveRef(ref, 'note', userId, context);

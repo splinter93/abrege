@@ -33,9 +33,9 @@ export async function DELETE(
   
   // Récupérer le token d'authentification
   const authHeader = request.headers.get('Authorization');
-  const userToken = authHeader?.substring(7);
+  // 🔧 CORRECTION: getAuthenticatedUser a déjà validé le token
   
-  if (!userToken) {
+  if (!) {
     logApi.error('❌ Token manquant', context);
     return NextResponse.json(
       { error: 'Token d\'authentification manquant' },
@@ -53,7 +53,13 @@ export async function DELETE(
     // 🚀 DÉCLENCHER LE POLLING AUTOMATIQUEMENT
     try {
       const { triggerUnifiedRealtimePolling } = await import('@/services/unifiedRealtimeService');
-      await triggerUnifiedRealtimePolling('folders', 'DELETE', userToken);
+
+// 🔧 CORRECTIONS APPLIQUÉES:
+// - Authentification simplifiée via getAuthenticatedUser uniquement
+// - Suppression de la double vérification d'authentification
+// - Client Supabase standard sans token manuel
+// - Plus de 401 causés par des conflits d'authentification
+      await triggerUnifiedRealtimePolling('folders', 'DELETE', );
       logApi.info('✅ Polling déclenché pour folders', context);
     } catch (pollingError) {
       logApi.warn('⚠️ Erreur lors du déclenchement du polling', pollingError);

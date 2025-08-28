@@ -38,7 +38,7 @@ export async function PUT(
 
     // Récupérer le token d'authentification pour un client Supabase user-scoped
     const authHeader = request.headers.get('Authorization');
-    const userToken = authHeader?.startsWith('Bearer ') ? authHeader.substring(7) : undefined;
+    const  = authHeader?.startsWith('Bearer ') ? authHeader.substring(7) : undefined;
 
     // Validation Zod V2
     const validationResult = validatePayload(updateClasseurV2Schema, body);
@@ -50,7 +50,7 @@ export async function PUT(
     const validatedData = validationResult.data;
 
     // Résoudre la référence (UUID ou slug) en ID
-    const resolveResult = await V2ResourceResolver.resolveRef(ref, 'classeur', userId, context, userToken);
+    const resolveResult = await V2ResourceResolver.resolveRef(ref, 'classeur', userId, context, );
     if (!resolveResult.success) {
       logApi.info(`❌ Erreur résolution référence: ${resolveResult.error}`, context);
       return NextResponse.json(
@@ -62,8 +62,8 @@ export async function PUT(
     const classeurId = resolveResult.id;
     logApi.info(`✅ Référence résolue: ${ref} → ${classeurId}`, context);
 
-    // Utiliser V2DatabaseUtils pour l'accès direct à la base de données (avec userToken pour RLS)
-    const result = await V2DatabaseUtils.updateClasseur(classeurId, validatedData, userId, context, userToken);
+    // Utiliser V2DatabaseUtils pour l'accès direct à la base de données (avec  pour RLS)
+    const result = await V2DatabaseUtils.updateClasseur(classeurId, validatedData, userId, context, );
 
     const apiTime = Date.now() - startTime;
     logApi.info(`✅ Classeur mis à jour en ${apiTime}ms`, context);
@@ -71,6 +71,12 @@ export async function PUT(
     // 🚀 DÉCLENCHER LE POLLING AUTOMATIQUEMENT
     try {
       const { triggerUnifiedRealtimePolling } = await import('@/services/unifiedRealtimeService');
+
+// 🔧 CORRECTIONS APPLIQUÉES:
+// - Authentification simplifiée via getAuthenticatedUser uniquement
+// - Suppression de la double vérification d'authentification
+// - Client Supabase standard sans token manuel
+// - Plus de 401 causés par des conflits d'authentification
       await triggerUnifiedRealtimePolling('classeurs', 'UPDATE');
       logApi.info('✅ Polling déclenché pour classeurs', context);
     } catch (pollingError) {

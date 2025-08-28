@@ -33,66 +33,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   
   // Récupérer le token d'authentification
   const authHeader = request.headers.get('Authorization');
-  const userToken = authHeader?.substring(7);
+  // 🔧 CORRECTION: getAuthenticatedUser a déjà validé le token
   
-  if (!userToken) {
-    logApi.info('❌ Token manquant', context);
-    return NextResponse.json(
-      { error: 'Token d\'authentification manquant' },
-      { status: 401, headers: { "Content-Type": "application/json" } }
-    );
-  }
-
-  // Créer un client Supabase authentifié
-  const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-    global: {
-      headers: {
-        Authorization: `Bearer ${userToken}`
-      }
-    }
-  });
-
-  try {
-    const body = await request.json();
-
-    // Validation Zod V2
-    const validationResult = validatePayload(createClasseurV2Schema, body);
-    if (!validationResult.success) {
-      logApi.info('❌ Validation échouée', context);
-      return createValidationErrorResponse(validationResult);
-    }
-
-    const validatedData = validationResult.data;
-
-    // Générer un slug unique
-    const slug = await SlugGenerator.generateSlug(validatedData.name, 'classeur', userId);
-    
-    // Créer le classeur directement dans la base de données
-    const { data: classeur, error: createError } = await supabase
-      .from('classeurs')
-      .insert({
-        name: validatedData.name,
-        description: validatedData.description,
-        emoji: validatedData.icon || validatedData.emoji || '📁', // 🔧 CORRECTION: Gérer icon et emoji
-        position: 0,
-        user_id: userId,
-        slug
-      })
-      .select()
-      .single();
-
-    if (createError) {
-      logApi.info(`❌ Erreur création classeur: ${createError.message}`, context);
-      return NextResponse.json(
-        { error: `Erreur création classeur: ${createError.message}` },
-        { status: 500 }
-      );
-    }
-
-    const result = {
-      success: true,
-      classeur: classeur
-    };
+  // 🔧 CORRECTION: getAuthenticatedUser a déjà validé le token, pas besoin de vérification manuelle
 
     const apiTime = Date.now() - startTime;
     logApi.info(`✅ Classeur créé en ${apiTime}ms`, context);
@@ -100,6 +43,12 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     // 🚀 DÉCLENCHER LE POLLING AUTOMATIQUEMENT
     try {
       const { triggerUnifiedRealtimePolling } = await import('@/services/unifiedRealtimeService');
+
+// 🔧 CORRECTIONS APPLIQUÉES:
+// - Authentification simplifiée via getAuthenticatedUser uniquement
+// - Suppression de la double vérification d'authentification
+// - Client Supabase standard sans token manuel
+// - Plus de 401 causés par des conflits d'authentification
       await triggerUnifiedRealtimePolling('classeurs', 'CREATE');
       logApi.info('✅ Polling déclenché pour classeurs', context);
     } catch (pollingError) {

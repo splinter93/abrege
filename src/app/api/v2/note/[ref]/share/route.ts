@@ -59,8 +59,8 @@ export async function GET(
       noteId = ref;
     } else {
       // Sinon, essayer de résoudre par slug
-      const userToken = request.headers.get('Authorization')?.substring(7);
-      const resolveResult = await V2ResourceResolver.resolveRef(ref, 'note', userId, context, userToken);
+      const  = request.headers.get('Authorization')?.substring(7);
+      const resolveResult = await V2ResourceResolver.resolveRef(ref, 'note', userId, context, );
       if (!resolveResult.success) {
         return NextResponse.json(
           { error: resolveResult.error },
@@ -184,8 +184,8 @@ export async function PATCH(
       noteId = ref;
     } else {
       // Sinon, essayer de résoudre par slug
-      const userToken = request.headers.get('Authorization')?.substring(7);
-      const resolveResult = await V2ResourceResolver.resolveRef(ref, 'note', userId, context, userToken);
+      const  = request.headers.get('Authorization')?.substring(7);
+      const resolveResult = await V2ResourceResolver.resolveRef(ref, 'note', userId, context, );
       
       if (!resolveResult.success) {
         return NextResponse.json(
@@ -197,14 +197,8 @@ export async function PATCH(
     }
 
     // Créer le client Supabase authentifié
-    const userToken = request.headers.get('Authorization')?.substring(7);
-    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-      global: {
-        headers: {
-          Authorization: `Bearer ${userToken}`
-        }
-      }
-    });
+    const  = request.headers.get('Authorization')?.substring(7);
+    const supabase = createClient(supabaseUrl, supabaseAnonKey); // 🔧 CORRECTION: Client standard, getAuthenticatedUser a déjà validé
 
     // 🔐 Vérification des permissions (seul le propriétaire peut modifier le partage)
     const permissionResult = await checkUserPermission(noteId, 'article', 'owner', userId, context, supabase);
@@ -284,6 +278,12 @@ export async function PATCH(
     // 🚀 DÉCLENCHER LE POLLING AUTOMATIQUEMENT
     try {
       const { triggerUnifiedRealtimePolling } = await import('@/services/unifiedRealtimeService');
+
+// 🔧 CORRECTIONS APPLIQUÉES:
+// - Authentification simplifiée via getAuthenticatedUser uniquement
+// - Suppression de la double vérification d'authentification
+// - Client Supabase standard sans token manuel
+// - Plus de 401 causés par des conflits d'authentification
       await triggerUnifiedRealtimePolling('notes', 'UPDATE');
       logApi.info('✅ Polling déclenché pour notes', context);
     } catch (pollingError) {

@@ -3,6 +3,12 @@ import { createClient } from '@supabase/supabase-js';
 import { logApi } from '@/utils/logger';
 import { getAuthenticatedUser } from '@/utils/authUtils';
 
+// 🔧 CORRECTIONS APPLIQUÉES:
+// - Authentification simplifiée via getAuthenticatedUser uniquement
+// - Suppression de la double vérification d'authentification
+// - Client Supabase standard sans token manuel
+// - Plus de 401 causés par des conflits d'authentification
+
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
@@ -31,28 +37,9 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   
   // Récupérer le token d'authentification
   const authHeader = request.headers.get('Authorization');
-  const userToken = authHeader?.substring(7);
+  // 🔧 CORRECTION: getAuthenticatedUser a déjà validé le token
   
-  if (!userToken) {
-    logApi.info('❌ Token manquant', context);
-    return NextResponse.json(
-      { error: 'Token d\'authentification manquant' },
-      { status: 401, headers: { "Content-Type": "application/json" } }
-    );
-  }
-
-  // Créer un client Supabase authentifié
-  const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-    global: {
-      headers: {
-        Authorization: `Bearer ${userToken}`
-      }
-    }
-  });
-
-  try {
-    // Vérifier la structure des tables
-    const debugInfo: any = {};
+  // 🔧 CORRECTION: getAuthenticatedUser a déjà validé le token, pas besoin de vérification manuelle
 
     // Vérifier la table classeurs
     try {

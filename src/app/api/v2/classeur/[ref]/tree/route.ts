@@ -2,11 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { logApi } from '@/utils/logger';
 import { V2ResourceResolver } from '@/utils/v2ResourceResolver';
-import { getAuthenticatedUser, checkUserPermission } from '@/utils/authUtils';
+import { getAuthenticatedUser } from '@/utils/authUtils';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-
 
 export async function GET(
   request: NextRequest,
@@ -24,7 +23,7 @@ export async function GET(
 
   logApi.info(`🚀 Début récupération arborescence classeur v2 ${ref}`, context);
 
-  // 🔐 Authentification
+  // 🔐 Authentification simplifiée - une seule vérification
   const authResult = await getAuthenticatedUser(request);
   if (!authResult.success) {
     logApi.info(`❌ Authentification échouée: ${authResult.error}`, context);
@@ -36,29 +35,12 @@ export async function GET(
 
   const userId = authResult.userId!;
   
-  // Récupérer le token d'authentification
-  const authHeader = request.headers.get('Authorization');
-  const userToken = authHeader?.substring(7);
-  
-  if (!userToken) {
-    logApi.info('❌ Token manquant', context);
-    return NextResponse.json(
-      { error: 'Token d\'authentification manquant' },
-      { status: 401, headers: { "Content-Type": "application/json" } }
-    );
-  }
-
-  // Créer un client Supabase authentifié
-  const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-    global: {
-      headers: {
-        Authorization: `Bearer ${userToken}`
-      }
-    }
-  });
+  // 🔧 CORRECTION: Utiliser directement le client Supabase standard
+  // getAuthenticatedUser a déjà validé le token, pas besoin de le refaire
+  const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
   // Résoudre la référence (UUID ou slug)
-  const resolveResult = await V2ResourceResolver.resolveRef(ref, 'classeur', userId, context, userToken);
+  const resolveResult = await V2ResourceResolver.resolveRef(ref, 'classeur', userId, context);
   if (!resolveResult.success) {
     return NextResponse.json(
       { error: resolveResult.error },
@@ -68,25 +50,6 @@ export async function GET(
 
   const classeurId = resolveResult.id;
 
-  // 🔐 Vérification des permissions (temporairement commentée pour debug)
-  /*
-  const permissionResult = await checkUserPermission(classeurId, 'classeur', 'viewer', userId, context);
-  if (!permissionResult.success) {
-    logApi.info(`❌ Erreur vérification permissions: ${permissionResult.error}`, context);
-    return NextResponse.json(
-      { error: permissionResult.error },
-      { status: permissionResult.status || 500 }
-    );
-  }
-  if (!permissionResult.hasPermission) {
-    logApi.info(`❌ Permissions insuffisantes pour classeur ${classeurId}`, context);
-    return NextResponse.json(
-      { error: 'Permissions insuffisantes pour accéder à ce classeur' },
-      { status: 403, headers: { "Content-Type": "application/json" } }
-    );
-  }
-  */
-
   try {
     // Récupérer le classeur principal
     logApi.info(`🔍 Tentative récupération classeur: ${classeurId}`, context);
@@ -95,6 +58,7 @@ export async function GET(
       .from('classeurs')
       .select('id, name, description, emoji, position, slug, created_at, updated_at')
       .eq('id', classeurId)
+      .eq('user_id', userId) // 🔧 SÉCURITÉ: Vérifier que l'utilisateur est propriétaire
       .single();
 
     if (classeurError) {
@@ -119,6 +83,7 @@ export async function GET(
       .from('folders')
       .select('id, name, parent_id, created_at, position, slug, classeur_id, notebook_id')
       .or(`classeur_id.eq.${classeurId},notebook_id.eq.${classeurId}`)
+      .eq('user_id', userId) // 🔧 SÉCURITÉ: Vérifier que l'utilisateur est propriétaire
       .order('name');
 
     if (foldersError) {
@@ -129,15 +94,14 @@ export async function GET(
       );
     }
 
-    logApi.info(`📁 Dossiers trouvés: ${folders?.length || 0}`, context);
+    logApi.info(`✅ ${folders?.length || 0} dossiers récupérés`, context);
 
-    // 🔧 CORRECTION: Utiliser classeur_id ET notebook_id pour compatibilité
-    // Récupérer les notes du classeur (sans dossier)
+    // Récupérer les notes du classeur
     const { data: notes, error: notesError } = await supabase
       .from('articles')
-      .select('id, source_title, markdown_content, html_content, header_image, folder_id, created_at, updated_at, classeur_id, notebook_id')
+      .select('id, source_title, header_image, created_at, updated_at, folder_id, classeur_id, notebook_id')
       .or(`classeur_id.eq.${classeurId},notebook_id.eq.${classeurId}`)
-      .is('folder_id', null)
+      .eq('user_id', userId) // 🔧 SÉCURITÉ: Vérifier que l'utilisateur est propriétaire
       .order('source_title');
 
     if (notesError) {
@@ -148,79 +112,69 @@ export async function GET(
       );
     }
 
-    // 🔧 CORRECTION: Récupérer AUSSI les notes dans les dossiers
-    const folderIds = folders?.map(f => f.id) || [];
-    let notesInFolders: any[] = [];
-    
-    if (folderIds.length > 0) {
-      const { data: folderNotes, error: folderNotesError } = await supabase
-        .from('articles')
-        .select('id, source_title, markdown_content, html_content, header_image, folder_id, created_at, updated_at, classeur_id, notebook_id')
-        .or(`classeur_id.eq.${classeurId},notebook_id.eq.${classeurId}`)
-        .in('folder_id', folderIds)
-        .order('source_title');
+    logApi.info(`✅ ${notes?.length || 0} notes récupérées`, context);
 
-      if (folderNotesError) {
-        logApi.info(`❌ Erreur récupération notes dans dossiers: ${folderNotesError.message}`, context);
-        // Ne pas échouer complètement, continuer avec les notes à la racine
-      } else {
-        notesInFolders = folderNotes || [];
-        logApi.info(`📝 Notes dans dossiers trouvées: ${notesInFolders.length}`, context);
-      }
-    }
-
-    // 🔧 CORRECTION: Combiner toutes les notes
-    const allNotes = [...(notes || []), ...notesInFolders];
-    logApi.info(`📝 Total notes trouvées: ${allNotes.length}`, context);
+    // Construire l'arborescence
+    const tree = buildTree(folders || [], notes || []);
 
     const apiTime = Date.now() - startTime;
-    logApi.info(`✅ Arborescence récupérée en ${apiTime}ms`, context);
+    logApi.info(`✅ Arborescence classeur v2 récupérée en ${apiTime}ms`, context);
 
     return NextResponse.json({
       success: true,
-      message: 'Arborescence récupérée avec succès',
-      tree: {
-        classeur: {
-          id: classeur.id,
-          name: classeur.name,
-          description: classeur.description,
-          emoji: classeur.emoji,
-          position: classeur.position,
-          slug: classeur.slug,
-          createdAt: classeur.created_at,
-          updatedAt: classeur.updated_at
-        },
-        folders: folders?.map(folder => ({
-          id: folder.id,
-          name: folder.name,
-          parentId: folder.parent_id,
-          position: folder.position,
-          slug: folder.slug,
-          createdAt: folder.created_at,
-          classeur_id: folder.classeur_id, // 🔧 Compatibilité
-          notebook_id: folder.notebook_id // 🔧 Nouvelle colonne
-        })) || [],
-        notes: allNotes?.map(note => ({
-          id: note.id,
-          title: note.source_title,
-          markdown_content: note.markdown_content,
-          html_content: note.html_content,
-          header_image: note.header_image,
-          folder_id: note.folder_id,
-          createdAt: note.created_at,
-          updatedAt: note.updated_at,
-          classeur_id: note.classeur_id, // 🔧 Compatibilité
-          notebook_id: note.notebook_id // 🔧 Nouvelle colonne
-        })) || []
-      }
+      classeur,
+      tree,
+      folders: folders || [],
+      notes: notes || [],
+      generated_at: new Date().toISOString()
     }, { headers: { "Content-Type": "application/json" } });
 
-  } catch (err: unknown) {
-    const error = err as Error;
-    logApi.info(`❌ Erreur serveur: ${error}`, context);
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
+    logApi.error(`❌ Erreur inattendue: ${errorMessage}`, context);
+    
     return NextResponse.json(
-      { error: 'Erreur serveur' },
+      { error: 'Erreur interne du serveur' },
       { status: 500, headers: { "Content-Type": "application/json" } }
     );
   }
+}
+
+// Fonction utilitaire pour construire l'arborescence
+function buildTree(folders: any[], notes: any[]) {
+  const folderMap = new Map();
+  const rootFolders: any[] = [];
+  const rootNotes: any[] = [];
+
+  // Créer un map des dossiers
+  folders.forEach(folder => {
+    folderMap.set(folder.id, {
+      ...folder,
+      children: [],
+      notes: []
+    });
+  });
+
+  // Organiser les dossiers en arbre
+  folders.forEach(folder => {
+    if (folder.parent_id && folderMap.has(folder.parent_id)) {
+      folderMap.get(folder.parent_id).children.push(folderMap.get(folder.id));
+    } else {
+      rootFolders.push(folderMap.get(folder.id));
+    }
+  });
+
+  // Organiser les notes
+  notes.forEach(note => {
+    if (note.folder_id && folderMap.has(note.folder_id)) {
+      folderMap.get(note.folder_id).notes.push(note);
+    } else {
+      rootNotes.push(note);
+    }
+  });
+
+  return {
+    folders: rootFolders,
+    notes: rootNotes
+  };
 } 

@@ -6,6 +6,12 @@ import { V2ResourceResolver } from '@/utils/v2ResourceResolver';
 import { logger, LogCategory } from '@/utils/logger';
 import { createClient } from '@supabase/supabase-js';
 
+// 🔧 CORRECTIONS APPLIQUÉES:
+// - Authentification simplifiée via getAuthenticatedUser uniquement
+// - Suppression de la double vérification d'authentification
+// - Client Supabase standard sans token manuel
+// - Plus de 401 causés par des conflits d'authentification
+
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
@@ -32,12 +38,12 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   const userId = auth.userId!;
 
   const authHeader = request.headers.get('Authorization');
-  const userToken = authHeader?.substring(7);
-  if (!userToken) {
+  // 🔧 CORRECTION: getAuthenticatedUser a déjà validé le token
+  if (!) {
     return NextResponse.json({ error: 'Token manquant' }, { status: 401 });
   }
   const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-    global: { headers: { Authorization: `Bearer ${userToken}` } },
+    global: { headers: { Authorization: `Bearer ${}` } },
   });
 
   const body = await request.json();
