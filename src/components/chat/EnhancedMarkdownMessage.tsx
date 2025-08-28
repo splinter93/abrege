@@ -12,7 +12,7 @@ interface EnhancedMarkdownMessageProps {
 }
 
 // Composant pour remplacer les wrappers de code blocks par CodeBlock React
-const CodeBlockReplacer: React.FC<{ containerRef: React.RefObject<HTMLDivElement> }> = React.memo(({ containerRef }) => {
+const CodeBlockReplacer: React.FC<{ containerRef: React.RefObject<HTMLDivElement | null> }> = React.memo(({ containerRef }) => {
   useEffect(() => {
     if (!containerRef.current) return;
 
@@ -53,6 +53,11 @@ const TextBlock: React.FC<{ content: string; index: number }> = React.memo(({ co
   
   // Fonction pour remplacer les blocs de code par des wrappers
   const processCodeBlocks = (htmlContent: string) => {
+    // Vérifier si nous sommes côté client (DOMParser n'est disponible que dans le navigateur)
+    if (typeof window === 'undefined' || typeof DOMParser === 'undefined') {
+      return htmlContent; // Retourner le HTML original côté serveur
+    }
+    
     // Créer un DOM parser temporaire
     const parser = new DOMParser();
     const doc = parser.parseFromString(htmlContent, 'text/html');
@@ -110,6 +115,11 @@ const EnhancedMarkdownMessage: React.FC<EnhancedMarkdownMessageProps> = React.me
 
   // Fonction pour remplacer les blocs de code par des wrappers
   const processCodeBlocks = (htmlContent: string) => {
+    // Vérifier si nous sommes côté client (DOMParser n'est disponible que dans le navigateur)
+    if (typeof window === 'undefined' || typeof DOMParser === 'undefined') {
+      return htmlContent; // Retourner le HTML original côté serveur
+    }
+    
     // Créer un DOM parser temporaire
     const parser = new DOMParser();
     const doc = parser.parseFromString(htmlContent, 'text/html');
