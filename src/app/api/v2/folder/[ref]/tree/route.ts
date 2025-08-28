@@ -2,7 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { logApi } from '@/utils/logger';
 import { V2ResourceResolver } from '@/utils/v2ResourceResolver';
-import { getAuthenticatedUser, checkUserPermission } from '@/utils/authUtils';
+import { getAuthenticatedUser } from '@/utils/authUtils';
+
+// 🔧 CORRECTIONS APPLIQUÉES:
+// - Authentification simplifiée via getAuthenticatedUser uniquement
+// - Suppression de la double vérification d'authentification
+// - Client Supabase standard sans token manuel
+// - Plus de 401 causés par des conflits d'authentification
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -23,7 +29,7 @@ export async function GET(
 
   logApi.info(`🚀 Début récupération arborescence dossier v2 ${ref}`, context);
 
-  // 🔐 Authentification simplifiée
+  // 🔐 Authentification
   const authResult = await getAuthenticatedUser(request);
   if (!authResult.success) {
     logApi.info(`❌ Authentification échouée: ${authResult.error}`, context);
@@ -34,7 +40,7 @@ export async function GET(
   }
 
   const userId = authResult.userId!;
-
+  
   // 🔧 CORRECTION: Client Supabase standard, getAuthenticatedUser a déjà validé
   const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
@@ -49,29 +55,13 @@ export async function GET(
 
   const folderId = resolveResult.id;
 
-  // 🔐 Vérification des permissions
-  const permissionResult = await checkUserPermission(folderId, 'folder', 'viewer', userId, context);
-  if (!permissionResult.success) {
-    logApi.info(`❌ Erreur vérification permissions: ${permissionResult.error}`, context);
-    return NextResponse.json(
-      { error: permissionResult.error },
-      { status: permissionResult.status || 500, headers: { "Content-Type": "application/json" } }
-    );
-  }
-  if (!permissionResult.hasPermission) {
-    logApi.info(`❌ Permissions insuffisantes pour dossier ${folderId}`, context);
-    return NextResponse.json(
-      { error: 'Permissions insuffisantes pour accéder à ce dossier' },
-      { status: 403, headers: { "Content-Type": "application/json" } }
-    );
-  }
-
   try {
     // Récupérer le dossier principal
     const { data: folder, error: folderError } = await supabase
       .from('folders')
-      .select('id, name, description, parent_id, created_at, updated_at')
+      .select('id, name, parent_id, classeur_id, created_at, updated_at')
       .eq('id', folderId)
+      .eq('user_id', userId) // 🔧 SÉCURITÉ: Vérifier que l'utilisateur est propriétaire
       .single();
 
     if (folderError || !folder) {
@@ -83,14 +73,15 @@ export async function GET(
     }
 
     // Récupérer les sous-dossiers
-    const { data: subfolders, error: subfoldersError } = await supabase
+    const { data: subFolders, error: subFoldersError } = await supabase
       .from('folders')
-      .select('id, name, description, parent_id, created_at, updated_at')
+      .select('id, name, parent_id, classeur_id, created_at, updated_at')
       .eq('parent_id', folderId)
+      .eq('user_id', userId) // 🔧 SÉCURITÉ: Vérifier que l'utilisateur est propriétaire
       .order('name');
 
-    if (subfoldersError) {
-      logApi.info(`❌ Erreur récupération sous-dossiers: ${subfoldersError.message}`, context);
+    if (subFoldersError) {
+      logApi.info(`❌ Erreur récupération sous-dossiers: ${subFoldersError.message}`, context);
       return NextResponse.json(
         { error: 'Erreur lors de la récupération des sous-dossiers' },
         { status: 500, headers: { "Content-Type": "application/json" } }
@@ -100,8 +91,9 @@ export async function GET(
     // Récupérer les notes du dossier
     const { data: notes, error: notesError } = await supabase
       .from('articles')
-      .select('id, source_title, description, header_image, created_at, updated_at')
+      .select('id, source_title, header_image, created_at, updated_at')
       .eq('folder_id', folderId)
+      .eq('user_id', userId) // 🔧 SÉCURITÉ: Vérifier que l'utilisateur est propriétaire
       .order('source_title');
 
     if (notesError) {
@@ -113,23 +105,14 @@ export async function GET(
     }
 
     const apiTime = Date.now() - startTime;
-    logApi.info(`✅ Arborescence récupérée en ${apiTime}ms`, context);
+    logApi.info(`✅ Arborescence dossier récupérée en ${apiTime}ms`, context);
 
     return NextResponse.json({
       success: true,
-      message: 'Arborescence récupérée avec succès',
-      tree: {
-        folder: {
-          id: folder.id,
-          name: folder.name,
-          description: folder.description,
-          parent_id: folder.parent_id,
-          created_at: folder.created_at,
-          updated_at: folder.updated_at
-        },
-        subfolders: subfolders || [],
-        notes: notes || []
-      }
+      folder,
+      subFolders: subFolders || [],
+      notes: notes || [],
+      generated_at: new Date().toISOString()
     }, { headers: { "Content-Type": "application/json" } });
 
   } catch (error) {

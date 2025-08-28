@@ -3,6 +3,12 @@ import { createClient } from '@supabase/supabase-js';
 import { logApi } from '@/utils/logger';
 import { getAuthenticatedUser } from '@/utils/authUtils';
 
+// 🔧 CORRECTIONS APPLIQUÉES:
+// - Authentification simplifiée via getAuthenticatedUser uniquement
+// - Suppression de la double vérification d'authentification
+// - Client Supabase standard sans token manuel
+// - Plus de 401 causés par des conflits d'authentification
+
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
@@ -17,7 +23,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
   logApi.info('🚀 Début debug base de données', context);
 
-  // 🔐 Authentification simplifiée
+  // 🔐 Authentification
   const authResult = await getAuthenticatedUser(request);
   if (!authResult.success) {
     logApi.info(`❌ Authentification échouée: ${authResult.error}`, context);
@@ -28,19 +34,13 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   }
 
   const userId = authResult.userId!;
+  
+  // 🔧 CORRECTION: Client Supabase standard, getAuthenticatedUser a déjà validé
+  const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
   try {
-    // 🔧 CORRECTION: Client Supabase standard, getAuthenticatedUser a déjà validé
-    const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
-    const debugInfo: any = {
-      timestamp: new Date().toISOString(),
-      userId: userId,
-      database: {
-        url: supabaseUrl,
-        tables: {}
-      }
-    };
+    // Vérifier la structure des tables
+    const debugInfo: any = {};
 
     // Vérifier la table classeurs
     try {
@@ -53,44 +53,61 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       debugInfo.classeurs = {
         count: classeurs?.length || 0,
         error: classeursError?.message || null,
-        sample: classeurs || []
+        sample: classeurs?.slice(0, 3) || []
       };
-    } catch (e) {
-      debugInfo.classeurs = { error: e.message };
+    } catch (error) {
+      debugInfo.classeurs = { error: 'Erreur lors de la vérification' };
     }
 
-    // Vérifier la table folders
+    // Vérifier la table dossiers
     try {
       const { data: folders, error: foldersError } = await supabase
         .from('folders')
-        .select('id, name, classeur_id, user_id')
+        .select('id, name, user_id, classeur_id')
         .eq('user_id', userId)
         .limit(5);
       
       debugInfo.folders = {
         count: folders?.length || 0,
         error: foldersError?.message || null,
-        sample: folders || []
+        sample: folders?.slice(0, 3) || []
       };
-    } catch (e) {
-      debugInfo.folders = { error: e.message };
+    } catch (error) {
+      debugInfo.folders = { error: 'Erreur lors de la vérification' };
     }
 
     // Vérifier la table articles
     try {
       const { data: articles, error: articlesError } = await supabase
         .from('articles')
-        .select('id, source_title, classeur_id, folder_id, user_id')
+        .select('id, source_title, user_id, classeur_id')
         .eq('user_id', userId)
         .limit(5);
       
       debugInfo.articles = {
         count: articles?.length || 0,
         error: articlesError?.message || null,
-        sample: articles || []
+        sample: articles?.slice(0, 3) || []
       };
-    } catch (e) {
-      debugInfo.articles = { error: e.message };
+    } catch (error) {
+      debugInfo.articles = { error: 'Erreur lors de la vérification' };
+    }
+
+    // Vérifier la table users
+    try {
+      const { data: user, error: userError } = await supabase
+        .from('users')
+        .select('id, username, email')
+        .eq('id', userId)
+        .single();
+      
+      debugInfo.user = {
+        found: !!user,
+        error: userError?.message || null,
+        data: user || null
+      };
+    } catch (error) {
+      debugInfo.user = { error: 'Erreur lors de la vérification' };
     }
 
     const apiTime = Date.now() - startTime;
@@ -98,14 +115,16 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
     return NextResponse.json({
       success: true,
-      debug: debugInfo
-    });
+      debug: debugInfo,
+      timestamp: new Date().toISOString()
+    }, { headers: { "Content-Type": "application/json" } });
 
-  } catch (err: unknown) {
-    const error = err as Error;
-    logApi.info(`❌ Erreur serveur: ${error}`, context);
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
+    logApi.error(`❌ Erreur inattendue: ${errorMessage}`, context);
+    
     return NextResponse.json(
-      { error: 'Erreur serveur' },
+      { error: 'Erreur interne du serveur' },
       { status: 500, headers: { "Content-Type": "application/json" } }
     );
   }

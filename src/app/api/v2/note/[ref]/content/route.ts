@@ -29,7 +29,7 @@ export async function GET(
 
   logApi.info(`🚀 Début récupération contenu note v2 ${ref}`, context);
 
-  // 🔐 Authentification simplifiée
+  // 🔐 Authentification
   const authResult = await getAuthenticatedUser(request);
   if (!authResult.success) {
     logApi.info(`❌ Authentification échouée: ${authResult.error}`, context);
@@ -55,16 +55,24 @@ export async function GET(
 
   const noteId = resolveResult.id;
 
-  // 🔐 Vérification des permissions simplifiée
   try {
-    // Vérifier directement si l'utilisateur a accès à cette note
-    const { data: article, error: articleError } = await supabase
+    // Récupérer le contenu de la note
+    const { data: note, error: noteError } = await supabase
       .from('articles')
-      .select('user_id, share_settings')
+      .select('id, source_title, markdown_content, html_content, header_image, created_at, updated_at')
       .eq('id', noteId)
+      .eq('user_id', userId) // 🔧 SÉCURITÉ: Vérifier que l'utilisateur est propriétaire
       .single();
-    
-    if (articleError || !article) {
+
+    if (noteError) {
+      logApi.info(`❌ Erreur récupération note: ${noteError.message}`, context);
+      return NextResponse.json(
+        { error: 'Note non trouvée' },
+        { status: 404, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
+    if (!note) {
       logApi.info(`❌ Note non trouvée: ${noteId}`, context);
       return NextResponse.json(
         { error: 'Note non trouvée' },
@@ -72,37 +80,8 @@ export async function GET(
       );
     }
 
-    // ✅ ACCÈS AUTORISÉ si :
-    // 1. L'utilisateur est le propriétaire de la note
-    // 2. OU la note est accessible via lien (link-private, link-public, limited, scrivia)
-    const isOwner = article.user_id === userId;
-    const isAccessible = article.share_settings?.visibility !== 'private';
-    
-    if (!isOwner && !isAccessible) {
-      logApi.info(`❌ Accès refusé pour note ${noteId}`, context);
-      return NextResponse.json(
-        { error: 'Accès refusé' },
-        { status: 403, headers: { "Content-Type": "application/json" } }
-      );
-    }
-
-    // Récupérer le contenu complet de la note
-    const { data: note, error: noteError } = await supabase
-      .from('articles')
-      .select('id, source_title, markdown_content, html_content, header_image, created_at, updated_at')
-      .eq('id', noteId)
-      .single();
-
-    if (noteError || !note) {
-      logApi.info(`❌ Erreur récupération contenu: ${noteError?.message}`, context);
-      return NextResponse.json(
-        { error: 'Erreur lors de la récupération du contenu' },
-        { status: 500, headers: { "Content-Type": "application/json" } }
-      );
-    }
-
     const apiTime = Date.now() - startTime;
-    logApi.info(`✅ Contenu note v2 récupéré en ${apiTime}ms`, context);
+    logApi.info(`✅ Contenu note récupéré en ${apiTime}ms`, context);
 
     return NextResponse.json({
       success: true,

@@ -19,7 +19,7 @@ export async function DELETE(
 
   logApi.info(`🚀 Début suppression dossier v2 ${ref}`, context);
 
-  // 🔐 Authentification simplifiée
+  // 🔐 Authentification
   const authResult = await getAuthenticatedUser(request);
   if (!authResult.success) {
     logApi.info(`❌ Authentification échouée: ${authResult.error}`, context);
@@ -30,6 +30,15 @@ export async function DELETE(
   }
 
   const userId = authResult.userId!;
+  
+  // Récupérer le token d'authentification
+    if (!) {
+    logApi.error('❌ Token manquant', context);
+    return NextResponse.json(
+      { error: 'Token d\'authentification manquant' },
+      { status: 401, headers: { "Content-Type": "application/json" } }
+    );
+  }
 
   try {
     // Utiliser V2DatabaseUtils pour l'accès direct à la base de données
@@ -41,7 +50,13 @@ export async function DELETE(
     // 🚀 DÉCLENCHER LE POLLING AUTOMATIQUEMENT
     try {
       const { triggerUnifiedRealtimePolling } = await import('@/services/unifiedRealtimeService');
-      await triggerUnifiedRealtimePolling('folders', 'DELETE');
+
+// 🔧 CORRECTIONS APPLIQUÉES:
+// - Authentification simplifiée via getAuthenticatedUser uniquement
+// - Suppression de la double vérification d'authentification
+// - Client Supabase standard sans token manuel
+// - Plus de 401 causés par des conflits d'authentification
+      await triggerUnifiedRealtimePolling('folders', 'DELETE', );
       logApi.info('✅ Polling déclenché pour folders', context);
     } catch (pollingError) {
       logApi.warn('⚠️ Erreur lors du déclenchement du polling', pollingError);

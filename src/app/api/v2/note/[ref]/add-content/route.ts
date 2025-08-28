@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { updateArticleInsight } from '@/utils/insightUpdater';
 import { logApi } from '@/utils/logger';
 import { addContentV2Schema, validatePayload, createValidationErrorResponse } from '@/utils/v2ValidationSchemas';
-import { getAuthenticatedUser, checkUserPermission } from '@/utils/authUtils';
 import { V2ResourceResolver } from '@/utils/v2ResourceResolver';
-import { updateArticleInsight } from '@/utils/insightUpdater';
+
+import { getAuthenticatedUser, checkUserPermission } from '@/utils/authUtils';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -25,7 +26,7 @@ export async function POST(
 
   logApi.info(`🚀 Début ajout contenu note v2 ${ref}`, context);
 
-  // 🔐 Authentification simplifiée
+  // 🔐 Authentification
   const authResult = await getAuthenticatedUser(request);
   if (!authResult.success) {
     logApi.info(`❌ Authentification échouée: ${authResult.error}`, context);
@@ -36,9 +37,18 @@ export async function POST(
   }
 
   const userId = authResult.userId!;
+  
+  // Récupérer le token d'authentification
+    if (!) {
+    logApi.info('❌ Token manquant', context);
+    return NextResponse.json(
+      { error: 'Token d\'authentification manquant' },
+      { status: 401, headers: { "Content-Type": "application/json" } }
+    );
+  }
 
-  // 🔧 CORRECTION: Client Supabase standard, getAuthenticatedUser a déjà validé
-  const supabase = createClient(supabaseUrl, supabaseAnonKey);
+  // Créer un client Supabase authentifié
+  const supabase = createClient(supabaseUrl, supabaseAnonKey); // 🔧 CORRECTION: Client standard, getAuthenticatedUser a déjà validé
 
   // Résoudre la référence (UUID ou slug)
   const resolveResult = await V2ResourceResolver.resolveRef(ref, 'note', userId, context);
@@ -123,18 +133,27 @@ export async function POST(
     const apiTime = Date.now() - startTime;
     logApi.info(`✅ Contenu ajouté en ${apiTime}ms`, context);
 
+    // 🚀 DÉCLENCHER LE POLLING AUTOMATIQUEMENT
+    try {
+      const { triggerUnifiedRealtimePolling } = await import('@/services/unifiedRealtimeService');
+
+      await triggerUnifiedRealtimePolling('notes', 'UPDATE');
+      logApi.info('✅ Polling déclenché pour notes', context);
+    } catch (pollingError) {
+      logApi.warn('⚠️ Erreur lors du déclenchement du polling', pollingError);
+    }
+
     return NextResponse.json({
       success: true,
       message: 'Contenu ajouté avec succès',
       note: updatedNote
     }, { headers: { "Content-Type": "application/json" } });
 
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
-    logApi.error(`❌ Erreur inattendue: ${errorMessage}`, context);
-    
+  } catch (err: unknown) {
+    const error = err as Error;
+    logApi.info(`❌ Erreur serveur: ${error}`, context);
     return NextResponse.json(
-      { error: 'Erreur interne du serveur' },
+      { error: 'Erreur serveur' },
       { status: 500, headers: { "Content-Type": "application/json" } }
     );
   }

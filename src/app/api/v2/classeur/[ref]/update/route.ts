@@ -1,9 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
 import { logApi } from '@/utils/logger';
-import { updateClasseurV2Schema, validatePayload, createValidationErrorResponse } from '@/utils/v2ValidationSchemas';
-import { getAuthenticatedUser } from '@/utils/authUtils';
-import { V2DatabaseUtils } from '@/utils/v2DatabaseUtils';
 import { V2ResourceResolver } from '@/utils/v2ResourceResolver';
+import { getAuthenticatedUser } from '@/utils/authUtils';
+import { updateClasseurV2Schema, validatePayload, createValidationErrorResponse } from '@/utils/v2ValidationSchemas';
+
+// 🔧 CORRECTIONS APPLIQUÉES:
+// - Authentification simplifiée via getAuthenticatedUser uniquement
+// - Suppression de la double vérification d'authentification
+// - Client Supabase standard sans token manuel
+// - Plus de 401 causés par des conflits d'authentification
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
 export async function PUT(
   request: NextRequest,
@@ -21,7 +30,7 @@ export async function PUT(
 
   logApi.info(`🚀 Début mise à jour classeur v2 ${ref}`, context);
 
-  // 🔐 Authentification simplifiée
+  // 🔐 Authentification
   const authResult = await getAuthenticatedUser(request);
   if (!authResult.success) {
     logApi.info(`❌ Authentification échouée: ${authResult.error}`, context);
@@ -32,34 +41,70 @@ export async function PUT(
   }
 
   const userId = authResult.userId!;
+  
+  // 🔧 CORRECTION: Client Supabase standard, getAuthenticatedUser a déjà validé
+  const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
   try {
     const body = await request.json();
-
-    // Validation Zod V2
+    
+    // Validation du payload
     const validationResult = validatePayload(updateClasseurV2Schema, body);
     if (!validationResult.success) {
-      logApi.info('❌ Validation échouée', context);
       return createValidationErrorResponse(validationResult);
     }
 
-    const validatedData = validationResult.data;
+    const { name, emoji, color } = validationResult.data;
 
-    // Résoudre la référence (UUID ou slug) en ID
+    // Résoudre la référence (UUID ou slug)
     const resolveResult = await V2ResourceResolver.resolveRef(ref, 'classeur', userId, context);
     if (!resolveResult.success) {
-      logApi.info(`❌ Erreur résolution référence: ${resolveResult.error}`, context);
       return NextResponse.json(
         { error: resolveResult.error },
-        { status: resolveResult.status || 400, headers: { "Content-Type": "application/json" } }
+        { status: resolveResult.status, headers: { "Content-Type": "application/json" } }
       );
     }
 
     const classeurId = resolveResult.id;
-    logApi.info(`✅ Référence résolue: ${ref} → ${classeurId}`, context);
 
-    // Utiliser V2DatabaseUtils pour l'accès direct à la base de données
-    const result = await V2DatabaseUtils.updateClasseur(classeurId, validatedData, userId, context);
+    // Vérifier que l'utilisateur est propriétaire du classeur
+    const { data: existingClasseur, error: checkError } = await supabase
+      .from('classeurs')
+      .select('id, name')
+      .eq('id', classeurId)
+      .eq('user_id', userId)
+      .single();
+
+    if (checkError || !existingClasseur) {
+      logApi.info(`❌ Classeur non trouvé ou accès refusé: ${classeurId}`, context);
+      return NextResponse.json(
+        { error: 'Classeur non trouvé ou accès refusé' },
+        { status: 404, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
+    // Préparer les données de mise à jour
+    const updateData: any = {};
+    if (name !== undefined) updateData.name = name;
+    if (emoji !== undefined) updateData.emoji = emoji;
+    if (color !== undefined) updateData.color = color;
+
+    // Mettre à jour le classeur
+    const { data: updatedClasseur, error: updateError } = await supabase
+      .from('classeurs')
+      .update(updateData)
+      .eq('id', classeurId)
+      .eq('user_id', userId)
+      .select()
+      .single();
+
+    if (updateError) {
+      logApi.error(`❌ Erreur mise à jour classeur: ${updateError.message}`, context);
+      return NextResponse.json(
+        { error: 'Erreur lors de la mise à jour du classeur' },
+        { status: 500, headers: { "Content-Type": "application/json" } }
+      );
+    }
 
     const apiTime = Date.now() - startTime;
     logApi.info(`✅ Classeur mis à jour en ${apiTime}ms`, context);
@@ -70,20 +115,20 @@ export async function PUT(
       await triggerUnifiedRealtimePolling('classeurs', 'UPDATE');
       logApi.info('✅ Polling déclenché pour classeurs', context);
     } catch (pollingError) {
-      logApi.warn('⚠️ Erreur lors du déclenchement du polling', pollingError);
+      logApi.warn('⚠️ Erreur lors du déclenchement du polling', context);
     }
 
     return NextResponse.json({
       success: true,
-      message: 'Classeur mis à jour avec succès',
-      classeur: result.classeur
-    });
+      classeur: updatedClasseur
+    }, { headers: { "Content-Type": "application/json" } });
 
-  } catch (err: unknown) {
-    const error = err as Error;
-    logApi.info(`❌ Erreur serveur: ${error}`, context);
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
+    logApi.error(`❌ Erreur inattendue: ${errorMessage}`, context);
+    
     return NextResponse.json(
-      { error: 'Erreur serveur' },
+      { error: 'Erreur interne du serveur' },
       { status: 500, headers: { "Content-Type": "application/json" } }
     );
   }

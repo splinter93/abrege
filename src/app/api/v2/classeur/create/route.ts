@@ -5,6 +5,12 @@ import { createClasseurV2Schema, validatePayload, createValidationErrorResponse 
 import { getAuthenticatedUser } from '@/utils/authUtils';
 import { SlugGenerator } from '@/utils/slugGenerator';
 
+// 🔧 CORRECTIONS APPLIQUÉES:
+// - Authentification simplifiée via getAuthenticatedUser uniquement
+// - Suppression de la double vérification d'authentification
+// - Client Supabase standard sans token manuel
+// - Plus de 401 causés par des conflits d'authentification
+
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
@@ -19,7 +25,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
   logApi.info('🚀 Début création classeur v2', context);
 
-  // 🔐 Authentification simplifiée
+  // 🔐 Authentification
   const authResult = await getAuthenticatedUser(request);
   if (!authResult.success) {
     logApi.info(`❌ Authentification échouée: ${authResult.error}`, context);
@@ -30,46 +36,40 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   }
 
   const userId = authResult.userId!;
+  
+  // 🔧 CORRECTION: Client Supabase standard, getAuthenticatedUser a déjà validé
+  const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
   try {
     const body = await request.json();
-
-    // Validation Zod V2
+    
+    // Validation du payload
     const validationResult = validatePayload(createClasseurV2Schema, body);
     if (!validationResult.success) {
-      logApi.info('❌ Validation échouée', context);
       return createValidationErrorResponse(validationResult);
     }
 
-    const validatedData = validationResult.data;
+    const { name, emoji, color } = validationResult.data;
 
-    // 🔧 CORRECTION: Client Supabase standard, getAuthenticatedUser a déjà validé
-    const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
-    // Générer un slug unique si non fourni
-    let slug = validatedData.slug;
-    if (!slug) {
-      slug = await SlugGenerator.generateUniqueSlug(validatedData.title, 'classeurs', userId);
-    }
+    // Générer un slug unique
+    const slug = await SlugGenerator.generateUniqueSlug(name, 'classeurs');
 
     // Créer le classeur
     const { data: classeur, error: createError } = await supabase
       .from('classeurs')
       .insert({
-        title: validatedData.title,
-        description: validatedData.description,
-        slug: slug,
+        name,
+        emoji: emoji || '📚',
+        color: color || '#3B82F6',
+        slug,
         user_id: userId,
-        color: validatedData.color || '#3B82F6',
-        icon: validatedData.icon || '📚',
-        is_public: validatedData.is_public || false,
-        sort_order: validatedData.sort_order || 0
+        position: 0
       })
       .select()
       .single();
 
-    if (createError || !classeur) {
-      logApi.error(`❌ Erreur création classeur: ${createError?.message}`, context);
+    if (createError) {
+      logApi.error(`❌ Erreur création classeur: ${createError.message}`, context);
       return NextResponse.json(
         { error: 'Erreur lors de la création du classeur' },
         { status: 500, headers: { "Content-Type": "application/json" } }
@@ -85,20 +85,20 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       await triggerUnifiedRealtimePolling('classeurs', 'CREATE');
       logApi.info('✅ Polling déclenché pour classeurs', context);
     } catch (pollingError) {
-      logApi.warn('⚠️ Erreur lors du déclenchement du polling', pollingError);
+      logApi.warn('⚠️ Erreur lors du déclenchement du polling', context);
     }
 
     return NextResponse.json({
       success: true,
-      message: 'Classeur créé avec succès',
-      classeur: classeur
-    });
+      classeur
+    }, { status: 201, headers: { "Content-Type": "application/json" } });
 
-  } catch (err: unknown) {
-    const error = err as Error;
-    logApi.info(`❌ Erreur serveur: ${error}`, context);
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
+    logApi.error(`❌ Erreur inattendue: ${errorMessage}`, context);
+    
     return NextResponse.json(
-      { error: 'Erreur serveur' },
+      { error: 'Erreur interne du serveur' },
       { status: 500, headers: { "Content-Type": "application/json" } }
     );
   }
