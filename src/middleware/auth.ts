@@ -22,50 +22,88 @@ export interface AuthResult {
  */
 export async function authenticateUser(req: NextRequest): Promise<AuthResult> {
   try {
+    // 🚨 LOGS DÉTAILLÉS POUR DÉBOGUER CHATGPT
     console.log('🚨 [AUTH] ===== DÉBUT GETAUTHENTICATEDUSER =====');
     console.log('🚨 [AUTH] URL:', req.url);
     console.log('🚨 [AUTH] Méthode:', req.method);
+    console.log('🚨 [AUTH] User-Agent:', req.headers.get('user-agent'));
+    console.log('🚨 [AUTH] Content-Type:', req.headers.get('content-type'));
+    console.log('🚨 [AUTH] Accept:', req.headers.get('accept'));
     
-    // ✅ LOGS COMPLETS : Capturer tous les headers
-    console.log('🚨 [AUTH] Tous les headers reçus:');
-    const allHeaders: Record<string, string> = {};
+    // 🚨 LOGS COMPLETS DES HEADERS
+    console.log('🚨 [AUTH] ===== TOUS LES HEADERS =====');
     req.headers.forEach((value, key) => {
-      allHeaders[key] = value;
-      console.log(`   ${key}: ${value}`);
+      console.log(`🚨 [AUTH] ${key}:`, value);
     });
+    console.log('🚨 [AUTH] ===== FIN HEADERS =====');
     
-    console.log('🚨 [AUTH] Headers complets:', JSON.stringify(allHeaders, null, 2));
+    // 🚨 LOGS DU BODY SI PRÉSENT
+    if (req.method !== 'GET' && req.method !== 'HEAD') {
+      try {
+        const bodyText = await req.text();
+        console.log('🚨 [AUTH] Body reçu:', bodyText);
+        console.log('🚨 [AUTH] Taille du body:', bodyText.length);
+        
+        // Essayer de parser le JSON si possible
+        try {
+          const bodyJson = JSON.parse(bodyText);
+          console.log('🚨 [AUTH] Body JSON parsé:', JSON.stringify(bodyJson, null, 2));
+        } catch (parseError) {
+          console.log('🚨 [AUTH] Body non-JSON, affichage brut');
+        }
+      } catch (bodyError) {
+        console.log('🚨 [AUTH] Erreur lecture body:', bodyError);
+      }
+    }
     
     // Extraire le token depuis les headers
     const authHeader = req.headers.get('authorization');
-    console.log('🚨 [AUTH] Header Authorization reçu:', authHeader ? `"${authHeader}"` : 'ABSENT');
+    console.log('🚨 [AUTH] Header Authorization reçu:', authHeader || 'ABSENT');
     
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       console.log('🚨 [AUTH] ❌ Header Authorization manquant ou invalide');
-      console.log('🚨 [AUTH] Format attendu: "Bearer <token>"');
-      console.log('🚨 [AUTH] Format reçu:', authHeader ? `"${authHeader}"` : 'ABSENT');
-      console.log('🚨 [AUTH] ===== FIN GETAUTHENTICATEDUSER (ÉCHEC) =====');
+      
+      // 🚨 VÉRIFICATION ALTERNATIVE DES HEADERS
+      const allHeaders = Array.from(req.headers.entries());
+      const authVariants = allHeaders.filter(([key, value]) => 
+        key.toLowerCase().includes('auth') || 
+        key.toLowerCase().includes('token') ||
+        key.toLowerCase().includes('bearer')
+      );
+      
+      if (authVariants.length > 0) {
+        console.log('🚨 [AUTH] 🔍 Headers similaires trouvés:', authVariants);
+      }
+      
+      // 🚨 VÉRIFICATION DES HEADERS PERSONNALISÉS CHATGPT
+      const chatgptHeaders = allHeaders.filter(([key, value]) => 
+        key.toLowerCase().includes('chatgpt') || 
+        key.toLowerCase().includes('openai') ||
+        key.toLowerCase().includes('gpt')
+      );
+      
+      if (chatgptHeaders.length > 0) {
+        console.log('🚨 [AUTH] 🔍 Headers ChatGPT trouvés:', chatgptHeaders);
+      }
+      
       return { user: null, error: 'Token d\'authentification manquant' };
     }
 
     const token = authHeader.replace('Bearer ', '');
     console.log('🚨 [AUTH] Token extrait (longueur):', token.length);
-    console.log('🚨 [AUTH] Token (premiers 20 caractères):', token.substring(0, 20) + '...');
+    console.log('🚨 [AUTH] Token début:', token.substring(0, 20) + '...');
     
     // Vérifier le token avec Supabase
-    console.log('🚨 [AUTH] Vérification du token avec Supabase...');
     const { data: { user }, error } = await supabase.auth.getUser(token);
     
     if (error || !user) {
-      console.log('🚨 [AUTH] ❌ Erreur Supabase ou utilisateur non trouvé:', error);
-      console.log('🚨 [AUTH] ===== FIN GETAUTHENTICATEDUSER (ÉCHEC) =====');
+      console.log('🚨 [AUTH] ❌ Erreur validation token Supabase:', error);
       return { user: null, error: 'Token invalide ou expiré' };
     }
 
-    console.log('🚨 [AUTH] ✅ Token Supabase valide, utilisateur:', user.id);
+    console.log('🚨 [AUTH] ✅ Token validé pour utilisateur:', user.id);
     
     // Récupérer les informations utilisateur depuis la base
-    console.log('🚨 [AUTH] Récupération du profil utilisateur...');
     const { data: userProfile, error: profileError } = await supabase
       .from('users')
       .select('id, email, username')
@@ -73,18 +111,13 @@ export async function authenticateUser(req: NextRequest): Promise<AuthResult> {
       .single();
 
     if (profileError || !userProfile) {
-      console.log('🚨 [AUTH] ❌ Profil utilisateur non trouvé:', profileError);
-      console.log('🚨 [AUTH] ===== FIN GETAUTHENTICATEDUSER (ÉCHEC) =====');
+      console.log('🚨 [AUTH] ❌ Erreur récupération profil:', profileError);
       return { user: null, error: 'Profil utilisateur non trouvé' };
     }
 
-    console.log('🚨 [AUTH] ✅ Profil utilisateur récupéré:', { 
-      id: userProfile.id, 
-      email: userProfile.email, 
-      username: userProfile.username 
-    });
-    console.log('🚨 [AUTH] ===== FIN GETAUTHENTICATEDUSER (SUCCÈS) =====');
-    
+    console.log('🚨 [AUTH] ✅ Profil utilisateur récupéré:', userProfile.email);
+    console.log('🚨 [AUTH] ===== FIN GETAUTHENTICATEDUSER =====');
+
     return {
       user: {
         id: userProfile.id,
@@ -94,8 +127,8 @@ export async function authenticateUser(req: NextRequest): Promise<AuthResult> {
     };
 
   } catch (error) {
-    console.error('🚨 [AUTH] ❌ Erreur d\'authentification:', error);
-    console.log('🚨 [AUTH] ===== FIN GETAUTHENTICATEDUSER (ERREUR) =====');
+    console.error('🚨 [AUTH] ❌ Erreur inattendue:', error);
+    logger.error('Erreur d\'authentification:', error);
     return { user: null, error: 'Erreur d\'authentification' };
   }
 }
