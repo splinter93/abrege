@@ -62,7 +62,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     // Construire la requête de base
     let query = supabase
       .from('articles')
-      .select('id, source_title, slug, folder_id, classeur_id, created_at, updated_at, is_published, markdown_content', { count: 'exact' })
+      .select('id, source_title, slug, folder_id, classeur_id, created_at, updated_at, is_published, markdown_content')
       .eq('user_id', userId);
 
     // Appliquer les filtres
@@ -79,8 +79,11 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       query = query.eq('is_published', isPublished === 'true');
     }
 
-    // Récupérer le nombre total d'éléments
-    const { count: totalCount, error: countError } = await query;
+    // Récupérer le nombre total d'éléments avec une requête séparée
+    const { count: totalCount, error: countError } = await supabase
+      .from('articles')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', userId);
     
     if (countError) {
       logApi.info(`❌ Erreur comptage notes: ${countError.message}`, context);

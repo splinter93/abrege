@@ -36,18 +36,12 @@ export interface PermissionResult {
  */
 export async function getAuthenticatedUser(request: NextRequest): Promise<AuthResult> {
   try {
-    console.log('🚨 [AUTH] ===== DÉBUT GETAUTHENTICATEDUSER =====');
-    
     // ✅ ESSAYER D'ABORD L'API KEY
     const apiKey = request.headers.get('X-API-Key');
     if (apiKey) {
-      console.log('🚨 [AUTH] API Key détectée, validation...');
       try {
         const apiKeyUser = await validateApiKey(apiKey);
         if (apiKeyUser) {
-          console.log('🚨 [AUTH] ✅ Utilisateur authentifié via API Key:', apiKeyUser.user_id);
-          console.log('🚨 [AUTH] ===== FIN GETAUTHENTICATEDUSER API KEY SUCCÈS =====');
-          
           return {
             success: true,
             userId: apiKeyUser.user_id,
@@ -56,28 +50,19 @@ export async function getAuthenticatedUser(request: NextRequest): Promise<AuthRe
           };
         }
       } catch (apiKeyError) {
-        console.log('🚨 [AUTH] ❌ API Key invalide, essai OAuth...');
+        // API Key invalide, essai OAuth
       }
     }
     
     // ✅ ESSAYER LE TOKEN OAUTH
     const authHeader = request.headers.get('Authorization');
     if (authHeader && authHeader.startsWith('Bearer ')) {
-      console.log('🚨 [AUTH] Header Authorization reçu:', 'PRÉSENT');
-      
       const token = authHeader.substring(7);
-      console.log('🚨 [AUTH] Token extrait:', token ? 'PRÉSENT' : 'ABSENT');
-      console.log('🚨 [AUTH] Longueur token:', token.length);
       
       try {
-        console.log('🚨 [AUTH] Test authentification OAuth...');
         const oauthUser = await oauthService.validateAccessToken(token);
         
         if (oauthUser) {
-          console.log('🚨 [AUTH] ✅ Utilisateur authentifié via OAuth:', oauthUser.user_id);
-          console.log('🚨 [AUTH] Scopes OAuth:', oauthUser.scopes);
-          console.log('🚨 [AUTH] ===== FIN GETAUTHENTICATEDUSER OAUTH SUCCÈS =====');
-          
           return {
             success: true,
             userId: oauthUser.user_id,
@@ -86,12 +71,11 @@ export async function getAuthenticatedUser(request: NextRequest): Promise<AuthRe
           };
         }
       } catch (oauthError) {
-        console.log('🚨 [AUTH] ❌ Token OAuth invalide, essai JWT Supabase...');
+        // Token OAuth invalide, essai JWT Supabase
       }
       
       // ✅ ESSAYER LE JWT SUPABASE (fallback)
       try {
-        console.log('🚨 [AUTH] Test authentification JWT Supabase...');
         const supabaseWithToken = createClient(
           process.env.NEXT_PUBLIC_SUPABASE_URL!,
           process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -107,12 +91,8 @@ export async function getAuthenticatedUser(request: NextRequest): Promise<AuthRe
         const { data: { user }, error } = await supabaseWithToken.auth.getUser();
         
         if (error || !user) {
-          console.log('🚨 [AUTH] ❌ JWT Supabase invalide');
           throw new Error('JWT invalide');
         }
-
-        console.log('🚨 [AUTH] ✅ Utilisateur authentifié via JWT Supabase:', user.id);
-        console.log('🚨 [AUTH] ===== FIN GETAUTHENTICATEDUSER JWT SUCCÈS =====');
 
         return {
           success: true,
@@ -120,14 +100,11 @@ export async function getAuthenticatedUser(request: NextRequest): Promise<AuthRe
           authType: 'jwt'
         };
       } catch (jwtError) {
-        console.log('🚨 [AUTH] ❌ JWT Supabase échoué aussi');
+        // JWT Supabase échoué
       }
-    } else {
-      console.log('🚨 [AUTH] Header Authorization reçu:', 'ABSENT');
     }
     
     // ❌ AUCUNE AUTHENTIFICATION VALIDE
-    console.log('🚨 [AUTH] ❌ Aucune méthode d\'authentification valide');
     return {
       success: false,
       error: 'Authentification requise - API Key, OAuth ou JWT valide nécessaire',
@@ -135,9 +112,6 @@ export async function getAuthenticatedUser(request: NextRequest): Promise<AuthRe
     };
 
   } catch (error) {
-    console.log('🚨 [AUTH] ❌ EXCEPTION dans getAuthenticatedUser:', error);
-    console.log('🚨 [AUTH] Stack trace:', error instanceof Error ? error.stack : 'Pas de stack trace');
-    
     logApi.error(`❌ Erreur authentification: ${error}`, { component: 'AuthUtils', error });
     return {
       success: false,
@@ -441,20 +415,12 @@ export async function isArticlePublic(articleId: string): Promise<boolean> {
  */
 async function validateApiKey(apiKey: string): Promise<{ user_id: string; scopes?: string[] } | null> {
   try {
-    console.log('🚨 [AUTH] Validation API Key via service...');
-    console.log('🚨 [AUTH] API Key reçue (longueur):', apiKey ? apiKey.length : 'NULL');
-    console.log('🚨 [AUTH] API Key début:', apiKey ? apiKey.substring(0, 10) + '...' : 'NULL');
-    
     // Utiliser le nouveau service pour valider l'API Key
     const apiKeyInfo = await ApiKeyService.validateApiKey(apiKey);
     
     if (!apiKeyInfo) {
-      console.log('🚨 [AUTH] API Key invalide via service');
       return null;
     }
-    
-    console.log('🚨 [AUTH] ✅ API Key valide via service pour utilisateur:', apiKeyInfo.user_id);
-    console.log('🚨 [AUTH] Scopes API Key:', apiKeyInfo.scopes);
     
     return {
       user_id: apiKeyInfo.user_id,
@@ -462,8 +428,6 @@ async function validateApiKey(apiKey: string): Promise<{ user_id: string; scopes
     };
     
   } catch (error) {
-    console.log('🚨 [AUTH] ❌ Erreur validation API Key via service:', error);
-    console.log('🚨 [AUTH] Stack trace:', error.stack);
     return null;
   }
 } 

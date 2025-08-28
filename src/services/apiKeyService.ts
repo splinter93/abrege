@@ -110,13 +110,11 @@ export class ApiKeyService {
         .single();
 
       if (error || !data) {
-        console.log('🚨 [API_KEY] Clé invalide ou inactive');
         return null;
       }
 
       // Vérifier l'expiration
       if (data.expires_at && new Date(data.expires_at) < new Date()) {
-        console.log('🚨 [API_KEY] Clé expirée');
         return null;
       }
 
@@ -135,7 +133,6 @@ export class ApiKeyService {
         expires_at: data.expires_at
       };
 
-      console.log('🚨 [API_KEY] ✅ Clé valide pour utilisateur:', data.user_id);
       return info;
 
     } catch (error) {
