@@ -22,44 +22,40 @@ function AuthPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  // Params OAuth externes (ChatGPT Actions)
+  // Params OAuth envoyés par ChatGPT Actions
   const clientId = searchParams?.get('client_id') || null;
   const redirectUri = searchParams?.get('redirect_uri') || null;
-  const scope = searchParams?.get('scope') || null; // espaces attendus
+  const scope = searchParams?.get('scope') || null;         // espaces, pas virgules
   const state = searchParams?.get('state') || null;
   const responseType = searchParams?.get('response_type') || null;
 
   const isExternalOAuth = Boolean(clientId && redirectUri && responseType === 'code');
 
-  // Empêche les doubles callbacks auto
+  // Anti double callback auto
   const didRunExternalCallbackRef = useRef(false);
 
-  // ✅ CORRECTION : Vérification de session avec gestion du flux OAuth externe
+  // Vérifie la session et gère le flux externe ChatGPT
   useEffect(() => {
     (async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
+
         if (session) {
           setCurrentSession(session);
 
-          // Flux externe (ChatGPT) → générer le code et rediriger automatiquement
+          // Flux ChatGPT → génère un code et redirige vers redirect_uri immédiatement
           if (isExternalOAuth && clientId && redirectUri && !didRunExternalCallbackRef.current) {
-            // ✅ CORRECTION : Vérifier d'abord si on a des paramètres OAuth stockés
-            const oauthParams = sessionStorage.getItem('oauth_external_params');
-            if (oauthParams) {
-              console.log('🔍 [Auth] Paramètres OAuth externes trouvés, lancement du callback');
-              didRunExternalCallbackRef.current = true; // lock anti double-run
-              setSessionStatus('Session trouvée, authentification OAuth en cours...');
-              await handleExternalOAuthCallback(session);
-              return;
-            } else {
-              console.log('🔍 [Auth] Pas de paramètres OAuth externes, flux normal');
-            }
+            didRunExternalCallbackRef.current = true;
+            setSessionStatus('Session trouvée, authentification OAuth en cours...');
+            await handleExternalOAuthCallback(session);
+            return; // ne pas router ailleurs
           }
 
-          // Flux normal → entrer dans l'app
-          setSessionStatus('Session trouvée, redirection…');
-          router.push('/');
+          // Flux normal
+          if (!isExternalOAuth) {
+            setSessionStatus('Session trouvée, redirection…');
+            router.push('/');
+          }
         } else {
           setSessionStatus('Aucune session');
           setCurrentSession(null);
@@ -70,10 +66,10 @@ function AuthPageContent() {
         setCurrentSession(null);
       }
     })();
-    // Recalc si les params changent (nouvelle tentative d'OAuth externe)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams, isExternalOAuth, clientId, redirectUri]);
 
+  // Form email/password
   const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -98,22 +94,9 @@ function AuthPageContent() {
   // OAuth (Google/GitHub/Apple) via hook dédié
   const { signIn: signInWithOAuth, loading: oauthLoading, error: oauthError } = useOAuth();
 
-  /**
-   * Lance l’auth OAuth (interne). Pour un flux externe, on stocke juste les params (debug/traçabilité),
-   * puis on laisse Supabase gérer l’auth. La redirection finale vers ChatGPT sera faite par handleExternalOAuthCallback.
-   */
+  // Lance l’auth interne ; le callback ChatGPT sera déclenché automatiquement quand la session existe
   const handleOAuthSignIn = async (provider: 'google' | 'apple' | 'github') => {
     try {
-      if (isExternalOAuth && clientId && redirectUri) {
-        const oauthParams = {
-          client_id: clientId,
-          redirect_uri: redirectUri,
-          scope: scope || '',
-          state: state || '',
-          response_type: responseType || ''
-        };
-        sessionStorage.setItem('oauth_external_params', JSON.stringify(oauthParams));
-      }
       await signInWithOAuth(provider);
     } catch (e) {
       console.error('Erreur connexion OAuth:', e);
@@ -122,79 +105,61 @@ function AuthPageContent() {
   };
 
   /**
-   * Callback OAuth pour applications externes (ChatGPT).
-   * Rôle: générer un code Scrivia, puis rediriger vers `redirect_uri` avec `code` + `state` **inchangé**.
+   * Callback OAuth pour ChatGPT : crée un "code" côté Scrivia puis redirige vers `redirect_uri`
+   * avec `code` + `state` (state inchangé = indispensable pour ChatGPT).
    */
   const handleExternalOAuthCallback = async (session: any) => {
     try {
-      console.log('🔍 [OAuth] Début handleExternalOAuthCallback avec session:', session.user.email);
-      
       if (!clientId || !redirectUri) {
         console.error('❌ [OAuth] Paramètres manquants:', { clientId, redirectUri });
         return;
       }
 
-      console.log('🔍 [OAuth] Paramètres OAuth externes:', { clientId, redirectUri, scope, state });
-
-      // Scopes autorisés (filtrage souple)
+      // Filtrage souple des scopes
       const allowedScopes = [
         'notes:read', 'notes:write',
         'dossiers:read', 'dossiers:write',
         'classeurs:read', 'classeurs:write'
       ];
       const requested = scope ? scope.split(' ').filter(Boolean) : [];
-      const validScopes = requested.filter(s => allowedScopes.includes(s));
-      const finalScopes = validScopes.length > 0 ? validScopes : ['notes:read'];
+      const finalScopes = requested.filter(s => allowedScopes.includes(s));
+      if (finalScopes.length === 0) finalScopes.push('notes:read');
 
-      console.log('🔍 [OAuth] Scopes traités:', { requested, validScopes, finalScopes });
-
-      // Demande de code d'autorisation Scrivia
-      console.log('🔍 [OAuth] Appel API create-code...');
+      // Demande de code d’autorisation Scrivia (backend doit renvoyer { code })
       const res = await fetch('/api/auth/create-code', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          // Bearer = session Scrivia (Supabase), côté backend on identifie l'utilisateur
-          'Authorization': `Bearer ${session.access_token}`
+          'Authorization': `Bearer ${session.access_token}` // token Supabase (identifie l’utilisateur)
         },
         body: JSON.stringify({
           clientId,
           userId: session.user?.id,
           redirectUri,
           scopes: finalScopes,
-          state // IMPORTANT: on renvoie le state tel quel à ChatGPT
+          state // renvoyé tel quel à ChatGPT
         })
       });
 
-      console.log('🔍 [OAuth] Réponse API create-code:', res.status, res.statusText);
-
       if (!res.ok) {
         const text = await res.text();
-        console.error('❌ [OAuth] Erreur /api/auth/create-code:', res.status, text);
+        console.error('❌ [/create-code]', res.status, text);
         throw new Error(`create-code failed ${res.status}`);
       }
 
       const { code } = await res.json();
-      console.log('🔍 [OAuth] Code OAuth reçu:', code ? 'PRÉSENT' : 'ABSENT');
 
-      // Redirection vers le callback ChatGPT
+      // Redirection finale vers le callback ChatGPT
       const callbackUrl = new URL(redirectUri);
       callbackUrl.searchParams.set('code', code);
-      if (state) callbackUrl.searchParams.set('state', state);
+      if (state) callbackUrl.searchParams.set('state', state); // state INCHANGÉ
 
-      console.log('🔁 [OAuth] Redirection finale →', callbackUrl.toString());
-      console.log('🔁 [OAuth] Redirection vers ChatGPT dans 2 secondes...');
-      
-      // ✅ CORRECTION : Délai pour laisser l'UI se mettre à jour
-      setTimeout(() => {
-        window.location.href = callbackUrl.toString();
-      }, 2000);
+      window.location.href = callbackUrl.toString();
     } catch (e) {
       console.error('❌ [OAuth] Erreur callback OAuth externe:', e);
       setError('Erreur lors de la redirection OAuth');
       setSessionStatus('Erreur OAuth externe');
-      // Permettre un retry manuel si besoin
-      didRunExternalCallbackRef.current = false;
+      didRunExternalCallbackRef.current = false; // autorise un retry manuel
     }
   };
 
@@ -238,7 +203,7 @@ function AuthPageContent() {
             {error && <div className="error-message" role="alert">{error}</div>}
           </div>
 
-          {/* Formulaire classique (non flux externe) */}
+          {/* Formulaire classique (hors flux externe) */}
           {!isExternalOAuth && (
             <>
               <form onSubmit={handleEmailAuth} className="auth-form">
