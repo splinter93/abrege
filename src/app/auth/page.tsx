@@ -149,8 +149,8 @@ function AuthPageContent() {
         window.sessionStorage.setItem('oauth_external_params', JSON.stringify(oauthParams));
       }
       
-      // ❌ SUPPRIMÉ : Redirection automatique vers callback
-      // router.push('/auth/callback');
+      // ✅ CORRECTION : Redirection vers le callback OAuth
+      router.push('/auth/callback');
     }
   };
 

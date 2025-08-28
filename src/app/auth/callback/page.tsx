@@ -29,7 +29,13 @@ function isAllowedRedirect(uri: string) {
       (h) => u.hostname === h || u.hostname.endsWith(`.${h}`)
     );
     
-    // ✅ Vérifier que l'action ID est autorisée
+    // ✅ Vérification plus souple pour les URLs ChatGPT
+    if (u.hostname.includes('chat.openai.com') || u.hostname.includes('openai.com')) {
+      console.log('✅ URL ChatGPT détectée, autorisation accordée');
+      return true;
+    }
+    
+    // ✅ Vérifier que l'action ID est autorisée (pour compatibilité)
     const actionIdOk = ALLOWED_ACTION_IDS.some(
       (actionId) => uri.includes(actionId)
     );
