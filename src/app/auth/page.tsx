@@ -43,8 +43,9 @@ function AuthPageContent() {
         if (session) {
           setCurrentSession(session);
 
-          // Flux ChatGPT → génère un code et redirige vers redirect_uri immédiatement
+          // ✅ CORRECTION : Flux ChatGPT → génère un code et redirige vers redirect_uri immédiatement
           if (isExternalOAuth && clientId && redirectUri && !didRunExternalCallbackRef.current) {
+            console.log('🔍 [Auth] Session trouvée, lancement automatique du callback OAuth externe');
             didRunExternalCallbackRef.current = true;
             setSessionStatus('Session trouvée, authentification OAuth en cours...');
             await handleExternalOAuthCallback(session);
@@ -66,8 +67,9 @@ function AuthPageContent() {
         setCurrentSession(null);
       }
     })();
+    // ✅ CORRECTION : Ajouter session dans les dépendances pour relancer après connexion
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchParams, isExternalOAuth, clientId, redirectUri]);
+  }, [searchParams, isExternalOAuth, clientId, redirectUri, currentSession]);
 
   // Form email/password
   const handleEmailAuth = async (e: React.FormEvent) => {
