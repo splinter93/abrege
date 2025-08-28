@@ -124,6 +124,30 @@ export default function TestOAuthPage() {
     }
   };
 
+  const testOAuthEndpoint = async () => {
+    addResult('🧪 Test direct de l\'endpoint OAuth...');
+    
+    try {
+      const testUrl = '/api/test-oauth?client_id=scrivia-custom-gpt&redirect_uri=https://chat.openai.com/aip/g-369c00bd47b6f501275b414d19d5244ac411097b/oauth/callback';
+      addResult(`🔗 URL de test: ${testUrl}`);
+      
+      const response = await fetch(testUrl);
+      addResult(`📡 Réponse endpoint: ${response.status} ${response.statusText}`);
+      
+      if (response.ok) {
+        const data = await response.json();
+        addResult(`✅ Test réussi: ${data.message}`);
+        addResult(`🔍 Validation: ${JSON.stringify(data.validation, null, 2)}`);
+        addResult(`📊 Client: ${JSON.stringify(data.client, null, 2)}`);
+      } else {
+        const error = await response.json();
+        addResult(`❌ Erreur endpoint: ${JSON.stringify(error, null, 2)}`);
+      }
+    } catch (error) {
+      addResult(`💥 Exception: ${error}`);
+    }
+  };
+
   const clearResults = () => {
     setTestResults([]);
   };
@@ -150,6 +174,10 @@ export default function TestOAuthPage() {
             
             <button onClick={testCreateCodeWithRealAuth} className="auth-button">
               🔑 Tester l'API create-code avec authentification réelle
+            </button>
+            
+            <button onClick={testOAuthEndpoint} className="auth-button">
+              🔗 Tester l'endpoint OAuth direct
             </button>
             
             <button onClick={clearResults} className="auth-button">
