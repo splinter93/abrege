@@ -130,7 +130,7 @@ export async function PATCH(
     // Résoudre la référence de la note avec gestion d'erreur améliorée
     let noteId: string;
     try {
-      noteId = await resolveNoteRef(ref, userId);
+      noteId = await resolveNoteRef(ref, userId, userToken);
     } catch (error) {
       logger.error(`[Move Note API] ❌ Note non trouvée: ${ref}`, { 
         noteRef: ref, 
@@ -158,7 +158,7 @@ export async function PATCH(
     
     if (body.target_classeur_id) {
       try {
-        targetClasseurId = await resolveClasseurRef(body.target_classeur_id, userId);
+        targetClasseurId = await resolveClasseurRef(body.target_classeur_id, userId, userToken);
       } catch {
         return new Response(
           JSON.stringify({ 
@@ -174,7 +174,7 @@ export async function PATCH(
         targetFolderId = null;
       } else {
         try {
-          targetFolderId = await resolveFolderRef(body.target_folder_id, userId);
+          targetFolderId = await resolveFolderRef(body.target_folder_id, userId, userToken);
         } catch {
           return new Response(
             JSON.stringify({ 
