@@ -47,7 +47,18 @@ function AuthPageContent() {
           if (isExternalOAuth && clientId && redirectUri && !didRunExternalCallbackRef.current) {
             console.log('🔍 [Auth] Flux OAuth ChatGPT détecté, attente de connexion manuelle');
             didRunExternalCallbackRef.current = true;
-            setSessionStatus('Flux OAuth ChatGPT détecté. Veuillez vous connecter pour autoriser l\'accès.');
+            
+            // ✅ NOUVEAU : Détecter si c'est l'ancienne ou la nouvelle action ID
+            const isOldActionId = redirectUri.includes('g-011f24575c8d3b9d5d69e124bafa1364ae3badf9');
+            const isNewActionId = redirectUri.includes('g-369c00bd47b6f501275b414d19d5244ac411097b');
+            
+            if (isOldActionId) {
+              setSessionStatus('⚠️ Ancienne action ChatGPT détectée. Connectez-vous puis cliquez sur "Continuer le flux OAuth manuellement".');
+            } else if (isNewActionId) {
+              setSessionStatus('✅ Nouvelle action ChatGPT détectée. Veuillez vous connecter pour autoriser l\'accès.');
+            } else {
+              setSessionStatus('🔍 Flux OAuth externe détecté. Veuillez vous connecter pour autoriser l\'accès.');
+            }
             
             // ✅ CORRECTION : Stocker les paramètres pour plus tard
             const oauthParams = {
@@ -119,8 +130,27 @@ function AuthPageContent() {
     }
   };
 
-  // ✅ OPTIMISATION : Fonction handleExternalOAuthCallback supprimée
-  // La logique OAuth est maintenant gérée uniquement dans /auth/callback
+  // ✅ NOUVEAU : Fonction de redirection manuelle pour gérer l'ancienne action ID
+  const handleManualOAuthRedirect = () => {
+    if (isExternalOAuth && clientId && redirectUri) {
+      console.log('🔍 [Auth] Redirection manuelle vers callback OAuth');
+      
+      // Stocker les paramètres OAuth
+      const oauthParams = {
+        client_id: clientId,
+        redirect_uri: redirectUri,
+        scope: scope || '',
+        state: state || ''
+      };
+      
+      if (typeof window !== 'undefined') {
+        window.sessionStorage.setItem('oauth_external_params', JSON.stringify(oauthParams));
+      }
+      
+      // Rediriger vers callback pour traitement OAuth
+      router.push('/auth/callback');
+    }
+  };
 
   return (
     <div className="auth-container">
@@ -221,8 +251,16 @@ function AuthPageContent() {
               {currentSession && (
                 <div className="auth-oauth-session-info">
                   <p>✅ Connecté en tant que {currentSession.user?.email}</p>
-                  {/* ✅ OPTIMISATION : Bouton supprimé car la logique OAuth est gérée automatiquement */}
+                  {/* ✅ NOUVEAU : Bouton de redirection manuelle pour gérer l'ancienne action ID */}
                   <p>🔄 Redirection automatique en cours...</p>
+                  
+                  <button
+                    onClick={() => handleManualOAuthRedirect()}
+                    className="auth-button primary"
+                    style={{ marginTop: '1rem' }}
+                  >
+                    🔄 Continuer le flux OAuth manuellement
+                  </button>
                 </div>
               )}
 

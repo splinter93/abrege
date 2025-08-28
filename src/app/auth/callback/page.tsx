@@ -14,6 +14,12 @@ type OAuthParams = {
 };
 
 const ALLOWED_REDIRECT_HOSTS = ['chat.openai.com', 'openai.com', 'chatgpt.com'];
+
+// ✅ NOUVEAU : Accepter aussi l'ancienne action ID comme fallback
+const ALLOWED_ACTION_IDS = [
+  'g-011f24575c8d3b9d5d69e124bafa1364ae3badf9',  // Ancienne action ID
+  'g-369c00bd47b6f501275b414d19d5244ac411097b'   // Nouvelle action ID
+];
 const MAX_STATE_LEN = 512;
 
 function isAllowedRedirect(uri: string) {
@@ -22,7 +28,13 @@ function isAllowedRedirect(uri: string) {
     const hostOk = ALLOWED_REDIRECT_HOSTS.some(
       (h) => u.hostname === h || u.hostname.endsWith(`.${h}`)
     );
-    return u.protocol === 'https:' && hostOk;
+    
+    // ✅ NOUVEAU : Vérifier aussi que l'action ID est autorisée
+    const actionIdOk = ALLOWED_ACTION_IDS.some(
+      (actionId) => uri.includes(actionId)
+    );
+    
+    return u.protocol === 'https:' && hostOk && actionIdOk;
   } catch {
     return false;
   }

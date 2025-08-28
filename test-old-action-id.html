@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Ancienne Action ID ChatGPT</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-url {
+            background: #f0f0f0;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+            word-break: break-all;
+            font-family: monospace;
+        }
+        .button {
+            background: #007bff;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        .button:hover {
+            background: #0056b3;
+        }
+        .warning {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .info {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Test Ancienne Action ID ChatGPT</h1>
+        
+        <div class="warning">
+            <h3>⚠️ Test de l'Ancienne Action ID</h3>
+            <p><strong>Action ID :</strong> g-011f24575c8d3b9d5d69e124bafa1364ae3badf9</p>
+            <p><strong>Status :</strong> Supportée comme fallback</p>
+            <p><strong>Note :</strong> Cette action ID est l'ancienne version. Utilisez la nouvelle si possible.</p>
+        </div>
+
+        <div class="info">
+            <h3>✅ Configuration OAuth Validée</h3>
+            <p><strong>Client ID:</strong> scrivia-custom-gpt</p>
+            <p><strong>Action IDs supportés:</strong></p>
+            <ul>
+                <li>🆕 <strong>Nouvelle :</strong> g-369c00bd47b6f501275b414d19d5244ac411097b</li>
+                <li>🔄 <strong>Ancienne :</strong> g-011f24575c8d3b9d5d69e124bafa1364ae3badf9</li>
+            </ul>
+            <p><strong>Scopes:</strong> notes:read, notes:write, dossiers:read, dossiers:write, classeurs:read, classeurs:write, profile:read</p>
+        </div>
+
+        <h2>🚀 Test du Flux OAuth avec l'Ancienne Action ID</h2>
+        
+        <p>Cette page vous permet de tester le flux OAuth ChatGPT avec l'ancienne action ID. Cliquez sur le bouton ci-dessous pour simuler l'arrivée depuis l'ancienne action ChatGPT :</p>
+        
+        <div class="test-url">
+            <strong>URL de test (Ancienne Action ID) :</strong><br>
+            <span id="testUrlOld">Chargement...</span>
+        </div>
+
+        <div style="text-align: center; margin: 30px 0;">
+            <button class="button" onclick="testOldActionId()">
+                🧪 Tester l'Ancienne Action ID
+            </button>
+            
+            <button class="button" onclick="openTestUrlOld()">
+                🔗 Ouvrir l'URL de Test
+            </button>
+        </div>
+
+        <div class="info">
+            <h3>📋 Ce qui devrait se passer :</h3>
+            <ol>
+                <li>Vous arrivez sur la page <code>/auth</code> avec les paramètres OAuth de l'ancienne action</li>
+                <li>Vous voyez le message <strong>"⚠️ Ancienne action ChatGPT détectée. Connectez-vous puis cliquez sur 'Continuer le flux OAuth manuellement'."</strong></li>
+                <li>Vous cliquez sur "Se connecter avec Google"</li>
+                <li>Après connexion, vous cliquez sur "🔄 Continuer le flux OAuth manuellement"</li>
+                <li>Le flux OAuth se termine correctement</li>
+            </ol>
+        </div>
+
+        <div class="info">
+            <h3>🔧 Corrections Appliquées :</h3>
+            <ul>
+                <li>✅ <strong>Support de l'ancienne action ID</strong> - Ajoutée à la configuration OAuth</li>
+                <li>✅ <strong>Détection intelligente</strong> - Le système reconnaît l'ancienne et la nouvelle action ID</li>
+                <li>✅ <strong>Bouton de redirection manuelle</strong> - Pour gérer les cas où la redirection automatique ne fonctionne pas</li>
+                <li>✅ <strong>Messages d'état adaptés</strong> - Différents messages selon l'action ID détectée</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // Configuration OAuth pour l'ancienne action ID
+        const oauthParamsOld = {
+            client_id: 'scrivia-custom-gpt',
+            redirect_uri: 'https://chat.openai.com/aip/g-011f24575c8d3b9d5d69e124bafa1364ae3badf9/oauth/callback',
+            scope: 'notes:read,notes:write,notes:delete,notes:create,notes:update,notes:move,notes:share,notes:public,dossiers:read,dossiers:write,dossiers:delete,dossiers:create,dossiers:update,dossiers:move,dossiers:share,classeurs:read,classeurs:write,classeurs:delete,classeurs:create,classeurs:update,classeurs:share,files:read,files:write,files:delete,files:upload,files:download,audio:transcribe,audio:translate,user:profile,user:settings',
+            state: 'test-old-action-id',
+            response_type: 'code'
+        };
+
+        // Construire l'URL de test pour l'ancienne action ID
+        function buildTestUrlOld() {
+            const baseUrl = window.location.origin;
+            const params = new URLSearchParams(oauthParamsOld);
+            return `${baseUrl}/auth?${params.toString()}`;
+        }
+
+        // Afficher l'URL de test pour l'ancienne action ID
+        document.getElementById('testUrlOld').textContent = buildTestUrlOld();
+
+        // Tester le flux OAuth avec l'ancienne action ID
+        function testOldActionId() {
+            const testUrl = buildTestUrlOld();
+            console.log('🧪 Test du flux OAuth avec l\'ancienne action ID...');
+            console.log('URL de test:', testUrl);
+            
+            // Rediriger vers la page d'auth
+            window.location.href = testUrl;
+        }
+
+        // Ouvrir l'URL de test pour l'ancienne action ID dans un nouvel onglet
+        function openTestUrlOld() {
+            const testUrl = buildTestUrlOld();
+            window.open(testUrl, '_blank');
+        }
+
+        // Afficher les informations de debug
+        console.log('🔧 Configuration OAuth ancienne action ID:', oauthParamsOld);
+        console.log('🔧 URL de test ancienne action ID:', buildTestUrlOld());
+    </script>
+</body>
+</html>
