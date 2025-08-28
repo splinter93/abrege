@@ -1,7 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
 import { logApi } from '@/utils/logger';
+import { V2ResourceResolver } from '@/utils/v2ResourceResolver';
 import { getAuthenticatedUser } from '@/utils/authUtils';
-import { V2DatabaseUtils } from '@/utils/v2DatabaseUtils';
+
+// 🔧 CORRECTIONS APPLIQUÉES:
+// - Authentification simplifiée via getAuthenticatedUser uniquement
+// - Suppression de la double vérification d'authentification
+// - Client Supabase standard sans token manuel
+// - Plus de 401 causés par des conflits d'authentification
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
 export async function DELETE(
   request: NextRequest,
@@ -31,18 +41,51 @@ export async function DELETE(
 
   const userId = authResult.userId!;
   
-  // Récupérer le token d'authentification
-    if (!) {
-    logApi.error('❌ Token manquant', context);
-    return NextResponse.json(
-      { error: 'Token d\'authentification manquant' },
-      { status: 401, headers: { "Content-Type": "application/json" } }
-    );
-  }
+  // 🔧 CORRECTION: Client Supabase standard, getAuthenticatedUser a déjà validé
+  const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
   try {
-    // Utiliser V2DatabaseUtils pour l'accès direct à la base de données
-    const result = await V2DatabaseUtils.deleteFolder(ref, userId, context);
+    // Résoudre la référence (UUID ou slug)
+    const resolveResult = await V2ResourceResolver.resolveRef(ref, 'folder', userId, context);
+    if (!resolveResult.success) {
+      return NextResponse.json(
+        { error: resolveResult.error },
+        { status: resolveResult.status, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
+    const folderId = resolveResult.id;
+
+    // Vérifier que l'utilisateur est propriétaire du dossier
+    const { data: folder, error: checkError } = await supabase
+      .from('folders')
+      .select('id, name')
+      .eq('id', folderId)
+      .eq('user_id', userId)
+      .single();
+
+    if (checkError || !folder) {
+      logApi.info(`❌ Dossier non trouvé ou accès refusé: ${folderId}`, context);
+      return NextResponse.json(
+        { error: 'Dossier non trouvé ou accès refusé' },
+        { status: 404, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
+    // Supprimer le dossier (cascade automatique via RLS)
+    const { error: deleteError } = await supabase
+      .from('folders')
+      .delete()
+      .eq('id', folderId)
+      .eq('user_id', userId);
+
+    if (deleteError) {
+      logApi.error(`❌ Erreur suppression dossier: ${deleteError.message}`, context);
+      return NextResponse.json(
+        { error: 'Erreur lors de la suppression du dossier' },
+        { status: 500, headers: { "Content-Type": "application/json" } }
+      );
+    }
 
     const apiTime = Date.now() - startTime;
     logApi.info(`✅ Dossier supprimé en ${apiTime}ms`, context);
@@ -50,29 +93,23 @@ export async function DELETE(
     // 🚀 DÉCLENCHER LE POLLING AUTOMATIQUEMENT
     try {
       const { triggerUnifiedRealtimePolling } = await import('@/services/unifiedRealtimeService');
-
-// 🔧 CORRECTIONS APPLIQUÉES:
-// - Authentification simplifiée via getAuthenticatedUser uniquement
-// - Suppression de la double vérification d'authentification
-// - Client Supabase standard sans token manuel
-// - Plus de 401 causés par des conflits d'authentification
-      await triggerUnifiedRealtimePolling('folders', 'DELETE', );
+      await triggerUnifiedRealtimePolling('folders', 'DELETE');
       logApi.info('✅ Polling déclenché pour folders', context);
     } catch (pollingError) {
-      logApi.warn('⚠️ Erreur lors du déclenchement du polling', pollingError);
+      logApi.warn('⚠️ Erreur lors du déclenchement du polling', context);
     }
 
     return NextResponse.json({
       success: true,
-      message: 'Dossier supprimé avec succès',
-      deletedFolderId: ref
-    });
+      message: 'Dossier supprimé avec succès'
+    }, { headers: { "Content-Type": "application/json" } });
 
-  } catch (err: unknown) {
-    const error = err as Error;
-    logApi.info(`❌ Erreur serveur: ${error}`, context);
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
+    logApi.error(`❌ Erreur inattendue: ${errorMessage}`, context);
+    
     return NextResponse.json(
-      { error: 'Erreur serveur' },
+      { error: 'Erreur interne du serveur' },
       { status: 500, headers: { "Content-Type": "application/json" } }
     );
   }
