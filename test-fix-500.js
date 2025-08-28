@@ -1,5 +1,5 @@
 // Test rapide pour vérifier que l'erreur 500 est corrigée
-const API_KEY = 'your-api-key-here'; // Remplacez par votre vraie clé API
+const API_KEY = 'scrivia_d3eb49152b63e591e97c67de8f28d079c3e0927e1aa6c4e14db25d7389dac695';
 const BASE_URL = 'http://localhost:3000/api/v2'; // Test local
 
 async function testFixedAPI() {
