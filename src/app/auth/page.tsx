@@ -48,14 +48,11 @@ function AuthPageContent() {
             console.log('🔍 [Auth] Flux OAuth ChatGPT détecté, attente de connexion manuelle');
             didRunExternalCallbackRef.current = true;
             
-            // ✅ NOUVEAU : Détecter si c'est l'ancienne ou la nouvelle action ID
-            const isOldActionId = redirectUri.includes('g-011f24575c8d3b9d5d69e124bafa1364ae3badf9');
+            // ✅ Détecter l'action ChatGPT
             const isNewActionId = redirectUri.includes('g-369c00bd47b6f501275b414d19d5244ac411097b');
             
-            if (isOldActionId) {
-              setSessionStatus('⚠️ Ancienne action ChatGPT détectée. Connectez-vous puis cliquez sur "Continuer le flux OAuth manuellement".');
-            } else if (isNewActionId) {
-              setSessionStatus('✅ Nouvelle action ChatGPT détectée. Veuillez vous connecter pour autoriser l\'accès.');
+            if (isNewActionId) {
+              setSessionStatus('✅ Action ChatGPT détectée. Veuillez vous connecter pour autoriser l\'accès.');
             } else {
               setSessionStatus('🔍 Flux OAuth externe détecté. Veuillez vous connecter pour autoriser l\'accès.');
             }
@@ -253,7 +250,6 @@ function AuthPageContent() {
               {currentSession && (
                 <div className="auth-oauth-session-info">
                   <p>✅ Connecté en tant que {currentSession.user?.email}</p>
-                  {/* ✅ NOUVEAU : Bouton de redirection manuelle pour gérer l'ancienne action ID */}
                   <p>✅ Vous êtes connecté et pouvez rester sur cette page</p>
                   
                   <button
@@ -261,7 +257,7 @@ function AuthPageContent() {
                     className="auth-button primary"
                     style={{ marginTop: '1rem' }}
                   >
-                    🔄 Continuer le flux OAuth manuellement
+                    🔄 Continuer le flux OAuth
                   </button>
                 </div>
               )}
