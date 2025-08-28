@@ -15,9 +15,10 @@ type OAuthParams = {
 
 const ALLOWED_REDIRECT_HOSTS = ['chat.openai.com', 'openai.com', 'chatgpt.com'];
 
-// ✅ Action ID ChatGPT autorisée
+// ✅ Action IDs ChatGPT autorisées
 const ALLOWED_ACTION_IDS = [
-  'g-369c00bd47b6f501275b414d19d5244ac411097b'   // Action ID ChatGPT
+  'g-011f24575c8d3b9d5d69e124bafa1364ae3badf9',  // Action ID ChatGPT actuelle
+  'g-369c00bd47b6f501275b414d19d5244ac411097b'   // Action ID ChatGPT alternative
 ];
 const MAX_STATE_LEN = 512;
 

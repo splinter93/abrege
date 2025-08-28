@@ -48,11 +48,14 @@ function AuthPageContent() {
             console.log('🔍 [Auth] Flux OAuth ChatGPT détecté, attente de connexion manuelle');
             didRunExternalCallbackRef.current = true;
             
-            // ✅ Détecter l'action ChatGPT
+            // ✅ Détecter les actions ChatGPT
+            const isOldActionId = redirectUri.includes('g-011f24575c8d3b9d5d69e124bafa1364ae3badf9');
             const isNewActionId = redirectUri.includes('g-369c00bd47b6f501275b414d19d5244ac411097b');
             
-            if (isNewActionId) {
-              setSessionStatus('✅ Action ChatGPT détectée. Veuillez vous connecter pour autoriser l\'accès.');
+            if (isOldActionId) {
+              setSessionStatus('✅ Action ChatGPT détectée (ID: g-011f24575c8d3b9d5d69e124bafa1364ae3badf9). Veuillez vous connecter pour autoriser l\'accès.');
+            } else if (isNewActionId) {
+              setSessionStatus('✅ Action ChatGPT détectée (ID: g-369c00bd47b6f501275b414d19d5244ac411097b). Veuillez vous connecter pour autoriser l\'accès.');
             } else {
               setSessionStatus('🔍 Flux OAuth externe détecté. Veuillez vous connecter pour autoriser l\'accès.');
             }

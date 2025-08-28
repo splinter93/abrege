@@ -81,10 +81,12 @@ node scripts/setup-chatgpt-oauth.js
 {
   "client_id": "scrivia-custom-gpt",
   "client_secret": "scrivia-gpt-secret-2024",
-  "redirect_uri": "https://chat.openai.com/aip/g-369c00bd47b6f501275b414d19d5244ac411097b/oauth/callback",
+  "redirect_uri": "https://chat.openai.com/aip/g-011f24575c8d3b9d5d69e124bafa1364ae3badf9/oauth/callback",
   "scopes": "notes:read notes:write dossiers:read dossiers:write classeurs:read classeurs:write profile:read"
 }
 ```
+
+**⚠️ IMPORTANT :** ChatGPT génère automatiquement l'action ID. Utilisez l'URL de callback que ChatGPT vous donne.
 
 ---
 
