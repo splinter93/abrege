@@ -1,0 +1,154 @@
+/* ========================================
+   CHAT GLOBAL STYLES - POLICE INTER UNIFIÉE
+   ======================================== */
+
+/* Application globale de la police Inter pour tous les composants du chat */
+.chat-fullscreen-container,
+.chat-fullscreen-container *,
+.chat-widget-mode,
+.chat-widget-mode *,
+.chat-message,
+.chat-message *,
+.chat-input,
+.chat-input *,
+.chat-sidebar,
+.chat-sidebar *,
+.chat-markdown,
+.chat-markdown *,
+.tool-call-message,
+.tool-call-message *,
+.streaming-message,
+.streaming-message *,
+.reasoning-message,
+.reasoning-message *,
+.chat-bubble,
+.chat-bubble *,
+.chat-header,
+.chat-header *,
+.chat-footer,
+.chat-footer *,
+.chat-controls,
+.chat-controls * {
+  font-family: var(--chat-font-family-inter) !important;
+}
+
+/* Exceptions pour les polices monospace (code, etc.) */
+.chat-markdown code,
+.chat-markdown pre,
+.chat-markdown .hljs,
+.chat-markdown .highlight,
+.tool-call-message code,
+.tool-call-message pre,
+.streaming-message code,
+.streaming-message pre,
+.chat-bubble code,
+.chat-bubble pre,
+.chat-input code,
+.chat-input pre,
+.chat-sidebar code,
+.chat-sidebar pre {
+  font-family: var(--chat-font-mono, 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, monospace) !important;
+}
+
+/* Application spécifique pour les éléments de base du chat */
+.chat-fullscreen-container {
+  font-family: var(--chat-font-family-inter);
+}
+
+.chat-fullscreen-container.chat-widget-mode {
+  font-family: var(--chat-font-family-inter);
+}
+
+/* Messages du chat */
+.chat-message {
+  font-family: var(--chat-font-family-inter);
+}
+
+.chat-message-bubble {
+  font-family: var(--chat-font-family-inter);
+}
+
+.chat-message-assistant {
+  font-family: var(--chat-font-family-inter);
+}
+
+.chat-message-user {
+  font-family: var(--chat-font-family-inter);
+}
+
+/* Input du chat */
+.chat-input-container {
+  font-family: var(--chat-font-family-inter);
+}
+
+.chat-input-textarea {
+  font-family: var(--chat-font-family-inter);
+}
+
+.chat-input-placeholder {
+  font-family: var(--chat-font-family-inter);
+}
+
+/* Sidebar du chat */
+.chat-sidebar {
+  font-family: var(--chat-font-family-inter);
+}
+
+.chat-sidebar-content {
+  font-family: var(--chat-font-family-inter);
+}
+
+.chat-sidebar-header {
+  font-family: var(--chat-font-family-inter);
+}
+
+/* Header du chat */
+.chat-header {
+  font-family: var(--chat-font-family-inter);
+}
+
+.chat-header-title {
+  font-family: var(--chat-font-family-inter);
+}
+
+.chat-header-subtitle {
+  font-family: var(--chat-font-family-inter);
+}
+
+/* Boutons et contrôles du chat */
+.chat-button {
+  font-family: var(--chat-font-family-inter);
+}
+
+.chat-control-button {
+  font-family: var(--chat-font-family-inter);
+}
+
+.chat-toggle-button {
+  font-family: var(--chat-font-family-inter);
+}
+
+/* Tooltips et menus du chat */
+.chat-tooltip {
+  font-family: var(--chat-font-family-inter);
+}
+
+.chat-menu {
+  font-family: var(--chat-font-family-inter);
+}
+
+.chat-menu-item {
+  font-family: var(--chat-font-family-inter);
+}
+
+/* Override pour les composants spécifiques qui pourraient avoir des polices codées en dur */
+.chat-fullscreen-container *:not(code):not(pre):not(.hljs):not(.highlight) {
+  font-family: var(--chat-font-family-inter) !important;
+}
+
+/* Assurer que les variables CSS sont bien définies */
+:root {
+  --chat-font-family-inter: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --chat-font-family-base: 'Noto Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --chat-font-mono: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, monospace;
+}
