@@ -43,13 +43,27 @@ function AuthPageContent() {
         if (session) {
           setCurrentSession(session);
 
-          // ✅ CORRECTION : Flux ChatGPT → génère un code et redirige vers redirect_uri immédiatement
+          // ✅ OPTIMISATION : Flux ChatGPT → redirection vers callback pour traitement
           if (isExternalOAuth && clientId && redirectUri && !didRunExternalCallbackRef.current) {
-            console.log('🔍 [Auth] Session trouvée, lancement automatique du callback OAuth externe');
+            console.log('🔍 [Auth] Session trouvée, redirection vers callback pour traitement OAuth');
             didRunExternalCallbackRef.current = true;
-            setSessionStatus('Session trouvée, authentification OAuth en cours...');
-            await handleExternalOAuthCallback(session);
-            return; // ne pas router ailleurs
+            setSessionStatus('Session trouvée, redirection vers le traitement OAuth...');
+            
+            // ✅ OPTIMISATION : Stocker les paramètres et rediriger vers callback
+            const oauthParams = {
+              client_id: clientId,
+              redirect_uri: redirectUri,
+              scope: scope || '',
+              state: state || ''
+            };
+            
+            if (typeof window !== 'undefined') {
+              window.sessionStorage.setItem('oauth_external_params', JSON.stringify(oauthParams));
+            }
+            
+            // Rediriger vers callback pour traitement OAuth
+            router.push('/auth/callback');
+            return;
           }
 
           // Flux normal
@@ -67,9 +81,9 @@ function AuthPageContent() {
         setCurrentSession(null);
       }
     })();
-    // ✅ CORRECTION : Ajouter session dans les dépendances pour relancer après connexion
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchParams, isExternalOAuth, clientId, redirectUri, currentSession]);
+          // ✅ OPTIMISATION : Simplifier les dépendances
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [searchParams, isExternalOAuth, clientId, redirectUri]);
 
   // Form email/password
   const handleEmailAuth = async (e: React.FormEvent) => {
@@ -106,64 +120,8 @@ function AuthPageContent() {
     }
   };
 
-  /**
-   * Callback OAuth pour ChatGPT : crée un "code" côté Scrivia puis redirige vers `redirect_uri`
-   * avec `code` + `state` (state inchangé = indispensable pour ChatGPT).
-   */
-  const handleExternalOAuthCallback = async (session: any) => {
-    try {
-      if (!clientId || !redirectUri) {
-        console.error('❌ [OAuth] Paramètres manquants:', { clientId, redirectUri });
-        return;
-      }
-
-      // Filtrage souple des scopes
-      const allowedScopes = [
-        'notes:read', 'notes:write',
-        'dossiers:read', 'dossiers:write',
-        'classeurs:read', 'classeurs:write'
-      ];
-      const requested = scope ? scope.split(' ').filter(Boolean) : [];
-      const finalScopes = requested.filter(s => allowedScopes.includes(s));
-      if (finalScopes.length === 0) finalScopes.push('notes:read');
-
-      // Demande de code d’autorisation Scrivia (backend doit renvoyer { code })
-      const res = await fetch('/api/auth/create-code', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}` // token Supabase (identifie l’utilisateur)
-        },
-        body: JSON.stringify({
-          clientId,
-          userId: session.user?.id,
-          redirectUri,
-          scopes: finalScopes,
-          state // renvoyé tel quel à ChatGPT
-        })
-      });
-
-      if (!res.ok) {
-        const text = await res.text();
-        console.error('❌ [/create-code]', res.status, text);
-        throw new Error(`create-code failed ${res.status}`);
-      }
-
-      const { code } = await res.json();
-
-      // Redirection finale vers le callback ChatGPT
-      const callbackUrl = new URL(redirectUri);
-      callbackUrl.searchParams.set('code', code);
-      if (state) callbackUrl.searchParams.set('state', state); // state INCHANGÉ
-
-      window.location.href = callbackUrl.toString();
-    } catch (e) {
-      console.error('❌ [OAuth] Erreur callback OAuth externe:', e);
-      setError('Erreur lors de la redirection OAuth');
-      setSessionStatus('Erreur OAuth externe');
-      didRunExternalCallbackRef.current = false; // autorise un retry manuel
-    }
-  };
+  // ✅ OPTIMISATION : Fonction handleExternalOAuthCallback supprimée
+  // La logique OAuth est maintenant gérée uniquement dans /auth/callback
 
   return (
     <div className="auth-container">
@@ -264,12 +222,8 @@ function AuthPageContent() {
               {currentSession && (
                 <div className="auth-oauth-session-info">
                   <p>✅ Connecté en tant que {currentSession.user?.email}</p>
-                  <button
-                    onClick={() => handleExternalOAuthCallback(currentSession)}
-                    className="auth-button primary"
-                  >
-                    Autoriser l'application {clientId}
-                  </button>
+                  {/* ✅ OPTIMISATION : Bouton supprimé car la logique OAuth est gérée automatiquement */}
+                  <p>🔄 Redirection automatique en cours...</p>
                 </div>
               )}
 

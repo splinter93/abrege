@@ -125,95 +125,70 @@ function AuthCallbackContent() {
 
         setStatus('success');
 
-        // 1) Flux OAuth externe classique → /auth
-        const oauthExternalParams =
-          typeof window !== 'undefined'
-            ? window.sessionStorage.getItem('oauth_external_params')
-            : null;
-
-        if (oauthExternalParams) {
-          try {
-            const params = JSON.parse(oauthExternalParams);
-            window.sessionStorage.removeItem('oauth_external_params');
-            const authUrl = `/auth?${new URLSearchParams(params).toString()}`;
-            router.push(authUrl);
-            return;
-          } catch (e) {
-            console.error('Erreur parsing paramètres OAuth externes:', e);
-          }
-        }
-
-        // 2) Flux OAuth externe (ChatGPT) - ✅ CORRECTION : Utiliser la même clé que page.tsx
-        const oauthExternalParamsRaw = typeof window !== 'undefined'
+        // ✅ OPTIMISATION : Un seul flux OAuth externe unifié
+        const oauthExternalParams = typeof window !== 'undefined'
           ? window.sessionStorage.getItem('oauth_external_params')
           : null;
 
         console.log('🔍 [Callback] Vérification flux OAuth externe:', {
-          oauthExternalParams: oauthExternalParamsRaw ? 'PRÉSENT' : 'ABSENT',
+          oauthExternalParams: oauthExternalParams ? 'PRÉSENT' : 'ABSENT',
           sessionStorage: typeof window !== 'undefined' ? {
             oauth_external_params: window.sessionStorage.getItem('oauth_external_params')
           } : 'N/A'
         });
 
-        if (oauthExternalParamsRaw) {
-          const raw = oauthExternalParamsRaw;
-          
-          console.log('🔍 [Callback] Paramètres OAuth ChatGPT récupérés:', raw);
-
-          if (!raw) {
-            console.error('❌ Paramètres OAuth externes manquants');
-            console.error('❌ Redirection vers home car pas de paramètres OAuth');
-            router.push('/');
-            return;
-          }
-
-          let params: OAuthParams;
+        if (oauthExternalParams) {
           try {
-            params = JSON.parse(raw) as OAuthParams;
-            console.log('🔍 [Callback] Paramètres OAuth ChatGPT parsés:', params);
-          } catch {
-            console.error('❌ Paramètres OAuth ChatGPT invalides (JSON)');
-            router.push('/');
-            return;
-          }
-          
-          // ✅ CORRECTION : Nettoyage APRÈS avoir utilisé les paramètres
-          window.sessionStorage.removeItem('oauth_external_params');
+            const params = JSON.parse(oauthExternalParams) as OAuthParams;
+            console.log('🔍 [Callback] Paramètres OAuth ChatGPT récupérés:', params);
+            
+            // ✅ OPTIMISATION : Nettoyage immédiat après parsing
+            window.sessionStorage.removeItem('oauth_external_params');
 
-          if (!isAllowedRedirect(params.redirect_uri)) {
-            console.error('❌ redirect_uri non autorisée:', params.redirect_uri);
-            setError('redirect_uri non autorisée');
-            setStatus('error');
-            return;
-          }
+            if (!isAllowedRedirect(params.redirect_uri)) {
+              console.error('❌ redirect_uri non autorisée:', params.redirect_uri);
+              setError('redirect_uri non autorisée');
+              setStatus('error');
+              return;
+            }
 
-          try {
-            console.log('🔍 [Callback] Création du code OAuth ChatGPT pour utilisateur:', data.session.user.id);
-            const code = await createChatGPTOAuthCode(data.session.user.id, params);
-            if (abortRef.current) return;
+            try {
+              console.log('🔍 [Callback] Création du code OAuth ChatGPT pour utilisateur:', data.session.user.id);
+              const code = await createChatGPTOAuthCode(data.session.user.id, params);
+              if (abortRef.current) return;
 
-            console.log('🔍 [Callback] Code OAuth créé avec succès:', code);
+              console.log('🔍 [Callback] Code OAuth créé avec succès:', code);
 
-            const redirect = new URL(params.redirect_uri);
-            redirect.searchParams.set('code', code);
-            redirect.searchParams.set('state', sanitizeState(params.state));
+              const redirect = new URL(params.redirect_uri);
+              redirect.searchParams.set('code', code);
+              redirect.searchParams.set('state', sanitizeState(params.state));
 
-            console.log('🔍 [Callback] URL de redirection construite:', redirect.toString());
-            console.log('🔍 [Callback] Redirection vers ChatGPT...');
+              console.log('🔍 [Callback] URL de redirection construite:', redirect.toString());
+              console.log('🔍 [Callback] Redirection vers ChatGPT...');
 
-            // ✅ CORRECTION : Ajouter un délai pour laisser l'UI se mettre à jour
-            setTimeout(() => {
+              // ✅ OPTIMISATION : Redirection immédiate sans délai
               window.location.href = redirect.toString();
-            }, 1000);
+              return;
+            } catch (e) {
+              console.error('❌ Erreur création code OAuth ChatGPT:', e);
+              setError('Erreur lors de la création du code OAuth');
+              setStatus('error');
+              return;
+            }
           } catch (e) {
-            console.error('❌ Erreur création code OAuth ChatGPT:', e);
-            setError('Erreur lors de la création du code OAuth');
+            console.error('❌ Erreur parsing paramètres OAuth externes:', e);
+            // ✅ OPTIMISATION : Nettoyage en cas d'erreur
+            if (typeof window !== 'undefined') {
+              window.sessionStorage.removeItem('oauth_external_params');
+            }
+            setError('Paramètres OAuth invalides');
             setStatus('error');
+            return;
           }
-          return;
         }
 
-        // 3) Login classique → home
+        // ✅ OPTIMISATION : Flux normal (pas de redirection vers /auth)
+        console.log('🔍 [Callback] Flux normal, redirection vers home');
         const t = setTimeout(() => router.push('/'), 900);
         return () => clearTimeout(t);
       } catch (e) {
