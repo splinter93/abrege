@@ -2,7 +2,7 @@
 import type { SafeUnknown, SafeRecord, SafeError } from '@/types/quality';
 import { logger } from '@/utils/logger';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useChatStore } from '@/store/useChatStore';
 import { useAuth } from '@/hooks/useAuth';
 import { useAgents } from '@/hooks/useAgents';
@@ -98,15 +98,17 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({ isOpen, isDesktop, onClose })
     cancelRenaming();
   };
   
-  const sortedSessions = [...sessions].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-
-  const sidebarClass = `chat-sidebar ${isOpen ? 'open' : (isDesktop ? 'closed' : '')}`;
+  // ✅ CORRECTION : Utiliser useMemo pour éviter les erreurs de hoisting en production
+  const sortedSessions = useMemo(() => {
+    if (!sessions || sessions.length === 0) return [];
+    return [...sessions].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+  }, [sessions]);
 
   const displayName = (user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Utilisateur').trim();
   const emailText = user?.email || '';
 
   return (
-    <div className={sidebarClass}>
+    <div className={`chat-sidebar ${isOpen ? 'open' : (isDesktop ? 'closed' : '')}`}>
       <div className="sidebar-content-wrapper">
         {/* Header de la sidebar */}
         <div className="sidebar-header">
