@@ -151,6 +151,8 @@ export function useAuth() {
     setLoading(true);
     setError(null);
     try {
+      console.log('🔧 Auth: Tentative de déconnexion...');
+      
       const { error } = await supabase.auth.signOut();
       
       if (error) {
@@ -159,11 +161,24 @@ export function useAuth() {
         return { error: error.message };
       }
 
-      console.log('🔧 Auth: Déconnexion réussie');
+      console.log('🔧 Auth: Déconnexion réussie, redirection...');
+      
+      // ✅ CORRECTION : Rediriger l'utilisateur après la déconnexion
+      if (typeof window !== 'undefined') {
+        // Rediriger vers la page d'accueil
+        window.location.href = '/';
+      }
+      
       return { success: true };
     } catch (error) {
       console.log('🔧 Auth: Erreur inattendue lors de la déconnexion', { error });
       setError('Erreur inattendue');
+      
+      // ✅ CORRECTION : Rediriger même en cas d'erreur
+      if (typeof window !== 'undefined') {
+        window.location.href = '/';
+      }
+      
       return { error: 'Erreur inattendue' };
     } finally {
       setLoading(false);
