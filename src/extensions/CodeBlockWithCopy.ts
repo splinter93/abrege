@@ -193,6 +193,10 @@ async function renderMermaidDiagram(container: HTMLElement, mermaidContent: stri
         stateTextColor: '#ffffff',          // Texte des états blanc
         transitionTextColor: '#ffffff',      // Texte des transitions blanc
         
+        // Variables spécifiques pour les node labels des state diagrams
+        labelTextColor: '#ffffff',           // Texte des labels blanc
+        edgeLabelColor: '#ffffff',           // Couleur des labels d'arêtes blanc
+        
         // ENTITY RELATIONSHIP - STYLE CLASSIQUE
         entityBkg: '#1f2020',               // Fond des entités sombre
         entityBorder: '#f97316',            // Bordure des entités orange

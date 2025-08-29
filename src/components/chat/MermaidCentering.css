@@ -298,3 +298,31 @@
   fill: #ffffff !important;
   color: #ffffff !important;
 }
+
+/* Forcer le texte blanc sur TOUS les éléments des state diagrams */
+.mermaid-svg-container svg .stateDiagram * text,
+.mermaid-svg-container svg .stateDiagram * tspan,
+.mermaid-svg-container svg .state * text,
+.mermaid-svg-container svg .state * tspan {
+  fill: #ffffff !important;
+  color: #ffffff !important;
+}
+
+/* Styles spécifiques pour les éléments HTML des node labels */
+.mermaid-svg-container svg foreignObject div,
+.mermaid-svg-container svg foreignObject span,
+.mermaid-svg-container svg foreignObject p {
+  color: #ffffff !important;
+}
+
+/* Cibler spécifiquement les nodeLabel */
+.mermaid-svg-container svg .nodeLabel,
+.mermaid-svg-container svg .nodeLabel p,
+.mermaid-svg-container svg .nodeLabel span {
+  color: #ffffff !important;
+}
+
+/* Forcer le blanc sur tous les éléments de texte dans les foreignObject */
+.mermaid-svg-container svg foreignObject * {
+  color: #ffffff !important;
+}
