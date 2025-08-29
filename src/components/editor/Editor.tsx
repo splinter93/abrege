@@ -1,5 +1,7 @@
 import React from 'react';
 import '@/styles/markdown.css';
+// Mermaid styles are now handled via themeVariables in CodeBlockWithCopy.ts
+import '@/components/chat/MermaidCentering.css';
 import EditorLayout from './EditorLayout';
 import EditorHeader from './EditorHeader';
 import EditorContent from './EditorContent';

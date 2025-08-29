@@ -1,5 +1,5 @@
-import MermaidTestDemo from '@/components/chat/MermaidTestDemo';
+import MermaidDebug from '@/components/chat/MermaidDebug';
 
 export default function TestMermaidPage() {
-  return <MermaidTestDemo />;
+  return <MermaidDebug />;
 } 

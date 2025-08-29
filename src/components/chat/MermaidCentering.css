@@ -1,0 +1,300 @@
+/* ========================================
+   CENTRAGE UNIFORME DES DIAGRAMMES MERMAID
+   ======================================== */
+
+/* Centrer le conteneur principal */
+.mermaid-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+}
+
+/* Centrer le conteneur SVG */
+.mermaid-svg-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+}
+
+/* Centrer tous les SVG Mermaid */
+.mermaid-svg-container svg {
+  display: block;
+  margin: 0 auto;
+  max-width: 100%;
+  height: auto;
+}
+
+/* Centrer les éléments internes des diagrammes */
+.mermaid-svg-container svg g {
+  transform-origin: center;
+}
+
+/* Centrer spécifiquement les flowcharts */
+.mermaid-svg-container svg .flowchart {
+  transform-origin: center;
+}
+
+/* Centrer spécifiquement les diagrammes de séquence */
+.mermaid-svg-container svg .sequence {
+  transform-origin: center;
+}
+
+/* Centrer spécifiquement les diagrammes de classe */
+.mermaid-svg-container svg .class {
+  transform-origin: center;
+}
+
+/* Centrer spécifiquement les diagrammes d'état */
+.mermaid-svg-container svg .state {
+  transform-origin: center;
+}
+
+/* Centrer spécifiquement les graphiques Git */
+.mermaid-svg-container svg .git {
+  transform-origin: center;
+}
+
+/* Centrer spécifiquement les graphiques en camembert */
+.mermaid-svg-container svg .pie {
+  transform-origin: center;
+}
+
+/* Centrer spécifiquement les diagrammes d'entités */
+.mermaid-svg-container svg .er {
+  transform-origin: center;
+}
+
+/* Centrer spécifiquement les diagrammes de voyage */
+.mermaid-svg-container svg .journey {
+  transform-origin: center;
+}
+
+/* ========================================
+   STYLE CODE BLOCK NORMAL
+   ======================================== */
+
+/* Conteneur principal - style code block */
+.mermaid-container {
+  background: var(--surface-2, #f8f9fa);
+  border: 1px solid var(--border-subtle, #e5e7eb);
+  border-radius: 8px;
+  padding: 16px;
+  margin: 16px 0;
+  font-family: 'Noto Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  overflow: hidden;
+}
+
+/* Conteneur SVG - style code block */
+.mermaid-svg-container {
+  background: transparent;
+  border: none;
+  padding: 0;
+  margin: 0;
+  overflow: visible;
+}
+
+/* Indicateur de chargement - style code block */
+.mermaid-loading-indicator {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--text-secondary, #6b7280);
+  font-size: 14px;
+}
+
+.mermaid-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--border-subtle, #e5e7eb);
+  border-top: 2px solid var(--accent-primary, #f97316);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Gestion des erreurs - style code block */
+.mermaid-error {
+  background: var(--surface-2, #f8f9fa);
+  border: 1px solid var(--border-subtle, #e5e7eb);
+  border-radius: 8px;
+  padding: 16px;
+  margin: 16px 0;
+}
+
+.mermaid-error-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-error, #dc2626);
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.mermaid-error-body {
+  color: var(--text-secondary, #6b7280);
+}
+
+.mermaid-error-message {
+  margin-bottom: 12px;
+}
+
+.mermaid-error-message pre {
+  background: var(--surface-1, #ffffff);
+  border: 1px solid var(--border-subtle, #e5e7eb);
+  border-radius: 4px;
+  padding: 8px;
+  margin: 8px 0;
+  font-size: 12px;
+  overflow-x: auto;
+}
+
+.mermaid-error-details {
+  margin-top: 12px;
+}
+
+.mermaid-error-details summary {
+  cursor: pointer;
+  color: var(--accent-primary, #f97316);
+  font-weight: 500;
+}
+
+.mermaid-source {
+  background: var(--surface-1, #ffffff);
+  border: 1px solid var(--border-subtle, #e5e7eb);
+  border-radius: 4px;
+  padding: 12px;
+  margin: 8px 0;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 12px;
+  overflow-x: auto;
+  white-space: pre-wrap;
+}
+
+/* ========================================
+   BORDURES ARRONDIES UNIFORMES
+   ======================================== */
+
+/* Radius pour toutes les cases des flowcharts */
+.mermaid-svg-container svg rect,
+.mermaid-svg-container svg .node rect,
+.mermaid-svg-container svg .flowchart rect {
+  border-radius: 8px !important;
+  rx: 8 !important;
+  ry: 8 !important;
+}
+
+/* Radius pour les cercles et ellipses */
+.mermaid-svg-container svg circle,
+.mermaid-svg-container svg ellipse {
+  rx: 8 !important;
+  ry: 8 !important;
+}
+
+/* Radius pour les polygones */
+.mermaid-svg-container svg polygon {
+  rx: 8 !important;
+  ry: 8 !important;
+}
+
+/* Radius pour les acteurs des diagrammes de séquence */
+.mermaid-svg-container svg .actor rect,
+.mermaid-svg-container svg .sequence rect {
+  border-radius: 8px !important;
+  rx: 8 !important;
+  ry: 8 !important;
+}
+
+/* Radius pour les classes */
+.mermaid-svg-container svg .class rect,
+.mermaid-svg-container svg .class polygon {
+  border-radius: 8px !important;
+  rx: 8 !important;
+  ry: 8 !important;
+}
+
+/* Radius pour les états */
+.mermaid-svg-container svg .state rect,
+.mermaid-svg-container svg .state polygon {
+  border-radius: 8px !important;
+  rx: 8 !important;
+  ry: 8 !important;
+}
+
+/* Radius pour les entités */
+.mermaid-svg-container svg .er rect,
+.mermaid-svg-container svg .er polygon {
+  border-radius: 8px !important;
+  rx: 8 !important;
+  ry: 8 !important;
+}
+
+/* Radius pour les commits Git */
+.mermaid-svg-container svg .git rect,
+.mermaid-svg-container svg .git circle {
+  border-radius: 8px !important;
+  rx: 8 !important;
+  ry: 8 !important;
+}
+
+/* Radius pour les étapes de voyage */
+.mermaid-svg-container svg .journey rect,
+.mermaid-svg-container svg .journey polygon {
+  border-radius: 8px !important;
+  rx: 8 !important;
+  ry: 8 !important;
+}
+
+/* ========================================
+   FORCER LE TEXTE BLANC PARTOUT
+   ======================================== */
+
+/* Forcer le texte blanc dans tous les diagrammes */
+.mermaid-svg-container svg text,
+.mermaid-svg-container svg tspan,
+.mermaid-svg-container svg .label text,
+.mermaid-svg-container svg .node text,
+.mermaid-svg-container svg .edgeLabel text {
+  fill: #ffffff !important;
+  color: #ffffff !important;
+}
+
+/* Forcer le texte blanc spécifiquement dans les diagrammes d'état */
+.mermaid-svg-container svg .state text,
+.mermaid-svg-container svg .state tspan,
+.mermaid-svg-container svg .state .label text,
+.mermaid-svg-container svg .state .node text,
+.mermaid-svg-container svg .state .edgeLabel text,
+.mermaid-svg-container svg .state .transition text {
+  fill: #ffffff !important;
+  color: #ffffff !important;
+}
+
+/* Forcer le texte blanc dans les transitions */
+.mermaid-svg-container svg .transition text,
+.mermaid-svg-container svg .transition tspan,
+.mermaid-svg-container svg .transitionLabel text {
+  fill: #ffffff !important;
+  color: #ffffff !important;
+}
+
+/* Forcer le texte blanc dans les labels d'états */
+.mermaid-svg-container svg .stateLabel text,
+.mermaid-svg-container svg .stateLabel tspan {
+  fill: #ffffff !important;
+  color: #ffffff !important;
+}
+
+/* Forcer le texte blanc dans tous les éléments de texte */
+.mermaid-svg-container svg * text,
+.mermaid-svg-container svg * tspan {
+  fill: #ffffff !important;
+  color: #ffffff !important;
+}

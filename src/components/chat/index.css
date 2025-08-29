@@ -13,7 +13,7 @@
 @import './ChatMessage.css';
 @import './MessageContainer.css';
 @import './ChatMarkdown.css';
-@import './MermaidStyles.css';
+/* Mermaid styles are now handled via themeVariables in CodeBlockWithCopy.ts */
 
 /* ========================================
    STYLES GLOBAUX POUR LES BULLES
