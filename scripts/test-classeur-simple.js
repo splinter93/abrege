@@ -4,7 +4,7 @@ async function testClasseurSimple() {
   try {
     console.log('🧪 Test simple création classeur...');
     
-    const response = await fetch('http://localhost:3000/api/v1/classeur/create', {
+    const response = await fetch('http://localhost:3000/api/ui/classeur/create', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'

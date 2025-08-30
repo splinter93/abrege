@@ -70,8 +70,8 @@ export const simpleLogger = {
 
 ### **API Routes :**
 - ✅ `src/app/api/chat/llm/route.ts` (20+ logs)
-- ✅ `src/app/api/v1/chat-sessions/route.ts` (25 logs)
-- ✅ `src/app/api/v1/chat-sessions/[id]/route.ts` (22 logs)
+- ✅ `src/app/api/ui/chat-sessions/route.ts` (25 logs)
+- ✅ `src/app/api/ui/chat-sessions/[id]/route.ts` (22 logs)
 
 ### **Services :**
 - ✅ `src/services/llm/providers/template.ts` (8+ logs)

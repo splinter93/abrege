@@ -44,7 +44,7 @@
 
 ### **1. 🔧 API Messages - Schéma de validation**
 
-**Fichier : `src/app/api/v1/chat-sessions/[id]/messages/route.ts`**
+**Fichier : `src/app/api/ui/chat-sessions/[id]/messages/route.ts`**
 
 ```typescript
 // AVANT : Schéma incomplet

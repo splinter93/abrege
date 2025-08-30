@@ -115,7 +115,7 @@ export class BatchMessageService {
       });
 
       // Appeler l'API batch
-      const apiUrl = `/api/v1/chat-sessions/${request.sessionId}/messages/batch`;
+      const apiUrl = `/api/ui/chat-sessions/${request.sessionId}/messages/batch`;
       
       // Validation de l'URL
       if (!apiUrl.startsWith('/api/')) {
@@ -125,7 +125,7 @@ export class BatchMessageService {
 
       // Vérification rapide de la disponibilité de l'API
       try {
-        const healthCheck = await fetch('/api/v1/llm/health', { method: 'GET' });
+        const healthCheck = await fetch('/api/ui/llm/health', { method: 'GET' });
         logger.dev('[BatchMessageService] 🔧 Health check API:', {
           status: healthCheck.status,
           ok: healthCheck.ok

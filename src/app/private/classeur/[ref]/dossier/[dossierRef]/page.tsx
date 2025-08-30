@@ -11,7 +11,7 @@ async function fetchTree(ref: string) {
   const { data: { session } } = await supabase.auth.getSession();
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
   if (session?.access_token) headers['Authorization'] = `Bearer ${session.access_token}`;
-  const url = `/api/v1/classeur/${encodeURIComponent(ref)}/tree?depth=1`;
+  const url = `/api/ui/classeur/${encodeURIComponent(ref)}/tree?depth=1`;
   const cached = etagCache.get(url);
   if (cached?.etag) headers['If-None-Match'] = cached.etag;
   const res = await fetch(url, { headers });

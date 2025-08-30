@@ -16,11 +16,11 @@ Abrège est une API moderne pour la gestion de notes et de documents, maintenant
 
 ```javascript
 // Ancien (IDs uniquement)
-GET /api/v1/note/123e4567-e89b-12d3-a456-426614174000
+GET /api/ui/note/123e4567-e89b-12d3-a456-426614174000
 
 // Nouveau (IDs + Slugs)
-GET /api/v1/note/123e4567-e89b-12d3-a456-426614174000  // Par ID
-GET /api/v1/note/ma-premiere-note                        // Par slug
+GET /api/ui/note/123e4567-e89b-12d3-a456-426614174000  // Par ID
+GET /api/ui/note/ma-premiere-note                        // Par slug
 ```
 
 ## 🚀 **Installation**
@@ -90,23 +90,23 @@ npm run test:coverage
 ## 🎯 **Endpoints principaux**
 
 ### **Notes**
-- `GET /api/v1/note/[ref]` - Récupérer une note (ID ou slug)
-- `PUT /api/v1/note/[ref]` - Mettre à jour une note
-- `DELETE /api/v1/note/[ref]` - Supprimer une note
-- `POST /api/v1/note/create` - Créer une note avec slug automatique
+- `GET /api/ui/note/[ref]` - Récupérer une note (ID ou slug)
+- `PUT /api/ui/note/[ref]` - Mettre à jour une note
+- `DELETE /api/ui/note/[ref]` - Supprimer une note
+- `POST /api/ui/note/create` - Créer une note avec slug automatique
 
 ### **Dossiers**
-- `GET /api/v1/dossier/[ref]` - Récupérer un dossier
-- `PUT /api/v1/dossier/[ref]` - Mettre à jour un dossier
-- `DELETE /api/v1/dossier/[ref]` - Supprimer un dossier
+- `GET /api/ui/dossier/[ref]` - Récupérer un dossier
+- `PUT /api/ui/dossier/[ref]` - Mettre à jour un dossier
+- `DELETE /api/ui/dossier/[ref]` - Supprimer un dossier
 
 ### **Classeurs**
-- `GET /api/v1/classeur/[ref]` - Récupérer un classeur
-- `PUT /api/v1/classeur/[ref]` - Mettre à jour un classeur
-- `DELETE /api/v1/classeur/[ref]` - Supprimer un classeur
+- `GET /api/ui/classeur/[ref]` - Récupérer un classeur
+- `PUT /api/ui/classeur/[ref]` - Mettre à jour un classeur
+- `DELETE /api/ui/classeur/[ref]` - Supprimer un classeur
 
 ### **Génération de slugs**
-- `POST /api/v1/slug/generate` - Générer un slug pour un titre
+- `POST /api/ui/slug/generate` - Générer un slug pour un titre
 
 ## 🔄 **Migration des données**
 
@@ -132,7 +132,7 @@ npm run migrate-slugs
 ### **Pour les LLMs**
 ```javascript
 // Générer un slug
-const response = await fetch('/api/v1/slug/generate', {
+const response = await fetch('/api/ui/slug/generate', {
   method: 'POST',
   body: JSON.stringify({
     title: 'Guide complet de React',
@@ -144,7 +144,7 @@ const { slug } = await response.json();
 // slug = "guide-complet-de-react"
 
 // Créer la note
-const noteResponse = await fetch('/api/v1/note/create', {
+const noteResponse = await fetch('/api/ui/note/create', {
   method: 'POST',
   body: JSON.stringify({
     source_title: 'Guide complet de React',
@@ -160,7 +160,7 @@ const noteResponse = await fetch('/api/v1/note/create', {
 const shareableUrl = `https://mon-app.com/note/guide-react`;
 
 // Accéder à la note
-const note = await fetch('/api/v1/note/guide-react');
+const note = await fetch('/api/ui/note/guide-react');
 ```
 
 ## 🏗️ **Architecture**
@@ -168,7 +168,7 @@ const note = await fetch('/api/v1/note/guide-react');
 ### **Structure du projet**
 ```
 src/
-├── app/api/v1/           # Endpoints API
+├── app/api/ui/           # Endpoints API
 │   ├── note/[ref]/       # Endpoints notes (ID/slug)
 │   ├── dossier/[ref]/    # Endpoints dossiers
 │   ├── classeur/[ref]/   # Endpoints classeurs

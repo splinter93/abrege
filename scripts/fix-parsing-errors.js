@@ -4,13 +4,13 @@ const path = require('path');
 console.log('🔧 Correction des erreurs de parsing...');
 
 const filesToFix = [
-  'src/app/api/v1/note/[ref]/add-to-section/route.ts',
-  'src/app/api/v1/note/[ref]/clear-section/route.ts',
-  'src/app/api/v1/note/[ref]/information/route.ts',
-  'src/app/api/v1/note/[ref]/statistics/route.ts',
-  'src/app/api/v1/note/[ref]/table-of-contents/route.ts',
-  'src/app/api/v1/note/merge/route.ts',
-  'src/app/api/v1/note/overwrite/route.ts'
+  'src/app/api/ui/note/[ref]/add-to-section/route.ts',
+  'src/app/api/ui/note/[ref]/clear-section/route.ts',
+  'src/app/api/ui/note/[ref]/information/route.ts',
+  'src/app/api/ui/note/[ref]/statistics/route.ts',
+  'src/app/api/ui/note/[ref]/table-of-contents/route.ts',
+  'src/app/api/ui/note/merge/route.ts',
+  'src/app/api/ui/note/overwrite/route.ts'
 ];
 
 filesToFix.forEach(filePath => {

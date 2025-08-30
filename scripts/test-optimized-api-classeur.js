@@ -19,7 +19,7 @@ async function testOptimizedApiClasseur() {
     console.log('[OptimizedApi] 📋 Données:', classeurData);
     
     // Appel API
-    const response = await fetch('http://localhost:3000/api/v1/classeur/create', {
+    const response = await fetch('http://localhost:3000/api/ui/classeur/create', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(classeurData)

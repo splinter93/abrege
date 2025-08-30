@@ -6,7 +6,7 @@ Ce module fournit des composants React pour afficher l'activité récente des no
 
 ## 🚀 API Backend
 
-### Endpoint: `/api/v1/notes/recent`
+### Endpoint: `/api/ui/notes/recent`
 
 **Méthode:** GET  
 **Description:** Récupère les notes récentes triées par `updated_at`
@@ -18,11 +18,11 @@ Ce module fournit des composants React pour afficher l'activité récente des no
 **Exemple d'utilisation:**
 ```typescript
 // Récupérer 5 notes récentes
-const response = await fetch('/api/v1/notes/recent?limit=5');
+const response = await fetch('/api/ui/notes/recent?limit=5');
 const data = await response.json();
 
 // Récupérer les notes d'un utilisateur spécifique
-const response = await fetch('/api/v1/notes/recent?username=john&limit=8');
+const response = await fetch('/api/ui/notes/recent?username=john&limit=8');
 const data = await response.json();
 ```
 

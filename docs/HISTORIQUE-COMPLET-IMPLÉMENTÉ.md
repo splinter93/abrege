@@ -220,9 +220,9 @@ L'historique complet est maintenant **100% fonctionnel** et prêt pour la produc
 - `supabase/migrations/20250102_remove_auto_history_truncation.sql`
 
 ### **API Endpoints**
-- `src/app/api/v1/chat-sessions/route.ts`
-- `src/app/api/v1/chat-sessions/[id]/messages/route.ts`
-- `src/app/api/v1/chat-sessions/[id]/messages/batch/route.ts`
+- `src/app/api/ui/chat-sessions/route.ts`
+- `src/app/api/ui/chat-sessions/[id]/messages/route.ts`
+- `src/app/api/ui/chat-sessions/[id]/messages/batch/route.ts`
 
 ### **Composants Frontend**
 - `src/components/chat/ChatWidget.tsx`

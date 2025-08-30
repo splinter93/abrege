@@ -47,7 +47,7 @@ async function testAuthDelete() {
 
   // Test 1: Créer une session (sans auth - devrait échouer)
   console.log('\n📝 Test 1: Créer une session (sans auth)');
-  const createResult = await makeRequest('/api/v1/chat-sessions', {
+  const createResult = await makeRequest('/api/ui/chat-sessions', {
     method: 'POST',
     body: {
       name: 'Test Session',
@@ -63,7 +63,7 @@ async function testAuthDelete() {
 
   // Test 2: Supprimer une session (sans auth - devrait échouer)
   console.log('\n🗑️ Test 2: Supprimer une session (sans auth)');
-  const deleteResult = await makeRequest('/api/v1/chat-sessions/test-id', {
+  const deleteResult = await makeRequest('/api/ui/chat-sessions/test-id', {
     method: 'DELETE'
   });
 

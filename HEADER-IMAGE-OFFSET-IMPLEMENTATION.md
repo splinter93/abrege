@@ -62,19 +62,19 @@ const handleMouseUp = () => {
 
 ### 4. API Endpoints
 
-#### PUT `/api/v1/note/[ref]`
+#### PUT `/api/ui/note/[ref]`
 - Supporte `header_image_offset` dans le payload
 - Validation : `z.number().min(0).max(100).optional()`
 
-#### PATCH `/api/v1/note/[ref]/information`
+#### PATCH `/api/ui/note/[ref]/information`
 - Supporte `header_image_offset` dans le payload
 - Retourne `header_image_offset` dans la réponse
 
-#### POST `/api/v1/note/create`
+#### POST `/api/ui/note/create`
 - Supporte `header_image_offset` dans le payload
 - Valeur par défaut : `50`
 
-#### POST `/api/v1/note/overwrite`
+#### POST `/api/ui/note/overwrite`
 - Supporte `header_image_offset` dans le payload
 
 ### 5. Page de l'éditeur
@@ -147,7 +147,7 @@ Le script teste :
 ### Pour le développeur
 ```typescript
 // Créer une note avec offset personnalisé
-const response = await fetch('/api/v1/note/create', {
+const response = await fetch('/api/ui/note/create', {
   method: 'POST',
   body: JSON.stringify({
     source_title: 'Ma note',
@@ -159,7 +159,7 @@ const response = await fetch('/api/v1/note/create', {
 });
 
 // Mettre à jour l'offset
-await fetch(`/api/v1/note/${noteId}`, {
+await fetch(`/api/ui/note/${noteId}`, {
   method: 'PUT',
   body: JSON.stringify({
     header_image_offset: 25

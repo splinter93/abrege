@@ -25,7 +25,7 @@ async function testBatchAPISimple() {
     };
 
     console.log('📤 Envoi message simple...');
-    const simpleResponse = await fetch(`${baseUrl}/api/v1/chat-sessions/${testSessionId}/messages/batch`, {
+    const simpleResponse = await fetch(`${baseUrl}/api/ui/chat-sessions/${testSessionId}/messages/batch`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -56,7 +56,7 @@ async function testBatchAPISimple() {
       content: 'Test content'
     };
 
-    const validationResponse = await fetch(`${baseUrl}/api/v1/chat-sessions/${testSessionId}/messages/batch`, {
+    const validationResponse = await fetch(`${baseUrl}/api/ui/chat-sessions/${testSessionId}/messages/batch`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -89,7 +89,7 @@ async function testBatchAPISimple() {
       timestamp: new Date().toISOString()
     };
 
-    const structureResponse = await fetch(`${baseUrl}/api/v1/chat-sessions/${testSessionId}/messages/batch`, {
+    const structureResponse = await fetch(`${baseUrl}/api/ui/chat-sessions/${testSessionId}/messages/batch`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

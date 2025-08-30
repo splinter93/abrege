@@ -38,8 +38,8 @@
 #### **Fichiers Modifiés**
 1. `src/app/api/chat/llm/route.ts` - Intégration Function Calling
 2. `src/types/chat.ts` - Interface Agent mise à jour
-3. `src/app/api/v1/note/[ref]/route.test.ts` - Correction import
-4. `src/app/api/v1/slug/generate/route.test.ts` - Correction import
+3. `src/app/api/ui/note/[ref]/route.test.ts` - Correction import
+4. `src/app/api/ui/slug/generate/route.test.ts` - Correction import
 
 ### 🚀 **Fonctionnalités Implémentées**
 

@@ -128,9 +128,9 @@ const PRIORITY_FILES = [
   'src/tests/integration/chat-architecture.test.ts',
   
   // API routes critiques
-  'src/app/api/v1/notes/recent/route.ts',
-  'src/app/api/v1/note/merge/route.ts',
-  'src/app/api/v1/notebook/create/route.ts',
+  'src/app/api/ui/notes/recent/route.ts',
+  'src/app/api/ui/note/merge/route.ts',
+  'src/app/api/ui/notebook/create/route.ts',
   'src/app/api/v2/note/[ref]/metadata/route.ts',
   'src/app/api/v2/note/[ref]/move/route.ts'
 ];

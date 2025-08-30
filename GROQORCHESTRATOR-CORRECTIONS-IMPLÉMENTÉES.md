@@ -156,7 +156,7 @@ const toolMessages = toolCalls.map((toolCall, index) => {
 ```typescript
 private async handleETagConflict(sessionId: string, operationId: string, relanceIndex: number): Promise<void> {
   // Refetch de la session pour obtenir le nouvel ETag
-  const sessionResponse = await fetch(`/api/v1/chat-sessions/${sessionId}`);
+  const sessionResponse = await fetch(`/api/ui/chat-sessions/${sessionId}`);
   const newETag = sessionResponse.headers.get('ETag');
   
   // Replay du même batch avec le nouvel ETag

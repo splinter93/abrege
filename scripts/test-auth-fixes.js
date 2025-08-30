@@ -23,7 +23,7 @@ async function testAuthFixes() {
     console.log('✅ Connexion réussie, token obtenu');
     
     // 2. Tester un endpoint avec authentification
-    const response = await fetch('http://localhost:3000/api/v1/notebooks', {
+    const response = await fetch('http://localhost:3000/api/ui/notebooks', {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -32,15 +32,15 @@ async function testAuthFixes() {
     });
     
     if (response.status === 200) {
-      console.log('✅ Endpoint /api/v1/notebooks fonctionne avec authentification');
+      console.log('✅ Endpoint /api/ui/notebooks fonctionne avec authentification');
     } else if (response.status === 401) {
-      console.log('❌ Endpoint /api/v1/notebooks retourne 401 (authentification échouée)');
+      console.log('❌ Endpoint /api/ui/notebooks retourne 401 (authentification échouée)');
     } else {
-      console.log(`⚠️  Endpoint /api/v1/notebooks retourne ${response.status}`);
+      console.log(`⚠️  Endpoint /api/ui/notebooks retourne ${response.status}`);
     }
     
     // 3. Tester un endpoint sans authentification (doit échouer)
-    const responseNoAuth = await fetch('http://localhost:3000/api/v1/notebooks', {
+    const responseNoAuth = await fetch('http://localhost:3000/api/ui/notebooks', {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json'

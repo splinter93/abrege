@@ -28,24 +28,24 @@ UI Action → API REST → Database → Supabase Realtime → Zustand Store → 
 
 ### **✅ Endpoints LLM-Friendly**
 
-#### **Notes (`/api/v1/note/`)**
-- `POST /api/v1/note/create` - Créer une note
-- `PUT /api/v1/note/{ref}` - Mettre à jour une note
-- `DELETE /api/v1/note/{ref}` - Supprimer une note
-- `PATCH /api/v1/note/{ref}/add-content` - Ajouter du contenu
-- `PATCH /api/v1/note/{ref}/information` - Mettre à jour les infos
-- `GET /api/v1/note/{ref}/table-of-contents` - Table des matières
-- `GET /api/v1/note/{ref}/statistics` - Statistiques
+#### **Notes (`/api/ui/note/`)**
+- `POST /api/ui/note/create` - Créer une note
+- `PUT /api/ui/note/{ref}` - Mettre à jour une note
+- `DELETE /api/ui/note/{ref}` - Supprimer une note
+- `PATCH /api/ui/note/{ref}/add-content` - Ajouter du contenu
+- `PATCH /api/ui/note/{ref}/information` - Mettre à jour les infos
+- `GET /api/ui/note/{ref}/table-of-contents` - Table des matières
+- `GET /api/ui/note/{ref}/statistics` - Statistiques
 
-#### **Dossiers (`/api/v1/folder/`)**
-- `POST /api/v1/folder/create` - Créer un dossier
-- `PUT /api/v1/folder/{ref}` - Mettre à jour un dossier
-- `DELETE /api/v1/folder/{ref}` - Supprimer un dossier
+#### **Dossiers (`/api/ui/folder/`)**
+- `POST /api/ui/folder/create` - Créer un dossier
+- `PUT /api/ui/folder/{ref}` - Mettre à jour un dossier
+- `DELETE /api/ui/folder/{ref}` - Supprimer un dossier
 
-#### **Classeurs (`/api/v1/notebook/`)**
-- `POST /api/v1/notebook/create` - Créer un classeur
-- `PUT /api/v1/notebook/{ref}` - Mettre à jour un classeur
-- `DELETE /api/v1/notebook/{ref}` - Supprimer un classeur
+#### **Classeurs (`/api/ui/notebook/`)**
+- `POST /api/ui/notebook/create` - Créer un classeur
+- `PUT /api/ui/notebook/{ref}` - Mettre à jour un classeur
+- `DELETE /api/ui/notebook/{ref}` - Supprimer un classeur
 
 ### **✅ Fonctionnalités avancées**
 - **Support universel slug/ID** : Tous les endpoints acceptent slugs et UUIDs
@@ -56,7 +56,7 @@ UI Action → API REST → Database → Supabase Realtime → Zustand Store → 
 
 ### **✅ Exemple d'implémentation**
 ```typescript
-// src/app/api/v1/note/create/route.ts
+// src/app/api/ui/note/create/route.ts
 export async function POST(req: Request): Promise<Response> {
   const schema = z.object({
     source_title: z.string().min(1),
@@ -210,7 +210,7 @@ const createFile = useCallback(async (name: string) => {
    ↓
 2. UI: createFile("Ma note")
    ↓
-3. API: POST /api/v1/note/create
+3. API: POST /api/ui/note/create
    ↓
 4. Database: INSERT INTO articles
    ↓
@@ -227,7 +227,7 @@ const createFile = useCallback(async (name: string) => {
    ↓
 2. UI: deleteFile(noteId)
    ↓
-3. API: DELETE /api/v1/note/{id}
+3. API: DELETE /api/ui/note/{id}
    ↓
 4. Database: DELETE FROM articles
    ↓

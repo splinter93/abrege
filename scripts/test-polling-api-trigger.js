@@ -16,7 +16,7 @@ async function testPollingApiTrigger() {
     // Test 1: Créer une note via API
     console.log('\n📝 Test création note via API...');
     
-    const createNoteResponse = await fetch('http://localhost:3000/api/v1/note/create', {
+    const createNoteResponse = await fetch('http://localhost:3000/api/ui/note/create', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -44,7 +44,7 @@ async function testPollingApiTrigger() {
     // Test 2: Mettre à jour la note via API
     console.log('\n🔄 Test mise à jour note via API...');
     
-    const updateNoteResponse = await fetch(`http://localhost:3000/api/v1/note/${createdNote.note.id}`, {
+    const updateNoteResponse = await fetch(`http://localhost:3000/api/ui/note/${createdNote.note.id}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -70,7 +70,7 @@ async function testPollingApiTrigger() {
     // Test 3: Supprimer la note via API
     console.log('\n🗑️ Test suppression note via API...');
     
-    const deleteNoteResponse = await fetch(`http://localhost:3000/api/v1/note/${createdNote.note.id}`, {
+    const deleteNoteResponse = await fetch(`http://localhost:3000/api/ui/note/${createdNote.note.id}`, {
       method: 'DELETE'
     });
     
@@ -88,7 +88,7 @@ async function testPollingApiTrigger() {
     
     console.log('\n📁 Test création dossier via API...');
     
-    const createFolderResponse = await fetch('http://localhost:3000/api/v1/folder/create', {
+    const createFolderResponse = await fetch('http://localhost:3000/api/ui/folder/create', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -114,7 +114,7 @@ async function testPollingApiTrigger() {
     // Test 5: Supprimer le dossier via API
     console.log('\n🗑️ Test suppression dossier via API...');
     
-    const deleteFolderResponse = await fetch(`http://localhost:3000/api/v1/folder/${createdFolder.folder.id}`, {
+    const deleteFolderResponse = await fetch(`http://localhost:3000/api/ui/folder/${createdFolder.folder.id}`, {
       method: 'DELETE'
     });
     

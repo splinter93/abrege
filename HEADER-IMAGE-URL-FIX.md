@@ -15,14 +15,14 @@ Lors de l'upload d'**images** (en-tête ET contenu), l'URL avec signature AWS é
 **Avant :**
 ```typescript
 // Use AWS URL directly since the API route has auth issues
-const publicUrl = signed_url || `/api/v1/public/file/${saved.id}${saved.etag ? `?v=${saved.etag}` : ''}`;
+const publicUrl = signed_url || `/api/ui/public/file/${saved.id}${saved.etag ? `?v=${saved.etag}` : ''}`;
 ```
 
 **Après :**
 ```typescript
 // Use the canonical AWS URL from the files table instead of signed_url
 // The canonical URL is already stored in files.url and is the clean URL we want
-const publicUrl = saved.url || `/api/v1/public/file/${saved.id}${saved.etag ? `?v=${saved.etag}` : ''}`;
+const publicUrl = saved.url || `/api/ui/public/file/${saved.id}${saved.etag ? `?v=${saved.etag}` : ''}`;
 ```
 
 ### Modification de `src/components/ImageMenu.tsx`
@@ -30,14 +30,14 @@ const publicUrl = saved.url || `/api/v1/public/file/${saved.id}${saved.etag ? `?
 **Avant :**
 ```typescript
 // Use AWS URL directly since the API route has auth issues
-const renderUrl = signed_url || `/api/v1/public/file/${saved.id}${saved.etag ? `?v=${saved.etag}` : ''}`;
+const renderUrl = signed_url || `/api/ui/public/file/${saved.id}${saved.etag ? `?v=${saved.etag}` : ''}`;
 ```
 
 **Après :**
 ```typescript
 // Use the canonical AWS URL from the files table instead of signed_url
 // The canonical URL is already stored in files.url and is the clean URL we want
-const renderUrl = saved.url || `/api/v1/public/file/${saved.id}${saved.etag ? `?v=${saved.etag}` : ''}`;
+const renderUrl = saved.url || `/api/ui/public/file/${saved.id}${saved.etag ? `?v=${saved.etag}` : ''}`;
 ```
 
 ## 📋 Ordre des opérations corrigé

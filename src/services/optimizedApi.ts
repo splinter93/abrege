@@ -203,14 +203,14 @@ export class OptimizedApi {
   // v1 clients
   private async getClasseursV1(): Promise<any[]> {
     const headers = await this.getAuthHeaders();
-    const { ok, data } = await this.fetchWithEtag('/api/v1/classeurs', headers);
+    const { ok, data } = await this.fetchWithEtag('/api/ui/classeurs', headers);
     if (!ok) throw new Error('Classeurs v1 error');
     return data;
   }
 
   private async getTreeV1(ref: string, depth: '0'|'1'|'full' = 'full'): Promise<unknown> {
     const headers = await this.getAuthHeaders();
-    const { ok, data } = await this.fetchWithEtag(`/api/v1/classeur/${encodeURIComponent(ref)}/tree?depth=${depth}`, headers);
+    const { ok, data } = await this.fetchWithEtag(`/api/ui/classeur/${encodeURIComponent(ref)}/tree?depth=${depth}`, headers);
     if (!ok) throw new Error('Tree v1 error');
     return data;
   }
@@ -236,7 +236,7 @@ export class OptimizedApi {
       const headers = await this.getAuthHeaders();
       
       // Appel API
-      const response = await fetch('/api/v1/note/create', {
+      const response = await fetch('/api/ui/note/create', {
         method: 'POST',
         headers,
         body: JSON.stringify(noteData)
@@ -298,7 +298,7 @@ export class OptimizedApi {
       const headers = await this.getAuthHeaders();
       
       // Appel API avec [ref] au lieu de noteId direct
-      const response = await fetch(`/api/v1/note/${noteId}`, {
+      const response = await fetch(`/api/ui/note/${noteId}`, {
         method: 'PUT',
         headers,
         body: JSON.stringify(updateData)
@@ -347,7 +347,7 @@ export class OptimizedApi {
       const headers = await this.getAuthHeaders();
       
       // Appel API
-      const response = await fetch(`/api/v1/note/${noteId}`, {
+      const response = await fetch(`/api/ui/note/${noteId}`, {
         method: 'DELETE',
         headers
       });
@@ -393,7 +393,7 @@ export class OptimizedApi {
       const headers = await this.getAuthHeaders();
       
       // Appel API
-      const response = await fetch('/api/v1/folder/create', {
+      const response = await fetch('/api/ui/folder/create', {
         method: 'POST',
         headers,
         body: JSON.stringify(folderData)
@@ -441,7 +441,7 @@ export class OptimizedApi {
       const headers = await this.getAuthHeaders();
       
       // Appel API
-      const response = await fetch(`/api/v1/folder/${folderId}`, {
+      const response = await fetch(`/api/ui/folder/${folderId}`, {
         method: 'PUT',
         headers,
         body: JSON.stringify(updateData)
@@ -489,7 +489,7 @@ export class OptimizedApi {
       const headers = await this.getAuthHeaders();
       
       // Appel API
-      const response = await fetch(`/api/v1/folder/${folderId}`, {
+      const response = await fetch(`/api/ui/folder/${folderId}`, {
         method: 'DELETE',
         headers
       });
@@ -540,7 +540,7 @@ export class OptimizedApi {
       if (targetClasseurId) payload.target_classeur_id = targetClasseurId;
       
       // Appel API
-      const response = await fetch(`/api/v1/note/${noteId}/move`, {
+      const response = await fetch(`/api/ui/note/${noteId}/move`, {
         method: 'PATCH',
         headers,
         body: JSON.stringify(payload)
@@ -593,7 +593,7 @@ export class OptimizedApi {
       if (targetClasseurId) payload.target_classeur_id = targetClasseurId;
       
       // Appel API
-      const response = await fetch(`/api/v1/dossier/${folderId}/move`, {
+      const response = await fetch(`/api/ui/dossier/${folderId}/move`, {
         method: 'PATCH',
         headers,
         body: JSON.stringify(payload)
@@ -641,7 +641,7 @@ export class OptimizedApi {
       const headers = await this.getAuthHeaders();
       
       // Appel API
-      const response = await fetch('/api/v1/classeur/create', {
+      const response = await fetch('/api/ui/classeur/create', {
         method: 'POST',
         headers,
         body: JSON.stringify(classeurData)
@@ -703,7 +703,7 @@ export class OptimizedApi {
       const headers = await this.getAuthHeaders();
       
       // Appel API
-      const response = await fetch(`/api/v1/classeur/${classeurId}`, {
+      const response = await fetch(`/api/ui/classeur/${classeurId}`, {
         method: 'PUT',
         headers,
         body: JSON.stringify(updateData)
@@ -751,7 +751,7 @@ export class OptimizedApi {
       const headers = await this.getAuthHeaders();
       
       // Appel API
-      const response = await fetch(`/api/v1/classeur/${classeurId}`, {
+      const response = await fetch(`/api/ui/classeur/${classeurId}`, {
         method: 'DELETE',
         headers
       });
@@ -795,7 +795,7 @@ export class OptimizedApi {
     try {
       // Appel API avec authentification
       const headers = await this.getAuthHeaders();
-      const response = await fetch('/api/v1/classeur/reorder', {
+      const response = await fetch('/api/ui/classeur/reorder', {
         method: 'PUT',
         headers,
         body: JSON.stringify({ classeurs: updatedClasseurs })
@@ -855,8 +855,8 @@ export class OptimizedApi {
         try {
           // Charger dossiers et notes en parallèle
           const [foldersResponse, notesResponse] = await Promise.all([
-            fetch(`/api/v1/dossiers?classeurId=${c.id}`),
-            fetch(`/api/v1/notes?classeurId=${c.id}`)
+            fetch(`/api/ui/dossiers?classeurId=${c.id}`),
+            fetch(`/api/ui/notes?classeurId=${c.id}`)
           ]);
 
           let folders = [];
@@ -910,7 +910,7 @@ export class OptimizedApi {
     
     try {
       const headers = await this.getAuthHeaders();
-      const response = await fetch(`/api/v1/note/${noteId}/publish`, {
+      const response = await fetch(`/api/ui/note/${noteId}/publish`, {
         method: 'POST',
         headers,
         body: JSON.stringify({ visibility })
@@ -947,7 +947,7 @@ export class OptimizedApi {
     font_family: string;
   }>) {
     const headers = await this.getAuthHeaders();
-    const resp = await fetch(`/api/v1/note/${encodeURIComponent(noteId)}/appearance`, {
+    const resp = await fetch(`/api/ui/note/${encodeURIComponent(noteId)}/appearance`, {
       method: 'PATCH',
       headers,
       body: JSON.stringify(patch)

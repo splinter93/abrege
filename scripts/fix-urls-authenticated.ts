@@ -32,7 +32,7 @@ async function fixUrlsViaAPI() {
   try {
     // 1. Récupérer toutes les notes via l'API
     console.log('📊 1. Récupération des notes via l\'API...');
-    const notesResponse = await fetch(`${apiBaseUrl}/api/v1/notes/recent`, {
+    const notesResponse = await fetch(`${apiBaseUrl}/api/ui/notes/recent`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -72,7 +72,7 @@ async function fixUrlsViaAPI() {
         console.log(`🔄 Note ${note.id}: ${note.public_url || 'Aucune'} → ${newUrl}`);
 
         // Mise à jour via l'API de publication
-        const publishResponse = await fetch(`${apiBaseUrl}/api/v1/note/${note.id}/publish`, {
+        const publishResponse = await fetch(`${apiBaseUrl}/api/ui/note/${note.id}/publish`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

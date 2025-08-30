@@ -91,7 +91,7 @@ async function testPublicAccess() {
           // Tester l'API publique
           console.log('\n🌐 Test 4: Test de l\'API publique...');
           try {
-            const apiUrl = `${supabaseUrl.replace('/rest/v1', '')}/api/v1/public/note/${user.username}/${noteWithSlug.slug}`;
+            const apiUrl = `${supabaseUrl.replace('/rest/v1', '')}/api/ui/public/note/${user.username}/${noteWithSlug.slug}`;
             console.log(`   🔗 Test de l'API: ${apiUrl}`);
             
             // Note: Ce test nécessiterait une requête HTTP réelle

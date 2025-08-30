@@ -17,7 +17,7 @@ export class ChatSessionService {
   private baseUrl: string;
 
   constructor() {
-    this.baseUrl = '/api/v1/chat-sessions';
+    this.baseUrl = '/api/ui/chat-sessions';
   }
 
   static getInstance(): ChatSessionService {

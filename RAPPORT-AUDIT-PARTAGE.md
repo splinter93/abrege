@@ -188,7 +188,7 @@ USING (
 ### **Système de partage :**
 - ✅ **Pages publiques** : Accessibles et fonctionnelles
 - ✅ **URLs publiques** : Format `/{username}/{slug}` opérationnel
-- ✅ **API publique** : Endpoints `/api/v1/public/note/{username}/{slug}` fonctionnels
+- ✅ **API publique** : Endpoints `/api/ui/public/note/{username}/{slug}` fonctionnels
 - ✅ **Contenu des notes** : Affichage complet avec HTML et métadonnées
 
 ### **Gestion des slugs :**

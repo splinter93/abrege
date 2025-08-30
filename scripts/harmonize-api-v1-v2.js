@@ -240,9 +240,9 @@ const path = require('path');
 
 // Endpoints V1 à migrer
 const V1_ENDPOINTS = [
-  'src/app/api/v1/note/[ref]/route.ts',
-  'src/app/api/v1/classeur/[ref]/route.ts',
-  'src/app/api/v1/dossier/[ref]/route.ts'
+  'src/app/api/ui/note/[ref]/route.ts',
+  'src/app/api/ui/classeur/[ref]/route.ts',
+  'src/app/api/ui/dossier/[ref]/route.ts'
 ];
 
 function migrateEndpoint(filePath) {

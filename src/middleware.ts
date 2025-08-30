@@ -5,7 +5,7 @@ export function middleware(req: NextRequest) {
   const resRid = req.headers.get('x-request-id') ?? crypto.randomUUID();
 
   // Public paths to allow without auth check (home, public notes, assets)
-  const PUBLIC_PREFIXES = ['/_next', '/favicon', '/public', '/api/v1/public'];
+  const PUBLIC_PREFIXES = ['/_next', '/favicon', '/public', '/api/ui/public'];
   
   // ✅ SÉCURITÉ : Traitement spécial pour les pages publiques avec logging
   if (url.pathname.startsWith('/@')) {

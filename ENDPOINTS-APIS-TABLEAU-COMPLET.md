@@ -62,39 +62,39 @@
 ### **Notes**
 | Endpoint | Méthode | Statut | Description | Paramètres | Authentification |
 |----------|---------|--------|-------------|------------|------------------|
-| `/api/v1/note/create` | POST | ✅ | Création de note | `source_title`, `markdown_content`, `notebook_id` | JWT |
-| `/api/v1/note/[ref]` | GET | ✅ | Récupération note | `ref` (ID ou slug) | JWT |
-| `/api/v1/note/[ref]` | PUT | ✅ | Mise à jour note | `ref` + body | JWT |
-| `/api/v1/note/[ref]` | DELETE | ✅ | Suppression note | `ref` (ID ou slug) | JWT |
-| `/api/v1/note/merge` | POST | ✅ | Fusion de notes | `source_id`, `target_id` | JWT |
-| `/api/v1/note/overwrite` | POST | ✅ | Écrasement note | `ref`, `content` | JWT |
-| `/api/v1/note/publish` | POST | ✅ | Publication note | `ref`, `visibility` | JWT |
-| `/api/v1/notes/recent` | GET | ✅ | Notes récentes | `limit` | JWT |
+| `/api/ui/note/create` | POST | ✅ | Création de note | `source_title`, `markdown_content`, `notebook_id` | JWT |
+| `/api/ui/note/[ref]` | GET | ✅ | Récupération note | `ref` (ID ou slug) | JWT |
+| `/api/ui/note/[ref]` | PUT | ✅ | Mise à jour note | `ref` + body | JWT |
+| `/api/ui/note/[ref]` | DELETE | ✅ | Suppression note | `ref` (ID ou slug) | JWT |
+| `/api/ui/note/merge` | POST | ✅ | Fusion de notes | `source_id`, `target_id` | JWT |
+| `/api/ui/note/overwrite` | POST | ✅ | Écrasement note | `ref`, `content` | JWT |
+| `/api/ui/note/publish` | POST | ✅ | Publication note | `ref`, `visibility` | JWT |
+| `/api/ui/notes/recent` | GET | ✅ | Notes récentes | `limit` | JWT |
 
 ### **Classeurs**
 | Endpoint | Méthode | Statut | Description | Paramètres | Authentification |
 |----------|---------|--------|-------------|------------|------------------|
-| `/api/v1/classeurs` | GET | ✅ | Liste des classeurs | Aucun | JWT |
-| `/api/v1/classeurs` | POST | ✅ | Création classeur | `name`, `description` | JWT |
-| `/api/v1/classeur/[ref]` | GET | ✅ | Récupération classeur | `ref` (ID ou slug) | JWT |
-| `/api/v1/classeur/[ref]` | PUT | ✅ | Mise à jour classeur | `ref` + body | JWT |
-| `/api/v1/classeur/[ref]` | DELETE | ✅ | Suppression classeur | `ref` (ID ou slug) | JWT |
+| `/api/ui/classeurs` | GET | ✅ | Liste des classeurs | Aucun | JWT |
+| `/api/ui/classeurs` | POST | ✅ | Création classeur | `name`, `description` | JWT |
+| `/api/ui/classeur/[ref]` | GET | ✅ | Récupération classeur | `ref` (ID ou slug) | JWT |
+| `/api/ui/classeur/[ref]` | PUT | ✅ | Mise à jour classeur | `ref` + body | JWT |
+| `/api/ui/classeur/[ref]` | DELETE | ✅ | Suppression classeur | `ref` (ID ou slug) | JWT |
 
 ### **Dossiers**
 | Endpoint | Méthode | Statut | Description | Paramètres | Authentification |
 |----------|---------|--------|-------------|------------|------------------|
-| `/api/v1/folders` | GET | ✅ | Liste des dossiers | `classeur_id` | JWT |
-| `/api/v1/folders` | POST | ✅ | Création dossier | `name`, `classeur_id`, `parent_id` | JWT |
-| `/api/v1/folder/[ref]` | GET | ✅ | Récupération dossier | `ref` (ID ou slug) | JWT |
-| `/api/v1/folder/[ref]` | PUT | ✅ | Mise à jour dossier | `ref` + body | JWT |
-| `/api/v1/folder/[ref]` | DELETE | ✅ | Suppression dossier | `ref` (ID ou slug) | JWT |
+| `/api/ui/folders` | GET | ✅ | Liste des dossiers | `classeur_id` | JWT |
+| `/api/ui/folders` | POST | ✅ | Création dossier | `name`, `classeur_id`, `parent_id` | JWT |
+| `/api/ui/folder/[ref]` | GET | ✅ | Récupération dossier | `ref` (ID ou slug) | JWT |
+| `/api/ui/folder/[ref]` | PUT | ✅ | Mise à jour dossier | `ref` + body | JWT |
+| `/api/ui/folder/[ref]` | DELETE | ✅ | Suppression dossier | `ref` (ID ou slug) | JWT |
 
 ### **Autres**
 | Endpoint | Méthode | Statut | Description | Paramètres | Authentification |
 |----------|---------|--------|-------------|------------|------------------|
-| `/api/v1/user` | GET | ✅ | Profil utilisateur | Aucun | JWT |
-| `/api/v1/slug/[slug]` | GET | ✅ | Résolution slug | `slug` | JWT |
-| `/api/v1/erase-note` | POST | ✅ | Suppression définitive | `note_id` | JWT |
+| `/api/ui/user` | GET | ✅ | Profil utilisateur | Aucun | JWT |
+| `/api/ui/slug/[slug]` | GET | ✅ | Résolution slug | `slug` | JWT |
+| `/api/ui/erase-note` | POST | ✅ | Suppression définitive | `note_id` | JWT |
 
 ---
 

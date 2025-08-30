@@ -17,7 +17,7 @@ async function testApiOptimisee() {
     console.log('\n📝 Test création note avec API optimisée...');
     const startTime = Date.now();
     
-    const createNoteResponse = await fetch('http://localhost:3000/api/v1/note/create', {
+    const createNoteResponse = await fetch('http://localhost:3000/api/ui/note/create', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -50,7 +50,7 @@ async function testApiOptimisee() {
     console.log('\n🔄 Test mise à jour note avec API optimisée...');
     const updateStartTime = Date.now();
     
-    const updateNoteResponse = await fetch(`http://localhost:3000/api/v1/note/${createdNote.note.id}`, {
+    const updateNoteResponse = await fetch(`http://localhost:3000/api/ui/note/${createdNote.note.id}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -81,7 +81,7 @@ async function testApiOptimisee() {
     console.log('\n🗑️ Test suppression note avec API optimisée...');
     const deleteStartTime = Date.now();
     
-    const deleteNoteResponse = await fetch(`http://localhost:3000/api/v1/note/${createdNote.note.id}`, {
+    const deleteNoteResponse = await fetch(`http://localhost:3000/api/ui/note/${createdNote.note.id}`, {
       method: 'DELETE'
     });
     
@@ -104,7 +104,7 @@ async function testApiOptimisee() {
     console.log('\n📁 Test création dossier avec API optimisée...');
     const folderStartTime = Date.now();
     
-    const createFolderResponse = await fetch('http://localhost:3000/api/v1/folder/create', {
+    const createFolderResponse = await fetch('http://localhost:3000/api/ui/folder/create', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -135,7 +135,7 @@ async function testApiOptimisee() {
     console.log('\n🗑️ Test suppression dossier avec API optimisée...');
     const deleteFolderStartTime = Date.now();
     
-    const deleteFolderResponse = await fetch(`http://localhost:3000/api/v1/folder/${createdFolder.folder.id}`, {
+    const deleteFolderResponse = await fetch(`http://localhost:3000/api/ui/folder/${createdFolder.folder.id}`, {
       method: 'DELETE'
     });
     

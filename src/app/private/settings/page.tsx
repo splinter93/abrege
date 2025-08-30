@@ -77,7 +77,7 @@ function SettingsPageContent() {
   const loadApiKeys = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/v2/api-keys', {
+      const response = await fetch('/api/ui/api-keys', {
         headers: {
           'Authorization': `Bearer ${await getAuthToken()}`
         }
@@ -112,7 +112,7 @@ function SettingsPageContent() {
     if (!newApiKeyName.trim() || !user?.id) return;
 
     try {
-      const response = await fetch('/api/v2/api-keys', {
+      const response = await fetch('/api/ui/api-keys', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

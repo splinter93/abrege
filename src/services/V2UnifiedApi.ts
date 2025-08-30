@@ -645,11 +645,11 @@ export class V2UnifiedApi {
         // Utiliser l'API V1 directement pour le déplacement cross-classeur
         const headers = await this.getAuthHeaders();
         if (process.env.NODE_ENV === 'development') {
-          logger.dev(`[V2UnifiedApi] 🔧 Appel API V1: /api/v1/note/${cleanNoteId}/move`);
+          logger.dev(`[V2UnifiedApi] 🔧 Appel API V1: /api/ui/note/${cleanNoteId}/move`);
           logger.dev(`[V2UnifiedApi] 🔧 Payload:`, { target_classeur_id: targetClasseurId, target_folder_id: targetFolderId });
         }
         
-        const response = await fetch(this.buildUrl(`/api/v1/note/${cleanNoteId}/move`), {
+        const response = await fetch(this.buildUrl(`/api/ui/note/${cleanNoteId}/move`), {
           method: 'PATCH', // Utilise PATCH pour l'API V1 (méthode correcte)
           headers,
           body: JSON.stringify({

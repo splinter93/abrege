@@ -52,7 +52,7 @@ async function testBatchAPI() {
 
     // Tester avec notre API Next.js locale
     const baseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.replace('/rest/v1', '') || 'http://localhost:3000';
-    const simpleResponse = await fetch(`${baseUrl}/api/v1/chat-sessions/${session.id}/messages/batch`, {
+    const simpleResponse = await fetch(`${baseUrl}/api/ui/chat-sessions/${session.id}/messages/batch`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -102,7 +102,7 @@ async function testBatchAPI() {
       }
     ];
 
-    const toolResponse = await fetch(`${baseUrl}/api/v1/chat-sessions/${session.id}/messages/batch`, {
+    const toolResponse = await fetch(`${baseUrl}/api/ui/chat-sessions/${session.id}/messages/batch`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

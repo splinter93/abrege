@@ -2367,9 +2367,6 @@
           "updated_at": {
             "type": "string",
             "format": "date-time"
-          },
-          "share_settings": {
-            "$ref": "#/components/schemas/ShareSettings"
           }
         }
       },

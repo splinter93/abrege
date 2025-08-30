@@ -21,11 +21,11 @@
 - `src/app/layout.tsx` : `Header`, `AuthProvider`, `AppMainContent`
 
 #### **📁 API Routes**
-- `src/app/api/v1/dossier/[ref]/meta/route.ts` : `Folder`
-- `src/app/api/v1/dossier/[ref]/move/route.ts` : `Folder`, `err`
-- `src/app/api/v1/note/[ref]/content/delete/route.ts` : `supabase`
-- `src/app/api/v1/note/[ref]/content/route.ts` : `params`
-- `src/app/api/v1/note/merge/route.ts` : `Article`
+- `src/app/api/ui/dossier/[ref]/meta/route.ts` : `Folder`
+- `src/app/api/ui/dossier/[ref]/move/route.ts` : `Folder`, `err`
+- `src/app/api/ui/note/[ref]/content/delete/route.ts` : `supabase`
+- `src/app/api/ui/note/[ref]/content/route.ts` : `params`
+- `src/app/api/ui/note/merge/route.ts` : `Article`
 
 #### **📁 Composants**
 - `src/components/ClasseurTabs.tsx` : `motion`, `DynamicIcon`, `EMOJI_CHOICES`, `e`, `activeId`
@@ -87,11 +87,11 @@
 ### **5. Variables non réassignées** - `prefer-const`
 
 #### **📁 API Routes**
-- `src/app/api/v1/dossier/[ref]/meta/route.ts:66` : `updates`
-- `src/app/api/v1/folder/[ref]/route.ts:93` : `updates`
-- `src/app/api/v1/note/[ref]/section/route.ts:21` : `sectionStart`
-- `src/app/api/v1/note/merge/route.ts:48` : `finalClasseurId`
-- `src/app/api/v1/notebook/[ref]/route.ts:87` : `updates`
+- `src/app/api/ui/dossier/[ref]/meta/route.ts:66` : `updates`
+- `src/app/api/ui/folder/[ref]/route.ts:93` : `updates`
+- `src/app/api/ui/note/[ref]/section/route.ts:21` : `sectionStart`
+- `src/app/api/ui/note/merge/route.ts:48` : `finalClasseurId`
+- `src/app/api/ui/notebook/[ref]/route.ts:87` : `updates`
 
 #### **📁 Pages & Composants**
 - `src/app/(private)/note/[id]/page.tsx:215` : `baseSlug`
@@ -111,7 +111,7 @@
 
 #### **📁 API Routes (Majorité)**
 - Toutes les routes API utilisent `any` pour les paramètres et réponses
-- **Fichiers concernés** : Toutes les routes dans `src/app/api/v1/`
+- **Fichiers concernés** : Toutes les routes dans `src/app/api/ui/`
 
 #### **📁 Services**
 - `src/services/api.ts` : 30+ occurrences
@@ -171,11 +171,11 @@
 ### **4. Variables non réassignées** - `prefer-const`
 
 #### **📁 API Routes**
-- `src/app/api/v1/dossier/[ref]/meta/route.ts:66`
-- `src/app/api/v1/folder/[ref]/route.ts:93`
-- `src/app/api/v1/note/[ref]/section/route.ts:21`
-- `src/app/api/v1/note/merge/route.ts:48`
-- `src/app/api/v1/notebook/[ref]/route.ts:87`
+- `src/app/api/ui/dossier/[ref]/meta/route.ts:66`
+- `src/app/api/ui/folder/[ref]/route.ts:93`
+- `src/app/api/ui/note/[ref]/section/route.ts:21`
+- `src/app/api/ui/note/merge/route.ts:48`
+- `src/app/api/ui/notebook/[ref]/route.ts:87`
 
 ---
 
@@ -194,7 +194,7 @@
 ### **🎯 API ROUTES**
 - **Erreurs** : 12 variables non utilisées, 5 variables non réassignées
 - **Warnings** : 50+ types `any`
-- **Fichiers** : Toutes les routes dans `src/app/api/v1/`
+- **Fichiers** : Toutes les routes dans `src/app/api/ui/`
 
 ### **🎯 SERVICES**
 - **Erreurs** : 3 variables non utilisées

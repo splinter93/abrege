@@ -26,7 +26,7 @@ function ClasseurDeepLinkPageContent() {
   const ref = params?.ref as string;
   const etagRef = useRef<string | undefined>(undefined);
 
-  const key = useMemo(() => ref ? [`/api/v1/classeur/${encodeURIComponent(ref)}/tree?depth=1`] as const : null, [ref]);
+  const key = useMemo(() => ref ? [`/api/ui/classeur/${encodeURIComponent(ref)}/tree?depth=1`] as const : null, [ref]);
 
   const fetcher = async ([url]: readonly string[]) => {
     const { data: { session } } = await supabase.auth.getSession();

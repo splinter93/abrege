@@ -16,7 +16,7 @@ async function testInterfaceClasseursComplet() {
     console.log('\n📚 Test création classeur via interface optimisée...');
     const startTime = Date.now();
     
-    const createClasseurResponse = await fetch('http://localhost:3000/api/v1/classeur/create', {
+    const createClasseurResponse = await fetch('http://localhost:3000/api/ui/classeur/create', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -50,7 +50,7 @@ async function testInterfaceClasseursComplet() {
     console.log('\n🔄 Test mise à jour classeur via interface optimisée...');
     const updateStartTime = Date.now();
     
-    const updateClasseurResponse = await fetch(`http://localhost:3000/api/v1/classeur/${createdClasseur.classeur.id}`, {
+    const updateClasseurResponse = await fetch(`http://localhost:3000/api/ui/classeur/${createdClasseur.classeur.id}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -80,7 +80,7 @@ async function testInterfaceClasseursComplet() {
     console.log('\n🗑️ Test suppression classeur via interface optimisée...');
     const deleteStartTime = Date.now();
     
-    const deleteClasseurResponse = await fetch(`http://localhost:3000/api/v1/classeur/${createdClasseur.classeur.id}`, {
+    const deleteClasseurResponse = await fetch(`http://localhost:3000/api/ui/classeur/${createdClasseur.classeur.id}`, {
       method: 'DELETE'
     });
     

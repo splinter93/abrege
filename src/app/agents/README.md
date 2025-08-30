@@ -125,7 +125,7 @@ Tu es organisé, méthodique et toujours prêt à aider avec des conseils pratiq
 - `src/types/chat.ts` : Types TypeScript
 
 ### **Documentation API**
-- Endpoints v1 : `/api/v1/...`
+- Endpoints v1 : `/api/ui/...`
 - Endpoints v2 : `/api/v2/...`
 - Documentation complète : `API-V2-COMPLETE-DOCUMENTATION.md`
 

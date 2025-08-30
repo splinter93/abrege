@@ -11,7 +11,7 @@
 ### **✅ ROUTES API CRÉÉES**
 
 ```
-src/app/api/v1/whisper/
+src/app/api/ui/whisper/
 ├── transcribe/
 │   └── route.ts ✅ (Transcription audio)
 └── translate/
@@ -38,7 +38,7 @@ src/services/llm/providers/implementations/
 
 ### **✅ TRANSCRIPTION AUDIO**
 
-**Endpoint:** `POST /api/v1/whisper/transcribe`
+**Endpoint:** `POST /api/ui/whisper/transcribe`
 
 **Paramètres:**
 - `file`: Fichier audio (m4a, mp3, wav, flac, ogg, webm)
@@ -60,7 +60,7 @@ src/services/llm/providers/implementations/
 
 ### **✅ TRADUCTION AUDIO**
 
-**Endpoint:** `POST /api/v1/whisper/translate`
+**Endpoint:** `POST /api/ui/whisper/translate`
 
 **Paramètres:**
 - `file`: Fichier audio
@@ -154,14 +154,14 @@ src/services/llm/providers/implementations/
 
 ```bash
 # Transcription
-curl -X POST http://localhost:3005/api/v1/whisper/transcribe \
+curl -X POST http://localhost:3005/api/ui/whisper/transcribe \
   -F "file=@audio.m4a" \
   -F "model=whisper-large-v3-turbo" \
   -F "language=fr" \
   -F "response_format=verbose_json"
 
 # Traduction
-curl -X POST http://localhost:3005/api/v1/whisper/translate \
+curl -X POST http://localhost:3005/api/ui/whisper/translate \
   -F "file=@audio.m4a" \
   -F "model=whisper-large-v3" \
   -F "response_format=text"
@@ -214,7 +214,7 @@ node scripts/test-whisper.js
 
 2. **Tester l'API:**
    ```bash
-   curl http://localhost:3005/api/v1/whisper/transcribe
+   curl http://localhost:3005/api/ui/whisper/transcribe
    ```
 
 3. **Tester l'interface:**

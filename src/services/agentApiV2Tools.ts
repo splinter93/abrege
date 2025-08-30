@@ -1211,7 +1211,22 @@ export class AgentApiV2Tools {
       execute: async (params, jwtToken, userId) => {
         const { text, type } = params;
         const context = { operation: 'generate_slug', component: 'AgentApiV2Tools' };
-        return await V2DatabaseUtils.generateSlug(text, type, userId, context);
+        
+        // Générer le slug directement sans appeler l'endpoint supprimé
+        const slug = text
+          .normalize('NFD')
+          .replace(/\p{Diacritic}/gu, '')
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/(^-|-$)/g, '')
+          .slice(0, 120);
+        
+        return {
+          success: true,
+          slug,
+          original: text,
+          message: 'Slug généré localement par l\'agent'
+        };
       }
     });
 

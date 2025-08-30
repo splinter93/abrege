@@ -2,7 +2,7 @@
 
 /**
  * Test de l'API Whisper
- * Vérifie que l'endpoint /api/v1/whisper/transcribe fonctionne
+ * Vérifie que l'endpoint /api/ui/whisper/transcribe fonctionne
  */
 
 const fs = require('fs');
@@ -26,7 +26,7 @@ async function testWhisperAPI() {
   // Test de l'endpoint GET
   try {
     console.log('\n📡 Test de l\'endpoint GET...');
-    const response = await fetch('http://localhost:3000/api/v1/whisper/transcribe');
+    const response = await fetch('http://localhost:3000/api/ui/whisper/transcribe');
     
     if (response.ok) {
       const data = await response.json();
@@ -54,7 +54,7 @@ async function testWhisperAPI() {
     formData.append('response_format', 'text');
     formData.append('temperature', '0');
 
-    const response = await fetch('http://localhost:3000/api/v1/whisper/transcribe', {
+    const response = await fetch('http://localhost:3000/api/ui/whisper/transcribe', {
       method: 'POST',
       body: formData
     });

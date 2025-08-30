@@ -30,7 +30,7 @@ async function testBatchAPIWithAuth() {
     
     // 1.1 Test sans token (doit échouer)
     console.log('   📤 Test sans token...');
-    const noAuthResponse = await fetch(`${baseUrl}/api/v1/chat-sessions/${testSessionId}/messages/batch`, {
+    const noAuthResponse = await fetch(`${baseUrl}/api/ui/chat-sessions/${testSessionId}/messages/batch`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -47,7 +47,7 @@ async function testBatchAPIWithAuth() {
 
     // 1.2 Test avec token invalide (doit échouer)
     console.log('   📤 Test avec token invalide...');
-    const invalidTokenResponse = await fetch(`${baseUrl}/api/v1/chat-sessions/${testSessionId}/messages/batch`, {
+    const invalidTokenResponse = await fetch(`${baseUrl}/api/ui/chat-sessions/${testSessionId}/messages/batch`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -70,7 +70,7 @@ async function testBatchAPIWithAuth() {
     const { getTestUserToken } = require('./setup-test-auth');
     const validToken = await getTestUserToken(testConfig.testUserEmail, testConfig.testUserPassword);
     
-    const validAuthResponse = await fetch(`${baseUrl}/api/v1/chat-sessions/${testSessionId}/messages/batch`, {
+    const validAuthResponse = await fetch(`${baseUrl}/api/ui/chat-sessions/${testSessionId}/messages/batch`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -102,7 +102,7 @@ async function testBatchAPIWithAuth() {
 
     // 2.1 Premier envoi
     console.log('   📤 Premier envoi...');
-    const firstResponse = await fetch(`${baseUrl}/api/v1/chat-sessions/${testSessionId}/messages/batch`, {
+    const firstResponse = await fetch(`${baseUrl}/api/ui/chat-sessions/${testSessionId}/messages/batch`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -126,7 +126,7 @@ async function testBatchAPIWithAuth() {
 
     // 2.2 Deuxième envoi (même operation_id)
     console.log('   📤 Deuxième envoi (même operation_id)...');
-    const secondResponse = await fetch(`${baseUrl}/api/v1/chat-sessions/${testSessionId}/messages/batch`, {
+    const secondResponse = await fetch(`${baseUrl}/api/ui/chat-sessions/${testSessionId}/messages/batch`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -156,7 +156,7 @@ async function testBatchAPIWithAuth() {
     
     // 3.1 Lire la session pour obtenir l'ETag
     console.log('   📖 Lecture de la session pour obtenir l\'ETag...');
-    const sessionResponse = await fetch(`${baseUrl}/api/v1/chat-sessions/${testSessionId}`, {
+    const sessionResponse = await fetch(`${baseUrl}/api/ui/chat-sessions/${testSessionId}`, {
       headers: {
         'Authorization': `Bearer ${validToken}`
       }
@@ -169,7 +169,7 @@ async function testBatchAPIWithAuth() {
 
       // 3.2 Envoyer avec ETag valide
       console.log('   📤 Envoi avec ETag valide...');
-      const validEtagResponse = await fetch(`${baseUrl}/api/v1/chat-sessions/${testSessionId}/messages/batch`, {
+      const validEtagResponse = await fetch(`${baseUrl}/api/ui/chat-sessions/${testSessionId}/messages/batch`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -192,7 +192,7 @@ async function testBatchAPIWithAuth() {
 
       // 3.3 Envoyer avec ETag obsolète (doit échouer)
       console.log('   📤 Envoi avec ETag obsolète...');
-      const obsoleteEtagResponse = await fetch(`${baseUrl}/api/v1/chat-sessions/${testSessionId}/messages/batch`, {
+      const obsoleteEtagResponse = await fetch(`${baseUrl}/api/ui/chat-sessions/${testSessionId}/messages/batch`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -223,7 +223,7 @@ async function testBatchAPIWithAuth() {
       content: 'Test content invalide'
     };
 
-    const validationResponse = await fetch(`${baseUrl}/api/v1/chat-sessions/${testSessionId}/messages/batch`, {
+    const validationResponse = await fetch(`${baseUrl}/api/ui/chat-sessions/${testSessionId}/messages/batch`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -278,7 +278,7 @@ async function testBatchAPIWithAuth() {
       }
     ];
 
-    const sequenceResponse = await fetch(`${baseUrl}/api/v1/chat-sessions/${testSessionId}/messages/batch`, {
+    const sequenceResponse = await fetch(`${baseUrl}/api/ui/chat-sessions/${testSessionId}/messages/batch`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

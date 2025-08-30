@@ -47,7 +47,7 @@ Body: grant_type=authorization_code&code=abc123&client_id=scrivia-custom-gpt&cli
 
 ### **Étape 4 : Utilisation du Token**
 ```
-ChatGPT → GET https://scrivia.app/api/v1/classeurs
+ChatGPT → GET https://scrivia.app/api/ui/classeurs
 Headers: Authorization: Bearer [user's token]
 ```
 
@@ -112,7 +112,7 @@ curl -X POST https://scrivia.app/api/auth/token \
 ```bash
 # Test de l'utilisation du token
 curl -H "Authorization: Bearer [TOKEN_RECU]" \
-     https://scrivia.app/api/v1/classeurs
+     https://scrivia.app/api/ui/classeurs
 ```
 
 **Résultat attendu :** Liste des classeurs (200 OK)

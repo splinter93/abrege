@@ -35,9 +35,9 @@
 ### 3. **USER_ID hardcodé** (3 occurrences)
 **Impact :** CRITIQUE - Sécurité compromise  
 **Fichiers concernés :**
-- `src/app/api/v1/classeur/[ref]/tree/route.ts`
-- `src/app/api/v1/note/[ref]/content/route.ts`
-- `src/app/api/v1/note/[ref]/section/route.ts`
+- `src/app/api/ui/classeur/[ref]/tree/route.ts`
+- `src/app/api/ui/note/[ref]/content/route.ts`
+- `src/app/api/ui/note/[ref]/section/route.ts`
 
 **Risque :** Violations RLS, accès aux données d'autres utilisateurs
 

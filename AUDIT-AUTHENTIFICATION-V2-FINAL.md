@@ -79,7 +79,7 @@ const result = await optimizedApi.createClasseur({
 #### **Avant (Problématique)**
 ```
 AgentApiV2Tools → /api/v2/classeur/create → optimizedApi.createClasseur() 
-→ /api/v1/classeur/create → getAuthHeaders() → ❌ Session manquante
+→ /api/ui/classeur/create → getAuthHeaders() → ❌ Session manquante
 ```
 
 #### **Après (Corrigé)**

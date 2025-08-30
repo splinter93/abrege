@@ -44,7 +44,7 @@ async function runTests() {
 
   // Test 1: Créer une session
   console.log('\n📝 Test 1: Créer une session');
-  const createResult = await makeRequest('/api/v1/chat-sessions', {
+  const createResult = await makeRequest('/api/ui/chat-sessions', {
     method: 'POST',
     body: {
       name: 'Test Conversation',
@@ -63,7 +63,7 @@ async function runTests() {
 
   // Test 2: Récupérer la session
   console.log('\n📖 Test 2: Récupérer la session');
-  const getResult = await makeRequest(`/api/v1/chat-sessions/${sessionId}`);
+  const getResult = await makeRequest(`/api/ui/chat-sessions/${sessionId}`);
   
   if (!getResult.success) {
     console.log('❌ Échec de la récupération de session');
@@ -74,7 +74,7 @@ async function runTests() {
 
   // Test 3: Ajouter un message
   console.log('\n💬 Test 3: Ajouter un message');
-  const addMessageResult = await makeRequest(`/api/v1/chat-sessions/${sessionId}/messages`, {
+  const addMessageResult = await makeRequest(`/api/ui/chat-sessions/${sessionId}/messages`, {
     method: 'POST',
     body: {
       role: 'user',
@@ -91,7 +91,7 @@ async function runTests() {
 
   // Test 4: Récupérer les messages
   console.log('\n📋 Test 4: Récupérer les messages');
-  const getMessagesResult = await makeRequest(`/api/v1/chat-sessions/${sessionId}/messages`);
+  const getMessagesResult = await makeRequest(`/api/ui/chat-sessions/${sessionId}/messages`);
   
   if (!getMessagesResult.success) {
     console.log('❌ Échec de la récupération des messages');
@@ -103,7 +103,7 @@ async function runTests() {
 
   // Test 5: Mettre à jour la session
   console.log('\n✏️ Test 5: Mettre à jour la session');
-  const updateResult = await makeRequest(`/api/v1/chat-sessions/${sessionId}`, {
+  const updateResult = await makeRequest(`/api/ui/chat-sessions/${sessionId}`, {
     method: 'PUT',
     body: {
       name: 'Test Conversation Modifiée',
@@ -120,7 +120,7 @@ async function runTests() {
 
   // Test 6: Lister toutes les sessions
   console.log('\n📚 Test 6: Lister toutes les sessions');
-  const listResult = await makeRequest('/api/v1/chat-sessions');
+  const listResult = await makeRequest('/api/ui/chat-sessions');
   
   if (!listResult.success) {
     console.log('❌ Échec de la récupération des sessions');
@@ -132,7 +132,7 @@ async function runTests() {
 
   // Test 7: Supprimer la session
   console.log('\n🗑️ Test 7: Supprimer la session');
-  const deleteResult = await makeRequest(`/api/v1/chat-sessions/${sessionId}`, {
+  const deleteResult = await makeRequest(`/api/ui/chat-sessions/${sessionId}`, {
     method: 'DELETE'
   });
 

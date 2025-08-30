@@ -79,9 +79,9 @@ const PHASE2_PRIORITY_FILES = [
   'src/middleware/auth.ts',
   'src/middleware/rateLimit.ts',
   'src/utils/pagination.ts',
-  'src/app/api/v1/note/[ref]/route.ts',
-  'src/app/api/v1/folder/[ref]/route.ts',
-  'src/app/api/v1/classeur/[ref]/route.ts'
+  'src/app/api/ui/note/[ref]/route.ts',
+  'src/app/api/ui/folder/[ref]/route.ts',
+  'src/app/api/ui/classeur/[ref]/route.ts'
 ];
 
 function fixFilePhase2(filePath) {

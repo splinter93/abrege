@@ -13,7 +13,7 @@ L'API Batch v1 permet l'ajout atomique de messages à une session de chat via un
 ## 🌐 **Endpoint**
 
 ```
-POST /api/v1/chat-sessions/{sessionId}/messages/batch
+POST /api/ui/chat-sessions/{sessionId}/messages/batch
 ```
 
 ### **Paramètres de chemin**
@@ -198,7 +198,7 @@ If-Match: {etag_or_timestamp}
 ### **1. Ajout de messages simples**
 
 ```bash
-curl -X POST "http://localhost:3000/api/v1/chat-sessions/123e4567-e89b-12d3-a456-426614174000/messages/batch" \
+curl -X POST "http://localhost:3000/api/ui/chat-sessions/123e4567-e89b-12d3-a456-426614174000/messages/batch" \
   -H "Authorization: Bearer YOUR_JWT_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -240,7 +240,7 @@ curl -X POST "http://localhost:3000/api/v1/chat-sessions/123e4567-e89b-12d3-a456
 ### **2. Séquence tool call complète**
 
 ```bash
-curl -X POST "http://localhost:3000/api/v1/chat-sessions/123e4567-e89b-12d3-a456-426614174000/messages/batch" \
+curl -X POST "http://localhost:3000/api/ui/chat-sessions/123e4567-e89b-12d3-a456-426614174000/messages/batch" \
   -H "Authorization: Bearer YOUR_JWT_TOKEN" \
   -H "Content-Type: application/json" \
   -H "Idempotency-Key: op-create-note-123" \
@@ -314,7 +314,7 @@ curl -X POST "..." \
 
 ```bash
 # Lecture de la session pour obtenir l'ETag
-GET /api/v1/chat-sessions/123e4567-e89b-12d3-a456-426614174000
+GET /api/ui/chat-sessions/123e4567-e89b-12d3-a456-426614174000
 
 # Envoi avec ETag
 curl -X POST "..." \

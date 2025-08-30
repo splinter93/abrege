@@ -46,7 +46,7 @@ async function testDeleteSession() {
   const sessionId = 'test-session-id';
   
   console.log('\n🗑️ Test: Supprimer une session');
-  const deleteResult = await makeRequest(`/api/v1/chat-sessions/${sessionId}`, {
+  const deleteResult = await makeRequest(`/api/ui/chat-sessions/${sessionId}`, {
     method: 'DELETE'
   });
 

@@ -7,7 +7,7 @@ Le chat widget n'affichait pas automatiquement la dernière conversation en date
 ## 🔧 MODIFICATIONS APPORTÉES
 
 ### 1. **API Chat Sessions** ✅
-- **Fichier**: `src/app/api/v1/chat-sessions/route.ts`
+- **Fichier**: `src/app/api/ui/chat-sessions/route.ts`
 - **Ligne 189**: Déjà configuré avec `.order('updated_at', { ascending: false })`
 - **Statut**: ✅ Déjà correct
 

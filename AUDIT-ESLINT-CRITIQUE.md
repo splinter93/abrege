@@ -33,33 +33,33 @@
 
 | Fichier | Correction | Type |
 |---------|------------|------|
-| `src/app/api/v1/dossier/[ref]/meta/route.ts` | Suppression d'import non utilisé (`Folder`) | Suppression |
-| `src/app/api/v1/dossier/[ref]/meta/route.ts` | Remplacement du type `any` par type explicite pour `params` | Typage |
-| `src/app/api/v1/dossier/[ref]/meta/route.ts` | Remplacement de `let updates` par `const updates` | Const |
-| `src/app/api/v1/dossier/[ref]/move/route.ts` | Suppression d'import non utilisé (`Folder`) | Suppression |
-| `src/app/api/v1/dossier/[ref]/move/route.ts` | Remplacement du type `any` par type explicite pour `params` | Typage |
-| `src/app/api/v1/dossier/[ref]/move/route.ts` | Suppression de variables non utilisées dans catch blocks | Suppression |
-| `src/app/api/v1/dossier/[ref]/move/route.ts` | Remplacement de `let updates` par `const updates` | Const |
-| `src/app/api/v1/note/[ref]/content/delete/route.ts` | Suppression d'import non utilisé (`createClient`) | Suppression |
-| `src/app/api/v1/note/[ref]/content/delete/route.ts` | Remplacement du type `any` par type explicite pour `params` | Typage |
-| `src/app/api/v1/note/[ref]/content/delete/route.ts` | Remplacement de `err: any` par `err: unknown` avec type guards | Typage |
-| `src/app/api/v1/note/[ref]/content/route.ts` | Remplacement des types `any` par types explicites pour `params` | Typage |
-| `src/app/api/v1/note/[ref]/content/route.ts` | Remplacement de `err: any` par `err: unknown` avec type guards | Typage |
-| `src/app/api/v1/note/[ref]/content/route.ts` | Suppression du paramètre `params` non utilisé dans POST | Suppression |
-| `src/app/api/v1/note/[ref]/move/route.ts` | Remplacement du type `any` par type explicite pour `params` | Typage |
-| `src/app/api/v1/note/[ref]/move/route.ts` | Suppression de variables non utilisées dans catch blocks | Suppression |
-| `src/app/api/v1/note/[ref]/move/route.ts` | Remplacement de `let updates` par `const updates` | Const |
-| `src/app/api/v1/note/[ref]/move/route.ts` | Remplacement de `err: any` par `err: unknown` avec type guards | Typage |
-| `src/app/api/v1/note/[ref]/section/route.ts` | Remplacement de `let sectionStart` par `const sectionStart` | Const |
-| `src/app/api/v1/note/[ref]/section/route.ts` | Remplacement du type `any` par type explicite pour `params` | Typage |
-| `src/app/api/v1/note/[ref]/section/route.ts` | Remplacement de `err: any` par `err: unknown` avec type guards | Typage |
-| `src/app/api/v1/note/merge/route.ts` | Suppression d'import non utilisé (`Article`) | Suppression |
-| `src/app/api/v1/note/merge/route.ts` | Remplacement de `let finalClasseurId` par `const finalClasseurId` | Const |
-| `src/app/api/v1/notebooks/route.ts` | Suppression d'import non utilisé (`z`) | Suppression |
-| `src/app/api/v1/notebooks/route.ts` | Suppression du paramètre `req` non utilisé dans GET | Suppression |
-| `src/app/api/v1/notebooks/route.ts` | Remplacement de `err: any` par `err: unknown` avec type guards | Typage |
-| `src/app/api/v1/folder/[ref]/route.ts` | Remplacement de `let updates` par `const updates` | Const |
-| `src/app/api/v1/notebook/[ref]/route.ts` | Remplacement de `let updates` par `const updates` | Const |
+| `src/app/api/ui/dossier/[ref]/meta/route.ts` | Suppression d'import non utilisé (`Folder`) | Suppression |
+| `src/app/api/ui/dossier/[ref]/meta/route.ts` | Remplacement du type `any` par type explicite pour `params` | Typage |
+| `src/app/api/ui/dossier/[ref]/meta/route.ts` | Remplacement de `let updates` par `const updates` | Const |
+| `src/app/api/ui/dossier/[ref]/move/route.ts` | Suppression d'import non utilisé (`Folder`) | Suppression |
+| `src/app/api/ui/dossier/[ref]/move/route.ts` | Remplacement du type `any` par type explicite pour `params` | Typage |
+| `src/app/api/ui/dossier/[ref]/move/route.ts` | Suppression de variables non utilisées dans catch blocks | Suppression |
+| `src/app/api/ui/dossier/[ref]/move/route.ts` | Remplacement de `let updates` par `const updates` | Const |
+| `src/app/api/ui/note/[ref]/content/delete/route.ts` | Suppression d'import non utilisé (`createClient`) | Suppression |
+| `src/app/api/ui/note/[ref]/content/delete/route.ts` | Remplacement du type `any` par type explicite pour `params` | Typage |
+| `src/app/api/ui/note/[ref]/content/delete/route.ts` | Remplacement de `err: any` par `err: unknown` avec type guards | Typage |
+| `src/app/api/ui/note/[ref]/content/route.ts` | Remplacement des types `any` par types explicites pour `params` | Typage |
+| `src/app/api/ui/note/[ref]/content/route.ts` | Remplacement de `err: any` par `err: unknown` avec type guards | Typage |
+| `src/app/api/ui/note/[ref]/content/route.ts` | Suppression du paramètre `params` non utilisé dans POST | Suppression |
+| `src/app/api/ui/note/[ref]/move/route.ts` | Remplacement du type `any` par type explicite pour `params` | Typage |
+| `src/app/api/ui/note/[ref]/move/route.ts` | Suppression de variables non utilisées dans catch blocks | Suppression |
+| `src/app/api/ui/note/[ref]/move/route.ts` | Remplacement de `let updates` par `const updates` | Const |
+| `src/app/api/ui/note/[ref]/move/route.ts` | Remplacement de `err: any` par `err: unknown` avec type guards | Typage |
+| `src/app/api/ui/note/[ref]/section/route.ts` | Remplacement de `let sectionStart` par `const sectionStart` | Const |
+| `src/app/api/ui/note/[ref]/section/route.ts` | Remplacement du type `any` par type explicite pour `params` | Typage |
+| `src/app/api/ui/note/[ref]/section/route.ts` | Remplacement de `err: any` par `err: unknown` avec type guards | Typage |
+| `src/app/api/ui/note/merge/route.ts` | Suppression d'import non utilisé (`Article`) | Suppression |
+| `src/app/api/ui/note/merge/route.ts` | Remplacement de `let finalClasseurId` par `const finalClasseurId` | Const |
+| `src/app/api/ui/notebooks/route.ts` | Suppression d'import non utilisé (`z`) | Suppression |
+| `src/app/api/ui/notebooks/route.ts` | Suppression du paramètre `req` non utilisé dans GET | Suppression |
+| `src/app/api/ui/notebooks/route.ts` | Remplacement de `err: any` par `err: unknown` avec type guards | Typage |
+| `src/app/api/ui/folder/[ref]/route.ts` | Remplacement de `let updates` par `const updates` | Const |
+| `src/app/api/ui/notebook/[ref]/route.ts` | Remplacement de `let updates` par `const updates` | Const |
 
 ### Statut
 ✅ **Bloc API Routes terminé** - Build OK, erreurs critiques corrigées

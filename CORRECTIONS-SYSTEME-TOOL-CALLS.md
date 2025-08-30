@@ -262,7 +262,7 @@ export class ChatHistoryCleaner {
 
 1. **`src/store/useChatStore.ts`** - Refactorisation complète de `addMessage()`
 2. **`src/services/llm/groqGptOss120b.ts`** - Correction transmission tool calls + relance automatique
-3. **`src/app/api/v1/chat-sessions/[id]/messages/route.ts`** - Validation renforcée des messages tool
+3. **`src/app/api/ui/chat-sessions/[id]/messages/route.ts`** - Validation renforcée des messages tool
 4. **`src/services/llm/toolCallManager.ts`** - Nouveau service avec anti-boucle
 5. **`src/services/chatHistoryCleaner.ts`** - Nouveau service de nettoyage de l'historique
 6. **`src/tests/tool-call-system.test.ts`** - Tests complets du système

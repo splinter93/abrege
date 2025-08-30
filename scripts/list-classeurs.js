@@ -4,7 +4,7 @@ async function listClasseurs() {
   try {
     console.log('📚 Liste des classeurs existants...');
     
-    const response = await fetch('http://localhost:3000/api/v1/classeurs');
+    const response = await fetch('http://localhost:3000/api/ui/classeurs');
     
     if (!response.ok) {
       throw new Error(`Erreur: ${response.statusText}`);

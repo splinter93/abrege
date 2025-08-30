@@ -6,14 +6,14 @@ console.log('================================');
 
 // 1. Vérifier les endpoints avec des problèmes de parsing
 const parsingErrors = [
-  'src/app/api/v1/note/[ref]/add-content/route.ts',
-  'src/app/api/v1/note/[ref]/add-to-section/route.ts',
-  'src/app/api/v1/note/[ref]/clear-section/route.ts',
-  'src/app/api/v1/note/[ref]/information/route.ts',
-  'src/app/api/v1/note/[ref]/statistics/route.ts',
-  'src/app/api/v1/note/[ref]/table-of-contents/route.ts',
-  'src/app/api/v1/note/merge/route.ts',
-  'src/app/api/v1/note/overwrite/route.ts'
+  'src/app/api/ui/note/[ref]/add-content/route.ts',
+  'src/app/api/ui/note/[ref]/add-to-section/route.ts',
+  'src/app/api/ui/note/[ref]/clear-section/route.ts',
+  'src/app/api/ui/note/[ref]/information/route.ts',
+  'src/app/api/ui/note/[ref]/statistics/route.ts',
+  'src/app/api/ui/note/[ref]/table-of-contents/route.ts',
+  'src/app/api/ui/note/merge/route.ts',
+  'src/app/api/ui/note/overwrite/route.ts'
 ];
 
 console.log('\n❌ ERREURS DE PARSING CRITIQUES:');
@@ -49,11 +49,11 @@ envVars.forEach(varName => {
 // 3. Vérifier les types any dans les endpoints API
 console.log('\n⚠️  TYPES ANY DANS LES ENDPOINTS API:');
 const apiFiles = [
-  'src/app/api/v1/note/[ref]/publish/route.ts',
-  'src/app/api/v1/note/[ref]/route.ts',
-  'src/app/api/v1/folder/[ref]/route.ts',
-  'src/app/api/v1/classeur/[ref]/route.ts',
-  'src/app/api/v1/notebook/[ref]/route.ts'
+  'src/app/api/ui/note/[ref]/publish/route.ts',
+  'src/app/api/ui/note/[ref]/route.ts',
+  'src/app/api/ui/folder/[ref]/route.ts',
+  'src/app/api/ui/classeur/[ref]/route.ts',
+  'src/app/api/ui/notebook/[ref]/route.ts'
 ];
 
 apiFiles.forEach(file => {

@@ -47,7 +47,7 @@ await addMessage(tempAssistantMessage);
 **AVANT :**
 ```typescript
 // Ajouter le message final en DB une seule fois
-const response = await fetch(`/api/v1/chat-sessions/${currentSession.id}/messages`, {
+const response = await fetch(`/api/ui/chat-sessions/${currentSession.id}/messages`, {
   method: 'POST',
   headers: {
     'Authorization': `Bearer ${token}`,
@@ -69,7 +69,7 @@ logger.dev('[ChatFullscreen] ✅ Message assistant mis à jour (pas de sauvegard
 **AVANT :**
 ```typescript
 // Ajouter le message d'erreur en DB
-const response = await fetch(`/api/v1/chat-sessions/${currentSession.id}/messages`, {
+const response = await fetch(`/api/ui/chat-sessions/${currentSession.id}/messages`, {
   method: 'POST',
   headers: {
     'Authorization': `Bearer ${token}`,

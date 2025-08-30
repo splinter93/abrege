@@ -70,7 +70,7 @@ export async function uploadImageForNote(file: File, noteRef: string): Promise<{
       const { file: saved, signed_url, public_control_url } = await registerRes.json();
       // Use the canonical AWS URL from the files table instead of signed_url
       // The canonical URL is already stored in files.url and is the clean URL we want
-      const publicUrl = saved.url || `/api/v1/public/file/${saved.id}${saved.etag ? `?v=${saved.etag}` : ''}`;
+      const publicUrl = saved.url || `/api/ui/public/file/${saved.id}${saved.etag ? `?v=${saved.etag}` : ''}`;
       return { publicUrl, saved };
     }
 

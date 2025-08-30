@@ -81,7 +81,7 @@ node scripts/test-public-access.js
 ### **Test 3: Test de l'API publique**
 ```bash
 # Test de l'endpoint public
-curl "https://votre-app.com/api/v1/public/note/{username}/{slug}"
+curl "https://votre-app.com/api/ui/public/note/{username}/{slug}"
 ```
 
 ---

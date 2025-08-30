@@ -4,7 +4,7 @@
 
 **Le champ `name` était manquant dans l'API des messages, causant la perte du nom du tool dans les messages sauvegardés.**
 
-Le problème était dans le schéma de validation et la création des messages dans `/api/v1/chat-sessions/[id]/messages/route.ts`.
+Le problème était dans le schéma de validation et la création des messages dans `/api/ui/chat-sessions/[id]/messages/route.ts`.
 
 ---
 
@@ -78,7 +78,7 @@ const newMessage = {
 
 ### **1. 🔧 Correction du schéma de validation**
 
-**Fichier : `src/app/api/v1/chat-sessions/[id]/messages/route.ts`**
+**Fichier : `src/app/api/ui/chat-sessions/[id]/messages/route.ts`**
 
 ```typescript
 // AVANT : Schéma incomplet
@@ -131,7 +131,7 @@ const toolMessage = {
 };
 
 // Sauvegarde via l'API
-await fetch('/api/v1/chat-sessions/session-id/messages', {
+await fetch('/api/ui/chat-sessions/session-id/messages', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify(toolMessage)

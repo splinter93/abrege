@@ -95,7 +95,7 @@ async function validatePhase1Final() {
   
   const criticalFiles = [
     {
-      path: 'src/app/api/v1/chat-sessions/[id]/messages/batch/route.ts',
+      path: 'src/app/api/ui/chat-sessions/[id]/messages/batch/route.ts',
       description: 'Route API batch (CŒUR)'
     },
     {
@@ -255,7 +255,7 @@ async function validatePhase1Final() {
   
   totalChecks++;
   if (checkFileContent(
-    'src/app/api/v1/chat-sessions/[id]/messages/batch/route.ts',
+    'src/app/api/ui/chat-sessions/[id]/messages/batch/route.ts',
     [
       {
         pattern: /export async function POST/,

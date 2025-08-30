@@ -33,9 +33,9 @@ const FILES_TO_CHECK = {
   ],
   'Persistance et Base de Données': [
     'src/app/api/chat/llm/route.ts',
-    'src/app/api/v1/chat-sessions/[id]/messages/route.ts',
-    'src/app/api/v1/chat-sessions/[id]/messages/batch/route.ts',
-    'src/app/api/v1/chat-sessions/route.ts',
+    'src/app/api/ui/chat-sessions/[id]/messages/route.ts',
+    'src/app/api/ui/chat-sessions/[id]/messages/batch/route.ts',
+    'src/app/api/ui/chat-sessions/route.ts',
     'src/services/chatSessionService.ts',
     'src/services/sessionSyncService.ts',
     'src/store/useChatStore.ts'

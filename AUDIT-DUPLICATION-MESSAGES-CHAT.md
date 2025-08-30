@@ -213,7 +213,7 @@ if (currentSession && currentSession.thread.length > 0) {
     };
     
     // Utiliser directement le service de chat pour sauvegarder en DB (sans mettre à jour le store)
-    const response = await fetch(`/api/v1/chat-sessions/${currentSession.id}/messages`, {
+    const response = await fetch(`/api/ui/chat-sessions/${currentSession.id}/messages`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -317,7 +317,7 @@ const finalMessage = {
 };
 
 // Utiliser directement le service de chat pour sauvegarder en DB (sans mettre à jour le store)
-const response = await fetch(`/api/v1/chat-sessions/${currentSession.id}/messages`, {
+const response = await fetch(`/api/ui/chat-sessions/${currentSession.id}/messages`, {
   method: 'POST',
   headers: {
     'Authorization': `Bearer ${token}`,

@@ -10,7 +10,7 @@
 
 ### 1. **Correction des APIs de Création de Notes**
 
-#### ✅ API V1 (`src/app/api/v1/note/create/route.ts`)
+#### ✅ API V1 (`src/app/api/ui/note/create/route.ts`)
 - **Déjà conforme** : Génère automatiquement les slugs via `SlugAndUrlService.generateSlugAndUpdateUrl()`
 - **Fonctionne parfaitement** ✅
 

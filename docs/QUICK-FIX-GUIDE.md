@@ -23,7 +23,7 @@ J'ai corrigé toutes les APIs pour utiliser uniquement `classeur_id` :
 **Problème identifié** : La fonction `handleUpdateClasseurPositions` utilisait l'ancienne API V1.
 
 **Solution appliquée** :
-- ✅ Correction de l'endpoint : `/api/v1/classeur/reorder` → `/api/v2/classeur/reorder`
+- ✅ Correction de l'endpoint : `/api/ui/classeur/reorder` → `/api/v2/classeur/reorder`
 - ✅ Correction de la méthode HTTP : `POST` → `PUT`
 - ✅ Correction du format de payload : `{ positions: [...] }` → `{ classeurs: [...] }`
 - ✅ Correction de la contrainte NOT NULL : Seule la position est mise à jour, pas tous les champs

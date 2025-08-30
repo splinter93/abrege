@@ -60,11 +60,11 @@ node test-chatgpt-auth-debug.js
 
 ```bash
 # Test sans authentification (doit retourner 401)
-curl http://localhost:3000/api/v1/classeurs
+curl http://localhost:3000/api/ui/classeurs
 
 # Test avec authentification (doit retourner 401 mais avec token reçu)
 curl -H "Authorization: Bearer test-token" \
-     http://localhost:3000/api/v1/classeurs
+     http://localhost:3000/api/ui/classeurs
 ```
 
 ---
@@ -77,7 +77,7 @@ Après avoir testé, regardez les logs qui commencent par `🚨 [AUTH]` :
 
 ```
 🚨 [AUTH] ===== DÉBUT GETAUTHENTICATEDUSER =====
-🚨 [AUTH] URL: http://localhost:3000/api/v1/classeurs
+🚨 [AUTH] URL: http://localhost:3000/api/ui/classeurs
 🚨 [AUTH] Méthode: GET
 🚨 [AUTH] User-Agent: [valeur reçue]
 🚨 [AUTH] ===== TOUS LES HEADERS =====

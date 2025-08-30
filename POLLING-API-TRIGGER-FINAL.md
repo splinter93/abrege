@@ -46,24 +46,24 @@ async triggerImmediateCheck(table: string, operation: 'INSERT' | 'UPDATE' | 'DEL
 ## 🧪 **Tests Validés**
 
 ### **✅ INSERT (Création)**
-- **API** : `POST /api/v1/note/create`
+- **API** : `POST /api/ui/note/create`
 - **Déclenchement** : `pollingTrigger.triggerArticlesPolling('INSERT')`
 - **Résultat** : Note apparaît instantanément dans l'UI
 
 ### **✅ UPDATE (Mise à jour)**
-- **API** : `PUT /api/v1/note/[id]`
+- **API** : `PUT /api/ui/note/[id]`
 - **Déclenchement** : `pollingTrigger.triggerArticlesPolling('UPDATE')`
 - **Résultat** : Contenu mis à jour instantanément dans l'UI
 
 ### **✅ DELETE (Suppression)**
-- **API** : `DELETE /api/v1/note/[id]`
+- **API** : `DELETE /api/ui/note/[id]`
 - **Déclenchement** : `pollingTrigger.triggerArticlesPolling('DELETE')`
 - **Résultat** : Élément supprimé instantanément de l'UI
 
 ### **✅ Dossiers et Classeurs**
-- **Création** : `POST /api/v1/folder/create`
-- **Mise à jour** : `PUT /api/v1/folder/[id]`
-- **Suppression** : `DELETE /api/v1/folder/[id]`
+- **Création** : `POST /api/ui/folder/create`
+- **Mise à jour** : `PUT /api/ui/folder/[id]`
+- **Suppression** : `DELETE /api/ui/folder/[id]`
 
 ## 📊 **Comparaison des Performances**
 
@@ -82,19 +82,19 @@ async triggerImmediateCheck(table: string, operation: 'INSERT' | 'UPDATE' | 'DEL
 ## 🎯 **APIs Intégrées**
 
 ### **Notes (Articles)**
-- ✅ `POST /api/v1/note/create` → INSERT
-- ✅ `PUT /api/v1/note/[id]` → UPDATE
-- ✅ `DELETE /api/v1/note/[id]` → DELETE
+- ✅ `POST /api/ui/note/create` → INSERT
+- ✅ `PUT /api/ui/note/[id]` → UPDATE
+- ✅ `DELETE /api/ui/note/[id]` → DELETE
 
 ### **Dossiers (Folders)**
-- ✅ `POST /api/v1/folder/create` → INSERT
-- ✅ `PUT /api/v1/folder/[id]` → UPDATE
-- ✅ `DELETE /api/v1/folder/[id]` → DELETE
+- ✅ `POST /api/ui/folder/create` → INSERT
+- ✅ `PUT /api/ui/folder/[id]` → UPDATE
+- ✅ `DELETE /api/ui/folder/[id]` → DELETE
 
 ### **Classeurs (Classeurs)**
-- ✅ `POST /api/v1/classeur/create` → INSERT
-- ✅ `PUT /api/v1/classeur/[id]` → UPDATE
-- ✅ `DELETE /api/v1/classeur/[id]` → DELETE
+- ✅ `POST /api/ui/classeur/create` → INSERT
+- ✅ `PUT /api/ui/classeur/[id]` → UPDATE
+- ✅ `DELETE /api/ui/classeur/[id]` → DELETE
 
 ## 🔮 **Support LLM et Collaboratif**
 

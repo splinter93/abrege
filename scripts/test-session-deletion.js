@@ -156,7 +156,7 @@ async function testApiEndpoint() {
     
     // Note: On ne peut pas tester l'API directement sans authentification
     // Mais on peut vérifier que l'endpoint existe et fonctionne
-    console.log('✅ L\'endpoint DELETE /api/v1/chat-sessions/[id] existe');
+    console.log('✅ L\'endpoint DELETE /api/ui/chat-sessions/[id] existe');
     console.log('✅ La logique de soft delete est implémentée');
     console.log('✅ Le service ChatSessionService appelle correctement l\'API');
 

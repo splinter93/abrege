@@ -55,7 +55,7 @@ scripts/
 
 ### **🔧 Composants Clés**
 
-#### **1. Route API Batch (`/api/v1/chat-sessions/[id]/messages/batch`)**
+#### **1. Route API Batch (`/api/ui/chat-sessions/[id]/messages/batch`)**
 - **Méthode :** POST
 - **Fonctionnalités :**
   - Persistance atomique des messages

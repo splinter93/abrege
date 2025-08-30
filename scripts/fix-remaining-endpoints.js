@@ -3,18 +3,18 @@ const path = require('path');
 
 // Liste des endpoints restants à corriger
 const endpoints = [
-  'src/app/api/v1/note/publish/route.ts',
-  'src/app/api/v1/note/merge/route.ts',
-  'src/app/api/v1/note/[ref]/table-of-contents/route.ts',
-  'src/app/api/v1/note/[ref]/clear-section/route.ts',
-  'src/app/api/v1/note/overwrite/route.ts',
-  'src/app/api/v1/note/[ref]/content/delete/route.ts',
-  'src/app/api/v1/note/[ref]/content/route.ts',
-  'src/app/api/v1/note/[ref]/add-to-section/route.ts',
-  'src/app/api/v1/note/[ref]/section/route.ts',
-  'src/app/api/v1/note/[ref]/add-content/route.ts',
-  'src/app/api/v1/note/[ref]/statistics/route.ts',
-  'src/app/api/v1/note/[ref]/information/route.ts'
+  'src/app/api/ui/note/publish/route.ts',
+  'src/app/api/ui/note/merge/route.ts',
+  'src/app/api/ui/note/[ref]/table-of-contents/route.ts',
+  'src/app/api/ui/note/[ref]/clear-section/route.ts',
+  'src/app/api/ui/note/overwrite/route.ts',
+  'src/app/api/ui/note/[ref]/content/delete/route.ts',
+  'src/app/api/ui/note/[ref]/content/route.ts',
+  'src/app/api/ui/note/[ref]/add-to-section/route.ts',
+  'src/app/api/ui/note/[ref]/section/route.ts',
+  'src/app/api/ui/note/[ref]/add-content/route.ts',
+  'src/app/api/ui/note/[ref]/statistics/route.ts',
+  'src/app/api/ui/note/[ref]/information/route.ts'
 ];
 
 // Template pour la fonction getAuthenticatedClient

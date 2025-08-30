@@ -15,7 +15,7 @@ class OptimizedApiClient {
     
     try {
       // Appel API
-      const response = await fetch('http://localhost:3001/api/v1/note/create', {
+      const response = await fetch('http://localhost:3001/api/ui/note/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(noteData)
@@ -48,7 +48,7 @@ class OptimizedApiClient {
     
     try {
       // Appel API
-      const response = await fetch(`http://localhost:3001/api/v1/note/${noteId}`, {
+      const response = await fetch(`http://localhost:3001/api/ui/note/${noteId}`, {
         method: 'DELETE'
       });
 
@@ -78,7 +78,7 @@ class OptimizedApiClient {
     
     try {
       // Appel API
-      const response = await fetch('http://localhost:3001/api/v1/folder/create', {
+      const response = await fetch('http://localhost:3001/api/ui/folder/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(folderData)
@@ -111,7 +111,7 @@ class OptimizedApiClient {
     
     try {
       // Appel API
-      const response = await fetch(`http://localhost:3001/api/v1/folder/${folderId}`, {
+      const response = await fetch(`http://localhost:3001/api/ui/folder/${folderId}`, {
         method: 'DELETE'
       });
 

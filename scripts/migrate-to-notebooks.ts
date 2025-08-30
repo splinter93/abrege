@@ -145,7 +145,7 @@ async function updateFrontendCode() {
   console.log('- classeur_id → notebook_id');
   console.log('- classeurs → notebooks');
   console.log('- Classeur → Notebook');
-  console.log('- /api/v1/classeur/ → /api/v1/notebook/');
+  console.log('- /api/ui/classeur/ → /api/ui/notebook/');
 }
 
 async function main() {

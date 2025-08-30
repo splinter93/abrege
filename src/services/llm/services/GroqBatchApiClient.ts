@@ -83,13 +83,13 @@ export class GroqBatchApiClient {
       };
 
       logger.dev(`[GroqBatchApiClient] 🔌 Appel API batch:`, {
-        url: `${this.config.baseUrl}/api/v1/chat-sessions/${sessionId}/messages/batch`,
+        url: `${this.config.baseUrl}/api/ui/chat-sessions/${sessionId}/messages/batch`,
         operationId,
         headers: { ...headers, 'Authorization': 'Bearer ***' }
       });
 
       // Appel à l'API
-      const response = await fetch(`${this.config.baseUrl}/api/v1/chat-sessions/${sessionId}/messages/batch`, {
+      const response = await fetch(`${this.config.baseUrl}/api/ui/chat-sessions/${sessionId}/messages/batch`, {
         method: 'POST',
         headers,
         body: JSON.stringify(payload),
@@ -168,7 +168,7 @@ export class GroqBatchApiClient {
     try {
       const { token } = await this.getSessionAuth(sessionId);
       
-      const response = await fetch(`${this.config.baseUrl}/api/v1/chat-sessions/${sessionId}`, {
+      const response = await fetch(`${this.config.baseUrl}/api/ui/chat-sessions/${sessionId}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 
@@ -189,7 +189,7 @@ export class GroqBatchApiClient {
     try {
       const { token } = await this.getSessionAuth(sessionId);
       
-      const response = await fetch(`${this.config.baseUrl}/api/v1/chat-sessions/${sessionId}/operations/${operationId}`, {
+      const response = await fetch(`${this.config.baseUrl}/api/ui/chat-sessions/${sessionId}/operations/${operationId}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 

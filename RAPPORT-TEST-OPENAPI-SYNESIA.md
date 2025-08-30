@@ -26,24 +26,24 @@ Nous avons testé l'intégration de l'API LLM Direct de Synesia avec votre sché
 
 | Tool | Description | Endpoint | Paramètres |
 |------|-------------|----------|------------|
-| `create_note` | Créer une nouvelle note | POST /api/v1/note/create | 5 |
-| `get_note` | Récupérer une note | GET /api/v1/note/{ref} | 1 |
-| `update_note` | Mettre à jour une note | PUT /api/v1/note/{ref} | 5 |
-| `delete_note` | Supprimer une note | DELETE /api/v1/note/{ref} | 1 |
-| `add_content_to_note` | Ajouter du contenu | PATCH /api/v1/note/{ref}/add-content | 3 |
-| `move_note` | Déplacer une note | PUT /api/v1/note/{ref}/move | 4 |
-| `get_note_info` | Informations de note | GET /api/v1/note/{ref}/information | 1 |
-| `get_note_stats` | Statistiques de note | GET /api/v1/note/{ref}/statistics | 1 |
-| `create_folder` | Créer un dossier | POST /api/v1/folder/create | 3 |
-| `get_folder` | Récupérer un dossier | GET /api/v1/folder/{ref} | 1 |
-| `update_folder` | Mettre à jour un dossier | PUT /api/v1/folder/{ref} | 2 |
-| `delete_folder` | Supprimer un dossier | DELETE /api/v1/folder/{ref} | 1 |
-| `create_notebook` | Créer un classeur | POST /api/v1/notebook/create | 4 |
-| `get_notebook` | Récupérer un classeur | GET /api/v1/notebook/{ref} | 1 |
-| `update_notebook` | Mettre à jour un classeur | PUT /api/v1/notebook/{ref} | 5 |
-| `delete_notebook` | Supprimer un classeur | DELETE /api/v1/notebook/{ref} | 1 |
-| `list_notebooks` | Lister les classeurs | GET /api/v1/notebooks | 0 |
-| `generate_slug` | Générer un slug | POST /api/v1/slug/generate | 2 |
+| `create_note` | Créer une nouvelle note | POST /api/ui/note/create | 5 |
+| `get_note` | Récupérer une note | GET /api/ui/note/{ref} | 1 |
+| `update_note` | Mettre à jour une note | PUT /api/ui/note/{ref} | 5 |
+| `delete_note` | Supprimer une note | DELETE /api/ui/note/{ref} | 1 |
+| `add_content_to_note` | Ajouter du contenu | PATCH /api/ui/note/{ref}/add-content | 3 |
+| `move_note` | Déplacer une note | PUT /api/ui/note/{ref}/move | 4 |
+| `get_note_info` | Informations de note | GET /api/ui/note/{ref}/information | 1 |
+| `get_note_stats` | Statistiques de note | GET /api/ui/note/{ref}/statistics | 1 |
+| `create_folder` | Créer un dossier | POST /api/ui/folder/create | 3 |
+| `get_folder` | Récupérer un dossier | GET /api/ui/folder/{ref} | 1 |
+| `update_folder` | Mettre à jour un dossier | PUT /api/ui/folder/{ref} | 2 |
+| `delete_folder` | Supprimer un dossier | DELETE /api/ui/folder/{ref} | 1 |
+| `create_notebook` | Créer un classeur | POST /api/ui/notebook/create | 4 |
+| `get_notebook` | Récupérer un classeur | GET /api/ui/notebook/{ref} | 1 |
+| `update_notebook` | Mettre à jour un classeur | PUT /api/ui/notebook/{ref} | 5 |
+| `delete_notebook` | Supprimer un classeur | DELETE /api/ui/notebook/{ref} | 1 |
+| `list_notebooks` | Lister les classeurs | GET /api/ui/notebooks | 0 |
+| `generate_slug` | Générer un slug | POST /api/ui/slug/generate | 2 |
 
 ### **📈 Comparaison avec Votre Système Actuel**
 

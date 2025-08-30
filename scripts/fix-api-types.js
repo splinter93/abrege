@@ -4,11 +4,11 @@ const path = require('path');
 console.log('🔧 Correction des types any dans les API...');
 
 const apiFiles = [
-  'src/app/api/v1/note/[ref]/route.ts',
-  'src/app/api/v1/folder/[ref]/route.ts',
-  'src/app/api/v1/classeur/[ref]/route.ts',
-  'src/app/api/v1/notebook/[ref]/route.ts',
-  'src/app/api/v1/note/[ref]/publish/route.ts'
+  'src/app/api/ui/note/[ref]/route.ts',
+  'src/app/api/ui/folder/[ref]/route.ts',
+  'src/app/api/ui/classeur/[ref]/route.ts',
+  'src/app/api/ui/notebook/[ref]/route.ts',
+  'src/app/api/ui/note/[ref]/publish/route.ts'
 ];
 
 apiFiles.forEach(filePath => {

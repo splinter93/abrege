@@ -190,16 +190,16 @@ export class OpenAPIToolsGenerator {
 
     // Inclure tous les endpoints de modification et les endpoints de lecture utiles
     const usefulEndpoints = [
-      '/api/v1/note/create',
-      '/api/v1/note/{ref}',
-      '/api/v1/note/{ref}/add-content',
-      '/api/v1/note/{ref}/move',
-      '/api/v1/folder/create',
-      '/api/v1/folder/{ref}',
-      '/api/v1/notebook/create',
-      '/api/v1/notebook/{ref}',
-      '/api/v1/notebooks',
-      '/api/v1/slug/generate'
+      '/api/ui/note/create',
+      '/api/ui/note/{ref}',
+      '/api/ui/note/{ref}/add-content',
+      '/api/ui/note/{ref}/move',
+      '/api/ui/folder/create',
+      '/api/ui/folder/{ref}',
+      '/api/ui/notebook/create',
+      '/api/ui/notebook/{ref}',
+      '/api/ui/notebooks',
+      '/api/ui/slug/generate'
     ];
 
     // Vérifier si l'endpoint est utile
@@ -267,7 +267,7 @@ export function createOpenAPIToolsGenerator(): OpenAPIToolsGenerator {
   // Schéma OpenAPI simplifié pour les tests
   const defaultSchema = {
     paths: {
-      '/api/v1/note/create': {
+      '/api/ui/note/create': {
         post: {
           summary: 'Créer une nouvelle note',
           description: 'Créer une nouvelle note avec génération automatique de slug',
@@ -282,7 +282,7 @@ export function createOpenAPIToolsGenerator(): OpenAPIToolsGenerator {
           }
         }
       },
-      '/api/v1/note/{ref}': {
+      '/api/ui/note/{ref}': {
         get: {
           summary: 'Récupérer une note',
           parameters: [
@@ -306,7 +306,7 @@ export function createOpenAPIToolsGenerator(): OpenAPIToolsGenerator {
           ]
         }
       },
-      '/api/v1/notebooks': {
+      '/api/ui/notebooks': {
         get: {
           summary: 'Lister tous les classeurs'
         }

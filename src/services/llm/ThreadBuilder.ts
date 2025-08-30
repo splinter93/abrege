@@ -26,7 +26,7 @@ export class ThreadBuilder {
       logger.info(`[ThreadBuilder] 🔄 Reconstruction du thread pour la session ${sessionId}`);
       
       // Récupérer la session depuis l'API
-      const sessionResponse = await fetch(`/api/v1/chat-sessions/${sessionId}`);
+      const sessionResponse = await fetch(`/api/ui/chat-sessions/${sessionId}`);
       if (!sessionResponse.ok) {
         throw new Error(`Impossible de récupérer la session: ${sessionResponse.status}`);
       }

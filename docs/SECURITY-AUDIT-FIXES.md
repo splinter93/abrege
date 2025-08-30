@@ -60,10 +60,10 @@ Ce document détaille toutes les corrections de sécurité critiques appliquées
 **CORRECTION APPLIQUÉE :**
 ```typescript
 // AVANT (INSÉCURISÉ)
-const PUBLIC_PREFIXES = ['/_next', '/favicon', '/public', '/@', '/api/v1/public'];
+const PUBLIC_PREFIXES = ['/_next', '/favicon', '/public', '/@', '/api/ui/public'];
 
 // APRÈS (SÉCURISÉ)
-const PUBLIC_PREFIXES = ['/_next', '/favicon', '/public', '/api/v1/public'];
+const PUBLIC_PREFIXES = ['/_next', '/favicon', '/public', '/api/ui/public'];
 
 // ✅ Traitement spécial avec logging pour les pages publiques
 if (url.pathname.startsWith('/@')) {

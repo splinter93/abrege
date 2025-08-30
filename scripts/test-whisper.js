@@ -13,10 +13,10 @@ async function testWhisperAPI() {
   console.log('🎤 Test de l\'API Whisper\n');
 
   // Test 1: Vérifier que l'endpoint répond
-  console.log('1️⃣ Test de l\'endpoint GET /api/v1/whisper/transcribe');
+  console.log('1️⃣ Test de l\'endpoint GET /api/ui/whisper/transcribe');
   
   try {
-    const response = await fetch('http://localhost:3005/api/v1/whisper/transcribe');
+    const response = await fetch('http://localhost:3005/api/ui/whisper/transcribe');
     const data = await response.json();
     
     if (response.ok) {
@@ -33,10 +33,10 @@ async function testWhisperAPI() {
     console.log('❌ Erreur de connexion:', error.message);
   }
 
-  console.log('\n2️⃣ Test de l\'endpoint GET /api/v1/whisper/translate');
+  console.log('\n2️⃣ Test de l\'endpoint GET /api/ui/whisper/translate');
   
   try {
-    const response = await fetch('http://localhost:3005/api/v1/whisper/translate');
+    const response = await fetch('http://localhost:3005/api/ui/whisper/translate');
     const data = await response.json();
     
     if (response.ok) {

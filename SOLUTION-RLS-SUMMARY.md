@@ -2,7 +2,7 @@
 
 ## 🚨 **PROBLÈME**
 ```
-POST https://www.scrivia.app/api/v1/note/create 500 (Internal Server Error)
+POST https://www.scrivia.app/api/ui/note/create 500 (Internal Server Error)
 "new row violates row-level security policy for table "articles""
 ```
 

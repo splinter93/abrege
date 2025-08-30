@@ -14,13 +14,13 @@
 
 | Endpoint | Statut | Authentification | Validation | Types |
 |----------|--------|------------------|------------|-------|
-| `/api/v1/classeur/create` | ✅ OK | ✅ Bearer Token | ✅ Zod | ⚠️ any |
-| `/api/v1/classeur/[ref]` | ✅ OK | ✅ Bearer Token | ✅ Zod | ✅ Fixed |
-| `/api/v1/classeur/[ref]/dossiers` | ✅ OK | ✅ Bearer Token | ✅ Zod | ⚠️ any |
-| `/api/v1/classeur/[ref]/meta` | ✅ OK | ✅ Bearer Token | ✅ Zod | ⚠️ any |
-| `/api/v1/classeur/[ref]/tree` | ✅ OK | ✅ Bearer Token | ✅ Zod | ⚠️ any |
-| `/api/v1/classeur/[ref]/full-tree` | ✅ OK | ✅ Bearer Token | ✅ Zod | ⚠️ any |
-| `/api/v1/classeur/reorder` | ✅ OK | ✅ Bearer Token | ✅ Zod | ⚠️ any |
+| `/api/ui/classeur/create` | ✅ OK | ✅ Bearer Token | ✅ Zod | ⚠️ any |
+| `/api/ui/classeur/[ref]` | ✅ OK | ✅ Bearer Token | ✅ Zod | ✅ Fixed |
+| `/api/ui/classeur/[ref]/dossiers` | ✅ OK | ✅ Bearer Token | ✅ Zod | ⚠️ any |
+| `/api/ui/classeur/[ref]/meta` | ✅ OK | ✅ Bearer Token | ✅ Zod | ⚠️ any |
+| `/api/ui/classeur/[ref]/tree` | ✅ OK | ✅ Bearer Token | ✅ Zod | ⚠️ any |
+| `/api/ui/classeur/[ref]/full-tree` | ✅ OK | ✅ Bearer Token | ✅ Zod | ⚠️ any |
+| `/api/ui/classeur/reorder` | ✅ OK | ✅ Bearer Token | ✅ Zod | ⚠️ any |
 
 ## 🔒 SÉCURITÉ VÉRIFIÉE
 
@@ -41,19 +41,19 @@
 
 ## 🛡️ CORRECTIONS APPLIQUÉES
 
-### 🔧 **Endpoint `/api/v1/classeur/[ref]`**
+### 🔧 **Endpoint `/api/ui/classeur/[ref]`**
 - ✅ Ajout validation Zod pour paramètres et body
 - ✅ Remplacement `any` par `Record<string, unknown>`
 - ✅ Types de retour explicites `Promise<Response>`
 - ✅ Gestion d'erreur typée `err: unknown`
 
-### 🔧 **Endpoint `/api/v1/classeur/create`**
+### 🔧 **Endpoint `/api/ui/classeur/create`**
 - ✅ Authentification complète avec `getAuthenticatedClient`
 - ✅ Validation Zod des données d'entrée
 - ✅ Génération automatique de slug
 - ✅ Gestion d'erreur robuste
 
-### 🔧 **Endpoint `/api/v1/classeur/reorder`**
+### 🔧 **Endpoint `/api/ui/classeur/reorder`**
 - ✅ Authentification ajoutée dans `OptimizedApi`
 - ✅ Headers Bearer token inclus
 - ✅ Vérification propriétaire des classeurs
@@ -71,11 +71,11 @@
 ## ⚠️ WARNINGS RESTANTS
 
 ### **Types `any` restants (non critiques)**
-- `src/app/api/v1/classeur/[ref]/dossiers/route.ts`
-- `src/app/api/v1/classeur/[ref]/meta/route.ts`
-- `src/app/api/v1/classeur/[ref]/tree/route.ts`
-- `src/app/api/v1/classeur/[ref]/full-tree/route.ts`
-- `src/app/api/v1/classeur/reorder/route.ts`
+- `src/app/api/ui/classeur/[ref]/dossiers/route.ts`
+- `src/app/api/ui/classeur/[ref]/meta/route.ts`
+- `src/app/api/ui/classeur/[ref]/tree/route.ts`
+- `src/app/api/ui/classeur/[ref]/full-tree/route.ts`
+- `src/app/api/ui/classeur/reorder/route.ts`
 
 **Impact :** Faible - Ces `any` sont dans des contextes non critiques (paramètres de fonction, gestion d'erreur)
 

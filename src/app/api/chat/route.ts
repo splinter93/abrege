@@ -6,7 +6,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     message: 'Endpoint chat - utilisez POST pour les conversations',
     endpoints: {
       '/api/chat/llm': 'Chat avec LLM',
-      '/api/v1/chat-sessions': 'Gestion des sessions de chat',
+      '/api/ui/chat-sessions': 'Gestion des sessions de chat',
     }
   });
 }

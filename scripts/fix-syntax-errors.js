@@ -3,8 +3,8 @@ const fs = require('fs');
 console.log('🔧 Correction des erreurs de syntaxe...');
 
 const filesToFix = [
-  'src/app/api/v1/note/[ref]/information/route.ts',
-  'src/app/api/v1/note/merge/route.ts'
+  'src/app/api/ui/note/[ref]/information/route.ts',
+  'src/app/api/ui/note/merge/route.ts'
 ];
 
 filesToFix.forEach(filePath => {

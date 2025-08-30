@@ -225,7 +225,7 @@ export class BatchMessageService {
         attempt++;
         logger.dev(`[BatchMessageService] 🔄 Tentative ${attempt}/${maxRetries} pour l'API batch`);
 
-        const response = await fetch(`/api/v1/chat-sessions/${sessionId}/messages/batch`, {
+        const response = await fetch(`/api/ui/chat-sessions/${sessionId}/messages/batch`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -284,7 +284,7 @@ export class BatchMessageService {
   private async handleETagConflict(sessionId: string, operationId: string, relanceIndex: number): Promise<void> {
     try {
       // Refetch de la session pour obtenir le nouvel ETag
-      const sessionResponse = await fetch(`/api/v1/chat-sessions/${sessionId}`);
+      const sessionResponse = await fetch(`/api/ui/chat-sessions/${sessionId}`);
       if (!sessionResponse.ok) {
         throw new Error(`Impossible de refetch la session: ${sessionResponse.status}`);
       }

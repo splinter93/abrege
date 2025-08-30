@@ -12,42 +12,42 @@ L'API Abrège a été entièrement refactorisée avec des noms d'endpoints **LLM
 
 | Méthode | Endpoint | Description |
 |---------|----------|-------------|
-| `GET` | `/api/v1/note/{ref}` | Récupérer une note |
-| `PUT` | `/api/v1/note/{ref}` | Mettre à jour une note |
-| `DELETE` | `/api/v1/note/{ref}` | Supprimer une note |
-| `POST` | `/api/v1/note/create` | **Créer une note** |
-| `POST` | `/api/v1/note/overwrite` | **Mettre à jour complètement** |
-| `PATCH` | `/api/v1/note/{ref}/add-content` | **Ajouter du contenu** |
-| `PATCH` | `/api/v1/note/{ref}/add-to-section` | **Ajouter à une section** |
-| `PATCH` | `/api/v1/note/{ref}/clear-section` | **Effacer une section** |
-| `GET` | `/api/v1/note/{ref}/table-of-contents` | **Table des matières** |
-| `GET` | `/api/v1/note/{ref}/information` | **Informations de base** |
-| `PATCH` | `/api/v1/note/{ref}/information` | **Mettre à jour les infos** |
-| `GET` | `/api/v1/note/{ref}/statistics` | **Statistiques détaillées** |
+| `GET` | `/api/ui/note/{ref}` | Récupérer une note |
+| `PUT` | `/api/ui/note/{ref}` | Mettre à jour une note |
+| `DELETE` | `/api/ui/note/{ref}` | Supprimer une note |
+| `POST` | `/api/ui/note/create` | **Créer une note** |
+| `POST` | `/api/ui/note/overwrite` | **Mettre à jour complètement** |
+| `PATCH` | `/api/ui/note/{ref}/add-content` | **Ajouter du contenu** |
+| `PATCH` | `/api/ui/note/{ref}/add-to-section` | **Ajouter à une section** |
+| `PATCH` | `/api/ui/note/{ref}/clear-section` | **Effacer une section** |
+| `GET` | `/api/ui/note/{ref}/table-of-contents` | **Table des matières** |
+| `GET` | `/api/ui/note/{ref}/information` | **Informations de base** |
+| `PATCH` | `/api/ui/note/{ref}/information` | **Mettre à jour les infos** |
+| `GET` | `/api/ui/note/{ref}/statistics` | **Statistiques détaillées** |
 
 ### **📁 Dossiers (Folders)**
 
 | Méthode | Endpoint | Description |
 |---------|----------|-------------|
-| `GET` | `/api/v1/folder/{ref}` | **Récupérer un dossier** |
-| `PUT` | `/api/v1/folder/{ref}` | **Mettre à jour un dossier** |
-| `DELETE` | `/api/v1/folder/{ref}` | **Supprimer un dossier** |
-| `POST` | `/api/v1/folder/create` | **Créer un dossier** |
+| `GET` | `/api/ui/folder/{ref}` | **Récupérer un dossier** |
+| `PUT` | `/api/ui/folder/{ref}` | **Mettre à jour un dossier** |
+| `DELETE` | `/api/ui/folder/{ref}` | **Supprimer un dossier** |
+| `POST` | `/api/ui/folder/create` | **Créer un dossier** |
 
 ### **📚 Classeurs (Notebooks)**
 
 | Méthode | Endpoint | Description |
 |---------|----------|-------------|
-| `GET` | `/api/v1/notebook/{ref}` | **Récupérer un classeur** |
-| `PUT` | `/api/v1/notebook/{ref}` | **Mettre à jour un classeur** |
-| `DELETE` | `/api/v1/notebook/{ref}` | **Supprimer un classeur** |
-| `POST` | `/api/v1/notebook/create` | **Créer un classeur** |
+| `GET` | `/api/ui/notebook/{ref}` | **Récupérer un classeur** |
+| `PUT` | `/api/ui/notebook/{ref}` | **Mettre à jour un classeur** |
+| `DELETE` | `/api/ui/notebook/{ref}` | **Supprimer un classeur** |
+| `POST` | `/api/ui/notebook/create` | **Créer un classeur** |
 
 ### **🔧 Utilitaires**
 
 | Méthode | Endpoint | Description |
 |---------|----------|-------------|
-| `POST` | `/api/v1/slug/generate` | Générer un slug |
+| `POST` | `/api/ui/slug/generate` | Générer un slug |
 
 ---
 
@@ -56,43 +56,43 @@ L'API Abrège a été entièrement refactorisée avec des noms d'endpoints **LLM
 ### **✅ Nouveaux endpoints créés**
 
 #### **Notes**
-- ✅ `POST /api/v1/note/create` - Créer une note avec slug automatique
-- ✅ `POST /api/v1/note/overwrite` - Écraser complètement une note
-- ✅ `PATCH /api/v1/note/{ref}/add-content` - Ajouter du contenu
-- ✅ `PATCH /api/v1/note/{ref}/add-to-section` - Ajouter à une section
-- ✅ `PATCH /api/v1/note/{ref}/clear-section` - Effacer une section
-- ✅ `GET /api/v1/note/{ref}/table-of-contents` - Table des matières
-- ✅ `GET /api/v1/note/{ref}/information` - Informations de base
-- ✅ `PATCH /api/v1/note/{ref}/information` - Mettre à jour les infos
-- ✅ `GET /api/v1/note/{ref}/statistics` - Statistiques détaillées
+- ✅ `POST /api/ui/note/create` - Créer une note avec slug automatique
+- ✅ `POST /api/ui/note/overwrite` - Écraser complètement une note
+- ✅ `PATCH /api/ui/note/{ref}/add-content` - Ajouter du contenu
+- ✅ `PATCH /api/ui/note/{ref}/add-to-section` - Ajouter à une section
+- ✅ `PATCH /api/ui/note/{ref}/clear-section` - Effacer une section
+- ✅ `GET /api/ui/note/{ref}/table-of-contents` - Table des matières
+- ✅ `GET /api/ui/note/{ref}/information` - Informations de base
+- ✅ `PATCH /api/ui/note/{ref}/information` - Mettre à jour les infos
+- ✅ `GET /api/ui/note/{ref}/statistics` - Statistiques détaillées
 
 #### **Dossiers**
-- ✅ `POST /api/v1/folder/create` - Créer un dossier avec slug automatique
-- ✅ `GET /api/v1/folder/{ref}` - Récupérer un dossier
-- ✅ `PUT /api/v1/folder/{ref}` - Mettre à jour un dossier
-- ✅ `DELETE /api/v1/folder/{ref}` - Supprimer un dossier
+- ✅ `POST /api/ui/folder/create` - Créer un dossier avec slug automatique
+- ✅ `GET /api/ui/folder/{ref}` - Récupérer un dossier
+- ✅ `PUT /api/ui/folder/{ref}` - Mettre à jour un dossier
+- ✅ `DELETE /api/ui/folder/{ref}` - Supprimer un dossier
 
 #### **Classeurs**
-- ✅ `POST /api/v1/notebook/create` - Créer un classeur avec slug automatique
-- ✅ `GET /api/v1/notebook/{ref}` - Récupérer un classeur
-- ✅ `PUT /api/v1/notebook/{ref}` - Mettre à jour un classeur
-- ✅ `DELETE /api/v1/notebook/{ref}` - Supprimer un classeur
+- ✅ `POST /api/ui/notebook/create` - Créer un classeur avec slug automatique
+- ✅ `GET /api/ui/notebook/{ref}` - Récupérer un classeur
+- ✅ `PUT /api/ui/notebook/{ref}` - Mettre à jour un classeur
+- ✅ `DELETE /api/ui/notebook/{ref}` - Supprimer un classeur
 
 ### **🗑️ Anciens endpoints supprimés**
 
 #### **Supprimés (remplacés par les nouveaux)**
-- ❌ `POST /api/v1/create-note` → `POST /api/v1/note/create`
-- ❌ `POST /api/v1/create-folder` → `POST /api/v1/folder/create`
-- ❌ `POST /api/v1/create-classeur` → `POST /api/v1/notebook/create`
-- ❌ `POST /api/v1/erase-note` → `POST /api/v1/note/overwrite`
-- ❌ `PATCH /api/v1/note/{ref}/append` → `PATCH /api/v1/note/{ref}/add-content`
-- ❌ `PATCH /api/v1/note/{ref}/append-to-section` → `PATCH /api/v1/note/{ref}/add-to-section`
-- ❌ `PATCH /api/v1/note/{ref}/erase-section` → `PATCH /api/v1/note/{ref}/clear-section`
-- ❌ `GET /api/v1/note/{ref}/toc` → `GET /api/v1/note/{ref}/table-of-contents`
-- ❌ `GET /api/v1/note/{ref}/meta` → `GET /api/v1/note/{ref}/information`
-- ❌ `GET /api/v1/note/{ref}/metadata` → `GET /api/v1/note/{ref}/statistics`
-- ❌ `GET /api/v1/dossier/{ref}` → `GET /api/v1/folder/{ref}`
-- ❌ `GET /api/v1/classeur/{ref}` → `GET /api/v1/notebook/{ref}`
+- ❌ `POST /api/ui/create-note` → `POST /api/ui/note/create`
+- ❌ `POST /api/ui/create-folder` → `POST /api/ui/folder/create`
+- ❌ `POST /api/ui/create-classeur` → `POST /api/ui/notebook/create`
+- ❌ `POST /api/ui/erase-note` → `POST /api/ui/note/overwrite`
+- ❌ `PATCH /api/ui/note/{ref}/append` → `PATCH /api/ui/note/{ref}/add-content`
+- ❌ `PATCH /api/ui/note/{ref}/append-to-section` → `PATCH /api/ui/note/{ref}/add-to-section`
+- ❌ `PATCH /api/ui/note/{ref}/erase-section` → `PATCH /api/ui/note/{ref}/clear-section`
+- ❌ `GET /api/ui/note/{ref}/toc` → `GET /api/ui/note/{ref}/table-of-contents`
+- ❌ `GET /api/ui/note/{ref}/meta` → `GET /api/ui/note/{ref}/information`
+- ❌ `GET /api/ui/note/{ref}/metadata` → `GET /api/ui/note/{ref}/statistics`
+- ❌ `GET /api/ui/dossier/{ref}` → `GET /api/ui/folder/{ref}`
+- ❌ `GET /api/ui/classeur/{ref}` → `GET /api/ui/notebook/{ref}`
 
 ---
 
@@ -112,9 +112,9 @@ L'API Abrège a été entièrement refactorisée avec des noms d'endpoints **LLM
 - `statistics` au lieu de `metadata` → Précis et descriptif
 
 ### **✅ Structure cohérente**
-- `/api/v1/note/create` (pas `/api/v1/create-note`)
-- `/api/v1/folder/create` (pas `/api/v1/create-folder`)
-- `/api/v1/notebook/create` (pas `/api/v1/create-classeur`)
+- `/api/ui/note/create` (pas `/api/ui/create-note`)
+- `/api/ui/folder/create` (pas `/api/ui/create-folder`)
+- `/api/ui/notebook/create` (pas `/api/ui/create-classeur`)
 
 ---
 
@@ -164,7 +164,7 @@ npm run migrate-slugs
 ### **Créer une note avec slug automatique**
 ```javascript
 // 1. Générer le slug
-const slugResponse = await fetch('/api/v1/slug/generate', {
+const slugResponse = await fetch('/api/ui/slug/generate', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({
@@ -177,7 +177,7 @@ const slugResponse = await fetch('/api/v1/slug/generate', {
 const { slug } = await slugResponse.json();
 
 // 2. Créer la note
-const noteResponse = await fetch('/api/v1/note/create', {
+const noteResponse = await fetch('/api/ui/note/create', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({
@@ -193,7 +193,7 @@ console.log('Note créée:', note.slug); // "guide-complet-de-react"
 
 ### **Ajouter du contenu à une section**
 ```javascript
-await fetch('/api/v1/note/guide-complet-de-react/add-to-section', {
+await fetch('/api/ui/note/guide-complet-de-react/add-to-section', {
   method: 'PATCH',
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({
@@ -205,7 +205,7 @@ await fetch('/api/v1/note/guide-complet-de-react/add-to-section', {
 
 ### **Récupérer les statistiques d'une note**
 ```javascript
-const statsResponse = await fetch('/api/v1/note/guide-complet-de-react/statistics');
+const statsResponse = await fetch('/api/ui/note/guide-complet-de-react/statistics');
 const stats = await statsResponse.json();
 console.log(`Mots: ${stats.word_count}, Caractères: ${stats.char_count}, Sections: ${stats.section_count}`);
 ```
@@ -252,9 +252,9 @@ L'API Abrège est maintenant **100% LLM-friendly** avec :
 - `statistics` au lieu de `metadata`
 
 ### **🏗️ Structure cohérente**
-- `/api/v1/note/create` (pas `/api/v1/create-note`)
-- `/api/v1/folder/create` (pas `/api/v1/create-folder`)
-- `/api/v1/notebook/create` (pas `/api/v1/create-classeur`)
+- `/api/ui/note/create` (pas `/api/ui/create-note`)
+- `/api/ui/folder/create` (pas `/api/ui/create-folder`)
+- `/api/ui/notebook/create` (pas `/api/ui/create-classeur`)
 
 ### **📚 Documentation complète**
 - Documentation mise à jour avec nouveaux noms

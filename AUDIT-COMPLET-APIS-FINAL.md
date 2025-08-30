@@ -51,22 +51,22 @@ src/app/api/
 ### **🔐 API V1 (Legacy)**
 
 #### **Notes**
-- `POST /api/v1/note/create` - Création de note
-- `GET/PUT/DELETE /api/v1/note/[ref]` - CRUD note par référence
-- `POST /api/v1/note/merge` - Fusion de notes
-- `POST /api/v1/note/overwrite` - Écrasement de note
-- `POST /api/v1/note/publish` - Publication de note
+- `POST /api/ui/note/create` - Création de note
+- `GET/PUT/DELETE /api/ui/note/[ref]` - CRUD note par référence
+- `POST /api/ui/note/merge` - Fusion de notes
+- `POST /api/ui/note/overwrite` - Écrasement de note
+- `POST /api/ui/note/publish` - Publication de note
 
 #### **Classeurs**
-- `GET/POST /api/v1/classeurs` - CRUD classeurs
-- `GET/PUT/DELETE /api/v1/classeur/[ref]` - CRUD classeur par référence
+- `GET/POST /api/ui/classeurs` - CRUD classeurs
+- `GET/PUT/DELETE /api/ui/classeur/[ref]` - CRUD classeur par référence
 
 #### **Dossiers**
-- `GET/POST /api/v1/folders` - CRUD dossiers
-- `GET/PUT/DELETE /api/v1/folder/[ref]` - CRUD dossier par référence
+- `GET/POST /api/ui/folders` - CRUD dossiers
+- `GET/PUT/DELETE /api/ui/folder/[ref]` - CRUD dossier par référence
 
 #### **Authentification**
-- `GET /api/v1/user` - Profil utilisateur
+- `GET /api/ui/user` - Profil utilisateur
 
 ### **🚀 API V2 (Moderne - Recommandée)**
 

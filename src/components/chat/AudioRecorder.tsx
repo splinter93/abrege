@@ -140,7 +140,7 @@ export default function AudioRecorder({
       formData.append('temperature', '0');
 
       // Appeler l'API Whisper
-      const response = await fetch('/api/v2/whisper/transcribe', {
+      const response = await fetch('/api/ui/whisper/transcribe', {
         method: 'POST',
         body: formData
       });

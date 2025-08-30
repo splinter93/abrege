@@ -3,13 +3,13 @@ const fs = require('fs');
 console.log('🔍 AUDIT DES ENDPOINTS CLASSEURS...');
 
 const classeurEndpoints = [
-  'src/app/api/v1/classeur/create/route.ts',
-  'src/app/api/v1/classeur/[ref]/route.ts',
-  'src/app/api/v1/classeur/[ref]/dossiers/route.ts',
-  'src/app/api/v1/classeur/[ref]/meta/route.ts',
-  'src/app/api/v1/classeur/[ref]/tree/route.ts',
-  'src/app/api/v1/classeur/[ref]/full-tree/route.ts',
-  'src/app/api/v1/classeur/reorder/route.ts'
+  'src/app/api/ui/classeur/create/route.ts',
+  'src/app/api/ui/classeur/[ref]/route.ts',
+  'src/app/api/ui/classeur/[ref]/dossiers/route.ts',
+  'src/app/api/ui/classeur/[ref]/meta/route.ts',
+  'src/app/api/ui/classeur/[ref]/tree/route.ts',
+  'src/app/api/ui/classeur/[ref]/full-tree/route.ts',
+  'src/app/api/ui/classeur/reorder/route.ts'
 ];
 
 const auditResults = [];

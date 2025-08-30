@@ -70,9 +70,9 @@
 - **6 endpoints** sans validation Zod
 - **Impact :** Injection de données malveillantes
 - **Fichiers concernés :**
-  - `src/app/api/v1/note/[ref]/content/route.ts`
-  - `src/app/api/v1/note/[ref]/section/route.ts`
-  - `src/app/api/v1/classeur/[ref]/tree/route.ts`
+  - `src/app/api/ui/note/[ref]/content/route.ts`
+  - `src/app/api/ui/note/[ref]/section/route.ts`
+  - `src/app/api/ui/classeur/[ref]/tree/route.ts`
 
 #### **Validation Inconsistante :**
 - **Certains endpoints** : Validation stricte

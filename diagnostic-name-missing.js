@@ -68,7 +68,7 @@ const possibleCauses = [
     cause: 'Sauvegarde incomplète',
     description: 'Le name n\'est pas sauvegardé en base',
     check: 'Vérifier la création du newMessage dans l\'API',
-    file: 'src/app/api/v1/chat-sessions/[id]/messages/route.ts'
+    file: 'src/app/api/ui/chat-sessions/[id]/messages/route.ts'
   },
   {
     cause: 'Récupération incomplète',

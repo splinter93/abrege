@@ -32,9 +32,9 @@ Ce document recense **TOUS** les fichiers du projet Abrège liés aux tool calls
 
 ### **1. API de chat**
 - **`src/app/api/chat/llm/route.ts`** - Route principale pour l'API LLM
-- **`src/app/api/v1/chat-sessions/[id]/messages/route.ts`** - Gestion des messages de session
-- **`src/app/api/v1/chat-sessions/[id]/messages/batch/route.ts`** - Gestion batch des messages
-- **`src/app/api/v1/chat-sessions/route.ts`** - Gestion des sessions de chat
+- **`src/app/api/ui/chat-sessions/[id]/messages/route.ts`** - Gestion des messages de session
+- **`src/app/api/ui/chat-sessions/[id]/messages/batch/route.ts`** - Gestion batch des messages
+- **`src/app/api/ui/chat-sessions/route.ts`** - Gestion des sessions de chat
 
 ### **2. Services de persistance**
 - **`src/services/chatSessionService.ts`** - Service de gestion des sessions

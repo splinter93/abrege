@@ -49,7 +49,7 @@ async function runAuthenticatedTests() {
 
   // Test 1: Créer une session
   console.log('\n📝 Test 1: Créer une session');
-  const createResult = await makeAuthenticatedRequest('/api/v1/chat-sessions', {
+  const createResult = await makeAuthenticatedRequest('/api/ui/chat-sessions', {
     method: 'POST',
     body: {
       name: 'Test Conversation Authentifiée',
@@ -69,7 +69,7 @@ async function runAuthenticatedTests() {
 
   // Test 2: Récupérer la session
   console.log('\n📖 Test 2: Récupérer la session');
-  const getResult = await makeAuthenticatedRequest(`/api/v1/chat-sessions/${sessionId}`);
+  const getResult = await makeAuthenticatedRequest(`/api/ui/chat-sessions/${sessionId}`);
   
   if (!getResult.success) {
     console.log('❌ Échec de la récupération de session');
@@ -80,7 +80,7 @@ async function runAuthenticatedTests() {
 
   // Test 3: Ajouter un message
   console.log('\n💬 Test 3: Ajouter un message');
-  const addMessageResult = await makeAuthenticatedRequest(`/api/v1/chat-sessions/${sessionId}/messages`, {
+  const addMessageResult = await makeAuthenticatedRequest(`/api/ui/chat-sessions/${sessionId}/messages`, {
     method: 'POST',
     body: {
       role: 'user',
@@ -97,7 +97,7 @@ async function runAuthenticatedTests() {
 
   // Test 4: Récupérer les messages
   console.log('\n📋 Test 4: Récupérer les messages');
-  const getMessagesResult = await makeAuthenticatedRequest(`/api/v1/chat-sessions/${sessionId}/messages`);
+  const getMessagesResult = await makeAuthenticatedRequest(`/api/ui/chat-sessions/${sessionId}/messages`);
   
   if (!getMessagesResult.success) {
     console.log('❌ Échec de la récupération des messages');
@@ -109,7 +109,7 @@ async function runAuthenticatedTests() {
 
   // Test 5: Mettre à jour la session
   console.log('\n✏️ Test 5: Mettre à jour la session');
-  const updateResult = await makeAuthenticatedRequest(`/api/v1/chat-sessions/${sessionId}`, {
+  const updateResult = await makeAuthenticatedRequest(`/api/ui/chat-sessions/${sessionId}`, {
     method: 'PUT',
     body: {
       name: 'Test Conversation Modifiée',
@@ -127,7 +127,7 @@ async function runAuthenticatedTests() {
 
   // Test 6: Lister toutes les sessions
   console.log('\n📚 Test 6: Lister toutes les sessions');
-  const listResult = await makeAuthenticatedRequest('/api/v1/chat-sessions');
+  const listResult = await makeAuthenticatedRequest('/api/ui/chat-sessions');
   
   if (!listResult.success) {
     console.log('❌ Échec de la récupération des sessions');
@@ -140,7 +140,7 @@ async function runAuthenticatedTests() {
   // Test 7: Tester la limite d'historique
   console.log('\n🔢 Test 7: Tester la limite d\'historique');
   for (let i = 0; i < 25; i++) {
-    const messageResult = await makeAuthenticatedRequest(`/api/v1/chat-sessions/${sessionId}/messages`, {
+    const messageResult = await makeAuthenticatedRequest(`/api/ui/chat-sessions/${sessionId}/messages`, {
       method: 'POST',
       body: {
         role: 'user',
@@ -155,7 +155,7 @@ async function runAuthenticatedTests() {
   }
 
   // Vérifier que l'historique a été tronqué
-  const finalMessagesResult = await makeAuthenticatedRequest(`/api/v1/chat-sessions/${sessionId}/messages`);
+  const finalMessagesResult = await makeAuthenticatedRequest(`/api/ui/chat-sessions/${sessionId}/messages`);
   if (finalMessagesResult.success) {
     const messageCount = finalMessagesResult.data?.data?.messages?.length || 0;
     console.log(`✅ Historique tronqué: ${messageCount} messages (limite: 20)`);
@@ -163,7 +163,7 @@ async function runAuthenticatedTests() {
 
   // Test 8: Supprimer la session
   console.log('\n🗑️ Test 8: Supprimer la session');
-  const deleteResult = await makeAuthenticatedRequest(`/api/v1/chat-sessions/${sessionId}`, {
+  const deleteResult = await makeAuthenticatedRequest(`/api/ui/chat-sessions/${sessionId}`, {
     method: 'DELETE'
   });
 

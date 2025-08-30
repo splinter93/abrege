@@ -15,11 +15,11 @@ function checkApiStructure() {
   console.log('🔍 Vérification de la structure des API...\n');
   
   const v1Endpoints = [
-    'src/app/api/v1/note/[ref]/route.ts',
-    'src/app/api/v1/classeur/[ref]/route.ts',
-    'src/app/api/v1/dossier/[ref]/route.ts',
-    'src/app/api/v1/notebook/[ref]/route.ts',
-    'src/app/api/v1/folder/[ref]/route.ts'
+    'src/app/api/ui/note/[ref]/route.ts',
+    'src/app/api/ui/classeur/[ref]/route.ts',
+    'src/app/api/ui/dossier/[ref]/route.ts',
+    'src/app/api/ui/notebook/[ref]/route.ts',
+    'src/app/api/ui/folder/[ref]/route.ts'
   ];
   
   const v2Endpoints = [
@@ -98,7 +98,7 @@ function checkTests() {
   console.log('\n🧪 Vérification des tests...\n');
   
   const testFiles = [
-    'src/app/api/v1/note/[ref]/route.test.ts',
+    'src/app/api/ui/note/[ref]/route.test.ts',
     'src/app/api/v2/note/[ref]/content/route.test.ts',
     'src/app/api/v2/note/[ref]/update/route.test.ts',
     'src/app/api/v2/classeur/[ref]/update/route.test.ts'

@@ -66,7 +66,7 @@ async function testApiToolCalls() {
 
     // Simuler l'appel API
     const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3000';
-    const apiUrl = `${baseUrl}/api/v1/chat-sessions/${sessionId}/messages`;
+    const apiUrl = `${baseUrl}/api/ui/chat-sessions/${sessionId}/messages`;
 
     console.log('🌐 URL API:', apiUrl);
 

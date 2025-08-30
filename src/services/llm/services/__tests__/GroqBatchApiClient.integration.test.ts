@@ -82,7 +82,7 @@ describe('GroqBatchApiClient Integration Tests', () => {
       expect(result.operationId).toBe('op-123');
       expect(result.messageIds).toHaveLength(2);
       expect(mockFetch).toHaveBeenCalledWith(
-        'http://localhost:3000/api/v1/batch',
+        'http://localhost:3000/api/ui/batch',
         expect.objectContaining({
           method: 'POST',
           headers: expect.objectContaining({
@@ -427,7 +427,7 @@ describe('GroqBatchApiClient Integration Tests', () => {
 
       // Assert
       expect(mockFetch).toHaveBeenCalledWith(
-        'http://localhost:3000/api/v1/batch',
+        'http://localhost:3000/api/ui/batch',
         expect.objectContaining({
           headers: expect.objectContaining({
             'Content-Type': 'application/json',
@@ -648,7 +648,7 @@ describe('GroqBatchApiClient Integration Tests', () => {
       // Assert
       expect(result.success).toBe(true);
       expect(mockFetch).toHaveBeenCalledWith(
-        'http://localhost:3000/api/v1/batch',
+        'http://localhost:3000/api/ui/batch',
         expect.objectContaining({
           body: expect.stringContaining(largeMessage)
         })

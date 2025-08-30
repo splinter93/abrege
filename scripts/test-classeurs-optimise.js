@@ -17,7 +17,7 @@ async function testClasseursOptimized() {
     console.log('📚 Test 1: Création classeur avec OptimizedApi');
     const startTime = Date.now();
     
-    const createResponse = await fetch(`${baseUrl}/api/v1/classeur/create`, {
+    const createResponse = await fetch(`${baseUrl}/api/ui/classeur/create`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -44,7 +44,7 @@ async function testClasseursOptimized() {
     console.log('🔄 Test 2: Mise à jour classeur avec OptimizedApi');
     const updateStartTime = Date.now();
     
-    const updateResponse = await fetch(`${baseUrl}/api/v1/classeur/${createResult.classeur.id}`, {
+    const updateResponse = await fetch(`${baseUrl}/api/ui/classeur/${createResult.classeur.id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -70,7 +70,7 @@ async function testClasseursOptimized() {
     console.log('🗑️ Test 3: Suppression classeur avec OptimizedApi');
     const deleteStartTime = Date.now();
     
-    const deleteResponse = await fetch(`${baseUrl}/api/v1/classeur/${createResult.classeur.id}`, {
+    const deleteResponse = await fetch(`${baseUrl}/api/ui/classeur/${createResult.classeur.id}`, {
       method: 'DELETE'
     });
 

@@ -57,7 +57,7 @@ llm-complete event → addMessage() → Store (DOUBLE!)
       };
       
       // Utiliser directement le service de chat pour sauvegarder en DB (sans mettre à jour le store)
-      const response = await fetch(`/api/v1/chat-sessions/${currentSession.id}/messages`, {
+      const response = await fetch(`/api/ui/chat-sessions/${currentSession.id}/messages`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -111,7 +111,7 @@ async addMessageAndSync(sessionId: string, message: Omit<ChatMessage, 'id'>): Pr
 
 ```typescript
 // AVANT (problématique)
-const response = await fetch(`/api/v1/chat-sessions/${currentSession.id}/messages`, {
+const response = await fetch(`/api/ui/chat-sessions/${currentSession.id}/messages`, {
   method: 'POST',
   headers: {
     'Authorization': `Bearer ${token}`,

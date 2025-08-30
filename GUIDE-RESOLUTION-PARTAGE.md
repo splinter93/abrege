@@ -110,7 +110,7 @@ node scripts/test-public-access.js
 ### **Test 3: Test de l'API publique**
 ```bash
 # Test de l'endpoint public
-curl "https://votre-app.com/api/v1/public/note/{username}/{slug}"
+curl "https://votre-app.com/api/ui/public/note/{username}/{slug}"
 ```
 
 ---
@@ -178,7 +178,7 @@ Après application de la correction :
 
 - ✅ **Pages publiques** : Notes partagées visibles et accessibles
 - ✅ **URLs publiques** : Fonctionnelles avec le format `/{username}/{slug}`
-- ✅ **API publique** : Endpoints `/api/v1/public/note/{username}/{slug}` opérationnels
+- ✅ **API publique** : Endpoints `/api/ui/public/note/{username}/{slug}` opérationnels
 - ✅ **Sécurité** : Notes privées restent protégées
 - ✅ **Performance** : Accès aux données sans blocage RLS
 

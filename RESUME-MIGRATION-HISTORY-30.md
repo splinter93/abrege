@@ -65,9 +65,9 @@
 ### **Fichiers Modifiés (11 fichiers)**
 ```
 🗄️  supabase/migrations/20250102_update_history_limit_default_to_30.sql
-🔌  src/app/api/v1/chat-sessions/route.ts
-🔌  src/app/api/v1/chat-sessions/[id]/messages/route.ts
-🔌  src/app/api/v1/chat-sessions/[id]/messages/batch/route.ts
+🔌  src/app/api/ui/chat-sessions/route.ts
+🔌  src/app/api/ui/chat-sessions/[id]/messages/route.ts
+🔌  src/app/api/ui/chat-sessions/[id]/messages/batch/route.ts
 ⚙️  src/services/sessionSyncService.ts
 🎨  src/components/chat/ChatWidget.tsx
 🎨  src/components/chat/ChatFullscreenV2.tsx

@@ -6,7 +6,7 @@ L'erreur `new row violates row-level security policy for table "articles"` indiq
 
 ### **Symptômes :**
 - ❌ Création de notes impossible
-- ❌ Erreur 500 sur `/api/v1/note/create`
+- ❌ Erreur 500 sur `/api/ui/note/create`
 - ❌ Message "violates row-level security policy"
 
 ---
@@ -77,7 +77,7 @@ Si vous préférez garder RLS activé, créez des politiques permissives :
 
 ### **Modifier l'API pour utiliser la clé de service :**
 
-1. **Dans `src/app/api/v1/note/create/route.ts` :**
+1. **Dans `src/app/api/ui/note/create/route.ts` :**
    ```typescript
    // Remplacer
    const supabase = createClient(supabaseUrl, supabaseAnonKey, {

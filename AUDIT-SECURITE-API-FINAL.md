@@ -16,14 +16,14 @@
 **Résultat :** ✅ Tous les endpoints fonctionnent maintenant
 
 **Endpoints corrigés :**
-- `src/app/api/v1/note/[ref]/add-content/route.ts`
-- `src/app/api/v1/note/[ref]/add-to-section/route.ts`
-- `src/app/api/v1/note/[ref]/clear-section/route.ts`
-- `src/app/api/v1/note/[ref]/information/route.ts`
-- `src/app/api/v1/note/[ref]/statistics/route.ts`
-- `src/app/api/v1/note/[ref]/table-of-contents/route.ts`
-- `src/app/api/v1/note/merge/route.ts`
-- `src/app/api/v1/note/overwrite/route.ts`
+- `src/app/api/ui/note/[ref]/add-content/route.ts`
+- `src/app/api/ui/note/[ref]/add-to-section/route.ts`
+- `src/app/api/ui/note/[ref]/clear-section/route.ts`
+- `src/app/api/ui/note/[ref]/information/route.ts`
+- `src/app/api/ui/note/[ref]/statistics/route.ts`
+- `src/app/api/ui/note/[ref]/table-of-contents/route.ts`
+- `src/app/api/ui/note/merge/route.ts`
+- `src/app/api/ui/note/overwrite/route.ts`
 
 ### ✅ 2. Authentification (CRITIQUE)
 **Problème :** USER_ID hardcodé dans tous les endpoints
@@ -31,10 +31,10 @@
 **Résultat :** ✅ Tous les endpoints authentifiés
 
 **Endpoints sécurisés :**
-- ✅ Tous les endpoints `/api/v1/note/*`
-- ✅ Tous les endpoints `/api/v1/folder/*`
-- ✅ Tous les endpoints `/api/v1/classeur/*`
-- ✅ Tous les endpoints `/api/v1/notebook/*`
+- ✅ Tous les endpoints `/api/ui/note/*`
+- ✅ Tous les endpoints `/api/ui/folder/*`
+- ✅ Tous les endpoints `/api/ui/classeur/*`
+- ✅ Tous les endpoints `/api/ui/notebook/*`
 
 ### ✅ 3. Types TypeScript (IMPORTANT)
 **Problème :** Types `any` non typés dans les API

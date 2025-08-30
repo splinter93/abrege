@@ -35,27 +35,27 @@ Le système de polling temps réel est maintenant **entièrement fonctionnel** p
 ### **1. Test INSERT**
 ```bash
 # Création de notes
-curl -X POST http://localhost:3000/api/v1/note/create -d '{"source_title":"Test","notebook_id":"..."}'
+curl -X POST http://localhost:3000/api/ui/note/create -d '{"source_title":"Test","notebook_id":"..."}'
 
 # Création de dossiers
-curl -X POST http://localhost:3000/api/v1/folder/create -d '{"name":"Test","notebook_id":"..."}'
+curl -X POST http://localhost:3000/api/ui/folder/create -d '{"name":"Test","notebook_id":"..."}'
 ```
 **✅ Résultat** : Détection automatique et ajout à l'interface
 
 ### **2. Test UPDATE**
 ```bash
 # Mise à jour de notes
-curl -X PUT http://localhost:3000/api/v1/note/[id] -d '{"source_title":"Mis à jour"}'
+curl -X PUT http://localhost:3000/api/ui/note/[id] -d '{"source_title":"Mis à jour"}'
 ```
 **✅ Résultat** : Détection automatique et mise à jour de l'interface
 
 ### **3. Test DELETE**
 ```bash
 # Suppression de notes
-curl -X DELETE http://localhost:3000/api/v1/note/[id]
+curl -X DELETE http://localhost:3000/api/ui/note/[id]
 
 # Suppression de dossiers
-curl -X DELETE http://localhost:3000/api/v1/folder/[id]
+curl -X DELETE http://localhost:3000/api/ui/folder/[id]
 ```
 **✅ Résultat** : Détection automatique et suppression de l'interface
 

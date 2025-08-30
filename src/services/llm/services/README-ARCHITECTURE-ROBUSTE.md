@@ -61,7 +61,7 @@ while (toolCalls.length > 0 && relances < this.limits.maxRelances) {
 ## II. Persistance atomique, idempotence et concurrence
 
 ### BatchMessageService
-Service dédié encapsulant l'appel `POST /api/v1/chat-sessions/:id/messages/batch` :
+Service dédié encapsulant l'appel `POST /api/ui/chat-sessions/:id/messages/batch` :
 
 #### En-têtes requis
 - `Authorization: Bearer <service JWT>`

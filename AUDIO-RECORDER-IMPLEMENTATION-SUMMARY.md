@@ -130,7 +130,7 @@ const mediaRecorder = new MediaRecorder(stream, {
 - **Modèle** : `whisper-large-v3-turbo`
 - **Format** : `text` (simple)
 - **Température** : 0 (déterministe)
-- **API** : `/api/v1/whisper/transcribe`
+- **API** : `/api/ui/whisper/transcribe`
 
 **Payload :**
 ```typescript

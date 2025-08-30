@@ -69,7 +69,7 @@ const addMessageSchema = z.object({
 
 ### **2. Logs de debug améliorés**
 
-#### **API Messages (`/api/v1/chat-sessions/[id]/messages/route.ts`)**
+#### **API Messages (`/api/ui/chat-sessions/[id]/messages/route.ts`)**
 ```typescript
 // 🔧 NOUVEAU: Log détaillé pour debug
 logger.dev('[Chat Messages API] 📋 Body reçu:', JSON.stringify(body, null, 2));

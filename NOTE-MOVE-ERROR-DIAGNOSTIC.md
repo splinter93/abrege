@@ -15,7 +15,7 @@
 ## 🔍 **Analyse du problème**
 
 ### **Contexte**
-- **Endpoint** : `PATCH /api/v1/note/[ref]/move`
+- **Endpoint** : `PATCH /api/ui/note/[ref]/move`
 - **Note UUID** : `c724010c-8cbb-4e7b-9345-4ac9d702378c`
 - **Utilisateur** : `3223651c-5580-4471-affb-b3f4456bd729`
 - **Opération** : Déplacement de note
@@ -115,7 +115,7 @@ LIMIT 10;
 
 ### **Test 1 : Note existante**
 ```bash
-curl -X PATCH "https://scrivia.app/api/v1/note/EXISTING-UUID/move" \
+curl -X PATCH "https://scrivia.app/api/ui/note/EXISTING-UUID/move" \
   -H "Authorization: Bearer TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"target_classeur_id": "NEW-CLASSEUR-UUID"}'
@@ -123,7 +123,7 @@ curl -X PATCH "https://scrivia.app/api/v1/note/EXISTING-UUID/move" \
 
 ### **Test 2 : Note inexistante**
 ```bash
-curl -X PATCH "https://scrivia.app/api/v1/note/INVALID-UUID/move" \
+curl -X PATCH "https://scrivia.app/api/ui/note/INVALID-UUID/move" \
   -H "Authorization: Bearer TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"target_classeur_id": "NEW-CLASSEUR-UUID"}'
@@ -139,7 +139,7 @@ curl -X PATCH "https://scrivia.app/api/v1/note/INVALID-UUID/move" \
 
 ## 🔗 **Fichiers modifiés**
 
-- `src/app/api/v1/note/[ref]/move/route.ts` - Gestion d'erreur améliorée
+- `src/app/api/ui/note/[ref]/move/route.ts` - Gestion d'erreur améliorée
 - `src/utils/resourceResolver.ts` - Validation des UUID
 - `src/middleware/resourceResolver.ts` - Wrappers de résolution
 

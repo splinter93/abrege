@@ -23,7 +23,7 @@ async function testPublishEndpoint() {
     console.log('✅ Connexion réussie, token obtenu');
     
     // 2. Tester l'endpoint de publication avec authentification
-    const response = await fetch('http://localhost:3000/api/v1/note/test-note-id/publish', {
+    const response = await fetch('http://localhost:3000/api/ui/note/test-note-id/publish', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -47,7 +47,7 @@ async function testPublishEndpoint() {
     }
     
     // 3. Tester sans authentification (doit échouer)
-    const responseNoAuth = await fetch('http://localhost:3000/api/v1/note/test-note-id/publish', {
+    const responseNoAuth = await fetch('http://localhost:3000/api/ui/note/test-note-id/publish', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'

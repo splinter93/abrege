@@ -3,10 +3,10 @@
 ## 🚨 **PROBLÈME IDENTIFIÉ ET RÉSOLU**
 
 ### **1. Problème Principal**
-L'endpoint `/api/v1/classeurs` était **non sécurisé** et accessible sans authentification, ce qui expliquait pourquoi ChatGPT pouvait accéder aux données sans token valide.
+L'endpoint `/api/ui/classeurs` était **non sécurisé** et accessible sans authentification, ce qui expliquait pourquoi ChatGPT pouvait accéder aux données sans token valide.
 
 ### **2. Cause Racine**
-- ❌ **Ancien endpoint** : `src/pages/api/v1/classeurs.ts` (Pages Router, non sécurisé)
+- ❌ **Ancien endpoint** : `src/pages/api/ui/classeurs.ts` (Pages Router, non sécurisé)
 - ❌ **Aucune vérification** d'authentification
 - ❌ **Accès direct** à Supabase sans contexte utilisateur
 
@@ -15,13 +15,13 @@ L'endpoint `/api/v1/classeurs` était **non sécurisé** et accessible sans auth
 ## ✅ **SOLUTIONS IMPLÉMENTÉES**
 
 ### **1. Endpoint Sécurisé Créé**
-- ✅ **Nouveau endpoint** : `src/app/api/v1/classeurs/route.ts` (App Router)
+- ✅ **Nouveau endpoint** : `src/app/api/ui/classeurs/route.ts` (App Router)
 - ✅ **Authentification obligatoire** via `getCurrentUser()`
 - ✅ **Middleware d'authentification** appliqué
 - ✅ **Contexte utilisateur** respecté (seulement les classeurs de l'utilisateur)
 
 ### **2. Ancien Endpoint Supprimé**
-- ✅ **Suppression** de `src/pages/api/v1/classeurs.ts`
+- ✅ **Suppression** de `src/pages/api/ui/classeurs.ts`
 - ✅ **Plus d'accès non autorisé** aux données
 
 ### **3. Logs de Débogage Ajoutés**
@@ -72,11 +72,11 @@ curl -X POST http://localhost:3000/api/auth/token \
 ### **2. Test de l'Endpoint Classeurs**
 ```bash
 # Sans authentification (doit retourner 401)
-curl http://localhost:3000/api/v1/classeurs
+curl http://localhost:3000/api/ui/classeurs
 
 # Avec authentification (doit retourner les classeurs)
 curl -H "Authorization: Bearer [TOKEN_VALIDE]" \
-     http://localhost:3000/api/v1/classeurs
+     http://localhost:3000/api/ui/classeurs
 ```
 
 **Résultat :** ✅ Authentification maintenant obligatoire
@@ -108,7 +108,7 @@ curl -H "Authorization: Bearer [TOKEN_VALIDE]" \
 node test-real-oauth-token.js
 
 # Vérifier que l'endpoint classeurs est sécurisé
-curl http://localhost:3000/api/v1/classeurs
+curl http://localhost:3000/api/ui/classeurs
 ```
 
 ### **2. Test avec ChatGPT**
@@ -161,6 +161,6 @@ Si des problèmes persistent :
 4. **Partager les logs** pour diagnostic final
 
 **Fichiers créés/modifiés :**
-- ✅ `src/app/api/v1/classeurs/route.ts` - Endpoint sécurisé
+- ✅ `src/app/api/ui/classeurs/route.ts` - Endpoint sécurisé
 - ✅ `test-real-oauth-token.js` - Script de test complet
 - ✅ `CHATGPT-AUTH-SOLUTION-SUMMARY.md` - Ce résumé
