@@ -9,7 +9,7 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ ref: string> }
+  { params }: { params: Promise<{ ref: string }> }
 ): Promise<NextResponse> {
   const startTime = Date.now();
   const { ref } = await params;
