@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { logApi } from '@/utils/logger';
 import { getAuthenticatedUser, createAuthenticatedSupabaseClient } from '@/utils/authUtils';
+import { V2ResourceResolver } from '@/utils/v2ResourceResolver';
 
 export async function GET(
   request: NextRequest,
@@ -30,35 +31,102 @@ export async function GET(
   const userId = authResult.userId!;
   const noteRef = params.ref;
 
+  // Récupérer le paramètre fields pour déterminer ce qui doit être retourné
+  const { searchParams } = new URL(request.url);
+  const fields = searchParams.get('fields') || 'all'; // all, content, metadata
+
   try {
-    // Créer le bon client Supabase selon le type d'authentification
+    // 🔧 CORRECTION: Utiliser V2ResourceResolver comme l'endpoint content
+    const resolveResult = await V2ResourceResolver.resolveRef(noteRef, 'note', userId, context);
+    if (!resolveResult.success) {
+      return NextResponse.json(
+        { error: resolveResult.error },
+        { status: resolveResult.status, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
+    const noteId = resolveResult.id;
     const supabase = createAuthenticatedSupabaseClient(authResult);
 
-    // Construire la requête - le ref peut être un ID UUID ou un slug
-    let query = supabase
-      .from('articles')
-      .select('id, source_title, slug, folder_id, classeur_id, created_at, updated_at, share_settings, markdown_content')
-      .eq('user_id', userId);
+    // Construire la requête selon le paramètre fields
+    let selectFields: string;
+    let responseNote: any;
 
-    // Essayer d'abord comme UUID, puis comme slug
-    const { data: note, error: fetchError } = await query
-      .or(`id.eq.${noteRef},slug.eq.${noteRef}`)
+    switch (fields) {
+      case 'content':
+        // Mode content : contenu + rendu uniquement
+        selectFields = 'id, source_title, markdown_content, html_content, header_image, created_at, updated_at';
+        break;
+      
+      case 'metadata':
+        // Mode metadata : organisation + permissions uniquement
+        selectFields = 'id, source_title, slug, folder_id, classeur_id, created_at, updated_at, share_settings';
+        break;
+      
+      case 'all':
+      default:
+        // Mode all : tout (comportement par défaut)
+        selectFields = 'id, source_title, slug, folder_id, classeur_id, created_at, updated_at, share_settings, markdown_content';
+        break;
+    }
+
+    // Récupérer la note avec les champs appropriés
+    const { data: note, error: fetchError } = await supabase
+      .from('articles')
+      .select(selectFields)
+      .eq('id', noteId)
+      .eq('user_id', userId)
       .single();
 
-    if (fetchError) {
-      logApi.info(`❌ Erreur récupération note: ${fetchError.message}`, context);
+    if (fetchError || !note) {
+      logApi.info(`❌ Erreur récupération note: ${fetchError?.message || 'Note non trouvée'}`, context);
       return NextResponse.json(
         { error: 'Note non trouvée' },
         { status: 404, headers: { "Content-Type": "application/json" } }
       );
     }
 
+    // Formater la réponse selon le mode
+    const noteData = note as any; // Type assertion pour éviter les erreurs TypeScript
+    switch (fields) {
+      case 'content':
+        responseNote = {
+          id: noteData.id,
+          title: noteData.source_title,
+          markdown_content: noteData.markdown_content,
+          html_content: noteData.html_content,
+          header_image: noteData.header_image,
+          created_at: noteData.created_at,
+          updated_at: noteData.updated_at
+        };
+        break;
+      
+      case 'metadata':
+        responseNote = {
+          id: noteData.id,
+          title: noteData.source_title,
+          slug: noteData.slug,
+          folder_id: noteData.folder_id,
+          classeur_id: noteData.classeur_id,
+          created_at: noteData.created_at,
+          updated_at: noteData.updated_at,
+          share_settings: noteData.share_settings
+        };
+        break;
+      
+      case 'all':
+      default:
+        responseNote = noteData;
+        break;
+    }
+
     const apiTime = Date.now() - startTime;
-    logApi.info(`✅ Note récupérée avec succès en ${apiTime}ms`, context);
+    logApi.info(`✅ Note récupérée avec succès en ${apiTime}ms (mode: ${fields})`, context);
 
     return NextResponse.json({
       success: true,
-      note
+      note: responseNote,
+      mode: fields
     });
 
   } catch (err: unknown) {
