@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { logApi } from '@/utils/logger';
-import { getAuthenticatedUser } from '@/utils/authUtils';
+import { getAuthenticatedUser, createAuthenticatedSupabaseClient } from '@/utils/authUtils';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -29,10 +29,10 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
   const userId = authResult.userId!;
   
-  // Créer un client Supabase standard (l'authentification est déjà validée)
-  const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
   try {
+    // Créer le bon client Supabase selon le type d'authentification
+    const supabase = createAuthenticatedSupabaseClient(authResult);
+
     // Récupérer tous les classeurs de l'utilisateur
     const { data: classeurs, error: fetchError } = await supabase
       .from('classeurs')
@@ -104,8 +104,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       );
     }
 
-    // Créer un client Supabase standard
-    const supabase = createClient(supabaseUrl, supabaseAnonKey);
+    // Créer le bon client Supabase selon le type d'authentification
+    const supabase = createAuthenticatedSupabaseClient(authResult);
 
     // Générer un slug à partir du nom
     const slug = name.toLowerCase()

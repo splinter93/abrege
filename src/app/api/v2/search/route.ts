@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { logApi } from '@/utils/logger';
-import { getAuthenticatedUser } from '@/utils/authUtils';
+import { getAuthenticatedUser, createAuthenticatedSupabaseClient } from '@/utils/authUtils';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -54,8 +54,9 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   }
 
   try {
-    // Créer un client Supabase standard
-    const supabase = createClient(supabaseUrl, supabaseAnonKey);
+    // Créer le bon client Supabase selon le type d'authentification
+    const supabase = createAuthenticatedSupabaseClient(authResult);
+    
     const results: any[] = [];
     let totalCount = 0;
 

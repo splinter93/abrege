@@ -122,6 +122,31 @@ export async function getAuthenticatedUser(request: NextRequest): Promise<AuthRe
 }
 
 /**
+ * Crée le bon client Supabase selon le type d'authentification
+ * Utilise le service role key pour les API Keys afin de contourner RLS
+ */
+export function createAuthenticatedSupabaseClient(authResult: AuthResult) {
+  if (authResult.authType === 'api_key') {
+    // Pour les API Keys, utiliser le service role pour contourner RLS
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!supabaseServiceKey) {
+      throw new Error('SUPABASE_SERVICE_ROLE_KEY manquante pour l\'authentification par API Key');
+    }
+    
+    return createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      supabaseServiceKey
+    );
+  } else {
+    // Pour JWT et OAuth, utiliser la clé anonyme (RLS fonctionne)
+    return createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    );
+  }
+}
+
+/**
  * Vérifie les permissions d'un utilisateur sur une ressource
  * 
  * Cette fonction implémente un système de permissions hiérarchique :
