@@ -17,75 +17,998 @@
     }
   ],
   "tags": [
-    { 
-      "name": "Authentification", 
-      "description": "Gestion de l'authentification et profil utilisateur" 
+    {
+      "name": "Authentification",
+      "description": "Gestion de l'authentification et profil utilisateur"
     },
-    { 
-      "name": "Classeurs", 
-      "description": "Gestion des classeurs (organisateurs de notes)" 
+    {
+      "name": "Classeurs",
+      "description": "Gestion des classeurs (organisateurs de notes)"
     },
-    { 
-      "name": "Notes", 
-      "description": "Gestion des notes et articles" 
+    {
+      "name": "Notes",
+      "description": "Gestion des notes et articles"
     },
-    { 
-      "name": "Dossiers", 
-      "description": "Gestion des dossiers et arborescences" 
+    {
+      "name": "Dossiers",
+      "description": "Gestion des dossiers et arborescences"
     },
-    { 
-      "name": "Recherche", 
-      "description": "Recherche textuelle dans le contenu" 
+    {
+      "name": "Recherche",
+      "description": "Recherche textuelle dans le contenu"
     }
   ],
   "paths": {
-    "/me": {
+    "/notes/recent": {
       "get": {
-        "summary": "Récupérer l'utilisateur authentifié",
-        "description": "Récupère les informations du profil de l'utilisateur authentifié par clé API",
-        "tags": ["Authentification"],
-        "operationId": "getAuthenticatedUserV2",
+        "summary": "Récupérer les notes récentes",
+        "description": "Récupère les notes les plus récemment modifiées de l'utilisateur",
+        "tags": [
+          "Notes"
+        ],
+        "operationId": "getRecentNotesV2",
         "security": [
           {
             "ApiKeyAuth": []
           }
         ],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Nombre maximum de notes à retourner",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Profil utilisateur récupéré avec succès",
+            "description": "Notes récentes récupérées avec succès",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "success": { 
+                    "success": {
                       "type": "boolean",
-                      "example": true,
-                      "description": "Indique si l'opération a réussi"
+                      "example": true
                     },
-                    "user": { 
-                      "$ref": "#/components/schemas/User",
-                      "description": "Informations du profil utilisateur"
+                    "notes": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Note"
+                      }
                     }
                   },
-                  "required": ["success", "user"]
+                  "required": [
+                    "success",
+                    "notes"
+                  ]
                 }
               }
             }
           },
-          "401": { 
-            "$ref": "#/components/responses/Unauthorized",
-            "description": "Authentification requise - Clé API manquante/invalide"
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
           },
-          "500": { "$ref": "#/components/responses/ServerError" }
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
         }
       }
     },
-    "/classeurs": {
+    "/note/{ref}/content": {
+      "get": {
+        "summary": "Récupérer le contenu d'une note",
+        "description": "Récupère le contenu complet d'une note avec gestion des permissions de partage",
+        "tags": [
+          "Notes"
+        ],
+        "operationId": "getNoteContentV2",
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "ref",
+            "in": "path",
+            "required": true,
+            "description": "ID ou slug de la note",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Contenu de la note récupéré avec succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "note": {
+                      "$ref": "#/components/schemas/Note"
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "note"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "description": "Note non trouvée",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Note non trouvée"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        }
+      }
+    },
+    "/note/{ref}/metadata": {
+      "get": {
+        "summary": "Récupérer les métadonnées d'une note",
+        "description": "Récupère les métadonnées détaillées d'une note",
+        "tags": [
+          "Notes"
+        ],
+        "operationId": "getNoteMetadataV2",
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "ref",
+            "in": "path",
+            "required": true,
+            "description": "ID ou slug de la note",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Métadonnées récupérées avec succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "metadata": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "source_title": {
+                          "type": "string"
+                        },
+                        "slug": {
+                          "type": "string"
+                        },
+                        "created_at": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "updated_at": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "is_published": {
+                          "type": "boolean"
+                        },
+                        "share_settings": {
+                          "$ref": "#/components/schemas/ShareSettings"
+                        }
+                      }
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "metadata"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "description": "Note non trouvée",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Note non trouvée"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        }
+      }
+    },
+    "/api/v2/note/create": {
+      "post": {
+        "summary": "Créer une note",
+        "description": "Crée une nouvelle note avec validation avancée et génération automatique de slug",
+        "tags": [
+          "Notes"
+        ],
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateNoteRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Note créée avec succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NoteResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Requête invalide",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "description": "Classeur non trouvé",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        }
+      }
+    },
+    "/api/v2/classeur/reorder": {
+      "put": {
+        "summary": "Réorganiser les classeurs",
+        "description": "Réorganise l'ordre des classeurs pour un utilisateur",
+        "tags": [
+          "Classeurs"
+        ],
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReorderClasseursRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Classeurs réorganisés avec succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReorderResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Requête invalide",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        }
+      }
+    },
+    "/api/v2/classeur/{ref}/reorder": {
+      "put": {
+        "summary": "Réorganiser un classeur",
+        "description": "Réorganise l'ordre d'un classeur spécifique",
+        "tags": [
+          "Classeurs"
+        ],
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "ref",
+            "in": "path",
+            "required": true,
+            "description": "ID ou slug du classeur",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReorderClasseurRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Classeur réorganisé avec succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReorderResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Requête invalide",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "description": "Classeur non trouvé",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        }
+      }
+    },
+    "/api/v2/classeur/{ref}/tree": {
+      "get": {
+        "summary": "Obtenir l'arborescence d'un classeur",
+        "description": "Récupère l'arborescence complète d'un classeur avec tous ses dossiers et notes",
+        "tags": [
+          "Classeurs"
+        ],
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "ref",
+            "in": "path",
+            "required": true,
+            "description": "ID ou slug du classeur",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Arborescence récupérée avec succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClasseurTreeResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "description": "Classeur non trouvé",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        }
+      }
+    },
+    "/api/v2/folder/{ref}/tree": {
+      "get": {
+        "summary": "Obtenir l'arborescence d'un dossier",
+        "description": "Récupère l'arborescence d'un dossier avec ses sous-dossiers et notes",
+        "tags": [
+          "Dossiers"
+        ],
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "ref",
+            "in": "path",
+            "required": true,
+            "description": "ID ou slug du dossier",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Arborescence récupérée avec succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FolderTreeResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "description": "Dossier non trouvé",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        }
+      }
+    },
+    "/api/v2/note/{ref}": {
+      "get": {
+        "summary": "Récupérer une note spécifique",
+        "description": "Récupère les détails d'une note par son ID ou slug",
+        "tags": [
+          "Notes"
+        ],
+        "operationId": "getNoteV2",
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "ref",
+            "in": "path",
+            "required": true,
+            "description": "ID ou slug ou slug de la note",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Note récupérée avec succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "note": {
+                      "$ref": "#/components/schemas/Note"
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "note"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "description": "Note non trouvée",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Note non trouvée"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        }
+      },
+      "put": {
+        "summary": "Modifier une note",
+        "description": "Met à jour le contenu et les métadonnées d'une note existante",
+        "tags": [
+          "Notes"
+        ],
+        "operationId": "updateNoteV2",
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "ref",
+            "in": "path",
+            "required": true,
+            "description": "ID ou slug ou slug de la note",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "source_title": {
+                    "type": "string",
+                    "description": "Nouveau titre de la note",
+                    "maxLength": 255
+                  },
+                  "markdown_content": {
+                    "type": "string",
+                    "description": "Nouveau contenu de la note en format Markdown"
+                  },
+                  "folder_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "Nouveau dossier parent"
+                  },
+                  "classeur_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "Nouveau classeur parent"
+                  },
+                  "is_published": {
+                    "type": "boolean",
+                    "description": "Nouveau statut de publication"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Note modifiée avec succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "note": {
+                      "$ref": "#/components/schemas/Note"
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "note"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Données invalides",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Données invalides"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "description": "Note non trouvée",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Note non trouvée"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Supprimer une note",
+        "description": "Supprime définitivement une note",
+        "tags": [
+          "Notes"
+        ],
+        "operationId": "deleteNoteV2",
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "ref",
+            "in": "path",
+            "required": true,
+            "description": "ID ou slug ou slug de la note",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Note supprimée avec succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Note supprimée avec succès"
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "description": "Note non trouvée",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Note non trouvée"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        }
+      }
+    },
+    "/api/v2/folders": {
+      "get": {
+        "summary": "Lister tous les dossiers de l'utilisateur",
+        "description": "Récupère la liste complète des dossiers appartenant à l'utilisateur authentifié par clé API",
+        "tags": [
+          "Dossiers"
+        ],
+        "operationId": "listFoldersV2",
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "classeur_id",
+            "in": "query",
+            "description": "Filtrer par classeur",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "parent_id",
+            "in": "query",
+            "description": "Filtrer par dossier parent (null pour la racine)",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Liste des dossiers récupérée avec succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "folders": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Folder"
+                      }
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "folders"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized",
+            "description": "Authentification requise - Clé API manquante/invalide"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        }
+      },
+      "post": {
+        "summary": "Créer un nouveau dossier",
+        "description": "Crée un nouveau dossier dans l'arborescence",
+        "tags": [
+          "Dossiers"
+        ],
+        "operationId": "createFolderV2",
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "classeur_id"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Nom du dossier",
+                    "maxLength": 255
+                  },
+                  "classeur_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "ID du classeur parent"
+                  },
+                  "parent_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "ID du dossier parent (null pour la racine)"
+                  },
+                  "position": {
+                    "type": "integer",
+                    "description": "Position d'ordre dans le dossier parent",
+                    "minimum": 0
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Dossier créé avec succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "folder": {
+                      "$ref": "#/components/schemas/Folder"
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "folder"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Données invalides",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Le nom et le classeur sont requis"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        }
+      }
+    },
+    "/api/v2/classeurs": {
       "get": {
         "summary": "Lister tous les classeurs de l'utilisateur",
         "description": "Récupère la liste complète des classeurs appartenant à l'utilisateur authentifié par clé API",
-        "tags": ["Classeurs"],
+        "tags": [
+          "Classeurs"
+        ],
         "operationId": "listClasseursV2",
         "security": [
           {
@@ -100,39 +1023,46 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "success": { 
+                    "success": {
                       "type": "boolean",
                       "example": true,
                       "description": "Indique si l'opération a réussi"
                     },
-                    "classeurs": { 
-                      "type": "array", 
-                      "items": { "$ref": "#/components/schemas/Classeur" },
+                    "classeurs": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Classeur"
+                      },
                       "description": "Liste des classeurs de l'utilisateur"
                     }
                   },
-                  "required": ["success", "classeurs"]
+                  "required": [
+                    "success",
+                    "classeurs"
+                  ]
                 }
               }
             }
           },
-          "401": { 
+          "401": {
             "$ref": "#/components/responses/Unauthorized",
             "description": "Authentification requise - Clé API manquante/invalide"
           },
-          "403": { 
+          "403": {
             "$ref": "#/components/responses/Forbidden",
             "description": "Permissions insuffisantes pour accéder aux classeurs"
           },
-          "500": { 
-            "$ref": "#/components/responses/ServerError" 
+          "500": {
+            "$ref": "#/components/responses/ServerError"
           }
         }
       },
       "post": {
         "summary": "Créer un nouveau classeur",
         "description": "Crée un nouveau classeur pour l'utilisateur authentifié",
-        "tags": ["Classeurs"],
+        "tags": [
+          "Classeurs"
+        ],
         "operationId": "createClasseurV2",
         "security": [
           {
@@ -145,7 +1075,9 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["name"],
+                "required": [
+                  "name"
+                ],
                 "properties": {
                   "name": {
                     "type": "string",
@@ -189,7 +1121,10 @@
                       "$ref": "#/components/schemas/Classeur"
                     }
                   },
-                  "required": ["success", "classeur"]
+                  "required": [
+                    "success",
+                    "classeur"
+                  ]
                 }
               }
             }
@@ -210,16 +1145,22 @@
               }
             }
           },
-          "401": { "$ref": "#/components/responses/Unauthorized" },
-          "500": { "$ref": "#/components/responses/ServerError" }
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
         }
       }
     },
-    "/classeurs/{id}": {
+    "/api/v2/classeur/{ref}": {
       "get": {
         "summary": "Récupérer un classeur spécifique",
         "description": "Récupère les détails d'un classeur par son ID ou slug",
-        "tags": ["Classeurs"],
+        "tags": [
+          "Classeurs"
+        ],
         "operationId": "getClasseurV2",
         "security": [
           {
@@ -253,10 +1194,16 @@
                       "$ref": "#/components/schemas/Classeur"
                     }
                   },
-                  "required": ["success", "classeur"]
+                  "required": [
+                    "success",
+                    "classeur"
+                  ]
                 }
               }
             }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
           },
           "404": {
             "description": "Classeur non trouvé",
@@ -274,14 +1221,17 @@
               }
             }
           },
-          "401": { "$ref": "#/components/responses/Unauthorized" },
-          "500": { "$ref": "#/components/responses/ServerError" }
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
         }
       },
       "put": {
         "summary": "Modifier un classeur",
         "description": "Met à jour les informations d'un classeur existant",
-        "tags": ["Classeurs"],
+        "tags": [
+          "Classeurs"
+        ],
         "operationId": "updateClasseurV2",
         "security": [
           {
@@ -345,7 +1295,10 @@
                       "$ref": "#/components/schemas/Classeur"
                     }
                   },
-                  "required": ["success", "classeur"]
+                  "required": [
+                    "success",
+                    "classeur"
+                  ]
                 }
               }
             }
@@ -366,6 +1319,9 @@
               }
             }
           },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
           "404": {
             "description": "Classeur non trouvé",
             "content": {
@@ -382,14 +1338,17 @@
               }
             }
           },
-          "401": { "$ref": "#/components/responses/Unauthorized" },
-          "500": { "$ref": "#/components/responses/ServerError" }
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
         }
       },
       "delete": {
         "summary": "Supprimer un classeur",
         "description": "Supprime définitivement un classeur et tout son contenu",
-        "tags": ["Classeurs"],
+        "tags": [
+          "Classeurs"
+        ],
         "operationId": "deleteClasseurV2",
         "security": [
           {
@@ -424,10 +1383,16 @@
                       "example": "Classeur supprimé avec succès"
                     }
                   },
-                  "required": ["success", "message"]
+                  "required": [
+                    "success",
+                    "message"
+                  ]
                 }
               }
             }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
           },
           "404": {
             "description": "Classeur non trouvé",
@@ -445,16 +1410,278 @@
               }
             }
           },
-          "401": { "$ref": "#/components/responses/Unauthorized" },
-          "500": { "$ref": "#/components/responses/ServerError" }
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
         }
       }
     },
-    "/notes": {
+    "/api/v2/folder/{ref}": {
+      "get": {
+        "summary": "Récupérer un dossier spécifique",
+        "description": "Récupère les détails d'un dossier par son ID ou slug",
+        "tags": [
+          "Dossiers"
+        ],
+        "operationId": "getFolderV2",
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "ID ou slug du dossier",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Dossier récupéré avec succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "folder": {
+                      "$ref": "#/components/schemas/Folder"
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "folder"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "description": "Dossier non trouvé",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Dossier non trouvé"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        }
+      },
+      "put": {
+        "summary": "Modifier un dossier",
+        "description": "Met à jour les informations d'un dossier existant",
+        "tags": [
+          "Dossiers"
+        ],
+        "operationId": "updateFolderV2",
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "ID ou slug du dossier",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Nouveau nom du dossier",
+                    "maxLength": 255
+                  },
+                  "parent_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "Nouveau dossier parent"
+                  },
+                  "position": {
+                    "type": "integer",
+                    "description": "Nouvelle position d'ordre",
+                    "minimum": 0
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Dossier modifié avec succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "folder": {
+                      "$ref": "#/components/schemas/Folder"
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "folder"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Données invalides",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Données invalides"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "description": "Dossier non trouvé",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Dossier non trouvé"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Supprimer un dossier",
+        "description": "Supprime définitivement un dossier et tout son contenu",
+        "tags": [
+          "Dossiers"
+        ],
+        "operationId": "deleteFolderV2",
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "ID ou slug du dossier",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Dossier supprimé avec succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Dossier supprimé avec succès"
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "description": "Dossier non trouvé",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Dossier non trouvé"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        }
+      }
+    },
+    "/api/v2/notes": {
       "get": {
         "summary": "Lister toutes les notes de l'utilisateur",
         "description": "Récupère la liste complète des notes appartenant à l'utilisateur authentifié par clé API",
-        "tags": ["Notes"],
+        "tags": [
+          "Notes"
+        ],
         "operationId": "listNotesV2",
         "security": [
           {
@@ -533,13 +1760,15 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "success": { 
+                    "success": {
                       "type": "boolean",
                       "example": true
                     },
-                    "notes": { 
-                      "type": "array", 
-                      "items": { "$ref": "#/components/schemas/Note" }
+                    "notes": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Note"
+                      }
                     },
                     "total": {
                       "type": "integer",
@@ -554,22 +1783,29 @@
                       "description": "Offset appliqué"
                     }
                   },
-                  "required": ["success", "notes"]
+                  "required": [
+                    "success",
+                    "notes"
+                  ]
                 }
               }
             }
           },
-          "401": { 
+          "401": {
             "$ref": "#/components/responses/Unauthorized",
             "description": "Authentification requise - Clé API manquante/invalide"
           },
-          "500": { "$ref": "#/components/responses/ServerError" }
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
         }
       },
       "post": {
         "summary": "Créer une nouvelle note",
         "description": "Crée une nouvelle note dans le système",
-        "tags": ["Notes"],
+        "tags": [
+          "Notes"
+        ],
         "operationId": "createNoteV2",
         "security": [
           {
@@ -582,7 +1818,10 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["source_title", "markdown_content"],
+                "required": [
+                  "source_title",
+                  "markdown_content"
+                ],
                 "properties": {
                   "source_title": {
                     "type": "string",
@@ -629,7 +1868,10 @@
                       "$ref": "#/components/schemas/Note"
                     }
                   },
-                  "required": ["success", "note"]
+                  "required": [
+                    "success",
+                    "note"
+                  ]
                 }
               }
             }
@@ -650,17 +1892,23 @@
               }
             }
           },
-          "401": { "$ref": "#/components/responses/Unauthorized" },
-          "500": { "$ref": "#/components/responses/ServerError" }
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
         }
       }
     },
-    "/notes/{id}": {
+    "/api/v2/search": {
       "get": {
-        "summary": "Récupérer une note spécifique",
-        "description": "Récupère les détails d'une note par son ID ou slug",
-        "tags": ["Notes"],
-        "operationId": "getNoteV2",
+        "summary": "Rechercher dans le contenu",
+        "description": "Effectue une recherche textuelle dans les notes et dossiers",
+        "tags": [
+          "Recherche"
+        ],
+        "operationId": "searchContentV2",
         "security": [
           {
             "ApiKeyAuth": []
@@ -668,249 +1916,19 @@
         ],
         "parameters": [
           {
-            "name": "id",
-            "in": "path",
+            "name": "q",
+            "in": "query",
             "required": true,
-            "description": "ID ou slug de la note",
+            "description": "Terme de recherche",
             "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Note récupérée avec succès",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "success": {
-                      "type": "boolean",
-                      "example": true
-                    },
-                    "note": {
-                      "$ref": "#/components/schemas/Note"
-                    }
-                  },
-                  "required": ["success", "note"]
-                }
-              }
+              "type": "string",
+              "minLength": 1
             }
           },
-          "404": {
-            "description": "Note non trouvée",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "string",
-                      "example": "Note non trouvée"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "401": { "$ref": "#/components/responses/Unauthorized" },
-          "500": { "$ref": "#/components/responses/ServerError" }
-        }
-      },
-      "put": {
-        "summary": "Modifier une note",
-        "description": "Met à jour le contenu et les métadonnées d'une note existante",
-        "tags": ["Notes"],
-        "operationId": "updateNoteV2",
-        "security": [
-          {
-            "ApiKeyAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "description": "ID ou slug de la note",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "source_title": {
-                    "type": "string",
-                    "description": "Nouveau titre de la note",
-                    "maxLength": 255
-                  },
-                  "markdown_content": {
-                    "type": "string",
-                    "description": "Nouveau contenu de la note en format Markdown"
-                  },
-                  "folder_id": {
-                    "type": "string",
-                    "format": "uuid",
-                    "description": "Nouveau dossier parent"
-                  },
-                  "classeur_id": {
-                    "type": "string",
-                    "format": "uuid",
-                    "description": "Nouveau classeur parent"
-                  },
-                  "is_published": {
-                    "type": "boolean",
-                    "description": "Nouveau statut de publication"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Note modifiée avec succès",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "success": {
-                      "type": "boolean",
-                      "example": true
-                    },
-                    "note": {
-                      "$ref": "#/components/schemas/Note"
-                    }
-                  },
-                  "required": ["success", "note"]
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Données invalides",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "string",
-                      "example": "Données invalides"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Note non trouvée",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "string",
-                      "example": "Note non trouvée"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "401": { "$ref": "#/components/responses/Unauthorized" },
-          "500": { "$ref": "#/components/responses/ServerError" }
-        }
-      },
-      "delete": {
-        "summary": "Supprimer une note",
-        "description": "Supprime définitivement une note",
-        "tags": ["Notes"],
-        "operationId": "deleteNoteV2",
-        "security": [
-          {
-            "ApiKeyAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "description": "ID ou slug de la note",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Note supprimée avec succès",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "success": {
-                      "type": "boolean",
-                      "example": true
-                    },
-                    "message": {
-                      "type": "string",
-                      "example": "Note supprimée avec succès"
-                    }
-                  },
-                  "required": ["success", "message"]
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Note non trouvée",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "string",
-                      "example": "Note non trouvée"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "401": { "$ref": "#/components/responses/Unauthorized" },
-          "500": { "$ref": "#/components/responses/ServerError" }
-        }
-      }
-    },
-    "/folders": {
-      "get": {
-        "summary": "Lister tous les dossiers de l'utilisateur",
-        "description": "Récupère la liste complète des dossiers appartenant à l'utilisateur authentifié par clé API",
-        "tags": ["Dossiers"],
-        "operationId": "listFoldersV2",
-        "security": [
-          {
-            "ApiKeyAuth": []
-          }
-        ],
-        "parameters": [
           {
             "name": "classeur_id",
             "in": "query",
-            "description": "Filtrer par classeur",
+            "description": "Limiter la recherche à un classeur spécifique",
             "required": false,
             "schema": {
               "type": "string",
@@ -918,50 +1936,138 @@
             }
           },
           {
-            "name": "parent_id",
+            "name": "type",
             "in": "query",
-            "description": "Filtrer par dossier parent (null pour la racine)",
+            "description": "Type de contenu à rechercher",
             "required": false,
             "schema": {
               "type": "string",
-              "format": "uuid"
+              "enum": [
+                "notes",
+                "folders",
+                "all"
+              ],
+              "default": "all"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Nombre maximum de résultats",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
             }
           }
         ],
         "responses": {
           "200": {
-            "description": "Liste des dossiers récupérée avec succès",
+            "description": "Résultats de recherche",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "success": { 
+                    "success": {
                       "type": "boolean",
                       "example": true
                     },
-                    "folders": { 
-                      "type": "array", 
-                      "items": { "$ref": "#/components/schemas/Folder" }
+                    "query": {
+                      "type": "string",
+                      "description": "Terme de recherche utilisé"
+                    },
+                    "results": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "enum": [
+                              "note",
+                              "folder"
+                            ],
+                            "description": "Type du résultat"
+                          },
+                          "id": {
+                            "type": "string",
+                            "format": "uuid",
+                            "description": "ID de l'élément"
+                          },
+                          "title": {
+                            "type": "string",
+                            "description": "Titre ou nom de l'élément"
+                          },
+                          "slug": {
+                            "type": "string",
+                            "description": "Slug de l'élément"
+                          },
+                          "classeur_id": {
+                            "type": "string",
+                            "format": "uuid",
+                            "description": "ID du classeur parent"
+                          },
+                          "score": {
+                            "type": "number",
+                            "description": "Score de pertinence de la recherche"
+                          },
+                          "excerpt": {
+                            "type": "string",
+                            "description": "Extrait du contenu correspondant"
+                          }
+                        }
+                      }
+                    },
+                    "total": {
+                      "type": "integer",
+                      "description": "Nombre total de résultats"
                     }
                   },
-                  "required": ["success", "folders"]
+                  "required": [
+                    "success",
+                    "query",
+                    "results"
+                  ]
                 }
               }
             }
           },
-          "401": { 
-            "$ref": "#/components/responses/Unauthorized",
-            "description": "Authentification requise - Clé API manquante/invalide"
+          "400": {
+            "description": "Requête de recherche invalide",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Le terme de recherche est requis"
+                    }
+                  }
+                }
+              }
+            }
           },
-          "500": { "$ref": "#/components/responses/ServerError" }
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
         }
-      },
+      }
+    },
+    "/api/v2/export": {
       "post": {
-        "summary": "Créer un nouveau dossier",
-        "description": "Crée un nouveau dossier dans l'arborescence",
-        "tags": ["Dossiers"],
-        "operationId": "createFolderV2",
+        "summary": "Exporter les données",
+        "description": "Exporte les données de l'utilisateur dans différents formats",
+        "tags": [
+          "Notes"
+        ],
+        "operationId": "exportDataV2",
         "security": [
           {
             "ApiKeyAuth": []
@@ -973,27 +2079,28 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["name", "classeur_id"],
+                "required": [
+                  "format"
+                ],
                 "properties": {
-                  "name": {
+                  "format": {
                     "type": "string",
-                    "description": "Nom du dossier",
-                    "maxLength": 255
+                    "enum": [
+                      "markdown",
+                      "json",
+                      "html"
+                    ],
+                    "description": "Format d'export souhaité"
                   },
                   "classeur_id": {
                     "type": "string",
                     "format": "uuid",
-                    "description": "ID du classeur parent"
+                    "description": "Limiter l'export à un classeur spécifique"
                   },
-                  "parent_id": {
-                    "type": "string",
-                    "format": "uuid",
-                    "description": "ID du dossier parent (null pour la racine)"
-                  },
-                  "position": {
-                    "type": "integer",
-                    "description": "Position d'ordre dans le dossier parent",
-                    "minimum": 0
+                  "include_metadata": {
+                    "type": "boolean",
+                    "description": "Inclure les métadonnées dans l'export",
+                    "default": true
                   }
                 }
               }
@@ -1001,8 +2108,8 @@
           }
         },
         "responses": {
-          "201": {
-            "description": "Dossier créé avec succès",
+          "200": {
+            "description": "Export généré avec succès",
             "content": {
               "application/json": {
                 "schema": {
@@ -1012,17 +2119,28 @@
                       "type": "boolean",
                       "example": true
                     },
-                    "folder": {
-                      "$ref": "#/components/schemas/Folder"
+                    "export_url": {
+                      "type": "string",
+                      "format": "uri",
+                      "description": "URL de téléchargement de l'export"
+                    },
+                    "expires_at": {
+                      "type": "string",
+                      "format": "date-time",
+                      "description": "Date d'expiration du lien de téléchargement"
                     }
                   },
-                  "required": ["success", "folder"]
+                  "required": [
+                    "success",
+                    "export_url",
+                    "expires_at"
+                  ]
                 }
               }
             }
           },
           "400": {
-            "description": "Données invalides",
+            "description": "Format d'export invalide",
             "content": {
               "application/json": {
                 "schema": {
@@ -1030,43 +2148,38 @@
                   "properties": {
                     "error": {
                       "type": "string",
-                      "example": "Le nom et le classeur sont requis"
+                      "example": "Format d'export non supporté"
                     }
                   }
                 }
               }
             }
           },
-          "401": { "$ref": "#/components/responses/Unauthorized" },
-          "500": { "$ref": "#/components/responses/ServerError" }
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
         }
       }
     },
-    "/folders/{id}": {
+    "/api/v2/stats": {
       "get": {
-        "summary": "Récupérer un dossier spécifique",
-        "description": "Récupère les détails d'un dossier par son ID ou slug",
-        "tags": ["Dossiers"],
-        "operationId": "getFolderV2",
+        "summary": "Récupérer les statistiques utilisateur",
+        "description": "Récupère les statistiques globales de l'utilisateur (nombre de notes, classeurs, dossiers)",
+        "tags": [
+          "Authentification"
+        ],
+        "operationId": "getUserStatsV2",
         "security": [
           {
             "ApiKeyAuth": []
           }
         ],
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "description": "ID ou slug du dossier",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
         "responses": {
           "200": {
-            "description": "Dossier récupéré avec succès",
+            "description": "Statistiques récupérées avec succès",
             "content": {
               "application/json": {
                 "schema": {
@@ -1076,945 +2189,98 @@
                       "type": "boolean",
                       "example": true
                     },
-                    "folder": {
-                      "$ref": "#/components/schemas/Folder"
+                    "stats": {
+                      "type": "object",
+                      "properties": {
+                        "total_notes": {
+                          "type": "integer",
+                          "description": "Nombre total de notes"
+                        },
+                        "total_classeurs": {
+                          "type": "integer",
+                          "description": "Nombre total de classeurs"
+                        },
+                        "total_folders": {
+                          "type": "integer",
+                          "description": "Nombre total de dossiers"
+                        },
+                        "published_notes": {
+                          "type": "integer",
+                          "description": "Nombre de notes publiées"
+                        },
+                        "total_content_size": {
+                          "type": "integer",
+                          "description": "Taille totale du contenu en octets"
+                        }
+                      }
                     }
                   },
-                  "required": ["success", "folder"]
+                  "required": [
+                    "success",
+                    "stats"
+                  ]
                 }
               }
             }
           },
-          "404": {
-            "description": "Dossier non trouvé",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "string",
-                      "example": "Dossier non trouvé"
-                    }
-                  }
-                }
-              }
-            }
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
           },
-          "401": { "$ref": "#/components/responses/Unauthorized" },
-          "500": { "$ref": "#/components/responses/ServerError" }
-        }
-      },
-      "put": {
-        "summary": "Modifier un dossier",
-        "description": "Met à jour les informations d'un dossier existant",
-        "tags": ["Dossiers"],
-        "operationId": "updateFolderV2",
-        "security": [
-          {
-            "ApiKeyAuth": []
+          "500": {
+            "$ref": "#/components/responses/ServerError"
           }
-        ],
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "description": "ID ou slug du dossier",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "name": {
-                    "type": "string",
-                    "description": "Nouveau nom du dossier",
-                    "maxLength": 255
-                  },
-                  "parent_id": {
-                    "type": "string",
-                    "format": "uuid",
-                    "description": "Nouveau dossier parent"
-                  },
-                  "position": {
-                    "type": "integer",
-                    "description": "Nouvelle position d'ordre",
-                    "minimum": 0
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Dossier modifié avec succès",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "success": {
-                      "type": "boolean",
-                      "example": true
-                    },
-                    "folder": {
-                      "$ref": "#/components/schemas/Folder"
-                    }
-                  },
-                  "required": ["success", "folder"]
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Données invalides",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "string",
-                      "example": "Données invalides"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Dossier non trouvé",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "string",
-                      "example": "Dossier non trouvé"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "401": { "$ref": "#/components/responses/Unauthorized" },
-          "500": { "$ref": "#/components/responses/ServerError" }
-        }
-      },
-      "delete": {
-        "summary": "Supprimer un dossier",
-        "description": "Supprime définitivement un dossier et tout son contenu",
-        "tags": ["Dossiers"],
-        "operationId": "deleteFolderV2",
-        "security": [
-          {
-            "ApiKeyAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "description": "ID ou slug du dossier",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Dossier supprimé avec succès",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "success": {
-                      "type": "boolean",
-                      "example": true
-                    },
-                    "message": {
-                      "type": "string",
-                      "example": "Dossier supprimé avec succès"
-                    }
-                  },
-                  "required": ["success", "message"]
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Dossier non trouvé",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "string",
-                      "example": "Dossier non trouvé"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "401": { "$ref": "#/components/responses/Unauthorized" },
-          "500": { "$ref": "#/components/responses/ServerError" }
         }
       }
     },
-         "/search": {
-       "get": {
-         "summary": "Rechercher dans le contenu",
-         "description": "Effectue une recherche textuelle dans les notes et dossiers",
-         "tags": ["Recherche"],
-         "operationId": "searchContentV2",
-         "security": [
-           {
-             "ApiKeyAuth": []
-           }
-         ],
-         "parameters": [
-           {
-             "name": "q",
-             "in": "query",
-             "required": true,
-             "description": "Terme de recherche",
-             "schema": {
-               "type": "string",
-               "minLength": 1
-             }
-           },
-           {
-             "name": "classeur_id",
-             "in": "query",
-             "description": "Limiter la recherche à un classeur spécifique",
-             "required": false,
-             "schema": {
-               "type": "string",
-               "format": "uuid"
-             }
-           },
-           {
-             "name": "type",
-             "in": "query",
-             "description": "Type de contenu à rechercher",
-             "required": false,
-             "schema": {
-               "type": "string",
-               "enum": ["notes", "folders", "all"],
-               "default": "all"
-             }
-           },
-           {
-             "name": "limit",
-             "in": "query",
-             "description": "Nombre maximum de résultats",
-             "required": false,
-             "schema": {
-               "type": "integer",
-               "minimum": 1,
-               "maximum": 100,
-               "default": 20
-             }
-           }
-         ],
-         "responses": {
-           "200": {
-             "description": "Résultats de recherche",
-             "content": {
-               "application/json": {
-                 "schema": {
-                   "type": "object",
-                   "properties": {
-                     "success": {
-                       "type": "boolean",
-                       "example": true
-                     },
-                     "query": {
-                       "type": "string",
-                       "description": "Terme de recherche utilisé"
-                     },
-                     "results": {
-                       "type": "array",
-                       "items": {
-                         "type": "object",
-                         "properties": {
-                           "type": {
-                             "type": "string",
-                             "enum": ["note", "folder"],
-                             "description": "Type du résultat"
-                           },
-                           "id": {
-                             "type": "string",
-                             "format": "uuid",
-                             "description": "ID de l'élément"
-                           },
-                           "title": {
-                             "type": "string",
-                             "description": "Titre ou nom de l'élément"
-                           },
-                           "slug": {
-                             "type": "string",
-                             "description": "Slug de l'élément"
-                           },
-                           "classeur_id": {
-                             "type": "string",
-                             "format": "uuid",
-                             "description": "ID du classeur parent"
-                           },
-                           "score": {
-                             "type": "number",
-                             "description": "Score de pertinence de la recherche"
-                           },
-                           "excerpt": {
-                             "type": "string",
-                             "description": "Extrait du contenu correspondant"
-                           }
-                         }
-                       }
-                     },
-                     "total": {
-                       "type": "integer",
-                       "description": "Nombre total de résultats"
-                     }
-                   },
-                   "required": ["success", "query", "results"]
-                 }
-               }
-             }
-           },
-           "400": {
-             "description": "Requête de recherche invalide",
-             "content": {
-               "application/json": {
-                 "schema": {
-                   "type": "object",
-                   "properties": {
-                     "error": {
-                       "type": "string",
-                       "example": "Le terme de recherche est requis"
-                     }
-                   }
-                 }
-               }
-             }
-           },
-           "401": { "$ref": "#/components/responses/Unauthorized" },
-           "500": { "$ref": "#/components/responses/ServerError" }
-         }
-       }
-     },
-     "/stats": {
-       "get": {
-         "summary": "Récupérer les statistiques utilisateur",
-         "description": "Récupère les statistiques globales de l'utilisateur (nombre de notes, classeurs, dossiers)",
-         "tags": ["Authentification"],
-         "operationId": "getUserStatsV2",
-         "security": [
-           {
-             "ApiKeyAuth": []
-           }
-         ],
-         "responses": {
-           "200": {
-             "description": "Statistiques récupérées avec succès",
-             "content": {
-               "application/json": {
-                 "schema": {
-                   "type": "object",
-                   "properties": {
-                     "success": {
-                       "type": "boolean",
-                       "example": true
-                     },
-                     "stats": {
-                       "type": "object",
-                       "properties": {
-                         "total_notes": {
-                           "type": "integer",
-                           "description": "Nombre total de notes"
-                         },
-                         "total_classeurs": {
-                           "type": "integer",
-                           "description": "Nombre total de classeurs"
-                         },
-                         "total_folders": {
-                           "type": "integer",
-                           "description": "Nombre total de dossiers"
-                         },
-                         "published_notes": {
-                           "type": "integer",
-                           "description": "Nombre de notes publiées"
-                         },
-                         "total_content_size": {
-                           "type": "integer",
-                           "description": "Taille totale du contenu en octets"
-                         }
-                       }
-                     }
-                   },
-                   "required": ["success", "stats"]
-                 }
-               }
-             }
-           },
-           "401": { "$ref": "#/components/responses/Unauthorized" },
-           "500": { "$ref": "#/components/responses/ServerError" }
-         }
-       }
-     },
-     "/export": {
-       "post": {
-         "summary": "Exporter les données",
-         "description": "Exporte les données de l'utilisateur dans différents formats",
-         "tags": ["Notes"],
-         "operationId": "exportDataV2",
-         "security": [
-           {
-             "ApiKeyAuth": []
-           }
-         ],
-         "requestBody": {
-           "required": true,
-           "content": {
-             "application/json": {
-               "schema": {
-                 "type": "object",
-                 "required": ["format"],
-                 "properties": {
-                   "format": {
-                     "type": "string",
-                     "enum": ["markdown", "json", "html"],
-                     "description": "Format d'export souhaité"
-                   },
-                   "classeur_id": {
-                     "type": "string",
-                     "format": "uuid",
-                     "description": "Limiter l'export à un classeur spécifique"
-                   },
-                   "include_metadata": {
-                     "type": "boolean",
-                     "description": "Inclure les métadonnées dans l'export",
-                     "default": true
-                   }
-                 }
-               }
-             }
-           }
-         },
-         "responses": {
-           "200": {
-             "description": "Export généré avec succès",
-             "content": {
-               "application/json": {
-                 "schema": {
-                   "type": "object",
-                   "properties": {
-                     "success": {
-                       "type": "boolean",
-                       "example": true
-                     },
-                     "export_url": {
-                       "type": "string",
-                       "format": "uri",
-                       "description": "URL de téléchargement de l'export"
-                     },
-                     "expires_at": {
-                       "type": "string",
-                       "format": "date-time",
-                       "description": "Date d'expiration du lien de téléchargement"
-                     }
-                   },
-                   "required": ["success", "export_url", "expires_at"]
-                 }
-               }
-             }
-           },
-           "400": {
-             "description": "Format d'export invalide",
-             "content": {
-               "application/json": {
-                 "schema": {
-                   "type": "object",
-                   "properties": {
-                     "error": {
-                       "type": "string",
-                       "example": "Format d'export non supporté"
-                     }
-                   }
-                 }
-               }
-             }
-           },
-           "401": { "$ref": "#/components/responses/Unauthorized" },
-           "500": { "$ref": "#/components/responses/ServerError" }
-         }
-       }
-     },
-     "/notes/recent": {
-       "get": {
-         "summary": "Récupérer les notes récentes",
-         "description": "Récupère les notes les plus récemment modifiées de l'utilisateur",
-         "tags": ["Notes"],
-         "operationId": "getRecentNotesV2",
-         "security": [
-           {
-             "ApiKeyAuth": []
-           }
-         ],
-         "parameters": [
-           {
-             "name": "limit",
-             "in": "query",
-             "description": "Nombre maximum de notes à retourner",
-             "required": false,
-             "schema": {
-               "type": "integer",
-               "minimum": 1,
-               "maximum": 100,
-               "default": 20
-             }
-           }
-         ],
-         "responses": {
-           "200": {
-             "description": "Notes récentes récupérées avec succès",
-             "content": {
-               "application/json": {
-                 "schema": {
-                   "type": "object",
-                   "properties": {
-                     "success": {
-                       "type": "boolean",
-                       "example": true
-                     },
-                     "notes": {
-                       "type": "array",
-                       "items": { "$ref": "#/components/schemas/Note" }
-                     }
-                   },
-                   "required": ["success", "notes"]
-                 }
-               }
-             }
-           },
-           "401": { "$ref": "#/components/responses/Unauthorized" },
-           "500": { "$ref": "#/components/responses/ServerError" }
-         }
-       }
-     },
-     "/note/{ref}/content": {
-       "get": {
-         "summary": "Récupérer le contenu d'une note",
-         "description": "Récupère le contenu complet d'une note avec gestion des permissions de partage",
-         "tags": ["Notes"],
-         "operationId": "getNoteContentV2",
-         "security": [
-           {
-             "ApiKeyAuth": []
-           }
-         ],
-         "parameters": [
-           {
-             "name": "ref",
-             "in": "path",
-             "required": true,
-             "description": "ID ou slug de la note",
-             "schema": {
-               "type": "string"
-             }
-           }
-         ],
-         "responses": {
-           "200": {
-             "description": "Contenu de la note récupéré avec succès",
-             "content": {
-               "application/json": {
-                 "schema": {
-                   "type": "object",
-                   "properties": {
-                     "success": {
-                       "type": "boolean",
-                       "example": true
-                     },
-                     "note": {
-                       "$ref": "#/components/schemas/Note"
-                     }
-                   },
-                   "required": ["success", "note"]
-                 }
-               }
-             }
-           },
-           "404": {
-             "description": "Note non trouvée",
-             "content": {
-               "application/json": {
-                 "schema": {
-                   "type": "object",
-                   "properties": {
-                     "error": {
-                       "type": "string",
-                       "example": "Note non trouvée"
-                     }
-                   }
-                 }
-               }
-             }
-           },
-           "401": { "$ref": "#/components/responses/Unauthorized" },
-           "500": { "$ref": "#/components/responses/ServerError" }
-         }
-       }
-     },
-     "/note/{ref}/metadata": {
-       "get": {
-         "summary": "Récupérer les métadonnées d'une note",
-         "description": "Récupère les métadonnées détaillées d'une note",
-         "tags": ["Notes"],
-         "operationId": "getNoteMetadataV2",
-         "security": [
-           {
-             "ApiKeyAuth": []
-           }
-         ],
-         "parameters": [
-           {
-             "name": "ref",
-             "in": "path",
-             "required": true,
-             "description": "ID ou slug de la note",
-             "schema": {
-               "type": "string"
-             }
-           }
-         ],
-         "responses": {
-           "200": {
-             "description": "Métadonnées récupérées avec succès",
-             "content": {
-               "application/json": {
-                 "schema": {
-                   "type": "object",
-                   "properties": {
-                     "success": {
-                       "type": "boolean",
-                       "example": true
-                     },
-                     "metadata": {
-                       "type": "object",
-                       "properties": {
-                         "id": { "type": "string", "format": "uuid" },
-                         "source_title": { "type": "string" },
-                         "slug": { "type": "string" },
-                         "created_at": { "type": "string", "format": "date-time" },
-                         "updated_at": { "type": "string", "format": "date-time" },
-                         "is_published": { "type": "boolean" },
-                         "share_settings": { "$ref": "#/components/schemas/ShareSettings" }
-                       }
-                     }
-                   },
-                   "required": ["success", "metadata"]
-                 }
-               }
-             }
-           },
-           "404": {
-             "description": "Note non trouvée",
-             "content": {
-               "application/json": {
-                 "schema": {
-                   "type": "object",
-                   "properties": {
-                     "error": {
-                       "type": "string",
-                       "example": "Note non trouvée"
-                     }
-                   }
-                 }
-               }
-             }
-           },
-           "401": { "$ref": "#/components/responses/Unauthorized" },
-           "500": { "$ref": "#/components/responses/ServerError" }
-         }
-       }
-     },
-     "/api/v2/note/create": {
-       "post": {
-         "summary": "Créer une note",
-         "description": "Crée une nouvelle note avec validation avancée et génération automatique de slug",
-         "tags": ["Notes"],
-         "security": [
-           {
-             "ApiKeyAuth": []
-           }
-         ],
-         "requestBody": {
-           "required": true,
-           "content": {
-             "application/json": {
-               "schema": {
-                 "$ref": "#/components/schemas/CreateNoteRequest"
-               }
-             }
-           }
-         },
-         "responses": {
-           "201": {
-             "description": "Note créée avec succès",
-             "content": {
-               "application/json": {
-                 "schema": {
-                   "$ref": "#/components/schemas/NoteResponse"
-                 }
-               }
-             }
-           },
-           "400": {
-             "description": "Requête invalide",
-             "content": {
-               "application/json": {
-                 "schema": {
-                   "$ref": "#/components/schemas/ErrorResponse"
-                 }
-               }
-             }
-           },
-           "401": { "$ref": "#/components/responses/Unauthorized" },
-           "404": {
-             "description": "Classeur non trouvé",
-             "content": {
-               "application/json": {
-                 "schema": {
-                   "$ref": "#/components/schemas/ErrorResponse"
-                 }
-               }
-             }
-           },
-           "500": { "$ref": "#/components/responses/ServerError" }
-         }
-       }
-     },
-     "/api/v2/classeur/reorder": {
-       "put": {
-         "summary": "Réorganiser les classeurs",
-         "description": "Réorganise l'ordre des classeurs pour un utilisateur",
-         "tags": ["Classeurs"],
-         "security": [
-           {
-             "ApiKeyAuth": []
-           }
-         ],
-         "requestBody": {
-           "required": true,
-           "content": {
-             "application/json": {
-               "schema": {
-                 "$ref": "#/components/schemas/ReorderClasseursRequest"
-               }
-             }
-           }
-         },
-         "responses": {
-           "200": {
-             "description": "Classeurs réorganisés avec succès",
-             "content": {
-               "application/json": {
-                 "schema": {
-                   "$ref": "#/components/schemas/ReorderResponse"
-                 }
-               }
-             }
-           },
-           "400": {
-             "description": "Requête invalide",
-             "content": {
-               "application/json": {
-                 "schema": {
-                   "$ref": "#/components/schemas/ErrorResponse"
-                 }
-               }
-             }
-           },
-           "401": { "$ref": "#/components/responses/Unauthorized" },
-           "500": { "$ref": "#/components/responses/ServerError" }
-         }
-       }
-     },
-     "/api/v2/classeur/{ref}/reorder": {
-       "put": {
-         "summary": "Réorganiser un classeur",
-         "description": "Réorganise l'ordre d'un classeur spécifique",
-         "tags": ["Classeurs"],
-         "security": [
-           {
-             "ApiKeyAuth": []
-           }
-         ],
-         "parameters": [
-           {
-             "name": "ref",
-             "in": "path",
-             "required": true,
-             "description": "ID ou slug du classeur",
-             "schema": {
-               "type": "string"
-             }
-           }
-         ],
-         "requestBody": {
-           "required": true,
-           "content": {
-             "application/json": {
-               "schema": {
-                 "$ref": "#/components/schemas/ReorderClasseurRequest"
-               }
-             }
-           }
-         },
-         "responses": {
-           "200": {
-             "description": "Classeur réorganisé avec succès",
-             "content": {
-               "application/json": {
-                 "schema": {
-                   "$ref": "#/components/schemas/ReorderResponse"
-                 }
-               }
-             }
-           },
-           "400": {
-             "description": "Requête invalide",
-             "content": {
-               "application/json": {
-                 "schema": {
-                   "$ref": "#/components/schemas/ErrorResponse"
-                 }
-               }
-             }
-           },
-           "401": { "$ref": "#/components/responses/Unauthorized" },
-           "404": {
-             "description": "Classeur non trouvé",
-             "content": {
-               "application/json": {
-                 "schema": {
-                   "$ref": "#/components/schemas/ErrorResponse"
-                 }
-               }
-             }
-           },
-           "500": { "$ref": "#/components/responses/ServerError" }
-         }
-       }
-     },
-     "/api/v2/classeur/{ref}/tree": {
-       "get": {
-         "summary": "Obtenir l'arborescence d'un classeur",
-         "description": "Récupère l'arborescence complète d'un classeur avec tous ses dossiers et notes",
-         "tags": ["Classeurs"],
-         "security": [
-           {
-             "ApiKeyAuth": []
-           }
-         ],
-         "parameters": [
-           {
-             "name": "ref",
-             "in": "path",
-             "required": true,
-             "description": "ID ou slug du classeur",
-             "schema": {
-               "type": "string"
-             }
-           }
-         ],
-         "responses": {
-           "200": {
-             "description": "Arborescence récupérée avec succès",
-             "content": {
-               "application/json": {
-                 "schema": {
-                   "$ref": "#/components/schemas/ClasseurTreeResponse"
-                 }
-               }
-             }
-           },
-           "401": { "$ref": "#/components/responses/Unauthorized" },
-           "404": {
-             "description": "Classeur non trouvé",
-             "content": {
-               "application/json": {
-                 "schema": {
-                   "$ref": "#/components/schemas/ErrorResponse"
-                 }
-               }
-             }
-           },
-           "500": { "$ref": "#/components/responses/ServerError" }
-         }
-       }
-     },
-     "/api/v2/folder/{ref}/tree": {
-       "get": {
-         "summary": "Obtenir l'arborescence d'un dossier",
-         "description": "Récupère l'arborescence d'un dossier avec ses sous-dossiers et notes",
-         "tags": ["Dossiers"],
-         "security": [
-           {
-             "ApiKeyAuth": []
-           }
-         ],
-         "parameters": [
-           {
-             "name": "ref",
-             "in": "path",
-             "required": true,
-             "description": "ID ou slug du dossier",
-             "schema": {
-               "type": "string"
-             }
-           }
-         ],
-         "responses": {
-           "200": {
-             "description": "Arborescence récupérée avec succès",
-             "content": {
-               "application/json": {
-                 "schema": {
-                   "$ref": "#/components/schemas/FolderTreeResponse"
-                 }
-               }
-             }
-           },
-           "401": { "$ref": "#/components/responses/Unauthorized" },
-           "404": {
-             "description": "Dossier non trouvé",
-             "content": {
-               "application/json": {
-                 "schema": {
-                   "$ref": "#/components/schemas/ErrorResponse"
-                 }
-               }
-             }
-           },
-           "500": { "$ref": "#/components/responses/ServerError" }
-         }
-       }
-     }
+    "/api/v2/me": {
+      "get": {
+        "summary": "Récupérer l'utilisateur authentifié",
+        "description": "Récupère les informations du profil de l'utilisateur authentifié par clé API",
+        "tags": [
+          "Authentification"
+        ],
+        "operationId": "getAuthenticatedUserV2",
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Profil utilisateur récupéré avec succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true,
+                      "description": "Indique si l'opération a réussi"
+                    },
+                    "user": {
+                      "$ref": "#/components/schemas/User",
+                      "description": "Informations du profil utilisateur"
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "user"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized",
+            "description": "Authentification requise - Clé API manquante/invalide"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        }
+      }
+    }
   },
   "components": {
     "securitySchemes": {
@@ -2029,47 +2295,51 @@
       "User": {
         "type": "object",
         "description": "Profil utilisateur authentifié",
-        "required": ["id", "email", "created_at"],
+        "required": [
+          "id",
+          "email",
+          "created_at"
+        ],
         "properties": {
-          "id": { 
-            "type": "string", 
+          "id": {
+            "type": "string",
             "format": "uuid",
             "description": "Identifiant unique de l'utilisateur"
           },
-          "email": { 
+          "email": {
             "type": "string",
             "format": "email",
             "description": "Adresse email de l'utilisateur",
             "example": "user@example.com"
           },
-          "first_name": { 
+          "first_name": {
             "type": "string",
             "description": "Prénom de l'utilisateur"
           },
-          "last_name": { 
+          "last_name": {
             "type": "string",
             "description": "Nom de famille de l'utilisateur"
           },
-          "username": { 
+          "username": {
             "type": "string",
             "description": "Nom d'utilisateur unique"
           },
-          "avatar_url": { 
+          "avatar_url": {
             "type": "string",
             "format": "uri",
             "description": "URL de l'avatar de l'utilisateur"
           },
-          "is_active": { 
+          "is_active": {
             "type": "boolean",
             "description": "Indique si le compte est actif"
           },
-          "created_at": { 
-            "type": "string", 
+          "created_at": {
+            "type": "string",
             "format": "date-time",
             "description": "Date de création du compte"
           },
-          "updated_at": { 
-            "type": "string", 
+          "updated_at": {
+            "type": "string",
             "format": "date-time",
             "description": "Date de dernière modification du profil"
           }
@@ -2078,51 +2348,56 @@
       "Classeur": {
         "type": "object",
         "description": "Un classeur est un organisateur de notes et dossiers",
-        "required": ["id", "name", "created_at", "updated_at"],
+        "required": [
+          "id",
+          "name",
+          "created_at",
+          "updated_at"
+        ],
         "properties": {
-          "id": { 
-            "type": "string", 
+          "id": {
+            "type": "string",
             "format": "uuid",
             "description": "Identifiant unique du classeur"
           },
-          "name": { 
-            "type": "string", 
+          "name": {
+            "type": "string",
             "maxLength": 255,
             "description": "Nom du classeur",
             "example": "Mes Notes"
           },
-          "slug": { 
+          "slug": {
             "type": "string",
             "description": "Slug URL-friendly du classeur",
             "example": "mes-notes"
           },
-          "description": { 
-            "type": "string", 
+          "description": {
+            "type": "string",
             "maxLength": 500,
             "description": "Description optionnelle du classeur"
           },
-          "emoji": { 
+          "emoji": {
             "type": "string",
             "description": "Emoji représentant le classeur",
             "example": "📝"
           },
-          "color": { 
+          "color": {
             "type": "string",
             "description": "Couleur d'accent du classeur",
             "example": "#2994ff"
           },
-          "position": { 
-            "type": "integer", 
+          "position": {
+            "type": "integer",
             "minimum": 0,
             "description": "Position d'ordre du classeur"
           },
-          "created_at": { 
-            "type": "string", 
+          "created_at": {
+            "type": "string",
             "format": "date-time",
             "description": "Date de création du classeur"
           },
-          "updated_at": { 
-            "type": "string", 
+          "updated_at": {
+            "type": "string",
             "format": "date-time",
             "description": "Date de dernière modification"
           }
@@ -2131,86 +2406,96 @@
       "Note": {
         "type": "object",
         "description": "Une note ou article dans le système",
-        "required": ["id", "source_title", "created_at", "updated_at"],
+        "required": [
+          "id",
+          "source_title",
+          "created_at",
+          "updated_at"
+        ],
         "properties": {
-          "id": { 
-            "type": "string", 
-            "format": "uuid" 
+          "id": {
+            "type": "string",
+            "format": "uuid"
           },
-          "source_title": { 
+          "source_title": {
             "type": "string",
             "description": "Titre de la note"
           },
-          "slug": { 
+          "slug": {
             "type": "string",
             "description": "Slug URL-friendly de la note"
           },
-          "folder_id": { 
-            "type": "string", 
+          "folder_id": {
+            "type": "string",
             "format": "uuid",
             "description": "ID du dossier parent"
           },
-          "classeur_id": { 
-            "type": "string", 
+          "classeur_id": {
+            "type": "string",
             "format": "uuid",
             "description": "ID du classeur parent"
           },
-          "markdown_content": { 
+          "markdown_content": {
             "type": "string",
             "description": "Contenu de la note en format Markdown"
           },
-          "is_published": { 
+          "is_published": {
             "type": "boolean",
             "description": "Indique si la note est publiée"
           },
-          "created_at": { 
-            "type": "string", 
-            "format": "date-time" 
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
           },
-          "updated_at": { 
-            "type": "string", 
-            "format": "date-time" 
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
           }
         }
       },
       "Folder": {
         "type": "object",
         "description": "Un dossier organisateur dans l'arborescence",
-        "required": ["id", "name", "created_at", "updated_at"],
+        "required": [
+          "id",
+          "name",
+          "created_at",
+          "updated_at"
+        ],
         "properties": {
-          "id": { 
-            "type": "string", 
-            "format": "uuid" 
+          "id": {
+            "type": "string",
+            "format": "uuid"
           },
-          "name": { 
+          "name": {
             "type": "string",
             "description": "Nom du dossier"
           },
-          "slug": { 
+          "slug": {
             "type": "string",
             "description": "Slug URL-friendly du dossier"
           },
-          "parent_id": { 
-            "type": "string", 
+          "parent_id": {
+            "type": "string",
             "format": "uuid",
             "description": "ID du dossier parent (null pour la racine)"
           },
-          "classeur_id": { 
-            "type": "string", 
+          "classeur_id": {
+            "type": "string",
             "format": "uuid",
             "description": "ID du classeur parent"
           },
-          "position": { 
+          "position": {
             "type": "integer",
             "description": "Position d'ordre dans le dossier parent"
           },
-          "created_at": { 
-            "type": "string", 
-            "format": "date-time" 
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
           },
-          "updated_at": { 
-            "type": "string", 
-            "format": "date-time" 
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
           }
         }
       },
@@ -2220,7 +2505,11 @@
         "properties": {
           "visibility": {
             "type": "string",
-            "enum": ["private", "public", "unlisted"],
+            "enum": [
+              "private",
+              "public",
+              "unlisted"
+            ],
             "description": "Niveau de visibilité de la note",
             "default": "private"
           },
@@ -2247,7 +2536,10 @@
         "properties": {
           "type": {
             "type": "string",
-            "enum": ["note", "folder"],
+            "enum": [
+              "note",
+              "folder"
+            ],
             "description": "Type du résultat"
           },
           "id": {
@@ -2281,7 +2573,10 @@
       "CreateNoteRequest": {
         "type": "object",
         "description": "Requête de création d'une note",
-        "required": ["source_title", "notebook_id"],
+        "required": [
+          "source_title",
+          "notebook_id"
+        ],
         "properties": {
           "source_title": {
             "type": "string",
@@ -2314,14 +2609,19 @@
       "ReorderClasseursRequest": {
         "type": "object",
         "description": "Requête de réorganisation des classeurs",
-        "required": ["classeurs"],
+        "required": [
+          "classeurs"
+        ],
         "properties": {
           "classeurs": {
             "type": "array",
             "description": "Liste des classeurs avec leur nouvelle position",
             "items": {
               "type": "object",
-              "required": ["id", "position"],
+              "required": [
+                "id",
+                "position"
+              ],
               "properties": {
                 "id": {
                   "type": "string",
@@ -2341,7 +2641,9 @@
       "ReorderClasseurRequest": {
         "type": "object",
         "description": "Requête de réorganisation d'un classeur",
-        "required": ["position"],
+        "required": [
+          "position"
+        ],
         "properties": {
           "position": {
             "type": "integer",
@@ -2510,7 +2812,7 @@
       }
     },
     "responses": {
-      "Unauthorized": { 
+      "Unauthorized": {
         "description": "Authentification requise - Clé API manquante/invalide",
         "content": {
           "application/json": {
@@ -2530,7 +2832,7 @@
           }
         }
       },
-      "Forbidden": { 
+      "Forbidden": {
         "description": "Permissions insuffisantes pour cette ressource",
         "content": {
           "application/json": {
@@ -2546,7 +2848,7 @@
           }
         }
       },
-      "ServerError": { 
+      "ServerError": {
         "description": "Erreur interne du serveur",
         "content": {
           "application/json": {
