@@ -55,7 +55,7 @@ export async function GET(
     switch (fields) {
       case 'content':
         // Mode content : champs socle + contenu + rendu
-        selectFields = 'id, source_title, slug, header_image, markdown_content, html_content, created_at, updated_at';
+        selectFields = 'id, source_title, slug, header_image, markdown_content, created_at, updated_at';
         break;
       
       case 'metadata':
@@ -102,7 +102,6 @@ export async function GET(
         responseNote = {
           ...baseFields,
           markdown_content: noteData.markdown_content,
-          html_content: noteData.html_content,
           created_at: noteData.created_at,
           updated_at: noteData.updated_at
         };
