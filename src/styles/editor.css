@@ -9,3 +9,9 @@
 .editor-debug-outline * {
   outline: 1px solid blue;
 }
+
+/* ==========================================================================
+   STYLES DES BOUTONS DE COPIE DES BLOCS DE CODE
+   ========================================================================== */
+
+@import './codeBlockButtons.css';

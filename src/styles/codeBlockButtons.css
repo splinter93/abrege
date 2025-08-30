@@ -1,0 +1,91 @@
+/* Styles pour les boutons de copie des blocs de code */
+
+.code-copy-button {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: #9ca3af;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 0;
+  z-index: 10;
+}
+
+.code-copy-button:hover {
+  background: transparent;
+  color: #6b7280;
+}
+
+.code-copy-button.copied {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+}
+
+/* Styles pour les boutons de la toolbar Mermaid */
+.mermaid-toolbar-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: #9ca3af;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 0;
+}
+
+.mermaid-toolbar-button:hover {
+  background: transparent;
+  color: #6b7280;
+}
+
+.mermaid-copy-button.copied {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+}
+
+/* Positionnement du bouton de copie pour les blocs de code normaux */
+.code-block-container {
+  position: relative;
+}
+
+/* Styles pour la barre d'outils Mermaid */
+.mermaid-toolbar {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  gap: 6px;
+  z-index: 10;
+}
+
+/* Padding pour éviter que le diagramme Mermaid chevauche les boutons */
+.mermaid-container {
+  padding-top: 50px;
+  padding-right: 50px;
+}
+
+.code-block-container pre {
+  margin: 0;
+  padding: 16px;
+  background: #1f2937;
+  border-radius: 8px;
+  overflow-x: auto;
+}
+
+.code-block-container code {
+  font-family: 'Fira Code', 'Monaco', 'Consolas', monospace;
+  font-size: 14px;
+  line-height: 1.5;
+}

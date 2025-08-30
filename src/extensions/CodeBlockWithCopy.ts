@@ -38,11 +38,67 @@ const CodeBlockWithCopy = CodeBlockLowlight.extend({
 // Fonction pour rendre un bloc Mermaid
 function renderMermaidBlock(container: HTMLElement, mermaidContent: string) {
   container.className = 'mermaid-block-container';
+  container.style.position = 'relative';
   
   // Créer le conteneur Mermaid
   const mermaidContainer = document.createElement('div');
   mermaidContainer.className = 'mermaid-container mermaid-loading';
   mermaidContainer.setAttribute('aria-label', 'Diagramme Mermaid');
+  
+  // Créer la barre d'outils avec boutons
+  const toolbar = document.createElement('div');
+  toolbar.className = 'mermaid-toolbar';
+  
+  // Bouton Copier
+  const copyButton = document.createElement('button');
+  copyButton.className = 'mermaid-toolbar-button mermaid-copy-button';
+  copyButton.title = 'Copier le code Mermaid';
+  copyButton.innerHTML = `
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16">
+      <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+    </svg>
+  `;
+  
+  const copyCheckIcon = `
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="16" height="16">
+      <polyline points="20 6 9 17 4 12"></polyline>
+    </svg>
+  `;
+  
+  copyButton.addEventListener('click', () => {
+    navigator.clipboard.writeText(mermaidContent).then(() => {
+      copyButton.innerHTML = copyCheckIcon;
+      copyButton.style.color = '#f97316';
+      setTimeout(() => {
+        copyButton.innerHTML = `
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16">
+            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+          </svg>
+        `;
+        copyButton.style.color = 'inherit';
+      }, 2000);
+    });
+  });
+  
+  // Bouton Agrandir
+  const expandButton = document.createElement('button');
+  expandButton.className = 'mermaid-toolbar-button mermaid-expand-button';
+  expandButton.title = 'Agrandir le diagramme';
+  expandButton.innerHTML = `
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16">
+      <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
+    </svg>
+  `;
+  
+  expandButton.addEventListener('click', () => {
+    openMermaidModal(mermaidContent);
+  });
+  
+  // Ajouter les boutons à la barre d'outils
+  toolbar.appendChild(copyButton);
+  toolbar.appendChild(expandButton);
   
   // Indicateur de chargement
   const loadingIndicator = document.createElement('div');
@@ -53,7 +109,8 @@ function renderMermaidBlock(container: HTMLElement, mermaidContent: string) {
   `;
   mermaidContainer.appendChild(loadingIndicator);
   
-  // Ajouter le conteneur au DOM
+  // Ajouter la barre d'outils et le conteneur au DOM
+  container.appendChild(toolbar);
   container.appendChild(mermaidContainer);
   
   // Rendre le diagramme Mermaid de manière asynchrone
@@ -381,6 +438,64 @@ async function renderMermaidDiagram(container: HTMLElement, mermaidContent: stri
     `;
     container.className = 'mermaid-container mermaid-error';
   }
+}
+
+// Fonction pour ouvrir le modal Mermaid agrandi
+function openMermaidModal(mermaidContent: string) {
+  // Créer le modal avec une structure simple
+  const modal = document.createElement('div');
+  modal.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.95);
+    z-index: 999999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    overflow: hidden;
+  `;
+  
+  // Conteneur du diagramme avec scroll
+  const diagramContainer = document.createElement('div');
+  diagramContainer.style.cssText = `
+    max-width: 95vw;
+    max-height: 95vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: auto;
+    padding: 20px;
+  `;
+  
+  // Rendre le diagramme dans le modal
+  renderMermaidDiagram(diagramContainer, mermaidContent);
+  
+  // Ajouter le conteneur au modal
+  modal.appendChild(diagramContainer);
+  
+  // Ajouter au DOM
+  document.body.appendChild(modal);
+  
+  // Fermer avec Escape
+  const handleEscape = (e: KeyboardEvent) => {
+    if (e.key === 'Escape') {
+      document.body.removeChild(modal);
+      document.removeEventListener('keydown', handleEscape);
+    }
+  };
+  document.addEventListener('keydown', handleEscape);
+  
+  // Fermer en cliquant sur l'overlay
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) {
+      document.body.removeChild(modal);
+      document.removeEventListener('keydown', handleEscape);
+    }
+  });
 }
 
 export default CodeBlockWithCopy;
