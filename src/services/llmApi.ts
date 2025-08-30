@@ -905,7 +905,7 @@ export class LLMApi {
     
     try {
       const headers = await this.getAuthHeaders();
-      const response = await fetch(`/api/v2/note/${noteRef}/metadata`, {
+      const response = await fetch(`/api/v2/note/${noteRef}?fields=metadata`, {
         method: 'GET',
         headers
       });

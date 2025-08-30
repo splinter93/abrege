@@ -307,7 +307,7 @@ class UnifiedRealtimeService {
           });
           break;
         case 'notes':
-          response = await fetch('/api/v2/notes', {
+          response = await fetch('/api/v2/note/recent', {
             headers: {
               'Authorization': `Bearer ${this.config.userToken}`,
               'X-Client-Type': 'unified-realtime'
