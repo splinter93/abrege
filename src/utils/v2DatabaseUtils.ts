@@ -500,16 +500,19 @@ export class V2DatabaseUtils {
   /**
    * Créer un dossier
    */
-  static async createFolder(data: CreateFolderData, userId: string, context: any) {
+  static async createFolder(data: CreateFolderData, userId: string, context: any, supabaseClient?: any) {
     logApi.info(`🚀 Création dossier directe DB`, context);
     
     try {
+      // 🔧 CORRECTION: Utiliser le client authentifié si fourni
+      const client = supabaseClient || supabase;
+      
       // Résoudre le notebook_id (peut être un UUID ou un slug)
       let classeurId = data.notebook_id;
       
       // Si ce n'est pas un UUID, essayer de le résoudre comme un slug
       if (!classeurId.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
-        const { data: classeur, error: resolveError } = await supabase
+        const { data: classeur, error: resolveError } = await client
           .from('classeurs')
           .select('id')
           .eq('slug', classeurId)
@@ -525,7 +528,7 @@ export class V2DatabaseUtils {
 
       // Vérifier que le dossier parent existe et appartient à l'utilisateur
       if (data.parent_id) {
-        const { data: parentFolder, error: parentError } = await supabase
+        const { data: parentFolder, error: parentError } = await client
           .from('folders')
           .select('id')
           .eq('id', data.parent_id)
@@ -537,11 +540,11 @@ export class V2DatabaseUtils {
         }
       }
 
-      // Générer un slug unique
-      const slug = await SlugGenerator.generateSlug(data.name, 'folder', userId);
+      // Générer un slug unique avec le client authentifié
+      const slug = await SlugGenerator.generateSlug(data.name, 'folder', userId, undefined, client);
       
       // Créer le dossier
-      const { data: folder, error: createError } = await supabase
+      const { data: folder, error: createError } = await client
         .from('folders')
         .insert({
           name: data.name,

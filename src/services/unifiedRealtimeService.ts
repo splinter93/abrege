@@ -275,7 +275,7 @@ class UnifiedRealtimeService {
 
     try {
       // Polling intelligent : vérifier seulement les tables qui ont des changements récents
-      const tables: EntityType[] = ['notes', 'folders', 'classeurs'];
+      const tables: EntityType[] = ['notes', 'classeurs']; // 🗑️ 'folders' supprimé
       
       for (const table of tables) {
         await this.pollTable(table);
@@ -315,13 +315,9 @@ class UnifiedRealtimeService {
           });
           break;
         case 'folders':
-          response = await fetch('/api/v2/folders', {
-            headers: {
-              'Authorization': `Bearer ${this.config.userToken}`,
-              'X-Client-Type': 'unified-realtime'
-            }
-          });
-          break;
+          // 🗑️ SUPPRIMÉ : Utilisation du tree à la place
+          // Le tree gère déjà les dossiers et notes
+          return; // Sortir de la fonction au lieu de continuer
         default:
           response = await fetch(`/api/v2/${table}`, {
             headers: {
@@ -356,10 +352,7 @@ class UnifiedRealtimeService {
           }
           break;
         case 'folders':
-          if (data.folders && Array.isArray(data.folders)) {
-            // 🔧 CORRECTION : Merge intelligent au lieu de remplacement
-            this.mergeFolders(store, data.folders);
-          }
+          // 🗑️ SUPPRIMÉ : Géré par le tree
           break;
         case 'classeurs':
           // ✅ CORRECTION: Gérer la structure de l'endpoint with-content

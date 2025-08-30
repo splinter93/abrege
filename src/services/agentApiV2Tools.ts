@@ -142,10 +142,10 @@ export class AgentApiV2Tools {
               }
             }
           },
-          '/api/v2/note/{ref}/insert': {
+          '/api/llm/note/{ref}/insert-content': {
             post: {
-              summary: 'Insérer du contenu à une position spécifique',
-              description: 'Insérer du contenu markdown à une position spécifique dans la note',
+              summary: 'Insérer ou modifier du contenu dans une note (endpoint unifié)',
+              description: 'Insérer du contenu markdown dans une note entière ou une section spécifique avec position flexible',
               parameters: [
                 {
                   name: 'ref',
@@ -159,7 +159,7 @@ export class AgentApiV2Tools {
                 content: {
                   'application/json': {
                     schema: {
-                      $ref: '#/components/schemas/InsertContentPayload'
+                      $ref: '#/components/schemas/AddContentPayload'
                     }
                   }
                 }
@@ -211,24 +211,15 @@ export class AgentApiV2Tools {
               ]
             }
           },
-          '/api/v2/note/{ref}/merge': {
+          '/api/llm/note/merge': {
             post: {
-              summary: 'Fusionner des notes',
-              description: 'Fusionner le contenu d\'une note avec une autre note selon une stratégie spécifique',
-              parameters: [
-                {
-                  name: 'ref',
-                  in: 'path',
-                  required: true,
-                  schema: { type: 'string' },
-                  description: 'ID ou slug de la note source'
-                }
-              ],
+              summary: 'Fusionner plusieurs notes en une nouvelle note',
+              description: 'Fusionner le contenu de plusieurs notes dans une nouvelle note avec ordre respecté',
               requestBody: {
                 content: {
                   'application/json': {
                     schema: {
-                      $ref: '#/components/schemas/MergeNotePayload'
+                      $ref: '#/components/schemas/MergeNotesPayload'
                     }
                   }
                 }
@@ -436,7 +427,7 @@ export class AgentApiV2Tools {
           return await this.callApiV2('GET', `/api/v2/note/${params.ref}/content`, null, jwtToken);
           
         case 'insert_content_to_note':
-          return await this.callApiV2('POST', `/api/v2/note/${params.ref}/insert`, params, jwtToken);
+          return await this.callApiV2('POST', `/api/llm/note/${params.ref}/insert-content`, params, jwtToken);
           
         case 'get_note_insights':
           return await this.callApiV2('GET', `/api/v2/note/${params.ref}/insights`, null, jwtToken);
@@ -448,7 +439,7 @@ export class AgentApiV2Tools {
           return await this.callApiV2('GET', `/api/v2/note/${params.ref}/statistics`, null, jwtToken);
           
         case 'merge_note':
-          return await this.callApiV2('POST', `/api/v2/note/${params.ref}/merge`, params, jwtToken);
+          return await this.callApiV2('POST', `/api/llm/note/merge`, params, jwtToken);
           
         case 'publish_note':
           return await this.callApiV2('POST', `/api/v2/note/${params.ref}/publish`, params, jwtToken);

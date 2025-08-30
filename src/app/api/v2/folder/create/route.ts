@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { logApi } from '@/utils/logger';
 import { createFolderV2Schema, validatePayload, createValidationErrorResponse } from '@/utils/v2ValidationSchemas';
-import { getAuthenticatedUser } from '@/utils/authUtils';
+import { getAuthenticatedUser, createAuthenticatedSupabaseClient } from '@/utils/authUtils';
 import { V2DatabaseUtils } from '@/utils/v2DatabaseUtils';
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
@@ -26,6 +26,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   }
 
   const userId = authResult.userId!;
+  
+  // 🔧 CORRECTION: Créer le client Supabase authentifié
+  const supabase = createAuthenticatedSupabaseClient(authResult);
 
   try {
     const body = await request.json();
@@ -40,7 +43,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const validatedData = validationResult.data;
 
     // Utiliser V2DatabaseUtils pour l'accès direct à la base de données
-    const result = await V2DatabaseUtils.createFolder(validatedData, userId, context);
+    const result = await V2DatabaseUtils.createFolder(validatedData, userId, context, supabase);
 
     const apiTime = Date.now() - startTime;
     logApi.info(`✅ Dossier créé en ${apiTime}ms`, context);

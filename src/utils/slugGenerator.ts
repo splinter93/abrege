@@ -50,7 +50,12 @@ export class SlugGenerator {
     excludeId?: string,
     clientOverride?: SupabaseClient
   ): Promise<string> {
-    const supabase = clientOverride ?? defaultClient;
+    // 🔧 CORRECTION: Forcer l'utilisation du client authentifié
+    if (!clientOverride) {
+      throw new Error('SlugGenerator.generateSlug requires an authenticated Supabase client');
+    }
+    
+    const supabase = clientOverride;
     const baseSlug = this.slugify(title);
     let candidateSlug = baseSlug;
     let counter = 1;

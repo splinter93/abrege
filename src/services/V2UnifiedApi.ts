@@ -1001,7 +1001,7 @@ export class V2UnifiedApi {
       
       // 🚀 2. Appel vers l'endpoint API V2
       const headers = await this.getAuthHeaders();
-      const response = await fetch(this.buildUrl(`/api/v2/note/${cleanRef}/add-content`), {
+      const response = await fetch(this.buildUrl(`/api/llm/note/${cleanRef}/insert-content`), {
         method: 'POST',
         headers,
         body: JSON.stringify({ content })
@@ -1042,7 +1042,7 @@ export class V2UnifiedApi {
       
       // 🚀 2. Appel vers l'endpoint API V2
       const headers = await this.getAuthHeaders();
-      const response = await fetch(this.buildUrl(`/api/v2/note/${cleanRef}/content`), {
+      const response = await fetch(this.buildUrl(`/api/v2/note/${cleanRef}?fields=content`), {
         method: 'GET',
         headers
       });

@@ -365,7 +365,7 @@ export class LLMApi {
     
     try {
       const headers = await this.getAuthHeaders();
-      const response = await fetch(`/api/v2/note/${sourceNoteRef}/merge`, {
+      const response = await fetch(`/api/llm/note/merge`, {
         method: 'POST',
         headers,
         body: JSON.stringify(mergeData)
@@ -402,7 +402,7 @@ export class LLMApi {
     
     try {
       const headers = await this.getAuthHeaders();
-      const response = await fetch(`/api/v2/note/${noteRef}/add-content`, {
+      const response = await fetch(`/api/llm/note/${noteRef}/insert-content`, {
         method: 'POST',
         headers,
         body: JSON.stringify({ content })
@@ -437,7 +437,7 @@ export class LLMApi {
     
     try {
       const headers = await this.getAuthHeaders();
-      const response = await fetch(`/api/v2/note/${noteId}/add-to-section`, {
+      const response = await fetch(`/api/llm/note/${noteId}/insert-content`, {
         method: 'POST',
         headers,
         body: JSON.stringify({ sectionId, content })
@@ -870,7 +870,7 @@ export class LLMApi {
     
     try {
       const headers = await this.getAuthHeaders();
-      const response = await fetch(`/api/v2/note/${noteRef}/content`, {
+      const response = await fetch(`/api/v2/note/${noteRef}?fields=content`, {
         method: 'GET',
         headers
       });
