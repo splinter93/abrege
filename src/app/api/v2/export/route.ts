@@ -46,7 +46,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     // Construire la requête pour récupérer les données
     let notesQuery = supabase
       .from('articles')
-      .select('id, source_title, slug, markdown_content, created_at, updated_at, is_published, folder_id, classeur_id')
+      .select('id, source_title, slug, markdown_content, created_at, updated_at, share_settings, folder_id, classeur_id')
       .eq('user_id', userId);
 
     if (classeur_id) {
@@ -165,7 +165,7 @@ function generateMarkdownExport(notes: any[], classeurs: any[], folders: any[], 
       content += `- **Slug :** ${note.slug}\n`;
       content += `- **Créé le :** ${note.created_at}\n`;
       content += `- **Modifié le :** ${note.updated_at}\n`;
-      content += `- **Publié :** ${note.is_published ? 'Oui' : 'Non'}\n\n`;
+              content += `- **Visibilité :** ${note.share_settings?.visibility || 'private'}\n\n`;
     }
     content += `${note.markdown_content}\n\n`;
     content += `---\n\n`;
@@ -194,7 +194,7 @@ function generateJsonExport(notes: any[], classeurs: any[], folders: any[], incl
       content: note.markdown_content,
       created_at: note.created_at,
       updated_at: note.updated_at,
-      is_published: note.is_published,
+              visibility: note.share_settings?.visibility || 'private',
       folder_id: note.folder_id,
       classeur_id: note.classeur_id
     })),
@@ -253,7 +253,7 @@ function generateHtmlExport(notes: any[], classeurs: any[], folders: any[], incl
             <div class="metadata-item"><strong>Slug :</strong> ${note.slug}</div>
             <div class="metadata-item"><strong>Créé le :</strong> ${note.created_at}</div>
             <div class="metadata-item"><strong>Modifié le :</strong> ${note.updated_at}</div>
-            <div class="metadata-item"><strong>Publié :</strong> ${note.is_published ? 'Oui' : 'Non'}</div>
+            <div class="metadata-item"><strong>Visibilité :</strong> ${note.share_settings?.visibility || 'private'}</div>
         </div>`;
     }
 

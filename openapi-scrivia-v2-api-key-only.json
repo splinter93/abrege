@@ -232,9 +232,6 @@
                           "type": "string",
                           "format": "date-time"
                         },
-                        "is_published": {
-                          "type": "boolean"
-                        },
                         "share_settings": {
                           "$ref": "#/components/schemas/ShareSettings"
                         }
@@ -688,9 +685,8 @@
                     "format": "uuid",
                     "description": "Nouveau classeur parent"
                   },
-                  "is_published": {
-                    "type": "boolean",
-                    "description": "Nouveau statut de publication"
+                  "share_settings": {
+                    "$ref": "#/components/schemas/ShareSettings"
                   }
                 }
               }
@@ -1842,10 +1838,8 @@
                     "format": "uuid",
                     "description": "ID du classeur parent"
                   },
-                  "is_published": {
-                    "type": "boolean",
-                    "description": "Statut de publication de la note",
-                    "default": false
+                  "share_settings": {
+                    "$ref": "#/components/schemas/ShareSettings"
                   }
                 }
               }
@@ -2439,10 +2433,6 @@
             "type": "string",
             "description": "Contenu de la note en format Markdown"
           },
-          "is_published": {
-            "type": "boolean",
-            "description": "Indique si la note est publiée"
-          },
           "created_at": {
             "type": "string",
             "format": "date-time"
@@ -2450,6 +2440,9 @@
           "updated_at": {
             "type": "string",
             "format": "date-time"
+          },
+          "share_settings": {
+            "$ref": "#/components/schemas/ShareSettings"
           }
         }
       },
@@ -2501,34 +2494,38 @@
       },
       "ShareSettings": {
         "type": "object",
-        "description": "Paramètres de partage d'une note",
+        "description": "Configuration de partage de la note",
         "properties": {
+          "allow_edit": {
+            "type": "boolean",
+            "description": "Autorise la modification par les utilisateurs invités",
+            "default": false
+          },
           "visibility": {
             "type": "string",
+            "description": "Niveau de visibilité de la note",
             "enum": [
               "private",
-              "public",
-              "unlisted"
+              "link-private",
+              "link-public",
+              "limited",
+              "scrivia"
             ],
-            "description": "Niveau de visibilité de la note",
             "default": "private"
           },
-          "allow_comments": {
-            "type": "boolean",
-            "description": "Autoriser les commentaires",
-            "default": false
-          },
-          "allow_editing": {
-            "type": "boolean",
-            "description": "Autoriser l'édition par d'autres",
-            "default": false
-          },
-          "expires_at": {
-            "type": "string",
-            "format": "date-time",
-            "description": "Date d'expiration du partage"
+          "invited_users": {
+            "type": "array",
+            "description": "Liste des utilisateurs invités",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "default": []
           }
-        }
+        },
+        "required": [
+          "visibility"
+        ]
       },
       "SearchResult": {
         "type": "object",

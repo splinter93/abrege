@@ -49,7 +49,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
         .from('articles')
         .select('id', { count: 'exact', head: true })
         .eq('user_id', userId)
-        .eq('is_published', true),
+        .eq('share_settings->>visibility', 'public'),
       
       // Nombre total de classeurs
       supabase

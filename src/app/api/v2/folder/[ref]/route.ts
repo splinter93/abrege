@@ -37,7 +37,7 @@ export async function GET(
     // Construire la requête - le ref peut être un ID UUID ou un slug
     let query = supabase
       .from('folders')
-      .select('id, name, description, slug, classeur_id, parent_id, created_at, updated_at, is_published')
+      .select('id, name, description, slug, classeur_id, parent_id, created_at, updated_at')
       .eq('user_id', userId);
 
     // Essayer d'abord comme UUID, puis comme slug
@@ -102,7 +102,7 @@ export async function PUT(
   try {
     // Récupérer le corps de la requête
     const body = await request.json();
-    const { name, description, classeur_id, parent_id, is_published } = body;
+    const { name, description, classeur_id, parent_id } = body;
 
     // Créer le bon client Supabase selon le type d'authentification
     const supabase = createAuthenticatedSupabaseClient(authResult);
@@ -134,7 +134,7 @@ export async function PUT(
     if (description !== undefined) updateData.description = description;
     if (classeur_id !== undefined) updateData.classeur_id = classeur_id;
     if (parent_id !== undefined) updateData.parent_id = parent_id;
-    if (is_published !== undefined) updateData.is_published = is_published;
+
 
     // Mettre à jour le dossier
     const { data: updatedFolder, error: updateError } = await supabase

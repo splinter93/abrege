@@ -37,7 +37,7 @@ export async function GET(
     // Construire la requête - le ref peut être un ID UUID ou un slug
     let query = supabase
       .from('articles')
-      .select('id, source_title, slug, folder_id, classeur_id, created_at, updated_at, is_published, markdown_content')
+      .select('id, source_title, slug, folder_id, classeur_id, created_at, updated_at, share_settings, markdown_content')
       .eq('user_id', userId);
 
     // Essayer d'abord comme UUID, puis comme slug
@@ -102,7 +102,7 @@ export async function PUT(
   try {
     // Récupérer le corps de la requête
     const body = await request.json();
-    const { source_title, markdown_content, folder_id, classeur_id, is_published } = body;
+    const { source_title, markdown_content, folder_id, classeur_id, share_settings } = body;
 
     // Créer le bon client Supabase selon le type d'authentification
     const supabase = createAuthenticatedSupabaseClient(authResult);
@@ -134,7 +134,7 @@ export async function PUT(
     if (markdown_content !== undefined) updateData.markdown_content = markdown_content;
     if (folder_id !== undefined) updateData.folder_id = folder_id;
     if (classeur_id !== undefined) updateData.classeur_id = classeur_id;
-    if (is_published !== undefined) updateData.is_published = is_published;
+    if (share_settings !== undefined) updateData.share_settings = share_settings;
 
     // Mettre à jour la note
     const { data: updatedNote, error: updateError } = await supabase

@@ -37,7 +37,7 @@ export async function GET(
     // Construire la requête - le ref peut être un ID UUID ou un slug
     let query = supabase
       .from('classeurs')
-      .select('id, name, description, slug, created_at, updated_at, is_published')
+      .select('id, name, description, slug, created_at, updated_at')
       .eq('user_id', userId);
 
     // Essayer d'abord comme UUID, puis comme slug
@@ -102,7 +102,7 @@ export async function PUT(
   try {
     // Récupérer le corps de la requête
     const body = await request.json();
-    const { name, description, is_published } = body;
+    const { name, description } = body;
 
     // Créer le bon client Supabase selon le type d'authentification
     const supabase = createAuthenticatedSupabaseClient(authResult);
@@ -132,7 +132,7 @@ export async function PUT(
 
     if (name !== undefined) updateData.name = name;
     if (description !== undefined) updateData.description = description;
-    if (is_published !== undefined) updateData.is_published = is_published;
+
 
     // Mettre à jour le classeur
     const { data: updatedClasseur, error: updateError } = await supabase

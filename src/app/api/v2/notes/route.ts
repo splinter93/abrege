@@ -34,7 +34,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   const noteId = searchParams.get('id');
   const classeurId = searchParams.get('classeur_id');
   const folderId = searchParams.get('folder_id');
-  const isPublished = searchParams.get('is_published');
+  const visibility = searchParams.get('visibility');
   const limit = parseInt(searchParams.get('limit') || '50');
   const offset = parseInt(searchParams.get('offset') || '0');
 
@@ -62,7 +62,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     // Construire la requête de base
     let query = supabase
       .from('articles')
-      .select('id, source_title, slug, folder_id, classeur_id, created_at, updated_at, markdown_content')
+      .select('id, source_title, slug, folder_id, classeur_id, created_at, updated_at, share_settings, markdown_content')
       .eq('user_id', userId);
 
     // Appliquer les filtres
@@ -75,7 +75,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     if (folderId) {
       query = query.eq('folder_id', folderId);
     }
-    // Note: is_published n'existe pas dans la table articles
+    // Note: visibility est maintenant dans share_settings
 
     // TEMPORAIRE: Récupérer les données sans comptage pour identifier le problème
     const { data: notes, error: fetchError } = await query
@@ -138,7 +138,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
     // Récupérer le corps de la requête
     const body = await request.json();
-    const { source_title, markdown_content, folder_id, classeur_id, is_published = false } = body;
+    const { source_title, markdown_content, folder_id, classeur_id, share_settings } = body;
 
     // Validation des champs requis
     if (!source_title || !markdown_content) {
