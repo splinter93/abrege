@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+
 import { logApi } from '@/utils/logger';
 import { V2ResourceResolver } from '@/utils/v2ResourceResolver';
-import { getAuthenticatedUser } from '@/utils/authUtils';
+import { getAuthenticatedUser, createAuthenticatedSupabaseClient } from '@/utils/authUtils';
 import { addContentV2Schema, validatePayload, createValidationErrorResponse } from '@/utils/v2ValidationSchemas';
 import { updateArticleInsight } from '@/utils/insightUpdater';
 
@@ -11,9 +11,6 @@ import { updateArticleInsight } from '@/utils/insightUpdater';
 // - Suppression de la double vérification d'authentification
 // - Client Supabase standard sans token manuel
 // - Plus de 401 causés par des conflits d'authentification
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
 export async function POST(
   request: NextRequest,
@@ -44,7 +41,7 @@ export async function POST(
   const userId = authResult.userId!;
   
   // 🔧 CORRECTION: Client Supabase standard, getAuthenticatedUser a déjà validé
-  const supabase = createClient(supabaseUrl, supabaseAnonKey);
+  const supabase = createAuthenticatedSupabaseClient(authResult);
 
   // Résoudre la référence (UUID ou slug)
   const resolveResult = await V2ResourceResolver.resolveRef(ref, 'note', userId, context);

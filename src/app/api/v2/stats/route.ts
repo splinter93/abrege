@@ -1,10 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-import { logApi } from '@/utils/logger';
-import { getAuthenticatedUser } from '@/utils/authUtils';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+import { logApi } from '@/utils/logger';
+import { getAuthenticatedUser, createAuthenticatedSupabaseClient } from '@/utils/authUtils';
 
 export async function GET(request: NextRequest): Promise<NextResponse> {
   const startTime = Date.now();
@@ -31,7 +28,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
   try {
     // Créer un client Supabase standard
-    const supabase = createClient(supabaseUrl, supabaseAnonKey);
+    const supabase = createAuthenticatedSupabaseClient(authResult);
 
     // Récupérer les statistiques en parallèle
     const [

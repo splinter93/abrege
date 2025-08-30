@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+
 import { logApi } from '@/utils/logger';
 import { createClasseurV2Schema, validatePayload, createValidationErrorResponse } from '@/utils/v2ValidationSchemas';
-import { getAuthenticatedUser } from '@/utils/authUtils';
+import { getAuthenticatedUser, createAuthenticatedSupabaseClient } from '@/utils/authUtils';
 import { SlugGenerator } from '@/utils/slugGenerator';
 
 // 🔧 CORRECTIONS APPLIQUÉES:
@@ -10,9 +10,6 @@ import { SlugGenerator } from '@/utils/slugGenerator';
 // - Suppression de la double vérification d'authentification
 // - Client Supabase standard sans token manuel
 // - Plus de 401 causés par des conflits d'authentification
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
   const startTime = Date.now();
@@ -38,7 +35,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   const userId = authResult.userId!;
   
   // 🔧 CORRECTION: Client Supabase standard, getAuthenticatedUser a déjà validé
-  const supabase = createClient(supabaseUrl, supabaseAnonKey);
+  const supabase = createAuthenticatedSupabaseClient(authResult);
 
   try {
     const body = await request.json();

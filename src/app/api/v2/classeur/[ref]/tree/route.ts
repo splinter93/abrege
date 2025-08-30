@@ -1,11 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+
 import { logApi } from '@/utils/logger';
 import { V2ResourceResolver } from '@/utils/v2ResourceResolver';
-import { getAuthenticatedUser } from '@/utils/authUtils';
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+import { getAuthenticatedUser, createAuthenticatedSupabaseClient } from '@/utils/authUtils';
 
 export async function GET(
   request: NextRequest,
@@ -37,7 +34,7 @@ export async function GET(
   
   // 🔧 CORRECTION: Utiliser directement le client Supabase standard
   // getAuthenticatedUser a déjà validé le token, pas besoin de le refaire
-  const supabase = createClient(supabaseUrl, supabaseAnonKey);
+  const supabase = createAuthenticatedSupabaseClient(authResult);
 
   // Résoudre la référence (UUID ou slug)
   const resolveResult = await V2ResourceResolver.resolveRef(ref, 'classeur', userId, context);
