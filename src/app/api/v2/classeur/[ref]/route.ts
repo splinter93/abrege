@@ -1,10 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
 import { logApi } from '@/utils/logger';
-import { getAuthenticatedUser } from '@/utils/authUtils';
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+import { getAuthenticatedUser, createAuthenticatedSupabaseClient } from '@/utils/authUtils';
 
 export async function GET(
   request: NextRequest,
@@ -35,13 +31,13 @@ export async function GET(
   const classeurRef = params.ref;
 
   try {
-    // Créer un client Supabase standard
-    const supabase = createClient(supabaseUrl, supabaseAnonKey);
+    // Créer le bon client Supabase selon le type d'authentification
+    const supabase = createAuthenticatedSupabaseClient(authResult);
 
     // Construire la requête - le ref peut être un ID UUID ou un slug
     let query = supabase
       .from('classeurs')
-      .select('id, name, description, emoji, position, slug, created_at, updated_at')
+      .select('id, name, description, slug, created_at, updated_at, is_published')
       .eq('user_id', userId);
 
     // Essayer d'abord comme UUID, puis comme slug
@@ -106,10 +102,10 @@ export async function PUT(
   try {
     // Récupérer le corps de la requête
     const body = await request.json();
-    const { name, description, emoji, color } = body;
+    const { name, description, is_published } = body;
 
-    // Créer un client Supabase standard
-    const supabase = createClient(supabaseUrl, supabaseAnonKey);
+    // Créer le bon client Supabase selon le type d'authentification
+    const supabase = createAuthenticatedSupabaseClient(authResult);
 
     // Vérifier que le classeur existe et appartient à l'utilisateur
     let query = supabase
@@ -134,18 +130,9 @@ export async function PUT(
       updated_at: new Date().toISOString()
     };
 
-    if (name !== undefined) {
-      updateData.name = name;
-      // Générer un nouveau slug si le nom change
-      updateData.slug = name.toLowerCase()
-        .replace(/[^a-z0-9\s-]/g, '')
-        .replace(/\s+/g, '-')
-        .replace(/-+/g, '-')
-        .trim();
-    }
+    if (name !== undefined) updateData.name = name;
     if (description !== undefined) updateData.description = description;
-    if (emoji !== undefined) updateData.emoji = emoji;
-    if (color !== undefined) updateData.color = color;
+    if (is_published !== undefined) updateData.is_published = is_published;
 
     // Mettre à jour le classeur
     const { data: updatedClasseur, error: updateError } = await supabase
@@ -156,15 +143,15 @@ export async function PUT(
       .single();
 
     if (updateError) {
-      logApi.info(`❌ Erreur mise à jour classeur: ${updateError.message}`, context);
+      logApi.info(`❌ Erreur mise à jour: ${updateError.message}`, context);
       return NextResponse.json(
-        { error: 'Erreur lors de la mise à jour du classeur' },
+        { error: 'Erreur lors de la mise à jour' },
         { status: 500, headers: { "Content-Type": "application/json" } }
       );
     }
 
     const apiTime = Date.now() - startTime;
-    logApi.info(`✅ Classeur modifié avec succès en ${apiTime}ms`, context);
+    logApi.info(`✅ Classeur mis à jour avec succès en ${apiTime}ms`, context);
 
     return NextResponse.json({
       success: true,
@@ -210,8 +197,8 @@ export async function DELETE(
   const classeurRef = params.ref;
 
   try {
-    // Créer un client Supabase standard
-    const supabase = createClient(supabaseUrl, supabaseAnonKey);
+    // Créer le bon client Supabase selon le type d'authentification
+    const supabase = createAuthenticatedSupabaseClient(authResult);
 
     // Vérifier que le classeur existe et appartient à l'utilisateur
     let query = supabase
@@ -238,9 +225,9 @@ export async function DELETE(
       .eq('id', existingClasseur.id);
 
     if (deleteError) {
-      logApi.info(`❌ Erreur suppression classeur: ${deleteError.message}`, context);
+      logApi.info(`❌ Erreur suppression: ${deleteError.message}`, context);
       return NextResponse.json(
-        { error: 'Erreur lors de la suppression du classeur' },
+        { error: 'Erreur lors de la suppression' },
         { status: 500, headers: { "Content-Type": "application/json" } }
       );
     }

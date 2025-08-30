@@ -1,10 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
 import { logApi } from '@/utils/logger';
 import { getAuthenticatedUser, createAuthenticatedSupabaseClient } from '@/utils/authUtils';
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
 export async function GET(
   request: NextRequest,
@@ -35,8 +31,8 @@ export async function GET(
   const noteRef = params.ref;
 
   try {
-    // Créer un client Supabase standard
-    const supabase = createClient(supabaseUrl, supabaseAnonKey);
+    // Créer le bon client Supabase selon le type d'authentification
+    const supabase = createAuthenticatedSupabaseClient(authResult);
 
     // Construire la requête - le ref peut être un ID UUID ou un slug
     let query = supabase
@@ -108,8 +104,8 @@ export async function PUT(
     const body = await request.json();
     const { source_title, markdown_content, folder_id, classeur_id, is_published } = body;
 
-    // Créer un client Supabase standard
-    const supabase = createClient(supabaseUrl, supabaseAnonKey);
+    // Créer le bon client Supabase selon le type d'authentification
+    const supabase = createAuthenticatedSupabaseClient(authResult);
 
     // Vérifier que la note existe et appartient à l'utilisateur
     let query = supabase
@@ -149,15 +145,15 @@ export async function PUT(
       .single();
 
     if (updateError) {
-      logApi.info(`❌ Erreur mise à jour note: ${updateError.message}`, context);
+      logApi.info(`❌ Erreur mise à jour: ${updateError.message}`, context);
       return NextResponse.json(
-        { error: 'Erreur lors de la mise à jour de la note' },
+        { error: 'Erreur lors de la mise à jour' },
         { status: 500, headers: { "Content-Type": "application/json" } }
       );
     }
 
     const apiTime = Date.now() - startTime;
-    logApi.info(`✅ Note modifiée avec succès en ${apiTime}ms`, context);
+    logApi.info(`✅ Note mise à jour avec succès en ${apiTime}ms`, context);
 
     return NextResponse.json({
       success: true,
@@ -231,9 +227,9 @@ export async function DELETE(
       .eq('id', existingNote.id);
 
     if (deleteError) {
-      logApi.info(`❌ Erreur suppression note: ${deleteError.message}`, context);
+      logApi.info(`❌ Erreur suppression: ${deleteError.message}`, context);
       return NextResponse.json(
-        { error: 'Erreur lors de la suppression de la note' },
+        { error: 'Erreur lors de la suppression' },
         { status: 500, headers: { "Content-Type": "application/json" } }
       );
     }
