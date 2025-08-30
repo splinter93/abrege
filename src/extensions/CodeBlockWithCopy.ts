@@ -444,32 +444,11 @@ async function renderMermaidDiagram(container: HTMLElement, mermaidContent: stri
 function openMermaidModal(mermaidContent: string) {
   // Créer le modal avec une structure simple
   const modal = document.createElement('div');
-  modal.style.cssText = `
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background: rgba(0, 0, 0, 0.95);
-    z-index: 999999;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    overflow: hidden;
-  `;
+  modal.className = 'mermaid-modal';
   
-  // Conteneur du diagramme avec scroll
+  // Conteneur du diagramme avec scroll et taille adaptative
   const diagramContainer = document.createElement('div');
-  diagramContainer.style.cssText = `
-    max-width: 95vw;
-    max-height: 95vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: auto;
-    padding: 20px;
-  `;
+  diagramContainer.className = 'mermaid-modal-container';
   
   // Rendre le diagramme dans le modal
   renderMermaidDiagram(diagramContainer, mermaidContent);
