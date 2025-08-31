@@ -55,18 +55,18 @@ export async function GET(
     switch (fields) {
       case 'content':
         // Mode content : champs socle + contenu + rendu
-        selectFields = 'id, source_title, slug, header_image, markdown_content, created_at, updated_at';
+        selectFields = 'id, source_title, slug, public_url, header_image, markdown_content, created_at, updated_at';
         break;
       
       case 'metadata':
         // Mode metadata : champs socle + organisation + permissions
-        selectFields = 'id, source_title, slug, header_image, folder_id, classeur_id, created_at, updated_at, share_settings';
+        selectFields = 'id, source_title, slug, public_url, header_image, folder_id, classeur_id, created_at, updated_at, share_settings';
         break;
       
       case 'all':
       default:
         // Mode all : tout (champs socle inclus)
-        selectFields = 'id, source_title, slug, header_image, folder_id, classeur_id, created_at, updated_at, share_settings, markdown_content';
+        selectFields = 'id, source_title, slug, public_url, header_image, folder_id, classeur_id, created_at, updated_at, share_settings, markdown_content';
         break;
     }
 
@@ -94,6 +94,7 @@ export async function GET(
       id: noteData.id,
       title: noteData.source_title,
       slug: noteData.slug,
+      public_url: noteData.public_url,
       header_image: noteData.header_image
     };
     

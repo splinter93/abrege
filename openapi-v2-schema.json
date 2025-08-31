@@ -814,11 +814,96 @@
                       "type": "boolean",
                       "example": true
                     },
-                    "data": {
-                      "$ref": "#/components/schemas/Note"
+                    "note": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid",
+                          "description": "ID unique de la note"
+                        },
+                        "title": {
+                          "type": "string",
+                          "description": "Titre de la note"
+                        },
+                        "slug": {
+                          "type": "string",
+                          "description": "Slug unique de la note"
+                        },
+                        "public_url": {
+                          "type": "string",
+                          "format": "uri",
+                          "description": "URL publique de la note",
+                          "example": "https://scrivia.app/@username/slug"
+                        },
+                        "header_image": {
+                          "type": "string",
+                          "format": "uri",
+                          "nullable": true,
+                          "description": "URL de l'image d'en-tête"
+                        },
+                        "folder_id": {
+                          "type": "string",
+                          "format": "uuid",
+                          "nullable": true,
+                          "description": "ID du dossier parent"
+                        },
+                        "classeur_id": {
+                          "type": "string",
+                          "format": "uuid",
+                          "description": "ID du classeur parent"
+                        },
+                        "created_at": {
+                          "type": "string",
+                          "format": "date-time",
+                          "description": "Date de création"
+                        },
+                        "updated_at": {
+                          "type": "string",
+                          "format": "date-time",
+                          "description": "Date de dernière modification"
+                        },
+                        "share_settings": {
+                          "type": "object",
+                          "properties": {
+                            "allow_edit": {
+                              "type": "boolean",
+                              "description": "Autoriser l'édition"
+                            },
+                            "visibility": {
+                              "type": "string",
+                              "enum": ["private", "public", "link-private", "shared"],
+                              "description": "Visibilité de la note"
+                            },
+                            "invited_users": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              },
+                              "description": "Utilisateurs invités"
+                            },
+                            "allow_comments": {
+                              "type": "boolean",
+                              "description": "Autoriser les commentaires"
+                            }
+                          },
+                          "description": "Paramètres de partage"
+                        },
+                        "markdown_content": {
+                          "type": "string",
+                          "description": "Contenu markdown de la note"
+                        }
+                      },
+                      "required": ["id", "title", "slug", "public_url", "header_image", "created_at", "updated_at"]
+                    },
+                    "mode": {
+                      "type": "string",
+                      "enum": ["all", "content", "metadata"],
+                      "description": "Mode de récupération utilisé",
+                      "example": "all"
                     }
                   },
-                  "required": ["success", "data"]
+                  "required": ["success", "note", "mode"]
                 }
               }
             }
@@ -1352,43 +1437,84 @@
                       "type": "boolean",
                       "example": true
                     },
-                    "data": {
-                      "type": "object",
-                      "properties": {
-                        "notes": {
-                          "type": "array",
-                          "items": {
+                    "notes": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid",
+                            "description": "ID unique de la note"
+                          },
+                          "source_title": {
+                            "type": "string",
+                            "description": "Titre de la note"
+                          },
+                          "slug": {
+                            "type": "string",
+                            "description": "Slug unique de la note"
+                          },
+                          "public_url": {
+                            "type": "string",
+                            "format": "uri",
+                            "description": "URL publique de la note",
+                            "example": "https://scrivia.app/@username/slug"
+                          },
+                          "header_image": {
+                            "type": "string",
+                            "format": "uri",
+                            "description": "URL de l'image d'en-tête",
+                            "nullable": true
+                          },
+                          "created_at": {
+                            "type": "string",
+                            "format": "date-time",
+                            "description": "Date de création"
+                          },
+                          "updated_at": {
+                            "type": "string",
+                            "format": "date-time",
+                            "description": "Date de dernière modification"
+                          },
+                          "share_settings": {
                             "type": "object",
                             "properties": {
-                              "id": {
+                              "visibility": {
                                 "type": "string",
-                                "format": "uuid"
-                              },
-                              "source_title": {
-                                "type": "string"
-                              },
-                              "slug": {
-                                "type": "string"
-                              },
-                              "updated_at": {
-                                "type": "string",
-                                "format": "date-time"
+                                "enum": ["private", "public", "shared"],
+                                "default": "private"
                               }
                             },
-                            "required": ["id", "source_title", "slug", "updated_at"]
+                            "description": "Paramètres de partage de la note"
+                          },
+                          "user_id": {
+                            "type": "string",
+                            "format": "uuid",
+                            "description": "ID de l'utilisateur propriétaire"
+                          },
+                          "classeur_id": {
+                            "type": "string",
+                            "format": "uuid",
+                            "description": "ID du classeur parent",
+                            "nullable": true
+                          },
+                          "folder_id": {
+                            "type": "string",
+                            "format": "uuid",
+                            "description": "ID du dossier parent",
+                            "nullable": true
+                          },
+                          "markdown_content": {
+                            "type": "string",
+                            "description": "Contenu markdown de la note"
                           }
                         },
-                        "total_count": {
-                          "type": "integer"
-                        },
-                        "has_more": {
-                          "type": "boolean"
-                        }
-                      },
-                      "required": ["notes", "total_count", "has_more"]
+                        "required": ["id", "source_title", "slug", "public_url", "created_at", "updated_at", "user_id", "markdown_content"]
+                      }
                     }
                   },
-                  "required": ["success", "data"]
+                  "required": ["success", "notes"]
                 }
               }
             }

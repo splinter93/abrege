@@ -39,6 +39,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
         id,
         source_title,
         slug,
+        public_url,
         header_image,
         created_at,
         updated_at,
@@ -46,8 +47,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
         user_id,
         classeur_id,
         folder_id,
-        markdown_content,
-        html_content
+        markdown_content
       `)
       .eq('user_id', userId)
       .order('updated_at', { ascending: false })
@@ -66,6 +66,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       id: note.id,
       source_title: note.source_title || 'Sans titre',
       slug: note.slug,
+      public_url: note.public_url,
       header_image: note.header_image,
       created_at: note.created_at,
       updated_at: note.updated_at,
@@ -73,8 +74,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       user_id: note.user_id,
       classeur_id: note.classeur_id,
       folder_id: note.folder_id,
-      markdown_content: note.markdown_content,
-      html_content: note.html_content
+      markdown_content: note.markdown_content
     })) || [];
 
     const apiTime = Date.now() - startTime;
