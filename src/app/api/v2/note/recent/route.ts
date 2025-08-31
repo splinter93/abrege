@@ -101,7 +101,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 export async function HEAD() {
   return new Response(
     JSON.stringify({
-      endpoint: '/api/v2/notes/recent',
+      endpoint: '/api/v2/note/recent',
       method: 'GET',
       description: 'Récupère les notes récentes triées par updated_at (API v2)',
       api_version: 'v2',

@@ -247,16 +247,29 @@ export class OpenAPIToolsGenerator {
  */
 export async function loadOpenAPISchema(): Promise<any> {
   try {
-    // En production, vous pourriez charger depuis une URL
-    const schema = {
-      // Votre schéma OpenAPI ici
-      // Pour l'instant, on utilise un schéma simplifié
-    };
+    // Charger le schéma OpenAPI V2 actuel
+    const response = await fetch('/api/v2/openapi-schema');
+    
+    if (!response.ok) {
+      throw new Error(`Erreur HTTP: ${response.status}`);
+    }
+    
+    const schema = await response.json();
+    console.log('[OpenAPIToolsGenerator] ✅ Schéma OpenAPI chargé avec succès');
     
     return schema;
   } catch (error) {
     console.error('[OpenAPIToolsGenerator] ❌ Erreur lors du chargement du schéma:', error);
-    throw error;
+    
+    // Fallback vers le schéma local si disponible
+    try {
+      const localSchema = await import('../../openapi-scrivia-v2-api-key-only.json');
+      console.log('[OpenAPIToolsGenerator] 🔄 Utilisation du schéma local en fallback');
+      return localSchema.default;
+    } catch (fallbackError) {
+      console.error('[OpenAPIToolsGenerator] ❌ Fallback échoué:', fallbackError);
+      throw error;
+    }
   }
 }
 
@@ -264,68 +277,9 @@ export async function loadOpenAPISchema(): Promise<any> {
  * Factory pour créer le générateur avec le schéma par défaut
  */
 export function createOpenAPIToolsGenerator(): OpenAPIToolsGenerator {
-  // Schéma OpenAPI simplifié pour les tests
-  const defaultSchema = {
-    paths: {
-      '/api/ui/note/create': {
-        post: {
-          summary: 'Créer une nouvelle note',
-          description: 'Créer une nouvelle note avec génération automatique de slug',
-          requestBody: {
-            content: {
-              'application/json': {
-                schema: {
-                  $ref: '#/components/schemas/CreateNotePayload'
-                }
-              }
-            }
-          }
-        }
-      },
-      '/api/ui/note/{ref}': {
-        get: {
-          summary: 'Récupérer une note',
-          parameters: [
-            {
-              name: 'ref',
-              in: 'path',
-              required: true,
-              schema: { type: 'string' }
-            }
-          ]
-        },
-        put: {
-          summary: 'Mettre à jour une note',
-          parameters: [
-            {
-              name: 'ref',
-              in: 'path',
-              required: true,
-              schema: { type: 'string' }
-            }
-          ]
-        }
-      },
-      '/api/ui/notebooks': {
-        get: {
-          summary: 'Lister tous les classeurs'
-        }
-      }
-    },
-    components: {
-      schemas: {
-        CreateNotePayload: {
-          type: 'object',
-          properties: {
-            source_title: { type: 'string' },
-            notebook_id: { type: 'string' },
-            markdown_content: { type: 'string' }
-          },
-          required: ['source_title', 'notebook_id']
-        }
-      }
-    }
-  };
-
-  return new OpenAPIToolsGenerator(defaultSchema);
+  // Utiliser le schéma OpenAPI V2 actuel
+  console.log('[OpenAPIToolsGenerator] 🔧 Création du générateur avec schéma V2');
+  
+  // Le schéma sera chargé dynamiquement via loadOpenAPISchema()
+  return new OpenAPIToolsGenerator({});
 } 

@@ -1,3 +1,17 @@
+/**
+ * 📝 POST /api/v2/note/[ref]/insert-content
+ * 
+ * Insère, remplace ou supprime du contenu dans une note
+ * 
+ * Opérations supportées :
+ * - start : Ajouter au début
+ * - end : Ajouter à la fin  
+ * - replace : Remplacer le contenu
+ * - erase : Effacer le contenu
+ * 
+ * Peut opérer sur la note entière ou sur une section spécifique
+ */
+
 import { NextRequest, NextResponse } from 'next/server';
 import { logApi } from '@/utils/logger';
 import { V2ResourceResolver } from '@/utils/v2ResourceResolver';
@@ -5,7 +19,7 @@ import { getAuthenticatedUser, createAuthenticatedSupabaseClient } from '@/utils
 import { z } from 'zod';
 import { updateArticleInsight } from '@/utils/insightUpdater';
 
-// Schéma de validation basé sur la spec OpenAPI
+// 🔒 Schéma de validation basé sur la spec OpenAPI
 const addContentSchema = z.object({
   content: z.string().optional(), // Optionnel pour erase
   target_section: z.string().optional(),
@@ -20,13 +34,13 @@ export async function POST(
   const { ref } = await params;
   const clientType = request.headers.get('X-Client-Type') || 'unknown';
   const context = {
-    operation: 'llm_note_insert_content',
-    component: 'API_LLM',
+    operation: 'v2_note_insert_content',
+    component: 'API_V2',
     ref,
     clientType
   };
 
-  logApi.info(`🚀 Début insertion contenu note LLM ${ref}`, context);
+  logApi.info(`🚀 Début insertion contenu note V2 ${ref}`, context);
 
   // 🔐 Authentification
   const authResult = await getAuthenticatedUser(request);
@@ -42,7 +56,7 @@ export async function POST(
   const supabase = createAuthenticatedSupabaseClient(authResult);
 
   try {
-    // Résoudre la référence (UUID ou slug)
+    // 🔍 Résoudre la référence (UUID ou slug)
     const resolveResult = await V2ResourceResolver.resolveRef(ref, 'note', userId, context);
     if (!resolveResult.success) {
       return NextResponse.json(
@@ -53,7 +67,7 @@ export async function POST(
 
     const noteId = resolveResult.id;
 
-    // Récupérer et valider le body
+    // 📋 Récupérer et valider le body
     const body = await request.json();
     const validationResult = addContentSchema.safeParse(body);
     
@@ -67,7 +81,7 @@ export async function POST(
 
     const { content, target_section, position } = validationResult.data;
 
-    // Vérifier que l'utilisateur est propriétaire de la note
+    // 🔒 Vérifier que l'utilisateur est propriétaire de la note
     const { data: currentNote, error: checkError } = await supabase
       .from('articles')
       .select('id, markdown_content')
@@ -85,7 +99,7 @@ export async function POST(
 
     let newContent = currentNote.markdown_content;
 
-    // Logique d'insertion selon la position et la cible
+    // 🔧 Logique d'insertion selon la position et la cible
     if (target_section) {
       // Opération sur une section spécifique
       newContent = await handleSectionOperation(currentNote.markdown_content, target_section, content, position);
@@ -94,7 +108,7 @@ export async function POST(
       newContent = handleGlobalOperation(currentNote.markdown_content, content, position);
     }
 
-    // Mettre à jour la note
+    // 💾 Mettre à jour la note
     const { data: updatedNote, error: updateError } = await supabase
       .from('articles')
       .update({
@@ -114,7 +128,7 @@ export async function POST(
       );
     }
 
-    // Mettre à jour l'insight
+    // 🔍 Mettre à jour l'insight
     try {
       await updateArticleInsight(noteId);
     } catch (insightError) {
@@ -141,7 +155,7 @@ export async function POST(
 }
 
 /**
- * Gère les opérations sur une section spécifique
+ * 🔧 Gère les opérations sur une section spécifique
  */
 async function handleSectionOperation(
   currentContent: string, 
@@ -181,7 +195,7 @@ async function handleSectionOperation(
 }
 
 /**
- * Gère les opérations sur la note entière
+ * 🔧 Gère les opérations sur la note entière
  */
 function handleGlobalOperation(
   currentContent: string, 
@@ -203,7 +217,7 @@ function handleGlobalOperation(
 }
 
 /**
- * Échappe les caractères spéciaux pour les regex
+ * 🔧 Échappe les caractères spéciaux pour les regex
  */
 function escapeRegExp(string: string): string {
   return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');

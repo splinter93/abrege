@@ -142,7 +142,7 @@ export class AgentApiV2Tools {
               }
             }
           },
-          '/api/llm/note/{ref}/insert-content': {
+          '/api/v2/note/{ref}/insert-content': {
             post: {
               summary: 'Insérer ou modifier du contenu dans une note (endpoint unifié)',
               description: 'Insérer du contenu markdown dans une note entière ou une section spécifique avec position flexible',
@@ -427,7 +427,7 @@ export class AgentApiV2Tools {
           return await this.callApiV2('GET', `/api/v2/note/${params.ref}/content`, null, jwtToken);
           
         case 'insert_content_to_note':
-          return await this.callApiV2('POST', `/api/llm/note/${params.ref}/insert-content`, params, jwtToken);
+          return await this.callApiV2('POST', `/api/v2/note/${params.ref}/insert-content`, params, jwtToken);
           
         case 'get_note_insights':
           return await this.callApiV2('GET', `/api/v2/note/${params.ref}/insights`, null, jwtToken);
@@ -451,7 +451,7 @@ export class AgentApiV2Tools {
           return await this.callApiV2('GET', `/api/v2/classeur/${params.ref}/tree`, null, jwtToken);
           
         case 'delete_note':
-          return await this.callApiV2('DELETE', `/api/v2/note/${params.ref}/delete`, null, jwtToken);
+          return await this.callApiV2('DELETE', `/api/v2/note/${params.ref}`, null, jwtToken);
           
         case 'reorder_notebook':
           return await this.callApiV2('PUT', `/api/v2/classeur/${params.ref}/reorder`, params, jwtToken);
@@ -483,7 +483,7 @@ export class AgentApiV2Tools {
       'get_note_statistics': { method: 'GET', path: `/api/v2/note/${params.ref}/statistics` },
       'merge_note': { method: 'POST', path: `/api/v2/note/${params.ref}/merge` },
       'publish_note': { method: 'POST', path: `/api/v2/note/${params.ref}/publish` },
-      'delete_note': { method: 'DELETE', path: `/api/v2/note/${params.ref}/delete` },
+              'delete_note': { method: 'DELETE', path: `/api/v2/note/${params.ref}` },
       'move_folder': { method: 'PUT', path: `/api/v2/folder/${params.ref}/move` },
       'get_notebook_tree': { method: 'GET', path: `/api/v2/classeur/${params.ref}/tree` },
       'reorder_notebook': { method: 'PUT', path: `/api/v2/classeur/${params.ref}/reorder` }

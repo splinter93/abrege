@@ -240,7 +240,7 @@ export class LLMApi {
       });
       
       // ✅ DEBUG: Construire l'URL et vérifier sa validité
-      const deleteUrl = `/api/v2/note/${noteRef}/delete`;
+      const deleteUrl = `/api/v2/note/${noteRef}`;
       console.log('🔗 [LLM DELETE] URL construite:', {
         url: deleteUrl,
         isValid: deleteUrl.includes(noteRef),
@@ -402,7 +402,7 @@ export class LLMApi {
     
     try {
       const headers = await this.getAuthHeaders();
-      const response = await fetch(`/api/llm/note/${noteRef}/insert-content`, {
+              const response = await fetch(`/api/v2/note/${noteRef}/insert-content`, {
         method: 'POST',
         headers,
         body: JSON.stringify({ content })
@@ -437,7 +437,7 @@ export class LLMApi {
     
     try {
       const headers = await this.getAuthHeaders();
-      const response = await fetch(`/api/llm/note/${noteId}/insert-content`, {
+              const response = await fetch(`/api/v2/note/${noteId}/insert-content`, {
         method: 'POST',
         headers,
         body: JSON.stringify({ sectionId, content })
@@ -653,7 +653,7 @@ export class LLMApi {
     
     try {
       const headers = await this.getAuthHeaders();
-      const response = await fetch(`/api/v2/folder/${folderRef}/delete`, {
+      const response = await fetch(`/api/v2/folder/${folderRef}`, {
         method: 'DELETE',
         headers
       });
@@ -796,7 +796,7 @@ export class LLMApi {
     
     try {
       const headers = await this.getAuthHeaders();
-      const response = await fetch(`/api/v2/classeur/${classeurRef}/delete`, {
+      const response = await fetch(`/api/v2/classeur/${classeurRef}`, {
         method: 'DELETE',
         headers
       });

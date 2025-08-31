@@ -97,7 +97,7 @@ export class AgentIntentParser {
     this.apiV2Actions.set('note:delete', {
       resource: 'note',
       operation: 'delete',
-      endpoint: '/api/v2/note/{ref}/delete',
+              endpoint: '/api/v2/note/{ref}',
       method: 'DELETE',
       dataExtractor: (message: string) => {
         const refMatch = message.match(/note\s+['"]([^'"]+)['"]/);

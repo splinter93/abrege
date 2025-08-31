@@ -59,7 +59,7 @@ export default function RecentActivityCard({
         if (username) params.append('username', username);
         
         console.log('🔧 Dashboard: Appel API notes récentes avec token');
-        const response = await fetch(`/api/v2/notes/recent?${params}`, {
+        const response = await fetch(`/api/v2/note/recent?${params}`, {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json',

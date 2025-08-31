@@ -404,7 +404,7 @@ export class V2UnifiedApi {
         });
       }
       
-      const deleteUrl = this.buildUrl(`/api/v2/note/${cleanNoteId}/delete`);
+      const deleteUrl = this.buildUrl(`/api/v2/note/${cleanNoteId}`);
       if (process.env.NODE_ENV === 'development') {
         logger.dev(`[V2UnifiedApi] 🔗 URL construite:`, deleteUrl);
       }
@@ -590,7 +590,7 @@ export class V2UnifiedApi {
       
       // ✅ 2. Appel vers l'endpoint API V2 DIRECT (pas de modification du store)
       const headers = await this.getAuthHeaders();
-      const response = await fetch(this.buildUrl(`/api/v2/folder/${cleanFolderId}/delete`), {
+      const response = await fetch(this.buildUrl(`/api/v2/folder/${cleanFolderId}`), {
         method: 'DELETE',
         headers
       });
@@ -955,9 +955,9 @@ export class V2UnifiedApi {
       // ✅ 1. Nettoyer et valider l'ID
       const cleanClasseurId = this.cleanAndValidateId(classeurId, 'classeur');
       
-      // ✅ 2. Appel vers l'endpoint API V2 DIRECT (pas de modification du store)
+      // ✅ 2. Appel vers l'endpoint API V2 unifié (pas de modification du store)
       const headers = await this.getAuthHeaders();
-      const response = await fetch(this.buildUrl(`/api/v2/classeur/${cleanClasseurId}/delete`), {
+      const response = await fetch(this.buildUrl(`/api/v2/classeur/${cleanClasseurId}`), {
         method: 'DELETE',
         headers
       });
@@ -1001,7 +1001,7 @@ export class V2UnifiedApi {
       
       // 🚀 2. Appel vers l'endpoint API V2
       const headers = await this.getAuthHeaders();
-      const response = await fetch(this.buildUrl(`/api/llm/note/${cleanRef}/insert-content`), {
+              const response = await fetch(this.buildUrl(`/api/v2/note/${cleanRef}/insert-content`), {
         method: 'POST',
         headers,
         body: JSON.stringify({ content })
