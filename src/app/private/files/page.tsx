@@ -275,6 +275,8 @@ function FilesPageContent() {
                 onCancelRename={handleCancelRename}
                 onContextMenuItem={handleContextMenuItem}
                 viewMode={viewMode}
+                onFilesDropped={handleUploadComplete}
+                onUploadError={handleUploadError}
               />
             </div>
           )}

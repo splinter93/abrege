@@ -18,8 +18,6 @@
   position: relative;
 }
 
-
-
 /* Section gauche - Barre de recherche (plus large) */
 .toolbar-left {
   flex: 2;
@@ -100,7 +98,6 @@
   font-size: 18px;
   color: var(--files-text-secondary);
   margin-right: var(--files-spacing-md);
-  flex-shrink: 0;
   transition: color var(--files-transition-normal);
   z-index: 2;
   position: relative;
@@ -112,58 +109,42 @@
 
 .search-input {
   flex: 1;
-  background: transparent;
   border: none;
-  outline: none;
+  background: transparent;
   color: var(--files-text-primary);
   font-size: 15px;
+  font-weight: 500;
   font-family: 'Noto Sans', sans-serif;
-  font-weight: 400;
-  min-width: 0;
-  letter-spacing: 0.01em;
+  outline: none;
+  z-index: 2;
   position: relative;
-  z-index: 3;
-  cursor: text;
 }
 
 .search-input::placeholder {
-  color: var(--files-text-muted);
-  font-weight: 400;
-  transition: color var(--files-transition-normal);
-}
-
-.search-container:hover .search-input::placeholder {
   color: var(--files-text-secondary);
+  opacity: 0.7;
 }
 
 .search-clear {
-  background: var(--glass-bg-secondary);
+  background: none;
   border: none;
-  border-radius: 50%;
-  width: 24px;
-  height: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   color: var(--files-text-secondary);
   cursor: pointer;
-  transition: all var(--files-transition-fast);
-  margin-left: var(--files-spacing-md);
-  flex-shrink: 0;
-  font-size: 12px;
-  font-weight: bold;
-  position: relative;
+  padding: var(--files-spacing-xs);
+  border-radius: var(--files-radius-sm);
+  transition: all var(--files-transition-normal);
+  font-size: 16px;
   z-index: 2;
+  position: relative;
 }
 
 .search-clear:hover {
-  background: var(--glass-bg-hover);
+  background: rgba(255, 255, 255, 0.1);
   color: var(--files-text-primary);
-  transform: scale(1.1);
 }
 
 /* ==========================================================================
-   BOUTON UPLOAD - DESIGN PREMIUM ULTRA-MODERNE
+   BOUTON UPLOAD - DESIGN SIMPLE ET ÉLÉGANT
    ========================================================================== */
 
 .upload-btn {
@@ -171,27 +152,22 @@
   height: 52px;
   padding: var(--files-spacing-md) var(--files-spacing-xl);
   font-size: 16px;
-  font-weight: 700;
-  background: linear-gradient(135deg, 
-    var(--files-primary) 0%, 
-    #ff6b35 50%,
-    var(--files-primary-hover) 100%);
-  border: none;
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.05);
+  border: 2px solid var(--files-primary);
   border-radius: var(--files-radius-xl);
-  color: white;
+  color: var(--files-text-primary);
   cursor: pointer;
   transition: all var(--files-transition-normal);
   display: flex;
   align-items: center;
   justify-content: center;
   gap: var(--files-spacing-md);
-  box-shadow: 
-    0 8px 24px rgba(249, 115, 22, 0.4),
-    0 4px 12px rgba(0, 0, 0, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
   position: relative;
   overflow: hidden;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.02em;
   text-transform: uppercase;
   font-family: 'Noto Sans', sans-serif;
 }
@@ -203,101 +179,59 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(135deg, 
-    rgba(255, 255, 255, 0.3) 0%, 
-    rgba(255, 255, 255, 0.1) 50%, 
-    rgba(255, 255, 255, 0.3) 100%);
+  background: rgba(255, 255, 255, 0.05);
   opacity: 0;
   transition: opacity var(--files-transition-normal);
   border-radius: var(--files-radius-xl);
 }
 
-.upload-btn::after {
-  content: '';
-  position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: radial-gradient(
-    circle,
-    rgba(255, 255, 255, 0.1) 0%,
-    transparent 70%
-  );
-  opacity: 0;
-  transition: all var(--files-transition-normal);
-  transform: scale(0.5);
-}
-
 .upload-btn:hover {
-  background: linear-gradient(135deg, 
-    var(--files-primary-hover) 0%, 
-    #ff6b35 50%,
-    var(--files-primary) 100%);
-  transform: translateY(-3px) scale(1.02);
-  box-shadow: 
-    0 12px 32px rgba(249, 115, 22, 0.5),
-    0 8px 16px rgba(0, 0, 0, 0.15),
-    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.1);
+  border-color: var(--files-primary-hover);
+  transform: translateY(-1px);
 }
 
 .upload-btn:hover::before {
   opacity: 1;
 }
 
-.upload-btn:hover::after {
-  opacity: 1;
-  transform: scale(1);
-}
-
 .upload-btn:active {
-  transform: translateY(-1px) scale(0.98);
+  transform: translateY(0px);
   transition: transform var(--files-transition-fast);
-  box-shadow: 
-    0 6px 20px rgba(249, 115, 22, 0.4),
-    0 4px 12px rgba(0, 0, 0, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
 .upload-btn .btn-icon {
   font-size: 20px;
   transition: all var(--files-transition-normal);
-  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
 }
 
 .upload-btn:hover .btn-icon {
-  transform: scale(1.15) rotate(5deg);
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+  transform: scale(1.05);
 }
 
 .upload-btn .btn-text {
-  font-weight: 700;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-  letter-spacing: 0.05em;
+  font-weight: 600;
+  letter-spacing: 0.02em;
   transition: all var(--files-transition-normal);
 }
 
 .upload-btn:hover .btn-text {
-  text-shadow: 0 3px 6px rgba(0, 0, 0, 0.4);
-  letter-spacing: 0.08em;
+  letter-spacing: 0.03em;
 }
 
-/* Animation d'entrée pour le bouton upload */
+/* Animation d'entrée simple pour le bouton upload */
 .upload-btn {
-  animation: uploadButtonEntrance 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: fadeIn 0.3s ease;
 }
 
-@keyframes uploadButtonEntrance {
-  0% {
+@keyframes fadeIn {
+  from {
     opacity: 0;
-    transform: translateY(20px) scale(0.9);
+    transform: translateY(10px);
   }
-  50% {
-    transform: translateY(-5px) scale(1.05);
-  }
-  100% {
+  to {
     opacity: 1;
-    transform: translateY(0) scale(1);
+    transform: translateY(0);
   }
 }
 
@@ -419,8 +353,8 @@
 }
 
 .toolbar-btn .btn-icon {
-  font-size: 15px;
-  transition: transform var(--files-transition-fast);
+  font-size: 16px;
+  transition: transform var(--files-transition-normal);
 }
 
 .toolbar-btn:hover .btn-icon {
@@ -429,7 +363,7 @@
 
 .toolbar-btn .btn-text {
   font-weight: 500;
-  transition: color var(--files-transition-fast);
+  transition: all var(--files-transition-normal);
 }
 
 /* ==========================================================================
@@ -440,34 +374,12 @@
   display: flex;
   align-items: center;
   gap: var(--files-spacing-xs);
+  padding: var(--files-spacing-xs);
   background: var(--glass-bg-tertiary);
   border: 1px solid var(--glass-border-secondary);
   border-radius: var(--files-radius-lg);
-  padding: var(--files-spacing-sm);
   backdrop-filter: blur(15px);
   -webkit-backdrop-filter: blur(15px);
-  transition: all var(--files-transition-normal);
-  position: relative;
-  overflow: hidden;
-}
-
-.view-toggle::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(135deg, 
-    rgba(255, 255, 255, 0.02) 0%, 
-    rgba(255, 255, 255, 0.01) 50%, 
-    rgba(255, 255, 255, 0.02) 100%);
-  opacity: 0;
-  transition: opacity var(--files-transition-normal);
-}
-
-.view-toggle:hover::before {
-  opacity: 1;
 }
 
 .view-btn {
@@ -478,7 +390,7 @@
   background: transparent;
   color: var(--files-text-secondary);
   cursor: pointer;
-  transition: all var(--files-transition-fast);
+  transition: all var(--files-transition-normal);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -493,22 +405,14 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(135deg, 
-    rgba(255, 255, 255, 0.1) 0%, 
-    rgba(255, 255, 255, 0.05) 50%, 
-    rgba(255, 255, 255, 0.1) 100%);
+  background: rgba(255, 255, 255, 0.05);
   opacity: 0;
-  transition: opacity var(--files-transition-fast);
+  transition: opacity var(--files-transition-normal);
+  border-radius: var(--files-radius-md);
 }
 
 .view-btn:hover::before {
   opacity: 1;
-}
-
-.view-btn:hover {
-  background: var(--glass-bg-hover);
-  color: var(--files-text-primary);
-  transform: scale(1.05);
 }
 
 .view-btn.active {
@@ -518,13 +422,17 @@
 }
 
 .view-btn.active::before {
-  opacity: 1;
+  display: none;
 }
 
-.view-btn .view-icon {
+.view-btn:hover:not(.active) {
+  color: var(--files-text-primary);
+  transform: translateY(-1px);
+}
+
+.view-icon {
   font-size: 16px;
-  font-weight: bold;
-  transition: transform var(--files-transition-fast);
+  transition: transform var(--files-transition-normal);
 }
 
 .view-btn:hover .view-icon {
@@ -532,13 +440,12 @@
 }
 
 /* ==========================================================================
-   RESPONSIVE DESIGN - ADAPTATION MOBILE
+   RESPONSIVE DESIGN
    ========================================================================== */
 
 @media (max-width: 1024px) {
   .files-toolbar {
     gap: var(--files-spacing-lg);
-    padding: var(--files-spacing-md) 0;
   }
   
   .search-container {

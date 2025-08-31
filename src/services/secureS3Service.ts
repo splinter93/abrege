@@ -51,18 +51,48 @@ const s3ConfigSchema = z.object({
   bucket: z.string().min(1, 'AWS_S3_BUCKET requis'),
 });
 
+// Configuration centralisée des types de fichiers autorisés
+export const ALLOWED_FILE_TYPES = [
+  // Images
+  'image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml', 'image/bmp', 'image/tiff',
+  
+  // Documents texte
+  'text/plain', 'text/markdown', 'text/csv', 'text/html', 'text/css', 'text/javascript',
+  
+  // Documents Office et PDF
+  'application/pdf',
+  'application/msword', // .doc
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // .docx
+  'application/vnd.ms-excel', // .xls
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // .xlsx
+  'application/vnd.ms-powerpoint', // .ppt
+  'application/vnd.openxmlformats-officedocument.presentationml.presentation', // .pptx
+  
+  // Google Docs/Sheets (types MIME alternatifs)
+  'application/vnd.google-apps.document',
+  'application/vnd.google-apps.spreadsheet',
+  'application/vnd.google-apps.presentation',
+  
+  // Autres formats de documents
+  'application/json', 'application/xml', 'application/rtf',
+  'application/vnd.oasis.opendocument.text', // .odt
+  'application/vnd.oasis.opendocument.spreadsheet', // .ods
+  'application/vnd.oasis.opendocument.presentation', // .odp
+  
+  // Archives
+  'application/zip', 'application/x-rar-compressed', 'application/x-7z-compressed',
+  'application/gzip', 'application/x-tar',
+  
+  // Fichiers de données
+  'application/sql', 'application/x-sql',
+  
+  // Fallback pour types non reconnus
+  'application/octet-stream'
+];
+
 const fileValidationSchema = z.object({
   maxSize: z.number().default(100 * 1024 * 1024), // 100MB par défaut
-  allowedTypes: z.array(z.string()).default([
-    // Images
-    'image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml',
-    // Documents
-    'application/pdf', 'text/plain', 'text/markdown', 'application/json',
-    // Archives
-    'application/zip', 'application/x-rar-compressed',
-    // Autres
-    'application/octet-stream'
-  ]),
+  allowedTypes: z.array(z.string()).default(ALLOWED_FILE_TYPES),
   maxUploadDuration: z.number().default(900), // 15 minutes
   maxDownloadDuration: z.number().default(300), // 5 minutes
 });

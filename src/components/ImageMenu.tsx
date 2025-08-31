@@ -1,5 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { FiImage, FiUpload, FiLink, FiX, FiFile, FiAlertCircle } from 'react-icons/fi';
+import { uploadImageForNote } from '@/utils/fileUpload';
+import { FILE_SIZE_LIMITS, ALLOWED_IMAGE_TYPES, ERROR_MESSAGES } from '@/constants/fileUpload';
 import './ImageMenu.css';
 
 interface ImageMenuProps {
@@ -60,14 +62,12 @@ const ImageMenu: React.FC<ImageMenuProps> = ({ open, onClose, onInsertImage, not
   }, [open]);
 
   const validateFile = (file: File) => {
-    const maxSize = 8 * 1024 * 1024; // 8MB
-    if (file.size > maxSize) {
-      return `Fichier trop volumineux. Taille max: 8MB`;
+    if (file.size > FILE_SIZE_LIMITS.MAX_IMAGE_SIZE) {
+      return ERROR_MESSAGES.FILE_TOO_LARGE(FILE_SIZE_LIMITS.MAX_IMAGE_SIZE);
     }
     
-    const allowed = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-    if (!allowed.includes(file.type)) {
-      return `Type non supporté (${file.type}). Formats acceptés: JPEG, PNG, GIF, WebP`;
+    if (!ALLOWED_IMAGE_TYPES.includes(file.type as any)) {
+      return ERROR_MESSAGES.INVALID_TYPE(file.type, ALLOWED_IMAGE_TYPES);
     }
     
     return null;
@@ -127,14 +127,7 @@ const ImageMenu: React.FC<ImageMenuProps> = ({ open, onClose, onInsertImage, not
     setError(null);
   };
 
-  const getAuthHeader = async (): Promise<Record<string, string>> => {
-    try {
-      const { data: { session } } = await import('@/supabaseClient').then(m => m.supabase.auth.getSession());
-      return session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {};
-    } catch {
-      return {};
-    }
-  };
+
 
   const handleUpload = async () => {
     if (!file) return;
@@ -144,96 +137,12 @@ const ImageMenu: React.FC<ImageMenuProps> = ({ open, onClose, onInsertImage, not
     setError(null);
     
     try {
-      const headers = await getAuthHeader();
-      console.log('🔑 [IMAGE-MENU] Headers auth:', headers);
+      // NOUVELLE APPROCHE: Utiliser la fonction uploadImageForNote corrigée
+      // qui utilise la même logique que FileUploaderLocal
+      const { publicUrl } = await uploadImageForNote(file, noteId);
+      console.log('✅ [IMAGE-MENU] Upload réussi via uploadImageForNote:', publicUrl);
       
-      // 1. Presign upload
-      const presignPayload = {
-        file_name: file.name,
-        file_type: file.type,
-        file_size: file.size,
-        scope: { note_ref: noteId },
-        visibility_mode: 'inherit_note'
-      };
-      console.log('📤 [IMAGE-MENU] Presign payload:', presignPayload);
-      
-      const presignResponse = await fetch('/api/ui/files/presign-upload', {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          ...headers 
-        },
-        body: JSON.stringify(presignPayload)
-      });
-      
-      console.log('📥 [IMAGE-MENU] Presign response status:', presignResponse.status);
-      
-      if (!presignResponse.ok) {
-        const errorData = await presignResponse.json().catch(() => ({}));
-        console.error('❌ [IMAGE-MENU] Presign error:', errorData);
-        throw new Error(errorData.error || 'Erreur lors de l\'initiation de l\'upload');
-      }
-      
-      const presignData = await presignResponse.json();
-      console.log('✅ [IMAGE-MENU] Presign success:', presignData);
-      
-      const { upload_url, key, headers: uploadHeaders } = presignData;
-      
-      // 2. Upload vers S3
-      console.log('🌐 [IMAGE-MENU] Upload vers S3:', upload_url);
-      const s3Response = await fetch(upload_url, {
-        method: 'PUT',
-        headers: { 
-          'Content-Type': file.type,
-          ...(uploadHeaders || {})
-        },
-        body: file
-      });
-      
-      console.log('📤 [IMAGE-MENU] S3 response status:', s3Response.status);
-      
-      if (!s3Response.ok) {
-        throw new Error('Erreur lors de l\'upload vers S3');
-      }
-      
-      // 3. Register le fichier
-      const registerPayload = {
-        key,
-        file_name: file.name,
-        file_type: file.type,
-        file_size: file.size,
-        scope: { note_ref: noteId },
-        visibility_mode: 'inherit_note'
-      };
-      console.log('📝 [IMAGE-MENU] Register payload:', registerPayload);
-      
-      const registerResponse = await fetch('/api/ui/files/register', {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          ...headers 
-        },
-        body: JSON.stringify(registerPayload)
-      });
-      
-      console.log('📥 [IMAGE-MENU] Register response status:', registerResponse.status);
-      
-      if (!registerResponse.ok) {
-        const errorData = await registerResponse.json().catch(() => ({}));
-        console.error('❌ [IMAGE-MENU] Register error:', errorData);
-        throw new Error(errorData.error || 'Erreur lors de l\'enregistrement du fichier');
-      }
-      
-      const registerData = await registerResponse.json();
-      console.log('✅ [IMAGE-MENU] Register success:', registerData);
-      
-      const { file: savedFile, signed_url } = registerData;
-      
-      // Utiliser l'URL canonique ou l'URL signée
-      const imageUrl = savedFile.url || signed_url;
-      console.log('🖼️ [IMAGE-MENU] Image URL finale:', imageUrl);
-      
-      onInsertImage(imageUrl);
+      onInsertImage(publicUrl);
       onClose();
       
     } catch (err) {
@@ -250,10 +159,23 @@ const ImageMenu: React.FC<ImageMenuProps> = ({ open, onClose, onInsertImage, not
     try {
       // Validation basique d'URL
       new URL(url);
-      onInsertImage(url);
+      
+      setLoading(true);
+      setError(null);
+      
+      // NOUVELLE APPROCHE: Passer directement l'URL à uploadImageForNote
+      // qui gère maintenant les URLs externes
+      const { publicUrl } = await uploadImageForNote(url.trim(), noteId);
+      console.log('✅ [IMAGE-MENU] URL externe traitée via uploadImageForNote:', publicUrl);
+      
+      onInsertImage(publicUrl);
       onClose();
-    } catch {
-      setError('URL invalide. Veuillez entrer une URL complète (ex: https://example.com/image.jpg)');
+      
+    } catch (err) {
+      console.error('❌ [IMAGE-MENU] Erreur traitement URL externe:', err);
+      setError(err instanceof Error ? err.message : 'Erreur lors du traitement de l\'URL');
+    } finally {
+      setLoading(false);
     }
   };
 

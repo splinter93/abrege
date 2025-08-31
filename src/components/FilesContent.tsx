@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { FileItem } from '@/types/files';
 import ImageModal from './ImageModal';
+import DropZone from './DropZone';
 import './FilesContent.css';
 import './FolderGridItems.css';
 import { 
@@ -25,6 +26,8 @@ interface FilesContentProps {
   onContextMenuItem?: (e: React.MouseEvent, item: FileItem) => void;
   emptyMessage?: React.ReactNode;
   viewMode?: 'grid' | 'list';
+  onFilesDropped?: (files: FileItem[]) => void;
+  onUploadError?: (error: string) => void;
 }
 
 // Fonction pour obtenir l'icône selon le type MIME
@@ -83,6 +86,8 @@ const FilesContent: React.FC<FilesContentProps> = ({
   onContextMenuItem,
   emptyMessage,
   viewMode = 'grid',
+  onFilesDropped,
+  onUploadError,
 }) => {
   // État pour la modal d'image
   const [imageModal, setImageModal] = useState<{
@@ -209,55 +214,77 @@ const FilesContent: React.FC<FilesContentProps> = ({
       animate="animate"
     >
       {viewMode === 'grid' ? (
-        <motion.div 
-          className="files-grid"
-          variants={fileListVariants}
-          initial="initial"
-          animate="animate"
+        <DropZone
+          onFilesDropped={onFilesDropped}
+          onError={onUploadError}
+          className="files-grid-drop-zone"
+          overlayMessage="Déposez vos fichiers ici pour les ajouter à votre bibliothèque"
+          showOverlay={true}
+          onDragEnter={() => {
+            // Ajouter une classe pour l'indicateur visuel
+            const dropZone = document.querySelector('.files-grid-drop-zone');
+            if (dropZone) {
+              dropZone.classList.add('drag-over');
+            }
+          }}
+          onDragLeave={() => {
+            // Retirer la classe quand le drag se termine
+            const dropZone = document.querySelector('.files-grid-drop-zone');
+            if (dropZone) {
+              dropZone.classList.remove('drag-over');
+            }
+          }}
         >
-          {safeFiles.map((file) => (
-            <motion.div
-              key={file.id}
-              className="file-grid-item"
-              variants={gridColumnVariants}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => handleFileClick(file)}
-              onDoubleClick={() => handleFileDoubleClick(file)}
-              onContextMenu={(e) => onContextMenuItem?.(e, file)}
-            >
-              {file.mime_type?.startsWith('image/') ? (
-                <ImagePreview file={file} />
-              ) : (
-                <div className="file-icon">
-                  {getFileIcon(file.mime_type || '')}
+          <motion.div 
+            className="files-grid"
+            variants={fileListVariants}
+            initial="initial"
+            animate="animate"
+          >
+            {safeFiles.map((file) => (
+              <motion.div
+                key={file.id}
+                className="file-grid-item"
+                variants={gridColumnVariants}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => handleFileClick(file)}
+                onDoubleClick={() => handleFileDoubleClick(file)}
+                onContextMenu={(e) => onContextMenuItem?.(e, file)}
+              >
+                {file.mime_type?.startsWith('image/') ? (
+                  <ImagePreview file={file} />
+                ) : (
+                  <div className="file-icon">
+                    {getFileIcon(file.mime_type || '')}
+                  </div>
+                )}
+                <div className="file-info">
+                  <div className="file-name">
+                    {renamingItemId === file.id ? (
+                      <input
+                        type="text"
+                        defaultValue={file.filename || ''}
+                        onBlur={(e) => onFileRename(file.id, e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            onFileRename(file.id, e.currentTarget.value);
+                          } else if (e.key === 'Escape') {
+                            onCancelRename?.();
+                          }
+                        }}
+                        autoFocus
+                      />
+                    ) : (
+                      file.filename || 'Fichier sans nom'
+                    )}
+                  </div>
+                  {/* Suppression de file-meta pour gagner de l'espace vertical */}
                 </div>
-              )}
-              <div className="file-info">
-                <div className="file-name">
-                  {renamingItemId === file.id ? (
-                    <input
-                      type="text"
-                      defaultValue={file.filename || ''}
-                      onBlur={(e) => onFileRename(file.id, e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          onFileRename(file.id, e.currentTarget.value);
-                        } else if (e.key === 'Escape') {
-                          onCancelRename?.();
-                        }
-                      }}
-                      autoFocus
-                    />
-                  ) : (
-                    file.filename || 'Fichier sans nom'
-                  )}
-                </div>
-                {/* Suppression de file-meta pour gagner de l'espace vertical */}
-              </div>
-            </motion.div>
-          ))}
-        </motion.div>
+              </motion.div>
+            ))}
+          </motion.div>
+        </DropZone>
       ) : (
         <motion.div 
           className="files-list"

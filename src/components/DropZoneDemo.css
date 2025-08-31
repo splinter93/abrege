@@ -1,0 +1,466 @@
+/* ==========================================================================
+   DROP ZONE DEMO - COMPOSANT DE DÉMONSTRATION
+   ========================================================================== */
+
+.drop-zone-demo {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: var(--files-spacing-2xl);
+  font-family: 'Noto Sans', sans-serif;
+}
+
+/* ==========================================================================
+   EN-TÊTE DE DÉMONSTRATION
+   ========================================================================== */
+
+.demo-header {
+  text-align: center;
+  margin-bottom: var(--files-spacing-3xl);
+  padding: var(--files-spacing-2xl);
+  background: var(--glass-bg-primary);
+  border-radius: var(--files-radius-xl);
+  border: 1px solid var(--glass-border-primary);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+.demo-header h1 {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--files-text-primary);
+  margin: 0 0 var(--files-spacing-md) 0;
+  background: linear-gradient(135deg, var(--files-primary), var(--files-primary-hover));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.demo-header p {
+  font-size: 18px;
+  color: var(--files-text-secondary);
+  margin: 0;
+  opacity: 0.8;
+}
+
+/* ==========================================================================
+   CONTENU PRINCIPAL
+   ========================================================================== */
+
+.demo-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--files-spacing-3xl);
+}
+
+/* ==========================================================================
+   SECTIONS DE DÉMONSTRATION
+   ========================================================================== */
+
+.demo-section {
+  background: var(--glass-bg-secondary);
+  border-radius: var(--files-radius-xl);
+  border: 1px solid var(--glass-border-secondary);
+  padding: var(--files-spacing-2xl);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+}
+
+.demo-section h2 {
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--files-text-primary);
+  margin: 0 0 var(--files-spacing-md) 0;
+  display: flex;
+  align-items: center;
+  gap: var(--files-spacing-sm);
+}
+
+.demo-section p {
+  font-size: 16px;
+  color: var(--files-text-secondary);
+  margin: 0 0 var(--files-spacing-lg) 0;
+  line-height: 1.6;
+}
+
+/* ==========================================================================
+   GRILLE DE DÉMONSTRATION
+   ========================================================================== */
+
+.demo-grid-drop-zone {
+  min-height: 300px;
+  border-radius: var(--files-radius-lg);
+  overflow: hidden;
+}
+
+.demo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: var(--files-spacing-md);
+  padding: var(--files-spacing-md);
+  min-height: 300px;
+}
+
+/* ==========================================================================
+   ÉTAT VIDE
+   ========================================================================== */
+
+.demo-empty-state {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: var(--files-spacing-md);
+  padding: var(--files-spacing-2xl);
+  opacity: 0.6;
+}
+
+.demo-empty-icon {
+  font-size: 48px;
+  color: var(--files-text-tertiary);
+}
+
+.demo-empty-text {
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--files-text-secondary);
+}
+
+.demo-empty-hint {
+  font-size: 14px;
+  color: var(--files-text-tertiary);
+  font-style: italic;
+}
+
+/* ==========================================================================
+   ÉLÉMENTS DE FICHIERS
+   ========================================================================== */
+
+.demo-file-item {
+  background: var(--glass-bg-tertiary);
+  border: 1px solid var(--glass-border-secondary);
+  border-radius: var(--files-radius-md);
+  padding: var(--files-spacing-md);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--files-spacing-sm);
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.demo-file-item:hover {
+  transform: translateY(-2px);
+  border-color: var(--files-primary);
+  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.15);
+}
+
+.demo-file-icon {
+  font-size: 24px;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+}
+
+.demo-file-name {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--files-text-primary);
+  line-height: 1.3;
+  word-break: break-word;
+  max-width: 100%;
+  
+  /* Limitation à 2 lignes */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ==========================================================================
+   FILE UPLOADER DE DÉMONSTRATION
+   ========================================================================== */
+
+.demo-file-uploader {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+/* ==========================================================================
+   STATISTIQUES
+   ========================================================================== */
+
+.demo-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: var(--files-spacing-lg);
+  margin-bottom: var(--files-spacing-xl);
+}
+
+.demo-stat {
+  background: var(--glass-bg-tertiary);
+  border: 1px solid var(--glass-border-secondary);
+  border-radius: var(--files-radius-lg);
+  padding: var(--files-spacing-lg);
+  text-align: center;
+  transition: all 0.2s ease;
+}
+
+.demo-stat:hover {
+  border-color: var(--files-primary);
+  transform: translateY(-2px);
+}
+
+.demo-stat-number {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--files-primary);
+  margin-bottom: var(--files-spacing-sm);
+}
+
+.demo-stat-label {
+  font-size: 14px;
+  color: var(--files-text-secondary);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* ==========================================================================
+   CONTRÔLES
+   ========================================================================== */
+
+.demo-controls {
+  display: flex;
+  gap: var(--files-spacing-md);
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.demo-btn {
+  padding: var(--files-spacing-md) var(--files-spacing-lg);
+  border: none;
+  border-radius: var(--files-radius-md);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: 'Noto Sans', sans-serif;
+  display: flex;
+  align-items: center;
+  gap: var(--files-spacing-sm);
+}
+
+.demo-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.demo-btn-primary {
+  background: var(--files-primary);
+  color: white;
+}
+
+.demo-btn-primary:hover:not(:disabled) {
+  background: var(--files-primary-hover);
+  transform: translateY(-1px);
+}
+
+.demo-btn-secondary {
+  background: var(--glass-bg-tertiary);
+  color: var(--files-text-primary);
+  border: 1px solid var(--glass-border-secondary);
+}
+
+.demo-btn-secondary:hover:not(:disabled) {
+  background: var(--glass-bg-primary);
+  border-color: var(--files-primary);
+  transform: translateY(-1px);
+}
+
+/* ==========================================================================
+   SECTION D'ERREURS
+   ========================================================================== */
+
+.demo-errors {
+  background: rgba(239, 68, 68, 0.05);
+  border-color: rgba(239, 68, 68, 0.2);
+}
+
+.demo-error-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--files-spacing-sm);
+}
+
+.demo-error-item {
+  display: flex;
+  align-items: center;
+  gap: var(--files-spacing-sm);
+  padding: var(--files-spacing-md);
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: var(--files-radius-md);
+  font-size: 14px;
+}
+
+.demo-error-icon {
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.demo-error-text {
+  color: var(--files-error, #dc2626);
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+/* ==========================================================================
+   RESPONSIVE DESIGN
+   ========================================================================== */
+
+@media (max-width: 768px) {
+  .drop-zone-demo {
+    padding: var(--files-spacing-lg);
+  }
+  
+  .demo-header {
+    padding: var(--files-spacing-lg);
+    margin-bottom: var(--files-spacing-2xl);
+  }
+  
+  .demo-header h1 {
+    font-size: 24px;
+  }
+  
+  .demo-header p {
+    font-size: 16px;
+  }
+  
+  .demo-section {
+    padding: var(--files-spacing-lg);
+  }
+  
+  .demo-section h2 {
+    font-size: 20px;
+  }
+  
+  .demo-grid {
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: var(--files-spacing-sm);
+    padding: var(--files-spacing-sm);
+  }
+  
+  .demo-file-item {
+    padding: var(--files-spacing-sm);
+  }
+  
+  .demo-file-icon {
+    font-size: 20px;
+  }
+  
+  .demo-file-name {
+    font-size: 11px;
+  }
+  
+  .demo-stats {
+    grid-template-columns: 1fr;
+    gap: var(--files-spacing-md);
+  }
+  
+  .demo-controls {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .demo-btn {
+    width: 100%;
+    max-width: 200px;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .drop-zone-demo {
+    padding: var(--files-spacing-md);
+  }
+  
+  .demo-header {
+    padding: var(--files-spacing-md);
+  }
+  
+  .demo-header h1 {
+    font-size: 20px;
+  }
+  
+  .demo-section {
+    padding: var(--files-spacing-md);
+  }
+  
+  .demo-grid {
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    gap: var(--files-spacing-xs);
+  }
+  
+  .demo-file-item {
+    padding: var(--files-spacing-xs);
+  }
+  
+  .demo-file-icon {
+    font-size: 18px;
+  }
+  
+  .demo-file-name {
+    font-size: 10px;
+  }
+}
+
+/* ==========================================================================
+   ANIMATIONS
+   ========================================================================== */
+
+.demo-section {
+  animation: demoSectionEntrance 0.6s ease-out;
+}
+
+@keyframes demoSectionEntrance {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ==========================================================================
+   THÈMES ALTERNATIFS
+   ========================================================================== */
+
+/* Mode sombre */
+@media (prefers-color-scheme: dark) {
+  .demo-header {
+    background: var(--glass-bg-primary-dark, rgba(0, 0, 0, 0.3));
+    border-color: var(--glass-border-primary-dark, rgba(255, 255, 255, 0.1));
+  }
+  
+  .demo-section {
+    background: var(--glass-bg-secondary-dark, rgba(0, 0, 0, 0.2));
+    border-color: var(--glass-border-secondary-dark, rgba(255, 255, 255, 0.05));
+  }
+}
+
+/* Mode haute contraste */
+@media (prefers-contrast: high) {
+  .demo-header,
+  .demo-section {
+    border-width: 2px;
+  }
+  
+  .demo-btn {
+    border-width: 2px;
+  }
+}

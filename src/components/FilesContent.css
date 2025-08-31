@@ -85,13 +85,35 @@
    GRILLE DES FICHIERS
    ========================================================================== */
 
+.files-grid-drop-zone {
+  position: relative;
+  width: 100%;
+  min-height: 300px;
+  border-radius: var(--files-radius-xl);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 2px dashed transparent;
+}
+
+/* Indicateur de zone de drop actif */
+.files-grid-drop-zone.drag-over {
+  border-color: var(--files-primary);
+  background: rgba(249, 115, 22, 0.05);
+  box-shadow: 0 0 0 4px rgba(249, 115, 22, 0.1);
+}
+
 .files-grid {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
   gap: var(--files-spacing-lg);
   padding: var(--files-spacing-sm);
   max-width: 100%;
+  min-height: 300px;
+  position: relative;
 }
+
+
+
+
 
 /* ==========================================================================
    ÉLÉMENTS DE FICHIERS - DESIGN ÉPURÉ

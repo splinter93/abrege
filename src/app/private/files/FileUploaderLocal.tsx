@@ -4,6 +4,7 @@ import React, { useState, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FileItem } from '@/types/files';
 import { STORAGE_CONFIG, formatBytes } from '@/config/storage';
+import { useAuth } from '@/hooks/useAuth';
 import './FileUploaderLocal.css';
 
 interface FileUploaderLocalProps {
@@ -28,14 +29,16 @@ const FileUploaderLocal: React.FC<FileUploaderLocalProps> = ({
   onUploadComplete,
   onUploadError,
   folderId,
-  notebookId,
   maxFileSize = STORAGE_CONFIG.FILE_LIMITS.MAX_FILE_SIZE, // Utilise la config centralisée
   allowedTypes = STORAGE_CONFIG.FILE_LIMITS.ALLOWED_MIME_TYPES, // Utilise la config centralisée
   multiple = false
 }) => {
+  const { getAccessToken } = useAuth();
   const [isDragOver, setIsDragOver] = useState(false);
   const [uploads, setUploads] = useState<UploadProgress[]>([]);
   const [isUploading, setIsUploading] = useState(false);
+  const [externalUrl, setExternalUrl] = useState('');
+  const [isUrlUploading, setIsUrlUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // ========================================
@@ -153,18 +156,25 @@ const FileUploaderLocal: React.FC<FileUploaderLocalProps> = ({
 
   const uploadFile = async (file: File, upload: UploadProgress) => {
     try {
-      // 1. Initier l'upload
+      // 1. Récupérer le token d'authentification
+      const accessToken = await getAccessToken();
+      
+      if (!accessToken) {
+        throw new Error('Session d\'authentification expirée. Veuillez vous reconnecter.');
+      }
+
+      // 2. Initier l'upload avec le token d'authentification
       const uploadResponse = await fetch('/api/ui/files/upload', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`,
         },
         body: JSON.stringify({
           fileName: file.name,
           fileType: file.type,
           fileSize: file.size,
           folderId: folderId || undefined,
-          notebookId: notebookId || undefined,
         }),
       });
 
@@ -175,7 +185,7 @@ const FileUploaderLocal: React.FC<FileUploaderLocalProps> = ({
 
       const uploadData = await uploadResponse.json();
 
-      // 2. Upload vers S3
+      // 3. Upload vers S3
       const s3Response = await fetch(uploadData.uploadUrl, {
         method: 'PUT',
         headers: {
@@ -188,19 +198,19 @@ const FileUploaderLocal: React.FC<FileUploaderLocalProps> = ({
         throw new Error('Erreur lors de l\'upload vers S3');
       }
 
-      // 3. Marquer comme terminé
+      // 4. Marquer comme terminé
       setUploads(prev => prev.map(u => 
         u.fileId === upload.fileId 
           ? { ...u, status: 'complete', progress: 100 }
           : u
       ));
 
-      // 4. Notifier le composant parent
+      // 5. Notifier le composant parent
       if (uploadData.file) {
         onUploadComplete(uploadData.file);
       }
 
-      // 5. Nettoyer après un délai
+      // 6. Nettoyer après un délai
       setTimeout(() => {
         setUploads(prev => prev.filter(u => u.fileId !== upload.fileId));
       }, 3000);
@@ -209,6 +219,91 @@ const FileUploaderLocal: React.FC<FileUploaderLocalProps> = ({
       throw error;
     }
   };
+
+  // ========================================
+  // GESTION DES URLS EXTERNES
+  // ========================================
+
+  const handleExternalUrl = useCallback(async () => {
+    if (!externalUrl.trim()) return;
+
+    setIsUrlUploading(true);
+    const uploadId = generateFileId();
+
+    try {
+      // Validation de l'URL
+      const url = new URL(externalUrl.trim());
+      if (!['http:', 'https:'].includes(url.protocol)) {
+        throw new Error('URL invalide');
+      }
+
+      // Ajouter à la liste des uploads
+      const newUpload: UploadProgress = {
+        fileId: uploadId,
+        fileName: `URL externe: ${url.hostname}`,
+        progress: 0,
+        status: 'uploading'
+      };
+
+      setUploads(prev => [...prev, newUpload]);
+
+      // Upload via l'API
+      const token = await getAccessToken();
+      if (!token) {
+        throw new Error('Authentification requise');
+      }
+
+      const response = await fetch('/api/ui/files/upload', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          externalUrl: externalUrl.trim()
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Erreur lors de l\'upload');
+      }
+
+      const uploadData = await response.json();
+
+      // Mettre à jour le statut
+      setUploads(prev => prev.map(u => 
+        u.fileId === uploadId 
+          ? { ...u, status: 'complete', progress: 100 }
+          : u
+      ));
+
+      // Notifier le composant parent
+      if (uploadData.file) {
+        onUploadComplete(uploadData.file);
+      }
+
+      // Nettoyer l'URL
+      setExternalUrl('');
+
+      // Nettoyer après un délai
+      setTimeout(() => {
+        setUploads(prev => prev.filter(u => u.fileId !== uploadId));
+      }, 3000);
+
+    } catch (error: any) {
+      // Mettre à jour le statut d'erreur
+      setUploads(prev => prev.map(u => 
+        u.fileId === uploadId 
+          ? { ...u, status: 'error', error: error.message }
+          : u
+      ));
+
+      onUploadError(error.message);
+    } finally {
+      setIsUrlUploading(false);
+    }
+  }, [externalUrl, getAccessToken, onUploadComplete, onUploadError]);
 
   // ========================================
   // UTILITAIRES
@@ -226,6 +321,37 @@ const FileUploaderLocal: React.FC<FileUploaderLocalProps> = ({
 
   return (
     <div className="file-uploader">
+      {/* Section URL externe */}
+      <div className="external-url-section">
+        <h3>📎 Ajouter une image depuis une URL</h3>
+        <div className="url-input-group">
+          <input
+            type="url"
+            placeholder="https://example.com/image.jpg"
+            value={externalUrl}
+            onChange={(e) => setExternalUrl(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleExternalUrl()}
+            className="url-input"
+            disabled={isUrlUploading}
+          />
+          <button
+            onClick={handleExternalUrl}
+            disabled={!externalUrl.trim() || isUrlUploading}
+            className="url-upload-btn"
+          >
+            {isUrlUploading ? '⏳...' : 'Ajouter'}
+          </button>
+        </div>
+        <p className="url-hint">
+          Collez l'URL d'une image et cliquez sur "Ajouter"
+        </p>
+      </div>
+
+      {/* Séparateur */}
+      <div className="upload-separator">
+        <span>ou</span>
+      </div>
+
       {/* Zone de drag & drop */}
       <motion.div
         className={`upload-zone ${isDragOver ? 'drag-over' : ''}`}

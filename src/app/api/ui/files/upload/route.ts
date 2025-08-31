@@ -1,30 +1,60 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { supabase } from '@/supabaseClient';
-import { secureS3Service, generateRequestId } from '@/services/secureS3Service';
+import { secureS3Service, generateRequestId, ALLOWED_FILE_TYPES } from '@/services/secureS3Service';
 import { getAuthenticatedUser } from '@/utils/authUtils';
 import { logApi } from '@/utils/logger';
+import { createClient } from '@supabase/supabase-js';
+import { buildS3ObjectUrl } from '@/utils/s3Utils';
 
 // ========================================
 // SCHEMAS DE VALIDATION
 // ========================================
 
 const uploadSchema = z.object({
-  fileName: z.string().min(1, 'Nom de fichier requis').max(255, 'Nom de fichier trop long'),
-  fileType: z.string().min(1, 'Type de fichier requis'),
-  fileSize: z.number().int().positive('Taille de fichier invalide'),
+  // Cas 1: Upload de fichier local
+  fileName: z.string().min(1, 'Nom de fichier requis').max(255, 'Nom de fichier trop long').optional(),
+  fileType: z.string().min(1, 'Type de fichier requis').optional(),
+  fileSize: z.number().int().min(0, 'Taille de fichier invalide').optional(),
+  
+  // Cas 2: URL externe
+  externalUrl: z.string().url('URL externe invalide').optional(),
+  
+  // Métadonnées communes
   folderId: z.string().uuid().optional(),
   notebookId: z.string().uuid().optional(),
-});
+}).refine(
+  (data) => {
+    // Si on a une URL externe, c'est valide
+    if (data.externalUrl) return true;
+    
+    // Si on a un fichier, tous les champs requis doivent être présents et valides
+    if (data.fileName && data.fileType && data.fileSize !== undefined) {
+      return data.fileSize > 0;
+    }
+    
+    return false;
+  },
+  {
+    message: 'Doit fournir soit une URL externe, soit un fichier complet avec taille > 0',
+    path: ['fileName']
+  }
+);
 
 // ========================================
 // TYPES
 // ========================================
 
 interface UploadRequest {
-  fileName: string;
-  fileType: string;
-  fileSize: number;
+  // Cas 1: Fichier local
+  fileName?: string;
+  fileType?: string;
+  fileSize?: number;
+  
+  // Cas 2: URL externe
+  externalUrl?: string;
+  
+  // Métadonnées communes
   folderId?: string;
   notebookId?: string;
 }
@@ -32,8 +62,8 @@ interface UploadRequest {
 interface UploadResponse {
   success: boolean;
   file: any;
-  uploadUrl: string;
-  expiresAt: Date;
+  uploadUrl?: string; // Seulement pour les fichiers locaux
+  expiresAt?: Date;   // Seulement pour les fichiers locaux
   requestId: string;
 }
 
@@ -43,21 +73,26 @@ interface UploadResponse {
 
 /**
  * Validation du Content-Type côté serveur
+ * Utilise la configuration centralisée depuis secureS3Service
  */
 function validateContentType(fileType: string): boolean {
-  const allowedTypes = [
-    // Images
-    'image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml',
-    // Documents
-    'application/pdf', 'text/plain', 'text/markdown', 'application/json',
-    // Archives
-    'application/zip', 'application/x-rar-compressed',
-    // Autres
-    'application/octet-stream'
-  ];
-  
-  return allowedTypes.includes(fileType);
+  return ALLOWED_FILE_TYPES.includes(fileType);
 }
+
+/**
+ * Validation d'URL externe
+ */
+function validateExternalUrl(url: string): boolean {
+  try {
+    const parsedUrl = new URL(url);
+    // Vérifier que c'est une URL HTTP/HTTPS valide
+    return ['http:', 'https:'].includes(parsedUrl.protocol);
+  } catch {
+    return false;
+  }
+}
+
+
 
 /**
  * Audit trail pour les actions sur les fichiers
@@ -136,169 +171,306 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     try {
       const body = await request.json();
       uploadData = uploadSchema.parse(body);
-         } catch (error) {
-       logApi.info(`❌ Validation des données échouée: ${error.message}`, { 
-         requestId, 
-         userId 
-       });
-       return NextResponse.json(
-         { error: `Données invalides: ${error.message}` }, 
-         { status: 400 }
-       );
-     }
-
-     // ========================================
-     // 3. VALIDATION SÉCURITÉ SUPPLÉMENTAIRE
-     // ========================================
-     
-     // Validation du Content-Type côté serveur
-     if (!validateContentType(uploadData.fileType)) {
-       logApi.info(`❌ Type de fichier non autorisé: ${uploadData.fileType}`, { 
-         requestId, 
-         userId 
-       });
-       return NextResponse.json(
-         { error: `Type de fichier non autorisé: ${uploadData.fileType}` }, 
-         { status: 400 }
-       );
-     }
-
-     // Validation de la taille maximale (100MB)
-     const maxSize = 100 * 1024 * 1024;
-     if (uploadData.fileSize > maxSize) {
-       logApi.info(`❌ Fichier trop volumineux: ${uploadData.fileSize} bytes`, { 
-         requestId, 
-         userId 
-       });
-       return NextResponse.json(
-         { error: `Fichier trop volumineux (max: 100MB)` }, 
-         { status: 400 }
-       );
-     }
-
-     // ========================================
-     // 4. UPLOAD SÉCURISÉ VERS S3
-     // ========================================
-     
-     const s3Result = await secureS3Service.secureUpload({
-       fileName: uploadData.fileName,
-       fileType: uploadData.fileType,
-       fileSize: uploadData.fileSize,
-       userId,
-       folderId: uploadData.folderId,
-       notebookId: uploadData.notebookId,
-       requestId
-     });
-
-     // ========================================
-     // 5. ENREGISTREMENT EN BASE DE DONNÉES
-     // ========================================
-     
-     const { data: fileRecord, error: dbError } = await supabase
-       .from('files')
-       .insert({
-         filename: uploadData.fileName,
-         original_name: uploadData.fileName,
-         mime_type: uploadData.fileType,
-         size_bytes: uploadData.fileSize,
-         s3_key: s3Result.key,
-         s3_bucket: process.env.AWS_S3_BUCKET,
-         s3_region: process.env.AWS_REGION,
-         user_id: userId,
-         folder_id: uploadData.folderId || null,
-         notebook_id: uploadData.notebookId || null,
-         status: 'uploading',
-         request_id: requestId,
-         sha256: s3Result.sha256,
-         url: '', // Sera mis à jour après upload complet
-         created_at: new Date().toISOString(),
-         updated_at: new Date().toISOString()
-       })
-       .select()
-       .single();
-
-     if (dbError) {
-       // Rollback S3 en cas d'erreur DB
-       logApi.info(`❌ Erreur DB, rollback S3: ${dbError.message}`, { 
-         requestId, 
-         userId,
-         key: s3Result.key
-       });
-       
-       try {
-         await secureS3Service.secureDelete(s3Result.key, userId);
-       } catch (rollbackError) {
-         logApi.info(`⚠️ Erreur rollback S3: ${rollbackError.message}`, { 
-           requestId, 
-           userId,
-           key: s3Result.key
-         });
-       }
-       
-       return NextResponse.json(
-         { error: `Erreur base de données: ${dbError.message}` }, 
-         { status: 500 }
-       );
-     }
-
-     // ========================================
-     // 6. AUDIT TRAIL
-     // ========================================
-     
-     await logFileEvent({
-       fileId: fileRecord.id,
-       userId,
-       eventType: 'upload_initiated',
-       requestId,
-       ipAddress: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || undefined,
-       userAgent: request.headers.get('user-agent') || undefined,
-       metadata: {
-         fileName: uploadData.fileName,
-         fileSize: uploadData.fileSize,
-         fileType: uploadData.fileType,
-         s3Key: s3Result.key
-       }
-     });
-
-     // ========================================
-     // 7. MISE À JOUR USAGE STOCKAGE
-     // ========================================
-     
-     await updateStorageUsage(userId);
+    } catch (error) {
+      logApi.info(`❌ Validation des données échouée: ${error.message}`, { 
+        requestId, 
+        userId 
+      });
+      return NextResponse.json(
+        { error: `Données invalides: ${error.message}` }, 
+        { status: 400 }
+      );
+    }
 
     // ========================================
-    // 8. RÉPONSE SUCCÈS
+    // 3. DÉTERMINATION DU TYPE D'OPÉRATION
+    // ========================================
+    
+    const isFileUpload = uploadData.fileName && uploadData.fileType && uploadData.fileSize;
+    const isExternalUrl = uploadData.externalUrl;
+
+    if (!isFileUpload && !isExternalUrl) {
+      return NextResponse.json(
+        { error: 'Type d\'opération non reconnu' },
+        { status: 400 }
+      );
+    }
+
+    // ========================================
+    // 4. TRAITEMENT SELON LE TYPE
+    // ========================================
+    
+    let fileRecord: any;
+    let s3Result: any = null;
+
+    if (isFileUpload) {
+      // ========================================
+      // CAS 1: UPLOAD DE FICHIER LOCAL
+      // ========================================
+      
+      // Validation du Content-Type côté serveur
+      if (!validateContentType(uploadData.fileType!)) {
+        logApi.info(`❌ Type de fichier non autorisé: ${uploadData.fileType}`, { 
+          requestId, 
+          userId 
+        });
+        return NextResponse.json(
+          { error: `Type de fichier non autorisé: ${uploadData.fileType}` }, 
+          { status: 400 }
+        );
+      }
+
+      // Validation de la taille maximale (100MB)
+      const maxSize = 100 * 1024 * 1024;
+      if (uploadData.fileSize! > maxSize) {
+        logApi.info(`❌ Fichier trop volumineux: ${uploadData.fileSize} bytes`, { 
+          requestId, 
+          userId 
+        });
+        return NextResponse.json(
+          { error: `Fichier trop volumineux (max: 100MB)` }, 
+          { status: 500 }
+        );
+      }
+
+      // Pour les fichiers locaux, on retourne l'URL pré-signée pour l'upload côté client
+      // Le client devra ensuite faire l'upload vers S3 et appeler l'endpoint de finalisation
+      s3Result = await secureS3Service.secureUpload({
+        fileName: uploadData.fileName!,
+        fileType: uploadData.fileType!,
+        fileSize: uploadData.fileSize!,
+        userId,
+        folderId: uploadData.folderId,
+        notebookId: uploadData.notebookId,
+        requestId
+      });
+
+      // Construire l'URL publique S3 finale avec encodage correct
+      const publicUrl = buildS3ObjectUrl(
+        process.env.AWS_S3_BUCKET!,
+        process.env.AWS_REGION!,
+        s3Result.key
+      );
+      
+      console.log('🔗 [UPLOAD] URL S3 construite:', {
+        bucket: process.env.AWS_S3_BUCKET,
+        region: process.env.AWS_REGION,
+        key: s3Result.key,
+        publicUrl
+      });
+
+      // Créer un client Supabase avec le contexte d'authentification de l'utilisateur
+      const authHeader = request.headers.get('Authorization');
+      let userSupabase = supabase;
+      
+      if (authHeader && authHeader.startsWith('Bearer ')) {
+        const token = authHeader.substring(7);
+        userSupabase = createClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+          {
+            global: {
+              headers: {
+                Authorization: `Bearer ${token}`
+              }
+            }
+          }
+        );
+      }
+      
+      // Enregistrement en base de données avec statut 'uploading'
+      const { data: dbFileRecord, error: dbError } = await userSupabase
+        .from('files')
+        .insert({
+          filename: uploadData.fileName,
+          mime_type: uploadData.fileType,
+          size: uploadData.fileSize,
+          s3_key: s3Result.key,
+          owner_id: userId,
+          user_id: userId,
+          folder_id: uploadData.folderId || null,
+          status: 'uploading', // Statut temporaire en attendant l'upload S3
+          request_id: requestId,
+          sha256: s3Result.sha256,
+          url: publicUrl,
+          visibility_mode: 'inherit_note',
+          storage_type: 's3' // Nouveau champ pour discriminer
+        })
+        .select()
+        .single();
+
+      if (dbError) {
+        logApi.info(`❌ Erreur DB: ${dbError.message}`, { 
+          requestId, 
+          userId,
+          key: s3Result.key
+        });
+        
+        return NextResponse.json(
+          { error: `Erreur base de données: ${dbError.message}` }, 
+          { status: 500 }
+        );
+      }
+
+      fileRecord = dbFileRecord;
+
+    } else if (isExternalUrl) {
+      // ========================================
+      // CAS 2: URL EXTERNE
+      // ========================================
+      
+      // Validation de l'URL externe
+      if (!validateExternalUrl(uploadData.externalUrl!)) {
+        logApi.info(`❌ URL externe invalide: ${uploadData.externalUrl}`, { 
+          requestId, 
+          userId 
+        });
+        return NextResponse.json(
+          { error: 'URL externe invalide' }, 
+          { status: 400 }
+        );
+      }
+
+      // Créer un client Supabase avec le contexte d'authentification de l'utilisateur
+      const authHeader = request.headers.get('Authorization');
+      let userSupabase = supabase;
+      
+      if (authHeader && authHeader.startsWith('Bearer ')) {
+        const token = authHeader.substring(7);
+        userSupabase = createClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+          {
+            global: {
+              headers: {
+                Authorization: `Bearer ${token}`
+              }
+            }
+          }
+        );
+      }
+      
+      // Fonction utilitaire pour extraire le filename de l'URL
+      function extractFilenameFromUrl(url: string): string {
+        try {
+          const urlObj = new URL(url);
+          const pathname = urlObj.pathname;
+          const filename = pathname.split('/').pop();
+          
+          if (filename && filename.includes('.')) {
+            return filename;
+          }
+          
+          // Si pas de filename dans le path, utiliser le domaine + timestamp
+          return `${urlObj.hostname}_${Date.now()}`;
+        } catch {
+          return `external_image_${Date.now()}`;
+        }
+      }
+      
+      // Enregistrement direct en base de données (pas d'upload S3)
+      const { data: dbFileRecord, error: dbError } = await userSupabase
+        .from('files')
+        .insert({
+          filename: uploadData.fileName || extractFilenameFromUrl(uploadData.externalUrl!),
+          mime_type: uploadData.fileType || 'image/jpeg',
+          size: 0, // Taille 0 pour les URLs externes
+          s3_key: null, // Pas de clé S3 pour les URLs externes
+          owner_id: userId,
+          user_id: userId,
+          folder_id: uploadData.folderId || null,
+          status: 'ready',
+          request_id: requestId,
+          sha256: null, // Pas de hash pour les URLs externes
+          url: uploadData.externalUrl, // URL externe directe
+          visibility_mode: 'inherit_note',
+          storage_type: 'external' // Nouveau champ pour discriminer
+        })
+        .select()
+        .single();
+
+      if (dbError) {
+        logApi.info(`❌ Erreur DB pour URL externe: ${dbError.message}`, { 
+          requestId, 
+          userId,
+          externalUrl: uploadData.externalUrl
+        });
+        
+        return NextResponse.json(
+          { error: `Erreur base de données: ${dbError.message}` }, 
+          { status: 500 }
+        );
+      }
+
+      fileRecord = dbFileRecord;
+    }
+
+    // ========================================
+    // 5. AUDIT TRAIL
+    // ========================================
+    
+    await logFileEvent({
+      fileId: fileRecord.id,
+      userId,
+      eventType: isFileUpload ? 'upload_initiated' : 'external_url_added',
+      requestId,
+      ipAddress: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || undefined,
+      userAgent: request.headers.get('user-agent') || undefined,
+      metadata: {
+        fileName: uploadData.fileName || 'url_externe',
+        fileSize: uploadData.fileSize || 0,
+        fileType: uploadData.fileType || 'unknown',
+        s3Key: s3Result?.key || null,
+        externalUrl: uploadData.externalUrl || null,
+        operationType: isFileUpload ? 'file_upload' : 'external_url'
+      }
+    });
+
+    // ========================================
+    // 6. MISE À JOUR USAGE STOCKAGE (seulement pour les vrais uploads)
+    // ========================================
+    
+    if (isFileUpload) {
+      await updateStorageUsage(userId);
+    }
+
+    // ========================================
+    // 7. RÉPONSE SUCCÈS
     // ========================================
     
     const apiTime = Date.now() - startTime;
     const response: UploadResponse = {
       success: true,
       file: fileRecord,
-      uploadUrl: s3Result.uploadUrl,
-      expiresAt: s3Result.expiresAt,
-      requestId
+      requestId,
+      ...(isFileUpload && s3Result && {
+        uploadUrl: s3Result.uploadUrl,
+        expiresAt: s3Result.expiresAt
+      })
     };
 
-         logApi.info(`✅ Upload initié avec succès en ${apiTime}ms`, { 
-       requestId, 
-       userId,
-       fileId: fileRecord.id,
-       fileSize: uploadData.fileSize,
-       duration: apiTime
-     });
+    logApi.info(`✅ ${isFileUpload ? 'Upload' : 'URL externe'} traité avec succès en ${apiTime}ms`, { 
+      requestId, 
+      userId,
+      fileId: fileRecord.id,
+      operationType: isFileUpload ? 'file_upload' : 'external_url',
+      duration: apiTime
+    });
 
     return NextResponse.json(response, {
       status: 200,
       headers: {
         'Content-Type': 'application/json',
         'X-Request-ID': requestId,
-        'X-Upload-Expires-At': s3Result.expiresAt.toISOString()
+        ...(isFileUpload && s3Result && {
+          'X-Upload-Expires-At': s3Result.expiresAt.toISOString()
+        })
       }
     });
 
   } catch (error: any) {
     // ========================================
-    // 9. GESTION D'ERREURS GLOBALES
+    // 8. GESTION D'ERREURS GLOBALES
     // ========================================
     
     const apiTime = Date.now() - startTime;

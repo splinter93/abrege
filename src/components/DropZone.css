@@ -1,0 +1,248 @@
+/* ==========================================================================
+   DROP ZONE - ZONE DE DÉPÔT UNIFIÉE
+   ========================================================================== */
+
+.drop-zone {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 200px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ==========================================================================
+   OVERLAY DE DRAG & DROP
+   ========================================================================== */
+
+.drop-zone-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(249, 115, 22, 0.08);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 3px dashed var(--files-primary);
+  border-radius: var(--files-radius-xl);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: dropZonePulse 2s ease-in-out infinite;
+}
+
+@keyframes dropZonePulse {
+  0%, 100% {
+    border-color: var(--files-primary);
+    background: rgba(249, 115, 22, 0.08);
+  }
+  50% {
+    border-color: var(--files-primary-hover);
+    background: rgba(249, 115, 22, 0.12);
+  }
+}
+
+/* ==========================================================================
+   CONTENU DE L'OVERLAY
+   ========================================================================== */
+
+.drop-zone-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: var(--files-spacing-2xl);
+  max-width: 400px;
+}
+
+.drop-zone-icon {
+  font-size: 64px;
+  margin-bottom: var(--files-spacing-lg);
+  animation: dropZoneIconFloat 3s ease-in-out infinite;
+  filter: drop-shadow(0 8px 16px rgba(249, 115, 22, 0.3));
+}
+
+@keyframes dropZoneIconFloat {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+.drop-zone-message {
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--files-text-primary);
+  margin-bottom: var(--files-spacing-md);
+  font-family: 'Noto Sans', sans-serif;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* ==========================================================================
+   INDICATEUR DE TRAITEMENT
+   ========================================================================== */
+
+.drop-zone-processing {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--files-spacing-md);
+  margin-top: var(--files-spacing-lg);
+}
+
+.drop-zone-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid rgba(249, 115, 22, 0.2);
+  border-top: 3px solid var(--files-primary);
+  border-radius: 50%;
+  animation: dropZoneSpin 1s linear infinite;
+}
+
+@keyframes dropZoneSpin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.drop-zone-processing span {
+  font-size: 16px;
+  color: var(--files-text-secondary);
+  font-weight: 500;
+  font-family: 'Noto Sans', sans-serif;
+}
+
+/* ==========================================================================
+   ÉTATS SPÉCIAUX
+   ========================================================================== */
+
+/* État désactivé */
+.drop-zone.disabled {
+  pointer-events: none;
+  opacity: 0.6;
+}
+
+/* État de drag invalide */
+.drop-zone-overlay.invalid {
+  border-color: var(--files-error);
+  background: rgba(239, 68, 68, 0.08);
+  animation: none;
+}
+
+.drop-zone-overlay.invalid .drop-zone-icon {
+  animation: dropZoneShake 0.5s ease-in-out;
+}
+
+@keyframes dropZoneShake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-4px);
+  }
+  75% {
+    transform: translateX(4px);
+  }
+}
+
+/* ==========================================================================
+   RESPONSIVE DESIGN
+   ========================================================================== */
+
+@media (max-width: 768px) {
+  .drop-zone-content {
+    padding: var(--files-spacing-xl);
+    max-width: 300px;
+  }
+  
+  .drop-zone-icon {
+    font-size: 48px;
+    margin-bottom: var(--files-spacing-md);
+  }
+  
+  .drop-zone-message {
+    font-size: 20px;
+    margin-bottom: var(--files-spacing-sm);
+  }
+  
+  .drop-zone-processing span {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .drop-zone-content {
+    padding: var(--files-spacing-lg);
+    max-width: 250px;
+  }
+  
+  .drop-zone-icon {
+    font-size: 40px;
+  }
+  
+  .drop-zone-message {
+    font-size: 18px;
+  }
+}
+
+/* ==========================================================================
+   ANIMATIONS D'ENTRÉE/SORTIE
+   ========================================================================== */
+
+.drop-zone-overlay {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.drop-zone-overlay:hover {
+  background: rgba(249, 115, 22, 0.12);
+  border-color: var(--files-primary-hover);
+  transform: scale(1.02);
+}
+
+/* ==========================================================================
+   ACCESSIBILITÉ
+   ========================================================================== */
+
+.drop-zone:focus-within {
+  outline: 2px solid var(--files-primary);
+  outline-offset: 2px;
+}
+
+/* Support pour les lecteurs d'écran */
+.drop-zone-overlay[aria-hidden="true"] {
+  display: none;
+}
+
+/* ==========================================================================
+   THÈMES ALTERNATIFS
+   ========================================================================== */
+
+/* Mode sombre */
+@media (prefers-color-scheme: dark) {
+  .drop-zone-overlay {
+    background: rgba(249, 115, 22, 0.12);
+  }
+  
+  .drop-zone-overlay:hover {
+    background: rgba(249, 115, 22, 0.16);
+  }
+}
+
+/* Mode haute contraste */
+@media (prefers-contrast: high) {
+  .drop-zone-overlay {
+    border-width: 4px;
+    background: rgba(249, 115, 22, 0.2);
+  }
+  
+  .drop-zone-message {
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+  }
+}
