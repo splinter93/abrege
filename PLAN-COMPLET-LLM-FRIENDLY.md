@@ -122,7 +122,7 @@ L'API Abrège a été entièrement refactorisée avec des noms d'endpoints **LLM
 
 ### **Fichiers créés/mis à jour**
 - ✅ `API-DOCUMENTATION.md` - Documentation complète avec nouveaux noms
-- ✅ `openapi.yaml` - Spécification OpenAPI mise à jour
+- ✅ Schéma OpenAPI intégré dans l'API V2
 - ✅ `LLM-FRIENDLY-MIGRATION.md` - Document de migration détaillé
 - ✅ `PLAN-COMPLET-LLM-FRIENDLY.md` - Ce plan complet
 

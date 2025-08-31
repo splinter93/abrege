@@ -1,0 +1,2369 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "API V2 Abrège",
+    "description": "API V2 moderne et robuste pour la gestion de notes, classeurs et dossiers avec support LLM. Authentification par clé API uniquement.",
+    "version": "2.0.0",
+    "contact": {
+      "name": "Support Abrège",
+      "email": "support@scrivia.app",
+      "url": "https://docs.scrivia.app"
+    },
+    "license": {
+      "name": "MIT",
+      "url": "https://opensource.org/licenses/MIT"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://scrivia.app/api/v2",
+      "description": "Production"
+    }
+  ],
+  "security": [
+    {
+      "ApiKeyAuth": []
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "ApiKeyAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-API-Key",
+        "description": "Clé API d'Abrège"
+      }
+    },
+    "schemas": {
+      "Error": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string",
+            "description": "Message d'erreur descriptif"
+          },
+          "details": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Détails des erreurs de validation"
+          },
+          "status": {
+            "type": "integer",
+            "description": "Code de statut HTTP"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Horodatage de l'erreur"
+          },
+          "request_id": {
+            "type": "string",
+            "description": "ID unique de la requête"
+          }
+        },
+        "required": ["error"]
+      },
+      "SuccessResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "message": {
+            "type": "string",
+            "description": "Message de succès optionnel"
+          }
+        },
+        "required": ["success"]
+      },
+      "Note": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "ID unique de la note"
+          },
+          "source_title": {
+            "type": "string",
+            "maxLength": 255,
+            "description": "Titre de la note"
+          },
+          "slug": {
+            "type": "string",
+            "description": "Slug unique de la note"
+          },
+          "public_url": {
+            "type": "string",
+            "format": "uri",
+            "description": "URL publique de la note"
+          },
+          "markdown_content": {
+            "type": "string",
+            "description": "Contenu markdown de la note"
+          },
+          "html_content": {
+            "type": "string",
+            "description": "Contenu HTML généré"
+          },
+          "notebook_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "ID du classeur parent"
+          },
+          "folder_id": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true,
+            "description": "ID du dossier parent"
+          },
+          "header_image": {
+            "type": "string",
+            "format": "uri",
+            "nullable": true,
+            "description": "URL de l'image d'en-tête"
+          },
+          "is_published": {
+            "type": "boolean",
+            "description": "Note publiée ou non"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Date de création"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Date de dernière modification"
+          }
+        },
+        "required": ["id", "source_title", "slug", "notebook_id", "created_at", "updated_at"]
+      },
+      "CreateNoteRequest": {
+        "type": "object",
+        "properties": {
+          "source_title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255,
+            "description": "Titre de la note (obligatoire)"
+          },
+          "notebook_id": {
+            "type": "string",
+            "description": "ID ou slug du classeur (obligatoire)"
+          },
+          "markdown_content": {
+            "type": "string",
+            "description": "Contenu markdown optionnel"
+          },
+          "header_image": {
+            "type": "string",
+            "format": "uri",
+            "description": "URL de l'image d'en-tête"
+          },
+          "folder_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "ID du dossier parent"
+          }
+        },
+        "required": ["source_title", "notebook_id"]
+      },
+      "UpdateNoteRequest": {
+        "type": "object",
+        "properties": {
+          "source_title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255,
+            "description": "Nouveau titre de la note"
+          },
+          "markdown_content": {
+            "type": "string",
+            "description": "Nouveau contenu markdown"
+          },
+          "header_image": {
+            "type": "string",
+            "format": "uri",
+            "nullable": true,
+            "description": "Nouvelle image d'en-tête"
+          },
+          "folder_id": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true,
+            "description": "Nouveau dossier parent"
+          }
+        }
+      },
+      "MoveNoteRequest": {
+        "type": "object",
+        "properties": {
+          "target_notebook_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "ID du nouveau classeur"
+          },
+          "target_folder_id": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true,
+            "description": "ID du nouveau dossier"
+          }
+        }
+      },
+      "AddContentRequest": {
+        "type": "object",
+        "properties": {
+          "markdown_content": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Contenu markdown à ajouter (obligatoire)"
+          }
+        },
+        "required": ["markdown_content"]
+      },
+      "TableOfContentsItem": {
+        "type": "object",
+        "properties": {
+          "level": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 6,
+            "description": "Niveau de titre (H1 à H6)"
+          },
+          "text": {
+            "type": "string",
+            "description": "Texte du titre"
+          },
+          "id": {
+            "type": "string",
+            "description": "ID d'ancrage"
+          }
+        },
+        "required": ["level", "text", "id"]
+      },
+      "NoteStatistics": {
+        "type": "object",
+        "properties": {
+          "word_count": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Nombre de mots"
+          },
+          "character_count": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Nombre de caractères"
+          },
+          "paragraph_count": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Nombre de paragraphes"
+          },
+          "heading_count": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Nombre de titres"
+          },
+          "list_count": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Nombre de listes"
+          },
+          "code_block_count": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Nombre de blocs de code"
+          }
+        },
+        "required": ["word_count", "character_count", "paragraph_count", "heading_count", "list_count", "code_block_count"]
+      },
+      "Classeur": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "ID unique du classeur"
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 255,
+            "description": "Nom du classeur"
+          },
+          "slug": {
+            "type": "string",
+            "description": "Slug unique du classeur"
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 500,
+            "description": "Description du classeur"
+          },
+          "is_public": {
+            "type": "boolean",
+            "description": "Classeur public ou privé"
+          },
+          "note_count": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Nombre de notes dans le classeur"
+          },
+          "folder_count": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Nombre de dossiers dans le classeur"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Date de création"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Date de dernière modification"
+          }
+        },
+        "required": ["id", "name", "slug", "created_at", "updated_at"]
+      },
+      "CreateClasseurRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255,
+            "description": "Nom du classeur (obligatoire)"
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 500,
+            "description": "Description optionnelle du classeur"
+          },
+          "is_public": {
+            "type": "boolean",
+            "description": "Rendre le classeur public (défaut: false)"
+          }
+        },
+        "required": ["name"]
+      },
+      "UpdateClasseurRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255,
+            "description": "Nouveau nom du classeur"
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 500,
+            "description": "Nouvelle description"
+          },
+          "is_public": {
+            "type": "boolean",
+            "description": "Nouveau statut public"
+          }
+        }
+      },
+      "Folder": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "ID unique du dossier"
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 255,
+            "description": "Nom du dossier"
+          },
+          "notebook_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "ID du classeur parent"
+          },
+          "parent_folder_id": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true,
+            "description": "ID du dossier parent (pour sous-dossiers)"
+          },
+          "note_count": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Nombre de notes dans le dossier"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Date de création"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Date de dernière modification"
+          }
+        },
+        "required": ["id", "name", "notebook_id", "created_at", "updated_at"]
+      },
+      "CreateFolderRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255,
+            "description": "Nom du dossier (obligatoire)"
+          },
+          "notebook_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "ID du classeur parent (obligatoire)"
+          },
+          "parent_folder_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "ID du dossier parent (pour sous-dossiers)"
+          }
+        },
+        "required": ["name", "notebook_id"]
+      },
+      "UpdateFolderRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255,
+            "description": "Nouveau nom du dossier"
+          }
+        },
+        "required": ["name"]
+      },
+      "SearchResult": {
+        "type": "object",
+        "properties": {
+          "note_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "ID de la note trouvée"
+          },
+          "source_title": {
+            "type": "string",
+            "description": "Titre de la note"
+          },
+          "slug": {
+            "type": "string",
+            "description": "Slug de la note"
+          },
+          "notebook_name": {
+            "type": "string",
+            "description": "Nom du classeur contenant la note"
+          },
+          "snippet": {
+            "type": "string",
+            "description": "Extrait du contenu autour du terme recherché"
+          },
+          "relevance_score": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "description": "Score de pertinence de la recherche"
+          }
+        },
+        "required": ["note_id", "source_title", "slug", "notebook_name", "snippet", "relevance_score"]
+      },
+      "SearchRequest": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Terme de recherche (obligatoire)"
+          },
+          "notebook_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Limiter la recherche à un classeur"
+          },
+          "folder_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Limiter la recherche à un dossier"
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "default": 20,
+            "description": "Nombre maximum de résultats"
+          },
+          "offset": {
+            "type": "integer",
+            "minimum": 0,
+            "default": 0,
+            "description": "Nombre de résultats à ignorer"
+          }
+        },
+        "required": ["query"]
+      },
+
+      "User": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "ID unique de l'utilisateur"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "description": "Adresse email de l'utilisateur"
+          },
+          "full_name": {
+            "type": "string",
+            "description": "Nom complet de l'utilisateur"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Date de création du compte"
+          },
+          "last_login": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Date de dernière connexion"
+          }
+        },
+        "required": ["id", "email", "created_at"]
+      },
+      "UserStatistics": {
+        "type": "object",
+        "properties": {
+          "total_notes": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Nombre total de notes"
+          },
+          "total_classeurs": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Nombre total de classeurs"
+          },
+          "total_folders": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Nombre total de dossiers"
+          },
+          "storage_used_mb": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Espace de stockage utilisé en MB"
+          }
+        },
+        "required": ["total_notes", "total_classeurs", "total_folders", "storage_used_mb"]
+      },
+      "PlatformStatistics": {
+        "type": "object",
+        "properties": {
+          "total_users": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Nombre total d'utilisateurs"
+          },
+          "total_notes": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Nombre total de notes"
+          },
+          "total_classeurs": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Nombre total de classeurs"
+          },
+          "total_folders": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Nombre total de dossiers"
+          }
+        },
+        "required": ["total_users", "total_notes", "total_classeurs", "total_folders"]
+      },
+      "File": {
+        "type": "object",
+        "properties": {
+          "file_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "ID unique du fichier"
+          },
+          "filename": {
+            "type": "string",
+            "description": "Nom du fichier"
+          },
+          "size_bytes": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Taille du fichier en octets"
+          },
+          "mime_type": {
+            "type": "string",
+            "description": "Type MIME du fichier"
+          },
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "description": "URL de téléchargement du fichier"
+          },
+          "uploaded_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Date d'upload"
+          }
+        },
+        "required": ["file_id", "filename", "size_bytes", "mime_type", "url", "uploaded_at"]
+      },
+      "UploadFileRequest": {
+        "type": "object",
+        "properties": {
+          "note_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "ID de la note associée"
+          },
+          "folder_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "ID du dossier associé"
+          },
+          "description": {
+            "type": "string",
+            "description": "Description du fichier"
+          }
+        }
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Notes",
+      "description": "Gestion des notes et articles"
+    },
+    {
+      "name": "Classeurs",
+      "description": "Gestion des classeurs (notebooks)"
+    },
+    {
+      "name": "Dossiers",
+      "description": "Gestion des dossiers et organisation"
+    },
+    {
+      "name": "Recherche",
+      "description": "Recherche et utilitaires"
+    },
+    {
+      "name": "Utilisateur",
+      "description": "Informations utilisateur et statistiques"
+    },
+    {
+      "name": "Fichiers",
+      "description": "Gestion des fichiers uploadés"
+    },
+    {
+      "name": "Gestion unifiée",
+      "description": "Endpoints unifiés pour la gestion des ressources"
+    }
+  ],
+  "paths": {
+    "/note/create": {
+      "post": {
+        "tags": ["Notes"],
+        "summary": "Créer une nouvelle note",
+        "description": "Créer une nouvelle note structurée dans un classeur spécifique avec un titre obligatoire et un contenu markdown optionnel",
+        "operationId": "createNote",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateNoteRequest"
+              },
+              "examples": {
+                "note-simple": {
+                  "summary": "Note simple",
+                  "value": {
+                    "source_title": "Ma Première Note",
+                    "notebook_id": "uuid-du-classeur",
+                    "markdown_content": "# Introduction\n\nContenu de la note..."
+                  }
+                },
+                "note-complete": {
+                  "summary": "Note complète",
+                  "value": {
+                    "source_title": "Guide complet",
+                    "notebook_id": "uuid-du-classeur",
+                    "markdown_content": "# Guide complet\n\n## Section 1\n\nContenu détaillé...",
+                    "header_image": "https://example.com/image.jpg",
+                    "folder_id": "uuid-du-dossier"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Note créée avec succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/Note"
+                    }
+                  },
+                  "required": ["success", "data"]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Données invalides",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Token invalide ou expiré",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Classeur non trouvé",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Erreur de validation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/note/{ref}": {
+      "get": {
+        "tags": ["Notes"],
+        "summary": "Récupérer une note",
+        "description": "Récupérer les informations complètes d'une note par son ID, slug ou URL publique",
+        "operationId": "getNote",
+        "parameters": [
+          {
+            "name": "ref",
+            "in": "path",
+            "required": true,
+            "description": "ID, slug ou URL publique de la note",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Note récupérée avec succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/Note"
+                    }
+                  },
+                  "required": ["success", "data"]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Token invalide ou expiré",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Note non trouvée",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/note/{ref}/update": {
+      "put": {
+        "tags": ["Notes"],
+        "summary": "Mettre à jour une note",
+        "description": "Mettre à jour les informations d'une note existante",
+        "operationId": "updateNote",
+        "parameters": [
+          {
+            "name": "ref",
+            "in": "path",
+            "required": true,
+            "description": "ID, slug ou URL publique de la note",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateNoteRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Note mise à jour avec succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/Note"
+                    }
+                  },
+                  "required": ["success", "data"]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Données invalides",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Token invalide ou expiré",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Note non trouvée",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/note/{ref}/delete": {
+      "delete": {
+        "tags": ["Notes"],
+        "summary": "Supprimer une note",
+        "description": "Supprimer définitivement une note et toutes ses données associées",
+        "operationId": "deleteNote",
+        "parameters": [
+          {
+            "name": "ref",
+            "in": "path",
+            "required": true,
+            "description": "ID, slug ou URL publique de la note",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Note supprimée avec succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Note supprimée avec succès"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "deleted_note_id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "deleted_at": {
+                          "type": "string",
+                          "format": "date-time"
+                        }
+                      }
+                    }
+                  },
+                  "required": ["success", "message", "data"]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Token invalide ou expiré",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Note non trouvée",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/note/{ref}/move": {
+      "put": {
+        "tags": ["Notes"],
+        "summary": "Déplacer une note",
+        "description": "Déplacer une note vers un autre classeur ou dossier",
+        "operationId": "moveNote",
+        "parameters": [
+          {
+            "name": "ref",
+            "in": "path",
+            "required": true,
+            "description": "ID, slug ou URL publique de la note",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MoveNoteRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Note déplacée avec succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/Note"
+                    }
+                  },
+                  "required": ["success", "data"]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Données invalides",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Token invalide ou expiré",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Note ou destination non trouvée",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/note/{ref}/add-content": {
+      "patch": {
+        "tags": ["Notes"],
+        "summary": "Ajouter du contenu à une note",
+        "description": "Ajouter du contenu markdown à la fin d'une note existante",
+        "operationId": "addContentToNote",
+        "parameters": [
+          {
+            "name": "ref",
+            "in": "path",
+            "required": true,
+            "description": "ID, slug ou URL publique de la note",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddContentRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Contenu ajouté avec succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/Note"
+                    }
+                  },
+                  "required": ["success", "data"]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Données invalides",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Token invalide ou expiré",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Note non trouvée",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/note/{ref}/table-of-contents": {
+      "get": {
+        "tags": ["Notes"],
+        "summary": "Récupérer la table des matières",
+        "description": "Générer et récupérer la table des matières automatique d'une note",
+        "operationId": "getNoteTableOfContents",
+        "parameters": [
+          {
+            "name": "ref",
+            "in": "path",
+            "required": true,
+            "description": "ID, slug ou URL publique de la note",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Table des matières récupérée avec succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "note_id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "table_of_contents": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/TableOfContentsItem"
+                          }
+                        }
+                      },
+                      "required": ["note_id", "table_of_contents"]
+                    }
+                  },
+                  "required": ["success", "data"]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Token invalide ou expiré",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Note non trouvée",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/note/{ref}/statistics": {
+      "get": {
+        "tags": ["Notes"],
+        "summary": "Récupérer les statistiques d'une note",
+        "description": "Obtenir des statistiques détaillées sur une note (nombre de mots, caractères, etc.)",
+        "operationId": "getNoteStatistics",
+        "parameters": [
+          {
+            "name": "ref",
+            "in": "path",
+            "required": true,
+            "description": "ID, slug ou URL publique de la note",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Statistiques récupérées avec succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "note_id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "statistics": {
+                          "$ref": "#/components/schemas/NoteStatistics"
+                        }
+                      },
+                      "required": ["note_id", "statistics"]
+                    }
+                  },
+                  "required": ["success", "data"]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Token invalide ou expiré",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Note non trouvée",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/note/recent": {
+      "get": {
+        "tags": ["Notes"],
+        "summary": "Récupérer les notes récentes",
+        "description": "Obtenir la liste des notes les plus récemment modifiées",
+        "operationId": "getRecentNotes",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "description": "Nombre maximum de notes à retourner",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 10
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "description": "Nombre de notes à ignorer",
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Notes récentes récupérées avec succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "notes": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string",
+                                "format": "uuid"
+                              },
+                              "source_title": {
+                                "type": "string"
+                              },
+                              "slug": {
+                                "type": "string"
+                              },
+                              "updated_at": {
+                                "type": "string",
+                                "format": "date-time"
+                              }
+                            },
+                            "required": ["id", "source_title", "slug", "updated_at"]
+                          }
+                        },
+                        "total_count": {
+                          "type": "integer"
+                        },
+                        "has_more": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": ["notes", "total_count", "has_more"]
+                    }
+                  },
+                  "required": ["success", "data"]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Token invalide ou expiré",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/classeur/create": {
+      "post": {
+        "tags": ["Classeurs"],
+        "summary": "Créer un nouveau classeur",
+        "description": "Créer un nouveau classeur pour organiser vos notes et dossiers",
+        "operationId": "createClasseur",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateClasseurRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Classeur créé avec succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/Classeur"
+                    }
+                  },
+                  "required": ["success", "data"]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Données invalides",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Token invalide ou expiré",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Erreur de validation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/classeurs": {
+      "get": {
+        "tags": ["Classeurs"],
+        "summary": "Lister tous les classeurs",
+        "description": "Obtenir la liste de tous les classeurs de l'utilisateur",
+        "operationId": "listClasseurs",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "description": "Nombre maximum de classeurs",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 50
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "description": "Nombre de classeurs à ignorer",
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Liste des classeurs récupérée avec succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "classeurs": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/Classeur"
+                          }
+                        },
+                        "total_count": {
+                          "type": "integer"
+                        }
+                      },
+                      "required": ["classeurs", "total_count"]
+                    }
+                  },
+                  "required": ["success", "data"]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Token invalide ou expiré",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/classeur/{ref}/tree": {
+      "get": {
+        "tags": ["Classeurs"],
+        "summary": "Récupérer l'arborescence d'un classeur",
+        "description": "Obtenir la structure complète d'un classeur avec tous ses dossiers et notes",
+        "operationId": "getClasseurTree",
+        "parameters": [
+          {
+            "name": "ref",
+            "in": "path",
+            "required": true,
+            "description": "ID ou slug du classeur",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Arborescence récupérée avec succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "classeur": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "format": "uuid"
+                            },
+                            "name": {
+                              "type": "string"
+                            },
+                            "slug": {
+                              "type": "string"
+                            }
+                          }
+                        },
+                        "structure": {
+                          "type": "object",
+                          "properties": {
+                            "folders": {
+                              "type": "array",
+                              "items": {
+                                "$ref": "#/components/schemas/Folder"
+                              }
+                            },
+                            "notes": {
+                              "type": "array",
+                              "items": {
+                                "$ref": "#/components/schemas/Note"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "required": ["success", "data"]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Token invalide ou expiré",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Classeur non trouvé",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/folder/create": {
+      "post": {
+        "tags": ["Dossiers"],
+        "summary": "Créer un nouveau dossier",
+        "description": "Créer un nouveau dossier dans un classeur spécifique",
+        "operationId": "createFolder",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateFolderRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Dossier créé avec succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/Folder"
+                    }
+                  },
+                  "required": ["success", "data"]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Données invalides",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Token invalide ou expiré",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Classeur parent non trouvé",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/folder/{ref}/tree": {
+      "get": {
+        "tags": ["Dossiers"],
+        "summary": "Récupérer l'arborescence d'un dossier",
+        "description": "Obtenir la structure complète d'un dossier avec ses sous-dossiers et notes",
+        "operationId": "getFolderTree",
+        "parameters": [
+          {
+            "name": "ref",
+            "in": "path",
+            "required": true,
+            "description": "ID ou slug du dossier",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Arborescence récupérée avec succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "folder": {
+                          "$ref": "#/components/schemas/Folder"
+                        },
+                        "children": {
+                          "type": "object",
+                          "properties": {
+                            "folders": {
+                              "type": "array",
+                              "items": {
+                                "$ref": "#/components/schemas/Folder"
+                              }
+                            },
+                            "notes": {
+                              "type": "array",
+                              "items": {
+                                "$ref": "#/components/schemas/Note"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "required": ["success", "data"]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Token invalide ou expiré",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Dossier non trouvé",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/search": {
+      "get": {
+        "tags": ["Recherche"],
+        "summary": "Rechercher dans le contenu",
+        "description": "Effectuer une recherche textuelle dans toutes les notes et dossiers de l'utilisateur",
+        "operationId": "searchNotes",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": true,
+            "description": "Terme de recherche",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          {
+            "name": "classeur_id",
+            "in": "query",
+            "required": false,
+            "description": "Limiter la recherche à un classeur",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "required": false,
+            "description": "Type de contenu à rechercher",
+            "schema": {
+              "type": "string",
+              "enum": ["all", "notes", "folders"],
+              "default": "all"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "description": "Nombre maximum de résultats",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Recherche effectuée avec succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "query": {
+                      "type": "string",
+                      "description": "Terme de recherche utilisé"
+                    },
+                    "results": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "enum": ["note", "folder"],
+                            "description": "Type de résultat"
+                          },
+                          "id": {
+                            "type": "string",
+                            "format": "uuid",
+                            "description": "ID de la ressource"
+                          },
+                          "title": {
+                            "type": "string",
+                            "description": "Titre de la ressource"
+                          },
+                          "slug": {
+                            "type": "string",
+                            "description": "Slug de la ressource"
+                          },
+                          "classeur_id": {
+                            "type": "string",
+                            "format": "uuid",
+                            "description": "ID du classeur parent"
+                          },
+                          "score": {
+                            "type": "number",
+                            "description": "Score de pertinence (0-200)"
+                          },
+                          "excerpt": {
+                            "type": "string",
+                            "description": "Extrait du contenu"
+                          }
+                        },
+                        "required": ["type", "id", "title", "slug", "classeur_id", "score", "excerpt"]
+                      }
+                    },
+                    "total": {
+                      "type": "integer",
+                      "description": "Nombre total de résultats trouvés"
+                    }
+                  },
+                  "required": ["success", "query", "results", "total"]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Requête invalide",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Token invalide ou expiré",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/files/search": {
+      "get": {
+        "tags": ["Recherche"],
+        "summary": "Rechercher des fichiers",
+        "description": "Rechercher et lister les fichiers avec critères de filtrage avancés",
+        "operationId": "searchFiles",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "description": "Mot-clé de recherche (nom de fichier + description)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "required": false,
+            "description": "Type de fichier (pdf, image, csv) ou MIME type",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "description": "Nombre maximum de résultats",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 50
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "description": "Nombre de résultats à ignorer",
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0
+            }
+          },
+          {
+            "name": "created_from",
+            "in": "query",
+            "required": false,
+            "description": "Date de création de début (ISO string)",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "created_to",
+            "in": "query",
+            "required": false,
+            "description": "Date de création de fin (ISO string)",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "min_size",
+            "in": "query",
+            "required": false,
+            "description": "Taille minimale en bytes",
+            "schema": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          {
+            "name": "max_size",
+            "in": "query",
+            "required": false,
+            "description": "Taille maximale en bytes",
+            "schema": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          {
+            "name": "sort_by",
+            "in": "query",
+            "required": false,
+            "description": "Critère de tri",
+            "schema": {
+              "type": "string",
+              "enum": ["filename", "size", "created_at"],
+              "default": "created_at"
+            }
+          },
+          {
+            "name": "sort_order",
+            "in": "query",
+            "required": false,
+            "description": "Ordre de tri",
+            "schema": {
+              "type": "string",
+              "enum": ["asc", "desc"],
+              "default": "desc"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Recherche de fichiers effectuée avec succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "files": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "filename": {
+                            "type": "string",
+                            "description": "Nom du fichier"
+                          },
+                          "type": {
+                            "type": "string",
+                            "description": "Type MIME du fichier"
+                          },
+                          "size": {
+                            "type": "integer",
+                            "description": "Taille en bytes"
+                          },
+                          "url": {
+                            "type": "string",
+                            "description": "URL de téléchargement"
+                          },
+                          "slug": {
+                            "type": "string",
+                            "description": "Slug unique du fichier"
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Description optionnelle"
+                          },
+                          "created_at": {
+                            "type": "string",
+                            "format": "date-time",
+                            "description": "Date de création"
+                          },
+                          "updated_at": {
+                            "type": "string",
+                            "format": "date-time",
+                            "description": "Date de modification"
+                          }
+                        },
+                        "required": ["filename", "type", "size", "url", "slug", "created_at", "updated_at"]
+                      }
+                    },
+                    "total": {
+                      "type": "integer",
+                      "description": "Nombre total de fichiers"
+                    },
+                    "metadata": {
+                      "type": "object",
+                      "properties": {
+                        "limit": {
+                          "type": "integer",
+                          "description": "Limite appliquée"
+                        },
+                        "offset": {
+                          "type": "integer",
+                          "description": "Offset appliqué"
+                        },
+                        "has_more": {
+                          "type": "boolean",
+                          "description": "Y a-t-il plus de résultats"
+                        },
+                        "filters_applied": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          },
+                          "description": "Filtres appliqués"
+                        },
+                        "search_query": {
+                          "type": "string",
+                          "description": "Requête de recherche si applicable"
+                        }
+                      },
+                      "required": ["limit", "offset", "has_more", "filters_applied"]
+                    }
+                  },
+                  "required": ["success", "files", "total", "metadata"]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Paramètres de requête invalides",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Non autorisé",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "/me": {
+      "get": {
+        "tags": ["Utilisateur"],
+        "summary": "Informations sur l'utilisateur actuel",
+        "description": "Récupérer les informations de l'utilisateur authentifié",
+        "operationId": "getCurrentUser",
+        "responses": {
+          "200": {
+            "description": "Informations utilisateur récupérées avec succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "user": {
+                          "$ref": "#/components/schemas/User"
+                        },
+                        "statistics": {
+                          "$ref": "#/components/schemas/UserStatistics"
+                        }
+                      },
+                      "required": ["user", "statistics"]
+                    }
+                  },
+                  "required": ["success", "data"]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Token invalide ou expiré",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/stats": {
+      "get": {
+        "tags": ["Utilisateur"],
+        "summary": "Statistiques globales",
+        "description": "Obtenir des statistiques globales sur l'utilisation de la plateforme",
+        "operationId": "getPlatformStats",
+        "responses": {
+          "200": {
+            "description": "Statistiques récupérées avec succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "platform_stats": {
+                          "$ref": "#/components/schemas/PlatformStatistics"
+                        },
+                        "user_stats": {
+                          "$ref": "#/components/schemas/UserStatistics"
+                        }
+                      },
+                      "required": ["platform_stats", "user_stats"]
+                    }
+                  },
+                  "required": ["success", "data"]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Token invalide ou expiré",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/delete/{resource}/{ref}": {
+      "delete": {
+        "tags": ["Gestion unifiée"],
+        "summary": "Supprimer une ressource",
+        "description": "Endpoint unifié pour supprimer n'importe quel type de ressource (note, classeur, dossier, fichier)",
+        "operationId": "deleteResource",
+        "parameters": [
+          {
+            "name": "resource",
+            "in": "path",
+            "required": true,
+            "description": "Type de ressource",
+            "schema": {
+              "type": "string",
+              "enum": ["note", "classeur", "folder", "file"]
+            }
+          },
+          {
+            "name": "ref",
+            "in": "path",
+            "required": true,
+            "description": "ID ou slug de la ressource",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ressource supprimée avec succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Ressource supprimée avec succès"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "resource_type": {
+                          "type": "string"
+                        },
+                        "resource_id": {
+                          "type": "string"
+                        },
+                        "deleted_at": {
+                          "type": "string",
+                          "format": "date-time"
+                        }
+                      }
+                    }
+                  },
+                  "required": ["success", "message", "data"]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Type de ressource invalide",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Token invalide ou expiré",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Ressource non trouvée",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

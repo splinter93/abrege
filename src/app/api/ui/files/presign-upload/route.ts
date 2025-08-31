@@ -17,8 +17,8 @@ const schema = z.object({
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
   const clientType = request.headers.get('X-Client-Type') || 'unknown';
-  const context = { operation: 'v2_files_presign_upload', component: 'API_V2', clientType };
-  logger.info(LogCategory.API, '🚀 Début presign upload', context);
+  const context = { operation: 'ui_files_presign_upload', component: 'API_UI', clientType };
+  logger.info(LogCategory.API, '🚀 Début presign upload UI', context);
 
   // Auth
   const auth = await getAuthenticatedUser(request);
@@ -70,4 +70,4 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     logger.error(LogCategory.API, `❌ Erreur presign: ${error?.message || error}`, { ...context, error });
     return NextResponse.json({ error: 'Erreur presign' }, { status: 500 });
   }
-} 
+}

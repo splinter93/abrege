@@ -169,7 +169,7 @@ return NextResponse.json(
 
 #### 2. Documentation API
 ```yaml
-# Créer openapi.yaml avec tous les endpoints
+# Schéma OpenAPI intégré dans l'API V2
 # Ajouter des exemples pour chaque endpoint
 ```
 

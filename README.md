@@ -83,9 +83,11 @@ npm run test:coverage
 
 ## 📚 **Documentation**
 
-- **[API Documentation](API-SLUGS-DOCUMENTATION.md)** : Documentation complète des endpoints
+- **[API V2 Documentation Complète](API-V2-DOCUMENTATION-COMPLETE.md)** : Documentation détaillée de tous les endpoints
+- **[API V2 Guide de Démarrage Rapide](API-V2-QUICKSTART.md)** : Commencer en 5 minutes
+- **[Schéma OpenAPI V2](openapi-v2-schema.json)** : Spécification OpenAPI 3.1.0 complète
+- **[Guide d'utilisation OpenAPI](OPENAPI-V2-USAGE-GUIDE.md)** : Comment utiliser le schéma OpenAPI
 - **[Migration Guide](MIGRATION-GUIDE.md)** : Guide de migration pour les utilisateurs
-- **[API Quickstart](API-Quickstart.md)** : Démarrage rapide
 
 ## 🎯 **Endpoints principaux**
 
@@ -212,7 +214,7 @@ npm run build
 
 ## 📞 **Support**
 
-- **Documentation** : `API-SLUGS-DOCUMENTATION.md`
+- **Documentation** : [API V2 Documentation Complète](API-V2-DOCUMENTATION-COMPLETE.md)
 - **Migration** : `MIGRATION-GUIDE.md`
 - **Tests** : `npm run test-endpoints`
 - **Logs** : Vérifier les logs de déploiement

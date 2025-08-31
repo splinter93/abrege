@@ -208,7 +208,7 @@ function generateRecommendations(structure, utilities, tests, config, quality) {
       action: 'Créer la documentation API OpenAPI',
       impact: 'HAUT',
       effort: 'MOYEN',
-      command: 'Créer openapi.yaml'
+              command: 'Schéma OpenAPI intégré dans l\'API V2'
     });
   }
   

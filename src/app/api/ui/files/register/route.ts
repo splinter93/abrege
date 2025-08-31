@@ -3,22 +3,16 @@ import { NextRequest, NextResponse } from 'next/server';
 import { logApi } from '@/utils/logger';
 import { getAuthenticatedUser, createAuthenticatedSupabaseClient } from '@/utils/authUtils';
 
-// 🔧 CORRECTIONS APPLIQUÉES:
-// - Authentification simplifiée via getAuthenticatedUser uniquement
-// - Suppression de la double vérification d'authentification
-// - Client Supabase standard sans token manuel
-// - Plus de 401 causés par des conflits d'authentification
-
-export async function GET(request: NextRequest): Promise<NextResponse> {
+export async function POST(request: NextRequest): Promise<NextResponse> {
   const startTime = Date.now();
   const clientType = request.headers.get('X-Client-Type') || 'unknown';
   const context = {
-    operation: 'v2_files_list',
-    component: 'API_V2',
+    operation: 'ui_files_register',
+    component: 'API_UI',
     clientType
   };
 
-  logApi.info('🚀 Début récupération liste fichiers v2', context);
+  logApi.info('🚀 Début enregistrement fichier UI', context);
 
   // 🔐 Authentification
   const authResult = await getAuthenticatedUser(request);
@@ -32,42 +26,51 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
   const userId = authResult.userId!;
   
-  // Récupérer l'ID de fichier spécifique si fourni
-  const { searchParams } = new URL(request.url);
-  const fileId = searchParams.get('id');
-
   // 🔧 CORRECTION: Client Supabase standard, getAuthenticatedUser a déjà validé
   const supabase = createAuthenticatedSupabaseClient(authResult);
 
   try {
-    let query = supabase
-      .from('files')
-      .select('id, name, size, mime_type, created_at, updated_at, classeur_id, folder_id')
-      .eq('user_id', userId);
+    const body = await request.json();
+    const { filename, original_name, mime_type, size, classeur_id, folder_id } = body;
 
-    // Filtrer par ID si spécifié
-    if (fileId) {
-      query = query.eq('id', fileId);
+    // Validation des données
+    if (!filename || !mime_type || !size) {
+      return NextResponse.json(
+        { error: 'Données manquantes: filename, mime_type et size sont requis' },
+        { status: 400, headers: { "Content-Type": "application/json" } }
+      );
     }
 
-    const { data: files, error: fetchError } = await query.order('created_at', { ascending: false });
+    // Enregistrer le fichier dans la base
+    const { data: file, error: insertError } = await supabase
+      .from('files')
+      .insert({
+        filename,
+        original_name: original_name || filename,
+        mime_type,
+        size,
+        classeur_id,
+        folder_id,
+        user_id: userId
+      })
+      .select()
+      .single();
 
-    if (fetchError) {
-      logApi.info(`❌ Erreur récupération fichiers: ${fetchError.message}`, context);
+    if (insertError) {
+      logApi.error(`❌ Erreur enregistrement fichier: ${insertError.message}`, context);
       return NextResponse.json(
-        { error: 'Erreur lors de la récupération des fichiers' },
+        { error: 'Erreur lors de l\'enregistrement du fichier' },
         { status: 500, headers: { "Content-Type": "application/json" } }
       );
     }
 
     const apiTime = Date.now() - startTime;
-    logApi.info(`✅ ${files?.length || 0} fichiers récupérés en ${apiTime}ms`, context);
+    logApi.info(`✅ Fichier enregistré en ${apiTime}ms`, context);
 
     return NextResponse.json({
       success: true,
-      files: files || [],
-      count: files?.length || 0
-    }, { headers: { "Content-Type": "application/json" } });
+      file
+    }, { status: 201, headers: { "Content-Type": "application/json" } });
 
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
@@ -78,4 +81,4 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       { status: 500, headers: { "Content-Type": "application/json" } }
     );
   }
-} 
+}

@@ -8,7 +8,7 @@ export async function uploadImageForNote(file: File, noteRef: string): Promise<{
   const authHeader = { Authorization: `Bearer ${token}` } as const;
 
   // Presign
-  const presignRes = await fetch('/api/v2/files/presign-upload', {
+  const presignRes = await fetch('/api/ui/files/presign-upload', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...authHeader },
     body: JSON.stringify({
@@ -53,7 +53,7 @@ export async function uploadImageForNote(file: File, noteRef: string): Promise<{
   // eslint-disable-next-line no-constant-condition
   while (true) {
     const candidateName = buildFileNameVariant(file.name, attempt);
-    const registerRes = await fetch('/api/v2/files/register', {
+    const registerRes = await fetch('/api/ui/files/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...authHeader },
       body: JSON.stringify({

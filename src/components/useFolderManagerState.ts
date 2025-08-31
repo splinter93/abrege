@@ -237,7 +237,14 @@ export function useFolderManagerState(classeurId: string, userId: string, parent
   const deleteFolder = useCallback(async (id: string) => {
     try {
       if (process.env.NODE_ENV === 'development') {
-        logger.dev('[UI] 🗑️ Suppression dossier avec V2UnifiedApi uniquement...', { id });
+        logger.dev('[UI] 🗑️ Suppression dossier avec V2UnifiedApi uniquement...', { id, userId });
+      }
+      
+      // Vérifier que l'utilisateur est connecté
+      if (!userId || userId.trim() === '') {
+        logger.error('[UI] ❌ Utilisateur non connecté:', { userId });
+        setError('Vous devez être connecté pour supprimer un dossier.');
+        return;
       }
       
       // Vérifier que le dossier existe

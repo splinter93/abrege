@@ -51,7 +51,7 @@ export async function PUT(
       return createValidationErrorResponse(validationResult);
     }
 
-    const { name, emoji, color } = validationResult.data;
+    const { name, emoji, description } = validationResult.data;
 
     // Résoudre la référence (UUID ou slug)
     const resolveResult = await V2ResourceResolver.resolveRef(ref, 'classeur', userId, context);
@@ -84,7 +84,7 @@ export async function PUT(
     const updateData: any = {};
     if (name !== undefined) updateData.name = name;
     if (emoji !== undefined) updateData.emoji = emoji;
-    if (color !== undefined) updateData.color = color;
+    if (description !== undefined) updateData.description = description;
 
     // Mettre à jour le classeur
     const { data: updatedClasseur, error: updateError } = await supabase

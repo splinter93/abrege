@@ -342,4 +342,4 @@ export async function OPTIONS(request: NextRequest): Promise<NextResponse> {
       'Access-Control-Max-Age': '86400',
     },
   });
-} 
+}

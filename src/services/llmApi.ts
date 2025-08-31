@@ -240,7 +240,7 @@ export class LLMApi {
       });
       
       // ✅ DEBUG: Construire l'URL et vérifier sa validité
-      const deleteUrl = `/api/v2/note/${noteRef}`;
+              const deleteUrl = `/api/v2/delete/note/${noteRef}`;
       console.log('🔗 [LLM DELETE] URL construite:', {
         url: deleteUrl,
         isValid: deleteUrl.includes(noteRef),
@@ -653,7 +653,7 @@ export class LLMApi {
     
     try {
       const headers = await this.getAuthHeaders();
-      const response = await fetch(`/api/v2/folder/${folderRef}`, {
+      const response = await fetch(`/api/v2/delete/folder/${folderRef}`, {
         method: 'DELETE',
         headers
       });
@@ -796,7 +796,7 @@ export class LLMApi {
     
     try {
       const headers = await this.getAuthHeaders();
-      const response = await fetch(`/api/v2/classeur/${classeurRef}`, {
+      const response = await fetch(`/api/v2/delete/classeur/${classeurRef}`, {
         method: 'DELETE',
         headers
       });

@@ -261,15 +261,9 @@ export async function loadOpenAPISchema(): Promise<any> {
   } catch (error) {
     console.error('[OpenAPIToolsGenerator] ❌ Erreur lors du chargement du schéma:', error);
     
-    // Fallback vers le schéma local si disponible
-    try {
-      const localSchema = await import('../../openapi-scrivia-v2-api-key-only.json');
-      console.log('[OpenAPIToolsGenerator] 🔄 Utilisation du schéma local en fallback');
-      return localSchema.default;
-    } catch (fallbackError) {
-      console.error('[OpenAPIToolsGenerator] ❌ Fallback échoué:', fallbackError);
-      throw error;
-    }
+    // Fallback vers un schéma par défaut si nécessaire
+    console.log('[OpenAPIToolsGenerator] 🔄 Utilisation du schéma par défaut en fallback');
+    throw error;
   }
 }
 

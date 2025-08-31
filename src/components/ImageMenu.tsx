@@ -157,7 +157,7 @@ const ImageMenu: React.FC<ImageMenuProps> = ({ open, onClose, onInsertImage, not
       };
       console.log('📤 [IMAGE-MENU] Presign payload:', presignPayload);
       
-      const presignResponse = await fetch('/api/v2/files/presign-upload', {
+      const presignResponse = await fetch('/api/ui/files/presign-upload', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -207,7 +207,7 @@ const ImageMenu: React.FC<ImageMenuProps> = ({ open, onClose, onInsertImage, not
       };
       console.log('📝 [IMAGE-MENU] Register payload:', registerPayload);
       
-      const registerResponse = await fetch('/api/v2/files/register', {
+      const registerResponse = await fetch('/api/ui/files/register', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',

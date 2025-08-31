@@ -154,7 +154,7 @@ const FileUploaderLocal: React.FC<FileUploaderLocalProps> = ({
   const uploadFile = async (file: File, upload: UploadProgress) => {
     try {
       // 1. Initier l'upload
-      const uploadResponse = await fetch('/api/v2/files/upload', {
+      const uploadResponse = await fetch('/api/ui/files/upload', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -166,7 +166,7 @@ Ouvrez `http://localhost:3001/test-auto-slug-update` pour tester :
 - 📖 [SlugGenerator](./src/utils/slugGenerator.ts) - Générateur de slugs
 - 📖 [V2DatabaseUtils](./src/utils/v2DatabaseUtils.ts) - Utilitaires de base de données
 - 📖 [AutoSlugUpdateService](./src/services/autoSlugUpdateService.ts) - Service de mise à jour
-- 📖 [API Endpoints](./docs/API-ENDPOINTS.md) - Documentation des endpoints
+- 📖 Documentation API intégrée dans l'API V2
 
 ---
 
