@@ -1,6 +1,7 @@
 import React from 'react';
 import '@/styles/markdown.css';
 import '@/components/mermaid/MermaidRenderer.css';
+import '@/components/mermaid/MermaidToolbar.css';
 import '@/components/mermaid/MermaidModal.css';
 import EditorLayout from './EditorLayout';
 import EditorHeader from './EditorHeader';

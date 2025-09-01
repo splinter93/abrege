@@ -9,6 +9,7 @@ import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { initializeMermaid } from '@/services/mermaid/mermaidConfig';
 import { normalizeMermaidContent, getMermaidDiagramType } from '@/components/chat/mermaidService';
 import { simpleLogger as logger } from '@/utils/logger';
+import MermaidToolbar from './MermaidToolbar';
 import './MermaidRenderer.css';
 
 export interface MermaidRendererProps {
@@ -18,12 +19,20 @@ export interface MermaidRendererProps {
   variant?: 'editor' | 'chat';
   /** Classe CSS optionnelle */
   className?: string;
-  /** Afficher les boutons d'action */
-  showActions?: boolean;
+  /** Afficher la toolbar */
+  showToolbar?: boolean;
+  /** Afficher le bouton copier dans la toolbar */
+  showCopy?: boolean;
+  /** Afficher le bouton agrandir dans la toolbar */
+  showExpand?: boolean;
+  /** Afficher le bouton éditer dans la toolbar */
+  showEdit?: boolean;
   /** Callback appelé en cas d'erreur */
   onError?: (error: string) => void;
   /** Callback appelé en cas de succès */
   onSuccess?: () => void;
+  /** Callback pour l'édition */
+  onEdit?: () => void;
   /** Options de rendu personnalisées */
   renderOptions?: {
     timeout?: number;
@@ -39,16 +48,19 @@ const MermaidRenderer: React.FC<MermaidRendererProps> = ({
   content,
   variant = 'chat',
   className = '',
-  showActions = true,
+  showToolbar = true,
+  showCopy = true,
+  showExpand = true,
+  showEdit = true,
   onError,
   onSuccess,
+  onEdit,
   renderOptions = {}
 }) => {
   const [svgContent, setSvgContent] = useState<string>('');
   const [isRendered, setIsRendered] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isCopied, setIsCopied] = useState(false);
   
   const renderIdRef = useRef<string>('');
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -161,14 +173,6 @@ const MermaidRenderer: React.FC<MermaidRendererProps> = ({
     };
   }, [content, renderChart]);
 
-  // Gestion de la copie du code source
-  const handleCopy = useCallback(() => {
-    navigator.clipboard.writeText(content).then(() => {
-      setIsCopied(true);
-      setTimeout(() => setIsCopied(false), 2000);
-    });
-  }, [content]);
-
   // Gestion des erreurs avec retry
   const handleRetry = useCallback(() => {
     setError(null);
@@ -188,6 +192,18 @@ const MermaidRenderer: React.FC<MermaidRendererProps> = ({
   if (error) {
     return (
       <div className={containerClasses}>
+        {/* Toolbar même en cas d'erreur */}
+        {showToolbar && (
+          <MermaidToolbar
+            content={content}
+            variant={variant}
+            showCopy={showCopy}
+            showExpand={false}
+            showEdit={showEdit}
+            onEdit={onEdit}
+          />
+        )}
+        
         <div className="mermaid-error-content">
           <div className="mermaid-error-header">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -224,6 +240,17 @@ const MermaidRenderer: React.FC<MermaidRendererProps> = ({
   if (isLoading) {
     return (
       <div className={containerClasses}>
+        {/* Toolbar même pendant le chargement */}
+        {showToolbar && (
+          <MermaidToolbar
+            content={content}
+            variant={variant}
+            showCopy={false}
+            showExpand={false}
+            showEdit={false}
+          />
+        )}
+        
         <div className="mermaid-loading-content">
           <div className="mermaid-spinner"></div>
           <span>Rendu du diagramme...</span>
@@ -236,38 +263,23 @@ const MermaidRenderer: React.FC<MermaidRendererProps> = ({
   if (isRendered && svgContent) {
     return (
       <div className={containerClasses}>
+        {/* Toolbar au-dessus du diagramme */}
+        {showToolbar && (
+          <MermaidToolbar
+            content={content}
+            variant={variant}
+            showCopy={showCopy}
+            showExpand={showExpand}
+            showEdit={showEdit}
+            onEdit={onEdit}
+          />
+        )}
+        
+        {/* Diagramme en dessous */}
         <div 
           dangerouslySetInnerHTML={{ __html: svgContent }}
           className="mermaid-svg-container"
         />
-        
-        {/* Boutons d'action modernes */}
-        {showActions && (
-          <div className="mermaid-actions">
-            <button 
-              onClick={handleCopy}
-              className="mermaid-action-btn mermaid-copy-btn"
-              title="Copier le code"
-            >
-              {isCopied ? (
-                <>
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                    <polyline points="20 6 9 17 4 12"></polyline>
-                  </svg>
-                  <span>Copié !</span>
-                </>
-              ) : (
-                <>
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-                  </svg>
-                  <span>Copier</span>
-                </>
-              )}
-            </button>
-          </div>
-        )}
       </div>
     );
   }

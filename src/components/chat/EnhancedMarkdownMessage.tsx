@@ -141,10 +141,12 @@ const EnhancedMarkdownMessage: React.FC<EnhancedMarkdownMessageProps> = ({ conte
               key={`mermaid-${index}`}
               content={cleanContent}
               variant="chat"
-              showActions={true}
+              showToolbar={true}
+              showCopy={true}
+              showExpand={true}
+              showEdit={false}
               renderOptions={{
-                timeout: 10000,
-                retryCount: 1
+                timeout: 10000
               }}
             />
           );

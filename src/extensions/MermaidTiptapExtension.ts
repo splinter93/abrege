@@ -45,39 +45,89 @@ function renderMermaidBlock(mermaidContent: string) {
   container.className = 'mermaid-container mermaid-editor mermaid-loading';
   container.style.position = 'relative';
   
-  // Créer la barre d'outils avec boutons
+  // Créer la toolbar avec boutons
+  const toolbar = createMermaidToolbar(mermaidContent);
+  
+  // Indicateur de chargement
+  const loadingIndicator = document.createElement('div');
+  loadingIndicator.className = 'mermaid-loading-content';
+  loadingIndicator.innerHTML = `
+    <div class="mermaid-spinner"></div>
+    <span>Rendu du diagramme...</span>
+  `;
+  
+  // Ajouter la toolbar et l'indicateur au conteneur
+  container.appendChild(toolbar);
+  container.appendChild(loadingIndicator);
+  
+  // Rendre le diagramme Mermaid de manière asynchrone
+  renderMermaidDiagram(container, mermaidContent);
+  
+  return {
+    dom: container,
+    contentDOM: null, // Pas de contentDOM pour Mermaid
+  };
+}
+
+// Fonction pour créer la toolbar Mermaid
+function createMermaidToolbar(mermaidContent: string) {
   const toolbar = document.createElement('div');
-  toolbar.className = 'mermaid-actions';
-  toolbar.style.position = 'absolute';
-  toolbar.style.top = '8px';
-  toolbar.style.right = '8px';
-  toolbar.style.zIndex = '10';
+  toolbar.className = 'mermaid-toolbar mermaid-toolbar-editor';
+  
+  // Type de diagramme à gauche
+  const typeContainer = document.createElement('div');
+  typeContainer.className = 'mermaid-toolbar-type';
+  
+  const label = document.createElement('span');
+  label.className = 'mermaid-toolbar-label';
+  label.textContent = 'Mermaid';
+  
+  const diagramType = document.createElement('span');
+  diagramType.className = 'mermaid-toolbar-diagram-type';
+  diagramType.textContent = getMermaidDiagramType(mermaidContent);
+  
+  typeContainer.appendChild(label);
+  typeContainer.appendChild(diagramType);
+  
+  // Boutons d'action à droite
+  const actionsContainer = document.createElement('div');
+  actionsContainer.className = 'mermaid-toolbar-actions';
+  
+  // Bouton Éditer (placeholder pour l'instant)
+  const editButton = document.createElement('button');
+  editButton.className = 'mermaid-toolbar-btn mermaid-edit-btn';
+  editButton.title = 'Éditer le diagramme';
+  editButton.innerHTML = `
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+      <path d="m18.5 2.5 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+    </svg>
+    <span>Éditer</span>
+  `;
   
   // Bouton Copier
   const copyButton = document.createElement('button');
-  copyButton.className = 'mermaid-action-btn mermaid-copy-btn';
+  copyButton.className = 'mermaid-toolbar-btn mermaid-copy-btn';
   copyButton.title = 'Copier le code Mermaid';
   copyButton.innerHTML = `
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="12" height="12">
-      <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
     </svg>
     <span>Copier</span>
-  `;
-  
-  const copyCheckIcon = `
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="12" height="12">
-      <polyline points="20 6 9 17 4 12"></polyline>
-    </svg>
-    <span>Copié !</span>
   `;
   
   let copyTimeout: NodeJS.Timeout | null = null;
   
   const handleCopyClick = () => {
     navigator.clipboard.writeText(mermaidContent).then(() => {
-      copyButton.innerHTML = copyCheckIcon;
-      copyButton.style.color = '#f97316';
+      copyButton.innerHTML = `
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <polyline points="20 6 9 17 4 12" />
+        </svg>
+        <span>Copié !</span>
+      `;
+      copyButton.style.color = '#10b981';
       
       // Nettoyer le timeout précédent
       if (copyTimeout) {
@@ -86,9 +136,9 @@ function renderMermaidBlock(mermaidContent: string) {
       
       copyTimeout = setTimeout(() => {
         copyButton.innerHTML = `
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="12" height="12">
-            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
           </svg>
           <span>Copier</span>
         `;
@@ -101,11 +151,11 @@ function renderMermaidBlock(mermaidContent: string) {
   
   // Bouton Agrandir
   const expandButton = document.createElement('button');
-  expandButton.className = 'mermaid-action-btn';
+  expandButton.className = 'mermaid-toolbar-btn mermaid-expand-btn';
   expandButton.title = 'Agrandir le diagramme';
   expandButton.innerHTML = `
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="12" height="12">
-      <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
     </svg>
     <span>Agrandir</span>
   `;
@@ -116,29 +166,42 @@ function renderMermaidBlock(mermaidContent: string) {
   
   expandButton.addEventListener('click', handleExpandClick);
   
-  // Ajouter les boutons à la barre d'outils
-  toolbar.appendChild(copyButton);
-  toolbar.appendChild(expandButton);
+  // Assembler la toolbar
+  actionsContainer.appendChild(editButton);
+  actionsContainer.appendChild(copyButton);
+  actionsContainer.appendChild(expandButton);
   
-  // Indicateur de chargement
-  const loadingIndicator = document.createElement('div');
-  loadingIndicator.className = 'mermaid-loading-content';
-  loadingIndicator.innerHTML = `
-    <div class="mermaid-spinner"></div>
-    <span>Rendu du diagramme...</span>
-  `;
+  toolbar.appendChild(typeContainer);
+  toolbar.appendChild(actionsContainer);
   
-  // Ajouter la barre d'outils et l'indicateur au conteneur
-  container.appendChild(toolbar);
-  container.appendChild(loadingIndicator);
+  return toolbar;
+}
+
+// Fonction pour détecter le type de diagramme (version simplifiée)
+function getMermaidDiagramType(content: string): string {
+  const normalized = content.trim().toLowerCase();
   
-  // Rendre le diagramme Mermaid de manière asynchrone
-  renderMermaidDiagram(container, mermaidContent, copyTimeout);
-  
-  return {
-    dom: container,
-    contentDOM: null, // Pas de contentDOM pour Mermaid
-  };
+  if (normalized.startsWith('flowchart') || normalized.startsWith('graph')) {
+    return 'Flowchart';
+  } else if (normalized.startsWith('sequencediagram')) {
+    return 'Sequence';
+  } else if (normalized.startsWith('classdiagram')) {
+    return 'Class';
+  } else if (normalized.startsWith('pie')) {
+    return 'Pie';
+  } else if (normalized.startsWith('gantt')) {
+    return 'Gantt';
+  } else if (normalized.startsWith('gitgraph')) {
+    return 'GitGraph';
+  } else if (normalized.startsWith('journey')) {
+    return 'Journey';
+  } else if (normalized.startsWith('er')) {
+    return 'ER';
+  } else if (normalized.startsWith('statediagram')) {
+    return 'State';
+  } else {
+    return 'Diagram';
+  }
 }
 
 // Fonction pour rendre un bloc de code normal
@@ -205,7 +268,7 @@ function renderCodeBlock(node: Node, language: string) {
 }
 
 // Fonction pour rendre le diagramme Mermaid (utilise la config centralisée)
-async function renderMermaidDiagram(container: HTMLElement, mermaidContent: string, copyTimeout: NodeJS.Timeout | null) {
+async function renderMermaidDiagram(container: HTMLElement, mermaidContent: string) {
   try {
     // Initialiser Mermaid avec la configuration centralisée
     await initializeMermaid();
@@ -226,75 +289,8 @@ async function renderMermaidDiagram(container: HTMLElement, mermaidContent: stri
       // Supprimer l'indicateur de chargement
       container.innerHTML = '';
       
-      // Recréer la barre d'outils
-      const toolbar = document.createElement('div');
-      toolbar.className = 'mermaid-actions';
-      toolbar.style.position = 'absolute';
-      toolbar.style.top = '8px';
-      toolbar.style.right = '8px';
-      toolbar.style.zIndex = '10';
-      
-      // Bouton Copier
-      const copyButton = document.createElement('button');
-      copyButton.className = 'mermaid-action-btn mermaid-copy-btn';
-      copyButton.title = 'Copier le code Mermaid';
-      copyButton.innerHTML = `
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="12" height="12">
-          <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-        </svg>
-        <span>Copier</span>
-      `;
-      
-      const handleCopyClick = () => {
-        navigator.clipboard.writeText(mermaidContent).then(() => {
-          copyButton.innerHTML = `
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="12" height="12">
-              <polyline points="20 6 9 17 4 12"></polyline>
-            </svg>
-            <span>Copié !</span>
-          `;
-          copyButton.style.color = '#f97316';
-          
-          // Nettoyer le timeout précédent
-          if (copyTimeout) {
-            clearTimeout(copyTimeout);
-          }
-          
-          copyTimeout = setTimeout(() => {
-            copyButton.innerHTML = `
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="12" height="12">
-                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-              </svg>
-              <span>Copier</span>
-            `;
-            copyButton.style.color = '';
-          }, 2000);
-        });
-      };
-      
-      copyButton.addEventListener('click', handleCopyClick);
-      
-      // Bouton Agrandir
-      const expandButton = document.createElement('button');
-      expandButton.className = 'mermaid-action-btn';
-      expandButton.title = 'Agrandir le diagramme';
-      expandButton.innerHTML = `
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="12" height="12">
-          <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
-        </svg>
-        <span>Agrandir</span>
-      `;
-      
-      const handleExpandClick = () => {
-        openMermaidModal(mermaidContent);
-      };
-      
-      expandButton.addEventListener('click', handleExpandClick);
-      
-      toolbar.appendChild(copyButton);
-      toolbar.appendChild(expandButton);
+      // Recréer la toolbar
+      const toolbar = createMermaidToolbar(mermaidContent);
       
       // Créer le conteneur SVG
       const svgContainer = document.createElement('div');
@@ -304,15 +300,15 @@ async function renderMermaidDiagram(container: HTMLElement, mermaidContent: stri
       // Mettre à jour les classes du conteneur
       container.className = 'mermaid-container mermaid-editor mermaid-rendered';
       
-      // Ajouter la barre d'outils et le conteneur SVG
+      // Ajouter la toolbar et le conteneur SVG
       container.appendChild(toolbar);
       container.appendChild(svgContainer);
     } else {
       throw new Error('Format de réponse Mermaid invalide');
     }
     
-      } catch (error) {
-      logger.error('Erreur lors du rendu Mermaid dans l\'éditeur:', error);
+  } catch (error) {
+    logger.error('Erreur lors du rendu Mermaid dans l\'éditeur:', error);
     
     // Afficher l'erreur
     container.innerHTML = `
