@@ -13,19 +13,19 @@ import { simpleLogger as logger } from '@/utils/logger';
 function detectDiagramType(mermaidContent: string): string {
   const firstLine = mermaidContent.trim().split('\n')[0].toLowerCase();
   
-  if (firstLine.includes('graph') || firstLine.includes('flowchart')) return 'Graphique';
-  if (firstLine.includes('sequence')) return 'Diagramme de séquence';
-  if (firstLine.includes('class')) return 'Diagramme de classe';
-  if (firstLine.includes('state')) return 'Machine à états';
-  if (firstLine.includes('er')) return 'Diagramme entité-relation';
-  if (firstLine.includes('journey')) return 'Journey Map';
-  if (firstLine.includes('gantt')) return 'Diagramme de Gantt';
-  if (firstLine.includes('pie')) return 'Graphique circulaire';
-  if (firstLine.includes('gitgraph')) return 'Git Graph';
-  if (firstLine.includes('c4')) return 'Diagramme C4';
-  if (firstLine.includes('mindmap')) return 'Mind Map';
+  if (firstLine.includes('graph') || firstLine.includes('flowchart')) return 'FLOWCHART';
+  if (firstLine.includes('sequence')) return 'SEQUENCE';
+  if (firstLine.includes('class')) return 'CLASS';
+  if (firstLine.includes('state')) return 'STATE';
+  if (firstLine.includes('er')) return 'ER';
+  if (firstLine.includes('journey')) return 'JOURNEY';
+  if (firstLine.includes('gantt')) return 'GANTT';
+  if (firstLine.includes('pie')) return 'PIE';
+  if (firstLine.includes('gitgraph')) return 'GITGRAPH';
+  if (firstLine.includes('c4')) return 'C4';
+  if (firstLine.includes('mindmap')) return 'MINDMAP';
   
-  return 'Diagramme Mermaid';
+  return 'DIAGRAM';
 }
 
 /**
