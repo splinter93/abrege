@@ -1,22 +1,21 @@
-/* Fichier CSS pour la modal Mermaid */
+/* Fichier CSS pour la modal Mermaid sans container */
 
-/* Styles pour la modal Mermaid agrandie */
+/* Styles pour la modal Mermaid agrandie - sans container */
 .mermaid-modal {
   position: fixed;
   top: 0;
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba(0, 0, 0, 0.75);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   z-index: 999999;
   display: flex;
-  align-items: flex-start;
-  justify-content: center;
+  flex-direction: column;
   cursor: pointer;
   overflow: auto;
-  padding: 20px;
+  padding: 0 20px 20px 20px;
   animation: modalFadeIn 0.3s ease-out;
 }
 
@@ -28,56 +27,217 @@
   }
   to {
     opacity: 1;
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
   }
 }
 
-.mermaid-modal-container {
-  min-width: 300px;
-  min-height: 200px;
-  max-width: 98vw;
-  max-height: 98vh;
+/* Barre propre en haut de l'écran */
+.mermaid-modal-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 20px 0;
+  flex-shrink: 0;
+  max-width: calc(100vw - 40px);
+}
+
+/* Type de diagramme à gauche */
+.mermaid-modal-type {
+  color: rgba(255, 255, 255, 0.9);
+  font-family: 'Noto Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  flex: 1;
+}
+
+/* Bouton copier au centre - juste l'icône */
+.mermaid-modal-copy {
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: visible;
-  padding: 20px;
-  margin: auto;
-  background: rgba(26, 26, 26, 0.95);
-  border-radius: 12px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
-  border: 1px solid rgba(249, 115, 22, 0.2);
-  animation: containerSlideIn 0.3s ease-out 0.1s both;
+  width: 40px;
+  height: 40px;
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.9);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin: 0 16px;
 }
 
-@keyframes containerSlideIn {
-  from {
-    opacity: 0;
-    transform: translateY(20px) scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
+.mermaid-modal-copy:hover {
+  color: rgba(255, 255, 255, 1);
+  transform: scale(1.1);
 }
 
-/* Amélioration du scroll dans la modal */
+.mermaid-modal-copy:active {
+  transform: scale(0.95);
+}
+
+.mermaid-modal-copy.copied {
+  color: rgba(34, 197, 94, 0.9);
+}
+
+.mermaid-modal-copy svg {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+/* Bouton de fermeture intégré dans la toolbar - juste l'icône */
+.mermaid-modal-close {
+  width: 40px;
+  height: 40px;
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.9);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.mermaid-modal-close:hover {
+  color: rgba(255, 255, 255, 1);
+  transform: scale(1.1);
+}
+
+.mermaid-modal-close:active {
+  transform: scale(0.95);
+}
+
+.mermaid-modal-close svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* Wrapper SVG avec zoom et pan - centré dans la modal */
+.mermaid-modal-svg-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.2s ease-out;
+  transform-origin: center center;
+  flex: 1;
+  min-height: 0;
+}
+
+.mermaid-modal-svg-wrapper:active {
+  cursor: grabbing !important;
+}
+
+/* Styles pour le contenu SVG dans la modal */
+.mermaid-modal svg {
+  max-width: 95%;
+  max-height: 95%;
+  width: auto;
+  height: auto;
+  display: block;
+  margin: 0 auto;
+}
+
+/* Scrollbar personnalisée pour la modal */
 .mermaid-modal::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 12px;
+  height: 12px;
 }
 
 .mermaid-modal::-webkit-scrollbar-track {
   background: rgba(255, 255, 255, 0.1);
-  border-radius: 4px;
+  border-radius: 6px;
 }
 
 .mermaid-modal::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.3);
-  border-radius: 4px;
+  border-radius: 6px;
 }
 
 .mermaid-modal::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.5);
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .mermaid-modal {
+    padding: 0 10px 10px 10px;
+  }
+  
+  .mermaid-modal-toolbar {
+    padding: 16px 0;
+    max-width: calc(100vw - 20px);
+  }
+  
+  .mermaid-modal-type {
+    font-size: 13px;
+  }
+  
+  .mermaid-modal-copy {
+    width: 36px;
+    height: 36px;
+    margin: 0 12px;
+  }
+  
+  .mermaid-modal-copy svg {
+    width: 18px;
+    height: 18px;
+  }
+  
+  .mermaid-modal-close {
+    width: 36px;
+    height: 36px;
+  }
+  
+  .mermaid-modal-close svg {
+    width: 18px;
+    height: 18px;
+  }
+  
+  .mermaid-modal svg {
+    max-width: 98%;
+    max-height: 98%;
+  }
+}
+
+@media (max-width: 480px) {
+  .mermaid-modal {
+    padding: 0 8px 8px 8px;
+  }
+  
+  .mermaid-modal-toolbar {
+    padding: 12px 0;
+    max-width: calc(100vw - 16px);
+  }
+  
+  .mermaid-modal-type {
+    font-size: 12px;
+  }
+  
+  .mermaid-modal-copy {
+    width: 32px;
+    height: 32px;
+    margin: 0 8px;
+  }
+  
+  .mermaid-modal-copy svg {
+    width: 16px;
+    height: 16px;
+  }
+  
+  .mermaid-modal-close {
+    width: 32px;
+    height: 32px;
+  }
+  
+  .mermaid-modal-close svg {
+    width: 16px;
+    height: 16px;
+  }
 }

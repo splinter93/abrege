@@ -300,30 +300,42 @@ async function renderMermaidDiagram(container: HTMLElement, mermaidContent: stri
   } catch (error) {
     logger.error('Erreur lors du rendu Mermaid dans l\'éditeur:', error);
     
-    // Afficher l'erreur
-    container.innerHTML = `
-      <div class="mermaid-error-content">
-        <div class="mermaid-error-header">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <circle cx="12" cy="12" r="10" />
-            <line x1="15" y1="9" x2="9" y2="15" />
-            <line x1="9" y1="9" x2="15" y2="15" />
-          </svg>
-          <span>Erreur de rendu du diagramme</span>
+    // Supprimer le contenu existant
+    container.innerHTML = '';
+    
+    // Recréer la toolbar même en cas d'erreur
+    const toolbar = createMermaidToolbar(mermaidContent);
+    
+    // Créer le contenu d'erreur
+    const errorContent = document.createElement('div');
+    errorContent.className = 'mermaid-error-content';
+    errorContent.innerHTML = `
+      <div class="mermaid-error-header">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <circle cx="12" cy="12" r="10" />
+          <line x1="15" y1="9" x2="9" y2="15" />
+          <line x1="9" y1="9" x2="15" y2="15" />
+        </svg>
+        <span>Erreur de rendu du diagramme</span>
+      </div>
+      <div class="mermaid-error-body">
+        <div class="mermaid-error-message">
+          <strong>Erreur :</strong>
+          <pre>${error instanceof Error ? error.message : 'Erreur inconnue'}</pre>
         </div>
-        <div class="mermaid-error-body">
-          <div class="mermaid-error-message">
-            <strong>Erreur :</strong>
-            <pre>${error instanceof Error ? error.message : 'Erreur inconnue'}</pre>
-          </div>
-          <details class="mermaid-error-details">
-            <summary>Code source</summary>
-            <pre class="mermaid-source">${mermaidContent}</pre>
-          </details>
-        </div>
+        <details class="mermaid-error-details">
+          <summary>Code source</summary>
+          <pre class="mermaid-source">${mermaidContent}</pre>
+        </details>
       </div>
     `;
+    
+    // Mettre à jour les classes du conteneur
     container.className = 'mermaid-container mermaid-editor mermaid-error';
+    
+    // Ajouter la toolbar et le contenu d'erreur
+    container.appendChild(toolbar);
+    container.appendChild(errorContent);
   }
 }
 

@@ -18,9 +18,15 @@
   font-family: 'Noto Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-size: 12px;
   line-height: 1.4;
-  /* S'assurer que la toolbar est toujours en premier */
+  /* S'assurer que la toolbar est toujours en premier et bien calée */
   order: 1;
   flex-shrink: 0;
+  /* Assurer que la toolbar prend toute la largeur */
+  box-sizing: border-box;
+  /* Ajouter une bordure subtile en bas pour séparer de la toolbar */
+  border-bottom: 1px solid var(--border-subtle, #e5e7eb);
+  /* Assurer que la toolbar a une hauteur fixe */
+  min-height: 40px;
 }
 
 /* ========================================
@@ -30,11 +36,21 @@
 /* Variante Éditeur */
 .mermaid-toolbar.mermaid-toolbar-editor {
   color: var(--text-primary, #374151);
+  /* Effet glass très subtil */
+  background: rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  /* Bordure plus visible pour l'éditeur */
+  border-bottom: 1px solid var(--border-subtle, #e5e7eb);
 }
 
 /* Variante Chat */
 .mermaid-toolbar.mermaid-toolbar-chat {
   color: var(--text-primary, #374151);
+  /* Pas de fond pour le chat */
+  background: transparent;
+  /* Bordure plus subtile pour le chat */
+  border-bottom: 1px solid var(--border-subtle, #e5e7eb);
 }
 
 /* ========================================
@@ -46,6 +62,9 @@
   align-items: center;
   gap: 8px;
   font-weight: 500;
+  /* Assurer que le type prend l'espace nécessaire */
+  flex: 1;
+  min-width: 0;
 }
 
 .mermaid-toolbar-label {
@@ -60,6 +79,10 @@
   padding: 0;
   border: none;
   text-transform: capitalize;
+  /* Assurer que le texte ne déborde pas */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* ========================================
@@ -70,6 +93,9 @@
   display: flex;
   align-items: center;
   gap: 8px;
+  /* Assurer que les actions restent à droite */
+  flex-shrink: 0;
+  margin-left: auto;
 }
 
 .mermaid-toolbar-btn {
@@ -86,6 +112,8 @@
   cursor: pointer;
   transition: all 0.2s ease;
   padding: 0;
+  /* Assurer que les boutons sont bien alignés */
+  flex-shrink: 0;
 }
 
 .mermaid-toolbar-btn:hover {
@@ -165,6 +193,7 @@
   .mermaid-toolbar {
     padding: 10px 12px;
     font-size: 11px;
+    min-height: 36px;
   }
   
   .mermaid-toolbar-type {
@@ -196,6 +225,7 @@
     flex-direction: row;
     gap: 8px;
     align-items: center;
+    min-height: 32px;
   }
   
   .mermaid-toolbar-type {
@@ -256,6 +286,13 @@
 @media (prefers-color-scheme: dark) {
   .mermaid-toolbar {
     color: var(--text-dark-primary, #f9fafb);
+    border-bottom-color: var(--border-dark-subtle, #374151);
+  }
+  
+  .mermaid-toolbar.mermaid-toolbar-editor {
+    background: rgba(0, 0, 0, 0.15);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
   }
   
   .mermaid-toolbar-diagram-type {

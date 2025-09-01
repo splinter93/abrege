@@ -12,6 +12,8 @@
   flex-direction: column;
   width: 100%;
   position: relative;
+  /* Assurer que le conteneur prend toute la largeur disponible */
+  min-height: 0;
 }
 
 /* ========================================
@@ -29,6 +31,8 @@
   font-size: 14px;
   line-height: 1.5;
   overflow: hidden;
+  /* Assurer que le conteneur éditeur a une hauteur minimale */
+  min-height: 120px;
 }
 
 /* Variante Chat */
@@ -38,6 +42,8 @@
   padding: 0;
   margin: 8px 0;
   border-radius: 6px;
+  /* Pas de hauteur minimale pour le chat */
+  min-height: auto;
 }
 
 /* ========================================
@@ -57,6 +63,8 @@
   /* S'assurer que le conteneur SVG est bien en dessous de la toolbar */
   order: 2;
   flex: 1;
+  /* Assurer que le conteneur SVG prend l'espace disponible */
+  min-height: 0;
 }
 
 /* Centrer tous les SVG Mermaid */
@@ -65,6 +73,8 @@
   margin: 0 auto;
   max-width: 100%;
   height: auto;
+  /* Assurer que le SVG ne déborde pas */
+  overflow: visible;
 }
 
 /* ========================================
@@ -82,6 +92,8 @@
   /* S'assurer que le loading est bien en dessous de la toolbar */
   order: 2;
   flex: 1;
+  /* Assurer que le contenu de chargement prend l'espace disponible */
+  min-height: 80px;
 }
 
 .mermaid-spinner {
@@ -112,6 +124,8 @@
   /* S'assurer que l'erreur est bien en dessous de la toolbar */
   order: 2;
   flex: 1;
+  /* Assurer que le contenu d'erreur prend l'espace disponible */
+  min-height: 80px;
 }
 
 .mermaid-error-header {
@@ -200,6 +214,7 @@
 @media (max-width: 768px) {
   .mermaid-container.mermaid-editor {
     margin: 12px 0;
+    min-height: 100px;
   }
   
   .mermaid-container.mermaid-chat {
@@ -212,10 +227,12 @@
   
   .mermaid-loading-content {
     padding: 20px 12px;
+    min-height: 60px;
   }
   
   .mermaid-error-content {
     margin: 12px 12px 12px 12px;
+    min-height: 60px;
   }
 }
 
@@ -226,10 +243,12 @@
   
   .mermaid-loading-content {
     padding: 16px 10px;
+    min-height: 50px;
   }
   
   .mermaid-error-content {
     margin: 10px 10px 10px 10px;
+    min-height: 50px;
   }
 }
 

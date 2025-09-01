@@ -1,173 +1,101 @@
-/* Styles pour les boutons de copie des blocs de code */
+/**
+ * Styles CSS pour les boutons des blocs de code
+ * Boutons copier, édition, etc.
+ */
 
-.code-copy-button {
+/* ========================================
+   BOUTON COPIER GÉNÉRIQUE
+   ======================================== */
+
+.code-block-copy-btn {
   position: absolute;
   top: 8px;
   right: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
-  border: none;
+  width: 32px;
+  height: 32px;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid var(--border-subtle, #e5e7eb);
   border-radius: 6px;
-  background: transparent;
-  color: #9ca3af;
+  color: var(--text-muted, #6b7280);
   cursor: pointer;
   transition: all 0.2s ease;
-  padding: 0;
+  opacity: 0;
   z-index: 10;
 }
 
-.code-copy-button:hover {
-  background: transparent;
-  color: #6b7280;
+.code-block:hover .code-block-copy-btn {
+  opacity: 1;
 }
 
-.code-copy-button.copied {
-  background: rgba(16, 185, 129, 0.1);
-  color: #10b981;
+.code-block-copy-btn:hover {
+  background: rgba(255, 255, 255, 1);
+  color: var(--text-primary, #374151);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-/* Styles pour les boutons de la toolbar Mermaid */
-.mermaid-toolbar-button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  border: none;
-  border-radius: 6px;
-  background: transparent;
-  color: #9ca3af;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  padding: 0;
+.code-block-copy-btn:active {
+  transform: translateY(0);
 }
 
-.mermaid-toolbar-button:hover {
-  background: transparent;
-  color: #6b7280;
+.code-block-copy-btn svg {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
 }
 
-.mermaid-copy-button.copied {
-  background: rgba(16, 185, 129, 0.1);
-  color: #10b981;
+/* ========================================
+   ÉTAT "COPIÉ !"
+   ======================================== */
+
+.code-block-copy-btn.copied {
+  background: var(--success-bg, #ecfdf5);
+  border-color: var(--success-border, #a7f3d0);
+  color: var(--success-text, #10b981);
 }
 
-/* Positionnement du bouton de copie pour les blocs de code normaux */
-.code-block-container {
-  position: relative;
+.code-block-copy-btn.copied svg {
+  animation: copy-success 0.3s ease-out;
 }
 
-/* Styles pour la barre d'outils Mermaid */
-.mermaid-toolbar {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  display: flex;
-  gap: 6px;
-  z-index: 10;
+@keyframes copy-success {
+  0% { transform: scale(0.8); }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); }
 }
 
-/* Padding pour éviter que le diagramme Mermaid chevauche les boutons */
-.mermaid-container {
-  padding-top: 50px;
-  padding-right: 50px;
-}
+/* ========================================
+   RESPONSIVE DESIGN
+   ======================================== */
 
-/* Styles pour la modal Mermaid agrandie */
-.mermaid-modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background: rgba(0, 0, 0, 0.75);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  z-index: 999999;
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  cursor: pointer;
-  overflow: auto;
-  padding: 20px;
-  animation: modalFadeIn 0.3s ease-out;
-}
-
-@keyframes modalFadeIn {
-  from {
-    opacity: 0;
-    backdrop-filter: blur(0px);
-    -webkit-backdrop-filter: blur(0px);
+@media (max-width: 768px) {
+  .code-block-copy-btn {
+    width: 28px;
+    height: 28px;
+    top: 6px;
+    right: 6px;
   }
-  to {
-    opacity: 1;
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
+  
+  .code-block-copy-btn svg {
+    width: 14px;
+    height: 14px;
   }
 }
 
-.mermaid-modal-container {
-  min-width: 300px;
-  min-height: 200px;
-  max-width: 98vw;
-  max-height: 98vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: visible;
-  padding: 20px;
-  margin: auto;
-  background: rgba(26, 26, 26, 0.95);
-  border-radius: 12px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
-  border: 1px solid rgba(249, 115, 22, 0.2);
-  animation: containerSlideIn 0.3s ease-out 0.1s both;
-}
-
-@keyframes containerSlideIn {
-  from {
-    opacity: 0;
-    transform: translateY(20px) scale(0.95);
+@media (max-width: 480px) {
+  .code-block-copy-btn {
+    width: 24px;
+    height: 24px;
+    top: 4px;
+    right: 4px;
   }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
+  
+  .code-block-copy-btn svg {
+    width: 12px;
+    height: 12px;
   }
 }
 
-/* Amélioration du scroll dans la modal */
-.mermaid-modal::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-.mermaid-modal::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 4px;
-}
-
-.mermaid-modal::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.3);
-  border-radius: 4px;
-}
-
-.mermaid-modal::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.5);
-}
-
-.code-block-container pre {
-  margin: 0;
-  padding: 16px;
-  background: #1f2937;
-  border-radius: 8px;
-  overflow-x: auto;
-}
-
-.code-block-container code {
-  font-family: 'Fira Code', 'Monaco', 'Consolas', monospace;
-  font-size: 14px;
-  line-height: 1.5;
-}
