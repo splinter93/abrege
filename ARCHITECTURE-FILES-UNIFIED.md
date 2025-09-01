@@ -301,3 +301,4 @@ L'architecture unifiée des fichiers représente une amélioration significative
 
 **Prochaine étape :** Tester l'endpoint unifié avec différents types de fichiers et valider que tous les cas d'usage fonctionnent correctement.
 
+

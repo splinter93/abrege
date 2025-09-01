@@ -156,3 +156,4 @@ La solution implémentée résout complètement le problème d'URL S3 en introdu
 **Statut :** ✅ **RÉSOLU**
 **Prochaine étape :** Tester le drag & drop dans l'éditeur pour valider la solution.
 
+
