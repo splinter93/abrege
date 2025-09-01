@@ -117,8 +117,9 @@
 }
 
 .mermaid-toolbar-btn:hover {
-  background: var(--surface-1, #f3f4f6);
+  background: transparent;
   color: var(--text-primary, #374151);
+  transform: scale(1.05);
 }
 
 .mermaid-toolbar-btn:active {
@@ -126,8 +127,8 @@
 }
 
 .mermaid-toolbar-btn:focus {
-  outline: 2px solid var(--accent-primary, #f97316);
-  outline-offset: 2px;
+  outline: none !important;
+  box-shadow: none !important;
 }
 
 /* Icônes dans les boutons */
@@ -152,8 +153,9 @@
 }
 
 .mermaid-edit-btn:hover {
-  background: var(--accent-bg, #fef3c7);
+  background: transparent;
   color: var(--accent-hover, #ea580c);
+  transform: scale(1.05);
 }
 
 /* Bouton Copier */
@@ -163,7 +165,8 @@
 
 .mermaid-copy-btn:hover {
   color: var(--success-text, #10b981);
-  background: var(--success-bg, #ecfdf5);
+  background: transparent;
+  transform: scale(1.05);
 }
 
 /* Bouton Agrandir */
@@ -173,7 +176,8 @@
 
 .mermaid-expand-btn:hover {
   color: var(--info-text, #3b82f6);
-  background: var(--info-bg, #eff6ff);
+  background: transparent;
+  transform: scale(1.05);
 }
 
 /* ========================================
@@ -271,8 +275,17 @@
    ======================================== */
 
 .mermaid-toolbar-btn:focus-visible {
-  outline: 2px solid var(--accent-primary, #f97316);
-  outline-offset: 2px;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Supprimer TOUS les outlines possibles */
+.mermaid-toolbar-btn:focus,
+.mermaid-toolbar-btn:focus-visible,
+.mermaid-toolbar-btn:focus-within,
+.mermaid-toolbar-btn:active {
+  outline: none !important;
+  box-shadow: none !important;
 }
 
 .mermaid-toolbar-btn:focus:not(:focus-visible) {
@@ -304,7 +317,8 @@
   }
   
   .mermaid-toolbar-btn:hover {
-    background: var(--surface-dark-1, #1f2937);
-    color: var(--text-dark-primary, #f9fafb);
-  }
+  background: transparent;
+  color: var(--text-dark-primary, #f9fafb);
+  transform: scale(1.05);
+}
 }

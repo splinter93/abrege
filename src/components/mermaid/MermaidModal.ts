@@ -46,6 +46,48 @@ export function openMermaidModal(mermaidContent: string) {
   typeLabel.className = 'mermaid-modal-type';
   typeLabel.textContent = diagramType;
   
+  // Boutons de zoom à gauche du bouton copier
+  const zoomControls = document.createElement('div');
+  zoomControls.className = 'mermaid-modal-zoom-controls';
+  
+  // Bouton Zoom -
+  const zoomOutButton = document.createElement('button');
+  zoomOutButton.className = 'mermaid-modal-zoom-btn';
+  zoomOutButton.title = 'Zoom arrière';
+  zoomOutButton.innerHTML = `
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="11" cy="11" r="8"></circle>
+      <path d="m21 21-4.35-4.35"></path>
+      <line x1="8" y1="11" x2="14" y2="11"></line>
+    </svg>
+  `;
+  
+  // Bouton Zoom +
+  const zoomInButton = document.createElement('button');
+  zoomInButton.className = 'mermaid-modal-zoom-btn';
+  zoomInButton.title = 'Zoom avant';
+  zoomInButton.innerHTML = `
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="11" cy="11" r="8"></circle>
+      <path d="m21 21-4.35-4.35"></path>
+      <line x1="8" y1="11" x2="14" y2="11"></line>
+      <line x1="11" y1="8" x2="11" y2="14"></line>
+    </svg>
+  `;
+  
+  // Bouton Reset
+  const resetButton = document.createElement('button');
+  resetButton.className = 'mermaid-modal-zoom-btn';
+  resetButton.title = 'Reset zoom';
+  resetButton.innerHTML = `
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path>
+      <path d="M21 3v5h-5"></path>
+      <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path>
+      <path d="M8 16H3v5"></path>
+    </svg>
+  `;
+  
   // Bouton copier - juste l'icône
   const copyButton = document.createElement('button');
   copyButton.className = 'mermaid-modal-copy';
@@ -87,16 +129,37 @@ export function openMermaidModal(mermaidContent: string) {
   closeButton.className = 'mermaid-modal-close';
   closeButton.title = 'Fermer (Échap)';
   closeButton.innerHTML = `
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
       <line x1="18" y1="6" x2="6" y2="18"></line>
       <line x1="6" y1="6" x2="18" y2="18"></line>
     </svg>
   `;
   
+  // Event listeners pour les boutons de zoom
+  zoomOutButton.addEventListener('click', () => {
+    const newScale = Math.max(1, currentScale - 0.2);
+    applyZoom(newScale);
+  });
+  
+  zoomInButton.addEventListener('click', () => {
+    const newScale = Math.min(3, currentScale + 0.2);
+    applyZoom(newScale);
+  });
+  
+  resetButton.addEventListener('click', () => {
+    resetZoom();
+  });
+  
   // Assembler la toolbar
   toolbar.appendChild(typeLabel);
+  toolbar.appendChild(zoomControls);
   toolbar.appendChild(copyButton);
   toolbar.appendChild(closeButton);
+  
+  // Assembler les contrôles de zoom
+  zoomControls.appendChild(zoomOutButton);
+  zoomControls.appendChild(zoomInButton);
+  zoomControls.appendChild(resetButton);
   
   // Conteneur pour le SVG avec zoom et pan
   const svgWrapper = document.createElement('div');
@@ -120,6 +183,8 @@ export function openMermaidModal(mermaidContent: string) {
   let isDragging = false;
   let lastX = 0;
   let lastY = 0;
+  let dragStartTime = 0;
+  let hasMoved = false;
   
   // Fonction pour appliquer la transformation complète
   const applyTransform = () => {
@@ -163,6 +228,8 @@ export function openMermaidModal(mermaidContent: string) {
   const handleMouseDown = (e: MouseEvent) => {
     if (currentScale > 1) {
       isDragging = true;
+      hasMoved = false;
+      dragStartTime = Date.now();
       lastX = e.clientX;
       lastY = e.clientY;
       svgWrapper.style.cursor = 'grabbing';
@@ -174,6 +241,11 @@ export function openMermaidModal(mermaidContent: string) {
     if (isDragging) {
       const deltaX = e.clientX - lastX;
       const deltaY = e.clientY - lastY;
+      
+      // Détecter si on a vraiment bougé (plus de 5px)
+      if (Math.abs(deltaX) > 5 || Math.abs(deltaY) > 5) {
+        hasMoved = true;
+      }
       
       translateX += deltaX;
       translateY += deltaY;
@@ -189,6 +261,11 @@ export function openMermaidModal(mermaidContent: string) {
     if (isDragging) {
       isDragging = false;
       svgWrapper.style.cursor = currentScale > 1 ? 'grab' : 'default';
+      
+      // Réinitialiser le flag de mouvement après un délai
+      setTimeout(() => {
+        hasMoved = false;
+      }, 150);
     }
   };
   
@@ -227,6 +304,11 @@ export function openMermaidModal(mermaidContent: string) {
   // Fermer en cliquant sur l'overlay
   const handleOverlayClick = (e: MouseEvent) => {
     if (e.target === modal) {
+      // Ne pas fermer si on vient de faire du drag
+      const timeSinceDrag = Date.now() - dragStartTime;
+      if (isDragging || hasMoved || timeSinceDrag < 100) {
+        return;
+      }
       closeModal();
     }
   };
