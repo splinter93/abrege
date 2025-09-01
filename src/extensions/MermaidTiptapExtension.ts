@@ -46,7 +46,7 @@ function renderMermaidBlock(mermaidContent: string) {
   container.style.position = 'relative';
   
   // Créer la toolbar avec boutons
-  const toolbar = createMermaidToolbar(mermaidContent);
+  const toolbar = createMermaidToolbar(mermaidContent, container);
   
   // Indicateur de chargement
   const loadingIndicator = document.createElement('div');
@@ -70,7 +70,7 @@ function renderMermaidBlock(mermaidContent: string) {
 }
 
 // Fonction pour créer la toolbar Mermaid
-function createMermaidToolbar(mermaidContent: string) {
+function createMermaidToolbar(mermaidContent: string, container: HTMLElement) {
   const toolbar = document.createElement('div');
   toolbar.className = 'mermaid-toolbar mermaid-toolbar-editor';
   
@@ -88,7 +88,7 @@ function createMermaidToolbar(mermaidContent: string) {
   const actionsContainer = document.createElement('div');
   actionsContainer.className = 'mermaid-toolbar-actions';
   
-  // Bouton Éditer (placeholder pour l'instant)
+  // Bouton Éditer avec fonctionnalité de basculement
   const editButton = document.createElement('button');
   editButton.className = 'mermaid-toolbar-btn mermaid-edit-btn';
   editButton.title = 'Éditer le diagramme';
@@ -98,6 +98,22 @@ function createMermaidToolbar(mermaidContent: string) {
       <path d="m18.5 2.5 3 3L12 15l-4 1 1-4 9.5-9.5z" />
     </svg>
   `;
+  
+  // Gestion du mode édition
+  let isEditMode = false;
+  let originalContent = mermaidContent;
+  
+  const handleEditClick = () => {
+    if (isEditMode) {
+      // Sortir du mode édition et re-rendre
+      exitEditMode();
+    } else {
+      // Entrer en mode édition
+      enterEditMode();
+    }
+  };
+  
+  editButton.addEventListener('click', handleEditClick);
   
   // Bouton Copier
   const copyButton = document.createElement('button');
@@ -155,6 +171,86 @@ function createMermaidToolbar(mermaidContent: string) {
   };
   
   expandButton.addEventListener('click', handleExpandClick);
+  
+  // Fonction pour entrer en mode édition
+  const enterEditMode = () => {
+    isEditMode = true;
+    
+    // Changer l'icône du bouton (crayon → checkmark)
+    editButton.innerHTML = `
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polyline points="20 6 9 17 4 12"></polyline>
+      </svg>
+    `;
+    editButton.title = 'Valider et re-rendre';
+    
+    // Masquer le contenu SVG et afficher le textarea
+    const svgContainer = container.querySelector('.mermaid-svg-container') as HTMLElement;
+    if (svgContainer) {
+      svgContainer.style.display = 'none';
+    }
+    
+    // Créer le textarea d'édition
+    const textarea = document.createElement('textarea');
+    textarea.className = 'mermaid-edit-textarea';
+    textarea.value = originalContent;
+    textarea.style.cssText = `
+      width: 100%;
+      min-height: 200px;
+      padding: 16px;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+      font-size: 14px;
+      line-height: 1.5;
+      background: #f9fafb;
+      color: #374151;
+      resize: vertical;
+      outline: none;
+    `;
+    
+    // Ajouter le textarea après la toolbar
+    container.insertBefore(textarea, container.children[1]);
+    
+    // Focus sur le textarea
+    textarea.focus();
+    textarea.select();
+  };
+  
+  // Fonction pour sortir du mode édition
+  const exitEditMode = () => {
+    isEditMode = false;
+    
+    // Récupérer le contenu modifié
+    const textarea = container.querySelector('.mermaid-edit-textarea');
+    if (textarea) {
+      const newContent = (textarea as HTMLTextAreaElement).value;
+      
+      // Mettre à jour le contenu original
+      originalContent = newContent;
+      
+      // Supprimer le textarea
+      textarea.remove();
+      
+      // Re-afficher le contenu SVG
+      const svgContainer = container.querySelector('.mermaid-svg-container') as HTMLElement;
+      if (svgContainer) {
+        svgContainer.style.display = 'block';
+      }
+      
+      // Re-rendre le diagramme avec le nouveau contenu
+      renderMermaidDiagram(container, newContent);
+    }
+    
+    // Restaurer l'icône du bouton (checkmark → crayon)
+    editButton.innerHTML = `
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+        <path d="m18.5 2.5 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+      </svg>
+    `;
+    editButton.title = 'Éditer le diagramme';
+  };
   
   // Assembler la toolbar
   actionsContainer.appendChild(editButton);
@@ -280,7 +376,7 @@ async function renderMermaidDiagram(container: HTMLElement, mermaidContent: stri
       container.innerHTML = '';
       
       // Recréer la toolbar
-      const toolbar = createMermaidToolbar(mermaidContent);
+      const toolbar = createMermaidToolbar(mermaidContent, container);
       
       // Créer le conteneur SVG
       const svgContainer = document.createElement('div');
@@ -303,8 +399,8 @@ async function renderMermaidDiagram(container: HTMLElement, mermaidContent: stri
     // Supprimer le contenu existant
     container.innerHTML = '';
     
-    // Recréer la toolbar même en cas d'erreur
-    const toolbar = createMermaidToolbar(mermaidContent);
+          // Recréer la toolbar même en cas d'erreur
+      const toolbar = createMermaidToolbar(mermaidContent, container);
     
     // Créer le contenu d'erreur
     const errorContent = document.createElement('div');
