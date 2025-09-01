@@ -163,7 +163,7 @@
 
 @media (max-width: 768px) {
   .mermaid-toolbar {
-    padding: 6px 8px;
+    padding: 10px 12px;
     font-size: 11px;
   }
   
@@ -192,6 +192,7 @@
 
 @media (max-width: 480px) {
   .mermaid-toolbar {
+    padding: 8px 10px;
     flex-direction: row;
     gap: 8px;
     align-items: center;

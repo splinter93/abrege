@@ -207,7 +207,29 @@
   }
   
   .mermaid-svg-container {
-    padding: 12px;
+    padding: 16px 12px;
+  }
+  
+  .mermaid-loading-content {
+    padding: 20px 12px;
+  }
+  
+  .mermaid-error-content {
+    margin: 12px 12px 12px 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .mermaid-svg-container {
+    padding: 12px 10px;
+  }
+  
+  .mermaid-loading-content {
+    padding: 16px 10px;
+  }
+  
+  .mermaid-error-content {
+    margin: 10px 10px 10px 10px;
   }
 }
 
