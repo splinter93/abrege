@@ -1,6 +1,6 @@
 /**
  * Styles CSS pour MermaidToolbar
- * Design moderne et cohérent avec le système Mermaid
+ * Design minimaliste style ChatGPT
  */
 
 /* ========================================
@@ -13,12 +13,11 @@
   align-items: center;
   width: 100%;
   padding: 8px 12px;
-  background: var(--surface-1, #f8f9fa);
-  border-bottom: 1px solid var(--border-subtle, #e5e7eb);
+  background: transparent;
+  border: none;
   font-family: 'Noto Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-size: 12px;
   line-height: 1.4;
-  border-radius: 6px 6px 0 0;
   /* S'assurer que la toolbar est toujours en premier */
   order: 1;
   flex-shrink: 0;
@@ -30,15 +29,11 @@
 
 /* Variante Éditeur */
 .mermaid-toolbar.mermaid-toolbar-editor {
-  background: var(--surface-2, #f1f3f4);
-  border-bottom: 1px solid var(--border-subtle, #d1d5db);
   color: var(--text-primary, #374151);
 }
 
 /* Variante Chat */
 .mermaid-toolbar.mermaid-toolbar-chat {
-  background: var(--surface-1, #f8f9fa);
-  border-bottom: 1px solid var(--border-subtle, #e5e7eb);
   color: var(--text-primary, #374151);
 }
 
@@ -54,21 +49,17 @@
 }
 
 .mermaid-toolbar-label {
-  color: var(--text-muted, #6b7280);
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  font-weight: 600;
+  display: none; /* Cache "Mermaid" */
 }
 
 .mermaid-toolbar-diagram-type {
-  color: var(--accent-primary, #f97316);
-  font-weight: 600;
+  color: var(--text-muted, #6b7280);
+  font-weight: 500;
   font-size: 12px;
-  background: var(--accent-bg, #fef3c7);
-  padding: 2px 6px;
-  border-radius: 4px;
-  border: 1px solid var(--accent-border, #f59e0b);
+  background: transparent;
+  padding: 0;
+  border: none;
+  text-transform: capitalize;
 }
 
 /* ========================================
@@ -78,34 +69,32 @@
 .mermaid-toolbar-actions {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
 }
 
 .mermaid-toolbar-btn {
   display: flex;
   align-items: center;
-  gap: 4px;
-  padding: 4px 8px;
-  background: var(--surface-0, #ffffff);
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  background: transparent;
   color: var(--text-muted, #6b7280);
-  border: 1px solid var(--border-subtle, #d1d5db);
+  border: none;
   border-radius: 4px;
-  font-size: 11px;
-  font-weight: 500;
+  font-size: 12px;
   cursor: pointer;
   transition: all 0.2s ease;
-  white-space: nowrap;
+  padding: 0;
 }
 
 .mermaid-toolbar-btn:hover {
   background: var(--surface-1, #f3f4f6);
   color: var(--text-primary, #374151);
-  border-color: var(--border-primary, #9ca3af);
 }
 
 .mermaid-toolbar-btn:active {
   transform: translateY(1px);
-  background: var(--surface-2, #e5e7eb);
 }
 
 .mermaid-toolbar-btn:focus {
@@ -115,9 +104,14 @@
 
 /* Icônes dans les boutons */
 .mermaid-toolbar-btn svg {
-  width: 12px;
-  height: 12px;
+  width: 14px;
+  height: 14px;
   flex-shrink: 0;
+}
+
+/* Cacher le texte des boutons */
+.mermaid-toolbar-btn span {
+  display: none;
 }
 
 /* ========================================
@@ -127,47 +121,40 @@
 /* Bouton Éditer */
 .mermaid-edit-btn {
   color: var(--accent-primary, #f97316);
-  border-color: var(--accent-border, #fbbf24);
 }
 
 .mermaid-edit-btn:hover {
   background: var(--accent-bg, #fef3c7);
   color: var(--accent-hover, #ea580c);
-  border-color: var(--accent-hover, #ea580c);
 }
 
 /* Bouton Copier */
 .mermaid-copy-btn {
-  min-width: 70px;
-  justify-content: center;
+  color: var(--text-muted, #6b7280);
 }
 
 .mermaid-copy-btn:hover {
   color: var(--success-text, #10b981);
-  border-color: var(--success-border, #34d399);
+  background: var(--success-bg, #ecfdf5);
 }
 
 /* Bouton Agrandir */
 .mermaid-expand-btn {
-  color: var(--info-text, #3b82f6);
-  border-color: var(--info-border, #93c5fd);
+  color: var(--text-muted, #6b7280);
 }
 
 .mermaid-expand-btn:hover {
+  color: var(--info-text, #3b82f6);
   background: var(--info-bg, #eff6ff);
-  color: var(--info-hover, #2563eb);
-  border-color: var(--info-hover, #2563eb);
 }
 
 /* ========================================
    ÉTATS SPÉCIAUX
    ======================================== */
 
-/* État "Copié !" */
+/* État "Copié !" - juste changer la couleur */
 .mermaid-copy-btn:has(svg polyline) {
   color: var(--success-text, #10b981) !important;
-  border-color: var(--success-border, #34d399) !important;
-  background: var(--success-bg, #ecfdf5) !important;
 }
 
 /* ========================================
@@ -184,58 +171,48 @@
     gap: 6px;
   }
   
-  .mermaid-toolbar-label {
-    font-size: 10px;
-  }
-  
   .mermaid-toolbar-diagram-type {
     font-size: 11px;
-    padding: 1px 4px;
   }
   
   .mermaid-toolbar-actions {
-    gap: 4px;
+    gap: 6px;
   }
   
   .mermaid-toolbar-btn {
-    padding: 3px 6px;
-    font-size: 10px;
-    gap: 3px;
+    width: 22px;
+    height: 22px;
   }
   
   .mermaid-toolbar-btn svg {
-    width: 11px;
-    height: 11px;
-  }
-  
-  .mermaid-copy-btn {
-    min-width: 60px;
+    width: 13px;
+    height: 13px;
   }
 }
 
 @media (max-width: 480px) {
   .mermaid-toolbar {
-    flex-direction: column;
+    flex-direction: row;
     gap: 8px;
-    align-items: stretch;
+    align-items: center;
   }
   
   .mermaid-toolbar-type {
-    justify-content: center;
+    justify-content: flex-start;
   }
   
   .mermaid-toolbar-actions {
-    justify-content: center;
-  }
-  
-  .mermaid-toolbar-btn span {
-    display: none;
+    justify-content: flex-end;
   }
   
   .mermaid-toolbar-btn {
-    padding: 6px;
-    min-width: 32px;
-    justify-content: center;
+    width: 20px;
+    height: 20px;
+  }
+  
+  .mermaid-toolbar-btn svg {
+    width: 12px;
+    height: 12px;
   }
 }
 
@@ -277,25 +254,19 @@
 
 @media (prefers-color-scheme: dark) {
   .mermaid-toolbar {
-    background: var(--surface-dark-1, #1f2937);
-    border-bottom-color: var(--border-dark-subtle, #374151);
     color: var(--text-dark-primary, #f9fafb);
   }
   
-  .mermaid-toolbar.mermaid-toolbar-editor {
-    background: var(--surface-dark-2, #111827);
-    border-bottom-color: var(--border-dark-subtle, #374151);
+  .mermaid-toolbar-diagram-type {
+    color: var(--text-dark-muted, #9ca3af);
   }
   
   .mermaid-toolbar-btn {
-    background: var(--surface-dark-0, #374151);
-    border-color: var(--border-dark-subtle, #4b5563);
     color: var(--text-dark-muted, #9ca3af);
   }
   
   .mermaid-toolbar-btn:hover {
     background: var(--surface-dark-1, #1f2937);
     color: var(--text-dark-primary, #f9fafb);
-    border-color: var(--border-dark-primary, #6b7280);
   }
 }

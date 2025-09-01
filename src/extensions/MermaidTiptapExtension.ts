@@ -78,15 +78,10 @@ function createMermaidToolbar(mermaidContent: string) {
   const typeContainer = document.createElement('div');
   typeContainer.className = 'mermaid-toolbar-type';
   
-  const label = document.createElement('span');
-  label.className = 'mermaid-toolbar-label';
-  label.textContent = 'Mermaid';
-  
   const diagramType = document.createElement('span');
   diagramType.className = 'mermaid-toolbar-diagram-type';
   diagramType.textContent = getMermaidDiagramType(mermaidContent);
   
-  typeContainer.appendChild(label);
   typeContainer.appendChild(diagramType);
   
   // Boutons d'action à droite
@@ -98,11 +93,10 @@ function createMermaidToolbar(mermaidContent: string) {
   editButton.className = 'mermaid-toolbar-btn mermaid-edit-btn';
   editButton.title = 'Éditer le diagramme';
   editButton.innerHTML = `
-    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
       <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
       <path d="m18.5 2.5 3 3L12 15l-4 1 1-4 9.5-9.5z" />
     </svg>
-    <span>Éditer</span>
   `;
   
   // Bouton Copier
@@ -110,11 +104,10 @@ function createMermaidToolbar(mermaidContent: string) {
   copyButton.className = 'mermaid-toolbar-btn mermaid-copy-btn';
   copyButton.title = 'Copier le code Mermaid';
   copyButton.innerHTML = `
-    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
       <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
       <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
     </svg>
-    <span>Copier</span>
   `;
   
   let copyTimeout: NodeJS.Timeout | null = null;
@@ -122,10 +115,9 @@ function createMermaidToolbar(mermaidContent: string) {
   const handleCopyClick = () => {
     navigator.clipboard.writeText(mermaidContent).then(() => {
       copyButton.innerHTML = `
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
           <polyline points="20 6 9 17 4 12" />
         </svg>
-        <span>Copié !</span>
       `;
       copyButton.style.color = '#10b981';
       
@@ -136,11 +128,10 @@ function createMermaidToolbar(mermaidContent: string) {
       
       copyTimeout = setTimeout(() => {
         copyButton.innerHTML = `
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
             <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
           </svg>
-          <span>Copier</span>
         `;
         copyButton.style.color = '';
       }, 2000);
@@ -154,10 +145,9 @@ function createMermaidToolbar(mermaidContent: string) {
   expandButton.className = 'mermaid-toolbar-btn mermaid-expand-btn';
   expandButton.title = 'Agrandir le diagramme';
   expandButton.innerHTML = `
-    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
       <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
     </svg>
-    <span>Agrandir</span>
   `;
   
   const handleExpandClick = () => {
