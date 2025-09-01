@@ -8,7 +8,7 @@ export { default as ChatKebabMenu } from './ChatKebabMenu';
 
 // Composants de rendu des messages
 export { default as EnhancedMarkdownMessage } from './EnhancedMarkdownMessage';
-export { default as MermaidRenderer } from './MermaidRenderer';
+export { default as MermaidRenderer } from '@/components/mermaid/MermaidRenderer';
 export { default as OptimizedMessage } from './OptimizedMessage';
 export { default as ToolCallMessage } from './ToolCallMessage';
 export { default as ToolCallDebugger } from './ToolCallDebugger';

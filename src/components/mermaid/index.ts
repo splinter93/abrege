@@ -1,6 +1,7 @@
 /**
- * Composants Mermaid unifiés pour tout le projet
+ * Exports unifiés pour le système Mermaid
  */
 
-export { default as MermaidBlock } from './MermaidBlock';
-export type { MermaidBlockProps } from './MermaidBlock';
+export { default as MermaidRenderer } from './MermaidRenderer';
+export type { MermaidRendererProps } from './MermaidRenderer';
+export { openMermaidModal } from './MermaidModal';

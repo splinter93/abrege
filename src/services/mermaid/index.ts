@@ -15,20 +15,15 @@ export * from './mermaidRenderer';
 // Types réexportés pour facilité d'utilisation
 export type {
   MermaidConfig,
-  FlowchartConfig,
-  SequenceConfig,
-  GanttConfig,
-  JourneyConfig,
-  GitGraphConfig,
-  PieConfig,
-  EntityRelationshipConfig,
-  ClassConfig,
-  MermaidBlock,
-  TextBlock,
-  MermaidValidation,
-  ContentBlock,
-  MermaidRenderResult,
-  MermaidRenderOptions
+  MermaidThemeVariables,
+  MermaidFlowchartConfig,
+  MermaidSequenceConfig,
+  MermaidGanttConfig,
+  MermaidJourneyConfig,
+  MermaidGitGraphConfig,
+  MermaidPieConfig,
+  MermaidERConfig,
+  MermaidClassConfig
 } from './mermaidConfig';
 
 export type {

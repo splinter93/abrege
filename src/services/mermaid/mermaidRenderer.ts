@@ -10,6 +10,7 @@ import {
   generateMermaidId,
   isMermaidErrorSvg 
 } from './mermaidService';
+import { simpleLogger as logger } from '@/utils/logger';
 
 export interface MermaidRenderResult {
   svg: string;
@@ -55,12 +56,12 @@ export class MermaidRenderer {
     if (this.isInitialized) return;
 
     try {
-      console.log('🔧 Initialisation de Mermaid...');
+      logger.info('Initialisation de Mermaid...');
       await initializeMermaid(defaultMermaidConfig);
       this.isInitialized = true;
-      console.log('✅ Mermaid initialisé avec succès');
+      logger.info('Mermaid initialisé avec succès');
     } catch (error) {
-      console.error('❌ Erreur lors de l\'initialisation de Mermaid:', error);
+      logger.error('Erreur lors de l\'initialisation de Mermaid:', error);
       throw error;
     }
   }
@@ -108,7 +109,7 @@ export class MermaidRenderer {
 
     try {
       onProgress?.('loading');
-      console.log(`🔍 Rendu du diagramme ${diagramType} avec l'ID ${id}`);
+      logger.info(`Rendu du diagramme ${diagramType} avec l'ID ${id}`);
 
       // Importer Mermaid dynamiquement
       const mermaidModule = await import('mermaid');
@@ -152,7 +153,7 @@ export class MermaidRenderer {
         }
 
         onProgress?.('success');
-        console.log(`✅ Diagramme ${diagramType} rendu avec succès`);
+        logger.info(`Diagramme ${diagramType} rendu avec succès`);
 
         return {
           svg,
@@ -170,12 +171,12 @@ export class MermaidRenderer {
 
       const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
       
-      console.error(`❌ Erreur lors du rendu du diagramme ${diagramType}:`, errorMessage);
+      logger.error(`Erreur lors du rendu du diagramme ${diagramType}:`, errorMessage);
       onProgress?.('error');
 
       // Retry automatique si configuré
       if (retryCount > 0 && !abortController.signal.aborted) {
-        console.warn(`🔄 Tentative de retry pour le diagramme ${id}:`, errorMessage);
+        logger.warn(`Tentative de retry pour le diagramme ${id}:`, errorMessage);
         return this.render(content, { ...options, retryCount: retryCount - 1 });
       }
 
@@ -197,7 +198,7 @@ export class MermaidRenderer {
     if (controller) {
       controller.abort();
       this.renderQueue.delete(id);
-      console.log(`🚫 Rendu annulé pour le diagramme ${id}`);
+      logger.info(`Rendu annulé pour le diagramme ${id}`);
     }
   }
 
@@ -207,7 +208,7 @@ export class MermaidRenderer {
   public cancelAllRenders(): void {
     this.renderQueue.forEach(controller => controller.abort());
     this.renderQueue.clear();
-    console.log('🚫 Tous les rendus annulés');
+    logger.info('Tous les rendus annulés');
   }
 
   /**
@@ -230,7 +231,7 @@ export class MermaidRenderer {
   public cleanup(): void {
     this.cancelAllRenders();
     this.isInitialized = false;
-    console.log('🧹 Renderer Mermaid nettoyé');
+    logger.info('Renderer Mermaid nettoyé');
   }
 }
 

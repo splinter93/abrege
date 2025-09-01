@@ -1,7 +1,7 @@
 import React from 'react';
 import '@/styles/markdown.css';
-// Mermaid styles are now handled via themeVariables in CodeBlockWithCopy.ts
-import '@/components/chat/MermaidCentering.css';
+import '@/components/mermaid/MermaidRenderer.css';
+import '@/components/mermaid/MermaidModal.css';
 import EditorLayout from './EditorLayout';
 import EditorHeader from './EditorHeader';
 import EditorContent from './EditorContent';
@@ -34,7 +34,6 @@ import TableCell from '@tiptap/extension-table-cell';
 import { Markdown } from 'tiptap-markdown';
 import Link from '@tiptap/extension-link';
 import CustomImage from '@/extensions/CustomImage';
-import CodeBlockWithCopy from '@/extensions/CodeBlockWithCopy';
 import { NoAutoListConversion } from '@/extensions/NoAutoListConversion';
 import Placeholder from '@tiptap/extension-placeholder';
 import lowlight from '@/utils/lowlightInstance';
@@ -48,7 +47,8 @@ import { toast } from 'react-hot-toast';
 import ImageMenu from '@/components/ImageMenu';
 import { uploadImageForNote } from '@/utils/fileUpload';
 import { logger, LogCategory } from '@/utils/logger';
-import type { FullEditorInstance, CustomImageExtension, CodeBlockWithCopyExtension } from '@/types/editor';
+import type { FullEditorInstance, CustomImageExtension } from '@/types/editor';
+import MermaidTiptapExtension from '@/extensions/MermaidTiptapExtension';
 
 /**
  * Full Editor – markdown is source of truth; HTML only for display.
@@ -202,7 +202,7 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
       TableHeader,
       TableCell,
       // Code block with copy button and lowlight highlighting
-      CodeBlockWithCopy.configure({ lowlight }),
+      MermaidTiptapExtension.configure({ lowlight }),
       Link.configure({ openOnClick: false, autolink: true, linkOnPaste: true }),
       // Custom image node view to hook our image menu
       CustomImage.configure({ inline: false }),

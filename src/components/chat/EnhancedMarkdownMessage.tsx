@@ -2,7 +2,7 @@
 import React, { useMemo, useEffect, useRef } from 'react';
 import { useMarkdownRender } from '../../hooks/editor/useMarkdownRender';
 import { detectMermaidBlocks, validateMermaidSyntax, cleanMermaidContent } from './mermaidService';
-import MermaidRenderer from './MermaidRenderer';
+import MermaidRenderer from '@/components/mermaid/MermaidRenderer';
 import CodeBlock from './CodeBlock';
 import { createRoot } from 'react-dom/client';
 import './index.css';
@@ -102,214 +102,65 @@ const TextBlock: React.FC<{ content: string; index: number }> = React.memo(({ co
 
 TextBlock.displayName = 'TextBlock';
 
-const EnhancedMarkdownMessage: React.FC<EnhancedMarkdownMessageProps> = React.memo(({ content }) => {
-  const containerRef = useRef<HTMLDivElement>(null);
-  
-  // ==================================================================
-  // 1. Appeler TOUS les hooks inconditionnellement en premier
-  // ==================================================================
-  
-  const { html: fullHtml } = useMarkdownRender({ content });
+// Composant principal pour le rendu des messages markdown avec support Mermaid
+const EnhancedMarkdownMessage: React.FC<EnhancedMarkdownMessageProps> = ({ content }) => {
+  // Détecter les blocs Mermaid dans le contenu
+  const blocks = useMemo(() => {
+    return detectMermaidBlocks(content);
+  }, [content]);
 
-  const blocks = useMemo(() => detectMermaidBlocks(content), [content]);
+  // Si aucun bloc Mermaid n'est détecté, utiliser le rendu markdown simple
+  if (blocks.length === 0) {
+    return <TextBlock content={content} index={0} />;
+  }
 
-  // Fonction pour remplacer les blocs de code par des wrappers
-  const processCodeBlocks = (htmlContent: string) => {
-    // Vérifier si nous sommes côté client (DOMParser n'est disponible que dans le navigateur)
-    if (typeof window === 'undefined' || typeof DOMParser === 'undefined') {
-      return htmlContent; // Retourner le HTML original côté serveur
-    }
-    
-    // Créer un DOM parser temporaire
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(htmlContent, 'text/html');
-    
-    // Trouver tous les blocs pre > code
-    const codeBlocks = doc.querySelectorAll('pre > code');
-    
-    codeBlocks.forEach((codeElement, blockIndex) => {
-      const preElement = codeElement.parentElement;
-      if (!preElement) return;
-      
-      // Extraire le langage et le contenu
-      const language = codeElement.className.replace('language-', '') || '';
-      const codeContent = codeElement.textContent || '';
-      
-      // Créer un wrapper pour notre composant React
-      const wrapper = doc.createElement('div');
-      wrapper.className = 'code-block-wrapper';
-      wrapper.setAttribute('data-language', language);
-      wrapper.setAttribute('data-content', codeContent);
-      wrapper.setAttribute('data-index', blockIndex.toString());
-      
-      // Remplacer le pre par notre wrapper
-      preElement.parentNode?.replaceChild(wrapper, preElement);
-    });
-    
-    return doc.body.innerHTML;
-  };
-
-  // Mémoriser le rendu pour éviter les re-renders inutiles
-  const renderedContent = useMemo(() => {
-    // Si pas de blocs Mermaid, rendu simple avec traitement des code blocks
-    if (blocks.length === 1 && blocks[0].type === 'text') {
-      const processedHtml = processCodeBlocks(fullHtml);
-      return (
-        <div 
-          ref={containerRef}
-          className="chat-markdown"
-          dangerouslySetInnerHTML={{ __html: processedHtml }}
-        />
-      );
-    }
-
-    // Si on a des blocs Mermaid, on doit traiter chaque bloc séparément
-    return (
-      <div className="chat-enhanced-markdown">
-        {blocks.map((block, index) => {
-          if (block.type === 'text') {
-            // Pour les blocs de texte, utiliser le HTML complet mais filtrer les blocs Mermaid
-            // Extraire seulement la partie du HTML correspondant à ce bloc de texte
-            const startPos = block.startIndex;
-            const endPos = block.endIndex;
-            
-            // Créer un contenu temporaire pour ce bloc
-            const tempContent = content.substring(startPos, endPos);
-            
-            // IMPORTANT : Vérifier que ce bloc de texte ne contient pas de blocs Mermaid
-            // Si c'est le cas, on doit le traiter différemment
-            const hasMermaidInText = tempContent.includes('```mermaid');
-            
-            if (hasMermaidInText) {
-              // Si le bloc de texte contient des blocs Mermaid, on doit le traiter récursivement
-              // Mais d'abord, on doit extraire le HTML correspondant à ce bloc
-              const tempBlocks = detectMermaidBlocks(tempContent);
-              
-              if (tempBlocks.length === 1 && tempBlocks[0].type === 'text') {
-                // Pas de Mermaid dans ce bloc, on peut utiliser TextBlock normalement
-                return (
-                  <TextBlock 
-                    key={`text-${index}`} 
-                    content={tempContent} 
-                    index={index} 
-                  />
-                );
-              } else {
-                // Il y a du Mermaid dans ce bloc, on doit le traiter récursivement
-                return (
-                  <div key={`recursive-${index}`} className="recursive-block">
-                    {tempBlocks.map((subBlock, subIndex) => {
-                      if (subBlock.type === 'text') {
-                        return (
-                          <TextBlock 
-                            key={`sub-text-${index}-${subIndex}`} 
-                            content={subBlock.content} 
-                            index={subIndex} 
-                          />
-                        );
-                      } else {
-                        // Bloc Mermaid imbriqué
-                        const mermaidContent = cleanMermaidContent(subBlock.content);
-                        const validation = validateMermaidSyntax(mermaidContent);
-                        
-                        return (
-                          <div key={`sub-mermaid-${index}-${subIndex}`} className="mermaid-block">
-                            {validation.isValid ? (
-                              <MermaidRenderer 
-                                key={`sub-mermaid-renderer-${index}-${subIndex}`}
-                                chart={mermaidContent}
-                                className="mermaid-inline"
-                              />
-                            ) : (
-                              <div className="mermaid-invalid">
-                                <div className="mermaid-invalid-content">
-                                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                    <circle cx="12" cy="12" r="10" />
-                                    <line x1="15" y1="9" x2="9" y2="15" />
-                                    <line x1="9" y1="9" x2="15" y2="15" />
-                                  </svg>
-                                  <span>Diagramme Mermaid invalide</span>
-                                  {validation.error && (
-                                    <details>
-                                      <summary>Erreur</summary>
-                                      <pre>{validation.error}</pre>
-                                    </details>
-                                  )}
-                                  <details>
-                                    <summary>Code source</summary>
-                                    <pre className="mermaid-source">{subBlock.content}</pre>
-                                  </details>
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        );
-                      }
-                    })}
-                  </div>
-                );
-              }
-            } else {
-              // Pas de Mermaid dans ce bloc, on peut utiliser TextBlock normalement
-              return (
-                <TextBlock 
-                  key={`text-${index}`} 
-                  content={tempContent} 
-                  index={index} 
-                />
-              );
-            }
-          } else {
-            // Pour les blocs Mermaid
-            const mermaidContent = cleanMermaidContent(block.content);
-            const validation = validateMermaidSyntax(mermaidContent);
-            
+  // Rendu avec blocs Mermaid
+  return (
+    <div className="enhanced-markdown-message">
+      {blocks.map((block, index) => {
+        if (block.type === 'mermaid') {
+          // Valider la syntaxe Mermaid
+          const isValid = validateMermaidSyntax(block.content);
+          
+          if (!isValid) {
             return (
-              <div key={`mermaid-${index}`} className="mermaid-block">
-                {validation.isValid ? (
-                  <MermaidRenderer 
-                    key={`mermaid-renderer-${index}`}
-                    chart={mermaidContent}
-                    className="mermaid-inline"
-                  />
-                ) : (
-                  <div className="mermaid-invalid">
-                    <div className="mermaid-invalid-content">
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <circle cx="12" cy="12" r="10" />
-                        <line x1="15" y1="9" x2="9" y2="15" />
-                        <line x1="9" y1="9" x2="15" y2="15" />
-                      </svg>
-                      <span>Diagramme Mermaid invalide</span>
-                      {validation.error && (
-                        <details>
-                          <summary>Erreur</summary>
-                          <pre>{validation.error}</pre>
-                        </details>
-                      )}
-                      <details>
-                        <summary>Code source</summary>
-                        <pre className="mermaid-source">{block.content}</pre>
-                      </details>
-                    </div>
-                  </div>
-                )}
+              <div key={`mermaid-error-${index}`} className="mermaid-error-block">
+                <div className="mermaid-error-header">
+                  <span>❌ Syntaxe Mermaid invalide</span>
+                </div>
+                <pre className="mermaid-error-content">{block.content}</pre>
               </div>
             );
           }
-        })}
-      </div>
-    );
-  }, [blocks, fullHtml, content]);
 
-  return (
-    <div ref={containerRef}>
-      {renderedContent}
-      <CodeBlockReplacer containerRef={containerRef} />
+          // Nettoyer le contenu Mermaid
+          const cleanContent = cleanMermaidContent(block.content);
+          
+          return (
+            <MermaidRenderer
+              key={`mermaid-${index}`}
+              content={cleanContent}
+              variant="chat"
+              showActions={true}
+              renderOptions={{
+                timeout: 10000,
+                retryCount: 1
+              }}
+            />
+          );
+        } else {
+          // Bloc de texte normal
+          return (
+            <TextBlock 
+              key={`text-${index}`} 
+              content={block.content} 
+              index={index} 
+            />
+          );
+        }
+      })}
     </div>
   );
-});
-
-EnhancedMarkdownMessage.displayName = 'EnhancedMarkdownMessage';
+};
 
 export default EnhancedMarkdownMessage; 
