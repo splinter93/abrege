@@ -47,6 +47,37 @@
 }
 
 /* ========================================
+   MODE ÉDITION
+   ======================================== */
+
+.mermaid-edit-textarea {
+  width: 100%;
+  min-height: 200px;
+  padding: 16px;
+  border: 1px solid var(--border-subtle, #e5e7eb);
+  border-radius: 8px;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 14px;
+  line-height: 1.5;
+  background: var(--surface-1, #ffffff);
+  color: var(--text-primary, #374151);
+  resize: vertical;
+  outline: none;
+  /* S'assurer que le textarea est bien en dessous de la toolbar */
+  order: 2;
+  flex: 1;
+  /* Assurer que le textarea prend l'espace disponible */
+  min-height: 0;
+  margin: 0;
+  box-sizing: border-box;
+}
+
+.mermaid-edit-textarea:focus {
+  border-color: var(--accent-primary, #f97316);
+  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.1);
+}
+
+/* ========================================
    CONTENEUR SVG
    ======================================== */
 

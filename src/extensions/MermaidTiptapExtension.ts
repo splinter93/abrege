@@ -194,20 +194,6 @@ function createMermaidToolbar(mermaidContent: string, container: HTMLElement) {
     const textarea = document.createElement('textarea');
     textarea.className = 'mermaid-edit-textarea';
     textarea.value = originalContent;
-    textarea.style.cssText = `
-      width: 100%;
-      min-height: 200px;
-      padding: 16px;
-      border: 1px solid #e5e7eb;
-      border-radius: 8px;
-      font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-      font-size: 14px;
-      line-height: 1.5;
-      background: #f9fafb;
-      color: #374151;
-      resize: vertical;
-      outline: none;
-    `;
     
     // Ajouter le textarea après la toolbar
     container.insertBefore(textarea, container.children[1]);
