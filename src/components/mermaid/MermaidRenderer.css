@@ -51,7 +51,7 @@
   width: 100%;
   background: transparent;
   border: none;
-  padding: 16px;
+  padding: 20px 16px;
   margin: 0;
   overflow: visible;
   /* S'assurer que le conteneur SVG est bien en dessous de la toolbar */
@@ -76,7 +76,7 @@
   align-items: center;
   justify-content: center;
   gap: 12px;
-  padding: 20px;
+  padding: 24px 16px;
   color: var(--text-muted, #6b7280);
   font-size: 14px;
   /* S'assurer que le loading est bien en dessous de la toolbar */
