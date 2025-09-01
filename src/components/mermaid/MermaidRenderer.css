@@ -54,6 +54,9 @@
   padding: 16px;
   margin: 0;
   overflow: visible;
+  /* S'assurer que le conteneur SVG est bien en dessous de la toolbar */
+  order: 2;
+  flex: 1;
 }
 
 /* Centrer tous les SVG Mermaid */
@@ -76,6 +79,9 @@
   padding: 20px;
   color: var(--text-muted, #6b7280);
   font-size: 14px;
+  /* S'assurer que le loading est bien en dessous de la toolbar */
+  order: 2;
+  flex: 1;
 }
 
 .mermaid-spinner {
@@ -103,6 +109,9 @@
   background: var(--error-bg, #fef2f2);
   color: var(--error-text, #dc2626);
   margin: 16px;
+  /* S'assurer que l'erreur est bien en dessous de la toolbar */
+  order: 2;
+  flex: 1;
 }
 
 .mermaid-error-header {
