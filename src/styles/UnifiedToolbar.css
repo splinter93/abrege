@@ -274,6 +274,15 @@
     overflow-x: auto;
 }
 
+/* Mode édition Mermaid - background transparent comme les blocs de code */
+.mermaid-container.mermaid-editor.mermaid-edit-mode {
+    background-color: transparent;
+}
+
+.mermaid-container.mermaid-editor.mermaid-edit-mode .mermaid-svg-container {
+    background: transparent;
+}
+
 /* Appliquer la police monospace aux blocs de code */
 .code-block-container pre,
 .code-block-container code {
