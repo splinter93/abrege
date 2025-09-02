@@ -61,25 +61,25 @@ const MermaidToolbar: React.FC<MermaidToolbarProps> = ({
 
   // Classes CSS dynamiques
   const toolbarClasses = [
+    'unified-toolbar',
     'mermaid-toolbar',
-    `mermaid-toolbar-${variant}`,
     className
   ].filter(Boolean).join(' ');
 
   return (
     <div className={toolbarClasses}>
       {/* Type de diagramme à gauche */}
-      <div className="mermaid-toolbar-type">
-        <span className="mermaid-toolbar-diagram-type">{diagramType}</span>
+      <div className="toolbar-left">
+        <span className="toolbar-label">{diagramType}</span>
       </div>
 
       {/* Boutons d'action à droite */}
-      <div className="mermaid-toolbar-actions">
+      <div className="toolbar-right">
         {/* Bouton Éditer */}
         {showEdit && (
           <button
             onClick={onEdit}
-            className="mermaid-toolbar-btn mermaid-edit-btn"
+            className="toolbar-btn mermaid-edit-btn"
             title="Éditer le diagramme"
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -93,7 +93,7 @@ const MermaidToolbar: React.FC<MermaidToolbarProps> = ({
         {showCopy && (
           <button
             onClick={handleCopy}
-            className="mermaid-toolbar-btn mermaid-copy-btn"
+            className="toolbar-btn mermaid-copy-btn"
             title="Copier le code"
           >
             {isCopied ? (
@@ -113,7 +113,7 @@ const MermaidToolbar: React.FC<MermaidToolbarProps> = ({
         {showExpand && (
           <button
             onClick={onExpand}
-            className="mermaid-toolbar-btn mermaid-expand-btn"
+            className="toolbar-btn mermaid-expand-btn"
             title="Agrandir le diagramme"
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

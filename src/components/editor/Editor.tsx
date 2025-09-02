@@ -1,5 +1,6 @@
 import React from 'react';
 import '@/styles/markdown.css';
+import '@/styles/UnifiedToolbar.css';
 import '@/components/mermaid/MermaidRenderer.css';
 import '@/components/mermaid/MermaidToolbar.css';
 import '@/components/mermaid/MermaidModal.css';
@@ -49,7 +50,7 @@ import ImageMenu from '@/components/ImageMenu';
 import { uploadImageForNote } from '@/utils/fileUpload';
 import { logger, LogCategory } from '@/utils/logger';
 import type { FullEditorInstance, CustomImageExtension } from '@/types/editor';
-import MermaidTiptapExtension from '@/extensions/MermaidTiptapExtension';
+import UnifiedCodeBlockExtension from '@/extensions/UnifiedCodeBlockExtension';
 
 /**
  * Full Editor – markdown is source of truth; HTML only for display.
@@ -177,16 +178,7 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
     immediatelyRender: false, // Éviter les erreurs de SSR/hydration
     extensions: [
       StarterKit.configure({ 
-        codeBlock: false,
-        // Désactiver les extensions non essentielles pour les performances
-        code: false,
-        // Garder horizontalRule pour les slash commands
-        horizontalRule: {},
-        // Désactiver la conversion automatique des tirets en listes
-        bulletList: false,
-        orderedList: false,
-        // Désactiver complètement la conversion automatique
-        listItem: false
+        // codeBlock est géré par notre extension UnifiedCodeBlockExtension
       }),
       Underline,
       TextAlign.configure({ types: ['heading', 'paragraph'] }),
@@ -202,8 +194,10 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
       TableRow,
       TableHeader,
       TableCell,
-      // Code block with copy button and lowlight highlighting
-      MermaidTiptapExtension.configure({ lowlight }),
+      // Notre bloc unifié remplace CodeBlockLowlight natif
+      UnifiedCodeBlockExtension.configure({ 
+        lowlight,
+      }),
       Link.configure({ openOnClick: false, autolink: true, linkOnPaste: true }),
       // Custom image node view to hook our image menu
       CustomImage.configure({ inline: false }),

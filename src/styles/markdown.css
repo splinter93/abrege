@@ -387,49 +387,16 @@ h6 {
      CODE - STYLE TERMINAL MODERNE
    ========================================================================== */
 
-.markdown-body code {
-  background: var(--surface-2);
-    color: var(--accent-primary);
-    border-radius: 6px;
-    padding: 0.25em 0.5em;
-    font-size: 0.875em;
-  font-family: var(--font-monospace);
-    font-weight: 500;
-    letter-spacing: 0.01em;
-    border: 1px solid var(--border-subtle);
-    /* Meilleure gestion des retours à la ligne multi-lignes */
-    white-space: break-spaces;
-    overflow-wrap: anywhere;
-    word-break: break-word;
-    box-decoration-break: clone;
-}
+/* NOTE: Les styles pour 'pre' et 'code' sont maintenant gérés par
+   l'extension Tiptap UnifiedCodeBlockExtension et son CSS dédié
+   (src/styles/UnifiedToolbar.css) pour assurer un style cohérent
+   entre le mode lecture et le mode édition. */
 
-.markdown-body pre {
-  background: var(--surface-2);
-  color: var(--text-2);
-    border-radius: 12px;
-    padding: 1.5rem 1.75rem;
-    font-size: 0.9em;
-  font-family: var(--font-monospace);
-  overflow-x: auto;
-    margin: 2rem 0;
-  border: 1px solid var(--border-subtle);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-    position: relative;
-    line-height: 1.6;
-}
-
-.markdown-body pre code {
-  background: none;
-  padding: 0;
-  border: none;
-  font-size: inherit;
-    line-height: inherit;
-  color: inherit;
-    white-space: pre;
-  }
+/* .markdown-body code { ... } */
+/* .markdown-body pre { ... } */
+/* .markdown-body pre code { ... } */
   
-  /* Option : étiquette de langage si data-language présent */
+/* Option : étiquette de langage si data-language présent */
   .markdown-body pre[data-language]::before {
     content: attr(data-language);
   position: absolute;
@@ -894,31 +861,12 @@ h6 {
      CODE BLOCKS - PROSEMIRROR UNIFIED
    ========================================================================== */
 
-.ProseMirror pre {
-  position: relative;
-  background: var(--surface-2);
-  color: var(--text-2);
-    border-radius: 12px;
-    padding: 1.5rem 1.75rem;
-    font-size: 0.9em;
-  font-family: var(--font-monospace);
-  overflow-x: auto;
-    margin: 2rem 0;
-  border: 1px solid var(--border-subtle);
-  transition: background-color 0.2s;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-    line-height: 1.6;
-}
+/* NOTE: Les styles pour '.ProseMirror pre' et '.ProseMirror pre code' 
+   sont maintenant gérés par la NodeView de l'extension UnifiedCodeBlockExtension
+   et son CSS dédié pour une cohérence parfaite. */
 
-.ProseMirror pre code {
-  background: none;
-  padding: 0;
-  border: none;
-  font-size: inherit;
-    line-height: inherit;
-  color: inherit;
-    white-space: pre;
-  }
+/* .ProseMirror pre { ... } */
+/* .ProseMirror pre code { ... } */
   
   .ProseMirror > pre.selected,
   .ProseMirror > pre:focus,

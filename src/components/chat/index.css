@@ -5,6 +5,9 @@
 /* Import du design system global */
 @import '../../styles/chat-design-system-v2.css';
 
+/* Import de la coloration syntaxique */
+@import '../../styles/syntax-highlighting.css';
+
 /* Import des composants modulaires */
 @import './ChatLayout.css';
 @import './ChatBubbles.css';

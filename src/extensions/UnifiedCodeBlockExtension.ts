@@ -1,5 +1,5 @@
 /**
- * Extension Tiptap pour les blocs Mermaid
+ * Extension Tiptap pour les blocs de code unifiés (Mermaid + Code standard)
  * Utilise la configuration centralisée avec rendu DOM direct
  */
 
@@ -9,88 +9,172 @@ import { openMermaidModal } from '@/components/mermaid/MermaidModal';
 import { normalizeMermaidContent } from '@/components/chat/mermaidService';
 import { initializeMermaid } from '@/services/mermaid/mermaidConfig';
 import { simpleLogger as logger } from '@/utils/logger';
+import { NodeViewProps } from '@tiptap/react';
+import { createCodeBlockToolbar } from './CodeBlockToolbar';
+import '@/styles/UnifiedToolbar.css';
 
-const MermaidTiptapExtension = CodeBlockLowlight.extend({
+const UnifiedCodeBlockExtension = CodeBlockLowlight.extend({
+  name: 'codeBlock', // Nom standard pour remplacer l'extension native
+  
+  addOptions() {
+    return {
+      ...this.parent?.(),
+      lowlight: {},
+      defaultLanguage: null,
+    };
+  },
+
   addNodeView() {
-    return ({ node }) => {
-      const codeContent = node.textContent;
-      const language = node.attrs.language || '';
-
-      // Détecter si c'est un bloc Mermaid
-      const isMermaid = language === 'mermaid' || 
-                       (language === '' && codeContent.trim().startsWith('flowchart')) ||
-                       (language === '' && codeContent.trim().startsWith('sequenceDiagram')) ||
-                       (language === '' && codeContent.trim().startsWith('classDiagram')) ||
-                       (language === '' && codeContent.trim().startsWith('pie')) ||
-                       (language === '' && codeContent.trim().startsWith('gantt')) ||
-                       (language === '' && codeContent.trim().startsWith('gitGraph')) ||
-                       (language === '' && codeContent.trim().startsWith('journey')) ||
-                       (language === '' && codeContent.trim().startsWith('er')) ||
-                       (language === '' && codeContent.trim().startsWith('stateDiagram'));
-
-      if (isMermaid) {
-        // Rendre le diagramme Mermaid avec DOM direct
-        return renderMermaidBlock(codeContent);
+    return ({ node, getPos, editor }) => {
+      const language = node.attrs.language;
+      if (language === 'mermaid') {
+        return createMermaidNodeView(node, getPos, editor);
       } else {
-        // Rendre le bloc de code normal avec bouton de copie
-        return renderCodeBlock(node, language);
+        return createCodeBlockNodeView(node, getPos, editor);
       }
     };
   },
 });
 
-// Fonction pour rendre un bloc Mermaid
-function renderMermaidBlock(mermaidContent: string) {
+// =================================================================
+// MERMAID NODE VIEW
+// =================================================================
+
+function createMermaidNodeView(node: Node, getPos: () => number, editor: any) {
   const container = document.createElement('div');
   container.className = 'mermaid-container mermaid-editor mermaid-loading';
-  container.style.position = 'relative';
   
-  // Créer la toolbar avec boutons
-  const toolbar = createMermaidToolbar(mermaidContent, container);
-  
-  // Indicateur de chargement
-  const loadingIndicator = document.createElement('div');
-  loadingIndicator.className = 'mermaid-loading-content';
-  loadingIndicator.innerHTML = `
-    <div class="mermaid-spinner"></div>
-    <span>Rendu du diagramme...</span>
-  `;
-  
-  // Ajouter la toolbar et l'indicateur au conteneur
+  const toolbar = createMermaidToolbar(node, getPos, editor, container);
   container.appendChild(toolbar);
-  container.appendChild(loadingIndicator);
   
-  // Rendre le diagramme Mermaid de manière asynchrone
-  renderMermaidDiagram(container, mermaidContent);
+  renderMermaidDiagram(container, node.textContent);
   
   return {
     dom: container,
-    contentDOM: null, // Pas de contentDOM pour Mermaid
+    contentDOM: undefined, // Pas de contentDOM pour Mermaid
+    update: (updatedNode: Node) => {
+      if (updatedNode.type.name !== 'codeBlock') return false;
+      // Re-render on content change
+      if (updatedNode.textContent !== node.textContent) {
+        renderMermaidDiagram(container, updatedNode.textContent);
+        // Mettre à jour le type de diagramme dans la toolbar
+        const typeSpan = toolbar.querySelector('.toolbar-label') as HTMLSpanElement;
+        if (typeSpan) {
+            typeSpan.textContent = getMermaidDiagramType(updatedNode.textContent);
+        }
+      }
+      return true;
+    },
   };
 }
 
+// =================================================================
+// STANDARD CODE BLOCK NODE VIEW
+// =================================================================
+
+function createCodeBlockNodeView(node: Node, getPos: () => number, editor: any) {
+  const container = document.createElement('div');
+  container.className = 'code-block-container';
+
+  const toolbar = createCodeBlockToolbar(node, getPos, editor, container);
+  container.appendChild(toolbar);
+
+  const pre = document.createElement('pre');
+  const code = document.createElement('code');
+
+  // IMPORTANT: Ces attributs sont essentiels pour Tiptap/Lowlight
+  if (node.attrs.language) {
+    code.className = `language-${node.attrs.language} hljs`;
+  } else {
+    code.className = 'hljs';
+  }
+  
+  // Cet attribut est essentiel pour que Tiptap gère le contenu
+  code.setAttribute('data-node-view-content', '');
+
+  pre.appendChild(code);
+  container.appendChild(pre);
+
+  // Appliquer la coloration syntaxique immédiatement
+  if (node.attrs.language && node.textContent) {
+    try {
+      const lowlight = editor.storage.lowlight;
+      if (lowlight && lowlight.highlight) {
+        const result = lowlight.highlight(node.textContent, node.attrs.language);
+        code.innerHTML = result.value;
+      }
+    } catch (error) {
+      logger.warn('Erreur coloration syntaxique:', error);
+    }
+  }
+
+  return {
+    dom: container,
+    contentDOM: code, // Tiptap gère le contenu de cet élément
+    update: (updatedNode: Node) => {
+      if (updatedNode.type.name !== 'codeBlock') {
+        return false;
+      }
+      // La langue a peut-être changé
+      if (updatedNode.attrs.language !== node.attrs.language) {
+        // Mettre à jour la toolbar si la langue change
+        const newToolbar = createCodeBlockToolbar(updatedNode, getPos, editor, container);
+        const oldToolbar = container.querySelector('.unified-toolbar');
+        if (oldToolbar && newToolbar) {
+          container.replaceChild(newToolbar, oldToolbar);
+        }
+        
+        // Mettre à jour la classe du code
+        if (updatedNode.attrs.language) {
+          code.className = `language-${updatedNode.attrs.language} hljs`;
+        } else {
+          code.className = 'hljs';
+        }
+        
+        // Re-appliquer la coloration syntaxique
+        if (updatedNode.attrs.language && updatedNode.textContent) {
+          try {
+            const lowlight = editor.storage.lowlight;
+            if (lowlight && lowlight.highlight) {
+              const result = lowlight.highlight(updatedNode.textContent, updatedNode.attrs.language);
+              code.innerHTML = result.value;
+            }
+          } catch (error) {
+            logger.warn('Erreur coloration syntaxique:', error);
+          }
+        }
+      }
+      return true;
+    },
+  };
+}
+
+// =================================================================
+// MERMAID-SPECIFIC HELPERS (UNCHANGED FOR NOW)
+// =================================================================
+
 // Fonction pour créer la toolbar Mermaid
-function createMermaidToolbar(mermaidContent: string, container: HTMLElement) {
+function createMermaidToolbar(node: Node, getPos: NodeViewProps['getPos'], editor: NodeViewProps['editor'], container: HTMLElement) {
   const toolbar = document.createElement('div');
-  toolbar.className = 'mermaid-toolbar mermaid-toolbar-editor';
+  toolbar.className = 'unified-toolbar mermaid-toolbar'; // Utiliser les classes unifiées
   
   // Type de diagramme à gauche
   const typeContainer = document.createElement('div');
-  typeContainer.className = 'mermaid-toolbar-type';
+  typeContainer.className = 'toolbar-left';
   
   const diagramType = document.createElement('span');
-  diagramType.className = 'mermaid-toolbar-diagram-type';
-  diagramType.textContent = getMermaidDiagramType(mermaidContent);
+  diagramType.className = 'toolbar-label';
+  diagramType.textContent = getMermaidDiagramType(node.textContent);
   
   typeContainer.appendChild(diagramType);
   
   // Boutons d'action à droite
   const actionsContainer = document.createElement('div');
-  actionsContainer.className = 'mermaid-toolbar-actions';
+  actionsContainer.className = 'toolbar-right';
   
   // Bouton Éditer avec fonctionnalité de basculement
   const editButton = document.createElement('button');
-  editButton.className = 'mermaid-toolbar-btn mermaid-edit-btn';
+  editButton.className = 'toolbar-btn mermaid-edit-btn';
   editButton.title = 'Éditer le diagramme';
   editButton.innerHTML = `
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -101,15 +185,14 @@ function createMermaidToolbar(mermaidContent: string, container: HTMLElement) {
   
   // Gestion du mode édition
   let isEditMode = false;
-  let originalContent = mermaidContent;
   
   const handleEditClick = () => {
     if (isEditMode) {
       // Sortir du mode édition et re-rendre
-      exitEditMode();
+      exitEditMode(container, node, getPos());
     } else {
       // Entrer en mode édition
-      enterEditMode();
+      enterEditMode(container, node, getPos());
     }
   };
   
@@ -117,7 +200,7 @@ function createMermaidToolbar(mermaidContent: string, container: HTMLElement) {
   
   // Bouton Copier
   const copyButton = document.createElement('button');
-  copyButton.className = 'mermaid-toolbar-btn mermaid-copy-btn';
+  copyButton.className = 'toolbar-btn mermaid-copy-btn';
   copyButton.title = 'Copier le code Mermaid';
   copyButton.innerHTML = `
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -129,7 +212,7 @@ function createMermaidToolbar(mermaidContent: string, container: HTMLElement) {
   let copyTimeout: NodeJS.Timeout | null = null;
   
   const handleCopyClick = () => {
-    navigator.clipboard.writeText(mermaidContent).then(() => {
+    navigator.clipboard.writeText(node.textContent).then(() => {
       copyButton.innerHTML = `
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
           <polyline points="20 6 9 17 4 12" />
@@ -158,7 +241,7 @@ function createMermaidToolbar(mermaidContent: string, container: HTMLElement) {
   
   // Bouton Agrandir
   const expandButton = document.createElement('button');
-  expandButton.className = 'mermaid-toolbar-btn mermaid-expand-btn';
+  expandButton.className = 'toolbar-btn mermaid-expand-btn';
   expandButton.title = 'Agrandir le diagramme';
   expandButton.innerHTML = `
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -167,22 +250,26 @@ function createMermaidToolbar(mermaidContent: string, container: HTMLElement) {
   `;
   
   const handleExpandClick = () => {
-    openMermaidModal(mermaidContent);
+    openMermaidModal(node.textContent);
   };
   
   expandButton.addEventListener('click', handleExpandClick);
   
   // Fonction pour entrer en mode édition
-  const enterEditMode = () => {
+  const enterEditMode = (container: HTMLElement, node: Node, pos: number) => {
     isEditMode = true;
     
-    // Changer l'icône du bouton (crayon → checkmark)
+    // Ajouter la classe d'édition au container
+    container.classList.add('mermaid-edit-mode');
+    
+    // Changer l'icône du bouton (crayon → œil)
     editButton.innerHTML = `
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <polyline points="20 6 9 17 4 12"></polyline>
+        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+        <circle cx="12" cy="12" r="3"></circle>
       </svg>
     `;
-    editButton.title = 'Valider et re-rendre';
+    editButton.title = 'Voir le diagramme';
     
     // Masquer le contenu SVG et afficher le textarea
     const svgContainer = container.querySelector('.mermaid-svg-container') as HTMLElement;
@@ -192,11 +279,32 @@ function createMermaidToolbar(mermaidContent: string, container: HTMLElement) {
     
     // Créer le textarea d'édition
     const textarea = document.createElement('textarea');
-    textarea.className = 'mermaid-edit-textarea';
-    textarea.value = originalContent;
+    textarea.className = 'mermaid-edit-textarea font-monospace';
+    textarea.value = node.textContent;
+    
+    // Fonction pour auto-resize le textarea
+    const autoResize = () => {
+      textarea.style.height = 'auto';
+      textarea.style.height = `${textarea.scrollHeight}px`;
+    };
+
+    // Isoler les événements du textarea pour ne pas interférer avec Tiptap
+    const stopPropagation = (e: Event) => e.stopPropagation();
+    textarea.addEventListener('input', autoResize);
+    textarea.addEventListener('paste', (e) => {
+      stopPropagation(e);
+      setTimeout(autoResize, 0);
+    });
+    textarea.addEventListener('keydown', stopPropagation);
+    textarea.addEventListener('keyup', stopPropagation);
+    textarea.addEventListener('keypress', stopPropagation);
+    textarea.addEventListener('mousedown', stopPropagation);
     
     // Ajouter le textarea après la toolbar
     container.insertBefore(textarea, container.children[1]);
+    
+    // Auto-resize initial après un court délai pour être sûr que tout est rendu
+    setTimeout(autoResize, 0);
     
     // Focus sur le textarea
     textarea.focus();
@@ -204,8 +312,11 @@ function createMermaidToolbar(mermaidContent: string, container: HTMLElement) {
   };
   
   // Fonction pour sortir du mode édition
-  const exitEditMode = () => {
+  const exitEditMode = (container: HTMLElement, node: Node, pos: number) => {
     isEditMode = false;
+    
+    // Retirer la classe d'édition du container
+    container.classList.remove('mermaid-edit-mode');
     
     // Récupérer le contenu modifié
     const textarea = container.querySelector('.mermaid-edit-textarea');
@@ -213,7 +324,12 @@ function createMermaidToolbar(mermaidContent: string, container: HTMLElement) {
       const newContent = (textarea as HTMLTextAreaElement).value;
       
       // Mettre à jour le contenu original
-      originalContent = newContent;
+      const transaction = editor.view.state.tr.replaceWith(
+        pos + 1,
+        pos + node.nodeSize - 1,
+        editor.schema.text(newContent)
+      );
+      editor.view.dispatch(transaction);
       
       // Supprimer le textarea
       textarea.remove();
@@ -232,7 +348,6 @@ function createMermaidToolbar(mermaidContent: string, container: HTMLElement) {
     editButton.innerHTML = `
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-        <path d="m18.5 2.5 3 3L12 15l-4 1 1-4 9.5-9.5z" />
       </svg>
     `;
     editButton.title = 'Éditer le diagramme';
@@ -254,89 +369,26 @@ function getMermaidDiagramType(content: string): string {
   const normalized = content.trim().toLowerCase();
   
   if (normalized.startsWith('flowchart') || normalized.startsWith('graph')) {
-    return 'Flowchart';
+    return 'FLOWCHART';
   } else if (normalized.startsWith('sequencediagram')) {
-    return 'Sequence';
+    return 'SEQUENCE';
   } else if (normalized.startsWith('classdiagram')) {
-    return 'Class';
+    return 'CLASS';
   } else if (normalized.startsWith('pie')) {
-    return 'Pie';
+    return 'PIE';
   } else if (normalized.startsWith('gantt')) {
-    return 'Gantt';
+    return 'GANTT';
   } else if (normalized.startsWith('gitgraph')) {
-    return 'GitGraph';
+    return 'GITGRAPH';
   } else if (normalized.startsWith('journey')) {
-    return 'Journey';
+    return 'JOURNEY';
   } else if (normalized.startsWith('er')) {
     return 'ER';
   } else if (normalized.startsWith('statediagram')) {
-    return 'State';
+    return 'STATE';
   } else {
-    return 'Diagram';
+    return 'DIAGRAM';
   }
-}
-
-// Fonction pour rendre un bloc de code normal
-function renderCodeBlock(node: Node, language: string) {
-  const container = document.createElement('div');
-  container.style.position = 'relative';
-  container.className = 'code-block-container';
-
-  // Créer le bloc de code standard
-  const pre = document.createElement('pre');
-  const code = document.createElement('code');
-
-  if (language) {
-    code.className = 'language-' + language;
-  }
-  pre.appendChild(code);
-  
-  const button = document.createElement('button');
-  button.className = 'code-copy-button';
-  button.title = 'Copier le code';
-  
-  const copyIcon = `
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16">
-      <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-    </svg>
-  `;
-  const checkIcon = `
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="16" height="16">
-      <polyline points="20 6 9 17 4 12"></polyline>
-    </svg>
-  `;
-  
-  let copyTimeout: NodeJS.Timeout | null = null;
-  
-  const handleCopyClick = () => {
-    navigator.clipboard.writeText(node.textContent).then(() => {
-      button.innerHTML = checkIcon;
-      button.style.color = 'var(--accent-primary)';
-      button.classList.add('copied');
-      
-      // Nettoyer le timeout précédent
-      if (copyTimeout) {
-        clearTimeout(copyTimeout);
-      }
-      
-      copyTimeout = setTimeout(() => {
-        button.innerHTML = copyIcon;
-        button.style.color = '';
-        button.classList.remove('copied');
-      }, 2000);
-    });
-  };
-  
-  button.innerHTML = copyIcon;
-  button.addEventListener('click', handleCopyClick);
-
-  container.append(pre, button);
-
-  return {
-    dom: container,
-    contentDOM: code,
-  };
 }
 
 // Fonction pour rendre le diagramme Mermaid (utilise la config centralisée)
@@ -348,6 +400,17 @@ async function renderMermaidDiagram(container: HTMLElement, mermaidContent: stri
     // Importer Mermaid dynamiquement
     const mermaid = await import('mermaid');
 
+    // **VALIDATION EN AMONT** : Vérifier la syntaxe avant le rendu
+    try {
+      await mermaid.default.parse(mermaidContent);
+    } catch (e) {
+      // Si la validation échoue, on lance une erreur pour être attrapé par le bloc catch principal
+      if (e instanceof Error) {
+        throw new Error(`Erreur de syntaxe Mermaid: ${e.message}`);
+      }
+      throw new Error('Erreur de syntaxe Mermaid inconnue.');
+    }
+
     // Normaliser le contenu Mermaid
     const normalizedContent = normalizeMermaidContent(mermaidContent);
     
@@ -358,12 +421,11 @@ async function renderMermaidDiagram(container: HTMLElement, mermaidContent: stri
     const result = await mermaid.default.render(id, normalizedContent);
     
     if (result && result.svg) {
-      // Supprimer l'indicateur de chargement
+      // Nettoyer le contenu (garder la toolbar)
+      const toolbar = container.querySelector('.unified-toolbar');
       container.innerHTML = '';
-      
-      // Recréer la toolbar
-      const toolbar = createMermaidToolbar(mermaidContent, container);
-      
+      if (toolbar) container.appendChild(toolbar);
+
       // Créer le conteneur SVG
       const svgContainer = document.createElement('div');
       svgContainer.className = 'mermaid-svg-container';
@@ -372,8 +434,7 @@ async function renderMermaidDiagram(container: HTMLElement, mermaidContent: stri
       // Mettre à jour les classes du conteneur
       container.className = 'mermaid-container mermaid-editor mermaid-rendered';
       
-      // Ajouter la toolbar et le conteneur SVG
-      container.appendChild(toolbar);
+      // Ajouter le conteneur SVG après la toolbar
       container.appendChild(svgContainer);
     } else {
       throw new Error('Format de réponse Mermaid invalide');
@@ -382,11 +443,10 @@ async function renderMermaidDiagram(container: HTMLElement, mermaidContent: stri
   } catch (error) {
     logger.error('Erreur lors du rendu Mermaid dans l\'éditeur:', error);
     
-    // Supprimer le contenu existant
+    // Nettoyer le contenu (garder la toolbar)
+    const toolbar = container.querySelector('.unified-toolbar');
     container.innerHTML = '';
-    
-          // Recréer la toolbar même en cas d'erreur
-      const toolbar = createMermaidToolbar(mermaidContent, container);
+    if (toolbar) container.appendChild(toolbar);
     
     // Créer le contenu d'erreur
     const errorContent = document.createElement('div');
@@ -400,25 +460,18 @@ async function renderMermaidDiagram(container: HTMLElement, mermaidContent: stri
         </svg>
         <span>Erreur de rendu du diagramme</span>
       </div>
-      <div class="mermaid-error-body">
-        <div class="mermaid-error-message">
-          <strong>Erreur :</strong>
-          <pre>${error instanceof Error ? error.message : 'Erreur inconnue'}</pre>
-        </div>
-        <details class="mermaid-error-details">
-          <summary>Code source</summary>
-          <pre class="mermaid-source">${mermaidContent}</pre>
-        </details>
+      <div class="mermaid-error-message">
+        <strong>Cause :</strong>
+        <pre>${error instanceof Error ? error.message : 'Erreur inconnue'}</pre>
       </div>
     `;
     
     // Mettre à jour les classes du conteneur
     container.className = 'mermaid-container mermaid-editor mermaid-error';
     
-    // Ajouter la toolbar et le contenu d'erreur
-    container.appendChild(toolbar);
+    // Ajouter le contenu d'erreur après la toolbar
     container.appendChild(errorContent);
   }
 }
 
-export default MermaidTiptapExtension;
+export default UnifiedCodeBlockExtension;

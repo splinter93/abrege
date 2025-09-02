@@ -1,0 +1,437 @@
+/* =================================================================
+   SYNTAX HIGHLIGHTING - THÈME MODERNE ET LISIBLE
+   ================================================================= */
+
+/* Base styles pour tous les blocs de code */
+.hljs {
+  display: block;
+  overflow-x: auto;
+  padding: 0.5em;
+  background: transparent;
+  color: var(--text-primary);
+}
+
+/* =================================================================
+   LANGUAGES SUPPORTÉS
+   ================================================================= */
+
+/* JavaScript/TypeScript */
+.language-javascript .hljs,
+.language-js .hljs,
+.language-typescript .hljs,
+.language-ts .hljs {
+  color: #e4e4e7;
+}
+
+.language-javascript .hljs-keyword,
+.language-js .hljs-keyword,
+.language-typescript .hljs-keyword,
+.language-ts .hljs-keyword {
+  color: #f472b6; /* Pink */
+  font-weight: 600;
+}
+
+.language-javascript .hljs-string,
+.language-js .hljs-string,
+.language-typescript .hljs-string,
+.language-ts .hljs-string {
+  color: #a7f3d0; /* Green */
+}
+
+.language-javascript .hljs-number,
+.language-js .hljs-number,
+.language-typescript .hljs-number,
+.language-ts .hljs-number {
+  color: #fbbf24; /* Yellow */
+}
+
+.language-javascript .hljs-function,
+.language-js .hljs-function,
+.language-typescript .hljs-function,
+.language-ts .hljs-function {
+  color: #93c5fd; /* Blue */
+}
+
+.language-javascript .hljs-params,
+.language-js .hljs-params,
+.language-typescript .hljs-params,
+.language-ts .hljs-params {
+  color: #cbd5e1; /* Gray */
+}
+
+.language-javascript .hljs-comment,
+.language-js .hljs-comment,
+.language-typescript .hljs-comment,
+.language-ts .hljs-comment {
+  color: #64748b; /* Slate */
+  font-style: italic;
+}
+
+.language-javascript .hljs-operator,
+.language-js .hljs-operator,
+.language-typescript .hljs-operator,
+.language-ts .hljs-operator {
+  color: #f472b6; /* Pink */
+}
+
+.language-javascript .hljs-punctuation,
+.language-js .hljs-punctuation,
+.language-typescript .hljs-punctuation,
+.language-ts .hljs-punctuation {
+  color: #cbd5e1; /* Gray */
+}
+
+/* JSON */
+.language-json .hljs {
+  color: #e4e4e7;
+}
+
+.language-json .hljs-string {
+  color: #a7f3d0; /* Green */
+}
+
+.language-json .hljs-number {
+  color: #fbbf24; /* Yellow */
+}
+
+.language-json .hljs-literal {
+  color: #f472b6; /* Pink */
+}
+
+.language-json .hljs-punctuation {
+  color: #cbd5e1; /* Gray */
+}
+
+/* Python */
+.language-python .hljs,
+.language-py .hljs {
+  color: #e4e4e7;
+}
+
+.language-python .hljs-keyword,
+.language-py .hljs-keyword {
+  color: #f472b6; /* Pink */
+  font-weight: 600;
+}
+
+.language-python .hljs-string,
+.language-py .hljs-string {
+  color: #a7f3d0; /* Green */
+}
+
+.language-python .hljs-number,
+.language-py .hljs-number {
+  color: #fbbf24; /* Yellow */
+}
+
+.language-python .hljs-function,
+.language-py .hljs-function {
+  color: #93c5fd; /* Blue */
+}
+
+.language-python .hljs-comment,
+.language-py .hljs-comment {
+  color: #64748b; /* Slate */
+  font-style: italic;
+}
+
+/* HTML */
+.language-html .hljs {
+  color: #e4e4e7;
+}
+
+.language-html .hljs-tag {
+  color: #f472b6; /* Pink */
+}
+
+.language-html .hljs-name {
+  color: #93c5fd; /* Blue */
+}
+
+.language-html .hljs-attr {
+  color: #a7f3d0; /* Green */
+}
+
+.language-html .hljs-string {
+  color: #fbbf24; /* Yellow */
+}
+
+.language-html .hljs-comment {
+  color: #64748b; /* Slate */
+  font-style: italic;
+}
+
+/* CSS */
+.language-css .hljs {
+  color: #e4e4e7;
+}
+
+.language-css .hljs-selector-tag {
+  color: #f472b6; /* Pink */
+}
+
+.language-css .hljs-property {
+  color: #93c5fd; /* Blue */
+}
+
+.language-css .hljs-value {
+  color: #a7f3d0; /* Green */
+}
+
+.language-css .hljs-number {
+  color: #fbbf24; /* Yellow */
+}
+
+.language-css .hljs-comment {
+  color: #64748b; /* Slate */
+  font-style: italic;
+}
+
+/* Bash/Shell */
+.language-bash .hljs,
+.language-shell .hljs,
+.language-sh .hljs {
+  color: #e4e4e7;
+}
+
+.language-bash .hljs-keyword,
+.language-shell .hljs-keyword,
+.language-sh .hljs-keyword {
+  color: #f472b6; /* Pink */
+  font-weight: 600;
+}
+
+.language-bash .hljs-string,
+.language-shell .hljs-string,
+.language-sh .hljs-string {
+  color: #a7f3d0; /* Green */
+}
+
+.language-bash .hljs-comment,
+.language-shell .hljs-comment,
+.language-sh .hljs-comment {
+  color: #64748b; /* Slate */
+  font-style: italic;
+}
+
+/* SQL */
+.language-sql .hljs {
+  color: #e4e4e7;
+}
+
+.language-sql .hljs-keyword {
+  color: #f472b6; /* Pink */
+  font-weight: 600;
+}
+
+.language-sql .hljs-string {
+  color: #a7f3d0; /* Green */
+}
+
+.language-sql .hljs-number {
+  color: #fbbf24; /* Yellow */
+}
+
+.language-sql .hljs-function {
+  color: #93c5fd; /* Blue */
+}
+
+.language-sql .hljs-comment {
+  color: #64748b; /* Slate */
+  font-style: italic;
+}
+
+/* Markdown */
+.language-markdown .hljs,
+.language-md .hljs {
+  color: #e4e4e7;
+}
+
+.language-markdown .hljs-emphasis,
+.language-md .hljs-emphasis {
+  font-style: italic;
+  color: #cbd5e1;
+}
+
+.language-markdown .hljs-strong,
+.language-md .hljs-strong {
+  font-weight: 600;
+  color: #f472b6;
+}
+
+.language-markdown .hljs-code,
+.language-md .hljs-code {
+  color: #a7f3d0;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 2px 4px;
+  border-radius: 3px;
+}
+
+/* YAML */
+.language-yaml .hljs,
+.language-yml .hljs {
+  color: #e4e4e7;
+}
+
+.language-yaml .hljs-keyword,
+.language-yml .hljs-keyword {
+  color: #f472b6; /* Pink */
+  font-weight: 600;
+}
+
+.language-yaml .hljs-string,
+.language-yml .hljs-string {
+  color: #a7f3d0; /* Green */
+}
+
+.language-yaml .hljs-number,
+.language-yml .hljs-number {
+  color: #fbbf24; /* Yellow */
+}
+
+.language-yaml .hljs-comment,
+.language-yml .hljs-comment {
+  color: #64748b; /* Slate */
+  font-style: italic;
+}
+
+/* XML */
+.language-xml .hljs {
+  color: #e4e4e7;
+}
+
+.language-xml .hljs-tag {
+  color: #f472b6; /* Pink */
+}
+
+.language-xml .hljs-name {
+  color: #93c5fd; /* Blue */
+}
+
+.language-xml .hljs-attr {
+  color: #a7f3d0; /* Green */
+}
+
+.language-xml .hljs-string {
+  color: #fbbf24; /* Yellow */
+}
+
+.language-xml .hljs-comment {
+  color: #64748b; /* Slate */
+  font-style: italic;
+}
+
+/* =================================================================
+   ÉLÉMENTS GÉNÉRIQUES (fallback pour tous les langages)
+   ================================================================= */
+
+.hljs-keyword {
+  color: #f472b6; /* Pink */
+  font-weight: 600;
+}
+
+.hljs-string {
+  color: #a7f3d0; /* Green */
+}
+
+.hljs-number {
+  color: #fbbf24; /* Yellow */
+}
+
+.hljs-function {
+  color: #93c5fd; /* Blue */
+}
+
+.hljs-comment {
+  color: #64748b; /* Slate */
+  font-style: italic;
+}
+
+.hljs-operator {
+  color: #f472b6; /* Pink */
+}
+
+.hljs-punctuation {
+  color: #cbd5e1; /* Gray */
+}
+
+.hljs-variable {
+  color: #cbd5e1; /* Gray */
+}
+
+.hljs-constant {
+  color: #fbbf24; /* Yellow */
+}
+
+.hljs-class {
+  color: #93c5fd; /* Blue */
+}
+
+.hljs-title {
+  color: #93c5fd; /* Blue */
+}
+
+.hljs-built_in {
+  color: #a7f3d0; /* Green */
+}
+
+.hljs-literal {
+  color: #f472b6; /* Pink */
+}
+
+.hljs-regexp {
+  color: #fbbf24; /* Yellow */
+}
+
+.hljs-symbol {
+  color: #a7f3d0; /* Green */
+}
+
+.hljs-deletion {
+  color: #fca5a5; /* Red */
+}
+
+.hljs-addition {
+  color: #86efac; /* Green */
+}
+
+/* =================================================================
+   SUPPORT POUR LES THÈMES SOMBRE/CLAIR
+   ================================================================= */
+
+@media (prefers-color-scheme: light) {
+  .hljs {
+    color: #1f2937; /* Dark text for light theme */
+  }
+  
+  .hljs-comment {
+    color: #6b7280; /* Darker gray for light theme */
+  }
+  
+  .hljs-punctuation {
+    color: #374151; /* Darker gray for light theme */
+  }
+  
+  .hljs-variable {
+    color: #374151; /* Darker gray for light theme */
+  }
+}
+
+/* =================================================================
+   RESPONSIVE ET ACCESSIBILITÉ
+   ================================================================= */
+
+@media (max-width: 768px) {
+  .hljs {
+    font-size: 13px;
+    line-height: 1.4;
+  }
+}
+
+/* Support pour la réduction de mouvement */
+@media (prefers-reduced-motion: reduce) {
+  .hljs * {
+    transition: none !important;
+    animation: none !important;
+  }
+}

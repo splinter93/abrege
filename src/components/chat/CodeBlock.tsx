@@ -1,6 +1,7 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FiCopy, FiCheck } from 'react-icons/fi';
+import lowlight from '@/utils/lowlightInstance';
 
 interface CodeBlockProps {
   children: React.ReactNode;
@@ -10,6 +11,34 @@ interface CodeBlockProps {
 
 const CodeBlock: React.FC<CodeBlockProps> = ({ children, className, language }) => {
   const [copied, setCopied] = useState(false);
+  const [highlightedCode, setHighlightedCode] = useState<string>('');
+
+  // Appliquer la coloration syntaxique quand le composant se monte ou que le contenu change
+  useEffect(() => {
+    if (!language || !children) {
+      setHighlightedCode(typeof children === 'string' ? children : 
+        Array.isArray(children) ? children.join('') : 
+        children?.toString() || '');
+      return;
+    }
+
+    try {
+      // Extraire le texte du code
+      const codeText = typeof children === 'string' ? children : 
+        Array.isArray(children) ? children.join('') : 
+        children?.toString() || '';
+      
+      // Appliquer la coloration syntaxique avec lowlight
+      const result = lowlight.highlight(codeText, language);
+      setHighlightedCode(result.value);
+    } catch (error) {
+      console.warn(`Erreur lors de la coloration syntaxique pour ${language}:`, error);
+      // Fallback : utiliser le code brut
+      setHighlightedCode(typeof children === 'string' ? children : 
+        Array.isArray(children) ? children.join('') : 
+        children?.toString() || '');
+    }
+  }, [children, language]);
 
   const handleCopy = async () => {
     try {
@@ -40,29 +69,36 @@ const CodeBlock: React.FC<CodeBlockProps> = ({ children, className, language }) 
   };
 
   return (
-    <pre className={`chat-markdown-code-block ${className || ''}`}>
-      {/* Bouton de copie - même style que les bubbles */}
-      <button
-        className={`copy-button ${copied ? 'copied' : ''}`}
-        onClick={handleCopy}
-        title={copied ? 'Copié !' : 'Copier le code'}
-        aria-label={copied ? 'Code copié' : 'Copier le code'}
-      >
-        {copied ? <FiCheck size={16} /> : <FiCopy size={16} />}
-      </button>
-      
-      {/* Indicateur de langage */}
-      {language && (
-        <div className="code-language-indicator">
-          {language}
+    <div className={`code-block-container ${className || ''}`}>
+      {/* Toolbar unifiée - même style que Mermaid */}
+      <div className="unified-toolbar">
+        {/* Indicateur de langage à gauche */}
+        <div className="toolbar-language">
+          {language ? language.toUpperCase() : 'CODE'}
         </div>
-      )}
+        
+        {/* Boutons d'action à droite */}
+        <div className="toolbar-actions">
+          {/* Bouton de copie */}
+          <button
+            className={`toolbar-btn ${copied ? 'copied' : ''}`}
+            onClick={handleCopy}
+            title={copied ? 'Copié !' : 'Copier le code'}
+            aria-label={copied ? 'Code copié' : 'Copier le code'}
+          >
+            {copied ? <FiCheck size={14} /> : <FiCopy size={14} />}
+          </button>
+        </div>
+      </div>
       
-      {/* Contenu du code */}
-      <code className={language ? `language-${language}` : ''}>
-        {children}
-      </code>
-    </pre>
+      {/* Contenu du code avec coloration syntaxique */}
+      <pre className="code-content">
+        <code 
+          className={language ? `language-${language} hljs` : ''}
+          dangerouslySetInnerHTML={{ __html: highlightedCode }}
+        />
+      </pre>
+    </div>
   );
 };
 
