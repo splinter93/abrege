@@ -200,7 +200,7 @@ function createMermaidToolbar(node: Node, getPos: NodeViewProps['getPos'], edito
   
   // Bouton Copier
   const copyButton = document.createElement('button');
-  copyButton.className = 'toolbar-btn mermaid-copy-btn';
+  copyButton.className = 'toolbar-btn mermaid-copy-btn copy-btn';
   copyButton.title = 'Copier le code Mermaid';
   copyButton.innerHTML = `
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -214,11 +214,11 @@ function createMermaidToolbar(node: Node, getPos: NodeViewProps['getPos'], edito
   const handleCopyClick = () => {
     navigator.clipboard.writeText(node.textContent).then(() => {
       copyButton.innerHTML = `
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <polyline points="20 6 9 17 4 12" />
         </svg>
       `;
-      copyButton.style.color = '#10b981';
+      copyButton.classList.add('copied');
       
       // Nettoyer le timeout précédent
       if (copyTimeout) {
@@ -232,7 +232,7 @@ function createMermaidToolbar(node: Node, getPos: NodeViewProps['getPos'], edito
             <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
           </svg>
         `;
-        copyButton.style.color = '';
+        copyButton.classList.remove('copied');
       }, 2000);
     });
   };

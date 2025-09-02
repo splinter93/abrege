@@ -53,9 +53,61 @@
     transform: scale(1.05);
 }
 
+.toolbar-btn:focus {
+    outline: none !important;
+    box-shadow: none !important;
+    border: none !important;
+}
+
+.toolbar-btn:focus-visible {
+    outline: none !important;
+    box-shadow: none !important;
+    border: none !important;
+}
+
+.toolbar-btn:active {
+    outline: none !important;
+    box-shadow: none !important;
+    border: none !important;
+}
+
+/* S'assurer que les boutons gardent leurs dimensions exactes */
+.toolbar-btn svg {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+}
+
+/* Suppression globale de tous les effets de focus sur tous les boutons */
+.toolbar-btn,
+.toolbar-btn *,
+.copy-btn,
+.copy-btn *,
+.mermaid-edit-btn,
+.mermaid-copy-btn,
+.mermaid-expand-btn {
+    -webkit-tap-highlight-color: transparent !important;
+    -webkit-touch-callout: none !important;
+    -webkit-user-select: none !important;
+    -khtml-user-select: none !important;
+    -moz-user-select: none !important;
+    -ms-user-select: none !important;
+    user-select: none !important;
+}
+
+/* =================================================================
+   Copy Button - Style harmonisé
+   ================================================================= */
+
+.copy-btn:hover {
+    background: transparent;
+    color: var(--text-primary);
+    transform: scale(1.05);
+}
+
 .toolbar-btn.copied {
-    color: #10b981; /* Green check */
-    background-color: rgba(16, 185, 129, 0.1);
+    color: var(--success-text, #10b981) !important;
+    background: transparent;
 }
 
 /* =================================================================
@@ -159,36 +211,32 @@
    Mermaid-specific button styles
    ================================================================= */
 
-/* Bouton Éditer Mermaid */
-.mermaid-edit-btn {
-    color: var(--accent-primary);
-}
-
-.mermaid-edit-btn:hover {
-    background: transparent;
-    color: var(--accent-hover);
-    transform: scale(1.05);
-}
-
-/* Bouton Copier Mermaid */
-.mermaid-copy-btn {
-    color: var(--text-secondary);
-}
-
-.mermaid-copy-btn:hover {
-    color: var(--success-text, #10b981);
-    background: transparent;
-    transform: scale(1.05);
-}
-
-/* Bouton Agrandir Mermaid */
+/* Boutons Mermaid - tous harmonisés */
+.mermaid-edit-btn,
+.mermaid-copy-btn,
 .mermaid-expand-btn {
     color: var(--text-secondary);
 }
 
+/* Suppression complète du focus pour tous les boutons Mermaid */
+.mermaid-edit-btn:focus,
+.mermaid-copy-btn:focus,
+.mermaid-expand-btn:focus,
+.mermaid-edit-btn:focus-visible,
+.mermaid-copy-btn:focus-visible,
+.mermaid-expand-btn:focus-visible,
+.mermaid-edit-btn:active,
+.mermaid-copy-btn:active,
+.mermaid-expand-btn:active {
+    outline: none !important;
+    box-shadow: none !important;
+    border: none !important;
+}
+
+.mermaid-edit-btn:hover,
 .mermaid-expand-btn:hover {
-    color: var(--info-text, #3b82f6);
     background: transparent;
+    color: var(--text-primary);
     transform: scale(1.05);
 }
 
