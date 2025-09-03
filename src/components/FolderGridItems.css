@@ -69,13 +69,29 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  width: 100%;
-  height: 48px; /* Réduit de 64px à 48px pour plus de compacité */
-  font-size: 24px; /* Réduit de 28px à 24px pour plus de compacité */
+  width: 56px; /* Agrandi de 40px à 56px */
+  height: 56px; /* Agrandi de 40px à 56px */
+  font-size: 24px; /* Agrandi de 18px à 24px */
   transition: transform 0.15s ease; /* Valeur fixe au lieu de var(--files-transition-fast) */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   flex-shrink: 0; /* Empêche la réduction de taille */
+  margin-left: auto; /* Centrage horizontal */
+  margin-right: auto; /* Centrage horizontal */
+}
+
+/* Style encadré pour les icônes de dossiers */
+.fm-grid-item .folder-icon {
+  background: linear-gradient(135deg, rgba(251, 146, 60, 0.2) 0%, rgba(234, 88, 12, 0.15) 100%);
+  border: 1px solid rgba(251, 146, 60, 0.3);
+  border-radius: 12px;
+}
+
+/* Style encadré pour les icônes de fichiers */
+.fm-grid-item .file-icon {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(37, 99, 235, 0.15) 100%);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  border-radius: 12px;
 }
 
 .fm-grid-item:hover .file-icon,
@@ -143,8 +159,9 @@
 .fm-grid-item.file-list-item .folder-icon {
   margin-bottom: 0 !important;
   margin-right: 16px !important; /* Valeur fixe au lieu de variable */
-  font-size: 24px !important;
-  height: 48px !important; /* Augmenté de 32px à 48px pour la vue liste */
+  font-size: 24px !important; /* Agrandi pour correspondre au nouveau cadre */
+  height: 56px !important; /* Agrandi pour correspondre au nouveau cadre */
+  width: 56px !important; /* Agrandi pour correspondre au nouveau cadre */
   flex-shrink: 0 !important;
 }
 

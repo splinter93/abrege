@@ -8,7 +8,7 @@ import type { AuthenticatedUser } from '@/types/dossiers';
 import type { TrashItem, TrashStatistics } from '@/types/supabase';
 import AuthGuard from '@/components/AuthGuard';
 import PageLoading from '@/components/PageLoading';
-import TestTrashButtons from '@/components/test/TestTrashButtons';
+
 import './index.css';
 
 export default function TrashPage() {
@@ -229,34 +229,7 @@ function TrashPageContent() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
             >
-              {/* TEST BOUTONS */}
-              {trashItems.length > 0 && (
-                <div style={{ padding: '20px', border: '2px solid blue', margin: '10px' }}>
-                  <h3>🧪 TEST DIRECT</h3>
-                  <p>Item: {trashItems[0].name} ({trashItems[0].type})</p>
-                  <button 
-                    onClick={() => {
-                      console.log('🧪 TEST DIRECT - Bouton cliqué !');
-                      handleRestore(trashItems[0]);
-                    }}
-                    style={{ 
-                      padding: '10px', 
-                      margin: '5px', 
-                      backgroundColor: 'blue', 
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '4px'
-                    }}
-                  >
-                    🔄 TEST RESTAURER DIRECT
-                  </button>
-                  <TestTrashButtons
-                    item={trashItems[0]}
-                    onRestore={handleRestore}
-                    onDelete={handlePermanentDelete}
-                  />
-                </div>
-              )}
+
 
               {/* Grille des éléments de la corbeille */}
               <div className="trash-grid-container">

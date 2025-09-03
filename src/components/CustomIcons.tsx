@@ -42,7 +42,7 @@ export const FileIcon: React.FC<{ size?: number; className?: string }> = ({ size
     {/* Fichier avec design moderne */}
     <path
       d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z"
-      stroke="#64748b"
+      stroke="#3b82f6"
       strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
@@ -51,7 +51,7 @@ export const FileIcon: React.FC<{ size?: number; className?: string }> = ({ size
     {/* Coin plié du fichier */}
     <path
       d="M14 2v6h6"
-      stroke="#64748b"
+      stroke="#3b82f6"
       strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
@@ -60,7 +60,7 @@ export const FileIcon: React.FC<{ size?: number; className?: string }> = ({ size
     {/* Lignes de contenu du fichier */}
     <path
       d="M16 13H8"
-      stroke="#64748b"
+      stroke="#3b82f6"
       strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
@@ -68,7 +68,7 @@ export const FileIcon: React.FC<{ size?: number; className?: string }> = ({ size
     />
     <path
       d="M16 17H8"
-      stroke="#64748b"
+      stroke="#3b82f6"
       strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
@@ -76,7 +76,7 @@ export const FileIcon: React.FC<{ size?: number; className?: string }> = ({ size
     />
     <path
       d="M10 9H8"
-      stroke="#64748b"
+      stroke="#3b82f6"
       strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"

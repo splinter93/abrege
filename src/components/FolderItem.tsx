@@ -116,7 +116,7 @@ const FolderItem: React.FC<FolderItemProps> = ({ folder, onOpen, isRenaming, onR
         }}
       >
         <div className="folder-icon">
-          <FolderIcon size={64} />
+          <FolderIcon size={24} />
         </div>
         {isRenaming ? (
           <input
