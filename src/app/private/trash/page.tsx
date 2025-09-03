@@ -63,20 +63,24 @@ function TrashPageContent() {
 
   // Fonctions de gestion
   const handleRestore = async (item: TrashItem) => {
+    console.log('🔄 Restauration de l\'élément:', item);
     try {
       const { TrashService } = await import('@/services/trashService');
       await TrashService.restoreItem(item.type, item.id);
       
+      console.log('✅ Élément restauré avec succès');
       // Recharger la liste après restauration
       await loadTrashItems();
     } catch (err) {
-      console.error('Erreur restauration:', err);
+      console.error('❌ Erreur restauration:', err);
       setError(err instanceof Error ? err.message : 'Erreur lors de la restauration');
     }
   };
 
   const handlePermanentDelete = async (item: TrashItem) => {
+    console.log('🗑️ Suppression définitive de l\'élément:', item);
     if (!confirm(`Êtes-vous sûr de vouloir supprimer définitivement "${item.name}" ?`)) {
+      console.log('❌ Suppression annulée par l\'utilisateur');
       return;
     }
 
@@ -84,10 +88,11 @@ function TrashPageContent() {
       const { TrashService } = await import('@/services/trashService');
       await TrashService.permanentlyDeleteItem(item.type, item.id);
       
+      console.log('✅ Élément supprimé définitivement avec succès');
       // Recharger la liste après suppression
       await loadTrashItems();
     } catch (err) {
-      console.error('Erreur suppression:', err);
+      console.error('❌ Erreur suppression:', err);
       setError(err instanceof Error ? err.message : 'Erreur lors de la suppression');
     }
   };
