@@ -64,36 +64,46 @@ function TrashPageContent() {
 
   // Fonctions de gestion
   const handleRestore = async (item: TrashItem) => {
-    console.log('🔄 Restauration de l\'élément:', item);
+    console.log('🔄 RESTAURATION DÉBUT - Élément:', item);
+    console.log('🔄 RESTAURATION - Type:', item.type, 'ID:', item.id);
     try {
+      console.log('🔄 RESTAURATION - Import TrashService...');
       const { TrashService } = await import('@/services/trashService');
+      console.log('🔄 RESTAURATION - Appel TrashService.restoreItem...');
       await TrashService.restoreItem(item.type, item.id);
       
-      console.log('✅ Élément restauré avec succès');
+      console.log('✅ RESTAURATION - Élément restauré avec succès');
       // Recharger la liste après restauration
+      console.log('🔄 RESTAURATION - Rechargement de la liste...');
       await loadTrashItems();
+      console.log('✅ RESTAURATION - Liste rechargée');
     } catch (err) {
-      console.error('❌ Erreur restauration:', err);
+      console.error('❌ RESTAURATION - Erreur:', err);
       setError(err instanceof Error ? err.message : 'Erreur lors de la restauration');
     }
   };
 
   const handlePermanentDelete = async (item: TrashItem) => {
-    console.log('🗑️ Suppression définitive de l\'élément:', item);
+    console.log('🗑️ SUPPRESSION DÉBUT - Élément:', item);
+    console.log('🗑️ SUPPRESSION - Type:', item.type, 'ID:', item.id);
     if (!confirm(`Êtes-vous sûr de vouloir supprimer définitivement "${item.name}" ?`)) {
-      console.log('❌ Suppression annulée par l\'utilisateur');
+      console.log('❌ SUPPRESSION - Annulée par l\'utilisateur');
       return;
     }
 
     try {
+      console.log('🗑️ SUPPRESSION - Import TrashService...');
       const { TrashService } = await import('@/services/trashService');
+      console.log('🗑️ SUPPRESSION - Appel TrashService.permanentlyDeleteItem...');
       await TrashService.permanentlyDeleteItem(item.type, item.id);
       
-      console.log('✅ Élément supprimé définitivement avec succès');
+      console.log('✅ SUPPRESSION - Élément supprimé définitivement avec succès');
       // Recharger la liste après suppression
+      console.log('🗑️ SUPPRESSION - Rechargement de la liste...');
       await loadTrashItems();
+      console.log('✅ SUPPRESSION - Liste rechargée');
     } catch (err) {
-      console.error('❌ Erreur suppression:', err);
+      console.error('❌ SUPPRESSION - Erreur:', err);
       setError(err instanceof Error ? err.message : 'Erreur lors de la suppression');
     }
   };
