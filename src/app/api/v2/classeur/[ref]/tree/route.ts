@@ -81,6 +81,7 @@ export async function GET(
       .select('id, name, parent_id, created_at, position, slug, classeur_id, notebook_id')
       .or(`classeur_id.eq.${classeurId},notebook_id.eq.${classeurId}`)
       .eq('user_id', userId) // 🔧 SÉCURITÉ: Vérifier que l'utilisateur est propriétaire
+      .is('trashed_at', null) // 🔧 CORRECTION: Exclure les dossiers supprimés
       .order('name');
 
     if (foldersError) {
@@ -99,6 +100,7 @@ export async function GET(
       .select('id, source_title, header_image, created_at, updated_at, folder_id, classeur_id, notebook_id')
       .or(`classeur_id.eq.${classeurId},notebook_id.eq.${classeurId}`)
       .eq('user_id', userId) // 🔧 SÉCURITÉ: Vérifier que l'utilisateur est propriétaire
+      .is('trashed_at', null) // 🔧 CORRECTION: Exclure les notes supprimées
       .order('source_title');
 
     if (notesError) {

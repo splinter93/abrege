@@ -44,6 +44,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ user
       .eq('slug', slug)
       .eq('user_id', user.id)
       .not('share_settings->>visibility', 'eq', 'private')
+      .is('trashed_at', null) // 🔧 CORRECTION: Exclure les notes supprimées
       .limit(1)
       .maybeSingle();
     if (noteError || !note) {

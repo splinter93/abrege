@@ -50,6 +50,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
         markdown_content
       `)
       .eq('user_id', userId)
+      .is('trashed_at', null) // 🔧 CORRECTION: Exclure les notes supprimées
       .order('updated_at', { ascending: false })
       .limit(limitNum);
 

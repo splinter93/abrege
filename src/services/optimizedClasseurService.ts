@@ -442,6 +442,7 @@ export class OptimizedClasseurService {
         .from('folders')
         .select('id, name, position, parent_id, created_at')
         .eq('classeur_id', classeurId)
+        .is('trashed_at', null) // 🔧 CORRECTION: Exclure les dossiers supprimés
         .order('position', { ascending: true });
 
       if (error) {
@@ -464,6 +465,7 @@ export class OptimizedClasseurService {
         .from('articles')
         .select('id, source_title, folder_id, created_at, updated_at, slug')
         .eq('classeur_id', classeurId)
+        .is('trashed_at', null) // 🔧 CORRECTION: Exclure les notes supprimées
         .order('created_at', { ascending: false });
 
       if (error) {

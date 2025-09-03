@@ -67,7 +67,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ ref:
     const { data: folders, error: foldersError } = await supabase
       .from('folders')
       .select('id, name, parent_id, classeur_id')
-      .eq('classeur_id', classeurId);
+      .eq('classeur_id', classeurId)
+      .is('trashed_at', null); // 🔧 CORRECTION: Exclure les dossiers supprimés
     if (foldersError) {
       return new Response(JSON.stringify({ error: foldersError.message }), { status: 500, headers: { "Content-Type": "application/json" } });
     }
@@ -75,7 +76,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ ref:
     const { data: notes, error: notesError } = await supabase
       .from('articles')
       .select('id, source_title, header_image, created_at, folder_id, classeur_id')
-      .eq('classeur_id', classeurId);
+      .eq('classeur_id', classeurId)
+      .is('trashed_at', null); // 🔧 CORRECTION: Exclure les notes supprimées
     if (notesError) {
       return new Response(JSON.stringify({ error: notesError.message }), { status: 500, headers: { "Content-Type": "application/json" } });
     }

@@ -76,6 +76,7 @@ export async function GET(
       .select(selectFields)
       .eq('id', noteId)
       .eq('user_id', userId)
+      .is('trashed_at', null) // 🔧 CORRECTION: Exclure les notes supprimées
       .single();
 
     if (fetchError || !note) {

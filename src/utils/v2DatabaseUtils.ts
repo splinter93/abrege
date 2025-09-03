@@ -1075,6 +1075,7 @@ export class V2DatabaseUtils {
         .select('id, name, parent_id, position, created_at, slug')
         .eq('classeur_id', classeurId)
         .eq('user_id', userId)
+        .is('trashed_at', null) // 🔧 CORRECTION: Exclure les dossiers supprimés
         .order('position', { ascending: true });
 
       if (dossiersError) {
@@ -1087,6 +1088,7 @@ export class V2DatabaseUtils {
         .select('id, source_title, slug, folder_id, position, created_at, updated_at')
         .eq('classeur_id', classeurId)
         .eq('user_id', userId)
+        .is('trashed_at', null) // 🔧 CORRECTION: Exclure les notes supprimées
         .order('position', { ascending: true });
 
       if (notesError) {

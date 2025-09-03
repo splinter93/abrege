@@ -375,19 +375,34 @@ function TrashItemCard({
       transition={{ duration: 0.2 }}
     >
       <div className="trash-item-content">
-        <div className="trash-item-icon">
-          {getIcon()}
+        {/* Header avec icône et type */}
+        <div className="trash-item-header">
+          <div className="trash-item-icon">
+            {getIcon()}
+          </div>
+          <div className="trash-item-type-badge">
+            {getTypeLabel()}
+          </div>
         </div>
+
+        {/* Détails principaux */}
         <div className="trash-item-details">
           <h4 className="trash-item-name">{item.name}</h4>
-          <p className="trash-item-type">{getTypeLabel()}</p>
-          <p className="trash-item-date">
-            {formatDate(item.trashed_at)}
-          </p>
-          <p className="trash-item-expiry">
-            Expire dans {getDaysUntilExpiry()} jour{getDaysUntilExpiry() > 1 ? 's' : ''}
-          </p>
+          
+          {/* Métadonnées */}
+          <div className="trash-item-meta">
+            <p className="trash-item-date">
+              <Clock size={12} />
+              {formatDate(item.trashed_at)}
+            </p>
+            <p className="trash-item-expiry">
+              <AlertCircle size={12} />
+              Expire dans {getDaysUntilExpiry()} jour{getDaysUntilExpiry() > 1 ? 's' : ''}
+            </p>
+          </div>
         </div>
+
+        {/* Actions */}
         <div className="trash-item-actions">
           <button
             className="trash-action-btn restore-btn"
@@ -397,7 +412,7 @@ function TrashItemCard({
             }}
             title="Restaurer"
           >
-            <RotateCcw size={16} />
+            <RotateCcw size={14} />
             <span>Restaurer</span>
           </button>
           <button
@@ -408,7 +423,7 @@ function TrashItemCard({
             }}
             title="Supprimer définitivement"
           >
-            <Trash size={16} />
+            <Trash size={14} />
             <span>Supprimer</span>
           </button>
         </div>

@@ -74,7 +74,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ ref:
     const { data: allFolders, error: foldersError } = await supabase
       .from('folders')
       .select('id, name, parent_id, classeur_id, updated_at')
-      .eq('classeur_id', classeurId);
+      .eq('classeur_id', classeurId)
+      .is('trashed_at', null); // 🔧 CORRECTION: Exclure les dossiers supprimés
     if (foldersError) {
       return new Response(JSON.stringify({ error: foldersError.message }), { status: 500, headers: { "Content-Type": "application/json" } });
     }
@@ -89,7 +90,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ ref:
       .from('articles')
       .select('id, source_title, header_image, created_at, updated_at, folder_id, classeur_id')
       .eq('classeur_id', classeurId)
-      .is('folder_id', null);
+      .is('folder_id', null)
+      .is('trashed_at', null); // 🔧 CORRECTION: Exclure les notes supprimées
     if (rootNotesError) notesError = rootNotesError; else if (rootNotes) notes = notes.concat(rootNotes as unknown as Note[]);
 
     // Notes dans les dossiers (profondeur complète uniquement)
@@ -98,7 +100,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ ref:
         .from('articles')
         .select('id, source_title, header_image, created_at, updated_at, folder_id, classeur_id')
         .eq('classeur_id', classeurId)
-        .in('folder_id', folderIds);
+        .in('folder_id', folderIds)
+        .is('trashed_at', null); // 🔧 CORRECTION: Exclure les notes supprimées
       if (folderNotesError) notesError = folderNotesError; else if (folderNotes) notes = notes.concat(folderNotes as unknown as Note[]);
     }
     if (notesError) {
