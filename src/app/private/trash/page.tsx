@@ -8,6 +8,7 @@ import type { AuthenticatedUser } from '@/types/dossiers';
 import type { TrashItem, TrashStatistics } from '@/types/supabase';
 import AuthGuard from '@/components/AuthGuard';
 import PageLoading from '@/components/PageLoading';
+import TestTrashButtons from '@/components/test/TestTrashButtons';
 import './index.css';
 
 export default function TrashPage() {
@@ -218,6 +219,15 @@ function TrashPageContent() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
             >
+              {/* TEST BOUTONS */}
+              {trashItems.length > 0 && (
+                <TestTrashButtons
+                  item={trashItems[0]}
+                  onRestore={handleRestore}
+                  onDelete={handlePermanentDelete}
+                />
+              )}
+
               {/* Grille des éléments de la corbeille */}
               <div className="trash-grid-container">
                 <div className="trash-grid">
@@ -351,7 +361,10 @@ function TrashItemCard({
         <div className="trash-item-actions">
           <button
             className="trash-action-btn restore-btn"
-            onClick={() => onRestore(item)}
+            onClick={() => {
+              console.log('🔄 Bouton Restaurer cliqué pour:', item);
+              onRestore(item);
+            }}
             title="Restaurer"
           >
             <RotateCcw size={16} />
@@ -359,7 +372,10 @@ function TrashItemCard({
           </button>
           <button
             className="trash-action-btn delete-btn"
-            onClick={() => onDelete(item)}
+            onClick={() => {
+              console.log('🗑️ Bouton Supprimer cliqué pour:', item);
+              onDelete(item);
+            }}
             title="Supprimer définitivement"
           >
             <Trash size={16} />
