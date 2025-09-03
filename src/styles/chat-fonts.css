@@ -1,0 +1,63 @@
+/* ========================================
+   CHAT FONTS - CLASSES UTILITAIRES
+   ======================================== */
+
+/* ========================================
+   POLICES SANS-SERIF
+   ======================================== */
+.chat-font-noto-sans { font-family: var(--chat-font-family-base); }
+.chat-font-inter { font-family: var(--chat-font-family-inter); }
+.chat-font-manrope { font-family: var(--chat-font-family-manrope); }
+.chat-font-roboto { font-family: var(--chat-font-family-roboto); }
+.chat-font-open-sans { font-family: var(--chat-font-family-open-sans); }
+.chat-font-lato { font-family: var(--chat-font-family-lato); }
+.chat-font-source-sans-3 { font-family: var(--chat-font-family-source-sans-3); }
+.chat-font-work-sans { font-family: var(--chat-font-family-work-sans); }
+.chat-font-figtree { font-family: var(--chat-font-family-figtree); }
+
+/* ========================================
+   POLICES SERIF
+   ======================================== */
+.chat-font-eb-garamond { font-family: var(--chat-font-family-eb-garamond); }
+.chat-font-cormorant-garamond { font-family: var(--chat-font-family-cormorant-garamond); }
+
+/* ========================================
+   POLICES MONOSPACE
+   ======================================== */
+.chat-font-jetbrains-mono { font-family: var(--chat-font-family-jetbrains-mono); }
+.chat-font-noto-sans-mono { font-family: var(--chat-font-family-noto-sans-mono); }
+
+/* ========================================
+   APPLICATIONS SPÉCIFIQUES
+   ======================================== */
+
+/* Police par défaut pour le chat */
+.chat-default-font {
+  font-family: var(--chat-font-family-base);
+}
+
+/* Police pour les titres du chat */
+.chat-title-font {
+  font-family: var(--chat-font-family-base);
+  font-weight: 600;
+}
+
+/* Police pour le contenu principal du chat */
+.chat-content-font {
+  font-family: var(--chat-font-family-inter);
+}
+
+/* Police pour le code dans le chat */
+.chat-code-font {
+  font-family: var(--chat-font-family-jetbrains-mono);
+}
+
+/* Police pour les messages d'erreur */
+.chat-error-font {
+  font-family: var(--chat-font-family-roboto);
+}
+
+/* Police pour les messages de succès */
+.chat-success-font {
+  font-family: var(--chat-font-family-open-sans);
+}
