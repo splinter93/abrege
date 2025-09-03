@@ -125,9 +125,8 @@ export const useFolderDragAndDrop = ({
         } else {
           // Cross-classeur: déplacer dans targetClasseurId et racine
           if (itemType === 'folder') {
-            // Pour les dossiers, on ne peut pas changer le classeur directement
-            // On déplace juste à la racine du classeur courant
-            await moveItem(itemId, null, itemType);
+            // Pour les dossiers, on peut maintenant changer le classeur
+            await v2UnifiedApi.moveFolder(itemId, null, targetClasseurId);
           } else {
             // Pour les notes, on peut changer le classeur
             await v2UnifiedApi.moveNote(itemId, null, targetClasseurId);

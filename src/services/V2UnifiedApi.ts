@@ -633,90 +633,40 @@ export class V2UnifiedApi {
       // ✅ 1. Nettoyer et valider l'ID
       const cleanNoteId = this.cleanAndValidateId(noteId, 'note');
       
-      /**
-       * Utilise l'API V1 directement pour les déplacements cross-classeur
-       * Évite la complexité de redirection entre APIs
-       */
-      if (targetClasseurId) {
-        if (process.env.NODE_ENV === 'development') {
-          logger.dev(`[V2UnifiedApi] 🚀 Déplacement cross-classeur via API V1: ${targetClasseurId}`);
-        }
-        
-        // Utiliser l'API V1 directement pour le déplacement cross-classeur
-        const headers = await this.getAuthHeaders();
-        if (process.env.NODE_ENV === 'development') {
-          logger.dev(`[V2UnifiedApi] 🔧 Appel API V1: /api/ui/note/${cleanNoteId}/move`);
-          logger.dev(`[V2UnifiedApi] 🔧 Payload:`, { target_classeur_id: targetClasseurId, target_folder_id: targetFolderId });
-        }
-        
-        const response = await fetch(this.buildUrl(`/api/ui/note/${cleanNoteId}/move`), {
-          method: 'PATCH', // Utilise PATCH pour l'API V1 (méthode correcte)
-          headers,
-          body: JSON.stringify({
-            target_classeur_id: targetClasseurId,
-            target_folder_id: targetFolderId
-          })
-        });
-
-        if (process.env.NODE_ENV === 'development') {
-          logger.dev(`[V2UnifiedApi] 🔧 Réponse API V1: ${response.status} ${response.statusText}`);
-        }
-
-        if (!response.ok) {
-          const errorText = await response.text();
-          if (process.env.NODE_ENV === 'development') {
-            logger.dev(`[V2UnifiedApi] ❌ Erreur API V1: ${errorText}`);
-          }
-          throw new Error(`Erreur déplacement cross-classeur: ${response.status} ${response.statusText} - ${errorText}`);
-        }
-
-        const result = await response.json();
-        const apiTime = Date.now() - startTime;
-        if (process.env.NODE_ENV === 'development') {
-          logger.dev(`[V2UnifiedApi] ✅ API V1 terminée en ${apiTime}ms`);
-        }
-
-        /**
-         * Récupérer le classeur_id de la note avant de la déplacer
-         * Assure la cohérence des données dans Zustand
-         */
-        const store = useFileSystemStore.getState();
-        const currentNote = store.notes[cleanNoteId];
-        const noteClasseurId = targetClasseurId || currentNote?.classeur_id;
-        
-        if (process.env.NODE_ENV === 'development') {
-          logger.dev(`[V2UnifiedApi] 📝 Note ${cleanNoteId} - classeur_id: ${noteClasseurId}, targetFolderId: ${targetFolderId}`);
-        }
-
-        // 🚀 Mise à jour directe de Zustand (instantanée)
-        store.moveNote(cleanNoteId, targetFolderId, noteClasseurId);
-        
-        // 🚀 5. Déclencher le polling intelligent immédiatement
-        await triggerUnifiedRealtimePolling('notes', 'UPDATE');
-        
-        const totalTime = Date.now() - startTime;
-        if (process.env.NODE_ENV === 'development') {
-          logger.dev(`[V2UnifiedApi] ✅ Note déplacée cross-classeur dans Zustand en ${totalTime}ms total`);
-        }
-        
-        return result;
-      }
-      
-      // Déplacement de dossier uniquement - utiliser l'API V2
+      // Utiliser l'API V2 pour tous les déplacements (même classeur et cross-classeur)
       if (process.env.NODE_ENV === 'development') {
-        logger.dev(`[V2UnifiedApi] 🚀 Déplacement de dossier: ${targetFolderId}`);
+        logger.dev(`[V2UnifiedApi] 🚀 Déplacement note via API V2`);
+        if (targetClasseurId) {
+          logger.dev(`[V2UnifiedApi] 🚀 Déplacement cross-classeur: ${targetClasseurId}`);
+        }
       }
       
-      // 🚀 2. Appel vers l'endpoint API V2
       const headers = await this.getAuthHeaders();
+      const payload: any = { target_folder_id: targetFolderId };
+      if (targetClasseurId) {
+        payload.target_notebook_id = targetClasseurId;
+      }
+      
+      if (process.env.NODE_ENV === 'development') {
+        logger.dev(`[V2UnifiedApi] 🔧 Appel API V2: /api/v2/note/${cleanNoteId}/move`);
+        logger.dev(`[V2UnifiedApi] 🔧 Payload:`, payload);
+      }
+      
       const response = await fetch(this.buildUrl(`/api/v2/note/${cleanNoteId}/move`), {
-        method: 'PUT',
+        method: 'PUT', // Utilise PUT pour l'API V2
         headers,
-        body: JSON.stringify({ folder_id: targetFolderId })
+        body: JSON.stringify(payload)
       });
+
+      if (process.env.NODE_ENV === 'development') {
+        logger.dev(`[V2UnifiedApi] 🔧 Réponse API V2: ${response.status} ${response.statusText}`);
+      }
 
       if (!response.ok) {
         const errorText = await response.text();
+        if (process.env.NODE_ENV === 'development') {
+          logger.dev(`[V2UnifiedApi] ❌ Erreur API V2: ${errorText}`);
+        }
         throw new Error(`Erreur déplacement note: ${response.status} ${response.statusText} - ${errorText}`);
       }
 
@@ -732,7 +682,7 @@ export class V2UnifiedApi {
        */
       const store = useFileSystemStore.getState();
       const currentNote = store.notes[cleanNoteId];
-      const noteClasseurId = currentNote?.classeur_id;
+      const noteClasseurId = targetClasseurId || currentNote?.classeur_id;
       
       if (process.env.NODE_ENV === 'development') {
         logger.dev(`[V2UnifiedApi] 📝 Note ${cleanNoteId} - classeur_id: ${noteClasseurId}, targetFolderId: ${targetFolderId}`);
@@ -746,9 +696,9 @@ export class V2UnifiedApi {
       
       const totalTime = Date.now() - startTime;
       if (process.env.NODE_ENV === 'development') {
-        logger.dev(`[V2UnifiedApi] ✅ Note déplacée dans Zustand  en ${totalTime}ms total`);
+        logger.dev(`[V2UnifiedApi] ✅ Note déplacée dans Zustand en ${totalTime}ms total`);
       }
-      
+
       return result;
     } catch (error) {
       logger.error('[V2UnifiedApi] ❌ Erreur déplacement note:', error);
@@ -759,7 +709,7 @@ export class V2UnifiedApi {
   /**
    * Déplacer un dossier avec mise à jour directe de Zustand + polling côté client
    */
-  async moveFolder(folderId: string, targetParentId: string | null) {
+  async moveFolder(folderId: string, targetParentId: string | null, targetClasseurId?: string) {
     if (process.env.NODE_ENV === 'development') {
       logger.dev('[V2UnifiedApi] 📦 Déplacement dossier unifié V2');
     }
@@ -771,10 +721,15 @@ export class V2UnifiedApi {
       
       // 🚀 2. Appel vers l'endpoint API V2
       const headers = await this.getAuthHeaders();
+      const payload: any = { target_folder_id: targetParentId };
+      if (targetClasseurId) {
+        payload.target_classeur_id = targetClasseurId;
+      }
+      
       const response = await fetch(this.buildUrl(`/api/v2/folder/${cleanFolderId}/move`), {
         method: 'PUT',
         headers,
-        body: JSON.stringify({ parent_id: targetParentId }) // Utilise parent_id (format correct de l'API V2)
+        body: JSON.stringify(payload)
       });
 
       if (!response.ok) {
@@ -801,7 +756,8 @@ export class V2UnifiedApi {
       }
 
       // 🚀 Mise à jour directe de Zustand (instantanée)
-      store.moveFolder(cleanFolderId, targetParentId, folderClasseurId);
+      const finalClasseurId = targetClasseurId || folderClasseurId;
+      store.moveFolder(cleanFolderId, targetParentId, finalClasseurId);
       
       // 🚀 Déclencher le polling intelligent immédiatement
       await triggerUnifiedRealtimePolling('folders', 'UPDATE');

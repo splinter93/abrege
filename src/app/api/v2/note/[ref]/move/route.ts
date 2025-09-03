@@ -45,7 +45,7 @@ export async function PUT(
     const validatedData = validationResult.data;
 
     // Utiliser V2DatabaseUtils pour l'accès direct à la base de données
-    const result = await V2DatabaseUtils.moveNote(ref, validatedData.folder_id || null, userId, context);
+    const result = await V2DatabaseUtils.moveNote(ref, validatedData.target_folder_id || null, userId, context, validatedData.target_notebook_id);
 
     const apiTime = Date.now() - startTime;
     logApi.info(`✅ Note déplacée en ${apiTime}ms`, context);

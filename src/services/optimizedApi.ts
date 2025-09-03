@@ -534,14 +534,14 @@ export class OptimizedApi {
       // Récupérer les headers d'authentification
       const headers = await this.getAuthHeaders();
       
-      // Préparer le payload
-      const payload: unknown = {};
-      if (targetFolderId !== undefined) payload.target_folder_id = targetFolderId;
-      if (targetClasseurId) payload.target_classeur_id = targetClasseurId;
+      // Appel API V2 (déplacement dans le même classeur et cross-classeur)
+      const payload: any = { target_folder_id: targetFolderId };
+      if (targetClasseurId) {
+        payload.target_notebook_id = targetClasseurId;
+      }
       
-      // Appel API
-      const response = await fetch(`/api/ui/note/${noteId}/move`, {
-        method: 'PATCH',
+      const response = await fetch(`/api/v2/note/${noteId}/move`, {
+        method: 'PUT',
         headers,
         body: JSON.stringify(payload)
       });
@@ -587,14 +587,15 @@ export class OptimizedApi {
       // Récupérer les headers d'authentification
       const headers = await this.getAuthHeaders();
       
-      // Préparer le payload
-      const payload: unknown = {};
-      if (targetParentId !== undefined) payload.target_parent_id = targetParentId;
-      if (targetClasseurId) payload.target_classeur_id = targetClasseurId;
+      // Préparer le payload pour l'API V2
+      const payload: any = { target_folder_id: targetParentId };
+      if (targetClasseurId) {
+        payload.target_classeur_id = targetClasseurId;
+      }
       
-      // Appel API
-      const response = await fetch(`/api/ui/dossier/${folderId}/move`, {
-        method: 'PATCH',
+      // Appel API V2
+      const response = await fetch(`/api/v2/folder/${folderId}/move`, {
+        method: 'PUT',
         headers,
         body: JSON.stringify(payload)
       });

@@ -681,7 +681,7 @@ export class LLMApi {
    * @param folderRef - UUID ou slug du dossier
    * @param targetParentRef - UUID ou slug du dossier parent de destination
    */
-  async moveFolder(folderRef: string, targetParentRef: string) {
+  async moveFolder(folderRef: string, targetParentRef: string, targetClasseurId?: string) {
     const startTime = Date.now();
     const context = { operation: 'v2_llm_folder_move', component: 'LLMApi', folderRef };
     
@@ -689,10 +689,15 @@ export class LLMApi {
     
     try {
       const headers = await this.getAuthHeaders();
+      const payload: any = { target_folder_id: targetParentRef };
+      if (targetClasseurId) {
+        payload.target_classeur_id = targetClasseurId;
+      }
+      
       const response = await fetch(`/api/v2/folder/${folderRef}/move`, {
         method: 'PUT',
         headers,
-        body: JSON.stringify({ parent_id: targetParentRef })
+        body: JSON.stringify(payload)
       });
 
       if (!response.ok) {

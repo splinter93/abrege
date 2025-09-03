@@ -121,8 +121,8 @@ export class V2DatabaseUtils {
         classeurId = classeur.id;
       }
 
-      // Générer un slug unique
-      const slug = await SlugGenerator.generateSlug(data.source_title, 'note', userId);
+      // Générer un slug unique avec le client authentifié
+      const slug = await SlugGenerator.generateSlug(data.source_title, 'note', userId, undefined, client);
       
       // Créer la note
       const { data: note, error: createError } = await supabase
@@ -446,7 +446,7 @@ export class V2DatabaseUtils {
   /**
    * Déplacer une note
    */
-  static async moveNote(ref: string, targetFolderId: string | null, userId: string, context: any) {
+  static async moveNote(ref: string, targetFolderId: string | null, userId: string, context: any, targetClasseurId?: string) {
     logApi.info(`🚀 Déplacement note ${ref} vers folder ${targetFolderId}`, context);
     
     try {
@@ -473,12 +473,19 @@ export class V2DatabaseUtils {
       }
 
       // Déplacer la note
+      const updateData: any = { 
+        folder_id: targetFolderId,
+        updated_at: new Date().toISOString()
+      };
+      
+      // Si cross-classeur, mettre à jour aussi le classeur_id
+      if (targetClasseurId) {
+        updateData.classeur_id = targetClasseurId;
+      }
+      
       const { data: note, error: moveError } = await supabase
         .from('articles')
-        .update({ 
-          folder_id: targetFolderId,
-          updated_at: new Date().toISOString()
-        })
+        .update(updateData)
         .eq('id', noteId)
         .eq('user_id', userId)
         .select()
@@ -663,7 +670,7 @@ export class V2DatabaseUtils {
   /**
    * Déplacer un dossier
    */
-  static async moveFolder(ref: string, targetParentId: string | null, userId: string, context: any) {
+  static async moveFolder(ref: string, targetParentId: string | null, userId: string, context: any, targetClasseurId?: string) {
     logApi.info(`🚀 Déplacement dossier ${ref}`, context);
     
     try {
@@ -713,11 +720,18 @@ export class V2DatabaseUtils {
       }
 
       // Mettre à jour le parent du dossier
+      const updateData: any = {
+        parent_id: targetParentId
+      };
+      
+      // Si cross-classeur, mettre à jour aussi le classeur_id
+      if (targetClasseurId) {
+        updateData.classeur_id = targetClasseurId;
+      }
+      
       const { data: updatedFolder, error: updateError } = await supabase
         .from('folders')
-        .update({
-          parent_id: targetParentId
-        })
+        .update(updateData)
         .eq('id', folderId)
         .select()
         .single();
@@ -750,34 +764,26 @@ export class V2DatabaseUtils {
 
       const folderId = resolveResult.id;
 
-      // Vérifier qu'il n'y a pas de sous-dossiers
-      const { data: subFolders, error: subFoldersError } = await supabase
+      // Suppression en cascade : supprimer tous les sous-dossiers
+      const { error: deleteSubFoldersError } = await supabase
         .from('folders')
-        .select('id')
+        .delete()
         .eq('parent_id', folderId)
         .eq('user_id', userId);
 
-      if (subFoldersError) {
-        throw new Error(`Erreur vérification sous-dossiers: ${subFoldersError.message}`);
+      if (deleteSubFoldersError) {
+        throw new Error(`Erreur suppression sous-dossiers: ${deleteSubFoldersError.message}`);
       }
 
-      if (subFolders && subFolders.length > 0) {
-        throw new Error('Impossible de supprimer un dossier contenant des sous-dossiers');
-      }
-
-      // Vérifier qu'il n'y a pas de notes dans le dossier
-      const { data: notes, error: notesError } = await supabase
+      // Suppression en cascade : supprimer toutes les notes du dossier
+      const { error: deleteNotesError } = await supabase
         .from('articles')
-        .select('id')
+        .delete()
         .eq('folder_id', folderId)
         .eq('user_id', userId);
 
-      if (notesError) {
-        throw new Error(`Erreur vérification notes: ${notesError.message}`);
-      }
-
-      if (notes && notes.length > 0) {
-        throw new Error('Impossible de supprimer un dossier contenant des notes');
+      if (deleteNotesError) {
+        throw new Error(`Erreur suppression notes: ${deleteNotesError.message}`);
       }
 
       // Supprimer le dossier
@@ -807,8 +813,8 @@ export class V2DatabaseUtils {
     logApi.info(`🚀 Création classeur directe DB`, context);
     
     try {
-      // Générer un slug unique
-      const slug = await SlugGenerator.generateSlug(data.name, 'classeur', userId);
+      // Générer un slug unique avec le client authentifié
+      const slug = await SlugGenerator.generateSlug(data.name, 'classeur', userId, undefined, supabase);
       
       // Créer le classeur
       const { data: classeur, error: createError } = await supabase
@@ -948,34 +954,27 @@ export class V2DatabaseUtils {
 
       const classeurId = resolveResult.id;
 
-      // Vérifier qu'il n'y a pas de dossiers dans le classeur
-      const { data: folders, error: foldersError } = await supabase
-        .from('folders')
-        .select('id')
-        .eq('classeur_id', classeurId)
-        .eq('user_id', userId);
-
-      if (foldersError) {
-        throw new Error(`Erreur vérification dossiers: ${foldersError.message}`);
-      }
-
-      if (folders && folders.length > 0) {
-        throw new Error('Impossible de supprimer un classeur contenant des dossiers');
-      }
-
-      // Vérifier qu'il n'y a pas de notes dans le classeur
-      const { data: notes, error: notesError } = await supabase
+      // Suppression en cascade : d'abord les notes, puis les dossiers, puis le classeur
+      // Supprimer toutes les notes du classeur
+      const { error: deleteNotesError } = await supabase
         .from('articles')
-        .select('id')
+        .delete()
         .eq('classeur_id', classeurId)
         .eq('user_id', userId);
 
-      if (notesError) {
-        throw new Error(`Erreur vérification notes: ${notesError.message}`);
+      if (deleteNotesError) {
+        throw new Error(`Erreur suppression notes: ${deleteNotesError.message}`);
       }
 
-      if (notes && notes.length > 0) {
-        throw new Error('Impossible de supprimer un classeur contenant des notes');
+      // Supprimer tous les dossiers du classeur
+      const { error: deleteFoldersError } = await supabase
+        .from('folders')
+        .delete()
+        .eq('classeur_id', classeurId)
+        .eq('user_id', userId);
+
+      if (deleteFoldersError) {
+        throw new Error(`Erreur suppression dossiers: ${deleteFoldersError.message}`);
       }
 
       // Supprimer le classeur
@@ -1620,11 +1619,16 @@ export class V2DatabaseUtils {
   /**
    * Générer un slug
    */
-  static async generateSlug(text: string, type: 'note' | 'classeur' | 'folder', userId: string, context: any) {
+  static async generateSlug(text: string, type: 'note' | 'classeur' | 'folder', userId: string, context: any, supabaseClient?: any) {
     logApi.info(`🚀 Génération slug pour ${type}`, context);
     
     try {
-      const slug = await SlugGenerator.generateSlug(text, type, userId);
+      // 🔧 CORRECTION: Passer le client Supabase authentifié
+      if (!supabaseClient) {
+        throw new Error('Client Supabase authentifié requis pour la génération de slug');
+      }
+      
+      const slug = await SlugGenerator.generateSlug(text, type, userId, undefined, supabaseClient);
       
       return {
         success: true,

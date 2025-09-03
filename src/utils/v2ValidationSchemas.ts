@@ -40,7 +40,8 @@ export const updateNoteV2Schema = z.object({
  * Schéma pour déplacer une note V2
  */
 export const moveNoteV2Schema = z.object({
-  folder_id: z.string().uuid('folder_id doit être un UUID valide').nullable().optional(),
+  target_folder_id: z.string().uuid('target_folder_id doit être un UUID valide').nullable().optional(),
+  target_notebook_id: z.string().uuid('target_notebook_id doit être un UUID valide').optional(),
 });
 
 /**
@@ -133,7 +134,8 @@ export const updateFolderV2Schema = z.object({
  * Schéma pour déplacer un dossier V2
  */
 export const moveFolderV2Schema = z.object({
-  parent_id: z.string().uuid('parent_id doit être un UUID valide').nullable(),
+  target_folder_id: z.string().uuid('target_folder_id doit être un UUID valide').nullable().optional(),
+  target_classeur_id: z.string().uuid('target_classeur_id doit être un UUID valide').optional(),
 });
 
 // ============================================================================
