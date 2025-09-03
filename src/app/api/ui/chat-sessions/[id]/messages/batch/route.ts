@@ -299,20 +299,51 @@ export async function POST(
       return true;
     });
 
-    if (deduplicatedMessages.length === 0) {
-      logger.warn('[Chat Messages Batch API] ⚠️ Tous les messages étaient des doublons');
+    // ✅ Déduplication supplémentaire: assistant avec exactement le même set de tool_calls que déjà présent
+    const assistantToolCallSignatures = new Set<string>();
+    if (currentSession.thread && Array.isArray(currentSession.thread)) {
+      for (const msg of currentSession.thread) {
+        if (msg.role === 'assistant' && Array.isArray((msg as any).tool_calls) && (msg as any).tool_calls.length > 0) {
+          const calls = (msg as any).tool_calls as Array<{ id: string; function: { name: string } }>;
+          const sig = calls
+            .map(c => `${c.id}:${c.function?.name || 'unknown'}`)
+            .sort()
+            .join('|');
+          if (sig) assistantToolCallSignatures.add(sig);
+        }
+      }
+    }
+
+    const fullyDedupedMessages = deduplicatedMessages.filter(msg => {
+      if (msg.role === 'assistant' && Array.isArray((msg as any).tool_calls) && (msg as any).tool_calls.length > 0) {
+        const calls = (msg as any).tool_calls as Array<{ id: string; function: { name: string } }>;
+        const sig = calls
+          .map(c => `${c.id}:${c.function?.name || 'unknown'}`)
+          .sort()
+          .join('|');
+        if (assistantToolCallSignatures.has(sig)) {
+          logger.warn('[Chat Messages Batch API] ⚠️ Assistant tool_calls dupliqués ignorés (même set)');
+          return false;
+        }
+        assistantToolCallSignatures.add(sig);
+      }
+      return true;
+    });
+
+    if (fullyDedupedMessages.length === 0) {
+      logger.warn('[Chat Messages Batch API] ⚠️ Tous les messages étaient des doublons (après assistant/tool dedup)');
       return NextResponse.json({
         success: true,
         data: {
           session: currentSession,
           messages: [],
-          duplicatesFiltered: messages.length - deduplicatedMessages.length
+          duplicatesFiltered: messages.length
         }
       });
     }
 
     // Préparer les nouveaux messages avec IDs uniques et métadonnées d'opération
-    const newMessages = deduplicatedMessages.map(msg => ({
+    const newMessages = fullyDedupedMessages.map(msg => ({
       ...msg,
       id: `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       timestamp: msg.timestamp || new Date().toISOString(),
@@ -336,7 +367,7 @@ export async function POST(
       nouveauxMessages: newMessages.length,
       threadComplet: sortedFullThread.length,
       limite: historyLimit,
-      doublonsFiltrés: messages.length - deduplicatedMessages.length,
+      doublonsFiltrés: messages.length - fullyDedupedMessages.length,
       operation_id,
       relance_index,
       note: '✅ TOUS les messages conservés (pas de limitation)'
@@ -374,7 +405,7 @@ export async function POST(
       data: {
         session: updatedSession,
         messages: newMessages,
-        duplicatesFiltered: messages.length - deduplicatedMessages.length,
+        duplicatesFiltered: messages.length - fullyDedupedMessages.length,
         operation_id,
         relance_index
       }

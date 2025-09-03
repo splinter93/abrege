@@ -74,7 +74,7 @@ const DEFAULT_GROQ_CONFIG: GroqConfig = {
   timeout: 30000,
   
   // LLM
-  model: 'openai/gpt-oss-120b', // 🚀 Modèle 120B pour plus de puissance
+  model: 'openai/gpt-oss-20b', // ✅ Modèle 20B plus stable et disponible
   temperature: 0.7,
   maxTokens: 8000, // ✅ Augmenté pour plus de réponses
   topP: 0.9,
@@ -152,7 +152,7 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
   /**
    * Effectue un appel à l'API Groq avec support des function calls
    */
-  async call(message: string, context: AppContext, history: ChatMessage[], tools?: any[]): Promise<any> {
+  async call(message: string, context: AppContext, history: ChatMessage[]): Promise<any> {
     if (!this.isAvailable()) {
       throw new Error('Groq provider non configuré');
     }
@@ -169,7 +169,7 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
       const messages = this.prepareMessages(message, context, history);
       
       // Préparer le payload (sans streaming)
-      const payload = await this.preparePayload(messages, tools);
+      const payload = await this.preparePayload(messages);
       payload.stream = false; // Forcer le mode non-streaming
       
       // Effectuer l'appel API
@@ -189,8 +189,21 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
       };
 
     } catch (error) {
-      logger.error('[GroqProvider] ❌ Erreur lors de l\'appel:', error);
-      throw error;
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      const stack = error instanceof Error ? error.stack : 'No stack trace';
+      
+      logger.error('[GroqProvider] ❌ Erreur lors de l\'appel:', {
+        message: errorMessage,
+        stack: stack,
+        rawError: error
+      });
+      
+      // Toujours lancer une instance de Error pour une meilleure gestion en amont
+      if (error instanceof Error) {
+        throw error;
+      } else {
+        throw new Error(`Erreur inattendue dans GroqProvider: ${errorMessage}`);
+      }
     }
   }
 
@@ -210,7 +223,7 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
     // Historique des messages
     for (const msg of history) {
       const messageObj: any = {
-        role: msg.role as 'user' | 'assistant' | 'system' | 'tool',
+        role: msg.role as 'user' | 'assistant' | 'system' | 'tool' | 'developer',
         content: msg.content
       };
 
@@ -227,12 +240,19 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
         }
       }
 
-      // ✅ Gérer les tool results si présents
-      if (msg.tool_results && msg.tool_results.length > 0) {
-        messageObj.tool_results = msg.tool_results;
-      }
-
       messages.push(messageObj);
+
+      // ✅ Transformer `tool_results` (si présents sur un message assistant) en messages `tool` séparés
+      if (msg.role === 'assistant' && msg.tool_results && msg.tool_results.length > 0) {
+        for (const result of (msg.tool_results as any[])) {
+          messages.push({
+            role: 'tool',
+            tool_call_id: result.tool_call_id,
+            name: result.name,
+            content: typeof result.content === 'string' ? result.content : JSON.stringify(result.content ?? null),
+          });
+        }
+      }
     }
 
     // Message utilisateur actuel
@@ -247,7 +267,7 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
   /**
    * Prépare le payload pour l'API Groq avec support des tools
    */
-  private async preparePayload(messages: any[], tools?: any[]) {
+  private async preparePayload(messages: any[]) {
     const payload: any = {
       model: this.config.model,
       messages,
@@ -257,71 +277,46 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
       stream: false // ✅ Streaming désactivé dans le provider (géré par la route API)
     };
 
-    // 🔍 DEBUG: Log des tools reçus
-    logger.dev(`[GroqProvider] 🔍 Tools reçus:`, {
-      toolsCount: tools?.length || 0,
-      tools: tools?.slice(0, 2) || [], // Log des 2 premiers tools
-      hasTools: !!tools && tools.length > 0
+    // ✅ Debug: Log des messages pour identifier le problème
+    logger.dev(`[GroqProvider] 🔍 Messages reçus (${messages.length}):`, 
+      messages.map(msg => ({ role: msg.role, hasContent: !!msg.content, contentPreview: msg.content?.substring(0, 50) + '...' }))
+    );
+    
+    // Détecter si un message developer avec des tools est présent
+    const hasDeveloperMessageWithTools = messages.some(
+      msg => msg.role === 'developer' && msg.content
+    );
+    
+    logger.dev(`[GroqProvider] 🔍 Détection message developer:`, {
+      hasDeveloperMessageWithTools,
+      developerMessages: messages.filter(msg => msg.role === 'developer').length
     });
 
-    // Ajouter les tools si disponibles (avec validation moins stricte)
-    if (tools && tools.length > 0) {
-      // 🔧 VALIDATION DES TOOLS : s'assurer que les paramètres sont un schéma d'objet valide
-      const validatedTools = tools.filter((tool: any) => {
-        // Vérification de la structure de base
-        if (!tool || typeof tool !== 'object') {
-          logger.warn(`[GroqProvider] ⚠️ Tool invalide ignoré:`, tool);
-          return false;
-        }
-        
-        // Vérification de la structure function
-        if (!tool.function || typeof tool.function !== 'object') {
-          logger.warn(`[GroqProvider] ⚠️ Tool sans fonction ignoré:`, tool);
-          return false;
-        }
-        
-        if (!tool.function.name || typeof tool.function.name !== 'string') {
-          logger.warn(`[GroqProvider] ⚠️ Tool sans nom de fonction ignoré:`, tool);
-          return false;
-        }
-        // PARAMÈTRES OBLIGATOIRES : s'assurer qu'il s'agit d'un schéma JSON d'objet compréhensible
-        const params = tool.function.parameters;
-        if (!params || params.type !== 'object' || typeof params.properties !== 'object' || !Array.isArray(params.required)) {
-          logger.warn(`[GroqProvider] ⚠️ Tool avec paramètres invalides ignoré: ${tool.function.name}`, params);
-          return false;
-        }
-        
-        return true;
-      });
+    if (hasDeveloperMessageWithTools) {
+      payload.tool_choice = 'auto'; // ✅ Permettre à Groq de choisir les tools automatiquement
+      payload.parallel_tool_calls = true; // ✅ Forcer l'activation des tool calls parallèles
+      payload.max_tokens = Math.max(this.config.maxTokens ?? 0, 4000); // ✅ Augmenter les tokens pour les réponses avec tools
       
-      if (validatedTools.length > 0) {
-        payload.tools = validatedTools;
-        payload.tool_choice = 'auto'; // ✅ Permettre à Groq de choisir les tools automatiquement
-        
-        // 🔧 CONFIGURATION OPTIMISÉE POUR MULTI-TOOL CALLS
-        payload.parallel_tool_calls = true; // ✅ Forcer l'activation des tool calls parallèles
-        payload.max_tokens = Math.max(this.config.maxTokens, 4000); // ✅ Augmenter les tokens pour les réponses avec tools
-        
-        logger.dev(`[GroqProvider] 🔧 ${validatedTools.length}/${tools.length} tools validés pour les function calls`);
-        logger.dev(`[GroqProvider] 🔧 Configuration multi-tools: parallel=${payload.parallel_tool_calls}, max_tokens=${payload.max_tokens}`);
-        
-        // 🔧 DÉBOGAGE: Log du premier tool validé
-        logger.dev(`[GroqProvider] 🔍 Premier tool validé:`, {
-          name: validatedTools[0].function.name,
-          description: validatedTools[0].function.description?.substring(0, 100) || 'Pas de description',
-          hasParameters: !!validatedTools[0].function.parameters || 'Pas de paramètres'
-        });
-        
-        // 🔍 DEBUG: Log du payload final avec tools
-        logger.dev(`[GroqProvider] 📤 Payload final avec tools:`, {
-          hasTools: !!payload.tools,
-          toolsCount: payload.tools?.length || 0,
-          toolChoice: payload.tool_choice,
-          parallelToolCalls: payload.parallel_tool_calls
-        });
-      } else {
-        logger.warn(`[GroqProvider] ⚠️ Aucun tool valide trouvé, appel sans tools`);
+      // ✅ Extraire les outils du message developer
+      const developerMessage = messages.find(msg => msg.role === 'developer');
+      if (developerMessage && developerMessage.content) {
+        try {
+          // Parser le contenu du message developer pour extraire les outils
+          const tools = this.extractToolsFromDeveloperMessage(developerMessage.content);
+          if (tools && tools.length > 0) {
+            payload.tools = tools;
+            logger.dev(`[GroqProvider] 🔧 ${tools.length} outils extraits du message developer`);
+          }
+        } catch (error) {
+          logger.warn(`[GroqProvider] ⚠️ Erreur extraction outils:`, error);
+        }
       }
+      
+      logger.dev(`[GroqProvider] 🔧 Message Developer détecté. Activation des tool calls.`);
+      logger.dev(`[GroqProvider] 🔧 Configuration multi-tools: parallel=${payload.parallel_tool_calls}, max_tokens=${payload.max_tokens}`);
+    } else {
+      payload.tool_choice = 'none';
+      logger.dev(`[GroqProvider] 🔒 Aucun message Developer, function calls désactivés`);
     }
 
     // Ajouter les paramètres spécifiques à Groq
@@ -329,90 +324,93 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
       payload.service_tier = this.config.serviceTier;
     }
 
-    if (this.config.parallelToolCalls) {
+    if (this.config.parallelToolCalls && hasDeveloperMessageWithTools) {
       payload.parallel_tool_calls = this.config.parallelToolCalls;
     }
 
     if (this.config.reasoningEffort) {
       payload.reasoning_effort = this.config.reasoningEffort;
     }
-
-    // Si aucun tool valide, désactiver explicitement les function calls
-    if (!payload.tools || payload.tools.length === 0) {
-      // 🔧 CORRECTION: Vérifier si FORCE_TOOLS_ON est activé
-      const forceToolsOn = process.env.FORCE_TOOLS_ON === 'true';
-      
-      if (forceToolsOn) {
-        // ✅ FORCER l'activation des tools même sans tools fournis
-        logger.warn(`[GroqProvider] ⚠️ FORCE_TOOLS_ON=true - Forcer l'activation des tools sans validation`);
-        payload.tool_choice = 'auto'; // Permettre au modèle de choisir automatiquement
-        
-        // 🔧 CORRECTION: Fournir des tools réels au lieu d'un tool factice
-        // Importer et utiliser les tools depuis AgentApiV2Tools
-        try {
-          const { agentApiV2Tools } = await import('@/services/agentApiV2Tools');
-          await agentApiV2Tools.waitForInitialization();
-          
-          // Récupérer tous les tools disponibles
-          const allTools = agentApiV2Tools.getToolsForFunctionCalling([]);
-          
-          if (allTools && allTools.length > 0) {
-            payload.tools = allTools;
-            logger.dev(`[GroqProvider] 🔧 ${allTools.length} tools réels chargés pour FORCE_TOOLS_ON`);
-          } else {
-            // Fallback: créer un tool factice mais plus réaliste
-            payload.tools = [{
-              type: 'function',
-              function: {
-                name: 'list_classeurs',
-                description: 'Lister tous les classeurs disponibles',
-                parameters: {
-                  type: 'object',
-                  properties: {
-                    query: {
-                      type: 'string',
-                      description: 'Terme de recherche pour filtrer les classeurs'
-                    },
-                    top_n: {
-                      type: 'number',
-                      description: 'Nombre maximum de classeurs à retourner',
-                      default: 10
-                    }
-                  },
-                  required: []
-                }
-              }
-            }];
-            logger.dev(`[GroqProvider] 🔧 Tool factice créé pour FORCE_TOOLS_ON`);
-          }
-        } catch (error) {
-          logger.warn(`[GroqProvider] ⚠️ Erreur lors du chargement des tools: ${error}`);
-          // Fallback: tool factice minimal
-          payload.tools = [{
-            type: 'function',
-            function: {
-              name: 'force_tools_enabled',
-              description: 'Tool factice pour forcer l\'activation des function calls',
-              parameters: {
-                type: 'object',
-                properties: {},
-                required: []
-              }
-            }
-          }];
-        }
-        
-        logger.dev(`[GroqProvider] 🔧 Tools forcés activés avec ${payload.tools.length} tools`);
-      } else {
-        // Comportement normal : désactiver les function calls
-        payload.tool_choice = 'none';
-        delete payload.parallel_tool_calls;
-        delete payload.tools;
-        logger.dev(`[GroqProvider] 🔒 Aucun tool, function calls désactivés`);
-      }
-    }
     
     return payload;
+  }
+
+  /**
+   * Extrait les outils du message developer
+   */
+  private extractToolsFromDeveloperMessage(content: string): any[] {
+    try {
+      logger.dev(`[GroqProvider] 🔍 Extraction outils depuis message developer (${content.length} chars)`);
+      
+      // Le message developer contient les outils dans le format <|tool_code|>...</|tool_code|>
+      const toolCodeMatch = content.match(/<\|tool_code\|>([\s\S]*?)<\|\/tool_code\|>/);
+      if (!toolCodeMatch) {
+        logger.dev(`[GroqProvider] ⚠️ Aucun bloc tool_code trouvé dans le message developer`);
+        return [];
+      }
+
+      const toolCodeContent = toolCodeMatch[1].trim();
+      logger.dev(`[GroqProvider] 🔍 Contenu tool_code extrait (${toolCodeContent.length} chars):`, toolCodeContent.substring(0, 200) + '...');
+      
+      const tools: any[] = [];
+
+      // Parser chaque outil (séparés par des lignes vides)
+      const toolSections = toolCodeContent.split(/\n\s*\n/);
+      logger.dev(`[GroqProvider] 🔍 ${toolSections.length} sections d'outils trouvées`);
+      
+      for (let i = 0; i < toolSections.length; i++) {
+        const section = toolSections[i];
+        const lines = section.trim().split('\n');
+        if (lines.length < 3) {
+          logger.dev(`[GroqProvider] ⚠️ Section ${i} ignorée (trop courte: ${lines.length} lignes)`);
+          continue;
+        }
+
+        const nameMatch = lines[0].match(/^#\s*(\w+)/);
+        const descMatch = lines[1].match(/^#\s*Description:\s*(.+)/);
+        const paramsMatch = lines.find(line => line.startsWith('# Parameters:'));
+
+        if (nameMatch && descMatch && paramsMatch) {
+          const name = nameMatch[1];
+          const description = descMatch[1];
+          
+          // Trouver les paramètres JSON
+          const paramsStartIndex = lines.findIndex(line => line.startsWith('# Parameters:'));
+          if (paramsStartIndex >= 0 && paramsStartIndex + 1 < lines.length) {
+            const paramsJson = lines.slice(paramsStartIndex + 1).join('\n').trim();
+            try {
+              const parameters = JSON.parse(paramsJson);
+              
+              tools.push({
+                type: 'function',
+                function: {
+                  name,
+                  description,
+                  parameters
+                }
+              });
+              
+              logger.dev(`[GroqProvider] ✅ Outil ${name} extrait avec succès`);
+            } catch (parseError) {
+              logger.warn(`[GroqProvider] ⚠️ Erreur parsing paramètres pour ${name}:`, parseError);
+            }
+          }
+        } else {
+          logger.dev(`[GroqProvider] ⚠️ Section ${i} ignorée (format invalide)`, {
+            hasName: !!nameMatch,
+            hasDesc: !!descMatch,
+            hasParams: !!paramsMatch,
+            firstLine: lines[0]
+          });
+        }
+      }
+
+      logger.dev(`[GroqProvider] 🎯 ${tools.length} outils extraits au total`);
+      return tools;
+    } catch (error) {
+      logger.warn(`[GroqProvider] ⚠️ Erreur extraction outils:`, error);
+      return [];
+    }
   }
 
   /**
@@ -441,7 +439,17 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
       throw new Error('Streaming non supporté dans le provider Groq - utilisez la route API directement');
     }
 
-    return await response.json();
+    const responseData = await response.json();
+    logger.dev('[GroqProvider] 🔍 Réponse brute de l\'API Groq:', {
+      responseData: responseData,
+      responseType: typeof responseData,
+      hasChoices: 'choices' in responseData,
+      choices: responseData?.choices,
+      hasContent: responseData?.choices?.[0]?.message?.content,
+      content: responseData?.choices?.[0]?.message?.content?.substring(0, 100) + '...'
+    });
+    
+    return responseData;
   }
 
   /**
@@ -469,6 +477,12 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
       });
     }
 
+    // ✅ Ajouter le reasoning si présent
+    if (choice?.message?.reasoning) {
+      result.reasoning = choice.message.reasoning;
+      logger.dev(`[GroqProvider] 🧠 Reasoning détecté (${result.reasoning.length} chars)`);
+    }
+
     return result;
   }
 
@@ -488,9 +502,17 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
    * Retourne les tools disponibles pour les function calls
    */
   getFunctionCallTools(): any[] {
-    // Pour l'instant, retourner un tableau vide
-    // Les tools seront injectés depuis l'extérieur via AgentApiV2Tools
-    return [];
+    try {
+      // Importer dynamiquement les tools OpenAPI V2
+      const { getOpenAPIV2Tools } = require('@/services/openApiToolsGenerator');
+      const tools = getOpenAPIV2Tools();
+      
+      logger.dev(`[GroqProvider] 🔧 ${tools.length} tools OpenAPI V2 chargés`);
+      return tools;
+    } catch (error) {
+      logger.warn('[GroqProvider] ⚠️ Erreur lors du chargement des tools OpenAPI V2:', error);
+      return [];
+    }
   }
 
   /**

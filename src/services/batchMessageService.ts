@@ -5,6 +5,8 @@ export interface BatchMessageRequest {
   messages: Omit<ChatMessage, 'id'>[];
   sessionId: string;
   batchId?: string;
+  operationId?: string;
+  relanceIndex?: number;
 }
 
 export interface BatchMessageResponse {
@@ -42,7 +44,9 @@ export class BatchMessageService {
       logger.dev('[BatchMessageService] 🔧 Ajout batch de messages:', {
         sessionId: request.sessionId,
         messageCount: request.messages.length,
-        batchId: request.batchId
+        batchId: request.batchId,
+        operationId: request.operationId,
+        relanceIndex: request.relanceIndex
       });
 
       // Validation des paramètres
@@ -61,7 +65,7 @@ export class BatchMessageService {
         throw new Error('Messages invalides ou manquants');
       }
 
-      // Validation de la structure des messages
+      // Validation de la structure des messages (avant assainissement)
       for (let i = 0; i < request.messages.length; i++) {
         const msg = request.messages[i];
         if (!msg.role || !['user', 'assistant', 'system', 'tool'].includes(msg.role)) {
@@ -70,10 +74,10 @@ export class BatchMessageService {
         
         if (msg.role === 'tool') {
           if (!msg.tool_call_id) {
-            logger.warn('[BatchMessageService] ⚠️ Message tool ${i} sans tool_call_id:', msg);
+            logger.warn(`[BatchMessageService] ⚠️ Message tool ${i} sans tool_call_id:`, msg);
           }
           if (!msg.name) {
-            logger.warn('[BatchMessageService] ⚠️ Message tool ${i} sans name:', msg);
+            logger.warn(`[BatchMessageService] ⚠️ Message tool ${i} sans name:`, msg);
           }
         }
       }
@@ -135,10 +139,16 @@ export class BatchMessageService {
         // Ne pas bloquer, mais logger pour debug
       }
       
+      // Assainir les messages: retirer CoT, timestamps, canaux corrects
+      const sanitizedMessages: Omit<ChatMessage, 'id'>[] = request.messages.map((m) => this.sanitizeMessageForPersistence(m));
+
+      const operationId = request.operationId || `op-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      const relanceIndex = typeof request.relanceIndex === 'number' ? request.relanceIndex : 0;
+
       const requestBody = {
-        messages: request.messages,
-        sessionId: request.sessionId,
-        batchId: request.batchId || `batch-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+        messages: sanitizedMessages,
+        operation_id: operationId,
+        relance_index: relanceIndex
       };
       
       const startTime = Date.now();
@@ -157,6 +167,8 @@ export class BatchMessageService {
         headers: {
           'Authorization': `Bearer ${session.access_token}`,
           'Content-Type': 'application/json',
+          'Idempotency-Key': operationId,
+          'X-Operation-ID': operationId
         },
         body: JSON.stringify(requestBody),
         // Ajouter un timeout pour éviter les blocages
@@ -215,11 +227,7 @@ export class BatchMessageService {
           url: apiUrl,
           errorData,
           errorText,
-          requestBody: {
-            messages: request.messages,
-            sessionId: request.sessionId,
-            batchId: request.batchId
-          }
+          requestBody
         };
         
         logger.error('[BatchMessageService] ❌ Erreur API batch:', errorDetails);
@@ -312,7 +320,7 @@ export class BatchMessageService {
 
       // 1. Message assistant avec tool calls
       if (assistantMessage.tool_calls && assistantMessage.tool_calls.length > 0) {
-        messages.push(assistantMessage);
+        messages.push(this.sanitizeMessageForPersistence(assistantMessage));
       }
 
       // 2. Messages tool avec résultats
@@ -328,7 +336,7 @@ export class BatchMessageService {
 
       // 3. Message assistant final (si relance)
       if (finalAssistantMessage) {
-        messages.push(finalAssistantMessage);
+        messages.push(this.sanitizeMessageForPersistence(finalAssistantMessage));
       }
 
       if (messages.length === 0) {
@@ -416,6 +424,36 @@ export class BatchMessageService {
       isValid: errors.length === 0,
       errors
     };
+  }
+
+  /**
+   * Assainit un message avant persistance en DB
+   * - Retire le chain-of-thought (reasoning)
+   * - Convertit le canal 'analysis' en 'final' (non persisté tel quel)
+   * - Ajoute un timestamp si manquant
+   */
+  private sanitizeMessageForPersistence(message: Omit<ChatMessage, 'id'>): Omit<ChatMessage, 'id'> {
+    const { reasoning: _removedReasoning, ...rest } = message as any;
+    const sanitized: any = { ...rest };
+
+    // Horodatage garanti
+    sanitized.timestamp = sanitized.timestamp || new Date().toISOString();
+
+    // Ne jamais persister de messages en canal 'analysis' pour user/assistant
+    if (sanitized.role === 'assistant' || sanitized.role === 'user') {
+      if (sanitized.channel === 'analysis' || !sanitized.channel) {
+        sanitized.channel = 'final';
+      }
+    } else if (sanitized.role === 'tool') {
+      if (sanitized.channel) delete sanitized.channel;
+    }
+
+    // Nettoyer les undefined
+    Object.keys(sanitized).forEach((key) => {
+      if (sanitized[key] === undefined) delete sanitized[key];
+    });
+
+    return sanitized;
   }
 }
 

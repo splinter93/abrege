@@ -1012,81 +1012,7 @@
         }
       }
     },
-    "/note/{ref}/delete": {
-      "delete": {
-        "tags": ["Notes"],
-        "summary": "Supprimer une note",
-        "description": "Supprimer définitivement une note et toutes ses données associées",
-        "operationId": "deleteNote",
-        "parameters": [
-          {
-            "name": "ref",
-            "in": "path",
-            "required": true,
-            "description": "ID, slug ou URL publique de la note",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Note supprimée avec succès",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "success": {
-                      "type": "boolean",
-                      "example": true
-                    },
-                    "message": {
-                      "type": "string",
-                      "example": "Note supprimée avec succès"
-                    },
-                    "data": {
-                      "type": "object",
-                      "properties": {
-                        "deleted_note_id": {
-                          "type": "string",
-                          "format": "uuid"
-                        },
-                        "deleted_at": {
-                          "type": "string",
-                          "format": "date-time"
-                        }
-                      }
-                    }
-                  },
-                  "required": ["success", "message", "data"]
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Token invalide ou expiré",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Note non trouvée",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
+
     "/note/{ref}/move": {
       "put": {
         "tags": ["Notes"],
@@ -1168,12 +1094,12 @@
         }
       }
     },
-    "/note/{ref}/add-content": {
+    "/note/{ref}/insert-content": {
       "patch": {
         "tags": ["Notes"],
-        "summary": "Ajouter du contenu à une note",
-        "description": "Ajouter du contenu markdown à la fin d'une note existante",
-        "operationId": "addContentToNote",
+        "summary": "Insérer du contenu dans une note",
+        "description": "Insérer du contenu markdown dans une note existante",
+        "operationId": "insertContentToNote",
         "parameters": [
           {
             "name": "ref",
@@ -1323,77 +1249,7 @@
         }
       }
     },
-    "/note/{ref}/statistics": {
-      "get": {
-        "tags": ["Notes"],
-        "summary": "Récupérer les statistiques d'une note",
-        "description": "Obtenir des statistiques détaillées sur une note (nombre de mots, caractères, etc.)",
-        "operationId": "getNoteStatistics",
-        "parameters": [
-          {
-            "name": "ref",
-            "in": "path",
-            "required": true,
-            "description": "ID, slug ou URL publique de la note",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Statistiques récupérées avec succès",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "success": {
-                      "type": "boolean",
-                      "example": true
-                    },
-                    "data": {
-                      "type": "object",
-                      "properties": {
-                        "note_id": {
-                          "type": "string",
-                          "format": "uuid"
-                        },
-                        "statistics": {
-                          "$ref": "#/components/schemas/NoteStatistics"
-                        }
-                      },
-                      "required": ["note_id", "statistics"]
-                    }
-                  },
-                  "required": ["success", "data"]
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Token invalide ou expiré",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Note non trouvée",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
+
     "/note/recent": {
       "get": {
         "tags": ["Notes"],
@@ -2484,6 +2340,451 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/classeur/{ref}": {
+      "get": {
+        "tags": ["Classeurs"],
+        "summary": "Récupérer un classeur",
+        "description": "Récupérer les détails d'un classeur par son ID ou slug",
+        "operationId": "getClasseur",
+        "parameters": [
+          {
+            "name": "ref",
+            "in": "path",
+            "required": true,
+            "description": "ID ou slug du classeur",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Classeur récupéré avec succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Classeur"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Classeur non trouvé",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/classeur/{ref}/update": {
+      "patch": {
+        "tags": ["Classeurs"],
+        "summary": "Mettre à jour un classeur",
+        "description": "Mettre à jour les propriétés d'un classeur",
+        "operationId": "updateClasseur",
+        "parameters": [
+          {
+            "name": "ref",
+            "in": "path",
+            "required": true,
+            "description": "ID ou slug du classeur",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "title": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 255
+                  },
+                  "description": {
+                    "type": "string",
+                    "maxLength": 1000
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Classeur mis à jour avec succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Classeur"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/classeur/reorder": {
+      "post": {
+        "tags": ["Classeurs"],
+        "summary": "Réorganiser les classeurs",
+        "description": "Changer l'ordre des classeurs",
+        "operationId": "reorderClasseurs",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "classeur_ids": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "Liste des IDs de classeurs dans le nouvel ordre"
+                  }
+                },
+                "required": ["classeur_ids"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Classeurs réorganisés avec succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Classeurs réorganisés avec succès"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/classeurs/with-content": {
+      "get": {
+        "tags": ["Classeurs"],
+        "summary": "Lister les classeurs avec contenu",
+        "description": "Récupérer la liste des classeurs avec leur contenu détaillé",
+        "operationId": "listClasseursWithContent",
+        "responses": {
+          "200": {
+            "description": "Liste des classeurs avec contenu",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "classeurs": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Classeur"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/folder/{ref}": {
+      "get": {
+        "tags": ["Dossiers"],
+        "summary": "Récupérer un dossier",
+        "description": "Récupérer les détails d'un dossier par son ID ou slug",
+        "operationId": "getFolder",
+        "parameters": [
+          {
+            "name": "ref",
+            "in": "path",
+            "required": true,
+            "description": "ID ou slug du dossier",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Dossier récupéré avec succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Folder"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Dossier non trouvé",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/folder/{ref}/move": {
+      "patch": {
+        "tags": ["Dossiers"],
+        "summary": "Déplacer un dossier",
+        "description": "Déplacer un dossier vers un autre classeur ou dossier parent",
+        "operationId": "moveFolder",
+        "parameters": [
+          {
+            "name": "ref",
+            "in": "path",
+            "required": true,
+            "description": "ID ou slug du dossier",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "target_classeur_id": {
+                    "type": "string",
+                    "description": "ID du classeur de destination"
+                  },
+                  "target_folder_id": {
+                    "type": "string",
+                    "description": "ID du dossier parent de destination"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Dossier déplacé avec succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Folder"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/folder/{ref}/update": {
+      "patch": {
+        "tags": ["Dossiers"],
+        "summary": "Mettre à jour un dossier",
+        "description": "Mettre à jour les propriétés d'un dossier",
+        "operationId": "updateFolder",
+        "parameters": [
+          {
+            "name": "ref",
+            "in": "path",
+            "required": true,
+            "description": "ID ou slug du dossier",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "title": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 255
+                  },
+                  "description": {
+                    "type": "string",
+                    "maxLength": 1000
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Dossier mis à jour avec succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Folder"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/note/{ref}/share": {
+      "post": {
+        "tags": ["Notes"],
+        "summary": "Partager une note",
+        "description": "Créer un lien de partage pour une note",
+        "operationId": "shareNote",
+        "parameters": [
+          {
+            "name": "ref",
+            "in": "path",
+            "required": true,
+            "description": "ID, slug ou URL publique de la note",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "public": {
+                    "type": "boolean",
+                    "description": "Rendre la note publique"
+                  },
+                  "expires_at": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "Date d'expiration du partage"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Note partagée avec succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "share_url": {
+                      "type": "string",
+                      "format": "uri"
+                    },
+                    "public_url": {
+                      "type": "string",
+                      "format": "uri"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/openapi-schema": {
+      "get": {
+        "tags": ["Métadonnées"],
+        "summary": "Récupérer le schéma OpenAPI",
+        "description": "Récupérer le schéma OpenAPI complet de l'API v2",
+        "operationId": "getOpenApiSchema",
+        "responses": {
+          "200": {
+            "description": "Schéma OpenAPI",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tools": {
+      "get": {
+        "tags": ["Métadonnées"],
+        "summary": "Récupérer les tools LLM",
+        "description": "Récupérer la liste des tools disponibles pour les LLMs",
+        "operationId": "getTools",
+        "responses": {
+          "200": {
+            "description": "Liste des tools LLM",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "tools": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "enum": ["function"]
+                          },
+                          "function": {
+                            "type": "object",
+                            "properties": {
+                              "name": {
+                                "type": "string"
+                              },
+                              "description": {
+                                "type": "string"
+                              },
+                              "parameters": {
+                                "type": "object"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
                 }
               }
             }

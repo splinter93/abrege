@@ -6,10 +6,10 @@ import { ToolCallPersistenceService } from './ToolCallPersistenceService';
 import { ToolResultNormalizer } from './ToolResultNormalizer';
 import { simpleLogger as logger } from '@/utils/logger';
 import { AgentTemplateService } from '../agentTemplateService';
+import { ChatMessage } from '@/types/chat';
+import { GroqHistoryBuilder } from './GroqHistoryBuilder';
 
-/**
- * Types internes stricts pour fiabiliser le pipeline
- */
+// Types internes stricts pour fiabiliser le pipeline
 type ToolCall = {
   id: string;
   type?: 'function';
@@ -19,15 +19,8 @@ type ToolCall = {
   };
 };
 
-type NormalizedToolResult = {
-  tool_call_id: string;
-  name: string;
-  success: boolean;
-  result: unknown;
-  timestamp: string;
-  code?: string;
-  message?: string;
-};
+// Utiliser le type de ToolCallPersistenceService pour la cohérence
+import type { NormalizedToolResult } from './ToolCallPersistenceService';
 
 /**
  * Orchestrateur Groq — plomberie neutre (ton/personnalité = agent)
@@ -36,7 +29,7 @@ type NormalizedToolResult = {
 export class GroqOrchestrator {
   private limits: GroqLimits = {
     maxToolCalls: 10,
-    maxRelances: 1,
+    maxRelances: 2,
     maxContextMessages: 25,
     maxHistoryMessages: 50
   };
@@ -74,8 +67,16 @@ export class GroqOrchestrator {
       const persistenceService = new ToolCallPersistenceService(sessionId, userToken);
 
       // 1) Premier appel — propose des tool_calls
-      const firstResponse = await this.callLLM(message, sessionHistory, agentConfig, sessionId, traceId);
-      toolCalls = Array.isArray((firstResponse as any).tool_calls) ? (firstResponse as any).tool_calls : [];
+      const { response: firstResponse } = await this.callLLM(
+        message,
+        sessionHistory,
+        agentConfig,
+        userToken,
+        sessionId,
+        traceId
+      );
+
+      toolCalls = Array.isArray((firstResponse as any)?.tool_calls) ? (firstResponse as any).tool_calls : [];
 
       // Dédup + cap
       toolCalls = this.deduplicateToolCalls(toolCalls);
@@ -87,17 +88,27 @@ export class GroqOrchestrator {
       if (toolCalls.length === 0) {
         // Pas d’outils → la réponse du LLM fait foi (aucune altération)
         const duration = Date.now() - startTime;
-        logger.info(`[GroqOrchestrator] ✅ round ok (no tools) s=${sessionId} dur=${duration}ms chars=${(firstResponse?.content || '').length}`);
-        return this.createSuccessResponse(firstResponse, [], sessionId, { isRelance: false, hasNewToolCalls: false });
+        logger.info(
+          `[GroqOrchestrator] ✅ round ok (no tools) s=${sessionId} dur=${duration}ms chars=${(firstResponse?.content ?? '').length}`
+        );
+        return this.createSuccessResponse(firstResponse, [], sessionId, {
+          isRelance: false,
+          hasNewToolCalls: false
+        });
       }
 
-      // Persister les tool calls et masquer le content partiel avant de repasser au LLM
+      // Persister les tool calls ; ne pas muter l'objet wrapper
       await persistenceService.persistToolCalls(toolCalls);
-      (firstResponse as any).content = '';
 
       // 2) Exécution des tools (normalisation + persistance)
       logger.info(`[GroqOrchestrator] 🔧 Exec ${toolCalls.length} tools`);
-      toolResults = await this.executeToolsWithPersistence(toolCalls, userToken, sessionId, persistenceService, traceId);
+      toolResults = await this.executeToolsWithPersistence(
+        toolCalls,
+        userToken,
+        sessionId,
+        persistenceService,
+        traceId
+      );
 
       // 3) Deuxième appel — tools actifs, possible relance si le modèle corrige
       const { response: finalResponse, isRelance, hasNewToolCalls } = await this.callLLMWithResults(
@@ -122,17 +133,32 @@ export class GroqOrchestrator {
 
       return this.createSuccessResponse(finalResponse, toolResults, sessionId, {
         isRelance,
-        hasNewToolCalls
+        hasNewToolCalls,
+        toolCalls
       });
-
     } catch (error: any) {
       logger.error(`[GroqOrchestrator] ❌ error in round trace=${traceId}`, error);
 
-      // 👉 Pas de fallback texte : on crée un "résultat outil" synthétique avec l’erreur
+      // 🔧 Gestion spéciale des erreurs Groq 500 - on fournit une réponse de fallback directe
+      if (error instanceof Error && error.message.includes('Groq API error: 500')) {
+        logger.warn(`[GroqOrchestrator] ⚠️ Erreur Groq 500 détectée, fourniture d'une réponse de fallback directe`);
+        
+        return this.createSuccessResponse(
+          {
+            content: "Je comprends votre demande. Malheureusement, je rencontre actuellement des difficultés techniques temporaires qui m'empêchent de traiter votre requête de manière optimale. Votre message a bien été enregistré et je pourrai y répondre plus en détail une fois ces problèmes résolus. En attendant, n'hésitez pas à reformuler votre question ou à essayer une approche différente.",
+            reasoning: "Service Groq temporairement indisponible - réponse de fallback intelligente fournie pour maintenir l'expérience utilisateur"
+          },
+          [],
+          sessionId,
+          { isFallback: true }
+        );
+      }
+
+      // 👉 Pas de fallback texte : on crée un "résultat outil" synthétique avec l'erreur
       const errResult: NormalizedToolResult = {
         tool_call_id: 'orchestrator_error',
-        name: 'orchestrator_error',
-        result: {
+        tool_name: 'orchestrator_error',
+        details: {
           success: false,
           code: error?.code || 'ORCHESTRATOR_ERROR',
           message: (error?.message || String(error || 'Erreur inconnue')).toString().slice(0, 500)
@@ -157,10 +183,41 @@ export class GroqOrchestrator {
           0,
           traceId
         );
-        return this.createSuccessResponse(response, toolResults, sessionId, { isRelance, hasNewToolCalls });
-      } catch (secondary) {
-        logger.error(`[GroqOrchestrator] ❌ secondary failure after error-handling trace=${traceId}`, secondary);
-        return this.createErrorResponse(secondary, sessionId);
+        const finalResponse = {
+          ...response,
+          tool_calls: toolCalls, // Garder les tool calls originaux
+          reasoning: (response as any)?.reasoning || '' // Garder le reasoning s'il existe
+        };
+        return this.createSuccessResponse(finalResponse, toolResults, sessionId, { isRelance, hasNewToolCalls });
+      } catch (secondary: any) {
+        logger.error(`[GroqOrchestrator] ❌ secondary failure after error-handling trace=${traceId}`, {
+          originalError: error,
+          secondaryError: secondary
+        });
+
+        // 🔧 Gestion spéciale des erreurs Groq 500 - on fournit une réponse de fallback
+        if (error instanceof Error && error.message.includes('Groq API error: 500')) {
+          logger.warn(`[GroqOrchestrator] ⚠️ Erreur Groq 500 détectée, fourniture d'une réponse de fallback`);
+          
+          return this.createSuccessResponse(
+            {
+              content: "Je comprends votre demande. Malheureusement, je rencontre actuellement des difficultés techniques temporaires qui m'empêchent de traiter votre requête de manière optimale. Votre message a bien été enregistré et je pourrai y répondre plus en détail une fois ces problèmes résolus. En attendant, n'hésitez pas à reformuler votre question ou à essayer une approche différente.",
+              reasoning: "Service Groq temporairement indisponible - réponse de fallback intelligente fournie pour maintenir l'expérience utilisateur",
+              tool_calls: toolCalls || []
+            },
+            toolResults || [],
+            sessionId,
+            { isFallback: true }
+          );
+        }
+
+        const combinedError = new Error(
+          `Secondary failure after handling: ${secondary?.message || String(secondary)}. Original error: ${
+            error?.message || String(error)
+          }`
+        );
+
+        return this.createErrorResponse(combinedError, sessionId);
       }
     }
   }
@@ -170,47 +227,58 @@ export class GroqOrchestrator {
     message: string,
     sessionHistory: any[],
     agentConfig: any,
+    userToken: string,
     sessionId: string,
     traceId: string
   ) {
-    const systemContent = this.getSystemContent(agentConfig);
-    const tools = await this.getToolsWithGating(agentConfig);
+    const appContext = { type: 'chat_session' as const, name: `session-${sessionId}`, id: sessionId, content: '' };
+    const sessionIdentity = { userToken, sessionId };
 
-    // Historique nettoyé & borné en budget simple
-    const cleanedHistory = this.cleanHistory(sessionHistory);
-    const conversationContext = this.buildConversationContext(cleanedHistory, [], []);
-    const mergedSystem = this.mergeSystemMessages(systemContent, tools.length === 0 ? this.noToolsSystemBanner() : null, conversationContext);
-
-    const messages = this.buildMessages(mergedSystem, message, cleanedHistory);
-
+    // Obtenir la configuration une seule fois
+    const systemContent = this.getSystemContent(agentConfig, appContext);
+    const tools = await this.getToolsWithGating(agentConfig, appContext, sessionIdentity);
     const configuredProvider = this.getConfiguredProvider(agentConfig);
 
-    logger.dev?.(`[GroqOrchestrator] 🔧 Tools (callLLM):`, {
+    // Construire l'historique avec le message developer
+    const historyBuilder = new GroqHistoryBuilder(this.limits);
+    const developerMessage = this.buildDeveloperMessage(tools);
+
+    // On souhaite idéalement que le developer soit juste après le system. Si le builder ne le garantit pas,
+    // on l'injecte dans l'historique de base avant construction.
+    const baseHistory = developerMessage ? [developerMessage, ...sessionHistory] : sessionHistory;
+
+    const messages = historyBuilder.buildInitialHistory(systemContent, message, baseHistory);
+
+    // Log pour debug
+    logger.dev?.(`[GroqOrchestrator] 🔧 Developer msg:`, {
+      hasDeveloperMessage: !!developerMessage,
       toolsCount: tools.length,
-      toolNames: tools.slice(0, 5).map(t => t.function?.name || 'unknown')
+      developerContent: developerMessage?.content?.substring(0, 100) + '...'
     });
 
-    // Appel provider (tool_choice explicite non garanti par le provider — on signale via system banner quand tools=[])
-    const response = await configuredProvider.call(
-      message,
-      { type: 'chat_session', name: `session-${sessionId}`, id: sessionId, content: '' },
-      messages,
-      tools
-    );
+    this.currentHistoryRef = messages; // Mettre à jour la référence
+
+    logger.dev?.(`[GroqOrchestrator] 📢 1er appel LLM...`, {
+      messageLength: message.length,
+      historyLength: messages.length,
+      toolsCount: tools.length,
+      traceId
+    });
+
+    // Appel au provider (on passe aussi tools)
+    const response = await configuredProvider.call(message, appContext, messages);
 
     logger.dev?.(`[GroqOrchestrator] 📥 Provider response:`, {
-      hasContent: !!response?.content,
-      contentLength: response?.content?.length || 0,
+      hasContent: !!(response as any)?.content,
+      contentLength: (response as any)?.content?.length || 0,
       hasToolCalls: !!(response as any)?.tool_calls,
       toolCallsCount: (response as any)?.tool_calls?.length || 0,
       traceId
     });
 
     return {
-      content: response?.content || '',
-      tool_calls: (response as any)?.tool_calls || [],
-      model: (configuredProvider as any)?.config?.model,
-      usage: (response as any)?.usage || null
+      response,
+      history: messages
     };
   }
 
@@ -230,39 +298,36 @@ export class GroqOrchestrator {
     traceId: string
   ): Promise<{ response: any; isRelance: boolean; hasNewToolCalls: boolean }> {
     const tools = await this.getToolsForRelance(agentConfig);
+    const appContext = { type: 'chat_session' as const, name: `session-${sessionId}`, id: sessionId, content: '' };
 
     // Historique nettoyé & borné
     const cleanedHistory = this.cleanHistory(sessionHistory);
-    const systemContent = this.getSystemContent(agentConfig);
+    const systemContent = this.getSystemContent(agentConfig, appContext);
     const conversationContext = this.buildConversationContext(cleanedHistory, toolCalls, toolResults);
-    const mergedSystem = this.mergeSystemMessages(systemContent, null, conversationContext);
+    const resultsPolicy = this.buildResultsInterpretationBanner(toolResults);
+    const mergedSystem = this.mergeSystemMessages(systemContent, null, conversationContext, resultsPolicy);
+
+    // Recréer le developer message (définitions d'outils) pour le 2e appel
+    const developerMessage = this.buildDeveloperMessage(tools);
 
     const messages = this.buildMessagesWithResultsIntelligent(
       mergedSystem,
       message,
       cleanedHistory,
       toolCalls,
-      toolResults
+      toolResults,
+      developerMessage
     );
 
     const configuredProvider = this.getConfiguredProvider(agentConfig);
 
-    let response = await configuredProvider.call(
-      message,
-      { type: 'chat_session', name: `session-${sessionId}`, id: sessionId, content: '' },
-      messages,
-      tools
-    );
+    // Appel provider + tools
+    let response = await configuredProvider.call(message, appContext, messages);
 
     // Re-try léger si réponse trop courte (souvent hallucination/latence tool)
-    if (response?.content && response.content.trim().length < 15) {
-      logger.warn(`[GroqOrchestrator] ⚠️ content court (${response.content.length} chars) → retry trace=${traceId}`);
-      response = await configuredProvider.call(
-        message,
-        { type: 'chat_session', name: `session-${sessionId}`, id: sessionId, content: '' },
-        messages,
-        tools
-      );
+    if ((response as any)?.content && (response as any).content.trim().length < 15) {
+      logger.warn(`[GroqOrchestrator] ⚠️ content court (${(response as any).content.length} chars) → retry trace=${traceId}`);
+      response = await configuredProvider.call(message, appContext, messages);
     }
 
     // Nouveaux tool calls ?
@@ -275,7 +340,9 @@ export class GroqOrchestrator {
     }
 
     if (newToolCalls.length > 0 && relanceCount < this.limits.maxRelances) {
-      logger.info(`[GroqOrchestrator] 🔁 relance ${relanceCount + 1}/${this.limits.maxRelances} — ${newToolCalls.length} nouveaux tools trace=${traceId}`);
+      logger.info(
+        `[GroqOrchestrator] 🔁 relance ${relanceCount + 1}/${this.limits.maxRelances} — ${newToolCalls.length} nouveaux tools trace=${traceId}`
+      );
 
       const newToolResults = await this.executeTools(newToolCalls, userToken, sessionId, traceId);
 
@@ -292,15 +359,23 @@ export class GroqOrchestrator {
         traceId
       );
     } else if (newToolCalls.length > 0) {
-      logger.warn(`[GroqOrchestrator] ⚠️ limite de relances atteinte — tool calls supplémentaires ignorés trace=${traceId}`);
+      logger.warn(
+        `[GroqOrchestrator] ⚠️ limite de relances atteinte — tool calls supplémentaires ignorés trace=${traceId}`
+      );
       return { response, isRelance: relanceCount > 0, hasNewToolCalls: true };
+    }
+
+    // Si contenu vide malgré outillage → produire un résumé factuel des tool_results
+    if (!((response as any)?.content || '').trim() && (toolResults?.length || 0) > 0) {
+      const summary = this.summarizeToolResults(toolResults);
+      response = { ...(response || {}), content: summary };
     }
 
     return { response, isRelance: relanceCount > 0, hasNewToolCalls: false };
   }
 
-  /** Gating strict + feature flag */
-  private async getToolsWithGating(agentConfig: any): Promise<any[]> {
+  /** Gating strict + feature flag - Utilise maintenant les tools OpenAPI V2 */
+  private async getToolsWithGating(agentConfig: any, appContext: any, sessionIdentity: any): Promise<any[]> {
     const hasCapabilities =
       (Array.isArray(agentConfig?.api_v2_capabilities) && agentConfig.api_v2_capabilities.length > 0) ||
       (Array.isArray((agentConfig as any)?.capabilities) && (agentConfig as any).capabilities.length > 0);
@@ -314,22 +389,46 @@ export class GroqOrchestrator {
       logger.warn(`[GroqOrchestrator] ⚠️ FORCE_TOOLS_ON=true — bypass gating`);
     }
 
-    let toolCapabilities: string[] = [];
-    if (Array.isArray(agentConfig?.api_v2_capabilities)) toolCapabilities = agentConfig.api_v2_capabilities;
-    else if (Array.isArray((agentConfig as any)?.capabilities)) toolCapabilities = (agentConfig as any).capabilities;
+    // ✅ CORRECTION: Utiliser les tools OpenAPI V2 au lieu des anciens tools
+    try {
+      const { getOpenAPIV2Tools } = await import('@/services/openApiToolsGenerator');
+      const tools = getOpenAPIV2Tools();
+      
+      logger.info(`[GroqOrchestrator] 🔧 ${tools.length} tools OpenAPI V2 chargés`);
+      return tools;
+    } catch (error) {
+      logger.error(`[GroqOrchestrator] ❌ Erreur lors du chargement des tools OpenAPI V2:`, error);
+      
+      // Fallback vers les anciens tools en cas d'erreur
+      let toolCapabilities: string[] = [];
+      if (Array.isArray(agentConfig?.api_v2_capabilities)) toolCapabilities = agentConfig.api_v2_capabilities;
+      else if (Array.isArray((agentConfig as any)?.capabilities)) toolCapabilities = (agentConfig as any).capabilities;
 
-    await agentApiV2Tools.waitForInitialization();
-    return agentApiV2Tools.getToolsForFunctionCalling(toolCapabilities);
+      await agentApiV2Tools.waitForInitialization();
+      return agentApiV2Tools.getToolsForFunctionCalling(toolCapabilities);
+    }
   }
 
-  /** Outils actifs pour la relance (mêmes capacités) */
+  /** Outils actifs pour la relance (mêmes capacités) - Utilise les tools OpenAPI V2 */
   private async getToolsForRelance(agentConfig: any): Promise<any[]> {
-    let toolCapabilities: string[] = [];
-    if (Array.isArray(agentConfig?.api_v2_capabilities)) toolCapabilities = agentConfig.api_v2_capabilities;
-    else if (Array.isArray((agentConfig as any)?.capabilities)) toolCapabilities = (agentConfig as any).capabilities;
+    // ✅ CORRECTION: Utiliser les mêmes tools OpenAPI V2 que pour le premier appel
+    try {
+      const { getOpenAPIV2Tools } = await import('@/services/openApiToolsGenerator');
+      const tools = getOpenAPIV2Tools();
+      
+      logger.info(`[GroqOrchestrator] 🔧 ${tools.length} tools OpenAPI V2 chargés pour relance`);
+      return tools;
+    } catch (error) {
+      logger.error(`[GroqOrchestrator] ❌ Erreur lors du chargement des tools OpenAPI V2 pour relance:`, error);
+      
+      // Fallback vers les anciens tools en cas d'erreur
+      let toolCapabilities: string[] = [];
+      if (Array.isArray(agentConfig?.api_v2_capabilities)) toolCapabilities = agentConfig.api_v2_capabilities;
+      else if (Array.isArray((agentConfig as any)?.capabilities)) toolCapabilities = (agentConfig as any).capabilities;
 
-    await agentApiV2Tools.waitForInitialization();
-    return agentApiV2Tools.getToolsForFunctionCalling(toolCapabilities);
+      await agentApiV2Tools.waitForInitialization();
+      return agentApiV2Tools.getToolsForFunctionCalling(toolCapabilities);
+    }
   }
 
   /** Configure le provider avec les paramètres de l'agent */
@@ -339,11 +438,15 @@ export class GroqOrchestrator {
     const customConfig = {
       model: agentConfig.model || this.groqProvider.config.model,
       temperature: agentConfig.temperature ?? this.groqProvider.config.temperature,
-      maxTokens: agentConfig.max_tokens || agentConfig.max_completion_tokens || this.groqProvider.config.maxTokens,
+      maxTokens:
+        agentConfig.max_tokens || agentConfig.max_completion_tokens || this.groqProvider.config.maxTokens,
       topP: agentConfig.top_p ?? this.groqProvider.config.topP,
       reasoningEffort: agentConfig.reasoning_effort ?? this.groqProvider.config.reasoningEffort,
       serviceTier: agentConfig.service_tier ?? this.groqProvider.config.serviceTier,
-      parallelToolCalls: agentConfig.parallel_tool_calls !== undefined ? agentConfig.parallel_tool_calls : this.groqProvider.config.parallelToolCalls
+      parallelToolCalls:
+        agentConfig.parallel_tool_calls !== undefined
+          ? agentConfig.parallel_tool_calls
+          : this.groqProvider.config.parallelToolCalls
     };
 
     logger.dev?.(`[GroqOrchestrator] 🎯 Configuration agent:`, {
@@ -372,7 +475,8 @@ export class GroqOrchestrator {
     message: string,
     history: any[],
     toolCalls: ToolCall[],
-    toolResults: NormalizedToolResult[]
+    toolResults: NormalizedToolResult[],
+    developerMessage?: ChatMessage | null
   ) {
     const prunedHistory = this.pruneHistoryByBudget(history);
 
@@ -383,11 +487,12 @@ export class GroqOrchestrator {
       role: 'tool' as const,
       content: this.truncateToolResult(result),
       tool_call_id: result.tool_call_id,
-      name: result.name
+      name: (result as any)?.tool_name || 'unknown'
     }));
 
     const msgs: any[] = [];
     if (mergedSystem) msgs.push({ role: 'system' as const, content: mergedSystem });
+    if (developerMessage) msgs.push(developerMessage);
     msgs.push(...prunedHistory.slice(-this.limits.maxContextMessages), userMessage, assistantMessage, ...toolMessages);
     return msgs;
   }
@@ -425,14 +530,20 @@ export class GroqOrchestrator {
     }
 
     logger.dev?.(
-      `[GroqOrchestrator] 📚 Historique nettoyé: in=${useful.length} out=${preservedMessages.length} tool_calls_preserved=${Array.from(preservedToolCalls)}`
+      `[GroqOrchestrator] 📚 Historique nettoyé: in=${useful.length} out=${preservedMessages.length} tool_calls_preserved=${Array.from(
+        preservedToolCalls
+      )}`
     );
 
     return preservedMessages;
   }
 
   /** Construit un contexte conversationnel minimal pour éviter les doublons d’actions */
-  private buildConversationContext(history: any[], currentToolCalls: ToolCall[], currentToolResults: NormalizedToolResult[]): string | null {
+  private buildConversationContext(
+    history: any[],
+    _currentToolCalls: ToolCall[],
+    _currentToolResults: NormalizedToolResult[]
+  ): string | null {
     const previousActions = new Map<string, { count: number; lastTimestamp?: string }>();
 
     for (const msg of history) {
@@ -454,7 +565,7 @@ export class GroqOrchestrator {
     parts.push('📋 CONTEXTE CONVERSATIONNEL (anti-duplication) :');
     parts.push('');
 
-    for (const [toolName, info] of previousActions) {
+    for (const [toolName, info] of Array.from(previousActions.entries())) {
       const timeAgo = info.lastTimestamp ? this.getTimeAgo(info.lastTimestamp) : 'récemment';
       parts.push(`• ${toolName} : exécuté ${info.count} fois (dernière fois ${timeAgo})`);
     }
@@ -470,6 +581,29 @@ export class GroqOrchestrator {
   /** Merge propre de plusieurs "system" en un seul message */
   private mergeSystemMessages(...systems: (string | null)[]): string {
     return systems.filter(Boolean).join('\n\n');
+  }
+
+  /** Directives claires pour interpréter les tool_results sans halluciner l'état */
+  private buildResultsInterpretationBanner(toolResults: NormalizedToolResult[]): string {
+    try {
+      const hasDeleteSuccess = (toolResults || []).some(r => (r as any)?.tool_name === 'delete_resource' && r.success);
+      const hasNotFound = (toolResults || []).some(r => String((r as any)?.code || '').toUpperCase().includes('NOT_FOUND'));
+
+      const lines: string[] = [];
+      lines.push('🔎 INTERPRÉTATION DES RÉSULTATS OUTILS (obligatoire) :');
+      lines.push('- Décris factuellement ce que les outils VIENNENT DE faire, en te basant UNIQUEMENT sur tool_results.');
+      lines.push("- Si delete_resource renvoie success=true, indique que la ressource vient d'être supprimée maintenant.");
+      lines.push("- N'indique JAMAIS qu'une action était déjà faite à l'avance sauf si le tool_result renvoie explicitement NOT_FOUND/409 sans exécuter l'action.");
+      lines.push('- Ne déduis pas des états secondaires (ex: 404 après suppression) à la place du résultat principal.');
+
+      if (hasDeleteSuccess && !hasNotFound) {
+        lines.push("- Pour ce tour: suppression réussie détectée → formule au présent (effectuée maintenant), pas 'déjà supprimée'.");
+      }
+
+      return lines.join('\n');
+    } catch {
+      return '🔎 INTERPRÉTATION OUTILS: Décris exactement le résultat des tools du tour actuel sans inférer des états passés.';
+    }
   }
 
   /** Bannière system pour désactiver explicitement l’usage d’outils quand aucun n’est autorisé */
@@ -499,9 +633,9 @@ export class GroqOrchestrator {
   }
 
   /** Troncature UTF-8 safe (limite ≈ 8KB) */
-  private truncateToolResult(result: any): string {
+  private truncateToolResult(result: NormalizedToolResult): string {
     try {
-      const content = result?.result ?? result;
+      const content = (result as any)?.details ?? result;
       const contentStr = typeof content === 'string' ? content : JSON.stringify(content);
       const encoder = new TextEncoder();
       const decoder = new TextDecoder();
@@ -542,12 +676,12 @@ export class GroqOrchestrator {
           success: false,
           code: 'VALIDATION_ERROR',
           message: validation.error || 'Arguments invalides',
-          result: {
+          details: {
             success: false,
             code: 'VALIDATION_ERROR',
             message: validation.error || 'Arguments invalides'
           },
-          name: toolName,
+          tool_name: toolName,
           tool_call_id: toolCall.id,
           timestamp: new Date().toISOString()
         };
@@ -573,7 +707,12 @@ export class GroqOrchestrator {
   }
 
   /** Compat: exécution simple (utilisée pour relance) — renvoie des résultats NORMALISÉS */
-  private async executeTools(toolCalls: ToolCall[], userToken: string, sessionId: string, traceId: string): Promise<NormalizedToolResult[]> {
+  private async executeTools(
+    toolCalls: ToolCall[],
+    userToken: string,
+    sessionId: string,
+    traceId: string
+  ): Promise<NormalizedToolResult[]> {
     // Réutilise la persistance pour cohérence (logs/outbox)
     const persistenceService = new ToolCallPersistenceService(sessionId, userToken);
     return await this.executeToolsWithPersistence(toolCalls, userToken, sessionId, persistenceService, traceId);
@@ -660,22 +799,24 @@ export class GroqOrchestrator {
     }
 
     return false;
-    }
+  }
 
-  /** System = uniquement le prompt de l’agent (sinon rien) */
-  private getSystemContent(agentConfig?: any): string {
-    if (agentConfig) {
-      try {
+  /** System = uniquement le prompt de l'agent (sinon rien) */
+  private getSystemContent(agentConfig: any, appContext?: any): string {
+    try {
+      if (agentConfig) {
         const templateService = AgentTemplateService.getInstance();
-        const context = { type: 'chat_session', name: 'Session de chat', id: 'session', content: '' };
+        const context = appContext ?? { type: 'chat_session', name: 'Session de chat', id: 'session', content: '' };
         const rendered = templateService.renderAgentTemplate(agentConfig, context);
         if (rendered?.content && rendered.content.trim().length > 0) {
-          logger.dev?.(`[GroqOrchestrator] 🎯 instructions agent utilisées: ${agentConfig.name ?? '(sans nom)'}`);
+          logger.dev?.(
+            `[GroqOrchestrator] 🎯 instructions agent utilisées: ${agentConfig.name ?? '(sans nom)'}`
+          );
           return rendered.content;
         }
-      } catch (error) {
-        logger.warn(`[GroqOrchestrator] ⚠️ template agent render error`, error);
       }
+    } catch (error) {
+      logger.warn(`[GroqOrchestrator] ⚠️ template agent render error`, error);
     }
     logger.dev?.(`[GroqOrchestrator] ⚙️ aucun system par défaut`);
     return '';
@@ -706,28 +847,88 @@ export class GroqOrchestrator {
     response: any,
     toolResults: NormalizedToolResult[],
     sessionId: string,
-    opts?: { isRelance?: boolean; hasNewToolCalls?: boolean }
+    opts?: { isRelance?: boolean; hasNewToolCalls?: boolean; toolCalls?: ToolCall[]; isFallback?: boolean }
   ): GroqRoundResult {
     // Extraire le content correctement selon la structure de la réponse
     let content = '';
+
     if (response && typeof response === 'object') {
-      if (typeof response.content === 'string') {
-        content = response.content;
-      } else if (response.content && typeof response.content === 'object' && typeof response.content.content === 'string') {
-        content = response.content.content;
+      // 1) string direct
+      if (typeof (response as any).content === 'string') {
+        content = (response as any).content;
+      }
+      // 2) tableaux/segments (certains providers renvoient des chunks)
+      else if (Array.isArray((response as any).content)) {
+        content = (response as any).content.map((c: any) => c?.text ?? c?.content ?? '').join('');
+      }
+      // 3) fallback commun (choices/message)
+      else if ((response as any)?.choices?.[0]?.message?.content) {
+        content = (response as any).choices[0].message.content;
+      } else {
+        logger.warn('[GroqOrchestrator] ⚠️ Structure de contenu non reconnue:', (response as any)?.content);
       }
     }
+    // Si pas de contenu et des toolResults, produire un résumé lisible (comportement ChatGPT-like)
+    if (!content.trim() && (toolResults?.length || 0) > 0) {
+      content = this.summarizeToolResults(toolResults);
+    }
+
+    logger.dev?.('[GroqOrchestrator] 📤 Réponse finale:', {
+      success: true,
+      content: content.substring(0, 100) + '...',
+      contentLength: content.length,
+      hasReasoning: !!(response as any)?.reasoning,
+      toolCallsCount: (response as any)?.tool_calls?.length || 0,
+      toolResultsCount: toolResults.length,
+      sessionId,
+      isRelance: !!opts?.isRelance,
+      hasNewToolCalls: !!opts?.hasNewToolCalls
+    });
+
+    // 🔧 Transformer les tool_results pour qu'ils aient les bons champs
+    // Pour les relances, inclure une version allégée pour l'affichage immédiat
+    const transformedToolResults = toolResults.map(result => ({
+      tool_call_id: result.tool_call_id,
+      name: result.tool_name, // Utiliser tool_name comme name
+      content: JSON.stringify(result.details || result), // Utiliser details comme content
+      success: result.success,
+      // Conserver les champs originaux pour la compatibilité
+      tool_name: result.tool_name,
+      details: result.details,
+      tool_args: result.tool_args,
+      timestamp: result.timestamp
+    }));
 
     return {
       success: true,
       content: content,
-      reasoning: response?.reasoning || '',
-      tool_calls: (response as any)?.tool_calls || [],
-      tool_results: toolResults,
+      reasoning: (response as any)?.reasoning || '',
+      // 🔧 Toujours inclure les tool_calls originaux pour l'affichage, même en relance
+      tool_calls: (response as any)?.tool_calls || (opts?.toolCalls ?? []),
+      tool_results: transformedToolResults,
       sessionId,
       is_relance: !!opts?.isRelance,
-      has_new_tool_calls: !!opts?.hasNewToolCalls
+      has_new_tool_calls: !!opts?.hasNewToolCalls,
+      isFallback: !!opts?.isFallback
     };
+  }
+
+  /** Résumé concis et actionnable des résultats outils (fallback user-friendly) */
+  private summarizeToolResults(toolResults: NormalizedToolResult[]): string {
+    try {
+      const lines: string[] = [];
+      lines.push('Voici ce qui a été fait :');
+      for (const r of toolResults) {
+        const name = (r as any)?.tool_name || 'outil';
+        const ok = r.success ? 'réussi' : 'échoué';
+        const msg = (r.message || (r.details && (r.details.message || r.details.error))) || '';
+        lines.push(`- ${name} : ${ok}${msg ? ` — ${String(msg).slice(0, 160)}` : ''}`);
+      }
+      lines.push('Souhaitez-vous que je continue ou que j’apporte des modifications supplémentaires ?');
+      return lines.join('\n');
+    } catch {
+      return 'Les outils ont été exécutés. Souhaitez-vous continuer ?';
+    }
   }
 
   /** Erreur fatale (ex: provider KO) */
@@ -740,9 +941,47 @@ export class GroqOrchestrator {
       status: 500
     };
   }
+
+  /**
+   * Construit le message de rôle 'developer' contenant les définitions des outils.
+   */
+  private buildDeveloperMessage(tools: any[]): ChatMessage | null {
+    if (!tools || tools.length === 0) {
+      return null;
+    }
+
+    // Formatter les schemas des outils dans la syntaxe attendue
+    const toolSchemas = tools
+      .map(tool => {
+        const name = tool?.function?.name ?? 'unknown_tool';
+        const description = tool?.function?.description ?? '';
+        const parameters = tool?.function?.parameters ?? {};
+        return `
+# ${name}
+# Description: ${description}
+# Parameters:
+${JSON.stringify(parameters, null, 2)}
+        `.trim();
+      })
+      .join('\n\n');
+
+    const content = `<|tool_code|>\n${toolSchemas}\n<|/tool_code|>`;
+
+    return {
+      id: `msg-dev-${Date.now()}`,
+      role: 'developer',
+      content,
+      timestamp: new Date().toISOString()
+      // pas de channel pour developer
+    };
+  }
 }
 
 /** Utils */
 function safeParseJSON(input: any): any {
-  try { return JSON.parse(input ?? '{}'); } catch { return {}; }
+  try {
+    return JSON.parse(input ?? '{}');
+  } catch {
+    return {};
+  }
 }

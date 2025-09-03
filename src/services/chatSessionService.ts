@@ -288,6 +288,10 @@ export class ChatSessionService {
         throw new Error('Authentification requise');
       }
 
+      // Assainir le message avant persistance (pas de CoT, pas de canal analysis)
+      const sanitized = this.sanitizeMessageForPersistence(message);
+      const operationId = `op-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
       // Utiliser une URL relative côté client pour éviter les problèmes de CORS
       const url = `${this.baseUrl}/${sessionId}/messages`;
 
@@ -296,8 +300,11 @@ export class ChatSessionService {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
+          // Idempotence (le backend peut ignorer pour cette route, sans effet négatif)
+          'Idempotency-Key': operationId,
+          'X-Operation-ID': operationId,
         },
-        body: JSON.stringify(message),
+        body: JSON.stringify(sanitized),
       });
 
       const data = await response.json();
@@ -328,19 +335,23 @@ export class ChatSessionService {
       // Construire une URL absolue sécurisée côté serveur
       const siteUrl = process.env.NEXT_PUBLIC_SITE_URL
         || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : '')
-        || 'https://www.scrivia.app';
+        || (process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : 'https://www.scrivia.app');
       const url = `${siteUrl}${this.baseUrl}/${sessionId}/messages`;
 
       // 🔧 NOUVEAU: Log détaillé pour debug
-      logger.debug('[ChatSessionService] 📋 Message à sauvegarder:', { message: JSON.stringify(message, null, 2), url });
+      logger.debug('[ChatSessionService] 📋 Message à sauvegarder (avant assainissement):', { message: JSON.stringify(message, null, 2), url });
+      const sanitized = this.sanitizeMessageForPersistence(message);
+      const operationId = `op-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
       
       const response = await fetch(url, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${userToken}`,
           'Content-Type': 'application/json',
+          'Idempotency-Key': operationId,
+          'X-Operation-ID': operationId,
         },
-        body: JSON.stringify(message),
+        body: JSON.stringify(sanitized),
       });
 
       const data = await response.json();
@@ -368,6 +379,36 @@ export class ChatSessionService {
         error: error instanceof Error ? error.message : 'Erreur inconnue'
       };
     }
+  }
+
+  /**
+   * Assainit un message avant persistance en DB
+   * - Retire le chain-of-thought (reasoning)
+   * - Convertit le canal 'analysis' en 'final' (non persisté tel quel)
+   * - Ajoute un timestamp si manquant
+   */
+  private sanitizeMessageForPersistence(message: Omit<ChatMessage, 'id'>): Omit<ChatMessage, 'id'> {
+    const sanitized: any = { ...(message as any) };
+
+    // Horodatage garanti
+    sanitized.timestamp = sanitized.timestamp || new Date().toISOString();
+
+    // Ne jamais persister de messages en canal 'analysis'
+    if (sanitized.role === 'assistant' || sanitized.role === 'user') {
+      if (sanitized.channel === 'analysis' || !sanitized.channel) {
+        sanitized.channel = 'final';
+      }
+    } else if (sanitized.role === 'tool') {
+      // Les messages tool n'ont pas besoin de canal
+      if (sanitized.channel) delete sanitized.channel;
+    }
+
+    // Nettoyer les propriétés undefined
+    Object.keys(sanitized).forEach((key) => {
+      if (sanitized[key] === undefined) delete sanitized[key];
+    });
+
+    return sanitized;
   }
 
   /**

@@ -7,6 +7,7 @@ export interface CleanHistoryOptions {
   removeDuplicateMessages?: boolean;
   removeEmptyMessages?: boolean;
   preserveSystemMessages?: boolean;
+  excludeChannels?: Array<'analysis' | 'commentary' | 'final'>;
 }
 
 export class ChatHistoryCleaner {
@@ -31,10 +32,16 @@ export class ChatHistoryCleaner {
       removeInvalidToolMessages = true,
       removeDuplicateMessages = true,
       removeEmptyMessages = true,
-      preserveSystemMessages = true
+      preserveSystemMessages = true,
+      excludeChannels = ['analysis']
     } = options;
 
     let cleanedMessages = [...messages];
+
+    // 🔧 Exclure certains canaux (par défaut, on exclut 'analysis')
+    if (excludeChannels && excludeChannels.length > 0) {
+      cleanedMessages = cleanedMessages.filter(msg => !excludeChannels.includes((msg as any).channel));
+    }
 
     // 🔧 Supprimer les messages tool invalides
     if (removeInvalidToolMessages) {

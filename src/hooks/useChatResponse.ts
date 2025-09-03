@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react';
 import { simpleLogger as logger } from '@/utils/logger';
 
 interface UseChatResponseOptions {
-  onComplete?: (fullContent: string, fullReasoning: string) => void;
+  onComplete?: (fullContent: string, fullReasoning: string, toolCalls?: any[], toolResults?: any[]) => void;
   onError?: (error: string) => void;
   onToolCalls?: (toolCalls: Array<{ id: string; name: string; arguments: Record<string, unknown> }>, toolName: string) => void;
   onToolResult?: (toolName: string, result: unknown, success: boolean, toolCallId?: string) => void;
@@ -23,6 +23,14 @@ export function useChatResponse(options: UseChatResponseOptions = {}): UseChatRe
 
   const sendMessage = useCallback(async (message: string, sessionId: string, context?: Record<string, unknown>, history?: unknown[], token?: string) => {
     try {
+      logger.dev('[useChatResponse] 🎯 sendMessage appelé:', {
+        message: message.substring(0, 50) + '...',
+        sessionId,
+        hasContext: !!context,
+        historyLength: history?.length || 0,
+        hasToken: !!token
+      });
+
       setIsProcessing(true);
 
       const headers: Record<string, string> = { 'Content-Type': 'application/json' };
@@ -31,6 +39,15 @@ export function useChatResponse(options: UseChatResponseOptions = {}): UseChatRe
       if (token) {
         headers['Authorization'] = `Bearer ${token}`;
       }
+      
+      logger.dev('[useChatResponse] 🚀 Envoi de la requête à l\'API LLM:', {
+        message: message.substring(0, 50) + '...',
+        sessionId,
+        hasContext: !!context,
+        historyLength: history?.length || 0
+      });
+
+      logger.dev('[useChatResponse] 🔄 Appel fetch en cours...');
       
       const response = await fetch('/api/chat/llm', {
         method: 'POST',
@@ -43,7 +60,20 @@ export function useChatResponse(options: UseChatResponseOptions = {}): UseChatRe
         })
       });
 
+      logger.dev('[useChatResponse] ✅ Fetch terminé, traitement de la réponse...');
+
+      logger.dev('[useChatResponse] 📥 Réponse HTTP reçue:', {
+        status: response.status,
+        ok: response.ok,
+        statusText: response.statusText,
+        headers: Object.fromEntries(response.headers.entries())
+      });
+
       if (!response.ok) {
+        logger.error('[useChatResponse] ❌ Réponse HTTP non-OK:', {
+          status: response.status,
+          statusText: response.statusText
+        });
         const errorText = await response.text();
         let errorData;
         try {
@@ -54,7 +84,29 @@ export function useChatResponse(options: UseChatResponseOptions = {}): UseChatRe
         throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
       }
 
-      const data = await response.json();
+      logger.dev('[useChatResponse] 🔄 Début du parsing JSON...');
+      
+      let data;
+      try {
+        data = await response.json();
+        logger.dev('[useChatResponse] ✅ JSON parsé avec succès');
+        logger.dev('[useChatResponse] 🔍 Réponse brute reçue:', {
+          status: response.status,
+          ok: response.ok,
+          data: data,
+          dataType: typeof data,
+          hasSuccess: 'success' in data,
+          success: data?.success,
+          hasContent: 'content' in data,
+          content: data?.content?.substring(0, 100) + '...',
+          contentLength: data?.content?.length || 0
+        });
+      } catch (parseError) {
+        logger.error('[useChatResponse] ❌ Erreur parsing JSON:', parseError);
+        const textResponse = await response.text();
+        logger.error('[useChatResponse] ❌ Réponse texte brute:', textResponse.substring(0, 500));
+        throw new Error('Erreur parsing JSON de la réponse');
+      }
 
       // 🔧 AMÉLIORATION: Validation de base de la réponse
       if (!data) {
@@ -63,6 +115,17 @@ export function useChatResponse(options: UseChatResponseOptions = {}): UseChatRe
 
       // ✅ RESTAURATION: Logique originale qui fonctionnait
       if (data.success) {
+        // 🔧 DEBUG: Logger la structure de la réponse
+        logger.dev('[useChatResponse] 🔍 Structure de la réponse:', {
+          success: data.success,
+          has_new_tool_calls: data.has_new_tool_calls,
+          tool_calls: data.tool_calls,
+          tool_calls_length: data.tool_calls?.length || 0,
+          content: data.content?.substring(0, 100) + '...',
+          content_length: data.content?.length || 0,
+          is_relance: data.is_relance
+        });
+
         // 🎯 Gérer le cas des nouveaux tool calls (continuation du cycle)
         if (data.has_new_tool_calls && data.tool_calls && data.tool_calls.length > 0) {
           logger.dev('[useChatResponse] 🔄 Nouveaux tool calls détectés, continuation du cycle');
@@ -122,8 +185,14 @@ export function useChatResponse(options: UseChatResponseOptions = {}): UseChatRe
             // Optionnel: Ajouter un indicateur visuel pour l'utilisateur
           }
           
-          // Appeler onComplete avec la réponse finale
-          onComplete?.(data.content || '', data.reasoning || '');
+          // Appeler onComplete avec la réponse finale (avec tool calls pour l'affichage)
+          logger.dev('[useChatResponse] 🎯 Appel onComplete (relance automatique):', {
+            content: data.content?.substring(0, 100) + '...',
+            reasoning: data.reasoning?.substring(0, 50) + '...',
+            tool_calls: data.tool_calls?.length || 0,
+            tool_results: data.tool_results?.length || 0
+          });
+          onComplete?.(data.content || '', data.reasoning || '', data.tool_calls || [], data.tool_results || []);
           return;
         }
         
@@ -171,8 +240,16 @@ export function useChatResponse(options: UseChatResponseOptions = {}): UseChatRe
         } else {
           // Pas de tool calls ou réponse finale, appeler onComplete directement
           logger.dev('[useChatResponse] ✅ Réponse simple sans tool calls, appel onComplete');
-          logger.dev('[useChatResponse] 📄 Contenu:', { content: data.content, contentLength: data.content?.length || 0 });
-          onComplete?.(data.content || '', data.reasoning || '');
+          logger.dev('[useChatResponse] 📄 Contenu:', { 
+            content: data.content?.substring(0, 100) + '...', 
+            contentLength: data.content?.length || 0,
+            reasoning: data.reasoning?.substring(0, 50) + '...'
+          });
+          logger.dev('[useChatResponse] 🎯 Appel onComplete (réponse simple):', {
+            content: data.content?.substring(0, 100) + '...',
+            reasoning: data.reasoning?.substring(0, 50) + '...'
+          });
+          onComplete?.(data.content || '', data.reasoning || '', data.tool_calls || [], data.tool_results || []);
         }
       } else {
         // 🔧 AMÉLIORATION: Gestion des erreurs serveur

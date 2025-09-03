@@ -117,14 +117,59 @@ export const useChatStore = create<ChatStore>()(
         }
 
         try {
-          // Créer le message avec ID
-          const messageWithId: ChatMessage = {
-            ...message,
-            id: `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
-          };
+          let updatedThread: ChatMessage[];
+          
+          if (options?.updateExisting) {
+            // ✅ Remplacer le dernier message temporaire (canal 'analysis') par le message final
+            const lastMessage = currentSession.thread[currentSession.thread.length - 1];
+            if (lastMessage && (lastMessage as any).channel === 'analysis') {
+              // Remplacer le message temporaire
+              const messageWithId: ChatMessage = {
+                ...message,
+                id: lastMessage.id // Garder le même ID
+              };
+              updatedThread = [...currentSession.thread.slice(0, -1), messageWithId];
+              
+              if (process.env.NODE_ENV === 'development') {
+                logger.dev('[ChatStore] Message temporaire remplacé par le message final:', {
+                  messageId: messageWithId.id,
+                  role: messageWithId.role,
+                  content: messageWithId.content?.substring(0, 50) + '...',
+                  channel: messageWithId.channel,
+                  hasToolCalls: !!(messageWithId as any).tool_calls?.length,
+                  hasReasoning: !!(messageWithId as any).reasoning
+                });
+              }
+            } else {
+              // Pas de message temporaire à remplacer, ajouter normalement
+              const messageWithId: ChatMessage = {
+                ...message,
+                id: `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+              };
+              updatedThread = [...currentSession.thread, messageWithId];
+            }
+          } else {
+            // Ajouter un nouveau message
+            const messageWithId: ChatMessage = {
+              ...message,
+              id: `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+            };
+            updatedThread = [...currentSession.thread, messageWithId];
+            
+            // Log optimisé pour le debugging
+            if (process.env.NODE_ENV === 'development') {
+              logger.dev('[ChatStore] Nouveau message ajouté:', {
+                messageId: messageWithId.id,
+                role: messageWithId.role,
+                content: messageWithId.content?.substring(0, 50) + '...',
+                channel: messageWithId.channel,
+                hasToolCalls: !!(messageWithId as any).tool_calls?.length,
+                hasReasoning: !!(messageWithId as any).reasoning,
+                threadLength: updatedThread.length
+              });
+            }
+          }
 
-          // Mise à jour optimiste immédiate
-          const updatedThread = [...currentSession.thread, messageWithId];
           const updatedSession = {
             ...currentSession,
             thread: updatedThread,
@@ -133,14 +178,11 @@ export const useChatStore = create<ChatStore>()(
 
           // Mettre à jour le store immédiatement
           get().setCurrentSession(updatedSession);
-          logger.dev('[ChatStore] Message ajouté optimistiquement');
 
           // Persister en DB si demandé
           if (options?.persist !== false) {
             const { sessionSyncService } = await import('@/services/sessionSyncService');
             await sessionSyncService.addMessageAndSync(currentSession.id, message);
-            // Synchroniser pour avoir les données à jour
-            get().syncSessions();
           }
         } catch (error) {
           logger.error('[ChatStore] Erreur addMessage:', error);

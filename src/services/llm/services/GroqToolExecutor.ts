@@ -4,6 +4,9 @@ import { simpleLogger as logger } from '@/utils/logger';
 
 /**
  * Service responsable de l'exécution des tools pour Groq
+ * - Exécution parallèle bornée (par la limite maxToolCalls amont)
+ * - Résilience: allSettled, erreurs sérialisées, codes d'erreur normalisés
+ * - Résultats toujours alignés sur l'ordre d'entrée (1:1)
  */
 export class GroqToolExecutor {
   private limits: GroqLimits;
@@ -16,53 +19,78 @@ export class GroqToolExecutor {
 
   /**
    * Exécute une liste de tool calls en parallèle avec gestion d'erreurs optimisée
+   * Retourne un tableau ToolExecutionResult aligné sur l'ordre initial.
    */
   async executeTools(
     toolCalls: any[],
     context: ToolExecutionContext
   ): Promise<ToolExecutionResult[]> {
     const { userToken, batchId, maxRetries } = context;
-    logger.info(`[GroqToolExecutor] 🔧 EXÉCUTION PARALLÈLE DE ${toolCalls.length} TOOLS...`);
+    const totalRequested = Array.isArray(toolCalls) ? toolCalls.length : 0;
+    logger.info(
+      `[GroqToolExecutor] 🔧 EXÉCUTION PARALLÈLE (${totalRequested}) tools... batch=${batchId ?? 'n/a'}`
+    );
 
-    // Vérifier la limite de sécurité
-    if (toolCalls.length > this.limits.maxToolCalls) {
-      logger.warn(`[GroqToolExecutor] ⚠️ Limite de tool calls dépassée: ${toolCalls.length}/${this.limits.maxToolCalls}`);
+    // 0) Bornage sécurité
+    if (totalRequested > this.limits.maxToolCalls) {
+      logger.warn(
+        `[GroqToolExecutor] ⚠️ Limite tool calls dépassée: ${totalRequested}/${this.limits.maxToolCalls} → trim`
+      );
       toolCalls = toolCalls.slice(0, this.limits.maxToolCalls);
     }
 
-    // Exécution parallèle des tools avec Promise.allSettled pour éviter les blocages
-    const executionPromises = toolCalls.map((toolCall, index) =>
-      this.executeSingleTool(toolCall, userToken, maxRetries, batchId, index + 1, toolCalls.length)
-    );
-    
-    // Utiliser allSettled pour ne pas bloquer sur un seul échec
-    const results = await Promise.allSettled(executionPromises);
-    
-    // Traiter les résultats (succès + échecs)
-    const processedResults = results.map((result, index) => {
-      if (result.status === 'fulfilled') {
-        return result.value;
-      } else {
-        // En cas d'échec, créer un résultat d'erreur
-        const toolCall = toolCalls[index];
-        return {
-          tool_call_id: toolCall.id,
-          name: toolCall.function?.name || 'unknown',
-          result: { success: false, error: result.reason?.message || 'Erreur inconnue' },
-          success: false,
-          timestamp: new Date().toISOString()
-        };
-      }
+    // 1) Validation amont
+    const validation = this.validateToolCalls(toolCalls);
+    if (!validation.isValid) {
+      logger.warn(
+        `[GroqToolExecutor] ⚠️ Tool calls invalides détectés (${validation.errors.length}) — exécution partielle`
+      );
+      validation.errors.slice(0, 5).forEach((e, i) => logger.warn(`  • [${i + 1}] ${e}`));
+    }
+
+    // Marquer les indices invalides pour rendre un résultat d'erreur cohérent sans bloquer le lot
+    const invalidIndexes = new Set<number>();
+    toolCalls.forEach((tc, idx) => {
+      if (!this.isToolCallStructValid(tc)) invalidIndexes.add(idx);
+      else if (!this.isArgsJsonValid(tc)) invalidIndexes.add(idx);
     });
 
-    // Log des résultats
-    this.logExecutionSummary(processedResults);
+    // 2) Préparation des promesses (les invalides sont mappées sur une promesse résolue avec erreur formattée)
+    const executionPromises = toolCalls.map((toolCall, index) => {
+      if (invalidIndexes.has(index)) {
+        return Promise.resolve(this.buildInvalidCallResult(toolCall, 'INVALID_TOOL_CALL'));
+      }
+      return this.executeSingleTool(
+        toolCall,
+        userToken,
+        maxRetries,
+        batchId ?? `batch-${Date.now()}`,
+        index + 1,
+        toolCalls.length
+      );
+    });
 
-    return processedResults;
+    // 3) Exécution parallèle sécurisée
+    const settled = await Promise.allSettled(executionPromises);
+
+    // 4) Normalisation finale: on conserve l'ordre initial, et on aplati les erreurs/rejets
+    const results: ToolExecutionResult[] = settled.map((s, idx) => {
+      if (s.status === 'fulfilled') return s.value;
+      const tc = toolCalls[idx];
+      const toolName = tc?.function?.name || 'unknown';
+      const errMsg = (s.reason?.message || String(s.reason || 'Erreur inconnue')).toString().slice(0, 500);
+      return this.toResultError(tc?.id ?? `tool_${idx}`, toolName, errMsg, 'UNKNOWN_ERROR');
+    });
+
+    // 5) Synthèse logs
+    this.logExecutionSummary(results);
+
+    return results;
   }
 
   /**
-   * Exécute un tool individuel
+   * Exécute un tool individuel avec instrumentation.
+   * NB: le ToolCallManager gère déjà ses propres retries/timeouts ; ici on loggue finement.
    */
   private async executeSingleTool(
     toolCall: any,
@@ -72,66 +100,75 @@ export class GroqToolExecutor {
     currentIndex: number,
     totalCount: number
   ): Promise<ToolExecutionResult> {
-    const toolName = toolCall.function?.name || 'unknown';
-    
-    try {
-      logger.info(`[GroqToolExecutor] 🔧 Exécution du tool ${currentIndex}/${totalCount}: ${toolName}`);
-      
-      const result = await this.toolCallManager.executeToolCall(
-        toolCall,
-        userToken,
-        maxRetries,
-        { batchId }
-      );
+    const toolName = toolCall?.function?.name || 'unknown';
+    const toolId = toolCall?.id || `tool_${currentIndex}`;
+    const startedAt = Date.now();
 
+    // Log d'entrée concis (sans PII)
+    logger.info(
+      `[GroqToolExecutor] 🔧 ${currentIndex}/${totalCount} → ${toolName} (id=${toolId}, batch=${batchId})`
+    );
+    logger.dev?.(
+      `[GroqToolExecutor] 🧩 args preview ${toolName}: ${this.previewArgs(toolCall?.function?.arguments)}`
+    );
+
+    try {
+      const result = await this.toolCallManager.executeToolCall(toolCall, userToken, maxRetries, { batchId });
+
+      const duration = Date.now() - startedAt;
       const executionResult: ToolExecutionResult = {
-        tool_call_id: result.tool_call_id,
-        name: result.name,
+        tool_call_id: result.tool_call_id ?? toolId,
+        name: result.name ?? toolName,
         result: result.result,
-        success: result.success,
+        success: !!result.success,
         timestamp: new Date().toISOString()
       };
 
       if (result.success) {
-        logger.info(`[GroqToolExecutor] ✅ Tool ${toolName} exécuté avec succès`);
+        logger.info(
+          `[GroqToolExecutor] ✅ ${toolName} OK (${duration}ms)`
+        );
       } else {
-        logger.warn(`[GroqToolExecutor] ⚠️ Tool ${toolName} a échoué:`, result.result?.error);
+        const errMsg = result?.result?.error ?? 'Erreur inconnue';
+        logger.warn(
+          `[GroqToolExecutor] ⚠️ ${toolName} KO (${duration}ms): ${String(errMsg).slice(0, 200)}`
+        );
+        // Enrichir le résultat avec des métadonnées utiles côté normalizer/LLM
+        (executionResult as any).result = {
+          ...(executionResult as any).result,
+          duration_ms: duration
+        };
       }
 
       return executionResult;
-
     } catch (error) {
+      const duration = Date.now() - startedAt;
       const errorMsg = error instanceof Error ? error.message : String(error);
-      logger.error(`[GroqToolExecutor] ❌ Erreur lors de l'exécution du tool ${toolName}:`, error);
+      const code = this.detectErrorCode(errorMsg);
+      logger.error(
+        `[GroqToolExecutor] ❌ ${toolName} EXC (${duration}ms) code=${code}: ${String(errorMsg).slice(0, 300)}`
+      );
 
-      return {
-        tool_call_id: toolCall.id,
-        name: toolName,
-        result: {
-          success: false,
-          error: errorMsg,
-          code: this.detectErrorCode(errorMsg)
-        },
-        success: false,
-        timestamp: new Date().toISOString()
-      };
+      const failure = this.toResultError(toolId, toolName, errorMsg, code);
+      (failure as any).result.duration_ms = duration;
+      return failure;
     }
   }
 
   /**
-   * Détecte le code d'erreur à partir du texte d'erreur
+   * Détecte le code d'erreur à partir du texte d'erreur (heuristique)
    */
   private detectErrorCode(errorText: string): string {
-    const text = errorText.toLowerCase();
-    
+    const text = (errorText || '').toLowerCase();
+
     if (text.includes('401') || text.includes('unauthorized')) return 'AUTH_ERROR';
     if (text.includes('403') || text.includes('forbidden')) return 'PERMISSION_ERROR';
     if (text.includes('404') || text.includes('not found')) return 'NOT_FOUND';
-    if (text.includes('500') || text.includes('internal')) return 'SERVER_ERROR';
-    if (text.includes('timeout') || text.includes('timeout')) return 'TIMEOUT';
-    if (text.includes('rate limit') || text.includes('too many requests')) return 'RATE_LIMIT';
-    if (text.includes('quota') || text.includes('quota exceeded')) return 'QUOTA_EXCEEDED';
-    
+    if (text.includes('429') || text.includes('rate limit') || text.includes('too many requests')) return 'RATE_LIMIT';
+    if (text.includes('quota')) return 'QUOTA_EXCEEDED';
+    if (text.includes('timeout') || text.includes('timed out')) return 'TIMEOUT';
+    if (text.includes('5xx') || text.includes('internal') || text.includes('server error') || text.includes('502') || text.includes('503') || text.includes('504')) return 'SERVER_ERROR';
+
     return 'UNKNOWN_ERROR';
   }
 
@@ -140,17 +177,29 @@ export class GroqToolExecutor {
    */
   private logExecutionSummary(results: ToolExecutionResult[]): void {
     const successfulCount = results.filter(r => r.success).length;
-    const failedCount = results.filter(r => !r.success).length;
+    const failedCount = results.length - successfulCount;
 
     if (failedCount === 0) {
-      logger.info(`[GroqToolExecutor] ✅ Tous les ${successfulCount} tools ont été exécutés avec succès`);
+      logger.info(`[GroqToolExecutor] ✅ ${successfulCount}/${results.length} tools OK`);
     } else {
-      logger.warn(`[GroqToolExecutor] ⚠️ Exécution terminée: ${successfulCount} succès, ${failedCount} échecs`);
+      logger.warn(
+        `[GroqToolExecutor] ⚠️ Exécution: ${successfulCount} succès, ${failedCount} échecs`
+      );
+      // Top 3 erreurs pour le debug rapide
+      const topErrors = results
+        .filter(r => !r.success)
+        .slice(0, 3)
+        .map(r => {
+          const err = (r as any)?.result?.error || 'Erreur inconnue';
+          const code = (r as any)?.result?.code || 'UNKNOWN_ERROR';
+          return `• ${r.name} (${code}): ${String(err).slice(0, 140)}`;
+        });
+      topErrors.forEach(e => logger.warn(e));
     }
   }
 
   /**
-   * Valide les tool calls avant exécution (validation moins stricte)
+   * Validation pragmatique des tool calls (ne bloque jamais tout le lot)
    */
   validateToolCalls(toolCalls: any[]): { isValid: boolean; errors: string[] } {
     const errors: string[] = [];
@@ -160,31 +209,80 @@ export class GroqToolExecutor {
       return { isValid: false, errors };
     }
 
-    for (const toolCall of toolCalls) {
-      if (!toolCall.id || typeof toolCall.id !== 'string') {
-        errors.push(`Tool call sans ID valide: ${JSON.stringify(toolCall)}`);
+    toolCalls.forEach((toolCall, idx) => {
+      if (!toolCall?.id || typeof toolCall.id !== 'string') {
+        errors.push(`Tool call #${idx} sans ID valide`);
       }
-      
-      if (!toolCall.function?.name || typeof toolCall.function.name !== 'string') {
-        errors.push(`Tool call ${toolCall.id} sans nom de fonction valide`);
+      if (!toolCall?.function?.name || typeof toolCall.function.name !== 'string') {
+        errors.push(`Tool call ${toolCall?.id ?? `#${idx}`} sans nom de fonction valide`);
       }
-      
-      // ✅ ARGUMENTS OPTIONNELS - Permettre les tools sans arguments
-      if (toolCall.function?.arguments) {
+      if (toolCall?.function?.arguments) {
         try {
           JSON.parse(toolCall.function.arguments);
         } catch {
-          errors.push(`Tool call ${toolCall.id} avec arguments JSON invalides`);
+          errors.push(`Tool call ${toolCall?.id ?? `#${idx}`} avec arguments JSON invalides`);
         }
-      } else {
-        // ✅ Tool sans arguments autorisé
-        logger.info(`[GroqToolExecutor] Tool call ${toolCall.id} sans arguments (autorisé)`);
       }
-    }
+    });
 
+    return { isValid: errors.length === 0, errors };
+  }
+
+  // --- Helpers privés ---
+
+  private isToolCallStructValid(toolCall: any): boolean {
+    return !!toolCall && typeof toolCall?.id === 'string' && typeof toolCall?.function?.name === 'string';
+  }
+
+  private isArgsJsonValid(toolCall: any): boolean {
+    if (!toolCall?.function?.arguments) return true;
+    try {
+      JSON.parse(toolCall.function.arguments);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  private buildInvalidCallResult(toolCall: any, code: string): ToolExecutionResult {
+    const toolName = toolCall?.function?.name || 'unknown';
+    const toolId = toolCall?.id || `invalid_${Date.now()}`;
     return {
-      isValid: errors.length === 0,
-      errors
+      tool_call_id: toolId,
+      name: toolName,
+      result: {
+        success: false,
+        error: 'Tool call invalide (structure ou arguments)',
+        code
+      },
+      success: false,
+      timestamp: new Date().toISOString()
     };
   }
-} 
+
+  private toResultError(toolId: string, toolName: string, errorMsg: string, code: string): ToolExecutionResult {
+    return {
+      tool_call_id: toolId,
+      name: toolName,
+      result: {
+        success: false,
+        error: errorMsg,
+        code
+      },
+      success: false,
+      timestamp: new Date().toISOString()
+    };
+  }
+
+  private previewArgs(args?: string): string {
+    if (!args || typeof args !== 'string') return '(no-args)';
+    try {
+      const obj = JSON.parse(args);
+      // Eviter PII: ne logguer que les clés de haut niveau
+      const keys = Object.keys(obj || {});
+      return keys.length ? `{ ${keys.slice(0, 5).join(', ')}${keys.length > 5 ? ', ...' : ''} }` : '{}';
+    } catch {
+      return '(invalid-json)';
+    }
+  }
+}

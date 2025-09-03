@@ -60,8 +60,8 @@ export async function POST(request: NextRequest) {
     
     const { name, icon, position } = parseResult.data;
     
-    // Générer un slug unique
-    const slug = await SlugGenerator.generateSlug(name, 'classeur', userId);
+    // Générer un slug unique avec le client authentifié
+    const slug = await SlugGenerator.generateSlug(name, 'classeur', userId, undefined, supabase);
     
     // Créer le classeur
     const { data: classeur, error } = await supabase

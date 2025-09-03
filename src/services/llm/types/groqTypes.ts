@@ -24,6 +24,7 @@ export interface GroqRoundResult {
   error?: string;
   details?: string;
   status?: number;
+  isFallback?: boolean; // Marqueur pour identifier les réponses de fallback
 }
 
 // 🎯 Types pour la construction d'historique

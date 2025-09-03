@@ -144,7 +144,8 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
       role: 'assistant',
       content: safeContent,
       reasoning: fullReasoning,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      channel: 'final'
     });
     
     toolFlowActiveRef.current = false;
@@ -168,7 +169,8 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
     addMessage({
       role: 'assistant',
       content: `Erreur: ${errorMessage}`,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      channel: 'final'
     });
     
     // Scroll immédiat après l'erreur
@@ -203,8 +205,9 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
       role: 'assistant',
       content: null,
       tool_calls: toolCalls,
-      timestamp: new Date().toISOString()
-    });
+      timestamp: new Date().toISOString(),
+      channel: 'analysis' as const
+    }, { persist: false });
     
     // Scroll immédiat après les tool calls
     scrollToBottom(true);
@@ -278,7 +281,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
         ...normalizedToolResult,
         timestamp: new Date().toISOString()
       };
-      await addMessage(toolResultMessage, { persist: true });
+      await addMessage(toolResultMessage, { persist: false });
     } catch (error) {
       logger.error('[ChatWidget] ❌ Erreur lors du traitement du tool result:', error);
       

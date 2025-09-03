@@ -78,7 +78,7 @@ const ChatFullscreenV2: React.FC = () => {
   // 🎯 Hook pour les tool calls atomiques
   // const { addToolResult, isProcessing: isProcessingToolCalls } = useAtomicToolCalls(); // Hook supprimé
 
-  const handleComplete = useCallback(async (fullContent: string, fullReasoning: string) => {
+  const handleComplete = useCallback(async (fullContent: string, fullReasoning: string, toolCalls?: any[], toolResults?: any[]) => {
     // Vérifier l'authentification avant de continuer
     if (authLoading) {
       logger.dev('[ChatFullscreenV2] ⏳ Vérification de l\'authentification en cours...');
@@ -91,21 +91,50 @@ const ChatFullscreenV2: React.FC = () => {
     }
 
     const safeContent = fullContent?.trim();
+    logger.dev('[ChatFullscreenV2] 🎯 handleComplete appelé:', {
+      fullContent: fullContent?.substring(0, 100) + '...',
+      safeContent: safeContent?.substring(0, 100) + '...',
+      hasContent: !!safeContent,
+      reasoning: fullReasoning?.substring(0, 50) + '...'
+    });
+
     if (!safeContent) {
+      logger.warn('[ChatFullscreenV2] ⚠️ Contenu vide, pas de message à ajouter');
       scrollToBottom(true);
       return;
     }
       
-    await addMessage({
-      role: 'assistant',
+    // ✅ Message final complet (avec tool calls et reasoning)
+    const messageToAdd = {
+      role: 'assistant' as const,
       content: safeContent,
       reasoning: fullReasoning,
-      timestamp: new Date().toISOString()
+      tool_calls: toolCalls || [],
+      tool_results: toolResults || [],
+      timestamp: new Date().toISOString(),
+      channel: 'final' as const
+    };
+
+    logger.dev('[ChatFullscreenV2] 📝 Ajout du message final complet:', {
+      content: safeContent?.substring(0, 100) + '...',
+      reasoning: fullReasoning?.substring(0, 50) + '...',
+      toolCalls: toolCalls?.length || 0,
+      toolResults: toolResults?.length || 0
     });
+    
+    // ✅ Remplacer le message temporaire par le message final
+    await addMessage(messageToAdd, { 
+      persist: true, 
+      updateExisting: true // Remplacer le message temporaire
+    });
+    
+    logger.dev('[ChatFullscreenV2] ✅ Message final ajouté avec succès');
     
     toolFlowActiveRef.current = false;
     scrollToBottom(true);
   }, [addMessage, scrollToBottom, user, authLoading]);
+
+
 
   const handleError = useCallback((errorMessage: string) => {
     // Vérifier l'authentification avant de continuer
@@ -122,7 +151,8 @@ const ChatFullscreenV2: React.FC = () => {
     addMessage({
       role: 'assistant',
       content: `Erreur: ${errorMessage}`,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      channel: 'final'
     });
   }, [addMessage, user, authLoading]);
 
@@ -146,17 +176,21 @@ const ChatFullscreenV2: React.FC = () => {
     logger.dev('[ChatFullscreenV2] 🔧 Tool calls détectés:', { toolCalls, toolName });
     logger.tool('[ChatFullscreenV2] 🔧 Tool calls détectés:', { toolCalls, toolName });
     
-    // 🔧 NOUVEAU: Ajouter les tool calls au debugger
+    // ✅ Ajouter les tool calls au debugger
     addToolCalls(toolCalls);
     
     toolFlowActiveRef.current = true;
-      
-    await addMessage({
-      role: 'assistant',
-      content: null,
+    
+    // ✅ Créer un message temporaire avec tool calls pour l'affichage immédiat
+    const toolCallMessage = {
+      role: 'assistant' as const,
+      content: '🔧 Exécution des outils en cours...',
       tool_calls: toolCalls,
-      timestamp: new Date().toISOString()
-    });
+      timestamp: new Date().toISOString(),
+      channel: 'analysis' as const // Canal temporaire pour l'affichage
+    };
+      
+    await addMessage(toolCallMessage, { persist: false }); // Ne pas persister ce message temporaire
     
     scrollToBottom(true);
   }, [addMessage, scrollToBottom, user, authLoading, addToolCalls]);
@@ -320,12 +354,44 @@ const ChatFullscreenV2: React.FC = () => {
     return null;
   };
 
-  // 🎯 Messages triés et mémorisés
-  const sortedMessages = useMemo(() => {
+  // 🎯 Messages triés et mémorisés pour l'affichage
+  const displayMessages = useMemo(() => {
     if (!currentSession?.thread) return [];
-    return [...currentSession.thread].sort(
+    
+    const sorted = [...currentSession.thread].sort(
       (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
     );
+
+    // ✅ Filtrage intelligent : garder tous les messages importants
+    const filtered = sorted.filter(msg => {
+      // Toujours garder les messages utilisateur
+      if (msg.role === 'user') return true;
+      
+      // Toujours garder les messages assistant avec du contenu
+      if (msg.role === 'assistant' && msg.content) return true;
+      
+      // Garder les messages tool
+      if (msg.role === 'tool') return true;
+      
+      // Exclure les messages temporaires sans contenu (canal 'analysis' sans content)
+      if ((msg as any).channel === 'analysis' && !msg.content) return false;
+      
+      // Par défaut, garder le message
+      return true;
+    });
+    
+    // Log optimisé pour le debugging
+    if (process.env.NODE_ENV === 'development') {
+      logger.dev(`[ChatFullscreenV2] 🔍 Messages affichés: ${filtered.length}/${sorted.length}`, {
+        total: sorted.length,
+        filtered: filtered.length,
+        hasToolCalls: filtered.some(m => (m as any).tool_calls?.length > 0),
+        hasReasoning: filtered.some(m => (m as any).reasoning),
+        channels: sorted.map(m => ({ role: m.role, channel: (m as any).channel, hasContent: !!m.content }))
+      });
+    }
+    
+    return filtered;
   }, [currentSession?.thread]);
 
   // 🎯 Effets optimisés
@@ -634,7 +700,7 @@ const ChatFullscreenV2: React.FC = () => {
           {/* Messages optimisés */}
           <div className="chat-messages-container">
             <div className="chat-message-list">
-              {sortedMessages.map((message) => (
+              {displayMessages.map((message) => (
                 <ChatMessageOptimized 
                   key={message.id || `${message.role}-${message.timestamp}-${(message as any).tool_call_id || ''}`} 
                   message={message}

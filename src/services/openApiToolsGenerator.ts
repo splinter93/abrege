@@ -1,4 +1,4 @@
-// import { logger } from '@/utils/logger';
+import { getOpenAPISchemaService, type OpenAPISchema } from './openApiSchemaService';
 
 /**
  * Interface pour les tools générés depuis OpenAPI
@@ -16,13 +16,15 @@ export interface OpenAPITool {
 }
 
 /**
- * Générateur de tools depuis un schéma OpenAPI
+ * Générateur de tools depuis un schéma OpenAPI V2
  */
 export class OpenAPIToolsGenerator {
-  private schema: any;
+  private schema: OpenAPISchema;
+  private schemaService = getOpenAPISchemaService();
 
-  constructor(openApiSchema: any) {
-    this.schema = openApiSchema;
+  constructor(openApiSchema?: OpenAPISchema) {
+    // Utiliser le schéma fourni ou charger depuis le service
+    this.schema = openApiSchema || this.schemaService.getSchema();
   }
 
   /**
@@ -70,7 +72,7 @@ export class OpenAPIToolsGenerator {
       const parameters = this.extractParameters(operation);
 
       // Vérifier si le tool est utile pour les LLMs
-      if (!this.isToolUseful(operation, method)) {
+      if (!this.isToolUseful(operation, method, endpoint)) {
         return null;
       }
 
@@ -91,9 +93,9 @@ export class OpenAPIToolsGenerator {
    * Générer un nom de tool compatible avec votre système
    */
   private generateToolName(endpoint: string, method: string): string {
-    // Convertir l'endpoint en nom de tool
+    // Convertir l'endpoint en nom de tool (API V2)
     let toolName = endpoint
-      .replace(/^\/api\/v1\//, '') // Enlever le préfixe API
+      .replace(/^\/api\/v2\//, '') // Enlever le préfixe API V2
       .replace(/\/\{([^}]+)\}/g, '_$1') // Convertir les paramètres de path
       .replace(/\//g, '_') // Remplacer les slashes par des underscores
       .replace(/^_/, '') // Enlever le underscore initial
@@ -103,26 +105,38 @@ export class OpenAPIToolsGenerator {
     const httpVerb = method.toLowerCase();
     toolName = `${httpVerb}_${toolName}`;
 
-    // Noms plus lisibles pour les LLMs
+    // Noms plus lisibles pour les LLMs (API V2)
     const nameMappings: Record<string, string> = {
+      // Notes
       'post_note_create': 'create_note',
       'get_note_ref': 'get_note',
-      'put_note_ref': 'update_note',
-      'delete_note_ref': 'delete_note',
-      'patch_note_ref_add-content': 'add_content_to_note',
+      'put_note_ref_update': 'update_note',
+      'delete_note_ref_delete': 'delete_note',
+      'patch_note_ref_insert-content': 'insert_content_to_note',
       'put_note_ref_move': 'move_note',
-      'get_note_ref_information': 'get_note_info',
+      'get_note_ref_table-of-contents': 'get_note_toc',
       'get_note_ref_statistics': 'get_note_stats',
+      'get_note_recent': 'get_recent_notes',
+      
+      // Classeurs
+      'post_classeur_create': 'create_classeur',
+      'get_classeurs': 'list_classeurs',
+      'get_classeur_ref_tree': 'get_classeur_tree',
+      
+      // Dossiers
       'post_folder_create': 'create_folder',
-      'get_folder_ref': 'get_folder',
-      'put_folder_ref': 'update_folder',
-      'delete_folder_ref': 'delete_folder',
-      'post_notebook_create': 'create_notebook',
-      'get_notebook_ref': 'get_notebook',
-      'put_notebook_ref': 'update_notebook',
-      'delete_notebook_ref': 'delete_notebook',
-      'get_notebooks': 'list_notebooks',
-      'post_slug_generate': 'generate_slug'
+      'get_folder_ref_tree': 'get_folder_tree',
+      
+      // Recherche
+      'get_search': 'search_notes',
+      'get_files_search': 'search_files',
+      
+      // Utilisateur
+      'get_me': 'get_user_info',
+      'get_stats': 'get_platform_stats',
+      
+      // Gestion unifiée
+      'delete_delete_resource_ref': 'delete_resource'
     };
 
     return nameMappings[toolName] || toolName;
@@ -138,13 +152,17 @@ export class OpenAPIToolsGenerator {
       required: [] as string[]
     };
 
-    // Paramètres de path
+    // Paramètres de path, query et body
     if (operation.parameters) {
       operation.parameters.forEach((param: any) => {
-        if (param.in === 'path') {
+        if (param.in === 'path' || param.in === 'query') {
           parameters.properties[param.name] = {
             type: param.schema?.type || 'string',
-            description: param.description || `Parameter ${param.name}`
+            description: param.description || `Parameter ${param.name}`,
+            ...(param.schema?.enum && { enum: param.schema.enum }),
+            ...(param.schema?.minimum !== undefined && { minimum: param.schema.minimum }),
+            ...(param.schema?.maximum !== undefined && { maximum: param.schema.maximum }),
+            ...(param.schema?.default !== undefined && { default: param.schema.default })
           };
           if (param.required) {
             parameters.required.push(param.name);
@@ -184,29 +202,49 @@ export class OpenAPIToolsGenerator {
   /**
    * Déterminer si un tool est utile pour les LLMs
    */
-  private isToolUseful(operation: any, method: string): boolean {
-    // Exclure les endpoints de lecture pure qui ne modifient rien
-    // const readOnlyEndpoints = [^;]+;
-
-    // Inclure tous les endpoints de modification et les endpoints de lecture utiles
+  private isToolUseful(operation: any, method: string, endpoint: string): boolean {
+    // Endpoints utiles pour les LLMs (API V2)
     const usefulEndpoints = [
-      '/api/ui/note/create',
-      '/api/ui/note/{ref}',
-      '/api/ui/note/{ref}/add-content',
-      '/api/ui/note/{ref}/move',
-      '/api/ui/folder/create',
-      '/api/ui/folder/{ref}',
-      '/api/ui/notebook/create',
-      '/api/ui/notebook/{ref}',
-      '/api/ui/notebooks',
-      '/api/ui/slug/generate'
+      // Notes
+      '/note/create',
+      '/note/{ref}',
+      '/note/{ref}/update',
+      '/note/{ref}/move',
+      '/note/{ref}/insert-content',
+      '/note/{ref}/table-of-contents',
+      '/note/recent',
+      
+      // Classeurs
+      '/classeur/create',
+      '/classeurs',
+      '/classeur/{ref}/tree',
+      
+      // Dossiers
+      '/folder/create',
+      '/folder/{ref}/tree',
+      
+      // Recherche
+      '/search',
+      '/files/search',
+      
+      // Utilisateur
+      '/me',
+      '/stats',
+      
+      // Gestion unifiée
+      '/delete/{resource}/{ref}'
     ];
 
-    // Vérifier si l'endpoint est utile
-    return usefulEndpoints.some(endpoint => 
-      operation.endpoint?.includes(endpoint.replace('{ref}', '')) ||
-      operation.path?.includes(endpoint.replace('{ref}', ''))
-    );
+    // Vérifier si l'endpoint est utile - LOGIQUE AMÉLIORÉE
+    return usefulEndpoints.some(usefulEndpoint => {
+      // Créer un pattern regex pour matcher les endpoints avec paramètres
+      const pattern = usefulEndpoint
+        .replace(/\{([^}]+)\}/g, '[^/]+') // Remplacer {param} par [^/]+
+        .replace(/\//g, '\\/'); // Échapper les slashes
+      
+      const regex = new RegExp(`^${pattern}$`);
+      return regex.test(endpoint);
+    });
   }
 
   /**
@@ -243,37 +281,23 @@ export class OpenAPIToolsGenerator {
 }
 
 /**
- * Utilitaire pour charger le schéma OpenAPI
+ * Factory pour créer le générateur avec le schéma V2
  */
-export async function loadOpenAPISchema(): Promise<any> {
-  try {
-    // Charger le schéma OpenAPI V2 actuel
-    const response = await fetch('/api/v2/openapi-schema');
-    
-    if (!response.ok) {
-      throw new Error(`Erreur HTTP: ${response.status}`);
-    }
-    
-    const schema = await response.json();
-    console.log('[OpenAPIToolsGenerator] ✅ Schéma OpenAPI chargé avec succès');
-    
-    return schema;
-  } catch (error) {
-    console.error('[OpenAPIToolsGenerator] ❌ Erreur lors du chargement du schéma:', error);
-    
-    // Fallback vers un schéma par défaut si nécessaire
-    console.log('[OpenAPIToolsGenerator] 🔄 Utilisation du schéma par défaut en fallback');
-    throw error;
-  }
+export function createOpenAPIToolsGenerator(): OpenAPIToolsGenerator {
+  console.log('[OpenAPIToolsGenerator] 🔧 Création du générateur avec schéma V2');
+  
+  // Forcer le rechargement du schéma pour avoir les dernières modifications
+  const schemaService = getOpenAPISchemaService();
+  schemaService.reload();
+  
+  // Le schéma sera chargé automatiquement depuis le service
+  return new OpenAPIToolsGenerator();
 }
 
 /**
- * Factory pour créer le générateur avec le schéma par défaut
+ * Obtenir les tools OpenAPI V2 pour les function calls
  */
-export function createOpenAPIToolsGenerator(): OpenAPIToolsGenerator {
-  // Utiliser le schéma OpenAPI V2 actuel
-  console.log('[OpenAPIToolsGenerator] 🔧 Création du générateur avec schéma V2');
-  
-  // Le schéma sera chargé dynamiquement via loadOpenAPISchema()
-  return new OpenAPIToolsGenerator({});
+export function getOpenAPIV2Tools(): any[] {
+  const generator = createOpenAPIToolsGenerator();
+  return generator.generateToolsForFunctionCalling();
 } 

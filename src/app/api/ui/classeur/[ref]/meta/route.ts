@@ -92,7 +92,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ re
       .eq('id', classeurId)
       .single();
     if (body.name && !oldClasseurError && oldClasseur && oldClasseur.name !== body.name) {
-      const newSlug = await SlugGenerator.generateSlug(body.name, 'classeur', userId, classeurId);
+      const newSlug = await SlugGenerator.generateSlug(body.name, 'classeur', userId, classeurId, supabase);
       updates.slug = newSlug;
     }
 

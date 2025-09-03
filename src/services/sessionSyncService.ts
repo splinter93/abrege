@@ -3,6 +3,7 @@ import type { ChatSession } from '@/store/useChatStore';
 import type { ChatMessage } from '@/types/chat';
 import { useChatStore } from '@/store/useChatStore';
 import { logger } from '@/utils/logger';
+import { batchMessageService } from './batchMessageService';
 
 /**
  * Service de synchronisation simplifié entre la DB et le store Zustand
@@ -11,9 +12,11 @@ import { logger } from '@/utils/logger';
 export class SessionSyncService {
   private static instance: SessionSyncService;
   private chatSessionService: ChatSessionService;
+  private sessionQueues: Map<string, Promise<any>>;
 
   constructor() {
     this.chatSessionService = ChatSessionService.getInstance();
+    this.sessionQueues = new Map();
   }
 
   static getInstance(): SessionSyncService {
@@ -21,6 +24,27 @@ export class SessionSyncService {
       SessionSyncService.instance = new SessionSyncService();
     }
     return SessionSyncService.instance;
+  }
+
+  /**
+   * Exécuter des opérations de manière exclusive par session pour éviter les courses
+   */
+  private async runExclusive<T>(sessionId: string, fn: () => Promise<T>): Promise<T> {
+    const previous = this.sessionQueues.get(sessionId) || Promise.resolve();
+    let resolveNext: (value: unknown) => void;
+    const next = new Promise((resolve) => (resolveNext = resolve));
+    this.sessionQueues.set(sessionId, previous.then(() => next));
+    try {
+      const result = await fn();
+      return result;
+    } finally {
+      // Libérer la file d'attente pour cette session
+      resolveNext!(null);
+      // Nettoyage si la promesse correspond toujours
+      if (this.sessionQueues.get(sessionId) === next) {
+        this.sessionQueues.delete(sessionId);
+      }
+    }
   }
 
   /**
@@ -54,7 +78,7 @@ export class SessionSyncService {
       };
 
     } catch (error) {
-      logger.error('[SessionSync] ❌ Erreur synchronisation:', error);
+      logger.error('API', '[SessionSync] ❌ Erreur synchronisation:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Erreur inconnue'
@@ -92,7 +116,7 @@ export class SessionSyncService {
       };
 
     } catch (error) {
-      logger.error('[SessionSync] ❌ Erreur création session:', error);
+      logger.error('API', '[SessionSync] ❌ Erreur création session:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Erreur inconnue'
@@ -102,22 +126,39 @@ export class SessionSyncService {
 
   /**
    * 💬 Ajouter un message en DB puis synchroniser
+   * ✅ CONSERVE toutes les données (tool_calls, tool_results, reasoning)
    */
   async addMessageAndSync(sessionId: string, message: Omit<ChatMessage, 'id'>): Promise<{
     success: boolean;
     error?: string;
   }> {
     try {
-      const response = await this.chatSessionService.addMessage(sessionId, message);
-      
-      if (!response.success) {
-        throw new Error(response.error || 'Erreur ajout message');
-      }
+      return await this.runExclusive(sessionId, async () => {
+        // Ajouter timestamp si manquant pour garantir l'ordre
+        const messageWithTimestamp = {
+          ...message,
+          timestamp: (message as any).timestamp || new Date().toISOString()
+        } as Omit<ChatMessage, 'id'>;
 
-      return { success: true };
+        // 🔧 NOUVEAU : Ne plus persister les messages tool individuellement
+        // Ils sont maintenant inclus dans les tool_results du message assistant
+        if (messageWithTimestamp.role === 'tool' && (messageWithTimestamp as any).tool_call_id) {
+          logger.debug('EDITOR', '[SessionSync] ⏭️ Message tool ignoré (inclus dans tool_results)', {
+            tool_call_id: (messageWithTimestamp as any).tool_call_id
+          });
+          return { success: true }; // Ne rien faire, déjà géré via tool_results
+        }
 
+        // Par défaut, route simple
+        logger.debug('EDITOR', '[SessionSync] 🔧 Persist via route simple');
+        const response = await this.chatSessionService.addMessage(sessionId, messageWithTimestamp);
+        if (!response.success) {
+          throw new Error(response.error || 'Erreur ajout message');
+        }
+        return { success: true };
+      });
     } catch (error) {
-      logger.error('[SessionSync] ❌ Erreur ajout message:', error);
+      logger.error('API', '[SessionSync] ❌ Erreur ajout message:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Erreur inconnue'
@@ -142,7 +183,7 @@ export class SessionSyncService {
       return { success: true };
 
     } catch (error) {
-      logger.error('[SessionSync] ❌ Erreur suppression session:', error);
+      logger.error('API', '[SessionSync] ❌ Erreur suppression session:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Erreur inconnue'
@@ -158,16 +199,44 @@ export class SessionSyncService {
     error?: string;
   }> {
     try {
-      const response = await this.chatSessionService.updateSession(sessionId, data);
-      
-      if (!response.success) {
-        throw new Error(response.error || 'Erreur mise à jour session');
-      }
-
-      return { success: true };
-
+      return await this.runExclusive(sessionId, async () => {
+        const response = await this.chatSessionService.updateSession(sessionId, data);
+        if (!response.success) {
+          throw new Error(response.error || 'Erreur mise à jour session');
+        }
+        return { success: true };
+      });
     } catch (error) {
-      logger.error('[SessionSync] ❌ Erreur mise à jour session:', error);
+      logger.error('API', '[SessionSync] ❌ Erreur mise à jour session:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Erreur inconnue'
+      };
+    }
+  }
+
+  /**
+   * Ajouter des messages en batch avec idempotence et déduplication côté serveur
+   */
+  async addBatchMessagesAndSync(sessionId: string, messages: Omit<ChatMessage, 'id'>[], options?: { operationId?: string; relanceIndex?: number }): Promise<{
+    success: boolean;
+    error?: string;
+  }> {
+    try {
+      return await this.runExclusive(sessionId, async () => {
+        const result = await batchMessageService.addBatchMessages({
+          sessionId,
+          messages,
+          operationId: options?.operationId,
+          relanceIndex: typeof options?.relanceIndex === 'number' ? options!.relanceIndex : 0
+        });
+        if (!result.success) {
+          throw new Error(result.error || 'Erreur ajout batch');
+        }
+        return { success: true };
+      });
+    } catch (error) {
+      logger.error('API', '[SessionSync] ❌ Erreur ajout batch:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Erreur inconnue'

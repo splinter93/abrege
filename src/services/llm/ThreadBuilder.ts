@@ -109,7 +109,8 @@ export class ThreadBuilder {
       return !!message.content && typeof message.content === 'string';
     }
 
-    return false;
+    // Par défaut, un message doit avoir un rôle et un timestamp
+    return !!message.role && !!message.timestamp;
   }
 
   /**
@@ -118,17 +119,23 @@ export class ThreadBuilder {
    * @returns Message normalisé
    */
   private normalizeMessage(message: any): any {
-    const normalized = { ...message };
+    const normalized: ChatMessage = { ...message };
 
     // S'assurer que le contenu est une string
     if (normalized.content && typeof normalized.content !== 'string') {
       normalized.content = JSON.stringify(normalized.content);
     }
 
+    // Définir un canal par défaut si manquant
+    if (!normalized.channel) {
+      normalized.channel = 'final';
+    }
+
     // Normaliser les tool_calls si présents
     if (normalized.tool_calls && Array.isArray(normalized.tool_calls)) {
       normalized.tool_calls = normalized.tool_calls.map(toolCall => ({
         id: toolCall.id || `tool-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        type: 'function',
         function: {
           name: toolCall.function?.name || 'unknown',
           arguments: toolCall.function?.arguments || '{}'
@@ -139,6 +146,11 @@ export class ThreadBuilder {
     // Ajouter un timestamp si manquant
     if (!normalized.timestamp) {
       normalized.timestamp = new Date().toISOString();
+    }
+
+    // Ajouter un ID si manquant
+    if (!normalized.id) {
+      normalized.id = `msg-${new Date(normalized.timestamp).getTime()}-${Math.random().toString(36).slice(2, 8)}`;
     }
 
     return normalized;

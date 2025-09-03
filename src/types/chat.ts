@@ -1,19 +1,21 @@
 // Types pour le système de sessions de chat
 
-export interface ChatMessage {
-  id?: string;
-  role: 'user' | 'assistant' | 'system' | 'tool';
+export type ToolCall = {
+  id: string;
+  type: 'function';
+  function: {
+    name: string;
+    arguments: string;
+  };
+};
+
+export type ChatMessage = {
+  id: string;
+  role: 'user' | 'assistant' | 'system' | 'tool' | 'developer';
   content: string | null;
   reasoning?: string | null;
   timestamp: string;
-  tool_calls?: Array<{
-    id: string;
-    type: 'function';
-    function: {
-      name: string;
-      arguments: string;
-    };
-  }>;
+  tool_calls?: ToolCall[];
   tool_call_id?: string;
   name?: string;
   tool_results?: Array<{
@@ -22,8 +24,9 @@ export interface ChatMessage {
     content: string;
     success?: boolean;
   }>;
-  isStreaming?: boolean; // Pour indiquer si le message est en cours de streaming
-}
+  isStreaming?: boolean;
+  channel?: 'analysis' | 'commentary' | 'final';
+};
 
 export interface ChatSession {
   id: string;
@@ -81,6 +84,7 @@ export interface HistoryConfig {
   maxMessages: number;
   includeSystemMessages?: boolean;
   truncateStrategy?: 'keep_latest' | 'keep_oldest' | 'keep_middle';
+  excludeChannels?: Array<'analysis' | 'commentary' | 'final'>;
 }
 
 export interface ProcessedHistory {

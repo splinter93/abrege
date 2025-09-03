@@ -20,9 +20,14 @@ export class ChatHistoryService {
     messages: ChatMessage[],
     config: HistoryConfig
   ): ProcessedHistory {
-    const { maxMessages, includeSystemMessages = true, truncateStrategy = 'keep_latest' } = config;
+    const { maxMessages, includeSystemMessages = true, truncateStrategy = 'keep_latest', excludeChannels = ['analysis'] } = config as HistoryConfig & { excludeChannels?: ('analysis'|'commentary'|'final')[] };
     
     let processedMessages = [...messages];
+
+    // Exclure certains canaux (par défaut, on exclut 'analysis')
+    if (excludeChannels && excludeChannels.length > 0) {
+      processedMessages = processedMessages.filter(msg => !excludeChannels.includes((msg as any).channel));
+    }
 
     // Filtrer les messages système si nécessaire
     if (!includeSystemMessages) {

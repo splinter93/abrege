@@ -1,5 +1,6 @@
 import { simpleLogger as logger } from '@/utils/logger';
 import { agentApiV2Tools } from '@/services/agentApiV2Tools';
+import { OpenApiToolExecutor } from './openApiToolExecutor';
 import { ChatMessage } from '@/types/chat';
 
 export interface ToolCallResult {
@@ -12,6 +13,7 @@ export interface ToolCallResult {
 
 export class ToolCallManager {
   private static instance: ToolCallManager;
+  private openApiExecutor: OpenApiToolExecutor;
   
   // ✅ SIMPLE: Historique des IDs déjà exécutés (évite la double exécution)
   private executedCallIds: Set<string> = new Set();
@@ -21,6 +23,10 @@ export class ToolCallManager {
       ToolCallManager.instance = new ToolCallManager();
     }
     return ToolCallManager.instance;
+  }
+
+  private constructor() {
+    this.openApiExecutor = OpenApiToolExecutor.getInstance();
   }
 
   /**
@@ -59,27 +65,14 @@ export class ToolCallManager {
     }, 5 * 60 * 1000);
 
     try {
-      const args = this.parseArguments(func.arguments);
-      logger.info(`[ToolCallManager] 🔧 Exécution de ${func.name}...`);
-
-      // ✅ SIMPLE: Exécuter le tool avec timeout raisonnable
-      const toolCallPromise = agentApiV2Tools.executeTool(func.name, args, userToken);
-      const timeoutPromise = new Promise((resolve) => { 
-        setTimeout(() => resolve({ success: false, error: 'Timeout tool call (10s)' }), 10000); 
-      });
-      const rawResult = await Promise.race([toolCallPromise, timeoutPromise]);
-
-      // ✅ SIMPLE: Normaliser le résultat
-      const normalized = this.normalizeResult(rawResult, func.name, args);
-      logger.info(`[ToolCallManager] ✅ Tool ${func.name} exécuté avec succès`);
-
-      return {
-        tool_call_id: id,
-        name: func.name,
-        result: normalized,
-        success: normalized.success !== false && !normalized.error,
-        timestamp: new Date().toISOString()
-      };
+      // ✅ NOUVEAU: Utiliser le système OpenAPI V2
+      logger.info(`[ToolCallManager] 🔧 Exécution de ${func.name} avec OpenAPI V2...`);
+      
+      const result = await this.openApiExecutor.executeToolCall(toolCall, userToken, maxRetries, options);
+      
+      logger.info(`[ToolCallManager] ✅ Tool ${func.name} exécuté avec succès via OpenAPI V2`);
+      
+      return result;
 
     } catch (error) {
       logger.error(`[ToolCallManager] ❌ Erreur exécution ${func.name}:`, error);

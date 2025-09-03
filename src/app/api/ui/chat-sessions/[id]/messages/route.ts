@@ -21,13 +21,15 @@ if (!supabaseUrl || !supabaseKey) {
 const supabaseAdmin = createClient(supabaseUrl, supabaseKey);
 
 // Schéma de validation pour ajouter un message
+// ✅ CONSERVE tous les champs critiques (tool_calls, tool_results, reasoning)
 const addMessageSchema = z.object({
   role: z.enum(['user', 'assistant', 'system', 'tool']),
   content: z.string().nullable().optional(),
   timestamp: z.string().optional().default(() => new Date().toISOString()),
-  // Support pour le reasoning
+  channel: z.enum(['analysis', 'commentary', 'final']).optional(),
+  // ✅ Support complet pour le reasoning
   reasoning: z.string().nullable().optional(),
-  // Support pour les tool calls (format DeepSeek)
+  // ✅ Support complet pour les tool calls (format DeepSeek)
   tool_calls: z.array(z.object({
     id: z.string(),
     type: z.literal('function'),
@@ -37,13 +39,18 @@ const addMessageSchema = z.object({
     })
   })).optional(),
   tool_call_id: z.string().optional(), // Pour les messages tool
-  name: z.string().optional(), // 🔧 CORRECTION: Ajouter le name pour les messages tool
-  // Support pour les tool results
+  name: z.string().optional(), // Pour les messages tool
+  // ✅ Support complet pour les tool results (structure flexible)
   tool_results: z.array(z.object({
     tool_call_id: z.string(),
-    name: z.string(),
-    content: z.string(),
-    success: z.boolean().optional()
+    name: z.string().optional(), // Optionnel car peut être dans tool_name
+    content: z.string().optional(), // Optionnel car peut être dans details
+    success: z.boolean().optional(),
+    // Champs alternatifs pour la structure actuelle
+    tool_name: z.string().optional(),
+    details: z.any().optional(),
+    tool_args: z.any().optional(),
+    timestamp: z.string().optional()
   })).optional()
 });
 
@@ -116,21 +123,23 @@ export async function POST(
     
     const validatedData = addMessageSchema.parse(body);
 
-    // Créer le nouveau message
+    // Créer le nouveau message avec tous les champs
     const newMessage = {
       id: crypto.randomUUID(),
       role: validatedData.role,
       content: validatedData.content,
       timestamp: validatedData.timestamp,
+      channel: validatedData.channel,
+      // ✅ CONSERVER tous les champs critiques
       reasoning: validatedData.reasoning,
       tool_calls: validatedData.tool_calls,
       tool_call_id: validatedData.tool_call_id,
-      name: validatedData.name, // 🔧 CORRECTION: Inclure le name pour les messages tool
+      name: validatedData.name,
       tool_results: validatedData.tool_results
     };
 
-    // 🔧 NOUVEAU: Log détaillé du message créé
-    logger.dev('[Chat Messages API] 📝 Message créé:', {
+    // ✅ Log détaillé du message créé avec conservation des données
+    logger.dev('[Chat Messages API] 📝 Message créé avec données complètes:', {
       id: newMessage.id,
       role: newMessage.role,
       hasContent: !!newMessage.content,
@@ -138,7 +147,8 @@ export async function POST(
       hasToolCalls: !!newMessage.tool_calls,
       hasToolResults: !!newMessage.tool_results,
       toolCallsCount: newMessage.tool_calls?.length || 0,
-      toolResultsCount: newMessage.tool_results?.length || 0
+      toolResultsCount: newMessage.tool_results?.length || 0,
+      channel: newMessage.channel
     });
 
     // Validation du message avec le schéma
@@ -220,22 +230,29 @@ export async function POST(
       historyLimit: currentSession.history_limit
     });
 
-    // Ajouter le nouveau message au thread
-    const currentThread = currentSession.thread || [];
-    const updatedThread = [...currentThread, newMessage];
+    // Ajouter le message au thread
+    const messageWithId = {
+      ...body,
+      id: `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      timestamp: new Date().toISOString(),
+      // Définir un canal par défaut si non fourni
+      channel: body.channel || 'final' 
+    };
+    
+    const newThread = [...(currentSession.thread || []), messageWithId];
 
     // ✅ NOUVEAU: Garder TOUS les messages pour l'utilisateur
     // La limitation history_limit est uniquement pour l'API LLM, pas pour la persistance
     const historyLimit = currentSession.history_limit || 30;
     
     // Trier par timestamp PUIS garder TOUS les messages (pas de limitation)
-    const sortedFullThread = updatedThread
+    const sortedFullThread = newThread
       .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
     // ✅ Pas de .slice(-historyLimit) - on garde TOUT !
 
     logger.dev('[Chat Messages API] 💾 Mise à jour du thread...', {
-      ancienThread: currentThread.length,
-      nouveauThread: updatedThread.length,
+      ancienThread: currentSession.thread?.length || 0,
+      nouveauThread: newThread.length,
       threadComplet: sortedFullThread.length,
       limite: historyLimit,
       trié: '✅ Par timestamp',

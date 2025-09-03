@@ -153,16 +153,19 @@ export class ToolResultNormalizer {
    * B)1 - Déduplication des tool calls
    */
   static createToolCallSignature(toolCall: any): string {
-    const { name, function: func } = toolCall;
-    if (!func || !func.arguments) return `${name}::{}`;
-    
+    const func = toolCall?.function;
+    const funcName = (func && typeof func.name === 'string' && func.name) || (toolCall && toolCall.name) || 'unknown';
+    if (!func || !('arguments' in func)) return `${funcName}::{}`;
+
     try {
-      const args = JSON.parse(func.arguments);
+      const rawArgs = (func as any).arguments;
+      const args = typeof rawArgs === 'string' ? JSON.parse(rawArgs || '{}') : (rawArgs || {});
       const sortedArgs = this.sortObjectKeys(args);
-      return `${name}::${JSON.stringify(sortedArgs)}`;
+      return `${funcName}::${JSON.stringify(sortedArgs)}`;
     } catch (error) {
       logger.warn(`[ToolResultNormalizer] ⚠️ Erreur parsing arguments:`, error);
-      return `${name}::${func.arguments}`;
+      // Tomber en repli sur la chaîne brute pour éviter les collisions silencieuses
+      return `${funcName}::${(func as any).arguments}`;
     }
   }
 

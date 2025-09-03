@@ -162,10 +162,28 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     logger.error(`[LLM Route] ❌ Erreur fatale: ${error}`);
 
+    // 🔧 Gestion spéciale des erreurs Groq 500 - on fournit une réponse de fallback
+    if (error instanceof Error && error.message.includes('Groq API error: 500')) {
+      logger.warn(`[LLM Route] ⚠️ Erreur Groq 500 détectée, fourniture d'une réponse de fallback`);
+      
+      return NextResponse.json({
+        success: true, // ✅ On considère comme succès pour permettre la persistance
+        content: "Je comprends votre demande. Malheureusement, je rencontre actuellement des difficultés techniques temporaires qui m'empêchent de traiter votre requête de manière optimale. Votre message a bien été enregistré et je pourrai y répondre plus en détail une fois ces problèmes résolus. En attendant, n'hésitez pas à reformuler votre question ou à essayer une approche différente.",
+        reasoning: "Service Groq temporairement indisponible - réponse de fallback intelligente fournie pour maintenir l'expérience utilisateur",
+        tool_calls: [],
+        tool_results: [],
+        sessionId: body.context?.sessionId || 'unknown',
+        status: 200,
+        isFallback: true // Marqueur pour identifier les réponses de fallback
+      });
+    }
+
     return NextResponse.json(
       {
+        success: false,
         error: 'Erreur interne du serveur',
-        details: error instanceof Error ? error.message : 'Erreur inconnue'
+        details: error instanceof Error ? error.message : 'Erreur inconnue',
+        sessionId: body.context?.sessionId || 'unknown'
       },
       { status: 500 }
     );

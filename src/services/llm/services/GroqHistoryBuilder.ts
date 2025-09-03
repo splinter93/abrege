@@ -20,19 +20,33 @@ export class GroqHistoryBuilder {
     userMessage: string,
     cleanedHistory: ChatMessage[]
   ): ChatMessage[] {
-    // 🔒 ISOLATION : Marquer tous les messages avec le timestamp actuel
-    const timestamp = new Date().toISOString();
-    
-    const messages: ChatMessage[] = [
-      { role: 'system', content: systemContent, timestamp },
-      ...cleanedHistory.slice(-this.limits.maxContextMessages).map(msg => ({
-        ...msg,
-        timestamp: msg.timestamp || timestamp // Assurer un timestamp pour tous les messages
-      })) as ChatMessage[],
-      { role: 'user', content: userMessage, timestamp }
-    ];
+    const historyWithoutOldCoTs = this.purgeOldCoTs(cleanedHistory);
 
-    logger.info(`[GroqHistoryBuilder] 🔒 Historique initial construit: ${messages.length} messages avec isolation temporelle`);
+    const messages: ChatMessage[] = [];
+
+    // 1. Message système (uniquement si contenu non vide) — pas de channel pour system
+    if (systemContent && systemContent.trim().length > 0) {
+      messages.push({
+        id: `msg-system-${Date.now()}`,
+        role: 'system',
+        content: systemContent,
+        timestamp: new Date().toISOString()
+      });
+    }
+
+    // 2. Historique sans CoT, borné
+    const contextMessages = historyWithoutOldCoTs.slice(-this.limits.maxContextMessages);
+    messages.push(...contextMessages);
+
+    // 3. Message utilisateur — pas de channel pour user
+    messages.push({
+      id: `msg-user-${Date.now()}`,
+      role: 'user',
+      content: userMessage,
+      timestamp: new Date().toISOString()
+    });
+
+    logger.dev?.(`[GroqHistoryBuilder] 🔧 Historique initial construit: ${messages.length} messages`);
     return messages;
   }
 
@@ -41,22 +55,29 @@ export class GroqHistoryBuilder {
    */
   buildSecondCallHistory(context: HistoryBuildContext): HistoryBuildResult {
     const { systemContent, userMessage, cleanedHistory, toolCalls, toolResults } = context;
+    const historyWithoutOldCoTs = this.purgeOldCoTs(cleanedHistory);
     const validationErrors: string[] = [];
 
-    // 1. Message système
-    const systemMessage: ChatMessage = {
-      role: 'system',
-      content: systemContent,
-      timestamp: new Date().toISOString()
-    };
+    // 1. Message système (optionnel si vide) — pas de channel pour system
+    const baseMessages: ChatMessage[] = [];
+    if (systemContent && systemContent.trim().length > 0) {
+      const systemMessage: ChatMessage = {
+        id: `msg-system-${Date.now()}`,
+        role: 'system',
+        content: systemContent,
+        timestamp: new Date().toISOString()
+      };
+      baseMessages.push(systemMessage);
+    }
 
-    // 2. Contexte de conversation
-    const contextMessages = cleanedHistory.slice(-this.limits.maxContextMessages);
-    // 3. Créer la base de messages
-    const baseMessages: ChatMessage[] = [systemMessage, ...contextMessages];
-    // 4. Injecter le message utilisateur si non vide
+    // 2. Contexte de conversation (sans CoT), borné
+    const contextMessages = historyWithoutOldCoTs.slice(-this.limits.maxContextMessages);
+    baseMessages.push(...contextMessages);
+
+    // 3. Injecter le message utilisateur si non vide — pas de channel pour user
     if (userMessage && userMessage.trim().length > 0) {
       baseMessages.push({
+        id: `msg-user-${Date.now()}`,
         role: 'user',
         content: userMessage,
         timestamp: new Date().toISOString()
@@ -64,10 +85,12 @@ export class GroqHistoryBuilder {
     }
     // 5. Message assistant avec tool calls
     const assistantMessage: ChatMessage = {
+      id: `msg-assistant-${Date.now()}`,
       role: 'assistant',
       content: null, // Le contenu peut être null
       tool_calls: toolCalls,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      channel: 'commentary'
     };
     // 6. Construire les messages tool
     const toolMessages = this.buildToolMessages(toolResults, validationErrors);
@@ -93,14 +116,39 @@ export class GroqHistoryBuilder {
    */
   private buildToolMessages(toolResults: any[], validationErrors: string[]): ChatMessage[] {
     return toolResults
-      .filter(result => this.validateToolResult(result, validationErrors))
-      .map(result => ({
-        role: 'tool' as const,
-        tool_call_id: result.tool_call_id,
-        name: result.name,
-        content: JSON.stringify(result.result),
-        timestamp: result.timestamp
-      }));
+      .map(toolResult => {
+        const toolCallId = toolResult.tool_call_id;
+        const toolName = toolResult.tool_name || toolResult.name;
+        const payload = toolResult.details !== undefined ? toolResult.details : toolResult.result;
+
+        if (!toolCallId || !toolName || payload === undefined) {
+          validationErrors.push(`Résultat d'outil invalide: ${JSON.stringify(toolResult)}`);
+          return null;
+        }
+
+        return {
+          id: `msg-tool-${toolCallId}`,
+          role: 'tool',
+          tool_call_id: toolCallId,
+          name: toolName,
+          content: typeof payload === 'string' ? payload : JSON.stringify(payload),
+          timestamp: toolResult.timestamp
+        } as ChatMessage;
+      })
+      .filter((msg): msg is ChatMessage => msg !== null);
+  }
+
+  /**
+   * Purge les anciens messages de CoT (canal 'analysis') de l'historique.
+   * C'est une optimisation clé pour GPT-OSS.
+   */
+  private purgeOldCoTs(history: ChatMessage[]): ChatMessage[] {
+    const purgedHistory = history.filter(msg => msg.channel !== 'analysis');
+    const removedCount = history.length - purgedHistory.length;
+    if (removedCount > 0) {
+      logger.dev?.(`[GroqHistoryBuilder] 🧹 ${removedCount} message(s) CoT ('analysis') purgé(s) de l'historique`);
+    }
+    return purgedHistory;
   }
 
   /**
@@ -121,7 +169,7 @@ export class GroqHistoryBuilder {
   }
 
   /**
-   * Insère les messages tool après le message assistant
+   * Insère les messages tool après le message assistant correspondant
    */
   private insertToolMessages(baseMessages: ChatMessage[], toolMessages: ChatMessage[]): ChatMessage[] {
     if (toolMessages.length === 0) {
@@ -138,7 +186,7 @@ export class GroqHistoryBuilder {
     if (assistantIndex !== -1) {
       // Insérer les messages tool juste après
       finalMessages.splice(assistantIndex + 1, 0, ...toolMessages);
-      logger.dev(`[GroqHistoryBuilder] 🔧 Messages tool insérés à l'index ${assistantIndex + 1}`);
+      logger.dev?.(`[GroqHistoryBuilder] 🔧 Messages tool insérés à l'index ${assistantIndex + 1}`);
     } else {
       // Fallback: ajouter à la fin
       finalMessages.push(...toolMessages);
@@ -214,4 +262,4 @@ export class GroqHistoryBuilder {
 
     return true;
   }
-} 
+}
