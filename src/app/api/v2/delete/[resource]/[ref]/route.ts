@@ -64,29 +64,24 @@ export async function DELETE(
     // 🔧 Créer le client Supabase authentifié conforme aux autres endpoints V2
     const supabase = createAuthenticatedSupabaseClient(authResult);
     
-    // Utiliser V2DatabaseUtils pour la suppression (méthodes statiques)
-    let deleteResult;
+    // 🗑️ Mettre en corbeille au lieu de supprimer définitivement
+    let trashResult;
 
     switch (resourceType) {
       case 'note':
-        deleteResult = await V2DatabaseUtils.deleteNote(resourceId, userId, context);
+        trashResult = await moveToTrash(supabase, 'articles', resourceId, userId, context);
         break;
       case 'classeur':
-        deleteResult = await V2DatabaseUtils.deleteClasseur(resourceId, userId, context);
+        // Pour les classeurs, mettre en corbeille en cascade
+        trashResult = await moveClasseurToTrash(supabase, resourceId, userId, context);
         break;
       case 'folder':
-        deleteResult = await V2DatabaseUtils.deleteFolder(resourceId, userId, context);
+        // Pour les dossiers, mettre en corbeille en cascade
+        trashResult = await moveFolderToTrash(supabase, resourceId, userId, context);
         break;
       case 'file':
-        // Vérifier si deleteFile existe
-        if (typeof V2DatabaseUtils.deleteFile === 'function') {
-          deleteResult = await V2DatabaseUtils.deleteFile(resourceId, userId, context);
-        } else {
-          return NextResponse.json(
-            { success: false, error: 'File deletion not yet implemented' },
-            { status: 501 }
-          );
-        }
+        // Les fichiers utilisent déjà is_deleted, on peut s'en inspirer
+        trashResult = await moveToTrash(supabase, 'files', resourceId, userId, context);
         break;
       default:
         return NextResponse.json(
@@ -95,24 +90,29 @@ export async function DELETE(
         );
     }
 
-    if (!deleteResult.success) {
-      logApi.info(`❌ Erreur suppression ${resourceType}: ${deleteResult.error}`, context);
+    if (!trashResult.success) {
+      logApi.info(`❌ Erreur mise en corbeille ${resourceType}: ${trashResult.error}`, context);
       return NextResponse.json(
-        { success: false, error: deleteResult.error || 'Failed to delete resource' },
+        { success: false, error: trashResult.error || 'Failed to move resource to trash' },
         { status: 400 }
       );
     }
 
-    // Réponse de succès
+    // Réponse de succès avec données mises à jour
     const response = {
       success: true,
-      message: `${resourceType} deleted successfully`,
+      message: `${resourceType} moved to trash successfully`,
       resource_type: resourceType,
-      resource_id: resourceId
+      resource_id: resourceId,
+      data: {
+        updated: true,
+        action: 'moved_to_trash',
+        timestamp: new Date().toISOString()
+      }
     };
 
     const apiTime = Date.now() - startTime;
-    logApi.info(`✅ ${resourceType} supprimé avec succès en ${apiTime}ms`, context);
+    logApi.info(`✅ ${resourceType} mis en corbeille avec succès en ${apiTime}ms`, context);
 
     return NextResponse.json(response);
 
@@ -183,5 +183,170 @@ export async function HEAD(
         'X-Error': 'Internal server error'
       }
     });
+  }
+}
+
+/**
+ * Fonction utilitaire pour mettre un élément en corbeille
+ */
+async function moveToTrash(
+  supabase: any,
+  tableName: string,
+  resourceId: string,
+  userId: string,
+  context: any
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const now = new Date().toISOString();
+    
+    // Pour les fichiers, utiliser is_deleted et deleted_at
+    if (tableName === 'files') {
+      const { error } = await supabase
+        .from('files')
+        .update({
+          is_deleted: true,
+          deleted_at: now
+        })
+        .eq('id', resourceId)
+        .eq('user_id', userId);
+
+      if (error) {
+        logApi.error(`❌ Erreur mise en corbeille fichier:`, error);
+        return { success: false, error: 'Failed to move file to trash' };
+      }
+    } else {
+      // Pour les autres tables, utiliser is_in_trash et trashed_at
+      const { error } = await supabase
+        .from(tableName)
+        .update({
+          is_in_trash: true,
+          trashed_at: now
+        })
+        .eq('id', resourceId)
+        .eq('user_id', userId);
+
+      if (error) {
+        logApi.error(`❌ Erreur mise en corbeille ${tableName}:`, error);
+        return { success: false, error: `Failed to move ${tableName} to trash` };
+      }
+    }
+
+    return { success: true };
+  } catch (error) {
+    logApi.error(`❌ Erreur moveToTrash:`, error);
+    return { success: false, error: 'Internal error during trash operation' };
+  }
+}
+
+/**
+ * Fonction pour mettre un classeur en corbeille avec tous ses enfants
+ */
+async function moveClasseurToTrash(
+  supabase: any,
+  classeurId: string,
+  userId: string,
+  context: any
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const now = new Date().toISOString();
+
+    // 1. Mettre le classeur en corbeille
+    const { error: classeurError } = await supabase
+      .from('classeurs')
+      .update({
+        is_in_trash: true,
+        trashed_at: now
+      })
+      .eq('id', classeurId)
+      .eq('user_id', userId);
+
+    if (classeurError) {
+      logApi.error('❌ Erreur mise en corbeille classeur:', classeurError);
+      return { success: false, error: 'Failed to move classeur to trash' };
+    }
+
+    // 2. Mettre tous les dossiers du classeur en corbeille
+    const { error: foldersError } = await supabase
+      .from('folders')
+      .update({
+        is_in_trash: true,
+        trashed_at: now
+      })
+      .eq('classeur_id', classeurId)
+      .eq('user_id', userId);
+
+    if (foldersError) {
+      logApi.error('❌ Erreur mise en corbeille dossiers:', foldersError);
+      return { success: false, error: 'Failed to move folders to trash' };
+    }
+
+    // 3. Mettre toutes les notes du classeur en corbeille
+    const { error: articlesError } = await supabase
+      .from('articles')
+      .update({
+        is_in_trash: true,
+        trashed_at: now
+      })
+      .eq('classeur_id', classeurId)
+      .eq('user_id', userId);
+
+    if (articlesError) {
+      logApi.error('❌ Erreur mise en corbeille articles:', articlesError);
+      return { success: false, error: 'Failed to move articles to trash' };
+    }
+
+    return { success: true };
+  } catch (error) {
+    logApi.error('❌ Erreur moveClasseurToTrash:', error);
+    return { success: false, error: 'Internal error during classeur trash operation' };
+  }
+}
+
+/**
+ * Fonction pour mettre un dossier en corbeille avec tous ses enfants
+ */
+async function moveFolderToTrash(
+  supabase: any,
+  folderId: string,
+  userId: string,
+  context: any
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const now = new Date().toISOString();
+
+    // 1. Mettre le dossier en corbeille
+    const { error: folderError } = await supabase
+      .from('folders')
+      .update({
+        is_in_trash: true,
+        trashed_at: now
+      })
+      .eq('id', folderId)
+      .eq('user_id', userId);
+
+    if (folderError) {
+      logApi.error('❌ Erreur mise en corbeille dossier:', folderError);
+      return { success: false, error: 'Failed to move folder to trash' };
+    }
+
+    // 2. Mettre toutes les notes du dossier en corbeille
+    const { error: articlesError } = await supabase
+      .from('articles')
+      .update({
+        is_in_trash: true,
+        trashed_at: now
+      })
+      .eq('folder_id', folderId)
+      .eq('user_id', userId);
+
+    if (articlesError) {
+      logApi.error('❌ Erreur mise en corbeille articles:', articlesError);
+      return { success: false, error: 'Failed to move articles to trash' };
+    }
+
+    return { success: true };
+  } catch (error) {
+    logApi.error('❌ Erreur moveFolderToTrash:', error);
+    return { success: false, error: 'Internal error during folder trash operation' };
   }
 }

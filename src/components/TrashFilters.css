@@ -1,0 +1,236 @@
+/* Styles pour les filtres de la corbeille */
+.trash-filters {
+  background: var(--background-secondary);
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 24px;
+}
+
+.filters-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.filters-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 16px;
+}
+
+.clear-filters-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: var(--background-tertiary);
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  color: var(--text-secondary);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.clear-filters-btn:hover {
+  background: var(--background-primary);
+  color: var(--text-primary);
+  border-color: var(--border-primary);
+}
+
+.filters-content {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.filter-label {
+  font-weight: 500;
+  color: var(--text-primary);
+  font-size: 14px;
+}
+
+/* Barre de recherche */
+.search-input-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.search-icon {
+  position: absolute;
+  left: 12px;
+  color: var(--text-tertiary);
+  z-index: 1;
+}
+
+.search-input {
+  width: 100%;
+  padding: 12px 12px 12px 40px;
+  background: var(--background-primary);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  color: var(--text-primary);
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 3px var(--accent-light);
+}
+
+.search-input::placeholder {
+  color: var(--text-tertiary);
+}
+
+.clear-search-btn {
+  position: absolute;
+  right: 8px;
+  padding: 4px;
+  background: transparent;
+  border: none;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.clear-search-btn:hover {
+  background: var(--background-tertiary);
+  color: var(--text-primary);
+}
+
+/* Boutons de filtre par type */
+.filter-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.filter-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: var(--background-primary);
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  color: var(--text-secondary);
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.filter-btn:hover:not(:disabled) {
+  background: var(--background-tertiary);
+  border-color: var(--border-primary);
+  color: var(--text-primary);
+}
+
+.filter-btn.active {
+  background: var(--accent-primary);
+  border-color: var(--accent-primary);
+  color: white;
+}
+
+.filter-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.filter-btn .count {
+  font-size: 11px;
+  opacity: 0.8;
+}
+
+/* Options de tri */
+.sort-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.sort-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: var(--background-primary);
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  color: var(--text-secondary);
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sort-btn:hover {
+  background: var(--background-tertiary);
+  border-color: var(--border-primary);
+  color: var(--text-primary);
+}
+
+.sort-btn.active {
+  background: var(--accent-primary);
+  border-color: var(--accent-primary);
+  color: white;
+}
+
+/* Résultats */
+.filters-results {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.results-count {
+  font-size: 13px;
+  color: var(--text-tertiary);
+  font-weight: 500;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .trash-filters {
+    padding: 16px;
+  }
+  
+  .filter-buttons,
+  .sort-options {
+    flex-direction: column;
+  }
+  
+  .filter-btn,
+  .sort-btn {
+    justify-content: center;
+  }
+  
+  .filters-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .trash-filters {
+    padding: 12px;
+  }
+  
+  .filters-content {
+    gap: 16px;
+  }
+}

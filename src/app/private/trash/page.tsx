@@ -1,24 +1,14 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Trash2, Archive, Clock, AlertCircle, FileText, Folder, RotateCcw, Trash } from 'react-feather';
 import { useAuth } from '@/hooks/useAuth';
 import type { AuthenticatedUser } from '@/types/dossiers';
+import type { TrashItem, TrashStatistics } from '@/types/supabase';
 import AuthGuard from '@/components/AuthGuard';
 import PageLoading from '@/components/PageLoading';
 import './index.css';
-
-// Types pour les éléments de la corbeille
-interface TrashItem {
-  id: string;
-  type: 'note' | 'folder' | 'file';
-  name: string;
-  deletedAt: Date;
-  expiresAt: Date;
-  size?: number;
-  originalPath?: string;
-}
 
 export default function TrashPage() {
   return (
@@ -31,48 +21,120 @@ export default function TrashPage() {
 function TrashPageContent() {
   const { user } = useAuth();
   
-  // État simulé pour la démonstration
+  // État pour la gestion de la corbeille
   const [trashItems, setTrashItems] = useState<TrashItem[]>([]);
+  const [statistics, setStatistics] = useState<TrashStatistics>({
+    total: 0,
+    notes: 0,
+    folders: 0,
+    classeurs: 0,
+    files: 0
+  });
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  // Simuler le chargement des éléments de la corbeille
-  useEffect(() => {
-    setLoading(true);
-    // Simulation d'un délai de chargement
-    const timer = setTimeout(() => {
-      setLoading(false);
-    }, 1000);
+  // Fonction stable pour charger les éléments de la corbeille
+  const loadTrashItems = useCallback(async () => {
+    if (!user) return;
     
-    return () => clearTimeout(timer);
-  }, []);
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const { TrashService } = await import('@/services/trashService');
+      const data = await TrashService.getTrashItems();
+      
+      setTrashItems(data.items);
+      setStatistics(data.statistics);
+    } catch (err) {
+      console.error('Erreur chargement corbeille:', err);
+      setError(err instanceof Error ? err.message : 'Erreur inconnue');
+    } finally {
+      setLoading(false);
+    }
+  }, [user?.id]); // Seulement quand l'ID de l'utilisateur change
 
-  // Calculer les statistiques
-  const stats = {
-    total: trashItems.length,
-    notes: trashItems.filter(item => item.type === 'note').length,
-    folders: trashItems.filter(item => item.type === 'folder').length,
-    files: trashItems.filter(item => item.type === 'file').length
-  };
+  // Charger les données au montage du composant
+  useEffect(() => {
+    if (user) {
+      loadTrashItems();
+    }
+  }, [user?.id, loadTrashItems]);
 
   // Fonctions de gestion
-  const handleRestore = (id: string) => {
-    // Logique de restauration
-    console.log('Restaurer:', id);
+  const handleRestore = async (item: TrashItem) => {
+    try {
+      const { TrashService } = await import('@/services/trashService');
+      await TrashService.restoreItem(item.type, item.id);
+      
+      // Recharger la liste après restauration
+      await loadTrashItems();
+    } catch (err) {
+      console.error('Erreur restauration:', err);
+      setError(err instanceof Error ? err.message : 'Erreur lors de la restauration');
+    }
   };
 
-  const handlePermanentDelete = (id: string) => {
-    // Logique de suppression définitive
-    console.log('Supprimer définitivement:', id);
+  const handlePermanentDelete = async (item: TrashItem) => {
+    if (!confirm(`Êtes-vous sûr de vouloir supprimer définitivement "${item.name}" ?`)) {
+      return;
+    }
+
+    try {
+      const { TrashService } = await import('@/services/trashService');
+      await TrashService.permanentlyDeleteItem(item.type, item.id);
+      
+      // Recharger la liste après suppression
+      await loadTrashItems();
+    } catch (err) {
+      console.error('Erreur suppression:', err);
+      setError(err instanceof Error ? err.message : 'Erreur lors de la suppression');
+    }
   };
 
-  const handleEmptyTrash = () => {
-    // Logique de vidage de la corbeille
-    console.log('Vider la corbeille');
+  const handleEmptyTrash = async () => {
+    if (!confirm('Êtes-vous sûr de vouloir vider complètement la corbeille ? Cette action est irréversible.')) {
+      return;
+    }
+
+    try {
+      const { TrashService } = await import('@/services/trashService');
+      await TrashService.emptyTrash();
+      
+      // Vider la liste locale
+      setTrashItems([]);
+      setStatistics({
+        total: 0,
+        notes: 0,
+        folders: 0,
+        classeurs: 0,
+        files: 0
+      });
+    } catch (err) {
+      console.error('Erreur vidage corbeille:', err);
+      setError(err instanceof Error ? err.message : 'Erreur lors du vidage de la corbeille');
+    }
   };
 
   // Afficher l'état de chargement
   if (loading) {
-    return <PageLoading theme="trash" message="Chargement" />;
+    return <PageLoading theme="trash" message="Chargement de la corbeille..." />;
+  }
+
+  // Afficher l'erreur si elle existe
+  if (error) {
+    return (
+      <div className="error-container">
+        <div className="error-content">
+          <AlertCircle className="error-icon" />
+          <h2>Erreur</h2>
+          <p>{error}</p>
+          <button onClick={loadTrashItems} className="retry-button">
+            Réessayer
+          </button>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -96,19 +158,23 @@ function TrashPageContent() {
           </div>
           <div className="page-title-stats">
             <div className="page-title-stats-item">
-              <span className="page-title-stats-number">{stats.total}</span>
+              <span className="page-title-stats-number">{statistics.total}</span>
               <span className="page-title-stats-label">Total</span>
             </div>
             <div className="page-title-stats-item">
-              <span className="page-title-stats-number">{stats.notes}</span>
+              <span className="page-title-stats-number">{statistics.notes}</span>
               <span className="page-title-stats-label">Notes</span>
             </div>
             <div className="page-title-stats-item">
-              <span className="page-title-stats-number">{stats.folders}</span>
+              <span className="page-title-stats-number">{statistics.folders}</span>
               <span className="page-title-stats-label">Dossiers</span>
             </div>
             <div className="page-title-stats-item">
-              <span className="page-title-stats-number">{stats.files}</span>
+              <span className="page-title-stats-number">{statistics.classeurs}</span>
+              <span className="page-title-stats-label">Classeurs</span>
+            </div>
+            <div className="page-title-stats-item">
+              <span className="page-title-stats-number">{statistics.files}</span>
               <span className="page-title-stats-label">Fichiers</span>
             </div>
           </div>
@@ -147,16 +213,18 @@ function TrashPageContent() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
             >
-              {/* Liste des éléments de la corbeille */}
-              <div className="trash-items-list">
-                {trashItems.map((item) => (
-                  <TrashItemCard
-                    key={item.id}
-                    item={item}
-                    onRestore={handleRestore}
-                    onDelete={handlePermanentDelete}
-                  />
-                ))}
+              {/* Grille des éléments de la corbeille */}
+              <div className="trash-grid-container">
+                <div className="trash-grid">
+                  {trashItems.map((item) => (
+                    <TrashItemCard
+                      key={item.id}
+                      item={item}
+                      onRestore={handleRestore}
+                      onDelete={handlePermanentDelete}
+                    />
+                  ))}
+                </div>
               </div>
             </motion.div>
           )}
@@ -200,8 +268,8 @@ function TrashItemCard({
   onDelete 
 }: { 
   item: TrashItem; 
-  onRestore: (id: string) => void; 
-  onDelete: (id: string) => void; 
+  onRestore: (item: TrashItem) => void; 
+  onDelete: (item: TrashItem) => void; 
 }) {
   const getIcon = () => {
     switch (item.type) {
@@ -209,6 +277,8 @@ function TrashItemCard({
         return <FileText size={20} />;
       case 'folder':
         return <Folder size={20} />;
+      case 'classeur':
+        return <Archive size={20} />;
       case 'file':
         return <FileText size={20} />;
       default:
@@ -222,6 +292,8 @@ function TrashItemCard({
         return 'Note';
       case 'folder':
         return 'Dossier';
+      case 'classeur':
+        return 'Classeur';
       case 'file':
         return 'Fichier';
       default:
@@ -229,7 +301,8 @@ function TrashItemCard({
     }
   };
 
-  const formatDate = (date: Date) => {
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
     return new Intl.DateTimeFormat('fr-FR', {
       day: '2-digit',
       month: '2-digit',
@@ -241,14 +314,15 @@ function TrashItemCard({
 
   const getDaysUntilExpiry = () => {
     const now = new Date();
-    const diffTime = item.expiresAt.getTime() - now.getTime();
+    const expiresAt = new Date(item.expires_at);
+    const diffTime = expiresAt.getTime() - now.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays;
+    return Math.max(0, diffDays);
   };
 
   return (
     <motion.div
-      className="trash-item"
+      className="trash-grid-item"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
@@ -263,7 +337,7 @@ function TrashItemCard({
           <h4 className="trash-item-name">{item.name}</h4>
           <p className="trash-item-type">{getTypeLabel()}</p>
           <p className="trash-item-date">
-            Supprimé le {formatDate(item.deletedAt)}
+            {formatDate(item.trashed_at)}
           </p>
           <p className="trash-item-expiry">
             Expire dans {getDaysUntilExpiry()} jour{getDaysUntilExpiry() > 1 ? 's' : ''}
@@ -272,7 +346,7 @@ function TrashItemCard({
         <div className="trash-item-actions">
           <button
             className="trash-action-btn restore-btn"
-            onClick={() => onRestore(item.id)}
+            onClick={() => onRestore(item)}
             title="Restaurer"
           >
             <RotateCcw size={16} />
@@ -280,7 +354,7 @@ function TrashItemCard({
           </button>
           <button
             className="trash-action-btn delete-btn"
-            onClick={() => onDelete(item.id)}
+            onClick={() => onDelete(item)}
             title="Supprimer définitivement"
           >
             <Trash size={16} />

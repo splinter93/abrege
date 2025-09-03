@@ -14,6 +14,7 @@ export type Article = {
   html_content: string | null;
   id: string;
   insight: string | null;
+  is_in_trash: boolean | null;
   markdown_content: string | null;
   podcast_url: string | null;
   position: number | null;
@@ -24,6 +25,7 @@ export type Article = {
   source_url: string | null;
   summary: string | null;
   tags: string[] | null;
+  trashed_at: string | null;
   updated_at: string | null;
   user_id: string | null;
   view_count: number;
@@ -125,8 +127,10 @@ export type Classeur = {
   created_at: string | null;
   emoji: string | null;
   id: string;
+  is_in_trash: boolean | null;
   name: string;
   position: number;
+  trashed_at: string | null;
   user_id: string | null;
 };
 
@@ -134,10 +138,31 @@ export type Folder = {
   classeur_id: string | null;
   created_at: string | null;
   id: string;
+  is_in_trash: boolean | null;
   name: string;
   parent_id: string | null;
   position: number | null;
+  trashed_at: string | null;
   user_id: string | null;
+};
+
+// Types pour la corbeille
+export type TrashItem = {
+  id: string;
+  type: 'note' | 'folder' | 'classeur' | 'file';
+  name: string;
+  trashed_at: string;
+  expires_at: string;
+  original_path?: string;
+  size?: number;
+};
+
+export type TrashStatistics = {
+  total: number;
+  notes: number;
+  folders: number;
+  classeurs: number;
+  files: number;
 };
 
 export type User = {

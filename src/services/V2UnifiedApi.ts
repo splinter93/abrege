@@ -213,9 +213,8 @@ export class V2UnifiedApi {
       return fallbackHeaders;
     } catch (error) {
       if (process.env.NODE_ENV === 'development') {
-        logger.error(`[V2UnifiedApi] Erreur récupération headers:`, {
-          error,
-          message: error instanceof Error ? error.message : 'Erreur inconnue',
+        logger.error('API', `[V2UnifiedApi] Erreur récupération headers`, {
+          error: error instanceof Error ? error.message : 'Erreur inconnue',
           stack: error instanceof Error ? error.stack : 'Pas de stack trace'
         });
       }
@@ -425,13 +424,13 @@ export class V2UnifiedApi {
       if (!response.ok) {
         const errorText = await response.text();
         if (process.env.NODE_ENV === 'development') {
-          logger.error(`[V2UnifiedApi] ❌ Erreur HTTP:`, {
-            status: response.status,
-            statusText: response.statusText,
-            errorText,
-            containsFailedToParse: errorText.includes('Failed to parse'),
-            containsURL: errorText.includes('URL')
-          });
+                  logger.error('API', `[V2UnifiedApi] ❌ Erreur HTTP lors de la suppression de note`, {
+          status: response.status,
+          statusText: response.statusText,
+          errorText,
+          containsFailedToParse: errorText.includes('Failed to parse'),
+          containsURL: errorText.includes('URL')
+        });
         }
         
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -446,12 +445,24 @@ export class V2UnifiedApi {
         throw new Error(result.error || 'Erreur lors de la suppression de la note');
       }
 
-      // ✅ 2. Pas de polling manuel (le realtime naturel s'en charge)
-      // ✅ 3. Pas de restauration complexe (pas de modification du store)
+      // ✅ 2. Mettre à jour le store pour retirer l'élément de l'interface
+      // (l'élément est maintenant en corbeille, donc il ne doit plus être visible)
+      const { useFileSystemStore } = await import('@/store/useFileSystemStore');
+      const store = useFileSystemStore.getState();
+      
+      // Retirer la note du store
+      const { [cleanNoteId]: deletedNote, ...remainingNotes } = store.notes;
+      store.setNotes(Object.values(remainingNotes));
+      
+      if (process.env.NODE_ENV === 'development') {
+        logger.dev(`[V2UnifiedApi] 🗑️ Note retirée du store (mise en corbeille):`, {
+          noteId: cleanNoteId
+        });
+      }
 
       const duration = Date.now() - startTime;
       if (process.env.NODE_ENV === 'development') {
-        logger.dev(`[V2UnifiedApi] ✅ Suppression réussie en ${duration}ms`);
+        logger.dev(`[V2UnifiedApi] ✅ Note mise en corbeille en ${duration}ms`);
       }
       
       return {
@@ -462,18 +473,15 @@ export class V2UnifiedApi {
     } catch (error) {
       const duration = Date.now() - startTime;
       if (process.env.NODE_ENV === 'development') {
-        logger.error(`[V2UnifiedApi] 💥 Erreur complète:`, {
-          error,
-          message: error instanceof Error ? error.message : 'Erreur inconnue',
-          stack: error instanceof Error ? error.stack : 'Pas de stack trace',
-          noteId,
-          duration
-        });
+        // Convertir l'erreur en objet Error standard si ce n'est pas déjà le cas
+        const errorObj = error instanceof Error ? error : new Error(String(error));
+        
+        logger.error(`[V2UnifiedApi] 💥 Erreur complète lors de la suppression de note - ${errorObj.message}`, errorObj);
       }
       
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Erreur inconnue',
+        error: error instanceof Error ? error.message : String(error),
         duration
       };
     }
@@ -570,7 +578,7 @@ export class V2UnifiedApi {
       
       return result;
     } catch (error) {
-      logger.error('[V2UnifiedApi] ❌ Erreur mise à jour dossier:', error);
+      logger.error('API', '[V2UnifiedApi] ❌ Erreur mise à jour dossier', undefined, error instanceof Error ? error : undefined);
       throw error;
     }
   }
@@ -605,17 +613,36 @@ export class V2UnifiedApi {
         logger.dev(`[V2UnifiedApi] ✅ API terminée en ${apiTime}ms`);
       }
 
-      // ✅ 2. Pas de modification du store (le realtime naturel s'en charge)
-      // ✅ 3. Pas de polling manuel (le realtime naturel s'en charge)
+      // ✅ 2. Mettre à jour le store pour retirer l'élément de l'interface
+      // (l'élément est maintenant en corbeille, donc il ne doit plus être visible)
+      const { useFileSystemStore } = await import('@/store/useFileSystemStore');
+      const store = useFileSystemStore.getState();
+      
+      // Retirer le dossier du store
+      const { [cleanFolderId]: deletedFolder, ...remainingFolders } = store.folders;
+      store.setFolders(Object.values(remainingFolders));
+      
+      // Retirer toutes les notes de ce dossier du store
+      const remainingNotes = Object.fromEntries(
+        Object.entries(store.notes).filter(([_, note]) => note.folder_id !== cleanFolderId)
+      );
+      store.setNotes(Object.values(remainingNotes));
+      
+      if (process.env.NODE_ENV === 'development') {
+        logger.dev(`[V2UnifiedApi] 🗑️ Dossier retiré du store (mis en corbeille):`, {
+          folderId: cleanFolderId,
+          notesRetirées: Object.keys(store.notes).length - Object.keys(remainingNotes).length
+        });
+      }
       
       const totalTime = Date.now() - startTime;
       if (process.env.NODE_ENV === 'development') {
-        logger.dev(`[V2UnifiedApi] ✅ Dossier supprimé en ${totalTime}ms total`);
+        logger.dev(`[V2UnifiedApi] ✅ Dossier mis en corbeille en ${totalTime}ms total`);
       }
       
       return { success: true };
     } catch (error) {
-      logger.error('[V2UnifiedApi] ❌ Erreur suppression dossier:', error);
+      logger.error('API', '[V2UnifiedApi] ❌ Erreur suppression dossier', undefined, error instanceof Error ? error : undefined);
       throw error;
     }
   }
@@ -701,7 +728,7 @@ export class V2UnifiedApi {
 
       return result;
     } catch (error) {
-      logger.error('[V2UnifiedApi] ❌ Erreur déplacement note:', error);
+      logger.error('API', '[V2UnifiedApi] ❌ Erreur déplacement note', undefined, error instanceof Error ? error : undefined);
       throw error;
     }
   }
@@ -769,7 +796,7 @@ export class V2UnifiedApi {
       
       return result;
     } catch (error) {
-      logger.error('[V2UnifiedApi] ❌ Erreur déplacement dossier:', error);
+      logger.error('API', '[V2UnifiedApi] ❌ Erreur déplacement dossier', undefined, error instanceof Error ? error : undefined);
       throw error;
     }
   }
@@ -893,7 +920,7 @@ export class V2UnifiedApi {
         duration
       };
     } catch (error) {
-      logger.error('[V2UnifiedApi] ❌ Erreur mise à jour classeur:', error);
+      logger.error('API', '[V2UnifiedApi] ❌ Erreur mise à jour classeur', undefined, error instanceof Error ? error : undefined);
       throw error;
     }
   }
@@ -928,17 +955,42 @@ export class V2UnifiedApi {
         logger.dev(`[V2UnifiedApi] ✅ API terminée en ${apiTime}ms`);
       }
 
-      // ✅ 2. Pas de modification du store (le realtime naturel s'en charge)
-      // ✅ 3. Pas de polling manuel (le realtime naturel s'en charge)
+      // ✅ 2. Mettre à jour le store pour retirer l'élément de l'interface
+      // (l'élément est maintenant en corbeille, donc il ne doit plus être visible)
+      const { useFileSystemStore } = await import('@/store/useFileSystemStore');
+      const store = useFileSystemStore.getState();
+      
+      // Retirer le classeur du store
+      const { [cleanClasseurId]: deletedClasseur, ...remainingClasseurs } = store.classeurs;
+      store.setClasseurs(Object.values(remainingClasseurs));
+      
+      // Retirer tous les dossiers et notes de ce classeur du store
+      const remainingFolders = Object.fromEntries(
+        Object.entries(store.folders).filter(([_, folder]) => folder.classeur_id !== cleanClasseurId)
+      );
+      store.setFolders(Object.values(remainingFolders));
+      
+      const remainingNotes = Object.fromEntries(
+        Object.entries(store.notes).filter(([_, note]) => note.classeur_id !== cleanClasseurId)
+      );
+      store.setNotes(Object.values(remainingNotes));
+      
+      if (process.env.NODE_ENV === 'development') {
+        logger.dev(`[V2UnifiedApi] 🗑️ Classeur retiré du store (mis en corbeille):`, {
+          classeurId: cleanClasseurId,
+          dossiersRetirés: Object.keys(store.folders).length - Object.keys(remainingFolders).length,
+          notesRetirées: Object.keys(store.notes).length - Object.keys(remainingNotes).length
+        });
+      }
       
       const totalTime = Date.now() - startTime;
       if (process.env.NODE_ENV === 'development') {
-        logger.dev(`[V2UnifiedApi] ✅ Classeur supprimé en ${totalTime}ms total`);
+        logger.dev(`[V2UnifiedApi] ✅ Classeur mis en corbeille en ${totalTime}ms total`);
       }
       
       return { success: true };
     } catch (error) {
-      logger.error('[V2UnifiedApi] ❌ Erreur suppression classeur:', error);
+      logger.error('API', '[V2UnifiedApi] ❌ Erreur suppression classeur', undefined, error instanceof Error ? error : undefined);
       throw error;
     }
   }
@@ -979,7 +1031,7 @@ export class V2UnifiedApi {
       
       return result;
     } catch (error) {
-      logger.error('[V2UnifiedApi] ❌ Erreur ajout contenu note:', error);
+      logger.error('API', '[V2UnifiedApi] ❌ Erreur ajout contenu note', undefined, error instanceof Error ? error : undefined);
       throw error;
     }
   }
@@ -1011,7 +1063,7 @@ export class V2UnifiedApi {
       const result = await response.json();
       return result;
     } catch (error) {
-      logger.error('[V2UnifiedApi] ❌ Erreur récupération contenu note:', error);
+      logger.error('API', '[V2UnifiedApi] ❌ Erreur récupération contenu note', undefined, error instanceof Error ? error : undefined);
       throw error;
     }
   }
@@ -1063,7 +1115,7 @@ export class V2UnifiedApi {
       
       return result;
     } catch (error) {
-      logger.error('[V2UnifiedApi] ❌ Erreur récupération arbre classeur:', error);
+      logger.error('API', '[V2UnifiedApi] ❌ Erreur récupération arbre classeur', undefined, error instanceof Error ? error : undefined);
       throw error;
     }
   }
@@ -1092,7 +1144,7 @@ export class V2UnifiedApi {
       const result = await response.json();
       return result;
     } catch (error) {
-      logger.error('[V2UnifiedApi] ❌ Erreur récupération classeurs:', error);
+      logger.error('API', '[V2UnifiedApi] ❌ Erreur récupération classeurs', undefined, error instanceof Error ? error : undefined);
       throw error;
     }
   }
@@ -1132,7 +1184,7 @@ export class V2UnifiedApi {
       
       return result;
     } catch (error) {
-      logger.error('[V2UnifiedApi] ❌ Erreur réorganisation classeurs:', error);
+      logger.error('API', '[V2UnifiedApi] ❌ Erreur réorganisation classeurs', undefined, error instanceof Error ? error : undefined);
       throw error;
     }
   }
@@ -1213,7 +1265,7 @@ export class V2UnifiedApi {
       
       return { success: true, classeurs: classeursResult.classeurs };
     } catch (error) {
-      logger.error('[V2UnifiedApi] ❌ Erreur chargement classeurs avec contenu:', error);
+      logger.error('API', '[V2UnifiedApi] ❌ Erreur chargement classeurs avec contenu', undefined, error instanceof Error ? error : undefined);
       throw error;
     }
   }

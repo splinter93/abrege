@@ -1,7 +1,9 @@
 "use client";
 import React, { useState, useCallback } from "react";
 import SimpleContextMenu from "./SimpleContextMenu";
+import TrashConfirmationModal from "./TrashConfirmationModal";
 import "./ClasseurBandeau.css";
+import "./TrashConfirmationModal.css";
 
 export interface Classeur {
   id: string;
@@ -33,6 +35,12 @@ const ClasseurBandeau: React.FC<ClasseurBandeauProps> = ({
    * État pour le drag over visuel sur les icônes des classeurs
    */
   const [dragOverClasseurId, setDragOverClasseurId] = useState<string | null>(null);
+  
+  /**
+   * État pour le modal de confirmation de suppression
+   */
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [classeurToDelete, setClasseurToDelete] = useState<Classeur | null>(null);
 
   const handleContextMenu = (e: React.MouseEvent<HTMLButtonElement>, classeur: Classeur) => {
     e.preventDefault();
@@ -59,12 +67,24 @@ const ClasseurBandeau: React.FC<ClasseurBandeauProps> = ({
   };
   
   const handleDelete = () => {
-    if (contextMenu.item && onDeleteClasseur) {
-      if (window.confirm(`Voulez-vous vraiment supprimer le classeur "${contextMenu.item.name}" et tout son contenu ?`)) {
-        onDeleteClasseur(contextMenu.item.id);
-      }
+    if (contextMenu.item) {
+      setClasseurToDelete(contextMenu.item);
+      setShowDeleteModal(true);
     }
     closeContextMenu();
+  };
+
+  const handleConfirmDelete = () => {
+    if (classeurToDelete && onDeleteClasseur) {
+      onDeleteClasseur(classeurToDelete.id);
+    }
+    setShowDeleteModal(false);
+    setClasseurToDelete(null);
+  };
+
+  const handleCancelDelete = () => {
+    setShowDeleteModal(false);
+    setClasseurToDelete(null);
   };
 
   /**
@@ -163,6 +183,19 @@ const ClasseurBandeau: React.FC<ClasseurBandeauProps> = ({
         ]}
         onClose={closeContextMenu}
       />
+
+      {/* Modal de confirmation pour la suppression */}
+      {classeurToDelete && (
+        <TrashConfirmationModal
+          isOpen={showDeleteModal}
+          onClose={handleCancelDelete}
+          onConfirm={handleConfirmDelete}
+          itemType="classeur"
+          itemName={classeurToDelete.name}
+          hasChildren={true}
+          childrenCount={0} // TODO: Calculer le nombre réel d'éléments
+        />
+      )}
     </div>
   );
 };

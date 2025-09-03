@@ -375,4 +375,291 @@
     align-items: flex-start;
     gap: var(--trash-spacing-sm);
   }
+}
+
+/* ==========================================================================
+   GRILLE DES ÉLÉMENTS DE LA CORBEILLE - STYLE SIMILAIRE AUX DOSSIERS
+   ========================================================================== */
+
+/* Container pour la grille */
+.trash-grid-container {
+  width: 100%;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Grille responsive - style similaire aux dossiers */
+.trash-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: var(--trash-spacing-lg);
+  justify-items: stretch;
+  width: 100%;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Éléments de la grille - style glassmorphism épuré */
+.trash-grid-item {
+  background: transparent;
+  border: none;
+  border-radius: var(--trash-radius-lg);
+  padding: var(--trash-spacing-lg);
+  cursor: pointer;
+  transition: all var(--trash-transition-normal);
+  position: relative;
+  overflow: hidden;
+  min-height: 200px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-shadow: none;
+  max-width: 250px;
+}
+
+/* Effet de lueur subtile sur les éléments */
+.trash-grid-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.02) 0%, 
+    rgba(255, 255, 255, 0.01) 50%, 
+    rgba(255, 255, 255, 0.02) 100%);
+  opacity: 0;
+  transition: opacity var(--trash-transition-normal);
+  border-radius: var(--trash-radius-lg);
+}
+
+/* Hover des éléments - glassmorphism amélioré */
+.trash-grid-item:hover {
+  background: var(--glass-bg-light);
+  border: 1px solid var(--glass-border-hover);
+  transform: translateY(-4px);
+  box-shadow: var(--glass-shadow-medium);
+}
+
+.trash-grid-item:hover::before {
+  opacity: 1;
+}
+
+/* Contenu des éléments de grille */
+.trash-item-content {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--trash-spacing-md);
+}
+
+/* Icône dans la grille */
+.trash-item-content .trash-item-icon {
+  width: 48px;
+  height: 48px;
+  background: var(--trash-primary-light);
+  border: 1px solid var(--trash-primary);
+  border-radius: var(--trash-radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--trash-primary);
+  font-size: 24px;
+  margin-bottom: var(--trash-spacing-sm);
+}
+
+/* Détails dans la grille */
+.trash-item-content .trash-item-details {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--trash-spacing-xs);
+  width: 100%;
+}
+
+/* Nom dans la grille */
+.trash-item-content .trash-item-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--trash-text-primary);
+  margin: 0;
+  font-family: 'Noto Sans', sans-serif;
+  line-height: 1.3;
+  height: 2.6em;
+  min-height: 2.6em;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  word-break: break-word;
+}
+
+/* Type dans la grille */
+.trash-item-content .trash-item-type {
+  font-size: 12px;
+  color: var(--trash-text-secondary);
+  margin: 0;
+  font-family: 'Noto Sans', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 500;
+}
+
+/* Date dans la grille */
+.trash-item-content .trash-item-date {
+  font-size: 11px;
+  color: var(--trash-text-muted);
+  margin: 0;
+  font-family: 'Noto Sans', sans-serif;
+}
+
+/* Expiry dans la grille */
+.trash-item-content .trash-item-expiry {
+  font-size: 11px;
+  color: var(--trash-primary);
+  margin: 0;
+  font-family: 'Noto Sans', sans-serif;
+  font-weight: 500;
+}
+
+/* Actions dans la grille */
+.trash-item-content .trash-item-actions {
+  display: flex;
+  gap: var(--trash-spacing-sm);
+  width: 100%;
+  justify-content: center;
+  margin-top: var(--trash-spacing-sm);
+}
+
+/* Boutons d'action dans la grille */
+.trash-item-content .trash-action-btn {
+  padding: var(--trash-spacing-xs) var(--trash-spacing-sm);
+  border: 1px solid var(--glass-border-secondary);
+  border-radius: var(--trash-radius-sm);
+  background: var(--glass-bg-secondary);
+  color: var(--trash-text-secondary);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all var(--trash-transition-normal);
+  font-family: 'Noto Sans', sans-serif;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: 1;
+  justify-content: center;
+  min-height: 32px;
+}
+
+.trash-item-content .trash-action-btn:hover {
+  background: var(--glass-bg-hover);
+  border-color: var(--glass-border-hover);
+  color: var(--trash-text-primary);
+  transform: translateY(-1px);
+}
+
+.trash-item-content .trash-action-btn.restore-btn {
+  border-color: var(--trash-primary);
+  color: var(--trash-primary);
+}
+
+.trash-item-content .trash-action-btn.restore-btn:hover {
+  background: var(--trash-primary);
+  color: white;
+}
+
+.trash-item-content .trash-action-btn.delete-btn {
+  border-color: #dc2626;
+  color: #dc2626;
+}
+
+.trash-item-content .trash-action-btn.delete-btn:hover {
+  background: #dc2626;
+  color: white;
+}
+
+/* Animation de stagger pour les éléments de grille */
+.trash-grid .trash-grid-item:nth-child(1) { animation-delay: 0.1s; }
+.trash-grid .trash-grid-item:nth-child(2) { animation-delay: 0.2s; }
+.trash-grid .trash-grid-item:nth-child(3) { animation-delay: 0.3s; }
+.trash-grid .trash-grid-item:nth-child(4) { animation-delay: 0.4s; }
+.trash-grid .trash-grid-item:nth-child(5) { animation-delay: 0.5s; }
+.trash-grid .trash-grid-item:nth-child(6) { animation-delay: 0.6s; }
+
+/* ==========================================================================
+   RESPONSIVE DESIGN POUR LA GRILLE
+   ========================================================================== */
+
+@media (max-width: 768px) {
+  .trash-grid {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: var(--trash-spacing-md);
+  }
+  
+  .trash-grid-item {
+    min-height: 180px;
+    padding: var(--trash-spacing-md);
+    border-radius: var(--trash-radius-md);
+  }
+  
+  .trash-item-content .trash-item-icon {
+    width: 40px;
+    height: 40px;
+    font-size: 20px;
+  }
+  
+  .trash-item-content .trash-item-name {
+    font-size: 14px;
+    height: 2.4em;
+    min-height: 2.4em;
+  }
+  
+  .trash-item-content .trash-action-btn {
+    font-size: 11px;
+    padding: 6px 8px;
+    min-height: 28px;
+  }
+}
+
+@media (max-width: 480px) {
+  .trash-grid {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: var(--trash-spacing-sm);
+  }
+  
+  .trash-grid-item {
+    min-height: 160px;
+    padding: var(--trash-spacing-sm);
+  }
+  
+  .trash-item-content .trash-item-icon {
+    width: 36px;
+    height: 36px;
+    font-size: 18px;
+  }
+  
+  .trash-item-content .trash-item-name {
+    font-size: 13px;
+    height: 2.2em;
+    min-height: 2.2em;
+  }
+  
+  .trash-item-content .trash-item-actions {
+    flex-direction: column;
+    gap: 6px;
+  }
+  
+  .trash-item-content .trash-action-btn {
+    font-size: 10px;
+    padding: 4px 6px;
+    min-height: 24px;
+  }
 } 

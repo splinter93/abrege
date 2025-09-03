@@ -78,7 +78,7 @@ class Logger {
       switch (level) {
         case LogLevel.ERROR:
           // 🔧 CORRECTION : Éviter d'afficher des objets vides ou des chaînes vides
-          const errorData = data && Object.keys(data).length > 0 ? data : undefined;
+          const errorData = data && typeof data === 'object' && Object.keys(data).length > 0 ? data : undefined;
           const errorObj = error && error instanceof Error ? error : undefined;
           
           // Ne passer que les paramètres non-vides à console.error
@@ -120,13 +120,6 @@ class Logger {
 
   // Méthodes publiques
   error(category: LogCategory, message: string, data?: unknown, error?: Error): void {
-    // 🔧 DEBUG : Vérifier ce qui est reçu par la méthode error
-    console.log('🔧 DEBUG - Logger.error reçoit:', { 
-      category, 
-      message, 
-      data: JSON.stringify(data), 
-      error: error ? String(error) : 'undefined' 
-    });
     this.log(LogLevel.ERROR, category, message, data, error);
   }
 
@@ -213,7 +206,9 @@ export const simpleLogger = {
     }
   },
   error: (message: string, error?: unknown) => {
-    logger.error(LogCategory.EDITOR, message, error);
+    // Convertir l'erreur en objet Error si ce n'est pas déjà le cas
+    const errorObj = error instanceof Error ? error : (error ? new Error(String(error)) : undefined);
+    logger.error(LogCategory.EDITOR, message, undefined, errorObj);
   },
   warn: (message: string, ...args: unknown[]) => {
     logger.warn(LogCategory.EDITOR, message, args);
