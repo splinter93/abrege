@@ -125,6 +125,376 @@ body.public-note-page {
 }
 
 /* ==========================================================================
+   PADDING TITRE PAGE PUBLIQUE - AUGMENTÉ
+   ==========================================================================
+   Augmenter le padding sous le titre pour la page publique
+*/
+
+/* Titre dans la page publique (pas dans l'image) - padding augmenté */
+.public-note-content-wrapper .noteLayout-title h1 {
+  padding: 0 0 32px 0 !important; /* Augmenté de 20px à 32px */
+}
+
+/* Titre dans l'image d'en-tête - padding augmenté */
+.public-header-title h1 {
+  padding: 0 0 8px 0 !important; /* Augmenté de 4px à 8px */
+}
+
+/* ==========================================================================
+   RESPONSIVE DESIGN - MOBILE PREMIUM
+   ==========================================================================
+   Gestion responsive complète pour la page publique
+*/
+
+/* ==========================================================================
+   TABLETTE (768px et moins)
+   ========================================================================== */
+@media (max-width: 768px) {
+  /* Container principal */
+  .public-note-container {
+    padding-bottom: 32px;
+  }
+
+  /* Image d'en-tête - hauteur réduite */
+  .public-header-image {
+    height: 200px !important;
+    margin-bottom: 24px;
+  }
+
+  /* Titre dans l'image - ajustements */
+  .public-header-title {
+    max-width: 90% !important;
+    padding: 0 16px !important;
+  }
+
+  .public-header-title h1 {
+    font-size: 1.75rem !important; /* Réduit pour mobile */
+    padding: 0 0 6px 0 !important;
+    line-height: 1.2 !important;
+  }
+
+  /* Wrapper du contenu - padding latéral */
+  .public-note-content-wrapper {
+    max-width: 100% !important;
+    width: 100% !important;
+    padding: 0 16px !important;
+  }
+
+  /* Titre normal - ajustements mobile */
+  .public-note-content-wrapper .noteLayout-title h1 {
+    font-size: 1.75rem !important; /* Réduit pour mobile */
+    padding: 0 0 24px 0 !important; /* Réduit pour mobile */
+    line-height: 1.2 !important;
+  }
+
+  /* TOC - masquer sur mobile */
+  .public-toc-container {
+    display: none !important;
+  }
+
+  /* Contenu - padding ajusté */
+  .public-note-content-wrapper .noteLayout-content {
+    padding: 0 !important;
+  }
+
+  .public-note-content-wrapper .noteLayout-content .editor-content {
+    padding: 0 !important;
+  }
+
+  /* Layout principal - ajustements mobile */
+  .noteLayout {
+    flex-direction: column !important;
+    gap: 0 !important;
+  }
+
+  /* Texte du contenu - responsive */
+  .public-note-content-wrapper .editor-content {
+    font-size: 16px !important;
+    line-height: 1.6 !important;
+  }
+
+  /* Blocs de code - responsive */
+  .public-note-content-wrapper .unified-code-block {
+    margin: 16px 0 !important;
+    border-radius: 8px !important;
+  }
+
+  .public-note-content-wrapper .unified-code-block pre {
+    padding: 12px !important;
+    font-size: 14px !important;
+  }
+
+  /* Tableaux - responsive */
+  .public-note-content-wrapper table {
+    font-size: 14px !important;
+    margin: 16px 0 !important;
+  }
+
+  .public-note-content-wrapper th,
+  .public-note-content-wrapper td {
+    padding: 8px !important;
+  }
+
+  /* Blockquotes - responsive */
+  .public-note-content-wrapper blockquote {
+    margin: 16px 0 !important;
+    padding: 12px 16px !important;
+    font-size: 16px !important;
+  }
+
+  /* Mermaid - responsive */
+  .public-note-content-wrapper .mermaid-container {
+    margin: 16px 0 !important;
+    border-radius: 8px !important;
+  }
+
+  .public-note-content-wrapper .mermaid-container svg {
+    max-width: 100% !important;
+    height: auto !important;
+  }
+}
+
+/* ==========================================================================
+   MOBILE (480px et moins)
+   ========================================================================== */
+@media (max-width: 480px) {
+  /* Container principal */
+  .public-note-container {
+    padding-bottom: 24px;
+  }
+
+  /* Image d'en-tête - encore plus petite */
+  .public-header-image {
+    height: 150px !important;
+    margin-bottom: 20px;
+  }
+
+  /* Titre dans l'image - très compact */
+  .public-header-title {
+    max-width: 95% !important;
+    padding: 0 12px !important;
+  }
+
+  .public-header-title h1 {
+    font-size: 1.5rem !important; /* Encore plus petit */
+    padding: 0 0 4px 0 !important;
+    line-height: 1.15 !important;
+  }
+
+  /* Wrapper du contenu - padding réduit */
+  .public-note-content-wrapper {
+    padding: 0 12px !important;
+  }
+
+  /* Titre normal - très compact */
+  .public-note-content-wrapper .noteLayout-title h1 {
+    font-size: 1.5rem !important; /* Encore plus petit */
+    padding: 0 0 20px 0 !important; /* Réduit */
+    line-height: 1.15 !important;
+  }
+
+  /* Badge Crafted - ajustements */
+  .public-note-container .crafted-badge {
+    padding: 8px 12px !important;
+    font-size: 12px !important;
+  }
+
+  /* Texte du contenu - plus petit sur mobile */
+  .public-note-content-wrapper .editor-content {
+    font-size: 15px !important;
+    line-height: 1.5 !important;
+  }
+
+  /* Blocs de code - plus compacts */
+  .public-note-content-wrapper .unified-code-block {
+    margin: 12px 0 !important;
+    border-radius: 6px !important;
+  }
+
+  .public-note-content-wrapper .unified-code-block pre {
+    padding: 10px !important;
+    font-size: 13px !important;
+  }
+
+  /* Tableaux - plus compacts */
+  .public-note-content-wrapper table {
+    font-size: 13px !important;
+    margin: 12px 0 !important;
+  }
+
+  .public-note-content-wrapper th,
+  .public-note-content-wrapper td {
+    padding: 6px !important;
+  }
+
+  /* Blockquotes - plus compacts */
+  .public-note-content-wrapper blockquote {
+    margin: 12px 0 !important;
+    padding: 10px 12px !important;
+    font-size: 15px !important;
+  }
+
+  /* Mermaid - plus compacts */
+  .public-note-content-wrapper .mermaid-container {
+    margin: 12px 0 !important;
+    border-radius: 6px !important;
+  }
+
+  /* Headings - responsive */
+  .public-note-content-wrapper h1 {
+    font-size: 1.5rem !important;
+    line-height: 1.2 !important;
+  }
+
+  .public-note-content-wrapper h2 {
+    font-size: 1.3rem !important;
+    line-height: 1.2 !important;
+  }
+
+  .public-note-content-wrapper h3 {
+    font-size: 1.2rem !important;
+    line-height: 1.2 !important;
+  }
+
+  .public-note-content-wrapper h4,
+  .public-note-content-wrapper h5,
+  .public-note-content-wrapper h6 {
+    font-size: 1.1rem !important;
+    line-height: 1.2 !important;
+  }
+}
+
+/* ==========================================================================
+   TRÈS PETIT MOBILE (360px et moins)
+   ========================================================================== */
+@media (max-width: 360px) {
+  /* Wrapper du contenu - padding minimal */
+  .public-note-content-wrapper {
+    padding: 0 8px !important;
+  }
+
+  /* Titre dans l'image - ultra compact */
+  .public-header-title h1 {
+    font-size: 1.25rem !important;
+    padding: 0 0 2px 0 !important;
+    line-height: 1.1 !important;
+  }
+
+  /* Titre normal - ultra compact */
+  .public-note-content-wrapper .noteLayout-title h1 {
+    font-size: 1.25rem !important;
+    padding: 0 0 16px 0 !important;
+    line-height: 1.1 !important;
+  }
+
+  /* Image d'en-tête - hauteur minimale */
+  .public-header-image {
+    height: 120px !important;
+    margin-bottom: 16px;
+  }
+
+  /* Texte du contenu - ultra compact */
+  .public-note-content-wrapper .editor-content {
+    font-size: 14px !important;
+    line-height: 1.4 !important;
+  }
+
+  /* Blocs de code - ultra compacts */
+  .public-note-content-wrapper .unified-code-block {
+    margin: 10px 0 !important;
+    border-radius: 4px !important;
+  }
+
+  .public-note-content-wrapper .unified-code-block pre {
+    padding: 8px !important;
+    font-size: 12px !important;
+  }
+
+  /* Tableaux - ultra compacts */
+  .public-note-content-wrapper table {
+    font-size: 12px !important;
+    margin: 10px 0 !important;
+  }
+
+  .public-note-content-wrapper th,
+  .public-note-content-wrapper td {
+    padding: 4px !important;
+  }
+
+  /* Blockquotes - ultra compacts */
+  .public-note-content-wrapper blockquote {
+    margin: 10px 0 !important;
+    padding: 8px 10px !important;
+    font-size: 14px !important;
+  }
+
+  /* Mermaid - ultra compacts */
+  .public-note-content-wrapper .mermaid-container {
+    margin: 10px 0 !important;
+    border-radius: 4px !important;
+  }
+
+  /* Headings - ultra compacts */
+  .public-note-content-wrapper h1 {
+    font-size: 1.25rem !important;
+    line-height: 1.1 !important;
+  }
+
+  .public-note-content-wrapper h2 {
+    font-size: 1.15rem !important;
+    line-height: 1.1 !important;
+  }
+
+  .public-note-content-wrapper h3 {
+    font-size: 1.1rem !important;
+    line-height: 1.1 !important;
+  }
+
+  .public-note-content-wrapper h4,
+  .public-note-content-wrapper h5,
+  .public-note-content-wrapper h6 {
+    font-size: 1rem !important;
+    line-height: 1.1 !important;
+  }
+}
+
+/* ==========================================================================
+   LANDSCAPE MOBILE (orientation paysage)
+   ========================================================================== */
+@media (max-width: 768px) and (orientation: landscape) {
+  /* Image d'en-tête - hauteur réduite en paysage */
+  .public-header-image {
+    height: 120px !important;
+    margin-bottom: 16px;
+  }
+
+  /* Titre dans l'image - ajustements paysage */
+  .public-header-title h1 {
+    font-size: 1.5rem !important;
+    padding: 0 0 2px 0 !important;
+    line-height: 1.1 !important;
+  }
+
+  /* Titre normal - ajustements paysage */
+  .public-note-content-wrapper .noteLayout-title h1 {
+    font-size: 1.5rem !important;
+    padding: 0 0 16px 0 !important;
+    line-height: 1.1 !important;
+  }
+
+  /* Wrapper du contenu - padding réduit en paysage */
+  .public-note-content-wrapper {
+    padding: 0 12px !important;
+  }
+
+  /* Texte du contenu - ajustements paysage */
+  .public-note-content-wrapper .editor-content {
+    font-size: 15px !important;
+    line-height: 1.4 !important;
+  }
+}
+
+/* ==========================================================================
    RESPECT TOTAL DE TYPOGRAPHY.CSS
    ==========================================================================
    Aucun style pour les éléments d'image - typography.css s'en charge

@@ -5,15 +5,23 @@ import PublicTOCClient from '@/components/PublicTOCClient';
 import CraftedBadge from '@/components/CraftedBadge';
 import LogoHeader from '@/components/LogoHeader';
 import SecurityValidator from '@/components/SecurityValidator';
+import PublicMarkdownRenderer from '@/components/PublicMarkdownRenderer';
 import { supabase } from '@/supabaseClient';
 import '@/styles/public-note.css'; // CSS spécifique page publique - PRIORITÉ MAXIMALE
 import '@/styles/typography.css'; // Importer le CSS typography
 import '@/styles/design-system.css'; // Importer le design system pour les variables
+import '@/styles/markdown.css'; // Styles markdown complets
+import '@/styles/UnifiedToolbar.css'; // Styles des blocs de code et Mermaid
+import '@/components/mermaid/MermaidRenderer.css'; // Styles Mermaid pour les pages publiques
+import '@/components/mermaid/MermaidToolbar.css'; // Styles de la toolbar Mermaid
+import '@/components/mermaid/MermaidModal.css'; // Styles de la modal Mermaid
+import '@/styles/syntax-highlighting.css'; // Coloration syntaxique
 
 interface PublicNoteProps {
   note: {
     source_title: string;
     html_content: string;
+    markdown_content: string; // Ajout du contenu markdown
     header_image: string | null;
     header_image_offset: number | null;
     header_image_blur: number | null;
@@ -164,9 +172,13 @@ export default function PublicNoteContent({ note, slug }: PublicNoteProps) {
             <div className="noteLayout-content">
               <div
                 ref={contentRef}
-                className={`editor-content markdown-body ${note.font_family ? `font-${note.font_family.replace(/\s+/g, '-').toLowerCase()}` : 'font-noto-sans'}`}
-                dangerouslySetInnerHTML={{ __html: note.html_content || '' }}
-              />
+                className={`editor-content ${note.font_family ? `font-${note.font_family.replace(/\s+/g, '-').toLowerCase()}` : 'font-noto-sans'}`}
+              >
+                <PublicMarkdownRenderer 
+                  content={note.markdown_content || ''}
+                  className="markdown-body"
+                />
+              </div>
             </div>
           </div>
           {/* TOC sticky tout à droite */}
