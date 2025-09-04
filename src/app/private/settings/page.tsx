@@ -88,12 +88,18 @@ function AuthenticatedSettingsContent({ user }: { user: { id: string; email?: st
     userId: user.id
   });
 
-  // Charger les API Keys existantes
-  useEffect(() => {
-    if (user?.id) {
-      loadApiKeys();
-    }
-  }, [user?.id, loadApiKeys]);
+  // 🔧 FIX: Définir les fonctions avant de les utiliser dans useEffect
+  const getAuthToken = useCallback(async (): Promise<string> => {
+    // Récupérer le token depuis Supabase
+    const { createClient } = await import('@supabase/supabase-js');
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    );
+    
+    const { data: { session } } = await supabase.auth.getSession();
+    return session?.access_token || '';
+  }, []);
 
   const loadApiKeys = useCallback(async () => {
     try {
@@ -115,19 +121,14 @@ function AuthenticatedSettingsContent({ user }: { user: { id: string; email?: st
     } finally {
       setLoading(false);
     }
-  }, [handleError]);
+  }, [handleError, getAuthToken]);
 
-  const getAuthToken = useCallback(async (): Promise<string> => {
-    // Récupérer le token depuis Supabase
-    const { createClient } = await import('@supabase/supabase-js');
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    );
-    
-    const { data: { session } } = await supabase.auth.getSession();
-    return session?.access_token || '';
-  }, []);
+  // Charger les API Keys existantes
+  useEffect(() => {
+    if (user?.id) {
+      loadApiKeys();
+    }
+  }, [user?.id, loadApiKeys]);
 
   const handleCreateApiKey = useCallback(async () => {
     if (!newApiKeyName.trim() || !user?.id) return;
@@ -193,19 +194,21 @@ function AuthenticatedSettingsContent({ user }: { user: { id: string; email?: st
     { key: 'dossiers:write', label: 'Écriture des dossiers', description: 'Créer et modifier vos dossiers' }
   ], []);
 
-  if (authLoading) {
-    return (
-      <div className="settings-loading">
-        <div className="loading-spinner"></div>
-        <p>Chargement des réglages...</p>
-      </div>
-    );
-  }
+  // 🔧 FIX: Plus besoin de vérifier authLoading car c'est déjà fait dans le composant parent
+  // if (authLoading) {
+  //   return (
+  //     <div className="settings-loading">
+  //       <div className="loading-spinner"></div>
+  //       <p>Chargement des réglages...</p>
+  //     </div>
+  //   );
+  // }
 
   return (
     <>
       {/* Titre de la page avec design glassmorphism uniforme */}
       <motion.div 
+        key="settings-title"
         className="page-title-container-glass"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -240,6 +243,7 @@ function AuthenticatedSettingsContent({ user }: { user: { id: string; email?: st
 
       {/* Section des réglages avec navigation glassmorphism */}
       <motion.section 
+        key="settings-content"
         className="content-section-glass"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -432,7 +436,7 @@ function AuthenticatedSettingsContent({ user }: { user: { id: string; email?: st
       </motion.section>
 
       {/* Modal pour afficher la nouvelle clé */}
-      <AnimatePresence>
+      <AnimatePresence key="settings-modal">
         {showNewKeyModal && (
           <motion.div
             className="modal-overlay"
