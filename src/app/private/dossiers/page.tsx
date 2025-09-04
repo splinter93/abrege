@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { Classeur, Folder } from "@/store/useFileSystemStore";
 import ClasseurNavigation from "@/components/ClasseurNavigation";
@@ -46,16 +46,18 @@ function DossiersPageContent() {
 
 // 🔧 FIX: Composant séparé pour éviter les problèmes d'ordre des hooks
 function AuthenticatedDossiersContent({ user }: { user: AuthenticatedUser }) {
+  // 🔧 FIX: TOUS les hooks doivent être appelés dans le même ordre à chaque render
   // État pour le mode de vue
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('grid');
   
-  // Utiliser le nouveau hook unifié pour le realtime
-  const { isConnected, provider, status, triggerPolling } = useUnifiedRealtime({
-    autoInitialize: true,
-    debug: process.env.NODE_ENV === 'development'
+  // Gestionnaire d'erreur sécurisé - TOUJOURS en premier
+  const { handleError } = useSecureErrorHandler({
+    context: 'DossiersPage',
+    operation: 'gestion_dossiers',
+    userId: user.id
   });
   
-  // Appeler useDossiersPage maintenant que nous avons un user.id valide
+  // Appeler useDossiersPage - TOUJOURS en deuxième
   const {
     loading,
     error,
@@ -79,11 +81,10 @@ function AuthenticatedDossiersContent({ user }: { user: AuthenticatedUser }) {
     canRetry
   } = useDossiersPage(user.id);
   
-  // Gestionnaire d'erreur sécurisé
-  const { handleError } = useSecureErrorHandler({
-    context: 'DossiersPage',
-    operation: 'gestion_dossiers',
-    userId: user.id
+  // Utiliser le nouveau hook unifié pour le realtime - TOUJOURS en troisième
+  const { isConnected, provider, status, triggerPolling } = useUnifiedRealtime({
+    autoInitialize: true,
+    debug: process.env.NODE_ENV === 'development'
   });
   
   const activeClasseur = useMemo(
@@ -91,10 +92,8 @@ function AuthenticatedDossiersContent({ user }: { user: AuthenticatedUser }) {
     [classeurs, activeClasseurId]
   );
 
-  // 🔧 NOUVEAU: Calculer le nombre total de notes
-  const totalNotes = useMemo(() => {
-    return Object.values(useFileSystemStore.getState().notes).length;
-  }, []);
+  // 🔧 OPTIMISATION: Calculer le nombre total de notes avec sélecteur Zustand
+  const totalNotes = useFileSystemStore((state) => Object.keys(state.notes).length);
 
   // Auto-sélectionner le premier classeur si aucun n'est actif
   useEffect(() => {
@@ -123,7 +122,7 @@ function AuthenticatedDossiersContent({ user }: { user: AuthenticatedUser }) {
   }
 
   // Handlers pour la création (utilisent maintenant le service optimisé)
-  const handleCreateFolder = async () => {
+  const handleCreateFolder = useCallback(async () => {
     if (!activeClasseur || !user?.id) return;
     
     try {
@@ -140,9 +139,9 @@ function AuthenticatedDossiersContent({ user }: { user: AuthenticatedUser }) {
     } catch (e) {
       handleError(e, 'création dossier');
     }
-  };
+  }, [activeClasseur, user?.id, currentFolderId, handleError]);
 
-  const handleCreateNote = async () => {
+  const handleCreateNote = useCallback(async () => {
     if (!activeClasseur || !user?.id) return;
     
     try {
@@ -160,10 +159,10 @@ function AuthenticatedDossiersContent({ user }: { user: AuthenticatedUser }) {
     } catch (e) {
       handleError(e, 'création note');
     }
-  };
+  }, [activeClasseur, user?.id, currentFolderId, handleError]);
 
   // Handlers pour les classeurs (utilisent maintenant le service optimisé)
-  const handleCreateClasseurClick = async () => {
+  const handleCreateClasseurClick = useCallback(async () => {
     if (!user?.id) return;
     
     try {
@@ -171,9 +170,9 @@ function AuthenticatedDossiersContent({ user }: { user: AuthenticatedUser }) {
     } catch (e) {
       handleError(e, 'création classeur');
     }
-  };
+  }, [user?.id, handleCreateClasseur, handleError]);
 
-  const handleRenameClasseurClick = async (id: string, newName: string) => {
+  const handleRenameClasseurClick = useCallback(async (id: string, newName: string) => {
     if (!user?.id) return;
     
     try {
@@ -181,9 +180,9 @@ function AuthenticatedDossiersContent({ user }: { user: AuthenticatedUser }) {
     } catch (e) {
       handleError(e, 'renommage classeur');
     }
-  };
+  }, [user?.id, handleRenameClasseur, handleError]);
 
-  const handleDeleteClasseurClick = async (id: string) => {
+  const handleDeleteClasseurClick = useCallback(async (id: string) => {
     if (!user?.id) return;
     
     try {
@@ -191,15 +190,32 @@ function AuthenticatedDossiersContent({ user }: { user: AuthenticatedUser }) {
     } catch (e) {
       handleError(e, 'suppression classeur');
     }
-  };
+  }, [user?.id, handleDeleteClasseur, handleError]);
 
-  const handleFolderOpenClick = (folder: Folder) => {
+  const handleFolderOpenClick = useCallback((folder: Folder) => {
     handleFolderOpen(folder.id);
-  };
+  }, [handleFolderOpen]);
 
-  const handleToggleView = (mode: 'list' | 'grid') => {
+  const handleToggleView = useCallback((mode: 'list' | 'grid') => {
     setViewMode(mode);
-  };
+  }, []);
+
+  // 🔧 OPTIMISATION: Mémoiser la transformation des classeurs pour éviter les re-renders
+  const transformedClasseurs = useMemo(() => 
+    classeurs.map((c: Classeur) => ({ 
+      id: c.id, 
+      name: c.name, 
+      emoji: c.emoji || '📁', 
+      color: '#e55a2c'
+    })), 
+    [classeurs]
+  );
+
+  // 🔧 OPTIMISATION: Mémoiser le handler de sélection de classeur
+  const handleSelectClasseur = useCallback((id: string) => {
+    setActiveClasseurId(id);
+    setCurrentFolderId(undefined);
+  }, [setActiveClasseurId, setCurrentFolderId]);
 
   return (
     <div className="dossiers-page-wrapper">
@@ -256,17 +272,9 @@ function AuthenticatedDossiersContent({ user }: { user: AuthenticatedUser }) {
             transition={{ duration: 0.4, delay: 0.1, ease: "easeOut" }}
           >
             <ClasseurNavigation
-              classeurs={classeurs.map((c: Classeur) => ({ 
-                id: c.id, 
-                name: c.name, 
-                emoji: c.emoji || '📁', 
-                color: '#e55a2c'
-              }))}
+              classeurs={transformedClasseurs}
               activeClasseurId={activeClasseurId || null}
-              onSelectClasseur={(id) => {
-                setActiveClasseurId(id);
-                setCurrentFolderId(undefined);
-              }}
+              onSelectClasseur={handleSelectClasseur}
               onCreateClasseur={handleCreateClasseurClick}
               onRenameClasseur={handleRenameClasseurClick}
               onDeleteClasseur={handleDeleteClasseurClick}

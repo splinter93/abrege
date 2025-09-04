@@ -4,21 +4,13 @@ import { V2ResourceResolver } from './v2ResourceResolver';
 import { SlugGenerator } from './slugGenerator';
 import { SlugAndUrlService } from '@/services/slugAndUrlService';
 
-// Wrapper temporaire pour logApi pour accepter 3 arguments
+// Wrapper pour logApi pour accepter les paramètres ApiContext
 const logApi = {
-  info: (operation: string, message?: string, context?: any) => {
-    if (message) {
-      originalLogApi.info(message);
-    } else {
-      originalLogApi.info(operation);
-    }
+  info: (message: string, context?: ApiContext) => {
+    originalLogApi.info(message);
   },
-  error: (operation: string, message?: string, context?: any) => {
-    if (message) {
-      originalLogApi.error(message);
-    } else {
-      originalLogApi.error(operation);
-    }
+  error: (message: string, context?: ApiContext) => {
+    originalLogApi.error(message);
   }
 };
 
@@ -31,6 +23,14 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 // Types pour les données
+export interface ApiContext {
+  operation: string;
+  component: string;
+  userId?: string;
+  timestamp?: number;
+  [key: string]: unknown;
+}
+
 export interface CreateNoteData {
   source_title: string;
   notebook_id?: string; // ✅ Optionnel pour supporter 'notebook'
@@ -93,7 +93,7 @@ export class V2DatabaseUtils {
   /**
    * Créer une note
    */
-  static async createNote(data: CreateNoteData, userId: string, context: any) {
+  static async createNote(data: CreateNoteData, userId: string, context: ApiContext) {
           logApi.info('🚀 Création note directe DB', context);
     
     try {
@@ -122,7 +122,7 @@ export class V2DatabaseUtils {
       }
 
       // Générer un slug unique avec le client authentifié
-      const slug = await SlugGenerator.generateSlug(data.source_title, 'note', userId, undefined, client);
+      const slug = await SlugGenerator.generateSlug(data.source_title, 'note', userId, undefined, supabase);
       
       // Créer la note
       const { data: note, error: createError } = await supabase
@@ -157,7 +157,7 @@ export class V2DatabaseUtils {
   /**
    * Mettre à jour une note
    */
-  static async updateNote(ref: string, data: UpdateNoteData, userId: string, context: any) {
+  static async updateNote(ref: string, data: UpdateNoteData, userId: string, context: ApiContext) {
     logApi.info(`🚀 Mise à jour note ${ref}`, context);
     
     try {
@@ -181,7 +181,7 @@ export class V2DatabaseUtils {
       }
 
       // Préparer les données de mise à jour
-      const updateData: any = {};
+      const updateData: Record<string, unknown> = {};
       
       // 🔧 CORRECTION : Charger d'abord l'état complet de la note pour préserver les valeurs existantes
       const { data: currentNote, error: currentError } = await supabase
@@ -278,7 +278,7 @@ export class V2DatabaseUtils {
   /**
    * Supprimer une note
    */
-  static async deleteNote(ref: string, userId: string, context: any) {
+  static async deleteNote(ref: string, userId: string, context: ApiContext) {
     console.log('🚀 [V2DatabaseUtils] Début suppression note:', { ref, userId, context });
     logApi.info(`🚀 Suppression note ${ref}`, context);
     
@@ -333,7 +333,7 @@ export class V2DatabaseUtils {
   /**
    * Récupérer le contenu d'une note
    */
-  static async getNoteContent(ref: string, userId: string, context: any) {
+  static async getNoteContent(ref: string, userId: string, context: ApiContext) {
     logApi.info('🚀 Récupération contenu note directe DB', context);
     
     try {
@@ -380,7 +380,7 @@ export class V2DatabaseUtils {
   /**
    * Ajouter du contenu à une note
    */
-  static async addContentToNote(ref: string, content: string, userId: string, context: any) {
+  static async addContentToNote(ref: string, content: string, userId: string, context: ApiContext) {
     logApi.info(`🚀 Ajout contenu note directe DB`, context);
     
     try {
@@ -446,7 +446,7 @@ export class V2DatabaseUtils {
   /**
    * Déplacer une note
    */
-  static async moveNote(ref: string, targetFolderId: string | null, userId: string, context: any, targetClasseurId?: string) {
+  static async moveNote(ref: string, targetFolderId: string | null, userId: string, context: ApiContext, targetClasseurId?: string) {
     logApi.info(`🚀 Déplacement note ${ref} vers folder ${targetFolderId}`, context);
     
     try {
@@ -473,7 +473,7 @@ export class V2DatabaseUtils {
       }
 
       // Déplacer la note
-      const updateData: any = { 
+      const updateData: Record<string, unknown> = { 
         folder_id: targetFolderId,
         updated_at: new Date().toISOString()
       };
@@ -507,7 +507,7 @@ export class V2DatabaseUtils {
   /**
    * Créer un dossier
    */
-  static async createFolder(data: CreateFolderData, userId: string, context: any, supabaseClient?: any) {
+  static async createFolder(data: CreateFolderData, userId: string, context: ApiContext, supabaseClient?: any) {
     logApi.info(`🚀 Création dossier directe DB`, context);
     
     try {
@@ -548,10 +548,10 @@ export class V2DatabaseUtils {
       }
 
       // Générer un slug unique avec le client authentifié
-      const slug = await SlugGenerator.generateSlug(data.name, 'folder', userId, undefined, client);
+      const slug = await SlugGenerator.generateSlug(data.name, 'folder', userId, undefined, supabase);
       
       // Créer le dossier
-      const { data: folder, error: createError } = await client
+      const { data: folder, error: createError } = await supabase
         .from('folders')
         .insert({
           name: data.name,
@@ -579,7 +579,7 @@ export class V2DatabaseUtils {
   /**
    * Mettre à jour un dossier
    */
-  static async updateFolder(ref: string, data: UpdateFolderData, userId: string, context: any) {
+  static async updateFolder(ref: string, data: UpdateFolderData, userId: string, context: ApiContext) {
     logApi.info(`🚀 Mise à jour dossier ${ref}`, context);
     
     try {
@@ -604,7 +604,7 @@ export class V2DatabaseUtils {
       }
 
       // Préparer les données de mise à jour
-      const updateData: any = {};
+      const updateData: Record<string, unknown> = {};
       if (data.name) updateData.name = data.name;
       if (data.parent_id !== undefined) updateData.parent_id = data.parent_id;
 
@@ -670,7 +670,7 @@ export class V2DatabaseUtils {
   /**
    * Déplacer un dossier
    */
-  static async moveFolder(ref: string, targetParentId: string | null, userId: string, context: any, targetClasseurId?: string) {
+  static async moveFolder(ref: string, targetParentId: string | null, userId: string, context: ApiContext, targetClasseurId?: string) {
     logApi.info(`🚀 Déplacement dossier ${ref}`, context);
     
     try {
@@ -752,7 +752,7 @@ export class V2DatabaseUtils {
   /**
    * Supprimer un dossier
    */
-  static async deleteFolder(ref: string, userId: string, context: any) {
+  static async deleteFolder(ref: string, userId: string, context: ApiContext) {
     logApi.info(`🚀 Suppression dossier ${ref}`, context);
     
     try {
@@ -809,7 +809,7 @@ export class V2DatabaseUtils {
   /**
    * Créer un classeur
    */
-  static async createClasseur(data: CreateClasseurData, userId: string, context: any) {
+  static async createClasseur(data: CreateClasseurData, userId: string, context: ApiContext) {
     logApi.info(`🚀 Création classeur directe DB`, context);
     
     try {
@@ -846,7 +846,7 @@ export class V2DatabaseUtils {
   /**
    * Mettre à jour un classeur
    */
-  static async updateClasseur(ref: string, data: UpdateClasseurData, userId: string, context: any, userToken?: string) {
+  static async updateClasseur(ref: string, data: UpdateClasseurData, userId: string, context: ApiContext, userToken?: string) {
     logApi.info(`🚀 Mise à jour classeur ${ref}`, context);
     
     try {
@@ -886,7 +886,7 @@ export class V2DatabaseUtils {
       }
 
       // Préparer les données de mise à jour
-      const updateData: any = {};
+      const updateData: Record<string, unknown> = {};
       if (data.name) updateData.name = data.name;
       if (data.description !== undefined) updateData.description = data.description;
       if (data.icon !== undefined) updateData.emoji = data.icon;
@@ -942,7 +942,7 @@ export class V2DatabaseUtils {
   /**
    * Supprimer un classeur
    */
-  static async deleteClasseur(ref: string, userId: string, context: any) {
+  static async deleteClasseur(ref: string, userId: string, context: ApiContext) {
     logApi.info(`🚀 Suppression classeur ${ref}`, context);
     
     try {
@@ -1000,7 +1000,7 @@ export class V2DatabaseUtils {
   /**
    * Récupérer l'arbre d'un classeur
    */
-  static async getClasseurTree(notebookId: string, userId: string, context: any) {
+  static async getClasseurTree(notebookId: string, userId: string, context: ApiContext) {
     logApi.info(`🚀 Récupération arbre classeur directe DB`, context);
     
     try {
@@ -1114,7 +1114,7 @@ export class V2DatabaseUtils {
   /**
    * Réorganiser les classeurs
    */
-  static async reorderClasseurs(classeurs: Array<{ id: string; position: number }>, userId: string, context: any) {
+  static async reorderClasseurs(classeurs: Array<{ id: string; position: number }>, userId: string, context: ApiContext) {
     logApi.info(`🚀 Réorganisation classeurs directe DB`, context);
     
     try {
@@ -1174,7 +1174,7 @@ export class V2DatabaseUtils {
   /**
    * Obtenir la liste des classeurs
    */
-  static async getClasseurs(userId: string, context: any) {
+  static async getClasseurs(userId: string, context: ApiContext) {
     logApi.info(`🚀 Récupération classeurs`, context);
     
     try {
@@ -1214,7 +1214,7 @@ export class V2DatabaseUtils {
   /**
    * Insérer du contenu à une position spécifique
    */
-  static async insertContentToNote(ref: string, content: string, position: number, userId: string, context: any) {
+  static async insertContentToNote(ref: string, content: string, position: number, userId: string, context: ApiContext) {
     logApi.info(`🚀 Insertion contenu à position ${position}`, context);
     
     try {
@@ -1268,7 +1268,7 @@ export class V2DatabaseUtils {
   /**
    * Ajouter du contenu à une section spécifique
    */
-  static async addContentToSection(ref: string, sectionId: string, content: string, userId: string, context: any) {
+  static async addContentToSection(ref: string, sectionId: string, content: string, userId: string, context: ApiContext) {
     logApi.info(`🚀 Ajout contenu à section ${sectionId}`, context);
     
     try {
@@ -1321,7 +1321,7 @@ export class V2DatabaseUtils {
   /**
    * Vider une section
    */
-  static async clearSection(ref: string, sectionId: string, userId: string, context: any) {
+  static async clearSection(ref: string, sectionId: string, userId: string, context: ApiContext) {
     logApi.info(`🚀 Vidage section ${sectionId}`, context);
     
     try {
@@ -1374,7 +1374,7 @@ export class V2DatabaseUtils {
   /**
    * Supprimer une section
    */
-  static async eraseSection(ref: string, sectionId: string, userId: string, context: any) {
+  static async eraseSection(ref: string, sectionId: string, userId: string, context: ApiContext) {
     logApi.info(`🚀 Suppression section ${sectionId}`, context);
     
     try {
@@ -1427,7 +1427,7 @@ export class V2DatabaseUtils {
   /**
    * Récupérer la table des matières
    */
-  static async getTableOfContents(ref: string, userId: string, context: any) {
+  static async getTableOfContents(ref: string, userId: string, context: ApiContext) {
     logApi.info(`🚀 Récupération table des matières`, context);
     
     try {
@@ -1467,7 +1467,7 @@ export class V2DatabaseUtils {
   /**
    * Récupérer les statistiques d'une note
    */
-  static async getNoteStatistics(ref: string, userId: string, context: any) {
+  static async getNoteStatistics(ref: string, userId: string, context: ApiContext) {
     logApi.info(`🚀 Récupération statistiques`, context);
     
     try {
@@ -1517,7 +1517,7 @@ export class V2DatabaseUtils {
   /**
    * Publier une note
    */
-  static async publishNote(ref: string, visibility: 'private' | 'public' | 'link-private' | 'link-public' | 'limited' | 'scrivia', userId: string, context: any) {
+  static async publishNote(ref: string, visibility: 'private' | 'public' | 'link-private' | 'link-public' | 'limited' | 'scrivia', userId: string, context: ApiContext) {
     logApi.info(`🚀 Publication note (${visibility})`, context);
     
     try {
@@ -1555,7 +1555,7 @@ export class V2DatabaseUtils {
   /**
    * Récupérer l'arborescence d'un dossier
    */
-  static async getFolderTree(ref: string, userId: string, context: any) {
+  static async getFolderTree(ref: string, userId: string, context: ApiContext) {
     logApi.info(`🚀 Récupération arborescence dossier`, context);
     
     try {
@@ -1621,7 +1621,7 @@ export class V2DatabaseUtils {
   /**
    * Générer un slug
    */
-  static async generateSlug(text: string, type: 'note' | 'classeur' | 'folder', userId: string, context: any, supabaseClient?: any) {
+  static async generateSlug(text: string, type: 'note' | 'classeur' | 'folder', userId: string, context: ApiContext, supabaseClient?: any) {
     logApi.info(`🚀 Génération slug pour ${type}`, context);
     
     try {

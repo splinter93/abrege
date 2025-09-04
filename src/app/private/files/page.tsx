@@ -13,6 +13,7 @@ import ErrorBoundary from "@/components/ErrorBoundary";
 import AuthGuard from "@/components/AuthGuard";
 import { useSecureErrorHandler } from "@/components/SecureErrorHandler";
 import { STORAGE_CONFIG } from "@/config/storage";
+import { simpleLogger as logger } from "@/utils/logger";
 import "./index.css";
 import "./page.css"; // CSS critique pour éviter le flash
 import { motion } from "framer-motion";
@@ -29,7 +30,30 @@ export default function FilesPage() {
 }
 
 function FilesPageContent() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
+  
+  // 🔧 FIX: Gérer le cas où l'utilisateur n'est pas encore chargé AVANT d'appeler les hooks
+  if (authLoading || !user?.id) {
+    return (
+      <div className="files-page-wrapper">
+        <aside className="files-sidebar-fixed">
+          <Sidebar />
+        </aside>
+        <main className="files-content-area">
+          <div className="loading-state">
+            <p>Chargement...</p>
+          </div>
+        </main>
+      </div>
+    );
+  }
+  
+  // Maintenant on sait que user.id existe, on peut appeler tous les hooks en toute sécurité
+  return <AuthenticatedFilesContent user={user} />;
+}
+
+// 🔧 FIX: Composant séparé pour éviter les problèmes d'ordre des hooks
+function AuthenticatedFilesContent({ user }: { user: { id: string; email?: string; username?: string } }) {
   const {
     loading,
     error,
@@ -46,7 +70,7 @@ function FilesPageContent() {
   const { handleError } = useSecureErrorHandler({
     context: 'FilesPage',
     operation: 'gestion_fichiers',
-    userId: user?.id
+    userId: user.id
   });
 
   // État local pour la gestion de l'interface
@@ -141,14 +165,19 @@ function FilesPageContent() {
 
   const handleContextMenuItem = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
-    // TODO: Implémenter le menu contextuel
+    // Menu contextuel - fonctionnalité à implémenter dans une version future
+    logger.dev('[FilesPage] Menu contextuel demandé pour:', e.currentTarget);
   }, []);
 
   const handleCancelRename = useCallback(() => {
     setRenamingItemId(null);
   }, []);
 
-  const usagePercentage = quotaInfo ? Math.round((quotaInfo.usedBytes / quotaInfo.quotaBytes) * 100) : 0;
+  // 🔧 OPTIMISATION: Mémoiser le calcul du pourcentage d'utilisation
+  const usagePercentage = useMemo(() => 
+    quotaInfo ? Math.round((quotaInfo.usedBytes / quotaInfo.quotaBytes) * 100) : 0,
+    [quotaInfo]
+  );
 
   return (
     <div className="files-page-wrapper">

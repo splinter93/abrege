@@ -1,6 +1,6 @@
 "use client";
 
-import React from 'react';
+import React, { useMemo, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Trash2, Archive, Clock, AlertCircle, FileText, Folder, RotateCcw, Trash } from 'react-feather';
 import PageLoading from '@/components/PageLoading';
@@ -37,26 +37,26 @@ export default function TestTrashPage() {
     }
   ];
 
-  // Calculer les statistiques
-  const stats = {
+  // 🔧 OPTIMISATION: Mémoiser le calcul des statistiques
+  const stats = useMemo(() => ({
     total: testTrashItems.length,
     notes: testTrashItems.filter(item => item.type === 'note').length,
     folders: testTrashItems.filter(item => item.type === 'folder').length,
     files: testTrashItems.filter(item => item.type === 'file').length
-  };
+  }), [testTrashItems]);
 
-  // Fonctions de gestion
-  const handleRestore = (id: string) => {
-    console.log('🔄 Restaurer:', id);
+  // 🔧 OPTIMISATION: Mémoiser les handlers pour éviter les re-renders
+  const handleRestore = useCallback((id: string) => {
+    // Test: Restaurer élément
     alert(`Restauration de l'élément ${id}`);
-  };
+  }, []);
 
-  const handlePermanentDelete = (id: string) => {
-    console.log('🗑️ Supprimer définitivement:', id);
+  const handlePermanentDelete = useCallback((id: string) => {
+    // Test: Supprimer définitivement
     if (confirm(`Êtes-vous sûr de vouloir supprimer définitivement l'élément ${id} ?`)) {
       alert(`Suppression définitive de l'élément ${id}`);
     }
-  };
+  }, []);
 
   return (
     <>
@@ -147,12 +147,22 @@ export default function TestTrashPage() {
 }
 
 // Composant pour afficher un élément de la corbeille
+interface TestTrashItem {
+  id: string;
+  type: 'note' | 'folder' | 'file';
+  name: string;
+  deletedAt: Date;
+  expiresAt: Date;
+  size?: number;
+  originalPath: string;
+}
+
 function TrashItemCard({ 
   item, 
   onRestore, 
   onDelete 
 }: { 
-  item: any; 
+  item: TestTrashItem; 
   onRestore: (id: string) => void; 
   onDelete: (id: string) => void; 
 }) {

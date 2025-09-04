@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { logger } from '@/utils/logger';
+import { logger, LogCategory } from '@/utils/logger';
 
 /**
  * Route API pour la transcription audio avec Whisper via Groq
@@ -16,11 +16,11 @@ import { logger } from '@/utils/logger';
  */
 export async function POST(request: NextRequest) {
   try {
-    logger.info('[Whisper API] 🎤 Début de la transcription audio');
+    logger.info(LogCategory.API, '[Whisper API] 🎤 Début de la transcription audio');
     
     // Log des headers pour diagnostiquer
     const contentType = request.headers.get('content-type');
-    logger.debug('[Whisper API] 📋 Content-Type reçu:', { contentType });
+    logger.debug(LogCategory.API, '[Whisper API] 📋 Content-Type reçu:', { contentType });
 
     // Vérifier la méthode
     if (request.method !== 'POST') {
@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
 
     // Vérifier le Content-Type
     if (!contentType || !contentType.includes('multipart/form-data')) {
-      logger.error('[Whisper API] ❌ Content-Type invalide:', { contentType });
+      logger.error(LogCategory.API, '[Whisper API] ❌ Content-Type invalide:', { contentType });
       return NextResponse.json(
         { error: 'Content-Type doit être multipart/form-data' },
         { status: 400 }
@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
     
     // Log des entrées du FormData pour diagnostiquer
     const formDataEntries = Array.from(formData.entries());
-    logger.debug('[Whisper API] 📋 FormData reçu:', { 
+    logger.debug(LogCategory.API, '[Whisper API] 📋 FormData reçu:', { 
       entries: formDataEntries.map(([key, value]) => ({ 
         key, 
         valueType: typeof value,
@@ -91,7 +91,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    logger.debug(`[Whisper API] 📁 Fichier reçu: ${file.name} (${(file.size / 1024).toFixed(2)}KB)`);
+    logger.debug(LogCategory.API, `[Whisper API] 📁 Fichier reçu: ${file.name} (${(file.size / 1024).toFixed(2)}KB)`);
 
     // Préparer le FormData pour Groq
     const groqFormData = new FormData();
@@ -117,14 +117,14 @@ export async function POST(request: NextRequest) {
     // Appel à l'API Groq
     const groqApiKey = process.env.GROQ_API_KEY;
     if (!groqApiKey) {
-      logger.error('[Whisper API] ❌ GROQ_API_KEY non configurée');
+      logger.error(LogCategory.API, '[Whisper API] ❌ GROQ_API_KEY non configurée');
       return NextResponse.json(
         { error: 'Configuration API manquante' },
         { status: 500 }
       );
     }
 
-    logger.debug(`[Whisper API] 🚀 Appel à Groq avec modèle: ${model}`);
+    logger.debug(LogCategory.API, `[Whisper API] 🚀 Appel à Groq avec modèle: ${model}`);
 
     const response = await fetch('https://api.groq.com/openai/v1/audio/transcriptions', {
       method: 'POST',
@@ -136,7 +136,7 @@ export async function POST(request: NextRequest) {
 
     if (!response.ok) {
       const errorText = await response.text();
-      logger.error(`[Whisper API] ❌ Erreur Groq: ${response.status} - ${errorText}`);
+      logger.error(LogCategory.API, `[Whisper API] ❌ Erreur Groq: ${response.status} - ${errorText}`);
       
       return NextResponse.json(
         { 
@@ -155,14 +155,14 @@ export async function POST(request: NextRequest) {
       // Pour le format 'text', l'API retourne directement du texte
       const text = await response.text();
       result = { text: text.trim() };
-      logger.debug('[Whisper API] 📄 Texte reçu:', { text: text.trim() });
+      logger.debug(LogCategory.API, '[Whisper API] 📄 Texte reçu:', { text: text.trim() });
     } else {
       // Pour les formats JSON, parser la réponse
       result = await response.json();
-      logger.debug('[Whisper API] 📄 JSON reçu:', result);
+      logger.debug(LogCategory.API, '[Whisper API] 📄 JSON reçu:', result);
     }
     
-    logger.info('[Whisper API] ✅ Transcription réussie');
+    logger.info(LogCategory.API, '[Whisper API] ✅ Transcription réussie');
     
     // Retourner le résultat
     return NextResponse.json({
@@ -178,8 +178,8 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    logger.error('[Whisper API] ❌ Erreur inattendue:', error);
-    logger.error('[Whisper API] ❌ Stack trace:', { stack: error instanceof Error ? error.stack : 'Pas de stack trace' });
+    logger.error(LogCategory.API, '[Whisper API] ❌ Erreur inattendue:', error);
+    logger.error(LogCategory.API, '[Whisper API] ❌ Stack trace:', { stack: error instanceof Error ? error.stack : 'Pas de stack trace' });
     
     return NextResponse.json(
       { 

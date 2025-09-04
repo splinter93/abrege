@@ -1,4 +1,4 @@
-// import.*console.*from '@/utils/logger';
+import { simpleLogger as logger } from '@/utils/logger';
 
 /**
  * Représente un appel d'outil en cours de parsing.
@@ -36,7 +36,7 @@ function safeParseArgs(raw: string): Record<string, unknown> | undefined {
   }
 
   // 🔧 AMÉLIORATION: Détecter et corriger les JSON malformés
-  console.dev(`[ToolCallsParser] 🔍 Parsing arguments bruts: ${candidate.substring(0, 200)}...`);
+  logger.dev(`[ToolCallsParser] 🔍 Parsing arguments bruts: ${candidate.substring(0, 200)}...`);
 
   // Gère les cas où les arguments sont une chaîne JSON échappée
   if (candidate.startsWith('"') && candidate.endsWith('"')) {
@@ -49,7 +49,7 @@ function safeParseArgs(raw: string): Record<string, unknown> | undefined {
 
   // 🔧 NOUVEAU: Détecter les JSON malformés avec duplication
   if (candidate.includes('}{')) {
-    console.dev(`[ToolCallsParser] ⚠️ JSON malformé détecté avec duplication`);
+    logger.dev(`[ToolCallsParser] ⚠️ JSON malformé détecté avec duplication`);
     
     // Essayer de récupérer le premier objet JSON valide
     const firstBrace = candidate.indexOf('{');
@@ -59,7 +59,7 @@ function safeParseArgs(raw: string): Record<string, unknown> | undefined {
       const potentialJson = candidate.substring(firstBrace, lastBrace + 1);
       try {
         const parsed = JSON.parse(potentialJson);
-        console.dev(`[ToolCallsParser] ✅ JSON récupéré après nettoyage:`, parsed);
+        logger.dev(`[ToolCallsParser] ✅ JSON récupéré après nettoyage:`, parsed);
         return parsed;
       } catch (error) {
         console.error(`[ToolCallsParser] ❌ Impossible de parser le JSON nettoyé:`, error);
@@ -69,7 +69,7 @@ function safeParseArgs(raw: string): Record<string, unknown> | undefined {
 
   // 🔧 NOUVEAU: Détecter les arguments avec des objets concaténés
   if (candidate.includes(',{"')) {
-    console.dev(`[ToolCallsParser] ⚠️ Arguments avec objets concaténés détectés`);
+    logger.dev(`[ToolCallsParser] ⚠️ Arguments avec objets concaténés détectés`);
     
     // Essayer de récupérer le premier objet JSON
     const firstBrace = candidate.indexOf('{');
@@ -79,7 +79,7 @@ function safeParseArgs(raw: string): Record<string, unknown> | undefined {
       const potentialJson = candidate.substring(firstBrace, firstClosingBrace + 1);
       try {
         const parsed = JSON.parse(potentialJson);
-        console.dev(`[ToolCallsParser] ✅ Premier objet JSON récupéré:`, parsed);
+        logger.dev(`[ToolCallsParser] ✅ Premier objet JSON récupéré:`, parsed);
         return parsed;
       } catch (error) {
         console.error(`[ToolCallsParser] ❌ Impossible de parser le premier objet:`, error);
@@ -97,7 +97,7 @@ function safeParseArgs(raw: string): Record<string, unknown> | undefined {
 
   try {
     const parsed = JSON.parse(candidate);
-    console.dev(`[ToolCallsParser] ✅ Arguments parsés avec succès:`, parsed);
+    logger.dev(`[ToolCallsParser] ✅ Arguments parsés avec succès:`, parsed);
     return parsed;
   } catch (error) {
     console.error(`[ToolCallsParser] ❌ safeParseArgs a échoué pour: ${candidate}`, error);
@@ -217,7 +217,8 @@ export class ToolCallsParser {
    * @param chunk Le chunk de réponse de l'API.
    */
   feed(chunk: unknown): void {
-    const delta = chunk?.choices?.[0]?.delta;
+    const chunkObj = chunk as { choices?: Array<{ delta?: any }> };
+    const delta = chunkObj?.choices?.[0]?.delta;
     if (!delta) return;
 
     // 1. Accumuler le contenu textuel (PRIORITÉ)
@@ -226,16 +227,16 @@ export class ToolCallsParser {
     }
 
     // 2. Accumuler le reasoning (SECONDAIRE - seulement pour les modèles qui le supportent)
-    if (typeof (delta as unknown).reasoning_content === 'string') {
-      this.reasoningBuffer += (delta as unknown).reasoning_content;
-    } else if (typeof (delta as unknown).reasoning === 'string') {
-      this.reasoningBuffer += (delta as unknown).reasoning;
+    if (typeof delta.reasoning_content === 'string') {
+      this.reasoningBuffer += delta.reasoning_content;
+    } else if (typeof delta.reasoning === 'string') {
+      this.reasoningBuffer += delta.reasoning;
     }
 
     // 3. Traiter les tool_calls
     if (Array.isArray(delta.tool_calls)) {
-      delta.tool_calls.forEach((toolCallChunk: unknown) => {
-        // let index = [^;]+;
+      delta.tool_calls.forEach((toolCallChunk: any) => {
+        const index = toolCallChunk.index;
         if (typeof index !== 'number') return;
 
         let call = this.toolCallMap.get(index);

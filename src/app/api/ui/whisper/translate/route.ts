@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { logger } from '@/utils/logger';
+import { logger, LogCategory } from '@/utils/logger';
 
 /**
  * Route API pour la traduction audio avec Whisper via Groq
@@ -15,7 +15,7 @@ import { logger } from '@/utils/logger';
  */
 export async function POST(request: NextRequest) {
   try {
-    logger.info('[Whisper API] 🌍 Début de la traduction audio');
+    logger.info(LogCategory.API, '[Whisper API] 🌍 Début de la traduction audio');
 
     // Vérifier la méthode
     if (request.method !== 'POST') {
@@ -63,7 +63,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    logger.debug(`[Whisper API] 📁 Fichier reçu: ${file.name} (${(file.size / 1024).toFixed(2)}KB)`);
+    logger.debug(LogCategory.API, `[Whisper API] 📁 Fichier reçu: ${file.name} (${(file.size / 1024).toFixed(2)}KB)`);
 
     // Préparer le FormData pour Groq
     const groqFormData = new FormData();
@@ -85,14 +85,14 @@ export async function POST(request: NextRequest) {
     // Appel à l'API Groq
     const groqApiKey = process.env.GROQ_API_KEY;
     if (!groqApiKey) {
-      logger.error('[Whisper API] ❌ GROQ_API_KEY non configurée');
+      logger.error(LogCategory.API, '[Whisper API] ❌ GROQ_API_KEY non configurée');
       return NextResponse.json(
         { error: 'Configuration API manquante' },
         { status: 500 }
       );
     }
 
-    logger.debug(`[Whisper API] 🚀 Appel à Groq avec modèle: ${model}`);
+    logger.debug(LogCategory.API, `[Whisper API] 🚀 Appel à Groq avec modèle: ${model}`);
 
     const response = await fetch('https://api.groq.com/openai/v1/audio/translations', {
       method: 'POST',
@@ -104,7 +104,7 @@ export async function POST(request: NextRequest) {
 
     if (!response.ok) {
       const errorText = await response.text();
-      logger.error(`[Whisper API] ❌ Erreur Groq: ${response.status} - ${errorText}`);
+      logger.error(LogCategory.API, `[Whisper API] ❌ Erreur Groq: ${response.status} - ${errorText}`);
       
       return NextResponse.json(
         { 
@@ -118,7 +118,7 @@ export async function POST(request: NextRequest) {
 
     const result = await response.json();
     
-    logger.info('[Whisper API] ✅ Traduction réussie');
+    logger.info(LogCategory.API, '[Whisper API] ✅ Traduction réussie');
     
     // Retourner le résultat
     return NextResponse.json({
@@ -134,7 +134,7 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    logger.error('[Whisper API] ❌ Erreur inattendue:', error);
+    logger.error(LogCategory.API, '[Whisper API] ❌ Erreur inattendue:', error);
     
     return NextResponse.json(
       { 

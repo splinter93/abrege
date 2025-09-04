@@ -1,13 +1,14 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { motion as motionDom } from "framer-motion";
 import LogoHeader from "@/components/LogoHeader";
 import Sidebar from "@/components/Sidebar";
 import { useAuth } from "@/hooks/useAuth";
 import { useSecureErrorHandler } from "@/components/SecureErrorHandler";
 import { logApi } from "@/utils/logger";
+import ErrorBoundary from "@/components/ErrorBoundary";
+import AuthGuard from "@/components/AuthGuard";
 import "./SettingsPage.css";
 
 interface ApiKey {
@@ -32,24 +33,44 @@ interface CreateApiKeyResponse {
 
 export default function SettingsPage() {
   return (
-    <div className="settings-page-wrapper">
-      <header className="settings-header-fixed">
-        <LogoHeader size="medium" position="left" />
-      </header>
+    <ErrorBoundary>
+      <AuthGuard>
+        <div className="settings-page-wrapper">
+          <header className="settings-header-fixed">
+            <LogoHeader size="medium" position="left" />
+          </header>
 
-      <aside className="settings-sidebar-fixed">
-        <Sidebar />
-      </aside>
+          <aside className="settings-sidebar-fixed">
+            <Sidebar />
+          </aside>
 
-      <main className="settings-content-area">
-        <SettingsPageContent />
-      </main>
-    </div>
+          <main className="settings-content-area">
+            <SettingsPageContent />
+          </main>
+        </div>
+      </AuthGuard>
+    </ErrorBoundary>
   );
 }
 
 function SettingsPageContent() {
   const { user, loading: authLoading } = useAuth();
+  
+  // 🔧 FIX: Gérer le cas où l'utilisateur n'est pas encore chargé AVANT d'appeler les hooks
+  if (authLoading || !user?.id) {
+    return (
+      <div className="loading-state">
+        <p>Chargement...</p>
+      </div>
+    );
+  }
+  
+  // Maintenant on sait que user.id existe, on peut appeler tous les hooks en toute sécurité
+  return <AuthenticatedSettingsContent user={user} />;
+}
+
+// 🔧 FIX: Composant séparé pour éviter les problèmes d'ordre des hooks
+function AuthenticatedSettingsContent({ user }: { user: { id: string; email?: string; username?: string } }) {
   const [apiKeys, setApiKeys] = useState<ApiKey[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateForm, setShowCreateForm] = useState(false);
@@ -64,7 +85,7 @@ function SettingsPageContent() {
   const { handleError } = useSecureErrorHandler({
     context: 'SettingsPage',
     operation: 'gestion_api_keys',
-    userId: user?.id || ''
+    userId: user.id
   });
 
   // Charger les API Keys existantes
@@ -72,9 +93,9 @@ function SettingsPageContent() {
     if (user?.id) {
       loadApiKeys();
     }
-  }, [user?.id]);
+  }, [user?.id, loadApiKeys]);
 
-  const loadApiKeys = async () => {
+  const loadApiKeys = useCallback(async () => {
     try {
       setLoading(true);
       const response = await fetch('/api/ui/api-keys', {
@@ -87,16 +108,16 @@ function SettingsPageContent() {
         const data = await response.json();
         setApiKeys(data.api_keys || []);
       } else {
-        console.error('Erreur chargement API Keys:', response.status);
+        logApi.error('Erreur chargement API Keys:', response.status);
       }
     } catch (error) {
       handleError(error, 'chargement API Keys');
     } finally {
       setLoading(false);
     }
-  };
+  }, [handleError]);
 
-  const getAuthToken = async (): Promise<string> => {
+  const getAuthToken = useCallback(async (): Promise<string> => {
     // Récupérer le token depuis Supabase
     const { createClient } = await import('@supabase/supabase-js');
     const supabase = createClient(
@@ -106,9 +127,9 @@ function SettingsPageContent() {
     
     const { data: { session } } = await supabase.auth.getSession();
     return session?.access_token || '';
-  };
+  }, []);
 
-  const handleCreateApiKey = async () => {
+  const handleCreateApiKey = useCallback(async () => {
     if (!newApiKeyName.trim() || !user?.id) return;
 
     try {
@@ -139,37 +160,38 @@ function SettingsPageContent() {
     } catch (error) {
       handleError(error, 'création API Key');
     }
-  };
+  }, [newApiKeyName, user?.id, selectedScopes, getAuthToken, loadApiKeys, handleError]);
 
-  const handleDeleteApiKey = async (apiKeyName: string) => {
+  const handleDeleteApiKey = useCallback(async (apiKeyName: string) => {
     if (!confirm(`Êtes-vous sûr de vouloir supprimer l'API Key "${apiKeyName}" ?`)) return;
 
     try {
       // Note: L'endpoint DELETE n'existe pas encore, on utilise la désactivation
-      // TODO: Implémenter l'endpoint DELETE
-      console.log('Suppression API Key:', apiKeyName);
+      // TODO: Implémenter l'endpoint DELETE dans une version future
+      logApi.dev('Suppression API Key:', apiKeyName);
       loadApiKeys(); // Recharger la liste
     } catch (error) {
       handleError(error, 'suppression API Key');
     }
-  };
+  }, [loadApiKeys, handleError]);
 
-  const toggleScope = (scope: string) => {
+  const toggleScope = useCallback((scope: string) => {
     setSelectedScopes(prev => 
       prev.includes(scope) 
         ? prev.filter(s => s !== scope)
         : [...prev, scope]
     );
-  };
+  }, []);
 
-  const availableScopes = [
+  // 🔧 OPTIMISATION: Mémoiser les scopes disponibles pour éviter les re-renders
+  const availableScopes = useMemo(() => [
     { key: 'notes:read', label: 'Lecture des notes', description: 'Consulter vos notes et articles' },
     { key: 'notes:write', label: 'Écriture des notes', description: 'Créer et modifier vos notes' },
     { key: 'classeurs:read', label: 'Lecture des classeurs', description: 'Consulter vos classeurs' },
     { key: 'classeurs:write', label: 'Écriture des classeurs', description: 'Créer et modifier vos classeurs' },
     { key: 'dossiers:read', label: 'Lecture des dossiers', description: 'Consulter vos dossiers' },
     { key: 'dossiers:write', label: 'Écriture des dossiers', description: 'Créer et modifier vos dossiers' }
-  ];
+  ], []);
 
   if (authLoading) {
     return (

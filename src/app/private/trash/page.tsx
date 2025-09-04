@@ -8,19 +8,42 @@ import type { AuthenticatedUser } from '@/types/dossiers';
 import type { TrashItem, TrashStatistics } from '@/types/supabase';
 import AuthGuard from '@/components/AuthGuard';
 import PageLoading from '@/components/PageLoading';
+import ErrorBoundary from '@/components/ErrorBoundary';
+import { useSecureErrorHandler } from '@/components/SecureErrorHandler';
+import { simpleLogger as logger } from '@/utils/logger';
 
 import './index.css';
 
 export default function TrashPage() {
   return (
-    <AuthGuard>
-      <TrashPageContent />
-    </AuthGuard>
+    <ErrorBoundary>
+      <AuthGuard>
+        <TrashPageContent />
+      </AuthGuard>
+    </ErrorBoundary>
   );
 }
 
 function TrashPageContent() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
+  
+  // 🔧 FIX: Gérer le cas où l'utilisateur n'est pas encore chargé AVANT d'appeler les hooks
+  if (authLoading || !user?.id) {
+    return <PageLoading message="Vérification de l'authentification..." />;
+  }
+  
+  // Maintenant on sait que user.id existe, on peut appeler tous les hooks en toute sécurité
+  return <AuthenticatedTrashContent user={user} />;
+}
+
+// 🔧 FIX: Composant séparé pour éviter les problèmes d'ordre des hooks
+function AuthenticatedTrashContent({ user }: { user: AuthenticatedUser }) {
+  // Gestionnaire d'erreur sécurisé
+  const { handleError } = useSecureErrorHandler({
+    context: 'TrashPage',
+    operation: 'gestion_corbeille',
+    userId: user.id
+  });
   
   // État pour la gestion de la corbeille
   const [trashItems, setTrashItems] = useState<TrashItem[]>([]);
@@ -48,7 +71,8 @@ function TrashPageContent() {
       setTrashItems(data.items);
       setStatistics(data.statistics);
     } catch (err) {
-      console.error('Erreur chargement corbeille:', err);
+      logger.error('[TrashPage] Erreur chargement corbeille:', err);
+      handleError(err, 'chargement corbeille');
       setError(err instanceof Error ? err.message : 'Erreur inconnue');
     } finally {
       setLoading(false);
@@ -63,52 +87,54 @@ function TrashPageContent() {
   }, [user?.id, loadTrashItems]);
 
   // Fonctions de gestion
-  const handleRestore = async (item: TrashItem) => {
-    console.log('🔄 RESTAURATION DÉBUT - Élément:', item);
-    console.log('🔄 RESTAURATION - Type:', item.type, 'ID:', item.id);
+  const handleRestore = useCallback(async (item: TrashItem) => {
+    logger.dev('[TrashPage] 🔄 RESTAURATION DÉBUT - Élément:', item);
+    logger.dev('[TrashPage] 🔄 RESTAURATION - Type:', item.type, 'ID:', item.id);
     try {
-      console.log('🔄 RESTAURATION - Import TrashService...');
+      logger.dev('[TrashPage] 🔄 RESTAURATION - Import TrashService...');
       const { TrashService } = await import('@/services/trashService');
-      console.log('🔄 RESTAURATION - Appel TrashService.restoreItem...');
+      logger.dev('[TrashPage] 🔄 RESTAURATION - Appel TrashService.restoreItem...');
       await TrashService.restoreItem(item.type, item.id);
       
-      console.log('✅ RESTAURATION - Élément restauré avec succès');
+      logger.dev('[TrashPage] ✅ RESTAURATION - Élément restauré avec succès');
       // Recharger la liste après restauration
-      console.log('🔄 RESTAURATION - Rechargement de la liste...');
+      logger.dev('[TrashPage] 🔄 RESTAURATION - Rechargement de la liste...');
       await loadTrashItems();
-      console.log('✅ RESTAURATION - Liste rechargée');
+      logger.dev('[TrashPage] ✅ RESTAURATION - Liste rechargée');
     } catch (err) {
-      console.error('❌ RESTAURATION - Erreur:', err);
+      logger.error('[TrashPage] ❌ RESTAURATION - Erreur:', err);
+      handleError(err, 'restauration élément');
       setError(err instanceof Error ? err.message : 'Erreur lors de la restauration');
     }
-  };
+  }, [loadTrashItems, handleError]);
 
-  const handlePermanentDelete = async (item: TrashItem) => {
-    console.log('🗑️ SUPPRESSION DÉBUT - Élément:', item);
-    console.log('🗑️ SUPPRESSION - Type:', item.type, 'ID:', item.id);
+  const handlePermanentDelete = useCallback(async (item: TrashItem) => {
+    logger.dev('[TrashPage] 🗑️ SUPPRESSION DÉBUT - Élément:', item);
+    logger.dev('[TrashPage] 🗑️ SUPPRESSION - Type:', item.type, 'ID:', item.id);
     if (!confirm(`Êtes-vous sûr de vouloir supprimer définitivement "${item.name}" ?`)) {
-      console.log('❌ SUPPRESSION - Annulée par l\'utilisateur');
+      logger.dev('[TrashPage] ❌ SUPPRESSION - Annulée par l\'utilisateur');
       return;
     }
 
     try {
-      console.log('🗑️ SUPPRESSION - Import TrashService...');
+      logger.dev('[TrashPage] 🗑️ SUPPRESSION - Import TrashService...');
       const { TrashService } = await import('@/services/trashService');
-      console.log('🗑️ SUPPRESSION - Appel TrashService.permanentlyDeleteItem...');
+      logger.dev('[TrashPage] 🗑️ SUPPRESSION - Appel TrashService.permanentlyDeleteItem...');
       await TrashService.permanentlyDeleteItem(item.type, item.id);
       
-      console.log('✅ SUPPRESSION - Élément supprimé définitivement avec succès');
+      logger.dev('[TrashPage] ✅ SUPPRESSION - Élément supprimé définitivement avec succès');
       // Recharger la liste après suppression
-      console.log('🗑️ SUPPRESSION - Rechargement de la liste...');
+      logger.dev('[TrashPage] 🗑️ SUPPRESSION - Rechargement de la liste...');
       await loadTrashItems();
-      console.log('✅ SUPPRESSION - Liste rechargée');
+      logger.dev('[TrashPage] ✅ SUPPRESSION - Liste rechargée');
     } catch (err) {
-      console.error('❌ SUPPRESSION - Erreur:', err);
+      logger.error('[TrashPage] ❌ SUPPRESSION - Erreur:', err);
+      handleError(err, 'suppression définitive');
       setError(err instanceof Error ? err.message : 'Erreur lors de la suppression');
     }
-  };
+  }, [loadTrashItems, handleError]);
 
-  const handleEmptyTrash = async () => {
+  const handleEmptyTrash = useCallback(async () => {
     if (!confirm('Êtes-vous sûr de vouloir vider complètement la corbeille ? Cette action est irréversible.')) {
       return;
     }
@@ -127,10 +153,11 @@ function TrashPageContent() {
         files: 0
       });
     } catch (err) {
-      console.error('Erreur vidage corbeille:', err);
+      logger.error('[TrashPage] Erreur vidage corbeille:', err);
+      handleError(err, 'vidage corbeille');
       setError(err instanceof Error ? err.message : 'Erreur lors du vidage de la corbeille');
     }
-  };
+  }, [handleError]);
 
   // Afficher l'état de chargement
   if (loading) {
@@ -380,7 +407,7 @@ function TrashItemCard({
           <button
             className="trash-action-btn restore-btn"
             onClick={() => {
-              console.log('🔄 Bouton Restaurer cliqué pour:', item);
+              logger.dev('[TrashPage] 🔄 Bouton Restaurer cliqué pour:', item);
               onRestore(item);
             }}
             title="Restaurer"
@@ -391,7 +418,7 @@ function TrashItemCard({
           <button
             className="trash-action-btn delete-btn"
             onClick={() => {
-              console.log('🗑️ Bouton Supprimer cliqué pour:', item);
+              logger.dev('[TrashPage] 🗑️ Bouton Supprimer cliqué pour:', item);
               onDelete(item);
             }}
             title="Supprimer définitivement"

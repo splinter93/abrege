@@ -1,10 +1,14 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'next/navigation';
 import Sidebar from '@/components/Sidebar';
 import LogoHeader from '@/components/LogoHeader';
+import ErrorBoundary from '@/components/ErrorBoundary';
+import AuthGuard from '@/components/AuthGuard';
+import { useSecureErrorHandler } from '@/components/SecureErrorHandler';
+import { simpleLogger as logger } from '@/utils/logger';
 import { Book, FileText, MessageSquare, Plus, Search, Upload, Link as LinkIcon, Sparkles, FolderOpen, Clock, TrendingUp, Zap, Eye, X } from 'lucide-react';
 import RecentActivityPrivate from '@/components/RecentActivityPrivate';
 import PerformanceMonitor from '@/components/PerformanceMonitor';
@@ -34,7 +38,7 @@ const CreateNoteModal = ({ isOpen, onClose, onCreateNote }: {
       setNoteTitle('');
       onClose();
     } catch (error) {
-      console.error('Erreur création note:', error);
+      logger.error('[HomePage] Erreur création note:', error);
       setError('Une erreur est survenue lors de la création de la note. Veuillez réessayer.');
     } finally {
       setIsLoading(false);
@@ -127,7 +131,35 @@ const CreateNoteModal = ({ isOpen, onClose, onCreateNote }: {
 };
 
 export default function HomePage() {
-  const { user, loading } = useAuth();
+  return (
+    <ErrorBoundary>
+      <AuthGuard>
+        <HomePageContent />
+      </AuthGuard>
+    </ErrorBoundary>
+  );
+}
+
+function HomePageContent() {
+  const { user, loading: authLoading } = useAuth();
+  
+  // 🔧 FIX: Gérer le cas où l'utilisateur n'est pas encore chargé AVANT d'appeler les hooks
+  if (authLoading || !user?.id) {
+    return (
+      <div className="home-page-wrapper">
+        <div className="loading-state">
+          <p>Chargement...</p>
+        </div>
+      </div>
+    );
+  }
+  
+  // Maintenant on sait que user.id existe, on peut appeler tous les hooks en toute sécurité
+  return <AuthenticatedHomeContent user={user} />;
+}
+
+// 🔧 FIX: Composant séparé pour éviter les problèmes d'ordre des hooks
+function AuthenticatedHomeContent({ user }: { user: { id: string; email?: string; username?: string } }) {
   const router = useRouter();
   const [isDragOver, setIsDragOver] = useState(false);
   const [urlInput, setUrlInput] = useState('');
@@ -135,50 +167,57 @@ export default function HomePage() {
   const [isSearching, setIsSearching] = useState(false);
   const [isCreateNoteModalOpen, setIsCreateNoteModalOpen] = useState(false);
 
-  const handleDragOver = (e: React.DragEvent) => {
+  // Gestionnaire d'erreur sécurisé
+  const { handleError } = useSecureErrorHandler({
+    context: 'HomePage',
+    operation: 'dashboard_actions',
+    userId: user.id
+  });
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     setIsDragOver(true);
-  };
+  }, []);
 
-  const handleDragLeave = (e: React.DragEvent) => {
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     setIsDragOver(false);
-  };
+  }, []);
 
-  const handleDrop = (e: React.DragEvent) => {
+  const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     setIsDragOver(false);
     const files = Array.from(e.dataTransfer.files);
     if (files.length > 0) {
-      console.log('Fichiers déposés:', files);
-      // TODO: Traiter les fichiers
+      logger.dev('[HomePage] Fichiers déposés:', files);
+      // TODO: Traiter les fichiers dans une version future
     }
-  };
+  }, []);
 
-  const handleUrlSubmit = () => {
+  const handleUrlSubmit = useCallback(() => {
     if (urlInput.trim()) {
-      console.log('URL saisie:', urlInput);
+      logger.dev('[HomePage] URL saisie:', urlInput);
       setUrlInput('');
-      // TODO: Traiter l'URL
+      // TODO: Traiter l'URL dans une version future
     }
-  };
+  }, [urlInput]);
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
+  const handleKeyPress = useCallback((e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
       handleUrlSubmit();
     }
-  };
+  }, [handleUrlSubmit]);
 
-  const handleSearch = (e: React.FormEvent) => {
+  const handleSearch = useCallback((e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
       setIsSearching(true);
-      // TODO: Implémenter la recherche
+      // TODO: Implémenter la recherche dans une version future
       setTimeout(() => setIsSearching(false), 2000);
     }
-  };
+  }, [searchQuery]);
 
-  const handleCreateNote = async (title: string) => {
+  const handleCreateNote = useCallback(async (title: string) => {
     if (!user) {
       throw new Error('Utilisateur non connecté');
     }
@@ -188,58 +227,27 @@ export default function HomePage() {
       // L'utilisateur pourra créer la note dans le contexte approprié
       router.push('/private/dossiers');
     } catch (error) {
-      console.error('Erreur lors de la création de la note:', error);
+      logger.error('[HomePage] Erreur lors de la création de la note:', error);
+      handleError(error, 'création note');
       throw error; // Remonter l'erreur pour l'afficher dans le modal
     }
-  };
+  }, [user, router, handleError]);
 
-  const handleOpenChat = () => {
+  const handleOpenChat = useCallback(() => {
     router.push('/chat');
-  };
+  }, [router]);
 
-  if (loading) {
-    return (
-      <div className="home-loading">
-        <div className="loading-spinner"></div>
-        <p>Chargement...</p>
-      </div>
-    );
-  }
+  // 🔧 FIX: Plus besoin de vérifier loading et user car c'est déjà fait dans le composant parent
+  // if (loading) {
+  //   return (
+  //     <div className="home-loading">
+  //       <div className="loading-spinner"></div>
+  //       <p>Chargement...</p>
+  //     </div>
+  //   );
+  // }
 
-  if (!user) {
-    return (
-      <div style={{
-        height: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%)',
-        color: 'white'
-      }}>
-        <div style={{ textAlign: 'center' }}>
-          <h1 style={{ fontSize: '2rem', marginBottom: '1rem' }}>Scrivia</h1>
-          <p style={{ marginBottom: '2rem', opacity: 0.8 }}>
-            A minimalist, LLM-friendly markdown knowledge base
-          </p>
-          <button 
-            onClick={() => window.location.href = '/auth'}
-            style={{
-              padding: '12px 24px',
-              fontSize: 16,
-              borderRadius: 8,
-              background: '#2994ff',
-              color: 'white',
-              border: 'none',
-              cursor: 'pointer',
-              fontWeight: 500
-            }}
-          >
-            Se connecter
-          </button>
-        </div>
-      </div>
-    );
-  }
+  // 🔧 FIX: Plus besoin de vérifier user car c'est déjà fait dans le composant parent
 
   return (
     <div className="home-page-wrapper">
@@ -403,7 +411,7 @@ export default function HomePage() {
                         style={{ display: 'none' }}
                         onChange={(e) => {
                           if (e.target.files?.length) {
-                            console.log('Fichier sélectionné:', e.target.files[0]);
+                            logger.dev('[HomePage] Fichier sélectionné:', e.target.files[0]);
                           }
                         }}
                       />

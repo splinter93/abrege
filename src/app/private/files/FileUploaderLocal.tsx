@@ -291,15 +291,15 @@ const FileUploaderLocal: React.FC<FileUploaderLocalProps> = ({
         setUploads(prev => prev.filter(u => u.fileId !== uploadId));
       }, 3000);
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       // Mettre à jour le statut d'erreur
       setUploads(prev => prev.map(u => 
         u.fileId === uploadId 
-          ? { ...u, status: 'error', error: error.message }
+          ? { ...u, status: 'error', error: error instanceof Error ? error.message : 'Erreur inconnue' }
           : u
       ));
 
-      onUploadError(error.message);
+      onUploadError(error instanceof Error ? error.message : 'Erreur inconnue');
     } finally {
       setIsUrlUploading(false);
     }

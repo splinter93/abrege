@@ -45,8 +45,6 @@ run().catch(err => {
   process.exit(1);
 });
 
-#!/usr/bin/env tsx
-
 /**
  * Script de test pour vérifier que le LLM utilise bien les tools OpenAPI V2
  */

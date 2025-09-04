@@ -75,7 +75,6 @@ class CriticalIssuesFixer {
           strictPropertyInitialization: true,
           noImplicitOverride: true,
           noUncheckedIndexedAccess: true,
-          noImplicitOverride: true,
           exactOptionalPropertyTypes: true
         }
       };

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { FileItem } from '@/types/files';
 import ImageModal from './ImageModal';
@@ -152,7 +152,7 @@ const FilesContent: React.FC<FilesContentProps> = ({
     );
   }
 
-  const handleFileClick = (file: FileItem) => {
+  const handleFileClick = useCallback((file: FileItem) => {
     // Si c'est une image, ouvrir la modal
     if (file.mime_type?.startsWith('image/')) {
       const imageFiles = safeFiles.filter(f => f.mime_type?.startsWith('image/'));
@@ -167,22 +167,22 @@ const FilesContent: React.FC<FilesContentProps> = ({
       // Pour les autres types de fichiers, utiliser le comportement par défaut
       onFileOpen(file);
     }
-  };
+  }, [safeFiles, onFileOpen]);
 
-  const handleFileDoubleClick = (file: FileItem) => {
+  const handleFileDoubleClick = useCallback((file: FileItem) => {
     // Ouvrir le fichier dans un nouvel onglet
     window.open(file.url, '_blank');
-  };
+  }, []);
 
-  const handleCloseImageModal = () => {
+  const handleCloseImageModal = useCallback(() => {
     setImageModal(prev => ({ ...prev, isOpen: false }));
-  };
+  }, []);
 
-  const handleOpenImageInNewTab = () => {
+  const handleOpenImageInNewTab = useCallback(() => {
     window.open(imageModal.imageUrl, '_blank');
-  };
+  }, [imageModal.imageUrl]);
 
-  const handlePreviousImage = () => {
+  const handlePreviousImage = useCallback(() => {
     const imageFiles = safeFiles.filter(f => f.mime_type?.startsWith('image/'));
     const newIndex = imageModal.currentIndex > 0 ? imageModal.currentIndex - 1 : imageFiles.length - 1;
     const newFile = imageFiles[newIndex];
@@ -192,9 +192,9 @@ const FilesContent: React.FC<FilesContentProps> = ({
       imageName: newFile.filename || 'Image',
       currentIndex: newIndex,
     });
-  };
+  }, [safeFiles, imageModal.currentIndex]);
 
-  const handleNextImage = () => {
+  const handleNextImage = useCallback(() => {
     const imageFiles = safeFiles.filter(f => f.mime_type?.startsWith('image/'));
     const newIndex = imageModal.currentIndex < imageFiles.length - 1 ? imageModal.currentIndex + 1 : 0;
     const newFile = imageFiles[newIndex];
@@ -204,7 +204,7 @@ const FilesContent: React.FC<FilesContentProps> = ({
       imageName: newFile.filename || 'Image',
       currentIndex: newIndex,
     });
-  };
+  }, [safeFiles, imageModal.currentIndex]);
 
   return (
     <motion.div 

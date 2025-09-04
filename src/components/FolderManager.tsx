@@ -6,6 +6,7 @@ import FolderContent from './FolderContent';
 import { useFolderManagerState } from './useFolderManagerState';
 import { useAuth } from '@/hooks/useAuth';
 import { Folder, FileArticle } from './types';
+import { simpleLogger as logger } from '@/utils/logger';
 import SimpleContextMenu from './SimpleContextMenu';
 import { useFolderDragAndDrop } from '../hooks/useFolderDragAndDrop';
 import { useContextMenuManager } from '../hooks/useContextMenuManager';
@@ -29,8 +30,8 @@ interface FolderManagerProps {
   onGoToFolder: (folderId: string) => void; // 🔧 NOUVEAU: Navigation directe vers un dossier
   folderPath: Folder[]; // 🔧 NOUVEAU: Chemin de navigation pour le breadcrumb
   // 🔧 NOUVEAU: Données préchargées pour éviter les appels API redondants
-  preloadedFolders?: { [key: string]: any };
-  preloadedNotes?: { [key: string]: any };
+  preloadedFolders?: { [key: string]: Folder };
+  preloadedNotes?: { [key: string]: FileArticle };
   skipApiCalls?: boolean;
   onCreateFolder?: () => void;
   onCreateFile?: () => void;
@@ -101,7 +102,7 @@ const FolderManager: React.FC<FolderManagerProps> = ({
   const storeNotes = useFileSystemStore((state) => state.notes);
   
   // Fusion intelligente des données pour éviter les doublons
-  const mergeData = useCallback((preloaded: any[], store: Record<string, any>) => {
+  const mergeData = useCallback((preloaded: (Folder | FileArticle)[], store: Record<string, Folder | FileArticle>) => {
     const storeArray = Object.values(store);
     
     // Si pas de données préchargées, utiliser le store
@@ -145,12 +146,12 @@ const FolderManager: React.FC<FolderManagerProps> = ({
   );
   
   // Filtrer les données par classeur actif ET par dossier parent
-  const filteredFolders = effectiveFolders.filter((f: any) => 
-    f.classeur_id === classeurId && 
+  const filteredFolders = effectiveFolders.filter((f): f is Folder => 
+    f && 'classeur_id' in f && f.classeur_id === classeurId && 
     (f.parent_id === parentFolderId || (!f.parent_id && !parentFolderId))
   );
-  const filteredFiles = effectiveFiles.filter((n: any) => 
-    n.classeur_id === classeurId && 
+  const filteredFiles = effectiveFiles.filter((n): n is FileArticle => 
+    n && 'classeur_id' in n && n.classeur_id === classeurId && 
     (n.folder_id === parentFolderId || (!n.folder_id && !parentFolderId))
   );
   
@@ -177,7 +178,7 @@ const FolderManager: React.FC<FolderManagerProps> = ({
         await effectiveCreateFolder(name.trim());
       }
     } catch (error) {
-      console.error('Erreur création dossier:', error);
+      logger.error('[FolderManager] Erreur création dossier:', error);
     }
   }, [user?.id, effectiveCreateFolder]);
 
@@ -190,7 +191,7 @@ const FolderManager: React.FC<FolderManagerProps> = ({
         await effectiveCreateFile(name.trim(), parentFolderId || null);
       }
     } catch (error) {
-      console.error('Erreur création note:', error);
+      logger.error('[FolderManager] Erreur création note:', error);
     }
   }, [user?.id, effectiveCreateFile, parentFolderId]);
 

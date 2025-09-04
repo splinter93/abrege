@@ -68,7 +68,7 @@ export function createPaginatedResponse<T>(
 /**
  * Helper pour les requêtes Supabase avec pagination
  */
-export function addPaginationToQuery(query: unknown, params: PaginationParams) {
+export function addPaginationToQuery(query: any, params: PaginationParams) {
   return query
     .range(params.offset, params.offset + params.limit - 1)
     .order('created_at', { ascending: false });
@@ -77,7 +77,7 @@ export function addPaginationToQuery(query: unknown, params: PaginationParams) {
 /**
  * Compter le total d'éléments pour la pagination
  */
-export async function countTotal(supabase: unknown, table: string, filters: unknown = {}) {
+export async function countTotal(supabase: any, table: string, filters: Record<string, unknown> = {}) {
   let query = supabase
     .from(table)
     .select('*', { count: 'exact', head: true });

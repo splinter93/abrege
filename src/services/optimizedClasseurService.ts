@@ -79,7 +79,7 @@ export class OptimizedClasseurService {
   /**
    * 🔧 OPTIMISATION: Validation des données avant traitement
    */
-  private validateClasseurData(data: any): data is ClasseurWithContent[] {
+  private validateClasseurData(data: unknown): data is ClasseurWithContent[] {
     // Vérifier que c'est un tableau
     if (!Array.isArray(data)) {
       simpleLogger.warn('[OptimizedClasseurService] ⚠️ Données reçues ne sont pas un tableau:', typeof data);

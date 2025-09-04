@@ -10,6 +10,10 @@ const supabase = createClient(
 );
 
 export async function POST(request: NextRequest) {
+  // Extraire les variables en dehors du try pour qu'elles soient accessibles dans le catch
+  let sessionId: string | undefined;
+  let userToken: string | undefined;
+  
   try {
     const body = await request.json();
     const { message, context, history, provider, channelId } = body;
@@ -31,10 +35,11 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    const userToken = authHeader.replace('Bearer ', '');
+    userToken = authHeader.replace('Bearer ', '');
     
     // Extraire les valeurs nécessaires depuis le contexte
-    const { sessionId, agentId } = context;
+    const { sessionId: extractedSessionId, agentId } = context;
+    sessionId = extractedSessionId;
 
     if (!sessionId) {
       return NextResponse.json(
@@ -172,7 +177,7 @@ export async function POST(request: NextRequest) {
         reasoning: "Service Groq temporairement indisponible - réponse de fallback intelligente fournie pour maintenir l'expérience utilisateur",
         tool_calls: [],
         tool_results: [],
-        sessionId: body.context?.sessionId || 'unknown',
+        sessionId: sessionId || 'unknown',
         status: 200,
         isFallback: true // Marqueur pour identifier les réponses de fallback
       });
@@ -183,7 +188,7 @@ export async function POST(request: NextRequest) {
         success: false,
         error: 'Erreur interne du serveur',
         details: error instanceof Error ? error.message : 'Erreur inconnue',
-        sessionId: body.context?.sessionId || 'unknown'
+        sessionId: sessionId || 'unknown'
       },
       { status: 500 }
     );

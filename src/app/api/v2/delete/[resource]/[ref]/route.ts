@@ -19,9 +19,10 @@ export async function DELETE(
   const startTime = Date.now();
   const clientType = request.headers.get('X-Client-Type') || 'unknown';
   
+  // Await les params dans Next.js 15
+  const { resource, ref } = await params;
+  
   try {
-    // Await les params dans Next.js 15
-    const { resource, ref } = await params;
     
     const context = {
       operation: 'v2_unified_delete',
@@ -136,9 +137,10 @@ export async function HEAD(
 ) {
   const clientType = request.headers.get('X-Client-Type') || 'unknown';
   
+  // Await les params dans Next.js 15
+  const { resource, ref } = await params;
+  
   try {
-    // Await les params dans Next.js 15
-    const { resource, ref } = await params;
     
     const context = {
       operation: 'v2_unified_delete_head',
