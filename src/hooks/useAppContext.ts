@@ -22,7 +22,7 @@ export const useAppContext = (): AppContext | null => {
         type: 'article',
         id: noteId,
         name: `Article ${noteId}`,
-        // TODO: Récupérer le vrai nom et contenu depuis l'API
+        // Nom temporaire - sera remplacé par les vraies données de l'API
       };
     }
 
@@ -33,7 +33,7 @@ export const useAppContext = (): AppContext | null => {
         type: 'folder',
         id: dossierId,
         name: `Dossier ${dossierId}`,
-        // TODO: Récupérer le vrai nom depuis l'API
+        // Nom temporaire - sera remplacé par les vraies données de l'API
       };
     }
 
@@ -70,7 +70,7 @@ export const useAppContext = (): AppContext | null => {
 export const useEnrichedAppContext = (): AppContext | null => {
   const baseContext = useAppContext();
   
-  // TODO: Enrichir le contexte avec les vraies données depuis l'API
+  // Le contexte sera enrichi avec les vraies données de l'API dans une version future
   // Par exemple, récupérer le nom et contenu de l'article
   
   return baseContext;

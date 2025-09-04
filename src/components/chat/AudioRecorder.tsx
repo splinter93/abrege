@@ -51,7 +51,7 @@ export default function AudioRecorder({
     if (disabled) return;
 
     try {
-      logger.debug('[AudioRecorder] 🎤 Démarrage de l\'enregistrement');
+      logger.debug('[AudioRecorder] 🎤 Démarrage de l\'enregistrement', {});
 
       // Demander l'accès au microphone
       const stream = await navigator.mediaDevices.getUserMedia({ 
@@ -101,7 +101,7 @@ export default function AudioRecorder({
 
       setState(prev => ({ ...prev, isRecording: true, duration: 0 }));
 
-      logger.debug('[AudioRecorder] ✅ Enregistrement démarré');
+      logger.debug('[AudioRecorder] ✅ Enregistrement démarré', {});
 
     } catch (error) {
       logger.error('[AudioRecorder] ❌ Erreur lors du démarrage:', error);

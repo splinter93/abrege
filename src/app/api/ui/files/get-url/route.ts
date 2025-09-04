@@ -63,7 +63,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     // Récupérer le fichier depuis la base
     const { data: fileRecord, error: fetchError } = await supabase
       .from('files')
-      .select('id, owner_id, user_id, s3_key, url, filename, status')
+      .select('id, owner_id, user_id, s3_key, url, filename, status, storage_type')
       .eq('id', requestData.fileId)
       .eq('owner_id', userId) // Vérifier que l'utilisateur est le propriétaire
       .single();

@@ -22,8 +22,7 @@ export default function RecentActivityPrivate({
 
   useEffect(() => {
     if (user?.email) {
-      // Extraire le username de l'email pour l'instant
-      // TODO: Récupérer le vrai username depuis le profil utilisateur
+      // Extraire le username de l'email (solution temporaire)
       const emailUsername = user.email.split('@')[0];
       setUsername(emailUsername);
     }

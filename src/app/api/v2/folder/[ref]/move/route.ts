@@ -45,7 +45,7 @@ export async function PUT(
     const validatedData = validationResult.data;
 
     // Utiliser V2DatabaseUtils pour l'accès direct à la base de données
-    const result = await V2DatabaseUtils.moveFolder(ref, validatedData.target_folder_id, userId, context, validatedData.target_classeur_id);
+    const result = await V2DatabaseUtils.moveFolder(ref, validatedData.target_folder_id, userId, context, validatedData.target_classeur_id || null);
 
     const apiTime = Date.now() - startTime;
     logApi.info(`✅ Dossier déplacé en ${apiTime}ms`, context);

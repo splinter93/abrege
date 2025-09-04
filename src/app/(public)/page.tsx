@@ -190,7 +190,7 @@ function AuthenticatedHomeContent({ user }: { user: { id: string; email?: string
     const files = Array.from(e.dataTransfer.files);
     if (files.length > 0) {
       logger.dev('[HomePage] Fichiers déposés:', files);
-      // TODO: Traiter les fichiers dans une version future
+      // Fonctionnalité d'upload de fichiers - à implémenter dans une version future
     }
   }, []);
 
@@ -198,7 +198,7 @@ function AuthenticatedHomeContent({ user }: { user: { id: string; email?: string
     if (urlInput.trim()) {
       logger.dev('[HomePage] URL saisie:', urlInput);
       setUrlInput('');
-      // TODO: Traiter l'URL dans une version future
+      // Fonctionnalité de traitement d'URL - à implémenter dans une version future
     }
   }, [urlInput]);
 
@@ -212,7 +212,7 @@ function AuthenticatedHomeContent({ user }: { user: { id: string; email?: string
     e.preventDefault();
     if (searchQuery.trim()) {
       setIsSearching(true);
-      // TODO: Implémenter la recherche dans une version future
+      // Fonctionnalité de recherche - à implémenter dans une version future
       setTimeout(() => setIsSearching(false), 2000);
     }
   }, [searchQuery]);

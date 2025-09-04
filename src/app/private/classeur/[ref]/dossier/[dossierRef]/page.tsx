@@ -77,7 +77,18 @@ export default function FolderDeepLinkPage() {
     const result: Folder[] = [];
     function walk(nodes: any[]) {
       for (const n of nodes) {
-        result.push({ id: n.id, name: n.name, parent_id: n.parent_id ?? null, classeur_id: payload?.classeur?.id });
+        result.push({ 
+          id: n.id, 
+          name: n.name, 
+          parent_id: n.parent_id ?? null, 
+          classeur_id: payload?.classeur?.id,
+          user_id: payload?.classeur?.user_id || null,
+          created_at: n.created_at || null,
+          updated_at: n.updated_at || null,
+          position: n.position || null,
+          is_in_trash: n.is_in_trash || false,
+          trashed_at: n.trashed_at || null
+        } as Folder);
         if (Array.isArray(n.children) && n.children.length > 0) walk(n.children);
       }
     }
@@ -128,10 +139,11 @@ export default function FolderDeepLinkPage() {
           classeurName={classeurName}
           classeurIcon={classeurEmoji}
           parentFolderId={currentFolderId}
-          filteredFolders={shownFolders}
-          filteredNotes={shownFiles}
           onFolderOpen={handleFolderOpen}
           onGoBack={handleGoBack}
+          onGoToRoot={() => {}}
+          onGoToFolder={() => {}}
+          folderPath={[]}
         />
       </div>
     </main>

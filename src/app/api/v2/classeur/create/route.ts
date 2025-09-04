@@ -46,7 +46,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       return createValidationErrorResponse(validationResult);
     }
 
-    const { name, emoji, color } = validationResult.data;
+    const { name, emoji, description, icon } = validationResult.data;
 
     // Générer un slug unique avec le client authentifié
     const slug = await SlugGenerator.generateSlug(name, 'classeur', userId, undefined, supabase);
@@ -56,8 +56,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       .from('classeurs')
       .insert({
         name,
+        description,
         emoji: emoji || '📚',
-        color: color || '#3B82F6',
+        icon: icon || '📚',
         slug,
         user_id: userId,
         position: 0

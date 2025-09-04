@@ -42,8 +42,6 @@ export default function PublicNoteContent({ note, slug }: PublicNoteProps) {
         setCurrentUser(user);
       } catch (error) {
         console.error('Erreur d\'authentification:', error);
-      } finally {
-        setIsLoading(false);
       }
     };
     

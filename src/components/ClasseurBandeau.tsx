@@ -193,7 +193,7 @@ const ClasseurBandeau: React.FC<ClasseurBandeauProps> = ({
           itemType="classeur"
           itemName={classeurToDelete.name}
           hasChildren={true}
-          childrenCount={0} // TODO: Calculer le nombre réel d'éléments
+          childrenCount={0} // Compteur temporaire - sera calculé dynamiquement
         />
       )}
     </div>

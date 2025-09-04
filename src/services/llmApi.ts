@@ -363,9 +363,13 @@ export class LLMApi {
     
     logApi.info(`🚀 Début fusion note LLM ${sourceNoteRef}`, context);
     
+    // TODO: Implémenter la fusion de notes via l'API V2
+    // Pour l'instant, cette fonctionnalité est désactivée
+    throw new Error('Fusion de notes non implémentée - API LLM obsolète supprimée');
+    
     try {
       const headers = await this.getAuthHeaders();
-      const response = await fetch(`/api/llm/note/merge`, {
+      const response = await fetch(`/api/v2/note/merge`, {
         method: 'POST',
         headers,
         body: JSON.stringify(mergeData)

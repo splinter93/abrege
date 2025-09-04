@@ -169,7 +169,7 @@ function AuthenticatedSettingsContent({ user }: { user: { id: string; email?: st
     try {
       // Note: L'endpoint DELETE n'existe pas encore, on utilise la désactivation
       // TODO: Implémenter l'endpoint DELETE dans une version future
-      logApi.dev('Suppression API Key:', apiKeyName);
+      logApi.info('Suppression API Key:', apiKeyName);
       loadApiKeys(); // Recharger la liste
     } catch (error) {
       handleError(error, 'suppression API Key');

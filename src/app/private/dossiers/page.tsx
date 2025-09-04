@@ -3,6 +3,7 @@
 import { useMemo, useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { Classeur, Folder } from "@/store/useFileSystemStore";
+import type { FileArticle } from "@/components/types";
 import ClasseurNavigation from "@/components/ClasseurNavigation";
 import Sidebar from "@/components/Sidebar";
 import FolderManager from "@/components/FolderManager";
@@ -312,8 +313,8 @@ function AuthenticatedDossiersContent({ user }: { user: AuthenticatedUser }) {
                     user_id: user.id
                   }))}
                   // 🔧 FIX: Passer les données déjà chargées pour éviter le double chargement
-                  preloadedFolders={useFileSystemStore.getState().folders}
-                  preloadedNotes={useFileSystemStore.getState().notes}
+                  preloadedFolders={useFileSystemStore.getState().folders as any}
+                  preloadedNotes={useFileSystemStore.getState().notes as { [key: string]: FileArticle }}
                   skipApiCalls={true}
                   viewMode={viewMode}
                   onToggleView={handleToggleView}

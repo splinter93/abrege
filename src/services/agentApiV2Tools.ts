@@ -993,9 +993,9 @@ export class AgentApiV2Tools {
               ]
             }
           },
-          '/api/llm/note/merge': {
+          '/api/v2/note/merge': {
             post: {
-              summary: 'Fusionner plusieurs notes en une nouvelle note',
+              summary: 'Fusionner plusieurs notes en une nouvelle note (non implémenté)',
               description: 'Fusionner le contenu de plusieurs notes dans une nouvelle note avec ordre respecté',
               requestBody: {
                 content: {
@@ -1221,7 +1221,10 @@ export class AgentApiV2Tools {
           return await this.callApiV2('GET', `/api/v2/note/${params.ref}/statistics`, null, jwtToken);
           
         case 'merge_note':
-          return await this.callApiV2('POST', `/api/llm/note/merge`, params, jwtToken);
+          // TODO: Implémenter la fusion de notes via l'API V2
+          // Pour l'instant, cette fonctionnalité est désactivée
+          throw new Error('Fusion de notes non implémentée - API LLM obsolète supprimée');
+          // return await this.callApiV2('POST', `/api/v2/note/merge`, params, jwtToken);
           
         case 'publish_note':
           return await this.callApiV2('POST', `/api/v2/note/${params.ref}/publish`, params, jwtToken);
