@@ -36,13 +36,7 @@ interface FolderManagerProps {
   onCreateFile?: () => void;
   onToggleView?: (mode: 'list' | 'grid') => void;
   viewMode?: 'list' | 'grid';
-  // 🔧 NOUVEAU: Props pour le ClasseurBandeau intégré
-  classeurs?: Array<{ id: string; name: string; emoji: string; color?: string }>;
-  activeClasseurId?: string | null;
-  onSelectClasseur?: (id: string) => void;
-  onCreateClasseur?: () => void;
-  onRenameClasseur?: (id: string, newName: string) => void;
-  onDeleteClasseur?: (id: string) => void;
+
 }
 
 /**
@@ -66,13 +60,7 @@ const FolderManager: React.FC<FolderManagerProps> = ({
   onCreateFile,
   onToggleView,
   viewMode = 'grid',
-  // 🔧 NOUVEAU: Props pour le ClasseurBandeau intégré
-  classeurs,
-  activeClasseurId,
-  onSelectClasseur,
-  onCreateClasseur,
-  onRenameClasseur,
-  onDeleteClasseur
+
 }) => {
   // Optimisation : éviter les appels API redondants
   const [refreshKey, setRefreshKey] = useState(0);
@@ -298,13 +286,7 @@ const FolderManager: React.FC<FolderManagerProps> = ({
               onGoToRoot={onGoToRoot}
               onGoToFolder={onGoToFolder}
               folderPath={folderPath}
-              // 🔧 NOUVEAU: Props pour le ClasseurBandeau intégré
-              classeurs={classeurs}
-              activeClasseurId={activeClasseurId}
-              onSelectClasseur={onSelectClasseur}
-              onCreateClasseur={onCreateClasseur}
-              onRenameClasseur={onRenameClasseur}
-              onDeleteClasseur={onDeleteClasseur}
+
             />
           </main>
         </div>

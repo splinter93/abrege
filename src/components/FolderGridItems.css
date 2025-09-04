@@ -71,7 +71,7 @@
   align-items: center;
   width: 56px; /* Agrandi de 40px à 56px */
   height: 56px; /* Agrandi de 40px à 56px */
-  font-size: 24px; /* Agrandi de 18px à 24px */
+  font-size: 28px; /* Agrandi de 24px à 28px */
   transition: transform 0.15s ease; /* Valeur fixe au lieu de var(--files-transition-fast) */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -159,7 +159,7 @@
 .fm-grid-item.file-list-item .folder-icon {
   margin-bottom: 0 !important;
   margin-right: 16px !important; /* Valeur fixe au lieu de variable */
-  font-size: 24px !important; /* Agrandi pour correspondre au nouveau cadre */
+  font-size: 28px !important; /* Agrandi pour correspondre au nouveau cadre */
   height: 56px !important; /* Agrandi pour correspondre au nouveau cadre */
   width: 56px !important; /* Agrandi pour correspondre au nouveau cadre */
   flex-shrink: 0 !important;

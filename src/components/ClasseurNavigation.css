@@ -1,0 +1,258 @@
+/* ==========================================================================
+   CLASSEUR NAVIGATION - DESIGN ÉPURÉ AVEC TABS HORIZONTAUX
+   ========================================================================== */
+
+.classeur-navigation {
+  width: 100%;
+  background: var(--glass-bg-primary);
+  border: 1px solid var(--glass-border-primary);
+  border-radius: var(--dossiers-radius-lg);
+  margin: 0 0 var(--dossiers-spacing-sm) 0;
+  padding: var(--dossiers-spacing-md);
+  position: relative;
+  z-index: var(--dossiers-z-content);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: var(--glass-shadow-subtle);
+  transition: all var(--dossiers-transition-normal);
+}
+
+.classeur-navigation:hover {
+  background: var(--glass-bg-secondary);
+  border-color: var(--glass-border-hover);
+  box-shadow: var(--glass-shadow-medium);
+  transform: translateY(-1px);
+}
+
+.classeur-navigation-container {
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  border: none;
+  border-radius: var(--dossiers-radius-md);
+  overflow: hidden;
+}
+
+.classeur-tabs {
+  display: flex;
+  align-items: flex-end;
+  gap: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  padding: 0;
+  border-bottom: 1px solid var(--glass-border-secondary);
+  background: transparent;
+  border-radius: var(--dossiers-radius-md) var(--dossiers-radius-md) 0 0;
+}
+
+.classeur-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+/* ==========================================================================
+   TABS INDIVIDUELS - DESIGN ÉPURÉ
+   ========================================================================== */
+
+.classeur-tab {
+  display: flex;
+  align-items: center;
+  gap: var(--dossiers-spacing-sm);
+  padding: var(--dossiers-spacing-md) var(--dossiers-spacing-lg);
+  border: none;
+  background: transparent;
+  color: var(--dossiers-text-secondary);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--dossiers-transition-normal);
+  white-space: nowrap;
+  font-family: 'Noto Sans', sans-serif;
+  min-height: 48px;
+  position: relative;
+  border-radius: 0;
+  margin: 0;
+  outline: none;
+}
+
+.classeur-tab:hover {
+  color: var(--dossiers-text-primary);
+  background: var(--glass-bg-hover);
+}
+
+.classeur-tab.active {
+  color: var(--dossiers-text-primary);
+  background: transparent;
+  font-weight: 600;
+}
+
+.classeur-tab-emoji {
+  font-size: 16px;
+  line-height: 1;
+  opacity: 0.8;
+  transition: opacity var(--dossiers-transition-normal);
+}
+
+.classeur-tab.active .classeur-tab-emoji {
+  opacity: 1;
+}
+
+.classeur-tab-name {
+  font-size: 14px;
+  line-height: 1.2;
+  transition: color var(--dossiers-transition-normal);
+}
+
+/* ==========================================================================
+   INDICATEUR ACTIF - BARRE BLANCHE SOUS LE TAB
+   ========================================================================== */
+
+.classeur-tab-indicator {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--dossiers-primary);
+  border-radius: 1px 1px 0 0;
+  animation: slideIn var(--dossiers-transition-normal) ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    transform: scaleX(0);
+    opacity: 0;
+  }
+  to {
+    transform: scaleX(1);
+    opacity: 1;
+  }
+}
+
+/* ==========================================================================
+   BOUTON D'AJOUT
+   ========================================================================== */
+
+.classeur-tab.add-tab {
+  color: var(--dossiers-text-muted);
+  padding: var(--dossiers-spacing-md) var(--dossiers-spacing-md);
+  min-width: 48px;
+  justify-content: center;
+}
+
+.classeur-tab.add-tab:hover {
+  color: var(--dossiers-primary);
+  background: var(--glass-bg-hover);
+}
+
+.add-icon {
+  font-size: 18px;
+  font-weight: 300;
+  line-height: 1;
+}
+
+/* ==========================================================================
+   ÉTATS DE DRAG & DROP
+   ========================================================================== */
+
+.classeur-tab[draggable="true"] {
+  cursor: grab;
+}
+
+.classeur-tab[draggable="true"]:active {
+  cursor: grabbing;
+}
+
+.classeur-tab.drag-over {
+  background: var(--dossiers-primary-light);
+  color: var(--dossiers-primary);
+}
+
+.classeur-tab.drag-over .classeur-tab-emoji {
+  transform: scale(1.1);
+  transition: transform var(--dossiers-transition-fast);
+}
+
+/* ==========================================================================
+   RESPONSIVE DESIGN
+   ========================================================================== */
+
+@media (max-width: 768px) {
+  .classeur-tab {
+    padding: var(--dossiers-spacing-sm) var(--dossiers-spacing-md);
+    min-height: 44px;
+    font-size: 13px;
+  }
+  
+  .classeur-tab-emoji {
+    font-size: 14px;
+  }
+  
+  .classeur-tab-name {
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 480px) {
+  .classeur-tab {
+    padding: var(--dossiers-spacing-sm) var(--dossiers-spacing-sm);
+    min-height: 40px;
+  }
+  
+  .classeur-tab.add-tab {
+    padding: var(--dossiers-spacing-sm);
+    min-width: 40px;
+  }
+}
+
+/* ==========================================================================
+   ANIMATIONS ET TRANSITIONS
+   ========================================================================== */
+
+.classeur-tab {
+  transition: 
+    color var(--dossiers-transition-normal),
+    background-color var(--dossiers-transition-normal),
+    transform var(--dossiers-transition-fast);
+}
+
+.classeur-tab:hover {
+  transform: translateY(-1px);
+}
+
+.classeur-tab:active {
+  transform: translateY(0);
+}
+
+/* ==========================================================================
+   ACCESSIBILITÉ
+   ========================================================================== */
+
+.classeur-tab:focus-visible {
+  outline: 2px solid var(--dossiers-primary);
+  outline-offset: 2px;
+}
+
+.classeur-tab:focus-visible .classeur-tab-indicator {
+  background: var(--dossiers-primary-hover);
+}
+
+/* ==========================================================================
+   OVERRIDES POUR LA COHÉRENCE
+   ========================================================================== */
+
+.classeur-navigation * {
+  box-sizing: border-box;
+}
+
+.classeur-navigation button {
+  border: none;
+  background: none;
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+  cursor: pointer;
+  outline: none;
+}

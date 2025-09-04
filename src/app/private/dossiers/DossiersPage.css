@@ -122,36 +122,28 @@
 }
 
 /* ==========================================================================
-   SECTION CONTENU - GLASSMORPHISM
+   SECTION CONTENU - CONTAINER SIMPLE SANS GLASSMORPHISM
    ========================================================================== */
-.content-section-glass {
-  margin-top: 24px; /* Espace entre le titre et le contenu */
-  background: var(--glass-bg-secondary);
-  border: 1px solid var(--glass-border-secondary);
-  border-radius: var(--dossiers-radius-xl);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  box-shadow: var(--glass-shadow-subtle);
-  padding: var(--dossiers-spacing-xl);
-  transition: all var(--dossiers-transition-normal);
+.content-section-simple {
+  margin-top: 8px; /* Espace réduit entre la navigation et le contenu */
+  background: transparent;
+  border: none;
+  padding: 0;
   display: flex;
   flex-direction: column;
   flex: 1;
   min-height: calc(100vh - 500px); /* Hauteur minimale adaptée à l'écran */
 }
 
-.content-section-glass:hover {
-  border-color: var(--glass-border-hover);
-  box-shadow: var(--glass-shadow-medium);
-}
-
-.content-main-container-glass {
+.content-main-container-simple {
   width: 100%;
   flex: 1;
   min-height: calc(100vh - 400px); /* Hauteur minimale adaptée à l'écran */
   display: flex;
   flex-direction: column;
   padding-bottom: 20px; /* Espace en bas pour ne pas coller au bottom */
+  background: transparent;
+  border: none;
 }
 
 /* ==========================================================================

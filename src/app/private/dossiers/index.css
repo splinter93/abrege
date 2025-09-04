@@ -96,6 +96,17 @@
    OVERRIDES POUR LA COHÉRENCE AVEC LES NOUVEAUX STYLES
    ========================================================================== */
 
+/* Wrapper pour la navigation des classeurs */
+.classeur-navigation-wrapper {
+  width: 100%;
+  background: transparent;
+  border: none;
+  margin: 0;
+  padding: 0;
+  position: relative;
+  z-index: var(--dossiers-z-content);
+}
+
 /* Assurer que les composants utilisent les bonnes variables */
 .classeur-bandeau {
   --bandeau-bg: var(--glass-bg-secondary);

@@ -3,7 +3,7 @@
 import { useMemo, useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { Classeur, Folder } from "@/store/useFileSystemStore";
-import ClasseurBandeau from "@/components/ClasseurBandeau";
+import ClasseurNavigation from "@/components/ClasseurNavigation";
 import Sidebar from "@/components/Sidebar";
 import FolderManager from "@/components/FolderManager";
 import DossierErrorBoundary from "@/components/DossierErrorBoundary";
@@ -247,16 +247,43 @@ function AuthenticatedDossiersContent({ user }: { user: AuthenticatedUser }) {
           </div>
         </motion.div>
 
-        {/* Section des classeurs avec navigation glassmorphism */}
+        {/* Navigation des classeurs - Au-dessus du container principal */}
+        {classeurs.length > 0 && (
+          <motion.div
+            className="classeur-navigation-wrapper"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.1, ease: "easeOut" }}
+          >
+            <ClasseurNavigation
+              classeurs={classeurs.map((c: Classeur) => ({ 
+                id: c.id, 
+                name: c.name, 
+                emoji: c.emoji || '📁', 
+                color: '#e55a2c'
+              }))}
+              activeClasseurId={activeClasseurId || null}
+              onSelectClasseur={(id) => {
+                setActiveClasseurId(id);
+                setCurrentFolderId(undefined);
+              }}
+              onCreateClasseur={handleCreateClasseurClick}
+              onRenameClasseur={handleRenameClasseurClick}
+              onDeleteClasseur={handleDeleteClasseurClick}
+            />
+          </motion.div>
+        )}
+
+        {/* Section des classeurs - Container simple sans glassmorphism */}
         {activeClasseur && (
           <>
             <motion.section 
-              className="content-section-glass"
+              className="content-section-simple"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
             >
-              <div className="content-main-container-glass">
+              <div className="content-main-container-simple">
                 <FolderManager
                   classeurId={activeClasseur.id}
                   classeurName={activeClasseur.name}
@@ -284,21 +311,6 @@ function AuthenticatedDossiersContent({ user }: { user: AuthenticatedUser }) {
                   onToggleView={handleToggleView}
                   onCreateFolder={handleCreateFolder}
                   onCreateFile={handleCreateNote}
-                  // 🔧 NOUVEAU: Props pour le ClasseurBandeau intégré
-                  classeurs={classeurs.map((c: Classeur) => ({ 
-                    id: c.id, 
-                    name: c.name, 
-                    emoji: c.emoji || '📁', 
-                    color: '#e55a2c'
-                  }))}
-                  activeClasseurId={activeClasseurId || null}
-                  onSelectClasseur={(id) => {
-                    setActiveClasseurId(id);
-                    setCurrentFolderId(undefined);
-                  }}
-                  onCreateClasseur={handleCreateClasseurClick}
-                  onRenameClasseur={handleRenameClasseurClick}
-                  onDeleteClasseur={handleDeleteClasseurClick}
                 />
               </div>
             </motion.section>
