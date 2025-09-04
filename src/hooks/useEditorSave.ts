@@ -29,7 +29,7 @@ export interface UseEditorSaveResult {
  * Hook pour gérer la sauvegarde de l'éditeur (logique extraite de Editor.jsx).
  * @param {Object} options - { onSave, editor, headerImage, titleAlign }
  */
-export default function useEditorSave({ onSave, editor, titleAlign }: UseEditorSaveOptions): UseEditorSaveResult {
+export default function useEditorSave({ onSave, editor }: UseEditorSaveOptions): UseEditorSaveResult {
   const [isSaving, setIsSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState(new Date());
 

@@ -256,7 +256,7 @@ function createMermaidToolbar(node: Node, getPos: NodeViewProps['getPos'], edito
   expandButton.addEventListener('click', handleExpandClick);
   
   // Fonction pour entrer en mode édition
-  const enterEditMode = (container: HTMLElement, node: Node, pos: number) => {
+  const enterEditMode = (container: HTMLElement, node: Node) => {
     isEditMode = true;
     
     // Ajouter la classe d'édition au container

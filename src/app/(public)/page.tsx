@@ -1,15 +1,15 @@
 "use client";
 
-import { useEffect, useState, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'next/navigation';
 import Sidebar from '@/components/Sidebar';
-import LogoHeader from '@/components/LogoHeader';
+// import LogoHeader from '@/components/LogoHeader'; // Non utilisé
 import ErrorBoundary from '@/components/ErrorBoundary';
 import AuthGuard from '@/components/AuthGuard';
 import { useSecureErrorHandler } from '@/components/SecureErrorHandler';
 import { simpleLogger as logger } from '@/utils/logger';
-import { Book, FileText, MessageSquare, Plus, Search, Upload, Link as LinkIcon, Sparkles, FolderOpen, Clock, TrendingUp, Zap, Eye, X } from 'lucide-react';
+import { MessageSquare, Plus, Search, Upload, Sparkles, Zap, Eye, X } from 'lucide-react';
 import RecentActivityPrivate from '@/components/RecentActivityPrivate';
 import PerformanceMonitor from '@/components/PerformanceMonitor';
 import { motion } from 'framer-motion';
@@ -217,7 +217,7 @@ function AuthenticatedHomeContent({ user }: { user: { id: string; email?: string
     }
   }, [searchQuery]);
 
-  const handleCreateNote = useCallback(async (title: string) => {
+  const handleCreateNote = useCallback(async () => {
     if (!user) {
       throw new Error('Utilisateur non connecté');
     }

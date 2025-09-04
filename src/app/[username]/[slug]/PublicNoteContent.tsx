@@ -32,8 +32,7 @@ interface PublicNoteProps {
 export default function PublicNoteContent({ note, slug }: PublicNoteProps) {
   const titleRef = React.useRef<HTMLHeadingElement>(null);
   const contentRef = React.useRef<HTMLDivElement>(null);
-  const [currentUser, setCurrentUser] = React.useState<any>(null);
-  const [isLoading, setIsLoading] = React.useState(true);
+  const [currentUser, setCurrentUser] = React.useState<{ id: string; email?: string } | null>(null);
 
   // Vérifier l'authentification côté client
   React.useEffect(() => {

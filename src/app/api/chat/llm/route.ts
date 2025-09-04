@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
   
   try {
     const body = await request.json();
-    const { message, context, history, provider, channelId } = body;
+    const { message, context, history, provider } = body;
 
     // Validation des paramètres requis
     if (!message || !context || !history) {
@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
     logger.info(`[LLM Route] 🚀 Démarrage pour session ${sessionId} avec provider ${provider}`);
 
     // 🎯 Récupérer l'agentConfig depuis la base de données
-    let agentConfig: any = null;
+    let agentConfig: { id: string; name: string; config: Record<string, unknown> } | null = null;
 
     try {
       // 1) Priorité à l'agent explicitement sélectionné

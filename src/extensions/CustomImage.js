@@ -2,7 +2,7 @@ import Image from '@tiptap/extension-image';
 
 const CustomImage = Image.extend({
   addNodeView() {
-    return ({ node, editor }) => {
+    return ({ node }) => {
       const src = node.attrs.src;
       const dom = document.createElement('div');
       dom.className = 'editor-image-wrapper';

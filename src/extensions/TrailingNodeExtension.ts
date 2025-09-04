@@ -1,7 +1,6 @@
 import { Extension } from '@tiptap/core';
 import { Plugin } from 'prosemirror-state';
 import type { Transaction, EditorState } from 'prosemirror-state';
-import type { Node as ProseMirrorNode } from 'prosemirror-model';
 
 const TrailingNodeExtension = Extension.create({
   name: 'trailingNode',

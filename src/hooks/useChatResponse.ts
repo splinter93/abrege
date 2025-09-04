@@ -17,7 +17,6 @@ interface UseChatResponseReturn {
 
 export function useChatResponse(options: UseChatResponseOptions = {}): UseChatResponseReturn {
   const [isProcessing, setIsProcessing] = useState(false);
-  const [pendingToolCalls, setPendingToolCalls] = useState<Set<string>>(new Set());
 
   const { onComplete, onError, onToolCalls, onToolResult, onToolExecutionComplete } = options;
 

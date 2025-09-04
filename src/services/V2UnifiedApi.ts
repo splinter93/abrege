@@ -1,7 +1,6 @@
 import { useFileSystemStore } from '@/store/useFileSystemStore';
 
 import { simpleLogger as logger } from '@/utils/logger';
-import type { Folder, Note, Classeur } from '@/store/useFileSystemStore';
 import { triggerUnifiedRealtimePolling } from './unifiedRealtimeService';
 
 

@@ -4,17 +4,7 @@ import { DOMParser as ProseMirrorDOMParser } from '@tiptap/pm/model'
 import type MarkdownIt from 'markdown-it'
 import { createMarkdownIt } from '@/utils/markdownItConfig'
 
-type Options = {
-  /**
-   * Si true, quand aucun Markdown n'est détecté,
-   * on colle en "text/plain" (évite les doubles espaces issus du HTML du presse-papier).
-   */
-  preferPlainText: boolean
-  /**
-   * Possibilité d’injecter ton instance markdown-it custom.
-   */
-  markdownIt?: MarkdownIt
-}
+// Type Options défini mais non utilisé - supprimé pour éviter l'erreur TypeScript
 
 function looksLikeMarkdown(text: string): boolean {
   if (!text) return false

@@ -19,8 +19,8 @@ const refreshTokenSchema = z.object({
   client_secret: z.string().min(1),
 });
 
-// Schema de validation unifié pour la requête OAuth
-const tokenRequestSchema = z.union([authorizationCodeSchema, refreshTokenSchema]);
+// Schema de validation unifié pour la requête OAuth (non utilisé actuellement)
+// const tokenRequestSchema = z.union([authorizationCodeSchema, refreshTokenSchema]);
 
 // Schema de validation pour la réponse OAuth
 const tokenResponseSchema = z.object({

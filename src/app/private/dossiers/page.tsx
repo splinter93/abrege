@@ -102,25 +102,6 @@ function AuthenticatedDossiersContent({ user }: { user: AuthenticatedUser }) {
     }
   }, [activeClasseurId, classeurs, loading, setActiveClasseurId]);
 
-  // Afficher l'état de chargement initial
-  if (loading && classeurs.length === 0) {
-    return <DossierLoadingState type="initial" />;
-  }
-
-  // Afficher l'état d'erreur
-  if (error) {
-    return (
-      <DossierErrorState
-        message={error}
-        retryCount={retryCount}
-        canRetry={canRetry}
-        onRetry={retryWithBackoff}
-        onRefresh={refreshData}
-        onForceReload={forceReload}
-      />
-    );
-  }
-
   // Handlers pour la création (utilisent maintenant le service optimisé)
   const handleCreateFolder = useCallback(async () => {
     if (!activeClasseur || !user?.id) return;
@@ -216,6 +197,25 @@ function AuthenticatedDossiersContent({ user }: { user: AuthenticatedUser }) {
     setActiveClasseurId(id);
     setCurrentFolderId(undefined);
   }, [setActiveClasseurId, setCurrentFolderId]);
+
+  // Afficher l'état de chargement initial
+  if (loading && classeurs.length === 0) {
+    return <DossierLoadingState type="initial" />;
+  }
+
+  // Afficher l'état d'erreur
+  if (error) {
+    return (
+      <DossierErrorState
+        message={error}
+        retryCount={retryCount}
+        canRetry={canRetry}
+        onRetry={retryWithBackoff}
+        onRefresh={refreshData}
+        onForceReload={forceReload}
+      />
+    );
+  }
 
   return (
     <div className="dossiers-page-wrapper">

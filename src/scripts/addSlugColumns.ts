@@ -1,13 +1,9 @@
 import { config } from 'dotenv';
 import { resolve } from 'path';
-import { createClient } from '@supabase/supabase-js';
 // import.*logger.*from '@/utils/logger';
 
 // Charger les variables d'environnement depuis .env
 config({ path: resolve(process.cwd(), '.env') });
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 // // const supabase = [^;]+;]+;
 
 async function addSlugColumns() {
@@ -17,13 +13,9 @@ async function addSlugColumns() {
   try {
     // Ajouter la colonne slug à la table articles
     logger.dev('📝 Ajout de la colonne slug à la table articles...');
-            const { error: articlesError } = await supabase
-      .from('articles')
-      .select('id')
-      .limit(1);
     
     // Vérifier si la colonne existe déjà en essayant de la sélectionner
-    const { data: testData, error: testError } = await supabase
+    const { error: testError } = await supabase
       .from('articles')
       .select('slug')
       .limit(1);

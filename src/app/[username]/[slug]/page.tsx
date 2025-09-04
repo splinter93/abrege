@@ -1,5 +1,4 @@
 import { createClient } from '@supabase/supabase-js';
-import { redirect } from 'next/navigation';
 import '@/styles/markdown.css';
 import LogoHeader from '@/components/LogoHeader';
 import type { Metadata } from 'next';

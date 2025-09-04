@@ -33,8 +33,7 @@ export const useFolderDragAndDrop = ({
   parentFolderId,
   moveItem,
   refreshNow,
-  setRefreshKey,
-  userId
+  setRefreshKey
 }: UseFolderDragAndDropProps): UseFolderDragAndDropReturn => {
   const [isRootDropActive, setIsRootDropActive] = useState(false);
 

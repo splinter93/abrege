@@ -1,5 +1,4 @@
 import { simpleLogger as logger } from '@/utils/logger';
-import { v4 as uuidv4 } from 'uuid';
 
 /**
  * Service de persistance atomique des messages tool via l'API batch
