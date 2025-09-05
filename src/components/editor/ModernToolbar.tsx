@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { logger, LogCategory } from '@/utils/logger';
 import { 
   FiBold, 
   FiItalic, 
@@ -274,7 +275,7 @@ const ModernToolbar: React.FC<ModernToolbarProps> = ({
             <Tooltip text="Dictaphone IA">
               <AudioRecorder
                 onTranscriptionComplete={onTranscriptionComplete || (() => {})}
-                onError={(error) => console.error('Erreur dictée:', error)}
+                onError={(error) => logger.error(LogCategory.EDITOR, 'Erreur dictée:', error)}
                 disabled={isReadonly}
                 variant="toolbar"
               />

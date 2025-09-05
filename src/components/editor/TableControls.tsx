@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useMemo } from 'react';
 import { FiPlus, FiTrash2 } from 'react-icons/fi';
 import './table-controls.css';
 import type { FullEditorInstance } from '@/types/editor';
@@ -69,28 +69,44 @@ const TableControls: React.FC<TableControlsProps> = ({ editor, containerRef }) =
     }
   };
 
-  // Subscribe to editor events
+  // ✅ Subscribe to editor events (optimisation performance)
   useEffect(() => {
     if (!editor) return;
 
-    // Use a more efficient polling approach
-    const interval = setInterval(() => {
-      // Only update position if editor is focused and has selection
-      if (editor.isFocused && editor.state.selection) {
+    // Utiliser les événements Tiptap au lieu du polling
+    const handleSelectionUpdate = () => {
+      if (editor.isFocused) {
         updatePosition();
       }
-    }, 200); // Check every 200ms when focused
+    };
+
+    const handleFocus = () => {
+      updatePosition();
+    };
+
+    const handleBlur = () => {
+      setIsVisible(false);
+    };
+
+    // Écouter les événements Tiptap
+    editor.on('selectionUpdate', handleSelectionUpdate);
+    editor.on('focus', handleFocus);
+    editor.on('blur', handleBlur);
 
     return () => {
-      clearInterval(interval);
+      editor.off('selectionUpdate', handleSelectionUpdate);
+      editor.off('focus', handleFocus);
+      editor.off('blur', handleBlur);
     };
-  }, [editor]);
+  }, [editor, updatePosition]);
 
-  // Check if operations are possible
-  const canAddRowBefore = !!editor && !!editor.can?.().chain().focus().addRowBefore().run();
-  const canAddRowAfter = !!editor && !!editor.can?.().chain().focus().addRowAfter().run();
-  const canAddColBefore = !!editor && !!editor.can?.().chain().focus().addColumnBefore().run();
-  const canAddColAfter = !!editor && !!editor.can?.().chain().focus().addColumnAfter().run();
+  // ✅ Mémoriser les calculs coûteux (optimisation performance)
+  const tablePermissions = useMemo(() => ({
+    canAddRowBefore: !!editor?.can?.().chain().focus().addRowBefore().run(),
+    canAddRowAfter: !!editor?.can?.().chain().focus().addRowAfter().run(),
+    canAddColBefore: !!editor?.can?.().chain().focus().addColumnBefore().run(),
+    canAddColAfter: !!editor?.can?.().chain().focus().addColumnAfter().run(),
+  }), [editor]);
 
   // Table operations
   const addRowAbove = () => {
@@ -122,7 +138,7 @@ const TableControls: React.FC<TableControlsProps> = ({ editor, containerRef }) =
         <button
           className="table-control-btn"
           onClick={addRowAbove}
-          disabled={!canAddRowBefore}
+          disabled={!tablePermissions.canAddRowBefore}
           title="Ajouter une ligne au-dessus"
         >
           <FiPlus size={14} />
@@ -130,7 +146,7 @@ const TableControls: React.FC<TableControlsProps> = ({ editor, containerRef }) =
         <button
           className="table-control-btn"
           onClick={addRowBelow}
-          disabled={!canAddRowAfter}
+          disabled={!tablePermissions.canAddRowAfter}
           title="Ajouter une ligne en-dessous"
         >
           <FiPlus size={14} />
@@ -140,7 +156,7 @@ const TableControls: React.FC<TableControlsProps> = ({ editor, containerRef }) =
         <button
           className="table-control-btn"
           onClick={addColLeft}
-          disabled={!canAddColBefore}
+          disabled={!tablePermissions.canAddColBefore}
           title="Ajouter une colonne à gauche"
         >
           <FiPlus size={14} />
@@ -148,7 +164,7 @@ const TableControls: React.FC<TableControlsProps> = ({ editor, containerRef }) =
         <button
           className="table-control-btn"
           onClick={addColRight}
-          disabled={!canAddColAfter}
+          disabled={!tablePermissions.canAddColAfter}
           title="Ajouter une colonne à droite"
         >
           <FiPlus size={14} />
