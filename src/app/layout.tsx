@@ -19,7 +19,6 @@ import "../components/editor/editor-footer.css";
 import "../components/editor/editor-toc.css";
 import "../components/editor/editor-slash-menu.css";
 import "../components/editor/editor-header-image.css";
-import "../components/editor/editor-toolbar.css";
 import "../components/editor/editor-modal.css";
 
 
