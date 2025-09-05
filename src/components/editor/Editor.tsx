@@ -38,10 +38,36 @@ import ImageMenu from '@/components/ImageMenu';
 import { uploadImageForNote } from '@/utils/fileUpload';
 import { logger, LogCategory } from '@/utils/logger';
 import type { FullEditorInstance } from '@/types/editor';
-// import type { Note } from '@/types/note'; // Type non trouvé, on utilise Record<string, unknown>
+// Types pour les mises à jour de note
+interface NoteUpdate {
+  a4_mode?: boolean;
+  slash_lang?: 'fr' | 'en';
+  wide_mode?: boolean;
+  font_family?: string;
+  markdown_content?: string;
+  [key: string]: unknown;
+}
 import { createEditorExtensions, PRODUCTION_EXTENSIONS_CONFIG } from '@/config/editor-extensions';
 
-// Fonction utilitaire debounce optimisée pour les performances
+/**
+ * Fonction utilitaire debounce optimisée pour les performances
+ * 
+ * @description Retarde l'exécution d'une fonction jusqu'à ce qu'un délai se soit écoulé
+ * depuis la dernière fois qu'elle a été appelée. Utile pour optimiser les performances
+ * en évitant les appels trop fréquents (ex: sauvegarde automatique).
+ * 
+ * @param func - Fonction à débouncer
+ * @param wait - Délai d'attente en millisecondes
+ * @param immediate - Si true, exécute immédiatement au premier appel
+ * @returns Fonction débouncée
+ * 
+ * @example
+ * ```typescript
+ * const debouncedSave = debounce((content: string) => {
+ *   saveNote(content);
+ * }, 500);
+ * ```
+ */
 const debounce = <T extends (...args: unknown[]) => void>(
   func: T, 
   wait: number,
@@ -66,8 +92,22 @@ const debounce = <T extends (...args: unknown[]) => void>(
 import ContextMenu from './ContextMenu';
 
 /**
- * Full Editor – markdown is source of truth; HTML only for display.
- * Optimisé pour les performances avec extensions réduites.
+ * Composant principal de l'éditeur de notes
+ * 
+ * @description Éditeur de texte riche basé sur Tiptap avec support Markdown.
+ * Le Markdown est la source de vérité, le HTML est utilisé uniquement pour l'affichage.
+ * Optimisé pour les performances avec extensions réduites et gestion d'état intelligente.
+ * 
+ * @param noteId - ID unique de la note à éditer
+ * @param readonly - Mode lecture seule (désactive l'édition)
+ * @param userId - ID de l'utilisateur (par défaut: 'me')
+ * 
+ * @returns Composant React de l'éditeur complet
+ * 
+ * @example
+ * ```tsx
+ * <Editor noteId="note-123" readonly={false} userId="user-456" />
+ * ```
  */
 const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> = ({ noteId, readonly = false, userId = 'me' }) => {
   const router = useRouter();
@@ -226,7 +266,14 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
   // Mise à jour intelligente du contenu de l'éditeur quand la note change
   const [isUpdatingFromStore, setIsUpdatingFromStore] = React.useState(false);
 
-  // Mémoriser les callbacks coûteux pour l'éditeur
+  /**
+   * Gestionnaire de mise à jour de l'éditeur
+   * 
+   * @description Callback optimisé pour gérer les changements de contenu de l'éditeur.
+   * Met à jour le Markdown source de vérité et synchronise avec le store.
+   * 
+   * @param editor - Instance de l'éditeur Tiptap
+   */
   const handleEditorUpdate = React.useCallback(({ editor }: { editor: FullEditorInstance }) => {
     if (!editor || isUpdatingFromStore) return;
     
@@ -239,7 +286,7 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
         updateNote(noteId, { markdown_content: cleanMarkdown });
       }
     } catch (error) {
-      logger.warn(LogCategory.EDITOR, 'Erreur lors de la mise à jour du contenu:', error);
+      logger.error(LogCategory.EDITOR, 'Erreur lors de la mise à jour du contenu:', error);
     }
   }, [content, noteId, updateNote, isUpdatingFromStore]);
 
@@ -378,7 +425,9 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
             editor.commands.setTextSelection(currentPos);
           }
           
-          logger.debug(LogCategory.EDITOR, 'Contenu mis à jour depuis la note: ' + content.substring(0, 100) + '...');
+          if (process.env.NODE_ENV === 'development') {
+            logger.debug(LogCategory.EDITOR, 'Contenu mis à jour depuis la note: ' + content.substring(0, 100) + '...');
+          }
         } catch (error) {
           logger.error(LogCategory.EDITOR, 'Erreur mise à jour contenu: ' + error);
         } finally {
@@ -458,7 +507,9 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
   const handleShareSettingsChange = React.useCallback(async (newSettings: ShareSettingsUpdate) => {
     try {
       logger.info(LogCategory.EDITOR, 'Début de handleShareSettingsChange');
-      logger.debug(LogCategory.EDITOR, 'handleShareSettingsChange - newSettings', newSettings);
+      if (process.env.NODE_ENV === 'development') {
+        logger.debug(LogCategory.EDITOR, 'handleShareSettingsChange - newSettings', newSettings);
+      }
       
       // Update local state with proper type casting
       const updatedSettings: ShareSettings = {
@@ -492,11 +543,15 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
       const apiUrl = `/api/v2/note/${encodeURIComponent(noteId)}/share`;
       logger.info(LogCategory.EDITOR, 'URL API:', apiUrl);
       logger.info(LogCategory.EDITOR, 'Méthode: PATCH');
-      logger.debug(LogCategory.EDITOR, 'Headers:', { 
-        'Content-Type': 'application/json', 
-        'Authorization': `Bearer ${token.substring(0, 20)}...` 
-      });
-      logger.debug(LogCategory.EDITOR, 'Body:', JSON.stringify(newSettings));
+      if (process.env.NODE_ENV === 'development') {
+        logger.debug(LogCategory.EDITOR, 'Headers:', { 
+          'Content-Type': 'application/json', 
+          'Authorization': `Bearer ${token.substring(0, 20)}...` 
+        });
+      }
+      if (process.env.NODE_ENV === 'development') {
+        logger.debug(LogCategory.EDITOR, 'Body:', JSON.stringify(newSettings));
+      }
       
 
       
@@ -507,13 +562,15 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
       });
       
       // Ajouter plus de logs pour le debugging
-      logger.debug(LogCategory.EDITOR, 'Réponse fetch reçue', {
-        status: res.status,
-        statusText: res.statusText,
-        ok: res.ok,
-        url: apiUrl,
-        method: 'PATCH'
-      });
+      if (process.env.NODE_ENV === 'development') {
+        logger.debug(LogCategory.EDITOR, 'Réponse fetch reçue', {
+          status: res.status,
+          statusText: res.statusText,
+          ok: res.ok,
+          url: apiUrl,
+          method: 'PATCH'
+        });
+      }
       
       logger.info(LogCategory.EDITOR, 'Réponse reçue:', {
         status: res.status,
@@ -559,7 +616,7 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
           responseData = JSON.parse(responseText);
           logger.info(LogCategory.EDITOR, 'Données de réponse:', responseData);
         } catch (parseError) {
-          logger.warn(LogCategory.EDITOR, 'Réponse non-JSON reçue:', responseText);
+          logger.error(LogCategory.EDITOR, 'Réponse non-JSON reçue:', responseText);
           responseData = { message: responseText };
         }
       } else {
@@ -662,7 +719,7 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
       
       // 2. Si l'API réussit, mettre à jour l'état local
       setA4Mode(value);
-      updateNote(noteId, { a4_mode: value } as Record<string, unknown>);
+      updateNote(noteId, { a4_mode: value } as NoteUpdate);
       
       if (process.env.NODE_ENV === 'development') {
         logger.debug(LogCategory.EDITOR, `Mode A4 changé et persisté: ${value ? 'ON' : 'OFF'}`);
@@ -690,7 +747,7 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
       
       // 2. Si l'API réussit, mettre à jour l'état local
       setSlashLang(value);
-      updateNote(noteId, { slash_lang: value } as Record<string, unknown>);
+      updateNote(noteId, { slash_lang: value } as NoteUpdate);
       
       if (process.env.NODE_ENV === 'development') {
         logger.debug(LogCategory.EDITOR, `Langue slash changée et persistée: ${value}`);
@@ -739,7 +796,9 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
       editor.commands.focus();
       editor.commands.setTextSelection(from + insertText.length);
       
-      logger.debug(LogCategory.EDITOR, `Texte transcrit inséré: "${text}"`);
+      if (process.env.NODE_ENV === 'development') {
+        logger.debug(LogCategory.EDITOR, `Texte transcrit inséré: "${text}"`);
+      }
     } catch (error) {
       logger.error(LogCategory.EDITOR, 'Erreur lors de l\'insertion du texte transcrit:', error);
     }
@@ -771,7 +830,7 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
         return items;
         
       } catch (error) {
-        logger.warn(LogCategory.EDITOR, 'Erreur lors de l\'extraction des headings:', error);
+        logger.error(LogCategory.EDITOR, 'Erreur lors de l\'extraction des headings:', error);
         // Continuer vers le fallback
       }
     }
@@ -838,7 +897,9 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
 
       // Construire et ouvrir l'URL
       const url = `${window.location.origin}/@${userData.username}/${noteData.slug}`;
-      logger.debug(LogCategory.EDITOR, 'Ouverture de l\'URL publique:', url);
+      if (process.env.NODE_ENV === 'development') {
+        logger.debug(LogCategory.EDITOR, 'Ouverture de l\'URL publique:', url);
+      }
       window.open(url, '_blank', 'noopener,noreferrer');
       
     } catch (error) {
