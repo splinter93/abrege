@@ -1,0 +1,128 @@
+/**
+ * Styles pour le drag and drop des blocs dans l'éditeur
+ * Extension BlockDragDropExtension
+ */
+
+/* Indicateur de drag */
+.drag-handle {
+  cursor: grab;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.drag-handle:hover {
+  opacity: 1;
+}
+
+.drag-handle:active {
+  cursor: grabbing;
+}
+
+/* Bloc en cours de drag */
+.ProseMirror .dragging {
+  opacity: 0.5;
+  transform: rotate(2deg);
+  transition: all 0.2s ease;
+}
+
+/* Zone de drop */
+.ProseMirror .drop-target {
+  position: relative;
+}
+
+.ProseMirror .drop-target::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: var(--accent-primary);
+  border-radius: 2px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.ProseMirror .drop-target.drop-active::before {
+  opacity: 1;
+}
+
+/* Indicateur de position de drop */
+.ProseMirror .drop-indicator {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--accent-primary);
+  border-radius: 1px;
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* Animation de drop */
+@keyframes drop-success {
+  0% {
+    transform: scale(1.05);
+    box-shadow: 0 0 0 0 var(--accent-primary);
+  }
+  50% {
+    transform: scale(1.02);
+    box-shadow: 0 0 0 4px rgba(var(--accent-primary-rgb), 0.3);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 transparent;
+  }
+}
+
+.ProseMirror .drop-success {
+  animation: drop-success 0.3s ease;
+}
+
+/* Styles pour les différents types de blocs */
+.ProseMirror .code-block {
+  position: relative;
+}
+
+.ProseMirror .code-block .drag-handle {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 20px;
+  height: 20px;
+  background: var(--bg-2);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  color: var(--text-2);
+}
+
+.ProseMirror .callout {
+  position: relative;
+}
+
+.ProseMirror .callout .drag-handle {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 20px;
+  height: 20px;
+  background: var(--bg-2);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  color: var(--text-2);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .ProseMirror .drag-handle {
+    opacity: 1; /* Toujours visible sur mobile */
+  }
+}

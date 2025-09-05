@@ -5,6 +5,7 @@ import '@/styles/context-menu.css';
 import '@/styles/callouts.css';
 import '@/styles/color-buttons.css';
 import '@/styles/tiptap-extensions.css';
+import '@/styles/block-drag-drop.css';
 import '@/components/mermaid/MermaidRenderer.css';
 import '@/components/mermaid/MermaidToolbar.css';
 import '@/components/mermaid/MermaidModal.css';

@@ -141,12 +141,16 @@ export function createEditorExtensions(
   if (config.experimental) {
     extensions.push(
       BoxSelectionExtension,
-      BlockDragDropExtension,
       SelectionExtension,
       TrailingNodeExtension
       // SpaceHandlingExtension supprimé - causait des conflits
     );
   }
+
+  // Extensions de drag and drop (toujours activées pour l'UX)
+  extensions.push(
+    BlockDragDropExtension
+  );
 
   // Extensions de performance
   if (config.performance) {
