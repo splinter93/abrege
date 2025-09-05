@@ -1,5 +1,4 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { logger, LogCategory } from '@/utils/logger';
 import { 
   FiBold, 
   FiItalic, 
@@ -25,6 +24,7 @@ import {
 import { AiOutlineOrderedList } from 'react-icons/ai';
 import { MdGridOn, MdFormatQuote } from 'react-icons/md';
 import Tooltip from '@/components/Tooltip';
+import { logger, LogCategory } from '@/utils/logger';
 import AudioRecorder from '@/components/chat/AudioRecorder';
 import ColorButton from './ColorButton';
 import ModernFormatButton from './ModernFormatButton';

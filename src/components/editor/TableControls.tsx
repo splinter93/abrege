@@ -69,13 +69,13 @@ const TableControls: React.FC<TableControlsProps> = ({ editor, containerRef }) =
     }
   };
 
-  // ✅ Subscribe to editor events (optimisation performance)
+  // Subscribe to editor events - Performance optimisée
   useEffect(() => {
     if (!editor) return;
 
     // Utiliser les événements Tiptap au lieu du polling
     const handleSelectionUpdate = () => {
-      if (editor.isFocused) {
+      if (editor.isFocused && editor.state.selection) {
         updatePosition();
       }
     };
@@ -88,7 +88,7 @@ const TableControls: React.FC<TableControlsProps> = ({ editor, containerRef }) =
       setIsVisible(false);
     };
 
-    // Écouter les événements Tiptap
+    // Écouter les événements spécifiques
     editor.on('selectionUpdate', handleSelectionUpdate);
     editor.on('focus', handleFocus);
     editor.on('blur', handleBlur);
@@ -100,13 +100,58 @@ const TableControls: React.FC<TableControlsProps> = ({ editor, containerRef }) =
     };
   }, [editor, updatePosition]);
 
-  // ✅ Mémoriser les calculs coûteux (optimisation performance)
-  const tablePermissions = useMemo(() => ({
-    canAddRowBefore: !!editor?.can?.().chain().focus().addRowBefore().run(),
-    canAddRowAfter: !!editor?.can?.().chain().focus().addRowAfter().run(),
-    canAddColBefore: !!editor?.can?.().chain().focus().addColumnBefore().run(),
-    canAddColAfter: !!editor?.can?.().chain().focus().addColumnAfter().run(),
-  }), [editor]);
+  // Mémoriser les calculs coûteux des permissions de tableau
+  const tablePermissions = useMemo(() => {
+    if (!editor) {
+      return {
+        canAddRowBefore: false,
+        canAddRowAfter: false,
+        canAddColBefore: false,
+        canAddColAfter: false,
+        canDeleteRow: false,
+        canDeleteCol: false,
+        canMergeCells: false,
+        canSplitCell: false
+      };
+    }
+
+    try {
+      return {
+        canAddRowBefore: !!editor.can?.().chain().focus().addRowBefore().run(),
+        canAddRowAfter: !!editor.can?.().chain().focus().addRowAfter().run(),
+        canAddColBefore: !!editor.can?.().chain().focus().addColumnBefore().run(),
+        canAddColAfter: !!editor.can?.().chain().focus().addColumnAfter().run(),
+        canDeleteRow: !!editor.can?.().chain().focus().deleteRow().run(),
+        canDeleteCol: !!editor.can?.().chain().focus().deleteColumn().run(),
+        canMergeCells: !!editor.can?.().chain().focus().mergeCells().run(),
+        canSplitCell: !!editor.can?.().chain().focus().splitCell().run()
+      };
+    } catch (error) {
+      logger.error(LogCategory.EDITOR, 'Erreur calcul permissions tableau:', error);
+      return {
+        canAddRowBefore: false,
+        canAddRowAfter: false,
+        canAddColBefore: false,
+        canAddColAfter: false,
+        canDeleteRow: false,
+        canDeleteCol: false,
+        canMergeCells: false,
+        canSplitCell: false
+      };
+    }
+  }, [editor]);
+
+  // Destructurer pour la compatibilité
+  const { 
+    canAddRowBefore, 
+    canAddRowAfter, 
+    canAddColBefore, 
+    canAddColAfter,
+    canDeleteRow,
+    canDeleteCol,
+    canMergeCells,
+    canSplitCell
+  } = tablePermissions;
 
   // Table operations
   const addRowAbove = () => {
@@ -138,7 +183,7 @@ const TableControls: React.FC<TableControlsProps> = ({ editor, containerRef }) =
         <button
           className="table-control-btn"
           onClick={addRowAbove}
-          disabled={!tablePermissions.canAddRowBefore}
+          disabled={!canAddRowBefore}
           title="Ajouter une ligne au-dessus"
         >
           <FiPlus size={14} />
@@ -146,7 +191,7 @@ const TableControls: React.FC<TableControlsProps> = ({ editor, containerRef }) =
         <button
           className="table-control-btn"
           onClick={addRowBelow}
-          disabled={!tablePermissions.canAddRowAfter}
+          disabled={!canAddRowAfter}
           title="Ajouter une ligne en-dessous"
         >
           <FiPlus size={14} />
@@ -156,7 +201,7 @@ const TableControls: React.FC<TableControlsProps> = ({ editor, containerRef }) =
         <button
           className="table-control-btn"
           onClick={addColLeft}
-          disabled={!tablePermissions.canAddColBefore}
+          disabled={!canAddColBefore}
           title="Ajouter une colonne à gauche"
         >
           <FiPlus size={14} />
@@ -164,7 +209,7 @@ const TableControls: React.FC<TableControlsProps> = ({ editor, containerRef }) =
         <button
           className="table-control-btn"
           onClick={addColRight}
-          disabled={!tablePermissions.canAddColAfter}
+          disabled={!canAddColAfter}
           title="Ajouter une colonne à droite"
         >
           <FiPlus size={14} />

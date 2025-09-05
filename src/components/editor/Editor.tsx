@@ -40,12 +40,26 @@ import type { FullEditorInstance } from '@/types/editor';
 // import type { Note } from '@/types/note'; // Type non trouvé, on utilise Record<string, unknown>
 import { createEditorExtensions, PRODUCTION_EXTENSIONS_CONFIG } from '@/config/editor-extensions';
 
-// Fonction utilitaire debounce pour optimiser les performances
-const debounce = <T extends (...args: unknown[]) => void>(func: T, wait: number): T => {
+// Fonction utilitaire debounce optimisée pour les performances
+const debounce = <T extends (...args: unknown[]) => void>(
+  func: T, 
+  wait: number,
+  immediate = false
+): T => {
   let timeout: NodeJS.Timeout | null = null;
+  
   return ((...args: Parameters<T>) => {
+    const later = () => {
+      timeout = null;
+      if (!immediate) func(...args);
+    };
+    
+    const callNow = immediate && !timeout;
+    
     if (timeout) clearTimeout(timeout);
-    timeout = setTimeout(() => func(...args), wait);
+    timeout = setTimeout(later, wait);
+    
+    if (callNow) func(...args);
   }) as T;
 };
 import ContextMenu from './ContextMenu';
@@ -74,28 +88,30 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
     }
   }, [note, content, noteId, noteLoaded]);
 
-  // État consolidé pour les propriétés de note (optimisation performance)
-  const [noteState, setNoteState] = React.useState({
-    title: note?.source_title || '',
-    headerImageUrl: note?.header_image || null,
-    headerImageKey: 0, // Clé pour forcer le rechargement de l'image
-    headerOffset: 50,
-    headerBlur: 0,
-    headerOverlay: '0',
-    titleInImage: false,
-    a4Mode: false,
-    fullWidth: false,
-    slashLang: 'en' as 'fr' | 'en',
-    shareSettings: getDefaultShareSettings()
-  });
+  const [title, setTitle] = React.useState<string>(note?.source_title || '');
+  React.useEffect(() => { setTitle(note?.source_title || ''); }, [note?.source_title]);
 
-  // États UI séparés (non liés aux propriétés de note)
+  const [headerImageUrl, setHeaderImageUrl] = React.useState<string | null>(note?.header_image || null);
+  const [headerOffset, setHeaderOffset] = React.useState<number>(50);
+  const [headerBlur, setHeaderBlur] = React.useState<number>(0);
+  const [headerOverlay, setHeaderOverlay] = React.useState<string>('0');
+  const [titleInImage, setTitleInImage] = React.useState<boolean>(false);
   const [imageMenuOpen, setImageMenuOpen] = React.useState(false);
   const [imageMenuTarget, setImageMenuTarget] = React.useState<'header' | 'content'>('header');
+
+  // header actions state
   const [previewMode, setPreviewMode] = React.useState(false);
+
+  // Kebab state
   const [kebabOpen, setKebabOpen] = React.useState(false);
   const kebabBtnRef = React.useRef<HTMLButtonElement | null>(null);
   const [kebabPos, setKebabPos] = React.useState<{ top: number; left: number }>({ top: 0, left: 0 });
+  const [a4Mode, setA4Mode] = React.useState(false);
+  const [fullWidth, setFullWidth] = React.useState(false);
+  const [slashLang, setSlashLang] = React.useState<'fr' | 'en'>('en');
+  
+  // Share settings state
+  const [shareSettings, setShareSettings] = React.useState<ShareSettings>(getDefaultShareSettings());
 
   // Context menu state
   const [contextMenu, setContextMenu] = React.useState<{
@@ -133,7 +149,7 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
       }
     };
     const normalized = normalize(url);
-    setNoteState(prev => ({ ...prev, headerImageUrl: normalized }));
+    setHeaderImageUrl(normalized);
     try {
       updateNote(noteId, { header_image: normalized || undefined });
       await v2UnifiedApi.updateNote(noteId, { header_image: normalized || undefined }, userId);
@@ -155,30 +171,29 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
   // Ref to the element that contains .ProseMirror so TOC can scroll into view
   const editorContainerRef = React.useRef<HTMLDivElement>(null);
 
-  // ✅ UN SEUL useEffect pour toutes les propriétés de note (optimisation performance)
   React.useEffect(() => {
-    if (note) {
-      setNoteState(prev => ({
-        ...prev,
-        title: note.source_title || '',
-        headerImageUrl: note.header_image || null,
-        headerOffset: typeof note.header_image_offset === 'number' ? note.header_image_offset : prev.headerOffset,
-        headerBlur: typeof note.header_image_blur === 'number' ? note.header_image_blur : prev.headerBlur,
-        headerOverlay: typeof note.header_image_overlay === 'string' ? note.header_image_overlay : prev.headerOverlay,
-        titleInImage: typeof note.header_title_in_image === 'boolean' ? note.header_title_in_image : prev.titleInImage,
-        a4Mode: typeof (note as any).a4_mode === 'boolean' ? (note as any).a4_mode : prev.a4Mode,
-        fullWidth: typeof note.wide_mode === 'boolean' ? note.wide_mode : prev.fullWidth,
-        slashLang: typeof (note as any).slash_lang === 'string' ? (note as any).slash_lang : prev.slashLang,
-        shareSettings: note.share_settings ? {
-          ...prev.shareSettings,
-          visibility: (note.share_settings.visibility as ShareSettings['visibility']) || prev.shareSettings.visibility,
-          invited_users: note.share_settings.invited_users || prev.shareSettings.invited_users,
-          allow_edit: note.share_settings.allow_edit || prev.shareSettings.allow_edit,
-          allow_comments: note.share_settings.allow_comments || prev.shareSettings.allow_comments
-        } : prev.shareSettings
-      }));
+    if (note?.header_image) setHeaderImageUrl(note.header_image);
+  }, [note?.header_image]);
+
+  // Hydrate appearance fields from note
+  React.useEffect(() => {
+    if (typeof note?.header_image_offset === 'number') setHeaderOffset(note.header_image_offset);
+  }, [note?.header_image_offset]);
+  React.useEffect(() => {
+    if (typeof note?.header_image_blur === 'number') setHeaderBlur(note.header_image_blur);
+  }, [note?.header_image_blur]);
+  React.useEffect(() => {
+    if (typeof note?.header_image_overlay === 'string') setHeaderOverlay(note.header_image_overlay);
+  }, [note?.header_image_overlay]);
+  React.useEffect(() => {
+    if (typeof note?.header_title_in_image === 'boolean') setTitleInImage(note.header_title_in_image);
+  }, [note?.header_title_in_image]);
+  // Initialisation du wide mode depuis la note (seulement au chargement initial)
+  React.useEffect(() => {
+    if (typeof note?.wide_mode === 'boolean' && !fullWidth) {
+      setFullWidth(note.wide_mode);
     }
-  }, [note]);
+  }, [note?.wide_mode, fullWidth]);
   
 
 
@@ -207,24 +222,32 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
 
 
   // Real Tiptap editor instance (Markdown as source of truth)
+  // Mise à jour intelligente du contenu de l'éditeur quand la note change
+  const [isUpdatingFromStore, setIsUpdatingFromStore] = React.useState(false);
+
+  // Mémoriser les callbacks coûteux pour l'éditeur
+  const handleEditorUpdate = React.useCallback(({ editor }: { editor: FullEditorInstance }) => {
+    if (!editor || isUpdatingFromStore) return;
+    
+    try {
+      const md = editor.storage?.markdown?.getMarkdown?.() as string | undefined;
+      const nextMarkdown = typeof md === 'string' ? md : content;
+      if (nextMarkdown !== content) {
+        // 🔧 CORRECTION : Nettoyer le Markdown échappé avant sauvegarde
+        const cleanMarkdown = cleanEscapedMarkdown(nextMarkdown);
+        updateNote(noteId, { markdown_content: cleanMarkdown });
+      }
+    } catch (error) {
+      logger.warn(LogCategory.EDITOR, 'Erreur lors de la mise à jour du contenu:', error);
+    }
+  }, [content, noteId, updateNote, isUpdatingFromStore]);
+
   const editor = useEditor({
     editable: !isReadonly,
     immediatelyRender: false, // Éviter les erreurs de SSR/hydration
     extensions: createEditorExtensions(PRODUCTION_EXTENSIONS_CONFIG, lowlight), // Configuration stable mais fonctionnelle
     content: content || '',
-    onUpdate: React.useCallback(({ editor }) => {
-      try {
-        const md = editor.storage?.markdown?.getMarkdown?.() as string | undefined;
-        const nextMarkdown = typeof md === 'string' ? md : content;
-        if (nextMarkdown !== content) {
-          // 🔧 CORRECTION : Nettoyer le Markdown échappé avant sauvegarde
-          const cleanMarkdown = cleanEscapedMarkdown(nextMarkdown);
-          updateNote(noteId, { markdown_content: cleanMarkdown });
-        }
-      } catch (error) {
-        logger.warn(LogCategory.EDITOR, 'Erreur lors de la mise à jour du contenu:', error);
-      }
-    }, [content, noteId, updateNote]),
+    onUpdate: handleEditorUpdate,
   });
 
   // Gestion des actions du menu contextuel
@@ -314,9 +337,6 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
       .replace(/&amp;/g, '&');         // Supprimer l'échappement HTML des &
   };
 
-  // Mise à jour intelligente du contenu de l'éditeur quand la note change
-  const [isUpdatingFromStore, setIsUpdatingFromStore] = React.useState(false);
-  
   // Mettre à jour la TOC quand l'éditeur change - optimisé avec debounce
   const updateTOC = React.useCallback(() => {
     setForceTOCUpdate(prev => prev + 1);
@@ -405,7 +425,7 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
     } : undefined,
     onSave: async ({ title: newTitle, markdown_content, html_content }) => {
       await v2UnifiedApi.updateNote(noteId, {
-        source_title: newTitle ?? noteState.title ?? 'Untitled',
+        source_title: newTitle ?? title ?? 'Untitled',
         markdown_content,
         html_content,
       }, userId);
@@ -417,8 +437,21 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
 
   // Gestionnaire de mode large avec changement CSS automatique
   // Utiliser l'état local fullWidth au lieu de note?.wide_mode pour éviter les conflits
-  const { changeWideMode } = useWideModeManager(noteState.fullWidth);
+  const { changeWideMode } = useWideModeManager(fullWidth);
 
+  // Initialize share settings from note data
+  React.useEffect(() => {
+    if (note?.share_settings) {
+      const shareSettings = note.share_settings;
+      setShareSettings(prev => ({
+        ...prev,
+        visibility: (shareSettings.visibility as ShareSettings['visibility']) || prev.visibility,
+        invited_users: shareSettings.invited_users || prev.invited_users,
+        allow_edit: shareSettings.allow_edit || prev.allow_edit,
+        allow_comments: shareSettings.allow_comments || prev.allow_comments
+      }));
+    }
+  }, [note?.share_settings]);
 
   // Handle share settings changes
   const handleShareSettingsChange = React.useCallback(async (newSettings: ShareSettingsUpdate) => {
@@ -433,7 +466,7 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
         allow_edit: newSettings.allow_edit || false,
         allow_comments: newSettings.allow_comments || false
       };
-      setNoteState(prev => ({ ...prev, shareSettings: updatedSettings }));
+      setShareSettings(updatedSettings);
       logger.info(LogCategory.EDITOR, 'État local mis à jour');
       
       // Update note in store
@@ -590,7 +623,7 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
   // Persist fullWidth changes
   const handleFullWidthChange = React.useCallback(async (value: boolean) => {
     // Sauvegarder l'ancienne valeur pour rollback en cas d'échec
-    const oldValue = noteState.fullWidth;
+    const oldValue = fullWidth;
     
     try {
       // 1. Appeler l'API en premier
@@ -598,7 +631,7 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
       
       // 2. Si l'API réussit, mettre à jour l'état local et le CSS
       updateNote(noteId, { wide_mode: value });
-      setNoteState(prev => ({ ...prev, fullWidth: value }));
+      setFullWidth(value);
       changeWideMode(value);
       
       if (process.env.NODE_ENV === 'development') {
@@ -609,25 +642,25 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
       logger.error(LogCategory.EDITOR, 'Erreur lors du changement de mode large', error);
       
       // Rollback : restaurer l'état local et le CSS
-      setNoteState(prev => ({ ...prev, fullWidth: oldValue }));
+      setFullWidth(oldValue);
       changeWideMode(oldValue);
       
       // Optionnel : afficher un message d'erreur à l'utilisateur
       toast.error('Erreur lors de la sauvegarde du mode large');
     }
-  }, [noteId, updateNote, changeWideMode, userId, noteState.fullWidth]);
+  }, [noteId, updateNote, changeWideMode, userId, fullWidth]);
 
   // Persist a4Mode changes
   const handleA4ModeChange = React.useCallback(async (value: boolean) => {
     // Sauvegarder l'ancienne valeur pour rollback en cas d'échec
-    const oldValue = noteState.a4Mode;
+    const oldValue = a4Mode;
     
     try {
       // 1. Appeler l'API en premier
       await v2UnifiedApi.updateNote(noteId, { a4_mode: value }, userId);
       
       // 2. Si l'API réussit, mettre à jour l'état local
-      setNoteState(prev => ({ ...prev, a4Mode: value }));
+      setA4Mode(value);
       updateNote(noteId, { a4_mode: value } as Record<string, unknown>);
       
       if (process.env.NODE_ENV === 'development') {
@@ -638,24 +671,24 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
       logger.error(LogCategory.EDITOR, 'Erreur lors du changement de mode A4', error);
       
       // Rollback : restaurer l'état local
-      setNoteState(prev => ({ ...prev, a4Mode: oldValue }));
+      setA4Mode(oldValue);
       
       // Optionnel : afficher un message d'erreur à l'utilisateur
       toast.error('Erreur lors de la sauvegarde du mode A4');
     }
-  }, [noteId, updateNote, userId, noteState.a4Mode]);
+  }, [noteId, updateNote, userId, a4Mode]);
 
   // Persist slashLang changes
   const handleSlashLangChange = React.useCallback(async (value: 'fr' | 'en') => {
     // Sauvegarder l'ancienne valeur pour rollback en cas d'échec
-    const oldValue = noteState.slashLang;
+    const oldValue = slashLang;
     
     try {
       // 1. Appeler l'API en premier
       await v2UnifiedApi.updateNote(noteId, { slash_lang: value }, userId);
       
       // 2. Si l'API réussit, mettre à jour l'état local
-      setNoteState(prev => ({ ...prev, slashLang: value }));
+      setSlashLang(value);
       updateNote(noteId, { slash_lang: value } as Record<string, unknown>);
       
       if (process.env.NODE_ENV === 'development') {
@@ -666,26 +699,26 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
       logger.error(LogCategory.EDITOR, 'Erreur lors du changement de langue slash', error);
       
       // Rollback : restaurer l'état local
-      setNoteState(prev => ({ ...prev, slashLang: oldValue }));
+      setSlashLang(oldValue);
       
       // Optionnel : afficher un message d'erreur à l'utilisateur
       toast.error('Erreur lors de la sauvegarde de la langue slash');
     }
-  }, [noteId, updateNote, userId, noteState.slashLang]);
+  }, [noteId, updateNote, userId, slashLang]);
 
   // Ctrl/Cmd+S
   React.useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 's') { e.preventDefault(); handleSave(noteState.title || 'Untitled', content); }
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 's') { e.preventDefault(); handleSave(title || 'Untitled', content); }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [handleSave, noteState.title, content]);
+  }, [handleSave, title, content]);
 
   // Save title on blur
   const handleTitleBlur = React.useCallback(() => {
-    handleSave(noteState.title || 'Untitled', content);
-  }, [handleSave, noteState.title, content]);
+    handleSave(title || 'Untitled', content);
+  }, [handleSave, title, content]);
 
   // Gérer la transcription audio complétée
   const handleTranscriptionComplete = React.useCallback((text: string) => {
@@ -880,7 +913,7 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
         <PublicTableOfContents headings={headings} containerRef={editorContainerRef} />
       </div>
       <EditorLayout
-        layoutClassName={noteState.headerImageUrl ? (noteState.titleInImage ? 'noteLayout imageWithTitle' : 'noteLayout imageOnly') : 'noteLayout noImage'}
+        layoutClassName={headerImageUrl ? (titleInImage ? 'noteLayout imageWithTitle' : 'noteLayout imageOnly') : 'noteLayout noImage'}
         header={(
           <>
             <EditorHeader
@@ -922,7 +955,7 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
               />
             </EditorHeader>
             {/* Add header image CTA when no image is set */}
-            {!noteState.headerImageUrl && (
+            {!headerImageUrl && (
               <>
                 <div className="editor-add-header-image-row editor-full-width editor-add-image-center">
                   <div className="editor-container-width editor-image-container-width">
@@ -960,82 +993,70 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
               </>
             )}
             <EditorHeaderImage
-              headerImageUrl={noteState.headerImageUrl}
-              headerImageOffset={noteState.headerOffset}
-              headerImageBlur={noteState.headerBlur}
-              headerImageOverlay={parseFloat(noteState.headerOverlay) || 0}
-              headerTitleInImage={noteState.titleInImage}
+              headerImageUrl={headerImageUrl}
+              headerImageOffset={headerOffset}
+              headerImageBlur={headerBlur}
+              headerImageOverlay={parseFloat(headerOverlay) || 0}
+              headerTitleInImage={titleInImage}
               onHeaderChange={handleHeaderChange}
               onHeaderOffsetChange={async (offset) => {
-                const oldOffset = noteState.headerOffset;
+                const oldOffset = headerOffset;
                 try {
-                  // 1. Mettre à jour l'état local immédiatement pour l'UI
-                  setNoteState(prev => ({ 
-                    ...prev, 
-                    headerOffset: offset
-                  }));
-                  
-                  // 2. Appeler l'API en arrière-plan
+                  // 1. Appeler l'API en premier
                   await v2UnifiedApi.updateNote(noteId, { header_image_offset: offset }, userId);
+                  
+                  // 2. Si l'API réussit, mettre à jour l'état local
+                  setHeaderOffset(offset);
                   updateNote(noteId, { header_image_offset: offset });
                 } catch (error) {
                   // 3. En cas d'échec, restaurer l'ancienne valeur
                   logger.error(LogCategory.EDITOR, 'Erreur lors de la sauvegarde de l\'offset d\'image', error);
-                  setNoteState(prev => ({ ...prev, headerOffset: oldOffset }));
+                  setHeaderOffset(oldOffset);
                 }
               }}
               onHeaderBlurChange={async (blur) => {
-                const oldBlur = noteState.headerBlur;
+                const oldBlur = headerBlur;
                 try {
-                  // 1. Mettre à jour l'état local immédiatement pour l'UI
-                  setNoteState(prev => ({ 
-                    ...prev, 
-                    headerBlur: blur
-                  }));
-                  
-                  // 2. Appeler l'API en arrière-plan
+                  // 1. Appeler l'API en premier
                   await v2UnifiedApi.updateNote(noteId, { header_image_blur: blur }, userId);
+                  
+                  // 2. Si l'API réussit, mettre à jour l'état local
+                  setHeaderBlur(blur);
                   updateNote(noteId, { header_image_blur: blur });
                 } catch (error) {
                   // 3. En cas d'échec, restaurer l'ancienne valeur
                   logger.error(LogCategory.EDITOR, 'Erreur lors de la sauvegarde du flou d\'image', error);
-                  setNoteState(prev => ({ ...prev, headerBlur: oldBlur }));
+                  setHeaderBlur(oldBlur);
                 }
               }}
               onHeaderOverlayChange={async (overlay) => {
-                const oldOverlay = noteState.headerOverlay;
+                const oldOverlay = headerOverlay;
                 try {
-                  // 1. Mettre à jour l'état local immédiatement pour l'UI
-                  setNoteState(prev => ({ 
-                    ...prev, 
-                    headerOverlay: overlay.toString()
-                  }));
-                  
-                  // 2. Appeler l'API en arrière-plan
+                  // 1. Appeler l'API en premier
                   await v2UnifiedApi.updateNote(noteId, { header_image_overlay: overlay.toString() }, userId);
+                  
+                  // 2. Si l'API réussit, mettre à jour l'état local
+                  setHeaderOverlay(overlay.toString());
                   updateNote(noteId, { header_image_overlay: overlay.toString() });
                 } catch (error) {
                   // 3. En cas d'échec, restaurer l'ancienne valeur
                   logger.error(LogCategory.EDITOR, 'Erreur lors de la sauvegarde de l\'overlay d\'image', error);
-                  setNoteState(prev => ({ ...prev, headerOverlay: oldOverlay }));
+                  setHeaderOverlay(oldOverlay);
                 }
               }}
               onHeaderTitleInImageChange={async (v) => {
-                const oldValue = noteState.titleInImage;
+                const oldValue = titleInImage;
                 try {
-                  // 1. Mettre à jour l'état local immédiatement pour l'UI
-                  setNoteState(prev => ({ 
-                    ...prev, 
-                    titleInImage: v
-                  }));
-                  
-                  // 2. Appeler l'API en arrière-plan
+                  // 1. Appeler l'API en premier
                   await v2UnifiedApi.updateNote(noteId, { header_title_in_image: v }, userId);
+                  
+                  // 2. Si l'API réussit, mettre à jour l'état local
+                  setTitleInImage(v);
                   updateNote(noteId, { header_title_in_image: v });
                 } catch (error) {
                   // 3. En cas d'échec, restaurer l'ancienne valeur
                   logger.error(LogCategory.EDITOR, 'Erreur lors de la sauvegarde du titre dans l\'image', error);
-                  setNoteState(prev => ({ ...prev, titleInImage: oldValue }));
+                  setTitleInImage(oldValue);
                 }
               }}
               imageMenuOpen={imageMenuOpen}
@@ -1048,20 +1069,20 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
               open={kebabOpen}
               position={kebabPos}
               onClose={() => setKebabOpen(false)}
-              a4Mode={noteState.a4Mode}
+              a4Mode={a4Mode}
               setA4Mode={handleA4ModeChange}
-              slashLang={noteState.slashLang}
+              slashLang={slashLang}
               setSlashLang={handleSlashLangChange}
-              fullWidth={noteState.fullWidth}
+              fullWidth={fullWidth}
               setFullWidth={handleFullWidthChange}
               noteId={noteId}
-              currentShareSettings={noteState.shareSettings}
+              currentShareSettings={shareSettings}
               onShareSettingsChange={handleShareSettingsChange}
               publicUrl={note?.public_url || undefined}
             />
           </>
         )}
-        title={<EditorTitle value={noteState.title} onChange={(value) => setNoteState(prev => ({ ...prev, title: value }))} onBlur={handleTitleBlur} placeholder="Titre de la note..." />}
+        title={<EditorTitle value={title} onChange={setTitle} onBlur={handleTitleBlur} placeholder="Titre de la note..." />}
         content={(
           <EditorContent>
             {!isReadonly && (
@@ -1072,7 +1093,7 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
                 {/* Slash commands menu */}
                 <EditorSlashMenu
                   ref={slashMenuRef}
-                  lang={noteState.slashLang}
+                  lang={slashLang}
                   onOpenImageMenu={() => { setImageMenuTarget('content'); setImageMenuOpen(true); }}
                   onInsert={(cmd) => {
                     if (!editor) {

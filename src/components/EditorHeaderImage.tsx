@@ -60,7 +60,6 @@ const EditorHeaderImage: React.FC<EditorHeaderImageProps> = ({
   userId,
 }) => {
   const [imageOffsetY, setImageOffsetY] = useState(headerImageOffset);
-  const [isTransitioning, setIsTransitioning] = useState(false);
   const dragging = useRef(false);
   const isUpdatingFromDrag = useRef(false);
   const startY = useRef(0);
@@ -76,15 +75,6 @@ const EditorHeaderImage: React.FC<EditorHeaderImageProps> = ({
       startOffsetY.current = headerImageOffset;
     }
   }, [headerImageOffset]);
-
-  // Gérer les transitions pour éviter les sauts d'image
-  React.useEffect(() => {
-    setIsTransitioning(true);
-    const timer = setTimeout(() => {
-      setIsTransitioning(false);
-    }, 200); // Durée de la transition CSS
-    return () => clearTimeout(timer);
-  }, [headerImageBlur, headerImageOverlay, headerTitleInImage]);
 
   // Drag logic
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -196,16 +186,7 @@ const EditorHeaderImage: React.FC<EditorHeaderImageProps> = ({
       <img
         src={headerImageUrl}
         alt="Header"
-        style={{ 
-          width: '100%', 
-          height: '100%', 
-          objectFit: 'cover', 
-          filter: `blur(${headerImageBlur}px)`, 
-          transition: isTransitioning ? 'filter 0.2s' : 'none', // Pas de transition si on est en train de changer
-          objectPosition: `center ${imageOffsetY}%`, 
-          cursor: dragging.current ? 'grabbing' : 'grab',
-          opacity: isTransitioning ? 0.95 : 1 // Légère transparence pendant la transition
-        }}
+        style={{ width: '100%', height: '100%', objectFit: 'cover', filter: `blur(${headerImageBlur}px)`, transition: 'filter 0.2s', objectPosition: `center ${imageOffsetY}%`, cursor: dragging.current ? 'grabbing' : 'grab' }}
         onMouseDown={handleMouseDown}
         draggable={false}
       />
