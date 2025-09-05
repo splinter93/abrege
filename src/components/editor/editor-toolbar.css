@@ -267,4 +267,389 @@
   50% {
     box-shadow: 0 0 0 8px rgba(239, 68, 68, 0);
   }
+}
+
+/* ==========================================================================
+   TOOLBAR ÉLÉGANTE - STYLE NOTION-LIKE
+   ========================================================================== */
+
+/* Groupes de boutons avec séparateurs */
+.toolbar-group {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  position: relative;
+}
+
+.toolbar-group:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  right: -6px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1px;
+  height: 20px;
+  background: #3d3d3d;
+}
+
+/* Boutons de formatage élégants */
+.format-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: #a0a0a0;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-size: 14px;
+  font-weight: 500;
+  position: relative;
+}
+
+.format-button:hover {
+  background: #2d2d2d;
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+
+.format-button.active {
+  background: #8b5cf6;
+  color: #ffffff;
+  box-shadow: 0 2px 4px rgba(139, 92, 246, 0.3);
+}
+
+.format-button:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Boutons undo/redo */
+.undo-redo-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: #a0a0a0;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-size: 14px;
+}
+
+.undo-redo-button:hover:not(:disabled) {
+  background: #2d2d2d;
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+
+.undo-redo-button:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Boutons de couleur élégants */
+.color-button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: #a0a0a0;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-size: 13px;
+  font-weight: 500;
+  position: relative;
+}
+
+.color-button:hover {
+  background: #2d2d2d;
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+
+.color-button.active {
+  background: #8b5cf6;
+  color: #ffffff;
+  box-shadow: 0 2px 4px rgba(139, 92, 246, 0.3);
+}
+
+.color-button:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.color-indicator {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  flex-shrink: 0;
+}
+
+/* Popover de couleurs élégant */
+.color-popover {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 1000;
+  background: #1a1a1a;
+  border: 1px solid #2d2d2d;
+  border-radius: 8px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 2px 8px rgba(0, 0, 0, 0.2);
+  padding: 12px;
+  min-width: 200px;
+  margin-top: 6px;
+  backdrop-filter: blur(10px);
+}
+
+.color-popover-header {
+  font-size: 11px;
+  font-weight: 600;
+  color: #8b8b8b;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.color-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+
+.color-option {
+  width: 32px;
+  height: 32px;
+  border: 2px solid transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.color-option:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.color-option.selected {
+  border-color: #8b5cf6;
+  box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.3);
+}
+
+.color-option.default {
+  background: #2d2d2d;
+  border: 1px solid #3d3d3d;
+}
+
+.color-option-default {
+  font-size: 12px;
+  font-weight: 600;
+  color: #8b8b8b;
+}
+
+/* Boutons existants de la toolbar */
+.toolbar-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: #a0a0a0;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.toolbar-button:hover {
+  background: #2d2d2d;
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+
+.toolbar-button.active {
+  background: #8b5cf6;
+  color: #ffffff;
+  box-shadow: 0 2px 4px rgba(139, 92, 246, 0.3);
+}
+
+.toolbar-button:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Boutons de titre spéciaux */
+.toolbar-button[aria-label*="Titre"] {
+  padding: 6px 10px;
+  width: auto;
+  min-width: 40px;
+  font-weight: 600;
+}
+
+/* Sélecteur de police élégant */
+.font-select {
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  color: #a0a0a0;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 6px 10px;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.15s ease;
+  min-width: 120px;
+}
+
+.font-select:hover {
+  background: #2d2d2d;
+  color: #ffffff;
+}
+
+.font-select:focus {
+  background: #2d2d2d;
+  color: #ffffff;
+}
+
+.font-select:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.font-select option {
+  background: #1a1a1a;
+  color: #ffffff;
+  padding: 8px;
+}
+
+/* Menu de police élégant */
+.font-menu-container {
+  position: relative;
+}
+
+.font-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 1000;
+  background: #1a1a1a;
+  border: 1px solid #2d2d2d;
+  border-radius: 8px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 2px 8px rgba(0, 0, 0, 0.2);
+  padding: 12px;
+  min-width: 280px;
+  margin-top: 6px;
+  backdrop-filter: blur(10px);
+}
+
+.font-menu-header {
+  margin-bottom: 12px;
+}
+
+.font-menu-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: #2d2d2d;
+  border-radius: 6px;
+  border: 1px solid #3d3d3d;
+}
+
+.font-menu-search-input {
+  background: transparent;
+  border: none;
+  color: #ffffff;
+  font-size: 13px;
+  outline: none;
+  flex: 1;
+}
+
+.font-menu-search-input::placeholder {
+  color: #8b8b8b;
+}
+
+.font-menu-list {
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.font-menu-category {
+  margin-bottom: 8px;
+}
+
+.font-menu-category-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: #8b8b8b;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.font-menu-item {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 8px 12px;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  color: #a0a0a0;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: left;
+  font-size: 13px;
+}
+
+.font-menu-item:hover {
+  background: #2d2d2d;
+  color: #ffffff;
+}
+
+.font-menu-item.selected {
+  background: #8b5cf6;
+  color: #ffffff;
+}
+
+.font-menu-label {
+  font-weight: 500;
+}
+
+.font-menu-empty {
+  text-align: center;
+  color: #8b8b8b;
+  font-size: 13px;
+  padding: 16px;
+}
+
+/* Responsive pour les nouveaux boutons */
+@media (max-width: 768px) {
+  .format-button,
+  .undo-redo-button {
+    width: 28px;
+    height: 28px;
+    font-size: 12px;
+  }
 } 

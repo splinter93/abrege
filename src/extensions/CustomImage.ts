@@ -4,7 +4,7 @@ import type { NodeViewRendererProps } from '@tiptap/core';
 const CustomImage = Image.extend({
   addNodeView() {
     return ({ node, editor }: NodeViewRendererProps) => {
-      const src: string | undefined = (node?.attrs as any)?.src;
+      const src: string | undefined = node?.attrs?.src;
       const dom = document.createElement('div');
       dom.className = 'editor-image-wrapper';
 
@@ -15,9 +15,13 @@ const CustomImage = Image.extend({
         // Optimisation : utiliser un seul event listener
         const handleClick = (e: Event) => {
           e.stopPropagation();
-          const anyEditor = editor as any;
-          if (anyEditor?.options?.handleOpenImageMenu) {
-            anyEditor.options.handleOpenImageMenu();
+          const editorWithOptions = editor as Editor & { 
+            options?: { 
+              handleOpenImageMenu?: () => void 
+            } 
+          };
+          if (editorWithOptions?.options?.handleOpenImageMenu) {
+            editorWithOptions.options.handleOpenImageMenu();
           }
         };
         dom.addEventListener('click', handleClick);

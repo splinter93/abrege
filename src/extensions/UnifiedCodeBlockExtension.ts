@@ -40,7 +40,7 @@ const UnifiedCodeBlockExtension = CodeBlockLowlight.extend({
 // MERMAID NODE VIEW
 // =================================================================
 
-function createMermaidNodeView(node: Node, getPos: () => number, editor: any) {
+function createMermaidNodeView(node: Node, getPos: () => number, editor: NodeViewProps['editor']) {
   const container = document.createElement('div');
   container.className = 'mermaid-container mermaid-editor mermaid-loading';
   
@@ -72,7 +72,7 @@ function createMermaidNodeView(node: Node, getPos: () => number, editor: any) {
 // STANDARD CODE BLOCK NODE VIEW
 // =================================================================
 
-function createCodeBlockNodeView(node: Node, getPos: () => number, editor: any) {
+function createCodeBlockNodeView(node: Node, getPos: () => number, editor: NodeViewProps['editor']) {
   const container = document.createElement('div');
   container.className = 'code-block-container';
 
@@ -105,6 +105,8 @@ function createCodeBlockNodeView(node: Node, getPos: () => number, editor: any) 
       }
     } catch (error) {
       logger.warn('Erreur coloration syntaxique:', error);
+      // Fallback : afficher le code brut sans coloration
+      code.textContent = node.textContent;
     }
   }
 
@@ -141,6 +143,8 @@ function createCodeBlockNodeView(node: Node, getPos: () => number, editor: any) 
             }
           } catch (error) {
             logger.warn('Erreur coloration syntaxique:', error);
+            // Fallback : afficher le code brut sans coloration
+            code.textContent = updatedNode.textContent;
           }
         }
       }

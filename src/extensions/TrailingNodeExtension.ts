@@ -1,36 +1,38 @@
 import { Extension } from '@tiptap/core';
-import { Plugin } from 'prosemirror-state';
-import type { Transaction, EditorState } from 'prosemirror-state';
+import { Plugin, PluginKey } from '@tiptap/pm/state';
+import type { Transaction, EditorState } from '@tiptap/pm/state';
 
-const TrailingNodeExtension = Extension.create({
+export const TrailingNodeExtension = Extension.create({
   name: 'trailingNode',
 
   addProseMirrorPlugins() {
     return [
       new Plugin({
-        appendTransaction: (transactions: readonly Transaction[], oldState: EditorState, newState: EditorState) => {
-          if (!transactions.some(transaction => transaction.docChanged)) {
-            return null;
+        key: new PluginKey('trailingNode'),
+        appendTransaction: (transactions: Transaction[], oldState: EditorState, newState: EditorState) => {
+          const { doc, tr } = newState;
+          let shouldAppend = false;
+          let pos = null;
+
+          // Vérifier si on a besoin d'ajouter un paragraphe vide à la fin
+          if (doc.content.size === 0) {
+            shouldAppend = true;
+            pos = 0;
+          } else {
+            const lastNode = doc.lastChild;
+            if (lastNode && lastNode.type.name !== 'paragraph') {
+              shouldAppend = true;
+              pos = doc.content.size;
+            }
           }
 
-          const { doc, tr, schema } = newState;
-          const lastNode = doc.lastChild;
-          
-          if (lastNode && lastNode.type.name === 'codeBlock') {
-            return tr.insert(doc.content.size, schema.nodes.paragraph.create());
+          if (shouldAppend && pos !== null) {
+            return tr.insert(pos, this.editor.schema.nodes.paragraph.create());
           }
-          
+
           return null;
         },
       }),
     ];
   },
 });
-
-export default TrailingNodeExtension;
-
-
-
-
-
-

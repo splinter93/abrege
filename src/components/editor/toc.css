@@ -1,0 +1,190 @@
+/* Table of Contents - Styles optimisés */
+
+.toc-container {
+  position: fixed;
+  right: 8px;
+  top: 383px;
+  z-index: 30;
+  font-family: 'Noto Sans', sans-serif;
+  transition: all 0.32s cubic-bezier(0.2, 0.8, 0.4, 1);
+  pointer-events: all;
+}
+
+.toc-container.collapsed {
+  min-width: 32px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  border-radius: 16px;
+  color: var(--editor-text-color);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0;
+  box-shadow: none;
+  max-height: undefined;
+  transform: translateX(0);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.toc-container.expanded {
+  width: 300px;
+  background: var(--surface-1);
+  border: 1.5px solid var(--border-subtle);
+  border-radius: 16px;
+  color: var(--editor-text-color);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0;
+  padding: 14px 18px;
+  padding-right: 12px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  max-height: 56vh;
+  transform: none;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  min-width: 300px;
+  margin-right: 8px;
+}
+
+.toc-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  width: 100%;
+}
+
+.toc-empty-state {
+  padding: 20px;
+  text-align: center;
+  color: var(--text-3);
+  font-size: 14px;
+  font-style: italic;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.toc-empty-icon {
+  height: 12px;
+  margin: 12px 0;
+}
+
+.toc-empty-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.toc-empty-icon-large {
+  font-size: 24px;
+}
+
+.toc-empty-title {
+  font-weight: 500;
+}
+
+.toc-empty-subtitle {
+  font-size: 12px;
+  opacity: 0.7;
+}
+
+/* Barres de niveau collapsed */
+.toc-bar {
+  height: 3px;
+  background: var(--editor-text-color);
+  border-radius: 6px;
+  margin: 12px 0;
+  margin-left: auto;
+  margin-right: 10px;
+  opacity: 0.95;
+}
+
+.toc-bar-h2 {
+  width: 24px;
+}
+
+.toc-bar-h3 {
+  width: 12px;
+}
+
+.toc-bar-spacer {
+  height: 12px;
+  margin: 12px 0;
+}
+
+/* Items de la TOC */
+.toc-item {
+  background: none;
+  border-radius: 0;
+  padding: 0;
+  transition: background 0.18s, color 0.18s;
+  cursor: pointer;
+  white-space: pre-line;
+  width: 100%;
+  box-sizing: border-box;
+  border: none;
+  text-align: left;
+  font-family: inherit;
+}
+
+.toc-item-h1 {
+  font-weight: 600;
+  font-size: 16px;
+  color: var(--editor-text-color);
+  margin-bottom: 8px;
+  padding-left: 0;
+}
+
+.toc-item-h2 {
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--editor-text-color);
+  margin-bottom: 4px;
+  padding-left: 12px;
+}
+
+.toc-item-h3 {
+  font-weight: 400;
+  font-size: 14px;
+  color: var(--editor-text-color);
+  padding-left: 32px;
+  margin-bottom: 2px;
+  line-height: 1.7;
+}
+
+.toc-item:hover {
+  background: none;
+  color: var(--accent-primary);
+}
+
+.toc-item.active {
+  background: none;
+  color: var(--editor-text-color);
+}
+
+/* Séparateur entre sections */
+.toc-separator {
+  height: 1px;
+  background: var(--border-subtle);
+  border: none;
+  margin: 8px 0;
+  width: 100%;
+}
+
+/* Animation de flash pour la navigation */
+.active-flash {
+  animation: toc-flash 1.4s ease-in-out;
+}
+
+@keyframes toc-flash {
+  0% { background-color: transparent; }
+  20% { background-color: var(--accent-primary); opacity: 0.3; }
+  100% { background-color: transparent; }
+}

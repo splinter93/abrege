@@ -1,0 +1,200 @@
+/* Styles pour les boutons de couleur Notion-like */
+
+.color-button-container {
+  position: relative;
+  display: inline-block;
+}
+
+.color-button {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 8px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  background: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 14px;
+  color: #374151;
+  position: relative;
+}
+
+.color-button:hover {
+  background-color: #f8fafc;
+  border-color: #cbd5e1;
+}
+
+.color-button.active {
+  background-color: #3b82f6;
+  border-color: #3b82f6;
+  color: white;
+}
+
+.color-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.color-indicator {
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  flex-shrink: 0;
+}
+
+.color-popover {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 1000;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1), 0 4px 6px rgba(0, 0, 0, 0.05);
+  padding: 12px;
+  min-width: 200px;
+  margin-top: 4px;
+}
+
+.color-popover-header {
+  font-size: 12px;
+  font-weight: 600;
+  color: #6b7280;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.color-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+
+.color-option {
+  width: 32px;
+  height: 32px;
+  border: 2px solid transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.color-option:hover {
+  transform: scale(1.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.color-option.selected {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+.color-option.default {
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+}
+
+.color-option-default {
+  font-size: 14px;
+  font-weight: 600;
+  color: #6b7280;
+}
+
+/* Couleurs spécifiques pour le texte */
+.color-option.red { background-color: #ef4444; }
+.color-option.orange { background-color: #f97316; }
+.color-option.yellow { background-color: #eab308; }
+.color-option.green { background-color: #22c55e; }
+.color-option.blue { background-color: #3b82f6; }
+.color-option.purple { background-color: #8b5cf6; }
+.color-option.pink { background-color: #ec4899; }
+.color-option.gray { background-color: #6b7280; }
+
+/* Couleurs spécifiques pour le surlignage */
+.color-option.red-light { background-color: #fecaca; }
+.color-option.orange-light { background-color: #fed7aa; }
+.color-option.yellow-light { background-color: #fef3c7; }
+.color-option.green-light { background-color: #dcfce7; }
+.color-option.blue-light { background-color: #dbeafe; }
+.color-option.purple-light { background-color: #e9d5ff; }
+.color-option.pink-light { background-color: #fce7f3; }
+.color-option.gray-light { background-color: #f3f4f6; }
+
+/* Mode sombre */
+@media (prefers-color-scheme: dark) {
+  .color-button {
+    background: #1f2937;
+    border-color: #374151;
+    color: #e5e7eb;
+  }
+
+  .color-button:hover {
+    background-color: #374151;
+    border-color: #4b5563;
+  }
+
+  .color-button.active {
+    background-color: #3b82f6;
+    border-color: #3b82f6;
+    color: white;
+  }
+
+  .color-popover {
+    background: #1f2937;
+    border-color: #374151;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3), 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+
+  .color-popover-header {
+    color: #9ca3af;
+  }
+
+  .color-option.default {
+    background-color: #374151;
+    border-color: #4b5563;
+  }
+
+  .color-option-default {
+    color: #9ca3af;
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .color-popover {
+    min-width: 180px;
+    padding: 8px;
+  }
+
+  .color-grid {
+    gap: 4px;
+  }
+
+  .color-option {
+    width: 28px;
+    height: 28px;
+  }
+}
+
+/* Animation d'entrée */
+.color-popover {
+  animation: colorPopoverFadeIn 0.15s ease-out;
+}
+
+@keyframes colorPopoverFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}

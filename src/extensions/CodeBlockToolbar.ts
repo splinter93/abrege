@@ -1,4 +1,5 @@
 import { Node } from '@tiptap/pm/model';
+import type { Editor } from '@tiptap/react';
 
 const SUPPORTED_LANGUAGES = [
   { value: 'plaintext', label: 'Plain Text' },
@@ -20,7 +21,7 @@ const SUPPORTED_LANGUAGES = [
   { value: 'bash', label: 'Bash' },
 ];
 
-export function createCodeBlockToolbar(node: Node, getPos: () => number, editor: any, container: HTMLElement) {
+export function createCodeBlockToolbar(node: Node, getPos: () => number, editor: Editor, container: HTMLElement) {
   const toolbar = document.createElement('div');
   toolbar.className = 'unified-toolbar code-block-toolbar'; // Classe unifiée
 
@@ -43,7 +44,7 @@ export function createCodeBlockToolbar(node: Node, getPos: () => number, editor:
   return toolbar;
 }
 
-function createLanguageSelector(node: Node, getPos: () => number, editor: any) {
+function createLanguageSelector(node: Node, getPos: () => number, editor: Editor) {
   const selectContainer = document.createElement('div');
   selectContainer.className = 'language-selector-container';
 

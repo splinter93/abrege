@@ -1,13 +1,19 @@
 import React from 'react';
 import '@/styles/markdown.css';
 import '@/styles/UnifiedToolbar.css';
+import '@/styles/context-menu.css';
+import '@/styles/callouts.css';
+import '@/styles/color-buttons.css';
+import '@/styles/box-selection.css';
+import '@/styles/block-drag-drop.css';
+import '@/styles/tiptap-extensions.css';
 import '@/components/mermaid/MermaidRenderer.css';
 import '@/components/mermaid/MermaidToolbar.css';
 import '@/components/mermaid/MermaidModal.css';
 import EditorLayout from './EditorLayout';
 import EditorHeader from './EditorHeader';
 import EditorContent from './EditorContent';
-import EditorToolbar from './EditorToolbar';
+import ModernToolbar from './ModernToolbar';
 import EditorHeaderImage from '@/components/EditorHeaderImage';
 import EditorKebabMenu from '@/components/EditorKebabMenu';
 import EditorTitle from './EditorTitle';
@@ -21,23 +27,6 @@ import { useWideModeManager } from '@/hooks/useWideModeManager';
 import type { ShareSettings, ShareSettingsUpdate } from '@/types/sharing';
 import { getDefaultShareSettings } from '@/types/sharing';
 import { useEditor, EditorContent as TiptapEditorContent } from '@tiptap/react';
-import StarterKit from '@tiptap/starter-kit';
-import Underline from '@tiptap/extension-underline';
-import TextAlign from '@tiptap/extension-text-align';
-import BulletList from '@tiptap/extension-bullet-list';
-import OrderedList from '@tiptap/extension-ordered-list';
-import ListItem from '@tiptap/extension-list-item';
-import TaskList from '@tiptap/extension-task-list';
-import TaskItem from '@tiptap/extension-task-item';
-import Table from '@tiptap/extension-table';
-import TableRow from '@tiptap/extension-table-row';
-import TableHeader from '@tiptap/extension-table-header';
-import TableCell from '@tiptap/extension-table-cell';
-import { Markdown } from 'tiptap-markdown';
-import Link from '@tiptap/extension-link';
-import CustomImage from '@/extensions/CustomImage';
-import { NoAutoListConversion } from '@/extensions/NoAutoListConversion';
-import Placeholder from '@tiptap/extension-placeholder';
 import lowlight from '@/utils/lowlightInstance';
 import EditorSlashMenu, { type EditorSlashMenuHandle } from '@/components/EditorSlashMenu';
 import TableControls from '@/components/editor/TableControls';
@@ -50,7 +39,22 @@ import ImageMenu from '@/components/ImageMenu';
 import { uploadImageForNote } from '@/utils/fileUpload';
 import { logger, LogCategory } from '@/utils/logger';
 import type { FullEditorInstance, CustomImageExtension } from '@/types/editor';
-import UnifiedCodeBlockExtension from '@/extensions/UnifiedCodeBlockExtension';
+// import type { Note } from '@/types/note'; // Type non trouvé, on utilise Record<string, unknown>
+import { createEditorExtensions, PRODUCTION_EXTENSIONS_CONFIG } from '@/config/editor-extensions';
+
+// Fonction utilitaire debounce pour optimiser les performances
+const debounce = <T extends (...args: unknown[]) => void>(func: T, wait: number): T => {
+  let timeout: NodeJS.Timeout | null = null;
+  return ((...args: Parameters<T>) => {
+    if (timeout) clearTimeout(timeout);
+    timeout = setTimeout(() => func(...args), wait);
+  }) as T;
+};
+import ContextMenu from './ContextMenu';
+import MentionList from './MentionList';
+import EmojiList from './EmojiList';
+import LinkPopover from './LinkPopover';
+import FloatingToolbar from './FloatingToolbar';
 
 /**
  * Full Editor – markdown is source of truth; HTML only for display.
@@ -100,6 +104,21 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
   
   // Share settings state
   const [shareSettings, setShareSettings] = React.useState<ShareSettings>(getDefaultShareSettings());
+
+  // Context menu state
+  const [contextMenu, setContextMenu] = React.useState<{
+    isOpen: boolean;
+    position: { x: number; y: number };
+    nodeType: string;
+    hasSelection: boolean;
+    nodePosition: number;
+  }>({
+    isOpen: false,
+    position: { x: 0, y: 0 },
+    nodeType: 'paragraph',
+    hasSelection: false,
+    nodePosition: 0
+  });
 
   const isReadonly = readonly || previewMode;
 
@@ -172,45 +191,33 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
 
   const slashMenuRef = React.useRef<EditorSlashMenuHandle | null>(null);
 
+  // Gestion du menu contextuel
+  React.useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
+    const handleContextMenu = (event: CustomEvent) => {
+      if (isReadonly) return;
+      
+      const { coords, nodeType, hasSelection, position } = event.detail;
+      setContextMenu({
+        isOpen: true,
+        position: coords,
+        nodeType,
+        hasSelection,
+        nodePosition: position
+      });
+    };
+
+    document.addEventListener('tiptap-context-menu', handleContextMenu as EventListener);
+    return () => document.removeEventListener('tiptap-context-menu', handleContextMenu as EventListener);
+  }, [isReadonly]);
+
+
   // Real Tiptap editor instance (Markdown as source of truth)
   const editor = useEditor({
     editable: !isReadonly,
     immediatelyRender: false, // Éviter les erreurs de SSR/hydration
-    extensions: [
-      StarterKit.configure({ 
-        // codeBlock est géré par notre extension UnifiedCodeBlockExtension
-      }),
-      Underline,
-      TextAlign.configure({ types: ['heading', 'paragraph'] }),
-      // Listes avec conversion manuelle uniquement (pas de conversion automatique des tirets)
-      BulletList,
-      OrderedList,
-      ListItem,
-      TaskList,
-      TaskItem,
-      // Désactiver la conversion automatique des tirets en listes
-      NoAutoListConversion,
-      Table.configure({ resizable: true }),
-      TableRow,
-      TableHeader,
-      TableCell,
-      // Notre bloc unifié remplace CodeBlockLowlight natif
-      UnifiedCodeBlockExtension.configure({ 
-        lowlight,
-      }),
-      Link.configure({ openOnClick: false, autolink: true, linkOnPaste: true }),
-      // Custom image node view to hook our image menu
-      CustomImage.configure({ inline: false }),
-      Markdown.configure({ 
-        html: false,
-        transformPastedText: true,
-        transformCopiedText: true
-      }),
-      Placeholder.configure({
-        placeholder: 'Écrivez quelque chose d\'incroyable...',
-        showOnlyWhenEditable: true,
-      })
-    ],
+    extensions: createEditorExtensions(PRODUCTION_EXTENSIONS_CONFIG, lowlight), // Configuration stable mais fonctionnelle
     content: content || '',
     onUpdate: React.useCallback(({ editor }) => {
       try {
@@ -221,11 +228,77 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
           const cleanMarkdown = cleanEscapedMarkdown(nextMarkdown);
           updateNote(noteId, { markdown_content: cleanMarkdown });
         }
-      } catch {
-        // ignore
+      } catch (error) {
+        logger.warn(LogCategory.EDITOR, 'Erreur lors de la mise à jour du contenu:', error);
       }
     }, [content, noteId, updateNote]),
   });
+
+  // Gestion des actions du menu contextuel
+  const handleContextMenuAction = React.useCallback((action: string) => {
+    if (!editor) return;
+
+    try {
+      switch (action) {
+        case 'duplicate':
+          // Dupliquer le bloc actuel
+          const { state } = editor.view;
+          const { from, to } = state.selection;
+          const selectedContent = state.doc.slice(from, to);
+          editor.chain().focus().insertContent(selectedContent.content).run();
+          break;
+
+        case 'delete':
+          // Supprimer le contenu sélectionné ou le bloc
+          if (contextMenu.hasSelection) {
+            editor.chain().focus().deleteSelection().run();
+          } else {
+            // Supprimer le bloc entier
+            const pos = contextMenu.nodePosition;
+            const $pos = editor.state.doc.resolve(pos);
+            const start = $pos.before();
+            const end = $pos.after();
+            editor.chain().focus().deleteRange({ from: start, to: end }).run();
+          }
+          break;
+
+        case 'turn-into-h1':
+          editor.chain().focus().toggleHeading({ level: 1 }).run();
+          break;
+        case 'turn-into-h2':
+          editor.chain().focus().toggleHeading({ level: 2 }).run();
+          break;
+        case 'turn-into-h3':
+          editor.chain().focus().toggleHeading({ level: 3 }).run();
+          break;
+        case 'turn-into-bullet-list':
+          editor.chain().focus().toggleBulletList().run();
+          break;
+        case 'turn-into-ordered-list':
+          editor.chain().focus().toggleOrderedList().run();
+          break;
+        case 'turn-into-blockquote':
+          editor.chain().focus().toggleBlockquote().run();
+          break;
+        case 'turn-into-code-block':
+          editor.chain().focus().toggleCodeBlock().run();
+          break;
+        case 'turn-into-image':
+          setImageMenuOpen(true);
+          break;
+        case 'turn-into-table':
+          editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run();
+          break;
+        case 'turn-into-divider':
+          editor.chain().focus().setHorizontalRule().run();
+          break;
+      }
+    } catch (error) {
+      logger.error(LogCategory.EDITOR, 'Erreur action menu contextuel:', error);
+    }
+
+    setContextMenu(prev => ({ ...prev, isOpen: false }));
+  }, [editor, contextMenu.hasSelection, contextMenu.nodePosition, setImageMenuOpen]);
 
   // 🔧 FONCTION UTILITAIRE : Nettoyer le Markdown échappé
   const cleanEscapedMarkdown = (markdown: string): string => {
@@ -251,23 +324,25 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
   // Mise à jour intelligente du contenu de l'éditeur quand la note change
   const [isUpdatingFromStore, setIsUpdatingFromStore] = React.useState(false);
   
-  // Mettre à jour la TOC quand l'éditeur change
+  // Mettre à jour la TOC quand l'éditeur change - optimisé avec debounce
+  const updateTOC = React.useCallback(() => {
+    setForceTOCUpdate(prev => prev + 1);
+  }, []);
+
   React.useEffect(() => {
     if (!editor) return;
     
-    const updateTOC = () => {
-      // Forcer la mise à jour des headings
-    };
+    // Écouter les changements de l'éditeur avec debounce
+    const debouncedUpdateTOC = debounce(updateTOC, 100);
     
-    // Écouter les changements de l'éditeur
-    editor.on('update', updateTOC);
-    editor.on('selectionUpdate', updateTOC);
+    editor.on('update', debouncedUpdateTOC);
+    editor.on('selectionUpdate', debouncedUpdateTOC);
     
     return () => {
-      editor.off('update', updateTOC);
-      editor.off('selectionUpdate', updateTOC);
+      editor.off('update', debouncedUpdateTOC);
+      editor.off('selectionUpdate', debouncedUpdateTOC);
     };
-  }, [editor]);
+  }, [editor, updateTOC]);
   
   React.useEffect(() => {
     if (editor && content && !isUpdatingFromStore) {
@@ -357,7 +432,7 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
       const shareSettings = note.share_settings;
       setShareSettings(prev => ({
         ...prev,
-        visibility: shareSettings.visibility as any || prev.visibility,
+        visibility: (shareSettings.visibility as ShareSettings['visibility']) || prev.visibility,
         invited_users: shareSettings.invited_users || prev.invited_users,
         allow_edit: shareSettings.allow_edit || prev.allow_edit,
         allow_comments: shareSettings.allow_comments || prev.allow_comments
@@ -447,7 +522,12 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
         const errorMessage = errorData?.error || errorData?.message || errorText || 'Erreur mise à jour partage';
         
         // Créer des détails d'erreur significatifs
-        let errorDetails: any = { status: res.status, statusText: res.statusText };
+        interface ErrorDetails {
+          status: number;
+          statusText: string;
+          message?: string;
+        }
+        let errorDetails: ErrorDetails = { status: res.status, statusText: res.statusText };
         if (errorData && Object.keys(errorData).length > 0) {
           errorDetails = { ...errorDetails, ...errorData };
         }
@@ -651,7 +731,7 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
     }
   }, [editor]);
 
-  // Build headings for TOC - DIRECTEMENT depuis l'éditeur Tiptap
+  // Build headings for TOC - DIRECTEMENT depuis l'éditeur Tiptap (optimisé)
   const headings = React.useMemo(() => {
     // PRIORITÉ 1 : Éditeur Tiptap (si disponible)
     if (editor) {
@@ -677,6 +757,7 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
         return items;
         
       } catch (error) {
+        logger.warn(LogCategory.EDITOR, 'Erreur lors de l\'extraction des headings:', error);
         // Continuer vers le fallback
       }
     }
@@ -704,7 +785,7 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
     
     // AUCUN CONTENU : Retourner tableau vide
     return [];
-  }, [editor, content, note, noteId, forceTOCUpdate]); // Ajout de forceTOCUpdate pour forcer la régénération
+  }, [editor?.state.doc, content, forceTOCUpdate]); // Optimisé : dépendances réduites
 
   const handlePreviewClick = React.useCallback(async () => {
     try {
@@ -852,7 +933,7 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
                 </>
               )}
             >
-              <EditorToolbar 
+              <ModernToolbar 
                 editor={isReadonly ? null : editor} 
                 setImageMenuOpen={setImageMenuOpen} 
                 onFontChange={handleFontChange}
@@ -1057,6 +1138,16 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
         }}
         noteId={note.id}
         userId={userId}
+      />
+      
+      {/* Menu contextuel Notion-like */}
+      <ContextMenu
+        isOpen={contextMenu.isOpen}
+        position={contextMenu.position}
+        onClose={() => setContextMenu(prev => ({ ...prev, isOpen: false }))}
+        onAction={handleContextMenuAction}
+        nodeType={contextMenu.nodeType}
+        hasSelection={contextMenu.hasSelection}
       />
       
     </>

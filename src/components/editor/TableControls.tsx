@@ -23,8 +23,11 @@ const TableControls: React.FC<TableControlsProps> = ({ editor, containerRef }) =
   const findTableAtCursor = (el: Element | null): Element | null => {
     if (!el) return null;
     let node: Element | null = el instanceof HTMLElement ? el : null;
-    if (!node && el && (el as unknown as { node?: Element }).node) {
-      node = (el as unknown as { node: Element }).node;
+    if (!node && el) {
+      const elementWithNode = el as Element & { node?: Element };
+      if (elementWithNode.node) {
+        node = elementWithNode.node;
+      }
     }
     
     // Walk up the DOM tree to find a table
