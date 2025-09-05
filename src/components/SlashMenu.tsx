@@ -7,7 +7,6 @@ interface SlashCommand {
   alias: Record<string, string | string[]>;
   label: Record<string, string>;
   description: Record<string, string>;
-  preview?: string;
   [key: string]: unknown;
 }
 
@@ -253,15 +252,6 @@ const SlashMenu: React.FC<SlashMenuProps> = ({ open, search, setSearch, onSelect
                   <span className="slash-menu-desc">{cmd.description[langKey]}</span>
                 )}
               </div>
-              
-              {/* Preview de la commande */}
-              {cmd.preview && (
-                <span 
-                  className="slash-menu-preview" 
-                  dangerouslySetInnerHTML={{ __html: cmd.preview }} 
-                  aria-hidden="true"
-                />
-              )}
               
               {/* Indicateur de sélection */}
               {isSelected && (

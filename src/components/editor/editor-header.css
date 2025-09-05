@@ -187,39 +187,43 @@
 }
 
 .editor-toolbar {
-  padding: 0;
-  background: none;
-  border: none;
   display: flex;
-  gap: 0;
   align-items: center;
   flex-wrap: wrap;
-  position: static;
-  z-index: 10;
+  padding: 4px 0;
 }
 
 .toolbar-group {
   display: flex;
-  gap: 1px;
-  padding: 0;
+  align-items: center;
+  gap: 2px;
 }
-.toolbar-group:not(:last-child) {
-  border-right: 1px solid #2a2a2c;
-  margin-right: 6px;
-  padding-right: 6px;
+
+/* Ajouter un séparateur subtil entre les groupes */
+.toolbar-group:not(:last-child)::after {
+  content: '';
+  width: 1px;
+  height: 16px;
+  background: var(--border-subtle);
+  margin: 0 8px;
+}
+
+/* Style pour pousser le dernier groupe (outils IA) à droite */
+.toolbar-group-right {
+  margin-left: auto;
 }
 
 .toolbar-button {
-  height: 36px;
+  height: 32px;
   padding: 0 8px;
-  gap: 8px;
-  border-radius: 8px;
+  border-radius: 6px; /* Bordures plus douces */
   border: none;
   background: transparent;
   color: var(--text-2);
   cursor: pointer;
   display: flex;
   align-items: center;
+  gap: 6px;
   font-size: 0.875rem;
   font-weight: 500;
   transition: all 0.15s ease;
@@ -237,13 +241,92 @@
   width: 16px;
   height: 16px;
 }
-.font-dropdown-btn svg {
-  width: 18px;
-  height: 18px;
+
+/* Styles pour le nouveau sélecteur de type de bloc */
+.block-type-selector {
+  position: relative;
 }
-.toolbar-button.icon-text-style svg {
-  width: auto;
-  height: auto;
+
+.block-type-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 6px;
+  background: var(--surface-2);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  padding: 6px;
+  width: 200px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 20;
+}
+
+.block-type-menu-item {
+  width: 100%;
+  text-align: left;
+  padding: 8px 12px;
+  border-radius: 6px;
+  background: none;
+  border: none;
+  color: var(--text-1);
+  cursor: pointer;
+  font-size: 0.875rem;
+  transition: background 0.15s ease;
+}
+
+.block-type-menu-item:hover {
+  background: var(--surface-hover);
+}
+
+.block-type-menu-item.active {
+  background: var(--accent-subtle);
+  color: var(--accent-primary);
+  font-weight: 600;
+}
+
+/* Styles pour le menu de couleur et surlignage */
+.color-menu-selector {
+  position: relative;
+}
+
+.color-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 6px;
+  background: var(--surface-2);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  padding: 6px;
+  width: 180px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 20;
+}
+
+.color-menu-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  background: none;
+  border: none;
+  color: var(--text-1);
+  cursor: pointer;
+  font-size: 0.875rem;
+  transition: background 0.15s ease;
+}
+
+.color-menu-item:hover {
+  background: var(--surface-hover);
+}
+
+.color-preview {
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
+  border: 1px solid var(--border-subtle);
 }
 
 /* Styles supplémentaires pour les actions du header */

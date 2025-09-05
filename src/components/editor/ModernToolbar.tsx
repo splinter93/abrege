@@ -7,7 +7,6 @@ import {
   FiAlignCenter, 
   FiAlignRight, 
   FiAlignJustify,
-  FiList,
   FiCheckSquare,
   FiImage,
   FiMic,
@@ -16,7 +15,6 @@ import {
   FiChevronDown,
   FiSearch,
   FiCode,
-  FiQuote,
   FiRotateCcw,
   FiRotateCw,
   FiMoreHorizontal
@@ -63,8 +61,10 @@ const ModernToolbar: React.FC<ModernToolbarProps> = ({
   const [showMoreTools, setShowMoreTools] = useState(false);
   const [fontMenuOpen, setFontMenuOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [colorMenuOpen, setColorMenuOpen] = useState(false);
   const fontMenuRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const colorMenuRef = useRef<HTMLDivElement>(null);
   
   // Polices simplifiées
   const fonts: FontOption[] = [
@@ -91,16 +91,19 @@ const ModernToolbar: React.FC<ModernToolbarProps> = ({
       if (fontMenuRef.current && !fontMenuRef.current.contains(event.target as Node)) {
         setFontMenuOpen(false);
       }
+      if (colorMenuRef.current && !colorMenuRef.current.contains(event.target as Node)) {
+        setColorMenuOpen(false);
+      }
     };
 
-    if (fontMenuOpen) {
+    if (fontMenuOpen || colorMenuOpen) {
       document.addEventListener('mousedown', handleClickOutside);
     }
 
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [fontMenuOpen]);
+  }, [fontMenuOpen, colorMenuOpen]);
 
   // Focus sur l'input de recherche
   useEffect(() => {
@@ -134,12 +137,63 @@ const ModernToolbar: React.FC<ModernToolbarProps> = ({
           {/* Séparateur */}
           <div className="toolbar-separator" />
 
+          {/* Menu de police */}
+          {onFontChange && (
+            <div className="toolbar-section font-section" ref={fontMenuRef}>
+              <Tooltip text="Changer la police">
+                <button
+                  className="toolbar-btn"
+                  onClick={() => setFontMenuOpen(!fontMenuOpen)}
+                  disabled={isReadonly}
+                  aria-label="Sélectionner une police"
+                >
+                  <FiType size={16} />
+                </button>
+              </Tooltip>
+              
+              {fontMenuOpen && (
+                <div className="font-dropdown">
+                  <div className="font-search">
+                    <FiSearch size={14} />
+                    <input
+                      ref={searchInputRef}
+                      type="text"
+                      className="font-search-input"
+                      placeholder="Rechercher une police..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                  </div>
+                  
+                  <div className="font-list">
+                    {filteredFonts.map((font) => {
+                      const isSelected = font.name === currentFont;
+                      return (
+                        <button
+                          key={font.name}
+                          onClick={() => setFont(font.name)}
+                          className={`font-item ${isSelected ? 'selected' : ''}`}
+                          style={{ fontFamily: font.name }}
+                        >
+                          <span className="font-name">{font.label}</span>
+                          <span className="font-category">{font.category}</span>
+                        </button>
+                      );
+                    })}
+                    {filteredFonts.length === 0 && (
+                      <div className="font-empty">Aucune police trouvée</div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Formatage de base */}
           <div className="toolbar-section">
             <ModernFormatButton editor={editor} format="bold" title="Gras" shortcut="Ctrl+B" />
             <ModernFormatButton editor={editor} format="italic" title="Italique" shortcut="Ctrl+I" />
             <ModernFormatButton editor={editor} format="underline" title="Souligné" shortcut="Ctrl+U" />
-            <ModernFormatButton editor={editor} format="strike" title="Barré" />
           </div>
 
           {/* Couleurs */}
@@ -200,76 +254,6 @@ const ModernToolbar: React.FC<ModernToolbarProps> = ({
             </Tooltip>
           </div>
 
-          {/* Bouton "Plus" pour les outils secondaires */}
-          <div className="toolbar-section">
-            <button 
-              className={`toolbar-btn more-btn ${showMoreTools ? 'active' : ''}`}
-              onClick={() => setShowMoreTools(!showMoreTools)}
-              aria-label="Plus d'outils"
-            >
-              <FiMoreHorizontal size={16} />
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Section des outils avancés (collapsible) */}
-      {showMoreTools && (
-        <div className="toolbar-advanced">
-          {/* Menu de police */}
-          {onFontChange && (
-            <div className="toolbar-section font-section" ref={fontMenuRef}>
-              <Tooltip text="Changer la police">
-                <button
-                  className="toolbar-btn font-btn"
-                  onClick={() => setFontMenuOpen(!fontMenuOpen)}
-                  disabled={isReadonly}
-                  aria-label="Sélectionner une police"
-                >
-                  <FiType size={16} />
-                  <span className="font-label">{currentFontData.label}</span>
-                  <FiChevronDown size={12} className="chevron" />
-                </button>
-              </Tooltip>
-              
-              {fontMenuOpen && (
-                <div className="font-dropdown">
-                  <div className="font-search">
-                    <FiSearch size={14} />
-                    <input
-                      ref={searchInputRef}
-                      type="text"
-                      className="font-search-input"
-                      placeholder="Rechercher une police..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                    />
-                  </div>
-                  
-                  <div className="font-list">
-                    {filteredFonts.map((font) => {
-                      const isSelected = font.name === currentFont;
-                      return (
-                        <button
-                          key={font.name}
-                          onClick={() => setFont(font.name)}
-                          className={`font-item ${isSelected ? 'selected' : ''}`}
-                          style={{ fontFamily: font.name }}
-                        >
-                          <span className="font-name">{font.label}</span>
-                          <span className="font-category">{font.category}</span>
-                        </button>
-                      );
-                    })}
-                    {filteredFonts.length === 0 && (
-                      <div className="font-empty">Aucune police trouvée</div>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
           {/* Outils IA */}
           <div className="toolbar-section">
             <Tooltip text="Dictaphone IA">
@@ -281,12 +265,33 @@ const ModernToolbar: React.FC<ModernToolbarProps> = ({
               />
             </Tooltip>
             
+            {/* Bouton "Plus" pour les outils secondaires */}
+            <Tooltip text="Plus d'outils">
+              <button 
+                className={`toolbar-btn more-btn ${showMoreTools ? 'active' : ''}`}
+                onClick={() => setShowMoreTools(!showMoreTools)}
+                aria-label="Plus d'outils"
+              >
+                <FiMoreHorizontal size={16} />
+              </button>
+            </Tooltip>
+          </div>
+
+          {/* Éclair tout à droite */}
+          <div className="toolbar-section">
             <Tooltip text="Agent IA">
               <button className="toolbar-btn ai-btn" disabled={isReadonly}>
                 <FiZap size={16} />
               </button>
             </Tooltip>
           </div>
+        </div>
+      </div>
+
+      {/* Section des outils avancés (collapsible) */}
+      {showMoreTools && (
+        <div className="toolbar-advanced">
+          {/* Outils avancés supplémentaires */}
         </div>
       )}
     </div>

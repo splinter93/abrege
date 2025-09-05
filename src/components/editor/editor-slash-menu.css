@@ -47,8 +47,8 @@
   .slash-menu {
     position: fixed;
     z-index: 9999;
-    min-width: 280px;
-    max-width: 360px;
+    min-width: 240px;
+    max-width: 300px;
     max-height: 70vh;
     overflow: hidden;
     
@@ -154,10 +154,10 @@
   .slash-menu .slash-menu-item {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
     
-    padding: var(--sm-item-padding);
-    margin: 2px 0;
+    padding: 8px 12px;
+    margin: 1px 0;
     border-radius: var(--sm-item-radius);
     
     color: var(--sm-text-primary);
@@ -190,26 +190,22 @@
     align-items: center;
     justify-content: center;
     
-    width: 28px;
-    height: 28px;
-    border-radius: 4px;
+    width: 24px;
+    height: 24px;
     
-    background: rgba(255, 255, 255, 0.06);
+    /* Retrait du fond pour un style plus épuré */
+    background: transparent;
     color: var(--sm-text-secondary);
     
-    transition: 
-      background-color var(--sm-duration) var(--sm-ease),
-      color var(--sm-duration) var(--sm-ease);
+    transition: color 0.15s ease;
   }
   
   .slash-menu .slash-menu-item:hover .slash-menu-icon {
-    background: rgba(255, 255, 255, 0.08);
     color: var(--sm-text-primary);
   }
   
   .slash-menu .slash-menu-item.selected .slash-menu-icon {
-    background: var(--sm-accent);
-    color: white;
+    color: var(--accent-primary); /* Utilisation de la couleur d'accentuation principale */
   }
   
   /* =========================
@@ -245,59 +241,6 @@
     text-overflow: ellipsis;
   }
   
-  /* =========================
-     PREVIEW - STYLE NOTION
-     ========================= */
-  .slash-menu .slash-menu-preview {
-    flex-shrink: 0;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    
-    height: 26px;
-    min-width: 40px;
-    max-width: 80px;
-    padding: 0 10px;
-    
-    background: rgba(255, 255, 255, 0.05);
-    color: var(--sm-text-secondary);
-    border: 1px solid rgba(255, 255, 255, 0.09);
-    border-radius: 4px;
-    
-    font-size: 11px;
-    font-weight: 500;
-    letter-spacing: 0.02em;
-    line-height: 1;
-    
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    
-    transition: all var(--sm-duration) var(--sm-ease);
-    
-    /* Force l'utilisation de nos variables CSS */
-    --preview-bg: rgba(255, 255, 255, 0.05);
-    --preview-border: rgba(255, 255, 255, 0.09);
-    --preview-text: var(--sm-text-secondary);
-  }
-  
-  .slash-menu .slash-menu-item:hover .slash-menu-preview {
-    background: rgba(255, 255, 255, 0.08);
-    border-color: rgba(255, 255, 255, 0.12);
-    color: var(--sm-text-primary);
-  }
-  
-  .slash-menu .slash-menu-item.selected .slash-menu-preview {
-    background: var(--sm-accent) !important;
-    border-color: var(--sm-accent) !important;
-    color: white !important;
-  }
-  
-  /* Force les styles des previews sélectionnées */
-  .slash-menu .slash-menu-item.selected .slash-menu-preview * {
-    color: white !important;
-    background: transparent !important;
-  }
   
   /* =========================
      SELECTION INDICATOR
@@ -308,8 +251,8 @@
     align-items: center;
     justify-content: center;
     
-    width: 18px;
-    height: 18px;
+    width: 16px;
+    height: 16px;
     color: var(--sm-accent);
     
     opacity: 0;
@@ -321,8 +264,8 @@
   }
   
   .slash-menu .slash-menu-selection-indicator svg {
-    width: 14px;
-    height: 14px;
+    width: 12px;
+    height: 12px;
   }
   
   /* =========================
@@ -344,7 +287,7 @@
      ========================= */
   @media (max-width: 480px) {
     .slash-menu {
-      min-width: 260px;
+      min-width: 220px;
       max-width: calc(100vw - 32px);
       margin: 0 16px;
     }
@@ -360,14 +303,7 @@
     }
     
     .slash-menu .slash-menu-icon {
-      width: 24px;
-      height: 24px;
-    }
-    
-    .slash-menu .slash-menu-preview {
-      height: 24px;
-      min-width: 36px;
-      max-width: 70px;
-      font-size: 10px;
+      width: 22px;
+      height: 22px;
     }
   }

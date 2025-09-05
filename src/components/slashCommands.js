@@ -5,7 +5,6 @@ export const SLASH_COMMANDS = [
     alias: { fr: ['/t1', '/titre1', '/h1'], en: ['/h1', '/heading1', '/title1'] },
     description: { fr: 'Titre principal de la page', en: 'Main page heading' },
     action: (editor) => editor.chain().focus().toggleHeading({ level: 1 }).run(),
-    preview: '<h1 style="font-size:1.5em;font-weight:700;color:#1e293b;margin:0;">H1</h1>',
   },
   {
     id: 'h2',
@@ -13,7 +12,6 @@ export const SLASH_COMMANDS = [
     alias: { fr: ['/t2', '/titre2', '/h2'], en: ['/h2', '/heading2', '/title2'] },
     description: { fr: 'Titre de section', en: 'Section heading' },
     action: (editor) => editor.chain().focus().toggleHeading({ level: 2 }).run(),
-    preview: '<h2 style="font-size:1.3em;font-weight:600;color:#334155;margin:0;">H2</h2>',
   },
   {
     id: 'h3',
@@ -21,7 +19,6 @@ export const SLASH_COMMANDS = [
     alias: { fr: ['/t3', '/titre3', '/h3'], en: ['/h3', '/heading3', '/title3'] },
     description: { fr: 'Sous-titre de section', en: 'Subsection heading' },
     action: (editor) => editor.chain().focus().toggleHeading({ level: 3 }).run(),
-    preview: '<h3 style="font-size:1.1em;font-weight:600;color:#475569;margin:0;">H3</h3>',
   },
   {
     id: 'text',
@@ -29,7 +26,6 @@ export const SLASH_COMMANDS = [
     alias: { fr: ['/texte', '/paragraphe', '/p'], en: ['/text', '/paragraph', '/p'] },
     description: { fr: 'Paragraphe de texte simple', en: 'Simple text paragraph' },
     action: (editor) => editor.chain().focus().setParagraph().run(),
-    preview: '<p style="margin:0;color:#64748b;">Aa</p>',
   },
   {
     id: 'ul',
@@ -37,7 +33,6 @@ export const SLASH_COMMANDS = [
     alias: { fr: ['/liste', '/puces', '/ul'], en: ['/list', '/bullets', '/ul'] },
     description: { fr: 'Liste avec puces', en: 'List with bullet points' },
     action: (editor) => editor.chain().focus().toggleBulletList().run(),
-    preview: '<ul style="margin:0;padding-left:16px;"><li style="color:#64748b;">• Item</li></ul>',
   },
   {
     id: 'ol',
@@ -45,7 +40,6 @@ export const SLASH_COMMANDS = [
     alias: { fr: ['/liste numérotée', '/numéros', '/ol'], en: ['/numbered', '/numbers', '/ol'] },
     description: { fr: 'Liste ordonnée avec numéros', en: 'Ordered list with numbers' },
     action: (editor) => editor.chain().focus().toggleOrderedList().run(),
-    preview: '<ol style="margin:0;padding-left:16px;"><li style="color:#64748b;">1. Item</li></ol>',
   },
   {
     id: 'checklist',
@@ -53,7 +47,6 @@ export const SLASH_COMMANDS = [
     alias: { fr: ['/checklist', '/tâches', '/todo'], en: ['/checklist', '/tasks', '/todo'] },
     description: { fr: 'Liste de tâches à cocher', en: 'Checkable task list' },
     action: (editor) => editor.chain().focus().toggleTaskList().run(),
-    preview: '<div style="display:flex;align-items:center;gap:8px;"><input type="checkbox" style="margin:0;" /><span style="color:#64748b;">Task</span></div>',
   },
   {
     id: 'quote',
@@ -61,7 +54,6 @@ export const SLASH_COMMANDS = [
     alias: { fr: ['/citation', '/quote', '/guillemets'], en: ['/quote', '/citation', '/quotes'] },
     description: { fr: 'Bloc de citation mis en valeur', en: 'Highlighted quote block' },
     action: (editor) => editor.chain().focus().toggleBlockquote().run(),
-    preview: '<blockquote style="margin:0;padding:8px 12px;border-left:3px solid #3b82f6;background:rgba(59,130,246,0.05);color:#64748b;">Quote</blockquote>',
   },
   {
     id: 'code',
@@ -69,7 +61,6 @@ export const SLASH_COMMANDS = [
     alias: { fr: ['/code', '/programme', '/script'], en: ['/code', '/script', '/program'] },
     description: { fr: 'Bloc de code avec coloration', en: 'Code block with syntax highlighting' },
     action: (editor) => editor.chain().focus().toggleCodeBlock().run(),
-    preview: '<pre style="margin:0;padding:8px 12px;background:#1e293b;color:#e2e8f0;border-radius:6px;font-family:monospace;font-size:12px;"><code>let x = 42;</code></pre>',
   },
   {
     id: 'separator',
@@ -77,7 +68,6 @@ export const SLASH_COMMANDS = [
     alias: { fr: ['/séparateur', '/ligne', '/hr'], en: ['/separator', '/line', '/hr'] },
     description: { fr: 'Ligne de séparation horizontale', en: 'Horizontal separation line' },
     action: (editor) => editor.chain().focus().setHorizontalRule().run(),
-    preview: '<hr style="margin:8px 0;border:none;height:1px;background:linear-gradient(90deg,transparent,#cbd5e1,transparent);" />',
   },
   {
     id: 'image',
@@ -89,7 +79,6 @@ export const SLASH_COMMANDS = [
       // pour ouvrir le menu image de la toolbar
       return false;
     },
-    preview: '<div style="display:flex;align-items:center;justify-content:center;width:40px;height:24px;background:linear-gradient(135deg,#f1f5f9,#e2e8f0);border:1px solid #cbd5e1;border-radius:6px;color:#64748b;font-size:12px;">🖼️</div>',
   },
   {
     id: 'video',
@@ -97,7 +86,6 @@ export const SLASH_COMMANDS = [
     alias: { fr: ['/vidéo', '/video', '/film'], en: ['/video', '/movie', '/clip'] },
     description: { fr: 'Intégrer une vidéo ou un lien vidéo', en: 'Embed a video or video link' },
     action: (editor) => editor.chain().focus().insertContent('<div class="video-embed">Paste a video link here...</div>').run(),
-    preview: '<div style="display:flex;align-items:center;justify-content:center;width:40px;height:24px;background:linear-gradient(135deg,#1e293b,#334155);color:#e2e8f0;border-radius:6px;font-size:12px;">🎥</div>',
   },
   {
     id: 'ai',
@@ -105,7 +93,6 @@ export const SLASH_COMMANDS = [
     alias: { fr: ['/ai', '/assistant', '/intelligence'], en: ['/ai', '/assistant', '/intelligence'] },
     description: { fr: 'Demander de l\'aide à l\'intelligence artificielle', en: 'Ask AI for assistance' },
     action: () => {/* Ouvre un menu IA ou déclenche une action */},
-    preview: '<div style="display:flex;align-items:center;justify-content:center;width:40px;height:24px;background:linear-gradient(135deg,#dc2626,#ef4444);color:#fef2f2;border-radius:6px;font-size:12px;font-weight:600;">🤖</div>',
   },
   {
     id: 'table',
@@ -113,7 +100,6 @@ export const SLASH_COMMANDS = [
     alias: { fr: ['/tableau', '/table', '/grille'], en: ['/table', '/grid', '/spreadsheet'] },
     description: { fr: 'Créer un tableau de données', en: 'Create a data table' },
     action: (editor) => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run(),
-    preview: '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1px;width:40px;height:24px;background:#cbd5e1;border-radius:4px;overflow:hidden;"><div style="background:#f8fafc;display:flex;align-items:center;justify-content:center;font-size:10px;color:#64748b;">A</div><div style="background:#f8fafc;display:flex;align-items:center;justify-content:center;font-size:10px;color:#64748b;">B</div><div style="background:#f8fafc;display:flex;align-items:center;justify-content:center;font-size:10px;color:#64748b;">C</div></div>',
   },
   {
     id: 'callout',
@@ -121,7 +107,6 @@ export const SLASH_COMMANDS = [
     alias: { fr: ['/appel', '/callout', '/info'], en: ['/callout', '/info', '/highlight'] },
     description: { fr: 'Bloc d\'information mis en valeur', en: 'Highlighted information block' },
     action: (editor) => editor.chain().focus().insertContent('<div class="callout">💡 Callout</div>').run(),
-    preview: '<div style="display:flex;align-items:center;gap:8px;padding:6px 10px;background:linear-gradient(135deg,#fef3c7,#fde68a);border:1px solid #f59e0b;border-radius:6px;color:#92400e;font-size:12px;">💡 Callout</div>',
   },
   {
     id: 'link',
@@ -129,7 +114,6 @@ export const SLASH_COMMANDS = [
     alias: { fr: ['/lien', '/link', '/url'], en: ['/link', '/url', '/hyperlink'] },
     description: { fr: 'Insérer un lien hypertexte', en: 'Insert a hyperlink' },
     action: (editor) => editor.chain().focus().setLink({ href: '' }).run(),
-    preview: '<a href="#" style="color:#3b82f6;text-decoration:underline;font-size:12px;">Link</a>',
   },
   {
     id: 'draft',
@@ -137,7 +121,6 @@ export const SLASH_COMMANDS = [
     alias: { fr: ['/brouillon', '/draft', '/brouillon'], en: ['/draft', '/sketch', '/rough'] },
     description: { fr: 'Marquer le contenu comme brouillon', en: 'Mark content as draft' },
     action: (editor) => editor.chain().focus().insertContent('<span class="draft">Draft</span>').run(),
-    preview: '<span style="padding:2px 6px;background:#f1f5f9;color:#94a3b8;border-radius:4px;font-size:11px;font-weight:500;">Draft</span>',
   },
   {
     id: 'task-list',
@@ -145,7 +128,6 @@ export const SLASH_COMMANDS = [
     alias: { fr: ['/liste de tâches', '/tâches', '/todo'], en: ['/todo', '/tasks', '/checklist'] },
     description: { fr: 'Liste interactive de tâches à accomplir', en: 'Interactive list of tasks to complete' },
     action: (editor) => editor.chain().focus().toggleTaskList().run(),
-    preview: '<div style="display:flex;align-items:center;gap:8px;"><input type="checkbox" style="margin:0;" /><span style="color:#64748b;font-size:12px;">Task</span></div>',
   },
   {
     id: 'emoji',
@@ -153,7 +135,6 @@ export const SLASH_COMMANDS = [
     alias: { fr: ['/emoji', '/smiley', '/icône'], en: ['/emoji', '/smiley', '/icon'] },
     description: { fr: 'Sélectionner et insérer un emoji', en: 'Select and insert an emoji' },
     action: () => {/* Ouvre un picker d'emoji */},
-    preview: '<div style="display:flex;align-items:center;justify-content:center;width:40px;height:24px;background:linear-gradient(135deg,#fef3c7,#fde68a);border-radius:6px;font-size:16px;">😊</div>',
   },
   {
     id: 'callout-info',
@@ -161,7 +142,6 @@ export const SLASH_COMMANDS = [
     alias: { fr: ['/info', '/callout-info'], en: ['/info', '/callout-info'] },
     description: { fr: 'Bloc d\'information coloré', en: 'Colored information block' },
     action: (editor) => editor.chain().focus().setCallout({ type: 'info' }).run(),
-    preview: '<div style="background:#f0f9ff;border:1px solid #0ea5e9;border-radius:8px;padding:12px;margin:8px 0;"><strong>ℹ️ Information</strong><br><span style="color:#64748b;">Contenu du callout...</span></div>',
   },
   {
     id: 'callout-warning',
@@ -169,7 +149,6 @@ export const SLASH_COMMANDS = [
     alias: { fr: ['/attention', '/warning', '/callout-warning'], en: ['/warning', '/callout-warning'] },
     description: { fr: 'Bloc d\'attention coloré', en: 'Colored warning block' },
     action: (editor) => editor.chain().focus().setCallout({ type: 'warning' }).run(),
-    preview: '<div style="background:#fffbeb;border:1px solid #f59e0b;border-radius:8px;padding:12px;margin:8px 0;"><strong>⚠️ Attention</strong><br><span style="color:#64748b;">Contenu du callout...</span></div>',
   },
   {
     id: 'callout-error',
@@ -177,7 +156,6 @@ export const SLASH_COMMANDS = [
     alias: { fr: ['/erreur', '/error', '/callout-error'], en: ['/error', '/callout-error'] },
     description: { fr: 'Bloc d\'erreur coloré', en: 'Colored error block' },
     action: (editor) => editor.chain().focus().setCallout({ type: 'error' }).run(),
-    preview: '<div style="background:#fef2f2;border:1px solid #ef4444;border-radius:8px;padding:12px;margin:8px 0;"><strong>❌ Erreur</strong><br><span style="color:#64748b;">Contenu du callout...</span></div>',
   },
   {
     id: 'callout-success',
@@ -185,7 +163,6 @@ export const SLASH_COMMANDS = [
     alias: { fr: ['/succes', '/success', '/callout-success'], en: ['/success', '/callout-success'] },
     description: { fr: 'Bloc de succès coloré', en: 'Colored success block' },
     action: (editor) => editor.chain().focus().setCallout({ type: 'success' }).run(),
-    preview: '<div style="background:#f0fdf4;border:1px solid #22c55e;border-radius:8px;padding:12px;margin:8px 0;"><strong>✅ Succès</strong><br><span style="color:#64748b;">Contenu du callout...</span></div>',
   },
   {
     id: 'callout-note',
@@ -193,7 +170,6 @@ export const SLASH_COMMANDS = [
     alias: { fr: ['/note', '/callout-note'], en: ['/note', '/callout-note'] },
     description: { fr: 'Bloc de note coloré', en: 'Colored note block' },
     action: (editor) => editor.chain().focus().setCallout({ type: 'note' }).run(),
-    preview: '<div style="background:#f8fafc;border:1px solid #64748b;border-radius:8px;padding:12px;margin:8px 0;"><strong>📝 Note</strong><br><span style="color:#64748b;">Contenu du callout...</span></div>',
   },
   {
     id: 'callout-tip',
@@ -201,6 +177,5 @@ export const SLASH_COMMANDS = [
     alias: { fr: ['/conseil', '/tip', '/callout-tip'], en: ['/tip', '/callout-tip'] },
     description: { fr: 'Bloc de conseil coloré', en: 'Colored tip block' },
     action: (editor) => editor.chain().focus().setCallout({ type: 'tip' }).run(),
-    preview: '<div style="background:#fefce8;border:1px solid #eab308;border-radius:8px;padding:12px;margin:8px 0;"><strong>💡 Conseil</strong><br><span style="color:#64748b;">Contenu du callout...</span></div>',
   },
 ]; 

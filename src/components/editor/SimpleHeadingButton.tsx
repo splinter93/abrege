@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Editor } from '@tiptap/react';
-import { FiType, FiChevronDown } from 'react-icons/fi';
+import { FiChevronDown } from 'react-icons/fi';
 import Tooltip from '@/components/Tooltip';
 
 interface SimpleHeadingButtonProps {
@@ -60,8 +60,7 @@ const SimpleHeadingButton: React.FC<SimpleHeadingButtonProps> = ({ editor }) => 
           onClick={() => setIsOpen(!isOpen)}
           aria-label="Titres et paragraphes"
         >
-          <FiType size={16} />
-          <span className="dropdown-label">{currentLabel}</span>
+          <span className="dropdown-label">Titre</span>
           <FiChevronDown size={12} className={`chevron ${isOpen ? 'open' : ''}`} />
         </button>
       </Tooltip>

@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Editor } from '@tiptap/react';
-import { FiType, FiEdit3 } from 'react-icons/fi';
+import { FiDroplet, FiEdit3 } from 'react-icons/fi';
 
 interface ColorButtonProps {
   editor: Editor | null;
@@ -106,18 +106,12 @@ const ColorButton: React.FC<ColorButtonProps> = ({ editor, type }) => {
     <div className="color-button-container">
       <button
         ref={buttonRef}
-        className={`color-button ${isActive ? 'active' : ''}`}
+        className={`toolbar-btn ${isActive ? 'active' : ''}`}
         onClick={() => setIsOpen(!isOpen)}
         title={isTextColor ? 'Couleur du texte' : 'Surlignage'}
         disabled={!editor}
       >
-        {isTextColor ? <FiType size={16} /> : <FiEdit3 size={16} />}
-        {selectedColor && (
-          <div 
-            className="color-indicator"
-            style={{ backgroundColor: selectedColor }}
-          />
-        )}
+        {isTextColor ? <FiDroplet size={16} /> : <FiEdit3 size={16} />}
       </button>
 
       {isOpen && (
