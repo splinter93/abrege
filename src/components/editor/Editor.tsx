@@ -960,8 +960,7 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
               </>
             )}
             <EditorHeaderImage
-              key={noteState.headerImageKey} // Force le rechargement du composant
-              headerImageUrl={noteState.headerImageUrl}
+              headerImageUrl={noteState.headerImageUrl ? `${noteState.headerImageUrl}?v=${noteState.headerImageKey}` : null}
               headerImageOffset={noteState.headerOffset}
               headerImageBlur={noteState.headerBlur}
               headerImageOverlay={parseFloat(noteState.headerOverlay) || 0}
