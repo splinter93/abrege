@@ -31,56 +31,9 @@
     flex-shrink: 0;
 }
 
-.toolbar-btn {
-    background: transparent;
-    border: none;
-    cursor: pointer;
-    padding: 4px 6px;
-    border-radius: 4px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--text-secondary);
-    transition: all 0.2s ease;
-    font-size: 13px;
-    width: 24px;
-    height: 24px;
-}
-
-.toolbar-btn:hover {
-    background-color: var(--surface-3);
-    color: var(--text-primary);
-    transform: scale(1.05);
-}
-
-.toolbar-btn:focus {
-    outline: none !important;
-    box-shadow: none !important;
-    border: none !important;
-}
-
-.toolbar-btn:focus-visible {
-    outline: none !important;
-    box-shadow: none !important;
-    border: none !important;
-}
-
-.toolbar-btn:active {
-    outline: none !important;
-    box-shadow: none !important;
-    border: none !important;
-}
-
-/* S'assurer que les boutons gardent leurs dimensions exactes */
-.toolbar-btn svg {
-    width: 14px;
-    height: 14px;
-    flex-shrink: 0;
-}
+/* Styles .toolbar-btn supprimés - maintenant dans modern-toolbar.css */
 
 /* Suppression globale de tous les effets de focus sur tous les boutons */
-.toolbar-btn,
-.toolbar-btn *,
 .copy-btn,
 .copy-btn *,
 .mermaid-edit-btn,
@@ -105,10 +58,7 @@
     transform: scale(1.05);
 }
 
-.toolbar-btn.copied {
-    color: var(--success-text, #10b981) !important;
-    background: transparent;
-}
+/* .toolbar-btn.copied supprimé - maintenant dans modern-toolbar.css */
 
 /* =================================================================
    Toolbar Layout (Left/Right containers)
@@ -348,17 +298,7 @@
         min-height: 28px;
     }
     
-    .toolbar-btn {
-        padding: 3px 4px;
-        font-size: 12px;
-        width: 20px;
-        height: 20px;
-    }
-    
-    .toolbar-btn svg {
-        width: 12px;
-        height: 12px;
-    }
+    /* .toolbar-btn styles supprimés - maintenant dans modern-toolbar.css */
     
     .toolbar-left {
         gap: 6px;
@@ -390,15 +330,7 @@
         min-height: 24px;
     }
     
-    .toolbar-btn {
-        width: 18px;
-        height: 18px;
-    }
-    
-    .toolbar-btn svg {
-        width: 11px;
-        height: 11px;
-    }
+    /* .toolbar-btn styles supprimés - maintenant dans modern-toolbar.css */
     
     .toolbar-label {
         font-size: 10px;

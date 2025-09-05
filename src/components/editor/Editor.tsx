@@ -4,8 +4,6 @@ import '@/styles/UnifiedToolbar.css';
 import '@/styles/context-menu.css';
 import '@/styles/callouts.css';
 import '@/styles/color-buttons.css';
-import '@/styles/box-selection.css';
-import '@/styles/block-drag-drop.css';
 import '@/styles/tiptap-extensions.css';
 import '@/components/mermaid/MermaidRenderer.css';
 import '@/components/mermaid/MermaidToolbar.css';
@@ -38,7 +36,7 @@ import { toast } from 'react-hot-toast';
 import ImageMenu from '@/components/ImageMenu';
 import { uploadImageForNote } from '@/utils/fileUpload';
 import { logger, LogCategory } from '@/utils/logger';
-import type { FullEditorInstance, CustomImageExtension } from '@/types/editor';
+import type { FullEditorInstance } from '@/types/editor';
 // import type { Note } from '@/types/note'; // Type non trouvé, on utilise Record<string, unknown>
 import { createEditorExtensions, PRODUCTION_EXTENSIONS_CONFIG } from '@/config/editor-extensions';
 
@@ -51,10 +49,6 @@ const debounce = <T extends (...args: unknown[]) => void>(func: T, wait: number)
   }) as T;
 };
 import ContextMenu from './ContextMenu';
-import MentionList from './MentionList';
-import EmojiList from './EmojiList';
-import LinkPopover from './LinkPopover';
-import FloatingToolbar from './FloatingToolbar';
 
 /**
  * Full Editor – markdown is source of truth; HTML only for display.

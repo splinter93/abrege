@@ -33,7 +33,6 @@ import SimpleListButton from './SimpleListButton';
 import SimpleAlignButton from './SimpleAlignButton';
 import BlockquoteButton from './BlockquoteButton';
 import CodeBlockButton from './CodeBlockButton';
-import TurnIntoDropdown from './TurnIntoDropdown';
 import './modern-toolbar.css';
 import '@/styles/simple-editor-components.css';
 import type { FullEditorInstance } from '@/types/editor';
