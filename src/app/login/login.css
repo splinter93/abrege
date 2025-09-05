@@ -1,0 +1,30 @@
+.login-redirect {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  font-family: 'Noto Sans', sans-serif;
+}
+
+.login-redirect-content {
+  text-align: center;
+  color: white;
+  padding: 2rem;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+.login-redirect-content h1 {
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+}
+
+.login-redirect-content p {
+  font-size: 1rem;
+  opacity: 0.9;
+  margin: 0;
+}

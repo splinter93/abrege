@@ -155,11 +155,12 @@ function AuthPageContent() {
   };
 
   return (
-    <div className="auth-container">
-      <LogoHeader />
+    <div className="auth-page">
+      <div className="auth-container">
+        <LogoHeader />
 
-      <div className="auth-content">
-        <div className="auth-form-container">
+        <div className="auth-content">
+          <div className="auth-form-container">
           <div className="auth-header">
             <h1 className="auth-title">
               {isExternalOAuth ? `Autoriser l'accès à ${clientId}` : (isSignUp ? 'Créer un compte' : 'Se connecter')}
@@ -170,9 +171,9 @@ function AuthPageContent() {
                 : (isSignUp ? 'Rejoignez Scrivia pour organiser vos connaissances' : 'Accédez à votre espace personnel')}
             </p>
 
-            {/* Debug visible seulement en dev */}
-            {process.env.NODE_ENV === 'development' && (
-              <div style={{ background: '#f0f0f0', padding: 10, margin: '10px 0', borderRadius: 5, fontSize: 12 }}>
+            {/* Debug masqué pour un design plus propre */}
+            {process.env.NODE_ENV === 'development' && false && (
+              <div className="debug-info">
                 <strong>Debug OAuth:</strong><br />
                 client_id: {clientId}<br />
                 redirect_uri: {redirectUri}<br />
@@ -286,6 +287,7 @@ function AuthPageContent() {
               )}
             </div>
           )}
+          </div>
         </div>
       </div>
     </div>
@@ -296,11 +298,13 @@ function AuthPageContent() {
 export default function AuthPage() {
   return (
     <Suspense fallback={
-      <div className="auth-container">
-        <div className="auth-content">
-          <div className="auth-form-container">
-            <div className="auth-header">
-              <h1 className="auth-title">Chargement...</h1>
+      <div className="auth-page">
+        <div className="auth-container">
+          <div className="auth-content">
+            <div className="auth-form-container">
+              <div className="auth-header">
+                <h1 className="auth-title">Chargement...</h1>
+              </div>
             </div>
           </div>
         </div>
