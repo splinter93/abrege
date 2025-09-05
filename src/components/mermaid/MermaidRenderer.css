@@ -62,7 +62,7 @@
   padding: 16px;
   border: none;
   border-radius: 0;
-  font-family: var(--font-monospace);
+  font-family: 'JetBrains Mono', 'Noto Sans Mono', 'Fira Code', 'SFMono-Regular', 'Menlo', 'Consolas', 'Monaco', 'Liberation Mono', monospace !important;
   font-size: 14px;
   line-height: 1.5;
   background: transparent;

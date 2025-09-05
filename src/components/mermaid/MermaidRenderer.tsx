@@ -10,6 +10,7 @@ import { initializeMermaid } from '@/services/mermaid/mermaidConfig';
 import { normalizeMermaidContent, getMermaidDiagramType } from '@/components/chat/mermaidService';
 import { simpleLogger as logger } from '@/utils/logger';
 import MermaidToolbar from './MermaidToolbar';
+import { openMermaidModal } from './MermaidModal';
 import './MermaidRenderer.css';
 
 export interface MermaidRendererProps {
@@ -179,6 +180,11 @@ const MermaidRenderer: React.FC<MermaidRendererProps> = ({
     renderChart(content);
   }, [content, renderChart]);
 
+  // Gestion de l'expansion vers la modale
+  const handleExpand = useCallback(() => {
+    openMermaidModal(content);
+  }, [content]);
+
   // Classes CSS dynamiques
   const containerClasses = [
     'mermaid-container',
@@ -272,6 +278,7 @@ const MermaidRenderer: React.FC<MermaidRendererProps> = ({
             showExpand={showExpand}
             showEdit={showEdit}
             onEdit={onEdit}
+            onExpand={handleExpand}
           />
         )}
         

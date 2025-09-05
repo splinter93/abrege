@@ -24,20 +24,20 @@
   -moz-osx-font-smoothing: grayscale;
   letter-spacing: -0.005em; /* softened for readability */
   color-scheme: light dark;
-  /* FORCE left alignment on all elements */
-  text-align: left !important;
+  /* Alignement par défaut */
+  text-align: left;
 }
 
 /* Clean container borders */
 .markdown-body > :first-child { margin-top: 0; }
 .markdown-body > :last-child { margin-bottom: 0; }
 
-/* FORCE left alignment on base elements */
+/* Alignement par défaut pour les éléments de base */
 .markdown-body h1, .markdown-body h2, .markdown-body h3, .markdown-body h4, .markdown-body h5, .markdown-body h6,
-.markdown-body p, .markdown-body li, .markdown-body blockquote, .markdown-body pre, .markdown-body code,
+.markdown-body p, .markdown-body li, .markdown-body pre, .markdown-body code,
 .markdown-body table, .markdown-body th, .markdown-body td {
-  text-align: left !important;
-  text-align-last: left !important;
+  text-align: left;
+  text-align-last: left;
 }
 
 /* Exceptions for elements that should remain centered */
@@ -59,111 +59,38 @@ html {
 }
 
 /* ==========================================================================
-   HEADINGS - ULTRA-PREMIUM CHATGPT TYPOGRAPHY (OVERRIDE ALL CONFLICTS)
+   HEADINGS - TYPOGRAPHIE DÉLÉGUÉE À TYPOGRAPHY.CSS
+   ========================================================================== */
+/* 
+   Toute la typographie des titres (tailles, gras, polices) est maintenant 
+   centralisée dans src/styles/typography.css pour éviter les conflits.
+   Ce fichier ne gère que la mise en forme des objets (quotes, tableaux, etc.)
+*/
+
+/* ==========================================================================
+   PAGES PUBLIQUES - ASSURER L'APPLICATION DES STYLES
    ========================================================================== */
 
-/* ULTRA-BOLD HEADINGS - UNIVERSAL SELECTORS (NO MORE DUPLICATION!) */
-h1 {
-  font-size: 2.25rem !important;
-  font-weight: 900 !important;
-  line-height: 1.15;
-  margin: 3rem 0 1.5rem 0;
-  color: var(--editor-text-color);
-  letter-spacing: -0.02em;
-  font-family: var(--editor-font-family);
-  position: relative;
-  scroll-margin-top: 6rem; /* clean anchor positioning */
-}
-
-  /* H1 underline removed */
-  
-/* ULTRA-BOLD HEADINGS - UNIVERSAL SELECTORS (NO MORE DUPLICATION!) */
-h2 {
-  font-size: 1.75rem !important;
-  font-weight: 900 !important;
-  line-height: 1.2;
-  margin: 2.5rem 0 1.25rem 0;
-  color: var(--editor-text-color);
-  letter-spacing: -0.015em;
-  font-family: var(--editor-font-family);
-  position: relative;
-  scroll-margin-top: 6rem;
-}
-
-  /* H2 underline removed */
-  
-/* ULTRA-BOLD HEADINGS - UNIVERSAL SELECTORS (NO MORE DUPLICATION!) */
-h3 {
-  font-size: 1.5rem !important;
-  font-weight: 900 !important;
-  line-height: 1.25;
-  margin: 2rem 0 1rem 0;
-  color: var(--editor-text-color);
-  letter-spacing: -0.01em;
-  font-family: var(--editor-font-family);
-  position: relative;
-  scroll-margin-top: 6rem;
-}
-
-  /* H3 underline removed */
-  
-/* ULTRA-BOLD HEADINGS - UNIVERSAL SELECTORS (NO MORE DUPLICATION!) */
-h4 {
-  font-size: 1.25rem !important;
-  font-weight: 800 !important;
-  line-height: 1.3;
-  margin: 1.75rem 0 0.875rem 0;
-  color: var(--editor-text-color);
-  letter-spacing: -0.005em;
-  font-family: var(--editor-font-family);
-  scroll-margin-top: 6rem;
-}
-
-/* ULTRA-BOLD HEADINGS - UNIVERSAL SELECTORS (NO MORE DUPLICATION!) */
-h5 {
-  font-size: 1.125rem !important;
-  font-weight: 800 !important;
-  line-height: 1.35;
-  margin: 1.5rem 0 0.75rem 0;
-  color: var(--editor-text-color);
-  font-family: var(--editor-font-family);
-  scroll-margin-top: 6rem;
-}
-
-/* ULTRA-BOLD HEADINGS - UNIVERSAL SELECTORS (NO MORE DUPLICATION!) */
-h6 {
-  font-size: 1rem !important;
-  font-weight: 800 !important;
-  line-height: 1.4;
-  margin: 1.25rem 0 0.625rem 0;
-  color: var(--editor-text-color);
-  font-family: var(--editor-font-family);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  scroll-margin-top: 6rem;
+/* S'assurer que tous les styles markdown s'appliquent aux pages publiques */
+.public-note-container .markdown-body,
+.public-note-content-wrapper .markdown-body {
+  color: var(--editor-text-color) !important;
+  font-family: var(--editor-font-family) !important;
+  font-size: var(--editor-body-size) !important;
+  line-height: var(--editor-line-height-base) !important;
+  background: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  text-align: left;
 }
 
 /* ==========================================================================
-     PARAGRAPHES - ESPACEMENTS PARFAITS
+     PARAGRAPHES - TYPOGRAPHIE DÉLÉGUÉE À TYPOGRAPHY.CSS
    ========================================================================== */
-
-.markdown-body p {
-  margin: 0 0 1.5rem 0;
-  line-height: 1.8;
-  font-weight: 450;
-  text-align: left !important;
-  text-align-last: left !important;
-  hyphens: auto;
-  word-break: break-word;
-  max-width: 100%;
-}
-
-.markdown-body p:last-child { margin-bottom: 0; }
-
-  /* Special spacing after headings */
-  .markdown-body h1 + p,
-.markdown-body h2 + p,
-.markdown-body h3 + p { margin-top: 0.5rem; }
+/* 
+   La typographie des paragraphes est maintenant centralisée dans 
+   src/styles/typography.css pour éviter les conflits.
+*/
 
 /* ==========================================================================
      LISTES - HIÉRARCHIE VISUELLE PARFAITE
@@ -174,7 +101,7 @@ h6 {
   margin: 1.5rem 0;
   padding-left: 1.75em;
   line-height: 1.8;
-  text-align: left !important;
+  text-align: left;
 }
 
 .markdown-body ul { list-style-type: disc; }
@@ -186,7 +113,7 @@ h6 {
   font-weight: 400;
   padding-left: 0.5em;
   position: relative;
-  text-align: left !important;
+  text-align: left;
 }
   
 /* SUPPRIMER les bullets des listes qui contiennent des checkboxes */
@@ -410,99 +337,361 @@ h6 {
 }
 
 /* ==========================================================================
+     CODE INLINE - STYLE MODERNE
+   ========================================================================== */
+
+.markdown-body code,
+.public-note-container .markdown-body code,
+.public-note-content-wrapper .markdown-body code,
+.ProseMirror code {
+  background: var(--surface-2);
+  color: #ff6b00; /* Orange plus foncé et plus saturé */
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: 'JetBrains Mono', 'Noto Sans Mono', 'Fira Code', 'SFMono-Regular', 'Menlo', 'Consolas', 'Monaco', 'Liberation Mono', monospace !important;
+  font-size: 0.9em;
+  font-weight: 500;
+  border: 1px solid var(--border-subtle);
+}
+
+/* ==========================================================================
+     PATHS - FORMATAGE AUTOMATIQUE COMME CODE INLINE
+   ========================================================================== */
+
+/* Détecter les paths qui commencent par / ou contiennent des chemins */
+.markdown-body p:has-text("/"),
+.public-note-container .markdown-body p:has-text("/"),
+.public-note-content-wrapper .markdown-body p:has-text("/"),
+.ProseMirror p:has-text("/") {
+  /* Les paths seront détectés par JavaScript et wrappés dans <code> */
+}
+
+/* Style pour les paths spécifiquement */
+.markdown-body .path-code,
+.public-note-container .markdown-body .path-code,
+.public-note-content-wrapper .markdown-body .path-code,
+.ProseMirror .path-code {
+  background: var(--surface-2);
+  color: #ff6b00; /* Orange plus foncé et plus saturé */
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: 'JetBrains Mono', 'Noto Sans Mono', 'Fira Code', 'SFMono-Regular', 'Menlo', 'Consolas', 'Monaco', 'Liberation Mono', monospace !important;
+  font-size: 0.9em;
+  font-weight: 500;
+  border: 1px solid var(--border-subtle);
+  display: inline;
+}
+
+/* ==========================================================================
+     BLOCS DE CODE - POLICE OBLIGATOIRE JETBRAINS MONO
+   ========================================================================== */
+
+.markdown-body pre,
+.markdown-body pre code,
+.markdown-body .hljs,
+.markdown-body pre[data-language],
+.markdown-body pre[data-language] code,
+.markdown-body pre[data-language] .hljs,
+.markdown-body .language-json,
+.markdown-body .language-json code,
+.markdown-body .language-json .hljs,
+.markdown-body .language-javascript,
+.markdown-body .language-javascript code,
+.markdown-body .language-javascript .hljs,
+.markdown-body .language-typescript,
+.markdown-body .language-typescript code,
+.markdown-body .language-typescript .hljs,
+.markdown-body .language-python,
+.markdown-body .language-python code,
+.markdown-body .language-python .hljs,
+.markdown-body .language-html,
+.markdown-body .language-html code,
+.markdown-body .language-html .hljs,
+.markdown-body .language-css,
+.markdown-body .language-css code,
+.markdown-body .language-css .hljs,
+.markdown-body .language-bash,
+.markdown-body .language-bash code,
+.markdown-body .language-bash .hljs,
+.markdown-body .language-sql,
+.markdown-body .language-sql code,
+.markdown-body .language-sql .hljs,
+.markdown-body .language-markdown,
+.markdown-body .language-markdown code,
+.markdown-body .language-markdown .hljs,
+.markdown-body .language-yaml,
+.markdown-body .language-yaml code,
+.markdown-body .language-yaml .hljs,
+.markdown-body .language-xml,
+.markdown-body .language-xml code,
+.markdown-body .language-xml .hljs,
+.public-note-container .markdown-body pre,
+.public-note-container .markdown-body pre code,
+.public-note-container .markdown-body .hljs,
+.public-note-container .markdown-body pre[data-language],
+.public-note-container .markdown-body pre[data-language] code,
+.public-note-container .markdown-body pre[data-language] .hljs,
+.public-note-container .markdown-body .language-json,
+.public-note-container .markdown-body .language-json code,
+.public-note-container .markdown-body .language-json .hljs,
+.public-note-container .markdown-body .language-javascript,
+.public-note-container .markdown-body .language-javascript code,
+.public-note-container .markdown-body .language-javascript .hljs,
+.public-note-container .markdown-body .language-typescript,
+.public-note-container .markdown-body .language-typescript code,
+.public-note-container .markdown-body .language-typescript .hljs,
+.public-note-container .markdown-body .language-python,
+.public-note-container .markdown-body .language-python code,
+.public-note-container .markdown-body .language-python .hljs,
+.public-note-container .markdown-body .language-html,
+.public-note-container .markdown-body .language-html code,
+.public-note-container .markdown-body .language-html .hljs,
+.public-note-container .markdown-body .language-css,
+.public-note-container .markdown-body .language-css code,
+.public-note-container .markdown-body .language-css .hljs,
+.public-note-container .markdown-body .language-bash,
+.public-note-container .markdown-body .language-bash code,
+.public-note-container .markdown-body .language-bash .hljs,
+.public-note-container .markdown-body .language-sql,
+.public-note-container .markdown-body .language-sql code,
+.public-note-container .markdown-body .language-sql .hljs,
+.public-note-container .markdown-body .language-markdown,
+.public-note-container .markdown-body .language-markdown code,
+.public-note-container .markdown-body .language-markdown .hljs,
+.public-note-container .markdown-body .language-yaml,
+.public-note-container .markdown-body .language-yaml code,
+.public-note-container .markdown-body .language-yaml .hljs,
+.public-note-container .markdown-body .language-xml,
+.public-note-container .markdown-body .language-xml code,
+.public-note-container .markdown-body .language-xml .hljs,
+.public-note-content-wrapper .markdown-body pre,
+.public-note-content-wrapper .markdown-body pre code,
+.public-note-content-wrapper .markdown-body .hljs,
+.public-note-content-wrapper .markdown-body pre[data-language],
+.public-note-content-wrapper .markdown-body pre[data-language] code,
+.public-note-content-wrapper .markdown-body pre[data-language] .hljs,
+.public-note-content-wrapper .markdown-body .language-json,
+.public-note-content-wrapper .markdown-body .language-json code,
+.public-note-content-wrapper .markdown-body .language-json .hljs,
+.public-note-content-wrapper .markdown-body .language-javascript,
+.public-note-content-wrapper .markdown-body .language-javascript code,
+.public-note-content-wrapper .markdown-body .language-javascript .hljs,
+.public-note-content-wrapper .markdown-body .language-typescript,
+.public-note-content-wrapper .markdown-body .language-typescript code,
+.public-note-content-wrapper .markdown-body .language-typescript .hljs,
+.public-note-content-wrapper .markdown-body .language-python,
+.public-note-content-wrapper .markdown-body .language-python code,
+.public-note-content-wrapper .markdown-body .language-python .hljs,
+.public-note-content-wrapper .markdown-body .language-html,
+.public-note-content-wrapper .markdown-body .language-html code,
+.public-note-content-wrapper .markdown-body .language-html .hljs,
+.public-note-content-wrapper .markdown-body .language-css,
+.public-note-content-wrapper .markdown-body .language-css code,
+.public-note-content-wrapper .markdown-body .language-css .hljs,
+.public-note-content-wrapper .markdown-body .language-bash,
+.public-note-content-wrapper .markdown-body .language-bash code,
+.public-note-content-wrapper .markdown-body .language-bash .hljs,
+.public-note-content-wrapper .markdown-body .language-sql,
+.public-note-content-wrapper .markdown-body .language-sql code,
+.public-note-content-wrapper .markdown-body .language-sql .hljs,
+.public-note-content-wrapper .markdown-body .language-markdown,
+.public-note-content-wrapper .markdown-body .language-markdown code,
+.public-note-content-wrapper .markdown-body .language-markdown .hljs,
+.public-note-content-wrapper .markdown-body .language-yaml,
+.public-note-content-wrapper .markdown-body .language-yaml code,
+.public-note-content-wrapper .markdown-body .language-yaml .hljs,
+.public-note-content-wrapper .markdown-body .language-xml,
+.public-note-content-wrapper .markdown-body .language-xml code,
+.public-note-content-wrapper .markdown-body .language-xml .hljs,
+.ProseMirror pre,
+.ProseMirror pre code,
+.ProseMirror .hljs,
+.ProseMirror pre[data-language],
+.ProseMirror pre[data-language] code,
+.ProseMirror pre[data-language] .hljs,
+.ProseMirror .language-json,
+.ProseMirror .language-json code,
+.ProseMirror .language-json .hljs,
+.ProseMirror .language-javascript,
+.ProseMirror .language-javascript code,
+.ProseMirror .language-javascript .hljs,
+.ProseMirror .language-typescript,
+.ProseMirror .language-typescript code,
+.ProseMirror .language-typescript .hljs,
+.ProseMirror .language-python,
+.ProseMirror .language-python code,
+.ProseMirror .language-python .hljs,
+.ProseMirror .language-html,
+.ProseMirror .language-html code,
+.ProseMirror .language-html .hljs,
+.ProseMirror .language-css,
+.ProseMirror .language-css code,
+.ProseMirror .language-css .hljs,
+.ProseMirror .language-bash,
+.ProseMirror .language-bash code,
+.ProseMirror .language-bash .hljs,
+.ProseMirror .language-sql,
+.ProseMirror .language-sql code,
+.ProseMirror .language-sql .hljs,
+.ProseMirror .language-markdown,
+.ProseMirror .language-markdown code,
+.ProseMirror .language-markdown .hljs,
+.ProseMirror .language-yaml,
+.ProseMirror .language-yaml code,
+.ProseMirror .language-yaml .hljs,
+.ProseMirror .language-xml,
+.ProseMirror .language-xml code,
+.ProseMirror .language-xml .hljs {
+  font-family: 'JetBrains Mono', 'Noto Sans Mono', 'Fira Code', 'SFMono-Regular', 'Menlo', 'Consolas', 'Monaco', 'Liberation Mono', monospace !important;
+}
+
+/* ==========================================================================
      BLOCKQUOTES - DESIGN ÉLÉGANT
    ========================================================================== */
 
-  .markdown-body blockquote {
-    border-left: 4px solid var(--accent-primary);
+  .markdown-body blockquote,
+  .public-note-container .markdown-body blockquote,
+  .public-note-content-wrapper .markdown-body blockquote {
     background: var(--surface-2);
     color: var(--text-2);
     font-style: normal;
-    text-align: left;
+    text-align: center;
+    text-align-last: center;
     padding: 1.5rem 2rem;
     margin: 2rem 0;
-    border-radius: 0 12px 12px 0;
+    border-radius: 12px;
     position: relative;
     box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
   }
   
-  .markdown-body blockquote::before {
-    content: '"';
+  .markdown-body blockquote::before,
+  .public-note-container .markdown-body blockquote::before,
+  .public-note-content-wrapper .markdown-body blockquote::before {
+    content: '❝';
     position: absolute;
-    top: 1rem;
-    left: 1rem;
-    font-size: 3rem;
+    top: 0.5rem;
+    left: 0.5rem;
+    font-size: 1.5rem;
     color: var(--accent-primary);
-    opacity: 0.3;
+    opacity: 0.4;
     font-family: serif;
     line-height: 1;
   }
   
-  .markdown-body blockquote p {
+  .markdown-body blockquote p,
+  .public-note-container .markdown-body blockquote p,
+  .public-note-content-wrapper .markdown-body blockquote p {
     margin-bottom: 1rem;
     font-size: 1.05em;
     line-height: 1.7;
+    text-align: center;
+    text-align-last: center;
+    font-weight: 600 !important;
   }
   
-  .markdown-body blockquote p:last-child { margin-bottom: 0; }
+  .markdown-body blockquote p:last-child,
+  .public-note-container .markdown-body blockquote p:last-child,
+  .public-note-content-wrapper .markdown-body blockquote p:last-child { 
+    margin-bottom: 0; 
+  }
 
 /* ==========================================================================
-     TABLEAUX - DESIGN MODERNE ET ÉPURÉ (sticky fixe)
+     TABLEAUX - DESIGN ALIGNÉ SUR LES BLOCS DE CODE
    ========================================================================== */
 
-.markdown-body .tableWrapper {
+.markdown-body .tableWrapper,
+.public-note-container .markdown-body .tableWrapper,
+.public-note-content-wrapper .markdown-body .tableWrapper {
   border: 1px solid var(--border-subtle);
-    border-radius: 12px;
-    overflow: auto; /* permet sticky sur th */
-    margin: 2rem 0;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
-    -webkit-overflow-scrolling: touch;
-    max-width: 100%;
+  border-radius: 8px;
+  overflow: auto; /* permet sticky sur th */
+  margin: 1.5em 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  -webkit-overflow-scrolling: touch;
+  max-width: 100%;
+  background-color: var(--surface-2);
 }
 
-.markdown-body table {
+.markdown-body table,
+.public-note-container .markdown-body table,
+.public-note-content-wrapper .markdown-body table {
   width: 100%;
   border-collapse: collapse;
   table-layout: fixed;
   margin: 0;
+  background: var(--surface-1);
+  border-radius: 0 0 8px 8px;
 }
 
 .markdown-body th,
-.markdown-body td {
+.markdown-body td,
+.public-note-container .markdown-body th,
+.public-note-container .markdown-body td,
+.public-note-content-wrapper .markdown-body th,
+.public-note-content-wrapper .markdown-body td {
   border: none;
   border-bottom: 1px solid var(--border-subtle);
-    text-align: left;
-    vertical-align: top;
-    padding: 1rem 1.25rem;
-    font-size: 0.9em;
-  color: var(--text-2);
+  text-align: left;
+  vertical-align: top;
+  padding: 8px 20px;
+  font-size: 14px;
+  color: var(--text-primary);
   word-break: break-word;
   white-space: normal;
   box-sizing: border-box;
 }
 
-.markdown-body th {
+.markdown-body th,
+.public-note-container .markdown-body th,
+.public-note-content-wrapper .markdown-body th {
   background: var(--surface-2);
-  color: var(--text-1);
-    font-weight: 700;
-    font-size: 1.05em !important;
+  color: var(--text-primary);
+  font-weight: 900 !important;
+  font-size: 15px !important;
   letter-spacing: 0.02em;
-  border-bottom: 2px solid var(--border-subtle);
-    position: sticky;
+  border-bottom: 1px solid var(--border-subtle);
+  position: sticky;
   top: 0;
   z-index: 10;
+  padding: 8px 20px;
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
 }
 
-  .markdown-body tr:last-child td { border-bottom: none; }
+/* Force le gras sur tous les éléments dans les en-têtes */
+.markdown-body th,
+.markdown-body th *,
+.markdown-body th p,
+.markdown-body th span,
+.markdown-body th strong,
+.markdown-body th b {
+  font-weight: 900 !important;
+}
+
+  .markdown-body tr:last-child td,
+  .public-note-container .markdown-body tr:last-child td,
+  .public-note-content-wrapper .markdown-body tr:last-child td { 
+    border-bottom: none; 
+  }
   
-  .markdown-body tbody tr:nth-child(odd) td { background-color: rgba(28, 28, 28, 0.4); }
+  .markdown-body tbody tr:nth-child(odd) td,
+  .public-note-container .markdown-body tbody tr:nth-child(odd) td,
+  .public-note-content-wrapper .markdown-body tbody tr:nth-child(odd) td { 
+    background-color: rgba(28, 28, 28, 0.4); 
+  }
   
-  .markdown-body tbody tr:hover td {
+  .markdown-body tbody tr:hover td,
+  .public-note-container .markdown-body tbody tr:hover td,
+  .public-note-content-wrapper .markdown-body tbody tr:hover td {
     background-color: var(--surface-hover);
     transition: background-color 0.2s ease;
   }
   
-  .markdown-body table p { margin: 0; }
+  .markdown-body table p,
+  .public-note-container .markdown-body table p,
+  .public-note-content-wrapper .markdown-body table p { 
+    margin: 0; 
+  }
 
 /* ==========================================================================
    RÈGLES HORIZONTALES - STYLE CHATGPT
@@ -522,7 +711,9 @@ h6 {
      IMAGES - DESIGN PREMIUM AVEC ANIMATIONS
    ========================================================================== */
 
-.markdown-body img {
+.markdown-body img,
+.public-note-container .markdown-body img,
+.public-note-content-wrapper .markdown-body img {
   max-width: 100%;
     border-radius: 12px;
     margin: 1.5rem 0;
@@ -533,7 +724,9 @@ h6 {
     background: var(--surface-2);
 }
 
-.markdown-body img:hover {
+.markdown-body img:hover,
+.public-note-container .markdown-body img:hover,
+.public-note-content-wrapper .markdown-body img:hover {
     transform: translateY(-4px);
     box-shadow: 0 12px 35px rgba(0, 0, 0, 0.18);
     border-color: var(--accent-primary);
@@ -546,7 +739,9 @@ h6 {
 /* Styles de base pour toutes les checkboxes */
 .markdown-body input[type='checkbox'],
 .editor-content input[type='checkbox'],
-.ProseMirror input[type='checkbox'] {
+.ProseMirror input[type='checkbox'],
+.public-note-container .markdown-body input[type='checkbox'],
+.public-note-content-wrapper .markdown-body input[type='checkbox'] {
   appearance: none;
   width: 1.6em;
   height: 1.6em;
@@ -566,7 +761,9 @@ h6 {
 /* État checked */
 .markdown-body input[type='checkbox']:checked,
 .editor-content input[type='checkbox']:checked,
-.ProseMirror input[type='checkbox']:checked {
+.ProseMirror input[type='checkbox']:checked,
+.public-note-container .markdown-body input[type='checkbox']:checked,
+.public-note-content-wrapper .markdown-body input[type='checkbox']:checked {
   border-color: var(--accent-primary);
   background: var(--accent-primary);
 }
@@ -574,7 +771,9 @@ h6 {
 /* Symbole de validation */
 .markdown-body input[type='checkbox']:checked::after,
 .editor-content input[type='checkbox']:checked::after,
-.ProseMirror input[type='checkbox']:checked::after {
+.ProseMirror input[type='checkbox']:checked::after,
+.public-note-container .markdown-body input[type='checkbox']:checked::after,
+.public-note-content-wrapper .markdown-body input[type='checkbox']:checked::after {
   content: '✓' !important;
   position: absolute !important;
   top: 50% !important;
@@ -593,7 +792,9 @@ h6 {
 /* État focus */
 .markdown-body input[type='checkbox']:focus,
 .editor-content input[type='checkbox']:focus,
-.ProseMirror input[type='checkbox']:focus {
+.ProseMirror input[type='checkbox']:focus,
+.public-note-container .markdown-body input[type='checkbox']:focus,
+.public-note-content-wrapper .markdown-body input[type='checkbox']:focus {
   outline: 2px solid var(--accent-primary);
   outline-offset: 1px;
 }
@@ -777,21 +978,21 @@ h6 {
    ========================================================================== */
 
 .ProseMirror .tableWrapper {
-    margin: 2rem 0;
+  margin: 1.5em 0;
   border: 1px solid var(--border-subtle);
-    border-radius: 12px;
-    overflow: auto; /* sticky friendly */
-  background: none;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
-    -webkit-overflow-scrolling: touch;
+  border-radius: 8px;
+  overflow: auto; /* sticky friendly */
+  background-color: var(--surface-2);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  -webkit-overflow-scrolling: touch;
 }
 
 .ProseMirror table {
   width: 100%;
   border-collapse: collapse;
   border-spacing: 0;
-  background: none;
-    border-radius: 12px;
+  background: var(--surface-1);
+  border-radius: 0 0 8px 8px;
   table-layout: fixed;
   margin: 0;
   padding: 0;
@@ -804,13 +1005,13 @@ h6 {
   border: none;
   border-bottom: 1px solid var(--border-subtle);
   background: none;
-  color: var(--text-2);
-    font-size: 0.9em;
+  color: var(--text-primary);
+  font-size: 14px;
   font-weight: 400;
-    text-align: left;
-    vertical-align: top;
-    padding: 1rem 1.25rem;
-    min-width: 100px;
+  text-align: left;
+  vertical-align: top;
+  padding: 8px 20px;
+  min-width: 100px;
   max-width: none;
   word-break: break-word;
   white-space: normal;
@@ -819,15 +1020,28 @@ h6 {
 
 .ProseMirror th {
   background: var(--surface-2);
-  color: var(--text-1);
-    font-weight: 700;
-    font-size: 1.05em !important;
+  color: var(--text-primary);
+  font-weight: 900 !important;
+  font-size: 15px !important;
   letter-spacing: 0.02em;
-  border-bottom: 2px solid var(--border-subtle);
-    position: sticky;
-    top: 0;
-    z-index: 10;
-  }
+  border-bottom: 1px solid var(--border-subtle);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  padding: 8px 20px;
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+}
+
+/* Force le gras sur tous les éléments dans les en-têtes ProseMirror */
+.ProseMirror th,
+.ProseMirror th *,
+.ProseMirror th p,
+.ProseMirror th span,
+.ProseMirror th strong,
+.ProseMirror th b {
+  font-weight: 900 !important;
+}
   
   .ProseMirror td { background: var(--surface-1); }
   .ProseMirror tbody tr:nth-child(odd) td { background-color: rgba(28, 28, 28, 0.4); }

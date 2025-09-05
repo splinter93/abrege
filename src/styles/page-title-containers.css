@@ -143,10 +143,10 @@
 /* Titre principal */
 .page-title {
   font-size: 32px;
-  font-weight: 700;
+  font-weight: 900 !important;
   color: var(--page-title-text-color, #ffffff);
   margin: 0;
-  font-family: 'Noto Sans', sans-serif;
+  font-family: 'Noto Sans', sans-serif !important;
   letter-spacing: -0.02em;
   line-height: 1.2;
 }

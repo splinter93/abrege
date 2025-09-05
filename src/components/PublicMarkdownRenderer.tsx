@@ -4,6 +4,7 @@ import React, { useMemo, useEffect, useRef } from 'react';
 import { useMarkdownRender } from '@/hooks/editor/useMarkdownRender';
 import { detectMermaidBlocks, validateMermaidSyntax, cleanMermaidContent } from '@/components/chat/mermaidService';
 import MermaidRenderer from '@/components/mermaid/MermaidRenderer';
+import { formatPathsInElement } from '@/utils/formatPaths';
 
 interface PublicMarkdownRendererProps {
   content: string;
@@ -109,6 +110,9 @@ const PublicMarkdownRenderer: React.FC<PublicMarkdownRendererProps> = ({ content
       // Remplacer l'ancien pre par le nouveau container
       preElement.parentNode?.replaceChild(container, preElement);
     });
+
+    // Formater les paths après le traitement des blocs de code
+    formatPathsInElement(containerRef.current);
   }, [html]);
 
   // Si aucun bloc Mermaid n'est détecté, utiliser le rendu markdown simple
