@@ -960,7 +960,7 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
               </>
             )}
             <EditorHeaderImage
-              headerImageUrl={noteState.headerImageUrl ? `${noteState.headerImageUrl}?v=${noteState.headerImageKey}` : null}
+              headerImageUrl={noteState.headerImageUrl}
               headerImageOffset={noteState.headerOffset}
               headerImageBlur={noteState.headerBlur}
               headerImageOverlay={parseFloat(noteState.headerOverlay) || 0}
@@ -969,11 +969,10 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
               onHeaderOffsetChange={async (offset) => {
                 const oldOffset = noteState.headerOffset;
                 try {
-                  // 1. Mettre à jour l'état local immédiatement pour l'UI + forcer rechargement image
+                  // 1. Mettre à jour l'état local immédiatement pour l'UI
                   setNoteState(prev => ({ 
                     ...prev, 
-                    headerOffset: offset,
-                    headerImageKey: prev.headerImageKey + 1 // Force le rechargement
+                    headerOffset: offset
                   }));
                   
                   // 2. Appeler l'API en arrière-plan
@@ -988,11 +987,10 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
               onHeaderBlurChange={async (blur) => {
                 const oldBlur = noteState.headerBlur;
                 try {
-                  // 1. Mettre à jour l'état local immédiatement pour l'UI + forcer rechargement image
+                  // 1. Mettre à jour l'état local immédiatement pour l'UI
                   setNoteState(prev => ({ 
                     ...prev, 
-                    headerBlur: blur,
-                    headerImageKey: prev.headerImageKey + 1 // Force le rechargement
+                    headerBlur: blur
                   }));
                   
                   // 2. Appeler l'API en arrière-plan
@@ -1007,11 +1005,10 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
               onHeaderOverlayChange={async (overlay) => {
                 const oldOverlay = noteState.headerOverlay;
                 try {
-                  // 1. Mettre à jour l'état local immédiatement pour l'UI + forcer rechargement image
+                  // 1. Mettre à jour l'état local immédiatement pour l'UI
                   setNoteState(prev => ({ 
                     ...prev, 
-                    headerOverlay: overlay.toString(),
-                    headerImageKey: prev.headerImageKey + 1 // Force le rechargement
+                    headerOverlay: overlay.toString()
                   }));
                   
                   // 2. Appeler l'API en arrière-plan
@@ -1026,11 +1023,10 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
               onHeaderTitleInImageChange={async (v) => {
                 const oldValue = noteState.titleInImage;
                 try {
-                  // 1. Mettre à jour l'état local immédiatement pour l'UI + forcer rechargement image
+                  // 1. Mettre à jour l'état local immédiatement pour l'UI
                   setNoteState(prev => ({ 
                     ...prev, 
-                    titleInImage: v,
-                    headerImageKey: prev.headerImageKey + 1 // Force le rechargement
+                    titleInImage: v
                   }));
                   
                   // 2. Appeler l'API en arrière-plan
