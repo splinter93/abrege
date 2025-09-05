@@ -78,6 +78,7 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
   const [noteState, setNoteState] = React.useState({
     title: note?.source_title || '',
     headerImageUrl: note?.header_image || null,
+    headerImageKey: 0, // Clé pour forcer le rechargement de l'image
     headerOffset: 50,
     headerBlur: 0,
     headerOverlay: '0',
@@ -959,6 +960,7 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
               </>
             )}
             <EditorHeaderImage
+              key={noteState.headerImageKey} // Force le rechargement du composant
               headerImageUrl={noteState.headerImageUrl}
               headerImageOffset={noteState.headerOffset}
               headerImageBlur={noteState.headerBlur}
@@ -968,8 +970,12 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
               onHeaderOffsetChange={async (offset) => {
                 const oldOffset = noteState.headerOffset;
                 try {
-                  // 1. Mettre à jour l'état local immédiatement pour l'UI
-                  setNoteState(prev => ({ ...prev, headerOffset: offset }));
+                  // 1. Mettre à jour l'état local immédiatement pour l'UI + forcer rechargement image
+                  setNoteState(prev => ({ 
+                    ...prev, 
+                    headerOffset: offset,
+                    headerImageKey: prev.headerImageKey + 1 // Force le rechargement
+                  }));
                   
                   // 2. Appeler l'API en arrière-plan
                   await v2UnifiedApi.updateNote(noteId, { header_image_offset: offset }, userId);
@@ -983,8 +989,12 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
               onHeaderBlurChange={async (blur) => {
                 const oldBlur = noteState.headerBlur;
                 try {
-                  // 1. Mettre à jour l'état local immédiatement pour l'UI
-                  setNoteState(prev => ({ ...prev, headerBlur: blur }));
+                  // 1. Mettre à jour l'état local immédiatement pour l'UI + forcer rechargement image
+                  setNoteState(prev => ({ 
+                    ...prev, 
+                    headerBlur: blur,
+                    headerImageKey: prev.headerImageKey + 1 // Force le rechargement
+                  }));
                   
                   // 2. Appeler l'API en arrière-plan
                   await v2UnifiedApi.updateNote(noteId, { header_image_blur: blur }, userId);
@@ -998,8 +1008,12 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
               onHeaderOverlayChange={async (overlay) => {
                 const oldOverlay = noteState.headerOverlay;
                 try {
-                  // 1. Mettre à jour l'état local immédiatement pour l'UI
-                  setNoteState(prev => ({ ...prev, headerOverlay: overlay.toString() }));
+                  // 1. Mettre à jour l'état local immédiatement pour l'UI + forcer rechargement image
+                  setNoteState(prev => ({ 
+                    ...prev, 
+                    headerOverlay: overlay.toString(),
+                    headerImageKey: prev.headerImageKey + 1 // Force le rechargement
+                  }));
                   
                   // 2. Appeler l'API en arrière-plan
                   await v2UnifiedApi.updateNote(noteId, { header_image_overlay: overlay.toString() }, userId);
@@ -1013,8 +1027,12 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
               onHeaderTitleInImageChange={async (v) => {
                 const oldValue = noteState.titleInImage;
                 try {
-                  // 1. Mettre à jour l'état local immédiatement pour l'UI
-                  setNoteState(prev => ({ ...prev, titleInImage: v }));
+                  // 1. Mettre à jour l'état local immédiatement pour l'UI + forcer rechargement image
+                  setNoteState(prev => ({ 
+                    ...prev, 
+                    titleInImage: v,
+                    headerImageKey: prev.headerImageKey + 1 // Force le rechargement
+                  }));
                   
                   // 2. Appeler l'API en arrière-plan
                   await v2UnifiedApi.updateNote(noteId, { header_title_in_image: v }, userId);
