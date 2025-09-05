@@ -968,11 +968,11 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
               onHeaderOffsetChange={async (offset) => {
                 const oldOffset = noteState.headerOffset;
                 try {
-                  // 1. Appeler l'API en premier
-                  await v2UnifiedApi.updateNote(noteId, { header_image_offset: offset }, userId);
-                  
-                  // 2. Si l'API réussit, mettre à jour l'état local
+                  // 1. Mettre à jour l'état local immédiatement pour l'UI
                   setNoteState(prev => ({ ...prev, headerOffset: offset }));
+                  
+                  // 2. Appeler l'API en arrière-plan
+                  await v2UnifiedApi.updateNote(noteId, { header_image_offset: offset }, userId);
                   updateNote(noteId, { header_image_offset: offset });
                 } catch (error) {
                   // 3. En cas d'échec, restaurer l'ancienne valeur
@@ -983,11 +983,11 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
               onHeaderBlurChange={async (blur) => {
                 const oldBlur = noteState.headerBlur;
                 try {
-                  // 1. Appeler l'API en premier
-                  await v2UnifiedApi.updateNote(noteId, { header_image_blur: blur }, userId);
-                  
-                  // 2. Si l'API réussit, mettre à jour l'état local
+                  // 1. Mettre à jour l'état local immédiatement pour l'UI
                   setNoteState(prev => ({ ...prev, headerBlur: blur }));
+                  
+                  // 2. Appeler l'API en arrière-plan
+                  await v2UnifiedApi.updateNote(noteId, { header_image_blur: blur }, userId);
                   updateNote(noteId, { header_image_blur: blur });
                 } catch (error) {
                   // 3. En cas d'échec, restaurer l'ancienne valeur
@@ -998,11 +998,11 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
               onHeaderOverlayChange={async (overlay) => {
                 const oldOverlay = noteState.headerOverlay;
                 try {
-                  // 1. Appeler l'API en premier
-                  await v2UnifiedApi.updateNote(noteId, { header_image_overlay: overlay.toString() }, userId);
-                  
-                  // 2. Si l'API réussit, mettre à jour l'état local
+                  // 1. Mettre à jour l'état local immédiatement pour l'UI
                   setNoteState(prev => ({ ...prev, headerOverlay: overlay.toString() }));
+                  
+                  // 2. Appeler l'API en arrière-plan
+                  await v2UnifiedApi.updateNote(noteId, { header_image_overlay: overlay.toString() }, userId);
                   updateNote(noteId, { header_image_overlay: overlay.toString() });
                 } catch (error) {
                   // 3. En cas d'échec, restaurer l'ancienne valeur
@@ -1013,11 +1013,11 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
               onHeaderTitleInImageChange={async (v) => {
                 const oldValue = noteState.titleInImage;
                 try {
-                  // 1. Appeler l'API en premier
-                  await v2UnifiedApi.updateNote(noteId, { header_title_in_image: v }, userId);
-                  
-                  // 2. Si l'API réussit, mettre à jour l'état local
+                  // 1. Mettre à jour l'état local immédiatement pour l'UI
                   setNoteState(prev => ({ ...prev, titleInImage: v }));
+                  
+                  // 2. Appeler l'API en arrière-plan
+                  await v2UnifiedApi.updateNote(noteId, { header_title_in_image: v }, userId);
                   updateNote(noteId, { header_title_in_image: v });
                 } catch (error) {
                   // 3. En cas d'échec, restaurer l'ancienne valeur
