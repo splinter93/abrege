@@ -352,7 +352,7 @@ export class SpecializedAgentManager {
         model: agent.model,
         messagesCount: groqPayload.messages.length,
         hasImage: groqPayload.messages.some((msg: any) => 
-          msg.content?.some((c: any) => c.type === 'image_url')
+          Array.isArray(msg.content) && msg.content.some((c: any) => c.type === 'image_url')
         ),
         payload: JSON.stringify(groqPayload, null, 2)
       });
@@ -382,7 +382,7 @@ export class SpecializedAgentManager {
         traceId,
         model: agent.model,
         hasImage: groqPayload.messages.some((msg: any) => 
-          msg.content?.some((c: any) => c.type === 'image_url')
+          Array.isArray(msg.content) && msg.content.some((c: any) => c.type === 'image_url')
         )
       });
 
