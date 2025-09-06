@@ -1,0 +1,116 @@
+/**
+ * Utilitaires pour la validation et le nettoyage des schémas JSON
+ */
+
+export interface JSONParseResult {
+  success: boolean;
+  data?: any;
+  error?: string;
+  position?: number;
+  context?: string;
+}
+
+/**
+ * Nettoie et valide un texte JSON avant le parsing
+ */
+export function cleanAndValidateJSON(text: string): JSONParseResult {
+  // Nettoyer le texte en dehors du try/catch pour qu'il soit accessible partout
+  let cleanedText = text.trim();
+  
+  // Supprimer les caractères BOM et autres caractères invisibles
+  cleanedText = cleanedText.replace(/^\uFEFF/, ''); // BOM
+  cleanedText = cleanedText.replace(/[\u200B-\u200D\uFEFF]/g, ''); // Zero-width characters
+  
+  try {
+    // Vérifier que le texte commence et finit par des accolades
+    if (!cleanedText.startsWith('{') || !cleanedText.endsWith('}')) {
+      return {
+        success: false,
+        error: 'Le contenu ne semble pas être un JSON valide (doit commencer par { et finir par })'
+      };
+    }
+
+    // Essayer de parser le JSON
+    const data = JSON.parse(cleanedText);
+    
+    return {
+      success: true,
+      data
+    };
+  } catch (error) {
+    const err = error as Error;
+    
+    // Essayer de trouver la position de l'erreur
+    let position: number | undefined;
+    let context: string | undefined;
+    
+    if (err.message.includes('position')) {
+      const match = err.message.match(/position (\d+)/);
+      if (match) {
+        position = parseInt(match[1]);
+        const start = Math.max(0, position - 50);
+        const end = Math.min(cleanedText.length, position + 50);
+        context = cleanedText.substring(start, end);
+      }
+    }
+    
+    return {
+      success: false,
+      error: err.message,
+      position,
+      context
+    };
+  }
+}
+
+/**
+ * Valide qu'un objet est un schéma OpenAPI valide
+ */
+export function validateOpenAPISchema(data: any): { valid: boolean; error?: string } {
+  if (!data || typeof data !== 'object') {
+    return { valid: false, error: 'Le schéma doit être un objet' };
+  }
+
+  // Vérifier la présence de la propriété openapi ou swagger
+  if (!data.openapi && !data.swagger) {
+    return { 
+      valid: false, 
+      error: 'Ce fichier ne semble pas être un schéma OpenAPI valide (propriété "openapi" ou "swagger" manquante)' 
+    };
+  }
+
+  // Vérifier la présence des propriétés obligatoires
+  if (!data.info || typeof data.info !== 'object') {
+    return { 
+      valid: false, 
+      error: 'Propriété "info" manquante ou invalide' 
+    };
+  }
+
+  if (!data.info.title || typeof data.info.title !== 'string') {
+    return { 
+      valid: false, 
+      error: 'Propriété "info.title" manquante ou invalide' 
+    };
+  }
+
+  if (!data.info.version || typeof data.info.version !== 'string') {
+    return { 
+      valid: false, 
+      error: 'Propriété "info.version" manquante ou invalide' 
+    };
+  }
+
+  return { valid: true };
+}
+
+/**
+ * Formate un message d'erreur JSON avec contexte
+ */
+export function formatJSONError(error: string, position?: number, context?: string): string {
+  if (position !== undefined && context) {
+    return `Erreur de parsing JSON à la position ${position}:\n\n"${context}"\n\nVérifiez que le JSON est valide et qu'il n'y a pas de caractères supplémentaires.`;
+  }
+  
+  return `Erreur de parsing JSON: ${error}`;
+}

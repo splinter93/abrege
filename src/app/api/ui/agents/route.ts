@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { simpleLogger as logger } from '@/utils/logger';
+import { SpecializedAgentManager } from '@/services/specializedAgents/SpecializedAgentManager';
+import { CreateSpecializedAgentRequest } from '@/types/specializedAgents';
 
 // Client Supabase admin pour accéder aux agents
 const supabase = createClient(
@@ -8,15 +10,28 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
+// Instance du manager pour les agents spécialisés
+const agentManager = new SpecializedAgentManager();
+
 export async function GET(request: NextRequest) {
   try {
-    logger.info('[Agents API] 🚀 Récupération des agents');
+    const { searchParams } = new URL(request.url);
+    const specialized = searchParams.get('specialized') === 'true';
 
-    const { data: agents, error } = await supabase
+    logger.info(`[Agents API] 🚀 Récupération des agents${specialized ? ' spécialisés' : ''}`);
+
+    let query = supabase
       .from('agents')
       .select('*')
       .eq('is_active', true)
       .order('priority', { ascending: false });
+
+    // Filtrer les agents spécialisés si demandé
+    if (specialized) {
+      query = query.eq('is_endpoint_agent', true);
+    }
+
+    const { data: agents, error } = await query;
 
     if (error) {
       logger.error('[Agents API] ❌ Erreur récupération agents:', error);
@@ -30,7 +45,8 @@ export async function GET(request: NextRequest) {
     
     return NextResponse.json({
       success: true,
-      agents: agents || []
+      agents: agents || [],
+      specialized: specialized
     });
 
   } catch (error) {
@@ -49,10 +65,17 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { name, model, system_instructions, provider = 'groq' } = body;
+    const { 
+      name, model, system_instructions, provider = 'groq',
+      // Nouvelles propriétés pour agents spécialisés
+      slug, display_name, description, is_endpoint_agent = false,
+      input_schema, output_schema, is_chat_agent = false,
+      temperature = 0.7, max_tokens = 4000, api_v2_capabilities
+    } = body;
 
-    logger.info('[Agents API] 🚀 Création d\'un nouvel agent');
-
+    logger.info('[Agents API] 🚀 Création d\'un agent');
+    
+    // Validation basique
     if (!name || !model || !system_instructions) {
       return NextResponse.json(
         { error: 'Paramètres manquants', required: ['name', 'model', 'system_instructions'] },
@@ -60,18 +83,75 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { data: agent, error } = await supabase
-      .from('agents')
-      .insert({
-        name,
+    // Validation des agents spécialisés
+    if (is_endpoint_agent && (!slug || !display_name)) {
+      return NextResponse.json(
+        { error: 'Pour les agents spécialisés, slug et display_name sont requis' },
+        { status: 400 }
+      );
+    }
+
+    // Si c'est un agent spécialisé, utiliser le manager
+    if (is_endpoint_agent) {
+      const specializedConfig: CreateSpecializedAgentRequest = {
+        slug,
+        display_name,
+        description: description || '',
         model,
         provider,
         system_instructions,
-        is_active: true,
-        priority: 1,
-        temperature: 0.7,
-        max_tokens: 8000
-      })
+        input_schema,
+        output_schema,
+        is_chat_agent,
+        temperature,
+        max_tokens,
+        api_v2_capabilities
+      };
+
+      const result = await agentManager.createSpecializedAgent(specializedConfig);
+      
+      if (result.success) {
+        logger.info(`[Agents API] ✅ Agent spécialisé créé: ${result.agent?.slug} (ID: ${result.agent?.id})`);
+        return NextResponse.json({
+          success: true,
+          agent: result.agent,
+          endpoint: result.endpoint
+        });
+      } else {
+        logger.error('[Agents API] ❌ Erreur création agent spécialisé:', result.error);
+        return NextResponse.json(
+          { error: result.error },
+          { status: 400 }
+        );
+      }
+    }
+
+    // Agent classique
+    const agentData = {
+      name,
+      model,
+      provider,
+      system_instructions,
+      is_active: true,
+      priority: 1,
+      temperature,
+      max_tokens,
+      capabilities: ['text', 'function_calling'],
+      api_v2_capabilities: api_v2_capabilities || ['get_note', 'update_note', 'search_notes'],
+      
+      // Nouvelles propriétés pour agents spécialisés (null pour agents classiques)
+      slug: null,
+      display_name: name,
+      description: null,
+      is_endpoint_agent: false,
+      is_chat_agent: true,
+      input_schema: null,
+      output_schema: null
+    };
+
+    const { data: agent, error } = await supabase
+      .from('agents')
+      .insert(agentData)
       .select()
       .single();
 

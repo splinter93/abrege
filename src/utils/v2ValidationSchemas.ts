@@ -109,6 +109,58 @@ export const publishNoteV2Schema = z.object({
   visibility: z.enum(['private', 'public', 'link-private', 'link-public', 'limited', 'scrivia']),
 });
 
+/**
+ * Schéma pour appliquer des opérations de contenu V2
+ */
+export const contentApplyV2Schema = z.object({
+  ops: z.array(z.object({
+    id: z.string().min(1, 'ID de l\'opération requis'),
+    action: z.enum(['insert', 'replace', 'delete', 'upsert_section'], {
+      errorMap: () => ({ message: 'Action doit être insert, replace, delete ou upsert_section' })
+    }),
+    target: z.object({
+      type: z.enum(['heading', 'regex', 'position', 'anchor'], {
+        errorMap: () => ({ message: 'Type de cible doit être heading, regex, position ou anchor' })
+      }),
+      heading: z.object({
+        path: z.array(z.string().min(1)).min(1, 'Chemin de heading requis'),
+        level: z.number().int().min(1).max(6).optional(),
+        heading_id: z.string().min(1).optional()
+      }).optional(),
+      regex: z.object({
+        pattern: z.string().min(1).max(1000, 'Pattern regex trop long'),
+        flags: z.string().max(10, 'Flags regex trop long').optional(),
+        nth: z.number().int().optional()
+      }).optional(),
+      position: z.object({
+        mode: z.enum(['offset', 'start', 'end'], {
+          errorMap: () => ({ message: 'Mode de position doit être offset, start ou end' })
+        }),
+        offset: z.number().int().min(0).optional()
+      }).optional(),
+      anchor: z.object({
+        name: z.enum(['doc_start', 'doc_end', 'after_toc', 'before_first_heading'], {
+          errorMap: () => ({ message: 'Nom d\'ancre doit être doc_start, doc_end, after_toc ou before_first_heading' })
+        })
+      }).optional()
+    }),
+    where: z.enum(['before', 'after', 'inside_start', 'inside_end', 'at', 'replace_match'], {
+      errorMap: () => ({ message: 'Position doit être before, after, inside_start, inside_end, at ou replace_match' })
+    }),
+    content: z.string().max(100000, 'Contenu trop long').optional(),
+    options: z.object({
+      ensure_heading: z.boolean().optional(),
+      surround_with_blank_lines: z.number().int().min(0).max(3).optional(),
+      dedent: z.boolean().optional()
+    }).optional()
+  })).min(1, 'Au moins une opération requise').max(50, 'Trop d\'opérations'),
+  dry_run: z.boolean().default(true),
+  transaction: z.enum(['all_or_nothing', 'best_effort']).default('all_or_nothing'),
+  conflict_strategy: z.enum(['fail', 'skip']).default('fail'),
+  return: z.enum(['content', 'diff', 'none']).default('diff'),
+  idempotency_key: z.string().uuid('Clé d\'idempotence doit être un UUID valide').optional()
+});
+
 // ============================================================================
 // FOLDER MANAGEMENT SCHEMAS
 // ============================================================================

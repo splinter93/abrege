@@ -13,6 +13,7 @@ type SlashCommand = {
 };
 
 export interface EditorSlashMenuProps {
+  editor: FullEditorInstance | null;
   onInsert: (cmd: SlashCommand) => void;
   lang?: string;
   onOpenImageMenu?: () => void;
@@ -24,7 +25,7 @@ export interface EditorSlashMenuHandle {
 }
 
 const EditorSlashMenu = forwardRef<EditorSlashMenuHandle, EditorSlashMenuProps>(
-  function EditorSlashMenu({ onInsert, lang = 'fr', onOpenImageMenu }, ref) {
+  function EditorSlashMenu({ editor, onInsert, lang = 'fr', onOpenImageMenu }, ref) {
     const [slashOpen, setSlashOpen] = useState(false);
     const [slashSearch, setSlashSearch] = useState('');
     const slashAnchorRef = useRef<{ left: number; top: number; closeMenu?: () => void }>({ left: 0, top: 0 });
@@ -46,6 +47,10 @@ const EditorSlashMenu = forwardRef<EditorSlashMenuHandle, EditorSlashMenuProps>(
     const closeMenu = () => {
       setSlashOpen(false);
       setSlashSearch('');
+      // Remettre le focus sur l'éditeur
+      if (editor) {
+        editor.commands.focus();
+      }
     };
 
     useImperativeHandle(ref, () => ({ openMenu, closeMenu }), [openMenu]);

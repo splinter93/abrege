@@ -466,6 +466,11 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
           console.log('Editor: ouverture du menu à:', coords);
           slashMenuRef.current?.openMenu({ left: coords.left, top: coords.top });
         }, 10);
+      } else if (e.key === ' ') {
+        // Fermer le menu slash si ouvert et laisser l'espace être tapé
+        if (slashMenuRef.current) {
+          slashMenuRef.current.closeMenu();
+        }
       }
     };
     el.addEventListener('keydown', onKeyDown);
@@ -1172,6 +1177,7 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
                 {/* Slash commands menu */}
                 <EditorSlashMenu
                   ref={slashMenuRef}
+                  editor={editor}
                   lang={slashLang}
                   onOpenImageMenu={() => { setImageMenuTarget('content'); setImageMenuOpen(true); }}
                   onInsert={(cmd) => {
