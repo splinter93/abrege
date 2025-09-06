@@ -88,6 +88,7 @@ export class MultimodalHandler {
     const multimodalModels = [
       'meta-llama/llama-4-maverick-17b-128e-instruct',
       'meta-llama/llama-4-scout-17b-16e-instruct',
+      'meta-llama/llama-3.3-70b-versatile',
       'deepseek-vision'
     ];
     return multimodalModels.includes(model);

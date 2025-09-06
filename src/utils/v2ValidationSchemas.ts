@@ -115,6 +115,7 @@ export const publishNoteV2Schema = z.object({
 export const executeAgentV2Schema = z.object({
   ref: z.string().min(1, 'Référence de l\'agent requise (ID ou slug)'),
   input: z.string().min(1, 'Message d\'entrée requis'),
+  image: z.string().url().optional().describe('URL de l\'image à analyser (supporté par les modèles Llama)'),
   options: z.object({
     temperature: z.number().min(0).max(2).optional(),
     max_tokens: z.number().int().min(1).max(10000).optional(),

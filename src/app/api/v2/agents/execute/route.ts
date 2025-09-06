@@ -106,7 +106,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       return createValidationErrorResponse(validationResult);
     }
 
-    const { ref, input, options = {} } = validationResult.data;
+    const { ref, input, image, options = {} } = validationResult.data;
 
     // 🔍 Résoudre l'agent (ID ou slug)
     const agentManager = new SpecializedAgentManager();
@@ -141,6 +141,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const executionParams = {
       input: {
         input: input, // Format standardisé pour tous les agents
+        image: image, // Image optionnelle pour les modèles Llama
         ...options
       },
       userId,

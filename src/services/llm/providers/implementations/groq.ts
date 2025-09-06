@@ -319,16 +319,18 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
       logger.dev(`[GroqProvider] 🔒 Aucun message Developer, function calls désactivés`);
     }
 
-    // Ajouter les paramètres spécifiques à Groq
-    if (this.config.serviceTier) {
+    // Ajouter les paramètres spécifiques à Groq selon les capacités du modèle
+    const { modelSupportsServiceTier, modelSupportsParallelToolCalls, modelSupportsReasoningEffort } = await import('@/constants/groqModels');
+    
+    if (this.config.serviceTier && modelSupportsServiceTier(this.config.model)) {
       payload.service_tier = this.config.serviceTier;
     }
 
-    if (this.config.parallelToolCalls && hasDeveloperMessageWithTools) {
+    if (this.config.parallelToolCalls && hasDeveloperMessageWithTools && modelSupportsParallelToolCalls(this.config.model)) {
       payload.parallel_tool_calls = this.config.parallelToolCalls;
     }
 
-    if (this.config.reasoningEffort) {
+    if (this.config.reasoningEffort && modelSupportsReasoningEffort(this.config.model)) {
       payload.reasoning_effort = this.config.reasoningEffort;
     }
     

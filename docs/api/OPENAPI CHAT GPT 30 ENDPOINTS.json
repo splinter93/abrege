@@ -879,6 +879,12 @@
                       "description": "Message d'entrée pour l'agent",
                       "example": "Analyse cette note"
                     },
+                    "image": {
+                      "type": "string",
+                      "format": "uri",
+                      "description": "URL de l'image à analyser (supporté par les modèles Llama)",
+                      "example": "https://example.com/image.jpg"
+                    },
                     "options": {
                       "type": "object",
                       "properties": {
