@@ -2067,35 +2067,6 @@
             }
           }
         }
-      },
-      "/openapi-schema": {
-        "get": {
-          "operationId": "getOpenAPISchema",
-          "summary": "Schéma OpenAPI",
-          "description": "Récupère le schéma OpenAPI complet de l'API",
-          "tags": ["Documentation"],
-          "responses": {
-            "200": {
-              "description": "Schéma OpenAPI",
-              "content": {
-                "application/json": {
-                  "schema": {
-                    "type": "object",
-                    "description": "Schéma OpenAPI 3.1.0 complet",
-                    "properties": {
-                      "openapi": {"type": "string", "example": "3.1.0"},
-                      "info": {"type": "object"},
-                      "paths": {"type": "object"},
-                      "components": {"type": "object"},
-                      "tags": {"type": "array"}
-                    },
-                    "required": ["openapi", "info", "paths"]
-                  }
-                }
-              }
-            }
-          }
-        }
       }
     },
     "components": {
