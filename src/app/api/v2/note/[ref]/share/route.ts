@@ -189,6 +189,21 @@ export async function PATCH(
       ...validatedData
     };
 
+    // Récupérer le username pour construire l'URL publique
+    const { data: userData, error: userError } = await supabase
+      .from('users')
+      .select('username')
+      .eq('id', userId)
+      .single();
+
+    if (userError || !userData?.username) {
+      logApi.error(`❌ Impossible de récupérer le username pour l'utilisateur ${userId}`, context);
+      return NextResponse.json(
+        { error: 'Erreur lors de la récupération des informations utilisateur' },
+        { status: 500, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
     // Préparer les données de mise à jour
     const updateData: any = {
       share_settings: updatedShareSettings,
@@ -197,12 +212,17 @@ export async function PATCH(
 
     // Mettre à jour l'URL publique si la visibilité change
     if (validatedData.visibility && validatedData.visibility !== currentShareSettings.visibility) {
-      if (validatedData.visibility === 'private') {
-        updateData.public_url = null;
-      } else if (validatedData.visibility === 'link-private' || validatedData.visibility === 'link-public') {
-        // Générer une URL publique basée sur le slug
-        updateData.public_url = `${process.env.NEXT_PUBLIC_APP_URL}/public/note/${userId}/${currentNote.slug}`;
+      if (validatedData.visibility === 'link-private' || validatedData.visibility === 'link-public') {
+        // Générer une URL publique basée sur le slug et le username
+        updateData.public_url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/public/note/${userData.username}/${currentNote.slug}`;
       }
+      // Note: On ne supprime plus l'URL publique quand on passe en privé
+      // L'URL publique reste disponible pour le créateur même si la note est privée
+    }
+
+    // Si l'URL publique n'existe pas, la générer (même pour les notes privées)
+    if (!currentNote.public_url && currentNote.slug) {
+      updateData.public_url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/public/note/${userData.username}/${currentNote.slug}`;
     }
 
     // Mettre à jour la note

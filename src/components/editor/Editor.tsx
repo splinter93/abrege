@@ -875,21 +875,21 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
       // Prendre le slug depuis le store local
       const noteData = useFileSystemStore.getState().notes[noteId];
       
-      // Vérifier la visibilité AVANT le slug
-      if (noteData?.share_settings?.visibility === 'private') {
+      // Vérifier si l'utilisateur est connecté et s'il est le créateur de la note
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error('Vous devez être connecté.');
+        return;
+      }
+
+      // Si la note est privée, vérifier que l'utilisateur est le créateur
+      if (noteData?.share_settings?.visibility === 'private' && noteData?.user_id !== user.id) {
         toast.error('Cette note est privée. Changez sa visibilité pour la prévisualiser.');
         return;
       }
       
       if (!noteData?.slug) {
         toast.error('Cette note n\'a pas de slug. Publiez-la d\'abord.');
-        return;
-      }
-
-      // Construire l'URL publique avec le username actuel
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        toast.error('Vous devez être connecté.');
         return;
       }
 
@@ -906,7 +906,7 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
       }
 
       // Construire et ouvrir l'URL
-      const url = `${window.location.origin}/@${userData.username}/${noteData.slug}`;
+      const url = `${window.location.origin}/public/note/${userData.username}/${noteData.slug}`;
       if (process.env.NODE_ENV === 'development') {
         logger.debug(LogCategory.EDITOR, 'Ouverture de l\'URL publique:', url);
       }
