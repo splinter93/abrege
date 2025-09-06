@@ -169,11 +169,19 @@
                   "type": "object",
                   "properties": {
                     "source_title": {"type": "string", "maxLength": 255},
-                    "content": {"type": "string"},
-                    "visibility": {
-                      "type": "string",
-                      "enum": ["private", "public", "link-private", "link-public"]
-                    }
+                    "markdown_content": {"type": "string"},
+                    "html_content": {"type": "string"},
+                    "header_image": {"type": "string", "format": "uri", "nullable": true},
+                    "header_image_offset": {"type": "number", "minimum": 0, "maximum": 100},
+                    "header_image_blur": {"type": "integer", "minimum": 0, "maximum": 5},
+                    "header_image_overlay": {"type": "integer", "minimum": 0, "maximum": 5},
+                    "header_title_in_image": {"type": "boolean"},
+                    "wide_mode": {"type": "boolean"},
+                    "a4_mode": {"type": "boolean"},
+                    "slash_lang": {"type": "string", "enum": ["fr", "en"]},
+                    "font_family": {"type": "string"},
+                    "folder_id": {"type": "string", "format": "uuid", "nullable": true},
+                    "description": {"type": "string", "maxLength": 500}
                   }
                 }
               }
