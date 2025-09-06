@@ -830,6 +830,117 @@
               }
             }
           }
+        },
+        "patch": {
+          "operationId": "patchAgent",
+          "summary": "Mettre à jour partiellement un agent",
+          "description": "Met à jour partiellement les propriétés d'un agent spécialisé",
+          "tags": ["Agents Spécialisés"],
+          "security": [{"ApiKeyAuth": []}],
+          "parameters": [
+            {
+              "name": "agentId",
+              "in": "path",
+              "required": true,
+              "schema": {"type": "string"},
+              "description": "ID ou slug de l'agent"
+            }
+          ],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "display_name": {"type": "string", "maxLength": 255},
+                    "description": {"type": "string", "maxLength": 1000},
+                    "model": {"type": "string"},
+                    "system_instructions": {"type": "string"},
+                    "temperature": {"type": "number", "minimum": 0, "maximum": 2},
+                    "max_tokens": {"type": "integer", "minimum": 1, "maximum": 10000},
+                    "is_active": {"type": "boolean"},
+                    "api_v2_capabilities": {
+                      "type": "array",
+                      "items": {"type": "string"}
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "Agent mis à jour avec succès",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "allOf": [
+                      {"$ref": "#/components/schemas/Success"},
+                      {
+                        "type": "object",
+                        "properties": {
+                          "agent": {"$ref": "#/components/schemas/Agent"}
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            "404": {
+              "description": "Agent non trouvé",
+              "content": {
+                "application/json": {
+                  "schema": {"$ref": "#/components/schemas/Error"}
+                }
+              }
+            }
+          }
+        },
+        "delete": {
+          "operationId": "deleteAgent",
+          "summary": "Supprimer un agent",
+          "description": "Supprime un agent spécialisé",
+          "tags": ["Agents Spécialisés"],
+          "security": [{"ApiKeyAuth": []}],
+          "parameters": [
+            {
+              "name": "agentId",
+              "in": "path",
+              "required": true,
+              "schema": {"type": "string"},
+              "description": "ID ou slug de l'agent"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Agent supprimé avec succès",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "allOf": [
+                      {"$ref": "#/components/schemas/Success"},
+                      {
+                        "type": "object",
+                        "properties": {
+                          "message": {"type": "string", "example": "Agent supprimé avec succès"}
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            "404": {
+              "description": "Agent non trouvé",
+              "content": {
+                "application/json": {
+                  "schema": {"$ref": "#/components/schemas/Error"}
+                }
+              }
+            }
+          }
         }
       },
       "/agents/execute": {
@@ -2216,18 +2327,62 @@
               "maxLength": 1000,
               "description": "Description de l'agent"
             },
+            "model": {
+              "type": "string",
+              "description": "Modèle LLM utilisé par l'agent"
+            },
+            "provider": {
+              "type": "string",
+              "enum": ["groq", "openai", "anthropic"],
+              "description": "Fournisseur LLM"
+            },
+            "input_schema": {
+              "type": "object",
+              "nullable": true,
+              "description": "Schéma d'entrée OpenAPI"
+            },
+            "output_schema": {
+              "type": "object",
+              "nullable": true,
+              "description": "Schéma de sortie OpenAPI"
+            },
             "is_active": {
               "type": "boolean",
               "description": "Statut actif de l'agent"
             },
-            "agent_type": {
-              "type": "string",
-              "enum": ["chat", "endpoint"],
-              "description": "Type d'agent"
+            "is_chat_agent": {
+              "type": "boolean",
+              "description": "Agent de chat ou endpoint"
             },
-            "config": {
-              "type": "object",
-              "description": "Configuration de l'agent"
+            "is_endpoint_agent": {
+              "type": "boolean",
+              "description": "Agent endpoint ou chat"
+            },
+            "capabilities": {
+              "type": "array",
+              "items": {"type": "string"},
+              "description": "Capacités de l'agent"
+            },
+            "api_v2_capabilities": {
+              "type": "array",
+              "items": {"type": "string"},
+              "description": "Capacités API V2 de l'agent"
+            },
+            "temperature": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 2,
+              "description": "Température de génération"
+            },
+            "max_tokens": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 10000,
+              "description": "Nombre maximum de tokens"
+            },
+            "priority": {
+              "type": "integer",
+              "description": "Priorité de l'agent"
             },
             "created_at": {
               "type": "string",
@@ -2238,9 +2393,13 @@
               "type": "string",
               "format": "date-time",
               "description": "Date de dernière modification"
+            },
+            "metadata": {
+              "type": "object",
+              "description": "Métadonnées de l'agent"
             }
           },
-          "required": ["id", "name", "is_active"]
+          "required": ["name", "slug", "description", "is_active"]
         }
       }
     },
