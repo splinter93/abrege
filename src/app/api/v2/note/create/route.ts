@@ -4,6 +4,7 @@ import { createNoteV2Schema, validatePayload, createValidationErrorResponse } fr
 import { createSupabaseClient } from '@/utils/supabaseClient';
 import { getAuthenticatedUser } from '@/utils/authUtils';
 import { SlugAndUrlService } from '@/services/slugAndUrlService';
+import { canPerformAction } from '@/utils/scopeValidation';
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
   const startTime = Date.now();
@@ -27,6 +28,20 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   }
 
   const userId = authResult.userId!;
+
+  // 🔐 Vérification des permissions pour créer une note
+  if (!canPerformAction(authResult, 'notes:create', context)) {
+    logApi.warn(`❌ Permissions insuffisantes pour notes:create`, context);
+    return NextResponse.json(
+      { 
+        error: `Permissions insuffisantes. Scope requis: notes:create`,
+        required_scope: 'notes:create',
+        available_scopes: authResult.scopes || []
+      },
+      { status: 403, headers: { "Content-Type": "application/json" } }
+    );
+  }
+
   const supabase = createSupabaseClient();
 
   try {

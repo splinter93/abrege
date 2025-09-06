@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { getAuthenticatedUser, createAuthenticatedSupabaseClient } from '@/utils/authUtils';
 import { V2DatabaseUtils } from '@/utils/v2DatabaseUtils';
 import { logApi } from '@/utils/logger';
+import { canPerformAction } from '@/utils/scopeValidation';
 
 const resourceSchema = z.enum(['classeur', 'note', 'folder', 'file']);
 const deleteResponseSchema = z.object({
@@ -61,6 +62,42 @@ export async function DELETE(
     }
 
     const userId = authResult.userId!;
+
+    // 🔐 Vérification des permissions selon le type de ressource
+    let requiredAction: 'notes:delete' | 'classeurs:delete' | 'dossiers:delete' | 'files:delete';
+    switch (resourceType) {
+      case 'note':
+        requiredAction = 'notes:delete';
+        break;
+      case 'classeur':
+        requiredAction = 'classeurs:delete';
+        break;
+      case 'folder':
+        requiredAction = 'dossiers:delete';
+        break;
+      case 'file':
+        requiredAction = 'files:delete';
+        break;
+      default:
+        return NextResponse.json(
+          { success: false, error: 'Unsupported resource type' },
+          { status: 400 }
+        );
+    }
+
+    // Vérifier les permissions
+    if (!canPerformAction(authResult, requiredAction, context)) {
+      logApi.warn(`❌ Permissions insuffisantes pour ${requiredAction}`, context);
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: `Permissions insuffisantes. Scope requis: ${requiredAction}`,
+          required_scope: requiredAction,
+          available_scopes: authResult.scopes || []
+        },
+        { status: 403 }
+      );
+    }
 
     // 🔧 Créer le client Supabase authentifié conforme aux autres endpoints V2
     const supabase = createAuthenticatedSupabaseClient(authResult);
