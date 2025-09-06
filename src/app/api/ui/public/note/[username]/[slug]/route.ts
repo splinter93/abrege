@@ -4,7 +4,12 @@ import type { NextRequest } from 'next/server';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+
+// Client anonyme pour les requêtes publiques
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// Client avec service role pour l'authentification
+const supabaseService = createClient(supabaseUrl, supabaseServiceKey);
 
 /**
  * GET /api/ui/public/note/[username]/[slug]
@@ -45,12 +50,14 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ user
     if (authHeader && authHeader.startsWith('Bearer ')) {
       try {
         const token = authHeader.substring(7);
-        const { data: { user: authUser }, error: authError } = await supabase.auth.getUser(token);
+        // Utiliser le client service pour l'authentification
+        const { data: { user: authUser }, error: authError } = await supabaseService.auth.getUser(token);
         if (!authError && authUser && authUser.id === user.id) {
           isCreator = true;
         }
       } catch (error) {
         // Ignorer les erreurs d'authentification, on continue sans être connecté
+        console.log('Erreur auth:', error);
       }
     }
 
