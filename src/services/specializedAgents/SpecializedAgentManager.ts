@@ -198,6 +198,8 @@ export class SpecializedAgentManager {
    * Récupérer un agent par ID ou slug (avec cache)
    */
   private async getAgentByIdOrSlug(agentId: string): Promise<SpecializedAgentConfig | null> {
+    logger.dev(`[SpecializedAgentManager] 🔍 Recherche agent: ${agentId}`);
+    
     // Vérifier le cache
     if (this.agentCache.has(agentId)) {
       const cachedAgent = this.agentCache.get(agentId)!;
@@ -210,25 +212,54 @@ export class SpecializedAgentManager {
     }
 
     try {
-      const { data: agent, error } = await supabase
+      // Construire la requête conditionnelle selon le type d'ID
+      let query = supabase
         .from('agents')
         .select('*')
-        .or(`slug.eq.${agentId},id.eq.${agentId}`)
         .eq('is_endpoint_agent', true)
-        .eq('is_active', true)
-        .single();
+        .eq('is_active', true);
 
-      if (error || !agent) {
-        logger.warn(`[SpecializedAgentManager] ❌ Agent non trouvé: ${agentId}`, { error });
+      // Si c'est un UUID, chercher par ID, sinon par slug
+      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(agentId);
+      
+      logger.dev(`[SpecializedAgentManager] 🔍 Type d'ID: ${isUUID ? 'UUID' : 'slug'}`);
+      
+      if (isUUID) {
+        query = query.eq('id', agentId);
+        logger.dev(`[SpecializedAgentManager] 🔍 Recherche par ID: ${agentId}`);
+      } else {
+        query = query.eq('slug', agentId);
+        logger.dev(`[SpecializedAgentManager] 🔍 Recherche par slug: ${agentId}`);
+      }
+
+      const { data: agent, error } = await query.single();
+
+      if (error) {
+        logger.warn(`[SpecializedAgentManager] ❌ Erreur requête agent ${agentId}:`, { error: error.message, code: error.code });
         return null;
       }
 
+      if (!agent) {
+        logger.warn(`[SpecializedAgentManager] ❌ Agent non trouvé: ${agentId}`);
+        return null;
+      }
+
+      // Convertir les types numériques
+      const processedAgent = {
+        ...agent,
+        temperature: typeof agent.temperature === 'string' ? parseFloat(agent.temperature) : agent.temperature,
+        top_p: typeof agent.top_p === 'string' ? parseFloat(agent.top_p) : agent.top_p,
+        max_tokens: typeof agent.max_tokens === 'string' ? parseInt(agent.max_tokens) : agent.max_tokens,
+        max_completion_tokens: typeof agent.max_completion_tokens === 'string' ? parseInt(agent.max_completion_tokens) : agent.max_completion_tokens,
+        priority: typeof agent.priority === 'string' ? parseInt(agent.priority) : agent.priority
+      };
+
       // Mettre en cache
-      this.agentCache.set(agentId, agent as SpecializedAgentConfig);
+      this.agentCache.set(agentId, processedAgent as SpecializedAgentConfig);
       this.cacheExpiry.set(agentId, Date.now());
 
-      logger.dev(`[SpecializedAgentManager] 📥 Agent ${agentId} chargé depuis la DB`);
-      return agent as SpecializedAgentConfig;
+      logger.dev(`[SpecializedAgentManager] ✅ Agent ${agentId} trouvé: ${processedAgent.display_name || processedAgent.name}`);
+      return processedAgent as SpecializedAgentConfig;
 
     } catch (error) {
       logger.error(`[SpecializedAgentManager] ❌ Erreur récupération agent ${agentId}:`, error);
@@ -496,6 +527,13 @@ export class SpecializedAgentManager {
   }
 
   /**
+   * Récupérer un agent par référence (ID ou slug) - alias public
+   */
+  public async getAgentByRef(ref: string, userId: string): Promise<SpecializedAgentConfig | null> {
+    return await this.getAgentByIdOrSlug(ref);
+  }
+
+  /**
    * Lister tous les agents spécialisés
    */
   async listSpecializedAgents(): Promise<SpecializedAgentConfig[]> {
@@ -720,12 +758,22 @@ export class SpecializedAgentManager {
         throw new Error(`Erreur base de données: ${error.message}`);
       }
 
-      logger.dev(`[SpecializedAgentManager] ✅ ${agents?.length || 0} agents récupérés`, { 
+      // Convertir les types numériques pour tous les agents
+      const processedAgents = (agents || []).map(agent => ({
+        ...agent,
+        temperature: typeof agent.temperature === 'string' ? parseFloat(agent.temperature) : agent.temperature,
+        top_p: typeof agent.top_p === 'string' ? parseFloat(agent.top_p) : agent.top_p,
+        max_tokens: typeof agent.max_tokens === 'string' ? parseInt(agent.max_tokens) : agent.max_tokens,
+        max_completion_tokens: typeof agent.max_completion_tokens === 'string' ? parseInt(agent.max_completion_tokens) : agent.max_completion_tokens,
+        priority: typeof agent.priority === 'string' ? parseInt(agent.priority) : agent.priority
+      }));
+
+      logger.dev(`[SpecializedAgentManager] ✅ ${processedAgents.length} agents récupérés`, { 
         userId, 
-        count: agents?.length || 0 
+        count: processedAgents.length 
       });
 
-      return (agents || []) as SpecializedAgentConfig[];
+      return processedAgents as SpecializedAgentConfig[];
 
     } catch (error) {
       logger.error(`[SpecializedAgentManager] ❌ Erreur liste agents:`, error);

@@ -154,11 +154,11 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     // 🚀 Exécuter l'agent
     logApi.info(`🤖 Exécution agent: ${agent.display_name || agent.slug}`, context);
     
-    const executionResult = await agentManager.executeAgent(
+    const executionResult = await agentManager.executeSpecializedAgent(
       agent.id,
       executionParams.input,
       executionParams.userId,
-      executionParams.context
+      `api-v2-execute-${agent.id}-${Date.now()}`
     );
 
     if (!executionResult.success) {
