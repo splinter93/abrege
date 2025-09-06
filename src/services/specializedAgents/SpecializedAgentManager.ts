@@ -94,8 +94,22 @@ export class SpecializedAgentManager {
       let isMultimodal = false;
       let groqPayload: any = null;
       
+      logger.info(`[SpecializedAgentManager] 🔍 Vérification multimodale: ${agent.model}`, { 
+        traceId, 
+        isMultimodalModel: MultimodalHandler.isMultimodalModel(agent.model),
+        inputKeys: Object.keys(input),
+        hasImage: !!input.image
+      });
+      
       if (MultimodalHandler.isMultimodalModel(agent.model)) {
         const multimodalPrep = MultimodalHandler.prepareGroqContent(input, agent.model);
+        
+        logger.info(`[SpecializedAgentManager] 🔍 Préparation multimodale:`, { 
+          traceId, 
+          text: multimodalPrep.text,
+          imageUrl: multimodalPrep.imageUrl,
+          error: multimodalPrep.error
+        });
         
         if (multimodalPrep.error) {
           logger.warn(`[SpecializedAgentManager] ❌ Erreur préparation multimodale pour ${agentId}`, { 
@@ -328,6 +342,16 @@ export class SpecializedAgentManager {
       };
       
       groqPayload.messages.unshift(systemMessage);
+
+      logger.info(`[SpecializedAgentManager] 🖼️ Payload Groq multimodale:`, { 
+        traceId, 
+        model: agent.model,
+        messagesCount: groqPayload.messages.length,
+        hasImage: groqPayload.messages.some((msg: any) => 
+          msg.content?.some((c: any) => c.type === 'image_url')
+        ),
+        payload: JSON.stringify(groqPayload, null, 2)
+      });
 
       // Appel direct à l'API Groq
       const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
