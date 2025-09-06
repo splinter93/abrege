@@ -585,8 +585,8 @@ export class SpecializedAgentManager {
       errors.push('Slug doit contenir uniquement des lettres minuscules, chiffres et tirets');
     }
 
-    if (config.model && !config.model.includes('groq')) {
-      errors.push('Seuls les modèles Groq sont supportés actuellement');
+    if (config.model && !config.model.includes('groq') && !config.model.includes('llama') && !config.model.includes('deepseek')) {
+      errors.push('Seuls les modèles Groq (llama, deepseek) sont supportés actuellement');
     }
 
     if (config.temperature !== undefined && (config.temperature < 0 || config.temperature > 2)) {
