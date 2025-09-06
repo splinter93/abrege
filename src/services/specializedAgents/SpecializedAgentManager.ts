@@ -138,8 +138,15 @@ export class SpecializedAgentManager {
       // 4. Exécution selon le type de modèle
       let result: any;
       
+      logger.info(`[SpecializedAgentManager] 🔍 Détection multimodale: ${isMultimodal}, payload: ${!!groqPayload}`, { 
+        traceId, 
+        model: agent.model,
+        hasImage: input.image ? 'yes' : 'no'
+      });
+      
       if (isMultimodal && groqPayload) {
         // Exécution directe avec l'API Groq pour les modèles multimodaux
+        logger.info(`[SpecializedAgentManager] 🖼️ Exécution multimodale directe pour ${agentId}`, { traceId, model: agent.model });
         result = await this.executeMultimodalDirect(groqPayload, agent, traceId);
       } else {
         // Exécution normale via l'orchestrateur
