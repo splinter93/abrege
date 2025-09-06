@@ -459,7 +459,14 @@ async function validateApiKey(apiKey: string): Promise<{ user_id: string; scopes
         
         return {
           user_id: defaultUserId,
-          scopes: ['notes:read', 'classeurs:read', 'dossiers:read', 'agents:execute']
+          scopes: [
+            'notes:read', 'notes:write', 'notes:create', 'notes:update', 'notes:delete',
+            'classeurs:read', 'classeurs:write', 'classeurs:create', 'classeurs:update', 'classeurs:delete',
+            'dossiers:read', 'dossiers:write', 'dossiers:create', 'dossiers:update', 'dossiers:delete',
+            'files:read', 'files:write', 'files:upload', 'files:delete',
+            'agents:execute', 'agents:read',
+            'search:content', 'profile:read'
+          ]
         };
       }
     }

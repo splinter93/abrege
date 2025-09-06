@@ -55,9 +55,12 @@ function sanitizeState(s?: string) {
 async function createChatGPTOAuthCode(userId: string, params: OAuthParams): Promise<string> {
   // Filtrer les scopes pour ne garder que ceux autorisés
   const allowedScopes = [
-    'notes:read', 'notes:write', 
-    'dossiers:read', 'dossiers:write', 
-    'classeurs:read', 'classeurs:write'
+    'notes:read', 'notes:write', 'notes:create', 'notes:update', 'notes:delete',
+    'classeurs:read', 'classeurs:write', 'classeurs:create', 'classeurs:update', 'classeurs:delete',
+    'dossiers:read', 'dossiers:write', 'dossiers:create', 'dossiers:update', 'dossiers:delete',
+    'files:read', 'files:write', 'files:upload', 'files:delete',
+    'agents:execute', 'agents:read',
+    'search:content', 'profile:read'
   ];
   
   const scopes = params.scope

@@ -16,7 +16,7 @@
     },
     "servers": [
       {
-        "url": "https://www.scrivia.app/api/v2",
+        "url": "https://scrivia.app/api/v2",
         "description": "Production"
       }
     ],
@@ -91,28 +91,26 @@
                       "maxLength": 255,
                       "description": "Titre de la note"
                     },
-                    "classeur_id": {
+                    "notebook_id": {
                       "type": "string",
-                      "format": "uuid",
-                      "description": "ID du classeur parent"
+                      "description": "ID ou slug du classeur parent"
                     },
                     "folder_id": {
                       "type": "string",
                       "format": "uuid",
                       "description": "ID du dossier parent (optionnel)"
                     },
-                    "content": {
+                    "markdown_content": {
                       "type": "string",
                       "description": "Contenu markdown de la note"
                     },
-                    "visibility": {
+                    "header_image": {
                       "type": "string",
-                      "enum": ["private", "public", "link-private", "link-public"],
-                      "default": "private",
-                      "description": "Visibilité de la note"
+                      "format": "uri",
+                      "description": "URL de l'image d'en-tête (optionnel)"
                     }
                   },
-                  "required": ["source_title", "classeur_id"]
+                  "required": ["source_title", "notebook_id"]
                 }
               }
             }
@@ -538,6 +536,115 @@
                       }
                     ]
                   }
+                }
+              }
+            }
+          }
+        },
+        "post": {
+          "operationId": "createAgent",
+          "summary": "Créer un agent",
+          "description": "Crée un nouvel agent spécialisé",
+          "tags": ["Agents Spécialisés"],
+          "security": [{"ApiKeyAuth": []}],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "display_name": {
+                      "type": "string",
+                      "maxLength": 255,
+                      "description": "Nom d'affichage de l'agent"
+                    },
+                    "slug": {
+                      "type": "string",
+                      "maxLength": 100,
+                      "description": "Slug unique de l'agent"
+                    },
+                    "description": {
+                      "type": "string",
+                      "maxLength": 1000,
+                      "description": "Description de l'agent"
+                    },
+                    "model": {
+                      "type": "string",
+                      "description": "Modèle LLM à utiliser"
+                    },
+                    "provider": {
+                      "type": "string",
+                      "enum": ["groq", "openai", "anthropic"],
+                      "default": "groq",
+                      "description": "Fournisseur LLM"
+                    },
+                    "system_instructions": {
+                      "type": "string",
+                      "description": "Instructions système pour l'agent"
+                    },
+                    "is_chat_agent": {
+                      "type": "boolean",
+                      "default": false,
+                      "description": "Agent de chat ou endpoint"
+                    },
+                    "temperature": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 2,
+                      "default": 0.7,
+                      "description": "Température de génération"
+                    },
+                    "max_tokens": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 10000,
+                      "default": 4000,
+                      "description": "Nombre maximum de tokens"
+                    },
+                    "api_v2_capabilities": {
+                      "type": "array",
+                      "items": {"type": "string"},
+                      "description": "Capacités API V2 de l'agent"
+                    },
+                    "input_schema": {
+                      "type": "object",
+                      "description": "Schéma d'entrée OpenAPI"
+                    },
+                    "output_schema": {
+                      "type": "object",
+                      "description": "Schéma de sortie OpenAPI"
+                    }
+                  },
+                  "required": ["display_name", "slug", "description", "model"]
+                }
+              }
+            }
+          },
+          "responses": {
+            "201": {
+              "description": "Agent créé avec succès",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "allOf": [
+                      {"$ref": "#/components/schemas/Success"},
+                      {
+                        "type": "object",
+                        "properties": {
+                          "data": {"$ref": "#/components/schemas/Agent"}
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            "400": {
+              "description": "Données invalides",
+              "content": {
+                "application/json": {
+                  "schema": {"$ref": "#/components/schemas/Error"}
                 }
               }
             }

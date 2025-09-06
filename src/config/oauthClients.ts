@@ -17,12 +17,12 @@ export const oauthClients: OAuthClient[] = [
       'https://scrivia.app/auth/callback',
     ],
     scopes: [
-      'notes:read',
-      'notes:write', 
-      'dossiers:read',
-      'dossiers:write',
-      'classeurs:read',
-      'classeurs:write'
+      'notes:read', 'notes:write', 'notes:create', 'notes:update', 'notes:delete',
+      'classeurs:read', 'classeurs:write', 'classeurs:create', 'classeurs:update', 'classeurs:delete',
+      'dossiers:read', 'dossiers:write', 'dossiers:create', 'dossiers:update', 'dossiers:delete',
+      'files:read', 'files:write', 'files:upload', 'files:delete',
+      'agents:execute', 'agents:read',
+      'search:content', 'profile:read'
     ],
     description: 'Action personnalisée ChatGPT pour interagir avec l\'API Scrivia'
   },

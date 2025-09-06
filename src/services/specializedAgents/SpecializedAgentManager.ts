@@ -701,6 +701,39 @@ export class SpecializedAgentManager {
   }
 
   /**
+   * Lister tous les agents spécialisés disponibles
+   */
+  async listAgents(userId: string): Promise<SpecializedAgentConfig[]> {
+    try {
+      logger.dev(`[SpecializedAgentManager] 📋 Récupération liste des agents`, { userId });
+
+      const { data: agents, error } = await supabase
+        .from('agents')
+        .select('*')
+        .eq('is_endpoint_agent', true)
+        .eq('is_active', true)
+        .order('priority', { ascending: false })
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        logger.error(`[SpecializedAgentManager] ❌ Erreur récupération liste agents:`, error);
+        throw new Error(`Erreur base de données: ${error.message}`);
+      }
+
+      logger.dev(`[SpecializedAgentManager] ✅ ${agents?.length || 0} agents récupérés`, { 
+        userId, 
+        count: agents?.length || 0 
+      });
+
+      return (agents || []) as SpecializedAgentConfig[];
+
+    } catch (error) {
+      logger.error(`[SpecializedAgentManager] ❌ Erreur liste agents:`, error);
+      throw error;
+    }
+  }
+
+  /**
    * Supprimer un agent spécialisé
    */
   async deleteAgent(agentId: string, traceId: string): Promise<boolean> {
