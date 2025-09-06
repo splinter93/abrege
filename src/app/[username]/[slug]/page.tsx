@@ -2,6 +2,7 @@ import { createClient } from '@supabase/supabase-js';
 import '@/styles/markdown.css';
 import '@/styles/error-pages.css';
 import LogoHeader from '@/components/LogoHeader';
+import ErrorPageActions from '@/components/ErrorPageActions';
 import type { Metadata } from 'next';
 import PublicNoteContent from './PublicNoteContent';
 
@@ -147,17 +148,7 @@ export default async function Page(props: { params: Promise<{ username: string; 
             Vérifiez l'URL ou contactez l'auteur.
           </p>
           
-          <div className="not-found-actions">
-            <a href="/" className="not-found-button primary">
-              Retour à l'accueil
-            </a>
-            <button 
-              onClick={() => window.history.back()} 
-              className="not-found-button secondary"
-            >
-              Page précédente
-            </button>
-          </div>
+          <ErrorPageActions />
         </div>
       </div>
     );
@@ -205,17 +196,7 @@ export default async function Page(props: { params: Promise<{ username: string; 
             Seul l'auteur peut consulter cette note.
           </p>
           
-          <div className="not-found-actions">
-            <a href="/" className="not-found-button primary">
-              Retour à l'accueil
-            </a>
-            <button 
-              onClick={() => window.history.back()} 
-              className="not-found-button secondary"
-            >
-              Page précédente
-            </button>
-          </div>
+          <ErrorPageActions />
         </div>
       </div>
     );

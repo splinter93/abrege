@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js';
 import '@/styles/error-pages.css';
 import LogoHeader from '@/components/LogoHeader';
+import ErrorPageActions from '@/components/ErrorPageActions';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -58,17 +59,7 @@ export default async function Page(props: { params: Promise<{ username: string; 
             Vérifiez l'URL ou contactez l'auteur.
           </p>
           
-          <div className="not-found-actions">
-            <a href="/" className="not-found-button primary">
-              Retour à l'accueil
-            </a>
-            <button 
-              onClick={() => window.history.back()} 
-              className="not-found-button secondary"
-            >
-              Page précédente
-            </button>
-          </div>
+          <ErrorPageActions />
         </div>
       </div>
     );
@@ -139,17 +130,7 @@ export default async function Page(props: { params: Promise<{ username: string; 
             Vérifiez l'URL ou contactez l'auteur.
           </p>
           
-          <div className="not-found-actions">
-            <a href="/" className="not-found-button primary">
-              Retour à l'accueil
-            </a>
-            <button 
-              onClick={() => window.history.back()} 
-              className="not-found-button secondary"
-            >
-              Page précédente
-            </button>
-          </div>
+          <ErrorPageActions />
         </div>
       </div>
     );
