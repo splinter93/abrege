@@ -35,6 +35,17 @@ console.log('│ GET  /api/v2/agents                    │ Liste tous les agent
 console.log('│ GET  /api/v2/openapi-schema            │ Documentation OpenAPI  │');
 console.log('└─────────────────────────────────────────────────────────────────┘\n');
 
+console.log('🔗 ENDPOINT UNIVERSEL AGENTS\n');
+console.log('┌─────────────────────────────────────────────────────────────────┐');
+console.log('│ POST /api/v2/agents/execute                                   │');
+console.log('├─────────────────────────────────────────────────────────────────┤');
+console.log('│ 🆕 NOUVEAU │ Exécuter n\'importe quel agent universellement    │');
+console.log('│            │ ref: ID ou slug de l\'agent                       │');
+console.log('│            │ input: Message pour l\'agent                      │');
+console.log('│            │ options: temperature, max_tokens, stream          │');
+console.log('│            │ Parfait pour tests et développement LLM           │');
+console.log('└─────────────────────────────────────────────────────────────────┘\n');
+
 console.log('🔗 ENDPOINTS COMPLETS API V2\n');
 console.log('┌─────────────────────────────────────────────────────────────────┐');
 console.log('│ 📝 NOTES                                                       │');
@@ -100,7 +111,19 @@ console.log('└─────────────────────�
 
 console.log('📝 EXEMPLES D\'UTILISATION\n');
 
-console.log('1️⃣ 🆕 Appliquer des opérations de contenu:');
+console.log('1️⃣ 🆕 Exécuter un agent universel:');
+console.log('   POST /api/v2/agents/execute');
+console.log('   {');
+console.log('     "ref": "johnny",');
+console.log('     "input": "Analyse cette note et donne-moi un résumé",');
+console.log('     "options": {');
+console.log('       "temperature": 0.7,');
+console.log('       "max_tokens": 500');
+console.log('     }');
+console.log('   }');
+console.log('');
+
+console.log('2️⃣ 🆕 Appliquer des opérations de contenu:');
 console.log('   POST /api/v2/note/my-note/content:apply');
 console.log('   {');
 console.log('     "ops": [{');
@@ -121,7 +144,7 @@ console.log('     "return": "diff"');
 console.log('   }');
 console.log('');
 
-console.log('2️⃣ Exécuter l\'agent Johnny:');
+console.log('3️⃣ Exécuter l\'agent Johnny (endpoint spécifique):');
 console.log('   POST /api/v2/agents/johnny');
 console.log('   {');
 console.log('     "input": {');

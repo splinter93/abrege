@@ -430,39 +430,22 @@ export async function isArticlePublic(articleId: string): Promise<boolean> {
 
 /**
  * Valide une API Key et retourne les informations utilisateur associées
- * Supporte à la fois la base de données et les variables d'environnement
  */
 async function validateApiKey(apiKey: string): Promise<{ user_id: string; scopes?: string[] } | null> {
   try {
-    // 1. Essayer d'abord la base de données
+    // Utiliser le nouveau service pour valider l'API Key
     const apiKeyInfo = await ApiKeyService.validateApiKey(apiKey);
     
-    if (apiKeyInfo) {
-      return {
-        user_id: apiKeyInfo.user_id,
-        scopes: apiKeyInfo.scopes
-      };
+    if (!apiKeyInfo) {
+      return null;
     }
     
-    // 2. Fallback vers les variables d'environnement
-    const envApiKeys = process.env.SCRIVIA_API_KEYS;
-    const defaultUserId = process.env.SCRIVIA_DEFAULT_USER_ID;
-    
-    if (envApiKeys && defaultUserId) {
-      const validKeys = envApiKeys.split(',').map(key => key.trim());
-      
-      if (validKeys.includes(apiKey)) {
-        return {
-          user_id: defaultUserId,
-          scopes: ['notes:read', 'classeurs:read', 'dossiers:read', 'files:read']
-        };
-      }
-    }
-    
-    return null;
+    return {
+      user_id: apiKeyInfo.user_id,
+      scopes: apiKeyInfo.scopes
+    };
     
   } catch (error) {
-    console.error('❌ Erreur validation API Key:', error);
     return null;
   }
 } 

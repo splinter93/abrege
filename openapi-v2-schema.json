@@ -2791,6 +2791,219 @@
           }
         }
       }
+    },
+    "/agents/execute": {
+      "post": {
+        "summary": "Exécuter un agent universel",
+        "description": "Endpoint universel pour exécuter n'importe quel agent spécialisé avec une interface simple",
+        "tags": ["Agents Spécialisés"],
+        "security": [
+          { "ApiKeyAuth": [] }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ref": { 
+                    "type": "string", 
+                    "description": "Référence de l'agent (ID ou slug)",
+                    "example": "johnny"
+                  },
+                  "input": { 
+                    "type": "string", 
+                    "description": "Message d'entrée pour l'agent",
+                    "example": "Analyse cette note"
+                  },
+                  "options": {
+                    "type": "object",
+                    "properties": {
+                      "temperature": { 
+                        "type": "number", 
+                        "minimum": 0, 
+                        "maximum": 2,
+                        "description": "Température de génération (0-2)"
+                      },
+                      "max_tokens": { 
+                        "type": "integer", 
+                        "minimum": 1, 
+                        "maximum": 10000,
+                        "description": "Nombre maximum de tokens"
+                      },
+                      "stream": { 
+                        "type": "boolean",
+                        "description": "Activer le streaming"
+                      }
+                    }
+                  }
+                },
+                "required": ["ref", "input"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Agent exécuté avec succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/Success" },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "ref": { "type": "string", "example": "johnny" },
+                            "agent_name": { "type": "string", "example": "Johnny Query" },
+                            "agent_id": { "type": "string", "format": "uuid" },
+                            "response": { "type": "string", "description": "Réponse de l'agent" },
+                            "execution_time": { "type": "integer", "description": "Temps d'exécution en ms" },
+                            "model_used": { "type": "string", "example": "meta-llama/llama-4-scout-17b-16e-instruct" },
+                            "provider": { "type": "string", "example": "groq" }
+                          }
+                        },
+                        "meta": {
+                          "type": "object",
+                          "properties": {
+                            "timestamp": { "type": "string", "format": "date-time" },
+                            "agent_slug": { "type": "string" },
+                            "agent_type": { "type": "string", "enum": ["chat", "endpoint"] },
+                            "input_length": { "type": "integer" },
+                            "response_length": { "type": "integer" }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Agent inactif ou paramètres invalides",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/Error" },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "code": { 
+                          "type": "string",
+                          "enum": ["AGENT_INACTIVE", "INVALID_INPUT"]
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Agent non trouvé",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/Error" },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "code": { "type": "string", "enum": ["AGENT_NOT_FOUND"] }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Erreur de validation des paramètres",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "500": {
+            "description": "Erreur d'exécution de l'agent",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/Error" },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "code": { "type": "string", "enum": ["EXECUTION_FAILED"] }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "head": {
+        "summary": "Vérifier l'existence d'un agent",
+        "description": "Vérifie qu'un agent existe et retourne ses métadonnées",
+        "tags": ["Agents Spécialisés"],
+        "security": [
+          { "ApiKeyAuth": [] }
+        ],
+        "parameters": [
+          {
+            "name": "ref",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "Référence de l'agent (ID ou slug)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Agent existe",
+            "headers": {
+              "X-Agent-Name": {
+                "schema": { "type": "string" },
+                "description": "Nom de l'agent"
+              },
+              "X-Agent-Model": {
+                "schema": { "type": "string" },
+                "description": "Modèle utilisé"
+              },
+              "X-Agent-Provider": {
+                "schema": { "type": "string" },
+                "description": "Fournisseur"
+              },
+              "X-Agent-Active": {
+                "schema": { "type": "boolean" },
+                "description": "Agent actif"
+              },
+              "X-Agent-Type": {
+                "schema": { "type": "string" },
+                "description": "Type d'agent"
+              }
+            }
+          },
+          "401": {
+            "description": "Non authentifié"
+          },
+          "404": {
+            "description": "Agent non trouvé"
+          },
+          "500": {
+            "description": "Erreur interne du serveur"
+          }
+        }
+      }
     }
   }
 }

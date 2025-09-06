@@ -110,6 +110,19 @@ export const publishNoteV2Schema = z.object({
 });
 
 /**
+ * Schéma pour exécuter un agent universel V2
+ */
+export const executeAgentV2Schema = z.object({
+  ref: z.string().min(1, 'Référence de l\'agent requise (ID ou slug)'),
+  input: z.string().min(1, 'Message d\'entrée requis'),
+  options: z.object({
+    temperature: z.number().min(0).max(2).optional(),
+    max_tokens: z.number().int().min(1).max(10000).optional(),
+    stream: z.boolean().optional()
+  }).optional()
+});
+
+/**
  * Schéma pour appliquer des opérations de contenu V2
  */
 export const contentApplyV2Schema = z.object({

@@ -1,0 +1,301 @@
+/**
+ * 🤖 POST /api/v2/agents/execute
+ * 
+ * Endpoint universel pour exécuter n'importe quel agent spécialisé
+ * 
+ * Permet de tester facilement tous les agents avec une interface simple :
+ * - ref : ID ou slug de l'agent
+ * - input : Message d'entrée pour l'agent
+ * - options : Paramètres optionnels (temperature, max_tokens, etc.)
+ * 
+ * Parfait pour le développement et les tests LLM
+ */
+
+import { NextRequest, NextResponse } from 'next/server';
+import { logApi } from '@/utils/logger';
+import { getAuthenticatedUser } from '@/utils/authUtils';
+import { executeAgentV2Schema, validatePayload, createValidationErrorResponse } from '@/utils/v2ValidationSchemas';
+import { SpecializedAgentManager } from '@/services/specializedAgents/SpecializedAgentManager';
+
+// ============================================================================
+// TYPES
+// ============================================================================
+
+interface AgentExecuteResponse {
+  success: true;
+  data: {
+    ref: string;
+    agent_name: string;
+    agent_id: string;
+    response: string;
+    execution_time: number;
+    model_used: string;
+    provider: string;
+  };
+  meta: {
+    timestamp: string;
+    agent_slug: string;
+    agent_type: 'chat' | 'endpoint';
+    input_length: number;
+    response_length: number;
+  };
+}
+
+interface AgentExecuteError {
+  error: string;
+  code: string;
+  message: string;
+}
+
+interface ExecutionContext {
+  operation: string;
+  component: string;
+  clientType: string;
+  agent_ref?: string;
+  agent_id?: string;
+  apiTime?: number;
+}
+
+// ============================================================================
+// ERROR CODES
+// ============================================================================
+
+const AGENT_EXECUTE_ERRORS = {
+  AGENT_NOT_FOUND: { code: 'AGENT_NOT_FOUND', status: 404 },
+  AGENT_INACTIVE: { code: 'AGENT_INACTIVE', status: 400 },
+  EXECUTION_FAILED: { code: 'EXECUTION_FAILED', status: 500 },
+  INVALID_INPUT: { code: 'INVALID_INPUT', status: 400 },
+  RATE_LIMITED: { code: 'RATE_LIMITED', status: 429 }
+} as const;
+
+// ============================================================================
+// MAIN ENDPOINT
+// ============================================================================
+
+export async function POST(request: NextRequest): Promise<NextResponse> {
+  
+  const clientType = request.headers.get('X-Client-Type') || 'unknown';
+  const context: ExecutionContext = {
+    operation: 'v2_agents_execute_universal',
+    component: 'API_V2',
+    clientType
+  };
+
+  const startTime = Date.now();
+  logApi.info('🚀 Début exécution agent universel V2', context);
+
+  try {
+    // 🔐 Authentification
+    const authResult = await getAuthenticatedUser(request);
+    if (!authResult.success) {
+      logApi.info(`❌ Authentification échouée: ${authResult.error}`, context);
+      return NextResponse.json(
+        { error: authResult.error },
+        { status: authResult.status || 401, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
+    const userId = authResult.userId!;
+
+    // 📋 Récupérer et valider le body
+    const body = await request.json();
+    const validationResult = validatePayload(executeAgentV2Schema, body);
+    
+    if (!validationResult.success) {
+      logApi.info('❌ Validation échouée', context);
+      return createValidationErrorResponse(validationResult);
+    }
+
+    const { ref, input, options = {} } = validationResult.data;
+
+    // 🔍 Résoudre l'agent (ID ou slug)
+    const agentManager = new SpecializedAgentManager();
+    const agent = await agentManager.getAgentByRef(ref, userId);
+    
+    if (!agent) {
+      logApi.info(`❌ Agent non trouvé: ${ref}`, context);
+      return NextResponse.json(
+        { 
+          error: 'Agent non trouvé',
+          code: AGENT_EXECUTE_ERRORS.AGENT_NOT_FOUND.code,
+          message: `Aucun agent trouvé avec la référence: ${ref}`
+        },
+        { status: AGENT_EXECUTE_ERRORS.AGENT_NOT_FOUND.status }
+      );
+    }
+
+    // ✅ Vérifier que l'agent est actif
+    if (!agent.is_active) {
+      logApi.info(`❌ Agent inactif: ${ref}`, context);
+      return NextResponse.json(
+        { 
+          error: 'Agent inactif',
+          code: AGENT_EXECUTE_ERRORS.AGENT_INACTIVE.code,
+          message: `L'agent ${agent.display_name || agent.slug} est inactif`
+        },
+        { status: AGENT_EXECUTE_ERRORS.AGENT_INACTIVE.status }
+      );
+    }
+
+    // 🔧 Préparer les paramètres d'exécution
+    const executionParams = {
+      input: {
+        input: input, // Format standardisé pour tous les agents
+        ...options
+      },
+      userId,
+      context: {
+        ...context,
+        agent_ref: ref,
+        agent_id: agent.id
+      } as ExecutionContext
+    };
+
+    // 🚀 Exécuter l'agent
+    logApi.info(`🤖 Exécution agent: ${agent.display_name || agent.slug}`, context);
+    
+    const executionResult = await agentManager.executeAgent(
+      agent.id,
+      executionParams.input,
+      executionParams.userId,
+      executionParams.context
+    );
+
+    if (!executionResult.success) {
+      logApi.error(`❌ Erreur exécution agent: ${executionResult.error}`, context);
+      return NextResponse.json(
+        { 
+          error: 'Erreur lors de l\'exécution de l\'agent',
+          code: AGENT_EXECUTE_ERRORS.EXECUTION_FAILED.code,
+          message: executionResult.error
+        },
+        { status: AGENT_EXECUTE_ERRORS.EXECUTION_FAILED.status }
+      );
+    }
+
+    const apiTime = Date.now() - startTime;
+    logApi.info(`✅ Agent exécuté avec succès en ${apiTime}ms`, context);
+
+    // 📤 Construire la réponse
+    const response: AgentExecuteResponse = {
+      success: true,
+      data: {
+        ref: ref,
+        agent_name: agent.display_name || agent.slug,
+        agent_id: agent.id,
+        response: executionResult.data?.response || executionResult.data?.output || 'Réponse générée',
+        execution_time: apiTime,
+        model_used: agent.model,
+        provider: agent.provider || 'unknown'
+      },
+      meta: {
+        timestamp: new Date().toISOString(),
+        agent_slug: agent.slug,
+        agent_type: agent.is_chat_agent ? 'chat' : 'endpoint',
+        input_length: input.length,
+        response_length: (executionResult.data?.response || executionResult.data?.output || '').length
+      }
+    };
+
+    return NextResponse.json(response, { 
+      status: 200, 
+      headers: { 
+        "Content-Type": "application/json",
+        "X-Agent-Name": agent.display_name || agent.slug,
+        "X-Agent-Model": agent.model,
+        "X-Execution-Time": apiTime.toString()
+      }
+    });
+
+  } catch (error) {
+    const apiTime = Date.now() - startTime;
+    logApi.error(`❌ Erreur serveur: ${error}`, { ...context, apiTime });
+    
+    return NextResponse.json(
+      { 
+        error: 'Erreur interne du serveur',
+        code: AGENT_EXECUTE_ERRORS.EXECUTION_FAILED.code,
+        message: error instanceof Error ? error.message : 'Erreur inconnue'
+      },
+      { status: 500, headers: { "Content-Type": "application/json" } }
+    );
+  }
+}
+
+// ============================================================================
+// HEAD ENDPOINT (pour vérifier l'existence)
+// ============================================================================
+
+export async function HEAD(request: NextRequest): Promise<NextResponse> {
+  const clientType = request.headers.get('X-Client-Type') || 'unknown';
+  const context: ExecutionContext = {
+    operation: 'v2_agents_execute_head',
+    component: 'API_V2',
+    clientType
+  };
+
+  try {
+    // 🔐 Authentification
+    const authResult = await getAuthenticatedUser(request);
+    if (!authResult.success) {
+      return new NextResponse(null, { 
+        status: authResult.status || 401,
+        headers: {
+          'X-Error': authResult.error
+        }
+      });
+    }
+
+    const userId = authResult.userId!;
+
+    // Récupérer le paramètre ref depuis l'URL
+    const { searchParams } = new URL(request.url);
+    const ref = searchParams.get('ref');
+
+    if (!ref) {
+      return new NextResponse(null, { 
+        status: 400,
+        headers: {
+          'X-Error': 'Paramètre ref requis'
+        }
+      });
+    }
+
+    // Vérifier que l'agent existe
+    const agentManager = new SpecializedAgentManager();
+    const agent = await agentManager.getAgentByRef(ref, userId);
+
+    if (!agent) {
+      return new NextResponse(null, { 
+        status: 404,
+        headers: {
+          'X-Error': 'Agent non trouvé',
+          'X-Agent-Ref': ref
+        }
+      });
+    }
+
+    return new NextResponse(null, {
+      status: 200,
+      headers: {
+        'X-Agent-Name': agent.display_name || agent.slug,
+        'X-Agent-Model': agent.model,
+        'X-Agent-Provider': agent.provider || 'unknown',
+        'X-Agent-Active': agent.is_active.toString(),
+        'X-Agent-Type': agent.is_chat_agent ? 'chat' : 'endpoint',
+        'X-Endpoint': `/api/v2/agents/execute`,
+        'X-Method': 'POST',
+        'X-Description': 'Exécuter un agent spécialisé universel'
+      }
+    });
+    
+  } catch (error) {
+    logApi.error(`❌ Erreur HEAD agents/execute:`, error);
+    return new NextResponse(null, { 
+      status: 500,
+      headers: {
+        'X-Error': 'Erreur interne du serveur'
+      }
+    });
+  }
+}
