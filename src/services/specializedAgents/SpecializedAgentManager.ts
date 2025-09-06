@@ -678,6 +678,24 @@ export class SpecializedAgentManager {
   }
 
   /**
+   * Invalider le cache d'un agent spécifique
+   */
+  public invalidateAgentCache(agentId: string): void {
+    this.agentCache.delete(agentId);
+    this.cacheExpiry.delete(agentId);
+    logger.dev(`[SpecializedAgentManager] 🗑️ Cache invalidé pour agent: ${agentId}`);
+  }
+
+  /**
+   * Vider tout le cache des agents
+   */
+  public clearAllCache(): void {
+    this.agentCache.clear();
+    this.cacheExpiry.clear();
+    logger.dev(`[SpecializedAgentManager] 🗑️ Tout le cache vidé`);
+  }
+
+  /**
    * Mettre à jour partiellement un agent spécialisé
    */
   async patchAgent(
