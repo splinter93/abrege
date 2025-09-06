@@ -761,58 +761,6 @@
             }
           }
         },
-        "put": {
-          "operationId": "updateAgent",
-          "summary": "Mettre à jour un agent",
-          "description": "Met à jour les propriétés d'un agent spécialisé",
-          "tags": ["Agents Spécialisés"],
-          "security": [{"ApiKeyAuth": []}],
-          "parameters": [
-            {
-              "name": "agentId",
-              "in": "path",
-              "required": true,
-              "schema": {"type": "string"},
-              "description": "ID de l'agent"
-            }
-          ],
-          "requestBody": {
-            "required": true,
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "name": {"type": "string", "maxLength": 255},
-                    "description": {"type": "string", "maxLength": 1000},
-                    "is_active": {"type": "boolean"},
-                    "config": {"type": "object"}
-                  }
-                }
-              }
-            }
-          },
-          "responses": {
-            "200": {
-              "description": "Agent mis à jour avec succès",
-              "content": {
-                "application/json": {
-                  "schema": {
-                    "allOf": [
-                      {"$ref": "#/components/schemas/Success"},
-                      {
-                        "type": "object",
-                        "properties": {
-                          "data": {"$ref": "#/components/schemas/Agent"}
-                        }
-                      }
-                    ]
-                  }
-                }
-              }
-            }
-          }
-        },
         "delete": {
           "operationId": "deleteAgent",
           "summary": "Supprimer un agent",
