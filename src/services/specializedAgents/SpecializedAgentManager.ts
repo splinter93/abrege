@@ -195,7 +195,11 @@ export class SpecializedAgentManager {
 
       return {
         success: true,
-        result: formattedResult,
+        data: {
+          response: formattedResult.result || formattedResult.content || 'Réponse générée',
+          model: agent.model,
+          provider: 'groq'
+        },
         metadata: {
           agentId,
           executionTime,
