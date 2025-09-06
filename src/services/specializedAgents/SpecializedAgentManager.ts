@@ -8,6 +8,7 @@ import { GroqOrchestrator } from '@/services/llm/services/GroqOrchestrator';
 import { simpleLogger as logger } from '@/utils/logger';
 import { SchemaValidator } from './schemaValidator';
 import { MultimodalHandler } from './multimodalHandler';
+import { isGroqModelSupported, getGroqModelInfo, GROQ_MODELS } from '@/constants/groqModels';
 import {
   SpecializedAgentConfig,
   SpecializedAgentRequest,
@@ -585,8 +586,13 @@ export class SpecializedAgentManager {
       errors.push('Slug doit contenir uniquement des lettres minuscules, chiffres et tirets');
     }
 
-    if (config.model && !config.model.includes('groq') && !config.model.includes('llama') && !config.model.includes('deepseek') && !config.model.includes('openai/gpt-oss')) {
-      errors.push('Seuls les modèles Groq (llama, deepseek) et OpenAI GPT-OSS sont supportés actuellement');
+    if (config.model && !isGroqModelSupported(config.model)) {
+      const modelInfo = getGroqModelInfo(config.model);
+      if (modelInfo) {
+        errors.push(`Modèle ${modelInfo.name} non supporté. Modèles supportés: ${Object.keys(GROQ_MODELS).join(', ')}`);
+      } else {
+        errors.push(`Modèle '${config.model}' non supporté. Consultez la liste des modèles Groq disponibles.`);
+      }
     }
 
     if (config.temperature !== undefined && (config.temperature < 0 || config.temperature > 2)) {
