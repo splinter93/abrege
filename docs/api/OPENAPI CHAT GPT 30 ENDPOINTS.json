@@ -905,50 +905,6 @@
               }
             }
           }
-        },
-        "delete": {
-          "operationId": "deleteAgent",
-          "summary": "Supprimer un agent",
-          "description": "Supprime un agent spécialisé",
-          "tags": ["Agents Spécialisés"],
-          "security": [{"ApiKeyAuth": []}],
-          "parameters": [
-            {
-              "name": "agentId",
-              "in": "path",
-              "required": true,
-              "schema": {"type": "string"},
-              "description": "ID ou slug de l'agent"
-            }
-          ],
-          "responses": {
-            "200": {
-              "description": "Agent supprimé avec succès",
-              "content": {
-                "application/json": {
-                  "schema": {
-                    "allOf": [
-                      {"$ref": "#/components/schemas/Success"},
-                      {
-                        "type": "object",
-                        "properties": {
-                          "message": {"type": "string", "example": "Agent supprimé avec succès"}
-                        }
-                      }
-                    ]
-                  }
-                }
-              }
-            },
-            "404": {
-              "description": "Agent non trouvé",
-              "content": {
-                "application/json": {
-                  "schema": {"$ref": "#/components/schemas/Error"}
-                }
-              }
-            }
-          }
         }
       },
       "/agents/execute": {
