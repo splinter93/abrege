@@ -713,19 +713,19 @@ export class SpecializedAgentManager {
         return null;
       }
 
+      // Validation seulement des champs modifiés
+      const validation = this.validateAgentConfig(patchData);
+      if (!validation.valid) {
+        logger.warn(`[SpecializedAgentManager] ❌ Validation échouée pour les champs modifiés:`, validation.errors);
+        throw new Error(`Validation échouée: ${validation.errors.join(', ')}`);
+      }
+
       // Fusionner les données existantes avec les nouvelles
       const mergedData = {
         ...existingAgent,
         ...patchData,
         updated_at: new Date().toISOString()
       };
-
-      // Validation de la configuration fusionnée
-      const validation = this.validateAgentConfig(mergedData);
-      if (!validation.valid) {
-        logger.warn(`[SpecializedAgentManager] ❌ Validation échouée après fusion:`, validation.errors);
-        throw new Error(`Validation échouée: ${validation.errors.join(', ')}`);
-      }
 
       // Mettre à jour en base
       const { data: updatedAgent, error } = await supabase
