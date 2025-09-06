@@ -883,9 +883,9 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
       }
 
       // Si la note est privée, vérifier que l'utilisateur est le créateur
-      if (noteData?.share_settings?.visibility === 'private' && noteData?.user_id !== user.id) {
-        toast.error('Cette note est privée. Changez sa visibilité pour la prévisualiser.');
-        return;
+      if (noteData?.share_settings?.visibility === 'private') {
+        // Pour les notes privées, on permet toujours la prévisualisation au créateur
+        // La vérification se fait côté serveur
       }
       
       if (!noteData?.slug) {

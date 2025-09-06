@@ -46,6 +46,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ user
 
     // Vérifier si l'utilisateur est connecté (pour permettre au créateur de voir sa note privée)
     let isCreator = false;
+    
+    // Essayer d'abord avec l'Authorization header
     const authHeader = req.headers.get('authorization');
     if (authHeader && authHeader.startsWith('Bearer ')) {
       try {
@@ -57,7 +59,34 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ user
         }
       } catch (error) {
         // Ignorer les erreurs d'authentification, on continue sans être connecté
-        console.log('Erreur auth:', error);
+        console.log('Erreur auth header:', error);
+      }
+    }
+    
+    // Si pas d'Authorization header, essayer avec les cookies Supabase
+    if (!isCreator) {
+      try {
+        // Récupérer tous les cookies
+        const cookies = req.headers.get('cookie');
+        if (cookies) {
+          // Chercher le token d'accès Supabase dans les cookies
+          const accessTokenMatch = cookies.match(/sb-[^-]+-auth-token=([^;]+)/);
+          if (accessTokenMatch) {
+            const cookieValue = decodeURIComponent(accessTokenMatch[1]);
+            const cookieData = JSON.parse(cookieValue);
+            const token = cookieData.access_token;
+            
+            if (token) {
+              const { data: { user: authUser }, error: authError } = await supabaseService.auth.getUser(token);
+              if (!authError && authUser && authUser.id === user.id) {
+                isCreator = true;
+              }
+            }
+          }
+        }
+      } catch (error) {
+        // Ignorer les erreurs d'authentification, on continue sans être connecté
+        console.log('Erreur auth cookie:', error);
       }
     }
 
