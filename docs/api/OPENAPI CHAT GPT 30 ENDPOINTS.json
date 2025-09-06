@@ -579,7 +579,14 @@
                     },
                     "model": {
                       "type": "string",
-                      "description": "Modèle LLM à utiliser"
+                      "enum": [
+                        "openai/gpt-oss-20b",
+                        "openai/gpt-oss-120b",
+                        "meta-llama/llama-4-scout-17b-16e-instruct",
+                        "meta-llama/llama-4-maverick-17b-128e-instruct",
+                        "kimi-k2-0905"
+                      ],
+                      "description": "Modèle LLM à utiliser (modèles recommandés)"
                     },
                     "provider": {
                       "type": "string",
@@ -811,7 +818,17 @@
                   "properties": {
                     "display_name": {"type": "string", "maxLength": 255},
                     "description": {"type": "string", "maxLength": 1000},
-                    "model": {"type": "string"},
+                    "model": {
+                      "type": "string",
+                      "enum": [
+                        "openai/gpt-oss-20b",
+                        "openai/gpt-oss-120b",
+                        "meta-llama/llama-4-scout-17b-16e-instruct",
+                        "meta-llama/llama-4-maverick-17b-128e-instruct",
+                        "kimi-k2-0905"
+                      ],
+                      "description": "Modèle LLM à utiliser (modèles recommandés)"
+                    },
                     "system_instructions": {"type": "string"},
                     "temperature": {"type": "number", "minimum": 0, "maximum": 2},
                     "max_tokens": {"type": "integer", "minimum": 1, "maximum": 10000},
