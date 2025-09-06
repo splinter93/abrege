@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { logApi } from '@/utils/logger';
 import { getAuthenticatedUser, createAuthenticatedSupabaseClient } from '@/utils/authUtils';
+import { V2ResourceResolver } from '@/utils/v2ResourceResolver';
 
 export async function GET(
   request: NextRequest,
@@ -31,18 +32,24 @@ export async function GET(
   const classeurRef = params.ref;
 
   try {
-    // Créer le bon client Supabase selon le type d'authentification
+    // 🔧 CORRECTION: Utiliser V2ResourceResolver pour résoudre la référence
+    const resolveResult = await V2ResourceResolver.resolveRef(classeurRef, 'classeur', userId, context);
+    if (!resolveResult.success) {
+      return NextResponse.json(
+        { error: resolveResult.error },
+        { status: resolveResult.status, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
+    const classeurId = resolveResult.id;
     const supabase = createAuthenticatedSupabaseClient(authResult);
 
-    // Construire la requête - le ref peut être un ID UUID ou un slug
-    let query = supabase
+    // Récupérer le classeur par son ID résolu
+    const { data: classeur, error: fetchError } = await supabase
       .from('classeurs')
       .select('id, name, description, slug, created_at, updated_at')
-      .eq('user_id', userId);
-
-    // Essayer d'abord comme UUID, puis comme slug
-    const { data: classeur, error: fetchError } = await query
-      .or(`id.eq.${classeurRef},slug.eq.${classeurRef}`)
+      .eq('id', classeurId)
+      .eq('user_id', userId)
       .single();
 
     if (fetchError) {
