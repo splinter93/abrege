@@ -30,10 +30,10 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   const supabase = createAuthenticatedSupabaseClient(authResult);
 
   try {
-    // Récupérer le profil utilisateur
+    // Récupérer le profil utilisateur depuis auth.users avec les colonnes de profil
     const { data: userProfile, error: fetchError } = await supabase
-      .from('users')
-      .select('id, email, username, first_name, last_name, avatar_url, is_active, created_at, updated_at')
+      .from('auth.users')
+      .select('id, email, name, surname, display_name, profile_picture, bio, timezone, language, settings, created_at, updated_at')
       .eq('id', userId)
       .single();
 
@@ -58,14 +58,17 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
     return NextResponse.json({
       success: true,
-      user: {
+      data: {
         id: userProfile.id,
         email: userProfile.email,
-        username: userProfile.username,
-        first_name: userProfile.first_name,
-        last_name: userProfile.last_name,
-        avatar_url: userProfile.avatar_url,
-        is_active: userProfile.is_active,
+        name: userProfile.name,
+        surname: userProfile.surname,
+        display_name: userProfile.display_name,
+        profile_picture: userProfile.profile_picture,
+        bio: userProfile.bio,
+        timezone: userProfile.timezone,
+        language: userProfile.language,
+        settings: userProfile.settings,
         created_at: userProfile.created_at,
         updated_at: userProfile.updated_at
       }

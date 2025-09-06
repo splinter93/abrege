@@ -703,71 +703,6 @@
             }
           }
         },
-        "post": {
-          "operationId": "executeAgentById",
-          "summary": "Exécuter un agent par ID",
-          "description": "Exécute un agent spécialisé par son ID",
-          "tags": ["Agents Spécialisés"],
-          "security": [{"ApiKeyAuth": []}],
-          "parameters": [
-            {
-              "name": "agentId",
-              "in": "path",
-              "required": true,
-              "schema": {"type": "string"},
-              "description": "ID de l'agent"
-            }
-          ],
-          "requestBody": {
-            "required": true,
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "input": {"type": "string", "description": "Message d'entrée"},
-                    "options": {
-                      "type": "object",
-                      "properties": {
-                        "temperature": {"type": "number", "minimum": 0, "maximum": 2},
-                        "max_tokens": {"type": "integer", "minimum": 1, "maximum": 10000},
-                        "stream": {"type": "boolean"}
-                      }
-                    }
-                  },
-                  "required": ["input"]
-                }
-              }
-            }
-          },
-          "responses": {
-            "200": {
-              "description": "Agent exécuté avec succès",
-              "content": {
-                "application/json": {
-                  "schema": {
-                    "allOf": [
-                      {"$ref": "#/components/schemas/Success"},
-                      {
-                        "type": "object",
-                        "properties": {
-                          "data": {
-                            "type": "object",
-                            "properties": {
-                              "agent_id": {"type": "string"},
-                              "response": {"type": "string"},
-                              "execution_time": {"type": "integer"}
-                            }
-                          }
-                        }
-                      }
-                    ]
-                  }
-                }
-              }
-            }
-          }
-        },
         "delete": {
           "operationId": "deleteAgent",
           "summary": "Supprimer un agent",
@@ -1232,9 +1167,16 @@
                           "data": {
                             "type": "object",
                             "properties": {
-                              "id": {"type": "string"},
-                              "email": {"type": "string"},
-                              "name": {"type": "string"},
+                              "id": {"type": "string", "format": "uuid"},
+                              "email": {"type": "string", "format": "email"},
+                              "name": {"type": "string", "nullable": true},
+                              "surname": {"type": "string", "nullable": true},
+                              "display_name": {"type": "string", "nullable": true},
+                              "profile_picture": {"type": "string", "format": "uri", "nullable": true},
+                              "bio": {"type": "string", "nullable": true},
+                              "timezone": {"type": "string", "default": "UTC"},
+                              "language": {"type": "string", "default": "fr"},
+                              "settings": {"type": "object", "nullable": true},
                               "created_at": {"type": "string", "format": "date-time"},
                               "updated_at": {"type": "string", "format": "date-time"}
                             }
@@ -1357,10 +1299,70 @@
         }
       },
       "/note/{ref}/share": {
-        "post": {
-          "operationId": "shareNote",
-          "summary": "Partager une note",
-          "description": "Génère un lien de partage pour une note",
+        "get": {
+          "operationId": "getNoteShareSettings",
+          "summary": "Récupérer les paramètres de partage d'une note",
+          "description": "Récupère les paramètres de partage actuels d'une note",
+          "tags": ["Notes"],
+          "security": [{"ApiKeyAuth": []}],
+          "parameters": [
+            {
+              "name": "ref",
+              "in": "path",
+              "required": true,
+              "schema": {"type": "string"},
+              "description": "Référence de la note (UUID ou slug)"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Paramètres de partage récupérés avec succès",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "allOf": [
+                      {"$ref": "#/components/schemas/Success"},
+                      {
+                        "type": "object",
+                        "properties": {
+                          "share_settings": {
+                            "type": "object",
+                            "properties": {
+                              "visibility": {
+                                "type": "string",
+                                "enum": ["private", "link-private", "link-public", "limited", "scrivia"]
+                              },
+                              "invited_users": {
+                                "type": "array",
+                                "items": {"type": "string"}
+                              },
+                              "allow_edit": {"type": "boolean"},
+                              "allow_comments": {"type": "boolean"},
+                              "link_expires": {"type": "string", "format": "date-time"}
+                            }
+                          },
+                          "public_url": {"type": "string", "nullable": true}
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            "404": {
+              "description": "Note non trouvée",
+              "content": {
+                "application/json": {
+                  "schema": {"$ref": "#/components/schemas/Error"}
+                }
+              }
+            }
+          }
+        },
+        "patch": {
+          "operationId": "updateNoteShareSettings",
+          "summary": "Mettre à jour les paramètres de partage d'une note",
+          "description": "Met à jour les paramètres de partage d'une note (visibilité, permissions, etc.)",
           "tags": ["Notes"],
           "security": [{"ApiKeyAuth": []}],
           "parameters": [
@@ -1381,10 +1383,23 @@
                   "properties": {
                     "visibility": {
                       "type": "string",
-                      "enum": ["public", "link-private", "link-public"],
-                      "default": "link-public"
+                      "enum": ["private", "link-private", "link-public", "limited", "scrivia"],
+                      "description": "Niveau de visibilité de la note"
                     },
-                    "expires_at": {
+                    "invited_users": {
+                      "type": "array",
+                      "items": {"type": "string"},
+                      "description": "Liste des utilisateurs invités"
+                    },
+                    "allow_edit": {
+                      "type": "boolean",
+                      "description": "Autoriser l'édition par les utilisateurs invités"
+                    },
+                    "allow_comments": {
+                      "type": "boolean",
+                      "description": "Autoriser les commentaires"
+                    },
+                    "link_expires": {
                       "type": "string",
                       "format": "date-time",
                       "description": "Date d'expiration du lien (optionnel)"
@@ -1396,7 +1411,7 @@
           },
           "responses": {
             "200": {
-              "description": "Note partagée avec succès",
+              "description": "Paramètres de partage mis à jour avec succès",
               "content": {
                 "application/json": {
                   "schema": {
@@ -1405,18 +1420,44 @@
                       {
                         "type": "object",
                         "properties": {
-                          "data": {
+                          "message": {"type": "string"},
+                          "share_settings": {
                             "type": "object",
                             "properties": {
-                              "public_url": {"type": "string"},
-                              "share_token": {"type": "string"},
-                              "expires_at": {"type": "string", "format": "date-time"}
+                              "visibility": {
+                                "type": "string",
+                                "enum": ["private", "link-private", "link-public", "limited", "scrivia"]
+                              },
+                              "invited_users": {
+                                "type": "array",
+                                "items": {"type": "string"}
+                              },
+                              "allow_edit": {"type": "boolean"},
+                              "allow_comments": {"type": "boolean"},
+                              "link_expires": {"type": "string", "format": "date-time"}
                             }
-                          }
+                          },
+                          "public_url": {"type": "string", "nullable": true}
                         }
                       }
                     ]
                   }
+                }
+              }
+            },
+            "404": {
+              "description": "Note non trouvée",
+              "content": {
+                "application/json": {
+                  "schema": {"$ref": "#/components/schemas/Error"}
+                }
+              }
+            },
+            "422": {
+              "description": "Données invalides",
+              "content": {
+                "application/json": {
+                  "schema": {"$ref": "#/components/schemas/Error"}
                 }
               }
             }
@@ -1940,7 +1981,7 @@
         }
       },
       "/classeur/reorder": {
-        "post": {
+        "put": {
           "operationId": "reorderClasseurs",
           "summary": "Réorganiser les classeurs",
           "description": "Réorganise l'ordre des classeurs de l'utilisateur",
