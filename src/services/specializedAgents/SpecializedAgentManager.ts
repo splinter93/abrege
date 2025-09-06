@@ -91,6 +91,9 @@ export class SpecializedAgentManager {
 
       // 3. Préparation du contenu multimodale si le modèle le supporte
       let processedInput = input;
+      let isMultimodal = false;
+      let groqPayload: any = null;
+      
       if (MultimodalHandler.isMultimodalModel(agent.model)) {
         const multimodalPrep = MultimodalHandler.prepareGroqContent(input, agent.model);
         
@@ -119,7 +122,7 @@ export class SpecializedAgentManager {
         );
 
         // Préparer le payload Groq multimodale
-        const groqPayload = MultimodalHandler.createGroqPayload(
+        groqPayload = MultimodalHandler.createGroqPayload(
           agent.model,
           multimodalPrep.text,
           multimodalPrep.imageUrl,
@@ -129,26 +132,33 @@ export class SpecializedAgentManager {
             stream: false
           }
         );
-        processedInput = groqPayload as unknown as Record<string, unknown>;
+        isMultimodal = true;
       }
 
-      // 4. Préparer le contexte spécialisé
-      const systemMessage = this.buildSpecializedSystemMessage(agent, input);
-      const userMessage = `Exécution de tâche spécialisée: ${JSON.stringify(input)}`;
+      // 4. Exécution selon le type de modèle
+      let result: any;
+      
+      if (isMultimodal && groqPayload) {
+        // Exécution directe avec l'API Groq pour les modèles multimodaux
+        result = await this.executeMultimodalDirect(groqPayload, agent, traceId);
+      } else {
+        // Exécution normale via l'orchestrateur
+        const systemMessage = this.buildSpecializedSystemMessage(agent, input);
+        const userMessage = `Exécution de tâche spécialisée: ${JSON.stringify(input)}`;
 
-      // 4. Utiliser l'orchestrateur existant
-      const result = await this.orchestrator.executeRound({
-        message: userMessage,
-        sessionHistory: [],
-        agentConfig: agent,
-        userToken,
-        sessionId: sessionId || `specialized-${agentId}-${Date.now()}`,
-        appContext: {
-          type: 'chat_session',
-          id: agentId,
-          name: agent.display_name || agent.name
-        } // Contexte d'application pour les agents spécialisés
-      });
+        result = await this.orchestrator.executeRound({
+          message: userMessage,
+          sessionHistory: [],
+          agentConfig: agent,
+          userToken,
+          sessionId: sessionId || `specialized-${agentId}-${Date.now()}`,
+          appContext: {
+            type: 'chat_session',
+            id: agentId,
+            name: agent.display_name || agent.name
+          }
+        });
+      }
 
       // 5. Formater selon le schéma de sortie
       const formattedResult = this.formatSpecializedOutput(result, agent.output_schema);
@@ -293,6 +303,74 @@ export class SpecializedAgentManager {
     }
 
     return systemMessage;
+  }
+
+  /**
+   * Exécute directement un modèle multimodal avec l'API Groq
+   */
+  private async executeMultimodalDirect(
+    groqPayload: any, 
+    agent: any, 
+    traceId: string
+  ): Promise<any> {
+    try {
+      // Ajouter le message système au payload
+      const systemMessage = {
+        role: 'system',
+        content: agent.system_instructions || 'Tu es un assistant IA spécialisé.'
+      };
+      
+      groqPayload.messages.unshift(systemMessage);
+
+      // Appel direct à l'API Groq
+      const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${process.env.GROQ_API_KEY}`
+        },
+        body: JSON.stringify(groqPayload)
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        logger.error(`[SpecializedAgentManager] ❌ Erreur API Groq multimodale: ${response.status}`, {
+          traceId,
+          error: errorText
+        });
+        throw new Error(`API Groq error: ${response.status} - ${errorText}`);
+      }
+
+      const data = await response.json();
+      
+      logger.info(`[SpecializedAgentManager] ✅ Réponse multimodale reçue`, {
+        traceId,
+        model: agent.model,
+        hasImage: groqPayload.messages.some((msg: any) => 
+          msg.content?.some((c: any) => c.type === 'image_url')
+        )
+      });
+
+      return {
+        success: true,
+        data: {
+          response: data.choices[0]?.message?.content || 'Réponse générée',
+          model: agent.model,
+          provider: 'groq'
+        }
+      };
+
+    } catch (error) {
+      logger.error(`[SpecializedAgentManager] ❌ Erreur exécution multimodale:`, {
+        traceId,
+        error: error.message
+      });
+      
+      return {
+        success: false,
+        error: `Erreur multimodale: ${error.message}`
+      };
+    }
   }
 
   /**
