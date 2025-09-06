@@ -54,7 +54,7 @@ export class MultimodalHandler {
   }
 
   /**
-   * Crée un payload Groq pour requête multimodale ou texte simple
+   * Crée un payload Groq pour requête multimodale
    */
   static createGroqPayload(
     model: string,
@@ -68,11 +68,7 @@ export class MultimodalHandler {
       stop?: string | string[] | null;
     } = {}
   ): GroqMultimodalPayload {
-    // Pour les modèles GPT OSS, ne pas inclure d'images même si fournies
-    const gptOssModels = ['openai/gpt-oss-20b', 'openai/gpt-oss-120b'];
-    const shouldIncludeImage = imageUrl && !gptOssModels.includes(model);
-    
-    const message = this.createMultimodalMessage('user', text, shouldIncludeImage ? imageUrl : undefined);
+    const message = this.createMultimodalMessage('user', text, imageUrl);
 
     return {
       messages: [message],
@@ -80,23 +76,20 @@ export class MultimodalHandler {
       temperature: options.temperature ?? 1,
       max_completion_tokens: options.max_completion_tokens ?? 1024,
       top_p: options.top_p ?? 1,
-      stream: options.stream ?? false, // Changer la valeur par défaut à false pour les agents spécialisés
+      stream: options.stream ?? true,
       stop: options.stop ?? null
     };
   }
 
   /**
-   * Valide qu'un modèle supporte les images ou doit utiliser l'exécution directe
+   * Valide qu'un modèle supporte les images
    */
   static isMultimodalModel(model: string): boolean {
     const multimodalModels = [
       'meta-llama/llama-4-maverick-17b-128e-instruct',
       'meta-llama/llama-4-scout-17b-16e-instruct',
       'meta-llama/llama-3.3-70b-versatile',
-      'deepseek-vision',
-      // Ajouter les modèles GPT OSS pour qu'ils utilisent l'exécution directe
-      'openai/gpt-oss-20b',
-      'openai/gpt-oss-120b'
+      'deepseek-vision'
     ];
     return multimodalModels.includes(model);
   }
@@ -174,13 +167,7 @@ export class MultimodalHandler {
           };
         }
 
-        // Pour les modèles GPT OSS, ignorer les images même si fournies
-        const gptOssModels = ['openai/gpt-oss-20b', 'openai/gpt-oss-120b'];
-        if (gptOssModels.includes(model)) {
-          return { text: text || String(input) };
-        }
-
-        // Valider l'URL d'image si fournie et modèle supporte les images
+        // Valider l'URL d'image si fournie
         if (imageUrl) {
           const validation = this.validateImageUrl(imageUrl);
           if (!validation.valid) {
