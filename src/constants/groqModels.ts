@@ -10,7 +10,7 @@ export const GROQ_MODELS = {
     inputPrice: 0.10,
     outputPrice: 0.50,
     category: 'preferred',
-    description: 'Excellent modèle généraliste, fiable et pas cher'
+    description: 'Excellent modèle généraliste, fiable et performant'
   },
   'openai/gpt-oss-120b': {
     name: 'OpenAI GPT-OSS 120B',
@@ -19,19 +19,19 @@ export const GROQ_MODELS = {
     category: 'preferred',
     description: 'Modèle généraliste plus puissant'
   },
-  'llama-4-scout': {
+  'meta-llama/llama-4-scout-17b-16e-instruct': {
     name: 'Llama 4 Scout',
     inputPrice: 0.11,
     outputPrice: 0.34,
     category: 'preferred',
-    description: 'Puissant pour la recherche de texte et vision'
+    description: 'Puissant pour la génération de texte créative et structurée'
   },
-  'llama-4-maverick': {
+  'meta-llama/llama-4-maverick-17b-128e-instruct': {
     name: 'Llama 4 Maverick',
     inputPrice: 0.20,
     outputPrice: 0.60,
     category: 'preferred',
-    description: 'Puissant pour la recherche de texte et vision (Premium)'
+    description: 'Puissant pour la génération de texte créative et structurée (Premium)'
   },
 
   // Modèles de réflexion avancée
@@ -51,21 +51,14 @@ export const GROQ_MODELS = {
   },
 
   // Modèles alternatifs
-  'qwen3-32b': {
+  'qwen/qwen-3-32b-instruct': {
     name: 'Qwen3-32B',
     inputPrice: 0.29,
     outputPrice: 0.59,
     category: 'alternative',
     description: 'Bon compromis selon le contexte'
   },
-  'mistral-saba-24b': {
-    name: 'Mistral Saba 24B',
-    inputPrice: 0.79,
-    outputPrice: 0.79,
-    category: 'alternative',
-    description: 'Modèle Mistral spécialisé'
-  },
-  'llama-3.3-70b-versatile': {
+  'meta-llama/llama-3.3-70b-versatile': {
     name: 'Llama 3.3 70B Versatile',
     inputPrice: 0.59,
     outputPrice: 0.79,
@@ -74,7 +67,7 @@ export const GROQ_MODELS = {
   },
 
   // Modèles de sécurité
-  'llama-guard-4-12b': {
+  'meta-llama/llama-guard-4-12b': {
     name: 'Llama Guard 4 12B',
     inputPrice: 0.20,
     outputPrice: 0.20,
@@ -123,8 +116,8 @@ export function getGroqModelInfo(modelId: string): GroqModelInfo | null {
 export const PREFERRED_GROQ_MODELS: GroqModelId[] = [
   'openai/gpt-oss-20b',
   'openai/gpt-oss-120b',
-  'llama-4-scout',
-  'llama-4-maverick'
+  'meta-llama/llama-4-scout-17b-16e-instruct',
+  'meta-llama/llama-4-maverick-17b-128e-instruct'
 ];
 
 /**
@@ -138,6 +131,6 @@ export const ALL_GROQ_MODELS: GroqModelId[] = Object.keys(GROQ_MODELS) as GroqMo
 export const GROQ_MODELS_BY_CATEGORY = {
   preferred: PREFERRED_GROQ_MODELS,
   reasoning: ['kimi-k2-0905', 'deepseek-r1-distill-llama-70b'] as GroqModelId[],
-  alternative: ['qwen3-32b', 'mistral-saba-24b', 'llama-3.3-70b-versatile'] as GroqModelId[],
-  safety: ['llama-guard-4-12b'] as GroqModelId[]
+  alternative: ['qwen/qwen-3-32b-instruct', 'meta-llama/llama-3.3-70b-versatile'] as GroqModelId[],
+  safety: ['meta-llama/llama-guard-4-12b'] as GroqModelId[]
 } as const;
