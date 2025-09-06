@@ -23,11 +23,12 @@ import Placeholder from '@tiptap/extension-placeholder';
 import UnifiedCodeBlockExtension from '@/extensions/UnifiedCodeBlockExtension';
 import ContextMenuExtension from '@/extensions/ContextMenuExtension';
 import CalloutExtension from '@/extensions/CalloutExtension';
-import BoxSelectionExtension from '@/extensions/BoxSelectionExtension';
+// import BoxSelectionExtension from '@/extensions/BoxSelectionExtension'; // Désactivé - cause des problèmes
 import BlockDragDropExtension from '@/extensions/BlockDragDropExtension';
-import { SelectionExtension } from '@/extensions/SelectionExtension';
-import { TrailingNodeExtension } from '@/extensions/TrailingNodeExtension';
+// import { SelectionExtension } from '@/extensions/SelectionExtension'; // Désactivé - cause des problèmes
+// import { TrailingNodeExtension } from '@/extensions/TrailingNodeExtension'; // Désactivé - cause des problèmes
 // import { SpaceHandlingExtension } from '@/extensions/SpaceHandlingExtension'; // Supprimé - causait des conflits
+import SlashMenuExtension from '@/extensions/SlashMenuExtension';
 import Color from '@tiptap/extension-color';
 import TextStyle from '@tiptap/extension-text-style';
 import Highlight from '@tiptap/extension-highlight';
@@ -120,12 +121,14 @@ export function createEditorExtensions(
           class: 'link',
         },
       }),
-      FloatingMenu.configure({
-        element: typeof window !== 'undefined' ? document.createElement('div') : null,
-        tippyOptions: {
-          duration: 100,
-        },
-      })
+      // FloatingMenu désactivé - on utilise notre composant personnalisé
+      // FloatingMenu.configure({
+      //   element: typeof window !== 'undefined' ? document.createElement('div') : null,
+      //   tippyOptions: {
+      //     duration: 100,
+      //   },
+      // }),
+      // SlashMenuExtension // Temporairement désactivé
     );
   }
 
@@ -140,9 +143,9 @@ export function createEditorExtensions(
   // Extensions expérimentales (désactivées par défaut)
   if (config.experimental) {
     extensions.push(
-      BoxSelectionExtension,
-      SelectionExtension,
-      TrailingNodeExtension
+      // BoxSelectionExtension, // Désactivé - cause des problèmes
+      // SelectionExtension, // Désactivé - cause des problèmes
+      // TrailingNodeExtension, // Désactivé - cause des problèmes
       // SpaceHandlingExtension supprimé - causait des conflits
     );
   }

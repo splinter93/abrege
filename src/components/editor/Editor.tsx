@@ -29,6 +29,7 @@ import { useEditor, EditorContent as TiptapEditorContent } from '@tiptap/react';
 import lowlight from '@/utils/lowlightInstance';
 import EditorSlashMenu, { type EditorSlashMenuHandle } from '@/components/EditorSlashMenu';
 import TableControls from '@/components/editor/TableControls';
+import FloatingMenuNotion from './FloatingMenuNotion';
 import { useRouter } from 'next/navigation';
 import { FiEye, FiX, FiImage } from 'react-icons/fi';
 import { v2UnifiedApi } from '@/services/V2UnifiedApi';
@@ -457,10 +458,14 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
         } catch {}
       }
       if (e.key === '/') {
-        // Ouvrir le menu slash pour tous les slashes (test)
-        e.preventDefault();
-        const coords = editor.view.coordsAtPos(editor.state.selection.from);
-        slashMenuRef.current?.openMenu({ left: coords.left, top: coords.top });
+        console.log('Editor: touche / détectée');
+        // Ne pas preventDefault - laisser le slash être tapé
+        // Le menu s'ouvrira après que le slash soit dans le texte
+        setTimeout(() => {
+          const coords = editor.view.coordsAtPos(editor.state.selection.from);
+          console.log('Editor: ouverture du menu à:', coords);
+          slashMenuRef.current?.openMenu({ left: coords.left, top: coords.top });
+        }, 10);
       }
     };
     el.addEventListener('keydown', onKeyDown);
@@ -1146,7 +1151,19 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
         )}
         title={<EditorTitle value={title} onChange={setTitle} onBlur={handleTitleBlur} placeholder="Titre de la note..." />}
         content={(
-          <EditorContent>
+          <>
+            {/* Floating menu Notion-like - rendu en dehors du conteneur */}
+            {!isReadonly && (
+              <FloatingMenuNotion 
+                editor={editor} 
+                onAskAI={(selectedText) => {
+                  // TODO: Implémenter l'action Ask AI
+                  console.log('Ask AI with text:', selectedText);
+                  toast.success(`Ask AI: "${selectedText}"`);
+                }}
+              />
+            )}
+            <EditorContent>
             {!isReadonly && (
               <div className="tiptap-editor-container" ref={editorContainerRef}>
                 <TiptapEditorContent editor={editor} />
@@ -1180,13 +1197,17 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
                     }
                     
                     // Execute command action
+                    console.log('Exécution de la commande:', cmd.id, cmd);
                     if (typeof cmd.action === 'function') {
                       try {
                         cmd.action(editor);
+                        console.log('Commande exécutée avec succès:', cmd.id);
                       } catch (error) {
+                        console.error('Erreur exécution commande:', error);
                         logger.error(LogCategory.EDITOR, 'Erreur exécution commande:', error);
                       }
                     } else {
+                      console.error('Action non définie pour la commande:', cmd.id);
                       logger.error(LogCategory.EDITOR, 'Action non définie pour la commande:', cmd.id);
                     }
                   }}
@@ -1197,6 +1218,7 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
               <div className="markdown-body" dangerouslySetInnerHTML={{ __html: html }} />
             )}
           </EditorContent>
+          </>
         )}
       />
       {/* Global ImageMenu for both header and content insertions */}

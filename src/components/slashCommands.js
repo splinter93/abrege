@@ -32,7 +32,15 @@ export const SLASH_COMMANDS = [
     label: { fr: 'Bullet List', en: 'Bullet List' },
     alias: { fr: ['/liste', '/puces', '/ul'], en: ['/list', '/bullets', '/ul'] },
     description: { fr: 'Liste avec puces', en: 'List with bullet points' },
-    action: (editor) => editor.chain().focus().toggleBulletList().run(),
+    action: (editor) => {
+      // Essayer d'abord la méthode toggle
+      try {
+        editor.chain().focus().toggleBulletList().run();
+      } catch (error) {
+        // Si ça ne marche pas, insérer directement le markdown
+        editor.chain().focus().insertContent('- ').run();
+      }
+    },
   },
   {
     id: 'ol',
@@ -106,7 +114,7 @@ export const SLASH_COMMANDS = [
     label: { fr: 'Callout', en: 'Callout' },
     alias: { fr: ['/appel', '/callout', '/info'], en: ['/callout', '/info', '/highlight'] },
     description: { fr: 'Bloc d\'information mis en valeur', en: 'Highlighted information block' },
-    action: (editor) => editor.chain().focus().insertContent('<div class="callout">💡 Callout</div>').run(),
+    action: (editor) => editor.chain().focus().insertContent('<div class="callout callout-info">💡 Callout</div>').run(),
   },
   {
     id: 'link',
@@ -141,41 +149,41 @@ export const SLASH_COMMANDS = [
     label: { fr: 'Callout Info', en: 'Info Callout' },
     alias: { fr: ['/info', '/callout-info'], en: ['/info', '/callout-info'] },
     description: { fr: 'Bloc d\'information coloré', en: 'Colored information block' },
-    action: (editor) => editor.chain().focus().setCallout({ type: 'info' }).run(),
+    action: (editor) => editor.chain().focus().insertContent('<div class="callout callout-info">💡 Info</div>').run(),
   },
   {
     id: 'callout-warning',
     label: { fr: 'Callout Attention', en: 'Warning Callout' },
     alias: { fr: ['/attention', '/warning', '/callout-warning'], en: ['/warning', '/callout-warning'] },
     description: { fr: 'Bloc d\'attention coloré', en: 'Colored warning block' },
-    action: (editor) => editor.chain().focus().setCallout({ type: 'warning' }).run(),
+    action: (editor) => editor.chain().focus().insertContent('<div class="callout callout-warning">⚠️ Attention</div>').run(),
   },
   {
     id: 'callout-error',
     label: { fr: 'Callout Erreur', en: 'Error Callout' },
     alias: { fr: ['/erreur', '/error', '/callout-error'], en: ['/error', '/callout-error'] },
     description: { fr: 'Bloc d\'erreur coloré', en: 'Colored error block' },
-    action: (editor) => editor.chain().focus().setCallout({ type: 'error' }).run(),
+    action: (editor) => editor.chain().focus().insertContent('<div class="callout callout-error">❌ Erreur</div>').run(),
   },
   {
     id: 'callout-success',
     label: { fr: 'Callout Succès', en: 'Success Callout' },
     alias: { fr: ['/succes', '/success', '/callout-success'], en: ['/success', '/callout-success'] },
     description: { fr: 'Bloc de succès coloré', en: 'Colored success block' },
-    action: (editor) => editor.chain().focus().setCallout({ type: 'success' }).run(),
+    action: (editor) => editor.chain().focus().insertContent('<div class="callout callout-success">✅ Succès</div>').run(),
   },
   {
     id: 'callout-note',
     label: { fr: 'Callout Note', en: 'Note Callout' },
     alias: { fr: ['/note', '/callout-note'], en: ['/note', '/callout-note'] },
     description: { fr: 'Bloc de note coloré', en: 'Colored note block' },
-    action: (editor) => editor.chain().focus().setCallout({ type: 'note' }).run(),
+    action: (editor) => editor.chain().focus().insertContent('<div class="callout callout-note">📝 Note</div>').run(),
   },
   {
     id: 'callout-tip',
     label: { fr: 'Callout Conseil', en: 'Tip Callout' },
     alias: { fr: ['/conseil', '/tip', '/callout-tip'], en: ['/tip', '/callout-tip'] },
     description: { fr: 'Bloc de conseil coloré', en: 'Colored tip block' },
-    action: (editor) => editor.chain().focus().setCallout({ type: 'tip' }).run(),
+    action: (editor) => editor.chain().focus().insertContent('<div class="callout callout-tip">💡 Conseil</div>').run(),
   },
 ]; 

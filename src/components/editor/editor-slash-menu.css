@@ -2,39 +2,39 @@
    SLASH MENU - DARK NOTION STYLE
    ========================= */
    .slash-menu {
-    /* Couleurs mode sombre Notion */
-    --sm-bg: #1a1a1a;
-    --sm-border: rgba(255, 255, 255, 0.09);
-    --sm-text-primary: #ededed;
-    --sm-text-secondary: #a0a0a0;
-    --sm-text-tertiary: #6b6b6b;
-    --sm-hover-bg: rgba(107, 114, 128, 0.1);
-    --sm-selected-bg: rgba(107, 114, 128, 0.15);
-    --sm-selected-border: rgba(107, 114, 128, 0.3);
+  /* Couleurs mode sombre Notion - Plus sombres */
+  --sm-bg: #141414;
+  --sm-border: rgba(255, 255, 255, 0.09);
+  --sm-text-primary: #ededed;
+  --sm-text-secondary: #a0a0a0;
+  --sm-text-tertiary: #6b6b6b;
+  --sm-hover-bg: rgba(107, 114, 128, 0.1);
+  --sm-selected-bg: rgba(107, 114, 128, 0.15);
+  --sm-selected-border: rgba(107, 114, 128, 0.3);
     
     /* Accent Gray (Notion-like) */
     --sm-accent: #6b7280;
     --sm-accent-hover: #9ca3af;
     
-    /* Spacing & Sizing */
-    --sm-radius: 8px;
-    --sm-item-radius: 6px;
-    --sm-padding: 14px;
-    --sm-item-padding: 10px 14px;
-    --sm-gap: 6px;
+    /* Spacing & Sizing - Plus proche de Notion */
+    --sm-radius: 6px;
+    --sm-item-radius: 4px;
+    --sm-padding: 12px;
+    --sm-item-padding: 8px 12px;
+    --sm-gap: 4px;
     
     /* Typography */
     --sm-font: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif;
     --sm-font-size: 14px;
     --sm-line-height: 1.5;
     
-    /* Shadows & Effects - Plus subtils comme Notion */
+    /* Shadows & Effects - Style Notion */
     --sm-shadow: 
-      0 2px 8px rgba(0, 0, 0, 0.3),
-      0 1px 2px rgba(0, 0, 0, 0.2);
+      0 4px 16px rgba(0, 0, 0, 0.4),
+      0 2px 4px rgba(0, 0, 0, 0.2);
     --sm-shadow-hover: 
-      0 4px 12px rgba(0, 0, 0, 0.4),
-      0 2px 4px rgba(0, 0, 0, 0.3);
+      0 6px 20px rgba(0, 0, 0, 0.5),
+      0 3px 6px rgba(0, 0, 0, 0.3);
     
     /* Animations */
     --sm-ease: cubic-bezier(0.16, 1, 0.3, 1);
@@ -42,7 +42,7 @@
   }
   
   /* =========================
-     ROOT CONTAINER - STYLE NOTION
+     ROOT CONTAINER - STYLE NOTION DARK
      ========================= */
   .slash-menu {
     position: fixed;
@@ -75,7 +75,7 @@
   }
   
   /* =========================
-     SEARCH INPUT - STYLE NOTION
+     SEARCH INPUT - STYLE NOTION DARK
      ========================= */
   .slash-menu .slash-search-input {
     width: 100%;
@@ -92,19 +92,19 @@
     padding: var(--sm-padding);
     padding-bottom: 12px;
     margin-bottom: 4px;
-    border-bottom: 1px solid var(--sm-border);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
     
     caret-color: var(--sm-accent);
     transition: border-color var(--sm-duration) var(--sm-ease);
   }
   
   .slash-menu .slash-search-input::placeholder {
-    color: var(--sm-text-tertiary);
+    color: var(--sm-text-secondary);
     font-weight: 400;
   }
   
   .slash-menu .slash-search-input:focus {
-    border-bottom-color: var(--sm-accent);
+    border-bottom-color: rgba(255, 255, 255, 0.1);
   }
   
   /* =========================
@@ -149,23 +149,25 @@
   }
   
   /* =========================
-     MENU ITEMS - STYLE NOTION
+     MENU ITEMS - STYLE NOTION DARK
      ========================= */
   .slash-menu .slash-menu-item {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
     
     padding: 8px 12px;
     margin: 1px 0;
     border-radius: var(--sm-item-radius);
+    border: 1px solid transparent;
     
     color: var(--sm-text-primary);
     background: transparent;
     cursor: pointer;
     
     transition: 
-      background-color var(--sm-duration) var(--sm-ease);
+      background-color var(--sm-duration) var(--sm-ease),
+      border-color var(--sm-duration) var(--sm-ease);
   }
   
   .slash-menu .slash-menu-item:hover {
@@ -174,6 +176,7 @@
   
   .slash-menu .slash-menu-item.selected {
     background: var(--sm-selected-bg);
+    border-color: var(--sm-selected-border);
   }
   
   .slash-menu .slash-menu-item:focus-visible {
@@ -205,7 +208,7 @@
   }
   
   .slash-menu .slash-menu-item.selected .slash-menu-icon {
-    color: var(--accent-primary); /* Utilisation de la couleur d'accentuation principale */
+    color: var(--sm-text-primary);
   }
   
   /* =========================
@@ -241,6 +244,12 @@
     text-overflow: ellipsis;
   }
   
+  .slash-menu .slash-menu-category {
+    color: var(--sm-text-secondary);
+    font-size: 12px;
+    line-height: 1.3;
+    margin-top: 4px;
+  }
   
   /* =========================
      SELECTION INDICATOR

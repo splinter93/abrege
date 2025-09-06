@@ -75,10 +75,16 @@ const EditorSlashMenu = forwardRef<EditorSlashMenuHandle, EditorSlashMenuProps>(
 
     React.useEffect(() => {
       if (!slashOpen) return;
-      // Ferme si la recherche ne commence plus par '/' OU si un espace suit immédiatement '/'
-      if (slashSearch && (!slashSearch.startsWith('/') || /^\/\s/.test(slashSearch))) {
+      // Ferme si la recherche ne commence plus par '/'
+      if (slashSearch && !slashSearch.startsWith('/')) {
         setSlashOpen(false);
         setSlashSearch('');
+      }
+      // Si un espace suit '/', on ferme le menu mais on laisse le slash
+      // Le slash sera géré par l'éditeur principal
+      if (/^\/\s/.test(slashSearch)) {
+        setSlashOpen(false);
+        // On ne vide pas `slashSearch` ici pour que l'éditeur puisse voir le '/ '
       }
     }, [slashSearch, slashOpen]);
 
