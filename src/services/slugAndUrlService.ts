@@ -45,7 +45,7 @@ export class SlugAndUrlService {
       }
 
       // 3. Construire l'URL publique
-      const publicUrl = `${apiBaseUrl}/public/note/${user.username}/${slug}`;
+      const publicUrl = `${apiBaseUrl}/${user.username}/${slug}`;
 
       // 4. Si on a un noteId, mettre à jour la base de données
       if (noteId) {
@@ -173,7 +173,7 @@ export class SlugAndUrlService {
       throw new Error(`Impossible de récupérer le username pour l'utilisateur ${userId}`);
     }
 
-    return `${apiBaseUrl}/public/note/${user.username}/${slug}`;
+    return `${apiBaseUrl}/${user.username}/${slug}`;
   }
 
   /**
@@ -219,7 +219,7 @@ export class SlugAndUrlService {
           continue;
         }
 
-        const expectedUrl = `${apiBaseUrl}/public/note/${user.username}/${note.slug}`;
+        const expectedUrl = `${apiBaseUrl}/${user.username}/${note.slug}`;
         
         // Vérifier si l'URL publique est correcte
         if (note.public_url !== expectedUrl) {
@@ -299,7 +299,7 @@ export class SlugAndUrlService {
 
         // Vérifier l'URL publique
         if (note.public_url) {
-          const expectedUrl = `${apiBaseUrl}/public/note/${username}/${note.slug}`;
+          const expectedUrl = `${apiBaseUrl}/${username}/${note.slug}`;
           if (note.public_url === expectedUrl) {
             report.validUrls++;
           } else {
@@ -313,7 +313,7 @@ export class SlugAndUrlService {
           report.issues.push({
             noteId: note.id,
             issue: 'URL publique manquante',
-            fix: `Générer: ${apiBaseUrl}/public/note/${username}/${note.slug}`
+            fix: `Générer: ${apiBaseUrl}/${username}/${note.slug}`
           });
         }
       }

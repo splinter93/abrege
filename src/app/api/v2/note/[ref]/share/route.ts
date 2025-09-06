@@ -214,7 +214,7 @@ export async function PATCH(
     if (validatedData.visibility && validatedData.visibility !== currentShareSettings.visibility) {
       if (validatedData.visibility === 'link-private' || validatedData.visibility === 'link-public') {
         // Générer une URL publique basée sur le slug et le username
-        updateData.public_url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/public/note/${userData.username}/${currentNote.slug}`;
+        updateData.public_url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/${userData.username}/${currentNote.slug}`;
       }
       // Note: On ne supprime plus l'URL publique quand on passe en privé
       // L'URL publique reste disponible pour le créateur même si la note est privée

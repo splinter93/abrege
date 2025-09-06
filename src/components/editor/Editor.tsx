@@ -906,7 +906,7 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
       }
 
       // Construire et ouvrir l'URL
-      const url = `${window.location.origin}/public/note/${userData.username}/${noteData.slug}`;
+      const url = `${window.location.origin}/${userData.username}/${noteData.slug}`;
       if (process.env.NODE_ENV === 'development') {
         logger.debug(LogCategory.EDITOR, 'Ouverture de l\'URL publique:', url);
       }
