@@ -182,7 +182,21 @@ export class SpecializedAgentManager {
       }
 
       // 5. Formater selon le schéma de sortie
+      logger.info(`[SpecializedAgentManager] 🔍 Résultat brut de l'orchestrateur:`, { 
+        traceId, 
+        resultType: typeof result,
+        resultKeys: result && typeof result === 'object' ? Object.keys(result) : 'N/A',
+        resultContent: result && typeof result === 'object' ? (result as any).content : 'N/A',
+        resultSuccess: result && typeof result === 'object' ? (result as any).success : 'N/A'
+      });
+      
       const formattedResult = this.formatSpecializedOutput(result, agent.output_schema);
+      
+      logger.info(`[SpecializedAgentManager] 🔍 Résultat formaté:`, { 
+        traceId, 
+        formattedKeys: Object.keys(formattedResult),
+        formattedResult: formattedResult
+      });
 
       const executionTime = Date.now() - startTime;
       logger.info(`[SpecializedAgentManager] ✅ Agent ${agentId} exécuté avec succès`, { 
@@ -412,9 +426,18 @@ export class SpecializedAgentManager {
    * Formater la sortie selon le schéma
    */
   private formatSpecializedOutput(result: unknown, outputSchema?: OpenAPISchema): Record<string, unknown> {
+    logger.info(`[SpecializedAgentManager] 🔍 formatSpecializedOutput:`, { 
+      hasOutputSchema: !!outputSchema,
+      hasProperties: !!(outputSchema?.properties),
+      resultType: typeof result,
+      resultKeys: result && typeof result === 'object' ? Object.keys(result) : 'N/A'
+    });
+    
     if (!outputSchema || !outputSchema.properties) {
       const resultObj = result as Record<string, unknown>;
-      return { result: resultObj?.content || result };
+      const formatted = { result: resultObj?.content || result };
+      logger.info(`[SpecializedAgentManager] 🔍 Format simple (pas de schéma):`, { formatted });
+      return formatted;
     }
 
     const formatted: Record<string, unknown> = {};
