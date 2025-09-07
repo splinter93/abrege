@@ -124,5 +124,5 @@ export default function PublicNoteAuthWrapper({ note, slug, ownerId }: PublicNot
   }
 
   // Afficher la note (publique ou privée si l'utilisateur est le propriétaire)
-  return <PublicNoteContent note={note} slug={slug} />;
+  return <PublicNoteContent note={note} slug={slug} currentUser={currentUser} />;
 }

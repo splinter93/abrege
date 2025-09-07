@@ -35,15 +35,21 @@ interface PublicNoteProps {
     user_id: string;
   };
   slug: string;
+  currentUser?: { id: string; email?: string } | null;
 }
 
-export default function PublicNoteContent({ note, slug }: PublicNoteProps) {
+export default function PublicNoteContent({ note, slug, currentUser: propCurrentUser }: PublicNoteProps) {
   const titleRef = React.useRef<HTMLHeadingElement>(null);
   const contentRef = React.useRef<HTMLDivElement>(null);
-  const [currentUser, setCurrentUser] = React.useState<{ id: string; email?: string } | null>(null);
+  const [currentUser, setCurrentUser] = React.useState<{ id: string; email?: string } | null>(propCurrentUser || null);
 
-  // Vérifier l'authentification côté client
+  // Vérifier l'authentification côté client seulement si pas déjà fourni
   React.useEffect(() => {
+    if (propCurrentUser) {
+      setCurrentUser(propCurrentUser);
+      return;
+    }
+    
     const checkAuth = async () => {
       try {
         const { data: { user } } = await supabase.auth.getUser();
@@ -54,7 +60,7 @@ export default function PublicNoteContent({ note, slug }: PublicNoteProps) {
     };
     
     checkAuth();
-  }, []);
+  }, [propCurrentUser]);
 
   React.useEffect(() => {
     // Appliquer le mode pleine largeur
