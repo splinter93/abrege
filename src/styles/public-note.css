@@ -188,7 +188,7 @@ body.public-note-page {
   }
 
   /* TOC - masquer sur mobile */
-  .public-toc-container {
+  .public-note-container .public-toc-container {
     display: none !important;
   }
 
@@ -201,8 +201,8 @@ body.public-note-page {
     padding: 0 !important;
   }
 
-  /* Layout principal - ajustements mobile */
-  .noteLayout {
+  /* Layout principal - ajustements mobile - SEULEMENT pour les pages publiques */
+  .public-note-container .noteLayout {
     flex-direction: column !important;
     gap: 0 !important;
   }
@@ -500,8 +500,8 @@ body.public-note-page {
    Styles pour positionner la TOC à droite comme dans l'éditeur
 */
 
-/* Layout principal avec TOC à droite */
-.noteLayout {
+/* Layout principal avec TOC à droite - SEULEMENT pour les pages publiques */
+.public-note-container .noteLayout {
   display: flex;
   gap: 40px;
   max-width: 1200px;
@@ -509,21 +509,22 @@ body.public-note-page {
   padding: 0 20px;
 }
 
-/* Contenu principal */
-.public-note-content-wrapper {
+/* Contenu principal - SEULEMENT pour les pages publiques */
+.public-note-container .public-note-content-wrapper {
   flex: 1;
   max-width: var(--editor-content-width);
   width: 100%;
 }
 
-/* TOC à droite - position sticky */
-.public-toc-container {
+/* TOC à droite - position sticky - SEULEMENT pour les pages publiques */
+.public-note-container .public-toc-container {
   position: sticky;
   top: 100px;
   height: fit-content;
   width: 280px;
   flex-shrink: 0;
   padding-left: 20px;
+  display: block !important; /* Forcer l'affichage */
 }
 
 /* ==========================================================================
