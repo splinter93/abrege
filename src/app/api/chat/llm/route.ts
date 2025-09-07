@@ -9,6 +9,16 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
+// 🔧 SCOPES PAR DÉFAUT POUR LES AGENTS SPÉCIALISÉS
+const DEFAULT_AGENT_SCOPES = [
+  'notes:read', 'notes:write', 'notes:create', 'notes:update', 'notes:delete',
+  'classeurs:read', 'classeurs:write', 'classeurs:create', 'classeurs:update', 'classeurs:delete',
+  'dossiers:read', 'dossiers:write', 'dossiers:create', 'dossiers:update', 'dossiers:delete',
+  'files:read', 'files:write', 'files:upload', 'files:delete',
+  'agents:execute', 'agents:read',
+  'search:content', 'profile:read'
+];
+
 export async function POST(request: NextRequest) {
   // Extraire les variables en dehors du try pour qu'elles soient accessibles dans le catch
   let sessionId: string | undefined;
@@ -147,6 +157,35 @@ export async function POST(request: NextRequest) {
           logger.warn(`[LLM Route] ⚠️ Aucun agent actif trouvé dans la base de données`);
         }
       }
+
+      // 🔧 CORRECTION : Ajouter les scopes par défaut si l'agent n'en a pas
+      if (agentConfig) {
+        // Vérifier si l'agent a des scopes configurés
+        const hasScopes = agentConfig.api_v2_capabilities && agentConfig.api_v2_capabilities.length > 0;
+        
+        if (!hasScopes) {
+          logger.warn(`[LLM Route] ⚠️ Agent ${agentConfig.name} n'a pas de scopes configurés, ajout des scopes par défaut`);
+          
+          // Mettre à jour l'agent avec les scopes par défaut
+          const { error: updateError } = await supabase
+            .from('agents')
+            .update({ 
+              api_v2_capabilities: DEFAULT_AGENT_SCOPES 
+            })
+            .eq('id', agentConfig.id);
+
+          if (updateError) {
+            logger.error(`[LLM Route] ❌ Erreur mise à jour scopes agent: ${updateError.message}`);
+          } else {
+            logger.info(`[LLM Route] ✅ Scopes par défaut ajoutés à l'agent ${agentConfig.name}`);
+            // Mettre à jour la config locale
+            agentConfig.api_v2_capabilities = DEFAULT_AGENT_SCOPES;
+          }
+        } else {
+          logger.info(`[LLM Route] ✅ Agent ${agentConfig.name} a déjà des scopes configurés: ${agentConfig.api_v2_capabilities?.length || 0}`);
+        }
+      }
+
     } catch (error) {
       logger.error(`[LLM Route] ❌ Erreur lors de la récupération de l'agent: ${error}`);
     }

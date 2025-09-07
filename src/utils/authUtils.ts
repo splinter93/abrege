@@ -94,9 +94,26 @@ export async function getAuthenticatedUser(request: NextRequest): Promise<AuthRe
           throw new Error('JWT invalide');
         }
 
+        // 🔧 CORRECTION : Pour les agents spécialisés, ajouter des scopes par défaut
+        // Vérifier si c'est un agent spécialisé (via le header X-Agent-Type ou autre indicateur)
+        const isAgentExecution = request.headers.get('X-Agent-Type') === 'specialized' || 
+                                request.headers.get('X-Client-Type') === 'agent';
+        
+        let scopes: string[] = [];
+        
+        if (isAgentExecution) {
+          // Agent spécialisé : utiliser les scopes par défaut
+          scopes = DEFAULT_AGENT_SCOPES;
+          logApi.info(`[AuthUtils] 🤖 Agent spécialisé détecté, scopes par défaut appliqués: ${scopes.length} scopes`);
+        } else {
+          // Utilisateur normal : pas de scopes par défaut (sera géré par OAuth/API Key)
+          logApi.info(`[AuthUtils] 👤 Utilisateur normal détecté, pas de scopes par défaut`);
+        }
+
         return {
           success: true,
           userId: user.id,
+          scopes: scopes,
           authType: 'jwt'
         };
       } catch (jwtError) {

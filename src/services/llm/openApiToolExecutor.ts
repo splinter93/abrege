@@ -146,6 +146,7 @@ export class OpenApiToolExecutor {
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
       'X-Client-Type': 'llm',
+      'X-Agent-Type': 'specialized', // 🔧 CORRECTION : Marquer comme agent spécialisé
       'Authorization': `Bearer ${userToken}`
     };
 
@@ -156,6 +157,11 @@ export class OpenApiToolExecutor {
     }
 
     logger.dev(`[OpenApiToolExecutor] 🚀 Appel ${mapping.method} ${url}`, { args });
+    logger.dev(`[OpenApiToolExecutor] 🔧 Headers:`, { 
+      'X-Client-Type': headers['X-Client-Type'],
+      'X-Agent-Type': headers['X-Agent-Type'],
+      'Authorization': 'Bearer [TOKEN]'
+    });
 
     // Faire l'appel API
     const response = await fetch(url, {
