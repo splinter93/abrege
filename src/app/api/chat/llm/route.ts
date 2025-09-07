@@ -204,7 +204,14 @@ export async function POST(request: NextRequest) {
     return result;
 
   } catch (error) {
-    logger.error(`[LLM Route] ❌ Erreur fatale: ${error}`);
+    logger.error(`[LLM Route] ❌ Erreur fatale:`, {
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+      sessionId: sessionId || 'unknown',
+      message: message?.substring(0, 100) + '...',
+      hasContext: !!context,
+      hasHistory: !!history
+    });
 
     // 🔧 Gestion spéciale des erreurs Groq 500 - on fournit une réponse de fallback
     if (error instanceof Error && error.message.includes('Groq API error: 500')) {
@@ -227,7 +234,13 @@ export async function POST(request: NextRequest) {
         success: false,
         error: 'Erreur interne du serveur',
         details: error instanceof Error ? error.message : 'Erreur inconnue',
-        sessionId: sessionId || 'unknown'
+        sessionId: sessionId || 'unknown',
+        timestamp: new Date().toISOString(),
+        // En développement, inclure plus de détails
+        ...(process.env.NODE_ENV === 'development' && {
+          stack: error instanceof Error ? error.stack : undefined,
+          errorType: error instanceof Error ? error.constructor.name : typeof error
+        })
       },
       { status: 500 }
     );

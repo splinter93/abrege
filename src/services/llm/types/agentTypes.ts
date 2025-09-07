@@ -22,6 +22,8 @@ export interface AgentConfig {
   capabilities?: string[]; // Legacy
   api_v2_capabilities?: string[];
   api_config?: Record<string, unknown>;
+  toolExecutionMode?: 'sequential' | 'parallel';
+  toolBatchSize?: number;
   is_active: boolean;
   priority: number;
   created_at: string;
