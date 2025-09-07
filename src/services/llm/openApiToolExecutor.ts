@@ -1,5 +1,4 @@
 import { simpleLogger as logger } from '@/utils/logger';
-import { createClient } from '@supabase/supabase-js';
 
 export interface OpenApiToolResult {
   tool_call_id: string;
@@ -15,16 +14,13 @@ export interface OpenApiToolResult {
  */
 export class OpenApiToolExecutor {
   private static instance: OpenApiToolExecutor;
-  private supabase: any;
   
   // Historique des IDs déjà exécutés (évite la double exécution)
   private executedCallIds: Set<string> = new Set();
 
   private constructor() {
-    this.supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
+    // ✅ CORRECTION: Ne pas initialiser Supabase ici car on utilise le token utilisateur
+    // Le token utilisateur sera passé directement aux appels API
   }
 
   static getInstance(): OpenApiToolExecutor {
