@@ -1154,7 +1154,7 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
             />
           </>
         )}
-        title={<EditorTitle value={title} onChange={setTitle} onBlur={handleTitleBlur} placeholder="Titre de la note..." />}
+        title={<EditorTitle value={title} onChange={setTitle} onBlur={handleTitleBlur} placeholder="Titre de la note..." wideMode={fullWidth} />}
         content={(
           <>
             {/* Floating menu Notion-like - rendu en dehors du conteneur */}

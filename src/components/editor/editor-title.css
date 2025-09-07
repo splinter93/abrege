@@ -38,7 +38,7 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  min-height: 45px;
+  min-height: auto; /* S'adapte automatiquement à la hauteur du contenu */
   margin-bottom: 0; /* aucun espace sous le titre */
 }
 

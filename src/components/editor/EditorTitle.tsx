@@ -7,13 +7,14 @@ interface EditorTitleProps {
   onChange: (value: string) => void;
   onBlur?: () => void;
   placeholder?: string;
+  wideMode?: boolean; // Nouvelle prop pour le mode wide
 }
 
 /**
  * Champ de titre de l'éditeur, auto-resize, centré.
  */
-const EditorTitle: React.FC<EditorTitleProps> = ({ value, onChange, onBlur, placeholder }) => {
-  const { textareaRef } = useAutoResize({ value });
+const EditorTitle: React.FC<EditorTitleProps> = ({ value, onChange, onBlur, placeholder, wideMode }) => {
+  const { textareaRef } = useAutoResize({ value, wideMode });
 
   return (
     <div className="editor-title-wrapper">
