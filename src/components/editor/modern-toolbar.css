@@ -136,23 +136,24 @@
 
 /* Bouton "Plus" spécial */
 .more-btn {
-  background: var(--surface-2);
+  background: transparent;
   color: var(--text-primary);
   font-weight: 500;
-  border: 1px solid var(--border-subtle);
+  border: none;
 }
 
 .more-btn:hover {
-  background: var(--accent-primary);
-  color: white;
-  border-color: var(--accent-primary);
+  background: transparent;
+  color: var(--accent-primary);
+  border: none;
+  transform: scale(1.05);
 }
 
 .more-btn.active {
-  background: var(--accent-primary);
-  color: white;
-  border-color: var(--accent-primary);
-  transform: rotate(45deg);
+  background: transparent;
+  color: var(--accent-primary);
+  border: none;
+  transform: rotate(45deg) scale(1.05);
 }
 
 /* Section des outils avancés */
@@ -483,20 +484,33 @@
 
 /* Boutons spéciaux */
 .ai-btn {
-  background: var(--accent-primary);
-  color: white;
+  background: transparent !important;
+  color: #ff6b35 !important; /* Orange */
   font-weight: 500;
-  border: 1px solid var(--accent-primary);
+  border: none !important;
 }
 
 .ai-btn:hover {
-  background: var(--accent-hover);
-  border-color: var(--accent-hover);
+  background: transparent !important;
+  color: #ff5722 !important; /* Orange plus foncé au hover */
+  transform: scale(1.05);
 }
 
 .ai-btn:active {
   transform: scale(0.95);
-  background: var(--accent-primary);
+  color: #e64a19 !important; /* Orange encore plus foncé */
+}
+
+.ai-btn svg {
+  color: #ff6b35 !important; /* Orange pour l'icône SVG */
+}
+
+.ai-btn:hover svg {
+  color: #ff5722 !important; /* Orange plus foncé au hover */
+}
+
+.ai-btn:active svg {
+  color: #e64a19 !important; /* Orange encore plus foncé */
 }
 
 /* Scrollbar personnalisée */
