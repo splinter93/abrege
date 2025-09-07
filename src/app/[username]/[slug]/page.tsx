@@ -93,11 +93,16 @@ export default async function Page(props: { params: Promise<{ username: string; 
   // Déterminer si le visiteur est le propriétaire de la note
   const isOwner = authUser?.id === owner.id;
 
+  // Debug: Log de l'authentification
+  console.log('🔍 [DEBUG] Auth user:', authUser?.id);
+  console.log('🔍 [DEBUG] Owner ID:', owner.id);
+  console.log('🔍 [DEBUG] Is owner:', isOwner);
+
   // Construire la requête pour la note
   let noteQuery = supabaseAnon
     .from('articles')
     .select(
-      'id, source_title, html_content, header_image, header_image_offset, header_image_blur, header_image_overlay, header_title_in_image, wide_mode, font_family, created_at, updated_at, share_settings, slug, user_id'
+      'id, source_title, html_content, markdown_content, header_image, header_image_offset, header_image_blur, header_image_overlay, header_title_in_image, wide_mode, font_family, created_at, updated_at, share_settings, slug, user_id'
     )
     .eq('slug', slug)
     .eq('user_id', owner.id);
