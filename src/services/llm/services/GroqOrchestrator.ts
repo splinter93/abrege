@@ -243,6 +243,17 @@ export class GroqOrchestrator {
         // Remonter les résultats consolidés
         toolResults = allResults;
       }
+
+      // 🔧 CORRECTION: Retourner la réponse finale après traitement des tools
+      const duration = Date.now() - startTime;
+      logger.info(
+        `[GroqOrchestrator] ✅ round ok (with tools) s=${sessionId} dur=${duration}ms tools=${allToolCalls.length} results=${toolResults.length}`
+      );
+      
+      return this.createSuccessResponse(finalResponse, toolResults, sessionId, {
+        isRelance,
+        hasNewToolCalls
+      });
     } catch (error: any) {
       logger.error(`[GroqOrchestrator] ❌ error in round trace=${traceId}`, {
         error: error instanceof Error ? error.message : String(error),
