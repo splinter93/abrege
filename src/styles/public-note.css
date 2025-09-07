@@ -21,7 +21,16 @@
 
 /* Image d'en-tête - padding réduit sur desktop */
 .public-header-image {
-  margin-bottom: 16px !important;
+  margin-bottom: 8px !important;
+}
+
+/* Réduction espacement titre-texte - page publique */
+.public-note-content-wrapper .noteLayout-title {
+  padding-top: 40px !important; /* Réduit de 55px à 40px */
+}
+
+.public-note-content-wrapper .noteLayout-title h1 {
+  padding: 0 0 2px 0 !important; /* Réduit de 4px à 2px */
 }
 
 /* Forcer le thème sombre sur le container principal */
@@ -160,7 +169,7 @@ body.public-note-page {
   /* Image d'en-tête - hauteur réduite */
   .public-header-image {
     height: 200px !important;
-    margin-bottom: 12px;
+    margin-bottom: 6px;
   }
 
   /* Titre dans l'image - ajustements */
@@ -239,7 +248,7 @@ body.public-note-page {
   /* Image d'en-tête - encore plus petite */
   .public-header-image {
     height: 150px !important;
-    margin-bottom: 8px;
+    margin-bottom: 4px;
   }
 
   /* Titre dans l'image - très compact */
@@ -315,7 +324,7 @@ body.public-note-page {
   /* Image d'en-tête - hauteur minimale */
   .public-header-image {
     height: 120px !important;
-    margin-bottom: 6px;
+    margin-bottom: 3px;
   }
 
   /* Texte du contenu - DÉLÉGUÉ À TYPOGRAPHY.CSS */
@@ -367,7 +376,7 @@ body.public-note-page {
   /* Image d'en-tête - hauteur réduite en paysage */
   .public-header-image {
     height: 120px !important;
-    margin-bottom: 8px;
+    margin-bottom: 4px;
   }
 
   /* Titre dans l'image - ajustements paysage */
