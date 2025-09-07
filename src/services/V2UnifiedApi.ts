@@ -21,7 +21,7 @@ export interface UpdateNoteData {
   header_image?: string | null;
   header_image_offset?: number;
   header_image_blur?: number;
-  header_image_overlay?: string; // Type string pour correspondre au type Note
+  header_image_overlay?: number; // Type number pour correspondre au schéma de validation
   header_title_in_image?: boolean;
   wide_mode?: boolean;
   a4_mode?: boolean;
@@ -300,9 +300,7 @@ export class V2UnifiedApi {
       // Nettoyer les données avant mise à jour
       const sanitizedUpdateData = {
         ...cleanData,
-        header_image: cleanData.header_image === null ? undefined : cleanData.header_image,
-        // S'assurer que header_image_overlay est une string
-        header_image_overlay: cleanData.header_image_overlay !== undefined ? String(cleanData.header_image_overlay) : undefined
+        header_image: cleanData.header_image === null ? undefined : cleanData.header_image
       };
       
       const updatedNote = { ...currentNote, ...sanitizedUpdateData, updated_at: new Date().toISOString() };

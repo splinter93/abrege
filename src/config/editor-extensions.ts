@@ -4,6 +4,7 @@
  */
 
 import StarterKit from '@tiptap/starter-kit';
+import Blockquote from '@tiptap/extension-blockquote';
 import Underline from '@tiptap/extension-underline';
 import TextAlign from '@tiptap/extension-text-align';
 import BulletList from '@tiptap/extension-bullet-list';
@@ -72,7 +73,9 @@ export function createEditorExtensions(
         // Configuration minimale pour éviter les conflits de curseur
         codeBlock: false, // Désactiver le codeBlock natif
         hardBreak: false, // Désactiver les sauts de ligne forcés
+        blockquote: false, // Désactiver le blockquote natif pour utiliser notre extension
       }),
+      Blockquote,
       Underline,
       TextAlign.configure({ types: ['heading', 'paragraph'] }),
       BulletList,

@@ -136,7 +136,7 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
   const [headerImageUrl, setHeaderImageUrl] = React.useState<string | null>(note?.header_image || null);
   const [headerOffset, setHeaderOffset] = React.useState<number>(50);
   const [headerBlur, setHeaderBlur] = React.useState<number>(0);
-  const [headerOverlay, setHeaderOverlay] = React.useState<string>('0');
+  const [headerOverlay, setHeaderOverlay] = React.useState<number>(0);
   const [titleInImage, setTitleInImage] = React.useState<boolean>(false);
   const [imageMenuOpen, setImageMenuOpen] = React.useState(false);
   const [imageMenuTarget, setImageMenuTarget] = React.useState<'header' | 'content'>('header');
@@ -225,7 +225,7 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
     if (typeof note?.header_image_blur === 'number') setHeaderBlur(note.header_image_blur);
   }, [note?.header_image_blur]);
   React.useEffect(() => {
-    if (typeof note?.header_image_overlay === 'string') setHeaderOverlay(note.header_image_overlay);
+    if (typeof note?.header_image_overlay === 'number') setHeaderOverlay(note.header_image_overlay);
   }, [note?.header_image_overlay]);
   React.useEffect(() => {
     if (typeof note?.header_title_in_image === 'boolean') setTitleInImage(note.header_title_in_image);
@@ -1068,7 +1068,7 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
               headerImageUrl={headerImageUrl}
               headerImageOffset={headerOffset}
               headerImageBlur={headerBlur}
-              headerImageOverlay={parseFloat(headerOverlay) || 0}
+              headerImageOverlay={headerOverlay}
               headerTitleInImage={titleInImage}
               onHeaderChange={handleHeaderChange}
               onHeaderOffsetChange={async (offset) => {
@@ -1105,11 +1105,11 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
                 const oldOverlay = headerOverlay;
                 try {
                   // 1. Appeler l'API en premier
-                  await v2UnifiedApi.updateNote(noteId, { header_image_overlay: overlay.toString() }, userId);
+                  await v2UnifiedApi.updateNote(noteId, { header_image_overlay: overlay }, userId);
                   
                   // 2. Si l'API réussit, mettre à jour l'état local
-                  setHeaderOverlay(overlay.toString());
-                  updateNote(noteId, { header_image_overlay: overlay.toString() });
+                  setHeaderOverlay(overlay);
+                  updateNote(noteId, { header_image_overlay: overlay });
                 } catch (error) {
                   // 3. En cas d'échec, restaurer l'ancienne valeur
                   logger.error(LogCategory.EDITOR, 'Erreur lors de la sauvegarde de l\'overlay d\'image', error);

@@ -1,6 +1,5 @@
 import React from 'react';
 import { Editor } from '@tiptap/react';
-import { FiMessageSquare } from 'react-icons/fi';
 import Tooltip from '@/components/Tooltip';
 
 interface BlockquoteButtonProps {
@@ -27,7 +26,7 @@ const BlockquoteButton: React.FC<BlockquoteButtonProps> = ({ editor }) => {
         aria-label="Citation"
         type="button"
       >
-        <FiMessageSquare size={16} />
+        <span style={{ fontSize: '16px', fontWeight: 'bold', fontFamily: 'serif' }}>❝</span>
       </button>
     </Tooltip>
   );
