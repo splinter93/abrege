@@ -737,10 +737,13 @@ h1 {
   margin-top: 0 !important;
 }
 
-/* H2 - Ultra-gras partout */
+/* H2 - Ultra-gras partout - SPÉCIFICITÉ MAXIMALE */
 .markdown-body h2,
 .ProseMirror h2,
 .editor-content h2,
+.editor-content-wrapper h2,
+.noteLayout h2,
+.noteLayout-content h2,
 h2 {
   font-size: 1.75rem !important;
   font-weight: 900 !important;
@@ -760,10 +763,13 @@ h2 {
   margin-top: 0 !important;
 }
 
-/* H3 - Ultra-gras partout */
+/* H3 - Ultra-gras partout - SPÉCIFICITÉ MAXIMALE */
 .markdown-body h3,
 .ProseMirror h3,
 .editor-content h3,
+.editor-content-wrapper h3,
+.noteLayout h3,
+.noteLayout-content h3,
 h3 {
   font-size: 1.5rem !important;
   font-weight: 900 !important;
@@ -781,6 +787,26 @@ h3 {
 .editor-content > h3:first-child,
 .markdown-body > h3:first-child {
   margin-top: 0 !important;
+}
+
+/* FORCER LE FONT-WEIGHT ULTRA-GRAS - SPÉCIFICITÉ MAXIMALE */
+/* Ces règles ont une spécificité plus élevée que les styles de chat */
+.noteLayout .markdown-body h2,
+.noteLayout .ProseMirror h2,
+.noteLayout .editor-content h2,
+.noteLayout .editor-content-wrapper h2,
+.noteLayout .noteLayout-content h2,
+.noteLayout h2 {
+  font-weight: 900 !important;
+}
+
+.noteLayout .markdown-body h3,
+.noteLayout .ProseMirror h3,
+.noteLayout .editor-content h3,
+.noteLayout .editor-content-wrapper h3,
+.noteLayout .noteLayout-content h3,
+.noteLayout h3 {
+  font-weight: 900 !important;
 }
 
 /* H4 - Très gras partout */
