@@ -71,11 +71,6 @@ export class OpenAPIToolsGenerator {
       // Paramètres
       const parameters = this.extractParameters(operation);
 
-      // Vérifier si le tool est utile pour les LLMs
-      if (!this.isToolUseful(operation, method, endpoint)) {
-        return null;
-      }
-
       return {
         name: toolName,
         description,
@@ -168,54 +163,6 @@ export class OpenAPIToolsGenerator {
       return this.schema.components.schemas[refPath] || schema;
     }
     return schema;
-  }
-
-  /**
-   * Déterminer si un tool est utile pour les LLMs
-   */
-  private isToolUseful(operation: any, method: string, endpoint: string): boolean {
-    // Endpoints utiles pour les LLMs (API V2)
-    const usefulEndpoints = [
-      // Notes
-      '/note/create',
-      '/note/{ref}',
-      '/note/{ref}/update',
-      '/note/{ref}/move',
-      '/note/{ref}/insert-content',
-      '/note/{ref}/table-of-contents',
-      '/note/recent',
-      
-      // Classeurs
-      '/classeur/create',
-      '/classeurs',
-      '/classeur/{ref}/tree',
-      
-      // Dossiers
-      '/folder/create',
-      '/folder/{ref}/tree',
-      
-      // Recherche
-      '/search',
-      '/files/search',
-      
-      // Utilisateur
-      '/me',
-      '/stats',
-      
-      // Gestion unifiée
-      '/delete/{resource}/{ref}'
-    ];
-
-    // Vérifier si l'endpoint est utile - LOGIQUE AMÉLIORÉE
-    return usefulEndpoints.some(usefulEndpoint => {
-      // Créer un pattern regex pour matcher les endpoints avec paramètres
-      const pattern = usefulEndpoint
-        .replace(/\{([^}]+)\}/g, '[^/]+') // Remplacer {param} par [^/]+
-        .replace(/\//g, '\\/'); // Échapper les slashes
-      
-      const regex = new RegExp(`^${pattern}$`);
-      return regex.test(endpoint);
-    });
   }
 
   /**

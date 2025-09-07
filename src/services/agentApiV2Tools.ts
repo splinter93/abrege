@@ -836,6 +836,7 @@ export class AgentApiV2Tools {
     const { 
       q: query, 
       limit = 20, 
+      classeur_id, // ✅ NOUVEAU: Ajouter le filtre par classeur_id
       type = 'all',
       offset = 0,
       created_from,
@@ -872,6 +873,9 @@ export class AgentApiV2Tools {
       queryBuilder = queryBuilder.or(`filename.ilike.%${query}%,description.ilike.%${query}%`);
       
       // Filtres optionnels (conformes à l'API V2)
+      if (classeur_id) { // ✅ NOUVEAU: Appliquer le filtre
+        queryBuilder = queryBuilder.eq('classeur_id', classeur_id);
+      }
       if (type && type !== 'all') {
         // Supporte les types internes (pdf, image, csv) ET MIME types
         queryBuilder = queryBuilder.or(`mime_type.ilike.%${type}%,filename.ilike.%.${type}%`);
@@ -1024,6 +1028,7 @@ export class AgentApiV2Tools {
         // 🔧 CORRECTION: Si les capacités incluent 'function_calls', retourner tous les outils
         if (capabilities.includes('function_calls')) {
           console.log('[AgentApiV2Tools] 🔧 Capacité function_calls détectée, tous les outils disponibles');
+          // Ne pas filtrer, garder tous les tools
         } else {
           // Filtrage strict par nom d'outil (pour les capacités spécifiques)
           filteredTools = allTools.filter(tool => capabilities.includes(tool.name));
@@ -1323,37 +1328,47 @@ export class AgentApiV2Tools {
     const { ref, ops, dry_run = true } = params;
     
     try {
+      // TODO: Implémenter la logique métier réelle pour appliquer les opérations de contenu.
+      // Le service devrait utiliser une bibliothèque de diff/patch et gérer les différents types de cibles et d'opérations.
+      
       // Récupérer la note
       const { data: note, error: noteError } = await supabase
         .from('articles')
         .select('*')
-        .eq('id', ref)
+        .or(`id.eq.${ref},slug.eq.${ref}`) // Utiliser `or` pour slug ou id
         .eq('user_id', userId)
         .single();
       
       if (noteError || !note) {
-        return { success: false, error: 'Note non trouvée' };
+        return { success: false, error: 'Note non trouvée', code: 'TARGET_NOT_FOUND' };
       }
       
       // Simuler les opérations de contenu (pour l'instant)
-      const results = ops.map((op: any) => ({
+      const results = (ops || []).map((op: any) => ({
         id: op.id,
         status: 'applied',
         matches: 1,
-        preview: 'Opération simulée'
+        preview: `Opération simulée pour ${op.action} sur ${op.target.type}`
       }));
       
       return {
         success: true,
         data: {
-          note_id: ref,
+          note_id: note.id,
           ops_results: results,
+          etag: note.etag || `W/"${Date.now()}"`,
+          diff: '', // Diff vide pour la simulation
+          content: note.markdown_content
+        },
+        meta: {
           dry_run,
-          char_diff: { added: 0, removed: 0 }
+          char_diff: { added: 0, removed: 0 },
+          execution_time: 50
         }
       };
     } catch (error) {
-      return { success: false, error: `Erreur lors des opérations de contenu: ${error}` };
+      const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
+      return { success: false, error: `Erreur lors des opérations de contenu: ${errorMessage}` };
     }
   }
 
@@ -1576,10 +1591,11 @@ export class AgentApiV2Tools {
   private async listAgentsInternal(params: any, userId: string, supabase: any): Promise<any> {
     try {
       const { data: agents, error } = await supabase
-        .from('specialized_agents')
+        .from('agents')
         .select('*')
         .eq('user_id', userId)
         .eq('is_active', true)
+        .eq('is_endpoint_agent', true)
         .order('created_at');
       
       if (error) {
@@ -1597,8 +1613,9 @@ export class AgentApiV2Tools {
     
     try {
       const { data, error } = await supabase
-        .from('specialized_agents')
+        .from('agents')
         .insert({
+          name: display_name,
           display_name,
           slug,
           description,
@@ -1609,6 +1626,7 @@ export class AgentApiV2Tools {
           max_tokens,
           user_id: userId,
           is_active: true,
+          is_endpoint_agent: true,
           created_at: new Date().toISOString()
         })
         .select()
@@ -1625,14 +1643,15 @@ export class AgentApiV2Tools {
   }
 
   private async getAgentInternal(params: any, userId: string, supabase: any): Promise<any> {
-    const { ref } = params;
+    const { agentId } = params;
     
     try {
       const { data: agent, error } = await supabase
-        .from('specialized_agents')
+        .from('agents')
         .select('*')
-        .eq('id', ref)
+        .eq('id', agentId)
         .eq('user_id', userId)
+        .eq('is_endpoint_agent', true)
         .single();
       
       if (error || !agent) {
@@ -1646,14 +1665,15 @@ export class AgentApiV2Tools {
   }
 
   private async deleteAgentInternal(params: any, userId: string, supabase: any): Promise<any> {
-    const { ref } = params;
+    const { agentId } = params;
     
     try {
       const { error } = await supabase
-        .from('specialized_agents')
-        .delete()
-        .eq('id', ref)
-        .eq('user_id', userId);
+        .from('agents')
+        .update({ is_active: false, updated_at: new Date().toISOString() })
+        .eq('id', agentId)
+        .eq('user_id', userId)
+        .eq('is_endpoint_agent', true);
       
       if (error) {
         return { success: false, error: `Erreur lors de la suppression: ${error.message}` };
@@ -1666,17 +1686,18 @@ export class AgentApiV2Tools {
   }
 
   private async patchAgentInternal(params: any, userId: string, supabase: any): Promise<any> {
-    const { ref, ...updates } = params;
+    const { agentId, ...updates } = params;
     
     try {
       const { data, error } = await supabase
-        .from('specialized_agents')
+        .from('agents')
         .update({
           ...updates,
           updated_at: new Date().toISOString()
         })
-        .eq('id', ref)
+        .eq('id', agentId)
         .eq('user_id', userId)
+        .eq('is_endpoint_agent', true)
         .select()
         .single();
       
@@ -1694,36 +1715,58 @@ export class AgentApiV2Tools {
     const { ref, input, image, options = {} } = params;
     
     try {
+      // 🔧 CORRECTION: Utiliser V2ResourceResolver pour gérer ID ou slug
+      const { V2ResourceResolver } = await import('@/utils/v2ResourceResolver');
+      const resolveResult = await V2ResourceResolver.resolveRef(ref, 'agent', userId, {
+        operation: 'executeAgent',
+        component: 'AgentApiV2Tools'
+      });
+
+      if (!resolveResult.success) {
+        return { success: false, error: resolveResult.error, code: 'AGENT_NOT_FOUND' };
+      }
+      
+      const agentId = resolveResult.id;
+      
       // Récupérer l'agent
       const { data: agent, error: agentError } = await supabase
-        .from('specialized_agents')
+        .from('agents')
         .select('*')
-        .eq('id', ref)
+        .eq('id', agentId)
         .eq('user_id', userId)
         .eq('is_active', true)
+        .eq('is_endpoint_agent', true)
         .single();
       
       if (agentError || !agent) {
-        return { success: false, error: 'Agent non trouvé ou inactif' };
+        return { success: false, error: 'Agent non trouvé ou inactif', code: 'AGENT_INACTIVE' };
       }
       
       // Simuler l'exécution de l'agent
-      const response = `Réponse simulée de l'agent ${agent.display_name}: ${input}`;
+      const response = `Réponse simulée de l'agent ${agent.display_name || agent.name}: ${input}`;
       
       return {
         success: true,
         data: {
           ref,
-          agent_name: agent.display_name,
+          agent_name: agent.display_name || agent.name,
           agent_id: agent.id,
           response,
           execution_time: 150,
           model_used: agent.model,
           provider: agent.provider
+        },
+        meta: {
+          timestamp: new Date().toISOString(),
+          agent_slug: agent.slug,
+          agent_type: agent.is_chat_agent ? 'chat' : 'endpoint',
+          input_length: input.length,
+          response_length: response.length
         }
       };
     } catch (error) {
-      return { success: false, error: `Erreur lors de l'exécution: ${error}` };
+      const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
+      return { success: false, error: `Erreur lors de l'exécution: ${errorMessage}`, code: 'EXECUTION_FAILED' };
     }
   }
 }
