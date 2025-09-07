@@ -25,12 +25,24 @@
 }
 
 /* Réduction espacement titre-texte - page publique */
-.public-note-content-wrapper .noteLayout-title {
-  padding-top: 40px !important; /* Réduit de 55px à 40px */
+.public-note-container .noteLayout-title {
+  padding-top: 4px !important; /* Réduit de 20px à 8px */
+  padding-bottom: 0 !important; /* Supprime le padding-bottom du container */
 }
 
-.public-note-content-wrapper .noteLayout-title h1 {
-  padding: 0 0 2px 0 !important; /* Réduit de 4px à 2px */
+.public-note-container .noteLayout-title h1 {
+  padding: 0 0 25px 0 !important; /* Padding en dessous pour décaler le texte */
+}
+
+/* Réduction padding-top du contenu - page publique */
+.public-note-container .noteLayout-content {
+  padding-top: 0px !important; /* Supprime le padding-top */
+  margin-top: -10px !important; /* Margin négatif pour remonter le texte */
+}
+
+/* Suppression padding-bottom du container editor-container-width */
+.public-note-container .noteLayout-title .editor-container-width {
+  padding-bottom: 0 !important; /* Supprime le padding en dessous du titre */
 }
 
 /* Forcer le thème sombre sur le container principal */
