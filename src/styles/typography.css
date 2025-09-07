@@ -579,14 +579,9 @@ body.public-note-page {
   margin: 0 auto;
 }
 
-/* Container de la TOC publique */
+/* Container de la TOC publique - styles de base seulement */
 .public-toc-container {
-  position: fixed;
-  top: 380px;
-  right: 0;
-  padding-right: 0;
-  min-width: 220px;
-  max-width: 320px;
+  /* Position et layout gérés par public-note.css */
   z-index: 20;
 }
 
