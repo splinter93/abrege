@@ -1913,18 +1913,26 @@ export class AgentApiV2Tools {
     const { ref, input, image, options = {} } = params;
     
     try {
-      // 🔧 CORRECTION: Utiliser V2ResourceResolver pour gérer ID ou slug
-      const { V2ResourceResolver } = await import('@/utils/v2ResourceResolver');
-      const resolveResult = await V2ResourceResolver.resolveRef(ref, 'note', userId, {
-        operation: 'executeAgent',
-        component: 'AgentApiV2Tools'
-      });
-
-      if (!resolveResult.success) {
-        return { success: false, error: resolveResult.error, code: 'AGENT_NOT_FOUND' };
-      }
+      // 🔧 CORRECTION: Recherche directe de l'agent par slug ou ID
+      let agentId = ref;
       
-      const agentId = resolveResult.id;
+      // Si ce n'est pas un UUID, chercher par slug
+      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(ref);
+      if (!isUUID) {
+        const { data: agentBySlug, error: slugError } = await supabase
+          .from('agents')
+          .select('id')
+          .eq('slug', ref)
+          .eq('is_endpoint_agent', true)
+          .eq('is_active', true)
+          .single();
+          
+        if (slugError || !agentBySlug) {
+          return { success: false, error: 'Agent non trouvé', code: 'AGENT_NOT_FOUND' };
+        }
+        
+        agentId = agentBySlug.id;
+      }
       
       // Récupérer l'agent
       const { data: agent, error: agentError } = await supabase

@@ -1,4 +1,5 @@
 import type { GroqRoundParams, GroqRoundResult, GroqLimits } from '../types/groqTypes';
+import type { LLMResponse } from '../types/agentTypes';
 import { GroqProvider } from '../providers';
 import { GroqToolExecutor } from './GroqToolExecutor';
 import { agentApiV2Tools } from '@/services/agentApiV2Tools';
@@ -38,7 +39,7 @@ export class GroqOrchestrator {
   private toolExecutor: GroqToolExecutor;
 
   /** Historique courant (pour dédup intelligente des actions) */
-  private currentHistoryRef: any[] = [];
+  private currentHistoryRef: ChatMessage[] = [];
 
   /** Budgets globaux anti-boucle **/
   private readonly MAX_TOTAL_TOOL_CALLS = 12;
@@ -111,7 +112,7 @@ export class GroqOrchestrator {
       let allToolCalls: ToolCall[] = [];
       let allResults: NormalizedToolResult[] = [];
 
-      let finalResponse: any = null;
+      let finalResponse: LLMResponse | null = null;
       let isRelance = false;
       let hasNewToolCalls = false;
 
@@ -184,50 +185,56 @@ export class GroqOrchestrator {
             userToken,
             relanceCount,
             traceId,
-            false // autoExecuteNewTools: on veut décider avant d'exécuter
+            true // autoExecuteNewTools: relance automatique ChatGPT-like
           );
 
           finalResponse = r.response;
           isRelance = r.isRelance;
           hasNewToolCalls = r.hasNewToolCalls;
 
-          // Décision explicite
-          const decision = this.parseDecision((finalResponse as any)?.content);
-          if (decision.type === 'STOP' || decision.type === 'ASK_CLARIFICATION') {
-            stopRequested = true;
-            break;
-          }
+          // ✅ ChatGPT-like: Pas de décision explicite bloquante
+          // Le LLM continue naturellement s'il a de nouveaux tool calls
 
-          // Nouveaux tools proposés ?
+          // ✅ ChatGPT-like: Le LLM choisit librement de continuer ou d'arrêter
           let nextCalls: ToolCall[] = Array.isArray((finalResponse as any)?.tool_calls)
             ? (finalResponse as any).tool_calls
             : [];
           nextCalls = this.deduplicateToolCalls(nextCalls);
-          if (nextCalls.length > this.limits.maxToolCalls) {
-            logger.warn(`[GroqOrchestrator] ⚠️ relance tool calls > max — trim`);
-            nextCalls = nextCalls.slice(0, this.limits.maxToolCalls);
-          }
+          
+          if (nextCalls.length > 0) {
+            // Le LLM a choisi de continuer avec de nouveaux tool calls
+            logger.info(`[GroqOrchestrator] 🔄 LLM choisit de continuer avec ${nextCalls.length} nouveaux tool calls`);
+            
+            if (nextCalls.length > this.limits.maxToolCalls) {
+              logger.warn(`[GroqOrchestrator] ⚠️ relance tool calls > max — trim`);
+              nextCalls = nextCalls.slice(0, this.limits.maxToolCalls);
+            }
 
-          // Loop guard: même set de tools répété
-          const setSig = this.signatureOfSet(nextCalls);
-          if (setSig && seenSets.has(setSig)) {
-            logger.warn(`[GroqOrchestrator] ⛔ même set de tools détecté — arrêt pour éviter la boucle`);
+            // Loop guard: même set de tools répété
+            const setSig = this.signatureOfSet(nextCalls);
+            if (setSig && seenSets.has(setSig)) {
+              logger.warn(`[GroqOrchestrator] ⛔ même set de tools détecté — arrêt pour éviter la boucle`);
+              break;
+            }
+            if (setSig) seenSets.add(setSig);
+
+            // Budgets si on ajoute la vague suivante
+            if (allToolCalls.length + nextCalls.length > this.MAX_TOTAL_TOOL_CALLS) {
+              logger.warn(`[GroqOrchestrator] ⛔ exécutions supplémentaires dépasseraient le cap global`);
+              break;
+            }
+            if (Date.now() - startWall > this.MAX_WALLCLOCK_MS) {
+              logger.warn(`[GroqOrchestrator] ⛔ budget temps dépassé avant nouvelle vague`);
+              break;
+            }
+
+            // Préparer la prochaine vague
+            waveToolCalls = nextCalls;
+          } else {
+            // Le LLM a choisi d'arrêter et de donner sa réponse finale
+            logger.info(`[GroqOrchestrator] ✅ LLM choisit d'arrêter - réponse finale fournie`);
             break;
           }
-          if (setSig) seenSets.add(setSig);
-
-          // Budgets si on ajoute la vague suivante
-          if (allToolCalls.length + nextCalls.length > this.MAX_TOTAL_TOOL_CALLS) {
-            logger.warn(`[GroqOrchestrator] ⛔ exécutions supplémentaires dépasseraient le cap global`);
-            break;
-          }
-          if (Date.now() - startWall > this.MAX_WALLCLOCK_MS) {
-            logger.warn(`[GroqOrchestrator] ⛔ budget temps dépassé avant nouvelle vague`);
-            break;
-          }
-
-          // Préparer la prochaine vague
-          waveToolCalls = nextCalls;
           relanceCount += 1;
           if (relanceCount > this.limits.maxRelances) {
             logger.warn(`[GroqOrchestrator] ⚠️ limite de relances atteinte`);
@@ -719,24 +726,16 @@ export class GroqOrchestrator {
     return systems.filter(Boolean).join('\n\n');
   }
 
-  /** Directive de décision pour forcer STOP/CONTINUE/ASK_CLARIFICATION */
+  /** ✅ ChatGPT-like: Choix libre du LLM à chaque relance */
   private buildDecisionBanner(): string {
     return [
-      '🧭 DECISION POLICY (OBLIGATOIRE) :',
-      "- Commence ta réponse par `DECISION: STOP` ou `DECISION: CONTINUE(tool_name)` ou `DECISION: ASK_CLARIFICATION`.",
-      "- STOP si l'objectif utilisateur est atteint ou si les résultats actuels suffisent à répondre.",
-      "- CONTINUE(tool_name) uniquement si un outil précis est strictement nécessaire pour progresser.",
-      "- ASK_CLARIFICATION si une information manque pour continuer proprement.",
+      '🧭 COMPORTEMENT NATUREL (comme ChatGPT) :',
+      "- À chaque relance, tu as le CHOIX LIBRE :",
+      "  • Si tu as besoin d'autres outils → utilise-les (tool_calls)",
+      "  • Si tu as assez d'informations → donne ta réponse finale (sans tool_calls)",
+      "- Pas de format de décision spécial requis.",
+      "- Continue naturellement jusqu'à ce que tu aies tout ce qu'il faut pour répondre.",
     ].join('\n');
-  }
-
-  private parseDecision(text?: string): { type: 'STOP'|'CONTINUE'|'ASK_CLARIFICATION', tool?: string } {
-    const t = (text || '').trim().toUpperCase();
-    if (t.startsWith('DECISION: STOP')) return { type: 'STOP' };
-    if (t.startsWith('DECISION: ASK_CLARIFICATION')) return { type: 'ASK_CLARIFICATION' };
-    const m = t.match(/^DECISION:\s*CONTINUE\(([^)]+)\)/);
-    if (m) return { type: 'CONTINUE', tool: (m[1] || '').trim() };
-    return { type: 'STOP' }; // fail-safe
   }
 
   private signatureOfSet(calls: ToolCall[]): string {
