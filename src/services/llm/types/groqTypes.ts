@@ -1,12 +1,13 @@
 import type { ChatMessage } from '@/types/chat';
 import type { AppContext } from '../types';
+import type { AgentConfig, LLMResponse, ToolCall, ToolResult, SessionIdentity } from './agentTypes';
 
 // 🎯 Types pour l'orchestration des rounds
 export interface GroqRoundParams {
   message: string;
   appContext: AppContext;
   sessionHistory: ChatMessage[];
-  agentConfig?: any;
+  agentConfig?: AgentConfig;
   userToken: string;
   sessionId: string;
 }
@@ -15,8 +16,8 @@ export interface GroqRoundResult {
   success: boolean;
   content?: string;
   reasoning?: string;
-  tool_calls?: any[];
-  tool_results?: any[];
+  tool_calls?: ToolCall[];
+  tool_results?: ToolResult[];
   sessionId: string;
   is_relance?: boolean;
   has_new_tool_calls?: boolean;
@@ -32,8 +33,8 @@ export interface HistoryBuildContext {
   systemContent: string;
   userMessage: string;
   cleanedHistory: ChatMessage[];
-  toolCalls: any[];
-  toolResults: any[];
+  toolCalls: ToolCall[];
+  toolResults: ToolResult[];
 }
 
 export interface HistoryBuildResult {
@@ -46,7 +47,7 @@ export interface HistoryBuildResult {
 export interface ToolExecutionResult {
   tool_call_id: string;
   name: string;
-  result: any;
+  result: unknown;
   success: boolean;
   timestamp: string;
 }

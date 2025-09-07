@@ -51,7 +51,24 @@ const DEFAULT_TEMPLATES: Record<string, SystemMessageTemplate> = {
 - Tu peux utiliser les outils disponibles pour interagir avec l'API Scrivia
 - Choisis l'outil le plus approprié pour répondre à la demande
 - Fournis les paramètres requis pour chaque outil
-- Explique tes actions de manière claire`,
+- Explique tes actions de manière claire
+
+## 🎯 RÈGLES CRITIQUES POUR LES TOOL CALLS
+**IMPORTANT :** Utilise UN SEUL tool call à la fois, sauf si absolument nécessaire.
+
+### Règles d'or :
+1. **UNE ACTION = UN TOOL CALL** : Pour créer une note, utilise SEULEMENT createNote
+2. **ÉVITE LES ACTIONS MULTIPLES** : Ne crée pas plusieurs notes, classeurs ou dossiers en une fois
+3. **PRIORITÉ À L'EFFICACITÉ** : Si tu peux répondre sans outils, fais-le
+4. **ÉVALUATION OBLIGATOIRE** : Avant chaque tool call, demande-toi : "Est-ce vraiment nécessaire ?"
+
+### Exemples :
+- ✅ "Créer une note" → UN SEUL createNote
+- ❌ "Créer une note" → createNote + createClasseur + createDossier
+- ✅ "Organiser mes notes" → UN SEUL listNotes puis réponse textuelle
+- ❌ "Organiser mes notes" → listNotes + createClasseur + moveNote + updateNote
+
+**RÉSULTAT ATTENDU :** Maximum 1-2 tool calls par demande utilisateur.`,
     variables: [],
     isDefault: false
   },
@@ -72,7 +89,24 @@ const DEFAULT_TEMPLATES: Record<string, SystemMessageTemplate> = {
 - Tu peux utiliser les outils disponibles pour interagir avec l'API Scrivia
 - Choisis l'outil le plus approprié pour répondre à la demande
 - Fournis les paramètres requis pour chaque outil
-- Explique tes actions de manière claire`,
+- Explique tes actions de manière claire
+
+## 🎯 RÈGLES CRITIQUES POUR LES TOOL CALLS
+**IMPORTANT :** Utilise UN SEUL tool call à la fois, sauf si absolument nécessaire.
+
+### Règles d'or :
+1. **UNE ACTION = UN TOOL CALL** : Pour créer une note, utilise SEULEMENT createNote
+2. **ÉVITE LES ACTIONS MULTIPLES** : Ne crée pas plusieurs notes, classeurs ou dossiers en une fois
+3. **PRIORITÉ À L'EFFICACITÉ** : Si tu peux répondre sans outils, fais-le
+4. **ÉVALUATION OBLIGATOIRE** : Avant chaque tool call, demande-toi : "Est-ce vraiment nécessaire ?"
+
+### Exemples :
+- ✅ "Créer une note" → UN SEUL createNote
+- ❌ "Créer une note" → createNote + createClasseur + createDossier
+- ✅ "Organiser mes notes" → UN SEUL listNotes puis réponse textuelle
+- ❌ "Organiser mes notes" → listNotes + createClasseur + moveNote + updateNote
+
+**RÉSULTAT ATTENDU :** Maximum 1-2 tool calls par demande utilisateur.`,
     variables: ['context.type', 'context.name', 'context.id', 'context.content'],
     isDefault: false
   },
