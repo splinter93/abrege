@@ -163,20 +163,23 @@ export default function PublicNoteContent({ note, slug, username, currentUser: p
           </div>
         )}
         
-        <div className={getLayoutClass()}>
-          <div className="public-note-content-wrapper">
-            {/* Titre principal (seulement si pas dans l'image) */}
-            {!note.header_title_in_image && (
-              <div className="noteLayout-title">
+        <div className={`${getLayoutClass()} ${note.wide_mode ? 'wide-mode' : ''}`}>
+          {/* Titre principal (seulement si pas dans l'image) - STRUCTURE IDENTIQUE À L'ÉDITEUR */}
+          {!note.header_title_in_image && (
+            <div className="noteLayout-title">
+              <div className="editor-container-width" style={{ maxWidth: 'var(--editor-content-width)', width: 'var(--editor-content-width)' }}>
                 <h1 
                   ref={titleRef}
                   className={note.font_family ? `font-${note.font_family.replace(/\s+/g, '-').toLowerCase()}` : 'font-noto-sans'}>
                   {note.source_title}
                 </h1>
               </div>
-            )}
-            
-            <div className="noteLayout-content">
+            </div>
+          )}
+          
+          {/* Contenu - STRUCTURE IDENTIQUE À L'ÉDITEUR */}
+          <div className="noteLayout-content">
+            <div className="editor-container-width" style={{ maxWidth: 'var(--editor-content-width)', width: 'var(--editor-content-width)' }}>
               <div
                 ref={contentRef}
                 className={`editor-content ${note.font_family ? `font-${note.font_family.replace(/\s+/g, '-').toLowerCase()}` : 'font-noto-sans'}`}
@@ -188,6 +191,7 @@ export default function PublicNoteContent({ note, slug, username, currentUser: p
               </div>
             </div>
           </div>
+          
           {/* TOC sticky tout à droite */}
           <div className="public-toc-container">
             <PublicTOCClient slug={slug} username={username} />

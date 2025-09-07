@@ -61,6 +61,11 @@ export interface SpecializedAgentRequest {
 export interface SpecializedAgentResponse {
   success: boolean;
   result?: Record<string, unknown>;
+  data?: {
+    response: string;
+    model: string;
+    provider: string;
+  };
   error?: string;
   metadata?: {
     agentId: string;

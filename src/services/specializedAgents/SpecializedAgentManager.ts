@@ -21,6 +21,7 @@ import {
   OpenAPISchema,
   OpenAPIProperty
 } from '@/types/specializedAgents';
+import { GroqRoundResult } from '@/services/llm/types/groqTypes';
 
 // Client Supabase admin
 const supabase = createClient(
@@ -92,7 +93,18 @@ export class SpecializedAgentManager {
       // 3. Préparation du contenu multimodale si le modèle le supporte
       let processedInput = input;
       let isMultimodal = false;
-      let groqPayload: any = null;
+      let groqPayload: {
+        messages: Array<{
+          role: string;
+          content: string | Array<{ type: string; text?: string; image_url?: { url: string } }>;
+        }>;
+        model: string;
+        temperature?: number;
+        max_tokens?: number;
+        top_p?: number;
+        reasoning_effort?: string;
+        stream?: boolean;
+      } | null = null;
       
       logger.info(`[SpecializedAgentManager] 🔍 Vérification multimodale: ${agent.model}`, { 
         traceId, 
@@ -150,7 +162,7 @@ export class SpecializedAgentManager {
       }
 
       // 4. Exécution selon le type de modèle
-      let result: any;
+      let result: SpecializedAgentResponse;
       
       logger.info(`[SpecializedAgentManager] 🔍 Détection multimodale: ${isMultimodal}, payload: ${!!groqPayload}`, { 
         traceId, 
@@ -167,7 +179,7 @@ export class SpecializedAgentManager {
         const systemMessage = this.buildSpecializedSystemMessage(agent, input);
         const userMessage = `Exécution de tâche spécialisée: ${JSON.stringify(input)}`;
 
-        result = await this.orchestrator.executeRound({
+        const orchestratorResult = await this.orchestrator.executeRound({
           message: userMessage,
           sessionHistory: [],
           agentConfig: agent,
@@ -179,6 +191,22 @@ export class SpecializedAgentManager {
             name: agent.display_name || agent.name
           }
         });
+        
+        // Convertir GroqRoundResult en SpecializedAgentResponse
+        result = {
+          success: orchestratorResult.success,
+          result: {
+            response: orchestratorResult.content || 'Réponse générée',
+            model: agent.model,
+            provider: 'groq'
+          },
+          error: orchestratorResult.error,
+          metadata: {
+            agentId,
+            executionTime: 0, // Sera calculé plus tard
+            model: agent.model
+          }
+        };
       }
 
       // 5. Formater selon le schéma de sortie
@@ -210,7 +238,9 @@ export class SpecializedAgentManager {
       return {
         success: true,
         data: {
-          response: formattedResult.result || formattedResult.content || 'Réponse générée',
+          response: typeof formattedResult.result === 'string' ? formattedResult.result : 
+                   typeof formattedResult.content === 'string' ? formattedResult.content : 
+                   'Réponse générée',
           model: agent.model,
           provider: 'groq'
         },
@@ -348,10 +378,21 @@ export class SpecializedAgentManager {
    * Exécute directement un modèle multimodal avec l'API Groq
    */
   private async executeMultimodalDirect(
-    groqPayload: any, 
-    agent: any, 
+    groqPayload: {
+      messages: Array<{
+        role: string;
+        content: string | Array<{ type: string; text?: string; image_url?: { url: string } }>;
+      }>;
+      model: string;
+      temperature?: number;
+      max_tokens?: number;
+      top_p?: number;
+      reasoning_effort?: string;
+      stream?: boolean;
+    }, 
+    agent: SpecializedAgentConfig, 
     traceId: string
-  ): Promise<any> {
+  ): Promise<SpecializedAgentResponse> {
     try {
       // Ajouter le message système au payload
       const systemMessage = {
@@ -365,8 +406,8 @@ export class SpecializedAgentManager {
         traceId, 
         model: agent.model,
         messagesCount: groqPayload.messages.length,
-        hasImage: groqPayload.messages.some((msg: any) => 
-          Array.isArray(msg.content) && msg.content.some((c: any) => c.type === 'image_url')
+        hasImage: groqPayload.messages.some((msg) => 
+          Array.isArray(msg.content) && msg.content.some((c) => c.type === 'image_url')
         ),
         payload: JSON.stringify(groqPayload, null, 2)
       });
@@ -395,14 +436,14 @@ export class SpecializedAgentManager {
       logger.info(`[SpecializedAgentManager] ✅ Réponse multimodale reçue`, {
         traceId,
         model: agent.model,
-        hasImage: groqPayload.messages.some((msg: any) => 
-          Array.isArray(msg.content) && msg.content.some((c: any) => c.type === 'image_url')
+        hasImage: groqPayload.messages.some((msg) => 
+          Array.isArray(msg.content) && msg.content.some((c) => c.type === 'image_url')
         )
       });
 
       return {
         success: true,
-        data: {
+        result: {
           response: data.choices[0]?.message?.content || 'Réponse générée',
           model: agent.model,
           provider: 'groq'
@@ -694,14 +735,6 @@ export class SpecializedAgentManager {
     }
   }
 
-  /**
-   * Invalider le cache d'un agent
-   */
-  invalidateAgentCache(agentId: string): void {
-    this.agentCache.delete(agentId);
-    this.cacheExpiry.delete(agentId);
-    logger.dev(`[SpecializedAgentManager] 🗑️ Cache invalidé pour agent: ${agentId}`);
-  }
 
   /**
    * Vider tout le cache

@@ -125,20 +125,11 @@ body.public-note-page {
 }
 
 /* ==========================================================================
-   PADDING TITRE PAGE PUBLIQUE - AUGMENTÉ
+   PADDING TITRE PAGE PUBLIQUE - DÉLÉGUÉ À TYPOGRAPHY.CSS
    ==========================================================================
-   Augmenter le padding sous le titre pour la page publique
+   Les paddings sont maintenant gérés par typography.css avec la structure
+   identique à l'éditeur (noteLayout-title + noteLayout-content)
 */
-
-/* Titre dans la page publique (pas dans l'image) - padding augmenté */
-.public-note-content-wrapper .noteLayout-title h1 {
-  padding: 0 0 32px 0 !important; /* Augmenté de 20px à 32px */
-}
-
-/* Titre dans l'image d'en-tête - padding augmenté */
-.public-header-title h1 {
-  padding: 0 0 8px 0 !important; /* Augmenté de 4px à 8px */
-}
 
 /* ==========================================================================
    RESPONSIVE DESIGN - MOBILE PREMIUM
@@ -173,41 +164,16 @@ body.public-note-page {
     line-height: 1.2 !important;
   }
 
-  /* Wrapper du contenu - padding latéral */
-  .public-note-content-wrapper {
-    max-width: 100% !important;
-    width: 100% !important;
-    padding: 0 16px !important;
-  }
-
-  /* Titre normal - ajustements mobile */
-  .public-note-content-wrapper .noteLayout-title h1 {
-    font-size: 1.75rem !important; /* Réduit pour mobile */
-    padding: 0 0 24px 0 !important; /* Réduit pour mobile */
-    line-height: 1.2 !important;
-  }
+  /* Wrapper du contenu - padding latéral - DÉLÉGUÉ À TYPOGRAPHY.CSS */
+  /* Les styles responsive sont maintenant gérés par typography.css */
 
   /* TOC - masquer sur mobile */
   .public-note-container .public-toc-container {
     display: none !important;
   }
 
-  /* Contenu - padding ajusté */
-  .public-note-content-wrapper .noteLayout-content {
-    padding: 0 !important;
-  }
-
-  .public-note-content-wrapper .noteLayout-content .editor-content {
-    padding: 0 !important;
-  }
-
-  /* Layout principal - pas de modification nécessaire sur mobile */
-
-  /* Texte du contenu - responsive */
-  .public-note-content-wrapper .editor-content {
-    font-size: 16px !important;
-    line-height: 1.6 !important;
-  }
+  /* Contenu - DÉLÉGUÉ À TYPOGRAPHY.CSS */
+  /* Les styles responsive sont maintenant gérés par typography.css */
 
   /* Blocs de code - responsive */
   .public-note-content-wrapper .unified-code-block {
@@ -277,17 +243,8 @@ body.public-note-page {
     line-height: 1.15 !important;
   }
 
-  /* Wrapper du contenu - padding réduit */
-  .public-note-content-wrapper {
-    padding: 0 12px !important;
-  }
-
-  /* Titre normal - très compact */
-  .public-note-content-wrapper .noteLayout-title h1 {
-    font-size: 1.5rem !important; /* Encore plus petit */
-    padding: 0 0 20px 0 !important; /* Réduit */
-    line-height: 1.15 !important;
-  }
+  /* Wrapper du contenu - DÉLÉGUÉ À TYPOGRAPHY.CSS */
+  /* Les styles responsive sont maintenant gérés par typography.css */
 
   /* Badge Crafted - ajustements */
   .public-note-container .crafted-badge {
@@ -295,11 +252,8 @@ body.public-note-page {
     font-size: 12px !important;
   }
 
-  /* Texte du contenu - plus petit sur mobile */
-  .public-note-content-wrapper .editor-content {
-    font-size: 15px !important;
-    line-height: 1.5 !important;
-  }
+  /* Texte du contenu - DÉLÉGUÉ À TYPOGRAPHY.CSS */
+  /* Les styles responsive sont maintenant gérés par typography.css */
 
   /* Blocs de code - plus compacts */
   .public-note-content-wrapper .unified-code-block {
@@ -336,52 +290,16 @@ body.public-note-page {
     border-radius: 6px !important;
   }
 
-  /* Headings - responsive */
-  .public-note-content-wrapper h1 {
-    font-size: 1.5rem !important;
-    line-height: 1.2 !important;
-  }
-
-  .public-note-content-wrapper h2 {
-    font-size: 1.3rem !important;
-    line-height: 1.2 !important;
-  }
-
-  .public-note-content-wrapper h3 {
-    font-size: 1.2rem !important;
-    line-height: 1.2 !important;
-  }
-
-  .public-note-content-wrapper h4,
-  .public-note-content-wrapper h5,
-  .public-note-content-wrapper h6 {
-    font-size: 1.1rem !important;
-    line-height: 1.2 !important;
-  }
+  /* Headings - DÉLÉGUÉ À TYPOGRAPHY.CSS */
+  /* Les styles responsive sont maintenant gérés par typography.css */
 }
 
 /* ==========================================================================
    TRÈS PETIT MOBILE (360px et moins)
    ========================================================================== */
 @media (max-width: 360px) {
-  /* Wrapper du contenu - padding minimal */
-  .public-note-content-wrapper {
-    padding: 0 8px !important;
-  }
-
-  /* Titre dans l'image - ultra compact */
-  .public-header-title h1 {
-    font-size: 1.25rem !important;
-    padding: 0 0 2px 0 !important;
-    line-height: 1.1 !important;
-  }
-
-  /* Titre normal - ultra compact */
-  .public-note-content-wrapper .noteLayout-title h1 {
-    font-size: 1.25rem !important;
-    padding: 0 0 16px 0 !important;
-    line-height: 1.1 !important;
-  }
+  /* Wrapper du contenu - DÉLÉGUÉ À TYPOGRAPHY.CSS */
+  /* Les styles responsive sont maintenant gérés par typography.css */
 
   /* Image d'en-tête - hauteur minimale */
   .public-header-image {
@@ -389,11 +307,8 @@ body.public-note-page {
     margin-bottom: 16px;
   }
 
-  /* Texte du contenu - ultra compact */
-  .public-note-content-wrapper .editor-content {
-    font-size: 14px !important;
-    line-height: 1.4 !important;
-  }
+  /* Texte du contenu - DÉLÉGUÉ À TYPOGRAPHY.CSS */
+  /* Les styles responsive sont maintenant gérés par typography.css */
 
   /* Blocs de code - ultra compacts */
   .public-note-content-wrapper .unified-code-block {
@@ -430,28 +345,8 @@ body.public-note-page {
     border-radius: 4px !important;
   }
 
-  /* Headings - ultra compacts */
-  .public-note-content-wrapper h1 {
-    font-size: 1.25rem !important;
-    line-height: 1.1 !important;
-  }
-
-  .public-note-content-wrapper h2 {
-    font-size: 1.15rem !important;
-    line-height: 1.1 !important;
-  }
-
-  .public-note-content-wrapper h3 {
-    font-size: 1.1rem !important;
-    line-height: 1.1 !important;
-  }
-
-  .public-note-content-wrapper h4,
-  .public-note-content-wrapper h5,
-  .public-note-content-wrapper h6 {
-    font-size: 1rem !important;
-    line-height: 1.1 !important;
-  }
+  /* Headings - DÉLÉGUÉ À TYPOGRAPHY.CSS */
+  /* Les styles responsive sont maintenant gérés par typography.css */
 }
 
 /* ==========================================================================
@@ -471,23 +366,14 @@ body.public-note-page {
     line-height: 1.1 !important;
   }
 
-  /* Titre normal - ajustements paysage */
-  .public-note-content-wrapper .noteLayout-title h1 {
-    font-size: 1.5rem !important;
-    padding: 0 0 16px 0 !important;
-    line-height: 1.1 !important;
-  }
+  /* Titre normal - DÉLÉGUÉ À TYPOGRAPHY.CSS */
+  /* Les styles responsive sont maintenant gérés par typography.css */
 
-  /* Wrapper du contenu - padding réduit en paysage */
-  .public-note-content-wrapper {
-    padding: 0 12px !important;
-  }
+  /* Wrapper du contenu - DÉLÉGUÉ À TYPOGRAPHY.CSS */
+  /* Les styles responsive sont maintenant gérés par typography.css */
 
-  /* Texte du contenu - ajustements paysage */
-  .public-note-content-wrapper .editor-content {
-    font-size: 15px !important;
-    line-height: 1.4 !important;
-  }
+  /* Texte du contenu - DÉLÉGUÉ À TYPOGRAPHY.CSS */
+  /* Les styles responsive sont maintenant gérés par typography.css */
 }
 
 /* ==========================================================================
@@ -507,6 +393,14 @@ body.public-note-page {
   z-index: 20;
   display: block !important; /* Forcer l'affichage */
 }
+
+/* ==========================================================================
+   STRUCTURE IDENTIQUE À L'ÉDITEUR - RESPECT TOTAL DE TYPOGRAPHY.CSS
+   ==========================================================================
+   La page publique utilise maintenant EXACTEMENT la même structure que l'éditeur
+   avec noteLayout-title et noteLayout-content, donc typography.css s'applique
+   automatiquement sans conflit.
+*/
 
 /* ==========================================================================
    RESPECT TOTAL DE TYPOGRAPHY.CSS
