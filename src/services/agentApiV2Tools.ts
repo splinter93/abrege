@@ -240,13 +240,37 @@ export class AgentApiV2Tools {
       throw new Error('source_title et notebook_id sont requis');
     }
     
-    // Créer la note
+    // 🔧 CORRECTION : Résoudre le notebook_id (peut être un UUID ou un slug)
+    let classeurId = notebook_id;
+    
+    // Si ce n'est pas un UUID, essayer de le résoudre comme un slug
+    if (!classeurId.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
+      console.log(`[AgentApiV2Tools] 🔍 Résolution du slug: ${classeurId}`);
+      
+      const { data: classeur, error: resolveError } = await supabase
+        .from('classeurs')
+        .select('id, name, slug, user_id')
+        .eq('slug', classeurId)
+        .eq('user_id', userId)
+        .single();
+      
+      if (resolveError || !classeur) {
+        console.log(`[AgentApiV2Tools] ❌ Classeur non trouvé pour le slug: ${classeurId}`);
+        throw new Error(`Classeur non trouvé: ${classeurId}`);
+      }
+      
+      classeurId = classeur.id;
+      console.log(`[AgentApiV2Tools] ✅ Slug résolu: ${notebook_id} -> ${classeurId}`);
+    }
+    
+    // Créer la note avec le classeurId résolu
     const { data: note, error } = await supabase
       .from('articles')
       .insert({
         source_title,
-        notebook_id,
+        classeur_id: classeurId, // Utiliser classeur_id au lieu de notebook_id
         markdown_content: markdown_content || '',
+        html_content: markdown_content || '', // Ajouter html_content
         header_image,
         folder_id,
         user_id: userId
@@ -733,11 +757,34 @@ export class AgentApiV2Tools {
         return { success: false, error: 'Nom et classeur_id requis' };
       }
       
+      // 🔧 CORRECTION : Résoudre le classeur_id (peut être un UUID ou un slug)
+      let resolvedClasseurId = classeur_id;
+      
+      // Si ce n'est pas un UUID, essayer de le résoudre comme un slug
+      if (!resolvedClasseurId.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
+        console.log(`[AgentApiV2Tools] 🔍 Résolution du slug classeur: ${resolvedClasseurId}`);
+        
+        const { data: classeur, error: resolveError } = await supabase
+          .from('classeurs')
+          .select('id, name, slug, user_id')
+          .eq('slug', resolvedClasseurId)
+          .eq('user_id', userId)
+          .single();
+        
+        if (resolveError || !classeur) {
+          console.log(`[AgentApiV2Tools] ❌ Classeur non trouvé pour le slug: ${resolvedClasseurId}`);
+          return { success: false, error: `Classeur non trouvé: ${resolvedClasseurId}` };
+        }
+        
+        resolvedClasseurId = classeur.id;
+        console.log(`[AgentApiV2Tools] ✅ Slug classeur résolu: ${classeur_id} -> ${resolvedClasseurId}`);
+      }
+      
       const { data, error } = await supabase
         .from('folders')
         .insert({
           name,
-          classeur_id,
+          classeur_id: resolvedClasseurId, // Utiliser l'ID résolu
           parent_folder_id,
           position: position || 0,
           user_id: userId,
