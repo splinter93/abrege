@@ -87,12 +87,12 @@ export function useChatResponse(options: UseChatResponseOptions = {}): UseChatRe
         });
         
         // 🔧 TEMPORAIRE: Log direct dans la console pour debug
-        console.error('🔍 DEBUG - Réponse d\'erreur complète:', {
+        console.error('🔍 DEBUG - Réponse d\'erreur complète:', JSON.stringify({
           status: response.status,
           statusText: response.statusText,
           errorText: errorText,
           errorData: errorData
-        });
+        }, null, 2));
         
         throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
       }
