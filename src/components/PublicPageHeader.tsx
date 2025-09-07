@@ -46,7 +46,7 @@ export default function PublicPageHeader() {
           <LogoHeader size="medium" position="left" />
         </div>
         <div className="public-header-search">
-          <FiSearch size={15} className="public-header-search-icon" />
+          <FiSearch size={14} className="public-header-search-icon" />
           <input
             type="text"
             placeholder="Rechercher..."
@@ -61,13 +61,22 @@ export default function PublicPageHeader() {
             Connexion
           </Link>
         )}
+        {/* Favori */}
+        <button
+          title="Ajouter aux favoris"
+          className="public-header-button"
+          onClick={() => setIsFavorite(fav => !fav)}
+        >
+          {isFavorite ? <FiStar size={16} fill="#FFD600" color="#FFD600" /> : <FiStar size={16} />}
+        </button>
+        
         {/* Partager */}
         <button
           onClick={() => setIsShareMenuOpen(!isShareMenuOpen)}
           title="Partager cette page"
           className="public-header-button"
         >
-          <FiShare2 size={18} />
+          <FiShare2 size={16} />
         </button>
         
         {/* Menu de partage social */}
@@ -78,21 +87,13 @@ export default function PublicPageHeader() {
           isOpen={isShareMenuOpen}
           onClose={() => setIsShareMenuOpen(false)}
         />
-        {/* Favori */}
-        <button
-          title="Ajouter aux favoris"
-          className="public-header-button"
-          onClick={() => setIsFavorite(fav => !fav)}
-        >
-          {isFavorite ? <FiStar size={18} fill="#FFD600" color="#FFD600" /> : <FiStar size={18} />}
-        </button>
         {/* Options */}
         <button
           onClick={() => setIsKebabMenuOpen(!isKebabMenuOpen)}
           title="Options"
           className="public-header-button"
         >
-          <FiMoreHorizontal size={18} />
+          <FiMoreHorizontal size={16} />
         </button>
         
         {/* Menu kebab simple */}

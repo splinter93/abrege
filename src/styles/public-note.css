@@ -70,10 +70,22 @@ body.public-note-page {
    Ces éléments doivent garder leur apparence originale
 */
 
-/* Badge "Crafted with Scrivia" - garder son gradient */
+/* Badge "Crafted with Scrivia" - background gris dégradé */
 .public-note-container a[href*="scrivia.app"] {
-  background: inherit !important;
-  background-color: inherit !important;
+  background: linear-gradient(135deg, #4a4a4a 0%, #2a2a2a 100%) !important;
+  background-color: #4a4a4a !important;
+  border-radius: 16px !important;
+  padding: 8px 16px !important;
+  color: #f5f5dc !important;
+  text-decoration: none !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  transition: all 0.2s ease !important;
+}
+
+.public-note-container a[href*="scrivia.app"]:hover {
+  background: linear-gradient(135deg, #5a5a5a 0%, #3a3a3a 100%) !important;
+  transform: translateY(-1px) !important;
 }
 
 /* ==========================================================================
@@ -434,6 +446,55 @@ body.public-note-page {
    avec noteLayout-title et noteLayout-content, donc typography.css s'applique
    automatiquement sans conflit.
 */
+
+/* ==========================================================================
+   SUPPRESSION OUTLINES ORANGE - TITRES PAGE PUBLIQUE
+   ==========================================================================
+   Supprimer les encadrés orange qui apparaissent au clic sur les titres
+*/
+
+/* Supprimer les outlines orange sur tous les éléments focus de la page publique */
+.public-note-container *:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Supprimer spécifiquement les outlines sur les titres */
+.public-note-container h1:focus,
+.public-note-container h2:focus,
+.public-note-container h3:focus,
+.public-note-container h4:focus,
+.public-note-container h5:focus,
+.public-note-container h6:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* ==========================================================================
+   FONT-WEIGHT TEXTE - COHÉRENCE AVEC L'ÉDITEUR
+   ==========================================================================
+   Appliquer le même poids de texte que dans l'éditeur (500)
+*/
+
+/* Paragraphes et texte principal */
+.public-note-container p,
+.public-note-container .markdown-body p,
+.public-note-container .noteLayout-content p {
+  font-weight: 500 !important;
+}
+
+/* Listes */
+.public-note-container li,
+.public-note-container .markdown-body li,
+.public-note-container .noteLayout-content li {
+  font-weight: 500 !important;
+}
+
+/* Texte général du contenu */
+.public-note-container .markdown-body,
+.public-note-container .noteLayout-content {
+  font-weight: 500 !important;
+}
 
 /* ==========================================================================
    RESPECT TOTAL DE TYPOGRAPHY.CSS

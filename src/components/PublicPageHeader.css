@@ -17,7 +17,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0.25rem 0.25rem 0.25rem 0.25rem;
+  padding: 0.5rem 0.5rem 0.5rem 0.5rem;
   border-bottom: 0.5px solid #2a2a2c;
   box-shadow: none;
   position: sticky;
@@ -25,7 +25,7 @@
   z-index: 100;
   box-sizing: border-box;
   flex-shrink: 0;
-  min-height: 36px;
+  min-height: 48px;
 }
 
 /* ==========================================================================
@@ -73,43 +73,41 @@
 
 .public-header-search-icon {
   position: absolute;
-  left: 11px;
-  color: var(--editor-text-muted);
-  opacity: 0.7;
+  left: 10px;
+  color: #6a6a6a;
+  opacity: 0.8;
   pointer-events: none;
-  width: 15px;
-  height: 15px;
+  width: 14px;
+  height: 14px;
+  z-index: 1;
 }
 
 .public-header-search-input {
-  width: 140px;
-  height: 30px;
-  background: transparent;
-  border: 1px solid #3a3a3a;
-  border-radius: 15px;
+  width: 240px;
+  height: 32px;
+  background: #1a1a1a;
+  border: none;
+  border-radius: 16px;
   padding: 0 12px 0 32px;
-  color: #3a3a3a;
+  color: #f5f5dc;
   font-family: var(--editor-font-family);
-  font-size: 12px;
+  font-size: 13px;
   outline: none;
   transition: all 0.2s ease;
 }
 
 .public-header-search-input::placeholder {
-  color: #4a4a4a;
-  opacity: 1;
+  color: #5a5a5a;
+  opacity: 0.8;
 }
 
 .public-header-search-input:hover {
-  background: transparent;
-  border-color: #3a3a3a;
-  color: #3a3a3a;
+  background: #2a2a2a;
 }
 
 .public-header-search-input:focus {
-  background: transparent;
-  border-color: #3a3a3a;
-  color: #3a3a3a;
+  background: #2a2a2a;
+  color: #f5f5dc;
 }
 
 /* ==========================================================================
@@ -120,7 +118,7 @@
 .public-header-buttons {
   display: flex;
   align-items: center;
-  gap: 18px;
+  gap: 12px;
   position: relative;
   height: 100%;
 }
@@ -155,10 +153,10 @@
   background: none;
   border: none;
   color: var(--editor-text-color);
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  transition: background 0.18s, color 0.18s;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
   box-shadow: none;
   font-family: var(--editor-font-family);
   outline: none;
@@ -167,8 +165,9 @@
 }
 
 .public-header-button:hover {
-  background: rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.1);
   color: var(--editor-text-color);
+  transform: translateY(-1px);
 }
 
 /* ==========================================================================
