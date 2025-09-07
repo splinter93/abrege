@@ -312,7 +312,27 @@ export class AgentApiV2Tools {
       console.log(`[AgentApiV2Tools] ✅ Slug résolu: ${notebook_id} -> ${classeurId}`);
     }
     
-    // Créer la note avec le classeurId résolu
+    // 🔧 CORRECTION : Générer le slug et l'URL publique
+    let slug: string;
+    let publicUrl: string | null = null;
+    try {
+      const { SlugAndUrlService } = await import('@/services/slugAndUrlService');
+      const result = await SlugAndUrlService.generateSlugAndUpdateUrl(
+        source_title,
+        userId,
+        undefined, // Pas de noteId pour la création
+        supabase
+      );
+      slug = result.slug;
+      publicUrl = result.publicUrl;
+      console.log(`[AgentApiV2Tools] ✅ Slug généré: ${slug} -> ${publicUrl}`);
+    } catch (error) {
+      // Fallback minimal en cas d'échec
+      slug = `${source_title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')}-${Date.now().toString(36)}`.slice(0, 120);
+      console.log(`[AgentApiV2Tools] ⚠️ Fallback slug utilisé: ${slug}`);
+    }
+    
+    // Créer la note avec le classeurId résolu, slug et URL publique
     const { data: note, error } = await supabase
       .from('articles')
       .insert({
@@ -322,7 +342,9 @@ export class AgentApiV2Tools {
         html_content: markdown_content || '', // Ajouter html_content
         header_image,
         folder_id,
-        user_id: userId
+        user_id: userId,
+        slug, // Ajouter le slug généré
+        public_url: publicUrl // Ajouter l'URL publique
       })
       .select()
       .single();
