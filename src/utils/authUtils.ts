@@ -10,6 +10,16 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 // Créer le client Supabase
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
+// 🔧 SCOPES PAR DÉFAUT POUR LES AGENTS SPÉCIALISÉS
+const DEFAULT_AGENT_SCOPES = [
+  'notes:read', 'notes:write', 'notes:create', 'notes:update', 'notes:delete',
+  'classeurs:read', 'classeurs:write', 'classeurs:create', 'classeurs:update', 'classeurs:delete',
+  'dossiers:read', 'dossiers:write', 'dossiers:create', 'dossiers:update', 'dossiers:delete',
+  'files:read', 'files:write', 'files:upload', 'files:delete',
+  'agents:execute', 'agents:read',
+  'search:content', 'profile:read'
+];
+
 export type PermissionRole = 'viewer' | 'editor' | 'owner';
 export type ResourceType = 'article' | 'folder' | 'classeur';
 

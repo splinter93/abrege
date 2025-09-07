@@ -108,27 +108,38 @@ export class OpenApiToolExecutor {
    * Exécuter un tool OpenAPI V2 spécifique
    */
   private async executeOpenApiTool(toolName: string, args: any, userToken: string): Promise<any> {
-    // Mapper le nom du tool vers l'endpoint API v2
+    // 🔧 CORRECTION: Mapper les noms OpenAPI (camelCase) vers les endpoints API v2
     const endpointMapping: Record<string, { method: string; path: string }> = {
-      'create_note': { method: 'POST', path: '/api/v2/note/create' },
-      'get_note': { method: 'GET', path: `/api/v2/note/${args.ref}` },
-      'update_note': { method: 'PATCH', path: `/api/v2/note/${args.ref}/update` },
-      'insert_content_to_note': { method: 'PATCH', path: `/api/v2/note/${args.ref}/insert-content` },
-      'move_note': { method: 'PUT', path: `/api/v2/note/${args.ref}/move` },
-      'get_note_toc': { method: 'GET', path: `/api/v2/note/${args.ref}/table-of-contents` },
-      'get_recent_notes': { method: 'GET', path: '/api/v2/note/recent' },
-      'create_classeur': { method: 'POST', path: '/api/v2/classeur/create' },
-      'get_classeur': { method: 'GET', path: `/api/v2/classeur/${args.ref}` },
-      'list_classeurs': { method: 'GET', path: '/api/v2/classeurs' },
-      'get_classeur_tree': { method: 'GET', path: `/api/v2/classeur/${args.ref}/tree` },
-      'create_folder': { method: 'POST', path: '/api/v2/folder/create' },
-      'get_folder': { method: 'GET', path: `/api/v2/folder/${args.ref}` },
-      'get_folder_tree': { method: 'GET', path: `/api/v2/folder/${args.ref}/tree` },
-      'search_notes': { method: 'GET', path: '/api/v2/search' },
-      'search_files': { method: 'GET', path: '/api/v2/files/search' },
-      'get_user_info': { method: 'GET', path: '/api/v2/me' },
-      'get_platform_stats': { method: 'GET', path: '/api/v2/stats' },
-      'delete_resource': { method: 'DELETE', path: `/api/v2/delete/${args.resource}/${args.ref}` }
+      // Notes
+      'createNote': { method: 'POST', path: '/api/v2/note/create' },
+      'getNote': { method: 'GET', path: `/api/v2/note/${args.ref}` },
+      'updateNote': { method: 'PATCH', path: `/api/v2/note/${args.ref}/update` },
+      'insertNoteContent': { method: 'PATCH', path: `/api/v2/note/${args.ref}/insert-content` },
+      'moveNote': { method: 'PUT', path: `/api/v2/note/${args.ref}/move` },
+      'getNoteTOC': { method: 'GET', path: `/api/v2/note/${args.ref}/table-of-contents` },
+      'getRecentNotes': { method: 'GET', path: '/api/v2/note/recent' },
+      
+      // Classeurs
+      'createClasseur': { method: 'POST', path: '/api/v2/classeur/create' },
+      'getClasseur': { method: 'GET', path: `/api/v2/classeur/${args.ref}` },
+      'listClasseurs': { method: 'GET', path: '/api/v2/classeurs' },
+      'getClasseurTree': { method: 'GET', path: `/api/v2/classeur/${args.ref}/tree` },
+      
+      // Dossiers
+      'createFolder': { method: 'POST', path: '/api/v2/folder/create' },
+      'getFolder': { method: 'GET', path: `/api/v2/folder/${args.ref}` },
+      'getFolderTree': { method: 'GET', path: `/api/v2/folder/${args.ref}/tree` },
+      
+      // Recherche
+      'searchContent': { method: 'GET', path: '/api/v2/search' },
+      'searchFiles': { method: 'GET', path: '/api/v2/files/search' },
+      
+      // Utilisateur
+      'getUserProfile': { method: 'GET', path: '/api/v2/me' },
+      'getStats': { method: 'GET', path: '/api/v2/stats' },
+      
+      // Gestion unifiée
+      'deleteResource': { method: 'DELETE', path: `/api/v2/delete/${args.resource}/${args.ref}` }
     };
 
     const mapping = endpointMapping[toolName];
