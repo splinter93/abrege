@@ -108,16 +108,28 @@ export class AgentApiV2Tools {
 
   /**
    * Exécuter un tool OpenAPI V2 via les services internes
+   * Supporte les tokens JWT et les clés d'API
    */
-  private async executeOpenAPIV2Tool(toolName: string, params: any, jwtToken: string): Promise<any> {
+  private async executeOpenAPIV2Tool(toolName: string, params: any, authToken: string): Promise<any> {
     try {
       console.log(`[AgentApiV2Tools] 🔧 Exécution du tool OpenAPI V2: ${toolName}`);
       
-      // Récupérer le userId à partir du JWT token
-      const userId = await this.getUserIdFromToken(jwtToken);
+      // 🔧 CORRECTION : Gérer les tokens JWT et les clés d'API
+      let userId: string;
+      
+      // Vérifier si c'est un userId direct (clé d'API) ou un token JWT
+      if (this.isUserId(authToken)) {
+        // C'est un userId direct (clé d'API)
+        userId = authToken;
+        console.log(`[AgentApiV2Tools] 🔑 Authentification par clé d'API - userId: ${userId}`);
+      } else {
+        // C'est un token JWT, extraire l'userId
+        userId = await this.getUserIdFromToken(authToken);
+        console.log(`[AgentApiV2Tools] 🔑 Authentification par token JWT - userId: ${userId}`);
+      }
       
       // Utiliser les services internes au lieu d'appels HTTP externes
-      const result = await this.executeInternalService(toolName, params, userId, jwtToken);
+      const result = await this.executeInternalService(toolName, params, userId, authToken);
       
       console.log(`[AgentApiV2Tools] ✅ Tool ${toolName} exécuté avec succès`);
       return result;
@@ -130,7 +142,7 @@ export class AgentApiV2Tools {
   /**
    * Exécuter un service interne selon le nom du tool
    */
-  private async executeInternalService(toolName: string, params: any, userId: string, jwtToken: string): Promise<any> {
+  private async executeInternalService(toolName: string, params: any, userId: string, authToken: string): Promise<any> {
     // Créer un client Supabase authentifié
     const { createClient } = await import('@supabase/supabase-js');
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
