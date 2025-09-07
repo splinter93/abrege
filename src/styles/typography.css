@@ -87,8 +87,8 @@
      TAILLES HARMONISÉES - PREMIUM EDITOR (RÉDUITES DE 10%)
      ========================================================================== */
   --editor-title-size: 2.375rem;      /* 38px - taille optimisée */
-  --editor-body-size: 0.9rem;           /* 14.4px - réduit de 10% (16px → 14.4px) */
-  --editor-body-size-mobile: 0.84375rem; /* 13.5px - réduit de 10% (15px → 13.5px) */
+  --editor-body-size: 1.125rem;         /* 18px - taille cohérente avec les paragraphes et listes */
+  --editor-body-size-mobile: 1rem;      /* 16px - taille mobile cohérente */
   --editor-h1-size: 1.8rem;             /* 28.8px - réduit de 10% (32px → 28.8px) */
   
   /* ==========================================================================
@@ -390,10 +390,10 @@
 
 /* 1. Layout sans image - PADDING RÉDUIT */
 .noteLayout.noImage .noteLayout-title { 
-  padding-top: 55px; 
+  padding-top: 60px; 
 }
 .noteLayout.noImage .noteLayout-title textarea { 
-  padding: 0 0 4px 0; /* Padding réduit sous le titre */
+  padding: 0 0 16px 0; /* Padding augmenté sous le titre pour le mode sans image */
 }
 .noteLayout.noImage .noteLayout-content .editor-content { 
   padding-top: 0; /* Pas de padding en haut */
@@ -401,7 +401,7 @@
 
 /* Wide mode sans image - PADDING ENCORE PLUS RÉDUIT */
 .noteLayout.noImage.wide-mode .noteLayout-title textarea { 
-  padding: 0 0 2px 0; /* Très peu d'espace en wide mode */
+  padding: 0 0 12px 0; /* Espacement cohérent en wide mode pour le mode sans image */
 }
 
 /* 2. Layout avec titre dans l'image - PADDING MINIMAL */
@@ -480,7 +480,7 @@
   margin: var(--editor-list-margin-vertical) 0; /* 1.75em */
   padding-left: 1.5em;
   font-family: var(--editor-font-family-body);
-  font-size: 1.125rem;                    /* 18px - même taille que les paragraphes */
+  font-size: var(--editor-body-size);     /* Utilise la variable centralisée */
   line-height: var(--editor-line-height-base); /* 1.75 */
 }
 
@@ -490,7 +490,7 @@
   margin: var(--editor-list-item-margin-vertical) 0; /* 0.5em */
   line-height: var(--editor-line-height-base); /* 1.75 */
   font-family: var(--editor-font-family-body);
-  font-size: 1.125rem;                    /* 18px - cohérent avec les paragraphes */
+  font-size: var(--editor-body-size);     /* Utilise la variable centralisée */
 }
 
 /* ==========================================================================
@@ -747,8 +747,8 @@ body.public-note-page {
 } 
 
 /* Match spacing between title and text for no-image layout to image-only layout */
-.noteLayout.noImage .noteLayout-title > .editor-container-width { padding-bottom: 4px; }
-.noteLayout.noImage .noteLayout-title textarea { padding-bottom: 0; }
+.noteLayout.noImage .noteLayout-title > .editor-container-width { padding-bottom: 16px; }
+.noteLayout.noImage .noteLayout-title textarea { padding-bottom: 16px; }
 .noteLayout.noImage .noteLayout-content { margin-top: 0; padding-top: 0; }
 
 /* ==========================================================================
@@ -934,7 +934,7 @@ p {
   margin: 0 0 var(--editor-paragraph-margin-bottom) 0 !important; /* 1.75em */
   line-height: var(--editor-line-height-base) !important; /* 1.75 */
   font-weight: var(--editor-body-weight) !important; /* 500 */
-  font-size: 1.125rem !important;         /* 18px - taille optimale pour la lecture */
+  font-size: var(--editor-body-size) !important; /* Utilise la variable centralisée */
   color: var(--editor-text-color) !important;
   font-family: var(--editor-font-family-headings) !important;
   text-align: left !important;
@@ -980,7 +980,7 @@ p:last-child {
   border-left: 4px solid var(--accent-primary, #ff6b35);
   border-radius: 0 8px 8px 0;
   font-style: italic;
-  font-size: 1.125rem;                    /* 18px */
+  font-size: var(--editor-body-size);     /* Utilise la variable centralisée */
   line-height: var(--editor-line-height-relaxed); /* 1.8 */
   color: var(--editor-text-color);
   position: relative;
