@@ -53,6 +53,22 @@
   min-height: auto;
 }
 
+/* Variante Éditeur sur pages publiques - adaptation du style */
+.public-note-content .mermaid-container.mermaid-editor {
+  background: var(--surface-2, #f8f9fa);
+  border: 1px solid var(--border-subtle, #e5e7eb);
+  border-radius: 8px;
+  padding: 0;
+  margin: 1.75rem 0;
+  font-family: 'Noto Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 14px;
+  line-height: 1.75;
+  overflow: visible;
+  min-height: 120px;
+  /* Assurer la cohérence avec le thème des pages publiques */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
 /* ========================================
    MODE ÉDITION
    ======================================== */
@@ -110,6 +126,140 @@
   height: auto;
   /* Assurer que le SVG ne déborde pas */
   overflow: visible;
+}
+
+/* ========================================
+   STYLES PERSONNALISÉS MERMAID - RADIUS
+   ======================================== */
+
+/* Appliquer un radius à tous les éléments rect (nœuds, boîtes, etc.) */
+.mermaid-svg-container svg rect {
+  rx: 8px !important;
+  ry: 8px !important;
+}
+
+/* Appliquer un radius aux éléments polygon (formes personnalisées) */
+.mermaid-svg-container svg polygon {
+  /* Pour les polygones, on utilise une approche différente */
+  /* Le radius sera géré par les styles de stroke */
+}
+
+/* Appliquer un radius aux éléments ellipse */
+.mermaid-svg-container svg ellipse {
+  /* Les ellipses sont déjà arrondies, mais on peut ajuster */
+}
+
+/* Styles spécifiques pour les différents types de diagrammes */
+
+/* Flowchart - nœuds */
+.mermaid-svg-container svg .node rect,
+.mermaid-svg-container svg .node polygon,
+.mermaid-svg-container svg .flowchart-node rect,
+.mermaid-svg-container svg .flowchart-node polygon {
+  rx: 8px !important;
+  ry: 8px !important;
+}
+
+/* Sequence Diagram - acteurs et boîtes */
+.mermaid-svg-container svg .actor rect,
+.mermaid-svg-container svg .actor polygon,
+.mermaid-svg-container svg .messageLine0,
+.mermaid-svg-container svg .messageLine1,
+.mermaid-svg-container svg .messageText rect {
+  rx: 6px !important;
+  ry: 6px !important;
+}
+
+/* Class Diagram - classes et interfaces */
+.mermaid-svg-container svg .class rect,
+.mermaid-svg-container svg .class polygon,
+.mermaid-svg-container svg .classBox rect {
+  rx: 8px !important;
+  ry: 8px !important;
+}
+
+/* State Diagram - états */
+.mermaid-svg-container svg .state rect,
+.mermaid-svg-container svg .state polygon,
+.mermaid-svg-container svg .state-node rect {
+  rx: 12px !important;
+  ry: 12px !important;
+}
+
+/* Entity Relationship - entités */
+.mermaid-svg-container svg .entity rect,
+.mermaid-svg-container svg .entity polygon {
+  rx: 8px !important;
+  ry: 8px !important;
+}
+
+/* Gantt - barres de tâches */
+.mermaid-svg-container svg .task rect,
+.mermaid-svg-container svg .taskText rect {
+  rx: 4px !important;
+  ry: 4px !important;
+}
+
+/* Journey - étapes */
+.mermaid-svg-container svg .journey-step rect,
+.mermaid-svg-container svg .journey-step polygon {
+  rx: 10px !important;
+  ry: 10px !important;
+}
+
+/* Git Graph - commits */
+.mermaid-svg-container svg .commit rect,
+.mermaid-svg-container svg .commit polygon {
+  rx: 6px !important;
+  ry: 6px !important;
+}
+
+/* Pie Chart - segments (pas de radius pour les secteurs) */
+.mermaid-svg-container svg .pieTitleText rect {
+  rx: 6px !important;
+  ry: 6px !important;
+}
+
+/* Clusters et groupes */
+.mermaid-svg-container svg .cluster rect,
+.mermaid-svg-container svg .cluster polygon {
+  rx: 12px !important;
+  ry: 12px !important;
+}
+
+/* Notes et annotations */
+.mermaid-svg-container svg .note rect,
+.mermaid-svg-container svg .note polygon,
+.mermaid-svg-container svg .noteText rect {
+  rx: 6px !important;
+  ry: 6px !important;
+}
+
+/* Labels et textes dans des boîtes */
+.mermaid-svg-container svg .label rect,
+.mermaid-svg-container svg .label polygon {
+  rx: 4px !important;
+  ry: 4px !important;
+}
+
+/* Éléments de contrôle et boutons */
+.mermaid-svg-container svg .control rect,
+.mermaid-svg-container svg .control polygon {
+  rx: 6px !important;
+  ry: 6px !important;
+}
+
+/* Styles pour les éléments avec des classes spécifiques */
+.mermaid-svg-container svg .rounded rect,
+.mermaid-svg-container svg .rounded polygon {
+  rx: 12px !important;
+  ry: 12px !important;
+}
+
+/* Assurer que tous les éléments rect ont un radius par défaut */
+.mermaid-svg-container svg rect:not([rx]):not([ry]) {
+  rx: 8px !important;
+  ry: 8px !important;
 }
 
 /* Cacher le texte d'erreur généré par Mermaid à l'intérieur du SVG */

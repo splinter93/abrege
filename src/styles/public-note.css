@@ -470,6 +470,32 @@ body.public-note-page {
   box-shadow: none !important;
 }
 
+/* S'assurer que les titres utilisent la bonne police */
+.public-note-container h1,
+.public-note-container h2,
+.public-note-container h3,
+.public-note-container h4,
+.public-note-container h5,
+.public-note-container h6,
+.public-note-container .markdown-body h1,
+.public-note-container .markdown-body h2,
+.public-note-container .markdown-body h3,
+.public-note-container .markdown-body h4,
+.public-note-container .markdown-body h5,
+.public-note-container .markdown-body h6 {
+  font-family: var(--editor-font-family-headings) !important;
+}
+
+/* S'assurer que le texte utilise la bonne police */
+.public-note-container p,
+.public-note-container .markdown-body p,
+.public-note-container .markdown-body li,
+.public-note-container .markdown-body,
+.public-note-container .noteLayout-content p,
+.public-note-container .noteLayout-content li {
+  font-family: var(--editor-font-family-body) !important;
+}
+
 /* ==========================================================================
    FONT-WEIGHT TEXTE - COHÉRENCE AVEC L'ÉDITEUR
    ==========================================================================
@@ -506,5 +532,131 @@ body.public-note-page {
    2. Le CSS de typography.css
    3. Aucune interférence de ce fichier
 */
+
+/* ==========================================================================
+   MERMAID DIAGRAMS - RADIUS POUR PAGES PUBLIQUES
+   ========================================================================== */
+
+/* Styles spécifiques pour les diagrammes Mermaid sur les pages publiques */
+/* Ces styles s'appliquent aux SVG Mermaid dans le contenu public */
+
+/* Appliquer un radius à tous les éléments rect dans les SVG Mermaid */
+.public-note-content svg rect {
+  rx: 8px !important;
+  ry: 8px !important;
+}
+
+/* Styles spécifiques par type de diagramme pour les pages publiques */
+
+/* Flowchart - nœuds */
+.public-note-content svg .node rect,
+.public-note-content svg .node polygon,
+.public-note-content svg .flowchart-node rect,
+.public-note-content svg .flowchart-node polygon {
+  rx: 8px !important;
+  ry: 8px !important;
+}
+
+/* Sequence Diagram - acteurs et boîtes */
+.public-note-content svg .actor rect,
+.public-note-content svg .actor polygon,
+.public-note-content svg .messageLine0,
+.public-note-content svg .messageLine1,
+.public-note-content svg .messageText rect {
+  rx: 6px !important;
+  ry: 6px !important;
+}
+
+/* Class Diagram - classes et interfaces */
+.public-note-content svg .class rect,
+.public-note-content svg .class polygon,
+.public-note-content svg .classBox rect {
+  rx: 8px !important;
+  ry: 8px !important;
+}
+
+/* State Diagram - états */
+.public-note-content svg .state rect,
+.public-note-content svg .state polygon,
+.public-note-content svg .state-node rect {
+  rx: 12px !important;
+  ry: 12px !important;
+}
+
+/* Entity Relationship - entités */
+.public-note-content svg .entity rect,
+.public-note-content svg .entity polygon {
+  rx: 8px !important;
+  ry: 8px !important;
+}
+
+/* Gantt - barres de tâches */
+.public-note-content svg .task rect,
+.public-note-content svg .taskText rect {
+  rx: 4px !important;
+  ry: 4px !important;
+}
+
+/* Journey - étapes */
+.public-note-content svg .journey-step rect,
+.public-note-content svg .journey-step polygon {
+  rx: 10px !important;
+  ry: 10px !important;
+}
+
+/* Git Graph - commits */
+.public-note-content svg .commit rect,
+.public-note-content svg .commit polygon {
+  rx: 6px !important;
+  ry: 6px !important;
+}
+
+/* Pie Chart - titres */
+.public-note-content svg .pieTitleText rect {
+  rx: 6px !important;
+  ry: 6px !important;
+}
+
+/* Clusters et groupes */
+.public-note-content svg .cluster rect,
+.public-note-content svg .cluster polygon {
+  rx: 12px !important;
+  ry: 12px !important;
+}
+
+/* Notes et annotations */
+.public-note-content svg .note rect,
+.public-note-content svg .note polygon,
+.public-note-content svg .noteText rect {
+  rx: 6px !important;
+  ry: 6px !important;
+}
+
+/* Labels et textes dans des boîtes */
+.public-note-content svg .label rect,
+.public-note-content svg .label polygon {
+  rx: 4px !important;
+  ry: 4px !important;
+}
+
+/* Éléments de contrôle et boutons */
+.public-note-content svg .control rect,
+.public-note-content svg .control polygon {
+  rx: 6px !important;
+  ry: 6px !important;
+}
+
+/* Styles pour les éléments avec des classes spécifiques */
+.public-note-content svg .rounded rect,
+.public-note-content svg .rounded polygon {
+  rx: 12px !important;
+  ry: 12px !important;
+}
+
+/* Assurer que tous les éléments rect ont un radius par défaut */
+.public-note-content svg rect:not([rx]):not([ry]) {
+  rx: 8px !important;
+  ry: 8px !important;
+}
 
  

@@ -661,7 +661,7 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
   }, [noteId, updateNote]);
 
   // Persist font changes via toolbar callback
-  const handleFontChange = React.useCallback(async (fontName: string) => {
+  const handleFontChange = React.useCallback(async (fontName: string, scope?: 'all' | 'headings' | 'body') => {
     // Sauvegarder l'ancienne valeur pour rollback en cas d'échec
     const oldFontName = note?.font_family || 'Noto Sans';
     
@@ -670,7 +670,7 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
       await v2UnifiedApi.updateNote(noteId, { font_family: fontName }, userId);
       
       // 2. Si l'API réussit, changer la police en temps réel et mettre à jour l'état
-      changeFont(fontName);
+      changeFont(fontName, scope || 'all');
       useFileSystemStore.getState().updateNote(noteId, { font_family: fontName });
       
       if (process.env.NODE_ENV === 'development') {
@@ -681,7 +681,7 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
       logger.error(LogCategory.EDITOR, 'Erreur lors du changement de police', error);
       
       // Rollback : restaurer l'ancienne police
-      changeFont(oldFontName);
+      changeFont(oldFontName, scope || 'all');
       
       // Optionnel : afficher un message d'erreur à l'utilisateur
       toast.error('Erreur lors de la sauvegarde de la police');

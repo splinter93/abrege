@@ -59,9 +59,10 @@
   /* Police par défaut avec fallback robuste */
   --editor-font-family: 'Noto Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
   
-  /* Police hybride : Noto Sans pour titres, Inter pour texte */
+  /* Polices distinctes pour titres et texte */
   --editor-font-family-headings: 'Noto Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
-  --editor-font-family-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+  --editor-font-family-body: 'Noto Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+  
   
   /* Sans-serif modernes */
   --font-inter: 'Inter', sans-serif;
@@ -212,6 +213,7 @@
 .font-monospace { font-family: var(--font-monospace); }
 .font-noto-sans { font-family: var(--editor-font-family); }
 
+
 /* ==========================================================================
    LAYOUT TYPOGRAPHIQUE - NOTE HEADER
    ==========================================================================
@@ -248,7 +250,7 @@
   max-width: var(--editor-content-width);
   font-size: var(--editor-title-size);
   font-weight: 800;
-  font-family: var(--editor-font-family);
+  font-family: var(--editor-font-family-headings);
   color: var(--editor-text-color);
   background: none;
   border: none;
@@ -270,7 +272,7 @@
   max-width: var(--editor-content-width);
   font-size: var(--editor-title-size);
   font-weight: 800;
-  font-family: var(--editor-font-family);
+  font-family: var(--editor-font-family-headings);
   color: var(--editor-text-color);
   background: none;
   border: none;
@@ -1046,4 +1048,168 @@ p:last-child {
   border: none;
   height: 1px;
   background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.2), transparent);
+}
+
+/* ==========================================================================
+   MERMAID DIAGRAMS - RADIUS GLOBAL
+   ========================================================================== */
+
+/* Styles globaux pour tous les diagrammes Mermaid dans l'application */
+/* Ces styles s'appliquent UNIQUEMENT aux SVG Mermaid, pas aux autres SVG */
+
+/* Appliquer un radius à tous les éléments rect dans les SVG Mermaid UNIQUEMENT */
+.mermaid-container svg rect,
+.mermaid-svg-container svg rect,
+.mermaid-toolbar svg rect {
+  rx: 8px !important;
+  ry: 8px !important;
+}
+
+/* Styles spécifiques par type de diagramme */
+
+/* Flowchart - nœuds */
+.mermaid-container svg .node rect,
+.mermaid-container svg .node polygon,
+.mermaid-container svg .flowchart-node rect,
+.mermaid-container svg .flowchart-node polygon,
+.mermaid-svg-container svg .node rect,
+.mermaid-svg-container svg .node polygon,
+.mermaid-svg-container svg .flowchart-node rect,
+.mermaid-svg-container svg .flowchart-node polygon {
+  rx: 8px !important;
+  ry: 8px !important;
+}
+
+/* Sequence Diagram - acteurs et boîtes */
+.mermaid-container svg .actor rect,
+.mermaid-container svg .actor polygon,
+.mermaid-container svg .messageLine0,
+.mermaid-container svg .messageLine1,
+.mermaid-container svg .messageText rect,
+.mermaid-svg-container svg .actor rect,
+.mermaid-svg-container svg .actor polygon,
+.mermaid-svg-container svg .messageLine0,
+.mermaid-svg-container svg .messageLine1,
+.mermaid-svg-container svg .messageText rect {
+  rx: 6px !important;
+  ry: 6px !important;
+}
+
+/* Class Diagram - classes et interfaces */
+.mermaid-container svg .class rect,
+.mermaid-container svg .class polygon,
+.mermaid-container svg .classBox rect,
+.mermaid-svg-container svg .class rect,
+.mermaid-svg-container svg .class polygon,
+.mermaid-svg-container svg .classBox rect {
+  rx: 8px !important;
+  ry: 8px !important;
+}
+
+/* State Diagram - états */
+.mermaid-container svg .state rect,
+.mermaid-container svg .state polygon,
+.mermaid-container svg .state-node rect,
+.mermaid-svg-container svg .state rect,
+.mermaid-svg-container svg .state polygon,
+.mermaid-svg-container svg .state-node rect {
+  rx: 12px !important;
+  ry: 12px !important;
+}
+
+/* Entity Relationship - entités */
+.mermaid-container svg .entity rect,
+.mermaid-container svg .entity polygon,
+.mermaid-svg-container svg .entity rect,
+.mermaid-svg-container svg .entity polygon {
+  rx: 8px !important;
+  ry: 8px !important;
+}
+
+/* Gantt - barres de tâches */
+.mermaid-container svg .task rect,
+.mermaid-container svg .taskText rect,
+.mermaid-svg-container svg .task rect,
+.mermaid-svg-container svg .taskText rect {
+  rx: 4px !important;
+  ry: 4px !important;
+}
+
+/* Journey - étapes */
+.mermaid-container svg .journey-step rect,
+.mermaid-container svg .journey-step polygon,
+.mermaid-svg-container svg .journey-step rect,
+.mermaid-svg-container svg .journey-step polygon {
+  rx: 10px !important;
+  ry: 10px !important;
+}
+
+/* Git Graph - commits */
+.mermaid-container svg .commit rect,
+.mermaid-container svg .commit polygon,
+.mermaid-svg-container svg .commit rect,
+.mermaid-svg-container svg .commit polygon {
+  rx: 6px !important;
+  ry: 6px !important;
+}
+
+/* Pie Chart - titres */
+.mermaid-container svg .pieTitleText rect,
+.mermaid-svg-container svg .pieTitleText rect {
+  rx: 6px !important;
+  ry: 6px !important;
+}
+
+/* Clusters et groupes */
+.mermaid-container svg .cluster rect,
+.mermaid-container svg .cluster polygon,
+.mermaid-svg-container svg .cluster rect,
+.mermaid-svg-container svg .cluster polygon {
+  rx: 12px !important;
+  ry: 12px !important;
+}
+
+/* Notes et annotations */
+.mermaid-container svg .note rect,
+.mermaid-container svg .note polygon,
+.mermaid-container svg .noteText rect,
+.mermaid-svg-container svg .note rect,
+.mermaid-svg-container svg .note polygon,
+.mermaid-svg-container svg .noteText rect {
+  rx: 6px !important;
+  ry: 6px !important;
+}
+
+/* Labels et textes dans des boîtes */
+.mermaid-container svg .label rect,
+.mermaid-container svg .label polygon,
+.mermaid-svg-container svg .label rect,
+.mermaid-svg-container svg .label polygon {
+  rx: 4px !important;
+  ry: 4px !important;
+}
+
+/* Éléments de contrôle et boutons */
+.mermaid-container svg .control rect,
+.mermaid-container svg .control polygon,
+.mermaid-svg-container svg .control rect,
+.mermaid-svg-container svg .control polygon {
+  rx: 6px !important;
+  ry: 6px !important;
+}
+
+/* Styles pour les éléments avec des classes spécifiques */
+.mermaid-container svg .rounded rect,
+.mermaid-container svg .rounded polygon,
+.mermaid-svg-container svg .rounded rect,
+.mermaid-svg-container svg .rounded polygon {
+  rx: 12px !important;
+  ry: 12px !important;
+}
+
+/* Assurer que tous les éléments rect ont un radius par défaut */
+.mermaid-container svg rect:not([rx]):not([ry]),
+.mermaid-svg-container svg rect:not([rx]):not([ry]) {
+  rx: 8px !important;
+  ry: 8px !important;
 }

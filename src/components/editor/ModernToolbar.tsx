@@ -39,7 +39,7 @@ import type { FullEditorInstance } from '@/types/editor';
 interface ModernToolbarProps {
   editor: FullEditorInstance | null;
   setImageMenuOpen: (open: boolean) => void;
-  onFontChange?: (fontName: string) => void;
+  onFontChange?: (fontName: string, scope?: 'all' | 'headings' | 'body') => void;
   currentFont?: string;
   onTranscriptionComplete?: (text: string) => void;
 }
@@ -62,6 +62,7 @@ const ModernToolbar: React.FC<ModernToolbarProps> = ({
   const [fontMenuOpen, setFontMenuOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [colorMenuOpen, setColorMenuOpen] = useState(false);
+  const [fontScope, setFontScope] = useState<'all' | 'headings' | 'body'>('all');
   const fontMenuRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const colorMenuRef = useRef<HTMLDivElement>(null);
@@ -127,7 +128,7 @@ const ModernToolbar: React.FC<ModernToolbarProps> = ({
 
   const setFont = (fontName: string) => {
     if (onFontChange) {
-      onFontChange(fontName);
+      onFontChange(fontName, fontScope);
     }
     setFontMenuOpen(false);
     setSearchTerm('');
@@ -176,6 +177,28 @@ const ModernToolbar: React.FC<ModernToolbarProps> = ({
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                     />
+                  </div>
+                  
+                  {/* Options de scope */}
+                  <div className="font-scope-options">
+                    <button
+                      className={`font-scope-btn ${fontScope === 'all' ? 'active' : ''}`}
+                      onClick={() => setFontScope('all')}
+                    >
+                      All
+                    </button>
+                    <button
+                      className={`font-scope-btn ${fontScope === 'headings' ? 'active' : ''}`}
+                      onClick={() => setFontScope('headings')}
+                    >
+                      Titres
+                    </button>
+                    <button
+                      className={`font-scope-btn ${fontScope === 'body' ? 'active' : ''}`}
+                      onClick={() => setFontScope('body')}
+                    >
+                      Texte
+                    </button>
                   </div>
                   
                   <div className="font-list">

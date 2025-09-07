@@ -158,41 +158,102 @@
 }
 
 /* =================================================================
-   Mermaid-specific button styles
+   Mermaid-specific button styles - DESIGN MODERNE
    ================================================================= */
 
-/* Boutons Mermaid - tous harmonisés */
-.mermaid-edit-btn,
-.mermaid-copy-btn,
-.mermaid-expand-btn {
-    color: var(--text-secondary);
+/* Boutons Mermaid - style moderne et cohérent - SÉLECTEURS SPÉCIFIQUES */
+.unified-toolbar .mermaid-edit-btn,
+.unified-toolbar .mermaid-copy-btn,
+.unified-toolbar .mermaid-expand-btn,
+.mermaid-container .mermaid-edit-btn,
+.mermaid-container .mermaid-copy-btn,
+.mermaid-container .mermaid-expand-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--text-muted, #6b7280);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    font-size: 14px;
+    font-weight: 500;
+    position: relative;
+    overflow: hidden;
+    flex-shrink: 0;
+    outline: none;
+    /* Supprimer tous les effets de focus par défaut */
+    -webkit-tap-highlight-color: transparent !important;
+    -webkit-touch-callout: none !important;
+    -webkit-user-select: none !important;
+    -khtml-user-select: none !important;
+    -moz-user-select: none !important;
+    -ms-user-select: none !important;
+    user-select: none !important;
 }
 
-/* Suppression complète du focus pour tous les boutons Mermaid */
-.mermaid-edit-btn:focus,
-.mermaid-copy-btn:focus,
-.mermaid-expand-btn:focus,
-.mermaid-edit-btn:focus-visible,
-.mermaid-copy-btn:focus-visible,
-.mermaid-expand-btn:focus-visible,
-.mermaid-edit-btn:active,
-.mermaid-copy-btn:active,
-.mermaid-expand-btn:active {
+/* Hover state - effet subtil et moderne - SÉLECTEURS SPÉCIFIQUES */
+.unified-toolbar .mermaid-edit-btn:hover,
+.unified-toolbar .mermaid-copy-btn:hover,
+.unified-toolbar .mermaid-expand-btn:hover,
+.mermaid-container .mermaid-edit-btn:hover,
+.mermaid-container .mermaid-copy-btn:hover,
+.mermaid-container .mermaid-expand-btn:hover {
+    background: var(--surface-2, #f8f9fa);
+    color: var(--text-primary, #374151);
+    transform: scale(1.05);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Active state - SÉLECTEURS SPÉCIFIQUES */
+.unified-toolbar .mermaid-edit-btn:active,
+.unified-toolbar .mermaid-copy-btn:active,
+.unified-toolbar .mermaid-expand-btn:active,
+.mermaid-container .mermaid-edit-btn:active,
+.mermaid-container .mermaid-copy-btn:active,
+.mermaid-container .mermaid-expand-btn:active {
+    transform: scale(0.95);
+    background: var(--surface-3, #e5e7eb);
+}
+
+/* Suppression complète du focus pour tous les boutons Mermaid - SÉLECTEURS SPÉCIFIQUES */
+.unified-toolbar .mermaid-edit-btn:focus,
+.unified-toolbar .mermaid-copy-btn:focus,
+.unified-toolbar .mermaid-expand-btn:focus,
+.unified-toolbar .mermaid-edit-btn:focus-visible,
+.unified-toolbar .mermaid-copy-btn:focus-visible,
+.unified-toolbar .mermaid-expand-btn:focus-visible,
+.mermaid-container .mermaid-edit-btn:focus,
+.mermaid-container .mermaid-copy-btn:focus,
+.mermaid-container .mermaid-expand-btn:focus,
+.mermaid-container .mermaid-edit-btn:focus-visible,
+.mermaid-container .mermaid-copy-btn:focus-visible,
+.mermaid-container .mermaid-expand-btn:focus-visible {
     outline: none !important;
     box-shadow: none !important;
     border: none !important;
 }
 
-.mermaid-edit-btn:hover,
-.mermaid-expand-btn:hover {
-    background: transparent;
-    color: var(--text-primary);
+/* État "Copié !" pour Mermaid - style moderne - SÉLECTEURS SPÉCIFIQUES */
+.unified-toolbar .mermaid-copy-btn.copied,
+.unified-toolbar .mermaid-copy-btn:has(svg polyline),
+.mermaid-container .mermaid-copy-btn.copied,
+.mermaid-container .mermaid-copy-btn:has(svg polyline) {
+    background: var(--success-bg, #ecfdf5) !important;
+    color: var(--success-text, #10b981) !important;
     transform: scale(1.05);
 }
 
-/* État "Copié !" pour Mermaid */
-.mermaid-copy-btn:has(svg polyline) {
+.unified-toolbar .mermaid-copy-btn.copied:hover,
+.unified-toolbar .mermaid-copy-btn:has(svg polyline):hover,
+.mermaid-container .mermaid-copy-btn.copied:hover,
+.mermaid-container .mermaid-copy-btn:has(svg polyline):hover {
+    background: var(--success-bg, #ecfdf5) !important;
     color: var(--success-text, #10b981) !important;
+    transform: scale(1.1);
 }
 
 /* Toolbar unifiée pour tous les blocs de code */

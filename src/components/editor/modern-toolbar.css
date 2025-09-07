@@ -76,8 +76,9 @@
   opacity: 0.6;
 }
 
-/* Boutons de base - Design ultra moderne */
-.toolbar-btn {
+/* Boutons de base - Design ultra moderne - SÉLECTEURS SPÉCIFIQUES */
+.modern-toolbar .toolbar-btn,
+.editor-header .toolbar-btn {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -97,39 +98,46 @@
   outline: none;
 }
 
-.toolbar-btn:hover {
+.modern-toolbar .toolbar-btn:hover,
+.editor-header .toolbar-btn:hover {
   background: var(--surface-2);
   color: var(--text-primary);
 }
 
-.toolbar-btn:active {
+.modern-toolbar .toolbar-btn:active,
+.editor-header .toolbar-btn:active {
   transform: scale(0.95);
 }
 
-.toolbar-btn.active {
+.modern-toolbar .toolbar-btn.active,
+.editor-header .toolbar-btn.active {
   background: var(--accent-primary);
   color: white;
   font-weight: 600;
 }
 
-.toolbar-btn.active:hover {
+.modern-toolbar .toolbar-btn.active:hover,
+.editor-header .toolbar-btn.active:hover {
   background: var(--accent-hover);
 }
 
-.toolbar-btn:disabled {
+.modern-toolbar .toolbar-btn:disabled,
+.editor-header .toolbar-btn:disabled {
   opacity: 0.3;
   cursor: not-allowed;
   transform: none;
 }
 
-.toolbar-btn:disabled:hover {
+.modern-toolbar .toolbar-btn:disabled:hover,
+.editor-header .toolbar-btn:disabled:hover {
   background: transparent;
   color: var(--text-muted);
   transform: none;
 }
 
 /* Focus visible pour l'accessibilité */
-.toolbar-btn:focus-visible {
+.modern-toolbar .toolbar-btn:focus-visible,
+.editor-header .toolbar-btn:focus-visible {
   outline: 2px solid var(--accent-primary);
   outline-offset: 1px;
 }
@@ -274,6 +282,40 @@
 
 .font-search-input::placeholder {
   color: var(--text-muted);
+}
+
+/* Options de scope */
+.font-scope-options {
+  display: flex;
+  gap: 2px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--surface-2);
+}
+
+.font-scope-btn {
+  flex: 1;
+  padding: 6px 8px;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: center;
+}
+
+.font-scope-btn:hover {
+  background: var(--surface-hover);
+  color: var(--text-primary);
+}
+
+.font-scope-btn.active {
+  background: var(--accent-primary);
+  color: white;
+  font-weight: 600;
 }
 
 /* Liste des polices */
@@ -542,7 +584,8 @@
     gap: 12px;
   }
   
-  .toolbar-btn {
+  .modern-toolbar .toolbar-btn,
+  .editor-header .toolbar-btn {
     width: 28px;
     height: 28px;
   }
@@ -568,12 +611,14 @@
     min-height: 36px;
   }
   
-  .toolbar-btn {
+  .modern-toolbar .toolbar-btn,
+  .editor-header .toolbar-btn {
     width: 24px;
     height: 24px;
   }
   
-  .toolbar-btn svg {
+  .modern-toolbar .toolbar-btn svg,
+  .editor-header .toolbar-btn svg {
     width: 14px;
     height: 14px;
   }
@@ -610,12 +655,14 @@
     min-height: 32px;
   }
   
-  .toolbar-btn {
+  .modern-toolbar .toolbar-btn,
+  .editor-header .toolbar-btn {
     width: 20px;
     height: 20px;
   }
   
-  .toolbar-btn svg {
+  .modern-toolbar .toolbar-btn svg,
+  .editor-header .toolbar-btn svg {
     width: 12px;
     height: 12px;
   }
@@ -634,8 +681,9 @@
   }
 }
 
-/* Focus et accessibilité */
-.toolbar-btn:focus-visible {
+/* Focus et accessibilité - SÉLECTEURS SPÉCIFIQUES */
+.modern-toolbar .toolbar-btn:focus-visible,
+.editor-header .toolbar-btn:focus-visible {
   outline: 2px solid var(--accent-primary);
   outline-offset: 2px;
 }

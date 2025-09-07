@@ -2,12 +2,12 @@ import { useCallback, useEffect } from 'react';
 
 /**
  * Hook pour gérer le changement de police dans l'éditeur
- * Change dynamiquement la variable CSS --editor-font-family
+ * Change dynamiquement les variables CSS --editor-font-family-headings et --editor-font-family-body
  */
 export const useFontManager = (currentFont: string | null | undefined) => {
   
   // Fonction pour changer la police dans le CSS
-  const changeFont = useCallback((fontName: string) => {
+  const changeFont = useCallback((fontName: string, scope: 'all' | 'headings' | 'body' = 'all') => {
     try {
       // Mapper les noms de police aux familles CSS
       const fontFamilyMap: Record<string, string> = {
@@ -34,11 +34,19 @@ export const useFontManager = (currentFont: string | null | undefined) => {
       // Récupérer la famille de police correspondante
       const fontFamily = fontFamilyMap[fontName] || fontFamilyMap['Noto Sans'];
       
-      // Changer la variable CSS --editor-font-family
-      document.documentElement.style.setProperty('--editor-font-family', fontFamily);
+      // Changer les variables CSS selon le scope
+      if (scope === 'all' || scope === 'headings') {
+        document.documentElement.style.setProperty('--editor-font-family-headings', fontFamily);
+        console.log(`[FontManager] 🎯 Headings changés: ${fontFamily}`);
+      }
+      if (scope === 'all' || scope === 'body') {
+        document.documentElement.style.setProperty('--editor-font-family-body', fontFamily);
+        console.log(`[FontManager] 🎯 Body changé: ${fontFamily}`);
+      }
       
       if (process.env.NODE_ENV === 'development') {
-        console.log(`[FontManager] 🎨 Police changée: ${fontName} → ${fontFamily}`);
+        console.log(`[FontManager] 🎨 Police changée: ${fontName} (${scope}) → ${fontFamily}`);
+        console.log(`[FontManager] 🔍 Scope reçu: "${scope}"`);
       }
       
     } catch (error) {

@@ -136,7 +136,7 @@ const PublicMarkdownRenderer: React.FC<PublicMarkdownRendererProps> = ({ content
           
           if (!isValid) {
             return (
-              <div key={`mermaid-error-${index}`} className="mermaid-container mermaid-chat mermaid-error">
+              <div key={`mermaid-error-${index}`} className="mermaid-container mermaid-editor mermaid-error">
                 <div className="mermaid-error-content">
                   <div className="mermaid-error-header">
                     <span>❌ Syntaxe Mermaid invalide</span>
@@ -154,7 +154,7 @@ const PublicMarkdownRenderer: React.FC<PublicMarkdownRendererProps> = ({ content
             <MermaidRenderer
               key={`mermaid-${index}`}
               content={cleanContent}
-              variant="chat"
+              variant="editor"
               showToolbar={true}
               showCopy={true}
               showExpand={true}
