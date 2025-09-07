@@ -96,7 +96,7 @@
   --editor-h4-weight: 800;            /* Poids pour H4 - TRÈS GRAS */
   --editor-h5-weight: 800;            /* Poids pour H5 - TRÈS GRAS */
   --editor-h6-weight: 800;            /* Poids pour H6 - TRÈS GRAS */
-  --editor-body-weight: 400;          /* Poids pour le contenu principal */
+  --editor-body-weight: 500;          /* Poids pour le contenu principal */
   --editor-strong-weight: 700;        /* Poids pour le texte en gras */
   --editor-table-header-weight: 900;  /* Poids pour les en-têtes de tableau */
   --editor-blockquote-weight: 600;    /* Poids pour les blockquotes */
@@ -737,7 +737,7 @@ h1 {
   margin-top: 0 !important;
 }
 
-/* H2 - Ultra-gras partout - SPÉCIFICITÉ MAXIMALE */
+/* H2 - Ultra-gras partout */
 .markdown-body h2,
 .ProseMirror h2,
 .editor-content h2,
@@ -763,7 +763,7 @@ h2 {
   margin-top: 0 !important;
 }
 
-/* H3 - Ultra-gras partout - SPÉCIFICITÉ MAXIMALE */
+/* H3 - Ultra-gras partout */
 .markdown-body h3,
 .ProseMirror h3,
 .editor-content h3,
@@ -772,7 +772,7 @@ h2 {
 .noteLayout-content h3,
 h3 {
   font-size: 1.5rem !important;
-  font-weight: 900 !important;
+  font-weight: 700 !important;
   line-height: 1.25 !important;
   margin: 1rem 0 0.5rem 0 !important;
   color: var(--editor-text-color) !important;
@@ -789,25 +789,29 @@ h3 {
   margin-top: 0 !important;
 }
 
-/* FORCER LE FONT-WEIGHT ULTRA-GRAS - SPÉCIFICITÉ MAXIMALE */
-/* Ces règles ont une spécificité plus élevée que les styles de chat */
-.noteLayout .markdown-body h2,
-.noteLayout .ProseMirror h2,
-.noteLayout .editor-content h2,
-.noteLayout .editor-content-wrapper h2,
-.noteLayout .noteLayout-content h2,
-.noteLayout h2 {
-  font-weight: 900 !important;
+/* NEUTRALISER LES BALISES STRONG DANS LES TITRES */
+/* Les titres ne doivent pas être en gras même s'ils contiennent des balises <strong> */
+.markdown-body h1 strong,
+.markdown-body h2 strong,
+.markdown-body h3 strong,
+.markdown-body h4 strong,
+.markdown-body h5 strong,
+.markdown-body h6 strong,
+.ProseMirror h1 strong,
+.ProseMirror h2 strong,
+.ProseMirror h3 strong,
+.ProseMirror h4 strong,
+.ProseMirror h5 strong,
+.ProseMirror h6 strong,
+.editor-content h1 strong,
+.editor-content h2 strong,
+.editor-content h3 strong,
+.editor-content h4 strong,
+.editor-content h5 strong,
+.editor-content h6 strong {
+  font-weight: inherit !important;
 }
 
-.noteLayout .markdown-body h3,
-.noteLayout .ProseMirror h3,
-.noteLayout .editor-content h3,
-.noteLayout .editor-content-wrapper h3,
-.noteLayout .noteLayout-content h3,
-.noteLayout h3 {
-  font-weight: 900 !important;
-}
 
 /* H4 - Très gras partout */
 .markdown-body h4,
