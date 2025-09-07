@@ -54,6 +54,7 @@ interface ExecutionContext {
   agent_ref?: string;
   agent_id?: string;
   apiTime?: number;
+  authType?: string;
 }
 
 // ============================================================================
@@ -96,6 +97,24 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     }
 
     const userId = authResult.userId!;
+    const authType = authResult.authType!;
+    
+    // 🔑 Gérer l'authentification selon le type (JWT, API Key, OAuth)
+    let userToken: string | null = null;
+    
+    if (authType === 'jwt') {
+      // Pour les tokens JWT, extraire le token
+      const authHeader = request.headers.get('authorization');
+      userToken = authHeader?.startsWith('Bearer ') ? authHeader.substring(7) : null;
+    } else if (authType === 'api_key') {
+      // Pour les clés d'API, on n'a pas de token JWT
+      // On va passer l'userId directement aux tool calls
+      logApi.info(`🔑 Authentification par clé d'API détectée - userId: ${userId}`, context);
+    } else if (authType === 'oauth') {
+      // Pour OAuth, extraire le token
+      const authHeader = request.headers.get('authorization');
+      userToken = authHeader?.startsWith('Bearer ') ? authHeader.substring(7) : null;
+    }
 
     // 📋 Récupérer et valider le body
     const body = await request.json();
@@ -144,11 +163,12 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         image: image, // Image optionnelle pour les modèles Llama
         ...options
       },
-      userId,
+      userId, // Utiliser l'userId de l'authentification
       context: {
         ...context,
         agent_ref: ref,
-        agent_id: agent.id
+        agent_id: agent.id,
+        authType // Ajouter le type d'authentification
       } as ExecutionContext
     };
 
@@ -158,7 +178,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const executionResult = await agentManager.executeSpecializedAgent(
       agent.id,
       executionParams.input,
-      executionParams.userId,
+      userToken || userId, // ✅ CORRECTION : Passer le token JWT ou l'userId selon le type d'auth
       `api-v2-execute-${agent.id}-${Date.now()}`
     );
 

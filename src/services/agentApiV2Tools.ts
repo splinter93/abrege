@@ -1074,8 +1074,9 @@ export class AgentApiV2Tools {
 
   /**
    * Exécuter un outil par son nom (avec monitoring et optimisations)
+   * Supporte les tokens JWT et les clés d'API
    */
-  async executeTool(toolName: string, parameters: any, jwtToken: string): Promise<any> {
+  async executeTool(toolName: string, parameters: any, authToken: string): Promise<any> {
     const startTime = Date.now();
     let cacheHit = false;
     
@@ -1088,22 +1089,33 @@ export class AgentApiV2Tools {
       console.log(`[AgentApiV2Tools] 🚀 Tool: ${toolName}`);
       console.log(`[AgentApiV2Tools] 📦 Paramètres:`, parameters);
 
-      // Récupérer le userId à partir du JWT token (avec cache optimisé)
-      const userId = await this.getUserIdFromToken(jwtToken);
+      // 🔧 CORRECTION : Gérer les tokens JWT et les clés d'API
+      let userId: string;
+      
+      // Vérifier si c'est un userId direct (clé d'API) ou un token JWT
+      if (this.isUserId(authToken)) {
+        // C'est un userId direct (clé d'API)
+        userId = authToken;
+        console.log(`[AgentApiV2Tools] 🔑 Authentification par clé d'API - userId: ${userId}`);
+      } else {
+        // C'est un token JWT, extraire l'userId
+        userId = await this.getUserIdFromToken(authToken);
+        console.log(`[AgentApiV2Tools] 🔑 Authentification par token JWT - userId: ${userId}`);
+      }
 
       // Exécuter le tool avec timeout adaptatif si disponible
       let result;
       if (this.timeouts) {
         const timeout = this.timeouts.getToolCallTimeout(toolName);
         result = await Promise.race([
-          tool.execute(parameters, jwtToken, userId),
+          tool.execute(parameters, authToken, userId),
           new Promise((_, reject) => 
             setTimeout(() => reject(new Error(`Tool timeout after ${timeout}ms`)), timeout)
           )
         ]);
       } else {
         // Fallback sans timeout adaptatif
-        result = await tool.execute(parameters, jwtToken, userId);
+        result = await tool.execute(parameters, authToken, userId);
       }
       
       const duration = Date.now() - startTime;
@@ -1130,7 +1142,7 @@ export class AgentApiV2Tools {
       try {
         const pollingConfig = this.getPollingConfigForTool(toolName, result, userId);
         if (pollingConfig) {
-          await triggerUnifiedRealtimePolling(pollingConfig.entityType, pollingConfig.operation, jwtToken);
+          await triggerUnifiedRealtimePolling(pollingConfig.entityType, pollingConfig.operation, authToken);
           console.log(`[AgentApiV2Tools] 🔄 Polling intelligent déclenché: ${pollingConfig.entityType} ${pollingConfig.operation}`);
         }
       } catch (pollingError) {
@@ -1171,6 +1183,15 @@ export class AgentApiV2Tools {
   }
 
   /**
+   * Vérifier si la chaîne est un userId (UUID) ou un token JWT
+   */
+  private isUserId(token: string): boolean {
+    // Un userId est un UUID (format: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx)
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    return uuidRegex.test(token);
+  }
+
+  /**
    * Extraire le userId à partir du JWT token avec cache distribué optimisé
    */
   private async getUserIdFromToken(jwtToken: string): Promise<string> {
@@ -1187,16 +1208,23 @@ export class AgentApiV2Tools {
       }
 
       // 2. Récupérer depuis Supabase avec timeout optimisé si disponible
+      // ✅ CORRECTION : Utiliser l'anon key avec le token JWT dans les headers (comme dans authUtils.ts)
       const { createClient } = await import('@supabase/supabase-js');
       const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-      const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+      const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
       
-      const supabase = createClient(supabaseUrl, supabaseServiceRoleKey);
+      const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+        global: {
+          headers: {
+            Authorization: `Bearer ${jwtToken}`
+          }
+        }
+      });
       
       let user, error;
       if (this.timeouts) {
         const timeout = this.timeouts.getApiTimeout('supabase');
-        const userPromise = supabase.auth.getUser(jwtToken);
+        const userPromise = supabase.auth.getUser();
         const timeoutPromise = new Promise<never>((_, reject) => 
           setTimeout(() => reject(new Error(`Supabase timeout after ${timeout}ms`)), timeout)
         );
@@ -1206,7 +1234,7 @@ export class AgentApiV2Tools {
         error = result.error;
       } else {
         // Fallback sans timeout optimisé
-        const result = await supabase.auth.getUser(jwtToken);
+        const result = await supabase.auth.getUser();
         user = result.data.user;
         error = result.error;
       }

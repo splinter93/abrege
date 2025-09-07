@@ -81,6 +81,22 @@ export async function POST(
     }
 
     const userId = authResult.userId!;
+    
+    // 🔑 Extraire le token JWT pour les tool calls
+    const authHeader = request.headers.get('authorization');
+    const userToken = authHeader?.startsWith('Bearer ') ? authHeader.substring(7) : null;
+    
+    if (!userToken) {
+      logApi.info(`❌ Token JWT manquant pour les tool calls`, context);
+      return NextResponse.json(
+        { 
+          success: false,
+          error: 'Token JWT requis pour l\'exécution des agents avec tool calls',
+          code: SpecializedAgentError.AUTHENTICATION_ERROR
+        },
+        { status: 401 }
+      );
+    }
 
     // 📥 Récupérer le body de la requête
     let input: Record<string, unknown>;
@@ -115,7 +131,7 @@ export async function POST(
     const result = await agentManager.executeSpecializedAgent(
       agentId,
       input,
-      userId,
+      userToken, // ✅ CORRECTION : Passer le token JWT au lieu de l'userId
       `api-v2-${agentId}-${Date.now()}`
     );
 
