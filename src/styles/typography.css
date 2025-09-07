@@ -85,6 +85,23 @@
   --editor-body-size: 1rem;           /* 16px - premium size, was 18px */
   --editor-body-size-mobile: 0.9375rem; /* 15px - mobile optimized */
   --editor-h1-size: 2rem;             /* 32px - refined from 36px */
+
+  /* ==========================================================================
+     FONT-WEIGHTS CENTRALISÉS - PREMIUM EDITOR
+     ========================================================================== */
+  --editor-title-weight: 800;         /* Poids pour les titres principaux - AUGMENTÉ */
+  --editor-h1-weight: 900;            /* Poids pour H1 - ULTRA-GRAS */
+  --editor-h2-weight: 900;            /* Poids pour H2 - ULTRA-GRAS */
+  --editor-h3-weight: 900;            /* Poids pour H3 - ULTRA-GRAS */
+  --editor-h4-weight: 800;            /* Poids pour H4 - TRÈS GRAS */
+  --editor-h5-weight: 800;            /* Poids pour H5 - TRÈS GRAS */
+  --editor-h6-weight: 800;            /* Poids pour H6 - TRÈS GRAS */
+  --editor-body-weight: 400;          /* Poids pour le contenu principal */
+  --editor-strong-weight: 700;        /* Poids pour le texte en gras */
+  --editor-table-header-weight: 900;  /* Poids pour les en-têtes de tableau */
+  --editor-blockquote-weight: 600;    /* Poids pour les blockquotes */
+  --editor-code-weight: 500;          /* Poids pour le code inline */
+  --editor-checkbox-weight: 500;      /* Poids pour les checkboxes */
   --editor-h2-size: 1.5rem;           /* 24px - refined from 28px */
   --editor-h3-size: 1.25rem;          /* 20px - refined from 22px */
   --editor-h4-size: 1.0625rem;        /* 17px - refined from 18px */
@@ -213,7 +230,7 @@
   width: 100%;
   max-width: var(--editor-content-width);
   font-size: var(--editor-title-size);
-  font-weight: 700;
+  font-weight: 800;
   font-family: var(--editor-font-family);
   color: var(--editor-text-color);
   background: none;
@@ -235,7 +252,7 @@
   width: 100%;
   max-width: var(--editor-content-width);
   font-size: var(--editor-title-size);
-  font-weight: 700;
+  font-weight: 800;
   font-family: var(--editor-font-family);
   color: var(--editor-text-color);
   background: none;
@@ -511,6 +528,54 @@
 }
 
 /* ==========================================================================
+   STYLES DE CONTENU CENTRALISÉS - FONT-WEIGHTS
+   ==========================================================================
+   Tous les font-weights pour le contenu des notes sont définis ici
+*/
+
+/* Paragraphes et contenu principal */
+.markdown-body p,
+.ProseMirror p,
+.editor-content p {
+  font-weight: var(--editor-body-weight);
+}
+
+/* Texte en gras */
+.markdown-body strong,
+.ProseMirror strong,
+.editor-content strong {
+  font-weight: var(--editor-strong-weight);
+}
+
+/* Code inline */
+.markdown-body code,
+.ProseMirror code,
+.editor-content code {
+  font-weight: var(--editor-code-weight);
+}
+
+/* Blockquotes */
+.markdown-body blockquote p,
+.ProseMirror blockquote p,
+.editor-content blockquote p {
+  font-weight: var(--editor-blockquote-weight) !important;
+}
+
+/* En-têtes de tableaux */
+.markdown-body th,
+.ProseMirror th,
+.editor-content th {
+  font-weight: var(--editor-table-header-weight) !important;
+}
+
+/* Checkboxes */
+.markdown-body input[type='checkbox']:checked::after,
+.ProseMirror input[type='checkbox']:checked::after,
+.editor-content input[type='checkbox']:checked::after {
+  font-weight: bold !important;
+}
+
+/* ==========================================================================
    STYLES PAGE PUBLIQUE
    ==========================================================================
    Utilise les mêmes variables et logiques que l'éditeur
@@ -606,7 +671,7 @@ body.public-note-page {
   line-height: 1.1;
   color: var(--editor-text-color);
   font-size: var(--editor-title-size);
-  font-weight: 900 !important;
+  font-weight: var(--editor-h1-weight) !important;
   font-family: var(--editor-font-family) !important;
 }
 
@@ -627,7 +692,7 @@ body.public-note-page {
   color: white;
   text-shadow: 0 2px 4px rgba(0,0,0,0.2);
   font-size: var(--editor-title-size);
-  font-weight: 900 !important;
+  font-weight: var(--editor-h1-weight) !important;
   font-family: var(--editor-font-family) !important;
   margin: 0;
   text-align: center;
@@ -753,7 +818,7 @@ h6 {
 p {
   margin: 0 0 1.5rem 0 !important;
   line-height: 1.8 !important;
-  font-weight: 400 !important;
+  font-weight: var(--editor-body-weight) !important;
   font-size: 1rem !important;
   color: var(--editor-text-color) !important;
   font-family: var(--editor-font-family) !important;

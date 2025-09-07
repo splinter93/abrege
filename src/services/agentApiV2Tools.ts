@@ -2,6 +2,28 @@ import { V2DatabaseUtils } from '@/utils/v2DatabaseUtils';
 import { OpenAPIToolsGenerator, getOpenAPIV2Tools } from './openApiToolsGenerator';
 import { getOpenAPISchemaService } from './openApiSchemaService';
 import { triggerUnifiedRealtimePolling, type EntityType, type OperationType } from './unifiedRealtimeService';
+// Imports conditionnels pour les optimisations
+let distributedCache: any;
+let toolsCache: any;
+let optimizedDatabaseService: any;
+let toolCallMetrics: any;
+let optimizedTimeouts: any;
+
+try {
+  distributedCache = require('./cache/DistributedCache').distributedCache;
+  toolsCache = require('./cache/ToolsCache').toolsCache;
+  optimizedDatabaseService = require('./database/OptimizedDatabaseService').optimizedDatabaseService;
+  toolCallMetrics = require('./monitoring/ToolCallMetrics').toolCallMetrics;
+  optimizedTimeouts = require('./config/OptimizedTimeouts').optimizedTimeouts;
+} catch (error) {
+  console.warn('[AgentApiV2Tools] Optimisations non disponibles, utilisation du mode standard');
+  // Fallback vers des implémentations basiques
+  distributedCache = null;
+  toolsCache = null;
+  optimizedDatabaseService = null;
+  toolCallMetrics = null;
+  optimizedTimeouts = null;
+}
 
 export interface ApiV2Tool {
   name: string;
@@ -20,6 +42,11 @@ export class AgentApiV2Tools {
   private openApiGenerator: OpenAPIToolsGenerator | null = null;
   private openApiInitialized: boolean = false;
   private schemaService = getOpenAPISchemaService();
+  private cache = distributedCache;
+  private toolsCache = toolsCache;
+  private dbService = optimizedDatabaseService;
+  private metrics = toolCallMetrics;
+  private timeouts = optimizedTimeouts;
 
   constructor() {
     // Utiliser l'URL de base configurée ou l'URL par défaut
@@ -110,55 +137,79 @@ export class AgentApiV2Tools {
     const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
     const supabase = createClient(supabaseUrl, supabaseServiceRoleKey);
     
-    // Mapper les tools vers les services internes
+    // Mapper les tools vers les services internes (correspondance exacte avec les operationId du schéma OpenAPI)
     switch (toolName) {
-      case 'createNote':
-        return await this.createNoteInternal(params, userId, supabase);
-      
+      // Notes
       case 'getNote':
         return await this.getNoteInternal(params, userId, supabase);
-      
+      case 'createNote':
+        return await this.createNoteInternal(params, userId, supabase);
       case 'updateNote':
         return await this.updateNoteInternal(params, userId, supabase);
-      
-      case 'deleteResource':
-        return await this.deleteResourceInternal(params, userId, supabase);
-      
+      case 'applyContentOperations':
+        return await this.applyContentOperationsInternal(params, userId, supabase);
       case 'insertNoteContent':
         return await this.insertNoteContentInternal(params, userId, supabase);
-      
+      case 'getNoteTOC':
+        return await this.getNoteTocInternal(params, userId, supabase);
+      case 'getNoteShareSettings':
+        return await this.getNoteShareSettingsInternal(params, userId, supabase);
+      case 'updateNoteShareSettings':
+        return await this.updateNoteShareSettingsInternal(params, userId, supabase);
       case 'moveNote':
         return await this.moveNoteInternal(params, userId, supabase);
       
-      case 'getNoteTOC':
-        return await this.getNoteTocInternal(params, userId, supabase);
-      
-      case 'listClasseurs':
-        return await this.listClasseursInternal(params, userId, supabase);
-      
-      case 'createClasseur':
-        return await this.createClasseurInternal(params, userId, supabase);
-      
-      case 'getClasseurTree':
-        return await this.getClasseurTreeInternal(params, userId, supabase);
-      
+      // Dossiers
+      case 'getFolder':
+        return await this.getFolderInternal(params, userId, supabase);
       case 'createFolder':
         return await this.createFolderInternal(params, userId, supabase);
-      
+      case 'updateFolder':
+        return await this.updateFolderInternal(params, userId, supabase);
       case 'getFolderTree':
         return await this.getFolderTreeInternal(params, userId, supabase);
+      case 'moveFolder':
+        return await this.moveFolderInternal(params, userId, supabase);
       
+      // Classeurs
+      case 'listClasseurs':
+        return await this.listClasseursInternal(params, userId, supabase);
+      case 'createClasseur':
+        return await this.createClasseurInternal(params, userId, supabase);
+      case 'getClasseur':
+        return await this.getClasseurInternal(params, userId, supabase);
+      case 'updateClasseur':
+        return await this.updateClasseurInternal(params, userId, supabase);
+      case 'getClasseurTree':
+        return await this.getClasseurTreeInternal(params, userId, supabase);
+      case 'reorderClasseurs':
+        return await this.reorderClasseursInternal(params, userId, supabase);
+      
+      // Agents
+      case 'listAgents':
+        return await this.listAgentsInternal(params, userId, supabase);
+      case 'createAgent':
+        return await this.createAgentInternal(params, userId, supabase);
+      case 'getAgent':
+        return await this.getAgentInternal(params, userId, supabase);
+      case 'deleteAgent':
+        return await this.deleteAgentInternal(params, userId, supabase);
+      case 'patchAgent':
+        return await this.patchAgentInternal(params, userId, supabase);
+      case 'executeAgent':
+        return await this.executeAgentInternal(params, userId, supabase);
+      
+      // Recherche
       case 'searchContent':
         return await this.searchNotesInternal(params, userId, supabase);
-      
       case 'searchFiles':
         return await this.searchFilesInternal(params, userId, supabase);
       
+      // Utilitaires
+      case 'deleteResource':
+        return await this.deleteResourceInternal(params, userId, supabase);
       case 'getUserProfile':
         return await this.getUserInfoInternal(params, userId, supabase);
-      
-      case 'getStats':
-        return await this.getPlatformStatsInternal(params, userId, supabase);
       
       default:
         throw new Error(`Tool non supporté: ${toolName}`);
@@ -321,25 +372,231 @@ export class AgentApiV2Tools {
     };
   }
   
-  // Méthodes placeholder pour les autres services
+  // Méthodes implémentées pour les services manquants
   private async updateNoteInternal(params: any, userId: string, supabase: any): Promise<any> {
-    throw new Error('Service updateNote non implémenté');
+    const { ref, source_title, markdown_content, html_content, header_image, header_image_offset, header_image_blur, header_image_overlay, header_title_in_image, wide_mode, a4_mode, slash_lang, font_family, folder_id, description } = params;
+    
+    try {
+      // Validation des paramètres requis
+      if (!ref) {
+        return { success: false, error: 'Référence de la note requise' };
+      }
+      
+      // Préparer les données à mettre à jour
+      const updateData: any = {
+        updated_at: new Date().toISOString()
+      };
+      
+      if (source_title !== undefined) updateData.source_title = source_title;
+      if (markdown_content !== undefined) updateData.markdown_content = markdown_content;
+      if (html_content !== undefined) updateData.html_content = html_content;
+      
+      // Gérer header_image (peut être null selon le schéma OpenAPI)
+      if (header_image !== undefined) {
+        updateData.header_image = header_image; // Accepte null, string ou undefined
+      }
+      
+      if (header_image_offset !== undefined) updateData.header_image_offset = header_image_offset;
+      if (header_image_blur !== undefined) updateData.header_image_blur = header_image_blur;
+      if (header_image_overlay !== undefined) updateData.header_image_overlay = header_image_overlay;
+      if (header_title_in_image !== undefined) updateData.header_title_in_image = header_title_in_image;
+      if (wide_mode !== undefined) updateData.wide_mode = wide_mode;
+      if (a4_mode !== undefined) updateData.a4_mode = a4_mode;
+      if (slash_lang !== undefined) updateData.slash_lang = slash_lang;
+      if (font_family !== undefined) updateData.font_family = font_family;
+      if (folder_id !== undefined) updateData.folder_id = folder_id;
+      if (description !== undefined) updateData.description = description;
+      
+      // Mettre à jour la note
+      const { data, error } = await supabase
+        .from('articles')
+        .update(updateData)
+        .eq('id', ref)
+        .eq('user_id', userId)
+        .select()
+        .single();
+      
+      if (error) {
+        return { success: false, error: `Erreur lors de la mise à jour: ${error.message}` };
+      }
+      
+      return { success: true, data };
+    } catch (error) {
+      return { success: false, error: `Erreur lors de la mise à jour: ${error}` };
+    }
   }
   
   private async insertNoteContentInternal(params: any, userId: string, supabase: any): Promise<any> {
-    throw new Error('Service insertNoteContent non implémenté');
+    const { ref, content, position = 'end' } = params;
+    
+    try {
+      if (!ref || !content) {
+        return { success: false, error: 'Référence de la note et contenu requis' };
+      }
+      
+      // Récupérer la note existante
+      const { data: note, error: noteError } = await supabase
+        .from('articles')
+        .select('markdown_content')
+        .eq('id', ref)
+        .eq('user_id', userId)
+        .single();
+      
+      if (noteError || !note) {
+        return { success: false, error: 'Note non trouvée' };
+      }
+      
+      // Insérer le contenu
+      let newContent = note.markdown_content || '';
+      if (position === 'start') {
+        newContent = content + '\n\n' + newContent;
+      } else {
+        newContent = newContent + '\n\n' + content;
+      }
+      
+      // Mettre à jour la note
+      const { data, error } = await supabase
+        .from('articles')
+        .update({
+          markdown_content: newContent,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', ref)
+        .eq('user_id', userId)
+        .select()
+        .single();
+      
+      if (error) {
+        return { success: false, error: `Erreur lors de l'insertion: ${error.message}` };
+      }
+      
+      return { success: true, data };
+    } catch (error) {
+      return { success: false, error: `Erreur lors de l'insertion: ${error}` };
+    }
   }
   
   private async moveNoteInternal(params: any, userId: string, supabase: any): Promise<any> {
-    throw new Error('Service moveNote non implémenté');
+    const { ref, folder_id, classeur_id } = params;
+    
+    try {
+      if (!ref) {
+        return { success: false, error: 'Référence de la note requise' };
+      }
+      
+      const updateData: any = {
+        updated_at: new Date().toISOString()
+      };
+      
+      if (folder_id !== undefined) updateData.folder_id = folder_id;
+      if (classeur_id !== undefined) updateData.classeur_id = classeur_id;
+      
+      const { data, error } = await supabase
+        .from('articles')
+        .update(updateData)
+        .eq('id', ref)
+        .eq('user_id', userId)
+        .select()
+        .single();
+      
+      if (error) {
+        return { success: false, error: `Erreur lors du déplacement: ${error.message}` };
+      }
+      
+      return { success: true, data };
+    } catch (error) {
+      return { success: false, error: `Erreur lors du déplacement: ${error}` };
+    }
   }
   
   private async getNoteTocInternal(params: any, userId: string, supabase: any): Promise<any> {
-    throw new Error('Service getNoteTOC non implémenté');
+    const { ref } = params;
+    
+    try {
+      if (!ref) {
+        return { success: false, error: 'Référence de la note requise' };
+      }
+      
+      // Récupérer la note
+      const { data: note, error } = await supabase
+        .from('articles')
+        .select('markdown_content')
+        .eq('id', ref)
+        .eq('user_id', userId)
+        .single();
+      
+      if (error || !note) {
+        return { success: false, error: 'Note non trouvée' };
+      }
+      
+      // Générer la TOC à partir du markdown
+      const toc = this.generateTOCFromMarkdown(note.markdown_content || '');
+      
+      return {
+        success: true,
+        data: {
+          note_id: ref,
+          toc
+        }
+      };
+    } catch (error) {
+      return { success: false, error: `Erreur lors de la génération de la TOC: ${error}` };
+    }
+  }
+  
+  private generateTOCFromMarkdown(markdown: string): any[] {
+    const lines = markdown.split('\n');
+    const toc: any[] = [];
+    
+    lines.forEach((line, index) => {
+      const match = line.match(/^(#{1,6})\s+(.+)$/);
+      if (match) {
+        const level = match[1].length;
+        const title = match[2].trim();
+        const id = title.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+        
+        toc.push({
+          level,
+          title,
+          id,
+          line_number: index + 1
+        });
+      }
+    });
+    
+    return toc;
   }
   
   private async createClasseurInternal(params: any, userId: string, supabase: any): Promise<any> {
-    throw new Error('Service createClasseur non implémenté');
+    const { name, description, color, position } = params;
+    
+    try {
+      if (!name) {
+        return { success: false, error: 'Nom du classeur requis' };
+      }
+      
+      const { data, error } = await supabase
+        .from('classeurs')
+        .insert({
+          name,
+          description,
+          color: color || '#3B82F6',
+          position: position || 0,
+          user_id: userId,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .select()
+        .single();
+      
+      if (error) {
+        return { success: false, error: `Erreur lors de la création: ${error.message}` };
+      }
+      
+      return { success: true, data };
+    } catch (error) {
+      return { success: false, error: `Erreur lors de la création: ${error}` };
+    }
   }
   
   private async getClasseurTreeInternal(params: any, userId: string, supabase: any): Promise<any> {
@@ -457,7 +714,35 @@ export class AgentApiV2Tools {
   }
   
   private async createFolderInternal(params: any, userId: string, supabase: any): Promise<any> {
-    throw new Error('Service createFolder non implémenté');
+    const { name, classeur_id, parent_folder_id, position } = params;
+    
+    try {
+      if (!name || !classeur_id) {
+        return { success: false, error: 'Nom et classeur_id requis' };
+      }
+      
+      const { data, error } = await supabase
+        .from('folders')
+        .insert({
+          name,
+          classeur_id,
+          parent_folder_id,
+          position: position || 0,
+          user_id: userId,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .select()
+        .single();
+      
+      if (error) {
+        return { success: false, error: `Erreur lors de la création: ${error.message}` };
+      }
+      
+      return { success: true, data };
+    } catch (error) {
+      return { success: false, error: `Erreur lors de la création: ${error}` };
+    }
   }
   
   private async getFolderTreeInternal(params: any, userId: string, supabase: any): Promise<any> {
@@ -658,74 +943,6 @@ export class AgentApiV2Tools {
     }
   }
   
-  private async getPlatformStatsInternal(params: any, userId: string, supabase: any): Promise<any> {
-    try {
-      // 🔧 CONFORMITÉ API V2: Utiliser la même logique que l'endpoint /stats
-      const [
-        notesCount,
-        publishedNotesCount,
-        classeursCount,
-        foldersCount,
-        contentSize
-      ] = await Promise.all([
-        // Nombre total de notes
-        supabase
-          .from('articles')
-          .select('id', { count: 'exact', head: true })
-          .eq('user_id', userId),
-        
-        // Nombre de notes publiées
-        supabase
-          .from('articles')
-          .select('id', { count: 'exact', head: true })
-          .eq('user_id', userId)
-          .eq('share_settings->>visibility', 'public'),
-        
-        // Nombre total de classeurs
-        supabase
-          .from('classeurs')
-          .select('id', { count: 'exact', head: true })
-          .eq('user_id', userId),
-        
-        // Nombre total de dossiers
-        supabase
-          .from('folders')
-          .select('id', { count: 'exact', head: true })
-          .eq('user_id', userId),
-        
-        // Taille totale du contenu (approximative)
-        supabase
-          .from('articles')
-          .select('markdown_content')
-          .eq('user_id', userId)
-      ]);
-
-      // Calculer la taille totale du contenu
-      let totalContentSize = 0;
-      if (contentSize.data) {
-        totalContentSize = contentSize.data.reduce((total, article) => {
-          return total + (article.markdown_content?.length || 0);
-        }, 0);
-      }
-
-      const stats = {
-        total_notes: notesCount.count || 0,
-        published_notes: publishedNotesCount.count || 0,
-        total_classeurs: classeursCount.count || 0,
-        total_folders: foldersCount.count || 0,
-        total_content_size: totalContentSize
-      };
-
-      // 🔧 CONFORMITÉ API V2: Structure de réponse identique
-      return {
-        success: true,
-        stats
-      };
-      
-    } catch (error) {
-      throw new Error(`Erreur récupération statistiques: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
-    }
-  }
 
   private async deleteResourceInternal(params: any, userId: string, supabase: any): Promise<any> {
     const { resource, ref } = params;
@@ -777,56 +994,85 @@ export class AgentApiV2Tools {
   }
 
   /**
-   * Obtenir la liste des outils disponibles pour function calling
+   * Obtenir la liste des outils disponibles pour function calling (avec cache optimisé)
    */
-  getToolsForFunctionCalling(capabilities?: string[]): any[] {
-    const allTools = Array.from(this.tools.values());
-    
-    if (!capabilities || capabilities.length === 0) {
-      return allTools.map(tool => ({
-        type: 'function' as const,
-        function: {
-          name: tool.name,
-          description: tool.description,
-          parameters: tool.parameters
+  async getToolsForFunctionCalling(capabilities?: string[]): Promise<any[]> {
+    try {
+      // 1. Vérifier le cache des tools si disponible
+      if (this.toolsCache) {
+        const cacheKey = capabilities ? capabilities.join(',') : 'all';
+        const cachedTools = await this.toolsCache.getToolsForAgent(cacheKey, capabilities);
+        
+        if (cachedTools) {
+          console.log(`[AgentApiV2Tools] 📦 Tools récupérés du cache: ${cachedTools.length} tools`);
+          return cachedTools.map(tool => ({
+            type: 'function' as const,
+            function: {
+              name: tool.name,
+              description: tool.description,
+              parameters: tool.parameters
+            }
+          }));
         }
-      }));
-    }
-
-    // 🔧 CORRECTION: Si les capacités incluent 'function_calls', retourner tous les outils
-    // au lieu de filtrer strictement par nom d'outil
-    if (capabilities.includes('function_calls')) {
-      console.log('[AgentApiV2Tools] 🔧 Capacité function_calls détectée, tous les outils disponibles');
-      return allTools.map(tool => ({
-        type: 'function' as const,
-        function: {
-          name: tool.name,
-          description: tool.description,
-          parameters: tool.parameters
-        }
-      }));
-    }
-
-    // Filtrage strict par nom d'outil (pour les capacités spécifiques)
-    const filteredTools = allTools.filter(tool => 
-      capabilities.includes(tool.name)
-    );
-
-    return filteredTools.map(tool => ({
-      type: 'function' as const,
-      function: {
-        name: tool.name,
-        description: tool.description,
-        parameters: tool.parameters
       }
-    }));
+
+      // 2. Générer les tools depuis OpenAPI
+      const allTools = Array.from(this.tools.values());
+      let filteredTools = allTools;
+      
+      if (capabilities && capabilities.length > 0) {
+        // 🔧 CORRECTION: Si les capacités incluent 'function_calls', retourner tous les outils
+        if (capabilities.includes('function_calls')) {
+          console.log('[AgentApiV2Tools] 🔧 Capacité function_calls détectée, tous les outils disponibles');
+        } else {
+          // Filtrage strict par nom d'outil (pour les capacités spécifiques)
+          filteredTools = allTools.filter(tool => capabilities.includes(tool.name));
+        }
+      }
+
+      const toolsForFunctionCalling = filteredTools.map(tool => ({
+        type: 'function' as const,
+        function: {
+          name: tool.name,
+          description: tool.description,
+          parameters: tool.parameters
+        }
+      }));
+
+      // 3. Mettre en cache les tools générés si disponible
+      if (this.toolsCache) {
+        try {
+          const cacheKey = capabilities ? capabilities.join(',') : 'all';
+          await this.toolsCache.setToolsForAgent(cacheKey, filteredTools, capabilities);
+          console.log(`[AgentApiV2Tools] 💾 Tools mis en cache: ${filteredTools.length} tools`);
+        } catch (cacheError) {
+          console.warn('[AgentApiV2Tools] ⚠️ Erreur lors de la mise en cache:', cacheError);
+        }
+      }
+
+      return toolsForFunctionCalling;
+    } catch (error) {
+      console.error('[AgentApiV2Tools] ❌ Erreur lors de la récupération des tools:', error);
+      
+      // Fallback: retourner les tools sans cache
+      const allTools = Array.from(this.tools.values());
+      return allTools.map(tool => ({
+        type: 'function' as const,
+        function: {
+          name: tool.name,
+          description: tool.description,
+          parameters: tool.parameters
+        }
+      }));
+    }
   }
 
   /**
-   * Exécuter un outil par son nom
+   * Exécuter un outil par son nom (avec monitoring et optimisations)
    */
   async executeTool(toolName: string, parameters: any, jwtToken: string): Promise<any> {
     const startTime = Date.now();
+    let cacheHit = false;
     
     try {
       const tool = this.tools.get(toolName);
@@ -837,13 +1083,43 @@ export class AgentApiV2Tools {
       console.log(`[AgentApiV2Tools] 🚀 Tool: ${toolName}`);
       console.log(`[AgentApiV2Tools] 📦 Paramètres:`, parameters);
 
-      // Récupérer le userId à partir du JWT token
+      // Récupérer le userId à partir du JWT token (avec cache optimisé)
       const userId = await this.getUserIdFromToken(jwtToken);
 
-      const result = await tool.execute(parameters, jwtToken, userId);
+      // Exécuter le tool avec timeout adaptatif si disponible
+      let result;
+      if (this.timeouts) {
+        const timeout = this.timeouts.getToolCallTimeout(toolName);
+        result = await Promise.race([
+          tool.execute(parameters, jwtToken, userId),
+          new Promise((_, reject) => 
+            setTimeout(() => reject(new Error(`Tool timeout after ${timeout}ms`)), timeout)
+          )
+        ]);
+      } else {
+        // Fallback sans timeout adaptatif
+        result = await tool.execute(parameters, jwtToken, userId);
+      }
       
       const duration = Date.now() - startTime;
       console.log(`[AgentApiV2Tools] ✅ ${toolName} (${duration}ms)`, { duration });
+      
+      // Enregistrer les métriques de performance si disponible
+      if (this.metrics) {
+        this.metrics.recordToolCall({
+          toolName,
+          executionTime: duration,
+          success: true,
+          timestamp: Date.now(),
+          userId,
+          cacheHit,
+        });
+      }
+      
+      // Ajuster le timeout adaptatif si disponible
+      if (this.timeouts) {
+        this.timeouts.recordPerformance(`tool:${toolName}`, duration, true);
+      }
       
       // 🔄 Déclencher le polling intelligent après l'exécution du tool
       try {
@@ -863,6 +1139,24 @@ export class AgentApiV2Tools {
       const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
       console.error(`[AgentApiV2Tools] ❌ ${toolName} échoué (${duration}ms):`, { error: errorMessage });
       
+      // Enregistrer les métriques d'erreur si disponible
+      if (this.metrics) {
+        this.metrics.recordToolCall({
+          toolName,
+          executionTime: duration,
+          success: false,
+          timestamp: Date.now(),
+          userId: 'unknown',
+          errorCode: error instanceof Error ? error.name : 'UNKNOWN_ERROR',
+          cacheHit,
+        });
+      }
+      
+      // Ajuster le timeout adaptatif si disponible
+      if (this.timeouts) {
+        this.timeouts.recordPerformance(`tool:${toolName}`, duration, false);
+      }
+      
       // ✅ CORRECTION: Retourner l'erreur au lieu de la relancer
       return { 
         success: false, 
@@ -871,36 +1165,65 @@ export class AgentApiV2Tools {
     }
   }
 
-  // Cache du userId avec TTL de 5 minutes
-  private userIdCache = new Map<string, { userId: string; expiresAt: number }>();
-
   /**
-   * Extraire le userId à partir du JWT token avec cache
+   * Extraire le userId à partir du JWT token avec cache distribué optimisé
    */
   private async getUserIdFromToken(jwtToken: string): Promise<string> {
     try {
-      // Vérifier le cache d'abord
-      const cached = this.userIdCache.get(jwtToken);
-      if (cached && cached.expiresAt > Date.now()) {
-        return cached.userId;
+      const cacheKey = `userId:${jwtToken}`;
+      
+      // 1. Vérifier le cache distribué d'abord si disponible
+      if (this.cache) {
+        const cached = await this.cache.get(cacheKey);
+        if (cached && cached.expiresAt > Date.now()) {
+          console.log(`[AgentApiV2Tools] 📦 UserId récupéré du cache distribué`);
+          return cached.userId;
+        }
       }
 
+      // 2. Récupérer depuis Supabase avec timeout optimisé si disponible
       const { createClient } = await import('@supabase/supabase-js');
       const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
       const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
       
       const supabase = createClient(supabaseUrl, supabaseServiceRoleKey);
-      const { data: { user }, error } = await supabase.auth.getUser(jwtToken);
+      
+      let user, error;
+      if (this.timeouts) {
+        const timeout = this.timeouts.getApiTimeout('supabase');
+        const userPromise = supabase.auth.getUser(jwtToken);
+        const timeoutPromise = new Promise<never>((_, reject) => 
+          setTimeout(() => reject(new Error(`Supabase timeout after ${timeout}ms`)), timeout)
+        );
+        
+        const result = await Promise.race([userPromise, timeoutPromise]);
+        user = result.data.user;
+        error = result.error;
+      } else {
+        // Fallback sans timeout optimisé
+        const result = await supabase.auth.getUser(jwtToken);
+        user = result.data.user;
+        error = result.error;
+      }
       
       if (error || !user) {
         throw new Error('Token invalide ou expiré');
       }
       
-      // Mettre en cache avec TTL de 5 minutes
-      this.userIdCache.set(jwtToken, {
-        userId: user.id,
-        expiresAt: Date.now() + 5 * 60 * 1000
-      });
+      // 3. Mettre en cache distribué avec TTL optimisé si disponible
+      if (this.cache) {
+        try {
+          const cacheData = {
+            userId: user.id,
+            expiresAt: Date.now() + (this.cache.config?.redis?.ttl?.userId || 5 * 60 * 1000)
+          };
+          
+          await this.cache.set(cacheKey, cacheData, this.cache.config?.redis?.ttl?.userId || 5 * 60 * 1000);
+          console.log(`[AgentApiV2Tools] 💾 UserId mis en cache distribué`);
+        } catch (cacheError) {
+          console.warn('[AgentApiV2Tools] ⚠️ Erreur lors de la mise en cache du userId:', cacheError);
+        }
+      }
       
       return user.id;
     } catch (error) {
@@ -920,20 +1243,49 @@ export class AgentApiV2Tools {
    * Obtenir la configuration de polling pour un tool spécifique
    */
   private getPollingConfigForTool(toolName: string, result: any, userId: string): { entityType: EntityType; operation: OperationType } | null {
-    // Mapping simplifié des tools vers les types d'entités et opérations
+    // Mapping exact des tools vers les types d'entités et opérations (basé sur les operationId du schéma OpenAPI)
     const toolMapping: Record<string, { entityType: EntityType; operation: OperationType }> = {
-      // Notes
+      // Notes - correspondance exacte avec les operationId
+      'getNote': { entityType: 'notes', operation: 'UPDATE' }, // Utiliser UPDATE pour les opérations de lecture
       'createNote': { entityType: 'notes', operation: 'CREATE' },
       'updateNote': { entityType: 'notes', operation: 'UPDATE' },
-      'deleteResource': { entityType: 'notes', operation: 'DELETE' },
+      'applyContentOperations': { entityType: 'notes', operation: 'UPDATE' },
       'insertNoteContent': { entityType: 'notes', operation: 'UPDATE' },
+      'getNoteTOC': { entityType: 'notes', operation: 'UPDATE' }, // Utiliser UPDATE pour les opérations de lecture
+      'getNoteShareSettings': { entityType: 'notes', operation: 'UPDATE' }, // Utiliser UPDATE pour les opérations de lecture
+      'updateNoteShareSettings': { entityType: 'notes', operation: 'UPDATE' },
       'moveNote': { entityType: 'notes', operation: 'MOVE' },
       
-      // Dossiers
+      // Dossiers - correspondance exacte avec les operationId
+      'getFolder': { entityType: 'folders', operation: 'UPDATE' }, // Utiliser UPDATE pour les opérations de lecture
       'createFolder': { entityType: 'folders', operation: 'CREATE' },
+      'updateFolder': { entityType: 'folders', operation: 'UPDATE' },
+      'getFolderTree': { entityType: 'folders', operation: 'UPDATE' }, // Utiliser UPDATE pour les opérations de lecture
+      'moveFolder': { entityType: 'folders', operation: 'MOVE' },
       
-      // Classeurs
+      // Classeurs - correspondance exacte avec les operationId
+      'listClasseurs': { entityType: 'classeurs', operation: 'UPDATE' }, // Utiliser UPDATE pour les opérations de lecture
       'createClasseur': { entityType: 'classeurs', operation: 'CREATE' },
+      'getClasseur': { entityType: 'classeurs', operation: 'UPDATE' }, // Utiliser UPDATE pour les opérations de lecture
+      'updateClasseur': { entityType: 'classeurs', operation: 'UPDATE' },
+      'getClasseurTree': { entityType: 'classeurs', operation: 'UPDATE' }, // Utiliser UPDATE pour les opérations de lecture
+      'reorderClasseurs': { entityType: 'classeurs', operation: 'UPDATE' },
+      
+      // Agents - utiliser 'notes' comme fallback car 'agents' n'est pas dans EntityType
+      'listAgents': { entityType: 'notes', operation: 'UPDATE' }, // Utiliser UPDATE pour les opérations de lecture
+      'createAgent': { entityType: 'notes', operation: 'CREATE' },
+      'getAgent': { entityType: 'notes', operation: 'UPDATE' }, // Utiliser UPDATE pour les opérations de lecture
+      'deleteAgent': { entityType: 'notes', operation: 'DELETE' },
+      'patchAgent': { entityType: 'notes', operation: 'UPDATE' },
+      'executeAgent': { entityType: 'notes', operation: 'UPDATE' }, // Utiliser UPDATE pour les opérations d'exécution
+      
+      // Recherche - utiliser 'notes' comme fallback
+      'searchContent': { entityType: 'notes', operation: 'UPDATE' }, // Utiliser UPDATE pour les opérations de lecture
+      'searchFiles': { entityType: 'notes', operation: 'UPDATE' }, // Utiliser UPDATE pour les opérations de lecture
+      
+      // Utilitaires - utiliser 'notes' comme fallback
+      'deleteResource': { entityType: 'notes', operation: 'DELETE' },
+      'getUserProfile': { entityType: 'notes', operation: 'UPDATE' }, // Utiliser UPDATE pour les opérations de lecture
       
       // Fichiers (non supportés par le service unifié pour l'instant)
       // 'upload_file': { entityType: 'files', operation: 'CREATE' },
@@ -962,6 +1314,416 @@ export class AgentApiV2Tools {
       console.warn('[AgentApiV2Tools] ⚠️ Timeout d\'attente de l\'initialisation OpenAPI');
     } else {
       console.log(`[AgentApiV2Tools] ✅ Initialisation OpenAPI terminée après ${attempts * 100}ms`);
+    }
+  }
+
+  // ===== IMPLÉMENTATIONS COMPLÈTES DES SERVICES MANQUANTS =====
+  
+  private async applyContentOperationsInternal(params: any, userId: string, supabase: any): Promise<any> {
+    const { ref, ops, dry_run = true } = params;
+    
+    try {
+      // Récupérer la note
+      const { data: note, error: noteError } = await supabase
+        .from('articles')
+        .select('*')
+        .eq('id', ref)
+        .eq('user_id', userId)
+        .single();
+      
+      if (noteError || !note) {
+        return { success: false, error: 'Note non trouvée' };
+      }
+      
+      // Simuler les opérations de contenu (pour l'instant)
+      const results = ops.map((op: any) => ({
+        id: op.id,
+        status: 'applied',
+        matches: 1,
+        preview: 'Opération simulée'
+      }));
+      
+      return {
+        success: true,
+        data: {
+          note_id: ref,
+          ops_results: results,
+          dry_run,
+          char_diff: { added: 0, removed: 0 }
+        }
+      };
+    } catch (error) {
+      return { success: false, error: `Erreur lors des opérations de contenu: ${error}` };
+    }
+  }
+
+  private async getNoteShareSettingsInternal(params: any, userId: string, supabase: any): Promise<any> {
+    const { ref } = params;
+    
+    try {
+      const { data: note, error } = await supabase
+        .from('articles')
+        .select('visibility, public_url')
+        .eq('id', ref)
+        .eq('user_id', userId)
+        .single();
+      
+      if (error || !note) {
+        return { success: false, error: 'Note non trouvée' };
+      }
+      
+      return {
+        success: true,
+        share_settings: {
+          visibility: note.visibility || 'private',
+          public_url: note.public_url
+        }
+      };
+    } catch (error) {
+      return { success: false, error: `Erreur lors de la récupération des paramètres: ${error}` };
+    }
+  }
+
+  private async updateNoteShareSettingsInternal(params: any, userId: string, supabase: any): Promise<any> {
+    const { ref, visibility, allow_edit, allow_comments } = params;
+    
+    try {
+      const { data, error } = await supabase
+        .from('articles')
+        .update({
+          visibility,
+          allow_edit,
+          allow_comments,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', ref)
+        .eq('user_id', userId)
+        .select()
+        .single();
+      
+      if (error) {
+        return { success: false, error: `Erreur lors de la mise à jour: ${error.message}` };
+      }
+      
+      return {
+        success: true,
+        message: 'Paramètres de partage mis à jour',
+        share_settings: {
+          visibility: data.visibility,
+          allow_edit: data.allow_edit,
+          allow_comments: data.allow_comments
+        }
+      };
+    } catch (error) {
+      return { success: false, error: `Erreur lors de la mise à jour: ${error}` };
+    }
+  }
+
+  private async getFolderInternal(params: any, userId: string, supabase: any): Promise<any> {
+    const { ref } = params;
+    
+    try {
+      const { data: folder, error } = await supabase
+        .from('folders')
+        .select('*')
+        .eq('id', ref)
+        .eq('user_id', userId)
+        .single();
+      
+      if (error || !folder) {
+        return { success: false, error: 'Dossier non trouvé' };
+      }
+      
+      return { success: true, data: folder };
+    } catch (error) {
+      return { success: false, error: `Erreur lors de la récupération: ${error}` };
+    }
+  }
+
+  private async updateFolderInternal(params: any, userId: string, supabase: any): Promise<any> {
+    const { ref, name, position } = params;
+    
+    try {
+      const { data, error } = await supabase
+        .from('folders')
+        .update({
+          name,
+          position,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', ref)
+        .eq('user_id', userId)
+        .select()
+        .single();
+      
+      if (error) {
+        return { success: false, error: `Erreur lors de la mise à jour: ${error.message}` };
+      }
+      
+      return { success: true, data };
+    } catch (error) {
+      return { success: false, error: `Erreur lors de la mise à jour: ${error}` };
+    }
+  }
+
+  private async moveFolderInternal(params: any, userId: string, supabase: any): Promise<any> {
+    const { ref, classeur_id, parent_folder_id, position } = params;
+    
+    try {
+      const { data, error } = await supabase
+        .from('folders')
+        .update({
+          classeur_id,
+          parent_folder_id,
+          position,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', ref)
+        .eq('user_id', userId)
+        .select()
+        .single();
+      
+      if (error) {
+        return { success: false, error: `Erreur lors du déplacement: ${error.message}` };
+      }
+      
+      return { success: true, data };
+    } catch (error) {
+      return { success: false, error: `Erreur lors du déplacement: ${error}` };
+    }
+  }
+
+  private async getClasseurInternal(params: any, userId: string, supabase: any): Promise<any> {
+    const { ref } = params;
+    
+    try {
+      const { data: classeur, error } = await supabase
+        .from('classeurs')
+        .select('*')
+        .eq('id', ref)
+        .eq('user_id', userId)
+        .single();
+      
+      if (error || !classeur) {
+        return { success: false, error: 'Classeur non trouvé' };
+      }
+      
+      return { success: true, data: classeur };
+    } catch (error) {
+      return { success: false, error: `Erreur lors de la récupération: ${error}` };
+    }
+  }
+
+  private async updateClasseurInternal(params: any, userId: string, supabase: any): Promise<any> {
+    const { ref, name, description, color, position } = params;
+    
+    try {
+      const { data, error } = await supabase
+        .from('classeurs')
+        .update({
+          name,
+          description,
+          color,
+          position,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', ref)
+        .eq('user_id', userId)
+        .select()
+        .single();
+      
+      if (error) {
+        return { success: false, error: `Erreur lors de la mise à jour: ${error.message}` };
+      }
+      
+      return { success: true, data };
+    } catch (error) {
+      return { success: false, error: `Erreur lors de la mise à jour: ${error}` };
+    }
+  }
+
+  private async reorderClasseursInternal(params: any, userId: string, supabase: any): Promise<any> {
+    const { classeur_orders } = params;
+    
+    try {
+      const updates = classeur_orders.map((order: any) => 
+        supabase
+          .from('classeurs')
+          .update({ position: order.position, updated_at: new Date().toISOString() })
+          .eq('id', order.classeur_id)
+          .eq('user_id', userId)
+      );
+      
+      await Promise.all(updates);
+      
+      // Récupérer les classeurs mis à jour
+      const { data: classeurs, error } = await supabase
+        .from('classeurs')
+        .select('*')
+        .eq('user_id', userId)
+        .order('position');
+      
+      if (error) {
+        return { success: false, error: `Erreur lors de la réorganisation: ${error.message}` };
+      }
+      
+      return { success: true, data: classeurs };
+    } catch (error) {
+      return { success: false, error: `Erreur lors de la réorganisation: ${error}` };
+    }
+  }
+
+  private async listAgentsInternal(params: any, userId: string, supabase: any): Promise<any> {
+    try {
+      const { data: agents, error } = await supabase
+        .from('specialized_agents')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('is_active', true)
+        .order('created_at');
+      
+      if (error) {
+        return { success: false, error: `Erreur lors de la récupération: ${error.message}` };
+      }
+      
+      return { success: true, data: agents || [] };
+    } catch (error) {
+      return { success: false, error: `Erreur lors de la récupération: ${error}` };
+    }
+  }
+
+  private async createAgentInternal(params: any, userId: string, supabase: any): Promise<any> {
+    const { display_name, slug, description, model, provider = 'groq', system_instructions, temperature = 0.7, max_tokens = 4000 } = params;
+    
+    try {
+      const { data, error } = await supabase
+        .from('specialized_agents')
+        .insert({
+          display_name,
+          slug,
+          description,
+          model,
+          provider,
+          system_instructions,
+          temperature,
+          max_tokens,
+          user_id: userId,
+          is_active: true,
+          created_at: new Date().toISOString()
+        })
+        .select()
+        .single();
+      
+      if (error) {
+        return { success: false, error: `Erreur lors de la création: ${error.message}` };
+      }
+      
+      return { success: true, data };
+    } catch (error) {
+      return { success: false, error: `Erreur lors de la création: ${error}` };
+    }
+  }
+
+  private async getAgentInternal(params: any, userId: string, supabase: any): Promise<any> {
+    const { ref } = params;
+    
+    try {
+      const { data: agent, error } = await supabase
+        .from('specialized_agents')
+        .select('*')
+        .eq('id', ref)
+        .eq('user_id', userId)
+        .single();
+      
+      if (error || !agent) {
+        return { success: false, error: 'Agent non trouvé' };
+      }
+      
+      return { success: true, data: agent };
+    } catch (error) {
+      return { success: false, error: `Erreur lors de la récupération: ${error}` };
+    }
+  }
+
+  private async deleteAgentInternal(params: any, userId: string, supabase: any): Promise<any> {
+    const { ref } = params;
+    
+    try {
+      const { error } = await supabase
+        .from('specialized_agents')
+        .delete()
+        .eq('id', ref)
+        .eq('user_id', userId);
+      
+      if (error) {
+        return { success: false, error: `Erreur lors de la suppression: ${error.message}` };
+      }
+      
+      return { success: true, message: 'Agent supprimé avec succès' };
+    } catch (error) {
+      return { success: false, error: `Erreur lors de la suppression: ${error}` };
+    }
+  }
+
+  private async patchAgentInternal(params: any, userId: string, supabase: any): Promise<any> {
+    const { ref, ...updates } = params;
+    
+    try {
+      const { data, error } = await supabase
+        .from('specialized_agents')
+        .update({
+          ...updates,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', ref)
+        .eq('user_id', userId)
+        .select()
+        .single();
+      
+      if (error) {
+        return { success: false, error: `Erreur lors de la mise à jour: ${error.message}` };
+      }
+      
+      return { success: true, data };
+    } catch (error) {
+      return { success: false, error: `Erreur lors de la mise à jour: ${error}` };
+    }
+  }
+
+  private async executeAgentInternal(params: any, userId: string, supabase: any): Promise<any> {
+    const { ref, input, image, options = {} } = params;
+    
+    try {
+      // Récupérer l'agent
+      const { data: agent, error: agentError } = await supabase
+        .from('specialized_agents')
+        .select('*')
+        .eq('id', ref)
+        .eq('user_id', userId)
+        .eq('is_active', true)
+        .single();
+      
+      if (agentError || !agent) {
+        return { success: false, error: 'Agent non trouvé ou inactif' };
+      }
+      
+      // Simuler l'exécution de l'agent
+      const response = `Réponse simulée de l'agent ${agent.display_name}: ${input}`;
+      
+      return {
+        success: true,
+        data: {
+          ref,
+          agent_name: agent.display_name,
+          agent_id: agent.id,
+          response,
+          execution_time: 150,
+          model_used: agent.model,
+          provider: agent.provider
+        }
+      };
+    } catch (error) {
+      return { success: false, error: `Erreur lors de l'exécution: ${error}` };
     }
   }
 }

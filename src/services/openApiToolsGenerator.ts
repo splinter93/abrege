@@ -60,8 +60,8 @@ export class OpenAPIToolsGenerator {
    */
   private createTool(endpoint: string, method: string, operation: any): OpenAPITool | null {
     try {
-      // Nom du tool (format compatible avec votre système)
-      const toolName = this.generateToolName(endpoint, method);
+      // Nom du tool basé sur l'operationId (source de vérité)
+      const toolName = this.generateToolName(endpoint, method, operation.operationId);
       
       // Description
       const description = operation.summary || 
@@ -90,10 +90,15 @@ export class OpenAPIToolsGenerator {
   }
 
   /**
-   * Générer un nom de tool compatible avec votre système
+   * Générer un nom de tool basé sur l'operationId du schéma OpenAPI (source de vérité)
    */
-  private generateToolName(endpoint: string, method: string): string {
-    // Convertir l'endpoint en nom de tool (API V2)
+  private generateToolName(endpoint: string, method: string, operationId?: string): string {
+    // Si on a un operationId, l'utiliser directement (source de vérité)
+    if (operationId) {
+      return operationId;
+    }
+
+    // Fallback: conversion manuelle si pas d'operationId
     let toolName = endpoint
       .replace(/^\/api\/v2\//, '') // Enlever le préfixe API V2
       .replace(/\/\{([^}]+)\}/g, '_$1') // Convertir les paramètres de path
@@ -105,41 +110,7 @@ export class OpenAPIToolsGenerator {
     const httpVerb = method.toLowerCase();
     toolName = `${httpVerb}_${toolName}`;
 
-    // Noms plus lisibles pour les LLMs (API V2)
-    const nameMappings: Record<string, string> = {
-      // Notes
-      'post_note_create': 'create_note',
-      'get_note_ref': 'get_note',
-      'put_note_ref_update': 'update_note',
-      'delete_note_ref_delete': 'delete_note',
-      'patch_note_ref_insert-content': 'insert_content_to_note',
-      'put_note_ref_move': 'move_note',
-      'get_note_ref_table-of-contents': 'get_note_toc',
-      'get_note_ref_statistics': 'get_note_stats',
-      'get_note_recent': 'get_recent_notes',
-      
-      // Classeurs
-      'post_classeur_create': 'create_classeur',
-      'get_classeurs': 'list_classeurs',
-      'get_classeur_ref_tree': 'get_classeur_tree',
-      
-      // Dossiers
-      'post_folder_create': 'create_folder',
-      'get_folder_ref_tree': 'get_folder_tree',
-      
-      // Recherche
-      'get_search': 'search_notes',
-      'get_files_search': 'search_files',
-      
-      // Utilisateur
-      'get_me': 'get_user_info',
-      'get_stats': 'get_platform_stats',
-      
-      // Gestion unifiée
-      'delete_delete_resource_ref': 'delete_resource'
-    };
-
-    return nameMappings[toolName] || toolName;
+    return toolName;
   }
 
   /**

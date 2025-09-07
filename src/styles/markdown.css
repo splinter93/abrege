@@ -110,7 +110,7 @@ html {
 .markdown-body li {
   margin: 0.75rem 0;
   line-height: 1.8;
-  font-weight: 400;
+  /* font-weight géré par typography.css */
   padding-left: 0.5em;
   position: relative;
   text-align: left;
@@ -586,7 +586,7 @@ html {
     line-height: 1.7;
     text-align: center;
     text-align-last: center;
-    font-weight: 600 !important;
+    /* font-weight géré par typography.css */
   }
   
   .markdown-body blockquote p:last-child,
@@ -646,7 +646,7 @@ html {
 .public-note-content-wrapper .markdown-body th {
   background: var(--surface-2);
   color: var(--text-primary);
-  font-weight: 900 !important;
+  /* font-weight géré par typography.css */
   font-size: 15px !important;
   letter-spacing: 0.02em;
   border-bottom: 1px solid var(--border-subtle);
@@ -665,7 +665,7 @@ html {
 .markdown-body th span,
 .markdown-body th strong,
 .markdown-body th b {
-  font-weight: 900 !important;
+  /* font-weight géré par typography.css */
 }
 
   .markdown-body tr:last-child td,
@@ -896,7 +896,7 @@ html {
     font-weight: 500;
   }
   
-  .markdown-body strong { font-weight: 700; color: var(--editor-text-color); }
+  .markdown-body strong { /* font-weight géré par typography.css */ color: var(--editor-text-color); }
   .markdown-body em { font-style: italic; color: var(--editor-text-color); }
   .markdown-body del { text-decoration: line-through; color: var(--text-3); opacity: 0.8; }
   
@@ -934,7 +934,7 @@ html {
   }
   .markdown-body summary {
     cursor: pointer;
-    font-weight: 600;
+    /* font-weight géré par typography.css */
     list-style: none;
   }
   .markdown-body summary::-webkit-details-marker { display: none; }
@@ -965,7 +965,7 @@ html {
     .markdown-body h1 { font-size: 1.875rem; margin: 2.5rem 0 1.25rem 0; }
     .markdown-body h2 { font-size: 1.5rem; margin: 2rem 0 1rem 0; }
     .markdown-body h3 { font-size: 1.25rem; margin: 1.75rem 0 0.875rem 0; }
-    .markdown-body p { margin: 0 0 1.25rem 0; line-height: 1.7; font-weight: 450; }
+    .markdown-body p { margin: 0 0 1.25rem 0; line-height: 1.7; /* font-weight géré par typography.css */ }
     .markdown-body ul, .markdown-body ol { margin: 1.25rem 0; padding-left: 1.5em; }
     .markdown-body li { margin: 0.625rem 0; }
     .markdown-body blockquote { padding: 1.25rem 1.5rem; margin: 1.5rem 0; }
@@ -1021,7 +1021,7 @@ html {
 .ProseMirror th {
   background: var(--surface-2);
   color: var(--text-primary);
-  font-weight: 900 !important;
+  /* font-weight géré par typography.css */
   font-size: 15px !important;
   letter-spacing: 0.02em;
   border-bottom: 1px solid var(--border-subtle);
@@ -1040,7 +1040,7 @@ html {
 .ProseMirror th span,
 .ProseMirror th strong,
 .ProseMirror th b {
-  font-weight: 900 !important;
+  /* font-weight géré par typography.css */
 }
   
   .ProseMirror td { background: var(--surface-1); }
