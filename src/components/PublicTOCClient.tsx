@@ -8,16 +8,17 @@ const TableOfContents = dynamic(() => import("@/components/TableOfContents"), { 
 
 interface PublicTOCClientProps {
   slug: string;
+  username: string;
 }
 
-const PublicTOCClient: React.FC<PublicTOCClientProps> = ({ slug }) => {
+const PublicTOCClient: React.FC<PublicTOCClientProps> = ({ slug, username }) => {
   const [headings, setHeadings] = useState<Heading[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchTOC = async () => {
       try {
-        const res = await fetch(`/api/v2/note/${slug}/table-of-contents`);
+        const res = await fetch(`/api/ui/public/note/${encodeURIComponent(username)}/${slug}/table-of-contents`);
         if (!res.ok) {
           throw new Error(`TOC non disponible (${res.status})`);
         }
@@ -40,7 +41,7 @@ const PublicTOCClient: React.FC<PublicTOCClientProps> = ({ slug }) => {
     };
 
     fetchTOC();
-  }, [slug]);
+  }, [slug, username]);
 
   if (error || !headings.length) return null;
   

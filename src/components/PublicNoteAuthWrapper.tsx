@@ -26,9 +26,10 @@ interface PublicNoteAuthWrapperProps {
   };
   slug: string;
   ownerId: string;
+  username: string;
 }
 
-export default function PublicNoteAuthWrapper({ note, slug, ownerId }: PublicNoteAuthWrapperProps) {
+export default function PublicNoteAuthWrapper({ note, slug, ownerId, username }: PublicNoteAuthWrapperProps) {
   const [currentUser, setCurrentUser] = React.useState<{ id: string } | null>(null);
   const [loading, setLoading] = React.useState(true);
 
@@ -124,5 +125,5 @@ export default function PublicNoteAuthWrapper({ note, slug, ownerId }: PublicNot
   }
 
   // Afficher la note (publique ou privée si l'utilisateur est le propriétaire)
-  return <PublicNoteContent note={note} slug={slug} currentUser={currentUser} />;
+  return <PublicNoteContent note={note} slug={slug} username={username} currentUser={currentUser} />;
 }

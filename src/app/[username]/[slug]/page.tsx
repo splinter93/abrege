@@ -177,5 +177,5 @@ export default async function Page(props: { params: Promise<{ username: string; 
 
 
   // Utiliser le composant client pour gérer l'authentification
-  return <PublicNoteAuthWrapper note={noteBySlug} slug={slug} ownerId={owner.id} />;
+  return <PublicNoteAuthWrapper note={noteBySlug} slug={slug} ownerId={owner.id} username={decodedUsername} />;
 } 

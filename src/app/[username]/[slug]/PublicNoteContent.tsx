@@ -35,10 +35,11 @@ interface PublicNoteProps {
     user_id: string;
   };
   slug: string;
+  username: string;
   currentUser?: { id: string; email?: string } | null;
 }
 
-export default function PublicNoteContent({ note, slug, currentUser: propCurrentUser }: PublicNoteProps) {
+export default function PublicNoteContent({ note, slug, username, currentUser: propCurrentUser }: PublicNoteProps) {
   const titleRef = React.useRef<HTMLHeadingElement>(null);
   const contentRef = React.useRef<HTMLDivElement>(null);
   const [currentUser, setCurrentUser] = React.useState<{ id: string; email?: string } | null>(propCurrentUser || null);
@@ -189,7 +190,7 @@ export default function PublicNoteContent({ note, slug, currentUser: propCurrent
           </div>
           {/* TOC sticky tout à droite */}
           <div className="public-toc-container">
-            <PublicTOCClient slug={slug} />
+            <PublicTOCClient slug={slug} username={username} />
           </div>
         </div>
         {/* Footer discret */}
