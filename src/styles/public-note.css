@@ -26,12 +26,13 @@
 
 /* Réduction espacement titre-texte - page publique */
 .public-note-container .noteLayout-title {
-  padding-top: 4px !important; /* Réduit de 20px à 8px */
+  padding-top: 0px !important; /* Supprime complètement le padding-top */
   padding-bottom: 0 !important; /* Supprime le padding-bottom du container */
 }
 
 .public-note-container .noteLayout-title h1 {
-  padding: 0 0 25px 0 !important; /* Padding en dessous pour décaler le texte */
+  padding: 0 0 15px 0 !important; /* Padding réduit en dessous pour remonter le titre */
+  margin-top: 20px !important; /* Espacement de 20px au-dessus du titre */
 }
 
 /* Réduction padding-top du contenu - page publique */

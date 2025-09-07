@@ -98,9 +98,9 @@ html {
    
 .markdown-body ul,
 .markdown-body ol {
-  margin: 1.5rem 0;
+  margin: 1.25rem 0;
   padding-left: 1.75em;
-  line-height: 1.8;
+  line-height: 1.75;
   text-align: left;
 }
 
@@ -108,8 +108,8 @@ html {
 .markdown-body ol { list-style-type: decimal; }
 
 .markdown-body li {
-  margin: 0.75rem 0;
-  line-height: 1.8;
+  margin: 0.375rem 0;
+  line-height: 1.75;
   /* font-weight géré par typography.css */
   padding-left: 0.5em;
   position: relative;
@@ -327,8 +327,8 @@ html {
   .markdown-body pre[data-language]::before {
     content: attr(data-language);
   position: absolute;
-  top: 10px;
-    left: 12px;
+  top: 12px;
+    left: 16px;
     font: 600 11px/1 var(--font-monospace);
     letter-spacing: 0.06em;
     text-transform: uppercase;
@@ -556,8 +556,8 @@ html {
     color: var(--text-2);
     font-style: italic;
     text-align: left;
-    padding: 1rem 1.5rem;
-    margin: 1.5rem 0;
+    padding: 1.25rem 1.75rem;
+    margin: 1.75rem 0;
     border-left: none;
     border-radius: 8px;
     position: relative;
@@ -582,7 +582,7 @@ html {
   .public-note-content-wrapper .markdown-body blockquote p {
     margin-bottom: 1rem;
     font-size: 1em;
-    line-height: 1.6;
+    line-height: 1.75;
     text-align: left;
     /* font-weight géré par typography.css */
   }
@@ -603,7 +603,7 @@ html {
   border: 1px solid var(--border-subtle);
   border-radius: 8px;
   overflow: auto; /* permet sticky sur th */
-  margin: 1.5em 0;
+  margin: 1.75em 0;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   -webkit-overflow-scrolling: touch;
   max-width: 100%;
@@ -697,7 +697,7 @@ html {
    
 .markdown-body hr {
   border: none;
-  margin: 1rem 0;
+  margin: 1.5em 0;
   max-width: none;
   width: 100%;
   height: 2px;
@@ -714,7 +714,7 @@ html {
 .public-note-content-wrapper .markdown-body img {
   max-width: 100%;
     border-radius: 12px;
-    margin: 1.5rem 0;
+    margin: 1.75rem 0;
   display: block;
     border: 1px solid var(--border-subtle);
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
