@@ -81,8 +81,8 @@ export default function PublicNoteAuthWrapper({ note, slug, ownerId }: PublicNot
   console.log('🔍 [DEBUG] Is owner:', isOwner);
   console.log('🔍 [DEBUG] Note visibility:', note.share_settings?.visibility);
 
-  // Si la note est privée et que l'utilisateur n'est pas le propriétaire
-  if (note.share_settings?.visibility === 'private' && !isOwner) {
+  // Si la note est privée/link-private et que l'utilisateur n'est pas le propriétaire
+  if ((note.share_settings?.visibility === 'private' || note.share_settings?.visibility === 'link-private') && !isOwner) {
     return (
       <div className="not-found-container">
         <div className="not-found-content">
