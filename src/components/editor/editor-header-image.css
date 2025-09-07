@@ -3,7 +3,7 @@
 .editor-header-image {
   position: relative;
   width: 100%;
-  height: 300px;
+  height: var(--editor-header-image-height); /* 280px - cohérent avec la page publique */
   background: var(--surface-2);
   border-radius: 0;
   overflow: hidden;
@@ -89,7 +89,7 @@
 .header-image {
   position: relative;
   width: 100%;
-  height: 300px;
+  height: var(--editor-header-image-height); /* 280px - cohérent avec la page publique */
   background: var(--surface-2);
   border-radius: 0;
   overflow: hidden;
@@ -224,4 +224,34 @@
 .editor-header-image .editor-image-placeholder:hover { background: var(--surface-3); border-color: var(--border-hover); }
 .editor-header-image .editor-image-placeholder-inner { display: flex; flex-direction: column; align-items: center; gap: 0.5rem; color: var(--text-3); }
 .editor-header-image .editor-image { width: 100%; height: auto; max-width: 700px; display: block; margin: 0 auto; background: var(--surface-2); border-radius: 10px; box-shadow: 0 2px 12px 0 rgba(0,0,0,0.06); transition: filter 0.18s, box-shadow 0.18s; object-fit: contain; }
-.editor-header-image .editor-image:hover { filter: brightness(0.97) saturate(1.08); box-shadow: 0 4px 24px 0 rgba(0,0,0,0.10); } 
+.editor-header-image .editor-image:hover { filter: brightness(0.97) saturate(1.08); box-shadow: 0 4px 24px 0 rgba(0,0,0,0.10); }
+
+/* ==========================================================================
+   RESPONSIVE DESIGN - ÉDITEUR
+   ==========================================================================
+   Hauteurs d'image d'en-tête adaptées aux écrans mobiles
+*/
+
+/* Tablette (768px et moins) */
+@media (max-width: 768px) {
+  .editor-header-image,
+  .header-image {
+    height: var(--editor-header-image-height-mobile) !important; /* 200px */
+  }
+}
+
+/* Mobile (480px et moins) */
+@media (max-width: 480px) {
+  .editor-header-image,
+  .header-image {
+    height: 150px !important;
+  }
+}
+
+/* Très petit mobile (360px et moins) */
+@media (max-width: 360px) {
+  .editor-header-image,
+  .header-image {
+    height: 120px !important;
+  }
+} 

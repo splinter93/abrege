@@ -193,7 +193,7 @@ body.public-note-page {
 
   /* Image d'en-tête - hauteur réduite */
   .public-header-image {
-    height: 200px !important;
+    height: var(--editor-header-image-height-mobile) !important; /* 200px - cohérent avec l'éditeur */
     margin-bottom: 6px;
   }
 
