@@ -665,7 +665,7 @@ body.public-note-page {
 .public-note-content-wrapper .noteLayout-title h1 {
   text-align: left;
   margin: 0 !important;
-  padding: 0 !important;
+  padding: 0 0 4px 0 !important; /* Même padding que l'éditeur */
   max-width: var(--editor-content-width);
   width: var(--editor-content-width);
   line-height: 1.1;
@@ -675,9 +675,9 @@ body.public-note-page {
   font-family: var(--editor-font-family) !important;
 }
 
-/* Correction des paddings pour les pages publiques */
+/* Correction des paddings pour les pages publiques - ALIGNÉS AVEC L'ÉDITEUR */
 .public-note-content-wrapper .noteLayout-title {
-  padding: 0 !important;
+  padding-top: 55px !important; /* Même padding que l'éditeur */
   margin: 0 !important;
 }
 
@@ -704,9 +704,9 @@ body.public-note-page {
 } 
 
 /* Match spacing between title and text for no-image layout to image-only layout */
-.noteLayout.noImage .noteLayout-title > .editor-container-width { padding-bottom: 6px; }
+.noteLayout.noImage .noteLayout-title > .editor-container-width { padding-bottom: 4px; }
 .noteLayout.noImage .noteLayout-title textarea { padding-bottom: 0; }
-.noteLayout.noImage .noteLayout-content { margin-top: 0; padding-top: 28px; }
+.noteLayout.noImage .noteLayout-content { margin-top: 0; padding-top: 0; }
 
 /* ==========================================================================
    TYPOGRAPHIE DES TITRES - CENTRALISÉE ET ULTRA-SPÉCIFIQUE
