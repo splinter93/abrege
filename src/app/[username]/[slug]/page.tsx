@@ -8,7 +8,10 @@ import type { Metadata } from 'next';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+
 const supabaseAnon = createClient(supabaseUrl, supabaseAnonKey);
+const supabaseService = createClient(supabaseUrl, supabaseServiceKey);
 
 export async function generateMetadata({ params }: { params: Promise<{ username: string; slug: string }> }): Promise<Metadata> {
   const { username, slug } = await params;
@@ -86,9 +89,10 @@ export default async function Page(props: { params: Promise<{ username: string; 
 
 
   // Récupérer la note (même si elle est privée - le composant client gérera l'authentification)
+  // Utiliser le client service pour contourner RLS
   console.log('🔍 [DEBUG] Server: Looking for note with slug:', slug, 'and user_id:', owner.id);
   
-  const { data: noteBySlug, error: noteError } = await supabaseAnon
+  const { data: noteBySlug, error: noteError } = await supabaseService
     .from('articles')
     .select(
       'id, source_title, html_content, markdown_content, header_image, header_image_offset, header_image_blur, header_image_overlay, header_title_in_image, wide_mode, font_family, created_at, updated_at, share_settings, slug, user_id'
