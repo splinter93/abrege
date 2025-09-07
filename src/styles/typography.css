@@ -371,7 +371,7 @@
 
 /* 1. Layout sans image - PADDING RÉDUIT */
 .noteLayout.noImage .noteLayout-title { 
-  padding-top: 35px; 
+  padding-top: 55px; 
 }
 .noteLayout.noImage .noteLayout-title textarea { 
   padding: 0 0 4px 0; /* Padding réduit sous le titre */
@@ -394,7 +394,7 @@
 }
 .noteLayout.imageWithTitle .noteLayout-content { 
   margin-top: -24px; 
-  padding-top: 4px; /* Réduit de 8px à 4px */
+  padding-top: 18px; /* Augmenté de 12px à 18px */
 }
 
 /* Wide mode avec titre dans l'image */
@@ -402,7 +402,7 @@
   padding: 0 0 1px 0; /* Padding ultra-minimal */
 }
 .noteLayout.imageWithTitle.wide-mode .noteLayout-content { 
-  padding-top: 2px; /* Encore plus réduit */
+  padding-top: 12px; /* Augmenté de 8px à 12px */
 }
 
 /* 3. Layout image seule - PADDING RÉDUIT */
@@ -413,12 +413,12 @@
   padding: 0; 
 }
 .noteLayout.imageOnly .noteLayout-content { 
-  padding-top: 4px; /* Réduit de 8px à 4px */
+  padding-top: 18px; /* Augmenté de 12px à 18px */
 }
 
 /* Wide mode image seule */
 .noteLayout.imageOnly.wide-mode .noteLayout-content { 
-  padding-top: 2px; /* Encore plus réduit */
+  padding-top: 12px; /* Augmenté de 8px à 12px */
 }
 
 /* ==========================================================================
@@ -706,7 +706,7 @@ body.public-note-page {
 /* Match spacing between title and text for no-image layout to image-only layout */
 .noteLayout.noImage .noteLayout-title > .editor-container-width { padding-bottom: 6px; }
 .noteLayout.noImage .noteLayout-title textarea { padding-bottom: 0; }
-.noteLayout.noImage .noteLayout-content { margin-top: 0; padding-top: 10px; }
+.noteLayout.noImage .noteLayout-content { margin-top: 0; padding-top: 28px; }
 
 /* ==========================================================================
    TYPOGRAPHIE DES TITRES - CENTRALISÉE ET ULTRA-SPÉCIFIQUE
