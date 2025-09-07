@@ -52,6 +52,20 @@ export class OpenAPISchemaService {
       return this.schema;
     }
 
+    // 🔧 CORRECTION: Vérifier que nous sommes côté serveur
+    if (typeof window !== 'undefined') {
+      console.warn('[OpenAPISchemaService] ⚠️ Tentative de chargement côté client - utilisation du schéma par défaut');
+      // Retourner un schéma minimal pour éviter les erreurs côté client
+      this.schema = {
+        openapi: '3.0.0',
+        info: { title: 'API V2', description: 'API par défaut', version: '1.0.0' },
+        paths: {},
+        components: { schemas: {}, securitySchemes: {} },
+        tags: []
+      };
+      return this.schema;
+    }
+
     try {
       console.log('[OpenAPISchemaService] 🔧 Chargement du schéma OpenAPI V2...');
       

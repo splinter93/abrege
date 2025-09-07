@@ -53,6 +53,13 @@ export class AgentApiV2Tools {
     this.baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://scrivia.app';
     console.log(`[AgentApiV2Tools] 🚀 Initialisation avec baseUrl: ${this.baseUrl}`);
     
+    // 🔧 CORRECTION: Vérifier que nous sommes côté serveur
+    if (typeof window !== 'undefined') {
+      console.warn('[AgentApiV2Tools] ⚠️ Initialisation côté client - outils désactivés');
+      this.openApiInitialized = true; // Marquer comme initialisé pour éviter les erreurs
+      return;
+    }
+    
     // 🔧 NOUVEAU: Plus de tools manuels obsolètes, seulement OpenAPI
     console.log(`[AgentApiV2Tools] 🔧 Système OpenAPI uniquement`);
     
@@ -1908,7 +1915,7 @@ export class AgentApiV2Tools {
     try {
       // 🔧 CORRECTION: Utiliser V2ResourceResolver pour gérer ID ou slug
       const { V2ResourceResolver } = await import('@/utils/v2ResourceResolver');
-      const resolveResult = await V2ResourceResolver.resolveRef(ref, 'agent', userId, {
+      const resolveResult = await V2ResourceResolver.resolveRef(ref, 'note', userId, {
         operation: 'executeAgent',
         component: 'AgentApiV2Tools'
       });
