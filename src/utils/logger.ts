@@ -75,10 +75,22 @@ class Logger {
     if (this.isDevelopment) {
       const formattedMessage = this.formatMessage(entry);
       
+      // 🔧 CORRECTION : Sérialiser les objets pour éviter [object Object]
+      const serializeData = (obj: unknown): string => {
+        if (obj === null || obj === undefined) return '';
+        if (typeof obj === 'string') return obj;
+        if (typeof obj === 'number' || typeof obj === 'boolean') return String(obj);
+        try {
+          return JSON.stringify(obj, null, 2);
+        } catch {
+          return String(obj);
+        }
+      };
+      
       switch (level) {
         case LogLevel.ERROR:
-          // 🔧 CORRECTION : Éviter d'afficher des objets vides ou des chaînes vides
-          const errorData = data && typeof data === 'object' && Object.keys(data).length > 0 ? data : undefined;
+          
+          const errorData = data && typeof data === 'object' && Object.keys(data).length > 0 ? serializeData(data) : undefined;
           const errorObj = error && error instanceof Error ? error : undefined;
           
           // Ne passer que les paramètres non-vides à console.error
@@ -93,16 +105,16 @@ class Logger {
           }
           break;
         case LogLevel.WARN:
-          console.warn(formattedMessage, data || '');
+          console.warn(formattedMessage, data ? serializeData(data) : '');
           break;
         case LogLevel.INFO:
-          console.info(formattedMessage, data || '');
+          console.info(formattedMessage, data ? serializeData(data) : '');
           break;
         case LogLevel.DEBUG:
-          console.debug(formattedMessage, data || '');
+          console.debug(formattedMessage, data ? serializeData(data) : '');
           break;
         case LogLevel.TRACE:
-          console.trace(formattedMessage, data || '');
+          console.trace(formattedMessage, data ? serializeData(data) : '');
           break;
       }
     }
