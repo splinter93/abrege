@@ -70,10 +70,6 @@ export function useChatResponse(options: UseChatResponseOptions = {}): UseChatRe
       });
 
       if (!response.ok) {
-        logger.error('[useChatResponse] ❌ Réponse HTTP non-OK:', {
-          status: response.status,
-          statusText: response.statusText
-        });
         const errorText = await response.text();
         let errorData;
         try {
@@ -81,6 +77,23 @@ export function useChatResponse(options: UseChatResponseOptions = {}): UseChatRe
         } catch {
           errorData = { error: `HTTP ${response.status}: ${response.statusText}` };
         }
+        
+        // 🔧 Logging amélioré avec sérialisation JSON
+        logger.error('[useChatResponse] ❌ Réponse HTTP non-OK:', {
+          status: response.status,
+          statusText: response.statusText,
+          errorText: errorText.substring(0, 500),
+          errorData: JSON.stringify(errorData, null, 2)
+        });
+        
+        // 🔧 TEMPORAIRE: Log direct dans la console pour debug
+        console.error('🔍 DEBUG - Réponse d\'erreur complète:', {
+          status: response.status,
+          statusText: response.statusText,
+          errorText: errorText,
+          errorData: errorData
+        });
+        
         throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
       }
 
