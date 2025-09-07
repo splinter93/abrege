@@ -213,7 +213,7 @@
   --glass-border-accent-hover: rgba(229, 90, 44, 0.5);
   
   --font-main: var(--font-family-base);
-  --editor-font-family: var(--font-family-base);
+  /* --editor-font-family est géré dynamiquement par useFontManager */
 }
 
 /* ==========================================================================
@@ -322,7 +322,7 @@
   --glass-border-accent-hover: rgba(229, 90, 44, 0.5);
   
   --font-main: var(--font-family-base);
-  --editor-font-family: var(--font-family-base);
+  /* --editor-font-family est géré dynamiquement par useFontManager */
 }
 
 /* ==========================================================================

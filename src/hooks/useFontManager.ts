@@ -17,13 +17,18 @@ export const useFontManager = (currentFont: string | null | undefined) => {
         'Open Sans': "'Open Sans', sans-serif",
         'Lato': "'Lato', sans-serif",
         'Poppins': "'Poppins', sans-serif",
+        'Figtree': "'Figtree', sans-serif",
         'Source Sans Pro': "'Source Sans 3', sans-serif",
+        'Work Sans': "'Work Sans', sans-serif",
         'Ubuntu': "'Ubuntu', sans-serif",
         'Montserrat': "'Montserrat', sans-serif",
         'Raleway': "'Raleway', sans-serif",
+        'Georgia': "'Georgia', 'Times New Roman', serif",
+        'Times New Roman': "'Times New Roman', serif",
         'EB Garamond': "'EB Garamond', serif",
         'Cormorant Garamond': "'Cormorant Garamond', serif",
-        'JetBrains Mono': "'JetBrains Mono', 'Noto Sans Mono', 'Fira Code', 'SFMono-Regular', 'Menlo', 'Consolas', 'Monaco', 'Liberation Mono', monospace"
+        'JetBrains Mono': "'JetBrains Mono', 'Noto Sans Mono', 'Fira Code', 'SFMono-Regular', 'Menlo', 'Consolas', 'Monaco', 'Liberation Mono', monospace",
+        'Fira Code': "'Fira Code', 'JetBrains Mono', 'Noto Sans Mono', 'SFMono-Regular', 'Menlo', 'Consolas', 'Monaco', 'Liberation Mono', monospace"
       };
 
       // Récupérer la famille de police correspondante

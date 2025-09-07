@@ -30,6 +30,11 @@
 @import url('https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Work+Sans:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Figtree:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Ubuntu:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,500;1,700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Raleway:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
 
 /* Serif classiques */
 @import url('https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&display=swap');
@@ -37,6 +42,7 @@
 
 /* Monospace pour le code */
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500;600;700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Mono:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&display=swap');
 
 :root {
@@ -601,7 +607,7 @@ body.public-note-page {
   color: var(--editor-text-color);
   font-size: var(--editor-title-size);
   font-weight: 900 !important;
-  font-family: 'Noto Sans', sans-serif !important;
+  font-family: var(--editor-font-family) !important;
 }
 
 /* Correction des paddings pour les pages publiques */
@@ -622,7 +628,7 @@ body.public-note-page {
   text-shadow: 0 2px 4px rgba(0,0,0,0.2);
   font-size: var(--editor-title-size);
   font-weight: 900 !important;
-  font-family: 'Noto Sans', sans-serif !important;
+  font-family: var(--editor-font-family) !important;
   margin: 0;
   text-align: center;
   width: auto;
@@ -654,7 +660,7 @@ h1 {
   margin: 3rem 0 1.5rem 0 !important;
   color: var(--editor-text-color) !important;
   letter-spacing: -0.02em !important;
-  font-family: 'Noto Sans', sans-serif !important;
+  font-family: var(--editor-font-family) !important;
   position: relative;
   scroll-margin-top: 6rem;
 }
@@ -670,7 +676,7 @@ h2 {
   margin: 2.5rem 0 1.25rem 0 !important;
   color: var(--editor-text-color) !important;
   letter-spacing: -0.015em !important;
-  font-family: 'Noto Sans', sans-serif !important;
+  font-family: var(--editor-font-family) !important;
   position: relative;
   scroll-margin-top: 6rem;
 }
@@ -686,7 +692,7 @@ h3 {
   margin: 2rem 0 1rem 0 !important;
   color: var(--editor-text-color) !important;
   letter-spacing: -0.01em !important;
-  font-family: 'Noto Sans', sans-serif !important;
+  font-family: var(--editor-font-family) !important;
   position: relative;
   scroll-margin-top: 6rem;
 }
@@ -702,7 +708,7 @@ h4 {
   margin: 1.75rem 0 0.875rem 0 !important;
   color: var(--editor-text-color) !important;
   letter-spacing: -0.005em !important;
-  font-family: 'Noto Sans', sans-serif !important;
+  font-family: var(--editor-font-family) !important;
   scroll-margin-top: 6rem;
 }
 
@@ -716,7 +722,7 @@ h5 {
   line-height: 1.35 !important;
   margin: 1.5rem 0 0.75rem 0 !important;
   color: var(--editor-text-color) !important;
-  font-family: 'Noto Sans', sans-serif !important;
+  font-family: var(--editor-font-family) !important;
   scroll-margin-top: 6rem;
 }
 
@@ -730,7 +736,7 @@ h6 {
   line-height: 1.4 !important;
   margin: 1.25rem 0 0.625rem 0 !important;
   color: var(--editor-text-color) !important;
-  font-family: 'Noto Sans', sans-serif !important;
+  font-family: var(--editor-font-family) !important;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   scroll-margin-top: 6rem;
@@ -750,7 +756,7 @@ p {
   font-weight: 400 !important;
   font-size: 1rem !important;
   color: var(--editor-text-color) !important;
-  font-family: 'Noto Sans', sans-serif !important;
+  font-family: var(--editor-font-family) !important;
   text-align: left !important;
   hyphens: auto;
   word-break: break-word;

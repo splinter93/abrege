@@ -66,16 +66,29 @@ const ModernToolbar: React.FC<ModernToolbarProps> = ({
   const searchInputRef = useRef<HTMLInputElement>(null);
   const colorMenuRef = useRef<HTMLDivElement>(null);
   
-  // Polices simplifiées
+  // Polices disponibles dans l'éditeur
   const fonts: FontOption[] = [
+    // Sans-serif modernes
     { name: 'Noto Sans', label: 'Noto Sans', category: 'sans-serif' },
     { name: 'Inter', label: 'Inter', category: 'sans-serif' },
     { name: 'Roboto', label: 'Roboto', category: 'sans-serif' },
     { name: 'Open Sans', label: 'Open Sans', category: 'sans-serif' },
     { name: 'Lato', label: 'Lato', category: 'sans-serif' },
     { name: 'Poppins', label: 'Poppins', category: 'sans-serif' },
+    { name: 'Figtree', label: 'Figtree', category: 'sans-serif' },
+    { name: 'Work Sans', label: 'Work Sans', category: 'sans-serif' },
+    { name: 'Source Sans Pro', label: 'Source Sans Pro', category: 'sans-serif' },
+    { name: 'Ubuntu', label: 'Ubuntu', category: 'sans-serif' },
+    { name: 'Montserrat', label: 'Montserrat', category: 'sans-serif' },
+    { name: 'Raleway', label: 'Raleway', category: 'sans-serif' },
+    
+    // Serif classiques
     { name: 'Georgia', label: 'Georgia', category: 'serif' },
     { name: 'Times New Roman', label: 'Times New Roman', category: 'serif' },
+    { name: 'EB Garamond', label: 'EB Garamond', category: 'serif' },
+    { name: 'Cormorant Garamond', label: 'Cormorant Garamond', category: 'serif' },
+    
+    // Monospace pour le code
     { name: 'JetBrains Mono', label: 'JetBrains Mono', category: 'monospace' },
     { name: 'Fira Code', label: 'Fira Code', category: 'monospace' },
   ];
