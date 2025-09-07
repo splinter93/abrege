@@ -1,11 +1,10 @@
 import { createClient } from '@supabase/supabase-js';
-import { createSupabaseServerClient } from '@/lib/supabaseServer'; // Importer le client serveur
 import '@/styles/markdown.css';
 import '@/styles/error-pages.css';
 import LogoHeader from '@/components/LogoHeader';
 import ErrorPageActions from '@/components/ErrorPageActions';
+import PublicNoteAuthWrapper from '@/components/PublicNoteAuthWrapper';
 import type { Metadata } from 'next';
-import PublicNoteContent from './PublicNoteContent';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -60,16 +59,6 @@ export async function generateMetadata({ params }: { params: Promise<{ username:
 export default async function Page(props: { params: Promise<{ username: string; slug: string }> }) {
   const { username, slug } = await props.params;
 
-  // Utiliser le client serveur pour récupérer l'utilisateur authentifié
-  const supabase = createSupabaseServerClient();
-  const {
-    data: { user: authUser },
-    error: authError
-  } = await supabase.auth.getUser();
-
-  // Debug: Log de l'authentification
-  console.log('🔍 [DEBUG] Auth error:', authError);
-  console.log('🔍 [DEBUG] Auth user:', authUser?.id);
 
   // Décoder l'username (retirer le @ et décoder l'URL)
   const decodedUsername = decodeURIComponent(username).replace(/^@/, '');
@@ -95,29 +84,17 @@ export default async function Page(props: { params: Promise<{ username: string; 
     );
   }
 
-  // Déterminer si le visiteur est le propriétaire de la note
-  const isOwner = authUser?.id === owner.id;
 
-  // Debug: Log de l'authentification
-  console.log('🔍 [DEBUG] Auth user:', authUser?.id);
-  console.log('🔍 [DEBUG] Owner ID:', owner.id);
-  console.log('🔍 [DEBUG] Is owner:', isOwner);
-
-  // Construire la requête pour la note
-  let noteQuery = supabaseAnon
+  // Récupérer la note (même si elle est privée - le composant client gérera l'authentification)
+  const { data: noteBySlug, error: noteError } = await supabaseAnon
     .from('articles')
     .select(
       'id, source_title, html_content, markdown_content, header_image, header_image_offset, header_image_blur, header_image_overlay, header_title_in_image, wide_mode, font_family, created_at, updated_at, share_settings, slug, user_id'
     )
     .eq('slug', slug)
-    .eq('user_id', owner.id);
-
-  // Si le visiteur n'est PAS le propriétaire, filtrer les notes privées
-  if (!isOwner) {
-    noteQuery = noteQuery.not('share_settings->>visibility', 'eq', 'private');
-  }
-  
-  const { data: noteBySlug, error: noteError } = await noteQuery.limit(1).maybeSingle();
+    .eq('user_id', owner.id)
+    .limit(1)
+    .maybeSingle();
 
   if (noteError || !noteBySlug) {
     // Note non trouvée - afficher une erreur au lieu de rediriger
@@ -187,48 +164,7 @@ export default async function Page(props: { params: Promise<{ username: string; 
     console.warn(`Slug mismatch: URL=${slug}, DB=${noteBySlug.slug}`);
   }
 
-  // ✅ SÉCURİTÉ : Bloquer la note si elle est privée ET que le visiteur n'est pas le propriétaire
-  if (noteBySlug.share_settings?.visibility === 'private' && !isOwner) {
-    console.warn(`🔒 Tentative d'accès à une note privée: ${slug}`);
-    return (
-      <div className="not-found-container">
-        <div className="not-found-content">
-          <div className="not-found-logo">
-            <LogoHeader size="medium" position="center" />
-          </div>
-          
-          <div className="not-found-icon">
-            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path 
-                d="M12 1L3 5V11C3 16.55 6.84 21.74 12 23C17.16 21.74 21 16.55 21 11V5L12 1Z" 
-                stroke="currentColor" 
-                strokeWidth="1.5" 
-                strokeLinecap="round" 
-                strokeLinejoin="round"
-              />
-              <path 
-                d="M9 12L11 14L15 10" 
-                stroke="currentColor" 
-                strokeWidth="1.5" 
-                strokeLinecap="round" 
-                strokeLinejoin="round"
-              />
-            </svg>
-          </div>
-          
-          <h1 className="not-found-title">Note privée</h1>
-          <p className="not-found-description">
-            Cette note est privée et n'est pas accessible publiquement.
-          </p>
-          <p className="not-found-subtitle">
-            Seul l'auteur peut consulter cette note.
-          </p>
-          
-          <ErrorPageActions />
-        </div>
-      </div>
-    );
-  }
 
-  return <PublicNoteContent note={noteBySlug} slug={slug} />;
+  // Utiliser le composant client pour gérer l'authentification
+  return <PublicNoteAuthWrapper note={noteBySlug} slug={slug} ownerId={owner.id} />;
 } 
