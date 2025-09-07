@@ -12,7 +12,7 @@
 
 .markdown-body {
   color: var(--editor-text-color);
-  font-family: var(--editor-font-family);
+  font-family: var(--editor-font-family-body);
   font-size: var(--editor-body-size);
   line-height: var(--editor-line-height-base);
   background: none;
@@ -75,7 +75,7 @@ html {
 .public-note-container .markdown-body,
 .public-note-content-wrapper .markdown-body {
   color: var(--editor-text-color) !important;
-  font-family: var(--editor-font-family) !important;
+  font-family: var(--editor-font-family-body) !important;
   font-size: var(--editor-body-size) !important;
   line-height: var(--editor-line-height-base) !important;
   background: none !important;
@@ -276,7 +276,7 @@ html {
 .markdown-body ul ul,
 .markdown-body ul ol,
 .markdown-body ol ul,
-.markdown-body ol ol { margin: 0.75rem 0 0.75rem 1.5em; }
+.markdown-body ol ol { margin: 0.75rem 0 0.75rem 0; } /* Alignement au bord gauche */
 
 .markdown-body ul ul { list-style-type: circle; }
 .markdown-body ol ol { list-style-type: lower-alpha; }
