@@ -26,13 +26,12 @@ export async function generateMetadata({ params }: { params: Promise<{ username:
     .maybeSingle();
   if (!user) return { title: 'Note introuvable – Scrivia' };
 
-  // Chercher la note par slug et user_id, SEULEMENT si elle est accessible publiquement
-  const { data: note } = await supabaseAnon
+  // Chercher la note par slug et user_id (même si privée - pour le titre de la page)
+  const { data: note } = await supabaseService
     .from('articles')
     .select('source_title, markdown_content, header_image')
     .eq('slug', slug)
     .eq('user_id', user.id)
-    .not('share_settings->>visibility', 'eq', 'private') // ✅ SÉCURITÉ : Bloquer l'accès aux notes privées
     .limit(1)
     .maybeSingle();
   if (!note) return { title: 'Note introuvable – Scrivia' };
