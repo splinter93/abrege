@@ -30,8 +30,8 @@ export class OpenAPISchemaService {
   private schemaPath: string;
 
   private constructor() {
-    // Chemin vers le schéma OpenAPI V2
-    this.schemaPath = join(process.cwd(), 'openapi-v2-schema.json');
+    // Chemin vers le schéma OpenAPI V2 pour ChatGPT
+    this.schemaPath = join(process.cwd(), 'docs/api/OPENAPI CHAT GPT 30 ENDPOINTS.json');
   }
 
   /**
