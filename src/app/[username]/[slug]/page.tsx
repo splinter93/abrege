@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { createSupabaseServerClient } from '@/lib/supabaseServer'; // Importer le client serveur
 import '@/styles/markdown.css';
 import '@/styles/error-pages.css';
 import LogoHeader from '@/components/LogoHeader';
@@ -8,23 +9,25 @@ import PublicNoteContent from './PublicNoteContent';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+const supabaseAnon = createClient(supabaseUrl, supabaseAnonKey);
 
 export async function generateMetadata({ params }: { params: Promise<{ username: string; slug: string }> }): Promise<Metadata> {
   const { username, slug } = await params;
   const decodedUsername = decodeURIComponent(username).replace(/^@/, '');
+  
   // Chercher l'utilisateur par username
-  const { data: user } = await supabase
+  const { data: user } = await supabaseAnon
     .from('users')
     .select('id')
     .eq('username', decodedUsername)
     .limit(1)
     .maybeSingle();
   if (!user) return { title: 'Note introuvable – Scrivia' };
+
   // Chercher la note par slug et user_id, SEULEMENT si elle est accessible publiquement
-  const { data: note } = await supabase
+  const { data: note } = await supabaseAnon
     .from('articles')
-    .select('source_title, summary, header_image')
+    .select('source_title, markdown_content, header_image')
     .eq('slug', slug)
     .eq('user_id', user.id)
     .not('share_settings->>visibility', 'eq', 'private') // ✅ SÉCURITÉ : Bloquer l'accès aux notes privées
@@ -33,7 +36,7 @@ export async function generateMetadata({ params }: { params: Promise<{ username:
   if (!note) return { title: 'Note introuvable – Scrivia' };
   
   const title = note.source_title + ' – Scrivia';
-  const description = note.summary || 'Note partagée via Scrivia';
+  const description = note.markdown_content || 'Note partagée via Scrivia';
   const image = note.header_image || undefined;
   
   return {
@@ -57,18 +60,24 @@ export async function generateMetadata({ params }: { params: Promise<{ username:
 export default async function Page(props: { params: Promise<{ username: string; slug: string }> }) {
   const { username, slug } = await props.params;
 
+  // Utiliser le client serveur pour récupérer l'utilisateur authentifié
+  const supabase = createSupabaseServerClient();
+  const {
+    data: { user: authUser },
+  } = await supabase.auth.getUser();
+
   // Décoder l'username (retirer le @ et décoder l'URL)
   const decodedUsername = decodeURIComponent(username).replace(/^@/, '');
 
-  // Chercher l'utilisateur par username
-  const { data: user, error: userError } = await supabase
+  // Chercher l'utilisateur (propriétaire de la note) par username avec le client anonyme
+  const { data: owner, error: userError } = await supabaseAnon
     .from('users')
     .select('id, username')
     .eq('username', decodedUsername)
     .limit(1)
     .maybeSingle();
 
-  if (userError || !user) {
+  if (userError || !owner) {
     return (
       <div style={{ padding: '2rem', textAlign: 'center' }}>
         <div style={{ marginLeft: '4px', display: 'inline-block' }}>
@@ -81,17 +90,26 @@ export default async function Page(props: { params: Promise<{ username: string; 
     );
   }
 
-  // Chercher la note par slug et user_id, SEULEMENT si elle est accessible publiquement
-  const { data: noteBySlug } = await supabase
-    .from('articles')
-    .select('id, slug, source_title, html_content, markdown_content, header_image, header_image_offset, header_image_blur, header_image_overlay, header_title_in_image, wide_mode, font_family, created_at, updated_at, share_settings, user_id')
-    .eq('slug', slug)
-    .eq('user_id', user.id)
-    .not('share_settings->>visibility', 'eq', 'private') // ✅ SÉCURITÉ : Bloquer l'accès aux notes privées
-    .limit(1)
-    .maybeSingle();
+  // Déterminer si le visiteur est le propriétaire de la note
+  const isOwner = authUser?.id === owner.id;
 
-  if (!noteBySlug) {
+  // Construire la requête pour la note
+  let noteQuery = supabaseAnon
+    .from('articles')
+    .select(
+      'id, source_title, html_content, header_image, header_image_offset, header_image_blur, header_image_overlay, header_title_in_image, wide_mode, font_family, created_at, updated_at, share_settings, slug, user_id'
+    )
+    .eq('slug', slug)
+    .eq('user_id', owner.id);
+
+  // Si le visiteur n'est PAS le propriétaire, filtrer les notes privées
+  if (!isOwner) {
+    noteQuery = noteQuery.not('share_settings->>visibility', 'eq', 'private');
+  }
+  
+  const { data: noteBySlug, error: noteError } = await noteQuery.limit(1).maybeSingle();
+
+  if (noteError || !noteBySlug) {
     // Note non trouvée - afficher une erreur au lieu de rediriger
     return (
       <div className="not-found-container">
@@ -159,9 +177,9 @@ export default async function Page(props: { params: Promise<{ username: string; 
     console.warn(`Slug mismatch: URL=${slug}, DB=${noteBySlug.slug}`);
   }
 
-  // ✅ SÉCURITÉ : Double vérification côté serveur
-  if (noteBySlug.share_settings?.visibility === 'private') {
-    console.warn(`🔒 Tentative d'accès à une note privée: ${slug} par ${user.username}`);
+  // ✅ SÉCURİTÉ : Bloquer la note si elle est privée ET que le visiteur n'est pas le propriétaire
+  if (noteBySlug.share_settings?.visibility === 'private' && !isOwner) {
+    console.warn(`🔒 Tentative d'accès à une note privée: ${slug}`);
     return (
       <div className="not-found-container">
         <div className="not-found-content">
