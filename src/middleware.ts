@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerClient, type CookieOptions } from '@supabase/ssr';
 
-export async function middleware(req: NextRequest) {
+export function middleware(req: NextRequest) {
   const url = req.nextUrl;
   const resRid = req.headers.get('x-request-id') ?? crypto.randomUUID();
 
@@ -13,64 +12,9 @@ export async function middleware(req: NextRequest) {
     // Log des tentatives d'accès aux pages publiques pour monitoring
     console.log(`🔍 [MIDDLEWARE] Tentative d'accès à la page publique: ${url.pathname}`);
     
-    // Créer un client Supabase pour gérer les cookies d'authentification
-    let response = NextResponse.next({
-      request: {
-        headers: req.headers,
-      },
-    });
-
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          get(name: string) {
-            return req.cookies.get(name)?.value;
-          },
-          set(name: string, value: string, options: CookieOptions) {
-            req.cookies.set({
-              name,
-              value,
-              ...options,
-            });
-            response = NextResponse.next({
-              request: {
-                headers: req.headers,
-              },
-            });
-            response.cookies.set({
-              name,
-              value,
-              ...options,
-            });
-          },
-          remove(name: string, options: CookieOptions) {
-            req.cookies.set({
-              name,
-              value: '',
-              ...options,
-            });
-            response = NextResponse.next({
-              request: {
-                headers: req.headers,
-              },
-            });
-            response.cookies.set({
-              name,
-              value: '',
-              ...options,
-            });
-          },
-        },
-      }
-    );
-
-    // Rafraîchir la session si nécessaire
-    await supabase.auth.getUser();
-
-    response.headers.set('x-request-id', resRid);
-    return response;
+    const res = NextResponse.next();
+    res.headers.set('x-request-id', resRid);
+    return res;
   }
 
   if (PUBLIC_PREFIXES.some(p => url.pathname.startsWith(p))) {
