@@ -232,6 +232,55 @@ export class AgentApiV2Tools {
    * Services internes pour les tools OpenAPI V2
    */
   
+  /**
+   * 🔧 UTILITAIRE : Résoudre une référence (UUID ou slug) vers un ID
+   * Supporte les notes, dossiers, classeurs
+   */
+  private async resolveRef(ref: string, type: 'note' | 'folder' | 'classeur', userId: string, supabase: any): Promise<string> {
+    // Si c'est déjà un UUID, le retourner directement
+    if (ref.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
+      return ref;
+    }
+
+    // Sinon, résoudre le slug selon le type
+    let table: string;
+    let idField: string;
+    
+    switch (type) {
+      case 'note':
+        table = 'articles';
+        idField = 'id';
+        break;
+      case 'folder':
+        table = 'folders';
+        idField = 'id';
+        break;
+      case 'classeur':
+        table = 'classeurs';
+        idField = 'id';
+        break;
+      default:
+        throw new Error(`Type de référence non supporté: ${type}`);
+    }
+
+    console.log(`[AgentApiV2Tools] 🔍 Résolution du slug ${type}: ${ref}`);
+    
+    const { data: item, error } = await supabase
+      .from(table)
+      .select(idField)
+      .eq('slug', ref)
+      .eq('user_id', userId)
+      .single();
+    
+    if (error || !item) {
+      console.log(`[AgentApiV2Tools] ❌ ${type} non trouvé pour le slug: ${ref}`);
+      throw new Error(`${type} non trouvé: ${ref}`);
+    }
+    
+    console.log(`[AgentApiV2Tools] ✅ Slug ${type} résolu: ${ref} -> ${item[idField]}`);
+    return item[idField];
+  }
+  
   private async createNoteInternal(params: any, userId: string, supabase: any): Promise<any> {
     const { source_title, notebook_id, markdown_content, header_image, folder_id } = params;
     
@@ -418,6 +467,9 @@ export class AgentApiV2Tools {
         return { success: false, error: 'Référence de la note requise' };
       }
       
+      // 🔧 CORRECTION : Résoudre la référence (slug → UUID)
+      const noteId = await this.resolveRef(ref, 'note', userId, supabase);
+      
       // Préparer les données à mettre à jour
       const updateData: any = {
         updated_at: new Date().toISOString()
@@ -447,7 +499,7 @@ export class AgentApiV2Tools {
       const { data, error } = await supabase
         .from('articles')
         .update(updateData)
-        .eq('id', ref)
+        .eq('id', noteId) // Utiliser noteId résolu
         .eq('user_id', userId)
         .select()
         .single();
@@ -470,11 +522,14 @@ export class AgentApiV2Tools {
         return { success: false, error: 'Référence de la note et contenu requis' };
       }
       
+      // 🔧 CORRECTION : Résoudre la référence (slug → UUID)
+      const noteId = await this.resolveRef(ref, 'note', userId, supabase);
+      
       // Récupérer la note existante
       const { data: note, error: noteError } = await supabase
         .from('articles')
         .select('markdown_content')
-        .eq('id', ref)
+        .eq('id', noteId)
         .eq('user_id', userId)
         .single();
       
@@ -497,7 +552,7 @@ export class AgentApiV2Tools {
           markdown_content: newContent,
           updated_at: new Date().toISOString()
         })
-        .eq('id', ref)
+        .eq('id', noteId) // Utiliser noteId résolu
         .eq('user_id', userId)
         .select()
         .single();
@@ -520,6 +575,9 @@ export class AgentApiV2Tools {
         return { success: false, error: 'Référence de la note requise' };
       }
       
+      // 🔧 CORRECTION : Résoudre la référence (slug → UUID)
+      const noteId = await this.resolveRef(ref, 'note', userId, supabase);
+      
       const updateData: any = {
         updated_at: new Date().toISOString()
       };
@@ -530,7 +588,7 @@ export class AgentApiV2Tools {
       const { data, error } = await supabase
         .from('articles')
         .update(updateData)
-        .eq('id', ref)
+        .eq('id', noteId) // Utiliser noteId résolu
         .eq('user_id', userId)
         .select()
         .single();
@@ -553,11 +611,14 @@ export class AgentApiV2Tools {
         return { success: false, error: 'Référence de la note requise' };
       }
       
+      // 🔧 CORRECTION : Résoudre la référence (slug → UUID)
+      const noteId = await this.resolveRef(ref, 'note', userId, supabase);
+      
       // Récupérer la note
       const { data: note, error } = await supabase
         .from('articles')
         .select('markdown_content')
-        .eq('id', ref)
+        .eq('id', noteId)
         .eq('user_id', userId)
         .single();
       
@@ -571,7 +632,7 @@ export class AgentApiV2Tools {
       return {
         success: true,
         data: {
-          note_id: ref,
+          note_id: noteId, // Utiliser noteId résolu
           toc
         }
       };
@@ -1463,10 +1524,13 @@ export class AgentApiV2Tools {
     const { ref } = params;
     
     try {
+      // 🔧 CORRECTION : Résoudre la référence (slug → UUID)
+      const noteId = await this.resolveRef(ref, 'note', userId, supabase);
+      
       const { data: note, error } = await supabase
         .from('articles')
         .select('visibility, public_url')
-        .eq('id', ref)
+        .eq('id', noteId)
         .eq('user_id', userId)
         .single();
       
@@ -1490,6 +1554,9 @@ export class AgentApiV2Tools {
     const { ref, visibility, allow_edit, allow_comments } = params;
     
     try {
+      // 🔧 CORRECTION : Résoudre la référence (slug → UUID)
+      const noteId = await this.resolveRef(ref, 'note', userId, supabase);
+      
       const { data, error } = await supabase
         .from('articles')
         .update({
@@ -1498,7 +1565,7 @@ export class AgentApiV2Tools {
           allow_comments,
           updated_at: new Date().toISOString()
         })
-        .eq('id', ref)
+        .eq('id', noteId)
         .eq('user_id', userId)
         .select()
         .single();
@@ -1525,10 +1592,13 @@ export class AgentApiV2Tools {
     const { ref } = params;
     
     try {
+      // 🔧 CORRECTION : Résoudre la référence (slug → UUID)
+      const folderId = await this.resolveRef(ref, 'folder', userId, supabase);
+      
       const { data: folder, error } = await supabase
         .from('folders')
         .select('*')
-        .eq('id', ref)
+        .eq('id', folderId)
         .eq('user_id', userId)
         .single();
       
@@ -1546,6 +1616,9 @@ export class AgentApiV2Tools {
     const { ref, name, position } = params;
     
     try {
+      // 🔧 CORRECTION : Résoudre la référence (slug → UUID)
+      const folderId = await this.resolveRef(ref, 'folder', userId, supabase);
+      
       const { data, error } = await supabase
         .from('folders')
         .update({
@@ -1553,7 +1626,7 @@ export class AgentApiV2Tools {
           position,
           updated_at: new Date().toISOString()
         })
-        .eq('id', ref)
+        .eq('id', folderId)
         .eq('user_id', userId)
         .select()
         .single();
@@ -1572,6 +1645,9 @@ export class AgentApiV2Tools {
     const { ref, classeur_id, parent_folder_id, position } = params;
     
     try {
+      // 🔧 CORRECTION : Résoudre la référence (slug → UUID)
+      const folderId = await this.resolveRef(ref, 'folder', userId, supabase);
+      
       const { data, error } = await supabase
         .from('folders')
         .update({
@@ -1580,7 +1656,7 @@ export class AgentApiV2Tools {
           position,
           updated_at: new Date().toISOString()
         })
-        .eq('id', ref)
+        .eq('id', folderId)
         .eq('user_id', userId)
         .select()
         .single();
@@ -1599,10 +1675,13 @@ export class AgentApiV2Tools {
     const { ref } = params;
     
     try {
+      // 🔧 CORRECTION : Résoudre la référence (slug → UUID)
+      const classeurId = await this.resolveRef(ref, 'classeur', userId, supabase);
+      
       const { data: classeur, error } = await supabase
         .from('classeurs')
         .select('*')
-        .eq('id', ref)
+        .eq('id', classeurId)
         .eq('user_id', userId)
         .single();
       
@@ -1620,6 +1699,9 @@ export class AgentApiV2Tools {
     const { ref, name, description, color, position } = params;
     
     try {
+      // 🔧 CORRECTION : Résoudre la référence (slug → UUID)
+      const classeurId = await this.resolveRef(ref, 'classeur', userId, supabase);
+      
       const { data, error } = await supabase
         .from('classeurs')
         .update({
@@ -1629,7 +1711,7 @@ export class AgentApiV2Tools {
           position,
           updated_at: new Date().toISOString()
         })
-        .eq('id', ref)
+        .eq('id', classeurId)
         .eq('user_id', userId)
         .select()
         .single();
