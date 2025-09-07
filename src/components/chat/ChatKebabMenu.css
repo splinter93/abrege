@@ -27,8 +27,8 @@
 }
 
 .kebab-button:hover {
-  color: var(--chat-text-primary);
-  background: var(--chat-bg-tertiary);
+  color: var(--chat-text-primary, #ececf1);
+  background: var(--chat-bg-tertiary, #212121);
   transform: translateY(-1px);
 }
 
@@ -45,9 +45,9 @@
 }
 
 .kebab-button[aria-expanded="true"] {
-  color: var(--chat-text-primary);
-  background: var(--chat-bg-tertiary);
-  border-color: var(--chat-border-focus);
+  color: var(--chat-text-primary, #ececf1);
+  background: var(--chat-bg-tertiary, #212121);
+  border-color: var(--chat-border-focus, #3b82f6);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
@@ -64,13 +64,13 @@
   position: absolute;
   top: calc(100% + 8px);
   right: 0;
-  background: var(--chat-bg-elevated);
-  border: 1px solid var(--chat-border-primary);
+  background: var(--chat-bg-elevated, #1a1a1c);
+  border: 1px solid var(--chat-border-primary, #2a2a2c);
   border-radius: 12px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), 0 4px 16px rgba(0, 0, 0, 0.08);
   min-width: 240px;
   max-width: 280px;
-  z-index: var(--chat-z-dropdown);
+  z-index: var(--chat-z-dropdown, 1000);
   overflow: hidden;
   backdrop-filter: blur(20px);
   animation: kebabDropdownSlide 0.2s ease-out;
@@ -131,12 +131,12 @@
 }
 
 .kebab-option:hover {
-  background: var(--chat-bg-tertiary);
-  color: var(--chat-text-primary);
+  background: var(--chat-bg-tertiary, #212121);
+  color: var(--chat-text-primary, #ececf1);
 }
 
 .kebab-option:active {
-  background: var(--chat-bg-quaternary);
+  background: var(--chat-bg-quaternary, #2a2a2c);
   transform: scale(0.98);
 }
 
