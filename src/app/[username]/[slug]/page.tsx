@@ -64,7 +64,12 @@ export default async function Page(props: { params: Promise<{ username: string; 
   const supabase = createSupabaseServerClient();
   const {
     data: { user: authUser },
+    error: authError
   } = await supabase.auth.getUser();
+
+  // Debug: Log de l'authentification
+  console.log('🔍 [DEBUG] Auth error:', authError);
+  console.log('🔍 [DEBUG] Auth user:', authUser?.id);
 
   // Décoder l'username (retirer le @ et décoder l'URL)
   const decodedUsername = decodeURIComponent(username).replace(/^@/, '');
