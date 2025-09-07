@@ -13,6 +13,17 @@
    Seulement pour éviter le flash blanc, pas pour interférer avec typography.css
 */
 
+/* ==========================================================================
+   RÉDUCTION PADDING IMAGE-TITRE - PAGE PUBLIQUE
+   ==========================================================================
+   Réduire l'espacement entre l'image d'en-tête et le titre
+*/
+
+/* Image d'en-tête - padding réduit sur desktop */
+.public-header-image {
+  margin-bottom: 16px !important;
+}
+
 /* Forcer le thème sombre sur le container principal */
 .public-note-container {
   background: #141414;
@@ -149,7 +160,7 @@ body.public-note-page {
   /* Image d'en-tête - hauteur réduite */
   .public-header-image {
     height: 200px !important;
-    margin-bottom: 24px;
+    margin-bottom: 12px;
   }
 
   /* Titre dans l'image - ajustements */
@@ -228,7 +239,7 @@ body.public-note-page {
   /* Image d'en-tête - encore plus petite */
   .public-header-image {
     height: 150px !important;
-    margin-bottom: 20px;
+    margin-bottom: 8px;
   }
 
   /* Titre dans l'image - très compact */
@@ -304,7 +315,7 @@ body.public-note-page {
   /* Image d'en-tête - hauteur minimale */
   .public-header-image {
     height: 120px !important;
-    margin-bottom: 16px;
+    margin-bottom: 6px;
   }
 
   /* Texte du contenu - DÉLÉGUÉ À TYPOGRAPHY.CSS */
@@ -356,7 +367,7 @@ body.public-note-page {
   /* Image d'en-tête - hauteur réduite en paysage */
   .public-header-image {
     height: 120px !important;
-    margin-bottom: 16px;
+    margin-bottom: 8px;
   }
 
   /* Titre dans l'image - ajustements paysage */
