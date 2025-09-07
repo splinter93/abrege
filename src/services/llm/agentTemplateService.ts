@@ -114,6 +114,10 @@ export class AgentTemplateService {
     if (agentConfig.api_v2_capabilities && Array.isArray(agentConfig.api_v2_capabilities) && agentConfig.api_v2_capabilities.length > 0) {
       hasApiV2Capabilities = true;
       logger.dev(`[AgentTemplate] 🔧 Capacités API v2 détectées: ${agentConfig.api_v2_capabilities.length} outils`);
+      
+      // 🔧 PLUS BESOIN D'INSTRUCTIONS D'AUTH - Le système gère ça automatiquement
+      // Les agents utilisent maintenant les services internes directement
+      // Plus d'appels HTTP, plus d'erreurs 401, plus de bypass tokens
     }
 
     return {

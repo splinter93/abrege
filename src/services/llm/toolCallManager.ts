@@ -65,14 +65,25 @@ export class ToolCallManager {
     }, 5 * 60 * 1000);
 
     try {
-      // ✅ NOUVEAU: Utiliser le système OpenAPI V2
-      logger.info(`[ToolCallManager] 🔧 Exécution de ${func.name} avec OpenAPI V2...`);
+      // 🔧 CORRECTION: Utiliser directement les services internes au lieu d'appels HTTP
+      logger.info(`[ToolCallManager] 🔧 Exécution de ${func.name} avec services internes...`);
       
-      const result = await this.openApiExecutor.executeToolCall(toolCall, userToken, maxRetries, options);
+      // Utiliser AgentApiV2Tools qui fait des appels directs à la DB
+      const { AgentApiV2Tools } = await import('@/services/agentApiV2Tools');
+      const agentTools = new AgentApiV2Tools();
       
-      logger.info(`[ToolCallManager] ✅ Tool ${func.name} exécuté avec succès via OpenAPI V2`);
+      const args = this.parseArguments(func.arguments);
+      const result = await agentTools.executeTool(func.name, args, userToken);
       
-      return result;
+      logger.info(`[ToolCallManager] ✅ Tool ${func.name} exécuté avec succès via services internes`);
+      
+      return {
+        tool_call_id: id,
+        name: func.name,
+        result: result,
+        success: result.success !== false && !result.error,
+        timestamp: new Date().toISOString()
+      };
 
     } catch (error) {
       logger.error(`[ToolCallManager] ❌ Erreur exécution ${func.name}:`, error);
