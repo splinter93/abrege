@@ -86,6 +86,8 @@ export default async function Page(props: { params: Promise<{ username: string; 
 
 
   // Récupérer la note (même si elle est privée - le composant client gérera l'authentification)
+  console.log('🔍 [DEBUG] Server: Looking for note with slug:', slug, 'and user_id:', owner.id);
+  
   const { data: noteBySlug, error: noteError } = await supabaseAnon
     .from('articles')
     .select(
@@ -95,6 +97,12 @@ export default async function Page(props: { params: Promise<{ username: string; 
     .eq('user_id', owner.id)
     .limit(1)
     .maybeSingle();
+
+  console.log('🔍 [DEBUG] Server: Note found:', !!noteBySlug);
+  console.log('🔍 [DEBUG] Server: Note error:', noteError);
+  if (noteBySlug) {
+    console.log('🔍 [DEBUG] Server: Note visibility:', noteBySlug.share_settings?.visibility);
+  }
 
   if (noteError || !noteBySlug) {
     // Note non trouvée - afficher une erreur au lieu de rediriger
