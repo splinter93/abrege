@@ -90,7 +90,7 @@ function toUIFolder(f: Folder): Folder {
 function toUIFile(n: Note): FileArticle {
   return {
     id: n.id,
-    source_title: n.source_title || n.title || '',
+    source_title: n.source_title || n.title || 'Sans titre',
     classeur_id: n.classeur_id || '',
     folder_id: n.folder_id || null,
     user_id: 'unknown', // Valeur par défaut car pas dans le type Zustand
@@ -192,7 +192,7 @@ export function useFolderManagerState(classeurId: string, userId: string, parent
       }
       return toUIFolder(result.folder);
     } catch (err) {
-      logger.error('[UI] ❌ Erreur création dossier:', err);
+      logger.error('[UI] ❌ Erreur création dossier', undefined, err instanceof Error ? err : new Error(String(err)));
       setError('Erreur lors de la création du dossier.');
       return undefined;
     }
@@ -223,12 +223,19 @@ export function useFolderManagerState(classeurId: string, userId: string, parent
       const result = await v2UnifiedApi.createNote(payload);
       
       if (process.env.NODE_ENV === 'development') {
-        logger.dev('[UI] ✅ Note créée avec V2UnifiedApi uniquement:', result.note.source_title);
+        logger.dev('[UI] ✅ Note créée avec V2UnifiedApi uniquement:', result.note?.source_title || 'Titre non défini');
+      }
+
+      // Vérifier que la note a bien un source_title
+      if (!result.note || !result.note.source_title) {
+        logger.error('[UI] ❌ Note créée sans source_title', { result });
+        setError('Erreur lors de la création du fichier: titre manquant.');
+        return undefined;
       }
 
       return result.note;
     } catch (err) {
-      logger.error('[UI] ❌ Erreur création note:', err);
+      logger.error('[UI] ❌ Erreur création note', undefined, err instanceof Error ? err : new Error(String(err)));
       setError('Erreur lors de la création du fichier.');
       return undefined;
     }
@@ -242,7 +249,7 @@ export function useFolderManagerState(classeurId: string, userId: string, parent
       
       // Vérifier que l'utilisateur est connecté
       if (!userId || userId.trim() === '') {
-        logger.error('[UI] ❌ Utilisateur non connecté:', { userId });
+        logger.error('[UI] ❌ Utilisateur non connecté', { userId });
         setError('Vous devez être connecté pour supprimer un dossier.');
         return;
       }
@@ -250,7 +257,7 @@ export function useFolderManagerState(classeurId: string, userId: string, parent
       // Vérifier que le dossier existe
       const originalFolder = folders.find(f => f.id === id);
       if (!originalFolder) {
-        logger.error('[UI] ❌ Dossier non trouvé dans le store local:', { id });
+        logger.error('[UI] ❌ Dossier non trouvé dans le store local', { id });
         setError('Dossier non trouvé dans l\'interface.');
         return;
       }
@@ -267,7 +274,7 @@ export function useFolderManagerState(classeurId: string, userId: string, parent
         // Navigation gérée par le parent
       }
     } catch (err) {
-      logger.error('[UI] ❌ Erreur suppression dossier:', err);
+      logger.error('[UI] ❌ Erreur suppression dossier', undefined, err instanceof Error ? err : new Error(String(err)));
       setError('Erreur lors de la suppression du dossier.');
     }
   }, [folders, parentFolderId, userId]);
@@ -287,7 +294,7 @@ export function useFolderManagerState(classeurId: string, userId: string, parent
         logger.dev('[UI] ✅ Note renommée avec succès:', { id, newName: name });
       }
     } catch (error) {
-      logger.error('[UI] ❌ Erreur renommage note:', error);
+      logger.error('[UI] ❌ Erreur renommage note', undefined, error instanceof Error ? error : new Error(String(error)));
       
       // 🔧 CORRECTION: Rollback en cas d'erreur
       store.updateNote(id, { source_title: originalNote.source_title });
@@ -314,7 +321,7 @@ export function useFolderManagerState(classeurId: string, userId: string, parent
         logger.dev('[UI] ✅ Dossier renommé avec succès:', { id, newName: name });
       }
     } catch (error) {
-      logger.error('[UI] ❌ Erreur renommage dossier:', error);
+      logger.error('[UI] ❌ Erreur renommage dossier', undefined, error instanceof Error ? error : new Error(String(error)));
       
       // 🔧 CORRECTION: Rollback en cas d'erreur
       store.updateFolder(id, { name: originalFolder.name });
@@ -334,7 +341,7 @@ export function useFolderManagerState(classeurId: string, userId: string, parent
       
       // Vérifier que l'utilisateur est connecté
       if (!userId || userId.trim() === '') {
-        logger.error('[UI] ❌ Utilisateur non connecté:', { userId });
+        logger.error('[UI] ❌ Utilisateur non connecté', { userId });
         setError('Vous devez être connecté pour supprimer une note.');
         return;
       }
@@ -342,7 +349,7 @@ export function useFolderManagerState(classeurId: string, userId: string, parent
       // Vérifier que la note existe dans le store local
       const note = Object.values(notes).find(n => n.id === id);
       if (!note) {
-        logger.error('[UI] ❌ Note non trouvée dans le store local:', { id });
+        logger.error('[UI] ❌ Note non trouvée dans le store local', { id });
         setError('Note non trouvée dans l\'interface.');
         return;
       }
@@ -358,7 +365,7 @@ export function useFolderManagerState(classeurId: string, userId: string, parent
         logger.dev('[UI] ✅ Note supprimée avec V2UnifiedApi uniquement');
       }
     } catch (err) {
-      logger.error('[UI] ❌ Erreur suppression note:', err);
+      logger.error('[UI] ❌ Erreur suppression note', undefined, err instanceof Error ? err : new Error(String(err)));
       setError('Erreur lors de la suppression du fichier.');
     }
   }, [notes, userId]);
@@ -377,7 +384,7 @@ export function useFolderManagerState(classeurId: string, userId: string, parent
         // Récupérer la note originale pour le rollback
         const originalNote = notes.find(n => n.id === id);
         if (!originalNote) {
-          logger.error('[UI] ❌ Note non trouvée pour renommage:', { id });
+          logger.error('[UI] ❌ Note non trouvée pour renommage', { id });
           setError('Note non trouvée.');
           return;
         }
@@ -395,7 +402,7 @@ export function useFolderManagerState(classeurId: string, userId: string, parent
         // Récupérer le dossier original pour le rollback
         const originalFolder = folders.find(f => f.id === id);
         if (!originalFolder) {
-          logger.error('[UI] ❌ Dossier non trouvé pour renommage:', { id });
+          logger.error('[UI] ❌ Dossier non trouvé pour renommage', { id });
           setError('Dossier non trouvé.');
           return;
         }
@@ -415,7 +422,7 @@ export function useFolderManagerState(classeurId: string, userId: string, parent
         logger.dev('[UI] ✅ Item renommé avec API optimisée');
       }
     } catch (err) {
-      logger.error('[UI] ❌ Erreur renommage:', err);
+      logger.error('[UI] ❌ Erreur renommage', undefined, err instanceof Error ? err : new Error(String(err)));
       
       // 🔧 CORRECTION: Rollback en cas d'erreur
       const store = useFileSystemStore.getState();
@@ -499,7 +506,7 @@ export function useFolderManagerState(classeurId: string, userId: string, parent
         logger.dev('[UI] ✅ Item déplacé avec API + Zustand');
       }
     } catch (err) {
-      logger.error('[UI] ❌ Erreur déplacement item:', err);
+      logger.error('[UI] ❌ Erreur déplacement item', undefined, err instanceof Error ? err : new Error(String(err)));
       setError('Erreur lors du déplacement de l\'élément.');
     }
   }, [activeClasseurId, folders, notes]);

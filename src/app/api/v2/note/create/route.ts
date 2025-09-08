@@ -129,7 +129,20 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         slug,
         public_url: publicUrl
       })
-      .select()
+      .select(`
+        id,
+        source_title,
+        slug,
+        public_url,
+        header_image,
+        folder_id,
+        classeur_id,
+        user_id,
+        created_at,
+        updated_at,
+        markdown_content,
+        html_content
+      `)
       .single();
 
     if (createError) {

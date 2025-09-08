@@ -116,8 +116,15 @@ export async function getAuthenticatedUser(request: NextRequest): Promise<AuthRe
           scopes = DEFAULT_AGENT_SCOPES;
           logApi.info(`[AuthUtils] 🤖 Agent spécialisé détecté, scopes par défaut appliqués: ${scopes.length} scopes`);
         } else {
-          // Utilisateur normal : pas de scopes par défaut (sera géré par OAuth/API Key)
-          logApi.info(`[AuthUtils] 👤 Utilisateur normal détecté, pas de scopes par défaut`);
+          // Utilisateur normal : scopes par défaut pour l'interface utilisateur
+          scopes = [
+            'notes:read', 'notes:write', 'notes:create', 'notes:update', 'notes:delete',
+            'classeurs:read', 'classeurs:write', 'classeurs:create', 'classeurs:update', 'classeurs:delete',
+            'dossiers:read', 'dossiers:write', 'dossiers:create', 'dossiers:update', 'dossiers:delete',
+            'files:read', 'files:write', 'files:upload', 'files:delete',
+            'profile:read'
+          ];
+          logApi.info(`[AuthUtils] 👤 Utilisateur normal détecté, scopes par défaut appliqués: ${scopes.length} scopes`);
         }
 
         return {
