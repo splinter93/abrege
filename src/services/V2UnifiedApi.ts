@@ -1,7 +1,6 @@
 import { useFileSystemStore } from '@/store/useFileSystemStore';
 
 import { simpleLogger as logger } from '@/utils/logger';
-import { triggerUnifiedRealtimePolling } from './unifiedRealtimeService';
 
 
 // Types pour les données d'API (compatibles avec V1)
@@ -257,8 +256,13 @@ export class V2UnifiedApi {
         throw new Error(result.error || 'Erreur lors de la création de la note');
       }
 
-      // 🚀 Déclencher le polling intelligent pour synchronisation
-      await triggerUnifiedRealtimePolling('notes', 'CREATE');
+      // 🎯 Déclencher le polling ciblé pour synchronisation
+      try {
+        const { triggerPollingAfterNoteAction } = await import('@/services/uiActionPolling');
+        await triggerPollingAfterNoteAction('note_created');
+      } catch (error) {
+        console.warn('[V2UnifiedApi] ⚠️ Erreur déclenchement polling ciblé:', error);
+      }
 
       const duration = Date.now() - startTime;
       return {
@@ -324,8 +328,7 @@ export class V2UnifiedApi {
         throw new Error(result.error || 'Erreur lors de la mise à jour de la note');
       }
 
-      // 🚀 3. Déclencher le polling intelligent immédiatement
-      await triggerUnifiedRealtimePolling('notes', 'UPDATE');
+      // 🎯 Le polling ciblé est maintenant géré par le système ciblé
 
       const duration = Date.now() - startTime;
       return {
@@ -457,6 +460,14 @@ export class V2UnifiedApi {
         });
       }
 
+      // 🎯 Déclencher le polling ciblé pour la suppression
+      try {
+        const { triggerPollingAfterNoteAction } = await import('@/services/uiActionPolling');
+        await triggerPollingAfterNoteAction('note_deleted');
+      } catch (error) {
+        console.warn('[V2UnifiedApi] ⚠️ Erreur déclenchement polling ciblé:', error);
+      }
+
       const duration = Date.now() - startTime;
       if (process.env.NODE_ENV === 'development') {
         logger.dev(`[V2UnifiedApi] ✅ Note mise en corbeille en ${duration}ms`);
@@ -509,8 +520,13 @@ export class V2UnifiedApi {
         throw new Error(result.error || 'Erreur lors de la création du dossier');
       }
 
-      // 🚀 Déclencher le polling intelligent pour synchronisation
-      await triggerUnifiedRealtimePolling('folders', 'CREATE');
+      // 🎯 Déclencher le polling ciblé pour la création
+      try {
+        const { triggerPollingAfterFolderAction } = await import('@/services/uiActionPolling');
+        await triggerPollingAfterFolderAction('folder_created');
+      } catch (error) {
+        console.warn('[V2UnifiedApi] ⚠️ Erreur déclenchement polling ciblé:', error);
+      }
 
       const duration = Date.now() - startTime;
       return {
@@ -565,8 +581,13 @@ export class V2UnifiedApi {
       const store = useFileSystemStore.getState();
       store.updateFolder(cleanFolderId, result.folder);
       
-      // 🚀 Déclencher le polling intelligent immédiatement
-      await triggerUnifiedRealtimePolling('folders', 'UPDATE');
+      // 🎯 Déclencher le polling ciblé pour la mise à jour
+      try {
+        const { triggerPollingAfterFolderAction } = await import('@/services/uiActionPolling');
+        await triggerPollingAfterFolderAction('folder_updated');
+      } catch (error) {
+        console.warn('[V2UnifiedApi] ⚠️ Erreur déclenchement polling ciblé:', error);
+      }
       
       const totalTime = Date.now() - startTime;
       if (process.env.NODE_ENV === 'development') {
@@ -632,6 +653,14 @@ export class V2UnifiedApi {
         });
       }
       
+      // 🎯 Déclencher le polling ciblé pour la suppression
+      try {
+        const { triggerPollingAfterFolderAction } = await import('@/services/uiActionPolling');
+        await triggerPollingAfterFolderAction('folder_deleted');
+      } catch (error) {
+        console.warn('[V2UnifiedApi] ⚠️ Erreur déclenchement polling ciblé:', error);
+      }
+
       const totalTime = Date.now() - startTime;
       if (process.env.NODE_ENV === 'development') {
         logger.dev(`[V2UnifiedApi] ✅ Dossier mis en corbeille en ${totalTime}ms total`);
@@ -715,8 +744,13 @@ export class V2UnifiedApi {
       // 🚀 Mise à jour directe de Zustand (instantanée)
       store.moveNote(cleanNoteId, targetFolderId, noteClasseurId);
       
-      // 🚀 5. Déclencher le polling intelligent immédiatement
-      await triggerUnifiedRealtimePolling('notes', 'UPDATE');
+      // 🎯 Déclencher le polling ciblé pour le déplacement
+      try {
+        const { triggerPollingAfterNoteAction } = await import('@/services/uiActionPolling');
+        await triggerPollingAfterNoteAction('note_moved');
+      } catch (error) {
+        console.warn('[V2UnifiedApi] ⚠️ Erreur déclenchement polling ciblé:', error);
+      }
       
       const totalTime = Date.now() - startTime;
       if (process.env.NODE_ENV === 'development') {
@@ -783,8 +817,13 @@ export class V2UnifiedApi {
       const finalClasseurId = targetClasseurId || folderClasseurId;
       store.moveFolder(cleanFolderId, targetParentId, finalClasseurId);
       
-      // 🚀 Déclencher le polling intelligent immédiatement
-      await triggerUnifiedRealtimePolling('folders', 'UPDATE');
+      // 🎯 Déclencher le polling ciblé pour le déplacement
+      try {
+        const { triggerPollingAfterFolderAction } = await import('@/services/uiActionPolling');
+        await triggerPollingAfterFolderAction('folder_moved');
+      } catch (error) {
+        console.warn('[V2UnifiedApi] ⚠️ Erreur déclenchement polling ciblé:', error);
+      }
       
       const totalTime = Date.now() - startTime;
       if (process.env.NODE_ENV === 'development') {
@@ -834,8 +873,13 @@ export class V2UnifiedApi {
         const store = useFileSystemStore.getState();
         store.addClasseur(mappedClasseur);
         
-        // 🚀 Déclencher le polling intelligent immédiatement
-        await triggerUnifiedRealtimePolling('classeurs', 'CREATE');
+        // 🎯 Déclencher le polling ciblé pour la création
+        try {
+          const { triggerPollingAfterClasseurAction } = await import('@/services/uiActionPolling');
+          await triggerPollingAfterClasseurAction('classeur_created');
+        } catch (error) {
+          console.warn('[V2UnifiedApi] ⚠️ Erreur déclenchement polling ciblé:', error);
+        }
         
         const totalTime = Date.now() - startTime;
         if (process.env.NODE_ENV === 'development') {
@@ -907,8 +951,13 @@ export class V2UnifiedApi {
       const store = useFileSystemStore.getState();
       store.updateClasseur(cleanClasseurId, result.classeur);
       
-      // 🚀 4. Déclencher le polling intelligent immédiatement
-      await triggerUnifiedRealtimePolling('classeurs', 'UPDATE');
+      // 🎯 Déclencher le polling ciblé pour la mise à jour
+      try {
+        const { triggerPollingAfterClasseurAction } = await import('@/services/uiActionPolling');
+        await triggerPollingAfterClasseurAction('classeur_updated');
+      } catch (error) {
+        console.warn('[V2UnifiedApi] ⚠️ Erreur déclenchement polling ciblé:', error);
+      }
 
       const duration = Date.now() - startTime;
       return {
@@ -980,6 +1029,14 @@ export class V2UnifiedApi {
         });
       }
       
+      // 🎯 Déclencher le polling ciblé pour la suppression
+      try {
+        const { triggerPollingAfterClasseurAction } = await import('@/services/uiActionPolling');
+        await triggerPollingAfterClasseurAction('classeur_deleted');
+      } catch (error) {
+        console.warn('[V2UnifiedApi] ⚠️ Erreur déclenchement polling ciblé:', error);
+      }
+
       const totalTime = Date.now() - startTime;
       if (process.env.NODE_ENV === 'development') {
         logger.dev(`[V2UnifiedApi] ✅ Classeur mis en corbeille en ${totalTime}ms total`);
@@ -1023,8 +1080,13 @@ export class V2UnifiedApi {
       const store = useFileSystemStore.getState();
       store.updateNote(cleanRef, { markdown_content: result.note.markdown_content });
       
-      // 🚀 Déclencher le polling intelligent immédiatement
-      await triggerUnifiedRealtimePolling('notes', 'UPDATE');
+      // 🎯 Déclencher le polling ciblé pour la mise à jour
+      try {
+        const { triggerPollingAfterNoteAction } = await import('@/services/uiActionPolling');
+        await triggerPollingAfterNoteAction('note_updated');
+      } catch (error) {
+        console.warn('[V2UnifiedApi] ⚠️ Erreur déclenchement polling ciblé:', error);
+      }
       
       return result;
     } catch (error) {
@@ -1181,8 +1243,7 @@ export class V2UnifiedApi {
         logger.warn('[V2UnifiedApi] ⚠️ Réponse API invalide pour reorderClasseurs:', result);
       }
       
-      // 🚀 Déclencher le polling côté client immédiatement
-      await triggerUnifiedRealtimePolling('classeurs', 'UPDATE');
+      // 🎯 Le polling ciblé est maintenant géré par le système ciblé
       
       return result;
     } catch (error) {

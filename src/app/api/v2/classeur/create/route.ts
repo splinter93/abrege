@@ -76,14 +76,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const apiTime = Date.now() - startTime;
     logApi.info(`✅ Classeur créé en ${apiTime}ms`, context);
 
-    // 🚀 DÉCLENCHER LE POLLING AUTOMATIQUEMENT
-    try {
-      const { triggerUnifiedRealtimePolling } = await import('@/services/unifiedRealtimeService');
-      await triggerUnifiedRealtimePolling('classeurs', 'CREATE');
-      logApi.info('✅ Polling déclenché pour classeurs', context);
-    } catch (pollingError) {
-      logApi.warn('⚠️ Erreur lors du déclenchement du polling', context);
-    }
+    // 🎯 Le polling ciblé est maintenant géré côté client par V2UnifiedApi
 
     return NextResponse.json({
       success: true,

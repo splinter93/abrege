@@ -15,9 +15,9 @@ import { useDossiersPage } from "@/hooks/useDossiersPage";
 import { useAuth } from "@/hooks/useAuth";
 import { useSecureErrorHandler } from "@/components/SecureErrorHandler";
 import type { AuthenticatedUser } from "@/types/dossiers";
-import { useUnifiedRealtime } from "@/hooks/useUnifiedRealtime";
 import { useFileSystemStore } from "@/store/useFileSystemStore";
-import UnifiedRealtimeManager from "@/components/UnifiedRealtimeManager";
+import TargetedPollingManager from "@/components/TargetedPollingManager";
+import TargetedPollingMonitor from "@/components/TargetedPollingMonitor";
 
 import "./index.css";
 import "@/components/DossierErrorBoundary.css";
@@ -84,11 +84,7 @@ function AuthenticatedDossiersContent({ user }: { user: AuthenticatedUser }) {
     canRetry
   } = useDossiersPage(user.id);
   
-  // Utiliser le nouveau hook unifié pour le realtime - TOUJOURS en troisième
-  const { isConnected, provider, status, triggerPolling } = useUnifiedRealtime({
-    autoInitialize: true,
-    debug: process.env.NODE_ENV === 'development'
-  });
+  // 🎯 Le système de polling ciblé est maintenant géré par TargetedPollingManager
   
   const activeClasseur = useMemo(
     () => classeurs.find((c) => c.id === activeClasseurId),
@@ -119,6 +115,15 @@ function AuthenticatedDossiersContent({ user }: { user: AuthenticatedUser }) {
           notebook_id: activeClasseur.id,
           parent_id: currentFolderId || null
         }, user.id);
+        
+        // 🎯 Déclencher le polling ciblé pour les dossiers
+        try {
+          const { triggerPollingAfterFolderAction } = await import('@/services/uiActionPolling');
+          await triggerPollingAfterFolderAction('folder_created');
+          console.log('[DossiersPage] ✅ Dossier créé, polling ciblé déclenché');
+        } catch (error) {
+          console.warn('[DossiersPage] ⚠️ Erreur déclenchement polling dossier:', error);
+        }
       }
     } catch (e) {
       handleError(e, 'création dossier');
@@ -139,6 +144,9 @@ function AuthenticatedDossiersContent({ user }: { user: AuthenticatedUser }) {
           markdown_content: `# ${name.trim()}\n\nContenu de la note...`,
           folder_id: currentFolderId || null
         }, user.id);
+        
+        // 🎯 Le polling ciblé est déjà déclenché par V2UnifiedApi dans DossierService
+        console.log('[DossiersPage] ✅ Note créée, polling ciblé déclenché automatiquement');
       }
     } catch (e) {
       handleError(e, 'création note');
@@ -231,8 +239,6 @@ function AuthenticatedDossiersContent({ user }: { user: AuthenticatedUser }) {
 
   return (
     <div className="dossiers-page-wrapper">
-      {/* Gestionnaire realtime unifié pour la synchronisation */}
-      <UnifiedRealtimeManager />
       
       {/* Sidebar fixe */}
       <aside className="dossiers-sidebar-fixed">
@@ -339,6 +345,12 @@ function AuthenticatedDossiersContent({ user }: { user: AuthenticatedUser }) {
           </>
         )}
       </main>
+      
+      {/* 🎯 Nouveau système de polling ciblé */}
+      <TargetedPollingManager />
+      
+      {/* 🎯 Monitor du polling ciblé (dev seulement) */}
+      <TargetedPollingMonitor />
     </div>
   );
 } 

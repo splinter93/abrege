@@ -16,7 +16,6 @@ import { useFolderKeyboard } from '../hooks/useFolderKeyboard';
 
 import { classeurTabVariants, classeurTabTransition } from './FolderAnimation';
 import { useFileSystemStore } from '@/store/useFileSystemStore';
-import UnifiedRealtimeManager from './UnifiedRealtimeManager';
 
 
 interface FolderManagerProps {
@@ -246,8 +245,6 @@ const FolderManager: React.FC<FolderManagerProps> = ({
 
   return (
     <div className="folder-manager-wrapper">
-      {/* Gestionnaire realtime unifié pour la synchronisation */}
-      <UnifiedRealtimeManager />
       
       <div 
         className="folder-manager"

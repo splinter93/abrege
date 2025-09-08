@@ -175,14 +175,7 @@ export async function POST(
       );
     }
 
-    // 🔄 Déclencher le polling automatique
-    try {
-      const { triggerUnifiedRealtimePolling } = await import('@/services/unifiedRealtimeService');
-      await triggerUnifiedRealtimePolling('notes', 'UPDATE');
-      logApi.info('✅ Polling déclenché pour notes', context);
-    } catch (pollingError) {
-      logApi.warn('⚠️ Erreur lors du déclenchement du polling', pollingError);
-    }
+    // 🎯 Le polling ciblé est maintenant géré côté client par V2UnifiedApi
 
     // 📊 Mettre à jour les insights si nécessaire
     try {

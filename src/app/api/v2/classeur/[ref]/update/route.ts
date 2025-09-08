@@ -106,14 +106,7 @@ export async function PUT(
     const apiTime = Date.now() - startTime;
     logApi.info(`✅ Classeur mis à jour en ${apiTime}ms`, context);
 
-    // 🚀 DÉCLENCHER LE POLLING AUTOMATIQUEMENT
-    try {
-      const { triggerUnifiedRealtimePolling } = await import('@/services/unifiedRealtimeService');
-      await triggerUnifiedRealtimePolling('classeurs', 'UPDATE');
-      logApi.info('✅ Polling déclenché pour classeurs', context);
-    } catch (pollingError) {
-      logApi.warn('⚠️ Erreur lors du déclenchement du polling', context);
-    }
+    // 🎯 Le polling ciblé est maintenant géré côté client par V2UnifiedApi
 
     return NextResponse.json({
       success: true,
