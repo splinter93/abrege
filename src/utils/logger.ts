@@ -75,14 +75,32 @@ class Logger {
     if (this.isDevelopment) {
       const formattedMessage = this.formatMessage(entry);
       
-      // 🔧 CORRECTION : Sérialiser les objets pour éviter [object Object]
+      // 🔧 CORRECTION : Sérialiser les objets pour éviter [object Object] et gérer les références circulaires
       const serializeData = (obj: unknown): string => {
         if (obj === null || obj === undefined) return '';
         if (typeof obj === 'string') return obj;
         if (typeof obj === 'number' || typeof obj === 'boolean') return String(obj);
         try {
-          return JSON.stringify(obj, null, 2);
-        } catch {
+          return JSON.stringify(obj, (key, value) => {
+            // Gérer les références circulaires communes
+            if (key === 'socket' || key === 'channels' || key === 'client' || key === 'parent' || key === 'child') {
+              return '[Circular Reference]';
+            }
+            // Limiter la profondeur pour éviter les structures trop complexes
+            if (typeof value === 'object' && value !== null) {
+              const seen = new WeakSet();
+              if (seen.has(value)) {
+                return '[Circular Reference]';
+              }
+              seen.add(value);
+            }
+            return value;
+          }, 2);
+        } catch (error) {
+          // Fallback pour les objets avec structures circulaires complexes
+          if (error instanceof Error && error.message.includes('circular')) {
+            return `[Object with circular structure: ${(obj as any)?.constructor?.name || 'Unknown'}]`;
+          }
           return String(obj);
         }
       };
@@ -92,14 +110,19 @@ class Logger {
           
           const errorData = data && typeof data === 'object' && Object.keys(data).length > 0 ? serializeData(data) : undefined;
           const errorObj = error && error instanceof Error ? error : undefined;
+          const serializedError = error && !(error instanceof Error) ? serializeData(error) : undefined;
           
           // Ne passer que les paramètres non-vides à console.error
           if (errorData && errorObj) {
             console.error(formattedMessage, errorData, errorObj);
+          } else if (errorData && serializedError) {
+            console.error(formattedMessage, errorData, serializedError);
           } else if (errorData) {
             console.error(formattedMessage, errorData);
           } else if (errorObj) {
             console.error(formattedMessage, errorObj);
+          } else if (serializedError) {
+            console.error(formattedMessage, serializedError);
           } else {
             console.error(formattedMessage);
           }
@@ -220,7 +243,31 @@ export const simpleLogger = {
   error: (message: string, error?: unknown) => {
     // Convertir l'erreur en objet Error si ce n'est pas déjà le cas
     const errorObj = error instanceof Error ? error : (error ? new Error(String(error)) : undefined);
-    logger.error(LogCategory.EDITOR, message, undefined, errorObj);
+    
+    // Si l'erreur est un objet complexe, le sérialiser pour éviter [object Object]
+    let serializedData: string | undefined = undefined;
+    if (error && typeof error === 'object' && !(error instanceof Error)) {
+      try {
+        serializedData = JSON.stringify(error, (key, value) => {
+          // Gérer les références circulaires communes
+          if (key === 'socket' || key === 'channels' || key === 'client' || key === 'parent' || key === 'child') {
+            return '[Circular Reference]';
+          }
+          return value;
+        }, 2);
+      } catch (circularError) {
+        // Fallback pour les objets avec structures circulaires
+        if (circularError instanceof Error && circularError.message.includes('circular')) {
+          serializedData = `[Object with circular structure: ${(error as any)?.constructor?.name || 'Unknown'}]`;
+        } else {
+          serializedData = String(error);
+        }
+      }
+    }
+    
+    // Passer les données sérialisées comme message étendu si nécessaire
+    const fullMessage = serializedData ? `${message}\n${serializedData}` : message;
+    logger.error(LogCategory.EDITOR, fullMessage, undefined, errorObj);
   },
   warn: (message: string, ...args: unknown[]) => {
     logger.warn(LogCategory.EDITOR, message, args);
@@ -239,7 +286,19 @@ export const simpleLogger = {
 // Export de logApi pour compatibilité avec l'ancien système
 export const logApi = {
   error: (message: string, error?: unknown) => {
-    logger.error(LogCategory.API, message, error);
+    // Sérialiser l'erreur si c'est un objet complexe
+    let serializedError: string | undefined = undefined;
+    if (error && typeof error === 'object' && !(error instanceof Error)) {
+      try {
+        serializedError = JSON.stringify(error, null, 2);
+      } catch {
+        serializedError = String(error);
+      }
+    }
+    
+    // Passer les données sérialisées comme message étendu si nécessaire
+    const fullMessage = serializedError ? `${message}\n${serializedError}` : message;
+    logger.error(LogCategory.API, fullMessage);
   },
   info: (message: string, data?: unknown) => {
     logger.info(LogCategory.API, message, data);

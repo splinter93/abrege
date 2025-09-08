@@ -36,9 +36,16 @@ import { v2UnifiedApi } from '@/services/V2UnifiedApi';
 import { supabase } from '@/supabaseClient';
 import { toast } from 'react-hot-toast';
 import ImageMenu from '@/components/ImageMenu';
+import { useAuth } from '@/hooks/useAuth';
+import { RealtimeEditorDebug } from '@/components/RealtimeEditorDebug';
+import { useDatabaseRealtime } from '@/hooks/useDatabaseRealtime';
 import { uploadImageForNote } from '@/utils/fileUpload';
 import { logger, LogCategory } from '@/utils/logger';
 import type { FullEditorInstance } from '@/types/editor';
+import RealtimeEditorManager from '@/components/RealtimeEditorManager';
+import RealtimeEditorMonitor from '@/components/RealtimeEditorMonitor';
+import '@/components/RealtimeEditorMonitor.css';
+import { useRealtimeEditor } from '@/hooks/RealtimeEditorHook';
 // Types pour les mises à jour de note
 interface NoteUpdate {
   a4_mode?: boolean;
@@ -110,7 +117,11 @@ import ContextMenu from './ContextMenu';
  * <Editor noteId="note-123" readonly={false} userId="user-456" />
  * ```
  */
-const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> = ({ noteId, readonly = false, userId = 'me' }) => {
+const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> = ({ noteId, readonly = false, userId: propUserId }) => {
+  // 🔧 CORRECTION : Utiliser le vrai ID utilisateur de la session
+  const { user } = useAuth();
+  const userId = propUserId || user?.id || 'anonymous';
+  
   const router = useRouter();
   const selectNote = React.useCallback((s: FileSystemState) => s.notes[noteId], [noteId]);
   const note = useFileSystemStore(selectNote);
@@ -154,6 +165,50 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
   
   // Share settings state
   const [shareSettings, setShareSettings] = React.useState<ShareSettings>(getDefaultShareSettings());
+
+  // 🔄 Realtime Editor Integration
+  const realtimeEditor = useRealtimeEditor({
+    noteId,
+    userId,
+    debug: process.env.NODE_ENV === 'development',
+    autoReconnect: true,
+    onEvent: (event) => {
+      if (process.env.NODE_ENV === 'development') {
+        logger.info(LogCategory.EDITOR, 'Realtime event received:', event);
+      }
+      
+      // Traiter les événements d'éditeur en temps réel
+      if (event.type.startsWith('editor.')) {
+        // Les événements editor.* sont déjà traités par le dispatcher
+        // qui met à jour le store via updateNoteContent
+        // L'éditeur réagira automatiquement via le useEffect ci-dessus
+        if (process.env.NODE_ENV === 'development') {
+          logger.info(LogCategory.EDITOR, '🔄 Événement éditeur traité:', {
+            type: event.type,
+            source: event.source,
+            noteId: event.payload?.noteId
+          });
+        }
+      }
+    },
+    onStateChange: (state) => {
+      if (process.env.NODE_ENV === 'development') {
+        logger.info(LogCategory.EDITOR, 'Realtime state changed:', state);
+      }
+    }
+  });
+
+  // 🔄 Database Realtime Integration - Écouter les changements de base de données
+  const databaseRealtime = useDatabaseRealtime({
+    userId,
+    debug: process.env.NODE_ENV === 'development',
+    autoReconnect: true,
+    onStateChange: (state) => {
+      if (process.env.NODE_ENV === 'development') {
+        logger.info(LogCategory.EDITOR, 'Database Realtime state changed:', state);
+      }
+    }
+  });
 
   // Context menu state
   const [contextMenu, setContextMenu] = React.useState<{
@@ -298,6 +353,35 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
     content: content || '',
     onUpdate: handleEditorUpdate,
   });
+
+  // 🔄 Écouter les changements Realtime du store et mettre à jour l'éditeur
+  React.useEffect(() => {
+    if (!editor || !note || isUpdatingFromStore) return;
+
+    const storeContent = note.markdown_content || '';
+    const editorContent = editor.storage.markdown?.getMarkdown?.() || '';
+
+    // Seulement mettre à jour si le contenu a vraiment changé
+    if (storeContent !== editorContent && storeContent !== content) {
+      if (process.env.NODE_ENV === 'development') {
+        logger.info(LogCategory.EDITOR, '🔄 Mise à jour éditeur depuis le store Realtime:', {
+          storeContent: storeContent.substring(0, 100) + '...',
+          editorContent: editorContent.substring(0, 100) + '...',
+          noteId
+        });
+      }
+
+      setIsUpdatingFromStore(true);
+      
+      // Mettre à jour l'éditeur avec le nouveau contenu
+      editor.commands.setContent(storeContent);
+      
+      // Réinitialiser le flag après un court délai
+      setTimeout(() => {
+        setIsUpdatingFromStore(false);
+      }, 100);
+    }
+  }, [note?.markdown_content, editor, noteId, isUpdatingFromStore, content]);
 
   // Gestion des actions du menu contextuel
   const handleContextMenuAction = React.useCallback((action: string) => {
@@ -981,9 +1065,26 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
 
   return (
     <>
-      <div className="editor-toc-fixed">
-        <PublicTableOfContents headings={headings} containerRef={editorContainerRef} />
-      </div>
+      {/* 🔄 Realtime Editor Manager */}
+      <RealtimeEditorManager
+        noteId={noteId}
+        userId={userId}
+        debug={process.env.NODE_ENV === 'development'}
+        autoReconnect={true}
+        onStateChange={(state) => {
+          if (process.env.NODE_ENV === 'development') {
+            logger.info(LogCategory.EDITOR, 'Realtime state changed:', state);
+          }
+        }}
+        onEvent={(event) => {
+          if (process.env.NODE_ENV === 'development') {
+            logger.info(LogCategory.EDITOR, 'Realtime event received:', event);
+          }
+        }}
+      >
+        <div className="editor-toc-fixed">
+          <PublicTableOfContents headings={headings} containerRef={editorContainerRef} />
+        </div>
       <EditorLayout
         layoutClassName={headerImageUrl ? (titleInImage ? 'noteLayout imageWithTitle' : 'noteLayout imageOnly') : 'noteLayout noImage'}
         header={(
@@ -1253,6 +1354,17 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
         hasSelection={contextMenu.hasSelection}
       />
       
+      {/* 🔄 Realtime Editor Monitor (dev only) */}
+      {process.env.NODE_ENV === 'development' && (
+        <RealtimeEditorMonitor />
+      )}
+      
+      {/* 🔍 Realtime Editor Debug (dev only) */}
+      {process.env.NODE_ENV === 'development' && userId && (
+        <RealtimeEditorDebug noteId={noteId} userId={userId} />
+      )}
+      
+      </RealtimeEditorManager>
     </>
   );
 };
