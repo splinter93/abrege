@@ -1171,10 +1171,15 @@ export class V2UnifiedApi {
       const result = await response.json();
       
       // 🚀 Mise à jour directe de Zustand (instantanée)
-      const store = useFileSystemStore.getState();
-      result.classeurs.forEach(classeur => {
-        store.updateClasseur(classeur.id, classeur);
-      });
+      // Vérifier que result.classeurs existe et est un tableau
+      if (result && Array.isArray(result.classeurs)) {
+        const store = useFileSystemStore.getState();
+        result.classeurs.forEach(classeur => {
+          store.updateClasseur(classeur.id, classeur);
+        });
+      } else {
+        logger.warn('[V2UnifiedApi] ⚠️ Réponse API invalide pour reorderClasseurs:', result);
+      }
       
       // 🚀 Déclencher le polling côté client immédiatement
       await triggerUnifiedRealtimePolling('classeurs', 'UPDATE');

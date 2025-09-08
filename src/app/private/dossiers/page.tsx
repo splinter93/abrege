@@ -70,6 +70,8 @@ function AuthenticatedDossiersContent({ user }: { user: AuthenticatedUser }) {
     handleCreateClasseur,
     handleRenameClasseur,
     handleDeleteClasseur,
+    handleUpdateClasseur,
+    handleUpdateClasseurPositions,
     handleFolderOpen,
     handleGoBack,
     handleGoToRoot,
@@ -163,6 +165,15 @@ function AuthenticatedDossiersContent({ user }: { user: AuthenticatedUser }) {
       handleError(e, 'renommage classeur');
     }
   }, [user?.id, handleRenameClasseur, handleError]);
+
+  const handleUpdateClasseurClick = useCallback(async (id: string, data: Partial<Classeur>) => {
+    if (!user?.id) return;
+    try {
+      await handleUpdateClasseur(id, data);
+    } catch (e) {
+      handleError(e, 'mise à jour classeur');
+    }
+  }, [user?.id, handleUpdateClasseur, handleError]);
 
   const handleDeleteClasseurClick = useCallback(async (id: string) => {
     if (!user?.id) return;
@@ -279,6 +290,8 @@ function AuthenticatedDossiersContent({ user }: { user: AuthenticatedUser }) {
               onCreateClasseur={handleCreateClasseurClick}
               onRenameClasseur={handleRenameClasseurClick}
               onDeleteClasseur={handleDeleteClasseurClick}
+              onUpdateClasseur={handleUpdateClasseurClick}
+              onUpdateClasseurPositions={handleUpdateClasseurPositions}
             />
           </motion.div>
         )}

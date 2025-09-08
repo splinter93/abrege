@@ -228,18 +228,32 @@ export function useDossiersPage(userId: string) {
     }
   }, [userId, dossierService]);
 
-  const handleUpdateClasseurPositions = useCallback(async (updatedClasseurs: Array<{ id: string; position: number }>) => {
+  const handleUpdateClasseurPositions = useCallback(async (reorderedClasseurs: Classeur[]) => {
+    // 1. Sauvegarder l'état actuel pour un rollback en cas d'erreur
+    const originalClasseurs = Object.values(useFileSystemStore.getState().classeurs);
+
+    // 2. Mise à jour optimiste de l'UI via le store Zustand
+    logger.dev('[useDossiersPage] 🚀 Mise à jour optimiste des positions');
+    setClasseurs(reorderedClasseurs);
+
     try {
-      logger.dev('[useDossiersPage] 🔄 Mise à jour positions classeurs via service:', updatedClasseurs);
+      // 3. Préparer les données et appeler l'API
+      const positionsToUpdate = reorderedClasseurs.map((c, index) => ({ id: c.id, position: index }));
+      logger.dev('[useDossiersPage] 🔄 Appel API pour mise à jour positions', positionsToUpdate);
       
-      await dossierService.updateClasseurPositions(updatedClasseurs, userId);
+      await dossierService.updateClasseurPositions(positionsToUpdate, userId);
       
-      logger.dev('[useDossiersPage] ✅ Positions classeurs mises à jour avec succès');
+      logger.dev('[useDossiersPage] ✅ Positions mises à jour avec succès (côté serveur)');
     } catch (error) {
-      logger.error('[useDossiersPage] ❌ Erreur mise à jour positions classeurs:', error);
+      logger.error('[useDossiersPage] ❌ Erreur API - Rollback de la mise à jour optimiste', error);
+      
+      // 4. Rollback en cas d'erreur de l'API
+      setClasseurs(originalClasseurs);
+      
+      // 5. Propager l'erreur pour affichage à l'utilisateur
       throw error;
     }
-  }, [userId, dossierService]);
+  }, [userId, dossierService, setClasseurs]);
 
   const handleFolderOpen = useCallback((folderId: string) => {
     setCurrentFolderId(folderId);

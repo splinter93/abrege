@@ -1,258 +1,271 @@
 /* ==========================================================================
-   CLASSEUR NAVIGATION - DESIGN ÉPURÉ AVEC TABS HORIZONTAUX
+   CLASSEUR NAVIGATION - STYLES PROFESSIONNELS (formerly ClasseurTabs)
    ========================================================================== */
 
-.classeur-navigation {
-  width: 100%;
-  background: var(--glass-bg-primary);
-  border: 1px solid var(--glass-border-primary);
-  border-radius: var(--dossiers-radius-lg);
-  margin: 0 0 var(--dossiers-spacing-sm) 0;
-  padding: var(--dossiers-spacing-md);
-  position: relative;
-  z-index: var(--dossiers-z-content);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  box-shadow: var(--glass-shadow-subtle);
-  transition: all var(--dossiers-transition-normal);
+:root {
+  --classeur-font-family: "Noto Sans", "Inter", "Arial", sans-serif;
 }
 
-.classeur-navigation:hover {
-  background: var(--glass-bg-secondary);
-  border-color: var(--glass-border-hover);
-  box-shadow: var(--glass-shadow-medium);
-  transform: translateY(-1px);
-}
-
-.classeur-navigation-container {
-  width: 100%;
-  max-width: 100%;
-  margin: 0;
-  padding: 0;
+/* Styles professionnels pour ClasseurNavigation */
+.classeur-tabs-wrapper {
+  padding: var(--spacing-lg) var(--spacing-xl) 0 var(--spacing-xl);
+  border-bottom: 1px solid var(--glass-border-light);
+  flex-shrink: 0;
   background: transparent;
-  border: none;
-  border-radius: var(--dossiers-radius-md);
-  overflow: hidden;
+  position: relative;
+  font-family: var(--classeur-font-family);
+}
+
+.classeur-tabs-container {
+  display: flex;
+  align-items: center;
+  position: relative;
+  font-family: var(--classeur-font-family);
 }
 
 .classeur-tabs {
   display: flex;
   align-items: flex-end;
-  gap: 0;
+  gap: var(--spacing-sm);
   overflow-x: auto;
+  padding-bottom: 0;
   scrollbar-width: none;
   -ms-overflow-style: none;
-  padding: 0;
-  border-bottom: 1px solid var(--glass-border-secondary);
-  background: transparent;
-  border-radius: var(--dossiers-radius-md) var(--dossiers-radius-md) 0 0;
+  min-height: 48px;
+  position: relative;
+  font-family: var(--classeur-font-family);
+  border-bottom: none;
 }
 
 .classeur-tabs::-webkit-scrollbar {
   display: none;
 }
 
-/* ==========================================================================
-   TABS INDIVIDUELS - DESIGN ÉPURÉ
-   ========================================================================== */
-
 .classeur-tab {
+  padding: var(--spacing-md) var(--spacing-lg);
+  border: 1px solid transparent;
+  border-bottom: none;
+  border-radius: 10px 10px 0 0;
+  background-color: transparent;
+  color: var(--text-2);
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 400;
+  font-family: var(--classeur-font-family);
+  white-space: nowrap;
+  transition: var(--transition-normal);
+  position: relative;
+  bottom: -1px;
   display: flex;
   align-items: center;
-  gap: var(--dossiers-spacing-sm);
-  padding: var(--dossiers-spacing-md) var(--dossiers-spacing-lg);
-  border: none;
-  background: transparent;
-  color: var(--dossiers-text-secondary);
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all var(--dossiers-transition-normal);
-  white-space: nowrap;
-  font-family: 'Noto Sans', sans-serif;
-  min-height: 48px;
-  position: relative;
-  border-radius: 0;
-  margin: 0;
-  outline: none;
+  gap: var(--spacing-sm);
+  min-width: 120px;
+  justify-content: center;
+  box-shadow: none;
+  user-select: none;
 }
 
 .classeur-tab:hover {
-  color: var(--dossiers-text-primary);
-  background: var(--glass-bg-hover);
+  background-color: rgba(60, 60, 80, 0.7);
+  color: var(--text-1);
+  box-shadow: none;
 }
 
 .classeur-tab.active {
-  color: var(--dossiers-text-primary);
-  background: transparent;
-  font-weight: 600;
-}
-
-.classeur-tab-emoji {
-  font-size: 16px;
-  line-height: 1;
-  opacity: 0.8;
-  transition: opacity var(--dossiers-transition-normal);
-}
-
-.classeur-tab.active .classeur-tab-emoji {
-  opacity: 1;
-}
-
-.classeur-tab-name {
-  font-size: 14px;
-  line-height: 1.2;
-  transition: color var(--dossiers-transition-normal);
-}
-
-/* ==========================================================================
-   INDICATEUR ACTIF - BARRE BLANCHE SOUS LE TAB
-   ========================================================================== */
-
-.classeur-tab-indicator {
-  position: absolute;
+  background-color: transparent;
+  color: var(--text-1);
+  border-color: transparent;
+  border-bottom: 2px solid var(--accent-primary);
+  box-shadow: none;
+  z-index: 2;
   bottom: 0;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background: var(--dossiers-primary);
-  border-radius: 1px 1px 0 0;
-  animation: slideIn var(--dossiers-transition-normal) ease-out;
-}
-
-@keyframes slideIn {
-  from {
-    transform: scaleX(0);
-    opacity: 0;
-  }
-  to {
-    transform: scaleX(1);
-    opacity: 1;
-  }
-}
-
-/* ==========================================================================
-   BOUTON D'AJOUT
-   ========================================================================== */
-
-.classeur-tab.add-tab {
-  color: var(--dossiers-text-muted);
-  padding: var(--dossiers-spacing-md) var(--dossiers-spacing-md);
-  min-width: 48px;
-  justify-content: center;
-}
-
-.classeur-tab.add-tab:hover {
-  color: var(--dossiers-primary);
-  background: var(--glass-bg-hover);
-}
-
-.add-icon {
-  font-size: 18px;
-  font-weight: 300;
-  line-height: 1;
-}
-
-/* ==========================================================================
-   ÉTATS DE DRAG & DROP
-   ========================================================================== */
-
-.classeur-tab[draggable="true"] {
-  cursor: grab;
-}
-
-.classeur-tab[draggable="true"]:active {
-  cursor: grabbing;
 }
 
 .classeur-tab.drag-over {
-  background: var(--dossiers-primary-light);
-  color: var(--dossiers-primary);
-}
-
-.classeur-tab.drag-over .classeur-tab-emoji {
-  transform: scale(1.1);
-  transition: transform var(--dossiers-transition-fast);
+  background-color: var(--glass-bg-heavy);
+  border-bottom: 2px dashed var(--accent-primary);
 }
 
 /* ==========================================================================
-   RESPONSIVE DESIGN
+   DRAG AND DROP STYLES - AMÉLIORATION VISUELLE
    ========================================================================== */
 
-@media (max-width: 768px) {
-  .classeur-tab {
-    padding: var(--dossiers-spacing-sm) var(--dossiers-spacing-md);
-    min-height: 44px;
-    font-size: 13px;
-  }
-  
-  .classeur-tab-emoji {
-    font-size: 14px;
-  }
-  
-  .classeur-tab-name {
-    font-size: 13px;
-  }
+/* Élément en cours de drag */
+.motion-tab-wrapper.dragged {
+  opacity: 0.5;
+  transform: scale(0.95);
+  z-index: 1000;
+  transition: all 0.2s ease;
 }
 
-@media (max-width: 480px) {
-  .classeur-tab {
-    padding: var(--dossiers-spacing-sm) var(--dossiers-spacing-sm);
-    min-height: 40px;
-  }
-  
-  .classeur-tab.add-tab {
-    padding: var(--dossiers-spacing-sm);
-    min-width: 40px;
-  }
+/* Zone de drop active */
+.motion-tab-wrapper.drag-over-target {
+  background-color: rgba(59, 130, 246, 0.1);
+  border: 2px dashed rgba(59, 130, 246, 0.5);
+  border-radius: 8px;
+  transform: scale(1.05);
+  transition: all 0.2s ease;
 }
 
-/* ==========================================================================
-   ANIMATIONS ET TRANSITIONS
-   ========================================================================== */
-
-.classeur-tab {
-  transition: 
-    color var(--dossiers-transition-normal),
-    background-color var(--dossiers-transition-normal),
-    transform var(--dossiers-transition-fast);
+/* Hover pendant le drag */
+.motion-tab-wrapper:hover:not(.dragged) {
+  background-color: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  transition: all 0.2s ease;
 }
 
-.classeur-tab:hover {
-  transform: translateY(-1px);
+/* Indicateur visuel pour les zones de drop */
+.classeur-tabs.drag-active {
+  background-color: rgba(59, 130, 246, 0.05);
+  border-radius: 8px;
+  transition: all 0.2s ease;
 }
 
-.classeur-tab:active {
-  transform: translateY(0);
+/* Animation pour les éléments qui bougent */
+.motion-tab-wrapper {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* ==========================================================================
-   ACCESSIBILITÉ
-   ========================================================================== */
-
-.classeur-tab:focus-visible {
-  outline: 2px solid var(--dossiers-primary);
-  outline-offset: 2px;
+/* Style pour l'overlay de drag */
+.drag-overlay .motion-tab-wrapper {
+  opacity: 0.9;
+  transform: rotate(5deg) scale(1.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  border: 2px solid var(--accent-primary);
+  background-color: rgba(59, 130, 246, 0.1);
 }
 
-.classeur-tab:focus-visible .classeur-tab-indicator {
-  background: var(--dossiers-primary-hover);
-}
-
-/* ==========================================================================
-   OVERRIDES POUR LA COHÉRENCE
-   ========================================================================== */
-
-.classeur-navigation * {
-  box-sizing: border-box;
-}
-
-.classeur-navigation button {
-  border: none;
+.add-classeur-btn {
+  margin-left: var(--spacing-lg);
+  margin-top: 18px;
   background: none;
-  font-family: inherit;
-  font-size: inherit;
-  color: inherit;
+  border: none;
+  color: var(--text-2);
+  padding: 0;
   cursor: pointer;
-  outline: none;
+  transition: all 0.2s ease;
+  font-size: 1.8rem;
+  font-weight: 400;
+  font-family: var(--classeur-font-family);
+  width: auto;
+  height: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  align-self: center;
+}
+
+.add-classeur-btn:hover {
+  color: var(--accent-primary);
+  transform: scale(1.1);
+}
+
+.add-classeur-btn:active {
+  transform: scale(0.95);
+}
+
+/* Styles pour les éléments internes des onglets */
+.classeur-tab-button {
+  font-family: var(--classeur-font-family);
+  background: none;
+  border: none;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  justify-content: center;
+}
+
+.classeur-emoji {
+  font-size: 18px;
+  vertical-align: middle;
+  cursor: pointer;
+  display: inline-block;
+}
+
+.classeur-name-text {
+  font-size: 0.9rem;
+  font-weight: 400;
+  color: inherit;
+}
+
+/* Styles pour le menu contextuel et emoji picker */
+.classeur-context-menu {
+  position: fixed;
+  z-index: 1000;
+}
+
+.classeur-emoji-picker-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(20,20,30,0.72);
+  z-index: 4000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.classeur-emoji-picker-container {
+  background: rgba(30,30,40,1);
+  border: 1.5px solid rgba(255,255,255,0.13);
+  border-radius: var(--radius-xl);
+  box-shadow: 0 8px 48px rgba(0,0,0,0.22);
+  padding: 32px;
+  max-width: 520px;
+  max-height: 70vh;
+  overflow-y: auto;
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: var(--spacing-md);
+  position: relative;
+}
+
+.classeur-emoji-picker-close {
+  position: absolute;
+  top: var(--spacing-md);
+  right: var(--spacing-md);
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 22px;
+  cursor: pointer;
+  z-index: 2;
+}
+
+.classeur-emoji-option {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  padding: var(--spacing-md);
+  border-radius: var(--radius-md);
+  transition: background-color var(--transition-normal);
+}
+
+.classe-emoji-option:hover {
+  background: var(--glass-bg-medium);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .classeur-tabs-wrapper {
+    padding: var(--spacing-md) var(--spacing-md) 0 var(--spacing-md);
+  }
+  
+  .classeur-tab {
+    min-width: 100px;
+    padding: var(--spacing-md) var(--spacing-md);
+    font-size: 0.85rem;
+  }
+  
+  .add-classeur-btn {
+    font-size: 2rem;
+    margin-left: var(--spacing-md);
+  }
 }
