@@ -60,7 +60,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json({
       success: true,
       message: 'Dossier créé avec succès',
-      folder: result.folder
+      folder: result.data
     });
 
   } catch (err: unknown) {

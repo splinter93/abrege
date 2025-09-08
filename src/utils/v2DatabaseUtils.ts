@@ -146,7 +146,7 @@ export class V2DatabaseUtils {
       }
 
       logApi.info(`✅ Note créée avec succès`, context);
-      return { success: true, note };
+      return { success: true, data: note };
       
     } catch (error) {
       logApi.info(`❌ Erreur création note: ${error}`, context);
@@ -267,7 +267,7 @@ export class V2DatabaseUtils {
       }
 
       logApi.info('✅ Note mise à jour avec succès', context);
-      return { success: true, note };
+      return { success: true, data: note };
       
     } catch (error) {
       logApi.error(`❌ Erreur mise à jour note: ${error}`, context);
@@ -369,7 +369,7 @@ export class V2DatabaseUtils {
       }
 
       logApi.info(`✅ Contenu récupéré avec succès`, context);
-      return { success: true, note };
+      return { success: true, data: note };
       
     } catch (error) {
       logApi.info(`❌ Erreur récupération contenu: ${error}`, context);
@@ -435,7 +435,7 @@ export class V2DatabaseUtils {
       }
 
       logApi.info(`✅ Contenu ajouté avec succès`, context);
-      return { success: true, note: updatedNote };
+      return { success: true, data: updatedNote };
       
     } catch (error) {
       logApi.info(`❌ Erreur ajout contenu: ${error}`, context);
@@ -496,7 +496,7 @@ export class V2DatabaseUtils {
       }
 
       logApi.info(`✅ Note déplacée avec succès`, context);
-      return { success: true, note };
+      return { success: true, data: note };
       
     } catch (error) {
       logApi.info(`❌ Erreur déplacement note: ${error}`, context);
@@ -568,7 +568,7 @@ export class V2DatabaseUtils {
       }
 
       logApi.info(`✅ Dossier créé avec succès`, context);
-      return { success: true, folder };
+      return { success: true, data: folder };
       
     } catch (error) {
       logApi.info(`❌ Erreur création dossier: ${error}`, context);
@@ -659,7 +659,7 @@ export class V2DatabaseUtils {
       }
 
       logApi.info(`✅ Dossier mis à jour avec succès`, context);
-      return { success: true, folder };
+      return { success: true, data: folder };
       
     } catch (error) {
       logApi.info(`❌ Erreur mise à jour dossier: ${error}`, context);
@@ -741,7 +741,7 @@ export class V2DatabaseUtils {
       }
 
       logApi.info(`✅ Dossier déplacé avec succès`, context);
-      return { success: true, folder: updatedFolder };
+      return { success: true, data: updatedFolder };
 
     } catch (error) {
       logApi.info(`❌ Erreur déplacement dossier: ${error}`, context);
@@ -835,7 +835,7 @@ export class V2DatabaseUtils {
       }
 
       logApi.info(`✅ Classeur créé avec succès`, context);
-      return { success: true, classeur };
+      return { success: true, data: classeur };
       
     } catch (error) {
       logApi.info(`❌ Erreur création classeur: ${error}`, context);
@@ -931,7 +931,7 @@ export class V2DatabaseUtils {
       }
 
       logApi.info(`✅ Classeur mis à jour avec succès`, context);
-      return { success: true, classeur };
+      return { success: true, data: classeur };
       
     } catch (error) {
       logApi.info(`❌ Erreur mise à jour classeur: ${error}`, context);
@@ -1103,7 +1103,7 @@ export class V2DatabaseUtils {
       };
 
       logApi.info(`✅ Arbre classeur récupéré avec succès`, context);
-      return { success: true, classeur: classeurComplet };
+      return { success: true, data: classeurComplet };
       
     } catch (error) {
       logApi.info(`❌ Erreur récupération arbre: ${error}`, context);
@@ -1163,7 +1163,7 @@ export class V2DatabaseUtils {
       }
 
       logApi.info(`✅ Classeurs réorganisés avec succès`, context);
-      return { success: true, classeurs: updatedClasseurs || [] };
+      return { success: true, data: updatedClasseurs || [] };
       
     } catch (error) {
       logApi.info(`❌ Erreur réorganisation classeurs: ${error}`, context);
@@ -1175,11 +1175,26 @@ export class V2DatabaseUtils {
    * Obtenir la liste des classeurs
    */
   static async getClasseurs(userId: string, context: ApiContext) {
+    console.error(`🚨🚨🚨 [FORCE DEBUG] V2DatabaseUtils.getClasseurs appelé avec userId: ${userId} 🚨🚨🚨`);
+    console.log(`🔍 [DEBUG] getClasseurs appelé avec userId: ${userId}`);
     logApi.info(`🚀 Récupération classeurs`, context);
     
     try {
       logApi.info(`🔍 User ID: ${userId}`, context);
+      logApi.info(`🔍 User ID type: ${typeof userId}`, context);
+      logApi.info(`🔍 User ID length: ${userId.length}`, context);
       
+      // D'abord, vérifier si la table existe et combien de classeurs il y a au total
+      const { data: allClasseurs, error: allError } = await supabase
+        .from('classeurs')
+        .select('id, name, user_id')
+        .limit(5);
+      
+      logApi.info(`📊 Tous les classeurs (premiers 5):`, context);
+      logApi.info(`   - Data: ${JSON.stringify(allClasseurs)}`, context);
+      logApi.info(`   - Error: ${allError ? JSON.stringify(allError) : 'null'}`, context);
+      
+      // Maintenant la requête normale
       const { data: classeurs, error } = await supabase
         .from('classeurs')
         .select('id, name, description, emoji, position, slug, created_at, updated_at')
@@ -1199,7 +1214,15 @@ export class V2DatabaseUtils {
 
       const result = {
         success: true,
-        classeurs: classeurs || []
+        data: classeurs || [],
+        debug: {
+          userId: userId,
+          userIdType: typeof userId,
+          userIdLength: userId.length,
+          allClasseursCount: allClasseurs ? allClasseurs.length : 0,
+          filteredClasseursCount: classeurs ? classeurs.length : 0,
+          allClasseurs: allClasseurs || []
+        }
       };
       
       logApi.info(`✅ Retour final: ${JSON.stringify(result)}`, context);
@@ -1641,5 +1664,194 @@ export class V2DatabaseUtils {
       logApi.info(`❌ Erreur: ${error}`, context);
       throw error;
     }
+  }
+
+  // ============================================================================
+  // MÉTHODES MANQUANTES POUR L'API V2
+  // ============================================================================
+
+  /**
+   * Récupérer un classeur par ID
+   */
+  static async getClasseur(classeurId: string, userId: string, context: ApiContext) {
+    logApi.info(`🚀 Récupération classeur ${classeurId}`, context);
+    
+    try {
+      const { data: classeur, error } = await supabase
+        .from('classeurs')
+        .select('*')
+        .eq('id', classeurId)
+        .eq('user_id', userId)
+        .single();
+
+      if (error || !classeur) {
+        throw new Error(`Classeur non trouvé: ${classeurId}`);
+      }
+
+      return { success: true, data: classeur };
+    } catch (error) {
+      logApi.info(`❌ Erreur: ${error}`, context);
+      return { success: false, error: error instanceof Error ? error.message : String(error) };
+    }
+  }
+
+  /**
+   * Récupérer un dossier par ID
+   */
+  static async getFolder(folderId: string, userId: string, context: ApiContext) {
+    logApi.info(`🚀 Récupération dossier ${folderId}`, context);
+    
+    try {
+      const { data: folder, error } = await supabase
+        .from('folders')
+        .select('*')
+        .eq('id', folderId)
+        .eq('user_id', userId)
+        .single();
+
+      if (error || !folder) {
+        throw new Error(`Dossier non trouvé: ${folderId}`);
+      }
+
+      return { success: true, data: folder };
+    } catch (error) {
+      logApi.info(`❌ Erreur: ${error}`, context);
+      return { success: false, error: error instanceof Error ? error.message : String(error) };
+    }
+  }
+
+  /**
+   * Récupérer une note par ID
+   */
+  static async getNote(noteId: string, userId: string, context: ApiContext) {
+    logApi.info(`🚀 Récupération note ${noteId}`, context);
+    
+    try {
+      const { data: note, error } = await supabase
+        .from('notes')
+        .select('*')
+        .eq('id', noteId)
+        .eq('user_id', userId)
+        .single();
+
+      if (error || !note) {
+        throw new Error(`Note non trouvée: ${noteId}`);
+      }
+
+      return { success: true, data: note };
+    } catch (error) {
+      logApi.info(`❌ Erreur: ${error}`, context);
+      return { success: false, error: error instanceof Error ? error.message : String(error) };
+    }
+  }
+
+  /**
+   * Rechercher dans les notes
+   */
+  static async searchNotes(query: string, limit: number, offset: number, userId: string, context: ApiContext) {
+    logApi.info(`🚀 Recherche notes: "${query}"`, context);
+    
+    try {
+      const { data: notes, error } = await supabase
+        .from('articles')
+        .select('*')
+        .eq('user_id', userId)
+        .or(`source_title.ilike.%${query}%,markdown_content.ilike.%${query}%`)
+        .order('updated_at', { ascending: false })
+        .range(offset, offset + limit - 1);
+
+      if (error) {
+        throw new Error(`Erreur recherche notes: ${error.message}`);
+      }
+
+      return { success: true, data: notes || [] };
+    } catch (error) {
+      logApi.info(`❌ Erreur: ${error}`, context);
+      return { success: false, error: error instanceof Error ? error.message : String(error) };
+    }
+  }
+
+  /**
+   * Rechercher dans les classeurs
+   */
+  static async searchClasseurs(query: string, limit: number, offset: number, userId: string, context: ApiContext) {
+    logApi.info(`🚀 Recherche classeurs: "${query}"`, context);
+    
+    try {
+      const { data: classeurs, error } = await supabase
+        .from('classeurs')
+        .select('*')
+        .eq('user_id', userId)
+        .or(`name.ilike.%${query}%,description.ilike.%${query}%`)
+        .order('updated_at', { ascending: false })
+        .range(offset, offset + limit - 1);
+
+      if (error) {
+        throw new Error(`Erreur recherche classeurs: ${error.message}`);
+      }
+
+      return { success: true, data: classeurs || [] };
+    } catch (error) {
+      logApi.info(`❌ Erreur: ${error}`, context);
+      return { success: false, error: error instanceof Error ? error.message : String(error) };
+    }
+  }
+
+  /**
+   * Rechercher dans les fichiers
+   */
+  static async searchFiles(query: string, limit: number, offset: number, userId: string, context: ApiContext) {
+    logApi.info(`🚀 Recherche fichiers: "${query}"`, context);
+    
+    try {
+      const { data: files, error } = await supabase
+        .from('files')
+        .select('id, filename, mime_type, size, url, slug, description, created_at, updated_at')
+        .eq('user_id', userId)
+        .eq('is_deleted', false)
+        .or(`filename.ilike.%${query}%,description.ilike.%${query}%`)
+        .order('updated_at', { ascending: false })
+        .range(offset, offset + limit - 1);
+
+      if (error) {
+        throw new Error(`Erreur recherche fichiers: ${error.message}`);
+      }
+
+      return { success: true, data: files || [] };
+    } catch (error) {
+      logApi.info(`❌ Erreur: ${error}`, context);
+      return { success: false, error: error instanceof Error ? error.message : String(error) };
+    }
+  }
+
+  /**
+   * Récupérer les informations utilisateur
+   */
+  static async getUserInfo(userId: string, context: ApiContext) {
+    logApi.info(`🚀 Récupération infos utilisateur ${userId}`, context);
+    
+    try {
+      const { data: user, error } = await supabase
+        .from('users')
+        .select('id, email, name, avatar_url, created_at, updated_at')
+        .eq('id', userId)
+        .single();
+
+      if (error || !user) {
+        throw new Error(`Utilisateur non trouvé: ${userId}`);
+      }
+
+      return { success: true, data: user };
+    } catch (error) {
+      logApi.info(`❌ Erreur: ${error}`, context);
+      return { success: false, error: error instanceof Error ? error.message : String(error) };
+    }
+  }
+
+  /**
+   * Insérer du contenu dans une note (alias pour insertContentToNote)
+   */
+  static async insertNoteContent(noteId: string, params: { content: string; position: number }, userId: string, context: ApiContext) {
+    return await this.insertContentToNote(noteId, params.content, params.position, userId, context);
   }
 } 

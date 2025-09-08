@@ -4,7 +4,7 @@
  */
 
 import { distributedCache } from './DistributedCache';
-import { ApiV2Tool } from '../agentApiV2Tools';
+import { ApiV2Tool } from '../apiV2/types/ApiV2Types';
 import { simpleLogger as logger } from '@/utils/logger';
 
 export interface ToolsCacheEntry {

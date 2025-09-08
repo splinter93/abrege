@@ -204,7 +204,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         ref: ref,
         agent_name: agent.display_name || agent.slug,
         agent_id: agent.id,
-        response: executionResult.data?.response || executionResult.data?.output || 'Réponse générée',
+        response: executionResult.data?.response || executionResult.data?.output || executionResult.data?.result || 'Réponse générée',
         execution_time: apiTime,
         model_used: agent.model,
         provider: agent.provider || 'unknown'

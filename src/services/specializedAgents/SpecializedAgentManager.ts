@@ -193,10 +193,20 @@ export class SpecializedAgentManager {
         });
         
         // Convertir GroqRoundResult en SpecializedAgentResponse
+        logger.info(`[SpecializedAgentManager] 🔍 Résultat orchestrateur brut:`, { 
+          traceId, 
+          success: orchestratorResult.success,
+          content: orchestratorResult.content,
+          contentLength: orchestratorResult.content?.length || 0,
+          hasError: !!orchestratorResult.error,
+          error: orchestratorResult.error,
+          orchestratorKeys: Object.keys(orchestratorResult)
+        });
+        
         result = {
           success: orchestratorResult.success,
           result: {
-            response: orchestratorResult.content || 'Réponse générée',
+            response: orchestratorResult.content || (orchestratorResult as any).message || (orchestratorResult as any).text || 'Réponse générée',
             model: agent.model,
             provider: 'groq'
           },
@@ -235,12 +245,30 @@ export class SpecializedAgentManager {
       // 6. Mettre à jour les métriques
       await this.updateAgentMetrics(agentId, true, executionTime);
 
+      // Extraire la réponse finale avec une logique plus robuste
+      let finalResponse = 'Réponse générée';
+      
+      if (typeof formattedResult.result === 'string' && formattedResult.result.trim()) {
+        finalResponse = formattedResult.result;
+      } else if (typeof formattedResult.content === 'string' && formattedResult.content.trim()) {
+        finalResponse = formattedResult.content;
+      } else if (typeof formattedResult.response === 'string' && formattedResult.response.trim()) {
+        finalResponse = formattedResult.response;
+      } else if (typeof formattedResult === 'string' && (formattedResult as string).trim()) {
+        finalResponse = formattedResult;
+      }
+      
+      logger.info(`[SpecializedAgentManager] 🔍 Réponse finale extraite:`, { 
+        traceId, 
+        finalResponse: finalResponse.substring(0, 100) + (finalResponse.length > 100 ? '...' : ''),
+        finalResponseLength: finalResponse.length,
+        formattedResultKeys: Object.keys(formattedResult)
+      });
+
       return {
         success: true,
         data: {
-          response: typeof formattedResult.result === 'string' ? formattedResult.result : 
-                   typeof formattedResult.content === 'string' ? formattedResult.content : 
-                   'Réponse générée',
+          response: finalResponse,
           model: agent.model,
           provider: 'groq'
         },
@@ -476,8 +504,26 @@ export class SpecializedAgentManager {
     
     if (!outputSchema || !outputSchema.properties) {
       const resultObj = result as Record<string, unknown>;
-      const formatted = { result: resultObj?.content || result };
-      logger.info(`[SpecializedAgentManager] 🔍 Format simple (pas de schéma):`, { formatted });
+      
+      // Essayer d'extraire la réponse de différentes propriétés possibles
+      const extractedResponse = resultObj?.content || 
+                               resultObj?.response || 
+                               resultObj?.message || 
+                               resultObj?.text || 
+                               (resultObj?.result as any)?.response ||
+                               (resultObj?.result as any)?.content ||
+                               result;
+      
+      const formatted = { 
+        result: extractedResponse,
+        response: extractedResponse,
+        content: extractedResponse
+      };
+      logger.info(`[SpecializedAgentManager] 🔍 Format simple (pas de schéma):`, { 
+        extractedResponse,
+        resultObjKeys: Object.keys(resultObj || {}),
+        formatted 
+      });
       return formatted;
     }
 

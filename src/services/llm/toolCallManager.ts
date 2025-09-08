@@ -66,14 +66,18 @@ export class ToolCallManager {
 
     try {
       // 🔧 CORRECTION: Utiliser directement les services internes au lieu d'appels HTTP
+      console.error(`🚨🚨🚨 [FORCE DEBUG] ToolCallManager.executeToolCall - Début exécution ${func.name} 🚨🚨🚨`);
       logger.info(`[ToolCallManager] 🔧 Exécution de ${func.name} avec services internes...`);
       
       // Utiliser AgentApiV2Tools qui fait des appels directs à la DB
-      const { AgentApiV2Tools } = await import('@/services/agentApiV2Tools');
-      const agentTools = new AgentApiV2Tools();
+      const { agentApiV2Tools } = await import('@/services/agentApiV2Tools');
+      console.error(`🚨🚨🚨 [FORCE DEBUG] ToolCallManager - agentApiV2Tools importé:`, !!agentApiV2Tools, `🚨🚨🚨`);
       
       const args = this.parseArguments(func.arguments);
-      const result = await agentTools.executeTool(func.name, args, userToken);
+      console.error(`🚨🚨🚨 [FORCE DEBUG] ToolCallManager - Arguments parsés:`, args, `🚨🚨🚨`);
+      
+      const result = await agentApiV2Tools.executeInternalService(func.name, args, 'system-user', userToken);
+      console.error(`🚨🚨🚨 [FORCE DEBUG] ToolCallManager - Résultat reçu:`, result, `🚨🚨🚨`);
       
       logger.info(`[ToolCallManager] ✅ Tool ${func.name} exécuté avec succès via services internes`);
       
