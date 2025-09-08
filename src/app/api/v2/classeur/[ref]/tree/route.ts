@@ -56,6 +56,7 @@ export async function GET(
       .select('id, name, description, emoji, position, slug, created_at, updated_at')
       .eq('id', classeurId)
       .eq('user_id', userId) // 🔧 SÉCURITÉ: Vérifier que l'utilisateur est propriétaire
+      .eq('is_in_trash', false) // 🔧 CORRECTION: Exclure les classeurs en corbeille
       .single();
 
     if (classeurError) {

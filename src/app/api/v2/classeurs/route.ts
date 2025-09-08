@@ -33,11 +33,12 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     // Créer le bon client Supabase selon le type d'authentification
     const supabase = createAuthenticatedSupabaseClient(authResult);
 
-    // Récupérer tous les classeurs de l'utilisateur
+    // Récupérer tous les classeurs de l'utilisateur (exclure ceux en corbeille)
     const { data: classeurs, error: fetchError } = await supabase
       .from('classeurs')
       .select('id, name, description, emoji, position, slug, created_at, updated_at')
       .eq('user_id', userId)
+      .eq('is_in_trash', false) // 🔧 CORRECTION: Exclure les classeurs en corbeille
       .order('position', { ascending: true })
       .order('created_at', { ascending: false });
 

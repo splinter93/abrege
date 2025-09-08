@@ -173,12 +173,11 @@ const FolderManager: React.FC<FolderManagerProps> = ({
     if (!user?.id) return;
     
     try {
-      const name = prompt('Nom du dossier :');
-      if (name && name.trim()) {
-        await effectiveCreateFolder(name.trim());
-      }
+      // 🎯 NOUVEAU: Créer avec un nom par défaut, le renommage inline se déclenchera automatiquement
+      const defaultName = 'Nouveau dossier';
+      await effectiveCreateFolder(defaultName);
     } catch (error) {
-      logger.error('[FolderManager] Erreur création dossier:', error);
+      logger.error('[FolderManager] Erreur création dossier', undefined, error instanceof Error ? error : new Error(String(error)));
     }
   }, [user?.id, effectiveCreateFolder]);
 
@@ -186,12 +185,11 @@ const FolderManager: React.FC<FolderManagerProps> = ({
     if (!user?.id) return;
     
     try {
-      const name = prompt('Nom de la note :');
-      if (name && name.trim()) {
-        await effectiveCreateFile(name.trim(), parentFolderId || null);
-      }
+      // 🎯 NOUVEAU: Créer avec un nom par défaut, le renommage inline se déclenchera automatiquement
+      const defaultName = 'Nouvelle note';
+      await effectiveCreateFile(defaultName, parentFolderId || null);
     } catch (error) {
-      logger.error('[FolderManager] Erreur création note:', error);
+      logger.error('[FolderManager] Erreur création note', undefined, error instanceof Error ? error : new Error(String(error)));
     }
   }, [user?.id, effectiveCreateFile, parentFolderId]);
 

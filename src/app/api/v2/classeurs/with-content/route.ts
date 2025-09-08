@@ -28,11 +28,12 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   const supabase = createSupabaseClient();
 
   try {
-    // 🚀 Étape 1: Récupérer tous les classeurs
+    // 🚀 Étape 1: Récupérer tous les classeurs (exclure ceux en corbeille)
     const { data: classeurs, error: classeursError } = await supabase
       .from('classeurs')
       .select('id, name, description, emoji, position, slug, created_at, updated_at')
       .eq('user_id', userId)
+      .eq('is_in_trash', false) // 🔧 CORRECTION: Exclure les classeurs en corbeille
       .order('position', { ascending: true });
 
     if (classeursError) {
@@ -63,13 +64,13 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
             .from('folders')
             .select('id, name, position, parent_id, created_at')
             .eq('classeur_id', classeur.id)
-            .is('trashed_at', null) // 🔧 CORRECTION: Exclure les dossiers supprimés
+            .eq('is_in_trash', false) // 🔧 CORRECTION: Exclure les dossiers supprimés
             .order('position', { ascending: true }),
           supabase
             .from('articles')
             .select('id, source_title, folder_id, created_at, updated_at, slug')
             .eq('classeur_id', classeur.id)
-            .is('trashed_at', null) // 🔧 CORRECTION: Exclure les notes supprimées
+            .eq('is_in_trash', false) // 🔧 CORRECTION: Exclure les notes supprimées
             .order('created_at', { ascending: false })
         ]);
 

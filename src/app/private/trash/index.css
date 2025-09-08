@@ -13,7 +13,10 @@
 /* 2. Layout principal de la page */
 @import './TrashPage.css';
 
-/* 3. Composants utilitaires */
+/* 3. Styles des dossiers/fichiers pour la corbeille */
+@import '../../../components/FolderGridItems.css';
+
+/* 4. Composants utilitaires */
 @import '../../../components/Toast.css';
 @import '../../../components/Tooltip.css';
 

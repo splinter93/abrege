@@ -190,13 +190,21 @@ export function useFolderManagerState(classeurId: string, userId: string, parent
       if (process.env.NODE_ENV === 'development') {
         logger.dev('[UI] ✅ Dossier créé avec API optimisée:', result.folder.name);
       }
-      return toUIFolder(result.folder);
+      
+      const newFolder = toUIFolder(result.folder);
+      
+      // 🎯 NOUVEAU: Déclencher automatiquement le renommage inline
+      setTimeout(() => {
+        startRename(newFolder.id, 'folder');
+      }, 100); // Petit délai pour s'assurer que l'élément est rendu
+      
+      return newFolder;
     } catch (err) {
       logger.error('[UI] ❌ Erreur création dossier', undefined, err instanceof Error ? err : new Error(String(err)));
       setError('Erreur lors de la création du dossier.');
       return undefined;
     }
-  }, [classeurId, parentFolderId]);
+  }, [classeurId, parentFolderId, startRename]);
 
   const DEFAULT_HEADER_IMAGE = 'https://images.unsplash.com/photo-1443890484047-5eaa67d1d630?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D';
 
@@ -233,13 +241,18 @@ export function useFolderManagerState(classeurId: string, userId: string, parent
         return undefined;
       }
 
+      // 🎯 NOUVEAU: Déclencher automatiquement le renommage inline
+      setTimeout(() => {
+        startRename(result.note.id, 'file');
+      }, 100); // Petit délai pour s'assurer que l'élément est rendu
+
       return result.note;
     } catch (err) {
       logger.error('[UI] ❌ Erreur création note', undefined, err instanceof Error ? err : new Error(String(err)));
       setError('Erreur lors de la création du fichier.');
       return undefined;
     }
-  }, [classeurId, parentFolderId, filteredFiles, userId]);
+  }, [classeurId, parentFolderId, filteredFiles, userId, startRename]);
 
   const deleteFolder = useCallback(async (id: string) => {
     try {

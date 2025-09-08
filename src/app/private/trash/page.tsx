@@ -306,7 +306,7 @@ function AuthenticatedTrashContent({ user }: { user: AuthenticatedUser }) {
   );
 }
 
-// Composant pour afficher un élément de la corbeille
+// Composant pour afficher un élément de la corbeille - Style identique aux dossiers/fichiers
 function TrashItemCard({ 
   item, 
   onRestore, 
@@ -319,30 +319,30 @@ function TrashItemCard({
   const getIcon = () => {
     switch (item.type) {
       case 'note':
-        return <FileText size={20} />;
+        return <FileText size={28} />;
       case 'folder':
-        return <Folder size={20} />;
+        return <Folder size={28} />;
       case 'classeur':
-        return <Archive size={20} />;
+        return <Archive size={28} />;
       case 'file':
-        return <FileText size={20} />;
+        return <FileText size={28} />;
       default:
-        return <FileText size={20} />;
+        return <FileText size={28} />;
     }
   };
 
-  const getTypeLabel = () => {
+  const getIconClass = () => {
     switch (item.type) {
       case 'note':
-        return 'Note';
+        return 'file-icon';
       case 'folder':
-        return 'Dossier';
+        return 'folder-icon';
       case 'classeur':
-        return 'Classeur';
+        return 'classeur-icon';
       case 'file':
-        return 'Fichier';
+        return 'file-icon';
       default:
-        return 'Élément';
+        return 'file-icon';
     }
   };
 
@@ -367,66 +367,53 @@ function TrashItemCard({
 
   return (
     <motion.div
-      className="trash-grid-item"
+      className="fm-grid-item trash-item"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
       whileHover={{ y: -2 }}
       transition={{ duration: 0.2 }}
     >
-      <div className="trash-item-content">
-        {/* Header avec icône et type */}
-        <div className="trash-item-header">
-          <div className="trash-item-icon">
-            {getIcon()}
-          </div>
-          <div className="trash-item-type-badge">
-            {getTypeLabel()}
-          </div>
-        </div>
+      {/* Icône avec style identique aux dossiers/fichiers */}
+      <div className={getIconClass()}>
+        {getIcon()}
+      </div>
 
-        {/* Détails principaux */}
-        <div className="trash-item-details">
-          <h4 className="trash-item-name">{item.name}</h4>
-          
-          {/* Métadonnées */}
-          <div className="trash-item-meta">
-            <p className="trash-item-date">
-              <Clock size={12} />
-              {formatDate(item.trashed_at)}
-            </p>
-            <p className="trash-item-expiry">
-              <AlertCircle size={12} />
-              Expire dans {getDaysUntilExpiry()} jour{getDaysUntilExpiry() > 1 ? 's' : ''}
-            </p>
-          </div>
-        </div>
+      {/* Nom de l'élément */}
+      <div className="fm-grid-item-name">
+        {item.name}
+      </div>
 
-        {/* Actions */}
-        <div className="trash-item-actions">
-          <button
-            className="trash-action-btn restore-btn"
-            onClick={() => {
-              logger.dev('[TrashPage] 🔄 Bouton Restaurer cliqué pour:', item);
-              onRestore(item);
-            }}
-            title="Restaurer"
-          >
-            <RotateCcw size={14} />
-            <span>Restaurer</span>
-          </button>
-          <button
-            className="trash-action-btn delete-btn"
-            onClick={() => {
-              logger.dev('[TrashPage] 🗑️ Bouton Supprimer cliqué pour:', item);
-              onDelete(item);
-            }}
-            title="Supprimer définitivement"
-          >
-            <Trash size={14} />
-            <span>Supprimer</span>
-          </button>
-        </div>
+      {/* Date de suppression */}
+      <div className="trash-item-date">
+        <Clock size={12} />
+        {formatDate(item.trashed_at)}
+      </div>
+
+      {/* Actions - boutons restaurer et supprimer */}
+      <div className="trash-item-actions">
+        <button
+          className="trash-action-btn restore-btn"
+          onClick={() => {
+            logger.dev('[TrashPage] 🔄 Bouton Restaurer cliqué pour:', item);
+            onRestore(item);
+          }}
+          title="Restaurer"
+        >
+          <RotateCcw size={14} />
+          <span>Restaurer</span>
+        </button>
+        <button
+          className="trash-action-btn delete-btn"
+          onClick={() => {
+            logger.dev('[TrashPage] 🗑️ Bouton Supprimer cliqué pour:', item);
+            onDelete(item);
+          }}
+          title="Supprimer définitivement"
+        >
+          <Trash size={14} />
+          <span>Supprimer</span>
+        </button>
       </div>
     </motion.div>
   );

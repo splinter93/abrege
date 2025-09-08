@@ -378,7 +378,7 @@
 }
 
 /* ==========================================================================
-   GRILLE DES ÉLÉMENTS DE LA CORBEILLE - DESIGN MODERNE ET ÉPURÉ
+   GRILLE DES ÉLÉMENTS DE LA CORBEILLE - STYLE IDENTIQUE AUX DOSSIERS/FICHIERS
    ========================================================================== */
 
 /* Container pour la grille */
@@ -388,10 +388,10 @@
   box-sizing: border-box;
 }
 
-/* Grille responsive - design moderne */
+/* Grille responsive - style identique aux dossiers/fichiers */
 .trash-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: var(--trash-spacing-lg);
   justify-items: stretch;
   width: 100%;
@@ -399,27 +399,33 @@
   box-sizing: border-box;
 }
 
-/* Éléments de la grille - design card moderne */
-.trash-grid-item {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+/* ==========================================================================
+   ÉLÉMENTS DE LA CORBEILLE - STYLE IDENTIQUE AUX DOSSIERS/FICHIERS
+   ========================================================================== */
+
+/* Style de base identique aux dossiers/fichiers */
+.trash-item {
+  background: transparent;
+  border: none;
   border-radius: 16px;
-  padding: 0;
+  padding: 16px;
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
-  overflow: hidden;
-  min-height: 240px;
+  transition: all 0.25s ease;
   display: flex;
   flex-direction: column;
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-  max-width: 320px;
+  align-items: center;
+  text-align: center;
+  min-height: 160px; /* Plus haut pour inclure les boutons */
+  max-width: 200px;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-shadow: none;
+  position: relative;
+  overflow: hidden;
+  justify-content: flex-start;
 }
 
-/* Effet de lueur subtile sur les éléments */
-.trash-grid-item::before {
+.trash-item::before {
   content: '';
   position: absolute;
   top: 0;
@@ -427,90 +433,90 @@
   right: 0;
   bottom: 0;
   background: linear-gradient(135deg, 
-    rgba(255, 255, 255, 0.05) 0%, 
-    rgba(255, 255, 255, 0.02) 50%, 
-    rgba(255, 255, 255, 0.05) 100%);
+    rgba(255, 255, 255, 0.02) 0%, 
+    rgba(255, 255, 255, 0.01) 50%, 
+    rgba(255, 255, 255, 0.02) 100%);
   opacity: 0;
-  transition: opacity 0.3s ease;
+  transition: opacity 0.25s ease;
   border-radius: 16px;
 }
 
-/* Hover des éléments - effet moderne */
-.trash-grid-item:hover {
-  background: rgba(255, 255, 255, 0.06);
-  border-color: rgba(255, 255, 255, 0.15);
-  transform: translateY(-6px) scale(1.02);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+.trash-item:hover {
+  background: transparent;
+  border-color: transparent;
+  transform: translateY(-2px);
+  box-shadow: none;
 }
 
-.trash-grid-item:hover::before {
+.trash-item:hover::before {
   opacity: 1;
 }
 
-/* Contenu des éléments de grille - design moderne */
-.trash-item-content {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  padding: 24px;
-  gap: 16px;
-  position: relative;
-  z-index: 1;
+.trash-item:active {
+  transform: translateY(-1px);
+  transition: transform 0.15s ease;
 }
 
-/* Header avec icône et type */
-.trash-item-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 8px;
-}
+/* ==========================================================================
+   ICÔNES DES ÉLÉMENTS DE LA CORBEILLE
+   ========================================================================== */
 
-/* Icône moderne */
-.trash-item-content .trash-item-icon {
-  width: 40px;
-  height: 40px;
-  background: linear-gradient(135deg, rgba(239, 68, 68, 0.2) 0%, rgba(220, 38, 38, 0.15) 100%);
-  border: 1px solid rgba(239, 68, 68, 0.3);
-  border-radius: 12px;
+/* Icônes avec style identique aux dossiers/fichiers */
+.trash-item .file-icon,
+.trash-item .folder-icon,
+.trash-item .classeur-icon {
+  margin-bottom: 12px;
   display: flex;
-  align-items: center;
   justify-content: center;
-  color: #ef4444;
-  font-size: 18px;
+  align-items: center;
+  width: 56px;
+  height: 56px;
+  font-size: 28px;
+  transition: transform 0.15s ease;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   flex-shrink: 0;
+  margin-left: auto;
+  margin-right: auto;
 }
 
-/* Badge de type */
-.trash-item-type-badge {
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 20px;
-  padding: 4px 12px;
-  font-size: 11px;
-  color: #94a3b8;
-  font-family: 'Noto Sans', sans-serif;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+/* Style encadré pour les icônes de dossiers */
+.trash-item .folder-icon {
+  background: linear-gradient(135deg, rgba(251, 146, 60, 0.2) 0%, rgba(234, 88, 12, 0.15) 100%);
+  border: 1px solid rgba(251, 146, 60, 0.3);
+  border-radius: 12px;
+}
+
+/* Style encadré pour les icônes de fichiers */
+.trash-item .file-icon {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(37, 99, 235, 0.15) 100%);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  border-radius: 12px;
+}
+
+/* Style encadré pour les icônes de classeurs */
+.trash-item .classeur-icon {
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.2) 0%, rgba(147, 51, 234, 0.15) 100%);
+  border: 1px solid rgba(168, 85, 247, 0.3);
+  border-radius: 12px;
+}
+
+.trash-item:hover .file-icon,
+.trash-item:hover .folder-icon,
+.trash-item:hover .classeur-icon {
+  transform: scale(1.05);
+}
+
+/* ==========================================================================
+   NOM ET MÉTADONNÉES
+   ========================================================================== */
+
+/* Nom de l'élément - style identique aux dossiers/fichiers */
+.trash-item .fm-grid-item-name {
+  font-size: 14px;
   font-weight: 500;
-  white-space: nowrap;
-}
-
-/* Détails principaux */
-.trash-item-details {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-/* Nom moderne */
-.trash-item-content .trash-item-name {
-  font-size: 16px;
-  font-weight: 600;
   color: #f8fafc;
-  margin: 0;
+  margin: 0 0 8px 0;
   font-family: 'Noto Sans', sans-serif;
   line-height: 1.4;
   display: -webkit-box;
@@ -520,126 +526,92 @@
   text-overflow: ellipsis;
   word-break: break-word;
   min-height: 2.8em;
+  max-width: 100%;
+  text-align: center;
 }
 
-/* Métadonnées */
-.trash-item-meta {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin-top: 4px;
-}
-
-/* Date moderne */
-.trash-item-content .trash-item-date {
-  font-size: 12px;
+/* Date de suppression */
+.trash-item .trash-item-date {
+  font-size: 11px;
   color: #64748b;
-  margin: 0;
-  font-family: 'Noto Sans', sans-serif;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-/* Expiry avec style d'alerte */
-.trash-item-content .trash-item-expiry {
-  font-size: 12px;
-  color: #ef4444;
-  margin: 0;
-  font-family: 'Noto Sans', sans-serif;
-  font-weight: 500;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  background: rgba(239, 68, 68, 0.1);
-  border: 1px solid rgba(239, 68, 68, 0.2);
-  border-radius: 8px;
-  padding: 4px 8px;
-  width: fit-content;
-}
-
-/* Actions modernes */
-.trash-item-content .trash-item-actions {
-  display: flex;
-  gap: 8px;
-  width: 100%;
-  margin-top: 16px;
-  padding-top: 16px;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-/* Boutons d'action modernes */
-.trash-item-content .trash-action-btn {
-  flex: 1;
-  padding: 10px 16px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.05);
-  color: #94a3b8;
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  margin: 0 0 12px 0;
   font-family: 'Noto Sans', sans-serif;
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 4px;
+  text-align: center;
+}
+
+/* ==========================================================================
+   BOUTONS D'ACTION
+   ========================================================================== */
+
+/* Container des actions */
+.trash-item .trash-item-actions {
+  display: flex;
   gap: 6px;
-  min-height: 36px;
+  width: 100%;
+  margin-top: auto;
+  padding-top: 8px;
+}
+
+/* Boutons d'action compacts */
+.trash-item .trash-action-btn {
+  flex: 1;
+  padding: 6px 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  color: #94a3b8;
+  font-size: 10px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: 'Noto Sans', sans-serif;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-height: 28px;
   position: relative;
   overflow: hidden;
 }
 
-/* Effet de lueur sur les boutons */
-.trash-item-content .trash-action-btn::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
-  transition: left 0.5s ease;
-}
-
-.trash-item-content .trash-action-btn:hover::before {
-  left: 100%;
-}
-
-.trash-item-content .trash-action-btn:hover {
+.trash-item .trash-action-btn:hover {
   background: rgba(255, 255, 255, 0.1);
   border-color: rgba(255, 255, 255, 0.2);
   color: #f8fafc;
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
-/* Bouton restaurer moderne */
-.trash-item-content .trash-action-btn.restore-btn {
+/* Bouton restaurer */
+.trash-item .trash-action-btn.restore-btn {
   border-color: rgba(34, 197, 94, 0.3);
   color: #22c55e;
   background: rgba(34, 197, 94, 0.1);
 }
 
-.trash-item-content .trash-action-btn.restore-btn:hover {
+.trash-item .trash-action-btn.restore-btn:hover {
   background: #22c55e;
   border-color: #22c55e;
   color: white;
-  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+  box-shadow: 0 2px 8px rgba(34, 197, 94, 0.3);
 }
 
-/* Bouton supprimer moderne */
-.trash-item-content .trash-action-btn.delete-btn {
+/* Bouton supprimer */
+.trash-item .trash-action-btn.delete-btn {
   border-color: rgba(239, 68, 68, 0.3);
   color: #ef4444;
   background: rgba(239, 68, 68, 0.1);
 }
 
-.trash-item-content .trash-action-btn.delete-btn:hover {
+.trash-item .trash-action-btn.delete-btn:hover {
   background: #ef4444;
   border-color: #ef4444;
   color: white;
-  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
 }
 
 /* Animation de stagger pour les éléments de grille */

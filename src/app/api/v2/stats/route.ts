@@ -51,11 +51,12 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
         .eq('user_id', userId)
         .eq('share_settings->>visibility', 'public'),
       
-      // Nombre total de classeurs
+      // Nombre total de classeurs (exclure ceux en corbeille)
       supabase
         .from('classeurs')
         .select('id', { count: 'exact', head: true })
-        .eq('user_id', userId),
+        .eq('user_id', userId)
+        .eq('is_in_trash', false), // 🔧 CORRECTION: Exclure les classeurs en corbeille
       
       // Nombre total de dossiers
       supabase

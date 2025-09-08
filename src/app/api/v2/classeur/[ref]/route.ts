@@ -44,12 +44,13 @@ export async function GET(
     const classeurId = resolveResult.id;
     const supabase = createAuthenticatedSupabaseClient(authResult);
 
-    // Récupérer le classeur par son ID résolu
+    // Récupérer le classeur par son ID résolu (exclure ceux en corbeille)
     const { data: classeur, error: fetchError } = await supabase
       .from('classeurs')
       .select('id, name, description, slug, created_at, updated_at')
       .eq('id', classeurId)
       .eq('user_id', userId)
+      .eq('is_in_trash', false) // 🔧 CORRECTION: Exclure les classeurs en corbeille
       .single();
 
     if (fetchError) {
