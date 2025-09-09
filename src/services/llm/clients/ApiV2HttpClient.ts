@@ -138,10 +138,17 @@ export class ApiV2HttpClient {
     if (isUserId) {
       // Si c'est un userId, utiliser le service role key pour l'impersonation
       // Les endpoints API V2 géreront l'impersonation via le header X-User-Id
+      const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+      if (!serviceRoleKey) {
+        throw new Error('SUPABASE_SERVICE_ROLE_KEY manquante pour l\'impersonation');
+      }
+      
+      headers['Authorization'] = `Bearer ${serviceRoleKey}`;
       headers['X-User-Id'] = userToken;
       headers['X-Service-Role'] = 'true';
       logger.info(`[ApiV2HttpClient] 🔑 IMPERSONATION DÉTECTÉE - userId: ${userToken.substring(0, 8)}...`);
       logger.info(`[ApiV2HttpClient] 📤 Headers d'impersonation:`, {
+        'Authorization': 'Bearer ' + serviceRoleKey.substring(0, 20) + '...',
         'X-User-Id': userToken.substring(0, 8) + '...',
         'X-Service-Role': 'true',
         'X-Client-Type': 'agent'

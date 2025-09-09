@@ -54,18 +54,32 @@ export async function getAuthenticatedUser(request: NextRequest): Promise<AuthRe
       // Vérifier que c'est un UUID valide
       const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
       if (uuidRegex.test(userId)) {
-        logApi.info(`[AuthUtils] 🤖 IMPERSONATION D'AGENT DÉTECTÉE - userId: ${userId}`);
-        logApi.info(`[AuthUtils] 🔑 Headers reçus:`, {
-          'X-User-Id': userId,
-          'X-Service-Role': isServiceRole,
-          'X-Client-Type': request.headers.get('X-Client-Type')
-        });
-        return {
-          success: true,
-          userId: userId,
-          scopes: DEFAULT_AGENT_SCOPES,
-          authType: 'api_key'
-        };
+        // Vérifier que le token d'authentification est bien le service role key
+        const authHeader = request.headers.get('Authorization');
+        const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+        
+        if (authHeader && authHeader.startsWith('Bearer ') && serviceRoleKey) {
+          const token = authHeader.substring(7);
+          if (token === serviceRoleKey) {
+            logApi.info(`[AuthUtils] 🤖 IMPERSONATION D'AGENT DÉTECTÉE - userId: ${userId}`);
+            logApi.info(`[AuthUtils] 🔑 Headers reçus:`, {
+              'Authorization': 'Bearer ' + token.substring(0, 20) + '...',
+              'X-User-Id': userId,
+              'X-Service-Role': isServiceRole,
+              'X-Client-Type': request.headers.get('X-Client-Type')
+            });
+            return {
+              success: true,
+              userId: userId,
+              scopes: DEFAULT_AGENT_SCOPES,
+              authType: 'api_key'
+            };
+          } else {
+            logApi.warn(`[AuthUtils] ⚠️ Token d'authentification invalide pour l'impersonation`);
+          }
+        } else {
+          logApi.warn(`[AuthUtils] ⚠️ Headers d'impersonation présents mais token d'authentification manquant ou invalide`);
+        }
       } else {
         logApi.warn(`[AuthUtils] ⚠️ X-User-Id fourni mais pas un UUID valide: ${userId}`);
       }
