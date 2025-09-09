@@ -27,7 +27,8 @@
    ========================================================================== */
 .ProseMirror .u-block,
 .markdown-body .u-block,
-.chat-markdown-content .u-block { /* Added chat context */
+.chat-markdown-content .u-block,
+.code-block-wrapper { /* Added code-block-wrapper for chat */
   background: var(--blk-bg);
   color: var(--blk-fg);
   border: none;
@@ -41,7 +42,8 @@
 /* Toolbar */
 .ProseMirror .u-block__toolbar,
 .markdown-body .u-block__toolbar,
-.chat-markdown-content .u-block__toolbar {
+.chat-markdown-content .u-block__toolbar,
+.unified-block-toolbar { /* Added for chat CodeBlock */
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -55,7 +57,8 @@
 
 .ProseMirror .u-block__toolbar .toolbar-left,
 .markdown-body .u-block__toolbar .toolbar-left,
-.chat-markdown-content .u-block__toolbar .toolbar-left {
+.chat-markdown-content .u-block__toolbar .toolbar-left,
+.unified-block-toolbar .toolbar-left { /* Added for chat CodeBlock */
   display: flex;
   align-items: center;
   gap: 8px;
@@ -65,7 +68,8 @@
 
 .ProseMirror .u-block__toolbar .toolbar-right,
 .markdown-body .u-block__toolbar .toolbar-right,
-.chat-markdown-content .u-block__toolbar .toolbar-right {
+.chat-markdown-content .u-block__toolbar .toolbar-right,
+.unified-block-toolbar .toolbar-right { /* Added for chat CodeBlock */
   display: flex;
   align-items: center;
   gap: 4px;
@@ -75,7 +79,8 @@
 
 .ProseMirror .u-block__toolbar .toolbar-label,
 .markdown-body .u-block__toolbar .toolbar-label,
-.chat-markdown-content .u-block__toolbar .toolbar-label {
+.chat-markdown-content .u-block__toolbar .toolbar-label,
+.unified-block-toolbar .toolbar-label { /* Added for chat CodeBlock */
   font-family: var(--sans);
   font-size: 13px;
   font-weight: 500;
@@ -89,7 +94,8 @@
 /* Buttons */
 .ProseMirror .toolbar-btn,
 .markdown-body .toolbar-btn,
-.chat-markdown-content .toolbar-btn {
+.chat-markdown-content .toolbar-btn,
+.unified-block-toolbar .toolbar-btn { /* Added for chat CodeBlock */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -110,20 +116,23 @@
 
 .ProseMirror .toolbar-btn:hover,
 .markdown-body .toolbar-btn:hover,
-.chat-markdown-content .toolbar-btn:hover {
+.chat-markdown-content .toolbar-btn:hover,
+.unified-block-toolbar .toolbar-btn:hover { /* Added for chat CodeBlock */
   background: rgba(255,255,255,0.08);
   color: var(--blk-fg);
 }
 
 .ProseMirror .toolbar-btn:focus,
 .markdown-body .toolbar-btn:focus,
-.chat-markdown-content .toolbar-btn:focus {
+.chat-markdown-content .toolbar-btn:focus,
+.unified-block-toolbar .toolbar-btn:focus { /* Added for chat CodeBlock */
   outline: none;
 }
 
 .ProseMirror .toolbar-btn.copied,
 .markdown-body .toolbar-btn.copied,
 .chat-markdown-content .toolbar-btn.copied,
+.unified-block-toolbar .toolbar-btn.copied, /* Added for chat CodeBlock */
 .toolbar-btn.copied,
 .toolbar-btn.copy-btn.copied,
 .toolbar-btn.mermaid-copy-btn.copied {
@@ -134,7 +143,8 @@
 /* Force l'affichage des icônes SVG dans les boutons */
 .ProseMirror .toolbar-btn svg,
 .markdown-body .toolbar-btn svg,
-.chat-markdown-content .toolbar-btn svg {
+.chat-markdown-content .toolbar-btn svg,
+.unified-block-toolbar .toolbar-btn svg { /* Added for chat CodeBlock */
   width: 14px !important;
   height: 14px !important;
   display: block !important;
@@ -145,7 +155,8 @@
 /* Body */
 .ProseMirror .u-block__body,
 .markdown-body .u-block__body,
-.chat-markdown-content .u-block__body {
+.chat-markdown-content .u-block__body,
+.unified-block-content { /* Added for chat CodeBlock */
   padding: 16px 20px;
   flex: 1;
   min-height: 0;

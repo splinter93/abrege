@@ -21,11 +21,13 @@ export function createCodeBlockToolbar(node: Node, getPos: () => number, editor:
   languageLabel.textContent = formatLanguageLabel(node.attrs.language);
   leftContainer.appendChild(languageLabel);
 
-  // --- Conteneur droite (bouton copier) ---
+  // --- Conteneur droite (boutons) ---
   const rightContainer = document.createElement('div');
   rightContainer.className = 'toolbar-right';
   const copyButton = createCopyButton(node);
+  const expandButton = createExpandButton(node);
   rightContainer.appendChild(copyButton);
+  rightContainer.appendChild(expandButton);
 
   // --- Assemblage ---
   toolbar.appendChild(leftContainer);
@@ -69,4 +71,49 @@ function createCopyButton(node: Node) {
     });
 
     return copyButton;
+}
+
+function createExpandButton(node: Node) {
+    const expandButton = document.createElement('button');
+    expandButton.className = 'toolbar-btn expand-btn';
+    expandButton.title = 'Agrandir le code';
+    
+    const expandIconSVG = `
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
+      </svg>
+    `;
+    expandButton.innerHTML = expandIconSVG;
+
+    expandButton.addEventListener('click', () => {
+      // Ouvrir le code dans une modal ou un nouvel onglet
+      const codeContent = node.textContent;
+      const newWindow = window.open('', '_blank', 'width=800,height=600,scrollbars=yes,resizable=yes');
+      if (newWindow) {
+        newWindow.document.write(`
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <title>Code - ${node.attrs.language || 'TEXT'}</title>
+            <style>
+              body { 
+                font-family: 'JetBrains Mono', monospace; 
+                background: #1a1a1a; 
+                color: #a0a0a0; 
+                margin: 0; 
+                padding: 20px; 
+                white-space: pre-wrap;
+                font-size: 14px;
+                line-height: 1.8;
+              }
+            </style>
+          </head>
+          <body>${codeContent}</body>
+          </html>
+        `);
+        newWindow.document.close();
+      }
+    });
+
+    return expandButton;
 }

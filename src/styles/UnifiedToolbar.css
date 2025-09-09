@@ -87,58 +87,7 @@
    Appliquer la police monospace aux blocs de code - OBLIGATOIRE
    ================================================================= */
 
-.code-block-container pre,
-.code-block-container code,
-.code-block-container pre code,
-.code-block-container .hljs,
-.code-block-container pre[data-language],
-.code-block-container pre[data-language] code,
-.code-block-container pre[data-language] .hljs,
-.code-block-container .language-json,
-.code-block-container .language-json code,
-.code-block-container .language-json .hljs,
-.code-block-container .language-javascript,
-.code-block-container .language-javascript code,
-.code-block-container .language-javascript .hljs,
-.code-block-container .language-typescript,
-.code-block-container .language-typescript code,
-.code-block-container .language-typescript .hljs,
-.code-block-container .language-python,
-.code-block-container .language-python code,
-.code-block-container .language-python .hljs,
-.code-block-container .language-html,
-.code-block-container .language-html code,
-.code-block-container .language-html .hljs,
-.code-block-container .language-css,
-.code-block-container .language-css code,
-.code-block-container .language-css .hljs,
-.code-block-container .language-bash,
-.code-block-container .language-bash code,
-.code-block-container .language-bash .hljs,
-.code-block-container .language-sql,
-.code-block-container .language-sql code,
-.code-block-container .language-sql .hljs,
-.code-block-container .language-markdown,
-.code-block-container .language-markdown code,
-.code-block-container .language-markdown .hljs,
-.code-block-container .language-yaml,
-.code-block-container .language-yaml code,
-.code-block-container .language-yaml .hljs,
-.code-block-container .language-xml,
-.code-block-container .language-xml code,
-.code-block-container .language-xml .hljs {
-    font-family: 'JetBrains Mono', 'Noto Sans Mono', 'Fira Code', 'SFMono-Regular', 'Menlo', 'Consolas', 'Monaco', 'Liberation Mono', monospace !important;
-}
-
-.code-block-container code {
-    font-size: 14px;
-    background: none !important; /* Important pour surcharger les thèmes highlight.js */
-    color: var(--text-primary);
-    line-height: 1.6;
-    padding: 0;
-    border: none;
-    border-radius: 0;
-}
+/* Styles de blocs de code supprimés - gérés par unified-blocks.css */
 
 /* =================================================================
    Responsive Design
@@ -159,10 +108,7 @@
         height: auto;
     }
     
-    .code-block-container pre {
-        padding: 14px 16px;
-        font-size: 13px;
-    }
+    /* Code blocks gérés par unified-blocks.css */
 }
 
 @media (max-width: 480px) {

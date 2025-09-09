@@ -94,9 +94,50 @@ const PublicMarkdownRenderer: React.FC<PublicMarkdownRendererProps> = ({ content
         }
       });
       
+      // Créer le bouton agrandir
+      const expandBtn = document.createElement('button');
+      expandBtn.className = 'toolbar-btn expand-btn';
+      expandBtn.title = 'Agrandir le code';
+      expandBtn.innerHTML = `
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
+        </svg>
+      `;
+      
+      // Ajouter la fonctionnalité d'agrandissement
+      expandBtn.addEventListener('click', () => {
+        const codeContent = codeElement.textContent || '';
+        const newWindow = window.open('', '_blank', 'width=800,height=600,scrollbars=yes,resizable=yes');
+        if (newWindow) {
+          newWindow.document.write(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+              <title>Code - ${languageDisplay}</title>
+              <style>
+                body { 
+                  font-family: 'JetBrains Mono', monospace; 
+                  background: #1a1a1a; 
+                  color: #a0a0a0; 
+                  margin: 0; 
+                  padding: 20px; 
+                  white-space: pre-wrap;
+                  font-size: 14px;
+                  line-height: 1.8;
+                }
+              </style>
+            </head>
+            <body>${codeContent}</body>
+            </html>
+          `);
+          newWindow.document.close();
+        }
+      });
+      
       // Assembler la toolbar
       toolbarLeft.appendChild(languageLabel);
       toolbarRight.appendChild(copyBtn);
+      toolbarRight.appendChild(expandBtn);
       toolbar.appendChild(toolbarLeft);
       toolbar.appendChild(toolbarRight);
       
