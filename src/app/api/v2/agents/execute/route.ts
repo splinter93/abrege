@@ -180,11 +180,13 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     // pas celui de l'agent appelant, pour que l'agent appelé puisse faire des tool calls
     const finalUserToken = userToken || userId;
     
-    logApi.info(`🔑 Token d'authentification pour l'agent appelé:`, {
+    logApi.info(`🔑 TOKEN D'AUTHENTIFICATION POUR L'AGENT APPELÉ:`, {
       hasUserToken: !!userToken,
       hasUserId: !!userId,
       authType,
-      tokenType: userToken ? 'JWT' : 'userId'
+      tokenType: userToken ? 'JWT' : 'userId',
+      finalToken: finalUserToken ? finalUserToken.substring(0, 8) + '...' : 'AUCUN',
+      isUserId: finalUserToken ? /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(finalUserToken) : false
     });
     
     const executionResult = await agentManager.executeSpecializedAgent(

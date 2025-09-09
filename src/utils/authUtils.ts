@@ -54,13 +54,20 @@ export async function getAuthenticatedUser(request: NextRequest): Promise<AuthRe
       // Vérifier que c'est un UUID valide
       const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
       if (uuidRegex.test(userId)) {
-        logApi.info(`[AuthUtils] 🤖 Impersonation d'agent détectée pour userId: ${userId}`);
+        logApi.info(`[AuthUtils] 🤖 IMPERSONATION D'AGENT DÉTECTÉE - userId: ${userId}`);
+        logApi.info(`[AuthUtils] 🔑 Headers reçus:`, {
+          'X-User-Id': userId,
+          'X-Service-Role': isServiceRole,
+          'X-Client-Type': request.headers.get('X-Client-Type')
+        });
         return {
           success: true,
           userId: userId,
           scopes: DEFAULT_AGENT_SCOPES,
           authType: 'api_key'
         };
+      } else {
+        logApi.warn(`[AuthUtils] ⚠️ X-User-Id fourni mais pas un UUID valide: ${userId}`);
       }
     }
 

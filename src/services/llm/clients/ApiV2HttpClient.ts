@@ -140,10 +140,16 @@ export class ApiV2HttpClient {
       // Les endpoints API V2 géreront l'impersonation via le header X-User-Id
       headers['X-User-Id'] = userToken;
       headers['X-Service-Role'] = 'true';
-      logger.dev(`[ApiV2HttpClient] 🔑 Impersonation pour userId: ${userToken.substring(0, 8)}...`);
+      logger.info(`[ApiV2HttpClient] 🔑 IMPERSONATION DÉTECTÉE - userId: ${userToken.substring(0, 8)}...`);
+      logger.info(`[ApiV2HttpClient] 📤 Headers d'impersonation:`, {
+        'X-User-Id': userToken.substring(0, 8) + '...',
+        'X-Service-Role': 'true',
+        'X-Client-Type': 'agent'
+      });
     } else {
       // Si c'est un token JWT, utiliser l'Authorization Bearer
       headers['Authorization'] = `Bearer ${userToken}`;
+      logger.info(`[ApiV2HttpClient] 🔑 TOKEN JWT DÉTECTÉ - token: ${userToken.substring(0, 20)}...`);
     }
 
     const requestOptions: RequestInit = {
