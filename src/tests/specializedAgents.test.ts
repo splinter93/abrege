@@ -30,11 +30,11 @@ jest.mock('@supabase/supabase-js', () => ({
   }))
 }));
 
-// Mock GroqOrchestrator
-jest.mock('@/services/llm/services/GroqOrchestrator', () => ({
-  GroqOrchestrator: jest.fn().mockImplementation(() => ({
-    executeRound: jest.fn()
-  }))
+// Mock SimpleChatOrchestrator (remplace GroqOrchestrator)
+jest.mock('@/services/llm/services/SimpleChatOrchestrator', () => ({
+  simpleChatOrchestrator: {
+    processMessage: jest.fn()
+  }
 }));
 
 describe('SpecializedAgentManager', () => {
@@ -181,9 +181,8 @@ describe('SpecializedAgentManager', () => {
       });
 
       // Mock de l'orchestrateur
-      const mockOrchestrator = require('@/services/llm/services/GroqOrchestrator').GroqOrchestrator;
-      const mockInstance = new mockOrchestrator();
-      mockInstance.executeRound.mockResolvedValue(mockOrchestratorResult);
+      const { simpleChatOrchestrator } = require('@/services/llm/services/SimpleChatOrchestrator');
+      simpleChatOrchestrator.processMessage.mockResolvedValue(mockOrchestratorResult);
 
       const result = await agentManager.executeSpecializedAgent(
         'test-agent',

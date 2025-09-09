@@ -4,7 +4,7 @@
  */
 
 import { createClient } from '@supabase/supabase-js';
-import { GroqOrchestrator } from '@/services/llm/services/GroqOrchestrator';
+import { simpleChatOrchestrator } from '@/services/llm/services/SimpleChatOrchestrator';
 import { simpleLogger as logger } from '@/utils/logger';
 import { SchemaValidator } from './schemaValidator';
 import { MultimodalHandler } from './multimodalHandler';
@@ -30,13 +30,12 @@ const supabase = createClient(
 );
 
 export class SpecializedAgentManager {
-  private orchestrator: GroqOrchestrator;
   private agentCache: Map<string, SpecializedAgentConfig> = new Map();
   private cacheExpiry: Map<string, number> = new Map();
   private readonly CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
   constructor() {
-    this.orchestrator = new GroqOrchestrator();
+    // Utilise maintenant SimpleChatOrchestrator (singleton)
   }
 
   /**
@@ -179,20 +178,17 @@ export class SpecializedAgentManager {
         const systemMessage = this.buildSpecializedSystemMessage(agent, input);
         const userMessage = `Exécution de tâche spécialisée: ${JSON.stringify(input)}`;
 
-        const orchestratorResult = await this.orchestrator.executeRound({
-          message: userMessage,
-          sessionHistory: [],
-          agentConfig: agent,
-          userToken,
-          sessionId: sessionId || `specialized-${agentId}-${Date.now()}`,
-          appContext: {
-            type: 'chat_session',
-            id: agentId,
-            name: agent.display_name || agent.name
+        const orchestratorResult = await simpleChatOrchestrator.processMessage(
+          userMessage,
+          [],
+          {
+            userToken,
+            sessionId: sessionId || `specialized-${agentId}-${Date.now()}`,
+            agentConfig: agent
           }
-        });
+        );
         
-        // Convertir GroqRoundResult en SpecializedAgentResponse
+        // Convertir ChatResponse en SpecializedAgentResponse
         logger.info(`[SpecializedAgentManager] 🔍 Résultat orchestrateur brut:`, { 
           traceId, 
           success: orchestratorResult.success,
@@ -206,7 +202,7 @@ export class SpecializedAgentManager {
         result = {
           success: orchestratorResult.success,
           result: {
-            response: orchestratorResult.content || (orchestratorResult as any).message || (orchestratorResult as any).text || 'Réponse générée',
+            response: orchestratorResult.content || 'Réponse générée',
             model: agent.model,
             provider: 'groq'
           },
@@ -492,6 +488,30 @@ export class SpecializedAgentManager {
   }
 
   /**
+   * Normaliser les caractères Unicode pour éviter les erreurs d'encodage ByteString
+   */
+  private normalizeUnicode(text: string): string {
+    if (!text || typeof text !== 'string') return text;
+    
+    return text
+      .replace(/—/g, '-') // Tiret cadratin vers tiret normal
+      .replace(/–/g, '-') // Tiret en vers tiret normal
+      .replace(/"/g, '"') // Guillemets courbes vers guillemets droits
+      .replace(/"/g, '"') // Guillemets courbes vers guillemets droits
+      .replace(/'/g, "'") // Apostrophe courbe vers apostrophe droite
+      .replace(/…/g, '...') // Points de suspension vers trois points
+      .replace(/–/g, '-') // Tiret en vers tiret normal
+      .replace(/—/g, '-') // Tiret cadratin vers tiret normal
+      .replace(/[\u2010-\u2015]/g, '-') // Tous les types de tirets vers tiret normal
+      .replace(/[\u2018\u2019]/g, "'") // Guillemets simples vers apostrophe droite
+      .replace(/[\u201C\u201D]/g, '"') // Guillemets doubles vers guillemets droits
+      .replace(/[\u2026]/g, '...') // Points de suspension vers trois points
+      .replace(/[\u00A0]/g, ' ') // Espace insécable vers espace normal
+      .replace(/[\u2000-\u200F]/g, ' ') // Espaces spéciaux vers espace normal
+      .replace(/[\u2028\u2029]/g, '\n'); // Séparateurs de ligne vers newline
+  }
+
+  /**
    * Formater la sortie selon le schéma
    */
   private formatSpecializedOutput(result: unknown, outputSchema?: OpenAPISchema): Record<string, unknown> {
@@ -514,10 +534,15 @@ export class SpecializedAgentManager {
                                (resultObj?.result as any)?.content ||
                                result;
       
+      // Normaliser les caractères Unicode pour éviter les erreurs d'encodage
+      const normalizedResponse = typeof extractedResponse === 'string' 
+        ? this.normalizeUnicode(extractedResponse) 
+        : extractedResponse;
+      
       const formatted = { 
-        result: extractedResponse,
-        response: extractedResponse,
-        content: extractedResponse
+        result: normalizedResponse,
+        response: normalizedResponse,
+        content: normalizedResponse
       };
       logger.info(`[SpecializedAgentManager] 🔍 Format simple (pas de schéma):`, { 
         extractedResponse,
@@ -533,14 +558,16 @@ export class SpecializedAgentManager {
     // Mapper les propriétés du schéma
     for (const [key, schema] of Object.entries(outputSchema.properties)) {
       if (key === 'answer' || key === 'result' || key === 'response') {
-        formatted[key] = resultObj?.content || resultObj?.message || 'Tâche exécutée';
+        const rawContent = resultObj?.content || resultObj?.message || 'Tâche exécutée';
+        formatted[key] = typeof rawContent === 'string' ? this.normalizeUnicode(rawContent) : rawContent;
       } else if (key === 'success') {
         formatted[key] = resultObj?.success !== false;
       } else if (key === 'confidence') {
         // Essayer d'extraire un niveau de confiance du résultat
         formatted[key] = this.extractConfidence(result);
       } else if (key === 'formattedContent') {
-        formatted[key] = resultObj?.content || resultObj?.message || '';
+        const rawContent = resultObj?.content || resultObj?.message || '';
+        formatted[key] = typeof rawContent === 'string' ? this.normalizeUnicode(rawContent) : rawContent;
       } else if (key === 'changes') {
         formatted[key] = this.extractChanges(result);
       } else {
@@ -576,7 +603,9 @@ export class SpecializedAgentManager {
   private extractChanges(result: unknown): string[] {
     const resultObj = result as Record<string, unknown>;
     if (Array.isArray(resultObj?.changes)) {
-      return resultObj.changes;
+      return resultObj.changes.map(change => 
+        typeof change === 'string' ? this.normalizeUnicode(change) : change
+      );
     }
     if (typeof resultObj?.reasoning === 'string' && resultObj.reasoning.includes('modifié')) {
       return ['Contenu reformaté selon les instructions'];

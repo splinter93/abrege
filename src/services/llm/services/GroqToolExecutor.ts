@@ -2,6 +2,14 @@ import type { ToolExecutionResult, ToolExecutionContext, GroqLimits } from '../t
 import { ToolCallManager } from '../toolCallManager';
 import { simpleLogger as logger } from '@/utils/logger';
 
+export interface ToolCall {
+  id: string;
+  function: {
+    name: string;
+    arguments: string;
+  };
+}
+
 /**
  * Service responsable de l'exécution des tools pour Groq
  * - Exécution parallèle bornée (par la limite maxToolCalls amont)
@@ -22,7 +30,7 @@ export class GroqToolExecutor {
    * Retourne un tableau ToolExecutionResult aligné sur l'ordre initial.
    */
   async executeTools(
-    toolCalls: any[],
+    toolCalls: ToolCall[],
     context: ToolExecutionContext
   ): Promise<ToolExecutionResult[]> {
     const { userToken, batchId, maxRetries } = context;
@@ -79,7 +87,7 @@ export class GroqToolExecutor {
       const tc = toolCalls[idx];
       const toolName = tc?.function?.name || 'unknown';
       const errMsg = (s.reason?.message || String(s.reason || 'Erreur inconnue')).toString().slice(0, 500);
-      return this.toResultError(tc?.id ?? `tool_${idx}`, toolName, errMsg, 'UNKNOWN_ERROR');
+      return this.buildErrorResult(tc?.id ?? `tool_${idx}`, toolName, errMsg, 'UNKNOWN_ERROR', 0);
     });
 
     // 5) Synthèse logs
@@ -93,7 +101,7 @@ export class GroqToolExecutor {
    * NB: le ToolCallManager gère déjà ses propres retries/timeouts ; ici on loggue finement.
    */
   private async executeSingleTool(
-    toolCall: any,
+    toolCall: ToolCall,
     userToken: string,
     maxRetries: number,
     batchId: string,
@@ -119,7 +127,10 @@ export class GroqToolExecutor {
       const executionResult: ToolExecutionResult = {
         tool_call_id: result.tool_call_id ?? toolId,
         name: result.name ?? toolName,
-        result: result.result,
+        result: {
+          ...result.result,
+          duration_ms: duration
+        },
         success: !!result.success,
         timestamp: new Date().toISOString()
       };
@@ -133,11 +144,6 @@ export class GroqToolExecutor {
         logger.warn(
           `[GroqToolExecutor] ⚠️ ${toolName} KO (${duration}ms): ${String(errMsg).slice(0, 200)}`
         );
-        // Enrichir le résultat avec des métadonnées utiles côté normalizer/LLM
-        (executionResult as any).result = {
-          ...(executionResult as any).result,
-          duration_ms: duration
-        };
       }
 
       return executionResult;
@@ -149,9 +155,7 @@ export class GroqToolExecutor {
         `[GroqToolExecutor] ❌ ${toolName} EXC (${duration}ms) code=${code}: ${String(errorMsg).slice(0, 300)}`
       );
 
-      const failure = this.toResultError(toolId, toolName, errorMsg, code);
-      (failure as any).result.duration_ms = duration;
-      return failure;
+      return this.buildErrorResult(toolId, toolName, errorMsg, code, duration);
     }
   }
 
@@ -201,7 +205,7 @@ export class GroqToolExecutor {
   /**
    * Validation pragmatique des tool calls (ne bloque jamais tout le lot)
    */
-  validateToolCalls(toolCalls: any[]): { isValid: boolean; errors: string[] } {
+  validateToolCalls(toolCalls: ToolCall[]): { isValid: boolean; errors: string[] } {
     const errors: string[] = [];
 
     if (!Array.isArray(toolCalls) || toolCalls.length === 0) {
@@ -216,12 +220,8 @@ export class GroqToolExecutor {
       if (!toolCall?.function?.name || typeof toolCall.function.name !== 'string') {
         errors.push(`Tool call ${toolCall?.id ?? `#${idx}`} sans nom de fonction valide`);
       }
-      if (toolCall?.function?.arguments) {
-        try {
-          JSON.parse(toolCall.function.arguments);
-        } catch {
-          errors.push(`Tool call ${toolCall?.id ?? `#${idx}`} avec arguments JSON invalides`);
-        }
+      if (!this.isArgsJsonValid(toolCall)) {
+        errors.push(`Tool call ${toolCall?.id ?? `#${idx}`} avec arguments JSON invalides`);
       }
     });
 
@@ -230,11 +230,11 @@ export class GroqToolExecutor {
 
   // --- Helpers privés ---
 
-  private isToolCallStructValid(toolCall: any): boolean {
+  private isToolCallStructValid(toolCall: ToolCall): boolean {
     return !!toolCall && typeof toolCall?.id === 'string' && typeof toolCall?.function?.name === 'string';
   }
 
-  private isArgsJsonValid(toolCall: any): boolean {
+  private isArgsJsonValid(toolCall: ToolCall): boolean {
     if (!toolCall?.function?.arguments) return true;
     try {
       JSON.parse(toolCall.function.arguments);
@@ -244,30 +244,21 @@ export class GroqToolExecutor {
     }
   }
 
-  private buildInvalidCallResult(toolCall: any, code: string): ToolExecutionResult {
+  private buildInvalidCallResult(toolCall: ToolCall, code: string): ToolExecutionResult {
     const toolName = toolCall?.function?.name || 'unknown';
     const toolId = toolCall?.id || `invalid_${Date.now()}`;
-    return {
-      tool_call_id: toolId,
-      name: toolName,
-      result: {
-        success: false,
-        error: 'Tool call invalide (structure ou arguments)',
-        code
-      },
-      success: false,
-      timestamp: new Date().toISOString()
-    };
+    return this.buildErrorResult(toolId, toolName, 'Tool call invalide (structure ou arguments)', code, 0);
   }
 
-  private toResultError(toolId: string, toolName: string, errorMsg: string, code: string): ToolExecutionResult {
+  private buildErrorResult(toolId: string, toolName: string, errorMsg: string, code: string, duration: number = 0): ToolExecutionResult {
     return {
       tool_call_id: toolId,
       name: toolName,
       result: {
         success: false,
         error: errorMsg,
-        code
+        code,
+        duration_ms: duration
       },
       success: false,
       timestamp: new Date().toISOString()

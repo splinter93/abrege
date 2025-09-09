@@ -17,10 +17,10 @@ src/services/llm/
 
 ## 🎯 Services Principaux
 
-### **GroqOrchestrator** 🎼
-- **Responsabilité** : Coordination de tous les services
-- **Fonctionnalités** : Exécution de rounds complets, gestion du cycle de vie
-- **Méthodes clés** : `executeRound()`, `prepareContext()`, `processFinalResponse()`
+### **SimpleChatOrchestrator** 🎼
+- **Responsabilité** : Coordination intelligente des services
+- **Fonctionnalités** : Chat avec tools, relance automatique, gestion d'erreurs
+- **Méthodes clés** : `processMessage()`, `executeWithRetry()`, `generateFinalResponse()`
 
 ### **GroqHistoryBuilder** 🏗️
 - **Responsabilité** : Construction et validation de l'historique
@@ -41,25 +41,26 @@ src/services/llm/
 
 ### **1. Import et Configuration**
 ```typescript
-import { GroqOrchestrator } from './services/GroqOrchestrator';
-import { DEFAULT_GROQ_LIMITS } from './types/groqTypes';
+import { simpleChatOrchestrator } from './services/SimpleChatOrchestrator';
 
-const orchestrator = new GroqOrchestrator(DEFAULT_GROQ_LIMITS);
+// Utilise le singleton - pas besoin d'instanciation
 ```
 
-### **2. Exécution d'un Round**
+### **2. Exécution d'un Message**
 ```typescript
-const result = await orchestrator.executeRound({
-  message: "Crée un dossier 'Projets'",
-  appContext: { type: 'chat_session', name: 'assistant', id: '123', content: '' },
-  sessionHistory: [],
-  userToken: 'user-jwt',
-  sessionId: 'session-123'
-});
+const result = await simpleChatOrchestrator.processMessage(
+  "Crée un dossier 'Projets'",
+  [], // historique
+  {
+    userToken: 'user-jwt',
+    sessionId: 'session-123',
+    agentConfig: { name: 'assistant' }
+  }
+);
 
 if (result.success) {
   console.log('✅ Réponse:', result.content);
-  console.log('🔧 Tools exécutés:', result.tool_results?.length || 0);
+  console.log('🔧 Tools exécutés:', result.toolCalls?.length || 0);
 }
 ```
 

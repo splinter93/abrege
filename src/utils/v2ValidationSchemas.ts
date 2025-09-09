@@ -41,7 +41,7 @@ export const updateNoteV2Schema = z.object({
  */
 export const moveNoteV2Schema = z.object({
   target_folder_id: z.string().uuid('target_folder_id doit être un UUID valide').nullable().optional(),
-  target_notebook_id: z.string().uuid('target_notebook_id doit être un UUID valide').optional(),
+  target_classeur_id: z.string().uuid('target_classeur_id doit être un UUID valide').optional(),
 });
 
 /**
@@ -110,7 +110,74 @@ export const publishNoteV2Schema = z.object({
 });
 
 /**
- * Schéma pour exécuter un agent universel V2
+ * Schéma pour insérer du contenu dans une note V2
+ */
+export const insertNoteContentV2Schema = z.object({
+  content: z.string().min(1, 'content requis'),
+  position: z.union([
+    z.literal('start'),
+    z.literal('end'),
+    z.number().int().min(0, 'position doit être >= 0')
+  ])
+});
+
+/**
+ * Schéma pour les paramètres de partage V2
+ */
+export const shareSettingsV2Schema = z.object({
+  visibility: z.enum(['private', 'public', 'unlisted']),
+  allow_edit: z.boolean().optional(),
+  allow_comments: z.boolean().optional()
+});
+
+/**
+ * Schéma pour restaurer depuis la corbeille V2
+ */
+export const restoreFromTrashV2Schema = z.object({
+  item_id: z.string().uuid('item_id doit être un UUID valide'),
+  item_type: z.enum(['note', 'folder', 'classeur'])
+});
+
+/**
+ * Schéma pour créer un agent V2
+ */
+export const createAgentV2Schema = z.object({
+  name: z.string().min(1, 'name requis').max(255, 'name trop long'),
+  slug: z.string().min(1, 'slug requis').max(100, 'slug trop long'),
+  description: z.string().max(500, 'description trop longue'),
+  model: z.string().min(1, 'model requis'),
+  provider: z.string().min(1, 'provider requis'),
+  is_active: z.boolean().optional().default(true),
+  is_chat_agent: z.boolean().optional().default(false),
+  is_endpoint_agent: z.boolean().optional().default(false),
+  capabilities: z.array(z.string()).optional().default([]),
+  api_v2_capabilities: z.array(z.string()).optional().default([]),
+  temperature: z.number().min(0).max(2).optional().default(0.7),
+  max_tokens: z.number().int().min(1).max(10000).optional().default(2000),
+  priority: z.number().int().min(0).max(100).optional().default(50)
+});
+
+/**
+ * Schéma pour mettre à jour un agent V2
+ */
+export const updateAgentV2Schema = z.object({
+  name: z.string().min(1, 'name requis').max(255, 'name trop long').optional(),
+  slug: z.string().min(1, 'slug requis').max(100, 'slug trop long').optional(),
+  description: z.string().max(500, 'description trop longue').optional(),
+  model: z.string().min(1, 'model requis').optional(),
+  provider: z.string().min(1, 'provider requis').optional(),
+  is_active: z.boolean().optional(),
+  is_chat_agent: z.boolean().optional(),
+  is_endpoint_agent: z.boolean().optional(),
+  capabilities: z.array(z.string()).optional(),
+  api_v2_capabilities: z.array(z.string()).optional(),
+  temperature: z.number().min(0).max(2).optional(),
+  max_tokens: z.number().int().min(1).max(10000).optional(),
+  priority: z.number().int().min(0).max(100).optional()
+});
+
+/**
+ * Schéma pour exécuter un agent V2
  */
 export const executeAgentV2Schema = z.object({
   ref: z.string().min(1, 'Référence de l\'agent requise (ID ou slug)'),
@@ -184,7 +251,7 @@ export const contentApplyV2Schema = z.object({
  */
 export const createFolderV2Schema = z.object({
   name: z.string().min(1, 'name requis').max(255, 'name trop long'),
-  notebook_id: z.string().min(1, 'notebook_id OBLIGATOIRE'),
+  classeur_id: z.string().min(1, 'classeur_id OBLIGATOIRE'),
   parent_id: z.string().uuid('parent_id doit être un UUID valide').nullable().optional(),
 });
 

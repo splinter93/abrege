@@ -4,13 +4,13 @@ import { useState, useEffect, useCallback } from 'react';
 
 interface StreamingPreferences {
   enabled: boolean;
-  lineDelay: number; // Délai entre chaque ligne en millisecondes
+  wordDelay: number; // Délai entre chaque mot en millisecondes
   autoAdjust: boolean; // Ajustement automatique selon la longueur du message
 }
 
 const DEFAULT_PREFERENCES: StreamingPreferences = {
   enabled: true,
-  lineDelay: 600, // 600ms par défaut
+  wordDelay: 20, // 20ms par défaut (plus fluide)
   autoAdjust: true
 };
 
@@ -52,9 +52,9 @@ export const useStreamingPreferences = () => {
     savePreferences({ enabled: !preferences.enabled });
   }, [preferences.enabled, savePreferences]);
 
-  // Modifier le délai entre les lignes
-  const setLineDelay = useCallback((delay: number) => {
-    savePreferences({ lineDelay: delay });
+  // Modifier le délai entre les mots
+  const setWordDelay = useCallback((delay: number) => {
+    savePreferences({ wordDelay: delay });
   }, [savePreferences]);
 
   // Activer/désactiver l'ajustement automatique
@@ -65,21 +65,21 @@ export const useStreamingPreferences = () => {
   // Obtenir le délai ajusté selon la longueur du contenu
   const getAdjustedDelay = useCallback((content: string): number => {
     if (!preferences.autoAdjust) {
-      return preferences.lineDelay;
+      return preferences.wordDelay;
     }
 
     const charCount = content.length;
-    const lineCount = content.split('\n').filter(l => l.trim()).length;
+    const wordCount = content.split(/\s+/).filter(w => w.length > 0).length;
 
-    // Ajustement basé sur la longueur et le nombre de lignes
-    if (charCount < 200 && lineCount < 5) {
-      return Math.max(300, preferences.lineDelay * 0.7); // Plus rapide pour les messages courts
-    } else if (charCount > 1000 || lineCount > 15) {
-      return Math.min(1200, preferences.lineDelay * 1.3); // Plus lent pour les messages longs
+    // Ajustement basé sur la longueur et le nombre de mots
+    if (charCount < 200 && wordCount < 20) {
+      return Math.max(10, preferences.wordDelay * 0.7); // Plus rapide pour les messages courts
+    } else if (charCount > 1000 || wordCount > 100) {
+      return Math.min(50, preferences.wordDelay * 1.3); // Plus lent pour les messages longs
     }
 
-    return preferences.lineDelay;
-  }, [preferences.lineDelay, preferences.autoAdjust]);
+    return preferences.wordDelay;
+  }, [preferences.wordDelay, preferences.autoAdjust]);
 
   // Réinitialiser aux valeurs par défaut
   const resetToDefaults = useCallback(() => {
@@ -95,7 +95,7 @@ export const useStreamingPreferences = () => {
     preferences,
     isLoaded,
     toggleStreaming,
-    setLineDelay,
+    setWordDelay,
     toggleAutoAdjust,
     getAdjustedDelay,
     resetToDefaults,

@@ -77,6 +77,24 @@ const ChatFullscreenV2: React.FC = () => {
     hideDebugger
   } = useToolCallDebugger();
 
+  // 🎼 Activation automatique d'Harmony pour GPT OSS 20b et 120b
+  useEffect(() => {
+    if (selectedAgent?.model_variant === '20b' || selectedAgent?.model_variant === '120b') {
+      logger.dev('[ChatFullscreenV2] 🎼 Activation automatique d\'Harmony pour GPT OSS', {
+        model_variant: selectedAgent.model_variant,
+        agent_name: selectedAgent.name
+      });
+      setUseHarmony(true);
+    } else if (selectedAgent?.model_variant) {
+      // Désactiver Harmony pour les autres modèles
+      logger.dev('[ChatFullscreenV2] 🎼 Désactivation d\'Harmony pour modèle non-GPT OSS', {
+        model_variant: selectedAgent.model_variant,
+        agent_name: selectedAgent.name
+      });
+      setUseHarmony(false);
+    }
+  }, [selectedAgent?.model_variant, selectedAgent?.name]);
+
   // 🎯 Hook pour les tool calls atomiques
   // const { addToolResult, isProcessing: isProcessingToolCalls } = useAtomicToolCalls(); // Hook supprimé
 

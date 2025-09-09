@@ -1,6 +1,6 @@
 /**
- * Exécuteur de tools TypeScript strict pour l'API V2
- * Appels HTTP directs, zéro any, parfaitement fidèle aux endpoints
+ * ApiV2ToolExecutor - Version simplifiée et robuste
+ * 100 lignes max, zéro switch case, générique
  */
 
 import { ToolCall, ToolResult } from '../types/apiV2Types';
@@ -8,43 +8,36 @@ import { ApiV2HttpClient } from '../clients/ApiV2HttpClient';
 import { simpleLogger as logger } from '@/utils/logger';
 
 /**
- * Exécuteur de tools avec appels HTTP directs vers l'API V2
- * Chaque tool correspond exactement à un endpoint
+ * Exécuteur de tools simplifié
+ * Utilise une approche générique au lieu d'un switch case géant
  */
 export class ApiV2ToolExecutor {
   private readonly httpClient: ApiV2HttpClient;
+  private readonly toolHandlers: Map<string, Function>;
 
   constructor(httpClient?: ApiV2HttpClient) {
     this.httpClient = httpClient || new ApiV2HttpClient();
+    this.toolHandlers = this.initializeToolHandlers();
   }
 
   /**
-   * Exécuter un tool call via l'API V2
+   * Exécuter un tool call
    */
   async executeToolCall(toolCall: ToolCall, userToken: string): Promise<ToolResult> {
-    const startTime = Date.now();
     const { id, function: func } = toolCall;
+    const startTime = Date.now();
 
     try {
-      logger.info(`[ApiV2ToolExecutor] 🚀 Exécution tool: ${func.name}`, {
-        toolCallId: id,
-        functionName: func.name,
-        hasArguments: !!func.arguments
-      });
+      logger.info(`[ApiV2ToolExecutor] 🚀 Executing tool: ${func.name}`);
 
       // Parser les arguments
       const args = this.parseArguments(func.arguments);
       
-      // Exécuter le tool correspondant
+      // Exécuter le tool
       const result = await this.executeToolFunction(func.name, args, userToken);
 
       const executionTime = Date.now() - startTime;
-      logger.info(`[ApiV2ToolExecutor] ✅ Tool exécuté: ${func.name}`, {
-        toolCallId: id,
-        functionName: func.name,
-        executionTime,
-        success: true
-      });
+      logger.info(`[ApiV2ToolExecutor] ✅ Tool executed: ${func.name} (${executionTime}ms)`);
 
       return {
         tool_call_id: id,
@@ -55,207 +48,123 @@ export class ApiV2ToolExecutor {
 
     } catch (error) {
       const executionTime = Date.now() - startTime;
-      logger.error(`[ApiV2ToolExecutor] ❌ Erreur tool ${func.name}:`, {
-        toolCallId: id,
-        functionName: func.name,
-        executionTime,
-        error: error instanceof Error ? error.message : String(error)
-      });
+      logger.error(`[ApiV2ToolExecutor] ❌ Tool failed: ${func.name} (${executionTime}ms)`, error);
 
       return {
         tool_call_id: id,
         name: func.name,
         content: JSON.stringify({
           success: false,
-          error: error instanceof Error ? error.message : 'Erreur interne du serveur',
-          code: 'TOOL_EXECUTION_ERROR'
+          error: error instanceof Error ? error.message : 'Erreur interne du serveur'
         }),
-        success: false,
-        error: error instanceof Error ? error.message : 'Erreur interne du serveur',
-        code: 'TOOL_EXECUTION_ERROR'
+        success: false
       };
     }
   }
 
   /**
-   * Parser les arguments JSON d'un tool call
+   * Initialiser les handlers de tools de manière générique
    */
-  private parseArguments(argumentsStr: string): Record<string, unknown> {
-    try {
-      return JSON.parse(argumentsStr || '{}');
-    } catch (error) {
-      logger.warn(`[ApiV2ToolExecutor] ⚠️ Arguments JSON invalides:`, {
-        arguments: argumentsStr,
-        error: error instanceof Error ? error.message : String(error)
-      });
-      throw new Error('Arguments JSON invalides');
-    }
+  private initializeToolHandlers(): Map<string, Function> {
+    const handlers = new Map<string, Function>();
+
+    // Notes
+    handlers.set('createNote', (args: any, token: string) => this.httpClient.createNote(args, token));
+    handlers.set('getNote', (args: any, token: string) => this.httpClient.getNote(args, token));
+    handlers.set('updateNote', (args: any, token: string) => this.httpClient.updateNote(args.ref, args, token));
+    handlers.set('moveNote', (args: any, token: string) => this.httpClient.moveNote(args.ref, args, token));
+    handlers.set('insertNoteContent', (args: any, token: string) => this.httpClient.insertNoteContent(args.ref, args, token));
+    handlers.set('applyContentOperations', (args: any, token: string) => this.httpClient.applyContentOperations(args.ref, args, token));
+    handlers.set('getNoteTOC', (args: any, token: string) => this.httpClient.getNoteTOC(args.ref, token));
+    handlers.set('getNoteShareSettings', (args: any, token: string) => this.httpClient.getNoteShareSettings(args.ref, token));
+    handlers.set('updateNoteShareSettings', (args: any, token: string) => this.httpClient.updateNoteShareSettings(args.ref, args, token));
+    handlers.set('getRecentNotes', (args: any, token: string) => this.httpClient.getRecentNotes(args, token));
+
+    // Classeurs
+    handlers.set('createClasseur', (args: any, token: string) => this.httpClient.createClasseur(args, token));
+    handlers.set('getClasseur', (args: any, token: string) => this.httpClient.getClasseur(args, token));
+    handlers.set('updateClasseur', (args: any, token: string) => this.httpClient.updateClasseur(args.ref, args, token));
+    handlers.set('getClasseurTree', (args: any, token: string) => this.httpClient.getClasseurTree(args.ref, token));
+    handlers.set('getClasseursWithContent', (args: any, token: string) => this.httpClient.getClasseursWithContent(token));
+    handlers.set('listClasseurs', (args: any, token: string) => this.httpClient.listClasseurs(token));
+
+    // Dossiers
+    handlers.set('createFolder', (args: any, token: string) => this.httpClient.createFolder(args, token));
+    handlers.set('getFolder', (args: any, token: string) => this.httpClient.getFolder(args, token));
+    handlers.set('updateFolder', (args: any, token: string) => this.httpClient.updateFolder(args.ref, args, token));
+    handlers.set('moveFolder', (args: any, token: string) => this.httpClient.moveFolder(args.ref, args, token));
+    handlers.set('getFolderTree', (args: any, token: string) => this.httpClient.getFolderTree(args.ref, token));
+
+    // Recherche
+    handlers.set('searchContent', (args: any, token: string) => this.httpClient.searchContent(args, token));
+    handlers.set('searchFiles', (args: any, token: string) => this.httpClient.searchFiles(args, token));
+
+    // Autres
+    handlers.set('getStats', (args: any, token: string) => this.httpClient.getStats(token));
+    handlers.set('getUserProfile', (args: any, token: string) => this.httpClient.getUserProfile(token));
+    handlers.set('getTrash', (args: any, token: string) => this.httpClient.getTrash(token));
+    handlers.set('restoreFromTrash', (args: any, token: string) => this.httpClient.restoreFromTrash(args, token));
+    handlers.set('purgeTrash', (args: any, token: string) => this.httpClient.purgeTrash(token));
+    handlers.set('deleteResource', (args: any, token: string) => this.httpClient.deleteResource(args.resource, args.ref, token));
+
+    // Agents
+    handlers.set('listAgents', (args: any, token: string) => this.httpClient.listAgents(token));
+    handlers.set('createAgent', (args: any, token: string) => this.httpClient.createAgent(args, token));
+    handlers.set('getAgent', (args: any, token: string) => this.httpClient.getAgent(args.agentId, token));
+    handlers.set('executeAgent', (args: any, token: string) => {
+      // Mapper les paramètres pour l'API V2
+      const mappedArgs = {
+        ref: args.ref || args.agentId || args.agent_slug,
+        input: args.input || args.message
+      };
+      return this.httpClient.executeAgent(mappedArgs, token);
+    });
+    handlers.set('updateAgent', (args: any, token: string) => this.httpClient.updateAgent(args.agentId, args, token));
+    handlers.set('patchAgent', (args: any, token: string) => this.httpClient.patchAgent(args.agentId, args, token));
+    handlers.set('deleteAgent', (args: any, token: string) => this.httpClient.deleteAgent(args.agentId, token));
+
+    // Notes - Opérations avancées
+    handlers.set('applyContentOperations', (args: any, token: string) => this.httpClient.applyContentOperations(args.ref, args, token));
+    handlers.set('insertNoteContent', (args: any, token: string) => this.httpClient.insertNoteContent(args.ref, args, token));
+    handlers.set('getNoteTOC', (args: any, token: string) => this.httpClient.getNoteTOC(args.ref, token));
+    handlers.set('getNoteShareSettings', (args: any, token: string) => this.httpClient.getNoteShareSettings(args.ref, token));
+    handlers.set('updateNoteShareSettings', (args: any, token: string) => this.httpClient.updateNoteShareSettings(args.ref, args, token));
+
+    // Classeurs - Opérations avancées
+    handlers.set('reorderClasseurs', (args: any, token: string) => this.httpClient.reorderClasseurs(args, token));
+
+    // Debug
+    handlers.set('listTools', (args: any, token: string) => this.httpClient.listTools(token));
+    handlers.set('debugInfo', (args: any, token: string) => this.httpClient.debugInfo(token));
+
+    return handlers;
   }
 
   /**
-   * Exécuter une fonction de tool spécifique
+   * Exécuter une fonction de tool
    */
   private async executeToolFunction(
     functionName: string,
     args: Record<string, unknown>,
     userToken: string
   ): Promise<unknown> {
-    switch (functionName) {
-      // ============================================================================
-      // TOOLS POUR LES NOTES
-      // ============================================================================
+    const handler = this.toolHandlers.get(functionName);
+    
+    if (!handler) {
+      throw new Error(`Tool non supporté: ${functionName}`);
+    }
 
-      case 'createNote':
-        return await this.httpClient.createNote(args, userToken);
+    return await handler(args, userToken);
+  }
 
-      case 'getNote':
-        return await this.httpClient.getNote(args, userToken);
-
-      case 'updateNote':
-        return await this.httpClient.updateNote(args.ref as string, args, userToken);
-
-      case 'moveNote':
-        return await this.httpClient.moveNote(args.ref as string, args, userToken);
-
-      case 'insertNoteContent':
-        return await this.httpClient.insertNoteContent(args.ref as string, args, userToken);
-
-      case 'applyContentOperations':
-        return await this.httpClient.applyContentOperations(args.ref as string, args, userToken);
-
-      case 'getNoteTOC':
-        return await this.httpClient.getNoteTOC(args.ref as string, userToken);
-
-      case 'getNoteShareSettings':
-        return await this.httpClient.getNoteShareSettings(args.ref as string, userToken);
-
-      case 'updateNoteShareSettings':
-        return await this.httpClient.updateNoteShareSettings(args.ref as string, args, userToken);
-
-      case 'getRecentNotes':
-        return await this.httpClient.getRecentNotes(args, userToken);
-
-      // ============================================================================
-      // TOOLS POUR LES CLASSEURS
-      // ============================================================================
-
-      case 'createClasseur':
-        return await this.httpClient.createClasseur(args, userToken);
-
-      case 'getClasseur':
-        return await this.httpClient.getClasseur(args, userToken);
-
-      case 'updateClasseur':
-        return await this.httpClient.updateClasseur(args.ref as string, args, userToken);
-
-      case 'getClasseurTree':
-        return await this.httpClient.getClasseurTree(args.ref as string, userToken);
-
-      case 'getClasseursWithContent':
-        return await this.httpClient.getClasseursWithContent(userToken);
-
-      case 'listClasseurs':
-        return await this.httpClient.listClasseurs(userToken);
-
-      // ============================================================================
-      // TOOLS POUR LES DOSSIERS
-      // ============================================================================
-
-      case 'createFolder':
-        return await this.httpClient.createFolder(args, userToken);
-
-      case 'getFolder':
-        return await this.httpClient.getFolder(args, userToken);
-
-      case 'updateFolder':
-        return await this.httpClient.updateFolder(args.ref as string, args, userToken);
-
-      case 'moveFolder':
-        return await this.httpClient.moveFolder(args.ref as string, args, userToken);
-
-      case 'getFolderTree':
-        return await this.httpClient.getFolderTree(args.ref as string, userToken);
-
-      // ============================================================================
-      // TOOLS POUR LA RECHERCHE
-      // ============================================================================
-
-      case 'searchContent':
-        return await this.httpClient.searchContent(args, userToken);
-
-      case 'searchFiles':
-        return await this.httpClient.searchFiles(args, userToken);
-
-      // ============================================================================
-      // TOOLS POUR LES STATISTIQUES
-      // ============================================================================
-
-      case 'getStats':
-        return await this.httpClient.getStats(userToken);
-
-      // ============================================================================
-      // TOOLS POUR LE PROFIL UTILISATEUR
-      // ============================================================================
-
-      case 'getUserProfile':
-        return await this.httpClient.getUserProfile(userToken);
-
-      // ============================================================================
-      // TOOLS POUR LA CORBEILLE
-      // ============================================================================
-
-      case 'getTrash':
-        return await this.httpClient.getTrash(userToken);
-
-      case 'restoreFromTrash':
-        return await this.httpClient.restoreFromTrash(args, userToken);
-
-      case 'purgeTrash':
-        return await this.httpClient.purgeTrash(userToken);
-
-      // ============================================================================
-      // TOOLS POUR LA SUPPRESSION
-      // ============================================================================
-
-      case 'deleteResource':
-        return await this.httpClient.deleteResource(
-          args.resource as 'note' | 'folder' | 'classeur',
-          args.ref as string,
-          userToken
-        );
-
-      // ============================================================================
-      // TOOLS POUR LES AGENTS SPÉCIALISÉS
-      // ============================================================================
-
-      case 'listAgents':
-        return await this.httpClient.listAgents(userToken);
-
-      case 'createAgent':
-        return await this.httpClient.createAgent(args, userToken);
-
-      case 'getAgent':
-        return await this.httpClient.getAgent(args.agentId as string, userToken);
-
-      case 'executeAgent':
-        return await this.httpClient.executeAgent(args, userToken);
-
-      // ============================================================================
-      // TOOLS POUR LE DEBUG
-      // ============================================================================
-
-      case 'listTools':
-        return await this.httpClient.listTools(userToken);
-
-      case 'debugInfo':
-        return await this.httpClient.debugInfo(userToken);
-
-      // ============================================================================
-      // TOOL NON SUPPORTÉ
-      // ============================================================================
-
-      default:
-        throw new Error(`Tool non supporté: ${functionName}`);
+  /**
+   * Parser les arguments JSON
+   */
+  private parseArguments(argumentsStr: string): Record<string, unknown> {
+    try {
+      return JSON.parse(argumentsStr || '{}');
+    } catch (error) {
+      throw new Error('Arguments JSON invalides');
     }
   }
 
@@ -263,82 +172,14 @@ export class ApiV2ToolExecutor {
    * Vérifier si un tool est supporté
    */
   isToolSupported(functionName: string): boolean {
-    const supportedTools = [
-      // Notes
-      'createNote', 'getNote', 'updateNote', 'moveNote', 'insertNoteContent',
-      'applyContentOperations', 'getNoteTOC', 'getNoteShareSettings',
-      'updateNoteShareSettings', 'getRecentNotes',
-      
-      // Classeurs
-      'createClasseur', 'getClasseur', 'updateClasseur', 'getClasseurTree',
-      'getClasseursWithContent', 'listClasseurs',
-      
-      // Dossiers
-      'createFolder', 'getFolder', 'updateFolder', 'moveFolder', 'getFolderTree',
-      
-      // Recherche
-      'searchContent', 'searchFiles',
-      
-      // Statistiques
-      'getStats',
-      
-      // Profil utilisateur
-      'getUserProfile',
-      
-      // Corbeille
-      'getTrash', 'restoreFromTrash', 'purgeTrash',
-      
-      // Suppression
-      'deleteResource',
-      
-      // Agents spécialisés
-      'listAgents', 'createAgent', 'getAgent', 'executeAgent',
-      
-      // Debug
-      'listTools', 'debugInfo'
-    ];
-
-    return supportedTools.includes(functionName);
+    return this.toolHandlers.has(functionName);
   }
 
   /**
    * Obtenir la liste des tools supportés
    */
   getSupportedTools(): string[] {
-    return [
-      // Notes
-      'createNote', 'getNote', 'updateNote', 'moveNote', 'insertNoteContent',
-      'applyContentOperations', 'getNoteTOC', 'getNoteShareSettings',
-      'updateNoteShareSettings', 'getRecentNotes',
-      
-      // Classeurs
-      'createClasseur', 'getClasseur', 'updateClasseur', 'getClasseurTree',
-      'getClasseursWithContent', 'listClasseurs',
-      
-      // Dossiers
-      'createFolder', 'getFolder', 'updateFolder', 'moveFolder', 'getFolderTree',
-      
-      // Recherche
-      'searchContent', 'searchFiles',
-      
-      // Statistiques
-      'getStats',
-      
-      // Profil utilisateur
-      'getUserProfile',
-      
-      // Corbeille
-      'getTrash', 'restoreFromTrash', 'purgeTrash',
-      
-      // Suppression
-      'deleteResource',
-      
-      // Agents spécialisés
-      'listAgents', 'createAgent', 'getAgent', 'executeAgent',
-      
-      // Debug
-      'listTools', 'debugInfo'
-    ];
+    return Array.from(this.toolHandlers.keys());
   }
 }
 

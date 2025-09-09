@@ -89,8 +89,8 @@ export const HarmonyMessageSchema = z.object({
   content: z.string(),
   timestamp: z.string().datetime().optional(),
   
-  // La propriété tool_calls est dépréciée et gérée dans le content
-  // tool_calls: z.array(ToolCallSchema).optional(),
+  // Support tool calls
+  tool_calls: z.array(ToolCallSchema).optional(),
   
   // Support tool results (tool uniquement)
   tool_call_id: z.string().optional(),

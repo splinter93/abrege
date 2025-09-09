@@ -1,5 +1,5 @@
 // 🎯 Services pour l'orchestration Groq
-export { GroqOrchestrator } from './GroqOrchestrator';
+// GroqOrchestrator supprimé - remplacé par SimpleChatOrchestrator
 export { GroqHistoryBuilder } from './GroqHistoryBuilder';
 export { GroqToolExecutor } from './GroqToolExecutor';
 export { GroqErrorHandler } from './GroqErrorHandler';

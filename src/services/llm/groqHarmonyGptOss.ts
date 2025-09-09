@@ -6,7 +6,7 @@
 import { NextResponse } from 'next/server';
 import type { GroqRoundParams, GroqRoundResult } from './types/groqTypes';
 import { DEFAULT_GROQ_LIMITS } from './types/groqTypes';
-import { HarmonyOrchestrator } from './services/HarmonyOrchestrator';
+import { simpleChatOrchestrator } from './services/SimpleChatOrchestrator';
 import { simpleLogger as logger } from '@/utils/logger';
 
 /**
@@ -44,11 +44,30 @@ export async function handleGroqHarmonyGptOss(params: GroqRoundParams): Promise<
       agentName: params.agentConfig?.name || 'default'
     });
 
-    // Créer l'orchestrateur Harmony avec les limites par défaut
-    const orchestrator = new HarmonyOrchestrator(DEFAULT_GROQ_LIMITS);
+    // Utiliser l'orchestrateur SimpleChat (singleton)
+    const chatResult = await simpleChatOrchestrator.processMessage(
+      params.message,
+      params.sessionHistory || [],
+      {
+        userToken: params.userToken,
+        sessionId: params.sessionId,
+        agentConfig: params.agentConfig
+      }
+    );
 
-    // Exécuter le round Harmony complet
-    const result = await orchestrator.executeRound(params);
+    // Convertir le résultat SimpleChat vers le format GroqRoundResult
+    const result: GroqRoundResult = {
+      success: chatResult.success,
+      content: chatResult.content,
+      tool_results: chatResult.toolResults?.map(tr => ({
+        tool_call_id: tr.tool_call_id,
+        name: tr.name,
+        content: tr.content,
+        success: tr.success
+      })) || [],
+      reasoning: chatResult.reasoning,
+      status: chatResult.success ? 200 : 500
+    };
 
     // Retourner la réponse appropriée
     if (result.success) {
@@ -92,49 +111,6 @@ export async function testHarmonyImplementation(): Promise<{
 }> {
   const tests = [
     {
-      name: 'HarmonyFormatter - Formatage de message',
-      test: async () => {
-        const { HarmonyFormatter } = await import('./services/HarmonyFormatter');
-        const formatter = new HarmonyFormatter();
-        
-        const message = {
-          role: 'system' as const,
-          content: 'Test message',
-          timestamp: new Date().toISOString(),
-        };
-        
-        const result = formatter.formatMessage(message);
-        return result.success;
-      }
-    },
-    {
-      name: 'HarmonyBuilder - Construction de message',
-      test: async () => {
-        const { HarmonyBuilder } = await import('./services/HarmonyBuilder');
-        const builder = new HarmonyBuilder();
-        
-        const message = builder.buildSystemMessage('Test system message');
-        return message.role === 'system' && message.content === 'Test system message';
-      }
-    },
-    {
-      name: 'HarmonyHistoryBuilder - Construction d\'historique',
-      test: async () => {
-        const { HarmonyHistoryBuilder } = await import('./services/HarmonyHistoryBuilder');
-        const builder = new HarmonyHistoryBuilder(DEFAULT_GROQ_LIMITS);
-        
-        const result = builder.buildInitialHistory(
-          'System content',
-          'User message',
-          [],
-          [],
-          { sessionId: 'test-session' }
-        );
-        
-        return result.isValid;
-      }
-    },
-    {
       name: 'GroqHarmonyProvider - Initialisation',
       test: async () => {
         const { GroqHarmonyProvider } = await import('./providers/implementations/groqHarmony');
@@ -149,6 +125,20 @@ export async function testHarmonyImplementation(): Promise<{
       test: async () => {
         const orchestrator = new HarmonyOrchestrator(DEFAULT_GROQ_LIMITS);
         return orchestrator !== null;
+      }
+    },
+    {
+      name: 'SimpleChatOrchestrator - Initialisation',
+      test: async () => {
+        const { simpleChatOrchestrator } = await import('./services/SimpleChatOrchestrator');
+        return simpleChatOrchestrator !== null;
+      }
+    },
+    {
+      name: 'SimpleToolExecutor - Initialisation',
+      test: async () => {
+        const { simpleToolExecutor } = await import('./services/SimpleToolExecutor');
+        return simpleToolExecutor !== null;
       }
     }
   ];

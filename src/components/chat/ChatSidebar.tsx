@@ -179,7 +179,17 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({ isOpen, isDesktop, onClose })
                       className={`agent-option ${selectedAgent?.id === agent.id ? 'active' : ''}`}
                       onClick={() => handleSelectAgent(agent)}
                     >
-                      <div className="agent-icon">{agent.profile_picture || '🤖'}</div>
+                      <div className="agent-icon">
+                        {agent.profile_picture ? (
+                          <img
+                            src={agent.profile_picture}
+                            alt={agent.name}
+                            className="agent-profile-image"
+                          />
+                        ) : (
+                          '🤖'
+                        )}
+                      </div>
                       <div className="agent-info">
                         <div className="agent-name">{agent.name}</div>
                       </div>

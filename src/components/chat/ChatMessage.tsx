@@ -79,7 +79,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
 
   // Déterminer si le streaming doit être utilisé
   const shouldUseStreaming = preferences.enabled && role === 'assistant' && content && !isStreamingComplete;
-  const streamingDelay = getAdjustedDelay(content || '');
+  const wordDelay = getAdjustedDelay(content || '');
 
   const parseSuccessFromContent = (raw: string | null | undefined): boolean | undefined => {
     if (!raw) return undefined;
@@ -130,8 +130,8 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
       transition={{ duration: 0.3 }}
     >
       <div className={`chat-message-bubble chat-message-bubble-${role}`}>
-        {/* Raisonnement (si présent) */}
-        {reasoning && (
+        {/* 🧠 Raisonnement affiché EN PREMIER pour les messages assistant */}
+        {reasoning && role === 'assistant' && (
           <ReasoningMessage reasoning={reasoning} />
         )}
 
@@ -143,13 +143,13 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
           />
         )}
 
-        {/* Contenu markdown avec streaming ligne par ligne ou animation optionnelle */}
+        {/* Contenu markdown avec streaming ligne par ligne ou animation optionnelle - affiché APRÈS le reasoning */}
         {content && (
           <div className="chat-message-content">
             {shouldUseStreaming ? (
               <StreamingLineByLine
                 content={content}
-                lineDelay={streamingDelay}
+                wordDelay={wordDelay}
                 onComplete={handleStreamingComplete}
                 className="chat-streaming-content"
               />

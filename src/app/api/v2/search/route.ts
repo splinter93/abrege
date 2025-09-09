@@ -36,13 +36,12 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   const type = searchParams.get('type') || 'all';
   const limit = parseInt(searchParams.get('limit') || '20');
 
-  // Validation des paramètres
-  if (!query || query.trim().length === 0) {
-    logApi.info('❌ Terme de recherche requis', context);
-    return NextResponse.json(
-      { error: 'Le terme de recherche est requis' },
-      { status: 400, headers: { "Content-Type": "application/json" } }
-    );
+  // ✅ CORRECTION : Rendre le paramètre query facultatif
+  // Si pas de query, on retourne tous les résultats (recherche globale)
+  const searchQuery = query && query.trim().length > 0 ? query.trim() : null;
+  
+  if (searchQuery === null) {
+    logApi.info('🔍 Recherche globale (sans terme spécifique)', context);
   }
 
   if (limit < 1 || limit > 100) {
@@ -65,8 +64,12 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       let notesQuery = supabase
         .from('articles')
         .select('id, source_title, slug, classeur_id, markdown_content')
-        .eq('user_id', userId)
-        .or(`source_title.ilike.%${query}%,markdown_content.ilike.%${query}%`);
+        .eq('user_id', userId);
+
+      // ✅ CORRECTION : Appliquer le filtre de recherche seulement si searchQuery existe
+      if (searchQuery) {
+        notesQuery = notesQuery.or(`source_title.ilike.%${searchQuery}%,markdown_content.ilike.%${searchQuery}%`);
+      }
 
       if (classeurId) {
         notesQuery = notesQuery.eq('classeur_id', classeurId);
@@ -88,7 +91,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
             title: note.source_title,
             slug: note.slug,
             classeur_id: note.classeur_id,
-            score: calculateScore(query, note.source_title, content),
+            score: searchQuery ? calculateScore(searchQuery, note.source_title, content) : 1.0,
             excerpt: excerpt.replace(/[#*`]/g, '') // Nettoyer le markdown
           });
         });
@@ -101,8 +104,12 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       let foldersQuery = supabase
         .from('folders')
         .select('id, name, slug, classeur_id')
-        .eq('user_id', userId)
-        .ilike('name', `%${query}%`);
+        .eq('user_id', userId);
+
+      // ✅ CORRECTION : Appliquer le filtre de recherche seulement si searchQuery existe
+      if (searchQuery) {
+        foldersQuery = foldersQuery.ilike('name', `%${searchQuery}%`);
+      }
 
       if (classeurId) {
         foldersQuery = foldersQuery.eq('classeur_id', classeurId);
@@ -118,7 +125,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
             title: folder.name,
             slug: folder.slug,
             classeur_id: folder.classeur_id,
-            score: calculateScore(query, folder.name, ''),
+            score: searchQuery ? calculateScore(searchQuery, folder.name, '') : 1.0,
             excerpt: `Dossier: ${folder.name}`
           });
         });
@@ -137,7 +144,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
     return NextResponse.json({
       success: true,
-      query: query.trim(),
+      query: searchQuery || '',
       results: limitedResults,
       total: totalCount
     });

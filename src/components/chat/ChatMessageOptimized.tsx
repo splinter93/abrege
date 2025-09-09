@@ -5,8 +5,10 @@ import EnhancedMarkdownMessage from './EnhancedMarkdownMessage';
 import ReasoningMessage from './ReasoningMessage';
 import HarmonyReasoningMessage from './HarmonyReasoningMessage';
 import ToolCallMessage from './ToolCallMessage';
+import StreamingLineByLine from './StreamingLineByLine';
 import MessageContainer from './MessageContainer';
 import { useChatStore } from '@/store/useChatStore';
+import { useStreamingPreferences } from '@/hooks/useStreamingPreferences';
 import { usePropsValidation, ChatMessageOptimizedPropsSchema } from './validators';
 
 interface ChatMessageProps {
@@ -36,6 +38,10 @@ const ChatMessageOptimized: React.FC<ChatMessageProps> = memo(({
   // Tous les hooks doivent être appelés au début, avant tout return conditionnel
   const [displayedContent, setDisplayedContent] = useState('');
   const [isAnimating, setIsAnimating] = useState(false);
+  const [isStreamingComplete, setIsStreamingComplete] = useState(false);
+  
+  // Hook pour les préférences de streaming
+  const { preferences, getAdjustedDelay } = useStreamingPreferences();
   
   // Vérification de sécurité
   if (!validatedProps.message) {
@@ -54,6 +60,15 @@ const ChatMessageOptimized: React.FC<ChatMessageProps> = memo(({
       hasHarmonyFinal: !!(validatedProps.message as any).harmony_final
     });
   }
+  
+  // Gestion du streaming ligne par ligne
+  const handleStreamingComplete = () => {
+    setIsStreamingComplete(true);
+  };
+  
+  // Déterminer si le streaming doit être utilisé
+  const shouldUseStreaming = preferences.enabled && role === 'assistant' && content && !isStreamingComplete;
+  const wordDelay = getAdjustedDelay(content || '');
 
   // Masquer les observations internes de l'assistant
   if (role === 'assistant' && (validatedProps.message as any).name === 'observation') {
@@ -169,16 +184,7 @@ const ChatMessageOptimized: React.FC<ChatMessageProps> = memo(({
       className={validatedProps.className || ''}
     >
       <div className={`chat-message-bubble chat-message-bubble-${role}`}>
-        <div className="message-content">
-          {contentToDisplay ? (
-            <EnhancedMarkdownMessage 
-              content={contentToDisplay}
-            />
-          ) : (
-            <div className="no-content">Aucun contenu</div>
-          )}
-        </div>
-        
+        {/* 🧠 Reasoning affiché EN PREMIER pour les messages assistant */}
         {reasoning && role === 'assistant' && (
           <>
             {/* 🎼 Affichage Harmony si disponible - CORRECTION: Meilleure détection */}
@@ -212,6 +218,26 @@ const ChatMessageOptimized: React.FC<ChatMessageProps> = memo(({
             )}
           </>
         )}
+        
+        {/* Contenu du message affiché APRÈS le reasoning */}
+        <div className="message-content">
+          {contentToDisplay ? (
+            shouldUseStreaming ? (
+              <StreamingLineByLine
+                content={contentToDisplay}
+                wordDelay={wordDelay}
+                onComplete={handleStreamingComplete}
+                className="chat-streaming-content"
+              />
+            ) : (
+              <EnhancedMarkdownMessage 
+                content={contentToDisplay}
+              />
+            )
+          ) : (
+            <div className="no-content">Aucun contenu</div>
+          )}
+        </div>
         
         {/* Indicateur de frappe quand on attend une réponse */}
         {isWaitingForResponse && role === 'assistant' && !contentToDisplay && (

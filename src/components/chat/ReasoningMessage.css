@@ -6,7 +6,8 @@
   border-top: none;
   padding-top: 0;
   margin-top: 0;
-  padding-bottom: 12px; /* Espace avec la réponse */
+  margin-bottom: 16px; /* Espace avec le contenu du message */
+  padding-bottom: 0;
 }
 
 /* ========================================
@@ -31,16 +32,18 @@
 }
 
 .reasoning-icon {
-  width: 14px;
-  height: 14px;
-  color: var(--chat-text-secondary);
+  width: 12px;
+  height: 12px;
+  color: var(--chat-text-tertiary, #9ca3af);
 }
 
 .reasoning-title {
-  font-size: 13px;
-  font-weight: 600; /* Titre en gras */
-  color: var(--chat-text-secondary);
+  font-size: 11px;
+  font-weight: 500; /* Titre moins gras */
+  color: var(--chat-text-tertiary, #9ca3af);
   transition: color 0.2s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .reasoning-header:hover .reasoning-title {
@@ -48,8 +51,9 @@
 }
 
 .reasoning-toggle {
-  color: var(--chat-text-secondary);
+  color: var(--chat-text-tertiary, #9ca3af);
   transition: transform 0.2s ease;
+  font-size: 10px;
 }
 
 .reasoning-header[aria-expanded="false"] .reasoning-toggle {
@@ -66,16 +70,54 @@
 }
 
 .reasoning-content .chat-markdown {
-  font-size: 13px;
-  line-height: 1.6;
-  color: var(--chat-text-secondary);
+  font-size: 10px;
+  line-height: 1.4;
+  color: var(--chat-text-tertiary, #9ca3af);
+  opacity: 0.8;
 }
 
 .reasoning-content .chat-markdown p {
-  margin: 0 0 8px 0;
+  margin: 0 0 4px 0;
 }
 
 .reasoning-content .chat-markdown strong {
-  color: var(--chat-text-primary);
+  color: var(--chat-text-secondary, #6b7280);
   font-weight: 500;
+}
+
+.reasoning-content .chat-markdown h1,
+.reasoning-content .chat-markdown h2,
+.reasoning-content .chat-markdown h3,
+.reasoning-content .chat-markdown h4,
+.reasoning-content .chat-markdown h5,
+.reasoning-content .chat-markdown h6 {
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--chat-text-tertiary, #9ca3af);
+  margin: 2px 0 1px 0;
+  opacity: 0.9;
+}
+
+.reasoning-content .chat-markdown code {
+  background: rgba(0, 0, 0, 0.05);
+  color: var(--chat-text-tertiary, #9ca3af);
+  font-size: 9px;
+  opacity: 0.8;
+}
+
+.reasoning-content .chat-markdown pre {
+  background: rgba(0, 0, 0, 0.05);
+  font-size: 9px;
+  padding: 4px 6px;
+  margin: 2px 0;
+  opacity: 0.8;
+}
+
+.reasoning-content .chat-markdown blockquote {
+  border-left: 2px solid var(--chat-text-tertiary, #9ca3af);
+  color: var(--chat-text-tertiary, #9ca3af);
+  font-size: 9px;
+  padding-left: 6px;
+  margin: 2px 0;
+  opacity: 0.8;
 } 

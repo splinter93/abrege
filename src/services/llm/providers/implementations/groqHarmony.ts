@@ -70,7 +70,7 @@ const GROQ_HARMONY_INFO: ProviderInfo = {
     structuredOutput: true,
     audioTranscription: false,
     audioTranslation: false,
-    harmonyFormat: true, // ✅ Nouvelle capacité Harmony
+    // harmonyFormat: true, // ✅ Nouvelle capacité Harmony - commenté pour compatibilité
   },
   supportedModels: [
     'openai/gpt-oss-20b',
@@ -132,6 +132,7 @@ export class GroqHarmonyProvider extends BaseProvider implements LLMProvider {
     id: 'groq-harmony',
     name: 'Groq Harmony Provider',
     version: '1.0.0',
+    description: 'Groq provider avec support complet du format Harmony GPT-OSS',
     capabilities: {
       functionCalls: true,
       streaming: false,
@@ -140,6 +141,14 @@ export class GroqHarmonyProvider extends BaseProvider implements LLMProvider {
       webSearch: false,
       structuredOutput: true,
     },
+    supportedModels: [
+      'openai/gpt-oss-20b',
+      'openai/gpt-oss-120b',
+    ],
+    pricing: {
+      input: '$0.15/1M tokens',
+      output: '$0.75/1M tokens',
+    }
   };
 
   constructor(config: Partial<GroqHarmonyConfig> = {}) {
@@ -300,7 +309,17 @@ export class GroqHarmonyProvider extends BaseProvider implements LLMProvider {
         },
       };
 
-      // 2. Ajouter le message utilisateur actuel
+      // 2. Ajouter les instructions système si présentes
+      if (context.content && context.content.trim().length > 0) {
+        const systemMessage: HarmonyMessage = {
+          role: HARMONY_ROLES.SYSTEM,
+          content: context.content,
+          timestamp: new Date().toISOString(),
+        };
+        conversation.messages.unshift(systemMessage); // Ajouter au début
+      }
+
+      // 3. Ajouter le message utilisateur actuel
       const userMessage: HarmonyMessage = {
         role: HARMONY_ROLES.USER,
         content: message,
@@ -308,13 +327,14 @@ export class GroqHarmonyProvider extends BaseProvider implements LLMProvider {
       };
       conversation.messages.push(userMessage);
 
-      // 3. Formater en texte Harmony
+      // 4. Formater en texte Harmony
       const harmonyText = this.harmonyFormatter.formatConversation(conversation.messages);
       
       logger.dev?.('[GroqHarmonyProvider] 📝 Messages Harmony préparés:', {
         messagesCount: conversation.messages.length,
         harmonyLength: harmonyText.length,
         hasTools: !!(tools?.length),
+        hasSystemInstructions: !!(context.content?.trim()),
       });
 
       return harmonyText;
@@ -345,7 +365,17 @@ export class GroqHarmonyProvider extends BaseProvider implements LLMProvider {
         },
       };
 
-      // 2. Ajouter le message utilisateur actuel
+      // 2. Ajouter les instructions système si présentes
+      if (context.content && context.content.trim().length > 0) {
+        const systemMessage: HarmonyMessage = {
+          role: HARMONY_ROLES.SYSTEM,
+          content: context.content,
+          timestamp: new Date().toISOString(),
+        };
+        conversation.messages.unshift(systemMessage); // Ajouter au début
+      }
+
+      // 3. Ajouter le message utilisateur actuel
       const userMessage: HarmonyMessage = {
         role: HARMONY_ROLES.USER,
         content: message,
@@ -353,7 +383,7 @@ export class GroqHarmonyProvider extends BaseProvider implements LLMProvider {
       };
       conversation.messages.push(userMessage);
 
-      // 3. Ajouter un message assistant avec le canal spécifique
+      // 4. Ajouter un message assistant avec le canal spécifique
       const assistantMessage: HarmonyMessage = {
         role: HARMONY_ROLES.ASSISTANT,
         channel: channel === 'analysis' ? HARMONY_CHANNELS.ANALYSIS : HARMONY_CHANNELS.FINAL,
@@ -362,7 +392,7 @@ export class GroqHarmonyProvider extends BaseProvider implements LLMProvider {
       };
       conversation.messages.push(assistantMessage);
 
-      // 4. Formater en texte Harmony
+      // 5. Formater en texte Harmony
       const harmonyText = this.harmonyFormatter.formatConversation(conversation.messages);
       
       logger.dev?.('[GroqHarmonyProvider] 📝 Messages Harmony avec canal préparés:', {
@@ -370,6 +400,7 @@ export class GroqHarmonyProvider extends BaseProvider implements LLMProvider {
         harmonyLength: harmonyText.length,
         channel,
         hasTools: !!(tools?.length),
+        hasSystemInstructions: !!(context.content?.trim()),
       });
 
       return harmonyText;
@@ -389,8 +420,8 @@ export class GroqHarmonyProvider extends BaseProvider implements LLMProvider {
       
       logger.dev?.('[GroqHarmonyProvider] 📤 Payload Groq préparé:', {
         model: payload.model,
-        messagesCount: payload.messages?.length || 0,
-        hasTools: !!(payload.tools?.length),
+        messagesCount: (payload.messages as any[])?.length || 0,
+        hasTools: !!((payload.tools as any[])?.length),
         harmonyLength: harmonyText.length,
       });
 
@@ -454,7 +485,8 @@ export class GroqHarmonyProvider extends BaseProvider implements LLMProvider {
     if (this.config.parallelToolCalls) {
       payload.parallel_tool_calls = this.config.parallelToolCalls;
     }
-    if (this.config.reasoningEffort) {
+    // ✅ CORRECTION : reasoning_effort seulement pour les modèles qui le supportent
+    if (this.config.reasoningEffort && this.supportsReasoningEffort()) {
       payload.reasoning_effort = this.config.reasoningEffort;
     }
 
@@ -508,8 +540,8 @@ export class GroqHarmonyProvider extends BaseProvider implements LLMProvider {
       }
 
       // Ajouter le reasoning si présent
-      if (groqResponse.reasoning) {
-        result.reasoning = groqResponse.reasoning;
+      if ((message as any).reasoning) {
+        result.reasoning = (message as any).reasoning;
       }
 
       return result;
@@ -518,6 +550,18 @@ export class GroqHarmonyProvider extends BaseProvider implements LLMProvider {
       logger.error('[GroqHarmonyProvider] ❌ Erreur lors du traitement de la réponse:', error);
       throw error;
     }
+  }
+
+  // ============================================================================
+  // MÉTHODES PRIVÉES
+  // ============================================================================
+
+  /**
+   * Vérifie si le modèle supporte reasoning_effort
+   */
+  private supportsReasoningEffort(): boolean {
+    const reasoningModels = ['openai/gpt-oss-20b', 'openai/gpt-oss-120b'];
+    return reasoningModels.includes(this.config.model);
   }
 
   // ============================================================================

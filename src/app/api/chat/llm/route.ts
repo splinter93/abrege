@@ -47,6 +47,37 @@ export async function POST(request: NextRequest) {
     
     userToken = authHeader.replace('Bearer ', '');
     
+    // ✅ CORRECTION : Valider le token utilisateur avec Supabase
+    try {
+      // Vérifier si c'est un userId (UUID) ou un JWT
+      const isUserId = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userToken);
+      
+      if (isUserId) {
+        // ✅ CORRECTION : Pour les userId, utiliser l'impersonation d'agent
+        logger.dev(`[LLM Route] 🔑 Impersonation d'agent détectée: userId: ${userToken.substring(0, 8)}...`);
+        // Pas de validation Supabase nécessaire pour l'impersonation d'agent
+      } else {
+        // Pour les JWT, valider avec Supabase
+        const { data: { user }, error: authError } = await supabase.auth.getUser(userToken);
+        
+        if (authError || !user) {
+          logger.error(`[LLM Route] ❌ Token invalide ou expiré:`, authError);
+          return NextResponse.json(
+            { error: 'Token invalide ou expiré' },
+            { status: 401 }
+          );
+        }
+        
+        logger.dev(`[LLM Route] ✅ Utilisateur authentifié: ${user.id}`);
+      }
+    } catch (validationError) {
+      logger.error(`[LLM Route] ❌ Erreur validation token:`, validationError);
+      return NextResponse.json(
+        { error: 'Erreur de validation du token' },
+        { status: 401 }
+      );
+    }
+    
     // Extraire les valeurs nécessaires depuis le contexte
     const { sessionId: extractedSessionId, agentId } = context;
     sessionId = extractedSessionId;

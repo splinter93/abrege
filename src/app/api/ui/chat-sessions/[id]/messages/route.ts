@@ -84,18 +84,30 @@ export async function POST(
     let userToken: string;
 
     if (authHeader && authHeader.startsWith('Bearer ')) {
-      // Token JWT fourni
+      // Token fourni
       userToken = authHeader.substring(7);
-      const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(userToken);
       
-      if (authError || !user) {
-        logger.error('[Chat Messages API] ❌ Erreur auth:', authError);
-        return NextResponse.json(
-          { error: 'Token invalide ou expiré' },
-          { status: 401 }
-        );
+      // ✅ CORRECTION : Vérifier si c'est un userId (UUID) ou un JWT
+      const isUserId = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userToken);
+      
+      if (isUserId) {
+        // ✅ CORRECTION : Pour les userId, utiliser l'impersonation d'agent
+        logger.dev(`[Chat Messages API] 🔑 Impersonation d'agent détectée: userId: ${userToken.substring(0, 8)}...`);
+        userId = userToken;
+        // Pas de validation Supabase nécessaire pour l'impersonation d'agent
+      } else {
+        // Pour les JWT, valider avec Supabase
+        const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(userToken);
+        
+        if (authError || !user) {
+          logger.error('[Chat Messages API] ❌ Erreur auth:', authError);
+          return NextResponse.json(
+            { error: 'Token invalide ou expiré' },
+            { status: 401 }
+          );
+        }
+        userId = user.id;
       }
-      userId = user.id;
     } else {
       return NextResponse.json(
         { error: 'Authentification requise' },

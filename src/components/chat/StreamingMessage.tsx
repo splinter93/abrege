@@ -10,7 +10,7 @@ import './StreamingLineByLine.css';
 interface StreamingMessageProps {
   message: ChatMessageType;
   className?: string;
-  lineDelay?: number; // Délai entre chaque ligne (ms)
+  wordDelay?: number; // Délai entre chaque mot (ms)
   onComplete?: () => void;
   showBubbleButtons?: boolean;
 }
@@ -18,7 +18,7 @@ interface StreamingMessageProps {
 export const StreamingMessage: React.FC<StreamingMessageProps> = ({
   message,
   className = '',
-  lineDelay = 600, // 600ms par défaut pour un bon équilibre
+  wordDelay = 20, // 20ms par défaut pour un bon équilibre
   onComplete,
   showBubbleButtons = true
 }) => {
@@ -52,17 +52,17 @@ export const StreamingMessage: React.FC<StreamingMessageProps> = ({
 
   // Ajuster le délai selon la longueur du contenu
   const getAdjustedDelay = () => {
-    if (!content) return lineDelay;
+    if (!content) return wordDelay;
     
-    const lineCount = content.split('\n').filter(l => l.trim()).length;
+    const wordCount = content.split(/\s+/).filter(w => w.length > 0).length;
     const charCount = content.length;
     
     // Délai plus court pour les messages courts
-    if (charCount < 200) return Math.max(300, lineDelay * 0.7);
+    if (charCount < 200 && wordCount < 20) return Math.max(10, wordDelay * 0.7);
     // Délai plus long pour les messages très longs
-    if (charCount > 1000) return Math.min(1200, lineDelay * 1.3);
+    if (charCount > 1000 || wordCount > 100) return Math.min(50, wordDelay * 1.3);
     
-    return lineDelay;
+    return wordDelay;
   };
 
   return (
@@ -73,7 +73,7 @@ export const StreamingMessage: React.FC<StreamingMessageProps> = ({
       transition={{ duration: 0.3 }}
     >
       <div className={`chat-message-bubble chat-message-bubble-${role}`}>
-        {/* Raisonnement (si présent) */}
+        {/* 🧠 Raisonnement affiché EN PREMIER pour les messages assistant */}
         {reasoning && role === 'assistant' && (
           <div className="reasoning-message">
             <strong>🧠 Raisonnement :</strong>
@@ -100,13 +100,13 @@ export const StreamingMessage: React.FC<StreamingMessageProps> = ({
           </div>
         )}
 
-        {/* Contenu principal avec streaming */}
+        {/* Contenu principal avec streaming - affiché APRÈS le reasoning */}
         {content && (
           <div className="chat-message-content">
             {role === 'assistant' && isStreaming ? (
               <StreamingLineByLine
                 content={content}
-                lineDelay={getAdjustedDelay()}
+                wordDelay={getAdjustedDelay()}
                 onComplete={handleStreamingComplete}
                 className="chat-streaming-content"
               />

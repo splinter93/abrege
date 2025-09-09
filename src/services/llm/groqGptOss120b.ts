@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { GroqRoundParams, GroqRoundResult } from './types/groqTypes';
 import { DEFAULT_GROQ_LIMITS } from './types/groqTypes';
-import { HarmonyOrchestrator } from './services/HarmonyOrchestrator';
+import { simpleChatOrchestrator } from './services/SimpleChatOrchestrator';
 import { simpleLogger as logger } from '@/utils/logger';
 
 /**
@@ -37,11 +37,30 @@ export async function handleGroqGptOss120b(params: GroqRoundParams): Promise<Nex
       agentName: params.agentConfig?.name || 'default'
     });
 
-    // Créer l'orchestrateur Harmony avec les limites par défaut
-    const orchestrator = new HarmonyOrchestrator(DEFAULT_GROQ_LIMITS);
+    // Utiliser l'orchestrateur SimpleChat (singleton)
+    const chatResult = await simpleChatOrchestrator.processMessage(
+      params.message,
+      params.sessionHistory || [],
+      {
+        userToken: params.userToken,
+        sessionId: params.sessionId,
+        agentConfig: params.agentConfig
+      }
+    );
 
-    // Exécuter le round complet
-    const result = await orchestrator.executeRound(params);
+    // Convertir le résultat SimpleChat vers le format GroqRoundResult
+    const result: GroqRoundResult = {
+      success: chatResult.success,
+      content: chatResult.content,
+      tool_results: chatResult.toolResults?.map(tr => ({
+        tool_call_id: tr.tool_call_id,
+        name: tr.name,
+        content: tr.content,
+        success: tr.success
+      })) || [],
+      reasoning: chatResult.reasoning,
+      status: chatResult.success ? 200 : 500
+    };
 
     // Retourner la réponse appropriée
     if (result.success) {

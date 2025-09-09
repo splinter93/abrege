@@ -61,11 +61,7 @@ jest.mock('@supabase/supabase-js', () => ({
 }));
 
 // Mock des services LLM
-jest.mock('@/services/llm/services/GroqOrchestrator', () => ({
-  GroqOrchestrator: jest.fn().mockImplementation(() => ({
-    executeRound: jest.fn()
-  }))
-}));
+// GroqOrchestrator supprimé - utiliser SimpleChatOrchestrator
 
 // Mock des utilitaires
 jest.mock('@/utils/logger', () => ({
