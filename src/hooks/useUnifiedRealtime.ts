@@ -14,7 +14,7 @@ interface UseUnifiedRealtimeOptions {
   noteId?: string;
   debug?: boolean;
   autoReconnect?: boolean;
-  onEvent?: (event: UnifiedRealtimeEvent) => void;
+  onEvent?: (event: UnifiedRealtimeEvent<unknown>) => void;
   onStateChange?: (state: UnifiedRealtimeState) => void;
 }
 
@@ -33,7 +33,7 @@ interface UseUnifiedRealtimeReturn {
   connect: () => Promise<void>;
   disconnect: () => Promise<void>;
   reconnect: () => Promise<void>;
-  broadcast: (event: string, payload: any) => Promise<void>;
+  broadcast: (event: string, payload: unknown) => Promise<void>;
   
   // Utilitaires
   isInitialized: boolean;
@@ -53,9 +53,24 @@ export function useUnifiedRealtime({
   onStateChange
 }: UseUnifiedRealtimeOptions): UseUnifiedRealtimeReturn {
   
-  const [state, setState] = useState<UnifiedRealtimeState>(() => 
-    unifiedRealtimeService.getState()
-  );
+  const [state, setState] = useState<UnifiedRealtimeState>(() => {
+    try {
+      return unifiedRealtimeService.getState();
+    } catch (error) {
+      logger.warn(LogCategory.EDITOR, '[useUnifiedRealtime] Erreur lors de l\'obtention de l\'état initial:', error);
+      return {
+        isConnected: false,
+        isConnecting: false,
+        connectionStatus: 'disconnected' as const,
+        lastError: null,
+        reconnectAttempts: 0,
+        lastActivity: 0,
+        channels: new Set(),
+        uptime: 0,
+        connectionStartTime: null
+      };
+    }
+  });
   
   const [isInitialized, setIsInitialized] = useState(false);
   const configRef = useRef<UnifiedRealtimeConfig | null>(null);
@@ -173,7 +188,7 @@ export function useUnifiedRealtime({
     await unifiedRealtimeService.reconnect();
   }, []);
 
-  const broadcast = useCallback(async (event: string, payload: any) => {
+  const broadcast = useCallback(async (event: string, payload: unknown) => {
     await unifiedRealtimeService.broadcast(event, payload);
   }, []);
 
@@ -208,9 +223,24 @@ export function useUnifiedRealtime({
  * Hook simplifié pour obtenir uniquement l'état de la connexion
  */
 export function useUnifiedRealtimeState(): UnifiedRealtimeState {
-  const [state, setState] = useState<UnifiedRealtimeState>(() => 
-    unifiedRealtimeService.getState()
-  );
+  const [state, setState] = useState<UnifiedRealtimeState>(() => {
+    try {
+      return unifiedRealtimeService.getState();
+    } catch (error) {
+      logger.warn(LogCategory.EDITOR, '[useUnifiedRealtimeState] Erreur lors de l\'obtention de l\'état initial:', error);
+      return {
+        isConnected: false,
+        isConnecting: false,
+        connectionStatus: 'disconnected' as const,
+        lastError: null,
+        reconnectAttempts: 0,
+        lastActivity: 0,
+        channels: new Set(),
+        uptime: 0,
+        connectionStartTime: null
+      };
+    }
+  });
 
   useEffect(() => {
     const unsubscribe = unifiedRealtimeService.onStateChange(setState);
@@ -231,8 +261,8 @@ export function useUnifiedRealtimeService() {
  * Hook pour écouter les événements Realtime
  */
 export function useUnifiedRealtimeEvents(
-  onEvent: (event: UnifiedRealtimeEvent) => void,
-  dependencies: any[] = []
+  onEvent: (event: UnifiedRealtimeEvent<unknown>) => void,
+  dependencies: unknown[] = []
 ) {
   const onEventRef = useRef(onEvent);
   onEventRef.current = onEvent;
@@ -331,7 +361,7 @@ export function useUnifiedRealtimeVisibility() {
  */
 export function useUnifiedRealtimeDebug() {
   const state = useUnifiedRealtimeState();
-  const [events, setEvents] = useState<UnifiedRealtimeEvent[]>([]);
+  const [events, setEvents] = useState<UnifiedRealtimeEvent<unknown>[]>([]);
 
   useEffect(() => {
     const unsubscribe = unifiedRealtimeService.onEvent((event) => {

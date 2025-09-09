@@ -16,7 +16,6 @@ import { logApi } from '@/utils/logger';
 import { getAuthenticatedUser } from '@/utils/authUtils';
 import { executeAgentV2Schema, validatePayload, createValidationErrorResponse } from '@/utils/v2ValidationSchemas';
 import { SpecializedAgentManager } from '@/services/specializedAgents/SpecializedAgentManager';
-import { generateUserJwt } from '@/utils/jwtUtils'; // ✅ Import de la nouvelle fonction
 
 // ============================================================================
 // TYPES
@@ -108,21 +107,11 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       const authHeader = request.headers.get('authorization');
       userToken = authHeader?.startsWith('Bearer ') ? authHeader.substring(7) : null;
     } else if (authType === 'api_key') {
-      // 🔑 CORRECTION : Pour les clés d'API, on génère un JWT à la volée
-      userToken = generateUserJwt(userId);
-      if (!userToken) {
-        // Gérer le cas où la génération du token échoue
-        logApi.error(`❌ Échec de la génération du JWT pour l'utilisateur ${userId}`, context);
-        return NextResponse.json(
-          { 
-            error: 'Erreur interne du serveur',
-            code: AGENT_EXECUTE_ERRORS.EXECUTION_FAILED.code,
-            message: 'Impossible de générer un token d\'authentification pour l\'agent'
-          },
-          { status: 500 }
-        );
-      }
-      logApi.info(`🔑 Clé d'API détectée - JWT généré pour l'utilisateur: ${userId}`, context);
+      // 🔑 CORRECTION : Pour les clés d'API, on utilise l'impersonation d'agent
+      // Au lieu de générer un JWT, on passe l'userId directement
+      // Le système d'impersonation gérera l'authentification pour les tool calls
+      userToken = userId; // ✅ CORRECTION : Passer l'userId directement
+      logApi.info(`🔑 Clé d'API détectée - Utilisation de l'impersonation pour l'utilisateur: ${userId}`, context);
     } else if (authType === 'oauth') {
       // Pour OAuth, extraire le token
       const authHeader = request.headers.get('authorization');
