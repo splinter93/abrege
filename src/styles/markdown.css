@@ -854,11 +854,7 @@ html {
   text-shadow: none;
 }
 
-.markdown-body *:focus:not(textarea):not(input):not([contenteditable="true"]) {
-  outline: 2px solid var(--accent-primary);
-  outline-offset: 2px;
-  border-radius: 4px;
-}
+/* Focus orange supprimé pour un style épuré */
 
 .markdown-body textarea:focus,
 .markdown-body input:focus,
