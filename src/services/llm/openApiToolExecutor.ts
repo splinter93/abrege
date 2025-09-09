@@ -115,19 +115,27 @@ export class OpenApiToolExecutor {
       'getNote': { method: 'GET', path: `/api/v2/note/${args.ref}` },
       'updateNote': { method: 'PATCH', path: `/api/v2/note/${args.ref}/update` },
       'insertNoteContent': { method: 'PATCH', path: `/api/v2/note/${args.ref}/insert-content` },
+      'applyContentOperations': { method: 'POST', path: `/api/v2/note/${args.ref}/content:apply` },
       'moveNote': { method: 'PUT', path: `/api/v2/note/${args.ref}/move` },
       'getNoteTOC': { method: 'GET', path: `/api/v2/note/${args.ref}/table-of-contents` },
+      'getNoteShareSettings': { method: 'GET', path: `/api/v2/note/${args.ref}/share` },
+      'updateNoteShareSettings': { method: 'PUT', path: `/api/v2/note/${args.ref}/share` },
       'getRecentNotes': { method: 'GET', path: '/api/v2/note/recent' },
       
       // Classeurs
       'createClasseur': { method: 'POST', path: '/api/v2/classeur/create' },
       'getClasseur': { method: 'GET', path: `/api/v2/classeur/${args.ref}` },
+      'updateClasseur': { method: 'PATCH', path: `/api/v2/classeur/${args.ref}/update` },
+      'reorderClasseurs': { method: 'PUT', path: '/api/v2/classeur/reorder' },
       'listClasseurs': { method: 'GET', path: '/api/v2/classeurs' },
+      'getClasseursWithContent': { method: 'GET', path: '/api/v2/classeurs/with-content' },
       'getClasseurTree': { method: 'GET', path: `/api/v2/classeur/${args.ref}/tree` },
       
       // Dossiers
       'createFolder': { method: 'POST', path: '/api/v2/folder/create' },
       'getFolder': { method: 'GET', path: `/api/v2/folder/${args.ref}` },
+      'updateFolder': { method: 'PATCH', path: `/api/v2/folder/${args.ref}/update` },
+      'moveFolder': { method: 'PUT', path: `/api/v2/folder/${args.ref}/move` },
       'getFolderTree': { method: 'GET', path: `/api/v2/folder/${args.ref}/tree` },
       
       // Recherche
@@ -139,7 +147,20 @@ export class OpenApiToolExecutor {
       'getStats': { method: 'GET', path: '/api/v2/stats' },
       
       // Gestion unifiée
-      'deleteResource': { method: 'DELETE', path: `/api/v2/delete/${args.resource}/${args.ref}` }
+      'getTrash': { method: 'GET', path: '/api/v2/trash' },
+      'restoreFromTrash': { method: 'POST', path: '/api/v2/trash/restore' },
+      'purgeTrash': { method: 'DELETE', path: '/api/v2/trash/purge' },
+      'deleteResource': { method: 'DELETE', path: `/api/v2/delete/${args.resource}/${args.ref}` },
+      
+      // Agents spécialisés
+      'listAgents': { method: 'GET', path: '/api/v2/agents' },
+      'createAgent': { method: 'POST', path: '/api/v2/agents' },
+      'getAgent': { method: 'GET', path: `/api/v2/agents/${args.agentId}` },
+      'executeAgent': { method: 'POST', path: '/api/v2/agents/execute' },
+      
+      // Outils & Debug
+      'listTools': { method: 'GET', path: '/api/v2/tools' },
+      'debugInfo': { method: 'GET', path: '/api/v2/debug' }
     };
 
     const mapping = endpointMapping[toolName];

@@ -16,6 +16,7 @@
 @import './ChatMessage.css';
 @import './MessageContainer.css';
 @import './ChatMarkdown.css';
+@import './HarmonyReasoningMessage.css';
 /* Mermaid styles are now handled via themeVariables in CodeBlockWithCopy.ts */
 
 /* ========================================
@@ -38,4 +39,112 @@
   background: rgba(34, 197, 94, 0.1) !important;
   border-color: rgba(34, 197, 94, 0.2) !important;
   color: #22c55e !important;
+}
+
+/* ========================================
+   HARMONY TOGGLE STYLES
+   ======================================== */
+
+.harmony-toggle {
+  display: flex;
+  align-items: center;
+  margin-right: 12px;
+}
+
+.harmony-toggle-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(10px);
+}
+
+.harmony-toggle-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.3);
+  color: rgba(255, 255, 255, 0.9);
+  transform: translateY(-1px);
+}
+
+.harmony-toggle-btn.active {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-color: #667eea;
+  color: white;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.harmony-toggle-btn.active:hover {
+  background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+}
+
+.harmony-toggle-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.harmony-toggle-btn:disabled:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.2);
+  transform: none;
+  box-shadow: none;
+}
+
+.harmony-icon {
+  font-size: 14px;
+  line-height: 1;
+}
+
+.harmony-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Animation pour le toggle */
+.harmony-toggle-btn {
+  position: relative;
+  overflow: hidden;
+}
+
+.harmony-toggle-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.harmony-toggle-btn:hover::before {
+  left: 100%;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .harmony-toggle-btn {
+    padding: 6px 8px;
+    gap: 4px;
+  }
+  
+  .harmony-label {
+    display: none;
+  }
+  
+  .harmony-icon {
+    font-size: 16px;
+  }
 } 

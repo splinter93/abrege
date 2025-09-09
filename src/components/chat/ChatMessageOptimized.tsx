@@ -3,6 +3,7 @@ import React, { useState, useEffect, memo } from 'react';
 import { ChatMessage as ChatMessageType } from '@/types/chat';
 import EnhancedMarkdownMessage from './EnhancedMarkdownMessage';
 import ReasoningMessage from './ReasoningMessage';
+import HarmonyReasoningMessage from './HarmonyReasoningMessage';
 import ToolCallMessage from './ToolCallMessage';
 import MessageContainer from './MessageContainer';
 import { useChatStore } from '@/store/useChatStore';
@@ -43,6 +44,16 @@ const ChatMessageOptimized: React.FC<ChatMessageProps> = memo(({
   }
   
   const { role, content, reasoning } = validatedProps.message;
+  
+  // 🐛 Debug pour le reasoning
+  if (role === 'assistant' && reasoning) {
+    console.log('[ChatMessageOptimized] 🧠 Reasoning détecté:', {
+      reasoning: reasoning.substring(0, 100) + '...',
+      hasHarmonyAnalysis: !!(validatedProps.message as any).harmony_analysis,
+      hasHarmonyCommentary: !!(validatedProps.message as any).harmony_commentary,
+      hasHarmonyFinal: !!(validatedProps.message as any).harmony_final
+    });
+  }
 
   // Masquer les observations internes de l'assistant
   if (role === 'assistant' && (validatedProps.message as any).name === 'observation') {
@@ -169,7 +180,37 @@ const ChatMessageOptimized: React.FC<ChatMessageProps> = memo(({
         </div>
         
         {reasoning && role === 'assistant' && (
-          <ReasoningMessage reasoning={reasoning} />
+          <>
+            {/* 🎼 Affichage Harmony si disponible - CORRECTION: Meilleure détection */}
+            {(message as any).harmony_analysis || (message as any).harmony_commentary || (message as any).harmony_final ? (
+              <>
+                {(message as any).harmony_analysis && (message as any).harmony_analysis.trim() && (
+                  <HarmonyReasoningMessage 
+                    reasoning={(message as any).harmony_analysis} 
+                    channel="analysis"
+                    model={(message as any).model}
+                  />
+                )}
+                {(message as any).harmony_commentary && (message as any).harmony_commentary.trim() && (
+                  <HarmonyReasoningMessage 
+                    reasoning={(message as any).harmony_commentary} 
+                    channel="commentary"
+                    model={(message as any).model}
+                  />
+                )}
+                {(message as any).harmony_final && (message as any).harmony_final.trim() && (
+                  <HarmonyReasoningMessage 
+                    reasoning={(message as any).harmony_final} 
+                    channel="final"
+                    model={(message as any).model}
+                  />
+                )}
+              </>
+            ) : (
+              /* Fallback vers le reasoning standard */
+              <ReasoningMessage reasoning={reasoning} />
+            )}
+          </>
         )}
         
         {/* Indicateur de frappe quand on attend une réponse */}

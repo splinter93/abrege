@@ -14,6 +14,10 @@ export type ChatMessage = {
   role: 'user' | 'assistant' | 'system' | 'tool' | 'developer';
   content: string | null;
   reasoning?: string | null;
+  // 🎼 Canaux Harmony séparés
+  harmony_analysis?: string;
+  harmony_commentary?: string;
+  harmony_final?: string;
   timestamp: string;
   tool_calls?: ToolCall[];
   tool_call_id?: string;

@@ -1,6 +1,6 @@
 import { simpleLogger as logger } from '@/utils/logger';
-import { agentApiV2Tools } from '@/services/agentApiV2Tools';
 import { OpenApiToolExecutor } from './openApiToolExecutor';
+import { ApiV2ToolExecutor } from './executors/ApiV2ToolExecutor';
 import { ChatMessage } from '@/types/chat';
 
 export interface ToolCallResult {
@@ -14,6 +14,7 @@ export interface ToolCallResult {
 export class ToolCallManager {
   private static instance: ToolCallManager;
   private openApiExecutor: OpenApiToolExecutor;
+  private apiV2ToolExecutor: ApiV2ToolExecutor;
   
   // ✅ SIMPLE: Historique des IDs déjà exécutés (évite la double exécution)
   private executedCallIds: Set<string> = new Set();
@@ -27,6 +28,7 @@ export class ToolCallManager {
 
   private constructor() {
     this.openApiExecutor = OpenApiToolExecutor.getInstance();
+    this.apiV2ToolExecutor = new ApiV2ToolExecutor();
   }
 
   /**
@@ -65,27 +67,32 @@ export class ToolCallManager {
     }, 5 * 60 * 1000);
 
     try {
-      // 🔧 CORRECTION: Utiliser directement les services internes au lieu d'appels HTTP
-      console.error(`🚨🚨🚨 [FORCE DEBUG] ToolCallManager.executeToolCall - Début exécution ${func.name} 🚨🚨🚨`);
-      logger.info(`[ToolCallManager] 🔧 Exécution de ${func.name} avec services internes...`);
-      
-      // Utiliser AgentApiV2Tools qui fait des appels directs à la DB
-      const { agentApiV2Tools } = await import('@/services/agentApiV2Tools');
-      console.error(`🚨🚨🚨 [FORCE DEBUG] ToolCallManager - agentApiV2Tools importé:`, !!agentApiV2Tools, `🚨🚨🚨`);
+      // 🔧 CORRECTION: Utiliser l'ApiV2ToolExecutor pour l'exécution directe
+      logger.info(`[ToolCallManager] 🔧 Exécution de ${func.name} via ApiV2ToolExecutor...`);
       
       const args = this.parseArguments(func.arguments);
-      console.error(`🚨🚨🚨 [FORCE DEBUG] ToolCallManager - Arguments parsés:`, args, `🚨🚨🚨`);
+      logger.dev(`[ToolCallManager] 📋 Arguments parsés:`, args);
       
-      const result = await agentApiV2Tools.executeInternalService(func.name, args, 'system-user', userToken);
-      console.error(`🚨🚨🚨 [FORCE DEBUG] ToolCallManager - Résultat reçu:`, result, `🚨🚨🚨`);
+      // Utiliser l'ApiV2ToolExecutor pour l'exécution
+      const toolResult = await this.apiV2ToolExecutor.executeToolCall(
+        {
+          id,
+          type: 'function',
+          function: {
+            name: func.name,
+            arguments: func.arguments
+          }
+        },
+        userToken
+      );
       
-      logger.info(`[ToolCallManager] ✅ Tool ${func.name} exécuté avec succès via services internes`);
+      logger.info(`[ToolCallManager] ✅ Tool ${func.name} exécuté avec succès via ApiV2ToolExecutor`);
       
       return {
         tool_call_id: id,
         name: func.name,
-        result: result,
-        success: result.success !== false && !result.error,
+        result: toolResult,
+        success: toolResult.success,
         timestamp: new Date().toISOString()
       };
 

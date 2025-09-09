@@ -5,6 +5,7 @@ import { useChatStore } from '@/store/useChatStore';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { useAppContext } from '@/hooks/useAppContext';
 import { useChatResponse } from '@/hooks/useChatResponse';
+import { useChatResponseHarmony } from '@/hooks/useChatResponseHarmony';
 import { useChatScroll } from '@/hooks/useChatScroll';
 // import { useAtomicToolCalls } from '@/hooks/useAtomicToolCalls'; // Fichier supprimé
 import { useAuth } from '@/hooks/useAuth';
@@ -29,6 +30,7 @@ const ChatFullscreenV2: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(isDesktop);
   const [wideMode, setWideMode] = useState(false);
   const [isWidgetMode, setIsWidgetMode] = useState(false);
+  const [useHarmony, setUseHarmony] = useState(false); // 🎼 Toggle Harmony
   
   // 🎯 Contexte et store
   const appContext = useAppContext();
@@ -78,7 +80,11 @@ const ChatFullscreenV2: React.FC = () => {
   // 🎯 Hook pour les tool calls atomiques
   // const { addToolResult, isProcessing: isProcessingToolCalls } = useAtomicToolCalls(); // Hook supprimé
 
-  const handleComplete = useCallback(async (fullContent: string, fullReasoning: string, toolCalls?: any[], toolResults?: any[]) => {
+  const handleComplete = useCallback(async (fullContent: string, fullReasoning: string, toolCalls?: any[], toolResults?: any[], harmonyChannels?: {
+    analysis?: string;
+    commentary?: string;
+    final?: string;
+  }) => {
     // Vérifier l'authentification avant de continuer
     if (authLoading) {
       logger.dev('[ChatFullscreenV2] ⏳ Vérification de l\'authentification en cours...');
@@ -95,7 +101,12 @@ const ChatFullscreenV2: React.FC = () => {
       fullContent: fullContent?.substring(0, 100) + '...',
       safeContent: safeContent?.substring(0, 100) + '...',
       hasContent: !!safeContent,
-      reasoning: fullReasoning?.substring(0, 50) + '...'
+      reasoning: fullReasoning?.substring(0, 50) + '...',
+      useHarmony,
+      hasHarmonyChannels: !!harmonyChannels,
+      harmonyAnalysis: harmonyChannels?.analysis?.substring(0, 50) + '...',
+      harmonyCommentary: harmonyChannels?.commentary?.substring(0, 50) + '...',
+      harmonyFinal: harmonyChannels?.final?.substring(0, 50) + '...'
     });
 
     if (!safeContent) {
@@ -112,7 +123,13 @@ const ChatFullscreenV2: React.FC = () => {
       tool_calls: toolCalls || [],
       tool_results: toolResults || [],
       timestamp: new Date().toISOString(),
-      channel: 'final' as const
+      channel: 'final' as const,
+      // 🎼 Ajouter les canaux Harmony si disponibles
+      ...(harmonyChannels && {
+        harmony_analysis: harmonyChannels.analysis,
+        harmony_commentary: harmonyChannels.commentary,
+        harmony_final: harmonyChannels.final
+      })
     };
 
     logger.dev('[ChatFullscreenV2] 📝 Ajout du message final complet:', {
@@ -190,7 +207,7 @@ const ChatFullscreenV2: React.FC = () => {
       channel: 'analysis' as const // Canal temporaire pour l'affichage
     };
       
-    await addMessage(toolCallMessage, { persist: false }); // Ne pas persister ce message temporaire
+    await addMessage(toolCallMessage, { persist: true }); // Persister pour l'affichage
     
     scrollToBottom(true);
   }, [addMessage, scrollToBottom, user, authLoading, addToolCalls]);
@@ -311,6 +328,15 @@ const ChatFullscreenV2: React.FC = () => {
 
   // 🎯 Hook de chat avec callbacks mémorisés
   const { isProcessing, sendMessage } = useChatResponse({
+    onComplete: handleComplete,
+    onError: handleError,
+    onToolCalls: handleToolCalls,
+    onToolResult: handleToolResult,
+    onToolExecutionComplete: handleToolExecutionComplete
+  });
+
+  // 🎼 Hook de chat Harmony avec callbacks mémorisés
+  const { isProcessing: isProcessingHarmony, sendMessage: sendMessageHarmony } = useChatResponseHarmony({
     onComplete: handleComplete,
     onError: handleError,
     onToolCalls: handleToolCalls,
@@ -524,7 +550,17 @@ const ChatFullscreenV2: React.FC = () => {
       // Pour l'API LLM, on peut limiter à history_limit pour la performance
       const limitedHistoryForLLM = fullHistory.slice(-(currentSession.history_limit || 30));
       
-      await sendMessage(message, currentSession.id, contextWithSessionId, limitedHistoryForLLM, token);
+      // 🎼 Utiliser Harmony ou l'API standard selon le toggle
+      const sendFunction = useHarmony ? sendMessageHarmony : sendMessage;
+      
+      logger.dev('[ChatFullscreenV2] 🎼 Envoi du message:', {
+        useHarmony,
+        message: message.substring(0, 50) + '...',
+        sessionId: currentSession.id,
+        agentId: selectedAgent?.id
+      });
+
+      await sendFunction(message, currentSession.id, contextWithSessionId, limitedHistoryForLLM, token);
 
     } catch (error) {
       logger.error('Erreur lors de l\'appel LLM:', error);
@@ -643,6 +679,19 @@ const ChatFullscreenV2: React.FC = () => {
           <div className="chat-session-info" />
         </div>
         <div className="chat-actions">
+          {/* 🎼 Toggle Harmony */}
+          <div className="harmony-toggle">
+            <button
+              onClick={() => setUseHarmony(!useHarmony)}
+              className={`harmony-toggle-btn ${useHarmony ? 'active' : ''}`}
+              title={useHarmony ? 'Désactiver Harmony' : 'Activer Harmony (format GPT-OSS)'}
+              disabled={!user || authLoading}
+            >
+              <span className="harmony-icon">🎼</span>
+              <span className="harmony-label">{useHarmony ? 'Harmony' : 'Standard'}</span>
+            </button>
+          </div>
+          
           <ChatKebabMenu
             isWideMode={wideMode}
             isFullscreen={true}

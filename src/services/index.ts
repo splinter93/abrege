@@ -1,1 +1,1 @@
-export { agentApiV2Tools } from './agentApiV2Tools'; 
+// export { agentApiV2Tools } from './agentApiV2Tools'; // Supprimé - remplacé par API V2 direct 

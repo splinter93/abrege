@@ -190,12 +190,24 @@ export async function POST(request: NextRequest) {
       logger.error(`[LLM Route] ❌ Erreur lors de la récupération de l'agent: ${error}`);
     }
 
+    // Configuration par défaut si aucun agent n'est trouvé
+    const finalAgentConfig = agentConfig || {
+      id: 'default-agent',
+      name: 'Agent par défaut',
+      model: 'openai/gpt-oss-20b',
+      provider: 'groq',
+      temperature: 0.7,
+      max_tokens: 4000,
+      system_instructions: 'Tu es un assistant IA utile et compétent.',
+      api_v2_capabilities: DEFAULT_AGENT_SCOPES
+    };
+
     // Appel à la logique Groq OSS 120B avec l'agentConfig récupéré
     const result = await handleGroqGptOss120b({
       message,
       appContext: context,
       sessionHistory: history,
-      agentConfig: agentConfig, // ✅ Récupéré depuis la base, par ID si fourni
+      agentConfig: finalAgentConfig, // ✅ Récupéré depuis la base, par ID si fourni
       userToken,
       sessionId
     });

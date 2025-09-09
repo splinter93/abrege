@@ -16,6 +16,10 @@ export interface GroqRoundResult {
   success: boolean;
   content?: string;
   reasoning?: string;
+  // 🎼 Canaux Harmony séparés
+  harmony_analysis?: string;
+  harmony_commentary?: string;
+  harmony_final?: string;
   tool_calls?: ToolCall[];
   tool_results?: ToolResult[];
   sessionId: string;

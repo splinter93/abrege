@@ -2,7 +2,7 @@ import type { GroqRoundParams, GroqRoundResult, GroqLimits } from '../types/groq
 import type { LLMResponse } from '../types/agentTypes';
 import { GroqProvider } from '../providers';
 import { GroqToolExecutor } from './GroqToolExecutor';
-import { agentApiV2Tools } from '@/services/agentApiV2Tools';
+// import { agentApiV2Tools } from '@/services/agentApiV2Tools'; // Supprimé - remplacé par API V2 direct
 import { ToolCallPersistenceService } from './ToolCallPersistenceService';
 import { ToolResultNormalizer } from './ToolResultNormalizer';
 import { simpleLogger as logger } from '@/utils/logger';
@@ -262,15 +262,14 @@ export class GroqOrchestrator {
         hasNewToolCalls
       });
     } catch (error: any) {
-      logger.error(`[GroqOrchestrator] ❌ error in round trace=${traceId}`, {
-        error: error instanceof Error ? error.message : String(error),
-        stack: error instanceof Error ? error.stack : undefined,
-        errorType: error instanceof Error ? error.constructor.name : typeof error,
-        sessionId,
-        traceId,
-        toolCallsCount: toolCalls?.length || 0,
-        toolResultsCount: toolResults?.length || 0
-      });
+      // Sérialiser l'erreur pour un meilleur logging
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      const errorType = error instanceof Error ? error.constructor.name : typeof error;
+      
+      logger.error(`[GroqOrchestrator] ❌ error in round trace=${traceId} - ${errorMessage} (${errorType})`, 
+        new Error(`Session: ${sessionId}, Tools: ${toolCalls?.length || 0}, Results: ${toolResults?.length || 0}${errorStack ? `\nStack: ${errorStack}` : ''}`)
+      );
 
       // 🔧 Gestion spéciale des erreurs Groq 500 - on fournit une réponse de fallback directe
       if (error instanceof Error && error.message.includes('Groq API error: 500')) {
@@ -323,10 +322,13 @@ export class GroqOrchestrator {
         };
         return this.createSuccessResponse(finalResponse, toolResults, sessionId, { isRelance, hasNewToolCalls });
       } catch (secondary: any) {
-        logger.error(`[GroqOrchestrator] ❌ secondary failure after error-handling trace=${traceId}`, {
-          originalError: error,
-          secondaryError: secondary
-        });
+        // Sérialiser les erreurs pour un meilleur logging
+        const originalErrorStr = error instanceof Error ? error.message : JSON.stringify(error);
+        const secondaryErrorStr = secondary instanceof Error ? secondary.message : JSON.stringify(secondary);
+        
+        logger.error(`[GroqOrchestrator] ❌ secondary failure after error-handling trace=${traceId}`, 
+          new Error(`Original: ${originalErrorStr} | Secondary: ${secondaryErrorStr}`)
+        );
 
         // 🔧 Gestion spéciale des erreurs Groq 500 - on fournit une réponse de fallback
         if (error instanceof Error && error.message.includes('Groq API error: 500')) {

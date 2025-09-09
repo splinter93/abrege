@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { GroqRoundParams, GroqRoundResult } from './types/groqTypes';
 import { DEFAULT_GROQ_LIMITS } from './types/groqTypes';
-import { GroqOrchestrator } from './services/GroqOrchestrator';
+import { HarmonyOrchestrator } from './services/HarmonyOrchestrator';
 import { simpleLogger as logger } from '@/utils/logger';
 
 /**
@@ -37,8 +37,8 @@ export async function handleGroqGptOss120b(params: GroqRoundParams): Promise<Nex
       agentName: params.agentConfig?.name || 'default'
     });
 
-    // Créer l'orchestrateur avec les limites par défaut
-    const orchestrator = new GroqOrchestrator(DEFAULT_GROQ_LIMITS);
+    // Créer l'orchestrateur Harmony avec les limites par défaut
+    const orchestrator = new HarmonyOrchestrator(DEFAULT_GROQ_LIMITS);
 
     // Exécuter le round complet
     const result = await orchestrator.executeRound(params);

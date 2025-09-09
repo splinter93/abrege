@@ -1,0 +1,225 @@
+/* ========================================
+   HARMONY REASONING MESSAGE STYLES
+   ======================================== */
+
+.harmony-reasoning-message {
+  margin: 12px 0;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+  backdrop-filter: blur(10px);
+}
+
+.harmony-reasoning-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: rgba(255, 255, 255, 0.05);
+  border-left: 4px solid #667eea;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.harmony-reasoning-header:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.harmony-reasoning-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.harmony-reasoning-icon {
+  font-size: 16px;
+  line-height: 1;
+}
+
+.harmony-reasoning-channel {
+  padding: 2px 8px;
+  border-radius: 12px;
+  background: rgba(102, 126, 234, 0.2);
+  color: #667eea;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.harmony-reasoning-label {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.harmony-reasoning-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.harmony-reasoning-toggle,
+.harmony-reasoning-collapse {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.harmony-reasoning-toggle:hover,
+.harmony-reasoning-collapse:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.9);
+  transform: scale(1.05);
+}
+
+.harmony-reasoning-content {
+  padding: 16px;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.harmony-reasoning-formatted {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 13px;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.harmony-reasoning-line {
+  margin-bottom: 4px;
+  padding-left: 12px;
+  position: relative;
+}
+
+.harmony-reasoning-line::before {
+  content: '•';
+  position: absolute;
+  left: 0;
+  color: rgba(102, 126, 234, 0.6);
+  font-weight: bold;
+}
+
+.harmony-reasoning-line:last-child {
+  margin-bottom: 0;
+}
+
+.harmony-reasoning-raw {
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 12px;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.7);
+  background: rgba(0, 0, 0, 0.3);
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* Styles spécifiques par canal */
+.harmony-reasoning-message[data-channel="analysis"] .harmony-reasoning-header {
+  border-left-color: #667eea;
+}
+
+.harmony-reasoning-message[data-channel="analysis"] .harmony-reasoning-channel {
+  background: rgba(102, 126, 234, 0.2);
+  color: #667eea;
+}
+
+.harmony-reasoning-message[data-channel="commentary"] .harmony-reasoning-header {
+  border-left-color: #f093fb;
+}
+
+.harmony-reasoning-message[data-channel="commentary"] .harmony-reasoning-channel {
+  background: rgba(240, 147, 251, 0.2);
+  color: #f093fb;
+}
+
+.harmony-reasoning-message[data-channel="final"] .harmony-reasoning-header {
+  border-left-color: #4facfe;
+}
+
+.harmony-reasoning-message[data-channel="final"] .harmony-reasoning-channel {
+  background: rgba(79, 172, 254, 0.2);
+  color: #4facfe;
+}
+
+/* Animation pour le contenu */
+.harmony-reasoning-line {
+  animation: fadeInUp 0.3s ease forwards;
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+.harmony-reasoning-line:nth-child(1) { animation-delay: 0.1s; }
+.harmony-reasoning-line:nth-child(2) { animation-delay: 0.2s; }
+.harmony-reasoning-line:nth-child(3) { animation-delay: 0.3s; }
+.harmony-reasoning-line:nth-child(4) { animation-delay: 0.4s; }
+.harmony-reasoning-line:nth-child(5) { animation-delay: 0.5s; }
+
+@keyframes fadeInUp {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .harmony-reasoning-header {
+    padding: 10px 12px;
+  }
+  
+  .harmony-reasoning-title {
+    font-size: 13px;
+    gap: 6px;
+  }
+  
+  .harmony-reasoning-channel {
+    font-size: 10px;
+    padding: 1px 6px;
+  }
+  
+  .harmony-reasoning-content {
+    padding: 12px;
+  }
+  
+  .harmony-reasoning-formatted {
+    font-size: 12px;
+  }
+  
+  .harmony-reasoning-raw {
+    font-size: 11px;
+    padding: 8px;
+  }
+}
+
+/* Dark mode optimizations */
+@media (prefers-color-scheme: dark) {
+  .harmony-reasoning-message {
+    background: rgba(0, 0, 0, 0.3);
+    border-color: rgba(255, 255, 255, 0.15);
+  }
+  
+  .harmony-reasoning-header {
+    background: rgba(0, 0, 0, 0.2);
+  }
+  
+  .harmony-reasoning-content {
+    background: rgba(0, 0, 0, 0.4);
+  }
+}

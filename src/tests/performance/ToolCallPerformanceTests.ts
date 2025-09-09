@@ -3,7 +3,7 @@
  * Validation des gains de performance attendus
  */
 
-import { agentApiV2Tools } from '../../services/agentApiV2Tools';
+// import { agentApiV2Tools } from '../../services/agentApiV2Tools'; // Supprimé - remplacé par API V2 direct
 import { distributedCache } from '../../services/cache/DistributedCache';
 import { toolsCache } from '../../services/cache/ToolsCache';
 import { optimizedDatabaseService } from '../../services/database/OptimizedDatabaseService';
