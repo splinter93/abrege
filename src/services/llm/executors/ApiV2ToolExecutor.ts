@@ -225,6 +225,32 @@ export class ApiV2ToolExecutor {
         );
 
       // ============================================================================
+      // TOOLS POUR LES AGENTS SPÉCIALISÉS
+      // ============================================================================
+
+      case 'listAgents':
+        return await this.httpClient.listAgents(userToken);
+
+      case 'createAgent':
+        return await this.httpClient.createAgent(args, userToken);
+
+      case 'getAgent':
+        return await this.httpClient.getAgent(args.agentId as string, userToken);
+
+      case 'executeAgent':
+        return await this.httpClient.executeAgent(args, userToken);
+
+      // ============================================================================
+      // TOOLS POUR LE DEBUG
+      // ============================================================================
+
+      case 'listTools':
+        return await this.httpClient.listTools(userToken);
+
+      case 'debugInfo':
+        return await this.httpClient.debugInfo(userToken);
+
+      // ============================================================================
       // TOOL NON SUPPORTÉ
       // ============================================================================
 
@@ -263,7 +289,13 @@ export class ApiV2ToolExecutor {
       'getTrash', 'restoreFromTrash', 'purgeTrash',
       
       // Suppression
-      'deleteResource'
+      'deleteResource',
+      
+      // Agents spécialisés
+      'listAgents', 'createAgent', 'getAgent', 'executeAgent',
+      
+      // Debug
+      'listTools', 'debugInfo'
     ];
 
     return supportedTools.includes(functionName);
@@ -299,7 +331,13 @@ export class ApiV2ToolExecutor {
       'getTrash', 'restoreFromTrash', 'purgeTrash',
       
       // Suppression
-      'deleteResource'
+      'deleteResource',
+      
+      // Agents spécialisés
+      'listAgents', 'createAgent', 'getAgent', 'executeAgent',
+      
+      // Debug
+      'listTools', 'debugInfo'
     ];
   }
 }
