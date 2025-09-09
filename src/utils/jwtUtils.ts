@@ -1,12 +1,12 @@
 import jwt from 'jsonwebtoken';
 import { logApi } from './logger';
 
-const JWT_SECRET = process.env.SUPABASE_JWT_SECRET || process.env.JWT_SECRET;
+const JWT_SECRET = process.env.SUPABASE_JWT_SECRET || process.env.JWT_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 if (!JWT_SECRET) {
-  logApi.error("❌ La variable d'environnement SUPABASE_JWT_SECRET ou JWT_SECRET est requise mais n'a pas été trouvée.");
+  logApi.error("❌ Aucune clé JWT trouvée. SUPABASE_JWT_SECRET, JWT_SECRET ou SUPABASE_SERVICE_ROLE_KEY requis.");
   // Dans un environnement de production, vous pourriez vouloir arrêter le processus
-  // throw new Error("SUPABASE_JWT_SECRET or JWT_SECRET is missing from environment variables.");
+  // throw new Error("No JWT secret found in environment variables.");
 }
 
 /**
@@ -31,21 +31,15 @@ export function generateUserJwt(userId: string, expiresIn: string | number = '15
 
   const payload = {
     sub: userId,
-    // Vous pouvez ajouter d'autres claims pertinents si nécessaire
-    // Par exemple, les rôles ou les scopes, mais pour l'instant on garde simple
-    // 'https://hasura.io/jwt/claims': {
-    //   'x-hasura-allowed-roles': ['user'],
-    //   'x-hasura-default-role': 'user',
-    //   'x-hasura-user-id': userId
-    // }
+    aud: 'authenticated',
+    role: 'authenticated',
+    iat: Math.floor(Date.now() / 1000),
+    iss: process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://hddhjwlaampspoqncubs.supabase.co'
   };
 
   const options: jwt.SignOptions = {
     expiresIn,
-    // L'audience et l'émetteur doivent correspondre à votre configuration Supabase
-    // pour que RLS fonctionne correctement. Consultez vos paramètres Supabase.
-    // audience: 'authenticated', 
-    // issuer: `https://${process.env.NEXT_PUBLIC_SUPABASE_URL?.split('//')[1]}`
+    algorithm: 'HS256'
   };
 
   try {

@@ -37,15 +37,11 @@ import { supabase } from '@/supabaseClient';
 import { toast } from 'react-hot-toast';
 import ImageMenu from '@/components/ImageMenu';
 import { useAuth } from '@/hooks/useAuth';
-import { RealtimeEditorDebug } from '@/components/RealtimeEditorDebug';
-import { useDatabaseRealtime } from '@/hooks/useDatabaseRealtime';
+import { UnifiedRealtimeDebug } from '@/components/UnifiedRealtimeDebug';
 import { uploadImageForNote } from '@/utils/fileUpload';
 import { logger, LogCategory } from '@/utils/logger';
 import type { FullEditorInstance } from '@/types/editor';
-import RealtimeEditorManager from '@/components/RealtimeEditorManager';
-import RealtimeEditorMonitor from '@/components/RealtimeEditorMonitor';
-import '@/components/RealtimeEditorMonitor.css';
-import { useRealtimeEditor } from '@/hooks/RealtimeEditorHook';
+import { useUnifiedRealtime } from '@/hooks/useUnifiedRealtime';
 // Types pour les mises à jour de note
 interface NoteUpdate {
   a4_mode?: boolean;
@@ -166,46 +162,32 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
   // Share settings state
   const [shareSettings, setShareSettings] = React.useState<ShareSettings>(getDefaultShareSettings());
 
-  // 🔄 Realtime Editor Integration
-  const realtimeEditor = useRealtimeEditor({
-    noteId,
+  // 🔄 Unified Realtime Integration - Remplace les anciens services
+  const unifiedRealtime = useUnifiedRealtime({
     userId,
+    noteId,
     debug: process.env.NODE_ENV === 'development',
     autoReconnect: true,
     onEvent: (event) => {
       if (process.env.NODE_ENV === 'development') {
-        logger.info(LogCategory.EDITOR, 'Realtime event received:', event);
+        logger.info(LogCategory.EDITOR, 'Unified Realtime event received:', {
+          type: event.type,
+          source: event.source,
+          channel: event.channel
+        });
       }
       
-      // Traiter les événements d'éditeur en temps réel
-      if (event.type.startsWith('editor.')) {
-        // Les événements editor.* sont déjà traités par le dispatcher
-        // qui met à jour le store via updateNoteContent
-        // L'éditeur réagira automatiquement via le useEffect ci-dessus
-        if (process.env.NODE_ENV === 'development') {
-          logger.info(LogCategory.EDITOR, '🔄 Événement éditeur traité:', {
-            type: event.type,
-            source: event.source,
-            noteId: event.payload?.noteId
-          });
-        }
-      }
+      // Les événements sont déjà traités par le dispatcher
+      // qui met à jour le store via updateNoteContent
+      // L'éditeur réagira automatiquement via le useEffect ci-dessus
     },
     onStateChange: (state) => {
       if (process.env.NODE_ENV === 'development') {
-        logger.info(LogCategory.EDITOR, 'Realtime state changed:', state);
-      }
-    }
-  });
-
-  // 🔄 Database Realtime Integration - Écouter les changements de base de données
-  const databaseRealtime = useDatabaseRealtime({
-    userId,
-    debug: process.env.NODE_ENV === 'development',
-    autoReconnect: true,
-    onStateChange: (state) => {
-      if (process.env.NODE_ENV === 'development') {
-        logger.info(LogCategory.EDITOR, 'Database Realtime state changed:', state);
+        logger.info(LogCategory.EDITOR, 'Unified Realtime state changed:', {
+          status: state.connectionStatus,
+          connected: state.isConnected,
+          channels: state.channels.size
+        });
       }
     }
   });
@@ -1065,23 +1047,7 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
 
   return (
     <>
-      {/* 🔄 Realtime Editor Manager */}
-      <RealtimeEditorManager
-        noteId={noteId}
-        userId={userId}
-        debug={process.env.NODE_ENV === 'development'}
-        autoReconnect={true}
-        onStateChange={(state) => {
-          if (process.env.NODE_ENV === 'development') {
-            logger.info(LogCategory.EDITOR, 'Realtime state changed:', state);
-          }
-        }}
-        onEvent={(event) => {
-          if (process.env.NODE_ENV === 'development') {
-            logger.info(LogCategory.EDITOR, 'Realtime event received:', event);
-          }
-        }}
-      >
+      {/* 🔄 Unified Realtime System - Remplace l'ancien RealtimeEditorManager */}
         <div className="editor-toc-fixed">
           <PublicTableOfContents headings={headings} containerRef={editorContainerRef} />
         </div>
@@ -1354,17 +1320,10 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
         hasSelection={contextMenu.hasSelection}
       />
       
-      {/* 🔄 Realtime Editor Monitor (dev only) */}
-      {process.env.NODE_ENV === 'development' && (
-        <RealtimeEditorMonitor />
-      )}
-      
-      {/* 🔍 Realtime Editor Debug (dev only) */}
+      {/* 🔍 Unified Realtime Debug (dev only) */}
       {process.env.NODE_ENV === 'development' && userId && (
-        <RealtimeEditorDebug noteId={noteId} userId={userId} />
+        <UnifiedRealtimeDebug noteId={noteId} userId={userId} />
       )}
-      
-      </RealtimeEditorManager>
     </>
   );
 };
