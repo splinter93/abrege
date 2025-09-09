@@ -16,6 +16,7 @@ import { logApi } from '@/utils/logger';
 import { getAuthenticatedUser } from '@/utils/authUtils';
 import { executeAgentV2Schema, validatePayload, createValidationErrorResponse } from '@/utils/v2ValidationSchemas';
 import { SpecializedAgentManager } from '@/services/specializedAgents/SpecializedAgentManager';
+import { generateUserJwt } from '@/utils/jwtUtils'; // ✅ Import de la nouvelle fonction
 
 // ============================================================================
 // TYPES
@@ -107,9 +108,21 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       const authHeader = request.headers.get('authorization');
       userToken = authHeader?.startsWith('Bearer ') ? authHeader.substring(7) : null;
     } else if (authType === 'api_key') {
-      // Pour les clés d'API, on n'a pas de token JWT
-      // On va passer l'userId directement aux tool calls
-      logApi.info(`🔑 Authentification par clé d'API détectée - userId: ${userId}`, context);
+      // 🔑 CORRECTION : Pour les clés d'API, on génère un JWT à la volée
+      userToken = generateUserJwt(userId);
+      if (!userToken) {
+        // Gérer le cas où la génération du token échoue
+        logApi.error(`❌ Échec de la génération du JWT pour l'utilisateur ${userId}`, context);
+        return NextResponse.json(
+          { 
+            error: 'Erreur interne du serveur',
+            code: AGENT_EXECUTE_ERRORS.EXECUTION_FAILED.code,
+            message: 'Impossible de générer un token d\'authentification pour l\'agent'
+          },
+          { status: 500 }
+        );
+      }
+      logApi.info(`🔑 Clé d'API détectée - JWT généré pour l'utilisateur: ${userId}`, context);
     } else if (authType === 'oauth') {
       // Pour OAuth, extraire le token
       const authHeader = request.headers.get('authorization');
@@ -178,21 +191,21 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     // 🔧 CORRECTION CRITIQUE : Préserver le token de l'utilisateur final
     // Quand un agent appelle un autre agent, on doit utiliser le token de l'utilisateur original,
     // pas celui de l'agent appelant, pour que l'agent appelé puisse faire des tool calls
-    const finalUserToken = userToken || userId;
+    const finalUserToken = userToken; // ✅ CORRECTION : userToken contient maintenant soit le JWT original, soit le JWT généré
     
     logApi.info(`🔑 TOKEN D'AUTHENTIFICATION POUR L'AGENT APPELÉ:`, {
       hasUserToken: !!userToken,
       hasUserId: !!userId,
       authType,
-      tokenType: userToken ? 'JWT' : 'userId',
+      tokenType: userToken ? 'JWT' : 'AUCUN',
       finalToken: finalUserToken ? finalUserToken.substring(0, 8) + '...' : 'AUCUN',
-      isUserId: finalUserToken ? /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(finalUserToken) : false
+      isUserId: false // On ne passe plus jamais d'userId comme token
     });
     
     const executionResult = await agentManager.executeSpecializedAgent(
       agent.id,
       executionParams.input,
-      finalUserToken, // ✅ CORRECTION : Utiliser le token de l'utilisateur final
+      finalUserToken!, // ✅ CORRECTION : Utiliser le token de l'utilisateur final (ne peut pas être null ici)
       `api-v2-execute-${agent.id}-${Date.now()}`
     );
 

@@ -108,15 +108,6 @@ export class ApiV2HttpClient {
   }
 
   /**
-   * Détecter si une chaîne est un UUID (userId) ou un token JWT
-   */
-  private isUUID(str: string): boolean {
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-    return uuidRegex.test(str);
-  }
-
-
-  /**
    * Méthode générique pour les appels HTTP
    */
   private async makeRequest<T>(
@@ -127,37 +118,14 @@ export class ApiV2HttpClient {
   ): Promise<T> {
     let url = `${this.baseUrl}/api/v2${endpoint}`;
     
-    // 🔧 CORRECTION : Détecter si c'est un userId (UUID) ou un token JWT
-    const isUserId = this.isUUID(userToken);
-    
+    // Le userToken est maintenant toujours un JWT valide
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
-      'X-Client-Type': 'agent'
+      'X-Client-Type': 'agent',
+      'Authorization': `Bearer ${userToken}`
     };
     
-    if (isUserId) {
-      // Si c'est un userId, utiliser le service role key pour l'impersonation
-      // Les endpoints API V2 géreront l'impersonation via le header X-User-Id
-      const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-      if (!serviceRoleKey) {
-        throw new Error('SUPABASE_SERVICE_ROLE_KEY manquante pour l\'impersonation');
-      }
-      
-      headers['Authorization'] = `Bearer ${serviceRoleKey}`;
-      headers['X-User-Id'] = userToken;
-      headers['X-Service-Role'] = 'true';
-      logger.info(`[ApiV2HttpClient] 🔑 IMPERSONATION DÉTECTÉE - userId: ${userToken.substring(0, 8)}...`);
-      logger.info(`[ApiV2HttpClient] 📤 Headers d'impersonation:`, {
-        'Authorization': 'Bearer ' + serviceRoleKey.substring(0, 20) + '...',
-        'X-User-Id': userToken.substring(0, 8) + '...',
-        'X-Service-Role': 'true',
-        'X-Client-Type': 'agent'
-      });
-    } else {
-      // Si c'est un token JWT, utiliser l'Authorization Bearer
-      headers['Authorization'] = `Bearer ${userToken}`;
-      logger.info(`[ApiV2HttpClient] 🔑 TOKEN JWT DÉTECTÉ - token: ${userToken.substring(0, 20)}...`);
-    }
+    logger.dev(`[ApiV2HttpClient] 🔑 Appel authentifié avec JWT: token: ${userToken.substring(0, 20)}...`);
 
     const requestOptions: RequestInit = {
       method,
