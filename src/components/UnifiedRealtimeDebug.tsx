@@ -135,8 +135,6 @@ export function UnifiedRealtimeDebug({ userId, noteId }: UnifiedRealtimeDebugPro
     }
   };
 
-  const stats = getStats();
-
   if (!isVisible) {
     return (
       <button
