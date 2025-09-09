@@ -105,3 +105,4 @@ Il faut s'assurer que tous ces endpoints sont bien implémentés dans `/api/v2/`
 **🚨 Action immédiate requise** : Ajouter les 12 mappings manquants pour éviter les erreurs "Tool non supporté".
 
 
+

@@ -100,3 +100,4 @@ Le hook `useChatResponseHarmony` utilise maintenant correctement :
 **🔧 Erreur "[object Object]" corrigée avec succès !**
 
 
+
