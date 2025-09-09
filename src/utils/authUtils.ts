@@ -46,7 +46,25 @@ export interface PermissionResult {
  */
 export async function getAuthenticatedUser(request: NextRequest): Promise<AuthResult> {
   try {
-    // ✅ ESSAYER D'ABORD L'API KEY
+    // ✅ ESSAYER D'ABORD L'IMPERSONATION D'AGENT
+    const userId = request.headers.get('X-User-Id');
+    const isServiceRole = request.headers.get('X-Service-Role') === 'true';
+    
+    if (userId && isServiceRole) {
+      // Vérifier que c'est un UUID valide
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (uuidRegex.test(userId)) {
+        logApi.info(`[AuthUtils] 🤖 Impersonation d'agent détectée pour userId: ${userId}`);
+        return {
+          success: true,
+          userId: userId,
+          scopes: DEFAULT_AGENT_SCOPES,
+          authType: 'api_key'
+        };
+      }
+    }
+
+    // ✅ ESSAYER L'API KEY
     const apiKey = request.headers.get('X-API-Key');
     if (apiKey) {
       try {

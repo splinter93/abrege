@@ -175,10 +175,22 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     // 🚀 Exécuter l'agent
     logApi.info(`🤖 Exécution agent: ${agent.display_name || agent.slug}`, context);
     
+    // 🔧 CORRECTION CRITIQUE : Préserver le token de l'utilisateur final
+    // Quand un agent appelle un autre agent, on doit utiliser le token de l'utilisateur original,
+    // pas celui de l'agent appelant, pour que l'agent appelé puisse faire des tool calls
+    const finalUserToken = userToken || userId;
+    
+    logApi.info(`🔑 Token d'authentification pour l'agent appelé:`, {
+      hasUserToken: !!userToken,
+      hasUserId: !!userId,
+      authType,
+      tokenType: userToken ? 'JWT' : 'userId'
+    });
+    
     const executionResult = await agentManager.executeSpecializedAgent(
       agent.id,
       executionParams.input,
-      userToken || userId, // ✅ CORRECTION : Passer le token JWT ou l'userId selon le type d'auth
+      finalUserToken, // ✅ CORRECTION : Utiliser le token de l'utilisateur final
       `api-v2-execute-${agent.id}-${Date.now()}`
     );
 

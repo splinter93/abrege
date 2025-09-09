@@ -108,6 +108,15 @@ export class ApiV2HttpClient {
   }
 
   /**
+   * Détecter si une chaîne est un UUID (userId) ou un token JWT
+   */
+  private isUUID(str: string): boolean {
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    return uuidRegex.test(str);
+  }
+
+
+  /**
    * Méthode générique pour les appels HTTP
    */
   private async makeRequest<T>(
@@ -118,11 +127,24 @@ export class ApiV2HttpClient {
   ): Promise<T> {
     let url = `${this.baseUrl}/api/v2${endpoint}`;
     
+    // 🔧 CORRECTION : Détecter si c'est un userId (UUID) ou un token JWT
+    const isUserId = this.isUUID(userToken);
+    
     const headers: Record<string, string> = {
-      'Authorization': `Bearer ${userToken}`,
       'Content-Type': 'application/json',
       'X-Client-Type': 'agent'
     };
+    
+    if (isUserId) {
+      // Si c'est un userId, utiliser le service role key pour l'impersonation
+      // Les endpoints API V2 géreront l'impersonation via le header X-User-Id
+      headers['X-User-Id'] = userToken;
+      headers['X-Service-Role'] = 'true';
+      logger.dev(`[ApiV2HttpClient] 🔑 Impersonation pour userId: ${userToken.substring(0, 8)}...`);
+    } else {
+      // Si c'est un token JWT, utiliser l'Authorization Bearer
+      headers['Authorization'] = `Bearer ${userToken}`;
+    }
 
     const requestOptions: RequestInit = {
       method,
@@ -320,6 +342,38 @@ export class ApiV2HttpClient {
 
   async deleteResource(resource: 'note' | 'folder' | 'classeur', ref: string, userToken: string): Promise<ApiV2Response<{ success: boolean }>> {
     return this.makeRequest<ApiV2Response<{ success: boolean }>>(`/delete/${resource}/${ref}`, 'DELETE', null, userToken);
+  }
+
+  // ============================================================================
+  // MÉTHODES POUR LES AGENTS SPÉCIALISÉS
+  // ============================================================================
+
+  async listAgents(userToken: string): Promise<ApiV2Response<{ agents: any[] }>> {
+    return this.makeRequest<ApiV2Response<{ agents: any[] }>>('/agents', 'GET', null, userToken);
+  }
+
+  async createAgent(params: any, userToken: string): Promise<ApiV2Response<{ agent: any }>> {
+    return this.makeRequest<ApiV2Response<{ agent: any }>>('/agents', 'POST', params, userToken);
+  }
+
+  async getAgent(agentId: string, userToken: string): Promise<ApiV2Response<{ agent: any }>> {
+    return this.makeRequest<ApiV2Response<{ agent: any }>>(`/agents/${agentId}`, 'GET', null, userToken);
+  }
+
+  async executeAgent(params: any, userToken: string): Promise<ApiV2Response<{ response: string; data: any }>> {
+    return this.makeRequest<ApiV2Response<{ response: string; data: any }>>('/agents/execute', 'POST', params, userToken);
+  }
+
+  // ============================================================================
+  // MÉTHODES POUR LE DEBUG
+  // ============================================================================
+
+  async listTools(userToken: string): Promise<ApiV2Response<{ tools: any[] }>> {
+    return this.makeRequest<ApiV2Response<{ tools: any[] }>>('/tools', 'GET', null, userToken);
+  }
+
+  async debugInfo(userToken: string): Promise<ApiV2Response<{ info: any }>> {
+    return this.makeRequest<ApiV2Response<{ info: any }>>('/debug', 'GET', null, userToken);
   }
 }
 
