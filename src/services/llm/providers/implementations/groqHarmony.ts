@@ -13,6 +13,7 @@ import {
 } from '../../types/harmonyTypes';
 import { HarmonyFormatter } from '../../services/HarmonyFormatter';
 import { simpleLogger as logger } from '@/utils/logger';
+import { systemMessageBuilder } from '../../SystemMessageBuilder';
 
 /**
  * Interface pour la réponse Groq Harmony
@@ -317,6 +318,9 @@ export class GroqHarmonyProvider extends BaseProvider implements LLMProvider {
           timestamp: new Date().toISOString(),
         };
         conversation.messages.unshift(systemMessage); // Ajouter au début
+        logger.dev(`[GroqHarmonyProvider] 🎯 Instructions système injectées (${context.content.length} chars)`);
+      } else {
+        logger.dev(`[GroqHarmonyProvider] ⚙️ Aucune instruction système fournie`);
       }
 
       // 3. Ajouter le message utilisateur actuel
@@ -373,6 +377,9 @@ export class GroqHarmonyProvider extends BaseProvider implements LLMProvider {
           timestamp: new Date().toISOString(),
         };
         conversation.messages.unshift(systemMessage); // Ajouter au début
+        logger.dev(`[GroqHarmonyProvider] 🎯 Instructions système injectées (${context.content.length} chars)`);
+      } else {
+        logger.dev(`[GroqHarmonyProvider] ⚙️ Aucune instruction système fournie`);
       }
 
       // 3. Ajouter le message utilisateur actuel

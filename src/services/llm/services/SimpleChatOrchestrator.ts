@@ -8,6 +8,7 @@ import { SimpleToolExecutor, ToolCall, ToolResult } from './SimpleToolExecutor';
 import { simpleLogger as logger } from '@/utils/logger';
 import { ChatMessage } from '@/types/chat';
 import { HarmonyMessage } from '../types/harmonyTypes';
+import { systemMessageBuilder, SystemMessageContext } from '../SystemMessageBuilder';
 
 // ChatMessage est maintenant importé depuis @/types/chat
 
@@ -120,11 +121,26 @@ export class SimpleChatOrchestrator {
     userToken: string,
     sessionId: string
   ): Promise<any> {
+    // Construire le contexte pour le message système
+    const systemContext: SystemMessageContext = {
+      type: 'chat_session',
+      name: `session-${sessionId}`,
+      id: sessionId,
+      content: message
+    };
+
+    // Construire le message système avec les instructions de l'agent
+    const systemMessage = systemMessageBuilder.buildSystemMessage(
+      agentConfig || {},
+      systemContext,
+      'Tu es un assistant IA utile et bienveillant.'
+    );
+
     const appContext = { 
       type: 'chat_session' as const, 
       name: `session-${sessionId}`, 
       id: sessionId, 
-      content: agentConfig?.instructions || '' // Injecter les instructions système
+      content: systemMessage.content
     };
 
     // Construire l'historique (sans ajouter le message actuel)
@@ -150,11 +166,26 @@ export class SimpleChatOrchestrator {
     userToken: string,
     sessionId: string
   ): Promise<any> {
+    // Construire le contexte pour le message système
+    const systemContext: SystemMessageContext = {
+      type: 'chat_session',
+      name: `session-${sessionId}`,
+      id: sessionId,
+      content: message
+    };
+
+    // Construire le message système avec les instructions de l'agent
+    const systemMessage = systemMessageBuilder.buildSystemMessage(
+      agentConfig || {},
+      systemContext,
+      'Tu es un assistant IA utile et bienveillant.'
+    );
+
     const appContext = { 
       type: 'chat_session' as const, 
       name: `session-${sessionId}`, 
       id: sessionId, 
-      content: agentConfig?.instructions || '' // Injecter les instructions système
+      content: systemMessage.content
     };
 
     // Construire l'historique avec les résultats des tools

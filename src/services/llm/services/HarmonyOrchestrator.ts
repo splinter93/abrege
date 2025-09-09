@@ -8,6 +8,7 @@ import { GroqHarmonyProvider } from '../providers/implementations/groqHarmony';
 import { ApiV2ToolExecutor } from '../executors/ApiV2ToolExecutor';
 import { simpleLogger as logger } from '@/utils/logger';
 import { ChatMessage } from '@/types/chat';
+import { systemMessageBuilder, SystemMessageContext } from '../SystemMessageBuilder';
 
 /**
  * Orchestrateur Harmony simplifié
@@ -84,7 +85,27 @@ export class HarmonyOrchestrator {
     userToken: string,
     sessionId: string
   ) {
-    const appContext = { type: 'chat_session' as const, name: `session-${sessionId}`, id: sessionId, content: '' };
+    // Construire le contexte pour le message système
+    const systemContext: SystemMessageContext = {
+      type: 'chat_session',
+      name: `session-${sessionId}`,
+      id: sessionId,
+      content: message
+    };
+
+    // Construire le message système avec les instructions de l'agent
+    const systemMessage = systemMessageBuilder.buildSystemMessage(
+      agentConfig || {},
+      systemContext,
+      'Tu es un assistant IA utile et bienveillant.'
+    );
+
+    const appContext = { 
+      type: 'chat_session' as const, 
+      name: `session-${sessionId}`, 
+      id: sessionId, 
+      content: systemMessage.content 
+    };
 
     // Obtenir les tools
     const tools = await this.getTools(agentConfig);
@@ -108,7 +129,27 @@ export class HarmonyOrchestrator {
     sessionId: string,
     userToken: string
   ) {
-    const appContext = { type: 'chat_session' as const, name: `session-${sessionId}`, id: sessionId, content: '' };
+    // Construire le contexte pour le message système
+    const systemContext: SystemMessageContext = {
+      type: 'chat_session',
+      name: `session-${sessionId}`,
+      id: sessionId,
+      content: message
+    };
+
+    // Construire le message système avec les instructions de l'agent
+    const systemMessage = systemMessageBuilder.buildSystemMessage(
+      agentConfig || {},
+      systemContext,
+      'Tu es un assistant IA utile et bienveillant.'
+    );
+
+    const appContext = { 
+      type: 'chat_session' as const, 
+      name: `session-${sessionId}`, 
+      id: sessionId, 
+      content: systemMessage.content 
+    };
 
     // Construire l'historique avec résultats
     const history = this.buildHistoryWithResults(sessionHistory, message, toolCalls, toolResults);

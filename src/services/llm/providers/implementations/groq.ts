@@ -3,6 +3,7 @@ import type { LLMProvider, AppContext } from '../../types';
 import type { ChatMessage } from '@/types/chat';
 import { simpleLogger as logger } from '@/utils/logger';
 import { getSystemMessage } from '../../templates';
+import { systemMessageBuilder } from '../../SystemMessageBuilder';
 
 /**
  * Interface étendue pour le provider Groq qui retourne la structure attendue par l'orchestrateur
@@ -492,11 +493,19 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
    * Formate le message système avec le contexte
    */
   private formatSystemMessage(context: AppContext): string {
-    // Utiliser le système de templates
+    // Si le contexte contient déjà des instructions système (depuis l'orchestrateur)
+    if (context.content && context.content.trim().length > 0) {
+      logger.dev(`[GroqProvider] 🎯 Utilisation des instructions système fournies (${context.content.length} chars)`);
+      return context.content;
+    }
+
+    // Fallback vers le système de templates existant
     const message = getSystemMessage('assistant-contextual', { context });
     if (!message) {
       return 'Tu es un assistant IA utile et bienveillant.';
     }
+    
+    logger.dev(`[GroqProvider] ⚙️ Utilisation du template par défaut`);
     return message;
   }
 
