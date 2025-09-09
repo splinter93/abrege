@@ -30,19 +30,26 @@ const PublicMarkdownRenderer: React.FC<PublicMarkdownRendererProps> = ({ content
   useEffect(() => {
     if (!containerRef.current) return;
 
-    // Transformer tous les blocs de code <pre><code> en structure avec toolbar
+    // Transformer tous les blocs de code <pre><code> en structure avec toolbar unifiée
     const codeBlocks = containerRef.current.querySelectorAll('pre code');
     codeBlocks.forEach((codeElement) => {
       const preElement = codeElement.parentElement;
-      if (!preElement || preElement.classList.contains('code-block-container')) return;
+      if (!preElement || preElement.classList.contains('u-block')) return;
 
-      // Créer la structure de l'éditeur
+      // Créer la structure unifiée (identique à l'éditeur)
       const container = document.createElement('div');
-      container.className = 'code-block-container';
+      container.className = 'u-block u-block--code';
       
-      // Créer la toolbar
+      // Créer la toolbar unifiée
       const toolbar = document.createElement('div');
-      toolbar.className = 'unified-toolbar';
+      toolbar.className = 'u-block__toolbar';
+      
+      // Créer la structure toolbar-left/toolbar-right
+      const toolbarLeft = document.createElement('div');
+      toolbarLeft.className = 'toolbar-left';
+      
+      const toolbarRight = document.createElement('div');
+      toolbarRight.className = 'toolbar-right';
       
       // Détecter le langage
       const language = codeElement.className.match(/language-(\w+)/)?.[1] || '';
@@ -50,23 +57,16 @@ const PublicMarkdownRenderer: React.FC<PublicMarkdownRendererProps> = ({ content
       
       // Créer le label de langue
       const languageLabel = document.createElement('span');
-      languageLabel.className = 'language-label';
+      languageLabel.className = 'toolbar-label';
       languageLabel.textContent = languageDisplay;
-      languageLabel.style.cssText = `
-        font-size: 12px;
-        color: var(--text-muted);
-        font-weight: 500;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-      `;
       
       // Créer le bouton copy
       const copyBtn = document.createElement('button');
-      copyBtn.className = 'toolbar-btn copy-btn';
+      copyBtn.className = 'toolbar-btn';
       copyBtn.innerHTML = `
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+          <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
         </svg>
       `;
       
@@ -76,18 +76,18 @@ const PublicMarkdownRenderer: React.FC<PublicMarkdownRendererProps> = ({ content
           await navigator.clipboard.writeText(codeElement.textContent || '');
           copyBtn.innerHTML = `
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polyline points="20,6 9,17 4,12"></polyline>
+              <polyline points="20 6 9 17 4 12" />
             </svg>
           `;
-          copyBtn.style.color = 'var(--success)';
+          copyBtn.classList.add('copied');
           setTimeout(() => {
             copyBtn.innerHTML = `
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
               </svg>
             `;
-            copyBtn.style.color = '';
+            copyBtn.classList.remove('copied');
           }, 2000);
         } catch (err) {
           console.error('Erreur lors de la copie:', err);
@@ -95,17 +95,23 @@ const PublicMarkdownRenderer: React.FC<PublicMarkdownRendererProps> = ({ content
       });
       
       // Assembler la toolbar
-      toolbar.appendChild(languageLabel);
-      toolbar.appendChild(copyBtn);
+      toolbarLeft.appendChild(languageLabel);
+      toolbarRight.appendChild(copyBtn);
+      toolbar.appendChild(toolbarLeft);
+      toolbar.appendChild(toolbarRight);
+      
+      // Créer le body
+      const body = document.createElement('div');
+      body.className = 'u-block__body';
       
       // Créer le nouveau pre avec les bonnes classes
       const newPre = document.createElement('pre');
-      newPre.className = 'hljs';
       newPre.appendChild(codeElement.cloneNode(true));
       
       // Assembler le container
+      body.appendChild(newPre);
       container.appendChild(toolbar);
-      container.appendChild(newPre);
+      container.appendChild(body);
       
       // Remplacer l'ancien pre par le nouveau container
       preElement.parentNode?.replaceChild(container, preElement);

@@ -11,7 +11,8 @@ import { normalizeMermaidContent, getMermaidDiagramType } from '@/components/cha
 import { simpleLogger as logger } from '@/utils/logger';
 import MermaidToolbar from './MermaidToolbar';
 import { openMermaidModal } from './MermaidModal';
-import './MermaidRenderer.css';
+// Les styles sont maintenant dans unified-blocks.css
+// import './MermaidRenderer.css'; - REMOVED
 
 export interface MermaidRendererProps {
   /** Contenu Mermaid à rendre */
@@ -173,126 +174,88 @@ const MermaidRenderer: React.FC<MermaidRendererProps> = ({
       }
     };
   }, [content, renderChart]);
-
-  // Gestion des erreurs avec retry
-  const handleRetry = useCallback(() => {
-    setError(null);
-    renderChart(content);
-  }, [content, renderChart]);
-
-  // Gestion de l'expansion vers la modale
+  
   const handleExpand = useCallback(() => {
     openMermaidModal(content);
   }, [content]);
 
-  // Classes CSS dynamiques
-  const containerClasses = [
-    'mermaid-container',
-    `mermaid-${variant}`,
-    isRendered ? 'mermaid-rendered' : 'mermaid-loading',
-    error ? 'mermaid-error' : '',
-    className
-  ].filter(Boolean).join(' ');
+  const diagramType = getMermaidDiagramType(content);
 
-  // Affichage des erreurs avec design moderne
-  if (error) {
-    return (
-      <div className={containerClasses}>
-        {/* Toolbar même en cas d'erreur */}
-        {showToolbar && (
-          <MermaidToolbar
-            content={content}
-            variant={variant}
-            showCopy={showCopy}
-            showExpand={false}
-            showEdit={showEdit}
-            onEdit={onEdit}
-          />
-        )}
-        
-        <div className="mermaid-error-content">
-          <div className="mermaid-error-header">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <circle cx="12" cy="12" r="10" />
-              <line x1="15" y1="9" x2="9" y2="15" />
-              <line x1="9" y1="9" x2="15" y2="15" />
-            </svg>
-            <span>Erreur de rendu du diagramme</span>
+  return (
+    <div className={`u-block u-block--mermaid ${className}`}>
+      {showToolbar && (
+        <div className="u-block__toolbar">
+          <div className="toolbar-left">
+            <span className="toolbar-label">{diagramType}</span>
           </div>
-          
-          <div className="mermaid-error-body">
-            <div className="mermaid-error-message">
-              <strong>Erreur :</strong>
-              <pre>{error}</pre>
-            </div>
-            
-            <div className="mermaid-error-actions">
-              <button onClick={handleRetry} className="mermaid-retry-btn">
-                🔄 Réessayer
+          <div className="toolbar-right">
+            {/* Note: La toolbar du renderer est plus simple que celle de l'éditeur */}
+            {showCopy && isRendered && (
+              <button
+                className="toolbar-btn"
+                title="Copier le code"
+                onClick={async (event) => {
+                  try {
+                    await navigator.clipboard.writeText(content);
+                    // Animation de confirmation visuelle
+                    const button = event.currentTarget as HTMLButtonElement;
+                    const originalHTML = button.innerHTML;
+                    button.innerHTML = `
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <polyline points="20 6 9 17 4 12" />
+                      </svg>
+                    `;
+                    button.classList.add('copied');
+                    setTimeout(() => {
+                      button.innerHTML = originalHTML;
+                      button.classList.remove('copied');
+                    }, 2000);
+                  } catch (err) {
+                    console.error('Erreur lors de la copie:', err);
+                  }
+                }}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                </svg>
               </button>
-            </div>
-            
-            <details className="mermaid-error-details">
-              <summary>Code source</summary>
-              <pre className="mermaid-source">{content}</pre>
-            </details>
+            )}
+            {showExpand && isRendered && (
+               <button 
+                 className="toolbar-btn" 
+                 title="Agrandir le diagramme"
+                 onClick={handleExpand}
+               >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
+                </svg>
+              </button>
+            )}
           </div>
         </div>
-      </div>
-    );
-  }
-
-  // Affichage du chargement avec design moderne
-  if (isLoading) {
-    return (
-      <div className={containerClasses}>
-        {/* Toolbar même pendant le chargement */}
-        {showToolbar && (
-          <MermaidToolbar
-            content={content}
-            variant={variant}
-            showCopy={false}
-            showExpand={false}
-            showEdit={false}
+      )}
+      <div className="u-block__body">
+        {isLoading && (
+          <div className="mermaid-loading-content">
+            <div className="mermaid-spinner"></div>
+          </div>
+        )}
+        {error && (
+          <div className="mermaid-error-content">
+            <span>Erreur de rendu</span>
+            <pre>{error}</pre>
+          </div>
+        )}
+        {isRendered && svgContent && (
+          <div
+            dangerouslySetInnerHTML={{ __html: svgContent }}
+            className="mermaid-svg-container"
           />
         )}
-        
-        <div className="mermaid-loading-content">
-          <div className="mermaid-spinner"></div>
-          <span>Rendu du diagramme...</span>
-        </div>
       </div>
-    );
-  }
-
-  // Affichage du diagramme rendu avec design moderne
-  if (isRendered && svgContent) {
-    return (
-      <div className={containerClasses}>
-        {/* Toolbar au-dessus du diagramme */}
-        {showToolbar && (
-          <MermaidToolbar
-            content={content}
-            variant={variant}
-            showCopy={showCopy}
-            showExpand={showExpand}
-            showEdit={showEdit}
-            onEdit={onEdit}
-            onExpand={handleExpand}
-          />
-        )}
-        
-        {/* Diagramme en dessous */}
-        <div 
-          dangerouslySetInnerHTML={{ __html: svgContent }}
-          className="mermaid-svg-container"
-        />
-      </div>
-    );
-  }
-
-  // Fallback si rien n'est rendu
-  return null;
+    </div>
+  );
 };
 
 export default MermaidRenderer;

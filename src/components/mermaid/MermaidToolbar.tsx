@@ -7,7 +7,7 @@
 
 import React, { useState } from 'react';
 import { getMermaidDiagramType } from '@/components/chat/mermaidService';
-import './MermaidToolbar.css';
+// import './MermaidToolbar.css'; - REMOVED
 
 export interface MermaidToolbarProps {
   /** Contenu Mermaid pour détecter le type */
@@ -61,7 +61,7 @@ const MermaidToolbar: React.FC<MermaidToolbarProps> = ({
 
   // Classes CSS dynamiques
   const toolbarClasses = [
-    'unified-toolbar',
+    'unified-block-toolbar',
     'mermaid-toolbar',
     className
   ].filter(Boolean).join(' ');
@@ -93,7 +93,7 @@ const MermaidToolbar: React.FC<MermaidToolbarProps> = ({
         {showCopy && (
           <button
             onClick={handleCopy}
-            className={`toolbar-btn mermaid-copy-btn copy-btn ${isCopied ? 'copied' : ''}`}
+            className={`toolbar-btn mermaid-copy-btn ${isCopied ? 'copied' : ''}`}
             title="Copier le code"
           >
             {isCopied ? (

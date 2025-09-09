@@ -156,35 +156,43 @@ export function cleanMermaidContent(content: string): string {
 /**
  * Extrait le type de diagramme Mermaid
  */
-export function getMermaidDiagramType(content: string): string | null {
+export function getMermaidDiagramType(content: string): string {
   if (!content || typeof content !== 'string') {
-    return null;
+    return 'Mermaid';
   }
 
   const firstLine = content.trim().split('\n')[0].trim();
   
-  // Mapping des types de diagrammes
+  // Mapping des types de diagrammes avec détection plus robuste
   const typeMapping: { [key: string]: string } = {
-    'flowchart': 'flowchart',
-    'graph': 'flowchart',
-    'sequencediagram': 'sequenceDiagram',
-    'sequence': 'sequenceDiagram',
-    'classdiagram': 'classDiagram',
-    'class': 'classDiagram',
-    'pie': 'pie',
-    'gantt': 'gantt',
-    'gitgraph': 'gitGraph',
-    'journey': 'journey',
-    'er': 'er',
-    'statediagram': 'stateDiagram',
-    'state': 'stateDiagram'
+    'flowchart': 'Flowchart',
+    'graph': 'Flowchart',
+    'sequencediagram': 'Sequence Diagram',
+    'sequence': 'Sequence Diagram',
+    'classdiagram': 'Class Diagram',
+    'class': 'Class Diagram',
+    'pie': 'Pie Chart',
+    'gantt': 'Gantt Chart',
+    'gitgraph': 'Git Graph',
+    'journey': 'Journey',
+    'er': 'ER Diagram',
+    'statediagram': 'State Diagram',
+    'state': 'State Diagram',
+    'mindmap': 'Mind Map',
+    'timeline': 'Timeline',
+    'quadrantchart': 'Quadrant Chart',
+    'requirement': 'Requirement Diagram',
+    'c4context': 'C4 Context',
+    'c4container': 'C4 Container',
+    'c4component': 'C4 Component',
+    'c4dynamic': 'C4 Dynamic'
   };
 
   const detectedType = Object.keys(typeMapping).find(type => 
     firstLine.toLowerCase().startsWith(type.toLowerCase())
   );
 
-  return detectedType ? typeMapping[detectedType] : null;
+  return detectedType ? typeMapping[detectedType] : 'Mermaid';
 }
 
 /**

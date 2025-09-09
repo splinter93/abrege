@@ -69,16 +69,18 @@ const CodeBlock: React.FC<CodeBlockProps> = ({ children, className, language }) 
   };
 
   return (
-    <div className={`code-block-container ${className || ''}`}>
+    <div className={`code-block-wrapper ${className || ''}`}>
       {/* Toolbar unifiée - même style que Mermaid */}
-      <div className="unified-toolbar">
+      <div className="unified-block-toolbar">
         {/* Indicateur de langage à gauche */}
-        <div className="toolbar-language">
-          {language ? language.toUpperCase() : 'CODE'}
+        <div className="toolbar-left">
+          <span className="toolbar-label">
+            {language ? language.toUpperCase() : 'CODE'}
+          </span>
         </div>
         
         {/* Boutons d'action à droite */}
-        <div className="toolbar-actions">
+        <div className="toolbar-right">
           {/* Bouton de copie */}
           <button
             className={`toolbar-btn ${copied ? 'copied' : ''}`}
@@ -92,12 +94,14 @@ const CodeBlock: React.FC<CodeBlockProps> = ({ children, className, language }) 
       </div>
       
       {/* Contenu du code avec coloration syntaxique */}
-      <pre className="code-content">
-        <code 
-          className={language ? `language-${language} hljs` : ''}
-          dangerouslySetInnerHTML={{ __html: highlightedCode }}
-        />
-      </pre>
+      <div className="unified-block-content">
+        <pre className="code-content">
+          <code 
+            className={language ? `language-${language} hljs` : ''}
+            dangerouslySetInnerHTML={{ __html: highlightedCode }}
+          />
+        </pre>
+      </div>
     </div>
   );
 };

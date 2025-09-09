@@ -1,5 +1,5 @@
 /* =================================================================
-   Unified Toolbar (CodeBlock + Mermaid)
+   Unified Toolbar (CodeBlock + Mermaid) - STYLES ESSENTIELS SEULEMENT
    ================================================================= */
 
 /* =================================================================
@@ -12,86 +12,6 @@
 .code-block-container code,
 .mermaid-edit-textarea {
     color: var(--text-muted, #6b7280);
-}
-
-.unified-toolbar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 6px 12px;
-    border-bottom: 1px solid var(--border-subtle);
-    background-color: var(--surface-2);
-    border-top-left-radius: 8px;
-    border-top-right-radius: 8px;
-    font-size: 13px;
-    width: 100%;
-    box-sizing: border-box;
-    min-height: 32px;
-    order: 1;
-    flex-shrink: 0;
-}
-
-/* Styles .toolbar-btn supprimés - maintenant dans modern-toolbar.css */
-
-/* Suppression globale de tous les effets de focus sur tous les boutons */
-.copy-btn,
-.copy-btn *,
-.mermaid-edit-btn,
-.mermaid-copy-btn,
-.mermaid-expand-btn {
-    -webkit-tap-highlight-color: transparent !important;
-    -webkit-touch-callout: none !important;
-    -webkit-user-select: none !important;
-    -khtml-user-select: none !important;
-    -moz-user-select: none !important;
-    -ms-user-select: none !important;
-    user-select: none !important;
-}
-
-/* =================================================================
-   Copy Button - Style harmonisé
-   ================================================================= */
-
-.copy-btn:hover {
-    background: transparent;
-    color: var(--text-primary);
-    transform: scale(1.05);
-}
-
-/* .toolbar-btn.copied supprimé - maintenant dans modern-toolbar.css */
-
-/* =================================================================
-   Toolbar Layout (Left/Right containers)
-   ================================================================= */
-
-.toolbar-left {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-weight: 500;
-    flex: 1;
-    min-width: 0;
-}
-
-.toolbar-right {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex-shrink: 0;
-    margin-left: auto;
-}
-
-.toolbar-label {
-    color: var(--text-secondary);
-    font-weight: 500;
-    font-size: 13px;
-    background: transparent;
-    padding: 0;
-    border: none;
-    text-transform: capitalize;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
 }
 
 /* =================================================================
@@ -143,158 +63,30 @@
 }
 
 /* =================================================================
-   Code Block Container Styles - UNIFIÉS AVEC MERMAID
+   Toolbar Layout (Left/Right containers)
    ================================================================= */
 
-.code-block-container,
-.mermaid-container.mermaid-editor {
-    position: relative;
-    background-color: var(--surface-2);
-    border: 1px solid var(--border-subtle);
-    border-radius: 8px;
-    margin: 1.5em 0;
-    overflow: hidden; /* Pour que le radius s'applique à la toolbar */
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+.toolbar-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 500;
+    flex: 1;
+    min-width: 0;
+}
+
+.toolbar-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+    margin-left: auto;
 }
 
 /* =================================================================
-   Mermaid-specific button styles - DESIGN MODERNE
+   Appliquer la police monospace aux blocs de code - OBLIGATOIRE
    ================================================================= */
 
-/* Boutons Mermaid - style moderne et cohérent - SÉLECTEURS SPÉCIFIQUES */
-.unified-toolbar .mermaid-edit-btn,
-.unified-toolbar .mermaid-copy-btn,
-.unified-toolbar .mermaid-expand-btn,
-.mermaid-container .mermaid-edit-btn,
-.mermaid-container .mermaid-copy-btn,
-.mermaid-container .mermaid-expand-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 32px;
-    height: 32px;
-    border: none;
-    border-radius: 6px;
-    background: transparent;
-    color: var(--text-muted, #6b7280);
-    cursor: pointer;
-    transition: all 0.15s ease;
-    font-size: 14px;
-    font-weight: 500;
-    position: relative;
-    overflow: hidden;
-    flex-shrink: 0;
-    outline: none;
-    /* Supprimer tous les effets de focus par défaut */
-    -webkit-tap-highlight-color: transparent !important;
-    -webkit-touch-callout: none !important;
-    -webkit-user-select: none !important;
-    -khtml-user-select: none !important;
-    -moz-user-select: none !important;
-    -ms-user-select: none !important;
-    user-select: none !important;
-}
-
-/* Hover state - effet subtil et moderne - SÉLECTEURS SPÉCIFIQUES */
-.unified-toolbar .mermaid-edit-btn:hover,
-.unified-toolbar .mermaid-copy-btn:hover,
-.unified-toolbar .mermaid-expand-btn:hover,
-.mermaid-container .mermaid-edit-btn:hover,
-.mermaid-container .mermaid-copy-btn:hover,
-.mermaid-container .mermaid-expand-btn:hover {
-    background: var(--surface-2, #f8f9fa);
-    color: var(--text-primary, #374151);
-    transform: scale(1.05);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-/* Active state - SÉLECTEURS SPÉCIFIQUES */
-.unified-toolbar .mermaid-edit-btn:active,
-.unified-toolbar .mermaid-copy-btn:active,
-.unified-toolbar .mermaid-expand-btn:active,
-.mermaid-container .mermaid-edit-btn:active,
-.mermaid-container .mermaid-copy-btn:active,
-.mermaid-container .mermaid-expand-btn:active {
-    transform: scale(0.95);
-    background: var(--surface-3, #e5e7eb);
-}
-
-/* Suppression complète du focus pour tous les boutons Mermaid - SÉLECTEURS SPÉCIFIQUES */
-.unified-toolbar .mermaid-edit-btn:focus,
-.unified-toolbar .mermaid-copy-btn:focus,
-.unified-toolbar .mermaid-expand-btn:focus,
-.unified-toolbar .mermaid-edit-btn:focus-visible,
-.unified-toolbar .mermaid-copy-btn:focus-visible,
-.unified-toolbar .mermaid-expand-btn:focus-visible,
-.mermaid-container .mermaid-edit-btn:focus,
-.mermaid-container .mermaid-copy-btn:focus,
-.mermaid-container .mermaid-expand-btn:focus,
-.mermaid-container .mermaid-edit-btn:focus-visible,
-.mermaid-container .mermaid-copy-btn:focus-visible,
-.mermaid-container .mermaid-expand-btn:focus-visible {
-    outline: none !important;
-    box-shadow: none !important;
-    border: none !important;
-}
-
-/* État "Copié !" pour Mermaid - style moderne - SÉLECTEURS SPÉCIFIQUES */
-.unified-toolbar .mermaid-copy-btn.copied,
-.unified-toolbar .mermaid-copy-btn:has(svg polyline),
-.mermaid-container .mermaid-copy-btn.copied,
-.mermaid-container .mermaid-copy-btn:has(svg polyline) {
-    background: var(--success-bg, #ecfdf5) !important;
-    color: var(--success-text, #10b981) !important;
-    transform: scale(1.05);
-}
-
-.unified-toolbar .mermaid-copy-btn.copied:hover,
-.unified-toolbar .mermaid-copy-btn:has(svg polyline):hover,
-.mermaid-container .mermaid-copy-btn.copied:hover,
-.mermaid-container .mermaid-copy-btn:has(svg polyline):hover {
-    background: var(--success-bg, #ecfdf5) !important;
-    color: var(--success-text, #10b981) !important;
-    transform: scale(1.1);
-}
-
-/* Toolbar unifiée pour tous les blocs de code */
-.code-block-container .unified-toolbar,
-.mermaid-container.mermaid-editor .unified-toolbar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 8px 12px;
-    border-bottom: 1px solid var(--border-subtle);
-    background-color: var(--surface-2);
-    border-top-left-radius: 8px;
-    border-top-right-radius: 8px;
-    font-size: 13px;
-}
-
-/* Contenu des blocs de code - style unifié */
-.code-block-container pre,
-.mermaid-container.mermaid-editor .mermaid-svg-container {
-    margin: 0;
-    padding: 16px 20px;
-    white-space: pre-wrap;
-    word-break: break-word;
-    background: var(--surface-1);
-    border-radius: 0 0 8px 8px;
-    font-size: 14px;
-    line-height: 1.6;
-    color: var(--text-primary);
-    overflow-x: auto;
-}
-
-/* Mode édition Mermaid - background transparent comme les blocs de code */
-.mermaid-container.mermaid-editor.mermaid-edit-mode {
-    background-color: transparent;
-}
-
-.mermaid-container.mermaid-editor.mermaid-edit-mode .mermaid-svg-container {
-    background: transparent;
-}
-
-/* Appliquer la police monospace aux blocs de code - OBLIGATOIRE */
 .code-block-container pre,
 .code-block-container code,
 .code-block-container pre code,
@@ -353,24 +145,12 @@
    ================================================================= */
 
 @media (max-width: 768px) {
-    .unified-toolbar {
-        padding: 4px 10px;
-        font-size: 12px;
-        min-height: 28px;
-    }
-    
-    /* .toolbar-btn styles supprimés - maintenant dans modern-toolbar.css */
-    
     .toolbar-left {
         gap: 6px;
     }
     
     .toolbar-right {
         gap: 6px;
-    }
-    
-    .toolbar-label {
-        font-size: 11px;
     }
     
     .language-selector {
@@ -386,17 +166,6 @@
 }
 
 @media (max-width: 480px) {
-    .unified-toolbar {
-        padding: 3px 8px;
-        min-height: 24px;
-    }
-    
-    /* .toolbar-btn styles supprimés - maintenant dans modern-toolbar.css */
-    
-    .toolbar-label {
-        font-size: 10px;
-    }
-    
     .language-selector {
         padding: 0 12px 0 0;
         font-size: 10px;

@@ -6,6 +6,7 @@
 import { initializeMermaid } from '@/services/mermaid/mermaidConfig';
 import { normalizeMermaidContent } from '@/components/chat/mermaidService';
 import { simpleLogger as logger } from '@/utils/logger';
+import './MermaidModal.css';
 
 /**
  * Fonction pour détecter le type de diagramme Mermaid
@@ -94,7 +95,7 @@ export function openMermaidModal(mermaidContent: string) {
   copyButton.title = 'Copier le code (Ctrl+C)';
   copyButton.innerHTML = `
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+      <rect x="9" y="9" width="13" height="13"></rect>
       <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
     </svg>
   `;
@@ -113,7 +114,7 @@ export function openMermaidModal(mermaidContent: string) {
       setTimeout(() => {
         copyButton.innerHTML = `
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+            <rect x="9" y="9" width="13" height="13"></rect>
             <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
           </svg>
         `;

@@ -1,0 +1,112 @@
+/* ==========================================================================
+   MERMAID THEME - DARK & ELEGANT
+   ==========================================================================
+   - Thème sombre inspiré de GitHub Dark & Linear
+   - Assure la lisibilité et la cohérence avec le container de bloc unifié
+*/
+
+/* Variables du thème Mermaid */
+:root {
+  --mermaid-theme-background: transparent; /* Le fond est géré par .unified-block-container */
+  --mermaid-theme-text-color: #d1d5db; /* Gris clair pour le texte */
+  --mermaid-theme-primary-color: #38bdf8; /* Bleu ciel pour les éléments principaux (ex: boîtes de flowchart) */
+  --mermaid-theme-primary-border-color: #0ea5e9;
+  --mermaid-theme-primary-text-color: #0c0a09; /* Texte sombre sur fond clair pour contraste */
+  --mermaid-theme-secondary-color: #374151; /* Gris sombre pour les éléments secondaires */
+  --mermaid-theme-secondary-border-color: #4b5563;
+  --mermaid-theme-secondary-text-color: #e5e7eb;
+  --mermaid-theme-tertiary-color: #1f2937;
+  --mermaid-theme-tertiary-border-color: #374151;
+  --mermaid-theme-tertiary-text-color: #d1d5db;
+  --mermaid-theme-line-color: #4b5563; /* Couleur des flèches et lignes */
+  --mermaid-theme-font-family: 'Noto Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --mermaid-theme-font-size: 14px;
+}
+
+/* Application du thème via le renderer Mermaid */
+/* Le `init` de Mermaid dans le composant doit spécifier `theme: 'base'` 
+   et `themeVariables` avec les valeurs ci-dessus.
+   Ce fichier CSS sert de fallback et pour styler des éléments
+   que les variables de thème ne peuvent pas atteindre.
+*/
+
+/* Styles globaux pour tous les SVGs Mermaid */
+.mermaid-svg-container svg {
+  font-family: var(--mermaid-theme-font-family) !important;
+  font-size: var(--mermaid-theme-font-size) !important;
+  color: var(--mermaid-theme-text-color);
+}
+
+/* Texte dans les noeuds */
+.mermaid-svg-container .nodeLabel {
+  color: var(--mermaid-theme-primary-text-color) !important;
+}
+.mermaid-svg-container .node text {
+  fill: var(--mermaid-theme-primary-text-color) !important;
+}
+
+/* Style des liens/flèches */
+.mermaid-svg-container .edgePath .path {
+  stroke: var(--mermaid-theme-line-color) !important;
+}
+.mermaid-svg-container .arrowheadPath {
+  fill: var(--mermaid-theme-line-color) !important;
+}
+
+/* Texte sur les liens */
+.mermaid-svg-container .edgeLabel {
+  background-color: var(--block-bg) !important; /* Pour que le texte soit lisible sur la ligne */
+  color: var(--mermaid-theme-text-color) !important;
+}
+.mermaid-svg-container .edgeLabel rect {
+  fill: var(--block-bg) !important;
+  opacity: 0.8;
+}
+.mermaid-svg-container .edgeLabel text {
+  fill: var(--mermaid-theme-text-color) !important;
+}
+
+
+/* Surcharge pour des types de diagrammes spécifiques si nécessaire */
+
+/* Flowchart */
+.mermaid-svg-container .flowchart-label {
+  color: var(--mermaid-theme-primary-text-color) !important;
+}
+.mermaid-svg-container .flowchart-link {
+  stroke: var(--mermaid-theme-line-color) !important;
+}
+.mermaid-svg-container .flowchart-node-rect {
+  fill: var(--mermaid-theme-primary-color) !important;
+  stroke: var(--mermaid-theme-primary-border-color) !important;
+}
+
+/* Sequence Diagram */
+.mermaid-svg-container .actor {
+  stroke: var(--mermaid-theme-secondary-border-color) !important;
+  fill: var(--mermaid-theme-secondary-color) !important;
+}
+.mermaid-svg-container .messageText {
+  fill: var(--mermaid-theme-text-color) !important;
+}
+.mermaid-svg-container .sequence-number {
+  fill: var(--mermaid-theme-text-color) !important;
+}
+
+/* Gantt Chart */
+.mermaid-svg-container .section {
+  fill: var(--mermaid-theme-secondary-color) !important;
+  stroke: var(--mermaid-theme-secondary-border-color) !important;
+}
+.mermaid-svg-container .task {
+  fill: var(--mermaid-theme-primary-color) !important;
+  stroke: var(--mermaid-theme-primary-border-color) !important;
+}
+.mermaid-svg-container .taskText {
+  fill: var(--mermaid-theme-primary-text-color) !important;
+}
+
+/* Cacher le texte d'erreur généré par Mermaid à l'intérieur du SVG */
+.mermaid-svg-container svg text.error-text {
+  display: none !important;
+}

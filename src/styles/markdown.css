@@ -311,41 +311,38 @@ html {
 }
 
 /* ==========================================================================
-     CODE - STYLE TERMINAL MODERNE
+     CODE - STYLE TERMINAL MODERNE (DÉSACTIVÉ)
    ========================================================================== */
 
-/* NOTE: Les styles pour 'pre' et 'code' sont maintenant gérés par
-   l'extension Tiptap UnifiedCodeBlockExtension et son CSS dédié
-   (src/styles/UnifiedToolbar.css) pour assurer un style cohérent
-   entre le mode lecture et le mode édition. */
+/* 
+  NOTE: Tous les styles pour 'pre' et 'code' sont maintenant gérés par
+  le fichier centralisé src/styles/unified-blocks.css pour assurer un
+  style unique et cohérent sur toute la plateforme (éditeur, chat, pages publiques).
+  Les anciennes règles ci-dessous ont été désactivées pour éviter les conflits.
+*/
 
-/* .markdown-body code { ... } */
-/* .markdown-body pre { ... } */
-/* .markdown-body pre code { ... } */
+/*
+.markdown-body code { ... }
+.markdown-body pre { ... }
+.markdown-body pre code { ... }
+*/
   
 /* Option : étiquette de langage si data-language présent */
   .markdown-body pre[data-language]::before {
-    content: attr(data-language);
-  position: absolute;
-  top: 12px;
-    left: 16px;
-    font: 600 11px/1 var(--font-monospace);
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: var(--text-3);
-    opacity: 0.9;
-}
+    content: none; /* Désactivé pour utiliser la nouvelle toolbar */
+  }
 
 /* ==========================================================================
-     CODE INLINE - STYLE MODERNE
+     CODE INLINE - STYLE MODERNE (DÉSACTIVÉ)
    ========================================================================== */
-
+/* Géré par unified-blocks.css */
+/*
 .markdown-body code,
 .public-note-container .markdown-body code,
 .public-note-content-wrapper .markdown-body code,
 .ProseMirror code {
   background: var(--surface-2);
-  color: #ff6b00; /* Orange plus foncé et plus saturé */
+  color: #ff6b00; 
   padding: 2px 6px;
   border-radius: 4px;
   font-family: 'JetBrains Mono', 'Noto Sans Mono', 'Fira Code', 'SFMono-Regular', 'Menlo', 'Consolas', 'Monaco', 'Liberation Mono', monospace !important;
@@ -353,6 +350,7 @@ html {
   font-weight: 500;
   border: 1px solid var(--border-subtle);
 }
+*/
 
 /* ==========================================================================
      PATHS - FORMATAGE AUTOMATIQUE COMME CODE INLINE
@@ -383,9 +381,10 @@ html {
 }
 
 /* ==========================================================================
-     BLOCS DE CODE - POLICE OBLIGATOIRE JETBRAINS MONO
+     BLOCS DE CODE - POLICE OBLIGATOIRE JETBRAINS MONO (DÉSACTIVÉ)
    ========================================================================== */
-
+/* Géré par unified-blocks.css */
+/*
 .markdown-body pre,
 .markdown-body pre code,
 .markdown-body .hljs,
@@ -544,6 +543,7 @@ html {
 .ProseMirror .language-xml .hljs {
   font-family: 'JetBrains Mono', 'Noto Sans Mono', 'Fira Code', 'SFMono-Regular', 'Menlo', 'Consolas', 'Monaco', 'Liberation Mono', monospace !important;
 }
+*/
 
 /* ==========================================================================
      BLOCKQUOTES - DESIGN ÉLÉGANT
@@ -1161,50 +1161,52 @@ html {
   
   .ProseMirror-dropcursor { border-top: 3px solid var(--accent-primary); opacity: 0.8; }
   
-  /* ==========================================================================
-     COPY BUTTON - STYLE PREMIUM
-     ========================================================================== */
+/* ==========================================================================
+     COPY BUTTON - STYLE PREMIUM (DÉSACTIVÉ)
+   ========================================================================== */
+/* Géré par unified-blocks.css */
+/*
+.code-copy-button {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px; 
+  height: 36px;
+  background: transparent;
+  color: var(--text-2);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  z-index: 10;
+  outline: none !important;
+}
   
-  .code-copy-button {
-    position: absolute;
-    top: 12px;
-    right: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 36px; 
-    height: 36px;
-    background: transparent;
-    color: var(--text-2);
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    z-index: 10;
-    outline: none !important;
-  }
+.code-copy-button:hover {
+  color: var(--text-1);
+}
   
-  .code-copy-button:hover {
-    color: var(--text-1);
-  }
+.code-copy-button:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
   
-  .code-copy-button:focus {
-    outline: none !important;
-    box-shadow: none !important;
-  }
+.code-copy-button.copied { 
+  background: var(--success) !important; 
+  color: white !important; 
+  border-radius: 8px;
+  padding: 8px;
+  min-width: 36px;
+  min-height: 36px;
+}
   
-  .code-copy-button.copied { 
-    background: var(--success) !important; 
-    color: white !important; 
-    border-radius: 8px;
-    padding: 8px;
-    min-width: 36px;
-    min-height: 36px;
-  }
-  
-  .code-copy-button svg { 
-    width: 18px; 
-    height: 18px; 
-  }
+.code-copy-button svg { 
+  width: 18px; 
+  height: 18px; 
+}
+*/
 
 /* ==========================================================================
      ANIMATIONS ET TRANSITIONS (avec respect motion)

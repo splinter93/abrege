@@ -34,6 +34,7 @@ import BlockquoteButton from './BlockquoteButton';
 import CodeBlockButton from './CodeBlockButton';
 import './modern-toolbar.css';
 import '@/styles/simple-editor-components.css';
+import '@/styles/unified-blocks.css'; // Système unifié pour tous les blocs
 import type { FullEditorInstance } from '@/types/editor';
 
 interface ModernToolbarProps {

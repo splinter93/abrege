@@ -6,9 +6,8 @@ import '@/styles/callouts.css';
 import '@/styles/color-buttons.css';
 import '@/styles/tiptap-extensions.css';
 import '@/styles/block-drag-drop.css';
-import '@/components/mermaid/MermaidRenderer.css';
-import '@/components/mermaid/MermaidToolbar.css';
-import '@/components/mermaid/MermaidModal.css';
+import '@/styles/mermaid.css'; // Styles Mermaid centralisés
+import '@/styles/unified-blocks.css'; // Système unifié pour tous les blocs
 import EditorLayout from './EditorLayout';
 import EditorHeader from './EditorHeader';
 import EditorContent from './EditorContent';

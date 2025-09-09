@@ -11,11 +11,10 @@ import '@/styles/public-note.css'; // CSS spécifique page publique - PRIORITÉ 
 import '@/styles/typography.css'; // Importer le CSS typography
 import '@/styles/design-system.css'; // Importer le design system pour les variables
 import '@/styles/markdown.css'; // Styles markdown complets
-import '@/styles/UnifiedToolbar.css'; // Styles des blocs de code et Mermaid
-import '@/components/mermaid/MermaidRenderer.css'; // Styles Mermaid pour les pages publiques
-import '@/components/mermaid/MermaidToolbar.css'; // Styles de la toolbar Mermaid
-import '@/components/mermaid/MermaidModal.css'; // Styles de la modal Mermaid
+import '@/styles/unified-blocks.css'; // Système unifié pour tous les blocs - PRIORITÉ
+import '@/styles/mermaid.css'; // Styles Mermaid centralisés
 import '@/styles/syntax-highlighting.css'; // Coloration syntaxique
+import '@/components/mermaid/MermaidModal.css'; // Styles de la modale Mermaid
 
 interface PublicNoteProps {
   note: {
