@@ -431,6 +431,9 @@ export class ContentApplier {
         return before + content.substring(range.start) + newContent + after;
       case 'at':
         return before + newContent + after;
+      case 'replace_match':
+        // Pour replace_match, on remplace le contenu dans la plage spécifiée
+        return before + newContent + after;
       default:
         return content;
     }

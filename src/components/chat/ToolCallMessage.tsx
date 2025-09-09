@@ -51,7 +51,7 @@ const ToolCallMessage: React.FC<ToolCallMessageProps> = ({ toolCalls, toolResult
   };
 
   // Auto-expand when any tool call is pending to improve visibility during execution
-  const hasPending = toolCalls.some(tc => getStatus(tc.id) === 'pending');
+  const hasPending = toolCalls.some(tc => tc && tc.id && getStatus(tc.id) === 'pending');
   React.useEffect(() => {
     if (hasPending) setCollapsed(false);
   }, [hasPending]);
@@ -60,24 +60,31 @@ const ToolCallMessage: React.FC<ToolCallMessageProps> = ({ toolCalls, toolResult
   const getMainEndpointName = () => {
     if (toolCalls.length === 0) return 'Tool Call';
     
+    // Filter out tool calls without function property or with invalid structure
+    const validToolCalls = toolCalls.filter(tc => tc && tc.function && tc.function.name);
+    if (validToolCalls.length === 0) return 'Tool Call';
+    
     // If all tool calls use the same function, show that name
-    const firstFunctionName = toolCalls[0].function.name;
-    const allSameFunction = toolCalls.every(tc => tc.function.name === firstFunctionName);
+    const firstFunctionName = validToolCalls[0].function.name;
+    const allSameFunction = validToolCalls.every(tc => tc.function && tc.function.name === firstFunctionName);
     
     if (allSameFunction) {
       return firstFunctionName;
     }
     
     // If multiple different functions, show the most common one
-    const functionCounts = toolCalls.reduce((acc, tc) => {
-      acc[tc.function.name] = (acc[tc.function.name] || 0) + 1;
+    const functionCounts = validToolCalls.reduce((acc, tc) => {
+      const functionName = tc.function?.name;
+      if (functionName) {
+        acc[functionName] = (acc[functionName] || 0) + 1;
+      }
       return acc;
     }, {} as Record<string, number>);
     
     const mostCommonFunction = Object.entries(functionCounts)
-      .sort(([,a], [,b]) => b - a)[0][0];
+      .sort(([,a], [,b]) => b - a)[0]?.[0];
     
-    return mostCommonFunction;
+    return mostCommonFunction || 'Tool Call';
   };
 
   const renderIndicator = (status: 'success' | 'error' | 'pending') => {
@@ -107,7 +114,7 @@ const ToolCallMessage: React.FC<ToolCallMessageProps> = ({ toolCalls, toolResult
   };
 
   const mainEndpointName = getMainEndpointName();
-  const hasMultipleFunctions = toolCalls.some(tc => tc.function.name !== mainEndpointName);
+  const hasMultipleFunctions = toolCalls.some(tc => tc && tc.function && tc.function.name && tc.function.name !== mainEndpointName);
 
   return (
     <div className={`tool-call-message ${className}`}>
@@ -137,8 +144,8 @@ const ToolCallMessage: React.FC<ToolCallMessageProps> = ({ toolCalls, toolResult
         </div>
         <div className="tool-call-status-indicators">
           {toolCalls.map((toolCall) => (
-            <div key={toolCall.id}>
-              {renderIndicator(getStatus(toolCall.id))}
+            <div key={toolCall?.id || 'unknown'}>
+              {renderIndicator(getStatus(toolCall?.id || ''))}
             </div>
           ))}
         </div>
@@ -148,6 +155,20 @@ const ToolCallMessage: React.FC<ToolCallMessageProps> = ({ toolCalls, toolResult
         <div className="tool-call-content">
           {toolCalls.map((toolCall) => {
             const result = getToolResult(toolCall.id);
+            // Vérification de sécurité pour éviter l'erreur "Cannot read properties of undefined"
+            if (!toolCall || !toolCall.function || !toolCall.function.name) {
+              return (
+                <div key={toolCall?.id || 'invalid'} className="tool-call-item">
+                  <div className="tool-call-item-header">
+                    <span className="tool-call-name">Tool Call Invalide</span>
+                  </div>
+                  <div className="tool-call-arguments">
+                    <div className="tool-call-arguments-header">Erreur</div>
+                    <pre className="tool-call-arguments-content">Structure de tool call invalide</pre>
+                  </div>
+                </div>
+              );
+            }
             return (
               <div key={toolCall.id} className="tool-call-item">
                 <div className="tool-call-item-header">
