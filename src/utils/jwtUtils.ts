@@ -4,7 +4,7 @@ import { logApi } from './logger';
 const JWT_SECRET = process.env.SUPABASE_JWT_SECRET || process.env.JWT_SECRET;
 
 if (!JWT_SECRET) {
-  logger.error("❌ La variable d'environnement SUPABASE_JWT_SECRET ou JWT_SECRET est requise mais n'a pas été trouvée.");
+  logApi.error("❌ La variable d'environnement SUPABASE_JWT_SECRET ou JWT_SECRET est requise mais n'a pas été trouvée.");
   // Dans un environnement de production, vous pourriez vouloir arrêter le processus
   // throw new Error("SUPABASE_JWT_SECRET or JWT_SECRET is missing from environment variables.");
 }
@@ -20,12 +20,12 @@ if (!JWT_SECRET) {
  */
 export function generateUserJwt(userId: string, expiresIn: string | number = '15m'): string | null {
   if (!JWT_SECRET) {
-    logger.error("❌ Tentative de génération de JWT sans secret configuré.", { userId });
+    logApi.error("❌ Tentative de génération de JWT sans secret configuré.", { userId });
     return null;
   }
   
   if (!userId) {
-    logger.warn("⚠️ Tentative de génération de JWT sans userId.");
+    logApi.warn("⚠️ Tentative de génération de JWT sans userId.");
     return null;
   }
 
@@ -53,7 +53,7 @@ export function generateUserJwt(userId: string, expiresIn: string | number = '15
     logApi.info(`🔑 JWT généré pour l'utilisateur ${userId.substring(0,8)}...`, { component: 'jwtUtils' });
     return token;
   } catch (error) {
-    logger.error("❌ Erreur lors de la signature du JWT :", { error: error instanceof Error ? error.message : String(error), userId });
+    logApi.error("❌ Erreur lors de la signature du JWT :", { error: error instanceof Error ? error.message : String(error), userId });
     return null;
   }
 }
