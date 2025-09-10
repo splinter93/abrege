@@ -7,11 +7,11 @@ import { useAppContext } from '@/hooks/useAppContext';
 import { useChatResponse } from '@/hooks/useChatResponse';
 import { useChatScroll } from '@/hooks/useChatScroll';
 import { useAuth } from '@/hooks/useAuth';
-// useToolCallDebugger supprimé
+import { useToolCallDebugger } from '@/hooks/useToolCallDebugger';
 import { useAgents } from '@/hooks/useAgents';
 import { supabase } from '@/supabaseClient';
 import ChatInput from './ChatInput';
-import ChatMessage from './ChatMessage';
+import ChatMessageOptimized from './ChatMessageOptimized';
 import { simpleLogger as logger } from '@/utils/logger';
 import './ChatWidget.css';
 
@@ -110,15 +110,17 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
     };
   }, [checkScrollPosition]);
 
-  // useToolCallDebugger supprimé - variables non utilisées
-  const toolCalls: any[] = [];
-  const toolResults: any[] = [];
-  const isDebuggerVisible = false;
-  const addToolCalls = () => {};
-  const addToolResult = () => {};
-  const clearToolCalls = () => {};
-  const toggleDebugger = () => {};
-  const hideDebugger = () => {};
+  // 🎯 Hook pour le debugger des tool calls
+  const {
+    toolCalls,
+    toolResults,
+    isDebuggerVisible,
+    addToolCalls,
+    addToolResult,
+    clearToolCalls,
+    toggleDebugger,
+    hideDebugger
+  } = useToolCallDebugger();
 
   // 🎯 Callbacks mémorisés pour le hook de chat
   const handleComplete = useCallback(async (fullContent: string, fullReasoning: string) => {
@@ -789,7 +791,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
               <div className="messages-container">
                 <div className="chat-message-list">
                   {sortedMessages.map((message) => (
-                    <ChatMessage 
+                    <ChatMessageOptimized 
                       key={message.id || `${message.role}-${message.timestamp}-${(message as any).tool_call_id || ''}`} 
                       message={message}
                       animateContent={message.role === 'assistant' && message.timestamp === new Date().toISOString().slice(0, -5) + 'Z'}

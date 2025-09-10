@@ -64,6 +64,7 @@ const ModernToolbar: React.FC<ModernToolbarProps> = ({
   const [searchTerm, setSearchTerm] = useState('');
   const [colorMenuOpen, setColorMenuOpen] = useState(false);
   const [fontScope, setFontScope] = useState<'all' | 'headings' | 'body'>('all');
+  const [audioError, setAudioError] = useState<string | null>(null);
   const fontMenuRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const colorMenuRef = useRef<HTMLDivElement>(null);
@@ -294,9 +295,9 @@ const ModernToolbar: React.FC<ModernToolbarProps> = ({
           {/* Outils IA */}
           <div className="toolbar-section">
             <Tooltip text="Dictaphone IA">
-              <AudioRecorder
+              <AudioRecorder 
                 onTranscriptionComplete={onTranscriptionComplete || (() => {})}
-                onError={(error) => logger.error(LogCategory.EDITOR, 'Erreur dictée:', error)}
+                onError={setAudioError}
                 disabled={isReadonly}
                 variant="toolbar"
               />

@@ -3,9 +3,9 @@ import React, { useMemo, useEffect, useRef } from 'react';
 import { useMarkdownRender } from '../../hooks/editor/useMarkdownRender';
 import { detectMermaidBlocks, validateMermaidSyntax, cleanMermaidContent } from './mermaidService';
 import MermaidRenderer from '@/components/mermaid/MermaidRenderer';
+import CodeBlock from './CodeBlock';
 import { createRoot } from 'react-dom/client';
 import './index.css';
-import '@/styles/mermaid.css';
 
 interface EnhancedMarkdownMessageProps {
   content: string;
@@ -32,13 +32,11 @@ const CodeBlockReplacer: React.FC<{ containerRef: React.RefObject<HTMLDivElement
       // Créer une racine React pour ce wrapper
       const root = createRoot(wrapper as HTMLElement);
       
-      // Rendre un simple code block (CodeBlock supprimé)
+      // Rendre le composant CodeBlock
       root.render(
-        <pre className="code-block">
-          <code className={`language-${language}`}>
-            {content}
-          </code>
-        </pre>
+        <CodeBlock language={language}>
+          {content}
+        </CodeBlock>
       );
     });
   }, [containerRef]);

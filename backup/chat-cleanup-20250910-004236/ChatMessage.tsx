@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChatMessage as ChatMessageType } from '@/types/chat';
 import EnhancedMarkdownMessage from './EnhancedMarkdownMessage';
+import ReasoningMessage from './ReasoningMessage';
 import ToolCallMessage from './ToolCallMessage';
 import BubbleButtons from './BubbleButtons';
 import { useChatStore } from '@/store/useChatStore';
@@ -131,9 +132,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
       <div className={`chat-message-bubble chat-message-bubble-${role}`}>
         {/* 🧠 Raisonnement affiché EN PREMIER pour les messages assistant */}
         {reasoning && role === 'assistant' && (
-          <div className="reasoning-content">
-            <pre>{reasoning}</pre>
-          </div>
+          <ReasoningMessage reasoning={reasoning} />
         )}
 
         {/* Tool calls - only for assistant messages to avoid duplicates */}

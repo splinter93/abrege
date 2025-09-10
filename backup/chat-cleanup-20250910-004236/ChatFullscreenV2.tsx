@@ -9,16 +9,18 @@ import { useChatResponseHarmony } from '@/hooks/useChatResponseHarmony';
 import { useChatScroll } from '@/hooks/useChatScroll';
 // import { useAtomicToolCalls } from '@/hooks/useAtomicToolCalls'; // Fichier supprimé
 import { useAuth } from '@/hooks/useAuth';
-// useToolCallDebugger supprimé
+import { useToolCallDebugger } from '@/hooks/useToolCallDebugger';
 import { supabase } from '@/supabaseClient';
 import ChatInput from './ChatInput';
-import ChatMessage from './ChatMessage';
+import ChatMessageOptimized from './ChatMessageOptimized';
 import ChatKebabMenu from './ChatKebabMenu';
 import ChatSidebar from './ChatSidebar';
+import ToolCallDebugger from './ToolCallDebugger';
 import ChatWidget from './ChatWidget';
 import { simpleLogger as logger, LogCategory } from '@/utils/logger';
 
 import './index.css';
+import './ReasoningMessage.css';
 import './ToolCallMessage.css';
 import Link from 'next/link';
 
@@ -64,15 +66,16 @@ const ChatFullscreenV2: React.FC = () => {
   });
 
   // 🎯 Hook pour le debugger des tool calls
-  // useToolCallDebugger supprimé - variables non utilisées
-  const toolCalls: any[] = [];
-  const toolResults: any[] = [];
-  const isDebuggerVisible = false;
-  const addToolCalls = () => {};
-  const addToolResult = () => {};
-  const clearToolCalls = () => {};
-  const toggleDebugger = () => {};
-  const hideDebugger = () => {};
+  const {
+    toolCalls,
+    toolResults,
+    isDebuggerVisible,
+    addToolCalls,
+    addToolResult,
+    clearToolCalls,
+    toggleDebugger,
+    hideDebugger
+  } = useToolCallDebugger();
 
   // 🎼 Activation automatique d'Harmony pour GPT OSS 20b et 120b
   useEffect(() => {
@@ -677,6 +680,12 @@ const ChatFullscreenV2: React.FC = () => {
       {/* Chat fullscreen (masqué quand en mode widget) */}
       <div className={`chat-fullscreen-container ${wideMode ? 'wide-mode' : ''}`} style={{ display: isWidgetMode ? 'none' : 'flex' }}>
       {/* 🔧 Tool Call Debugger */}
+      <ToolCallDebugger
+        toolCalls={toolCalls}
+        toolResults={toolResults}
+        isVisible={isDebuggerVisible}
+        onToggle={hideDebugger}
+      />
       {/* Header optimisé */}
       <div className="chat-header">
         <div className="chat-header-left">
@@ -708,6 +717,7 @@ const ChatFullscreenV2: React.FC = () => {
             onToggleWideMode={handleWideModeToggle}
             onToggleFullscreen={() => {}}
             onHistoryLimitChange={handleHistoryLimitChange}
+            onToggleToolCallDebugger={toggleDebugger}
             onToggleWidget={handleWidgetToggle}
             disabled={!user || authLoading}
           />
@@ -758,7 +768,7 @@ const ChatFullscreenV2: React.FC = () => {
           <div className="chat-messages-container">
             <div className="chat-message-list">
               {displayMessages.map((message) => (
-                <ChatMessage 
+                <ChatMessageOptimized 
                   key={message.id || `${message.role}-${message.timestamp}-${(message as any).tool_call_id || ''}`} 
                   message={message}
                   animateContent={message.role === 'assistant' && message.timestamp === new Date().toISOString().slice(0, -5) + 'Z'}

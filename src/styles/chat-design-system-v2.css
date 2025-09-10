@@ -6,10 +6,10 @@
   /* ========================================
      COULEURS DE BASE
      ======================================== */
-  --chat-bg-primary: #1a1a1f;
-  --chat-bg-secondary: #24242a;
-  --chat-bg-tertiary: #2a2a32;
-  --chat-bg-elevated: #24242a;
+  --chat-bg-primary: #0f0f12;
+  --chat-bg-secondary: #1a1a1f;
+  --chat-bg-tertiary: #1f1f25;
+  --chat-bg-elevated: #1a1a1f;
   
   /* ========================================
      COULEURS DE TEXTE
@@ -35,8 +35,8 @@
   /* ========================================
      BORDURES
      ======================================== */
-  --chat-border-primary: #2d2d35;
-  --chat-border-secondary: #3a3a42;
+  --chat-border-primary: #1f1f25;
+  --chat-border-secondary: #2a2a32;
   --chat-border-focus: #8e8ea0;
   
   /* ========================================

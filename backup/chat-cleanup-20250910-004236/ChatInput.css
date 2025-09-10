@@ -21,7 +21,7 @@
   max-width: 1000px;
   margin: 0 auto;
   background: var(--chat-bg-secondary);
-  border: none;
+  border: 1px solid var(--chat-border-primary);
   border-radius: 20px;
   padding: var(--chat-spacing-md) var(--chat-spacing-lg);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
@@ -37,6 +37,7 @@
 
 .chat-input-area:hover,
 .chat-input-area:focus-within {
+  border-color: var(--chat-border-secondary);
   background: var(--chat-bg-tertiary);
 }
 

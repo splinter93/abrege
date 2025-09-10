@@ -1,0 +1,161 @@
+/* ========================================
+   CHAT FULLSCREEN V2 - BOUTON STOP
+   ======================================== */
+
+.chat-stop-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: #dc2626;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-right: 12px;
+}
+
+.chat-stop-btn:hover {
+  background: #b91c1c;
+  transform: translateY(-1px);
+}
+
+.chat-stop-btn:active {
+  transform: translateY(0);
+}
+
+.chat-stop-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+.chat-stop-btn span {
+  font-size: 15px;
+  font-weight: 500;
+}
+
+/* Animation de pulsation pour attirer l'attention */
+@keyframes pulse-stop {
+  0% {
+    box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(220, 38, 38, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(220, 38, 38, 0);
+  }
+}
+
+.chat-stop-btn {
+  animation: pulse-stop 2s infinite;
+}
+
+/* ========================================
+   REASONING QWEN 3 - STYLES AMÉLIORÉS
+   ======================================== */
+
+.reasoning-message {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-left: 4px solid #3b82f6;
+  border-radius: 8px;
+  margin: 12px 0;
+  padding: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  position: relative;
+  overflow: hidden;
+}
+
+.reasoning-message::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #3b82f6, #8b5cf6, #06b6d4);
+  animation: shimmer 3s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0%, 100% {
+    opacity: 0.7;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.reasoning-message .markdown-content {
+  font-family: var(--chat-font-family-inter);
+  line-height: 1.6;
+  color: #374151;
+}
+
+.reasoning-message .markdown-content h2 {
+  color: #1f2937;
+  font-size: 1.1em;
+  font-weight: 600;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.reasoning-message .markdown-content h2::before {
+  content: '🧠';
+  font-size: 1.2em;
+}
+
+.reasoning-message .markdown-content hr {
+  border: none;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #d1d5db, transparent);
+  margin: 16px 0;
+}
+
+.reasoning-message .markdown-content em {
+  color: #6b7280;
+  font-style: italic;
+  font-size: 0.9em;
+}
+
+/* Animation d'apparition pour le reasoning */
+.reasoning-message {
+  animation: slideInReasoning 0.3s ease-out;
+}
+
+@keyframes slideInReasoning {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .chat-stop-btn {
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+  
+  .chat-stop-btn span {
+    font-size: 12px;
+  }
+  
+  .reasoning-message {
+    padding: 12px;
+    margin: 8px 0;
+  }
+  
+  .reasoning-message .markdown-content h2 {
+    font-size: 1em;
+  }
+} 

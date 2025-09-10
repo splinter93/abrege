@@ -1,0 +1,311 @@
+/* ========================================
+   CHAT LAYOUT - FICHIER DÉDIÉ
+   ======================================== */
+
+/* ========================================
+   LAYOUT PRINCIPAL
+   ======================================== */
+
+.chat-fullscreen-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  background: var(--chat-bg-primary);
+  color: var(--chat-text-primary);
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+.main-content-area {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+  min-height: 0; /* Important pour que flex fonctionne correctement */
+}
+
+/* ========================================
+   HEADER FIXE
+   ======================================== */
+
+.chat-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 var(--chat-spacing-xl);
+  height: var(--chat-height-header);
+  background: var(--chat-bg-primary);
+  border-bottom: 1px solid var(--chat-border-primary);
+  flex-shrink: 0;
+  z-index: calc(var(--chat-z-sidebar) + 1);
+}
+
+.chat-header-left {
+  display: flex;
+  align-items: center;
+  gap: var(--chat-spacing-lg);
+}
+
+.sidebar-toggle-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--chat-text-secondary);
+  padding: var(--chat-spacing-sm);
+  border-radius: var(--chat-radius-md);
+  transition: background var(--chat-transition-normal);
+}
+
+.sidebar-toggle-btn:hover {
+  background: var(--chat-bg-tertiary);
+}
+
+.chat-logo {
+  height: 22px;
+  width: auto;
+}
+
+.chat-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--chat-spacing-sm);
+}
+
+/* ========================================
+   LOGO
+   ======================================== */
+
+.chat-logo {
+  display: flex;
+  align-items: center;
+  margin-right: var(--chat-spacing-md);
+  margin-left: calc(-1 * var(--chat-spacing-sm));
+}
+
+.chat-logo-link {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  transition: opacity var(--chat-transition-normal);
+}
+
+.chat-logo-link:hover {
+  opacity: 0.8;
+}
+
+.chat-logo-img {
+  height: 24px;
+  width: auto;
+  object-fit: contain;
+}
+
+/* ========================================
+   NOM DE SESSION
+   ======================================== */
+
+.chat-session-info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--chat-spacing-xs);
+  align-items: center;
+}
+
+.chat-session-name {
+  font-size: var(--chat-font-size-sm);
+  font-weight: var(--chat-font-weight-medium);
+  color: var(--chat-text-secondary);
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 300px;
+  transform: translateY(3px);
+}
+
+.chat-agent-indicator {
+  display: flex;
+  align-items: center;
+  gap: var(--chat-spacing-xs);
+  font-size: var(--chat-font-size-xs);
+  color: var(--chat-text-secondary);
+  background: var(--chat-bg-secondary);
+  padding: var(--chat-spacing-xs) var(--chat-spacing-sm);
+  border-radius: var(--chat-radius-md);
+  border: 1px solid var(--chat-border-primary);
+}
+
+.agent-indicator-icon {
+  font-size: var(--chat-font-size-sm);
+}
+
+.agent-indicator-name {
+  font-weight: var(--chat-font-weight-medium);
+  color: var(--chat-text-primary);
+}
+
+.agent-indicator-model {
+  font-family: var(--chat-font-mono);
+  color: var(--chat-text-muted);
+}
+
+/* ========================================
+   CONTENU PRINCIPAL (MESSAGES + INPUT)
+   ======================================== */
+
+.chat-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+  background: var(--chat-bg-primary);
+  min-height: 0; /* Important pour que flex fonctionne correctement */
+}
+
+/* ========================================
+   BOUTON SIDEBAR FLOTTANT
+   ======================================== */
+
+.sidebar-toggle-btn-floating {
+  position: absolute;
+  top: var(--chat-spacing-lg);
+  left: var(--chat-spacing-lg);
+  z-index: var(--chat-z-sidebar);
+  background: none;
+  border: none;
+  border-radius: var(--chat-radius-lg);
+  color: var(--chat-text-secondary);
+  cursor: pointer;
+  padding: var(--chat-spacing-sm);
+  transition: all var(--chat-transition-normal);
+}
+
+.sidebar-toggle-btn-floating:hover {
+  background: var(--chat-bg-tertiary);
+  color: var(--chat-text-primary);
+}
+
+/* ========================================
+   AJUSTEMENT QUAND LA SIDEBAR EST OUVERTE
+   ======================================== */
+
+.chat-fullscreen-container.sidebar-open .chat-content {
+  /* Cette logique est maintenant gérée par le layout flex de la sidebar elle-même */
+}
+
+/* ========================================
+   RESPONSIVE - MOBILE
+   ======================================== */
+
+@media (max-width: 768px) {
+  .chat-fullscreen-container.sidebar-open .chat-content {
+    margin-left: 0;
+    width: 100vw;
+  }
+}
+
+/* ========================================
+   MESSAGES CONTAINER
+   ======================================== */
+
+.chat-messages-container {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: var(--chat-spacing-xl);
+  padding-bottom: 10rem;
+  background: var(--chat-bg-primary);
+  min-height: 0; /* Important pour que flex fonctionne correctement */
+  /* Amélioration du scroll */
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch; /* Pour iOS */
+  /* Optimisations de performance */
+  will-change: scroll-position;
+  transform: translateZ(0); /* Force hardware acceleration */
+  backface-visibility: hidden;
+}
+
+  .chat-message-list {
+    max-width: 1000px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: var(--chat-spacing-sm);
+    /* Optimisations de performance */
+    will-change: transform;
+    transform: translateZ(0);
+    /* Assurer que le contenu ne déborde pas */
+    width: 100%;
+    /* Protection contre le débordement */
+    overflow-x: auto;
+    overflow-y: visible;
+  }
+
+/* ========================================
+   INPUT CONTAINER
+   ======================================== */
+
+.chat-input-container {
+  flex-shrink: 0;
+  background: var(--chat-bg-primary);
+  padding: var(--chat-spacing-lg);
+  z-index: var(--chat-z-sidebar);
+}
+
+/* ========================================
+   TYPING INDICATOR
+   ======================================== */
+
+.chat-typing-indicator {
+  display: flex;
+  gap: var(--chat-spacing-xs);
+  margin-top: var(--chat-spacing-sm);
+  justify-content: flex-start;
+}
+
+.chat-typing-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--chat-text-secondary);
+  animation: chatTyping 1.4s infinite ease-in-out;
+}
+
+.chat-typing-dot:nth-child(1) { animation-delay: -0.32s; }
+.chat-typing-dot:nth-child(2) { animation-delay: -0.16s; }
+
+@keyframes chatTyping {
+  0%, 80%, 100% {
+    transform: scale(0.8);
+    opacity: 0.5;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* ========================================
+   RESPONSIVE
+   ======================================== */
+
+@media (max-width: 768px) {
+  .chat-header {
+    height: 44px;
+    padding: 0 var(--chat-spacing-lg);
+  }
+  
+  .chat-header-left {
+    gap: var(--chat-spacing-sm);
+  }
+
+  .chat-messages-container {
+    padding: var(--chat-spacing-lg);
+    padding-bottom: 7rem;
+  }
+} 

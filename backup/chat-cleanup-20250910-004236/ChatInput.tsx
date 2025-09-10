@@ -1,8 +1,10 @@
 'use client';
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { Send, Plus, Zap, Globe, Search, ArrowUp } from 'react-feather';
-import { logger, LogCategory } from '@/utils/logger';
+import LoadingSpinner from './LoadingSpinner';
 import AudioRecorder from './AudioRecorder';
+import { logger, LogCategory } from '@/utils/logger';
+import './LoadingSpinner.css';
 
 interface ChatInputProps {
   onSend: (message: string) => void;
@@ -86,21 +88,21 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend, loading, textareaRef, dis
   return (
     <div className="chat-input-area">
       {/* Affichage des erreurs audio */}
-        {audioError && (
-          <div className="chat-input-audio-error">
-            <div className="chat-input-audio-error-content">
-              <span className="chat-input-audio-error-icon">🎤</span>
-              <span className="chat-input-audio-error-text">{audioError}</span>
-              <button 
-                className="chat-input-audio-error-close"
-                onClick={() => setAudioError(null)}
-                aria-label="Fermer l'erreur"
-              >
-                ×
-              </button>
-            </div>
+      {audioError && (
+        <div className="chat-input-audio-error">
+          <div className="chat-input-audio-error-content">
+            <span className="chat-input-audio-error-icon">🎤</span>
+            <span className="chat-input-audio-error-text">{audioError}</span>
+            <button 
+              className="chat-input-audio-error-close"
+              onClick={() => setAudioError(null)}
+              aria-label="Fermer l'erreur"
+            >
+              ×
+            </button>
           </div>
-        )}
+        </div>
+      )}
 
       <div className="chat-input-main">
         <div className="chat-input-content">
@@ -134,6 +136,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend, loading, textareaRef, dis
         </div>
         
         <div className="chat-input-actions">
+          {/* Composant AudioRecorder isolé et propre */}
           <AudioRecorder 
             onTranscriptionComplete={handleTranscriptionComplete}
             onError={setAudioError}
@@ -147,7 +150,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend, loading, textareaRef, dis
             aria-label="Envoyer le message"
           >
             {loading ? (
-              <div className="loading-spinner">⏳</div>
+              <LoadingSpinner size={16} variant="spinner" className="loading-spinner" />
             ) : (
               <ArrowUp size={16} />
             )}

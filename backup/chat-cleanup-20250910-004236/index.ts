@@ -1,7 +1,7 @@
 // Composants de base
 export { default as ChatFullscreenV2 } from './ChatFullscreenV2';
 export { default as ChatWidget } from './ChatWidget';
-// ChatModeToggle supprimé
+export { default as ChatModeToggle } from './ChatModeToggle';
 export { default as ChatSidebar } from './ChatSidebar';
 export { default as ChatInput } from './ChatInput';
 export { default as ChatKebabMenu } from './ChatKebabMenu';
@@ -9,9 +9,9 @@ export { default as ChatKebabMenu } from './ChatKebabMenu';
 // Composants de rendu des messages
 export { default as EnhancedMarkdownMessage } from './EnhancedMarkdownMessage';
 export { default as MermaidRenderer } from '@/components/mermaid/MermaidRenderer';
-// OptimizedMessage supprimé
+export { default as OptimizedMessage } from './OptimizedMessage';
 export { default as ToolCallMessage } from './ToolCallMessage';
-// ToolCallDebugger supprimé
+export { default as ToolCallDebugger } from './ToolCallDebugger';
 
 // Composants d'interface
 export { default as BubbleButtons } from './BubbleButtons';

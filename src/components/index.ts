@@ -41,4 +41,4 @@ export { default as LoadingPage } from './LoadingPage';
 export { DossierLoadingState, DossierErrorState, DossierEmptyState } from './DossierLoadingStates';
 
 // Composant de chargement pour le chat
-export { default as LoadingSpinner } from './chat/LoadingSpinner'; 
+// LoadingSpinner supprimé 

@@ -14,8 +14,9 @@
 @import './ChatSidebar.css';
 @import './ChatInput.css';
 @import './ChatMessage.css';
+@import './MessageContainer.css';
 @import './ChatMarkdown.css';
-@import './AudioRecorder.css';
+@import './HarmonyReasoningMessage.css';
 /* Mermaid styles are now handled via themeVariables in CodeBlockWithCopy.ts */
 
 /* ========================================

@@ -1,0 +1,611 @@
+/* ========================================
+   CHAT WIDGET - VERSION COMPACTE
+   ======================================== */
+
+/* Surcharge du layout principal pour le mode widget */
+.chat-fullscreen-container.chat-widget-mode {
+  position: fixed !important;
+  bottom: 20px !important;
+  right: 20px !important;
+  top: auto !important;
+  left: auto !important;
+  width: 400px !important;
+  height: 600px !important;
+  max-width: calc(100vw - 40px) !important;
+  max-height: calc(100vh - 40px) !important;
+  border-radius: 16px !important;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15) !important;
+  border: 1px solid var(--chat-border-primary) !important;
+  overflow: hidden !important;
+  z-index: 1000 !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* Animation d'entrée pour le widget */
+.chat-fullscreen-container.chat-widget-mode {
+  animation: widgetSlideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes widgetSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Header compact pour le widget */
+.chat-fullscreen-container.chat-widget-mode .chat-header {
+  height: 44px;
+  padding: 0 12px;
+  border-bottom: 1px solid var(--chat-border-primary);
+  background: var(--chat-bg-primary);
+}
+
+/* Logo plus petit dans le widget */
+.chat-fullscreen-container.chat-widget-mode .chat-logo-img {
+  height: 16px;
+}
+
+/* Réduire la taille du texte dans le header */
+.chat-fullscreen-container.chat-widget-mode .chat-header span {
+  font-size: 13px !important;
+}
+
+/* ========================================
+   AVATAR ET INFOS DE L'AGENT
+   ======================================== */
+.chat-agent-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-right: 8px;
+}
+
+.chat-agent-avatar-placeholder {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--chat-accent-primary);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 600;
+  margin-right: 8px;
+}
+
+.chat-agent-info {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.chat-agent-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--chat-text-primary);
+  line-height: 1.2;
+}
+
+.chat-agent-model {
+  font-size: 11px;
+  color: var(--chat-text-secondary);
+  opacity: 0.8;
+  line-height: 1.2;
+}
+
+/* Bouton de fermeture pour le widget */
+.chat-widget-close-btn {
+  background: none;
+  border: none;
+  color: var(--chat-text-secondary);
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.chat-widget-close-btn:hover {
+  background: var(--chat-bg-tertiary);
+  color: var(--chat-text-primary);
+}
+
+.chat-widget-close-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* Zone de messages compacte */
+.chat-fullscreen-container.chat-widget-mode .messages-container {
+  flex: 1;
+  overflow-y: auto;
+  /* Ajout d'un espace en bas pour ne pas couper le dernier message sous l'input */
+  padding: 8px 20px 88px;
+}
+
+/* Ajuster l'espacement des messages pour éviter les débordements */
+.chat-fullscreen-container.chat-widget-mode .chat-message {
+  margin-bottom: 4px;
+  padding: 0 4px;
+}
+
+/* Réduire l'espacement entre les messages */
+.chat-fullscreen-container.chat-widget-mode .chat-message-list {
+  gap: 4px;
+}
+
+/* Messages plus compacts */
+.chat-fullscreen-container.chat-widget-mode .chat-message {
+  margin-bottom: 4px;
+}
+
+.chat-fullscreen-container.chat-widget-mode .chat-message-bubble {
+  padding: 6px 8px;
+  font-size: 13px;
+  line-height: 1.3;
+  border-radius: 10px;
+  width: fit-content;
+  max-width: calc(100% - 40px);
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
+  display: table;
+  table-layout: fixed;
+}
+
+/* Assistant: occuper quasi 100% en widget */
+.chat-fullscreen-container.chat-widget-mode .chat-message-assistant {
+  margin-right: 8px; /* au lieu de 60px en fullscreen */
+}
+
+.chat-fullscreen-container.chat-widget-mode .chat-message.assistant .chat-message-bubble,
+.chat-fullscreen-container.chat-widget-mode .chat-message.assistant .chat-message-bubble-assistant {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  margin-right: 0;
+  padding: 6px 6px; /* padding réduit pour gagner en largeur utile */
+}
+
+/* Ajuster les bulles de l'utilisateur */
+.chat-fullscreen-container.chat-widget-mode .chat-message.user .chat-message-bubble {
+  max-width: calc(100% - 60px);
+  margin-left: auto;
+  margin-right: 8px;
+}
+
+/* Réduire la taille des titres dans les messages */
+.chat-fullscreen-container.chat-widget-mode .chat-message-bubble h1,
+.chat-fullscreen-container.chat-widget-mode .chat-message-bubble h2,
+.chat-fullscreen-container.chat-widget-mode .chat-message-bubble h3 {
+  font-size: 15px;
+  margin: 8px 0 4px 0;
+}
+
+.chat-fullscreen-container.chat-widget-mode .chat-message-bubble h4,
+.chat-fullscreen-container.chat-widget-mode .chat-message-bubble h5,
+.chat-fullscreen-container.chat-widget-mode .chat-message-bubble h6 {
+  font-size: 13px;
+  margin: 6px 0 3px 0;
+}
+
+/* Réduire la taille des paragraphes */
+.chat-fullscreen-container.chat-widget-mode .chat-message-bubble p {
+  margin: 4px 0;
+  font-size: 14px;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+/* Gérer les longs mots et URLs */
+.chat-fullscreen-container.chat-widget-mode .chat-message-bubble a {
+  word-break: break-all;
+  overflow-wrap: break-word;
+}
+
+.chat-fullscreen-container.chat-widget-mode .chat-message-bubble code {
+  word-break: break-all;
+  white-space: pre-wrap;
+}
+
+/* Réduire la taille des listes */
+.chat-fullscreen-container.chat-widget-mode .chat-message-bubble ul,
+.chat-fullscreen-container.chat-widget-mode .chat-message-bubble ol {
+  margin: 4px 0;
+  padding-left: 16px;
+}
+
+.chat-fullscreen-container.chat-widget-mode .chat-message-bubble li {
+  margin: 2px 0;
+  font-size: 14px;
+}
+
+/* Réduire la taille du code */
+.chat-fullscreen-container.chat-widget-mode .chat-message-bubble code {
+  font-size: 11px;
+  padding: 2px 4px;
+}
+
+.chat-fullscreen-container.chat-widget-mode .chat-message-bubble pre {
+  font-size: 11px;
+  padding: 8px;
+  margin: 6px 0;
+}
+
+/* Réduire la taille des tableaux */
+.chat-fullscreen-container.chat-widget-mode .chat-message-bubble table {
+  font-size: 11px;
+  margin: 6px 0;
+}
+
+.chat-fullscreen-container.chat-widget-mode .chat-message-bubble th,
+.chat-fullscreen-container.chat-widget-mode .chat-message-bubble td {
+  padding: 4px 6px;
+  font-size: 11px;
+}
+
+/* Input compact */
+.chat-fullscreen-container.chat-widget-mode .chat-input-container {
+  padding: 8px 8px 12px 8px;
+  background: var(--chat-bg-primary);
+}
+
+/* Styles spécifiques pour le composant ChatInput dans le widget */
+.chat-fullscreen-container.chat-widget-mode .chat-input-area {
+  min-height: 36px;
+  max-height: 100px;
+  padding: 3px 6px;
+  border-radius: 14px;
+}
+
+.chat-fullscreen-container.chat-widget-mode .chat-input-textarea {
+  min-height: 18px;
+  max-height: 60px;
+  padding: 6px 3px 3px 0;
+  font-size: 14px;
+}
+
+.chat-fullscreen-container.chat-widget-mode .chat-input-icons {
+  padding: 1px 0;
+  margin-top: 2px;
+}
+
+.chat-fullscreen-container.chat-widget-mode .chat-input-actions {
+  gap: 4px;
+}
+
+.chat-fullscreen-container.chat-widget-mode .chat-input-send,
+.chat-fullscreen-container.chat-widget-mode .chat-input-speaker,
+.chat-fullscreen-container.chat-widget-mode .chat-input-mic {
+  width: 24px;
+  height: 24px;
+}
+
+.chat-fullscreen-container.chat-widget-mode .chat-input-icon-btn {
+  padding: 3px;
+}
+
+/* Réduire la taille du placeholder */
+.chat-fullscreen-container.chat-widget-mode .chat-input::placeholder {
+  font-size: 12px;
+}
+
+/* Bouton d'envoi plus petit */
+.chat-fullscreen-container.chat-widget-mode .send-button {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  padding: 0;
+}
+
+.chat-fullscreen-container.chat-widget-mode .send-button svg {
+  width: 12px;
+  height: 12px;
+}
+
+/* Réduire la taille des boutons du header */
+.chat-fullscreen-container.chat-widget-mode .chat-widget-close-btn {
+  padding: 6px;
+}
+
+.chat-fullscreen-container.chat-widget-mode .chat-widget-close-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* Masquer la sidebar dans le mode widget */
+.chat-fullscreen-container.chat-widget-mode .chat-sidebar {
+  display: none;
+}
+
+/* Masquer le bouton toggle sidebar */
+.chat-fullscreen-container.chat-widget-mode .sidebar-toggle-btn {
+  display: none;
+}
+
+/* Responsive pour le widget */
+@media (max-width: 480px) {
+  .chat-fullscreen-container.chat-widget-mode {
+    bottom: 10px;
+    right: 10px;
+    left: 10px;
+    width: auto;
+    height: 500px;
+    max-width: none;
+    max-height: calc(100vh - 20px);
+  }
+}
+
+/* Mode minimisé pour le widget */
+.chat-fullscreen-container.chat-widget-mode.chat-widget-minimized {
+  width: 48px !important;
+  height: 48px !important;
+  border-radius: 50% !important;
+  overflow: hidden;
+  padding: 0 !important;
+  border: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+
+.chat-fullscreen-container.chat-widget-mode.chat-widget-minimized .chat-header,
+.chat-fullscreen-container.chat-widget-mode.chat-widget-minimized .messages-container,
+.chat-fullscreen-container.chat-widget-mode.chat-widget-minimized .chat-input-container {
+  display: none;
+}
+
+.chat-fullscreen-container.chat-widget-mode.chat-widget-minimized .chat-widget-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);
+  color: white;
+  border: none;
+  cursor: pointer;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+  box-shadow: 
+    0 4px 12px rgba(0, 0, 0, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+.chat-widget-toggle {
+  display: none;
+}
+
+.chat-fullscreen-container.chat-widget-mode.chat-widget-minimized .chat-widget-toggle:hover {
+  background: var(--chat-accent-hover);
+  transform: scale(1.05);
+}
+
+.chat-fullscreen-container.chat-widget-mode.chat-widget-minimized .chat-widget-toggle svg {
+  width: 22px;
+  height: 22px;
+}
+
+/* Bouton flottant pour ouvrir le widget - Design moderne et compact */
+.chat-widget-floating-btn {
+  position: fixed;
+  bottom: 16px;
+  right: 16px;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--chat-accent-primary) 0%, var(--chat-accent-hover) 100%);
+  color: white;
+  border: none;
+  cursor: pointer;
+  box-shadow: 
+    0 4px 12px rgba(0, 0, 0, 0.1),
+    0 8px 24px rgba(0, 0, 0, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 2147483646; /* au-dessus de l'app */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  animation: widgetButtonFadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.chat-widget-floating-btn:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 
+    0 8px 20px rgba(0, 0, 0, 0.12),
+    0 16px 32px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  background: linear-gradient(135deg, var(--chat-accent-hover) 0%, var(--chat-accent-primary) 100%);
+}
+
+.chat-widget-floating-btn:active {
+  transform: translateY(0) scale(0.98);
+  transition: all 0.1s ease;
+}
+
+.chat-widget-floating-btn svg {
+  width: 20px;
+  height: 20px;
+  stroke-width: 2;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
+}
+
+/* Masquer le bouton flottant quand le widget est ouvert */
+.chat-widget-floating-btn.hidden {
+  display: none;
+}
+
+/* Animation d'apparition pour le bouton */
+@keyframes widgetButtonFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.8) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+
+
+/* Indicateur de notification (optionnel) */
+.chat-widget-floating-btn::before {
+  content: '';
+  position: absolute;
+  top: -1px;
+  right: -1px;
+  width: 10px;
+  height: 10px;
+  background: #ef4444;
+  border-radius: 50%;
+  border: 2px solid white;
+  opacity: 0;
+  transform: scale(0);
+  transition: all 0.2s ease;
+}
+
+.chat-widget-floating-btn.has-notification::before {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* ========================================
+   POSITIONS DU WIDGET
+   ======================================== */
+
+.chat-widget-bottom-right {
+  bottom: 20px;
+  right: 20px;
+}
+
+.chat-widget-bottom-left {
+  bottom: 20px;
+  left: 20px;
+}
+
+.chat-widget-top-right {
+  top: 20px;
+    right: 20px;
+}
+
+.chat-widget-top-left {
+  top: 20px;
+    left: 20px;
+  }
+  
+/* ========================================
+   TAILLES DU WIDGET
+   ======================================== */
+
+.chat-widget-small {
+  width: 320px;
+  height: 480px;
+}
+
+.chat-widget-small .chat-message-bubble {
+  font-size: 12px;
+  padding: 5px 8px;
+  max-width: calc(100% - 50px);
+}
+
+.chat-widget-small .chat-message.assistant .chat-message-bubble,
+.chat-widget-small .chat-message.assistant .chat-message-bubble-assistant {
+  max-width: calc(100% - 70px) !important;
+  width: auto !important;
+}
+
+.chat-widget-small .chat-message.user .chat-message-bubble {
+  max-width: calc(100% - 70px);
+}
+
+.chat-widget-small .chat-input {
+  font-size: 12px;
+  min-height: 32px;
+}
+
+.chat-widget-small .chat-header {
+  height: 40px;
+}
+
+.chat-widget-small .chat-logo-img {
+  height: 14px;
+}
+
+.chat-widget-medium {
+  width: 400px;
+  height: 600px;
+}
+
+.chat-widget-large {
+  width: 500px;
+  height: 700px;
+}
+
+.chat-widget-large .chat-message-bubble {
+  font-size: 15px;
+  padding: 8px 12px;
+  max-width: calc(100% - 30px);
+}
+
+.chat-widget-large .chat-message.assistant .chat-message-bubble,
+.chat-widget-large .chat-message.assistant .chat-message-bubble-assistant {
+  max-width: calc(100% - 50px) !important;
+  width: auto !important;
+}
+
+.chat-widget-large .chat-message.user .chat-message-bubble {
+  max-width: calc(100% - 50px);
+}
+
+.chat-widget-large .chat-input {
+  font-size: 15px;
+  min-height: 40px;
+}
+
+.chat-widget-large .chat-header {
+  height: 50px;
+}
+
+.chat-widget-large .chat-logo-img {
+  height: 18px;
+}
+
+/* Responsive pour toutes les tailles */
+@media (max-width: 480px) {
+  .chat-widget-small,
+  .chat-widget-medium,
+  .chat-widget-large {
+    bottom: 10px;
+    right: 10px;
+    left: 10px;
+    width: auto;
+    height: 500px;
+    max-width: none;
+    max-height: calc(100vh - 20px);
+  }
+} 
+
+/* ========================================
+   BULLE ASSISTANT PLEINE LARGEUR EN WIDGET
+   ======================================== */
+.chat-fullscreen-container.chat-widget-mode .chat-message-bubble-assistant {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  padding: 6px 8px;
+  box-sizing: border-box;
+} 

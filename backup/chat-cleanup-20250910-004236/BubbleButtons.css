@@ -1,0 +1,404 @@
+/* ========================================
+   BUBBLE BUTTONS - BOUTONS D'ACTION SOUS LES BULLES
+   ======================================== */
+
+.bubble-buttons {
+  display: flex;
+  justify-content: flex-start;
+  margin-top: 2px;
+  margin-bottom: 0;
+  width: 60%;
+  opacity: 0;
+  transition: opacity var(--chat-transition-normal);
+}
+
+.chat-message-user .bubble-buttons,
+.bubble-buttons-user {
+  justify-content: flex-end;
+}
+
+/* ========================================
+   AFFICHAGE AU HOVER
+   ======================================== */
+
+.chat-message-container:hover .bubble-buttons,
+.chat-message:hover .bubble-buttons {
+  opacity: 1;
+}
+
+.chat-message-assistant .bubble-buttons {
+  justify-content: flex-start;
+  width: auto;
+}
+
+.bubble-buttons-container {
+  display: flex;
+  gap: 3px;
+  align-items: center;
+}
+
+/* ========================================
+   BOUTONS INDIVIDUELS
+   ======================================== */
+
+.bubble-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  background: transparent;
+  color: var(--chat-text-secondary);
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: color var(--chat-transition-normal), transform var(--chat-transition-fast);
+  padding: 0;
+}
+
+.bubble-button:hover {
+  background: transparent;
+  color: var(--chat-text-primary);
+  transform: none;
+}
+
+.bubble-button:active {
+  transform: scale(0.92);
+}
+
+/* ========================================
+   BOUTON COPIER - ÉTATS SPÉCIAUX
+   ======================================== */
+
+.copy-button.copied {
+  color: var(--chat-text-success);
+}
+
+.copy-button.copied:hover {
+  background: var(--chat-bg-success);
+  color: var(--chat-text-success);
+}
+
+
+
+/* ========================================
+   MENU KEBBAB DROPDOWN
+   ======================================== */
+
+.bubble-kebab-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 999;
+}
+
+.bubble-kebab-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background: var(--chat-bg-elevated, #ffffff);
+  border: 1px solid var(--chat-border-primary, #e5e7eb);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), 0 4px 16px rgba(0, 0, 0, 0.08);
+  min-width: 280px;
+  max-width: 320px;
+  z-index: 1000;
+  overflow: hidden;
+  backdrop-filter: blur(20px);
+  animation: kebabDropdownSlide 0.2s ease-out;
+}
+
+@keyframes kebabDropdownSlide {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ========================================
+   SECTIONS
+   ======================================== */
+
+.kebab-section {
+  padding: 12px 0;
+}
+
+.kebab-section:not(:last-child) {
+  border-bottom: 1px solid var(--chat-border-primary, #e5e7eb);
+}
+
+.kebab-section-title {
+  padding: 8px 16px 12px 16px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--chat-text-muted, #6b7280);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+
+/* ========================================
+   OPTIONS
+   ======================================== */
+
+.kebab-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 16px;
+  background: none;
+  border: none;
+  color: var(--chat-text-primary, #111827);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-size: 15px;
+  font-weight: 500;
+  text-align: left;
+  position: relative;
+}
+
+.kebab-option:hover {
+  background: var(--chat-bg-tertiary, #f3f4f6);
+  color: var(--chat-text-primary, #111827);
+}
+
+.kebab-option:active {
+  background: var(--chat-bg-quaternary, #e5e7eb);
+  transform: scale(0.98);
+}
+
+.kebab-option-icon {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+}
+
+.kebab-option span {
+  flex: 1;
+  line-height: 1.4;
+}
+
+/* ========================================
+   TOGGLES
+   ======================================== */
+
+.kebab-toggle {
+  background: #e5e7eb;
+  border: none;
+  border-radius: 20px;
+  width: 48px;
+  height: 24px;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.kebab-toggle.enabled {
+  background: #3b82f6;
+}
+
+.kebab-toggle.small {
+  width: 40px;
+  height: 20px;
+}
+
+.kebab-toggle-slider {
+  background: #ffffff;
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  transition: all 0.3s ease;
+  transform: translateX(-12px);
+}
+
+.kebab-toggle-slider.small {
+  width: 14px;
+  height: 14px;
+  transform: translateX(-10px);
+}
+
+.kebab-toggle.enabled .kebab-toggle-slider {
+  transform: translateX(12px);
+}
+
+.kebab-toggle.enabled .kebab-toggle-slider.small {
+  transform: translateX(10px);
+}
+
+/* ========================================
+   INPUTS ET GROUPES
+   ======================================== */
+
+.kebab-input-group {
+  padding: 12px 16px;
+}
+
+.kebab-input-label {
+  display: block;
+  font-size: 12px;
+  color: var(--chat-text-muted, #6b7280);
+  margin-bottom: 8px;
+  font-weight: 500;
+  line-height: 1.3;
+}
+
+.kebab-range-slider {
+  width: 100%;
+  height: 6px;
+  border-radius: 3px;
+  background: #e5e7eb;
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+  cursor: pointer;
+  margin-bottom: 8px;
+}
+
+.kebab-range-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #3b82f6;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  transition: all 0.2s ease;
+}
+
+.kebab-range-slider::-webkit-slider-thumb:hover {
+  background: #2563eb;
+  transform: scale(1.1);
+}
+
+.kebab-range-slider::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #3b82f6;
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.kebab-range-value {
+  text-align: center;
+  font-size: 12px;
+  color: var(--chat-text-muted, #6b7280);
+  font-weight: 600;
+  font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, monospace;
+}
+
+/* ========================================
+   RESPONSIVE
+   ======================================== */
+
+@media (max-width: 768px) {
+  .bubble-kebab-dropdown {
+    min-width: 240px;
+    max-width: 280px;
+    right: -8px;
+  }
+  
+  .kebab-option {
+    padding: 14px 16px;
+    font-size: 15px;
+  }
+}
+
+@media (max-width: 480px) {
+  .bubble-kebab-dropdown {
+    min-width: 200px;
+    max-width: 260px;
+    right: -16px;
+  }
+}
+
+/* ========================================
+   ICÔNES
+   ======================================== */
+
+.bubble-button svg {
+  flex-shrink: 0;
+  transition: transform var(--chat-transition-normal);
+}
+
+/* ========================================
+   RESPONSIVE DESIGN
+   ======================================== */
+
+@media (max-width: 768px) {
+  .bubble-buttons {
+    margin-top: 2px;
+  }
+  
+  .bubble-buttons-container {
+    gap: 4px;
+  }
+  
+  .bubble-button {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .bubble-buttons {
+    margin-top: 1px;
+  }
+  
+  .bubble-buttons-container {
+    gap: 4px;
+  }
+  
+  .bubble-button {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+/* ========================================
+   ANIMATIONS D'ENTRÉE
+   ======================================== */
+
+.bubble-buttons {
+  /* Animation supprimée car les boutons sont cachés par défaut */
+}
+
+/* ========================================
+   ACCESSIBILITÉ
+   ======================================== */
+
+.bubble-button:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+.bubble-button:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+
+/* ========================================
+   THÈME SOMBRE/CLAIR (VARIABLES CSS)
+   ======================================== */
+
+:root {
+  --chat-text-success: #22c55e;
+  --chat-bg-success: rgba(34, 197, 94, 0.1);
+  --chat-accent-primary: #3b82f6;
+} 

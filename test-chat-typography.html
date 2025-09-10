@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Typographie Chat - Scrivia</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Helvetica Neue", Arial, sans-serif;
+            background: #1a1a1a;
+            color: #ffffff;
+            padding: 2rem;
+            line-height: 1.6;
+        }
+        
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #2d2d2d;
+            padding: 2rem;
+            border-radius: 12px;
+        }
+        
+        /* Styles du chat appliqués */
+        .chat-markdown {
+            font-size: 16px;
+            line-height: 1.6;
+            color: inherit;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Helvetica Neue", Arial, sans-serif;
+            font-weight: 400;
+            text-rendering: optimizeLegibility;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        
+        .chat-markdown h1 {
+            font-size: 1.875rem;
+            font-weight: 600;
+            margin: 1.5rem 0 1rem 0;
+            line-height: 1.2;
+            color: inherit;
+            letter-spacing: -0.025em;
+        }
+        
+        .chat-markdown h2 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin: 1.25rem 0 0.75rem 0;
+            line-height: 1.25;
+            color: inherit;
+            letter-spacing: -0.025em;
+        }
+        
+        .chat-markdown p {
+            margin: 0 0 0.85em 0;
+            line-height: 1.6;
+            font-size: 1rem;
+        }
+        
+        .chat-markdown code {
+            background: rgba(255,255,255,0.10);
+            padding: 0.2em 0.4em;
+            border-radius: 4px;
+            font-family: 'JetBrains Mono', 'Noto Sans Mono', 'Fira Code', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+            font-size: 0.9em;
+            color: #ff6b35;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        
+        .chat-markdown pre {
+            background: #1a1a1a !important;
+            color: #a0a0a0 !important;
+            border: none !important;
+            border-radius: 8px !important;
+            padding: 16px 20px !important;
+            margin: 1.75rem 0 !important;
+            font-family: 'JetBrains Mono', monospace !important;
+            font-size: 14px !important;
+            line-height: 1.8 !important;
+            text-decoration: none !important;
+            white-space: pre !important;
+            overflow-x: auto !important;
+            display: block !important;
+        }
+        
+        .chat-markdown pre code {
+            background: none !important;
+            padding: 0 !important;
+            border-radius: 0 !important;
+            font-size: inherit !important;
+            line-height: inherit !important;
+            color: inherit !important;
+            font-family: inherit !important;
+        }
+        
+        .chat-markdown a {
+            color: #2563eb;
+            text-decoration: underline;
+            text-decoration-thickness: 1px;
+            text-underline-offset: 2px;
+            transition: color 0.15s ease;
+        }
+        
+        .chat-markdown a:hover {
+            color: #1d4ed8;
+            text-decoration-thickness: 2px;
+        }
+        
+        .chat-markdown ul, .chat-markdown ol {
+            margin: 1rem 0;
+            padding-left: 1.5rem;
+            line-height: 1.6;
+        }
+        
+        .chat-markdown li {
+            margin: 0.25rem 0;
+            line-height: 1.6;
+            font-size: 1rem;
+        }
+        
+        .chat-markdown blockquote {
+            margin: 1rem 0;
+            padding: 0.75rem 1rem;
+            border-left: 4px solid #e5e7eb;
+            background: rgba(0, 0, 0, 0.02);
+            border-radius: 0 6px 6px 0;
+            font-style: italic;
+            color: inherit;
+            line-height: 1.6;
+        }
+        
+        .chat-markdown table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+            font-size: 0.875rem;
+            line-height: 1.5;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .chat-markdown th, .chat-markdown td {
+            padding: 0.75rem 1rem;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+            color: inherit;
+        }
+        
+        .chat-markdown th {
+            background: #f9fafb;
+            font-weight: 600;
+            color: inherit;
+            font-size: 0.875rem;
+        }
+        
+        .chat-markdown tr:hover {
+            background: #f9fafb;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>Test Typographie Chat - Style ChatGPT</h1>
+        
+        <div class="chat-markdown">
+            <h1>Titre Principal</h1>
+            <p>Ceci est un paragraphe de test avec du <strong>texte en gras</strong> et du <em>texte en italique</em>. Le line-height est maintenant de 1.6 comme ChatGPT.</p>
+            
+            <h2>Titre Secondaire</h2>
+            <p>Voici un <a href="#">lien de test</a> avec la couleur bleue de ChatGPT (#2563eb).</p>
+            
+            <h3>Code Inline</h3>
+            <p>Voici du code inline : <code>const message = "Hello World"</code> avec le style unifié.</p>
+            
+            <h3>Bloc de Code</h3>
+            <pre><code>function greetUser(name) {
+  console.log(`Hello, ${name}!`);
+  return `Welcome to Scrivia, ${name}`;
+}
+
+const user = "Développeur";
+const greeting = greetUser(user);</code></pre>
+            
+            <h3>Liste</h3>
+            <ul>
+                <li>Premier élément de la liste</li>
+                <li>Deuxième élément avec <code>code inline</code></li>
+                <li>Troisième élément</li>
+            </ul>
+            
+            <h3>Citation</h3>
+            <blockquote>
+                <p>Ceci est une citation de test avec le style ChatGPT. Elle utilise une bordure gauche grise et un fond subtil.</p>
+            </blockquote>
+            
+            <h3>Tableau</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Fonctionnalité</th>
+                        <th>Status</th>
+                        <th>Priorité</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Typographie ChatGPT</td>
+                        <td>✅ Terminé</td>
+                        <td>Haute</td>
+                    </tr>
+                    <tr>
+                        <td>Blocs de code unifiés</td>
+                        <td>✅ Terminé</td>
+                        <td>Haute</td>
+                    </tr>
+                    <tr>
+                        <td>Blocs Mermaid unifiés</td>
+                        <td>✅ Terminé</td>
+                        <td>Moyenne</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+</html>

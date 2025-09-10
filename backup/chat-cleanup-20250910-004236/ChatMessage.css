@@ -109,13 +109,11 @@
   margin: 16px 0;
   padding-left: 24px;
   line-height: 2;
-  font-size: 15px;
 }
 
 .chat-markdown li {
   margin: 4px 0;
   line-height: 2;
-  font-size: 15px;
 }
 
 .chat-markdown ul ul,
@@ -212,13 +210,13 @@
 }
 
 .chat-markdown th {
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(255, 255, 255, 0.05);
   font-weight: 600;
   color: inherit;
 }
 
 .chat-markdown tr:hover {
-  background: rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.05);
 }
 
 /* Ligne horizontale */
