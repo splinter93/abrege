@@ -1,5 +1,6 @@
 'use client';
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
+import { debounce } from 'lodash';
 import { useChatStore } from '@/store/useChatStore';
 
 import { useMediaQuery } from '@/hooks/useMediaQuery';
@@ -63,16 +64,8 @@ const ChatFullscreenV2: React.FC = () => {
     scrollDelay: 100
   });
 
-  // 🎯 Hook pour le debugger des tool calls
-  // useToolCallDebugger supprimé - variables non utilisées
-  const toolCalls: any[] = [];
-  const toolResults: any[] = [];
-  const isDebuggerVisible = false;
-  const addToolCalls = () => {};
-  const addToolResult = () => {};
-  const clearToolCalls = () => {};
-  const toggleDebugger = () => {};
-  const hideDebugger = () => {};
+  // 🎯 Hook pour le debugger des tool calls - SUPPRIMÉ
+  // Code mort nettoyé pour la production
 
   // 🎼 Activation automatique d'Harmony pour GPT OSS 20b et 120b
   useEffect(() => {
@@ -95,11 +88,17 @@ const ChatFullscreenV2: React.FC = () => {
   // 🎯 Hook pour les tool calls atomiques
   // const { addToolResult, isProcessing: isProcessingToolCalls } = useAtomicToolCalls(); // Hook supprimé
 
-  const handleComplete = useCallback(async (fullContent: string, fullReasoning: string, toolCalls?: any[], toolResults?: any[], harmonyChannels?: {
-    analysis?: string;
-    commentary?: string;
-    final?: string;
-  }) => {
+  const handleComplete = useCallback(async (
+    fullContent: string, 
+    fullReasoning: string, 
+    toolCalls?: any[], 
+    toolResults?: any[], 
+    harmonyChannels?: {
+      analysis?: string;
+      commentary?: string;
+      final?: string;
+    }
+  ) => {
     // Vérifier l'authentification avant de continuer
     if (authLoading) {
       logger.dev('[ChatFullscreenV2] ⏳ Vérification de l\'authentification en cours...');
@@ -208,8 +207,7 @@ const ChatFullscreenV2: React.FC = () => {
     logger.dev('[ChatFullscreenV2] 🔧 Tool calls détectés:', { toolCalls, toolName });
     logger.tool('[ChatFullscreenV2] 🔧 Tool calls détectés:', { toolCalls, toolName });
     
-    // ✅ Ajouter les tool calls au debugger
-    addToolCalls(toolCalls);
+    // ✅ Tool calls traités (debugger supprimé pour la production)
     
     toolFlowActiveRef.current = true;
     
@@ -225,7 +223,7 @@ const ChatFullscreenV2: React.FC = () => {
     await addMessage(toolCallMessage, { persist: true }); // Persister pour l'affichage
     
     scrollToBottom(true);
-  }, [addMessage, scrollToBottom, user, authLoading, addToolCalls]);
+  }, [addMessage, scrollToBottom, user, authLoading]);
 
   const handleToolResult = useCallback(async (toolName: string, result: any, success: boolean, toolCallId?: string) => {
     try {
@@ -283,8 +281,7 @@ const ChatFullscreenV2: React.FC = () => {
         success: !!success
       };
 
-      // Ajouter au debugger
-      addToolResult(normalizedToolResult);
+      // ✅ Tool result traité (debugger supprimé pour la production)
       
       // Créer le message à afficher
       const toolResultMessage = {
@@ -319,7 +316,7 @@ const ChatFullscreenV2: React.FC = () => {
     }
     
     scrollToBottom(true);
-  }, [addMessage, scrollToBottom, user, authLoading, addToolResult]);
+  }, [addMessage, scrollToBottom, user, authLoading]);
 
   // 🎯 Hook de chat optimisé avec callbacks mémorisés
   const handleToolExecutionComplete = useCallback(async (toolResults: any[]) => {
@@ -472,11 +469,26 @@ const ChatFullscreenV2: React.FC = () => {
     restoreSelectedAgent();
   }, [selectedAgentId, selectedAgent, setSelectedAgent, setSelectedAgentId, user, authLoading]);
 
-  // Scroll initial après chargement des sessions
+  // ✅ MÉMOIRE: Scroll optimisé avec debounce et cleanup
+  const debouncedScrollToBottom = useCallback(
+    debounce(() => scrollToBottom(true), 100),
+    [scrollToBottom]
+  );
+
+  // ✅ MÉMOIRE: Cleanup du debounce au démontage
+  useEffect(() => {
+    return () => {
+      debouncedScrollToBottom.cancel();
+    };
+  }, [debouncedScrollToBottom]);
+
+  // ✅ MÉMOIRE: Scroll initial avec cleanup garanti
   useEffect(() => {
     if (user && !authLoading && sessions.length > 0 && currentSession?.thread && currentSession.thread.length > 0) {
       const timer = setTimeout(() => scrollToBottom(true), 500);
-      return () => clearTimeout(timer);
+      return () => {
+        clearTimeout(timer);
+      };
     }
   }, [sessions.length, currentSession?.thread, scrollToBottom, user, authLoading]);
 
@@ -487,13 +499,12 @@ const ChatFullscreenV2: React.FC = () => {
     }
   }, [sessions, currentSession, setCurrentSession, user, authLoading]);
 
-  // Scroll automatique pour nouveaux messages
+  // Scroll automatique pour nouveaux messages (optimisé)
   useEffect(() => {
     if (user && !authLoading && currentSession?.thread && currentSession.thread.length > 0) {
-      const timer = setTimeout(() => scrollToBottom(true), 100);
-      return () => clearTimeout(timer);
+      debouncedScrollToBottom();
     }
-  }, [currentSession?.thread, scrollToBottom, user, authLoading]);
+  }, [currentSession?.thread?.length, debouncedScrollToBottom, user, authLoading]);
 
   // Scroll intelligent pendant le traitement
   useEffect(() => {
@@ -587,7 +598,7 @@ const ChatFullscreenV2: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [loading, currentSession, createSession, addMessage, selectedAgent, appContext, sendMessage, setLoading, user]);
+  }, [loading, currentSession, createSession, addMessage, selectedAgent, appContext, sendMessage, setLoading, user, useHarmony, sendMessageHarmony]);
 
   const handleHistoryLimitChange = useCallback(async (newLimit: number) => {
     // Vérifier l'authentification avant de continuer

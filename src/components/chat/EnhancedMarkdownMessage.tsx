@@ -1,5 +1,6 @@
 "use client";
 import React, { useMemo, useEffect, useRef } from 'react';
+import DOMPurify from 'dompurify';
 import { useMarkdownRender } from '../../hooks/editor/useMarkdownRender';
 import { detectMermaidBlocks, validateMermaidSyntax, cleanMermaidContent } from './mermaidService';
 import MermaidRenderer from '@/components/mermaid/MermaidRenderer';
@@ -53,51 +54,111 @@ const TextBlock: React.FC<{ content: string; index: number }> = React.memo(({ co
   const { html } = useMarkdownRender({ content });
   const containerRef = useRef<HTMLDivElement>(null);
   
-  // Fonction pour remplacer les blocs de code par des wrappers
+  // ✅ SÉCURITÉ: Fonction sécurisée pour remplacer les blocs de code
   const processCodeBlocks = (htmlContent: string) => {
     // Vérifier si nous sommes côté client (DOMParser n'est disponible que dans le navigateur)
     if (typeof window === 'undefined' || typeof DOMParser === 'undefined') {
       return htmlContent; // Retourner le HTML original côté serveur
     }
     
-    // Créer un DOM parser temporaire
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(htmlContent, 'text/html');
-    
-    // Trouver tous les blocs pre > code
-    const codeBlocks = doc.querySelectorAll('pre > code');
-    
-    codeBlocks.forEach((codeElement, blockIndex) => {
-      const preElement = codeElement.parentElement;
-      if (!preElement) return;
+    try {
+      // ✅ SÉCURITÉ: Sanitizer d'abord le contenu avant parsing (avec support des tableaux)
+      const sanitizedContent = DOMPurify.sanitize(htmlContent, {
+        ALLOWED_TAGS: [
+          'p', 'br', 'strong', 'em', 'u', 'b', 'i', 's', 'del', 'ins',
+          'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+          'ul', 'ol', 'li', 'dl', 'dt', 'dd',
+          'blockquote', 'q', 'cite',
+          'code', 'pre', 'kbd', 'samp', 'var',
+          'a', 'img', 'figure', 'figcaption',
+          'div', 'span', 'section', 'article', 'aside', 'header', 'footer',
+          'table', 'thead', 'tbody', 'tfoot', 'tr', 'th', 'td', 'caption',
+          'hr', 'br'
+        ],
+        ALLOWED_ATTR: ['class', 'id', 'href', 'src', 'alt', 'title', 'style', 'colspan', 'rowspan', 'scope', 'headers'],
+        ALLOW_DATA_ATTR: false // Désactiver les data-* pour plus de sécurité
+      });
       
-      // Extraire le langage et le contenu
-      const language = codeElement.className.replace('language-', '') || '';
-      const codeContent = codeElement.textContent || '';
+      // Créer un DOM parser temporaire avec contenu sanitizé
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(sanitizedContent, 'text/html');
       
-      // Créer un wrapper pour notre composant React
-      const wrapper = doc.createElement('div');
-      wrapper.className = 'code-block-wrapper';
-      wrapper.setAttribute('data-language', language);
-      wrapper.setAttribute('data-content', codeContent);
-      wrapper.setAttribute('data-index', blockIndex.toString());
+      // Trouver tous les blocs pre > code
+      const codeBlocks = doc.querySelectorAll('pre > code');
       
-      // Remplacer le pre par notre wrapper
-      preElement.parentNode?.replaceChild(wrapper, preElement);
-    });
-    
-    return doc.body.innerHTML;
+      codeBlocks.forEach((codeElement, blockIndex) => {
+        const preElement = codeElement.parentElement;
+        if (!preElement) return;
+        
+        // ✅ SÉCURITÉ: Échapper le contenu avant de l'utiliser
+        const language = (codeElement.className.replace('language-', '') || '').replace(/[^a-zA-Z0-9-_]/g, '');
+        const codeContent = (codeElement.textContent || '').replace(/[<>]/g, (match) => 
+          match === '<' ? '&lt;' : '&gt;'
+        );
+        
+        // Créer un wrapper sécurisé
+        const wrapper = doc.createElement('div');
+        wrapper.className = 'code-block-wrapper';
+        wrapper.setAttribute('data-language', language);
+        wrapper.setAttribute('data-content', codeContent);
+        wrapper.setAttribute('data-index', blockIndex.toString());
+        
+        // Remplacer le pre par notre wrapper
+        preElement.parentNode?.replaceChild(wrapper, preElement);
+      });
+      
+      return doc.body.innerHTML;
+    } catch (error) {
+      console.error('Erreur lors du traitement des code blocks:', error);
+      // ✅ SÉCURITÉ: Fallback sécurisé en cas d'erreur (avec support des tableaux)
+      return DOMPurify.sanitize(htmlContent, {
+        ALLOWED_TAGS: [
+          'p', 'br', 'strong', 'em', 'u', 'b', 'i', 's', 'del', 'ins',
+          'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+          'ul', 'ol', 'li', 'dl', 'dt', 'dd',
+          'blockquote', 'q', 'cite',
+          'code', 'pre', 'kbd', 'samp', 'var',
+          'a', 'img', 'figure', 'figcaption',
+          'div', 'span', 'section', 'article', 'aside', 'header', 'footer',
+          'table', 'thead', 'tbody', 'tfoot', 'tr', 'th', 'td', 'caption',
+          'hr', 'br'
+        ],
+        ALLOWED_ATTR: ['class', 'id', 'href', 'src', 'alt', 'title', 'style', 'colspan', 'rowspan', 'scope', 'headers'],
+        ALLOW_DATA_ATTR: false
+      });
+    }
   };
   
-  // Traiter le HTML pour remplacer les code blocks
+  // ✅ SÉCURITÉ: Sanitizer le HTML avant de l'injecter (avec support des tableaux)
   const processedHtml = processCodeBlocks(html);
+  const sanitizedHtml = DOMPurify.sanitize(processedHtml, {
+    ALLOWED_TAGS: [
+      'p', 'br', 'strong', 'em', 'u', 'b', 'i', 's', 'del', 'ins',
+      'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+      'ul', 'ol', 'li', 'dl', 'dt', 'dd',
+      'blockquote', 'q', 'cite',
+      'code', 'pre', 'kbd', 'samp', 'var',
+      'a', 'img', 'figure', 'figcaption',
+      'div', 'span', 'section', 'article', 'aside', 'header', 'footer',
+      'table', 'thead', 'tbody', 'tfoot', 'tr', 'th', 'td', 'caption',
+      'hr', 'br'
+    ],
+    ALLOWED_ATTR: [
+      'href', 'src', 'alt', 'title', 'class', 'id', 'style',
+      'data-language', 'data-content', 'data-index',
+      'colspan', 'rowspan', 'scope', 'headers',
+      'width', 'height', 'align', 'valign'
+    ],
+    ALLOW_DATA_ATTR: true,
+    ALLOW_UNKNOWN_PROTOCOLS: false
+  });
   
   return (
     <div 
       ref={containerRef}
       key={`text-${index}`}
       className="chat-markdown"
-      dangerouslySetInnerHTML={{ __html: processedHtml }}
+      dangerouslySetInnerHTML={{ __html: sanitizedHtml }}
     />
   );
 });

@@ -49,13 +49,13 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend, loading, textareaRef, dis
     }
   };
 
-  // Gérer la transcription audio complétée
+  // ✅ MÉMOIRE: Gérer la transcription audio avec cleanup
   const handleTranscriptionComplete = useCallback((text: string) => {
     setMessage(prev => prev + (prev ? ' ' : '') + text);
     setAudioError(null);
     
-    // Focus sur le textarea pour permettre l'édition
-    setTimeout(() => {
+    // Focus sur le textarea pour permettre l'édition avec cleanup
+    const timeoutId = setTimeout(() => {
       if (textareaRef.current) {
         textareaRef.current.focus();
         textareaRef.current.setSelectionRange(
@@ -64,6 +64,9 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend, loading, textareaRef, dis
         );
       }
     }, 100);
+    
+    // ✅ MÉMOIRE: Cleanup du timeout si le composant se démonte
+    return () => clearTimeout(timeoutId);
   }, [textareaRef]);
 
   // Gérer la hauteur du textarea

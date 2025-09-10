@@ -14,6 +14,7 @@ interface ChatMessageProps {
   className?: string;
   isStreaming?: boolean;
   animateContent?: boolean; // Nouveau prop pour contrôler l'animation
+  isWaitingForResponse?: boolean; // ✅ Ajout de la prop manquante
 }
 
 const ChatMessage: React.FC<ChatMessageProps> = ({ 
@@ -46,7 +47,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
     return null;
   }
 
-  // Animation du contenu si demandé (seulement si streaming désactivé)
+  // ✅ MÉMOIRE: Animation du contenu avec cleanup garanti
   useEffect(() => {
     if (animateContent && content && role === 'assistant' && !preferences.enabled) {
       setIsAnimating(true);
@@ -54,18 +55,29 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
       
       let currentIndex = 0;
       const speed = 80; // Plus rapide : 80 caractères/seconde
+      let intervalId: NodeJS.Timeout | null = null;
       
-      const interval = setInterval(() => {
+      intervalId = setInterval(() => {
         if (currentIndex < content.length) {
           setDisplayedContent(content.slice(0, currentIndex + 1));
           currentIndex++;
         } else {
-          clearInterval(interval);
+          if (intervalId) {
+            clearInterval(intervalId);
+            intervalId = null;
+          }
           setIsAnimating(false);
         }
       }, 1000 / speed);
 
-      return () => clearInterval(interval);
+      // ✅ MÉMOIRE: Cleanup garanti
+      return () => {
+        if (intervalId) {
+          clearInterval(intervalId);
+          intervalId = null;
+        }
+        setIsAnimating(false);
+      };
     } else if (content && !preferences.enabled) {
       setDisplayedContent(content);
     }

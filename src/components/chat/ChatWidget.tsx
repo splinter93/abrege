@@ -1,5 +1,6 @@
 'use client';
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { debounce } from 'lodash';
 import { createPortal } from 'react-dom';
 import { useChatStore } from '@/store/useChatStore';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
@@ -93,7 +94,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
     setIsNearBottom(near);
   }, []);
   
-  // Écouter le scroll pour détecter la position
+  // ✅ MÉMOIRE: Écouter le scroll avec cleanup garanti
   useEffect(() => {
     const container = messagesEndRef.current?.closest('.messages-container') as HTMLElement;
     if (!container) return;
@@ -105,20 +106,17 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
     container.addEventListener('scroll', handleScroll, { passive: true });
     checkScrollPosition(); // Vérifier la position initiale
     
+    // ✅ MÉMOIRE: Cleanup garanti des event listeners
     return () => {
-      container.removeEventListener('scroll', handleScroll);
+      try {
+        container.removeEventListener('scroll', handleScroll);
+      } catch (error) {
+        console.warn('Erreur lors du cleanup des event listeners:', error);
+      }
     };
   }, [checkScrollPosition]);
 
-  // useToolCallDebugger supprimé - variables non utilisées
-  const toolCalls: any[] = [];
-  const toolResults: any[] = [];
-  const isDebuggerVisible = false;
-  const addToolCalls = () => {};
-  const addToolResult = () => {};
-  const clearToolCalls = () => {};
-  const toggleDebugger = () => {};
-  const hideDebugger = () => {};
+  // ✅ Code mort nettoyé pour la production
 
   // 🎯 Callbacks mémorisés pour le hook de chat
   const handleComplete = useCallback(async (fullContent: string, fullReasoning: string) => {
@@ -195,7 +193,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
     logger.dev('[ChatWidget] 🔧 Tool calls détectés:', { toolCalls, toolName });
     logger.tool('[ChatWidget] 🔧 Tool calls détectés:', { toolCalls, toolName });
     
-    addToolCalls(toolCalls);
+    // ✅ Tool calls traités (debugger supprimé pour la production)
     
     toolFlowActiveRef.current = true;
       
@@ -210,7 +208,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
     // Scroll immédiat après les tool calls
     scrollToBottom(true);
     setTimeout(() => scrollToBottom(true), 100);
-  }, [addMessage, scrollToBottom, user, authLoading, addToolCalls]);
+  }, [addMessage, scrollToBottom, user, authLoading]);
 
   const handleToolResult = useCallback(async (toolName: string, result: any, success: boolean, toolCallId?: string) => {
     if (authLoading) {
@@ -238,7 +236,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
       success: !!success
     };
     
-    addToolResult(toolResult);
+    // ✅ Tool result traité (debugger supprimé pour la production)
       
     const normalizeResult = (res: unknown, ok: boolean): string => {
       try {
@@ -301,7 +299,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
     // Scroll immédiat après les tool results
     scrollToBottom(true);
     setTimeout(() => scrollToBottom(true), 100);
-  }, [addMessage, scrollToBottom, user, authLoading, addToolResult]);
+  }, [addMessage, scrollToBottom, user, authLoading]);
 
   const handleToolExecutionComplete = useCallback(async (toolResults: any[]) => {
     logger.dev('[ChatWidget] ✅ Exécution des tools terminée, attente de la réponse automatique de l\'API');
@@ -476,13 +474,25 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
     }
   }, [sessions, currentSession, setCurrentSession, user, authLoading]);
 
-  // Scroll automatique pour nouveaux messages
+  // ✅ MÉMOIRE: Scroll optimisé avec debounce et cleanup
+  const debouncedScrollToBottom = useCallback(
+    debounce(() => scrollToBottom(true), 100),
+    [scrollToBottom]
+  );
+
+  // ✅ MÉMOIRE: Cleanup du debounce au démontage
+  useEffect(() => {
+    return () => {
+      debouncedScrollToBottom.cancel();
+    };
+  }, [debouncedScrollToBottom]);
+
+  // Scroll automatique pour nouveaux messages (optimisé)
   useEffect(() => {
     if (user && !authLoading && currentSession?.thread && currentSession.thread.length > 0) {
-      const timer = setTimeout(() => scrollToBottom(true), 100);
-      return () => clearTimeout(timer);
+      debouncedScrollToBottom();
     }
-  }, [currentSession?.thread, scrollToBottom, user, authLoading]);
+  }, [currentSession?.thread?.length, debouncedScrollToBottom, user, authLoading]);
 
   // Scroll intelligent pendant le traitement
   useEffect(() => {
@@ -491,56 +501,15 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
     }
   }, [isProcessing, isNearBottom, scrollToBottom, user, authLoading]);
 
-  // Scroll automatique après ajout de message (plus agressif pour le widget)
-  useEffect(() => {
-    if (user && !authLoading && currentSession?.thread && currentSession.thread.length > 0) {
-      // Scroll immédiat pour les nouveaux messages
-      scrollToBottom(true);
-      
-      // Scroll supplémentaire après un délai pour s'assurer que tout est visible
-      const timer = setTimeout(() => scrollToBottom(true), 100);
-      return () => clearTimeout(timer);
-    }
-  }, [currentSession?.thread?.length, scrollToBottom, user, authLoading]);
-
-  // Scroll automatique après tool calls (plus agressif pour le widget)
-  useEffect(() => {
-    if (toolCalls.length > 0) {
-      // Scroll immédiat
-      scrollToBottom(true);
-      
-      // Scroll supplémentaire après un délai
-      const timer = setTimeout(() => scrollToBottom(true), 100);
-      return () => clearTimeout(timer);
-    }
-  }, [toolCalls.length, scrollToBottom]);
-
-  // Scroll automatique après tool results (plus agressif pour le widget)
-  useEffect(() => {
-    if (toolResults.length > 0) {
-      // Scroll immédiat
-      scrollToBottom(true);
-      
-      // Scroll supplémentaire après un délai
-      const timer = setTimeout(() => scrollToBottom(true), 100);
-      return () => clearTimeout(timer);
-    }
-  }, [toolResults.length, scrollToBottom]);
-
   // Synchroniser avec la prop isOpen
   useEffect(() => {
     setWidgetOpen(isOpen);
     
     // Scroll automatique quand le widget s'ouvre
     if (isOpen && currentSession?.thread && currentSession.thread.length > 0) {
-      // Scroll immédiat
-      scrollToBottom(true);
-      // Scroll supplémentaire après un délai
-      setTimeout(() => scrollToBottom(true), 100);
-      // Scroll final pour s'assurer que tout est visible
-      setTimeout(() => scrollToBottom(true), 300);
+      debouncedScrollToBottom();
     }
-  }, [isOpen, currentSession?.thread, scrollToBottom]);
+  }, [isOpen, currentSession?.thread, debouncedScrollToBottom]);
 
   const handleToggle = () => {
     const newState = !widgetOpen;
