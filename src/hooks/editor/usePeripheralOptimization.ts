@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { debounce } from 'lodash-es';
+import { debounce } from 'lodash';
 
 /**
  * Hook pour optimiser les performances des composants périphériques de l'éditeur
