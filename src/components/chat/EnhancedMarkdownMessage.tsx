@@ -7,6 +7,7 @@ import MermaidRenderer from '@/components/mermaid/MermaidRenderer';
 import { createRoot } from 'react-dom/client';
 import './index.css';
 import '@/styles/mermaid.css';
+import '@/styles/unified-blocks.css';
 
 interface EnhancedMarkdownMessageProps {
   content: string;
@@ -14,34 +15,59 @@ interface EnhancedMarkdownMessageProps {
 
 // Composant pour remplacer les wrappers de code blocks par CodeBlock React
 const CodeBlockReplacer: React.FC<{ containerRef: React.RefObject<HTMLDivElement | null> }> = React.memo(({ containerRef }) => {
+  const rootsRef = useRef<Map<HTMLElement, any>>(new Map());
+
   useEffect(() => {
     if (!containerRef.current) return;
 
-    // Trouver tous les wrappers de code blocks
-    const codeBlockWrappers = containerRef.current.querySelectorAll('.code-block-wrapper');
-    
-    codeBlockWrappers.forEach((wrapper, index) => {
-      // Vérifier si ce wrapper a déjà été traité
-      if (wrapper.hasAttribute('data-processed')) return;
+    // Utiliser un timeout pour s'assurer que le HTML est injecté
+    const timeoutId = setTimeout(() => {
+      // Trouver tous les wrappers de code blocks
+      const codeBlockWrappers = containerRef.current?.querySelectorAll('.code-block-wrapper');
       
-      const language = wrapper.getAttribute('data-language') || '';
-      const content = wrapper.getAttribute('data-content') || '';
+      if (!codeBlockWrappers) return;
       
-      // Marquer comme traité
-      wrapper.setAttribute('data-processed', 'true');
-      
-      // Créer une racine React pour ce wrapper
-      const root = createRoot(wrapper as HTMLElement);
-      
-      // Rendre un simple code block (CodeBlock supprimé)
-      root.render(
-        <pre className="code-block">
-          <code className={`language-${language}`}>
-            {content}
-          </code>
-        </pre>
-      );
-    });
+      codeBlockWrappers.forEach((wrapper, index) => {
+        // Vérifier si ce wrapper a déjà été traité
+        if (wrapper.hasAttribute('data-processed')) return;
+        
+        const language = wrapper.getAttribute('data-language') || '';
+        const content = wrapper.getAttribute('data-content') || '';
+        
+        // Marquer comme traité
+        wrapper.setAttribute('data-processed', 'true');
+        
+        // Créer une racine React pour ce wrapper
+        const root = createRoot(wrapper as HTMLElement);
+        rootsRef.current.set(wrapper as HTMLElement, root);
+        
+        // Rendre un code block avec les styles unified-blocks
+        root.render(
+          <div className="u-block u-block--code">
+            <div className="u-block__body">
+              <pre>
+                <code className={`language-${language}`}>
+                  {content}
+                </code>
+              </pre>
+            </div>
+          </div>
+        );
+      });
+    }, 0);
+
+    // Cleanup function
+    return () => {
+      clearTimeout(timeoutId);
+      rootsRef.current.forEach((root, element) => {
+        try {
+          root.unmount();
+        } catch (error) {
+          console.warn('Error unmounting root:', error);
+        }
+      });
+      rootsRef.current.clear();
+    };
   }, [containerRef]);
 
   return null;
@@ -154,12 +180,15 @@ const TextBlock: React.FC<{ content: string; index: number }> = React.memo(({ co
   });
   
   return (
-    <div 
-      ref={containerRef}
-      key={`text-${index}`}
-      className="chat-markdown"
-      dangerouslySetInnerHTML={{ __html: sanitizedHtml }}
-    />
+    <>
+      <div 
+        ref={containerRef}
+        key={`text-${index}`}
+        className="chat-markdown"
+        dangerouslySetInnerHTML={{ __html: sanitizedHtml }}
+      />
+      <CodeBlockReplacer containerRef={containerRef} />
+    </>
   );
 });
 
