@@ -29,7 +29,7 @@
 .chat-footer *,
 .chat-controls,
 .chat-controls * {
-  font-family: var(--chat-font-family-inter) !important;
+  font-family: var(--chat-font-family);
 }
 
 /* Exceptions pour les polices monospace (code, etc.) */
@@ -47,108 +47,101 @@
 .chat-input pre,
 .chat-sidebar code,
 .chat-sidebar pre {
-  font-family: var(--chat-font-mono, 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, monospace) !important;
+  font-family: var(--chat-font-mono);
 }
 
 /* Application spécifique pour les éléments de base du chat */
 .chat-fullscreen-container {
-  font-family: var(--chat-font-family-inter);
+  font-family: var(--chat-font-family);
 }
 
 .chat-fullscreen-container.chat-widget-mode {
-  font-family: var(--chat-font-family-inter);
+  font-family: var(--chat-font-family);
 }
 
 /* Messages du chat */
 .chat-message {
-  font-family: var(--chat-font-family-inter);
+  font-family: var(--chat-font-family);
 }
 
 .chat-message-bubble {
-  font-family: var(--chat-font-family-inter);
+  font-family: var(--chat-font-family);
 }
 
 .chat-message-assistant {
-  font-family: var(--chat-font-family-inter);
+  font-family: var(--chat-font-family);
 }
 
 .chat-message-user {
-  font-family: var(--chat-font-family-inter);
+  font-family: var(--chat-font-family);
 }
 
 /* Input du chat */
 .chat-input-container {
-  font-family: var(--chat-font-family-inter);
+  font-family: var(--chat-font-family);
 }
 
 .chat-input-textarea {
-  font-family: var(--chat-font-family-inter);
+  font-family: var(--chat-font-family);
 }
 
 .chat-input-placeholder {
-  font-family: var(--chat-font-family-inter);
+  font-family: var(--chat-font-family);
 }
 
 /* Sidebar du chat */
 .chat-sidebar {
-  font-family: var(--chat-font-family-inter);
+  font-family: var(--chat-font-family);
 }
 
 .chat-sidebar-content {
-  font-family: var(--chat-font-family-inter);
+  font-family: var(--chat-font-family);
 }
 
 .chat-sidebar-header {
-  font-family: var(--chat-font-family-inter);
+  font-family: var(--chat-font-family);
 }
 
 /* Header du chat */
 .chat-header {
-  font-family: var(--chat-font-family-inter);
+  font-family: var(--chat-font-family);
 }
 
 .chat-header-title {
-  font-family: var(--chat-font-family-inter);
+  font-family: var(--chat-font-family);
 }
 
 .chat-header-subtitle {
-  font-family: var(--chat-font-family-inter);
+  font-family: var(--chat-font-family);
 }
 
 /* Boutons et contrôles du chat */
 .chat-button {
-  font-family: var(--chat-font-family-inter);
+  font-family: var(--chat-font-family);
 }
 
 .chat-control-button {
-  font-family: var(--chat-font-family-inter);
+  font-family: var(--chat-font-family);
 }
 
 .chat-toggle-button {
-  font-family: var(--chat-font-family-inter);
+  font-family: var(--chat-font-family);
 }
 
 /* Tooltips et menus du chat */
 .chat-tooltip {
-  font-family: var(--chat-font-family-inter);
+  font-family: var(--chat-font-family);
 }
 
 .chat-menu {
-  font-family: var(--chat-font-family-inter);
+  font-family: var(--chat-font-family);
 }
 
 .chat-menu-item {
-  font-family: var(--chat-font-family-inter);
+  font-family: var(--chat-font-family);
 }
 
 /* Override pour les composants spécifiques qui pourraient avoir des polices codées en dur */
 .chat-fullscreen-container *:not(code):not(pre):not(.hljs):not(.highlight) {
-  font-family: var(--chat-font-family-inter) !important;
-}
-
-/* Assurer que les variables CSS sont bien définies */
-:root {
-  --chat-font-family-inter: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --chat-font-family-base: 'Noto Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --chat-font-mono: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, monospace;
+  font-family: var(--chat-font-family);
 }

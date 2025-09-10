@@ -2,11 +2,11 @@
    UNIFIED BLOCK STYLES – FINAL & ROBUST REWRITE
    - Single source of truth for code and mermaid blocks.
    - High-specificity selectors (.ProseMirror .u-block, .markdown-body .u-block)
-     to override legacy styles without using !important.
+     to override legacy styles without using ;.
    - Local CSS reset on <pre> and <code> tags to prevent style inheritance issues.
    ========================================================================== */
 
-/* ========================================================================== 
+/* ==========================================================================
    DESIGN TOKENS
    ========================================================================== */
 :root {
@@ -19,24 +19,24 @@
   --blk-toolbar-h: 40px;
   --mono: 'JetBrains Mono', 'Noto Sans Mono', 'Fira Code', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   --sans: 'Noto Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-  --accent: #ff6b35; 
+  --accent: #ff6b35;
 }
 
-/* ========================================================================== 
+/* ==========================================================================
    UNIFIED CONTAINER - HIGH SPECIFICITY
    ========================================================================== */
 .ProseMirror .u-block,
 .markdown-body .u-block,
 .chat-markdown-content .u-block,
 .code-block-wrapper { /* Added code-block-wrapper for chat */
-  background: var(--blk-bg) !important;
-  color: var(--blk-fg) !important;
-  border: none !important;
-  border-radius: var(--blk-radius) !important;
-  margin: 1.75rem 0 !important;
-  display: flex !important;
-  flex-direction: column !important;
-  overflow: hidden !important;
+  background: var(--blk-bg) ;
+  color: var(--blk-fg) ;
+  border: none ;
+  border-radius: var(--blk-radius) ;
+  margin: 1.75rem 0 ;
+  display: flex ;
+  flex-direction: column ;
+  overflow: hidden ;
 }
 
 /* Toolbar */
@@ -103,7 +103,7 @@
   height: 28px;
   width: 28px;
   border: none;
-  border-radius: 6px;
+  border-radius: var(--radius-md);
   background: transparent;
   color: var(--blk-muted);
   cursor: pointer;
@@ -136,8 +136,8 @@
 .toolbar-btn.copied,
 .toolbar-btn.copy-btn.copied,
 .toolbar-btn.mermaid-copy-btn.copied {
-  background: rgba(34, 197, 94, 0.15) !important;
-  color: #22c55e !important;
+  background: rgba(34, 197, 94, 0.15) ;
+  color: #22c55e ;
 }
 
 /* Force l'affichage des icônes SVG dans les boutons */
@@ -145,12 +145,11 @@
 .markdown-body .toolbar-btn svg,
 .chat-markdown-content .toolbar-btn svg,
 .unified-block-toolbar .toolbar-btn svg { /* Added for chat CodeBlock */
-  width: 14px !important;
-  height: 14px !important;
-  display: block !important;
+  width: 14px ;
+  height: 14px ;
+  display: block ;
   flex-shrink: 0;
 }
-
 
 /* Body */
 .ProseMirror .u-block__body,
@@ -166,7 +165,7 @@
   line-height: 1.8;
 }
 
-/* ========================================================================== 
+/* ==========================================================================
    CODE BLOCK VARIANT - ALIGNED WITH MERMAID
    ========================================================================== */
 
@@ -180,31 +179,31 @@
 .public-note-content-wrapper .markdown-body pre,
 .public-note-content-wrapper .markdown-body pre code,
 .public-note-content-wrapper .markdown-body .hljs {
-  background: var(--blk-bg) !important;
-  color: var(--blk-fg) !important;
-  border: none !important;
-  border-radius: var(--blk-radius) !important;
-  padding: 16px 20px !important;
-  margin: 1.75rem 0 !important;
-  font-family: var(--mono) !important;
-  font-size: 14px !important;
-  line-height: 1.8 !important;
-  text-decoration: none !important;
-  border-bottom: none !important;
-  text-underline-offset: unset !important;
-  text-decoration-thickness: unset !important;
-  font-weight: normal !important;
-  font-style: normal !important;
-  letter-spacing: normal !important;
-  word-spacing: normal !important;
-  text-transform: none !important;
-  text-indent: 0 !important;
-  text-shadow: none !important;
-  white-space: pre !important;
-  word-wrap: normal !important;
-  word-break: normal !important;
-  overflow-wrap: normal !important;
-  hyphens: none !important;
+  background: var(--blk-bg) ;
+  color: var(--blk-fg) ;
+  border: none ;
+  border-radius: var(--blk-radius) ;
+  padding: 16px 20px ;
+  margin: 1.75rem 0 ;
+  font-family: var(--mono) ;
+  font-size: 14px ;
+  line-height: 1.8 ;
+  text-decoration: none ;
+  border-bottom: none ;
+  text-underline-offset: unset ;
+  text-decoration-thickness: unset ;
+  font-weight: normal ;
+  font-style: normal ;
+  letter-spacing: normal ;
+  word-spacing: normal ;
+  text-transform: none ;
+  text-indent: 0 ;
+  text-shadow: none ;
+  white-space: pre ;
+  word-wrap: normal ;
+  word-break: normal ;
+  overflow-wrap: normal ;
+  hyphens: none ;
 }
 
 /* STYLES SIMPLES POUR TOUS LES BLOCS DE CODE */
@@ -217,34 +216,34 @@
 .public-note-content-wrapper .markdown-body pre,
 .public-note-content-wrapper .markdown-body pre code,
 .public-note-content-wrapper .markdown-body .hljs {
-  background: #1a1a1a !important;
-  color: #a0a0a0 !important;
-  border: none !important;
-  border-radius: 8px !important;
-  padding: 16px 20px !important;
-  margin: 1.75rem 0 !important;
-  font-family: 'JetBrains Mono', monospace !important;
-  font-size: 14px !important;
-  line-height: 1.8 !important;
-  text-decoration: none !important;
-  white-space: pre !important;
-  overflow-x: auto !important;
-  display: block !important;
+  background: #1a1a1a ;
+  color: #a0a0a0 ;
+  border: none ;
+  border-radius: 8px ;
+  padding: 16px 20px ;
+  margin: 1.75rem 0 ;
+  font-family: var(--font-base);
+  font-size: 14px ;
+  line-height: 1.8 ;
+  text-decoration: none ;
+  white-space: pre ;
+  overflow-x: auto ;
+  display: block ;
 }
 
 /* GESTION des blocs imbriqués - Si un .u-block contient un <pre> */
 .u-block pre,
 .u-block pre code,
 .u-block .hljs {
-  background: transparent !important;
-  color: inherit !important;
-  border: none !important;
-  border-radius: 0 !important;
-  padding: 0 !important;
-  margin: 0 !important;
-  font-family: inherit !important;
-  font-size: inherit !important;
-  line-height: inherit !important;
+  background: transparent ;
+  color: inherit ;
+  border: none ;
+  border-radius: 0 ;
+  padding: 0 ;
+  margin: 0 ;
+  font-family: inherit ;
+  font-size: inherit ;
+  line-height: inherit ;
 }
 
 /* COULEUR SIMPLE POUR TOUS LES ÉLÉMENTS DE CODE */
@@ -257,11 +256,11 @@
 .public-note-content-wrapper .markdown-body pre *,
 .public-note-content-wrapper .markdown-body pre code *,
 .public-note-content-wrapper .markdown-body .hljs * {
-  color: #a0a0a0 !important;
-  background: transparent !important;
-  text-decoration: none !important;
-  font-weight: normal !important;
-  font-style: normal !important;
+  color: #a0a0a0 ;
+  background: transparent ;
+  text-decoration: none ;
+  font-weight: normal ;
+  font-style: normal ;
 }
 
 /* Le .u-block__body a déjà le padding et le style de base.
@@ -280,10 +279,10 @@
   color: inherit;       /* Hérite de --blk-fg depuis .u-block__body */
   overflow-x: auto;     /* Permet le défilement horizontal pour le code long */
   white-space: pre;
-  text-decoration: none !important;
-  border-bottom: none !important;
-  text-underline-offset: unset !important;
-  text-decoration-thickness: unset !important;
+  text-decoration: none ;
+  border-bottom: none ;
+  text-underline-offset: unset ;
+  text-decoration-thickness: unset ;
 }
 
 /* Neutralisation COMPLÈTE de la coloration syntaxique pour un style épuré */
@@ -293,17 +292,17 @@
 .ProseMirror .u-block--code .hljs *,
 .markdown-body .u-block--code .hljs *,
 .chat-markdown-content .u-block--code .hljs * {
-  color: var(--blk-fg) !important; /* Forcer la couleur grise par défaut */
-  background-color: transparent !important;
-  text-decoration: none !important;
-  font-style: normal !important;
-  font-weight: normal !important;
-  border-bottom: none !important;
-  text-underline-offset: unset !important;
-  text-decoration-thickness: unset !important;
-  box-shadow: none !important;
-  outline: none !important;
-  background-image: none !important;
+  color: var(--blk-fg) ; /* Forcer la couleur grise par défaut */
+  background-color: transparent ;
+  text-decoration: none ;
+  font-style: normal ;
+  font-weight: normal ;
+  border-bottom: none ;
+  text-underline-offset: unset ;
+  text-decoration-thickness: unset ;
+  box-shadow: none ;
+  outline: none ;
+  background-image: none ;
 }
 
 /* La balise <code> doit aussi être transparente */
@@ -312,27 +311,25 @@
 .chat-markdown-content .u-block--code pre code {
   background: none;
   padding: 0;
-  text-decoration: none !important;
-  border-bottom: none !important;
-  text-underline-offset: unset !important;
-  text-decoration-thickness: unset !important;
+  text-decoration: none ;
+  border-bottom: none ;
+  text-underline-offset: unset ;
+  text-decoration-thickness: unset ;
 }
 
-
 /* Fallback for inline code (not in a block) */
-:not(.u-block) > code, 
+:not(.u-block) > code,
 :not(pre) > code {
   background: rgba(255,255,255,0.10);
   padding: 0.2em 0.4em;
-  border-radius: 4px;
+  border-radius: var(--radius-md);
   font-family: var(--mono);
   font-size: 0.9em;
   color: var(--accent);
   border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-
-/* ========================================================================== 
+/* ==========================================================================
    MERMAID VARIANT
    ========================================================================== */
 .ProseMirror .u-block--mermaid .u-block__body,
@@ -384,75 +381,75 @@
 
 @keyframes u-block-spin { from { transform: rotate(0deg);} to { transform: rotate(360deg);} }
 
-/* ========================================================================== 
+/* ==========================================================================
    CHAT SPECIFIC OVERRIDES - HIGH SPECIFICITY
    ========================================================================== */
 
 /* Override chat-specific styles for code blocks */
 .chat-markdown .code-block-wrapper,
 .chat-markdown .u-block--code {
-  background: var(--blk-bg) !important;
-  color: var(--blk-fg) !important;
-  border: none !important;
-  border-radius: var(--blk-radius) !important;
-  margin: 1.75rem 0 !important;
-  display: flex !important;
-  flex-direction: column !important;
-  overflow: hidden !important;
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
-  box-shadow: none !important;
+  background: var(--blk-bg) ;
+  color: var(--blk-fg) ;
+  border: none ;
+  border-radius: var(--blk-radius) ;
+  margin: 1.75rem 0 ;
+  display: flex ;
+  flex-direction: column ;
+  overflow: hidden ;
+  backdrop-filter: none ;
+  -webkit-backdrop-filter: none ;
+  box-shadow: none ;
 }
 
 .chat-markdown .code-block-wrapper .u-block__body,
 .chat-markdown .u-block--code .u-block__body {
-  padding: 16px 20px !important;
-  flex: 1 !important;
-  min-height: 0 !important;
-  overflow: auto !important;
-  font-family: var(--mono) !important;
-  font-size: 14px !important;
-  line-height: 1.8 !important;
-  background: transparent !important;
+  padding: 16px 20px ;
+  flex: 1 ;
+  min-height: 0 ;
+  overflow: auto ;
+  font-family: var(--mono) ;
+  font-size: 14px ;
+  line-height: 1.8 ;
+  background: transparent ;
 }
 
 .chat-markdown .code-block-wrapper pre,
 .chat-markdown .u-block--code pre {
-  background: transparent !important;
-  color: inherit !important;
-  border: none !important;
-  border-radius: 0 !important;
-  padding: 0 !important;
-  margin: 0 !important;
-  font-family: inherit !important;
-  font-size: inherit !important;
-  line-height: inherit !important;
-  overflow-x: auto !important;
-  white-space: pre !important;
-  text-decoration: none !important;
-  border-bottom: none !important;
-  text-underline-offset: unset !important;
-  text-decoration-thickness: unset !important;
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
-  box-shadow: none !important;
+  background: transparent ;
+  color: inherit ;
+  border: none ;
+  border-radius: 0 ;
+  padding: 0 ;
+  margin: 0 ;
+  font-family: inherit ;
+  font-size: inherit ;
+  line-height: inherit ;
+  overflow-x: auto ;
+  white-space: pre ;
+  text-decoration: none ;
+  border-bottom: none ;
+  text-underline-offset: unset ;
+  text-decoration-thickness: unset ;
+  backdrop-filter: none ;
+  -webkit-backdrop-filter: none ;
+  box-shadow: none ;
 }
 
 .chat-markdown .code-block-wrapper pre code,
 .chat-markdown .u-block--code pre code {
-  background: none !important;
-  padding: 0 !important;
-  text-decoration: none !important;
-  border-bottom: none !important;
-  text-underline-offset: unset !important;
-  text-decoration-thickness: unset !important;
-  color: inherit !important;
-  font-family: inherit !important;
-  font-size: inherit !important;
-  line-height: inherit !important;
+  background: none ;
+  padding: 0 ;
+  text-decoration: none ;
+  border-bottom: none ;
+  text-underline-offset: unset ;
+  text-decoration-thickness: unset ;
+  color: inherit ;
+  font-family: inherit ;
+  font-size: inherit ;
+  line-height: inherit ;
 }
 
-/* ========================================================================== 
+/* ==========================================================================
    RESPONSIVE & ANIMATIONS
    ========================================================================== */
 @media (max-width: 768px) {
@@ -462,4 +459,3 @@
 }
 
 /* Animations supprimées pour un style plus épuré */
-  

@@ -1,0 +1,86 @@
+/* ========================================
+   MARKDOWN CHAT - STYLES DÉDIÉS
+   ======================================== */
+/* 
+   La typographie markdown du chat est maintenant centralisée dans
+   src/styles/chat-markdown-typography.css pour une meilleure organisation
+   et cohérence avec la hiérarchie Noto Sans (titres) / Inter (texte)
+*/
+
+@layer components {
+  .chat-markdown {
+    /* Utilise les styles de chat-markdown-typography.css */
+    font-family: var(--font-chat-text);
+    font-size: var(--chat-text-base);
+    line-height: var(--chat-leading-relaxed);
+    font-weight: var(--chat-weight-normal);
+    letter-spacing: var(--chat-tracking-normal);
+    color: var(--color-text-primary);
+  }
+
+  /* ========================================
+     TITRES - DÉLÉGUÉS À CHAT-MARKDOWN-TYPOGRAPHY.CSS
+     ======================================== */
+  /*
+     Tous les styles de titres sont maintenant centralisés dans
+     src/styles/chat-markdown-typography.css avec la hiérarchie :
+     - Noto Sans pour les titres (h1-h6)
+     - Inter pour le texte (p, li, etc.)
+  */
+
+  /* ========================================
+     PARAGRAPHES ET TEXTE - DÉLÉGUÉS À CHAT-MARKDOWN-TYPOGRAPHY.CSS
+     ======================================== */
+  /*
+     Tous les styles de paragraphes et texte sont maintenant centralisés dans
+     src/styles/chat-markdown-typography.css
+  */
+
+  /* ========================================
+     CODE INLINE ET BLOCS - DÉLÉGUÉS À CHAT-MARKDOWN-TYPOGRAPHY.CSS
+     ======================================== */
+  /*
+     Tous les styles de code sont maintenant centralisés dans
+     src/styles/chat-markdown-typography.css avec JetBrains Mono
+  */
+
+  /* ========================================
+     CITATIONS - DÉLÉGUÉES À CHAT-MARKDOWN-TYPOGRAPHY.CSS
+     ======================================== */
+  /*
+     Tous les styles de citations sont maintenant centralisés dans
+     src/styles/chat-markdown-typography.css
+  */
+
+  /* ========================================
+     TABLEAUX - DÉLÉGUÉS À CHAT-MARKDOWN-TYPOGRAPHY.CSS
+     ======================================== */
+  /*
+     Tous les styles de tableaux sont maintenant centralisés dans
+     src/styles/chat-markdown-typography.css
+  */
+
+  /* ========================================
+     LISTES - DÉLÉGUÉES À CHAT-MARKDOWN-TYPOGRAPHY.CSS
+     ======================================== */
+  /*
+     Tous les styles de listes sont maintenant centralisés dans
+     src/styles/chat-markdown-typography.css
+  */
+
+  /* ========================================
+     LIENS - DÉLÉGUÉS À CHAT-MARKDOWN-TYPOGRAPHY.CSS
+     ======================================== */
+  /*
+     Tous les styles de liens sont maintenant centralisés dans
+     src/styles/chat-markdown-typography.css
+  */
+
+  /* ========================================
+     LIGNE HORIZONTALE - DÉLÉGUÉE À CHAT-MARKDOWN-TYPOGRAPHY.CSS
+     ======================================== */
+  /*
+     Tous les styles de ligne horizontale sont maintenant centralisés dans
+     src/styles/chat-markdown-typography.css
+  */
+}

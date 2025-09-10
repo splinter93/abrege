@@ -403,15 +403,15 @@
   .hljs {
     color: #1f2937; /* Dark text for light theme */
   }
-  
+
   .hljs-comment {
     color: #6b7280; /* Darker gray for light theme */
   }
-  
+
   .hljs-punctuation {
     color: #374151; /* Darker gray for light theme */
   }
-  
+
   .hljs-variable {
     color: #374151; /* Darker gray for light theme */
   }
@@ -431,7 +431,7 @@
 /* Support pour la réduction de mouvement */
 @media (prefers-reduced-motion: reduce) {
   .hljs * {
-    transition: none !important;
-    animation: none !important;
+    transition: none ;
+    animation: none ;
   }
 }

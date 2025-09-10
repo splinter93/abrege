@@ -4,21 +4,21 @@
 
 /* Surcharge du layout principal pour le mode widget */
 .chat-fullscreen-container.chat-widget-mode {
-  position: fixed !important;
-  bottom: 20px !important;
-  right: 20px !important;
-  top: auto !important;
-  left: auto !important;
-  width: 400px !important;
-  height: 600px !important;
-  max-width: calc(100vw - 40px) !important;
-  max-height: calc(100vh - 40px) !important;
-  border-radius: 16px !important;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15) !important;
-  border: 1px solid var(--chat-border-primary) !important;
-  overflow: hidden !important;
-  z-index: 1000 !important;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  top: auto;
+  left: auto;
+  width: 400px;
+  height: 600px;
+  max-width: calc(100vw - 40px);
+  max-height: calc(100vh - 40px);
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+  border: 1px solid var(--chat-border-primary);
+  overflow: hidden;
+  z-index: 1000;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Animation d'entrée pour le widget */
@@ -52,7 +52,7 @@
 
 /* Réduire la taille du texte dans le header */
 .chat-fullscreen-container.chat-widget-mode .chat-header span {
-  font-size: 13px !important;
+  font-size: var(--chat-font-size-sm);
 }
 
 /* ========================================
@@ -348,14 +348,14 @@
 
 /* Mode minimisé pour le widget */
 .chat-fullscreen-container.chat-widget-mode.chat-widget-minimized {
-  width: 48px !important;
-  height: 48px !important;
-  border-radius: 50% !important;
+  width: 48px;
+  height: 48px;
+  border-radius: var(--chat-radius-full);
   overflow: hidden;
-  padding: 0 !important;
-  border: none !important;
-  box-shadow: none !important;
-  background: transparent !important;
+  padding: 0;
+  border: none;
+  box-shadow: none;
+  background: transparent;
 }
 
 .chat-fullscreen-container.chat-widget-mode.chat-widget-minimized .chat-header,
@@ -523,8 +523,8 @@
 
 .chat-widget-small .chat-message.assistant .chat-message-bubble,
 .chat-widget-small .chat-message.assistant .chat-message-bubble-assistant {
-  max-width: calc(100% - 70px) !important;
-  width: auto !important;
+  max-width: calc(100% - 70px);
+  width: auto;
 }
 
 .chat-widget-small .chat-message.user .chat-message-bubble {
@@ -562,8 +562,8 @@
 
 .chat-widget-large .chat-message.assistant .chat-message-bubble,
 .chat-widget-large .chat-message.assistant .chat-message-bubble-assistant {
-  max-width: calc(100% - 50px) !important;
-  width: auto !important;
+  max-width: calc(100% - 50px);
+  width: auto;
 }
 
 .chat-widget-large .chat-message.user .chat-message-bubble {

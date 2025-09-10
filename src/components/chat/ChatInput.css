@@ -2,33 +2,7 @@
    CHAT INPUT - FICHIER DÉDIÉ
    ======================================== */
 
-/* ========================================
-   VARIABLES GLASSMORPHISM
-   ======================================== */
-
-:root {
-  --glass-bg-base: rgba(255, 255, 255, 0.03);
-  --glass-bg-subtle: rgba(255, 255, 255, 0.05);
-  --glass-bg-soft: rgba(255, 255, 255, 0.08);
-  --glass-bg-medium: rgba(255, 255, 255, 0.12);
-  --glass-bg-hover: rgba(255, 255, 255, 0.15);
-  
-  --glass-border-subtle: rgba(255, 255, 255, 0.06);
-  --glass-border-soft: rgba(255, 255, 255, 0.08);
-  --glass-border-medium: rgba(255, 255, 255, 0.12);
-  --glass-border-focus: rgba(255, 255, 255, 0.18);
-  
-  --glass-blur-light: blur(10px);
-  --glass-blur-medium: blur(15px);
-  --glass-blur-heavy: blur(20px);
-  
-  --glass-shadow-subtle: 0 2px 8px rgba(0, 0, 0, 0.08);
-  --glass-shadow-soft: 0 4px 12px rgba(0, 0, 0, 0.12);
-  --glass-shadow-medium: 0 6px 16px rgba(0, 0, 0, 0.15);
-  
-  --glass-gradient-subtle: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.03) 50%, rgba(255, 255, 255, 0.01) 100%);
-  --glass-gradient-soft: linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.06) 50%, rgba(255, 255, 255, 0.02) 100%);
-}
+/* Utilise les variables centralisées du design system */
 
 /* ========================================
    ZONE DE SAISIE
@@ -46,7 +20,9 @@
 }
 
 .chat-input-area {
+  width: 1000px;
   max-width: 1000px;
+  min-width: 1000px;
   margin: 0 auto;
   background: var(--glass-bg-base);
   backdrop-filter: var(--glass-blur-heavy);
@@ -62,6 +38,7 @@
   flex-direction: column;
   position: relative;
   overflow: hidden;
+  box-sizing: border-box;
 }
 
 .chat-input-area::before {
@@ -119,13 +96,13 @@
   border: none;
   outline: none;
   color: var(--chat-text-primary);
-  font-size: 16px;
+  font-size: var(--chat-font-size-md);
   line-height: var(--chat-line-height-normal);
   resize: none;
   padding: var(--chat-spacing-sm) 0;
   max-height: 300px;
   min-height: 24px;
-  font-family: var(--chat-font-family-base);
+  font-family: var(--chat-font-family);
   width: 100%;
   height: auto;
   overflow-y: auto;
@@ -148,9 +125,9 @@
 
 .chat-input-textarea::placeholder {
   color: var(--chat-text-muted);
-  font-weight: 400;
-  font-family: var(--chat-font-family-inter);
-  font-size: 16px;
+  font-weight: var(--chat-font-weight-normal);
+  font-family: var(--chat-font-family);
+  font-size: var(--chat-font-size-md);
   opacity: 0.7;
   transition: opacity 0.2s ease;
 }
@@ -211,22 +188,22 @@
 
 .chat-input-speaker,
 .chat-input-mic {
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  width: var(--chat-button-md) !important;
-  height: var(--chat-button-md) !important;
-  border-radius: var(--chat-radius-full) !important;
-  background: var(--glass-bg-subtle) !important;
-  backdrop-filter: var(--glass-blur-light) !important;
-  -webkit-backdrop-filter: var(--glass-blur-light) !important;
-  border: 1px solid var(--glass-border-subtle) !important;
-  color: var(--chat-text-secondary) !important;
-  cursor: pointer !important;
-  transition: all var(--chat-transition-normal) !important;
-  flex-shrink: 0 !important;
-  position: relative !important;
-  overflow: hidden !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--chat-button-md);
+  height: var(--chat-button-md);
+  border-radius: var(--chat-radius-full);
+  background: var(--glass-bg-subtle);
+  backdrop-filter: var(--glass-blur-light);
+  -webkit-backdrop-filter: var(--glass-blur-light);
+  border: 1px solid var(--glass-border-subtle);
+  color: var(--chat-text-secondary);
+  cursor: pointer;
+  transition: all var(--chat-transition-normal);
+  flex-shrink: 0;
+  position: relative;
+  overflow: hidden;
 }
 
 .chat-input-speaker::before,
@@ -247,11 +224,11 @@
 
 .chat-input-speaker:hover,
 .chat-input-mic:hover:not(:disabled) {
-  background: var(--glass-bg-subtle) !important;
-  border-color: var(--glass-border-subtle) !important;
-  color: var(--chat-text-primary) !important;
-  transform: none !important;
-  box-shadow: none !important;
+  background: var(--glass-bg-subtle);
+  border-color: var(--glass-border-subtle);
+  color: var(--chat-text-primary);
+  transform: none;
+  box-shadow: none;
 }
 
 .chat-input-speaker:hover::before,
@@ -273,20 +250,20 @@
 
 /* État d'enregistrement */
 .chat-input-mic-recording {
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  width: var(--chat-button-md) !important;
-  height: var(--chat-button-md) !important;
-  border-radius: var(--chat-radius-full) !important;
-  background: linear-gradient(135deg, #ef4444, #dc2626) !important;
-  border: 1px solid rgba(239, 68, 68, 0.15) !important;
-  color: white !important;
-  cursor: pointer !important;
-  transition: all var(--chat-transition-normal) !important;
-  flex-shrink: 0 !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--chat-button-md);
+  height: var(--chat-button-md);
+  border-radius: var(--chat-radius-full);
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  border: 1px solid rgba(239, 68, 68, 0.15);
+  color: white;
+  cursor: pointer;
+  transition: all var(--chat-transition-normal);
+  flex-shrink: 0;
   animation: pulse-recording 2s infinite;
-  box-shadow: 0 1px 4px rgba(239, 68, 68, 0.15) !important;
+  box-shadow: 0 1px 4px rgba(239, 68, 68, 0.15);
   position: relative;
   overflow: visible;
 }
@@ -314,11 +291,11 @@
 }
 
 .chat-input-mic-recording:hover:not(:disabled) {
-  background: linear-gradient(135deg, #dc2626, #b91c1c) !important;
-  border-color: rgba(239, 68, 68, 0.2) !important;
-  color: white !important;
-  transform: scale(1.05) translateY(-1px) !important;
-  box-shadow: 0 2px 6px rgba(239, 68, 68, 0.2) !important;
+  background: linear-gradient(135deg, #dc2626, #b91c1c);
+  border-color: rgba(239, 68, 68, 0.2);
+  color: white;
+  transform: scale(1.05) translateY(-1px);
+  box-shadow: 0 2px 6px rgba(239, 68, 68, 0.2);
 }
 
 @keyframes pulse-recording {
@@ -347,26 +324,26 @@
 
 /* État de traitement */
 .chat-input-mic-processing {
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  width: var(--chat-button-md) !important;
-  height: var(--chat-button-md) !important;
-  border-radius: var(--chat-radius-full) !important;
-  background: linear-gradient(135deg, var(--chat-accent-primary), #2563eb) !important;
-  border: 1px solid rgba(59, 130, 246, 0.15) !important;
-  color: white !important;
-  cursor: not-allowed !important;
-  transition: all var(--chat-transition-normal) !important;
-  flex-shrink: 0 !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--chat-button-md);
+  height: var(--chat-button-md);
+  border-radius: var(--chat-radius-full);
+  background: linear-gradient(135deg, var(--chat-accent-primary), #2563eb);
+  border: 1px solid rgba(59, 130, 246, 0.15);
+  color: white;
+  cursor: not-allowed;
+  transition: all var(--chat-transition-normal);
+  flex-shrink: 0;
   animation: pulse-processing 1.5s infinite;
-  box-shadow: 0 1px 4px rgba(59, 130, 246, 0.15) !important;
+  box-shadow: 0 1px 4px rgba(59, 130, 246, 0.15);
 }
 
 .chat-input-mic-processing:hover {
-  background: linear-gradient(135deg, var(--chat-accent-primary), #2563eb) !important;
-  color: white !important;
-  transform: none !important;
+  background: linear-gradient(135deg, var(--chat-accent-primary), #2563eb);
+  color: white;
+  transform: none;
 }
 
 @keyframes pulse-processing {
@@ -601,4 +578,26 @@
   width: 16px;
   height: 16px;
   font-size: 14px;
+}
+
+/* ========================================
+   RESPONSIVE DESIGN
+   ======================================== */
+
+@media (max-width: 768px) {
+  .chat-input-area {
+    width: 100%;
+    max-width: 100%;
+    min-width: auto;
+    margin: 0 var(--chat-spacing-sm);
+  }
+}
+
+/* Pour les écrans très larges, maintenir la largeur fixe */
+@media (min-width: 1200px) {
+  .chat-input-area {
+    width: 1000px;
+    max-width: 1000px;
+    min-width: 1000px;
+  }
 } 

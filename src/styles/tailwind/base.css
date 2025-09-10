@@ -1,0 +1,21 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ========================================
+   RESET ET BASE STYLES
+   ======================================== */
+
+@layer base {
+  * {
+    @apply border-chat-border-primary;
+  }
+  
+  body {
+    @apply bg-chat-bg-primary text-chat-text-primary font-chat-inter;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-semibold text-chat-text-primary;
+  }
+}

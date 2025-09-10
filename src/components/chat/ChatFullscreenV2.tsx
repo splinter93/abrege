@@ -21,12 +21,13 @@ import { simpleLogger as logger, LogCategory } from '@/utils/logger';
 
 import './index.css';
 import './ToolCallMessage.css';
+import '@/styles/chat-responsive.css';
 import Link from 'next/link';
 
 const ChatFullscreenV2: React.FC = () => {
   // 🎯 Hooks optimisés
   const isDesktop = useMediaQuery('(min-width: 1024px)');
-  const [sidebarOpen, setSidebarOpen] = useState(isDesktop);
+  const [sidebarOpen, setSidebarOpen] = useState(false); // Toujours fermée par défaut
   const [wideMode, setWideMode] = useState(false);
   const [isWidgetMode, setIsWidgetMode] = useState(false);
   const [useHarmony, setUseHarmony] = useState(false); // 🎼 Toggle Harmony
@@ -87,6 +88,39 @@ const ChatFullscreenV2: React.FC = () => {
 
   // 🎯 Hook pour les tool calls atomiques
   // const { addToolResult, isProcessing: isProcessingToolCalls } = useAtomicToolCalls(); // Hook supprimé
+
+  // 🎯 Gestion intelligente de l'ouverture de la sidebar
+  useEffect(() => {
+    if (isDesktop && user && !authLoading) {
+      // Vérifier si l'utilisateur a déjà interagi avec la sidebar
+      const hasInteracted = localStorage.getItem('sidebar-interacted');
+      const userPreference = localStorage.getItem('sidebar-preference');
+      
+      if (!hasInteracted) {
+        // Première fois : ouvrir par défaut
+        setSidebarOpen(true);
+        localStorage.setItem('sidebar-interacted', 'true');
+        localStorage.setItem('sidebar-preference', 'open');
+      } else if (userPreference) {
+        // Respecter la préférence de l'utilisateur
+        setSidebarOpen(userPreference === 'open');
+      }
+    } else if (!isDesktop) {
+      // Sur mobile/tablette, toujours fermée par défaut
+      setSidebarOpen(false);
+    }
+  }, [isDesktop, user, authLoading]);
+
+  // 🎯 Fermer la sidebar sur mobile après sélection d'une session
+  useEffect(() => {
+    if (!isDesktop && sidebarOpen) {
+      // Délai pour permettre l'animation de fermeture
+      const timer = setTimeout(() => {
+        setSidebarOpen(false);
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [currentSession, isDesktop, sidebarOpen]);
 
   const handleComplete = useCallback(async (
     fullContent: string, 
@@ -634,7 +668,13 @@ const ChatFullscreenV2: React.FC = () => {
       return;
     }
 
-    setSidebarOpen(prev => !prev);
+    setSidebarOpen(prev => {
+      const newState = !prev;
+      // Sauvegarder la préférence de l'utilisateur
+      localStorage.setItem('sidebar-interacted', 'true');
+      localStorage.setItem('sidebar-preference', newState ? 'open' : 'closed');
+      return newState;
+    });
   }, [user, authLoading]);
 
   const handleWideModeToggle = useCallback(() => {
@@ -740,11 +780,14 @@ const ChatFullscreenV2: React.FC = () => {
 
         {/* Overlay mobile/tablette */}
         {!isDesktop && sidebarOpen && (
-          <div className="chat-sidebar-overlay" onClick={() => {
-            if (user && !authLoading) {
-              setSidebarOpen(false);
-            }
-          }} />
+          <div 
+            className="chat-sidebar-overlay visible" 
+            onClick={() => {
+              if (user && !authLoading) {
+                setSidebarOpen(false);
+              }
+            }} 
+          />
         )}
 
         {/* Content optimisé */}

@@ -1,0 +1,100 @@
+/* ========================================
+   COMPOSANTS CHAT - STRUCTURE MODULAIRE
+   ======================================== */
+
+@layer components {
+  /* ========================================
+     GLASSMORPHISM - SYSTÈME UNIFIÉ
+     ======================================== */
+
+  /* ========================================
+     BOUTONS - SYSTÈME COHÉRENT
+     ======================================== */
+
+  .btn {
+    @apply px-4 py-2 rounded-lg font-medium transition-all duration-200 ease-in-out cursor-pointer;
+  }
+
+  .btn-primary {
+    @apply btn bg-chat-accent text-chat-bg-primary hover:bg-chat-accent-hover;
+  }
+
+  .btn-secondary {
+    @apply btn text-chat-text-primary;
+
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .btn-secondary:hover {
+
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.12);
+  }
+
+  .btn-ghost {
+    @apply btn bg-transparent text-chat-text-secondary hover:text-chat-text-primary;
+  }
+
+  .btn-ghost:hover {
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  /* ========================================
+     MESSAGES CHAT - FLEXIBLE
+     ======================================== */
+
+  .message-bubble {
+    @apply max-w-[85%] px-3 py-2 rounded-[18px] break-words leading-relaxed text-15 relative box-border transition-all duration-200;
+  }
+
+  .message-bubble-user {
+    @apply message-bubble bg-chat-bg-secondary text-white rounded-br-sm ml-auto max-w-[45%] px-4 py-3;
+  }
+
+  .message-bubble-assistant {
+    @apply message-bubble bg-transparent text-chat-text-primary rounded-bl-sm pl-0;
+  }
+
+  /* ========================================
+     INPUT CHAT - MODULAIRE
+     ======================================== */
+
+  .input-area {
+    @apply rounded-[20px] p-4 shadow-glass-soft min-h-[60px] flex flex-col relative overflow-hidden;
+
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  .input-textarea {
+    @apply bg-transparent border-none outline-none text-chat-text-primary text-base leading-normal resize-none py-2 max-h-[300px] min-h-6 font-chat-inter w-full h-auto overflow-y-auto transition-all duration-200 box-border relative z-10;
+  }
+
+  /* ========================================
+     SIDEBAR CHAT - RÉUTILISABLE
+     ======================================== */
+
+  .sidebar {
+    @apply relative w-80 h-full flex flex-col transition-all duration-300 overflow-hidden flex-shrink-0 shadow-glass-soft;
+
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  .sidebar-item {
+    @apply flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition-all duration-200 text-chat-text-primary text-sm font-normal border border-transparent relative overflow-hidden;
+  }
+
+  .sidebar-item:hover {
+    @apply -translate-y-0.5 shadow-glass-soft;
+    border-color: rgba(255, 255, 255, 0.12);
+  }
+
+  .sidebar-item.active {
+    @apply shadow-glass-medium -translate-y-0.5;
+
+    background: rgba(255, 255, 255, 0.12);
+    border-color: rgba(255, 255, 255, 0.20);
+  }
+}

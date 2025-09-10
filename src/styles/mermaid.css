@@ -24,7 +24,7 @@
 }
 
 /* Application du thème via le renderer Mermaid */
-/* Le `init` de Mermaid dans le composant doit spécifier `theme: 'base'` 
+/* Le `init` de Mermaid dans le composant doit spécifier `theme: 'base'`
    et `themeVariables` avec les valeurs ci-dessus.
    Ce fichier CSS sert de fallback et pour styler des éléments
    que les variables de thème ne peuvent pas atteindre.
@@ -32,81 +32,80 @@
 
 /* Styles globaux pour tous les SVGs Mermaid */
 .mermaid-svg-container svg {
-  font-family: var(--mermaid-theme-font-family) !important;
-  font-size: var(--mermaid-theme-font-size) !important;
+  font-family: var(--mermaid-theme-font-family) ;
+  font-size: var(--mermaid-theme-font-size) ;
   color: var(--mermaid-theme-text-color);
 }
 
 /* Texte dans les noeuds */
 .mermaid-svg-container .nodeLabel {
-  color: var(--mermaid-theme-primary-text-color) !important;
+  color: var(--mermaid-theme-primary-text-color) ;
 }
 .mermaid-svg-container .node text {
-  fill: var(--mermaid-theme-primary-text-color) !important;
+  fill: var(--mermaid-theme-primary-text-color) ;
 }
 
 /* Style des liens/flèches */
 .mermaid-svg-container .edgePath .path {
-  stroke: var(--mermaid-theme-line-color) !important;
+  stroke: var(--mermaid-theme-line-color) ;
 }
 .mermaid-svg-container .arrowheadPath {
-  fill: var(--mermaid-theme-line-color) !important;
+  fill: var(--mermaid-theme-line-color) ;
 }
 
 /* Texte sur les liens */
 .mermaid-svg-container .edgeLabel {
-  background-color: var(--block-bg) !important; /* Pour que le texte soit lisible sur la ligne */
-  color: var(--mermaid-theme-text-color) !important;
+  background-color: var(--block-bg) ; /* Pour que le texte soit lisible sur la ligne */
+  color: var(--mermaid-theme-text-color) ;
 }
 .mermaid-svg-container .edgeLabel rect {
-  fill: var(--block-bg) !important;
+  fill: var(--block-bg) ;
   opacity: 0.8;
 }
 .mermaid-svg-container .edgeLabel text {
-  fill: var(--mermaid-theme-text-color) !important;
+  fill: var(--mermaid-theme-text-color) ;
 }
-
 
 /* Surcharge pour des types de diagrammes spécifiques si nécessaire */
 
 /* Flowchart */
 .mermaid-svg-container .flowchart-label {
-  color: var(--mermaid-theme-primary-text-color) !important;
+  color: var(--mermaid-theme-primary-text-color) ;
 }
 .mermaid-svg-container .flowchart-link {
-  stroke: var(--mermaid-theme-line-color) !important;
+  stroke: var(--mermaid-theme-line-color) ;
 }
 .mermaid-svg-container .flowchart-node-rect {
-  fill: var(--mermaid-theme-primary-color) !important;
-  stroke: var(--mermaid-theme-primary-border-color) !important;
+  fill: var(--mermaid-theme-primary-color) ;
+  stroke: var(--mermaid-theme-primary-border-color) ;
 }
 
 /* Sequence Diagram */
 .mermaid-svg-container .actor {
-  stroke: var(--mermaid-theme-secondary-border-color) !important;
-  fill: var(--mermaid-theme-secondary-color) !important;
+  stroke: var(--mermaid-theme-secondary-border-color) ;
+  fill: var(--mermaid-theme-secondary-color) ;
 }
 .mermaid-svg-container .messageText {
-  fill: var(--mermaid-theme-text-color) !important;
+  fill: var(--mermaid-theme-text-color) ;
 }
 .mermaid-svg-container .sequence-number {
-  fill: var(--mermaid-theme-text-color) !important;
+  fill: var(--mermaid-theme-text-color) ;
 }
 
 /* Gantt Chart */
 .mermaid-svg-container .section {
-  fill: var(--mermaid-theme-secondary-color) !important;
-  stroke: var(--mermaid-theme-secondary-border-color) !important;
+  fill: var(--mermaid-theme-secondary-color) ;
+  stroke: var(--mermaid-theme-secondary-border-color) ;
 }
 .mermaid-svg-container .task {
-  fill: var(--mermaid-theme-primary-color) !important;
-  stroke: var(--mermaid-theme-primary-border-color) !important;
+  fill: var(--mermaid-theme-primary-color) ;
+  stroke: var(--mermaid-theme-primary-border-color) ;
 }
 .mermaid-svg-container .taskText {
-  fill: var(--mermaid-theme-primary-text-color) !important;
+  fill: var(--mermaid-theme-primary-text-color) ;
 }
 
 /* Cacher le texte d'erreur généré par Mermaid à l'intérieur du SVG */
 .mermaid-svg-container svg text.error-text {
-  display: none !important;
+  display: none ;
 }

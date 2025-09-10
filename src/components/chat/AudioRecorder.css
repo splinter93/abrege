@@ -14,7 +14,7 @@
    ======================================== */
 
 .audio-recorder-button {
-  display: flex !important;
+  display: flex;
   align-items: center;
   justify-content: center;
   width: 32px;

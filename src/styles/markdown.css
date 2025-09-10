@@ -45,11 +45,11 @@
 .markdown-body img,
 .markdown-body .center,
 .markdown-body [align="center"] {
-  text-align: center !important;
+  text-align: center ;
 }
 
 .markdown-body [align="right"] {
-  text-align: right !important;
+  text-align: right ;
 }
 
 /* ==========================================================================
@@ -62,8 +62,8 @@ html {
 /* ==========================================================================
    HEADINGS - TYPOGRAPHIE DÉLÉGUÉE À TYPOGRAPHY.CSS
    ========================================================================== */
-/* 
-   Toute la typographie des titres (tailles, gras, polices) est maintenant 
+/*
+   Toute la typographie des titres (tailles, gras, polices) est maintenant
    centralisée dans src/styles/typography.css pour éviter les conflits.
    Ce fichier ne gère que la mise en forme des objets (quotes, tableaux, etc.)
 */
@@ -75,28 +75,28 @@ html {
 /* S'assurer que tous les styles markdown s'appliquent aux pages publiques */
 .public-note-container .markdown-body,
 .public-note-content-wrapper .markdown-body {
-  color: var(--editor-text-color) !important;
-  font-family: var(--editor-font-family-body) !important;
-  font-size: var(--editor-body-size) !important;
-  line-height: var(--editor-line-height-base) !important;
-  background: none !important;
-  margin: 0 !important;
-  padding: 0 !important;
+  color: var(--editor-text-color) ;
+  font-family: var(--editor-font-family-body) ;
+  font-size: var(--editor-body-size) ;
+  line-height: var(--editor-line-height-base) ;
+  background: none ;
+  margin: 0 ;
+  padding: 0 ;
   text-align: left;
 }
 
 /* ==========================================================================
      PARAGRAPHES - TYPOGRAPHIE DÉLÉGUÉE À TYPOGRAPHY.CSS
    ========================================================================== */
-/* 
-   La typographie des paragraphes est maintenant centralisée dans 
+/*
+   La typographie des paragraphes est maintenant centralisée dans
    src/styles/typography.css pour éviter les conflits.
 */
 
 /* ==========================================================================
      LISTES - HIÉRARCHIE VISUELLE PARFAITE
    ========================================================================== */
-   
+
 .markdown-body ul,
 .markdown-body ol {
   margin: 1.25rem 0;
@@ -116,32 +116,32 @@ html {
   position: relative;
   text-align: left;
 }
-  
+
 /* SUPPRIMER les bullets des listes qui contiennent des checkboxes */
 .markdown-body ul li:has(> input[type="checkbox"]),
 .markdown-body ol li:has(> input[type="checkbox"]) {
-  list-style: none !important;
-  list-style-type: none !important;
-  padding-left: 0 !important;
-  margin-left: 0 !important;
+  list-style: none ;
+  list-style-type: none ;
+  padding-left: 0 ;
+  margin-left: 0 ;
 }
 
 /* Aligner correctement le texte avec les checkboxes */
 .markdown-body li:has(> input[type="checkbox"]) {
-  display: flex !important;
-  align-items: flex-start !important;
-  gap: 0.6em !important;
-  flex-direction: row !important;
-  flex-wrap: nowrap !important;
-  width: 100% !important;
+  display: flex ;
+  align-items: flex-start ;
+  gap: 0.6em ;
+  flex-direction: row ;
+  flex-wrap: nowrap ;
+  width: 100% ;
 }
 
 .markdown-body li:has(> input[type="checkbox"]) > *:not(input) {
-  flex: 1 !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  min-width: 0 !important;
-  display: inline !important;
+  flex: 1 ;
+  margin: 0 ;
+  padding: 0 ;
+  min-width: 0 ;
+  display: inline ;
 }
 
 /* Règle de fallback pour les navigateurs qui ne supportent pas :has() */
@@ -152,23 +152,23 @@ html {
 /* Supprimer les bullets de tous les éléments avec checkbox (méthode alternative) */
 .markdown-body ul li:has(input[type="checkbox"]),
 .markdown-body ol li:has(input[type="checkbox"]) {
-  list-style: none !important;
+  list-style: none ;
 }
-  
+
 /* STYLES SPÉCIFIQUES POUR TIPTAP TASK ITEMS */
 /* Cibler les éléments TaskItem de Tiptap */
 .ProseMirror li[data-type="taskItem"],
 .ProseMirror .task-list-item {
-  list-style: none !important;
-  list-style-type: none !important;
-  padding-left: 0 !important;
-  margin-left: 0 !important;
-  display: flex !important;
-  align-items: flex-start !important;
-  gap: 0.6em !important;
-  flex-direction: row !important;
-  flex-wrap: nowrap !important;
-  width: 100% !important;
+  list-style: none ;
+  list-style-type: none ;
+  padding-left: 0 ;
+  margin-left: 0 ;
+  display: flex ;
+  align-items: flex-start ;
+  gap: 0.6em ;
+  flex-direction: row ;
+  flex-wrap: nowrap ;
+  width: 100% ;
 }
 
 /* Supprimer les pseudo-éléments des TaskItem */
@@ -176,101 +176,101 @@ html {
 .ProseMirror li[data-type="taskItem"]::after,
 .ProseMirror .task-list-item::before,
 .ProseMirror .task-list-item::after {
-  content: none !important;
-  display: none !important;
+  content: none ;
+  display: none ;
 }
 
 /* Aligner le contenu des TaskItem */
 .ProseMirror li[data-type="taskItem"] > *:not(input),
 .ProseMirror .task-list-item > *:not(input) {
-  flex: 1 !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  min-width: 0 !important;
-  display: inline !important;
+  flex: 1 ;
+  margin: 0 ;
+  padding: 0 ;
+  min-width: 0 ;
+  display: inline ;
 }
 
 /* Styles spécifiques pour les checkboxes dans les TaskItem */
 .ProseMirror li[data-type="taskItem"] input[type="checkbox"],
 .ProseMirror .task-list-item input[type="checkbox"] {
-  margin: 0 !important;
-  margin-top: 0.1em !important;
-  flex-shrink: 0 !important;
-  flex-grow: 0 !important;
-  order: -1 !important;
+  margin: 0 ;
+  margin-top: 0.1em ;
+  flex-shrink: 0 ;
+  flex-grow: 0 ;
+  order: -1 ;
 }
-  
+
 /* RÈGLES ULTRA-AGRESSIVES pour forcer l'alignement horizontal */
 .markdown-body li:has(> input[type="checkbox"]),
 .ProseMirror li[data-type="taskItem"],
 .ProseMirror .task-list-item {
-  white-space: nowrap !important;
-  overflow: visible !important;
+  white-space: nowrap ;
+  overflow: visible ;
 }
 
 /* Forcer la checkbox à rester sur la même ligne */
 .markdown-body li:has(> input[type="checkbox"]) input[type="checkbox"],
 .ProseMirror li[data-type="taskItem"] input[type="checkbox"],
 .ProseMirror .task-list-item input[type="checkbox"] {
-  order: -1 !important;
-  flex-shrink: 0 !important;
-  flex-grow: 0 !important;
+  order: -1 ;
+  flex-shrink: 0 ;
+  flex-grow: 0 ;
 }
 
 /* Forcer le contenu à rester sur la même ligne */
 .markdown-body li:has(> input[type="checkbox"]) > *:not(input),
 .ProseMirror li[data-type="taskItem"] > *:not(input),
 .ProseMirror .task-list-item > *:not(input) {
-  order: 1 !important;
-  flex-shrink: 1 !important;
-  white-space: normal !important;
+  order: 1 ;
+  flex-shrink: 1 ;
+  white-space: normal ;
 }
 
 /* APPROCHE ALTERNATIVE : Styles universels pour TOUS les inputs checkbox */
 .markdown-body input[type="checkbox"],
 .ProseMirror input[type="checkbox"] {
-  float: left !important;
-  margin: 0.1em 0.6em 0 0 !important;
-  clear: both !important;
+  float: left ;
+  margin: 0.1em 0.6em 0 0 ;
+  clear: both ;
 }
 
 /* Positionner la checkbox en absolu si le flexbox ne marche pas */
 .markdown-body li:has(input[type="checkbox"]) {
-  padding-left: 1.2em !important;
-  position: relative !important;
-  margin-left: -1em !important;
+  padding-left: 1.2em ;
+  position: relative ;
+  margin-left: -1em ;
 }
 
 .markdown-body li:has(input[type="checkbox"]) input[type="checkbox"] {
-  position: absolute !important;
-  left: -0.8em !important;
-  top: 0.2em !important;
+  position: absolute ;
+  left: -0.8em ;
+  top: 0.2em ;
 }
-  
+
 /* RESTAURER les bullets normales pour les listes SANS checkboxes */
 .markdown-body ul li:not(:has(input[type="checkbox"])) {
-  list-style-type: disc !important;
-  padding-left: 0 !important;
-  margin-left: 0 !important;
+  list-style-type: disc ;
+  padding-left: 0 ;
+  margin-left: 0 ;
 }
 
 .markdown-body ol li:not(:has(input[type="checkbox"])) {
-  list-style-type: decimal !important;
-  padding-left: 0 !important;
-  margin-left: 0 !important;
+  list-style-type: decimal ;
+  padding-left: 0 ;
+  margin-left: 0 ;
 }
 
 /* Nested lists normales (sans checkboxes) */
 .markdown-body ul ul li:not(:has(input[type="checkbox"])) {
-  list-style-type: circle !important;
+  list-style-type: circle ;
 }
 
 .markdown-body ol ol li:not(:has(input[type="checkbox"])) {
-  list-style-type: lower-alpha !important;
+  list-style-type: lower-alpha ;
 }
 
 .markdown-body ol ol ol li:not(:has(input[type="checkbox"])) {
-  list-style-type: lower-roman !important;
+  list-style-type: lower-roman ;
 }
 
 /* Nested lists */
@@ -304,18 +304,18 @@ html {
     text-decoration-thickness: 2px;
     border-bottom-color: var(--accent-primary);
   }
-  
+
 .markdown-body a:focus {
   outline: 2px solid var(--accent-primary);
   outline-offset: 2px;
-  border-radius: 4px;
+  border-radius: var(--radius-md);
 }
 
 /* ==========================================================================
      CODE - STYLE TERMINAL MODERNE (DÉSACTIVÉ)
    ========================================================================== */
 
-/* 
+/*
   NOTE: Tous les styles pour 'pre' et 'code' sont maintenant gérés par
   le fichier centralisé src/styles/unified-blocks.css pour assurer un
   style unique et cohérent sur toute la plateforme (éditeur, chat, pages publiques).
@@ -327,7 +327,7 @@ html {
 .markdown-body pre { ... }
 .markdown-body pre code { ... }
 */
-  
+
 /* Option : étiquette de langage si data-language présent */
   .markdown-body pre[data-language]::before {
     content: none; /* Désactivé pour utiliser la nouvelle toolbar */
@@ -358,8 +358,8 @@ html {
   background: var(--surface-2);
   color: #ff6b00; /* Orange plus foncé et plus saturé */
   padding: 2px 6px;
-  border-radius: 4px;
-  font-family: 'JetBrains Mono', 'Noto Sans Mono', 'Fira Code', 'SFMono-Regular', 'Menlo', 'Consolas', 'Monaco', 'Liberation Mono', monospace !important;
+  border-radius: var(--radius-md);
+  font-family: var(--font-base);
   font-size: 0.9em;
   font-weight: 500;
   border: 1px solid var(--border-subtle);
@@ -527,7 +527,7 @@ html {
 .ProseMirror .language-xml,
 .ProseMirror .language-xml code,
 .ProseMirror .language-xml .hljs {
-  font-family: 'JetBrains Mono', 'Noto Sans Mono', 'Fira Code', 'SFMono-Regular', 'Menlo', 'Consolas', 'Monaco', 'Liberation Mono', monospace !important;
+  font-family: var(--font-base);
 }
 */
 
@@ -545,11 +545,11 @@ html {
     padding: 1.25rem 1.75rem;
     margin: 1.75rem 0;
     border-left: none;
-    border-radius: 8px;
+    border-radius: var(--radius-md);
     position: relative;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    box-shadow: var(--glass-shadow-soft);
   }
-  
+
   .markdown-body blockquote::before,
   .public-note-container .markdown-body blockquote::before,
   .public-note-content-wrapper .markdown-body blockquote::before {
@@ -562,7 +562,7 @@ html {
     background: var(--accent-primary);
     border-radius: 2px 0 0 2px;
   }
-  
+
   .markdown-body blockquote p,
   .public-note-container .markdown-body blockquote p,
   .public-note-content-wrapper .markdown-body blockquote p {
@@ -572,11 +572,11 @@ html {
     text-align: left;
     /* font-weight géré par typography.css */
   }
-  
+
   .markdown-body blockquote p:last-child,
   .public-note-container .markdown-body blockquote p:last-child,
-  .public-note-content-wrapper .markdown-body blockquote p:last-child { 
-    margin-bottom: 0; 
+  .public-note-content-wrapper .markdown-body blockquote p:last-child {
+    margin-bottom: 0;
   }
 
 /* ==========================================================================
@@ -587,10 +587,10 @@ html {
 .public-note-container .markdown-body .tableWrapper,
 .public-note-content-wrapper .markdown-body .tableWrapper {
   border: 1px solid var(--border-subtle);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   overflow: auto; /* permet sticky sur th */
   margin: 1.75em 0;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--glass-shadow-soft);
   -webkit-overflow-scrolling: touch;
   max-width: 100%;
   background-color: var(--surface-2);
@@ -631,7 +631,7 @@ html {
   background: var(--surface-2);
   color: var(--text-primary);
   /* font-weight géré par typography.css */
-  font-size: 15px !important;
+  font-size: 15px ;
   letter-spacing: 0.02em;
   border-bottom: 1px solid var(--border-subtle);
   position: sticky;
@@ -654,33 +654,33 @@ html {
 
   .markdown-body tr:last-child td,
   .public-note-container .markdown-body tr:last-child td,
-  .public-note-content-wrapper .markdown-body tr:last-child td { 
-    border-bottom: none; 
+  .public-note-content-wrapper .markdown-body tr:last-child td {
+    border-bottom: none;
   }
-  
+
   .markdown-body tbody tr:nth-child(odd) td,
   .public-note-container .markdown-body tbody tr:nth-child(odd) td,
-  .public-note-content-wrapper .markdown-body tbody tr:nth-child(odd) td { 
-    background-color: rgba(28, 28, 28, 0.4); 
+  .public-note-content-wrapper .markdown-body tbody tr:nth-child(odd) td {
+    background-color: rgba(28, 28, 28, 0.4);
   }
-  
+
   .markdown-body tbody tr:hover td,
   .public-note-container .markdown-body tbody tr:hover td,
   .public-note-content-wrapper .markdown-body tbody tr:hover td {
     background-color: var(--surface-hover);
     transition: background-color 0.2s ease;
   }
-  
+
   .markdown-body table p,
   .public-note-container .markdown-body table p,
-  .public-note-content-wrapper .markdown-body table p { 
-    margin: 0; 
+  .public-note-content-wrapper .markdown-body table p {
+    margin: 0;
   }
 
 /* ==========================================================================
    RÈGLES HORIZONTALES - STYLE CHATGPT
    ========================================================================== */
-   
+
 .markdown-body hr {
   border: none;
   margin: 1.5em 0;
@@ -699,11 +699,11 @@ html {
 .public-note-container .markdown-body img,
 .public-note-content-wrapper .markdown-body img {
   max-width: 100%;
-    border-radius: 12px;
+    border-radius: var(--radius-md);
     margin: 1.75rem 0;
   display: block;
     border: 1px solid var(--border-subtle);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+    box-shadow: var(--glass-shadow-soft);
     transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
     background: var(--surface-2);
 }
@@ -712,7 +712,7 @@ html {
 .public-note-container .markdown-body img:hover,
 .public-note-content-wrapper .markdown-body img:hover {
     transform: translateY(-4px);
-    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.18);
+    box-shadow: var(--glass-shadow-soft);
     border-color: var(--accent-primary);
 }
 
@@ -730,7 +730,7 @@ html {
   width: 1.6em;
   height: 1.6em;
   border: 2px solid var(--border-subtle);
-  border-radius: 6px;
+  border-radius: var(--radius-md);
   background: var(--surface-1);
   display: inline-block;
   vertical-align: top;
@@ -758,19 +758,19 @@ html {
 .ProseMirror input[type='checkbox']:checked::after,
 .public-note-container .markdown-body input[type='checkbox']:checked::after,
 .public-note-content-wrapper .markdown-body input[type='checkbox']:checked::after {
-  content: '✓' !important;
-  position: absolute !important;
-  top: 50% !important;
-  left: 50% !important;
-  transform: translate(-50%, -50%) !important;
-  color: white !important;
-  font-size: 1em !important;
-  font-weight: bold !important;
-  line-height: 1 !important;
-  text-align: center !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
+  content: '✓' ;
+  position: absolute ;
+  top: 50% ;
+  left: 50% ;
+  transform: translate(-50%, -50%) ;
+  color: white ;
+  font-size: 1em ;
+  font-weight: bold ;
+  line-height: 1 ;
+  text-align: center ;
+  display: flex ;
+  align-items: center ;
+  justify-content: center ;
 }
 
 /* État focus */
@@ -786,58 +786,58 @@ html {
 /* ==========================================================================
      TASK LISTS - STYLES UNIFIÉS ET SIMPLIFIÉS
    ==========================================================================
-   
+
    PROBLÈME RÉSOLU : Alignement des checkboxes dans les listes
    =============================================================
-   
+
    CONTEXTE :
    - Les checkboxes dans les listes Tiptap/ProseMirror s'affichaient avec des bullets
    - Le texte était mal aligné (sous la checkbox au lieu d'à côté)
    - Les styles flexbox ne fonctionnaient pas correctement avec la structure HTML de Tiptap
-   
+
    CAUSE RACINE :
    - Tiptap génère des éléments avec data-type="taskItem" et des classes .task-list-item
    - La structure HTML complexe de Tiptap (li > div > input + span) cassait l'alignement
    - Les sélecteurs CSS :has() ne ciblaient pas correctement tous les cas
-   
+
    SOLUTION IMPLÉMENTÉE (Approche multi-niveaux) :
    ===============================================
-   
+
    1. FLEXBOX (Première tentative) :
       - display: flex, align-items: flex-start, gap: 0.6em
       - Problème : Ne fonctionnait pas avec la structure Tiptap complexe
-   
+
    2. FLOAT (Deuxième tentative) :
       - float: left sur les checkboxes avec margin et clear
       - Problème : Layout fragile, pas de contrôle précis
-   
+
    3. POSITION ABSOLUTE (Solution finale) :
       - position: absolute sur la checkbox, position: relative sur le li parent
       - padding-left: 2em sur le li pour laisser l'espace à la checkbox
       - Alignement parfait et robuste
-   
+
    SÉLECTEURS CSS UTILISÉS :
    =========================
    - .markdown-body li:has(input[type="checkbox"]) → Cible les li avec checkboxes
    - .ProseMirror li[data-type="taskItem"] → Cible les TaskItem Tiptap
    - .ProseMirror .task-list-item → Cible les classes Tiptap
    - :not(:has(input[type="checkbox"])) → Exclut les li avec checkboxes des styles normaux
-   
+
    RÉSULTAT :
    ==========
    ✅ Checkboxes parfaitement alignées avec le texte
-   ✅ Aucun bullet point sur les listes avec checkboxes  
+   ✅ Aucun bullet point sur les listes avec checkboxes
    ✅ Bullets normales préservées sur les listes sans checkboxes
    ✅ Hiérarchie des listes imbriquées maintenue
    ✅ Compatible avec Tiptap/ProseMirror ET affichage markdown
-   
+
    MAINTENANCE :
    =============
    - Ne jamais appliquer de styles généraux sur .markdown-body li
    - Toujours utiliser :not(:has(input[type="checkbox"])) pour les styles de bullets
    - Tester avec Tiptap ET avec l'affichage markdown final
    - Vérifier que les listes imbriquées conservent leurs styles
-   
+
    ========================================================================== */
 
 /* ==========================================================================
@@ -860,8 +860,8 @@ html {
 .markdown-body textarea:focus,
 .markdown-body input:focus,
 .markdown-body [contenteditable="true"]:focus {
-  outline: none !important;
-  box-shadow: none !important;
+  outline: none ;
+  box-shadow: none ;
 }
 
 /* ==========================================================================
@@ -872,14 +872,14 @@ html {
     background: var(--accent-subtle);
     color: var(--editor-text-color);
     padding: 0.15em 0.3em;
-    border-radius: 4px;
+    border-radius: var(--radius-md);
     font-weight: 500;
   }
-  
+
   .markdown-body strong { /* font-weight géré par typography.css */ color: var(--editor-text-color); }
   .markdown-body em { font-style: italic; color: var(--editor-text-color); }
   .markdown-body del { text-decoration: line-through; color: var(--text-3); opacity: 0.8; }
-  
+
   /* Abréviations + kbd + sup/sub */
   .markdown-body abbr[title] { text-decoration: underline dotted; cursor: help; }
   .markdown-body kbd {
@@ -888,13 +888,13 @@ html {
     padding: 0.15em 0.4em;
   border: 1px solid var(--border-subtle);
     border-bottom-width: 2px;
-  border-radius: 6px;
+  border-radius: var(--radius-md);
     background: var(--surface-2);
   }
   .markdown-body sup, .markdown-body sub { line-height: 0; position: relative; vertical-align: baseline; }
   .markdown-body sup { top: -0.4em; }
   .markdown-body sub { top: 0.2em; }
-  
+
   /* Figures / légendes */
   .markdown-body figure { margin: 2rem 0; }
   .markdown-body figcaption {
@@ -903,11 +903,11 @@ html {
     color: var(--text-3);
     text-align: center;
   }
-  
+
   /* Détails / sommaire */
   .markdown-body details {
     border: 1px solid var(--border-subtle);
-    border-radius: 10px;
+    border-radius: var(--radius-md);
     padding: 0.75rem 1rem;
     background: var(--surface-1);
     margin: 1.25rem 0;
@@ -918,15 +918,15 @@ html {
     list-style: none;
   }
   .markdown-body summary::-webkit-details-marker { display: none; }
-  
+
   /* Footnotes (style courant Markdown) */
   .markdown-body .footnotes { font-size: 0.9em; color: var(--text-2); }
   .markdown-body .footnotes ol { padding-left: 1.25em; }
   .markdown-body .footnotes hr { margin-top: 2rem; }
-  
+
   /* Visually hidden (pour a11y si besoin) */
   .markdown-body .visually-hidden {
-    position: absolute !important;
+    position: absolute ;
     width: 1px; height: 1px;
     padding: 0; margin: -1px;
     overflow: hidden; clip: rect(0 0 0 0);
@@ -960,10 +960,10 @@ html {
 .ProseMirror .tableWrapper {
   margin: 1.5em 0;
   border: 1px solid var(--border-subtle);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   overflow: auto; /* sticky friendly */
   background-color: var(--surface-2);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--glass-shadow-soft);
   -webkit-overflow-scrolling: touch;
 }
 
@@ -1002,7 +1002,7 @@ html {
   background: var(--surface-2);
   color: var(--text-primary);
   /* font-weight géré par typography.css */
-  font-size: 15px !important;
+  font-size: 15px ;
   letter-spacing: 0.02em;
   border-bottom: 1px solid var(--border-subtle);
   position: sticky;
@@ -1022,7 +1022,7 @@ html {
 .ProseMirror th b {
   /* font-weight géré par typography.css */
 }
-  
+
   .ProseMirror td { background: var(--surface-1); }
   .ProseMirror tbody tr:nth-child(odd) td { background-color: rgba(28, 28, 28, 0.4); }
   .ProseMirror tbody tr:hover td { background-color: var(--surface-hover); transition: background-color 0.2s ease; }
@@ -1043,7 +1043,7 @@ html {
   .ProseMirror .tableWrapper:hover .column-resize-handle { opacity: 0.45; }
 .ProseMirror .column-resize-handle:hover,
   .ProseMirror .column-resize-handle.dragging { opacity: 0.9; }
-  
+
   .ProseMirror .selectedCell {
     position: relative;
     background-color: rgba(var(--accent-primary-rgb, 229, 90, 44), 0.08);
@@ -1055,13 +1055,13 @@ html {
      CODE BLOCKS - PROSEMIRROR UNIFIED
    ========================================================================== */
 
-/* NOTE: Les styles pour '.ProseMirror pre' et '.ProseMirror pre code' 
+/* NOTE: Les styles pour '.ProseMirror pre' et '.ProseMirror pre code'
    sont maintenant gérés par la NodeView de l'extension UnifiedCodeBlockExtension
    et son CSS dédié pour une cohérence parfaite. */
 
 /* .ProseMirror pre { ... } */
 /* .ProseMirror pre code { ... } */
-  
+
   .ProseMirror > pre.selected,
   .ProseMirror > pre:focus,
   .ProseMirror > *.selected {
@@ -1072,67 +1072,67 @@ html {
 /* ==========================================================================
      IMAGES - PROSEMIRROR UNIFIED
    ========================================================================== */
-  
+
 .ProseMirror img {
   max-width: 100%;
-    border-radius: 12px;
+    border-radius: var(--radius-md);
     margin: 1.5rem 0;
   display: block;
   border: 1px solid var(--border-subtle);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+    box-shadow: var(--glass-shadow-soft);
     transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
     background: var(--surface-2);
 }
 
 .ProseMirror img:hover {
     transform: translateY(-4px);
-    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.18);
+    box-shadow: var(--glass-shadow-soft);
     border-color: var(--accent-primary);
   }
-  
-  .ProseMirror .editor-image-wrapper { 
-    max-width: 100% !important; 
-    width: 100% !important; 
-    margin: 1.5rem 0; 
+
+  .ProseMirror .editor-image-wrapper {
+    max-width: 100% ;
+    width: 100% ;
+    margin: 1.5rem 0;
     display: block;
   }
   .ProseMirror .editor-image {
-    display: block; 
-    width: 100% !important; 
-    height: auto; 
-    max-width: 100% !important;
-    margin: 0 auto; 
-    border: 1px solid var(--border-subtle); 
-    border-radius: 12px;
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12); 
+    display: block;
+    width: 100% ;
+    height: auto;
+    max-width: 100% ;
+    margin: 0 auto;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    box-shadow: var(--glass-shadow-soft);
     object-fit: contain;
-    transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease; 
+    transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
     background: var(--surface-2);
   }
   .ProseMirror .editor-image:hover {
     transform: translateY(-4px);
-    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.18);
+    box-shadow: var(--glass-shadow-soft);
     border-color: var(--accent-primary);
   }
   .ProseMirror p:has(img),
-  .ProseMirror p:has(.editor-image-wrapper) { 
-    margin: 0; 
-    width: 100% !important;
-    max-width: 100% !important;
+  .ProseMirror p:has(.editor-image-wrapper) {
+    margin: 0;
+    width: 100% ;
+    max-width: 100% ;
   }
-  
+
   /* Forcer la largeur complète pour tous les conteneurs d'images */
-  .ProseMirror .editor-image-wrapper { 
-    width: 100% !important; 
-    max-width: 100% !important;
+  .ProseMirror .editor-image-wrapper {
+    width: 100% ;
+    max-width: 100% ;
     display: block;
   }
-  
+
   /* S'assurer que les images prennent toute la largeur disponible */
   .ProseMirror .editor-image,
   .ProseMirror img {
-    width: 100% !important;
-    max-width: 100% !important;
+    width: 100% ;
+    max-width: 100% ;
     height: auto;
     display: block;
   }
@@ -1140,9 +1140,9 @@ html {
 /* ==========================================================================
      DROP CURSOR ET SÉLECTION
    ========================================================================== */
-  
+
   .ProseMirror-dropcursor { border-top: 3px solid var(--accent-primary); opacity: 0.8; }
-  
+
 /* ==========================================================================
      COPY BUTTON - STYLE PREMIUM (DÉSACTIVÉ)
    ========================================================================== */
@@ -1155,61 +1155,61 @@ html {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 36px; 
+  width: 36px;
   height: 36px;
   background: transparent;
   color: var(--text-2);
   border: none;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   cursor: pointer;
   z-index: 10;
-  outline: none !important;
+  outline: none ;
 }
-  
+
 .code-copy-button:hover {
   color: var(--text-1);
 }
-  
+
 .code-copy-button:focus {
-  outline: none !important;
-  box-shadow: none !important;
+  outline: none ;
+  box-shadow: none ;
 }
-  
-.code-copy-button.copied { 
-  background: var(--success) !important; 
-  color: white !important; 
-  border-radius: 8px;
+
+.code-copy-button.copied {
+  background: var(--success) ;
+  color: white ;
+  border-radius: var(--radius-md);
   padding: 8px;
   min-width: 36px;
   min-height: 36px;
 }
-  
-.code-copy-button svg { 
-  width: 18px; 
-  height: 18px; 
+
+.code-copy-button svg {
+  width: 18px;
+  height: 18px;
 }
 */
 
 /* ==========================================================================
      ANIMATIONS ET TRANSITIONS (avec respect motion)
    ========================================================================== */
-  
+
   /* Animations supprimées pour un style épuré */
-  
+
   @media (prefers-reduced-motion: reduce) {
     .markdown-body * {
-      animation: none !important;
-      transition: none !important;
+      animation: none ;
+      transition: none ;
     }
     .markdown-body img,
 .ProseMirror img,
-    .ProseMirror .editor-image { transform: none !important; }
+    .ProseMirror .editor-image { transform: none ; }
   }
-  
+
   /* ==========================================================================
      PRINT STYLES
      ========================================================================== */
-  
+
   @media print {
     .markdown-body {
       color: #000;
@@ -1221,12 +1221,12 @@ html {
     }
     .markdown-body h1, .markdown-body h2, .markdown-body h3 { page-break-after: avoid; page-break-inside: avoid; }
     .markdown-body pre, .markdown-body blockquote, .markdown-body table { page-break-inside: avoid; }
-    .markdown-body img { max-width: 100% !important; page-break-inside: avoid; box-shadow: none; border-color: #00000022; }
+    .markdown-body img { max-width: 100% ; page-break-inside: avoid; box-shadow: none; border-color: #00000022; }
     /* .markdown-body pre { box-shadow: none; background: #f6f6f6; color: #000; border-color: #00000022; } - DÉSACTIVÉ pour unified-blocks.css */
     .markdown-body blockquote { background: #f6f6f6; border-color: #000; box-shadow: none; }
-         .markdown-body hr { 
-       background: #00000022; 
-       height: 1px; 
+         .markdown-body hr {
+       background: #00000022;
+       height: 1px;
        opacity: 0.8;
      }
   }

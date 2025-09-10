@@ -1,0 +1,239 @@
+/* ========================================
+   CHAT UTILITIES - STYLES COMMUNS
+   ======================================== */
+
+/* ========================================
+   GLASSMORPHISM UTILITIES
+   ======================================== */
+
+.glass-effect {
+  background: var(--glass-bg-base);
+  backdrop-filter: var(--glass-blur-medium);
+  -webkit-backdrop-filter: var(--glass-blur-medium);
+  border: 1px solid var(--glass-border-subtle);
+  border-radius: var(--chat-radius-lg);
+  box-shadow: var(--glass-shadow-soft);
+}
+
+.glass-effect-subtle {
+  background: var(--glass-bg-subtle);
+  backdrop-filter: var(--glass-blur-light);
+  -webkit-backdrop-filter: var(--glass-blur-light);
+  border: 1px solid var(--glass-border-soft);
+  border-radius: var(--chat-radius-md);
+  box-shadow: var(--glass-shadow-subtle);
+}
+
+.glass-effect-strong {
+  background: var(--glass-bg-strong);
+  backdrop-filter: var(--glass-blur-heavy);
+  -webkit-backdrop-filter: var(--glass-blur-heavy);
+  border: 1px solid var(--glass-border-strong);
+  border-radius: var(--chat-radius-xl);
+  box-shadow: var(--glass-shadow-strong);
+}
+
+/* ========================================
+   BUTTON UTILITIES
+   ======================================== */
+
+.btn-glass::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--glass-gradient-subtle);
+  border-radius: var(--chat-radius-md);
+  opacity: 0;
+  transition: opacity var(--chat-transition-normal);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.btn-glass:hover::before {
+  opacity: 1;
+}
+
+.btn-glass:hover {
+  background: var(--glass-bg-soft);
+  border-color: var(--glass-border-medium);
+  transform: translateY(-1px);
+  box-shadow: var(--glass-shadow-soft);
+}
+
+.btn-glass:active {
+  transform: translateY(0);
+}
+
+/* ========================================
+   INPUT UTILITIES
+   ======================================== */
+
+.input-glass::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--glass-gradient-subtle);
+  border-radius: var(--chat-radius-md);
+  opacity: 0;
+  transition: opacity var(--chat-transition-normal);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.input-glass:focus {
+  border-color: var(--glass-border-focus);
+  box-shadow: var(--glass-shadow-medium), 0 0 0 2px rgba(255, 255, 255, 0.1);
+  background: var(--glass-bg-soft);
+}
+
+.input-glass:focus::before {
+  opacity: 1;
+}
+
+.input-glass::placeholder {
+  color: var(--chat-text-muted);
+  opacity: 0.7;
+}
+
+/* ========================================
+   TEXT UTILITIES
+   ======================================== */
+
+.text-primary {
+  color: var(--chat-text-primary);
+}
+
+.text-secondary {
+  color: var(--chat-text-secondary);
+}
+
+.text-muted {
+  color: var(--chat-text-muted);
+}
+
+.text-sm {
+  font-size: var(--chat-font-size-sm);
+}
+
+.text-xs {
+  font-size: var(--chat-font-size-xs);
+}
+
+.text-md {
+  font-size: var(--chat-font-size-md);
+}
+
+.text-lg {
+  font-size: var(--chat-font-size-lg);
+}
+
+.font-medium {
+  font-weight: var(--chat-font-weight-medium);
+}
+
+.font-semibold {
+  font-weight: var(--chat-font-weight-semibold);
+}
+
+.font-bold {
+  font-weight: var(--chat-font-weight-bold);
+}
+
+/* ========================================
+   SPACING UTILITIES
+   ======================================== */
+
+.p-xs { padding: var(--chat-spacing-xs); }
+.p-sm { padding: var(--chat-spacing-sm); }
+.p-md { padding: var(--chat-spacing-md); }
+.p-lg { padding: var(--chat-spacing-lg); }
+.p-xl { padding: var(--chat-spacing-xl); }
+
+.m-xs { margin: var(--chat-spacing-xs); }
+.m-sm { margin: var(--chat-spacing-sm); }
+.m-md { margin: var(--chat-spacing-md); }
+.m-lg { margin: var(--chat-spacing-lg); }
+.m-xl { margin: var(--chat-spacing-xl); }
+
+.gap-xs { gap: var(--chat-spacing-xs); }
+.gap-sm { gap: var(--chat-spacing-sm); }
+.gap-md { gap: var(--chat-spacing-md); }
+.gap-lg { gap: var(--chat-spacing-lg); }
+.gap-xl { gap: var(--chat-spacing-xl); }
+
+/* ========================================
+   BORDER RADIUS UTILITIES
+   ======================================== */
+
+.rounded-sm { border-radius: var(--chat-radius-sm); }
+.rounded-md { border-radius: var(--chat-radius-md); }
+.rounded-lg { border-radius: var(--chat-radius-lg); }
+.rounded-xl { border-radius: var(--chat-radius-xl); }
+.rounded-2xl { border-radius: var(--chat-radius-2xl); }
+.rounded-full { border-radius: var(--chat-radius-full); }
+
+/* ========================================
+   SHADOW UTILITIES
+   ======================================== */
+
+.shadow-sm { box-shadow: var(--chat-shadow-sm); }
+.shadow-md { box-shadow: var(--chat-shadow-md); }
+.shadow-lg { box-shadow: var(--chat-shadow-lg); }
+.shadow-xl { box-shadow: var(--chat-shadow-xl); }
+
+.shadow-glass-subtle { box-shadow: var(--glass-shadow-subtle); }
+.shadow-glass-soft { box-shadow: var(--glass-shadow-soft); }
+.shadow-glass-medium { box-shadow: var(--glass-shadow-medium); }
+.shadow-glass-strong { box-shadow: var(--glass-shadow-strong); }
+
+/* ========================================
+   TRANSITION UTILITIES
+   ======================================== */
+
+.transition-fast { transition: all var(--chat-transition-fast); }
+.transition-normal { transition: all var(--chat-transition-normal); }
+.transition-slow { transition: all var(--chat-transition-slow); }
+
+/* ========================================
+   LAYOUT UTILITIES
+   ======================================== */
+
+.flex { display: flex; }
+.flex-col { flex-direction: column; }
+.flex-row { flex-direction: row; }
+.items-center { align-items: center; }
+.justify-center { justify-content: center; }
+.justify-between { justify-content: space-between; }
+.justify-start { justify-content: flex-start; }
+.justify-end { justify-content: flex-end; }
+
+.flex-1 { flex: 1; }
+.flex-shrink-0 { flex-shrink: 0; }
+
+.relative { position: relative; }
+.absolute { position: absolute; }
+.fixed { position: fixed; }
+
+.overflow-hidden { overflow: hidden; }
+.overflow-auto { overflow: auto; }
+
+.w-full { width: 100%; }
+.h-full { height: 100%; }
+
+/* ========================================
+   RESPONSIVE UTILITIES
+   ======================================== */
+
+@media (max-width: 768px) {
+  .mobile-hidden { display: none; }
+  .mobile-p-sm { padding: var(--chat-spacing-sm); }
+  .mobile-p-md { padding: var(--chat-spacing-md); }
+  .mobile-text-sm { font-size: var(--chat-font-size-sm); }
+  .mobile-text-xs { font-size: var(--chat-font-size-xs); }
+}
+
+@media (max-width: 480px) {
+  .mobile-sm-hidden { display: none; }
+  .mobile-sm-p-xs { padding: var(--chat-spacing-xs); }
+  .mobile-sm-text-xs { font-size: var(--chat-font-size-xs); }
+}

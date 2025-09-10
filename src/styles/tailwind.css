@@ -1,0 +1,9 @@
+/* ========================================
+   TAILWIND CSS - STRUCTURE MODULAIRE
+   ======================================== */
+
+/* Import des modules Tailwind */
+@import './tailwind/base.css';
+@import './tailwind/components.css';
+@import './tailwind/utilities.css';
+@import './tailwind/markdown.css';

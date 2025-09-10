@@ -202,7 +202,23 @@
    RESPONSIVE - MOBILE
    ======================================== */
 
-@media (max-width: 768px) {
+/* Overlay pour mobile quand sidebar est ouverte */
+.chat-sidebar-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: calc(var(--chat-z-sidebar) - 1);
+  display: none;
+}
+
+@media (max-width: 1024px) {
+  .chat-sidebar-overlay {
+    display: block;
+  }
+  
   .chat-fullscreen-container.sidebar-open .chat-content {
     margin-left: 0;
     width: 100vw;
@@ -231,7 +247,9 @@
 }
 
   .chat-message-list {
+    width: 100%;
     max-width: 1000px;
+    min-width: 0;
     margin: 0 auto;
     display: flex;
     flex-direction: column;
@@ -239,11 +257,32 @@
     /* Optimisations de performance */
     will-change: transform;
     transform: translateZ(0);
-    /* Assurer que le contenu ne déborde pas */
-    width: 100%;
     /* Protection contre le débordement */
-    overflow-x: auto;
+    overflow-x: hidden;
     overflow-y: visible;
+    /* Assurer que le contenu ne déborde pas */
+    box-sizing: border-box;
+    padding: 0 var(--chat-spacing-md);
+  }
+  
+  /* Forcer le redimensionnement en dessous de 1000px */
+  @media (max-width: 1000px) {
+    .chat-message-list {
+      max-width: 100%;
+      width: 100%;
+      padding: 0 var(--chat-spacing-sm);
+    }
+    
+    .chat-input-wrapper {
+      max-width: 100%;
+      width: 100%;
+      padding: 0 var(--chat-spacing-sm);
+    }
+    
+    .chat-fullscreen-container:not(.chat-widget-mode) .chat-message-bubble-assistant {
+      max-width: 100%;
+      width: 100%;
+    }
   }
 
 /* ========================================
@@ -255,6 +294,18 @@
   background: var(--chat-bg-primary);
   padding: var(--chat-spacing-lg);
   z-index: var(--chat-z-sidebar);
+  /* Centrer le contenu avec largeur fixe */
+  display: flex;
+  justify-content: center;
+}
+
+.chat-input-wrapper {
+  width: 100%;
+  max-width: 1000px;
+  min-width: 0;
+  margin: 0 auto;
+  box-sizing: border-box;
+  padding: 0 var(--chat-spacing-md);
 }
 
 /* ========================================
@@ -294,9 +345,14 @@
    RESPONSIVE
    ======================================== */
 
-@media (max-width: 768px) {
+/* ========================================
+   RESPONSIVE BREAKPOINTS
+   ======================================== */
+
+/* Tablette */
+@media (max-width: 1024px) {
   .chat-header {
-    height: 44px;
+    height: 48px;
     padding: 0 var(--chat-spacing-lg);
   }
   
@@ -306,6 +362,102 @@
 
   .chat-messages-container {
     padding: var(--chat-spacing-lg);
+    padding-bottom: 8rem;
+  }
+
+  .chat-message-list {
+    padding: 0 var(--chat-spacing-sm);
+  }
+
+  .chat-input-wrapper {
+    padding: 0 var(--chat-spacing-sm);
+  }
+  
+  /* Sidebar en overlay sur tablette */
+  .chat-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    z-index: var(--chat-z-sidebar);
+    transform: translateX(-100%);
+    transition: transform var(--chat-transition-slow);
+  }
+  
+  .chat-sidebar.open {
+    transform: translateX(0);
+  }
+  
+  .chat-sidebar.closed {
+    transform: translateX(-100%);
+  }
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .chat-header {
+    height: 44px;
+    padding: 0 var(--chat-spacing-md);
+  }
+  
+  .chat-header-left {
+    gap: var(--chat-spacing-xs);
+  }
+
+  .chat-messages-container {
+    padding: var(--chat-spacing-md);
     padding-bottom: 7rem;
+  }
+
+  .chat-message-list {
+    padding: 0 var(--chat-spacing-xs);
+  }
+
+  .chat-input-wrapper {
+    padding: 0 var(--chat-spacing-xs);
+  }
+  
+  /* Sidebar plus étroite sur mobile */
+  .chat-sidebar {
+    width: 280px;
+  }
+}
+
+/* Mobile très petit */
+@media (max-width: 480px) {
+  .chat-header {
+    height: 40px;
+    padding: 0 var(--chat-spacing-sm);
+  }
+
+  .chat-messages-container {
+    padding: var(--chat-spacing-sm);
+    padding-bottom: 6rem;
+  }
+
+  .chat-message-list {
+    padding: 0;
+  }
+
+  .chat-input-wrapper {
+    padding: 0;
+  }
+  
+  /* Sidebar encore plus étroite */
+  .chat-sidebar {
+    width: 260px;
+  }
+}
+
+/* Pour les écrans très larges, maintenir la largeur optimale */
+@media (min-width: 1200px) {
+  .chat-message-list {
+    max-width: 1000px;
+    padding: 0 var(--chat-spacing-lg);
+  }
+
+  .chat-input-wrapper {
+    max-width: 1000px;
+    padding: 0 var(--chat-spacing-lg);
   }
 } 

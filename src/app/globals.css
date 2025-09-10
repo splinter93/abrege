@@ -1,4 +1,16 @@
-/* Import du design system chat */
+/* Import des variables unifiées en premier */
+@import '../styles/variables-unified.css';
+
+/* Import du système glassmorphism centralisé */
+@import '../styles/glassmorphism-system.css';
+
+/* Import de la typographie markdown chat optimisée */
+@import '../styles/chat-markdown-typography.css';
+
+/* Import Tailwind CSS */
+@import '../styles/tailwind.css';
+
+/* Import du design system chat (pour compatibilité temporaire) */
 @import '../styles/chat-design-system-v2.css';
 
 :root {
@@ -28,9 +40,9 @@
 }
 
 body {
-  background: var(--bg-main, #141414) !important;
-  color: var(--text-1, #f5f5f5);
-  font-family: var(--font-main, 'Noto Sans', sans-serif);
+  background: var(--color-bg-primary);
+  color: var(--color-text-primary);
+  font-family: var(--font-base);
   margin: 0;
   padding: 0;
   min-height: 100vh;

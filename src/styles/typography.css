@@ -3,7 +3,7 @@
    ==========================================================================
    Système unifié pour fonts, tailles, layouts.
    Les couleurs sont gérées par src/styles/design-system.css
-   
+
    POLICES DISPONIBLES DANS L'ÉDITEUR :
    - Noto Sans (par défaut) : Sans-serif moderne, très lisible
    - Inter : Sans-serif optimisé pour l'écran
@@ -20,30 +20,14 @@
 */
 
 /* ==========================================================================
-   IMPORTS GOOGLE FONTS - POLICES PRINCIPALES
+   IMPORTS GOOGLE FONTS - POLICES OPTIMISÉES POUR LA PRODUCTION
    ========================================================================== */
-/* Sans-serif modernes */
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,300;1,400;1,500;1,600;1,700;1,800&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,500;1,700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Work+Sans:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Figtree:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Ubuntu:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,500;1,700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Raleway:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+/* POLICES PRINCIPALES - Noto Sans + Inter + Monospace */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap');
 
-/* Serif classiques */
-@import url('https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&display=swap');
-
-/* Monospace pour le code */
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500;600;700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Mono:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&display=swap');
+/* POLICES ÉDITEUR - Options utilisateur uniquement */
 
 :root {
   /* ==========================================================================
@@ -52,36 +36,36 @@
   --editor-text-color: #D4D4D4; /* Gris clair comme dans l'image */
   --editor-text-primary: #D4D4D4; /* Gris clair comme dans l'image */
   --editor-text-muted: #737373;
-  
+
   /* ==========================================================================
-     FONTS HARMONISÉES - POLICES PRINCIPALES
+     FONTS HIÉRARCHISÉES - NOTO SANS + INTER + OPTIONS ÉDITEUR
      ========================================================================== */
-  /* Police par défaut avec fallback robuste */
-  --editor-font-family: 'Noto Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
-  
-  /* Polices distinctes pour titres et texte */
+  /* Police de base - Noto Sans partout */
+  --font-base: 'Noto Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+
+  /* Polices éditeur - Noto Sans pour titres, Inter pour texte */
+  --editor-font-family: var(--font-base);
   --editor-font-family-headings: 'Noto Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
-  --editor-font-family-body: 'Noto Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
-  
-  
-  /* Sans-serif modernes */
-  --font-inter: 'Inter', sans-serif;
+  --editor-font-family-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+
+  /* Polices chat - Noto Sans pour titres, Inter pour texte */
+  --chat-font-family: var(--font-base);
+  --chat-font-family-headings: 'Noto Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+
+  /* Police monospace optimisée */
+  --font-monospace: 'JetBrains Mono', 'SF Mono', 'Monaco', 'Cascadia Code', 'Roboto Mono', 'Consolas', monospace;
+
+  /* FALLBACK GLOBAL FONT - Noto Sans comme police principale */
+  --font-main: var(--font-base, 'Noto Sans', sans-serif);
+
+  /* POLICES ÉDITEUR - Options utilisateur */
   --font-open-sans: 'Open Sans', sans-serif;
   --font-roboto: 'Roboto', sans-serif;
   --font-lato: 'Lato', sans-serif;
   --font-source-sans-3: 'Source Sans 3', sans-serif;
   --font-work-sans: 'Work Sans', sans-serif;
-  
-  /* Serif classiques */
   --font-eb-garamond: 'EB Garamond', serif;
   --font-cormorant-garamond: 'Cormorant Garamond', serif;
-  
-  /* Système et monospace */
-  --font-system: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
-  --font-monospace: 'JetBrains Mono', 'Noto Sans Mono', 'Fira Code', 'SFMono-Regular', 'Menlo', 'Consolas', 'Monaco', 'Liberation Mono', monospace;
-
-  /* FALLBACK GLOBAL FONT - Éviter les undefined */
-  --font-main: var(--editor-font-family, 'Noto Sans', sans-serif);
 
   /* ==========================================================================
      TAILLES HARMONISÉES - PREMIUM EDITOR (RÉDUITES DE 10%)
@@ -90,7 +74,7 @@
   --editor-body-size: 1.125rem;         /* 18px - taille cohérente avec les paragraphes et listes */
   --editor-body-size-mobile: 1rem;      /* 16px - taille mobile cohérente */
   --editor-h1-size: 1.8rem;             /* 28.8px - réduit de 10% (32px → 28.8px) */
-  
+
   /* ==========================================================================
      HAUTEURS D'IMAGE D'EN-TÊTE - COHÉRENCE GLOBALE
      ========================================================================== */
@@ -118,7 +102,7 @@
   --editor-h4-size: 0.95625rem;        /* 15.3px - réduit de 10% (17px → 15.3px) */
   --editor-h5-size: 0.84375rem;        /* 13.5px - réduit de 10% (15px → 13.5px) */
   --editor-h6-size: 0.73125rem;        /* 11.7px - réduit de 10% (13px → 11.7px) */
-  
+
   /* === TAILLES SPÉCIALISÉES - PREMIUM (RÉDUITES DE 10%) === */
   --editor-small-size: 0.73125rem;     /* 11.7px - réduit de 10% (13px → 11.7px) */
   --editor-medium-size: 0.7875rem;     /* 12.6px - réduit de 10% (14px → 12.6px) */
@@ -150,7 +134,7 @@
   --editor-title-line-height: 1.2;        /* 1.2 - refined from 1.15 for better title spacing */
   --editor-title-letter-spacing: -0.025em; /* -0.025em - refined from -0.02em */
   --editor-title-min-height: 40px;        /* 40px - refined from 45px */
-  
+
   /* ==========================================================================
      LINE-HEIGHTS ET ESPACEMENTS - BLOG PREMIUM (Optimisé 4.0)
      ========================================================================== */
@@ -158,17 +142,17 @@
   --editor-line-height-tight: 1.3;       /* Line-height pour les titres, plus lisible */
   --editor-line-height-mobile: 1.7;      /* Line-height mobile, légèrement plus dense */
   --editor-line-height-relaxed: 1.85;    /* Line-height pour les paragraphes importants */
-  
+
   /* Rythme vertical harmonieux pour blog premium */
   --editor-paragraph-margin-bottom: 1.25em; /* Marge SOUS les paragraphes - plus compact */
   --editor-list-margin-vertical: 1.25em;    /* Marge verticale pour les listes */
   --editor-list-item-margin-vertical: 0.375em; /* Marge entre les items de liste */
-  
+
   /* Espacements titres optimisés pour hiérarchie claire */
   --editor-heading-margin-top: 1.25em;      /* Marge AU-DESSUS des titres - plus compact */
   --editor-heading-margin-bottom: 0.5em;    /* Marge SOUS les titres - espacement optimal */
   --editor-heading-margin-top-first: 0;     /* Pas de marge pour le premier titre */
-  
+
   /* Espacements spéciaux pour blog premium */
   --editor-section-spacing: 1.5em;          /* Espacement entre sections */
   --editor-block-spacing: 1.75em;           /* Espacement entre blocs (images, quotes, etc.) */
@@ -200,19 +184,21 @@
 }
 
 /* ==========================================================================
-   CLASSES UTILITAIRES
+   CLASSES UTILITAIRES - HIÉRARCHISÉES
    ========================================================================== */
-.font-inter { font-family: var(--font-inter); }
+/* Polices principales */
+.font-base { font-family: var(--font-base); }
+.font-inter { font-family: var(--editor-font-family); }
+.font-monospace { font-family: var(--font-monospace); }
+
+/* Polices éditeur - options utilisateur */
 .font-open-sans { font-family: var(--font-open-sans); }
-.font-eb-garamond { font-family: var(--font-eb-garamond); }
 .font-roboto { font-family: var(--font-roboto); }
 .font-lato { font-family: var(--font-lato); }
 .font-source-sans-3 { font-family: var(--font-source-sans-3); }
 .font-work-sans { font-family: var(--font-work-sans); }
+.font-eb-garamond { font-family: var(--font-eb-garamond); }
 .font-cormorant-garamond { font-family: var(--font-cormorant-garamond); }
-.font-monospace { font-family: var(--font-monospace); }
-.font-noto-sans { font-family: var(--editor-font-family); }
-
 
 /* ==========================================================================
    LAYOUT TYPOGRAPHIQUE - NOTE HEADER
@@ -224,7 +210,7 @@
 /* Classe de base pour le layout */
 .noteLayout {
   width: 100%;
-  transition: all 0.2s ease;
+  transition: all var(--transition-normal);
 }
 
 /* Conteneur du titre */
@@ -232,7 +218,7 @@
   width: 100%;
   display: flex;
   justify-content: center;
-  transition: all 0.2s ease;
+  transition: all var(--transition-normal);
 }
 
 /* Conteneur du contenu */
@@ -240,7 +226,7 @@
   width: 100%;
   display: flex;
   justify-content: center;
-  transition: all 0.2s ease;
+  transition: all var(--transition-normal);
   background: var(--surface-1);
 }
 
@@ -263,7 +249,7 @@
   line-height: var(--editor-title-line-height);
   min-height: var(--editor-title-min-height);
   height: auto;
-  transition: all 0.2s ease;
+  transition: all var(--transition-normal);
 }
 
 /* Add editor H1 styling so typography applies when not using a textarea */
@@ -293,8 +279,6 @@
    ========================================================================== */
 /* Ces règles sont maintenant gérées dans la section "PADDINGS SPÉCIFIQUES PAR MODE" */
 
-
-
 /* ==========================================================================
    LAYOUT AVEC TITRE DANS L'IMAGE - POSITIONNEMENT
    ========================================================================== */
@@ -320,13 +304,13 @@
 
 /* Style du titre dans l'image */
 .noteLayout.imageWithTitle .noteLayout-title textarea {
-  color: white !important;
+  color: white;
   text-shadow: 0 2px 4px rgba(0,0,0,0.2);
   text-align: center;
-  width: 100% !important;
-  max-width: 800px !important;
-  white-space: pre-wrap !important;
-  overflow: visible !important;
+  width: 100%;
+  max-width: 800px;
+  white-space: pre-wrap;
+  overflow: visible;
 }
 
 /* Wide mode pour le titre dans l'image */
@@ -340,11 +324,11 @@
   max-width: 1000px;
 }
 
-.noteLayout.imageWithTitle .noteLayout-content .editor-content { 
-  padding-top: 0; 
+.noteLayout.imageWithTitle .noteLayout-content .editor-content {
+  padding-top: 0;
 }
-.noteLayout.imageWithTitle .noteLayout-content .markdown-body { 
-  padding-top: 0; 
+.noteLayout.imageWithTitle .noteLayout-content .markdown-body {
+  padding-top: 0;
 }
 
 /* ==========================================================================
@@ -370,18 +354,18 @@
    WIDE MODE - PADDING OPTIMISÉ
    ========================================================================== */
 /* Règles de base pour tous les layouts */
-.noteLayout .noteLayout-title { 
-  display: flex; 
-  justify-content: center; 
+.noteLayout .noteLayout-title {
+  display: flex;
+  justify-content: center;
 }
 
-.noteLayout .noteLayout-content { 
+.noteLayout .noteLayout-content {
   margin-top: 0; /* Supprime la marge par défaut */
 }
 
 /* Standard paddings for content area - REDUITS pour le wide mode */
-.noteLayout .noteLayout-content .editor-content { 
-  padding: 2px 0 72px 0; 
+.noteLayout .noteLayout-content .editor-content {
+  padding: 2px 0 72px 0;
 }
 
 /* ==========================================================================
@@ -389,54 +373,54 @@
    ========================================================================== */
 
 /* 1. Layout sans image - PADDING RÉDUIT */
-.noteLayout.noImage .noteLayout-title { 
-  padding-top: 60px; 
+.noteLayout.noImage .noteLayout-title {
+  padding-top: 60px;
 }
-.noteLayout.noImage .noteLayout-title textarea { 
+.noteLayout.noImage .noteLayout-title textarea {
   padding: 0 0 16px 0; /* Padding augmenté sous le titre pour le mode sans image */
 }
-.noteLayout.noImage .noteLayout-content .editor-content { 
+.noteLayout.noImage .noteLayout-content .editor-content {
   padding-top: 0; /* Pas de padding en haut */
 }
 
 /* Wide mode sans image - PADDING ENCORE PLUS RÉDUIT */
-.noteLayout.noImage.wide-mode .noteLayout-title textarea { 
+.noteLayout.noImage.wide-mode .noteLayout-title textarea {
   padding: 0 0 12px 0; /* Espacement cohérent en wide mode pour le mode sans image */
 }
 
 /* 2. Layout avec titre dans l'image - PADDING MINIMAL */
-.noteLayout.imageWithTitle .noteLayout-title { 
-  padding: 0; 
+.noteLayout.imageWithTitle .noteLayout-title {
+  padding: 0;
 }
-.noteLayout.imageWithTitle .noteLayout-title textarea { 
+.noteLayout.imageWithTitle .noteLayout-title textarea {
   padding: 0 0 1px 0; /* Padding minimal */
 }
-.noteLayout.imageWithTitle .noteLayout-content { 
-  margin-top: -24px; 
+.noteLayout.imageWithTitle .noteLayout-content {
+  margin-top: -24px;
   padding-top: 18px; /* Augmenté de 12px à 18px */
 }
 
 /* Wide mode avec titre dans l'image */
-.noteLayout.imageWithTitle.wide-mode .noteLayout-title textarea { 
+.noteLayout.imageWithTitle.wide-mode .noteLayout-title textarea {
   padding: 0 0 1px 0; /* Padding ultra-minimal */
 }
-.noteLayout.imageWithTitle.wide-mode .noteLayout-content { 
+.noteLayout.imageWithTitle.wide-mode .noteLayout-content {
   padding-top: 12px; /* Augmenté de 8px à 12px */
 }
 
 /* 3. Layout image seule - PADDING RÉDUIT */
-.noteLayout.imageOnly .noteLayout-title { 
-  padding-top: 4px; 
+.noteLayout.imageOnly .noteLayout-title {
+  padding-top: 4px;
 }
-.noteLayout.imageOnly .noteLayout-title textarea { 
-  padding: 0; 
+.noteLayout.imageOnly .noteLayout-title textarea {
+  padding: 0;
 }
-.noteLayout.imageOnly .noteLayout-content { 
+.noteLayout.imageOnly .noteLayout-content {
   padding-top: 18px; /* Augmenté de 12px à 18px */
 }
 
 /* Wide mode image seule */
-.noteLayout.imageOnly.wide-mode .noteLayout-content { 
+.noteLayout.imageOnly.wide-mode .noteLayout-content {
   padding-top: 12px; /* Augmenté de 8px à 12px */
 }
 
@@ -502,9 +486,9 @@
     font-size: var(--editor-body-size-mobile);
     line-height: var(--editor-line-height-mobile);
   }
-  
+
   /* .editor-content h1, h2, h3 styles removed to avoid conflicts with markdown.css */
-  
+
   /* Premium mobile spacing */
   .editor-content p,
   .markdown-body p,
@@ -513,7 +497,7 @@
     line-height: var(--editor-line-height-mobile); /* 1.65 */
     font-size: 1rem;                        /* 16px sur mobile */
   }
-  
+
   .editor-content ul,
   .editor-content ol,
   .markdown-body ul,
@@ -524,7 +508,7 @@
     padding-left: 1.2em;
     font-size: 1rem;                        /* 16px sur mobile */
   }
-  
+
   .editor-content li,
   .markdown-body li,
   .ProseMirror li {
@@ -601,21 +585,21 @@
 .markdown-body blockquote p,
 .ProseMirror blockquote p,
 .editor-content blockquote p {
-  font-weight: var(--editor-blockquote-weight) !important;
+  font-weight: var(--editor-blockquote-weight);
 }
 
 /* En-têtes de tableaux */
 .markdown-body th,
 .ProseMirror th,
 .editor-content th {
-  font-weight: var(--editor-table-header-weight) !important;
+  font-weight: var(--editor-table-header-weight);
 }
 
 /* Checkboxes */
 .markdown-body input[type='checkbox']:checked::after,
 .ProseMirror input[type='checkbox']:checked::after,
 .editor-content input[type='checkbox']:checked::after {
-  font-weight: bold !important;
+  font-weight: bold;
 }
 
 /* ==========================================================================
@@ -627,8 +611,8 @@
 /* Forcer le thème sombre sur toute la page publique */
 html.public-note-page,
 body.public-note-page {
-  background: var(--bg-main) !important;
-  color: var(--editor-text-color) !important;
+  background: var(--color-bg-primary);
+  color: var(--color-text-primary);
 }
 
 /* Container principal de la page publique */
@@ -639,10 +623,6 @@ body.public-note-page {
   color: var(--editor-text-color);
   padding-bottom: 64px;
 }
-
-
-
-
 
 /* Image d'en-tête publique */
 .public-header-image {
@@ -707,26 +687,26 @@ body.public-note-page {
 /* Titre dans la page publique (pas dans l'image) - aligné à gauche */
 .public-note-content-wrapper .noteLayout-title h1 {
   text-align: left;
-  margin: 0 !important;
-  padding: 0 0 4px 0 !important; /* Même padding que l'éditeur */
+  margin: 0;
+  padding: 0 0 4px 0; /* Même padding que l'éditeur */
   max-width: var(--editor-content-width);
   width: var(--editor-content-width);
   line-height: 1.1;
   color: var(--editor-text-color);
   font-size: var(--editor-title-size);
-  font-weight: var(--editor-h1-weight) !important;
-  font-family: var(--editor-font-family-headings) !important;
+  font-weight: var(--editor-h1-weight);
+  font-family: var(--editor-font-family-headings);
 }
 
 /* Correction des paddings pour les pages publiques - ALIGNÉS AVEC L'ÉDITEUR */
 .public-note-content-wrapper .noteLayout-title {
-  padding-top: 55px !important; /* Même padding que l'éditeur */
-  margin: 0 !important;
+  padding-top: 55px; /* Même padding que l'éditeur */
+  margin: 0;
 }
 
 .public-note-content-wrapper .noteLayout-content {
-  padding: 0 !important;
-  margin: 0 !important;
+  padding: 0;
+  margin: 0;
   color: var(--editor-text-color);
 }
 
@@ -735,8 +715,8 @@ body.public-note-page {
   color: white;
   text-shadow: 0 2px 4px rgba(0,0,0,0.2);
   font-size: var(--editor-title-size);
-  font-weight: var(--editor-h1-weight) !important;
-  font-family: var(--editor-font-family-headings) !important;
+  font-weight: var(--editor-h1-weight);
+  font-family: var(--editor-font-family-headings);
   margin: 0;
   text-align: center;
   width: auto;
@@ -744,7 +724,7 @@ body.public-note-page {
   padding: 0 0 4px 0;
   white-space: pre-wrap;
   overflow: visible;
-} 
+}
 
 /* Match spacing between title and text for no-image layout to image-only layout */
 .noteLayout.noImage .noteLayout-title > .editor-container-width { padding-bottom: 16px; }
@@ -762,13 +742,13 @@ body.public-note-page {
 .noteLayout-title h1,
 .public-header-title h1,
 h1 {
-  font-size: 2.375rem !important;           /* 38px - taille optimisée */
-  font-weight: 800 !important;            /* Poids optimal pour la lisibilité */
-  line-height: var(--editor-line-height-tight) !important; /* 1.3 */
-  margin: var(--editor-heading-margin-top) 0 var(--editor-heading-margin-bottom) 0 !important; /* 2.75em 0 0.875em 0 */
-  color: var(--editor-text-color) !important;
-  letter-spacing: -0.025em !important;    /* Légèrement plus serré */
-  font-family: var(--editor-font-family-headings) !important;
+  font-size: 2.375rem;           /* 38px - taille optimisée */
+  font-weight: 800;            /* Poids optimal pour la lisibilité */
+  line-height: var(--editor-line-height-tight); /* 1.3 */
+  margin: var(--editor-heading-margin-top) 0 var(--editor-heading-margin-bottom) 0; /* 2.75em 0 0.875em 0 */
+  color: var(--editor-text-color);
+  letter-spacing: -0.025em;    /* Légèrement plus serré */
+  font-family: var(--editor-font-family-headings);
   position: relative;
   scroll-margin-top: 6rem;
 }
@@ -777,7 +757,7 @@ h1 {
 .ProseMirror > h1:first-child,
 .editor-content > h1:first-child,
 .markdown-body > h1:first-child {
-  margin-top: var(--editor-heading-margin-top-first) !important; /* 0 */
+  margin-top: var(--editor-heading-margin-top-first); /* 0 */
 }
 
 /* H2 - Blog Premium - Sous-titre principal */
@@ -788,13 +768,13 @@ h1 {
 .noteLayout h2,
 .noteLayout-content h2,
 h2 {
-  font-size: 1.8rem !important;             /* Taille réduite de 10% pour H2 */
-  font-weight: 800 !important;            /* Plus gras pour l'impact */
-  line-height: var(--editor-line-height-tight) !important; /* 1.3 */
-  margin: var(--editor-heading-margin-top) 0 var(--editor-heading-margin-bottom) 0 !important; /* 2.75em 0 0.875em 0 */
-  color: var(--editor-text-color) !important;
-  letter-spacing: -0.02em !important;     /* Légèrement serré */
-  font-family: var(--editor-font-family-headings) !important;
+  font-size: 1.8rem;             /* Taille réduite de 10% pour H2 */
+  font-weight: 800;            /* Plus gras pour l'impact */
+  line-height: var(--editor-line-height-tight); /* 1.3 */
+  margin: var(--editor-heading-margin-top) 0 var(--editor-heading-margin-bottom) 0; /* 2.75em 0 0.875em 0 */
+  color: var(--editor-text-color);
+  letter-spacing: -0.02em;     /* Légèrement serré */
+  font-family: var(--editor-font-family-headings);
   position: relative;
   scroll-margin-top: 6rem;
 }
@@ -803,7 +783,7 @@ h2 {
 .ProseMirror > h2:first-child,
 .editor-content > h2:first-child,
 .markdown-body > h2:first-child {
-  margin-top: var(--editor-heading-margin-top-first) !important; /* 0 */
+  margin-top: var(--editor-heading-margin-top-first); /* 0 */
 }
 
 /* H3 - Blog Premium - Titre de section */
@@ -814,13 +794,13 @@ h2 {
 .noteLayout h3,
 .noteLayout-content h3,
 h3 {
-  font-size: 1.4625rem !important;         /* Taille réduite de 10% pour H3 */
-  font-weight: 700 !important;            /* Plus gras pour l'impact */
-  line-height: var(--editor-line-height-tight) !important; /* 1.3 */
-  margin: var(--editor-heading-margin-top) 0 var(--editor-heading-margin-bottom) 0 !important; /* 2.75em 0 0.875em 0 */
-  color: var(--editor-text-color) !important;
-  letter-spacing: -0.015em !important;    /* Légèrement serré */
-  font-family: var(--editor-font-family-headings) !important;
+  font-size: 1.4625rem;         /* Taille réduite de 10% pour H3 */
+  font-weight: 700;            /* Plus gras pour l'impact */
+  line-height: var(--editor-line-height-tight); /* 1.3 */
+  margin: var(--editor-heading-margin-top) 0 var(--editor-heading-margin-bottom) 0; /* 2.75em 0 0.875em 0 */
+  color: var(--editor-text-color);
+  letter-spacing: -0.015em;    /* Légèrement serré */
+  font-family: var(--editor-font-family-headings);
   position: relative;
   scroll-margin-top: 6rem;
 }
@@ -829,7 +809,7 @@ h3 {
 .ProseMirror > h3:first-child,
 .editor-content > h3:first-child,
 .markdown-body > h3:first-child {
-  margin-top: var(--editor-heading-margin-top-first) !important; /* 0 */
+  margin-top: var(--editor-heading-margin-top-first); /* 0 */
 }
 
 /* NEUTRALISER LES BALISES STRONG DANS LES TITRES */
@@ -852,22 +832,21 @@ h3 {
 .editor-content h4 strong,
 .editor-content h5 strong,
 .editor-content h6 strong {
-  font-weight: inherit !important;
+  font-weight: inherit;
 }
-
 
 /* H4 - Très gras partout */
 .markdown-body h4,
 .ProseMirror h4,
 .editor-content h4,
 h4 {
-  font-size: 1.25rem !important;
-  font-weight: 800 !important;
-  line-height: 1.3 !important;
-  margin: 0.875rem 0 0.4375rem 0 !important;
-  color: var(--editor-text-color) !important;
-  letter-spacing: -0.005em !important;
-  font-family: var(--editor-font-family-headings) !important;
+  font-size: 1.25rem;
+  font-weight: 800;
+  line-height: 1.3;
+  margin: 0.875rem 0 0.4375rem 0;
+  color: var(--editor-text-color);
+  letter-spacing: -0.005em;
+  font-family: var(--editor-font-family-headings);
   scroll-margin-top: 6rem;
 }
 
@@ -875,7 +854,7 @@ h4 {
 .ProseMirror > h4:first-child,
 .editor-content > h4:first-child,
 .markdown-body > h4:first-child {
-  margin-top: 0 !important;
+  margin-top: 0;
 }
 
 /* H5 - Gras partout */
@@ -883,12 +862,12 @@ h4 {
 .ProseMirror h5,
 .editor-content h5,
 h5 {
-  font-size: 1.125rem !important;
-  font-weight: 800 !important;
-  line-height: 1.35 !important;
-  margin: 0.75rem 0 0.375rem 0 !important;
-  color: var(--editor-text-color) !important;
-  font-family: var(--editor-font-family-headings) !important;
+  font-size: 1.125rem;
+  font-weight: 800;
+  line-height: 1.35;
+  margin: 0.75rem 0 0.375rem 0;
+  color: var(--editor-text-color);
+  font-family: var(--editor-font-family-headings);
   scroll-margin-top: 6rem;
 }
 
@@ -896,7 +875,7 @@ h5 {
 .ProseMirror > h5:first-child,
 .editor-content > h5:first-child,
 .markdown-body > h5:first-child {
-  margin-top: 0 !important;
+  margin-top: 0;
 }
 
 /* H6 - Gras partout */
@@ -904,12 +883,12 @@ h5 {
 .ProseMirror h6,
 .editor-content h6,
 h6 {
-  font-size: 1rem !important;
-  font-weight: 800 !important;
-  line-height: 1.4 !important;
-  margin: 0.625rem 0 0.3125rem 0 !important;
-  color: var(--editor-text-color) !important;
-  font-family: var(--editor-font-family-headings) !important;
+  font-size: 1rem;
+  font-weight: 800;
+  line-height: 1.4;
+  margin: 0.625rem 0 0.3125rem 0;
+  color: var(--editor-text-color);
+  font-family: var(--editor-font-family-headings);
   text-transform: uppercase;
   letter-spacing: 0.05em;
   scroll-margin-top: 6rem;
@@ -919,7 +898,7 @@ h6 {
 .ProseMirror > h6:first-child,
 .editor-content > h6:first-child,
 .markdown-body > h6:first-child {
-  margin-top: 0 !important;
+  margin-top: 0;
 }
 
 /* ==========================================================================
@@ -931,13 +910,13 @@ h6 {
 .ProseMirror p,
 .editor-content p,
 p {
-  margin: 0 0 var(--editor-paragraph-margin-bottom) 0 !important; /* 1.75em */
-  line-height: var(--editor-line-height-base) !important; /* 1.75 */
-  font-weight: var(--editor-body-weight) !important; /* 500 */
-  font-size: var(--editor-body-size) !important; /* Utilise la variable centralisée */
-  color: var(--editor-text-color) !important;
-  font-family: var(--editor-font-family-headings) !important;
-  text-align: left !important;
+  margin: 0 0 var(--editor-paragraph-margin-bottom) 0; /* 1.75em */
+  line-height: var(--editor-line-height-base); /* 1.75 */
+  font-weight: var(--editor-body-weight); /* 500 */
+  font-size: var(--editor-body-size); /* Utilise la variable centralisée */
+  color: var(--editor-text-color);
+  font-family: var(--editor-font-family-headings);
+  text-align: left;
   hyphens: auto;
   word-break: break-word;
   max-width: 100%;
@@ -949,8 +928,8 @@ p {
 .markdown-body p:last-child,
 .ProseMirror p:last-child,
 .editor-content p:last-child,
-p:last-child { 
-  margin-bottom: 0 !important; 
+p:last-child {
+  margin-bottom: 0;
 }
 
 /* Espacement spécial après les titres - Blog Premium */
@@ -962,9 +941,9 @@ p:last-child {
 .ProseMirror h3 + p,
 .editor-content h1 + p,
 .editor-content h2 + p,
-.editor-content h3 + p { 
-  margin-top: 0.5rem !important;          /* Espacement réduit après les titres */
-  line-height: var(--editor-line-height-relaxed) !important; /* 1.85 - plus aéré */
+.editor-content h3 + p {
+  margin-top: 0.5rem;          /* Espacement réduit après les titres */
+  line-height: var(--editor-line-height-relaxed); /* 1.85 - plus aéré */
 }
 
 /* ==========================================================================
@@ -998,7 +977,7 @@ p:last-child {
    CODE BLOCKS & INLINE CODE - Styles now handled by unified-blocks.css
    ========================================================================== */
 
-/* 
+/*
   NOTE: Tous les styles pour les blocs de code et le code inline sont maintenant
   gérés de manière centralisée par src/styles/unified-blocks.css.
   Les anciennes règles ci-dessous ont été désactivées pour éviter les conflits
@@ -1015,8 +994,8 @@ p:last-child {
   margin: var(--editor-block-spacing) 0; /* 2em */
   max-width: 100%;
   height: auto;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border-radius: var(--radius-md);
+  box-shadow: var(--glass-shadow-soft);
 }
 
 /* ==========================================================================

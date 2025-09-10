@@ -3,7 +3,7 @@
    ==========================================================================
    Ce fichier contient UNIQUEMENT les styles nécessaires pour éviter le flash blanc
    et forcer le thème sombre sur la page publique.
-   
+
    TOUS les autres styles (image, titre, overlay, etc.) sont gérés par typography.css
 */
 
@@ -21,29 +21,29 @@
 
 /* Image d'en-tête - padding réduit sur desktop */
 .public-header-image {
-  margin-bottom: 8px !important;
+  margin-bottom: 8px ;
 }
 
 /* Réduction espacement titre-texte - page publique */
 .public-note-container .noteLayout-title {
-  padding-top: 0px !important; /* Supprime complètement le padding-top */
-  padding-bottom: 0 !important; /* Supprime le padding-bottom du container */
+  padding-top: 0px ; /* Supprime complètement le padding-top */
+  padding-bottom: 0 ; /* Supprime le padding-bottom du container */
 }
 
 .public-note-container .noteLayout-title h1 {
-  padding: 0 0 15px 0 !important; /* Padding réduit en dessous pour remonter le titre */
-  margin-top: 25px !important; /* Espacement final au-dessus du titre */
+  padding: 0 0 15px 0 ; /* Padding réduit en dessous pour remonter le titre */
+  margin-top: 25px ; /* Espacement final au-dessus du titre */
 }
 
 /* Réduction padding-top du contenu - page publique */
 .public-note-container .noteLayout-content {
-  padding-top: 0px !important; /* Supprime le padding-top */
-  margin-top: -10px !important; /* Margin négatif pour remonter le texte */
+  padding-top: 0px ; /* Supprime le padding-top */
+  margin-top: -10px ; /* Margin négatif pour remonter le texte */
 }
 
 /* Suppression padding-bottom du container editor-container-width */
 .public-note-container .noteLayout-title .editor-container-width {
-  padding-bottom: 0 !important; /* Supprime le padding en dessous du titre */
+  padding-bottom: 0 ; /* Supprime le padding en dessous du titre */
 }
 
 /* Forcer le thème sombre sur le container principal */
@@ -72,20 +72,20 @@ body.public-note-page {
 
 /* Badge "Crafted with Scrivia" - background gris dégradé */
 .public-note-container a[href*="scrivia.app"] {
-  background: linear-gradient(135deg, #4a4a4a 0%, #2a2a2a 100%) !important;
-  background-color: #4a4a4a !important;
-  border-radius: 16px !important;
-  padding: 8px 16px !important;
-  color: #f5f5dc !important;
-  text-decoration: none !important;
-  font-size: 12px !important;
-  font-weight: 500 !important;
-  transition: all 0.2s ease !important;
+  background: linear-gradient(135deg, #4a4a4a 0%, #2a2a2a 100%) ;
+  background-color: #4a4a4a ;
+  border-radius: 16px ;
+  padding: 8px 16px ;
+  color: #f5f5dc ;
+  text-decoration: none ;
+  font-size: 12px ;
+  font-weight: 500 ;
+  transition: all 0.2s ease ;
 }
 
 .public-note-container a[href*="scrivia.app"]:hover {
-  background: linear-gradient(135deg, #5a5a5a 0%, #3a3a3a 100%) !important;
-  transform: translateY(-1px) !important;
+  background: linear-gradient(135deg, #5a5a5a 0%, #3a3a3a 100%) ;
+  transform: translateY(-1px) ;
 }
 
 /* ==========================================================================
@@ -96,77 +96,77 @@ body.public-note-page {
 
 /* Styles spécifiques pour les checkboxes dans les pages publiques */
 .public-note-container .markdown-body input[type='checkbox'] {
-  appearance: none !important;
-  -webkit-appearance: none !important;
-  -moz-appearance: none !important;
-  width: 1.2em !important;
-  height: 1.2em !important;
-  border: 2px solid #444 !important;
-  border-radius: 4px !important;
-  background: #2a2a2a !important;
-  display: inline-block !important;
-  vertical-align: middle !important;
-  position: relative !important;
-  transition: border-color 0.18s, background 0.18s !important;
-  cursor: pointer !important;
-  margin-right: 0.8em !important;
-  margin-top: 0 !important;
-  flex-shrink: 0 !important;
+  appearance: none ;
+  -webkit-appearance: none ;
+  -moz-appearance: none ;
+  width: 1.2em ;
+  height: 1.2em ;
+  border: 2px solid #444 ;
+  border-radius: 4px ;
+  background: #2a2a2a ;
+  display: inline-block ;
+  vertical-align: middle ;
+  position: relative ;
+  transition: border-color 0.18s, background 0.18s ;
+  cursor: pointer ;
+  margin-right: 0.8em ;
+  margin-top: 0 ;
+  flex-shrink: 0 ;
 }
 
 .public-note-container .markdown-body input[type='checkbox']:checked {
-  border-color: #ff6b35 !important;
-  background: #ff6b35 !important;
+  border-color: #ff6b35 ;
+  background: #ff6b35 ;
 }
 
 .public-note-container .markdown-body input[type='checkbox']:checked::after {
-  content: '✓' !important;
-  position: absolute !important;
-  top: 50% !important;
-  left: 50% !important;
-  transform: translate(-50%, -50%) !important;
-  color: white !important;
-  font-size: 0.9em !important;
-  font-weight: bold !important;
-  line-height: 1 !important;
-  text-align: center !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
+  content: '✓' ;
+  position: absolute ;
+  top: 50% ;
+  left: 50% ;
+  transform: translate(-50%, -50%) ;
+  color: white ;
+  font-size: 0.9em ;
+  font-weight: bold ;
+  line-height: 1 ;
+  text-align: center ;
+  display: flex ;
+  align-items: center ;
+  justify-content: center ;
 }
 
 .public-note-container .markdown-body input[type='checkbox']:focus {
-  outline: 2px solid #2994ff !important;
-  outline-offset: 2px !important;
+  outline: 2px solid #2994ff ;
+  outline-offset: 2px ;
 }
 
 /* Correction des listes avec checkboxes */
 .public-note-container .markdown-body li:has(> input[type="checkbox"]) {
-  display: flex !important;
-  align-items: center !important;
-  gap: 0.5em !important;
-  list-style: none !important;
-  padding-left: 0 !important;
-  margin-left: 0 !important;
+  display: flex ;
+  align-items: center ;
+  gap: 0.5em ;
+  list-style: none ;
+  padding-left: 0 ;
+  margin-left: 0 ;
 }
 
 /* Contenu des éléments avec checkbox */
 .public-note-container .markdown-body li:has(> input[type="checkbox"]) > *:not(input) {
-  display: inline !important;
-  margin: 0 !important;
+  display: inline ;
+  margin: 0 ;
 }
 
 /* Paragraphes dans les éléments avec checkbox */
 .public-note-container .markdown-body li:has(> input[type="checkbox"]) p {
-  display: inline !important;
-  margin: 0 !important;
+  display: inline ;
+  margin: 0 ;
 }
 
 /* Alignement vertical des checkboxes */
 .public-note-container .markdown-body input[type='checkbox'] {
-  vertical-align: middle !important;
-  margin-top: 0 !important;
-  margin-bottom: 0 !important;
+  vertical-align: middle ;
+  margin-top: 0 ;
+  margin-bottom: 0 ;
 }
 
 /* ==========================================================================
@@ -193,20 +193,20 @@ body.public-note-page {
 
   /* Image d'en-tête - hauteur réduite */
   .public-header-image {
-    height: var(--editor-header-image-height-mobile) !important; /* 200px - cohérent avec l'éditeur */
+    height: var(--editor-header-image-height-mobile) ; /* 200px - cohérent avec l'éditeur */
     margin-bottom: 6px;
   }
 
   /* Titre dans l'image - ajustements */
   .public-header-title {
-    max-width: 90% !important;
-    padding: 0 16px !important;
+    max-width: 90% ;
+    padding: 0 16px ;
   }
 
   .public-header-title h1 {
-    font-size: 1.575rem !important; /* Réduit de 10% pour mobile (1.75rem → 1.575rem) */
-    padding: 0 0 6px 0 !important;
-    line-height: 1.2 !important;
+    font-size: 1.575rem ; /* Réduit de 10% pour mobile (1.75rem → 1.575rem) */
+    padding: 0 0 6px 0 ;
+    line-height: 1.2 ;
   }
 
   /* Wrapper du contenu - padding latéral - DÉLÉGUÉ À TYPOGRAPHY.CSS */
@@ -214,7 +214,7 @@ body.public-note-page {
 
   /* TOC - masquer sur mobile */
   .public-note-container .public-toc-container {
-    display: none !important;
+    display: none ;
   }
 
   /* Contenu - DÉLÉGUÉ À TYPOGRAPHY.CSS */
@@ -222,42 +222,42 @@ body.public-note-page {
 
   /* Blocs de code - responsive */
   .public-note-content-wrapper .unified-code-block {
-    margin: 16px 0 !important;
-    border-radius: 8px !important;
+    margin: 16px 0 ;
+    border-radius: 8px ;
   }
 
   .public-note-content-wrapper .unified-code-block pre {
-    padding: 12px !important;
-    font-size: 12.6px !important; /* Réduit de 10% (14px → 12.6px) */
+    padding: 12px ;
+    font-size: 12.6px ; /* Réduit de 10% (14px → 12.6px) */
   }
 
   /* Tableaux - responsive */
   .public-note-content-wrapper table {
-    font-size: 12.6px !important; /* Réduit de 10% (14px → 12.6px) */
-    margin: 16px 0 !important;
+    font-size: 12.6px ; /* Réduit de 10% (14px → 12.6px) */
+    margin: 16px 0 ;
   }
 
   .public-note-content-wrapper th,
   .public-note-content-wrapper td {
-    padding: 8px !important;
+    padding: 8px ;
   }
 
   /* Blockquotes - responsive */
   .public-note-content-wrapper blockquote {
-    margin: 16px 0 !important;
-    padding: 12px 16px !important;
-    font-size: 14.4px !important; /* Réduit de 10% (16px → 14.4px) */
+    margin: 16px 0 ;
+    padding: 12px 16px ;
+    font-size: 14.4px ; /* Réduit de 10% (16px → 14.4px) */
   }
 
   /* Mermaid - responsive */
   .public-note-content-wrapper .mermaid-container {
-    margin: 16px 0 !important;
-    border-radius: 8px !important;
+    margin: 16px 0 ;
+    border-radius: 8px ;
   }
 
   .public-note-content-wrapper .mermaid-container svg {
-    max-width: 100% !important;
-    height: auto !important;
+    max-width: 100% ;
+    height: auto ;
   }
 }
 
@@ -272,20 +272,20 @@ body.public-note-page {
 
   /* Image d'en-tête - encore plus petite */
   .public-header-image {
-    height: 150px !important;
+    height: 150px ;
     margin-bottom: 4px;
   }
 
   /* Titre dans l'image - très compact */
   .public-header-title {
-    max-width: 95% !important;
-    padding: 0 12px !important;
+    max-width: 95% ;
+    padding: 0 12px ;
   }
 
   .public-header-title h1 {
-    font-size: 1.35rem !important; /* Réduit de 10% (1.5rem → 1.35rem) */
-    padding: 0 0 4px 0 !important;
-    line-height: 1.15 !important;
+    font-size: 1.35rem ; /* Réduit de 10% (1.5rem → 1.35rem) */
+    padding: 0 0 4px 0 ;
+    line-height: 1.15 ;
   }
 
   /* Wrapper du contenu - DÉLÉGUÉ À TYPOGRAPHY.CSS */
@@ -293,8 +293,8 @@ body.public-note-page {
 
   /* Badge Crafted - ajustements */
   .public-note-container .crafted-badge {
-    padding: 8px 12px !important;
-    font-size: 12px !important;
+    padding: 8px 12px ;
+    font-size: 12px ;
   }
 
   /* Texte du contenu - DÉLÉGUÉ À TYPOGRAPHY.CSS */
@@ -302,37 +302,37 @@ body.public-note-page {
 
   /* Blocs de code - plus compacts */
   .public-note-content-wrapper .unified-code-block {
-    margin: 12px 0 !important;
-    border-radius: 6px !important;
+    margin: 12px 0 ;
+    border-radius: 6px ;
   }
 
   .public-note-content-wrapper .unified-code-block pre {
-    padding: 10px !important;
-    font-size: 11.7px !important; /* Réduit de 10% (13px → 11.7px) */
+    padding: 10px ;
+    font-size: 11.7px ; /* Réduit de 10% (13px → 11.7px) */
   }
 
   /* Tableaux - plus compacts */
   .public-note-content-wrapper table {
-    font-size: 11.7px !important; /* Réduit de 10% (13px → 11.7px) */
-    margin: 12px 0 !important;
+    font-size: 11.7px ; /* Réduit de 10% (13px → 11.7px) */
+    margin: 12px 0 ;
   }
 
   .public-note-content-wrapper th,
   .public-note-content-wrapper td {
-    padding: 6px !important;
+    padding: 6px ;
   }
 
   /* Blockquotes - plus compacts */
   .public-note-content-wrapper blockquote {
-    margin: 12px 0 !important;
-    padding: 10px 12px !important;
-    font-size: 13.5px !important; /* Réduit de 10% (15px → 13.5px) */
+    margin: 12px 0 ;
+    padding: 10px 12px ;
+    font-size: 13.5px ; /* Réduit de 10% (15px → 13.5px) */
   }
 
   /* Mermaid - plus compacts */
   .public-note-content-wrapper .mermaid-container {
-    margin: 12px 0 !important;
-    border-radius: 6px !important;
+    margin: 12px 0 ;
+    border-radius: 6px ;
   }
 
   /* Headings - DÉLÉGUÉ À TYPOGRAPHY.CSS */
@@ -348,7 +348,7 @@ body.public-note-page {
 
   /* Image d'en-tête - hauteur minimale */
   .public-header-image {
-    height: 120px !important;
+    height: 120px ;
     margin-bottom: 3px;
   }
 
@@ -357,37 +357,37 @@ body.public-note-page {
 
   /* Blocs de code - ultra compacts */
   .public-note-content-wrapper .unified-code-block {
-    margin: 10px 0 !important;
-    border-radius: 4px !important;
+    margin: 10px 0 ;
+    border-radius: 4px ;
   }
 
   .public-note-content-wrapper .unified-code-block pre {
-    padding: 8px !important;
-    font-size: 10.8px !important; /* Réduit de 10% (12px → 10.8px) */
+    padding: 8px ;
+    font-size: 10.8px ; /* Réduit de 10% (12px → 10.8px) */
   }
 
   /* Tableaux - ultra compacts */
   .public-note-content-wrapper table {
-    font-size: 10.8px !important; /* Réduit de 10% (12px → 10.8px) */
-    margin: 10px 0 !important;
+    font-size: 10.8px ; /* Réduit de 10% (12px → 10.8px) */
+    margin: 10px 0 ;
   }
 
   .public-note-content-wrapper th,
   .public-note-content-wrapper td {
-    padding: 4px !important;
+    padding: 4px ;
   }
 
   /* Blockquotes - ultra compacts */
   .public-note-content-wrapper blockquote {
-    margin: 10px 0 !important;
-    padding: 8px 10px !important;
-    font-size: 12.6px !important; /* Réduit de 10% (14px → 12.6px) */
+    margin: 10px 0 ;
+    padding: 8px 10px ;
+    font-size: 12.6px ; /* Réduit de 10% (14px → 12.6px) */
   }
 
   /* Mermaid - ultra compacts */
   .public-note-content-wrapper .mermaid-container {
-    margin: 10px 0 !important;
-    border-radius: 4px !important;
+    margin: 10px 0 ;
+    border-radius: 4px ;
   }
 
   /* Headings - DÉLÉGUÉ À TYPOGRAPHY.CSS */
@@ -400,15 +400,15 @@ body.public-note-page {
 @media (max-width: 768px) and (orientation: landscape) {
   /* Image d'en-tête - hauteur réduite en paysage */
   .public-header-image {
-    height: 120px !important;
+    height: 120px ;
     margin-bottom: 4px;
   }
 
   /* Titre dans l'image - ajustements paysage */
   .public-header-title h1 {
-    font-size: 1.35rem !important; /* Réduit de 10% (1.5rem → 1.35rem) */
-    padding: 0 0 2px 0 !important;
-    line-height: 1.1 !important;
+    font-size: 1.35rem ; /* Réduit de 10% (1.5rem → 1.35rem) */
+    padding: 0 0 2px 0 ;
+    line-height: 1.1 ;
   }
 
   /* Titre normal - DÉLÉGUÉ À TYPOGRAPHY.CSS */
@@ -436,7 +436,7 @@ body.public-note-page {
   width: 280px;
   height: fit-content;
   z-index: 20;
-  display: block !important; /* Forcer l'affichage */
+  display: block ; /* Forcer l'affichage */
 }
 
 /* ==========================================================================
@@ -455,8 +455,8 @@ body.public-note-page {
 
 /* Supprimer les outlines orange sur tous les éléments focus de la page publique */
 .public-note-container *:focus {
-  outline: none !important;
-  box-shadow: none !important;
+  outline: none ;
+  box-shadow: none ;
 }
 
 /* Supprimer spécifiquement les outlines sur les titres */
@@ -466,8 +466,8 @@ body.public-note-page {
 .public-note-container h4:focus,
 .public-note-container h5:focus,
 .public-note-container h6:focus {
-  outline: none !important;
-  box-shadow: none !important;
+  outline: none ;
+  box-shadow: none ;
 }
 
 /* S'assurer que les titres utilisent la bonne police */
@@ -483,7 +483,7 @@ body.public-note-page {
 .public-note-container .markdown-body h4,
 .public-note-container .markdown-body h5,
 .public-note-container .markdown-body h6 {
-  font-family: var(--editor-font-family-headings) !important;
+  font-family: var(--editor-font-family-headings) ;
 }
 
 /* S'assurer que le texte utilise la bonne police */
@@ -493,7 +493,7 @@ body.public-note-page {
 .public-note-container .markdown-body,
 .public-note-container .noteLayout-content p,
 .public-note-container .noteLayout-content li {
-  font-family: var(--editor-font-family-body) !important;
+  font-family: var(--editor-font-family-body) ;
 }
 
 /* ==========================================================================
@@ -506,27 +506,27 @@ body.public-note-page {
 .public-note-container p,
 .public-note-container .markdown-body p,
 .public-note-container .noteLayout-content p {
-  font-weight: 500 !important;
+  font-weight: 500 ;
 }
 
 /* Listes */
 .public-note-container li,
 .public-note-container .markdown-body li,
 .public-note-container .noteLayout-content li {
-  font-weight: 500 !important;
+  font-weight: 500 ;
 }
 
 /* Texte général du contenu */
 .public-note-container .markdown-body,
 .public-note-container .noteLayout-content {
-  font-weight: 500 !important;
+  font-weight: 500 ;
 }
 
 /* ==========================================================================
    RESPECT TOTAL DE TYPOGRAPHY.CSS
    ==========================================================================
    Aucun style pour les éléments d'image - typography.css s'en charge
-   
+
    Les paramètres de blur, overlay, titre, etc. sont gérés par :
    1. Les styles inline du composant React
    2. Le CSS de typography.css
@@ -545,4 +545,3 @@ body.public-note-page {
    ========================================================================== */
 /* Les styles Mermaid sont maintenant centralisés dans src/styles/mermaid.css */
 
- 

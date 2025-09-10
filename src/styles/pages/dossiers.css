@@ -1,0 +1,434 @@
+/* ========================================
+   PAGE DOSSIERS - STYLES SPÉCIFIQUES
+   ======================================== */
+
+/* ========================================
+   LAYOUT PRINCIPAL
+   ======================================== */
+
+.dossiers-content-area {
+  padding: 0 32px 0 32px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ========================================
+   SECTION CLASSEURS
+   ======================================== */
+
+.classeurs-section-glass {
+  margin-bottom: var(--unified-spacing-3xl);
+}
+
+.classeurs-container-glass {
+  background: var(--unified-glass-bg-light);
+  border: 1px solid var(--unified-glass-border-light);
+  border-radius: var(--unified-radius-xl);
+
+  box-shadow: var(--unified-glass-shadow-subtle);
+  padding: var(--unified-spacing-lg);
+  transition: all var(--unified-transition-normal);
+}
+
+.classeurs-container-glass:hover {
+  border-color: var(--unified-glass-border-heavy);
+  box-shadow: var(--unified-glass-shadow-medium);
+}
+
+/* ========================================
+   SECTION CONTENU
+   ======================================== */
+
+.content-section-simple {
+  margin-top: 8px;
+  background: transparent;
+  border: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: calc(100vh - 500px);
+}
+
+.content-main-container-simple {
+  width: 100%;
+  flex: 1;
+  min-height: calc(100vh - 400px);
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 20px;
+  background: transparent;
+  border: none;
+}
+
+/* ========================================
+   GRILLE DES DOSSIERS ET FICHIERS
+   ======================================== */
+
+.folder-grid,
+.folder-list,
+.folder-grid-container {
+  background: transparent ;
+  border: none ;
+  box-shadow: none ;
+  padding: 0 ;
+  margin: 0 ;
+  gap: 20px ;
+}
+
+/* ========================================
+   ÉLÉMENTS DE GRILLE
+   ======================================== */
+
+.folder-item-wrapper,
+.file-item-wrapper {
+  background: transparent ;
+  border: none ;
+  box-shadow: none ;
+  padding: 0 ;
+  margin: 0 ;
+}
+
+.fm-grid-item {
+  background: transparent ;
+  border: none ;
+  border-radius: 16px ;
+  backdrop-filter: none ;
+  -webkit-backdrop-filter: none ;
+  box-shadow: none ;
+  padding: 20px ;
+  cursor: pointer ;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) ;
+  position: relative ;
+  overflow: hidden ;
+  min-height: 120px ;
+  display: flex ;
+  flex-direction: column ;
+  align-items: center ;
+  justify-content: flex-start ;
+}
+
+.fm-grid-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg,
+    var(--unified-glass-bg-subtle) 0%,
+    var(--unified-glass-bg-light) 50%,
+    var(--unified-glass-bg-subtle) 100%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  border-radius: 16px;
+}
+
+.fm-grid-item:hover {
+  background: var(--unified-glass-bg-light) ;
+  border-color: var(--unified-glass-border-light) ;
+  transform: translateY(-4px) ;
+  box-shadow: var(--unified-glass-shadow-medium) ;
+}
+
+.fm-grid-item:hover::before {
+  opacity: 1;
+}
+
+/* ========================================
+   ICÔNES DES DOSSIERS ET FICHIERS
+   ======================================== */
+
+.fm-grid-item .folder-icon {
+  margin-bottom: 16px ;
+  display: flex ;
+  justify-content: center ;
+  align-items: center ;
+  width: 100% ;
+  height: 44px ;
+  -webkit-font-smoothing: antialiased ;
+  -moz-osx-font-smoothing: grayscale ;
+  font-smooth: never ;
+}
+
+.fm-grid-item .file-icon {
+  margin-bottom: 16px ;
+  display: flex ;
+  justify-content: center ;
+  align-items: center ;
+  width: 100% ;
+  height: 44px ;
+  -webkit-font-smoothing: antialiased ;
+  -moz-osx-font-smoothing: grayscale ;
+  font-smooth: never ;
+}
+
+.fm-grid-item:hover .folder-icon {
+  transform: scale(1.08) ;
+  transition: transform 0.2s ease-out ;
+}
+
+.fm-grid-item:hover .file-icon {
+  transform: scale(1.08) ;
+  transition: transform 0.2s ease-out ;
+}
+
+/* ========================================
+   NOMS DES ÉLÉMENTS
+   ======================================== */
+
+.fm-grid-item .fm-item-name {
+  font-size: 14px ;
+  font-weight: 500 ;
+  color: var(--unified-text-primary) ;
+  text-align: center ;
+  line-height: 1.4 ;
+  font-family: 'Noto Sans', sans-serif ;
+  word-break: break-word ;
+  max-width: 100% ;
+  margin: 0 ;
+
+  /* Limitation stricte à 2 lignes avec "..." */
+  display: block ;
+  overflow: hidden ;
+  text-overflow: ellipsis ;
+
+  /* Hauteur fixe pour exactement 2 lignes */
+  height: 2.8em ;
+  min-height: 2.8em ;
+  max-height: 2.8em ;
+
+  /* Centrage horizontal PARFAIT */
+  align-self: center ;
+  justify-self: center ;
+  text-align: center ;
+  width: 100% ;
+
+  /* Assurer le centrage parfait */
+  position: relative ;
+  left: 50% ;
+  transform: translateX(-50%) ;
+}
+
+/* ========================================
+   APERÇUS D'IMAGES
+   ======================================== */
+
+.file-image-preview {
+  width: 100% ;
+  height: 80px ;
+  margin-bottom: 12px ;
+  border-radius: 12px ;
+  overflow: hidden ;
+  background: var(--unified-glass-bg-light) ;
+  border: 1px solid var(--unified-glass-border-subtle) ;
+  backdrop-filter: blur(10px) ;
+  -webkit-backdrop-filter: blur(10px) ;
+}
+
+.preview-image {
+  width: 100% ;
+  height: 100% ;
+  object-fit: cover ;
+  border-radius: 12px ;
+}
+
+/* ========================================
+   ÉTATS SPÉCIAUX
+   ======================================== */
+
+.fm-grid-item.renaming {
+  background: var(--unified-glass-bg-medium) ;
+  border-color: var(--unified-primary) ;
+  box-shadow: 0 0 0 2px rgba(229, 90, 44, 0.2) ;
+}
+
+.fm-grid-item.dragging {
+  opacity: 0.5 ;
+  transform: rotate(5deg) scale(0.95) ;
+}
+
+.fm-grid-item.drag-over {
+  background: var(--unified-glass-bg-medium) ;
+  border-color: var(--unified-primary) ;
+  box-shadow: 0 0 0 3px rgba(229, 90, 44, 0.3) ;
+}
+
+/* ========================================
+   INPUTS DE RENOMMAGE
+   ======================================== */
+
+.fm-grid-item input {
+  background: var(--unified-glass-bg-medium) ;
+  border: 1px solid var(--unified-glass-border-light) ;
+  border-radius: 8px ;
+  color: var(--unified-text-primary) ;
+  padding: 8px 12px ;
+  font-size: 14px ;
+  font-family: 'Noto Sans', sans-serif ;
+  text-align: center ;
+  width: 100% ;
+  max-width: 150px ;
+  backdrop-filter: blur(10px) ;
+  -webkit-backdrop-filter: blur(10px) ;
+}
+
+.fm-grid-item input:focus {
+  outline: none ;
+  border-color: var(--unified-primary) ;
+  box-shadow: 0 0 0 2px rgba(229, 90, 44, 0.2) ;
+  background: var(--unified-glass-bg-light) ;
+}
+
+/* ========================================
+   BREADCRUMB
+   ======================================== */
+
+.folder-breadcrumb {
+  background: transparent ;
+  border: none ;
+  padding: 0 0 24px 0 ;
+  margin: 0 ;
+}
+
+.breadcrumb-item {
+  background: var(--unified-glass-bg-subtle) ;
+  border: 1px solid var(--unified-glass-border-subtle) ;
+  border-radius: 8px ;
+  backdrop-filter: blur(15px) ;
+  -webkit-backdrop-filter: blur(15px) ;
+  box-shadow: var(--unified-glass-shadow-subtle) ;
+  transition: all 0.3s ease ;
+}
+
+.breadcrumb-item:hover {
+  background: var(--unified-glass-bg-light) ;
+  border-color: var(--unified-glass-border-light) ;
+  transform: translateY(-2px) ;
+}
+
+/* ========================================
+   ÉTATS VIDE ET ERREUR
+   ======================================== */
+
+.folder-content-empty {
+  background: var(--unified-glass-bg-subtle) ;
+  border: 1px solid var(--unified-glass-border-subtle) ;
+  border-radius: 20px ;
+  backdrop-filter: blur(20px) ;
+  -webkit-backdrop-filter: blur(20px) ;
+  box-shadow: var(--unified-glass-shadow-subtle) ;
+  padding: 60px 32px ;
+  margin: 24px ;
+}
+
+.folder-empty-icon {
+  font-size: 48px ;
+  margin-bottom: 20px ;
+  opacity: 0.7 ;
+}
+
+.folder-empty-title {
+  font-size: 20px ;
+  font-weight: 600 ;
+  color: var(--unified-text-primary) ;
+  margin-bottom: 12px ;
+}
+
+.folder-empty-subtitle {
+  font-size: 14px ;
+  font-weight: 500 ;
+  color: var(--unified-text-secondary) ;
+  opacity: 0.8 ;
+}
+
+/* ========================================
+   ANIMATIONS SPÉCIFIQUES
+   ======================================== */
+
+.folder-item-wrapper,
+.file-item-wrapper {
+  animation: fadeInUp 0.4s cubic-bezier(0.4, 0, 0.2, 1) ;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Animation de stagger pour les grilles */
+.folder-grid .folder-item-wrapper:nth-child(1) { animation-delay: 0.1s; }
+.folder-grid .folder-item-wrapper:nth-child(2) { animation-delay: 0.2s; }
+.folder-grid .folder-item-wrapper:nth-child(3) { animation-delay: 0.3s; }
+.folder-grid .folder-item-wrapper:nth-child(4) { animation-delay: 0.4s; }
+.folder-grid .folder-item-wrapper:nth-child(5) { animation-delay: 0.5s; }
+.folder-grid .folder-item-wrapper:nth-child(6) { animation-delay: 0.6s; }
+
+.folder-grid.files .file-item-wrapper:nth-child(1) { animation-delay: 0.1s; }
+.folder-grid.files .file-item-wrapper:nth-child(2) { animation-delay: 0.2s; }
+.folder-grid.files .file-item-wrapper:nth-child(3) { animation-delay: 0.3s; }
+.folder-grid.files .file-item-wrapper:nth-child(4) { animation-delay: 0.4s; }
+.folder-grid.files .file-item-wrapper:nth-child(5) { animation-delay: 0.5s; }
+.folder-grid.files .file-item-wrapper:nth-child(6) { animation-delay: 0.6s; }
+
+/* ========================================
+   RESPONSIVE SPÉCIFIQUE
+   ======================================== */
+
+@media (max-width: 768px) {
+  .fm-grid-item {
+    min-height: 100px ;
+    padding: 16px ;
+    border-radius: 12px ;
+  }
+
+  .fm-grid-item .folder-icon,
+  .fm-grid-item .file-icon {
+    font-size: 28px ;
+    margin-bottom: 12px ;
+  }
+
+  .fm-grid-item .folder-name,
+  .fm-grid-item .file-name {
+    font-size: 13px ;
+    height: 2.6em ;
+    min-height: 2.6em ;
+  }
+
+  .folder-breadcrumb {
+    padding: 0 0 20px 0 ;
+  }
+
+  .folder-content-empty {
+    padding: 40px 24px ;
+    margin: 16px ;
+  }
+}
+
+@media (max-width: 480px) {
+  .fm-grid-item {
+    min-height: 90px ;
+    padding: 14px ;
+    border-radius: 10px ;
+  }
+
+  .fm-grid-item .folder-icon,
+  .fm-grid-item .file-icon {
+    font-size: 24px ;
+    margin-bottom: 10px ;
+  }
+
+  .fm-grid-item .folder-name,
+  .fm-grid-item .file-name {
+    font-size: 12px ;
+    height: 2.4em ;
+    min-height: 2.4em ;
+  }
+}

@@ -1,0 +1,361 @@
+/* ========================================
+   PAGE CLASSEURS - STYLES SPÉCIFIQUES
+   ======================================== */
+
+/* ========================================
+   NAVIGATION DES CLASSEURS
+   ======================================== */
+
+.classeur-tabs-wrapper {
+  padding: var(--unified-spacing-xl) var(--unified-spacing-2xl) 0 var(--unified-spacing-2xl);
+  border-bottom: 1px solid var(--unified-glass-border-subtle);
+  background: transparent;
+  position: relative;
+}
+
+.classeur-tabs-container {
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+.classeur-tabs {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--unified-spacing-sm);
+  overflow-x: auto;
+  padding-bottom: 0;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  min-height: 48px;
+  position: relative;
+  border-bottom: none;
+}
+
+.classeur-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.classeur-tab {
+  padding: var(--unified-spacing-md) var(--unified-spacing-lg);
+  border: 1px solid transparent;
+  border-bottom: none;
+  border-radius: 10px 10px 0 0;
+  background-color: transparent;
+  color: var(--unified-text-secondary);
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 400;
+  white-space: nowrap;
+  transition: var(--unified-transition-normal);
+  position: relative;
+  bottom: -1px;
+  display: flex;
+  align-items: center;
+  gap: var(--unified-spacing-sm);
+  min-width: 120px;
+  justify-content: center;
+  box-shadow: none;
+  user-select: none;
+}
+
+.classeur-tab:hover {
+  background-color: var(--unified-glass-bg-medium);
+  color: var(--unified-text-primary);
+  box-shadow: none;
+}
+
+.classeur-tab.active {
+  background-color: transparent;
+  color: var(--unified-text-primary);
+  border-color: transparent;
+  border-bottom: 2px solid var(--unified-primary);
+  box-shadow: none;
+  z-index: 2;
+  bottom: 0;
+}
+
+.classeur-tab.drag-over {
+  background-color: var(--unified-glass-bg-heavy);
+  border-bottom: 2px dashed var(--unified-primary);
+}
+
+/* ========================================
+   BANDEAU DES CLASSEURS
+   ======================================== */
+
+.classeur-bandeau {
+  width: 100%;
+  background: transparent;
+  border: none;
+  margin: 0;
+  padding: 16px 0 8px 0;
+  position: relative;
+}
+
+.bandeau-content {
+  display: flex;
+  align-items: center;
+  gap: var(--unified-spacing-md);
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  padding: 0;
+}
+
+.bandeau-content::-webkit-scrollbar {
+  display: none;
+}
+
+.classeur-pill {
+  display: flex;
+  align-items: center;
+  gap: var(--unified-spacing-sm);
+  padding: var(--unified-spacing-sm) var(--unified-spacing-lg);
+  border-radius: var(--unified-radius-md);
+  border: 1px solid var(--unified-glass-border-light);
+  background: var(--unified-glass-bg-medium);
+  color: var(--unified-text-secondary);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--unified-transition-normal);
+  white-space: nowrap;
+  font-family: 'Noto Sans', sans-serif;
+  min-height: 44px;
+  position: relative;
+  overflow: hidden;
+
+  box-shadow: var(--unified-glass-shadow-subtle);
+}
+
+.classeur-pill::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg,
+    var(--unified-glass-bg-light) 0%,
+    var(--unified-glass-bg-subtle) 50%,
+    var(--unified-glass-bg-light) 100%);
+  opacity: 0;
+  transition: opacity var(--unified-transition-normal);
+  border-radius: var(--unified-radius-md);
+}
+
+.classeur-pill:hover {
+  background: var(--unified-glass-bg-heavy);
+  border-color: var(--unified-glass-border-heavy);
+  color: var(--unified-text-primary);
+  transform: translateY(-2px);
+  box-shadow: var(--unified-glass-shadow-medium);
+}
+
+.classeur-pill:hover::before {
+  opacity: 1;
+}
+
+.classeur-pill.active {
+  background: var(--unified-primary-light);
+  border-color: var(--unified-primary);
+  color: var(--unified-primary);
+  box-shadow: 0 4px 16px rgba(229, 90, 44, 0.2);
+}
+
+.classeur-pill.active::before {
+  background: linear-gradient(135deg,
+    rgba(229, 90, 44, 0.05) 0%,
+    rgba(229, 90, 44, 0.02) 50%,
+    rgba(229, 90, 44, 0.05) 100%);
+  opacity: 1;
+}
+
+.classeur-pill.active:hover {
+  background: rgba(229, 90, 44, 0.2);
+  transform: translateY(-3px);
+  box-shadow: 0 12px 24px rgba(229, 90, 44, 0.25);
+}
+
+/* ========================================
+   ÉLÉMENTS DES PILLS
+   ======================================== */
+
+.classeur-emoji {
+  font-size: 18px;
+  filter: brightness(1.1);
+  transition: transform var(--unified-transition-fast);
+  position: relative;
+  cursor: pointer;
+}
+
+.classeur-pill:hover .classeur-emoji {
+  transform: scale(1.1);
+}
+
+.classeur-emoji.drag-over {
+  transform: scale(1.2);
+  filter: brightness(1.3);
+  animation: dropPulse 0.6s ease-in-out;
+}
+
+@keyframes dropPulse {
+  0% { transform: scale(1.1); }
+  50% { transform: scale(1.3); }
+  100% { transform: scale(1.2); }
+}
+
+.classeur-emoji::after {
+  content: '';
+  position: absolute;
+  top: -4px;
+  left: -4px;
+  right: -4px;
+  bottom: -4px;
+  border: 2px dashed transparent;
+  border-radius: 50%;
+  transition: all var(--unified-transition-fast);
+  pointer-events: none;
+}
+
+.classeur-pill:hover .classeur-emoji::after {
+  border-color: var(--unified-primary);
+  opacity: 0.3;
+}
+
+.classeur-emoji.drag-over::after {
+  border-color: var(--unified-primary);
+  opacity: 0.8;
+  animation: dropGlow 1s ease-in-out infinite alternate;
+}
+
+@keyframes dropGlow {
+  0% {
+    border-color: var(--unified-primary);
+    box-shadow: 0 0 8px rgba(229, 90, 44, 0.3);
+  }
+  100% {
+    border-color: var(--unified-primary);
+    box-shadow: 0 0 16px rgba(229, 90, 44, 0.6);
+  }
+}
+
+.classeur-name {
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  transition: color var(--unified-transition-fast);
+}
+
+/* ========================================
+   PILL D'AJOUT
+   ======================================== */
+
+.classeur-pill.add-classeur {
+  background: var(--unified-glass-bg-light);
+  border: 2px dashed var(--unified-glass-border-light);
+  color: var(--unified-text-secondary);
+  min-width: 44px;
+  justify-content: center;
+  padding: var(--unified-spacing-sm);
+}
+
+.classeur-pill.add-classeur:hover {
+  background: var(--unified-glass-bg-heavy);
+  border-color: var(--unified-primary);
+  color: var(--unified-primary);
+  transform: translateY(-2px);
+  box-shadow: var(--unified-glass-shadow-medium);
+}
+
+.add-icon {
+  font-size: 20px;
+  font-weight: 600;
+  transition: transform var(--unified-transition-fast);
+}
+
+.classeur-pill.add-classeur:hover .add-icon {
+  transform: scale(1.2);
+}
+
+/* ========================================
+   BOUTON AJOUT CLASSEUR
+   ======================================== */
+
+.add-classeur-btn {
+  margin-left: var(--unified-spacing-lg);
+  margin-top: 18px;
+  background: none;
+  border: none;
+  color: var(--unified-text-secondary);
+  padding: 0;
+  cursor: pointer;
+  transition: all var(--unified-transition-normal);
+  font-size: 1.8rem;
+  font-weight: 400;
+  font-family: 'Noto Sans', sans-serif;
+  width: auto;
+  height: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  align-self: center;
+}
+
+.add-classeur-btn:hover {
+  color: var(--unified-primary);
+  transform: scale(1.1);
+}
+
+.add-classeur-btn:active {
+  transform: scale(0.95);
+}
+
+/* ========================================
+   ANIMATIONS SPÉCIFIQUES
+   ======================================== */
+
+@keyframes pillFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.classeur-pill {
+  animation: pillFadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Animation de stagger pour les pills */
+.classeur-pill:nth-child(1) { animation-delay: 0.1s; }
+.classeur-pill:nth-child(2) { animation-delay: 0.2s; }
+.classeur-pill:nth-child(3) { animation-delay: 0.3s; }
+.classeur-pill:nth-child(4) { animation-delay: 0.4s; }
+.classeur-pill:nth-child(5) { animation-delay: 0.5s; }
+.classeur-pill:nth-child(6) { animation-delay: 0.6s; }
+
+/* ========================================
+   RESPONSIVE SPÉCIFIQUE
+   ======================================== */
+
+@media (max-width: 768px) {
+  .classeur-tabs-wrapper {
+    padding: var(--unified-spacing-md) var(--unified-spacing-md) 0 var(--unified-spacing-md);
+  }
+
+  .classeur-tab {
+    min-width: 100px;
+    padding: var(--unified-spacing-md) var(--unified-spacing-md);
+    font-size: 0.85rem;
+  }
+
+  .add-classeur-btn {
+    font-size: 2rem;
+    margin-left: var(--unified-spacing-md);
+  }
+}

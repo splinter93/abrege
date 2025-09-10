@@ -1,0 +1,115 @@
+/* ========================================
+   UTILITAIRES CHAT - CLASSES RÉUTILISABLES
+   ======================================== */
+
+@layer utilities {
+  /* ========================================
+     TRANSITIONS
+     ======================================== */
+  
+  .transition-chat {
+    @apply transition-all duration-200 ease-in-out;
+  }
+  
+  .transition-chat-fast {
+    @apply transition-all duration-150 ease-in-out;
+  }
+  
+  .transition-chat-slow {
+    @apply transition-all duration-300 ease-in-out;
+  }
+
+  /* ========================================
+     ESPACEMENTS CHAT
+     ======================================== */
+  
+  .space-chat-xs { @apply space-y-1; }
+  .space-chat-sm { @apply space-y-2; }
+  .space-chat-md { @apply space-y-3; }
+  .space-chat-lg { @apply space-y-4; }
+  .space-chat-xl { @apply space-y-6; }
+
+  /* ========================================
+     TAILLES CHAT
+     ======================================== */
+  
+  .w-chat-sidebar { @apply w-80; }
+  .h-chat-input { @apply h-[60px]; }
+  .h-chat-header { @apply h-14; }
+
+  /* ========================================
+     Z-INDEX CHAT
+     ======================================== */
+  
+  .z-chat-dropdown { @apply z-[1000]; }
+  .z-chat-sidebar { @apply z-[1001]; }
+  .z-chat-modal { @apply z-[1002]; }
+  .z-chat-tooltip { @apply z-[1003]; }
+
+  /* ========================================
+     OMBRES CHAT
+     ======================================== */
+  
+  .shadow-glass-subtle { @apply shadow-[0_2px_8px_rgba(0,0,0,0.08)]; }
+  .shadow-glass-soft { @apply shadow-[0_4px_12px_rgba(0,0,0,0.12)]; }
+  .shadow-glass-medium { @apply shadow-[0_6px_16px_rgba(0,0,0,0.15)]; }
+
+  /* ========================================
+     RAYONS DE BORDURE CHAT
+     ======================================== */
+  
+  .rounded-chat-sm { @apply rounded-[4px]; }
+  .rounded-chat-md { @apply rounded-[6px]; }
+  .rounded-chat-lg { @apply rounded-[8px]; }
+  .rounded-chat-xl { @apply rounded-[12px]; }
+  .rounded-chat-2xl { @apply rounded-[16px]; }
+
+  /* ========================================
+     ANIMATIONS CHAT
+     ======================================== */
+  
+  .animate-pulse-chat {
+    animation: pulse-chat 2s infinite;
+  }
+  
+  .animate-shimmer {
+    animation: shimmer 3s ease-in-out infinite;
+  }
+  
+  .animate-slide-in {
+    animation: slideIn 0.3s ease-out;
+  }
+}
+
+/* ========================================
+   KEYFRAMES
+   ======================================== */
+
+@keyframes pulse-chat {
+  0%, 100% {
+    box-shadow: 0 1px 4px rgba(239, 68, 68, 0.15);
+  }
+  50% {
+    box-shadow: 0 1px 6px rgba(239, 68, 68, 0.2);
+  }
+}
+
+@keyframes shimmer {
+  0%, 100% {
+    opacity: 0.7;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

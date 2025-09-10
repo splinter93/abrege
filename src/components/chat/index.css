@@ -5,6 +5,9 @@
 /* Import du design system global */
 @import '../../styles/chat-design-system-v2.css';
 
+/* Import des utilities CSS */
+@import '../../styles/chat-utilities.css';
+
 /* Import de la coloration syntaxique */
 @import '../../styles/syntax-highlighting.css';
 
@@ -14,7 +17,6 @@
 @import './ChatSidebar.css';
 @import './ChatInput.css';
 @import './ChatMessage.css';
-@import './ChatMarkdown.css';
 @import './AudioRecorder.css';
 /* Mermaid styles are now handled via themeVariables in CodeBlockWithCopy.ts */
 
@@ -29,15 +31,15 @@
 
 /* Styles spécifiques pour les messages d'erreur et de succès */
 .chat-message.error-message .chat-message-bubble {
-  background: rgba(239, 68, 68, 0.1) !important;
-  border-color: rgba(239, 68, 68, 0.2) !important;
-  color: #ef4444 !important;
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
 }
 
 .chat-message.success-message .chat-message-bubble {
-  background: rgba(34, 197, 94, 0.1) !important;
-  border-color: rgba(34, 197, 94, 0.2) !important;
-  color: #22c55e !important;
+  background: rgba(34, 197, 94, 0.1);
+  border-color: rgba(34, 197, 94, 0.2);
+  color: #22c55e;
 }
 
 /* ========================================
