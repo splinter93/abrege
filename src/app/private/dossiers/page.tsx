@@ -101,28 +101,26 @@ function AuthenticatedDossiersContent({ user }: { user: AuthenticatedUser }) {
     }
   }, [activeClasseurId, classeurs, loading, setActiveClasseurId]);
 
-  // Handlers pour la création (utilisent maintenant le service optimisé)
+  // Handlers pour la création (utilisent maintenant V2UnifiedApi avec optimistic UI)
   const handleCreateFolder = useCallback(async () => {
     if (!activeClasseur || !user?.id) return;
     
     try {
       const name = prompt('Nom du dossier :');
       if (name && name.trim()) {
-        const { DossierService } = await import('@/services/dossierService');
-        const dossierService = DossierService.getInstance();
-        await dossierService.createFolder({
-          name: name.trim(),
-          notebook_id: activeClasseur.id,
-          parent_id: currentFolderId || null
-        }, user.id);
+        const { V2UnifiedApi } = await import('@/services/V2UnifiedApi');
+        const v2Api = V2UnifiedApi.getInstance();
         
-        // 🎯 Déclencher le polling ciblé pour les dossiers
-        try {
-          const { triggerPollingAfterFolderAction } = await import('@/services/uiActionPolling');
-          await triggerPollingAfterFolderAction('folder_created');
-          console.log('[DossiersPage] ✅ Dossier créé, polling ciblé déclenché');
-        } catch (error) {
-          console.warn('[DossiersPage] ⚠️ Erreur déclenchement polling dossier:', error);
+        const result = await v2Api.createFolder({
+          name: name.trim(),
+          classeur_id: activeClasseur.id,
+          parent_id: currentFolderId || null
+        });
+        
+        if (result.success) {
+          console.log('[DossiersPage] ✅ Dossier créé avec V2UnifiedApi (optimistic UI)');
+        } else {
+          throw new Error(result.error || 'Erreur lors de la création du dossier');
         }
       }
     } catch (e) {

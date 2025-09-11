@@ -560,18 +560,37 @@ export class V2UnifiedApi {
       }
 
       // ✅ SUCCÈS: Remplacer le dossier optimiste par le vrai dossier
-      store.removeFolder(tempId);
-      store.addFolder(result.folder);
-      
-      // Marquer l'opération comme terminée pour permettre le realtime
-      const { markOperationComplete } = await import('@/realtime/dispatcher');
-      markOperationComplete('folder', result.folder.id);
-      
       if (process.env.NODE_ENV === 'development') {
-        logger.dev(`[V2UnifiedApi] ✅ Dossier optimiste remplacé par le vrai:`, {
+        logger.dev(`[V2UnifiedApi] 🔍 AVANT remplacement - État du store:`, {
           tempId,
           realId: result.folder.id,
-          name: result.folder.name
+          storeFolders: Object.keys(store.folders),
+          tempExists: !!store.folders[tempId],
+          realExists: !!store.folders[result.folder.id]
+        });
+      }
+      
+      store.removeFolder(tempId);
+      
+      if (process.env.NODE_ENV === 'development') {
+        logger.dev(`[V2UnifiedApi] 🔍 APRÈS suppression temp - État du store:`, {
+          tempId,
+          realId: result.folder.id,
+          storeFolders: Object.keys(store.folders),
+          tempExists: !!store.folders[tempId],
+          realExists: !!store.folders[result.folder.id]
+        });
+      }
+      
+      store.addFolder(result.folder);
+      
+      if (process.env.NODE_ENV === 'development') {
+        logger.dev(`[V2UnifiedApi] 🔍 APRÈS ajout réel - État du store final:`, {
+          tempId,
+          realId: result.folder.id,
+          storeFolders: Object.keys(store.folders),
+          tempExists: !!store.folders[tempId],
+          realExists: !!store.folders[result.folder.id]
         });
       }
 
@@ -891,14 +910,6 @@ export class V2UnifiedApi {
       // 🚀 Mise à jour directe de Zustand (instantanée)
       const finalClasseurId = targetClasseurId || folderClasseurId;
       store.moveFolder(cleanFolderId, targetParentId, finalClasseurId);
-      
-      // 🎯 Déclencher le polling ciblé pour le déplacement
-      try {
-        const { triggerPollingAfterFolderAction } = await import('@/services/uiActionPolling');
-        await triggerPollingAfterFolderAction('folder_moved');
-      } catch (error) {
-        console.warn('[V2UnifiedApi] ⚠️ Erreur déclenchement polling ciblé:', error);
-      }
       
       const totalTime = Date.now() - startTime;
       if (process.env.NODE_ENV === 'development') {
