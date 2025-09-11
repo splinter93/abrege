@@ -187,6 +187,11 @@ export function useFolderManagerState(classeurId: string, userId: string, parent
         classeur_id: classeurId,
         parent_id: parentFolderId,
       });
+      
+      if (!result.success || !result.folder) {
+        throw new Error(result.error || 'Erreur lors de la création du dossier');
+      }
+      
       if (process.env.NODE_ENV === 'development') {
         logger.dev('[UI] ✅ Dossier créé avec API optimisée:', result.folder.name);
       }
