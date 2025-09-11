@@ -36,11 +36,11 @@ import { supabase } from '@/supabaseClient';
 import { toast } from 'react-hot-toast';
 import ImageMenu from '@/components/ImageMenu';
 import { useAuth } from '@/hooks/useAuth';
-import { UnifiedRealtimeDebug } from '@/components/UnifiedRealtimeDebug';
 import { uploadImageForNote } from '@/utils/fileUpload';
 import { logger, LogCategory } from '@/utils/logger';
 import type { FullEditorInstance } from '@/types/editor';
-import { useUnifiedRealtime } from '@/hooks/useUnifiedRealtime';
+import { useRealtime } from '@/hooks/useRealtime';
+import { RealtimeStatus } from '@/components/RealtimeStatus';
 // Types pour les mises à jour de note
 interface NoteUpdate {
   a4_mode?: boolean;
@@ -161,15 +161,14 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
   // Share settings state
   const [shareSettings, setShareSettings] = React.useState<ShareSettings>(getDefaultShareSettings());
 
-  // 🔄 Unified Realtime Integration - Remplace les anciens services
-  const unifiedRealtime = useUnifiedRealtime({
+  // 🔄 Realtime Integration - Service simple et robuste
+  const realtime = useRealtime({
     userId,
     noteId,
     debug: process.env.NODE_ENV === 'development',
-    autoReconnect: true,
     onEvent: (event) => {
       if (process.env.NODE_ENV === 'development') {
-        logger.info(LogCategory.EDITOR, 'Unified Realtime event received:', {
+        logger.info(LogCategory.EDITOR, 'Realtime event received:', {
           type: event.type,
           source: event.source,
           channel: event.channel
@@ -182,10 +181,10 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
     },
     onStateChange: (state) => {
       if (process.env.NODE_ENV === 'development') {
-        logger.info(LogCategory.EDITOR, 'Unified Realtime state changed:', {
-          status: state.connectionStatus,
+        logger.info(LogCategory.EDITOR, 'Realtime state changed:', {
           connected: state.isConnected,
-          channels: state.channels.size
+          connecting: state.isConnecting,
+          channels: state.channels.length
         });
       }
     }
@@ -1046,7 +1045,7 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
 
   return (
     <>
-      {/* 🔄 Unified Realtime System - Remplace l'ancien RealtimeEditorManager */}
+      {/* 🔄 Realtime System - Service simple et robuste */}
         <div className="editor-toc-fixed">
           <PublicTableOfContents headings={headings} containerRef={editorContainerRef} />
         </div>
@@ -1319,9 +1318,9 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
         hasSelection={contextMenu.hasSelection}
       />
       
-      {/* 🔍 Unified Realtime Debug (dev only) */}
+      {/* 🔍 Realtime Status (dev only) */}
       {process.env.NODE_ENV === 'development' && userId && (
-        <UnifiedRealtimeDebug noteId={noteId} userId={userId} />
+        <RealtimeStatus userId={userId} noteId={noteId} />
       )}
     </>
   );
