@@ -617,14 +617,43 @@ export class V2UnifiedApi {
       // ✅ 1. Nettoyer et valider l'ID
       const cleanFolderId = this.cleanAndValidateId(folderId, 'folder');
       
-      // ✅ 2. Appel vers l'endpoint API V2 DIRECT (pas de modification du store)
-      const headers = await this.getAuthHeaders();
-              const response = await fetch(this.buildUrl(`/api/v2/delete/folder/${cleanFolderId}`), {
-          method: 'DELETE',
-          headers
+      // ⚡ OPTIMISTIC UI: Mettre à jour le store IMMÉDIATEMENT
+      const { useFileSystemStore } = await import('@/store/useFileSystemStore');
+      const store = useFileSystemStore.getState();
+      
+      // Sauvegarder les données pour rollback en cas d'erreur
+      const originalFolders = { ...store.folders };
+      const originalNotes = { ...store.notes };
+      
+      // Retirer le dossier du store IMMÉDIATEMENT (optimistic)
+      const { [cleanFolderId]: deletedFolder, ...remainingFolders } = store.folders;
+      store.setFolders(Object.values(remainingFolders));
+      
+      // Retirer toutes les notes de ce dossier du store IMMÉDIATEMENT
+      const remainingNotes = Object.fromEntries(
+        Object.entries(store.notes).filter(([_, note]) => note.folder_id !== cleanFolderId)
+      );
+      store.setNotes(Object.values(remainingNotes));
+      
+      if (process.env.NODE_ENV === 'development') {
+        logger.dev(`[V2UnifiedApi] ⚡ Dossier retiré du store (optimistic):`, {
+          folderId: cleanFolderId,
+          notesRetirées: Object.keys(originalNotes).length - Object.keys(remainingNotes).length
         });
+      }
+      
+      // ✅ 2. Appel vers l'endpoint API V2 (en arrière-plan)
+      const headers = await this.getAuthHeaders();
+      const response = await fetch(this.buildUrl(`/api/v2/delete/folder/${cleanFolderId}`), {
+        method: 'DELETE',
+        headers
+      });
 
       if (!response.ok) {
+        // 🔄 ROLLBACK: Restaurer le store en cas d'erreur
+        store.setFolders(Object.values(originalFolders));
+        store.setNotes(Object.values(originalNotes));
+        
         const errorText = await response.text();
         throw new Error(`Erreur suppression dossier: ${response.status} ${response.statusText} - ${errorText}`);
       }
@@ -632,28 +661,6 @@ export class V2UnifiedApi {
       const apiTime = Date.now() - startTime;
       if (process.env.NODE_ENV === 'development') {
         logger.dev(`[V2UnifiedApi] ✅ API terminée en ${apiTime}ms`);
-      }
-
-      // ✅ 2. Mettre à jour le store pour retirer l'élément de l'interface
-      // (l'élément est maintenant en corbeille, donc il ne doit plus être visible)
-      const { useFileSystemStore } = await import('@/store/useFileSystemStore');
-      const store = useFileSystemStore.getState();
-      
-      // Retirer le dossier du store
-      const { [cleanFolderId]: deletedFolder, ...remainingFolders } = store.folders;
-      store.setFolders(Object.values(remainingFolders));
-      
-      // Retirer toutes les notes de ce dossier du store
-      const remainingNotes = Object.fromEntries(
-        Object.entries(store.notes).filter(([_, note]) => note.folder_id !== cleanFolderId)
-      );
-      store.setNotes(Object.values(remainingNotes));
-      
-      if (process.env.NODE_ENV === 'development') {
-        logger.dev(`[V2UnifiedApi] 🗑️ Dossier retiré du store (mis en corbeille):`, {
-          folderId: cleanFolderId,
-          notesRetirées: Object.keys(store.notes).length - Object.keys(remainingNotes).length
-        });
       }
       
       // 🎯 Déclencher le polling ciblé pour la suppression (avec délai)
