@@ -563,15 +563,9 @@ export class V2UnifiedApi {
       store.removeFolder(tempId);
       store.addFolder(result.folder);
 
-      // 🎯 Déclencher le polling ciblé pour la création (avec délai)
-      try {
-        const { triggerPollingAfterFolderAction } = await import('@/services/uiActionPolling');
-        // Délai pour laisser l'API se terminer complètement
-        setTimeout(async () => {
-          await triggerPollingAfterFolderAction('folder_created');
-        }, 500);
-      } catch (error) {
-        console.warn('[V2UnifiedApi] ⚠️ Erreur déclenchement polling ciblé:', error);
+      // ⚡ OPTIMISTIC UI: Pas de polling nécessaire, le store est déjà à jour
+      if (process.env.NODE_ENV === 'development') {
+        logger.dev(`[V2UnifiedApi] ✅ Dossier créé avec optimistic UI (pas de polling)`);
       }
 
       const duration = Date.now() - startTime;
@@ -649,12 +643,9 @@ export class V2UnifiedApi {
       // ✅ SUCCÈS: Mettre à jour avec les données finales de l'API
       store.updateFolder(cleanFolderId, result.folder);
       
-      // 🎯 Déclencher le polling ciblé pour la mise à jour
-      try {
-        const { triggerPollingAfterFolderAction } = await import('@/services/uiActionPolling');
-        await triggerPollingAfterFolderAction('folder_updated');
-      } catch (error) {
-        console.warn('[V2UnifiedApi] ⚠️ Erreur déclenchement polling ciblé:', error);
+      // ⚡ OPTIMISTIC UI: Pas de polling nécessaire, le store est déjà à jour
+      if (process.env.NODE_ENV === 'development') {
+        logger.dev(`[V2UnifiedApi] ✅ Dossier mis à jour avec optimistic UI (pas de polling)`);
       }
       
       const totalTime = Date.now() - startTime;
@@ -728,15 +719,9 @@ export class V2UnifiedApi {
         logger.dev(`[V2UnifiedApi] ✅ API terminée en ${apiTime}ms`);
       }
       
-      // 🎯 Déclencher le polling ciblé pour la suppression (avec délai)
-      try {
-        const { triggerPollingAfterFolderAction } = await import('@/services/uiActionPolling');
-        // Délai pour laisser l'API se terminer complètement
-        setTimeout(async () => {
-          await triggerPollingAfterFolderAction('folder_deleted');
-        }, 500);
-      } catch (error) {
-        console.warn('[V2UnifiedApi] ⚠️ Erreur déclenchement polling ciblé:', error);
+      // ⚡ OPTIMISTIC UI: Pas de polling nécessaire, le store est déjà à jour
+      if (process.env.NODE_ENV === 'development') {
+        logger.dev(`[V2UnifiedApi] ✅ Dossier supprimé avec optimistic UI (pas de polling)`);
       }
 
       const totalTime = Date.now() - startTime;
