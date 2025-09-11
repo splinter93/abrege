@@ -21,7 +21,8 @@
 
 /* Image d'en-tête - padding réduit sur desktop */
 .public-header-image {
-  margin-bottom: 8px ;
+  position: relative;
+  margin-bottom: 8px;
 }
 
 /* Réduction espacement titre-texte - page publique */
@@ -44,6 +45,67 @@
 /* Suppression padding-bottom du container editor-container-width */
 .public-note-container .noteLayout-title .editor-container-width {
   padding-bottom: 0 ; /* Supprime le padding en dessous du titre */
+}
+
+/* ==========================================================================
+   BOUTON D'ÉDITION SOUS L'IMAGE D'EN-TÊTE - PAGE PUBLIQUE
+   ==========================================================================
+   Bouton visible uniquement pour l'auteur de la note
+*/
+
+.public-edit-button-header {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 10;
+  
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(8px);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  
+  font-family: 'Noto Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  text-decoration: none;
+  
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.public-edit-button-header:hover {
+  background: rgba(0, 0, 0, 0.8);
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: translateY(-1px);
+  color: white;
+  text-decoration: none;
+}
+
+.public-edit-button-header:active {
+  transform: translateY(0);
+}
+
+.edit-button-text {
+  white-space: nowrap;
+}
+
+/* Responsive - masquer le texte sur mobile */
+@media (max-width: 768px) {
+  .public-edit-button-header {
+    padding: 6px;
+    border-radius: 6px;
+    gap: 4px;
+  }
+  
+  .edit-button-text {
+    display: none;
+  }
 }
 
 /* Forcer le thème sombre sur le container principal */

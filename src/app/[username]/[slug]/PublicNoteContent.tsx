@@ -7,6 +7,8 @@ import LogoHeader from '@/components/LogoHeader';
 import SecurityValidator from '@/components/SecurityValidator';
 import PublicMarkdownRenderer from '@/components/PublicMarkdownRenderer';
 import { supabase } from '@/supabaseClient';
+import { Edit3 } from 'lucide-react';
+import Link from 'next/link';
 import '@/styles/public-note.css'; // CSS spécifique page publique - PRIORITÉ MAXIMALE
 import '@/styles/typography.css'; // Importer le CSS typography
 import '@/styles/design-system.css'; // Importer le design system pour les variables
@@ -42,6 +44,9 @@ export default function PublicNoteContent({ note, slug, username, currentUser: p
   const titleRef = React.useRef<HTMLHeadingElement>(null);
   const contentRef = React.useRef<HTMLDivElement>(null);
   const [currentUser, setCurrentUser] = React.useState<{ id: string; email?: string } | null>(propCurrentUser || null);
+  
+  // Vérifier si l'utilisateur actuel est le propriétaire de la note
+  const isOwner = currentUser?.id === note.user_id;
 
   // Vérifier l'authentification côté client seulement si pas déjà fourni
   React.useEffect(() => {
@@ -158,6 +163,18 @@ export default function PublicNoteContent({ note, slug, username, currentUser: p
                   {note.source_title}
                 </h1>
               </div>
+            )}
+            
+            {/* Bouton d'édition - visible uniquement pour l'auteur */}
+            {isOwner && (
+              <Link 
+                href={`/private/note/${note.id}`}
+                className="public-edit-button-header"
+                title="Modifier cette note"
+              >
+                <Edit3 size={18} />
+                <span className="edit-button-text">Modifier</span>
+              </Link>
             )}
           </div>
         )}

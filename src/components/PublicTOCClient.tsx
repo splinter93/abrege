@@ -18,7 +18,12 @@ const PublicTOCClient: React.FC<PublicTOCClientProps> = ({ slug, username }) => 
   useEffect(() => {
     const fetchTOC = async () => {
       try {
-        const res = await fetch(`/api/ui/public/note/${encodeURIComponent(username)}/${slug}/table-of-contents`);
+        const res = await fetch(`/api/ui/public/note/${encodeURIComponent(username)}/${slug}/table-of-contents`, {
+          credentials: 'include', // Inclure les cookies d'authentification
+          headers: {
+            'Content-Type': 'application/json',
+          }
+        });
         if (!res.ok) {
           throw new Error(`TOC non disponible (${res.status})`);
         }

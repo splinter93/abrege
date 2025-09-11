@@ -81,7 +81,6 @@ export default async function Page(props: { params: Promise<{ username: string; 
         </div>
         <h1>Utilisateur non trouvé</h1>
         <p>Vérifiez l&apos;URL ou contactez l&apos;auteur.</p>
-        <p>Debug: error = {userError?.message}</p>
       </div>
     );
   }
@@ -89,8 +88,6 @@ export default async function Page(props: { params: Promise<{ username: string; 
 
   // Récupérer la note (même si elle est privée - le composant client gérera l'authentification)
   // Utiliser le client service pour contourner RLS
-  console.log('🔍 [DEBUG] Server: Looking for note with slug:', slug, 'and user_id:', owner.id);
-  
   const { data: noteBySlug, error: noteError } = await supabaseService
     .from('articles')
     .select(
@@ -100,12 +97,6 @@ export default async function Page(props: { params: Promise<{ username: string; 
     .eq('user_id', owner.id)
     .limit(1)
     .maybeSingle();
-
-  console.log('🔍 [DEBUG] Server: Note found:', !!noteBySlug);
-  console.log('🔍 [DEBUG] Server: Note error:', noteError);
-  if (noteBySlug) {
-    console.log('🔍 [DEBUG] Server: Note visibility:', noteBySlug.share_settings?.visibility);
-  }
 
   if (noteError || !noteBySlug) {
     // Note non trouvée - afficher une erreur au lieu de rediriger
@@ -172,7 +163,20 @@ export default async function Page(props: { params: Promise<{ username: string; 
 
   // ✅ SÉCURITÉ : Vérification supplémentaire du slug
   if (noteBySlug.slug !== slug) {
-    console.warn(`Slug mismatch: URL=${slug}, DB=${noteBySlug.slug}`);
+    // Slug mismatch détecté - rediriger vers le bon slug
+    return (
+      <div className="not-found-container">
+        <div className="not-found-content">
+          <div className="not-found-logo">
+            <LogoHeader size="medium" position="center" />
+          </div>
+          <h1 className="not-found-title">Note non trouvée</h1>
+          <p className="not-found-description">
+            Cette note n'existe pas ou n'est pas accessible.
+          </p>
+        </div>
+      </div>
+    );
   }
 
 

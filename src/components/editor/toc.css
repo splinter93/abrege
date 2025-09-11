@@ -122,8 +122,9 @@
 /* Items de la TOC */
 .toc-item {
   background: none;
-  border-radius: 0;
-  padding: 0;
+  border-radius: 8px;
+  padding: 6px 8px;
+  margin: 2px 0;
   transition: background 0.18s, color 0.18s;
   cursor: pointer;
   white-space: pre-line;
@@ -139,7 +140,7 @@
   font-size: 16px;
   color: var(--editor-text-color);
   margin-bottom: 8px;
-  padding-left: 0;
+  padding-left: 8px;
 }
 
 .toc-item-h2 {
@@ -147,26 +148,33 @@
   font-size: 15px;
   color: var(--editor-text-color);
   margin-bottom: 4px;
-  padding-left: 12px;
+  padding-left: 20px;
 }
 
 .toc-item-h3 {
   font-weight: 400;
   font-size: 14px;
   color: var(--editor-text-color);
-  padding-left: 32px;
+  padding-left: 40px;
   margin-bottom: 2px;
   line-height: 1.7;
 }
 
 .toc-item:hover {
-  background: none;
-  color: var(--accent-primary);
+  background: rgba(107, 114, 128, 0.1);
+  color: var(--text-primary);
+  border-radius: 8px;
+  padding: 6px 8px;
+  margin: 2px 0;
 }
 
 .toc-item.active {
-  background: none;
-  color: var(--editor-text-color);
+  background: rgba(107, 114, 128, 0.15);
+  color: var(--text-primary);
+  border-radius: 8px;
+  padding: 6px 8px;
+  margin: 2px 0;
+  font-weight: 600;
 }
 
 /* Séparateur entre sections */
@@ -184,7 +192,13 @@
 }
 
 @keyframes toc-flash {
-  0% { background-color: transparent; }
-  20% { background-color: var(--accent-primary); opacity: 0.3; }
-  100% { background-color: transparent; }
+  0% { 
+    background-color: transparent; 
+  }
+  20% { 
+    background-color: rgba(107, 114, 128, 0.15); 
+  }
+  100% { 
+    background-color: transparent; 
+  }
 }

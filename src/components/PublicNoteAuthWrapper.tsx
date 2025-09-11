@@ -36,17 +36,11 @@ export default function PublicNoteAuthWrapper({ note, slug, ownerId, username }:
   React.useEffect(() => {
     const checkAuth = async () => {
       try {
-        console.log('🔍 [DEBUG] Checking auth in PublicNoteAuthWrapper...');
-        
         // Essayer d'abord getSession
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-        console.log('🔍 [DEBUG] Session:', session);
-        console.log('🔍 [DEBUG] Session error:', sessionError);
         
         // Puis getUser
         const { data: { user }, error: userError } = await supabase.auth.getUser();
-        console.log('🔍 [DEBUG] User:', user);
-        console.log('🔍 [DEBUG] User error:', userError);
         
         setCurrentUser(user);
       } catch (error) {
@@ -75,12 +69,6 @@ export default function PublicNoteAuthWrapper({ note, slug, ownerId, username }:
 
   // Vérifier si l'utilisateur est le propriétaire
   const isOwner = currentUser?.id === ownerId;
-  
-  // Debug: Log de la comparaison
-  console.log('🔍 [DEBUG] Current user ID:', currentUser?.id);
-  console.log('🔍 [DEBUG] Owner ID:', ownerId);
-  console.log('🔍 [DEBUG] Is owner:', isOwner);
-  console.log('🔍 [DEBUG] Note visibility:', note.share_settings?.visibility);
 
   // Si la note est privée/link-private et que l'utilisateur n'est pas le propriétaire
   if ((note.share_settings?.visibility === 'private' || note.share_settings?.visibility === 'link-private') && !isOwner) {
