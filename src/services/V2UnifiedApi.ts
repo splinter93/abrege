@@ -566,23 +566,29 @@ export class V2UnifiedApi {
           realId: result.folder.id,
           storeFolders: Object.keys(store.folders),
           tempExists: !!store.folders[tempId],
-          realExists: !!store.folders[result.folder.id]
+          realExists: !!store.folders[result.folder.id],
+          tempFolder: store.folders[tempId],
+          realFolder: result.folder
         });
       }
       
+      // ✅ SUCCÈS: Remplacer le dossier optimiste par le vrai dossier
+      // Supprimer d'abord le dossier temporaire
       store.removeFolder(tempId);
       
+      // Ajouter le dossier réel
+      store.addFolder(result.folder);
+      
       if (process.env.NODE_ENV === 'development') {
-        logger.dev(`[V2UnifiedApi] 🔍 APRÈS suppression temp - État du store:`, {
+        logger.dev(`[V2UnifiedApi] 🔍 APRÈS remplacement - Vérification finale:`, {
           tempId,
           realId: result.folder.id,
           storeFolders: Object.keys(store.folders),
           tempExists: !!store.folders[tempId],
-          realExists: !!store.folders[result.folder.id]
+          realExists: !!store.folders[result.folder.id],
+          realFolder: store.folders[result.folder.id]
         });
       }
-      
-      store.addFolder(result.folder);
       
       if (process.env.NODE_ENV === 'development') {
         logger.dev(`[V2UnifiedApi] 🔍 APRÈS ajout réel - État du store final:`, {
