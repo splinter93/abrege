@@ -508,23 +508,41 @@ export class V2DatabaseUtils {
    * Créer un dossier
    */
   static async createFolder(data: CreateFolderData, userId: string, context: ApiContext, supabaseClient?: any) {
-    logApi.info(`🚀 Création dossier ULTRA-RAPIDE`, context);
+    logApi.info(`🚀 Création dossier optimisée`, context);
     
     try {
       // 🔧 CORRECTION: Utiliser le client authentifié si fourni
       const client = supabaseClient || supabase;
       
+      // ⚡ OPTIMISATION: Résolution conditionnelle du classeur_id
+      let classeurId = data.classeur_id;
+      
+      // Si ce n'est pas un UUID, c'est un slug (venant des LLM) → résoudre
+      if (!classeurId.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
+        const { data: classeur, error: resolveError } = await client
+          .from('classeurs')
+          .select('id')
+          .eq('slug', classeurId)
+          .eq('user_id', userId)
+          .single();
+        
+        if (resolveError || !classeur) {
+          throw new Error(`Classeur non trouvé: ${classeurId}`);
+        }
+        
+        classeurId = classeur.id;
+      }
+      
       // ⚡ OPTIMISATION: Slug simple basé sur le nom + timestamp (pas de vérification DB)
       const timestamp = Date.now().toString(36);
       const slug = `${data.name.toLowerCase().replace(/[^a-z0-9]/g, '-')}-${timestamp}`;
       
-      // ⚡ OPTIMISATION: Création directe sans vérifications préalables
-      // Les contraintes DB se chargeront de valider l'intégrité
+      // ⚡ OPTIMISATION: Création directe (on fait confiance aux contraintes DB)
       const { data: folder, error: createError } = await client
         .from('folders')
         .insert({
           name: data.name,
-          classeur_id: data.classeur_id, // On fait confiance au frontend
+          classeur_id: classeurId, // UUID résolu
           parent_id: data.parent_id,
           user_id: userId,
           slug
@@ -533,14 +551,14 @@ export class V2DatabaseUtils {
         .single();
 
       if (createError) {
-        // Si erreur de contrainte, on peut faire une vérification ciblée
+        // Si erreur de contrainte, message clair
         if (createError.code === '23503') { // Foreign key violation
           throw new Error(`Classeur ou dossier parent non trouvé`);
         }
         throw new Error(`Erreur création dossier: ${createError.message}`);
       }
 
-      logApi.info(`✅ Dossier créé ULTRA-RAPIDE`, context);
+      logApi.info(`✅ Dossier créé optimisé`, context);
       return { success: true, data: folder };
       
     } catch (error) {
