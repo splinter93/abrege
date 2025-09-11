@@ -6,6 +6,7 @@ import { useChatStore } from '@/store/useChatStore';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { useAppContext } from '@/hooks/useAppContext';
 import { useChatResponse } from '@/hooks/useChatResponse';
+import { useChatResponseHarmony } from '@/hooks/useChatResponseHarmony';
 import { useChatScroll } from '@/hooks/useChatScroll';
 // import { useAtomicToolCalls } from '@/hooks/useAtomicToolCalls'; // Fichier supprimé
 import { useAuth } from '@/hooks/useAuth';

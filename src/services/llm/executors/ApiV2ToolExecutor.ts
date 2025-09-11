@@ -162,10 +162,43 @@ export class ApiV2ToolExecutor {
    */
   private parseArguments(argumentsStr: string): Record<string, unknown> {
     try {
-      return JSON.parse(argumentsStr || '{}');
+      const parsed = JSON.parse(argumentsStr || '{}');
+      
+      // 🔧 CORRECTION: Nettoyer les paramètres null pour éviter les erreurs Groq
+      return this.cleanNullParameters(parsed);
     } catch (error) {
       throw new Error('Arguments JSON invalides');
     }
+  }
+
+  /**
+   * Nettoie les paramètres null des arguments de tool call
+   * L'API Groq ne supporte pas les valeurs null pour les paramètres de type string
+   */
+  private cleanNullParameters(args: any): any {
+    if (!args || typeof args !== 'object') {
+      return args;
+    }
+
+    const cleaned: any = {};
+    
+    for (const [key, value] of Object.entries(args)) {
+      // Si la valeur est null, undefined, ou une chaîne vide, on l'omet complètement
+      if (value === null || value === undefined || value === '') {
+        logger.dev(`[ApiV2ToolExecutor] 🧹 Suppression du paramètre invalide: ${key} = ${value}`);
+        continue;
+      }
+      
+      // Si c'est un objet, nettoyer récursivement
+      if (value && typeof value === 'object') {
+        cleaned[key] = this.cleanNullParameters(value);
+      } else {
+        cleaned[key] = value;
+      }
+    }
+    
+    logger.dev(`[ApiV2ToolExecutor] 🧹 Arguments nettoyés:`, { original: args, cleaned });
+    return cleaned;
   }
 
   /**

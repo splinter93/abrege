@@ -38,7 +38,7 @@ export class OpenAPIToolsGenerator {
 
       this.createTool('moveNote', 'Déplacer une note', {
         ref: { type: 'string', description: 'Référence de la note' },
-        folder_id: { type: 'string', description: 'ID du dossier de destination' },
+        folder_id: { type: 'string', description: 'ID du dossier de destination (optionnel)' },
         classeur_id: { type: 'string', description: 'ID du classeur de destination' }
       }, ['ref']),
 
@@ -105,7 +105,7 @@ export class OpenAPIToolsGenerator {
       this.createTool('moveFolder', 'Déplacer un dossier', {
         ref: { type: 'string', description: 'Référence du dossier' },
         classeur_id: { type: 'string', description: 'ID du classeur de destination' },
-        parent_id: { type: 'string', description: 'ID du dossier parent de destination' }
+        parent_id: { type: 'string', description: 'ID du dossier parent de destination (optionnel)' }
       }, ['ref']),
 
       this.createTool('getFolderTree', 'Récupérer l\'arborescence d\'un dossier', {

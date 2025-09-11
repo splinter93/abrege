@@ -26,21 +26,7 @@ const ReasoningDropdown: React.FC<ReasoningDropdownProps> = ({
         aria-label="Toggle reasoning details"
       >
         <div className="reasoning-dropdown-header">
-          <div className="reasoning-dropdown-icon">
-            🧠
-          </div>
           <span className="reasoning-dropdown-title">Reasoning</span>
-          <div className="reasoning-dropdown-chevron">
-            {isOpen ? (
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
-              </svg>
-            ) : (
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-            )}
-          </div>
         </div>
       </button>
 
