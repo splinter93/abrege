@@ -22,7 +22,8 @@
 
 .chat-message-assistant {
   align-items: flex-start;
-  margin-right: 60px;
+  margin-right: 0;
+  width: 100%;
 }
 
 /* ========================================
@@ -78,19 +79,21 @@
    ======================================== */
 
 .chat-message-bubble-assistant {
-  background: var(--glass-bg-subtle);
+  background: none !important;
   color: var(--color-text-primary, #f8f9fa);
-  border: 1px solid var(--glass-border-soft);
-  box-shadow: var(--glass-shadow-subtle);
-  border-bottom-left-radius: var(--radius-md, 6px);
-  backdrop-filter: var(--glass-blur-medium);
-  -webkit-backdrop-filter: var(--glass-blur-medium);
-  padding: var(--spacing-sm, 0.5rem) var(--spacing-lg, 1rem);
+  border: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  padding: 0;
+  width: 100%;
+  max-width: 100%;
 }
 
-/* Largeur spéciale seulement en plein écran, pas en widget */
+/* Largeur complète pour les bulles assistant */
 .chat-fullscreen-container:not(.chat-widget-mode) .chat-message-bubble-assistant {
-  max-width: 1000px;
+  max-width: 100%;
   width: 100%;
 }
 
@@ -110,15 +113,16 @@
   }
   
   .chat-message-assistant {
-    margin-right: 20px;
+    margin-right: 0;
+    width: 100%;
   }
 }
 
 .chat-message-bubble-assistant:hover {
-  background: var(--glass-bg-soft);
-  border-color: var(--glass-border-medium);
-  box-shadow: var(--glass-shadow-soft);
-  transform: translateY(-1px);
+  background: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  transform: none;
 }
 
 /* ========================================
@@ -292,7 +296,8 @@
   }
 
   .chat-message-assistant {
-    margin-right: 40px;
+    margin-right: 0;
+    width: 100%;
   }
 
   .chat-message-bubble {
@@ -323,7 +328,8 @@
   }
 
   .chat-message-assistant {
-    margin-right: 20px;
+    margin-right: 0;
+    width: 100%;
   }
 
   .chat-message-bubble {
@@ -360,7 +366,8 @@
   }
 
   .chat-message-assistant {
-    margin-right: 10px;
+    margin-right: 0;
+    width: 100%;
   }
   
   /* Bulles assistant en pleine largeur sur petit mobile */

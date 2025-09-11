@@ -55,7 +55,7 @@
   }
 
   .message-bubble-assistant {
-    @apply message-bubble bg-transparent text-chat-text-primary rounded-bl-sm pl-0;
+    @apply message-bubble bg-transparent text-chat-text-primary rounded-none p-0 w-full max-w-full;
   }
 
   /* ========================================

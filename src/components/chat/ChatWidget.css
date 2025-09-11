@@ -180,7 +180,11 @@
   max-width: 100%;
   box-sizing: border-box;
   margin-right: 0;
-  padding: var(--spacing-xs, 0.25rem); /* padding réduit pour gagner en largeur utile */
+  padding: 0;
+  background: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
 }
 
 /* Ajuster les bulles de l'utilisateur en mode widget */

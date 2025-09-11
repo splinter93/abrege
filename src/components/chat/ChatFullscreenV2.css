@@ -55,89 +55,9 @@
 }
 
 /* ========================================
-   REASONING QWEN 3 - STYLES AMÉLIORÉS
+   REASONING QWEN 3 - STYLES SUPPRIMÉS
    ======================================== */
-
-.reasoning-message {
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-  border-left: 4px solid #3b82f6;
-  border-radius: 8px;
-  margin: 12px 0;
-  padding: 16px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  position: relative;
-  overflow: hidden;
-}
-
-.reasoning-message::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background: linear-gradient(90deg, #3b82f6, #8b5cf6, #06b6d4);
-  animation: shimmer 3s ease-in-out infinite;
-}
-
-@keyframes shimmer {
-  0%, 100% {
-    opacity: 0.7;
-  }
-  50% {
-    opacity: 1;
-  }
-}
-
-.reasoning-message .markdown-content {
-  font-family: var(--chat-font-family-inter);
-  line-height: 1.6;
-  color: #374151;
-}
-
-.reasoning-message .markdown-content h2 {
-  color: #1f2937;
-  font-size: 1.1em;
-  font-weight: 600;
-  margin-bottom: 12px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.reasoning-message .markdown-content h2::before {
-  content: '🧠';
-  font-size: 1.2em;
-}
-
-.reasoning-message .markdown-content hr {
-  border: none;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, #d1d5db, transparent);
-  margin: 16px 0;
-}
-
-.reasoning-message .markdown-content em {
-  color: #6b7280;
-  font-style: italic;
-  font-size: 0.9em;
-}
-
-/* Animation d'apparition pour le reasoning */
-.reasoning-message {
-  animation: slideInReasoning 0.3s ease-out;
-}
-
-@keyframes slideInReasoning {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
+/* Les styles de reasoning sont maintenant gérés par ReasoningDropdown.css */
 
 /* Responsive */
 @media (max-width: 768px) {
@@ -150,12 +70,5 @@
     font-size: 12px;
   }
   
-  .reasoning-message {
-    padding: 12px;
-    margin: 8px 0;
-  }
-  
-  .reasoning-message .markdown-content h2 {
-    font-size: 1em;
-  }
+  /* Styles de reasoning supprimés - gérés par ReasoningDropdown.css */
 } 

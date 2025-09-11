@@ -119,7 +119,12 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
   // ✅ Code mort nettoyé pour la production
 
   // 🎯 Callbacks mémorisés pour le hook de chat
-  const handleComplete = useCallback(async (fullContent: string, fullReasoning: string) => {
+  const handleComplete = useCallback(async (
+    fullContent: string, 
+    fullReasoning: string, 
+    toolCalls?: any[], 
+    toolResults?: any[]
+  ) => {
     if (authLoading) {
       logger.dev('[ChatWidget] ⏳ Vérification de l\'authentification en cours...');
       return;
@@ -140,6 +145,8 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
       role: 'assistant',
       content: safeContent,
       reasoning: fullReasoning,
+      tool_calls: toolCalls || [],
+      tool_results: toolResults || [],
       timestamp: new Date().toISOString(),
       channel: 'final'
     });

@@ -261,6 +261,10 @@
   .chat-fullscreen-container:not(.chat-widget-mode) .chat-message-bubble-assistant {
     max-width: 100%;
     width: 100%;
+    background: none !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0;
   }
   
   .chat-message-bubble {
@@ -325,12 +329,20 @@
   .chat-message-bubble-assistant {
     max-width: 100%;
     width: 100%;
+    background: none !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0;
   }
   
   /* Forcer le redimensionnement du contenu */
   .chat-fullscreen-container:not(.chat-widget-mode) .chat-message-bubble-assistant {
     max-width: 100%;
     width: 100%;
+    background: none !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0;
   }
   
   .chat-fullscreen-container:not(.chat-widget-mode) .chat-message-list {
@@ -373,12 +385,20 @@
   .chat-message-bubble-assistant {
     max-width: 100%;
     width: 100%;
+    background: none !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0;
   }
   
   /* Forcer le redimensionnement du contenu */
   .chat-fullscreen-container:not(.chat-widget-mode) .chat-message-bubble-assistant {
     max-width: 100%;
     width: 100%;
+    background: none !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0;
   }
   
   .chat-fullscreen-container:not(.chat-widget-mode) .chat-message-list {
@@ -421,12 +441,20 @@
   .chat-message-bubble-assistant {
     max-width: 100%;
     width: 100%;
+    background: none !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0;
   }
   
   /* Forcer le redimensionnement du contenu */
   .chat-fullscreen-container:not(.chat-widget-mode) .chat-message-bubble-assistant {
     max-width: 100%;
     width: 100%;
+    background: none !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0;
   }
 }
 

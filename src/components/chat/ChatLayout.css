@@ -285,6 +285,10 @@
     .chat-fullscreen-container:not(.chat-widget-mode) .chat-message-bubble-assistant {
       max-width: 100%;
       width: 100%;
+      background: none !important;
+      border: none !important;
+      box-shadow: none !important;
+      padding: 0;
     }
   }
 

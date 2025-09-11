@@ -5,9 +5,12 @@ import { ChatMessage as ChatMessageType } from '@/types/chat';
 import EnhancedMarkdownMessage from './EnhancedMarkdownMessage';
 import ToolCallMessage from './ToolCallMessage';
 import BubbleButtons from './BubbleButtons';
+import ReasoningDropdown from './ReasoningDropdown';
 import { useChatStore } from '@/store/useChatStore';
 import { useStreamingPreferences } from '@/hooks/useStreamingPreferences';
 import StreamingLineByLine from './StreamingLineByLine';
+import './ReasoningDropdown.css';
+import './ToolCallMessage.css';
 
 interface ChatMessageProps {
   message: ChatMessageType;
@@ -133,6 +136,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
     return message.tool_results;
   };
 
+
   return (
     <motion.div 
       className={`chat-message chat-message-${role} ${className || ''}`}
@@ -143,9 +147,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
       <div className={`chat-message-bubble chat-message-bubble-${role}`}>
         {/* 🧠 Raisonnement affiché EN PREMIER pour les messages assistant */}
         {reasoning && role === 'assistant' && (
-          <div className="reasoning-content">
-            <pre>{reasoning}</pre>
-          </div>
+          <ReasoningDropdown reasoning={reasoning} />
         )}
 
         {/* Tool calls - only for assistant messages to avoid duplicates */}
