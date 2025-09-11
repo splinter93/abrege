@@ -342,7 +342,7 @@ async function moveClasseurToTrash(
 }
 
 /**
- * Fonction pour mettre un dossier en corbeille avec tous ses enfants
+ * Fonction pour mettre un dossier en corbeille avec tous ses enfants (OPTIMISÉE)
  */
 async function moveFolderToTrash(
   supabase: any,
@@ -353,34 +353,16 @@ async function moveFolderToTrash(
   try {
     const now = new Date().toISOString();
 
-    // 1. Mettre le dossier en corbeille
-    const { error: folderError } = await supabase
-      .from('folders')
-      .update({
-        is_in_trash: true,
-        trashed_at: now
-      })
-      .eq('id', folderId)
-      .eq('user_id', userId);
+    // ⚡ OPTIMISATION: Transaction en une seule requête avec RPC
+    const { error: rpcError } = await supabase.rpc('move_folder_to_trash', {
+      p_folder_id: folderId,
+      p_user_id: userId,
+      p_trashed_at: now
+    });
 
-    if (folderError) {
-      logApi.error('❌ Erreur mise en corbeille dossier:', folderError);
+    if (rpcError) {
+      logApi.error('❌ Erreur RPC move_folder_to_trash:', rpcError);
       return { success: false, error: 'Failed to move folder to trash' };
-    }
-
-    // 2. Mettre toutes les notes du dossier en corbeille
-    const { error: articlesError } = await supabase
-      .from('articles')
-      .update({
-        is_in_trash: true,
-        trashed_at: now
-      })
-      .eq('folder_id', folderId)
-      .eq('user_id', userId);
-
-    if (articlesError) {
-      logApi.error('❌ Erreur mise en corbeille articles:', articlesError);
-      return { success: false, error: 'Failed to move articles to trash' };
     }
 
     return { success: true };
