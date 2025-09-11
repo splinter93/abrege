@@ -187,10 +187,10 @@ export class RealtimeService {
   private async createChannels(): Promise<void> {
     if (!this.config) return;
 
-    // Canal pour les changements de base de données
-    const dbChannelName = `database:${this.config.userId}`;
-    const dbChannel = supabase
-      .channel(dbChannelName)
+    // Canal pour les changements de base de données (articles)
+    const articlesChannelName = `articles:${this.config.userId}`;
+    const articlesChannel = supabase
+      .channel(articlesChannelName)
       .on(
         'postgres_changes',
         {
@@ -199,10 +199,44 @@ export class RealtimeService {
           table: 'articles',
           filter: `user_id=eq.${this.config.userId}`
         },
-        (payload) => this.handleDatabaseEvent(payload, dbChannelName)
+        (payload) => this.handleDatabaseEvent(payload, articlesChannelName)
       );
 
-    this.channels.set(dbChannelName, dbChannel);
+    this.channels.set(articlesChannelName, articlesChannel);
+
+    // Canal pour les changements de dossiers
+    const foldersChannelName = `folders:${this.config.userId}`;
+    const foldersChannel = supabase
+      .channel(foldersChannelName)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'folders',
+          filter: `user_id=eq.${this.config.userId}`
+        },
+        (payload) => this.handleDatabaseEvent(payload, foldersChannelName)
+      );
+
+    this.channels.set(foldersChannelName, foldersChannel);
+
+    // Canal pour les changements de classeurs
+    const classeursChannelName = `classeurs:${this.config.userId}`;
+    const classeursChannel = supabase
+      .channel(classeursChannelName)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'classeurs',
+          filter: `user_id=eq.${this.config.userId}`
+        },
+        (payload) => this.handleDatabaseEvent(payload, classeursChannelName)
+      );
+
+    this.channels.set(classeursChannelName, classeursChannel);
 
     // Canal pour l'éditeur (si noteId fourni)
     if (this.config.noteId) {
@@ -251,13 +285,47 @@ export class RealtimeService {
   private handleDatabaseEvent(payload: Record<string, unknown>, channelName: string): void {
     if (!this.config) return;
 
+    const eventType = String(payload.eventType || 'unknown').toLowerCase();
+    const tableName = channelName.split(':')[0]; // articles, folders, classeurs
+    
+    // Mapper les événements PostgreSQL vers les événements du dispatcher
+    let mappedEventType: string;
+    let mappedPayload: Record<string, unknown>;
+
+    switch (tableName) {
+      case 'articles':
+        mappedEventType = `note.${eventType}`;
+        mappedPayload = payload.new || payload.old || {};
+        break;
+      case 'folders':
+        mappedEventType = `folder.${eventType}`;
+        mappedPayload = payload.new || payload.old || {};
+        break;
+      case 'classeurs':
+        mappedEventType = `classeur.${eventType}`;
+        mappedPayload = payload.new || payload.old || {};
+        break;
+      default:
+        mappedEventType = `database.${eventType}`;
+        mappedPayload = payload;
+    }
+
     const event: RealtimeEvent<Record<string, unknown>> = {
-      type: `database.${String(payload.eventType || 'unknown').toLowerCase()}`,
-      payload,
+      type: mappedEventType,
+      payload: mappedPayload,
       timestamp: Date.now(),
       source: 'database',
       channel: channelName
     };
+
+    if (this.config.debug) {
+      logger.info(LogCategory.EDITOR, '[RealtimeService] Event database:', {
+        tableName,
+        eventType,
+        mappedEventType,
+        payload: mappedPayload
+      });
+    }
 
     // Dispatcher vers le store
     handleRealtimeEvent(event, this.config.debug);
