@@ -1,0 +1,520 @@
+/* ========================================
+   CHAT MARKDOWN - STYLES CENTRALISÉS
+   ======================================== */
+
+/* ========================================
+   STYLES DE BASE POUR LE MARKDOWN
+   ======================================== */
+
+.chat-markdown {
+  font-size: var(--font-size-base, 1rem);
+  line-height: var(--line-height-relaxed, 1.75);
+  color: var(--color-text-primary, #f8f9fa);
+  font-family: var(--font-chat-text, 'Inter', sans-serif);
+  font-weight: var(--font-weight-normal, 400);
+  letter-spacing: -0.01em;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ========================================
+   TITRES - HIÉRARCHIE CLAIRE ET MODERNE
+   ======================================== */
+
+.chat-markdown h1 {
+  font-size: var(--font-size-3xl, 1.875rem);
+  font-weight: var(--font-weight-bold, 700);
+  margin: var(--spacing-2xl, 2rem) 0 var(--spacing-xl, 1.5rem) 0;
+  line-height: 1.2;
+  color: var(--color-text-primary, #f8f9fa);
+  letter-spacing: -0.02em;
+  position: relative;
+}
+
+.chat-markdown h1::after {
+  content: '';
+  position: absolute;
+  bottom: calc(-1 * var(--spacing-sm, 0.5rem));
+  left: 0;
+  width: var(--spacing-2xl, 2rem);
+  height: 3px;
+  background: currentColor;
+  border-radius: 2px;
+  opacity: 0.6;
+}
+
+.chat-markdown h2 {
+  font-size: var(--font-size-2xl, 1.5rem);
+  font-weight: var(--font-weight-semibold, 600);
+  margin: var(--spacing-xl, 1.5rem) 0 var(--spacing-lg, 1rem) 0;
+  line-height: 1.3;
+  color: var(--color-text-primary, #f8f9fa);
+  letter-spacing: -0.015em;
+  position: relative;
+}
+
+.chat-markdown h2::after {
+  content: '';
+  position: absolute;
+  bottom: calc(-1 * var(--spacing-sm, 0.5rem));
+  left: 0;
+  width: var(--spacing-xl, 1.5rem);
+  height: 2px;
+  background: currentColor;
+  border-radius: 1px;
+  opacity: 0.4;
+}
+
+.chat-markdown h3 {
+  font-size: var(--font-size-xl, 1.25rem);
+  font-weight: var(--font-weight-semibold, 600);
+  margin: var(--spacing-xl, 1.5rem) 0 var(--spacing-lg, 1rem) 0;
+  line-height: 1.4;
+  color: var(--color-text-primary, #f8f9fa);
+  letter-spacing: -0.01em;
+}
+
+.chat-markdown h4 {
+  font-size: var(--font-size-lg, 1.125rem);
+  font-weight: var(--font-weight-semibold, 600);
+  margin: var(--spacing-lg, 1rem) 0 var(--spacing-md, 0.75rem) 0;
+  line-height: 1.4;
+  color: var(--color-text-primary, #f8f9fa);
+}
+
+.chat-markdown h5 {
+  font-size: var(--font-size-base, 1rem);
+  font-weight: var(--font-weight-semibold, 600);
+  margin: var(--spacing-lg, 1rem) 0 var(--spacing-sm, 0.5rem) 0;
+  line-height: 1.4;
+  color: var(--color-text-primary, #f8f9fa);
+  opacity: 0.9;
+}
+
+.chat-markdown h6 {
+  font-size: var(--font-size-sm, 0.875rem);
+  font-weight: var(--font-weight-semibold, 600);
+  margin: var(--spacing-lg, 1rem) 0 var(--spacing-sm, 0.5rem) 0;
+  line-height: 1.4;
+  color: var(--color-text-primary, #f8f9fa);
+  opacity: 0.8;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* ========================================
+   PARAGRAPHES ET TEXTE - LISIBILITÉ OPTIMISÉE
+   ======================================== */
+
+.chat-markdown p {
+  margin: 0 0 var(--spacing-xl, 1.5rem) 0;
+  line-height: var(--line-height-relaxed, 1.75);
+  color: var(--color-text-primary, #f8f9fa);
+}
+
+.chat-markdown p:last-child {
+  margin-bottom: 0;
+}
+
+.chat-markdown strong {
+  font-weight: var(--font-weight-semibold, 600);
+  color: var(--color-text-primary, #f8f9fa);
+  letter-spacing: -0.005em;
+}
+
+.chat-markdown em {
+  font-style: italic;
+  color: var(--color-text-primary, #f8f9fa);
+  opacity: 0.9;
+}
+
+/* ========================================
+   CODE INLINE - DESIGN SUBTIL
+   ======================================== */
+
+.chat-markdown code {
+  background: var(--glass-bg-subtle);
+  padding: 3px 8px;
+  border-radius: var(--radius-md, 6px);
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-size: var(--font-size-sm, 0.875rem);
+  color: var(--color-text-primary, #f8f9fa);
+  border: 1px solid var(--glass-border-soft);
+  font-weight: var(--font-weight-medium, 500);
+  letter-spacing: 0.01em;
+  backdrop-filter: var(--glass-blur-light);
+  -webkit-backdrop-filter: var(--glass-blur-light);
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--glass-shadow-subtle);
+}
+
+.chat-markdown code::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--glass-gradient-subtle);
+  border-radius: var(--radius-md);
+  opacity: 0.6;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ========================================
+   LISTES - ESPACEMENT OPTIMISÉ
+   ======================================== */
+
+.chat-markdown ul,
+.chat-markdown ol {
+  margin: var(--spacing-xl, 1.5rem) 0;
+  padding-left: var(--spacing-xl, 1.5rem);
+  line-height: var(--line-height-relaxed);
+}
+
+.chat-markdown li {
+  margin: var(--spacing-sm, 0.5rem) 0;
+  line-height: var(--line-height-relaxed);
+  color: inherit;
+}
+
+.chat-markdown ul ul,
+.chat-markdown ol ol,
+.chat-markdown ul ol,
+.chat-markdown ol ul {
+  margin: var(--spacing-sm, 0.5rem) 0;
+}
+
+.chat-markdown ul {
+  list-style-type: none;
+}
+
+.chat-markdown ul li::before {
+  content: '•';
+  color: currentColor;
+  font-weight: var(--font-weight-bold);
+  display: inline-block;
+  width: 1em;
+  margin-left: -1em;
+  font-size: 18px;
+  line-height: 1;
+  vertical-align: middle;
+  opacity: 0.8;
+}
+
+.chat-markdown ol {
+  list-style-type: decimal;
+  counter-reset: item;
+}
+
+.chat-markdown ol li {
+  counter-increment: item;
+  position: relative;
+}
+
+.chat-markdown ol li::marker {
+  color: currentColor;
+  font-weight: var(--font-weight-semibold);
+  opacity: 0.8;
+}
+
+/* ========================================
+   CITATIONS - DESIGN ÉLÉGANT
+   ======================================== */
+
+.chat-markdown blockquote {
+  margin: var(--spacing-xl, 1.5rem) 0;
+  padding: var(--spacing-xl, 1.5rem) var(--spacing-xl, 1.5rem);
+  border-left: 4px solid var(--color-accent-primary);
+  background: var(--glass-bg-subtle);
+  border-radius: 0 var(--radius-xl, 12px) var(--radius-xl, 12px) 0;
+  font-style: normal;
+  color: inherit;
+  position: relative;
+  backdrop-filter: var(--glass-blur-medium);
+  -webkit-backdrop-filter: var(--glass-blur-medium);
+  border: 1px solid var(--glass-border-soft);
+  box-shadow: var(--glass-shadow-soft);
+}
+
+.chat-markdown blockquote::before {
+  content: '"';
+  font-size: 32px;
+  position: absolute;
+  top: var(--spacing-sm, 0.5rem);
+  left: var(--spacing-lg, 1rem);
+  opacity: 0.2;
+  color: currentColor;
+  font-family: Georgia, serif;
+}
+
+.chat-markdown blockquote p {
+  margin: 0;
+  font-size: var(--font-size-base, 1rem);
+  line-height: 1.6;
+}
+
+/* ========================================
+   LIENS - STYLE MODERNE
+   ======================================== */
+
+.chat-markdown a {
+  color: currentColor;
+  text-decoration: none;
+  transition: all var(--transition-normal, 0.2s ease);
+  opacity: 0.9;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  padding-bottom: 1px;
+}
+
+.chat-markdown a:hover {
+  color: currentColor;
+  opacity: 1;
+  border-bottom-color: currentColor;
+}
+
+/* ========================================
+   LIGNE HORIZONTALE - DESIGN SUBTIL
+   ======================================== */
+
+.chat-markdown hr {
+  border: none;
+  border-top: 1px solid var(--glass-border-soft);
+  margin: var(--spacing-2xl, 2rem) 0;
+  position: relative;
+}
+
+.chat-markdown hr::after {
+  content: '✦';
+  position: absolute;
+  top: calc(-1 * var(--spacing-sm, 0.5rem));
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--color-bg-primary);
+  padding: 0 var(--spacing-xl, 1.5rem);
+  font-size: var(--font-size-sm, 0.875rem);
+  opacity: 0.4;
+  color: currentColor;
+}
+
+/* ========================================
+   TABLEAUX - DESIGN MODERNE AVEC COINS ARRONDIS
+   ======================================== */
+
+.chat-markdown table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: var(--spacing-xl, 1.5rem) 0;
+  font-size: var(--font-size-sm, 0.875rem);
+  line-height: 1.5;
+  background: var(--glass-bg-subtle);
+  border-radius: var(--radius-xl, 12px);
+  overflow: hidden;
+  border: 1px solid var(--glass-border-soft);
+  backdrop-filter: var(--glass-blur-medium);
+  -webkit-backdrop-filter: var(--glass-blur-medium);
+  position: relative;
+  box-shadow: var(--glass-shadow-medium);
+}
+
+.chat-markdown table::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--glass-gradient-subtle);
+  opacity: 0.8;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.chat-markdown thead {
+  background: transparent;
+}
+
+.chat-markdown th {
+  padding: var(--spacing-lg, 1rem) var(--spacing-xl, 1.5rem);
+  text-align: left;
+  font-weight: var(--font-weight-semibold);
+  color: inherit;
+  border-bottom: 1px solid var(--glass-border-soft);
+  background: var(--glass-bg-soft);
+  font-size: var(--font-size-xs, 0.75rem);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  position: relative;
+  z-index: 1;
+}
+
+.chat-markdown th::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--glass-gradient-subtle);
+  opacity: 0.6;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.chat-markdown td {
+  padding: var(--spacing-lg, 1rem) var(--spacing-xl, 1.5rem);
+  text-align: left;
+  border-bottom: 1px solid var(--glass-border-subtle);
+  color: inherit;
+  vertical-align: top;
+  position: relative;
+  z-index: 1;
+  transition: all var(--transition-normal, 0.2s ease);
+}
+
+.chat-markdown tr:last-child td {
+  border-bottom: none;
+}
+
+.chat-markdown tr:hover td {
+  background: var(--glass-bg-soft);
+}
+
+/* ========================================
+   IMAGES - DESIGN RESPONSIVE
+   ======================================== */
+
+.chat-markdown img {
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--radius-lg, 8px);
+  margin: var(--spacing-xl, 1.5rem) 0;
+  box-shadow: var(--glass-shadow-lg);
+  border: 1px solid var(--glass-border-soft);
+}
+
+/* ========================================
+   RESPONSIVE DESIGN
+   ======================================== */
+
+@media (max-width: 768px) {
+  .chat-markdown {
+    font-size: var(--font-size-sm, 0.875rem);
+  }
+  
+  .chat-markdown h1 { 
+    font-size: var(--font-size-2xl, 1.5rem); 
+    margin: var(--spacing-xl, 1.5rem) 0 var(--spacing-lg, 1rem) 0;
+  }
+  
+  .chat-markdown h2 { 
+    font-size: var(--font-size-xl, 1.25rem); 
+    margin: var(--spacing-lg, 1rem) 0 var(--spacing-md, 0.75rem) 0;
+  }
+  
+  .chat-markdown h3 { 
+    font-size: var(--font-size-lg, 1.125rem); 
+    margin: var(--spacing-lg, 1rem) 0 var(--spacing-sm, 0.5rem) 0;
+  }
+  
+  .chat-markdown p {
+    margin: 0 0 var(--spacing-lg, 1rem) 0;
+  }
+  
+  .chat-markdown ul,
+  .chat-markdown ol {
+    margin: var(--spacing-lg, 1rem) 0;
+    padding-left: var(--spacing-lg, 1rem);
+  }
+  
+  .chat-markdown blockquote {
+    margin: var(--spacing-lg, 1rem) 0;
+    padding: var(--spacing-lg, 1rem);
+  }
+  
+  .chat-markdown table {
+    margin: var(--spacing-lg, 1rem) 0;
+    font-size: var(--font-size-xs, 0.75rem);
+  }
+  
+  .chat-markdown th,
+  .chat-markdown td {
+    padding: var(--spacing-sm, 0.5rem) var(--spacing-md, 0.75rem);
+  }
+}
+
+@media (max-width: 480px) {
+  .chat-markdown {
+    font-size: var(--font-size-xs, 0.75rem);
+  }
+  
+  .chat-markdown h1 { 
+    font-size: var(--font-size-xl, 1.25rem); 
+  }
+  
+  .chat-markdown h2 { 
+    font-size: var(--font-size-lg, 1.125rem); 
+  }
+  
+  .chat-markdown h3 { 
+    font-size: var(--font-size-base, 1rem); 
+  }
+  
+  .chat-markdown p {
+    margin: 0 0 var(--spacing-md, 0.75rem) 0;
+  }
+  
+  .chat-markdown ul,
+  .chat-markdown ol {
+    margin: var(--spacing-md, 0.75rem) 0;
+    padding-left: var(--spacing-md, 0.75rem);
+  }
+  
+  .chat-markdown blockquote {
+    margin: var(--spacing-md, 0.75rem) 0;
+    padding: var(--spacing-md, 0.75rem);
+  }
+}
+
+/* ========================================
+   ACCESSIBILITÉ
+   ======================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  .chat-markdown a {
+    transition: none;
+  }
+  
+  .chat-markdown td {
+    transition: none;
+  }
+}
+
+/* ========================================
+   PRINT STYLES
+   ======================================== */
+
+@media print {
+  .chat-markdown {
+    color: #000;
+  }
+  
+  .chat-markdown code {
+    background: #f5f5f5;
+    color: #000;
+    border: 1px solid #ddd;
+  }
+  
+  .chat-markdown blockquote {
+    background: #f9f9f9;
+    border-left-color: #ccc;
+  }
+  
+  .chat-markdown table {
+    background: #fff;
+    border: 1px solid #ccc;
+  }
+}

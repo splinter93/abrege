@@ -17,6 +17,7 @@
 @import './ChatSidebar.css';
 @import './ChatInput.css';
 @import './ChatMessage.css';
+@import './ChatMarkdown.css';
 @import './AudioRecorder.css';
 /* Mermaid styles are now handled via themeVariables in CodeBlockWithCopy.ts */
 
@@ -57,20 +58,21 @@
   align-items: center;
   gap: 6px;
   padding: 8px 12px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid var(--glass-border-soft);
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--glass-bg-subtle);
   color: rgba(255, 255, 255, 0.8);
   font-size: 12px;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
-  backdrop-filter: blur(10px);
+  backdrop-filter: var(--glass-blur-medium);
+  -webkit-backdrop-filter: var(--glass-blur-medium);
 }
 
 .harmony-toggle-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.3);
+  background: var(--glass-bg-soft);
+  border-color: var(--glass-border-medium);
   color: rgba(255, 255, 255, 0.9);
   transform: translateY(-1px);
 }
