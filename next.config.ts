@@ -9,7 +9,7 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
   trailingSlash: false,
-  serverExternalPackages: ['@supabase/supabase-js', 'puppeteer', 'puppeteer-extra', 'puppeteer-extra-plugin-stealth'],
+  serverExternalPackages: ['@supabase/supabase-js'],
   webpack: (config: any, options: any) => {
     // Resolve '@' to the 'src' directory
     config.resolve.alias = {
@@ -20,7 +20,7 @@ const nextConfig = {
     // Optimize for production builds
     if (options.isServer) {
       config.externals = config.externals || [];
-      config.externals.push('@supabase/supabase-js', 'puppeteer', 'puppeteer-extra', 'puppeteer-extra-plugin-stealth');
+      config.externals.push('@supabase/supabase-js');
     }
     
     return config;
