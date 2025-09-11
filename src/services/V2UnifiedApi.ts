@@ -502,40 +502,12 @@ export class V2UnifiedApi {
     const startTime = Date.now();
     
     try {
-      // ⚡ OPTIMISTIC UI: Créer le dossier IMMÉDIATEMENT dans le store
-      const { useFileSystemStore } = await import('@/store/useFileSystemStore');
-      const store = useFileSystemStore.getState();
-      
-      // Générer un ID temporaire pour l'optimistic UI
-      const tempId = `temp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-      
-      // Créer le dossier optimiste
-      const optimisticFolder = {
-        id: tempId,
+      console.log(`[V2UnifiedApi] 🚀 Création dossier directe (pas d'optimistic UI):`, {
         name: folderData.name,
-        classeur_id: folderData.classeur_id,
-        parent_id: folderData.parent_id || null,
-        user_id: '', // Sera rempli par l'API
-        slug: '', // Sera généré par l'API
-        position: 0, // Sera calculé par l'API
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        is_in_trash: false,
-        trashed_at: null
-      };
+        classeurId: folderData.classeur_id
+      });
       
-      // Ajouter le dossier au store IMMÉDIATEMENT
-      store.addFolder(optimisticFolder);
-      
-      if (process.env.NODE_ENV === 'development') {
-        logger.dev(`[V2UnifiedApi] ⚡ Dossier créé optimiste:`, {
-          tempId,
-          name: folderData.name,
-          classeurId: folderData.classeur_id
-        });
-      }
-      
-      // 🚀 Appel vers l'endpoint API V2 (en arrière-plan)
+      // 🚀 Appel direct vers l'endpoint API V2
       const headers = await this.getAuthHeaders();
       const response = await fetch(this.buildUrl('/api/v2/folder/create'), {
         method: 'POST',
@@ -544,9 +516,6 @@ export class V2UnifiedApi {
       });
 
       if (!response.ok) {
-        // 🔄 ROLLBACK: Supprimer le dossier optimiste en cas d'erreur
-        store.removeFolder(tempId);
-        
         const errorText = await response.text();
         throw new Error(`HTTP ${response.status}: ${response.statusText} - ${errorText}`);
       }
@@ -554,56 +523,19 @@ export class V2UnifiedApi {
       const result = await response.json();
 
       if (!result.success) {
-        // 🔄 ROLLBACK: Supprimer le dossier optimiste en cas d'erreur
-        store.removeFolder(tempId);
         throw new Error(result.error || 'Erreur lors de la création du dossier');
       }
 
-      // ✅ SUCCÈS: Remplacer le dossier optimiste par le vrai dossier
-      if (process.env.NODE_ENV === 'development') {
-        logger.dev(`[V2UnifiedApi] 🔍 AVANT remplacement - État du store:`, {
-          tempId,
-          realId: result.folder.id,
-          storeFolders: Object.keys(store.folders),
-          tempExists: !!store.folders[tempId],
-          realExists: !!store.folders[result.folder.id],
-          tempFolder: store.folders[tempId],
-          realFolder: result.folder
-        });
-      }
-      
-      // ✅ SUCCÈS: Remplacer le dossier optimiste par le vrai dossier
-      // Supprimer d'abord le dossier temporaire
-      store.removeFolder(tempId);
-      
-      // Ajouter le dossier réel
+      // ✅ SUCCÈS: Ajouter le dossier au store
+      const { useFileSystemStore } = await import('@/store/useFileSystemStore');
+      const store = useFileSystemStore.getState();
       store.addFolder(result.folder);
       
-      if (process.env.NODE_ENV === 'development') {
-        logger.dev(`[V2UnifiedApi] 🔍 APRÈS remplacement - Vérification finale:`, {
-          tempId,
-          realId: result.folder.id,
-          storeFolders: Object.keys(store.folders),
-          tempExists: !!store.folders[tempId],
-          realExists: !!store.folders[result.folder.id],
-          realFolder: store.folders[result.folder.id]
-        });
-      }
-      
-      if (process.env.NODE_ENV === 'development') {
-        logger.dev(`[V2UnifiedApi] 🔍 APRÈS ajout réel - État du store final:`, {
-          tempId,
-          realId: result.folder.id,
-          storeFolders: Object.keys(store.folders),
-          tempExists: !!store.folders[tempId],
-          realExists: !!store.folders[result.folder.id]
-        });
-      }
-
-      // ⚡ OPTIMISTIC UI: Pas de polling nécessaire, le store est déjà à jour
-      if (process.env.NODE_ENV === 'development') {
-        logger.dev(`[V2UnifiedApi] ✅ Dossier créé avec optimistic UI (pas de polling)`);
-      }
+      console.log(`[V2UnifiedApi] ✅ Dossier créé et ajouté au store:`, {
+        realId: result.folder.id,
+        name: result.folder.name,
+        storeFolders: Object.keys(store.folders)
+      });
 
       const duration = Date.now() - startTime;
       return {
@@ -614,6 +546,7 @@ export class V2UnifiedApi {
 
     } catch (error) {
       const duration = Date.now() - startTime;
+      logger.error('[V2UnifiedApi] ❌ Erreur création dossier', { folderData, duration }, error instanceof Error ? error : new Error(String(error)));
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Erreur inconnue',
