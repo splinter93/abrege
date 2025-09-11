@@ -29,7 +29,10 @@ export function handleRealtimeEvent(event: { type: string, payload: any, timesta
   switch (type) {
     // Notes
     case 'note.created':
-      store.addNote(payload);
+      // Vérifier si la note n'existe pas déjà (éviter les doublons)
+      if (!store.notes[payload.id]) {
+        store.addNote(payload);
+      }
       break;
     case 'note.deleted':
       store.removeNote(payload.id);
@@ -49,7 +52,10 @@ export function handleRealtimeEvent(event: { type: string, payload: any, timesta
       
     // Dossiers
     case 'folder.created':
-      store.addFolder(payload);
+      // Vérifier si le dossier n'existe pas déjà (éviter les doublons)
+      if (!store.folders[payload.id]) {
+        store.addFolder(payload);
+      }
       break;
     case 'folder.deleted':
       store.removeFolder(payload.id);
@@ -66,7 +72,10 @@ export function handleRealtimeEvent(event: { type: string, payload: any, timesta
       
     // Classeurs
     case 'classeur.created':
-      store.addClasseur(payload);
+      // Vérifier si le classeur n'existe pas déjà (éviter les doublons)
+      if (!store.classeurs[payload.id]) {
+        store.addClasseur(payload);
+      }
       break;
     case 'classeur.deleted':
       store.removeClasseur(payload.id);
