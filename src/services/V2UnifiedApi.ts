@@ -562,6 +562,18 @@ export class V2UnifiedApi {
       // ✅ SUCCÈS: Remplacer le dossier optimiste par le vrai dossier
       store.removeFolder(tempId);
       store.addFolder(result.folder);
+      
+      // Marquer l'opération comme terminée pour permettre le realtime
+      const { markOperationComplete } = await import('@/realtime/dispatcher');
+      markOperationComplete('folder', result.folder.id);
+      
+      if (process.env.NODE_ENV === 'development') {
+        logger.dev(`[V2UnifiedApi] ✅ Dossier optimiste remplacé par le vrai:`, {
+          tempId,
+          realId: result.folder.id,
+          name: result.folder.name
+        });
+      }
 
       // ⚡ OPTIMISTIC UI: Pas de polling nécessaire, le store est déjà à jour
       if (process.env.NODE_ENV === 'development') {

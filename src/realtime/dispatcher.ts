@@ -8,6 +8,23 @@
 
 import { useFileSystemStore } from '@/store/useFileSystemStore';
 
+// Set pour tracker les opérations en cours (éviter les doublons realtime)
+const pendingOperations = new Set<string>();
+
+/**
+ * Marquer une opération comme en cours
+ */
+export function markOperationPending(type: string, id: string): void {
+  pendingOperations.add(`${type}:${id}`);
+}
+
+/**
+ * Marquer une opération comme terminée
+ */
+export function markOperationComplete(type: string, id: string): void {
+  pendingOperations.delete(`${type}:${id}`);
+}
+
 /**
  * handleRealtimeEvent - Route les événements WebSocket vers le store Zustand
  *
@@ -53,7 +70,7 @@ export function handleRealtimeEvent(event: { type: string, payload: any, timesta
     // Dossiers
     case 'folder.created':
       // Vérifier si le dossier n'existe pas déjà (éviter les doublons)
-      if (!store.folders[payload.id]) {
+      if (!store.folders[payload.id] && !pendingOperations.has(`folder:${payload.id}`)) {
         store.addFolder(payload);
       }
       break;

@@ -204,22 +204,22 @@ export class RealtimeService {
 
     this.channels.set(articlesChannelName, articlesChannel);
 
-    // Canal pour les changements de dossiers
-    const foldersChannelName = `folders:${this.config.userId}`;
-    const foldersChannel = supabase
-      .channel(foldersChannelName)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'folders',
-          filter: `user_id=eq.${this.config.userId}`
-        },
-        (payload) => this.handleDatabaseEvent(payload, foldersChannelName)
-      );
+    // Canal pour les changements de dossiers (désactivé pour éviter les doublons avec optimistic UI)
+    // const foldersChannelName = `folders:${this.config.userId}`;
+    // const foldersChannel = supabase
+    //   .channel(foldersChannelName)
+    //   .on(
+    //     'postgres_changes',
+    //     {
+    //       event: '*',
+    //       schema: 'public',
+    //       table: 'folders',
+    //       filter: `user_id=eq.${this.config.userId}`
+    //     },
+    //     (payload) => this.handleDatabaseEvent(payload, foldersChannelName)
+    //   );
 
-    this.channels.set(foldersChannelName, foldersChannel);
+    // this.channels.set(foldersChannelName, foldersChannel);
 
     // Canal pour les changements de classeurs
     const classeursChannelName = `classeurs:${this.config.userId}`;
