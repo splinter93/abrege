@@ -49,9 +49,18 @@
   --font-chat-text: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
   --font-chat-headings: 'Noto Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
   
+  /* Variables de compatibilité pour le chat */
+  --chat-font-family: var(--font-chat-text);
+  --chat-font-family-headings: var(--font-chat-headings);
+  
   /* Polices éditeur - Noto Sans pour titres, Inter pour texte */
   --font-editor-text: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
   --font-editor-headings: 'Noto Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+  
+  /* Variables de compatibilité pour l'éditeur */
+  --editor-font-family: var(--font-editor-text);
+  --editor-font-family-headings: var(--font-editor-headings);
+  --editor-font-family-body: var(--font-editor-text);
   
   /* Police monospace optimisée */
   --font-mono: 'JetBrains Mono', 'SF Mono', 'Monaco', 'Cascadia Code', 'Roboto Mono', 'Consolas', monospace;
@@ -135,9 +144,39 @@
   --line-height-relaxed: 1.75;
   
   /* ========================================
-     GLASSMORPHISM - RÉFÉRENCES VERS SYSTÈME CENTRALISÉ
+     GLASSMORPHISM - VARIABLES CENTRALISÉES
      ======================================== */
-  /* Les variables glassmorphism sont maintenant centralisées dans glassmorphism-system.css */
+  
+  /* Backgrounds glassmorphism - Hiérarchie claire */
+  --glass-bg-base: rgba(16, 16, 20, 0.5); /* Plus sombre et moins transparent pour la base */
+  --glass-bg-subtle: rgba(30, 30, 35, 0.5); /* Légèrement plus clair pour les éléments secondaires */
+  --glass-bg-soft: rgba(40, 40, 45, 0.6);
+  --glass-bg-medium: rgba(50, 50, 55, 0.7);
+  --glass-bg-strong: rgba(60, 60, 65, 0.8);
+  
+  /* Bordures glassmorphism - Progression harmonieuse */
+  --glass-border-subtle: rgba(255, 255, 255, 0.07);
+  --glass-border-soft: rgba(255, 255, 255, 0.1);
+  --glass-border-medium: rgba(255, 255, 255, 0.15);
+  --glass-border-strong: rgba(255, 255, 255, 0.2);
+  --glass-border-focus: rgba(255, 255, 255, 0.25);
+  
+  /* Effets de flou - Optimisés pour les performances */
+  --glass-blur-light: blur(8px);
+  --glass-blur-medium: blur(16px);
+  --glass-blur-strong: blur(24px);
+  --glass-blur-heavy: blur(32px);
+  
+  /* Ombres glassmorphism - Cohérentes */
+  --glass-shadow-subtle: 0 2px 4px rgba(0, 0, 0, 0.1);
+  --glass-shadow-soft: 0 4px 8px rgba(0, 0, 0, 0.15);
+  --glass-shadow-medium: 0 6px 16px rgba(0, 0, 0, 0.2);
+  --glass-shadow-strong: 0 10px 30px rgba(0, 0, 0, 0.25);
+  
+  /* Dégradés glassmorphism - Subtils */
+  --glass-gradient-subtle: linear-gradient(135deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.02) 100%);
+  --glass-gradient-soft: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.03) 100%);
+  --glass-gradient-medium: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.04) 100%);
 }
 
 /* ========================================
@@ -231,6 +270,30 @@
   --chat-line-height-tight: var(--line-height-tight);
   --chat-line-height-normal: var(--line-height-normal);
   --chat-line-height-relaxed: var(--line-height-relaxed);
+  
+  /* Variables spécifiques au chat manquantes */
+  --chat-bg-primary: var(--color-bg-primary);
+  --chat-bg-secondary: var(--color-bg-secondary);
+  --chat-bg-tertiary: var(--color-bg-tertiary);
+  --chat-bg-elevated: var(--color-bg-elevated);
+  --chat-bg-hover: var(--color-bg-hover);
+  
+  --chat-text-primary: var(--color-text-primary);
+  --chat-text-secondary: var(--color-text-secondary);
+  --chat-text-muted: var(--color-text-muted);
+  
+  --chat-accent: var(--color-accent);
+  --chat-accent-primary: var(--color-accent-primary);
+  --chat-accent-hover: var(--color-accent-hover);
+  
+  --chat-success: var(--color-success);
+  --chat-warning: var(--color-warning);
+  --chat-error: var(--color-error);
+  --chat-info: var(--color-info);
+  
+  --chat-border-primary: var(--color-border-primary);
+  --chat-border-secondary: var(--color-border-secondary);
+  --chat-border-focus: var(--color-border-focus);
 }
 
 /* ========================================

@@ -39,8 +39,8 @@
   transition: width var(--chat-transition-slow), transform var(--chat-transition-slow);
   overflow: hidden;
   flex-shrink: 0;
-  background-image: var(--glass-gradient-subtle);
-  box-shadow: var(--glass-shadow-soft);
+  background-image: var(--glass-gradient-soft);
+  box-shadow: var(--glass-shadow-medium);
 }
 
 .chat-sidebar.closed {

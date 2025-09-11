@@ -22,10 +22,10 @@
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  background: rgba(255, 255, 255, 0.03);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--glass-bg-subtle);
+  backdrop-filter: var(--glass-blur-strong);
+  -webkit-backdrop-filter: var(--glass-blur-strong);
+  border: 1px solid var(--glass-border-soft);
   padding: 8px 12px;
   border-radius: 12px;
   cursor: pointer;
@@ -42,17 +42,17 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.01) 100%);
+  background: var(--glass-gradient-soft);
   opacity: 0;
   transition: opacity 0.25s ease;
   pointer-events: none;
 }
 
 .tool-call-header:hover {
-  background: rgba(255, 255, 255, 0.06);
-  border-color: rgba(255, 255, 255, 0.15);
+  background: var(--glass-bg-soft);
+  border-color: var(--glass-border-medium);
   transform: translateY(-1px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--glass-shadow-medium);
 }
 
 .tool-call-header:hover::before {
@@ -202,12 +202,12 @@
 
 .tool-call-content {
   padding: 4px 12px 8px;
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--glass-border-subtle);
   border-top: 0;
   border-radius: 0 0 12px 12px;
-  background: rgba(255, 255, 255, 0.015);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  background: var(--glass-bg-base);
+  backdrop-filter: var(--glass-blur-strong);
+  -webkit-backdrop-filter: var(--glass-blur-strong);
   margin-top: -1px;
 }
 
@@ -246,21 +246,21 @@
 
 .tool-call-arguments pre,
 .tool-call-result-content {
-  background: rgba(255, 255, 255, 0.02);
+  background: rgba(0, 0, 0, 0.2);
   border-radius: 8px;
   padding: 8px;
   font-size: 11px;
   color: rgba(255, 255, 255, 0.65);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid var(--glass-border-subtle);
+  backdrop-filter: var(--glass-blur-light);
+  -webkit-backdrop-filter: var(--glass-blur-light);
   transition: all 0.2s ease;
 }
 
 .tool-call-arguments pre:hover,
 .tool-call-result-content:hover {
-  background: rgba(255, 255, 255, 0.04);
-  border-color: rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.3);
+  border-color: var(--glass-border-soft);
 }
 
 .tool-call-arguments pre {

@@ -1,3 +1,8 @@
+/* Import des polices Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap');
+
 /* Import des variables unifiées en premier */
 @import '../styles/variables-unified.css';
 
@@ -15,14 +20,14 @@
 
 :root {
   /* FALLBACKS - Éviter le flash blanc */
-  --background: #141414;
-  --foreground: #f5f5f5;
+  --background: var(--color-bg-primary, #0f0f12);
+  --foreground: var(--color-text-primary, #f8f9fa);
 }
 
 /* Réassigner après chargement complet */
 :root {
-  --background: var(--bg-main, #141414);
-  --foreground: var(--text-1, #f5f5f5);
+  --background: var(--color-bg-primary, #0f0f12);
+  --foreground: var(--color-text-primary, #f8f9fa);
 }
 
 @theme inline {
@@ -34,19 +39,34 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: var(--bg-main, #141414);
-    --foreground: var(--text-1, #f5f5f5);
+    --background: var(--color-bg-primary, #0f0f12);
+    --foreground: var(--color-text-primary, #f8f9fa);
   }
 }
 
 body {
-  background: var(--color-bg-primary);
-  color: var(--color-text-primary);
-  font-family: var(--font-base);
-  margin: 0;
+  color: var(--color-text-primary, #f8f9fa);
+  background: var(--color-bg-primary, #0f0f12);
+  height: 100vh;
+}
+
+@media (prefers-color-scheme: dark) {
+  body {
+    background-color: var(--color-bg-primary, #0f0f12);
+    background-image: radial-gradient(at 27% 37%, hsla(215, 98%, 11%, 0.3) 0px, transparent 50%),
+      radial-gradient(at 97% 21%, hsla(125, 98%, 11%, 0.3) 0px, transparent 50%),
+      radial-gradient(at 52% 99%, hsla(355, 98%, 11%, 0.3) 0px, transparent 50%),
+      radial-gradient(at 10% 29%, hsla(256, 96%, 11%, 0.3) 0px, transparent 50%),
+      radial-gradient(at 97% 96%, hsla(38, 60%, 11%, 0.3) 0px, transparent 50%),
+      radial-gradient(at 33% 50%, hsla(222, 67%, 11%, 0.3) 0px, transparent 50%),
+      radial-gradient(at 79% 53%, hsla(343, 68%, 11%, 0.3) 0px, transparent 50%);
+    background-attachment: fixed;
+  }
+}
+
+/* Remove default margin */
+body, html {
   padding: 0;
-  min-height: 100vh;
-  overflow-x: hidden;
 }
 
 /* Empêcher le scroll global quand on est dans le chat */

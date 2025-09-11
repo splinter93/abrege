@@ -8,38 +8,7 @@
 /* ========================================
    VARIABLES GLASSMORPHISM UNIFIÉES
    ======================================== */
-:root {
-  /* Backgrounds glassmorphism - Hiérarchie claire */
-  --glass-bg-base: rgba(255, 255, 255, 0.03);
-  --glass-bg-subtle: rgba(255, 255, 255, 0.05);
-  --glass-bg-soft: rgba(255, 255, 255, 0.08);
-  --glass-bg-medium: rgba(255, 255, 255, 0.12);
-  --glass-bg-strong: rgba(255, 255, 255, 0.15);
-  
-  /* Bordures glassmorphism - Progression harmonieuse */
-  --glass-border-subtle: rgba(255, 255, 255, 0.06);
-  --glass-border-soft: rgba(255, 255, 255, 0.08);
-  --glass-border-medium: rgba(255, 255, 255, 0.12);
-  --glass-border-strong: rgba(255, 255, 255, 0.15);
-  --glass-border-focus: rgba(255, 255, 255, 0.18);
-  
-  /* Effets de flou - Optimisés pour les performances */
-  --glass-blur-light: blur(8px);
-  --glass-blur-medium: blur(12px);
-  --glass-blur-strong: blur(16px);
-  --glass-blur-heavy: blur(20px);
-  
-  /* Ombres glassmorphism - Cohérentes */
-  --glass-shadow-subtle: 0 1px 3px rgba(0, 0, 0, 0.15);
-  --glass-shadow-soft: 0 2px 6px rgba(0, 0, 0, 0.20);
-  --glass-shadow-medium: 0 4px 12px rgba(0, 0, 0, 0.25);
-  --glass-shadow-strong: 0 8px 24px rgba(0, 0, 0, 0.30);
-  
-  /* Dégradés glassmorphism - Subtils */
-  --glass-gradient-subtle: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.03) 50%, rgba(255, 255, 255, 0.01) 100%);
-  --glass-gradient-soft: linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.06) 50%, rgba(255, 255, 255, 0.02) 100%);
-  --glass-gradient-medium: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.08) 50%, rgba(255, 255, 255, 0.03) 100%);
-}
+/* Les variables glassmorphism sont maintenant centralisées dans variables-unified.css */
 
 /* ========================================
    CLASSES GLASSMORPHISM OPTIMISÉES
@@ -187,6 +156,7 @@
   box-shadow: var(--glass-shadow-soft);
   position: relative;
   overflow: hidden;
+  transition: all var(--transition-normal);
 }
 
 .card-glass::before {

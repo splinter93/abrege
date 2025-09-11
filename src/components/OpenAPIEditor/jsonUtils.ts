@@ -1,19 +1,22 @@
+import * as yaml from 'js-yaml';
+
 /**
- * Utilitaires pour la validation et le nettoyage des schémas JSON
+ * Utilitaires pour la validation et le nettoyage des schémas JSON/YAML
  */
 
-export interface JSONParseResult {
+export interface ParseResult {
   success: boolean;
   data?: any;
   error?: string;
   position?: number;
   context?: string;
+  format?: 'json' | 'yaml';
 }
 
 /**
- * Nettoie et valide un texte JSON avant le parsing
+ * Nettoie et valide un texte JSON ou YAML avant le parsing
  */
-export function cleanAndValidateJSON(text: string): JSONParseResult {
+export function cleanAndValidateSchema(text: string): ParseResult {
   // Nettoyer le texte en dehors du try/catch pour qu'il soit accessible partout
   let cleanedText = text.trim();
   
@@ -21,21 +24,38 @@ export function cleanAndValidateJSON(text: string): JSONParseResult {
   cleanedText = cleanedText.replace(/^\uFEFF/, ''); // BOM
   cleanedText = cleanedText.replace(/[\u200B-\u200D\uFEFF]/g, ''); // Zero-width characters
   
+  // Détecter le format (YAML ou JSON)
+  const isYAML = !cleanedText.startsWith('{') && !cleanedText.startsWith('[');
+  
   try {
-    // Vérifier que le texte commence et finit par des accolades
-    if (!cleanedText.startsWith('{') || !cleanedText.endsWith('}')) {
-      return {
-        success: false,
-        error: 'Le contenu ne semble pas être un JSON valide (doit commencer par { et finir par })'
-      };
+    let data: any;
+    
+    if (isYAML) {
+      // Parser YAML
+      data = yaml.load(cleanedText);
+      if (typeof data !== 'object' || data === null) {
+        return {
+          success: false,
+          error: 'Le contenu YAML doit être un objet valide',
+          format: 'yaml'
+        };
+      }
+    } else {
+      // Parser JSON
+      if (!cleanedText.startsWith('{') && !cleanedText.startsWith('[')) {
+        return {
+          success: false,
+          error: 'Le contenu ne semble pas être un JSON ou YAML valide',
+          format: 'json'
+        };
+      }
+      data = JSON.parse(cleanedText);
     }
-
-    // Essayer de parser le JSON
-    const data = JSON.parse(cleanedText);
     
     return {
       success: true,
-      data
+      data,
+      format: isYAML ? 'yaml' : 'json'
     };
   } catch (error) {
     const err = error as Error;
@@ -58,9 +78,17 @@ export function cleanAndValidateJSON(text: string): JSONParseResult {
       success: false,
       error: err.message,
       position,
-      context
+      context,
+      format: isYAML ? 'yaml' : 'json'
     };
   }
+}
+
+/**
+ * @deprecated Utilisez cleanAndValidateSchema à la place
+ */
+export function cleanAndValidateJSON(text: string): ParseResult {
+  return cleanAndValidateSchema(text);
 }
 
 /**

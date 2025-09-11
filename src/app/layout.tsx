@@ -68,8 +68,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <style dangerouslySetInnerHTML={{ __html: `
           /* CRITICAL CSS - Éviter le flash de couleur */
           html, body { 
-            background: #141414 !important; 
-            color: #f5f5f5 !important; 
+            background: var(--color-bg-primary, #0f0f12) !important; 
+            color: var(--color-text-primary, #f8f9fa) !important; 
             font-family: 'Noto Sans', sans-serif !important;
             margin: 0;
             padding: 0;

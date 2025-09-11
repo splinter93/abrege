@@ -7,7 +7,7 @@ import { EndpointForm } from './EndpointForm';
 import { ExportActions } from './ExportActions';
 import { DebugInfo } from './DebugInfo';
 import { OpenAPITypes } from './OpenAPITypes';
-import { cleanAndValidateJSON, validateOpenAPISchema, formatJSONError } from './jsonUtils';
+import { cleanAndValidateSchema, validateOpenAPISchema, formatJSONError } from './jsonUtils';
 
 interface OpenAPIEditorProps {
   schema: object | null;
@@ -91,13 +91,13 @@ export function OpenAPIEditor({
         rawText = await input.text();
       }
 
-      // Nettoyer et valider le JSON
-      const parseResult = cleanAndValidateJSON(rawText);
+      // Nettoyer et valider le JSON/YAML
+      const parseResult = cleanAndValidateSchema(rawText);
       
       if (!parseResult.success) {
         const errorMessage = parseResult.error 
           ? formatJSONError(parseResult.error, parseResult.position, parseResult.context)
-          : 'Erreur de parsing JSON inconnue';
+          : `Erreur de parsing ${parseResult.format?.toUpperCase() || 'JSON'} inconnue`;
         throw new Error(errorMessage);
       }
 

@@ -14,8 +14,11 @@
   max-width: calc(100vw - 40px);
   max-height: calc(100vh - 40px);
   border-radius: 16px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
-  border: 1px solid var(--chat-border-primary);
+  background: var(--glass-bg-base);
+  backdrop-filter: var(--glass-blur-heavy);
+  -webkit-backdrop-filter: var(--glass-blur-heavy);
+  border: 1px solid var(--glass-border-soft);
+  box-shadow: var(--glass-shadow-strong);
   overflow: hidden;
   z-index: 1000;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -41,8 +44,10 @@
 .chat-fullscreen-container.chat-widget-mode .chat-header {
   height: 44px;
   padding: 0 12px;
-  border-bottom: 1px solid var(--chat-border-primary);
-  background: var(--chat-bg-primary);
+  border-bottom: 1px solid var(--glass-border-soft);
+  background: var(--glass-bg-subtle);
+  backdrop-filter: var(--glass-blur-medium);
+  -webkit-backdrop-filter: var(--glass-blur-medium);
 }
 
 /* Logo plus petit dans le widget */
@@ -89,13 +94,13 @@
 .chat-agent-name {
   font-size: 13px;
   font-weight: 600;
-  color: var(--chat-text-primary);
+  color: var(--chat-text-primary, #f8f9fa);
   line-height: 1.2;
 }
 
 .chat-agent-model {
   font-size: 11px;
-  color: var(--chat-text-secondary);
+  color: var(--chat-text-secondary, #a1a5b7);
   opacity: 0.8;
   line-height: 1.2;
 }
@@ -104,7 +109,7 @@
 .chat-widget-close-btn {
   background: none;
   border: none;
-  color: var(--chat-text-secondary);
+  color: var(--chat-text-secondary, #a1a5b7);
   cursor: pointer;
   padding: 8px;
   border-radius: 6px;
@@ -115,8 +120,8 @@
 }
 
 .chat-widget-close-btn:hover {
-  background: var(--chat-bg-tertiary);
-  color: var(--chat-text-primary);
+  background: var(--chat-bg-tertiary, #1f1f25);
+  color: var(--chat-text-primary, #f8f9fa);
 }
 
 .chat-widget-close-btn svg {
@@ -167,21 +172,22 @@
   margin-right: 8px; /* au lieu de 60px en fullscreen */
 }
 
-.chat-fullscreen-container.chat-widget-mode .chat-message.assistant .chat-message-bubble,
-.chat-fullscreen-container.chat-widget-mode .chat-message.assistant .chat-message-bubble-assistant {
+/* Styles pour les bulles assistant en mode widget */
+.chat-widget-mode .chat-message.assistant .chat-message-bubble,
+.chat-widget-mode .chat-message.assistant .chat-message-bubble-assistant {
   display: block;
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
   margin-right: 0;
-  padding: 6px 6px; /* padding réduit pour gagner en largeur utile */
+  padding: var(--spacing-xs, 0.25rem); /* padding réduit pour gagner en largeur utile */
 }
 
-/* Ajuster les bulles de l'utilisateur */
-.chat-fullscreen-container.chat-widget-mode .chat-message.user .chat-message-bubble {
+/* Ajuster les bulles de l'utilisateur en mode widget */
+.chat-widget-mode .chat-message.user .chat-message-bubble {
   max-width: calc(100% - 60px);
   margin-left: auto;
-  margin-right: 8px;
+  margin-right: var(--spacing-sm, 0.5rem);
 }
 
 /* Réduire la taille des titres dans les messages */
@@ -257,7 +263,7 @@
 /* Input compact */
 .chat-fullscreen-container.chat-widget-mode .chat-input-container {
   padding: 8px 8px 12px 8px;
-  background: var(--chat-bg-primary);
+  background: transparent;
 }
 
 /* Styles spécifiques pour le composant ChatInput dans le widget */

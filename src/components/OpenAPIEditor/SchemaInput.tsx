@@ -40,9 +40,16 @@ export function SchemaInput({ onSchemaLoad, isLoading, error }: SchemaInputProps
   const handlePaste = (e: React.ClipboardEvent) => {
     const pastedText = e.clipboardData.getData('text');
     try {
-      JSON.parse(pastedText);
-      setJsonInput(pastedText);
-      setInputType('json');
+      // Essayer de détecter le format
+      if (pastedText.trim().startsWith('{') || pastedText.trim().startsWith('[')) {
+        JSON.parse(pastedText);
+        setJsonInput(pastedText);
+        setInputType('json');
+      } else {
+        // Probablement du YAML, on le met quand même dans le champ JSON
+        setJsonInput(pastedText);
+        setInputType('json');
+      }
     } catch {
       // Pas du JSON valide, on laisse l'utilisateur choisir
     }
@@ -52,7 +59,7 @@ export function SchemaInput({ onSchemaLoad, isLoading, error }: SchemaInputProps
     <div className="schema-input">
       <div className="schema-input-header">
         <h3>Charger un schéma OpenAPI</h3>
-        <p>Collez votre JSON, fournissez une URL ou uploadez un fichier</p>
+        <p>Collez votre JSON/YAML, fournissez une URL ou uploadez un fichier</p>
       </div>
 
       <form onSubmit={handleSubmit} className="schema-input-form">
@@ -93,13 +100,13 @@ export function SchemaInput({ onSchemaLoad, isLoading, error }: SchemaInputProps
         {/* Input JSON */}
         {inputType === 'json' && (
           <div className="schema-input-field">
-            <label htmlFor="json-input">Schéma JSON</label>
+            <label htmlFor="json-input">Schéma JSON/YAML</label>
             <textarea
               id="json-input"
               value={jsonInput}
               onChange={(e) => setJsonInput(e.target.value)}
               onPaste={handlePaste}
-              placeholder="Collez votre schéma OpenAPI en JSON ici..."
+              placeholder="Collez votre schéma OpenAPI en JSON ou YAML ici..."
               className="schema-input-textarea"
               rows={8}
             />

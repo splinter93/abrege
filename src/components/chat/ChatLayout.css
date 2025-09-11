@@ -12,8 +12,8 @@
   height: 100vh;
   width: 100vw;
   overflow: hidden;
-  background: var(--chat-bg-primary);
-  color: var(--chat-text-primary);
+  background: var(--color-bg-primary, #0f0f12);
+  color: var(--chat-text-primary, #f8f9fa);
   position: fixed;
   top: 0;
   left: 0;
@@ -37,32 +37,35 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0 var(--chat-spacing-xl);
-  height: var(--chat-height-header);
-  background: var(--chat-bg-primary);
-  border-bottom: 1px solid var(--chat-border-primary);
+  padding: 0 var(--chat-spacing-xl, 1.5rem);
+  height: var(--chat-height-header, 48px);
+  background: var(--glass-bg-subtle);
+  backdrop-filter: var(--glass-blur-medium);
+  -webkit-backdrop-filter: var(--glass-blur-medium);
+  border-bottom: 1px solid var(--glass-border-soft);
   flex-shrink: 0;
-  z-index: calc(var(--chat-z-sidebar) + 1);
+  z-index: calc(var(--chat-z-sidebar, 1001) + 1);
+  box-shadow: var(--glass-shadow-subtle);
 }
 
 .chat-header-left {
   display: flex;
   align-items: center;
-  gap: var(--chat-spacing-lg);
+  gap: var(--chat-spacing-lg, 1rem);
 }
 
 .sidebar-toggle-btn {
   background: none;
   border: none;
   cursor: pointer;
-  color: var(--chat-text-secondary);
-  padding: var(--chat-spacing-sm);
-  border-radius: var(--chat-radius-md);
-  transition: background var(--chat-transition-normal);
+  color: var(--chat-text-secondary, #a1a5b7);
+  padding: var(--chat-spacing-sm, 0.5rem);
+  border-radius: var(--chat-radius-md, 6px);
+  transition: background var(--chat-transition-normal, 0.2s ease);
 }
 
 .sidebar-toggle-btn:hover {
-  background: var(--chat-bg-tertiary);
+  background: var(--chat-bg-tertiary, #1f1f25);
 }
 
 .chat-logo {
@@ -163,7 +166,7 @@
   flex-direction: column;
   overflow: hidden;
   position: relative;
-  background: var(--chat-bg-primary);
+  background: var(--color-bg-primary, #0f0f12);
   min-height: 0; /* Important pour que flex fonctionne correctement */
 }
 
@@ -234,8 +237,8 @@
   overflow-y: auto;
   overflow-x: hidden;
   padding: var(--chat-spacing-xl);
-  padding-bottom: 10rem;
-  background: var(--chat-bg-primary);
+  padding-bottom: 12rem; /* Augmenté pour plus d'espace sous l'input */
+  background: var(--color-bg-primary, #0f0f12);
   min-height: 0; /* Important pour que flex fonctionne correctement */
   /* Amélioration du scroll */
   scroll-behavior: smooth;
@@ -291,7 +294,7 @@
 
 .chat-input-container {
   flex-shrink: 0;
-  background: var(--chat-bg-primary);
+  background: var(--color-bg-primary, #0f0f12);
   padding: var(--chat-spacing-lg);
   z-index: var(--chat-z-sidebar);
   /* Centrer le contenu avec largeur fixe */

@@ -67,12 +67,20 @@
   --color-primary-dark: #d44a1a;
   
   /* Surfaces */
-  --surface-primary: #141414;
-  --surface-secondary: #1c1c1c;
-  --surface-tertiary: #212121;
-  --surface-elevated: #1c1c1c;
-  --surface-background: #141414;
-  --surface-hover: #212121;
+  --surface-primary: #0f0f12;
+  --surface-secondary: #1a1a1f;
+  --surface-tertiary: #1f1f25;
+  --surface-elevated: #1a1a1f;
+  --surface-background: #0f0f12;
+  --surface-hover: #1f1f25;
+  
+  /* Variables unifiées pour compatibilité */
+  --color-bg-primary: #0f0f12;
+  --color-bg-secondary: #1a1a1f;
+  --color-bg-tertiary: #1f1f25;
+  --color-text-primary: #f8f9fa;
+  --color-text-secondary: #a1a5b7;
+  --color-text-muted: #6c757d;
   
   /* Textes */
   --text-primary: #f5f5f5;
