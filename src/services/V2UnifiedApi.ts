@@ -502,7 +502,40 @@ export class V2UnifiedApi {
     const startTime = Date.now();
     
     try {
-      // 🚀 Appel vers l'endpoint API V2
+      // ⚡ OPTIMISTIC UI: Créer le dossier IMMÉDIATEMENT dans le store
+      const { useFileSystemStore } = await import('@/store/useFileSystemStore');
+      const store = useFileSystemStore.getState();
+      
+      // Générer un ID temporaire pour l'optimistic UI
+      const tempId = `temp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      
+      // Créer le dossier optimiste
+      const optimisticFolder = {
+        id: tempId,
+        name: folderData.name,
+        classeur_id: folderData.classeur_id,
+        parent_id: folderData.parent_id || null,
+        user_id: '', // Sera rempli par l'API
+        slug: '', // Sera généré par l'API
+        position: 0, // Sera calculé par l'API
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        is_in_trash: false,
+        trashed_at: null
+      };
+      
+      // Ajouter le dossier au store IMMÉDIATEMENT
+      store.addFolder(optimisticFolder);
+      
+      if (process.env.NODE_ENV === 'development') {
+        logger.dev(`[V2UnifiedApi] ⚡ Dossier créé optimiste:`, {
+          tempId,
+          name: folderData.name,
+          classeurId: folderData.classeur_id
+        });
+      }
+      
+      // 🚀 Appel vers l'endpoint API V2 (en arrière-plan)
       const headers = await this.getAuthHeaders();
       const response = await fetch(this.buildUrl('/api/v2/folder/create'), {
         method: 'POST',
@@ -511,14 +544,24 @@ export class V2UnifiedApi {
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        // 🔄 ROLLBACK: Supprimer le dossier optimiste en cas d'erreur
+        store.removeFolder(tempId);
+        
+        const errorText = await response.text();
+        throw new Error(`HTTP ${response.status}: ${response.statusText} - ${errorText}`);
       }
 
       const result = await response.json();
 
       if (!result.success) {
+        // 🔄 ROLLBACK: Supprimer le dossier optimiste en cas d'erreur
+        store.removeFolder(tempId);
         throw new Error(result.error || 'Erreur lors de la création du dossier');
       }
+
+      // ✅ SUCCÈS: Remplacer le dossier optimiste par le vrai dossier
+      store.removeFolder(tempId);
+      store.addFolder(result.folder);
 
       // 🎯 Déclencher le polling ciblé pour la création (avec délai)
       try {
@@ -561,7 +604,27 @@ export class V2UnifiedApi {
       // ✅ 1. Nettoyer et valider l'ID
       const cleanFolderId = this.cleanAndValidateId(folderId, 'folder');
       
-      // 🚀 2. Appel vers l'endpoint API V2
+      // ⚡ OPTIMISTIC UI: Mettre à jour le dossier IMMÉDIATEMENT dans le store
+      const { useFileSystemStore } = await import('@/store/useFileSystemStore');
+      const store = useFileSystemStore.getState();
+      
+      // Sauvegarder les données originales pour rollback
+      const originalFolder = store.folders[cleanFolderId];
+      if (!originalFolder) {
+        throw new Error('Dossier non trouvé dans le store');
+      }
+      
+      // Mettre à jour le dossier IMMÉDIATEMENT (optimistic)
+      store.updateFolder(cleanFolderId, updateData);
+      
+      if (process.env.NODE_ENV === 'development') {
+        logger.dev(`[V2UnifiedApi] ⚡ Dossier mis à jour optimiste:`, {
+          folderId: cleanFolderId,
+          updateData
+        });
+      }
+      
+      // 🚀 2. Appel vers l'endpoint API V2 (en arrière-plan)
       const headers = await this.getAuthHeaders();
       const response = await fetch(this.buildUrl(`/api/v2/folder/${cleanFolderId}/update`), {
         method: 'PUT',
@@ -570,6 +633,9 @@ export class V2UnifiedApi {
       });
 
       if (!response.ok) {
+        // 🔄 ROLLBACK: Restaurer le dossier original en cas d'erreur
+        store.updateFolder(cleanFolderId, originalFolder);
+        
         const errorText = await response.text();
         throw new Error(`Erreur mise à jour dossier: ${response.status} ${response.statusText} - ${errorText}`);
       }
@@ -580,8 +646,7 @@ export class V2UnifiedApi {
         logger.dev(`[V2UnifiedApi] ✅ API terminée en ${apiTime}ms`);
       }
 
-      // 🚀 Mise à jour directe de Zustand (instantanée)
-      const store = useFileSystemStore.getState();
+      // ✅ SUCCÈS: Mettre à jour avec les données finales de l'API
       store.updateFolder(cleanFolderId, result.folder);
       
       // 🎯 Déclencher le polling ciblé pour la mise à jour
