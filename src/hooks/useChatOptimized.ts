@@ -1,14 +1,12 @@
 import { useCallback, useMemo } from 'react';
 import { debounce } from 'lodash';
 import { useChatResponse } from './useChatResponse';
-import { useChatResponseHarmony } from './useChatResponseHarmony';
 import { useChatScroll } from './useChatScroll';
 import { useAuth } from './useAuth';
 import { useChatStore } from '@/store/useChatStore';
 import { simpleLogger as logger } from '@/utils/logger';
 
 interface UseChatOptimizedOptions {
-  useHarmony?: boolean;
   scrollThreshold?: number;
   scrollDelay?: number;
 }
@@ -57,7 +55,7 @@ interface UseChatOptimizedReturn {
  * Hook optimisé pour le chat - évite la duplication de code entre ChatFullscreenV2 et ChatWidget
  */
 export function useChatOptimized(options: UseChatOptimizedOptions = {}): UseChatOptimizedReturn {
-  const { useHarmony = false, scrollThreshold = 150, scrollDelay = 100 } = options;
+  const { scrollThreshold = 150, scrollDelay = 100 } = options;
   
   // Hooks de base
   const { user, loading: authLoading } = useAuth();
@@ -298,13 +296,6 @@ export function useChatOptimized(options: UseChatOptimizedOptions = {}): UseChat
     onToolExecutionComplete: handleToolExecutionComplete
   });
 
-  const { isProcessing: isProcessingHarmony, sendMessage: sendMessageHarmony } = useChatResponseHarmony({
-    onComplete: handleComplete,
-    onError: handleError,
-    onToolCalls: handleToolCalls,
-    onToolResult: handleToolResult,
-    onToolExecutionComplete: handleToolExecutionComplete
-  });
 
   // Handler d'envoi de message optimisé
   const handleSendMessage = useCallback(async (message: string) => {
@@ -354,8 +345,8 @@ export function useChatOptimized(options: UseChatOptimizedOptions = {}): UseChat
       const fullHistory = currentSession.thread;
       const limitedHistoryForLLM = fullHistory.slice(-(currentSession.history_limit || 30));
       
-      // Utiliser Harmony ou l'API standard selon le toggle
-      const sendFunction = useHarmony ? sendMessageHarmony : sendMessage;
+      // Utiliser l'API standard
+      const sendFunction = sendMessage;
       
       await sendFunction(message, currentSession.id, contextWithSessionId, limitedHistoryForLLM, token);
 
@@ -369,7 +360,7 @@ export function useChatOptimized(options: UseChatOptimizedOptions = {}): UseChat
     } finally {
       setLoading(false);
     }
-  }, [loading, currentSession, createSession, addMessage, selectedAgent, sendMessage, sendMessageHarmony, setLoading, user, useHarmony]);
+  }, [loading, currentSession, createSession, addMessage, selectedAgent, sendMessage, setLoading, user]);
 
   return {
     // Hooks de base

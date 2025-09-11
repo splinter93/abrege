@@ -3,11 +3,11 @@
  * Style ChatGPT : LLM → tools → relance → réponse finale
  */
 
-import { GroqHarmonyProvider } from '../providers/implementations/groqHarmony';
+import { GroqProvider } from '../providers/implementations/groq';
 import { SimpleToolExecutor, ToolCall, ToolResult } from './SimpleToolExecutor';
 import { simpleLogger as logger } from '@/utils/logger';
 import { ChatMessage } from '@/types/chat';
-import { HarmonyMessage } from '../types/harmonyTypes';
+import { ChatMessage as HarmonyMessage } from '@/types/chat';
 import { systemMessageBuilder, SystemMessageContext } from '../SystemMessageBuilder';
 
 // ChatMessage est maintenant importé depuis @/types/chat
@@ -34,11 +34,11 @@ export interface ChatResponse {
  * Gère automatiquement les tool calls et les relances
  */
 export class SimpleChatOrchestrator {
-  private llmProvider: GroqHarmonyProvider;
+  private llmProvider: GroqProvider;
   private toolExecutor: SimpleToolExecutor;
 
   constructor() {
-    this.llmProvider = new GroqHarmonyProvider();
+    this.llmProvider = new GroqProvider();
     this.toolExecutor = new SimpleToolExecutor();
   }
 

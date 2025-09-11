@@ -29,7 +29,6 @@ const ChatFullscreenV2: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false); // Toujours fermée par défaut
   const [wideMode, setWideMode] = useState(false);
   const [isWidgetMode, setIsWidgetMode] = useState(false);
-  const [useHarmony, setUseHarmony] = useState(false); // 🎼 Toggle Harmony
   
   // 🎯 Contexte et store
   const appContext = useAppContext();
@@ -68,22 +67,6 @@ const ChatFullscreenV2: React.FC = () => {
   // Code mort nettoyé pour la production
 
   // 🎼 Activation automatique d'Harmony pour GPT OSS 20b et 120b
-  useEffect(() => {
-    if (selectedAgent?.model_variant === '20b' || selectedAgent?.model_variant === '120b') {
-      logger.dev('[ChatFullscreenV2] 🎼 Activation automatique d\'Harmony pour GPT OSS', {
-        model_variant: selectedAgent.model_variant,
-        agent_name: selectedAgent.name
-      });
-      setUseHarmony(true);
-    } else if (selectedAgent?.model_variant) {
-      // Désactiver Harmony pour les autres modèles
-      logger.dev('[ChatFullscreenV2] 🎼 Désactivation d\'Harmony pour modèle non-GPT OSS', {
-        model_variant: selectedAgent.model_variant,
-        agent_name: selectedAgent.name
-      });
-      setUseHarmony(false);
-    }
-  }, [selectedAgent?.model_variant, selectedAgent?.name]);
 
   // 🎯 Hook pour les tool calls atomiques
   // const { addToolResult, isProcessing: isProcessingToolCalls } = useAtomicToolCalls(); // Hook supprimé
@@ -149,7 +132,6 @@ const ChatFullscreenV2: React.FC = () => {
       safeContent: safeContent?.substring(0, 100) + '...',
       hasContent: !!safeContent,
       reasoning: fullReasoning?.substring(0, 50) + '...',
-      useHarmony,
       hasHarmonyChannels: !!harmonyChannels,
       harmonyAnalysis: harmonyChannels?.analysis?.substring(0, 50) + '...',
       harmonyCommentary: harmonyChannels?.commentary?.substring(0, 50) + '...',
@@ -380,14 +362,6 @@ const ChatFullscreenV2: React.FC = () => {
     onToolExecutionComplete: handleToolExecutionComplete
   });
 
-  // 🎼 Hook de chat Harmony avec callbacks mémorisés
-  const { isProcessing: isProcessingHarmony, sendMessage: sendMessageHarmony } = useChatResponseHarmony({
-    onComplete: handleComplete,
-    onError: handleError,
-    onToolCalls: handleToolCalls,
-    onToolResult: handleToolResult,
-    onToolExecutionComplete: handleToolExecutionComplete
-  });
 
   // 🎯 Affichage de l'état d'authentification
   const renderAuthStatus = () => {
@@ -609,11 +583,10 @@ const ChatFullscreenV2: React.FC = () => {
       // Pour l'API LLM, on peut limiter à history_limit pour la performance
       const limitedHistoryForLLM = fullHistory.slice(-(currentSession.history_limit || 30));
       
-      // 🎼 Utiliser Harmony ou l'API standard selon le toggle
-      const sendFunction = useHarmony ? sendMessageHarmony : sendMessage;
+      // Utiliser l'API standard
+      const sendFunction = sendMessage;
       
       logger.dev('[ChatFullscreenV2] 🎼 Envoi du message:', {
-        useHarmony,
         message: message.substring(0, 50) + '...',
         sessionId: currentSession.id,
         agentId: selectedAgent?.id
@@ -631,7 +604,7 @@ const ChatFullscreenV2: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [loading, currentSession, createSession, addMessage, selectedAgent, appContext, sendMessage, setLoading, user, useHarmony, sendMessageHarmony]);
+  }, [loading, currentSession, createSession, addMessage, selectedAgent, appContext, sendMessage, setLoading, user]);
 
   const handleHistoryLimitChange = useCallback(async (newLimit: number) => {
     // Vérifier l'authentification avant de continuer
@@ -739,17 +712,6 @@ const ChatFullscreenV2: React.FC = () => {
         </div>
         <div className="chat-actions">
           {/* 🎼 Toggle Harmony */}
-          <div className="harmony-toggle">
-            <button
-              onClick={() => setUseHarmony(!useHarmony)}
-              className={`harmony-toggle-btn ${useHarmony ? 'active' : ''}`}
-              title={useHarmony ? 'Désactiver Harmony' : 'Activer Harmony (format GPT-OSS)'}
-              disabled={!user || authLoading}
-            >
-              <span className="harmony-icon">🎼</span>
-              <span className="harmony-label">{useHarmony ? 'Harmony' : 'Standard'}</span>
-            </button>
-          </div>
           
           <ChatKebabMenu
             isWideMode={wideMode}

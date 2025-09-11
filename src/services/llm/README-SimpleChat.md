@@ -16,8 +16,7 @@ Un système de chat simple et intelligent avec relance automatique, style ChatGP
 src/services/llm/
 ├── services/
 │   ├── SimpleToolExecutor.ts      # Exécuteur de tools intelligent
-│   ├── SimpleChatOrchestrator.ts  # Orchestrateur de chat
-│   └── HarmonyOrchestrator.ts     # Version simplifiée (legacy)
+│   └── SimpleChatOrchestrator.ts  # Orchestrateur de chat
 ├── executors/
 │   └── ApiV2ToolExecutor.ts       # Exécuteur API V2 simplifié
 ├── examples/
