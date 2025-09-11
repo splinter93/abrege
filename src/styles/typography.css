@@ -211,6 +211,18 @@
 .noteLayout {
   width: 100%;
   transition: all var(--transition-normal);
+  background: var(--color-bg-primary) !important; /* VARIABLE CSS - COHÉRENT */
+  background-color: var(--color-bg-primary) !important;
+}
+
+/* ==========================================================================
+   HEADERS - BACKGROUND COHÉRENT
+   ========================================================================== */
+/* Headers de l'éditeur */
+.editor-header,
+.noteLayout-header {
+  background: var(--color-bg-header) !important; /* VARIABLE CSS - HEADER */
+  background-color: var(--color-bg-header) !important;
 }
 
 /* Conteneur du titre */
@@ -219,6 +231,8 @@
   display: flex;
   justify-content: center;
   transition: all var(--transition-normal);
+  background: var(--color-bg-primary) !important; /* VARIABLE CSS - COHÉRENT */
+  background-color: var(--color-bg-primary) !important;
 }
 
 /* Conteneur du contenu */
@@ -227,7 +241,8 @@
   display: flex;
   justify-content: center;
   transition: all var(--transition-normal);
-  background: var(--surface-1);
+  background: var(--color-bg-primary) !important; /* VARIABLE CSS - COHÉRENT */
+  background-color: var(--color-bg-primary) !important;
 }
 
 /* Style typographique complet du titre */
@@ -631,6 +646,8 @@ body.public-note-page {
   overflow: hidden;
   margin-bottom: 32px;
   position: relative;
+  background: var(--color-bg-header) !important; /* VARIABLE CSS - HEADER */
+  background-color: var(--color-bg-header) !important;
 }
 
 .public-header-image img {
@@ -639,6 +656,8 @@ body.public-note-page {
   object-fit: cover;
   border-radius: 0;
   transition: filter 0.2s;
+  background: var(--color-bg-header) !important; /* VARIABLE CSS - HEADER */
+  background-color: var(--color-bg-header) !important;
 }
 
 /* Overlay de l'image d'en-tête */
@@ -662,6 +681,8 @@ body.public-note-page {
   max-width: 800px;
   padding: 0;
   box-sizing: border-box;
+  background: var(--color-bg-header) !important; /* VARIABLE CSS - HEADER */
+  background-color: var(--color-bg-header) !important;
   text-align: center;
   z-index: 10;
 }
@@ -730,6 +751,14 @@ body.public-note-page {
 .noteLayout.noImage .noteLayout-title > .editor-container-width { padding-bottom: 16px; }
 .noteLayout.noImage .noteLayout-title textarea { padding-bottom: 16px; }
 .noteLayout.noImage .noteLayout-content { margin-top: 0; padding-top: 0; }
+
+/* ==========================================================================
+   RÈGLES POUR LA PAGE PUBLIQUE - SIMPLE ET EFFICACE
+   ========================================================================== */
+/* Supprimer le padding du container H1 sur la page publique */
+.public-note-container .editor-container-width {
+  padding-bottom: 0 !important;
+}
 
 /* ==========================================================================
    TYPOGRAPHIE DES TITRES - CENTRALISÉE ET ULTRA-SPÉCIFIQUE

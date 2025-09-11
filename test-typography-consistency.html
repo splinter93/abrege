@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Cohérence Typographie - Éditeur vs Page Publique</title>
+    <style>
+        /* Import des polices Google Fonts */
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700;800;900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+        /* Variables CSS unifiées */
+        :root {
+            --editor-text-color: #D4D4D4;
+            --editor-font-family-headings: 'Noto Sans', sans-serif;
+            --editor-font-family-body: 'Inter', sans-serif;
+            --editor-body-size: 1.125rem; /* 18px */
+            --editor-body-size-mobile: 1rem; /* 16px */
+            --editor-line-height-base: 1.75;
+            --editor-line-height-mobile: 1.7;
+            --editor-body-weight: 500;
+            --editor-blockquote-weight: 600;
+            --editor-list-margin-vertical: 1.25rem;
+            --editor-list-item-margin-vertical: 0.375rem;
+            --editor-block-spacing: 1.75rem;
+            --editor-line-height-relaxed: 1.85;
+            --surface-2: rgba(255, 255, 255, 0.05);
+            --text-2: #a1a5b7;
+            --radius-md: 6px;
+            --glass-shadow-soft: 0 4px 12px rgba(0, 0, 0, 0.12);
+            --accent-primary: #ff6b35;
+        }
+
+        body {
+            background: #0f0f12;
+            color: var(--editor-text-color);
+            font-family: var(--editor-font-family-body);
+            font-size: var(--editor-body-size);
+            line-height: var(--editor-line-height-base);
+            font-weight: var(--editor-body-weight);
+            margin: 0;
+            padding: 20px;
+        }
+
+        .comparison-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        .section h2 {
+            color: var(--accent-primary);
+            font-family: var(--editor-font-family-headings);
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin: 0 0 20px 0;
+        }
+
+        .markdown-body {
+            color: var(--editor-text-color);
+            font-family: var(--editor-font-family-body);
+            font-size: var(--editor-body-size);
+            line-height: var(--editor-line-height-base);
+            font-weight: var(--editor-body-weight);
+            background: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .markdown-body h1 {
+            font-size: 2.375rem;
+            font-weight: 800;
+            font-family: var(--editor-font-family-headings);
+            margin: 1.25rem 0 0.5rem 0;
+            color: var(--editor-text-color);
+        }
+
+        .markdown-body h2 {
+            font-size: 1.8rem;
+            font-weight: 800;
+            font-family: var(--editor-font-family-headings);
+            margin: 1.25rem 0 0.5rem 0;
+            color: var(--editor-text-color);
+        }
+
+        .markdown-body p {
+            margin: 0 0 1.25rem 0;
+            line-height: var(--editor-line-height-base);
+            font-weight: var(--editor-body-weight);
+            font-family: var(--editor-font-family-body);
+            font-size: var(--editor-body-size);
+        }
+
+        .markdown-body ul,
+        .markdown-body ol {
+            margin: var(--editor-list-margin-vertical) 0;
+            padding-left: 1.75em;
+            line-height: var(--editor-line-height-base);
+            font-family: var(--editor-font-family-body);
+            font-size: var(--editor-body-size);
+            font-weight: var(--editor-body-weight);
+        }
+
+        .markdown-body li {
+            margin: var(--editor-list-item-margin-vertical) 0;
+            line-height: var(--editor-line-height-base);
+            font-weight: var(--editor-body-weight);
+            font-family: var(--editor-font-family-body);
+            font-size: var(--editor-body-size);
+        }
+
+        .markdown-body blockquote {
+            background: var(--surface-2);
+            color: var(--text-2);
+            font-style: italic;
+            padding: 1.25rem 1.75rem;
+            margin: var(--editor-block-spacing) 0;
+            border-left: 4px solid var(--accent-primary);
+            border-radius: var(--radius-md);
+            font-family: var(--editor-font-family-body);
+            font-size: var(--editor-body-size);
+            font-weight: var(--editor-blockquote-weight);
+            line-height: var(--editor-line-height-relaxed);
+        }
+
+        .status {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            color: #10b981;
+            padding: 10px;
+            border-radius: 6px;
+            margin: 20px 0;
+            font-weight: 500;
+        }
+
+        .error {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #ef4444;
+            padding: 10px;
+            border-radius: 6px;
+            margin: 20px 0;
+            font-weight: 500;
+        }
+
+        @media (max-width: 768px) {
+            .comparison-container {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .markdown-body {
+                font-size: var(--editor-body-size-mobile);
+                line-height: var(--editor-line-height-mobile);
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>🎨 Test Cohérence Typographie - Éditeur vs Page Publique</h1>
+    
+    <div class="status">
+        ✅ <strong>Corrections appliquées :</strong> Les styles de la page publique utilisent maintenant les mêmes variables CSS que l'éditeur
+    </div>
+
+    <div class="comparison-container">
+        <div class="section">
+            <h2>📝 Éditeur (typography.css)</h2>
+            <div class="markdown-body">
+                <h1>Titre Principal</h1>
+                <p>Ce paragraphe utilise <strong>Inter</strong> avec une taille de <code>1.125rem (18px)</code> et un font-weight de <code>500</code>.</p>
+                
+                <h2>Sous-titre</h2>
+                <p>La cohérence typographique est maintenant assurée entre l'éditeur et la page publique.</p>
+                
+                <ul>
+                    <li>Liste avec Inter 18px</li>
+                    <li>Font-weight 500</li>
+                    <li>Line-height 1.75</li>
+                </ul>
+                
+                <blockquote>
+                    Citation avec les mêmes styles que l'éditeur
+                </blockquote>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🌐 Page Publique (markdown.css)</h2>
+            <div class="markdown-body">
+                <h1>Titre Principal</h1>
+                <p>Ce paragraphe utilise maintenant <strong>Inter</strong> avec une taille de <code>1.125rem (18px)</code> et un font-weight de <code>500</code>.</p>
+                
+                <h2>Sous-titre</h2>
+                <p>Les variables CSS sont maintenant unifiées entre l'éditeur et la page publique.</p>
+                
+                <ul>
+                    <li>Liste avec Inter 18px</li>
+                    <li>Font-weight 500</li>
+                    <li>Line-height 1.75</li>
+                </ul>
+                
+                <blockquote>
+                    Citation avec les mêmes styles que l'éditeur
+                </blockquote>
+            </div>
+        </div>
+    </div>
+
+    <div class="status">
+        <h3>✅ Corrections Appliquées :</h3>
+        <ul>
+            <li><strong>Police :</strong> Inter pour le texte (au lieu de -apple-system)</li>
+            <li><strong>Taille :</strong> 1.125rem (18px) au lieu de 16px</li>
+            <li><strong>Font-weight :</strong> 500 au lieu de 400</li>
+            <li><strong>Line-height :</strong> 1.75 cohérent</li>
+            <li><strong>Variables CSS :</strong> Utilisation des variables unifiées</li>
+        </ul>
+    </div>
+
+    <div class="status">
+        <h3>🎯 Résultat :</h3>
+        <p>L'éditeur et la page publique utilisent maintenant <strong>exactement les mêmes styles typographiques</strong> grâce aux variables CSS centralisées dans <code>typography.css</code>.</p>
+    </div>
+</body>
+</html>

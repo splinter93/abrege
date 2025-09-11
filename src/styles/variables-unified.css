@@ -16,6 +16,7 @@
   --color-bg-tertiary: #1f1f25;
   --color-bg-elevated: #1a1a1f;
   --color-bg-hover: rgba(255, 255, 255, 0.05);
+  --color-bg-header: var(--color-bg-primary); /* Background pour les headers - MÊME COULEUR QUE LE CONTENU */
   
   /* Textes - Contraste optimisé */
   --color-text-primary: #f8f9fa;

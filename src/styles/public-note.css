@@ -19,32 +19,123 @@
    Réduire l'espacement entre l'image d'en-tête et le titre
 */
 
-/* Image d'en-tête - padding réduit sur desktop */
+/* Image d'en-tête - ESPACEMENT IDENTIQUE À L'ÉDITEUR */
 .public-header-image {
   position: relative;
-  margin-bottom: 8px;
+  margin-bottom: 32px; /* IDENTIQUE À L'ÉDITEUR - 32px */
 }
 
-/* Réduction espacement titre-texte - page publique */
+/* ESPACEMENTS IDENTIQUES À L'ÉDITEUR - PAGE PUBLIQUE */
 .public-note-container .noteLayout-title {
-  padding-top: 0px ; /* Supprime complètement le padding-top */
-  padding-bottom: 0 ; /* Supprime le padding-bottom du container */
+  background: var(--color-bg-primary) !important; /* VARIABLE CSS - COHÉRENT AVEC L'ÉDITEUR */
+  background-color: var(--color-bg-primary) !important;
+  padding-top: 0px ; /* Pas de padding-top pour les pages publiques */
+  padding-bottom: 0 ; /* Pas de padding-bottom */
 }
 
 .public-note-container .noteLayout-title h1 {
-  padding: 0 0 15px 0 ; /* Padding réduit en dessous pour remonter le titre */
-  margin-top: 25px ; /* Espacement final au-dessus du titre */
+  padding: 0 0 0 0 ; /* Pas de padding - géré par le conteneur */
+  margin-top: 0 ; /* Pas de margin-top */
 }
 
-/* Réduction padding-top du contenu - page publique */
+/* ESPACEMENT TITRE → CORPS RÉDUIT POUR PAGE PUBLIQUE */
 .public-note-container .noteLayout-content {
-  padding-top: 0px ; /* Supprime le padding-top */
-  margin-top: -10px ; /* Margin négatif pour remonter le texte */
+  padding-top: 8px ; /* RÉDUIT - 8px pour page publique */
+  margin-top: 0 ; /* Pas de margin négatif */
 }
 
-/* Suppression padding-bottom du container editor-container-width */
+/* Les règles de padding pour .editor-container-width sont gérées par typography.css */
+
+/* FORCER LE BACKGROUND SUR LES CONTAINERS PRINCIPAUX SEULEMENT */
+.public-note-container .noteLayout {
+  background: var(--color-bg-primary) !important; /* VARIABLE CSS - COHÉRENT AVEC L'ÉDITEUR */
+  background-color: var(--color-bg-primary) !important;
+}
+
+/* Container du contenu principal */
+.public-note-container .noteLayout-content {
+  background: var(--color-bg-primary) !important; /* VARIABLE CSS - COHÉRENT AVEC L'ÉDITEUR */
+  background-color: var(--color-bg-primary) !important;
+}
+
+/* FORCER LE BACKGROUND SUR LE CONTAINER EDITOR-CONTAINER-WIDTH */
 .public-note-container .noteLayout-title .editor-container-width {
-  padding-bottom: 0 ; /* Supprime le padding en dessous du titre */
+  background: var(--color-bg-primary) !important; /* VARIABLE CSS - COHÉRENT AVEC L'ÉDITEUR */
+  background-color: var(--color-bg-primary) !important;
+}
+
+.public-note-container .noteLayout-content .editor-container-width {
+  background: var(--color-bg-primary) !important; /* VARIABLE CSS - COHÉRENT AVEC L'ÉDITEUR */
+  background-color: var(--color-bg-primary) !important;
+}
+
+/* Wrapper du contenu */
+.public-note-container .public-note-content-wrapper {
+  background: var(--color-bg-primary) !important; /* VARIABLE CSS - COHÉRENT AVEC L'ÉDITEUR */
+  background-color: var(--color-bg-primary) !important;
+}
+
+/* RÈGLE GÉNÉRALE SUPPRIMÉE - ÉVITE DE CASSER LES STYLES MARKDOWN */
+
+/* ==========================================================================
+   HEADERS - BACKGROUND COHÉRENT AVEC L'ÉDITEUR - RÈGLES ULTRA-SPÉCIFIQUES
+   ========================================================================== */
+/* Headers de la page publique - RÈGLES ULTRA-SPÉCIFIQUES APRÈS LA GÉNÉRALE */
+.public-note-container .editor-header,
+.public-note-container .noteLayout-header,
+.public-note-container .public-header,
+.public-note-container .public-header-image,
+.public-note-container .public-header-title,
+.public-note-container .public-header-overlay {
+  background: var(--color-bg-header) !important; /* VARIABLE CSS - HEADER */
+  background-color: var(--color-bg-header) !important;
+}
+
+/* FORCER LE BACKGROUND SUR L'IMAGE DU HEADER */
+.public-note-container .public-header-image img {
+  background: var(--color-bg-header) !important; /* VARIABLE CSS - HEADER */
+  background-color: var(--color-bg-header) !important;
+}
+
+/* FORCER LE BACKGROUND SUR LE BOUTON D'ÉDITION DU HEADER */
+.public-note-container .public-edit-button-header {
+  background: var(--color-bg-header) !important; /* VARIABLE CSS - HEADER */
+  background-color: var(--color-bg-header) !important;
+}
+
+/* ==========================================================================
+   VRAI HEADER DE LA PAGE PUBLIQUE - CLASSES RÉELLES
+   ========================================================================== */
+/* Header principal de la page publique */
+.public-page-header {
+  background: var(--color-bg-header) !important; /* VARIABLE CSS - HEADER */
+  background-color: var(--color-bg-header) !important;
+}
+
+/* Sections du header */
+.public-page-header .public-header-left,
+.public-page-header .public-header-buttons {
+  background: var(--color-bg-header) !important; /* VARIABLE CSS - HEADER */
+  background-color: var(--color-bg-header) !important;
+}
+
+/* Logo et recherche */
+.public-page-header .public-header-logo,
+.public-page-header .public-header-search {
+  background: var(--color-bg-header) !important; /* VARIABLE CSS - HEADER */
+  background-color: var(--color-bg-header) !important;
+}
+
+/* Input de recherche */
+.public-page-header .public-header-search-input {
+  background: var(--color-bg-header) !important; /* VARIABLE CSS - HEADER */
+  background-color: var(--color-bg-header) !important;
+}
+
+/* Boutons du header */
+.public-page-header .public-header-button {
+  background: var(--color-bg-header) !important; /* VARIABLE CSS - HEADER */
+  background-color: var(--color-bg-header) !important;
 }
 
 /* ==========================================================================
@@ -110,9 +201,9 @@
 
 /* Forcer le thème sombre sur le container principal */
 .public-note-container {
-  background: #141414;
-  background-color: #141414;
-  color: #D4D4D4; /* Gris clair comme dans l'image */
+  background: var(--color-bg-primary) !important; /* VARIABLE CSS - COHÉRENT AVEC L'ÉDITEUR */
+  background-color: var(--color-bg-primary) !important;
+  color: var(--color-text-primary) !important; /* COHÉRENT AVEC L'ÉDITEUR */
   width: 100vw;
   min-height: 100vh;
   padding-bottom: 64px;
@@ -121,9 +212,9 @@
 /* Forcer le thème sombre sur html et body de la page publique */
 html.public-note-page,
 body.public-note-page {
-  background: #141414;
-  background-color: #141414;
-  color: #D4D4D4; /* Gris clair comme dans l'image */
+  background: var(--color-bg-primary) !important; /* VARIABLE CSS - COHÉRENT AVEC L'ÉDITEUR */
+  background-color: var(--color-bg-primary) !important;
+  color: var(--color-text-primary) !important; /* COHÉRENT AVEC L'ÉDITEUR */
 }
 
 /* ==========================================================================
@@ -232,11 +323,46 @@ body.public-note-page {
 }
 
 /* ==========================================================================
-   PADDING TITRE PAGE PUBLIQUE - DÉLÉGUÉ À TYPOGRAPHY.CSS
+   ESPACEMENTS SPÉCIFIQUES PAR LAYOUT - IDENTIQUES À L'ÉDITEUR
    ==========================================================================
-   Les paddings sont maintenant gérés par typography.css avec la structure
-   identique à l'éditeur (noteLayout-title + noteLayout-content)
+   Les espacements sont maintenant identiques à l'éditeur pour chaque type de layout
 */
+
+/* 1. Layout avec titre dans l'image - ESPACEMENT RÉDUIT POUR PAGE PUBLIQUE */
+.public-note-container .noteLayout.imageWithTitle .noteLayout-content {
+  margin-top: -16px; /* RÉDUIT - -16px pour page publique */
+  padding-top: 8px; /* RÉDUIT - 8px pour page publique */
+}
+
+.public-note-container .noteLayout.imageWithTitle .noteLayout-title h1 {
+  padding: 0 0 1px 0; /* padding minimal */
+}
+
+/* 2. Layout image seule - ESPACEMENT RÉDUIT POUR PAGE PUBLIQUE */
+.public-note-container .noteLayout.imageOnly .noteLayout-title {
+  padding-top: 4px; /* IDENTIQUE À L'ÉDITEUR */
+}
+
+.public-note-container .noteLayout.imageOnly .noteLayout-title h1 {
+  padding: 0; /* IDENTIQUE À L'ÉDITEUR */
+}
+
+.public-note-container .noteLayout.imageOnly .noteLayout-content {
+  padding-top: 8px; /* RÉDUIT - 8px pour page publique */
+}
+
+/* 3. Layout sans image - ESPACEMENT IDENTIQUE À L'ÉDITEUR */
+.public-note-container .noteLayout.noImage .noteLayout-title {
+  padding-top: 60px; /* IDENTIQUE À L'ÉDITEUR */
+}
+
+.public-note-container .noteLayout.noImage .noteLayout-title h1 {
+  padding: 0 0 0 0; /* Pas de padding - géré par le conteneur */
+}
+
+.public-note-container .noteLayout.noImage .noteLayout-content {
+  padding-top: 0; /* IDENTIQUE À L'ÉDITEUR */
+}
 
 /* ==========================================================================
    RESPONSIVE DESIGN - MOBILE PREMIUM
@@ -253,10 +379,10 @@ body.public-note-page {
     padding-bottom: 32px;
   }
 
-  /* Image d'en-tête - hauteur réduite */
+  /* Image d'en-tête - hauteur réduite - ESPACEMENT IDENTIQUE À L'ÉDITEUR */
   .public-header-image {
     height: var(--editor-header-image-height-mobile) ; /* 200px - cohérent avec l'éditeur */
-    margin-bottom: 6px;
+    margin-bottom: 16px; /* IDENTIQUE À L'ÉDITEUR - 16px sur mobile */
   }
 
   /* Titre dans l'image - ajustements */
@@ -332,10 +458,10 @@ body.public-note-page {
     padding-bottom: 24px;
   }
 
-  /* Image d'en-tête - encore plus petite */
+  /* Image d'en-tête - encore plus petite - ESPACEMENT IDENTIQUE À L'ÉDITEUR */
   .public-header-image {
     height: 150px ;
-    margin-bottom: 4px;
+    margin-bottom: 12px; /* IDENTIQUE À L'ÉDITEUR - 12px sur petit mobile */
   }
 
   /* Titre dans l'image - très compact */
@@ -408,10 +534,10 @@ body.public-note-page {
   /* Wrapper du contenu - DÉLÉGUÉ À TYPOGRAPHY.CSS */
   /* Les styles responsive sont maintenant gérés par typography.css */
 
-  /* Image d'en-tête - hauteur minimale */
+  /* Image d'en-tête - hauteur minimale - ESPACEMENT IDENTIQUE À L'ÉDITEUR */
   .public-header-image {
     height: 120px ;
-    margin-bottom: 3px;
+    margin-bottom: 8px; /* IDENTIQUE À L'ÉDITEUR - 8px sur très petit mobile */
   }
 
   /* Texte du contenu - DÉLÉGUÉ À TYPOGRAPHY.CSS */
@@ -460,10 +586,10 @@ body.public-note-page {
    LANDSCAPE MOBILE (orientation paysage)
    ========================================================================== */
 @media (max-width: 768px) and (orientation: landscape) {
-  /* Image d'en-tête - hauteur réduite en paysage */
+  /* Image d'en-tête - hauteur réduite en paysage - ESPACEMENT IDENTIQUE À L'ÉDITEUR */
   .public-header-image {
     height: 120px ;
-    margin-bottom: 4px;
+    margin-bottom: 8px; /* IDENTIQUE À L'ÉDITEUR - 8px en paysage */
   }
 
   /* Titre dans l'image - ajustements paysage */
