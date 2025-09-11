@@ -520,10 +520,13 @@ export class V2UnifiedApi {
         throw new Error(result.error || 'Erreur lors de la création du dossier');
       }
 
-      // 🎯 Déclencher le polling ciblé pour la création
+      // 🎯 Déclencher le polling ciblé pour la création (avec délai)
       try {
         const { triggerPollingAfterFolderAction } = await import('@/services/uiActionPolling');
-        await triggerPollingAfterFolderAction('folder_created');
+        // Délai pour laisser l'API se terminer complètement
+        setTimeout(async () => {
+          await triggerPollingAfterFolderAction('folder_created');
+        }, 500);
       } catch (error) {
         console.warn('[V2UnifiedApi] ⚠️ Erreur déclenchement polling ciblé:', error);
       }
@@ -653,10 +656,13 @@ export class V2UnifiedApi {
         });
       }
       
-      // 🎯 Déclencher le polling ciblé pour la suppression
+      // 🎯 Déclencher le polling ciblé pour la suppression (avec délai)
       try {
         const { triggerPollingAfterFolderAction } = await import('@/services/uiActionPolling');
-        await triggerPollingAfterFolderAction('folder_deleted');
+        // Délai pour laisser l'API se terminer complètement
+        setTimeout(async () => {
+          await triggerPollingAfterFolderAction('folder_deleted');
+        }, 500);
       } catch (error) {
         console.warn('[V2UnifiedApi] ⚠️ Erreur déclenchement polling ciblé:', error);
       }
