@@ -184,7 +184,7 @@ export function useFolderManagerState(classeurId: string, userId: string, parent
       }
       const result = await v2UnifiedApi.createFolder({
         name,
-        notebook_id: classeurId,
+        classeur_id: classeurId,
         parent_id: parentFolderId,
       });
       if (process.env.NODE_ENV === 'development') {

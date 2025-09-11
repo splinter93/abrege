@@ -51,7 +51,7 @@ export interface FolderUpdateData {
 
 export interface FolderCreateData {
   name: string;
-  notebook_id: string;
+  classeur_id: string;
   parent_id?: string | null;
 }
 

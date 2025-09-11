@@ -32,7 +32,7 @@ export interface UpdateNoteData {
 
 export interface CreateFolderData {
   name: string;
-  notebook_id: string;
+  classeur_id: string;
   parent_id?: string | null;
 }
 

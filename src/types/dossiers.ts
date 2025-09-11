@@ -65,7 +65,7 @@ export interface FolderPathItem {
 
 export interface CreateFolderRequest {
   name: string;
-  notebook_id: string;
+  classeur_id: string;
   parent_id?: string | null;
 }
 
