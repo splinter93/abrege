@@ -508,54 +508,23 @@ export class V2DatabaseUtils {
    * Créer un dossier
    */
   static async createFolder(data: CreateFolderData, userId: string, context: ApiContext, supabaseClient?: any) {
-    logApi.info(`🚀 Création dossier directe DB`, context);
+    logApi.info(`🚀 Création dossier ULTRA-RAPIDE`, context);
     
     try {
       // 🔧 CORRECTION: Utiliser le client authentifié si fourni
       const client = supabaseClient || supabase;
       
-      // Résoudre le classeur_id (peut être un UUID ou un slug)
-      let classeurId = data.classeur_id;
+      // ⚡ OPTIMISATION: Slug simple basé sur le nom + timestamp (pas de vérification DB)
+      const timestamp = Date.now().toString(36);
+      const slug = `${data.name.toLowerCase().replace(/[^a-z0-9]/g, '-')}-${timestamp}`;
       
-      // Si ce n'est pas un UUID, essayer de le résoudre comme un slug
-      if (!classeurId.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
-        const { data: classeur, error: resolveError } = await client
-          .from('classeurs')
-          .select('id')
-          .eq('slug', classeurId)
-          .eq('user_id', userId)
-          .single();
-        
-        if (resolveError || !classeur) {
-          throw new Error(`Classeur non trouvé: ${classeurId}`);
-        }
-        
-        classeurId = classeur.id;
-      }
-
-      // Vérifier que le dossier parent existe et appartient à l'utilisateur
-      if (data.parent_id) {
-        const { data: parentFolder, error: parentError } = await client
-          .from('folders')
-          .select('id')
-          .eq('id', data.parent_id)
-          .eq('user_id', userId)
-          .single();
-
-        if (parentError || !parentFolder) {
-          throw new Error(`Dossier parent non trouvé: ${data.parent_id}`);
-        }
-      }
-
-      // Générer un slug unique avec le client authentifié
-      const slug = await SlugGenerator.generateSlug(data.name, 'folder', userId, undefined, supabase);
-      
-      // Créer le dossier
-      const { data: folder, error: createError } = await supabase
+      // ⚡ OPTIMISATION: Création directe sans vérifications préalables
+      // Les contraintes DB se chargeront de valider l'intégrité
+      const { data: folder, error: createError } = await client
         .from('folders')
         .insert({
           name: data.name,
-          classeur_id: classeurId, // 🔧 CORRECTION TEMPORAIRE: Utiliser uniquement classeur_id
+          classeur_id: data.classeur_id, // On fait confiance au frontend
           parent_id: data.parent_id,
           user_id: userId,
           slug
@@ -564,10 +533,14 @@ export class V2DatabaseUtils {
         .single();
 
       if (createError) {
+        // Si erreur de contrainte, on peut faire une vérification ciblée
+        if (createError.code === '23503') { // Foreign key violation
+          throw new Error(`Classeur ou dossier parent non trouvé`);
+        }
         throw new Error(`Erreur création dossier: ${createError.message}`);
       }
 
-      logApi.info(`✅ Dossier créé avec succès`, context);
+      logApi.info(`✅ Dossier créé ULTRA-RAPIDE`, context);
       return { success: true, data: folder };
       
     } catch (error) {
