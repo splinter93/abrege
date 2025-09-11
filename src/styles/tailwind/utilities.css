@@ -2,6 +2,8 @@
    UTILITAIRES CHAT - CLASSES RÉUTILISABLES
    ======================================== */
 
+@tailwind utilities;
+
 @layer utilities {
   /* ========================================
      TRANSITIONS

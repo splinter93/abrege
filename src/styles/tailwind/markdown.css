@@ -7,6 +7,8 @@
    et cohérence avec la hiérarchie Noto Sans (titres) / Inter (texte)
 */
 
+@tailwind components;
+
 @layer components {
   .chat-markdown {
     /* Utilise les styles de chat-markdown-typography.css */
