@@ -73,7 +73,7 @@ export class SimpleChatOrchestrator {
           };
         }
 
-        const toolResults = await this.toolExecutor.executeSimple(newToolCalls, context.userToken);
+        const toolResults = await this.toolExecutor.executeSimple(newToolCalls, context.userToken, context.sessionId);
         allToolCalls.push(...newToolCalls);
         allToolResults.push(...toolResults);
         

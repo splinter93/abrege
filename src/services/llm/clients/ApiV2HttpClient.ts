@@ -65,21 +65,15 @@ export class ApiV2HttpClient {
   ): Promise<T> {
     let url = `${this.baseUrl}/api/v2${endpoint}`;
     
-    // Authentification simplifiée
+    // ✅ CORRECTION SÉCURITÉ : Toujours utiliser l'authentification authenticated
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
       'X-Client-Type': 'agent'
     };
     
-    const isUserId = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userToken);
-    
-    if (isUserId) {
-      headers['X-User-Id'] = userToken;
-      headers['X-Service-Role'] = 'true';
-      headers['Authorization'] = `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`;
-    } else {
-      headers['Authorization'] = `Bearer ${userToken}`;
-    }
+    // ✅ CORRECTION : Ne jamais contourner RLS avec Service Role
+    // Tous les tools doivent utiliser l'authentification normale
+    headers['Authorization'] = `Bearer ${userToken}`;
 
     const requestOptions: RequestInit = {
       method,

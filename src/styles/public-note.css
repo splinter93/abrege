@@ -88,10 +88,20 @@
 .public-note-container .noteLayout-header,
 .public-note-container .public-header,
 .public-note-container .public-header-image,
-.public-note-container .public-header-title,
 .public-note-container .public-header-overlay {
   background: var(--color-bg-header) !important; /* VARIABLE CSS - HEADER */
   background-color: var(--color-bg-header) !important;
+}
+
+/* Titre dans l'image - fond transparent */
+.public-note-container .public-header-title {
+  background: transparent !important; /* TRANSPARENT POUR TITRE DANS IMAGE */
+  background-color: transparent !important;
+}
+
+.public-note-container .public-header-title h1 {
+  background: transparent !important; /* TRANSPARENT POUR TITRE DANS IMAGE */
+  background-color: transparent !important;
 }
 
 /* FORCER LE BACKGROUND SUR L'IMAGE DU HEADER */
@@ -365,8 +375,15 @@ body.public-note-page {
   padding-top: 8px; /* RÉDUIT - 8px pour page publique */
 }
 
+.public-note-container .noteLayout.imageWithTitle .noteLayout-title {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
 .public-note-container .noteLayout.imageWithTitle .noteLayout-title h1 {
   padding: 0 0 1px 0; /* padding minimal */
+  background: transparent !important;
+  background-color: transparent !important;
 }
 
 /* 2. Layout image seule - ESPACEMENT RÉDUIT POUR PAGE PUBLIQUE */

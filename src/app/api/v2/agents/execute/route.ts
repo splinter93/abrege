@@ -16,6 +16,7 @@ import { logApi } from '@/utils/logger';
 import { getAuthenticatedUser } from '@/utils/authUtils';
 import { executeAgentV2Schema, validatePayload, createValidationErrorResponse } from '@/utils/v2ValidationSchemas';
 import { SpecializedAgentManager } from '@/services/specializedAgents/SpecializedAgentManager';
+import { generateUserJWT } from '@/utils/jwtGenerator';
 
 // ============================================================================
 // TYPES
@@ -107,11 +108,25 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       const authHeader = request.headers.get('authorization');
       userToken = authHeader?.startsWith('Bearer ') ? authHeader.substring(7) : null;
     } else if (authType === 'api_key') {
-      // 🔑 CORRECTION : Pour les clés d'API, on utilise l'impersonation d'agent
-      // Au lieu de générer un JWT, on passe l'userId directement
-      // Le système d'impersonation gérera l'authentification pour les tool calls
-      userToken = userId; // ✅ CORRECTION : Passer l'userId directement
-      logApi.info(`🔑 Clé d'API détectée - Utilisation de l'impersonation pour l'utilisateur: ${userId}`, context);
+      // ✅ CORRECTION SÉCURITÉ : Générer un JWT valide pour l'utilisateur
+      // Au lieu de contourner RLS avec Service Role
+      logApi.info(`🔑 Clé d'API détectée - Génération JWT pour l'utilisateur: ${userId}`, context);
+      
+      const jwtToken = await generateUserJWT(userId);
+      if (!jwtToken) {
+        logApi.error(`❌ Impossible de générer un JWT pour l'utilisateur: ${userId}`, context);
+        return NextResponse.json(
+          { 
+            error: 'Erreur d\'authentification',
+            code: 'AUTH_ERROR',
+            message: 'Impossible de générer un token d\'authentification'
+          },
+          { status: 401 }
+        );
+      }
+      
+      userToken = jwtToken;
+      logApi.info(`✅ JWT généré avec succès pour l'utilisateur: ${userId}`, context);
     } else if (authType === 'oauth') {
       // Pour OAuth, extraire le token
       const authHeader = request.headers.get('authorization');
@@ -177,18 +192,17 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     // 🚀 Exécuter l'agent
     logApi.info(`🤖 Exécution agent: ${agent.display_name || agent.slug}`, context);
     
-    // 🔧 CORRECTION CRITIQUE : Préserver le token de l'utilisateur final
-    // Quand un agent appelle un autre agent, on doit utiliser le token de l'utilisateur original,
-    // pas celui de l'agent appelant, pour que l'agent appelé puisse faire des tool calls
-    const finalUserToken = userToken; // ✅ CORRECTION : userToken contient maintenant soit le JWT original, soit le JWT généré
+    // ✅ CORRECTION SÉCURITÉ : Utiliser le JWT valide pour l'authentification
+    // Le JWT respecte les politiques RLS et permet l'accès aux données de l'utilisateur
+    const finalUserToken = userToken; // JWT valide (original ou généré)
     
-    logApi.info(`🔑 TOKEN D'AUTHENTIFICATION POUR L'AGENT APPELÉ:`, {
+    logApi.info(`🔑 TOKEN D'AUTHENTIFICATION POUR L'AGENT:`, {
       hasUserToken: !!userToken,
       hasUserId: !!userId,
       authType,
       tokenType: userToken ? 'JWT' : 'AUCUN',
       finalToken: finalUserToken ? finalUserToken.substring(0, 8) + '...' : 'AUCUN',
-      isUserId: false // On ne passe plus jamais d'userId comme token
+      respectsRLS: true // Le JWT respecte les politiques RLS
     });
     
     const executionResult = await agentManager.executeSpecializedAgent(

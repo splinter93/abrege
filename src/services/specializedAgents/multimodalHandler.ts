@@ -76,7 +76,7 @@ export class MultimodalHandler {
       temperature: options.temperature ?? 1,
       max_completion_tokens: options.max_completion_tokens ?? 1024,
       top_p: options.top_p ?? 1,
-      stream: options.stream ?? true,
+      stream: options.stream ?? false,
       stop: options.stop ?? null
     };
   }

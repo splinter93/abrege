@@ -318,6 +318,11 @@
 }
 
 /* Style du titre dans l'image */
+.noteLayout.imageWithTitle .noteLayout-title {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
 .noteLayout.imageWithTitle .noteLayout-title textarea {
   color: white;
   text-shadow: 0 2px 4px rgba(0,0,0,0.2);
@@ -326,12 +331,16 @@
   max-width: 800px;
   white-space: pre-wrap;
   overflow: visible;
+  background: transparent !important;
+  background-color: transparent !important;
 }
 
 /* Wide mode pour le titre dans l'image */
 .noteLayout.imageWithTitle.wide-mode .noteLayout-title {
   width: 1000px;
   max-width: 1000px;
+  background: transparent !important;
+  background-color: transparent !important;
 }
 
 .noteLayout.imageWithTitle.wide-mode .noteLayout-title > .editor-container-width {
@@ -681,8 +690,8 @@ body.public-note-page {
   max-width: 800px;
   padding: 0;
   box-sizing: border-box;
-  background: var(--color-bg-header) !important; /* VARIABLE CSS - HEADER */
-  background-color: var(--color-bg-header) !important;
+  background: transparent !important; /* TRANSPARENT POUR TITRE DANS IMAGE */
+  background-color: transparent !important;
   text-align: center;
   z-index: 10;
 }
@@ -745,6 +754,8 @@ body.public-note-page {
   padding: 0 0 4px 0;
   white-space: pre-wrap;
   overflow: visible;
+  background: transparent !important;
+  background-color: transparent !important;
 }
 
 /* Match spacing between title and text for no-image layout to image-only layout */
