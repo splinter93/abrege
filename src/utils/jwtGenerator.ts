@@ -100,45 +100,6 @@ export async function generateAgentJWT(userId: string): Promise<string | null> {
   }
 }
 
-/**
- * Génère un JWT temporaire pour les agents
- * Alternative plus simple pour les agents qui n'ont pas besoin de session complète
- */
-export async function generateAgentJWT(userId: string): Promise<string | null> {
-  try {
-    logger.info(`[JWTGenerator] 🤖 Génération JWT agent pour: ${userId}`);
-
-    // Créer un client Supabase avec l'utilisateur spécifique
-    const { data: sessionData, error: sessionError } = await supabase.auth.admin.generateLink({
-      type: 'magiclink',
-      email: `agent-${userId}@scrivia.internal`, // Email temporaire pour l'agent
-      options: {
-        redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/auth/callback`
-      }
-    });
-
-    if (sessionError || !sessionData) {
-      logger.error(`[JWTGenerator] ❌ Erreur génération session agent:`, sessionError);
-      return null;
-    }
-
-    // Extraire le token
-    const url = new URL(sessionData.properties.action_link);
-    const token = url.searchParams.get('token');
-    
-    if (!token) {
-      logger.error(`[JWTGenerator] ❌ Token agent non trouvé`);
-      return null;
-    }
-
-    logger.info(`[JWTGenerator] ✅ JWT agent généré pour: ${userId}`);
-    return token;
-
-  } catch (error) {
-    logger.error(`[JWTGenerator] ❌ Erreur génération JWT agent:`, error);
-    return null;
-  }
-}
 
 /**
  * Valide un JWT et retourne l'utilisateur associé
