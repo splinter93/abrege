@@ -104,6 +104,8 @@ export function useAuth() {
   }, []);
 
   useEffect(() => {
+    let isInitialized = false;
+    
     const initializeAuth = async () => {
       try {
         setLoading(true);
@@ -124,14 +126,18 @@ export function useAuth() {
         setUser(null);
       } finally {
         setLoading(false);
+        isInitialized = true;
       }
     };
 
     initializeAuth();
 
-    // Écouter les changements d'authentification
+    // Écouter les changements d'authentification SEULEMENT après l'initialisation
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        // Éviter les déclenchements pendant l'initialisation
+        if (!isInitialized) return;
+        
         console.log(`🔧 Auth: Changement d'état d'authentification: ${event}`);
         
         if (event === 'SIGNED_IN' && session?.user) {

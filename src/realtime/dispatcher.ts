@@ -61,10 +61,32 @@ export function handleRealtimeEvent(event: { type: string, payload: any, timesta
       store.moveNote(payload.id, payload.folder_id, payload.classeur_id);
       break;
     case 'note.updated':
-      if (debug) {
-        console.log('[Realtime] note.updated - Payload complet:', { payload });
+    case 'note.update': // Support pour les deux formats
+
+      // Vérifier si c'est une mise à jour de contenu significative
+      const currentNote = store.notes[payload.id];
+      if (currentNote) {
+        const contentChanged = currentNote.markdown_content !== payload.markdown_content ||
+                              currentNote.html_content !== payload.html_content;
+        
+        // Vérifier les changements liés aux images et à la présentation
+        const imageChanged = currentNote.header_image !== payload.header_image ||
+                            currentNote.header_image_blur !== payload.header_image_blur ||
+                            currentNote.header_image_overlay !== payload.header_image_overlay ||
+                            currentNote.header_title_in_image !== payload.header_title_in_image ||
+                            currentNote.header_image_offset !== payload.header_image_offset;
+        
+        // Vérifier les changements de style et de présentation
+        const styleChanged = currentNote.font_family !== payload.font_family ||
+                            currentNote.wide_mode !== payload.wide_mode ||
+                            currentNote.source_title !== payload.source_title;
+
+        if (contentChanged || imageChanged || styleChanged) {
+          store.updateNote(payload.id, payload);
+        }
+      } else {
+        store.updateNote(payload.id, payload);
       }
-      store.updateNote(payload.id, payload);
       break;
       
     // Dossiers
@@ -105,7 +127,9 @@ export function handleRealtimeEvent(event: { type: string, payload: any, timesta
       break;
       
     default:
-      if (debug) console.warn('[Realtime] Event ignoré :', { type, payload });
+      if (debug) {
+        // Event ignoré en mode debug
+      }
       break;
   }
 }
@@ -114,17 +138,12 @@ export function handleRealtimeEvent(event: { type: string, payload: any, timesta
  * logEventToConsole - Affiche l'event WebSocket dans la console (debug)
  */
 export function logEventToConsole(event: { type: string, payload: any, timestamp: number }) {
-  console.log('[Realtime] Event reçu :', { 
-    type: event.type, 
-    payload: event.payload, 
-    time: new Date(event.timestamp).toLocaleTimeString() 
-  });
+  // Fonction de debug - logs supprimés pour la production
 }
 
 /**
  * handleEditorEvent - Gère les événements spécifiques à l'éditeur
  */
 export function handleEditorEvent(event: { type: string, payload: any, timestamp: number }) {
-  console.log('[Realtime] Event éditeur reçu :', event);
   // TODO: Implémenter la logique spécifique à l'éditeur selon les besoins
 } 

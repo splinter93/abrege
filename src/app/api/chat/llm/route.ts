@@ -28,6 +28,13 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { message, context, history, provider } = body;
 
+    // 🕵️‍♂️ DEBUG: Log du body reçu par l'API
+    logger.dev('🕵️‍♂️ [API Route] Body Reçu:', {
+      hasMessage: !!message,
+      hasContext: !!context,
+      contextContent: JSON.stringify(context)
+    });
+
     // Validation des paramètres requis
     if (!message || !context || !history) {
       return NextResponse.json(
@@ -79,7 +86,7 @@ export async function POST(request: NextRequest) {
     }
     
     // Extraire les valeurs nécessaires depuis le contexte
-    const { sessionId: extractedSessionId, agentId } = context;
+    const { sessionId: extractedSessionId, agentId, uiContext } = context;
     sessionId = extractedSessionId;
 
     if (!sessionId) {
@@ -236,7 +243,10 @@ export async function POST(request: NextRequest) {
     // Appel à la logique Groq OSS 120B avec l'agentConfig récupéré
     const result = await handleGroqGptOss120b({
       message,
-      appContext: context,
+      appContext: {
+        ...context,
+        uiContext // ✅ Inclure le contexte UI
+      },
       sessionHistory: history,
       agentConfig: finalAgentConfig, // ✅ Récupéré depuis la base, par ID si fourni
       userToken,

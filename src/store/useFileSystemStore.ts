@@ -7,6 +7,7 @@ export interface Note {
   id: string;
   source_title: string;
   markdown_content: string;
+  html_content?: string;
   folder_id: string | null;
   classeur_id: string;
   position: number;

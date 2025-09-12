@@ -89,16 +89,21 @@ export async function getAuthenticatedUser(request: NextRequest): Promise<AuthRe
     const apiKey = request.headers.get('X-API-Key');
     if (apiKey) {
       try {
+        logApi.info(`[AuthUtils] 🔑 Validation clé API: ${apiKey.substring(0, 20)}...`);
         const apiKeyUser = await validateApiKey(apiKey);
         if (apiKeyUser) {
+          logApi.info(`[AuthUtils] ✅ Clé API validée pour utilisateur: ${apiKeyUser.user_id}`);
           return {
             success: true,
             userId: apiKeyUser.user_id,
             scopes: apiKeyUser.scopes || ['notes:read', 'classeurs:read', 'dossiers:read'],
             authType: 'api_key'
           };
+        } else {
+          logApi.warn(`[AuthUtils] ❌ Clé API invalide ou expirée`);
         }
       } catch (apiKeyError) {
+        logApi.error(`[AuthUtils] ❌ Erreur validation clé API:`, apiKeyError);
         // API Key invalide, essai OAuth
       }
     }

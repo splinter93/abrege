@@ -4,6 +4,7 @@
  */
 
 import { simpleLogger as logger } from '@/utils/logger';
+import { contextCollector, UIContext } from './ContextCollector';
 
 export interface AgentTemplateConfig {
   system_instructions?: string;
@@ -32,6 +33,7 @@ export interface RenderedTemplate {
   hasExpertise: boolean;
   hasCapabilities: boolean;
   hasApiV2Capabilities: boolean;
+  hasUIContext: boolean;
 }
 
 /**
@@ -50,7 +52,124 @@ export class AgentTemplateService {
   }
 
   /**
-   * Rendu du template principal de l'agent
+   * Rendu du template principal de l'agent avec contexte UI
+   */
+  async renderAgentTemplateWithUIContext(
+    agentConfig: AgentTemplateConfig,
+    uiContext: UIContext,
+    fallbackTemplate: string = 'Tu es un assistant IA utile et bienveillant.'
+  ): Promise<RenderedTemplate> {
+    let content = '';
+    let hasCustomInstructions = false;
+    let hasContextTemplate = false;
+    let hasPersonality = false;
+    let hasExpertise = false;
+    let hasCapabilities = false;
+    let hasApiV2Capabilities = false;
+    let hasUIContext = false;
+
+    // 1. Instructions système personnalisées
+    const primaryInstructions = agentConfig.system_instructions?.trim();
+    const legacyInstructions = agentConfig.instructions?.trim();
+    if (primaryInstructions || legacyInstructions) {
+      content = (primaryInstructions || legacyInstructions)!;
+      hasCustomInstructions = true;
+      logger.dev(`[AgentTemplate] 🎯 Template personnalisé utilisé pour l'agent`);
+    } else {
+      content = fallbackTemplate;
+      logger.dev(`[AgentTemplate] ⚙️ Template par défaut utilisé`);
+    }
+
+    // 2. Template contextuel avec variables (legacy)
+    if (agentConfig.context_template) {
+      try {
+        const contextualContent = this.renderContextTemplate(agentConfig.context_template, {
+          type: uiContext.page.type,
+          name: uiContext.page.name,
+          id: uiContext.activeNote?.id || uiContext.activeClasseur?.id || uiContext.activeFolder?.id || 'current',
+          content: uiContext.activeNote?.name || uiContext.page.name
+        });
+        content = `${content}\n\n${contextualContent}`;
+        hasContextTemplate = true;
+        logger.dev(`[AgentTemplate] 🌍 Template contextuel appliqué`);
+      } catch (error) {
+        logger.error(`[AgentTemplate] ❌ Erreur lors de l'application du template contextuel:`, error);
+      }
+    }
+
+    // 3. Contexte UI (nouveau système)
+    const contextResult = contextCollector.generateContextSection(uiContext);
+    if (contextResult.contextSection) {
+      content = `${content}\n\n${contextResult.contextSection}`;
+      hasUIContext = true;
+      
+      // ✅ SIMPLIFIÉ : Logs réduits
+      if (process.env.NODE_ENV === 'development') {
+        logger.dev(`[AgentTemplate] 🖥️ Contexte UI injecté`);
+      }
+    }
+
+    // 4. Personnalité
+    if (agentConfig.personality) {
+      content += `\n\n## Personnalité\n${agentConfig.personality}`;
+      hasPersonality = true;
+      logger.dev(`[AgentTemplate] 🎭 Personnalité ajoutée`);
+    }
+
+    // 5. Domaines d'expertise
+    if (agentConfig.expertise && agentConfig.expertise.length > 0) {
+      const expertiseList = agentConfig.expertise.filter(e => e?.trim()).join(', ');
+      if (expertiseList) {
+        content += `\n\n## Domaines d'expertise\n${expertiseList}`;
+        hasExpertise = true;
+        logger.dev(`[AgentTemplate] 🎓 Expertise ajoutée`);
+      }
+    }
+
+    // 6. Capacités
+    if (agentConfig.capabilities && agentConfig.capabilities.length > 0) {
+      const capabilitiesList = agentConfig.capabilities.filter(c => c?.trim()).join(', ');
+      if (capabilitiesList) {
+        content += `\n\n## Capacités\n${capabilitiesList}`;
+        hasCapabilities = true;
+        logger.dev(`[AgentTemplate] 🔧 Capacités ajoutées`);
+      }
+    }
+
+    // 7. Capacités API v2
+    if (agentConfig.api_v2_capabilities && agentConfig.api_v2_capabilities.length > 0) {
+      const apiCapabilitiesList = agentConfig.api_v2_capabilities.filter(c => c?.trim()).join(', ');
+      if (apiCapabilitiesList) {
+        content += `\n\n## Capacités API v2\n${apiCapabilitiesList}`;
+        hasApiV2Capabilities = true;
+        logger.dev(`[AgentTemplate] 🚀 Capacités API v2 ajoutées`);
+      }
+    }
+
+    logger.dev(`[AgentTemplate] ✅ Template complet rendu (${content.length} chars)`, {
+      hasCustomInstructions,
+      hasContextTemplate,
+      hasUIContext,
+      hasPersonality,
+      hasExpertise,
+      hasCapabilities,
+      hasApiV2Capabilities
+    });
+
+    return {
+      content: content.trim(),
+      hasCustomInstructions,
+      hasContextTemplate,
+      hasPersonality,
+      hasExpertise,
+      hasCapabilities,
+      hasApiV2Capabilities,
+      hasUIContext
+    };
+  }
+
+  /**
+   * Rendu du template principal de l'agent (legacy)
    */
   renderAgentTemplate(
     agentConfig: AgentTemplateConfig,
@@ -64,6 +183,7 @@ export class AgentTemplateService {
     let hasExpertise = false;
     let hasCapabilities = false;
     let hasApiV2Capabilities = false;
+    let hasUIContext = false;
 
     // 1. Instructions système personnalisées
     const primaryInstructions = agentConfig.system_instructions?.trim();
@@ -127,7 +247,8 @@ export class AgentTemplateService {
       hasPersonality,
       hasExpertise,
       hasCapabilities,
-      hasApiV2Capabilities
+      hasApiV2Capabilities,
+      hasUIContext: false
     };
   }
 

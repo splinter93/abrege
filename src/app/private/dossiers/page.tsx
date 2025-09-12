@@ -18,6 +18,8 @@ import type { AuthenticatedUser } from "@/types/dossiers";
 import { useFileSystemStore } from "@/store/useFileSystemStore";
 import TargetedPollingManager from "@/components/TargetedPollingManager";
 import TargetedPollingMonitor from "@/components/TargetedPollingMonitor";
+import { useRealtime } from "@/hooks/useRealtime";
+import RealtimeStatus from "@/components/RealtimeStatus";
 
 import "./index.css";
 import "@/components/DossierErrorBoundary.css";
@@ -56,6 +58,22 @@ function AuthenticatedDossiersContent({ user }: { user: AuthenticatedUser }) {
     context: 'DossiersPage',
     operation: 'gestion_dossiers',
     userId: user.id
+  });
+
+  // 🔄 Realtime Service - Initialisation pour les mises à jour en temps réel
+  const realtime = useRealtime({
+    userId: user.id,
+    debug: process.env.NODE_ENV === 'development',
+    onEvent: (event) => {
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[DossiersPage] 📨 Événement realtime reçu:', event);
+      }
+    },
+    onStateChange: (state) => {
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[DossiersPage] 🔄 État realtime:', state);
+      }
+    }
   });
   
   // Appeler useDossiersPage - TOUJOURS en deuxième
@@ -349,6 +367,9 @@ function AuthenticatedDossiersContent({ user }: { user: AuthenticatedUser }) {
       
       {/* 🎯 Monitor du polling ciblé (dev seulement) */}
       <TargetedPollingMonitor />
+      
+      {/* 🔄 Status Realtime */}
+      <RealtimeStatus userId={user.id} />
     </div>
   );
 } 

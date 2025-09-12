@@ -66,6 +66,9 @@ export class RealtimeService {
   private readonly reconnectDelay = 2000;
   private readonly heartbeatInterval = 60000; // 1 minute (plus économique)
   
+  // Throttling des reconnexions par canal
+  private channelReconnectTimes: Map<string, number> = new Map();
+  
   // Gestionnaire de visibilité
   private visibilityHandler: (() => void) | null = null;
 
@@ -86,7 +89,6 @@ export class RealtimeService {
    */
   public async initialize(config: RealtimeConfig): Promise<void> {
     if (this.config?.userId === config.userId && this.config?.noteId === config.noteId) {
-      logger.info(LogCategory.EDITOR, '[RealtimeService] Service déjà initialisé pour cette configuration');
       return;
     }
 
@@ -98,11 +100,6 @@ export class RealtimeService {
     this.config = { ...config };
     this.reconnectAttempts = 0;
 
-    logger.info(LogCategory.EDITOR, '[RealtimeService] Initialisation', {
-      userId: config.userId,
-      noteId: config.noteId,
-      debug: config.debug
-    });
 
     await this.connect();
   }
@@ -173,6 +170,11 @@ export class RealtimeService {
       throw new Error('Aucune session authentifiée');
     }
 
+    // Vérifier que l'utilisateur de la session correspond à celui configuré
+    if (session.user.id !== this.config?.userId) {
+      // Mismatch userId - continuer quand même
+    }
+
     if (this.config?.debug) {
       logger.info(LogCategory.EDITOR, '[RealtimeService] Session authentifiée:', {
         userId: session.user.id,
@@ -187,88 +189,36 @@ export class RealtimeService {
   private async createChannels(): Promise<void> {
     if (!this.config) return;
 
-    // Canal pour les changements de base de données (articles)
-    const articlesChannelName = `articles:${this.config.userId}`;
-    const articlesChannel = supabase
-      .channel(articlesChannelName)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'articles',
-          filter: `user_id=eq.${this.config.userId}`
-        },
-        (payload) => this.handleDatabaseEvent(payload, articlesChannelName)
-      );
+    // Attendre que l'authentification soit complète
+    await new Promise(resolve => setTimeout(resolve, 1000));
 
-    this.channels.set(articlesChannelName, articlesChannel);
+    // Vérifier à nouveau la session après l'attente
+    const { data: { session }, error } = await supabase.auth.getSession();
+    if (error || !session) {
+      throw new Error('Session d\'authentification perdue lors de la création des canaux');
+    }
 
-    // Canal pour les changements de dossiers (désactivé pour éviter les doublons avec optimistic UI)
-    // const foldersChannelName = `folders:${this.config.userId}`;
-    // const foldersChannel = supabase
-    //   .channel(foldersChannelName)
-    //   .on(
-    //     'postgres_changes',
-    //     {
-    //       event: '*',
-    //       schema: 'public',
-    //       table: 'folders',
-    //       filter: `user_id=eq.${this.config.userId}`
-    //     },
-    //     (payload) => this.handleDatabaseEvent(payload, foldersChannelName)
-    //   );
+    // Vérifier que le token JWT est valide
+    if (!session.access_token) {
+      throw new Error('Token d\'accès manquant dans la session');
+    }
 
-    // this.channels.set(foldersChannelName, foldersChannel);
-
-    // Canal pour les changements de classeurs
-    const classeursChannelName = `classeurs:${this.config.userId}`;
-    const classeursChannel = supabase
-      .channel(classeursChannelName)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'classeurs',
-          filter: `user_id=eq.${this.config.userId}`
-        },
-        (payload) => this.handleDatabaseEvent(payload, classeursChannelName)
-      );
-
-    this.channels.set(classeursChannelName, classeursChannel);
-
+    // Créer tous les canaux nécessaires
+    await this.createArticlesChannel();
+    await this.createClasseursChannel();
+    
     // Canal pour l'éditeur (si noteId fourni)
     if (this.config.noteId) {
-      const editorChannelName = `editor:${this.config.noteId}:${this.config.userId}`;
-      const editorChannel = supabase
-        .channel(editorChannelName, {
-          config: {
-            broadcast: { self: false },
-            presence: { key: this.config.userId }
-          }
-        })
-        .on('broadcast', { event: 'editor_update' }, (payload) => 
-          this.handleEditorEvent({ event: 'editor_update', payload }, editorChannelName)
-        )
-        .on('broadcast', { event: 'editor_insert' }, (payload) => 
-          this.handleEditorEvent({ event: 'editor_insert', payload }, editorChannelName)
-        )
-        .on('broadcast', { event: 'editor_delete' }, (payload) => 
-          this.handleEditorEvent({ event: 'editor_delete', payload }, editorChannelName)
-        );
-
-      this.channels.set(editorChannelName, editorChannel);
+      await this.createEditorChannel();
     }
 
     // S'abonner à tous les canaux
     for (const [channelName, channel] of this.channels) {
       try {
-        await channel.subscribe((status) => this.handleChannelStatus(channelName, status));
+        await channel.subscribe((status) => {
+          this.handleChannelStatus(channelName, status);
+        });
         
-        if (this.config.debug) {
-          logger.info(LogCategory.EDITOR, '[RealtimeService] Canal créé:', { channelName, status });
-        }
       } catch (error) {
         logger.error(LogCategory.EDITOR, '[RealtimeService] Erreur création canal:', {
           channelName,
@@ -285,7 +235,8 @@ export class RealtimeService {
   private handleDatabaseEvent(payload: Record<string, unknown>, channelName: string): void {
     if (!this.config) return;
 
-    const eventType = String(payload.eventType || 'unknown').toLowerCase();
+    // Supabase envoie event_type (avec underscore), pas eventType
+    const eventType = String(payload.event_type || payload.eventType || 'unknown').toLowerCase();
     const tableName = channelName.split(':')[0]; // articles, folders, classeurs
     
     // Mapper les événements PostgreSQL vers les événements du dispatcher
@@ -294,15 +245,40 @@ export class RealtimeService {
 
     switch (tableName) {
       case 'articles':
-        mappedEventType = `note.${eventType}`;
+        // Mapper correctement les types d'événements PostgreSQL vers les types du dispatcher
+        if (eventType === 'update') {
+          mappedEventType = 'note.updated';
+        } else if (eventType === 'insert') {
+          mappedEventType = 'note.created';
+        } else if (eventType === 'delete') {
+          mappedEventType = 'note.deleted';
+        } else {
+          mappedEventType = `note.${eventType}`;
+        }
         mappedPayload = payload.new || payload.old || {};
         break;
       case 'folders':
-        mappedEventType = `folder.${eventType}`;
+        if (eventType === 'insert') {
+          mappedEventType = 'folder.created';
+        } else if (eventType === 'update') {
+          mappedEventType = 'folder.updated';
+        } else if (eventType === 'delete') {
+          mappedEventType = 'folder.deleted';
+        } else {
+          mappedEventType = `folder.${eventType}`;
+        }
         mappedPayload = payload.new || payload.old || {};
         break;
       case 'classeurs':
-        mappedEventType = `classeur.${eventType}`;
+        if (eventType === 'insert') {
+          mappedEventType = 'classeur.created';
+        } else if (eventType === 'update') {
+          mappedEventType = 'classeur.updated';
+        } else if (eventType === 'delete') {
+          mappedEventType = 'classeur.deleted';
+        } else {
+          mappedEventType = `classeur.${eventType}`;
+        }
         mappedPayload = payload.new || payload.old || {};
         break;
       default:
@@ -369,24 +345,158 @@ export class RealtimeService {
       case 'SUBSCRIBED':
       case 'joined':
         this.updateState({ channels: currentChannels });
+        // Réinitialiser le compteur de tentatives en cas de succès
+        this.reconnectAttempts = 0;
         break;
 
       case 'CHANNEL_ERROR':
       case 'TIMED_OUT':
       case 'CLOSED':
-        this.channels.delete(channelName);
-        this.updateState({ 
-          channels: Array.from(this.channels.keys()),
-          error: `Canal fermé: ${channelName}`
-        });
-        
-        if (this.channels.size === 0) {
-          this.scheduleReconnect();
-        }
+        // Ne pas supprimer immédiatement le canal, essayer de le reconnecter
+        this.handleChannelReconnect(channelName);
         break;
 
       default:
         logger.warn(LogCategory.EDITOR, '[RealtimeService] Statut inconnu:', { channelName, status });
+    }
+  }
+
+  /**
+   * Crée le canal pour les articles
+   */
+  private async createArticlesChannel(): Promise<void> {
+    if (!this.config) return;
+
+    const articlesChannelName = `articles:${this.config.userId}`;
+    
+    const articlesChannel = supabase
+      .channel(articlesChannelName, {
+        config: {
+          broadcast: { self: false },
+          presence: { key: this.config.userId }
+        }
+      })
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'articles',
+          filter: `user_id=eq.${this.config.userId}`
+        },
+        (payload) => {
+          // Événement articles reçu
+          
+          // Vérifier si l'événement concerne l'utilisateur connecté
+          const targetUserId = this.config?.userId;
+          const eventUserId = payload.new?.user_id || payload.old?.user_id;
+          
+          if (eventUserId && targetUserId && eventUserId !== targetUserId) {
+            return; // Événement pour un autre utilisateur
+          }
+          
+          this.handleDatabaseEvent(payload, articlesChannelName);
+        }
+      );
+
+    this.channels.set(articlesChannelName, articlesChannel);
+  }
+
+  /**
+   * Crée le canal pour les classeurs
+   */
+  private async createClasseursChannel(): Promise<void> {
+    if (!this.config) return;
+
+    const classeursChannelName = `classeurs:${this.config.userId}`;
+    
+    const classeursChannel = supabase
+      .channel(classeursChannelName)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'classeurs',
+          filter: `user_id=eq.${this.config.userId}`
+        },
+        (payload) => this.handleDatabaseEvent(payload, classeursChannelName)
+      );
+
+    this.channels.set(classeursChannelName, classeursChannel);
+  }
+
+  /**
+   * Crée le canal pour l'éditeur
+   */
+  private async createEditorChannel(): Promise<void> {
+    if (!this.config || !this.config.noteId) return;
+
+    const editorChannelName = `editor:${this.config.noteId}:${this.config.userId}`;
+    
+    const editorChannel = supabase
+      .channel(editorChannelName, {
+        config: {
+          broadcast: { self: false },
+          presence: { key: this.config.userId }
+        }
+      })
+      .on('broadcast', { event: 'editor_update' }, (payload) => 
+        this.handleEditorEvent({ event: 'editor_update', payload }, editorChannelName)
+      )
+      .on('broadcast', { event: 'editor_insert' }, (payload) => 
+        this.handleEditorEvent({ event: 'editor_insert', payload }, editorChannelName)
+      )
+      .on('broadcast', { event: 'editor_delete' }, (payload) => 
+        this.handleEditorEvent({ event: 'editor_delete', payload }, editorChannelName)
+      );
+
+    this.channels.set(editorChannelName, editorChannel);
+  }
+
+  /**
+   * Gère la reconnexion d'un canal spécifique avec throttling
+   */
+  private async handleChannelReconnect(channelName: string): Promise<void> {
+    // Throttling pour éviter les reconnexions trop fréquentes
+    const now = Date.now();
+    const lastReconnect = this.channelReconnectTimes.get(channelName) || 0;
+    const timeSinceLastReconnect = now - lastReconnect;
+    
+    if (timeSinceLastReconnect < 5000) { // 5 secondes minimum entre reconnexions
+      return;
+    }
+    
+    this.channelReconnectTimes.set(channelName, now);
+    
+    try {
+      // Supprimer l'ancien canal
+      const oldChannel = this.channels.get(channelName);
+      if (oldChannel) {
+        await oldChannel.unsubscribe();
+        this.channels.delete(channelName);
+      }
+
+      // Recréer le canal selon son type
+      if (channelName.startsWith('articles:')) {
+        await this.createArticlesChannel();
+      } else if (channelName.startsWith('classeurs:')) {
+        await this.createClasseursChannel();
+      } else if (channelName.startsWith('editor:')) {
+        await this.createEditorChannel();
+      }
+
+      // S'abonner au nouveau canal
+      const newChannel = this.channels.get(channelName);
+      if (newChannel) {
+        await newChannel.subscribe((status) => {
+          this.handleChannelStatus(channelName, status);
+        });
+      }
+      
+    } catch (error) {
+      // Si la reconnexion échoue, programmer une reconnexion globale
+      this.scheduleReconnect();
     }
   }
 
@@ -400,11 +510,6 @@ export class RealtimeService {
 
     this.reconnectAttempts++;
     const delay = this.reconnectDelay * this.reconnectAttempts;
-
-    logger.info(LogCategory.EDITOR, '[RealtimeService] Reconnexion programmée', {
-      attempt: this.reconnectAttempts,
-      delay: `${delay}ms`
-    });
 
     this.reconnectTimer = setTimeout(async () => {
       this.reconnectTimer = null;
@@ -520,6 +625,9 @@ export class RealtimeService {
 
     this.channels.clear();
     this.reconnectAttempts = 0;
+    
+    // Nettoyer le throttling
+    this.channelReconnectTimes.clear();
 
     this.updateState({
       isConnected: false,
@@ -570,10 +678,6 @@ export class RealtimeService {
     
     this.heartbeatTimer = setInterval(() => {
       if (this.state.isConnected && this.channels.size > 0) {
-        // Heartbeat silencieux en production
-        if (this.config?.debug) {
-          console.log('[RealtimeService] 💓 Heartbeat...');
-        }
         // Envoyer un ping sur le premier canal disponible
         const firstChannel = this.channels.values().next().value;
         if (firstChannel) {
@@ -609,9 +713,6 @@ export class RealtimeService {
       if (document.visibilityState === 'visible') {
         // Vérifier si on est connecté
         if (!this.state.isConnected && !this.state.isConnecting && this.config) {
-          if (this.config?.debug) {
-            console.log('[RealtimeService] 🔄 Reconnexion automatique...');
-          }
           this.connect();
         }
       }
@@ -623,9 +724,6 @@ export class RealtimeService {
     // Gestionnaire de focus de la fenêtre (backup)
     const handleWindowFocus = () => {
       if (!this.state.isConnected && !this.state.isConnecting && this.config) {
-        if (this.config?.debug) {
-          console.log('[RealtimeService] 🔄 Reconnexion automatique (focus)...');
-        }
         this.connect();
       }
     };
@@ -637,6 +735,51 @@ export class RealtimeService {
       handleVisibilityChange();
       handleWindowFocus();
     };
+  }
+
+  /**
+   * Fonction de test pour déclencher un événement manuellement
+   */
+  public async testRealtimeEvent(): Promise<void> {
+    if (!this.config) {
+      return;
+    }
+
+    try {
+      
+      // Trouver une note de l'utilisateur
+      const { data: articles, error: selectError } = await supabase
+        .from('articles')
+        .select('id, source_title')
+        .eq('user_id', this.config.userId)
+        .limit(1);
+
+      if (selectError) {
+        return;
+      }
+
+      if (!articles || articles.length === 0) {
+        return;
+      }
+
+      const article = articles[0];
+
+      // Mettre à jour la note pour déclencher un événement
+      const { error: updateError } = await supabase
+        .from('articles')
+        .update({ 
+          updated_at: new Date().toISOString(),
+          source_title: `Test Realtime ${Date.now()}`
+        })
+        .eq('id', article.id);
+
+      if (updateError) {
+        // Erreur silencieuse
+      }
+
+    } catch (error) {
+      // Erreur silencieuse
+    }
   }
 
   /**
@@ -654,7 +797,6 @@ export class RealtimeService {
     this.stateCallbacks.clear();
     this.eventCallbacks.clear();
     RealtimeService.instance = null;
-    logger.info(LogCategory.EDITOR, '[RealtimeService] 🗑️ Service détruit');
   }
 }
 

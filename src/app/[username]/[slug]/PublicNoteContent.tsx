@@ -165,18 +165,25 @@ export default function PublicNoteContent({ note, slug, username, currentUser: p
               </div>
             )}
             
-            {/* Bouton d'édition - visible uniquement pour l'auteur */}
-            {isOwner && (
-              <Link 
-                href={`/private/note/${note.id}`}
-                className="public-edit-button-header"
-                title="Modifier cette note"
-              >
-                <Edit3 size={18} />
-                <span className="edit-button-text">Modifier</span>
-              </Link>
-            )}
           </div>
+        )}
+        
+        {/* Bouton d'édition - visible uniquement pour l'auteur, toujours affiché */}
+        {isOwner && (
+          <Link 
+            href={`/private/note/${note.id}`}
+            className={`public-edit-button-header ${!note.header_image ? 'no-image-position' : ''}`}
+            title="Modifier cette note"
+            style={{
+              position: 'fixed',
+              top: '80px',
+              right: '24px',
+              zIndex: 10000
+            }}
+          >
+            <Edit3 size={18} className="edit-icon" />
+            <span className="edit-button-text">Modifier</span>
+          </Link>
         )}
         
         <div className={`${getLayoutClass()} ${note.wide_mode ? 'wide-mode' : ''}`}>

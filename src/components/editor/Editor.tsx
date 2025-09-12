@@ -8,6 +8,7 @@ import '@/styles/tiptap-extensions.css';
 import '@/styles/block-drag-drop.css';
 import '@/styles/mermaid.css'; // Styles Mermaid centralisés
 import '@/styles/unified-blocks.css'; // Système unifié pour tous les blocs
+import '@/styles/editor-chat-widget.css'; // Styles pour le chat widget dans l'éditeur
 import EditorLayout from './EditorLayout';
 import EditorHeader from './EditorHeader';
 import EditorContent from './EditorContent';
@@ -93,6 +94,8 @@ const debounce = <T extends (...args: unknown[]) => void>(
   }) as T;
 };
 import ContextMenu from './ContextMenu';
+import ChatWidget from '@/components/chat/ChatWidget';
+import { useUIContext } from '@/hooks/useUIContext';
 
 /**
  * Composant principal de l'éditeur de notes
@@ -118,8 +121,20 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
   const userId = propUserId || user?.id || 'anonymous';
   
   const router = useRouter();
+  
   const selectNote = React.useCallback((s: FileSystemState) => s.notes[noteId], [noteId]);
   const note = useFileSystemStore(selectNote);
+  
+  // Collecter le contexte UI pour l'injection dans le chat
+  const uiContext = useUIContext({
+    activeNote: note ? {
+      id: note.id,
+      slug: note.slug || note.id,
+      name: note.source_title || 'Note sans titre'
+    } : undefined
+  });
+
+  // 🔍 DEBUG: Log du contexte UI collecté
   const updateNote = useFileSystemStore(s => s.updateNote);
   const content = note?.markdown_content || '';
   const { html } = useMarkdownRender({ content });
@@ -165,28 +180,14 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
   const realtime = useRealtime({
     userId,
     noteId,
-    debug: process.env.NODE_ENV === 'development',
+    debug: false,
     onEvent: (event) => {
-      if (process.env.NODE_ENV === 'development') {
-        logger.info(LogCategory.EDITOR, 'Realtime event received:', {
-          type: event.type,
-          source: event.source,
-          channel: event.channel
-        });
-      }
       
       // Les événements sont déjà traités par le dispatcher
       // qui met à jour le store via updateNoteContent
       // L'éditeur réagira automatiquement via le useEffect ci-dessus
     },
     onStateChange: (state) => {
-      if (process.env.NODE_ENV === 'development') {
-        logger.info(LogCategory.EDITOR, 'Realtime state changed:', {
-          connected: state.isConnected,
-          connecting: state.isConnecting,
-          channels: state.channels.length
-        });
-      }
     }
   });
 
@@ -341,16 +342,10 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
     const storeContent = note.markdown_content || '';
     const editorContent = editor.storage.markdown?.getMarkdown?.() || '';
 
-    // Seulement mettre à jour si le contenu a vraiment changé
-    if (storeContent !== editorContent && storeContent !== content) {
-      if (process.env.NODE_ENV === 'development') {
-        logger.info(LogCategory.EDITOR, '🔄 Mise à jour éditeur depuis le store Realtime:', {
-          storeContent: storeContent.substring(0, 100) + '...',
-          editorContent: editorContent.substring(0, 100) + '...',
-          noteId
-        });
-      }
 
+    // Seulement mettre à jour si le contenu a vraiment changé
+    if (storeContent !== editorContent) {
+      
       setIsUpdatingFromStore(true);
       
       // Mettre à jour l'éditeur avec le nouveau contenu
@@ -361,7 +356,7 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
         setIsUpdatingFromStore(false);
       }, 100);
     }
-  }, [note?.markdown_content, editor, noteId, isUpdatingFromStore, content]);
+  }, [note?.markdown_content, editor, noteId, isUpdatingFromStore]);
 
   // Gestion des actions du menu contextuel
   const handleContextMenuAction = React.useCallback((action: string) => {
@@ -522,7 +517,6 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
         } catch {}
       }
       if (e.key === '/') {
-        console.log('Editor: touche / détectée');
         // Ne pas preventDefault - laisser le slash être tapé
         // Le menu s'ouvrira après que le slash soit dans le texte
         setTimeout(() => {
@@ -1322,6 +1316,34 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
       {process.env.NODE_ENV === 'development' && userId && (
         <RealtimeStatus userId={userId} noteId={noteId} />
       )}
+      
+      {/* 💬 Chat Widget en bas à droite */}
+      <ChatWidget
+        position="bottom-right"
+        size="medium"
+      />
+      
+      {/* 🧪 Test simple du contexte UI */}
+      {process.env.NODE_ENV === 'development' && uiContext && (
+        <div style={{
+          position: 'fixed',
+          top: '10px',
+          left: '10px',
+          background: 'rgba(0,0,0,0.8)',
+          color: 'white',
+          padding: '10px',
+          borderRadius: '8px',
+          fontSize: '12px',
+          zIndex: 9999,
+          maxWidth: '300px'
+        }}>
+          <div><strong>🎯 Contexte UI:</strong></div>
+          <div>Utilisateur: {uiContext.user?.name || 'N/A'}</div>
+          <div>Page: {uiContext.page?.name || 'N/A'}</div>
+          <div>Note: {uiContext.activeNote?.name || 'N/A'}</div>
+        </div>
+      )}
+      
     </>
   );
 };

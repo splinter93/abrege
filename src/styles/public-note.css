@@ -7,6 +7,9 @@
    TOUS les autres styles (image, titre, overlay, etc.) sont gérés par typography.css
 */
 
+/* Import des variables glassmorphism pour le bouton modifier */
+@import './glassmorphism-variables.css';
+
 /* ==========================================================================
    THÈME SOMBRE FORCÉ - PAGE PUBLIQUE
    ==========================================================================
@@ -97,11 +100,25 @@
   background-color: var(--color-bg-header) !important;
 }
 
-/* FORCER LE BACKGROUND SUR LE BOUTON D'ÉDITION DU HEADER */
-.public-note-container .public-edit-button-header {
-  background: var(--color-bg-header) !important; /* VARIABLE CSS - HEADER */
-  background-color: var(--color-bg-header) !important;
+/* Le bouton d'édition utilise maintenant les variables glassmorphism */
+
+/* Positionnement du bouton d'édition sans image d'en-tête - RÈGLE FORCÉE */
+.public-edit-button-header.no-image-position {
+  position: fixed !important;
+  top: 80px !important; /* Plus haut sous le header principal */
+  right: 24px !important;
+  z-index: 10000 !important; /* Z-index très élevé pour être au-dessus du header */
 }
+
+/* Règle encore plus spécifique pour forcer le positionnement */
+.public-note-container .public-edit-button-header.no-image-position {
+  position: fixed !important;
+  top: 80px !important;
+  right: 24px !important;
+  z-index: 10000 !important;
+}
+
+/* Fallback supprimé - défini plus bas */
 
 /* ==========================================================================
    VRAI HEADER DE LA PAGE PUBLIQUE - CLASSES RÉELLES
@@ -155,27 +172,31 @@
   gap: 6px;
   padding: 8px 12px;
   
-  background: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(8px);
-  color: white;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 8px;
+  /* Glassmorphism effect avec variables du design system */
+  background: var(--glass-bg-primary);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: var(--text-primary);
+  border: 1px solid var(--glass-border-primary);
+  border-radius: var(--radius-md);
   
-  font-family: 'Noto Sans', sans-serif;
-  font-size: 13px;
-  font-weight: 500;
+  font-family: var(--font-main);
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
   text-decoration: none;
   
-  transition: all 0.2s ease;
+  transition: all var(--transition-normal);
   cursor: pointer;
+  box-shadow: var(--glass-shadow-subtle);
 }
 
 .public-edit-button-header:hover {
-  background: rgba(0, 0, 0, 0.8);
-  border-color: rgba(255, 255, 255, 0.3);
-  transform: translateY(-1px);
-  color: white;
+  background: var(--glass-bg-hover);
+  border-color: var(--glass-border-hover);
+  transform: translateY(-2px);
+  color: var(--text-primary);
   text-decoration: none;
+  box-shadow: var(--glass-shadow-medium);
 }
 
 .public-edit-button-header:active {
@@ -184,6 +205,16 @@
 
 .edit-button-text {
   white-space: nowrap;
+}
+
+/* Icône stylo orange */
+.public-edit-button-header .edit-icon {
+  color: #f97316; /* Orange vif */
+  transition: color var(--transition-normal);
+}
+
+.public-edit-button-header:hover .edit-icon {
+  color: #ea580c; /* Orange plus foncé au survol */
 }
 
 /* Responsive - masquer le texte sur mobile */

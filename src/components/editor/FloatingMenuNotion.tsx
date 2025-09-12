@@ -62,7 +62,6 @@ const FloatingMenuNotion: React.FC<FloatingMenuNotionProps> = ({
     
     // Vérifier s'il y a une sélection de texte
     if (selection.empty) {
-      console.log('FloatingMenu: Sélection vide');
       // Délai avant de masquer le menu
       timeoutRef.current = setTimeout(() => {
         setPosition(prev => ({ ...prev, visible: false }));
@@ -76,14 +75,12 @@ const FloatingMenuNotion: React.FC<FloatingMenuNotionProps> = ({
 
     // Vérifier que le texte n'est pas vide
     if (!text.trim()) {
-      console.log('FloatingMenu: Texte vide');
       timeoutRef.current = setTimeout(() => {
         setPosition(prev => ({ ...prev, visible: false }));
       }, 100);
       return;
     }
 
-    console.log('FloatingMenu: Texte sélectionné:', text);
 
     // Délai avant d'afficher le menu
     timeoutRef.current = setTimeout(() => {
@@ -136,10 +133,9 @@ const FloatingMenuNotion: React.FC<FloatingMenuNotionProps> = ({
           visible: true
         });
 
-        console.log('FloatingMenu: Block parent found:', blockParent, 'Calculated top:', top);
 
       } catch (error) {
-        console.warn('Erreur lors du calcul de la position du menu flottant:', error);
+        // Erreur lors du calcul de la position du menu flottant
         setPosition(prev => ({ ...prev, visible: false }));
       }
     }, 150);

@@ -1,0 +1,130 @@
+/* ==========================================================================
+   CHAT WIDGET DANS L'ÉDITEUR
+   ========================================================================== */
+
+/* Positionnement du chat widget dans l'éditeur */
+.editor-layout .chat-fullscreen-container.chat-widget-mode {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 1000;
+  max-width: 400px;
+  max-height: 600px;
+  width: 100%;
+  height: 100%;
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  background: rgba(20, 20, 20, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Mode minimisé */
+.editor-layout .chat-widget-minimized {
+  width: 60px;
+  height: 60px;
+  max-width: 60px;
+  max-height: 60px;
+}
+
+/* Bouton de toggle en mode minimisé */
+.editor-layout .chat-widget-toggle {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: rgba(20, 20, 20, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.editor-layout .chat-widget-toggle:hover {
+  background: rgba(30, 30, 30, 0.95);
+  transform: scale(1.05);
+}
+
+.editor-layout .chat-widget-toggle svg {
+  width: 24px;
+  height: 24px;
+}
+
+/* Header du chat widget */
+.editor-layout .chat-header {
+  background: rgba(20, 20, 20, 0.95);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px 16px 0 0;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* Zone de messages */
+.editor-layout .messages-container {
+  max-height: 400px;
+  overflow-y: auto;
+  padding: 16px;
+  background: transparent;
+}
+
+/* Zone de saisie */
+.editor-layout .chat-input-container {
+  padding: 16px;
+  background: rgba(20, 20, 20, 0.95);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0 0 16px 16px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .editor-layout .chat-fullscreen-container.chat-widget-mode {
+    bottom: 10px;
+    right: 10px;
+    left: 10px;
+    max-width: none;
+    width: auto;
+  }
+  
+  .editor-layout .chat-widget-minimized {
+    width: 50px;
+    height: 50px;
+    max-width: 50px;
+    max-height: 50px;
+  }
+}
+
+/* Animation d'apparition */
+.editor-layout .chat-fullscreen-container.chat-widget-mode {
+  animation: chatWidgetSlideIn 0.3s ease-out;
+}
+
+@keyframes chatWidgetSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Assurer que le chat ne gêne pas l'éditeur */
+.editor-layout {
+  position: relative;
+}
+
+/* Z-index pour éviter les conflits */
+.editor-layout .chat-fullscreen-container {
+  z-index: 1000;
+}
+
+.editor-layout .editor-content-wrapper {
+  z-index: 1;
+}
+

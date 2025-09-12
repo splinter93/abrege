@@ -78,12 +78,19 @@ export function useChatResponse(options: UseChatResponseOptions = {}): UseChatRe
           errorData = { error: `HTTP ${response.status}: ${response.statusText}` };
         }
         
-        // 🔧 Logging amélioré avec sérialisation JSON
+        // 🔧 Logging amélioré avec sérialisation JSON sécurisée
+        let safeErrorData: string;
+        try {
+          safeErrorData = JSON.stringify(errorData, null, 2);
+        } catch (e) {
+          safeErrorData = `[Error serializing data: ${e instanceof Error ? e.message : 'Unknown error'}]`;
+        }
+        
         logger.error('[useChatResponse] ❌ Réponse HTTP non-OK:', {
           status: response.status,
           statusText: response.statusText,
           errorText: errorText.substring(0, 500),
-          errorData: JSON.stringify(errorData, null, 2)
+          errorData: safeErrorData
         });
         
         // 🔧 TEMPORAIRE: Log direct dans la console pour debug
@@ -115,7 +122,7 @@ export function useChatResponse(options: UseChatResponseOptions = {}): UseChatRe
           contentLength: data?.content?.length || 0
         });
       } catch (parseError) {
-        logger.error('[useChatResponse] ❌ Erreur parsing JSON:', parseError);
+        logger.error('[useChatResponse] ❌ Erreur parsing JSON:', parseError instanceof Error ? parseError.message : String(parseError));
         const textResponse = await response.text();
         logger.error('[useChatResponse] ❌ Réponse texte brute:', textResponse.substring(0, 500));
         throw new Error('Erreur parsing JSON de la réponse');

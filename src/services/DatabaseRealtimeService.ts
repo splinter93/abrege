@@ -354,12 +354,25 @@ export class DatabaseRealtimeService {
           
           const titleChanged = newArticle.source_title !== oldArticle.source_title;
           
-          // Ne traiter que les changements de contenu ou de titre
-          if (contentChanged || titleChanged) {
+          // Vérifier les changements liés aux images et à la présentation
+          const imageChanged = newArticle.header_image !== oldArticle.header_image ||
+                              newArticle.header_image_blur !== oldArticle.header_image_blur ||
+                              newArticle.header_image_overlay !== oldArticle.header_image_overlay ||
+                              newArticle.header_title_in_image !== oldArticle.header_title_in_image ||
+                              newArticle.header_image_offset !== oldArticle.header_image_offset;
+          
+          // Vérifier les changements de style et de présentation
+          const styleChanged = newArticle.font_family !== oldArticle.font_family ||
+                              newArticle.wide_mode !== oldArticle.wide_mode;
+          
+          // Traiter tous les changements significatifs
+          if (contentChanged || titleChanged || imageChanged || styleChanged) {
             if (this.config?.debug) {
-              logger.info(LogCategory.EDITOR, '[DatabaseRealtime] Changement de contenu détecté:', {
+              logger.info(LogCategory.EDITOR, '[DatabaseRealtime] Changement détecté:', {
                 contentChanged,
                 titleChanged,
+                imageChanged,
+                styleChanged,
                 noteId: newArticle.id
               });
             }

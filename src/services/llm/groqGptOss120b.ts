@@ -37,6 +37,11 @@ export async function handleGroqGptOss120b(params: GroqRoundParams): Promise<Nex
       agentName: params.agentConfig?.name || 'default'
     });
 
+    // 🕵️‍♂️ DEBUG: Log du contexte applicatif reçu
+    logger.dev('🕵️‍♂️ [Groq Service] Contexte Applicatif Reçu:', {
+      appContext: params.appContext
+    });
+
     // Utiliser l'orchestrateur SimpleChat (singleton)
     const chatResult = await simpleChatOrchestrator.processMessage(
       params.message,
@@ -44,7 +49,8 @@ export async function handleGroqGptOss120b(params: GroqRoundParams): Promise<Nex
       {
         userToken: params.userToken,
         sessionId: params.sessionId,
-        agentConfig: params.agentConfig
+        agentConfig: params.agentConfig,
+        uiContext: params.appContext?.uiContext // ✅ CORRECTION : Contexte UI transmis
       }
     );
 

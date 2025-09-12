@@ -30,6 +30,7 @@ interface UseRealtimeReturn {
   readonly disconnect: () => Promise<void>;
   readonly reconnect: () => Promise<void>;
   readonly broadcast: (event: string, payload: unknown) => Promise<void>;
+  readonly testRealtimeEvent: () => Promise<void>;
   
   // Utilitaires
   readonly isInitialized: boolean;
@@ -89,14 +90,13 @@ export function useRealtime({
 
   // Initialisation du service
   const initializeService = useCallback(async () => {
+    
     if (!userId) {
-      logger.warn(LogCategory.EDITOR, '[useRealtime] UserId manquant');
       return;
     }
 
     // Protection contre les initialisations multiples
     if (isInitialized) {
-      logger.info(LogCategory.EDITOR, '[useRealtime] Service déjà initialisé');
       return;
     }
 
@@ -110,12 +110,10 @@ export function useRealtime({
 
     // Validation des paramètres
     if (typeof userId !== 'string' || userId.trim() === '') {
-      logger.error(LogCategory.EDITOR, '[useRealtime] UserId invalide:', { userId });
       return;
     }
 
     if (userId === 'anonymous') {
-      logger.warn(LogCategory.EDITOR, '[useRealtime] UserId "anonymous" non supporté pour Realtime');
       return;
     }
 
@@ -128,12 +126,6 @@ export function useRealtime({
     configRef.current = config;
 
     try {
-      logger.info(LogCategory.EDITOR, '[useRealtime] 🚀 Initialisation du service Realtime', {
-        userId,
-        noteId,
-        debug
-      });
-
       await realtimeService.initialize(config);
       setIsInitialized(true);
       isInitializingRef.current = false;
@@ -149,12 +141,10 @@ export function useRealtime({
         onEventRef.current?.(event);
       });
 
-      logger.info(LogCategory.EDITOR, '[useRealtime] ✅ Service initialisé avec succès');
-
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
       
-      logger.error(LogCategory.EDITOR, '[useRealtime] ❌ Erreur d\'initialisation:', {
+      logger.error(LogCategory.EDITOR, '[useRealtime] Erreur d\'initialisation:', {
         error: errorMessage,
         userId,
         noteId,
@@ -228,7 +218,7 @@ export function useRealtime({
       currentConfig.noteId !== newConfig.noteId;
 
     if (criticalConfigChanged) {
-      logger.info(LogCategory.EDITOR, '[useRealtime] 🔄 Configuration critique changée - réinitialisation', {
+      logger.info(LogCategory.EDITOR, '[useRealtime] Configuration critique changée - réinitialisation', {
         oldUserId: currentConfig.userId,
         newUserId: newConfig.userId,
         oldNoteId: currentConfig.noteId,
@@ -239,7 +229,7 @@ export function useRealtime({
       realtimeService.initialize(newConfig).then(() => {
         configRef.current = newConfig;
       }).catch((error) => {
-        logger.error(LogCategory.EDITOR, '[useRealtime] ❌ Erreur de réinitialisation:', error);
+        logger.error(LogCategory.EDITOR, '[useRealtime] Erreur de réinitialisation:', error);
       });
     } else {
       // Mettre à jour la configuration sans réinitialiser
@@ -284,6 +274,14 @@ export function useRealtime({
     }
   }, []);
 
+  const testRealtimeEvent = useCallback(async () => {
+    try {
+      await realtimeService.testRealtimeEvent();
+    } catch (error) {
+      logger.error(LogCategory.EDITOR, '[useRealtime] Erreur lors du test realtime:', error);
+    }
+  }, []);
+
   return {
     // État
     state,
@@ -297,6 +295,7 @@ export function useRealtime({
     disconnect,
     reconnect,
     broadcast,
+    testRealtimeEvent,
     
     // Utilitaires
     isInitialized

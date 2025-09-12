@@ -8,11 +8,12 @@ import { systemMessageBuilder } from '../../SystemMessageBuilder';
 /**
  * Interface étendue pour le provider Groq qui retourne la structure attendue par l'orchestrateur
  */
-interface GroqProviderResponse {
+export interface LLMResponse {
   content: string;
   tool_calls?: any[];
   model?: string;
   usage?: any;
+  reasoning?: string;
 }
 
 /**
@@ -210,6 +211,41 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
   }
 
   /**
+   * Effectue un appel à l'API Groq avec une liste de messages déjà préparée
+   */
+  async callWithMessages(messages: ChatMessage[], tools: any[]): Promise<LLMResponse> {
+    if (!this.isAvailable()) {
+      throw new Error('Groq provider non configuré');
+    }
+
+    try {
+      logger.dev(`[GroqProvider] 🚀 Appel direct avec ${messages.length} messages`);
+      
+      const payload = await this.preparePayload(messages, tools);
+      payload.stream = false;
+      
+      const response = await this.makeApiCall(payload);
+      const result = this.extractResponse(response);
+      
+      logger.dev('[GroqProvider] ✅ Appel direct réussi');
+      
+      return {
+        content: result.content || '',
+        tool_calls: result.tool_calls || [],
+        model: result.model,
+        usage: result.usage,
+        reasoning: result.reasoning
+      };
+
+    } catch (error) {
+      // ... (gestion d'erreur identique à `call`)
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      logger.error('[GroqProvider] ❌ Erreur lors de l\'appel direct:', { message: errorMessage });
+      throw error;
+    }
+  }
+
+  /**
    * Prépare les messages pour l'API
    */
   private prepareMessages(message: string, context: AppContext, history: ChatMessage[]) {
@@ -269,74 +305,27 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
   /**
    * Prépare le payload pour l'API Groq avec support des tools
    */
-  private async preparePayload(messages: any[]) {
+  private async preparePayload(messages: any[], tools: any[]) {
+    // Nettoyer les messages pour Groq (supprimer id et timestamp)
+    const cleanedMessages = messages.map(msg => ({
+      role: msg.role,
+      content: msg.content,
+      ...(msg.tool_calls && { tool_calls: msg.tool_calls }),
+      ...(msg.tool_call_id && { tool_call_id: msg.tool_call_id })
+    }));
+
     const payload: any = {
       model: this.config.model,
-      messages,
+      messages: cleanedMessages,
       temperature: this.config.temperature,
-      max_completion_tokens: this.config.maxTokens, // ✅ Correction: Groq utilise max_completion_tokens
+      max_completion_tokens: this.config.maxTokens,
       top_p: this.config.topP,
-      stream: false // ✅ Streaming désactivé dans le provider (géré par la route API)
+      stream: false
     };
 
-    // ✅ Debug: Log des messages pour identifier le problème
-    logger.dev(`[GroqProvider] 🔍 Messages reçus (${messages.length}):`, 
-      messages.map(msg => ({ role: msg.role, hasContent: !!msg.content, contentPreview: msg.content?.substring(0, 50) + '...' }))
-    );
-    
-    // Détecter si un message developer avec des tools est présent
-    const hasDeveloperMessageWithTools = messages.some(
-      msg => msg.role === 'developer' && msg.content
-    );
-    
-    logger.dev(`[GroqProvider] 🔍 Détection message developer:`, {
-      hasDeveloperMessageWithTools,
-      developerMessages: messages.filter(msg => msg.role === 'developer').length
-    });
-
-    if (hasDeveloperMessageWithTools) {
-      payload.tool_choice = 'auto'; // ✅ Permettre à Groq de choisir les tools automatiquement
-      payload.parallel_tool_calls = true; // ✅ Forcer l'activation des tool calls parallèles
-      payload.max_tokens = Math.max(this.config.maxTokens ?? 0, 4000); // ✅ Augmenter les tokens pour les réponses avec tools
-      
-      // ✅ Extraire les outils du message developer
-      const developerMessage = messages.find(msg => msg.role === 'developer');
-      if (developerMessage && developerMessage.content) {
-        try {
-          // Parser le contenu du message developer pour extraire les outils
-          const tools = this.extractToolsFromDeveloperMessage(developerMessage.content);
-          if (tools && tools.length > 0) {
-            payload.tools = tools;
-            logger.dev(`[GroqProvider] 🔧 ${tools.length} outils extraits du message developer`);
-            // Log des noms d'outils pour debugging
-            const toolNames = tools.map(t => t.function?.name).filter(Boolean);
-            logger.dev(`[GroqProvider] 🔧 Noms d'outils: ${toolNames.join(', ')}`);
-          }
-        } catch (error) {
-          logger.warn(`[GroqProvider] ⚠️ Erreur extraction outils:`, error);
-        }
-      }
-      
-      logger.dev(`[GroqProvider] 🔧 Message Developer détecté. Activation des tool calls.`);
-      logger.dev(`[GroqProvider] 🔧 Configuration multi-tools: parallel=${payload.parallel_tool_calls}, max_tokens=${payload.max_tokens}`);
-    } else {
-      payload.tool_choice = 'none';
-      logger.dev(`[GroqProvider] 🔒 Aucun message Developer, function calls désactivés`);
-    }
-
-    // Ajouter les paramètres spécifiques à Groq selon les capacités du modèle
-    const { modelSupportsServiceTier, modelSupportsParallelToolCalls, modelSupportsReasoningEffort } = await import('@/constants/groqModels');
-    
-    if (this.config.serviceTier && modelSupportsServiceTier(this.config.model)) {
-      payload.service_tier = this.config.serviceTier;
-    }
-
-    if (this.config.parallelToolCalls && hasDeveloperMessageWithTools && modelSupportsParallelToolCalls(this.config.model)) {
-      payload.parallel_tool_calls = this.config.parallelToolCalls;
-    }
-
-    if (this.config.reasoningEffort && modelSupportsReasoningEffort(this.config.model)) {
-      payload.reasoning_effort = this.config.reasoningEffort;
+    if (tools && tools.length > 0) {
+        payload.tools = tools;
+        payload.tool_choice = "auto";
     }
     
     return payload;

@@ -8,6 +8,7 @@ import { useAppContext } from '@/hooks/useAppContext';
 import { useChatResponse } from '@/hooks/useChatResponse';
 import { useChatScroll } from '@/hooks/useChatScroll';
 import { useAuth } from '@/hooks/useAuth';
+import { useUIContext } from '@/hooks/useUIContext';
 // useToolCallDebugger supprimé
 import { useAgents } from '@/hooks/useAgents';
 import { supabase } from '@/supabaseClient';
@@ -25,20 +26,43 @@ interface ChatWidgetProps {
 }
 
 const ChatWidget: React.FC<ChatWidgetProps> = ({
-  isOpen = true, // ✅ Ouvrir par défaut
+  isOpen, // ✅ Utiliser la prop ou le store
   onToggle,
   onExpand,
   position = 'bottom-right',
   size = 'medium'
 }) => {
-  const [widgetOpen, setWidgetOpen] = useState(isOpen);
+  // 🎯 Utiliser le store pour l'état global du widget
+  const { isWidgetOpen, toggleWidget } = useChatStore();
+  
+  // 🎯 État local pour l'état minimisé (indépendant de l'ouverture/fermeture)
   const [isMinimized, setIsMinimized] = useState(false);
+  
+  // 🎯 L'état du widget est maintenant géré par le store
+  const widgetOpen = isOpen !== undefined ? isOpen : isWidgetOpen;
+  
+  // 🐛 DEBUG: Log pour comprendre les changements d'état
+  useEffect(() => {
+    logger.dev('[ChatWidget] 🔍 État du widget:', {
+      isOpen,
+      isWidgetOpen,
+      widgetOpen,
+      isMinimized
+    });
+  }, [isOpen, isWidgetOpen, widgetOpen, isMinimized]);
   
   // 🎯 Hooks optimisés (même que ChatFullscreenV2)
   const isDesktop = useMediaQuery('(min-width: 1024px)');
   const appContext = useAppContext();
   const { user, loading: authLoading } = useAuth();
   const { agents, loading: agentsLoading } = useAgents();
+  
+  // 🎯 Contexte UI pour l'injection
+  const uiContext = useUIContext({
+    activeNote: appContext?.activeNote,
+    activeClasseur: appContext?.activeClasseur,
+    activeFolder: appContext?.activeFolder
+  });
   const {
     sessions,
     currentSession,
@@ -125,6 +149,13 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
     toolCalls?: any[], 
     toolResults?: any[]
   ) => {
+    logger.dev('[ChatWidget] 📥 Réponse complète reçue:', { 
+      contentLength: fullContent?.length, 
+      hasReasoning: !!fullReasoning,
+      toolCallsCount: toolCalls?.length || 0,
+      widgetOpen 
+    });
+    
     if (authLoading) {
       logger.dev('[ChatWidget] ⏳ Vérification de l\'authentification en cours...');
       return;
@@ -156,7 +187,9 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
     // Scroll immédiat après la réponse complète
     scrollToBottom(true);
     setTimeout(() => scrollToBottom(true), 100);
-  }, [addMessage, scrollToBottom, user, authLoading]);
+    
+    logger.dev('[ChatWidget] ✅ Réponse complète traitée, widget toujours ouvert:', widgetOpen);
+  }, [addMessage, scrollToBottom, user, authLoading, widgetOpen]);
 
   const handleError = useCallback((errorMessage: string) => {
     if (authLoading) {
@@ -341,6 +374,8 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
 
   // 🎯 Gestion des messages
   const handleSendMessage = useCallback(async (content: string) => {
+    logger.dev('[ChatWidget] 📤 Tentative d\'envoi de message:', { content: content.trim(), loading, widgetOpen });
+    
     if (!content.trim() || loading) return;
     
     // Vérifier l'authentification avant d'envoyer le message
@@ -382,11 +417,15 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
       
       if (!token) throw new Error('Token d\'authentification manquant');
 
-      // Contexte optimisé
+      // Contexte optimisé avec UI Context
       const contextWithSessionId = {
         sessionId: currentSession.id,
-        agentId: selectedAgent?.id
+        agentId: selectedAgent?.id,
+        uiContext: uiContext // 🎯 Injection du contexte UI
       };
+
+      // 🕵️‍♂️ DEBUG: Log du contexte avant envoi
+      logger.dev('🕵️‍♂️ [ChatWidget] Contexte envoyé à l\'API:', contextWithSessionId);
 
       // Log optimisé
       if (process.env.NODE_ENV === 'development') {
@@ -416,8 +455,9 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
       });
     } finally {
       setLoading(false);
+      logger.dev('[ChatWidget] ✅ Fin de l\'envoi de message, widget toujours ouvert:', widgetOpen);
     }
-  }, [loading, currentSession, createSession, addMessage, selectedAgent, sendMessage, setLoading, user]);
+  }, [loading, currentSession, createSession, addMessage, selectedAgent, sendMessage, setLoading, user, widgetOpen]);
 
 
 
@@ -508,25 +548,35 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
     }
   }, [isProcessing, isNearBottom, scrollToBottom, user, authLoading]);
 
-  // Synchroniser avec la prop isOpen
+  // 🎯 Synchroniser avec la prop isOpen ou le store
   useEffect(() => {
-    setWidgetOpen(isOpen);
-    
     // Scroll automatique quand le widget s'ouvre
-    if (isOpen && currentSession?.thread && currentSession.thread.length > 0) {
+    if (widgetOpen && currentSession?.thread && currentSession.thread.length > 0) {
       debouncedScrollToBottom();
     }
-  }, [isOpen, currentSession?.thread, debouncedScrollToBottom]);
+  }, [widgetOpen, currentSession?.thread, debouncedScrollToBottom]);
 
   const handleToggle = () => {
-    const newState = !widgetOpen;
-    setWidgetOpen(newState);
-    onToggle?.(newState);
+    // 🎯 Utiliser le store pour le toggle global
+    if (isOpen === undefined) {
+      // Si pas de prop isOpen, utiliser le store
+      toggleWidget();
+    } else {
+      // Si prop isOpen fournie, utiliser le callback
+      const newState = !widgetOpen;
+      onToggle?.(newState);
+    }
   };
 
   const handleClose = () => {
-    setWidgetOpen(false);
-    onToggle?.(false);
+    if (isOpen === undefined) {
+      // Si pas de prop isOpen, fermer via le store
+      const { closeWidget } = useChatStore.getState();
+      closeWidget();
+    } else {
+      // Si prop isOpen fournie, utiliser le callback
+      onToggle?.(false);
+    }
   };
 
   const handleExpand = () => {
@@ -612,7 +662,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
       <button
         className="chat-widget-toggle"
         onClick={handleToggle}
-        aria-label="Ouvrir le chat"
+        aria-label={`Ouvrir le chat avec ${selectedAgent?.name || 'Assistant'}`}
         style={{
           position: 'fixed',
           zIndex: 9999,
@@ -620,47 +670,93 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
           width: '60px',
           height: '60px',
           borderRadius: '50%',
-          border: 'none',
-          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          border: selectedAgent?.profile_picture ? '3px solid rgba(255, 255, 255, 0.9)' : 'none',
+          background: selectedAgent?.profile_picture 
+            ? 'rgba(255, 255, 255, 0.1)'
+            : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
           color: 'white',
           cursor: 'pointer',
-          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
+          boxShadow: selectedAgent?.profile_picture 
+            ? '0 4px 20px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.2)'
+            : '0 4px 20px rgba(0, 0, 0, 0.3)',
           transition: 'all 0.3s ease',
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'center'
+          justifyContent: 'center',
+          overflow: 'hidden',
+          padding: '0',
+          position: 'relative'
         }}
         onMouseEnter={(e) => {
           e.currentTarget.style.transform = 'scale(1.1)';
-          e.currentTarget.style.boxShadow = '0 6px 25px rgba(0, 0, 0, 0.4)';
+          if (selectedAgent?.profile_picture) {
+            e.currentTarget.style.boxShadow = '0 6px 25px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.3)';
+          } else {
+            e.currentTarget.style.boxShadow = '0 6px 25px rgba(0, 0, 0, 0.4)';
+          }
         }}
         onMouseLeave={(e) => {
           e.currentTarget.style.transform = 'scale(1)';
-          e.currentTarget.style.boxShadow = '0 4px 20px rgba(0, 0, 0, 0.3)';
+          if (selectedAgent?.profile_picture) {
+            e.currentTarget.style.boxShadow = '0 4px 20px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.2)';
+          } else {
+            e.currentTarget.style.boxShadow = '0 4px 20px rgba(0, 0, 0, 0.3)';
+          }
         }}
       >
-        <svg
-          width="24"
-          height="24"
-          viewBox="0 0 24 24"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-            opacity="0.8"
-          />
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M12 8v8m-4-4h8"
-            opacity="0.8"
-          />
-        </svg>
+        {selectedAgent?.profile_picture ? (
+          <>
+            <img
+              src={selectedAgent.profile_picture}
+              alt={selectedAgent.name}
+              style={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+                borderRadius: '50%',
+                position: 'absolute',
+                top: '0',
+                left: '0'
+              }}
+            />
+            {/* Overlay subtil pour améliorer la visibilité */}
+            <div
+              style={{
+                position: 'absolute',
+                top: '0',
+                left: '0',
+                width: '100%',
+                height: '100%',
+                borderRadius: '50%',
+                background: 'linear-gradient(135deg, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.05) 100%)',
+                pointerEvents: 'none'
+              }}
+            />
+          </>
+        ) : (
+          <svg
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+              opacity="0.8"
+            />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M12 8v8m-4-4h8"
+              opacity="0.8"
+            />
+          </svg>
+        )}
       </button>,
       document.body
     );
@@ -678,21 +774,73 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
           <button
             className="chat-widget-toggle"
             onClick={handleMinimize}
-            aria-label="Agrandir le chat"
+            aria-label={`Agrandir le chat avec ${selectedAgent?.name || 'Assistant'}`}
+            style={{
+              width: '60px',
+              height: '60px',
+              borderRadius: '50%',
+              border: selectedAgent?.profile_picture ? '3px solid rgba(255, 255, 255, 0.9)' : 'none',
+              background: selectedAgent?.profile_picture 
+                ? 'rgba(255, 255, 255, 0.1)'
+                : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              color: 'white',
+              cursor: 'pointer',
+              boxShadow: selectedAgent?.profile_picture 
+                ? '0 4px 20px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.2)'
+                : '0 4px 20px rgba(0, 0, 0, 0.3)',
+              transition: 'all 0.3s ease',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              overflow: 'hidden',
+              padding: '0',
+              position: 'relative'
+            }}
           >
-            <svg
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-              />
-            </svg>
+            {selectedAgent?.profile_picture ? (
+              <>
+                <img
+                  src={selectedAgent.profile_picture}
+                  alt={selectedAgent.name}
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                    borderRadius: '50%',
+                    position: 'absolute',
+                    top: '0',
+                    left: '0'
+                  }}
+                />
+                {/* Overlay subtil pour améliorer la visibilité */}
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: '0',
+                    left: '0',
+                    width: '100%',
+                    height: '100%',
+                    borderRadius: '50%',
+                    background: 'linear-gradient(135deg, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.05) 100%)',
+                    pointerEvents: 'none'
+                  }}
+                />
+              </>
+            ) : (
+              <svg
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                />
+              </svg>
+            )}
           </button>
                  ) : (
            <>

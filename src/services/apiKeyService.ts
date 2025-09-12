@@ -101,7 +101,8 @@ export class ApiKeyService {
     try {
       const apiKeyHash = this.hashApiKey(apiKey);
 
-      // Rechercher la clé dans la base de données
+      // Rechercher la clé dans la base de données avec le service role
+      // pour contourner les restrictions RLS
       const { data, error } = await supabase
         .from('api_keys')
         .select('*')
@@ -110,11 +111,13 @@ export class ApiKeyService {
         .single();
 
       if (error || !data) {
+        console.log('🔧 [ApiKeyService] Clé API non trouvée ou inactive:', error?.message);
         return null;
       }
 
       // Vérifier l'expiration
       if (data.expires_at && new Date(data.expires_at) < new Date()) {
+        console.log('🔧 [ApiKeyService] Clé API expirée:', data.expires_at);
         return null;
       }
 
@@ -133,10 +136,16 @@ export class ApiKeyService {
         expires_at: data.expires_at
       };
 
+      console.log('✅ [ApiKeyService] Clé API validée:', {
+        userId: info.user_id,
+        scopes: info.scopes,
+        name: info.api_key_name
+      });
+
       return info;
 
     } catch (error) {
-      console.error('❌ Erreur validation API Key:', error);
+      console.error('❌ [ApiKeyService] Erreur validation API Key:', error);
       return null;
     }
   }

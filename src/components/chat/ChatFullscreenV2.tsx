@@ -5,6 +5,7 @@ import { useChatStore } from '@/store/useChatStore';
 
 import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { useAppContext } from '@/hooks/useAppContext';
+import { useUIContext } from '@/hooks/useUIContext';
 import { useChatResponse } from '@/hooks/useChatResponse';
 import { useChatResponseHarmony } from '@/hooks/useChatResponseHarmony';
 import { useChatScroll } from '@/hooks/useChatScroll';
@@ -35,6 +36,13 @@ const ChatFullscreenV2: React.FC = () => {
   // 🎯 Contexte et store
   const appContext = useAppContext();
   const { user, loading: authLoading } = useAuth();
+  
+  // 🎯 Contexte UI pour l'injection
+  const uiContext = useUIContext({
+    activeNote: appContext?.activeNote,
+    activeClasseur: appContext?.activeClasseur,
+    activeFolder: appContext?.activeFolder
+  });
   const {
     sessions,
     currentSession,
@@ -564,11 +572,12 @@ const ChatFullscreenV2: React.FC = () => {
       
       if (!token) throw new Error('Token d\'authentification manquant');
 
-      // Contexte optimisé
+      // Contexte optimisé avec UI Context
       const contextWithSessionId = {
         ...appContext,
         sessionId: currentSession.id,
-        agentId: selectedAgent?.id
+        agentId: selectedAgent?.id,
+        uiContext // ✅ CORRECTION : Ajouter le contexte UI
       };
 
       // Log optimisé
