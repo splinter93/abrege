@@ -23,11 +23,16 @@ import {
 } from '@/types/specializedAgents';
 import { GroqRoundResult } from '@/services/llm/types/groqTypes';
 
+// ✅ CORRECTION : Validation de la configuration Supabase
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+if (!supabaseUrl || !supabaseServiceKey) {
+  throw new Error('Configuration Supabase manquante: NEXT_PUBLIC_SUPABASE_URL et SUPABASE_SERVICE_ROLE_KEY requis');
+}
+
 // Client Supabase admin
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 export class SpecializedAgentManager {
   private agentCache: Map<string, SpecializedAgentConfig> = new Map();
@@ -48,6 +53,140 @@ export class SpecializedAgentManager {
     userToken: string,
     sessionId?: string
   ): Promise<SpecializedAgentResponse> {
+    // ✅ CORRECTION : Validation du token utilisateur
+    if (!userToken || typeof userToken !== 'string' || userToken.trim().length === 0) {
+      logger.error(`[SpecializedAgentManager] ❌ Token utilisateur invalide`, { agentId });
+      return {
+        success: false,
+        error: 'Token utilisateur invalide ou manquant',
+        metadata: {
+          agentId,
+          executionTime: 0,
+          model: 'unknown'
+        }
+      };
+    }
+
+    // ✅ CORRECTION : Validation du format du token (UUID ou JWT)
+    const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userToken);
+    const isJWT = userToken.includes('.') && userToken.split('.').length === 3;
+    
+    if (!isUUID && !isJWT) {
+      logger.error(`[SpecializedAgentManager] ❌ Format de token invalide`, { 
+        agentId, 
+        tokenType: typeof userToken,
+        tokenLength: userToken.length 
+      });
+      return {
+        success: false,
+        error: 'Format de token invalide (attendu: UUID ou JWT)',
+        metadata: {
+          agentId,
+          executionTime: 0,
+          model: 'unknown'
+        }
+      };
+    }
+
+    // ✅ CORRECTION : Validation de l'input pour éviter les injections
+    if (!input || typeof input !== 'object' || Array.isArray(input)) {
+      logger.error(`[SpecializedAgentManager] ❌ Input invalide`, { agentId, inputType: typeof input });
+      return {
+        success: false,
+        error: 'Input doit être un objet JSON valide',
+        metadata: {
+          agentId,
+          executionTime: 0,
+          model: 'unknown'
+        }
+      };
+    }
+
+    // ✅ CORRECTION : Validation de la taille de l'input
+    const inputSize = JSON.stringify(input).length;
+    const MAX_INPUT_SIZE = 1024 * 1024; // 1MB
+    
+    if (inputSize > MAX_INPUT_SIZE) {
+      logger.error(`[SpecializedAgentManager] ❌ Input trop volumineux`, { 
+        agentId, 
+        inputSize, 
+        maxSize: MAX_INPUT_SIZE 
+      });
+      return {
+        success: false,
+        error: `Input trop volumineux (${inputSize} bytes, max: ${MAX_INPUT_SIZE} bytes)`,
+        metadata: {
+          agentId,
+          executionTime: 0,
+          model: 'unknown'
+        }
+      };
+    }
+
+    // ✅ CORRECTION : Validation de l'agentId pour éviter les injections
+    if (!agentId || typeof agentId !== 'string' || agentId.trim().length === 0) {
+      logger.error(`[SpecializedAgentManager] ❌ AgentId invalide`, { agentId });
+      return {
+        success: false,
+        error: 'AgentId invalide ou manquant',
+        metadata: {
+          agentId: 'unknown',
+          executionTime: 0,
+          model: 'unknown'
+        }
+      };
+    }
+
+    // ✅ CORRECTION : Validation du format de l'agentId (UUID ou slug sécurisé)
+    const isValidUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(agentId);
+    const isValidSlug = /^[a-z0-9-]+$/.test(agentId);
+    
+    if (!isValidUUID && !isValidSlug) {
+      logger.error(`[SpecializedAgentManager] ❌ Format d'agentId invalide`, { 
+        agentId, 
+        isValidUUID, 
+        isValidSlug 
+      });
+      return {
+        success: false,
+        error: 'Format d\'agentId invalide (attendu: UUID ou slug alphanumérique)',
+        metadata: {
+          agentId,
+          executionTime: 0,
+          model: 'unknown'
+        }
+      };
+    }
+
+    // ✅ CORRECTION : Validation de la sessionId si fournie
+    if (sessionId !== undefined) {
+      if (typeof sessionId !== 'string' || sessionId.trim().length === 0) {
+        logger.error(`[SpecializedAgentManager] ❌ SessionId invalide`, { agentId, sessionId });
+        return {
+          success: false,
+          error: 'SessionId doit être une chaîne non-vide',
+          metadata: {
+            agentId,
+            executionTime: 0,
+            model: 'unknown'
+          }
+        };
+      }
+      
+      // Validation du format de sessionId (alphanumérique + tirets)
+      if (!/^[a-zA-Z0-9-_]+$/.test(sessionId)) {
+        logger.error(`[SpecializedAgentManager] ❌ Format de sessionId invalide`, { agentId, sessionId });
+        return {
+          success: false,
+          error: 'Format de sessionId invalide (attendu: alphanumérique, tirets et underscores)',
+          metadata: {
+            agentId,
+            executionTime: 0,
+            model: 'unknown'
+          }
+        };
+      }
+    }
     const startTime = Date.now();
     const traceId = `agent-${agentId}-${Date.now()}`;
 
@@ -109,7 +248,10 @@ export class SpecializedAgentManager {
         traceId, 
         isMultimodalModel: MultimodalHandler.isMultimodalModel(agent.model),
         inputKeys: Object.keys(input),
-        hasImage: !!input.image
+        hasImage: !!(input.image || input.imageUrl || input.image_url),
+        inputImage: input.image,
+        inputImageUrl: input.imageUrl,
+        inputImage_url: input.image_url
       });
       
       if (MultimodalHandler.isMultimodalModel(agent.model)) {
@@ -166,61 +308,53 @@ export class SpecializedAgentManager {
       logger.info(`[SpecializedAgentManager] 🔍 Détection multimodale: ${isMultimodal}, payload: ${!!groqPayload}`, { 
         traceId, 
         model: agent.model,
-        hasImage: input.image ? 'yes' : 'no'
+        hasImage: !!(input.image || input.imageUrl || input.image_url) ? 'yes' : 'no',
+        inputKeys: Object.keys(input)
       });
+      
+      // ✅ CORRECTION : Forcer l'exécution multimodale si une image est détectée
+      const hasImage = !!(input.image || input.imageUrl || input.image_url);
       
       if (isMultimodal && groqPayload) {
         // Exécution directe avec l'API Groq pour les modèles multimodaux
         logger.info(`[SpecializedAgentManager] 🖼️ Exécution multimodale directe pour ${agentId}`, { traceId, model: agent.model });
         result = await this.executeMultimodalDirect(groqPayload, agent, traceId);
-      } else {
-        // Exécution normale via l'orchestrateur
-        const systemMessage = this.buildSpecializedSystemMessage(agent, input);
-        const userMessage = `Exécution de tâche spécialisée: ${JSON.stringify(input)}`;
-
-        // ✅ CORRECTION : Configurer l'agent avec les capabilities pour les tool calls
-        const agentConfigWithTools = {
-          ...agent,
-          // S'assurer que l'agent a accès aux tools
-          capabilities: agent.capabilities || ['text', 'function_calling'],
-          api_v2_capabilities: agent.api_v2_capabilities || ['get_note', 'update_note', 'search_notes', 'list_notes', 'create_note', 'delete_note']
-        };
-
-        const orchestratorResult = await simpleChatOrchestrator.processMessage(
-          userMessage,
-          [],
-          {
-            userToken,
-            sessionId: sessionId || `specialized-${agentId}-${Date.now()}`,
-            agentConfig: agentConfigWithTools
-          }
-        );
-        
-        // Convertir ChatResponse en SpecializedAgentResponse
-        logger.info(`[SpecializedAgentManager] 🔍 Résultat orchestrateur brut:`, { 
+      } else if (hasImage && MultimodalHandler.isMultimodalModel(agent.model)) {
+        // ✅ CORRECTION : Fallback pour forcer l'exécution multimodale si image détectée
+        logger.warn(`[SpecializedAgentManager] ⚠️ Image détectée mais exécution multimodale non déclenchée, tentative de récupération`, { 
           traceId, 
-          success: orchestratorResult.success,
-          content: orchestratorResult.content,
-          contentLength: orchestratorResult.content?.length || 0,
-          hasError: !!orchestratorResult.error,
-          error: orchestratorResult.error,
-          orchestratorKeys: Object.keys(orchestratorResult)
+          hasImage, 
+          isMultimodal, 
+          hasGroqPayload: !!groqPayload 
         });
         
-        result = {
-          success: orchestratorResult.success,
-          result: {
-            response: orchestratorResult.content || 'Réponse générée',
-            model: agent.model,
-            provider: 'groq'
-          },
-          error: orchestratorResult.error,
-          metadata: {
-            agentId,
-            executionTime: 0, // Sera calculé plus tard
-            model: agent.model
-          }
-        };
+        // Essayer de préparer le contenu multimodale à nouveau
+        const fallbackMultimodalPrep = MultimodalHandler.prepareGroqContent(input, agent.model);
+        if (!fallbackMultimodalPrep.error) {
+          const fallbackGroqPayload = MultimodalHandler.createGroqPayload(
+            agent.model,
+            fallbackMultimodalPrep.text,
+            fallbackMultimodalPrep.imageUrl,
+            {
+              temperature: agent.temperature,
+              max_completion_tokens: agent.max_tokens,
+              stream: false
+            }
+          );
+          
+          logger.info(`[SpecializedAgentManager] 🔄 Exécution multimodale de fallback pour ${agentId}`, { traceId });
+          result = await this.executeMultimodalDirect(fallbackGroqPayload, agent, traceId);
+        } else {
+          logger.error(`[SpecializedAgentManager] ❌ Impossible de préparer le contenu multimodale de fallback`, { 
+            traceId, 
+            error: fallbackMultimodalPrep.error 
+          });
+          // Continuer avec l'exécution normale
+          result = await this.executeNormalMode(agent, input, userToken, sessionId, traceId);
+        }
+      } else {
+        // Exécution normale via l'orchestrateur
+        result = await this.executeNormalMode(agent, input, userToken, sessionId, traceId);
       }
 
       // 5. Formater selon le schéma de sortie
@@ -249,8 +383,8 @@ export class SpecializedAgentManager {
       // 6. Mettre à jour les métriques
       await this.updateAgentMetrics(agentId, true, executionTime);
 
-      // Extraire la réponse finale avec une logique plus robuste
-      let finalResponse = 'Réponse générée';
+      // ✅ CORRECTION : Extraire la réponse finale avec une logique plus robuste
+      let finalResponse = 'Aucune réponse générée';
       
       if (typeof formattedResult.result === 'string' && formattedResult.result.trim()) {
         finalResponse = formattedResult.result;
@@ -260,6 +394,15 @@ export class SpecializedAgentManager {
         finalResponse = formattedResult.response;
       } else if (typeof formattedResult === 'string' && (formattedResult as string).trim()) {
         finalResponse = formattedResult;
+      } else if (formattedResult && typeof formattedResult === 'object') {
+        // Essayer d'extraire n'importe quelle propriété string non-vide
+        const obj = formattedResult as Record<string, unknown>;
+        for (const [key, value] of Object.entries(obj)) {
+          if (typeof value === 'string' && value.trim()) {
+            finalResponse = value;
+            break;
+          }
+        }
       }
       
       logger.info(`[SpecializedAgentManager] 🔍 Réponse finale extraite:`, { 
@@ -312,14 +455,26 @@ export class SpecializedAgentManager {
   private async getAgentByIdOrSlug(agentId: string): Promise<SpecializedAgentConfig | null> {
     logger.dev(`[SpecializedAgentManager] 🔍 Recherche agent: ${agentId}`);
     
-    // Vérifier le cache
+    // ✅ CORRECTION : Vérifier le cache avec validation
     if (this.agentCache.has(agentId)) {
       const cachedAgent = this.agentCache.get(agentId)!;
       const cacheTime = this.cacheExpiry.get(agentId) || 0;
       
-      if (Date.now() - cacheTime < this.CACHE_TTL) {
-        logger.dev(`[SpecializedAgentManager] 📦 Agent ${agentId} récupéré du cache`);
-        return cachedAgent;
+      if (Date.now() - cacheTime < this.CACHE_TTL && cachedAgent) {
+        // Validation de l'agent en cache
+        if (cachedAgent.id || cachedAgent.slug) {
+          logger.dev(`[SpecializedAgentManager] 📦 Agent ${agentId} récupéré du cache`);
+          return cachedAgent;
+        } else {
+          // Agent en cache invalide, le supprimer
+          logger.warn(`[SpecializedAgentManager] ⚠️ Agent en cache invalide, suppression`, { agentId });
+          this.agentCache.delete(agentId);
+          this.cacheExpiry.delete(agentId);
+        }
+      } else if (Date.now() - cacheTime >= this.CACHE_TTL) {
+        // Cache expiré, le nettoyer
+        this.agentCache.delete(agentId);
+        this.cacheExpiry.delete(agentId);
       }
     }
 
@@ -356,7 +511,7 @@ export class SpecializedAgentManager {
         return null;
       }
 
-      // Convertir les types numériques
+      // ✅ CORRECTION : Validation et conversion des types numériques
       const processedAgent = {
         ...agent,
         temperature: typeof agent.temperature === 'string' ? parseFloat(agent.temperature) : agent.temperature,
@@ -365,6 +520,31 @@ export class SpecializedAgentManager {
         max_completion_tokens: typeof agent.max_completion_tokens === 'string' ? parseInt(agent.max_completion_tokens) : agent.max_completion_tokens,
         priority: typeof agent.priority === 'string' ? parseInt(agent.priority) : agent.priority
       };
+
+      // ✅ CORRECTION : Validation des paramètres de l'agent
+      if (processedAgent.temperature < 0 || processedAgent.temperature > 2) {
+        logger.warn(`[SpecializedAgentManager] ⚠️ Temperature invalide, utilisation de la valeur par défaut`, {
+          agentId,
+          temperature: processedAgent.temperature
+        });
+        processedAgent.temperature = 0.7;
+      }
+
+      if (processedAgent.max_tokens < 1 || processedAgent.max_tokens > 8192) {
+        logger.warn(`[SpecializedAgentManager] ⚠️ Max tokens invalide, utilisation de la valeur par défaut`, {
+          agentId,
+          max_tokens: processedAgent.max_tokens
+        });
+        processedAgent.max_tokens = 4000;
+      }
+
+      if (processedAgent.top_p < 0 || processedAgent.top_p > 1) {
+        logger.warn(`[SpecializedAgentManager] ⚠️ Top_p invalide, utilisation de la valeur par défaut`, {
+          agentId,
+          top_p: processedAgent.top_p
+        });
+        processedAgent.top_p = 1;
+      }
 
       // Mettre en cache
       this.agentCache.set(agentId, processedAgent as SpecializedAgentConfig);
@@ -472,12 +652,22 @@ Instructions importantes :
         payload: JSON.stringify(groqPayload, null, 2)
       });
 
+      // ✅ CORRECTION : Validation de la clé API Groq
+      const groqApiKey = process.env.GROQ_API_KEY;
+      if (!groqApiKey || typeof groqApiKey !== 'string' || groqApiKey.trim().length === 0) {
+        logger.error(`[SpecializedAgentManager] ❌ Clé API Groq manquante`, { traceId });
+        return {
+          success: false,
+          error: 'Configuration API Groq manquante'
+        };
+      }
+
       // Appel direct à l'API Groq
       const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${process.env.GROQ_API_KEY}`
+          'Authorization': `Bearer ${groqApiKey}`
         },
         body: JSON.stringify(groqPayload)
       });
@@ -493,18 +683,45 @@ Instructions importantes :
 
       const data = await response.json();
       
+      // ✅ CORRECTION : Validation de la réponse de l'API Groq
+      if (!data || !data.choices || !Array.isArray(data.choices) || data.choices.length === 0) {
+        logger.error(`[SpecializedAgentManager] ❌ Réponse API Groq invalide`, {
+          traceId,
+          model: agent.model,
+          response: data
+        });
+        return {
+          success: false,
+          error: 'Réponse API Groq invalide ou vide'
+        };
+      }
+
+      const choice = data.choices[0];
+      if (!choice || !choice.message || typeof choice.message.content !== 'string') {
+        logger.error(`[SpecializedAgentManager] ❌ Contenu de réponse invalide`, {
+          traceId,
+          model: agent.model,
+          choice
+        });
+        return {
+          success: false,
+          error: 'Contenu de réponse invalide'
+        };
+      }
+      
       logger.info(`[SpecializedAgentManager] ✅ Réponse multimodale reçue`, {
         traceId,
         model: agent.model,
         hasImage: groqPayload.messages.some((msg) => 
           Array.isArray(msg.content) && msg.content.some((c) => c.type === 'image_url')
-        )
+        ),
+        responseLength: choice.message.content.length
       });
 
       return {
         success: true,
         result: {
-          response: data.choices[0]?.message?.content || 'Réponse générée',
+          response: choice.message.content,
           model: agent.model,
           provider: 'groq'
         }
@@ -1083,6 +1300,101 @@ Instructions importantes :
       logger.error(`[SpecializedAgentManager] ❌ Erreur liste agents:`, error);
       throw error;
     }
+  }
+
+  /**
+   * Exécution normale via l'orchestrateur (mode non-multimodal)
+   */
+  private async executeNormalMode(
+    agent: SpecializedAgentConfig,
+    input: Record<string, unknown>,
+    userToken: string,
+    sessionId: string | undefined,
+    traceId: string
+  ): Promise<SpecializedAgentResponse> {
+    const systemMessage = this.buildSpecializedSystemMessage(agent, input);
+    const userMessage = `Exécution de tâche spécialisée: ${JSON.stringify(input)}`;
+
+    // ✅ CORRECTION : Configurer l'agent avec les capabilities pour les tool calls
+    const agentConfigWithTools = {
+      ...agent,
+      // S'assurer que l'agent a accès aux tools
+      capabilities: agent.capabilities || ['text', 'function_calling'],
+      api_v2_capabilities: agent.api_v2_capabilities || ['get_note', 'update_note', 'search_notes', 'list_notes', 'create_note', 'delete_note']
+    };
+
+    const orchestratorResult = await simpleChatOrchestrator.processMessage(
+      userMessage,
+      [],
+      {
+        userToken,
+        sessionId: sessionId || `specialized-${agent.id || agent.slug || 'unknown'}-${Date.now()}`,
+        agentConfig: agentConfigWithTools
+      }
+    );
+    
+    // ✅ CORRECTION : Validation de la réponse de l'orchestrateur
+    if (!orchestratorResult || typeof orchestratorResult !== 'object') {
+      logger.error(`[SpecializedAgentManager] ❌ Réponse orchestrateur invalide`, { 
+        traceId, 
+        orchestratorResult 
+      });
+      return {
+        success: false,
+        result: {
+          response: 'Erreur: Réponse orchestrateur invalide',
+          model: agent.model,
+          provider: 'groq'
+        },
+        error: 'Réponse orchestrateur invalide',
+        metadata: {
+          agentId: agent.id || agent.slug || 'unknown',
+          executionTime: 0,
+          model: agent.model
+        }
+      };
+    }
+    
+    // Convertir ChatResponse en SpecializedAgentResponse
+    logger.info(`[SpecializedAgentManager] 🔍 Résultat orchestrateur brut:`, { 
+      traceId, 
+      success: orchestratorResult.success,
+      content: orchestratorResult.content,
+      contentLength: orchestratorResult.content?.length || 0,
+      hasError: !!orchestratorResult.error,
+      error: orchestratorResult.error,
+      orchestratorKeys: Object.keys(orchestratorResult)
+    });
+    
+    // ✅ CORRECTION : Améliorer la gestion des réponses vides
+    const responseContent = orchestratorResult.content || '';
+    
+    if (!responseContent.trim()) {
+      logger.warn(`[SpecializedAgentManager] ⚠️ Réponse vide de l'orchestrateur`, { 
+        traceId, 
+        orchestratorResult: {
+          success: orchestratorResult.success,
+          hasContent: !!orchestratorResult.content,
+          hasError: !!orchestratorResult.error,
+          error: orchestratorResult.error
+        }
+      });
+    }
+    
+    return {
+      success: orchestratorResult.success,
+      result: {
+        response: responseContent || (orchestratorResult.error ? `Erreur: ${orchestratorResult.error}` : 'Aucune réponse générée'),
+        model: agent.model,
+        provider: 'groq'
+      },
+      error: orchestratorResult.error,
+      metadata: {
+        agentId: agent.id || agent.slug || 'unknown',
+        executionTime: 0, // Sera calculé plus tard
+        model: agent.model
+      }
+    };
   }
 
   /**
