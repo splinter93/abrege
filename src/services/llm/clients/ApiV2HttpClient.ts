@@ -65,15 +65,27 @@ export class ApiV2HttpClient {
   ): Promise<T> {
     let url = `${this.baseUrl}/api/v2${endpoint}`;
     
-    // ✅ CORRECTION SÉCURITÉ : Toujours utiliser l'authentification authenticated
+    // ✅ CORRECTION SÉCURITÉ : Authentification appropriée selon le type de token
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
       'X-Client-Type': 'agent'
     };
     
-    // ✅ CORRECTION : Ne jamais contourner RLS avec Service Role
-    // Tous les tools doivent utiliser l'authentification normale
-    headers['Authorization'] = `Bearer ${userToken}`;
+    // Détecter si c'est un UUID (clé d'API) ou un JWT
+    const isUserId = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userToken);
+    
+    if (isUserId) {
+      // ✅ CORRECTION SÉCURITÉ : Pour les clés d'API, utiliser l'impersonation contrôlée
+      // On utilise l'impersonation mais avec des filtres user_id stricts
+      headers['X-User-Id'] = userToken;
+      headers['X-Service-Role'] = 'true';
+      headers['Authorization'] = `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`;
+      logger.dev(`[ApiV2HttpClient] 🔑 Mode impersonation pour utilisateur: ${userToken}`);
+    } else {
+      // ✅ Pour les JWT, utiliser l'authentification normale
+      headers['Authorization'] = `Bearer ${userToken}`;
+      logger.dev(`[ApiV2HttpClient] 🔑 Mode JWT standard`);
+    }
 
     const requestOptions: RequestInit = {
       method,

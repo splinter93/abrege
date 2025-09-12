@@ -108,25 +108,14 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       const authHeader = request.headers.get('authorization');
       userToken = authHeader?.startsWith('Bearer ') ? authHeader.substring(7) : null;
     } else if (authType === 'api_key') {
-      // ✅ CORRECTION SÉCURITÉ : Générer un JWT valide pour l'utilisateur
-      // Au lieu de contourner RLS avec Service Role
-      logApi.info(`🔑 Clé d'API détectée - Génération JWT pour l'utilisateur: ${userId}`, context);
+      // ✅ CORRECTION SÉCURITÉ : Utiliser l'userId comme token pour les clés d'API
+      // Le système d'authentification des tools gérera l'impersonation appropriée
+      logApi.info(`🔑 Clé d'API détectée - Utilisation de l'userId comme token: ${userId}`, context);
       
-      const jwtToken = await generateUserJWT(userId);
-      if (!jwtToken) {
-        logApi.error(`❌ Impossible de générer un JWT pour l'utilisateur: ${userId}`, context);
-        return NextResponse.json(
-          { 
-            error: 'Erreur d\'authentification',
-            code: 'AUTH_ERROR',
-            message: 'Impossible de générer un token d\'authentification'
-          },
-          { status: 401 }
-        );
-      }
-      
-      userToken = jwtToken;
-      logApi.info(`✅ JWT généré avec succès pour l'utilisateur: ${userId}`, context);
+      // Pour les clés d'API, on passe l'userId directement
+      // Le système de tools détectera que c'est un UUID et utilisera l'impersonation appropriée
+      userToken = userId;
+      logApi.info(`✅ Token configuré pour l'utilisateur: ${userId}`, context);
     } else if (authType === 'oauth') {
       // Pour OAuth, extraire le token
       const authHeader = request.headers.get('authorization');

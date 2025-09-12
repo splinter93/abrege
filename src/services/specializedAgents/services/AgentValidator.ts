@@ -40,7 +40,7 @@ export class AgentValidator {
 
     const trimmedToken = token.trim();
     const isUUID = this.UUID_REGEX.test(trimmedToken);
-    const isJWT = trimmedToken.includes('.') && trimmedToken.split('.').length === 3;
+    const isJWT = this.isValidJWTFormat(trimmedToken);
 
     if (!isUUID && !isJWT) {
       errors.push({
@@ -54,6 +54,34 @@ export class AgentValidator {
       valid: errors.length === 0,
       errors: errors.map(e => e.message)
     };
+  }
+
+  /**
+   * Valide le format d'un JWT
+   */
+  private static isValidJWTFormat(token: string): boolean {
+    // Un JWT doit avoir exactement 3 parties séparées par des points
+    const parts = token.split('.');
+    if (parts.length !== 3) {
+      return false;
+    }
+
+    // Chaque partie doit être en base64url
+    try {
+      parts.forEach(part => {
+        if (part.length === 0) {
+          throw new Error('Partie vide');
+        }
+        // Vérifier que c'est du base64url valide
+        const decoded = Buffer.from(part.replace(/-/g, '+').replace(/_/g, '/'), 'base64');
+        if (decoded.length === 0) {
+          throw new Error('Décodage échoué');
+        }
+      });
+      return true;
+    } catch (error) {
+      return false;
+    }
   }
 
   /**
