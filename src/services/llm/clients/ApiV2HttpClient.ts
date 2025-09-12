@@ -80,11 +80,23 @@ export class ApiV2HttpClient {
       headers['X-User-Id'] = userToken;
       headers['X-Service-Role'] = 'true';
       headers['Authorization'] = `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`;
-      logger.dev(`[ApiV2HttpClient] 🔑 Mode impersonation pour utilisateur: ${userToken}`);
+      logger.info(`[ApiV2HttpClient] 🔑 Mode impersonation pour utilisateur: ${userToken}`, {
+        url,
+        headers: {
+          'X-User-Id': userToken,
+          'X-Service-Role': 'true',
+          'Authorization': 'Bearer ' + (process.env.SUPABASE_SERVICE_ROLE_KEY?.substring(0, 20) + '...' || 'MISSING')
+        }
+      });
     } else {
       // ✅ Pour les JWT, utiliser l'authentification normale
       headers['Authorization'] = `Bearer ${userToken}`;
-      logger.dev(`[ApiV2HttpClient] 🔑 Mode JWT standard`);
+      logger.info(`[ApiV2HttpClient] 🔑 Mode JWT standard`, {
+        url,
+        headers: {
+          'Authorization': 'Bearer ' + (userToken.substring(0, 20) + '...' || 'MISSING')
+        }
+      });
     }
 
     const requestOptions: RequestInit = {
