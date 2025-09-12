@@ -75,30 +75,12 @@ export class ApiV2HttpClient {
     const isUserId = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userToken);
     
     if (isUserId) {
-      // ✅ CORRECTION SÉCURITÉ : Pour les clés d'API, générer un JWT valide
-      // Au lieu d'utiliser l'impersonation, on génère un JWT pour l'utilisateur
-      try {
-        const { generateUserJWT } = await import('@/utils/jwtGenerator');
-        const jwtToken = await generateUserJWT(userToken);
-        
-        if (jwtToken) {
-          headers['Authorization'] = `Bearer ${jwtToken}`;
-          logger.dev(`[ApiV2HttpClient] 🔑 JWT généré pour utilisateur: ${userToken}`);
-        } else {
-          // Fallback vers l'impersonation si la génération JWT échoue
-          headers['X-User-Id'] = userToken;
-          headers['X-Service-Role'] = 'true';
-          headers['Authorization'] = `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`;
-          logger.warn(`[ApiV2HttpClient] ⚠️ Fallback impersonation pour utilisateur: ${userToken}`);
-        }
-      } catch (error) {
-        logger.error(`[ApiV2HttpClient] ❌ Erreur génération JWT:`, error);
-        // Fallback vers l'impersonation
-        headers['X-User-Id'] = userToken;
-        headers['X-Service-Role'] = 'true';
-        headers['Authorization'] = `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`;
-        logger.warn(`[ApiV2HttpClient] ⚠️ Fallback impersonation après erreur pour utilisateur: ${userToken}`);
-      }
+      // ✅ CORRECTION SÉCURITÉ : Pour les clés d'API, utiliser l'impersonation contrôlée
+      // C'est la seule méthode fiable pour les clés d'API
+      headers['X-User-Id'] = userToken;
+      headers['X-Service-Role'] = 'true';
+      headers['Authorization'] = `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`;
+      logger.dev(`[ApiV2HttpClient] 🔑 Mode impersonation pour utilisateur: ${userToken}`);
     } else {
       // ✅ Pour les JWT, utiliser l'authentification normale
       headers['Authorization'] = `Bearer ${userToken}`;

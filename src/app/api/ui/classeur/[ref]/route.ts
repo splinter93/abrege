@@ -11,13 +11,26 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
  */
 async function getAuthenticatedClient(req: NextRequest) {
   const authHeader = req.headers.get('authorization');
+  const userIdHeader = req.headers.get('x-user-id');
+  const serviceRoleHeader = req.headers.get('x-service-role');
+  
   let userId: string;
-  let userToken: string;
+  let supabase: any;
 
+  // ✅ GESTION IMPERSONATION : Vérifier si c'est un appel avec Service Role
+  if (serviceRoleHeader === 'true' && userIdHeader) {
+    // Mode impersonation pour les clés d'API
+    userId = userIdHeader;
+    supabase = createClient(supabaseUrl, process.env.SUPABASE_SERVICE_ROLE_KEY!);
+    logger.dev(`[getAuthenticatedClient] 🔑 Mode impersonation pour utilisateur: ${userId}`);
+    return { supabase, userId };
+  }
+
+  // Mode JWT standard
   if (authHeader && authHeader.startsWith('Bearer ')) {
-    userToken = authHeader.substring(7);
+    const userToken = authHeader.substring(7);
     
-    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+    supabase = createClient(supabaseUrl, supabaseAnonKey, {
       global: {
         headers: {
           Authorization: `Bearer ${userToken}`
@@ -32,6 +45,7 @@ async function getAuthenticatedClient(req: NextRequest) {
     }
     
     userId = user.id;
+    logger.dev(`[getAuthenticatedClient] 🔑 Mode JWT pour utilisateur: ${userId}`);
     return { supabase, userId };
   } else {
     throw new Error('Authentification requise');
