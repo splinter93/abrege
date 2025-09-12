@@ -5,39 +5,50 @@
    et assurer la cohérence dans toute l'application.
 */
 
+/* Import du système glassmorphism pour le chat */
+@import './chat-glassmorphism.css';
+
 :root {
   /* ========================================
-     COULEURS PRINCIPALES - SYSTÈME UNIFIÉ
+     COULEURS PRINCIPALES - THÈME SOMBRE "NOTION"
      ======================================== */
   
-  /* Backgrounds - Hiérarchie claire */
-  --color-bg-primary: #0f0f12;
-  --color-bg-secondary: #1a1a1f;
-  --color-bg-tertiary: #1f1f25;
-  --color-bg-elevated: #1a1a1f;
-  --color-bg-hover: rgba(255, 255, 255, 0.05);
-  --color-bg-header: var(--color-bg-primary); /* Background pour les headers - MÊME COULEUR QUE LE CONTENU */
-  
-  /* Textes - Contraste optimisé */
-  --color-text-primary: #f8f9fa;
-  --color-text-secondary: #a1a5b7;
-  --color-text-muted: #6c757d;
-  
-  /* Accents - Cohérence visuelle */
-  --color-accent: #e3e6ea;
+  /* Backgrounds */
+  --color-bg-primary: #1E1E1E;        /* Fond principal, très sombre */
+  --color-bg-secondary: #252525;      /* Pour la sidebar, légèrement plus clair */
+  --color-bg-tertiary: #303030;       /* Pour les survols et éléments actifs */
+  --color-bg-elevated: #2C2C2C;       /* Pour les éléments "surélevés" comme les menus */
+  --color-bg-hover: rgba(255, 255, 255, 0.05); /* Survol transparent */
+  --color-bg-header: var(--color-bg-primary);
+  --color-bg-accent-soft: rgba(59, 130, 246, 0.15);
+  --color-bg-danger-soft: rgba(239, 68, 68, 0.15);
+  --color-bg-success-soft: rgba(16, 185, 129, 0.15);
+  --color-bg-warning-soft: rgba(245, 158, 11, 0.15);
+
+  /* Textes */
+  --color-text-primary: #EAEAEA;      /* Texte principal, blanc cassé */
+  --color-text-secondary: #A0A0A0;    /* Texte secondaire, gris clair */
+  --color-text-muted: #6A6A6A;      /* Texte discret, gris plus foncé */
+  --color-text-danger: #FF5C5C;
+
+  /* Accents */
+  --color-accent: #3b82f6;
   --color-accent-primary: #3b82f6;
-  --color-accent-hover: #cbd3d9;
-  
-  /* États - Système unifié */
+  --color-accent-hover: #4f90f7;
+  --color-accent-soft: rgba(59, 130, 246, 0.5);
+
+  /* États */
   --color-success: #10b981;
   --color-warning: #f59e0b;
   --color-error: #ef4444;
   --color-info: #3b82f6;
-  
-  /* Bordures - Progression harmonieuse */
-  --color-border-primary: #1f1f25;
-  --color-border-secondary: #2a2a32;
-  --color-border-focus: #8e8ea0;
+
+  /* Bordures - À utiliser avec parcimonie */
+  --color-border-primary: #363636;   /* Bordure subtile */
+  --color-border-secondary: #484848;  /* Bordure pour survol/focus */
+  --color-border-focus: var(--color-accent);
+  --color-border-success-soft: rgba(16, 185, 129, 0.2);
+  --color-border-warning-soft: rgba(245, 158, 11, 0.2);
   
   /* ========================================
      POLICES - HIÉRARCHIE CENTRALISÉE
@@ -143,41 +154,6 @@
   --line-height-tight: 1.25;
   --line-height-normal: 1.5;
   --line-height-relaxed: 1.75;
-  
-  /* ========================================
-     GLASSMORPHISM - VARIABLES CENTRALISÉES
-     ======================================== */
-  
-  /* Backgrounds glassmorphism - Hiérarchie claire */
-  --glass-bg-base: rgba(16, 16, 20, 0.5); /* Plus sombre et moins transparent pour la base */
-  --glass-bg-subtle: rgba(30, 30, 35, 0.5); /* Légèrement plus clair pour les éléments secondaires */
-  --glass-bg-soft: rgba(40, 40, 45, 0.6);
-  --glass-bg-medium: rgba(50, 50, 55, 0.7);
-  --glass-bg-strong: rgba(60, 60, 65, 0.8);
-  
-  /* Bordures glassmorphism - Progression harmonieuse */
-  --glass-border-subtle: rgba(255, 255, 255, 0.07);
-  --glass-border-soft: rgba(255, 255, 255, 0.1);
-  --glass-border-medium: rgba(255, 255, 255, 0.15);
-  --glass-border-strong: rgba(255, 255, 255, 0.2);
-  --glass-border-focus: rgba(255, 255, 255, 0.25);
-  
-  /* Effets de flou - Optimisés pour les performances */
-  --glass-blur-light: blur(8px);
-  --glass-blur-medium: blur(16px);
-  --glass-blur-strong: blur(24px);
-  --glass-blur-heavy: blur(32px);
-  
-  /* Ombres glassmorphism - Cohérentes */
-  --glass-shadow-subtle: 0 2px 4px rgba(0, 0, 0, 0.1);
-  --glass-shadow-soft: 0 4px 8px rgba(0, 0, 0, 0.15);
-  --glass-shadow-medium: 0 6px 16px rgba(0, 0, 0, 0.2);
-  --glass-shadow-strong: 0 10px 30px rgba(0, 0, 0, 0.25);
-  
-  /* Dégradés glassmorphism - Subtils */
-  --glass-gradient-subtle: linear-gradient(135deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.02) 100%);
-  --glass-gradient-soft: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.03) 100%);
-  --glass-gradient-medium: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.04) 100%);
 }
 
 /* ========================================

@@ -1,5 +1,5 @@
 /* ========================================
-   CHAT WIDGET - VERSION COMPACTE
+   CHAT WIDGET - GLASSMORPHISM MODERNE
    ======================================== */
 
 /* Surcharge du layout principal pour le mode widget */
@@ -19,13 +19,26 @@
   -webkit-backdrop-filter: var(--glass-blur-heavy);
   border: 1px solid var(--glass-border-soft);
   box-shadow: var(--glass-shadow-strong);
-  /* ✅ Permettre l'overflow pour l'input */
   overflow: visible;
   z-index: 1000;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  /* ✅ Structure flexbox pour le widget */
+  transition: all var(--glass-transition-slow);
   display: flex;
   flex-direction: column;
+  position: relative;
+}
+
+.chat-fullscreen-container.chat-widget-mode::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--glass-gradient-soft);
+  border-radius: 16px;
+  opacity: 0.4;
+  pointer-events: none;
+  z-index: 0;
 }
 
 /* Animation d'entrée pour le widget */

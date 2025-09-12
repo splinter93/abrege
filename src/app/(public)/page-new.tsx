@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'next/navigation';
 import Sidebar from '@/components/Sidebar';
@@ -8,8 +8,8 @@ import ErrorBoundary from '@/components/ErrorBoundary';
 import AuthGuard from '@/components/AuthGuard';
 import { useSecureErrorHandler } from '@/components/SecureErrorHandler';
 import { simpleLogger as logger } from '@/utils/logger';
-import { MessageSquare, Plus, Search, Upload, Sparkles, Zap, Eye, X, Youtube, FileText } from 'lucide-react';
-import NotesCarouselNotion from '@/components/NotesCarouselNotion';
+import { MessageSquare, Plus, Search, Upload, Sparkles, Zap, Eye, X } from 'lucide-react';
+import NotesCarouselHorizontal from '@/components/NotesCarouselHorizontal';
 import PerformanceMonitor from '@/components/PerformanceMonitor';
 import { motion } from 'framer-motion';
 import './home.css';
@@ -157,6 +157,8 @@ function HomePageContent() {
 
 function AuthenticatedHomeContent({ user }: { user: { id: string; email?: string; username?: string } }) {
   const router = useRouter();
+  const [isDragOver, setIsDragOver] = useState(false);
+  const [urlInput, setUrlInput] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const [isCreateNoteModalOpen, setIsCreateNoteModalOpen] = useState(false);
@@ -167,16 +169,37 @@ function AuthenticatedHomeContent({ user }: { user: { id: string; email?: string
     userId: user.id
   });
 
-
-  const handleImport = useCallback(() => {
-    // Ouvrir le sélecteur de fichiers
-    document.getElementById('file-input')?.click();
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(true);
   }, []);
 
-  const handleYoutubeSummary = useCallback(() => {
-    // Rediriger vers la page de résumé YouTube
-    router.push('/youtube-summary');
-  }, [router]);
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(false);
+  }, []);
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(false);
+    const files = Array.from(e.dataTransfer.files);
+    if (files.length > 0) {
+      logger.dev('[HomePage] Fichiers déposés:', files);
+    }
+  }, []);
+
+  const handleUrlSubmit = useCallback(() => {
+    if (urlInput.trim()) {
+      logger.dev('[HomePage] URL saisie:', urlInput);
+      setUrlInput('');
+    }
+  }, [urlInput]);
+
+  const handleKeyPress = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleUrlSubmit();
+    }
+  }, [handleUrlSubmit]);
 
   const handleSearch = useCallback((e: React.FormEvent) => {
     e.preventDefault();
@@ -206,40 +229,33 @@ function AuthenticatedHomeContent({ user }: { user: { id: string; email?: string
 
   return (
     <div className="home-page-wrapper">
-      <style dangerouslySetInnerHTML={{
-        __html: `
-          .search-container-glass {
-            border-radius: 16px !important;
-          }
-        `
-      }} />
       <Sidebar />
       
       <main className="home-content">
-        {/* Header simple sans encadré */}
+        {/* Header avec glassmorphism uniforme */}
         <motion.header 
-          className="page-title-simple"
+          className="page-title-container-glass"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease: "easeOut" }}
         >
-          <div className="page-title-header-simple">
-            <div className="page-title-section">
+          <div className="page-title-content">
+            <div className="page-title-header">
               <h1 className="page-title">Dashboard</h1>
               <p className="page-subtitle">Gérez vos notes et classeurs</p>
             </div>
-            <div className="quick-stats-simple">
-              <div className="stat-item-simple">
+            <div className="quick-stats">
+              <div className="stat-item">
                 <div className="stat-value">12</div>
-                <div className="stat-label">Notes</div>
+                <div className="page-title-stats-label">Notes</div>
               </div>
-              <div className="stat-item-simple">
+              <div className="stat-item">
                 <div className="stat-value">3</div>
-                <div className="stat-label">Classeurs</div>
+                <div className="page-title-stats-label">Classeurs</div>
               </div>
-              <div className="stat-item-simple">
+              <div className="stat-item">
                 <div className="stat-value">8</div>
-                <div className="stat-label">Récents</div>
+                <div className="page-title-stats-label">Récents</div>
               </div>
             </div>
           </div>
@@ -247,119 +263,137 @@ function AuthenticatedHomeContent({ user }: { user: { id: string; email?: string
 
         {/* Dashboard principal avec design moderne */}
         <div className="main-dashboard">
-          {/* Barre de recherche héro */}
-          <motion.section 
-            className="hero-search-glass"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
-          >
-            <form onSubmit={handleSearch} className="search-container-glass">
-              <Search size={22} className="search-icon" />
-              <input 
-                type="text" 
-                placeholder="Rechercher une note, un classeur..."
-                className="search-field-glass"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-              {searchQuery && (
-                <button 
-                  type="submit" 
-                  className="search-btn-glass"
-                  disabled={isSearching}
+          {/* Colonne unique - Actions et Import */}
+          <div className="dashboard-single-column">
+            {/* Barre de recherche héro */}
+            <motion.section 
+              className="hero-search-glass"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
+            >
+              <form onSubmit={handleSearch} className="search-container-glass">
+                <Search size={22} className="search-icon" />
+                <input 
+                  type="text" 
+                  placeholder="Rechercher une note, un classeur..."
+                  className="search-field-glass"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+                {searchQuery && (
+                  <button 
+                    type="submit" 
+                    className="search-btn-glass"
+                    disabled={isSearching}
+                  >
+                    {isSearching ? 'Recherche...' : 'Rechercher'}
+                  </button>
+                )}
+              </form>
+            </motion.section>
+
+            {/* Hub de création avec design moderne */}
+            <motion.section 
+              className="creation-hub-glass"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.4, ease: "easeOut" }}
+            >
+              <div className="hub-header">
+                <h2>Actions Rapides</h2>
+                <p>Créez et importez du contenu en quelques clics</p>
+              </div>
+              
+              <div className="creation-actions">
+                <motion.button 
+                  className="action-btn-glass"
+                  onClick={() => setIsCreateNoteModalOpen(true)}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  transition={{ type: "spring", stiffness: 300 }}
                 >
-                  {isSearching ? 'Recherche...' : 'Rechercher'}
-                </button>
-              )}
-            </form>
-          </motion.section>
+                  <Plus size={20} />
+                  <span>Nouvelle Note</span>
+                </motion.button>
+                
+                <motion.button 
+                  className="action-btn-glass"
+                  onClick={handleOpenChat}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  transition={{ type: "spring", stiffness: 300 }}
+                >
+                  <MessageSquare size={20} />
+                  <span>Chat IA</span>
+                </motion.button>
+              </div>
 
-          {/* Carrousel de notes récentes - Design Notion */}
-          <motion.section 
-            className="notes-carousel-section"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
-          >
-            <NotesCarouselNotion 
-              limit={6}
-              showNavigation={true}
-              autoPlay={false}
-              title="Notes Récentes"
-              showViewAll={true}
-            />
-          </motion.section>
-
-          {/* Titre Actions Rapides */}
-          <div className="section-title">
-            <h2>Actions Rapides</h2>
+              {/* Section d'import */}
+              <div className="import-section-glass">
+                <h3>Importer du contenu</h3>
+                <div className="import-actions">
+                  <div className="url-import">
+                    <input 
+                      type="url" 
+                      placeholder="Coller une URL..."
+                      className="url-field-glass"
+                      value={urlInput}
+                      onChange={(e) => setUrlInput(e.target.value)}
+                      onKeyPress={handleKeyPress}
+                    />
+                    <button 
+                      className="import-btn-glass" 
+                      onClick={handleUrlSubmit}
+                      disabled={!urlInput.trim()}
+                    >
+                      Importer
+                    </button>
+                  </div>
+                  
+                  <div className="separator">
+                    <span>ou</span>
+                  </div>
+                  
+                  <motion.div 
+                    className={`drop-zone-glass ${isDragOver ? 'drag-over' : ''}`}
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
+                    onClick={() => document.getElementById('file-input')?.click()}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    transition={{ type: "spring", stiffness: 300 }}
+                  >
+                    <input 
+                      id="file-input"
+                      type="file" 
+                      style={{ display: 'none' }}
+                      onChange={(e) => {
+                        if (e.target.files?.length) {
+                          logger.dev('[HomePage] Fichier sélectionné:', e.target.files[0]);
+                        }
+                      }}
+                    />
+                    <div className="drop-content">
+                      <Upload size={28} />
+                      <p>Glissez-déposez un fichier</p>
+                      <span>ou cliquez pour parcourir</span>
+                    </div>
+                  </motion.div>
+                </div>
+              </div>
+            </motion.section>
           </div>
-
-          {/* Actions rapides sans bloc */}
+          
+          {/* Carrousel de notes récentes - Plein largeur */}
           <motion.section 
-            className="creation-actions-section"
+            className="notes-carousel-fullwidth"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.5, ease: "easeOut" }}
           >
-            <div className="creation-actions">
-              <motion.button 
-                className="action-btn-glass create-note"
-                onClick={() => setIsCreateNoteModalOpen(true)}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                transition={{ type: "spring", stiffness: 300 }}
-              >
-                <Plus size={20} />
-                <span>Créer une note</span>
-              </motion.button>
-
-              <motion.button 
-                className="action-btn-glass import"
-                onClick={handleImport}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                transition={{ type: "spring", stiffness: 300 }}
-              >
-                <Upload size={20} />
-                <span>Importer</span>
-              </motion.button>
-
-              <motion.button 
-                className="action-btn-glass youtube"
-                onClick={handleYoutubeSummary}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                transition={{ type: "spring", stiffness: 300 }}
-              >
-                <Youtube size={20} />
-                <span>Youtube Summary</span>
-              </motion.button>
-              
-              <motion.button 
-                className="action-btn-glass chat"
-                onClick={handleOpenChat}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                transition={{ type: "spring", stiffness: 300 }}
-              >
-                <MessageSquare size={20} />
-                <span>Chat</span>
-              </motion.button>
-            </div>
-
-            {/* Input file caché pour l'import */}
-            <input 
-              id="file-input"
-              type="file" 
-              style={{ display: 'none' }}
-              onChange={(e) => {
-                if (e.target.files?.length) {
-                  logger.dev('[HomePage] Fichier sélectionné:', e.target.files[0]);
-                }
-              }}
-            />
+            <NotesCarouselHorizontal />
           </motion.section>
         </div>
       </main>

@@ -1,10 +1,10 @@
 "use client";
-import React, { useMemo, useEffect, useRef } from 'react';
+import React, { useMemo, useEffect, useRef, useCallback } from 'react';
 import DOMPurify from 'dompurify';
 import { useMarkdownRender } from '../../hooks/editor/useMarkdownRender';
 import { detectMermaidBlocks, validateMermaidSyntax, cleanMermaidContent } from './mermaidService';
 import MermaidRenderer from '@/components/mermaid/MermaidRenderer';
-import { createRoot } from 'react-dom/client';
+import { createRoot, Root } from 'react-dom/client';
 import './index.css';
 import '@/styles/mermaid.css';
 import '@/styles/unified-blocks.css';
@@ -13,9 +13,72 @@ interface EnhancedMarkdownMessageProps {
   content: string;
 }
 
+// Hook personnalisé pour gérer les racines React de manière sécurisée
+const useSafeReactRoots = () => {
+  const rootsRef = useRef<Map<HTMLElement, Root>>(new Map());
+  const isUnmountingRef = useRef(false);
+
+  const createSafeRoot = useCallback((element: HTMLElement): Root | null => {
+    if (isUnmountingRef.current || !element.isConnected) {
+      return null;
+    }
+
+    try {
+      const root = createRoot(element);
+      rootsRef.current.set(element, root);
+      return root;
+    } catch (error) {
+      console.warn('Error creating React root:', error);
+      return null;
+    }
+  }, []);
+
+  const renderSafeRoot = useCallback((root: Root | null, element: React.ReactElement) => {
+    if (!root || isUnmountingRef.current) return false;
+
+    try {
+      root.render(element);
+      return true;
+    } catch (error) {
+      console.warn('Error rendering to React root:', error);
+      return false;
+    }
+  }, []);
+
+  const unmountAllRoots = useCallback(() => {
+    isUnmountingRef.current = true;
+    
+    // Utiliser requestAnimationFrame pour démonter après le cycle de rendu actuel
+    requestAnimationFrame(() => {
+      rootsRef.current.forEach((root, element) => {
+        try {
+          // Vérifier si l'élément existe encore dans le DOM
+          if (element.isConnected && root) {
+            root.unmount();
+          }
+        } catch (error) {
+          // Ignorer silencieusement les erreurs de démontage pendant le rendu
+          if (process.env.NODE_ENV === 'development') {
+            console.warn('Error unmounting root:', error);
+          }
+        }
+      });
+      rootsRef.current.clear();
+      isUnmountingRef.current = false;
+    });
+  }, []);
+
+  return {
+    createSafeRoot,
+    renderSafeRoot,
+    unmountAllRoots,
+    isUnmounting: isUnmountingRef.current
+  };
+};
+
 // Composant pour remplacer les wrappers de code blocks par CodeBlock React
 const CodeBlockReplacer: React.FC<{ containerRef: React.RefObject<HTMLDivElement | null> }> = React.memo(({ containerRef }) => {
-  const rootsRef = useRef<Map<HTMLElement, any>>(new Map());
+  const { createSafeRoot, renderSafeRoot, unmountAllRoots } = useSafeReactRoots();
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -37,38 +100,32 @@ const CodeBlockReplacer: React.FC<{ containerRef: React.RefObject<HTMLDivElement
         // Marquer comme traité
         wrapper.setAttribute('data-processed', 'true');
         
-        // Créer une racine React pour ce wrapper
-        const root = createRoot(wrapper as HTMLElement);
-        rootsRef.current.set(wrapper as HTMLElement, root);
+        // Créer une racine React sécurisée pour ce wrapper
+        const root = createSafeRoot(wrapper as HTMLElement);
         
-        // Rendre un code block avec les styles unified-blocks
-        root.render(
-          <div className="u-block u-block--code">
-            <div className="u-block__body">
-              <pre>
-                <code className={`language-${language}`}>
-                  {content}
-                </code>
-              </pre>
+        if (root) {
+          // Rendre un code block avec les styles unified-blocks
+          renderSafeRoot(root, 
+            <div className="u-block u-block--code">
+              <div className="u-block__body">
+                <pre>
+                  <code className={`language-${language}`}>
+                    {content}
+                  </code>
+                </pre>
+              </div>
             </div>
-          </div>
-        );
+          );
+        }
       });
     }, 0);
 
-    // Cleanup function
+    // Cleanup function - démontage sécurisé
     return () => {
       clearTimeout(timeoutId);
-      rootsRef.current.forEach((root, element) => {
-        try {
-          root.unmount();
-        } catch (error) {
-          console.warn('Error unmounting root:', error);
-        }
-      });
-      rootsRef.current.clear();
+      unmountAllRoots();
     };
-  }, [containerRef]);
+  }, [containerRef, createSafeRoot, renderSafeRoot, unmountAllRoots]);
 
   return null;
 });

@@ -1,0 +1,280 @@
+/* ==========================================================================
+   NOTES CAROUSEL HORIZONTAL - CARROUSEL HORIZONTAL AVEC CONTENT CARDS
+   ========================================================================== */
+
+.notes-carousel-horizontal {
+  width: 100%;
+  margin-top: var(--space-lg);
+}
+
+/* ==========================================================================
+   HEADER DU CARROUSEL
+   ========================================================================== */
+
+.carousel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-md);
+  padding: 0 var(--space-sm);
+}
+
+.carousel-title h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+  font-family: 'Noto Sans', sans-serif;
+}
+
+.carousel-count {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin-left: var(--space-sm);
+  font-family: 'Noto Sans', sans-serif;
+}
+
+.carousel-nav {
+  display: flex;
+  gap: var(--space-xs);
+}
+
+.nav-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-md);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all var(--transition);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+.nav-btn:hover:not(:disabled) {
+  background: var(--glass-bg-hover);
+  border-color: var(--glass-border-hover);
+  color: var(--text-primary);
+  transform: scale(1.05);
+  box-shadow: var(--glass-shadow-hover);
+}
+
+.nav-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ==========================================================================
+   CONTAINER DU CARROUSEL
+   ========================================================================== */
+
+.carousel-container {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: var(--glass-shadow);
+}
+
+.carousel-scroll {
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-behavior: smooth;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
+}
+
+.carousel-scroll::-webkit-scrollbar {
+  display: none; /* Chrome/Safari */
+}
+
+.carousel-track {
+  display: flex;
+  gap: var(--space-md);
+  padding: var(--space-lg);
+  min-width: max-content;
+}
+
+.carousel-item {
+  flex: 0 0 320px; /* Largeur fixe pour les cartes */
+  height: 280px; /* Hauteur fixe pour les cartes */
+}
+
+/* ==========================================================================
+   ÉTATS DE CHARGEMENT ET D'ERREUR
+   ========================================================================== */
+
+.carousel-loading,
+.carousel-error,
+.carousel-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-xl);
+  text-align: center;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  min-height: 200px;
+}
+
+.carousel-loading {
+  gap: var(--space-md);
+}
+
+.loading-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid var(--glass-border-light);
+  border-top: 3px solid var(--dashboard-primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.carousel-loading span {
+  font-size: 16px;
+  color: var(--text-secondary);
+  font-family: 'Noto Sans', sans-serif;
+}
+
+.carousel-error span {
+  font-size: 16px;
+  color: #ef4444;
+  font-family: 'Noto Sans', sans-serif;
+}
+
+.carousel-empty {
+  gap: var(--space-md);
+  opacity: 0.7;
+}
+
+.carousel-empty span {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary);
+  font-family: 'Noto Sans', sans-serif;
+}
+
+.carousel-empty p {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin: 0;
+  font-family: 'Noto Sans', sans-serif;
+}
+
+/* ==========================================================================
+   RESPONSIVE DESIGN
+   ========================================================================== */
+
+@media (max-width: 1200px) {
+  .carousel-item {
+    flex: 0 0 280px;
+    height: 260px;
+  }
+  
+  .carousel-track {
+    gap: var(--space-sm);
+    padding: var(--space-md);
+  }
+}
+
+@media (max-width: 768px) {
+  .carousel-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-sm);
+  }
+  
+  .carousel-nav {
+    align-self: flex-end;
+  }
+  
+  .carousel-item {
+    flex: 0 0 260px;
+    height: 240px;
+  }
+  
+  .carousel-track {
+    gap: var(--space-xs);
+    padding: var(--space-sm);
+  }
+  
+  .nav-btn {
+    width: 36px;
+    height: 36px;
+  }
+  
+  .carousel-title h3 {
+    font-size: 16px;
+  }
+  
+  .carousel-count {
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .carousel-item {
+    flex: 0 0 240px;
+    height: 220px;
+  }
+  
+  .carousel-track {
+    padding: var(--space-xs);
+  }
+  
+  .nav-btn {
+    width: 32px;
+    height: 32px;
+  }
+  
+  .carousel-title h3 {
+    font-size: 14px;
+  }
+  
+  .carousel-count {
+    font-size: 11px;
+  }
+}
+
+/* ==========================================================================
+   ANIMATIONS ET TRANSITIONS
+   ========================================================================== */
+
+.carousel-item {
+  transition: transform var(--transition);
+}
+
+.carousel-item:hover {
+  transform: translateY(-4px);
+}
+
+/* ==========================================================================
+   SCROLL SMOOTH POUR MOBILE
+   ========================================================================== */
+
+@media (max-width: 768px) {
+  .carousel-scroll {
+    scroll-snap-type: x mandatory;
+  }
+  
+  .carousel-item {
+    scroll-snap-align: start;
+  }
+}

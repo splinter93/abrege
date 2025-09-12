@@ -685,8 +685,7 @@
   .chat-input-speaker:focus,
   .chat-input-mic:focus,
   .sidebar-toggle-btn-floating:focus {
-    outline: 2px solid var(--chat-accent-primary);
-    outline-offset: 2px;
+    outline: none;
   }
 }
 

@@ -1,0 +1,6 @@
+<svg width="320" height="180" viewBox="0 0 320 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+<rect width="320" height="180" fill="#1E293B"/>
+<rect x="10" y="10" width="300" height="160" rx="8" fill="rgba(255, 255, 255, 0.05)"/>
+<path d="M160 80L180 100L160 120L140 100L160 80Z" fill="#E55A2C"/>
+<text x="160" y="140" font-family="Noto Sans, sans-serif" font-size="14" fill="rgba(255, 255, 255, 0.7)" text-anchor="middle">Note</text>
+</svg>

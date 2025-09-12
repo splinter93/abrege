@@ -1,5 +1,5 @@
 /* ========================================
-   CHAT LAYOUT - FICHIER DÉDIÉ
+   CHAT LAYOUT - GLASSMORPHISM MODERNE
    ======================================== */
 
 /* ========================================
@@ -39,13 +39,28 @@
   align-items: center;
   padding: 0 var(--chat-spacing-xl, 1.5rem);
   height: var(--chat-height-header, 48px);
-  background: var(--glass-bg-subtle);
+  background: var(--glass-header-bg);
   backdrop-filter: var(--glass-blur-medium);
   -webkit-backdrop-filter: var(--glass-blur-medium);
-  border-bottom: 1px solid var(--glass-border-soft);
+  border-bottom: 1px solid var(--glass-header-border);
   flex-shrink: 0;
   z-index: calc(var(--chat-z-sidebar, 1001) + 1);
-  box-shadow: var(--glass-shadow-subtle);
+  box-shadow: var(--glass-header-shadow);
+  position: relative;
+  overflow: hidden;
+}
+
+.chat-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--glass-gradient-subtle);
+  opacity: 0.3;
+  pointer-events: none;
+  z-index: 0;
 }
 
 .chat-header-left {

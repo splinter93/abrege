@@ -1,5 +1,5 @@
 /* ========================================
-   CHAT BUBBLES - DESIGN MODERNE ET COHÉRENT
+   CHAT BUBBLES - GLASSMORPHISM MODERNE
    ======================================== */
 
 /* ========================================
@@ -40,38 +40,57 @@
   font-size: 15px;
   position: relative;
   box-sizing: border-box;
-  transition: all 0.2s ease-in-out;
+  transition: all var(--glass-transition-normal);
 }
 
 /* ========================================
-   BULLE UTILISATEUR - GRISE MODERNE
+   BULLE UTILISATEUR - GLASSMORPHISM MODERNE
    ======================================== */
 
 .chat-message-bubble-user {
-  background: var(--glass-bg-subtle);
+  background: var(--glass-message-user);
   color: var(--color-text-primary, #f8f9fa);
-  border: 1px solid var(--glass-border-soft);
-  box-shadow: var(--glass-shadow-subtle);
+  border: 1px solid var(--glass-message-user-border);
+  box-shadow: var(--glass-message-user-shadow);
   border-bottom-right-radius: var(--radius-md, 6px);
   margin-left: auto;
   max-width: 45%;
   padding: var(--spacing-sm, 0.5rem) var(--spacing-lg, 1rem);
   backdrop-filter: var(--glass-blur-medium);
   -webkit-backdrop-filter: var(--glass-blur-medium);
-  /* Assurer que le texte long se wrap correctement */
   word-wrap: break-word;
   overflow-wrap: break-word;
   box-sizing: border-box;
-  /* S'assurer que la bulle ne dépasse pas */
   min-width: 0;
   flex-shrink: 1;
+  position: relative;
+  overflow: hidden;
+}
+
+.chat-message-bubble-user::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--glass-gradient-subtle);
+  border-radius: 18px;
+  border-bottom-right-radius: var(--radius-md, 6px);
+  opacity: 0.4;
+  pointer-events: none;
+  z-index: 0;
 }
 
 .chat-message-bubble-user:hover {
-  background: var(--glass-bg-soft);
-  border-color: var(--glass-border-medium);
-  box-shadow: var(--glass-shadow-soft);
+  background: var(--glass-hover-bg);
+  border-color: var(--glass-hover-border);
+  box-shadow: var(--glass-hover-shadow);
   transform: translateY(-1px);
+}
+
+.chat-message-bubble-user:hover::before {
+  opacity: 0.6;
 }
 
 /* ========================================
