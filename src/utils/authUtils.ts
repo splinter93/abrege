@@ -46,6 +46,15 @@ export interface PermissionResult {
  */
 export async function getAuthenticatedUser(request: NextRequest): Promise<AuthResult> {
   try {
+    // 🔍 DEBUG : Log de tous les headers reçus
+    logApi.info(`[AuthUtils] 🔍 Headers reçus:`, {
+      'Authorization': request.headers.get('Authorization') ? 'Bearer ***' : 'ABSENT',
+      'X-User-Id': request.headers.get('X-User-Id') || 'ABSENT',
+      'X-Service-Role': request.headers.get('X-Service-Role') || 'ABSENT',
+      'X-Client-Type': request.headers.get('X-Client-Type') || 'ABSENT',
+      'X-API-Key': request.headers.get('X-API-Key') ? '***' : 'ABSENT'
+    });
+
     // ✅ ESSAYER D'ABORD L'IMPERSONATION D'AGENT
     const userId = request.headers.get('X-User-Id');
     const isServiceRole = request.headers.get('X-Service-Role') === 'true';
