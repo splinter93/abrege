@@ -70,7 +70,7 @@ export class MultimodalHandler {
   ): GroqMultimodalPayload {
     const message = this.createMultimodalMessage('user', text, imageUrl);
 
-    return {
+    const payload = {
       messages: [message],
       model,
       temperature: options.temperature ?? 1,
@@ -79,6 +79,18 @@ export class MultimodalHandler {
       stream: options.stream ?? false,
       stop: options.stop ?? null
     };
+
+    // 🔍 DEBUG : Log du payload Groq final
+    logger.info('[MultimodalHandler] 🔍 Payload Groq généré:', {
+      model,
+      hasImage: !!imageUrl,
+      imageUrl,
+      textLength: text.length,
+      messageContent: message.content,
+      payload: JSON.stringify(payload, null, 2)
+    });
+
+    return payload;
   }
 
   /**
@@ -159,8 +171,21 @@ export class MultimodalHandler {
       if (typeof input === 'object' && input !== null) {
         const text = input.query || input.question || input.prompt || input.text || input.input || '';
         const imageUrl = input.imageUrl || input.image_url || input.image || '';
+        
+        // ✅ CORRECTION : Gérer le format de l'endpoint execute { input: text, image: imageUrl }
+        const inputObj = input as any;
+        const finalText = text || inputObj.input || '';
+        const finalImageUrl = imageUrl || inputObj.image || '';
+        
+        // 🔍 DEBUG : Log de la structure d'input reçue
+        logger.info('[MultimodalHandler] 🔍 Structure input reçue:', {
+          originalInput: input,
+          extractedText: finalText,
+          extractedImageUrl: finalImageUrl,
+          inputKeys: Object.keys(inputObj)
+        });
 
-        if (!text && !imageUrl) {
+        if (!finalText && !finalImageUrl) {
           return { 
             text: '', 
             error: 'Aucun texte ou image fourni. Fournissez au moins "text" ou "imageUrl"' 
@@ -168,14 +193,14 @@ export class MultimodalHandler {
         }
 
         // Valider l'URL d'image si fournie
-        if (imageUrl) {
-          const validation = this.validateImageUrl(imageUrl);
+        if (finalImageUrl) {
+          const validation = this.validateImageUrl(finalImageUrl);
           if (!validation.valid) {
-            return { text: text || '', error: validation.error };
+            return { text: finalText || '', error: validation.error };
           }
         }
 
-        return { text, imageUrl: imageUrl || undefined };
+        return { text: finalText, imageUrl: finalImageUrl || undefined };
       }
 
       return { text: String(input) };
