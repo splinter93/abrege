@@ -1,6 +1,9 @@
 /* ==========================================================================
-   FOLDER CONTENT - STYLES COMPLÉMENTAIRES
+   FOLDER CONTENT - STYLES CONSOLIDÉS
    ========================================================================== */
+/* Utilise les styles consolidés et préserve les éléments essentiels */
+
+@import '../styles/glassmorphism-variables.css';
 
 .folder-content-container {
   width: 100%;
@@ -18,9 +21,9 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 16px 0 16px 0; /* Padding uniforme et fixe */
+  padding: 12px 0 12px 0; /* Padding uniforme et fixe */
   border-bottom: none; /* Supprimé le border-bottom */
-  margin-bottom: var(--spacing-lg);
+  margin-bottom: var(--spacing-md);
   margin-top: 0; /* Supprimé le margin-top négatif */
   background: transparent; /* Supprimé le background */
   position: relative;
@@ -51,7 +54,7 @@
 }
 
 .classeur-title {
-  font-size: 28px;
+  font-size: 20px;
   font-weight: 600;
   color: var(--text-primary, #111827);
   margin: 0;
@@ -202,8 +205,8 @@
 /* Grilles responsives - UTILISÉES PAR FOLDERMANAGER */
 .folder-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); /* Largeur minimale réduite */
-  gap: 12px; /* Réduit de 20px à 12px pour resserrer la grille */
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); /* Largeur minimale réduite */
+  gap: 8px; /* Réduit de 20px à 8px pour resserrer la grille */
   justify-items: stretch; /* Les items prennent toute la largeur de leur cellule */
   width: 100%;
   padding: 0;
@@ -211,7 +214,7 @@
 }
 
 .folder-grid.files {
-  margin-top: 12px; /* Réduit de 16px à 12px pour resserrer l'espacement */
+  margin-top: 8px; /* Réduit de 16px à 8px pour resserrer l'espacement */
 }
 
 /* Animation pour les fichiers */
@@ -292,11 +295,11 @@
 
 /* Espacement optimisé entre les éléments */
 .folder-grid {
-  gap: 12px; /* Réduit de 24px à 12px pour resserrer la grille */
+  gap: 8px; /* Réduit de 24px à 8px pour resserrer la grille */
 }
 
 .folder-grid.files {
-  margin-top: 20px;
+  margin-top: 8px;
 } 
 
 /* ==========================================================================
@@ -305,27 +308,27 @@
 
 @media (max-width: 1200px) {
   .folder-grid {
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); /* Largeur réduite sur écrans moyens */
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); /* Largeur réduite sur écrans moyens */
   }
 }
 
 @media (max-width: 1024px) {
   .folder-grid {
-    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); /* Largeur encore plus réduite */
+    grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); /* Largeur encore plus réduite */
   }
 }
 
 @media (max-width: 768px) {
   .folder-grid {
-    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); /* Largeur minimale sur tablette */
-    gap: 10px;
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); /* Largeur minimale sur tablette */
+    gap: 6px;
   }
 }
 
 @media (max-width: 480px) {
   .folder-grid {
-    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); /* Largeur très compacte sur mobile */
-    gap: 8px;
+    grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); /* Largeur très compacte sur mobile */
+    gap: 4px;
   }
 } 
 

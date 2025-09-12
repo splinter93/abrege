@@ -1,0 +1,17 @@
+/* ==========================================================================
+   INDEX CSS - PAGES FICHIERS & DOSSIERS
+   ========================================================================== */
+/* Point d'entrée centralisé pour tous les styles des pages */
+
+/* Variables glassmorphism centralisées */
+@import './glassmorphism-variables.css';
+
+/* Styles consolidés communs */
+@import './pages-files-dossiers.css';
+
+/* Styles spécifiques par page */
+@import './page-dossiers.css';
+@import './page-files.css';
+
+/* Styles des composants */
+@import './page-title-containers.css';

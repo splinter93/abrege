@@ -1,17 +1,19 @@
 /*
-  FOLDER MANAGER - MINIMAL MODERN THEME
-  =====================================
-  - Clean, flat surfaces
-  - No borders, no heavy shadows, no blur
-  - Subtle spacing and hover accents
+  FOLDER MANAGER - STYLES CONSOLIDÉS
+  ==================================
+  - Utilise les styles consolidés des pages
+  - Préserve les items, icônes et navigation
+  - Style minimal moderne maintenu
 */
 
+@import '../styles/glassmorphism-variables.css';
+
 .folder-manager-wrapper {
-  padding: 0 var(--spacing-xl) var(--spacing-xl) var(--spacing-xl);
+  padding: 0 var(--spacing-lg) var(--spacing-lg) var(--spacing-lg);
   flex-grow: 1;
   display: flex;
   flex-direction: column;
-  min-height: calc(100vh - 600px); /* Hauteur minimale adaptée à l'écran */
+  min-height: calc(100vh - 500px); /* Hauteur minimale adaptée à l'écran */
 }
 
 /* Container */
@@ -40,7 +42,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 0 16px 0; /* Padding uniforme et fixe */
+  padding: 12px 0 12px 0; /* Padding uniforme et fixe */
   background: transparent;
   border-bottom: none;
   margin: 0; /* Supprimé les marges */
@@ -52,21 +54,21 @@
 }
 
 .classeur-header-title {
-  font-size: 1.25rem;
+  font-size: 1rem;
   font-weight: 600;
   color: #FFF;
   margin: 0;
   display: flex;
   align-items: center;
-  gap: 0.6rem;
+  gap: 0.5rem;
 }
 
 .classeur-icon {
-  font-size: 1.2rem;
+  font-size: 1rem;
 }
 
 .classeur-name {
-  font-size: 1.2rem;
+  font-size: 1rem;
   font-weight: 600;
 }
 
@@ -98,8 +100,8 @@
 
 /* Toolbar Container - Design propre et transparent */
 .folder-toolbar-container {
-  padding: var(--spacing-lg) 0 var(--spacing-md) 0;
-  margin-bottom: var(--spacing-lg);
+  padding: var(--spacing-md) 0 var(--spacing-sm) 0;
+  margin-bottom: var(--spacing-md);
   background: transparent;
   border-bottom: none;
 }
@@ -108,8 +110,8 @@
 .folder-toolbar {
   display: flex;
   align-items: center;
-  gap: var(--spacing-md);
-  padding: var(--spacing-sm) 0;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-xs) 0;
 }
 
 /* Boutons de contrôle - Style glassmorphism */
@@ -117,15 +119,15 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   border: 1px solid var(--glass-border-light, rgba(255, 255, 255, 0.1));
-  border-radius: var(--radius-md, 8px);
+  border-radius: var(--radius-sm, 6px);
   background: var(--glass-bg-light, rgba(255, 255, 255, 0.05));
   color: var(--text-2, rgba(255, 255, 255, 0.8));
   cursor: pointer;
   transition: all 0.2s ease;
-  font-size: 0.9rem;
+  font-size: 0.8rem;
   backdrop-filter: blur(10px);
 }
 

@@ -92,7 +92,7 @@ const DEFAULT_GROQ_CONFIG: GroqConfig = {
   // Groq spécifique
   serviceTier: 'on_demand', // ✅ Gratuit au lieu de 'auto' (payant)
   parallelToolCalls: true,
-  reasoningEffort: 'low', // ✅ Réduit le reasoning pour plus de réponses
+  reasoningEffort: 'high', // ✅ Maximum pour générer du reasoning
   
   // ✅ Configuration audio par défaut
   audioModel: 'whisper-large-v3-turbo',
@@ -186,7 +186,8 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
         content: result.content || '',
         tool_calls: result.tool_calls || [],
         model: result.model,
-        usage: result.usage
+        usage: result.usage,
+        reasoning: result.reasoning // ✅ CORRECTION: Inclure le reasoning
       };
 
     } catch (error) {
@@ -307,6 +308,9 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
           if (tools && tools.length > 0) {
             payload.tools = tools;
             logger.dev(`[GroqProvider] 🔧 ${tools.length} outils extraits du message developer`);
+            // Log des noms d'outils pour debugging
+            const toolNames = tools.map(t => t.function?.name).filter(Boolean);
+            logger.dev(`[GroqProvider] 🔧 Noms d'outils: ${toolNames.join(', ')}`);
           }
         } catch (error) {
           logger.warn(`[GroqProvider] ⚠️ Erreur extraction outils:`, error);
@@ -384,6 +388,16 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
             try {
               const parameters = JSON.parse(paramsJson);
               
+              // ✅ Validation des champs requis
+              if (!name || !description || !parameters) {
+                logger.warn(`[GroqProvider] ⚠️ Tool ${name} ignoré: champs manquants`, {
+                  hasName: !!name,
+                  hasDescription: !!description,
+                  hasParameters: !!parameters
+                });
+                return;
+              }
+
               tools.push({
                 type: 'function',
                 function: {
@@ -483,7 +497,14 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
     // ✅ Ajouter le reasoning si présent
     if (choice?.message?.reasoning) {
       result.reasoning = choice.message.reasoning;
-      logger.dev(`[GroqProvider] 🧠 Reasoning détecté (${result.reasoning.length} chars)`);
+      logger.dev(`[GroqProvider] 🧠 Reasoning détecté (${result.reasoning.length} chars):`, result.reasoning);
+    } else {
+      logger.dev(`[GroqProvider] ❌ Pas de reasoning dans la réponse:`, {
+        hasChoice: !!choice,
+        hasMessage: !!choice?.message,
+        hasReasoning: !!choice?.message?.reasoning,
+        messageKeys: choice?.message ? Object.keys(choice.message) : []
+      });
     }
 
     return result;

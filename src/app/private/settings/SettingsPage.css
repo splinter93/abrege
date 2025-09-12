@@ -1,62 +1,9 @@
 /* ==========================================================================
-   PAGE SETTINGS - GLASSMORPHISM MODERNE ET ÉPURÉ
+   PAGE RÉGLAGES - STYLES CONSOLIDÉS
    ========================================================================== */
+/* Cette page utilise maintenant les styles consolidés */
 
-/* ==========================================================================
-   VARIABLES GLASSMORPHISM
-   ========================================================================== */
-:root {
-  /* Couleurs principales */
-  --settings-primary: #6366f1;
-  --settings-primary-light: rgba(99, 102, 241, 0.15);
-  --settings-primary-hover: #4f46e5;
-  
-  /* Couleurs glassmorphism */
-  --glass-bg-primary: rgba(255, 255, 255, 0.08);
-  --glass-bg-secondary: rgba(255, 255, 255, 0.05);
-  --glass-bg-tertiary: rgba(255, 255, 255, 0.03);
-  --glass-bg-hover: rgba(255, 255, 255, 0.12);
-  
-  /* Bordures glassmorphism */
-  --glass-border-primary: rgba(255, 255, 255, 0.12);
-  --glass-border-secondary: rgba(255, 255, 255, 0.08);
-  --glass-border-hover: rgba(255, 255, 255, 0.18);
-  
-  /* Ombres glassmorphism */
-  --glass-shadow-subtle: 0 4px 20px rgba(0, 0, 0, 0.1);
-  --glass-shadow-medium: 0 8px 32px rgba(0, 0, 0, 0.15);
-  --glass-shadow-strong: 0 16px 48px rgba(0, 0, 0, 0.2);
-  
-  /* Couleurs de texte */
-  --settings-text-primary: #f8fafc;
-  --settings-text-secondary: #94a3b8;
-  --settings-text-muted: #64748b;
-  
-  /* Espacements */
-  --settings-spacing-xs: 8px;
-  --settings-spacing-sm: 12px;
-  --settings-spacing-md: 16px;
-  --settings-spacing-lg: 24px;
-  --settings-spacing-xl: 32px;
-  --settings-spacing-2xl: 48px;
-  
-  /* Rayons de bordure */
-  --settings-radius-sm: 8px;
-  --settings-radius-md: 12px;
-  --settings-radius-lg: 16px;
-  --settings-radius-xl: 20px;
-  
-  /* Transitions */
-  --settings-transition-fast: 0.15s ease;
-  --settings-transition-normal: 0.25s ease;
-  --settings-transition-slow: 0.4s ease;
-  
-  /* Z-index */
-  --settings-z-header: 1001;
-  --settings-z-sidebar: 1000;
-  --settings-z-content: 999;
-  --settings-z-modal: 1002;
-}
+@import '../../../styles/page-settings.css';
 
 /* ==========================================================================
    BACKGROUND PRINCIPAL - STYLE UNIFIÉ DANS Sidebar.css

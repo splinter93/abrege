@@ -260,7 +260,9 @@ export function useChatResponse(options: UseChatResponseOptions = {}): UseChatRe
           });
           logger.dev('[useChatResponse] 🎯 Appel onComplete (réponse simple):', {
             content: data.content?.substring(0, 100) + '...',
-            reasoning: data.reasoning?.substring(0, 50) + '...'
+            reasoning: data.reasoning?.substring(0, 50) + '...',
+            hasReasoning: !!data.reasoning,
+            reasoningLength: data.reasoning?.length || 0
           });
           onComplete?.(data.content || '', data.reasoning || '', data.tool_calls || [], data.tool_results || []);
         }

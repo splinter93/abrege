@@ -8,7 +8,7 @@ import BubbleButtons from './BubbleButtons';
 import ReasoningDropdown from './ReasoningDropdown';
 import { useChatStore } from '@/store/useChatStore';
 import { useStreamingPreferences } from '@/hooks/useStreamingPreferences';
-import StreamingLineByLine from './StreamingLineByLine';
+// import StreamingLineByLine from './StreamingLineByLine'; // Supprimé - faux streaming
 import './ReasoningDropdown.css';
 import './ToolCallMessage.css';
 
@@ -30,8 +30,8 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
   const [isAnimating, setIsAnimating] = useState(false);
   const [isStreamingComplete, setIsStreamingComplete] = useState(false);
   
-  // Hook pour les préférences de streaming
-  const { preferences, getAdjustedDelay } = useStreamingPreferences();
+  // Hook pour les préférences de streaming - SUPPRIMÉ (faux streaming)
+  // const { preferences, getAdjustedDelay } = useStreamingPreferences();
   
   // Vérification de sécurité
   if (!message) {
@@ -50,50 +50,16 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
     return null;
   }
 
-  // ✅ MÉMOIRE: Animation du contenu avec cleanup garanti
+  // ✅ SUPPRIMÉ: Animation du contenu (faux streaming)
+  // Le vrai streaming est géré par useChatStreaming et les canaux Supabase
   useEffect(() => {
-    if (animateContent && content && role === 'assistant' && !preferences.enabled) {
-      setIsAnimating(true);
-      setDisplayedContent('');
-      
-      let currentIndex = 0;
-      const speed = 80; // Plus rapide : 80 caractères/seconde
-      let intervalId: NodeJS.Timeout | null = null;
-      
-      intervalId = setInterval(() => {
-        if (currentIndex < content.length) {
-          setDisplayedContent(content.slice(0, currentIndex + 1));
-          currentIndex++;
-        } else {
-          if (intervalId) {
-            clearInterval(intervalId);
-            intervalId = null;
-          }
-          setIsAnimating(false);
-        }
-      }, 1000 / speed);
-
-      // ✅ MÉMOIRE: Cleanup garanti
-      return () => {
-        if (intervalId) {
-          clearInterval(intervalId);
-          intervalId = null;
-        }
-        setIsAnimating(false);
-      };
-    } else if (content && !preferences.enabled) {
+    if (content) {
       setDisplayedContent(content);
     }
-  }, [content, animateContent, role, preferences.enabled]);
+  }, [content]);
 
-  // Gestion du streaming ligne par ligne
-  const handleStreamingComplete = () => {
-    setIsStreamingComplete(true);
-  };
-
-  // Déterminer si le streaming doit être utilisé
-  const shouldUseStreaming = preferences.enabled && role === 'assistant' && content && !isStreamingComplete;
-  const wordDelay = getAdjustedDelay(content || '');
+  // ✅ SUPPRIMÉ: Gestion du faux streaming
+  // Le vrai streaming est géré par useChatStreaming et les canaux Supabase
 
   const parseSuccessFromContent = (raw: string | null | undefined): boolean | undefined => {
     if (!raw) return undefined;
@@ -145,11 +111,6 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
       transition={{ duration: 0.3 }}
     >
       <div className={`chat-message-bubble chat-message-bubble-${role}`}>
-        {/* 🧠 Raisonnement affiché EN PREMIER pour les messages assistant */}
-        {reasoning && role === 'assistant' && (
-          <ReasoningDropdown reasoning={reasoning} />
-        )}
-
         {/* Tool calls - only for assistant messages to avoid duplicates */}
         {role === 'assistant' && message.tool_calls && message.tool_calls.length > 0 && (
           <ToolCallMessage
@@ -158,40 +119,22 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
           />
         )}
 
-        {/* Contenu markdown avec streaming ligne par ligne ou animation optionnelle - affiché APRÈS le reasoning */}
+        {/* Reasoning dropdown - affiché AVANT le contenu */}
+        {reasoning && (
+          <ReasoningDropdown 
+            reasoning={reasoning}
+            className="chat-message-reasoning"
+          />
+        )}
+
+        {/* Contenu markdown - affiché APRÈS le reasoning */}
         {content && (
           <div className="chat-message-content">
-            {shouldUseStreaming ? (
-              <StreamingLineByLine
-                content={content}
-                wordDelay={wordDelay}
-                onComplete={handleStreamingComplete}
-                className="chat-streaming-content"
-              />
-            ) : (
-              <EnhancedMarkdownMessage content={content} />
-            )}
-            
-            {/* Curseur de frappe pour l'animation caractère par caractère (seulement si streaming désactivé) */}
-            {isAnimating && !shouldUseStreaming && (
-              <motion.span
-                animate={{ opacity: [1, 0] }}
-                transition={{ duration: 0.8, repeat: Infinity }}
-                className="typing-cursor"
-                style={{ 
-                  display: 'inline-block',
-                  marginLeft: '2px',
-                  fontWeight: 'bold',
-                  color: 'var(--accent-primary)'
-                }}
-              >
-                |
-              </motion.span>
-            )}
+            <EnhancedMarkdownMessage content={content} />
           </div>
         )}
         
-        {/* Indicateur de frappe pour le streaming */}
+        {/* Indicateur de frappe pour le vrai streaming */}
         {isStreaming && !displayedContent && (
           <div className="chat-typing-indicator">
             <div className="chat-typing-dot"></div>

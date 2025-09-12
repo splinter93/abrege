@@ -19,10 +19,11 @@ export class OpenAPIToolsGenerator {
     this.tools = [
       // Notes
       this.createTool('createNote', 'Créer une nouvelle note', {
-        source_title: { type: 'string', description: 'Titre de la note' },
-        notebook_id: { type: 'string', description: 'ID du classeur parent' },
-        folder_id: { type: 'string', description: 'ID du dossier parent (optionnel)' },
-        markdown_content: { type: 'string', description: 'Contenu markdown (optionnel)' }
+        source_title: { type: 'string', maxLength: 255, description: 'Titre de la note' },
+        notebook_id: { type: 'string', description: 'ID ou slug du classeur parent' },
+        folder_id: { type: 'string', format: 'uuid', description: 'ID du dossier parent (optionnel)' },
+        markdown_content: { type: 'string', description: 'Contenu markdown de la note' },
+        header_image: { type: 'string', format: 'uri', description: 'URL de l\'image d\'en-tête (optionnel)' }
       }, ['source_title', 'notebook_id']),
 
       this.createTool('getNote', 'Récupérer une note', {
@@ -31,26 +32,62 @@ export class OpenAPIToolsGenerator {
       }, ['ref']),
 
       this.createTool('updateNote', 'Mettre à jour une note', {
-        ref: { type: 'string', description: 'Référence de la note' },
-        source_title: { type: 'string', description: 'Nouveau titre' },
-        markdown_content: { type: 'string', description: 'Nouveau contenu markdown' }
+        ref: { type: 'string', description: 'Référence de la note (UUID ou slug)' },
+        source_title: { type: 'string', maxLength: 255, description: 'Nouveau titre' },
+        markdown_content: { type: 'string', description: 'Nouveau contenu markdown' },
+        html_content: { type: 'string', description: 'Contenu HTML' },
+        header_image: { type: 'string', format: 'uri', nullable: true, description: 'URL de l\'image d\'en-tête' },
+        header_image_offset: { type: 'number', minimum: 0, maximum: 100, description: 'Décalage de l\'image d\'en-tête' },
+        header_image_blur: { type: 'integer', minimum: 0, maximum: 5, description: 'Flou de l\'image d\'en-tête' },
+        header_image_overlay: { type: 'integer', minimum: 0, maximum: 5, description: 'Superposition de l\'image d\'en-tête' },
+        header_title_in_image: { type: 'boolean', description: 'Titre dans l\'image' },
+        wide_mode: { type: 'boolean', description: 'Mode large' },
+        a4_mode: { type: 'boolean', description: 'Mode A4' },
+        slash_lang: { type: 'string', enum: ['fr', 'en'], description: 'Langue des slash commands' },
+        font_family: { type: 'string', description: 'Famille de police' },
+        folder_id: { type: 'string', format: 'uuid', nullable: true, description: 'ID du dossier parent' },
+        description: { type: 'string', maxLength: 500, description: 'Description de la note' }
       }, ['ref']),
 
       this.createTool('moveNote', 'Déplacer une note', {
-        ref: { type: 'string', description: 'Référence de la note' },
-        folder_id: { type: 'string', description: 'ID du dossier de destination (optionnel)' },
-        classeur_id: { type: 'string', description: 'ID du classeur de destination' }
-      }, ['ref']),
+        ref: { type: 'string', description: 'Référence de la note (UUID ou slug)' },
+        classeur_id: { type: 'string', format: 'uuid', description: 'ID du classeur de destination' },
+        folder_id: { type: 'string', format: 'uuid', description: 'ID du dossier de destination (optionnel)' },
+        position: { type: 'integer', description: 'Nouvelle position' }
+      }, ['ref', 'classeur_id']),
 
       // Opérations avancées sur notes
       this.createTool('applyContentOperations', 'Appliquer des opérations de contenu', {
-        ref: { type: 'string', description: 'Référence de la note' },
-        operations: { type: 'array', description: 'Liste des opérations à appliquer' }
-      }, ['ref', 'operations']),
+        ref: { type: 'string', description: 'Référence de la note (UUID ou slug)' },
+        ops: { 
+          type: 'array', 
+          minItems: 1, 
+          maxItems: 50,
+          items: {
+            type: 'object',
+            properties: {
+              id: { type: 'string', description: 'ID unique de l\'opération' },
+              action: { type: 'string', enum: ['insert', 'replace', 'delete', 'upsert_section'], description: 'Type d\'opération à effectuer' },
+              target: { type: 'object', description: 'Cible de l\'opération' },
+              where: { type: 'string', enum: ['before', 'after', 'inside_start', 'inside_end', 'at', 'replace_match'], description: 'Position relative à la cible' },
+              content: { type: 'string', maxLength: 100000, description: 'Contenu à insérer/remplacer' },
+              options: { type: 'object', description: 'Options d\'exécution' }
+            },
+            required: ['id', 'action', 'target', 'where']
+          },
+          description: 'Liste des opérations à appliquer'
+        },
+        dry_run: { type: 'boolean', default: true, description: 'Mode simulation (ne sauvegarde pas)' },
+        transaction: { type: 'string', enum: ['all_or_nothing', 'best_effort'], default: 'all_or_nothing', description: 'Mode de transaction' },
+        conflict_strategy: { type: 'string', enum: ['fail', 'skip'], default: 'fail', description: 'Stratégie en cas de conflit' },
+        return: { type: 'string', enum: ['content', 'diff', 'none'], default: 'diff', description: 'Type de retour' },
+        idempotency_key: { type: 'string', format: 'uuid', description: 'Clé d\'idempotence' }
+      }, ['ref', 'ops']),
       this.createTool('insertNoteContent', 'Insérer du contenu dans une note', {
-        ref: { type: 'string', description: 'Référence de la note' },
+        ref: { type: 'string', description: 'Référence de la note (UUID ou slug)' },
         content: { type: 'string', description: 'Contenu à insérer' },
-        position: { type: 'string', enum: ['start', 'end'], description: 'Position d\'insertion' }
+        position: { type: 'integer', description: 'Position d\'insertion' },
+        where: { type: 'string', enum: ['before', 'after', 'replace'], default: 'after', description: 'Position relative' }
       }, ['ref', 'content']),
       this.createTool('getNoteTOC', 'Récupérer la table des matières d\'une note', {
         ref: { type: 'string', description: 'Référence de la note' }
@@ -63,9 +100,10 @@ export class OpenAPIToolsGenerator {
 
       // Classeurs
       this.createTool('createClasseur', 'Créer un nouveau classeur', {
-        name: { type: 'string', description: 'Nom du classeur' },
-        description: { type: 'string', description: 'Description du classeur' },
-        emoji: { type: 'string', description: 'Emoji pour le classeur' }
+        name: { type: 'string', maxLength: 255, description: 'Nom du classeur' },
+        description: { type: 'string', maxLength: 1000, description: 'Description du classeur' },
+        color: { type: 'string', pattern: '^#[0-9A-Fa-f]{6}$', description: 'Couleur du classeur (hex)' },
+        position: { type: 'integer', description: 'Position du classeur' }
       }, ['name']),
 
       this.createTool('getClasseur', 'Récupérer un classeur', {
@@ -88,9 +126,10 @@ export class OpenAPIToolsGenerator {
 
       // Dossiers
       this.createTool('createFolder', 'Créer un nouveau dossier', {
-        name: { type: 'string', description: 'Nom du dossier' },
-        classeur_id: { type: 'string', description: 'ID du classeur parent' },
-        parent_id: { type: 'string', description: 'ID du dossier parent (optionnel)' }
+        name: { type: 'string', maxLength: 255, description: 'Nom du dossier' },
+        classeur_id: { type: 'string', format: 'uuid', description: 'ID du classeur parent' },
+        parent_folder_id: { type: 'string', format: 'uuid', description: 'ID du dossier parent (optionnel)' },
+        position: { type: 'integer', description: 'Position du dossier' }
       }, ['name', 'classeur_id']),
 
       this.createTool('getFolder', 'Récupérer un dossier', {
@@ -103,10 +142,11 @@ export class OpenAPIToolsGenerator {
       }, ['ref']),
 
       this.createTool('moveFolder', 'Déplacer un dossier', {
-        ref: { type: 'string', description: 'Référence du dossier' },
-        classeur_id: { type: 'string', description: 'ID du classeur de destination' },
-        parent_id: { type: 'string', description: 'ID du dossier parent de destination (optionnel)' }
-      }, ['ref']),
+        ref: { type: 'string', description: 'Référence du dossier (UUID ou slug)' },
+        classeur_id: { type: 'string', format: 'uuid', description: 'ID du classeur de destination' },
+        parent_folder_id: { type: 'string', format: 'uuid', description: 'ID du dossier parent de destination (optionnel)' },
+        position: { type: 'integer', description: 'Nouvelle position' }
+      }, ['ref', 'classeur_id']),
 
       this.createTool('getFolderTree', 'Récupérer l\'arborescence d\'un dossier', {
         ref: { type: 'string', description: 'Référence du dossier' }
@@ -115,15 +155,17 @@ export class OpenAPIToolsGenerator {
       // Recherche
       this.createTool('searchContent', 'Rechercher du contenu', {
         q: { type: 'string', description: 'Terme de recherche' },
-        type: { type: 'string', enum: ['all', 'notes', 'folders', 'classeurs'], description: 'Type de contenu' },
-        limit: { type: 'number', description: 'Nombre maximum de résultats' }
+        classeur_id: { type: 'string', description: 'ID du classeur à rechercher' },
+        type: { type: 'string', enum: ['all', 'notes', 'classeurs', 'files'], description: 'Type de contenu à rechercher' },
+        limit: { type: 'integer', minimum: 1, maximum: 100, default: 20, description: 'Nombre maximum de résultats' }
       }, ['q']),
 
       this.createTool('searchFiles', 'Rechercher des fichiers', {
         q: { type: 'string', description: 'Terme de recherche' },
-        type: { type: 'string', description: 'Type de fichier' },
-        limit: { type: 'number', description: 'Nombre maximum de résultats' }
-      }, []),
+        classeur_id: { type: 'string', description: 'ID du classeur à rechercher' },
+        file_type: { type: 'string', enum: ['all', 'image', 'document', 'pdf', 'text'], description: 'Type de fichier à rechercher' },
+        limit: { type: 'integer', minimum: 1, maximum: 100, default: 20, description: 'Nombre maximum de résultats' }
+      }, ['q']),
 
       // Autres
       this.createTool('getStats', 'Récupérer les statistiques', {}, []),
@@ -142,17 +184,39 @@ export class OpenAPIToolsGenerator {
       // Agents
       this.createTool('listAgents', 'Lister les agents', {}, []),
       this.createTool('createAgent', 'Créer un agent', {
-        name: { type: 'string', description: 'Nom de l\'agent' },
-        description: { type: 'string', description: 'Description de l\'agent' },
-        model: { type: 'string', description: 'Modèle LLM' },
-        provider: { type: 'string', description: 'Fournisseur LLM' }
-      }, ['name', 'description', 'model', 'provider']),
+        display_name: { type: 'string', maxLength: 255, description: 'Nom d\'affichage de l\'agent' },
+        slug: { type: 'string', maxLength: 100, description: 'Slug unique de l\'agent' },
+        description: { type: 'string', maxLength: 1000, description: 'Description de l\'agent' },
+        model: { 
+          type: 'string', 
+          enum: ['openai/gpt-oss-20b', 'openai/gpt-oss-120b', 'meta-llama/llama-4-scout-17b-16e-instruct', 'meta-llama/llama-4-maverick-17b-128e-instruct', 'kimi-k2-0905'], 
+          description: 'Modèle LLM à utiliser (modèles recommandés)' 
+        },
+        provider: { type: 'string', enum: ['groq', 'openai', 'anthropic'], default: 'groq', description: 'Fournisseur LLM' },
+        system_instructions: { type: 'string', description: 'Instructions système pour l\'agent' },
+        is_chat_agent: { type: 'boolean', default: false, description: 'Agent de chat ou endpoint' },
+        temperature: { type: 'number', minimum: 0, maximum: 2, default: 0.7, description: 'Température de génération' },
+        max_tokens: { type: 'integer', minimum: 1, maximum: 10000, default: 4000, description: 'Nombre maximum de tokens' },
+        api_v2_capabilities: { type: 'array', items: { type: 'string' }, description: 'Capacités API V2 de l\'agent' },
+        input_schema: { type: 'object', description: 'Schéma d\'entrée OpenAPI' },
+        output_schema: { type: 'object', description: 'Schéma de sortie OpenAPI' }
+      }, ['display_name', 'slug', 'description', 'model']),
       this.createTool('getAgent', 'Récupérer un agent', {
         agentId: { type: 'string', description: 'ID de l\'agent' }
       }, ['agentId']),
       this.createTool('executeAgent', 'Exécuter un agent', {
-        ref: { type: 'string', description: 'ID ou slug de l\'agent' },
-        input: { type: 'string', description: 'Message à envoyer' }
+        ref: { type: 'string', description: 'Référence de l\'agent (ID ou slug)', example: 'johnny' },
+        input: { type: 'string', description: 'Message d\'entrée pour l\'agent', example: 'Analyse cette note' },
+        image: { type: 'string', format: 'uri', description: 'URL de l\'image à analyser (supporté par les modèles Llama)', example: 'https://example.com/image.jpg' },
+        options: { 
+          type: 'object', 
+          properties: {
+            temperature: { type: 'number', minimum: 0, maximum: 2, description: 'Température de génération (0-2)' },
+            max_tokens: { type: 'integer', minimum: 1, maximum: 10000, description: 'Nombre maximum de tokens' },
+            stream: { type: 'boolean', description: 'Activer le streaming' }
+          },
+          description: 'Options d\'exécution'
+        }
       }, ['ref', 'input']),
       this.createTool('updateAgent', 'Mettre à jour un agent', {
         agentId: { type: 'string', description: 'ID de l\'agent' },

@@ -12,7 +12,7 @@ export const GROQ_MODELS = {
     category: 'preferred',
     description: 'Excellent modèle généraliste, fiable et performant',
     capabilities: {
-      reasoningEffort: false,
+      reasoningEffort: true,
       parallelToolCalls: true,
       serviceTier: true,
       imageSupport: false,
@@ -26,7 +26,7 @@ export const GROQ_MODELS = {
     category: 'preferred',
     description: 'Modèle généraliste plus puissant',
     capabilities: {
-      reasoningEffort: false,
+      reasoningEffort: true,
       parallelToolCalls: true,
       serviceTier: true,
       imageSupport: false,

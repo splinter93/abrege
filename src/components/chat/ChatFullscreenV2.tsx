@@ -8,6 +8,7 @@ import { useAppContext } from '@/hooks/useAppContext';
 import { useChatResponse } from '@/hooks/useChatResponse';
 import { useChatResponseHarmony } from '@/hooks/useChatResponseHarmony';
 import { useChatScroll } from '@/hooks/useChatScroll';
+// import { useChatStreaming } from '@/hooks/useChatStreaming'; // Supprimé - faux streaming
 // import { useAtomicToolCalls } from '@/hooks/useAtomicToolCalls'; // Fichier supprimé
 import { useAuth } from '@/hooks/useAuth';
 // useToolCallDebugger supprimé
@@ -63,6 +64,9 @@ const ChatFullscreenV2: React.FC = () => {
     scrollThreshold: 150,
     scrollDelay: 100
   });
+
+  // ✅ SUPPRIMÉ: Hook de streaming (faux streaming)
+  // Le chat utilise maintenant l'API standard sans streaming
 
   // 🎯 Hook pour le debugger des tool calls - SUPPRIMÉ
   // Code mort nettoyé pour la production
@@ -584,7 +588,7 @@ const ChatFullscreenV2: React.FC = () => {
       // Pour l'API LLM, on peut limiter à history_limit pour la performance
       const limitedHistoryForLLM = fullHistory.slice(-(currentSession.history_limit || 30));
       
-      // Utiliser l'API standard
+      // Utiliser l'API standard (sans streaming)
       const sendFunction = sendMessage;
       
       logger.dev('[ChatFullscreenV2] 🎼 Envoi du message:', {
@@ -777,10 +781,12 @@ const ChatFullscreenV2: React.FC = () => {
                 <ChatMessage 
                   key={message.id || `${message.role}-${message.timestamp}-${(message as any).tool_call_id || ''}`} 
                   message={message}
-                  animateContent={message.role === 'assistant' && message.timestamp === new Date().toISOString().slice(0, -5) + 'Z'}
+                  animateContent={false} // Supprimé - faux streaming
                   isWaitingForResponse={loading && message.role === 'assistant' && !message.content}
                 />
               ))}
+              
+              {/* ✅ SUPPRIMÉ: Message assistant en streaming (faux streaming) */}
             </div>
             <div ref={messagesEndRef} />
           </div>

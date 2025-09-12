@@ -357,6 +357,118 @@
 }
 
 /* ========================================
+   TOGGLES ET SLIDERS
+   ======================================== */
+
+.kebab-toggle {
+  position: relative;
+  width: 44px;
+  height: 24px;
+  background: var(--chat-bg-quaternary);
+  border-radius: 12px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  border: 1px solid var(--chat-border-primary);
+}
+
+.kebab-toggle.enabled {
+  background: var(--chat-accent-primary);
+  border-color: var(--chat-accent-primary);
+}
+
+.kebab-toggle.disabled {
+  background: var(--chat-bg-quaternary);
+  border-color: var(--chat-border-primary);
+}
+
+.kebab-toggle-slider {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  background: white;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.kebab-toggle.enabled .kebab-toggle-slider {
+  transform: translateX(20px);
+}
+
+.kebab-toggle.disabled .kebab-toggle-slider {
+  transform: translateX(0);
+}
+
+/* Toggle small pour les options secondaires */
+.kebab-toggle.small {
+  width: 36px;
+  height: 20px;
+}
+
+.kebab-toggle.small .kebab-toggle-slider {
+  width: 14px;
+  height: 14px;
+}
+
+.kebab-toggle.small.enabled .kebab-toggle-slider {
+  transform: translateX(16px);
+}
+
+/* Range slider pour la vitesse */
+.kebab-range-slider {
+  width: 100%;
+  height: 6px;
+  background: var(--chat-bg-quaternary);
+  border-radius: 3px;
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+  cursor: pointer;
+}
+
+.kebab-range-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  background: var(--chat-accent-primary);
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.kebab-range-slider::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  background: var(--chat-accent-primary);
+  border-radius: 50%;
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.kebab-range-value {
+  text-align: center;
+  font-size: 12px;
+  color: var(--chat-text-muted);
+  margin-top: 4px;
+  font-weight: 500;
+}
+
+/* Icônes des options */
+.kebab-option-icon {
+  font-size: 16px;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* ========================================
    ACCESSIBILITÉ
    ======================================== */
 
@@ -372,6 +484,16 @@
 
 .kebab-input:focus-visible,
 .kebab-select:focus-visible {
+  outline: 2px solid var(--chat-border-focus);
+  outline-offset: 2px;
+}
+
+.kebab-toggle:focus-visible {
+  outline: 2px solid var(--chat-border-focus);
+  outline-offset: 2px;
+}
+
+.kebab-range-slider:focus-visible {
   outline: 2px solid var(--chat-border-focus);
   outline-offset: 2px;
 } 

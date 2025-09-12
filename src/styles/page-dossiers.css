@@ -1,0 +1,191 @@
+/* ==========================================================================
+   PAGE DOSSIERS - STYLES SPÉCIFIQUES
+   ========================================================================== */
+/* Cette page utilise les styles consolidés et ajoute ses spécificités */
+
+@import './pages-files-dossiers.css';
+
+/* ==========================================================================
+   VARIABLES SPÉCIFIQUES PAGE DOSSIERS
+   ========================================================================== */
+
+:root {
+  /* Couleurs spécifiques pour la page dossiers */
+  --page-primary: var(--dossiers-primary);
+  --page-primary-light: var(--dossiers-primary-light);
+  --page-primary-hover: var(--dossiers-primary-hover);
+  --page-text-primary: var(--dossiers-text-primary);
+  --page-text-secondary: var(--dossiers-text-secondary);
+  --page-text-muted: var(--dossiers-text-muted);
+}
+
+/* ==========================================================================
+   OVERRIDES SPÉCIFIQUES PAGE DOSSIERS
+   ========================================================================== */
+
+/* Icône de la page dossiers */
+.page-title-icon-container {
+  background: var(--page-primary-light);
+  border-color: var(--page-primary);
+}
+
+.page-title-icon {
+  color: var(--page-primary);
+}
+
+/* Statistiques avec couleur dossiers */
+.page-title-stats-number {
+  color: var(--page-primary);
+}
+
+.page-title-stats-item:hover .page-title-stats-number {
+  color: var(--page-primary-hover);
+}
+
+/* Pills classeur avec couleur dossiers */
+.classeur-pill.active {
+  background: var(--page-primary-light);
+  border-color: var(--page-primary);
+  color: var(--page-primary);
+  box-shadow: 0 4px 16px rgba(229, 90, 44, 0.2);
+}
+
+.classeur-pill.active::before {
+  background: linear-gradient(135deg, 
+    rgba(229, 90, 44, 0.05) 0%, 
+    rgba(229, 90, 44, 0.02) 50%, 
+    rgba(229, 90, 44, 0.05) 100%);
+  opacity: 1;
+}
+
+.classeur-pill.active:hover {
+  background: rgba(229, 90, 44, 0.2);
+  transform: translateY(-3px);
+  box-shadow: 0 12px 24px rgba(229, 90, 44, 0.25);
+}
+
+/* Boutons de création avec couleur dossiers */
+.fm-control-btn:has(svg[data-lucide="folder-plus"]),
+.fm-control-btn:has(svg[data-lucide="pencil"]) {
+  background: var(--page-primary-light);
+  border-color: var(--page-primary);
+  color: var(--page-primary);
+}
+
+.fm-control-btn:has(svg[data-lucide="folder-plus"]):hover,
+.fm-control-btn:has(svg[data-lucide="pencil"]):hover {
+  background: rgba(229, 90, 44, 0.2);
+  border-color: var(--page-primary);
+  color: var(--page-primary);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(229, 90, 44, 0.2);
+}
+
+/* Breadcrumb avec couleur dossiers */
+.breadcrumb-root {
+  color: var(--page-primary);
+}
+
+.breadcrumb-root:hover {
+  background: var(--page-primary-light);
+}
+
+/* ==========================================================================
+   LAYOUT SPÉCIFIQUE PAGE DOSSIERS
+   ========================================================================== */
+
+/* Container principal de la page dossiers */
+.dossiers-page-wrapper {
+  width: 100%;
+  min-height: 100vh;
+  background: transparent;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Zone de contenu avec sidebar */
+.dossiers-content-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 0 var(--spacing-lg);
+  min-height: calc(100vh - 80px);
+}
+
+/* Section classeurs */
+.classeurs-section-glass {
+  margin-bottom: var(--spacing-lg);
+}
+
+.classeurs-container-glass {
+  background: var(--glass-bg-secondary);
+  border: 1px solid var(--glass-border-secondary);
+  border-radius: var(--radius-lg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: var(--glass-shadow-subtle);
+  padding: var(--spacing-md);
+  transition: all var(--transition-normal);
+}
+
+.classeurs-container-glass:hover {
+  border-color: var(--glass-border-hover);
+  box-shadow: var(--glass-shadow-medium);
+}
+
+/* Section contenu simple */
+.content-section-simple {
+  margin-top: 0;
+  background: transparent;
+  border: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: calc(100vh - 400px);
+}
+
+.content-main-container-simple {
+  width: 100%;
+  flex: 1;
+  min-height: calc(100vh - 350px);
+  display: flex;
+  flex-direction: column;
+  padding-bottom: var(--spacing-md);
+  background: transparent;
+  border: none;
+}
+
+/* ==========================================================================
+   RESPONSIVE SPÉCIFIQUE PAGE DOSSIERS
+   ========================================================================== */
+
+@media (max-width: 1400px) {
+  .dossiers-content-area {
+    padding: 0 var(--spacing-xl);
+  }
+}
+
+@media (max-width: 1200px) {
+  .dossiers-content-area {
+    padding: 0 var(--spacing-lg);
+  }
+}
+
+@media (max-width: 1024px) {
+  .dossiers-content-area {
+    padding: 0 var(--spacing-lg);
+  }
+}
+
+@media (max-width: 768px) {
+  .dossiers-content-area {
+    padding: 0 var(--spacing-md);
+  }
+}
+
+@media (max-width: 480px) {
+  .dossiers-content-area {
+    padding: 0 var(--spacing-sm);
+  }
+}
