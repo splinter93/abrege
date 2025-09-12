@@ -161,11 +161,10 @@ export class OpenAPIToolsGenerator {
       }, ['q']),
 
       this.createTool('searchFiles', 'Rechercher des fichiers', {
-        q: { type: 'string', description: 'Terme de recherche' },
-        classeur_id: { type: 'string', description: 'ID du classeur à rechercher' },
-        file_type: { type: 'string', enum: ['all', 'image', 'document', 'pdf', 'text'], description: 'Type de fichier à rechercher' },
+        q: { type: 'string', description: 'Terme de recherche (optionnel)' },
+        type: { type: 'string', description: 'Type de fichier à rechercher (pdf, image, csv, etc.)' },
         limit: { type: 'integer', minimum: 1, maximum: 100, default: 20, description: 'Nombre maximum de résultats' }
-      }, ['q']),
+      }, []),
 
       // Autres
       this.createTool('getStats', 'Récupérer les statistiques', {}, []),

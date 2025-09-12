@@ -212,6 +212,7 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
 
   /**
    * Effectue un appel à l'API Groq avec une liste de messages déjà préparée
+   * ✅ OPTIMISATION: Les messages sont déjà formatés par GroqHistoryBuilder
    */
   async callWithMessages(messages: ChatMessage[], tools: any[]): Promise<LLMResponse> {
     if (!this.isAvailable()) {
@@ -221,7 +222,9 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
     try {
       logger.dev(`[GroqProvider] 🚀 Appel direct avec ${messages.length} messages`);
       
-      const payload = await this.preparePayload(messages, tools);
+      // ✅ OPTIMISATION: Conversion directe des ChatMessage vers le format API
+      const apiMessages = this.convertChatMessagesToApiFormat(messages);
+      const payload = await this.preparePayload(apiMessages, tools);
       payload.stream = false;
       
       const response = await this.makeApiCall(payload);
@@ -238,7 +241,6 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
       };
 
     } catch (error) {
-      // ... (gestion d'erreur identique à `call`)
       const errorMessage = error instanceof Error ? error.message : String(error);
       logger.error('[GroqProvider] ❌ Erreur lors de l\'appel direct:', { message: errorMessage });
       throw error;
@@ -246,7 +248,34 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
   }
 
   /**
-   * Prépare les messages pour l'API
+   * ✅ NOUVELLE MÉTHODE: Convertit les ChatMessage vers le format API Groq
+   */
+  private convertChatMessagesToApiFormat(messages: ChatMessage[]): any[] {
+    return messages.map(msg => {
+      const messageObj: any = {
+        role: msg.role as 'user' | 'assistant' | 'system' | 'tool' | 'developer',
+        content: msg.content
+      };
+
+      // Gérer les tool calls pour les messages assistant
+      if (msg.role === 'assistant' && msg.tool_calls && msg.tool_calls.length > 0) {
+        messageObj.tool_calls = msg.tool_calls;
+      }
+
+      // Gérer les tool results pour les messages tool
+      if (msg.role === 'tool' && msg.tool_call_id) {
+        messageObj.tool_call_id = msg.tool_call_id;
+        if (msg.name) {
+          messageObj.name = msg.name;
+        }
+      }
+
+      return messageObj;
+    });
+  }
+
+  /**
+   * Prépare les messages pour l'API (méthode legacy - à supprimer progressivement)
    */
   private prepareMessages(message: string, context: AppContext, history: ChatMessage[]) {
     const messages: Array<any> = [];

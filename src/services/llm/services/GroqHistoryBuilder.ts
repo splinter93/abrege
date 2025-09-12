@@ -87,8 +87,12 @@ export class GroqHistoryBuilder {
     const assistantMessage: ChatMessage = {
       id: `msg-assistant-${Date.now()}`,
       role: 'assistant',
-      content: null, // Le contenu peut être null
-      tool_calls: toolCalls,
+      content: '', // Toujours une string pour compat API
+      tool_calls: toolCalls.map(tc => ({
+        id: tc.id,
+        type: 'function' as const,
+        function: tc.function
+      })),
       timestamp: new Date().toISOString(),
       channel: 'commentary'
     };
@@ -115,16 +119,32 @@ export class GroqHistoryBuilder {
    * Construit les messages tool à partir des résultats
    */
   private buildToolMessages(toolResults: any[], validationErrors: string[]): ChatMessage[] {
+    logger.dev(`[GroqHistoryBuilder] 🔧 Construction de ${toolResults.length} messages tool`);
+    
     return toolResults
-      .map(toolResult => {
+      .map((toolResult, index) => {
         const toolCallId = toolResult.tool_call_id;
         const toolName = toolResult.tool_name || toolResult.name;
-        const payload = toolResult.details !== undefined ? toolResult.details : toolResult.result;
+        
+        // ✅ CORRECTION: SimpleToolExecutor retourne directement le contenu dans 'content'
+        const payload = toolResult.content || toolResult.details || toolResult.result;
+
+        logger.dev(`[GroqHistoryBuilder] Tool ${index + 1}: ${toolName}`, {
+          toolCallId,
+          toolName,
+          hasContent: !!payload,
+          contentLength: typeof payload === 'string' ? payload.length : 'N/A'
+        });
 
         if (!toolCallId || !toolName || payload === undefined) {
           validationErrors.push(`Résultat d'outil invalide: ${JSON.stringify(toolResult)}`);
           return null;
         }
+
+        const normalizedTimestamp =
+          typeof toolResult.timestamp === 'string'
+            ? toolResult.timestamp
+            : new Date().toISOString();
 
         return {
           id: `msg-tool-${toolCallId}`,
@@ -132,7 +152,7 @@ export class GroqHistoryBuilder {
           tool_call_id: toolCallId,
           name: toolName,
           content: typeof payload === 'string' ? payload : JSON.stringify(payload),
-          timestamp: toolResult.timestamp
+          timestamp: normalizedTimestamp
         } as ChatMessage;
       })
       .filter((msg): msg is ChatMessage => msg !== null);
@@ -178,10 +198,14 @@ export class GroqHistoryBuilder {
 
     const finalMessages = [...baseMessages];
     
-    // Trouver l'index du message assistant avec tool_calls
-    const assistantIndex = finalMessages.findIndex(msg => 
-      msg.role === 'assistant' && msg.tool_calls && msg.tool_calls.length > 0
-    );
+    let assistantIndex = -1;
+    for (let i = finalMessages.length - 1; i >= 0; i--) {
+      const m: any = finalMessages[i];
+      if (m.role === 'assistant' && m.tool_calls && m.tool_calls.length > 0) {
+        assistantIndex = i;
+        break;
+      }
+    }
     
     if (assistantIndex !== -1) {
       // Insérer les messages tool juste après
@@ -256,6 +280,17 @@ export class GroqHistoryBuilder {
       }
       if (!msg.content || typeof msg.content !== 'string') {
         validationErrors.push(`Message tool sans contenu valide à l'index ${index}`);
+        return false;
+      }
+    }
+
+    if (msg.role === 'system' || msg.role === 'user' || msg.role === 'assistant') {
+      if (typeof msg.content !== 'string') {
+        validationErrors.push(`Message ${msg.role} sans contenu de type string à l'index ${index}`);
+        return false;
+      }
+      if ((msg.role === 'system' || msg.role === 'user') && msg.content.trim().length === 0) {
+        validationErrors.push(`Message ${msg.role} avec contenu vide à l'index ${index}`);
         return false;
       }
     }

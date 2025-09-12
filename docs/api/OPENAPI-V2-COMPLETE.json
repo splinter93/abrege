@@ -1078,21 +1078,15 @@
           {
             "name": "q",
             "in": "query",
-            "required": true,
+            "required": false,
             "schema": {"type": "string"},
-            "description": "Terme de recherche"
+            "description": "Terme de recherche (optionnel)"
           },
           {
-            "name": "classeur_id",
+            "name": "type",
             "in": "query",
             "schema": {"type": "string"},
-            "description": "ID du classeur à rechercher"
-          },
-          {
-            "name": "file_type",
-            "in": "query",
-            "schema": {"type": "string", "enum": ["all", "image", "document", "pdf", "text"]},
-            "description": "Type de fichier à rechercher"
+            "description": "Type de fichier à rechercher (pdf, image, csv, etc.)"
           },
           {
             "name": "limit",

@@ -5,6 +5,8 @@
 
 import { GroqProvider, LLMResponse } from '../providers/implementations/groq';
 import { SimpleToolExecutor, ToolCall, ToolResult } from './SimpleToolExecutor';
+import { GroqHistoryBuilder } from './GroqHistoryBuilder';
+import { DEFAULT_GROQ_LIMITS } from '../types/groqTypes';
 import { simpleLogger as logger } from '@/utils/logger';
 import { ChatMessage } from '@/types/chat';
 import { agentTemplateService, AgentTemplateConfig, RenderedTemplate } from '../agentTemplateService';
@@ -31,10 +33,12 @@ export interface ChatContext {
 export class SimpleChatOrchestrator {
   private llmProvider: GroqProvider;
   private toolExecutor: SimpleToolExecutor;
+  private historyBuilder: GroqHistoryBuilder;
 
   constructor() {
     this.llmProvider = new GroqProvider();
     this.toolExecutor = new SimpleToolExecutor();
+    this.historyBuilder = new GroqHistoryBuilder(DEFAULT_GROQ_LIMITS);
   }
 
   async processMessage(
@@ -51,10 +55,11 @@ export class SimpleChatOrchestrator {
     let updatedHistory = [...history];
     const allToolCalls: ToolCall[] = [];
     const allToolResults: ToolResult[] = [];
+    let isFirstPass = true;
 
     try {
       while (toolCallsCount < maxToolCalls) {
-        const response = await this.callLLM(currentMessage, updatedHistory, context);
+        const response = await this.callLLM(currentMessage, updatedHistory, context, 'auto');
         const newToolCalls = this.convertToolCalls(response.tool_calls || []);
         
         if (newToolCalls.length === 0) {
@@ -72,20 +77,57 @@ export class SimpleChatOrchestrator {
         allToolCalls.push(...newToolCalls);
         allToolResults.push(...toolResults);
         
-        updatedHistory.push({
-          id: `assistant-${Date.now()}`, role: 'assistant', content: null, 
-          tool_calls: newToolCalls, timestamp: new Date().toISOString()
+        // Validation des tool results avant injection dans l'historique
+        const validToolResults = toolResults.filter((result, idx) => {
+          if (!result.tool_call_id) {
+            logger.warn(`[Orchestrator] ⚠️ ToolResult ${idx} ignoré: tool_call_id manquant`);
+            return false;
+          }
+          if (!result.name) {
+            logger.warn(`[Orchestrator] ⚠️ ToolResult ${idx} ignoré: name manquant`);
+            return false;
+          }
+          if (!result.content) {
+            logger.warn(`[Orchestrator] ⚠️ ToolResult ${idx} ignoré: content manquant`);
+            return false;
+          }
+          return true;
         });
-        toolResults.forEach(result => {
-          updatedHistory.push({
-            id: `tool-${result.tool_call_id}`, role: 'tool', tool_call_id: result.tool_call_id,
-            name: result.name, content: result.content, timestamp: new Date().toISOString()
-          });
-        });
+
+        const convertedToolResults = validToolResults.map(result => ({
+          ...result,
+          timestamp: new Date().toISOString()
+        }));
         
-        currentMessage = ""; 
+        const historyContext = {
+          systemContent: '', // Pas de nouveau message système
+          userMessage: isFirstPass ? message : '',
+          cleanedHistory: updatedHistory,
+          toolCalls: newToolCalls,
+          toolResults: convertedToolResults
+        };
+        
+        const historyResult = this.historyBuilder.buildSecondCallHistory(historyContext);
+        updatedHistory = historyResult.messages;
+        
+        currentMessage = "Please continue with the answer based on the tool results.";
         toolCallsCount++;
         logger.dev(`[Orchestrator] 🔁 Loop ${toolCallsCount}/${maxToolCalls}, ${newToolCalls.length} new tools.`);
+
+        isFirstPass = false;
+
+        // Appel LLM forcé en mode texte uniquement (tool_choice:none)
+        const secondResponse = await this.callLLM(currentMessage, updatedHistory, context, 'none');
+        if (secondResponse.content && secondResponse.content.trim().length > 0) {
+          return {
+            success: true,
+            content: secondResponse.content,
+            toolCalls: allToolCalls,
+            toolResults: allToolResults,
+            reasoning: secondResponse.reasoning,
+            error: undefined
+          };
+        }
       }
 
       logger.warn(`[Orchestrator] ⚠️ Tool call limit (${maxToolCalls}) reached.`);
@@ -112,7 +154,8 @@ export class SimpleChatOrchestrator {
   private async callLLM(
     message: string,
     history: ChatMessage[],
-    context: ChatContext
+    context: ChatContext,
+    toolChoice: 'auto' | 'none' = 'auto'
   ): Promise<LLMResponse> {
     const { agentConfig, uiContext } = context;
     let systemMessageContent: string = 'You are a helpful AI assistant.';
@@ -130,12 +173,30 @@ export class SimpleChatOrchestrator {
       }
     }
     
-    const messages: ChatMessage[] = [
-      { role: 'system', content: systemMessageContent, id: 'system', timestamp: new Date().toISOString() },
-      ...history,
-    ];
-    if(message) {
-      messages.push({ role: 'user', content: message, id: `user-${Date.now()}`, timestamp: new Date().toISOString() });
+    // ✅ CORRECTION: Si l'historique contient déjà des tool calls, utiliser buildSecondCallHistory
+    let messages: ChatMessage[];
+    
+    const hasToolCalls = history.some(msg => msg.role === 'assistant' && msg.tool_calls && msg.tool_calls.length > 0);
+    
+    if (hasToolCalls) {
+      // L'historique contient déjà des tool calls, on utilise buildSecondCallHistory
+      const historyContext = {
+        systemContent: systemMessageContent,
+        userMessage: message,
+        cleanedHistory: history,
+        toolCalls: [], // Pas de nouveaux tool calls
+        toolResults: [] // Pas de nouveaux tool results
+      };
+      
+      const historyResult = this.historyBuilder.buildSecondCallHistory(historyContext);
+      messages = historyResult.messages;
+    } else {
+      // Premier appel, utiliser buildInitialHistory
+      messages = this.historyBuilder.buildInitialHistory(
+        systemMessageContent,
+        message,
+        history
+      );
     }
 
     const { getOpenAPIV2Tools } = await import('@/services/openApiToolsGenerator');
