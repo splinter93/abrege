@@ -71,6 +71,13 @@ export class SpecializedAgentManager {
     const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userToken);
     const isJWT = userToken.includes('.') && userToken.split('.').length === 3;
     
+    logger.info(`[SpecializedAgentManager] 🔍 Token reçu:`, {
+      agentId,
+      tokenType: isUUID ? 'UUID' : isJWT ? 'JWT' : 'INVALID',
+      tokenLength: userToken.length,
+      tokenStart: userToken.substring(0, 20) + '...'
+    });
+    
     if (!isUUID && !isJWT) {
       logger.error(`[SpecializedAgentManager] ❌ Format de token invalide`, { 
         agentId, 
