@@ -4,6 +4,7 @@ import { supabase } from "../supabaseClient";
 
 import type { Session } from "@supabase/supabase-js";
 import { useLanguageContext } from "../contexts/LanguageContext";
+import './PageLoading.css';
 
 interface AuthProviderProps {
   children: ReactNode;
@@ -40,15 +41,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
   // ✅ CORRECTION : Afficher un loader pendant le chargement initial
   if (loading) {
     return (
-      <div style={{
-        height: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%)',
-        color: 'white'
-      }}>
-        <div>Chargement...</div>
+      <div className="page-loading">
+        <div className="page-loading-content">
+          <div className="page-loading-spinner"></div>
+          <p className="page-loading-message">Chargement...</p>
+        </div>
       </div>
     );
   }

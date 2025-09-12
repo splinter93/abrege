@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 
 import { simpleLogger as logger } from '@/utils/logger';
-import './AuthGuard.css';
+import './PageLoading.css';
 
 interface AuthGuardProps {
   children: React.ReactNode;
@@ -43,9 +43,11 @@ export default function AuthGuard({
     }
     
     return (
-      <div className="auth-guard-loading">
-        <div className="loading-spinner"></div>
-        <p>Vérification de l'authentification...</p>
+      <div className="page-loading">
+        <div className="page-loading-content">
+          <div className="page-loading-spinner"></div>
+          <p className="page-loading-message">Vérification de l'authentification...</p>
+        </div>
       </div>
     );
   }

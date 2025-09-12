@@ -1,18 +1,21 @@
 /* ==========================================================================
-   PAGE LOADING - COMPOSANT MINIMALISTE POUR LES PAGES
+   PAGE LOADING - ULTRA SIMPLE, SANS ENCADRÉ
    ========================================================================== */
 
 /* ==========================================================================
-   BASE DU COMPOSANT
+   BASE DU COMPOSANT - CENTRÉ SIMPLE
    ========================================================================== */
 .page-loading {
   display: flex;
   align-items: center;
   justify-content: center;
   width: 100%;
-  height: 100%;
-  min-height: 400px;
-  padding: 2rem;
+  height: 100vh; /* Pleine hauteur d'écran */
+  background: transparent; /* Pas de fond */
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 9999;
 }
 
 .page-loading-content {
@@ -21,67 +24,86 @@
   align-items: center;
   justify-content: center;
   text-align: center;
-  gap: 24px;
+  gap: 16px; /* Espacement réduit */
 }
 
 /* ==========================================================================
-   ROUE DE CHARGEMENT
+   ROUE DE CHARGEMENT - SIMPLE ET ÉLÉGANTE
    ========================================================================== */
 .page-loading-spinner {
-  width: 48px;
-  height: 48px;
-  border: 4px solid rgba(255, 255, 255, 0.1);
-  border-top: 4px solid #3b82f6;
+  width: 32px; /* Plus petite */
+  height: 32px;
+  border: 3px solid rgba(255, 255, 255, 0.2); /* Plus subtile */
+  border-top: 3px solid #e55a2c; /* Couleur primaire du projet */
   border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
 /* ==========================================================================
-   MESSAGE DE CHARGEMENT
+   MESSAGE DE CHARGEMENT - MINIMALISTE
    ========================================================================== */
 .page-loading-message {
   font-family: 'Noto Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  font-size: 16px;
-  font-weight: 500;
-  color: #6b7280;
+  font-size: 14px; /* Plus petit */
+  font-weight: 400; /* Plus léger */
+  color: rgba(255, 255, 255, 0.8); /* Blanc transparent */
   margin: 0;
   text-align: center;
-  line-height: 1.5;
+  line-height: 1.4;
+  letter-spacing: 0.5px; /* Légèrement espacé */
 }
 
 /* ==========================================================================
-   THÈMES PAR PAGE
+   THÈMES PAR PAGE - COULEURS SIMPLES
    ========================================================================== */
 .page-loading-dossiers .page-loading-spinner {
   border-top-color: #e55a2c;
-}
-
-.page-loading-dossiers .page-loading-message {
-  color: #e55a2c;
 }
 
 .page-loading-files .page-loading-spinner {
   border-top-color: #f97316;
 }
 
-.page-loading-files .page-loading-message {
-  color: #f97316;
-}
-
 .page-loading-trash .page-loading-spinner {
   border-top-color: #dc2626;
 }
 
-.page-loading-trash .page-loading-message {
-  color: #dc2626;
+/* ==========================================================================
+   RESPONSIVE - ADAPTATION MOBILE
+   ========================================================================== */
+@media (max-width: 768px) {
+  .page-loading-spinner {
+    width: 28px;
+    height: 28px;
+    border-width: 2px;
+  }
+  
+  .page-loading-message {
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 480px) {
+  .page-loading-spinner {
+    width: 24px;
+    height: 24px;
+  }
+  
+  .page-loading-message {
+    font-size: 12px;
+  }
 }
 
 .page-loading-default .page-loading-spinner {
-  border-top-color: #3b82f6;
+  border-top-color: #e55a2c; /* Couleur primaire par défaut */
 }
 
-.page-loading-default .page-loading-message {
-  color: #3b82f6;
-}
+/* Pas de couleur spécifique pour le message par défaut - utilise la couleur de base */
 
 /* ==========================================================================
    RESPONSIVE DESIGN
