@@ -25,7 +25,7 @@ interface ChatWidgetProps {
 }
 
 const ChatWidget: React.FC<ChatWidgetProps> = ({
-  isOpen = false,
+  isOpen = true, // ✅ Ouvrir par défaut
   onToggle,
   onExpand,
   position = 'bottom-right',

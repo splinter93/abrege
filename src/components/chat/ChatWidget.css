@@ -19,9 +19,13 @@
   -webkit-backdrop-filter: var(--glass-blur-heavy);
   border: 1px solid var(--glass-border-soft);
   box-shadow: var(--glass-shadow-strong);
-  overflow: hidden;
+  /* ✅ Permettre l'overflow pour l'input */
+  overflow: visible;
   z-index: 1000;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  /* ✅ Structure flexbox pour le widget */
+  display: flex;
+  flex-direction: column;
 }
 
 /* Animation d'entrée pour le widget */
@@ -133,8 +137,10 @@
 .chat-fullscreen-container.chat-widget-mode .messages-container {
   flex: 1;
   overflow-y: auto;
-  /* Ajout d'un espace en bas pour ne pas couper le dernier message sous l'input */
-  padding: 8px 20px 88px;
+  /* ✅ Réduire le padding pour ne pas masquer l'input */
+  padding: 8px 20px 8px;
+  /* ✅ S'assurer que le container ne déborde pas */
+  min-height: 0;
 }
 
 /* Ajuster l'espacement des messages pour éviter les débordements */
@@ -268,6 +274,23 @@
 .chat-fullscreen-container.chat-widget-mode .chat-input-container {
   padding: 8px 8px 12px 8px;
   background: transparent;
+  /* ✅ S'assurer que l'input container est visible */
+  position: relative;
+  z-index: 10;
+  flex-shrink: 0;
+  /* ✅ S'assurer que le container ne déborde pas */
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+/* ✅ S'assurer que le contenu du chat permet l'affichage de l'input */
+.chat-fullscreen-container.chat-widget-mode .chat-content {
+  overflow: visible !important;
+  display: flex !important;
+  flex-direction: column !important;
+  height: 100% !important;
 }
 
 /* Styles spécifiques pour le composant ChatInput dans le widget */
@@ -276,6 +299,26 @@
   max-height: 100px;
   padding: 3px 6px;
   border-radius: 14px;
+  /* ✅ Supprimer les effets glassmorphism qui masquent l'input */
+  background: var(--color-bg-primary) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border: 1px solid var(--glass-border-soft) !important;
+  box-shadow: none !important;
+  /* ✅ S'assurer que l'input area est visible */
+  position: relative;
+  z-index: 15;
+  /* ✅ Forcer la largeur à s'adapter au widget */
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  box-sizing: border-box !important;
+}
+
+/* ✅ Supprimer le pseudo-élément glassmorphism dans le widget */
+.chat-fullscreen-container.chat-widget-mode .chat-input-area::before {
+  display: none !important;
 }
 
 .chat-fullscreen-container.chat-widget-mode .chat-input-textarea {
@@ -283,6 +326,37 @@
   max-height: 60px;
   padding: 6px 3px 3px 0;
   font-size: 14px;
+  /* ✅ S'assurer que le textarea est visible */
+  background: transparent !important;
+  color: var(--chat-text-primary, #f8f9fa) !important;
+  z-index: 1 !important;
+  position: relative !important;
+  /* ✅ S'assurer que le textarea s'adapte à la largeur */
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+.chat-fullscreen-container.chat-widget-mode .chat-input-main {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--chat-spacing-sm, 0.5rem);
+  flex: 1;
+  /* ✅ S'assurer que le main container s'adapte */
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.chat-fullscreen-container.chat-widget-mode .chat-input-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  /* ✅ S'assurer que le content s'adapte */
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .chat-fullscreen-container.chat-widget-mode .chat-input-icons {
@@ -299,10 +373,17 @@
 .chat-fullscreen-container.chat-widget-mode .chat-input-mic {
   width: 24px;
   height: 24px;
+  /* ✅ S'assurer que les boutons sont visibles */
+  z-index: 2 !important;
+  position: relative !important;
 }
 
 .chat-fullscreen-container.chat-widget-mode .chat-input-icon-btn {
   padding: 3px;
+  /* ✅ S'assurer que les icônes sont visibles */
+  z-index: 2 !important;
+  position: relative !important;
+  color: var(--chat-text-secondary, #a1a5b7) !important;
 }
 
 /* Réduire la taille du placeholder */

@@ -40,7 +40,7 @@ import { uploadImageForNote } from '@/utils/fileUpload';
 import { logger, LogCategory } from '@/utils/logger';
 import type { FullEditorInstance } from '@/types/editor';
 import { useRealtime } from '@/hooks/useRealtime';
-import { RealtimeStatus } from '@/components/RealtimeStatus';
+import RealtimeStatus from '@/components/RealtimeStatus';
 // Types pour les mises à jour de note
 interface NoteUpdate {
   a4_mode?: boolean;
