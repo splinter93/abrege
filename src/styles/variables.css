@@ -18,6 +18,10 @@
   --color-primary-light: #ff6b3d;
   --color-primary-dark: #d44a1a;
 
+  /* Backgrounds principaux - Compatibilité typography.css */
+  --color-bg-primary: var(--surface-background);
+  --color-bg-header: var(--surface-primary);
+
   /* Couleurs secondaires */
   --color-secondary: #3b82f6;
   --color-secondary-rgb: 59, 130, 246;
@@ -75,36 +79,48 @@
   --accent-faded: rgba(229, 90, 44, 0.07);
 
   /* ==========================================================================
-     GLASSMORPHISM - VARIABLES UNIVERSELLES
+     GLASSMORPHISM - VARIABLES UNIVERSELLES SOBRES
      ========================================================================== */
 
-  /* Backgrounds glassmorphism */
+  /* Backgrounds glassmorphism - Version sobre et moderne */
   --glass-bg-primary: rgba(255, 255, 255, 0.08);
   --glass-bg-secondary: rgba(255, 255, 255, 0.05);
   --glass-bg-tertiary: rgba(255, 255, 255, 0.03);
   --glass-bg-hover: rgba(255, 255, 255, 0.12);
-  --glass-bg-subtle: rgba(255, 255, 255, 0.06);
-  --glass-bg-medium: rgba(255, 255, 255, 0.1);
+  --glass-bg-subtle: rgba(255, 255, 255, 0.04);
+  --glass-bg-medium: rgba(255, 255, 255, 0.07);
   --glass-bg-heavy: rgba(255, 255, 255, 0.15);
-  --glass-bg-accent: rgba(0, 123, 255, 0.1);
-  --glass-bg-accent-hover: rgba(0, 123, 255, 0.2);
+  --glass-bg-accent: rgba(229, 90, 44, 0.12);
+  --glass-bg-accent-hover: rgba(229, 90, 44, 0.18);
+  --glass-bg-elevated: rgba(255, 255, 255, 0.10);
+  --glass-bg-overlay: rgba(0, 0, 0, 0.4);
 
-  /* Bordures glassmorphism */
+  /* Bordures glassmorphism - Version sobre et fine */
   --glass-border-primary: rgba(255, 255, 255, 0.12);
   --glass-border-secondary: rgba(255, 255, 255, 0.08);
   --glass-border-tertiary: rgba(255, 255, 255, 0.05);
   --glass-border-hover: rgba(255, 255, 255, 0.18);
   --glass-border-subtle: rgba(255, 255, 255, 0.06);
-  --glass-border-light: rgba(255, 255, 255, 0.1);
-  --glass-border-heavy: rgba(255, 255, 255, 0.2);
-  --glass-border-accent: rgba(0, 123, 255, 0.3);
-  --glass-border-accent-hover: rgba(0, 123, 255, 0.5);
+  --glass-border-light: rgba(255, 255, 255, 0.10);
+  --glass-border-heavy: rgba(255, 255, 255, 0.20);
+  --glass-border-accent: rgba(229, 90, 44, 0.25);
+  --glass-border-accent-hover: rgba(229, 90, 44, 0.35);
+  --glass-border-focus: rgba(229, 90, 44, 0.40);
 
-  /* Ombres glassmorphism */
-  --glass-shadow-subtle: 0 4px 20px rgba(0, 0, 0, 0.1);
-  --glass-shadow-medium: 0 8px 32px rgba(0, 0, 0, 0.15);
-  --glass-shadow-strong: 0 16px 48px rgba(0, 0, 0, 0.2);
-  --glass-shadow-hover: 0 12px 24px rgba(0, 0, 0, 0.15);
+  /* Ombres glassmorphism - Version subtile et moderne */
+  --glass-shadow-subtle: 0 2px 12px rgba(0, 0, 0, 0.08);
+  --glass-shadow-medium: 0 4px 20px rgba(0, 0, 0, 0.12);
+  --glass-shadow-strong: 0 8px 32px rgba(0, 0, 0, 0.16);
+  --glass-shadow-hover: 0 6px 16px rgba(0, 0, 0, 0.10);
+  --glass-shadow-elevated: 0 12px 40px rgba(0, 0, 0, 0.20);
+  --glass-shadow-focus: 0 0 0 3px rgba(229, 90, 44, 0.15);
+  --glass-shadow-inset: inset 0 1px 2px rgba(0, 0, 0, 0.05);
+
+  /* Effets de flou glassmorphism */
+  --glass-blur-light: blur(8px);
+  --glass-blur-medium: blur(12px);
+  --glass-blur-heavy: blur(20px);
+  --glass-blur-extra: blur(24px);
 
   /* ==========================================================================
      COULEURS SPÉCIFIQUES PAR PAGE
@@ -151,12 +167,16 @@
   --trash-text-muted: #64748b;
 
   /* ==========================================================================
-     TYPOGRAPHIE UNIFIÉE
+     TYPOGRAPHIE UNIFIÉE - GLASSMORPHISM
      ========================================================================== */
 
   --font-family-base: 'Noto Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
   --font-family-mono: 'JetBrains Mono', 'Fira Code', 'SFMono-Regular', 'Menlo', 'Consolas', monospace;
   --font-family-chat: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+  /* Alias glassmorphism pour compatibilité */
+  --glass-font-family: var(--font-family-base);
+  --glass-font-mono: var(--font-family-mono);
 
   /* Tailles de police */
   --font-size-xs: 0.75rem;    /* 12px */
@@ -167,6 +187,16 @@
   --font-size-2xl: 1.5rem;    /* 24px */
   --font-size-3xl: 1.875rem;  /* 30px */
   --font-size-4xl: 2.25rem;   /* 36px */
+
+  /* Alias glassmorphism pour compatibilité */
+  --glass-text-xs: var(--font-size-xs);
+  --glass-text-sm: var(--font-size-sm);
+  --glass-text-base: var(--font-size-base);
+  --glass-text-lg: var(--font-size-lg);
+  --glass-text-xl: var(--font-size-xl);
+  --glass-text-2xl: var(--font-size-2xl);
+  --glass-text-3xl: var(--font-size-3xl);
+  --glass-text-4xl: var(--font-size-4xl);
 
   /* Line heights */
   --line-height-tight: 1.25;
@@ -182,10 +212,20 @@
   --font-extrabold: 800;
   --font-black: 900;
 
+  /* Alias glassmorphism pour compatibilité */
+  --glass-font-light: var(--font-light);
+  --glass-font-normal: var(--font-normal);
+  --glass-font-medium: var(--font-medium);
+  --glass-font-semibold: var(--font-semibold);
+  --glass-font-bold: var(--font-bold);
+  --glass-font-extrabold: var(--font-extrabold);
+  --glass-font-black: var(--font-black);
+
   /* ==========================================================================
-     ESPACEMENTS UNIFIÉS
+     ESPACEMENTS UNIFIÉS - GLASSMORPHISM
      ========================================================================== */
 
+  /* Espacements principaux */
   --spacing-xs: 0.25rem;      /* 4px */
   --spacing-sm: 0.5rem;       /* 8px */
   --spacing-md: 1rem;         /* 16px */
@@ -193,25 +233,59 @@
   --spacing-xl: 2rem;         /* 32px */
   --spacing-2xl: 3rem;        /* 48px */
   --spacing-3xl: 4rem;        /* 64px */
+  --spacing-4xl: 6rem;        /* 96px */
+
+  /* Alias glassmorphism pour compatibilité */
+  --glass-space-xs: var(--spacing-xs);
+  --glass-space-sm: var(--spacing-sm);
+  --glass-space-md: var(--spacing-md);
+  --glass-space-lg: var(--spacing-lg);
+  --glass-space-xl: var(--spacing-xl);
+  --glass-space-2xl: var(--spacing-2xl);
+  --glass-space-3xl: var(--spacing-3xl);
+  --glass-space-4xl: var(--spacing-4xl);
 
   /* ==========================================================================
-     RAYONS DE BORDURE UNIFIÉS
+     RAYONS DE BORDURE UNIFIÉS - GLASSMORPHISM
      ========================================================================== */
 
-  --radius-sm: 4px;
+  /* Rayons principaux */
+  --radius-xs: 4px;
+  --radius-sm: 6px;
   --radius-md: 8px;
   --radius-lg: 12px;
   --radius-xl: 16px;
-  --radius-2xl: 24px;
+  --radius-2xl: 20px;
+  --radius-3xl: 24px;
+  --radius-full: 50%;
+
+  /* Alias glassmorphism pour compatibilité */
+  --glass-radius-xs: var(--radius-xs);
+  --glass-radius-sm: var(--radius-sm);
+  --glass-radius-md: var(--radius-md);
+  --glass-radius-lg: var(--radius-lg);
+  --glass-radius-xl: var(--radius-xl);
+  --glass-radius-2xl: var(--radius-2xl);
+  --glass-radius-3xl: var(--radius-3xl);
+  --glass-radius-full: var(--radius-full);
 
   /* ==========================================================================
-     TRANSITIONS UNIFIÉES
+     TRANSITIONS UNIFIÉES - GLASSMORPHISM
      ========================================================================== */
 
-  --transition-fast: 0.15s ease;
-  --transition-normal: 0.2s ease;
-  --transition-slow: 0.3s ease;
+  /* Transitions principales */
+  --transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-normal: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   --transition-bounce: 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  --transition-spring: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+
+  /* Alias glassmorphism pour compatibilité */
+  --glass-transition-fast: var(--transition-fast);
+  --glass-transition-normal: var(--transition-normal);
+  --glass-transition-slow: var(--transition-slow);
+  --glass-transition-bounce: var(--transition-bounce);
+  --glass-transition-spring: var(--transition-spring);
 
   /* ==========================================================================
      OMBRES UNIFIÉES
@@ -223,7 +297,7 @@
   --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.15);
 
   /* ==========================================================================
-     Z-INDEX UNIFIÉS
+     Z-INDEX UNIFIÉS - GLASSMORPHISM
      ========================================================================== */
 
   --z-dropdown: 1000;
@@ -231,6 +305,16 @@
   --z-modal: 1002;
   --z-overlay: 999;
   --z-tooltip: 1003;
+  --z-notification: 1004;
+
+  /* Alias glassmorphism pour compatibilité */
+  --glass-z-base: 1;
+  --glass-z-dropdown: var(--z-dropdown);
+  --glass-z-sidebar: var(--z-sidebar);
+  --glass-z-modal: var(--z-modal);
+  --glass-z-overlay: var(--z-overlay);
+  --glass-z-tooltip: var(--z-tooltip);
+  --glass-z-notification: var(--z-notification);
 
   /* ==========================================================================
      LAYOUT UNIFIÉ
@@ -381,6 +465,10 @@
   --color-primary-light: #ff6b3d;
   --color-primary-dark: #d44a1a;
 
+  /* Backgrounds principaux - Compatibilité typography.css (dark theme) */
+  --color-bg-primary: var(--surface-background);
+  --color-bg-header: var(--surface-primary);
+
   /* Surfaces (dark theme) */
   --surface-primary: #141414;
   --surface-secondary: #1c1c1c;
@@ -451,4 +539,29 @@
   --surface-2-rgb: 28, 28, 28;
 
   --font-main: var(--font-family-base);
+
+  /* Glassmorphism dark theme - Variables harmonisées */
+  --glass-bg-primary: rgba(255, 255, 255, 0.06);
+  --glass-bg-secondary: rgba(255, 255, 255, 0.04);
+  --glass-bg-tertiary: rgba(255, 255, 255, 0.02);
+  --glass-bg-hover: rgba(255, 255, 255, 0.08);
+  --glass-bg-subtle: rgba(255, 255, 255, 0.03);
+  --glass-bg-medium: rgba(255, 255, 255, 0.05);
+  --glass-bg-heavy: rgba(255, 255, 255, 0.10);
+  --glass-bg-elevated: rgba(255, 255, 255, 0.08);
+  --glass-bg-overlay: rgba(0, 0, 0, 0.6);
+
+  --glass-border-primary: rgba(255, 255, 255, 0.10);
+  --glass-border-secondary: rgba(255, 255, 255, 0.06);
+  --glass-border-tertiary: rgba(255, 255, 255, 0.04);
+  --glass-border-hover: rgba(255, 255, 255, 0.15);
+  --glass-border-subtle: rgba(255, 255, 255, 0.05);
+  --glass-border-light: rgba(255, 255, 255, 0.08);
+  --glass-border-heavy: rgba(255, 255, 255, 0.15);
+
+  --glass-shadow-subtle: 0 2px 12px rgba(0, 0, 0, 0.15);
+  --glass-shadow-medium: 0 4px 20px rgba(0, 0, 0, 0.20);
+  --glass-shadow-strong: 0 8px 32px rgba(0, 0, 0, 0.25);
+  --glass-shadow-hover: 0 6px 16px rgba(0, 0, 0, 0.18);
+  --glass-shadow-elevated: 0 12px 40px rgba(0, 0, 0, 0.30);
 }

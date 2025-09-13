@@ -3,12 +3,13 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import LogoHeader from "@/components/LogoHeader";
-import Sidebar from "@/components/Sidebar";
+import UnifiedPageLayout from "@/components/UnifiedPageLayout";
 import { useAuth } from "@/hooks/useAuth";
 import { useSecureErrorHandler } from "@/components/SecureErrorHandler";
 import { logApi } from "@/utils/logger";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import AuthGuard from "@/components/AuthGuard";
+import PageTitleSimple from "@/components/PageTitleSimple";
 import "@/styles/main.css";
 import "./SettingsPage.css";
 
@@ -36,19 +37,9 @@ export default function SettingsPage() {
   return (
     <ErrorBoundary>
       <AuthGuard>
-        <div className="page-wrapper">
-          <header className="settings-header-fixed">
-            <LogoHeader size="medium" position="left" />
-          </header>
-
-          <aside className="page-sidebar-fixed">
-            <Sidebar />
-          </aside>
-
-          <main className="page-content-area">
-            <SettingsPageContent />
-          </main>
-        </div>
+        <UnifiedPageLayout className="page-settings">
+          <SettingsPageContent />
+        </UnifiedPageLayout>
       </AuthGuard>
     </ErrorBoundary>
   );
@@ -207,40 +198,15 @@ function AuthenticatedSettingsContent({ user }: { user: { id: string; email?: st
 
   return (
     <>
-      {/* Titre de la page avec design glassmorphism uniforme */}
-      <motion.div 
-        key="settings-title"
-        className="page-title-container-glass"
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, ease: "easeOut" }}
-      >
-        <div className="page-title-content">
-          <div className="page-title-left-section">
-            <motion.div 
-              className="page-title-icon-container"
-              whileHover={{ scale: 1.05 }}
-              transition={{ type: "spring", stiffness: 300 }}
-            >
-              <span className="page-title-icon">⚙️</span>
-            </motion.div>
-            <div className="page-title-section">
-              <h1 className="page-title">Réglages</h1>
-              <p className="page-subtitle">Gérez vos préférences et clés API</p>
-            </div>
-          </div>
-          <div className="page-title-stats">
-            <div className="page-title-stats-item">
-              <span className="page-title-stats-number">{apiKeys.length}</span>
-              <span className="page-title-stats-label">clé{apiKeys.length > 1 ? 's' : ''} API</span>
-            </div>
-            <div className="page-title-stats-item">
-              <span className="page-title-stats-number">{user?.email ? '✅' : '❌'}</span>
-              <span className="page-title-stats-label">authentifié</span>
-            </div>
-          </div>
-        </div>
-      </motion.div>
+      {/* Titre de la page avec design simple unifié */}
+      <PageTitleSimple
+        title="Réglages"
+        subtitle="Gérez vos préférences et clés API"
+        stats={[
+          { number: apiKeys.length, label: `clé${apiKeys.length > 1 ? 's' : ''} API` },
+          { number: user?.email ? '✅' : '❌', label: 'authentifié' }
+        ]}
+      />
 
       {/* Section des réglages avec navigation glassmorphism */}
       <motion.section 

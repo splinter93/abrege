@@ -7,40 +7,36 @@
    ========================================================================== */
 
 .fm-grid-item {
-  background: transparent;
-  border: none;
-  border-radius: 16px; /* Valeur fixe au lieu de var(--files-radius-lg) */
-  padding: 16px; /* Valeur fixe au lieu de var(--files-spacing-md) */
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  padding: 16px;
   cursor: pointer;
-  transition: none;
+  transition: none !important;
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
-  min-height: 120px; /* Réduit de 140px à 120px pour plus de compacité */
-  max-width: 200px; /* Largeur maximale pour éviter les items trop larges */
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
-  box-shadow: none;
+  min-height: 140px;
+  max-width: 200px;
+  box-shadow: none !important;
   position: relative;
-  overflow: hidden;
-  justify-content: flex-start; /* Aligne le contenu en haut */
+  overflow: visible;
+  justify-content: flex-start;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
 
-.fm-grid-item::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(135deg, 
-    rgba(255, 255, 255, 0.02) 0%, 
-    rgba(255, 255, 255, 0.01) 50%, 
-    rgba(255, 255, 255, 0.02) 100%);
-  opacity: 0;
-  transition: opacity 0.25s ease; /* Valeur fixe au lieu de var(--files-transition-normal) */
-  border-radius: 16px; /* Valeur fixe au lieu de var(--files-radius-lg) */
+/* Wrappers d'items - FORCER l'absence d'effets */
+.file-item-wrapper,
+.folder-item-wrapper {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  transition: none !important;
+  transform: none !important;
 }
 
 .fm-grid-item:hover {
@@ -48,10 +44,6 @@
   border: none;
   transform: none;
   box-shadow: none;
-}
-
-.fm-grid-item:hover::before {
-  display: none;
 }
 
 .fm-grid-item:active {
@@ -65,38 +57,44 @@
 
 .fm-grid-item .file-icon,
 .fm-grid-item .folder-icon {
-  margin-bottom: 12px; /* Valeur fixe au lieu de var(--files-spacing-sm) */
+  margin-bottom: 6px;
   display: flex;
   justify-content: center;
   align-items: center;
-  width: 56px; /* Agrandi de 40px à 56px */
-  height: 56px; /* Agrandi de 40px à 56px */
-  font-size: 28px; /* Agrandi de 24px à 28px */
-  transition: transform 0.15s ease; /* Valeur fixe au lieu de var(--files-transition-fast) */
+  width: 72px;
+  height: 72px;
+  font-size: 36px;
+  transition: none;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  flex-shrink: 0; /* Empêche la réduction de taille */
-  margin-left: auto; /* Centrage horizontal */
-  margin-right: auto; /* Centrage horizontal */
+  flex-shrink: 0;
+  margin-left: auto;
+  margin-right: auto;
 }
 
-/* Style encadré pour les icônes de dossiers */
+/* Style encadré orange pour les icônes de dossiers */
 .fm-grid-item .folder-icon {
-  background: linear-gradient(135deg, rgba(251, 146, 60, 0.2) 0%, rgba(234, 88, 12, 0.15) 100%);
-  border: 1px solid rgba(251, 146, 60, 0.3);
-  border-radius: 12px;
+  background: rgba(229, 90, 44, 0.1) !important;
+  border: 1px solid rgba(229, 90, 44, 0.3) !important;
+  border-radius: 16px !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
 
-/* Style encadré pour les icônes de fichiers */
+/* Style encadré bleu pour les icônes de fichiers */
 .fm-grid-item .file-icon {
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(37, 99, 235, 0.15) 100%);
-  border: 1px solid rgba(59, 130, 246, 0.3);
-  border-radius: 12px;
+  background: rgba(59, 130, 246, 0.1) !important;
+  border: 1px solid rgba(59, 130, 246, 0.3) !important;
+  border-radius: 16px !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
 
 .fm-grid-item:hover .file-icon,
 .fm-grid-item:hover .folder-icon {
-  transform: scale(1.05); /* Réduit de 1.1 à 1.05 pour un effet plus subtil */
+  transform: none;
 }
 
 .fm-grid-item .file-info {
@@ -158,10 +156,10 @@
 .fm-grid-item.file-list-item .file-icon,
 .fm-grid-item.file-list-item .folder-icon {
   margin-bottom: 0 !important;
-  margin-right: 16px !important; /* Valeur fixe au lieu de variable */
-  font-size: 28px !important; /* Agrandi pour correspondre au nouveau cadre */
-  height: 56px !important; /* Agrandi pour correspondre au nouveau cadre */
-  width: 56px !important; /* Agrandi pour correspondre au nouveau cadre */
+  margin-right: 12px !important;
+  font-size: 36px !important;
+  height: 72px !important;
+  width: 72px !important;
   flex-shrink: 0 !important;
 }
 
@@ -197,14 +195,15 @@
 /* Éléments en cours de renommage */
 .fm-grid-item.renaming {
   background: transparent;
-  border-color: var(--border-color);
-  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.1);
+  border: none;
+  box-shadow: none;
 }
 
 /* Éléments en cours de drag */
 .fm-grid-item.dragging {
   opacity: 0.7;
   transform: none;
+  background: transparent;
 }
 
 /* Zone de drop */
@@ -221,7 +220,7 @@
 .fm-grid-item input {
   background: transparent;
   border: 1px solid var(--glass-border-hover);
-  border-radius: var(--files-radius-sm);
+  border-radius: 0;
   color: var(--files-text-primary);
   padding: var(--files-spacing-xs) var(--files-spacing-sm);
   font-size: 14px;
@@ -229,8 +228,6 @@
   text-align: center;
   width: 100%;
   max-width: 150px;
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
   outline: none;
   transition: none;
 }
@@ -243,33 +240,8 @@
 }
 
 /* ==========================================================================
-   ANIMATIONS ET TRANSITIONS
+   ANIMATIONS SUPPRIMÉES - DESIGN ÉPURÉ
    ========================================================================== */
-
-/* Animation d'entrée pour les éléments */
-.fm-grid-item {
-  animation: fadeInUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  will-change: transform, opacity; /* Optimisation pour les animations */
-}
-
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* Animation de stagger pour les grilles */
-.files-grid .fm-grid-item:nth-child(1) { animation-delay: 0.1s; }
-.files-grid .fm-grid-item:nth-child(2) { animation-delay: 0.2s; }
-.files-grid .fm-grid-item:nth-child(3) { animation-delay: 0.3s; }
-.files-grid .fm-grid-item:nth-child(4) { animation-delay: 0.4s; }
-.files-grid .fm-grid-item:nth-child(5) { animation-delay: 0.5s; }
-.files-grid .fm-grid-item:nth-child(6) { animation-delay: 0.6s; }
 
 /* ==========================================================================
    RESPONSIVE DESIGN
@@ -277,29 +249,31 @@
 
 @media (max-width: 1200px) {
   .fm-grid-item {
-    min-height: 120px; /* Hauteur cohérente avec le design principal */
-    padding: 16px; /* Valeur fixe */
+    min-height: 140px;
+    padding: 16px;
   }
   
   .fm-grid-item .file-icon,
   .fm-grid-item .folder-icon {
-    height: 48px; /* Hauteur cohérente avec le design principal */
-    font-size: 24px;
+    height: 64px;
+    width: 64px;
+    font-size: 32px;
   }
 }
 
 @media (max-width: 768px) {
   .fm-grid-item {
-    min-height: 110px; /* Hauteur réduite pour tablette */
-    padding: 12px; /* Valeur fixe */
-    border-radius: 12px; /* Valeur fixe */
+    min-height: 130px;
+    padding: 12px;
+    border-radius: 0;
   }
   
   .fm-grid-item .file-icon,
   .fm-grid-item .folder-icon {
-    font-size: 22px;
-    margin-bottom: 8px; /* Valeur fixe */
-    height: 44px; /* Hauteur optimisée pour tablette */
+    font-size: 28px;
+    margin-bottom: 4px;
+    height: 56px;
+    width: 56px;
   }
   
   .fm-grid-item .file-name,
@@ -314,16 +288,17 @@
 
 @media (max-width: 480px) {
   .fm-grid-item {
-    min-height: 100px; /* Hauteur minimale pour mobile */
-    padding: 8px; /* Valeur fixe */
-    border-radius: 8px; /* Valeur fixe */
+    min-height: 120px;
+    padding: 8px;
+    border-radius: 0;
   }
   
   .fm-grid-item .file-icon,
   .fm-grid-item .folder-icon {
-    font-size: 20px;
-    margin-bottom: 8px; /* Valeur fixe */
-    height: 36px; /* Hauteur minimale pour mobile */
+    font-size: 24px;
+    margin-bottom: 4px;
+    height: 48px;
+    width: 48px;
   }
   
   .fm-grid-item .file-name,

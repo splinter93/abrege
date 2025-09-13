@@ -1,0 +1,697 @@
+/*
+  DASHBOARD UNIFIED CSS - SYSTÈME OPTIMISÉ ET COHÉRENT
+  ===================================================
+  Refonte complète du CSS du dashboard avec :
+  - Architecture unifiée et modulaire
+  - Variables cohérentes et optimisées
+  - Responsive design parfait
+  - Performance optimisée
+  - Design glassmorphism moderne
+*/
+
+/* ==========================================================================
+   VARIABLES DASHBOARD UNIFIÉES
+   ========================================================================== */
+
+:root {
+  /* ==========================================================================
+     COULEURS DASHBOARD SPÉCIFIQUES
+     ========================================================================== */
+  
+  /* Dashboard - Accent multicolore harmonieux */
+  --dashboard-primary: #e55a2c;
+  --dashboard-primary-rgb: 229, 90, 44;
+  --dashboard-primary-light: #ff6b3d;
+  --dashboard-primary-hover: #d1451f;
+  
+  /* Couleurs des sections */
+  --dashboard-stats-color: #3b82f6;
+  --dashboard-actions-color: #8b5cf6;
+  --dashboard-files-color: #f97316;
+  --dashboard-settings-color: #10b981;
+  
+  /* Backgrounds glassmorphism dashboard */
+  --dashboard-bg-primary: rgba(255, 255, 255, 0.08);
+  --dashboard-bg-secondary: rgba(255, 255, 255, 0.05);
+  --dashboard-bg-hover: rgba(255, 255, 255, 0.12);
+  --dashboard-bg-accent: rgba(229, 90, 44, 0.15);
+  --dashboard-bg-accent-hover: rgba(229, 90, 44, 0.20);
+  
+  /* Bordures dashboard */
+  --dashboard-border-primary: rgba(255, 255, 255, 0.12);
+  --dashboard-border-secondary: rgba(255, 255, 255, 0.08);
+  --dashboard-border-accent: rgba(229, 90, 44, 0.25);
+  --dashboard-border-accent-hover: rgba(229, 90, 44, 0.35);
+  
+  /* Ombres dashboard */
+  --dashboard-shadow-subtle: 0 2px 12px rgba(0, 0, 0, 0.08);
+  --dashboard-shadow-medium: 0 4px 20px rgba(0, 0, 0, 0.12);
+  --dashboard-shadow-strong: 0 8px 32px rgba(0, 0, 0, 0.16);
+  --dashboard-shadow-focus: 0 0 0 3px rgba(229, 90, 44, 0.15);
+  
+  /* ==========================================================================
+     ESPACEMENTS DASHBOARD
+     ========================================================================== */
+  
+  --dashboard-space-xs: 0.25rem;    /* 4px */
+  --dashboard-space-sm: 0.5rem;     /* 8px */
+  --dashboard-space-md: 1rem;       /* 16px */
+  --dashboard-space-lg: 1.5rem;     /* 24px */
+  --dashboard-space-xl: 2rem;       /* 32px */
+  --dashboard-space-2xl: 3rem;      /* 48px */
+  
+  /* ==========================================================================
+     TAILLES DASHBOARD
+     ========================================================================== */
+  
+  --dashboard-icon-sm: 40px;
+  --dashboard-icon-md: 48px;
+  --dashboard-icon-lg: 56px;
+  --dashboard-icon-xl: 64px;
+  
+  --dashboard-card-min-width: 280px;
+  --dashboard-card-max-width: 400px;
+  
+  /* ==========================================================================
+     TRANSITIONS DASHBOARD
+     ========================================================================== */
+  
+  --dashboard-transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  --dashboard-transition-normal: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  --dashboard-transition-slow: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  --dashboard-transition-spring: 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+/* ==========================================================================
+   THÈME SOMBRE DASHBOARD
+   ========================================================================== */
+
+.dark {
+  --dashboard-bg-primary: rgba(255, 255, 255, 0.06);
+  --dashboard-bg-secondary: rgba(255, 255, 255, 0.04);
+  --dashboard-bg-hover: rgba(255, 255, 255, 0.08);
+  --dashboard-bg-accent: rgba(229, 90, 44, 0.12);
+  --dashboard-bg-accent-hover: rgba(229, 90, 44, 0.18);
+  
+  --dashboard-border-primary: rgba(255, 255, 255, 0.10);
+  --dashboard-border-secondary: rgba(255, 255, 255, 0.06);
+  --dashboard-border-accent: rgba(229, 90, 44, 0.20);
+  --dashboard-border-accent-hover: rgba(229, 90, 44, 0.30);
+  
+  --dashboard-shadow-subtle: 0 2px 12px rgba(0, 0, 0, 0.15);
+  --dashboard-shadow-medium: 0 4px 20px rgba(0, 0, 0, 0.20);
+  --dashboard-shadow-strong: 0 8px 32px rgba(0, 0, 0, 0.25);
+}
+
+/* ==========================================================================
+   LAYOUT DASHBOARD PRINCIPAL
+   ========================================================================== */
+
+.dashboard-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--dashboard-space-xl);
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: var(--dashboard-space-xl);
+}
+
+/* ==========================================================================
+   TITRE DE SECTION DASHBOARD
+   ========================================================================== */
+
+.dashboard-section-title {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-semibold);
+  color: var(--text-primary);
+  margin: 0 0 var(--dashboard-space-lg) 0;
+  padding-bottom: var(--dashboard-space-md);
+  border-bottom: 1px solid var(--dashboard-border-secondary);
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--dashboard-space-md);
+}
+
+.dashboard-section-title::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 60px;
+  height: 2px;
+  background: var(--dashboard-primary);
+  border-radius: 1px;
+}
+
+.dashboard-section-icon {
+  font-size: var(--font-size-lg);
+  opacity: 0.8;
+}
+
+/* ==========================================================================
+   GRILLE DE STATISTIQUES UNIFIÉE
+   ========================================================================== */
+
+.dashboard-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(var(--dashboard-card-min-width), 1fr));
+  gap: var(--dashboard-space-lg);
+  margin-bottom: var(--dashboard-space-xl);
+}
+
+.dashboard-stat-card {
+  background: var(--dashboard-bg-primary);
+  border: 1px solid var(--dashboard-border-primary);
+  border-radius: var(--radius-xl);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: var(--dashboard-shadow-subtle);
+  padding: var(--dashboard-space-xl);
+  display: flex;
+  align-items: center;
+  gap: var(--dashboard-space-lg);
+  transition: all var(--dashboard-transition-normal);
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  min-height: 120px;
+}
+
+.dashboard-stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.08) 0%, 
+    rgba(255, 255, 255, 0.03) 50%, 
+    rgba(255, 255, 255, 0.08) 100%);
+  opacity: 0;
+  transition: opacity var(--dashboard-transition-normal);
+  pointer-events: none;
+}
+
+.dashboard-stat-card:hover {
+  background: var(--dashboard-bg-hover);
+  border-color: var(--dashboard-border-accent);
+  box-shadow: var(--dashboard-shadow-medium);
+  transform: translateY(-4px);
+}
+
+.dashboard-stat-card:hover::before {
+  opacity: 1;
+}
+
+/* Icône de statistique */
+.dashboard-stat-icon {
+  width: var(--dashboard-icon-lg);
+  height: var(--dashboard-icon-lg);
+  background: var(--dashboard-bg-accent);
+  border: 1px solid var(--dashboard-border-accent);
+  border-radius: var(--radius-xl);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--font-size-2xl);
+  flex-shrink: 0;
+  transition: all var(--dashboard-transition-normal);
+  position: relative;
+  z-index: 1;
+}
+
+.dashboard-stat-card:hover .dashboard-stat-icon {
+  background: var(--dashboard-bg-accent-hover);
+  border-color: var(--dashboard-border-accent-hover);
+  transform: scale(1.1);
+  box-shadow: var(--dashboard-shadow-focus);
+}
+
+/* Contenu de statistique */
+.dashboard-stat-content {
+  flex: 1;
+  min-width: 0;
+  position: relative;
+  z-index: 1;
+}
+
+.dashboard-stat-title {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-semibold);
+  color: var(--text-primary);
+  margin: 0 0 var(--dashboard-space-xs) 0;
+  transition: all var(--dashboard-transition-normal);
+}
+
+.dashboard-stat-number {
+  font-size: var(--font-size-3xl);
+  font-weight: var(--font-bold);
+  color: var(--dashboard-primary);
+  margin: 0 0 var(--dashboard-space-xs) 0;
+  line-height: 1;
+  transition: all var(--dashboard-transition-normal);
+}
+
+.dashboard-stat-description {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-normal);
+  color: var(--text-secondary);
+  margin: 0;
+  transition: all var(--dashboard-transition-normal);
+}
+
+.dashboard-stat-card:hover .dashboard-stat-number {
+  color: var(--dashboard-primary-hover);
+  transform: scale(1.05);
+}
+
+/* ==========================================================================
+   GRILLE D'ACTIONS RAPIDES UNIFIÉE
+   ========================================================================== */
+
+.dashboard-actions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(var(--dashboard-card-min-width), 1fr));
+  gap: var(--dashboard-space-lg);
+  margin-bottom: var(--dashboard-space-xl);
+}
+
+.dashboard-action-card {
+  background: var(--dashboard-bg-primary);
+  border: 1px solid var(--dashboard-border-primary);
+  border-radius: var(--radius-xl);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: var(--dashboard-shadow-subtle);
+  padding: var(--dashboard-space-xl);
+  display: flex;
+  align-items: center;
+  gap: var(--dashboard-space-lg);
+  text-decoration: none;
+  color: inherit;
+  transition: all var(--dashboard-transition-normal);
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  min-height: 100px;
+}
+
+.dashboard-action-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.08) 0%, 
+    rgba(255, 255, 255, 0.03) 50%, 
+    rgba(255, 255, 255, 0.08) 100%);
+  opacity: 0;
+  transition: opacity var(--dashboard-transition-normal);
+  pointer-events: none;
+}
+
+.dashboard-action-card:hover {
+  background: var(--dashboard-bg-hover);
+  border-color: var(--dashboard-border-accent);
+  box-shadow: var(--dashboard-shadow-medium);
+  transform: translateY(-2px);
+  text-decoration: none;
+  color: inherit;
+}
+
+.dashboard-action-card:hover::before {
+  opacity: 1;
+}
+
+/* Icône d'action */
+.dashboard-action-icon {
+  width: var(--dashboard-icon-md);
+  height: var(--dashboard-icon-md);
+  background: var(--dashboard-bg-secondary);
+  border: 1px solid var(--dashboard-border-secondary);
+  border-radius: var(--radius-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--font-size-xl);
+  flex-shrink: 0;
+  transition: all var(--dashboard-transition-normal);
+  position: relative;
+  z-index: 1;
+}
+
+.dashboard-action-card:hover .dashboard-action-icon {
+  background: var(--dashboard-bg-accent);
+  border-color: var(--dashboard-border-accent);
+  transform: scale(1.05);
+  box-shadow: var(--dashboard-shadow-subtle);
+}
+
+/* Contenu d'action */
+.dashboard-action-content {
+  flex: 1;
+  min-width: 0;
+  position: relative;
+  z-index: 1;
+}
+
+.dashboard-action-title {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-semibold);
+  color: var(--text-primary);
+  margin: 0 0 var(--dashboard-space-xs) 0;
+  transition: all var(--dashboard-transition-normal);
+}
+
+.dashboard-action-description {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-normal);
+  color: var(--text-secondary);
+  margin: 0;
+  transition: all var(--dashboard-transition-normal);
+}
+
+.dashboard-action-card:hover .dashboard-action-title {
+  color: var(--dashboard-primary);
+}
+
+.dashboard-action-card:hover .dashboard-action-description {
+  color: var(--text-primary);
+}
+
+/* ==========================================================================
+   ÉTATS DE CHARGEMENT DASHBOARD
+   ========================================================================== */
+
+.dashboard-loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--dashboard-space-2xl);
+  text-align: center;
+  background: var(--dashboard-bg-primary);
+  border: 1px solid var(--dashboard-border-primary);
+  border-radius: var(--radius-xl);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: var(--dashboard-shadow-subtle);
+  min-height: 200px;
+}
+
+.dashboard-loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--dashboard-border-secondary);
+  border-top: 3px solid var(--dashboard-primary);
+  border-radius: 50%;
+  animation: dashboard-spin 1s linear infinite;
+  margin-bottom: var(--dashboard-space-lg);
+}
+
+@keyframes dashboard-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.dashboard-loading-text {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-medium);
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+/* ==========================================================================
+   RESPONSIVE DESIGN DASHBOARD
+   ========================================================================== */
+
+/* Tablette */
+@media (max-width: 1024px) {
+  .dashboard-container {
+    padding: var(--dashboard-space-lg);
+    gap: var(--dashboard-space-lg);
+  }
+  
+  .dashboard-stats-grid,
+  .dashboard-actions-grid {
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: var(--dashboard-space-md);
+  }
+  
+  .dashboard-stat-card,
+  .dashboard-action-card {
+    padding: var(--dashboard-space-lg);
+    min-height: 100px;
+  }
+  
+  .dashboard-stat-icon,
+  .dashboard-action-icon {
+    width: var(--dashboard-icon-md);
+    height: var(--dashboard-icon-md);
+    font-size: var(--font-size-lg);
+  }
+  
+  .dashboard-stat-number {
+    font-size: var(--font-size-2xl);
+  }
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .dashboard-container {
+    padding: var(--dashboard-space-md);
+    gap: var(--dashboard-space-md);
+  }
+  
+  .dashboard-stats-grid,
+  .dashboard-actions-grid {
+    grid-template-columns: 1fr;
+    gap: var(--dashboard-space-md);
+  }
+  
+  .dashboard-stat-card,
+  .dashboard-action-card {
+    padding: var(--dashboard-space-md);
+    flex-direction: column;
+    text-align: center;
+    gap: var(--dashboard-space-md);
+    min-height: auto;
+  }
+  
+  .dashboard-stat-icon,
+  .dashboard-action-icon {
+    width: var(--dashboard-icon-sm);
+    height: var(--dashboard-icon-sm);
+    font-size: var(--font-size-base);
+  }
+  
+  .dashboard-stat-number {
+    font-size: var(--font-size-xl);
+  }
+  
+  .dashboard-section-title {
+    font-size: var(--font-size-lg);
+    margin-bottom: var(--dashboard-space-md);
+  }
+}
+
+/* Mobile petit */
+@media (max-width: 480px) {
+  .dashboard-container {
+    padding: var(--dashboard-space-sm);
+    gap: var(--dashboard-space-sm);
+  }
+  
+  .dashboard-stat-card,
+  .dashboard-action-card {
+    padding: var(--dashboard-space-sm);
+    gap: var(--dashboard-space-sm);
+  }
+  
+  .dashboard-stat-icon,
+  .dashboard-action-icon {
+    width: 36px;
+    height: 36px;
+    font-size: var(--font-size-sm);
+  }
+  
+  .dashboard-stat-number {
+    font-size: var(--font-size-lg);
+  }
+  
+  .dashboard-stat-title,
+  .dashboard-action-title {
+    font-size: var(--font-size-base);
+  }
+  
+  .dashboard-stat-description,
+  .dashboard-action-description {
+    font-size: var(--font-size-xs);
+  }
+}
+
+/* ==========================================================================
+   ACCESSIBILITÉ DASHBOARD
+   ========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-stat-card,
+  .dashboard-action-card,
+  .dashboard-stat-icon,
+  .dashboard-action-icon,
+  .dashboard-loading-spinner {
+    transition: none;
+    animation: none;
+  }
+  
+  .dashboard-stat-card:hover,
+  .dashboard-action-card:hover {
+    transform: none;
+  }
+  
+  .dashboard-stat-card:hover .dashboard-stat-icon,
+  .dashboard-action-card:hover .dashboard-action-icon {
+    transform: none;
+  }
+}
+
+@media (prefers-contrast: high) {
+  .dashboard-stat-card,
+  .dashboard-action-card {
+    background: var(--dashboard-bg-secondary);
+    border-color: var(--dashboard-border-accent);
+  }
+  
+  .dashboard-stat-icon,
+  .dashboard-action-icon {
+    background: var(--dashboard-bg-accent);
+    border-color: var(--dashboard-border-accent);
+  }
+}
+
+/* Focus visible pour l'accessibilité */
+.dashboard-stat-card:focus-visible,
+.dashboard-action-card:focus-visible {
+  outline: 2px solid var(--dashboard-primary);
+  outline-offset: 2px;
+  box-shadow: var(--dashboard-shadow-focus);
+}
+
+/* ==========================================================================
+   PRINT DASHBOARD
+   ========================================================================== */
+
+@media print {
+  .dashboard-stats-grid,
+  .dashboard-actions-grid {
+    display: block;
+  }
+  
+  .dashboard-stat-card,
+  .dashboard-action-card {
+    background: white !important;
+    border: 1px solid #ccc !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    break-inside: avoid;
+    margin-bottom: 1rem;
+  }
+  
+  .dashboard-stat-icon,
+  .dashboard-action-icon {
+    background: #f5f5f5 !important;
+    border: 1px solid #ddd !important;
+  }
+}
+
+/* ==========================================================================
+   UTILITAIRES DASHBOARD
+   ========================================================================== */
+
+.dashboard-fade-in {
+  animation: dashboard-fade-in 0.6s ease-out;
+}
+
+@keyframes dashboard-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.dashboard-slide-in {
+  animation: dashboard-slide-in 0.4s ease-out;
+}
+
+@keyframes dashboard-slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* ==========================================================================
+   COULEURS SPÉCIFIQUES PAR CARTE
+   ========================================================================== */
+
+.dashboard-stat-card[data-type="classeurs"] .dashboard-stat-icon {
+  background: rgba(59, 130, 246, 0.15);
+  border-color: rgba(59, 130, 246, 0.25);
+  color: #3b82f6;
+}
+
+.dashboard-stat-card[data-type="notes"] .dashboard-stat-icon {
+  background: rgba(139, 92, 246, 0.15);
+  border-color: rgba(139, 92, 246, 0.25);
+  color: #8b5cf6;
+}
+
+.dashboard-stat-card[data-type="files"] .dashboard-stat-icon {
+  background: rgba(249, 115, 22, 0.15);
+  border-color: rgba(249, 115, 22, 0.25);
+  color: #f97316;
+}
+
+.dashboard-stat-card[data-type="activity"] .dashboard-stat-icon {
+  background: rgba(16, 185, 129, 0.15);
+  border-color: rgba(16, 185, 129, 0.25);
+  color: #10b981;
+}
+
+.dashboard-action-card[data-type="dossiers"] .dashboard-action-icon {
+  background: rgba(59, 130, 246, 0.15);
+  border-color: rgba(59, 130, 246, 0.25);
+  color: #3b82f6;
+}
+
+.dashboard-action-card[data-type="files"] .dashboard-action-icon {
+  background: rgba(249, 115, 22, 0.15);
+  border-color: rgba(249, 115, 22, 0.25);
+  color: #f97316;
+}
+
+.dashboard-action-card[data-type="shared"] .dashboard-action-icon {
+  background: rgba(139, 92, 246, 0.15);
+  border-color: rgba(139, 92, 246, 0.25);
+  color: #8b5cf6;
+}
+
+.dashboard-action-card[data-type="settings"] .dashboard-action-icon {
+  background: rgba(16, 185, 129, 0.15);
+  border-color: rgba(16, 185, 129, 0.25);
+  color: #10b981;
+}

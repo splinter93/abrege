@@ -1,0 +1,210 @@
+/*
+  BACKGROUND UNIFIED - SYSTÈME DE BACKGROUND MODERNE
+  =================================================
+  Background unifié pour toutes les pages avec sidebar
+  - Design moderne avec dégradés sophistiqués
+  - Effets de texture subtils
+  - Support thème sombre/clair
+  - Performance optimisée
+*/
+
+/* ==========================================================================
+   BACKGROUND PRINCIPAL - THÈME CLAIR
+   ========================================================================== */
+
+:root {
+  /* Background principal avec dégradé sophistiqué */
+  --background-primary: linear-gradient(135deg, 
+    #0f0f12 0%, 
+    #1a1a1e 25%, 
+    #141414 50%, 
+    #1c1c1e 75%, 
+    #0f0f12 100%);
+  
+  /* Effets de texture avec couleurs d'accent */
+  --background-texture: 
+    radial-gradient(circle at 20% 80%, rgba(229, 90, 44, 0.03) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(229, 90, 44, 0.02) 0%, transparent 50%),
+    radial-gradient(circle at 40% 40%, rgba(139, 92, 246, 0.02) 0%, transparent 50%);
+  
+  /* Effet de grain subtil */
+  --background-noise: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='1' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.02'/%3E%3C/svg%3E");
+}
+
+/* ==========================================================================
+   BACKGROUND PRINCIPAL - THÈME SOMBRE
+   ========================================================================== */
+
+.dark {
+  --background-primary: linear-gradient(135deg, 
+    #0a0a0c 0%, 
+    #1a1a1e 25%, 
+    #141418 50%, 
+    #1c1c20 75%, 
+    #0a0a0c 100%);
+  
+  --background-texture: 
+    radial-gradient(circle at 20% 80%, rgba(229, 90, 44, 0.05) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(229, 90, 44, 0.03) 0%, transparent 50%),
+    radial-gradient(circle at 40% 40%, rgba(139, 92, 246, 0.04) 0%, transparent 50%);
+  
+  --background-noise: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='1' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.03'/%3E%3C/svg%3E");
+}
+
+/* ==========================================================================
+   APPLICATION DU BACKGROUND
+   ========================================================================== */
+
+.page-wrapper {
+  background: var(--background-primary);
+}
+
+.page-wrapper::before {
+  background-image: var(--background-texture);
+}
+
+.page-wrapper::after {
+  background-image: var(--background-noise);
+}
+
+/* ==========================================================================
+   BACKGROUNDS UNIFIÉS - TOUTES LES PAGES IDENTIQUES
+   ========================================================================== */
+
+/* Toutes les pages utilisent le background standard */
+
+/* ==========================================================================
+   ANIMATIONS DE BACKGROUND
+   ========================================================================== */
+
+/* Animation subtile pour les effets de texture */
+@keyframes backgroundShift {
+  0%, 100% {
+    transform: translateX(0) translateY(0);
+  }
+  25% {
+    transform: translateX(-2px) translateY(-1px);
+  }
+  50% {
+    transform: translateX(2px) translateY(1px);
+  }
+  75% {
+    transform: translateX(-1px) translateY(2px);
+  }
+}
+
+.page-wrapper::before {
+  animation: backgroundShift 20s ease-in-out infinite;
+}
+
+/* Animation pour l'effet de grain */
+@keyframes grainMove {
+  0%, 100% {
+    transform: translateX(0) translateY(0);
+  }
+  10% {
+    transform: translateX(-5%) translateY(-5%);
+  }
+  20% {
+    transform: translateX(5%) translateY(-3%);
+  }
+  30% {
+    transform: translateX(-3%) translateY(5%);
+  }
+  40% {
+    transform: translateX(3%) translateY(3%);
+  }
+  50% {
+    transform: translateX(-5%) translateY(-2%);
+  }
+  60% {
+    transform: translateX(2%) translateY(5%);
+  }
+  70% {
+    transform: translateX(-2%) translateY(-5%);
+  }
+  80% {
+    transform: translateX(5%) translateY(2%);
+  }
+  90% {
+    transform: translateX(-3%) translateY(-3%);
+  }
+}
+
+.page-wrapper::after {
+  animation: grainMove 30s linear infinite;
+}
+
+/* ==========================================================================
+   RESPONSIVE BACKGROUND
+   ========================================================================== */
+
+@media (max-width: 768px) {
+  /* Réduire les effets sur mobile pour les performances */
+  .page-wrapper::before {
+    animation: none;
+    background-image: 
+      radial-gradient(circle at 50% 50%, rgba(229, 90, 44, 0.03) 0%, transparent 70%),
+      var(--background-texture);
+  }
+  
+  .page-wrapper::after {
+    animation: none;
+    opacity: 0.5;
+  }
+}
+
+@media (max-width: 480px) {
+  /* Simplifier encore plus sur petits écrans */
+  .page-wrapper::before {
+    background-image: var(--background-texture);
+  }
+  
+  .page-wrapper::after {
+    display: none;
+  }
+}
+
+/* ==========================================================================
+   PERFORMANCE ET ACCESSIBILITÉ
+   ========================================================================== */
+
+/* Désactiver les animations pour les utilisateurs qui préfèrent moins de mouvement */
+@media (prefers-reduced-motion: reduce) {
+  .page-wrapper::before,
+  .page-wrapper::after {
+    animation: none;
+  }
+}
+
+/* Optimiser pour les appareils à faible puissance */
+@media (prefers-reduced-data: reduce) {
+  .page-wrapper::after {
+    display: none;
+  }
+  
+  .page-wrapper::before {
+    background-image: var(--background-texture);
+  }
+}
+
+/* ==========================================================================
+   PRINT
+   ========================================================================== */
+
+@media print {
+  .page-wrapper {
+    background: white !important;
+  }
+  
+  .page-wrapper::before,
+  .page-wrapper::after {
+    display: none !important;
+  }
+}
+
+/* ==========================================================================
+   UTILITAIRES
+   ========================================================================== */
+
+/* Toutes les pages utilisent le background standard */

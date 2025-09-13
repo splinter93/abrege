@@ -24,56 +24,15 @@
    VARIABLES SPÉCIFIQUES AUX FILES
    ========================================================================== */
 :root {
-  /* Couleurs principales */
+  /* Couleurs spécifiques à la page Files */
   --files-primary: #f97316;
   --files-primary-light: rgba(249, 115, 22, 0.15);
   --files-primary-hover: #ea580c;
   
-  /* Couleurs glassmorphism */
-  --glass-bg-primary: rgba(255, 255, 255, 0.08);
-  --glass-bg-secondary: rgba(255, 255, 255, 0.05);
-  --glass-bg-tertiary: rgba(255, 255, 255, 0.03);
-  --glass-bg-hover: rgba(255, 255, 255, 0.12);
-  
-  /* Bordures glassmorphism */
-  --glass-border-primary: rgba(255, 255, 255, 0.12);
-  --glass-border-secondary: rgba(255, 255, 255, 0.08);
-  --glass-border-hover: rgba(255, 255, 255, 0.18);
-  
-  /* Ombres glassmorphism */
-  --glass-shadow-subtle: 0 4px 20px rgba(0, 0, 0, 0.1);
-  --glass-shadow-medium: 0 8px 32px rgba(0, 0, 0, 0.15);
-  --glass-shadow-strong: 0 16px 48px rgba(0, 0, 0, 0.2);
-  
-  /* Couleurs de texte */
+  /* Couleurs de texte spécifiques */
   --files-text-primary: #f8fafc;
   --files-text-secondary: #94a3b8;
   --files-text-muted: #64748b;
-  
-  /* Espacements */
-  --files-spacing-xs: 8px;
-  --files-spacing-sm: 12px;
-  --files-spacing-md: 16px;
-  --files-spacing-lg: 24px;
-  --files-spacing-xl: 32px;
-  --files-spacing-2xl: 48px;
-  
-  /* Rayons de bordure */
-  --files-radius-sm: 8px;
-  --files-radius-md: 12px;
-  --files-radius-lg: 16px;
-  --files-radius-xl: 20px;
-  
-  /* Transitions */
-  --files-transition-fast: 0.15s ease;
-  --files-transition-normal: 0.25s ease;
-  --files-transition-slow: 0.4s ease;
-  
-  /* Z-index */
-  --files-z-header: 1001;
-  --files-z-sidebar: 1000;
-  --files-z-content: 999;
-  --files-z-modal: 1002;
 }
 
 /* ==========================================================================

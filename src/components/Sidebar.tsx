@@ -4,7 +4,9 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js';
-// CSS importé via chatgpt-unified.css
+import { useActiveSidebarLink } from '@/hooks/useActiveSidebarLink';
+import { motion } from 'framer-motion';
+// CSS importé via main.css
 
 // Icônes SVG
 const HomeIcon = () => (
@@ -68,6 +70,15 @@ const TrashIcon = () => (
   </svg>
 );
 
+const DashboardIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="3" y="3" width="7" height="7"/>
+    <rect x="14" y="3" width="7" height="7"/>
+    <rect x="14" y="14" width="7" height="7"/>
+    <rect x="3" y="14" width="7" height="7"/>
+  </svg>
+);
+
 const SettingsIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
@@ -82,6 +93,7 @@ interface SidebarProps {
 const Sidebar: React.FC<SidebarProps> = ({ onToggleFoldersPanel = () => {} }) => {
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const router = useRouter();
+  const activeLink = useActiveSidebarLink();
 
   useEffect(() => {
     return () => {
@@ -142,60 +154,157 @@ const Sidebar: React.FC<SidebarProps> = ({ onToggleFoldersPanel = () => {} }) =>
     <aside className="sidebar">
       <div className="sidebar-main-content">
         {/* Logo Scrivia en haut */}
-        <div className="sidebar-logo">
+        <motion.div 
+          className="sidebar-logo"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, ease: "easeOut" }}
+        >
           <Image
             src="/logo-scrivia-white.png"
             alt="Scrivia"
-            width={120}
-            height={40}
+            width={140}
+            height={45}
             priority
             className="logo-image"
           />
-        </div>
+        </motion.div>
         
         {/* -- Navigation principale -- */}
-        <div className="sidebar-block">
+        <motion.div 
+          className="sidebar-block"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" }}
+        >
           <nav className="sidebar-nav">
-            <Link href="/" className="nav-link">
-              <HomeIcon />
-              <span>Accueil</span>
-            </Link>
-            <Link href="/private/dossiers" className="nav-link">
-              <FolderIcon />
-              <span>Mes Classeurs</span>
-            </Link>
-            <Link href="/private/shared" className="nav-link">
-              <ShareIcon />
-              <span>Notes Partagées</span>
-            </Link>
-            <Link href="/private/files" className="nav-link">
-              <FileIcon />
-              <span>Mes Fichiers</span>
-            </Link>
-            <Link href="/private/trash" className="nav-link">
-              <TrashIcon />
-              <span>Corbeille</span>
-            </Link>
-            <Link href="/private/settings" className="nav-link">
-              <SettingsIcon />
-              <span>Paramètres</span>
-            </Link>
+            <motion.div
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              transition={{ type: "spring", stiffness: 300 }}
+            >
+              <Link 
+                href="/" 
+                className={`nav-link glass-button ${activeLink === 'home' ? 'active' : ''}`}
+              >
+                <HomeIcon />
+                <span>Accueil</span>
+              </Link>
+            </motion.div>
+            <motion.div
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              transition={{ type: "spring", stiffness: 300 }}
+            >
+              <Link 
+                href="/private/dashboard" 
+                className={`nav-link glass-button ${activeLink === 'dashboard' ? 'active' : ''}`}
+              >
+                <DashboardIcon />
+                <span>Tableau de bord</span>
+              </Link>
+            </motion.div>
+            <motion.div
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              transition={{ type: "spring", stiffness: 300 }}
+            >
+              <Link 
+                href="/private/dossiers" 
+                className={`nav-link glass-button ${activeLink === 'dossiers' ? 'active' : ''}`}
+              >
+                <FolderIcon />
+                <span>Mes Classeurs</span>
+              </Link>
+            </motion.div>
+            <motion.div
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              transition={{ type: "spring", stiffness: 300 }}
+            >
+              <Link 
+                href="/private/shared" 
+                className={`nav-link glass-button ${activeLink === 'shared' ? 'active' : ''}`}
+              >
+                <ShareIcon />
+                <span>Notes Partagées</span>
+              </Link>
+            </motion.div>
+            <motion.div
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              transition={{ type: "spring", stiffness: 300 }}
+            >
+              <Link 
+                href="/private/files" 
+                className={`nav-link glass-button ${activeLink === 'files' ? 'active' : ''}`}
+              >
+                <FileIcon />
+                <span>Mes Fichiers</span>
+              </Link>
+            </motion.div>
+            <motion.div
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              transition={{ type: "spring", stiffness: 300 }}
+            >
+              <Link 
+                href="/private/trash" 
+                className={`nav-link glass-button ${activeLink === 'trash' ? 'active' : ''}`}
+              >
+                <TrashIcon />
+                <span>Corbeille</span>
+              </Link>
+            </motion.div>
+            <motion.div
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              transition={{ type: "spring", stiffness: 300 }}
+            >
+              <Link 
+                href="/private/settings" 
+                className={`nav-link glass-button ${activeLink === 'settings' ? 'active' : ''}`}
+              >
+                <SettingsIcon />
+                <span>Paramètres</span>
+              </Link>
+            </motion.div>
           </nav>
-        </div>
+        </motion.div>
 
         {/* -- Compte utilisateur (tout en bas) -- */}
-        <div className="sidebar-block">
+        <motion.div 
+          className="sidebar-block sidebar-footer"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
+        >
           <nav className="sidebar-nav">
-            <Link href="/private/account" className="nav-link">
-              <AccountIcon />
-              <span>Mon Compte</span>
-            </Link>
-            <button onClick={handleLogout} className="nav-link logout-button">
+            <motion.div
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              transition={{ type: "spring", stiffness: 300 }}
+            >
+              <Link 
+                href="/private/account" 
+                className={`nav-link glass-button ${activeLink === 'account' ? 'active' : ''}`}
+              >
+                <AccountIcon />
+                <span>Mon Compte</span>
+              </Link>
+            </motion.div>
+            <motion.button 
+              onClick={handleLogout} 
+              className="nav-link glass-button logout-button danger"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              transition={{ type: "spring", stiffness: 300 }}
+            >
               <LogoutIcon />
               <span>Déconnexion</span>
-            </button>
+            </motion.button>
           </nav>
-        </div>
+        </motion.div>
       </div>
     </aside>
   );

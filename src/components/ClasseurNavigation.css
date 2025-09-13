@@ -135,34 +135,55 @@
   background-color: rgba(59, 130, 246, 0.1);
 }
 
-.add-classeur-btn {
+/* ==========================================================================
+   BOUTON NOUVEAU CLASSEUR SIMPLE
+   ========================================================================== */
+
+.add-classeur-btn-simple {
   margin-left: var(--spacing-lg);
   margin-top: 18px;
-  background: none;
-  border: none;
-  color: var(--text-2);
+  background: var(--glass-bg-light, rgba(255, 255, 255, 0.05));
+  border: 1px solid var(--glass-border-light, rgba(255, 255, 255, 0.1));
+  border-radius: var(--radius-md, 8px);
+  color: var(--text-2, rgba(255, 255, 255, 0.8));
   padding: 0;
   cursor: pointer;
   transition: all 0.2s ease;
-  font-size: 1.8rem;
-  font-weight: 400;
+  font-size: 1.2rem;
+  font-weight: 600;
   font-family: var(--classeur-font-family);
-  width: auto;
-  height: auto;
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 40px;
+  height: 40px;
   flex-shrink: 0;
   align-self: center;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-.add-classeur-btn:hover {
-  color: var(--accent-primary);
-  transform: scale(1.1);
+.add-classeur-btn-simple:hover {
+  background: var(--glass-bg-medium, rgba(255, 255, 255, 0.1));
+  border-color: var(--glass-border-heavy, rgba(255, 255, 255, 0.2));
+  color: var(--text-1, rgba(255, 255, 255, 1));
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
-.add-classeur-btn:active {
-  transform: scale(0.95);
+.add-classeur-btn-simple:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.add-classeur-icon {
+  font-size: 1.2rem;
+  font-weight: 700;
+  transition: transform 0.2s ease;
+}
+
+.add-classeur-btn-simple:hover .add-classeur-icon {
+  transform: rotate(90deg);
 }
 
 /* Styles pour les éléments internes des onglets */
@@ -264,8 +285,24 @@
     font-size: 0.85rem;
   }
   
-  .add-classeur-btn {
-    font-size: 2rem;
+  .add-classeur-btn-simple {
+    width: 36px;
+    height: 36px;
     margin-left: var(--spacing-md);
+  }
+  
+  .add-classeur-icon {
+    font-size: 1.1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .add-classeur-btn-simple {
+    width: 32px;
+    height: 32px;
+  }
+  
+  .add-classeur-icon {
+    font-size: 1rem;
   }
 }

@@ -5,11 +5,12 @@ import { motion, AnimatePresence } from "framer-motion";
 import type { Classeur, Folder } from "@/store/useFileSystemStore";
 import type { FileArticle } from "@/components/types";
 import ClasseurNavigation from "@/components/ClasseurNavigation";
-import Sidebar from "@/components/Sidebar";
+import UnifiedPageLayout from "@/components/UnifiedPageLayout";
 import FolderManager from "@/components/FolderManager";
 import DossierErrorBoundary from "@/components/DossierErrorBoundary";
 import { DossierLoadingState, DossierErrorState } from "@/components/DossierLoadingStates";
 import AuthGuard from "@/components/AuthGuard";
+import PageTitleSimple from "@/components/PageTitleSimple";
 
 import { useDossiersPage } from "@/hooks/useDossiersPage";
 import { useAuth } from "@/hooks/useAuth";
@@ -255,39 +256,16 @@ function AuthenticatedDossiersContent({ user }: { user: AuthenticatedUser }) {
   }
 
   return (
-    <div className="dossiers-page">
-      <Sidebar />
-
-      <main className="dossiers-main-content">
-        {/* Titre de la page */}
-        <motion.header 
-          className="dossiers-header"
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, ease: "easeOut" }}
-        >
-          <div className="header-content">
-            <div className="header-left">
-              <div className="header-icon-container">
-                <span className="header-icon">📚</span>
-              </div>
-              <div className="header-text">
-                <h1 className="header-title">Mes Classeurs</h1>
-                <p className="header-subtitle">Organisez et gérez vos connaissances</p>
-              </div>
-            </div>
-            <div className="header-stats">
-              <div className="stat-item">
-                <span className="stat-number">{classeurs.length}</span>
-                <span className="stat-label">classeur{classeurs.length > 1 ? 's' : ''}</span>
-              </div>
-              <div className="stat-item">
-                <span className="stat-number">{totalNotes}</span>
-                <span className="stat-label">note{totalNotes > 1 ? 's' : ''}</span>
-              </div>
-            </div>
-          </div>
-        </motion.header>
+    <UnifiedPageLayout className="page-dossiers">
+        {/* Titre de la page avec design simple unifié */}
+        <PageTitleSimple
+          title="Mes Classeurs"
+          subtitle="Organisez et gérez vos connaissances"
+          stats={[
+            { number: classeurs.length, label: `classeur${classeurs.length > 1 ? 's' : ''}` },
+            { number: totalNotes, label: `note${totalNotes > 1 ? 's' : ''}` }
+          ]}
+        />
 
         {/* Navigation des classeurs */}
         {classeurs.length > 0 && (
@@ -347,11 +325,10 @@ function AuthenticatedDossiersContent({ user }: { user: AuthenticatedUser }) {
             />
           </motion.section>
         )}
-      </main>
       
       <TargetedPollingManager />
       <TargetedPollingMonitor />
       <RealtimeStatus userId={user.id} />
-    </div>
+    </UnifiedPageLayout>
   );
 } 

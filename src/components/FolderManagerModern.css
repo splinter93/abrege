@@ -106,81 +106,91 @@
   border-bottom: none;
 }
 
-/* Toolbar - Design épuré */
-.folder-toolbar {
+/* ==========================================================================
+   TOOLBAR SIMPLE - BOUTONS ICÔNES
+   ========================================================================== */
+
+.folder-toolbar-simple {
   display: flex;
   align-items: center;
   gap: var(--spacing-sm);
-  padding: var(--spacing-xs) 0;
+  padding: var(--spacing-sm) 0;
+  background: transparent;
+  margin-bottom: var(--spacing-md);
 }
 
-/* Boutons de contrôle - Style glassmorphism */
-.fm-control-btn {
+.toolbar-icon-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   border: 1px solid var(--glass-border-light, rgba(255, 255, 255, 0.1));
-  border-radius: var(--radius-sm, 6px);
+  border-radius: var(--radius-md, 8px);
   background: var(--glass-bg-light, rgba(255, 255, 255, 0.05));
   color: var(--text-2, rgba(255, 255, 255, 0.8));
   cursor: pointer;
   transition: all 0.2s ease;
-  font-size: 0.8rem;
   backdrop-filter: blur(10px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-.fm-control-btn:hover {
+.toolbar-icon-btn:hover {
   background: var(--glass-bg-medium, rgba(255, 255, 255, 0.1));
   border-color: var(--glass-border-heavy, rgba(255, 255, 255, 0.2));
   color: var(--text-1, rgba(255, 255, 255, 1));
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
-.fm-control-btn:active {
+.toolbar-icon-btn.active {
+  background: var(--glass-bg-heavy, rgba(255, 255, 255, 0.15));
+  border-color: var(--accent-primary, #007bff);
+  color: var(--accent-primary, #007bff);
+  box-shadow: 0 4px 16px rgba(0, 123, 255, 0.2);
+}
+
+.toolbar-icon-btn:active {
   transform: translateY(0);
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
 }
 
-.fm-control-btn.active {
-  background: var(--glass-bg-heavy, rgba(255, 255, 255, 0.15));
-  border-color: var(--glass-border-heavy, rgba(255, 255, 255, 0.3));
-  color: var(--text-1, rgba(255, 255, 255, 1));
+.toolbar-icon-btn svg {
+  transition: transform 0.2s ease;
 }
 
-/* Boutons spéciaux pour création - Style accentué */
-.fm-control-btn:has(svg[data-lucide="folder-plus"]),
-.fm-control-btn:has(svg[data-lucide="pencil"]) {
-  background: var(--glass-bg-accent, rgba(0, 123, 255, 0.1));
-  border-color: var(--glass-border-accent, rgba(0, 123, 255, 0.3));
-  color: var(--accent-primary, #007bff);
+.toolbar-icon-btn:hover svg {
+  transform: scale(1.1);
 }
 
-.fm-control-btn:has(svg[data-lucide="folder-plus"]):hover,
-.fm-control-btn:has(svg[data-lucide="pencil"]):hover {
-  background: var(--glass-bg-accent-hover, rgba(0, 123, 255, 0.2));
-  border-color: var(--glass-border-accent-hover, rgba(0, 123, 255, 0.5));
-  color: var(--accent-primary, #007bff);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(0, 123, 255, 0.2);
+.toolbar-icon-btn:active svg {
+  transform: scale(0.95);
 }
 
-/* Responsive */
+/* ==========================================================================
+   RESPONSIVE DESIGN
+   ========================================================================== */
+
 @media (max-width: 768px) {
-  .folder-toolbar-container {
-    padding: var(--spacing-md) 0 var(--spacing-sm) 0;
-    margin-bottom: var(--spacing-md);
+  .folder-toolbar-simple {
+    gap: var(--spacing-xs);
   }
   
-  .folder-toolbar {
-    gap: var(--spacing-sm);
-  }
-  
-  .fm-control-btn {
+  .toolbar-icon-btn {
     width: 36px;
     height: 36px;
+  }
+}
+
+@media (max-width: 480px) {
+  .toolbar-icon-btn {
+    width: 32px;
+    height: 32px;
+  }
+  
+  .toolbar-icon-btn svg {
+    width: 18px;
+    height: 18px;
   }
 }
 
@@ -262,34 +272,4 @@
 .folder-grid,
 .folder-list {
   background: transparent;
-}
-
-.fm-grid-item {
-  background: transparent;
-  border: none;
-  border-radius: 0;
-  transition: all 0.2s ease;
-}
-
-.fm-grid-item:hover {
-  background: transparent;
-  border-color: transparent;
-  transform: none;
-  box-shadow: none;
-}
-
-/* Renaming input */
-.fm-grid-item input {
-  background: var(--glass-bg-heavy, rgba(255, 255, 255, 0.15));
-  border: 1px solid var(--glass-border-heavy, rgba(255, 255, 255, 0.3));
-  border-radius: var(--radius-sm, 4px);
-  color: var(--text-1, rgba(255, 255, 255, 1));
-  padding: var(--spacing-xs) var(--spacing-sm);
-  font-size: 0.9rem;
-}
-
-.fm-grid-item input:focus {
-  outline: none;
-  border-color: var(--border-color);
-  box-shadow: none;
 } 

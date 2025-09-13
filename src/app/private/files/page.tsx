@@ -5,7 +5,7 @@ import { FileItem } from "@/types/files";
 import { useFilesPage } from "@/hooks/useFilesPage";
 import { useAuth } from "@/hooks/useAuth";
 import LogoHeader from "@/components/LogoHeader";
-import Sidebar from "@/components/Sidebar";
+import UnifiedPageLayout from "@/components/UnifiedPageLayout";
 import FilesContent from "@/components/FilesContent";
 import FilesToolbar, { ViewMode } from "@/components/FilesToolbar";
 import FileUploaderLocal from "./FileUploaderLocal";
@@ -14,6 +14,7 @@ import AuthGuard from "@/components/AuthGuard";
 import { useSecureErrorHandler } from "@/components/SecureErrorHandler";
 import { STORAGE_CONFIG } from "@/config/storage";
 import { simpleLogger as logger } from "@/utils/logger";
+import PageTitleSimple from "@/components/PageTitleSimple";
 import "@/styles/main.css";
 import "./index.css";
 import "./page.css"; // CSS critique pour éviter le flash
@@ -36,16 +37,11 @@ function FilesPageContent() {
   // 🔧 FIX: Gérer le cas où l'utilisateur n'est pas encore chargé AVANT d'appeler les hooks
   if (authLoading || !user?.id) {
     return (
-      <div className="page-wrapper">
-        <aside className="page-sidebar-fixed">
-          <Sidebar />
-        </aside>
-        <main className="page-content-area">
-          <div className="loading-state">
-            <p>Chargement...</p>
-          </div>
-        </main>
-      </div>
+      <UnifiedPageLayout className="page-files">
+        <div className="loading-state">
+          <p>Chargement...</p>
+        </div>
+      </UnifiedPageLayout>
     );
   }
   
@@ -332,41 +328,16 @@ function AuthenticatedFilesContent({ user }: { user: { id: string; email?: strin
   );
 
   return (
-    <div className="files-page">
-      <Sidebar />
-
-      <main className="files-main-content">
-        {/* Header */}
-        <motion.header
-          className="files-header"
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, ease: "easeOut" }}
-        >
-          <div className="header-content">
-            <div className="header-left">
-              <div className="header-icon-container">
-                <span className="header-icon">📁</span>
-              </div>
-              <div className="header-text">
-                <h1 className="header-title">Mes Fichiers</h1>
-                <p className="header-subtitle">Gérez et organisez vos documents</p>
-              </div>
-            </div>
-            <div className="header-stats">
-              <div className="stat-item">
-                <span className="stat-number">{displayFiles.length}</span>
-                <span className="stat-label">fichier{displayFiles.length > 1 ? 's' : ''}</span>
-              </div>
-              {quotaInfo && (
-                <div className="stat-item">
-                  <div className="stat-number">{usagePercentage}%</div>
-                  <span className="stat-label">utilisé</span>
-                </div>
-              )}
-            </div>
-          </div>
-        </motion.header>
+    <UnifiedPageLayout className="page-files">
+        {/* Titre de la page avec design simple unifié */}
+        <PageTitleSimple
+          title="Mes Fichiers"
+          subtitle="Gérez et organisez vos documents"
+          stats={[
+            { number: displayFiles.length, label: `fichier${displayFiles.length > 1 ? 's' : ''}` },
+            ...(quotaInfo ? [{ number: `${usagePercentage}%`, label: 'utilisé' }] : [])
+          ]}
+        />
 
         {/* Toolbar and Content Section */}
         <motion.section
@@ -435,7 +406,6 @@ function AuthenticatedFilesContent({ user }: { user: { id: string; email?: strin
             </>
           )}
         </motion.section>
-      </main>
-    </div>
+    </UnifiedPageLayout>
   );
 } 

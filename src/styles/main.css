@@ -14,7 +14,10 @@
    LAYOUT ET COMPOSANTS
    ========================================================================== */
 @import './layout.css';
-@import './sidebar.css';
+@import './background-unified.css';
+@import './sidebar-glassmorphism.css';
+@import './glassmorphism-unified.css';
+@import './pages-unified-layout.css';
 
 /* ==========================================================================
    STYLES EXISTANTS (À MIGRER PROGRESSIVEMENT)
@@ -28,6 +31,11 @@
    STYLES CHAT (TEMPORAIRE - À SÉPARER)
    ========================================================================== */
 @import './chatgpt-unified.css';
+
+/* ==========================================================================
+   STYLES SPÉCIFIQUES PAR PAGE - GLASSMORPHISM UNIFIÉ
+   ========================================================================== */
+@import './dashboard-unified.css';
 
 /* ==========================================================================
    STYLES SPÉCIFIQUES PAR PAGE (TEMPORAIRE - À MIGRER)

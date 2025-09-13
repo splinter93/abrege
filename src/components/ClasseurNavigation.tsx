@@ -266,7 +266,9 @@ const ClasseurNavigation: React.FC<ClasseurNavigationProps> = ({
             ) : null}
           </DragOverlay>
         </DndContext>
-        <button className="add-classeur-btn" onClick={onCreateClasseur}>+</button>
+        <button className="add-classeur-btn-simple" onClick={onCreateClasseur} title="Nouveau classeur">
+          <span className="add-classeur-icon">+</span>
+        </button>
       </div>
       {isColorPickerVisible && contextMenu.item && (
         <ColorPalette

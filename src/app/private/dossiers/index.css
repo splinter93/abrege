@@ -24,56 +24,15 @@
    VARIABLES SPÉCIFIQUES AUX DOSSIERS
    ========================================================================== */
 :root {
-  /* Couleurs principales */
+  /* Couleurs spécifiques à la page Dossiers */
   --dossiers-primary: #e55a2c;
   --dossiers-primary-light: rgba(229, 90, 44, 0.15);
   --dossiers-primary-hover: #d1451f;
   
-  /* Couleurs glassmorphism */
-  --glass-bg-primary: rgba(255, 255, 255, 0.08);
-  --glass-bg-secondary: rgba(255, 255, 255, 0.05);
-  --glass-bg-tertiary: rgba(255, 255, 255, 0.03);
-  --glass-bg-hover: rgba(255, 255, 255, 0.12);
-  
-  /* Bordures glassmorphism */
-  --glass-border-primary: rgba(255, 255, 255, 0.12);
-  --glass-border-secondary: rgba(255, 255, 255, 0.08);
-  --glass-border-hover: rgba(255, 255, 255, 0.18);
-  
-  /* Ombres glassmorphism */
-  --glass-shadow-subtle: 0 4px 20px rgba(0, 0, 0, 0.1);
-  --glass-shadow-medium: 0 8px 32px rgba(0, 0, 0, 0.15);
-  --glass-shadow-strong: 0 16px 48px rgba(0, 0, 0, 0.2);
-  
-  /* Couleurs de texte */
+  /* Couleurs de texte spécifiques */
   --dossiers-text-primary: #f8fafc;
   --dossiers-text-secondary: #94a3b8;
   --dossiers-text-muted: #64748b;
-  
-  /* Espacements */
-  --dossiers-spacing-xs: 8px;
-  --dossiers-spacing-sm: 12px;
-  --dossiers-spacing-md: 16px;
-  --dossiers-spacing-lg: 24px;
-  --dossiers-spacing-xl: 32px;
-  --dossiers-spacing-2xl: 48px;
-  
-  /* Rayons de bordure */
-  --dossiers-radius-sm: 8px;
-  --dossiers-radius-md: 12px;
-  --dossiers-radius-lg: 16px;
-  --dossiers-radius-xl: 20px;
-  
-  /* Transitions */
-  --dossiers-transition-fast: 0.15s ease;
-  --dossiers-transition-normal: 0.25s ease;
-  --dossiers-transition-slow: 0.4s ease;
-  
-  /* Z-index */
-  --dossiers-z-header: 1001;
-  --dossiers-z-sidebar: 1000;
-  --dossiers-z-content: 999;
-  --dossiers-z-modal: 1002;
 }
 
 /* ==========================================================================

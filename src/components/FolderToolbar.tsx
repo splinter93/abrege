@@ -12,38 +12,34 @@ interface FolderToolbarProps {
 
 const FolderToolbar: React.FC<FolderToolbarProps> = ({ onCreateFolder, onCreateFile, onToggleView, viewMode }) => {
   return (
-    <div className="folder-toolbar" style={{ display: 'flex', gap: 18, alignItems: 'center', padding: '10px 0' }}>
+    <div className="folder-toolbar-simple">
       <button
-        className="fm-control-btn"
+        className="toolbar-icon-btn"
         title="Nouvelle note"
-        aria-label="Nouvelle note"
         onClick={onCreateFile}
         type="button"
       >
         <Pencil size={20} />
       </button>
       <button
-        className="fm-control-btn"
+        className="toolbar-icon-btn"
         title="Nouveau dossier"
-        aria-label="Nouveau dossier"
         onClick={onCreateFolder}
         type="button"
       >
         <FolderPlus size={20} />
       </button>
       <button
-        className={`fm-control-btn${viewMode === 'list' ? ' active' : ''}`}
+        className={`toolbar-icon-btn${viewMode === 'list' ? ' active' : ''}`}
         title="Vue liste"
-        aria-label="Vue liste"
         onClick={() => onToggleView('list')}
         type="button"
       >
         <List size={20} />
       </button>
       <button
-        className={`fm-control-btn${viewMode === 'grid' ? ' active' : ''}`}
+        className={`toolbar-icon-btn${viewMode === 'grid' ? ' active' : ''}`}
         title="Vue grille"
-        aria-label="Vue grille"
         onClick={() => onToggleView('grid')}
         type="button"
       >

@@ -9,8 +9,10 @@ import type { TrashItem, TrashStatistics } from '@/types/supabase';
 import AuthGuard from '@/components/AuthGuard';
 import PageLoading from '@/components/PageLoading';
 import ErrorBoundary from '@/components/ErrorBoundary';
+import UnifiedPageLayout from '@/components/UnifiedPageLayout';
 import { useSecureErrorHandler } from '@/components/SecureErrorHandler';
 import { simpleLogger as logger } from '@/utils/logger';
+import PageTitleSimple from '@/components/PageTitleSimple';
 
 import './index.css';
 
@@ -181,56 +183,27 @@ function AuthenticatedTrashContent({ user }: { user: AuthenticatedUser }) {
   }
 
   return (
-    <>
-      {/* Titre de la page avec design glassmorphism uniforme */}
-      <motion.section 
-        className="page-title-container-glass"
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, ease: "easeOut" }}
-      >
-        <div className="page-title-content">
-          <div className="page-title-left-section">
-            <div className="page-title-icon-container">
-              <span className="page-title-icon">🗑️</span>
-            </div>
-            <div className="page-title-section">
-              <h1 className="page-title">Corbeille</h1>
-              <p className="page-subtitle">Gérez vos éléments supprimés et restaurez ce qui est important</p>
-            </div>
-          </div>
-          <div className="page-title-stats">
-            <div className="page-title-stats-item">
-              <span className="page-title-stats-number">{statistics.total}</span>
-              <span className="page-title-stats-label">Total</span>
-            </div>
-            <div className="page-title-stats-item">
-              <span className="page-title-stats-number">{statistics.notes}</span>
-              <span className="page-title-stats-label">Notes</span>
-            </div>
-            <div className="page-title-stats-item">
-              <span className="page-title-stats-number">{statistics.folders}</span>
-              <span className="page-title-stats-label">Dossiers</span>
-            </div>
-            <div className="page-title-stats-item">
-              <span className="page-title-stats-number">{statistics.classeurs}</span>
-              <span className="page-title-stats-label">Classeurs</span>
-            </div>
-            <div className="page-title-stats-item">
-              <span className="page-title-stats-number">{statistics.files}</span>
-              <span className="page-title-stats-label">Fichiers</span>
-            </div>
-          </div>
-        </div>
-      </motion.section>
+    <UnifiedPageLayout className="page-trash">
+        {/* Titre de la page avec design simple unifié */}
+        <PageTitleSimple
+          title="Corbeille"
+          subtitle="Gérez vos éléments supprimés et restaurez ce qui est important"
+          stats={[
+            { number: statistics.total, label: 'Total' },
+            { number: statistics.notes, label: 'Notes' },
+            { number: statistics.folders, label: 'Dossiers' },
+            { number: statistics.classeurs, label: 'Classeurs' },
+            { number: statistics.files, label: 'Fichiers' }
+          ]}
+        />
 
-      {/* Section de contenu principal avec glassmorphism */}
-      <motion.section 
-        className="trash-content-section"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
-      >
+        {/* Section de contenu principal avec glassmorphism */}
+        <motion.section 
+          className="trash-content-section"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
+        >
         <AnimatePresence mode="wait">
           {trashItems.length === 0 ? (
             <motion.div
@@ -301,8 +274,8 @@ function AuthenticatedTrashContent({ user }: { user: AuthenticatedUser }) {
             </div>
           </div>
         </div>
-      </motion.section>
-    </>
+        </motion.section>
+    </UnifiedPageLayout>
   );
 }
 
