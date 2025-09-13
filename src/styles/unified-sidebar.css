@@ -1,0 +1,389 @@
+/*
+  SIDEBAR UNIFIÉE - DESIGN MODERNE ET COHÉRENT
+  ============================================
+  Sidebar commune pour toutes les pages (home, files, dossiers, paramètres, etc.)
+  Design inspiré de SidebarUltraClean avec navigation complète
+*/
+
+/* ========================================
+   VARIABLES SIDEBAR UNIFIÉE
+   ======================================== */
+
+:root {
+  --unified-sidebar-width: 280px;
+  --unified-sidebar-bg: rgba(30, 30, 30, 0.65);
+  --unified-sidebar-bg-gradient: linear-gradient(135deg, rgba(30, 30, 30, 0.7) 0%, rgba(40, 40, 40, 0.55) 100%);
+  --unified-sidebar-border: rgba(255, 255, 255, 0.08);
+  --unified-sidebar-border-glow: rgba(255, 255, 255, 0.12);
+  --unified-sidebar-text-primary: #ffffff;
+  --unified-sidebar-text-secondary: #e5e7eb;
+  --unified-sidebar-text-muted: #9ca3af;
+  --unified-sidebar-hover: rgba(255, 255, 255, 0.06);
+  --unified-sidebar-active: rgba(255, 255, 255, 0.12);
+  --unified-sidebar-accent: #10a37f;
+  --unified-sidebar-accent-hover: #0d8f6f;
+  --unified-sidebar-radius: 12px;
+  --unified-sidebar-transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --unified-sidebar-z-index: 1000;
+  --unified-sidebar-overlay-z-index: 999;
+  --unified-sidebar-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 4px 16px rgba(0, 0, 0, 0.2);
+  --unified-sidebar-blur: blur(25px);
+}
+
+/* ========================================
+   CONTENEUR PRINCIPAL
+   ======================================== */
+
+.unified-sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: var(--unified-sidebar-width);
+  height: 100vh;
+  background: var(--unified-sidebar-bg-gradient);
+  border-right: 1px solid var(--unified-sidebar-border);
+  border-left: 1px solid var(--unified-sidebar-border-glow);
+  z-index: var(--unified-sidebar-z-index);
+  display: flex;
+  flex-direction: column;
+  font-family: 'Noto Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  transition: all var(--unified-sidebar-transition);
+  overflow: hidden;
+  backdrop-filter: var(--unified-sidebar-blur);
+  -webkit-backdrop-filter: var(--unified-sidebar-blur);
+  box-shadow: var(--unified-sidebar-shadow);
+}
+
+.unified-sidebar.desktop {
+  position: fixed;
+  width: var(--unified-sidebar-width);
+  transform: translateX(0);
+}
+
+.unified-sidebar.mobile {
+  position: fixed;
+  width: var(--unified-sidebar-width);
+  transform: translateX(-100%);
+}
+
+.unified-sidebar.mobile.open {
+  transform: translateX(0);
+}
+
+.unified-sidebar.closed {
+  width: 0;
+  border-right: none;
+  transform: translateX(-100%);
+}
+
+/* ========================================
+   CONTENU INTERNE
+   ======================================== */
+
+.unified-sidebar-content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 0;
+}
+
+/* ========================================
+   LOGO
+   ======================================== */
+
+.unified-sidebar-logo {
+  padding: 20px;
+  border-bottom: 1px solid var(--unified-sidebar-border);
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  flex-shrink: 0;
+  background: rgba(255, 255, 255, 0.01);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  position: relative;
+}
+
+.unified-sidebar-logo::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 20px;
+  right: 20px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, var(--unified-sidebar-border-glow) 50%, transparent 100%);
+}
+
+.unified-logo-image {
+  max-width: 120px;
+  height: auto;
+  transition: transform var(--unified-sidebar-transition);
+}
+
+.unified-logo-image:hover {
+  transform: scale(1.05);
+}
+
+/* ========================================
+   SECTIONS
+   ======================================== */
+
+.unified-sidebar-section {
+  flex: 1;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.unified-sidebar-section.unified-sidebar-footer {
+  flex: 0 0 auto;
+  border-top: 1px solid var(--unified-sidebar-border);
+  margin-top: auto;
+  background: rgba(255, 255, 255, 0.01);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  position: relative;
+}
+
+.unified-sidebar-section.unified-sidebar-footer::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 20px;
+  right: 20px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, var(--unified-sidebar-border-glow) 50%, transparent 100%);
+}
+
+/* ========================================
+   NAVIGATION
+   ======================================== */
+
+.unified-sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  gap: 0;
+}
+
+/* ========================================
+   LIENS DE NAVIGATION
+   ======================================== */
+
+.unified-nav-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  color: var(--unified-sidebar-text-secondary);
+  text-decoration: none;
+  border: none;
+  background: transparent;
+  width: 100%;
+  font-size: 14px;
+  font-weight: 400;
+  cursor: pointer;
+  transition: all var(--unified-sidebar-transition);
+  position: relative;
+  text-align: left;
+}
+
+.unified-nav-link:hover {
+  background: var(--unified-sidebar-hover);
+  color: var(--unified-sidebar-text-primary);
+  transform: translateX(2px);
+}
+
+.unified-nav-link.active {
+  background: var(--unified-sidebar-active);
+  color: var(--unified-sidebar-text-primary);
+  font-weight: 500;
+}
+
+.unified-nav-link.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 20px;
+  background: var(--unified-sidebar-accent);
+  border-radius: 0 2px 2px 0;
+}
+
+/* Icônes */
+.unified-nav-link svg {
+  width: 18px;
+  height: 18px;
+  color: var(--unified-sidebar-text-muted);
+  flex-shrink: 0;
+  transition: all var(--unified-sidebar-transition);
+}
+
+.unified-nav-link:hover svg,
+.unified-nav-link.active svg {
+  color: var(--unified-sidebar-text-primary);
+  transform: scale(1.1);
+}
+
+/* Texte */
+.unified-nav-link span {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ========================================
+   BOUTON DÉCONNEXION
+   ======================================== */
+
+.unified-logout-button {
+  color: var(--unified-sidebar-text-secondary);
+  background: transparent;
+  border: none;
+}
+
+.unified-logout-button:hover {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  border-color: transparent;
+}
+
+.unified-logout-button:hover svg {
+  color: #ef4444;
+}
+
+/* ========================================
+   OVERLAY MOBILE
+   ======================================== */
+
+.unified-sidebar-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: var(--unified-sidebar-overlay-z-index);
+  display: none;
+  opacity: 0;
+  transition: opacity var(--unified-sidebar-transition);
+}
+
+.unified-sidebar-overlay.visible {
+  opacity: 1;
+}
+
+/* ========================================
+   RESPONSIVE
+   ======================================== */
+
+@media (max-width: 768px) {
+  .unified-sidebar {
+    transform: translateX(-100%);
+    transition: transform var(--unified-sidebar-transition);
+  }
+  
+  .unified-sidebar.mobile.open {
+    transform: translateX(0);
+  }
+
+  .unified-sidebar-overlay {
+    display: block;
+  }
+
+  .unified-sidebar-logo {
+    padding: 16px;
+  }
+
+  .unified-logo-image {
+    max-width: 100px;
+  }
+
+  .unified-nav-link {
+    padding: 14px 16px;
+    font-size: 13px;
+  }
+
+  .unified-nav-link svg {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .unified-sidebar {
+    width: 100vw;
+  }
+
+  .unified-sidebar-logo {
+    padding: 12px;
+  }
+
+  .unified-logo-image {
+    max-width: 80px;
+  }
+
+  .unified-nav-link {
+    padding: 12px 14px;
+  }
+}
+
+/* ========================================
+   PRINT
+   ======================================== */
+
+@media print {
+  .unified-sidebar {
+    display: none;
+  }
+}
+
+/* ========================================
+   ACCESSIBILITÉ
+   ======================================== */
+
+.unified-nav-link:focus {
+  outline: 2px solid var(--unified-sidebar-accent);
+  outline-offset: 2px;
+}
+
+/* ========================================
+   REDUCED MOTION
+   ======================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  .unified-sidebar,
+  .unified-nav-link,
+  .unified-logo-image {
+    transition: none;
+  }
+  
+  .unified-nav-link:hover {
+    transform: none;
+  }
+}
+
+/* ========================================
+   DARK MODE SUPPORT
+   ======================================== */
+
+@media (prefers-color-scheme: dark) {
+  .unified-sidebar {
+    background: var(--unified-sidebar-bg);
+  }
+}
+
+/* ========================================
+   FALLBACKS POUR COMPATIBILITÉ
+   ======================================== */
+
+@supports not (backdrop-filter: blur(1px)) {
+  .unified-sidebar {
+    background: var(--unified-sidebar-bg);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}

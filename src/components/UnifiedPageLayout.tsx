@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import Sidebar from './Sidebar';
+import UnifiedSidebar from './UnifiedSidebar';
 
 interface UnifiedPageLayoutProps {
   children: React.ReactNode;
@@ -21,7 +21,7 @@ const UnifiedPageLayout: React.FC<UnifiedPageLayoutProps> = ({
     <div className={`page-wrapper ${className}`}>
       {/* Sidebar fixe avec glassmorphism */}
       <aside className="page-sidebar-fixed">
-        <Sidebar />
+        <UnifiedSidebar />
       </aside>
 
       {/* Zone de contenu principal */}

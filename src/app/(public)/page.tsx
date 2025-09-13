@@ -3,7 +3,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'next/navigation';
-import Sidebar from '@/components/Sidebar';
+import UnifiedSidebar from '@/components/UnifiedSidebar';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import AuthGuard from '@/components/AuthGuard';
 import { useSecureErrorHandler } from '@/components/SecureErrorHandler';
@@ -215,7 +215,7 @@ function AuthenticatedHomeContent({ user }: { user: { id: string; email?: string
         `
       }} />
       <aside className="page-sidebar-fixed">
-        <Sidebar />
+        <UnifiedSidebar />
       </aside>
       
       <main className="page-content-area">

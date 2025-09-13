@@ -33,6 +33,7 @@
   
   /* Ombres glassmorphism */
   --glass-shadow-subtle: 0 4px 20px rgba(0, 0, 0, 0.1);
+  --glass-shadow-soft: 0 6px 24px rgba(0, 0, 0, 0.12);
   --glass-shadow-medium: 0 8px 32px rgba(0, 0, 0, 0.15);
   --glass-shadow-strong: 0 16px 48px rgba(0, 0, 0, 0.2);
   --glass-shadow-hover: 0 12px 24px rgba(0, 0, 0, 0.15);

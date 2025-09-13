@@ -103,9 +103,9 @@
 
 .files-grid {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: var(--files-spacing-lg);
-  padding: var(--files-spacing-sm);
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: var(--spacing-lg);
+  padding: var(--spacing-md);
   max-width: 100%;
   min-height: 300px;
   position: relative;
@@ -116,65 +116,66 @@
 
 
 /* ==========================================================================
-   ÉLÉMENTS DE FICHIERS - DESIGN ÉPURÉ
+   ÉLÉMENTS DE FICHIERS - DESIGN GLASSMORPHISM MODERNE
    ========================================================================== */
 
 .file-grid-item {
   background: transparent;
   border: none;
-  border-radius: var(--files-radius-lg);
-  padding: var(--files-spacing-md);
+  border-radius: 0;
+  padding: var(--spacing-md);
   cursor: pointer;
-  transition: none;
+  transition: all var(--transition-normal);
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
-  min-height: 100px;
+  min-height: auto;
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
   box-shadow: none;
   position: relative;
-  overflow: hidden;
+  overflow: visible;
   width: 100%;
   box-sizing: border-box;
-}
-
-.file-grid-item::before {
-  display: none;
+  max-width: 140px;
+  margin: 0 auto;
 }
 
 .file-grid-item:hover {
   background: transparent;
   border: none;
-  transform: none;
+  transform: translateY(-2px);
   box-shadow: none;
 }
 
-.file-grid-item:hover::before {
-  display: none;
-}
-
 .file-grid-item:active {
-  transform: none;
-  transition: none;
+  transform: translateY(0px);
+  transition: transform var(--transition-fast);
 }
 
 /* ==========================================================================
-   ICÔNES ET CONTENU DES FICHIERS
+   ICÔNES ET CONTENU DES FICHIERS - GLASSMORPHISM
    ========================================================================== */
 
 .file-icon {
-  margin-bottom: var(--files-spacing-sm);
+  margin-bottom: var(--spacing-md);
   display: flex;
   justify-content: center;
   align-items: center;
-  width: 100%;
-  height: 40px;
-  font-size: 28px;
-  transition: none;
+  width: 64px;
+  height: 64px;
+  font-size: 40px;
+  transition: all var(--transition-normal);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  position: relative;
+  overflow: visible;
 }
 
 .file-grid-item:hover .file-icon {
@@ -188,15 +189,17 @@
   align-items: center;
   justify-content: center;
   width: 100%;
+  position: relative;
+  z-index: 1;
 }
 
 .file-name {
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--files-text-primary);
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  color: var(--text-primary);
   text-align: center;
   line-height: 1.4;
-  font-family: 'Noto Sans', sans-serif;
+  font-family: var(--font-main);
   word-break: break-word;
   max-width: 100%;
   margin: 0;
@@ -212,35 +215,45 @@
   height: 2.8em;
   min-height: 2.8em;
   max-height: 2.8em;
+  transition: color var(--transition-normal);
+}
+
+.file-grid-item:hover .file-name {
+  color: var(--accent-primary);
 }
 
 /* ==========================================================================
-   APERÇUS D'IMAGES - GLASSMORPHISM
+   APERÇUS D'IMAGES - GLASSMORPHISM MODERNE
    ========================================================================== */
 
 .file-image-preview {
-  width: 100%;
-  height: 80px;
-  margin-bottom: var(--files-spacing-sm);
-  border-radius: var(--files-radius-md);
+  width: 64px;
+  height: 64px;
+  margin-bottom: var(--spacing-md);
+  border-radius: var(--radius-sm);
   overflow: hidden;
-  background: var(--glass-bg-tertiary);
-  border: 1px solid var(--glass-border-secondary);
-  backdrop-filter: blur(15px);
-  -webkit-backdrop-filter: blur(15px);
+  background: transparent;
+  border: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
   position: relative;
+  transition: all var(--transition-normal);
+}
+
+.file-grid-item:hover .file-image-preview {
+  transform: scale(1.1);
 }
 
 .preview-image {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  border-radius: var(--files-radius-md);
-  transition: transform var(--files-transition-normal);
+  border-radius: var(--radius-lg);
+  transition: transform var(--transition-normal);
 }
 
 .file-grid-item:hover .preview-image {
-  transform: scale(1.05);
+  transform: scale(1.1);
 }
 
 .preview-loading {
@@ -253,15 +266,21 @@
   align-items: center;
   justify-content: center;
   background: var(--glass-bg-tertiary);
+  border-radius: var(--radius-lg);
 }
 
 .loading-spinner {
-  width: 24px;
-  height: 24px;
-  border: 2px solid var(--glass-border-secondary);
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--glass-border-tertiary);
   border-top: 2px solid var(--accent-primary);
   border-radius: 50%;
   animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
 /* ==========================================================================
@@ -273,15 +292,25 @@
   align-items: center !important;
   justify-content: flex-start !important;
   text-align: left !important;
-  min-height: 60px !important;
-  padding: var(--files-spacing-md) var(--files-spacing-lg) !important;
+  min-height: 80px !important;
+  padding: var(--spacing-md) var(--spacing-lg) !important;
+  max-width: none !important;
+  margin: 0 !important;
 }
 
 .file-list-item .file-icon {
   margin-bottom: 0 !important;
-  margin-right: var(--files-spacing-md) !important;
-  font-size: 24px !important;
-  height: 32px !important;
+  margin-right: var(--spacing-md) !important;
+  font-size: 28px !important;
+  height: 48px !important;
+  width: 48px !important;
+}
+
+.file-list-item .file-image-preview {
+  margin-bottom: 0 !important;
+  margin-right: var(--spacing-md) !important;
+  height: 48px !important;
+  width: 48px !important;
 }
 
 .file-list-item .file-info {
@@ -289,12 +318,13 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+  justify-content: center;
 }
 
 .file-list-item .file-name {
   text-align: left !important;
-  font-size: 14px !important;
-  margin-bottom: var(--files-spacing-xs) !important;
+  font-size: var(--text-sm) !important;
+  margin-bottom: var(--spacing-xs) !important;
   /* Réinitialiser les propriétés de ligne pour la vue liste */
   display: block !important;
   -webkit-line-clamp: unset !important;
@@ -302,6 +332,8 @@
   height: auto !important;
   min-height: auto !important;
   max-height: auto !important;
+  align-self: flex-start !important;
+  width: 100% !important;
 }
 
 /* ==========================================================================
@@ -489,51 +521,122 @@
 }
 
 /* ==========================================================================
-   RESPONSIVE DESIGN
+   RESPONSIVE DESIGN GLASSMORPHISM
    ========================================================================== */
 
 @media (max-width: 1200px) {
   .files-grid {
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: var(--spacing-md);
+  }
+  
+  .file-grid-item {
+    max-width: 130px;
   }
 }
 
 @media (max-width: 1024px) {
   .files-grid {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: var(--spacing-md);
+  }
+  
+  .file-grid-item {
+    max-width: 120px;
+    padding: var(--spacing-sm);
+  }
+  
+  .file-icon {
+    width: 56px;
+    height: 56px;
+    font-size: 32px;
+  }
+  
+  .file-image-preview {
+    width: 56px;
+    height: 56px;
   }
 }
 
 @media (max-width: 768px) {
   .files-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: var(--files-spacing-md);
+    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+    gap: var(--spacing-sm);
+    padding: var(--spacing-sm);
   }
   
   .file-grid-item {
-    min-height: 90px;
-    padding: var(--files-spacing-sm);
+    max-width: 110px;
+    padding: var(--spacing-xs);
   }
   
   .file-icon {
-    height: 36px;
-    font-size: 24px;
+    width: 52px;
+    height: 52px;
+    font-size: 28px;
+  }
+  
+  .file-image-preview {
+    width: 52px;
+    height: 52px;
+  }
+  
+  .file-name {
+    font-size: var(--text-xs);
   }
 }
 
 @media (max-width: 480px) {
   .files-grid {
-    grid-template-columns: repeat(1, 1fr);
-    gap: var(--files-spacing-sm);
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: var(--spacing-xs);
+    padding: var(--spacing-xs);
   }
   
   .file-grid-item {
-    min-height: 80px;
-    padding: var(--files-spacing-sm);
+    max-width: 100px;
+    padding: var(--spacing-xs);
   }
   
   .file-icon {
-    height: 32px;
-    font-size: 20px;
+    width: 48px;
+    height: 48px;
+    font-size: 24px;
+  }
+  
+  .file-image-preview {
+    width: 48px;
+    height: 48px;
+  }
+  
+  .file-name {
+    font-size: 10px;
+    height: 2em;
+    min-height: 2em;
+    max-height: 2em;
+  }
+}
+
+/* Optimisations pour les performances sur mobile */
+@media (max-width: 768px) {
+  .file-grid-item,
+  .file-icon,
+  .file-image-preview {
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+  }
+}
+
+/* Désactiver les animations sur les appareils avec préférence reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  .file-grid-item,
+  .file-icon,
+  .file-image-preview {
+    transition: none;
+    animation: none;
+  }
+  
+  .file-grid-item:hover {
+    transform: none;
   }
 } 

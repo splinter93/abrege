@@ -1,507 +1,121 @@
 /*
-  SIDEBAR GLASSMORPHISM - DESIGN MODERNE ET ÉLÉGANT
-  ================================================
-  Sidebar améliorée avec glassmorphism et animations fluides
-  - Design sobre et professionnel
-  - Animations micro-interactions
-  - Responsive et accessible
-  - Cohérence avec le système de design unifié
+  SIDEBAR SIMPLE - REFAIRE DE ZÉRO
+  ================================
+  Sidebar complètement refaite avec un design minimaliste et propre
 */
-
-/* ==========================================================================
-   SIDEBAR PRINCIPALE - GLASSMORPHISM MODERNE
-   ========================================================================== */
 
 .sidebar {
   position: fixed;
   top: 0;
   left: 0;
-  width: var(--sidebar-width);
+  width: 280px;
   height: 100vh;
-  background: linear-gradient(180deg, 
-    rgba(255, 255, 255, 0.08) 0%, 
-    rgba(255, 255, 255, 0.04) 50%, 
-    rgba(255, 255, 255, 0.06) 100%);
-  border-right: 1px solid var(--glass-border-primary);
-  backdrop-filter: var(--glass-blur-heavy);
-  -webkit-backdrop-filter: var(--glass-blur-heavy);
-  z-index: var(--glass-z-sidebar);
+  background: #000000;
+  border-right: 1px solid #111;
+  z-index: 1000;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
-  box-shadow: var(--glass-shadow-strong);
-  transition: all var(--glass-transition-normal);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
-/* Effet glassmorphism pour la sidebar */
-.sidebar::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(135deg, 
-    rgba(255, 255, 255, 0.1) 0%, 
-    rgba(255, 255, 255, 0.05) 50%, 
-    rgba(255, 255, 255, 0.1) 100%);
-  opacity: 0.8;
-  pointer-events: none;
-  z-index: -1;
-}
-
-/* Header avec logo */
 .sidebar-main-content {
   display: flex;
   flex-direction: column;
   height: 100%;
-  position: relative;
-  z-index: 1;
 }
 
 .sidebar-logo {
-  padding: var(--glass-space-xl);
-  border-bottom: 1px solid var(--glass-border-primary);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--glass-bg-secondary);
-  backdrop-filter: var(--glass-blur-medium);
-  -webkit-backdrop-filter: var(--glass-blur-medium);
-  position: relative;
-}
-
-.sidebar-logo::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(135deg, 
-    rgba(255, 255, 255, 0.08) 0%, 
-    rgba(255, 255, 255, 0.03) 50%, 
-    rgba(255, 255, 255, 0.08) 100%);
-  opacity: 0;
-  transition: opacity var(--glass-transition-normal);
-  pointer-events: none;
-}
-
-.sidebar-logo:hover::before {
-  opacity: 1;
+  padding: 20px;
+  border-bottom: 1px solid #111;
 }
 
 .logo-image {
-  max-width: 140px;
+  max-width: 120px;
   height: auto;
-  transition: all var(--glass-transition-normal);
 }
 
-.sidebar-logo:hover .logo-image {
-  transform: scale(1.05);
-}
-
-/* Navigation principale */
 .sidebar-block {
-  padding: var(--glass-space-lg) 0;
-  border-bottom: 1px solid var(--glass-border-secondary);
-  background: transparent;
-  position: relative;
-}
-
-.sidebar-block::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(135deg, 
-    rgba(255, 255, 255, 0.03) 0%, 
-    rgba(255, 255, 255, 0.01) 50%, 
-    rgba(255, 255, 255, 0.03) 100%);
-  opacity: 0;
-  transition: opacity var(--glass-transition-normal);
-  pointer-events: none;
-}
-
-.sidebar-block:hover::before {
-  opacity: 1;
+  flex: 1;
+  padding: 0;
 }
 
 .sidebar-nav {
   display: flex;
   flex-direction: column;
-  gap: var(--glass-space-sm);
-  padding: 0 var(--glass-space-lg);
+  padding: 0;
 }
 
-/* Liens de navigation */
 .nav-link {
   display: flex;
   align-items: center;
-  gap: var(--glass-space-md);
-  padding: var(--glass-space-md) var(--glass-space-lg);
-  color: var(--text-primary);
+  gap: 12px;
+  padding: 16px 20px;
+  color: #666;
   text-decoration: none;
-  transition: all var(--glass-transition-normal);
-  border-radius: var(--glass-radius-lg);
-  background: transparent;
-  border: 1px solid transparent;
+  border: none;
+  background: #000000;
   width: 100%;
-  text-align: left;
-  font-size: var(--glass-text-base);
-  font-weight: var(--glass-font-medium);
-  position: relative;
-  overflow: hidden;
+  font-size: 14px;
+  font-weight: 400;
   cursor: pointer;
 }
 
-.nav-link::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(135deg, 
-    rgba(255, 255, 255, 0.08) 0%, 
-    rgba(255, 255, 255, 0.03) 50%, 
-    rgba(255, 255, 255, 0.08) 100%);
-  opacity: 0;
-  transition: opacity var(--glass-transition-normal);
-  border-radius: var(--glass-radius-lg);
-}
-
 .nav-link:hover {
-  background: var(--glass-bg-hover);
-  border-color: var(--glass-border-hover);
-  color: var(--text-primary);
-  transform: translateY(-2px);
-  box-shadow: var(--glass-shadow-medium);
-}
-
-.nav-link:hover::before {
-  opacity: 1;
+  background: #111;
+  color: #fff;
 }
 
 .nav-link.active {
-  background: var(--glass-bg-accent);
-  border-color: var(--glass-border-accent);
-  color: var(--accent-primary);
-  font-weight: var(--glass-font-semibold);
-  box-shadow: var(--glass-shadow-focus);
-  transform: translateY(-1px);
+  background: #1a1a1a;
+  color: #fff;
+  font-weight: 500;
 }
 
-.nav-link.active::before {
-  background: linear-gradient(135deg, 
-    rgba(229, 90, 44, 0.1) 0%, 
-    rgba(229, 90, 44, 0.05) 50%, 
-    rgba(229, 90, 44, 0.1) 100%);
-  opacity: 1;
-}
-
-/* Icônes */
 .nav-link svg {
-  width: 20px;
-  height: 20px;
-  flex-shrink: 0;
-  transition: all var(--glass-transition-normal);
+  width: 18px;
+  height: 18px;
+  color: #555;
 }
 
-.nav-link:hover svg {
-  transform: scale(1.1);
-}
-
+.nav-link:hover svg,
 .nav-link.active svg {
-  color: var(--accent-primary);
-  transform: scale(1.05);
+  color: #fff;
 }
 
-/* Texte */
 .nav-link span {
   flex: 1;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  transition: all var(--glass-transition-normal);
 }
 
-/* Bouton de déconnexion */
+.sidebar-footer {
+  border-top: 1px solid #111;
+  padding: 0;
+}
+
 .logout-button {
-  color: var(--color-error) !important;
-  border-color: rgba(239, 68, 68, 0.2) !important;
+  color: #666;
+  background: #000000;
+  border: none;
 }
 
 .logout-button:hover {
-  background: rgba(239, 68, 68, 0.1) !important;
-  border-color: rgba(239, 68, 68, 0.3) !important;
-  color: var(--color-error) !important;
-  box-shadow: 0 4px 16px rgba(239, 68, 68, 0.15) !important;
+  background: #111;
+  color: #fff;
 }
 
-.logout-button::before {
-  background: linear-gradient(135deg, 
-    rgba(239, 68, 68, 0.08) 0%, 
-    rgba(239, 68, 68, 0.03) 50%, 
-    rgba(239, 68, 68, 0.08) 100%) !important;
-}
-
-/* Footer de la sidebar */
-.sidebar-footer {
-  margin-top: auto;
-  border-top: 1px solid var(--glass-border-primary);
-  border-bottom: none;
-  background: var(--glass-bg-secondary);
-}
-
-.sidebar-footer::before {
-  background: linear-gradient(135deg, 
-    rgba(255, 255, 255, 0.05) 0%, 
-    rgba(255, 255, 255, 0.02) 50%, 
-    rgba(255, 255, 255, 0.05) 100%);
-}
-
-/* ==========================================================================
-   ANIMATIONS ET MICRO-INTERACTIONS
-   ========================================================================== */
-
-/* Animation d'entrée pour les liens */
-@keyframes sidebarLinkSlideIn {
-  from {
-    opacity: 0;
-    transform: translateX(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-.nav-link {
-  animation: sidebarLinkSlideIn 0.3s ease-out;
-}
-
-/* Animation de pulse pour les liens actifs */
-@keyframes sidebarActivePulse {
-  0%, 100% {
-    box-shadow: var(--glass-shadow-focus);
-  }
-  50% {
-    box-shadow: var(--glass-shadow-focus), 0 0 20px rgba(229, 90, 44, 0.2);
-  }
-}
-
-.nav-link.active {
-  animation: sidebarActivePulse 2s infinite;
-}
-
-/* Animation de shimmer pour les liens au hover */
-@keyframes sidebarShimmer {
-  0% {
-    transform: translateX(-100%);
-  }
-  100% {
-    transform: translateX(100%);
-  }
-}
-
-.nav-link::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, 
-    transparent 0%, 
-    rgba(255, 255, 255, 0.1) 50%, 
-    transparent 100%);
-  transition: left var(--glass-transition-slow);
-  pointer-events: none;
-}
-
-.nav-link:hover::after {
-  left: 100%;
-}
-
-/* ==========================================================================
-   RESPONSIVE DESIGN
-   ========================================================================== */
-
+/* Responsive */
 @media (max-width: 768px) {
   .sidebar {
     transform: translateX(-100%);
-    transition: transform var(--glass-transition-normal);
+    transition: transform 0.3s ease;
   }
-
+  
   .sidebar.mobile-visible {
     transform: translateX(0);
   }
-
-  .sidebar-logo {
-    padding: var(--glass-space-lg);
-  }
-
-  .sidebar-nav {
-    padding: 0 var(--glass-space-md);
-  }
-
-  .nav-link {
-    padding: var(--glass-space-sm) var(--glass-space-md);
-    font-size: var(--glass-text-sm);
-  }
-
-  .nav-link svg {
-    width: 18px;
-    height: 18px;
-  }
 }
-
-@media (max-width: 480px) {
-  .sidebar {
-    width: 100vw;
-  }
-
-  .sidebar-logo {
-    padding: var(--glass-space-md);
-  }
-
-  .logo-image {
-    max-width: 120px;
-  }
-
-  .nav-link {
-    padding: var(--glass-space-md);
-    font-size: var(--glass-text-base);
-  }
-
-  .nav-link svg {
-  width: 20px;
-    height: 20px;
-  }
-}
-
-/* ==========================================================================
-   ACCESSIBILITÉ
-   ========================================================================== */
-
-@media (prefers-reduced-motion: reduce) {
-  .sidebar,
-  .nav-link,
-  .sidebar-logo,
-  .logo-image {
-    transition: none;
-    animation: none;
-  }
-  
-  .nav-link:hover,
-  .nav-link.active {
-    transform: none;
-  }
-  
-  .nav-link::after {
-    display: none;
-  }
-}
-
-@media (prefers-contrast: high) {
-  .sidebar {
-    background: var(--glass-bg-heavy);
-    border-color: var(--glass-border-heavy);
-  }
-
-  .nav-link {
-    border-color: var(--glass-border-light);
-  }
-
-  .nav-link:hover,
-  .nav-link.active {
-    background: var(--glass-bg-medium);
-    border-color: var(--glass-border-medium);
-  }
-}
-
-/* Focus visible pour l'accessibilité */
-.nav-link:focus-visible {
-  outline: 2px solid var(--accent-primary);
-  outline-offset: 2px;
-  box-shadow: var(--glass-shadow-focus);
-}
-
-/* ==========================================================================
-   THÈME SOMBRE - BACKGROUND AMÉLIORÉ
-   ========================================================================== */
-
-.dark .sidebar {
-  background: linear-gradient(180deg, 
-    rgba(255, 255, 255, 0.06) 0%, 
-    rgba(255, 255, 255, 0.03) 50%, 
-    rgba(255, 255, 255, 0.05) 100%);
-  border-color: var(--glass-border-primary);
-}
-
-.dark .sidebar::before {
-  background: linear-gradient(135deg, 
-    rgba(255, 255, 255, 0.06) 0%, 
-    rgba(255, 255, 255, 0.03) 50%, 
-    rgba(255, 255, 255, 0.06) 100%);
-}
-
-.dark .sidebar-logo {
-  background: var(--glass-bg-secondary);
-  border-color: var(--glass-border-primary);
-}
-
-.dark .sidebar-block {
-  border-color: var(--glass-border-secondary);
-}
-
-.dark .sidebar-footer {
-  border-color: var(--glass-border-primary);
-  background: var(--glass-bg-secondary);
-}
-
-/* ==========================================================================
-   PRINT
-   ========================================================================== */
 
 @media print {
   .sidebar {
-    display: none !important;
+    display: none;
   }
-}
-
-/* ==========================================================================
-   UTILITAIRES
-   ========================================================================== */
-
-.sidebar-hidden {
-  display: none !important;
-}
-
-.sidebar-visible {
-  display: flex !important;
-}
-
-/* Overlay pour mobile */
-.sidebar-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: var(--glass-bg-overlay);
-  backdrop-filter: var(--glass-blur-medium);
-  -webkit-backdrop-filter: var(--glass-blur-medium);
-  z-index: var(--glass-z-overlay);
-  opacity: 0;
-  visibility: hidden;
-  transition: all var(--glass-transition-normal);
-}
-
-.sidebar-overlay.visible {
-  opacity: 1;
-  visibility: visible;
 }

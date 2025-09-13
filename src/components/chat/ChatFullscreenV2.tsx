@@ -17,7 +17,6 @@ import { supabase } from '@/supabaseClient';
 import ChatInput from './ChatInput';
 import ChatMessage from './ChatMessage';
 import ChatKebabMenu from './ChatKebabMenu';
-import ChatSidebar from './ChatSidebar';
 import SidebarUltraClean from './SidebarUltraClean';
 import ChatWidget from './ChatWidget';
 import { simpleLogger as logger, LogCategory } from '@/utils/logger';

@@ -2,7 +2,7 @@
 export { default as ChatFullscreenV2 } from './ChatFullscreenV2';
 export { default as ChatWidget } from './ChatWidget';
 // ChatModeToggle supprimé
-export { default as ChatSidebar } from './ChatSidebar';
+// ChatSidebar supprimé - utilise SidebarUltraClean
 export { default as ChatInput } from './ChatInput';
 export { default as ChatKebabMenu } from './ChatKebabMenu';
 

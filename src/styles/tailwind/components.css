@@ -77,12 +77,13 @@
      SIDEBAR CHAT - RÉUTILISABLE
      ======================================== */
 
-  .sidebar {
+  /* .sidebar - DÉSACTIVÉ - Utilise sidebar-glassmorphism.css */
+  /* .sidebar {
     @apply relative w-80 h-full flex flex-col transition-all duration-300 overflow-hidden flex-shrink-0 shadow-glass-soft;
 
     background: rgba(255, 255, 255, 0.03);
     border: 1px solid rgba(255, 255, 255, 0.06);
-  }
+  } */
 
   .sidebar-item {
     @apply flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition-all duration-200 text-chat-text-primary text-sm font-normal border border-transparent relative overflow-hidden;

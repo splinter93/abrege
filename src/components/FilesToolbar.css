@@ -1,21 +1,38 @@
 /* ==========================================================================
-   FILES TOOLBAR - DESIGN ÉPURÉ ET MODERNE
+   FILES TOOLBAR - DESIGN GLASSMORPHISM MODERNE
    ========================================================================== */
 
 .files-toolbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--files-spacing-xl);
-  padding: var(--files-spacing-lg) 0;
-  background: transparent;
-  border: none;
-  border-radius: 0;
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
-  box-shadow: none;
-  margin-top: calc(-1 * var(--files-spacing-lg));
+  gap: var(--spacing-xl);
+  padding: var(--spacing-lg) var(--spacing-xl);
+  background: var(--glass-bg-primary);
+  border: 1px solid var(--glass-border-secondary);
+  border-radius: var(--radius-xl);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: var(--glass-shadow-medium);
+  margin: var(--spacing-lg) 0;
   position: relative;
+  overflow: hidden;
+}
+
+.files-toolbar::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.08) 0%, 
+    rgba(255, 255, 255, 0.02) 50%, 
+    rgba(255, 255, 255, 0.08) 100%);
+  opacity: 0.6;
+  pointer-events: none;
+  z-index: 0;
 }
 
 /* Section gauche - Barre de recherche (plus large) */
@@ -24,6 +41,8 @@
   min-width: 0;
   display: flex;
   align-items: center;
+  position: relative;
+  z-index: 1;
 }
 
 /* Section centrale - Bouton upload (taille fixe) */
@@ -32,6 +51,7 @@
   display: flex;
   justify-content: center;
   position: relative;
+  z-index: 1;
 }
 
 /* Section droite - Actions et vue (taille fixe) */
@@ -39,27 +59,30 @@
   flex: 0 0 auto;
   display: flex;
   align-items: center;
-  gap: var(--files-spacing-lg);
+  gap: var(--spacing-lg);
+  position: relative;
+  z-index: 1;
 }
 
 /* ==========================================================================
-   BARRE DE RECHERCHE - DESIGN MODERNE
+   BARRE DE RECHERCHE - DESIGN GLASSMORPHISM MODERNE
    ========================================================================== */
 
 .search-container {
   position: relative;
   width: 100%;
-  max-width: 450px;
-  background: var(--glass-bg-tertiary);
-  border: 1px solid var(--glass-border-secondary);
-  border-radius: var(--files-radius-lg);
-  backdrop-filter: blur(15px);
-  -webkit-backdrop-filter: blur(15px);
-  transition: all var(--files-transition-normal);
+  max-width: 500px;
+  background: var(--glass-bg-secondary);
+  border: 1px solid var(--glass-border-tertiary);
+  border-radius: var(--radius-lg);
+  backdrop-filter: blur(25px);
+  -webkit-backdrop-filter: blur(25px);
+  transition: all var(--transition-normal);
   display: flex;
   align-items: center;
-  padding: var(--files-spacing-md) var(--files-spacing-lg);
+  padding: var(--spacing-md) var(--spacing-lg);
   overflow: hidden;
+  box-shadow: var(--glass-shadow-subtle);
 }
 
 .search-container::before {
@@ -70,13 +93,20 @@
   right: 0;
   bottom: 0;
   background: linear-gradient(135deg, 
-    rgba(255, 255, 255, 0.03) 0%, 
-    rgba(255, 255, 255, 0.01) 50%, 
-    rgba(255, 255, 255, 0.03) 100%);
+    rgba(255, 255, 255, 0.1) 0%, 
+    rgba(255, 255, 255, 0.02) 50%, 
+    rgba(255, 255, 255, 0.1) 100%);
   opacity: 0;
-  transition: opacity var(--files-transition-normal);
+  transition: opacity var(--transition-normal);
   pointer-events: none;
   z-index: 1;
+}
+
+.search-container:hover {
+  background: var(--glass-bg-medium);
+  border-color: var(--glass-border-light);
+  box-shadow: var(--glass-shadow-soft);
+  transform: translateY(-1px);
 }
 
 .search-container:hover::before {
@@ -84,10 +114,10 @@
 }
 
 .search-container.focused {
-  border-color: var(--border-color);
-  box-shadow: none;
-  background: var(--glass-bg-secondary);
-  transform: none;
+  background: var(--glass-bg-medium);
+  border-color: var(--accent-primary);
+  box-shadow: var(--glass-shadow-medium), 0 0 0 2px rgba(59, 130, 246, 0.1);
+  transform: translateY(-2px);
 }
 
 .search-container.focused::before {
@@ -96,80 +126,99 @@
 
 .search-icon {
   font-size: 18px;
-  color: var(--files-text-secondary);
-  margin-right: var(--files-spacing-md);
-  transition: color var(--files-transition-normal);
+  color: var(--text-secondary);
+  margin-right: var(--spacing-md);
+  transition: all var(--transition-normal);
   z-index: 2;
   position: relative;
+  filter: brightness(0.8);
+}
+
+.search-container:hover .search-icon {
+  color: var(--text-primary);
+  filter: brightness(1);
 }
 
 .search-container.focused .search-icon {
   color: var(--accent-primary);
+  filter: brightness(1.2);
+  transform: scale(1.05);
 }
 
 .search-input {
   flex: 1;
   border: none;
   background: transparent;
-  color: var(--files-text-primary);
-  font-size: 15px;
-  font-weight: 500;
-  font-family: 'Noto Sans', sans-serif;
+  color: var(--text-primary);
+  font-size: var(--text-base);
+  font-weight: var(--font-medium);
+  font-family: var(--font-main);
   outline: none;
   z-index: 2;
   position: relative;
 }
 
 .search-input::placeholder {
-  color: var(--files-text-secondary);
-  opacity: 0.7;
+  color: var(--text-muted);
+  opacity: 0.8;
+  font-weight: var(--font-normal);
 }
 
 .search-clear {
-  background: none;
-  border: none;
-  color: var(--files-text-secondary);
+  background: var(--glass-bg-tertiary);
+  border: 1px solid var(--glass-border-tertiary);
+  color: var(--text-secondary);
   cursor: pointer;
-  padding: var(--files-spacing-xs);
-  border-radius: var(--files-radius-sm);
-  transition: all var(--files-transition-normal);
-  font-size: 16px;
+  padding: var(--spacing-xs);
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-normal);
+  font-size: 14px;
   z-index: 2;
   position: relative;
-}
-
-.search-clear:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: var(--files-text-primary);
-}
-
-/* ==========================================================================
-   BOUTON UPLOAD - DESIGN SIMPLE ET ÉLÉGANT
-   ========================================================================== */
-
-.upload-btn {
-  min-width: 160px;
-  height: 52px;
-  padding: var(--files-spacing-md) var(--files-spacing-xl);
-  font-size: 16px;
-  font-weight: 600;
-  background: rgba(255, 255, 255, 0.05);
-  border: 2px solid var(--border-color);
-  border-radius: var(--files-radius-xl);
-  color: var(--files-text-primary);
-  cursor: pointer;
-  transition: all var(--files-transition-normal);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  width: 28px;
+  height: 28px;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: var(--files-spacing-md);
-  backdrop-filter: blur(15px);
-  -webkit-backdrop-filter: blur(15px);
+}
+
+.search-clear:hover {
+  background: var(--glass-bg-medium);
+  border-color: var(--glass-border-light);
+  color: var(--text-primary);
+  transform: scale(1.1);
+  box-shadow: var(--glass-shadow-subtle);
+}
+
+/* ==========================================================================
+   BOUTON UPLOAD - DESIGN GLASSMORPHISM MODERNE
+   ========================================================================== */
+
+.upload-btn {
+  min-width: 180px;
+  height: 56px;
+  padding: var(--spacing-md) var(--spacing-xl);
+  font-size: var(--text-base);
+  font-weight: var(--font-semibold);
+  background: var(--glass-bg-medium);
+  border: 1px solid var(--glass-border-light);
+  border-radius: var(--radius-xl);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-md);
+  backdrop-filter: blur(25px);
+  -webkit-backdrop-filter: blur(25px);
   position: relative;
   overflow: hidden;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
-  font-family: 'Noto Sans', sans-serif;
+  letter-spacing: 0.01em;
+  font-family: var(--font-main);
+  box-shadow: var(--glass-shadow-soft);
 }
 
 .upload-btn::before {
@@ -179,79 +228,107 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(255, 255, 255, 0.05);
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.15) 0%, 
+    rgba(255, 255, 255, 0.05) 50%, 
+    rgba(255, 255, 255, 0.15) 100%);
   opacity: 0;
-  transition: opacity var(--files-transition-normal);
-  border-radius: var(--files-radius-xl);
+  transition: opacity var(--transition-normal);
+  border-radius: var(--radius-xl);
+}
+
+.upload-btn::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, 
+    rgba(59, 130, 246, 0.1) 0%, 
+    rgba(59, 130, 246, 0.05) 50%, 
+    rgba(59, 130, 246, 0.1) 100%);
+  opacity: 0;
+  transition: opacity var(--transition-normal);
+  border-radius: var(--radius-xl);
 }
 
 .upload-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: var(--files-primary-hover);
-  transform: translateY(-1px);
+  background: var(--glass-bg-heavy);
+  border-color: var(--accent-primary);
+  transform: translateY(-2px);
+  box-shadow: var(--glass-shadow-medium), 0 0 0 1px rgba(59, 130, 246, 0.2);
 }
 
 .upload-btn:hover::before {
   opacity: 1;
 }
 
+.upload-btn:hover::after {
+  opacity: 1;
+}
+
 .upload-btn:active {
-  transform: translateY(0px);
-  transition: transform var(--files-transition-fast);
+  transform: translateY(-1px);
+  transition: transform var(--transition-fast);
 }
 
 .upload-btn .btn-icon {
   font-size: 20px;
-  transition: all var(--files-transition-normal);
+  transition: all var(--transition-normal);
+  filter: brightness(0.9);
 }
 
 .upload-btn:hover .btn-icon {
-  transform: scale(1.05);
+  transform: scale(1.1) rotate(5deg);
+  filter: brightness(1.1);
 }
 
 .upload-btn .btn-text {
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  transition: all var(--files-transition-normal);
+  font-weight: var(--font-semibold);
+  letter-spacing: 0.01em;
+  transition: all var(--transition-normal);
 }
 
 .upload-btn:hover .btn-text {
-  letter-spacing: 0.03em;
+  letter-spacing: 0.02em;
+  color: var(--accent-primary);
 }
 
-/* Animation d'entrée simple pour le bouton upload */
+/* Animation d'entrée pour le bouton upload */
 .upload-btn {
-  animation: fadeIn 0.3s ease;
+  animation: slideInUp 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
 
-@keyframes fadeIn {
+@keyframes slideInUp {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(20px) scale(0.9);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
   }
 }
 
 /* ==========================================================================
-   ACTIONS SUR SÉLECTION - DESIGN MODERNE
+   ACTIONS SUR SÉLECTION - DESIGN GLASSMORPHISM MODERNE
    ========================================================================== */
 
 .selection-actions {
   display: flex;
   align-items: center;
-  gap: var(--files-spacing-md);
-  padding: var(--files-spacing-md) var(--files-spacing-lg);
-  background: var(--glass-bg-tertiary);
-  border: 1px solid var(--glass-border-secondary);
-  border-radius: var(--files-radius-lg);
-  backdrop-filter: blur(15px);
-  -webkit-backdrop-filter: blur(15px);
-  transition: all var(--files-transition-normal);
+  gap: var(--spacing-md);
+  padding: var(--spacing-md) var(--spacing-lg);
+  background: var(--glass-bg-secondary);
+  border: 1px solid var(--glass-border-tertiary);
+  border-radius: var(--radius-lg);
+  backdrop-filter: blur(25px);
+  -webkit-backdrop-filter: blur(25px);
+  transition: all var(--transition-normal);
   position: relative;
   overflow: hidden;
+  box-shadow: var(--glass-shadow-subtle);
 }
 
 .selection-actions::before {
@@ -262,11 +339,18 @@
   right: 0;
   bottom: 0;
   background: linear-gradient(135deg, 
-    rgba(255, 255, 255, 0.02) 0%, 
-    rgba(255, 255, 255, 0.01) 50%, 
-    rgba(255, 255, 255, 0.02) 100%);
+    rgba(255, 255, 255, 0.08) 0%, 
+    rgba(255, 255, 255, 0.02) 50%, 
+    rgba(255, 255, 255, 0.08) 100%);
   opacity: 0;
-  transition: opacity var(--files-transition-normal);
+  transition: opacity var(--transition-normal);
+}
+
+.selection-actions:hover {
+  background: var(--glass-bg-medium);
+  border-color: var(--glass-border-light);
+  box-shadow: var(--glass-shadow-soft);
+  transform: translateY(-1px);
 }
 
 .selection-actions:hover::before {
@@ -274,37 +358,48 @@
 }
 
 .selection-count {
-  color: var(--files-text-secondary);
-  font-size: 13px;
-  font-weight: 500;
-  margin-right: var(--files-spacing-md);
-  padding: var(--files-spacing-xs) var(--files-spacing-sm);
-  background: var(--glass-bg-secondary);
-  border-radius: var(--files-radius-sm);
-  border: 1px solid var(--glass-border-secondary);
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  margin-right: var(--spacing-md);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  background: var(--glass-bg-tertiary);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--glass-border-tertiary);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  transition: all var(--transition-normal);
+}
+
+.selection-actions:hover .selection-count {
+  background: var(--glass-bg-medium);
+  border-color: var(--glass-border-light);
+  color: var(--text-primary);
 }
 
 /* ==========================================================================
-   BOUTONS D'ACTION - DESIGN ÉLÉGANT
+   BOUTONS D'ACTION - DESIGN GLASSMORPHISM MODERNE
    ========================================================================== */
 
 .toolbar-btn {
-  padding: var(--files-spacing-md) var(--files-spacing-lg);
-  border: none;
-  border-radius: var(--files-radius-md);
-  font-size: 13px;
-  font-weight: 500;
+  padding: var(--spacing-md) var(--spacing-lg);
+  border: 1px solid var(--glass-border-tertiary);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
   cursor: pointer;
-  transition: all var(--files-transition-normal);
+  transition: all var(--transition-normal);
   display: flex;
   align-items: center;
-  gap: var(--files-spacing-sm);
-  backdrop-filter: blur(15px);
-  -webkit-backdrop-filter: blur(15px);
-  min-height: 40px;
+  gap: var(--spacing-sm);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  min-height: 44px;
   position: relative;
   overflow: hidden;
   letter-spacing: 0.01em;
+  font-family: var(--font-main);
+  box-shadow: var(--glass-shadow-subtle);
 }
 
 .toolbar-btn::before {
@@ -315,11 +410,11 @@
   right: 0;
   bottom: 0;
   background: linear-gradient(135deg, 
-    rgba(255, 255, 255, 0.05) 0%, 
+    rgba(255, 255, 255, 0.1) 0%, 
     rgba(255, 255, 255, 0.02) 50%, 
-    rgba(255, 255, 255, 0.05) 100%);
+    rgba(255, 255, 255, 0.1) 100%);
   opacity: 0;
-  transition: opacity var(--files-transition-normal);
+  transition: opacity var(--transition-normal);
 }
 
 .toolbar-btn:hover::before {
@@ -328,74 +423,100 @@
 
 .toolbar-btn.secondary {
   background: var(--glass-bg-secondary);
-  border: 1px solid var(--glass-border-secondary);
-  color: var(--files-text-primary);
+  border-color: var(--glass-border-tertiary);
+  color: var(--text-primary);
 }
 
 .toolbar-btn.secondary:hover {
-  background: var(--glass-bg-hover);
-  border-color: var(--glass-border-hover);
+  background: var(--glass-bg-medium);
+  border-color: var(--glass-border-light);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--glass-shadow-soft);
 }
 
 .toolbar-btn.danger {
-  background: rgba(239, 68, 68, 0.1);
-  border: 1px solid rgba(239, 68, 68, 0.3);
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.3);
   color: #ef4444;
 }
 
 .toolbar-btn.danger:hover {
-  background: rgba(239, 68, 68, 0.2);
+  background: rgba(239, 68, 68, 0.25);
   border-color: rgba(239, 68, 68, 0.5);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
+  box-shadow: var(--glass-shadow-soft), 0 0 0 1px rgba(239, 68, 68, 0.2);
 }
 
 .toolbar-btn .btn-icon {
   font-size: 16px;
-  transition: transform var(--files-transition-normal);
+  transition: all var(--transition-normal);
+  filter: brightness(0.9);
 }
 
 .toolbar-btn:hover .btn-icon {
   transform: scale(1.1);
+  filter: brightness(1.1);
 }
 
 .toolbar-btn .btn-text {
-  font-weight: 500;
-  transition: all var(--files-transition-normal);
+  font-weight: var(--font-medium);
+  transition: all var(--transition-normal);
+}
+
+.toolbar-btn:hover .btn-text {
+  letter-spacing: 0.02em;
 }
 
 /* ==========================================================================
-   BOUTONS DE VUE - DESIGN MODERNE
+   BOUTONS DE VUE - DESIGN GLASSMORPHISM MODERNE
    ========================================================================== */
 
 .view-toggle {
   display: flex;
   align-items: center;
-  gap: var(--files-spacing-xs);
-  padding: var(--files-spacing-xs);
-  background: var(--glass-bg-tertiary);
-  border: 1px solid var(--glass-border-secondary);
-  border-radius: var(--files-radius-lg);
-  backdrop-filter: blur(15px);
-  -webkit-backdrop-filter: blur(15px);
+  gap: var(--spacing-xs);
+  padding: var(--spacing-xs);
+  background: var(--glass-bg-secondary);
+  border: 1px solid var(--glass-border-tertiary);
+  border-radius: var(--radius-lg);
+  backdrop-filter: blur(25px);
+  -webkit-backdrop-filter: blur(25px);
+  box-shadow: var(--glass-shadow-subtle);
+  position: relative;
+  overflow: hidden;
+}
+
+.view-toggle::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.05) 0%, 
+    rgba(255, 255, 255, 0.01) 50%, 
+    rgba(255, 255, 255, 0.05) 100%);
+  opacity: 0.6;
+  pointer-events: none;
 }
 
 .view-btn {
-  width: 36px;
-  height: 36px;
-  border: none;
-  border-radius: var(--files-radius-md);
-  background: transparent;
-  color: var(--files-text-secondary);
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--glass-border-tertiary);
+  border-radius: var(--radius-md);
+  background: var(--glass-bg-tertiary);
+  color: var(--text-secondary);
   cursor: pointer;
-  transition: all var(--files-transition-normal);
+  transition: all var(--transition-normal);
   display: flex;
   align-items: center;
   justify-content: center;
   position: relative;
   overflow: hidden;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
 .view-btn::before {
@@ -405,10 +526,21 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(255, 255, 255, 0.05);
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.1) 0%, 
+    rgba(255, 255, 255, 0.02) 50%, 
+    rgba(255, 255, 255, 0.1) 100%);
   opacity: 0;
-  transition: opacity var(--files-transition-normal);
-  border-radius: var(--files-radius-md);
+  transition: opacity var(--transition-normal);
+  border-radius: var(--radius-md);
+}
+
+.view-btn:hover {
+  background: var(--glass-bg-medium);
+  border-color: var(--glass-border-light);
+  color: var(--text-primary);
+  transform: translateY(-1px);
+  box-shadow: var(--glass-shadow-subtle);
 }
 
 .view-btn:hover::before {
@@ -417,35 +549,44 @@
 
 .view-btn.active {
   background: var(--accent-primary);
+  border-color: var(--accent-primary);
   color: white;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  box-shadow: var(--glass-shadow-medium), 0 0 0 1px rgba(59, 130, 246, 0.3);
+  transform: translateY(-1px);
 }
 
 .view-btn.active::before {
-  display: none;
-}
-
-.view-btn:hover:not(.active) {
-  color: var(--files-text-primary);
-  transform: translateY(-1px);
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.2) 0%, 
+    rgba(255, 255, 255, 0.05) 50%, 
+    rgba(255, 255, 255, 0.2) 100%);
+  opacity: 1;
 }
 
 .view-icon {
   font-size: 16px;
-  transition: transform var(--files-transition-normal);
+  transition: all var(--transition-normal);
+  filter: brightness(0.9);
 }
 
 .view-btn:hover .view-icon {
   transform: scale(1.1);
+  filter: brightness(1.1);
+}
+
+.view-btn.active .view-icon {
+  filter: brightness(1.2);
+  transform: scale(1.05);
 }
 
 /* ==========================================================================
-   RESPONSIVE DESIGN
+   RESPONSIVE DESIGN GLASSMORPHISM
    ========================================================================== */
 
 @media (max-width: 1024px) {
   .files-toolbar {
-    gap: var(--files-spacing-lg);
+    gap: var(--spacing-lg);
+    padding: var(--spacing-md) var(--spacing-lg);
   }
   
   .search-container {
@@ -454,18 +595,19 @@
   
   .upload-btn {
     min-width: 160px;
-    height: 48px;
-    padding: var(--files-spacing-sm) var(--files-spacing-lg);
-    font-size: 15px;
+    height: 52px;
+    padding: var(--spacing-sm) var(--spacing-lg);
+    font-size: var(--text-sm);
   }
 }
 
 @media (max-width: 768px) {
   .files-toolbar {
     flex-direction: column;
-    gap: var(--files-spacing-lg);
-    padding: var(--files-spacing-lg) 0;
+    gap: var(--spacing-lg);
+    padding: var(--spacing-lg);
     align-items: stretch;
+    margin: var(--spacing-md) 0;
   }
   
   .toolbar-left {
@@ -488,8 +630,8 @@
   .upload-btn {
     width: 100%;
     min-width: auto;
-    max-width: 280px;
-    height: 48px;
+    max-width: 300px;
+    height: 52px;
   }
   
   .toolbar-right {
@@ -497,14 +639,15 @@
     flex: none;
     justify-content: center;
     flex-wrap: wrap;
-    gap: var(--files-spacing-md);
+    gap: var(--spacing-md);
   }
   
   .selection-actions {
     flex-direction: column;
-    gap: var(--files-spacing-md);
+    gap: var(--spacing-md);
     text-align: center;
     width: 100%;
+    padding: var(--spacing-sm) var(--spacing-md);
   }
   
   .view-toggle {
@@ -514,37 +657,77 @@
 
 @media (max-width: 480px) {
   .files-toolbar {
-    gap: var(--files-spacing-md);
-    padding: var(--files-spacing-md) 0;
+    gap: var(--spacing-md);
+    padding: var(--spacing-md);
+    margin: var(--spacing-sm) 0;
   }
   
   .search-container {
-    padding: var(--files-spacing-sm) var(--files-spacing-md);
+    padding: var(--spacing-sm) var(--spacing-md);
   }
   
   .search-input {
-    font-size: 14px;
+    font-size: var(--text-sm);
   }
   
   .upload-btn {
-    height: 44px;
-    padding: var(--files-spacing-sm) var(--files-spacing-md);
-    font-size: 14px;
-    max-width: 240px;
+    height: 48px;
+    padding: var(--spacing-sm) var(--spacing-md);
+    font-size: var(--text-sm);
+    max-width: 280px;
   }
   
   .toolbar-btn {
-    padding: var(--files-spacing-sm) var(--files-spacing-md);
-    min-height: 36px;
-    font-size: 12px;
+    padding: var(--spacing-sm) var(--spacing-md);
+    min-height: 40px;
+    font-size: var(--text-xs);
   }
   
   .view-btn {
-    width: 32px;
-    height: 32px;
+    width: 36px;
+    height: 36px;
   }
   
   .view-btn .view-icon {
     font-size: 14px;
+  }
+  
+  .selection-count {
+    font-size: var(--text-xs);
+    padding: var(--spacing-xs);
+  }
+}
+
+/* Optimisations pour les performances sur mobile */
+@media (max-width: 768px) {
+  .files-toolbar,
+  .search-container,
+  .upload-btn,
+  .toolbar-btn,
+  .view-toggle,
+  .view-btn,
+  .selection-actions {
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+  }
+}
+
+/* Désactiver les animations sur les appareils avec préférence reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  .files-toolbar,
+  .search-container,
+  .upload-btn,
+  .toolbar-btn,
+  .view-btn,
+  .selection-actions {
+    transition: none;
+    animation: none;
+  }
+  
+  .upload-btn:hover,
+  .toolbar-btn:hover,
+  .view-btn:hover,
+  .search-container:hover {
+    transform: none;
   }
 } 

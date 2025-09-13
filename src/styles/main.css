@@ -15,7 +15,6 @@
    ========================================================================== */
 @import './layout.css';
 @import './background-unified.css';
-@import './sidebar-glassmorphism.css';
 @import './glassmorphism-unified.css';
 @import './pages-unified-layout.css';
 
@@ -44,3 +43,13 @@
 @import '../app/private/settings/SettingsPage.css';
 @import '../app/private/trash/TrashPage.css';
 @import '../app/private/trash/index.css';
+
+/* ==========================================================================
+   SIDEBAR UNIFIÉE - NOUVELLE ARCHITECTURE
+   ========================================================================== */
+@import './unified-sidebar.css';
+
+/* ==========================================================================
+   SIDEBAR PRINCIPALE - OBSOLÈTE (À SUPPRIMER)
+   ========================================================================== */
+@import './sidebar-glassmorphism.css';
