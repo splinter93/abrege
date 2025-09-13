@@ -5,7 +5,6 @@ import { useMarkdownRender } from '../../hooks/editor/useMarkdownRender';
 import { detectMermaidBlocks, validateMermaidSyntax, cleanMermaidContent } from './mermaidService';
 import MermaidRenderer from '@/components/mermaid/MermaidRenderer';
 import { createRoot, Root } from 'react-dom/client';
-import './index.css';
 import '@/styles/mermaid.css';
 import '@/styles/unified-blocks.css';
 

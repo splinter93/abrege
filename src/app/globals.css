@@ -15,8 +15,11 @@
 /* Import Tailwind CSS */
 @import '../styles/tailwind.css';
 
-/* Import du design system chat (pour compatibilité temporaire) */
-@import '../styles/chat-design-system-v2.css';
+/* Import du design system chat ChatGPT unifié */
+@import '../styles/chatgpt-unified.css';
+
+/* Import des utilitaires chat */
+@import '../styles/chat-utilities.css';
 
 :root {
   /* FALLBACKS - Éviter le flash blanc */

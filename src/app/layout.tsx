@@ -8,7 +8,6 @@ import "../styles/themes.css";
 import "../styles/typography.css";
 import "./globals.css";
 import "../styles/markdown.css";
-import "../styles/chat-design-system-v2.css";
 import "../styles/chat-global.css";
 import "../styles/editor.css";
 import "../styles/page-title-containers.css";

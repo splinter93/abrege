@@ -2,8 +2,7 @@
    SYSTÈME UNIFIÉ PAGES - IMPORT CENTRAL
    ======================================== */
 
-/* Import du système unifié sidebar */
-@import './unified-sidebar-system.css';
+/* Import du système unifié sidebar via chatgpt-unified.css */
 
 /* Import des styles spécifiques par page */
 @import './pages/classeurs.css';

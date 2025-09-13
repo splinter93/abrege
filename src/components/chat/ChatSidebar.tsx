@@ -120,169 +120,144 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({ isOpen, isDesktop, onClose })
   const emailText = user?.email || '';
 
   return (
-    <div className={`chat-sidebar ${isOpen ? 'open' : (isDesktop ? 'closed' : '')}`}>
-      <div className="sidebar-content-wrapper">
-        {/* Actions de la sidebar */}
-        <div className="sidebar-actions-container">
-          <div className="sidebar-actions">
-            {/* Barre de recherche */}
-            <div className="sidebar-search">
-              <svg className="sidebar-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="11" cy="11" r="8"></circle>
-                <path d="m21 21-4.35-4.35"></path>
-              </svg>
-              <input
-                type="text"
-                placeholder="Rechercher..."
-                className="sidebar-search-input"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
+    <div className={`chatgpt-sidebar ${isOpen ? 'visible' : ''} ${isDesktop ? 'desktop' : 'mobile'}`}>
+      {/* Header de la sidebar avec nouveau design ChatGPT */}
+      <div className="sidebar-header">
+        <h2 className="sidebar-title">Chat</h2>
+        <div className="sidebar-actions">
+          <button onClick={onClose} className="sidebar-icon-btn" title="Fermer la sidebar">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="3" x2="9" y2="21"></line>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      {/* Barre de recherche avec nouveau design */}
+      <div className="sidebar-search">
+        <input
+          type="text"
+          placeholder="Rechercher dans les conversations..."
+          className="sidebar-search-input"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
+        <div className="sidebar-search-icon">🔍</div>
+      </div>
+
+      {/* Contenu principal avec nouveau design */}
+      <div className="sidebar-content">
+        {/* Section Agents */}
+        <div className="sidebar-section">
+          <h3 className="sidebar-section-title">Agents</h3>
+          {agentsLoading ? (
+            <div className="chat-loading">
+              <div className="chat-loading-spinner"></div>
+              Chargement des agents...
             </div>
-            
-            <button onClick={handleCreateNewSession} className="sidebar-icon-btn" title="Nouvelle conversation">
-              <Plus size={20} />
-            </button>
-            <button onClick={onClose} className="sidebar-icon-btn" title="Fermer la sidebar">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="3" x2="9" y2="21"></line>
-              </svg>
-            </button>
-          </div>
+          ) : agents.length > 0 ? (
+            agents.map((agent) => (
+              <button 
+                key={agent.id} 
+                className={`agent-option ${selectedAgent?.id === agent.id ? 'active' : ''}`}
+                onClick={() => handleSelectAgent(agent)}
+              >
+                <div className="agent-icon">
+                  {agent.profile_picture ? (
+                    <img
+                      src={agent.profile_picture}
+                      alt={agent.name}
+                      className="agent-profile-image"
+                    />
+                  ) : (
+                    '🤖'
+                  )}
+                </div>
+                <span className="agent-name">{agent.name}</span>
+              </button>
+            ))
+          ) : (
+            <div className="chat-empty">
+              <div className="chat-empty-icon">🤖</div>
+              <p className="chat-empty-description">Aucun agent disponible</p>
+            </div>
+          )}
         </div>
 
-        {/* Contenu principal */}
-        <div className="sidebar-main">
-          {/* Section Mes Agents */}
-          <div className="sidebar-section">
-            <div className="section-header">
-              <h3 className="section-title">Mes Agents</h3>
-              <button 
-                onClick={() => setAgentsOpen(!agentsOpen)} 
-                className={`section-toggle ${agentsOpen ? 'expanded' : ''}`}
-                aria-label={agentsOpen ? "Réduire les agents" : "Développer les agents"}
-                aria-expanded={agentsOpen}
-              >
-                <svg className="section-toggle-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="m6 9 6 6 6-6"/>
-                </svg>
-              </button>
-            </div>
-            {agentsOpen && (
-              <div className="section-content">
-                {agentsLoading ? (
-                  <div className="agent-loading">Chargement des agents...</div>
-                ) : agents.length > 0 ? (
-                  agents.map((agent) => (
-                    <button 
-                      key={agent.id} 
-                      className={`agent-option ${selectedAgent?.id === agent.id ? 'active' : ''}`}
-                      onClick={() => handleSelectAgent(agent)}
-                    >
-                      <div className="agent-icon">
-                        {agent.profile_picture ? (
-                          <img
-                            src={agent.profile_picture}
-                            alt={agent.name}
-                            className="agent-profile-image"
-                          />
-                        ) : (
-                          '🤖'
+        {/* Section Conversations */}
+        <div className="sidebar-section">
+          <h3 className="sidebar-section-title">Conversations</h3>
+          <button onClick={handleCreateNewSession} className="new-conversation-btn">
+            <Plus size={16} />
+            Lancer une nouvelle conversation
+          </button>
+          <div className="conversations-list">
+            {sortedSessions.length === 0 ? (
+              <div className="chat-empty">
+                <div className="chat-empty-icon">💬</div>
+                <h4 className="chat-empty-title">Aucune conversation</h4>
+                <p className="chat-empty-description">Commencez une nouvelle conversation</p>
+                <button onClick={handleCreateNewSession} className="chat-input-send">
+                  Créer une conversation
+                </button>
+              </div>
+            ) : (
+              sortedSessions.map((session) => (
+                <div
+                  key={session.id}
+                  className={`conversation-item ${currentSession?.id === session.id ? 'active' : ''}`}
+                  onClick={() => renamingSessionId !== session.id && handleSelectSession(session)}
+                >
+                  {renamingSessionId === session.id ? (
+                    <input
+                      type="text"
+                      value={newName}
+                      onChange={(e) => setNewName(e.target.value)}
+                      onBlur={() => handleRename(session.id)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') handleRename(session.id);
+                        if (e.key === 'Escape') cancelRenaming();
+                      }}
+                      autoFocus
+                      className="sidebar-search-input"
+                      placeholder="Nom de la conversation"
+                    />
+                  ) : (
+                    <div className="conversation-content">
+                      <h4 
+                        className="conversation-title" 
+                        onDoubleClick={(e) => {
+                          e.stopPropagation();
+                          startRenaming(session);
+                        }}
+                      >
+                        {session.name || 'Nouvelle conversation'}
+                      </h4>
+                      <p className="conversation-preview">
+                        {getLastResponsePreview(session)}
+                      </p>
+                      <div className="conversation-meta">
+                        <span className="conversation-time">
+                          {formatDistanceToNow(new Date(session.created_at), { addSuffix: true, locale: fr })}
+                        </span>
+                        {currentSession?.id === session.id && (
+                          <button 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              deleteSession(session.id);
+                            }}
+                            className="sidebar-icon-btn"
+                            title="Supprimer la conversation"
+                          >
+                            <Trash2 size={14} />
+                          </button>
                         )}
                       </div>
-                      <div className="agent-info">
-                        <div className="agent-name">{agent.name}</div>
-                      </div>
-                      {selectedAgent?.id === agent.id && (
-                        <div className="agent-selected-indicator">✓</div>
-                      )}
-                    </button>
-                  ))
-                ) : (
-                  <div className="agent-empty">Aucun agent disponible</div>
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* Séparateur élégant */}
-          <div className="sidebar-separator"></div>
-
-          {/* Section Conversations */}
-          <div className="sidebar-section">
-            <div className="section-header">
-              <h3 className="section-title">Conversations</h3>
-              <span className="session-count">{sessions.length}</span>
-            </div>
-            <div className="conversations-list">
-              {sortedSessions.length === 0 ? (
-                <div className="empty-state">
-                  <div className="empty-icon">💬</div>
-                  <p className="empty-text">Aucune conversation</p>
-                  <button onClick={handleCreateNewSession} className="empty-action">
-                    Créer une conversation
-                  </button>
+                    </div>
+                  )}
                 </div>
-              ) : (
-                sortedSessions.map((session) => (
-                  <div
-                    key={session.id}
-                    className={`conversation-item ${currentSession?.id === session.id ? 'active' : ''}`}
-                    onClick={() => renamingSessionId !== session.id && handleSelectSession(session)}
-                  >
-                    {renamingSessionId === session.id ? (
-                      <input
-                        type="text"
-                        value={newName}
-                        onChange={(e) => setNewName(e.target.value)}
-                        onBlur={() => handleRename(session.id)}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') handleRename(session.id);
-                          if (e.key === 'Escape') cancelRenaming();
-                        }}
-                        autoFocus
-                        className="rename-input"
-                        placeholder="Nom de la conversation"
-                      />
-                    ) : (
-                      <div className="conversation-content">
-                        <div className="conversation-header">
-                          <span 
-                            className="conversation-title" 
-                            onDoubleClick={(e) => {
-                              e.stopPropagation();
-                              startRenaming(session);
-                            }}
-                          >
-                            {session.name || 'Nouvelle conversation'}
-                          </span>
-                          {currentSession?.id === session.id && (
-                            <button 
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                deleteSession(session.id);
-                              }}
-                              className="delete-btn"
-                              title="Supprimer la conversation"
-                            >
-                              <Trash2 size={16} />
-                            </button>
-                          )}
-                        </div>
-                        <div className="conversation-preview">
-                          {getLastResponsePreview(session)}
-                        </div>
-                        <div className="conversation-meta">
-                          <span className="conversation-date">
-                            {formatDistanceToNow(new Date(session.created_at), { addSuffix: true, locale: fr })}
-                          </span>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                ))
-              )}
-            </div>
+              ))
+            )}
           </div>
         </div>
 

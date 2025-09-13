@@ -5,8 +5,8 @@
    et assurer la cohérence dans toute l'application.
 */
 
-/* Import du système glassmorphism pour le chat */
-@import './chat-glassmorphism.css';
+/* Import du système unifié pour le chat */
+@import './chatgpt-unified.css';
 
 :root {
   /* ========================================

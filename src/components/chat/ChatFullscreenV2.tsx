@@ -18,12 +18,12 @@ import ChatInput from './ChatInput';
 import ChatMessage from './ChatMessage';
 import ChatKebabMenu from './ChatKebabMenu';
 import ChatSidebar from './ChatSidebar';
+import SidebarUltraClean from './SidebarUltraClean';
 import ChatWidget from './ChatWidget';
 import { simpleLogger as logger, LogCategory } from '@/utils/logger';
 
-import './index.css';
 import './ToolCallMessage.css';
-import '@/styles/chat-responsive.css';
+import '@/styles/chatgpt-unified.css';
 import Link from 'next/link';
 
 const ChatFullscreenV2: React.FC = () => {
@@ -712,21 +712,17 @@ const ChatFullscreenV2: React.FC = () => {
       )}
 
       {/* Chat fullscreen (masqué quand en mode widget) */}
-      <div className={`chat-fullscreen-container ${wideMode ? 'wide-mode' : ''}`} style={{ display: isWidgetMode ? 'none' : 'flex' }}>
-      {/* 🔧 Tool Call Debugger */}
-      {/* Header optimisé */}
-      <div className="chat-header">
-        <div className="chat-header-left">
-          <div className="chat-logo">
-            <Link href="/" className="chat-logo-link" aria-label="Aller à l'accueil">
-                              <img src="/logo-scrivia-white.png" alt="Scrivia" className="chat-logo-img" />
+      <div className={`chatgpt-container ${wideMode ? 'wide-mode' : ''}`} style={{ display: isWidgetMode ? 'none' : 'flex' }}>
+      {/* Header optimisé avec nouveau design ChatGPT */}
+      <div className="chatgpt-header">
+        <div className="chatgpt-header-left">
+          <div className="chatgpt-logo">
+            <Link href="/" className="chatgpt-logo-link" aria-label="Aller à l'accueil">
+              <img src="/logo-scrivia-white.png" alt="Scrivia" className="chatgpt-logo-img" />
             </Link>
           </div>
-          <div className="chat-session-info" />
         </div>
-        <div className="chat-actions">
-          {/* 🎼 Toggle Harmony */}
-          
+        <div className="chatgpt-header-right">
           <ChatKebabMenu
             isWideMode={wideMode}
             isFullscreen={true}
@@ -740,10 +736,10 @@ const ChatFullscreenV2: React.FC = () => {
         </div>
       </div>
 
-      {/* Main content optimisé */}
-      <div className="main-content-area">
-        {/* Sidebar */}
-        <ChatSidebar
+      {/* Contenu principal avec nouveau design ChatGPT */}
+      <div className="chatgpt-content">
+        {/* Sidebar moderne */}
+        <SidebarUltraClean
           isOpen={sidebarOpen}
           isDesktop={isDesktop}
           onClose={() => {
@@ -756,7 +752,7 @@ const ChatFullscreenV2: React.FC = () => {
         {/* Overlay mobile/tablette */}
         {!isDesktop && sidebarOpen && (
           <div 
-            className="chat-sidebar-overlay visible" 
+            className="chatgpt-sidebar-overlay visible" 
             onClick={() => {
               if (user && !authLoading) {
                 setSidebarOpen(false);
@@ -765,27 +761,27 @@ const ChatFullscreenV2: React.FC = () => {
           />
         )}
 
-        {/* Content optimisé */}
-        <div className="chat-content">
-          {/* Sidebar toggle flottant */}
+        {/* Zone principale des messages */}
+        <div className="chatgpt-main">
+          {/* Bouton toggle sidebar - affiché seulement quand sidebar est fermée */}
           {!sidebarOpen && (
             <button
               onClick={handleSidebarToggle}
-              className="sidebar-toggle-btn-floating"
+              className="chatgpt-sidebar-toggle-btn"
               aria-label="Ouvrir les conversations"
               title="Ouvrir les conversations"
               disabled={!user || authLoading}
             >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
                 <line x1="9" y1="3" x2="9" y2="21"></line>
               </svg>
             </button>
           )}
-
+          
           {/* Messages optimisés */}
-          <div className="chat-messages-container">
-            <div className="chat-message-list">
+          <div className="chatgpt-messages-container">
+            <div className="chatgpt-messages">
               {displayMessages.map((message) => (
                 <ChatMessage 
                   key={message.id || `${message.role}-${message.timestamp}-${(message as any).tool_call_id || ''}`} 
@@ -801,14 +797,14 @@ const ChatFullscreenV2: React.FC = () => {
           </div>
 
           {/* Input optimisé */}
-          <div className="chat-input-container">
+          <div className="chatgpt-input-container">
             {renderAuthStatus()}
             <ChatInput 
               onSend={handleSendMessage} 
               loading={loading}
               textareaRef={textareaRef}
-              disabled={!user || authLoading}
-              placeholder={!user ? "Connectez-vous pour commencer à chatter..." : "Tapez votre message..."}
+              disabled={false}
+              placeholder="Tapez votre message..."
             />
           </div>
         </div>

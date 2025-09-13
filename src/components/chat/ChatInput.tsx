@@ -17,7 +17,6 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend, loading, textareaRef, dis
   const [audioError, setAudioError] = useState<string | null>(null);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    if (disabled) return;
     setMessage(e.target.value);
   };
 
@@ -87,75 +86,69 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend, loading, textareaRef, dis
   }, [message, textareaRef]);
 
   return (
-    <div className="chat-input-area">
+    <div className="chatgpt-input-area">
       {/* Affichage des erreurs audio */}
-        {audioError && (
-          <div className="chat-input-audio-error">
-            <div className="chat-input-audio-error-content">
-              <span className="chat-input-audio-error-icon">🎤</span>
-              <span className="chat-input-audio-error-text">{audioError}</span>
-              <button 
-                className="chat-input-audio-error-close"
-                onClick={() => setAudioError(null)}
-                aria-label="Fermer l'erreur"
-              >
-                ×
-              </button>
-            </div>
+      {audioError && (
+        <div className="chatgpt-message-error">
+          <div className="chatgpt-message-bubble">
+            <span className="chatgpt-message-status-icon error">🎤</span>
+            <span>{audioError}</span>
+            <button 
+              className="chatgpt-message-action"
+              onClick={() => setAudioError(null)}
+              aria-label="Fermer l'erreur"
+            >
+              ×
+            </button>
           </div>
-        )}
+        </div>
+      )}
 
-      <div className="chat-input-main">
-        <div className="chat-input-content">
-          <textarea
-            ref={textareaRef}
-            value={message}
-            onChange={handleInputChange}
-            onKeyDown={handleKeyDown}
-            placeholder={placeholder}
-            className={`chat-input-textarea ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-            rows={1}
-            disabled={disabled}
-          />
-          
-          <div className="chat-input-icons">
-            <div className="chat-input-icons-left">
-              <button className="chat-input-icon-btn" aria-label="Ajouter">
-                <Plus size={16} />
-              </button>
-              <button className="chat-input-icon-btn" aria-label="Reasoning">
-                <Zap size={16} />
-              </button>
-              <button className="chat-input-icon-btn" aria-label="Globe">
-                <Globe size={16} />
-              </button>
-              <button className="chat-input-icon-btn" aria-label="Rechercher">
-                <Search size={16} />
-              </button>
-            </div>
-          </div>
-        </div>
+      {/* Zone de texte principale */}
+      <textarea
+        ref={textareaRef}
+        value={message}
+        onChange={handleInputChange}
+        onKeyDown={handleKeyDown}
+        placeholder={placeholder}
+        className="chatgpt-input-textarea"
+        rows={1}
+        disabled={false}
+      />
+      
+      {/* Actions de l'input */}
+      <div className="chatgpt-input-actions">
+        <button className="chatgpt-input-speaker" aria-label="Ajouter">
+          <Plus size={16} />
+        </button>
+        <button className="chatgpt-input-mic" aria-label="Reasoning">
+          <Zap size={16} />
+        </button>
         
-        <div className="chat-input-actions">
-          <AudioRecorder 
-            onTranscriptionComplete={handleTranscriptionComplete}
-            onError={setAudioError}
-            disabled={disabled}
-          />
-          
-          <button 
-            onClick={handleSend} 
-            disabled={!message.trim() || loading || disabled}
-            className="chat-input-send"
-            aria-label="Envoyer le message"
-          >
-            {loading ? (
-              <div className="loading-spinner">⏳</div>
-            ) : (
-              <ArrowUp size={16} />
-            )}
-          </button>
-        </div>
+        <div style={{ flex: 1 }}></div>
+        
+        <AudioRecorder 
+          onTranscriptionComplete={handleTranscriptionComplete}
+          onError={setAudioError}
+          disabled={disabled}
+        />
+        
+        <button 
+          onClick={handleSend} 
+          disabled={!message.trim() || loading || disabled}
+          className={`chatgpt-input-send ${loading ? 'loading' : ''}`}
+          aria-label="Envoyer le message"
+        >
+          {loading ? (
+            <div className="chat-input-typing-dots">
+              <div className="chat-input-typing-dot"></div>
+              <div className="chat-input-typing-dot"></div>
+              <div className="chat-input-typing-dot"></div>
+            </div>
+          ) : (
+            <ArrowUp size={16} />
+          )}
+        </button>
       </div>
     </div>
   );

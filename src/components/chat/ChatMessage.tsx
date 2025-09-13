@@ -104,13 +104,8 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
 
 
   return (
-    <motion.div 
-      className={`chat-message chat-message-${role} ${className || ''}`}
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-    >
-      <div className={`chat-message-bubble chat-message-bubble-${role}`}>
+    <div className={`chatgpt-message chatgpt-message-${role} ${className || ''}`}>
+      <div className={`chatgpt-message-bubble chatgpt-message-bubble-${role}`}>
         {/* Tool calls - only for assistant messages to avoid duplicates */}
         {role === 'assistant' && message.tool_calls && message.tool_calls.length > 0 && (
           <ToolCallMessage
@@ -123,38 +118,67 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
         {reasoning && (
           <ReasoningDropdown 
             reasoning={reasoning}
-            className="chat-message-reasoning"
+            className="chatgpt-message-reasoning"
           />
         )}
 
         {/* Contenu markdown - affiché APRÈS le reasoning */}
         {content && (
-          <div className="chat-message-content">
+          <div className="chatgpt-message-content">
             <EnhancedMarkdownMessage content={content} />
           </div>
         )}
         
         {/* Indicateur de frappe pour le vrai streaming */}
         {isStreaming && !displayedContent && (
-          <div className="chat-typing-indicator">
-            <div className="chat-typing-dot"></div>
-            <div className="chat-typing-dot"></div>
-            <div className="chat-typing-dot"></div>
+          <div className="chatgpt-message-loading">
+            <div className="chatgpt-message-loading-dots">
+              <div className="chatgpt-message-loading-dot"></div>
+              <div className="chatgpt-message-loading-dot"></div>
+              <div className="chatgpt-message-loading-dot"></div>
+            </div>
+            <span>En cours de frappe...</span>
           </div>
         )}
       </div>
       
-                    {/* Boutons d'action sous la bulle (comme ChatGPT) */}
+      {/* Bouton copier */}
       {content && (
-        <BubbleButtons
-          content={content}
-          messageId={message.id}
-          onCopy={() => console.log('Message copié')}
-          onEdit={() => console.log('Édition du message')}
-          className={role === 'user' ? 'bubble-buttons-user' : ''}
-        />
+        <div className="chatgpt-message-copy">
+          <button
+            className="chatgpt-copy-button"
+            onClick={async () => {
+              try {
+                await navigator.clipboard.writeText(content);
+                // Optionnel: feedback visuel
+              } catch (err) {
+                console.error('Failed to copy text: ', err);
+              }
+            }}
+            title="Copier le message"
+            aria-label="Copier le message"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+            </svg>
+          </button>
+        </div>
       )}
-    </motion.div>
+      
+      {/* Boutons d'action sous la bulle (comme ChatGPT) */}
+      {content && (
+        <div className="chatgpt-message-actions">
+          <BubbleButtons
+            content={content}
+            messageId={message.id}
+            onCopy={() => console.log('Message copié')}
+            onEdit={() => console.log('Édition du message')}
+            className={role === 'user' ? 'bubble-buttons-user' : ''}
+          />
+        </div>
+      )}
+    </div>
   );
 };
 
