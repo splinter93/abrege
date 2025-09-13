@@ -144,8 +144,16 @@ const TextBlock: React.FC<{ content: string; index: number }> = React.memo(({ co
     }
     
     try {
+      // ✅ SÉCURITÉ: Configurer DOMPurify pour SSR si nécessaire
+      let purify = DOMPurify;
+      if (typeof window === 'undefined') {
+        // Configuration pour SSR avec JSDOM
+        const window = new JSDOM('').window;
+        purify = DOMPurify(window as any);
+      }
+      
       // ✅ SÉCURITÉ: Sanitizer d'abord le contenu avant parsing (avec support des tableaux)
-      const sanitizedContent = DOMPurify.sanitize(htmlContent, {
+      const sanitizedContent = purify.sanitize(htmlContent, {
         ALLOWED_TAGS: [
           'p', 'br', 'strong', 'em', 'u', 'b', 'i', 's', 'del', 'ins',
           'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
