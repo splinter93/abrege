@@ -142,12 +142,13 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
         )}
       </div>
       
-      {/* Bouton copier */}
+      {/* Boutons d'action sous la bulle (comme ChatGPT) - UNIQUEMENT */}
       {content && (
-        <div className="chatgpt-message-copy">
-          <button
-            className="chatgpt-copy-button"
-            onClick={async () => {
+        <div className="chatgpt-message-actions">
+          <BubbleButtons
+            content={content}
+            messageId={message.id}
+            onCopy={async () => {
               try {
                 await navigator.clipboard.writeText(content);
                 // Optionnel: feedback visuel
@@ -155,24 +156,6 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
                 console.error('Failed to copy text: ', err);
               }
             }}
-            title="Copier le message"
-            aria-label="Copier le message"
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-            </svg>
-          </button>
-        </div>
-      )}
-      
-      {/* Boutons d'action sous la bulle (comme ChatGPT) */}
-      {content && (
-        <div className="chatgpt-message-actions">
-          <BubbleButtons
-            content={content}
-            messageId={message.id}
-            onCopy={() => console.log('Message copié')}
             onEdit={() => console.log('Édition du message')}
             className={role === 'user' ? 'bubble-buttons-user' : ''}
           />

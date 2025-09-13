@@ -67,10 +67,12 @@ const ChatFullscreenV2: React.FC = () => {
   const toolFlowActiveRef = useRef(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // 🎯 Hook de scroll optimisé
+  // 🎯 Hook de scroll optimisé avec autoscroll
   const { messagesEndRef, scrollToBottom, isNearBottom } = useChatScroll({
     scrollThreshold: 150,
-    scrollDelay: 100
+    scrollDelay: 100,
+    autoScroll: true,
+    messages: currentSession?.thread || []
   });
 
   // ✅ SUPPRIMÉ: Hook de streaming (faux streaming)
@@ -153,7 +155,6 @@ const ChatFullscreenV2: React.FC = () => {
 
     if (!safeContent) {
       logger.warn('[ChatFullscreenV2] ⚠️ Contenu vide, pas de message à ajouter');
-      scrollToBottom(true);
       return;
     }
       
@@ -190,7 +191,7 @@ const ChatFullscreenV2: React.FC = () => {
     logger.dev('[ChatFullscreenV2] ✅ Message final ajouté avec succès');
     
     toolFlowActiveRef.current = false;
-    scrollToBottom(true);
+    // Autoscroll géré automatiquement par useChatScroll
   }, [addMessage, scrollToBottom, user, authLoading]);
 
 
@@ -249,8 +250,7 @@ const ChatFullscreenV2: React.FC = () => {
     };
       
     await addMessage(toolCallMessage, { persist: true }); // Persister pour l'affichage
-    
-    scrollToBottom(true);
+    // Autoscroll géré automatiquement par useChatScroll
   }, [addMessage, scrollToBottom, user, authLoading]);
 
   const handleToolResult = useCallback(async (toolName: string, result: any, success: boolean, toolCallId?: string) => {
@@ -342,8 +342,7 @@ const ChatFullscreenV2: React.FC = () => {
         }, { persist: false });
       }
     }
-    
-    scrollToBottom(true);
+    // Autoscroll géré automatiquement par useChatScroll
   }, [addMessage, scrollToBottom, user, authLoading]);
 
   // 🎯 Hook de chat optimisé avec callbacks mémorisés

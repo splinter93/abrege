@@ -85,60 +85,15 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
   const toolFlowActiveRef = useRef(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // 🎯 Hook de scroll personnalisé pour le widget
-  const messagesEndRef = useRef<HTMLDivElement | null>(null);
-  const [isNearBottom, setIsNearBottom] = useState(true);
+  // 🎯 Hook de scroll optimisé avec autoscroll
+  const { messagesEndRef, scrollToBottom, isNearBottom } = useChatScroll({
+    scrollThreshold: 150,
+    scrollDelay: 100,
+    autoScroll: true,
+    messages: currentSession?.thread || []
+  });
   
-  // Scroll personnalisé pour le widget
-  const scrollToBottom = useCallback((force = false) => {
-    const container = messagesEndRef.current?.closest('.messages-container') as HTMLElement;
-    if (!container) return;
-    
-    const { scrollHeight, clientHeight } = container;
-    const extraOffset = 24; // scroll un peu plus bas que le dernier message
-    const targetScrollTop = Math.max(0, scrollHeight - clientHeight + extraOffset);
-    
-    container.scrollTo({
-      top: targetScrollTop,
-      behavior: force ? 'auto' : 'smooth'
-    });
-    
-    setIsNearBottom(true);
-  }, []);
-  
-  // Vérifier si l'utilisateur est près du bas
-  const checkScrollPosition = useCallback(() => {
-    const container = messagesEndRef.current?.closest('.messages-container') as HTMLElement;
-    if (!container) return;
-    
-    const { scrollTop, scrollHeight, clientHeight } = container;
-    const distanceFromBottom = scrollHeight - scrollTop - clientHeight;
-    const near = distanceFromBottom <= 150; // 150px threshold
-    
-    setIsNearBottom(near);
-  }, []);
-  
-  // ✅ MÉMOIRE: Écouter le scroll avec cleanup garanti
-  useEffect(() => {
-    const container = messagesEndRef.current?.closest('.messages-container') as HTMLElement;
-    if (!container) return;
-    
-    const handleScroll = () => {
-      checkScrollPosition();
-    };
-    
-    container.addEventListener('scroll', handleScroll, { passive: true });
-    checkScrollPosition(); // Vérifier la position initiale
-    
-    // ✅ MÉMOIRE: Cleanup garanti des event listeners
-    return () => {
-      try {
-        container.removeEventListener('scroll', handleScroll);
-      } catch (error) {
-        console.warn('Erreur lors du cleanup des event listeners:', error);
-      }
-    };
-  }, [checkScrollPosition]);
+  // ✅ Ancienne logique de scroll supprimée - maintenant gérée par useChatScroll
 
   // ✅ Code mort nettoyé pour la production
 
@@ -168,7 +123,6 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
 
     const safeContent = fullContent?.trim();
     if (!safeContent) {
-      scrollToBottom(true);
       return;
     }
       
@@ -184,9 +138,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
     
     toolFlowActiveRef.current = false;
     
-    // Scroll immédiat après la réponse complète
-    scrollToBottom(true);
-    setTimeout(() => scrollToBottom(true), 100);
+    // Autoscroll géré automatiquement par useChatScroll
     
     logger.dev('[ChatWidget] ✅ Réponse complète traitée, widget toujours ouvert:', widgetOpen);
   }, [addMessage, scrollToBottom, user, authLoading, widgetOpen]);
@@ -209,9 +161,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
       channel: 'final'
     });
     
-    // Scroll immédiat après l'erreur
-    scrollToBottom(true);
-    setTimeout(() => scrollToBottom(true), 100);
+    // Autoscroll géré automatiquement par useChatScroll
   }, [addMessage, scrollToBottom, user, authLoading]);
 
   const handleToolCalls = useCallback(async (toolCalls: any[], toolName: string) => {
@@ -245,9 +195,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
       channel: 'analysis' as const
     }, { persist: false });
     
-    // Scroll immédiat après les tool calls
-    scrollToBottom(true);
-    setTimeout(() => scrollToBottom(true), 100);
+    // Autoscroll géré automatiquement par useChatScroll
   }, [addMessage, scrollToBottom, user, authLoading]);
 
   const handleToolResult = useCallback(async (toolName: string, result: any, success: boolean, toolCallId?: string) => {
@@ -336,9 +284,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
       }
     }
     
-    // Scroll immédiat après les tool results
-    scrollToBottom(true);
-    setTimeout(() => scrollToBottom(true), 100);
+    // Autoscroll géré automatiquement par useChatScroll
   }, [addMessage, scrollToBottom, user, authLoading]);
 
   const handleToolExecutionComplete = useCallback(async (toolResults: any[]) => {
@@ -407,9 +353,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
       };
       await addMessage(userMessage);
       
-      // Scroll immédiat après le message utilisateur
-      scrollToBottom(true);
-      setTimeout(() => scrollToBottom(true), 100);
+      // Autoscroll géré automatiquement par useChatScroll
 
       // Token d'authentification
       const { data: { session } } = await supabase.auth.getSession();

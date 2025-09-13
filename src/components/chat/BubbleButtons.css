@@ -5,9 +5,9 @@
 .bubble-buttons {
   display: flex;
   justify-content: flex-start;
-  margin-top: 2px;
+  margin-top: 0; /* ✅ RÉDUCTION: Suppression de la marge pour compacité */
   margin-bottom: 0;
-  width: 60%;
+  width: auto; /* ✅ RÉDUCTION: Largeur automatique au lieu de 60% */
   opacity: 0;
   transition: opacity var(--chat-transition-normal);
 }
