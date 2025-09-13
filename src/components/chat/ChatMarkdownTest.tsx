@@ -1,5 +1,6 @@
 'use client';
 import React from 'react';
+import EnhancedMarkdownMessage from './EnhancedMarkdownMessage';
 
 const ChatMarkdownTest: React.FC = () => {
   const testContent = `
