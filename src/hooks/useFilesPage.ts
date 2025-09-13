@@ -4,6 +4,7 @@ import { FileItem } from '@/types/files';
 import { simpleLogger as logger } from '@/utils/logger';
 import { STORAGE_CONFIG } from '@/config/storage';
 import SubscriptionService from '@/services/subscriptionService';
+import { TrashService } from '@/services/trashService';
 
 // ==========================================================================
 // TYPES
@@ -165,18 +166,8 @@ export function useFilesPage() {
    */
   const deleteFile = useCallback(async (fileId: string) => {
     try {
-      const { error } = await supabase
-        .from('files')
-        .update({ 
-          is_deleted: true,
-          deleted_at: new Date().toISOString()
-        })
-        .eq('id', fileId);
-
-      if (error) {
-        logger.warn(`⚠️ Erreur suppression fichier: ${error.message}`, { fileId });
-        throw new Error('Erreur lors de la suppression du fichier');
-      }
+      // Utiliser l'endpoint unifié delete-resource
+      await TrashService.moveToTrash('file', fileId);
 
       // Mettre à jour l'état local
       setFiles(prevFiles => prevFiles.filter(f => f.id !== fileId));
@@ -184,8 +175,13 @@ export function useFilesPage() {
       // Rafraîchir le quota
       refreshQuota();
 
+      logger.info(`✅ Fichier supprimé avec succès: ${fileId}`);
+
     } catch (err) {
-      logger.error('❌ Erreur suppression fichier:', { fileId, error: err });
+      logger.error('❌ Erreur suppression fichier:', { 
+        fileId, 
+        error: err instanceof Error ? err.message : String(err) 
+      });
       throw err;
     }
   }, [refreshQuota]);
