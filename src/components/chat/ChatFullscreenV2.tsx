@@ -490,7 +490,7 @@ const ChatFullscreenV2: React.FC = () => {
 
   // ✅ MÉMOIRE: Scroll optimisé avec debounce et cleanup
   const debouncedScrollToBottom = useCallback(
-    debounce(() => scrollToBottom(true), 100),
+    debounce(() => scrollToBottom(false), 150),
     [scrollToBottom]
   );
 
@@ -504,7 +504,7 @@ const ChatFullscreenV2: React.FC = () => {
   // ✅ MÉMOIRE: Scroll initial avec cleanup garanti
   useEffect(() => {
     if (user && !authLoading && sessions.length > 0 && currentSession?.thread && currentSession.thread.length > 0) {
-      const timer = setTimeout(() => scrollToBottom(true), 500);
+      const timer = setTimeout(() => scrollToBottom(false), 300);
       return () => {
         clearTimeout(timer);
       };

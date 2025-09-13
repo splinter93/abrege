@@ -1,386 +1,390 @@
 /* ========================================
-   CHAT MARKDOWN - STYLES CENTRALISÉS
+   CHAT MARKDOWN - STYLES PREMIUM CHATGPT-LEVEL
    ======================================== */
 
 /* ========================================
-   STYLES DE BASE POUR LE MARKDOWN
+   STYLES DE BASE - TYPOGRAPHIE PREMIUM UNIFIÉE
    ======================================== */
 
 .chat-markdown {
-  font-size: var(--font-size-base, 1rem);
-  line-height: var(--line-height-relaxed, 1.75);
-  color: var(--color-text-primary, #f8f9fa);
-  font-family: var(--font-chat-text, 'Inter', sans-serif);
-  font-weight: var(--font-weight-normal, 400);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+  color: #ffffff;
+  font-weight: 400;
   letter-spacing: -0.01em;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 /* ========================================
-   TITRES - HIÉRARCHIE CLAIRE ET MODERNE
+   TITRES - HIÉRARCHIE CHATGPT
    ======================================== */
 
 .chat-markdown h1 {
-  font-size: var(--font-size-3xl, 1.875rem);
-  font-weight: var(--font-weight-bold, 700);
-  margin: var(--spacing-2xl, 2rem) 0 var(--spacing-xl, 1.5rem) 0;
-  line-height: 1.2;
-  color: var(--color-text-primary, #f8f9fa);
-  letter-spacing: -0.02em;
-  position: relative;
-}
-
-.chat-markdown h1::after {
-  content: '';
-  position: absolute;
-  bottom: calc(-1 * var(--spacing-sm, 0.5rem));
-  left: 0;
-  width: var(--spacing-2xl, 2rem);
-  height: 3px;
-  background: currentColor;
-  border-radius: 2px;
-  opacity: 0.6;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
+  font-size: 2rem !important;
+  font-weight: 700 !important;
+  margin: 2rem 0 1rem 0 !important;
+  line-height: 1.2 !important;
+  color: #ffffff !important;
+  letter-spacing: -0.025em !important;
 }
 
 .chat-markdown h2 {
-  font-size: var(--font-size-2xl, 1.5rem);
-  font-weight: var(--font-weight-semibold, 600);
-  margin: var(--spacing-xl, 1.5rem) 0 var(--spacing-lg, 1rem) 0;
-  line-height: 1.3;
-  color: var(--color-text-primary, #f8f9fa);
-  letter-spacing: -0.015em;
-  position: relative;
-}
-
-.chat-markdown h2::after {
-  content: '';
-  position: absolute;
-  bottom: calc(-1 * var(--spacing-sm, 0.5rem));
-  left: 0;
-  width: var(--spacing-xl, 1.5rem);
-  height: 2px;
-  background: currentColor;
-  border-radius: 1px;
-  opacity: 0.4;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
+  font-size: 1.5rem !important;
+  font-weight: 600 !important;
+  margin: 1.75rem 0 0.75rem 0 !important;
+  line-height: 1.3 !important;
+  color: #ffffff !important;
+  letter-spacing: -0.02em !important;
 }
 
 .chat-markdown h3 {
-  font-size: var(--font-size-xl, 1.25rem);
-  font-weight: var(--font-weight-semibold, 600);
-  margin: var(--spacing-xl, 1.5rem) 0 var(--spacing-lg, 1rem) 0;
-  line-height: 1.4;
-  color: var(--color-text-primary, #f8f9fa);
-  letter-spacing: -0.01em;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
+  font-size: 1.25rem !important;
+  font-weight: 600 !important;
+  margin: 1.5rem 0 0.5rem 0 !important;
+  line-height: 1.4 !important;
+  color: #ffffff !important;
+  letter-spacing: -0.015em !important;
 }
 
 .chat-markdown h4 {
-  font-size: var(--font-size-lg, 1.125rem);
-  font-weight: var(--font-weight-semibold, 600);
-  margin: var(--spacing-lg, 1rem) 0 var(--spacing-md, 0.75rem) 0;
-  line-height: 1.4;
-  color: var(--color-text-primary, #f8f9fa);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
+  font-size: 1.125rem !important;
+  font-weight: 600 !important;
+  margin: 1.25rem 0 0.5rem 0 !important;
+  line-height: 1.4 !important;
+  color: #ffffff !important;
 }
 
 .chat-markdown h5 {
-  font-size: var(--font-size-base, 1rem);
-  font-weight: var(--font-weight-semibold, 600);
-  margin: var(--spacing-lg, 1rem) 0 var(--spacing-sm, 0.5rem) 0;
-  line-height: 1.4;
-  color: var(--color-text-primary, #f8f9fa);
-  opacity: 0.9;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
+  font-size: 1rem !important;
+  font-weight: 600 !important;
+  margin: 1rem 0 0.5rem 0 !important;
+  line-height: 1.4 !important;
+  color: #ffffff !important;
+  opacity: 0.9 !important;
 }
 
 .chat-markdown h6 {
-  font-size: var(--font-size-sm, 0.875rem);
-  font-weight: var(--font-weight-semibold, 600);
-  margin: var(--spacing-lg, 1rem) 0 var(--spacing-sm, 0.5rem) 0;
-  line-height: 1.4;
-  color: var(--color-text-primary, #f8f9fa);
-  opacity: 0.8;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
+  font-size: 0.875rem !important;
+  font-weight: 600 !important;
+  margin: 1rem 0 0.5rem 0 !important;
+  line-height: 1.4 !important;
+  color: #ffffff !important;
+  opacity: 0.8 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
 }
 
 /* ========================================
-   PARAGRAPHES ET TEXTE - LISIBILITÉ OPTIMISÉE
+   PARAGRAPHES ET TEXTE - LISIBILITÉ OPTIMALE
    ======================================== */
 
 .chat-markdown p {
-  margin: 0 0 var(--spacing-xl, 1.5rem) 0;
-  line-height: var(--line-height-relaxed, 1.75);
-  color: var(--color-text-primary, #f8f9fa);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
+  margin: 0 0 1rem 0 !important;
+  line-height: 1.6 !important;
+  color: #ffffff !important;
+  font-size: 16px !important;
+  font-weight: 400 !important;
 }
 
 .chat-markdown p:last-child {
-  margin-bottom: 0;
+  margin-bottom: 0 !important;
 }
 
 .chat-markdown strong {
-  font-weight: var(--font-weight-semibold, 600);
-  color: var(--color-text-primary, #f8f9fa);
-  letter-spacing: -0.005em;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
+  font-weight: 600 !important;
+  color: #ffffff !important;
 }
 
 .chat-markdown em {
-  font-style: italic;
-  color: var(--color-text-primary, #f8f9fa);
-  opacity: 0.9;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
+  font-style: italic !important;
+  color: #ffffff !important;
+  opacity: 0.9 !important;
 }
 
 /* ========================================
-   CODE INLINE - DESIGN SUBTIL
+   CODE INLINE - STYLE CHATGPT
    ======================================== */
 
-.chat-markdown code {
-  background: var(--glass-bg-subtle);
-  padding: 3px 8px;
-  border-radius: var(--radius-md, 6px);
-  font-family: var(--font-mono, 'JetBrains Mono', monospace);
-  font-size: var(--font-size-sm, 0.875rem);
-  color: var(--color-text-primary, #f8f9fa);
-  border: 1px solid var(--glass-border-soft);
-  font-weight: var(--font-weight-medium, 500);
-  letter-spacing: 0.01em;
-  backdrop-filter: var(--glass-blur-light);
-  -webkit-backdrop-filter: var(--glass-blur-light);
-  position: relative;
-  overflow: hidden;
-  box-shadow: var(--glass-shadow-subtle);
-}
-
-.chat-markdown code::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: var(--glass-gradient-subtle);
-  border-radius: var(--radius-md);
-  opacity: 0.6;
-  pointer-events: none;
-  z-index: 0;
+.chat-markdown code:not(pre code),
+.chatgpt-message-content code:not(pre code) {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 0.125rem 0.375rem;
+  border-radius: 0.25rem;
+  font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+  font-size: 0.875em;
+  color: #ffffff;
+  font-weight: 500;
+  letter-spacing: 0;
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 /* ========================================
-   LISTES - ESPACEMENT OPTIMISÉ
+   CODE BLOCKS - STYLE CHATGPT PREMIUM
+   ======================================== */
+
+.chat-markdown pre,
+.chatgpt-message-content pre {
+  background: #2d2d2d;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 20px 24px;
+  margin: 20px 0;
+  overflow-x: auto;
+  font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #e5e7eb;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  position: relative;
+}
+
+.chat-markdown pre code,
+.chatgpt-message-content pre code {
+  background: transparent;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+  font-weight: 400;
+  letter-spacing: 0;
+  white-space: pre;
+  word-wrap: normal;
+  overflow-wrap: normal;
+  display: block;
+}
+
+/* Code block avec langage spécifique */
+.chat-markdown pre[class*="language-"],
+.chatgpt-message-content pre[class*="language-"] {
+  background: #2d2d2d;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Amélioration de la lisibilité */
+.chat-markdown pre:hover,
+.chatgpt-message-content pre:hover {
+  border-color: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+}
+
+/* ========================================
+   LISTES - STYLE CHATGPT PREMIUM
    ======================================== */
 
 .chat-markdown ul,
 .chat-markdown ol {
-  margin: var(--spacing-xl, 1.5rem) 0;
-  padding-left: var(--spacing-xl, 1.5rem);
-  line-height: var(--line-height-relaxed);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
+  margin: 1rem 0 !important;
+  padding-left: 1.5rem !important;
+  line-height: 1.6 !important;
+  font-size: 16px !important;
+  font-weight: 400 !important;
 }
 
 .chat-markdown li {
-  margin: var(--spacing-sm, 0.5rem) 0;
-  line-height: var(--line-height-relaxed);
-  color: inherit;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
+  margin: 0.5rem 0 !important;
+  line-height: 1.6 !important;
+  color: inherit !important;
+  font-size: 16px !important;
+  font-weight: 400 !important;
 }
 
+/* Listes à puces - style ChatGPT */
+.chat-markdown ul {
+  list-style-type: none !important;
+}
+
+.chat-markdown ul li::before {
+  content: '•' !important;
+  color: #ffffff !important;
+  font-weight: 600 !important;
+  display: inline-block !important;
+  width: 1em !important;
+  margin-left: -1em !important;
+  font-size: 1.2em !important;
+  line-height: 1 !important;
+  vertical-align: middle !important;
+  opacity: 0.8 !important;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
+}
+
+/* Listes numérotées */
+.chat-markdown ol {
+  list-style-type: decimal !important;
+  counter-reset: item !important;
+}
+
+.chat-markdown ol li {
+  counter-increment: item !important;
+  position: relative !important;
+}
+
+.chat-markdown ol li::marker {
+  color: #ffffff !important;
+  font-weight: 600 !important;
+  opacity: 0.8 !important;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
+}
+
+/* Listes imbriquées */
 .chat-markdown ul ul,
 .chat-markdown ol ol,
 .chat-markdown ul ol,
 .chat-markdown ol ul {
-  margin: var(--spacing-sm, 0.5rem) 0;
+  margin: 0.5rem 0 !important;
 }
 
-.chat-markdown ul {
-  list-style-type: none;
+.chat-markdown ul ul li::before {
+  content: '◦' !important;
+  font-size: 1em !important;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
 }
 
-.chat-markdown ul li::before {
-  content: '•';
-  color: currentColor;
-  font-weight: var(--font-weight-bold);
-  display: inline-block;
-  width: 1em;
-  margin-left: -1em;
-  font-size: 18px;
-  line-height: 1;
-  vertical-align: middle;
-  opacity: 0.8;
-}
-
-.chat-markdown ol {
-  list-style-type: decimal;
-  counter-reset: item;
-}
-
-.chat-markdown ol li {
-  counter-increment: item;
-  position: relative;
-}
-
-.chat-markdown ol li::marker {
-  color: currentColor;
-  font-weight: var(--font-weight-semibold);
-  opacity: 0.8;
+.chat-markdown ul ul ul li::before {
+  content: '▪' !important;
+  font-size: 0.8em !important;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
 }
 
 /* ========================================
-   CITATIONS - DESIGN ÉLÉGANT
+   CITATIONS - DESIGN CHATGPT
    ======================================== */
 
 .chat-markdown blockquote {
-  margin: var(--spacing-xl, 1.5rem) 0;
-  padding: var(--spacing-xl, 1.5rem) var(--spacing-xl, 1.5rem);
-  border-left: 4px solid var(--color-accent-primary);
-  background: var(--glass-bg-subtle);
-  border-radius: 0 var(--radius-xl, 12px) var(--radius-xl, 12px) 0;
-  font-style: normal;
-  color: inherit;
-  position: relative;
-  backdrop-filter: var(--glass-blur-medium);
-  -webkit-backdrop-filter: var(--glass-blur-medium);
-  border: 1px solid var(--glass-border-soft);
-  box-shadow: var(--glass-shadow-soft);
-}
-
-.chat-markdown blockquote::before {
-  content: '"';
-  font-size: 32px;
-  position: absolute;
-  top: var(--spacing-sm, 0.5rem);
-  left: var(--spacing-lg, 1rem);
-  opacity: 0.2;
-  color: currentColor;
-  font-family: Georgia, serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
+  margin: 1.5rem 0 !important;
+  padding: 1rem 1.5rem !important;
+  border-left: 4px solid #6b7280 !important;
+  background: rgba(107, 114, 128, 0.1) !important;
+  border-radius: 0 0.5rem 0.5rem 0 !important;
+  font-style: normal !important;
+  color: #d1d5db !important;
+  position: relative !important;
+  font-size: 16px !important;
+  font-weight: 400 !important;
 }
 
 .chat-markdown blockquote p {
-  margin: 0;
-  font-size: var(--font-size-base, 1rem);
-  line-height: 1.6;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
+  margin: 0 !important;
+  font-size: 1rem !important;
+  line-height: 1.6 !important;
+  font-weight: 400 !important;
+}
+
+.chat-markdown blockquote p:last-child {
+  margin-bottom: 0 !important;
 }
 
 /* ========================================
-   LIENS - STYLE MODERNE
+   LIENS - STYLE CHATGPT
    ======================================== */
 
 .chat-markdown a {
-  color: currentColor;
-  text-decoration: none;
-  transition: all var(--transition-normal, 0.2s ease);
-  opacity: 0.9;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-  padding-bottom: 1px;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
+  color: #10a37f !important;
+  text-decoration: underline !important;
+  text-underline-offset: 2px !important;
+  text-decoration-thickness: 1px !important;
+  transition: color 0.2s ease, text-underline-offset 0.2s ease !important;
+  font-size: 16px !important;
+  font-weight: 400 !important;
 }
 
 .chat-markdown a:hover {
-  color: currentColor;
-  opacity: 1;
-  border-bottom-color: currentColor;
+  color: #1a7f64 !important;
+  text-underline-offset: 3px !important;
+}
+
+.chat-markdown a:focus {
+  outline: 2px solid #10a37f !important;
+  outline-offset: 2px !important;
+  border-radius: 0.25rem !important;
 }
 
 /* ========================================
-   LIGNE HORIZONTALE - DESIGN SUBTIL
+   LIGNE HORIZONTALE - STYLE CHATGPT
    ======================================== */
 
 .chat-markdown hr {
   border: none;
-  border-top: 1px solid var(--glass-border-soft);
-  margin: var(--spacing-2xl, 2rem) 0;
-  position: relative;
-}
-
-.chat-markdown hr::after {
-  content: '✦';
-  position: absolute;
-  top: calc(-1 * var(--spacing-sm, 0.5rem));
-  left: 50%;
-  transform: translateX(-50%);
-  background: var(--color-bg-primary);
-  padding: 0 var(--spacing-xl, 1.5rem);
-  font-size: var(--font-size-sm, 0.875rem);
-  opacity: 0.4;
-  color: currentColor;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  margin: 2rem 0;
+  height: 1px;
 }
 
 /* ========================================
-   TABLEAUX - DESIGN MODERNE AVEC COINS ARRONDIS
+   TABLEAUX - DESIGN CHATGPT PREMIUM
    ======================================== */
 
 .chat-markdown table {
-  width: 100%;
-  border-collapse: collapse;
-  margin: var(--spacing-xl, 1.5rem) 0;
-  font-size: var(--font-size-sm, 0.875rem);
-  line-height: 1.5;
-  background: var(--glass-bg-subtle);
-  border-radius: var(--radius-xl, 12px);
-  overflow: hidden;
-  border: 1px solid var(--glass-border-soft);
-  backdrop-filter: var(--glass-blur-medium);
-  -webkit-backdrop-filter: var(--glass-blur-medium);
-  position: relative;
-  box-shadow: var(--glass-shadow-medium);
-}
-
-.chat-markdown table::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: var(--glass-gradient-subtle);
-  opacity: 0.8;
-  pointer-events: none;
-  z-index: 0;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
+  width: 100% !important;
+  border-collapse: collapse !important;
+  margin: 1.5rem 0 !important;
+  font-size: 0.875rem !important;
+  line-height: 1.5 !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+  border-radius: 0.5rem !important;
+  overflow: hidden !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
 }
 
 .chat-markdown thead {
-  background: transparent;
+  background: rgba(255, 255, 255, 0.1) !important;
 }
 
 .chat-markdown th {
-  padding: var(--spacing-lg, 1rem) var(--spacing-xl, 1.5rem);
-  text-align: left;
-  font-weight: var(--font-weight-semibold);
-  color: inherit;
-  border-bottom: 1px solid var(--glass-border-soft);
-  background: var(--glass-bg-soft);
-  font-size: var(--font-size-xs, 0.75rem);
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
-  position: relative;
-  z-index: 1;
-}
-
-.chat-markdown th::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: var(--glass-gradient-subtle);
-  opacity: 0.6;
-  pointer-events: none;
-  z-index: 0;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
+  padding: 0.75rem 1rem !important;
+  text-align: left !important;
+  font-weight: 600 !important;
+  color: #ffffff !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+  font-size: 0.8rem !important;
+  letter-spacing: 0.025em !important;
+  text-transform: uppercase !important;
 }
 
 .chat-markdown td {
-  padding: var(--spacing-lg, 1rem) var(--spacing-xl, 1.5rem);
-  text-align: left;
-  border-bottom: 1px solid var(--glass-border-subtle);
-  color: inherit;
-  vertical-align: top;
-  position: relative;
-  z-index: 1;
-  transition: all var(--transition-normal, 0.2s ease);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
+  padding: 0.75rem 1rem !important;
+  text-align: left !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+  color: #ffffff !important;
+  vertical-align: top !important;
+  font-size: 0.875rem !important;
+  font-weight: 400 !important;
 }
 
 .chat-markdown tr:last-child td {
   border-bottom: none;
 }
 
-.chat-markdown tr:hover td {
-  background: var(--glass-bg-soft);
+.chat-markdown tbody tr:nth-child(even) td {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.chat-markdown tbody tr:hover td {
+  background: rgba(255, 255, 255, 0.05);
+  transition: background-color 0.2s ease;
 }
 
 /* ========================================
@@ -390,93 +394,228 @@
 .chat-markdown img {
   max-width: 100%;
   height: auto;
-  border-radius: var(--radius-lg, 8px);
-  margin: var(--spacing-xl, 1.5rem) 0;
-  box-shadow: var(--glass-shadow-lg);
-  border: 1px solid var(--glass-border-soft);
+  border-radius: 0.5rem;
+  margin: 1.5rem 0;
+  display: block;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
 /* ========================================
-   RESPONSIVE DESIGN
+   ÉLÉMENTS SPÉCIAUX
+   ======================================== */
+
+.chat-markdown mark {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
+  background: rgba(16, 163, 127, 0.2) !important;
+  color: #ffffff !important;
+  padding: 0.125rem 0.25rem !important;
+  border-radius: 0.25rem !important;
+  font-weight: 500 !important;
+  font-size: 16px !important;
+}
+
+.chat-markdown del {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
+  text-decoration: line-through !important;
+  color: #ffffff !important;
+  opacity: 0.6 !important;
+  font-size: 16px !important;
+  font-weight: 400 !important;
+}
+
+.chat-markdown kbd {
+  font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace !important;
+  font-size: 0.8em !important;
+  padding: 0.125rem 0.375rem !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  border-bottom-width: 2px !important;
+  border-radius: 0.25rem !important;
+  background: rgba(255, 255, 255, 0.1) !important;
+  color: #ffffff !important;
+}
+
+.chat-markdown sup,
+.chat-markdown sub {
+  line-height: 0;
+  position: relative;
+  vertical-align: baseline;
+  font-size: 0.75em;
+}
+
+.chat-markdown sup {
+  top: -0.4em;
+}
+
+.chat-markdown sub {
+  top: 0.2em;
+}
+
+/* ========================================
+   CHECKBOXES - STYLE CHATGPT
+   ======================================== */
+
+.chat-markdown input[type='checkbox'] {
+  appearance: none !important;
+  width: 1.25rem !important;
+  height: 1.25rem !important;
+  border: 2px solid rgba(255, 255, 255, 0.3) !important;
+  border-radius: 0.25rem !important;
+  background: transparent !important;
+  display: inline-block !important;
+  vertical-align: middle !important;
+  position: relative !important;
+  transition: all 0.2s ease !important;
+  cursor: pointer !important;
+  margin-right: 0.5rem !important;
+  margin-top: 0.125rem !important;
+  flex-shrink: 0 !important;
+}
+
+.chat-markdown input[type='checkbox']:checked {
+  border-color: #10a37f !important;
+  background: #10a37f !important;
+}
+
+.chat-markdown input[type='checkbox']:checked::after {
+  content: '✓' !important;
+  position: absolute !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  color: white !important;
+  font-size: 0.875rem !important;
+  font-weight: 600 !important;
+  line-height: 1 !important;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
+}
+
+.chat-markdown input[type='checkbox']:focus {
+  outline: 2px solid #10a37f !important;
+  outline-offset: 2px !important;
+}
+
+/* ========================================
+   INTÉGRATION UNIFIED BLOCKS
+   ======================================== */
+
+/* Styles unified blocks gérés par unified-blocks.css */
+
+/* ========================================
+   RESPONSIVE DESIGN - CHATGPT-LEVEL
    ======================================== */
 
 @media (max-width: 768px) {
   .chat-markdown {
-    font-size: var(--font-size-sm, 0.875rem);
+    font-size: 14px;
+    line-height: 1.5;
   }
   
   .chat-markdown h1 { 
-    font-size: var(--font-size-2xl, 1.5rem); 
-    margin: var(--spacing-xl, 1.5rem) 0 var(--spacing-lg, 1rem) 0;
+    font-size: 1.75rem; 
+    margin: 1.5rem 0 0.75rem 0;
+    line-height: 1.2;
   }
   
   .chat-markdown h2 { 
-    font-size: var(--font-size-xl, 1.25rem); 
-    margin: var(--spacing-lg, 1rem) 0 var(--spacing-md, 0.75rem) 0;
+    font-size: 1.375rem; 
+    margin: 1.25rem 0 0.5rem 0;
+    line-height: 1.25;
   }
   
   .chat-markdown h3 { 
-    font-size: var(--font-size-lg, 1.125rem); 
-    margin: var(--spacing-lg, 1rem) 0 var(--spacing-sm, 0.5rem) 0;
+    font-size: 1.125rem; 
+    margin: 1rem 0 0.5rem 0;
+    line-height: 1.3;
   }
   
   .chat-markdown p {
-    margin: 0 0 var(--spacing-lg, 1rem) 0;
+    margin: 0 0 0.875rem 0;
+    line-height: 1.5;
   }
   
   .chat-markdown ul,
   .chat-markdown ol {
-    margin: var(--spacing-lg, 1rem) 0;
-    padding-left: var(--spacing-lg, 1rem);
+    margin: 0.875rem 0;
+    padding-left: 1.25rem;
   }
   
   .chat-markdown blockquote {
-    margin: var(--spacing-lg, 1rem) 0;
-    padding: var(--spacing-lg, 1rem);
+    margin: 1.25rem 0;
+    padding: 0.875rem 1.25rem;
+    font-size: 0.9rem;
   }
   
   .chat-markdown table {
-    margin: var(--spacing-lg, 1rem) 0;
-    font-size: var(--font-size-xs, 0.75rem);
+    margin: 1.25rem 0;
+    font-size: 0.8rem;
   }
   
   .chat-markdown th,
   .chat-markdown td {
-    padding: var(--spacing-sm, 0.5rem) var(--spacing-md, 0.75rem);
+    padding: 0.625rem 0.75rem;
   }
+  
+  /* Code blocks responsive */
+  .chat-markdown pre,
+  .chatgpt-message-content pre {
+    padding: 16px 20px;
+    margin: 16px 0;
+    font-size: 13px;
+    border-radius: 10px;
+  }
+  
+  /* Unified blocks responsive - gérés par unified-blocks.css */
 }
 
 @media (max-width: 480px) {
   .chat-markdown {
-    font-size: var(--font-size-xs, 0.75rem);
+    font-size: 13px;
+    line-height: 1.45;
   }
   
   .chat-markdown h1 { 
-    font-size: var(--font-size-xl, 1.25rem); 
+    font-size: 1.5rem; 
+    margin: 1.25rem 0 0.625rem 0;
   }
   
   .chat-markdown h2 { 
-    font-size: var(--font-size-lg, 1.125rem); 
+    font-size: 1.25rem; 
+    margin: 1rem 0 0.5rem 0;
   }
   
   .chat-markdown h3 { 
-    font-size: var(--font-size-base, 1rem); 
+    font-size: 1.125rem; 
+    margin: 0.875rem 0 0.375rem 0;
   }
   
   .chat-markdown p {
-    margin: 0 0 var(--spacing-md, 0.75rem) 0;
+    margin: 0 0 0.75rem 0;
+    line-height: 1.45;
   }
   
   .chat-markdown ul,
   .chat-markdown ol {
-    margin: var(--spacing-md, 0.75rem) 0;
-    padding-left: var(--spacing-md, 0.75rem);
+    margin: 0.75rem 0;
+    padding-left: 1rem;
   }
   
   .chat-markdown blockquote {
-    margin: var(--spacing-md, 0.75rem) 0;
-    padding: var(--spacing-md, 0.75rem);
+    margin: 1rem 0;
+    padding: 0.75rem 1rem;
+    font-size: 0.85rem;
   }
+  
+  /* Code blocks mobile */
+  .chat-markdown pre,
+  .chatgpt-message-content pre {
+    padding: 12px 16px;
+    margin: 12px 0;
+    font-size: 12px;
+    border-radius: 8px;
+  }
+  
+  /* Unified blocks mobile - gérés par unified-blocks.css */
 }
 
 /* ========================================
@@ -484,11 +623,11 @@
    ======================================== */
 
 @media (prefers-reduced-motion: reduce) {
-  .chat-markdown a {
-    transition: none;
-  }
-  
-  .chat-markdown td {
+  .chat-markdown a,
+  .chat-markdown tbody tr:hover td,
+  .chat-markdown input[type='checkbox'],
+  .chat-markdown pre:hover,
+  .chatgpt-message-content pre:hover {
     transition: none;
   }
 }
@@ -500,21 +639,23 @@
 @media print {
   .chat-markdown {
     color: #000;
+    background: #fff;
   }
   
-  .chat-markdown code {
-    background: #f5f5f5;
-    color: #000;
-    border: 1px solid #ddd;
-  }
+  /* Code styles gérés par les styles principaux */
   
   .chat-markdown blockquote {
     background: #f9f9f9;
-    border-left-color: #ccc;
+    border-left-color: #10a37f;
   }
   
   .chat-markdown table {
     background: #fff;
     border: 1px solid #ccc;
+  }
+  
+  .chat-markdown th,
+  .chat-markdown td {
+    color: #000;
   }
 }

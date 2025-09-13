@@ -453,7 +453,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
   // Scroll initial après chargement des sessions
   useEffect(() => {
     if (user && !authLoading && sessions.length > 0 && currentSession?.thread && currentSession.thread.length > 0) {
-      const timer = setTimeout(() => scrollToBottom(true), 500);
+      const timer = setTimeout(() => scrollToBottom(false), 300);
       return () => clearTimeout(timer);
     }
   }, [sessions.length, currentSession?.thread, scrollToBottom, user, authLoading]);
@@ -467,7 +467,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
 
   // ✅ MÉMOIRE: Scroll optimisé avec debounce et cleanup
   const debouncedScrollToBottom = useCallback(
-    debounce(() => scrollToBottom(true), 100),
+    debounce(() => scrollToBottom(false), 150),
     [scrollToBottom]
   );
 
@@ -533,7 +533,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
     
     // Scroll automatique quand le widget est déminimisé
     if (!newState && currentSession?.thread && currentSession.thread.length > 0) {
-      setTimeout(() => scrollToBottom(true), 100);
+      setTimeout(() => scrollToBottom(false), 200);
     }
   };
 

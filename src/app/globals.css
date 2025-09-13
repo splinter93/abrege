@@ -18,6 +18,9 @@
 /* Import du design system chat ChatGPT unifié */
 @import '../styles/chatgpt-unified.css';
 
+/* Import des styles markdown chat premium (après chat-markdown-typography.css) */
+@import '../components/chat/ChatMarkdown.css';
+
 /* Import des utilitaires chat */
 @import '../styles/chat-utilities.css';
 

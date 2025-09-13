@@ -1,99 +1,80 @@
+'use client';
 import React from 'react';
 
-/**
- * Composant de test pour la typographie markdown du chat
- * Permet de valider la hiérarchie Noto Sans (titres) / Inter (texte)
- */
 const ChatMarkdownTest: React.FC = () => {
-  const markdownContent = `# Titre Principal (H1) - Noto Sans
+  const testContent = `
+# Titre Principal - Test Font Inter
 
-Ceci est un paragraphe de texte normal utilisant **Inter** pour une excellente lisibilité. Le texte est optimisé pour la lecture avec un line-height approprié et un letter-spacing subtil.
+Voici un **paragraphe** avec du texte normal et du *texte en italique*. Tous les éléments devraient utiliser la police Inter.
 
-## Sous-titre Principal (H2) - Noto Sans
+## Liste à Puces - Test Font
 
-Voici un autre paragraphe avec du texte en *italique* et du **texte en gras** pour tester la hiérarchie typographique.
+- Premier élément avec Inter
+- Deuxième élément avec Inter
+  - Sous-élément 1 avec Inter
+  - Sous-élément 2 avec Inter
+- Troisième élément avec Inter
 
-### Titre de Section (H3) - Noto Sans
+## Liste Numérotée - Test Font
 
-#### Titre de Sous-section (H4) - Noto Sans
+1. Premier point avec Inter
+2. Deuxième point avec Inter
+3. Troisième point avec Inter
 
-##### Titre Mineur (H5) - Noto Sans
+## Citation - Test Font
 
-###### Titre Minimal (H6) - Noto Sans
+> Voici une citation importante qui devrait être bien stylée avec une bordure gauche grise et utiliser Inter.
 
----
+## Code Inline - Test Font
 
-## Code et Citations
+Voici du \`code inline\` dans le texte. Le code utilise JetBrains Mono.
 
-Voici du \`code inline\` utilisant **JetBrains Mono** pour une excellente lisibilité du code.
+## Code Block - Test Unified Blocks
 
-\`\`\`typescript
-// Bloc de code avec syntaxe highlighting
-interface ChatMessage {
-  id: string;
-  content: string;
-  timestamp: Date;
-  author: 'user' | 'assistant';
+\`\`\`javascript
+function hello() {
+  console.log("Hello World!");
+  return "success";
 }
-
-const message: ChatMessage = {
-  id: '1',
-  content: 'Hello World!',
-  timestamp: new Date(),
-  author: 'user'
-};
 \`\`\`
 
-> **Citation importante** : Cette citation utilise Inter pour le texte et respecte la hiérarchie typographique avec un style italique subtil.
+## Tableau - Test Font
 
-## Tableaux
+| Colonne 1 | Colonne 2 | Colonne 3 |
+|-----------|-----------|-----------|
+| Donnée 1  | Donnée 2  | Donnée 3  |
+| Donnée 4  | Donnée 5  | Donnée 6  |
 
-| Fonctionnalité | Police | Taille | Poids |
-|----------------|--------|--------|-------|
-| Titres H1-H6 | Noto Sans | Variable | 700-800 |
-| Texte normal | Inter | 16px | 400 |
-| Code | JetBrains Mono | 14px | 400 |
-| Citations | Inter | 18px | 400 |
+## Lien - Test Font
 
-## Listes
+Voici un [lien vers Google](https://google.com) pour tester le style avec Inter.
 
-### Liste à puces
-- Premier élément utilisant **Inter**
-- Deuxième élément avec du *texte en italique*
-- Troisième élément avec du \`code inline\`
+## Checkbox - Test Font
 
-### Liste numérotée
-1. Premier point important
-2. Deuxième point avec **texte en gras**
-3. Troisième point avec [lien externe](https://example.com)
+- [x] Tâche terminée avec Inter
+- [ ] Tâche en cours avec Inter
+- [ ] Tâche à faire avec Inter
 
-## Liens et Formatage
+## Texte avec Formatage - Test Font
 
-Voici un [lien vers un exemple](https://example.com) qui utilise la police **Inter** avec un style de survol optimisé.
+Voici du **texte en gras**, du *texte en italique*, du ~~texte barré~~, et du \`code inline\`. Tout devrait utiliser Inter sauf le code.
 
-**Texte en gras** et *texte en italique* pour tester les différents poids de police.
+### Sous-titre - Test Font
 
----
+Voici un sous-titre de niveau 3 avec Inter.
 
-*Test de la typographie markdown du chat - Hiérarchie optimisée pour la production*`;
+#### Sous-sous-titre - Test Font
+
+Et un sous-titre de niveau 4 avec Inter.
+`;
 
   return (
-    <div className="p-8 max-w-4xl mx-auto">
-      <div className="mb-8 p-6 bg-glass-subtle rounded-lg border border-glass-border-soft">
-        <h2 className="text-2xl font-bold mb-4 text-white">Test Typographie Markdown Chat</h2>
-        <div className="space-y-2 text-sm text-gray-300">
-          <p><strong>Hiérarchie des polices :</strong></p>
-          <ul className="list-disc list-inside space-y-1 ml-4">
-            <li><strong>Titres (H1-H6) :</strong> Noto Sans - Poids variables (700-800)</li>
-            <li><strong>Texte normal :</strong> Inter - 16px, poids 400</li>
-            <li><strong>Code :</strong> JetBrains Mono - 14px, poids 400</li>
-            <li><strong>Citations :</strong> Inter - 18px, poids 400, italique</li>
-          </ul>
+    <div className="p-8 bg-gray-900 min-h-screen">
+      <div className="max-w-4xl mx-auto">
+        <h1 className="text-2xl font-bold text-white mb-6">Test des Styles Markdown Chat</h1>
+        <div className="bg-gray-800 p-6 rounded-lg border border-gray-700">
+          <EnhancedMarkdownMessage content={testContent} />
         </div>
-      </div>
-      
-      <div className="chat-markdown bg-glass-base p-8 rounded-lg border border-glass-border-soft">
-        <div dangerouslySetInnerHTML={{ __html: markdownContent.replace(/\n/g, '<br>') }} />
       </div>
     </div>
   );
