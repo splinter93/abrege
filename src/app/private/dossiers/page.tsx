@@ -21,6 +21,7 @@ import TargetedPollingMonitor from "@/components/TargetedPollingMonitor";
 import { useRealtime } from "@/hooks/useRealtime";
 import RealtimeStatus from "@/components/RealtimeStatus";
 
+import "@/styles/main.css";
 import "./index.css";
 import "@/components/DossierErrorBoundary.css";
 import "@/components/DossierLoadingStates.css";
@@ -254,15 +255,15 @@ function AuthenticatedDossiersContent({ user }: { user: AuthenticatedUser }) {
   }
 
   return (
-    <div className="dossiers-page-wrapper">
+    <div className="page-wrapper">
       
       {/* Sidebar fixe */}
-      <aside className="dossiers-sidebar-fixed">
+      <aside className="page-sidebar-fixed">
         <Sidebar />
       </aside>
 
       {/* Zone de contenu principal */}
-      <main className="dossiers-content-area">
+      <main className="page-content-area">
         {/* Titre de la page avec design glassmorphism uniforme */}
         <motion.div 
           className="page-title-container-glass"

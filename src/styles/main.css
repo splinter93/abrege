@@ -1,0 +1,39 @@
+/*
+  MAIN CSS - POINT D'ENTRÉE UNIFIÉ
+  =================================
+  Fichier principal qui importe tous les styles optimisés
+  Remplace l'ancienne architecture dispersée
+*/
+
+/* ==========================================================================
+   VARIABLES UNIFIÉES
+   ========================================================================== */
+@import './variables.css';
+
+/* ==========================================================================
+   LAYOUT ET COMPOSANTS
+   ========================================================================== */
+@import './layout.css';
+@import './sidebar.css';
+
+/* ==========================================================================
+   STYLES EXISTANTS (À MIGRER PROGRESSIVEMENT)
+   ========================================================================== */
+@import './design-system.css';
+@import './typography.css';
+@import './page-title-containers.css';
+@import './pages-files-dossiers.css';
+@import './page-dossiers.css';
+
+/* ==========================================================================
+   STYLES CHAT (TEMPORAIRE - À SÉPARER)
+   ========================================================================== */
+@import './chatgpt-unified.css';
+
+/* ==========================================================================
+   STYLES SPÉCIFIQUES PAR PAGE (TEMPORAIRE - À MIGRER)
+   ========================================================================== */
+@import '../app/private/files/page.css';
+@import '../app/private/settings/SettingsPage.css';
+@import '../app/private/trash/TrashPage.css';
+@import '../app/private/trash/index.css';

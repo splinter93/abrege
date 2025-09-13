@@ -1,6 +1,7 @@
 import React from 'react';
 import Sidebar from '@/components/Sidebar';
 import AuthGuard from '@/components/AuthGuard';
+import '@/styles/main.css';
 
 export default function TrashLayout({
   children,
@@ -9,11 +10,11 @@ export default function TrashLayout({
 }) {
   return (
     <AuthGuard>
-      <div className="trash-page-wrapper">
-        <aside className="trash-sidebar-fixed">
+      <div className="page-wrapper">
+        <aside className="page-sidebar-fixed">
           <Sidebar />
         </aside>
-        <main className="trash-content-area">
+        <main className="page-content-area">
           {children}
         </main>
       </div>

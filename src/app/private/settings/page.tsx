@@ -9,6 +9,7 @@ import { useSecureErrorHandler } from "@/components/SecureErrorHandler";
 import { logApi } from "@/utils/logger";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import AuthGuard from "@/components/AuthGuard";
+import "@/styles/main.css";
 import "./SettingsPage.css";
 
 interface ApiKey {
@@ -35,16 +36,16 @@ export default function SettingsPage() {
   return (
     <ErrorBoundary>
       <AuthGuard>
-        <div className="settings-page-wrapper">
+        <div className="page-wrapper">
           <header className="settings-header-fixed">
             <LogoHeader size="medium" position="left" />
           </header>
 
-          <aside className="settings-sidebar-fixed">
+          <aside className="page-sidebar-fixed">
             <Sidebar />
           </aside>
 
-          <main className="settings-content-area">
+          <main className="page-content-area">
             <SettingsPageContent />
           </main>
         </div>

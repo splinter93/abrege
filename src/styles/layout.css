@@ -1,0 +1,529 @@
+/*
+  LAYOUT CSS - CLASSES GÉNÉRIQUES POUR PAGES
+  ===========================================
+  Classes CSS unifiées pour remplacer les classes spécifiques par page
+  - .page-wrapper (remplace .dossiers-page-wrapper, .files-page-wrapper, etc.)
+  - .page-sidebar-fixed (remplace .dossiers-sidebar-fixed, .files-sidebar-fixed, etc.)
+  - .page-content-area (remplace .dossiers-content-area, .files-content-area, etc.)
+*/
+
+/* ==========================================================================
+   LAYOUT PRINCIPAL DES PAGES
+   ========================================================================== */
+
+/* Wrapper principal de toutes les pages */
+.page-wrapper {
+  display: flex;
+  min-height: 100vh;
+  width: 100vw;
+  background: var(--surface-background);
+  position: relative;
+}
+
+/* Sidebar fixe pour toutes les pages */
+.page-sidebar-fixed {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: var(--sidebar-width);
+  height: 100vh;
+  z-index: var(--z-sidebar);
+  background: var(--surface-primary);
+  border-right: 1px solid var(--border-subtle);
+}
+
+/* Zone de contenu principal */
+.page-content-area {
+  flex: 1;
+  margin-left: var(--sidebar-width);
+  min-height: 100vh;
+  background: var(--surface-background);
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+}
+
+/* ==========================================================================
+   SECTIONS DE CONTENU
+   ========================================================================== */
+
+/* Section principale de contenu */
+.page-content-section {
+  flex: 1;
+  padding: var(--page-padding);
+  display: flex;
+  flex-direction: column;
+  gap: var(--page-gap);
+  min-height: 0;
+}
+
+/* Section avec header glassmorphism */
+.page-section-glass {
+  background: var(--glass-bg-primary);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border-primary);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--glass-shadow-subtle);
+  padding: var(--spacing-xl);
+  margin-bottom: var(--spacing-lg);
+}
+
+/* Section simple sans glassmorphism */
+.page-section-simple {
+  background: var(--surface-primary);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg);
+  margin-bottom: var(--spacing-lg);
+}
+
+/* ==========================================================================
+   HEADERS DE PAGES
+   ========================================================================== */
+
+/* Container de titre de page avec glassmorphism */
+.page-title-container-glass {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-lg);
+  padding: var(--spacing-xl);
+  background: var(--glass-bg-primary);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border-primary);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--glass-shadow-subtle);
+  margin-bottom: var(--spacing-xl);
+  min-height: 80px;
+  position: relative;
+  overflow: hidden;
+}
+
+.page-title-container-glass::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.1) 0%, 
+    rgba(255, 255, 255, 0.05) 100%);
+  pointer-events: none;
+}
+
+.page-title-icon-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 60px;
+  height: 60px;
+  background: var(--glass-bg-medium);
+  border: 1px solid var(--glass-border-primary);
+  border-radius: var(--radius-lg);
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+}
+
+.page-title-icon {
+  width: 32px;
+  height: 32px;
+  color: var(--accent-primary);
+}
+
+.page-title-section {
+  flex: 1;
+  min-width: 0;
+  position: relative;
+  z-index: 1;
+}
+
+.page-title {
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-bold);
+  color: var(--text-primary);
+  margin: 0 0 var(--spacing-sm) 0;
+  line-height: var(--line-height-tight);
+}
+
+.page-subtitle {
+  font-size: var(--font-size-base);
+  color: var(--text-secondary);
+  margin: 0;
+  line-height: var(--line-height-normal);
+}
+
+.page-title-stats {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-lg);
+  margin-top: var(--spacing-md);
+}
+
+.page-title-stats-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--spacing-xs);
+}
+
+.page-title-stats-number {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-bold);
+  color: var(--accent-primary);
+  line-height: 1;
+}
+
+.page-title-stats-label {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  font-weight: var(--font-medium);
+}
+
+/* ==========================================================================
+   NAVIGATION ET CONTROLES
+   ========================================================================== */
+
+/* Navigation des classeurs */
+.classeur-navigation-wrapper {
+  background: var(--glass-bg-secondary);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid var(--glass-border-secondary);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-md);
+  margin-bottom: var(--spacing-lg);
+}
+
+.classeur-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--glass-bg-subtle);
+  border: 1px solid var(--glass-border-subtle);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-medium);
+  transition: all var(--transition-normal);
+  cursor: pointer;
+}
+
+.classeur-pill:hover {
+  background: var(--glass-bg-medium);
+  border-color: var(--glass-border-primary);
+  color: var(--text-primary);
+  transform: translateY(-1px);
+}
+
+.classeur-pill.active {
+  background: var(--accent-subtle);
+  border-color: var(--accent-primary);
+  color: var(--accent-primary);
+  font-weight: var(--font-semibold);
+  box-shadow: 0 0 0 2px rgba(229, 90, 44, 0.1);
+}
+
+/* Toolbar des fichiers/dossiers */
+.folder-toolbar-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-md);
+  padding: var(--spacing-lg);
+  background: var(--glass-bg-secondary);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid var(--glass-border-secondary);
+  border-radius: var(--radius-lg);
+  margin-bottom: var(--spacing-lg);
+}
+
+.fm-control-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--glass-bg-subtle);
+  border: 1px solid var(--glass-border-subtle);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-medium);
+  transition: all var(--transition-normal);
+  cursor: pointer;
+}
+
+.fm-control-btn:hover {
+  background: var(--glass-bg-medium);
+  border-color: var(--glass-border-primary);
+  color: var(--text-primary);
+  transform: translateY(-1px);
+}
+
+.fm-control-btn.active {
+  background: var(--accent-subtle);
+  border-color: var(--accent-primary);
+  color: var(--accent-primary);
+  font-weight: var(--font-semibold);
+}
+
+/* ==========================================================================
+   GRID ET ITEMS
+   ========================================================================== */
+
+/* Grid principal pour fichiers/dossiers */
+.fm-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: var(--spacing-lg);
+  padding: var(--spacing-lg);
+}
+
+/* Items de fichiers/dossiers */
+.fm-grid-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-lg);
+  background: var(--glass-bg-primary);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid var(--glass-border-primary);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--glass-shadow-subtle);
+  transition: all var(--transition-normal);
+  cursor: pointer;
+  text-decoration: none;
+  color: inherit;
+}
+
+.fm-grid-item:hover {
+  background: var(--glass-bg-medium);
+  border-color: var(--glass-border-hover);
+  box-shadow: var(--glass-shadow-medium);
+  transform: translateY(-2px);
+}
+
+.fm-grid-item.selected {
+  background: var(--accent-subtle);
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 2px rgba(229, 90, 44, 0.1);
+}
+
+.file-icon,
+.folder-icon {
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--glass-bg-medium);
+  border: 1px solid var(--glass-border-primary);
+  border-radius: var(--radius-md);
+  color: var(--accent-primary);
+  font-size: var(--font-size-xl);
+}
+
+.fm-grid-item-name {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-medium);
+  color: var(--text-primary);
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  width: 100%;
+}
+
+.fm-grid-item-meta {
+  font-size: var(--font-size-xs);
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+/* ==========================================================================
+   ÉTATS SPÉCIAUX
+   ========================================================================== */
+
+/* État de chargement */
+.loading-state-glass {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-lg);
+  padding: var(--spacing-3xl);
+  background: var(--glass-bg-primary);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border-primary);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--glass-shadow-subtle);
+  text-align: center;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--glass-border-subtle);
+  border-top: 3px solid var(--accent-primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading-text {
+  font-size: var(--font-size-base);
+  color: var(--text-secondary);
+  font-weight: var(--font-medium);
+}
+
+/* État d'erreur */
+.error-state-glass {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-lg);
+  padding: var(--spacing-3xl);
+  background: var(--glass-bg-primary);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--color-error);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--glass-shadow-subtle);
+  text-align: center;
+}
+
+.error-icon {
+  width: 48px;
+  height: 48px;
+  color: var(--color-error);
+  font-size: var(--font-size-2xl);
+}
+
+.error-text {
+  font-size: var(--font-size-base);
+  color: var(--text-primary);
+  font-weight: var(--font-medium);
+}
+
+.error-description {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+}
+
+/* État vide */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-lg);
+  padding: var(--spacing-3xl);
+  background: var(--glass-bg-primary);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border-primary);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--glass-shadow-subtle);
+  text-align: center;
+}
+
+.empty-icon {
+  width: 64px;
+  height: 64px;
+  color: var(--text-tertiary);
+  font-size: var(--font-size-4xl);
+}
+
+.empty-title {
+  font-size: var(--font-size-xl);
+  color: var(--text-primary);
+  font-weight: var(--font-semibold);
+  margin: 0;
+}
+
+.empty-description {
+  font-size: var(--font-size-base);
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+/* ==========================================================================
+   RESPONSIVE DESIGN
+   ========================================================================== */
+
+@media (max-width: 768px) {
+  .page-wrapper {
+    flex-direction: column;
+  }
+
+  .page-sidebar-fixed {
+    position: relative;
+    width: 100%;
+    height: auto;
+    border-right: none;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+
+  .page-content-area {
+    margin-left: 0;
+  }
+
+  .page-content-section {
+    padding: var(--spacing-md);
+  }
+
+  .page-title-container-glass {
+    padding: var(--spacing-lg);
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-md);
+  }
+
+  .page-title-stats {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-md);
+  }
+
+  .fm-grid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: var(--spacing-md);
+    padding: var(--spacing-md);
+  }
+
+  .folder-toolbar-container {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--spacing-sm);
+  }
+}
+
+@media (max-width: 480px) {
+  .page-content-section {
+    padding: var(--spacing-sm);
+  }
+
+  .page-title-container-glass {
+    padding: var(--spacing-md);
+  }
+
+  .fm-grid {
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: var(--spacing-sm);
+    padding: var(--spacing-sm);
+  }
+}

@@ -14,6 +14,7 @@ import AuthGuard from "@/components/AuthGuard";
 import { useSecureErrorHandler } from "@/components/SecureErrorHandler";
 import { STORAGE_CONFIG } from "@/config/storage";
 import { simpleLogger as logger } from "@/utils/logger";
+import "@/styles/main.css";
 import "./index.css";
 import "./page.css"; // CSS critique pour éviter le flash
 import { motion } from "framer-motion";
@@ -35,11 +36,11 @@ function FilesPageContent() {
   // 🔧 FIX: Gérer le cas où l'utilisateur n'est pas encore chargé AVANT d'appeler les hooks
   if (authLoading || !user?.id) {
     return (
-      <div className="files-page-wrapper">
-        <aside className="files-sidebar-fixed">
+      <div className="page-wrapper">
+        <aside className="page-sidebar-fixed">
           <Sidebar />
         </aside>
-        <main className="files-content-area">
+        <main className="page-content-area">
           <div className="loading-state">
             <p>Chargement...</p>
           </div>
@@ -180,14 +181,14 @@ function AuthenticatedFilesContent({ user }: { user: { id: string; email?: strin
   );
 
   return (
-    <div className="files-page-wrapper">
+    <div className="page-wrapper">
       {/* Sidebar fixe */}
-      <aside className="files-sidebar-fixed">
+      <aside className="page-sidebar-fixed">
         <Sidebar />
       </aside>
 
       {/* Zone de contenu principal */}
-      <main className="files-content-area">
+      <main className="page-content-area">
         {/* Section des fichiers avec header glassmorphism uniforme */}
         <motion.section 
           className="files-section"
