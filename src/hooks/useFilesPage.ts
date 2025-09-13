@@ -89,7 +89,7 @@ export function useFilesPage() {
           .from('files')
           .select('size')
           .eq('user_id', user.id)
-          .is('deleted_at', null);
+          .eq('is_deleted', false);
 
         if (filesError) {
           logger.warn(`⚠️ Erreur calcul usage: ${filesError.message}`, { userId: user.id });
@@ -129,7 +129,7 @@ export function useFilesPage() {
         .from('files')
         .select('*')
         .eq('user_id', user.id)
-        .is('deleted_at', null)
+        .eq('is_deleted', false)
         .order('created_at', { ascending: false });
 
       if (filesError) {

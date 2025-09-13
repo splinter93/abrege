@@ -1,249 +1,197 @@
 /* ==========================================================================
-   PAGE FICHIERS - STYLES CONSOLIDÉS
-   ========================================================================== */
-/* Cette page utilise maintenant les styles consolidés */
-
-@import '../../../styles/page-files.css';
-
-/* ==========================================================================
-   BACKGROUND PRINCIPAL - STYLE UNIFIÉ DANS Sidebar.css
+   PAGE FICHIERS - NOUVEAU LAYOUT 2025
    ========================================================================== */
 
-/* ==========================================================================
-   HEADER FIXE
-   ========================================================================== */
-.files-header-fixed {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 80px;
-  background: rgba(15, 23, 42, 0.8);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-bottom: 1px solid var(--glass-border-primary);
-  z-index: var(--files-z-header);
+/* Layout principal avec CSS Grid */
+.files-page {
+  display: grid;
+  grid-template-columns: 260px 1fr; /* Sidebar fixe, contenu flexible */
+  height: 100vh;
+  background-color: var(--background-primary);
+  overflow: hidden;
+}
+
+/* Contenu principal */
+.files-main-content {
+  grid-column: 2 / 3;
+  padding: 24px 48px;
+  overflow-y: auto;
   display: flex;
-  align-items: center;
-  padding: 0 var(--files-spacing-xl);
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Header de la page */
+.files-header {
+  padding: 16px 24px;
+  background-color: var(--background-secondary);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color);
 }
 
 .header-content {
-  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header-left {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: 16px;
 }
 
-/* ==========================================================================
-   SIDEBAR ET CONTENU - STYLES UNIFIÉS DANS Sidebar.css
-   ========================================================================== */
-
-/* Padding spécifique pour la page des fichiers */
-.files-content-area {
-  padding: 0 32px 0 32px; /* Padding horizontal seulement */
-}
-
-/* ==========================================================================
-   SECTION HEADER GLASSMORPHISM - STYLE UNIFORME
-   ========================================================================== */
-.files-section {
-  margin-bottom: 0; /* Pas d'espacement en bas pour la page fichiers */
-}
-
-/* Override du margin-bottom du title container pour la page fichiers */
-.page-title-container-glass {
-  margin-bottom: 0; /* Pas d'espacement en bas pour la page fichiers */
-}
-
-/* Suppression des styles redondants - maintenant dans page-title-containers.css */
-.files-header-glass,
-.files-header-content {
-  /* Styles définis dans page-title-containers.css */
-}
-
-/* ==========================================================================
-   INFOS DES FICHIERS - STYLE UNIFORME
-   ========================================================================== */
-/* Suppression des styles redondants - maintenant dans page-title-containers.css */
-.files-info,
-.files-icon-container,
-.files-icon,
-.files-title-section,
-.files-title,
-.files-subtitle {
-  /* Styles définis dans page-title-containers.css */
-}
-
-/* ==========================================================================
-   SECTION DE CONTENU DES FICHIERS
-   ========================================================================== */
-.files-content-section {
-  margin-top: 28px; /* Espace réduit entre le titre et le contenu */
-  background: var(--glass-bg-primary);
-  border: 1px solid var(--glass-border-primary);
-  border-radius: var(--files-radius-xl);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  box-shadow: var(--glass-shadow-medium);
-  padding: var(--files-spacing-xl);
-  transition: all var(--files-transition-normal);
-}
-
-.files-content-section:hover {
-  border-color: var(--glass-border-hover);
-  box-shadow: var(--glass-shadow-strong);
-}
-
-.files-content {
-  display: flex;
-  flex-direction: column;
-  gap: var(--files-spacing-lg);
-}
-
-/* ==========================================================================
-   TOOLBAR DES FICHIERS
-   ========================================================================== */
-.files-toolbar-section {
-  margin-bottom: var(--files-spacing-lg);
-}
-
-/* ==========================================================================
-   LISTE DES FICHIERS
-   ========================================================================== */
-.files-list {
-  display: flex;
-  flex-direction: column;
-  gap: var(--files-spacing-md);
-}
-
-.files-list-item {
-  background: var(--glass-bg-secondary);
-  border: 1px solid var(--glass-border-secondary);
-  border-radius: var(--files-radius-md);
-  padding: var(--files-spacing-md);
-  transition: all var(--files-transition-normal);
-  cursor: pointer;
-}
-
-.files-list-item:hover {
-  background: var(--glass-bg-hover);
-  border-color: var(--glass-border-hover);
-  transform: translateY(-1px);
-  box-shadow: var(--glass-shadow-subtle);
-}
-
-/* ==========================================================================
-   GRID DES FICHIERS
-   ========================================================================== */
-.files-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: var(--files-spacing-lg);
-}
-
-.files-grid-item {
-  background: var(--glass-bg-secondary);
-  border: 1px solid var(--glass-border-secondary);
-  border-radius: var(--files-radius-md);
-  padding: var(--files-spacing-lg);
-  transition: all var(--files-transition-normal);
-  cursor: pointer;
-  text-align: center;
-}
-
-.files-grid-item:hover {
-  background: var(--glass-bg-hover);
-  border-color: var(--glass-border-hover);
-  transform: translateY(-2px);
-  box-shadow: var(--glass-shadow-medium);
-}
-
-/* ==========================================================================
-   ÉTATS DE CHARGEMENT ET D'ERREUR
-   ========================================================================== */
-.loading-state-glass,
-.error-state-glass {
-  background: var(--glass-bg-primary);
-  border: 1px solid var(--glass-border-primary);
-  border-radius: var(--files-radius-xl);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  box-shadow: var(--glass-shadow-medium);
-  padding: var(--files-spacing-2xl);
-  text-align: center;
-  margin: var(--files-spacing-2xl) 0;
-}
-
-.loading-spinner-glass {
+.header-icon-container {
   width: 48px;
   height: 48px;
-  border: 3px solid var(--glass-border-secondary);
-  border-top: 3px solid var(--files-primary);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: var(--accent-primary-light);
+  border-radius: var(--radius-md);
+}
+
+.header-icon {
+  font-size: 24px;
+}
+
+.header-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.header-subtitle {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+/* Statistiques */
+.header-stats {
+  display: flex;
+  gap: 24px;
+}
+
+.stat-item {
+  text-align: right;
+}
+
+.stat-number {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  display: block;
+}
+
+.stat-label {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+}
+
+/* Section principale du contenu (Toolbar, Uploader, FilesContent) */
+.files-body-section {
+  flex: 1; /* Prend l'espace restant */
+  min-height: 0; /* Important pour le scroll dans un flex container */
+  padding: 24px;
+  background-color: var(--background-secondary);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Conteneur de l'uploader */
+.uploader-container {
+  border: 1px dashed var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 16px;
+}
+
+/* États de chargement et d'erreur */
+.loading-state, .error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  color: var(--text-secondary);
+  padding: 48px;
+}
+
+.loading-spinner {
+  width: 48px;
+  height: 48px;
+  border: 3px solid var(--border-color);
+  border-top-color: var(--accent-primary);
   border-radius: 50%;
   animation: spin 1s linear infinite;
-  margin: 0 auto var(--files-spacing-lg);
+  margin-bottom: 16px;
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  to { transform: rotate(360deg); }
 }
 
 .error-icon {
   font-size: 48px;
-  margin-bottom: var(--files-spacing-lg);
+  margin-bottom: 16px;
 }
 
-/* ==========================================================================
-   UPLOADER
-   ========================================================================== */
-.uploader-section-glass {
-  background: var(--glass-bg-primary);
-  border: 1px solid var(--glass-border-primary);
-  border-radius: var(--files-radius-xl);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  box-shadow: var(--glass-shadow-medium);
-  padding: var(--files-spacing-xl);
-  margin: var(--files-spacing-lg) 0;
-  transition: all var(--files-transition-normal);
-}
-
-.uploader-section-glass:hover {
-  border-color: var(--glass-border-hover);
-  box-shadow: var(--glass-shadow-strong);
-}
 
 /* ==========================================================================
    RESPONSIVE DESIGN
    ========================================================================== */
-@media (max-width: 768px) {
-  .files-content-area {
-    padding: 0 20px 0 20px;
+
+@media (max-width: 1200px) {
+  .files-page {
+    grid-template-columns: 240px 1fr;
   }
-  
-  .files-grid {
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-    gap: var(--files-spacing-md);
-  }
-  
-  .files-header-fixed {
-    padding: 0 var(--files-spacing-lg);
+  .files-main-content {
+    padding: 24px 32px;
   }
 }
 
-@media (max-width: 480px) {
-  .files-content-area {
-    padding: 0 16px 0 16px;
+@media (max-width: 992px) {
+  .files-page {
+    grid-template-columns: 220px 1fr;
   }
-  
-  .files-grid {
-    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-    gap: var(--files-spacing-sm);
+  .files-main-content {
+    padding: 24px;
   }
+  .header-content {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+  .header-stats {
+    width: 100%;
+    justify-content: space-between;
+  }
+  .stat-item {
+    text-align: left;
+  }
+}
+
+@media (max-width: 768px) {
+  .files-page {
+    grid-template-columns: 1fr;
+  }
+  /* .sidebar { display: none; } */
   
-  .files-header-fixed {
-    padding: 0 var(--files-spacing-md);
+  .files-main-content {
+    grid-column: 1 / 2;
+    padding: 16px;
+  }
+
+  .files-body-section {
+    padding: 16px;
+  }
+
+  .header-title {
+    font-size: 1.25rem;
   }
 } 

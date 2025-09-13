@@ -136,8 +136,8 @@ export function OpenAPIEditorStyles() {
 
       .schema-input-textarea:focus {
         outline: none;
-        border-color: #ff6a00;
-        box-shadow: 0 0 0 2px rgba(255, 106, 0, 0.1);
+        border-color: var(--border-color);
+        box-shadow: none;
       }
 
       .schema-input-url {
@@ -152,8 +152,8 @@ export function OpenAPIEditorStyles() {
 
       .schema-input-url:focus {
         outline: none;
-        border-color: #ff6a00;
-        box-shadow: 0 0 0 2px rgba(255, 106, 0, 0.1);
+        border-color: var(--border-color);
+        box-shadow: none;
       }
 
       .schema-input-file {
@@ -605,8 +605,8 @@ export function OpenAPIEditorStyles() {
       .endpoint-form-field select:focus,
       .endpoint-form-field textarea:focus {
         outline: none;
-        border-color: #ff6a00;
-        box-shadow: 0 0 0 2px rgba(255, 106, 0, 0.1);
+        border-color: var(--border-color);
+        box-shadow: none;
       }
 
       .endpoint-form-field input.error,

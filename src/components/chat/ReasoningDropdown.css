@@ -136,8 +136,8 @@
    ======================================== */
 
 .reasoning-dropdown-trigger:focus {
-  outline: 2px solid rgba(59, 130, 246, 0.5);
-  outline-offset: 2px;
+  outline: none;
+  box-shadow: none;
 }
 
 .reasoning-dropdown-trigger:focus:not(:focus-visible) {

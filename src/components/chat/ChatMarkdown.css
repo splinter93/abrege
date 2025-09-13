@@ -314,9 +314,8 @@
 }
 
 .chat-markdown a:focus {
-  outline: 2px solid #10a37f !important;
-  outline-offset: 2px !important;
-  border-radius: 0.25rem !important;
+  outline: none !important;
+  box-shadow: none !important;
 }
 
 /* ========================================
@@ -491,8 +490,8 @@
 }
 
 .chat-markdown input[type='checkbox']:focus {
-  outline: 2px solid #10a37f !important;
-  outline-offset: 2px !important;
+  outline: none !important;
+  box-shadow: none !important;
 }
 
 /* ========================================

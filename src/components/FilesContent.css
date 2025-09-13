@@ -35,7 +35,7 @@
   -webkit-backdrop-filter: blur(20px);
   box-shadow: var(--glass-shadow-subtle);
   margin: var(--files-spacing-lg);
-  transition: all var(--files-transition-normal);
+  transition: none;
 }
 
 .files-content-loading:hover,
@@ -50,7 +50,7 @@
   font-size: 32px;
   margin-bottom: var(--files-spacing-md);
   animation: spin 1s linear infinite;
-  color: var(--files-primary);
+  color: var(--accent-primary);
 }
 
 .files-error-icon {
@@ -90,15 +90,15 @@
   width: 100%;
   min-height: 300px;
   border-radius: var(--files-radius-xl);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: none;
   border: 2px dashed transparent;
 }
 
 /* Indicateur de zone de drop actif */
 .files-grid-drop-zone.drag-over {
-  border-color: var(--files-primary);
-  background: rgba(249, 115, 22, 0.05);
-  box-shadow: 0 0 0 4px rgba(249, 115, 22, 0.1);
+  border: none;
+  background: transparent;
+  box-shadow: none;
 }
 
 .files-grid {
@@ -125,7 +125,7 @@
   border-radius: var(--files-radius-lg);
   padding: var(--files-spacing-md);
   cursor: pointer;
-  transition: all var(--files-transition-normal);
+  transition: none;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -141,35 +141,23 @@
 }
 
 .file-grid-item::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(135deg, 
-    rgba(255, 255, 255, 0.02) 0%, 
-    rgba(255, 255, 255, 0.01) 50%, 
-    rgba(255, 255, 255, 0.02) 100%);
-  opacity: 0;
-  transition: opacity var(--files-transition-normal);
-  border-radius: var(--files-radius-lg);
+  display: none;
 }
 
 .file-grid-item:hover {
   background: transparent;
-  border-color: transparent;
-  transform: translateY(-2px);
+  border: none;
+  transform: none;
   box-shadow: none;
 }
 
 .file-grid-item:hover::before {
-  opacity: 1;
+  display: none;
 }
 
 .file-grid-item:active {
-  transform: translateY(-2px);
-  transition: transform var(--files-transition-fast);
+  transform: none;
+  transition: none;
 }
 
 /* ==========================================================================
@@ -184,7 +172,7 @@
   width: 100%;
   height: 40px;
   font-size: 28px;
-  transition: transform var(--files-transition-fast);
+  transition: none;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -271,7 +259,7 @@
   width: 24px;
   height: 24px;
   border: 2px solid var(--glass-border-secondary);
-  border-top: 2px solid var(--files-primary);
+  border-top: 2px solid var(--accent-primary);
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
@@ -323,21 +311,21 @@
 /* Éléments en cours de renommage */
 .file-grid-item.renaming {
   background: var(--glass-bg-hover);
-  border-color: var(--files-primary);
-  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.15);
+  border-color: var(--border-color);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.1);
 }
 
 /* Éléments en cours de drag */
 .file-grid-item.dragging {
-  opacity: 0.5;
-  transform: rotate(5deg) scale(0.95);
+  opacity: 0.7;
+  transform: none;
 }
 
 /* Zone de drop */
 .file-grid-item.drag-over {
-  background: var(--glass-bg-hover);
-  border-color: var(--files-primary);
-  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.2);
+  background: transparent;
+  border: none;
+  box-shadow: none;
 }
 
 /* ==========================================================================
@@ -358,13 +346,14 @@
   backdrop-filter: blur(15px);
   -webkit-backdrop-filter: blur(15px);
   outline: none;
-  transition: all var(--files-transition-fast);
+  transition: none;
 }
 
 .file-grid-item input:focus {
-  border-color: var(--files-primary);
-  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.15);
+  border-color: var(--border-color);
+  box-shadow: none;
   background: var(--glass-bg-primary);
+  outline: none;
 }
 
 /* ==========================================================================
@@ -394,6 +383,110 @@
 .files-grid .file-grid-item:nth-child(4) { animation-delay: 0.4s; }
 .files-grid .file-grid-item:nth-child(5) { animation-delay: 0.5s; }
 .files-grid .file-grid-item:nth-child(6) { animation-delay: 0.6s; }
+
+/* ==========================================================================
+   RENOMMAGE
+   ========================================================================== */
+
+.rename-input-container {
+  position: relative;
+  width: 100%;
+}
+
+.rename-input {
+  width: 100%;
+  padding: 4px 8px;
+  border: 2px solid var(--accent-primary);
+  border-radius: 4px;
+  font-size: 14px;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.rename-input:focus {
+  border-color: var(--accent-hover);
+  box-shadow: 0 0 0 2px rgba(var(--accent-primary-rgb), 0.2);
+}
+
+.rename-hint {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: 0 0 4px 4px;
+  border: 1px solid var(--border-color);
+  border-top: none;
+  z-index: 10;
+  opacity: 0.8;
+}
+
+.file-name-display {
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+  user-select: none;
+}
+
+.file-name-display:hover {
+  background-color: var(--hover-bg);
+}
+
+/* ==========================================================================
+   MENU CONTEXTUEL
+   ========================================================================== */
+
+/* Désactiver le menu contextuel par défaut */
+.file-grid-item,
+.file-list-item {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+.file-context-menu {
+  position: fixed;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 10000;
+  min-width: 160px;
+  padding: 4px 0;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.context-menu-item {
+  padding: 8px 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--text-primary);
+  transition: background-color 0.2s ease;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+}
+
+.context-menu-item:hover {
+  background-color: var(--hover-bg);
+}
+
+.context-menu-item:active {
+  background-color: var(--accent-primary);
+  color: white;
+}
 
 /* ==========================================================================
    RESPONSIVE DESIGN

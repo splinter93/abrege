@@ -170,9 +170,9 @@ const FilesContent: React.FC<FilesContentProps> = ({
   }, [safeFiles, onFileOpen]);
 
   const handleFileDoubleClick = useCallback((file: FileItem) => {
-    // Ouvrir le fichier dans un nouvel onglet
-    window.open(file.url, '_blank');
-  }, []);
+    // Double-clic : commencer le renommage
+    onFileRename(file.id, file.filename);
+  }, [onFileRename]);
 
   const handleCloseImageModal = useCallback(() => {
     setImageModal(prev => ({ ...prev, isOpen: false }));
@@ -250,7 +250,11 @@ const FilesContent: React.FC<FilesContentProps> = ({
                 whileTap={{ scale: 0.98 }}
                 onClick={() => handleFileClick(file)}
                 onDoubleClick={() => handleFileDoubleClick(file)}
-                onContextMenu={(e) => onContextMenuItem?.(e, file)}
+                onContextMenu={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onContextMenuItem?.(e, file);
+                }}
               >
                 {file.mime_type?.startsWith('image/') ? (
                   <ImagePreview file={file} />
@@ -262,21 +266,55 @@ const FilesContent: React.FC<FilesContentProps> = ({
                 <div className="file-info">
                   <div className="file-name">
                     {renamingItemId === file.id ? (
-                      <input
-                        type="text"
-                        defaultValue={file.filename || ''}
-                        onBlur={(e) => onFileRename(file.id, e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') {
-                            onFileRename(file.id, e.currentTarget.value);
-                          } else if (e.key === 'Escape') {
-                            onCancelRename?.();
-                          }
-                        }}
-                        autoFocus
-                      />
+                      <div className="rename-input-container">
+                        <input
+                          type="text"
+                          className="rename-input"
+                          defaultValue={file.filename || ''}
+                          onBlur={(e) => onFileRename(file.id, e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              onFileRename(file.id, e.currentTarget.value);
+                            } else if (e.key === 'Escape') {
+                              onCancelRename?.();
+                            }
+                          }}
+                          onClick={(e) => e.stopPropagation()}
+                          autoFocus
+                          style={{
+                            width: '100%',
+                            padding: '4px 8px',
+                            border: '2px solid var(--accent-primary)',
+                            borderRadius: '4px',
+                            fontSize: '14px',
+                            backgroundColor: 'var(--bg-primary)',
+                            color: 'var(--text-primary)',
+                            outline: 'none'
+                          }}
+                        />
+                        <div className="rename-hint">
+                          Appuyez sur Entrée pour confirmer, Échap pour annuler
+                        </div>
+                      </div>
                     ) : (
-                      file.filename || 'Fichier sans nom'
+                      <div 
+                        className="file-name-display"
+                        title="Double-clic pour renommer"
+                        style={{
+                          cursor: 'pointer',
+                          padding: '2px 4px',
+                          borderRadius: '4px',
+                          transition: 'background-color 0.2s'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.backgroundColor = 'var(--hover-bg)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.backgroundColor = 'transparent';
+                        }}
+                      >
+                        {file.filename || 'Fichier sans nom'}
+                      </div>
                     )}
                   </div>
                   {/* Suppression de file-meta pour gagner de l'espace vertical */}
@@ -300,7 +338,11 @@ const FilesContent: React.FC<FilesContentProps> = ({
               whileHover={{ backgroundColor: 'var(--hover-bg)' }}
               onClick={() => handleFileClick(file)}
               onDoubleClick={() => handleFileDoubleClick(file)}
-              onContextMenu={(e) => onContextMenuItem?.(e, file)}
+              onContextMenu={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onContextMenuItem?.(e, file);
+              }}
             >
               {file.mime_type?.startsWith('image/') ? (
                 <ImagePreview file={file} />
@@ -312,21 +354,55 @@ const FilesContent: React.FC<FilesContentProps> = ({
               <div className="file-info">
                 <div className="file-name">
                   {renamingItemId === file.id ? (
-                    <input
-                      type="text"
-                      defaultValue={file.filename || ''}
-                      onBlur={(e) => onFileRename(file.id, e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          onFileRename(file.id, e.currentTarget.value);
-                        } else if (e.key === 'Escape') {
-                          onCancelRename?.();
-                        }
-                      }}
-                      autoFocus
-                    />
+                    <div className="rename-input-container">
+                      <input
+                        type="text"
+                        className="rename-input"
+                        defaultValue={file.filename || ''}
+                        onBlur={(e) => onFileRename(file.id, e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            onFileRename(file.id, e.currentTarget.value);
+                          } else if (e.key === 'Escape') {
+                            onCancelRename?.();
+                          }
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                        autoFocus
+                        style={{
+                          width: '100%',
+                          padding: '4px 8px',
+                          border: '2px solid var(--accent-primary)',
+                          borderRadius: '4px',
+                          fontSize: '14px',
+                          backgroundColor: 'var(--bg-primary)',
+                          color: 'var(--text-primary)',
+                          outline: 'none'
+                        }}
+                      />
+                      <div className="rename-hint">
+                        Appuyez sur Entrée pour confirmer, Échap pour annuler
+                      </div>
+                    </div>
                   ) : (
-                    file.filename || 'Fichier sans nom'
+                    <div 
+                      className="file-name-display"
+                      title="Double-clic pour renommer"
+                      style={{
+                        cursor: 'pointer',
+                        padding: '2px 4px',
+                        borderRadius: '4px',
+                        transition: 'background-color 0.2s'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = 'var(--hover-bg)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = 'transparent';
+                      }}
+                    >
+                      {file.filename || 'Fichier sans nom'}
+                    </div>
                   )}
                 </div>
                 {/* Suppression de file-meta pour gagner de l'espace vertical */}

@@ -206,7 +206,7 @@
    ========================= */
 .floating-menu-button:focus {
   outline: none;
-  box-shadow: 0 0 0 2px var(--fm-accent-bg);
+  box-shadow: none;
 }
 
 .floating-menu-button:disabled {

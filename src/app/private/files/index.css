@@ -1,23 +1,22 @@
 /* ==========================================================================
-   FILES PAGE - GLASSMORPHISM MODERNE ET ÉPURÉ
-   ========================================================================== */
+   FILES PAGE - STYLES D'ENTRÉE
+   ========================================================================== 
+   
+   Ce fichier importe les styles nécessaires pour la page fichiers de manière
+   structurée.
+*/
 
-/* ==========================================================================
-   IMPORTS CSS
-   ========================================================================== */
-
-/* 1. Variables et design system */
+/* 1. Variables globales et design system */
 @import '../../../styles/design-system.css';
 @import '../../../styles/typography.css';
 
 /* 2. Layout principal de la page */
 @import './page.css';
 
-/* 3. Composants de fichiers */
+/* 3. Styles des composants utilisés sur la page */
+@import '../../../components/FilesToolbar.css';
 @import '../../../components/FilesContent.css';
-@import '../../../components/FolderGridItems.css';
-
-/* 4. Composants utilitaires */
+@import '../../../components/FileUploader.css';
 @import '../../../components/Toast.css';
 @import '../../../components/Tooltip.css';
 

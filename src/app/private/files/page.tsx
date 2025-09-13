@@ -115,12 +115,48 @@ function AuthenticatedFilesContent({ user }: { user: { id: string; email?: strin
 
   const handleFileRename = useCallback(async (fileId: string, newName: string) => {
     try {
-      await renameFile(fileId, newName);
+      // Validation du nom
+      if (!newName || newName.trim() === '') {
+        alert('Le nom du fichier ne peut pas être vide');
+        return;
+      }
+
+      if (newName.length > 255) {
+        alert('Le nom du fichier est trop long (maximum 255 caractères)');
+        return;
+      }
+
+      // Caractères interdits
+      const invalidChars = /[<>:"/\\|?*]/;
+      if (invalidChars.test(newName)) {
+        alert('Le nom du fichier contient des caractères interdits: < > : " / \\ | ? *');
+        return;
+      }
+
+      // Vérifier si le nom existe déjà dans le même dossier
+      const currentFile = displayFiles.find(f => f.id === fileId);
+      if (currentFile) {
+        const existingFile = displayFiles.find(f => 
+          f.id !== fileId && 
+          f.filename === newName.trim() && 
+          f.folder_id === currentFile.folder_id
+        );
+        
+        if (existingFile) {
+          alert('Un fichier avec ce nom existe déjà dans ce dossier');
+          return;
+        }
+      }
+
+      await renameFile(fileId, newName.trim());
       setRenamingItemId(null);
     } catch (error) {
+      console.error('Erreur renommage fichier:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue lors du renommage';
+      alert(`Erreur: ${errorMessage}`);
       handleError(error, 'renommage fichier');
     }
-  }, [renameFile, handleError]);
+  }, [renameFile, handleError, displayFiles]);
 
   const handleUploadFile = useCallback(() => {
     setShowUploader(!showUploader);
@@ -150,6 +186,9 @@ function AuthenticatedFilesContent({ user }: { user: { id: string; email?: strin
             return newSet;
           });
         } catch (error) {
+          console.error('Erreur suppression fichier:', error);
+          const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue lors de la suppression';
+          alert(`Erreur: ${errorMessage}`);
           handleError(error, 'suppression fichier');
         }
       });
@@ -164,11 +203,123 @@ function AuthenticatedFilesContent({ user }: { user: { id: string; email?: strin
     }
   }, [selectedFiles]);
 
-  const handleContextMenuItem = useCallback((e: React.MouseEvent) => {
+  const handleContextMenuItem = useCallback((e: React.MouseEvent, file: FileItem) => {
     e.preventDefault();
-    // Menu contextuel - fonctionnalité à implémenter dans une version future
-    logger.dev('[FilesPage] Menu contextuel demandé pour:', e.currentTarget);
-  }, []);
+    e.stopPropagation();
+    
+    // Supprimer tous les menus contextuels existants
+    const existingMenus = document.querySelectorAll('.file-context-menu');
+    existingMenus.forEach(menu => menu.remove());
+    
+    // Créer le menu contextuel
+    const contextMenu = document.createElement('div');
+    contextMenu.className = 'file-context-menu';
+    contextMenu.style.cssText = `
+      position: fixed;
+      top: ${e.clientY}px;
+      left: ${e.clientX}px;
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      z-index: 10000;
+      min-width: 160px;
+      padding: 4px 0;
+    `;
+
+    // Options du menu
+    const options = [
+      {
+        label: 'Renommer',
+        icon: '✏️',
+        action: () => {
+          setRenamingItemId(file.id);
+          contextMenu.remove();
+        }
+      },
+      {
+        label: 'Ouvrir',
+        icon: '👁️',
+        action: () => {
+          handleFileOpen(file);
+          contextMenu.remove();
+        }
+      },
+      {
+        label: 'Supprimer',
+        icon: '🗑️',
+        action: async () => {
+          if (confirm(`Supprimer "${file.filename}" ?`)) {
+            try {
+              await deleteFile(file.id);
+            } catch (error) {
+              console.error('Erreur suppression fichier:', error);
+              const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue lors de la suppression';
+              alert(`Erreur: ${errorMessage}`);
+            }
+          }
+          contextMenu.remove();
+        }
+      }
+    ];
+
+    // Créer les éléments du menu
+    options.forEach(option => {
+      const item = document.createElement('div');
+      item.className = 'context-menu-item';
+      item.style.cssText = `
+        padding: 8px 16px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 14px;
+        color: var(--text-primary);
+        transition: background-color 0.2s;
+        border: none;
+        background: none;
+        width: 100%;
+        text-align: left;
+      `;
+      item.innerHTML = `<span>${option.icon}</span><span>${option.label}</span>`;
+      
+      item.addEventListener('mouseenter', () => {
+        item.style.backgroundColor = 'var(--hover-bg)';
+      });
+      
+      item.addEventListener('mouseleave', () => {
+        item.style.backgroundColor = 'transparent';
+      });
+      
+      item.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        option.action();
+      });
+      
+      contextMenu.appendChild(item);
+    });
+
+    // Ajouter au DOM
+    document.body.appendChild(contextMenu);
+
+    // Fermer le menu si on clique ailleurs
+    const closeMenu = (e: MouseEvent) => {
+      if (!contextMenu.contains(e.target as Node)) {
+        contextMenu.remove();
+        document.removeEventListener('click', closeMenu);
+        document.removeEventListener('contextmenu', closeMenu);
+      }
+    };
+
+    // Attendre un tick pour éviter la fermeture immédiate
+    setTimeout(() => {
+      document.addEventListener('click', closeMenu);
+      document.addEventListener('contextmenu', closeMenu);
+    }, 0);
+
+    logger.dev('[FilesPage] Menu contextuel affiché pour:', file.filename);
+  }, [handleFileOpen, deleteFile]);
 
   const handleCancelRename = useCallback(() => {
     setRenamingItemId(null);
@@ -181,88 +332,62 @@ function AuthenticatedFilesContent({ user }: { user: { id: string; email?: strin
   );
 
   return (
-    <div className="page-wrapper">
-      {/* Sidebar fixe */}
-      <aside className="page-sidebar-fixed">
-        <Sidebar />
-      </aside>
+    <div className="files-page">
+      <Sidebar />
 
-      {/* Zone de contenu principal */}
-      <main className="page-content-area">
-        {/* Section des fichiers avec header glassmorphism uniforme */}
-        <motion.section 
-          className="files-section"
-          initial={{ opacity: 0, y: 20 }}
+      <main className="files-main-content">
+        {/* Header */}
+        <motion.header
+          className="files-header"
+          initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" }}
+          transition={{ duration: 0.5, ease: "easeOut" }}
         >
-          <div className="page-title-container-glass">
-            <div className="page-title-content">
-              <div className="page-title-left-section">
-                <motion.div 
-                  className="page-title-icon-container"
-                  whileHover={{ scale: 1.05 }}
-                  transition={{ type: "spring", stiffness: 300 }}
-                >
-                  <span className="page-title-icon">📁</span>
-                </motion.div>
-                <div className="page-title-section">
-                  <h2 className="page-title">Mes Fichiers</h2>
-                  <p className="page-subtitle">Gérez et organisez vos documents</p>
-                </div>
+          <div className="header-content">
+            <div className="header-left">
+              <div className="header-icon-container">
+                <span className="header-icon">📁</span>
               </div>
-              
-              <div className="page-title-stats">
-                <div className="page-title-stats-item">
-                  <span className="page-title-stats-number">{displayFiles.length}</span>
-                  <span className="page-title-stats-label">fichier{displayFiles.length > 1 ? 's' : ''}</span>
-                </div>
-                
-                {quotaInfo && (
-                  <div className="page-title-stats-item">
-                    <div className="page-title-stats-number">{usagePercentage}%</div>
-                    <span className="page-title-stats-label">utilisé</span>
-                  </div>
-                )}
+              <div className="header-text">
+                <h1 className="header-title">Mes Fichiers</h1>
+                <p className="header-subtitle">Gérez et organisez vos documents</p>
               </div>
             </div>
+            <div className="header-stats">
+              <div className="stat-item">
+                <span className="stat-number">{displayFiles.length}</span>
+                <span className="stat-label">fichier{displayFiles.length > 1 ? 's' : ''}</span>
+              </div>
+              {quotaInfo && (
+                <div className="stat-item">
+                  <div className="stat-number">{usagePercentage}%</div>
+                  <span className="stat-label">utilisé</span>
+                </div>
+              )}
+            </div>
           </div>
-        </motion.section>
+        </motion.header>
 
-        {/* Section de contenu des fichiers */}
-        <motion.section 
-          className="files-content-section"
+        {/* Toolbar and Content Section */}
+        <motion.section
+          className="files-body-section"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
+          transition={{ duration: 0.5, delay: 0.1, ease: "easeOut" }}
         >
-          {loading && (
-            <motion.div 
-              className="loading-state-glass"
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.4 }}
-            >
-              <div className="loading-spinner-glass"></div>
+          {loading ? (
+            <div className="loading-state">
+              <div className="loading-spinner"></div>
               <p>Chargement des fichiers...</p>
-            </motion.div>
-          )}
-          
-          {error && (
-            <motion.div 
-              className="error-state-glass"
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.4 }}
-            >
+            </div>
+          ) : error ? (
+            <div className="error-state">
               <div className="error-icon">⚠️</div>
               <h3>Erreur de chargement</h3>
               <p>{error}</p>
-            </motion.div>
-          )}
-          
-          {!loading && !error && (
-            <div className="files-content">
+            </div>
+          ) : (
+            <>
               <FilesToolbar
                 viewMode={viewMode}
                 onViewModeChange={setViewMode}
@@ -273,12 +398,11 @@ function AuthenticatedFilesContent({ user }: { user: { id: string; email?: strin
                 searchQuery={searchQuery}
                 onSearchChange={setSearchQuery}
               />
-              
-              {/* Composant d'upload avec animation */}
+
               <AnimatePresence>
                 {showUploader && (
-                  <motion.div 
-                    className="uploader-section-glass"
+                  <motion.div
+                    className="uploader-container"
                     initial={{ opacity: 0, height: 0, y: -20 }}
                     animate={{ opacity: 1, height: "auto", y: 0 }}
                     exit={{ opacity: 0, height: 0, y: -20 }}
@@ -294,7 +418,7 @@ function AuthenticatedFilesContent({ user }: { user: { id: string; email?: strin
                   </motion.div>
                 )}
               </AnimatePresence>
-              
+
               <FilesContent
                 files={displayFiles}
                 loading={loading}
@@ -308,7 +432,7 @@ function AuthenticatedFilesContent({ user }: { user: { id: string; email?: strin
                 onFilesDropped={handleUploadComplete}
                 onUploadError={handleUploadError}
               />
-            </div>
+            </>
           )}
         </motion.section>
       </main>

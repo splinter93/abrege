@@ -20,10 +20,10 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(249, 115, 22, 0.08);
+  background: var(--glass-bg-hover);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: 3px dashed var(--files-primary);
+  border: 3px dashed var(--border-color);
   border-radius: var(--files-radius-xl);
   display: flex;
   align-items: center;
@@ -34,12 +34,12 @@
 
 @keyframes dropZonePulse {
   0%, 100% {
-    border-color: var(--files-primary);
-    background: rgba(249, 115, 22, 0.08);
+    border-color: var(--border-color);
+    background: var(--glass-bg-hover);
   }
   50% {
-    border-color: var(--files-primary-hover);
-    background: rgba(249, 115, 22, 0.12);
+    border-color: var(--border-color);
+    background: var(--glass-bg-hover);
   }
 }
 
@@ -61,7 +61,7 @@
   font-size: 64px;
   margin-bottom: var(--files-spacing-lg);
   animation: dropZoneIconFloat 3s ease-in-out infinite;
-  filter: drop-shadow(0 8px 16px rgba(249, 115, 22, 0.3));
+  filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.2));
 }
 
 @keyframes dropZoneIconFloat {
@@ -97,8 +97,8 @@
 .drop-zone-spinner {
   width: 32px;
   height: 32px;
-  border: 3px solid rgba(249, 115, 22, 0.2);
-  border-top: 3px solid var(--files-primary);
+  border: 3px solid var(--border-color);
+  border-top: 3px solid var(--accent-primary);
   border-radius: 50%;
   animation: dropZoneSpin 1s linear infinite;
 }
@@ -201,7 +201,7 @@
 }
 
 .drop-zone-overlay:hover {
-  background: rgba(249, 115, 22, 0.12);
+  background: var(--glass-bg-hover);
   border-color: var(--files-primary-hover);
   transform: scale(1.02);
 }
@@ -211,8 +211,8 @@
    ========================================================================== */
 
 .drop-zone:focus-within {
-  outline: 2px solid var(--files-primary);
-  outline-offset: 2px;
+  outline: none;
+  box-shadow: none;
 }
 
 /* Support pour les lecteurs d'écran */
@@ -227,11 +227,11 @@
 /* Mode sombre */
 @media (prefers-color-scheme: dark) {
   .drop-zone-overlay {
-    background: rgba(249, 115, 22, 0.12);
+    background: var(--glass-bg-hover);
   }
   
   .drop-zone-overlay:hover {
-    background: rgba(249, 115, 22, 0.16);
+    background: var(--glass-bg-hover);
   }
 }
 
@@ -239,7 +239,7 @@
 @media (prefers-contrast: high) {
   .drop-zone-overlay {
     border-width: 4px;
-    background: rgba(249, 115, 22, 0.2);
+    background: var(--glass-bg-hover);
   }
   
   .drop-zone-message {

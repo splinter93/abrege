@@ -12,7 +12,7 @@
   border-radius: 16px; /* Valeur fixe au lieu de var(--files-radius-lg) */
   padding: 16px; /* Valeur fixe au lieu de var(--files-spacing-md) */
   cursor: pointer;
-  transition: all 0.25s ease; /* Valeur fixe au lieu de var(--files-transition-normal) */
+  transition: none;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -45,18 +45,18 @@
 
 .fm-grid-item:hover {
   background: transparent;
-  border-color: transparent;
-  transform: translateY(-2px);
+  border: none;
+  transform: none;
   box-shadow: none;
 }
 
 .fm-grid-item:hover::before {
-  opacity: 1;
+  display: none;
 }
 
 .fm-grid-item:active {
-  transform: translateY(-1px);
-  transition: transform 0.15s ease; /* Valeur fixe au lieu de var(--files-transition-fast) */
+  transform: none;
+  transition: none;
 }
 
 /* ==========================================================================
@@ -197,21 +197,21 @@
 /* Éléments en cours de renommage */
 .fm-grid-item.renaming {
   background: transparent;
-  border-color: var(--files-primary);
-  box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.15);
+  border-color: var(--border-color);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.1);
 }
 
 /* Éléments en cours de drag */
 .fm-grid-item.dragging {
-  opacity: 0.5;
-  transform: rotate(5deg) scale(0.95);
+  opacity: 0.7;
+  transform: none;
 }
 
 /* Zone de drop */
 .fm-grid-item.drag-over {
   background: transparent;
-  border-color: var(--files-primary);
-  box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.2);
+  border: none;
+  box-shadow: none;
 }
 
 /* ==========================================================================
@@ -232,13 +232,14 @@
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
   outline: none;
-  transition: all var(--files-transition-fast);
+  transition: none;
 }
 
 .fm-grid-item input:focus {
-  border-color: var(--files-primary);
-  box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.15);
+  border-color: var(--border-color);
+  box-shadow: none;
   background: transparent;
+  outline: none;
 }
 
 /* ==========================================================================

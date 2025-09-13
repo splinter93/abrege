@@ -32,17 +32,9 @@
   }
 }
 
-/* Barre propre en haut de l'écran */
+/* Barre propre en haut de l'écran - SUPPRIMÉE */
 .mermaid-modal-toolbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  width: 100%;
-  padding: 20px 0;
-  flex-shrink: 0;
-  max-width: calc(100vw - 40px);
-  position: relative;
-  z-index: 1000000;
+  display: none !important;
 }
 
 /* Type de diagramme à gauche */

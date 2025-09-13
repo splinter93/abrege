@@ -150,8 +150,8 @@
 
 /* Focus States for Accessibility */
 .breadcrumb-item:focus-visible {
-  outline: 2px solid var(--accent-primary);
-  outline-offset: 2px;
+  outline: none;
+  box-shadow: none;
 }
 
 /* Animation for smooth transitions */

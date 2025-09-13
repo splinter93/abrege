@@ -15,8 +15,8 @@
 }
 
 .file-uploader:hover {
-  border-color: var(--files-primary);
-  box-shadow: 0 8px 32px rgba(249, 115, 22, 0.1);
+  border-color: var(--border-color);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
 }
 
 /* ==========================================================================
@@ -55,8 +55,8 @@
 
 .file-uploader-icon {
   font-size: 48px;
-  color: var(--files-primary);
-  filter: drop-shadow(0 4px 8px rgba(249, 115, 22, 0.3));
+  color: var(--text-secondary);
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
   animation: fileUploaderIconFloat 3s ease-in-out infinite;
 }
 
@@ -116,15 +116,15 @@
   cursor: pointer;
   padding: var(--files-spacing-sm) var(--files-spacing-md);
   border-radius: var(--files-radius-md);
-  background: rgba(249, 115, 22, 0.05);
-  border: 1px solid rgba(249, 115, 22, 0.1);
+  background: var(--glass-bg-secondary);
+  border: 1px solid var(--border-color);
   transition: all 0.2s ease;
   font-family: 'Noto Sans', sans-serif;
 }
 
 .file-uploader-label:hover {
-  background: rgba(249, 115, 22, 0.1);
-  border-color: rgba(249, 115, 22, 0.2);
+  background: var(--glass-bg-hover);
+  border-color: var(--border-color);
   transform: translateY(-1px);
 }
 
@@ -144,7 +144,7 @@
   height: 32px;
   border: none;
   border-radius: 50%;
-  background: var(--files-primary);
+  background: var(--accent-primary);
   color: white;
   font-size: 18px;
   font-weight: 600;
@@ -158,7 +158,7 @@
 }
 
 .file-uploader-toggle:hover {
-  background: var(--files-primary-hover);
+  background: var(--accent-primary-hover);
   transform: scale(1.1);
 }
 
@@ -167,8 +167,8 @@
 }
 
 .file-uploader-toggle:focus {
-  outline: 2px solid var(--files-primary);
-  outline-offset: 2px;
+  outline: none;
+  box-shadow: none;
 }
 
 /* ==========================================================================
@@ -188,7 +188,7 @@
 
 /* État de drag over */
 .file-uploader-drop-zone.drag-over {
-  background: rgba(249, 115, 22, 0.05);
+  background: var(--glass-bg-hover);
 }
 
 /* ==========================================================================
@@ -267,8 +267,8 @@
    ========================================================================== */
 
 .file-uploader:focus-within {
-  outline: 2px solid var(--files-primary);
-  outline-offset: 2px;
+  outline: none;
+  box-shadow: none;
 }
 
 /* Support pour les lecteurs d'écran */

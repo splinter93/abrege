@@ -1,27 +1,22 @@
 /* ==========================================================================
-   DOSSIERS PAGE - GLASSMORPHISM MODERNE ET ÉPURÉ
+   DOSSIERS PAGE - STYLES D'ENTRÉE
    ========================================================================== 
    
-   Ce fichier centralise tous les imports CSS nécessaires pour la page dossiers.
-   L'ordre des imports est important pour éviter les conflits de spécificité.
- */
+   Ce fichier importe les styles nécessaires pour la page dossiers de manière
+   structurée.
+*/
 
-/* 1. Variables et design system (priorité la plus basse) */
+/* 1. Variables globales et design system */
 @import '../../../styles/design-system.css';
 @import '../../../styles/typography.css';
 
-/* 2. Containers de titre uniformes (priorité basse) */
-@import '../../../styles/page-title-containers.css';
-
-/* 3. Layout principal de la page */
+/* 2. Layout principal de la page */
 @import './DossiersPage.css';
 
-/* 4. Gestionnaire de dossiers et contenu */
+/* 3. Styles des composants utilisés sur la page */
 @import '../../../components/FolderManagerModern.css';
 @import '../../../components/FolderContent.css';
 @import '../../../components/FolderGridItems.css';
-
-/* 5. Composants utilitaires */
 @import '../../../components/Toast.css';
 @import '../../../components/Tooltip.css';
 

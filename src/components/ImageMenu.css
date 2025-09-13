@@ -107,16 +107,10 @@
 }
 
 /* =========================
-   HEADER - STYLE NOTION
+   HEADER - SUPPRIMÉ
    ========================= */
 .image-menu-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: var(--im-padding);
-  padding-bottom: 12px;
-  border-bottom: 1px solid var(--im-border);
-  margin-bottom: 4px;
+  display: none !important;
 }
 
 .image-menu-title {

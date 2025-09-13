@@ -222,8 +222,8 @@
    ======================================== */
 
 .audio-recorder-button:focus {
-  outline: 2px solid var(--chat-accent-primary);
-  outline-offset: 2px;
+  outline: none;
+  box-shadow: none;
 }
 
 .audio-recorder-button:focus:not(:focus-visible) {

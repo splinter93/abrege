@@ -190,7 +190,7 @@
 .dossier-error-state .error-btn.primary:hover {
   background: linear-gradient(135deg, #ea580c, #dc2626);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.4);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 .dossier-error-state .error-btn.secondary {
@@ -311,7 +311,7 @@
 .empty-action-btn:hover {
   background: linear-gradient(135deg, #ea580c, #dc2626);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.4);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 /* ==========================================================================

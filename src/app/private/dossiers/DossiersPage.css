@@ -1,234 +1,162 @@
 /* ==========================================================================
-   PAGE DOSSIERS - STYLES CONSOLIDÉS
-   ========================================================================== */
-/* Cette page utilise maintenant les styles consolidés */
-
-@import '../../../styles/page-dossiers.css';
-
-/* ==========================================================================
-   BACKGROUND PRINCIPAL - STYLE UNIFIÉ DANS Sidebar.css
+   PAGE DOSSIERS - NOUVEAU LAYOUT 2025
    ========================================================================== */
 
-/* ==========================================================================
-   SIDEBAR ET CONTENU - STYLES UNIFIÉS DANS Sidebar.css
-   ========================================================================== */
+/* Layout principal avec CSS Grid */
+.dossiers-page {
+  display: grid;
+  grid-template-columns: 260px 1fr; /* Sidebar fixe, contenu flexible */
+  height: 100vh;
+  background-color: var(--background-primary);
+  overflow: hidden;
+}
 
-/* Padding spécifique pour la page des dossiers */
-.dossiers-content-area {
-  padding: 0 32px 0 32px; /* Padding horizontal seulement */
-  flex: 1;
+/* Contenu principal */
+.dossiers-main-content {
+  grid-column: 2 / 3;
+  padding: 24px 48px;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
+  gap: 24px;
 }
 
-/* ==========================================================================
-   TITRE DE LA PAGE - STYLE UNIFORME
-   ========================================================================== */
-/* Suppression des styles redondants - maintenant dans page-title-containers.css */
-.dossiers-page-title-glass,
-.title-content,
-.title-icon-container,
-.title-icon,
-.title-section,
-.page-title,
-.page-subtitle,
-.title-stats {
-  /* Styles définis dans page-title-containers.css */
+/* Header de la page */
+.dossiers-header {
+  padding: 16px 24px;
+  background-color: var(--background-secondary);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color);
 }
 
-/* Suppression des styles redondants pour les stats - maintenant dans page-title-containers.css */
-.stats-item,
-.stats-item::before,
-.stats-item:hover,
-.stats-number,
-.stats-label {
-  /* Styles définis dans page-title-containers.css */
-}
-
-/* ==========================================================================
-   SECTION CLASSEURS - GLASSMORPHISM
-   ========================================================================== */
-.classeurs-section-glass {
-  margin-bottom: var(--dossiers-spacing-2xl);
-}
-
-.classeurs-container-glass {
-  background: var(--glass-bg-secondary);
-  border: 1px solid var(--glass-border-secondary);
-  border-radius: var(--dossiers-radius-xl);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  box-shadow: var(--glass-shadow-subtle);
-  padding: var(--dossiers-spacing-lg);
-  transition: all var(--dossiers-transition-normal);
-}
-
-.classeurs-container-glass:hover {
-  border-color: var(--glass-border-hover);
-  box-shadow: var(--glass-shadow-medium);
-}
-
-/* ==========================================================================
-   SECTION CONTENU - CONTAINER SIMPLE SANS GLASSMORPHISM
-   ========================================================================== */
-.content-section-simple {
-  margin-top: 8px; /* Espace réduit entre la navigation et le contenu */
-  background: transparent;
-  border: none;
-  padding: 0;
+.header-content {
   display: flex;
-  flex-direction: column;
-  flex: 1;
-  min-height: calc(100vh - 500px); /* Hauteur minimale adaptée à l'écran */
+  justify-content: space-between;
+  align-items: center;
 }
 
-.content-main-container-simple {
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.header-icon-container {
+  width: 48px;
+  height: 48px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: var(--accent-primary-light);
+  border-radius: var(--radius-md);
+}
+
+.header-icon {
+  font-size: 24px;
+}
+
+.header-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.header-subtitle {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+/* Statistiques */
+.header-stats {
+  display: flex;
+  gap: 24px;
+}
+
+.stat-item {
+  text-align: right;
+}
+
+.stat-number {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  display: block;
+}
+
+.stat-label {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+}
+
+/* Conteneur de la navigation des classeurs */
+.classeur-navigation-container {
   width: 100%;
-  flex: 1;
-  min-height: calc(100vh - 400px); /* Hauteur minimale adaptée à l'écran */
-  display: flex;
-  flex-direction: column;
-  padding-bottom: 20px; /* Espace en bas pour ne pas coller au bottom */
-  background: transparent;
-  border: none;
 }
+
+/* Section du gestionnaire de dossiers */
+.folder-manager-section {
+  flex: 1; /* Prend l'espace restant */
+  min-height: 0; /* Important pour que le scroll fonctionne dans un flex container */
+}
+
 
 /* ==========================================================================
-   RESPONSIVE DESIGN - SYSTÈME ADAPTATIF COMPLET
+   RESPONSIVE DESIGN
    ========================================================================== */
 
-/* ==========================================================================
-   ÉCRANS LARGES (1400px+)
-   ========================================================================== */
-@media (min-width: 1400px) {
-  .dossiers-sidebar-fixed {
-    width: 280px;
+@media (max-width: 1200px) {
+  .dossiers-page {
+    grid-template-columns: 240px 1fr;
   }
-  
-  .dossiers-content-area {
-    margin-left: 280px;
-    padding: 0 32px 0 32px;
-  }
-  
-  /* Styles du title container gérés par page-title-containers.css */
-}
-
-/* ==========================================================================
-   DESKTOP STANDARD (1200px - 1399px)
-   ========================================================================== */
-@media (max-width: 1399px) and (min-width: 1200px) {
-  .dossiers-sidebar-fixed {
-    width: 280px;
-  }
-  
-  .dossiers-content-area {
-    margin-left: 280px;
-    padding: 0 32px 0 32px;
-  }
-  
-  /* Styles du title container gérés par page-title-containers.css */
-}
-
-/* ==========================================================================
-   TABLETTE LARGE (1024px - 1199px)
-   ========================================================================== */
-@media (max-width: 1199px) and (min-width: 1024px) {
-  .dossiers-sidebar-fixed {
-    width: 260px;
-  }
-  
-  .dossiers-content-area {
-    margin-left: 260px;
-    padding: 0 24px 0 24px;
-  }
-  
-  /* Styles du title container gérés par page-title-containers.css */
-}
-
-/* ==========================================================================
-   TABLETTE STANDARD (768px - 1023px)
-   ========================================================================== */
-@media (max-width: 1023px) and (min-width: 768px) {
-  .dossiers-sidebar-fixed {
-    width: 240px;
-  }
-  
-  .dossiers-content-area {
-    margin-left: 240px;
-    padding: 0 20px 0 20px;
-  }
-  
-  /* Styles du title container gérés par page-title-containers.css */
-}
-
-/* ==========================================================================
-   MOBILE LARGE (480px - 767px)
-   ========================================================================== */
-@media (max-width: 767px) and (min-width: 480px) {
-  .dossiers-sidebar-fixed {
-    width: 220px;
-  }
-  
-  .dossiers-content-area {
-    margin-left: 220px;
-    padding: 0 16px 0 16px;
-  }
-  
-  /* Styles du title container gérés par page-title-containers.css */
-}
-
-/* ==========================================================================
-   MOBILE STANDARD (320px - 479px)
-   ========================================================================== */
-@media (max-width: 479px) {
-  .dossiers-sidebar-fixed {
-    width: 200px;
-  }
-  
-  .dossiers-content-area {
-    margin-left: 200px;
-    padding: 0 12px 0 12px;
-  }
-  
-  /* Styles du title container gérés par page-title-containers.css */
-}
-
-/* ==========================================================================
-   ANIMATIONS ET TRANSITIONS
-   ========================================================================== */
-
-/* Animation d'entrée pour la page */
-@keyframes pageFadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
+  .dossiers-main-content {
+    padding: 24px 32px;
   }
 }
 
-.dossiers-page-wrapper {
-  animation: pageFadeIn 0.6s ease-out;
+@media (max-width: 992px) {
+  .dossiers-page {
+    /* Pour les tablettes, on pourrait envisager une sidebar "fly-out" */
+    /* Pour l'instant on la garde mais on réduit la taille */
+    grid-template-columns: 220px 1fr;
+  }
+  .dossiers-main-content {
+    padding: 24px;
+  }
+  .header-content {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+  .header-stats {
+    width: 100%;
+    justify-content: space-between;
+  }
+  .stat-item {
+    text-align: left;
+  }
 }
 
-/* ==========================================================================
-   UTILITAIRES GLASSMORPHISM
-   ========================================================================== */
+@media (max-width: 768px) {
+  .dossiers-page {
+    /* Sur mobile, la sidebar est cachée par défaut */
+    grid-template-columns: 1fr;
+  }
+  /* Il faudrait un bouton pour ouvrir la sidebar */
+  /* .sidebar { display: none; } */
+  
+  .dossiers-main-content {
+    grid-column: 1 / 2;
+    padding: 16px;
+  }
 
-.glass-effect {
-  background: var(--glass-bg-primary);
-  border: 1px solid var(--glass-border-primary);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  box-shadow: var(--glass-shadow-subtle);
-}
+  .header-title {
+    font-size: 1.25rem;
+  }
 
-.glass-effect-hover:hover {
-  background: var(--glass-bg-hover);
-  border-color: var(--glass-border-hover);
-  box-shadow: var(--glass-shadow-medium);
-  transform: translateY(-2px);
-  transition: all var(--dossiers-transition-normal);
+  .header-subtitle {
+    font-size: 0.8rem;
+  }
 }
