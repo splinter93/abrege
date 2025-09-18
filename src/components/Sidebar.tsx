@@ -1,12 +1,11 @@
 'use client';
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js';
 import { useActiveSidebarLink } from '@/hooks/useActiveSidebarLink';
 import { motion } from 'framer-motion';
-// CSS importé via main.css
 
 // Icônes SVG
 const HomeIcon = () => (
@@ -103,7 +102,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onToggleFoldersPanel = () => {} }) =>
     };
   }, []);
 
-  const handleLogout = async () => {
+  const handleLogout = useCallback(async () => {
     try {
       // Vérifier d'abord s'il y a une session active
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
@@ -148,7 +147,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onToggleFoldersPanel = () => {} }) =>
       // En cas d'erreur fatale, rediriger quand même
       router.push('/');
     }
-  };
+  }, [router]);
 
   return (
     <aside className="sidebar">
@@ -185,7 +184,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onToggleFoldersPanel = () => {} }) =>
             >
               <Link 
                 href="/" 
-                className={`nav-link glass-button ${activeLink === 'home' ? 'active' : ''}`}
+                className={`nav-link ${activeLink === 'home' ? 'active' : ''}`}
               >
                 <HomeIcon />
                 <span>Accueil</span>
@@ -198,7 +197,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onToggleFoldersPanel = () => {} }) =>
             >
               <Link 
                 href="/private/dashboard" 
-                className={`nav-link glass-button ${activeLink === 'dashboard' ? 'active' : ''}`}
+                className={`nav-link ${activeLink === 'dashboard' ? 'active' : ''}`}
               >
                 <DashboardIcon />
                 <span>Tableau de bord</span>
@@ -211,7 +210,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onToggleFoldersPanel = () => {} }) =>
             >
               <Link 
                 href="/private/dossiers" 
-                className={`nav-link glass-button ${activeLink === 'dossiers' ? 'active' : ''}`}
+                className={`nav-link ${activeLink === 'dossiers' ? 'active' : ''}`}
               >
                 <FolderIcon />
                 <span>Mes Classeurs</span>
@@ -224,7 +223,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onToggleFoldersPanel = () => {} }) =>
             >
               <Link 
                 href="/private/shared" 
-                className={`nav-link glass-button ${activeLink === 'shared' ? 'active' : ''}`}
+                className={`nav-link ${activeLink === 'shared' ? 'active' : ''}`}
               >
                 <ShareIcon />
                 <span>Notes Partagées</span>
@@ -237,7 +236,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onToggleFoldersPanel = () => {} }) =>
             >
               <Link 
                 href="/private/files" 
-                className={`nav-link glass-button ${activeLink === 'files' ? 'active' : ''}`}
+                className={`nav-link ${activeLink === 'files' ? 'active' : ''}`}
               >
                 <FileIcon />
                 <span>Mes Fichiers</span>
@@ -250,7 +249,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onToggleFoldersPanel = () => {} }) =>
             >
               <Link 
                 href="/private/trash" 
-                className={`nav-link glass-button ${activeLink === 'trash' ? 'active' : ''}`}
+                className={`nav-link ${activeLink === 'trash' ? 'active' : ''}`}
               >
                 <TrashIcon />
                 <span>Corbeille</span>
@@ -263,7 +262,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onToggleFoldersPanel = () => {} }) =>
             >
               <Link 
                 href="/private/settings" 
-                className={`nav-link glass-button ${activeLink === 'settings' ? 'active' : ''}`}
+                className={`nav-link ${activeLink === 'settings' ? 'active' : ''}`}
               >
                 <SettingsIcon />
                 <span>Paramètres</span>
@@ -287,7 +286,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onToggleFoldersPanel = () => {} }) =>
             >
               <Link 
                 href="/private/account" 
-                className={`nav-link glass-button ${activeLink === 'account' ? 'active' : ''}`}
+                className={`nav-link ${activeLink === 'account' ? 'active' : ''}`}
               >
                 <AccountIcon />
                 <span>Mon Compte</span>
@@ -295,7 +294,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onToggleFoldersPanel = () => {} }) =>
             </motion.div>
             <motion.button 
               onClick={handleLogout} 
-              className="nav-link glass-button logout-button danger"
+              className="nav-link logout-button"
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               transition={{ type: "spring", stiffness: 300 }}

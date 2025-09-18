@@ -308,11 +308,6 @@ const NotesCarouselNotion: React.FC<NotesCarouselNotionProps> = ({
         </div>
         
         <div className="carousel-actions">
-          {showViewAll && (
-            <Link href="/private/dossiers" className="view-all-btn">
-              Voir tout
-            </Link>
-          )}
           
           {showNavigation && notes.length > 1 && (
             <div className="carousel-nav">

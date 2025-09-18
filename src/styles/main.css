@@ -45,11 +45,6 @@
 @import '../app/private/trash/index.css';
 
 /* ==========================================================================
-   SIDEBAR UNIFIÉE - NOUVELLE ARCHITECTURE
+   SIDEBAR UNIFIÉE - ARCHITECTURE OPTIMISÉE
    ========================================================================== */
 @import './unified-sidebar.css';
-
-/* ==========================================================================
-   SIDEBAR PRINCIPALE - OBSOLÈTE (À SUPPRIMER)
-   ========================================================================== */
-@import './sidebar-glassmorphism.css';
