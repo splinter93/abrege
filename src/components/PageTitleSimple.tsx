@@ -13,6 +13,7 @@ interface PageTitleSimpleProps {
   subtitle?: string;
   stats?: StatItem[];
   className?: string;
+  loading?: boolean;
 }
 
 /**
@@ -23,7 +24,8 @@ const PageTitleSimple: React.FC<PageTitleSimpleProps> = ({
   title,
   subtitle,
   stats = [],
-  className = ''
+  className = '',
+  loading = false
 }) => {
   return (
     <motion.header 
@@ -43,7 +45,9 @@ const PageTitleSimple: React.FC<PageTitleSimpleProps> = ({
           <div className="page-title-simple-stats">
             {stats.map((stat, index) => (
               <div key={index} className="page-title-simple-stat-item">
-                <span className="page-title-simple-stat-number">{stat.number}</span>
+                <span className="page-title-simple-stat-number">
+                  {loading ? '...' : stat.number}
+                </span>
                 <span className="page-title-simple-stat-label">{stat.label}</span>
               </div>
             ))}

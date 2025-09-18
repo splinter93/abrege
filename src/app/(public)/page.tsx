@@ -11,7 +11,7 @@ import { simpleLogger as logger } from '@/utils/logger';
 import { MessageSquare, Plus, Search, Upload, Sparkles, Zap, Eye, X, Youtube, FileText } from 'lucide-react';
 import NotesCarouselNotion from '@/components/NotesCarouselNotion';
 import PerformanceMonitor from '@/components/PerformanceMonitor';
-import PageTitleSimple from '@/components/PageTitleSimple';
+import DashboardTitle from '@/components/DashboardTitle';
 import { motion } from 'framer-motion';
 import './home.css';
 import './dashboard.css';
@@ -220,16 +220,8 @@ function AuthenticatedHomeContent({ user }: { user: { id: string; email?: string
       </aside>
       
       <main className="page-content-area">
-        {/* Titre simple unifié */}
-        <PageTitleSimple
-          title="Dashboard"
-          subtitle="Gérez vos notes et classeurs"
-          stats={[
-            { number: 12, label: "Notes" },
-            { number: 3, label: "Classeurs" },
-            { number: 8, label: "Récents" }
-          ]}
-        />
+        {/* Titre du dashboard avec statistiques dynamiques */}
+        <DashboardTitle />
 
         {/* Dashboard principal avec design moderne */}
         <div className="main-dashboard">
