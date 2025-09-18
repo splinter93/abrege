@@ -300,7 +300,8 @@
   transform: translateY(-50%);
   width: 1px;
   height: 20px;
-  background: #3d3d3d;
+  background: var(--border-subtle);
+  opacity: 0.6;
 }
 
 .floating-toolbar-button {

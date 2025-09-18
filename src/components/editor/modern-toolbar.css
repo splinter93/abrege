@@ -41,7 +41,7 @@
 .toolbar-group-right {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 4px;
   position: relative;
 }
 
@@ -56,15 +56,6 @@
 
 .toolbar-group-right {
   justify-content: flex-end;
-}
-
-/* Sections de la toolbar */
-.toolbar-section {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  position: relative;
-  height: 32px;
 }
 
 /* Séparateur élégant */

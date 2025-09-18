@@ -786,10 +786,10 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
               </svg>
             )}
           </button>
-                 ) : (
-           <>
-             {/* Header du widget */}
-             <div className="chat-header" style={{borderRadius: isMinimized ? '50%' : undefined}}>
+        ) : (
+          <>
+            {/* Header du widget - Structure optimisée */}
+            <div className="chat-header">
               <div className="chat-header-left">
                 {selectedAgent?.profile_picture ? (
                   <img
@@ -805,6 +805,9 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
                 <div className="chat-agent-info">
                   <span className="chat-agent-name">
                     {selectedAgent?.name || 'Assistant'}
+                  </span>
+                  <span className="chat-agent-status">
+                    {loading || isProcessing ? 'En train d\'écrire...' : 'En ligne'}
                   </span>
                 </div>
               </div>
@@ -833,6 +836,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
                   className="chat-widget-close-btn"
                   onClick={handleMinimize}
                   aria-label="Minimiser"
+                  title="Minimiser le chat"
                 >
                   <svg
                     fill="none"
@@ -851,9 +855,9 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
               </div>
             </div>
 
-            {/* Contenu du chat */}
+            {/* Contenu principal du chat - Structure réorganisée */}
             <div className="chat-content">
-              {/* Messages */}
+              {/* Zone des messages - Optimisée pour le scroll */}
               <div className="messages-container">
                 <div className="chat-message-list">
                   {sortedMessages.map((message) => (
@@ -864,27 +868,45 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
                       isWaitingForResponse={loading || isProcessing}
                     />
                   ))}
+                  {/* Indicateur de chargement */}
+                  {(loading || isProcessing) && (
+                    <div className="chat-message chat-message-assistant">
+                      <div className="chat-message-bubble">
+                        <div className="flex items-center space-x-2">
+                          <div className="animate-pulse flex space-x-1">
+                            <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                            <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+                            <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                          </div>
+                          <span className="text-sm text-gray-500">Assistant réfléchit...</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
                 <div ref={messagesEndRef} />
               </div>
 
-              {/* Input */}
+              {/* Zone d'input - Structure optimisée */}
               <div className="chat-input-container">
+                {/* Messages d'état */}
                 {renderAuthStatus()}
                 {error && (
-                  <div className="bg-red-50 border border-red-200 rounded-lg p-3 mx-4 mb-4">
+                  <div className="chat-error-message">
                     <div className="flex items-center">
                       <div className="flex-shrink-0">
-                        <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                        <svg className="h-4 w-4 text-red-400" viewBox="0 0 20 20" fill="currentColor">
                           <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
                         </svg>
                       </div>
-                      <div className="ml-3">
-                        <p className="text-sm text-red-800">{error}</p>
+                      <div className="ml-2">
+                        <p className="text-xs text-red-800">{error}</p>
                       </div>
                     </div>
                   </div>
                 )}
+                
+                {/* Input principal */}
                 <ChatInput 
                   onSend={handleSendMessage} 
                   loading={loading || isProcessing}

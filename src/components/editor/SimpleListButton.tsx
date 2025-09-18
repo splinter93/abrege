@@ -1,8 +1,42 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Editor } from '@tiptap/react';
-import { FiList, FiCheckSquare, FiChevronDown } from 'react-icons/fi';
-import { AiOutlineOrderedList } from 'react-icons/ai';
+import { FiCheckSquare, FiChevronDown } from 'react-icons/fi';
 import Tooltip from '@/components/Tooltip';
+
+// Icônes personnalisées pour les listes - Design moderne et épuré
+const BulletListIcon = ({ size = 16 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="8" y1="6" x2="21" y2="6"/>
+    <line x1="8" y1="12" x2="21" y2="12"/>
+    <line x1="8" y1="18" x2="21" y2="18"/>
+    <circle cx="3" cy="6" r="1.5"/>
+    <circle cx="3" cy="12" r="1.5"/>
+    <circle cx="3" cy="18" r="1.5"/>
+  </svg>
+);
+
+const OrderedListIcon = ({ size = 16 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="10" y1="6" x2="21" y2="6"/>
+    <line x1="10" y1="12" x2="21" y2="12"/>
+    <line x1="10" y1="18" x2="21" y2="18"/>
+    <path d="M4 6h1v4"/>
+    <path d="M4 10h2"/>
+    <path d="M6 18H4c0-1 2-2 2-3s-1-1.5-2-1"/>
+  </svg>
+);
+
+const TaskListIcon = ({ size = 16 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="9" y1="6" x2="21" y2="6"/>
+    <line x1="9" y1="12" x2="21" y2="12"/>
+    <line x1="9" y1="18" x2="21" y2="18"/>
+    <polyline points="9,12 12,15 15,12"/>
+    <path d="M21 12v.01"/>
+    <path d="M21 6v.01"/>
+    <path d="M21 18v.01"/>
+  </svg>
+);
 
 interface SimpleListButtonProps {
   editor: Editor | null;
@@ -34,35 +68,33 @@ const SimpleListButton: React.FC<SimpleListButtonProps> = ({ editor }) => {
   const listTypes = [
     { 
       type: 'bulletList', 
-      label: '•', 
-      icon: FiList,
+      label: 'Liste à puces', 
+      icon: BulletListIcon,
       command: () => editor.chain().focus().toggleBulletList().run() 
     },
     { 
       type: 'orderedList', 
-      label: '1.', 
-      icon: AiOutlineOrderedList,
+      label: 'Liste numérotée', 
+      icon: OrderedListIcon,
       command: () => editor.chain().focus().toggleOrderedList().run() 
     },
     { 
       type: 'taskList', 
-      label: '☐', 
-      icon: FiCheckSquare,
+      label: 'Liste de tâches', 
+      icon: TaskListIcon,
       command: () => editor.chain().focus().toggleTaskList().run() 
     },
   ];
 
-  const getCurrentType = () => {
-    if (editor.isActive('bulletList')) return 'bulletList';
-    if (editor.isActive('orderedList')) return 'orderedList';
-    if (editor.isActive('taskList')) return 'taskList';
-    return null;
+  const getCurrentList = () => {
+    if (editor.isActive('bulletList')) return listTypes[0];
+    if (editor.isActive('orderedList')) return listTypes[1];
+    if (editor.isActive('taskList')) return listTypes[2];
+    return listTypes[0]; // Default to bullet list
   };
 
-  const currentType = getCurrentType();
-  const currentList = listTypes.find(l => l.type === currentType);
-  const currentLabel = currentList?.label || '•';
-  const CurrentIcon = currentList?.icon || FiList;
+  const currentList = getCurrentList();
+  const CurrentIcon = currentList.icon;
 
   const handleClick = (command: () => void) => {
     command();
@@ -78,7 +110,6 @@ const SimpleListButton: React.FC<SimpleListButtonProps> = ({ editor }) => {
           aria-label="Listes"
         >
           <CurrentIcon size={16} />
-          <span className="dropdown-label">{currentLabel}</span>
           <FiChevronDown size={12} className={`chevron ${isOpen ? 'open' : ''}`} />
         </button>
       </Tooltip>
@@ -87,11 +118,13 @@ const SimpleListButton: React.FC<SimpleListButtonProps> = ({ editor }) => {
         <div className="dropdown-menu">
           {listTypes.map((list) => {
             const Icon = list.icon;
+            const isActive = currentList.type === list.type;
             return (
               <button
                 key={list.type}
-                className={`dropdown-item ${currentType === list.type ? 'active' : ''}`}
+                className={`dropdown-item ${isActive ? 'active' : ''}`}
                 onClick={() => handleClick(list.command)}
+                title={list.label}
               >
                 <Icon size={14} />
                 <span className="dropdown-item-label">{list.label}</span>

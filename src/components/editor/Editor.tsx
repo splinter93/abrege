@@ -1,4 +1,10 @@
 import React from 'react';
+// Ordre critique : variables de base en premier
+import '@/styles/design-system.css';
+import '@/styles/themes.css';
+import '@/styles/typography.css';
+import '@/styles/variables.css';
+import '@/styles/glassmorphism-variables.css';
 import '@/styles/markdown.css';
 import '@/styles/UnifiedToolbar.css';
 import '@/styles/context-menu.css';

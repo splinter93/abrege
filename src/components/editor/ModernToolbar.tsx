@@ -32,6 +32,12 @@ import SimpleListButton from './SimpleListButton';
 import SimpleAlignButton from './SimpleAlignButton';
 import BlockquoteButton from './BlockquoteButton';
 import CodeBlockButton from './CodeBlockButton';
+// Ordre critique : variables de base en premier
+import '@/styles/design-system.css';
+import '@/styles/themes.css';
+import '@/styles/typography.css';
+import '@/styles/variables.css';
+import '@/styles/glassmorphism-variables.css';
 import './modern-toolbar.css';
 import '@/styles/simple-editor-components.css';
 import '@/styles/unified-blocks.css'; // Système unifié pour tous les blocs
@@ -145,184 +151,93 @@ const ModernToolbar: React.FC<ModernToolbarProps> = ({
         {/* Groupe gauche - Formatage de base */}
         <div className="toolbar-group-left">
           {/* Undo/Redo */}
-          <div className="toolbar-section">
-            <ModernUndoRedoButton editor={editor} type="undo" />
-            <ModernUndoRedoButton editor={editor} type="redo" />
-          </div>
+          <ModernUndoRedoButton editor={editor} type="undo" />
+          <ModernUndoRedoButton editor={editor} type="redo" />
 
           {/* Séparateur */}
           <div className="toolbar-separator" />
 
-          {/* Menu de police */}
-          {onFontChange && (
-            <div className="toolbar-section font-section" ref={fontMenuRef}>
-              <Tooltip text="Changer la police">
-                <button
-                  className="toolbar-btn"
-                  onClick={() => setFontMenuOpen(!fontMenuOpen)}
-                  disabled={isReadonly}
-                  aria-label="Sélectionner une police"
-                >
-                  <FiType size={16} />
-                </button>
-              </Tooltip>
-              
-              {fontMenuOpen && (
-                <div className="font-dropdown">
-                  <div className="font-search">
-                    <FiSearch size={14} />
-                    <input
-                      ref={searchInputRef}
-                      type="text"
-                      className="font-search-input"
-                      placeholder="Rechercher une police..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                    />
-                  </div>
-                  
-                  {/* Options de scope */}
-                  <div className="font-scope-options">
-                    <button
-                      className={`font-scope-btn ${fontScope === 'all' ? 'active' : ''}`}
-                      onClick={() => setFontScope('all')}
-                    >
-                      All
-                    </button>
-                    <button
-                      className={`font-scope-btn ${fontScope === 'headings' ? 'active' : ''}`}
-                      onClick={() => setFontScope('headings')}
-                    >
-                      Titres
-                    </button>
-                    <button
-                      className={`font-scope-btn ${fontScope === 'body' ? 'active' : ''}`}
-                      onClick={() => setFontScope('body')}
-                    >
-                      Texte
-                    </button>
-                  </div>
-                  
-                  <div className="font-list">
-                    {filteredFonts.map((font) => {
-                      const isSelected = font.name === currentFont;
-                      return (
-                        <button
-                          key={font.name}
-                          onClick={() => setFont(font.name)}
-                          className={`font-item ${isSelected ? 'selected' : ''}`}
-                          style={{ fontFamily: font.name }}
-                        >
-                          <span className="font-name">{font.label}</span>
-                          <span className="font-category">{font.category}</span>
-                        </button>
-                      );
-                    })}
-                    {filteredFonts.length === 0 && (
-                      <div className="font-empty">Aucune police trouvée</div>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
           {/* Formatage de base */}
-          <div className="toolbar-section">
-            <ModernFormatButton editor={editor} format="bold" title="Gras" shortcut="Ctrl+B" />
-            <ModernFormatButton editor={editor} format="italic" title="Italique" shortcut="Ctrl+I" />
-            <ModernFormatButton editor={editor} format="underline" title="Souligné" shortcut="Ctrl+U" />
-          </div>
+          <ModernFormatButton editor={editor} format="bold" title="Gras" shortcut="Ctrl+B" />
+          <ModernFormatButton editor={editor} format="italic" title="Italique" shortcut="Ctrl+I" />
+          <ModernFormatButton editor={editor} format="underline" title="Souligné" shortcut="Ctrl+U" />
 
           {/* Couleurs */}
-          <div className="toolbar-section">
-            <ColorButton editor={editor} type="text" />
-            <ColorButton editor={editor} type="highlight" />
-          </div>
+          <ColorButton editor={editor} type="text" />
+          <ColorButton editor={editor} type="highlight" />
+
+          {/* Séparateur */}
+          <div className="toolbar-separator" />
 
           {/* Alignement */}
-          <div className="toolbar-section">
-            <SimpleAlignButton editor={editor} />
-          </div>
+          <SimpleAlignButton editor={editor} />
         </div>
 
         {/* Groupe centre - Structure */}
         <div className="toolbar-group-center">
           {/* Titres et paragraphes */}
-          <div className="toolbar-section">
-            <SimpleHeadingButton editor={editor} />
-          </div>
+          <SimpleHeadingButton editor={editor} />
 
           {/* Listes */}
-          <div className="toolbar-section">
-            <SimpleListButton editor={editor} />
-          </div>
+          <SimpleListButton editor={editor} />
 
           {/* Blocs */}
-          <div className="toolbar-section">
-            <BlockquoteButton editor={editor} />
-            <CodeBlockButton editor={editor} />
-          </div>
+          <BlockquoteButton editor={editor} />
+          <CodeBlockButton editor={editor} />
         </div>
 
         {/* Groupe droite - Outils avancés */}
         <div className="toolbar-group-right">
           {/* Outils avancés */}
-          <div className="toolbar-section">
-            <Tooltip text="Insérer un tableau">
-              <button 
-                className="toolbar-btn" 
-                disabled={isReadonly} 
-                onClick={() => editor?.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()} 
-                aria-label="Insérer un tableau"
-              >
-                <MdGridOn size={16} />
-              </button>
-            </Tooltip>
-            
-            <Tooltip text="Image">
-              <button 
-                className="toolbar-btn" 
-                disabled={isReadonly} 
-                onClick={() => setImageMenuOpen(true)} 
-                aria-label="Image"
-              >
-                <FiImage size={16} />
-              </button>
-            </Tooltip>
-          </div>
+          <Tooltip text="Insérer un tableau">
+            <button 
+              className="toolbar-btn" 
+              disabled={isReadonly} 
+              onClick={() => editor?.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()} 
+              aria-label="Insérer un tableau"
+            >
+              <MdGridOn size={16} />
+            </button>
+          </Tooltip>
+          
+          <Tooltip text="Image">
+            <button 
+              className="toolbar-btn" 
+              disabled={isReadonly} 
+              onClick={() => setImageMenuOpen(true)} 
+              aria-label="Image"
+            >
+              <FiImage size={16} />
+            </button>
+          </Tooltip>
 
           {/* Outils IA */}
-          <div className="toolbar-section">
-            <Tooltip text="Dictaphone IA">
-              <AudioRecorder 
-                onTranscriptionComplete={onTranscriptionComplete || (() => {})}
-                onError={setAudioError}
-                disabled={isReadonly}
-                variant="toolbar"
-              />
-            </Tooltip>
-            
-            {/* Bouton "Plus" pour les outils secondaires */}
-            <Tooltip text="Plus d'outils">
-              <button 
-                className={`toolbar-btn more-btn ${showMoreTools ? 'active' : ''}`}
-                onClick={() => setShowMoreTools(!showMoreTools)}
-                aria-label="Plus d'outils"
-              >
-                <FiMoreHorizontal size={16} />
-              </button>
-            </Tooltip>
-          </div>
+          <Tooltip text="Dictaphone IA">
+            <AudioRecorder 
+              onTranscriptionComplete={onTranscriptionComplete || (() => {})}
+              onError={setAudioError}
+              disabled={isReadonly}
+              variant="toolbar"
+            />
+          </Tooltip>
+          
+          {/* Bouton "Plus" pour les outils secondaires */}
+          <Tooltip text="Plus d'outils">
+            <button 
+              className={`toolbar-btn more-btn ${showMoreTools ? 'active' : ''}`}
+              onClick={() => setShowMoreTools(!showMoreTools)}
+              aria-label="Plus d'outils"
+            >
+              <FiMoreHorizontal size={16} />
+            </button>
+          </Tooltip>
 
           {/* Éclair tout à droite */}
-          <div className="toolbar-section">
-            <Tooltip text="Agent IA">
-              <button className="toolbar-btn ai-btn" disabled={isReadonly}>
-                <FiZap size={16} />
-              </button>
-            </Tooltip>
-          </div>
+          <Tooltip text="Agent IA">
+            <button className="toolbar-btn ai-btn" disabled={isReadonly}>
+              <FiZap size={16} />
+            </button>
+          </Tooltip>
         </div>
       </div>
 

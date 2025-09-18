@@ -208,6 +208,7 @@
   height: 16px;
   background: var(--border-subtle);
   margin: 0 8px;
+  opacity: 0.6;
 }
 
 /* Style pour pousser le dernier groupe (outils IA) à droite */
