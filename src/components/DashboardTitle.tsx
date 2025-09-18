@@ -3,6 +3,7 @@
 import React from 'react';
 import PageTitleSimple from './PageTitleSimple';
 import { useUserStats } from '@/hooks/useUserStats';
+import { LayoutDashboard } from 'lucide-react';
 
 interface DashboardTitleProps {
   title?: string;
@@ -54,13 +55,21 @@ const DashboardTitle: React.FC<DashboardTitleProps> = ({
   };
 
   return (
-    <PageTitleSimple
-      title={title}
-      subtitle={subtitle}
-      stats={getStats()}
-      loading={loading}
-      className={className}
-    />
+    <div className="dashboard-title-container">
+      {/* Logo stylé à gauche */}
+      <div className="dashboard-logo">
+        <LayoutDashboard size={40} />
+      </div>
+      
+      {/* Titre avec stats */}
+      <PageTitleSimple
+        title={title}
+        subtitle={subtitle}
+        stats={getStats()}
+        loading={loading}
+        className={className}
+      />
+    </div>
   );
 };
 
