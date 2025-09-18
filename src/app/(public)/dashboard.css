@@ -1,0 +1,288 @@
+/*
+  DASHBOARD DESIGN MODERNE - LAYOUT PARFAIT
+  ==========================================
+  Design unifié et professionnel pour le dashboard
+  Structure claire avec titres, séparateurs et espacements cohérents
+*/
+
+/* ========================================
+   STRUCTURE GÉNÉRALE DU DASHBOARD
+   ======================================== */
+
+.dashboard-section {
+  margin-bottom: 3rem;
+  width: 100%;
+}
+
+.section-header {
+  margin-bottom: 1.5rem;
+}
+
+.section-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0 0 0.75rem 0;
+  font-family: 'Noto Sans', sans-serif;
+  letter-spacing: -0.02em;
+}
+
+.section-separator {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.1);
+  margin-bottom: 0.5rem;
+}
+
+.section-content {
+  padding: 0;
+}
+
+/* ========================================
+   GRILLE D'ACTIONS RAPIDES
+   ======================================== */
+
+.actions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.action-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.5rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  color: #ffffff;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: left;
+  width: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+.action-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.05) 0%, 
+    transparent 50%, 
+    rgba(255, 255, 255, 0.02) 100%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.action-card:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.15);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+.action-card:hover::before {
+  opacity: 1;
+}
+
+.action-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  flex-shrink: 0;
+  transition: all 0.3s ease;
+}
+
+.action-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.action-content h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: #ffffff;
+  margin: 0 0 0.25rem 0;
+  font-family: 'Noto Sans', sans-serif;
+}
+
+.action-content p {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.7);
+  margin: 0;
+  font-family: 'Inter', sans-serif;
+}
+
+/* ========================================
+   COULEURS SPÉCIFIQUES PAR ACTION
+   ======================================== */
+
+.action-card.create-note .action-icon {
+  background: rgba(59, 130, 246, 0.15);
+  color: #3b82f6;
+}
+
+.action-card.create-note:hover .action-icon {
+  background: #3b82f6;
+  color: #ffffff;
+}
+
+.action-card.import .action-icon {
+  background: rgba(168, 85, 247, 0.15);
+  color: #a855f7;
+}
+
+.action-card.import:hover .action-icon {
+  background: #a855f7;
+  color: #ffffff;
+}
+
+.action-card.youtube .action-icon {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+}
+
+.action-card.youtube:hover .action-icon {
+  background: #ef4444;
+  color: #ffffff;
+}
+
+.action-card.chat .action-icon {
+  background: rgba(34, 197, 94, 0.15);
+  color: #22c55e;
+}
+
+.action-card.chat:hover .action-icon {
+  background: #22c55e;
+  color: #ffffff;
+}
+
+/* ========================================
+   RESPONSIVE DESIGN
+   ======================================== */
+
+@media (max-width: 1024px) {
+  .actions-grid {
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1.25rem;
+  }
+  
+  .action-card {
+    padding: 1.25rem;
+  }
+  
+  .action-icon {
+    width: 44px;
+    height: 44px;
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboard-section {
+    margin-bottom: 2.5rem;
+  }
+  
+  .section-title {
+    font-size: 20px;
+  }
+  
+  .actions-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .action-card {
+    padding: 1rem;
+  }
+  
+  .action-icon {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .action-content h3 {
+    font-size: 15px;
+  }
+  
+  .action-content p {
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboard-section {
+    margin-bottom: 2rem;
+  }
+  
+  .section-title {
+    font-size: 18px;
+  }
+  
+  .action-card {
+    padding: 0.875rem;
+    gap: 0.75rem;
+  }
+  
+  .action-icon {
+    width: 36px;
+    height: 36px;
+  }
+}
+
+/* ========================================
+   ACCESSIBILITÉ
+   ======================================== */
+
+.action-card:focus {
+  outline: 2px solid rgba(255, 255, 255, 0.3);
+  outline-offset: 2px;
+}
+
+/* ========================================
+   REDUCED MOTION
+   ======================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  .action-card {
+    transition: none;
+  }
+  
+  .action-card:hover {
+    transform: none;
+  }
+  
+  .action-card::before {
+    transition: none;
+  }
+}
+
+/* ========================================
+   DARK MODE SUPPORT
+   ======================================== */
+
+@media (prefers-color-scheme: dark) {
+  .section-title {
+    color: #ffffff;
+  }
+  
+  .action-content h3 {
+    color: #ffffff;
+  }
+  
+  .action-content p {
+    color: rgba(255, 255, 255, 0.7);
+  }
+}

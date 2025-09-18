@@ -14,6 +14,7 @@ import PerformanceMonitor from '@/components/PerformanceMonitor';
 import PageTitleSimple from '@/components/PageTitleSimple';
 import { motion } from 'framer-motion';
 import './home.css';
+import './dashboard.css';
 import Link from 'next/link';
 
 // Composant modal pour créer une nouvelle note
@@ -232,120 +233,115 @@ function AuthenticatedHomeContent({ user }: { user: { id: string; email?: string
 
         {/* Dashboard principal avec design moderne */}
         <div className="main-dashboard">
-          {/* Barre de recherche héro */}
-          <motion.section 
-            className="hero-search-glass"
+          {/* Ligne recherche + actions rapides */}
+          <motion.div 
+            className="search-actions-row"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
           >
-            <form onSubmit={handleSearch} className="search-container-glass">
-              <Search size={22} className="search-icon" />
+            {/* Barre de recherche */}
+            <form onSubmit={handleSearch} className="search-form">
+              <Search size={20} className="search-icon" />
               <input 
                 type="text" 
-                placeholder="Rechercher une note, un classeur..."
-                className="search-field-glass"
+                placeholder="Rechercher..."
+                className="search-field"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
               {searchQuery && (
                 <button 
                   type="submit" 
-                  className="search-btn-glass"
+                  className="search-btn"
                   disabled={isSearching}
                 >
-                  {isSearching ? 'Recherche...' : 'Rechercher'}
+                  {isSearching ? '...' : '→'}
                 </button>
               )}
             </form>
-          </motion.section>
 
-          {/* Carrousel de notes récentes - Design Notion */}
+            {/* Actions rapides compactes */}
+            <div className="quick-actions">
+              <motion.button 
+                className="quick-action create-note"
+                onClick={() => setIsCreateNoteModalOpen(true)}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                transition={{ type: "spring", stiffness: 300 }}
+                title="Créer une note"
+              >
+                <Plus size={16} />
+              </motion.button>
+
+              <motion.button 
+                className="quick-action import"
+                onClick={handleImport}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                transition={{ type: "spring", stiffness: 300 }}
+                title="Importer"
+              >
+                <Upload size={16} />
+              </motion.button>
+
+              <motion.button 
+                className="quick-action youtube"
+                onClick={handleYoutubeSummary}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                transition={{ type: "spring", stiffness: 300 }}
+                title="Youtube Summary"
+              >
+                <Youtube size={16} />
+              </motion.button>
+              
+              <motion.button 
+                className="quick-action chat"
+                onClick={handleOpenChat}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                transition={{ type: "spring", stiffness: 300 }}
+                title="Chat"
+              >
+                <MessageSquare size={16} />
+              </motion.button>
+            </div>
+          </motion.div>
+
+          {/* Section Notes Récentes */}
           <motion.section 
-            className="notes-carousel-section"
+            className="dashboard-section"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
           >
-            <NotesCarouselNotion 
-              limit={6}
-              showNavigation={true}
-              autoPlay={false}
-              title="Notes Récentes"
-              showViewAll={true}
-            />
-          </motion.section>
-
-          {/* Titre Actions Rapides */}
-          <div className="section-title">
-            <h2>Actions Rapides</h2>
-          </div>
-
-          {/* Actions rapides sans bloc */}
-          <motion.section 
-            className="creation-actions-section"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.5, ease: "easeOut" }}
-          >
-            <div className="creation-actions">
-              <motion.button 
-                className="action-btn-glass create-note"
-                onClick={() => setIsCreateNoteModalOpen(true)}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                transition={{ type: "spring", stiffness: 300 }}
-              >
-                <Plus size={20} />
-                <span>Créer une note</span>
-              </motion.button>
-
-              <motion.button 
-                className="action-btn-glass import"
-                onClick={handleImport}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                transition={{ type: "spring", stiffness: 300 }}
-              >
-                <Upload size={20} />
-                <span>Importer</span>
-              </motion.button>
-
-              <motion.button 
-                className="action-btn-glass youtube"
-                onClick={handleYoutubeSummary}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                transition={{ type: "spring", stiffness: 300 }}
-              >
-                <Youtube size={20} />
-                <span>Youtube Summary</span>
-              </motion.button>
-              
-              <motion.button 
-                className="action-btn-glass chat"
-                onClick={handleOpenChat}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                transition={{ type: "spring", stiffness: 300 }}
-              >
-                <MessageSquare size={20} />
-                <span>Chat</span>
-              </motion.button>
+            <div className="section-header">
+              <h2 className="section-title">Notes Récentes</h2>
+              <div className="section-separator"></div>
             </div>
-
-            {/* Input file caché pour l'import */}
-            <input 
-              id="file-input"
-              type="file" 
-              style={{ display: 'none' }}
-              onChange={(e) => {
-                if (e.target.files?.length) {
-                  logger.dev('[HomePage] Fichier sélectionné:', e.target.files[0]);
-                }
-              }}
-            />
+            <div className="section-content">
+              <NotesCarouselNotion 
+                limit={6}
+                showNavigation={true}
+                autoPlay={false}
+                title=""
+                showViewAll={false}
+              />
+            </div>
           </motion.section>
+
+          {/* Input file caché pour l'import */}
+          <input 
+            id="file-input"
+            type="file" 
+            style={{ display: 'none' }}
+            onChange={(e) => {
+              if (e.target.files?.length) {
+                logger.dev('[HomePage] Fichier sélectionné:', e.target.files[0]);
+              }
+            }}
+          />
         </div>
       </main>
       

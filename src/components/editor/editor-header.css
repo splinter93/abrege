@@ -217,32 +217,69 @@
 }
 
 .toolbar-button {
-  height: 32px;
-  padding: 0 8px;
-  border-radius: 6px; /* Bordures plus douces */
-  border: none;
-  background: transparent;
-  color: var(--text-2);
+  height: 36px;
+  padding: 0 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.7);
   cursor: pointer;
   display: flex;
   align-items: center;
   gap: 6px;
   font-size: 0.875rem;
   font-weight: 500;
-  transition: all 0.15s ease;
+  transition: all 0.3s ease;
   user-select: none;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  position: relative;
+  overflow: hidden;
 }
+
+.toolbar-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.08) 0%, 
+    transparent 50%, 
+    rgba(255, 255, 255, 0.03) 100%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
 .toolbar-button:hover {
-  background: var(--surface-hover);
-  color: var(--text-1);
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
+
+.toolbar-button:hover::before {
+  opacity: 1;
+}
+
 .toolbar-button.active {
-  background: var(--accent-subtle);
-  color: var(--accent-primary);
+  background: rgba(229, 90, 44, 0.15);
+  border-color: #e55a2c;
+  color: #e55a2c;
+  box-shadow: 0 4px 16px rgba(229, 90, 44, 0.2);
 }
+
 .toolbar-button svg {
   width: 16px;
   height: 16px;
+  transition: transform 0.2s ease;
+}
+
+.toolbar-button:hover svg {
+  transform: scale(1.05);
 }
 
 /* Styles pour le nouveau sélecteur de type de bloc */

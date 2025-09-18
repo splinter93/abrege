@@ -178,20 +178,46 @@
    ========================================================================== */
 
 .classeur-pill.add-classeur {
-  background: var(--glass-bg-secondary);
-  border: 2px dashed var(--glass-border-secondary);
-  color: var(--dossiers-text-secondary);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.7);
   min-width: 44px;
+  height: 44px;
   justify-content: center;
-  padding: var(--dossiers-spacing-sm);
+  padding: 0;
+  border-radius: 12px;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  position: relative;
+  overflow: hidden;
+}
+
+.classeur-pill.add-classeur::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.08) 0%, 
+    transparent 50%, 
+    rgba(255, 255, 255, 0.03) 100%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
 }
 
 .classeur-pill.add-classeur:hover {
-  background: var(--glass-bg-hover);
-  border-color: var(--dossiers-primary);
-  color: var(--dossiers-primary);
-  transform: translateY(-2px);
-  box-shadow: var(--glass-shadow-medium);
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.classeur-pill.add-classeur:hover::before {
+  opacity: 1;
 }
 
 .add-icon {
