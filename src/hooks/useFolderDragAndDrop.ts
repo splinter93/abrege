@@ -80,21 +80,22 @@ export const useFolderDragAndDrop = ({
     try {
       const data = JSON.parse(e.dataTransfer.getData('application/json'));
       if (data && data.id && data.type) {
-        // Vérifier si l'élément est déjà à la racine pour éviter les déplacements inutiles
+        // Vérifier si l'élément est déjà dans le bon dossier pour éviter les déplacements inutiles
         const store = useFileSystemStore.getState();
         let shouldMove = false;
+        let targetFolderId = parentFolderId; // 🎯 FIX: Rester dans le dossier courant si on est dans un dossier
         
         if (data.type === 'folder') {
           const folder = store.folders[data.id];
-          shouldMove = folder && folder.parent_id !== null;
+          shouldMove = folder && folder.parent_id !== targetFolderId;
         } else if (data.type === 'file') {
           const note = store.notes[data.id];
-          shouldMove = note && note.folder_id !== null;
+          shouldMove = note && note.folder_id !== targetFolderId;
         }
         
         // Ne déplacer que si nécessaire
         if (shouldMove) {
-          moveItem(data.id, null, data.type);
+          moveItem(data.id, targetFolderId, data.type);
         }
         
         // Si on déplace le dossier courant, revenir à la racine (navigation gérée par le parent)
