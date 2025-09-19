@@ -13,7 +13,7 @@ import "../styles/markdown.css";
 import "../styles/chat-global.css";
 import "../styles/editor.css";
 import "../styles/page-title-containers.css";
-import "../styles/unified-sidebar.css";
+import "../styles/unified-page-title.css";
 import "../styles/sidebar-collapsible.css";
 import "../styles/unified-page-layout.css";
 import "../styles/pages-unified-layout.css";
@@ -82,106 +82,20 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           * { box-sizing: border-box; }
           
           /* CRITICAL SIDEBAR CSS - Éviter le flash de sidebar noire */
-          .sidebar,
-          .page-sidebar-fixed {
+          .unified-sidebar {
             position: fixed !important;
             top: 0 !important;
             left: 0 !important;
             width: 280px !important;
             height: 100vh !important;
-            background: rgba(255, 255, 255, 0.08) !important;
-            border-right: 1px solid rgba(255, 255, 255, 0.12) !important;
-            backdrop-filter: blur(20px) !important;
-            -webkit-backdrop-filter: blur(20px) !important;
-            z-index: 1001 !important;
+            background: rgba(0, 0, 0, 0.18) !important;
+            border-right: 1px solid rgba(255, 255, 255, 0.1) !important;
+            backdrop-filter: blur(12px) !important;
+            -webkit-backdrop-filter: blur(12px) !important;
+            z-index: 1000 !important;
             display: flex !important;
             flex-direction: column !important;
             overflow: hidden !important;
-            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08) !important;
-          }
-          
-          .sidebar-main-content {
-            display: flex !important;
-            flex-direction: column !important;
-            height: 100% !important;
-          }
-          
-          .sidebar-logo {
-            padding: 24px !important;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.12) !important;
-            display: flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-            background: rgba(255, 255, 255, 0.05) !important;
-          }
-          
-          .sidebar-block {
-            padding: 24px 0 !important;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
-            background: transparent !important;
-          }
-          
-          .sidebar-nav {
-            display: flex !important;
-            flex-direction: column !important;
-            gap: 8px !important;
-            padding: 0 24px !important;
-          }
-          
-          .nav-link {
-            display: flex !important;
-            align-items: center !important;
-            gap: 16px !important;
-            padding: 16px 24px !important;
-            color: #f5f5f5 !important;
-            text-decoration: none !important;
-            transition: all 0.25s ease !important;
-            border-radius: 12px !important;
-            background: transparent !important;
-            border: 1px solid transparent !important;
-            width: 100% !important;
-            text-align: left !important;
-            font-size: 16px !important;
-            font-weight: 500 !important;
-            margin: 0 12px !important;
-            position: relative !important;
-            overflow: hidden !important;
-          }
-          
-          .nav-link:hover {
-            background: rgba(255, 255, 255, 0.08) !important;
-            border-color: rgba(255, 255, 255, 0.18) !important;
-            color: #f5f5f5 !important;
-            transform: translateY(-1px) !important;
-            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08) !important;
-          }
-          
-          .nav-link.active {
-            background: rgba(229, 90, 44, 0.12) !important;
-            border-color: rgba(229, 90, 44, 0.25) !important;
-            color: #e55a2c !important;
-            font-weight: 600 !important;
-            box-shadow: 0 4px 16px rgba(229, 90, 44, 0.15) !important;
-          }
-          
-          .nav-link svg {
-            width: 20px !important;
-            height: 20px !important;
-            flex-shrink: 0 !important;
-          }
-          
-          .nav-link span {
-            flex: 1 !important;
-            overflow: hidden !important;
-            text-overflow: ellipsis !important;
-            white-space: nowrap !important;
-          }
-          
-          .sidebar-footer {
-            margin-top: auto !important;
-            border-top: 1px solid rgba(255, 255, 255, 0.12) !important;
-            border-bottom: none !important;
-            background: rgba(255, 255, 255, 0.05) !important;
           }
           
           /* CRITICAL PAGE CONTENT CSS - S'assurer que le contenu est bien positionné */

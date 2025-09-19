@@ -8,7 +8,8 @@ import { useSecureErrorHandler } from "@/components/SecureErrorHandler";
 import { logApi } from "@/utils/logger";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import AuthGuard from "@/components/AuthGuard";
-import PageTitleSimple from "@/components/PageTitleSimple";
+import UnifiedPageTitle from "@/components/UnifiedPageTitle";
+import { Settings } from "lucide-react";
 import "@/styles/main.css";
 import "@/styles/account.css";
 
@@ -197,14 +198,11 @@ function AuthenticatedSettingsContent({ user }: { user: { id: string; email?: st
 
   return (
     <>
-      {/* Titre de la page avec design simple unifié */}
-      <PageTitleSimple
+      {/* Titre de la page avec design uniforme */}
+      <UnifiedPageTitle
+        icon={Settings}
         title="Réglages"
         subtitle="Gérez vos préférences et clés API"
-        stats={[
-          { number: apiKeys.length, label: `clé${apiKeys.length > 1 ? 's' : ''} API` },
-          { number: user?.email ? '✅' : '❌', label: 'authentifié' }
-        ]}
       />
 
       {/* Contenu principal avec blocs glassmorphism espacés */}

@@ -7,7 +7,8 @@ import { useSecureErrorHandler } from "@/components/SecureErrorHandler";
 import UnifiedPageLayout from "@/components/UnifiedPageLayout";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import AuthGuard from "@/components/AuthGuard";
-import PageTitleSimple from "@/components/PageTitleSimple";
+import UnifiedPageTitle from "@/components/UnifiedPageTitle";
+import { BarChart3 } from "lucide-react";
 import "@/styles/main.css";
 
 interface DashboardStats {
@@ -97,16 +98,35 @@ function AuthenticatedDashboardContent({ user }: { user: { id: string; email?: s
 
   return (
     <>
-      {/* Titre de la page avec design simple unifié */}
-      <PageTitleSimple
+      {/* Titre de la page avec design unifié et bloc icône */}
+      <UnifiedPageTitle
+        icon={BarChart3}
         title="Tableau de bord"
         subtitle="Vue d'ensemble de vos activités et contenus"
-        stats={[
-          { number: stats.totalClasseurs, label: `classeur${stats.totalClasseurs > 1 ? 's' : ''}` },
-          { number: stats.totalNotes, label: `note${stats.totalNotes > 1 ? 's' : ''}` },
-          { number: stats.totalFiles, label: `fichier${stats.totalFiles > 1 ? 's' : ''}` }
-        ]}
       />
+
+      {/* Statistiques rapides en bloc glassmorphism */}
+      <motion.div 
+        className="dashboard-stats-overview"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 0.05 }}
+      >
+        <div className="dashboard-stats-overview-grid">
+          <div className="dashboard-stat-overview-item">
+            <span className="dashboard-stat-overview-number">{stats.totalClasseurs}</span>
+            <span className="dashboard-stat-overview-label">classeur{stats.totalClasseurs > 1 ? 's' : ''}</span>
+          </div>
+          <div className="dashboard-stat-overview-item">
+            <span className="dashboard-stat-overview-number">{stats.totalNotes}</span>
+            <span className="dashboard-stat-overview-label">note{stats.totalNotes > 1 ? 's' : ''}</span>
+          </div>
+          <div className="dashboard-stat-overview-item">
+            <span className="dashboard-stat-overview-number">{stats.totalFiles}</span>
+            <span className="dashboard-stat-overview-label">fichier{stats.totalFiles > 1 ? 's' : ''}</span>
+          </div>
+        </div>
+      </motion.div>
 
       {/* Section des statistiques rapides */}
       <motion.section 

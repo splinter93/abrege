@@ -2,16 +2,17 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
+import { useUserStats } from '@/hooks/useUserStats';
 import { useRouter } from 'next/navigation';
 import UnifiedSidebar from '@/components/UnifiedSidebar';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import AuthGuard from '@/components/AuthGuard';
 import { useSecureErrorHandler } from '@/components/SecureErrorHandler';
 import { simpleLogger as logger } from '@/utils/logger';
-import { MessageSquare, Plus, Search, Upload, Sparkles, Zap, Eye, X, Youtube, FileText } from 'lucide-react';
+import { MessageSquare, Plus, Search, Upload, Sparkles, Zap, Eye, X, Youtube, FileText, LayoutDashboard } from 'lucide-react';
 import NotesCarouselNotion from '@/components/NotesCarouselNotion';
 import PerformanceMonitor from '@/components/PerformanceMonitor';
-import DashboardTitle from '@/components/DashboardTitle';
+import UnifiedPageTitle from '@/components/UnifiedPageTitle';
 import { motion } from 'framer-motion';
 import './home.css';
 import './dashboard.css';
@@ -163,6 +164,8 @@ function AuthenticatedHomeContent({ user }: { user: { id: string; email?: string
   const [isSearching, setIsSearching] = useState(false);
   const [isCreateNoteModalOpen, setIsCreateNoteModalOpen] = useState(false);
 
+  const { stats, loading: statsLoading } = useUserStats();
+
   const { handleError } = useSecureErrorHandler({
     context: 'HomePage',
     operation: 'dashboard_actions',
@@ -221,7 +224,16 @@ function AuthenticatedHomeContent({ user }: { user: { id: string; email?: string
       
       <main className="page-content-area">
         {/* Titre du dashboard avec statistiques dynamiques */}
-        <DashboardTitle />
+        <UnifiedPageTitle
+          icon={LayoutDashboard}
+          title="Dashboard"
+          subtitle="Gérez vos notes et classeurs"
+          stats={stats ? [
+            { number: stats.total_notes, label: "Notes" },
+            { number: stats.total_classeurs, label: "Classeurs" },
+            { number: stats.total_folders, label: "Dossiers" }
+          ] : []}
+        />
 
         {/* Dashboard principal avec design moderne */}
         <div className="main-dashboard">

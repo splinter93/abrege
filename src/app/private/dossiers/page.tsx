@@ -10,7 +10,8 @@ import FolderManager from "@/components/FolderManager";
 import DossierErrorBoundary from "@/components/DossierErrorBoundary";
 import { DossierLoadingState, DossierErrorState } from "@/components/DossierLoadingStates";
 import AuthGuard from "@/components/AuthGuard";
-import PageTitleSimple from "@/components/PageTitleSimple";
+import UnifiedPageTitle from "@/components/UnifiedPageTitle";
+import { Folder } from "lucide-react";
 
 import { useDossiersPage } from "@/hooks/useDossiersPage";
 import { useAuth } from "@/hooks/useAuth";
@@ -257,8 +258,9 @@ function AuthenticatedDossiersContent({ user }: { user: AuthenticatedUser }) {
 
   return (
     <UnifiedPageLayout className="page-dossiers">
-        {/* Titre de la page avec design simple unifié */}
-        <PageTitleSimple
+        {/* Titre de la page avec design uniforme */}
+        <UnifiedPageTitle
+          icon={Folder}
           title="Mes Classeurs"
           subtitle="Organisez et gérez vos connaissances"
           stats={[

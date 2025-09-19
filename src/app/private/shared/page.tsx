@@ -5,7 +5,8 @@ import { useState, useEffect } from "react";
 import UnifiedPageLayout from "@/components/UnifiedPageLayout";
 import AuthGuard from "@/components/AuthGuard";
 import ErrorBoundary from "@/components/ErrorBoundary";
-import PageTitleSimple from "@/components/PageTitleSimple";
+import UnifiedPageTitle from "@/components/UnifiedPageTitle";
+import { Share2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import "@/styles/account.css";
 
@@ -92,14 +93,11 @@ function SharedNotesContent() {
 
   return (
     <>
-      {/* Titre de la page avec design simple unifié */}
-      <PageTitleSimple
+      {/* Titre de la page avec design uniforme */}
+      <UnifiedPageTitle
+        icon={Share2}
         title="Notes Partagées"
         subtitle="Découvrez et partagez des connaissances"
-        stats={[
-          { number: totalReceived, label: 'reçues' },
-          { number: totalShared, label: 'partagées' }
-        ]}
       />
 
       {/* Contenu principal avec blocs glassmorphism espacés */}

@@ -5,6 +5,8 @@ import { useState } from "react";
 import UnifiedPageLayout from "@/components/UnifiedPageLayout";
 import AuthGuard from "@/components/AuthGuard";
 import ErrorBoundary from "@/components/ErrorBoundary";
+import UnifiedPageTitle from "@/components/UnifiedPageTitle";
+import { User } from "lucide-react";
 import "@/styles/account.css";
 
 interface ApiKey {
@@ -94,39 +96,12 @@ export default function AccountPage() {
     <ErrorBoundary>
       <AuthGuard>
         <UnifiedPageLayout className="page-account">
-          {/* Titre de la page avec design glassmorphism uniforme */}
-          <motion.div 
-            className="page-title-container-glass"
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, ease: "easeOut" }}
-          >
-            <div className="page-title-content">
-              <div className="page-title-left-section">
-                <motion.div 
-                  className="page-title-icon-container"
-                  whileHover={{ scale: 1.05 }}
-                  transition={{ type: "spring", stiffness: 300 }}
-                >
-                  <span className="page-title-icon">⚙️</span>
-                </motion.div>
-                <div className="page-title-section">
-                  <h1 className="page-title">Réglages</h1>
-                  <p className="page-subtitle">Gérez votre compte et vos préférences</p>
-                </div>
-              </div>
-              <div className="page-title-stats">
-                <div className="page-title-stats-item">
-                  <span className="page-title-stats-number">✅</span>
-                  <span className="page-title-stats-label">actif</span>
-                </div>
-                <div className="page-title-stats-item">
-                  <span className="page-title-stats-number">🔒</span>
-                  <span className="page-title-stats-label">sécurisé</span>
-                </div>
-              </div>
-            </div>
-          </motion.div>
+          {/* Titre de la page avec design uniforme */}
+          <UnifiedPageTitle
+            icon={User}
+            title="Mon Compte"
+            subtitle="Gérez votre compte et vos préférences"
+          />
 
           {/* Contenu principal avec blocs glassmorphism espacés */}
           <div className="account-main-container">

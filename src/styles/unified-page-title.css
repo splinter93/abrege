@@ -1,0 +1,402 @@
+/*
+  TITRE UNIFORME POUR TOUTES LES PAGES
+  ====================================
+  Style identique au dashboard avec bloc icône à gauche
+  Appliqué à toutes les pages de la sidebar
+*/
+
+/* ========================================
+   CONTAINER PRINCIPAL
+   ======================================== */
+
+.unified-page-title-container {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  width: 100%;
+}
+
+/* ========================================
+   CONTENU DU TITRE
+   ======================================== */
+
+.unified-page-title-content {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  width: 100%;
+}
+
+/* ========================================
+   BLOC ICÔNE (STYLE DASHBOARD)
+   ======================================== */
+
+.unified-page-title-logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 80px;
+  height: 80px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  color: rgba(255, 255, 255, 0.8);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  flex-shrink: 0;
+  margin-top: 0;
+  align-self: flex-start;
+}
+
+.unified-page-title-logo::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.08) 0%, 
+    transparent 50%, 
+    rgba(255, 255, 255, 0.03) 100%);
+  pointer-events: none;
+}
+
+.unified-page-title-logo:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.95);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+/* ========================================
+   SECTION TITRE
+   ======================================== */
+
+.unified-page-title-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  flex: 1;
+  align-items: flex-start;
+  padding-top: 0.25rem;
+}
+
+/* ========================================
+   STATISTIQUES À DROITE
+   ======================================== */
+
+.unified-page-title-stats {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-shrink: 0;
+}
+
+.unified-page-title-stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.75rem 1rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  transition: all 0.3s ease;
+  min-width: 80px;
+  position: relative;
+  overflow: hidden;
+}
+
+.unified-page-title-stat-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.08) 0%, 
+    transparent 50%, 
+    rgba(255, 255, 255, 0.03) 100%);
+  pointer-events: none;
+}
+
+.unified-page-title-stat-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.15);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.unified-page-title-stat-number {
+  font-size: 1.5rem;
+  font-weight: 900;
+  color: #ffffff;
+  font-family: 'Noto Sans', sans-serif;
+  line-height: 1;
+}
+
+.unified-page-title-stat-label {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.7);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-family: 'Noto Sans', sans-serif;
+  line-height: 1;
+}
+
+/* Titre principal - Surcharge le style global h1 */
+.unified-page-title-container .unified-page-title-content .unified-page-title-section h1.unified-page-title-text {
+  font-size: 2.5rem !important;
+  font-weight: 900 !important;
+  color: #ffffff !important;
+  margin: 0 !important;
+  font-family: 'Noto Sans', sans-serif !important;
+  letter-spacing: -0.02em !important;
+  line-height: 1.2 !important;
+}
+
+/* Sous-titre */
+.unified-page-title-container .unified-page-title-content .unified-page-title-section .unified-page-title-subtitle {
+  font-size: 1.1rem !important;
+  color: rgba(255, 255, 255, 0.7) !important;
+  margin: 0 !important;
+  font-family: 'Noto Sans', sans-serif !important;
+  font-weight: 400 !important;
+  line-height: 1.4 !important;
+}
+
+/* ========================================
+   RESPONSIVE
+   ======================================== */
+
+/* Écrans très larges */
+@media (min-width: 1400px) {
+  .unified-page-title-logo {
+    width: 90px;
+    height: 90px;
+  }
+  
+  .unified-page-title-text {
+    font-size: 2.75rem;
+  }
+  
+  .unified-page-title-subtitle {
+    font-size: 1.25rem;
+  }
+}
+
+/* Tablettes */
+@media (max-width: 1024px) and (min-width: 769px) {
+  .unified-page-title-logo {
+    width: 75px;
+    height: 75px;
+  }
+  
+  .unified-page-title-text {
+    font-size: 2.25rem;
+  }
+  
+  .unified-page-title-subtitle {
+    font-size: 1.125rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .unified-page-title-container {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 1.5rem;
+  }
+
+  .unified-page-title-content {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .unified-page-title-logo {
+    width: 70px;
+    height: 70px;
+  }
+
+  .unified-page-title-stats {
+    align-self: stretch;
+    justify-content: space-between;
+  }
+
+  .unified-page-title-stat-item {
+    flex: 1;
+    min-width: auto;
+  }
+
+  .unified-page-title-container .unified-page-title-content .unified-page-title-section h1.unified-page-title-text {
+    font-size: 2rem !important;
+  }
+
+  .unified-page-title-container .unified-page-title-content .unified-page-title-section .unified-page-title-subtitle {
+    font-size: 1rem !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .unified-page-title-logo {
+    width: 60px;
+    height: 60px;
+  }
+
+  .unified-page-title-container .unified-page-title-content .unified-page-title-section h1.unified-page-title-text {
+    font-size: 1.75rem !important;
+  }
+
+  .unified-page-title-container .unified-page-title-content .unified-page-title-section .unified-page-title-subtitle {
+    font-size: 0.95rem !important;
+  }
+}
+
+/* ========================================
+   REDUCED MOTION
+   ======================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  .unified-page-title-logo {
+    transition: none;
+  }
+  
+  .unified-page-title-logo:hover {
+    transform: none;
+  }
+}
+
+/* ========================================
+   STATISTIQUES RAPIDES DASHBOARD
+   ======================================== */
+
+.dashboard-stats-overview {
+  margin-bottom: 2rem;
+  width: 100%;
+}
+
+.dashboard-stats-overview-grid {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.dashboard-stat-overview-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 1rem 1.5rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  transition: all 0.3s ease;
+  min-width: 100px;
+  position: relative;
+  overflow: hidden;
+}
+
+.dashboard-stat-overview-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.08) 0%, 
+    transparent 50%, 
+    rgba(255, 255, 255, 0.03) 100%);
+  pointer-events: none;
+}
+
+.dashboard-stat-overview-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.15);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.dashboard-stat-overview-number {
+  font-size: 1.75rem;
+  font-weight: 900;
+  color: #ffffff;
+  font-family: 'Noto Sans', sans-serif;
+  line-height: 1;
+}
+
+.dashboard-stat-overview-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.7);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-family: 'Noto Sans', sans-serif;
+  line-height: 1;
+}
+
+/* Responsive pour les statistiques dashboard */
+@media (max-width: 1024px) and (min-width: 769px) {
+  .dashboard-stats-overview-grid {
+    gap: 0.875rem;
+  }
+  
+  .dashboard-stat-overview-item {
+    padding: 0.875rem 1.25rem;
+    min-width: 90px;
+  }
+  
+  .dashboard-stat-overview-number {
+    font-size: 1.625rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboard-stats-overview-grid {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  
+  .dashboard-stat-overview-item {
+    width: 100%;
+    flex-direction: row;
+    justify-content: space-between;
+    padding: 1rem 1.5rem;
+  }
+  
+  .dashboard-stat-overview-number {
+    font-size: 1.5rem;
+  }
+  
+  .dashboard-stat-overview-label {
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboard-stats-overview-item {
+    padding: 0.875rem 1.25rem;
+  }
+  
+  .dashboard-stat-overview-number {
+    font-size: 1.375rem;
+  }
+  
+  .dashboard-stat-overview-label {
+    font-size: 0.75rem;
+  }
+}

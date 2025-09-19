@@ -1,6 +1,5 @@
 // Composants principaux
 export { default as LogoHeader } from './LogoHeader';
-export { default as Sidebar } from './Sidebar'; // Obsolète - utiliser UnifiedSidebar
 export { default as UnifiedSidebar } from './UnifiedSidebar';
 export { default as AppMainContent } from './AppMainContent';
 export { default as AppRealtimeBridge } from './AppRealtimeBridge';

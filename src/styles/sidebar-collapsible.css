@@ -16,13 +16,13 @@
   left: 0 !important;
   width: 280px !important;
   height: 100vh !important;
-  background: rgba(0, 0, 0, 0.55) !important;
-  border-right: 1px solid rgba(0, 0, 0, 0.3) !important;
+  background: rgba(0, 0, 0, 0.18) !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.1) !important;
   z-index: 1000 !important;
   display: flex !important;
   flex-direction: column !important;
   font-family: 'Noto Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
   overflow: hidden !important;
   backdrop-filter: blur(12px) !important;
   -webkit-backdrop-filter: blur(12px) !important;
@@ -30,14 +30,15 @@
 
 /* Force la bordure avec une spécificité encore plus élevée */
 aside.unified-sidebar {
-  border-right: 1px solid rgba(0, 0, 0, 0.3) !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.1) !important;
 }
 
 /* Mode collapsed - largeur réduite */
 .unified-sidebar.collapsed {
   width: 64px !important;
   overflow: hidden !important;
-  border-right: 1px solid rgba(0, 0, 0, 0.3) !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.1) !important;
+  transform: translateX(0) !important;
 }
 
 /* Masquer le contenu qui déborde en mode collapsed */
@@ -100,8 +101,9 @@ aside.unified-sidebar {
 .unified-logo-image {
   max-width: 120px !important;
   height: auto !important;
-  transition: opacity 0.2s ease !important;
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
   margin-left: 8px !important;
+  opacity: 1 !important;
 }
 
 .unified-logo-icon {
@@ -110,12 +112,29 @@ aside.unified-sidebar {
   justify-content: center !important;
   width: 36px !important;
   height: 36px !important;
-  transition: all 0.2s ease !important;
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
   margin: 0 3px 0 auto !important;
+  opacity: 0 !important;
+  transform: scale(0.8) !important;
 }
 
 .unified-logo-icon:hover {
   transform: scale(1.05) !important;
+}
+
+/* Mode collapsed - afficher l'icône du logo */
+.unified-sidebar.collapsed .unified-logo-image {
+  opacity: 0 !important;
+  transform: scale(0.8) translateX(-10px) !important;
+  margin-left: 0 !important;
+  pointer-events: none !important;
+}
+
+.unified-sidebar.collapsed .unified-logo-icon {
+  opacity: 1 !important;
+  transform: scale(1) translateX(4px) !important;
+  margin: 0 !important;
+  pointer-events: auto !important;
 }
 
 .unified-logo-icon-image {
@@ -170,7 +189,7 @@ aside.unified-sidebar {
   font-size: 14px !important;
   font-weight: 400 !important;
   cursor: pointer !important;
-  transition: all 0.2s ease !important;
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
   text-align: left !important;
   border-radius: 6px !important;
   margin: 1px 8px !important;
@@ -201,6 +220,11 @@ aside.unified-sidebar {
   width: calc(100% - 16px) !important;
   max-width: 48px !important;
   min-width: 48px !important;
+  transform: scale(1) !important;
+}
+
+.unified-sidebar.collapsed .unified-nav-link:hover {
+  transform: scale(1.05) !important;
 }
 
 /* Icônes */
@@ -209,15 +233,18 @@ aside.unified-sidebar {
   height: 20px !important;
   color: rgba(255, 255, 255, 0.5) !important;
   flex-shrink: 0 !important;
-  transition: color 0.2s ease !important;
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
+  transform: scale(1) !important;
 }
 
 .unified-nav-link:hover svg {
   color: #ffffff !important;
+  transform: scale(1.1) !important;
 }
 
 .unified-nav-link.active svg {
   color: #ffffff !important;
+  transform: scale(1.05) !important;
 }
 
 /* Texte - masqué en mode collapsed */
@@ -227,11 +254,16 @@ aside.unified-sidebar {
   overflow: hidden !important;
   text-overflow: ellipsis !important;
   font-weight: inherit !important;
-  transition: opacity 0.2s ease !important;
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
+  opacity: 1 !important;
+  transform: translateX(0) !important;
 }
 
 .unified-sidebar.collapsed .unified-nav-link span {
-  display: none !important;
+  opacity: 0 !important;
+  transform: translateX(-10px) !important;
+  width: 0 !important;
+  overflow: hidden !important;
 }
 
 /* ========================================
@@ -246,7 +278,7 @@ aside.unified-sidebar {
   margin: 1px 8px !important;
   border-radius: 6px !important;
   cursor: pointer !important;
-  transition: all 0.2s ease !important;
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
   display: flex !important;
   align-items: center !important;
   gap: 12px !important;
@@ -269,7 +301,12 @@ aside.unified-sidebar {
   width: 20px !important;
   height: 20px !important;
   color: inherit !important;
-  transition: color 0.2s ease !important;
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
+  transform: scale(1) !important;
+}
+
+.unified-logout-button:hover svg {
+  transform: scale(1.1) !important;
 }
 
 /* Mode collapsed - centrer le bouton de déconnexion */
@@ -279,10 +316,18 @@ aside.unified-sidebar {
   width: calc(100% - 16px) !important;
   max-width: 48px !important;
   min-width: 48px !important;
+  transform: scale(1) !important;
+}
+
+.unified-sidebar.collapsed .unified-logout-button:hover {
+  transform: scale(1.05) !important;
 }
 
 .unified-sidebar.collapsed .unified-logout-button span {
-  display: none !important;
+  opacity: 0 !important;
+  transform: translateX(-10px) !important;
+  width: 0 !important;
+  overflow: hidden !important;
 }
 
 /* ========================================
@@ -309,6 +354,8 @@ aside.unified-sidebar {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
   backdrop-filter: blur(8px) !important;
   -webkit-backdrop-filter: blur(8px) !important;
+  opacity: 0 !important;
+  animation: tooltipFadeIn 0.2s ease-out forwards !important;
 }
 
 /* Flèche du tooltip */
@@ -427,6 +474,69 @@ aside.unified-sidebar {
 }
 
 /* ========================================
+   ANIMATIONS
+   ======================================== */
+
+@keyframes tooltipFadeIn {
+  from {
+    opacity: 0 !important;
+    transform: translateY(-50%) translateX(-5px) !important;
+  }
+  to {
+    opacity: 1 !important;
+    transform: translateY(-50%) translateX(0) !important;
+  }
+}
+
+@keyframes sidebarSlideIn {
+  from {
+    transform: translateX(-100%) !important;
+  }
+  to {
+    transform: translateX(0) !important;
+  }
+}
+
+@keyframes contentFadeIn {
+  from {
+    opacity: 0 !important;
+    transform: translateY(10px) !important;
+  }
+  to {
+    opacity: 1 !important;
+    transform: translateY(0) !important;
+  }
+}
+
+@keyframes sidebarCollapse {
+  from {
+    width: 280px !important;
+  }
+  to {
+    width: 64px !important;
+  }
+}
+
+@keyframes sidebarExpand {
+  from {
+    width: 64px !important;
+  }
+  to {
+    width: 280px !important;
+  }
+}
+
+/* Animation d'entrée pour la sidebar */
+.unified-sidebar {
+  animation: sidebarSlideIn 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
+}
+
+/* Animation d'entrée pour le contenu */
+.unified-sidebar-content {
+  animation: contentFadeIn 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.1s both !important;
+}
+
+/* ========================================
    REDUCED MOTION
    ======================================== */
 
@@ -435,8 +545,10 @@ aside.unified-sidebar {
   .unified-nav-link,
   .unified-logo-image,
   .unified-logo-icon,
-  .unified-logout-button {
+  .unified-logout-button,
+  .unified-sidebar-content {
     transition: none !important;
+    animation: none !important;
   }
 }
 
@@ -446,7 +558,7 @@ aside.unified-sidebar {
 
 /* Ajuster le contenu principal en fonction de l'état de la sidebar */
 .page-content-area {
-  transition: margin-left 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  transition: margin-left 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
 }
 
 /* Mode normal - sidebar étendue */
@@ -476,7 +588,7 @@ aside.unified-sidebar {
 
 /* Override de page-sidebar-fixed pour supporter le mode collapsed */
 .page-sidebar-fixed {
-  transition: width 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  transition: width 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
 }
 
 /* Mode collapsed - ajuster la largeur du conteneur parent */

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Trash2, Archive, Clock, AlertCircle, FileText, Folder, RotateCcw, Trash } from 'react-feather';
+import { Archive, Clock, AlertCircle, FileText, Folder, RotateCcw, Trash } from 'react-feather';
 import { useAuth } from '@/hooks/useAuth';
 import type { AuthenticatedUser } from '@/types/dossiers';
 import type { TrashItem, TrashStatistics } from '@/types/supabase';
@@ -12,7 +12,8 @@ import ErrorBoundary from '@/components/ErrorBoundary';
 import UnifiedPageLayout from '@/components/UnifiedPageLayout';
 import { useSecureErrorHandler } from '@/components/SecureErrorHandler';
 import { simpleLogger as logger } from '@/utils/logger';
-import PageTitleSimple from '@/components/PageTitleSimple';
+import UnifiedPageTitle from '@/components/UnifiedPageTitle';
+import { Trash2 } from 'lucide-react';
 
 import './index.css';
 
@@ -184,16 +185,15 @@ function AuthenticatedTrashContent({ user }: { user: AuthenticatedUser }) {
 
   return (
     <UnifiedPageLayout className="page-trash">
-        {/* Titre de la page avec design simple unifié */}
-        <PageTitleSimple
+        {/* Titre de la page avec design uniforme */}
+        <UnifiedPageTitle
+          icon={Trash2}
           title="Corbeille"
           subtitle="Gérez vos éléments supprimés et restaurez ce qui est important"
           stats={[
-            { number: statistics.total, label: 'Total' },
-            { number: statistics.notes, label: 'Notes' },
-            { number: statistics.folders, label: 'Dossiers' },
-            { number: statistics.classeurs, label: 'Classeurs' },
-            { number: statistics.files, label: 'Fichiers' }
+            { number: statistics.total, label: `élément${statistics.total > 1 ? 's' : ''}` },
+            { number: statistics.notes, label: 'notes' },
+            { number: statistics.folders, label: 'dossiers' }
           ]}
         />
 

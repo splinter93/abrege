@@ -14,7 +14,8 @@ import AuthGuard from "@/components/AuthGuard";
 import { useSecureErrorHandler } from "@/components/SecureErrorHandler";
 import { STORAGE_CONFIG } from "@/config/storage";
 import { simpleLogger as logger } from "@/utils/logger";
-import PageTitleSimple from "@/components/PageTitleSimple";
+import UnifiedPageTitle from "@/components/UnifiedPageTitle";
+import { FileText } from "lucide-react";
 import "@/styles/main.css";
 import "./index.css";
 import "./page.css"; // CSS critique pour éviter le flash
@@ -329,13 +330,14 @@ function AuthenticatedFilesContent({ user }: { user: { id: string; email?: strin
 
   return (
     <UnifiedPageLayout className="page-files">
-        {/* Titre de la page avec design simple unifié */}
-        <PageTitleSimple
+        {/* Titre de la page avec design uniforme */}
+        <UnifiedPageTitle
+          icon={FileText}
           title="Mes Fichiers"
           subtitle="Gérez et organisez vos documents"
           stats={[
             { number: displayFiles.length, label: `fichier${displayFiles.length > 1 ? 's' : ''}` },
-            ...(quotaInfo ? [{ number: `${usagePercentage}%`, label: 'utilisé' }] : [])
+            { number: quotaInfo ? Math.round(quotaInfo.usedBytes / (1024 * 1024)) : 0, label: 'MB' }
           ]}
         />
 
