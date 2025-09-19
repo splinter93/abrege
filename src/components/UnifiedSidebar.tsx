@@ -1,5 +1,5 @@
 'use client';
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
@@ -68,6 +68,7 @@ const SettingsIcon = () => (
   </svg>
 );
 
+
 interface UnifiedSidebarProps {
   isOpen?: boolean;
   isDesktop?: boolean;
@@ -84,6 +85,9 @@ const UnifiedSidebar: React.FC<UnifiedSidebarProps> = ({
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const router = useRouter();
   const activeLink = useActiveSidebarLink();
+  
+  // État pour la sidebar rétractable
+  const [isCollapsed, setIsCollapsed] = useState(true);
 
   useEffect(() => {
     return () => {
@@ -91,6 +95,24 @@ const UnifiedSidebar: React.FC<UnifiedSidebarProps> = ({
         clearTimeout(hoverTimeoutRef.current);
       }
     };
+  }, []);
+
+  // Gestion du hover pour déployer/réduire
+  const handleMouseEnter = useCallback(() => {
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current);
+    }
+    setIsCollapsed(false);
+  }, []);
+
+  const handleMouseLeave = useCallback(() => {
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current);
+    }
+    // Petit délai pour éviter les fermetures accidentelles
+    hoverTimeoutRef.current = setTimeout(() => {
+      setIsCollapsed(true);
+    }, 150);
   }, []);
 
   const handleLogout = async () => {
@@ -151,7 +173,11 @@ const UnifiedSidebar: React.FC<UnifiedSidebarProps> = ({
   ];
 
   return (
-    <aside className={`unified-sidebar ${isOpen ? 'open' : 'closed'} ${isDesktop ? 'desktop' : 'mobile'} ${className}`}>
+      <aside 
+        className={`unified-sidebar ${isOpen ? 'open' : 'closed'} ${isDesktop ? 'desktop' : 'mobile'} ${isCollapsed ? 'collapsed' : ''} ${className}`}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+      >
       <div className="unified-sidebar-content">
         {/* Logo Scrivia */}
         <motion.div 
@@ -160,15 +186,30 @@ const UnifiedSidebar: React.FC<UnifiedSidebarProps> = ({
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease: "easeOut" }}
         >
-          <Image
-            src="/logo-scrivia-white.png"
-            alt="Scrivia"
-            width={140}
-            height={45}
-            priority
-            className="unified-logo-image"
-          />
+          {!isCollapsed && (
+            <Image
+              src="/logo-scrivia-white.png"
+              alt="Scrivia"
+              width={140}
+              height={45}
+              priority
+              className="unified-logo-image"
+            />
+          )}
+        {isCollapsed && (
+          <div className="unified-logo-icon">
+            <Image
+              src="/simple logo.svg"
+              alt="Scrivia"
+              width={32}
+              height={32}
+              priority
+              className="unified-logo-icon-image"
+            />
+          </div>
+        )}
         </motion.div>
+
         
         {/* Navigation principale */}
         <motion.div 
@@ -188,9 +229,10 @@ const UnifiedSidebar: React.FC<UnifiedSidebarProps> = ({
                 <Link 
                   href={item.href} 
                   className={`unified-nav-link ${activeLink === item.key ? 'active' : ''}`}
+                  title={isCollapsed ? item.label : undefined}
                 >
                   <item.icon />
-                  <span>{item.label}</span>
+                  {!isCollapsed && <span>{item.label}</span>}
                 </Link>
               </motion.div>
             ))}
@@ -215,9 +257,10 @@ const UnifiedSidebar: React.FC<UnifiedSidebarProps> = ({
                 <Link 
                   href={item.href} 
                   className={`unified-nav-link ${activeLink === item.key ? 'active' : ''}`}
+                  title={isCollapsed ? item.label : undefined}
                 >
                   <item.icon />
-                  <span>{item.label}</span>
+                  {!isCollapsed && <span>{item.label}</span>}
                 </Link>
               </motion.div>
             ))}
@@ -227,9 +270,10 @@ const UnifiedSidebar: React.FC<UnifiedSidebarProps> = ({
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               transition={{ type: "spring", stiffness: 300 }}
+              title={isCollapsed ? "Déconnexion" : undefined}
             >
               <LogoutIcon />
-              <span>Déconnexion</span>
+              {!isCollapsed && <span>Déconnexion</span>}
             </motion.button>
           </nav>
         </motion.div>

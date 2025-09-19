@@ -322,6 +322,7 @@
 
   /* Sidebar */
   --sidebar-width: 280px;
+  --sidebar-width-collapsed: 64px;
   --sidebar-bg: var(--surface-primary);
   --sidebar-border: var(--border-subtle);
 

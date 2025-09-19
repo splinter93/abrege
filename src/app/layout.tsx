@@ -14,6 +14,7 @@ import "../styles/chat-global.css";
 import "../styles/editor.css";
 import "../styles/page-title-containers.css";
 import "../styles/unified-sidebar.css";
+import "../styles/sidebar-collapsible.css";
 import "../styles/unified-page-layout.css";
 import "../styles/pages-unified-layout.css";
 import "../components/editor/editor-header.css";
