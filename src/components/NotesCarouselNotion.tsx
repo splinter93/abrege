@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, forwardRef, useImperativeHandle } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -46,11 +46,18 @@ interface NotesCarouselNotionProps {
   showViewAll?: boolean;
 }
 
+export interface NotesCarouselRef {
+  goToPrevious: () => void;
+  goToNext: () => void;
+  canGoPrevious: boolean;
+  canGoNext: boolean;
+}
+
 /**
  * Carrousel de notes avec design moderne style Notion
  * Cartes élégantes avec animations fluides et interactions tactiles
  */
-const NotesCarouselNotion: React.FC<NotesCarouselNotionProps> = ({
+const NotesCarouselNotion = forwardRef<NotesCarouselRef, NotesCarouselNotionProps>(({
   limit = 8,
   showNavigation = true,
   autoPlay = false,
@@ -58,7 +65,7 @@ const NotesCarouselNotion: React.FC<NotesCarouselNotionProps> = ({
   className = '',
   title = "Notes Récentes",
   showViewAll = true
-}) => {
+}, ref) => {
   const { getAccessToken } = useAuth();
   const [notes, setNotes] = useState<Note[]>([]);
   const [loading, setLoading] = useState(true);
@@ -163,6 +170,14 @@ const NotesCarouselNotion: React.FC<NotesCarouselNotionProps> = ({
   const goToSlide = (index: number) => {
     setCurrentIndex(index);
   };
+
+  // Exposer les fonctions de navigation via la ref
+  useImperativeHandle(ref, () => ({
+    goToPrevious,
+    goToNext,
+    canGoPrevious: currentIndex > 0,
+    canGoNext: currentIndex < Math.max(0, notes.length - cardsPerView)
+  }), [currentIndex, notes.length, cardsPerView]);
 
   // Gestion du drag
   const handleDragStart = (e: React.MouseEvent) => {
@@ -300,37 +315,6 @@ const NotesCarouselNotion: React.FC<NotesCarouselNotionProps> = ({
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      {/* Header avec titre et navigation */}
-      <div className="carousel-header">
-        <div className="carousel-title-section">
-          <h2 className="carousel-title">{title}</h2>
-          <span className="carousel-count">{notes.length} note{notes.length > 1 ? 's' : ''}</span>
-        </div>
-        
-        <div className="carousel-actions">
-          
-          {showNavigation && notes.length > 1 && (
-            <div className="carousel-nav">
-              <button 
-                className="nav-btn prev-btn"
-                onClick={goToPrevious}
-                disabled={notes.length <= 1}
-                aria-label="Note précédente"
-              >
-                <ChevronLeft size={18} />
-              </button>
-              <button 
-                className="nav-btn next-btn"
-                onClick={goToNext}
-                disabled={notes.length <= 1}
-                aria-label="Note suivante"
-              >
-                <ChevronRight size={18} />
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
 
       {/* Container du carrousel avec drag */}
       <div 
@@ -417,41 +401,7 @@ const NotesCarouselNotion: React.FC<NotesCarouselNotionProps> = ({
                       </button>
                     </div>
                     
-                    {generateContentPreview(note.markdown_content) && (
-                      <p className="note-preview">{generateContentPreview(note.markdown_content)}</p>
-                    )}
-
-                    {/* Tags */}
-                    {note.tags && note.tags.length > 0 && (
-                      <div className="note-tags">
-                        {note.tags.slice(0, 3).map((tag, tagIndex) => (
-                          <span key={tagIndex} className="note-tag">
-                            {tag}
-                          </span>
-                        ))}
-                        {note.tags.length > 3 && (
-                          <span className="note-tag more">
-                            +{note.tags.length - 3}
-                          </span>
-                        )}
-                      </div>
-                    )}
-
-                    <div className="note-footer">
-                      <div className="note-meta">
-                        <div className="meta-item">
-                          <Calendar size={12} />
-                          <span>{formatDate(note.updated_at)}</span>
-                        </div>
-                        
-                        {note.read_time && (
-                          <div className="meta-item">
-                            <Clock size={12} />
-                            <span>{note.read_time} min</span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
+                    {/* Description, tags et métadonnées supprimés pour un design plus compact */}
                   </div>
                 </motion.div>
               </Link>
@@ -460,21 +410,10 @@ const NotesCarouselNotion: React.FC<NotesCarouselNotionProps> = ({
         </motion.div>
       </div>
 
-      {/* Indicateurs de pagination */}
-      {notes.length > cardsPerView && (
-        <div className="carousel-indicators">
-          {Array.from({ length: Math.ceil(notes.length / cardsPerView) }, (_, index) => (
-            <button
-              key={index}
-              className={`indicator ${Math.floor(currentIndex / cardsPerView) === index ? 'active' : ''}`}
-              onClick={() => goToSlide(index * cardsPerView)}
-              aria-label={`Aller au groupe ${index + 1}`}
-            />
-          ))}
-        </div>
-      )}
     </div>
   );
-};
+});
+
+NotesCarouselNotion.displayName = 'NotesCarouselNotion';
 
 export default NotesCarouselNotion;

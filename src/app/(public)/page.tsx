@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserStats } from '@/hooks/useUserStats';
 import { useRouter } from 'next/navigation';
@@ -9,10 +9,12 @@ import ErrorBoundary from '@/components/ErrorBoundary';
 import AuthGuard from '@/components/AuthGuard';
 import { useSecureErrorHandler } from '@/components/SecureErrorHandler';
 import { simpleLogger as logger } from '@/utils/logger';
-import { MessageSquare, Plus, Search, Upload, Sparkles, Zap, Eye, X, Youtube, FileText, LayoutDashboard } from 'lucide-react';
-import NotesCarouselNotion from '@/components/NotesCarouselNotion';
+import { MessageSquare, Plus, Search, Upload, Sparkles, Zap, Eye, X, Youtube, FileText, LayoutDashboard, ChevronLeft, ChevronRight } from 'lucide-react';
+import NotesCarouselNotion, { NotesCarouselRef } from '@/components/NotesCarouselNotion';
 import PerformanceMonitor from '@/components/PerformanceMonitor';
 import UnifiedPageTitle from '@/components/UnifiedPageTitle';
+import RecentFilesList from '@/components/RecentFilesList';
+import DropZone from '@/components/DropZone';
 import { motion } from 'framer-motion';
 import './home.css';
 import './dashboard.css';
@@ -163,6 +165,7 @@ function AuthenticatedHomeContent({ user }: { user: { id: string; email?: string
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const [isCreateNoteModalOpen, setIsCreateNoteModalOpen] = useState(false);
+  const notesCarouselRef = useRef<NotesCarouselRef>(null);
 
   const { stats, loading: statsLoading } = useUserStats();
 
@@ -209,6 +212,14 @@ function AuthenticatedHomeContent({ user }: { user: { id: string; email?: string
     router.push('/chat');
   }, [router]);
 
+  const handleNotesPrevious = useCallback(() => {
+    notesCarouselRef.current?.goToPrevious();
+  }, []);
+
+  const handleNotesNext = useCallback(() => {
+    notesCarouselRef.current?.goToNext();
+  }, []);
+
   return (
     <div className="page-wrapper">
       <style dangerouslySetInnerHTML={{
@@ -227,7 +238,7 @@ function AuthenticatedHomeContent({ user }: { user: { id: string; email?: string
         <UnifiedPageTitle
           icon={LayoutDashboard}
           title="Dashboard"
-          subtitle="Gérez vos notes et classeurs"
+          subtitle={`Welcome Home, ${user.username || user.email?.split('@')[0] || 'User'}.`}
           stats={stats ? [
             { number: stats.total_notes, label: "Notes" },
             { number: stats.total_classeurs, label: "Classeurs" },
@@ -321,17 +332,70 @@ function AuthenticatedHomeContent({ user }: { user: { id: string; email?: string
             transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
           >
             <div className="section-header">
-              <h2 className="section-title">Notes Récentes</h2>
+              <div className="section-title-row">
+                <h2 className="section-title">Notes Récentes</h2>
+                <div className="section-navigation">
+                  <button 
+                    className="nav-btn prev-btn"
+                    onClick={handleNotesPrevious}
+                    aria-label="Notes précédentes"
+                    title="Notes précédentes"
+                  >
+                    <ChevronLeft size={18} />
+                  </button>
+                  <button 
+                    className="nav-btn next-btn"
+                    onClick={handleNotesNext}
+                    aria-label="Notes suivantes"
+                    title="Notes suivantes"
+                  >
+                    <ChevronRight size={18} />
+                  </button>
+                </div>
+              </div>
               <div className="section-separator"></div>
             </div>
             <div className="section-content">
               <NotesCarouselNotion 
+                ref={notesCarouselRef}
                 limit={6}
                 showNavigation={true}
                 autoPlay={false}
                 title=""
                 showViewAll={false}
               />
+            </div>
+          </motion.section>
+
+          {/* Section 2 colonnes : Fichiers Récents + Drop Zone */}
+          <motion.section 
+            className="dashboard-section"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.4, ease: "easeOut" }}
+          >
+            <div className="dashboard-two-columns">
+              {/* Colonne gauche : Drop Zone */}
+              <div className="dashboard-column">
+                <div className="dashboard-column-header">
+                  <h3 className="dashboard-column-title">Drop Zone</h3>
+                  <div className="dashboard-column-separator"></div>
+                </div>
+                <div className="dashboard-column-content">
+                  <DropZone />
+                </div>
+              </div>
+
+              {/* Colonne droite : Fichiers Récents */}
+              <div className="dashboard-column">
+                <div className="dashboard-column-header">
+                  <h3 className="dashboard-column-title">Fichiers Récents</h3>
+                  <div className="dashboard-column-separator"></div>
+                </div>
+                <div className="dashboard-column-content">
+                  <RecentFilesList limit={5} />
+                </div>
+              </div>
             </div>
           </motion.section>
 

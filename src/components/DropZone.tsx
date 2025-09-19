@@ -1,239 +1,180 @@
 "use client";
 
-import React, { useState, useCallback, useRef, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { FileItem } from '@/types/files';
-import { uploadImageForNote } from '@/utils/fileUpload';
-import { useAuth } from '@/hooks/useAuth';
-import './DropZone.css';
+import React, { useState, useCallback } from 'react';
+import { motion } from 'framer-motion';
+import { Upload, FileText, Plus, Link, ArrowRight } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { simpleLogger as logger } from '@/utils/logger';
 
 interface DropZoneProps {
-  children: React.ReactNode;
-  onFilesDropped: (files: FileItem[]) => void;
-  onError: (error: string) => void;
   className?: string;
-  disabled?: boolean;
-  accept?: string[];
-  maxFiles?: number;
-  maxFileSize?: number;
-  showOverlay?: boolean;
-  overlayMessage?: string;
-  onDragEnter?: () => void;
-  onDragLeave?: () => void;
 }
 
-interface DropState {
-  isDragOver: boolean;
-  dragCounter: number;
-  isValidDrop: boolean;
-}
-
+/**
+ * Zone de drop pour l'upload de fichiers
+ * Design moderne avec animations et interactions
+ */
 const DropZone: React.FC<DropZoneProps> = ({
-  children,
-  onFilesDropped,
-  onError,
-  className = '',
-  disabled = false,
-  accept = [],
-  maxFiles = 10,
-  maxFileSize = 50 * 1024 * 1024, // 50MB par défaut
-  showOverlay = true,
-  overlayMessage = 'Déposez vos fichiers ici',
-  onDragEnter,
-  onDragLeave
+  className = ''
 }) => {
-  const { getAccessToken } = useAuth();
-  const [dropState, setDropState] = useState<DropState>({
-    isDragOver: false,
-    dragCounter: 0,
-    isValidDrop: false
-  });
-  const [isProcessing, setIsProcessing] = useState(false);
-  const dragCounterRef = useRef(0);
+  const router = useRouter();
+  const [isDragOver, setIsDragOver] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [urlInput, setUrlInput] = useState('');
+  const [isUrlUploading, setIsUrlUploading] = useState(false);
 
-  // ========================================
-  // VALIDATION DES FICHIERS
-  // ========================================
-
-  const validateFiles = useCallback((files: File[]): { valid: File[]; errors: string[] } => {
-    const valid: File[] = [];
-    const errors: string[] = [];
-
-    // Vérifier le nombre de fichiers
-    if (files.length > maxFiles) {
-      errors.push(`Trop de fichiers (max: ${maxFiles})`);
-      return { valid, errors };
-    }
-
-    files.forEach((file, index) => {
-      // Vérifier la taille
-      if (file.size > maxFileSize) {
-        errors.push(`${file.name}: Fichier trop volumineux (${(file.size / 1024 / 1024).toFixed(1)}MB)`);
-        return;
-      }
-
-      // Vérifier le type MIME
-      if (accept.length > 0) {
-        const isValidType = accept.some(type => {
-          if (type.endsWith('/*')) {
-            return file.type.startsWith(type.slice(0, -1));
-          }
-          return file.type === type;
-        });
-
-        if (!isValidType) {
-          errors.push(`${file.name}: Type non autorisé (${file.type})`);
-          return;
-        }
-      }
-
-      valid.push(file);
-    });
-
-    return { valid, errors };
-  }, [maxFiles, maxFileSize, accept]);
-
-  // ========================================
-  // GESTION DU DRAG & DROP
-  // ========================================
-
-  const handleDragEnter = useCallback((e: React.DragEvent) => {
+  // Gestion du drag & drop
+  const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
-
-    if (disabled) return;
-
-    dragCounterRef.current++;
-    
-    setDropState(prev => ({
-      ...prev,
-      isDragOver: true,
-      dragCounter: dragCounterRef.current,
-      isValidDrop: e.dataTransfer.types.includes('Files')
-    }));
-
-    onDragEnter?.();
-  }, [disabled, onDragEnter]);
+    setIsDragOver(true);
+  }, []);
 
   const handleDragLeave = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
-
-    if (disabled) return;
-
-    dragCounterRef.current--;
-    
-    if (dragCounterRef.current === 0) {
-      setDropState(prev => ({
-        ...prev,
-        isDragOver: false,
-        dragCounter: 0,
-        isValidDrop: false
-      }));
-      onDragLeave?.();
-    }
-  }, [disabled, onDragLeave]);
-
-  const handleDragOver = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
+    setIsDragOver(false);
   }, []);
 
   const handleDrop = useCallback(async (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
-
-    if (disabled) return;
+    setIsDragOver(false);
 
     const files = Array.from(e.dataTransfer.files);
     if (files.length === 0) return;
 
-    // Validation des fichiers
-    const { valid, errors } = validateFiles(files);
+    logger.dev('[DropZone] Fichiers déposés:', files);
     
-    if (errors.length > 0) {
-      errors.forEach(error => onError(error));
-      return;
+    // Pour l'instant, rediriger vers la page d'import
+    // TODO: Implémenter l'upload direct
+    router.push('/private/dossiers?import=true');
+  }, [router]);
+
+  // Gestion du clic pour ouvrir le sélecteur de fichiers
+  const handleClick = useCallback(() => {
+    const input = document.getElementById('file-input') as HTMLInputElement;
+    if (input) {
+      input.click();
     }
-
-    if (valid.length === 0) return;
-
-    // Traitement des fichiers
-    setIsProcessing(true);
-    setDropState(prev => ({ ...prev, isDragOver: false, dragCounter: 0 }));
-
-    try {
-      const uploadedFiles: FileItem[] = [];
-      
-      for (const file of valid) {
-        try {
-          const result = await uploadImageForNote(file, getAccessToken);
-          if (result.saved) {
-            uploadedFiles.push(result.saved);
-          }
-        } catch (error) {
-          onError(`Erreur lors de l'upload de ${file.name}: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
-        }
-      }
-
-      if (uploadedFiles.length > 0) {
-        onFilesDropped(uploadedFiles);
-      }
-    } catch (error) {
-      onError(`Erreur lors du traitement des fichiers: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
-    } finally {
-      setIsProcessing(false);
-    }
-  }, [disabled, validateFiles, onFilesDropped, onError, getAccessToken]);
-
-  // ========================================
-  // RÉINITIALISATION DU COMPTEUR
-  // ========================================
-
-  useEffect(() => {
-    return () => {
-      dragCounterRef.current = 0;
-    };
   }, []);
 
-  // ========================================
-  // RENDU
-  // ========================================
+  // Gestion du changement de fichier
+  const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      logger.dev('[DropZone] Fichiers sélectionnés:', files);
+      // Rediriger vers la page d'import
+      router.push('/private/dossiers?import=true');
+    }
+  }, [router]);
+
+  // Gestion de l'upload par URL
+  const handleUrlUpload = useCallback(async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!urlInput.trim()) return;
+
+    setIsUrlUploading(true);
+    try {
+      logger.dev('[DropZone] Upload URL:', urlInput);
+      // TODO: Implémenter l'upload par URL
+      // Pour l'instant, rediriger vers la page d'import avec l'URL
+      router.push(`/private/dossiers?import=true&url=${encodeURIComponent(urlInput)}`);
+    } catch (error) {
+      logger.error('[DropZone] Erreur upload URL:', error);
+    } finally {
+      setIsUrlUploading(false);
+    }
+  }, [urlInput, router]);
 
   return (
-    <div
-      className={`drop-zone ${className}`}
-      onDragEnter={handleDragEnter}
-      onDragLeave={handleDragLeave}
-      onDragOver={handleDragOver}
-      onDrop={handleDrop}
-    >
-      {children}
-      
-      {/* Overlay de drag & drop */}
-      <AnimatePresence>
-        {showOverlay && dropState.isDragOver && dropState.isValidDrop && (
-          <motion.div
-            className="drop-zone-overlay"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
+    <>
+      {/* Barre de saisie URL */}
+      <form onSubmit={handleUrlUpload} className="url-upload-form">
+        <div className="url-input-container">
+          <Link size={16} className="url-input-icon" />
+          <input
+            type="url"
+            value={urlInput}
+            onChange={(e) => setUrlInput(e.target.value)}
+            placeholder="Coller l'URL du fichier à importer..."
+            className="url-input"
+            disabled={isUrlUploading}
+            aria-label="URL du fichier à importer"
+            aria-describedby="url-help-text"
+          />
+          <motion.button
+            type="submit"
+            className="url-upload-btn"
+            disabled={!urlInput.trim() || isUrlUploading}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            transition={{ type: "spring", stiffness: 300 }}
+            aria-label={isUrlUploading ? "Upload en cours..." : "Uploader le fichier depuis l'URL"}
           >
-            <div className="drop-zone-content">
-              <div className="drop-zone-icon">📁</div>
-              <div className="drop-zone-message">{overlayMessage}</div>
-              {isProcessing && (
-                <div className="drop-zone-processing">
-                  <div className="drop-zone-spinner"></div>
-                  <span>Traitement en cours...</span>
-                </div>
-              )}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
+            {isUrlUploading ? (
+              <div className="loading-spinner" />
+            ) : (
+              <ArrowRight size={16} />
+            )}
+          </motion.button>
+        </div>
+      </form>
+
+      {/* Zone de drop */}
+      <motion.div
+        className={`drop-zone ${isDragOver ? 'drag-over' : ''} ${className}`}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+        onClick={handleClick}
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
+        transition={{ type: "spring", stiffness: 300, damping: 20 }}
+        role="button"
+        tabIndex={0}
+        aria-label="Zone de dépôt de fichiers"
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            handleClick();
+          }
+        }}
+      >
+        <motion.div 
+          className="drop-zone-icon"
+          animate={{ 
+            scale: isDragOver ? 1.1 : 1,
+            rotate: isDragOver ? 5 : 0
+          }}
+          transition={{ duration: 0.2 }}
+        >
+          {isDragOver ? <Plus size={24} /> : <Upload size={24} />}
+        </motion.div>
+        
+        <div className="drop-zone-text">
+          <h3 className="drop-zone-title">
+            {isDragOver ? 'Déposez vos fichiers' : 'Glissez-déposez vos fichiers'}
+          </h3>
+          <p className="drop-zone-subtitle">
+            {isDragOver 
+              ? 'Relâchez pour importer' 
+              : 'ou cliquez pour sélectionner des fichiers'
+            }
+          </p>
+        </div>
+      </motion.div>
+
+      {/* Input file caché */}
+      <input
+        id="file-input"
+        type="file"
+        multiple
+        accept=".md,.txt,.pdf,.doc,.docx,.jpg,.jpeg,.png,.gif"
+        style={{ display: 'none' }}
+        onChange={handleFileChange}
+      />
+    </>
   );
 };
 
