@@ -383,7 +383,7 @@
 .file-icon,
 .folder-icon {
   font-size: var(--text-2xl);
-  margin-bottom: var(--spacing-xs);
+  margin-bottom: 1px !important;
   filter: brightness(1.1);
   transition: filter var(--transition-normal);
 }

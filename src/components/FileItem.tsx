@@ -90,15 +90,15 @@ const FileItem: React.FC<FileItemProps> = ({ file, onOpen, isRenaming, onRename,
         role="button"
         aria-label={file.source_title}
         onContextMenu={e => {
+          e.preventDefault();
           if (onContextMenu) {
-            e.preventDefault();
             onContextMenu(e, file);
           }
           lastWasRightClick.current = false;
         }}
       >
         <div className="file-icon">
-          <FileIcon size={28} />
+          <FileIcon size={36} />
         </div>
         {isRenaming ? (
           <input

@@ -1,0 +1,145 @@
+/* ==========================================================================
+   SIMPLE CONTEXT MENU - DESIGN GLASSMORPHISM MODERNE
+   ========================================================================== */
+
+.context-menu-container {
+  position: fixed;
+  z-index: 2000;
+  min-width: 140px;
+  background: var(--glass-bg-primary);
+  border: 1px solid var(--glass-border-primary);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--glass-shadow-medium);
+  padding: 8px 0;
+  color: var(--text-primary);
+  font-family: 'Noto Sans', Inter, Arial, sans-serif;
+  font-size: 13px;
+  font-weight: 400;
+  user-select: none;
+  animation: fadeInMenu 0.2s ease-out;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  overflow: hidden;
+}
+
+.context-menu-gradient {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.1) 0%, 
+    rgba(255, 255, 255, 0.02) 50%, 
+    rgba(255, 255, 255, 0.1) 100%);
+  opacity: 0.6;
+  pointer-events: none;
+  z-index: 1;
+  border-radius: var(--radius-lg);
+}
+
+.context-menu-item {
+  padding: 10px 16px;
+  cursor: pointer;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+  font-size: 13px;
+  font-weight: 400;
+  border-radius: var(--radius-md);
+  transition: all var(--transition-normal);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+  color: var(--text-primary);
+  margin: 2px 6px;
+  position: relative;
+  z-index: 2;
+}
+
+.context-menu-item:hover {
+  background: var(--glass-bg-hover);
+  color: var(--text-primary);
+  transform: translateX(2px);
+  box-shadow: var(--glass-shadow-subtle);
+}
+
+.context-menu-item:active {
+  transform: translateX(1px) scale(0.98);
+  background: var(--glass-bg-medium);
+}
+
+.context-menu-item-text {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  position: relative;
+  z-index: 3;
+}
+
+/* Animation d'apparition */
+@keyframes fadeInMenu {
+  from { 
+    opacity: 0; 
+    transform: scale(0.92) translateY(-4px); 
+  }
+  to { 
+    opacity: 1; 
+    transform: scale(1) translateY(0); 
+  }
+}
+
+/* Animation de disparition */
+@keyframes fadeOutMenu {
+  from { 
+    opacity: 1; 
+    transform: scale(1) translateY(0); 
+  }
+  to { 
+    opacity: 0; 
+    transform: scale(0.95) translateY(-2px); 
+  }
+}
+
+/* Responsive - Ajustements pour petits écrans */
+@media (max-width: 768px) {
+  .context-menu-container {
+    min-width: 120px;
+    font-size: 12px;
+    padding: 6px 0;
+  }
+  
+  .context-menu-item {
+    padding: 8px 12px;
+    font-size: 12px;
+  }
+}
+
+/* Mode sombre - Ajustements supplémentaires */
+@media (prefers-color-scheme: dark) {
+  .context-menu-container {
+    background: var(--glass-bg-primary);
+    border-color: var(--glass-border-primary);
+  }
+  
+  .context-menu-item:hover {
+    background: var(--glass-bg-hover);
+  }
+}
+
+/* Focus visible pour l'accessibilité */
+.context-menu-item:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+  background: var(--glass-bg-hover);
+}
+
+/* Séparateur optionnel entre les éléments */
+.context-menu-separator {
+  height: 1px;
+  background: var(--glass-border-secondary);
+  margin: 4px 12px;
+  opacity: 0.6;
+}

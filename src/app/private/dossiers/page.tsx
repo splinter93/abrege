@@ -4,7 +4,6 @@ import { useMemo, useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { Classeur, Folder } from "@/store/useFileSystemStore";
 import type { FileArticle } from "@/components/types";
-import ClasseurNavigation from "@/components/ClasseurNavigation";
 import FolderManager from "@/components/FolderManager";
 import UnifiedSidebar from "@/components/UnifiedSidebar";
 import DossierErrorBoundary from "@/components/DossierErrorBoundary";
@@ -14,6 +13,22 @@ import UnifiedPageTitle from "@/components/UnifiedPageTitle";
 import SearchBar, { SearchResult } from "@/components/SearchBar";
 import FolderToolbar from "@/components/FolderToolbar";
 import { Folder } from "lucide-react";
+import {
+  DndContext,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  closestCenter,
+  DragOverlay,
+  DragStartEvent,
+  DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  useSortable,
+  horizontalListSortingStrategy,
+} from "@dnd-kit/sortable";
 
 import { useDossiersPage } from "@/hooks/useDossiersPage";
 import { useAuth } from "@/hooks/useAuth";
@@ -24,11 +39,67 @@ import TargetedPollingManager from "@/components/TargetedPollingManager";
 import TargetedPollingMonitor from "@/components/TargetedPollingMonitor";
 import { useRealtime } from "@/hooks/useRealtime";
 import RealtimeStatus from "@/components/RealtimeStatus";
+import { logger } from "@/utils/logger";
 
 import "@/styles/main.css";
 import "./index.css";
+import "./glassmorphism.css";
 import "@/components/DossierErrorBoundary.css";
 import "@/components/DossierLoadingStates.css";
+
+// Interface pour les classeurs
+interface ClasseurTab {
+  id: string;
+  name: string;
+  emoji?: string;
+  color?: string;
+  slug?: string;
+}
+
+// Composant SortableTab pour le drag and drop
+interface SortableTabProps {
+  classeur: ClasseurTab;
+  isActive: boolean;
+  onSelectClasseur: (id: string) => void;
+  isOverlay?: boolean;
+}
+
+function SortableTab({ classeur, isActive, onSelectClasseur, isOverlay }: SortableTabProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: classeur.id });
+  
+  const style = {
+    transform: transform ? `translate3d(${transform.x}px, ${transform.y}px, 0)` : undefined,
+    transition: isDragging ? 'none' : transition, // Pas de transition pendant le drag
+    opacity: isDragging ? 0.8 : 1,
+    zIndex: isOverlay ? 9999 : isDragging ? 1000 : "auto",
+    pointerEvents: isOverlay ? "none" : undefined,
+    display: "inline-block",
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      {...listeners}
+    >
+      <button
+        className={`classeur-tab-glassmorphism ${isActive ? "active" : ""}`}
+        onClick={() => onSelectClasseur(classeur.id)}
+      >
+        <span className="classeur-emoji">{classeur.emoji || '📁'}</span>
+        <span className="classeur-name">{classeur.name}</span>
+      </button>
+    </div>
+  );
+}
 
 export default function DossiersPage() {
   return (
@@ -70,14 +141,10 @@ function AuthenticatedDossiersContent({ user }: { user: AuthenticatedUser }) {
     userId: user.id,
     debug: process.env.NODE_ENV === 'development',
     onEvent: (event) => {
-      if (process.env.NODE_ENV === 'development') {
-        console.log('[DossiersPage] 📨 Événement realtime reçu:', event);
-      }
+      logger.dev('[DossiersPage] 📨 Événement realtime reçu:', event);
     },
     onStateChange: (state) => {
-      if (process.env.NODE_ENV === 'development') {
-        console.log('[DossiersPage] 🔄 État realtime:', state);
-      }
+      logger.dev('[DossiersPage] 🔄 État realtime:', state);
     }
   });
   
@@ -124,7 +191,10 @@ function AuthenticatedDossiersContent({ user }: { user: AuthenticatedUser }) {
     }
   }, [activeClasseurId, classeurs, loading, setActiveClasseurId]);
 
-  // Handlers pour la création (utilisent maintenant V2UnifiedApi avec optimistic UI)
+  /**
+   * Crée un nouveau dossier dans le classeur actif
+   * Utilise V2UnifiedApi avec mise à jour optimiste de l'UI
+   */
   const handleCreateFolder = useCallback(async () => {
     if (!activeClasseur || !user?.id) return;
     
@@ -141,7 +211,7 @@ function AuthenticatedDossiersContent({ user }: { user: AuthenticatedUser }) {
         });
         
         if (result.success) {
-          console.log('[DossiersPage] ✅ Dossier créé avec V2UnifiedApi (optimistic UI)');
+          logger.info('[DossiersPage] ✅ Dossier créé avec V2UnifiedApi (optimistic UI)');
         } else {
           throw new Error(result.error || 'Erreur lors de la création du dossier');
         }
@@ -151,6 +221,10 @@ function AuthenticatedDossiersContent({ user }: { user: AuthenticatedUser }) {
     }
   }, [activeClasseur, user?.id, currentFolderId, handleError]);
 
+  /**
+   * Crée une nouvelle note dans le classeur actif
+   * Utilise DossierService avec polling ciblé automatique
+   */
   const handleCreateNote = useCallback(async () => {
     if (!activeClasseur || !user?.id) return;
     
@@ -167,7 +241,7 @@ function AuthenticatedDossiersContent({ user }: { user: AuthenticatedUser }) {
         }, user.id);
         
         // 🎯 Le polling ciblé est déjà déclenché par V2UnifiedApi dans DossierService
-        console.log('[DossiersPage] ✅ Note créée, polling ciblé déclenché automatiquement');
+        logger.info('[DossiersPage] ✅ Note créée, polling ciblé déclenché automatiquement');
       }
     } catch (e) {
       handleError(e, 'création note');
@@ -233,13 +307,71 @@ function AuthenticatedDossiersContent({ user }: { user: AuthenticatedUser }) {
     [classeurs]
   );
 
-  // 🔧 OPTIMISATION: Mémoiser le handler de sélection de classeur
+  // Drag and Drop logic
+  const [draggedClasseur, setDraggedClasseur] = useState<ClasseurTab | null>(null);
+  
+  const sensors = useSensors(
+    useSensor(PointerSensor, { 
+      activationConstraint: { 
+        distance: 8,
+        delay: 100,
+        tolerance: 5
+      } 
+    })
+  );
+  
+  /**
+   * Gère le début du drag & drop des classeurs
+   * @param event - Événement de début de drag
+   */
+  const handleDragStart = (event: DragStartEvent) => {
+    const { active } = event;
+    const found = transformedClasseurs.find((c) => c.id === active.id) || null;
+    setDraggedClasseur(found);
+  };
+  
+  /**
+   * Gère la fin du drag & drop des classeurs
+   * Met à jour les positions via l'API avec types stricts
+   * @param event - Événement de fin de drag
+   */
+  const handleDragEnd = (event: DragEndEvent) => {
+    setDraggedClasseur(null);
+    const { active, over } = event;
+    if (active && over && active.id !== over.id) {
+      const oldIndex = transformedClasseurs.findIndex((c) => c.id === active.id);
+      const newIndex = transformedClasseurs.findIndex((c) => c.id === over.id);
+      const reorderedClasseurs = arrayMove(transformedClasseurs, oldIndex, newIndex);
+      
+      // Convertir vers le format Classeur pour l'API
+      const reorderedClasseursForApi: Classeur[] = reorderedClasseurs.map((c, index) => ({
+        id: c.id,
+        name: c.name,
+        emoji: c.emoji,
+        color: c.color,
+        position: index,
+        user_id: user.id,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      }));
+      
+      handleUpdateClasseurPositions(reorderedClasseursForApi);
+    }
+  };
+
+  /**
+   * Sélectionne un classeur et réinitialise le dossier courant
+   * @param id - ID du classeur à sélectionner
+   */
   const handleSelectClasseur = useCallback((id: string) => {
     setActiveClasseurId(id);
     setCurrentFolderId(undefined);
   }, [setActiveClasseurId, setCurrentFolderId]);
 
-  // Callback pour gérer les résultats de recherche
+  /**
+   * Gère les résultats de recherche (navigation par défaut du composant SearchBar)
+   * @param result - Résultat de recherche sélectionné
+   */
   const handleSearchResult = useCallback((result: SearchResult) => {
     // Navigation par défaut du composant SearchBar
     // Le composant gère déjà la navigation
@@ -303,83 +435,90 @@ function AuthenticatedDossiersContent({ user }: { user: AuthenticatedUser }) {
           </div>
         </div>
 
-        {/* Dashboard principal avec design moderne */}
-        <div className="main-dashboard">
-          {/* Navigation des classeurs */}
+        {/* Container glassmorphism principal */}
+        <motion.div 
+          className="glassmorphism-container"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.1, ease: "easeOut" }}
+        >
+          {/* Onglets des classeurs avec drag and drop */}
           {classeurs.length > 0 && (
-            <motion.section
-              className="dashboard-section"
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: 0.1, ease: "easeOut" }}
-            >
-              <div className="section-header">
-                <div className="section-title-row">
-                  <h2 className="section-title">Classeurs</h2>
+            <div className="classeur-tabs-container">
+              <DndContext 
+                sensors={sensors} 
+                collisionDetection={closestCenter} 
+                onDragStart={handleDragStart} 
+                onDragEnd={handleDragEnd}
+              >
+                <div className="classeur-tabs-glassmorphism">
+                  <div className="classeur-tabs-content">
+                    <SortableContext items={transformedClasseurs.map((c) => c.id)} strategy={horizontalListSortingStrategy}>
+                      {transformedClasseurs.map((classeur) => (
+                        <SortableTab
+                          key={classeur.id}
+                          classeur={classeur}
+                          isActive={activeClasseurId === classeur.id}
+                          onSelectClasseur={handleSelectClasseur}
+                        />
+                      ))}
+                    </SortableContext>
+                  </div>
+                  <button 
+                    className="add-classeur-tab-glassmorphism"
+                    onClick={handleCreateClasseurClick}
+                    title="Nouveau classeur"
+                  >
+                    <span className="add-icon">+</span>
+                  </button>
                 </div>
-                <div className="section-separator"></div>
-              </div>
-              <div className="section-content">
-                <ClasseurNavigation
-                  classeurs={transformedClasseurs}
-                  activeClasseurId={activeClasseurId || null}
-                  onSelectClasseur={handleSelectClasseur}
-                  onCreateClasseur={handleCreateClasseurClick}
-                  onRenameClasseur={handleRenameClasseurClick}
-                  onDeleteClasseur={handleDeleteClasseurClick}
-                  onUpdateClasseur={handleUpdateClasseurClick}
-                  onUpdateClasseurPositions={handleUpdateClasseurPositions}
-                />
-              </div>
-            </motion.section>
+                <DragOverlay>
+                  {draggedClasseur ? (
+                    <SortableTab
+                      classeur={draggedClasseur}
+                      isActive={draggedClasseur.id === activeClasseurId}
+                      onSelectClasseur={handleSelectClasseur}
+                      isOverlay={true}
+                    />
+                  ) : null}
+                </DragOverlay>
+              </DndContext>
+            </div>
           )}
 
-          {/* Gestionnaire de dossiers */}
+          {/* Contenu du classeur actif */}
           {activeClasseur && (
-            <motion.section 
-              className="dashboard-section"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.2, ease: "easeOut" }}
-            >
-              <div className="section-header">
-                <div className="section-title-row">
-                  <h2 className="section-title">{activeClasseur.name}</h2>
-                </div>
-                <div className="section-separator"></div>
-              </div>
-              <div className="section-content">
-                <FolderManager
-                  classeurId={activeClasseur.id}
-                  classeurName={activeClasseur.name}
-                  classeurIcon={activeClasseur.emoji}
-                  parentFolderId={currentFolderId}
-                  onFolderOpen={handleFolderOpenClick}
-                  onGoBack={handleGoBack}
-                  onGoToRoot={handleGoToRoot}
-                  onGoToFolder={handleGoToFolder}
-                  folderPath={folderPath.map(folder => ({
-                    id: folder.id,
-                    name: folder.name,
-                    parent_id: folder.parent_id || null,
-                    classeur_id: folder.classeur_id || '',
-                    position: folder.position || 0,
-                    created_at: folder.created_at || '',
-                    updated_at: new Date().toISOString(),
-                    user_id: user.id
-                  }))}
-                  preloadedFolders={useFileSystemStore.getState().folders as any}
-                  preloadedNotes={useFileSystemStore.getState().notes as { [key: string]: FileArticle }}
-                  skipApiCalls={true}
-                  viewMode={viewMode}
-                  onToggleView={handleToggleView}
-                  onCreateFolder={handleCreateFolder}
-                  onCreateFile={handleCreateNote}
-                />
-              </div>
-            </motion.section>
+            <div className="classeur-content-glassmorphism">
+              <FolderManager
+                classeurId={activeClasseur.id}
+                classeurName={activeClasseur.name}
+                classeurIcon={activeClasseur.emoji}
+                parentFolderId={currentFolderId}
+                onFolderOpen={handleFolderOpenClick}
+                onGoBack={handleGoBack}
+                onGoToRoot={handleGoToRoot}
+                onGoToFolder={handleGoToFolder}
+                folderPath={folderPath.map(folder => ({
+                  id: folder.id,
+                  name: folder.name,
+                  parent_id: folder.parent_id || null,
+                  classeur_id: folder.classeur_id || '',
+                  position: folder.position || 0,
+                  created_at: folder.created_at || '',
+                  updated_at: new Date().toISOString(),
+                  user_id: user.id
+                }))}
+                preloadedFolders={useFileSystemStore.getState().folders as { [key: string]: Folder }}
+                preloadedNotes={useFileSystemStore.getState().notes as { [key: string]: FileArticle }}
+                skipApiCalls={true}
+                viewMode={viewMode}
+                onToggleView={handleToggleView}
+                onCreateFolder={handleCreateFolder}
+                onCreateFile={handleCreateNote}
+              />
+            </div>
           )}
-        </div>
+        </motion.div>
       </main>
       
       <TargetedPollingManager />
