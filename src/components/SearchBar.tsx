@@ -2,7 +2,7 @@
 
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { Search, X } from 'lucide-react';
+import { Search } from 'lucide-react';
 import { simpleLogger as logger } from '@/utils/logger';
 import './SearchBar.css';
 
@@ -151,12 +151,6 @@ const SearchBar: React.FC<SearchBarProps> = ({
     setSearchQuery('');
   }, [router, onSearchResult]);
 
-  // Effacer la recherche
-  const handleClearSearch = useCallback(() => {
-    setSearchQuery('');
-    setSearchResults([]);
-    setShowSearchResults(false);
-  }, []);
 
   // Gestion du focus pour masquer le placeholder
   const handleInputClick = useCallback(() => {
@@ -209,16 +203,6 @@ const SearchBar: React.FC<SearchBarProps> = ({
           onFocus={handleInputFocus}
           onBlur={handleInputBlur}
         />
-        {searchQuery && (
-          <button 
-            type="button"
-            className="search-bar-clear-btn"
-            onClick={handleClearSearch}
-            title="Effacer"
-          >
-            <X size={16} />
-          </button>
-        )}
         {searchQuery.trim().length > 0 && (
           <button 
             type="submit" 

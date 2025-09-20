@@ -12,7 +12,7 @@ import AuthGuard from "@/components/AuthGuard";
 import UnifiedPageTitle from "@/components/UnifiedPageTitle";
 import SearchBar, { SearchResult } from "@/components/SearchBar";
 import FolderToolbar from "@/components/FolderToolbar";
-import { Folder } from "lucide-react";
+import { Folder as FolderIcon } from "lucide-react";
 import {
   DndContext,
   PointerSensor,
@@ -39,7 +39,9 @@ import TargetedPollingManager from "@/components/TargetedPollingManager";
 import TargetedPollingMonitor from "@/components/TargetedPollingMonitor";
 import { useRealtime } from "@/hooks/useRealtime";
 import RealtimeStatus from "@/components/RealtimeStatus";
-import { logger } from "@/utils/logger";
+import { logger, LogCategory } from "@/utils/logger";
+import { useClasseurContextMenu } from "@/hooks/useClasseurContextMenu";
+import SimpleContextMenu from "@/components/SimpleContextMenu";
 
 import "@/styles/main.css";
 import "./index.css";
@@ -61,10 +63,11 @@ interface SortableTabProps {
   classeur: ClasseurTab;
   isActive: boolean;
   onSelectClasseur: (id: string) => void;
+  onContextMenu?: (e: React.MouseEvent, classeur: ClasseurTab) => void;
   isOverlay?: boolean;
 }
 
-function SortableTab({ classeur, isActive, onSelectClasseur, isOverlay }: SortableTabProps) {
+function SortableTab({ classeur, isActive, onSelectClasseur, onContextMenu, isOverlay }: SortableTabProps) {
   const {
     attributes,
     listeners,
@@ -79,7 +82,7 @@ function SortableTab({ classeur, isActive, onSelectClasseur, isOverlay }: Sortab
     transition: isDragging ? 'none' : transition, // Pas de transition pendant le drag
     opacity: isDragging ? 0.8 : 1,
     zIndex: isOverlay ? 9999 : isDragging ? 1000 : "auto",
-    pointerEvents: isOverlay ? "none" : undefined,
+    pointerEvents: isOverlay ? ("none" as const) : undefined,
     display: "inline-block",
   };
 
@@ -93,6 +96,11 @@ function SortableTab({ classeur, isActive, onSelectClasseur, isOverlay }: Sortab
       <button
         className={`classeur-tab-glassmorphism ${isActive ? "active" : ""}`}
         onClick={() => onSelectClasseur(classeur.id)}
+        onContextMenu={(e) => {
+          if (onContextMenu && !isOverlay) {
+            onContextMenu(e, classeur);
+          }
+        }}
       >
         <span className="classeur-emoji">{classeur.emoji || '📁'}</span>
         <span className="classeur-name">{classeur.name}</span>
@@ -141,10 +149,10 @@ function AuthenticatedDossiersContent({ user }: { user: AuthenticatedUser }) {
     userId: user.id,
     debug: process.env.NODE_ENV === 'development',
     onEvent: (event) => {
-      logger.dev('[DossiersPage] 📨 Événement realtime reçu:', event);
+      logger.debug(LogCategory.API, '[DossiersPage] 📨 Événement realtime reçu:', event);
     },
     onStateChange: (state) => {
-      logger.dev('[DossiersPage] 🔄 État realtime:', state);
+      logger.debug(LogCategory.API, '[DossiersPage] 🔄 État realtime:', state);
     }
   });
   
@@ -211,7 +219,7 @@ function AuthenticatedDossiersContent({ user }: { user: AuthenticatedUser }) {
         });
         
         if (result.success) {
-          logger.info('[DossiersPage] ✅ Dossier créé avec V2UnifiedApi (optimistic UI)');
+          logger.info(LogCategory.API, '[DossiersPage] ✅ Dossier créé avec V2UnifiedApi (optimistic UI)', { classeurId: activeClasseur.id });
         } else {
           throw new Error(result.error || 'Erreur lors de la création du dossier');
         }
@@ -241,7 +249,7 @@ function AuthenticatedDossiersContent({ user }: { user: AuthenticatedUser }) {
         }, user.id);
         
         // 🎯 Le polling ciblé est déjà déclenché par V2UnifiedApi dans DossierService
-        logger.info('[DossiersPage] ✅ Note créée, polling ciblé déclenché automatiquement');
+        logger.info(LogCategory.API, '[DossiersPage] ✅ Note créée, polling ciblé déclenché automatiquement', { noteName: name.trim() });
       }
     } catch (e) {
       handleError(e, 'création note');
@@ -295,6 +303,19 @@ function AuthenticatedDossiersContent({ user }: { user: AuthenticatedUser }) {
   const handleToggleView = useCallback((mode: 'list' | 'grid') => {
     setViewMode(mode);
   }, []);
+
+  // Hook pour le menu contextuel des classeurs
+  const {
+    contextMenuState,
+    handleContextMenuClasseur,
+    handleRename,
+    handleDelete,
+    closeContextMenu
+  } = useClasseurContextMenu({
+    onRenameClasseur: handleRenameClasseurClick,
+    onDeleteClasseur: handleDeleteClasseurClick,
+    onUpdateClasseur: handleUpdateClasseurClick
+  });
 
   // 🔧 OPTIMISATION: Mémoiser la transformation des classeurs pour éviter les re-renders
   const transformedClasseurs = useMemo(() => 
@@ -405,7 +426,7 @@ function AuthenticatedDossiersContent({ user }: { user: AuthenticatedUser }) {
       <main className="page-content-area">
         {/* Titre de la page avec design uniforme */}
         <UnifiedPageTitle
-          icon={Folder}
+          icon={FolderIcon}
           title="Mes Classeurs"
           subtitle="Organisez et gérez vos connaissances"
           stats={[
@@ -414,26 +435,6 @@ function AuthenticatedDossiersContent({ user }: { user: AuthenticatedUser }) {
           ]}
         />
 
-        {/* Barre de recherche et toolbar */}
-        <div className="search-toolbar-container">
-          <SearchBar
-            placeholder="Rechercher dans vos classeurs..."
-            onSearchResult={handleSearchResult}
-            maxResults={10}
-            searchTypes={['all']}
-            className="search-bar-container"
-          />
-          
-          {/* Toolbar avec boutons crayon, dossier, grille/liste */}
-          <div className="toolbar-container">
-            <FolderToolbar
-              onCreateFolder={handleCreateFolder}
-              onCreateFile={handleCreateNote}
-              onToggleView={handleToggleView}
-              viewMode={viewMode}
-            />
-          </div>
-        </div>
 
         {/* Container glassmorphism principal */}
         <motion.div 
@@ -460,6 +461,7 @@ function AuthenticatedDossiersContent({ user }: { user: AuthenticatedUser }) {
                           classeur={classeur}
                           isActive={activeClasseurId === classeur.id}
                           onSelectClasseur={handleSelectClasseur}
+                          onContextMenu={handleContextMenuClasseur}
                         />
                       ))}
                     </SortableContext>
@@ -508,13 +510,14 @@ function AuthenticatedDossiersContent({ user }: { user: AuthenticatedUser }) {
                   updated_at: new Date().toISOString(),
                   user_id: user.id
                 }))}
-                preloadedFolders={useFileSystemStore.getState().folders as { [key: string]: Folder }}
-                preloadedNotes={useFileSystemStore.getState().notes as { [key: string]: FileArticle }}
+                preloadedFolders={useFileSystemStore.getState().folders as any}
+                preloadedNotes={useFileSystemStore.getState().notes as unknown as { [key: string]: FileArticle }}
                 skipApiCalls={true}
                 viewMode={viewMode}
                 onToggleView={handleToggleView}
                 onCreateFolder={handleCreateFolder}
                 onCreateFile={handleCreateNote}
+                onSearchResult={handleSearchResult}
               />
             </div>
           )}
@@ -524,6 +527,20 @@ function AuthenticatedDossiersContent({ user }: { user: AuthenticatedUser }) {
       <TargetedPollingManager />
       <TargetedPollingMonitor />
       <RealtimeStatus userId={user.id} />
+      
+      {/* Menu contextuel des classeurs */}
+      {contextMenuState.visible && contextMenuState.item && (
+        <SimpleContextMenu
+          x={contextMenuState.x}
+          y={contextMenuState.y}
+          visible={contextMenuState.visible}
+          options={[
+            { label: 'Renommer', onClick: handleRename },
+            { label: 'Supprimer', onClick: handleDelete }
+          ]}
+          onClose={closeContextMenu}
+        />
+      )}
     </div>
   );
 } 

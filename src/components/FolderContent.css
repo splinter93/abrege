@@ -53,6 +53,45 @@
   gap: 16px;
 }
 
+/* Container pour la barre de recherche et la toolbar */
+.folder-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-shrink: 0;
+}
+
+/* Container pour la barre de recherche */
+.folder-search-container {
+  display: flex;
+  align-items: center;
+}
+
+.folder-search-bar {
+  min-width: 320px;
+  max-width: 450px;
+}
+
+/* Responsive pour les petits écrans */
+@media (max-width: 768px) {
+  .folder-content-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+  
+  .folder-header-actions {
+    justify-content: space-between;
+    width: 100%;
+  }
+  
+  .folder-search-bar {
+    min-width: 200px;
+    max-width: 100%;
+    flex: 1;
+  }
+}
+
 .classeur-title {
   font-size: 20px;
   font-weight: 600;
@@ -60,6 +99,16 @@
   margin: 0;
   line-height: 1.2;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.classeur-title-emoji {
+  font-size: 24px;
+  line-height: 1;
+  filter: brightness(1.1);
+  transition: transform 0.2s ease;
 }
 
 /* 🔧 NOUVEAU: Styles pour le breadcrumb intégré dans le titre */

@@ -36,6 +36,7 @@ interface FolderManagerProps {
   onCreateFile?: () => void;
   onToggleView?: (mode: 'list' | 'grid') => void;
   viewMode?: 'list' | 'grid';
+  onSearchResult?: (result: any) => void; // 🔧 NOUVEAU: Prop pour la recherche
 
 }
 
@@ -60,6 +61,7 @@ const FolderManager: React.FC<FolderManagerProps> = ({
   onCreateFile,
   onToggleView,
   viewMode = 'grid',
+  onSearchResult,
 
 }) => {
   // Optimisation : éviter les appels API redondants
@@ -257,6 +259,7 @@ const FolderManager: React.FC<FolderManagerProps> = ({
           <main className="folder-manager-main">
             <FolderContent
               classeurName={classeurName}
+              classeurIcon={classeurIcon}
               folders={filteredFolders}
               files={filteredFiles}
               loading={effectiveLoading}
@@ -282,6 +285,8 @@ const FolderManager: React.FC<FolderManagerProps> = ({
               onGoToRoot={onGoToRoot}
               onGoToFolder={onGoToFolder}
               folderPath={folderPath}
+              // 🔧 NOUVEAU: Passer la prop de recherche
+              onSearchResult={onSearchResult}
 
             />
           </main>

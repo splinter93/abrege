@@ -5,6 +5,7 @@ import FolderItem from './FolderItem';
 import FileItem from './FileItem';
 import FolderToolbar, { ViewMode } from './FolderToolbar';
 import FolderBreadcrumb from './FolderBreadcrumb';
+import SearchBar, { SearchResult } from './SearchBar';
 
 import { Folder, FileArticle } from './types';
 import './FolderContent.css';
@@ -28,6 +29,7 @@ import {
 
 interface FolderContentProps {
   classeurName: string;
+  classeurIcon?: string;
   toolbar?: React.ReactNode;
   folders: Folder[];
   files: FileArticle[];
@@ -55,6 +57,8 @@ interface FolderContentProps {
   onGoToRoot?: () => void;
   onGoToFolder?: (folderId: string) => void;
   folderPath?: Folder[];
+  // Search props
+  onSearchResult?: (result: SearchResult) => void;
 
 }
 
@@ -75,6 +79,7 @@ const FolderContent: React.FC<FolderContentProps> = ({
   onStartRenameFolderClick,
   onStartRenameFileClick,
   classeurName,
+  classeurIcon,
   isInFolder,
   onCreateFolder,
   onCreateFile,
@@ -86,6 +91,8 @@ const FolderContent: React.FC<FolderContentProps> = ({
   onGoToRoot,
   onGoToFolder,
   folderPath = [],
+  // Search props
+  onSearchResult,
   // 🔧 NOUVEAU: Props pour le ClasseurBandeau intégré
   classeurs,
   activeClasseurId,
@@ -118,7 +125,7 @@ const FolderContent: React.FC<FolderContentProps> = ({
 
   return (
     <div className="folder-content-container">
-      {/* Header with classeur title and toolbar */}
+      {/* Header with classeur title, search bar and toolbar */}
       <div className="folder-content-header">
         <div className="folder-content-title">
           {/* 🔧 NOUVEAU: Breadcrumb intégré dans le titre */}
@@ -132,19 +139,40 @@ const FolderContent: React.FC<FolderContentProps> = ({
               />
             </div>
           ) : (
-            <h1 className="classeur-title">{classeurName}</h1>
+            <h1 className="classeur-title">
+              {classeurIcon && (
+                <span className="classeur-title-emoji">{classeurIcon}</span>
+              )}
+              {classeurName}
+            </h1>
           )}
         </div>
         
-        {/* Toolbar with creation buttons and view toggle */}
-        {onCreateFolder && onCreateFile && onToggleView && (
-          <FolderToolbar
-            onCreateFolder={onCreateFolder}
-            onCreateFile={onCreateFile}
-            onToggleView={onToggleView}
-            viewMode={viewMode}
-          />
-        )}
+        {/* Search bar and toolbar container */}
+        <div className="folder-header-actions">
+          {/* Barre de recherche */}
+          {onSearchResult && (
+            <div className="folder-search-container">
+              <SearchBar
+                placeholder="Rechercher dans mes classeurs..."
+                onSearchResult={onSearchResult}
+                maxResults={10}
+                searchTypes={['all']}
+                className="folder-search-bar"
+              />
+            </div>
+          )}
+          
+          {/* Toolbar with creation buttons and view toggle */}
+          {onCreateFolder && onCreateFile && onToggleView && (
+            <FolderToolbar
+              onCreateFolder={onCreateFolder}
+              onCreateFile={onCreateFile}
+              onToggleView={onToggleView}
+              viewMode={viewMode}
+            />
+          )}
+        </div>
       </div>
 
       {safeFolders.length === 0 && safeFiles.length === 0 ? (
