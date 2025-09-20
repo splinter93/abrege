@@ -114,6 +114,47 @@
   transition: all var(--dossiers-transition-normal);
 }
 
+
+/* ==========================================================================
+   ALIGNEMENT TOOLBAR
+   ========================================================================== */
+
+/* Container principal pour la barre de recherche et toolbar */
+.search-toolbar-container {
+  margin-bottom: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+/* Container pour la toolbar à droite */
+.toolbar-container {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  min-height: 44px;
+  margin-left: auto;
+}
+
+/* Forcer l'alignement vertical de la toolbar */
+.folder-toolbar-simple {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  height: 44px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.toolbar-icon-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  vertical-align: middle !important;
+}
+
 /* ==========================================================================
    RESPONSIVE UTILITIES
    ========================================================================== */

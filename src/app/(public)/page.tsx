@@ -9,12 +9,13 @@ import ErrorBoundary from '@/components/ErrorBoundary';
 import AuthGuard from '@/components/AuthGuard';
 import { useSecureErrorHandler } from '@/components/SecureErrorHandler';
 import { simpleLogger as logger } from '@/utils/logger';
-import { MessageSquare, Plus, Search, Upload, Sparkles, Zap, Eye, X, Youtube, FileText, LayoutDashboard, ChevronLeft, ChevronRight } from 'lucide-react';
+import { MessageSquare, Plus, Upload, Sparkles, Zap, Eye, Youtube, FileText, LayoutDashboard, ChevronLeft, ChevronRight } from 'lucide-react';
 import NotesCarouselNotion, { NotesCarouselRef } from '@/components/NotesCarouselNotion';
 import PerformanceMonitor from '@/components/PerformanceMonitor';
 import UnifiedPageTitle from '@/components/UnifiedPageTitle';
 import RecentFilesList from '@/components/RecentFilesList';
 import DropZone from '@/components/DropZone';
+import SearchBar, { SearchResult } from '@/components/SearchBar';
 import { motion } from 'framer-motion';
 import './home.css';
 import './dashboard.css';
@@ -162,8 +163,6 @@ function HomePageContent() {
 
 function AuthenticatedHomeContent({ user }: { user: { id: string; email?: string; username?: string } }) {
   const router = useRouter();
-  const [searchQuery, setSearchQuery] = useState('');
-  const [isSearching, setIsSearching] = useState(false);
   const [isCreateNoteModalOpen, setIsCreateNoteModalOpen] = useState(false);
   const notesCarouselRef = useRef<NotesCarouselRef>(null);
 
@@ -186,13 +185,11 @@ function AuthenticatedHomeContent({ user }: { user: { id: string; email?: string
     router.push('/youtube-summary');
   }, [router]);
 
-  const handleSearch = useCallback((e: React.FormEvent) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      setIsSearching(true);
-      setTimeout(() => setIsSearching(false), 2000);
-    }
-  }, [searchQuery]);
+  // Callback pour gérer les résultats de recherche
+  const handleSearchResult = useCallback((result: SearchResult) => {
+    // Navigation par défaut du composant SearchBar
+    // Le composant gère déjà la navigation
+  }, []);
 
   const handleCreateNote = useCallback(async () => {
     if (!user) {
@@ -219,6 +216,7 @@ function AuthenticatedHomeContent({ user }: { user: { id: string; email?: string
   const handleNotesNext = useCallback(() => {
     notesCarouselRef.current?.goToNext();
   }, []);
+
 
   return (
     <div className="page-wrapper">
@@ -256,25 +254,12 @@ function AuthenticatedHomeContent({ user }: { user: { id: string; email?: string
             transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
           >
             {/* Barre de recherche */}
-            <form onSubmit={handleSearch} className="search-form">
-              <Search size={20} className="search-icon" />
-              <input 
-                type="text" 
-                placeholder="Rechercher..."
-                className="search-field"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-              {searchQuery && (
-                <button 
-                  type="submit" 
-                  className="search-btn"
-                  disabled={isSearching}
-                >
-                  {isSearching ? '...' : '→'}
-                </button>
-              )}
-            </form>
+            <SearchBar
+              placeholder="Rechercher des notes..."
+              onSearchResult={handleSearchResult}
+              maxResults={10}
+              searchTypes={['all']}
+            />
 
             {/* Actions rapides compactes */}
             <div className="quick-actions">

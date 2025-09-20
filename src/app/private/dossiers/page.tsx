@@ -11,6 +11,8 @@ import DossierErrorBoundary from "@/components/DossierErrorBoundary";
 import { DossierLoadingState, DossierErrorState } from "@/components/DossierLoadingStates";
 import AuthGuard from "@/components/AuthGuard";
 import UnifiedPageTitle from "@/components/UnifiedPageTitle";
+import SearchBar, { SearchResult } from "@/components/SearchBar";
+import FolderToolbar from "@/components/FolderToolbar";
 import { Folder } from "lucide-react";
 
 import { useDossiersPage } from "@/hooks/useDossiersPage";
@@ -237,6 +239,12 @@ function AuthenticatedDossiersContent({ user }: { user: AuthenticatedUser }) {
     setCurrentFolderId(undefined);
   }, [setActiveClasseurId, setCurrentFolderId]);
 
+  // Callback pour gérer les résultats de recherche
+  const handleSearchResult = useCallback((result: SearchResult) => {
+    // Navigation par défaut du composant SearchBar
+    // Le composant gère déjà la navigation
+  }, []);
+
   // Afficher l'état de chargement initial
   if (loading && classeurs.length === 0) {
     return <DossierLoadingState type="initial" />;
@@ -273,6 +281,27 @@ function AuthenticatedDossiersContent({ user }: { user: AuthenticatedUser }) {
             { number: totalNotes, label: `note${totalNotes > 1 ? 's' : ''}` }
           ]}
         />
+
+        {/* Barre de recherche et toolbar */}
+        <div className="search-toolbar-container">
+          <SearchBar
+            placeholder="Rechercher dans vos classeurs..."
+            onSearchResult={handleSearchResult}
+            maxResults={10}
+            searchTypes={['all']}
+            className="search-bar-container"
+          />
+          
+          {/* Toolbar avec boutons crayon, dossier, grille/liste */}
+          <div className="toolbar-container">
+            <FolderToolbar
+              onCreateFolder={handleCreateFolder}
+              onCreateFile={handleCreateNote}
+              onToggleView={handleToggleView}
+              viewMode={viewMode}
+            />
+          </div>
+        </div>
 
         {/* Dashboard principal avec design moderne */}
         <div className="main-dashboard">
