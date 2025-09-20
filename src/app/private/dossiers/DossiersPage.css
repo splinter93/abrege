@@ -1,162 +1,21 @@
 /* ==========================================================================
-   PAGE DOSSIERS - NOUVEAU LAYOUT 2025
+   PAGE DOSSIERS - LAYOUT IDENTIQUE AU DASHBOARD
    ========================================================================== */
 
-/* Layout principal avec CSS Grid */
-.dossiers-page {
-  display: grid;
-  grid-template-columns: 260px 1fr; /* Sidebar fixe, contenu flexible */
-  height: 100vh;
-  background-color: var(--background-primary);
-  overflow: hidden;
-}
+/* La page utilise maintenant exactement la même structure que le dashboard */
+/* Tous les styles sont hérités de dashboard.css et layout.css */
 
-/* Contenu principal */
-.dossiers-main-content {
-  grid-column: 2 / 3;
-  padding: 24px 48px;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-}
+/* ==========================================================================
+   STYLES SPÉCIFIQUES POUR LES COMPOSANTS DE LA PAGE DOSSIERS
+   ========================================================================== */
 
-/* Header de la page */
-.dossiers-header {
-  padding: 16px 24px;
-  background-color: var(--background-secondary);
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--border-color);
-}
-
-.header-content {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.header-left {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-.header-icon-container {
-  width: 48px;
-  height: 48px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background-color: var(--accent-primary-light);
-  border-radius: var(--radius-md);
-}
-
-.header-icon {
-  font-size: 24px;
-}
-
-.header-title {
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: var(--text-primary);
-  margin: 0;
-}
-
-.header-subtitle {
-  font-size: 0.9rem;
-  color: var(--text-secondary);
-  margin: 0;
-}
-
-/* Statistiques */
-.header-stats {
-  display: flex;
-  gap: 24px;
-}
-
-.stat-item {
-  text-align: right;
-}
-
-.stat-number {
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: var(--text-primary);
-  display: block;
-}
-
-.stat-label {
-  font-size: 0.8rem;
-  color: var(--text-secondary);
-  text-transform: uppercase;
-}
-
-/* Conteneur de la navigation des classeurs */
+/* Navigation des classeurs - intégration avec le design dashboard */
 .classeur-navigation-container {
   width: 100%;
 }
 
 /* Section du gestionnaire de dossiers */
 .folder-manager-section {
-  flex: 1; /* Prend l'espace restant */
-  min-height: 0; /* Important pour que le scroll fonctionne dans un flex container */
-}
-
-
-/* ==========================================================================
-   RESPONSIVE DESIGN
-   ========================================================================== */
-
-@media (max-width: 1200px) {
-  .dossiers-page {
-    grid-template-columns: 240px 1fr;
-  }
-  .dossiers-main-content {
-    padding: 24px 32px;
-  }
-}
-
-@media (max-width: 992px) {
-  .dossiers-page {
-    /* Pour les tablettes, on pourrait envisager une sidebar "fly-out" */
-    /* Pour l'instant on la garde mais on réduit la taille */
-    grid-template-columns: 220px 1fr;
-  }
-  .dossiers-main-content {
-    padding: 24px;
-  }
-  .header-content {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 16px;
-  }
-  .header-stats {
-    width: 100%;
-    justify-content: space-between;
-  }
-  .stat-item {
-    text-align: left;
-  }
-}
-
-@media (max-width: 768px) {
-  .dossiers-page {
-    /* Sur mobile, la sidebar est cachée par défaut */
-    grid-template-columns: 1fr;
-  }
-  /* Il faudrait un bouton pour ouvrir la sidebar */
-  /* .sidebar { display: none; } */
-  
-  .dossiers-main-content {
-    grid-column: 1 / 2;
-    padding: 16px;
-  }
-
-  .header-title {
-    font-size: 1.25rem;
-  }
-
-  .header-subtitle {
-    font-size: 0.8rem;
-  }
+  flex: 1;
+  min-height: 0;
 }

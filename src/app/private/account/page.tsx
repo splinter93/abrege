@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import { useState } from "react";
-import UnifiedPageLayout from "@/components/UnifiedPageLayout";
+import UnifiedSidebar from "@/components/UnifiedSidebar";
 import AuthGuard from "@/components/AuthGuard";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import UnifiedPageTitle from "@/components/UnifiedPageTitle";
@@ -95,12 +95,17 @@ export default function AccountPage() {
   return (
     <ErrorBoundary>
       <AuthGuard>
-        <UnifiedPageLayout className="page-account">
-          {/* Titre de la page avec design uniforme */}
-          <UnifiedPageTitle
-            icon={User}
-            title="Mon Compte"
-            subtitle="Gérez votre compte et vos préférences"
+        <div className="page-wrapper">
+          <aside className="page-sidebar-fixed">
+            <UnifiedSidebar />
+          </aside>
+          
+          <main className="page-content-area">
+            {/* Titre de la page avec design uniforme */}
+            <UnifiedPageTitle
+              icon={User}
+              title="Mon Compte"
+              subtitle="Gérez votre compte et vos préférences"
           />
 
           {/* Contenu principal avec blocs glassmorphism espacés */}
@@ -343,7 +348,8 @@ export default function AccountPage() {
             </motion.div>
 
             </div>
-        </UnifiedPageLayout>
+          </main>
+        </div>
       </AuthGuard>
     </ErrorBoundary>
   );

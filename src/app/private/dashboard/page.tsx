@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { motion } from "framer-motion";
 import { useAuth } from "@/hooks/useAuth";
 import { useSecureErrorHandler } from "@/components/SecureErrorHandler";
-import UnifiedPageLayout from "@/components/UnifiedPageLayout";
+import UnifiedSidebar from "@/components/UnifiedSidebar";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import AuthGuard from "@/components/AuthGuard";
 import UnifiedPageTitle from "@/components/UnifiedPageTitle";
@@ -22,9 +22,15 @@ export default function DashboardPage() {
   return (
     <ErrorBoundary>
       <AuthGuard>
-        <UnifiedPageLayout className="page-dashboard">
+        <div className="page-wrapper">
+      <aside className="page-sidebar-fixed">
+        <UnifiedSidebar />
+      </aside>
+      
+      <main className="page-content-area">
           <DashboardPageContent />
-        </UnifiedPageLayout>
+              </main>
+    </div>
       </AuthGuard>
     </ErrorBoundary>
   );

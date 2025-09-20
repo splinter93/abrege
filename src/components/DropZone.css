@@ -23,7 +23,7 @@
   background: var(--glass-bg-hover);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: 3px dashed var(--border-color);
+  border: 1px dashed var(--border-color);
   border-radius: var(--files-radius-xl);
   display: flex;
   align-items: center;

@@ -9,7 +9,7 @@ import type { TrashItem, TrashStatistics } from '@/types/supabase';
 import AuthGuard from '@/components/AuthGuard';
 import PageLoading from '@/components/PageLoading';
 import ErrorBoundary from '@/components/ErrorBoundary';
-import UnifiedPageLayout from '@/components/UnifiedPageLayout';
+import UnifiedSidebar from '@/components/UnifiedSidebar';
 import { useSecureErrorHandler } from '@/components/SecureErrorHandler';
 import { simpleLogger as logger } from '@/utils/logger';
 import UnifiedPageTitle from '@/components/UnifiedPageTitle';
@@ -32,7 +32,16 @@ function TrashPageContent() {
   
   // 🔧 FIX: Gérer le cas où l'utilisateur n'est pas encore chargé AVANT d'appeler les hooks
   if (authLoading || !user?.id) {
-    return <PageLoading message="Vérification de l'authentification..." />;
+    return (
+      <div className="page-wrapper">
+        <aside className="page-sidebar-fixed">
+          <UnifiedSidebar />
+        </aside>
+        <main className="page-content-area">
+          <PageLoading message="Vérification de l'authentification..." />
+        </main>
+      </div>
+    );
   }
   
   // Maintenant on sait que user.id existe, on peut appeler tous les hooks en toute sécurité
@@ -184,7 +193,12 @@ function AuthenticatedTrashContent({ user }: { user: AuthenticatedUser }) {
   }
 
   return (
-    <UnifiedPageLayout className="page-trash">
+    <div className="page-wrapper">
+      <aside className="page-sidebar-fixed">
+        <UnifiedSidebar />
+      </aside>
+      
+      <main className="page-content-area">
         {/* Titre de la page avec design uniforme */}
         <UnifiedPageTitle
           icon={Trash2}
@@ -196,6 +210,9 @@ function AuthenticatedTrashContent({ user }: { user: AuthenticatedUser }) {
             { number: statistics.folders, label: 'dossiers' }
           ]}
         />
+
+        {/* Dashboard principal avec design moderne */}
+        <div className="main-dashboard">
 
         {/* Section de contenu principal avec glassmorphism */}
         <motion.section 
@@ -275,7 +292,9 @@ function AuthenticatedTrashContent({ user }: { user: AuthenticatedUser }) {
           </div>
         </div>
         </motion.section>
-    </UnifiedPageLayout>
+        </div>
+      </main>
+    </div>
   );
 }
 

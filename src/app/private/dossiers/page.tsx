@@ -5,8 +5,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import type { Classeur, Folder } from "@/store/useFileSystemStore";
 import type { FileArticle } from "@/components/types";
 import ClasseurNavigation from "@/components/ClasseurNavigation";
-import UnifiedPageLayout from "@/components/UnifiedPageLayout";
 import FolderManager from "@/components/FolderManager";
+import UnifiedSidebar from "@/components/UnifiedSidebar";
 import DossierErrorBoundary from "@/components/DossierErrorBoundary";
 import { DossierLoadingState, DossierErrorState } from "@/components/DossierLoadingStates";
 import AuthGuard from "@/components/AuthGuard";
@@ -257,7 +257,12 @@ function AuthenticatedDossiersContent({ user }: { user: AuthenticatedUser }) {
   }
 
   return (
-    <UnifiedPageLayout className="page-dossiers">
+    <div className="page-wrapper">
+      <aside className="page-sidebar-fixed">
+        <UnifiedSidebar />
+      </aside>
+      
+      <main className="page-content-area">
         {/* Titre de la page avec design uniforme */}
         <UnifiedPageTitle
           icon={Folder}
@@ -269,68 +274,88 @@ function AuthenticatedDossiersContent({ user }: { user: AuthenticatedUser }) {
           ]}
         />
 
-        {/* Navigation des classeurs */}
-        {classeurs.length > 0 && (
-          <motion.div
-            className="classeur-navigation-container"
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.1, ease: "easeOut" }}
-          >
-            <ClasseurNavigation
-              classeurs={transformedClasseurs}
-              activeClasseurId={activeClasseurId || null}
-              onSelectClasseur={handleSelectClasseur}
-              onCreateClasseur={handleCreateClasseurClick}
-              onRenameClasseur={handleRenameClasseurClick}
-              onDeleteClasseur={handleDeleteClasseurClick}
-              onUpdateClasseur={handleUpdateClasseurClick}
-              onUpdateClasseurPositions={handleUpdateClasseurPositions}
-            />
-          </motion.div>
-        )}
+        {/* Dashboard principal avec design moderne */}
+        <div className="main-dashboard">
+          {/* Navigation des classeurs */}
+          {classeurs.length > 0 && (
+            <motion.section
+              className="dashboard-section"
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.1, ease: "easeOut" }}
+            >
+              <div className="section-header">
+                <div className="section-title-row">
+                  <h2 className="section-title">Classeurs</h2>
+                </div>
+                <div className="section-separator"></div>
+              </div>
+              <div className="section-content">
+                <ClasseurNavigation
+                  classeurs={transformedClasseurs}
+                  activeClasseurId={activeClasseurId || null}
+                  onSelectClasseur={handleSelectClasseur}
+                  onCreateClasseur={handleCreateClasseurClick}
+                  onRenameClasseur={handleRenameClasseurClick}
+                  onDeleteClasseur={handleDeleteClasseurClick}
+                  onUpdateClasseur={handleUpdateClasseurClick}
+                  onUpdateClasseurPositions={handleUpdateClasseurPositions}
+                />
+              </div>
+            </motion.section>
+          )}
 
-        {/* Gestionnaire de dossiers */}
-        {activeClasseur && (
-          <motion.section 
-            className="folder-manager-section"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2, ease: "easeOut" }}
-          >
-            <FolderManager
-              classeurId={activeClasseur.id}
-              classeurName={activeClasseur.name}
-              classeurIcon={activeClasseur.emoji}
-              parentFolderId={currentFolderId}
-              onFolderOpen={handleFolderOpenClick}
-              onGoBack={handleGoBack}
-              onGoToRoot={handleGoToRoot}
-              onGoToFolder={handleGoToFolder}
-              folderPath={folderPath.map(folder => ({
-                id: folder.id,
-                name: folder.name,
-                parent_id: folder.parent_id || null,
-                classeur_id: folder.classeur_id || '',
-                position: folder.position || 0,
-                created_at: folder.created_at || '',
-                updated_at: new Date().toISOString(),
-                user_id: user.id
-              }))}
-              preloadedFolders={useFileSystemStore.getState().folders as any}
-              preloadedNotes={useFileSystemStore.getState().notes as { [key: string]: FileArticle }}
-              skipApiCalls={true}
-              viewMode={viewMode}
-              onToggleView={handleToggleView}
-              onCreateFolder={handleCreateFolder}
-              onCreateFile={handleCreateNote}
-            />
-          </motion.section>
-        )}
+          {/* Gestionnaire de dossiers */}
+          {activeClasseur && (
+            <motion.section 
+              className="dashboard-section"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.2, ease: "easeOut" }}
+            >
+              <div className="section-header">
+                <div className="section-title-row">
+                  <h2 className="section-title">{activeClasseur.name}</h2>
+                </div>
+                <div className="section-separator"></div>
+              </div>
+              <div className="section-content">
+                <FolderManager
+                  classeurId={activeClasseur.id}
+                  classeurName={activeClasseur.name}
+                  classeurIcon={activeClasseur.emoji}
+                  parentFolderId={currentFolderId}
+                  onFolderOpen={handleFolderOpenClick}
+                  onGoBack={handleGoBack}
+                  onGoToRoot={handleGoToRoot}
+                  onGoToFolder={handleGoToFolder}
+                  folderPath={folderPath.map(folder => ({
+                    id: folder.id,
+                    name: folder.name,
+                    parent_id: folder.parent_id || null,
+                    classeur_id: folder.classeur_id || '',
+                    position: folder.position || 0,
+                    created_at: folder.created_at || '',
+                    updated_at: new Date().toISOString(),
+                    user_id: user.id
+                  }))}
+                  preloadedFolders={useFileSystemStore.getState().folders as any}
+                  preloadedNotes={useFileSystemStore.getState().notes as { [key: string]: FileArticle }}
+                  skipApiCalls={true}
+                  viewMode={viewMode}
+                  onToggleView={handleToggleView}
+                  onCreateFolder={handleCreateFolder}
+                  onCreateFile={handleCreateNote}
+                />
+              </div>
+            </motion.section>
+          )}
+        </div>
+      </main>
       
       <TargetedPollingManager />
       <TargetedPollingMonitor />
       <RealtimeStatus userId={user.id} />
-    </UnifiedPageLayout>
+    </div>
   );
 } 

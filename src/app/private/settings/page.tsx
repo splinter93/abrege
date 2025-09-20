@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import UnifiedPageLayout from "@/components/UnifiedPageLayout";
+import UnifiedSidebar from "@/components/UnifiedSidebar";
 import { useAuth } from "@/hooks/useAuth";
 import { useSecureErrorHandler } from "@/components/SecureErrorHandler";
 import { logApi } from "@/utils/logger";
@@ -37,9 +37,7 @@ export default function SettingsPage() {
   return (
     <ErrorBoundary>
       <AuthGuard>
-        <UnifiedPageLayout className="page-settings">
-          <SettingsPageContent />
-        </UnifiedPageLayout>
+        <SettingsPageContent />
       </AuthGuard>
     </ErrorBoundary>
   );
@@ -51,8 +49,15 @@ function SettingsPageContent() {
   // 🔧 FIX: Gérer le cas où l'utilisateur n'est pas encore chargé AVANT d'appeler les hooks
   if (authLoading || !user?.id) {
     return (
-      <div className="loading-state">
-        <p>Chargement...</p>
+      <div className="page-wrapper">
+        <aside className="page-sidebar-fixed">
+          <UnifiedSidebar />
+        </aside>
+        <main className="page-content-area">
+          <div className="loading-state">
+            <p>Chargement...</p>
+          </div>
+        </main>
       </div>
     );
   }
@@ -197,13 +202,21 @@ function AuthenticatedSettingsContent({ user }: { user: { id: string; email?: st
   // }
 
   return (
-    <>
-      {/* Titre de la page avec design uniforme */}
-      <UnifiedPageTitle
-        icon={Settings}
-        title="Réglages"
-        subtitle="Gérez vos préférences et clés API"
-      />
+    <div className="page-wrapper">
+      <aside className="page-sidebar-fixed">
+        <UnifiedSidebar />
+      </aside>
+      
+      <main className="page-content-area">
+        {/* Titre de la page avec design uniforme */}
+        <UnifiedPageTitle
+          icon={Settings}
+          title="Réglages"
+          subtitle="Gérez vos préférences et clés API"
+        />
+
+        {/* Dashboard principal avec design moderne */}
+        <div className="main-dashboard">
 
       {/* Contenu principal avec blocs glassmorphism espacés */}
       <div className="account-main-container">
@@ -486,6 +499,8 @@ function AuthenticatedSettingsContent({ user }: { user: { id: string; email?: st
           </motion.div>
         )}
       </AnimatePresence>
-    </>
+        </div>
+      </main>
+    </div>
   );
 } 

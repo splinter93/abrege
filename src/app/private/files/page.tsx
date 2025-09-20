@@ -5,7 +5,7 @@ import { FileItem } from "@/types/files";
 import { useFilesPage } from "@/hooks/useFilesPage";
 import { useAuth } from "@/hooks/useAuth";
 import LogoHeader from "@/components/LogoHeader";
-import UnifiedPageLayout from "@/components/UnifiedPageLayout";
+import UnifiedSidebar from "@/components/UnifiedSidebar";
 import FilesContent from "@/components/FilesContent";
 import FilesToolbar, { ViewMode } from "@/components/FilesToolbar";
 import FileUploaderLocal from "./FileUploaderLocal";
@@ -38,11 +38,16 @@ function FilesPageContent() {
   // 🔧 FIX: Gérer le cas où l'utilisateur n'est pas encore chargé AVANT d'appeler les hooks
   if (authLoading || !user?.id) {
     return (
-      <UnifiedPageLayout className="page-files">
-        <div className="loading-state">
-          <p>Chargement...</p>
-        </div>
-      </UnifiedPageLayout>
+      <div className="page-wrapper">
+        <aside className="page-sidebar-fixed">
+          <UnifiedSidebar />
+        </aside>
+        <main className="page-content-area">
+          <div className="loading-state">
+            <p>Chargement...</p>
+          </div>
+        </main>
+      </div>
     );
   }
   
@@ -329,7 +334,12 @@ function AuthenticatedFilesContent({ user }: { user: { id: string; email?: strin
   );
 
   return (
-    <UnifiedPageLayout className="page-files">
+    <div className="page-wrapper">
+      <aside className="page-sidebar-fixed">
+        <UnifiedSidebar />
+      </aside>
+      
+      <main className="page-content-area">
         {/* Titre de la page avec design uniforme */}
         <UnifiedPageTitle
           icon={FileText}
@@ -341,73 +351,85 @@ function AuthenticatedFilesContent({ user }: { user: { id: string; email?: strin
           ]}
         />
 
-        {/* Toolbar and Content Section */}
-        <motion.section
-          className="files-body-section"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.1, ease: "easeOut" }}
-        >
-          {loading ? (
-            <div className="loading-state">
-              <div className="loading-spinner"></div>
-              <p>Chargement des fichiers...</p>
+        {/* Dashboard principal avec design moderne */}
+        <div className="main-dashboard">
+          {/* Toolbar and Content Section */}
+          <motion.section
+            className="dashboard-section"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.1, ease: "easeOut" }}
+          >
+            <div className="section-header">
+              <div className="section-title-row">
+                <h2 className="section-title">Gestion des Fichiers</h2>
+              </div>
+              <div className="section-separator"></div>
             </div>
-          ) : error ? (
-            <div className="error-state">
-              <div className="error-icon">⚠️</div>
-              <h3>Erreur de chargement</h3>
-              <p>{error}</p>
+            <div className="section-content">
+              {loading ? (
+                <div className="loading-state">
+                  <div className="loading-spinner"></div>
+                  <p>Chargement des fichiers...</p>
+                </div>
+              ) : error ? (
+                <div className="error-state">
+                  <div className="error-icon">⚠️</div>
+                  <h3>Erreur de chargement</h3>
+                  <p>{error}</p>
+                </div>
+              ) : (
+                <>
+                  <FilesToolbar
+                    viewMode={viewMode}
+                    onViewModeChange={setViewMode}
+                    onUploadFile={handleUploadFile}
+                    selectedFilesCount={selectedFiles.size}
+                    onDeleteSelected={handleDeleteSelected}
+                    onRenameSelected={handleRenameSelected}
+                    searchQuery={searchQuery}
+                    onSearchChange={setSearchQuery}
+                  />
+
+                  <AnimatePresence>
+                    {showUploader && (
+                      <motion.div
+                        className="uploader-container"
+                        initial={{ opacity: 0, height: 0, y: -20 }}
+                        animate={{ opacity: 1, height: "auto", y: 0 }}
+                        exit={{ opacity: 0, height: 0, y: -20 }}
+                        transition={{ duration: 0.4, ease: "easeInOut" }}
+                      >
+                        <FileUploaderLocal
+                          onUploadComplete={handleUploadComplete}
+                          onUploadError={handleUploadError}
+                          maxFileSize={STORAGE_CONFIG.FILE_LIMITS.MAX_FILE_SIZE}
+                          allowedTypes={[...STORAGE_CONFIG.FILE_LIMITS.ALLOWED_MIME_TYPES]}
+                          multiple={true}
+                        />
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                  <FilesContent
+                    files={displayFiles}
+                    loading={loading}
+                    error={error}
+                    onFileOpen={handleFileOpen}
+                    onFileRename={handleFileRename}
+                    renamingItemId={renamingItemId}
+                    onCancelRename={handleCancelRename}
+                    onContextMenuItem={handleContextMenuItem}
+                    viewMode={viewMode}
+                    onFilesDropped={handleUploadComplete}
+                    onUploadError={handleUploadError}
+                  />
+                </>
+              )}
             </div>
-          ) : (
-            <>
-              <FilesToolbar
-                viewMode={viewMode}
-                onViewModeChange={setViewMode}
-                onUploadFile={handleUploadFile}
-                selectedFilesCount={selectedFiles.size}
-                onDeleteSelected={handleDeleteSelected}
-                onRenameSelected={handleRenameSelected}
-                searchQuery={searchQuery}
-                onSearchChange={setSearchQuery}
-              />
-
-              <AnimatePresence>
-                {showUploader && (
-                  <motion.div
-                    className="uploader-container"
-                    initial={{ opacity: 0, height: 0, y: -20 }}
-                    animate={{ opacity: 1, height: "auto", y: 0 }}
-                    exit={{ opacity: 0, height: 0, y: -20 }}
-                    transition={{ duration: 0.4, ease: "easeInOut" }}
-                  >
-                    <FileUploaderLocal
-                      onUploadComplete={handleUploadComplete}
-                      onUploadError={handleUploadError}
-                      maxFileSize={STORAGE_CONFIG.FILE_LIMITS.MAX_FILE_SIZE}
-                      allowedTypes={[...STORAGE_CONFIG.FILE_LIMITS.ALLOWED_MIME_TYPES]}
-                      multiple={true}
-                    />
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              <FilesContent
-                files={displayFiles}
-                loading={loading}
-                error={error}
-                onFileOpen={handleFileOpen}
-                onFileRename={handleFileRename}
-                renamingItemId={renamingItemId}
-                onCancelRename={handleCancelRename}
-                onContextMenuItem={handleContextMenuItem}
-                viewMode={viewMode}
-                onFilesDropped={handleUploadComplete}
-                onUploadError={handleUploadError}
-              />
-            </>
-          )}
-        </motion.section>
-    </UnifiedPageLayout>
+          </motion.section>
+        </div>
+      </main>
+    </div>
   );
 } 

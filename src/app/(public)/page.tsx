@@ -379,18 +379,19 @@ function AuthenticatedHomeContent({ user }: { user: { id: string; email?: string
               <div className="dashboard-column">
                 <div className="dashboard-column-header">
                   <h3 className="dashboard-column-title">Drop Zone</h3>
-                  <div className="dashboard-column-separator"></div>
                 </div>
                 <div className="dashboard-column-content">
                   <DropZone />
                 </div>
               </div>
 
+              {/* Séparateur vertical */}
+              <div className="dashboard-vertical-separator"></div>
+
               {/* Colonne droite : Fichiers Récents */}
               <div className="dashboard-column">
                 <div className="dashboard-column-header">
                   <h3 className="dashboard-column-title">Fichiers Récents</h3>
-                  <div className="dashboard-column-separator"></div>
                 </div>
                 <div className="dashboard-column-content">
                   <RecentFilesList limit={5} />

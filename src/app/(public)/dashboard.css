@@ -109,9 +109,10 @@
 
 .dashboard-two-columns {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr auto 1fr;
   gap: 2rem;
   width: 100%;
+  align-items: start;
 }
 
 .dashboard-column {
@@ -132,10 +133,12 @@
   letter-spacing: -0.02em;
 }
 
-.dashboard-column-separator {
-  height: 1px;
+.dashboard-vertical-separator {
+  width: 1px;
+  height: 100%;
   background: rgba(255, 255, 255, 0.1);
-  margin-bottom: 0.5rem;
+  align-self: stretch;
+  min-height: 200px;
 }
 
 .dashboard-column-content {
@@ -474,6 +477,10 @@
   .dashboard-two-columns {
     grid-template-columns: 1fr;
     gap: 1.5rem;
+  }
+  
+  .dashboard-vertical-separator {
+    display: none;
   }
   
   .drop-zone {

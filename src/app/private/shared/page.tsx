@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
-import UnifiedPageLayout from "@/components/UnifiedPageLayout";
+import UnifiedSidebar from "@/components/UnifiedSidebar";
 import AuthGuard from "@/components/AuthGuard";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import UnifiedPageTitle from "@/components/UnifiedPageTitle";
@@ -27,9 +27,15 @@ export default function SharedNotesPage() {
   return (
     <ErrorBoundary>
       <AuthGuard>
-        <UnifiedPageLayout className="page-shared">
+        <div className="page-wrapper">
+      <aside className="page-sidebar-fixed">
+        <UnifiedSidebar />
+      </aside>
+      
+      <main className="page-content-area">
           <SharedNotesContent />
-        </UnifiedPageLayout>
+              </main>
+    </div>
       </AuthGuard>
     </ErrorBoundary>
   );
