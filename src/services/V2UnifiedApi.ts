@@ -531,11 +531,13 @@ export class V2UnifiedApi {
       const store = useFileSystemStore.getState();
       store.addFolder(result.folder);
       
-      console.log(`[V2UnifiedApi] ✅ Dossier créé et ajouté au store:`, {
-        realId: result.folder.id,
-        name: result.folder.name,
-        storeFolders: Object.keys(store.folders)
-      });
+      if (process.env.NODE_ENV === 'development') {
+        logger.dev(`[V2UnifiedApi] ✅ Dossier créé et ajouté au store:`, {
+          realId: result.folder.id,
+          name: result.folder.name,
+          storeFolders: Object.keys(store.folders)
+        });
+      }
 
       const duration = Date.now() - startTime;
       return {
@@ -771,7 +773,7 @@ export class V2UnifiedApi {
       const noteClasseurId = targetClasseurId || currentNote?.classeur_id;
       
       if (process.env.NODE_ENV === 'development') {
-        logger.dev(`[V2UnifiedApi] 📝 Note ${cleanNoteId} - classeur_id: ${noteClasseurId}, targetFolderId: ${targetFolderId}`);
+        logger.dev(`[V2UnifiedApi] 📝 Note ${cleanNoteId} - targetClasseurId: ${targetClasseurId}, noteClasseurId: ${noteClasseurId}, targetFolderId: ${targetFolderId}`);
       }
 
       // 🚀 Mise à jour directe de Zustand (instantanée)
@@ -850,9 +852,28 @@ export class V2UnifiedApi {
       const finalClasseurId = targetClasseurId || folderClasseurId;
       store.moveFolder(cleanFolderId, targetParentId, finalClasseurId);
       
+      // 🔄 Mettre à jour aussi toutes les notes et dossiers enfants du dossier dans Zustand
+      if (targetClasseurId) {
+        // Utiliser la fonction utilitaire pour synchroniser toute la hiérarchie
+        const { syncFolderHierarchy } = await import('@/utils/folderSyncUtils');
+        const notesCount = syncFolderHierarchy(cleanFolderId, targetClasseurId);
+        
+        if (process.env.NODE_ENV === 'development') {
+          logger.dev(`[V2UnifiedApi] 🔄 Synchronisation hiérarchie: ${notesCount} notes mises à jour`);
+        }
+        
+        // 🎯 Déclencher le polling ciblé pour les notes et dossiers déplacés
+        try {
+          const { triggerPollingAfterNoteAction } = await import('@/services/uiActionPolling');
+          await triggerPollingAfterNoteAction('folder_moved_with_children');
+        } catch (error) {
+          console.warn('[V2UnifiedApi] ⚠️ Erreur déclenchement polling ciblé pour dossiers enfants:', error);
+        }
+      }
+      
       const totalTime = Date.now() - startTime;
       if (process.env.NODE_ENV === 'development') {
-        logger.dev(`[V2UnifiedApi] ✅ Dossier déplacé dans Zustand  en ${totalTime}ms total`);
+        logger.dev(`[V2UnifiedApi] ✅ Dossier et notes déplacés dans Zustand en ${totalTime}ms total`);
       }
       
       return result;

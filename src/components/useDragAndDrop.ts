@@ -1,5 +1,6 @@
 import { PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { DRAG_SENSOR_CONFIG } from '@/constants/dragAndDropConfig';
 
 interface UseDragAndDropProps<T> {
   items: T[];
@@ -9,7 +10,7 @@ interface UseDragAndDropProps<T> {
 
 export function useDragAndDrop<T>({ items, onReorder, getId }: UseDragAndDropProps<T>) {
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
+    useSensor(PointerSensor, { activationConstraint: DRAG_SENSOR_CONFIG.items })
   );
 
   const handleDragEnd = (event: DragEndEvent) => {

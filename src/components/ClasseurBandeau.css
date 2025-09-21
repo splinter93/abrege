@@ -125,6 +125,14 @@
   animation: dropPulse 0.6s ease-in-out;
 }
 
+/* 🔧 NOUVEAU: Effet visuel pour le pill entier en drag over */
+.classeur-pill.drag-over {
+  background: var(--dossiers-primary-light);
+  border-color: var(--dossiers-primary);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(229, 90, 44, 0.3);
+}
+
 @keyframes dropPulse {
   0% { transform: scale(1.1); }
   50% { transform: scale(1.3); }
@@ -152,19 +160,17 @@
 
 .classeur-emoji.drag-over::after {
   border-color: var(--dossiers-primary);
-  opacity: 0.8;
-  animation: dropGlow 1s ease-in-out infinite alternate;
+  opacity: 1;
+  animation: dropPulse 0.6s ease-in-out;
 }
 
-@keyframes dropGlow {
-  0% { 
-    border-color: var(--dossiers-primary);
-    box-shadow: 0 0 8px rgba(229, 90, 44, 0.3);
-  }
-  100% { 
-    border-color: var(--dossiers-primary);
-    box-shadow: 0 0 16px rgba(229, 90, 44, 0.6);
-  }
+/* 🔧 NOUVEAU: Indicateur pour le pill entier en drag over */
+.classeur-pill.drag-over::before {
+  background: linear-gradient(135deg, 
+    rgba(229, 90, 44, 0.1) 0%, 
+    rgba(229, 90, 44, 0.05) 50%, 
+    rgba(229, 90, 44, 0.1) 100%);
+  opacity: 1;
 }
 
 .classeur-name {

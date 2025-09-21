@@ -447,7 +447,7 @@ export class V2DatabaseUtils {
    * Déplacer une note
    */
   static async moveNote(ref: string, targetFolderId: string | null, userId: string, context: ApiContext, targetClasseurId?: string) {
-    logApi.info(`🚀 Déplacement note ${ref} vers folder ${targetFolderId}`, context);
+    logApi.info(`🚀 Déplacement note ${ref} vers folder ${targetFolderId}, targetClasseurId: ${targetClasseurId}`, context);
     
     try {
       // Résoudre la référence de la note
@@ -481,6 +481,7 @@ export class V2DatabaseUtils {
       // Si cross-classeur, mettre à jour aussi le classeur_id
       if (targetClasseurId) {
         updateData.classeur_id = targetClasseurId;
+        logApi.info(`🔄 Mise à jour classeur_id vers ${targetClasseurId}`, context);
       }
       
       const { data: note, error: moveError } = await supabase
@@ -729,6 +730,65 @@ export class V2DatabaseUtils {
 
       if (updateError) {
         throw new Error(`Erreur mise à jour dossier: ${updateError.message}`);
+      }
+
+      // 🔄 DÉPLACER AUSSI TOUTES LES NOTES ET DOSSIERS ENFANTS DU DOSSIER
+      if (targetClasseurId) {
+        logApi.info(`🔄 Déplacement des notes et dossiers enfants du dossier vers le nouveau classeur`, context);
+        
+        // Fonction récursive pour déplacer tous les dossiers enfants
+        const moveChildFolders = async (parentFolderId: string) => {
+          // Récupérer tous les dossiers enfants
+          const { data: childFolders, error: childFoldersError } = await supabase
+            .from('folders')
+            .select('id')
+            .eq('parent_id', parentFolderId)
+            .eq('user_id', userId);
+
+          if (childFoldersError) {
+            logApi.info(`⚠️ Erreur récupération dossiers enfants: ${childFoldersError.message}`, context);
+            return;
+          }
+
+          // Déplacer chaque dossier enfant
+          for (const childFolder of childFolders || []) {
+            const { error: moveChildError } = await supabase
+              .from('folders')
+              .update({ 
+                classeur_id: targetClasseurId,
+                updated_at: new Date().toISOString()
+              })
+              .eq('id', childFolder.id)
+              .eq('user_id', userId);
+
+            if (moveChildError) {
+              logApi.info(`⚠️ Erreur déplacement dossier enfant ${childFolder.id}: ${moveChildError.message}`, context);
+            } else {
+              // Récursivement déplacer les dossiers enfants de ce dossier
+              await moveChildFolders(childFolder.id);
+            }
+          }
+        };
+
+        // Déplacer tous les dossiers enfants récursivement
+        await moveChildFolders(folderId);
+        
+        // Mettre à jour le classeur_id de toutes les notes dans ce dossier et ses enfants
+        const { error: notesUpdateError } = await supabase
+          .from('articles')
+          .update({ 
+            classeur_id: targetClasseurId,
+            updated_at: new Date().toISOString()
+          })
+          .eq('folder_id', folderId)
+          .eq('user_id', userId);
+
+        if (notesUpdateError) {
+          logApi.info(`⚠️ Erreur mise à jour notes du dossier: ${notesUpdateError.message}`, context);
+          // Ne pas faire échouer l'opération pour une erreur de notes
+        } else {
+          logApi.info(`✅ Notes du dossier déplacées vers le nouveau classeur`, context);
+        }
       }
 
       logApi.info(`✅ Dossier déplacé avec succès`, context);

@@ -41,7 +41,7 @@ export const updateNoteV2Schema = z.object({
  */
 export const moveNoteV2Schema = z.object({
   target_folder_id: z.string().uuid('target_folder_id doit être un UUID valide').nullable().optional(),
-  target_classeur_id: z.string().uuid('target_classeur_id doit être un UUID valide').optional(),
+  target_notebook_id: z.string().uuid('target_notebook_id doit être un UUID valide').optional(),
 });
 
 /**

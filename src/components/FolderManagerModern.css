@@ -13,7 +13,8 @@
   flex-grow: 1;
   display: flex;
   flex-direction: column;
-  min-height: calc(100vh - 500px); /* Hauteur minimale adaptée à l'écran */
+  min-height: calc(100vh - 200px); /* Hauteur minimale réduite pour occuper plus d'espace */
+  height: 100%; /* Force la hauteur complète */
 }
 
 /* Container */
@@ -24,6 +25,7 @@
   flex: 1;
   display: flex;
   flex-direction: column;
+  height: 100%; /* Assure que le container utilise toute la hauteur disponible */
 }
 
 /* Content wrapper */
@@ -35,6 +37,7 @@
   flex: 1;
   display: flex;
   flex-direction: column;
+  height: 100%; /* Assure que le contenu utilise toute la hauteur disponible */
 }
 
 /* Header */
@@ -224,6 +227,8 @@
   flex: 1;
   display: flex;
   flex-direction: column;
+  height: 100%; /* Assure que la zone principale utilise toute la hauteur disponible */
+  min-height: 0; /* Permet au flex de se rétrécir si nécessaire */
 }
 
 /* Content container */

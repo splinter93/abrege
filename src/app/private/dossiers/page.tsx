@@ -41,6 +41,8 @@ import { useRealtime } from "@/hooks/useRealtime";
 import RealtimeStatus from "@/components/RealtimeStatus";
 import { logger, LogCategory } from "@/utils/logger";
 import { useClasseurContextMenu } from "@/hooks/useClasseurContextMenu";
+import { useCrossClasseurDrag } from "@/hooks/useCrossClasseurDrag";
+import { DRAG_SENSOR_CONFIG, DRAG_ZONE_CONFIG } from "@/constants/dragAndDropConfig";
 import SimpleContextMenu from "@/components/SimpleContextMenu";
 
 import "@/styles/main.css";
@@ -65,9 +67,23 @@ interface SortableTabProps {
   onSelectClasseur: (id: string) => void;
   onContextMenu?: (e: React.MouseEvent, classeur: ClasseurTab) => void;
   isOverlay?: boolean;
+  onDragOver?: (e: React.DragEvent, classeur: ClasseurTab) => void;
+  onDragLeave?: (e: React.DragEvent) => void;
+  onDrop?: (e: React.DragEvent, classeur: ClasseurTab) => void;
+  isDragOver?: boolean;
 }
 
-function SortableTab({ classeur, isActive, onSelectClasseur, onContextMenu, isOverlay }: SortableTabProps) {
+function SortableTab({ 
+  classeur, 
+  isActive, 
+  onSelectClasseur, 
+  onContextMenu, 
+  isOverlay,
+  onDragOver,
+  onDragLeave,
+  onDrop,
+  isDragOver = false
+}: SortableTabProps) {
   const {
     attributes,
     listeners,
@@ -91,19 +107,56 @@ function SortableTab({ classeur, isActive, onSelectClasseur, onContextMenu, isOv
       ref={setNodeRef}
       style={style}
       {...attributes}
-      {...listeners}
     >
       <button
-        className={`classeur-tab-glassmorphism ${isActive ? "active" : ""}`}
+        className={`classeur-tab-glassmorphism ${isActive ? "active" : ""} ${isDragOver ? "drag-over" : ""}`}
+        style={{ position: 'relative' }}
         onClick={() => onSelectClasseur(classeur.id)}
         onContextMenu={(e) => {
           if (onContextMenu && !isOverlay) {
             onContextMenu(e, classeur);
           }
         }}
+        onDragOver={(e) => {
+          if (onDragOver && !isOverlay) {
+            e.preventDefault();
+            e.stopPropagation();
+            onDragOver(e, classeur);
+          }
+        }}
+        onDragLeave={(e) => {
+          if (onDragLeave && !isOverlay) {
+            e.preventDefault();
+            e.stopPropagation();
+            onDragLeave(e);
+          }
+        }}
+        onDrop={(e) => {
+          if (onDrop && !isOverlay) {
+            e.preventDefault();
+            e.stopPropagation();
+            onDrop(e, classeur);
+          }
+        }}
       >
-        <span className="classeur-emoji">{classeur.emoji || '📁'}</span>
+        <span className={`classeur-emoji ${isDragOver ? "drag-over" : ""}`}>
+          {classeur.emoji || '📁'}
+        </span>
         <span className="classeur-name">{classeur.name}</span>
+        {/* Zone de drag invisible avec curseur approprié */}
+        <div 
+          className="classeur-drag-handle"
+          {...listeners}
+          style={{
+            position: 'absolute',
+            top: 0,
+            right: 0,
+            width: `${DRAG_ZONE_CONFIG.handleWidth}px`,
+            height: '100%',
+            cursor: 'grab',
+            zIndex: 1
+          }}
+        />
       </button>
     </div>
   );
@@ -330,14 +383,11 @@ function AuthenticatedDossiersContent({ user }: { user: AuthenticatedUser }) {
 
   // Drag and Drop logic
   const [draggedClasseur, setDraggedClasseur] = useState<ClasseurTab | null>(null);
+  const [dragOverClasseurId, setDragOverClasseurId] = useState<string | null>(null);
   
   const sensors = useSensors(
     useSensor(PointerSensor, { 
-      activationConstraint: { 
-        distance: 8,
-        delay: 100,
-        tolerance: 5
-      } 
+      activationConstraint: DRAG_SENSOR_CONFIG.classeurs
     })
   );
   
@@ -388,6 +438,47 @@ function AuthenticatedDossiersContent({ user }: { user: AuthenticatedUser }) {
     setActiveClasseurId(id);
     setCurrentFolderId(undefined);
   }, [setActiveClasseurId, setCurrentFolderId]);
+
+  // Hook pour le drag & drop cross-classeur
+  const {
+    handleDrop: handleCrossClasseurDrop,
+    handleDragOver: handleCrossClasseurDragOver,
+    handleDragLeave: handleCrossClasseurDragLeave,
+    setupCrossClasseurListener,
+    cleanupCrossClasseurListener
+  } = useCrossClasseurDrag({
+    classeurId: activeClasseurId || '',
+    onRefresh: refreshData,
+    onSetRefreshKey: () => {} // Pas de refresh key nécessaire ici
+  });
+
+  // Configurer l'écouteur cross-classeur
+  useEffect(() => {
+    const handler = setupCrossClasseurListener();
+    return () => cleanupCrossClasseurListener();
+  }, [setupCrossClasseurListener, cleanupCrossClasseurListener]);
+
+  /**
+   * Handler pour le drop sur les onglets des classeurs
+   * Utilise le hook commun pour la logique cross-classeur
+   */
+  const handleClasseurDrop = useCallback((e: React.DragEvent, classeur: ClasseurTab) => {
+    setDragOverClasseurId(null);
+    handleCrossClasseurDrop(e, classeur.id);
+  }, [handleCrossClasseurDrop]);
+
+  /**
+   * Handlers pour l'état visuel de drag over
+   */
+  const handleClasseurDragOver = useCallback((e: React.DragEvent, classeur: ClasseurTab) => {
+    handleCrossClasseurDragOver(e, classeur.id);
+    setDragOverClasseurId(classeur.id);
+  }, [handleCrossClasseurDragOver]);
+
+  const handleClasseurDragLeave = useCallback((e: React.DragEvent) => {
+    handleCrossClasseurDragLeave(e);
+    setDragOverClasseurId(null);
+  }, [handleCrossClasseurDragLeave]);
 
   /**
    * Gère les résultats de recherche (navigation par défaut du composant SearchBar)
@@ -462,6 +553,10 @@ function AuthenticatedDossiersContent({ user }: { user: AuthenticatedUser }) {
                           isActive={activeClasseurId === classeur.id}
                           onSelectClasseur={handleSelectClasseur}
                           onContextMenu={handleContextMenuClasseur}
+                          onDragOver={handleClasseurDragOver}
+                          onDragLeave={handleClasseurDragLeave}
+                          onDrop={handleClasseurDrop}
+                          isDragOver={dragOverClasseurId === classeur.id}
                         />
                       ))}
                     </SortableContext>

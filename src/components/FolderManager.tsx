@@ -155,6 +155,13 @@ const FolderManager: React.FC<FolderManagerProps> = ({
     n && 'classeur_id' in n && n.classeur_id === classeurId && 
     (n.folder_id === parentFolderId || (!n.folder_id && !parentFolderId))
   );
+
+  // Debug: Log des dossiers filtrés pour diagnostiquer les problèmes
+  if (process.env.NODE_ENV === 'development') {
+    console.log(`[FolderManager] 📁 Dossiers filtrés pour classeur ${classeurId}, parent ${parentFolderId}:`, 
+      filteredFolders.map(f => ({ id: f.id, name: f.name, parent_id: f.parent_id, classeur_id: f.classeur_id }))
+    );
+  }
   
   // Pas de loading si données préchargées
   const effectiveLoading = usePreloadedData ? false : loading;

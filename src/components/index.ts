@@ -12,6 +12,8 @@ export { default as FilesContent } from './FilesContent';
 export { default as FilesToolbar } from './FilesToolbar';
 export { default as FolderManager } from './FolderManager';
 export { default as ClasseurBandeau } from './ClasseurBandeau';
+export { default as ClasseurBandeauWithReorder } from './ClasseurBandeauWithReorder';
+export { default as SortableClasseurItem } from './SortableClasseurItem';
 
 // Composants de test de sécurité
 export { default as SecurityTestSuite } from './SecurityTestSuite';

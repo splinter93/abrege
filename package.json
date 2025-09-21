@@ -31,6 +31,7 @@
     "@aws-sdk/s3-request-presigner": "^3.848.0",
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",
+    "@dnd-kit/utilities": "^3.2.2",
     "@hello-pangea/dnd": "^18.0.1",
     "@supabase/auth-helpers-react": "^0.5.0",
     "@supabase/auth-ui-react": "^0.4.7",
@@ -69,7 +70,9 @@
     "@types/jsonwebtoken": "^9.0.10",
     "@types/lodash": "^4.17.20",
     "@types/node": "^20.19.9",
+    "@types/react-beautiful-dnd": "^13.1.8",
     "@types/redis": "^4.0.10",
+    "autoprefixer": "^10.4.21",
     "axios": "^1.10.0",
     "bcryptjs": "^3.0.2",
     "date-fns": "^4.1.0",
@@ -108,8 +111,7 @@
     "turndown": "^7.2.0",
     "typescript": "^5.9.2",
     "zod": "^3.25.74",
-    "zustand": "^5.0.7",
-    "autoprefixer": "^10.4.21"
+    "zustand": "^5.0.7"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
