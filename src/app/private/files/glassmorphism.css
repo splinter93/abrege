@@ -1,0 +1,742 @@
+/* ==========================================================================
+   GLASSMORPHISM DESIGN - PAGE FICHIERS
+   ========================================================================== */
+
+/* Variables glassmorphism pour la page fichiers */
+:root {
+  /* Backgrounds glassmorphism */
+  --glass-bg-primary: rgba(255, 255, 255, 0.05);
+  --glass-bg-secondary: rgba(255, 255, 255, 0.03);
+  --glass-bg-tertiary: rgba(255, 255, 255, 0.08);
+  --glass-bg-hover: rgba(255, 255, 255, 0.1);
+  --glass-bg-active: rgba(255, 255, 255, 0.15);
+  
+  /* Bordures glassmorphism */
+  --glass-border-primary: 1px solid rgba(255, 255, 255, 0.1);
+  --glass-border-secondary: 1px solid rgba(255, 255, 255, 0.08);
+  --glass-border-tertiary: 1px solid rgba(255, 255, 255, 0.15);
+  --glass-border-light: rgba(255, 255, 255, 0.2);
+  
+  /* Ombres glassmorphism */
+  --glass-shadow-soft: 0 4px 16px rgba(0, 0, 0, 0.1);
+  --glass-shadow-medium: 0 8px 24px rgba(0, 0, 0, 0.15);
+  --glass-shadow-strong: 0 12px 32px rgba(0, 0, 0, 0.2);
+  --glass-shadow-subtle: 0 2px 8px rgba(0, 0, 0, 0.05);
+  
+  /* Rayons */
+  --glass-radius-sm: 8px;
+  --glass-radius-md: 12px;
+  --glass-radius-lg: 16px;
+  --glass-radius-xl: 20px;
+  
+  /* Backdrop filters */
+  --glass-backdrop: blur(20px);
+  --glass-backdrop-strong: blur(30px);
+  
+  /* Couleurs de texte */
+  --text-primary: rgba(255, 255, 255, 0.9);
+  --text-secondary: rgba(255, 255, 255, 0.7);
+  --text-tertiary: rgba(255, 255, 255, 0.5);
+  --text-muted: rgba(255, 255, 255, 0.4);
+  
+  /* Couleurs d'accent */
+  --accent-primary: #e55a2c;
+  --accent-hover: #d1451f;
+  --accent-light: rgba(229, 90, 44, 0.2);
+  
+  /* Couleurs pour les états */
+  --success-color: rgba(34, 197, 94, 0.8);
+  --error-color: rgba(239, 68, 68, 0.8);
+  --warning-color: rgba(245, 158, 11, 0.8);
+  
+  /* Transitions */
+  --transition-fast: 0.2s ease;
+  --transition-normal: 0.3s ease;
+  --transition-slow: 0.5s ease;
+  
+  /* Espacements */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 12px;
+  --spacing-lg: 16px;
+  --spacing-xl: 20px;
+  --spacing-2xl: 24px;
+  --spacing-3xl: 32px;
+}
+
+/* ==========================================================================
+   CONTAINER PRINCIPAL GLASSMORPHISM
+   ========================================================================== */
+
+.files-glass-container {
+  background: var(--glass-bg-primary);
+  border: var(--glass-border-primary);
+  border-radius: var(--glass-radius-lg);
+  backdrop-filter: var(--glass-backdrop);
+  -webkit-backdrop-filter: var(--glass-backdrop);
+  padding: 0;
+  margin: 0;
+  overflow: hidden;
+  position: relative;
+  transition: all var(--transition-normal);
+  box-shadow: var(--glass-shadow-medium);
+  height: calc(100vh - 200px);
+  max-height: calc(100vh - 200px);
+  display: flex;
+  flex-direction: column;
+}
+
+.files-glass-container:hover {
+  background: var(--glass-bg-secondary);
+  border-color: var(--glass-border-light);
+  box-shadow: var(--glass-shadow-strong);
+  transform: translateY(-2px);
+}
+
+/* ==========================================================================
+   HEADER AVEC RECHERCHE ET UPLOAD
+   ========================================================================== */
+
+.files-glass-header {
+  background: var(--glass-bg-secondary);
+  border-bottom: var(--glass-border-secondary);
+  padding: var(--spacing-xl);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-xl);
+  position: relative;
+  overflow: hidden;
+}
+
+.files-glass-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.05) 0%, 
+    rgba(255, 255, 255, 0.02) 50%, 
+    rgba(255, 255, 255, 0.05) 100%);
+  opacity: 0;
+  transition: opacity var(--transition-normal);
+}
+
+.files-glass-header:hover::before {
+  opacity: 1;
+}
+
+/* Section de recherche */
+.files-search-section {
+  flex: 1;
+  max-width: 600px;
+  position: relative;
+  z-index: 2;
+}
+
+/* Section upload */
+.files-upload-section {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  position: relative;
+  z-index: 2;
+}
+
+/* Bouton upload principal */
+.files-upload-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  background: var(--glass-bg-tertiary);
+  border: var(--glass-border-tertiary);
+  border-radius: var(--glass-radius-md);
+  color: var(--text-primary);
+  padding: var(--spacing-md) var(--spacing-xl);
+  font-size: 15px;
+  font-weight: 500;
+  font-family: 'Noto Sans', sans-serif;
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  backdrop-filter: var(--glass-backdrop);
+  -webkit-backdrop-filter: var(--glass-backdrop);
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--glass-shadow-subtle);
+  min-width: 140px;
+  justify-content: center;
+}
+
+.files-upload-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.1) 0%, 
+    rgba(255, 255, 255, 0.05) 50%, 
+    rgba(255, 255, 255, 0.1) 100%);
+  opacity: 0;
+  transition: opacity var(--transition-normal);
+  border-radius: var(--glass-radius-md);
+}
+
+.files-upload-btn:hover {
+  background: var(--glass-bg-hover);
+  border-color: var(--glass-border-light);
+  transform: translateY(-1px);
+  box-shadow: var(--glass-shadow-soft);
+}
+
+.files-upload-btn:hover::before {
+  opacity: 1;
+}
+
+.files-upload-btn:active {
+  transform: translateY(0) scale(0.98);
+  transition: all var(--transition-fast);
+}
+
+.files-upload-btn:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 3px var(--accent-light);
+}
+
+/* Icône upload */
+.files-upload-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  transition: transform var(--transition-normal);
+}
+
+.files-upload-btn:hover .files-upload-icon {
+  transform: scale(1.1) rotate(5deg);
+}
+
+/* Texte upload */
+.files-upload-text {
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+
+/* ==========================================================================
+   CONTENU DES FICHIERS
+   ========================================================================== */
+
+.files-glass-content {
+  flex: 1;
+  padding: var(--spacing-xl);
+  background: transparent;
+  display: flex;
+  flex-direction: column;
+  min-height: 400px;
+  max-height: calc(100vh - 280px);
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+}
+
+/* Style de la scrollbar */
+.files-glass-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.files-glass-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.files-glass-content::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
+  transition: background var(--transition-normal);
+}
+
+.files-glass-content::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.5);
+}
+
+/* Grille des fichiers - colonnes plus petites */
+.files-grid-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: var(--spacing-md);
+  padding: 0;
+  margin: 0;
+}
+
+/* Item de fichier - sans encadré, taille réduite */
+.file-item-glass {
+  background: transparent;
+  border: none;
+  border-radius: var(--glass-radius-md);
+  padding: var(--spacing-md);
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  min-height: 120px;
+  justify-content: center;
+}
+
+.file-item-glass::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.05) 0%, 
+    rgba(255, 255, 255, 0.02) 50%, 
+    rgba(255, 255, 255, 0.05) 100%);
+  opacity: 0;
+  transition: opacity var(--transition-normal);
+  border-radius: var(--glass-radius-md);
+}
+
+.file-item-glass:hover {
+  background: transparent;
+  border: none;
+  transform: translateY(-4px);
+  box-shadow: none;
+}
+
+.file-item-glass:hover::before {
+  opacity: 1;
+}
+
+.file-item-glass:active {
+  transform: translateY(-2px) scale(0.98);
+  transition: all var(--transition-fast);
+}
+
+/* Icône de fichier - taille réduite */
+.file-icon-glass {
+  font-size: 24px;
+  margin-bottom: var(--spacing-sm);
+  transition: transform var(--transition-normal);
+  position: relative;
+  z-index: 2;
+}
+
+.file-item-glass:hover .file-icon-glass {
+  transform: scale(1.1);
+}
+
+/* Nom du fichier - taille réduite */
+.file-name-glass {
+  color: var(--text-primary);
+  font-size: 12px;
+  font-weight: 500;
+  font-family: 'Noto Sans', sans-serif;
+  line-height: 1.3;
+  word-break: break-word;
+  position: relative;
+  z-index: 2;
+  margin-bottom: var(--spacing-xs);
+}
+
+/* Métadonnées du fichier - taille réduite */
+.file-meta-glass {
+  color: var(--text-secondary);
+  font-size: 10px;
+  font-family: 'Noto Sans', sans-serif;
+  position: relative;
+  z-index: 2;
+}
+
+/* Aperçu d'image - sans encadré, taille réduite */
+.file-image-preview-glass {
+  width: 100%;
+  height: 80px;
+  border-radius: var(--glass-radius-sm);
+  overflow: hidden;
+  margin-bottom: var(--spacing-sm);
+  position: relative;
+  z-index: 2;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.file-image-preview-glass img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform var(--transition-normal);
+}
+
+.file-item-glass:hover .file-image-preview-glass img {
+  transform: scale(1.05);
+}
+
+/* ==========================================================================
+   ÉTATS VIDES ET ERREURS
+   ========================================================================== */
+
+.files-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-3xl);
+  text-align: center;
+  color: var(--text-secondary);
+  min-height: 300px;
+}
+
+.files-empty-icon {
+  font-size: 48px;
+  margin-bottom: var(--spacing-lg);
+  opacity: 0.6;
+}
+
+.files-empty-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: var(--spacing-sm);
+  font-family: 'Noto Sans', sans-serif;
+}
+
+.files-empty-subtitle {
+  font-size: 14px;
+  color: var(--text-tertiary);
+  font-family: 'Noto Sans', sans-serif;
+}
+
+.files-loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-3xl);
+  color: var(--text-secondary);
+  min-height: 300px;
+}
+
+.files-loading-spinner {
+  font-size: 32px;
+  margin-bottom: var(--spacing-lg);
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.files-error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-3xl);
+  text-align: center;
+  color: var(--error-color);
+  min-height: 300px;
+}
+
+.files-error-icon {
+  font-size: 32px;
+  margin-bottom: var(--spacing-lg);
+}
+
+/* ==========================================================================
+   RESPONSIVE DESIGN
+   ========================================================================== */
+
+@media (max-width: 768px) {
+  .files-glass-container {
+    border-radius: var(--glass-radius-md);
+    margin: 0 var(--spacing-sm);
+  }
+  
+  .files-glass-header {
+    padding: var(--spacing-lg);
+    flex-direction: column;
+    gap: var(--spacing-lg);
+  }
+  
+  .files-search-section {
+    max-width: 100%;
+  }
+  
+  .files-upload-section {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .files-upload-btn {
+    flex: 1;
+    max-width: 200px;
+  }
+  
+  .files-glass-content {
+    padding: var(--spacing-lg);
+  }
+  
+  .files-grid-container {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: var(--spacing-md);
+  }
+  
+  .file-item-glass {
+    padding: var(--spacing-md);
+    min-height: 140px;
+  }
+  
+  .file-icon-glass {
+    font-size: 28px;
+  }
+  
+  .file-name-glass {
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 480px) {
+  .files-grid-container {
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: var(--spacing-sm);
+  }
+  
+  .file-item-glass {
+    padding: var(--spacing-sm);
+    min-height: 120px;
+  }
+  
+  .file-icon-glass {
+    font-size: 24px;
+  }
+  
+  .file-name-glass {
+    font-size: 12px;
+  }
+}
+
+/* ==========================================================================
+   ANIMATIONS
+   ========================================================================== */
+
+@keyframes files-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.files-glass-container {
+  animation: files-fade-in 0.5s ease-out;
+}
+
+/* Animation des items */
+.file-item-glass {
+  animation: files-fade-in 0.3s ease-out;
+}
+
+/* Animation de hover pour les icônes */
+@keyframes icon-bounce {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+.file-item-glass:hover .file-icon-glass {
+  animation: icon-bounce 0.6s ease-in-out;
+}
+
+/* ==========================================================================
+   ACCESSIBILITÉ
+   ========================================================================== */
+
+.files-upload-btn:focus-visible,
+.file-item-glass:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+}
+
+/* ==========================================================================
+   MODAL UPLOADER
+   ========================================================================== */
+
+.uploader-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  padding: var(--spacing-xl);
+}
+
+.uploader-modal-content {
+  background: var(--glass-bg-primary);
+  border: var(--glass-border-primary);
+  border-radius: var(--glass-radius-lg);
+  backdrop-filter: var(--glass-backdrop-strong);
+  -webkit-backdrop-filter: var(--glass-backdrop-strong);
+  box-shadow: var(--glass-shadow-strong);
+  max-width: 500px;
+  width: 100%;
+  max-height: 80vh;
+  overflow-y: auto;
+  position: relative;
+}
+
+/* Input de renommage */
+.file-rename-input {
+  width: 100%;
+  background: var(--glass-bg-tertiary);
+  border: 2px solid var(--accent-primary);
+  border-radius: var(--glass-radius-sm);
+  color: var(--text-primary);
+  padding: var(--spacing-sm) var(--spacing-md);
+  font-size: 14px;
+  font-family: 'Noto Sans', sans-serif;
+  outline: none;
+  transition: all var(--transition-fast);
+}
+
+.file-rename-input:focus {
+  border-color: var(--accent-hover);
+  box-shadow: 0 0 0 3px var(--accent-light);
+}
+
+/* Classe utilitaire pour cacher les éléments */
+.hidden {
+  display: none !important;
+}
+
+/* ==========================================================================
+   MENU CONTEXTUEL - STYLE GLASSMORPHISM (comme page dossiers)
+   ========================================================================== */
+
+/* Animation d'apparition du menu contextuel */
+@keyframes fadeInMenu {
+  from { 
+    opacity: 0; 
+    transform: scale(0.92) translateY(-4px); 
+  }
+  to { 
+    opacity: 1; 
+    transform: scale(1) translateY(0); 
+  }
+}
+
+/* Animation de disparition du menu contextuel */
+@keyframes fadeOutMenu {
+  from { 
+    opacity: 1; 
+    transform: scale(1) translateY(0); 
+  }
+  to { 
+    opacity: 0; 
+    transform: scale(0.95) translateY(-2px); 
+  }
+}
+
+/* ==========================================================================
+   PAGINATION - STYLE GLASSMORPHISM
+   ========================================================================== */
+
+.files-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-lg);
+  padding: var(--spacing-xl) 0;
+  margin-top: var(--spacing-lg);
+  border-top: var(--glass-border-secondary);
+}
+
+.pagination-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  background: var(--glass-bg-tertiary);
+  border: var(--glass-border-tertiary);
+  border-radius: var(--glass-radius-sm);
+  color: var(--text-primary);
+  padding: var(--spacing-sm) var(--spacing-md);
+  font-size: 13px;
+  font-weight: 500;
+  font-family: 'Noto Sans', sans-serif;
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  backdrop-filter: var(--glass-backdrop);
+  -webkit-backdrop-filter: var(--glass-backdrop);
+  position: relative;
+  overflow: hidden;
+}
+
+.pagination-btn:hover:not(:disabled) {
+  background: var(--glass-bg-hover);
+  border-color: var(--glass-border-light);
+  transform: translateY(-1px);
+  box-shadow: var(--glass-shadow-soft);
+}
+
+.pagination-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.pagination-info {
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-family: 'Noto Sans', sans-serif;
+  font-weight: 400;
+  white-space: nowrap;
+}
+
+/* Responsive pagination */
+@media (max-width: 768px) {
+  .files-pagination {
+    flex-direction: column;
+    gap: var(--spacing-md);
+    padding: var(--spacing-lg) 0;
+  }
+  
+  .pagination-btn {
+    width: 100%;
+    max-width: 200px;
+    justify-content: center;
+  }
+  
+  .pagination-info {
+    order: -1;
+  }
+}
+
+/* Mode sombre/clair (si nécessaire) */
+@media (prefers-color-scheme: light) {
+  :root {
+    --text-primary: rgba(0, 0, 0, 0.9);
+    --text-secondary: rgba(0, 0, 0, 0.7);
+    --text-tertiary: rgba(0, 0, 0, 0.5);
+    --text-muted: rgba(0, 0, 0, 0.4);
+  }
+}
