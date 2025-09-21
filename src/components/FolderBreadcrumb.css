@@ -1,171 +1,234 @@
-/* Breadcrumb Navigation */
-.folder-breadcrumb {
+/* ==========================================================================
+   BREADCRUMB CLEAN DESIGN - HIÉRARCHIE H1, H2, H3...
+   ========================================================================== */
+
+/* Container principal - design clean sans encadré */
+.folder-breadcrumb-clean {
   margin: 0;
   padding: 0;
   background: transparent;
 }
 
-.breadcrumb-container {
+.breadcrumb-hierarchy {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 8px;
-  padding: 16px 24px;
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 12px;
-  margin-bottom: 16px;
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.breadcrumb-item {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 12px;
+  gap: 0;
+  padding: 12px 0;
+  margin: 0;
   background: transparent;
   border: none;
-  border-radius: 8px;
-  color: var(--text-primary);
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  text-decoration: none;
-  outline: none;
 }
 
-.breadcrumb-item:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.1);
+/* Classeur - H1 - Style principal */
+.breadcrumb-classeur {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  padding: 6px 0;
+  font-size: 22px;
+  font-weight: 600;
+  color: #ffffff;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  line-height: 1.2;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.breadcrumb-classeur:hover {
+  color: #ffffff;
+  transform: translateY(-1px);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+}
+
+/* Dossiers - H2, H3, H4, H5, H6 - Styles hiérarchisés */
+.breadcrumb-folder {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 6px 0;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  line-height: 1.2;
+}
+
+/* H2 - Premier niveau de dossier */
+.breadcrumb-folder h2,
+h2.breadcrumb-folder {
+  font-size: 20px;
+  color: rgba(255, 255, 255, 0.75);
+  margin: 0 !important;
+  padding: 0 !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  position: static !important;
+  scroll-margin-top: 0 !important;
+  letter-spacing: normal !important;
+  font-family: inherit !important;
+}
+
+/* H3 - Deuxième niveau de dossier */
+.breadcrumb-folder h3,
+h3.breadcrumb-folder {
+  font-size: 18px;
+  color: rgba(255, 255, 255, 0.65);
+  margin: 0 !important;
+  padding: 0 !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  position: static !important;
+  scroll-margin-top: 0 !important;
+  letter-spacing: normal !important;
+  font-family: inherit !important;
+}
+
+/* H4 et suivants - Niveaux plus profonds */
+.breadcrumb-folder h4,
+h4.breadcrumb-folder,
+.breadcrumb-folder h5,
+h5.breadcrumb-folder,
+.breadcrumb-folder h6,
+h6.breadcrumb-folder {
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.55);
+  margin: 0 !important;
+  padding: 0 !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  position: static !important;
+  scroll-margin-top: 0 !important;
+  letter-spacing: normal !important;
+  font-family: inherit !important;
+}
+
+/* États des dossiers */
+.breadcrumb-link {
+  cursor: pointer;
+  color: rgba(255, 255, 255, 0.65);
+}
+
+.breadcrumb-link:hover {
+  color: rgba(255, 255, 255, 0.85);
   transform: translateY(-1px);
 }
 
-.breadcrumb-item:active:not(:disabled) {
-  transform: translateY(0);
-}
-
-.breadcrumb-item:disabled {
-  cursor: default;
-  opacity: 0.8;
-}
-
-.breadcrumb-root {
-  color: var(--accent-primary);
-  font-weight: 600;
-}
-
-.breadcrumb-root:hover:not(:disabled) {
-  background: rgba(var(--accent-primary-rgb), 0.1);
-}
-
-.breadcrumb-link {
-  color: var(--text-secondary);
-}
-
-.breadcrumb-link:hover:not(:disabled) {
-  color: var(--text-primary);
-}
-
 .breadcrumb-current {
-  color: var(--text-primary);
+  cursor: default;
+  color: rgba(255, 255, 255, 0.75);
   font-weight: 600;
-  background: rgba(255, 255, 255, 0.1);
 }
 
-.breadcrumb-icon {
-  font-size: 16px;
+/* Emojis */
+.breadcrumb-emoji {
+  font-size: 22px;
   line-height: 1;
+  filter: brightness(1.1);
+  transition: transform 0.2s ease;
 }
 
-.breadcrumb-text {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 120px;
+.breadcrumb-classeur .breadcrumb-emoji {
+  font-size: 26px;
 }
 
+.breadcrumb-folder:hover .breadcrumb-emoji {
+  transform: scale(1.1);
+}
+
+/* Séparateur */
 .breadcrumb-separator {
-  color: var(--text-tertiary);
-  font-size: 16px;
-  font-weight: 300;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 24px;
+  font-weight: 500;
   user-select: none;
+  margin: 0 8px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  opacity: 0.8;
+  transition: all 0.2s ease;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
 /* Responsive Design */
 @media (max-width: 768px) {
-  .breadcrumb-container {
-    padding: 12px 16px;
-    gap: 6px;
+  .breadcrumb-classeur {
+    font-size: 20px;
+    gap: 8px;
   }
   
-  .breadcrumb-item {
-    padding: 6px 8px;
-    font-size: 13px;
+  .breadcrumb-classeur .breadcrumb-emoji {
+    font-size: 22px;
   }
   
-  .breadcrumb-text {
-    max-width: 80px;
+  .breadcrumb-folder h2,
+  h2.breadcrumb-folder {
+    font-size: 18px;
+  }
+  
+  .breadcrumb-folder h3,
+  h3.breadcrumb-folder {
+    font-size: 16px;
+  }
+  
+  .breadcrumb-folder h4,
+  h4.breadcrumb-folder,
+  .breadcrumb-folder h5,
+  h5.breadcrumb-folder,
+  .breadcrumb-folder h6,
+  h6.breadcrumb-folder {
+    font-size: 14px;
+  }
+  
+  .breadcrumb-emoji {
+    font-size: 20px;
   }
   
   .breadcrumb-separator {
-    font-size: 14px;
+    font-size: 20px;
+    margin: 0 6px;
   }
 }
 
 @media (max-width: 480px) {
-  .breadcrumb-container {
-    padding: 10px 12px;
-    gap: 4px;
+  .breadcrumb-classeur {
+    font-size: 18px;
+    gap: 6px;
   }
   
-  .breadcrumb-item {
-    padding: 4px 6px;
-    font-size: 12px;
+  .breadcrumb-classeur .breadcrumb-emoji {
+    font-size: 20px;
   }
   
-  .breadcrumb-text {
-    max-width: 60px;
+  .breadcrumb-folder h2,
+  h2.breadcrumb-folder {
+    font-size: 16px;
   }
   
-  .breadcrumb-icon {
+  .breadcrumb-folder h3,
+  h3.breadcrumb-folder {
     font-size: 14px;
   }
-}
-
-/* Dark Mode Support */
-@media (prefers-color-scheme: dark) {
-  .breadcrumb-container {
-    background: rgba(0, 0, 0, 0.3);
-    border-color: rgba(255, 255, 255, 0.1);
+  
+  .breadcrumb-folder h4,
+  h4.breadcrumb-folder,
+  .breadcrumb-folder h5,
+  h5.breadcrumb-folder,
+  .breadcrumb-folder h6,
+  h6.breadcrumb-folder {
+    font-size: 13px;
   }
   
-  .breadcrumb-item:hover:not(:disabled) {
-    background: rgba(255, 255, 255, 0.05);
+  .breadcrumb-emoji {
+    font-size: 18px;
   }
   
-  .breadcrumb-current {
-    background: rgba(255, 255, 255, 0.05);
-  }
-}
-
-/* Focus States for Accessibility */
-.breadcrumb-item:focus-visible {
-  outline: none;
-  box-shadow: none;
-}
-
-/* Animation for smooth transitions */
-.breadcrumb-container {
-  animation: breadcrumb-fade-in 0.3s ease-out;
-}
-
-@keyframes breadcrumb-fade-in {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
+  .breadcrumb-separator {
+    font-size: 18px;
+    margin: 0 6px;
   }
 } 

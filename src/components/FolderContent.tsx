@@ -134,6 +134,7 @@ const FolderContent: React.FC<FolderContentProps> = ({
               <FolderBreadcrumb
                 folderPath={folderPath}
                 classeurName={classeurName}
+                classeurIcon={classeurIcon}
                 onGoToRoot={onGoToRoot}
                 onGoToFolder={onGoToFolder}
               />

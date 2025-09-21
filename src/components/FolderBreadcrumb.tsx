@@ -5,6 +5,7 @@ import './FolderBreadcrumb.css';
 interface FolderBreadcrumbProps {
   folderPath: Folder[];
   classeurName: string;
+  classeurIcon?: string;
   onGoToRoot: () => void;
   onGoToFolder: (folderId: string) => void;
 }
@@ -12,6 +13,7 @@ interface FolderBreadcrumbProps {
 const FolderBreadcrumb: React.FC<FolderBreadcrumbProps> = ({
   folderPath,
   classeurName,
+  classeurIcon,
   onGoToRoot,
   onGoToFolder,
 }) => {
@@ -20,42 +22,39 @@ const FolderBreadcrumb: React.FC<FolderBreadcrumbProps> = ({
   }
 
   return (
-    <nav className="folder-breadcrumb" aria-label="Navigation des dossiers">
-      <div className="breadcrumb-container">
-        {/* Bouton retour à la racine */}
-        <button
-          className="breadcrumb-item breadcrumb-root"
+    <nav className="folder-breadcrumb-clean" aria-label="Navigation des dossiers">
+      <div className="breadcrumb-hierarchy">
+        {/* Classeur - H1 */}
+        <h1 
+          className="breadcrumb-classeur"
           onClick={onGoToRoot}
           title="Retour à la racine"
         >
-          <span className="breadcrumb-icon">🏠</span>
-          <span className="breadcrumb-text">{classeurName}</span>
-        </button>
+          {classeurIcon && (
+            <span className="breadcrumb-emoji">{classeurIcon}</span>
+          )}
+          {classeurName}
+        </h1>
 
-        {/* Séparateur */}
-        <span className="breadcrumb-separator">/</span>
-
-        {/* Chemin des dossiers */}
-        {folderPath.map((folder, index) => (
-          <React.Fragment key={folder.id}>
-            <button
-              className={`breadcrumb-item ${index === folderPath.length - 1 ? 'breadcrumb-current' : 'breadcrumb-link'}`}
-              onClick={() => onGoToFolder(folder.id)}
-              title={index === folderPath.length - 1 ? 'Dossier actuel' : `Aller à ${folder.name}`}
-              disabled={index === folderPath.length - 1}
-            >
-              <span className="breadcrumb-icon">
-                {index === folderPath.length - 1 ? '📁' : '📂'}
-              </span>
-              <span className="breadcrumb-text">{folder.name}</span>
-            </button>
-            
-            {/* Séparateur (sauf pour le dernier élément) */}
-            {index < folderPath.length - 1 && (
+        {/* Dossiers - H2, H3, etc. */}
+        {folderPath.map((folder, index) => {
+          const HeadingTag = `h${Math.min(index + 2, 6)}` as keyof JSX.IntrinsicElements;
+          const isLast = index === folderPath.length - 1;
+          
+          return (
+            <React.Fragment key={folder.id}>
               <span className="breadcrumb-separator">/</span>
-            )}
-          </React.Fragment>
-        ))}
+              <HeadingTag
+                className={`breadcrumb-folder ${isLast ? 'breadcrumb-current' : 'breadcrumb-link'}`}
+                onClick={isLast ? undefined : () => onGoToFolder(folder.id)}
+                title={isLast ? 'Dossier actuel' : `Aller à ${folder.name}`}
+                style={{ cursor: isLast ? 'default' : 'pointer' }}
+              >
+                {folder.name}
+              </HeadingTag>
+            </React.Fragment>
+          );
+        })}
       </div>
     </nav>
   );

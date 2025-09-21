@@ -45,7 +45,7 @@
 
 /* Container principal glassmorphism - bordure fine comme SearchBar */
 .glassmorphism-container {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(0, 0, 0, 0.0);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 12px;
   backdrop-filter: blur(20px);
@@ -58,13 +58,13 @@
   height: calc(100vh - 200px);
   display: flex;
   flex-direction: column;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
 }
 
 .glassmorphism-container:hover {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.2);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+  background: rgba(0, 0, 0, 0.03);
+  border-color: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
   transform: translateY(-1px);
 }
 
@@ -127,21 +127,7 @@
   overflow: hidden;
 }
 
-/* Effet de brillance subtile au survol */
-.classeur-tab-glassmorphism::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, 
-    transparent 0%, 
-    rgba(255, 255, 255, 0.1) 50%, 
-    transparent 100%);
-  transition: left 0.6s ease;
-  z-index: 1;
-}
+/* Effet de brillance supprimé */
 
 /* État par défaut - sans encadré */
 .classeur-tab-glassmorphism {
@@ -151,29 +137,24 @@
 
 /* Hover state - subtil sans encadré */
 .classeur-tab-glassmorphism:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: transparent;
   color: #ffffff;
-  transform: translateY(-1px);
 }
 
-.classeur-tab-glassmorphism:hover::before {
-  left: 100%;
-}
+/* Animation brillante supprimée */
 
 /* Focus state - accessible sans encadré */
 .classeur-tab-glassmorphism:focus {
   outline: none;
-  background: rgba(255, 255, 255, 0.08);
+  background: transparent;
   color: #ffffff;
-  transform: translateY(-1px);
 }
 
-/* Active state - classeur sélectionné avec effet hover plus visible */
+/* Active state - classeur sélectionné avec background gris */
 .classeur-tab-glassmorphism.active {
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.1);
   color: #ffffff;
-  font-weight: 600;
-  transform: translateY(-1px);
+  font-weight: 400;
 }
 
 
@@ -205,7 +186,7 @@
   position: relative;
   z-index: 2;
   transition: all 0.3s ease;
-  font-weight: 500;
+  font-weight: 400;
 }
 
 .classeur-tab-glassmorphism:hover .classeur-name {
@@ -214,7 +195,7 @@
 
 .classeur-tab-glassmorphism.active .classeur-name {
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-  font-weight: 600;
+  font-weight: 400;
 }
 
 /* Emoji dans l'onglet */
@@ -239,8 +220,8 @@
   justify-content: center;
   width: 36px;
   height: 36px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: transparent;
+  border: none;
   border-radius: 12px;
   color: rgba(255, 255, 255, 0.7);
   cursor: pointer;
@@ -269,13 +250,11 @@
 
 /* Hover state pour le bouton d'ajout */
 .add-classeur-tab-glassmorphism:hover {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.2);
+  background: transparent;
+  border: none;
   color: #ffffff;
   transform: translateY(-2px) scale(1.05);
-  box-shadow: 
-    0 8px 25px rgba(0, 0, 0, 0.15),
-    0 0 0 1px rgba(255, 255, 255, 0.1);
+  box-shadow: none;
 }
 
 .add-classeur-tab-glassmorphism:hover::before {
@@ -285,11 +264,11 @@
 /* Focus state pour le bouton d'ajout */
 .add-classeur-tab-glassmorphism:focus {
   outline: none;
-  background: rgba(255, 255, 255, 0.12);
-  border-color: rgba(255, 255, 255, 0.25);
+  background: transparent;
+  border: none;
   color: #ffffff;
   transform: translateY(-1px);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+  box-shadow: none;
 }
 
 /* Active state pour le bouton d'ajout */
@@ -353,7 +332,7 @@
 }
 
 .classeur-content-glassmorphism .classeur-title {
-  font-size: 20px;
+  font-size: 22px;
   font-weight: 600;
   color: var(--text-primary, rgba(0, 0, 0, 0.9));
   margin: 0;
@@ -377,39 +356,45 @@
 .classeur-content-glassmorphism .breadcrumb-container {
   background: transparent;
   border: none;
-  padding: 0;
+  padding: 12px 0;
   margin: 0;
-  gap: 8px;
+  gap: 0;
   backdrop-filter: none;
 }
 
 .classeur-content-glassmorphism .breadcrumb-item {
-  background: var(--glass-background-secondary, rgba(255, 255, 255, 0.1));
-  border: 1px solid var(--glass-border-secondary, rgba(255, 255, 255, 0.2));
+  background: transparent;
+  border: none;
   border-radius: 6px;
-  padding: 6px 12px;
-  color: var(--text-secondary, rgba(0, 0, 0, 0.7));
-  font-size: 14px;
+  padding: 6px 0;
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 20px;
   font-weight: 500;
   transition: all 0.2s ease;
+  line-height: 1.2;
 }
 
 .classeur-content-glassmorphism .breadcrumb-item:hover {
-  background: var(--glass-hover, rgba(255, 255, 255, 0.15));
-  color: var(--text-primary, rgba(0, 0, 0, 0.9));
+  background: transparent;
+  color: rgba(255, 255, 255, 0.85);
   transform: translateY(-1px);
 }
 
 .classeur-content-glassmorphism .breadcrumb-item.breadcrumb-current {
-  background: var(--glass-active, rgba(255, 255, 255, 0.2));
-  color: var(--text-primary, rgba(0, 0, 0, 0.9));
-  box-shadow: var(--glass-shadow-inset, inset 0 1px 0 rgba(255, 255, 255, 0.3));
+  background: transparent;
+  color: rgba(255, 255, 255, 0.75);
+  box-shadow: none;
+  font-weight: 600;
 }
 
 .classeur-content-glassmorphism .breadcrumb-separator {
-  color: var(--text-tertiary, rgba(0, 0, 0, 0.4));
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 24px;
   font-weight: 500;
-  margin: 0 4px;
+  margin: 0 8px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  opacity: 0.8;
+  transition: all 0.2s ease;
 }
 
 /* Grille des items dans le container glassmorphism */
@@ -430,22 +415,22 @@
 /* Items de la grille - style harmonisé avec SearchBar */
 .classeur-content-glassmorphism .folder-item-wrapper,
 .classeur-content-glassmorphism .file-item-wrapper {
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border: none;
   border-radius: 12px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  box-shadow: none;
   transition: all 0.3s ease;
   overflow: hidden;
 }
 
 .classeur-content-glassmorphism .folder-item-wrapper:hover,
 .classeur-content-glassmorphism .file-item-wrapper:hover {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.15);
+  background: transparent;
+  border: none;
   transform: translateY(-2px);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+  box-shadow: none;
 }
 
 /* État vide dans le container glassmorphism */
@@ -532,7 +517,7 @@
 
 /* Zone de drag des classeurs */
 .classeur-drag-handle {
-  background: var(--drag-handle-bg);
+  background: transparent;
   border-radius: 0 var(--glass-radius) var(--glass-radius) 0;
   transition: all 0.2s ease;
   cursor: grab !important;
@@ -540,7 +525,7 @@
 }
 
 .classeur-drag-handle:hover {
-  background: var(--drag-handle-hover);
+  background: transparent;
   opacity: 1;
 }
 
@@ -554,10 +539,10 @@
 
 /* Styles pour drag over sur les onglets de classeurs */
 .classeur-tab-glassmorphism.drag-over {
-  background: var(--drag-over-bg) !important;
-  border-color: var(--drag-over-border) !important;
+  background: transparent !important;
+  border: none !important;
   transform: translateY(-3px);
-  box-shadow: var(--drag-over-shadow) !important;
+  box-shadow: none !important;
 }
 
 .classeur-tab-glassmorphism.drag-over .classeur-emoji {

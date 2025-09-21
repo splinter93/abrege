@@ -93,7 +93,7 @@
 }
 
 .classeur-title {
-  font-size: 20px;
+  font-size: 22px;
   font-weight: 600;
   color: var(--text-primary, #111827);
   margin: 0;
@@ -105,94 +105,33 @@
 }
 
 .classeur-title-emoji {
-  font-size: 24px;
+  font-size: 26px;
   line-height: 1;
   filter: brightness(1.1);
   transition: transform 0.2s ease;
 }
 
-/* 🔧 NOUVEAU: Styles pour le breadcrumb intégré dans le titre */
+/* 🔧 NOUVEAU: Styles pour le breadcrumb clean intégré dans le titre */
 .classeur-title-with-breadcrumb {
   display: flex;
   align-items: center;
 }
 
-.classeur-title-with-breadcrumb .folder-breadcrumb {
+.classeur-title-with-breadcrumb .folder-breadcrumb-clean {
   margin: 0;
   padding: 0;
 }
 
-.classeur-title-with-breadcrumb .breadcrumb-container {
+.classeur-title-with-breadcrumb .breadcrumb-hierarchy {
   background: transparent;
   border: none;
   padding: 0;
   margin: 0;
-  gap: 4px;
+  gap: 0;
   backdrop-filter: none;
 }
 
-.classeur-title-with-breadcrumb .breadcrumb-item {
-  padding: 4px 8px;
-  font-size: 16px;
-  font-weight: 500;
-  background: transparent;
-  border: none;
-  color: var(--text-primary, #111827);
-  transition: all 0.2s ease;
-}
 
-.classeur-title-with-breadcrumb .breadcrumb-item:hover:not(:disabled) {
-  background: rgba(0, 0, 0, 0.05);
-  border-radius: 6px;
-  transform: none;
-}
-
-.classeur-title-with-breadcrumb .breadcrumb-root {
-  color: var(--accent-primary, #3b82f6);
-  font-weight: 600;
-  font-size: 18px;
-}
-
-.classeur-title-with-breadcrumb .breadcrumb-root:hover:not(:disabled) {
-  background: rgba(59, 130, 246, 0.1);
-}
-
-.classeur-title-with-breadcrumb .breadcrumb-link {
-  color: var(--text-secondary, #6b7280);
-  font-size: 16px;
-}
-
-.classeur-title-with-breadcrumb .breadcrumb-link:hover:not(:disabled) {
-  color: var(--text-primary, #111827);
-}
-
-.classeur-title-with-breadcrumb .breadcrumb-current {
-  color: var(--text-primary, #111827);
-  font-weight: 600;
-  background: rgba(0, 0, 0, 0.05);
-  border-radius: 6px;
-  font-size: 16px;
-}
-
-.classeur-title-with-breadcrumb .breadcrumb-icon {
-  font-size: 18px;
-  line-height: 1;
-}
-
-.classeur-title-with-breadcrumb .breadcrumb-text {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 150px;
-}
-
-.classeur-title-with-breadcrumb .breadcrumb-separator {
-  color: var(--text-tertiary, #9ca3af);
-  font-size: 16px;
-  font-weight: 300;
-  user-select: none;
-  margin: 0 2px;
-}
 
 /* 🔧 NOUVEAU: Styles pour le bouton retour - SUPPRIMÉ */
 .folder-back-button {
@@ -458,28 +397,6 @@
     margin-top: 6px; /* Espacement uniforme après le header */
   }
 
-  /* 🔧 NOUVEAU: Styles responsives pour le breadcrumb intégré */
-  .classeur-title-with-breadcrumb .breadcrumb-item {
-    padding: 3px 6px;
-    font-size: 14px;
-  }
-  
-  .classeur-title-with-breadcrumb .breadcrumb-root {
-    font-size: 16px;
-  }
-  
-  .classeur-title-with-breadcrumb .breadcrumb-icon {
-    font-size: 16px;
-  }
-  
-  .classeur-title-with-breadcrumb .breadcrumb-text {
-    max-width: 100px;
-  }
-  
-  .classeur-title-with-breadcrumb .breadcrumb-separator {
-    font-size: 14px;
-    margin: 0 1px;
-  }
 }
 
 @media (max-width: 480px) {
@@ -500,26 +417,4 @@
     margin-top: 6px; /* Espacement uniforme après le header */
   }
 
-  /* 🔧 NOUVEAU: Styles responsives pour le breadcrumb intégré sur mobile */
-  .classeur-title-with-breadcrumb .breadcrumb-item {
-    padding: 2px 4px;
-    font-size: 13px;
-  }
-  
-  .classeur-title-with-breadcrumb .breadcrumb-root {
-    font-size: 15px;
-  }
-  
-  .classeur-title-with-breadcrumb .breadcrumb-icon {
-    font-size: 14px;
-  }
-  
-  .classeur-title-with-breadcrumb .breadcrumb-text {
-    max-width: 80px;
-  }
-  
-  .classeur-title-with-breadcrumb .breadcrumb-separator {
-    font-size: 13px;
-    margin: 0 1px;
-  }
 } 
