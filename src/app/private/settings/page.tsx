@@ -345,17 +345,21 @@ function AuthenticatedSettingsContent({ user }: { user: { id: string; email?: st
                       </div>
 
                       <div className="account-api-key-content">
-                        <div className="account-api-key-scopes">
-                          <strong>Permissions:</strong>
-                          <div className="account-scopes-tags">
-                            {apiKey.scopes.map((scope) => (
-                              <span key={scope} className="account-scope-tag">
-                                {scope}
-                              </span>
-                            ))}
+                        <div className="account-api-key-scopes-row">
+                          <div className="account-api-key-scopes">
+                            <strong>Permissions:</strong>
+                            <div className="account-scopes-tags">
+                              {apiKey.scopes.map((scope) => (
+                                <span key={scope} className="account-scope-tag">
+                                  {scope}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                          <div className="account-api-key-creation-date">
+                            Créée le {new Date(apiKey.created_at).toLocaleDateString()}
                           </div>
                         </div>
-
                       </div>
                     </motion.div>
                   ))
