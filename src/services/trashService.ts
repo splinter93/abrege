@@ -5,7 +5,9 @@ import type { TrashItem, TrashStatistics } from '@/types/supabase';
  * Centralise toutes les opérations liées à la corbeille
  */
 export class TrashService {
-  private static readonly API_BASE = '/api/v2/trash';
+  private static readonly API_BASE = typeof window !== 'undefined' 
+    ? `${window.location.origin}/api/v2/trash`
+    : '/api/v2/trash';
 
   /**
    * Récupérer les headers d'authentification pour les appels API
@@ -136,12 +138,27 @@ export class TrashService {
    */
   static async emptyTrash(): Promise<void> {
     const headers = await this.getAuthHeaders();
+    
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🔍 TrashService.emptyTrash - Headers:', headers);
+      console.log('🔍 TrashService.emptyTrash - URL:', this.API_BASE);
+    }
+    
     const response = await fetch(this.API_BASE, {
       method: 'DELETE',
       headers
     });
 
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🔍 TrashService.emptyTrash - Response status:', response.status);
+      console.log('🔍 TrashService.emptyTrash - Response ok:', response.ok);
+    }
+
     if (!response.ok) {
+      const errorText = await response.text();
+      if (process.env.NODE_ENV === 'development') {
+        console.error('🔍 TrashService.emptyTrash - Error response:', errorText);
+      }
       throw new Error(`Erreur ${response.status}: ${response.statusText}`);
     }
 

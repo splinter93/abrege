@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Archive, Clock, AlertCircle, FileText, Folder, RotateCcw, Trash, Trash2, RefreshCw } from 'lucide-react';
+import { Archive, Clock, AlertCircle, FileText, Folder, RotateCcw, Trash, Trash2, RefreshCw, TrashIcon } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import type { AuthenticatedUser } from '@/types/dossiers';
 import type { TrashItem, TrashStatistics } from '@/types/supabase';
@@ -170,9 +170,20 @@ function AuthenticatedTrashContent({ user }: { user: AuthenticatedUser }) {
       return;
     }
 
+    if (!user?.id) {
+      setError('Utilisateur non authentifié');
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
     try {
+      logger.dev('[TrashPage] 🗑️ VIDAGE DÉBUT - Utilisateur:', user.id);
       const { TrashService } = await import('@/services/trashService');
+      logger.dev('[TrashPage] 🗑️ VIDAGE - Appel TrashService.emptyTrash...');
       await TrashService.emptyTrash();
+      logger.dev('[TrashPage] ✅ VIDAGE - Corbeille vidée avec succès');
       
       // Vider la liste locale
       setTrashItems([]);
@@ -183,12 +194,15 @@ function AuthenticatedTrashContent({ user }: { user: AuthenticatedUser }) {
         classeurs: 0,
         files: 0
       });
+      logger.dev('[TrashPage] ✅ VIDAGE - État local mis à jour');
     } catch (err) {
-      logger.error('[TrashPage] Erreur vidage corbeille:', err);
+      logger.error('[TrashPage] ❌ VIDAGE - Erreur:', err);
       handleError(err, 'vidage corbeille');
       setError(err instanceof Error ? err.message : 'Erreur lors du vidage de la corbeille');
+    } finally {
+      setLoading(false);
     }
-  }, [handleError]);
+  }, [handleError, user?.id]);
 
   // Afficher l'état de chargement initial
   if (loading && trashItems.length === 0) {
@@ -228,7 +242,6 @@ function AuthenticatedTrashContent({ user }: { user: AuthenticatedUser }) {
           ]}
         />
 
-
         {/* Container glassmorphism principal */}
         <motion.div 
           className="glassmorphism-container"
@@ -236,6 +249,26 @@ function AuthenticatedTrashContent({ user }: { user: AuthenticatedUser }) {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1, ease: "easeOut" }}
         >
+          {/* Header avec séparateur */}
+          <div className="trash-container-header">
+            <div className="trash-header-left">
+              <h2 className="trash-header-title">Éléments supprimés récemment</h2>
+              <p className="trash-header-description">
+                Conservation automatique de 30 jours
+              </p>
+            </div>
+            <div className="trash-header-right">
+              <button
+                className="trash-empty-button"
+                onClick={handleEmptyTrash}
+                disabled={loading || trashItems.length === 0}
+                title="Vider la corbeille"
+              >
+                {loading ? <RefreshCw size={16} className="animate-spin" /> : <Trash size={16} />}
+                <span>{loading ? 'Vidage en cours...' : 'Vider la corbeille'}</span>
+              </button>
+            </div>
+          </div>
           <AnimatePresence mode="wait">
             {trashItems.length === 0 ? (
               <motion.div
@@ -246,12 +279,11 @@ function AuthenticatedTrashContent({ user }: { user: AuthenticatedUser }) {
                 exit={{ opacity: 0 }}
               >
                 <div className="empty-state-icon">
-                  <Archive size={64} />
+                  <Archive size={80} />
                 </div>
                 <h2 className="empty-state-title">Corbeille vide</h2>
                 <p className="empty-state-description">
-                  Aucun élément n'a été supprimé pour le moment. 
-                  Les éléments supprimés apparaîtront ici.
+                  Aucun élément n'a été supprimé pour le moment.
                 </p>
               </motion.div>
             ) : (
@@ -261,29 +293,6 @@ function AuthenticatedTrashContent({ user }: { user: AuthenticatedUser }) {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
               >
-                {/* Header avec actions */}
-                <div className="trash-header">
-                  <div className="trash-header-actions">
-                    <button
-                      className="trash-action-btn refresh-btn"
-                      onClick={refreshData}
-                      disabled={loading}
-                      title="Actualiser"
-                    >
-                      <RefreshCw size={16} />
-                      <span>Actualiser</span>
-                    </button>
-                    <button
-                      className="trash-action-btn empty-btn"
-                      onClick={handleEmptyTrash}
-                      disabled={loading || trashItems.length === 0}
-                      title="Vider la corbeille"
-                    >
-                      <Trash size={16} />
-                      <span>Vider</span>
-                    </button>
-                  </div>
-                </div>
 
                 {/* Grille des éléments de la corbeille */}
                 <div className="trash-grid-container">
@@ -347,15 +356,15 @@ function TrashItemCard({
   const getIcon = () => {
     switch (item.type) {
       case 'note':
-        return <FileText size={28} />;
+        return <FileText size={36} />;
       case 'folder':
-        return <Folder size={28} />;
+        return <Folder size={36} />;
       case 'classeur':
-        return <Archive size={28} />;
+        return <Archive size={36} />;
       case 'file':
-        return <FileText size={28} />;
+        return <FileText size={36} />;
       default:
-        return <FileText size={28} />;
+        return <FileText size={36} />;
     }
   };
 
@@ -374,17 +383,6 @@ function TrashItemCard({
     }
   };
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return new Intl.DateTimeFormat('fr-FR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    }).format(date);
-  };
-
   const getDaysUntilExpiry = () => {
     const now = new Date();
     const expiresAt = new Date(item.expires_at);
@@ -393,17 +391,27 @@ function TrashItemCard({
     return Math.max(0, diffDays);
   };
 
+  const formatTimeRemaining = () => {
+    const days = getDaysUntilExpiry();
+    if (days === 0) {
+      return "Expire aujourd'hui";
+    } else if (days === 1) {
+      return "Expire demain";
+    } else {
+      return `${days} jours restants`;
+    }
+  };
+
   return (
     <motion.div
-      className="fm-grid-item trash-item"
+      className="fm-grid-item trash-item-simple"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
-      whileHover={{ y: -2 }}
       transition={{ duration: 0.2 }}
     >
       {/* Icône avec style identique aux dossiers/fichiers */}
-      <div className={getIconClass()}>
+      <div className={`fm-grid-item-icon ${getIconClass()}`}>
         {getIcon()}
       </div>
 
@@ -412,37 +420,11 @@ function TrashItemCard({
         {item.name}
       </div>
 
-      {/* Date de suppression */}
-      <div className="trash-item-date">
-        <Clock size={12} />
-        {formatDate(item.trashed_at)}
-      </div>
-
-      {/* Actions - boutons restaurer et supprimer */}
-      <div className="trash-item-actions">
-        <button
-          className="trash-action-btn restore-btn"
-          onClick={() => {
-            logger.dev('[TrashPage] 🔄 Bouton Restaurer cliqué pour:', item);
-            onRestore(item);
-          }}
-          title="Restaurer"
-        >
-          <RotateCcw size={14} />
-          <span>Restaurer</span>
-        </button>
-        <button
-          className="trash-action-btn delete-btn"
-          onClick={() => {
-            logger.dev('[TrashPage] 🗑️ Bouton Supprimer cliqué pour:', item);
-            onDelete(item);
-          }}
-          title="Supprimer définitivement"
-        >
-          <Trash size={14} />
-          <span>Supprimer</span>
-        </button>
+      {/* Temps restant */}
+      <div className="trash-item-time-remaining">
+        <Clock size={14} />
+        {formatTimeRemaining()}
       </div>
     </motion.div>
   );
-} 
+}

@@ -164,7 +164,6 @@ const UnifiedSidebar: React.FC<UnifiedSidebarProps> = ({
     { href: '/private/shared', label: 'Notes Partagées', icon: ShareIcon, key: 'shared' },
     { href: '/private/files', label: 'Mes Fichiers', icon: FileIcon, key: 'files' },
     { href: '/private/trash', label: 'Corbeille', icon: TrashIcon, key: 'trash' },
-    { href: '/private/trash2', label: 'Corbeille 2', icon: TrashIcon, key: 'trash2' },
     { href: '/private/settings', label: 'Paramètres', icon: SettingsIcon, key: 'settings' },
   ];
 
