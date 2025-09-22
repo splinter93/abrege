@@ -207,7 +207,7 @@
   color: var(--unified-text-primary) ;
   text-align: center ;
   line-height: 1.4 ;
-  font-family: 'Noto Sans', sans-serif ;
+  font-family: var(--editor-font-family-headings);
   word-break: break-word ;
   max-width: 100% ;
   margin: 0 ;
@@ -289,7 +289,7 @@
   color: var(--unified-text-primary) ;
   padding: 8px 12px ;
   font-size: 14px ;
-  font-family: 'Noto Sans', sans-serif ;
+  font-family: var(--editor-font-family-headings);
   text-align: center ;
   width: 100% ;
   max-width: 150px ;

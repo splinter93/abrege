@@ -141,7 +141,7 @@
   font-size: 1.5rem;
   font-weight: 900;
   color: #ffffff;
-  font-family: 'Noto Sans', sans-serif;
+  font-family: var(--editor-font-family-headings);
   line-height: 1;
 }
 
@@ -151,7 +151,7 @@
   color: rgba(255, 255, 255, 0.7);
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  font-family: 'Noto Sans', sans-serif;
+  font-family: var(--editor-font-family-headings);
   line-height: 1;
 }
 
@@ -161,7 +161,7 @@
   font-weight: 900 !important;
   color: #ffffff !important;
   margin: 0 !important;
-  font-family: 'Noto Sans', sans-serif !important;
+  font-family: var(--editor-font-family-headings) !important;
   letter-spacing: -0.02em !important;
   line-height: 1.2 !important;
 }
@@ -171,7 +171,7 @@
   font-size: 1.1rem !important;
   color: rgba(255, 255, 255, 0.7) !important;
   margin: 0 !important;
-  font-family: 'Noto Sans', sans-serif !important;
+  font-family: var(--editor-font-family-headings) !important;
   font-weight: 400 !important;
   line-height: 1.4 !important;
 }
@@ -336,7 +336,7 @@
   font-size: 1.75rem;
   font-weight: 900;
   color: #ffffff;
-  font-family: 'Noto Sans', sans-serif;
+  font-family: var(--editor-font-family-headings);
   line-height: 1;
 }
 
@@ -346,7 +346,7 @@
   color: rgba(255, 255, 255, 0.7);
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  font-family: 'Noto Sans', sans-serif;
+  font-family: var(--editor-font-family-headings);
   line-height: 1;
 }
 

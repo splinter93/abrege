@@ -9,7 +9,7 @@
   justify-content: center;
   background: var(--background-primary, #ffffff);
   padding: 2rem;
-  font-family: 'Noto Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: var(--editor-font-family-headings);
 }
 
 .not-found-content {

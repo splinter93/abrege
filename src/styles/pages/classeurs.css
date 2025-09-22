@@ -121,7 +121,7 @@
   cursor: pointer;
   transition: all var(--unified-transition-normal);
   white-space: nowrap;
-  font-family: 'Noto Sans', sans-serif;
+  font-family: var(--editor-font-family-headings);
   min-height: 44px;
   position: relative;
   overflow: hidden;
@@ -293,7 +293,7 @@
   transition: all var(--unified-transition-normal);
   font-size: 1.8rem;
   font-weight: 400;
-  font-family: 'Noto Sans', sans-serif;
+  font-family: var(--editor-font-family-headings);
   width: auto;
   height: auto;
   display: flex;

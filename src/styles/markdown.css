@@ -11,7 +11,7 @@
    ========================================================================== */
 
 .markdown-body {
-  color: var(--editor-text-color);
+  color: var(--color-text-primary);
   font-family: var(--editor-font-family-body); /* Inter pour le texte - COHÉRENT AVEC L'ÉDITEUR */
   font-size: var(--editor-body-size); /* 1.125rem (18px) - COHÉRENT AVEC L'ÉDITEUR */
   line-height: var(--editor-line-height-base); /* 1.75 - COHÉRENT AVEC L'ÉDITEUR */
@@ -75,7 +75,7 @@ html {
 /* S'assurer que tous les styles markdown s'appliquent aux pages publiques */
 .public-note-container .markdown-body,
 .public-note-content-wrapper .markdown-body {
-  color: var(--editor-text-color) ;
+  color: var(--color-text-primary);
   font-family: var(--editor-font-family-body) ; /* Inter pour le texte */
   font-size: var(--editor-body-size) ; /* 1.125rem (18px) */
   line-height: var(--editor-line-height-base) ; /* 1.75 */
@@ -101,7 +101,7 @@ html {
 .markdown-body ul,
 .markdown-body ol {
   margin: var(--editor-list-margin-vertical) 0; /* 1.25rem - COHÉRENT AVEC L'ÉDITEUR */
-  padding-left: 1.75em;
+  padding-left: 1.3em;
   line-height: var(--editor-line-height-base); /* 1.75 - COHÉRENT AVEC L'ÉDITEUR */
   text-align: left;
   font-family: var(--editor-font-family-body); /* Inter pour le texte */
@@ -136,10 +136,12 @@ html {
 .markdown-body li:has(> input[type="checkbox"]) {
   display: flex ;
   align-items: flex-start ;
-  gap: 0.6em ;
+  gap: 0.3em ;
   flex-direction: row ;
   flex-wrap: nowrap ;
   width: 100% ;
+  padding-left: 0 ;
+  margin-left: 0 ;
 }
 
 .markdown-body li:has(> input[type="checkbox"]) > *:not(input) {
@@ -171,7 +173,7 @@ html {
   margin-left: 0 ;
   display: flex ;
   align-items: flex-start ;
-  gap: 0.6em ;
+  gap: 0.3em ;
   flex-direction: row ;
   flex-wrap: nowrap ;
   width: 100% ;
@@ -242,15 +244,15 @@ html {
 
 /* Positionner la checkbox en absolu si le flexbox ne marche pas */
 .markdown-body li:has(input[type="checkbox"]) {
-  padding-left: 1.2em ;
+  padding-left: 1.75em ;
   position: relative ;
-  margin-left: -1em ;
+  margin-left: 0 ;
 }
 
 .markdown-body li:has(input[type="checkbox"]) input[type="checkbox"] {
   position: absolute ;
-  left: -0.8em ;
-  top: 0.2em ;
+  left: 0.2em ;
+  top: 0.1em ;
 }
 
 /* RESTAURER les bullets normales pour les listes SANS checkboxes */
@@ -283,7 +285,10 @@ html {
 .markdown-body ul ul,
 .markdown-body ul ol,
 .markdown-body ol ul,
-.markdown-body ol ol { margin: 0.75rem 0 0.75rem 0; } /* Alignement au bord gauche */
+.markdown-body ol ol { 
+  margin: 0.75rem 0 0.75rem 0; 
+  padding-left: 1.0em; /* Indentation réduite pour les sous-listes */
+}
 
 .markdown-body ul ul { list-style-type: circle; }
 .markdown-body ol ol { list-style-type: lower-alpha; }
@@ -294,7 +299,7 @@ html {
    ========================================================================== */
 
 .markdown-body a {
-    color: var(--accent-primary);
+    color: var(--color-accent);
     text-decoration: underline;
     text-underline-offset: 2px;
     text-decoration-thickness: 1px;
@@ -305,44 +310,22 @@ html {
 }
 
 .markdown-body a:hover {
-  color: var(--accent-primary);
+  color: var(--color-accent);
     text-underline-offset: 3px;
     text-decoration-thickness: 2px;
-    border-bottom-color: var(--accent-primary);
+    border-bottom-color: var(--color-accent);
   }
 
 .markdown-body a:focus {
-  outline: 2px solid var(--accent-primary);
+  outline: 2px solid #ff6b35;
   outline-offset: 2px;
   border-radius: var(--radius-md);
 }
 
 /* ==========================================================================
-     CODE - STYLE TERMINAL MODERNE (DÉSACTIVÉ)
+     CODE - GÉRÉ PAR UNIFIED-BLOCKS.CSS
    ========================================================================== */
-
-/*
-  NOTE: Tous les styles pour 'pre' et 'code' sont maintenant gérés par
-  le fichier centralisé src/styles/unified-blocks.css pour assurer un
-  style unique et cohérent sur toute la plateforme (éditeur, chat, pages publiques).
-  Les anciennes règles ci-dessous ont été désactivées pour éviter les conflits.
-*/
-
-/*
-.markdown-body code { ... }
-.markdown-body pre { ... }
-.markdown-body pre code { ... }
-*/
-
-/* Option : étiquette de langage si data-language présent */
-  .markdown-body pre[data-language]::before {
-    content: none; /* Désactivé pour utiliser la nouvelle toolbar */
-  }
-
-/* ==========================================================================
-     CODE INLINE - STYLE MODERNE (DÉSACTIVÉ)
-   ========================================================================== */
-/* Géré par unified-blocks.css - TOUS LES STYLES DE CODE DÉSACTIVÉS */
+/* Tous les styles pour 'pre' et 'code' sont gérés par unified-blocks.css */
 
 /* ==========================================================================
      PATHS - FORMATAGE AUTOMATIQUE COMME CODE INLINE
@@ -361,7 +344,7 @@ html {
 .public-note-container .markdown-body .path-code,
 .public-note-content-wrapper .markdown-body .path-code,
 .ProseMirror .path-code {
-  background: var(--surface-2);
+  background: var(--color-bg-elevated);
   color: #ff6b00; /* Orange plus foncé et plus saturé */
   padding: 2px 6px;
   border-radius: var(--radius-md);
@@ -373,169 +356,9 @@ html {
 }
 
 /* ==========================================================================
-     BLOCS DE CODE - POLICE OBLIGATOIRE JETBRAINS MONO (DÉSACTIVÉ)
+     BLOCS DE CODE - GÉRÉ PAR UNIFIED-BLOCKS.CSS
    ========================================================================== */
-/* Géré par unified-blocks.css */
-/*
-.markdown-body pre,
-.markdown-body pre code,
-.markdown-body .hljs,
-.markdown-body pre[data-language],
-.markdown-body pre[data-language] code,
-.markdown-body pre[data-language] .hljs,
-.markdown-body .language-json,
-.markdown-body .language-json code,
-.markdown-body .language-json .hljs,
-.markdown-body .language-javascript,
-.markdown-body .language-javascript code,
-.markdown-body .language-javascript .hljs,
-.markdown-body .language-typescript,
-.markdown-body .language-typescript code,
-.markdown-body .language-typescript .hljs,
-.markdown-body .language-python,
-.markdown-body .language-python code,
-.markdown-body .language-python .hljs,
-.markdown-body .language-html,
-.markdown-body .language-html code,
-.markdown-body .language-html .hljs,
-.markdown-body .language-css,
-.markdown-body .language-css code,
-.markdown-body .language-css .hljs,
-.markdown-body .language-bash,
-.markdown-body .language-bash code,
-.markdown-body .language-bash .hljs,
-.markdown-body .language-sql,
-.markdown-body .language-sql code,
-.markdown-body .language-sql .hljs,
-.markdown-body .language-markdown,
-.markdown-body .language-markdown code,
-.markdown-body .language-markdown .hljs,
-.markdown-body .language-yaml,
-.markdown-body .language-yaml code,
-.markdown-body .language-yaml .hljs,
-.markdown-body .language-xml,
-.markdown-body .language-xml code,
-.markdown-body .language-xml .hljs,
-.public-note-container .markdown-body pre,
-.public-note-container .markdown-body pre code,
-.public-note-container .markdown-body .hljs,
-.public-note-container .markdown-body pre[data-language],
-.public-note-container .markdown-body pre[data-language] code,
-.public-note-container .markdown-body pre[data-language] .hljs,
-.public-note-container .markdown-body .language-json,
-.public-note-container .markdown-body .language-json code,
-.public-note-container .markdown-body .language-json .hljs,
-.public-note-container .markdown-body .language-javascript,
-.public-note-container .markdown-body .language-javascript code,
-.public-note-container .markdown-body .language-javascript .hljs,
-.public-note-container .markdown-body .language-typescript,
-.public-note-container .markdown-body .language-typescript code,
-.public-note-container .markdown-body .language-typescript .hljs,
-.public-note-container .markdown-body .language-python,
-.public-note-container .markdown-body .language-python code,
-.public-note-container .markdown-body .language-python .hljs,
-.public-note-container .markdown-body .language-html,
-.public-note-container .markdown-body .language-html code,
-.public-note-container .markdown-body .language-html .hljs,
-.public-note-container .markdown-body .language-css,
-.public-note-container .markdown-body .language-css code,
-.public-note-container .markdown-body .language-css .hljs,
-.public-note-container .markdown-body .language-bash,
-.public-note-container .markdown-body .language-bash code,
-.public-note-container .markdown-body .language-bash .hljs,
-.public-note-container .markdown-body .language-sql,
-.public-note-container .markdown-body .language-sql code,
-.public-note-container .markdown-body .language-sql .hljs,
-.public-note-container .markdown-body .language-markdown,
-.public-note-container .markdown-body .language-markdown code,
-.public-note-container .markdown-body .language-markdown .hljs,
-.public-note-container .markdown-body .language-yaml,
-.public-note-container .markdown-body .language-yaml code,
-.public-note-container .markdown-body .language-yaml .hljs,
-.public-note-container .markdown-body .language-xml,
-.public-note-container .markdown-body .language-xml code,
-.public-note-container .markdown-body .language-xml .hljs,
-.public-note-content-wrapper .markdown-body pre,
-.public-note-content-wrapper .markdown-body pre code,
-.public-note-content-wrapper .markdown-body .hljs,
-.public-note-content-wrapper .markdown-body pre[data-language],
-.public-note-content-wrapper .markdown-body pre[data-language] code,
-.public-note-content-wrapper .markdown-body pre[data-language] .hljs,
-.public-note-content-wrapper .markdown-body .language-json,
-.public-note-content-wrapper .markdown-body .language-json code,
-.public-note-content-wrapper .markdown-body .language-json .hljs,
-.public-note-content-wrapper .markdown-body .language-javascript,
-.public-note-content-wrapper .markdown-body .language-javascript code,
-.public-note-content-wrapper .markdown-body .language-javascript .hljs,
-.public-note-content-wrapper .markdown-body .language-typescript,
-.public-note-content-wrapper .markdown-body .language-typescript code,
-.public-note-content-wrapper .markdown-body .language-typescript .hljs,
-.public-note-content-wrapper .markdown-body .language-python,
-.public-note-content-wrapper .markdown-body .language-python code,
-.public-note-content-wrapper .markdown-body .language-python .hljs,
-.public-note-content-wrapper .markdown-body .language-html,
-.public-note-content-wrapper .markdown-body .language-html code,
-.public-note-content-wrapper .markdown-body .language-html .hljs,
-.public-note-content-wrapper .markdown-body .language-css,
-.public-note-content-wrapper .markdown-body .language-css code,
-.public-note-content-wrapper .markdown-body .language-css .hljs,
-.public-note-content-wrapper .markdown-body .language-bash,
-.public-note-content-wrapper .markdown-body .language-bash code,
-.public-note-content-wrapper .markdown-body .language-bash .hljs,
-.public-note-content-wrapper .markdown-body .language-sql,
-.public-note-content-wrapper .markdown-body .language-sql code,
-.public-note-content-wrapper .markdown-body .language-sql .hljs,
-.public-note-content-wrapper .markdown-body .language-markdown,
-.public-note-content-wrapper .markdown-body .language-markdown code,
-.public-note-content-wrapper .markdown-body .language-markdown .hljs,
-.public-note-content-wrapper .markdown-body .language-yaml,
-.public-note-content-wrapper .markdown-body .language-yaml code,
-.public-note-content-wrapper .markdown-body .language-yaml .hljs,
-.public-note-content-wrapper .markdown-body .language-xml,
-.public-note-content-wrapper .markdown-body .language-xml code,
-.public-note-content-wrapper .markdown-body .language-xml .hljs,
-.ProseMirror pre,
-.ProseMirror pre code,
-.ProseMirror .hljs,
-.ProseMirror pre[data-language],
-.ProseMirror pre[data-language] code,
-.ProseMirror pre[data-language] .hljs,
-.ProseMirror .language-json,
-.ProseMirror .language-json code,
-.ProseMirror .language-json .hljs,
-.ProseMirror .language-javascript,
-.ProseMirror .language-javascript code,
-.ProseMirror .language-javascript .hljs,
-.ProseMirror .language-typescript,
-.ProseMirror .language-typescript code,
-.ProseMirror .language-typescript .hljs,
-.ProseMirror .language-python,
-.ProseMirror .language-python code,
-.ProseMirror .language-python .hljs,
-.ProseMirror .language-html,
-.ProseMirror .language-html code,
-.ProseMirror .language-html .hljs,
-.ProseMirror .language-css,
-.ProseMirror .language-css code,
-.ProseMirror .language-css .hljs,
-.ProseMirror .language-bash,
-.ProseMirror .language-bash code,
-.ProseMirror .language-bash .hljs,
-.ProseMirror .language-sql,
-.ProseMirror .language-sql code,
-.ProseMirror .language-sql .hljs,
-.ProseMirror .language-markdown,
-.ProseMirror .language-markdown code,
-.ProseMirror .language-markdown .hljs,
-.ProseMirror .language-yaml,
-.ProseMirror .language-yaml code,
-.ProseMirror .language-yaml .hljs,
-.ProseMirror .language-xml,
-.ProseMirror .language-xml code,
-.ProseMirror .language-xml .hljs {
-  font-family: var(--font-base);
-}
-*/
+/* Tous les styles de code sont centralisés dans unified-blocks.css */
 
 /* ==========================================================================
      BLOCKQUOTES - DESIGN ÉLÉGANT
@@ -544,7 +367,7 @@ html {
   .markdown-body blockquote,
   .public-note-container .markdown-body blockquote,
   .public-note-content-wrapper .markdown-body blockquote {
-    background: var(--surface-2);
+    background: var(--color-bg-elevated);
     color: var(--text-2);
     font-style: italic;
     text-align: left;
@@ -569,7 +392,7 @@ html {
     top: 0;
     bottom: 0;
     width: 4px;
-    background: var(--accent-primary);
+    background: var(--color-accent);
     border-radius: 2px 0 0 2px;
   }
 
@@ -603,7 +426,7 @@ html {
   box-shadow: var(--glass-shadow-soft);
   -webkit-overflow-scrolling: touch;
   max-width: 100%;
-  background-color: var(--surface-2);
+  background-color: var(--color-bg-elevated);
 }
 
 .markdown-body table,
@@ -613,7 +436,7 @@ html {
   border-collapse: collapse;
   table-layout: fixed;
   margin: 0;
-  background: var(--surface-1);
+  background: var(--color-bg-secondary);
   border-radius: 0 0 8px 8px;
 }
 
@@ -629,7 +452,7 @@ html {
   vertical-align: top;
   padding: 8px 20px;
   font-size: 14px;
-  color: var(--text-primary);
+  color: var(--color-text-primary);
   word-break: break-word;
   white-space: normal;
   box-sizing: border-box;
@@ -638,8 +461,8 @@ html {
 .markdown-body th,
 .public-note-container .markdown-body th,
 .public-note-content-wrapper .markdown-body th {
-  background: var(--surface-2);
-  color: var(--text-primary);
+  background: var(--color-bg-elevated);
+  color: var(--color-text-primary);
   /* font-weight géré par typography.css */
   font-size: 15px ;
   letter-spacing: 0.02em;
@@ -715,7 +538,7 @@ html {
     border: 1px solid var(--border-subtle);
     box-shadow: var(--glass-shadow-soft);
     transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
-    background: var(--surface-2);
+    background: var(--color-bg-elevated);
 }
 
 .markdown-body img:hover,
@@ -723,7 +546,7 @@ html {
 .public-note-content-wrapper .markdown-body img:hover {
     transform: translateY(-4px);
     box-shadow: var(--glass-shadow-soft);
-    border-color: var(--accent-primary);
+    border-color: var(--color-accent);
 }
 
 /* ==========================================================================
@@ -737,17 +560,17 @@ html {
 .public-note-container .markdown-body input[type='checkbox'],
 .public-note-content-wrapper .markdown-body input[type='checkbox'] {
   appearance: none;
-  width: 1.6em;
-  height: 1.6em;
+  width: 1.2em;
+  height: 1.2em;
   border: 2px solid var(--border-subtle);
-  border-radius: var(--radius-md);
-  background: var(--surface-1);
+  border-radius: 6px;
+  background: var(--color-bg-secondary);
   display: inline-block;
   vertical-align: top;
   position: relative;
   transition: border-color 0.18s, background 0.18s;
   cursor: pointer;
-  margin-right: 0.8em;
+  margin-right: 0.4em;
   margin-top: 0.1em; /* Légèrement décalé vers le bas pour l'alignement */
   flex-shrink: 0; /* Empêcher la réduction de taille */
 }
@@ -758,8 +581,8 @@ html {
 .ProseMirror input[type='checkbox']:checked,
 .public-note-container .markdown-body input[type='checkbox']:checked,
 .public-note-content-wrapper .markdown-body input[type='checkbox']:checked {
-  border-color: var(--accent-primary);
-  background: var(--accent-primary);
+  border-color: #ff6b35;
+  background: #ff6b35;
 }
 
 /* Symbole de validation */
@@ -789,7 +612,7 @@ html {
 .ProseMirror input[type='checkbox']:focus,
 .public-note-container .markdown-body input[type='checkbox']:focus,
 .public-note-content-wrapper .markdown-body input[type='checkbox']:focus {
-  outline: 2px solid var(--accent-primary);
+  outline: 2px solid #ff6b35;
   outline-offset: 1px;
 }
 
@@ -855,12 +678,12 @@ html {
    ========================================================================== */
 
 .markdown-body ::selection {
-  background: var(--accent-primary);
+  background: var(--color-accent);
   color: white;
   text-shadow: none;
 }
 .markdown-body ::-moz-selection {
-  background: var(--accent-primary);
+  background: var(--color-accent);
   color: white;
   text-shadow: none;
 }
@@ -880,14 +703,14 @@ html {
 
   .markdown-body mark {
     background: var(--accent-subtle);
-    color: var(--editor-text-color);
+    color: var(--color-text-primary);
     padding: 0.15em 0.3em;
     border-radius: var(--radius-md);
     font-weight: 500;
   }
 
-  .markdown-body strong { /* font-weight géré par typography.css */ color: var(--editor-text-color); }
-  .markdown-body em { font-style: italic; color: var(--editor-text-color); }
+  .markdown-body strong { /* font-weight géré par typography.css */ color: var(--color-text-primary); }
+  .markdown-body em { font-style: italic; color: var(--color-text-primary); }
   .markdown-body del { text-decoration: line-through; color: var(--text-3); opacity: 0.8; }
 
   /* Abréviations + kbd + sup/sub */
@@ -899,7 +722,7 @@ html {
   border: 1px solid var(--border-subtle);
     border-bottom-width: 2px;
   border-radius: var(--radius-md);
-    background: var(--surface-2);
+    background: var(--color-bg-elevated);
   }
   .markdown-body sup, .markdown-body sub { line-height: 0; position: relative; vertical-align: baseline; }
   .markdown-body sup { top: -0.4em; }
@@ -919,7 +742,7 @@ html {
     border: 1px solid var(--border-subtle);
     border-radius: var(--radius-md);
     padding: 0.75rem 1rem;
-    background: var(--surface-1);
+    background: var(--color-bg-secondary);
     margin: 1.25rem 0;
   }
   .markdown-body summary {
@@ -960,7 +783,7 @@ html {
       line-height: var(--editor-line-height-mobile); /* 1.7 - COHÉRENT AVEC L'ÉDITEUR */
       font-weight: var(--editor-body-weight); /* 500 - COHÉRENT AVEC L'ÉDITEUR */
     }
-    .markdown-body ul, .markdown-body ol { margin: 1.25rem 0; padding-left: 1.5em; }
+    .markdown-body ul, .markdown-body ol { margin: 1.25rem 0; padding-left: 1.3em; }
     .markdown-body li { margin: 0.625rem 0; }
     .markdown-body blockquote { padding: 1.25rem 1.5rem; margin: 1.5rem 0; }
     /* .markdown-body pre { padding: 1.25rem 1.5rem; margin: 1.5rem 0; font-size: 0.85em; } - DÉSACTIVÉ pour unified-blocks.css */
@@ -976,7 +799,7 @@ html {
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
   overflow: auto; /* sticky friendly */
-  background-color: var(--surface-2);
+  background-color: var(--color-bg-elevated);
   box-shadow: var(--glass-shadow-soft);
   -webkit-overflow-scrolling: touch;
 }
@@ -985,7 +808,7 @@ html {
   width: 100%;
   border-collapse: collapse;
   border-spacing: 0;
-  background: var(--surface-1);
+  background: var(--color-bg-secondary);
   border-radius: 0 0 8px 8px;
   table-layout: fixed;
   margin: 0;
@@ -999,7 +822,7 @@ html {
   border: none;
   border-bottom: 1px solid var(--border-subtle);
   background: none;
-  color: var(--text-primary);
+  color: var(--color-text-primary);
   font-size: 14px;
   font-weight: 400;
   text-align: left;
@@ -1013,8 +836,8 @@ html {
 }
 
 .ProseMirror th {
-  background: var(--surface-2);
-  color: var(--text-primary);
+  background: var(--color-bg-elevated);
+  color: var(--color-text-primary);
   /* font-weight géré par typography.css */
   font-size: 15px ;
   letter-spacing: 0.02em;
@@ -1061,7 +884,7 @@ html {
   .ProseMirror .selectedCell {
     position: relative;
     background-color: rgba(var(--accent-primary-rgb, 229, 90, 44), 0.08);
-  outline: 2px solid var(--accent-primary);
+  outline: 2px solid #ff6b35;
     outline-offset: -2px;
 }
 
@@ -1079,7 +902,7 @@ html {
   .ProseMirror > pre.selected,
   .ProseMirror > pre:focus,
   .ProseMirror > *.selected {
-    outline: 2px solid var(--accent-primary);
+    outline: 2px solid #ff6b35;
     outline-offset: 2px;
 }
 
@@ -1095,13 +918,13 @@ html {
   border: 1px solid var(--border-subtle);
     box-shadow: var(--glass-shadow-soft);
     transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
-    background: var(--surface-2);
+    background: var(--color-bg-elevated);
 }
 
 .ProseMirror img:hover {
     transform: translateY(-4px);
     box-shadow: var(--glass-shadow-soft);
-    border-color: var(--accent-primary);
+    border-color: var(--color-accent);
   }
 
   .ProseMirror .editor-image-wrapper {
@@ -1121,12 +944,12 @@ html {
     box-shadow: var(--glass-shadow-soft);
     object-fit: contain;
     transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
-    background: var(--surface-2);
+    background: var(--color-bg-elevated);
   }
   .ProseMirror .editor-image:hover {
     transform: translateY(-4px);
     box-shadow: var(--glass-shadow-soft);
-    border-color: var(--accent-primary);
+    border-color: var(--color-accent);
   }
   .ProseMirror p:has(img),
   .ProseMirror p:has(.editor-image-wrapper) {
@@ -1158,51 +981,9 @@ html {
   .ProseMirror-dropcursor { border-top: 3px solid var(--accent-primary); opacity: 0.8; }
 
 /* ==========================================================================
-     COPY BUTTON - STYLE PREMIUM (DÉSACTIVÉ)
+     COPY BUTTON - GÉRÉ PAR UNIFIED-BLOCKS.CSS
    ========================================================================== */
-/* Géré par unified-blocks.css */
-/*
-.code-copy-button {
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  background: transparent;
-  color: var(--text-2);
-  border: none;
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  z-index: 10;
-  outline: none ;
-}
-
-.code-copy-button:hover {
-  color: var(--text-1);
-}
-
-.code-copy-button:focus {
-  outline: none ;
-  box-shadow: none ;
-}
-
-.code-copy-button.copied {
-  background: var(--success) ;
-  color: white ;
-  border-radius: var(--radius-md);
-  padding: 8px;
-  min-width: 36px;
-  min-height: 36px;
-}
-
-.code-copy-button svg {
-  width: 18px;
-  height: 18px;
-}
-*/
+/* Les boutons de copie sont gérés par unified-blocks.css */
 
 /* ==========================================================================
      ANIMATIONS ET TRANSITIONS (avec respect motion)
@@ -1236,7 +1017,7 @@ html {
     .markdown-body h1, .markdown-body h2, .markdown-body h3 { page-break-after: avoid; page-break-inside: avoid; }
     .markdown-body pre, .markdown-body blockquote, .markdown-body table { page-break-inside: avoid; }
     .markdown-body img { max-width: 100% ; page-break-inside: avoid; box-shadow: none; border-color: #00000022; }
-    /* .markdown-body pre { box-shadow: none; background: #f6f6f6; color: #000; border-color: #00000022; } - DÉSACTIVÉ pour unified-blocks.css */
+    /* Styles de code gérés par unified-blocks.css */
     .markdown-body blockquote { background: #f6f6f6; border-color: #000; box-shadow: none; }
          .markdown-body hr {
        background: #00000022;

@@ -114,7 +114,7 @@
   color: var(--unified-text-primary);
   font-size: 15px;
   font-weight: 500;
-  font-family: 'Noto Sans', sans-serif;
+  font-family: var(--editor-font-family-headings);
   outline: none;
   z-index: 2;
   position: relative;
@@ -168,7 +168,7 @@
   overflow: hidden;
   letter-spacing: 0.02em;
   text-transform: uppercase;
-  font-family: 'Noto Sans', sans-serif;
+  font-family: var(--editor-font-family-headings);
 }
 
 .upload-btn::before {
@@ -482,14 +482,14 @@
   font-weight: 600;
   margin-bottom: var(--unified-spacing-sm);
   color: var(--unified-text-primary);
-  font-family: 'Noto Sans', sans-serif;
+  font-family: var(--editor-font-family-headings);
 }
 
 .files-empty-subtitle {
   font-size: 16px;
   color: var(--unified-text-secondary);
   max-width: 300px;
-  font-family: 'Noto Sans', sans-serif;
+  font-family: var(--editor-font-family-headings);
   line-height: 1.5;
 }
 
@@ -611,7 +611,7 @@
   color: var(--unified-text-primary);
   text-align: center;
   line-height: 1.4;
-  font-family: 'Noto Sans', sans-serif;
+  font-family: var(--editor-font-family-headings);
   word-break: break-word;
   max-width: 100%;
   margin: 0;
@@ -750,7 +750,7 @@
   color: var(--unified-text-primary);
   padding: var(--unified-spacing-xs) var(--unified-spacing-sm);
   font-size: 14px;
-  font-family: 'Noto Sans', sans-serif;
+  font-family: var(--editor-font-family-headings);
   text-align: center;
   width: 100%;
   max-width: 150px;

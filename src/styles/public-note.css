@@ -296,7 +296,7 @@ body.public-note-page {
   width: 1.2em ;
   height: 1.2em ;
   border: 2px solid #444 ;
-  border-radius: 4px ;
+  border-radius: 6px;
   background: #2a2a2a ;
   display: inline-block ;
   vertical-align: middle ;
@@ -309,8 +309,8 @@ body.public-note-page {
 }
 
 .public-note-container .markdown-body input[type='checkbox']:checked {
-  border-color: #ff6b35 ;
-  background: #ff6b35 ;
+  border-color: #ff6b35;
+  background: #ff6b35;
 }
 
 .public-note-container .markdown-body input[type='checkbox']:checked::after {
@@ -338,10 +338,11 @@ body.public-note-page {
 .public-note-container .markdown-body li:has(> input[type="checkbox"]) {
   display: flex ;
   align-items: center ;
-  gap: 0.5em ;
+  gap: 0.3em ;
   list-style: none ;
-  padding-left: 0 ;
+  padding-left: 1.3em;
   margin-left: 0 ;
+  position: relative ;
 }
 
 /* Contenu des éléments avec checkbox */
@@ -358,6 +359,9 @@ body.public-note-page {
 
 /* Alignement vertical des checkboxes */
 .public-note-container .markdown-body input[type='checkbox'] {
+  position: absolute ;
+  left: 0.2em ;
+  top: 0.1em ;
   vertical-align: middle ;
   margin-top: 0 ;
   margin-bottom: 0 ;

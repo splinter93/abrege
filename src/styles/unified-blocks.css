@@ -418,7 +418,7 @@
   flex: 1 !important;
   min-height: 0 !important;
   overflow: auto !important;
-  font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace !important;
+  font-family: var(--font-monospace) !important;
   font-size: 14px !important;
   line-height: 1.5 !important;
   background: transparent !important;
@@ -433,7 +433,7 @@
   border-radius: 0 !important;
   padding: 0 !important;
   margin: 0 !important;
-  font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace !important;
+  font-family: var(--font-monospace) !important;
   font-size: 14px !important;
   line-height: 1.5 !important;
   overflow-x: auto !important;
@@ -495,7 +495,7 @@
 }
 
 .chat-markdown .u-block__toolbar .toolbar-label {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif ;
+  font-family: var(--editor-font-family-body);
   font-size: 0.8rem ;
   font-weight: 500 ;
   color: #a0a0a0 ;

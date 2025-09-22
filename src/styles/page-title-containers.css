@@ -146,7 +146,7 @@
   font-weight: 900 ;
   color: var(--page-title-text-color, #ffffff);
   margin: 0;
-  font-family: 'Noto Sans', sans-serif ;
+  font-family: var(--editor-font-family-headings);
   letter-spacing: -0.02em;
   line-height: 1.2;
 }
@@ -156,7 +156,7 @@
   font-size: 16px;
   color: var(--page-title-subtitle-color, rgba(255, 255, 255, 0.7));
   margin: 0;
-  font-family: 'Noto Sans', sans-serif;
+  font-family: var(--editor-font-family-headings);
   font-weight: 400;
   line-height: 1.4;
 }
@@ -201,7 +201,7 @@
   font-size: 24px;
   font-weight: 700;
   color: var(--page-title-stats-color);
-  font-family: 'Noto Sans', sans-serif;
+  font-family: var(--editor-font-family-headings);
   transition: color 0.25s ease;
 }
 

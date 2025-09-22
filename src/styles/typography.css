@@ -33,9 +33,9 @@
   /* ==========================================================================
      COULEURS TYPOGRAPHIQUES
      ========================================================================== */
-  --editor-text-color: #D4D4D4; /* Gris clair comme dans l'image */
-  --editor-text-primary: #D4D4D4; /* Gris clair comme dans l'image */
-  --editor-text-muted: #737373;
+  --editor-text-color: var(--color-text-primary); /* Délégation vers variables-unified.css */
+  --editor-text-primary: var(--color-text-primary); /* Délégation vers variables-unified.css */
+  --editor-text-muted: var(--color-text-secondary); /* Délégation vers variables-unified.css */
 
   /* ==========================================================================
      FONTS HIÉRARCHISÉES - NOTO SANS + INTER + OPTIONS ÉDITEUR
@@ -486,7 +486,7 @@
 .ProseMirror ul,
 .ProseMirror ol {
   margin: var(--editor-list-margin-vertical) 0; /* 1.75em */
-  padding-left: 1.5em;
+  padding-left: 1.3em;
   font-family: var(--editor-font-family-body);
   font-size: var(--editor-body-size);     /* Utilise la variable centralisée */
   line-height: var(--editor-line-height-base); /* 1.75 */
@@ -499,6 +499,22 @@
   line-height: var(--editor-line-height-base); /* 1.75 */
   font-family: var(--editor-font-family-body);
   font-size: var(--editor-body-size);     /* Utilise la variable centralisée */
+}
+
+/* Sous-listes - Indentation réduite */
+.editor-content ul ul,
+.editor-content ul ol,
+.editor-content ol ul,
+.editor-content ol ol,
+.markdown-body ul ul,
+.markdown-body ul ol,
+.markdown-body ol ul,
+.markdown-body ol ol,
+.ProseMirror ul ul,
+.ProseMirror ul ol,
+.ProseMirror ol ul,
+.ProseMirror ol ol {
+  padding-left: 1.0em; /* Indentation réduite pour les sous-listes */
 }
 
 /* ==========================================================================
