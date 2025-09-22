@@ -320,13 +320,13 @@
 /* Fallback for inline code (not in a block) */
 :not(.u-block) > code,
 :not(pre) > code {
-  background: rgba(255,255,255,0.10);
+  background: var(--color-bg-secondary); /* Harmonisé avec les blockquotes et tableaux */
   padding: 0.2em 0.4em;
   border-radius: var(--radius-md);
   font-family: var(--mono);
   font-size: 0.9em;
-  color: var(--accent);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--color-text-primary);
+  border: 1px solid var(--border-subtle);
 }
 
 /* ==========================================================================
