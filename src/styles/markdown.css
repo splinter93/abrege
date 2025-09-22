@@ -369,7 +369,6 @@ html {
   .public-note-content-wrapper .markdown-body blockquote {
     background: var(--color-bg-content); /* Variable unifiée pour les éléments de contenu */ /* Fond plus sombre */
     color: var(--text-2);
-    font-style: italic;
     text-align: left;
     padding: 1.25rem 1.75rem;
     margin: var(--editor-block-spacing) 0; /* 1.75rem - COHÉRENT AVEC L'ÉDITEUR */

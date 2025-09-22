@@ -1021,7 +1021,6 @@ p:last-child {
   background: var(--color-bg-secondary); /* Fond plus sombre */
   border-left: 4px solid #e55a2b; /* Orange adouci */
   border-radius: 0 8px 8px 0;
-  font-style: italic;
   font-size: var(--editor-body-size);     /* Utilise la variable centralisée */
   line-height: var(--editor-line-height-relaxed); /* 1.8 */
   color: var(--editor-text-color);
