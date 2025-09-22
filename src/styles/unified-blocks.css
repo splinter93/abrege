@@ -10,7 +10,7 @@
    DESIGN TOKENS
    ========================================================================== */
 :root {
-  --blk-bg: #1a1a1a;
+  --blk-bg: var(--color-bg-secondary); /* Harmonisé avec les blockquotes et tableaux */
   --blk-fg: #a0a0a0;
   --blk-muted: #8a8a8a;
   --blk-radius: 8px;
@@ -216,7 +216,7 @@
 .public-note-content-wrapper .markdown-body pre,
 .public-note-content-wrapper .markdown-body pre code,
 .public-note-content-wrapper .markdown-body .hljs {
-  background: #1a1a1a ;
+  background: var(--color-bg-secondary); /* Harmonisé avec les blockquotes et tableaux */
   color: #a0a0a0 ;
   border: none ;
   border-radius: 8px ;
@@ -463,7 +463,7 @@
 
 /* Mermaid blocks integration */
 .chat-markdown .u-block--mermaid {
-  background: #2d2d2d ;
+  background: var(--color-bg-secondary); /* Harmonisé avec les blockquotes et tableaux */
   color: #a0a0a0 ;
   border: 1px solid rgba(255, 255, 255, 0.1) ;
   border-radius: 0.5rem ;

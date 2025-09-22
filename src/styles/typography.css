@@ -619,6 +619,13 @@
 .ProseMirror code,
 .editor-content code {
   font-weight: var(--editor-code-weight);
+  background: var(--color-bg-secondary); /* Harmonisé avec les blockquotes et tableaux */
+  color: var(--color-text-primary);
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-monospace);
+  font-size: 0.9em;
+  border: 1px solid var(--border-subtle);
 }
 
 /* Blockquotes */
@@ -1011,8 +1018,8 @@ p:last-child {
 .editor-content blockquote {
   margin: var(--editor-block-spacing) 0; /* 2em */
   padding: 1.5rem 2rem;
-  background: rgba(255, 255, 255, 0.02);
-  border-left: 4px solid var(--accent-primary, #ff6b35);
+  background: var(--color-bg-secondary); /* Fond plus sombre */
+  border-left: 4px solid #e55a2b; /* Orange adouci */
   border-radius: 0 8px 8px 0;
   font-style: italic;
   font-size: var(--editor-body-size);     /* Utilise la variable centralisée */
@@ -1050,8 +1057,7 @@ p:last-child {
   margin: var(--editor-block-spacing) 0; /* 2em */
   max-width: 100%;
   height: auto;
-  border-radius: var(--radius-md);
-  box-shadow: var(--glass-shadow-soft);
+  /* Aucun encadré - design épuré */
 }
 
 /* ==========================================================================
