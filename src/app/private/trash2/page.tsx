@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Archive, Clock, AlertCircle, FileText, Folder, RotateCcw, Trash, Trash2, RefreshCw } from 'lucide-react';
+import { Archive, Clock, AlertCircle, FileText, Folder, RotateCcw, Trash, Trash2, RefreshCw, TrashIcon } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import type { AuthenticatedUser } from '@/types/dossiers';
 import type { TrashItem, TrashStatistics } from '@/types/supabase';
@@ -18,17 +18,17 @@ import { DossierLoadingState, DossierErrorState } from '@/components/DossierLoad
 import "@/styles/main.css";
 import "./index.css";
 
-export default function TrashPage() {
+export default function Trash2Page() {
   return (
     <DossierErrorBoundary>
       <AuthGuard>
-        <TrashPageContent />
+        <Trash2PageContent />
       </AuthGuard>
     </DossierErrorBoundary>
   );
 }
 
-function TrashPageContent() {
+function Trash2PageContent() {
   const { user, loading: authLoading } = useAuth();
   
   // 🔧 FIX: Gérer le cas où l'utilisateur n'est pas encore chargé AVANT d'appeler les hooks
@@ -37,19 +37,19 @@ function TrashPageContent() {
   }
   
   // Maintenant on sait que user.id existe, on peut appeler tous les hooks en toute sécurité
-  return <AuthenticatedTrashContent user={user} />;
+  return <AuthenticatedTrash2Content user={user} />;
 }
 
 // 🔧 FIX: Composant séparé pour éviter les problèmes d'ordre des hooks
-function AuthenticatedTrashContent({ user }: { user: AuthenticatedUser }) {
+function AuthenticatedTrash2Content({ user }: { user: AuthenticatedUser }) {
   // Gestionnaire d'erreur sécurisé - TOUJOURS en premier
   const { handleError } = useSecureErrorHandler({
-    context: 'TrashPage',
-    operation: 'gestion_corbeille',
+    context: 'Trash2Page',
+    operation: 'gestion_corbeille_2',
     userId: user.id
   });
   
-  // État pour la gestion de la corbeille
+  // État pour la gestion de la corbeille 2
   const [trashItems, setTrashItems] = useState<TrashItem[]>([]);
   const [statistics, setStatistics] = useState<TrashStatistics>({
     total: 0,
@@ -63,7 +63,7 @@ function AuthenticatedTrashContent({ user }: { user: AuthenticatedUser }) {
   const [retryCount, setRetryCount] = useState(0);
   const [canRetry, setCanRetry] = useState(true);
 
-  // Fonction stable pour charger les éléments de la corbeille
+  // Fonction stable pour charger les éléments de la corbeille 2
   const loadTrashItems = useCallback(async () => {
     if (!user) return;
     
@@ -79,8 +79,8 @@ function AuthenticatedTrashContent({ user }: { user: AuthenticatedUser }) {
       setRetryCount(0);
       setCanRetry(true);
     } catch (err) {
-      logger.error('[TrashPage] Erreur chargement corbeille:', err);
-      handleError(err, 'chargement corbeille');
+      logger.error('[Trash2Page] Erreur chargement corbeille 2:', err);
+      handleError(err, 'chargement corbeille 2');
       setError(err instanceof Error ? err.message : 'Erreur inconnue');
       setRetryCount(prev => prev + 1);
       setCanRetry(retryCount < 3);
@@ -119,54 +119,54 @@ function AuthenticatedTrashContent({ user }: { user: AuthenticatedUser }) {
 
   // Fonctions de gestion
   const handleRestore = useCallback(async (item: TrashItem) => {
-    logger.dev('[TrashPage] 🔄 RESTAURATION DÉBUT - Élément:', item);
-    logger.dev('[TrashPage] 🔄 RESTAURATION - Type:', item.type, 'ID:', item.id);
+    logger.dev('[Trash2Page] 🔄 RESTAURATION DÉBUT - Élément:', item);
+    logger.dev('[Trash2Page] 🔄 RESTAURATION - Type:', item.type, 'ID:', item.id);
     try {
-      logger.dev('[TrashPage] 🔄 RESTAURATION - Import TrashService...');
+      logger.dev('[Trash2Page] 🔄 RESTAURATION - Import TrashService...');
       const { TrashService } = await import('@/services/trashService');
-      logger.dev('[TrashPage] 🔄 RESTAURATION - Appel TrashService.restoreItem...');
+      logger.dev('[Trash2Page] 🔄 RESTAURATION - Appel TrashService.restoreItem...');
       await TrashService.restoreItem(item.type, item.id);
       
-      logger.dev('[TrashPage] ✅ RESTAURATION - Élément restauré avec succès');
+      logger.dev('[Trash2Page] ✅ RESTAURATION - Élément restauré avec succès');
       // Recharger la liste après restauration
-      logger.dev('[TrashPage] 🔄 RESTAURATION - Rechargement de la liste...');
+      logger.dev('[Trash2Page] 🔄 RESTAURATION - Rechargement de la liste...');
       await loadTrashItems();
-      logger.dev('[TrashPage] ✅ RESTAURATION - Liste rechargée');
+      logger.dev('[Trash2Page] ✅ RESTAURATION - Liste rechargée');
     } catch (err) {
-      logger.error('[TrashPage] ❌ RESTAURATION - Erreur:', err);
+      logger.error('[Trash2Page] ❌ RESTAURATION - Erreur:', err);
       handleError(err, 'restauration élément');
       setError(err instanceof Error ? err.message : 'Erreur lors de la restauration');
     }
   }, [loadTrashItems, handleError]);
 
   const handlePermanentDelete = useCallback(async (item: TrashItem) => {
-    logger.dev('[TrashPage] 🗑️ SUPPRESSION DÉBUT - Élément:', item);
-    logger.dev('[TrashPage] 🗑️ SUPPRESSION - Type:', item.type, 'ID:', item.id);
+    logger.dev('[Trash2Page] 🗑️ SUPPRESSION DÉBUT - Élément:', item);
+    logger.dev('[Trash2Page] 🗑️ SUPPRESSION - Type:', item.type, 'ID:', item.id);
     if (!confirm(`Êtes-vous sûr de vouloir supprimer définitivement "${item.name}" ?`)) {
-      logger.dev('[TrashPage] ❌ SUPPRESSION - Annulée par l\'utilisateur');
+      logger.dev('[Trash2Page] ❌ SUPPRESSION - Annulée par l\'utilisateur');
       return;
     }
 
     try {
-      logger.dev('[TrashPage] 🗑️ SUPPRESSION - Import TrashService...');
+      logger.dev('[Trash2Page] 🗑️ SUPPRESSION - Import TrashService...');
       const { TrashService } = await import('@/services/trashService');
-      logger.dev('[TrashPage] 🗑️ SUPPRESSION - Appel TrashService.permanentlyDeleteItem...');
+      logger.dev('[Trash2Page] 🗑️ SUPPRESSION - Appel TrashService.permanentlyDeleteItem...');
       await TrashService.permanentlyDeleteItem(item.type, item.id);
       
-      logger.dev('[TrashPage] ✅ SUPPRESSION - Élément supprimé définitivement avec succès');
+      logger.dev('[Trash2Page] ✅ SUPPRESSION - Élément supprimé définitivement avec succès');
       // Recharger la liste après suppression
-      logger.dev('[TrashPage] 🗑️ SUPPRESSION - Rechargement de la liste...');
+      logger.dev('[Trash2Page] 🗑️ SUPPRESSION - Rechargement de la liste...');
       await loadTrashItems();
-      logger.dev('[TrashPage] ✅ SUPPRESSION - Liste rechargée');
+      logger.dev('[Trash2Page] ✅ SUPPRESSION - Liste rechargée');
     } catch (err) {
-      logger.error('[TrashPage] ❌ SUPPRESSION - Erreur:', err);
+      logger.error('[Trash2Page] ❌ SUPPRESSION - Erreur:', err);
       handleError(err, 'suppression définitive');
       setError(err instanceof Error ? err.message : 'Erreur lors de la suppression');
     }
   }, [loadTrashItems, handleError]);
 
   const handleEmptyTrash = useCallback(async () => {
-    if (!confirm('Êtes-vous sûr de vouloir vider complètement la corbeille ? Cette action est irréversible.')) {
+    if (!confirm('Êtes-vous sûr de vouloir vider complètement la corbeille 2 ? Cette action est irréversible.')) {
       return;
     }
 
@@ -184,15 +184,15 @@ function AuthenticatedTrashContent({ user }: { user: AuthenticatedUser }) {
         files: 0
       });
     } catch (err) {
-      logger.error('[TrashPage] Erreur vidage corbeille:', err);
-      handleError(err, 'vidage corbeille');
-      setError(err instanceof Error ? err.message : 'Erreur lors du vidage de la corbeille');
+      logger.error('[Trash2Page] Erreur vidage corbeille 2:', err);
+      handleError(err, 'vidage corbeille 2');
+      setError(err instanceof Error ? err.message : 'Erreur lors du vidage de la corbeille 2');
     }
   }, [handleError]);
 
   // Afficher l'état de chargement initial
   if (loading && trashItems.length === 0) {
-    return <DossierLoadingState type="initial" message="Chargement de la corbeille..." />;
+    return <DossierLoadingState type="initial" message="Chargement de la corbeille 2..." />;
   }
 
   // Afficher l'état d'erreur
@@ -219,7 +219,7 @@ function AuthenticatedTrashContent({ user }: { user: AuthenticatedUser }) {
         {/* Titre de la page avec design uniforme */}
         <UnifiedPageTitle
           icon={Trash2}
-          title="Corbeille"
+          title="Corbeille 2"
           subtitle="Gérez vos éléments supprimés et restaurez ce qui est important"
           stats={[
             { number: statistics.total, label: `élément${statistics.total > 1 ? 's' : ''}` },
@@ -228,7 +228,6 @@ function AuthenticatedTrashContent({ user }: { user: AuthenticatedUser }) {
           ]}
         />
 
-
         {/* Container glassmorphism principal */}
         <motion.div 
           className="glassmorphism-container"
@@ -236,6 +235,26 @@ function AuthenticatedTrashContent({ user }: { user: AuthenticatedUser }) {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1, ease: "easeOut" }}
         >
+          {/* Header avec séparateur */}
+          <div className="trash-container-header">
+            <div className="trash-header-left">
+              <h2 className="trash-header-title">Éléments supprimés récemment</h2>
+              <p className="trash-header-description">
+                Conservation automatique de 30 jours
+              </p>
+            </div>
+            <div className="trash-header-right">
+              <button
+                className="trash-empty-button"
+                onClick={handleEmptyTrash}
+                disabled={loading || trashItems.length === 0}
+                title="Vider la corbeille 2"
+              >
+                <Trash size={16} />
+                <span>Vider la corbeille</span>
+              </button>
+            </div>
+          </div>
           <AnimatePresence mode="wait">
             {trashItems.length === 0 ? (
               <motion.div
@@ -248,7 +267,7 @@ function AuthenticatedTrashContent({ user }: { user: AuthenticatedUser }) {
                 <div className="empty-state-icon">
                   <Archive size={64} />
                 </div>
-                <h2 className="empty-state-title">Corbeille vide</h2>
+                <h2 className="empty-state-title">Corbeille 2 vide</h2>
                 <p className="empty-state-description">
                   Aucun élément n'a été supprimé pour le moment. 
                   Les éléments supprimés apparaîtront ici.
@@ -261,29 +280,6 @@ function AuthenticatedTrashContent({ user }: { user: AuthenticatedUser }) {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
               >
-                {/* Header avec actions */}
-                <div className="trash-header">
-                  <div className="trash-header-actions">
-                    <button
-                      className="trash-action-btn refresh-btn"
-                      onClick={refreshData}
-                      disabled={loading}
-                      title="Actualiser"
-                    >
-                      <RefreshCw size={16} />
-                      <span>Actualiser</span>
-                    </button>
-                    <button
-                      className="trash-action-btn empty-btn"
-                      onClick={handleEmptyTrash}
-                      disabled={loading || trashItems.length === 0}
-                      title="Vider la corbeille"
-                    >
-                      <Trash size={16} />
-                      <span>Vider</span>
-                    </button>
-                  </div>
-                </div>
 
                 {/* Grille des éléments de la corbeille */}
                 <div className="trash-grid-container">
@@ -347,15 +343,15 @@ function TrashItemCard({
   const getIcon = () => {
     switch (item.type) {
       case 'note':
-        return <FileText size={28} />;
+        return <FileText size={36} />;
       case 'folder':
-        return <Folder size={28} />;
+        return <Folder size={36} />;
       case 'classeur':
-        return <Archive size={28} />;
+        return <Archive size={36} />;
       case 'file':
-        return <FileText size={28} />;
+        return <FileText size={36} />;
       default:
-        return <FileText size={28} />;
+        return <FileText size={36} />;
     }
   };
 
@@ -374,17 +370,6 @@ function TrashItemCard({
     }
   };
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return new Intl.DateTimeFormat('fr-FR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    }).format(date);
-  };
-
   const getDaysUntilExpiry = () => {
     const now = new Date();
     const expiresAt = new Date(item.expires_at);
@@ -393,17 +378,27 @@ function TrashItemCard({
     return Math.max(0, diffDays);
   };
 
+  const formatTimeRemaining = () => {
+    const days = getDaysUntilExpiry();
+    if (days === 0) {
+      return "Expire aujourd'hui";
+    } else if (days === 1) {
+      return "Expire demain";
+    } else {
+      return `${days} jours restants`;
+    }
+  };
+
   return (
     <motion.div
-      className="fm-grid-item trash-item"
+      className="fm-grid-item trash-item-simple"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
-      whileHover={{ y: -2 }}
       transition={{ duration: 0.2 }}
     >
       {/* Icône avec style identique aux dossiers/fichiers */}
-      <div className={getIconClass()}>
+      <div className={`fm-grid-item-icon ${getIconClass()}`}>
         {getIcon()}
       </div>
 
@@ -412,37 +407,11 @@ function TrashItemCard({
         {item.name}
       </div>
 
-      {/* Date de suppression */}
-      <div className="trash-item-date">
-        <Clock size={12} />
-        {formatDate(item.trashed_at)}
-      </div>
-
-      {/* Actions - boutons restaurer et supprimer */}
-      <div className="trash-item-actions">
-        <button
-          className="trash-action-btn restore-btn"
-          onClick={() => {
-            logger.dev('[TrashPage] 🔄 Bouton Restaurer cliqué pour:', item);
-            onRestore(item);
-          }}
-          title="Restaurer"
-        >
-          <RotateCcw size={14} />
-          <span>Restaurer</span>
-        </button>
-        <button
-          className="trash-action-btn delete-btn"
-          onClick={() => {
-            logger.dev('[TrashPage] 🗑️ Bouton Supprimer cliqué pour:', item);
-            onDelete(item);
-          }}
-          title="Supprimer définitivement"
-        >
-          <Trash size={14} />
-          <span>Supprimer</span>
-        </button>
+      {/* Temps restant */}
+      <div className="trash-item-time-remaining">
+        <Clock size={14} />
+        {formatTimeRemaining()}
       </div>
     </motion.div>
   );
-} 
+}

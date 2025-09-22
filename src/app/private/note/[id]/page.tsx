@@ -7,6 +7,7 @@ import Editor from '@/components/editor/Editor';
 import { useOptimizedNoteLoader } from '@/hooks/useOptimizedNoteLoader';
 import { useRealtime } from '@/hooks/useRealtime';
 import { useAuth } from '@/hooks/useAuth';
+import { SimpleLoadingState } from '@/components/DossierLoadingStates';
 
 export default function NotePage() {
   const params = useParams();
@@ -31,20 +32,15 @@ export default function NotePage() {
 
 
   if (!noteId) {
-    return <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>ID de note non valide.</div>;
+    return <SimpleLoadingState message="ID de note non valide" />;
   }
 
   if (loading && !note) {
-    return <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Chargement de la note…</div>;
+    return <SimpleLoadingState message="Chargement de la note…" />;
   }
   
   if (error && !note) {
-    return (
-      <div style={{ padding: 24 }}>
-        <h2>Impossible d'ouvrir la note</h2>
-        <p style={{ color: 'var(--chat-text-tertiary)' }}>{error}</p>
-      </div>
-    );
+    return <SimpleLoadingState message="Impossible d'ouvrir la note" />;
   }
 
   // Render only the real Editor (which includes its own header/toolbar/kebab/TOC)

@@ -3,7 +3,63 @@
    ========================================================================== */
 
 /* ==========================================================================
-   ÉTAT DE CHARGEMENT
+   ÉTAT DE CHARGEMENT SIMPLE - HARMONISÉ AVEC AUTH
+   ========================================================================== */
+
+.dossier-loading-simple,
+.simple-loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  padding: 2rem;
+  text-align: center;
+}
+
+.loading-spinner-simple {
+  margin-bottom: 1.5rem;
+}
+
+.spinner-ring-simple {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(255, 255, 255, 0.1);
+  border-top: 3px solid #e55a2c;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading-title-simple {
+  color: #f8fafc;
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0;
+  font-family: var(--font-family-base, 'Inter', sans-serif);
+}
+
+/* Style spécifique pour les composants plus petits */
+.activity-loading-simple {
+  min-height: 200px;
+  padding: 1rem;
+}
+
+.activity-loading-simple .loading-title-simple {
+  font-size: 1.2rem;
+}
+
+.activity-loading-simple .spinner-ring-simple {
+  width: 30px;
+  height: 30px;
+}
+
+/* ==========================================================================
+   ÉTAT DE CHARGEMENT COMPLEXE (GARDÉ POUR COMPATIBILITÉ)
    ========================================================================== */
 
 .dossier-loading-state {
@@ -101,11 +157,6 @@
   border-top: 3px solid #f97316;
   border-radius: 50%;
   animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
 }
 
 /* ==========================================================================

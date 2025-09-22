@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/hooks/useAuth';
 import { FileText, Clock, User, Globe, Lock, Link as LinkIcon, Calendar, Eye } from 'lucide-react';
+import { SimpleLoadingState } from '@/components/DossierLoadingStates';
 
 interface RecentNote {
   id: string;
@@ -144,14 +145,7 @@ export default function RecentActivityCard({
   };
 
   if (loading) {
-    return (
-      <div className="activity-loading">
-        <div className="loading-spinner">
-          <div className="spinner"></div>
-          <span>Chargement...</span>
-        </div>
-      </div>
-    );
+    return <SimpleLoadingState message="Chargement..." className="activity-loading-simple" />;
   }
 
   if (error) {

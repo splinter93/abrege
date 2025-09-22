@@ -160,11 +160,11 @@ const UnifiedSidebar: React.FC<UnifiedSidebarProps> = ({
   // Navigation items
   const navigationItems = [
     { href: '/', label: 'Accueil', icon: HomeIcon, key: 'home' },
-    { href: '/private/dashboard', label: 'Tableau de bord', icon: SettingsIcon, key: 'dashboard' },
     { href: '/private/dossiers', label: 'Mes Classeurs', icon: FolderIcon, key: 'dossiers' },
     { href: '/private/shared', label: 'Notes Partagées', icon: ShareIcon, key: 'shared' },
     { href: '/private/files', label: 'Mes Fichiers', icon: FileIcon, key: 'files' },
     { href: '/private/trash', label: 'Corbeille', icon: TrashIcon, key: 'trash' },
+    { href: '/private/trash2', label: 'Corbeille 2', icon: TrashIcon, key: 'trash2' },
     { href: '/private/settings', label: 'Paramètres', icon: SettingsIcon, key: 'settings' },
   ];
 

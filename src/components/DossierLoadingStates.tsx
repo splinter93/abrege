@@ -30,39 +30,27 @@ export const DossierLoadingState: React.FC<LoadingStateProps> = ({
     switch (type) {
       case 'initial':
         return {
-          icon: '📚',
-          title: 'Chargement des dossiers',
-          description: 'Récupération de vos classeurs et dossiers...'
+          title: 'Chargement des dossiers'
         };
       case 'refresh':
         return {
-          icon: '🔄',
-          title: 'Actualisation',
-          description: 'Mise à jour des données...'
+          title: 'Actualisation'
         };
       case 'creating':
         return {
-          icon: '✨',
-          title: 'Création en cours',
-          description: message || 'Création de l\'élément...'
+          title: message || 'Création en cours'
         };
       case 'updating':
         return {
-          icon: '✏️',
-          title: 'Modification en cours',
-          description: message || 'Mise à jour de l\'élément...'
+          title: message || 'Modification en cours'
         };
       case 'deleting':
         return {
-          icon: '🗑️',
-          title: 'Suppression en cours',
-          description: message || 'Suppression de l\'élément...'
+          title: message || 'Suppression en cours'
         };
       default:
         return {
-          icon: '⏳',
-          title: 'Chargement...',
-          description: 'Veuillez patienter...'
+          title: 'Chargement...'
         };
     }
   };
@@ -70,28 +58,32 @@ export const DossierLoadingState: React.FC<LoadingStateProps> = ({
   const content = getLoadingContent();
 
   return (
-    <div className="dossier-loading-state">
-      <div className="loading-container">
-        <div className="loading-icon">{content.icon}</div>
-        <h2 className="loading-title">{content.title}</h2>
-        <p className="loading-description">{content.description}</p>
-        
-        {progress !== undefined && (
-          <div className="loading-progress">
-            <div className="progress-bar">
-              <div 
-                className="progress-fill" 
-                style={{ width: `${progress}%` }}
-              />
-            </div>
-            <span className="progress-text">{progress}%</span>
-          </div>
-        )}
-        
-        <div className="loading-spinner">
-          <div className="spinner-ring"></div>
-        </div>
+    <div className="dossier-loading-simple">
+      <div className="loading-spinner-simple">
+        <div className="spinner-ring-simple"></div>
       </div>
+      <h2 className="loading-title-simple">{content.title}</h2>
+    </div>
+  );
+};
+
+/**
+ * Composant de chargement simple harmonisé pour toutes les pages
+ * Utilise le même style que la page d'authentification
+ */
+export const SimpleLoadingState: React.FC<{
+  message?: string;
+  className?: string;
+}> = ({ 
+  message = 'Chargement...',
+  className = ''
+}) => {
+  return (
+    <div className={`simple-loading-state ${className}`}>
+      <div className="loading-spinner-simple">
+        <div className="spinner-ring-simple"></div>
+      </div>
+      <h2 className="loading-title-simple">{message}</h2>
     </div>
   );
 };
