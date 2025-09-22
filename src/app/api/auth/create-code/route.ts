@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { oauthService } from '@/services/oauthService';
-import { getCurrentUser } from '@/middleware/auth';
+import { getCurrentUser } from '@/middleware-utils/auth';
 
 // Schema de validation pour la création de code
 const createCodeRequestSchema = z.object({

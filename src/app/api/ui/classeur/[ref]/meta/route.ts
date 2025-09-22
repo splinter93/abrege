@@ -2,7 +2,7 @@ import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 import type { NextRequest } from 'next/server';
 import type { Classeur } from '@/types/supabase';
-import { resolveClasseurRef } from '@/middleware/resourceResolver';
+import { resolveClasseurRef } from '@/middleware-utils/resourceResolver';
 import { SlugGenerator } from '@/utils/slugGenerator';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;

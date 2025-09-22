@@ -2,7 +2,7 @@ import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 import type { Folder } from '@/types/supabase';
 import type { NextRequest } from 'next/server';
-import { resolveClasseurRef } from '@/middleware/resourceResolver';
+import { resolveClasseurRef } from '@/middleware-utils/resourceResolver';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
