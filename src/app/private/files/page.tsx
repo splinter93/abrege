@@ -6,14 +6,14 @@ import { useFilesPage } from "@/hooks/useFilesPage";
 import { useAuth } from "@/hooks/useAuth";
 import UnifiedSidebar from "@/components/UnifiedSidebar";
 import SearchFiles, { FileFilters, FileSortOptions } from "@/components/SearchFiles";
-import FileUploaderLocal from "./FileUploaderLocal";
+import UnifiedUploadZone from "@/components/UnifiedUploadZone";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import AuthGuard from "@/components/AuthGuard";
 import { useSecureErrorHandler } from "@/components/SecureErrorHandler";
 import { STORAGE_CONFIG } from "@/config/storage";
 import { simpleLogger as logger } from "@/utils/logger";
 import UnifiedPageTitle from "@/components/UnifiedPageTitle";
-import { FileText, Upload, Image as ImageIcon, File, FileText as FileTextIcon, Video, Music, Archive } from "lucide-react";
+import { FileText, Upload, Image as ImageIcon, File, FileText as FileTextIcon, Video, Music, Archive, X } from "lucide-react";
 import "@/styles/main.css";
 import "./index.css";
 import "./page.css";
@@ -74,6 +74,8 @@ function AuthenticatedFilesContent({ user }: { user: { id: string; email?: strin
     userId: user.id
   });
 
+  const { getAccessToken } = useAuth();
+
   // État local pour la gestion de l'interface
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFiles, setSelectedFiles] = useState<Set<string>>(new Set());
@@ -86,67 +88,117 @@ function AuthenticatedFilesContent({ user }: { user: { id: string; email?: strin
   });
   const [currentPage, setCurrentPage] = useState(1);
   const filesPerPage = 50; // Limiter à 50 fichiers par page
+  const [contextMenu, setContextMenu] = useState<{
+    file: FileItem;
+    x: number;
+    y: number;
+  } | null>(null);
 
   // Synchroniser la recherche avec le hook
   useEffect(() => {
     setSearchQuery(searchTerm);
   }, [searchTerm]);
 
-  // 🔧 OPTIMISATION: Cache pour les types MIME et noms de fichiers
-  const fileTypeCache = useMemo(() => {
-    const cache = new Map<string, string>();
+  // Fonction pour fermer le menu contextuel
+  const closeContextMenu = useCallback(() => {
+    setContextMenu(null);
+  }, []);
+
+  // Fermer le menu contextuel si on clique ailleurs
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (contextMenu) {
+        closeContextMenu();
+      }
+    };
+
+    if (contextMenu) {
+      document.addEventListener('click', handleClickOutside);
+      return () => document.removeEventListener('click', handleClickOutside);
+    }
+  }, [contextMenu, closeContextMenu]);
+
+  // 🔧 OPTIMISATION: Cache unifié pour les métadonnées de fichiers
+  const fileMetadataCache = useMemo(() => {
+    const cache = new Map<string, {
+      mimeType: string;
+      filename: string;
+      fileType: string;
+      icon: React.ReactNode;
+    }>();
+    
+    const iconSize = 24;
+    
     filteredFiles.forEach(file => {
-      if (file.mime_type) cache.set(file.id, file.mime_type.toLowerCase());
+      const mimeType = file.mime_type?.toLowerCase() || '';
+      const filename = file.filename?.toLowerCase() || '';
+      
+      // Déterminer le type de fichier
+      let fileType = 'other';
+      if (mimeType.startsWith('image/')) fileType = 'image';
+      else if (mimeType.startsWith('video/')) fileType = 'video';
+      else if (mimeType.startsWith('audio/')) fileType = 'audio';
+      else if (mimeType.includes('pdf')) fileType = 'pdf';
+      else if (mimeType.includes('word') || mimeType.includes('document') || filename.endsWith('.doc') || filename.endsWith('.docx')) fileType = 'document';
+      else if (mimeType.includes('excel') || mimeType.includes('spreadsheet')) fileType = 'spreadsheet';
+      else if (mimeType.includes('powerpoint') || mimeType.includes('presentation')) fileType = 'presentation';
+      else if (mimeType.includes('zip') || mimeType.includes('archive') || filename.endsWith('.zip') || filename.endsWith('.rar')) fileType = 'archive';
+      else if (mimeType.includes('text/')) fileType = 'text';
+      
+      // Déterminer l'icône
+      let icon: React.ReactNode;
+      switch (fileType) {
+        case 'image': icon = <ImageIcon size={iconSize} />; break;
+        case 'video': icon = <Video size={iconSize} />; break;
+        case 'audio': icon = <Music size={iconSize} />; break;
+        case 'pdf':
+        case 'document':
+        case 'spreadsheet':
+        case 'presentation':
+        case 'text': icon = <FileTextIcon size={iconSize} />; break;
+        case 'archive': icon = <Archive size={iconSize} />; break;
+        default: icon = <File size={iconSize} />; break;
+      }
+      
+      cache.set(file.id, {
+        mimeType,
+        filename,
+        fileType,
+        icon
+      });
     });
+    
     return cache;
   }, [filteredFiles]);
 
-  const filenameCache = useMemo(() => {
-    const cache = new Map<string, string>();
-    filteredFiles.forEach(file => {
-      if (file.filename) cache.set(file.id, file.filename.toLowerCase());
-    });
-    return cache;
-  }, [filteredFiles]);
-
-  // 🔧 OPTIMISATION: Fonction de filtrage optimisée
+  // 🔧 OPTIMISATION: Fonction de filtrage simplifiée
   const filterFile = useCallback((file: FileItem, searchTerm: string, typeFilter?: string): boolean => {
+    const metadata = fileMetadataCache.get(file.id);
+    if (!metadata) return false;
+
     // Filtre par recherche textuelle
     if (searchTerm) {
-      const filename = filenameCache.get(file.id) || '';
-      const mimeType = fileTypeCache.get(file.id) || '';
-      if (!filename.includes(searchTerm) && !mimeType.includes(searchTerm)) {
+      const searchLower = searchTerm.toLowerCase();
+      if (!metadata.filename.includes(searchLower) && !metadata.mimeType.includes(searchLower)) {
         return false;
       }
     }
 
     // Filtre par type
     if (typeFilter) {
-      const mimeType = fileTypeCache.get(file.id) || '';
-      const filename = filenameCache.get(file.id) || '';
-      
       switch (typeFilter) {
-        case 'image':
-          return mimeType.startsWith('image/');
-        case 'pdf':
-          return mimeType.includes('pdf') || filename.endsWith('.pdf');
-        case 'document':
-          return mimeType.includes('word') || mimeType.includes('document') || 
-                 filename.endsWith('.doc') || filename.endsWith('.docx');
-        case 'video':
-          return mimeType.startsWith('video/');
-        case 'audio':
-          return mimeType.startsWith('audio/');
-        case 'archive':
-          return mimeType.includes('zip') || mimeType.includes('archive') ||
-                 filename.endsWith('.zip') || filename.endsWith('.rar');
-        default:
-          return true;
+        case 'image': return metadata.fileType === 'image';
+        case 'pdf': return metadata.fileType === 'pdf';
+        case 'document': return metadata.fileType === 'document';
+        case 'video': return metadata.fileType === 'video';
+        case 'audio': return metadata.fileType === 'audio';
+        case 'archive': return metadata.fileType === 'archive';
+        default: return true;
       }
     }
 
     return true;
-  }, [fileTypeCache, filenameCache]);
+  }, [fileMetadataCache]);
 
   // Filtrer les fichiers selon la recherche et les filtres
   const displayFiles = useMemo(() => {
@@ -162,8 +214,8 @@ function AuthenticatedFilesContent({ user }: { user: { id: string; email?: strin
         
         switch (sortOptions.field) {
           case 'filename':
-            aValue = filenameCache.get(a.id) || '';
-            bValue = filenameCache.get(b.id) || '';
+            aValue = fileMetadataCache.get(a.id)?.filename || '';
+            bValue = fileMetadataCache.get(b.id)?.filename || '';
             break;
           case 'size':
             aValue = a.size || 0;
@@ -186,7 +238,7 @@ function AuthenticatedFilesContent({ user }: { user: { id: string; email?: strin
     }
 
     return files;
-  }, [filteredFiles, searchQuery, filters.type, sortOptions, filterFile, fileTypeCache, filenameCache]);
+  }, [filteredFiles, searchQuery, filters.type, sortOptions, filterFile, fileMetadataCache]);
 
   // Pagination des fichiers pour les performances
   const paginatedFiles = useMemo(() => {
@@ -202,42 +254,15 @@ function AuthenticatedFilesContent({ user }: { user: { id: string; email?: strin
     setCurrentPage(1);
   }, [searchQuery, filters, sortOptions]);
 
-  // 🔧 OPTIMISATION: Cache pour les icônes de fichiers
-  const iconCache = useMemo(() => {
-    const cache = new Map<string, React.ReactNode>();
-    const iconSize = 24;
-    
-    filteredFiles.forEach(file => {
-      if (file.mime_type) {
-        const type = file.mime_type.toLowerCase();
-        let icon: React.ReactNode;
-        
-        if (type.startsWith('image/')) icon = <ImageIcon size={iconSize} />;
-        else if (type.startsWith('video/')) icon = <Video size={iconSize} />;
-        else if (type.startsWith('audio/')) icon = <Music size={iconSize} />;
-        else if (type.includes('pdf')) icon = <FileTextIcon size={iconSize} />;
-        else if (type.includes('word') || type.includes('document')) icon = <FileTextIcon size={iconSize} />;
-        else if (type.includes('excel') || type.includes('spreadsheet')) icon = <FileTextIcon size={iconSize} />;
-        else if (type.includes('powerpoint') || type.includes('presentation')) icon = <FileTextIcon size={iconSize} />;
-        else if (type.includes('zip') || type.includes('archive')) icon = <Archive size={iconSize} />;
-        else if (type.includes('text/')) icon = <FileTextIcon size={iconSize} />;
-        else icon = <File size={iconSize} />;
-        
-        cache.set(file.id, icon);
-      }
-    });
-    
-    return cache;
-  }, [filteredFiles]);
-
-  // Fonction pour obtenir l'icône selon le type MIME - optimisée avec cache
+  // Fonction pour obtenir l'icône selon le type MIME - optimisée avec cache unifié
   const getFileIcon = useCallback((fileId: string, mimeType?: string): React.ReactNode => {
-    // Utiliser le cache si disponible
-    if (iconCache.has(fileId)) {
-      return iconCache.get(fileId);
+    // Utiliser le cache unifié si disponible
+    const metadata = fileMetadataCache.get(fileId);
+    if (metadata) {
+      return metadata.icon;
     }
     
-    // Fallback pour les nouveaux fichiers
+    // Fallback pour les nouveaux fichiers (rare)
     const type = mimeType?.toLowerCase() || '';
     const iconSize = 24;
     
@@ -252,7 +277,7 @@ function AuthenticatedFilesContent({ user }: { user: { id: string; email?: strin
     if (type.includes('text/')) return <FileTextIcon size={iconSize} />;
     
     return <File size={iconSize} />;
-  }, [iconCache]);
+  }, [fileMetadataCache]);
 
   // Fonction pour formater la taille de fichier
   const formatFileSize = useCallback((bytes: number): string => {
@@ -275,19 +300,22 @@ function AuthenticatedFilesContent({ user }: { user: { id: string; email?: strin
     try {
       // Validation du nom
       if (!newName || newName.trim() === '') {
-        alert('Le nom du fichier ne peut pas être vide');
+        logger.warn('[FilesPage] Tentative de renommage avec nom vide');
+        handleError(new Error('Le nom du fichier ne peut pas être vide'), 'validation renommage');
         return;
       }
 
       if (newName.length > 255) {
-        alert('Le nom du fichier est trop long (maximum 255 caractères)');
+        logger.warn('[FilesPage] Tentative de renommage avec nom trop long:', newName.length);
+        handleError(new Error('Le nom du fichier est trop long (maximum 255 caractères)'), 'validation renommage');
         return;
       }
 
       // Caractères interdits
       const invalidChars = /[<>:"/\\|?*]/;
       if (invalidChars.test(newName)) {
-        alert('Le nom du fichier contient des caractères interdits: < > : " / \\ | ? *');
+        logger.warn('[FilesPage] Tentative de renommage avec caractères interdits:', newName);
+        handleError(new Error('Le nom du fichier contient des caractères interdits: < > : " / \\ | ? *'), 'validation renommage');
         return;
       }
 
@@ -301,24 +329,24 @@ function AuthenticatedFilesContent({ user }: { user: { id: string; email?: strin
         );
         
         if (existingFile) {
-          alert('Un fichier avec ce nom existe déjà dans ce dossier');
+          logger.warn('[FilesPage] Tentative de renommage avec nom existant:', newName);
+          handleError(new Error('Un fichier avec ce nom existe déjà dans ce dossier'), 'validation renommage');
           return;
         }
       }
 
       await renameFile(fileId, newName.trim());
       setRenamingItemId(null);
+      logger.dev('[FilesPage] Fichier renommé avec succès:', fileId, '->', newName);
     } catch (error) {
-      console.error('Erreur renommage fichier:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue lors du renommage';
-      alert(`Erreur: ${errorMessage}`);
+      logger.error('[FilesPage] Erreur renommage fichier:', error);
       handleError(error, 'renommage fichier');
     }
   }, [renameFile, handleError, displayFiles]);
 
   const handleUploadFile = useCallback(() => {
-    setShowUploader(!showUploader);
-  }, [showUploader]);
+    setShowUploader(prev => !prev);
+  }, []);
 
   const handleUploadComplete = useCallback(() => {
     // Rafraîchir la liste des fichiers
@@ -331,11 +359,166 @@ function AuthenticatedFilesContent({ user }: { user: { id: string; email?: strin
     handleError(error, 'upload fichier');
   }, [handleError]);
 
+  // Fonction utilitaire pour déterminer le type MIME
+  const getMimeTypeFromExtension = useCallback((extension: string): string => {
+    const mimeTypes: Record<string, string> = {
+      'jpg': 'image/jpeg',
+      'jpeg': 'image/jpeg',
+      'png': 'image/png',
+      'gif': 'image/gif',
+      'pdf': 'application/pdf',
+      'txt': 'text/plain',
+      'md': 'text/markdown',
+      'doc': 'application/msword',
+      'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    };
+    
+    return mimeTypes[extension.toLowerCase()] || 'application/octet-stream';
+  }, []);
+
+  // Fonction utilitaire pour uploader un fichier
+  const uploadSingleFile = useCallback(async (file: File) => {
+    const accessToken = await getAccessToken();
+    
+    if (!accessToken) {
+      throw new Error('Session d\'authentification expirée. Veuillez vous reconnecter.');
+    }
+
+    // 1. Initier l'upload
+    const uploadResponse = await fetch('/api/ui/files/upload', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify({
+        fileName: file.name,
+        fileType: file.type,
+        fileSize: file.size,
+      }),
+    });
+
+    if (!uploadResponse.ok) {
+      const errorData = await uploadResponse.json();
+      throw new Error(errorData.error || 'Erreur lors de l\'initiation de l\'upload');
+    }
+
+    const uploadData = await uploadResponse.json();
+
+    // 2. Upload vers S3
+    const s3Response = await fetch(uploadData.uploadUrl, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': file.type,
+      },
+      body: file,
+    });
+
+    if (!s3Response.ok) {
+      throw new Error('Erreur lors de l\'upload vers S3');
+    }
+
+    logger.dev('[FilesPage] Fichier uploadé avec succès:', file.name);
+  }, [getAccessToken]);
+
+  // Fonction utilitaire pour uploader une URL externe
+  const uploadExternalUrl = useCallback(async (url: string, fileName: string, mimeType: string) => {
+    const accessToken = await getAccessToken();
+    
+    if (!accessToken) {
+      throw new Error('Session d\'authentification expirée. Veuillez vous reconnecter.');
+    }
+
+    const response = await fetch('/api/ui/files/upload', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify({
+        externalUrl: url,
+        fileName: fileName,
+        fileType: mimeType,
+        fileSize: 0,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Erreur lors de l\'enregistrement de l\'URL');
+    }
+
+    logger.dev('[FilesPage] URL externe enregistrée avec succès:', url);
+  }, [getAccessToken]);
+
+  // Handler pour les fichiers sélectionnés via UnifiedUploadZone
+  const handleFileSelect = useCallback(async (files: File[]) => {
+    try {
+      logger.dev('[FilesPage] Fichiers sélectionnés:', files);
+      
+      // Valider chaque fichier
+      for (const file of files) {
+        if (file.size > STORAGE_CONFIG.FILE_LIMITS.MAX_FILE_SIZE) {
+          throw new Error(`Fichier "${file.name}" trop volumineux (max: ${Math.round(STORAGE_CONFIG.FILE_LIMITS.MAX_FILE_SIZE / (1024 * 1024))} MB)`);
+        }
+        
+        if (!STORAGE_CONFIG.FILE_LIMITS.ALLOWED_MIME_TYPES.includes(file.type)) {
+          throw new Error(`Type de fichier "${file.type}" non autorisé`);
+        }
+      }
+
+      // Uploader chaque fichier
+      for (const file of files) {
+        await uploadSingleFile(file);
+      }
+
+      // Rafraîchir la liste et fermer la modale
+      await fetchFiles();
+      setShowUploader(false);
+      
+    } catch (error) {
+      handleError(error, 'upload fichiers');
+    }
+  }, [handleError, fetchFiles, uploadSingleFile]);
+
+  // Handler pour les URLs soumises via UnifiedUploadZone
+  const handleUrlSubmit = useCallback(async (url: string) => {
+    try {
+      logger.dev('[FilesPage] URL soumise:', url);
+      
+      // Valider l'URL
+      const urlObj = new URL(url);
+      if (!['http:', 'https:'].includes(urlObj.protocol)) {
+        throw new Error('URL invalide. Seules les URLs HTTP/HTTPS sont autorisées.');
+      }
+
+      // Extraire le nom de fichier de l'URL
+      const fileName = urlObj.pathname.split('/').pop() || 'fichier_externe';
+      const fileExtension = fileName.split('.').pop() || '';
+      
+      // Déterminer le type MIME basé sur l'extension
+      const mimeType = getMimeTypeFromExtension(fileExtension);
+
+      await uploadExternalUrl(url, fileName, mimeType);
+
+      // Rafraîchir la liste et fermer la modale
+      await fetchFiles();
+      setShowUploader(false);
+      
+    } catch (error) {
+      handleError(error, 'upload URL');
+    }
+  }, [handleError, fetchFiles, uploadExternalUrl, getMimeTypeFromExtension]);
+
   const handleDeleteSelected = useCallback(async () => {
     if (selectedFiles.size === 0) return;
     
+    // TODO: Remplacer par un composant de confirmation modal
     if (confirm(`Voulez-vous vraiment supprimer ${selectedFiles.size} fichier(s) ?`)) {
-      const promises = Array.from(selectedFiles).map(async (fileId) => {
+      const filesToDelete = Array.from(selectedFiles);
+      logger.dev('[FilesPage] Suppression en lot de fichiers:', filesToDelete.length);
+      
+      const promises = filesToDelete.map(async (fileId) => {
         try {
           await deleteFile(fileId);
           setSelectedFiles(prev => {
@@ -343,14 +526,14 @@ function AuthenticatedFilesContent({ user }: { user: { id: string; email?: strin
             newSet.delete(fileId);
             return newSet;
           });
+          logger.dev('[FilesPage] Fichier supprimé:', fileId);
         } catch (error) {
-          console.error('Erreur suppression fichier:', error);
-          const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue lors de la suppression';
-          alert(`Erreur: ${errorMessage}`);
+          logger.error('[FilesPage] Erreur suppression fichier:', error);
           handleError(error, 'suppression fichier');
         }
       });
       await Promise.all(promises);
+      logger.dev('[FilesPage] Suppression en lot terminée');
     }
   }, [selectedFiles, deleteFile, handleError]);
 
@@ -365,169 +548,81 @@ function AuthenticatedFilesContent({ user }: { user: { id: string; email?: strin
     e.preventDefault();
     e.stopPropagation();
     
-    // Supprimer tous les menus contextuels existants
-    const existingMenus = document.querySelectorAll('.file-context-menu');
-    existingMenus.forEach(menu => menu.remove());
-    
-    // Créer le menu contextuel avec le style glassmorphism
-    const contextMenu = document.createElement('div');
-    contextMenu.className = 'file-context-menu context-menu-container';
-    contextMenu.style.cssText = `
-      position: fixed;
-      top: ${e.clientY}px;
-      left: ${e.clientX}px;
-      z-index: 2000;
-      min-width: 140px;
-      background: rgba(15, 15, 15, 0.95);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 12px;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
-      padding: 8px 0;
-      color: #ffffff;
-      font-family: 'Noto Sans', Inter, Arial, sans-serif;
-      font-size: 13px;
-      font-weight: 400;
-      user-select: none;
-      animation: fadeInMenu 0.2s ease-out;
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      overflow: hidden;
-    `;
-
-    // Ajouter l'effet de gradient glassmorphique
-    const gradient = document.createElement('div');
-    gradient.className = 'context-menu-gradient';
-    gradient.style.cssText = `
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: linear-gradient(135deg, 
-        rgba(255, 255, 255, 0.05) 0%, 
-        rgba(255, 255, 255, 0.01) 50%, 
-        rgba(255, 255, 255, 0.05) 100%);
-      opacity: 0.8;
-      pointer-events: none;
-      z-index: 1;
-      border-radius: 12px;
-    `;
-    contextMenu.appendChild(gradient);
-
-    // Options du menu
-    const options = [
-      {
-        label: 'Renommer',
-        icon: '✏️',
-        action: () => {
-          setRenamingItemId(file.id);
-          contextMenu.remove();
-        }
-      },
-      {
-        label: 'Ouvrir',
-        icon: '👁️',
-        action: () => {
-          handleFileOpen(file);
-          contextMenu.remove();
-        }
-      },
-      {
-        label: 'Supprimer',
-        icon: '🗑️',
-        action: async () => {
-          if (confirm(`Supprimer "${file.filename}" ?`)) {
-            try {
-              await deleteFile(file.id);
-            } catch (error) {
-              console.error('Erreur suppression fichier:', error);
-              const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue lors de la suppression';
-              alert(`Erreur: ${errorMessage}`);
-            }
-          }
-          contextMenu.remove();
-        }
-      }
-    ];
-
-    // Créer les éléments du menu avec le style glassmorphism
-    options.forEach(option => {
-      const item = document.createElement('button');
-      item.className = 'context-menu-item';
-      item.style.cssText = `
-        padding: 10px 16px;
-        cursor: pointer;
-        border: none;
-        background: none;
-        width: 100%;
-        text-align: left;
-        font-size: 13px;
-        font-weight: 400;
-        border-radius: 8px;
-        transition: all 0.2s ease;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        display: block;
-        color: #ffffff;
-        margin: 2px 6px;
-        position: relative;
-        z-index: 2;
-      `;
-      item.innerHTML = `<span class="context-menu-item-text">${option.icon} ${option.label}</span>`;
-      
-      item.addEventListener('mouseenter', () => {
-        item.style.backgroundColor = 'rgba(255, 255, 255, 0.08)';
-        item.style.color = '#ffffff';
-        item.style.transform = 'translateX(2px)';
-        item.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.3)';
-      });
-      
-      item.addEventListener('mouseleave', () => {
-        item.style.backgroundColor = 'transparent';
-        item.style.color = '#ffffff';
-        item.style.transform = 'translateX(0)';
-        item.style.boxShadow = 'none';
-      });
-      
-      item.addEventListener('click', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        option.action();
-      });
-      
-      contextMenu.appendChild(item);
+    setContextMenu({
+      file,
+      x: e.clientX,
+      y: e.clientY
     });
-
-    // Ajouter au DOM
-    document.body.appendChild(contextMenu);
-
-    // Fermer le menu si on clique ailleurs
-    const closeMenu = (e: MouseEvent) => {
-      if (!contextMenu.contains(e.target as Node)) {
-        contextMenu.remove();
-        document.removeEventListener('click', closeMenu);
-        document.removeEventListener('contextmenu', closeMenu);
-      }
-    };
-
-    // Attendre un tick pour éviter la fermeture immédiate
-    setTimeout(() => {
-      document.addEventListener('click', closeMenu);
-      document.addEventListener('contextmenu', closeMenu);
-    }, 0);
-
+    
     logger.dev('[FilesPage] Menu contextuel affiché pour:', file.filename);
-  }, [handleFileOpen, deleteFile]);
+  }, []);
+
+  const handleContextMenuAction = useCallback(async (action: string, file: FileItem) => {
+    closeContextMenu();
+    
+    switch (action) {
+      case 'rename':
+        setRenamingItemId(file.id);
+        break;
+      case 'open':
+        handleFileOpen(file);
+        break;
+      case 'delete':
+        // TODO: Remplacer par un composant de confirmation modal
+        if (confirm(`Supprimer "${file.filename}" ?`)) {
+          try {
+            await deleteFile(file.id);
+            logger.dev('[FilesPage] Fichier supprimé via menu contextuel:', file.id);
+          } catch (error) {
+            logger.error('[FilesPage] Erreur suppression fichier via menu contextuel:', error);
+            handleError(error, 'suppression fichier');
+          }
+        }
+        break;
+    }
+  }, [closeContextMenu, handleFileOpen, deleteFile]);
 
   const handleCancelRename = useCallback(() => {
     setRenamingItemId(null);
   }, []);
 
-  // 🔧 OPTIMISATION: Mémoiser le calcul du pourcentage d'utilisation
-  const usagePercentage = useMemo(() => 
-    quotaInfo ? Math.round((quotaInfo.usedBytes / quotaInfo.quotaBytes) * 100) : 0,
-    [quotaInfo]
+  // 🔧 OPTIMISATION: Mémoiser tous les calculs de stats
+  const statsData = useMemo(() => {
+    const fileCount = displayFiles.length;
+    const usedMB = quotaInfo ? Math.round(quotaInfo.usedBytes / (1024 * 1024)) : 0;
+    const usagePercentage = quotaInfo ? Math.round((quotaInfo.usedBytes / quotaInfo.quotaBytes) * 100) : 0;
+    
+    return {
+      fileCount,
+      usedMB,
+      usagePercentage,
+      fileCountLabel: `fichier${fileCount > 1 ? 's' : ''}`
+    };
+  }, [displayFiles.length, quotaInfo]);
+
+  // 🔧 OPTIMISATION: Mémoiser les formats supportés (statique)
+  const supportedFormats = useMemo(() => {
+    const formats = STORAGE_CONFIG.FILE_LIMITS.ALLOWED_MIME_TYPES;
+    const simplified: string[] = [];
+    
+    // Grouper les formats par catégorie
+    const hasImages = formats.some(f => f.includes('image'));
+    const hasPdf = formats.some(f => f.includes('pdf'));
+    const hasText = formats.some(f => f.includes('text'));
+    const hasOffice = formats.some(f => f.includes('msword') || f.includes('openxml') || f.includes('excel') || f.includes('powerpoint'));
+    
+    if (hasImages) simplified.push('Images');
+    if (hasPdf) simplified.push('PDF');
+    if (hasText) simplified.push('Texte');
+    if (hasOffice) simplified.push('Office (Word, Excel, PowerPoint)');
+    
+    return simplified.join(', ');
+  }, []);
+
+  // 🔧 OPTIMISATION: Mémoiser la taille maximale (statique)
+  const maxFileSizeMB = useMemo(() => 
+    Math.round(STORAGE_CONFIG.FILE_LIMITS.MAX_FILE_SIZE / (1024 * 1024)),
+    []
   );
 
   return (
@@ -543,8 +638,8 @@ function AuthenticatedFilesContent({ user }: { user: { id: string; email?: strin
           title="Mes Fichiers"
           subtitle="Gérez et organisez vos documents"
           stats={[
-            { number: displayFiles.length, label: `fichier${displayFiles.length > 1 ? 's' : ''}` },
-            { number: quotaInfo ? Math.round(quotaInfo.usedBytes / (1024 * 1024)) : 0, label: 'MB' }
+            { number: statsData.fileCount, label: statsData.fileCountLabel },
+            { number: statsData.usedMB, label: 'MB' }
           ]}
         />
 
@@ -654,9 +749,9 @@ function AuthenticatedFilesContent({ user }: { user: { id: string; email?: strin
         </motion.div>
 
         {/* Uploader modal */}
-                  <AnimatePresence>
-                    {showUploader && (
-                      <motion.div
+        <AnimatePresence>
+          {showUploader && (
+            <motion.div
               className="uploader-modal-overlay"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -669,18 +764,85 @@ function AuthenticatedFilesContent({ user }: { user: { id: string; email?: strin
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.9, y: 20 }}
                 onClick={(e) => e.stopPropagation()}
-                      >
-                        <FileUploaderLocal
-                          onUploadComplete={handleUploadComplete}
-                          onUploadError={handleUploadError}
-                          maxFileSize={STORAGE_CONFIG.FILE_LIMITS.MAX_FILE_SIZE}
-                          allowedTypes={[...STORAGE_CONFIG.FILE_LIMITS.ALLOWED_MIME_TYPES]}
-                          multiple={true}
-                        />
+              >
+                {/* Header de la modale */}
+                <div className="uploader-modal-header">
+                  <h2 className="uploader-modal-title">Upload de fichiers</h2>
+                  <button 
+                    className="uploader-modal-close"
+                    onClick={() => setShowUploader(false)}
+                    aria-label="Fermer"
+                  >
+                    <X size={20} />
+                  </button>
+                </div>
+
+                {/* Contenu de la modale */}
+                <div className="uploader-modal-body">
+                  <UnifiedUploadZone
+                    placeholder="Coller l'URL du fichier à importer..."
+                    onFileSelect={handleFileSelect}
+                    onUrlSubmit={handleUrlSubmit}
+                    accept={STORAGE_CONFIG.FILE_LIMITS.ALLOWED_MIME_TYPES.join(',')}
+                    multiple={true}
+                    showUrlInput={true}
+                    showDropZone={true}
+                  />
+                </div>
+
+                {/* Footer de la modale */}
+                <div className="uploader-modal-footer">
+                  <p className="uploader-modal-hint">
+                    Formats supportés : {supportedFormats}
+                  </p>
+                  <p className="uploader-modal-hint">
+                    Taille maximale : {maxFileSizeMB} MB
+                  </p>
+                </div>
               </motion.div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Menu contextuel optimisé */}
+        <AnimatePresence>
+          {contextMenu && (
+            <motion.div
+              className="file-context-menu-react"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              style={{
+                position: 'fixed',
+                top: contextMenu.y,
+                left: contextMenu.x,
+                zIndex: 2000,
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="context-menu-options">
+                <button
+                  className="context-menu-item"
+                  onClick={() => handleContextMenuAction('rename', contextMenu.file)}
+                >
+                  ✏️ Renommer
+                </button>
+                <button
+                  className="context-menu-item"
+                  onClick={() => handleContextMenuAction('open', contextMenu.file)}
+                >
+                  👁️ Ouvrir
+                </button>
+                <button
+                  className="context-menu-item"
+                  onClick={() => handleContextMenuAction('delete', contextMenu.file)}
+                >
+                  🗑️ Supprimer
+                </button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </main>
     </div>
   );

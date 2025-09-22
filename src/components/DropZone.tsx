@@ -53,7 +53,7 @@ const DropZone: React.FC<DropZoneProps> = ({
 
   // Gestion du clic pour ouvrir le sélecteur de fichiers
   const handleClick = useCallback(() => {
-    const input = document.getElementById('file-input') as HTMLInputElement;
+    const input = document.getElementById('dropzone-file-input') as HTMLInputElement;
     if (input) {
       input.click();
     }
@@ -167,7 +167,7 @@ const DropZone: React.FC<DropZoneProps> = ({
 
       {/* Input file caché */}
       <input
-        id="file-input"
+        id="dropzone-file-input"
         type="file"
         multiple
         accept=".md,.txt,.pdf,.doc,.docx,.jpg,.jpeg,.png,.gif"

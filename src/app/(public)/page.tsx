@@ -14,7 +14,7 @@ import NotesCarouselNotion, { NotesCarouselRef } from '@/components/NotesCarouse
 import PerformanceMonitor from '@/components/PerformanceMonitor';
 import UnifiedPageTitle from '@/components/UnifiedPageTitle';
 import RecentFilesList from '@/components/RecentFilesList';
-import DropZone from '@/components/DropZone';
+import UnifiedUploadZone from '@/components/UnifiedUploadZone';
 import SearchBar, { SearchResult } from '@/components/SearchBar';
 import { motion } from 'framer-motion';
 import './home.css';
@@ -366,7 +366,7 @@ function AuthenticatedHomeContent({ user }: { user: { id: string; email?: string
                   <h3 className="dashboard-column-title">Drop Zone</h3>
                 </div>
                 <div className="dashboard-column-content">
-                  <DropZone />
+                  <UnifiedUploadZone />
                 </div>
               </div>
 

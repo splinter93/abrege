@@ -143,6 +143,78 @@
 
 
 /* ==========================================================================
+   MENU CONTEXTUEL REACT OPTIMISÉ
+   ========================================================================== */
+
+.file-context-menu-react {
+  min-width: 140px;
+  background: rgba(15, 15, 15, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  overflow: hidden;
+  position: relative;
+}
+
+.context-menu-options {
+  padding: 8px 0;
+  position: relative;
+  z-index: 2;
+}
+
+.context-menu-item {
+  padding: 10px 16px;
+  cursor: pointer;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+  font-size: 13px;
+  font-weight: 400;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+  color: #ffffff;
+  margin: 2px 6px;
+  position: relative;
+  z-index: 2;
+}
+
+.context-menu-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+  transform: translateX(2px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.context-menu-item:active {
+  transform: translateX(1px);
+}
+
+/* Gradient glassmorphique pour le menu */
+.file-context-menu-react::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.05) 0%, 
+    rgba(255, 255, 255, 0.01) 50%, 
+    rgba(255, 255, 255, 0.05) 100%);
+  opacity: 0.8;
+  pointer-events: none;
+  z-index: 1;
+  border-radius: 12px;
+}
+
+/* ==========================================================================
    RESPONSIVE DESIGN
    ========================================================================== */
 
@@ -193,5 +265,123 @@
 
   .header-title {
     font-size: 1.25rem;
+  }
+}
+
+/* ==========================================================================
+   MODALE D'UPLOAD
+   ========================================================================== */
+
+.uploader-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7) !important;
+  backdrop-filter: blur(16px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.uploader-modal-content {
+  background: var(--background-primary) !important;
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(20px);
+  width: 100%;
+  max-width: 600px;
+  max-height: 80vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.uploader-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24px 24px 16px 24px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.uploader-modal-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.uploader-modal-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.uploader-modal-close:hover {
+  background: var(--background-secondary);
+  color: var(--text-primary);
+}
+
+.uploader-modal-body {
+  padding: 24px;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.uploader-modal-footer {
+  padding: 16px 24px 24px 24px;
+  border-top: 1px solid var(--border-color);
+  background: var(--background-secondary);
+}
+
+.uploader-modal-hint {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin: 0 0 8px 0;
+  line-height: 1.4;
+}
+
+.uploader-modal-hint:last-child {
+  margin-bottom: 0;
+}
+
+/* Responsive pour la modale */
+@media (max-width: 768px) {
+  .uploader-modal-overlay {
+    padding: 16px;
+  }
+  
+  .uploader-modal-content {
+    max-width: 100%;
+    max-height: 90vh;
+  }
+  
+  .uploader-modal-header {
+    padding: 20px 20px 16px 20px;
+  }
+  
+  .uploader-modal-title {
+    font-size: 1.25rem;
+  }
+  
+  .uploader-modal-body {
+    padding: 20px;
+  }
+  
+  .uploader-modal-footer {
+    padding: 16px 20px 20px 20px;
   }
 } 
