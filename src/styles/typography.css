@@ -619,7 +619,7 @@
 .ProseMirror code,
 .editor-content code {
   font-weight: var(--editor-code-weight);
-  background: var(--color-bg-secondary); /* Harmonisé avec les blockquotes et tableaux */
+  background: var(--color-bg-content); /* Variable unifiée pour les éléments de contenu */
   color: var(--color-text-primary);
   padding: 2px 6px;
   border-radius: var(--radius-sm);

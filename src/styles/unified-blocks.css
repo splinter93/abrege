@@ -10,7 +10,7 @@
    DESIGN TOKENS
    ========================================================================== */
 :root {
-  --blk-bg: var(--color-bg-secondary); /* Harmonisé avec les blockquotes et tableaux */
+  --blk-bg: var(--color-bg-content); /* Variable unifiée pour les éléments de contenu */
   --blk-fg: #a0a0a0;
   --blk-muted: #8a8a8a;
   --blk-radius: 8px;
@@ -216,7 +216,7 @@
 .public-note-content-wrapper .markdown-body pre,
 .public-note-content-wrapper .markdown-body pre code,
 .public-note-content-wrapper .markdown-body .hljs {
-  background: var(--color-bg-secondary); /* Harmonisé avec les blockquotes et tableaux */
+  background: var(--color-bg-content); /* Variable unifiée pour les éléments de contenu */
   color: #a0a0a0 ;
   border: none ;
   border-radius: 8px ;
@@ -320,7 +320,7 @@
 /* Fallback for inline code (not in a block) */
 :not(.u-block) > code,
 :not(pre) > code {
-  background: var(--color-bg-secondary); /* Harmonisé avec les blockquotes et tableaux */
+  background: var(--color-bg-content); /* Variable unifiée pour les éléments de contenu */
   padding: 0.2em 0.4em;
   border-radius: var(--radius-md);
   font-family: var(--mono);
@@ -463,7 +463,7 @@
 
 /* Mermaid blocks integration */
 .chat-markdown .u-block--mermaid {
-  background: var(--color-bg-secondary); /* Harmonisé avec les blockquotes et tableaux */
+  background: var(--color-bg-content); /* Variable unifiée pour les éléments de contenu */
   color: #a0a0a0 ;
   border: 1px solid rgba(255, 255, 255, 0.1) ;
   border-radius: 0.5rem ;

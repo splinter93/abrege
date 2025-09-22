@@ -18,6 +18,7 @@
   --color-bg-secondary: #252525;      /* Pour la sidebar, légèrement plus clair */
   --color-bg-tertiary: #303030;       /* Pour les survols et éléments actifs */
   --color-bg-elevated: #2C2C2C;       /* Pour les éléments "surélevés" comme les menus */
+  --color-bg-content: #252525;         /* Pour les éléments de contenu : code, blockquotes, tableaux, etc. */
   --color-bg-hover: rgba(255, 255, 255, 0.05); /* Survol transparent */
   --color-bg-header: var(--color-bg-primary);
   --color-bg-accent-soft: rgba(59, 130, 246, 0.15);

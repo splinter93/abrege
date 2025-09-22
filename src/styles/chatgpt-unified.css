@@ -485,7 +485,7 @@
 }
 
 .chatgpt-message-content code {
-  background: var(--color-bg-secondary); /* Harmonisé avec les blockquotes et tableaux */
+  background: var(--color-bg-content); /* Variable unifiée pour les éléments de contenu */
   color: var(--chatgpt-text-primary);
   padding: 2px 6px;
   border-radius: var(--chatgpt-radius-sm);

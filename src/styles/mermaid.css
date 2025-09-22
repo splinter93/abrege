@@ -8,7 +8,7 @@
 /* Variables du thème Mermaid */
 :root {
   --mermaid-theme-background: transparent; /* Le fond est géré par .unified-block-container */
-  --block-bg: var(--color-bg-secondary); /* Harmonisé avec les blockquotes et tableaux */
+  --block-bg: var(--color-bg-content); /* Variable unifiée pour les éléments de contenu */
   --mermaid-theme-text-color: #d1d5db; /* Gris clair pour le texte */
   --mermaid-theme-primary-color: #38bdf8; /* Bleu ciel pour les éléments principaux (ex: boîtes de flowchart) */
   --mermaid-theme-primary-border-color: #0ea5e9;
