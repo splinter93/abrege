@@ -169,6 +169,8 @@
   flex-direction: column;
   gap: 20px;
   padding: 40px;
+  align-items: flex-start;
+  justify-content: flex-start;
 }
 
 .account-api-key-item {
@@ -933,6 +935,8 @@
   .account-api-keys-list {
     padding: 28px;
     gap: 16px;
+    align-items: flex-start;
+    justify-content: flex-start;
   }
   
   .account-api-key-item {
@@ -966,6 +970,8 @@
   
   .account-api-keys-list {
     padding: 24px;
+    align-items: flex-start;
+    justify-content: flex-start;
   }
   
   .account-api-key-item {

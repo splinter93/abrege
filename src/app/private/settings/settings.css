@@ -1,0 +1,879 @@
+/*
+  PAGE RÉGLAGES - DESIGN MODERNE COHÉRENT
+  ========================================
+  Styles spécifiques pour la page réglages avec cohérence visuelle
+  Utilise la même structure que la page d'accueil
+*/
+
+/* ========================================
+   MAIN DASHBOARD - CONTENEUR PRINCIPAL
+   ======================================== */
+
+.main-dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  width: 100%;
+  max-width: 100%;
+  align-items: stretch;
+}
+
+.dashboard-section {
+  width: 100%;
+  max-width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ========================================
+   SECTION CONTENT - LARGEUR COMPLÈTE
+   ======================================== */
+
+.section-content {
+  width: 100%;
+  max-width: 100%;
+}
+
+/* ========================================
+   SECTION TITLE ROW - ALIGNEMENT TITRE/BOUTON
+   ======================================== */
+
+.section-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.section-title {
+  margin: 0;
+  flex: 1;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #ffffff;
+  font-family: 'Noto Sans', sans-serif;
+  order: 1;
+}
+
+.account-create-button {
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+/* ========================================
+   BOUTON CRÉER NOUVELLE CLÉ
+   ======================================== */
+
+.account-create-button {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: rgba(255, 255, 255, 0.03) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 6px;
+  color: rgba(255, 255, 255, 0.8) !important;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  text-decoration: none;
+  white-space: nowrap;
+  flex-shrink: 0;
+  margin-left: auto;
+  order: 2;
+  position: static !important;
+  right: auto !important;
+  top: auto !important;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+.account-create-button:hover {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  color: #ffffff !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+}
+
+.account-create-button:active {
+  transform: translateY(0) !important;
+}
+
+/* ========================================
+   BLOCS GLASSMORPHISM AMÉLIORÉS
+   ======================================== */
+
+.account-glass-block {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  padding: 1.5rem;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.account-glass-block::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.05) 0%, 
+    transparent 50%, 
+    rgba(255, 255, 255, 0.02) 100%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.account-glass-block:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.12);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+}
+
+.account-glass-block:hover::before {
+  opacity: 1;
+}
+
+/* Bloc API spécial */
+.account-api-block {
+  background: rgba(59, 130, 246, 0.05);
+  border-color: rgba(59, 130, 246, 0.15);
+}
+
+.account-api-block:hover {
+  background: rgba(59, 130, 246, 0.08);
+  border-color: rgba(59, 130, 246, 0.25);
+}
+
+/* ========================================
+   FORMULAIRES
+   ======================================== */
+
+.account-create-key-form {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.account-field {
+  margin-bottom: 1.5rem;
+}
+
+.account-field:last-child {
+  margin-bottom: 0;
+}
+
+.account-field-label {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: #ffffff;
+  font-weight: 500;
+  font-size: 0.9rem;
+  font-family: 'Noto Sans', sans-serif;
+}
+
+.account-field-input,
+.account-field-select {
+  width: 100%;
+  padding: 0.75rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  color: #ffffff;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.account-field-input:focus,
+.account-field-select:focus {
+  outline: none;
+  border-color: rgba(59, 130, 246, 0.5);
+  background: rgba(255, 255, 255, 0.05);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.account-field-input::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* ========================================
+   SCOPES ET PERMISSIONS
+   ======================================== */
+
+.account-scopes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+.account-scope-checkbox {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.account-scope-checkbox:hover {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.account-scope-checkbox input[type="checkbox"] {
+  margin-top: 2px;
+  accent-color: #3b82f6;
+}
+
+.account-scope-content {
+  flex: 1;
+}
+
+.account-scope-label {
+  display: block;
+  font-weight: 500;
+  color: #ffffff;
+  margin-bottom: 0.25rem;
+  font-size: 0.9rem;
+  font-family: 'Noto Sans', sans-serif;
+}
+
+.account-scope-description {
+  display: block;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.8rem;
+  line-height: 1.4;
+  font-family: 'Inter', sans-serif;
+}
+
+/* ========================================
+   BOUTONS D'ACTION
+   ======================================== */
+
+.account-create-input-group {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.account-button-primary {
+  padding: 0.75rem 1.5rem;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.account-button-primary:hover:not(:disabled) {
+  background: #2563eb;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.account-button-primary:disabled {
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.5);
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.account-button-secondary {
+  padding: 0.75rem 1.5rem;
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.account-button-secondary:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.2);
+  transform: translateY(-1px);
+}
+
+.account-button-danger {
+  padding: 0.375rem 0.75rem;
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.account-button-danger:hover {
+  background: rgba(239, 68, 68, 0.25);
+  border-color: rgba(239, 68, 68, 0.5);
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+
+/* ========================================
+   LISTE DES CLÉS API
+   ======================================== */
+
+/* Les clés API sont maintenant directement dans la section, pas de conteneur */
+
+/* Espacement entre les clés API */
+.account-api-key-item + .account-api-key-item {
+  margin-top: 0.75rem;
+}
+
+.account-api-key-item:first-child {
+  margin-top: 1rem;
+}
+
+.account-api-key-item {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 0.75rem;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  display: block;
+  align-self: flex-start;
+  margin-left: 0;
+  margin-right: auto;
+}
+
+.account-api-key-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.03) 0%, 
+    transparent 50%, 
+    rgba(255, 255, 255, 0.01) 100%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.account-api-key-item:hover {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.1);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+.account-api-key-item:hover::before {
+  opacity: 1;
+}
+
+.account-api-key-item.inactive {
+  opacity: 0.6;
+}
+
+.account-api-key-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 0.5rem;
+  gap: 1rem;
+}
+
+.account-api-key-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  flex: 1;
+}
+
+.account-api-key-name-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+}
+
+.account-api-key-name {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #ffffff;
+  margin: 0;
+  font-family: 'Noto Sans', sans-serif;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
+.account-api-key-meta {
+  display: none;
+}
+
+/* ========================================
+   BOUTONS D'ACTION DANS LE HEADER
+   ======================================== */
+
+.account-api-key-actions-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.account-action-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.7);
+  padding: 0;
+}
+
+.account-action-button svg {
+  width: 16px;
+  height: 16px;
+}
+
+.account-action-button:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+
+.account-action-button.edit:hover {
+  background: rgba(59, 130, 246, 0.2);
+  border-color: rgba(59, 130, 246, 0.4);
+  color: #3b82f6;
+}
+
+.account-action-button.delete:hover {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: rgba(239, 68, 68, 0.4);
+  color: #ef4444;
+}
+
+.account-api-key-date,
+.account-api-key-last {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.6);
+  font-family: 'Inter', sans-serif;
+}
+
+
+.account-status-badge {
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.account-status-badge.active {
+  background: rgba(34, 197, 94, 0.2);
+  color: #22c55e;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.account-status-badge.inactive {
+  background: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.account-api-key-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-top: 0.5rem;
+  width: 100%;
+}
+
+.account-api-key-scopes {
+  flex: 1;
+  min-width: 0;
+}
+
+.account-api-key-scopes strong {
+  display: inline;
+  color: #ffffff;
+  font-size: 0.8rem;
+  margin-right: 0.5rem;
+  font-family: 'Noto Sans', sans-serif;
+}
+
+.account-scopes-tags {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.account-scope-tag {
+  padding: 0.125rem 0.375rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.7rem;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+}
+
+
+/* ========================================
+   PRÉFÉRENCES
+   ======================================== */
+
+.account-preferences-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+}
+
+.account-checkbox-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.account-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+
+.account-checkbox input[type="checkbox"] {
+  accent-color: #3b82f6;
+}
+
+.account-checkbox-text {
+  color: #ffffff;
+  font-size: 0.9rem;
+  font-family: 'Inter', sans-serif;
+}
+
+/* ========================================
+   SÉCURITÉ
+   ======================================== */
+
+.account-security-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* ========================================
+   ÉTATS VIDES ET CHARGEMENT
+   ======================================== */
+
+.account-loading-state,
+.account-empty-state {
+  text-align: center;
+  padding: 3rem 1.5rem;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.account-loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(255, 255, 255, 0.1);
+  border-top: 3px solid #3b82f6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 1rem auto;
+}
+
+.account-empty-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  opacity: 0.6;
+}
+
+.account-empty-state h3 {
+  margin: 0 0 0.5rem 0;
+  color: #ffffff;
+  font-size: 1.2rem;
+  font-family: 'Noto Sans', sans-serif;
+}
+
+.account-empty-state p {
+  margin: 0;
+  line-height: 1.5;
+  font-family: 'Inter', sans-serif;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* ========================================
+   ANIMATIONS AMÉLIORÉES
+   ======================================== */
+
+.account-glass-block {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+.account-api-key-item {
+  animation: slideInLeft 0.4s ease-out;
+}
+
+.account-api-key-item:nth-child(1) { animation-delay: 0.1s; }
+.account-api-key-item:nth-child(2) { animation-delay: 0.2s; }
+.account-api-key-item:nth-child(3) { animation-delay: 0.3s; }
+.account-api-key-item:nth-child(4) { animation-delay: 0.4s; }
+.account-api-key-item:nth-child(5) { animation-delay: 0.5s; }
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* ========================================
+   TRANSITIONS FLUIDES
+   ======================================== */
+
+.account-glass-block,
+.account-api-key-item,
+.account-create-button,
+.account-button-primary,
+.account-button-secondary,
+.account-button-danger {
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.account-field-input,
+.account-field-select,
+.account-scope-checkbox {
+  transition: all 0.2s ease;
+}
+
+/* ========================================
+   RESPONSIVE AMÉLIORÉ
+   ======================================== */
+
+@media (max-width: 1024px) {
+  .account-scopes-grid {
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  }
+  
+  .account-preferences-grid {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .section-title-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+  
+  .account-create-button {
+    align-self: flex-end;
+  }
+  
+  .account-scopes-grid {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+  
+  .account-preferences-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .account-api-key-item {
+    padding: 0.625rem;
+  }
+  
+  .account-api-key-content {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+  
+  .account-api-key-actions {
+    align-self: flex-end;
+    width: 100%;
+    display: flex;
+    justify-content: flex-end;
+  }
+  
+  .account-create-input-group {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  
+  .account-glass-block {
+    padding: 1.25rem;
+  }
+  
+  .account-scope-checkbox {
+    padding: 0.75rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .account-glass-block {
+    padding: 1rem;
+    border-radius: 12px;
+  }
+  
+  .account-api-key-item {
+    padding: 0.5rem;
+    border-radius: 6px;
+  }
+  
+  .account-api-key-meta {
+    font-size: 0.75rem;
+  }
+  
+  .account-scope-tag {
+    font-size: 0.7rem;
+    padding: 0.2rem 0.4rem;
+  }
+  
+  .account-create-button {
+    padding: 0.4rem 0.6rem;
+    font-size: 0.8rem;
+  }
+  
+  .account-button-primary,
+  .account-button-secondary {
+    padding: 0.625rem 1.25rem;
+    font-size: 0.85rem;
+  }
+  
+  .account-button-danger {
+    padding: 0.4rem 0.75rem;
+    font-size: 0.8rem;
+  }
+  
+  .account-field-input,
+  .account-field-select {
+    padding: 0.625rem;
+    font-size: 0.85rem;
+  }
+  
+  .account-scope-checkbox {
+    padding: 0.625rem;
+  }
+  
+  .account-scope-label {
+    font-size: 0.85rem;
+  }
+  
+  .account-scope-description {
+    font-size: 0.75rem;
+  }
+}
+
+/* ========================================
+   ACCESSIBILITÉ
+   ======================================== */
+
+.account-create-button:focus,
+.account-button-primary:focus,
+.account-button-secondary:focus,
+.account-button-danger:focus {
+  outline: 2px solid rgba(59, 130, 246, 0.5);
+  outline-offset: 2px;
+}
+
+.account-field-input:focus,
+.account-field-select:focus {
+  outline: none;
+}
+
+/* ========================================
+   REDUCED MOTION
+   ======================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  .account-glass-block,
+  .account-api-key-item {
+    animation: none;
+  }
+  
+  .account-glass-block,
+  .account-api-key-item,
+  .account-create-button,
+  .account-button-primary,
+  .account-button-secondary,
+  .account-button-danger {
+    transition: none;
+  }
+  
+  .account-glass-block:hover,
+  .account-api-key-item:hover {
+    transform: none;
+  }
+}
