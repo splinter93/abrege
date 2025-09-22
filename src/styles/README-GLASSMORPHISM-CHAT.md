@@ -9,14 +9,12 @@ Le système glassmorphism du chat a été entièrement refactorisé pour offrir 
 ```
 src/styles/
 ├── chat-glassmorphism.css          # Variables et mixins glassmorphism
-├── chat-glassmorphism-demo.css     # Démonstration des effets
 └── README-GLASSMORPHISM-CHAT.md    # Cette documentation
 
 src/components/chat/
 ├── ChatInput.css                   # Styles input avec glassmorphism
 ├── ChatBubbles.css                 # Styles bulles avec glassmorphism
 ├── ChatLayout.css                  # Styles layout avec glassmorphism
-└── ChatWidget.css                  # Styles widget avec glassmorphism
 ```
 
 ## 🎯 Variables principales

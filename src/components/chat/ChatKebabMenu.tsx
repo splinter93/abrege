@@ -1,43 +1,26 @@
 "use client";
 import React, { useState, useRef, useEffect } from 'react';
-import { useLLMStore } from '@/store/useLLMStore';
 import { useChatStore } from '@/store/useChatStore';
-// import { useStreamingPreferences } from '@/hooks/useStreamingPreferences'; // Supprimé - faux streaming
 import './ChatKebabMenu.css';
-import { simpleLogger as logger } from '@/utils/logger';
 
 interface ChatKebabMenuProps {
-  isWideMode: boolean;
-  isFullscreen: boolean;
   historyLimit: number;
-  onToggleWideMode: () => void;
-  onToggleFullscreen: () => void;
   onHistoryLimitChange: (limit: number) => void;
-  onToggleToolCallDebugger?: () => void;
-  onToggleWidget?: () => void;
   disabled?: boolean;
 }
 
 const ChatKebabMenu: React.FC<ChatKebabMenuProps> = ({ 
-  isWideMode, 
-  isFullscreen, 
   historyLimit,
-  onToggleWideMode, 
-  onToggleFullscreen,
   onHistoryLimitChange,
-  onToggleToolCallDebugger,
-  onToggleWidget,
   disabled = false
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   
   // LLM Provider state
-  const { currentProvider, availableProviders, setProvider } = useLLMStore();
   const { selectedAgent } = useChatStore();
   
   // ✅ SUPPRIMÉ: Hook pour les préférences de streaming (faux streaming)
-  // Le vrai streaming est géré par useChatStreaming et les canaux Supabase
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -61,11 +44,6 @@ const ChatKebabMenu: React.FC<ChatKebabMenuProps> = ({
     setIsOpen(false);
   };
 
-  const handleWidgetToggle = () => {
-    if (disabled) return;
-    onToggleWidget?.();
-    setIsOpen(false);
-  };
 
   const handleHistoryLimitChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (disabled) return;
@@ -106,18 +84,6 @@ const ChatKebabMenu: React.FC<ChatKebabMenuProps> = ({
             <span>Quitter Plein écran</span>
           </button>
 
-          {/* Passer en mode Widget */}
-          <button
-            onClick={handleWidgetToggle}
-            className="kebab-option"
-            aria-label="Passer en mode widget"
-            disabled={disabled}
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
-            </svg>
-            <span>Mode Widget</span>
-          </button>
 
           {/* Historique des messages réglable */}
           <div className="kebab-input-group">
@@ -152,7 +118,6 @@ const ChatKebabMenu: React.FC<ChatKebabMenuProps> = ({
           </div>
 
           {/* ✅ SUPPRIMÉ: Section Streaming (faux streaming) */}
-          {/* Le vrai streaming est géré automatiquement par useChatStreaming et les canaux Supabase */}
         </div>
       )}
     </div>

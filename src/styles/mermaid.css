@@ -79,12 +79,28 @@
 .mermaid-svg-container .flowchart-node-rect {
   fill: var(--mermaid-theme-primary-color) ;
   stroke: var(--mermaid-theme-primary-border-color) ;
+  rx: 8px;
+  ry: 8px;
+}
+
+/* Rayons de bordure pour tous les rectangles de nœuds */
+.mermaid-svg-container rect[id*="node"] {
+  rx: 8px;
+  ry: 8px;
+}
+
+/* Rayons de bordure pour les rectangles génériques dans les diagrammes */
+.mermaid-svg-container rect {
+  rx: 6px;
+  ry: 6px;
 }
 
 /* Sequence Diagram */
 .mermaid-svg-container .actor {
   stroke: var(--mermaid-theme-secondary-border-color) ;
   fill: var(--mermaid-theme-secondary-color) ;
+  rx: 6px;
+  ry: 6px;
 }
 .mermaid-svg-container .messageText {
   fill: var(--mermaid-theme-text-color) ;
@@ -97,16 +113,75 @@
 .mermaid-svg-container .section {
   fill: var(--mermaid-theme-secondary-color) ;
   stroke: var(--mermaid-theme-secondary-border-color) ;
+  rx: 4px;
+  ry: 4px;
 }
 .mermaid-svg-container .task {
   fill: var(--mermaid-theme-primary-color) ;
   stroke: var(--mermaid-theme-primary-border-color) ;
+  rx: 4px;
+  ry: 4px;
 }
 .mermaid-svg-container .taskText {
   fill: var(--mermaid-theme-primary-text-color) ;
 }
 
+/* Rayons de bordure pour les éléments de classe et d'état */
+.mermaid-svg-container .classBox,
+.mermaid-svg-container .stateBox,
+.mermaid-svg-container .noteBox {
+  rx: 6px;
+  ry: 6px;
+}
+
+/* Rayons de bordure pour les éléments de diagramme d'état */
+.mermaid-svg-container .state-node {
+  rx: 8px;
+  ry: 8px;
+}
+
+/* Rayons de bordure pour les éléments de diagramme de classe */
+.mermaid-svg-container .class-node {
+  rx: 6px;
+  ry: 6px;
+}
+
 /* Cacher le texte d'erreur généré par Mermaid à l'intérieur du SVG */
 .mermaid-svg-container svg text.error-text {
   display: none ;
+}
+
+/* ==========================================================================
+   STYLES POUR LA MODALE MERMAID
+   ========================================================================== */
+
+/* Rayons de bordure pour tous les rectangles dans la modale Mermaid */
+.mermaid-modal svg rect {
+  rx: 6px;
+  ry: 6px;
+}
+
+/* Rayons de bordure pour les rectangles de nœuds dans la modale */
+.mermaid-modal svg rect[id*="node"] {
+  rx: 8px;
+  ry: 8px;
+}
+
+/* Rayons de bordure pour les éléments spécifiques dans la modale */
+.mermaid-modal svg .actor {
+  rx: 6px;
+  ry: 6px;
+}
+
+.mermaid-modal svg .section,
+.mermaid-modal svg .task {
+  rx: 4px;
+  ry: 4px;
+}
+
+.mermaid-modal svg .classBox,
+.mermaid-modal svg .stateBox,
+.mermaid-modal svg .noteBox {
+  rx: 6px;
+  ry: 6px;
 }

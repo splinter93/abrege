@@ -5,8 +5,6 @@
 /* Application globale de la police Inter pour tous les composants du chat */
 .chat-fullscreen-container,
 .chat-fullscreen-container *,
-.chat-widget-mode,
-.chat-widget-mode *,
 .chat-message,
 .chat-message *,
 .chat-input,
@@ -55,9 +53,6 @@
   font-family: var(--chat-font-family);
 }
 
-.chat-fullscreen-container.chat-widget-mode {
-  font-family: var(--chat-font-family);
-}
 
 /* Messages du chat */
 .chat-message {

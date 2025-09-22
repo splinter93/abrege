@@ -7,9 +7,7 @@ import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { useAppContext } from '@/hooks/useAppContext';
 import { useUIContext } from '@/hooks/useUIContext';
 import { useChatResponse } from '@/hooks/useChatResponse';
-import { useChatResponseHarmony } from '@/hooks/useChatResponseHarmony';
 import { useChatScroll } from '@/hooks/useChatScroll';
-// import { useChatStreaming } from '@/hooks/useChatStreaming'; // Supprimé - faux streaming
 // import { useAtomicToolCalls } from '@/hooks/useAtomicToolCalls'; // Fichier supprimé
 import { useAuth } from '@/hooks/useAuth';
 // useToolCallDebugger supprimé
@@ -18,8 +16,7 @@ import ChatInput from './ChatInput';
 import ChatMessage from './ChatMessage';
 import ChatKebabMenu from './ChatKebabMenu';
 import SidebarUltraClean from './SidebarUltraClean';
-import ChatWidget from './ChatWidget';
-import { simpleLogger as logger, LogCategory } from '@/utils/logger';
+import { simpleLogger as logger } from '@/utils/logger';
 
 import './ToolCallMessage.css';
 import '@/styles/chatgpt-unified.css';
@@ -30,7 +27,6 @@ const ChatFullscreenV2: React.FC = () => {
   const isDesktop = useMediaQuery('(min-width: 1024px)');
   const [sidebarOpen, setSidebarOpen] = useState(false); // Toujours fermée par défaut
   const [wideMode, setWideMode] = useState(false);
-  const [isWidgetMode, setIsWidgetMode] = useState(false);
   
   // 🎯 Contexte et store
   const appContext = useAppContext();
@@ -48,7 +44,6 @@ const ChatFullscreenV2: React.FC = () => {
     selectedAgent,
     selectedAgentId,
     loading,
-    error,
     setCurrentSession,
     setSelectedAgent,
     setSelectedAgentId,
@@ -676,41 +671,13 @@ const ChatFullscreenV2: React.FC = () => {
     setWideMode(prev => !prev);
   }, [user, authLoading]);
 
-  const handleWidgetToggle = useCallback(() => {
-    // Vérifier l'authentification avant de continuer
-    if (authLoading) {
-      logger.dev('[ChatFullscreenV2] ⏳ Vérification de l\'authentification en cours...');
-      return;
-    }
-    
-    if (!user) {
-      logger.warn('[ChatFullscreenV2] ⚠️ Utilisateur non authentifié, impossible de passer en mode widget');
-      return;
-    }
-
-    setIsWidgetMode(true);
-  }, [user, authLoading]);
 
   // 🎯 Rendu optimisé
   return (
     <>
-      {/* Widget rendu en dehors du conteneur fullscreen */}
-      {isWidgetMode && (
-        <ChatWidget
-          isOpen={true}
-          onToggle={(isOpen) => {
-            if (!isOpen) {
-              setIsWidgetMode(false);
-            }
-          }}
-          onExpand={() => setIsWidgetMode(false)}
-          position="bottom-right"
-          size="medium"
-        />
-      )}
 
-      {/* Chat fullscreen (masqué quand en mode widget) */}
-      <div className={`chatgpt-container ${wideMode ? 'wide-mode' : ''}`} style={{ display: isWidgetMode ? 'none' : 'flex' }}>
+      {/* Chat fullscreen */}
+      <div className={`chatgpt-container ${wideMode ? 'wide-mode' : ''}`}>
       {/* Header optimisé avec nouveau design ChatGPT */}
       <div className="chatgpt-header">
         <div className="chatgpt-header-left">
@@ -722,13 +689,8 @@ const ChatFullscreenV2: React.FC = () => {
         </div>
         <div className="chatgpt-header-right">
           <ChatKebabMenu
-            isWideMode={wideMode}
-            isFullscreen={true}
             historyLimit={currentSession?.history_limit || 30}
-            onToggleWideMode={handleWideModeToggle}
-            onToggleFullscreen={() => {}}
             onHistoryLimitChange={handleHistoryLimitChange}
-            onToggleWidget={handleWidgetToggle}
             disabled={!user || authLoading}
           />
         </div>

@@ -18,7 +18,6 @@ interface ChatStore {
   currentSession: ChatSession | null;
   selectedAgent: Agent | null;
   selectedAgentId: string | null;
-  isWidgetOpen: boolean;
   isFullscreen: boolean;
   loading: boolean;
   error: string | null;
@@ -32,9 +31,7 @@ interface ChatStore {
   setError: (error: string | null) => void;
   
   // 🎮 Actions UI
-  toggleWidget: () => void;
   openFullscreen: () => void;
-  closeWidget: () => void;
   
   // ⚡ Actions avec fonctionnalités essentielles
   syncSessions: () => Promise<void>;
@@ -52,7 +49,6 @@ export const useChatStore = create<ChatStore>()(
       currentSession: null,
       selectedAgent: null,
       selectedAgentId: null,
-      isWidgetOpen: false,
       isFullscreen: false,
       loading: false,
       error: null,
@@ -69,19 +65,12 @@ export const useChatStore = create<ChatStore>()(
       setError: (error: string | null) => set({ error }),
 
       // 🎮 Actions UI
-      toggleWidget: () => {
-        const { isWidgetOpen } = get();
-        set({ isWidgetOpen: !isWidgetOpen });
-      },
-
       openFullscreen: () => {
-        set({ isFullscreen: true, isWidgetOpen: false });
+        set({ isFullscreen: true });
         if (typeof window !== 'undefined') {
           window.location.href = '/chat';
         }
       },
-
-      closeWidget: () => set({ isWidgetOpen: false, isFullscreen: false }),
 
       // ⚡ Actions avec fonctionnalités essentielles
       syncSessions: async () => {
@@ -214,7 +203,6 @@ export const useChatStore = create<ChatStore>()(
     {
       name: 'chat-store',
       partialize: (state) => ({
-        isWidgetOpen: state.isWidgetOpen,
         isFullscreen: state.isFullscreen,
         selectedAgentId: state.selectedAgentId,
       }),

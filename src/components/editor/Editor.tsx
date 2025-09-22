@@ -14,7 +14,6 @@ import '@/styles/tiptap-extensions.css';
 import '@/styles/block-drag-drop.css';
 import '@/styles/mermaid.css'; // Styles Mermaid centralisés
 import '@/styles/unified-blocks.css'; // Système unifié pour tous les blocs
-import '@/styles/editor-chat-widget.css'; // Styles pour le chat widget dans l'éditeur
 import EditorLayout from './EditorLayout';
 import EditorHeader from './EditorHeader';
 import EditorContent from './EditorContent';
@@ -101,7 +100,6 @@ const debounce = <T extends (...args: unknown[]) => void>(
   }) as T;
 };
 import ContextMenu from './ContextMenu';
-import ChatWidget from '@/components/chat/ChatWidget';
 import { useUIContext } from '@/hooks/useUIContext';
 
 /**
@@ -237,7 +235,7 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
     setHeaderImageUrl(normalized);
     try {
       updateNote(noteId, { header_image: normalized || undefined });
-      await v2UnifiedApi.updateNote(noteId, { header_image: normalized || undefined }, userId);
+      await v2UnifiedApi.updateNote(noteId, { header_image: normalized }, userId);
     } catch (error) {
       logger.error(LogCategory.EDITOR, 'Error updating header image');
     }
@@ -1326,12 +1324,6 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
       {process.env.NODE_ENV === 'development' && userId && (
         <RealtimeStatus userId={userId} noteId={noteId} />
       )}
-      
-      {/* 💬 Chat Widget en bas à droite */}
-      <ChatWidget
-        position="bottom-right"
-        size="medium"
-      />
       
       {/* 🧪 Test simple du contexte UI */}
       {process.env.NODE_ENV === 'development' && uiContext && (

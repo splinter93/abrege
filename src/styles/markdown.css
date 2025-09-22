@@ -463,11 +463,27 @@ a {
   text-align: left;
   vertical-align: top;
   padding: 8px 20px;
-  font-size: var(--editor-table-font-size); /* Taille réduite pour les tableaux */
+  font-size: var(--editor-table-font-size) !important; /* Taille réduite pour les tableaux */
   color: var(--color-text-primary);
   word-break: break-word;
   white-space: normal;
   box-sizing: border-box;
+}
+
+/* Règle ultra-spécifique pour forcer la font-size des tableaux */
+.markdown-body table th,
+.markdown-body table td,
+.markdown-body table th p,
+.markdown-body table td p,
+.public-note-container .markdown-body table th,
+.public-note-container .markdown-body table td,
+.public-note-container .markdown-body table th p,
+.public-note-container .markdown-body table td p,
+.public-note-content-wrapper .markdown-body table th,
+.public-note-content-wrapper .markdown-body table td,
+.public-note-content-wrapper .markdown-body table th p,
+.public-note-content-wrapper .markdown-body table td p {
+  font-size: var(--editor-table-font-size) !important; /* Force la font-size des tableaux */
 }
 
 .markdown-body th,
@@ -476,7 +492,7 @@ a {
   background: var(--color-bg-content); /* Variable unifiée pour les éléments de contenu */
   color: var(--color-text-primary);
   /* font-weight géré par typography.css */
-  font-size: var(--editor-table-font-size); /* Taille réduite pour les tableaux */
+  font-size: var(--editor-table-font-size) !important; /* Taille réduite pour les tableaux */
   letter-spacing: 0.02em;
   border-bottom: 1px solid var(--border-subtle);
   position: sticky;
@@ -494,7 +510,7 @@ a {
 .markdown-body th span,
 .markdown-body th strong,
 .markdown-body th b {
-  /* font-weight géré par typography.css */
+  font-weight: var(--editor-table-header-weight) !important; /* Force le gras sur tous les éléments */
 }
 
   .markdown-body tr:last-child td,
@@ -798,7 +814,7 @@ a {
     .markdown-body li { margin: 0.625rem 0; }
     .markdown-body blockquote { padding: 1.25rem 1.5rem; margin: 1.5rem 0; }
     /* .markdown-body pre { padding: 1.25rem 1.5rem; margin: 1.5rem 0; font-size: 0.85em; } - DÉSACTIVÉ pour unified-blocks.css */
-    .markdown-body table th, .markdown-body table td { padding: 0.875rem 1rem; font-size: 0.85em; }
+    .markdown-body table th, .markdown-body table td { padding: 0.875rem 1rem; font-size: var(--editor-table-font-size); }
 }
 
 /* ==========================================================================
@@ -834,7 +850,7 @@ a {
   border-bottom: 1px solid var(--border-subtle);
   background: none;
   color: var(--color-text-primary);
-  font-size: var(--editor-table-font-size); /* Taille réduite pour les tableaux */
+  font-size: var(--editor-table-font-size) !important; /* Taille réduite pour les tableaux */
   font-weight: 400;
   text-align: left;
   vertical-align: top;
@@ -846,11 +862,19 @@ a {
   box-sizing: border-box;
 }
 
+/* Règle ultra-spécifique pour forcer la font-size des tableaux ProseMirror */
+.ProseMirror table th,
+.ProseMirror table td,
+.ProseMirror table th p,
+.ProseMirror table td p {
+  font-size: var(--editor-table-font-size) !important; /* Force la font-size des tableaux */
+}
+
 .ProseMirror th {
   background: var(--color-bg-content); /* Variable unifiée pour les éléments de contenu */
   color: var(--color-text-primary);
   /* font-weight géré par typography.css */
-  font-size: var(--editor-table-font-size); /* Taille réduite pour les tableaux */
+  font-size: var(--editor-table-font-size) !important; /* Taille réduite pour les tableaux */
   letter-spacing: 0.02em;
   border-bottom: 1px solid var(--border-subtle);
   position: sticky;
@@ -868,7 +892,7 @@ a {
 .ProseMirror th span,
 .ProseMirror th strong,
 .ProseMirror th b {
-  /* font-weight géré par typography.css */
+  font-weight: var(--editor-table-header-weight) !important; /* Force le gras sur tous les éléments */
 }
 
   .ProseMirror td { background: transparent; /* Fond transparent pour alternance */ }

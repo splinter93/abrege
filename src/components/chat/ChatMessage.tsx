@@ -51,7 +51,6 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
   }
 
   // ✅ SUPPRIMÉ: Animation du contenu (faux streaming)
-  // Le vrai streaming est géré par useChatStreaming et les canaux Supabase
   useEffect(() => {
     if (content) {
       setDisplayedContent(content);
@@ -59,7 +58,6 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
   }, [content]);
 
   // ✅ SUPPRIMÉ: Gestion du faux streaming
-  // Le vrai streaming est géré par useChatStreaming et les canaux Supabase
 
   const parseSuccessFromContent = (raw: string | null | undefined): boolean | undefined => {
     if (!raw) return undefined;

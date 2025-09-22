@@ -205,17 +205,6 @@
   border-radius: var(--chat-radius-lg);
 }
 
-/* Style pour le widget chat */
-.chat-fullscreen-container.chat-widget-mode .audio-recorder-button {
-  width: 24px;
-  height: 24px;
-}
-
-.chat-fullscreen-container.chat-widget-mode .audio-recorder-duration,
-.chat-fullscreen-container.chat-widget-mode .audio-recorder-processing-text {
-  font-size: 10px;
-  padding: 1px 4px;
-}
 
 /* ========================================
    ACCESSIBILITÉ
