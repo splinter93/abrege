@@ -23,6 +23,7 @@ import EditorHeaderImage from '@/components/EditorHeaderImage';
 import EditorKebabMenu from '@/components/EditorKebabMenu';
 import EditorTitle from './EditorTitle';
 import PublicTableOfContents from '@/components/TableOfContents';
+import LinkDebugger from '@/components/debug/LinkDebugger';
 import { useFileSystemStore } from '@/store/useFileSystemStore';
 import type { FileSystemState } from '@/store/useFileSystemStore';
 import { useMarkdownRender } from '@/hooks/editor/useMarkdownRender';
@@ -1045,6 +1046,9 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
 
   return (
     <>
+      {/* 🔍 Debug: Vérifier les liens */}
+      <LinkDebugger />
+      
       {/* 🔄 Realtime System - Service simple et robuste */}
         <div className="editor-toc-fixed">
           <PublicTableOfContents headings={headings} containerRef={editorContainerRef} />

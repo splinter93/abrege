@@ -620,7 +620,7 @@
 .editor-content code {
   font-weight: var(--editor-code-weight);
   background: var(--color-bg-content); /* Variable unifiée pour les éléments de contenu */
-  color: var(--color-text-primary);
+  color: #e55a2b; /* Orange adouci pour le texte des codes inline */
   padding: 2px 6px;
   border-radius: var(--radius-sm);
   font-family: var(--font-monospace);

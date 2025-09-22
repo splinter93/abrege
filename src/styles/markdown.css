@@ -298,6 +298,17 @@ html {
      LIENS - DESIGN PREMIUM ACCESSIBLE
    ========================================================================== */
 
+/* Styles généraux pour tous les liens */
+a {
+  pointer-events: auto !important; /* S'assurer que tous les liens sont cliquables */
+  cursor: pointer !important; /* Curseur pointer pour tous les liens */
+}
+
+/* Debug: Vérifier que les liens sont bien formés */
+.markdown-body a[href]:not([href=""]):not([href="#"]) {
+  /* Styles pour les liens valides */
+}
+
 .markdown-body a {
     color: var(--color-accent);
     text-decoration: underline;
@@ -307,10 +318,12 @@ html {
     transition: color 0.2s ease, text-underline-offset 0.2s ease, text-decoration-thickness 0.2s ease, border-color 0.2s ease;
     border-bottom: 1px solid transparent; /* pour un léger soulignement animé si besoin */
     padding-bottom: 0;
+    pointer-events: auto; /* S'assurer que les liens sont cliquables */
+    cursor: pointer; /* Curseur pointer pour indiquer la cliquabilité */
 }
 
 .markdown-body a:hover {
-  color: var(--color-accent);
+  color: var(--color-accent-hover); /* Orange plus vif au survol */
     text-underline-offset: 3px;
     text-decoration-thickness: 2px;
     border-bottom-color: var(--color-accent);
@@ -450,7 +463,7 @@ html {
   text-align: left;
   vertical-align: top;
   padding: 8px 20px;
-  font-size: var(--editor-body-size); /* Taille normale du texte */
+  font-size: var(--editor-table-font-size); /* Taille réduite pour les tableaux */
   color: var(--color-text-primary);
   word-break: break-word;
   white-space: normal;
@@ -463,7 +476,7 @@ html {
   background: var(--color-bg-content); /* Variable unifiée pour les éléments de contenu */
   color: var(--color-text-primary);
   /* font-weight géré par typography.css */
-  font-size: var(--editor-body-size); /* Taille normale du texte */
+  font-size: var(--editor-table-font-size); /* Taille réduite pour les tableaux */
   letter-spacing: 0.02em;
   border-bottom: 1px solid var(--border-subtle);
   position: sticky;
@@ -493,13 +506,13 @@ html {
   .markdown-body tbody tr:nth-child(odd) td,
   .public-note-container .markdown-body tbody tr:nth-child(odd) td,
   .public-note-content-wrapper .markdown-body tbody tr:nth-child(odd) td {
-    background-color: var(--color-bg-secondary); /* Ligne grise */
+    background-color: var(--color-bg-content); /* Variable unifiée pour les éléments de contenu */
   }
 
   .markdown-body tbody tr:nth-child(even) td,
   .public-note-container .markdown-body tbody tr:nth-child(even) td,
   .public-note-content-wrapper .markdown-body tbody tr:nth-child(even) td {
-    background-color: rgba(0, 0, 0, 0.1); /* Ligne un peu plus foncée */
+    background-color: var(--color-bg-table-alternate); /* Variable unifiée pour l'alternance des tableaux */
   }
   .markdown-body tbody tr:hover td,
   .public-note-container .markdown-body tbody tr:hover td,
@@ -821,7 +834,7 @@ html {
   border-bottom: 1px solid var(--border-subtle);
   background: none;
   color: var(--color-text-primary);
-  font-size: var(--editor-body-size); /* Taille normale du texte */
+  font-size: var(--editor-table-font-size); /* Taille réduite pour les tableaux */
   font-weight: 400;
   text-align: left;
   vertical-align: top;
@@ -837,7 +850,7 @@ html {
   background: var(--color-bg-content); /* Variable unifiée pour les éléments de contenu */
   color: var(--color-text-primary);
   /* font-weight géré par typography.css */
-  font-size: var(--editor-body-size); /* Taille normale du texte */
+  font-size: var(--editor-table-font-size); /* Taille réduite pour les tableaux */
   letter-spacing: 0.02em;
   border-bottom: 1px solid var(--border-subtle);
   position: sticky;
@@ -859,8 +872,8 @@ html {
 }
 
   .ProseMirror td { background: transparent; /* Fond transparent pour alternance */ }
-  .ProseMirror tbody tr:nth-child(odd) td { background-color: var(--color-bg-secondary); /* Ligne grise */ }
-    .ProseMirror tbody tr:nth-child(even) td { background-color: rgba(0, 0, 0, 0.1); /* Ligne un peu plus foncée */ }
+  .ProseMirror tbody tr:nth-child(odd) td { background-color: var(--color-bg-content); /* Variable unifiée pour les éléments de contenu */ }
+    .ProseMirror tbody tr:nth-child(even) td { background-color: var(--color-bg-table-alternate); /* Variable unifiée pour l'alternance des tableaux */ }
   .ProseMirror tbody tr:hover td { background-color: var(--surface-hover); transition: background-color 0.2s ease; }
   .ProseMirror tr:last-child td { border-bottom: none; }
 

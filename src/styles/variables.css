@@ -346,8 +346,8 @@
   --chatgpt-text-secondary: #d1d5db;
   --chatgpt-text-muted: #9ca3af;
 
-  --chatgpt-accent-primary: #10a37f;
-  --chatgpt-accent-hover: #0d8f6f;
+  --chatgpt-accent-primary: #e55a2b; /* Orange adouci pour les liens */
+  --chatgpt-accent-hover: #f5652c; /* Orange plus vif au survol */
   --chatgpt-accent-light: #34d399;
 
   --chatgpt-border-subtle: rgba(255, 255, 255, 0.1);

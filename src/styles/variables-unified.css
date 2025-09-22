@@ -18,7 +18,9 @@
   --color-bg-secondary: #252525;      /* Pour la sidebar, légèrement plus clair */
   --color-bg-tertiary: #303030;       /* Pour les survols et éléments actifs */
   --color-bg-elevated: #2C2C2C;       /* Pour les éléments "surélevés" comme les menus */
-  --color-bg-content: #252525;         /* Pour les éléments de contenu : code, blockquotes, tableaux, etc. */
+  --color-bg-content: #202020;         /* Pour les éléments de contenu : code, blockquotes, tableaux, etc. */
+  --color-bg-table-alternate: rgba(0, 0, 0, 0.15); /* Pour l'alternance des lignes de tableau */
+  --editor-table-font-size: 0.95em; /* Taille de police réduite pour les tableaux */
   --color-bg-hover: rgba(255, 255, 255, 0.05); /* Survol transparent */
   --color-bg-header: var(--color-bg-primary);
   --color-bg-accent-soft: rgba(59, 130, 246, 0.15);
@@ -33,9 +35,9 @@
   --color-text-danger: #FF5C5C;
 
   /* Accents */
-  --color-accent: #3b82f6;
-  --color-accent-primary: #3b82f6;
-  --color-accent-hover: #4f90f7;
+  --color-accent: #e55a2b; /* Orange adouci pour les liens */
+  --color-accent-primary: #e55a2b; /* Orange adouci pour les liens */
+  --color-accent-hover: #f5652c; /* Orange plus vif au survol */
   --color-accent-soft: rgba(59, 130, 246, 0.5);
 
   /* États */

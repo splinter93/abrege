@@ -24,8 +24,8 @@
   --chatgpt-text-secondary: #d1d5db;
   --chatgpt-text-muted: #9ca3af;
   
-  --chatgpt-accent-primary: #10a37f;
-  --chatgpt-accent-hover: #0d8f6f;
+  --chatgpt-accent-primary: #e55a2b; /* Orange adouci pour les liens */
+  --chatgpt-accent-hover: #f5652c; /* Orange plus vif au survol */
   --chatgpt-accent-light: #34d399;
   
   --chatgpt-border-subtle: rgba(255, 255, 255, 0.1);
@@ -486,7 +486,7 @@
 
 .chatgpt-message-content code {
   background: var(--color-bg-content); /* Variable unifiée pour les éléments de contenu */
-  color: var(--chatgpt-text-primary);
+  color: #e55a2b; /* Orange adouci pour le texte des codes inline */
   padding: 2px 6px;
   border-radius: var(--chatgpt-radius-sm);
   font-family: var(--chatgpt-font-mono);
@@ -544,6 +544,8 @@
   color: var(--chatgpt-accent-primary);
   text-decoration: none;
   transition: color var(--chatgpt-transition-fast);
+  pointer-events: auto; /* S'assurer que les liens sont cliquables */
+  cursor: pointer; /* Curseur pointer pour indiquer la cliquabilité */
 }
 
 .chatgpt-message-content a:hover {
