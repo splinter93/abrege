@@ -12,6 +12,27 @@ export function createMarkdownIt() {
     typographer: true,
     quotes: '""\'\''
   });
+  
+  // Plugin pour ajouter target="_blank" aux liens externes
+  md.use((md) => {
+    const defaultRender = md.renderer.rules.link_open || function(tokens, idx, options, env, renderer) {
+      return renderer.renderToken(tokens, idx, options);
+    };
+
+    md.renderer.rules.link_open = function(tokens, idx, options, env, renderer) {
+      const token = tokens[idx];
+      const href = token.attrGet('href');
+      
+      // Si c'est un lien externe, ajouter target="_blank" et rel="noopener noreferrer"
+      if (href && (href.startsWith('http://') || href.startsWith('https://'))) {
+        token.attrSet('target', '_blank');
+        token.attrSet('rel', 'noopener noreferrer');
+      }
+      
+      return defaultRender(tokens, idx, options, env, renderer);
+    };
+  });
+  
   md.use(markdownItGithubTables);
   md.use(anchor, {
     slugify,
