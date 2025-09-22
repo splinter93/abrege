@@ -150,26 +150,32 @@
   top: 100%;
   left: 0;  /* Sera remplacé par le positionnement dynamique du composant */
   min-width: 180px;
-  background: transparent;
-  border: none;
-  border-radius: 0;
-  box-shadow: none;
+  background: var(--surface-1, #1a1a1c);
+  border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.1));
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 4px 16px rgba(0, 0, 0, 0.2);
   z-index: 1001;
-  padding: 0.5rem 0;
+  padding: 8px 0;
   display: flex;
   flex-direction: column;
   gap: 0;
-  margin-top: 2px; /* ✅ Réduit de 8px à 2px pour coller au header */
+  margin-top: 3px;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  overflow: hidden;
 }
 .editor-header-kebab-menu-item {
-  padding: 0.7rem 1.2rem;
-  color: var(--text-2);
-  font-size: var(--ui-font-size-md);
+  padding: 12px 16px;
+  color: var(--text-primary, #ffffff);
+  font-size: 14px;
+  font-weight: 500;
   background: none;
   border: none;
   text-align: left;
   cursor: pointer;
-  transition: background 0.15s, color 0.15s;
+  transition: all 0.15s ease;
+  margin: 2px 6px;
+  border-radius: 8px;
 }
 
 /* Styles pour les éléments div avec role="button" */
@@ -184,8 +190,14 @@
 }
 
 .editor-header-kebab-menu-item:hover {
-  background: var(--surface-hover);
-  color: var(--accent-primary);
+  background: var(--surface-hover, rgba(255, 255, 255, 0.08));
+  color: var(--text-primary, #ffffff);
+  transform: translateX(2px);
+}
+
+.editor-header-kebab-menu-item:active {
+  background: var(--surface-active, rgba(255, 255, 255, 0.12));
+  transform: translateX(1px) scale(0.98);
 }
 
 .editor-toolbar {

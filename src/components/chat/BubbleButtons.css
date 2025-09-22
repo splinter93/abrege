@@ -98,10 +98,10 @@
   position: absolute;
   top: calc(100% + 8px);
   right: 0;
-  background: var(--chat-bg-elevated, #ffffff);
-  border: 1px solid var(--chat-border-primary, #e5e7eb);
+  background: var(--surface-1, #1a1a1c);
+  border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.1));
   border-radius: 12px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), 0 4px 16px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 4px 16px rgba(0, 0, 0, 0.2);
   min-width: 280px;
   max-width: 320px;
   z-index: 1000;
@@ -130,7 +130,7 @@
 }
 
 .kebab-section:not(:last-child) {
-  border-bottom: 1px solid var(--chat-border-primary, #e5e7eb);
+  border-bottom: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.1));
 }
 
 .kebab-section-title {
@@ -165,12 +165,12 @@
 }
 
 .kebab-option:hover {
-  background: var(--chat-bg-tertiary, #f3f4f6);
-  color: var(--chat-text-primary, #111827);
+  background: var(--surface-hover, rgba(255, 255, 255, 0.08));
+  color: var(--text-primary, #ffffff);
 }
 
 .kebab-option:active {
-  background: var(--chat-bg-quaternary, #e5e7eb);
+  background: var(--surface-active, rgba(255, 255, 255, 0.12));
   transform: scale(0.98);
 }
 

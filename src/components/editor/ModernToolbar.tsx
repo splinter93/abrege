@@ -157,6 +157,77 @@ const ModernToolbar: React.FC<ModernToolbarProps> = ({
           {/* Séparateur */}
           <div className="toolbar-separator" />
 
+          {/* Sélecteur de police */}
+          <div className="font-section" ref={fontMenuRef}>
+            <Tooltip text="Police">
+              <button 
+                className="font-btn" 
+                onClick={() => setFontMenuOpen(!fontMenuOpen)}
+                disabled={isReadonly}
+              >
+                <span className="font-label">{currentFontData.label}</span>
+                <FiChevronDown size={14} className="chevron" />
+              </button>
+            </Tooltip>
+            
+            {fontMenuOpen && (
+              <div className="font-dropdown">
+                {/* Recherche de police */}
+                <div className="font-search">
+                  <FiSearch size={16} />
+                  <input
+                    ref={searchInputRef}
+                    type="text"
+                    placeholder="Rechercher une police..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="font-search-input"
+                  />
+                </div>
+
+                {/* Options de scope */}
+                <div className="font-scope-options">
+                  <button
+                    className={`font-scope-btn ${fontScope === 'all' ? 'active' : ''}`}
+                    onClick={() => setFontScope('all')}
+                  >
+                    Tout
+                  </button>
+                  <button
+                    className={`font-scope-btn ${fontScope === 'headings' ? 'active' : ''}`}
+                    onClick={() => setFontScope('headings')}
+                  >
+                    Titres
+                  </button>
+                  <button
+                    className={`font-scope-btn ${fontScope === 'body' ? 'active' : ''}`}
+                    onClick={() => setFontScope('body')}
+                  >
+                    Corps
+                  </button>
+                </div>
+
+                {/* Liste des polices */}
+                <div className="font-list">
+                  {filteredFonts.length > 0 ? (
+                    filteredFonts.map((font) => (
+                      <button
+                        key={font.name}
+                        className={`font-item ${currentFont === font.name ? 'selected' : ''}`}
+                        onClick={() => setFont(font.name)}
+                      >
+                        <span className="font-name">{font.label}</span>
+                        <span className="font-category">{font.category}</span>
+                      </button>
+                    ))
+                  ) : (
+                    <div className="font-empty">Aucune police trouvée</div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
           {/* Formatage de base */}
           <ModernFormatButton editor={editor} format="bold" title="Gras" shortcut="Ctrl+B" />
           <ModernFormatButton editor={editor} format="italic" title="Italique" shortcut="Ctrl+I" />

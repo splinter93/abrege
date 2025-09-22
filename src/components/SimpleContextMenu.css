@@ -6,12 +6,12 @@
   position: fixed;
   z-index: 2000;
   min-width: 140px;
-  background: rgba(15, 15, 15, 0.95);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--surface-1, #1a1a1c);
+  border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.1));
   border-radius: 12px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 4px 16px rgba(0, 0, 0, 0.2);
   padding: 8px 0;
-  color: #ffffff;
+  color: var(--text-primary, #ffffff);
   font-family: 'Noto Sans', Inter, Arial, sans-serif;
   font-size: 13px;
   font-weight: 400;
@@ -60,15 +60,15 @@
 }
 
 .context-menu-item:hover {
-  background: rgba(255, 255, 255, 0.08);
-  color: #ffffff;
+  background: var(--surface-hover, rgba(255, 255, 255, 0.08));
+  color: var(--text-primary, #ffffff);
   transform: translateX(2px);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 .context-menu-item:active {
   transform: translateX(1px) scale(0.98);
-  background: rgba(255, 255, 255, 0.12);
+  background: var(--surface-active, rgba(255, 255, 255, 0.12));
 }
 
 .context-menu-item-text {
