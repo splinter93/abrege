@@ -43,10 +43,10 @@
   --drag-handle-hover: rgba(255, 255, 255, 0.2);
 }
 
-/* Container principal glassmorphism - bordure fine comme SearchBar */
+/* Container principal glassmorphism - même background que les clés API */
 .glassmorphism-container {
-  background: rgba(0, 0, 0, 0.0);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 12px;
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
@@ -62,8 +62,8 @@
 }
 
 .glassmorphism-container:hover {
-  background: rgba(0, 0, 0, 0.03);
-  border-color: rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.1);
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
   transform: translateY(-1px);
 }

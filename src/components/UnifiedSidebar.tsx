@@ -68,6 +68,13 @@ const SettingsIcon = () => (
   </svg>
 );
 
+const DocumentationIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+    <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+  </svg>
+);
+
 
 interface UnifiedSidebarProps {
   isOpen?: boolean;
@@ -163,6 +170,7 @@ const UnifiedSidebar: React.FC<UnifiedSidebarProps> = ({
     { href: '/private/dossiers', label: 'Mes Classeurs', icon: FolderIcon, key: 'dossiers' },
     { href: '/private/shared', label: 'Notes Partagées', icon: ShareIcon, key: 'shared' },
     { href: '/private/files', label: 'Mes Fichiers', icon: FileIcon, key: 'files' },
+    { href: '/private/documentation', label: 'Documentation', icon: DocumentationIcon, key: 'documentation' },
     { href: '/private/trash', label: 'Corbeille', icon: TrashIcon, key: 'trash' },
     { href: '/private/settings', label: 'Paramètres', icon: SettingsIcon, key: 'settings' },
   ];

@@ -1,13 +1,15 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
 import UnifiedSidebar from "@/components/UnifiedSidebar";
 import AuthGuard from "@/components/AuthGuard";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import UnifiedPageTitle from "@/components/UnifiedPageTitle";
-import { User } from "lucide-react";
-import "@/styles/account.css";
+import { User, Edit, Trash2 } from "lucide-react";
+import "@/styles/main.css";
+import "@/app/(public)/dashboard.css";
+import "./account.css";
 
 interface ApiKey {
   id: string;
@@ -52,8 +54,8 @@ export default function AccountPage() {
     {
       id: "3",
       name: "Clé de test",
-      key: "sk-test-9876543210fedcba9876543210fedcba",
-      lastUsed: "Il y a 1 semaine",
+      key: "sk-test-1234567890abcdef1234567890abcdef",
+      lastUsed: "Il y a 3 jours",
       isActive: false,
       createdAt: "5 janvier 2024"
     }
@@ -87,11 +89,6 @@ export default function AccountPage() {
     console.log('Suppression de la clé:', keyId);
   };
 
-  const handleToggleKeyStatus = (keyId: string) => {
-    // Logique pour activer/désactiver une clé
-    console.log('Changement de statut de la clé:', keyId);
-  };
-
   return (
     <ErrorBoundary>
       <AuthGuard>
@@ -106,26 +103,25 @@ export default function AccountPage() {
               icon={User}
               title="Mon Compte"
               subtitle="Gérez votre compte et vos préférences"
-          />
+            />
 
-          {/* Contenu principal avec blocs glassmorphism espacés */}
-          <div className="account-main-container">
-            
-            {/* Section Profil - Bloc compact */}
-            <motion.div 
-              className="account-glass-block"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.1 }}
-            >
-              <div className="account-block-header">
-                <div className="account-block-icon">👤</div>
-                <div>
-                  <h2 className="account-block-title">Profil</h2>
-                  <p className="account-block-subtitle">Informations personnelles</p>
+            {/* Dashboard principal avec design moderne */}
+            <div className="main-dashboard">
+              
+              {/* Section Profil */}
+              <motion.section 
+                className="dashboard-section"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.1 }}
+              >
+                <div className="section-header">
+                  <div className="section-title-row">
+                    <h2 className="section-title">Profil</h2>
+                  </div>
+                  <div className="section-separator"></div>
                 </div>
-              </div>
-              <div className="account-block-content">
+                
                 <div className="account-profile-grid">
                   <div className="account-profile-item">
                     <span className="account-profile-label">Nom</span>
@@ -147,63 +143,62 @@ export default function AccountPage() {
                     <span className="account-profile-value">{userData.joinDate}</span>
                   </div>
                 </div>
-              </div>
-            </motion.div>
+              </motion.section>
 
-            {/* Section Clés API - Menu dédié */}
-            <motion.div 
-              className="account-glass-block account-api-block"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-            >
-              <div className="account-block-header">
-                <div className="account-block-icon">🔑</div>
-                <div>
-                  <h2 className="account-block-title">Clés API</h2>
-                  <p className="account-block-subtitle">Gérez vos clés d'accès programmatique</p>
-                </div>
-                <button 
-                  className="account-create-button"
-                  onClick={() => setShowCreateKey(!showCreateKey)}
-                >
-                  ➕ Nouvelle clé
-                </button>
-              </div>
-
-              {/* Formulaire de création de nouvelle clé */}
-              {showCreateKey && (
-                <div className="account-create-key-form">
-                  <div className="account-field">
-                    <label className="account-field-label">Nom de la clé</label>
-                    <div className="account-create-input-group">
-                      <input 
-                        type="text"
-                        value={newKeyName}
-                        onChange={(e) => setNewKeyName(e.target.value)}
-                        placeholder="Ex: Clé de production, Clé de test..."
-                        className="account-field-input"
-                      />
-                      <button 
-                        className="account-button-primary"
-                        onClick={handleCreateNewKey}
-                        disabled={!newKeyName.trim()}
-                      >
-                        Créer
-                      </button>
-                      <button 
-                        className="account-button-secondary"
-                        onClick={() => setShowCreateKey(false)}
-                      >
-                        Annuler
-                      </button>
-                    </div>
+              {/* Section Clés API */}
+              <motion.section 
+                className="dashboard-section"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.2 }}
+              >
+                <div className="section-header">
+                  <div className="section-title-row">
+                    <h2 className="section-title">Clés API</h2>
                   </div>
+                  <div className="section-separator"></div>
                 </div>
-              )}
 
-              {/* Liste des clés API */}
-              <div className="account-api-keys-list">
+                {/* Formulaire de création de nouvelle clé */}
+                <AnimatePresence>
+                  {showCreateKey && (
+                    <motion.div
+                      className="account-create-key-form"
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      <div className="account-field">
+                        <label className="account-field-label">Nom de la clé</label>
+                        <input 
+                          type="text"
+                          value={newKeyName}
+                          onChange={(e) => setNewKeyName(e.target.value)}
+                          placeholder="Ex: Clé de production, Clé de test..."
+                          className="account-field-input"
+                        />
+                      </div>
+                      <div className="account-create-input-group">
+                        <button 
+                          className="account-button-primary"
+                          onClick={handleCreateNewKey}
+                          disabled={!newKeyName.trim()}
+                        >
+                          Créer
+                        </button>
+                        <button 
+                          className="account-button-secondary"
+                          onClick={() => setShowCreateKey(false)}
+                        >
+                          Annuler
+                        </button>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                {/* Liste des clés API */}
                 {apiKeys.map((apiKey, index) => (
                   <motion.div 
                     key={apiKey.id}
@@ -214,138 +209,63 @@ export default function AccountPage() {
                   >
                     <div className="account-api-key-header">
                       <div className="account-api-key-info">
-                        <h3 className="account-api-key-name">{apiKey.name}</h3>
-                        <div className="account-api-key-meta">
-                          <span className="account-api-key-date">Créée le {apiKey.createdAt}</span>
-                          <span className="account-api-key-last">Dernière utilisation: {apiKey.lastUsed}</span>
+                        <div className="account-api-key-name-row">
+                          <h3 className="account-api-key-name">{apiKey.name}</h3>
+                          <div className={`account-status-badge ${apiKey.isActive ? 'active' : 'inactive'}`}>
+                            {apiKey.isActive ? 'Actif' : 'Inactif'}
+                          </div>
                         </div>
                       </div>
-                      <div className="account-api-key-status">
-                        <div className={`account-status-badge ${apiKey.isActive ? 'active' : 'inactive'}`}>
-                          {apiKey.isActive ? '🟢 Actif' : '🔴 Inactif'}
-                        </div>
+                      <div className="account-api-key-actions-header">
+                        <button 
+                          className="account-action-button edit"
+                          onClick={() => {/* TODO: Implémenter la modification */}}
+                          title="Modifier la clé"
+                        >
+                          <Edit size={16} />
+                        </button>
+                        <button 
+                          className="account-action-button delete"
+                          onClick={() => handleDeleteKey(apiKey.id)}
+                          title="Supprimer la clé"
+                        >
+                          <Trash2 size={16} />
+                        </button>
                       </div>
                     </div>
 
                     <div className="account-api-key-content">
-                      <div className="account-api-key-display">
-                        <input 
-                          type={apiKeyVisible === apiKey.id ? "text" : "password"}
-                          value={apiKey.key}
-                          className="account-api-key-input"
-                          readOnly
-                        />
-                        <button 
-                          type="button"
-                          className="account-api-key-toggle"
-                          onClick={() => handleToggleKeyVisibility(apiKey.id)}
-                        >
-                          {apiKeyVisible === apiKey.id ? "👁️" : "👁️‍🗨️"}
-                        </button>
+                      <div className="account-api-key-scopes-row">
+                        <div className="account-api-key-scopes">
+                          <strong>Clé:</strong>
+                          <div className="account-scopes-tags">
+                            <span className="account-scope-tag">
+                              {apiKeyVisible === apiKey.id ? apiKey.key : '••••••••••••••••••••••••••••••••'}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="account-api-key-creation-date">
+                          Créée le {apiKey.createdAt}
+                        </div>
                       </div>
-
                       <div className="account-api-key-actions">
                         <button 
                           className="account-button-secondary"
+                          onClick={() => handleToggleKeyVisibility(apiKey.id)}
+                        >
+                          {apiKeyVisible === apiKey.id ? '👁️ Masquer' : '👁️ Afficher'}
+                        </button>
+                        <button 
+                          className="account-button-primary"
                           onClick={() => handleCopyApiKey(apiKey.key, apiKey.id)}
                         >
-                          {copied === apiKey.id ? "✅ Copié" : "📋 Copier"}
-                        </button>
-                        <button 
-                          className="account-button-secondary"
-                          onClick={() => handleToggleKeyStatus(apiKey.id)}
-                        >
-                          {apiKey.isActive ? "⏸️ Désactiver" : "▶️ Activer"}
-                        </button>
-                        <button 
-                          className="account-button-danger"
-                          onClick={() => handleDeleteKey(apiKey.id)}
-                        >
-                          🗑️ Supprimer
+                          {copied === apiKey.id ? '✅ Copié' : '📋 Copier'}
                         </button>
                       </div>
                     </div>
                   </motion.div>
                 ))}
-              </div>
-            </motion.div>
-
-            {/* Section Préférences - Bloc compact */}
-            <motion.div 
-              className="account-glass-block"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.3 }}
-            >
-              <div className="account-block-header">
-                <div className="account-block-icon">🎨</div>
-                <div>
-                  <h2 className="account-block-title">Préférences</h2>
-                  <p className="account-block-subtitle">Personnalisez votre expérience</p>
-                </div>
-              </div>
-              <div className="account-block-content">
-                <div className="account-preferences-grid">
-                  <div className="account-field">
-                    <label className="account-field-label">Langue</label>
-                    <select className="account-field-select">
-                      <option value="fr">Français</option>
-                      <option value="en">English</option>
-                    </select>
-                  </div>
-                  <div className="account-field">
-                    <label className="account-field-label">Thème</label>
-                    <select className="account-field-select">
-                      <option value="light">Clair</option>
-                      <option value="dark">Sombre</option>
-                      <option value="auto">Automatique</option>
-                    </select>
-                  </div>
-                  <div className="account-field">
-                    <label className="account-field-label">Notifications</label>
-                    <div className="account-checkbox-group">
-                      <label className="account-checkbox">
-                        <input type="checkbox" defaultChecked />
-                        <span className="account-checkbox-text">Email</span>
-                      </label>
-                      <label className="account-checkbox">
-                        <input type="checkbox" />
-                        <span className="account-checkbox-text">Push</span>
-                      </label>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-
-            {/* Section Sécurité - Bloc compact */}
-            <motion.div 
-              className="account-glass-block"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.4 }}
-            >
-              <div className="account-block-header">
-                <div className="account-block-icon">🛡️</div>
-                <div>
-                  <h2 className="account-block-title">Sécurité</h2>
-                  <p className="account-block-subtitle">Gérez la sécurité de votre compte</p>
-                </div>
-              </div>
-              <div className="account-block-content">
-                <div className="account-security-actions">
-                  <button className="account-button-secondary">
-                    🔒 Changer le mot de passe
-                  </button>
-                  <button className="account-button-secondary">
-                    📱 Authentification à deux facteurs
-                  </button>
-                  <button className="account-button-danger">
-                    🗑️ Supprimer le compte
-                  </button>
-                </div>
-              </div>
-            </motion.div>
+              </motion.section>
 
             </div>
           </main>
@@ -353,4 +273,4 @@ export default function AccountPage() {
       </AuthGuard>
     </ErrorBoundary>
   );
-} 
+}
