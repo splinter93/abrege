@@ -107,11 +107,13 @@ function SortableTab({
       ref={setNodeRef}
       style={style}
       {...attributes}
+      {...listeners}
     >
       <button
         className={`classeur-tab-glassmorphism ${isActive ? "active" : ""} ${isDragOver ? "drag-over" : ""}`}
         style={{ position: 'relative' }}
         onClick={() => onSelectClasseur(classeur.id)}
+        draggable={false}
         onContextMenu={(e) => {
           if (onContextMenu && !isOverlay) {
             onContextMenu(e, classeur);
@@ -139,7 +141,7 @@ function SortableTab({
           }
         }}
       >
-        <span className={`classeur-emoji ${isDragOver ? "drag-over" : ""}`}>
+        <span className="classeur-emoji">
           {classeur.emoji || '📁'}
         </span>
         <span className="classeur-name">{classeur.name}</span>
