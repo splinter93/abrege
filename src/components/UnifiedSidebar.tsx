@@ -8,10 +8,12 @@ import { useActiveSidebarLink } from '@/hooks/useActiveSidebarLink';
 import { motion } from 'framer-motion';
 
 // Icônes SVG optimisées
-const HomeIcon = () => (
+const DashboardIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-    <polyline points="9,22 9,12 15,12 15,22"/>
+    <rect x="3" y="3" width="7" height="7"/>
+    <rect x="14" y="3" width="7" height="7"/>
+    <rect x="14" y="14" width="7" height="7"/>
+    <rect x="3" y="14" width="7" height="7"/>
   </svg>
 );
 
@@ -166,16 +168,13 @@ const UnifiedSidebar: React.FC<UnifiedSidebarProps> = ({
 
   // Navigation items
   const navigationItems = [
-    { href: '/', label: 'Accueil', icon: HomeIcon, key: 'home' },
+    { href: '/', label: 'Dashboard', icon: DashboardIcon, key: 'home' },
     { href: '/private/dossiers', label: 'Mes Classeurs', icon: FolderIcon, key: 'dossiers' },
-    { href: '/private/shared', label: 'Notes Partagées', icon: ShareIcon, key: 'shared' },
     { href: '/private/files', label: 'Mes Fichiers', icon: FileIcon, key: 'files' },
+    { href: '/private/shared', label: 'Notes Partagées', icon: ShareIcon, key: 'shared' },
     { href: '/private/documentation', label: 'Documentation', icon: DocumentationIcon, key: 'documentation' },
-    { href: '/private/trash', label: 'Corbeille', icon: TrashIcon, key: 'trash' },
     { href: '/private/settings', label: 'Paramètres', icon: SettingsIcon, key: 'settings' },
-  ];
-
-  const accountItems = [
+    { href: '/private/trash', label: 'Corbeille', icon: TrashIcon, key: 'trash' },
     { href: '/private/account', label: 'Mon Compte', icon: AccountIcon, key: 'account' },
   ];
 
@@ -227,34 +226,6 @@ const UnifiedSidebar: React.FC<UnifiedSidebarProps> = ({
         >
           <nav className="unified-sidebar-nav">
             {navigationItems.map((item) => (
-              <motion.div
-                key={item.key}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                transition={{ type: "spring", stiffness: 300 }}
-              >
-                <Link 
-                  href={item.href} 
-                  className={`unified-nav-link ${activeLink === item.key ? 'active' : ''}`}
-                  title={isCollapsed ? item.label : undefined}
-                >
-                  <item.icon />
-                  {!isCollapsed && <span>{item.label}</span>}
-                </Link>
-              </motion.div>
-            ))}
-          </nav>
-        </motion.div>
-
-        {/* Section compte utilisateur */}
-        <motion.div 
-          className="unified-sidebar-section unified-sidebar-footer"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
-        >
-          <nav className="unified-sidebar-nav">
-            {accountItems.map((item) => (
               <motion.div
                 key={item.key}
                 whileHover={{ scale: 1.02 }}

@@ -251,21 +251,67 @@ export class ContentApplier {
     try {
       const regexObj = new RegExp(pattern, flags);
       
+      // 🔍 DEBUG: Log du pattern et du contenu
+      logApi.info(`🔍 Regex search: pattern="${pattern}", flags="${flags}", content_length=${content.length}`, {
+        operation: 'findRegexTarget',
+        component: 'ContentApplier'
+      });
+      
       // Timeout pour éviter les regex malveillantes
       const matches = await this.executeRegexWithTimeout(regexObj, content);
+      
+      logApi.info(`🔍 Regex matches found: ${matches.length}`, {
+        operation: 'findRegexTarget',
+        component: 'ContentApplier',
+        matches: matches.slice(0, 3) // Log des 3 premières correspondances
+      });
       
       if (matches.length === 0) {
         return null;
       }
       
       // Sélectionner la correspondance selon nth
-      const targetMatch = nth !== undefined ? matches[nth] : matches[0];
-      if (!targetMatch) {
+      const targetIndex = nth !== undefined ? nth : 0;
+      if (targetIndex < 0 || targetIndex >= matches.length) {
+        logApi.warn(`🔍 Invalid nth index: ${targetIndex}, available: ${matches.length}`, {
+          operation: 'findRegexTarget',
+          component: 'ContentApplier'
+        });
         return null;
       }
       
-      const start = content.indexOf(targetMatch);
-      const end = start + targetMatch.length;
+      const targetMatch = matches[targetIndex];
+      
+      // 🔧 CORRECTION: Utiliser exec() pour obtenir les positions exactes
+      const regexWithGlobal = new RegExp(pattern, flags + 'g');
+      let match;
+      let matchIndex = 0;
+      let start = -1;
+      let end = -1;
+      
+      while ((match = regexWithGlobal.exec(content)) !== null) {
+        if (matchIndex === targetIndex) {
+          start = match.index;
+          end = match.index + match[0].length;
+          break;
+        }
+        matchIndex++;
+      }
+      
+      if (start === -1 || end === -1) {
+        logApi.warn(`🔍 Position not found for match ${targetIndex}`, {
+          operation: 'findRegexTarget',
+          component: 'ContentApplier',
+          targetIndex,
+          totalMatches: matches.length
+        });
+        return null;
+      }
+      
+      logApi.info(`🔍 Regex target found: start=${start}, end=${end}, match="${targetMatch.substring(0, 50)}..."`, {
+        operation: 'findRegexTarget',
+        component: 'ContentApplier'
+      });
       
       return {
         matches: [targetMatch],
@@ -367,12 +413,41 @@ export class ContentApplier {
       }, REGEX_TIMEOUT_MS);
       
       try {
-        const matches = content.match(regex);
+        // Vérifier la taille du contenu avant d'exécuter la regex
+        if (content.length > MAX_CONTENT_LENGTH) {
+          clearTimeout(timeout);
+          reject(new Error('CONTENT_TOO_LARGE'));
+          return;
+        }
+
+        // 🔧 CORRECTION: Utiliser exec() pour une meilleure gestion des regex globales
+        const matches: string[] = [];
+        const regexWithGlobal = new RegExp(regex.source, regex.flags + (regex.global ? '' : 'g'));
+        let match;
+        
+        while ((match = regexWithGlobal.exec(content)) !== null) {
+          matches.push(match[0]);
+          // Éviter les boucles infinies avec les regex qui matchent des chaînes vides
+          if (match[0].length === 0) {
+            regexWithGlobal.lastIndex++;
+          }
+        }
+        
         clearTimeout(timeout);
-        resolve(matches || []);
+        resolve(matches);
       } catch (error) {
         clearTimeout(timeout);
-        reject(error);
+        if (error instanceof Error) {
+          if (error.message.includes('timeout')) {
+            reject(new Error('REGEX_TIMEOUT'));
+          } else if (error.message.includes('Invalid regular expression')) {
+            reject(new Error('REGEX_COMPILE_ERROR: ' + error.message));
+          } else {
+            reject(error);
+          }
+        } else {
+          reject(new Error('REGEX_COMPILE_ERROR: Erreur inconnue'));
+        }
       }
     });
   }
@@ -388,21 +463,39 @@ export class ContentApplier {
   ): { newContent: string } {
     const { action, where, content: newContent = '' } = op;
     
+    // Validation des ranges
+    if (range.start < 0 || range.end < 0 || range.start > content.length || range.end > content.length) {
+      throw new Error('Range invalide: indices hors limites');
+    }
+    
+    if (range.start > range.end) {
+      throw new Error('Range invalide: start > end');
+    }
+    
     let result = content;
     
-    switch (action) {
-      case 'insert':
-        result = this.insertContent(content, range, newContent, where);
-        break;
-      case 'replace':
-        result = this.replaceContent(content, range, newContent);
-        break;
-      case 'delete':
-        result = this.deleteContent(content, range);
-        break;
-      case 'upsert_section':
-        result = this.upsertSection(content, range, newContent, where);
-        break;
+    try {
+      switch (action) {
+        case 'insert':
+          result = this.insertContent(content, range, newContent, where);
+          break;
+        case 'replace':
+          result = this.replaceContent(content, range, newContent);
+          break;
+        case 'delete':
+          result = this.deleteContent(content, range);
+          break;
+        case 'upsert_section':
+          result = this.upsertSection(content, range, newContent, where);
+          break;
+        default:
+          throw new Error(`Action non supportée: ${action}`);
+      }
+    } catch (error) {
+      if (error instanceof Error) {
+        throw new Error(`Erreur lors de l'exécution de l'opération ${action}: ${error.message}`);
+      }
+      throw new Error(`Erreur inconnue lors de l'exécution de l'opération ${action}`);
     }
     
     return { newContent: result };

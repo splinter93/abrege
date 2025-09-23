@@ -107,9 +107,16 @@ export async function POST(
           { 
             error: 'PRECONDITION_FAILED',
             code: CONTENT_APPLY_ERRORS.PRECONDITION_FAILED.code,
-            message: 'Version de la note obsolète'
+            message: etagResult.message || 'Version de la note obsolète',
+            current_etag: etagResult.etag
           },
-          { status: CONTENT_APPLY_ERRORS.PRECONDITION_FAILED.status }
+          { 
+            status: CONTENT_APPLY_ERRORS.PRECONDITION_FAILED.status,
+            headers: { 
+              "Content-Type": "application/json",
+              ...(etagResult.etag && { "ETag": etagResult.etag })
+            }
+          }
         );
       }
     }
@@ -218,7 +225,8 @@ export async function POST(
 
   } catch (error) {
     const apiTime = Date.now() - startTime;
-    logApi.error(`❌ Erreur serveur: ${error}`, { ...context, apiTime });
+    const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
+    logApi.error(`❌ Erreur serveur: ${errorMessage}`, { ...context, apiTime });
     
     // Gérer les erreurs spécifiques
     if (error instanceof Error) {
@@ -226,9 +234,10 @@ export async function POST(
         return NextResponse.json(
           { 
             error: 'Erreur de compilation regex',
-            code: CONTENT_APPLY_ERRORS.REGEX_COMPILE_ERROR.code
+            code: CONTENT_APPLY_ERRORS.REGEX_COMPILE_ERROR.code,
+            message: errorMessage
           },
-          { status: CONTENT_APPLY_ERRORS.REGEX_COMPILE_ERROR.status }
+          { status: CONTENT_APPLY_ERRORS.REGEX_COMPILE_ERROR.status, headers: { "Content-Type": "application/json" } }
         );
       }
       
@@ -236,15 +245,31 @@ export async function POST(
         return NextResponse.json(
           { 
             error: 'Timeout regex',
-            code: CONTENT_APPLY_ERRORS.REGEX_TIMEOUT.code
+            code: CONTENT_APPLY_ERRORS.REGEX_TIMEOUT.code,
+            message: errorMessage
           },
-          { status: CONTENT_APPLY_ERRORS.REGEX_TIMEOUT.status }
+          { status: CONTENT_APPLY_ERRORS.REGEX_TIMEOUT.status, headers: { "Content-Type": "application/json" } }
+        );
+      }
+
+      if (error.message.includes('CONTENT_TOO_LARGE')) {
+        return NextResponse.json(
+          { 
+            error: 'Contenu trop volumineux',
+            code: CONTENT_APPLY_ERRORS.CONTENT_TOO_LARGE.code,
+            message: errorMessage
+          },
+          { status: CONTENT_APPLY_ERRORS.CONTENT_TOO_LARGE.status, headers: { "Content-Type": "application/json" } }
         );
       }
     }
     
     return NextResponse.json(
-      { error: 'Erreur interne du serveur' },
+      { 
+        error: 'Erreur interne du serveur',
+        code: 'INTERNAL_SERVER_ERROR',
+        message: errorMessage
+      },
       { status: 500, headers: { "Content-Type": "application/json" } }
     );
   }
@@ -262,38 +287,50 @@ async function validateETag(
   noteId: string,
   ifMatch?: string | null,
   xNoteVersion?: string | null
-): Promise<{ valid: boolean; etag?: string }> {
+): Promise<{ valid: boolean; etag?: string; message?: string }> {
   try {
     // Récupérer la version actuelle de la note
     const { data: note, error } = await supabase
       .from('articles')
-      .select('updated_at')
+      .select('updated_at, markdown_content')
       .eq('id', noteId)
       .single();
 
     if (error || !note) {
-      return { valid: false };
+      return { valid: false, message: 'Note non trouvée' };
     }
 
-    const currentETag = calculateETag(note.updated_at);
+    const currentETag = calculateETag(note.markdown_content);
     
     // Vérifier l'ETag
     if (ifMatch && ifMatch !== currentETag) {
-      return { valid: false, etag: currentETag };
+      return { 
+        valid: false, 
+        etag: currentETag, 
+        message: `ETag mismatch: expected ${ifMatch}, got ${currentETag}` 
+      };
     }
 
     // Vérifier la version (simplifiée)
     if (xNoteVersion) {
       const version = parseInt(xNoteVersion);
+      if (isNaN(version)) {
+        return { valid: false, message: 'Version invalide' };
+      }
       const currentVersion = new Date(note.updated_at).getTime();
       if (version !== currentVersion) {
-        return { valid: false, etag: currentETag };
+        return { 
+          valid: false, 
+          etag: currentETag, 
+          message: `Version mismatch: expected ${version}, got ${currentVersion}` 
+        };
       }
     }
 
     return { valid: true, etag: currentETag };
   } catch (error) {
-    logApi.error('❌ Erreur validation ETag', error);
-    return { valid: false };
+    const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
+    logApi.error('❌ Erreur validation ETag', { error: errorMessage, noteId });
+    return { valid: false, message: 'Erreur lors de la validation' };
   }
 }

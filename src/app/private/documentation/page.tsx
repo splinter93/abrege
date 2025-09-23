@@ -128,7 +128,7 @@ const DocumentationPage: React.FC = () => {
               <h4>Navigation principale</h4>
               <p>La sidebar contient tous les accès rapides :</p>
               <ul>
-                <li><strong>Accueil</strong> - Tableau de bord principal</li>
+                <li><strong>Dashboard</strong> - Tableau de bord principal</li>
                 <li><strong>Mes Classeurs</strong> - Gestion de vos classeurs</li>
                 <li><strong>Notes Partagées</strong> - Contenus partagés</li>
                 <li><strong>Mes Fichiers</strong> - Gestion des fichiers</li>
