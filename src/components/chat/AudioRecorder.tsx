@@ -196,12 +196,12 @@ export default function AudioRecorder({
 
   // Déterminer l'icône et la classe selon le variant
   const getButtonState = () => {
-    const baseClass = variant === 'toolbar' ? 'toolbar-btn' : 'chat-input-mic';
+    const baseClass = variant === 'toolbar' ? 'toolbar-btn' : 'chatgpt-input-mic';
     
     if (state.isProcessing) {
       return {
         icon: <Loader size={16} className="animate-spin" />,
-        className: variant === 'toolbar' ? 'toolbar-btn processing' : 'chat-input-mic-processing',
+        className: variant === 'toolbar' ? 'toolbar-btn processing' : 'chatgpt-input-mic-processing',
         title: 'Traitement en cours...'
       };
     }
@@ -209,7 +209,7 @@ export default function AudioRecorder({
     if (state.isRecording) {
       return {
         icon: <Square size={16} />,
-        className: variant === 'toolbar' ? 'toolbar-btn recording' : 'chat-input-mic-recording',
+        className: variant === 'toolbar' ? 'toolbar-btn recording' : 'chatgpt-input-mic-recording',
         title: 'Cliquer pour arrêter'
       };
     }

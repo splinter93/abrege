@@ -497,9 +497,11 @@
   
   .chat-input-send,
   .chat-input-speaker,
-  .chat-input-mic {
-    width: 20px;
-    height: 20px;
+  .chat-input-mic,
+  .chatgpt-input-speaker,
+  .chatgpt-input-mic {
+    width: 48px !important;
+    height: 48px !important;
   }
 }
 
@@ -526,9 +528,11 @@
   
   .chat-input-send,
   .chat-input-speaker,
-  .chat-input-mic {
-    width: 22px;
-    height: 22px;
+  .chat-input-mic,
+  .chatgpt-input-speaker,
+  .chatgpt-input-mic {
+    width: 48px !important;
+    height: 48px !important;
   }
 }
 
@@ -605,6 +609,8 @@
   .chat-input-send,
   .chat-input-speaker,
   .chat-input-mic,
+  .chatgpt-input-speaker,
+  .chatgpt-input-mic,
   .sidebar-toggle-btn-floating {
     min-height: 44px;
     min-width: 44px;
@@ -684,6 +690,8 @@
   .chat-input-send:focus,
   .chat-input-speaker:focus,
   .chat-input-mic:focus,
+  .chatgpt-input-speaker:focus,
+  .chatgpt-input-mic:focus,
   .sidebar-toggle-btn-floating:focus {
     outline: none;
   }

@@ -19,7 +19,8 @@ import SidebarUltraClean from './SidebarUltraClean';
 import { simpleLogger as logger } from '@/utils/logger';
 
 import './ToolCallMessage.css';
-import '@/styles/chatgpt-unified.css';
+import '@/styles/chat-consolidated.css';
+import '@/styles/sidebar-collapsible.css';
 import Link from 'next/link';
 
 const ChatFullscreenV2: React.FC = () => {

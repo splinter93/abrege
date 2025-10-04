@@ -1,0 +1,251 @@
+/**
+ * Styles pour les Drag Handles de l'éditeur
+ * Design inspiré de Notion avec animations fluides
+ */
+
+/* =========================
+   VARIABLES CSS - NOTION-LIKE
+   ========================= */
+:root {
+  --dh-bg: rgba(255, 255, 255, 0.9);
+  --dh-bg-hover: rgba(255, 255, 255, 1);
+  --dh-border: rgba(0, 0, 0, 0.1);
+  --dh-border-hover: rgba(0, 0, 0, 0.15);
+  --dh-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  --dh-shadow-hover: 0 4px 12px rgba(0, 0, 0, 0.15);
+  --dh-radius: 6px;
+  --dh-size: 20px;
+  --dh-gap: 2px;
+  
+  --dh-text: rgba(0, 0, 0, 0.6);
+  --dh-text-hover: rgba(0, 0, 0, 0.8);
+  
+  --dh-duration: 150ms;
+  --dh-ease: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Mode sombre */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --dh-bg: rgba(0, 0, 0, 0.8);
+    --dh-bg-hover: rgba(0, 0, 0, 0.9);
+    --dh-border: rgba(255, 255, 255, 0.1);
+    --dh-border-hover: rgba(255, 255, 255, 0.15);
+    --dh-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    --dh-shadow-hover: 0 4px 12px rgba(0, 0, 0, 0.4);
+    --dh-text: rgba(255, 255, 255, 0.6);
+    --dh-text-hover: rgba(255, 255, 255, 0.8);
+  }
+}
+
+/* =========================
+   HANDLE PRINCIPAL
+   ========================= */
+.drag-handle-custom,
+.simple-drag-handle {
+  position: absolute;
+  z-index: 1000;
+  opacity: 0;
+  visibility: hidden;
+  transition: all var(--dh-duration) var(--dh-ease);
+  pointer-events: none;
+  user-select: none;
+  /* Amélioration : zone de survol plus large */
+  margin-left: -8px;
+  margin-top: -4px;
+  padding: 4px 8px;
+}
+
+.drag-handle-custom[style*="visibility: visible"],
+.simple-drag-handle[style*="visibility: visible"] {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+/* Zone de survol invisible plus large pour faciliter le clic */
+.drag-handle-custom::before,
+.simple-drag-handle::before {
+  content: '';
+  position: absolute;
+  top: -8px;
+  left: -8px;
+  right: -8px;
+  bottom: -8px;
+  background: transparent;
+  pointer-events: auto;
+}
+
+/* =========================
+   CONTENU DU HANDLE
+   ========================= */
+.drag-handle-content,
+.simple-drag-handle-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--dh-size);
+  height: var(--dh-size);
+  background: var(--dh-bg);
+  border: 1px solid var(--dh-border);
+  border-radius: var(--dh-radius);
+  box-shadow: var(--dh-shadow);
+  cursor: grab;
+  transition: all var(--dh-duration) var(--dh-ease);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.drag-handle-content:hover,
+.simple-drag-handle-content:hover {
+  background: var(--dh-bg-hover);
+  border-color: var(--dh-border-hover);
+  box-shadow: var(--dh-shadow-hover);
+  transform: scale(1.05);
+}
+
+.drag-handle-content:active,
+.simple-drag-handle-content:active {
+  cursor: grabbing;
+  transform: scale(0.95);
+}
+
+/* =========================
+   ICÔNE GRIP
+   ========================= */
+.drag-handle-icon,
+.simple-drag-handle-icon {
+  color: var(--dh-text);
+  transition: color var(--dh-duration) var(--dh-ease);
+}
+
+.drag-handle-content:hover .drag-handle-icon,
+.simple-drag-handle-content:hover .simple-drag-handle-icon {
+  color: var(--dh-text-hover);
+}
+
+/* =========================
+   DOTS PERSONNALISÉS (ALTERNATIVE)
+   ========================= */
+.drag-handle-dots {
+  display: none; /* Masqué par défaut, peut être activé */
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--dh-gap);
+  width: 12px;
+  height: 12px;
+}
+
+.drag-handle-dots .dot {
+  width: 3px;
+  height: 3px;
+  background: var(--dh-text);
+  border-radius: 50%;
+  transition: background var(--dh-duration) var(--dh-ease);
+}
+
+.drag-handle-content:hover .drag-handle-dots .dot {
+  background: var(--dh-text-hover);
+}
+
+/* =========================
+   ANIMATIONS
+   ========================= */
+@keyframes drag-handle-appear {
+  from {
+    opacity: 0;
+    transform: translateX(-8px) scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+@keyframes drag-handle-disappear {
+  from {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(-8px) scale(0.8);
+  }
+}
+
+.drag-handle-custom[style*="visibility: visible"] .drag-handle-content {
+  animation: drag-handle-appear var(--dh-duration) var(--dh-ease);
+}
+
+/* =========================
+   ÉTATS SPÉCIAUX
+   ========================= */
+.drag-handle-custom.dragging {
+  opacity: 0.5;
+  transform: rotate(2deg);
+}
+
+.drag-handle-custom.locked {
+  opacity: 0.3;
+  pointer-events: none;
+}
+
+/* =========================
+   RESPONSIVE
+   ========================= */
+@media (max-width: 768px) {
+  .drag-handle-custom {
+    /* Toujours visible sur mobile pour faciliter l'utilisation */
+    opacity: 0.7;
+  }
+  
+  .drag-handle-content {
+    width: 24px;
+    height: 24px;
+  }
+  
+  .drag-handle-icon {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+/* =========================
+   INTÉGRATION AVEC L'ÉDITEUR
+   ========================= */
+.ProseMirror {
+  position: relative;
+}
+
+/* Amélioration : le handle reste visible plus longtemps */
+.ProseMirror:hover .drag-handle-custom {
+  opacity: 1;
+  visibility: visible;
+  transition-delay: 0ms;
+}
+
+/* Le handle reste visible quand on survole la zone étendue */
+.drag-handle-custom:hover {
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+/* Amélioration de l'accessibilité */
+.drag-handle-custom:focus {
+  outline: 2px solid var(--accent-primary, #3b82f6);
+  outline-offset: 2px;
+}
+
+/* =========================
+   THÈME SOMBRE SPÉCIFIQUE
+   ========================= */
+[data-theme="dark"] .drag-handle-content {
+  background: rgba(0, 0, 0, 0.8);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.6);
+}
+
+[data-theme="dark"] .drag-handle-content:hover {
+  background: rgba(0, 0, 0, 0.9);
+  border-color: rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.8);
+}

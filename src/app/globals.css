@@ -16,13 +16,13 @@
 @import '../styles/tailwind.css';
 
 /* Import du design system chat ChatGPT unifié */
-@import '../styles/chatgpt-unified.css';
+@import '../styles/chat-consolidated.css';
 
 /* Import des styles markdown chat premium (après chat-markdown-typography.css) */
 @import '../components/chat/ChatMarkdown.css';
 
 /* Import des utilitaires chat */
-@import '../styles/chat-utilities.css';
+@import '../styles/toolbar-consolidated.css';
 
 :root {
   /* FALLBACKS - Éviter le flash blanc */

@@ -10,7 +10,7 @@ import "../styles/variables.css";
 import "../styles/glassmorphism-variables.css";
 import "./globals.css";
 import "../styles/markdown.css";
-import "../styles/chat-global.css";
+import "../styles/variables-consolidated.css";
 import "../styles/editor.css";
 import "../styles/page-title-containers.css";
 import "../styles/unified-page-title.css";

@@ -1,0 +1,284 @@
+/* ========================================
+   TOOLBAR CONSOLIDATED - STYLES UNIFIÉS
+   ========================================
+   Fichier consolidé remplaçant les doublons de .toolbar-btn
+   - unified-blocks.css (28 occurrences)
+   - pages/fichiers.css (11 occurrences)
+   
+   Objectif : Éliminer les conflits et redondances
+*/
+
+/* ========================================
+   BOUTONS TOOLBAR UNIFIÉS
+   ======================================== */
+
+.toolbar-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm, 8px);
+  padding: var(--space-sm, 8px) var(--space-md, 12px);
+  border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.1));
+  border-radius: var(--radius-md, 8px);
+  background: var(--glass-subtle, rgba(255, 255, 255, 0.03));
+  color: var(--text-secondary, #d1d5db);
+  font-size: var(--font-size-sm, 14px);
+  font-weight: var(--font-weight-medium, 500);
+  cursor: pointer;
+  transition: all var(--transition-normal, 0.2s ease);
+  position: relative;
+  overflow: hidden;
+  backdrop-filter: var(--blur-medium, blur(12px));
+  -webkit-backdrop-filter: var(--blur-medium, blur(12px));
+  min-height: 36px;
+  min-width: 36px;
+}
+
+.toolbar-btn:hover {
+  background: var(--glass-soft, rgba(255, 255, 255, 0.06));
+  border-color: var(--border-medium, rgba(255, 255, 255, 0.2));
+  color: var(--text-primary, #ffffff);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-soft, 0 4px 12px rgba(0, 0, 0, 0.4));
+}
+
+.toolbar-btn:active {
+  transform: translateY(0);
+  background: var(--glass-medium, rgba(255, 255, 255, 0.09));
+}
+
+.toolbar-btn:focus {
+  outline: none;
+  border-color: var(--accent-primary, #e55a2b);
+  box-shadow: 0 0 0 3px rgba(229, 90, 43, 0.1);
+}
+
+.toolbar-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  pointer-events: none;
+}
+
+/* ========================================
+   ÉTATS SPÉCIAUX
+   ======================================== */
+
+.toolbar-btn.copied {
+  background: rgba(34, 197, 94, 0.15);
+  border-color: rgba(34, 197, 94, 0.3);
+  color: #22c55e;
+  animation: copySuccess 0.3s ease;
+}
+
+.toolbar-btn.secondary {
+  background: var(--glass-bg-light, rgba(255, 255, 255, 0.05));
+  border-color: var(--glass-border-light, rgba(255, 255, 255, 0.1));
+  color: var(--text-secondary, #d1d5db);
+}
+
+.toolbar-btn.secondary:hover {
+  background: var(--glass-bg-heavy, rgba(255, 255, 255, 0.1));
+  border-color: var(--glass-border-heavy, rgba(255, 255, 255, 0.2));
+  color: var(--text-primary, #ffffff);
+}
+
+.toolbar-btn.danger {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.3);
+  color: #ef4444;
+}
+
+.toolbar-btn.danger:hover {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: rgba(239, 68, 68, 0.5);
+  color: #ff6666;
+}
+
+/* ========================================
+   ICÔNES ET CONTENU
+   ======================================== */
+
+.toolbar-btn svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+.toolbar-btn .btn-icon {
+  font-size: 16px;
+  transition: transform var(--transition-normal, 0.2s ease);
+}
+
+.toolbar-btn:hover .btn-icon {
+  transform: scale(1.1);
+}
+
+.toolbar-btn .btn-text {
+  font-weight: 500;
+  transition: all var(--transition-normal, 0.2s ease);
+}
+
+/* ========================================
+   CONTEXTES SPÉCIFIQUES
+   ======================================== */
+
+/* Éditeur ProseMirror */
+.ProseMirror .toolbar-btn {
+  background: transparent;
+  border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.1));
+  color: var(--text-muted, #9ca3af);
+}
+
+.ProseMirror .toolbar-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-primary, #ffffff);
+}
+
+/* Markdown Body */
+.markdown-body .toolbar-btn {
+  background: transparent;
+  border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.1));
+  color: var(--text-muted, #9ca3af);
+}
+
+.markdown-body .toolbar-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-primary, #ffffff);
+}
+
+/* Chat Markdown */
+.chat-markdown-content .toolbar-btn {
+  background: transparent;
+  color: #a0a0a0;
+  border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.1));
+}
+
+.chat-markdown-content .toolbar-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+}
+
+.chat-markdown-content .toolbar-btn.copied {
+  background: #10a37f;
+  color: #ffffff;
+}
+
+/* Unified Block Toolbar */
+.unified-block-toolbar .toolbar-btn {
+  background: transparent;
+  border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.1));
+  color: var(--text-muted, #9ca3af);
+}
+
+.unified-block-toolbar .toolbar-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-primary, #ffffff);
+}
+
+/* ========================================
+   ANIMATIONS
+   ======================================== */
+
+@keyframes copySuccess {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Animation de survol */
+.toolbar-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.toolbar-btn:hover::before {
+  left: 100%;
+}
+
+/* ========================================
+   RESPONSIVE
+   ======================================== */
+
+@media (max-width: 768px) {
+  .toolbar-btn {
+    padding: var(--space-xs, 6px) var(--space-sm, 8px);
+    min-height: 32px;
+    min-width: 32px;
+  }
+  
+  .toolbar-btn .btn-text {
+    display: none;
+  }
+  
+  .toolbar-btn svg {
+    width: 16px;
+    height: 16px;
+  }
+  
+  .toolbar-btn .btn-icon {
+    font-size: 18px;
+  }
+}
+
+@media (max-width: 480px) {
+  .toolbar-btn {
+    padding: var(--space-xs, 4px);
+    min-height: 28px;
+    min-width: 28px;
+  }
+  
+  .toolbar-btn svg {
+    width: 14px;
+    height: 14px;
+  }
+  
+  .toolbar-btn .btn-icon {
+    font-size: 16px;
+  }
+}
+
+/* ========================================
+   ACCESSIBILITÉ
+   ======================================== */
+
+.toolbar-btn:focus-visible {
+  outline: 2px solid var(--accent-primary, #e55a2b);
+  outline-offset: 2px;
+}
+
+/* ========================================
+   REDUCED MOTION
+   ======================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  .toolbar-btn {
+    transition: none;
+  }
+  
+  .toolbar-btn::before {
+    display: none;
+  }
+  
+  .toolbar-btn:hover .btn-icon {
+    transform: none;
+  }
+  
+  @keyframes copySuccess {
+    0%, 100% {
+      transform: scale(1);
+    }
+  }
+}

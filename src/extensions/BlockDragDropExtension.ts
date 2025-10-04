@@ -49,6 +49,8 @@ const BlockDragDropExtension = Extension.create({
               // Vérifier si on clique sur un bloc draggable
               const blockElement = target.closest('[data-block-type]') || 
                                  target.closest('.mermaid-container') ||
+                                 target.closest('.u-block--mermaid') ||
+                                 target.closest('.u-block--code') ||
                                  target.closest('.code-block') ||
                                  target.closest('.callout') ||
                                  target.closest('hr') ||
@@ -151,3 +153,4 @@ const BlockDragDropExtension = Extension.create({
 });
 
 export default BlockDragDropExtension;
+export { BlockDragDropExtension };

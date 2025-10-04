@@ -162,6 +162,16 @@ const SidebarUltraClean: React.FC<SidebarUltraCleanProps> = ({
             </div>
           </div>
         </div>
+        
+        {/* Bouton de déconnexion */}
+        <button 
+          onClick={signOut}
+          className="sidebar-logout-btn-clean"
+          title="Déconnexion"
+        >
+          <LogOut size={16} />
+          <span>Déconnexion</span>
+        </button>
       </div>
     </div>
   );

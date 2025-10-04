@@ -25,11 +25,13 @@ import UnifiedCodeBlockExtension from '@/extensions/UnifiedCodeBlockExtension';
 import ContextMenuExtension from '@/extensions/ContextMenuExtension';
 import CalloutExtension from '@/extensions/CalloutExtension';
 // import BoxSelectionExtension from '@/extensions/BoxSelectionExtension'; // Désactivé - cause des problèmes
-import BlockDragDropExtension from '@/extensions/BlockDragDropExtension';
+// import BlockDragDropExtension from '@/extensions/BlockDragDropExtension'; // Désactivé temporairement
+// import { BlockDragDropHandler } from '@/extensions/BlockDragDropHandler'; // Désactivé temporairement
 // import { SelectionExtension } from '@/extensions/SelectionExtension'; // Désactivé - cause des problèmes
 // import { TrailingNodeExtension } from '@/extensions/TrailingNodeExtension'; // Désactivé - cause des problèmes
 // import { SpaceHandlingExtension } from '@/extensions/SpaceHandlingExtension'; // Supprimé - causait des conflits
 import SlashMenuExtension from '@/extensions/SlashMenuExtension';
+import { SimpleDragHandleExtension } from '@/extensions/SimpleDragHandleExtension';
 import Color from '@tiptap/extension-color';
 import TextStyle from '@tiptap/extension-text-style';
 import Highlight from '@tiptap/extension-highlight';
@@ -155,7 +157,16 @@ export function createEditorExtensions(
 
   // Extensions de drag and drop (toujours activées pour l'UX)
   extensions.push(
-    BlockDragDropExtension
+    SimpleDragHandleExtension.configure({
+      onNodeChange: ({ node, pos }) => {
+        if (process.env.NODE_ENV === 'development') {
+          console.log('Simple drag handle node change:', { 
+            nodeType: node?.type.name, 
+            pos 
+          });
+        }
+      },
+    })
   );
 
   // Extensions de performance

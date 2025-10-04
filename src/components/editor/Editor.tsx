@@ -12,6 +12,7 @@ import '@/styles/callouts.css';
 import '@/styles/color-buttons.css';
 import '@/styles/tiptap-extensions.css';
 import '@/styles/block-drag-drop.css';
+import '@/styles/drag-handle.css'; // Styles pour les drag handles
 import '@/styles/mermaid.css'; // Styles Mermaid centralisés
 import '@/styles/unified-blocks.css'; // Système unifié pour tous les blocs
 import EditorLayout from './EditorLayout';
@@ -36,6 +37,7 @@ import lowlight from '@/utils/lowlightInstance';
 import EditorSlashMenu, { type EditorSlashMenuHandle } from '@/components/EditorSlashMenu';
 import TableControls from '@/components/editor/TableControls';
 import FloatingMenuNotion from './FloatingMenuNotion';
+// import DragHandle from './DragHandle'; // Plus nécessaire - extension intégrée
 import { useRouter } from 'next/navigation';
 import { FiEye, FiX, FiImage } from 'react-icons/fi';
 import { v2UnifiedApi } from '@/services/V2UnifiedApi';
@@ -1239,6 +1241,7 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
             {!isReadonly && (
               <div className="tiptap-editor-container" ref={editorContainerRef}>
                 <TiptapEditorContent editor={editor} />
+                {/* Drag Handle intégré via l'extension DragHandleExtension */}
                 {/* Table controls */}
                 <TableControls editor={editor} containerRef={editorContainerRef as React.RefObject<HTMLElement>} />
                 {/* Slash commands menu */}

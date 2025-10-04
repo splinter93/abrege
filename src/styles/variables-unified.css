@@ -6,7 +6,7 @@
 */
 
 /* Import du système unifié pour le chat */
-@import './chatgpt-unified.css';
+@import './chat-consolidated.css';
 
 :root {
   /* ========================================

@@ -3,7 +3,7 @@ import React, { useRef, useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '@/supabaseClient';
 import { useActiveSidebarLink } from '@/hooks/useActiveSidebarLink';
 import { motion } from 'framer-motion';
 
@@ -126,33 +126,14 @@ const UnifiedSidebar: React.FC<UnifiedSidebarProps> = ({
 
   const handleLogout = async () => {
     try {
-      // Vérifier d'abord s'il y a une session active
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      console.log('🔧 Déconnexion: Tentative de déconnexion...');
       
-      if (sessionError) {
-        console.log('🔧 Déconnexion: Erreur lors de la vérification de session:', sessionError.message);
-        router.push('/');
-        return;
-      }
-
-      if (!session) {
-        console.log('🔧 Déconnexion: Aucune session active, redirection directe');
-        router.push('/');
-        return;
-      }
-
-      console.log('🔧 Déconnexion: Session trouvée, tentative de déconnexion...');
-      
-      // Créer le client Supabase
-      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-      const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-      const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
-      // Déconnexion
+      // Déconnexion directe avec le client Supabase existant
       const { error } = await supabase.auth.signOut();
       
       if (error) {
         console.error('🔧 Déconnexion: Erreur lors de la déconnexion:', error.message);
+        // Même en cas d'erreur, on redirige pour s'assurer que l'utilisateur est déconnecté
       } else {
         console.log('🔧 Déconnexion: Déconnexion réussie');
       }
@@ -162,6 +143,7 @@ const UnifiedSidebar: React.FC<UnifiedSidebarProps> = ({
       
     } catch (error) {
       console.error('🔧 Déconnexion: Erreur inattendue:', error);
+      // Même en cas d'erreur, on redirige
       router.push('/');
     }
   };

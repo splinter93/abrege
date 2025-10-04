@@ -3,7 +3,7 @@
  * Extension BlockDragDropExtension
  */
 
-/* Indicateur de drag */
+/* Indicateur de drag - Styles de base (surchargés par drag-handle.css) */
 .drag-handle {
   cursor: grab;
   opacity: 0;
@@ -18,11 +18,27 @@
   cursor: grabbing;
 }
 
+/* Styles spécifiques pour les handles Tiptap officiels */
+.drag-handle-custom {
+  /* Surchargé par drag-handle.css */
+}
+
 /* Bloc en cours de drag */
 .ProseMirror .dragging {
   opacity: 0.5;
   transform: rotate(2deg);
   transition: all 0.2s ease;
+}
+
+/* Blocs unifiés en cours de drag */
+.ProseMirror .u-block.dragging,
+.ProseMirror .u-block--mermaid.dragging,
+.ProseMirror .u-block--code.dragging {
+  opacity: 0.6;
+  transform: scale(1.02);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  transition: all 0.2s ease;
+  border: 2px dashed var(--accent-primary);
 }
 
 /* Zone de drop */
@@ -85,6 +101,32 @@
 }
 
 .ProseMirror .code-block .drag-handle {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 20px;
+  height: 20px;
+  background: var(--bg-2);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  color: var(--text-2);
+}
+
+/* Blocs unifiés (Mermaid et Code) */
+.ProseMirror .u-block {
+  position: relative;
+}
+
+.ProseMirror .u-block--mermaid,
+.ProseMirror .u-block--code {
+  position: relative;
+}
+
+.ProseMirror .u-block .drag-handle {
   position: absolute;
   top: 8px;
   right: 8px;
