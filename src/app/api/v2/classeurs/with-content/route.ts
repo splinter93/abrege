@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { logApi } from '@/utils/logger';
-import { getAuthenticatedUser } from '@/utils/authUtils';
-import { createSupabaseClient } from '@/utils/supabaseClient';
+import { getAuthenticatedUser, createAuthenticatedSupabaseClient } from '@/utils/authUtils';
 
 export async function GET(request: NextRequest): Promise<NextResponse> {
   const startTime = Date.now();
@@ -25,7 +24,9 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   }
 
   const userId = authResult.userId!;
-  const supabase = createSupabaseClient();
+  
+  // Créer le bon client Supabase selon le type d'authentification
+  const supabase = createAuthenticatedSupabaseClient(authResult);
 
   try {
     // 🚀 Étape 1: Récupérer tous les classeurs (exclure ceux en corbeille)

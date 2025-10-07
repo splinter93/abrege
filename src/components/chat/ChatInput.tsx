@@ -76,8 +76,8 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend, loading, textareaRef, dis
       
       // Calculate new height based on content
       const scrollHeight = textareaRef.current.scrollHeight;
-      const minHeight = 24; // min-height from CSS
-      const maxHeight = 300; // max-height from CSS
+      const minHeight = 18; // min-height from CSS
+      const maxHeight = 80; // max-height from CSS
       
       // Apply height with constraints
       const newHeight = Math.max(minHeight, Math.min(scrollHeight, maxHeight));
@@ -119,10 +119,10 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend, loading, textareaRef, dis
       {/* Actions de l'input */}
       <div className="chatgpt-input-actions">
         <button className="chatgpt-input-speaker" aria-label="Ajouter">
-          <Plus size={16} />
+          <Plus size={18} />
         </button>
         <button className="chatgpt-input-mic" aria-label="Reasoning">
-          <Zap size={16} />
+          <Zap size={18} />
         </button>
         
         <div style={{ flex: 1 }}></div>
@@ -146,7 +146,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend, loading, textareaRef, dis
               <div className="chat-input-typing-dot"></div>
             </div>
           ) : (
-            <ArrowUp size={16} />
+            <ArrowUp size={18} />
           )}
         </button>
       </div>

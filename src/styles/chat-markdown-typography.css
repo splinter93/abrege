@@ -223,9 +223,80 @@
 /* Les styles de citations sont maintenant centralisés dans ChatMarkdown.css */
 
 /* ========================================
-   TABLEAUX, LISTES, LIENS, HR (GÉRÉS PAR ChatMarkdown.css)
+   TABLEAUX RESPONSIVES INTELLIGENTS
    ======================================== */
-/* Tous les styles markdown sont maintenant centralisés dans ChatMarkdown.css */
+
+/* ✅ Wrapper de tableau avec scroll horizontal intelligent */
+.chat-markdown .table-wrapper-chat {
+  width: 100%;
+  overflow-x: visible; /* ✅ Pas de scroll sur grand écran */
+  overflow-y: visible;
+  margin: var(--chat-space-lg) 0;
+  border-radius: 0; /* ✅ Pas de bordure arrondie */
+  border: none; /* ✅ Wrapper invisible */
+  background: transparent; /* ✅ Fond transparent */
+  -webkit-overflow-scrolling: touch; /* Smooth scrolling iOS */
+}
+
+/* ✅ Activer le scroll seulement sur tablette/mobile */
+@media (max-width: 1024px) {
+  .chat-markdown .table-wrapper-chat {
+    overflow-x: auto;
+  }
+}
+
+/* ✅ Scrollbar personnalisée pour le wrapper de tableau */
+.chat-markdown .table-wrapper-chat::-webkit-scrollbar {
+  height: 8px;
+}
+
+.chat-markdown .table-wrapper-chat::-webkit-scrollbar-track {
+  background: var(--chat-bg-tertiary);
+  border-radius: 4px;
+}
+
+.chat-markdown .table-wrapper-chat::-webkit-scrollbar-thumb {
+  background: var(--chat-text-muted);
+  border-radius: 4px;
+}
+
+.chat-markdown .table-wrapper-chat::-webkit-scrollbar-thumb:hover {
+  background: var(--chat-text-secondary);
+}
+
+/* ✅ Tableaux adaptatifs */
+.chat-markdown table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed; /* ✅ Colonnes de largeur égale - s'adapte au conteneur */
+  margin: 0; /* Pas de marge, géré par le wrapper */
+  background: var(--chat-bg-tertiary);
+  border-radius: var(--chat-radius-md);
+  overflow: hidden;
+}
+
+/* ✅ Colonnes adaptatives */
+.chat-markdown th,
+.chat-markdown td {
+  padding: var(--chat-space-md);
+  text-align: left;
+  border-bottom: 1px solid var(--chat-border-subtle);
+  white-space: normal; /* ✅ Retour à la ligne en mode large */
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  /* ✅ Pas de min/max-width - les colonnes s'adaptent automatiquement */
+  color: var(--chat-text-primary);
+}
+
+/* ✅ En-têtes sticky */
+.chat-markdown th {
+  background: var(--chat-bg-elevated);
+  font-weight: var(--chat-font-weight-semibold);
+  color: var(--chat-text-primary);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
 
 /* ========================================
    RESPONSIVE DESIGN
@@ -245,14 +316,34 @@
   .chat-markdown h2 { margin: var(--chat-space-xl) 0 var(--chat-space-md) 0; }
   .chat-markdown h3 { margin: var(--chat-space-lg) 0 var(--chat-space-sm) 0; }
   
-  /* Ajuster les tableaux */
+  /* ✅ Tableaux responsive sur mobile */
+  .chat-markdown th,
+  .chat-markdown td {
+    padding: var(--chat-space-sm) var(--chat-space-md);
+    font-size: var(--chat-font-size-sm);
+  }
+}
+
+/* ✅ Mobile très petit - scroll horizontal */
+@media (max-width: 480px) {
   .chat-markdown table {
-    font-size: var(--chat-text-xs);
+    min-width: 500px; /* ✅ Force le scroll horizontal */
   }
   
   .chat-markdown th,
   .chat-markdown td {
-    padding: var(--chat-space-sm) var(--chat-space-md);
+    white-space: nowrap; /* ✅ Préserve la structure */
+    padding: var(--chat-space-sm);
+    min-width: 60px;
+    max-width: none;
+  }
+}
+
+/* ✅ Tablette - mode intermédiaire */
+@media (max-width: 1024px) and (min-width: 769px) {
+  .chat-markdown th,
+  .chat-markdown td {
+    max-width: 300px; /* ✅ Limite la largeur des colonnes */
   }
 }
 
@@ -281,3 +372,4 @@
     color: var(--color-text-primary);
   }
 }
+

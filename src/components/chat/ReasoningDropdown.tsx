@@ -1,6 +1,7 @@
 'use client';
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Lightbulb } from 'lucide-react';
 
 interface ReasoningDropdownProps {
   reasoning: string;
@@ -26,6 +27,7 @@ const ReasoningDropdown: React.FC<ReasoningDropdownProps> = ({
         aria-label="Toggle reasoning details"
       >
         <div className="reasoning-dropdown-header">
+          <Lightbulb className="reasoning-dropdown-icon" size={12} />
           <span className="reasoning-dropdown-title">Reasoning...</span>
         </div>
       </button>

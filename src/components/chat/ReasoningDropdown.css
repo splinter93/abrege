@@ -31,7 +31,7 @@
 .reasoning-dropdown-header {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 0;
   padding: 4px 12px 4px 0;
   color: #9ca3af;
   font-size: 12px;
@@ -39,13 +39,19 @@
 }
 
 
+.reasoning-dropdown-icon {
+  color: #9ca3af;
+  margin-right: 2px;
+  flex-shrink: 0;
+}
+
 .reasoning-dropdown-title {
   flex: 1;
   text-align: left;
   font-weight: 600;
   letter-spacing: 0.3px;
   text-transform: none;
-  font-style: italic;
+  font-style: normal;
   font-size: 11px;
 }
 

@@ -64,7 +64,7 @@ const ChatFullscreenV2: React.FC = () => {
 
   // 🎯 Hook de scroll optimisé avec autoscroll
   const { messagesEndRef, scrollToBottom, isNearBottom } = useChatScroll({
-    scrollThreshold: 150,
+    scrollThreshold: 300,
     scrollDelay: 100,
     autoScroll: true,
     messages: currentSession?.thread || []
@@ -81,26 +81,10 @@ const ChatFullscreenV2: React.FC = () => {
   // 🎯 Hook pour les tool calls atomiques
   // const { addToolResult, isProcessing: isProcessingToolCalls } = useAtomicToolCalls(); // Hook supprimé
 
-  // 🎯 Gestion intelligente de l'ouverture de la sidebar
+  // ✅ CORRECTION: Sidebar TOUJOURS fermée par défaut, sauf si l'utilisateur l'a ouverte explicitement
   useEffect(() => {
-    if (isDesktop && user && !authLoading) {
-      // Vérifier si l'utilisateur a déjà interagi avec la sidebar
-      const hasInteracted = localStorage.getItem('sidebar-interacted');
-      const userPreference = localStorage.getItem('sidebar-preference');
-      
-      if (!hasInteracted) {
-        // Première fois : ouvrir par défaut
-        setSidebarOpen(true);
-        localStorage.setItem('sidebar-interacted', 'true');
-        localStorage.setItem('sidebar-preference', 'open');
-      } else if (userPreference) {
-        // Respecter la préférence de l'utilisateur
-        setSidebarOpen(userPreference === 'open');
-      }
-    } else if (!isDesktop) {
-      // Sur mobile/tablette, toujours fermée par défaut
-      setSidebarOpen(false);
-    }
+    // ✅ TOUJOURS fermée par défaut (desktop, mobile, tablette)
+    setSidebarOpen(false);
   }, [isDesktop, user, authLoading]);
 
   // 🎯 Fermer la sidebar sur mobile après sélection d'une session
@@ -584,12 +568,15 @@ const ChatFullscreenV2: React.FC = () => {
         });
       }
 
-      // ✅ NOUVEAU: Historique complet pour l'utilisateur
-      // La limitation history_limit est uniquement pour l'API LLM, pas pour l'affichage
+      // ✅ CORRECTION: Historique SANS le dernier message (qui vient d'être ajouté)
+      // Le dernier message sera envoyé via le paramètre `message`, pas dans l'historique
       const fullHistory = currentSession.thread;
       
+      // Enlever le dernier message (celui qu'on vient d'ajouter) pour éviter la duplication
+      const historyWithoutLastMessage = fullHistory.slice(0, -1);
+      
       // Pour l'API LLM, on peut limiter à history_limit pour la performance
-      const limitedHistoryForLLM = fullHistory.slice(-(currentSession.history_limit || 30));
+      const limitedHistoryForLLM = historyWithoutLastMessage.slice(-(currentSession.history_limit || 30));
       
       // Utiliser l'API standard (sans streaming)
       const sendFunction = sendMessage;
@@ -597,7 +584,9 @@ const ChatFullscreenV2: React.FC = () => {
       logger.dev('[ChatFullscreenV2] 🎼 Envoi du message:', {
         message: message.substring(0, 50) + '...',
         sessionId: currentSession.id,
-        agentId: selectedAgent?.id
+        agentId: selectedAgent?.id,
+        historyLength: limitedHistoryForLLM.length,
+        lastMessageInHistory: limitedHistoryForLLM[limitedHistoryForLLM.length - 1]?.role
       });
 
       await sendFunction(message, currentSession.id, contextWithSessionId, limitedHistoryForLLM, token);

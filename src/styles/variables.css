@@ -336,10 +336,10 @@
      ========================================================================== */
 
   /* Couleurs ChatGPT */
-  --chatgpt-bg-primary: #212121;
-  --chatgpt-bg-secondary: #2d2d2d;
-  --chatgpt-bg-tertiary: #3c3c3c;
-  --chatgpt-bg-elevated: #404040;
+  --chatgpt-bg-primary: #0f0f0f;
+  --chatgpt-bg-secondary: #1a1a1a;
+  --chatgpt-bg-tertiary: #2a2a2a;
+  --chatgpt-bg-elevated: #222222;
   --chatgpt-bg-hover: rgba(255, 255, 255, 0.05);
 
   --chatgpt-text-primary: #ffffff;

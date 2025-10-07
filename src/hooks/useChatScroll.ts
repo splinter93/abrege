@@ -15,7 +15,7 @@ interface UseChatScrollReturn {
 
 export function useChatScroll(options: UseChatScrollOptions = {}): UseChatScrollReturn {
   const { 
-    scrollThreshold = 150, 
+    scrollThreshold = 300, 
     scrollDelay = 100,
     autoScroll = true,
     messages = []

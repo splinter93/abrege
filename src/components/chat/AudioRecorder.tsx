@@ -200,7 +200,7 @@ export default function AudioRecorder({
     
     if (state.isProcessing) {
       return {
-        icon: <Loader size={16} className="animate-spin" />,
+        icon: <Loader size={18} className="animate-spin" />,
         className: variant === 'toolbar' ? 'toolbar-btn processing' : 'chatgpt-input-mic-processing',
         title: 'Traitement en cours...'
       };
@@ -208,14 +208,14 @@ export default function AudioRecorder({
     
     if (state.isRecording) {
       return {
-        icon: <Square size={16} />,
+        icon: <Square size={18} />,
         className: variant === 'toolbar' ? 'toolbar-btn recording' : 'chatgpt-input-mic-recording',
         title: 'Cliquer pour arrêter'
       };
     }
     
     return {
-      icon: <Mic size={16} />,
+      icon: <Mic size={18} />,
       className: baseClass,
       title: 'Cliquer pour enregistrer'
     };

@@ -21,10 +21,10 @@
      COULEURS CHAT - THÈME SOMBRE
      ======================================== */
   
-  --chat-bg-primary: #212121;
-  --chat-bg-secondary: #2d2d2d;
-  --chat-bg-tertiary: #3c3c3c;
-  --chat-bg-elevated: #404040;
+  --chat-bg-primary: #0f0f0f;
+  --chat-bg-secondary: #1a1a1a;
+  --chat-bg-tertiary: #2a2a2a;
+  --chat-bg-elevated: #222222;
   --chat-bg-hover: rgba(255, 255, 255, 0.05);
   
   --chat-text-primary: #ffffff;
@@ -141,6 +141,75 @@
   overflow: hidden;
   font-family: var(--chat-font-family);
   color: var(--chat-text-primary);
+  box-sizing: border-box;
+}
+
+/* Responsive pour le container principal */
+@media (max-width: 768px) {
+  .chatgpt-container,
+  .chat-fullscreen-container {
+    height: 100vh;
+    height: 100dvh; /* Dynamic viewport height pour mobile */
+  }
+}
+
+/* Amélioration du viewport mobile */
+@supports (height: 100dvh) {
+  .chatgpt-container,
+  .chat-fullscreen-container {
+    height: 100dvh;
+  }
+}
+
+/* Prévention du zoom sur iOS */
+@media screen and (max-width: 768px) {
+  .chatgpt-input-textarea,
+  .chat-input-textarea {
+    font-size: 16px !important; /* Évite le zoom automatique sur iOS */
+  }
+}
+
+/* ========================================
+   BOUTON TOGGLE SIDEBAR
+   ======================================== */
+
+.chatgpt-sidebar-toggle-btn {
+  position: fixed;
+  top: 60px;
+  left: 24px;
+  background: var(--chat-bg-secondary);
+  border: 1px solid var(--chat-border-color);
+  color: var(--chat-text-primary);
+  cursor: pointer;
+  padding: 12px;
+  border-radius: 12px;
+  transition: all var(--chat-transition-normal);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  z-index: 9999;
+  box-shadow: var(--chat-shadow-subtle);
+}
+
+.chatgpt-sidebar-toggle-btn:hover {
+  background: var(--chat-bg-tertiary);
+  border-color: var(--chat-text-primary);
+  color: var(--chat-text-primary);
+  transform: scale(1.05);
+  box-shadow: var(--chat-shadow-soft);
+}
+
+.chatgpt-sidebar-toggle-btn:active {
+  transform: scale(1.02);
+  background: var(--chat-bg-tertiary);
+}
+
+.chatgpt-sidebar-toggle-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
 }
 
 /* ========================================
@@ -149,8 +218,8 @@
 
 .chatgpt-header,
 .chat-header {
-  height: 64px;
-  background: #1e1e1e;
+  height: 48px;
+  background: #1a1a1a;
   backdrop-filter: var(--chat-blur-light);
   -webkit-backdrop-filter: var(--chat-blur-light);
   border-bottom: none;
@@ -320,12 +389,13 @@
    MESSAGES
    ======================================== */
 
+/* ✅ CORRECTION: Paddings symétriques - pas de padding latéral, géré par les enfants */
 .chatgpt-messages-container,
 .chat-messages-container {
   flex: 1;
   overflow-y: auto;
-  padding: var(--chat-space-xl);
-  padding-bottom: calc(var(--chat-space-xl) + 120px);
+  padding: var(--chat-space-xl) var(--chat-space-xl); /* ✅ Paddings horizontaux identiques à l'input */
+  padding-bottom: calc(var(--chat-space-xl) + 120px); /* Espace pour l'input fixe en bas */
   display: flex;
   flex-direction: column;
   gap: var(--chat-space-xs);
@@ -355,14 +425,93 @@
   background: var(--chat-text-secondary);
 }
 
+/* ✅ CENTRAGE: Messages centrés avec max-width */
 .chatgpt-messages,
 .chat-message-list {
   display: flex;
   flex-direction: column;
   gap: 0;
   max-width: 1000px;
-  width: 1000px;
-  margin: 0 auto;
+  width: 100%;
+  margin: 0 auto; /* ✅ Centrage horizontal */
+}
+
+/* ✅ PADDINGS: Espacements latéraux cohérents */
+.chatgpt-message-list,
+.chat-message-list {
+  max-width: 1000px;
+  width: 100%;
+  margin: 0 auto; /* ✅ Centrage horizontal */
+  padding: 0 var(--chat-space-2xl); /* 32px de chaque côté en desktop */
+  box-sizing: border-box;
+}
+
+.chatgpt-message-list:last-child {
+  padding-bottom: 24px;
+}
+
+/* ========================================
+   RESPONSIVE: PADDINGS ADAPTATIFS
+   ======================================== */
+
+/* Desktop large (≥ 1200px) - Paddings généreux */
+@media (min-width: 1200px) {
+  .chatgpt-message-list,
+  .chat-message-list {
+    padding: 0 var(--chat-space-2xl); /* 32px de chaque côté */
+  }
+  
+  /* ✅ Paddings pour le container */
+  .chatgpt-messages-container,
+  .chat-messages-container {
+    padding: var(--chat-space-xl) var(--chat-space-xl); /* Paddings horizontaux identiques à l'input */
+    padding-bottom: calc(var(--chat-space-xl) + 120px);
+  }
+}
+
+/* Tablette (769px - 1199px) - Paddings moyens */
+@media (max-width: 1199px) and (min-width: 769px) {
+  .chatgpt-message-list,
+  .chat-message-list {
+    padding: 0 var(--chat-space-xl); /* 24px de chaque côté */
+  }
+  
+  /* ✅ Paddings pour le container */
+  .chatgpt-messages-container,
+  .chat-messages-container {
+    padding: var(--chat-space-lg) var(--chat-space-lg); /* Paddings horizontaux identiques à l'input tablette */
+    padding-bottom: calc(var(--chat-space-lg) + 120px);
+  }
+}
+
+/* Mobile (480px - 768px) - Paddings réduits */
+@media (max-width: 768px) and (min-width: 481px) {
+  .chatgpt-message-list,
+  .chat-message-list {
+    padding: 0 var(--chat-space-lg); /* 16px de chaque côté */
+  }
+  
+  /* ✅ Paddings pour le container */
+  .chatgpt-messages-container,
+  .chat-messages-container {
+    padding: var(--chat-space-lg) var(--chat-space-lg); /* Paddings horizontaux identiques à l'input mobile */
+    padding-bottom: calc(var(--chat-space-lg) + 120px);
+  }
+}
+
+/* Mobile très petit (≤ 480px) - Paddings minimaux */
+@media (max-width: 480px) {
+  .chatgpt-message-list,
+  .chat-message-list {
+    padding: 0 var(--chat-space-md); /* 12px de chaque côté */
+  }
+  
+  /* ✅ Paddings pour le container */
+  .chatgpt-messages-container,
+  .chat-messages-container {
+    padding: var(--chat-space-md) var(--chat-space-md); /* Paddings horizontaux identiques à l'input mobile petit */
+    padding-bottom: calc(var(--chat-space-md) + 120px);
+  }
 }
 
 /* Messages */
@@ -405,6 +554,24 @@
   transition: all var(--chat-transition-normal);
 }
 
+/* Responsive pour les bulles de messages */
+@media (max-width: 768px) {
+  .chatgpt-message-bubble,
+  .chat-message-bubble {
+    max-width: calc(100% - 30px);
+    padding: 12px 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .chatgpt-message-bubble,
+  .chat-message-bubble {
+    max-width: calc(100% - 20px);
+    padding: 8px 12px;
+    font-size: var(--chat-font-size-sm);
+  }
+}
+
 .chatgpt-message-bubble-user,
 .chat-message-bubble-user {
   background: #3a3a3a;
@@ -434,8 +601,8 @@
   box-shadow: none;
   border-radius: 0;
   margin-right: auto;
-  width: 1000px;
-  max-width: 1000px;
+  width: 100% !important; /* ✅ Forcer 100% de largeur */
+  max-width: 100% !important; /* ✅ Toujours 100% */
   padding: var(--chat-space-md) 0;
   margin-left: 0;
   overflow: hidden;
@@ -457,17 +624,21 @@
   bottom: 0;
   left: 0;
   right: 0;
-  padding: var(--chat-space-xl) var(--chat-space-2xl) var(--chat-space-2xl);
+  padding: var(--chat-space-xl) var(--chat-space-xl) var(--chat-space-2xl);
   background: linear-gradient(to top, var(--chat-bg-primary) 20%, transparent 100%);
   pointer-events: none;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
 }
 
+/* ✅ CENTRAGE: Input centré avec max-width */
 .chatgpt-input-area,
 .chat-input-area {
-  width: 1010px;
-  max-width: 1010px;
+  width: 100%;
+  max-width: 1005px;
   min-width: 0;
-  margin: 0 auto;
+  margin: 0 auto; /* ✅ Centrage horizontal */
   background: var(--chat-bg-secondary);
   border: 1px solid var(--chat-border-subtle);
   border-radius: var(--chat-radius-2xl);
@@ -482,11 +653,77 @@
   box-sizing: border-box;
 }
 
+/* ========================================
+   RESPONSIVE: INPUT AREA ADAPTATIF
+   ======================================== */
+
+/* Desktop large (≥ 1200px) - Input large avec marges */
+@media (min-width: 1200px) {
+  .chatgpt-input-container,
+  .chat-input-container {
+    padding-left: var(--chat-space-xl); /* 24px - aligné avec messages-container */
+    padding-right: var(--chat-space-xl); /* 24px */
+  }
+  
+  .chatgpt-input-area,
+  .chat-input-area {
+    max-width: 1005px;
+    margin: 0 auto;
+  }
+}
+
+/* Tablette (769px - 1199px) - Input moyen */
+@media (max-width: 1199px) and (min-width: 769px) {
+  .chatgpt-input-container,
+  .chat-input-container {
+    padding-left: var(--chat-space-lg); /* 16px - aligné avec messages-container tablette */
+    padding-right: var(--chat-space-lg); /* 16px */
+  }
+  
+  .chatgpt-input-area,
+  .chat-input-area {
+    max-width: 1005px; /* Largeur fixe - légèrement plus large */
+    margin: 0 auto;
+  }
+}
+
+/* Mobile (480px - 768px) - Input compact */
+@media (max-width: 768px) and (min-width: 481px) {
+  .chatgpt-input-container,
+  .chat-input-container {
+    padding-left: var(--chat-space-lg); /* 16px */
+    padding-right: var(--chat-space-lg); /* 16px */
+  }
+  
+  .chatgpt-input-area,
+  .chat-input-area {
+    max-width: calc(100% - 32px);
+    margin: 0 auto;
+    padding: var(--chat-space-md) var(--chat-space-lg);
+  }
+}
+
+/* Mobile très petit (≤ 480px) - Input minimal */
+@media (max-width: 480px) {
+  .chatgpt-input-container,
+  .chat-input-container {
+    padding-left: var(--chat-space-md); /* 12px */
+    padding-right: var(--chat-space-md); /* 12px */
+  }
+  
+  .chatgpt-input-area,
+  .chat-input-area {
+    max-width: calc(100% - 24px);
+    margin: 0 auto;
+    padding: var(--chat-space-sm) var(--chat-space-md);
+  }
+}
+
 .chatgpt-input-textarea,
 .chat-input-textarea {
   width: 100%;
-  min-height: 24px;
-  max-height: 200px;
+  min-height: 18px;
+  max-height: 80px;
   background: transparent;
   border: none;
   outline: none;
@@ -500,6 +737,9 @@
   overflow-y: auto;
   scrollbar-width: thin;
   scrollbar-color: var(--chat-text-muted) transparent;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  box-sizing: border-box;
 }
 
 .chatgpt-input-textarea:focus,
@@ -539,47 +779,73 @@
 .chat-input-actions {
   display: flex;
   align-items: center;
-  gap: var(--chat-space-sm);
+  gap: 12px;
   margin-top: var(--chat-space-sm);
   padding-top: var(--chat-space-sm);
 }
 
 .chatgpt-input-speaker,
-.chatgpt-input-mic,
-.chat-input-speaker,
-.chat-input-mic {
+.chat-input-speaker {
   background: transparent;
   border: none;
   color: var(--chat-text-secondary);
   cursor: pointer;
-  padding: 0;
+  padding: 8px;
+  border-radius: 8px;
+  transition: all var(--chat-transition-normal);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  aspect-ratio: 1;
+}
+
+.chatgpt-input-mic,
+.chat-input-mic {
+  background: var(--chat-bg-secondary);
+  border: 1px solid var(--chat-border-color);
+  color: var(--chat-text-secondary);
+  cursor: pointer;
+  padding: 8px;
   border-radius: 50%;
   transition: all var(--chat-transition-normal);
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 48px;
-  height: 48px;
+  width: 40px;
+  height: 40px;
   flex-shrink: 0;
   aspect-ratio: 1;
 }
 
 .chatgpt-input-speaker:hover,
-.chatgpt-input-mic:hover,
-.chat-input-speaker:hover,
-.chat-input-mic:hover {
-  background: transparent;
+.chat-input-speaker:hover {
+  background: var(--chat-bg-hover);
   box-shadow: none;
   color: var(--chat-text-primary);
   transform: none;
 }
 
+.chatgpt-input-mic:hover,
+.chat-input-mic:hover {
+  background: var(--chat-bg-tertiary);
+  border-color: var(--chat-text-primary);
+  color: var(--chat-text-primary);
+  transform: none;
+}
+
 .chatgpt-input-speaker:active,
+.chat-input-speaker:active {
+  transform: none;
+  background: var(--chat-bg-hover);
+}
+
 .chatgpt-input-mic:active,
-.chat-input-speaker:active,
 .chat-input-mic:active {
   transform: none;
-  background: transparent;
+  background: var(--chat-bg-tertiary);
 }
 
 .chatgpt-input-speaker:disabled,
@@ -724,12 +990,13 @@
    SIDEBAR
    ======================================== */
 
+/* ✅ CORRECTION: Sidebar en position relative sur GRAND écran uniquement, fixed en overlay sur < 1024px */
 .chatgpt-sidebar,
 .chat-sidebar {
-  position: relative;
+  position: relative; /* Desktop par défaut */
   width: 260px;
   height: 100%;
-  background: #1e1e1e;
+  background: #1a1a1a;
   backdrop-filter: var(--chat-blur-heavy);
   -webkit-backdrop-filter: var(--chat-blur-heavy);
   border-right: 1px solid var(--chat-border-subtle);
@@ -749,6 +1016,7 @@
   transform: translateX(-100%);
 }
 
+/* ✅ Desktop (≥ 1024px) - Sidebar relative qui peut pousser le contenu si ouverte */
 .chatgpt-sidebar.desktop,
 .chat-sidebar.desktop {
   position: relative;
@@ -756,16 +1024,20 @@
   transform: translateX(0);
 }
 
+/* ✅ Mobile/Tablette (< 1024px) - Sidebar TOUJOURS en fixed (overlay) */
 .chatgpt-sidebar.mobile,
 .chat-sidebar.mobile {
-  position: fixed;
+  position: fixed; /* ✅ En overlay, ne repousse PAS le contenu */
+  top: 0;
+  left: 0;
   width: 280px;
-  transform: translateX(-100%);
+  height: 100vh;
+  transform: translateX(-100%); /* ✅ Cachée par défaut */
 }
 
 .chatgpt-sidebar.mobile.visible,
 .chat-sidebar.mobile.visible {
-  transform: translateX(0);
+  transform: translateX(0); /* ✅ Slide par-dessus le contenu */
 }
 
 /* ========================================
@@ -1029,7 +1301,7 @@
 }
 
 /* ========================================
-   SIDEBAR OVERLAY MOBILE
+   SIDEBAR OVERLAY MOBILE/TABLETTE
    ======================================== */
 
 .chatgpt-sidebar-overlay,
@@ -1049,6 +1321,20 @@
 .chatgpt-sidebar-overlay.visible,
 .chat-sidebar-overlay.visible {
   opacity: 1;
+  display: block; /* ✅ Afficher l'overlay quand visible */
+}
+
+/* ✅ Afficher l'overlay sur tablette et mobile (< 1024px) */
+@media (max-width: 1024px) {
+  .chatgpt-sidebar-overlay,
+  .chat-sidebar-overlay {
+    display: none; /* Par défaut caché */
+  }
+  
+  .chatgpt-sidebar-overlay.visible,
+  .chat-sidebar-overlay.visible {
+    display: block; /* Affiché quand sidebar ouverte */
+  }
 }
 
 /* ========================================
@@ -1290,7 +1576,7 @@
   .chatgpt-header,
   .chat-header {
     height: 40px;
-    padding: 0 var(--chat-space-sm);
+    padding: 0 12px;
   }
   
   .chatgpt-logo-img,
@@ -1304,18 +1590,7 @@
     max-width: 200px;
   }
   
-  .chatgpt-messages-container,
-  .chat-messages-container {
-    padding: var(--chat-space-sm);
-    padding-bottom: 6rem;
-  }
-  
-  .chatgpt-message-list,
-  .chat-message-list {
-    padding: 0;
-    max-width: 100%;
-    width: 100%;
-  }
+  /* ✅ Paddings gérés dans la section RESPONSIVE: PADDINGS ADAPTATIFS ci-dessus */
   
   .chatgpt-message,
   .chat-message {
@@ -1325,26 +1600,62 @@
   .chatgpt-message-bubble,
   .chat-message-bubble {
     font-size: var(--chat-font-size-sm);
-    padding: 5px 7px;
-    max-width: 95%;
+    padding: 8px 12px;
+    max-width: calc(100% - 20px);
+    word-wrap: break-word;
+    overflow-wrap: break-word;
   }
   
+  /* ✅ CORRECTION: Marges symétriques et minimales sur mobile */
   .chatgpt-message-user,
   .chat-message-user {
-    margin-left: 10px;
+    margin-left: 0;
   }
   
   .chatgpt-message-assistant,
   .chat-message-assistant {
-    margin-right: 10px;
+    margin-right: 0; /* ✅ Sidebar en overlay, pas de marge */
+    width: 100%;
+  }
+  
+  .chatgpt-input-container,
+  .chat-input-container {
+    padding: 12px;
+  }
+  
+  .chatgpt-input-area,
+  .chat-input-area {
+    width: 100%;
+    max-width: 1005px; /* ✅ Maintenir l'alignement en responsive */
+    padding: 12px;
+  }
+  
+  .chatgpt-input-textarea,
+  .chat-input-textarea {
+    font-size: 16px; /* Évite le zoom sur iOS */
+    min-height: 20px;
+    max-height: 120px;
+  }
+  
+  .chatgpt-input-actions,
+  .chat-input-actions {
+    gap: 8px;
+    margin-top: 8px;
   }
   
   .chatgpt-input-speaker,
   .chatgpt-input-mic,
   .chat-input-speaker,
   .chat-input-mic {
-    width: 44px;
-    height: 44px;
+    width: 36px;
+    height: 36px;
+    padding: 6px;
+  }
+  
+  .chatgpt-input-send,
+  .chat-input-send {
+    width: 36px;
+    height: 36px;
   }
 }
 
@@ -1353,7 +1664,7 @@
   .chatgpt-header,
   .chat-header {
     height: 44px;
-    padding: 0 var(--chat-space-md);
+    padding: 0 16px;
   }
   
   .chatgpt-logo-img,
@@ -1367,72 +1678,55 @@
     max-width: 250px;
   }
   
-  .chatgpt-messages-container,
-  .chat-messages-container {
-    padding: var(--chat-space-md);
-    padding-bottom: 7rem;
-  }
-  
-  .chatgpt-message-list,
-  .chat-message-list {
-    padding: 0 var(--chat-space-xs);
-    max-width: 100%;
-    width: 100%;
-  }
-  
-  .chatgpt-message,
-  .chat-message {
-    margin-bottom: 6px;
-  }
+  /* ✅ Paddings gérés dans la section RESPONSIVE: PADDINGS ADAPTATIFS ci-dessus */
   
   .chatgpt-message-bubble,
   .chat-message-bubble {
-    font-size: var(--chat-font-size-md);
-    padding: 6px 8px;
-    max-width: 90%;
+    max-width: calc(100% - 30px);
+    word-wrap: break-word;
+    overflow-wrap: break-word;
   }
   
-  .chatgpt-message-user,
-  .chat-message-user {
-    margin-left: 20px;
+  .chatgpt-input-container,
+  .chat-input-container {
+    padding: 16px;
   }
   
-  .chatgpt-message-assistant,
-  .chat-message-assistant {
-    margin-right: 20px;
+  .chatgpt-input-area,
+  .chat-input-area {
+    width: 100%;
+    max-width: 1005px; /* ✅ Maintenir l'alignement en responsive */
+    padding: 16px;
+  }
+  
+  .chatgpt-input-textarea,
+  .chat-input-textarea {
+    font-size: 16px; /* Évite le zoom sur iOS */
+    min-height: 20px;
+    max-height: 100px;
+  }
+  
+  .chatgpt-input-actions,
+  .chat-input-actions {
+    gap: 10px;
   }
   
   .chatgpt-input-speaker,
   .chatgpt-input-mic,
   .chat-input-speaker,
   .chat-input-mic {
-    width: 44px;
-    height: 44px;
+    width: 40px;
+    height: 40px;
   }
   
-  .chatgpt-sidebar,
-  .chat-sidebar {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 280px;
-    height: 100vh;
-    z-index: var(--chat-z-sidebar);
-    transform: translateX(-100%);
-    transition: transform var(--chat-transition-normal);
-  }
-  
-  .chatgpt-sidebar.visible,
-  .chat-sidebar.visible {
-    transform: translateX(0);
-  }
+  /* ✅ Sidebar gérée par .chatgpt-sidebar.mobile ci-dessus */
 }
 
-/* Tablette */
-@media (max-width: 1024px) {
+/* Tablette (769px - 1024px) */
+@media (max-width: 1024px) and (min-width: 769px) {
   .chatgpt-header,
   .chat-header {
-    height: 48px;
+    height: 56px;
     padding: 0 var(--chat-space-lg);
   }
   
@@ -1441,18 +1735,7 @@
     height: 22px;
   }
   
-  .chatgpt-messages-container,
-  .chat-messages-container {
-    padding: var(--chat-space-lg);
-    padding-bottom: 8rem;
-  }
-  
-  .chatgpt-message-list,
-  .chat-message-list {
-    padding: 0 var(--chat-space-sm);
-    max-width: 100%;
-    width: 100%;
-  }
+  /* ✅ Paddings gérés dans la section RESPONSIVE: PADDINGS ADAPTATIFS ci-dessus */
   
   .chatgpt-message,
   .chat-message {
@@ -1468,12 +1751,171 @@
   
   .chatgpt-message-user,
   .chat-message-user {
-    margin-left: 40px;
+    margin-left: 0; /* ✅ CORRECTION: Pas de marge excessive */
   }
   
+  /* ✅ CORRECTION: Pas de margin-right sur assistant car sidebar en overlay */
   .chatgpt-message-assistant,
   .chat-message-assistant {
-    margin-right: 40px;
+    margin-right: 0; /* ✅ Sidebar en overlay, pas besoin de marge */
+    width: 100%;
+  }
+  
+  /* ✅ Sidebar en overlay sur tablette aussi */
+  .chatgpt-sidebar,
+  .chat-sidebar {
+    position: fixed !important; /* ✅ Force overlay sur tablette */
+    top: 0;
+    left: 0;
+    width: 280px;
+    height: 100vh;
+    z-index: var(--chat-z-sidebar);
+  }
+}
+
+/* ========================================
+   TABLEAUX AVEC SCROLL HORIZONTAL INTELLIGENT
+   ======================================== */
+
+/* Wrapper pour tableaux avec scroll horizontal intelligent */
+.chat-message-content .table-wrapper,
+.chatgpt-message-content .table-wrapper {
+  width: 100%;
+  overflow-x: visible; /* ✅ Pas de scroll sur grand écran */
+  margin: var(--chat-space-lg) 0;
+  border-radius: 0; /* ✅ Pas de bordure arrondie */
+  border: none; /* ✅ Wrapper invisible */
+  background: transparent; /* ✅ Fond transparent */
+  -webkit-overflow-scrolling: touch; /* Smooth scrolling sur iOS */
+  position: relative;
+}
+
+/* Scrollbar personnalisée pour les tableaux */
+.chat-message-content .table-wrapper::-webkit-scrollbar,
+.chatgpt-message-content .table-wrapper::-webkit-scrollbar {
+  height: 8px;
+}
+
+.chat-message-content .table-wrapper::-webkit-scrollbar-track,
+.chatgpt-message-content .table-wrapper::-webkit-scrollbar-track {
+  background: var(--chat-bg-tertiary);
+  border-radius: 4px;
+}
+
+.chat-message-content .table-wrapper::-webkit-scrollbar-thumb,
+.chatgpt-message-content .table-wrapper::-webkit-scrollbar-thumb {
+  background: var(--chat-text-muted);
+  border-radius: 4px;
+}
+
+.chat-message-content .table-wrapper::-webkit-scrollbar-thumb:hover,
+.chatgpt-message-content .table-wrapper::-webkit-scrollbar-thumb:hover {
+  background: var(--chat-text-secondary);
+}
+
+/* ✅ CORRECTION: Tableaux adaptatifs avec scroll intelligent */
+.chat-message-content table,
+.chatgpt-message-content table {
+  width: 100%;
+  /* ✅ PAS de min-width fixe - les tableaux s'adaptent d'abord à la largeur disponible */
+  border-collapse: collapse;
+  margin: 0;
+  background: var(--chat-bg-tertiary);
+  border-radius: var(--chat-radius-md);
+  overflow: hidden;
+  table-layout: fixed; /* ✅ Colonnes de largeur égale - s'adapte à la largeur du conteneur */
+}
+
+/* ✅ RESPONSIVE: Scroll horizontal seulement sur tablette/mobile */
+@media (max-width: 1024px) {
+  .chat-message-content .table-wrapper,
+  .chatgpt-message-content .table-wrapper {
+    overflow-x: auto; /* ✅ Activer le scroll seulement sur tablette/mobile */
+  }
+}
+
+/* ✅ RESPONSIVE: Colonnes adaptatives */
+.chat-message-content th,
+.chat-message-content td,
+.chatgpt-message-content th,
+.chatgpt-message-content td {
+  padding: var(--chat-space-md);
+  text-align: left;
+  border-bottom: 1px solid var(--chat-border-subtle);
+  white-space: normal; /* ✅ Permet le retour à la ligne en mode large */
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  /* ✅ Pas de min/max-width - les colonnes s'adaptent automatiquement */
+}
+
+/* ✅ RESPONSIVE: Activer nowrap seulement sur mobile très petit */
+@media (max-width: 480px) {
+  .chat-message-content th,
+  .chat-message-content td,
+  .chatgpt-message-content th,
+  .chatgpt-message-content td {
+    white-space: nowrap; /* Empêche le retour à la ligne sur mobile */
+    padding: var(--chat-space-sm) var(--chat-space-md);
+    min-width: 60px;
+  }
+}
+
+/* ✅ En-têtes sticky avec background */
+.chat-message-content th,
+.chatgpt-message-content th {
+  background: var(--chat-bg-elevated);
+  font-weight: var(--chat-font-weight-semibold);
+  color: var(--chat-text-primary);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.chat-message-content td,
+.chatgpt-message-content td {
+  color: var(--chat-text-primary);
+}
+
+/* ========================================
+   TABLEAUX RESPONSIVE - MOBILE ET TABLETTE
+   ======================================== */
+
+/* Mobile très petit - scroll horizontal activé + nowrap */
+@media (max-width: 480px) {
+  .chat-message-content table,
+  .chatgpt-message-content table {
+    min-width: 500px; /* Force le scroll sur très petits écrans */
+  }
+  
+  .chat-message-content th,
+  .chat-message-content td,
+  .chatgpt-message-content th,
+  .chatgpt-message-content td {
+    white-space: nowrap; /* Empêche le retour à la ligne sur mobile */
+    padding: var(--chat-space-sm) var(--chat-space-md);
+    min-width: 60px;
+    max-width: none;
+  }
+}
+
+/* Mobile - scroll horizontal activé si nécessaire */
+@media (max-width: 768px) {
+  .chat-message-content th,
+  .chat-message-content td,
+  .chatgpt-message-content th,
+  .chatgpt-message-content td {
+    padding: var(--chat-space-sm) var(--chat-space-md);
+    font-size: var(--chat-font-size-sm);
+  }
+}
+
+/* Tablette - mode intermédiaire */
+@media (max-width: 1024px) and (min-width: 769px) {
+  .chat-message-content th,
+  .chat-message-content td,
+  .chatgpt-message-content th,
+  .chatgpt-message-content td {
+    max-width: 300px; /* Limite la largeur des colonnes sur tablette */
   }
 }
 
@@ -1544,3 +1986,4 @@
     animation: none;
   }
 }
+

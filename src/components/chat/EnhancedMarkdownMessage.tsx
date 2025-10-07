@@ -136,7 +136,7 @@ const TextBlock: React.FC<{ content: string; index: number }> = React.memo(({ co
   const { html } = useMarkdownRender({ content });
   const containerRef = useRef<HTMLDivElement>(null);
   
-  // ✅ SÉCURITÉ: Fonction sécurisée pour remplacer les blocs de code
+  // ✅ SÉCURITÉ: Fonction sécurisée pour remplacer les blocs de code ET wrapper les tableaux
   const processCodeBlocks = (htmlContent: string) => {
     // Vérifier si nous sommes côté client (DOMParser n'est disponible que dans le navigateur)
     if (typeof window === 'undefined' || typeof DOMParser === 'undefined') {
@@ -164,6 +164,18 @@ const TextBlock: React.FC<{ content: string; index: number }> = React.memo(({ co
       // Créer un DOM parser temporaire avec contenu sanitizé
       const parser = new DOMParser();
       const doc = parser.parseFromString(sanitizedContent, 'text/html');
+      
+      // ✅ NOUVEAU: Wrapper les tableaux pour le scroll horizontal
+      const tables = doc.querySelectorAll('table');
+      tables.forEach((table) => {
+        // Créer un wrapper avec overflow
+        const wrapper = doc.createElement('div');
+        wrapper.className = 'table-wrapper-chat';
+        
+        // Wrapper le tableau
+        table.parentNode?.insertBefore(wrapper, table);
+        wrapper.appendChild(table);
+      });
       
       // Trouver tous les blocs pre > code
       const codeBlocks = doc.querySelectorAll('pre > code');
@@ -211,7 +223,7 @@ const TextBlock: React.FC<{ content: string; index: number }> = React.memo(({ co
     }
   };
   
-  // ✅ SÉCURITÉ: Sanitizer le HTML avant de l'injecter (avec support des tableaux)
+  // ✅ SÉCURITÉ: Sanitizer le HTML avant de l'injecter (avec support des tableaux wrappés)
   const processedHtml = processCodeBlocks(html);
   const sanitizedHtml = DOMPurify.sanitize(processedHtml, {
     ALLOWED_TAGS: [
@@ -232,7 +244,10 @@ const TextBlock: React.FC<{ content: string; index: number }> = React.memo(({ co
       'width', 'height', 'align', 'valign'
     ],
     ALLOW_DATA_ATTR: true,
-    ALLOW_UNKNOWN_PROTOCOLS: false
+    ALLOW_UNKNOWN_PROTOCOLS: false,
+    // ✅ Permettre les wrappers de tableaux
+    ADD_TAGS: ['div'],
+    ADD_ATTR: ['class']
   });
   
   return (

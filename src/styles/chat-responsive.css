@@ -271,12 +271,14 @@
     max-width: 95%;
   }
   
+  /* ✅ CORRECTION: Pas de marges asymétriques - sidebar en overlay */
   .chat-message-user {
-    margin-left: 20px;
+    margin-left: 0;
   }
   
   .chat-message-assistant {
-    margin-right: 20px;
+    margin-right: 0; /* ✅ Sidebar en overlay, pas besoin de marge */
+    width: 100%;
   }
 }
 
@@ -318,12 +320,14 @@
     max-width: 95%;
   }
   
+  /* ✅ CORRECTION: Pas de marges asymétriques */
   .chat-message-user {
-    margin-left: 10px;
+    margin-left: 0;
   }
   
   .chat-message-assistant {
-    margin-right: 10px;
+    margin-right: 0; /* ✅ Sidebar en overlay, pas de marge */
+    width: 100%;
   }
   
   .chat-message-bubble-assistant {
@@ -374,12 +378,14 @@
     max-width: 90%;
   }
   
+  /* ✅ CORRECTION: Pas de marges asymétriques */
   .chat-message-user {
-    margin-left: 20px;
+    margin-left: 0;
   }
   
   .chat-message-assistant {
-    margin-right: 20px;
+    margin-right: 0; /* ✅ Sidebar en overlay, pas de marge */
+    width: 100%;
   }
   
   .chat-message-bubble-assistant {
@@ -430,12 +436,14 @@
     max-width: 90%;
   }
   
+  /* ✅ CORRECTION: Pas de marges asymétriques */
   .chat-message-user {
-    margin-left: 40px;
+    margin-left: 0;
   }
   
   .chat-message-assistant {
-    margin-right: 40px;
+    margin-right: 0; /* ✅ Sidebar en overlay, pas de marge */
+    width: 100%;
   }
   
   .chat-message-bubble-assistant {
@@ -500,8 +508,8 @@
   .chat-input-mic,
   .chatgpt-input-speaker,
   .chatgpt-input-mic {
-    width: 48px !important;
-    height: 48px !important;
+    width: 56px !important;
+    height: 56px !important;
   }
 }
 
@@ -531,8 +539,8 @@
   .chat-input-mic,
   .chatgpt-input-speaker,
   .chatgpt-input-mic {
-    width: 48px !important;
-    height: 48px !important;
+    width: 56px !important;
+    height: 56px !important;
   }
 }
 
