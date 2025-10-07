@@ -19,9 +19,8 @@
   overflow: hidden;
 }
 
-.reasoning-dropdown-trigger:hover {
-  background: none;
-  transform: none;
+.reasoning-dropdown-trigger:hover .reasoning-dropdown-header {
+  background: rgba(255, 255, 255, 0.08); /* ✅ Hover plus visible */
 }
 
 .reasoning-dropdown-trigger:active {
@@ -32,10 +31,13 @@
   display: flex;
   align-items: center;
   gap: 0;
-  padding: 4px 12px 4px 0;
+  padding: 6px 12px; /* ✅ Padding équilibré pour le background */
   color: #9ca3af;
   font-size: 12px;
   font-weight: 500;
+  background: rgba(255, 255, 255, 0.05); /* ✅ Background gris subtle */
+  border-radius: 8px; /* ✅ Coins arrondis */
+  transition: background 0.2s ease;
 }
 
 
