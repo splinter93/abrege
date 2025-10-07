@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { logApi } from '@/utils/logger';
 import { V2ResourceResolver } from '@/utils/v2ResourceResolver';
-import { getAuthenticatedUser, createAuthenticatedSupabaseClient } from '@/utils/authUtils';
+import { getAuthenticatedUser, createAuthenticatedSupabaseClient, extractTokenFromRequest } from '@/utils/authUtils';
 
 // 🔧 CORRECTIONS APPLIQUÉES:
 // - Authentification simplifiée via getAuthenticatedUser uniquement
@@ -39,7 +39,8 @@ export async function GET(
   const userId = authResult.userId!;
   
   // 🔧 CORRECTION: Client Supabase standard, getAuthenticatedUser a déjà validé
-  const supabase = createAuthenticatedSupabaseClient(authResult);
+  const userToken = extractTokenFromRequest(request);
+  const supabase = createAuthenticatedSupabaseClient(authResult, userToken || undefined);
 
   // Résoudre la référence (UUID ou slug)
   const resolveResult = await V2ResourceResolver.resolveRef(ref, 'folder', userId, context);

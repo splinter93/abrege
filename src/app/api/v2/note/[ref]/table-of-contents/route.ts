@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { logApi } from '@/utils/logger';
-import { getAuthenticatedUser, createAuthenticatedSupabaseClient } from '@/utils/authUtils';
+import { getAuthenticatedUser, createAuthenticatedSupabaseClient, extractTokenFromRequest } from '@/utils/authUtils';
 import { extractTOCWithSlugs } from '@/utils/markdownTOC';
 import { V2ResourceResolver } from '@/utils/v2ResourceResolver';
 
@@ -47,7 +47,8 @@ export async function GET(
     }
 
     const noteId = resolveResult.id;
-    const supabase = createAuthenticatedSupabaseClient(authResult);
+  const userToken = extractTokenFromRequest(request);
+    const supabase = createAuthenticatedSupabaseClient(authResult, userToken || undefined);
 
     // Récupérer la note par son ID résolu
     const { data: note, error: fetchError } = await supabase

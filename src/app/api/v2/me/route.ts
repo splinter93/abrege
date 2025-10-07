@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { logApi } from '@/utils/logger';
-import { getAuthenticatedUser, createAuthenticatedSupabaseClient } from '@/utils/authUtils';
+import { getAuthenticatedUser, createAuthenticatedSupabaseClient, extractTokenFromRequest } from '@/utils/authUtils';
 
 export async function GET(request: NextRequest): Promise<NextResponse> {
   const startTime = Date.now();
@@ -27,7 +27,8 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   const userId = authResult.userId!;
   
   // Créer un client Supabase standard (l'authentification est déjà validée)
-  const supabase = createAuthenticatedSupabaseClient(authResult);
+  const userToken = extractTokenFromRequest(request);
+  const supabase = createAuthenticatedSupabaseClient(authResult, userToken || undefined);
 
   try {
     // Récupérer le profil utilisateur depuis auth.users avec les colonnes de profil

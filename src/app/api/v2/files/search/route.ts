@@ -11,7 +11,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { getAuthenticatedUser, createAuthenticatedSupabaseClient } from '@/utils/authUtils';
+import { getAuthenticatedUser, createAuthenticatedSupabaseClient, extractTokenFromRequest } from '@/utils/authUtils';
 import { logApi } from '@/utils/logger';
 
 // 🔒 Schéma de validation des paramètres de requête
@@ -82,7 +82,8 @@ export async function GET(request: NextRequest) {
     }
 
     const userId = authResult.userId;
-    const supabase = createAuthenticatedSupabaseClient(authResult);
+  const userToken = extractTokenFromRequest(request);
+    const supabase = createAuthenticatedSupabaseClient(authResult, userToken || undefined);
 
     // 🔍 Validation des paramètres de requête
     const { searchParams } = new URL(request.url);

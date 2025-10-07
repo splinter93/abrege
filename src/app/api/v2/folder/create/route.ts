@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { logApi } from '@/utils/logger';
 import { createFolderV2Schema, validatePayload, createValidationErrorResponse } from '@/utils/v2ValidationSchemas';
-import { getAuthenticatedUser, createAuthenticatedSupabaseClient } from '@/utils/authUtils';
+import { getAuthenticatedUser, createAuthenticatedSupabaseClient, extractTokenFromRequest } from '@/utils/authUtils';
 import { V2DatabaseUtils } from '@/utils/v2DatabaseUtils';
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
@@ -28,7 +28,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   const userId = authResult.userId!;
   
   // 🔧 CORRECTION: Créer le client Supabase authentifié
-  const supabase = createAuthenticatedSupabaseClient(authResult);
+  const userToken = extractTokenFromRequest(request);
+  const supabase = createAuthenticatedSupabaseClient(authResult, userToken || undefined);
 
   try {
     const body = await request.json();

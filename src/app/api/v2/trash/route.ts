@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { getAuthenticatedUser, createAuthenticatedSupabaseClient } from '@/utils/authUtils';
+import { getAuthenticatedUser, createAuthenticatedSupabaseClient, extractTokenFromRequest } from '@/utils/authUtils';
 import { logApi } from '@/utils/logger';
 
 const trashItemSchema = z.object({
@@ -55,7 +55,8 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
     const userId = authResult.userId!;
     logApi.info(`✅ Utilisateur authentifié: ${userId} (type: ${authResult.authType})`, context);
-    const supabase = createAuthenticatedSupabaseClient(authResult);
+  const userToken = extractTokenFromRequest(request);
+    const supabase = createAuthenticatedSupabaseClient(authResult, userToken || undefined);
 
     // 📋 Récupérer les articles en corbeille
     const { data: articles, error: articlesError } = await supabase
@@ -209,7 +210,8 @@ export async function DELETE(request: NextRequest): Promise<NextResponse> {
     }
 
     const userId = authResult.userId!;
-    const supabase = createAuthenticatedSupabaseClient(authResult);
+  const userToken = extractTokenFromRequest(request);
+    const supabase = createAuthenticatedSupabaseClient(authResult, userToken || undefined);
 
     // 🗑️ Supprimer définitivement tous les éléments en corbeille
     const { error: articlesError } = await supabase

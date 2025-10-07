@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { logApi } from '@/utils/logger';
 import { V2ResourceResolver } from '@/utils/v2ResourceResolver';
-import { getAuthenticatedUser, createAuthenticatedSupabaseClient } from '@/utils/authUtils';
+import { getAuthenticatedUser, createAuthenticatedSupabaseClient, extractTokenFromRequest } from '@/utils/authUtils';
 import { updateClasseurV2Schema, validatePayload, createValidationErrorResponse } from '@/utils/v2ValidationSchemas';
 
 // 🔧 CORRECTIONS APPLIQUÉES:
@@ -40,7 +40,8 @@ export async function PUT(
   const userId = authResult.userId!;
   
   // 🔧 CORRECTION: Client Supabase standard, getAuthenticatedUser a déjà validé
-  const supabase = createAuthenticatedSupabaseClient(authResult);
+  const userToken = extractTokenFromRequest(request);
+  const supabase = createAuthenticatedSupabaseClient(authResult, userToken || undefined);
 
   try {
     const body = await request.json();

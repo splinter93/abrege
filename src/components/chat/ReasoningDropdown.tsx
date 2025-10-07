@@ -28,7 +28,7 @@ const ReasoningDropdown: React.FC<ReasoningDropdownProps> = ({
       >
         <div className="reasoning-dropdown-header">
           <Lightbulb className="reasoning-dropdown-icon" size={12} />
-          <span className="reasoning-dropdown-title">Reasoning...</span>
+          <span className="reasoning-dropdown-title">Reasoning</span>
         </div>
       </button>
 

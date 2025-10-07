@@ -15,7 +15,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { logApi } from '@/utils/logger';
 import { V2ResourceResolver } from '@/utils/v2ResourceResolver';
-import { getAuthenticatedUser, createAuthenticatedSupabaseClient } from '@/utils/authUtils';
+import { getAuthenticatedUser, createAuthenticatedSupabaseClient, extractTokenFromRequest } from '@/utils/authUtils';
 import { z } from 'zod';
 import { updateArticleInsight } from '@/utils/insightUpdater';
 
@@ -53,7 +53,8 @@ export async function POST(
   }
 
   const userId = authResult.userId!;
-  const supabase = createAuthenticatedSupabaseClient(authResult);
+  const userToken = extractTokenFromRequest(request);
+  const supabase = createAuthenticatedSupabaseClient(authResult, userToken || undefined);
 
   try {
     // 🔍 Résoudre la référence (UUID ou slug)

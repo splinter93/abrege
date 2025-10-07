@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { logApi } from '@/utils/logger';
 import { createClasseurV2Schema, validatePayload, createValidationErrorResponse } from '@/utils/v2ValidationSchemas';
-import { getAuthenticatedUser, createAuthenticatedSupabaseClient } from '@/utils/authUtils';
+import { getAuthenticatedUser, createAuthenticatedSupabaseClient, extractTokenFromRequest } from '@/utils/authUtils';
 import { SlugGenerator } from '@/utils/slugGenerator';
 
 // 🔧 CORRECTIONS APPLIQUÉES:
@@ -35,7 +35,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   const userId = authResult.userId!;
   
   // 🔧 CORRECTION: Client Supabase standard, getAuthenticatedUser a déjà validé
-  const supabase = createAuthenticatedSupabaseClient(authResult);
+  const userToken = extractTokenFromRequest(request);
+  const supabase = createAuthenticatedSupabaseClient(authResult, userToken || undefined);
   
   // ✅ CORRECTION : Pour l'impersonation d'agent, créer l'utilisateur s'il n'existe pas
   if (authResult.authType === 'api_key') {

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAuthenticatedUser, createAuthenticatedSupabaseClient } from '@/utils/authUtils';
+import { getAuthenticatedUser, createAuthenticatedSupabaseClient, extractTokenFromRequest } from '@/utils/authUtils';
 import { logApi } from '@/utils/logger';
 
 export async function GET(request: NextRequest) {
@@ -30,7 +30,8 @@ export async function GET(request: NextRequest) {
     let supabaseTest = null;
     if (authResult.success) {
       try {
-        const supabase = createAuthenticatedSupabaseClient(authResult);
+  const userToken = extractTokenFromRequest(request);
+        const supabase = createAuthenticatedSupabaseClient(authResult, userToken || undefined);
         const { data, error } = await supabase
           .from('articles')
           .select('id')

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { logApi } from '@/utils/logger';
-import { getAuthenticatedUser, createAuthenticatedSupabaseClient } from '@/utils/authUtils';
+import { getAuthenticatedUser, createAuthenticatedSupabaseClient, extractTokenFromRequest } from '@/utils/authUtils';
 import { V2ResourceResolver } from '@/utils/v2ResourceResolver';
 
 export async function GET(
@@ -42,7 +42,8 @@ export async function GET(
     }
 
     const folderId = resolveResult.id;
-    const supabase = createAuthenticatedSupabaseClient(authResult);
+  const userToken = extractTokenFromRequest(request);
+    const supabase = createAuthenticatedSupabaseClient(authResult, userToken || undefined);
 
     // Récupérer le dossier par son ID résolu
     const { data: folder, error: fetchError } = await supabase
@@ -112,7 +113,8 @@ export async function PUT(
     const { name, description, classeur_id, parent_id } = body;
 
     // Créer le bon client Supabase selon le type d'authentification
-    const supabase = createAuthenticatedSupabaseClient(authResult);
+  const userToken = extractTokenFromRequest(request);
+    const supabase = createAuthenticatedSupabaseClient(authResult, userToken || undefined);
 
     // 🔧 CORRECTION: Utiliser V2ResourceResolver pour résoudre la référence
     const resolveResult = await V2ResourceResolver.resolveRef(folderRef, 'folder', userId, context);

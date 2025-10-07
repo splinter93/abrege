@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { logApi } from '@/utils/logger';
-import { getAuthenticatedUser, createAuthenticatedSupabaseClient } from '@/utils/authUtils';
+import { getAuthenticatedUser, createAuthenticatedSupabaseClient, extractTokenFromRequest } from '@/utils/authUtils';
 import { V2ResourceResolver } from '@/utils/v2ResourceResolver';
 
 export async function GET(
@@ -42,7 +42,8 @@ export async function GET(
     }
 
     const classeurId = resolveResult.id;
-    const supabase = createAuthenticatedSupabaseClient(authResult);
+  const userToken = extractTokenFromRequest(request);
+    const supabase = createAuthenticatedSupabaseClient(authResult, userToken || undefined);
 
     // Récupérer le classeur par son ID résolu (exclure ceux en corbeille)
     const { data: classeur, error: fetchError } = await supabase

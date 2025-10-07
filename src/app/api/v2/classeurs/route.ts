@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { logApi } from '@/utils/logger';
-import { getAuthenticatedUser, createAuthenticatedSupabaseClient } from '@/utils/authUtils';
+import { getAuthenticatedUser, createAuthenticatedSupabaseClient, extractTokenFromRequest } from '@/utils/authUtils';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -28,10 +28,11 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   }
 
   const userId = authResult.userId!;
+  const userToken = extractTokenFromRequest(request);
   
   try {
     // Créer le bon client Supabase selon le type d'authentification
-    const supabase = createAuthenticatedSupabaseClient(authResult);
+    const supabase = createAuthenticatedSupabaseClient(authResult, userToken || undefined);
 
     // Récupérer tous les classeurs de l'utilisateur (exclure ceux en corbeille)
     const { data: classeurs, error: fetchError } = await supabase
@@ -106,7 +107,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     }
 
     // Créer le bon client Supabase selon le type d'authentification
-    const supabase = createAuthenticatedSupabaseClient(authResult);
+    const supabase = createAuthenticatedSupabaseClient(authResult, userToken || undefined);
 
     // Générer un slug à partir du nom
     const slug = name.toLowerCase()

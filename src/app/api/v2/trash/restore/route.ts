@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { getAuthenticatedUser, createAuthenticatedSupabaseClient } from '@/utils/authUtils';
+import { getAuthenticatedUser, createAuthenticatedSupabaseClient, extractTokenFromRequest } from '@/utils/authUtils';
 import { logApi } from '@/utils/logger';
 
 const restoreRequestSchema = z.object({
@@ -43,7 +43,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     }
 
     const userId = authResult.userId!;
-    const supabase = createAuthenticatedSupabaseClient(authResult);
+  const userToken = extractTokenFromRequest(request);
+    const supabase = createAuthenticatedSupabaseClient(authResult, userToken || undefined);
 
     // 📋 Validation du body
     const body = await request.json();

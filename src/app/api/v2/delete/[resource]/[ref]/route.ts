@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { getAuthenticatedUser, createAuthenticatedSupabaseClient } from '@/utils/authUtils';
+import { getAuthenticatedUser, createAuthenticatedSupabaseClient, extractTokenFromRequest } from '@/utils/authUtils';
 import { V2DatabaseUtils } from '@/utils/v2DatabaseUtils';
 import { logApi } from '@/utils/logger';
 import { canPerformAction } from '@/utils/scopeValidation';
@@ -100,7 +100,8 @@ export async function DELETE(
     }
 
     // 🔧 Créer le client Supabase authentifié conforme aux autres endpoints V2
-    const supabase = createAuthenticatedSupabaseClient(authResult);
+  const userToken = extractTokenFromRequest(request);
+    const supabase = createAuthenticatedSupabaseClient(authResult, userToken || undefined);
     
     // 🗑️ Mettre en corbeille au lieu de supprimer définitivement
     let trashResult;

@@ -209,16 +209,51 @@ export async function getAuthenticatedUser(request: NextRequest): Promise<AuthRe
 }
 
 /**
- * Crée le bon client Supabase selon le type d'authentification
- * Utilise le service role key pour les API Keys afin de contourner RLS
+ * Extrait le token depuis le header Authorization
  */
-export function createAuthenticatedSupabaseClient(authResult: AuthResult) {
-  // 🔧 CORRECTION: Utiliser la clé service role pour l'API V2
-  // car la clé anonyme n'a pas les bonnes permissions RLS
+export function extractTokenFromRequest(request: NextRequest): string | null {
+  const authHeader = request.headers.get('Authorization');
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    return authHeader.substring(7);
+  }
+  return null;
+}
+
+/**
+ * Crée le bon client Supabase selon le type d'authentification
+ * 
+ * Pour les JWT : utilise le JWT du user avec ANON_KEY
+ * Pour les API Keys : utilise SERVICE_ROLE_KEY pour bypass RLS
+ */
+export function createAuthenticatedSupabaseClient(authResult: AuthResult, userToken?: string) {
+  // ✅ Pour les JWT et OAuth : Utiliser le JWT du user
+  if (authResult.authType === 'jwt' || authResult.authType === 'oauth') {
+    if (!userToken) {
+      throw new Error('JWT token manquant pour créer le client authentifié');
+    }
+    
+    logApi.info(`[AuthUtils] 🔑 Création client Supabase avec JWT user`);
+    
+    return createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        global: {
+          headers: {
+            Authorization: `Bearer ${userToken}`
+          }
+        }
+      }
+    );
+  }
+  
+  // ✅ Pour les API Keys : Utiliser SERVICE_ROLE_KEY (agents, impersonation)
   const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!supabaseServiceKey) {
-    throw new Error('SUPABASE_SERVICE_ROLE_KEY manquante');
+    throw new Error('SUPABASE_SERVICE_ROLE_KEY manquante pour API Key');
   }
+  
+  logApi.info(`[AuthUtils] 🤖 Création client Supabase avec SERVICE_ROLE (API Key/Agent)`);
   
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,

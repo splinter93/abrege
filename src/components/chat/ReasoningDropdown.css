@@ -37,7 +37,7 @@
   font-size: 12px;
   font-weight: 500;
   background: rgba(255, 255, 255, 0.05); /* ✅ Background gris subtle */
-  border-radius: 8px; /* ✅ Coins arrondis */
+  border-radius: 12px; /* ✅ Plus arrondi */
   transition: background 0.2s ease;
   width: auto; /* ✅ Largeur adaptée au texte */
 }
@@ -67,14 +67,12 @@
 }
 
 .reasoning-dropdown-body {
-  padding: 8px 12px 12px 12px;
-  border-left: 3px solid rgba(255, 255, 255, 0.15); /* ✅ Barre verticale style quote */
-  margin-left: 0;
+  padding: 6px 12px 12px 0;
 }
 
 .reasoning-dropdown-text {
   margin: 0;
-  padding: 0 0 0 8px; /* ✅ Padding à gauche pour espacer de la barre */
+  padding: 0;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
   font-size: 12px;
   line-height: 1.4;
