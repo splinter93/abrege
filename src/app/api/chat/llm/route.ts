@@ -76,6 +76,10 @@ export async function POST(request: NextRequest) {
         }
         
         logger.dev(`[LLM Route] ✅ Utilisateur authentifié: ${user.id}`);
+        
+        // 🔧 CORRECTION PROD : Remplacer le token JWT par l'userId pour les tool calls
+        // Côté serveur, on utilisera SERVICE_ROLE_KEY + X-User-Id
+        userToken = user.id;
       }
     } catch (validationError) {
       logger.error(`[LLM Route] ❌ Erreur validation token:`, validationError);

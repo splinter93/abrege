@@ -77,22 +77,42 @@ export class ApiV2HttpClient {
   ): Promise<T> {
     let url = `${this.baseUrl}/api/v2${endpoint}`;
     
-    // ✅ AUTHENTIFICATION SIMPLE : Toujours utiliser le JWT du user
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-      'X-Client-Type': 'agent',
-      'Authorization': `Bearer ${userToken}`
-    };
+    // 🔧 CORRECTION PROD : Si on est côté serveur (Node.js), utiliser SERVICE_ROLE + userId dans headers
+    const isServerSide = typeof window === 'undefined';
+    
+    let headers: Record<string, string>;
+    
+    if (isServerSide && process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      // SERVEUR : Utiliser SERVICE_ROLE_KEY + X-User-Id pour impersonation
+      headers = {
+        'Content-Type': 'application/json',
+        'X-Client-Type': 'agent',
+        'Authorization': `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
+        'X-User-Id': userToken, // Le userToken est en fait l'userId côté serveur
+        'X-Service-Role': 'true'
+      };
+      
+      logger.info(`[ApiV2HttpClient] 🔑 Authentification SERVICE_ROLE (serveur)`, {
+        userId: userToken.substring(0, 8) + '...',
+        hasServiceKey: true
+      });
+    } else {
+      // CLIENT : Utiliser le JWT du user classique
+      headers = {
+        'Content-Type': 'application/json',
+        'X-Client-Type': 'agent',
+        'Authorization': `Bearer ${userToken}`
+      };
+      
+      logger.info(`[ApiV2HttpClient] 🔑 Authentification JWT (client)`, {
+        tokenLength: userToken.length
+      });
+    }
     
     // 🔍 LOGS DE DIAGNOSTIC POUR PROD
-    logger.info(`[ApiV2HttpClient] 🔑 Authentification JWT`, {
-      url,
-      method,
-      endpoint,
+    logger.dev(`[ApiV2HttpClient] 📡 ${method} ${endpoint}`, {
       baseUrl: this.baseUrl,
-      tokenStart: userToken.substring(0, 20) + '...',
-      tokenLength: userToken.length,
-      isServerSide: typeof window === 'undefined',
+      isServerSide,
       environment: process.env.NODE_ENV,
       platform: process.env.VERCEL ? 'Vercel' : 'Local'
     });

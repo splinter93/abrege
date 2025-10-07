@@ -431,7 +431,7 @@
   display: flex;
   flex-direction: column;
   gap: 0;
-  max-width: 1000px;
+  max-width: 1005px; /* ✅ CORRECTION: Aligné avec l'input */
   width: 100%;
   margin: 0 auto; /* ✅ Centrage horizontal */
 }
@@ -439,7 +439,7 @@
 /* ✅ PADDINGS: Espacements latéraux cohérents */
 .chatgpt-message-list,
 .chat-message-list {
-  max-width: 1000px;
+  max-width: 1005px; /* ✅ CORRECTION: Aligné avec l'input */
   width: 100%;
   margin: 0 auto; /* ✅ Centrage horizontal */
   padding: 0 var(--chat-space-2xl); /* 32px de chaque côté en desktop */
@@ -636,7 +636,7 @@
 .chatgpt-input-area,
 .chat-input-area {
   width: 100%;
-  max-width: 1005px;
+  max-width: 1055px; /* ✅ CORRECTION: 1005px contenu + 48px padding + 2px border pour aligner avec messages */
   min-width: 0;
   margin: 0 auto; /* ✅ Centrage horizontal */
   background: var(--chat-bg-secondary);
@@ -667,7 +667,7 @@
   
   .chatgpt-input-area,
   .chat-input-area {
-    max-width: 1005px;
+    max-width: 1055px; /* ✅ CORRECTION: Aligné avec les messages */
     margin: 0 auto;
   }
 }
@@ -682,7 +682,7 @@
   
   .chatgpt-input-area,
   .chat-input-area {
-    max-width: 1005px; /* Largeur fixe - légèrement plus large */
+    max-width: 1055px; /* ✅ CORRECTION: Largeur alignée avec messages */
     margin: 0 auto;
   }
 }
@@ -1626,7 +1626,7 @@
   .chatgpt-input-area,
   .chat-input-area {
     width: 100%;
-    max-width: 1005px; /* ✅ Maintenir l'alignement en responsive */
+    max-width: 1055px; /* ✅ CORRECTION: Maintenir l'alignement en responsive */
     padding: 12px;
   }
   
@@ -1695,7 +1695,7 @@
   .chatgpt-input-area,
   .chat-input-area {
     width: 100%;
-    max-width: 1005px; /* ✅ Maintenir l'alignement en responsive */
+    max-width: 1055px; /* ✅ CORRECTION: Maintenir l'alignement en responsive */
     padding: 16px;
   }
   
