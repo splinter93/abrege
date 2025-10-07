@@ -104,49 +104,67 @@
 }
 
 /* ========================================
-   SECTION 2 COLONNES
+   LAYOUT CENTRÉ NOTION
    ======================================== */
 
-.dashboard-two-columns {
-  display: grid;
-  grid-template-columns: 0.8fr auto 1.2fr; /* ✅ Drop Zone plus petite, Fichiers Récents plus large */
-  gap: 2rem;
-  width: 100%;
-  align-items: start;
-}
-
-.dashboard-column {
+/* Container principal centré */
+.main-dashboard {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
   display: flex;
   flex-direction: column;
-  min-width: 0; /* ✅ Empêche les enfants flex de déborder */
-  overflow: hidden; /* ✅ Contient les contenus débordants */
+  gap: 3rem;
 }
 
-.dashboard-column-header {
-  margin-bottom: 1rem;
+/* Welcome section */
+.welcome-section {
+  text-align: center;
+  padding: 2rem 0;
 }
 
-.dashboard-column-title {
-  font-size: 20px;
-  font-weight: 600;
+.welcome-title {
+  font-size: 48px;
+  font-weight: 700;
   color: #ffffff;
   margin: 0 0 0.5rem 0;
   font-family: 'Noto Sans', sans-serif;
   letter-spacing: -0.02em;
 }
 
-.dashboard-vertical-separator {
-  width: 1px;
-  height: 100%;
-  background: rgba(255, 255, 255, 0.1);
-  align-self: stretch;
-  min-height: 200px;
+.welcome-subtitle {
+  font-size: 18px;
+  color: rgba(255, 255, 255, 0.6);
+  margin: 0;
 }
 
-.dashboard-column-content {
-  flex: 1;
-  min-width: 0; /* ✅ Empêche le débordement */
-  overflow: hidden; /* ✅ Contient les contenus */
+/* Search section */
+.search-section {
+  width: 100%;
+}
+
+/* Quick actions centrées */
+.quick-actions-section {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+/* Sections uniformes */
+.dashboard-section {
+  width: 100%;
+  margin-bottom: 0; /* Gap géré par flex parent */
+}
+
+.section-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #ffffff;
+  margin: 0 0 1rem 0;
+  text-align: left;
+  font-family: 'Noto Sans', sans-serif;
+  letter-spacing: -0.02em;
 }
 
 /* ========================================
@@ -567,17 +585,14 @@
 }
 
 /* ========================================
-   RESPONSIVE 2 COLONNES
+   RESPONSIVE LAYOUT CENTRÉ
    ======================================== */
 
 @media (max-width: 1024px) {
-  .dashboard-two-columns {
-    grid-template-columns: 1fr;
-    gap: 1.5rem;
-  }
-  
-  .dashboard-vertical-separator {
-    display: none;
+  .main-dashboard {
+    max-width: 900px;
+    padding: 1.5rem;
+    gap: 2.5rem;
   }
   
   .drop-zone {
@@ -587,11 +602,16 @@
 }
 
 @media (max-width: 768px) {
-  .dashboard-two-columns {
-    gap: 1rem;
+  .main-dashboard {
+    padding: 1rem;
+    gap: 2rem;
   }
   
-  .dashboard-column-title {
+  .welcome-title {
+    font-size: 36px;
+  }
+  
+  .section-title {
     font-size: 18px;
   }
   

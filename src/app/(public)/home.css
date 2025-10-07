@@ -6,82 +6,18 @@
 */
 
 /* ========================================
-   LIGNE RECHERCHE + ACTIONS RAPIDES
+   ACTIONS RAPIDES (NOUVEAU LAYOUT)
    ======================================== */
 
-.search-actions-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1.5rem;
-  margin-bottom: 2rem;
-  flex-wrap: wrap;
-}
+/* Styles pour les boutons d'actions rapides dans le nouveau layout centré */
 
 
 /* ========================================
-   DASHBOARD LOGO
+   STYLES OBSOLÈTES SUPPRIMÉS
    ======================================== */
 
-.dashboard-title-container {
-  display: flex;
-  align-items: flex-start;
-  gap: 1rem;
-  margin-bottom: 2rem;
-}
-
-.dashboard-title-container .page-title-simple {
-  flex: 1;
-  margin-bottom: 0;
-  padding-top: 0.5rem;
-}
-
-.dashboard-logo {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 80px;
-  height: 80px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 20px;
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  color: rgba(255, 255, 255, 0.8);
-  transition: all 0.3s ease;
-  position: relative;
-  overflow: hidden;
-  flex-shrink: 0;
-  margin-top: 0;
-}
-
-.dashboard-logo::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(135deg, 
-    rgba(255, 255, 255, 0.08) 0%, 
-    transparent 50%, 
-    rgba(255, 255, 255, 0.03) 100%);
-  opacity: 0;
-  transition: opacity 0.3s ease;
-  pointer-events: none;
-}
-
-.dashboard-logo:hover {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.2);
-  color: #ffffff;
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
-}
-
-.dashboard-logo:hover::before {
-  opacity: 1;
-}
+/* Les styles pour dashboard-title-container et dashboard-logo 
+   ont été supprimés car remplacés par le nouveau layout centré */
 
 /* ========================================
    ACTIONS RAPIDES COMPACTES
@@ -211,8 +147,8 @@
   }
   
   .quick-action {
-    width: 40px;
-    height: 40px;
+    padding: 0.5rem 0.75rem;
+    font-size: 13px;
   }
 }
 
