@@ -53,7 +53,7 @@ const SidebarUltraClean: React.FC<SidebarUltraCleanProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className={`sidebar-ultra-clean ${isDesktop ? 'desktop' : 'mobile'}`}>
+    <div className={`sidebar-ultra-clean ${isDesktop ? 'desktop' : 'mobile'} ${isOpen ? 'visible' : ''}`}>
 
       {/* Boutons d'action en haut */}
       <div className="sidebar-actions-clean">
