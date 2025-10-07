@@ -58,17 +58,17 @@ export async function POST(request: NextRequest) {
     
     userToken = authHeader.replace('Bearer ', '');
     
-    // ✅ CORRECTION : Valider le token utilisateur avec Supabase
+    // ✅ FIX PROD : Valider le token mais le garder tel quel
     try {
       // Vérifier si c'est un userId (UUID) ou un JWT
       const isUserId = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userToken);
       
       if (isUserId) {
-        // ✅ CORRECTION : Pour les userId, utiliser l'impersonation d'agent
+        // UUID direct : impersonation d'agent (backend uniquement)
         logger.dev(`[LLM Route] 🔑 Impersonation d'agent détectée: userId: ${userToken.substring(0, 8)}...`);
-        // Pas de validation Supabase nécessaire pour l'impersonation d'agent
+        // Pas de validation nécessaire pour l'impersonation d'agent
       } else {
-        // Pour les JWT, valider avec Supabase
+        // JWT : valider avec Supabase mais GARDER le JWT original
         const { data: { user }, error: authError } = await supabase.auth.getUser(userToken);
         
         if (authError || !user) {
@@ -79,11 +79,10 @@ export async function POST(request: NextRequest) {
           );
         }
         
-        logger.dev(`[LLM Route] ✅ Utilisateur authentifié: ${user.id}`);
-        
-        // 🔧 CORRECTION PROD : Remplacer le token JWT par l'userId pour les tool calls
-        // Côté serveur, on utilisera SERVICE_ROLE_KEY + X-User-Id
-        userToken = user.id;
+        logger.info(`[LLM Route] ✅ JWT validé pour user: ${user.id}`);
+        // ✅ FIX: GARDER le JWT original pour les tool calls
+        // Le JWT sera passé tel quel aux endpoints API V2 qui le valideront
+        // userToken garde sa valeur JWT
       }
     } catch (validationError) {
       logger.error(`[LLM Route] ❌ Erreur validation token:`, validationError);

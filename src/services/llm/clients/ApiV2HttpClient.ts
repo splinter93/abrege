@@ -89,6 +89,10 @@ export class ApiV2HttpClient {
 
   /**
    * Méthode générique pour tous les appels HTTP
+   * @param endpoint - Endpoint de l'API (ex: /note/create)
+   * @param method - Méthode HTTP
+   * @param params - Paramètres de la requête
+   * @param userToken - JWT d'authentification (jamais userId)
    */
   private async makeRequest<T>(
     endpoint: string,
@@ -96,46 +100,24 @@ export class ApiV2HttpClient {
     params: Record<string, unknown> | null,
     userToken: string
   ): Promise<T> {
-    let url = `${this.baseUrl}/api/v2${endpoint}`;
+    const url = `${this.baseUrl}/api/v2${endpoint}`;
     
-    // 🔧 CORRECTION PROD : Si on est côté serveur (Node.js), utiliser SERVICE_ROLE + userId dans headers
+    // ✅ FIX PROD : Toujours utiliser le JWT dans Authorization (standard HTTP)
+    // Les endpoints API V2 valident le JWT via getAuthenticatedUser()
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      'X-Client-Type': 'agent',
+      'Authorization': `Bearer ${userToken}`
+    };
+    
     const isServerSide = typeof window === 'undefined';
     
-    let headers: Record<string, string>;
-    
-    if (isServerSide && process.env.SUPABASE_SERVICE_ROLE_KEY) {
-      // SERVEUR : Utiliser SERVICE_ROLE_KEY + X-User-Id pour impersonation
-      headers = {
-        'Content-Type': 'application/json',
-        'X-Client-Type': 'agent',
-        'Authorization': `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
-        'X-User-Id': userToken, // Le userToken est en fait l'userId côté serveur
-        'X-Service-Role': 'true'
-      };
-      
-      logger.info(`[ApiV2HttpClient] 🔑 Authentification SERVICE_ROLE (serveur)`, {
-        userId: userToken.substring(0, 8) + '...',
-        hasServiceKey: true
-      });
-    } else {
-      // CLIENT : Utiliser le JWT du user classique
-      headers = {
-        'Content-Type': 'application/json',
-        'X-Client-Type': 'agent',
-        'Authorization': `Bearer ${userToken}`
-      };
-      
-      logger.info(`[ApiV2HttpClient] 🔑 Authentification JWT (client)`, {
-        tokenLength: userToken.length
-      });
-    }
-    
-    // 🔍 LOGS DE DIAGNOSTIC POUR PROD
-    logger.dev(`[ApiV2HttpClient] 📡 ${method} ${endpoint}`, {
-      baseUrl: this.baseUrl,
+    logger.dev(`[ApiV2HttpClient] 🔑 Authentification standard`, {
+      endpoint,
+      method,
       isServerSide,
-      environment: process.env.NODE_ENV,
-      platform: process.env.VERCEL ? 'Vercel' : 'Local'
+      tokenType: this.detectTokenType(userToken),
+      tokenLength: userToken.length
     });
 
     const requestOptions: RequestInit = {
@@ -197,6 +179,25 @@ export class ApiV2HttpClient {
       });
       throw error;
     }
+  }
+
+  /**
+   * Détecte le type de token (JWT vs UUID)
+   * @param token - Token à analyser
+   * @returns Type du token détecté
+   */
+  private detectTokenType(token: string): 'JWT' | 'UUID' | 'UNKNOWN' {
+    // UUID v4 pattern
+    if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(token)) {
+      return 'UUID';
+    }
+    
+    // JWT pattern (3 parts séparés par des points)
+    if (/^[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+$/.test(token)) {
+      return 'JWT';
+    }
+    
+    return 'UNKNOWN';
   }
 
   // ============================================================================
