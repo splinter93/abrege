@@ -118,6 +118,8 @@
 .dashboard-column {
   display: flex;
   flex-direction: column;
+  min-width: 0; /* ✅ Empêche les enfants flex de déborder */
+  overflow: hidden; /* ✅ Contient les contenus débordants */
 }
 
 .dashboard-column-header {
@@ -143,6 +145,8 @@
 
 .dashboard-column-content {
   flex: 1;
+  min-width: 0; /* ✅ Empêche le débordement */
+  overflow: hidden; /* ✅ Contient les contenus */
 }
 
 /* ========================================
@@ -152,6 +156,7 @@
 .recent-files-grid,
 .recent-files-list {
   width: 100%;
+  max-width: 100%; /* ✅ Empêche l'extension au-delà du parent */
   
   /* Style de carte */
   background: rgba(255, 255, 255, 0.03);
@@ -173,12 +178,16 @@
 .recent-files-grid {
   display: flex;
   gap: 1rem;
-  overflow-x: auto;
+  overflow-x: auto; /* ✅ Scroll horizontal */
   overflow-y: hidden;
   scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: thin;
   scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+  
+  /* ✅ CORRECTION RESPONSIVE : Force le container à rester dans ses limites */
+  min-width: 0; /* Important pour flex containers */
+  flex-shrink: 1; /* Permet au container de rétrécir si nécessaire */
 }
 
 /* Personnalisation de la scrollbar pour webkit */
