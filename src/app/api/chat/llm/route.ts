@@ -49,7 +49,17 @@ export async function POST(request: NextRequest) {
 
     // Extraire le token d'authentification depuis le header Authorization
     const authHeader = request.headers.get('authorization');
+    
+    logger.info(`[LLM Route] 🔍 DEBUG AUTH - Header reçu:`, {
+      hasAuthHeader: !!authHeader,
+      authHeaderStart: authHeader ? authHeader.substring(0, 20) + '...' : 'N/A'
+    });
+    
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      logger.error(`[LLM Route] ❌ Token manquant ou invalide:`, {
+        hasHeader: !!authHeader,
+        headerValue: authHeader ? 'Present but invalid format' : 'Missing'
+      });
       return NextResponse.json(
         { error: 'Token d\'authentification manquant ou invalide' },
         { status: 401 }
@@ -57,6 +67,12 @@ export async function POST(request: NextRequest) {
     }
     
     userToken = authHeader.replace('Bearer ', '');
+    
+    logger.info(`[LLM Route] 🔍 DEBUG TOKEN - Extrait:`, {
+      tokenLength: userToken.length,
+      tokenStart: userToken.substring(0, 20) + '...',
+      tokenEnd: '...' + userToken.substring(userToken.length - 20)
+    });
     
     // ✅ FIX PROD : Valider le token mais le garder tel quel
     try {
@@ -80,6 +96,11 @@ export async function POST(request: NextRequest) {
         }
         
         logger.info(`[LLM Route] ✅ JWT validé pour user: ${user.id}`);
+        logger.info(`[LLM Route] 🔍 DEBUG TOKEN - JWT conservé:`, {
+          userId: user.id,
+          tokenLength: userToken.length,
+          email: user.email
+        });
         // ✅ FIX: GARDER le JWT original pour les tool calls
         // Le JWT sera passé tel quel aux endpoints API V2 qui le valideront
         // userToken garde sa valeur JWT
@@ -248,6 +269,12 @@ export async function POST(request: NextRequest) {
     };
 
     // Appel à la logique Groq OSS 120B avec l'agentConfig récupéré
+    logger.info(`[LLM Route] 🚀 Appel handleGroqGptOss120b avec token:`, {
+      tokenLength: userToken.length,
+      sessionId,
+      agentName: finalAgentConfig.name
+    });
+    
     const result = await handleGroqGptOss120b({
       message,
       appContext: {
@@ -259,6 +286,8 @@ export async function POST(request: NextRequest) {
       userToken,
       sessionId
     });
+    
+    logger.info(`[LLM Route] ✅ handleGroqGptOss120b terminé avec succès`);
 
     logger.info(`[LLM Route] ✅ Session ${sessionId} terminée avec succès`);
     return result;

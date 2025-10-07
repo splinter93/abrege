@@ -112,12 +112,14 @@ export class ApiV2HttpClient {
     
     const isServerSide = typeof window === 'undefined';
     
-    logger.dev(`[ApiV2HttpClient] 🔑 Authentification standard`, {
+    logger.info(`[ApiV2HttpClient] 🔑 DEBUG AUTH - Envoi requête:`, {
       endpoint,
       method,
       isServerSide,
       tokenType: this.detectTokenType(userToken),
-      tokenLength: userToken.length
+      tokenLength: userToken.length,
+      tokenStart: userToken.substring(0, 20) + '...',
+      hasAuthHeader: !!headers['Authorization']
     });
 
     const requestOptions: RequestInit = {
@@ -156,10 +158,17 @@ export class ApiV2HttpClient {
           status: response.status,
           statusText: response.statusText,
           errorData,
-          headers: Object.fromEntries(response.headers.entries()),
+          responseHeaders: Object.fromEntries(response.headers.entries()),
+          requestHeaders: {
+            'Authorization': headers['Authorization'] ? 'Bearer ***' : 'MISSING',
+            'Content-Type': headers['Content-Type'],
+            'X-Client-Type': headers['X-Client-Type']
+          },
           tokenInfo: {
+            type: this.detectTokenType(userToken),
             length: userToken.length,
-            start: userToken.substring(0, 20) + '...'
+            start: userToken.substring(0, 20) + '...',
+            end: '...' + userToken.substring(userToken.length - 20)
           }
         });
         
