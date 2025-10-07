@@ -4,11 +4,12 @@
 
 .reasoning-dropdown {
   margin-bottom: 2px;
-  width: 100%;
+  width: auto; /* ✅ Largeur adaptée au contenu */
+  display: inline-block; /* ✅ Prend seulement l'espace nécessaire */
 }
 
 .reasoning-dropdown-trigger {
-  width: 100%;
+  width: auto; /* ✅ Largeur adaptée au contenu */
   background: none;
   border: none;
   border-radius: 0;
@@ -16,7 +17,7 @@
   cursor: pointer;
   transition: all 0.2s ease;
   position: relative;
-  overflow: hidden;
+  overflow: visible; /* ✅ Permet au contenu d'être visible */
 }
 
 .reasoning-dropdown-trigger:hover .reasoning-dropdown-header {
@@ -28,9 +29,9 @@
 }
 
 .reasoning-dropdown-header {
-  display: flex;
+  display: inline-flex; /* ✅ Inline-flex pour largeur adaptative */
   align-items: center;
-  gap: 0;
+  gap: 6px;
   padding: 6px 12px; /* ✅ Padding équilibré pour le background */
   color: #9ca3af;
   font-size: 12px;
@@ -38,6 +39,7 @@
   background: rgba(255, 255, 255, 0.05); /* ✅ Background gris subtle */
   border-radius: 8px; /* ✅ Coins arrondis */
   transition: background 0.2s ease;
+  width: auto; /* ✅ Largeur adaptée au texte */
 }
 
 
