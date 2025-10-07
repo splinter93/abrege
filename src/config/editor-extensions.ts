@@ -32,14 +32,15 @@ import CalloutExtension from '@/extensions/CalloutExtension';
 // import { SpaceHandlingExtension } from '@/extensions/SpaceHandlingExtension'; // Supprimé - causait des conflits
 import SlashMenuExtension from '@/extensions/SlashMenuExtension';
 import { SimpleDragHandleExtension } from '@/extensions/SimpleDragHandleExtension';
+import { NotionDragHandleExtension } from '@/extensions/NotionDragHandleExtension';
 import Color from '@tiptap/extension-color';
 import { TextStyle } from '@tiptap/extension-text-style';
 import Highlight from '@tiptap/extension-highlight';
 import Mention from '@tiptap/extension-mention';
 import Emoji from '@tiptap/extension-emoji';
 import FloatingMenu from '@tiptap/extension-floating-menu';
-import type { Extension } from '@tiptap/core';
-import type { lowlight } from '@/utils/lowlightInstance';
+import type { Extension, AnyExtension } from '@tiptap/core';
+import type lowlight from '@/utils/lowlightInstance';
 
 export interface EditorExtensionsConfig {
   // Extensions de base (toujours activées)
@@ -65,17 +66,20 @@ export const DEFAULT_EXTENSIONS_CONFIG: EditorExtensionsConfig = {
 export function createEditorExtensions(
   config: EditorExtensionsConfig = DEFAULT_EXTENSIONS_CONFIG,
   lowlightInstance: typeof lowlight
-): Extension[] {
-  const extensions: Extension[] = [];
+): AnyExtension[] {
+  const extensions: AnyExtension[] = [];
 
   // Extensions de base (toujours activées)
   if (config.core) {
     extensions.push(
       StarterKit.configure({ 
-        // Configuration minimale pour éviter les conflits de curseur
-        codeBlock: false, // Désactiver le codeBlock natif
+        // Configuration minimale pour éviter les conflits
+        codeBlock: false, // Désactiver - on utilise UnifiedCodeBlockExtension
         hardBreak: false, // Désactiver les sauts de ligne forcés
-        blockquote: false, // Désactiver le blockquote natif pour utiliser notre extension
+        blockquote: false, // Désactiver - on utilise Blockquote standalone
+        bulletList: false, // Désactiver - on utilise BulletList standalone
+        orderedList: false, // Désactiver - on utilise OrderedList standalone  
+        listItem: false, // Désactiver - on utilise ListItem standalone
       }),
       Blockquote,
       Underline,
@@ -89,10 +93,18 @@ export function createEditorExtensions(
       TableRow,
       TableHeader,
       TableCell,
+      // TableWithTildeFix, // ❌ DÉSACTIVÉ - Cause une erreur
       UnifiedCodeBlockExtension.configure({ 
         lowlight: lowlightInstance,
       }),
-      LinkExtension.configure({ openOnClick: false, autolink: true, linkOnPaste: true }),
+      LinkExtension.configure({ 
+        openOnClick: false, 
+        autolink: true, 
+        linkOnPaste: true,
+        HTMLAttributes: {
+          class: 'link',
+        },
+      }),
       CustomImage.configure({ inline: false }),
       Markdown.configure({ 
         html: false,
@@ -111,7 +123,8 @@ export function createEditorExtensions(
         HTMLAttributes: {
           class: 'mention',
         },
-      }),
+      })
+      // LinkExtension SUPPRIMÉ ICI - déjà configuré ligne 99 !
       // Emoji temporairement désactivé - problème d'affichage avec les crochets
       // Emoji.configure({
       //   enableEmoticons: true,
@@ -120,12 +133,6 @@ export function createEditorExtensions(
       //     class: 'emoji',
       //   },
       // }),
-      LinkExtension.configure({
-        openOnClick: false,
-        HTMLAttributes: {
-          class: 'link',
-        },
-      }),
       // FloatingMenu désactivé - on utilise notre composant personnalisé
       // FloatingMenu.configure({
       //   element: typeof window !== 'undefined' ? document.createElement('div') : null,
@@ -157,15 +164,17 @@ export function createEditorExtensions(
 
   // Extensions de drag and drop (toujours activées pour l'UX)
   extensions.push(
-    SimpleDragHandleExtension.configure({
-      onNodeChange: ({ node, pos }) => {
-        if (process.env.NODE_ENV === 'development') {
-          console.log('Simple drag handle node change:', { 
-            nodeType: node?.type.name, 
-            pos 
-          });
-        }
-      },
+    NotionDragHandleExtension.configure({
+      handleClass: 'notion-drag-handle',
+      // onNodeChange désactivé en prod pour performance
+      // onNodeChange: ({ node, pos }) => {
+      //   if (process.env.NODE_ENV === 'development') {
+      //     console.log('🎯 Drag handle:', { 
+      //       nodeType: node?.type.name, 
+      //       pos 
+      //     });
+      //   }
+      // },
     })
   );
 

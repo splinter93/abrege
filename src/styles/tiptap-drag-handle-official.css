@@ -1,0 +1,75 @@
+/**
+ * Styles pour le Drag Handle OFFICIEL Tiptap
+ * Package: @tiptap/extension-drag-handle
+ */
+
+/* =================================================================
+   HANDLE OFFICIEL - FORCER L'AFFICHAGE
+   ================================================================= */
+.tiptap-drag-handle-official {
+  display: block !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+  z-index: 10000 !important;
+  cursor: grab !important;
+  position: fixed !important;
+  background: rgba(255, 0, 0, 0.5) !important; /* DEBUG: fond rouge semi-transparent */
+}
+
+.tiptap-drag-handle-btn {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 24px !important;
+  height: 24px !important;
+  padding: 0 !important;
+  background: rgba(255, 255, 255, 0.9) !important;
+  border: 2px solid red !important; /* DEBUG */
+  border-radius: 4px !important;
+  cursor: grab !important;
+  transition: all 150ms ease !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+  backdrop-filter: blur(8px) !important;
+}
+
+.tiptap-drag-handle-btn:hover {
+  background: rgba(255, 255, 255, 1) !important;
+  transform: scale(1.05) !important;
+}
+
+.tiptap-drag-handle-btn:active {
+  cursor: grabbing !important;
+  transform: scale(0.95) !important;
+}
+
+.tiptap-drag-handle-btn svg {
+  width: 16px !important;
+  height: 16px !important;
+  color: rgba(0, 0, 0, 0.4) !important;
+}
+
+.tiptap-drag-handle-btn:hover svg {
+  color: rgba(0, 0, 0, 0.6) !important;
+}
+
+/* Dark mode */
+@media (prefers-color-scheme: dark) {
+  .tiptap-drag-handle-btn {
+    background: rgba(255, 255, 255, 0.08) !important;
+    border-color: rgba(255, 255, 255, 0.2) !important;
+  }
+  
+  .tiptap-drag-handle-btn:hover {
+    background: rgba(255, 255, 255, 0.12) !important;
+  }
+  
+  .tiptap-drag-handle-btn svg {
+    color: rgba(255, 255, 255, 0.4) !important;
+  }
+  
+  .tiptap-drag-handle-btn:hover svg {
+    color: rgba(255, 255, 255, 0.6) !important;
+  }
+}
+

@@ -1,0 +1,134 @@
+/**
+ * Styles pour le Drag Handle type Notion
+ * Design propre et moderne
+ */
+
+/* =================================================================
+   VARIABLES
+   ================================================================= */
+:root {
+  --notion-handle-size: 36px; /* Taille encore augmentée */
+  --notion-handle-gap: 8px;
+  --notion-handle-bg: rgba(255, 255, 255, 0.95);
+  --notion-handle-bg-hover: rgba(255, 255, 255, 1);
+  --notion-handle-border: rgba(0, 0, 0, 0.12);
+  --notion-handle-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  --notion-handle-icon: rgba(0, 0, 0, 0.5);
+  --notion-handle-icon-hover: rgba(0, 0, 0, 0.7);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --notion-handle-bg: rgba(255, 255, 255, 0.08);
+    --notion-handle-bg-hover: rgba(255, 255, 255, 0.12);
+    --notion-handle-border: rgba(255, 255, 255, 0.12);
+    --notion-handle-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+    --notion-handle-icon: rgba(255, 255, 255, 0.5);
+    --notion-handle-icon-hover: rgba(255, 255, 255, 0.7);
+  }
+}
+
+/* =================================================================
+   DRAG HANDLE - CONTAINER
+   ================================================================= */
+.notion-drag-handle {
+  position: absolute !important;
+  z-index: 100 !important;
+  opacity: 0 !important;
+  transition: opacity 150ms ease !important;
+  pointer-events: auto !important;
+  user-select: none !important;
+}
+
+/* Visible au survol ou quand positionné */
+.notion-drag-handle[style*="opacity: 1"],
+.notion-drag-handle:hover {
+  opacity: 1 !important;
+}
+
+/* =================================================================
+   BOUTON DU HANDLE
+   ================================================================= */
+.notion-drag-handle-btn {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: var(--notion-handle-size) !important;
+  height: var(--notion-handle-size) !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  background: transparent !important;
+  border: none !important;
+  border-radius: 6px !important;
+  cursor: grab !important;
+  transition: all 150ms ease !important;
+  outline: none !important;
+}
+
+.notion-drag-handle-btn:hover {
+  background: rgba(0, 0, 0, 0.05) !important;
+  transform: scale(1.1) !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  .notion-drag-handle-btn:hover {
+    background: rgba(255, 255, 255, 0.08) !important;
+  }
+}
+
+.notion-drag-handle-btn:active {
+  cursor: grabbing !important;
+  transform: scale(0.95) !important;
+}
+
+/* =================================================================
+   ICÔNE
+   ================================================================= */
+.notion-drag-handle-btn svg {
+  width: 20px !important;
+  height: 34px !important; /* Encore plus allongé verticalement */
+  color: var(--notion-handle-icon) !important;
+  transition: color 150ms ease !important;
+}
+
+.notion-drag-handle-btn:hover svg {
+  color: var(--notion-handle-icon-hover) !important;
+}
+
+/* =================================================================
+   RESPONSIVE
+   ================================================================= */
+@media (max-width: 768px) {
+  :root {
+    --notion-handle-size: 40px; /* Encore plus gros sur mobile */
+  }
+  
+  .notion-drag-handle-btn svg {
+    width: 24px !important;
+    height: 24px !important;
+  }
+}
+
+/* =================================================================
+   ACCESSIBILITÉ
+   ================================================================= */
+.notion-drag-handle-btn:focus-visible {
+  outline: 2px solid var(--accent-primary, #e55a2c) !important;
+  outline-offset: 2px !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .notion-drag-handle,
+  .notion-drag-handle-btn {
+    transition: none !important;
+  }
+}
+
+/* =================================================================
+   ÉTAT DRAGGING DES BLOCS
+   ================================================================= */
+.ProseMirror > *.is-dragging {
+  opacity: 0.5 !important;
+  transform: rotate(2deg) !important;
+  transition: all 150ms ease !important;
+}

@@ -13,6 +13,8 @@ import '@/styles/color-buttons.css';
 import '@/styles/tiptap-extensions.css';
 import '@/styles/block-drag-drop.css';
 import '@/styles/drag-handle.css'; // Styles pour les drag handles
+import '@/styles/notion-drag-handle.css'; // Styles Notion drag handle
+import '@/styles/tiptap-drag-handle-official.css'; // Styles pour le drag handle officiel Tiptap
 import '@/styles/mermaid.css'; // Styles Mermaid centralisés
 import '@/styles/unified-blocks.css'; // Système unifié pour tous les blocs
 import EditorLayout from './EditorLayout';
@@ -50,6 +52,7 @@ import { logger, LogCategory } from '@/utils/logger';
 import type { FullEditorInstance } from '@/types/editor';
 import { useRealtime } from '@/hooks/useRealtime';
 import RealtimeStatus from '@/components/RealtimeStatus';
+import { preprocessMarkdown } from '@/utils/markdownPreprocessor';
 // Types pour les mises à jour de note
 interface NoteUpdate {
   a4_mode?: boolean;
@@ -143,7 +146,9 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
 
   // 🔍 DEBUG: Log du contexte UI collecté
   const updateNote = useFileSystemStore(s => s.updateNote);
-  const content = note?.markdown_content || '';
+  // ✅ PRÉTRAITER le Markdown pour échapper les ~ dans les tables (fix LLM)
+  const rawContent = note?.markdown_content || '';
+  const content = React.useMemo(() => preprocessMarkdown(rawContent), [rawContent]);
   const { html } = useMarkdownRender({ content });
 
   // État de chargement : Forcer la régénération de la TOC
@@ -445,6 +450,7 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
       .replace(/\\-/g, '-')            // Supprimer l'échappement des -
       .replace(/\\\|/g, '|')           // Supprimer l'échappement des |
       .replace(/\\~/g, '~')            // Supprimer l'échappement des ~
+      .replace(/≈/g, '~')              // Reconvertir ≈ en ~ (fix preprocessing)
       .replace(/\\=/g, '=')            // Supprimer l'échappement des =
       .replace(/\\#/g, '#')            // Supprimer l'échappement des #
       .replace(/&gt;/g, '>')           // Supprimer l'échappement HTML des >
@@ -509,11 +515,32 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
     if (!editor || isReadonly) return;
     const el = editor.view.dom as HTMLElement;
     const onKeyDown = (e: KeyboardEvent) => {
+      // DEBUG désactivé en prod
+      // if (e.key === ' ') {
+      //   console.log('🔍 ESPACE DÉTECTÉ:', {
+      //     key: e.key,
+      //     selectionType: editor?.state.selection.constructor.name,
+      //     isEditable: editor?.isEditable,
+      //     activeElement: document.activeElement?.tagName,
+      //     defaultPrevented: e.defaultPrevented,
+      //   });
+      // }
+      
       // If user types a space right after '/', close menu but do not delete any text
       if (e.key === ' ' && editor) {
         try {
           const { state } = editor.view;
-          const pos = state.selection.from;
+          const { selection } = state;
+          
+          // CRITICAL: Si c'est une NodeSelection, on skip toute la logique
+          // Laisser juste l'espace passer normalement
+          if (selection.constructor.name === 'NodeSelection' || selection.constructor.name === 'NodeRangeSelection') {
+            console.log('⚠️ NodeSelection détectée, skip logique slash menu');
+            // Ne rien faire, laisser Tiptap gérer l'espace normalement
+            return;
+          }
+          
+          const pos = selection.from;
           const $pos = state.doc.resolve(pos);
           const textBefore = $pos.parent.textBetween(0, $pos.parentOffset, undefined, '\uFFFC');
           if (/^\/$/.test(textBefore)) {
@@ -521,7 +548,10 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
             slashMenuRef.current?.closeMenu?.();
             return; // do not open
           }
-        } catch {}
+        } catch (err) {
+          console.error('❌ Erreur dans onKeyDown:', err);
+          // En cas d'erreur, laisser passer l'événement normalement
+        }
       }
       if (e.key === '/') {
         // Ne pas preventDefault - laisser le slash être tapé
