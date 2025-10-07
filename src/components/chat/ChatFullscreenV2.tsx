@@ -88,16 +88,26 @@ const ChatFullscreenV2: React.FC = () => {
     setSidebarOpen(false);
   }, []); // ✅ Dependencies vides = exécuté seulement au mount
 
-  // 🎯 Fermer la sidebar sur mobile après sélection d'une session (optionnel)
+  // 🎯 Fermer la sidebar sur mobile après sélection d'une nouvelle session
+  const previousSessionIdRef = useRef<string | null>(null);
+  
   useEffect(() => {
+    // Fermer seulement si la session a CHANGÉ (pas juste au mount)
     if (!isDesktop && sidebarOpen && currentSession) {
-      // Auto-fermer seulement si une session est sélectionnée (UX mobile)
-      const timer = setTimeout(() => {
-        setSidebarOpen(false);
-      }, 300); // Délai pour voir la sélection
-      return () => clearTimeout(timer);
+      const currentId = currentSession.id;
+      
+      if (previousSessionIdRef.current !== null && previousSessionIdRef.current !== currentId) {
+        // La session a changé → auto-fermer après 300ms
+        const timer = setTimeout(() => {
+          setSidebarOpen(false);
+        }, 300);
+        previousSessionIdRef.current = currentId;
+        return () => clearTimeout(timer);
+      }
+      
+      previousSessionIdRef.current = currentId;
     }
-  }, [currentSession?.id, isDesktop, sidebarOpen]); // ✅ Trigger seulement sur changement de session
+  }, [currentSession?.id, isDesktop, sidebarOpen]);
 
   const handleComplete = useCallback(async (
     fullContent: string, 
