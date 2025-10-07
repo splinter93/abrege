@@ -43,15 +43,27 @@ export class ApiV2HttpClient {
   }
 
   private getDefaultBaseUrl(): string {
+    // 🌐 CLIENT-SIDE : Utiliser l'origine de la page courante
     if (typeof window !== 'undefined') {
-      return window.location.origin;
+      const clientUrl = window.location.origin;
+      logger.dev(`[ApiV2HttpClient] 🌐 Client-side URL: ${clientUrl}`);
+      return clientUrl;
     }
     
+    // 🔧 SERVER-SIDE (Vercel Production)
     if (process.env.VERCEL_URL) {
-      return `https://${process.env.VERCEL_URL}`;
+      const vercelUrl = `https://${process.env.VERCEL_URL}`;
+      logger.info(`[ApiV2HttpClient] 🚀 Vercel URL: ${vercelUrl}`);
+      return vercelUrl;
     }
     
-    return process.env.NEXT_PUBLIC_API_BASE_URL || process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+    // 🔧 SERVER-SIDE (Custom ou local)
+    const fallbackUrl = process.env.NEXT_PUBLIC_API_BASE_URL 
+      || process.env.NEXT_PUBLIC_SITE_URL 
+      || 'http://localhost:3000';
+    
+    logger.info(`[ApiV2HttpClient] 🔧 Fallback URL: ${fallbackUrl}`);
+    return fallbackUrl;
   }
 
   /**
@@ -72,10 +84,17 @@ export class ApiV2HttpClient {
       'Authorization': `Bearer ${userToken}`
     };
     
+    // 🔍 LOGS DE DIAGNOSTIC POUR PROD
     logger.info(`[ApiV2HttpClient] 🔑 Authentification JWT`, {
       url,
+      method,
+      endpoint,
+      baseUrl: this.baseUrl,
       tokenStart: userToken.substring(0, 20) + '...',
-      tokenLength: userToken.length
+      tokenLength: userToken.length,
+      isServerSide: typeof window === 'undefined',
+      environment: process.env.NODE_ENV,
+      platform: process.env.VERCEL ? 'Vercel' : 'Local'
     });
 
     const requestOptions: RequestInit = {
@@ -105,7 +124,22 @@ export class ApiV2HttpClient {
       const response = await fetch(url, requestOptions);
       
       if (!response.ok) {
+        // 🔍 DIAGNOSTIC DÉTAILLÉ EN CAS D'ERREUR
         const errorData = await response.json().catch(() => ({}));
+        
+        logger.error(`[ApiV2HttpClient] ❌ ${response.status} ${response.statusText}`, {
+          url,
+          method,
+          status: response.status,
+          statusText: response.statusText,
+          errorData,
+          headers: Object.fromEntries(response.headers.entries()),
+          tokenInfo: {
+            length: userToken.length,
+            start: userToken.substring(0, 20) + '...'
+          }
+        });
+        
         throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
       }
 
@@ -114,7 +148,12 @@ export class ApiV2HttpClient {
       return data;
 
     } catch (error) {
-      logger.error(`[ApiV2HttpClient] ❌ ${method} ${url} failed:`, error);
+      logger.error(`[ApiV2HttpClient] ❌ ${method} ${url} failed:`, {
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+        url,
+        method
+      });
       throw error;
     }
   }

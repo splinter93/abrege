@@ -12,6 +12,7 @@ import { useChatScroll } from '@/hooks/useChatScroll';
 import { useAuth } from '@/hooks/useAuth';
 // useToolCallDebugger supprimé
 import { supabase } from '@/supabaseClient';
+import { tokenManager } from '@/utils/tokenManager';
 import ChatInput from './ChatInput';
 import ChatMessage from './ChatMessage';
 import ChatKebabMenu from './ChatKebabMenu';
@@ -555,11 +556,23 @@ const ChatFullscreenV2: React.FC = () => {
       };
       await addMessage(userMessage);
 
-      // Token d'authentification
-      const { data: { session } } = await supabase.auth.getSession();
-      const token = session?.access_token;
+      // 🔐 TOKEN AVEC REFRESH AUTOMATIQUE
+      logger.dev('[ChatFullscreenV2] 🔐 Récupération et validation du token...');
+      const tokenResult = await tokenManager.getValidToken();
       
-      if (!token) throw new Error('Token d\'authentification manquant');
+      if (!tokenResult.isValid || !tokenResult.token) {
+        throw new Error(tokenResult.error || 'Token d\'authentification manquant ou invalide');
+      }
+      
+      const token = tokenResult.token;
+      
+      // 🔍 LOG DE DIAGNOSTIC
+      logger.info('[ChatFullscreenV2] 🔐 Token validé:', {
+        wasRefreshed: tokenResult.wasRefreshed,
+        expiresAt: tokenResult.expiresAt ? new Date(tokenResult.expiresAt * 1000).toISOString() : 'unknown',
+        userId: tokenResult.userId,
+        tokenLength: token.length,
+      });
 
       // Contexte optimisé avec UI Context
       const contextWithSessionId = {
