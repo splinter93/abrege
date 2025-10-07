@@ -59,7 +59,14 @@ export class ApiV2HttpClient {
     });
     
     // 🔧 SERVER-SIDE (Vercel Production)
-    // IMPORTANT : Toujours utiliser VERCEL_URL en priorité pour éviter les appels externes
+    // PROBLÈME : VERCEL_URL pointe vers l'URL interne, pas le domaine custom
+    // SOLUTION : Utiliser le domaine custom pour les appels internes
+    if (process.env.VERCEL && process.env.NEXT_PUBLIC_API_BASE_URL) {
+      const customUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+      logger.info(`[ApiV2HttpClient] 🌐 Custom URL (domaine): ${customUrl}`);
+      return customUrl;
+    }
+    
     if (process.env.VERCEL_URL) {
       const vercelUrl = `https://${process.env.VERCEL_URL}`;
       logger.info(`[ApiV2HttpClient] 🚀 Vercel URL (interne): ${vercelUrl}`);
