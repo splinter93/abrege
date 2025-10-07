@@ -37,7 +37,8 @@ class Logger {
 
   constructor() {
     this.isDevelopment = process.env.NODE_ENV === 'development';
-    this.logLevel = this.isDevelopment ? LogLevel.DEBUG : LogLevel.ERROR;
+    // ✅ En prod : INFO (au lieu de ERROR uniquement) pour debug
+    this.logLevel = this.isDevelopment ? LogLevel.DEBUG : LogLevel.INFO;
   }
 
   private formatMessage(entry: LogEntry): string {
@@ -71,12 +72,13 @@ class Logger {
       this.logBuffer.shift();
     }
 
-    // En développement, afficher dans la console
-    if (this.isDevelopment) {
-      const formattedMessage = this.formatMessage(entry);
-      
-      // 🔧 CORRECTION : Sérialiser les objets pour éviter [object Object] et gérer les références circulaires
-      const serializeData = (obj: unknown): string => {
+    // ✅ PROD FIX : Toujours afficher dans la console (serveur + client)
+    // Côté serveur (Node.js) : logs Vercel
+    // Côté client (navigateur) : console devtools
+    const formattedMessage = this.formatMessage(entry);
+    
+    // 🔧 CORRECTION : Sérialiser les objets pour éviter [object Object] et gérer les références circulaires
+    const serializeData = (obj: unknown): string => {
         if (obj === null || obj === undefined) return '';
         if (typeof obj === 'string') return obj;
         if (typeof obj === 'number' || typeof obj === 'boolean') return String(obj);
@@ -104,42 +106,40 @@ class Logger {
           return String(obj);
         }
       };
-      
-      switch (level) {
-        case LogLevel.ERROR:
-          
-          const errorData = data && typeof data === 'object' && Object.keys(data).length > 0 ? serializeData(data) : undefined;
-          const errorObj = error && error instanceof Error ? error : undefined;
-          const serializedError = error && !(error instanceof Error) ? serializeData(error) : undefined;
-          
-          // Ne passer que les paramètres non-vides à console.error
-          if (errorData && errorObj) {
-            console.error(formattedMessage, errorData, errorObj);
-          } else if (errorData && serializedError) {
-            console.error(formattedMessage, errorData, serializedError);
-          } else if (errorData) {
-            console.error(formattedMessage, errorData);
-          } else if (errorObj) {
-            console.error(formattedMessage, errorObj);
-          } else if (serializedError) {
-            console.error(formattedMessage, serializedError);
-          } else {
-            console.error(formattedMessage);
-          }
-          break;
-        case LogLevel.WARN:
-          console.warn(formattedMessage, data ? serializeData(data) : '');
-          break;
-        case LogLevel.INFO:
-          console.info(formattedMessage, data ? serializeData(data) : '');
-          break;
-        case LogLevel.DEBUG:
-          console.debug(formattedMessage, data ? serializeData(data) : '');
-          break;
-        case LogLevel.TRACE:
-          console.trace(formattedMessage, data ? serializeData(data) : '');
-          break;
-      }
+    
+    switch (level) {
+      case LogLevel.ERROR:
+        const errorData = data && typeof data === 'object' && Object.keys(data).length > 0 ? serializeData(data) : undefined;
+        const errorObj = error && error instanceof Error ? error : undefined;
+        const serializedError = error && !(error instanceof Error) ? serializeData(error) : undefined;
+        
+        // Ne passer que les paramètres non-vides à console.error
+        if (errorData && errorObj) {
+          console.error(formattedMessage, errorData, errorObj);
+        } else if (errorData && serializedError) {
+          console.error(formattedMessage, errorData, serializedError);
+        } else if (errorData) {
+          console.error(formattedMessage, errorData);
+        } else if (errorObj) {
+          console.error(formattedMessage, errorObj);
+        } else if (serializedError) {
+          console.error(formattedMessage, serializedError);
+        } else {
+          console.error(formattedMessage);
+        }
+        break;
+      case LogLevel.WARN:
+        console.warn(formattedMessage, data ? serializeData(data) : '');
+        break;
+      case LogLevel.INFO:
+        console.info(formattedMessage, data ? serializeData(data) : '');
+        break;
+      case LogLevel.DEBUG:
+        console.debug(formattedMessage, data ? serializeData(data) : '');
+        break;
+      case LogLevel.TRACE:
+        console.trace(formattedMessage, data ? serializeData(data) : '');
+        break;
     }
 
     // En production, envoyer les erreurs critiques à un service de monitoring
@@ -236,9 +236,8 @@ export const {
 // Compatibilité avec l'ancien simpleLogger pour éviter les erreurs d'import
 export const simpleLogger = {
   dev: (message: string, ...args: unknown[]) => {
-    if (process.env.NODE_ENV === 'development') {
-      logger.debug(LogCategory.EDITOR, message, args);
-    }
+    // ✅ PROD FIX : Logger aussi en production (niveau DEBUG→INFO en prod)
+    logger.debug(LogCategory.EDITOR, message, args);
   },
   error: (message: string, error?: unknown) => {
     // Convertir l'erreur en objet Error si ce n'est pas déjà le cas
@@ -273,9 +272,8 @@ export const simpleLogger = {
     logger.warn(LogCategory.EDITOR, message, args);
   },
   info: (message: string, ...args: unknown[]) => {
-    if (process.env.NODE_ENV === 'development') {
-      logger.info(LogCategory.EDITOR, message, args);
-    }
+    // ✅ PROD FIX : Logger aussi en production
+    logger.info(LogCategory.EDITOR, message, args);
   },
   // Méthode pour les tool calls (compatible avec l'ancien système)
   tool: (message: string, ...args: unknown[]) => {
