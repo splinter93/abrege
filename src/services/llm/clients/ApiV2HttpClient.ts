@@ -65,52 +65,18 @@ export class ApiV2HttpClient {
   ): Promise<T> {
     let url = `${this.baseUrl}/api/v2${endpoint}`;
     
-    // ✅ CORRECTION SÉCURITÉ : Authentification appropriée selon le type de token
+    // ✅ AUTHENTIFICATION SIMPLE : Toujours utiliser le JWT du user
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
-      'X-Client-Type': 'agent'
+      'X-Client-Type': 'agent',
+      'Authorization': `Bearer ${userToken}`
     };
     
-    // Détecter si c'est un UUID (clé d'API) ou un JWT
-    const isUserId = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userToken);
-    
-    logger.info(`[ApiV2HttpClient] 🔍 Type de token détecté:`, {
-      isUserId,
+    logger.info(`[ApiV2HttpClient] 🔑 Authentification JWT`, {
+      url,
       tokenStart: userToken.substring(0, 20) + '...',
       tokenLength: userToken.length
     });
-    
-    if (isUserId) {
-      // ✅ CORRECTION SÉCURITÉ : Pour les clés d'API, utiliser l'impersonation contrôlée
-      // C'est la seule méthode fiable pour les clés d'API
-      const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-      
-      if (!serviceRoleKey) {
-        logger.error(`[ApiV2HttpClient] ❌ SUPABASE_SERVICE_ROLE_KEY manquante en production!`);
-        throw new Error('Configuration serveur manquante: SUPABASE_SERVICE_ROLE_KEY');
-      }
-      
-      headers['X-User-Id'] = userToken;
-      headers['X-Service-Role'] = 'true';
-      headers['Authorization'] = `Bearer ${serviceRoleKey}`;
-      logger.info(`[ApiV2HttpClient] 🔑 Mode impersonation pour utilisateur: ${userToken}`, {
-        url,
-        headers: {
-          'X-User-Id': userToken,
-          'X-Service-Role': 'true',
-          'Authorization': 'Bearer ' + (serviceRoleKey.substring(0, 20) + '...')
-        }
-      });
-    } else {
-      // ✅ Pour les JWT, utiliser l'authentification normale
-      headers['Authorization'] = `Bearer ${userToken}`;
-      logger.info(`[ApiV2HttpClient] 🔑 Mode JWT standard`, {
-        url,
-        headers: {
-          'Authorization': 'Bearer ' + (userToken.substring(0, 20) + '...' || 'MISSING')
-        }
-      });
-    }
 
     const requestOptions: RequestInit = {
       method,
