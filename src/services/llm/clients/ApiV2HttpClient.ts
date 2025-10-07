@@ -77,15 +77,22 @@ export class ApiV2HttpClient {
     if (isUserId) {
       // ✅ CORRECTION SÉCURITÉ : Pour les clés d'API, utiliser l'impersonation contrôlée
       // C'est la seule méthode fiable pour les clés d'API
+      const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+      
+      if (!serviceRoleKey) {
+        logger.error(`[ApiV2HttpClient] ❌ SUPABASE_SERVICE_ROLE_KEY manquante en production!`);
+        throw new Error('Configuration serveur manquante: SUPABASE_SERVICE_ROLE_KEY');
+      }
+      
       headers['X-User-Id'] = userToken;
       headers['X-Service-Role'] = 'true';
-      headers['Authorization'] = `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`;
+      headers['Authorization'] = `Bearer ${serviceRoleKey}`;
       logger.info(`[ApiV2HttpClient] 🔑 Mode impersonation pour utilisateur: ${userToken}`, {
         url,
         headers: {
           'X-User-Id': userToken,
           'X-Service-Role': 'true',
-          'Authorization': 'Bearer ' + (process.env.SUPABASE_SERVICE_ROLE_KEY?.substring(0, 20) + '...' || 'MISSING')
+          'Authorization': 'Bearer ' + (serviceRoleKey.substring(0, 20) + '...')
         }
       });
     } else {
