@@ -18,7 +18,9 @@ import {
   Bookmark
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import { useRouter } from 'next/navigation';
 import { simpleLogger as logger } from '@/utils/logger';
+import SimpleContextMenu from './SimpleContextMenu';
 import './NotesCarouselNotion.css';
 
 interface Note {
@@ -67,6 +69,7 @@ const NotesCarouselNotion = forwardRef<NotesCarouselRef, NotesCarouselNotionProp
   showViewAll = true
 }, ref) => {
   const { getAccessToken } = useAuth();
+  const router = useRouter();
   const [notes, setNotes] = useState<Note[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -75,6 +78,12 @@ const NotesCarouselNotion = forwardRef<NotesCarouselRef, NotesCarouselNotionProp
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState(0);
   const [dragOffset, setDragOffset] = useState(0);
+  const [contextMenu, setContextMenu] = useState<{ visible: boolean; x: number; y: number; note: Note | null }>({ 
+    visible: false, 
+    x: 0, 
+    y: 0, 
+    note: null 
+  });
 
   // Configuration du carrousel - Responsive
   const [cardsPerView, setCardsPerView] = useState(3);
@@ -157,6 +166,18 @@ const NotesCarouselNotion = forwardRef<NotesCarouselRef, NotesCarouselNotionProp
 
     return () => clearInterval(interval);
   }, [autoPlay, autoPlayInterval, isHovered, notes.length, isDragging, cardsPerView]);
+
+  // Fermer le menu contextuel avec la touche Escape
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && contextMenu.visible) {
+        closeContextMenu();
+      }
+    };
+
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [contextMenu.visible]);
   
   const goToPrevious = () => {
     setCurrentIndex((prev) => Math.max(0, prev - cardsPerView));
@@ -222,6 +243,120 @@ const NotesCarouselNotion = forwardRef<NotesCarouselRef, NotesCarouselNotionProp
         goToPrevious();
       }
     }
+  };
+
+  // Gestion du menu contextuel
+  const handleContextMenu = (e: React.MouseEvent, note: Note) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setContextMenu({ visible: true, x: e.clientX, y: e.clientY, note });
+  };
+
+  const closeContextMenu = () => {
+    setContextMenu({ visible: false, x: 0, y: 0, note: null });
+  };
+
+  const handleOpenNote = () => {
+    if (contextMenu.note) {
+      router.push(`/private/note/${contextMenu.note.id}`);
+    }
+    closeContextMenu();
+  };
+
+  const handleRenameNote = async () => {
+    if (!contextMenu.note) return;
+    
+    const newName = prompt("Nouveau titre de la note :", contextMenu.note.source_title);
+    if (!newName || newName.trim() === "") {
+      closeContextMenu();
+      return;
+    }
+
+    try {
+      const token = await getAccessToken();
+      if (!token) {
+        logger.error('[NotesCarouselNotion] Token non disponible pour renommer la note');
+        closeContextMenu();
+        return;
+      }
+
+      const response = await fetch(`/api/v2/note/${contextMenu.note.id}/update`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+          'X-Client-Type': 'notes_carousel'
+        },
+        body: JSON.stringify({ source_title: newName.trim() })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Erreur lors du renommage de la note');
+      }
+
+      // Recharger les notes
+      setNotes(prevNotes => 
+        prevNotes.map(n => 
+          n.id === contextMenu.note?.id 
+            ? { ...n, source_title: newName.trim() } 
+            : n
+        )
+      );
+
+      logger.dev('[NotesCarouselNotion] Note renommée avec succès');
+    } catch (err) {
+      logger.error('[NotesCarouselNotion] Erreur lors du renommage:', err);
+      alert('Erreur lors du renommage de la note');
+    }
+
+    closeContextMenu();
+  };
+
+  const handleDeleteNote = async () => {
+    if (!contextMenu.note) return;
+    
+    const confirmDelete = window.confirm(
+      `Êtes-vous sûr de vouloir supprimer la note "${contextMenu.note.source_title}" ?`
+    );
+    
+    if (!confirmDelete) {
+      closeContextMenu();
+      return;
+    }
+
+    try {
+      const token = await getAccessToken();
+      if (!token) {
+        logger.error('[NotesCarouselNotion] Token non disponible pour supprimer la note');
+        closeContextMenu();
+        return;
+      }
+
+      const response = await fetch(`/api/v2/delete/note/${contextMenu.note.id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+          'X-Client-Type': 'notes_carousel'
+        }
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Erreur lors de la suppression de la note');
+      }
+
+      // Retirer la note de la liste
+      setNotes(prevNotes => prevNotes.filter(n => n.id !== contextMenu.note?.id));
+
+      logger.dev('[NotesCarouselNotion] Note supprimée avec succès');
+    } catch (err) {
+      logger.error('[NotesCarouselNotion] Erreur lors de la suppression:', err);
+      alert('Erreur lors de la suppression de la note');
+    }
+
+    closeContextMenu();
   };
 
   // Formatage des dates
@@ -354,6 +489,7 @@ const NotesCarouselNotion = forwardRef<NotesCarouselRef, NotesCarouselNotionProp
                     transition: { duration: 0.2 }
                   }}
                   whileTap={{ scale: 0.98 }}
+                  onContextMenu={(e) => handleContextMenu(e, note)}
                 >
                   {/* Image de la note */}
                   <div className="note-image-container">
@@ -410,6 +546,18 @@ const NotesCarouselNotion = forwardRef<NotesCarouselRef, NotesCarouselNotionProp
         </motion.div>
       </div>
 
+      {/* Menu contextuel */}
+      <SimpleContextMenu
+        visible={contextMenu.visible}
+        x={contextMenu.x}
+        y={contextMenu.y}
+        options={[
+          { label: 'Ouvrir', onClick: handleOpenNote },
+          { label: 'Renommer', onClick: handleRenameNote },
+          { label: 'Supprimer', onClick: handleDeleteNote }
+        ]}
+        onClose={closeContextMenu}
+      />
     </div>
   );
 });

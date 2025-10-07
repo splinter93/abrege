@@ -39,6 +39,7 @@ const searchFilesQuerySchema = z.object({
 
 // 📋 Type de réponse
 interface FileSearchResult {
+  id: string; // UUID pour les opérations (delete, etc.)
   filename: string;
   type: string;
   size: number;
@@ -169,6 +170,7 @@ export async function GET(request: NextRequest) {
 
     // 🔧 Formatage des données selon l'OpenAPI
     const formattedFiles: FileSearchResult[] = (files || []).map(file => ({
+      id: file.id, // UUID nécessaire pour les opérations (delete, etc.)
       filename: file.filename,
       type: file.mime_type || 'unknown',
       size: file.size || 0,

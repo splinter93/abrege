@@ -239,16 +239,15 @@ async function moveToTrash(
   try {
     const now = new Date().toISOString();
     
-    // Pour les fichiers, utiliser is_deleted et deleted_at
+    // Pour les fichiers, utiliser seulement deleted_at (is_deleted n'existe pas dans la table)
     if (tableName === 'files') {
       const { error } = await supabase
         .from('files')
         .update({
-          is_deleted: true,
           deleted_at: now
         })
-        .eq('id', resourceId)
-        .eq('user_id', userId);
+        .eq('id', resourceId);
+        // Pas besoin de .eq('user_id', userId) car la politique RLS s'en charge
 
       if (error) {
         logApi.error(`❌ Erreur mise en corbeille fichier:`, error);

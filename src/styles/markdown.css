@@ -979,7 +979,6 @@ a {
   .ProseMirror .editor-image:hover {
     transform: translateY(-4px);
     box-shadow: var(--glass-shadow-soft);
-    border-color: var(--color-accent);
   }
   .ProseMirror p:has(img),
   .ProseMirror p:has(.editor-image-wrapper) {

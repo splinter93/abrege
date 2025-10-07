@@ -184,6 +184,7 @@
   padding: var(--notion-space-sm); /* Padding réduit */
   box-sizing: border-box;
   min-width: 0;
+  max-width: 280px; /* Limite la largeur maximale des cartes */
   transition: all 0.3s ease;
   transform: translateZ(0); /* Force l'accélération matérielle */
 }
@@ -249,7 +250,7 @@
 
 .note-image-container {
   position: relative;
-  height: 130px; /* Ajusté pour laisser plus de place au titre */
+  height: 124px; /* Réduit de 5% pour laisser plus de place au titre */
   overflow: hidden;
   background: rgba(255, 255, 255, 0.03);
   z-index: 2;
@@ -401,7 +402,7 @@
   gap: var(--notion-space-xs); /* Gap plus compact */
   position: relative;
   z-index: 2;
-  height: 50px; /* Légèrement plus grand pour le titre */
+  height: 56px; /* Plus d'espace pour le titre */
   justify-content: center; /* Centrer le titre verticalement */
 }
 
@@ -568,6 +569,7 @@
 @media (min-width: 1400px) {
   .carousel-slide {
     flex: 0 0 20%; /* 5 cartes par vue */
+    max-width: 280px; /* Limite la largeur maximale */
   }
 }
 
@@ -575,6 +577,7 @@
 @media (max-width: 1399px) and (min-width: 1024px) {
   .carousel-slide {
     flex: 0 0 25%; /* 4 cartes par vue */
+    max-width: 280px; /* Limite la largeur maximale */
   }
 }
 
@@ -599,12 +602,12 @@
   }
   
   .note-image-container {
-    height: 120px; /* 3/4 de 160px */
+    height: 114px; /* Réduit de 5% */
   }
   
   .note-content {
     padding: var(--notion-space-sm);
-    height: 45px; /* Légèrement plus grand pour le titre */
+    height: 46px; /* Plus d'espace pour le titre */
   }
   
   .note-title {
@@ -643,12 +646,12 @@
   }
   
   .note-image-container {
-    height: 105px; /* 3/4 de 140px */
+    height: 100px; /* Réduit de 5% */
   }
   
   .note-content {
     padding: var(--notion-space-sm);
-    height: 40px; /* Légèrement plus grand pour le titre */
+    height: 40px; /* Espace pour le titre */
   }
   
   .note-title {
@@ -677,13 +680,13 @@
   }
   
   .note-image-container {
-    height: 90px; /* 3/4 de 120px */
+    height: 86px; /* Réduit de 5% */
   }
   
   .note-content {
     padding: var(--notion-space-xs);
     gap: var(--notion-space-xs);
-    height: 35px; /* Légèrement plus grand pour le titre */
+    height: 34px; /* Espace pour le titre */
   }
   
   .note-title {

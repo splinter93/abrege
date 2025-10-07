@@ -73,14 +73,6 @@ export class ApiV2HttpClient {
       return vercelUrl;
     }
     
-    // 🔧 SERVER-SIDE (Vercel avec URL personnalisée)
-    if (process.env.VERCEL && process.env.NEXT_PUBLIC_API_BASE_URL) {
-      // On est sur Vercel mais VERCEL_URL n'est pas set, utiliser l'URL publique
-      const publicUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
-      logger.warn(`[ApiV2HttpClient] ⚠️ Utilisation URL publique sur Vercel: ${publicUrl}`);
-      return publicUrl;
-    }
-    
     // 🔧 SERVER-SIDE (Local ou autre)
     const fallbackUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
     logger.info(`[ApiV2HttpClient] 🔧 Fallback URL: ${fallbackUrl}`);
@@ -100,7 +92,7 @@ export class ApiV2HttpClient {
     params: Record<string, unknown> | null,
     userToken: string
   ): Promise<T> {
-    const url = `${this.baseUrl}/api/v2${endpoint}`;
+    let url = `${this.baseUrl}/api/v2${endpoint}`;
     
     // ✅ FIX PROD : Toujours utiliser le JWT dans Authorization (standard HTTP)
     // Les endpoints API V2 valident le JWT via getAuthenticatedUser()
@@ -113,15 +105,17 @@ export class ApiV2HttpClient {
     const isServerSide = typeof window === 'undefined';
     
     // 🚨 CONSOLE.LOG DIRECT - FORCE PROD
-    console.log('🔍 [ApiV2HttpClient] REQUEST:', {
-      url,
-      endpoint,
-      method,
-      isServerSide,
-      tokenType: this.detectTokenType(userToken),
-      tokenLength: userToken.length,
-      hasAuthHeader: !!headers['Authorization']
-    });
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('🔍 [ApiV2HttpClient] REQUEST:', {
+        url,
+        endpoint,
+        method,
+        isServerSide,
+        tokenType: this.detectTokenType(userToken),
+        tokenLength: userToken.length,
+        hasAuthHeader: !!headers['Authorization']
+      });
+    }
 
     const requestOptions: RequestInit = {
       method,
@@ -154,13 +148,15 @@ export class ApiV2HttpClient {
         const errorData = await response.json().catch(() => ({}));
         
         // 🚨 CONSOLE.ERROR DIRECT - FORCE PROD
-        console.error('❌ [ApiV2HttpClient] ERROR 401:', {
-          url,
-          status: response.status,
-          errorData,
-          tokenLength: userToken.length,
-          tokenType: this.detectTokenType(userToken)
-        });
+        if (process.env.NODE_ENV !== 'production') {
+          console.error('❌ [ApiV2HttpClient] ERROR 401:', {
+            url,
+            status: response.status,
+            errorData,
+            tokenLength: userToken.length,
+            tokenType: this.detectTokenType(userToken)
+          });
+        }
         
         logger.error(`[ApiV2HttpClient] ❌ ${response.status} ${response.statusText}`, {
           url,
@@ -374,27 +370,6 @@ export class ApiV2HttpClient {
 
   async deleteAgent(agentId: string, userToken: string) {
     return this.makeRequest(`/agents/${agentId}`, 'DELETE', null, userToken);
-  }
-
-  // Notes - Opérations avancées
-  async applyContentOperations(ref: string, params: any, userToken: string) {
-    return this.makeRequest(`/note/${ref}/apply`, 'POST', params, userToken);
-  }
-
-  async insertNoteContent(ref: string, params: any, userToken: string) {
-    return this.makeRequest(`/note/${ref}/insert`, 'POST', params, userToken);
-  }
-
-  async getNoteTOC(ref: string, userToken: string) {
-    return this.makeRequest(`/note/${ref}/toc`, 'GET', null, userToken);
-  }
-
-  async getNoteShareSettings(ref: string, userToken: string) {
-    return this.makeRequest(`/note/${ref}/share`, 'GET', null, userToken);
-  }
-
-  async updateNoteShareSettings(ref: string, params: any, userToken: string) {
-    return this.makeRequest(`/note/${ref}/share`, 'PUT', params, userToken);
   }
 
   // Classeurs - Opérations avancées

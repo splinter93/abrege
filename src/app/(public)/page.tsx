@@ -343,7 +343,7 @@ function AuthenticatedHomeContent({ user }: { user: { id: string; email?: string
             <div className="section-content">
               <NotesCarouselNotion 
                 ref={notesCarouselRef}
-                limit={6}
+                limit={10}
                 showNavigation={true}
                 autoPlay={false}
                 title=""
@@ -379,7 +379,7 @@ function AuthenticatedHomeContent({ user }: { user: { id: string; email?: string
                   <h3 className="dashboard-column-title">Fichiers Récents</h3>
                 </div>
                 <div className="dashboard-column-content">
-                  <RecentFilesList limit={5} />
+                  <RecentFilesList limit={10} />
                 </div>
               </div>
             </div>
