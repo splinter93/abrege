@@ -50,18 +50,32 @@ export class ApiV2HttpClient {
       return clientUrl;
     }
     
+    // 🔧 DEBUG: Log toutes les variables d'environnement pertinentes
+    logger.info(`[ApiV2HttpClient] 🔍 Env vars:`, {
+      VERCEL: process.env.VERCEL,
+      VERCEL_URL: process.env.VERCEL_URL,
+      NEXT_PUBLIC_API_BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL,
+      NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
+    });
+    
     // 🔧 SERVER-SIDE (Vercel Production)
+    // IMPORTANT : Toujours utiliser VERCEL_URL en priorité pour éviter les appels externes
     if (process.env.VERCEL_URL) {
       const vercelUrl = `https://${process.env.VERCEL_URL}`;
-      logger.info(`[ApiV2HttpClient] 🚀 Vercel URL: ${vercelUrl}`);
+      logger.info(`[ApiV2HttpClient] 🚀 Vercel URL (interne): ${vercelUrl}`);
       return vercelUrl;
     }
     
-    // 🔧 SERVER-SIDE (Custom ou local)
-    const fallbackUrl = process.env.NEXT_PUBLIC_API_BASE_URL 
-      || process.env.NEXT_PUBLIC_SITE_URL 
-      || 'http://localhost:3000';
+    // 🔧 SERVER-SIDE (Vercel avec URL personnalisée)
+    if (process.env.VERCEL && process.env.NEXT_PUBLIC_API_BASE_URL) {
+      // On est sur Vercel mais VERCEL_URL n'est pas set, utiliser l'URL publique
+      const publicUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+      logger.warn(`[ApiV2HttpClient] ⚠️ Utilisation URL publique sur Vercel: ${publicUrl}`);
+      return publicUrl;
+    }
     
+    // 🔧 SERVER-SIDE (Local ou autre)
+    const fallbackUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
     logger.info(`[ApiV2HttpClient] 🔧 Fallback URL: ${fallbackUrl}`);
     return fallbackUrl;
   }
