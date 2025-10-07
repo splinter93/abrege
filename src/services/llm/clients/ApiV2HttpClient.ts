@@ -74,6 +74,12 @@ export class ApiV2HttpClient {
     // Détecter si c'est un UUID (clé d'API) ou un JWT
     const isUserId = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userToken);
     
+    logger.info(`[ApiV2HttpClient] 🔍 Type de token détecté:`, {
+      isUserId,
+      tokenStart: userToken.substring(0, 20) + '...',
+      tokenLength: userToken.length
+    });
+    
     if (isUserId) {
       // ✅ CORRECTION SÉCURITÉ : Pour les clés d'API, utiliser l'impersonation contrôlée
       // C'est la seule méthode fiable pour les clés d'API
