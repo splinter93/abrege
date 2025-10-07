@@ -112,13 +112,14 @@ export class ApiV2HttpClient {
     
     const isServerSide = typeof window === 'undefined';
     
-    logger.info(`[ApiV2HttpClient] 🔑 DEBUG AUTH - Envoi requête:`, {
+    // 🚨 CONSOLE.LOG DIRECT - FORCE PROD
+    console.log('🔍 [ApiV2HttpClient] REQUEST:', {
+      url,
       endpoint,
       method,
       isServerSide,
       tokenType: this.detectTokenType(userToken),
       tokenLength: userToken.length,
-      tokenStart: userToken.substring(0, 20) + '...',
       hasAuthHeader: !!headers['Authorization']
     });
 
@@ -151,6 +152,15 @@ export class ApiV2HttpClient {
       if (!response.ok) {
         // 🔍 DIAGNOSTIC DÉTAILLÉ EN CAS D'ERREUR
         const errorData = await response.json().catch(() => ({}));
+        
+        // 🚨 CONSOLE.ERROR DIRECT - FORCE PROD
+        console.error('❌ [ApiV2HttpClient] ERROR 401:', {
+          url,
+          status: response.status,
+          errorData,
+          tokenLength: userToken.length,
+          tokenType: this.detectTokenType(userToken)
+        });
         
         logger.error(`[ApiV2HttpClient] ❌ ${response.status} ${response.statusText}`, {
           url,
