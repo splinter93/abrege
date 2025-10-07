@@ -82,21 +82,22 @@ const ChatFullscreenV2: React.FC = () => {
   // const { addToolResult, isProcessing: isProcessingToolCalls } = useAtomicToolCalls(); // Hook supprimé
 
   // ✅ CORRECTION: Sidebar TOUJOURS fermée par défaut, sauf si l'utilisateur l'a ouverte explicitement
+  // ✅ État initial de la sidebar (seulement au premier mount)
   useEffect(() => {
-    // ✅ TOUJOURS fermée par défaut (desktop, mobile, tablette)
+    // Sidebar fermée par défaut au chargement initial
     setSidebarOpen(false);
-  }, [isDesktop, user, authLoading]);
+  }, []); // ✅ Dependencies vides = exécuté seulement au mount
 
-  // 🎯 Fermer la sidebar sur mobile après sélection d'une session
+  // 🎯 Fermer la sidebar sur mobile après sélection d'une session (optionnel)
   useEffect(() => {
-    if (!isDesktop && sidebarOpen) {
-      // Délai pour permettre l'animation de fermeture
+    if (!isDesktop && sidebarOpen && currentSession) {
+      // Auto-fermer seulement si une session est sélectionnée (UX mobile)
       const timer = setTimeout(() => {
         setSidebarOpen(false);
-      }, 100);
+      }, 300); // Délai pour voir la sélection
       return () => clearTimeout(timer);
     }
-  }, [currentSession, isDesktop, sidebarOpen]);
+  }, [currentSession?.id, isDesktop, sidebarOpen]); // ✅ Trigger seulement sur changement de session
 
   const handleComplete = useCallback(async (
     fullContent: string, 
