@@ -1,4 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
+
+// Force Node.js runtime (not Edge) and disable caching to preserve auth context in production
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 import { handleGroqGptOss120b } from '@/services/llm/groqGptOss120b';
 import { simpleLogger as logger } from '@/utils/logger';
 import { createClient } from '@supabase/supabase-js';
