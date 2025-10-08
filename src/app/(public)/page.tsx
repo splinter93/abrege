@@ -245,27 +245,12 @@ function AuthenticatedHomeContent({ user }: { user: { id: string; email?: string
             <h1 className="welcome-title">Welcome Home, {user?.username || user?.email?.split('@')[0] || 'User'}</h1>
           </motion.div>
 
-          {/* 2. SearchBar pleine largeur */}
-          <motion.div 
-            className="search-section"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
-          >
-            <SearchBar
-              placeholder="Rechercher des notes..."
-              onSearchResult={handleSearchResult}
-              maxResults={10}
-              searchTypes={['all']}
-            />
-          </motion.div>
-
-          {/* 3. Actions rapides centrées */}
+          {/* 2. Actions rapides centrées */}
           <motion.div 
             className="quick-actions-section"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
+            transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
           >
             <motion.button 
               className="quick-action create-note"
@@ -302,6 +287,21 @@ function AuthenticatedHomeContent({ user }: { user: { id: string; email?: string
               <MessageSquare size={16} />
               <span>Chat</span>
             </motion.button>
+          </motion.div>
+
+          {/* 3. SearchBar pleine largeur */}
+          <motion.div 
+            className="search-section"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
+          >
+            <SearchBar
+              placeholder="Rechercher des notes..."
+              onSearchResult={handleSearchResult}
+              maxResults={10}
+              searchTypes={['all']}
+            />
           </motion.div>
 
           {/* 4. Notes Récentes */}
