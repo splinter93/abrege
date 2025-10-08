@@ -111,9 +111,9 @@ function createDragHandle(): HTMLElement {
             const paragraph = state.schema.nodes.paragraph.create();
             const transaction = tr.insert(afterPos, paragraph);
             
-            // Placer le curseur dans le nouveau paragraphe
+            // Placer le curseur dans le nouveau paragraphe (utiliser transaction.doc, pas doc)
             transaction.setSelection(
-              state.selection.constructor.near(doc.resolve(afterPos + 1))
+              state.selection.constructor.near(transaction.doc.resolve(afterPos + 1))
             );
             
             dispatch(transaction);
