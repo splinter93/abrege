@@ -5,16 +5,23 @@ export interface MarkdownStorage {
   getMarkdown?: () => string;
 }
 
-// Type simplifié pour l'éditeur avec les capacités essentielles
-export interface FullEditorInstance extends TiptapEditor {
-  chain: () => ChainedCommands;
-  can: () => CanCommands;
-  isActive: (type: string, attrs?: { level?: number }) => boolean;
-  storage: {
+// Type utilitaire qui étend Editor avec le storage markdown typé
+export type EditorWithMarkdown = TiptapEditor & {
+  storage: TiptapEditor['storage'] & {
     markdown?: MarkdownStorage;
-    [key: string]: unknown;
   };
+};
+
+// Garde de type pour vérifier si l'éditeur a le storage markdown
+export function hasMarkdownStorage(editor: TiptapEditor | null): editor is EditorWithMarkdown {
+  if (!editor) return false;
+  const storage = editor.storage as any;
+  return storage?.markdown && typeof storage.markdown.getMarkdown === 'function';
 }
+
+// Export de FullEditorInstance pour compatibilité (deprecated)
+/** @deprecated Use EditorWithMarkdown or Editor directly */
+export type FullEditorInstance = EditorWithMarkdown;
 
 // Types pour les props des composants
 export interface EditorProps {

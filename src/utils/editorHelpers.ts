@@ -118,3 +118,43 @@ export const hashString = (str: string): number => {
   return hash;
 };
 
+/**
+ * Extrait le markdown de l'éditeur de manière type-safe
+ * 
+ * @description Utilise un type guard pour vérifier que l'éditeur a le storage markdown
+ * avant d'essayer d'extraire le contenu. Gère les erreurs et retourne une chaîne vide
+ * si le markdown n'est pas disponible.
+ * 
+ * @param editor - Instance de l'éditeur Tiptap (accepte n'importe quel objet avec storage)
+ * @returns Le markdown ou une chaîne vide si indisponible
+ * 
+ * @example
+ * ```typescript
+ * const markdown = getEditorMarkdown(editor);
+ * if (markdown) {
+ *   await saveNote(markdown);
+ * }
+ * ```
+ */
+export function getEditorMarkdown(editor: { storage?: unknown } | null): string {
+  if (!editor) return '';
+  
+  try {
+    // Type guard avec vérification runtime
+    const storage = editor.storage as { markdown?: { getMarkdown?: () => string } } | undefined;
+    if (storage?.markdown && typeof storage.markdown.getMarkdown === 'function') {
+      return storage.markdown.getMarkdown() || '';
+    }
+    return '';
+  } catch (error) {
+    if (process.env.NODE_ENV === 'development') {
+      // Type-safe logging - pas de console.warn en production
+      if (typeof error === 'object' && error !== null) {
+        const errorMessage = 'message' in error ? String(error.message) : 'Unknown error';
+        // Utiliser un logger si disponible, sinon ignorer silencieusement
+        globalThis.console?.warn?.('Failed to get markdown from editor:', errorMessage);
+      }
+    }
+    return '';
+  }
+}

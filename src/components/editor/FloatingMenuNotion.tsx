@@ -47,6 +47,7 @@ const FloatingMenuNotion: React.FC<FloatingMenuNotionProps> = ({
   const [selectedText, setSelectedText] = useState('');
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [isTransformMenuOpen, setTransformMenuOpen] = useState(false);
+  const isDraggingRef = useRef(false);
 
   // Mise à jour de la position du menu avec délai
   const updatePosition = () => {
@@ -59,6 +60,29 @@ const FloatingMenuNotion: React.FC<FloatingMenuNotionProps> = ({
 
     const { state } = editor;
     const { selection } = state;
+    
+    // 🔧 FIX : Ne PAS afficher le menu pour les NodeSelection (drag handles, images, etc.)
+    const selectionType = selection.constructor.name;
+    if (selectionType === 'NodeSelection' || selectionType === 'AllSelection') {
+      timeoutRef.current = setTimeout(() => {
+        setPosition(prev => ({ ...prev, visible: false }));
+      }, 100);
+      return;
+    }
+    
+    // 🔧 FIX : Vérifier si un drag handle est actif
+    // Les drag handles ont des classes spécifiques
+    const activeElement = document.activeElement;
+    const isDragHandleActive = activeElement?.closest('.notion-drag-handle') || 
+                              activeElement?.closest('.drag-handle-custom') ||
+                              activeElement?.closest('[data-drag-handle]');
+    
+    if (isDragHandleActive) {
+      timeoutRef.current = setTimeout(() => {
+        setPosition(prev => ({ ...prev, visible: false }));
+      }, 100);
+      return;
+    }
     
     // Vérifier s'il y a une sélection de texte
     if (selection.empty) {
@@ -148,11 +172,47 @@ const FloatingMenuNotion: React.FC<FloatingMenuNotionProps> = ({
     }
   }, [position.visible]);
 
+  // 🔧 FIX : Détecter les interactions avec drag handles
+  useEffect(() => {
+    if (!editor) return;
+
+    const handleMouseDown = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      // Vérifier si le clic est sur un drag handle
+      if (target.closest('.notion-drag-handle') || 
+          target.closest('.drag-handle-custom') ||
+          target.closest('[data-drag-handle]')) {
+        isDraggingRef.current = true;
+        // Masquer le menu immédiatement
+        setPosition(prev => ({ ...prev, visible: false }));
+      }
+    };
+
+    const handleMouseUp = () => {
+      // Réinitialiser après un court délai
+      setTimeout(() => {
+        isDraggingRef.current = false;
+      }, 200);
+    };
+
+    document.addEventListener('mousedown', handleMouseDown);
+    document.addEventListener('mouseup', handleMouseUp);
+
+    return () => {
+      document.removeEventListener('mousedown', handleMouseDown);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [editor]);
+
   // Écouter les changements de sélection
   useEffect(() => {
     if (!editor) return;
 
     const handleSelectionUpdate = () => {
+      // 🔧 FIX : Ne pas mettre à jour si on est en train de drag
+      if (isDraggingRef.current) {
+        return;
+      }
       updatePosition();
     };
 
@@ -182,7 +242,7 @@ const FloatingMenuNotion: React.FC<FloatingMenuNotionProps> = ({
   }, []);
 
   // Commandes de formatage
-  const formatCommands = [
+  const formatCommands = React.useMemo(() => [
     {
       id: 'ask-ai',
       icon: FiZap,
@@ -244,15 +304,9 @@ const FloatingMenuNotion: React.FC<FloatingMenuNotionProps> = ({
       },
       isActive: () => editor?.isActive('link') || false
     }
-  ];
+  ], [editor, onAskAI, selectedText]);
 
-  // Debug: afficher le menu même si invisible pour tester
-  if (!editor) {
-    return null;
-  }
-
-  // Debug: forcer l'affichage pour tester
-  if (!position.visible) {
+  if (!editor || !position.visible) {
     return null;
   }
 

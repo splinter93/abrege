@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { toast } from 'react-hot-toast';
+import { getEditorMarkdown } from '@/utils/editorHelpers';
 // Type pour les données de sauvegarde
 interface NoteData {
   title: string;
@@ -14,7 +15,7 @@ export interface UseEditorSaveOptions {
   onSave?: (data: NoteData) => void;
   editor?: {
     getHTML: () => string;
-    storage: { markdown: { getMarkdown: () => string } };
+    storage?: { markdown?: { getMarkdown?: () => string } };
   };
   titleAlign?: 'left' | 'center' | 'right';
 }
@@ -40,7 +41,7 @@ export default function useEditorSave({ onSave, editor }: UseEditorSaveOptions):
     if (onSave && editor) {
       setIsSaving(true);
       const html_content = editor.getHTML();
-      let markdown_content = editor.storage.markdown.getMarkdown();
+      let markdown_content = getEditorMarkdown(editor);
       markdown_content = markdown_content.replace(/\\(#+ )/g, '$1');
       markdown_content = markdown_content.replace(/(\!\[.*?\]\(.*?\))\s*(#+ )/g, '$1\n\n$2');
       if (process.env.NODE_ENV === 'development') {

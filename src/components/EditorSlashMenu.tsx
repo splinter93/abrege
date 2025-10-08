@@ -1,19 +1,19 @@
 import React, { useState, useRef, useImperativeHandle, forwardRef } from 'react';
 import SlashMenu from './SlashMenu';
 import './editor/editor-slash-menu.css';
-import type { FullEditorInstance } from '@/types/editor';
+import type { Editor } from '@tiptap/react';
 type SlashCommand = {
   id: string;
   alias: Record<string, string | string[]>;
   label: Record<string, string>;
   description: Record<string, string>;
   preview?: string;
-  action?: (editor: FullEditorInstance) => void;
+  action?: (editor: Editor) => void;
   [key: string]: unknown;
 };
 
 export interface EditorSlashMenuProps {
-  editor: FullEditorInstance | null;
+  editor: Editor | null;
   onInsert: (cmd: SlashCommand) => void;
   lang?: string;
   onOpenImageMenu?: () => void;

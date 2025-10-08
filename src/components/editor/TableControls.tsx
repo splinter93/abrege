@@ -1,11 +1,11 @@
 import React, { useEffect, useState, useRef, useMemo } from 'react';
 import { FiPlus, FiTrash2 } from 'react-icons/fi';
 import './table-controls.css';
-import type { FullEditorInstance } from '@/types/editor';
+import type { Editor } from '@tiptap/react';
 import { logger, LogCategory } from '@/utils/logger';
 
 interface TableControlsProps {
-  editor: FullEditorInstance | null;
+  editor: Editor | null;
   containerRef: React.RefObject<HTMLElement>;
 }
 
@@ -98,7 +98,7 @@ const TableControls: React.FC<TableControlsProps> = ({ editor, containerRef }) =
       editor.off('focus', handleFocus);
       editor.off('blur', handleBlur);
     };
-  }, [editor, updatePosition]);
+  }, [editor]); // updatePosition est stable (ne change pas)
 
   // Mémoriser les calculs coûteux des permissions de tableau
   const tablePermissions = useMemo(() => {

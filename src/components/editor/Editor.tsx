@@ -10,7 +10,6 @@ import EditorHeaderImage from '@/components/EditorHeaderImage';
 import EditorKebabMenu from '@/components/EditorKebabMenu';
 import EditorTitle from './EditorTitle';
 import PublicTableOfContents from '@/components/TableOfContents';
-import LinkDebugger from '@/components/debug/LinkDebugger';
 import { useFileSystemStore } from '@/store/useFileSystemStore';
 import type { FileSystemState } from '@/store/useFileSystemStore';
 import { useMarkdownRender } from '@/hooks/editor/useMarkdownRender';
@@ -38,7 +37,7 @@ import type { FullEditorInstance } from '@/types/editor';
 import { useRealtime } from '@/hooks/useRealtime';
 import RealtimeStatus from '@/components/RealtimeStatus';
 import { preprocessMarkdown } from '@/utils/markdownPreprocessor';
-import { debounce, cleanEscapedMarkdown, hashString } from '@/utils/editorHelpers';
+import { debounce, cleanEscapedMarkdown, hashString, getEditorMarkdown } from '@/utils/editorHelpers';
 import { 
   DEBOUNCE_DELAYS, 
   TIMEOUTS, 
@@ -64,6 +63,7 @@ interface NoteUpdate {
 import { createEditorExtensions, PRODUCTION_EXTENSIONS_CONFIG } from '@/config/editor-extensions';
 import ContextMenu from './ContextMenu';
 import { useUIContext } from '@/hooks/useUIContext';
+import type { Editor as TiptapEditor } from '@tiptap/react';
 
 /**
  * Composant principal de l'éditeur de notes
@@ -121,7 +121,7 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
     initialFullWidth: note?.wide_mode || false,
     initialSlashLang: (note?.slash_lang as 'fr' | 'en') || 'en',
     initialShareSettings: note?.share_settings ? {
-      visibility: (note.share_settings.visibility as any) || 'private',
+      visibility: (note.share_settings.visibility as ShareSettings['visibility']) || 'private',
       invited_users: note.share_settings.invited_users || [],
       allow_edit: note.share_settings.allow_edit || false,
       allow_comments: note.share_settings.allow_comments || false,
@@ -134,12 +134,12 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
       editorState.setNoteLoaded(true);
       editorState.updateTOC();
     }
-  }, [note, content, noteId, editorState]);
+  }, [note, content, noteId, editorState.document.noteLoaded, editorState.setNoteLoaded, editorState.updateTOC]);
 
   // Synchroniser le titre avec la note
   React.useEffect(() => { 
     editorState.setTitle(note?.source_title || ''); 
-  }, [note?.source_title, editorState]);
+  }, [note?.source_title, editorState.setTitle]);
 
   // Ref pour le bouton kebab (besoin de calcul de position)
   const kebabBtnRef = React.useRef<HTMLButtonElement | null>(null);
@@ -188,7 +188,7 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
     } catch (error) {
       logger.error(LogCategory.EDITOR, 'Error updating header image');
     }
-  }, [noteId, updateNote, userId, editorState]);
+  }, [noteId, updateNote, userId, editorState.setHeaderImageUrl]);
 
   React.useEffect(() => {
     if (editorState.menus.kebabOpen && kebabBtnRef.current) {
@@ -198,34 +198,34 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
         left: rect.left - CONTEXT_MENU_CONFIG.kebabMenuOffsetLeft
       });
     }
-  }, [editorState]);
+  }, [editorState.menus.kebabOpen, editorState.setKebabPos]);
 
   // Ref to the element that contains .ProseMirror so TOC can scroll into view
   const editorContainerRef = React.useRef<HTMLDivElement>(null);
 
   React.useEffect(() => {
     if (note?.header_image) editorState.setHeaderImageUrl(note.header_image);
-  }, [note?.header_image, editorState]);
+  }, [note?.header_image, editorState.setHeaderImageUrl]);
 
   // Hydrate appearance fields from note
   React.useEffect(() => {
     if (typeof note?.header_image_offset === 'number') editorState.setHeaderImageOffset(note.header_image_offset);
-  }, [note?.header_image_offset, editorState]);
+  }, [note?.header_image_offset, editorState.setHeaderImageOffset]);
   React.useEffect(() => {
     if (typeof note?.header_image_blur === 'number') editorState.setHeaderImageBlur(note.header_image_blur);
-  }, [note?.header_image_blur, editorState]);
+  }, [note?.header_image_blur, editorState.setHeaderImageBlur]);
   React.useEffect(() => {
     if (typeof note?.header_image_overlay === 'number') editorState.setHeaderImageOverlay(note.header_image_overlay);
-  }, [note?.header_image_overlay, editorState]);
+  }, [note?.header_image_overlay, editorState.setHeaderImageOverlay]);
   React.useEffect(() => {
     if (typeof note?.header_title_in_image === 'boolean') editorState.setHeaderTitleInImage(note.header_title_in_image);
-  }, [note?.header_title_in_image, editorState]);
+  }, [note?.header_title_in_image, editorState.setHeaderTitleInImage]);
   // Initialisation du wide mode depuis la note (seulement au chargement initial)
   React.useEffect(() => {
     if (typeof note?.wide_mode === 'boolean' && !editorState.ui.fullWidth) {
       editorState.setFullWidth(note.wide_mode);
     }
-  }, [note?.wide_mode, editorState]);
+  }, [note?.wide_mode, editorState.ui.fullWidth, editorState.setFullWidth]);
   
 
 
@@ -244,7 +244,7 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
 
     document.addEventListener('tiptap-context-menu', handleContextMenu as EventListener);
     return () => document.removeEventListener('tiptap-context-menu', handleContextMenu as EventListener);
-  }, [isReadonly, editorState]);
+  }, [isReadonly, editorState.openContextMenu]);
 
 
   // Real Tiptap editor instance (Markdown as source of truth)
@@ -259,12 +259,12 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
    * 
    * @param editor - Instance de l'éditeur Tiptap
    */
-  const handleEditorUpdate = React.useCallback(({ editor }: { editor: any }) => {
+  const handleEditorUpdate = React.useCallback(({ editor }: { editor: TiptapEditor }) => {
     if (!editor || editorState.internal.isUpdatingFromStore) return;
     
     try {
-      const md = (editor.storage as any)?.markdown?.getMarkdown?.() as string | undefined;
-      const nextMarkdown = typeof md === 'string' ? md : content;
+      const nextMarkdown = getEditorMarkdown(editor);
+      // ✅ FIX : Permettre la sauvegarde de contenu vide (quand l'utilisateur efface tout)
       if (nextMarkdown !== content) {
         // 🔧 CORRECTION : Nettoyer le Markdown échappé avant sauvegarde
         const cleanMarkdown = cleanEscapedMarkdown(nextMarkdown);
@@ -273,11 +273,13 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
     } catch (error) {
       logger.error(LogCategory.EDITOR, 'Erreur lors de la mise à jour du contenu:', error);
     }
-  }, [content, noteId, updateNote, editorState]);
+  }, [content, noteId, updateNote, editorState.internal.isUpdatingFromStore]);
 
   const editor = useEditor({
     editable: !isReadonly,
-    immediatelyRender: false, // Éviter les erreurs de SSR/hydration
+    // ✅ FIX: Rendu immédiat côté client pour que les extensions (drag handles) s'initialisent
+    // En mode SSR, l'éditeur n'est pas rendu (composant client only)
+    immediatelyRender: typeof window !== 'undefined',
     extensions: createEditorExtensions(PRODUCTION_EXTENSIONS_CONFIG, lowlight), // Configuration stable mais fonctionnelle
     content: content || '',
     onUpdate: handleEditorUpdate,
@@ -303,7 +305,7 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
     return () => {
       editor.off('update', debouncedUpdateTOC);
     };
-  }, [editor, editorState]);
+  }, [editor, editorState.updateTOC]);
   
   // Synchronisation gérée par EditorSyncManager (composant séparé)
 
@@ -311,18 +313,7 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
   React.useEffect(() => {
     if (!editor || isReadonly) return;
     const el = editor.view.dom as HTMLElement;
-    const onKeyDown = (e: KeyboardEvent) => {
-      // DEBUG désactivé en prod
-      // if (e.key === ' ') {
-      //   console.log('🔍 ESPACE DÉTECTÉ:', {
-      //     key: e.key,
-      //     selectionType: editor?.state.selection.constructor.name,
-      //     isEditable: editor?.isEditable,
-      //     activeElement: document.activeElement?.tagName,
-      //     defaultPrevented: e.defaultPrevented,
-      //   });
-      // }
-      
+      const onKeyDown = (e: KeyboardEvent) => {
       // If user types a space right after '/', close menu but do not delete any text
       if (e.key === ' ' && editor) {
         try {
@@ -332,7 +323,7 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
           // CRITICAL: Si c'est une NodeSelection, on skip toute la logique
           // Laisser juste l'espace passer normalement
           if (selection.constructor.name === 'NodeSelection' || selection.constructor.name === 'NodeRangeSelection') {
-            console.log('⚠️ NodeSelection détectée, skip logique slash menu');
+            logger.debug(LogCategory.EDITOR, 'NodeSelection détectée, skip logique slash menu');
             // Ne rien faire, laisser Tiptap gérer l'espace normalement
             return;
           }
@@ -346,7 +337,7 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
             return; // do not open
           }
         } catch (err) {
-          console.error('❌ Erreur dans onKeyDown:', err);
+          logger.error(LogCategory.EDITOR, 'Erreur dans onKeyDown:', err);
           // En cas d'erreur, laisser passer l'événement normalement
         }
       }
@@ -355,7 +346,7 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
         // Le menu s'ouvrira après que le slash soit dans le texte
         setTimeout(() => {
           const coords = editor.view.coordsAtPos(editor.state.selection.from);
-          console.log('Editor: ouverture du menu à:', coords);
+          logger.debug(LogCategory.EDITOR, 'Slash menu ouvert', { coords });
           slashMenuRef.current?.openMenu({ left: coords.left, top: coords.top });
         }, 10);
       } else if (e.key === ' ') {
@@ -373,7 +364,11 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
   const { handleSave } = useEditorSave({
     editor: editor ? {
       getHTML: () => editor.getHTML(),
-      storage: { markdown: { getMarkdown: () => ((editor.storage as any).markdown as any)?.getMarkdown?.() || '' } }
+      storage: { 
+        markdown: { 
+          getMarkdown: () => getEditorMarkdown(editor)
+        } 
+      }
     } : undefined,
     onSave: async ({ title: newTitle, markdown_content, html_content }) => {
       await v2UnifiedApi.updateNote(noteId, {
@@ -395,14 +390,20 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
   React.useEffect(() => {
     if (note?.share_settings) {
       const shareSettings = note.share_settings;
+      const visibility = shareSettings.visibility as ShareSettings['visibility'];
+      const validVisibility: ShareSettings['visibility'] = 
+        ['private', 'link-private', 'link-public', 'limited', 'scrivia'].includes(visibility)
+          ? visibility
+          : 'private';
+      
       editorState.setShareSettings({
-        visibility: (shareSettings.visibility as ShareSettings['visibility']) || 'private',
+        visibility: validVisibility,
         invited_users: shareSettings.invited_users || [],
         allow_edit: shareSettings.allow_edit || false,
         allow_comments: shareSettings.allow_comments || false
       });
     }
-  }, [note?.share_settings, editorState]);
+  }, [note?.share_settings, editorState.setShareSettings]);
 
   // ✅ OPTIMISÉ: Utilisation du hook useShareManager
   const { handleShareSettingsChange } = useShareManager({
@@ -546,12 +547,12 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [handleSave, editorState, content]);
+  }, [handleSave, editorState.document.title, content]);
 
   // Save title on blur
   const handleTitleBlur = React.useCallback(() => {
     handleSave(editorState.document.title || 'Untitled', content);
-  }, [handleSave, editorState, content]);
+  }, [handleSave, editorState.document.title, content]);
 
   // Gérer la transcription audio complétée
   const handleTranscriptionComplete = React.useCallback((text: string) => {
@@ -582,12 +583,8 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
   // ✅ OPTIMISATION: Créer un hash du contenu pour éviter les re-calculs fréquents
   const contentHash = React.useMemo(() => {
     if (!editor) return 0;
-    try {
-      const markdown = (editor.storage as any)?.markdown?.getMarkdown?.() || '';
-      return hashString(markdown);
-    } catch {
-      return hashString(content || '');
-    }
+    const markdown = getEditorMarkdown(editor) || content || '';
+    return hashString(markdown);
   }, [editor, content, editorState.document.forceTOCUpdate]);
 
   // Build headings for TOC - DIRECTEMENT depuis l'éditeur Tiptap (optimisé)
@@ -757,9 +754,6 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
 
   return (
     <>
-      {/* 🔍 Debug: Vérifier les liens */}
-      <LinkDebugger />
-      
       {/* 🔄 Realtime System - Service simple et robuste */}
         <div className="editor-toc-fixed">
           <PublicTableOfContents headings={headings} containerRef={editorContainerRef} />
@@ -799,7 +793,7 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
               )}
             >
               <ModernToolbar 
-                editor={isReadonly ? null : (editor as any)} 
+                editor={isReadonly ? null : editor} 
                 setImageMenuOpen={editorState.setImageMenuOpen} 
                 onFontChange={handleFontChange}
                 currentFont={note?.font_family || 'Noto Sans'}
@@ -887,10 +881,10 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
             {/* Floating menu Notion-like - rendu en dehors du conteneur */}
             {!isReadonly && (
               <FloatingMenuNotion 
-                editor={editor as any} 
+                editor={editor} 
                 onAskAI={(selectedText) => {
                   // TODO: Implémenter l'action Ask AI
-                  console.log('Ask AI with text:', selectedText);
+                  logger.debug(LogCategory.EDITOR, 'Ask AI avec texte sélectionné', { selectedText });
                   toast.success(`Ask AI: "${selectedText}"`);
                 }}
               />
@@ -901,11 +895,11 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
                 <TiptapEditorContent editor={editor} />
                 {/* Drag Handle intégré via l'extension DragHandleExtension */}
                 {/* Table controls */}
-                <TableControls editor={editor as any} containerRef={editorContainerRef as React.RefObject<HTMLElement>} />
+                <TableControls editor={editor} containerRef={editorContainerRef as React.RefObject<HTMLElement>} />
                 {/* Slash commands menu */}
                 <EditorSlashMenu
                   ref={slashMenuRef}
-                  editor={editor as any}
+                  editor={editor}
                   lang={editorState.ui.slashLang}
                   onOpenImageMenu={() => { 
                     editorState.setImageMenuTarget('content'); 
@@ -934,17 +928,15 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
                     }
                     
                       // Execute command action
-                    console.log('Exécution de la commande:', cmd.id, cmd);
+                    logger.debug(LogCategory.EDITOR, 'Exécution slash command', { cmdId: cmd.id });
                     if (typeof cmd.action === 'function') {
                       try {
-                        cmd.action(editor as any);
-                        console.log('Commande exécutée avec succès:', cmd.id);
+                        cmd.action(editor);
+                        logger.debug(LogCategory.EDITOR, 'Slash command réussie', { cmdId: cmd.id });
                       } catch (error) {
-                        console.error('Erreur exécution commande:', error);
                         logger.error(LogCategory.EDITOR, 'Erreur exécution commande:', error);
                       }
                     } else {
-                      console.error('Action non définie pour la commande:', cmd.id);
                       logger.error(LogCategory.EDITOR, 'Action non définie pour la commande:', cmd.id);
                     }
                   }}
@@ -976,7 +968,7 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
       
       {/* Menu contextuel Notion-like */}
       <EditorContextMenuContainer
-        editor={editor as any}
+        editor={editor}
         editorState={editorState}
         onOpenImageMenu={() => {
           editorState.setImageMenuTarget('content');
@@ -986,7 +978,7 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
       
       {/* Gestionnaire de synchronisation store ↔ éditeur */}
       <EditorSyncManager
-        editor={editor as any}
+        editor={editor}
         storeContent={content}
         editorState={editorState}
       />

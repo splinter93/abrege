@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useRef } from 'react';
-import type { FullEditorInstance } from '@/types/editor';
+import type { Editor } from '@tiptap/react';
 import { logger, LogCategory } from '@/utils/logger';
 
 /**
  * Hook pour gérer les interactions entre l'éditeur et ses composants périphériques
  * Centralise la logique de communication et évite les re-renders excessifs
  */
-export function useEditorInteractions(editor: FullEditorInstance | null) {
+export function useEditorInteractions(editor: Editor | null) {
   const interactionRef = useRef({
     lastSelection: null as any,
     lastContent: '',
