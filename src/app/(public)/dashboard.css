@@ -303,8 +303,8 @@
   border-radius: 8px;
   background: transparent;
   border: none;
-  min-width: 120px;
-  max-width: 120px;
+  min-width: 100px;
+  max-width: 100px;
   flex-shrink: 0;
 }
 
