@@ -242,8 +242,7 @@ function AuthenticatedHomeContent({ user }: { user: { id: string; email?: string
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" }}
           >
-            <h1 className="welcome-title">Bonsoir</h1>
-            <p className="welcome-subtitle">{user?.username || user?.email?.split('@')[0] || 'Utilisateur'}</p>
+            <h1 className="welcome-title">Welcome Home, {user?.username || user?.email?.split('@')[0] || 'User'}</h1>
           </motion.div>
 
           {/* 2. SearchBar pleine largeur */}
