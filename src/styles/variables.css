@@ -19,7 +19,7 @@
   --color-primary-dark: #d44a1a;
 
   /* Backgrounds principaux - Compatibilité typography.css */
-  --color-bg-primary: var(--surface-background);
+  /* --color-bg-primary: var(--surface-background); */ /* DÉSACTIVÉ - Écrasait le noir #0f0f12 avec du gris */
   --color-bg-header: var(--surface-primary);
 
   /* Couleurs secondaires */
