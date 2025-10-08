@@ -277,9 +277,7 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
 
   const editor = useEditor({
     editable: !isReadonly,
-    // ✅ FIX: Rendu immédiat côté client pour que les extensions (drag handles) s'initialisent
-    // En mode SSR, l'éditeur n'est pas rendu (composant client only)
-    immediatelyRender: typeof window !== 'undefined',
+    immediatelyRender: false, // Éviter les erreurs de SSR/hydration et d'accès au DOM avant montage
     extensions: createEditorExtensions(PRODUCTION_EXTENSIONS_CONFIG, lowlight), // Configuration stable mais fonctionnelle
     content: content || '',
     onUpdate: handleEditorUpdate,

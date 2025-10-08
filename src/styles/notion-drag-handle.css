@@ -7,7 +7,7 @@
    VARIABLES
    ================================================================= */
 :root {
-  --notion-handle-size: 36px; /* Taille encore augmentée */
+  --notion-handle-size: 44px; /* Taille augmentée pour meilleure visibilité */
   --notion-handle-gap: 8px;
   --notion-handle-bg: rgba(255, 255, 255, 0.95);
   --notion-handle-bg-hover: rgba(255, 255, 255, 1);
@@ -66,13 +66,13 @@
 }
 
 .notion-drag-handle-btn:hover {
-  background: rgba(0, 0, 0, 0.05) !important;
-  transform: scale(1.1) !important;
+  background: rgba(255, 255, 255, 0.1) !important;
+  transform: none !important; /* Pas de scale pour rester cohérent avec le bouton + */
 }
 
 @media (prefers-color-scheme: dark) {
   .notion-drag-handle-btn:hover {
-    background: rgba(255, 255, 255, 0.08) !important;
+    background: rgba(255, 255, 255, 0.1) !important;
   }
 }
 

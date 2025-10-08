@@ -14,9 +14,9 @@
      ======================================== */
   
   /* Backgrounds */
-  --color-bg-primary: #1E1E1E;        /* Fond principal, très sombre */
-  --color-bg-secondary: #252525;      /* Pour la sidebar, légèrement plus clair */
-  --color-bg-tertiary: #303030;       /* Pour les survols et éléments actifs */
+  --color-bg-primary: #0f0f12;        /* Fond principal, très sombre (COHÉRENT avec themes.css) */
+  --color-bg-secondary: #1a1a1f;      /* Pour la sidebar, légèrement plus clair (COHÉRENT avec themes.css) */
+  --color-bg-tertiary: #1f1f25;       /* Pour les survols et éléments actifs (COHÉRENT avec themes.css) */
   --color-bg-elevated: #2C2C2C;       /* Pour les éléments "surélevés" comme les menus */
   --color-bg-content: #202020;         /* Pour les éléments de contenu : code, blockquotes, tableaux, etc. */
   --color-bg-table-alternate: rgba(0, 0, 0, 0.15); /* Pour l'alternance des lignes de tableau */
