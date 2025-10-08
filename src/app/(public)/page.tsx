@@ -9,7 +9,7 @@ import ErrorBoundary from '@/components/ErrorBoundary';
 import AuthGuard from '@/components/AuthGuard';
 import { useSecureErrorHandler } from '@/components/SecureErrorHandler';
 import { simpleLogger as logger } from '@/utils/logger';
-import { MessageSquare, Plus, Upload, Sparkles, Zap, Eye, Youtube, FileText, LayoutDashboard, ChevronLeft, ChevronRight } from 'lucide-react';
+import { MessageSquare, Plus, Upload, Sparkles, Zap, Eye, Youtube, FileText, LayoutDashboard, ChevronLeft, ChevronRight, Clock, UploadCloud } from 'lucide-react';
 import NotesCarouselNotion, { NotesCarouselRef } from '@/components/NotesCarouselNotion';
 import PerformanceMonitor from '@/components/PerformanceMonitor';
 import UnifiedPageTitle from '@/components/UnifiedPageTitle';
@@ -311,7 +311,9 @@ function AuthenticatedHomeContent({ user }: { user: { id: string; email?: string
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.4, ease: "easeOut" }}
           >
-            <h2 className="section-title">Notes Récentes</h2>
+            <div className="section-header">
+              <h2 className="section-title"><Clock size={16} /> Notes Récentes</h2>
+            </div>
             <NotesCarouselNotion 
               ref={notesCarouselRef}
               limit={10}
@@ -322,27 +324,32 @@ function AuthenticatedHomeContent({ user }: { user: { id: string; email?: string
             />
           </motion.section>
 
-          {/* 5. Fichiers Récents */}
-          <motion.section 
-            className="dashboard-section"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.5, ease: "easeOut" }}
-          >
-            <h2 className="section-title">Fichiers Récents</h2>
-            <RecentFilesList limit={10} />
-          </motion.section>
+          {/* 5. Fichiers Récents & Drop Zone */}
+          <div className="dashboard-grid-bottom">
+            <motion.section 
+              className="dashboard-section"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.5, ease: "easeOut" }}
+            >
+              <div className="section-header">
+                <h2 className="section-title"><FileText size={16} /> Fichiers Récents</h2>
+              </div>
+              <RecentFilesList limit={10} />
+            </motion.section>
 
-          {/* 6. Drop Zone */}
-          <motion.section 
-            className="dashboard-section"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.6, ease: "easeOut" }}
-          >
-            <h2 className="section-title">Drop Zone</h2>
-            <UnifiedUploadZone />
-          </motion.section>
+            <motion.section 
+              className="dashboard-section"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.6, ease: "easeOut" }}
+            >
+              <div className="section-header">
+                <h2 className="section-title"><UploadCloud size={16} /> Drop Zone</h2>
+              </div>
+              <UnifiedUploadZone />
+            </motion.section>
+          </div>
 
           {/* Input file caché pour l'import */}
           <input 
