@@ -235,7 +235,7 @@ export const contentApplyV2Schema = z.object({
       dedent: z.boolean().optional()
     }).optional()
   })).min(1, 'Au moins une opération requise').max(50, 'Trop d\'opérations'),
-  dry_run: z.boolean().default(true),
+  dry_run: z.boolean().default(false), // ✅ CORRECTION: false par défaut pour appliquer réellement
   transaction: z.enum(['all_or_nothing', 'best_effort']).default('all_or_nothing'),
   conflict_strategy: z.enum(['fail', 'skip']).default('fail'),
   return: z.enum(['content', 'diff', 'none']).default('diff'),

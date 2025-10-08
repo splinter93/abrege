@@ -24,15 +24,16 @@ import Placeholder from '@tiptap/extension-placeholder';
 import UnifiedCodeBlockExtension from '@/extensions/UnifiedCodeBlockExtension';
 import ContextMenuExtension from '@/extensions/ContextMenuExtension';
 import CalloutExtension from '@/extensions/CalloutExtension';
-// import BoxSelectionExtension from '@/extensions/BoxSelectionExtension'; // Désactivé - cause des problèmes
-// import BlockDragDropExtension from '@/extensions/BlockDragDropExtension'; // Désactivé temporairement
-// import { BlockDragDropHandler } from '@/extensions/BlockDragDropHandler'; // Désactivé temporairement
-// import { SelectionExtension } from '@/extensions/SelectionExtension'; // Désactivé - cause des problèmes
-// import { TrailingNodeExtension } from '@/extensions/TrailingNodeExtension'; // Désactivé - cause des problèmes
-// import { SpaceHandlingExtension } from '@/extensions/SpaceHandlingExtension'; // Supprimé - causait des conflits
+// ⚠️ EXTENSIONS PROBLÉMATIQUES RETIRÉES (non liées aux drag handles):
+// - BoxSelectionExtension: Causait des problèmes de sélection
+// - SelectionExtension: Causait des problèmes de sélection
+// - TrailingNodeExtension: Causait des problèmes d'édition
+// - SpaceHandlingExtension: Causait des conflits (déjà supprimé)
+// - BlockDragDropExtension: Désactivé temporairement
 import SlashMenuExtension from '@/extensions/SlashMenuExtension';
-import { SimpleDragHandleExtension } from '@/extensions/SimpleDragHandleExtension';
-import { NotionDragHandleExtension } from '@/extensions/NotionDragHandleExtension';
+// ⚠️ DRAG HANDLES - NE PAS MODIFIER - Voir docs/DRAG-HANDLES-AUDIT.md
+import { SimpleDragHandleExtension } from '@/extensions/SimpleDragHandleExtension'; // Backup
+import { NotionDragHandleExtension } from '@/extensions/NotionDragHandleExtension'; // ACTIF
 import Color from '@tiptap/extension-color';
 import { TextStyle } from '@tiptap/extension-text-style';
 import Highlight from '@tiptap/extension-highlight';
@@ -153,16 +154,17 @@ export function createEditorExtensions(
   }
 
   // Extensions expérimentales (désactivées par défaut)
+  // ⚠️ Extensions problématiques retirées en Phase 6 du refactoring
+  // Voir docs/DRAG-HANDLES-AUDIT.md pour détails
   if (config.experimental) {
-    extensions.push(
-      // BoxSelectionExtension, // Désactivé - cause des problèmes
-      // SelectionExtension, // Désactivé - cause des problèmes
-      // TrailingNodeExtension, // Désactivé - cause des problèmes
-      // SpaceHandlingExtension supprimé - causait des conflits
-    );
+    // Aucune extension expérimentale pour le moment
+    // Les extensions problématiques ont été retirées
   }
 
-  // Extensions de drag and drop (toujours activées pour l'UX)
+  // ⚠️ DRAG HANDLES - NE PAS MODIFIER SANS AUDIT COMPLET
+  // Voir docs/DRAG-HANDLES-AUDIT.md pour détails complets
+  // Extension active: NotionDragHandleExtension (version finale)
+  // Extensions backup: SimpleDragHandleExtension, DragHandleExtension (conservées)
   extensions.push(
     NotionDragHandleExtension.configure({
       handleClass: 'notion-drag-handle',

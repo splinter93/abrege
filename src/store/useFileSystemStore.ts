@@ -22,6 +22,8 @@ export interface Note {
   header_image_overlay?: number;
   header_title_in_image?: boolean;
   wide_mode?: boolean;
+  a4_mode?: boolean;
+  slash_lang?: 'fr' | 'en';
   font_family?: string;
   share_settings?: {
     visibility?: string;

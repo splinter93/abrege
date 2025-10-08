@@ -1,22 +1,7 @@
 import React from 'react';
-// Ordre critique : variables de base en premier
-import '@/styles/design-system.css';
-import '@/styles/themes.css';
-import '@/styles/typography.css';
-import '@/styles/variables.css';
-import '@/styles/glassmorphism-variables.css';
-import '@/styles/markdown.css';
-import '@/styles/UnifiedToolbar.css';
-import '@/styles/context-menu.css';
-import '@/styles/callouts.css';
-import '@/styles/color-buttons.css';
-import '@/styles/tiptap-extensions.css';
-import '@/styles/block-drag-drop.css';
-import '@/styles/drag-handle.css'; // Styles pour les drag handles
-import '@/styles/notion-drag-handle.css'; // Styles Notion drag handle
-import '@/styles/tiptap-drag-handle-official.css'; // Styles pour le drag handle officiel Tiptap
-import '@/styles/mermaid.css'; // Styles Mermaid centralisés
-import '@/styles/unified-blocks.css'; // Système unifié pour tous les blocs
+// ✅ OPTIMISÉ: Bundle CSS consolidé (17 imports → 1)
+// Ordre critique conservé dans editor-bundle.css
+import '@/styles/editor-bundle.css';
 import EditorLayout from './EditorLayout';
 import EditorHeader from './EditorHeader';
 import EditorContent from './EditorContent';
@@ -53,6 +38,20 @@ import type { FullEditorInstance } from '@/types/editor';
 import { useRealtime } from '@/hooks/useRealtime';
 import RealtimeStatus from '@/components/RealtimeStatus';
 import { preprocessMarkdown } from '@/utils/markdownPreprocessor';
+import { debounce, cleanEscapedMarkdown, hashString } from '@/utils/editorHelpers';
+import { 
+  DEBOUNCE_DELAYS, 
+  TIMEOUTS, 
+  DEFAULT_HEADER_IMAGE_CONFIG,
+  CONTEXT_MENU_CONFIG,
+  ERROR_MESSAGES,
+  SUCCESS_MESSAGES 
+} from '@/utils/editorConstants';
+import { useNoteUpdate, useHeaderImageUpdate } from '@/hooks/editor/useNoteUpdate';
+import { useEditorState } from '@/hooks/editor/useEditorState';
+import EditorSyncManager from './EditorCore/EditorSyncManager';
+import EditorContextMenuContainer from './EditorMenus/EditorContextMenuContainer';
+import { useShareManager } from './EditorMenus/EditorShareManager';
 // Types pour les mises à jour de note
 interface NoteUpdate {
   a4_mode?: boolean;
@@ -63,47 +62,6 @@ interface NoteUpdate {
   [key: string]: unknown;
 }
 import { createEditorExtensions, PRODUCTION_EXTENSIONS_CONFIG } from '@/config/editor-extensions';
-
-/**
- * Fonction utilitaire debounce optimisée pour les performances
- * 
- * @description Retarde l'exécution d'une fonction jusqu'à ce qu'un délai se soit écoulé
- * depuis la dernière fois qu'elle a été appelée. Utile pour optimiser les performances
- * en évitant les appels trop fréquents (ex: sauvegarde automatique).
- * 
- * @param func - Fonction à débouncer
- * @param wait - Délai d'attente en millisecondes
- * @param immediate - Si true, exécute immédiatement au premier appel
- * @returns Fonction débouncée
- * 
- * @example
- * ```typescript
- * const debouncedSave = debounce((content: string) => {
- *   saveNote(content);
- * }, 500);
- * ```
- */
-const debounce = <T extends (...args: unknown[]) => void>(
-  func: T, 
-  wait: number,
-  immediate = false
-): T => {
-  let timeout: NodeJS.Timeout | null = null;
-  
-  return ((...args: Parameters<T>) => {
-    const later = () => {
-      timeout = null;
-      if (!immediate) func(...args);
-    };
-    
-    const callNow = immediate && !timeout;
-    
-    if (timeout) clearTimeout(timeout);
-    timeout = setTimeout(later, wait);
-    
-    if (callNow) func(...args);
-  }) as T;
-};
 import ContextMenu from './ContextMenu';
 import { useUIContext } from '@/hooks/useUIContext';
 
@@ -151,42 +109,40 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
   const content = React.useMemo(() => preprocessMarkdown(rawContent), [rawContent]);
   const { html } = useMarkdownRender({ content });
 
-  // État de chargement : Forcer la régénération de la TOC
-  const [noteLoaded, setNoteLoaded] = React.useState(false);
-  const [forceTOCUpdate, setForceTOCUpdate] = React.useState(0);
+  // ✅ OPTIMISÉ: État centralisé avec useEditorState
+  const editorState = useEditorState({
+    initialTitle: note?.source_title || '',
+    initialHeaderImage: note?.header_image || null,
+    initialHeaderOffset: note?.header_image_offset,
+    initialHeaderBlur: note?.header_image_blur,
+    initialHeaderOverlay: note?.header_image_overlay,
+    initialTitleInImage: note?.header_title_in_image,
+    initialA4Mode: note?.a4_mode || false,
+    initialFullWidth: note?.wide_mode || false,
+    initialSlashLang: (note?.slash_lang as 'fr' | 'en') || 'en',
+    initialShareSettings: note?.share_settings ? {
+      visibility: (note.share_settings.visibility as any) || 'private',
+      invited_users: note.share_settings.invited_users || [],
+      allow_edit: note.share_settings.allow_edit || false,
+      allow_comments: note.share_settings.allow_comments || false,
+    } : getDefaultShareSettings(),
+  });
 
   // Forcer la mise à jour de la TOC quand la note arrive
   React.useEffect(() => {
-    if (note && content && !noteLoaded) {
-      setNoteLoaded(true);
-      setForceTOCUpdate(prev => prev + 1);
+    if (note && content && !editorState.document.noteLoaded) {
+      editorState.setNoteLoaded(true);
+      editorState.updateTOC();
     }
-  }, [note, content, noteId, noteLoaded]);
+  }, [note, content, noteId, editorState]);
 
-  const [title, setTitle] = React.useState<string>(note?.source_title || '');
-  React.useEffect(() => { setTitle(note?.source_title || ''); }, [note?.source_title]);
+  // Synchroniser le titre avec la note
+  React.useEffect(() => { 
+    editorState.setTitle(note?.source_title || ''); 
+  }, [note?.source_title, editorState]);
 
-  const [headerImageUrl, setHeaderImageUrl] = React.useState<string | null>(note?.header_image || null);
-  const [headerOffset, setHeaderOffset] = React.useState<number>(50);
-  const [headerBlur, setHeaderBlur] = React.useState<number>(0);
-  const [headerOverlay, setHeaderOverlay] = React.useState<number>(0);
-  const [titleInImage, setTitleInImage] = React.useState<boolean>(false);
-  const [imageMenuOpen, setImageMenuOpen] = React.useState(false);
-  const [imageMenuTarget, setImageMenuTarget] = React.useState<'header' | 'content'>('header');
-
-  // header actions state
-  const [previewMode, setPreviewMode] = React.useState(false);
-
-  // Kebab state
-  const [kebabOpen, setKebabOpen] = React.useState(false);
+  // Ref pour le bouton kebab (besoin de calcul de position)
   const kebabBtnRef = React.useRef<HTMLButtonElement | null>(null);
-  const [kebabPos, setKebabPos] = React.useState<{ top: number; left: number }>({ top: 0, left: 0 });
-  const [a4Mode, setA4Mode] = React.useState(false);
-  const [fullWidth, setFullWidth] = React.useState(false);
-  const [slashLang, setSlashLang] = React.useState<'fr' | 'en'>('en');
-  
-  // Share settings state
-  const [shareSettings, setShareSettings] = React.useState<ShareSettings>(getDefaultShareSettings());
 
   // 🔄 Realtime Integration - Service simple et robuste
   const realtime = useRealtime({
@@ -203,22 +159,8 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
     }
   });
 
-  // Context menu state
-  const [contextMenu, setContextMenu] = React.useState<{
-    isOpen: boolean;
-    position: { x: number; y: number };
-    nodeType: string;
-    hasSelection: boolean;
-    nodePosition: number;
-  }>({
-    isOpen: false,
-    position: { x: 0, y: 0 },
-    nodeType: 'paragraph',
-    hasSelection: false,
-    nodePosition: 0
-  });
-
-  const isReadonly = readonly || previewMode;
+  // Context menu géré par editorState
+  const isReadonly = readonly || editorState.ui.previewMode;
 
   const handleHeaderChange = React.useCallback(async (url: string | null) => {
     const normalize = (u: string | null): string | null => {
@@ -239,51 +181,51 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
       }
     };
     const normalized = normalize(url);
-    setHeaderImageUrl(normalized);
+    editorState.setHeaderImageUrl(normalized);
     try {
       updateNote(noteId, { header_image: normalized || undefined });
       await v2UnifiedApi.updateNote(noteId, { header_image: normalized }, userId);
     } catch (error) {
       logger.error(LogCategory.EDITOR, 'Error updating header image');
     }
-  }, [noteId, updateNote, userId]);
+  }, [noteId, updateNote, userId, editorState]);
 
   React.useEffect(() => {
-    if (kebabOpen && kebabBtnRef.current) {
+    if (editorState.menus.kebabOpen && kebabBtnRef.current) {
       const rect = kebabBtnRef.current.getBoundingClientRect();
-      setKebabPos({ 
-        top: rect.bottom + 3, 
-        left: rect.left - 150 // Décaler vers la gauche pour centrer le menu sur le bouton
+      editorState.setKebabPos({ 
+        top: rect.bottom + CONTEXT_MENU_CONFIG.kebabMenuOffsetTop, 
+        left: rect.left - CONTEXT_MENU_CONFIG.kebabMenuOffsetLeft
       });
     }
-  }, [kebabOpen]);
+  }, [editorState]);
 
   // Ref to the element that contains .ProseMirror so TOC can scroll into view
   const editorContainerRef = React.useRef<HTMLDivElement>(null);
 
   React.useEffect(() => {
-    if (note?.header_image) setHeaderImageUrl(note.header_image);
-  }, [note?.header_image]);
+    if (note?.header_image) editorState.setHeaderImageUrl(note.header_image);
+  }, [note?.header_image, editorState]);
 
   // Hydrate appearance fields from note
   React.useEffect(() => {
-    if (typeof note?.header_image_offset === 'number') setHeaderOffset(note.header_image_offset);
-  }, [note?.header_image_offset]);
+    if (typeof note?.header_image_offset === 'number') editorState.setHeaderImageOffset(note.header_image_offset);
+  }, [note?.header_image_offset, editorState]);
   React.useEffect(() => {
-    if (typeof note?.header_image_blur === 'number') setHeaderBlur(note.header_image_blur);
-  }, [note?.header_image_blur]);
+    if (typeof note?.header_image_blur === 'number') editorState.setHeaderImageBlur(note.header_image_blur);
+  }, [note?.header_image_blur, editorState]);
   React.useEffect(() => {
-    if (typeof note?.header_image_overlay === 'number') setHeaderOverlay(note.header_image_overlay);
-  }, [note?.header_image_overlay]);
+    if (typeof note?.header_image_overlay === 'number') editorState.setHeaderImageOverlay(note.header_image_overlay);
+  }, [note?.header_image_overlay, editorState]);
   React.useEffect(() => {
-    if (typeof note?.header_title_in_image === 'boolean') setTitleInImage(note.header_title_in_image);
-  }, [note?.header_title_in_image]);
+    if (typeof note?.header_title_in_image === 'boolean') editorState.setHeaderTitleInImage(note.header_title_in_image);
+  }, [note?.header_title_in_image, editorState]);
   // Initialisation du wide mode depuis la note (seulement au chargement initial)
   React.useEffect(() => {
-    if (typeof note?.wide_mode === 'boolean' && !fullWidth) {
-      setFullWidth(note.wide_mode);
+    if (typeof note?.wide_mode === 'boolean' && !editorState.ui.fullWidth) {
+      editorState.setFullWidth(note.wide_mode);
     }
-  }, [note?.wide_mode, fullWidth]);
+  }, [note?.wide_mode, editorState]);
   
 
 
@@ -297,23 +239,17 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
       if (isReadonly) return;
       
       const { coords, nodeType, hasSelection, position } = event.detail;
-      setContextMenu({
-        isOpen: true,
-        position: coords,
-        nodeType,
-        hasSelection,
-        nodePosition: position
-      });
+      editorState.openContextMenu(coords, nodeType, hasSelection, position);
     };
 
     document.addEventListener('tiptap-context-menu', handleContextMenu as EventListener);
     return () => document.removeEventListener('tiptap-context-menu', handleContextMenu as EventListener);
-  }, [isReadonly]);
+  }, [isReadonly, editorState]);
 
 
   // Real Tiptap editor instance (Markdown as source of truth)
   // Mise à jour intelligente du contenu de l'éditeur quand la note change
-  const [isUpdatingFromStore, setIsUpdatingFromStore] = React.useState(false);
+  // (géré par editorState.internal.isUpdatingFromStore)
 
   /**
    * Gestionnaire de mise à jour de l'éditeur
@@ -323,11 +259,11 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
    * 
    * @param editor - Instance de l'éditeur Tiptap
    */
-  const handleEditorUpdate = React.useCallback(({ editor }: { editor: FullEditorInstance }) => {
-    if (!editor || isUpdatingFromStore) return;
+  const handleEditorUpdate = React.useCallback(({ editor }: { editor: any }) => {
+    if (!editor || editorState.internal.isUpdatingFromStore) return;
     
     try {
-      const md = editor.storage?.markdown?.getMarkdown?.() as string | undefined;
+      const md = (editor.storage as any)?.markdown?.getMarkdown?.() as string | undefined;
       const nextMarkdown = typeof md === 'string' ? md : content;
       if (nextMarkdown !== content) {
         // 🔧 CORRECTION : Nettoyer le Markdown échappé avant sauvegarde
@@ -337,7 +273,7 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
     } catch (error) {
       logger.error(LogCategory.EDITOR, 'Erreur lors de la mise à jour du contenu:', error);
     }
-  }, [content, noteId, updateNote, isUpdatingFromStore]);
+  }, [content, noteId, updateNote, editorState]);
 
   const editor = useEditor({
     editable: !isReadonly,
@@ -347,168 +283,29 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
     onUpdate: handleEditorUpdate,
   });
 
-  // 🔄 Écouter les changements Realtime du store et mettre à jour l'éditeur
-  React.useEffect(() => {
-    if (!editor || !note || isUpdatingFromStore) return;
+  // 🔄 Synchronisation gérée par EditorSyncManager (composant séparé)
 
-    const storeContent = note.markdown_content || '';
-    const editorContent = editor.storage.markdown?.getMarkdown?.() || '';
+  // Gestion du menu contextuel déléguée au composant EditorContextMenuContainer
 
-
-    // Seulement mettre à jour si le contenu a vraiment changé
-    if (storeContent !== editorContent) {
-      
-      setIsUpdatingFromStore(true);
-      
-      // Mettre à jour l'éditeur avec le nouveau contenu
-      editor.commands.setContent(storeContent);
-      
-      // Réinitialiser le flag après un court délai
-      setTimeout(() => {
-        setIsUpdatingFromStore(false);
-      }, 100);
-    }
-  }, [note?.markdown_content, editor, noteId, isUpdatingFromStore]);
-
-  // Gestion des actions du menu contextuel
-  const handleContextMenuAction = React.useCallback((action: string) => {
-    if (!editor) return;
-
-    try {
-      switch (action) {
-        case 'duplicate':
-          // Dupliquer le bloc actuel
-          const { state } = editor.view;
-          const { from, to } = state.selection;
-          const selectedContent = state.doc.slice(from, to);
-          editor.chain().focus().insertContent(selectedContent.content).run();
-          break;
-
-        case 'delete':
-          // Supprimer le contenu sélectionné ou le bloc
-          if (contextMenu.hasSelection) {
-            editor.chain().focus().deleteSelection().run();
-          } else {
-            // Supprimer le bloc entier
-            const pos = contextMenu.nodePosition;
-            const $pos = editor.state.doc.resolve(pos);
-            const start = $pos.before();
-            const end = $pos.after();
-            editor.chain().focus().deleteRange({ from: start, to: end }).run();
-          }
-          break;
-
-        case 'turn-into-h1':
-          editor.chain().focus().toggleHeading({ level: 1 }).run();
-          break;
-        case 'turn-into-h2':
-          editor.chain().focus().toggleHeading({ level: 2 }).run();
-          break;
-        case 'turn-into-h3':
-          editor.chain().focus().toggleHeading({ level: 3 }).run();
-          break;
-        case 'turn-into-bullet-list':
-          editor.chain().focus().toggleBulletList().run();
-          break;
-        case 'turn-into-ordered-list':
-          editor.chain().focus().toggleOrderedList().run();
-          break;
-        case 'turn-into-blockquote':
-          editor.chain().focus().toggleBlockquote().run();
-          break;
-        case 'turn-into-code-block':
-          editor.chain().focus().toggleCodeBlock().run();
-          break;
-        case 'turn-into-image':
-          setImageMenuOpen(true);
-          break;
-        case 'turn-into-table':
-          editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run();
-          break;
-        case 'turn-into-divider':
-          editor.chain().focus().setHorizontalRule().run();
-          break;
-      }
-    } catch (error) {
-      logger.error(LogCategory.EDITOR, 'Erreur action menu contextuel:', error);
-    }
-
-    setContextMenu(prev => ({ ...prev, isOpen: false }));
-  }, [editor, contextMenu.hasSelection, contextMenu.nodePosition, setImageMenuOpen]);
-
-  // 🔧 FONCTION UTILITAIRE : Nettoyer le Markdown échappé
-  const cleanEscapedMarkdown = (markdown: string): string => {
-    return markdown
-      .replace(/\\\*/g, '*')           // Supprimer l'échappement des *
-      .replace(/\\_/g, '_')            // Supprimer l'échappement des _
-      .replace(/\\`/g, '`')            // Supprimer l'échappement des `
-      .replace(/\\\[/g, '[')           // Supprimer l'échappement des [
-      .replace(/\\\]/g, ']')           // Supprimer l'échappement des [
-      .replace(/\\\(/g, '(')           // Supprimer l'échappement des (
-      .replace(/\\\)/g, ')')           // Supprimer l'échappement des )
-      .replace(/\\>/g, '>')            // Supprimer l'échappement des >
-      .replace(/\\-/g, '-')            // Supprimer l'échappement des -
-      .replace(/\\\|/g, '|')           // Supprimer l'échappement des |
-      .replace(/\\~/g, '~')            // Supprimer l'échappement des ~
-      .replace(/≈/g, '~')              // Reconvertir ≈ en ~ (fix preprocessing)
-      .replace(/\\=/g, '=')            // Supprimer l'échappement des =
-      .replace(/\\#/g, '#')            // Supprimer l'échappement des #
-      .replace(/&gt;/g, '>')           // Supprimer l'échappement HTML des >
-      .replace(/&lt;/g, '<')           // Supprimer l'échappement HTML des <
-      .replace(/&amp;/g, '&');         // Supprimer l'échappement HTML des &
-  };
+  // Note: cleanEscapedMarkdown maintenant importé depuis @/utils/editorHelpers
 
   // Mettre à jour la TOC quand l'éditeur change - optimisé avec debounce
-  const updateTOC = React.useCallback(() => {
-    setForceTOCUpdate(prev => prev + 1);
-  }, []);
-
   React.useEffect(() => {
     if (!editor) return;
     
     // Écouter les changements de l'éditeur avec debounce
-    const debouncedUpdateTOC = debounce(updateTOC, 100);
+    const debouncedUpdateTOC = debounce(editorState.updateTOC, DEBOUNCE_DELAYS.TOC_UPDATE);
     
+    // ✅ OPTIMISATION: Retrait de 'selectionUpdate' - pas besoin de recalculer la TOC
+    // quand l'utilisateur déplace simplement le curseur
     editor.on('update', debouncedUpdateTOC);
-    editor.on('selectionUpdate', debouncedUpdateTOC);
     
     return () => {
       editor.off('update', debouncedUpdateTOC);
-      editor.off('selectionUpdate', debouncedUpdateTOC);
     };
-  }, [editor, updateTOC]);
+  }, [editor, editorState]);
   
-  React.useEffect(() => {
-    if (editor && content && !isUpdatingFromStore) {
-      const editorContent = editor.storage?.markdown?.getMarkdown?.() || '';
-      
-      // Ne mettre à jour que si le contenu est vraiment différent (éviter les boucles)
-      if (content !== editorContent) {
-        try {
-          setIsUpdatingFromStore(true);
-          
-          // Sauvegarder la position actuelle du curseur
-          const currentPos = editor.state.selection.from;
-          
-          // Mettre à jour le contenu de l'éditeur avec le contenu de la note
-          editor.commands.setContent(content);
-          
-          // Restaurer la position du curseur si elle est toujours valide
-          if (currentPos <= editor.state.doc.content.size) {
-            editor.commands.setTextSelection(currentPos);
-          }
-          
-          if (process.env.NODE_ENV === 'development') {
-            logger.debug(LogCategory.EDITOR, 'Contenu mis à jour depuis la note: ' + content.substring(0, 100) + '...');
-          }
-        } catch (error) {
-          logger.error(LogCategory.EDITOR, 'Erreur mise à jour contenu: ' + error);
-        } finally {
-          setIsUpdatingFromStore(false);
-        }
-      }
-    }
-  }, [editor, content, isUpdatingFromStore]);
+  // Synchronisation gérée par EditorSyncManager (composant séparé)
 
   // Open slash menu on '/'
   React.useEffect(() => {
@@ -576,11 +373,11 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
   const { handleSave } = useEditorSave({
     editor: editor ? {
       getHTML: () => editor.getHTML(),
-      storage: { markdown: { getMarkdown: () => editor.storage.markdown?.getMarkdown?.() || '' } }
+      storage: { markdown: { getMarkdown: () => ((editor.storage as any).markdown as any)?.getMarkdown?.() || '' } }
     } : undefined,
     onSave: async ({ title: newTitle, markdown_content, html_content }) => {
       await v2UnifiedApi.updateNote(noteId, {
-        source_title: newTitle ?? title ?? 'Untitled',
+        source_title: newTitle ?? editorState.document.title ?? 'Untitled',
         markdown_content,
         html_content,
       }, userId);
@@ -592,296 +389,169 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
 
   // Gestionnaire de mode large avec changement CSS automatique
   // Utiliser l'état local fullWidth au lieu de note?.wide_mode pour éviter les conflits
-  const { changeWideMode } = useWideModeManager(fullWidth);
+  const { changeWideMode } = useWideModeManager(editorState.ui.fullWidth);
 
   // Initialize share settings from note data
   React.useEffect(() => {
     if (note?.share_settings) {
       const shareSettings = note.share_settings;
-      setShareSettings(prev => ({
-        ...prev,
-        visibility: (shareSettings.visibility as ShareSettings['visibility']) || prev.visibility,
-        invited_users: shareSettings.invited_users || prev.invited_users,
-        allow_edit: shareSettings.allow_edit || prev.allow_edit,
-        allow_comments: shareSettings.allow_comments || prev.allow_comments
-      }));
+      editorState.setShareSettings({
+        visibility: (shareSettings.visibility as ShareSettings['visibility']) || 'private',
+        invited_users: shareSettings.invited_users || [],
+        allow_edit: shareSettings.allow_edit || false,
+        allow_comments: shareSettings.allow_comments || false
+      });
     }
-  }, [note?.share_settings]);
+  }, [note?.share_settings, editorState]);
 
-  // Handle share settings changes
-  const handleShareSettingsChange = React.useCallback(async (newSettings: ShareSettingsUpdate) => {
-    try {
-      logger.info(LogCategory.EDITOR, 'Début de handleShareSettingsChange');
-      if (process.env.NODE_ENV === 'development') {
-        logger.debug(LogCategory.EDITOR, 'handleShareSettingsChange - newSettings', newSettings);
-      }
-      
-      // Update local state with proper type casting
-      const updatedSettings: ShareSettings = {
-        visibility: newSettings.visibility || 'private',
-        invited_users: newSettings.invited_users || [],
-        allow_edit: newSettings.allow_edit || false,
-        allow_comments: newSettings.allow_comments || false
-      };
-      setShareSettings(updatedSettings);
-      logger.info(LogCategory.EDITOR, 'État local mis à jour');
-      
-      // Update note in store
-      updateNote(noteId, { 
-        share_settings: updatedSettings
-      });
-      logger.info(LogCategory.EDITOR, 'Store mis à jour');
-      
-      // Call API to update share settings
-      logger.info(LogCategory.EDITOR, 'Début appel API...');
-      const { data: { session } } = await supabase.auth.getSession();
-      logger.info(LogCategory.EDITOR, 'Session récupérée:', session ? 'PRÉSENTE' : 'ABSENTE');
-      
-      const token = session?.access_token;
-      logger.info(LogCategory.EDITOR, 'Token extrait:', token ? 'PRÉSENT' : 'ABSENT');
-      
-      if (!token) {
-        logger.error(LogCategory.EDITOR, 'Pas de token, erreur authentification');
-        throw new Error('Authentification requise');
-      }
-      
-      const apiUrl = `/api/v2/note/${encodeURIComponent(noteId)}/share`;
-      logger.info(LogCategory.EDITOR, 'URL API:', apiUrl);
-      logger.info(LogCategory.EDITOR, 'Méthode: PATCH');
-      if (process.env.NODE_ENV === 'development') {
-        logger.debug(LogCategory.EDITOR, 'Headers:', { 
-          'Content-Type': 'application/json', 
-          'Authorization': `Bearer ${token.substring(0, 20)}...` 
-        });
-      }
-      if (process.env.NODE_ENV === 'development') {
-        logger.debug(LogCategory.EDITOR, 'Body:', JSON.stringify(newSettings));
-      }
-      
+  // ✅ OPTIMISÉ: Utilisation du hook useShareManager
+  const { handleShareSettingsChange } = useShareManager({
+    noteId,
+    editorState,
+    onUpdate: updateNote,
+  });
 
-      
-      const res = await fetch(apiUrl, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify(newSettings)
-      });
-      
-      // Ajouter plus de logs pour le debugging
-      if (process.env.NODE_ENV === 'development') {
-        logger.debug(LogCategory.EDITOR, 'Réponse fetch reçue', {
-          status: res.status,
-          statusText: res.statusText,
-          ok: res.ok,
-          url: apiUrl,
-          method: 'PATCH'
-        });
-      }
-      
-      logger.info(LogCategory.EDITOR, 'Réponse reçue:', {
-        status: res.status,
-        statusText: res.statusText,
-        ok: res.ok,
-        headers: Object.fromEntries(res.headers.entries())
-      });
-      
-      if (!res.ok) {
-        // Ne pas appeler res.json() ici pour éviter le double appel
-        const errorText = await res.text();
-        let errorData;
-        try {
-          errorData = JSON.parse(errorText);
-        } catch {
-          errorData = { error: errorText || 'Erreur mise à jour partage' };
-        }
-        
-        // Améliorer la gestion des erreurs pour éviter les objets vides
-        const errorMessage = errorData?.error || errorData?.message || errorText || 'Erreur mise à jour partage';
-        
-        // Créer des détails d'erreur significatifs
-        interface ErrorDetails {
-          status: number;
-          statusText: string;
-          message?: string;
-        }
-        let errorDetails: ErrorDetails = { status: res.status, statusText: res.statusText };
-        if (errorData && Object.keys(errorData).length > 0) {
-          errorDetails = { ...errorDetails, ...errorData };
-        }
-        
-        logger.error(LogCategory.EDITOR, `Erreur API (${res.status}): ${errorMessage}`, errorDetails);
-        throw new Error(errorMessage);
-      }
-      
-      // Vérifier que la réponse a du contenu avant de parser
-      const responseText = await res.text();
-      let responseData;
-      
-      if (responseText.trim()) {
-        try {
-          responseData = JSON.parse(responseText);
-          logger.info(LogCategory.EDITOR, 'Données de réponse:', responseData);
-        } catch (parseError) {
-          logger.error(LogCategory.EDITOR, 'Réponse non-JSON reçue:', responseText);
-          responseData = { message: responseText };
-        }
-      } else {
-        logger.info(LogCategory.EDITOR, 'Réponse vide reçue');
-        responseData = { message: 'Succès' };
-      }
-      
-      toast.success('Paramètres de partage mis à jour !');
-      logger.info(LogCategory.EDITOR, 'Fin de handleShareSettingsChange avec succès');
-      
-    } catch (error) {
-      // Améliorer la gestion des erreurs pour éviter les objets vides
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      const errorStack = error instanceof Error ? error.stack : 'Pas de stack trace';
-      
-      // Créer un objet d'erreur structuré pour le logger
-      const errorDetails = {
-        error: errorMessage,
-        stack: errorStack,
+  // ✅ OPTIMISÉ: Utilisation du hook useNoteUpdate
+  const updateFontInDb = useNoteUpdate({
         noteId,
         userId,
-        errorType: typeof error,
-        errorString: String(error)
-      };
-      
-      logger.error(LogCategory.EDITOR, `ERREUR dans handleShareSettingsChange: ${errorMessage}`, errorDetails);
-      logger.info(LogCategory.EDITOR, 'Fin de handleShareSettingsChange avec erreur');
-      
-      toast.error(errorMessage);
-      logger.error(LogCategory.EDITOR, 'Erreur partage:', error);
-    }
-  }, [noteId, updateNote]);
+    field: 'font_family',
+    currentValue: note?.font_family || 'Noto Sans',
+    errorMessage: ERROR_MESSAGES.SAVE_FONT,
+  });
 
   // Persist font changes via toolbar callback
   const handleFontChange = React.useCallback(async (fontName: string, scope?: 'all' | 'headings' | 'body') => {
-    // Sauvegarder l'ancienne valeur pour rollback en cas d'échec
-    const oldFontName = note?.font_family || 'Noto Sans';
-    
-    try {
-      // 1. Appeler l'API en premier
-      await v2UnifiedApi.updateNote(noteId, { font_family: fontName }, userId);
-      
-      // 2. Si l'API réussit, changer la police en temps réel et mettre à jour l'état
+    // Changer la police en CSS immédiatement (optimistic)
       changeFont(fontName, scope || 'all');
-      useFileSystemStore.getState().updateNote(noteId, { font_family: fontName });
-      
-      if (process.env.NODE_ENV === 'development') {
-        logger.debug(LogCategory.EDITOR, `Police changée et persistée: ${fontName}`);
-      }
-    } catch (error) {
-      // 3. En cas d'échec, restaurer l'ancienne valeur
-      logger.error(LogCategory.EDITOR, 'Erreur lors du changement de police', error);
-      
-      // Rollback : restaurer l'ancienne police
-      changeFont(oldFontName, scope || 'all');
-      
-      // Optionnel : afficher un message d'erreur à l'utilisateur
-      toast.error('Erreur lors de la sauvegarde de la police');
-    }
-  }, [noteId, changeFont, userId, note?.font_family]);
+    
+    // Mettre à jour dans la DB
+    await updateFontInDb(fontName);
+  }, [changeFont, updateFontInDb]);
+
+  // ✅ OPTIMISÉ: Utilisation du hook useNoteUpdate
+  const updateWideMode = useNoteUpdate({
+    noteId,
+    userId,
+    field: 'wide_mode',
+    currentValue: editorState.ui.fullWidth,
+    onSuccess: (value) => {
+      editorState.setFullWidth(value);
+      changeWideMode(value);
+    },
+    onError: (error, oldValue) => {
+      editorState.setFullWidth(oldValue);
+      changeWideMode(oldValue);
+    },
+    errorMessage: ERROR_MESSAGES.SAVE_WIDE_MODE,
+  });
 
   // Persist fullWidth changes
   const handleFullWidthChange = React.useCallback(async (value: boolean) => {
-    // Sauvegarder l'ancienne valeur pour rollback en cas d'échec
-    const oldValue = fullWidth;
-    
-    try {
-      // 1. Appeler l'API en premier
-      await v2UnifiedApi.updateNote(noteId, { wide_mode: value }, userId);
-      
-      // 2. Si l'API réussit, mettre à jour l'état local et le CSS
-      updateNote(noteId, { wide_mode: value });
-      setFullWidth(value);
-      changeWideMode(value);
-      
-      if (process.env.NODE_ENV === 'development') {
-        logger.debug(LogCategory.EDITOR, `Mode large changé et persisté: ${value ? 'ON' : 'OFF'}`);
-      }
-    } catch (error) {
-      // 3. En cas d'échec, restaurer l'ancienne valeur
-      logger.error(LogCategory.EDITOR, 'Erreur lors du changement de mode large', error);
-      
-      // Rollback : restaurer l'état local et le CSS
-      setFullWidth(oldValue);
-      changeWideMode(oldValue);
-      
-      // Optionnel : afficher un message d'erreur à l'utilisateur
-      toast.error('Erreur lors de la sauvegarde du mode large');
-    }
-  }, [noteId, updateNote, changeWideMode, userId, fullWidth]);
+    await updateWideMode(value);
+  }, [updateWideMode]);
+
+  // ✅ OPTIMISÉ: Utilisation du hook useNoteUpdate
+  const updateA4Mode = useNoteUpdate({
+    noteId,
+    userId,
+    field: 'a4_mode',
+    currentValue: editorState.ui.a4Mode,
+    onSuccess: editorState.setA4Mode,
+    onError: (error, oldValue) => editorState.setA4Mode(oldValue),
+    errorMessage: ERROR_MESSAGES.SAVE_A4_MODE,
+  });
 
   // Persist a4Mode changes
   const handleA4ModeChange = React.useCallback(async (value: boolean) => {
-    // Sauvegarder l'ancienne valeur pour rollback en cas d'échec
-    const oldValue = a4Mode;
-    
-    try {
-      // 1. Appeler l'API en premier
-      await v2UnifiedApi.updateNote(noteId, { a4_mode: value }, userId);
-      
-      // 2. Si l'API réussit, mettre à jour l'état local
-      setA4Mode(value);
-      updateNote(noteId, { a4_mode: value } as NoteUpdate);
-      
-      if (process.env.NODE_ENV === 'development') {
-        logger.debug(LogCategory.EDITOR, `Mode A4 changé et persisté: ${value ? 'ON' : 'OFF'}`);
-      }
-    } catch (error) {
-      // 3. En cas d'échec, restaurer l'ancienne valeur
-      logger.error(LogCategory.EDITOR, 'Erreur lors du changement de mode A4', error);
-      
-      // Rollback : restaurer l'état local
-      setA4Mode(oldValue);
-      
-      // Optionnel : afficher un message d'erreur à l'utilisateur
-      toast.error('Erreur lors de la sauvegarde du mode A4');
-    }
-  }, [noteId, updateNote, userId, a4Mode]);
+    await updateA4Mode(value);
+  }, [updateA4Mode]);
+
+  // ✅ OPTIMISÉ: Utilisation du hook useNoteUpdate
+  const updateSlashLang = useNoteUpdate({
+    noteId,
+    userId,
+    field: 'slash_lang',
+    currentValue: editorState.ui.slashLang,
+    onSuccess: editorState.setSlashLang,
+    onError: (error, oldValue) => editorState.setSlashLang(oldValue),
+    errorMessage: ERROR_MESSAGES.SAVE_SLASH_LANG,
+  });
 
   // Persist slashLang changes
   const handleSlashLangChange = React.useCallback(async (value: 'fr' | 'en') => {
-    // Sauvegarder l'ancienne valeur pour rollback en cas d'échec
-    const oldValue = slashLang;
-    
-    try {
-      // 1. Appeler l'API en premier
-      await v2UnifiedApi.updateNote(noteId, { slash_lang: value }, userId);
-      
-      // 2. Si l'API réussit, mettre à jour l'état local
-      setSlashLang(value);
-      updateNote(noteId, { slash_lang: value } as NoteUpdate);
-      
-      if (process.env.NODE_ENV === 'development') {
-        logger.debug(LogCategory.EDITOR, `Langue slash changée et persistée: ${value}`);
-      }
-    } catch (error) {
-      // 3. En cas d'échec, restaurer l'ancienne valeur
-      logger.error(LogCategory.EDITOR, 'Erreur lors du changement de langue slash', error);
-      
-      // Rollback : restaurer l'état local
-      setSlashLang(oldValue);
-      
-      // Optionnel : afficher un message d'erreur à l'utilisateur
-      toast.error('Erreur lors de la sauvegarde de la langue slash');
-    }
-  }, [noteId, updateNote, userId, slashLang]);
+    await updateSlashLang(value);
+  }, [updateSlashLang]);
+
+  // ✅ OPTIMISÉ: Utilisation du hook useHeaderImageUpdate pour les paramètres d'image
+  const updateHeaderOffset = useHeaderImageUpdate({
+    noteId,
+    userId,
+    field: 'header_image_offset',
+    currentValue: editorState.headerImage.offset,
+    onSuccess: (value) => {
+      editorState.setHeaderImageOffset(value);
+      updateNote(noteId, { header_image_offset: value });
+    },
+    onError: (error, oldValue) => editorState.setHeaderImageOffset(oldValue),
+    errorMessage: ERROR_MESSAGES.SAVE_HEADER_IMAGE_OFFSET,
+  });
+
+  const updateHeaderBlur = useHeaderImageUpdate({
+    noteId,
+    userId,
+    field: 'header_image_blur',
+    currentValue: editorState.headerImage.blur,
+    onSuccess: (value) => {
+      editorState.setHeaderImageBlur(value);
+      updateNote(noteId, { header_image_blur: value });
+    },
+    onError: (error, oldValue) => editorState.setHeaderImageBlur(oldValue),
+    errorMessage: ERROR_MESSAGES.SAVE_HEADER_IMAGE_BLUR,
+  });
+
+  const updateHeaderOverlay = useHeaderImageUpdate({
+    noteId,
+    userId,
+    field: 'header_image_overlay',
+    currentValue: editorState.headerImage.overlay,
+    onSuccess: (value) => {
+      editorState.setHeaderImageOverlay(value);
+      updateNote(noteId, { header_image_overlay: value });
+    },
+    onError: (error, oldValue) => editorState.setHeaderImageOverlay(oldValue),
+    errorMessage: ERROR_MESSAGES.SAVE_HEADER_IMAGE_OVERLAY,
+  });
+
+  const updateTitleInImage = useNoteUpdate({
+    noteId,
+    userId,
+    field: 'header_title_in_image',
+    currentValue: editorState.headerImage.titleInImage,
+    onSuccess: (value) => {
+      editorState.setHeaderTitleInImage(value);
+      updateNote(noteId, { header_title_in_image: value });
+    },
+    onError: (error, oldValue) => editorState.setHeaderTitleInImage(oldValue),
+    errorMessage: ERROR_MESSAGES.SAVE_HEADER_TITLE_IN_IMAGE,
+  });
 
   // Ctrl/Cmd+S
   React.useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 's') { e.preventDefault(); handleSave(title || 'Untitled', content); }
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 's') { 
+        e.preventDefault(); 
+        handleSave(editorState.document.title || 'Untitled', content); 
+      }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [handleSave, title, content]);
+  }, [handleSave, editorState, content]);
 
   // Save title on blur
   const handleTitleBlur = React.useCallback(() => {
-    handleSave(title || 'Untitled', content);
-  }, [handleSave, title, content]);
+    handleSave(editorState.document.title || 'Untitled', content);
+  }, [handleSave, editorState, content]);
 
   // Gérer la transcription audio complétée
   const handleTranscriptionComplete = React.useCallback((text: string) => {
@@ -908,6 +578,17 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
       logger.error(LogCategory.EDITOR, 'Erreur lors de l\'insertion du texte transcrit:', error);
     }
   }, [editor]);
+
+  // ✅ OPTIMISATION: Créer un hash du contenu pour éviter les re-calculs fréquents
+  const contentHash = React.useMemo(() => {
+    if (!editor) return 0;
+    try {
+      const markdown = (editor.storage as any)?.markdown?.getMarkdown?.() || '';
+      return hashString(markdown);
+    } catch {
+      return hashString(content || '');
+    }
+  }, [editor, content, editorState.document.forceTOCUpdate]);
 
   // Build headings for TOC - DIRECTEMENT depuis l'éditeur Tiptap (optimisé)
   const headings = React.useMemo(() => {
@@ -963,7 +644,7 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
     
     // AUCUN CONTENU : Retourner tableau vide
     return [];
-  }, [editor?.state.doc, content, forceTOCUpdate]); // Optimisé : dépendances réduites
+  }, [editor, contentHash]); // ✅ OPTIMISÉ: Utilise contentHash au lieu de editor.state.doc
 
   const handlePreviewClick = React.useCallback(async () => {
     try {
@@ -1084,7 +765,7 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
           <PublicTableOfContents headings={headings} containerRef={editorContainerRef} />
         </div>
       <EditorLayout
-        layoutClassName={headerImageUrl ? (titleInImage ? 'noteLayout imageWithTitle' : 'noteLayout imageOnly') : 'noteLayout noImage'}
+        layoutClassName={editorState.headerImage.url ? (editorState.headerImage.titleInImage ? 'noteLayout imageWithTitle' : 'noteLayout imageOnly') : 'noteLayout noImage'}
         header={(
           <>
             <EditorHeader
@@ -1092,14 +773,14 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
               rightSlot={(
                 <>
                   <button
-                    className={`editor-header-preview${previewMode ? ' active' : ''}`}
+                    className={`editor-header-preview${editorState.ui.previewMode ? ' active' : ''}`}
                     aria-label="Aperçu"
                     title="Aperçu"
                     onClick={handlePreviewClick}
                   >
                     <FiEye size={16} />
                   </button>
-                  <button ref={kebabBtnRef} className="editor-header-kebab" aria-label="Options" title="Options" onClick={() => setKebabOpen(v => !v)}>
+                  <button ref={kebabBtnRef} className="editor-header-kebab" aria-label="Options" title="Options" onClick={editorState.toggleKebabMenu}>
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                       <circle cx="5" cy="12" r="2" fill="currentColor" />
                       <circle cx="12" cy="12" r="2" fill="currentColor" />
@@ -1118,15 +799,15 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
               )}
             >
               <ModernToolbar 
-                editor={isReadonly ? null : editor} 
-                setImageMenuOpen={setImageMenuOpen} 
+                editor={isReadonly ? null : (editor as any)} 
+                setImageMenuOpen={editorState.setImageMenuOpen} 
                 onFontChange={handleFontChange}
                 currentFont={note?.font_family || 'Noto Sans'}
                 onTranscriptionComplete={handleTranscriptionComplete}
               />
             </EditorHeader>
             {/* Add header image CTA when no image is set */}
-            {!headerImageUrl && (
+            {!editorState.headerImage.url && (
               <>
                 <div className="editor-add-header-image-row editor-full-width editor-add-image-center">
                   <div className="editor-container-width editor-image-container-width">
@@ -1151,7 +832,10 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
                     >
                       <button
                         className="editor-add-header-image-btn"
-                        onClick={() => { setImageMenuTarget('header'); setImageMenuOpen(true); }}
+                        onClick={() => { 
+                          editorState.setImageMenuTarget('header'); 
+                          editorState.setImageMenuOpen(true); 
+                        }}
                         aria-label="Ajouter une image d'en-tête"
                         title="Ajouter une image d'en-tête"
                       >
@@ -1164,102 +848,46 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
               </>
             )}
             <EditorHeaderImage
-              headerImageUrl={headerImageUrl}
-              headerImageOffset={headerOffset}
-              headerImageBlur={headerBlur}
-              headerImageOverlay={headerOverlay}
-              headerTitleInImage={titleInImage}
+              headerImageUrl={editorState.headerImage.url}
+              headerImageOffset={editorState.headerImage.offset}
+              headerImageBlur={editorState.headerImage.blur}
+              headerImageOverlay={editorState.headerImage.overlay}
+              headerTitleInImage={editorState.headerImage.titleInImage}
               onHeaderChange={handleHeaderChange}
-              onHeaderOffsetChange={async (offset) => {
-                const oldOffset = headerOffset;
-                try {
-                  // 1. Appeler l'API en premier
-                  await v2UnifiedApi.updateNote(noteId, { header_image_offset: offset }, userId);
-                  
-                  // 2. Si l'API réussit, mettre à jour l'état local
-                  setHeaderOffset(offset);
-                  updateNote(noteId, { header_image_offset: offset });
-                } catch (error) {
-                  // 3. En cas d'échec, restaurer l'ancienne valeur
-                  logger.error(LogCategory.EDITOR, 'Erreur lors de la sauvegarde de l\'offset d\'image', error);
-                  setHeaderOffset(oldOffset);
-                }
-              }}
-              onHeaderBlurChange={async (blur) => {
-                const oldBlur = headerBlur;
-                try {
-                  // 1. Appeler l'API en premier
-                  await v2UnifiedApi.updateNote(noteId, { header_image_blur: blur }, userId);
-                  
-                  // 2. Si l'API réussit, mettre à jour l'état local
-                  setHeaderBlur(blur);
-                  updateNote(noteId, { header_image_blur: blur });
-                } catch (error) {
-                  // 3. En cas d'échec, restaurer l'ancienne valeur
-                  logger.error(LogCategory.EDITOR, 'Erreur lors de la sauvegarde du flou d\'image', error);
-                  setHeaderBlur(oldBlur);
-                }
-              }}
-              onHeaderOverlayChange={async (overlay) => {
-                const oldOverlay = headerOverlay;
-                try {
-                  // 1. Appeler l'API en premier
-                  await v2UnifiedApi.updateNote(noteId, { header_image_overlay: overlay }, userId);
-                  
-                  // 2. Si l'API réussit, mettre à jour l'état local
-                  setHeaderOverlay(overlay);
-                  updateNote(noteId, { header_image_overlay: overlay });
-                } catch (error) {
-                  // 3. En cas d'échec, restaurer l'ancienne valeur
-                  logger.error(LogCategory.EDITOR, 'Erreur lors de la sauvegarde de l\'overlay d\'image', error);
-                  setHeaderOverlay(oldOverlay);
-                }
-              }}
-              onHeaderTitleInImageChange={async (v) => {
-                const oldValue = titleInImage;
-                try {
-                  // 1. Appeler l'API en premier
-                  await v2UnifiedApi.updateNote(noteId, { header_title_in_image: v }, userId);
-                  
-                  // 2. Si l'API réussit, mettre à jour l'état local
-                  setTitleInImage(v);
-                  updateNote(noteId, { header_title_in_image: v });
-                } catch (error) {
-                  // 3. En cas d'échec, restaurer l'ancienne valeur
-                  logger.error(LogCategory.EDITOR, 'Erreur lors de la sauvegarde du titre dans l\'image', error);
-                  setTitleInImage(oldValue);
-                }
-              }}
-              imageMenuOpen={imageMenuOpen}
-              onImageMenuOpen={() => setImageMenuOpen(true)}
-              onImageMenuClose={() => setImageMenuOpen(false)}
+              onHeaderOffsetChange={updateHeaderOffset}
+              onHeaderBlurChange={updateHeaderBlur}
+              onHeaderOverlayChange={updateHeaderOverlay}
+              onHeaderTitleInImageChange={updateTitleInImage}
+              imageMenuOpen={editorState.menus.imageMenuOpen}
+              onImageMenuOpen={() => editorState.setImageMenuOpen(true)}
+              onImageMenuClose={() => editorState.setImageMenuOpen(false)}
               noteId={note.id}
               userId={userId}
             />
             <EditorKebabMenu
-              open={kebabOpen}
-              position={kebabPos}
-              onClose={() => setKebabOpen(false)}
-              a4Mode={a4Mode}
+              open={editorState.menus.kebabOpen}
+              position={editorState.menus.kebabPos}
+              onClose={() => editorState.setKebabOpen(false)}
+              a4Mode={editorState.ui.a4Mode}
               setA4Mode={handleA4ModeChange}
-              slashLang={slashLang}
+              slashLang={editorState.ui.slashLang}
               setSlashLang={handleSlashLangChange}
-              fullWidth={fullWidth}
+              fullWidth={editorState.ui.fullWidth}
               setFullWidth={handleFullWidthChange}
               noteId={noteId}
-              currentShareSettings={shareSettings}
+              currentShareSettings={editorState.shareSettings}
               onShareSettingsChange={handleShareSettingsChange}
               publicUrl={note?.public_url || undefined}
             />
           </>
         )}
-        title={<EditorTitle value={title} onChange={setTitle} onBlur={handleTitleBlur} placeholder="Titre de la note..." wideMode={fullWidth} />}
+        title={<EditorTitle value={editorState.document.title} onChange={editorState.setTitle} onBlur={handleTitleBlur} placeholder="Titre de la note..." wideMode={editorState.ui.fullWidth} />}
         content={(
           <>
             {/* Floating menu Notion-like - rendu en dehors du conteneur */}
             {!isReadonly && (
               <FloatingMenuNotion 
-                editor={editor} 
+                editor={editor as any} 
                 onAskAI={(selectedText) => {
                   // TODO: Implémenter l'action Ask AI
                   console.log('Ask AI with text:', selectedText);
@@ -1273,13 +901,16 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
                 <TiptapEditorContent editor={editor} />
                 {/* Drag Handle intégré via l'extension DragHandleExtension */}
                 {/* Table controls */}
-                <TableControls editor={editor} containerRef={editorContainerRef as React.RefObject<HTMLElement>} />
+                <TableControls editor={editor as any} containerRef={editorContainerRef as React.RefObject<HTMLElement>} />
                 {/* Slash commands menu */}
                 <EditorSlashMenu
                   ref={slashMenuRef}
-                  editor={editor}
-                  lang={slashLang}
-                  onOpenImageMenu={() => { setImageMenuTarget('content'); setImageMenuOpen(true); }}
+                  editor={editor as any}
+                  lang={editorState.ui.slashLang}
+                  onOpenImageMenu={() => { 
+                    editorState.setImageMenuTarget('content'); 
+                    editorState.setImageMenuOpen(true); 
+                  }}
                   onInsert={(cmd) => {
                     if (!editor) {
                       logger.error(LogCategory.EDITOR, 'Editor non disponible pour slash command');
@@ -1302,11 +933,11 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
                       logger.error(LogCategory.EDITOR, 'Erreur suppression slash:', error);
                     }
                     
-                    // Execute command action
+                      // Execute command action
                     console.log('Exécution de la commande:', cmd.id, cmd);
                     if (typeof cmd.action === 'function') {
                       try {
-                        cmd.action(editor);
+                        cmd.action(editor as any);
                         console.log('Commande exécutée avec succès:', cmd.id);
                       } catch (error) {
                         console.error('Erreur exécution commande:', error);
@@ -1329,10 +960,10 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
       />
       {/* Global ImageMenu for both header and content insertions */}
       <ImageMenu
-        open={imageMenuOpen}
-        onClose={() => setImageMenuOpen(false)}
+        open={editorState.menus.imageMenuOpen}
+        onClose={() => editorState.setImageMenuOpen(false)}
         onInsertImage={(src: string) => {
-          if (imageMenuTarget === 'header') {
+          if (editorState.menus.imageMenuTarget === 'header') {
             return handleHeaderChange(src);
           }
           if (editor) {
@@ -1344,13 +975,20 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
       />
       
       {/* Menu contextuel Notion-like */}
-      <ContextMenu
-        isOpen={contextMenu.isOpen}
-        position={contextMenu.position}
-        onClose={() => setContextMenu(prev => ({ ...prev, isOpen: false }))}
-        onAction={handleContextMenuAction}
-        nodeType={contextMenu.nodeType}
-        hasSelection={contextMenu.hasSelection}
+      <EditorContextMenuContainer
+        editor={editor as any}
+        editorState={editorState}
+        onOpenImageMenu={() => {
+          editorState.setImageMenuTarget('content');
+          editorState.setImageMenuOpen(true);
+        }}
+      />
+      
+      {/* Gestionnaire de synchronisation store ↔ éditeur */}
+      <EditorSyncManager
+        editor={editor as any}
+        storeContent={content}
+        editorState={editorState}
       />
       
       {/* 🔍 Realtime Status (dev only) */}

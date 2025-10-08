@@ -1,10 +1,19 @@
 import type { Editor as TiptapEditor, ChainedCommands, CanCommands } from '@tiptap/react';
 
+// Type pour le storage markdown de Tiptap
+export interface MarkdownStorage {
+  getMarkdown?: () => string;
+}
+
 // Type simplifié pour l'éditeur avec les capacités essentielles
 export interface FullEditorInstance extends TiptapEditor {
   chain: () => ChainedCommands;
   can: () => CanCommands;
   isActive: (type: string, attrs?: { level?: number }) => boolean;
+  storage: {
+    markdown?: MarkdownStorage;
+    [key: string]: unknown;
+  };
 }
 
 // Types pour les props des composants

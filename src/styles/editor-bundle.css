@@ -1,0 +1,43 @@
+/**
+ * Bundle CSS complet pour l'éditeur
+ * Regroupe tous les imports CSS dans l'ordre critique
+ * 
+ * ⚠️ ORDRE CRITIQUE : Ne pas modifier l'ordre des imports
+ * Les variables de base doivent être chargées en premier
+ */
+
+/* === VARIABLES DE BASE === */
+@import './design-system.css';
+@import './themes.css';
+@import './typography.css';
+@import './variables.css';
+@import './glassmorphism-variables.css';
+
+/* === STYLES MARKDOWN === */
+@import './markdown.css';
+
+/* === COMPOSANTS UI === */
+@import './UnifiedToolbar.css';
+@import './context-menu.css';
+@import './callouts.css';
+@import './color-buttons.css';
+
+/* === EXTENSIONS TIPTAP === */
+@import './tiptap-extensions.css';
+
+/* === DRAG AND DROP === */
+@import './block-drag-drop.css';
+
+/* === DRAG HANDLES - NE PAS MODIFIER === */
+/* ⚠️ Les 3 CSS drag handle sont conservés pour sécurité */
+/* Voir docs/DRAG-HANDLES-AUDIT.md pour détails */
+@import './drag-handle.css';              /* SimpleDragHandle (backup) */
+@import './notion-drag-handle.css';       /* NotionDragHandle (ACTIF) */
+@import './tiptap-drag-handle-official.css'; /* DragHandle (référence) */
+
+/* === AUTRES EXTENSIONS === */
+@import './mermaid.css';
+
+/* === SYSTÈME UNIFIÉ === */
+@import './unified-blocks.css';
+
