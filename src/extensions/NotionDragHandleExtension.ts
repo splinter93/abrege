@@ -29,7 +29,7 @@ let globalDragHandle: HTMLElement | null = null;
 let currentView: EditorView | null = null;
 
 // Version du handle pour forcer la recréation après changements de design
-const HANDLE_VERSION = 'v3.4'; // Bouton + crée une ligne vide sous le bloc
+const HANDLE_VERSION = 'v3.5'; // Détection listItem individuel + bouton + fonctionnel
 
 function createDragHandle(): HTMLElement {
   // Créer le container pour les deux boutons (+ et ⋮⋮)
@@ -417,12 +417,21 @@ export const NotionDragHandleExtension = Extension.create<NotionDragHandleOption
                 let node = $pos.nodeAfter;
                 let nodePos = pos.pos;
 
+                // ✅ FIX: Détecter les listItem individuels au lieu de la liste entière
+                // Remonter dans l'arbre pour trouver le bon niveau de bloc
                 if ($pos.depth > 0) {
+                  // Si on est dans un listItem, utiliser le listItem comme bloc
+                  const parentNode = $pos.node($pos.depth);
+                  if (parentNode.type.name === 'listItem') {
+                    node = parentNode;
+                    nodePos = $pos.before($pos.depth);
+                  } else {
                   node = $pos.node();
                   nodePos = $pos.before();
+                  }
                 }
 
-                if (node && node.isBlock) {
+                if (node && (node.isBlock || node.type.name === 'listItem')) {
                   const domNode = view.nodeDOM(nodePos);
                   
                   if (domNode && domNode instanceof HTMLElement) {
