@@ -141,6 +141,13 @@
 /* Search section */
 .search-section {
   width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.search-section > * {
+  max-width: 600px;
+  width: 100%;
 }
 
 /* Quick actions centrées */
