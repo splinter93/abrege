@@ -104,91 +104,50 @@
 }
 
 /* ========================================
-   LAYOUT CENTRÉ NOTION
+   SECTION 2 COLONNES
    ======================================== */
 
-/* Container principal centré */
-.main-dashboard {
-  max-width: 1000px;
-  margin: 0 auto;
-  padding: 2rem;
+.dashboard-two-columns {
+  display: grid;
+  grid-template-columns: 0.6fr auto 1.4fr; /* ✅ Drop Zone réduite, Fichiers Récents plus larges */
+  gap: 2rem;
+  width: 100%;
+  align-items: start;
+}
+
+.dashboard-column {
   display: flex;
   flex-direction: column;
-  gap: 3rem;
+  min-width: 0; /* ✅ Empêche les enfants flex de déborder */
+  overflow: hidden; /* ✅ Contient les contenus débordants */
 }
 
-/* Welcome section */
-.welcome-section {
-  text-align: center;
-  padding: 2rem 0;
+.dashboard-column-header {
+  margin-bottom: 1rem;
 }
 
-.welcome-title {
-  font-size: 36px;
-  font-weight: 700;
+.dashboard-column-title {
+  font-size: 20px;
+  font-weight: 600;
   color: #ffffff;
   margin: 0 0 0.5rem 0;
   font-family: 'Noto Sans', sans-serif;
   letter-spacing: -0.02em;
 }
 
-.welcome-subtitle {
-  font-size: 18px;
-  color: rgba(255, 255, 255, 0.6);
-  margin: 0;
+.dashboard-vertical-separator {
+  width: 1px;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.1);
+  align-self: stretch;
+  min-height: 200px;
 }
 
-/* Search section */
-.search-section {
-  width: 100%;
-  display: flex;
-  justify-content: center;
+.dashboard-column-content {
+  flex: 1;
+  min-width: 0; /* ✅ Empêche le débordement */
+  overflow: hidden; /* ✅ Contient les contenus */
 }
-
-.search-section > * {
-  max-width: 600px;
-  width: 100%;
-}
-
-/* Quick actions centrées */
-.quick-actions-section {
-  display: flex;
-  justify-content: center;
-  gap: 0.75rem;
-  flex-wrap: wrap;
-}
-
-/* Sections uniformes */
-.dashboard-section {
-  width: 100%;
-  margin-bottom: 0; /* Gap géré par flex parent */
-}
-
-.section-header {
-  padding-bottom: 0.75rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  margin-bottom: 1.5rem;
-}
-
-.section-title {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  margin: 0;
-  font-size: 18px;
-  font-weight: 500;
-  color: rgba(255, 255, 255, 0.7);
-  letter-spacing: -0.02em;
-}
-
-/* Grille dynamique pour le bas de page */
-.dashboard-grid-bottom {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 3rem;
-}
-
-/* Drop Zone section spéciale - SUPPRIMÉ */
 
 /* ========================================
    FICHIERS RÉCENTS - STYLE GRID
@@ -208,6 +167,7 @@
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   transition: all 0.3s ease;
+  min-height: 80px; /* ✅ Même hauteur que la Drop Zone */
 }
 
 .recent-files-grid:hover,
@@ -303,8 +263,8 @@
   border-radius: 8px;
   background: transparent;
   border: none;
-  min-width: 100px;
-  max-width: 100px;
+  min-width: 120px;
+  max-width: 120px;
   flex-shrink: 0;
 }
 
@@ -608,14 +568,17 @@
 }
 
 /* ========================================
-   RESPONSIVE LAYOUT CENTRÉ
+   RESPONSIVE 2 COLONNES
    ======================================== */
 
 @media (max-width: 1024px) {
-  .main-dashboard {
-    max-width: 900px;
-    padding: 1.5rem;
-    gap: 2.5rem;
+  .dashboard-two-columns {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  
+  .dashboard-vertical-separator {
+    display: none;
   }
   
   .drop-zone {
@@ -625,27 +588,12 @@
 }
 
 @media (max-width: 768px) {
-  .main-dashboard {
-    padding: 1rem;
-    gap: 2rem;
-  }
-  
-  .welcome-title {
-    font-size: 36px;
-  }
-  
-  .section-title {
-    font-size: 18px;
-  }
-  
-  .quick-actions-section {
-    grid-template-columns: 1fr;
+  .dashboard-two-columns {
     gap: 1rem;
-    max-width: 400px;
   }
   
-  .dashboard-grid-bottom {
-    grid-template-columns: 1fr;
+  .dashboard-column-title {
+    font-size: 18px;
   }
   
   .recent-files-grid,

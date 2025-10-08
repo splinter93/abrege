@@ -9,7 +9,7 @@ import ErrorBoundary from '@/components/ErrorBoundary';
 import AuthGuard from '@/components/AuthGuard';
 import { useSecureErrorHandler } from '@/components/SecureErrorHandler';
 import { simpleLogger as logger } from '@/utils/logger';
-import { MessageSquare, Plus, Upload, Sparkles, Zap, Eye, Youtube, FileText, LayoutDashboard, ChevronLeft, ChevronRight, Clock, UploadCloud } from 'lucide-react';
+import { MessageSquare, Plus, Upload, Sparkles, Zap, Eye, Youtube, FileText, LayoutDashboard, ChevronLeft, ChevronRight } from 'lucide-react';
 import NotesCarouselNotion, { NotesCarouselRef } from '@/components/NotesCarouselNotion';
 import PerformanceMonitor from '@/components/PerformanceMonitor';
 import UnifiedPageTitle from '@/components/UnifiedPageTitle';
@@ -233,123 +233,157 @@ function AuthenticatedHomeContent({ user }: { user: { id: string; email?: string
       
       <main className="page-content-area">
         {/* Titre du dashboard avec statistiques dynamiques */}
-        {/* Dashboard principal avec layout centré Notion */}
-        <div className="main-dashboard">
-          {/* 1. Welcome message centré */}
-          <motion.div 
-            className="welcome-section"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" }}
-          >
-            <h1 className="welcome-title">Welcome Home, {user?.username || user?.email?.split('@')[0] || 'User'}</h1>
-          </motion.div>
+        <UnifiedPageTitle
+          icon={LayoutDashboard}
+          title="Dashboard"
+          subtitle={`Welcome Home, ${user.username || user.email?.split('@')[0] || 'User'}.`}
+          stats={stats ? [
+            { number: stats.total_notes, label: "Notes" },
+            { number: stats.total_classeurs, label: "Classeurs" },
+            { number: stats.total_folders, label: "Dossiers" }
+          ] : []}
+        />
 
-          {/* 2. Actions rapides centrées */}
+        {/* Dashboard principal avec design moderne */}
+        <div className="main-dashboard">
+          {/* Ligne recherche + actions rapides */}
           <motion.div 
-            className="quick-actions-section"
+            className="search-actions-row"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
           >
-            <motion.button 
-              className="quick-action create-note"
-              onClick={() => setIsCreateNoteModalOpen(true)}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              transition={{ type: "spring", stiffness: 300 }}
-              title="Créer une note"
-            >
-              <Plus size={16} />
-              <span>Créer une note</span>
-            </motion.button>
-
-            <motion.button 
-              className="quick-action youtube"
-              onClick={handleYoutubeSummary}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              transition={{ type: "spring", stiffness: 300 }}
-              title="Résumé YouTube"
-            >
-              <Youtube size={16} />
-              <span>Résumé YouTube</span>
-            </motion.button>
-            
-            <motion.button 
-              className="quick-action chat"
-              onClick={handleOpenChat}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              transition={{ type: "spring", stiffness: 300 }}
-              title="Chat"
-            >
-              <MessageSquare size={16} />
-              <span>Chat</span>
-            </motion.button>
-          </motion.div>
-
-          {/* 3. SearchBar pleine largeur */}
-          <motion.div 
-            className="search-section"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
-          >
+            {/* Barre de recherche */}
             <SearchBar
               placeholder="Rechercher des notes..."
               onSearchResult={handleSearchResult}
               maxResults={10}
               searchTypes={['all']}
             />
+
+            {/* Actions rapides compactes */}
+            <div className="quick-actions">
+              <motion.button 
+                className="quick-action create-note"
+                onClick={() => setIsCreateNoteModalOpen(true)}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                transition={{ type: "spring", stiffness: 300 }}
+                title="Créer une note"
+              >
+                <Plus size={16} />
+              </motion.button>
+
+              <motion.button 
+                className="quick-action import"
+                onClick={handleImport}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                transition={{ type: "spring", stiffness: 300 }}
+                title="Importer"
+              >
+                <Upload size={16} />
+              </motion.button>
+
+              <motion.button 
+                className="quick-action youtube"
+                onClick={handleYoutubeSummary}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                transition={{ type: "spring", stiffness: 300 }}
+                title="Youtube Summary"
+              >
+                <Youtube size={16} />
+              </motion.button>
+              
+              <motion.button 
+                className="quick-action chat"
+                onClick={handleOpenChat}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                transition={{ type: "spring", stiffness: 300 }}
+                title="Chat"
+              >
+                <MessageSquare size={16} />
+              </motion.button>
+            </div>
           </motion.div>
 
-          {/* 4. Notes Récentes */}
+          {/* Section Notes Récentes */}
+          <motion.section 
+            className="dashboard-section"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
+          >
+            <div className="section-header">
+              <div className="section-title-row">
+                <h2 className="section-title">Notes Récentes</h2>
+                <div className="section-navigation">
+                  <button 
+                    className="nav-btn prev-btn"
+                    onClick={handleNotesPrevious}
+                    aria-label="Notes précédentes"
+                    title="Notes précédentes"
+                  >
+                    <ChevronLeft size={18} />
+                  </button>
+                  <button 
+                    className="nav-btn next-btn"
+                    onClick={handleNotesNext}
+                    aria-label="Notes suivantes"
+                    title="Notes suivantes"
+                  >
+                    <ChevronRight size={18} />
+                  </button>
+                </div>
+              </div>
+              <div className="section-separator"></div>
+            </div>
+            <div className="section-content">
+              <NotesCarouselNotion 
+                ref={notesCarouselRef}
+                limit={10}
+                showNavigation={true}
+                autoPlay={false}
+                title=""
+                showViewAll={false}
+              />
+            </div>
+          </motion.section>
+
+          {/* Section 2 colonnes : Fichiers Récents + Drop Zone */}
           <motion.section 
             className="dashboard-section"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.4, ease: "easeOut" }}
           >
-            <div className="section-header">
-              <h2 className="section-title"><Clock size={16} /> Notes Récentes</h2>
+            <div className="dashboard-two-columns">
+              {/* Colonne gauche : Drop Zone */}
+              <div className="dashboard-column">
+                <div className="dashboard-column-header">
+                  <h3 className="dashboard-column-title">Drop Zone</h3>
+                </div>
+                <div className="dashboard-column-content">
+                  <UnifiedUploadZone />
+                </div>
+              </div>
+
+              {/* Séparateur vertical */}
+              <div className="dashboard-vertical-separator"></div>
+
+              {/* Colonne droite : Fichiers Récents */}
+              <div className="dashboard-column">
+                <div className="dashboard-column-header">
+                  <h3 className="dashboard-column-title">Fichiers Récents</h3>
+                </div>
+                <div className="dashboard-column-content">
+                  <RecentFilesList limit={10} />
+                </div>
+              </div>
             </div>
-            <NotesCarouselNotion 
-              ref={notesCarouselRef}
-              limit={10}
-              showNavigation={true}
-              autoPlay={false}
-              title=""
-              showViewAll={false}
-            />
           </motion.section>
-
-          {/* 5. Fichiers Récents & Drop Zone */}
-          <div className="dashboard-grid-bottom">
-            <motion.section 
-              className="dashboard-section"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.5, ease: "easeOut" }}
-            >
-              <div className="section-header">
-                <h2 className="section-title"><FileText size={16} /> Fichiers Récents</h2>
-              </div>
-              <RecentFilesList limit={10} />
-            </motion.section>
-
-            <motion.section 
-              className="dashboard-section"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.6, ease: "easeOut" }}
-            >
-              <div className="section-header">
-                <h2 className="section-title"><UploadCloud size={16} /> Drop Zone</h2>
-              </div>
-              <UnifiedUploadZone />
-            </motion.section>
-          </div>
 
           {/* Input file caché pour l'import */}
           <input 
