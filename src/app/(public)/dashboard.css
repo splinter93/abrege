@@ -176,6 +176,22 @@
   letter-spacing: -0.02em;
 }
 
+/* Drop Zone section spéciale */
+.dashboard-section:has(.drop-zone) {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.dashboard-section:has(.drop-zone) .section-title {
+  text-align: center;
+}
+
+.dashboard-section:has(.drop-zone) > *:not(.section-title) {
+  max-width: 500px;
+  width: 100%;
+}
+
 /* ========================================
    FICHIERS RÉCENTS - STYLE GRID
    ======================================== */
