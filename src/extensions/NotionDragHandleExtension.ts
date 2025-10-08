@@ -29,7 +29,7 @@ let globalDragHandle: HTMLElement | null = null;
 let currentView: EditorView | null = null;
 
 // Version du handle pour forcer la recréation après changements de design
-const HANDLE_VERSION = 'v3.3'; // Bouton + agrandi: SVG 22px avec stroke 3
+const HANDLE_VERSION = 'v3.4'; // Bouton + crée une ligne vide sous le bloc
 
 function createDragHandle(): HTMLElement {
   // Créer le container pour les deux boutons (+ et ⋮⋮)
@@ -86,7 +86,7 @@ function createDragHandle(): HTMLElement {
     plusBtn.style.color = 'rgba(255, 255, 255, 0.5)';
   });
   
-  // Click sur le bouton + pour ouvrir le menu slash
+  // Click sur le bouton + pour créer une ligne vide sous le bloc
   plusBtn.addEventListener('click', (e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -95,20 +95,33 @@ function createDragHandle(): HTMLElement {
       const pos = container.getAttribute('data-node-pos');
       if (pos) {
         const nodePos = parseInt(pos);
-        // Placer le curseur à la position du bloc
-        const tr = currentView.state.tr.setSelection(
-          currentView.state.selection.constructor.near(currentView.state.doc.resolve(nodePos))
-        );
-        currentView.dispatch(tr);
-        currentView.focus();
+        const { state, dispatch } = currentView;
+        const { doc, tr } = state;
         
-        // Déclencher l'ouverture du menu slash
-        const slashEvent = new KeyboardEvent('keydown', {
-          key: '/',
-          bubbles: true,
-          cancelable: true
-        });
-        currentView.dom.dispatchEvent(slashEvent);
+        try {
+          // Trouver le nœud actuel
+          const $pos = doc.resolve(nodePos);
+          const node = $pos.nodeAfter;
+          
+          if (node) {
+            // Calculer la position après le bloc
+            const afterPos = nodePos + node.nodeSize;
+            
+            // Insérer un nouveau paragraphe vide après le bloc
+            const paragraph = state.schema.nodes.paragraph.create();
+            const transaction = tr.insert(afterPos, paragraph);
+            
+            // Placer le curseur dans le nouveau paragraphe
+            transaction.setSelection(
+              state.selection.constructor.near(doc.resolve(afterPos + 1))
+            );
+            
+            dispatch(transaction);
+            currentView.focus();
+          }
+        } catch (error) {
+          console.error('Erreur lors de la création de ligne:', error);
+        }
       }
     }
   });
@@ -134,7 +147,7 @@ function createDragHandle(): HTMLElement {
       <circle cx="11" cy="8" r="1.5"/>
       <circle cx="5" cy="12" r="1.5"/>
       <circle cx="11" cy="12" r="1.5"/>
-    </svg>
+      </svg>
   `;
   
   // Hover effect cohérent avec le bouton +
@@ -191,13 +204,13 @@ export const NotionDragHandleExtension = Extension.create<NotionDragHandleOption
               }
               
               if (!globalDragHandle && view.dom && view.dom.parentElement) {
-                globalDragHandle = createDragHandle();
+            globalDragHandle = createDragHandle();
                 globalDragHandle.setAttribute('data-version', HANDLE_VERSION);
-                
-                const editorElement = view.dom.parentElement;
-                if (editorElement) {
-                  editorElement.style.position = 'relative';
-                  editorElement.appendChild(globalDragHandle);
+            
+            const editorElement = view.dom.parentElement;
+            if (editorElement) {
+              editorElement.style.position = 'relative';
+              editorElement.appendChild(globalDragHandle);
 
               // DRAGSTART: Utiliser la méthode officielle Tiptap
               globalDragHandle.addEventListener('dragstart', (e: DragEvent) => {
@@ -276,7 +289,7 @@ export const NotionDragHandleExtension = Extension.create<NotionDragHandleOption
                 }
               });
             }
-            }
+          }
             }); // Fin du 2ème RAF
           }); // Fin du 1er RAF
 
@@ -390,7 +403,7 @@ export const NotionDragHandleExtension = Extension.create<NotionDragHandleOption
 
               // Positionner le handle (vérifier qu'il existe d'abord)
               if (!globalDragHandle) return false;
-              
+
               const coords = { left: event.clientX, top: event.clientY };
               const pos = view.posAtCoords(coords);
 
