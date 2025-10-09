@@ -83,10 +83,12 @@ export const cleanEscapedMarkdown = (markdown: string): string => {
     .replace(/\\~/g, '~')            // Supprimer l'échappement des ~
     .replace(/≈/g, '~')              // Reconvertir ≈ en ~ (fix preprocessing)
     .replace(/\\=/g, '=')            // Supprimer l'échappement des =
-    .replace(/\\#/g, '#')            // Supprimer l'échappement des #
-    .replace(/&gt;/g, '>')           // Supprimer l'échappement HTML des >
-    .replace(/&lt;/g, '<')           // Supprimer l'échappement HTML des <
-    .replace(/&amp;/g, '&');         // Supprimer l'échappement HTML des &
+    .replace(/\\#/g, '#');           // Supprimer l'échappement des #
+    // ⚠️ NE PAS décoder les HTML entities (&lt; &gt; &amp;)
+    // Sinon ça cause une boucle infinie avec EditorSyncManager
+    // .replace(/&gt;/g, '>')        // ❌ DÉSACTIVÉ
+    // .replace(/&lt;/g, '<')        // ❌ DÉSACTIVÉ  
+    // .replace(/&amp;/g, '&');      // ❌ DÉSACTIVÉ
 };
 
 /**

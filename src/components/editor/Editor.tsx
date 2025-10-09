@@ -267,7 +267,15 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
       // ✅ FIX : Permettre la sauvegarde de contenu vide (quand l'utilisateur efface tout)
       if (nextMarkdown !== content) {
         // 🔧 CORRECTION : Nettoyer le Markdown échappé avant sauvegarde
-        const cleanMarkdown = cleanEscapedMarkdown(nextMarkdown);
+        let cleanMarkdown = cleanEscapedMarkdown(nextMarkdown);
+        
+        // 🛡️ SÉCURITÉ : Vérifier si du HTML brut est présent (ne devrait jamais arriver)
+        // Si oui, logger une erreur car c'est anormal
+        if (/<[a-z][\s\S]*>/i.test(cleanMarkdown)) {
+          logger.warn(LogCategory.EDITOR, '⚠️ HTML brut détecté dans le markdown ! Ceci ne devrait pas arriver.');
+          logger.debug(LogCategory.EDITOR, 'Contenu suspect:', cleanMarkdown.substring(0, 200));
+        }
+        
         updateNote(noteId, { markdown_content: cleanMarkdown });
       }
     } catch (error) {
@@ -279,7 +287,7 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
     editable: !isReadonly,
     immediatelyRender: false, // Éviter les erreurs de SSR/hydration et d'accès au DOM avant montage
     extensions: createEditorExtensions(PRODUCTION_EXTENSIONS_CONFIG, lowlight), // Configuration stable mais fonctionnelle
-    content: content || '',
+    content: content || '', // Laisser Tiptap gérer le contenu tel quel
     onUpdate: handleEditorUpdate,
   });
 

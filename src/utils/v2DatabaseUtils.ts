@@ -3,6 +3,7 @@ import { logApi as originalLogApi } from './logger';
 import { V2ResourceResolver } from './v2ResourceResolver';
 import { SlugGenerator } from './slugGenerator';
 import { SlugAndUrlService } from '@/services/slugAndUrlService';
+import { sanitizeMarkdownContent } from './markdownSanitizer.server';
 
 // Wrapper pour logApi pour accepter les paramètres ApiContext
 const logApi = {
@@ -124,13 +125,16 @@ export class V2DatabaseUtils {
       // Générer un slug unique avec le client authentifié
       const slug = await SlugGenerator.generateSlug(data.source_title, 'note', userId, undefined, supabase);
       
+      // 🛡️ Sanitizer le markdown pour empêcher les injections HTML
+      const safeMarkdown = sanitizeMarkdownContent(data.markdown_content || '');
+      
       // Créer la note
       const { data: note, error: createError } = await supabase
         .from('articles')
         .insert({
           source_title: data.source_title,
-          markdown_content: data.markdown_content || '',
-          html_content: data.markdown_content || '', // Pour l'instant, on met le même contenu
+          markdown_content: safeMarkdown,
+          html_content: safeMarkdown, // Pour l'instant, on met le même contenu
           header_image: data.header_image,
           folder_id: data.folder_id,
           classeur_id: classeurId, // 🔧 CORRECTION TEMPORAIRE: Utiliser uniquement classeur_id
@@ -229,7 +233,10 @@ export class V2DatabaseUtils {
           }
         }
       }
-      if (data.markdown_content !== undefined) updateData.markdown_content = data.markdown_content;
+      // 🛡️ SÉCURITÉ : Sanitizer automatiquement le markdown pour empêcher les injections HTML
+      if (data.markdown_content !== undefined) {
+        updateData.markdown_content = sanitizeMarkdownContent(data.markdown_content);
+      }
       if (data.html_content !== undefined) updateData.html_content = data.html_content;
       if (data.header_image !== undefined) updateData.header_image = data.header_image;
       if (data.header_image_offset !== undefined) {

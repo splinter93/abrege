@@ -108,9 +108,9 @@ export function createEditorExtensions(
       }),
       CustomImage.configure({ inline: false }),
       Markdown.configure({ 
-        html: false,
+        html: false, // Désactive la génération de HTML
         transformPastedText: true,
-        transformCopiedText: true
+        transformCopiedText: true,
       }),
       Placeholder.configure({
         placeholder: 'Écrivez quelque chose d\'incroyable...',

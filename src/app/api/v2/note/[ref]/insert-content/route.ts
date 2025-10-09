@@ -80,7 +80,10 @@ export async function POST(
       );
     }
 
-    const { content, target_section, position } = validationResult.data;
+    const { content: rawContent, target_section, position } = validationResult.data;
+    
+    // 🛡️ Sanitizer le contenu à insérer AVANT utilisation
+    const content = sanitizeMarkdownContent(rawContent);
 
     // 🔒 Vérifier que l'utilisateur est propriétaire de la note
     const { data: currentNote, error: checkError } = await supabase
@@ -109,11 +112,14 @@ export async function POST(
       newContent = handleGlobalOperation(currentNote.markdown_content, content, position);
     }
 
+    // 🛡️ Sanitizer le contenu final avant sauvegarde
+    const safeContent = sanitizeMarkdownContent(newContent);
+    
     // 💾 Mettre à jour la note
     const { data: updatedNote, error: updateError } = await supabase
       .from('articles')
       .update({
-        markdown_content: newContent,
+        markdown_content: safeContent,
         updated_at: new Date().toISOString()
       })
       .eq('id', noteId)

@@ -23,6 +23,7 @@ import { getAuthenticatedUser, createAuthenticatedSupabaseClient, extractTokenFr
 import { contentApplyV2Schema, validatePayload, createValidationErrorResponse } from '@/utils/v2ValidationSchemas';
 import { ContentApplier, calculateETag, generateDiff } from '@/utils/contentApplyUtils';
 import { updateArticleInsight } from '@/utils/insightUpdater';
+import { sanitizeMarkdownContent } from '@/utils/markdownSanitizer.server';
 
 // ============================================================================
 // ERROR CODES
@@ -138,9 +139,15 @@ export async function POST(
       );
     }
 
-    // 🔧 Appliquer les opérations de contenu
+    // 🛡️ Sanitizer le contenu de chaque opération AVANT de les appliquer
+    const sanitizedOps = ops.map(op => ({
+      ...op,
+      content: op.content ? sanitizeMarkdownContent(op.content) : op.content
+    }));
+    
+    // 🔧 Appliquer les opérations de contenu (avec contenu sanitizé)
     const applier = new ContentApplier(currentNote.markdown_content);
-    const result = await applier.applyOperations(ops);
+    const result = await applier.applyOperations(sanitizedOps);
 
     // 🚫 Si c'est un dry-run, retourner les résultats sans sauvegarder
     if (dry_run) {
@@ -163,11 +170,14 @@ export async function POST(
       });
     }
 
+    // 🛡️ Sanitizer le contenu final avant sauvegarde
+    const safeContent = sanitizeMarkdownContent(result.content);
+    
     // 💾 Sauvegarder les modifications
     const { data: updatedNote, error: updateError } = await supabase
       .from('articles')
       .update({
-        markdown_content: result.content,
+        markdown_content: safeContent,
         updated_at: new Date().toISOString()
       })
       .eq('id', noteId)
