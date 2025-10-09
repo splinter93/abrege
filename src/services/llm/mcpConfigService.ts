@@ -1,22 +1,28 @@
 /**
  * Service de configuration MCP pour les agents
- * Gère la configuration des serveurs MCP externes (Exa, ClickUp, Notion, etc.)
+ * Lit les serveurs MCP depuis Factoria (table agent_mcp_servers)
  * 
- * ⚠️ IMPORTANT : Le serveur MCP Scrivia n'est PAS utilisé ici
- * Raison : Nos agents utilisent déjà les endpoints OpenAPI v2 pour accéder aux données Scrivia
- * MCP est réservé aux services externes (websearch, intégrations tierces)
+ * Architecture :
+ * - agents <-> agent_mcp_servers <-> mcp_servers (Factoria)
+ * - Mode hybride par défaut : OpenAPI (Scrivia) + MCP (Factoria)
  */
 
 import { McpServerConfig, AgentMcpConfig, createMcpTool } from '@/types/mcp';
 import { simpleLogger as logger } from '@/utils/logger';
+import { createClient } from '@supabase/supabase-js';
 
 /**
  * Service de gestion des configurations MCP pour les agents
  */
 export class McpConfigService {
   private static instance: McpConfigService;
+  private supabase: ReturnType<typeof createClient>;
 
-  private constructor() {}
+  private constructor() {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+    this.supabase = createClient(supabaseUrl, supabaseServiceKey);
+  }
 
   static getInstance(): McpConfigService {
     if (!McpConfigService.instance) {
@@ -26,13 +32,55 @@ export class McpConfigService {
   }
 
   /**
-   * Récupère la configuration MCP d'un agent depuis la DB
+   * Récupère la configuration MCP d'un agent depuis Factoria
    */
   async getAgentMcpConfig(agentId: string): Promise<AgentMcpConfig | null> {
     try {
-      // TODO: Récupérer depuis la table agents (colonne mcp_config JSONB)
-      // Pour l'instant, retourner null
-      return null;
+      // Récupérer les serveurs MCP liés à cet agent
+      const { data: links, error } = await this.supabase
+        .from('agent_mcp_servers')
+        .select(`
+          is_active,
+          priority,
+          mcp_servers (
+            id,
+            name,
+            deployment_url,
+            config
+          )
+        `)
+        .eq('agent_id', agentId)
+        .eq('is_active', true)
+        .order('priority');
+
+      if (error) {
+        logger.error('[McpConfigService] Erreur récupération liaisons MCP:', error);
+        return null;
+      }
+
+      if (!links || links.length === 0) {
+        logger.dev('[McpConfigService] Aucun serveur MCP lié à cet agent');
+        return null;
+      }
+
+      // Construire la config MCP depuis les liaisons
+      const servers: McpServerConfig[] = links.map((link: any) => {
+        const server = link.mcp_servers;
+        const config = server.config || {};
+        
+        return {
+          type: 'mcp',
+          server_label: server.name.toLowerCase().replace(/\s+/g, '-'),
+          server_url: server.deployment_url,
+          headers: config.apiKey ? { 'x-api-key': config.apiKey } : undefined
+        };
+      });
+
+      return {
+        enabled: true,
+        servers,
+        hybrid_mode: true // Toujours hybride
+      };
     } catch (error) {
       logger.error('[McpConfigService] Erreur récupération config MCP:', error);
       return null;
@@ -40,46 +88,11 @@ export class McpConfigService {
   }
 
   /**
-   * Construit les outils MCP pour Groq depuis la config de l'agent
-   * 
-   * ⚠️ Cette méthode ne construit que les serveurs MCP EXTERNES (Exa, ClickUp, etc.)
-   * Les outils Scrivia restent en OpenAPI v2
-   */
-  buildMcpTools(mcpConfig: AgentMcpConfig | null, userId: string): McpServerConfig[] {
-    if (!mcpConfig || !mcpConfig.enabled) {
-      return [];
-    }
-
-    const mcpTools: McpServerConfig[] = [];
-
-    for (const server of mcpConfig.servers) {
-      // Injecter le userId dans les headers si nécessaire pour certains services
-      const headers = { ...server.headers };
-      
-      // Note : On ne traite PAS le serveur Scrivia ici (il reste en OpenAPI)
-      if (server.server_label === 'scrivia') {
-        logger.warn(`[McpConfigService] ⚠️ Serveur MCP Scrivia détecté mais ignoré (utiliser OpenAPI v2 à la place)`);
-        continue;
-      }
-
-      mcpTools.push({
-        type: 'mcp',
-        server_label: server.server_label,
-        server_url: server.server_url,
-        headers
-      });
-    }
-
-    logger.dev(`[McpConfigService] 🔧 ${mcpTools.length} serveurs MCP externes configurés`);
-    return mcpTools;
-  }
-
-  /**
    * Combine les tools OpenAPI et MCP pour un agent
    * 
-   * Architecture recommandée :
+   * Architecture hybride :
    * - OpenAPI v2 : Pour les données Scrivia (notes, classeurs, etc.)
-   * - MCP : Pour les services externes (Exa, ClickUp, Notion, etc.)
+   * - MCP Factoria : Pour les serveurs MCP personnalisés
    * 
    * ⚠️ TOUJOURS en mode hybride pour garder l'accès aux données Scrivia
    */
@@ -90,37 +103,18 @@ export class McpConfigService {
   ): Promise<any[]> {
     const mcpConfig = await this.getAgentMcpConfig(agentId);
     
-    if (!mcpConfig || !mcpConfig.enabled) {
+    if (!mcpConfig || !mcpConfig.enabled || mcpConfig.servers.length === 0) {
       // Pas de MCP, retourner seulement les tools OpenAPI
       logger.dev(`[McpConfigService] 📦 Mode OpenAPI pur: ${openApiTools.length} tools`);
       return openApiTools;
     }
 
-    const mcpTools = this.buildMcpTools(mcpConfig, userId);
-
-    // ✅ TOUJOURS en mode hybride pour garder l'accès aux données Scrivia
-    // Les outils MCP sont des AJOUTS, pas des remplacements
-    logger.dev(`[McpConfigService] 🔀 Mode hybride: ${openApiTools.length} OpenAPI (Scrivia) + ${mcpTools.length} MCP (externes)`);
-    return [...openApiTools, ...mcpTools];
-  }
-
-  /**
-   * Crée une configuration MCP pour des services externes
-   * 
-   * Exemple : Exa (websearch), ClickUp (tasks), etc.
-   */
-  createExternalMcpConfig(
-    servers: Array<{ label: string; url: string; apiKey?: string }>
-  ): AgentMcpConfig {
-    return {
-      enabled: true,
-      servers: servers.map(s => createMcpTool(
-        s.label,
-        s.url,
-        s.apiKey ? { 'x-api-key': s.apiKey } : undefined
-      )),
-      hybrid_mode: true // Toujours hybride pour garder OpenAPI Scrivia
-    };
+    // ✅ Mode hybride : OpenAPI + MCP Factoria
+    const mcpServers = mcpConfig.servers;
+    logger.dev(`[McpConfigService] 🔀 Mode hybride: ${openApiTools.length} OpenAPI (Scrivia) + ${mcpServers.length} MCP (Factoria)`);
+    
+    // Retourner tous les tools : OpenAPI + serveurs MCP
+    return [...openApiTools, ...mcpServers];
   }
 }
 

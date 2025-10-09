@@ -26,8 +26,8 @@
     "test:watch": "vitest --watch",
     "test:coverage": "vitest --coverage",
     "mcp:list": "tsx scripts/configure-agent-mcp.ts list",
-    "mcp:add": "tsx scripts/configure-agent-mcp.ts add",
-    "mcp:remove": "tsx scripts/configure-agent-mcp.ts remove"
+    "mcp:add": "tsx scripts/configure-agent-mcp.ts link",
+    "mcp:remove": "tsx scripts/configure-agent-mcp.ts unlink"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.848.0",

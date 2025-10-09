@@ -1,6 +1,6 @@
 #!/usr/bin/env ts-node
 /**
- * Script pour configurer les serveurs MCP sur un agent
+ * Script pour lier des serveurs MCP Factoria aux agents
  * Usage: ts-node scripts/configure-agent-mcp.ts
  */
 
@@ -17,183 +17,190 @@ if (!supabaseUrl || !supabaseServiceKey) {
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 /**
- * Serveurs MCP disponibles
- * ⚠️ Note : Les URLs sont des exemples, à adapter selon les services réels
+ * Liste les serveurs MCP disponibles dans Factoria
  */
-const AVAILABLE_MCP_SERVERS = {
-  // 🔍 Websearch
-  exa: {
-    server_label: 'exa',
-    server_url: 'https://api.exa.ai/mcp', // À vérifier
-    description: 'Recherche web sémantique avancée',
-    requires_api_key: true,
-    env_var: 'EXA_API_KEY'
-  },
+async function listMcpServers() {
+  console.log('\n📋 Serveurs MCP Factoria disponibles:\n');
   
-  // ✅ Task Management
-  clickup: {
-    server_label: 'clickup',
-    server_url: 'https://api.clickup.com/api/v2/mcp', // À vérifier
-    description: 'Gestion de tâches et projets',
-    requires_api_key: true,
-    env_var: 'CLICKUP_API_KEY'
-  },
-  
-  linear: {
-    server_label: 'linear',
-    server_url: 'https://api.linear.app/mcp', // À vérifier
-    description: 'Issue tracking',
-    requires_api_key: true,
-    env_var: 'LINEAR_API_KEY'
-  },
-  
-  // 📝 Notes & Docs
-  notion: {
-    server_label: 'notion',
-    server_url: 'https://api.notion.com/v1/mcp', // À vérifier
-    description: 'Notes et bases de données Notion',
-    requires_api_key: true,
-    env_var: 'NOTION_API_KEY'
-  },
-  
-  // 📧 Communication
-  gmail: {
-    server_label: 'gmail',
-    server_url: 'https://gmail.googleapis.com/mcp', // À vérifier
-    description: 'Envoi et lecture d\'emails',
-    requires_api_key: true,
-    env_var: 'GMAIL_API_KEY'
-  },
-  
-  slack: {
-    server_label: 'slack',
-    server_url: 'https://slack.com/api/mcp', // À vérifier
-    description: 'Messagerie Slack',
-    requires_api_key: true,
-    env_var: 'SLACK_BOT_TOKEN'
+  const { data: servers, error } = await supabase
+    .from('mcp_servers')
+    .select('id, name, description, deployment_url, status, tools_count')
+    .eq('status', 'deployed')
+    .order('name');
+
+  if (error) {
+    console.error('❌ Erreur lors de la récupération des serveurs MCP:', error);
+    return;
   }
-};
+
+  if (!servers || servers.length === 0) {
+    console.log('⚠️  Aucun serveur MCP disponible');
+    return;
+  }
+
+  for (const server of servers) {
+    console.log(`✅ ${server.name} (ID: ${server.id.substring(0, 8)}...)`);
+    console.log(`   Description: ${server.description || 'N/A'}`);
+    console.log(`   URL: ${server.deployment_url}`);
+    console.log(`   Tools: ${server.tools_count || 0}\n`);
+  }
+}
 
 /**
- * Configure les serveurs MCP sur un agent
+ * Lie des serveurs MCP Factoria à un agent
  */
-async function configureMcp(
+async function linkMcpServers(
   agentSlug: string,
-  mcpServers: string[], // ex: ['exa', 'clickup']
-  hybridMode: boolean = true
+  mcpServerIds: string[] // ex: ['c8d47664-01bf-44a5-a189-05842dd641f5']
 ) {
-  console.log(`\n🔧 Configuration MCP pour l'agent "${agentSlug}"`);
-  console.log(`📦 Serveurs demandés: ${mcpServers.join(', ')}\n`);
+  console.log(`\n🔧 Liaison des serveurs MCP à l'agent "${agentSlug}"`);
+  console.log(`📦 Serveurs demandés: ${mcpServerIds.length}\n`);
 
-  // 1. Valider les serveurs demandés
-  const servers = [];
-  for (const serverKey of mcpServers) {
-    const serverConfig = AVAILABLE_MCP_SERVERS[serverKey as keyof typeof AVAILABLE_MCP_SERVERS];
-    
-    if (!serverConfig) {
-      console.error(`❌ Serveur MCP inconnu: ${serverKey}`);
-      console.log(`   Serveurs disponibles: ${Object.keys(AVAILABLE_MCP_SERVERS).join(', ')}`);
-      continue;
-    }
-
-    // 2. Vérifier si l'API key est disponible
-    let apiKey: string | undefined;
-    if (serverConfig.requires_api_key) {
-      apiKey = process.env[serverConfig.env_var];
-      if (!apiKey) {
-        console.warn(`⚠️  ${serverConfig.server_label}: API key manquante (${serverConfig.env_var})`);
-        console.log(`   → Le serveur sera ajouté mais ne fonctionnera pas sans l'API key\n`);
-      } else {
-        console.log(`✅ ${serverConfig.server_label}: API key trouvée`);
-      }
-    }
-
-    // 3. Construire la config du serveur
-    servers.push({
-      server_label: serverConfig.server_label,
-      server_url: serverConfig.server_url,
-      headers: apiKey ? { 'x-api-key': apiKey } : undefined
-    });
-  }
-
-  if (servers.length === 0) {
-    console.error('\n❌ Aucun serveur MCP valide à configurer');
-    return;
-  }
-
-  // 4. Construire l'objet mcp_config
-  const mcpConfig = {
-    enabled: true,
-    servers,
-    hybrid_mode: hybridMode
-  };
-
-  console.log('\n📋 Configuration MCP finale:');
-  console.log(JSON.stringify(mcpConfig, null, 2));
-
-  // 5. Mettre à jour l'agent dans la DB
-  const { data, error } = await supabase
+  // 1. Récupérer l'agent
+  const { data: agent, error: agentError } = await supabase
     .from('agents')
-    .update({ mcp_config: mcpConfig })
+    .select('id, slug, display_name')
     .eq('slug', agentSlug)
-    .select()
     .single();
 
-  if (error) {
-    console.error(`\n❌ Erreur lors de la mise à jour de l'agent:`, error);
+  if (agentError || !agent) {
+    console.error(`❌ Agent "${agentSlug}" introuvable`);
     return;
   }
 
-  if (!data) {
-    console.error(`\n❌ Agent "${agentSlug}" introuvable`);
+  // 2. Vérifier que tous les serveurs MCP existent
+  const { data: servers, error: serversError } = await supabase
+    .from('mcp_servers')
+    .select('id, name, deployment_url, status')
+    .in('id', mcpServerIds);
+
+  if (serversError) {
+    console.error('❌ Erreur lors de la vérification des serveurs MCP:', serversError);
     return;
   }
 
-  console.log(`\n✅ Agent "${agentSlug}" configuré avec succès!`);
+  if (!servers || servers.length === 0) {
+    console.error('❌ Aucun serveur MCP trouvé avec ces IDs');
+    return;
+  }
+
+  if (servers.length !== mcpServerIds.length) {
+    console.warn(`⚠️  Seulement ${servers.length}/${mcpServerIds.length} serveurs trouvés`);
+  }
+
+  // 3. Créer les liaisons dans agent_mcp_servers
+  const linksToInsert = servers.map((server, index) => ({
+    agent_id: agent.id,
+    mcp_server_id: server.id,
+    is_active: true,
+    priority: index
+  }));
+
+  const { data: links, error: linksError } = await supabase
+    .from('agent_mcp_servers')
+    .upsert(linksToInsert, { onConflict: 'agent_id,mcp_server_id' })
+    .select();
+
+  if (linksError) {
+    console.error('❌ Erreur lors de la création des liaisons:', linksError);
+    return;
+  }
+
+  console.log(`\n✅ Agent "${agent.display_name || agent.slug}" configuré!`);
   console.log(`📊 Résumé:`);
-  console.log(`   - Serveurs MCP: ${servers.length}`);
-  console.log(`   - Mode: ${hybridMode ? 'Hybride (OpenAPI + MCP)' : 'MCP pur'}`);
-  console.log(`   - Tools disponibles: ~${hybridMode ? 42 : 0} OpenAPI + ${servers.length} MCP\n`);
-}
-
-/**
- * Affiche la liste des serveurs MCP disponibles
- */
-function listAvailableServers() {
-  console.log('\n📋 Serveurs MCP disponibles:\n');
-  
-  for (const [key, config] of Object.entries(AVAILABLE_MCP_SERVERS)) {
-    const hasApiKey = process.env[config.env_var] ? '✅' : '❌';
-    console.log(`${hasApiKey} ${key.padEnd(10)} - ${config.description}`);
-    console.log(`   URL: ${config.server_url}`);
-    console.log(`   Env: ${config.env_var}\n`);
+  console.log(`   - Serveurs MCP liés: ${links?.length || 0}`);
+  for (const server of servers) {
+    console.log(`     ✓ ${server.name} (${server.status})`);
   }
+  console.log();
 }
 
 /**
- * Supprime la config MCP d'un agent
+ * Affiche les serveurs MCP liés à un agent
  */
-async function removeMcp(agentSlug: string) {
-  console.log(`\n🗑️  Suppression de la config MCP pour l'agent "${agentSlug}"`);
+async function showAgentMcp(agentSlug: string) {
+  console.log(`\n📊 Serveurs MCP de l'agent "${agentSlug}":\n`);
 
-  const { data, error } = await supabase
+  // 1. Récupérer l'agent
+  const { data: agent, error: agentError } = await supabase
     .from('agents')
-    .update({ mcp_config: null })
+    .select('id, slug, display_name')
     .eq('slug', agentSlug)
-    .select()
     .single();
 
-  if (error) {
-    console.error(`\n❌ Erreur:`, error);
+  if (agentError || !agent) {
+    console.error(`❌ Agent "${agentSlug}" introuvable`);
     return;
   }
 
-  if (!data) {
-    console.error(`\n❌ Agent "${agentSlug}" introuvable`);
+  // 2. Récupérer les serveurs MCP liés
+  const { data: links, error: linksError } = await supabase
+    .from('agent_mcp_servers')
+    .select(`
+      id,
+      is_active,
+      priority,
+      mcp_servers (
+        id,
+        name,
+        description,
+        deployment_url,
+        status,
+        tools_count
+      )
+    `)
+    .eq('agent_id', agent.id)
+    .order('priority');
+
+  if (linksError) {
+    console.error('❌ Erreur lors de la récupération des liaisons:', linksError);
     return;
   }
 
-  console.log(`✅ Config MCP supprimée de l'agent "${agentSlug}"\n`);
+  if (!links || links.length === 0) {
+    console.log('⚠️  Aucun serveur MCP lié à cet agent');
+    return;
+  }
+
+  for (const link of links) {
+    const server = (link as any).mcp_servers;
+    const status = link.is_active ? '✅' : '❌';
+    console.log(`${status} ${server.name} (Priority: ${link.priority})`);
+    console.log(`   URL: ${server.deployment_url}`);
+    console.log(`   Tools: ${server.tools_count || 0}\n`);
+  }
+}
+
+/**
+ * Supprime toutes les liaisons MCP d'un agent
+ */
+async function unlinkAllMcp(agentSlug: string) {
+  console.log(`\n🗑️  Suppression de tous les serveurs MCP pour l'agent "${agentSlug}"`);
+
+  // 1. Récupérer l'agent
+  const { data: agent, error: agentError } = await supabase
+    .from('agents')
+    .select('id')
+    .eq('slug', agentSlug)
+    .single();
+
+  if (agentError || !agent) {
+    console.error(`❌ Agent "${agentSlug}" introuvable`);
+    return;
+  }
+
+  // 2. Supprimer toutes les liaisons
+  const { error: deleteError } = await supabase
+    .from('agent_mcp_servers')
+    .delete()
+    .eq('agent_id', agent.id);
+
+  if (deleteError) {
+    console.error('❌ Erreur lors de la suppression:', deleteError);
+    return;
+  }
+
+  console.log(`✅ Tous les serveurs MCP ont été supprimés de l'agent "${agentSlug}"\n`);
 }
 
 // ============================================================================
@@ -205,62 +212,90 @@ const command = args[0];
 
 switch (command) {
   case 'list':
-    listAvailableServers();
+    // Liste les serveurs MCP disponibles dans Factoria
+    listMcpServers().then(() => process.exit(0));
     break;
 
-  case 'add':
+  case 'link':
+    // Lie des serveurs MCP à un agent
     const agentSlug = args[1];
-    const servers = args.slice(2);
+    const serverIds = args.slice(2);
     
-    if (!agentSlug || servers.length === 0) {
-      console.log('\n❌ Usage: ts-node scripts/configure-agent-mcp.ts add <agent-slug> <server1> [server2] ...\n');
-      console.log('Exemple: ts-node scripts/configure-agent-mcp.ts add donna exa clickup\n');
+    if (!agentSlug || serverIds.length === 0) {
+      console.log('\n❌ Usage: npm run mcp:add <agent-slug> <mcp-server-id-1> [mcp-server-id-2] ...\n');
+      console.log('Exemple: npm run mcp:add donna c8d47664-01bf-44a5-a189-05842dd641f5\n');
+      console.log('💡 Astuce: Utilise "npm run mcp:list" pour voir les serveurs disponibles\n');
       process.exit(1);
     }
     
-    configureMcp(agentSlug, servers, true).then(() => process.exit(0));
+    linkMcpServers(agentSlug, serverIds).then(() => process.exit(0));
     break;
 
-  case 'remove':
-    const agentSlugToRemove = args[1];
+  case 'show':
+    // Affiche les serveurs MCP liés à un agent
+    const agentSlugToShow = args[1];
     
-    if (!agentSlugToRemove) {
-      console.log('\n❌ Usage: ts-node scripts/configure-agent-mcp.ts remove <agent-slug>\n');
+    if (!agentSlugToShow) {
+      console.log('\n❌ Usage: ts-node scripts/configure-agent-mcp.ts show <agent-slug>\n');
       process.exit(1);
     }
     
-    removeMcp(agentSlugToRemove).then(() => process.exit(0));
+    showAgentMcp(agentSlugToShow).then(() => process.exit(0));
+    break;
+
+  case 'unlink':
+    // Supprime toutes les liaisons MCP d'un agent
+    const agentSlugToUnlink = args[1];
+    
+    if (!agentSlugToUnlink) {
+      console.log('\n❌ Usage: npm run mcp:remove <agent-slug>\n');
+      process.exit(1);
+    }
+    
+    unlinkAllMcp(agentSlugToUnlink).then(() => process.exit(0));
     break;
 
   default:
     console.log(`
-🔧 Script de Configuration MCP pour Agents
+🏭 Script de Liaison Agents <-> Serveurs MCP Factoria
 
 Usage:
-  ts-node scripts/configure-agent-mcp.ts <command> [options]
+  npm run mcp:list                         Liste les serveurs MCP Factoria
+  npm run mcp:add <agent> <id1> [id2...]  Lie des serveurs MCP à un agent
+  npm run mcp:remove <agent>               Supprime tous les MCP d'un agent
+  ts-node scripts/configure-agent-mcp.ts show <agent>  Affiche les MCP d'un agent
 
-Commands:
-  list                              Liste les serveurs MCP disponibles
-  add <agent> <server1> [server2]  Ajoute des serveurs MCP à un agent
-  remove <agent>                    Supprime la config MCP d'un agent
+Workflow:
+  1. Liste les serveurs MCP Factoria disponibles
+     npm run mcp:list
+
+  2. Copie l'ID du serveur MCP que tu veux utiliser
+  
+  3. Lie-le à un agent
+     npm run mcp:add donna c8d47664-01bf-44a5-a189-05842dd641f5
+
+  4. Vérifie la config
+     ts-node scripts/configure-agent-mcp.ts show donna
 
 Exemples:
-  # Lister les serveurs disponibles
-  ts-node scripts/configure-agent-mcp.ts list
-
-  # Ajouter Exa (websearch) à Donna
-  ts-node scripts/configure-agent-mcp.ts add donna exa
-
-  # Ajouter Exa + ClickUp à Harvey
-  ts-node scripts/configure-agent-mcp.ts add harvey exa clickup
-
-  # Supprimer la config MCP de Donna
-  ts-node scripts/configure-agent-mcp.ts remove donna
+  # Lister les serveurs MCP Factoria
+  npm run mcp:list
+  
+  # Lier le serveur Scrivia à Donna
+  npm run mcp:add donna c8d47664-01bf-44a5-a189-05842dd641f5
+  
+  # Lier plusieurs serveurs à Harvey
+  npm run mcp:add harvey <id-exa> <id-clickup>
+  
+  # Afficher les MCP de Donna
+  ts-node scripts/configure-agent-mcp.ts show donna
+  
+  # Supprimer tous les MCP de Johnny
+  npm run mcp:remove johnny
 
 Variables d'environnement requises:
   - NEXT_PUBLIC_SUPABASE_URL
   - SUPABASE_SERVICE_ROLE_KEY
-  - [API_KEY du service MCP] (ex: EXA_API_KEY, CLICKUP_API_KEY)
     `);
 }
 
