@@ -59,15 +59,6 @@ export async function getAuthenticatedUser(request: NextRequest): Promise<AuthRe
     const userId = request.headers.get('X-User-Id');
     const isServiceRole = request.headers.get('X-Service-Role') === 'true';
     
-    // 🚨 DIAGNOSTIC IMPERSONATION
-    console.log('🔍 [AuthUtils] Check impersonation:', {
-      hasUserId: !!userId,
-      userId: userId ? userId.substring(0, 8) + '...' : 'N/A',
-      isServiceRole,
-      hasServiceRoleEnv: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
-      serviceRoleLength: process.env.SUPABASE_SERVICE_ROLE_KEY?.length || 0
-    });
-    
     if (userId && isServiceRole) {
       // Vérifier que c'est un UUID valide
       const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -76,27 +67,11 @@ export async function getAuthenticatedUser(request: NextRequest): Promise<AuthRe
         const authHeader = request.headers.get('Authorization');
         const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
         
-        console.log('🔍 [AuthUtils] Validation impersonation:', {
-          hasAuthHeader: !!authHeader,
-          hasServiceRoleKey: !!serviceRoleKey,
-          authHeaderStart: authHeader ? authHeader.substring(0, 27) + '...' : 'N/A',
-          serviceRoleStart: serviceRoleKey ? serviceRoleKey.substring(0, 20) + '...' : 'N/A'
-        });
-        
         if (authHeader && authHeader.startsWith('Bearer ') && serviceRoleKey) {
           const token = authHeader.substring(7);
           
-          console.log('🔍 [AuthUtils] Comparaison tokens:', {
-            tokenLength: token.length,
-            serviceRoleLength: serviceRoleKey.length,
-            areEqual: token === serviceRoleKey,
-            tokenStart: token.substring(0, 20) + '...',
-            serviceStart: serviceRoleKey.substring(0, 20) + '...'
-          });
-          
           if (token === serviceRoleKey) {
             logApi.info(`[AuthUtils] 🤖 IMPERSONATION D'AGENT DÉTECTÉE - userId: ${userId}`);
-            console.log('✅ [AuthUtils] Impersonation validée avec succès');
             return {
               success: true,
               userId: userId,
@@ -104,18 +79,12 @@ export async function getAuthenticatedUser(request: NextRequest): Promise<AuthRe
               authType: 'api_key'
             };
           } else {
-            console.error('❌ [AuthUtils] Token ne correspond pas à SERVICE_ROLE_KEY');
             logApi.warn(`[AuthUtils] ⚠️ Token d'authentification invalide pour l'impersonation`);
           }
         } else {
-          console.error('❌ [AuthUtils] Headers manquants:', {
-            hasAuthHeader: !!authHeader,
-            hasServiceRoleKey: !!serviceRoleKey
-          });
           logApi.warn(`[AuthUtils] ⚠️ Headers d'impersonation présents mais token d'authentification manquant ou invalide`);
         }
       } else {
-        console.error('❌ [AuthUtils] X-User-Id pas un UUID valide:', userId);
         logApi.warn(`[AuthUtils] ⚠️ X-User-Id fourni mais pas un UUID valide: ${userId}`);
       }
     }
@@ -165,16 +134,6 @@ export async function getAuthenticatedUser(request: NextRequest): Promise<AuthRe
       
       // ✅ ESSAYER LE JWT SUPABASE (fallback)
       try {
-        // 🔍 DIAGNOSTIC PROD
-        console.log('🔍 [AuthUtils] Validation JWT:', {
-          tokenLength: token.length,
-          tokenStart: token.substring(0, 20) + '...',
-          tokenEnd: '...' + token.substring(token.length - 20),
-          supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL?.substring(0, 40) + '...',
-          hasAnonKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-          env: process.env.NODE_ENV
-        });
-        
         const supabaseWithToken = createClient(
           process.env.NEXT_PUBLIC_SUPABASE_URL!,
           process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -189,17 +148,8 @@ export async function getAuthenticatedUser(request: NextRequest): Promise<AuthRe
         
         const { data: { user }, error } = await supabaseWithToken.auth.getUser();
         
-        // 🔍 DIAGNOSTIC RÉSULTAT
-        console.log('🔍 [AuthUtils] Résultat validation JWT:', {
-          hasError: !!error,
-          errorMessage: error?.message || 'N/A',
-          errorCode: (error as any)?.code || 'N/A',
-          hasUser: !!user,
-          userId: user?.id || 'N/A'
-        });
-        
         if (error || !user) {
-          throw new Error(`JWT invalide: ${error?.message || 'No user returned'}`);
+          throw new Error('JWT invalide');
         }
 
         // 🔧 CORRECTION : Pour les agents spécialisés, ajouter des scopes par défaut

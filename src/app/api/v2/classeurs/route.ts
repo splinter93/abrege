@@ -20,29 +20,10 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   };
 
   logApi.info('🚀 Début récupération liste classeurs v2', context);
-  
-  // 🚨 DIAGNOSTIC: Log des headers reçus
-  console.log('🔍 [API V2 /classeurs] Headers reçus:', {
-    'X-User-Id': request.headers.get('X-User-Id') || 'ABSENT',
-    'X-Service-Role': request.headers.get('X-Service-Role') || 'ABSENT',
-    'X-Client-Type': request.headers.get('X-Client-Type') || 'ABSENT',
-    'Authorization': request.headers.get('Authorization') ? 'Bearer ***' : 'ABSENT'
-  });
 
   // 🔐 Authentification
   const authResult = await getAuthenticatedUser(request);
-  
-  // 🚨 DIAGNOSTIC: Log du résultat auth
-  console.log('🔍 [API V2 /classeurs] Auth result:', {
-    success: authResult.success,
-    userId: authResult.userId || 'N/A',
-    error: authResult.error || 'N/A',
-    authType: authResult.authType || 'N/A',
-    scopes: authResult.scopes?.length || 0
-  });
-  
   if (!authResult.success) {
-    console.error('❌ [API V2 /classeurs] Authentification échouée:', authResult);
     logApi.info(`❌ Authentification échouée: ${authResult.error}`, context);
     return NextResponse.json(
       { error: authResult.error },

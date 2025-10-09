@@ -102,19 +102,8 @@ export class ApiV2HttpClient {
       // 🔧 C'est un UUID : Utiliser SERVICE_ROLE avec impersonation
       const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
       
-      // 🚨 DIAGNOSTIC PROD
-      console.log('🔍 [ApiV2HttpClient] SERVICE_ROLE Check:', {
-        hasServiceRoleKey: !!serviceRoleKey,
-        serviceRoleLength: serviceRoleKey?.length || 0,
-        serviceRoleStart: serviceRoleKey ? serviceRoleKey.substring(0, 20) + '...' : 'UNDEFINED',
-        env: process.env.NODE_ENV,
-        allEnvKeys: Object.keys(process.env).filter(k => k.includes('SUPABASE'))
-      });
-      
       if (!serviceRoleKey) {
-        const errorMsg = 'SUPABASE_SERVICE_ROLE_KEY manquante pour l\'impersonation';
-        console.error('❌ [ApiV2HttpClient] ERREUR CRITIQUE:', errorMsg);
-        throw new Error(errorMsg);
+        throw new Error('SUPABASE_SERVICE_ROLE_KEY manquante pour l\'impersonation');
       }
       
       headers = {
@@ -124,12 +113,6 @@ export class ApiV2HttpClient {
         'X-Service-Role': 'true',
         'Authorization': `Bearer ${serviceRoleKey}`
       };
-      
-      console.log('🔍 [ApiV2HttpClient] Headers impersonation:', {
-        'X-User-Id': userToken.substring(0, 8) + '...',
-        'X-Service-Role': 'true',
-        'Authorization': 'Bearer ' + serviceRoleKey.substring(0, 20) + '...'
-      });
       
       logger.dev(`[ApiV2HttpClient] 🤖 Impersonation: userId=${userToken.substring(0, 8)}...`);
     } else {
@@ -144,19 +127,6 @@ export class ApiV2HttpClient {
     }
     
     const isServerSide = typeof window === 'undefined';
-    
-    // 🚨 CONSOLE.LOG DIRECT - TOUJOURS ACTIF (pour debug prod)
-    console.log('🔍 [ApiV2HttpClient] REQUEST:', {
-      url,
-      endpoint,
-      method,
-      isServerSide,
-      env: process.env.NODE_ENV,
-      tokenType: this.detectTokenType(userToken),
-      tokenLength: userToken.length,
-      tokenStart: userToken.substring(0, 20) + '...',
-      hasAuthHeader: !!headers['Authorization']
-    });
 
     const requestOptions: RequestInit = {
       method,
@@ -187,23 +157,6 @@ export class ApiV2HttpClient {
       if (!response.ok) {
         // 🔍 DIAGNOSTIC DÉTAILLÉ EN CAS D'ERREUR
         const errorData = await response.json().catch(() => ({}));
-        
-        // 🚨 CONSOLE.ERROR DIRECT - TOUJOURS ACTIF (pour debug prod)
-        console.error('❌ [ApiV2HttpClient] ERROR HTTP:', {
-          url,
-          status: response.status,
-          errorData,
-          tokenLength: userToken.length,
-          tokenType: this.detectTokenType(userToken),
-          tokenStart: userToken.substring(0, 20) + '...',
-          env: process.env.NODE_ENV,
-          headers: {
-            'Authorization': headers['Authorization'] ? 'Bearer ***' : 'MISSING',
-            'X-Client-Type': headers['X-Client-Type'],
-            'X-User-Id': headers['X-User-Id'] || 'N/A',
-            'X-Service-Role': headers['X-Service-Role'] || 'N/A'
-          }
-        });
         
         logger.error(`[ApiV2HttpClient] ❌ ${response.status} ${response.statusText}`, {
           url,
