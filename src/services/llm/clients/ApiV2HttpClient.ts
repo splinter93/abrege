@@ -101,8 +101,20 @@ export class ApiV2HttpClient {
     if (this.isUUID(userToken)) {
       // 🔧 C'est un UUID : Utiliser SERVICE_ROLE avec impersonation
       const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+      
+      // 🚨 DIAGNOSTIC PROD
+      console.log('🔍 [ApiV2HttpClient] SERVICE_ROLE Check:', {
+        hasServiceRoleKey: !!serviceRoleKey,
+        serviceRoleLength: serviceRoleKey?.length || 0,
+        serviceRoleStart: serviceRoleKey ? serviceRoleKey.substring(0, 20) + '...' : 'UNDEFINED',
+        env: process.env.NODE_ENV,
+        allEnvKeys: Object.keys(process.env).filter(k => k.includes('SUPABASE'))
+      });
+      
       if (!serviceRoleKey) {
-        throw new Error('SUPABASE_SERVICE_ROLE_KEY manquante pour l\'impersonation');
+        const errorMsg = 'SUPABASE_SERVICE_ROLE_KEY manquante pour l\'impersonation';
+        console.error('❌ [ApiV2HttpClient] ERREUR CRITIQUE:', errorMsg);
+        throw new Error(errorMsg);
       }
       
       headers = {
@@ -112,6 +124,12 @@ export class ApiV2HttpClient {
         'X-Service-Role': 'true',
         'Authorization': `Bearer ${serviceRoleKey}`
       };
+      
+      console.log('🔍 [ApiV2HttpClient] Headers impersonation:', {
+        'X-User-Id': userToken.substring(0, 8) + '...',
+        'X-Service-Role': 'true',
+        'Authorization': 'Bearer ' + serviceRoleKey.substring(0, 20) + '...'
+      });
       
       logger.dev(`[ApiV2HttpClient] 🤖 Impersonation: userId=${userToken.substring(0, 8)}...`);
     } else {

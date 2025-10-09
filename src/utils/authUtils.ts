@@ -59,6 +59,15 @@ export async function getAuthenticatedUser(request: NextRequest): Promise<AuthRe
     const userId = request.headers.get('X-User-Id');
     const isServiceRole = request.headers.get('X-Service-Role') === 'true';
     
+    // 🚨 DIAGNOSTIC IMPERSONATION
+    console.log('🔍 [AuthUtils] Check impersonation:', {
+      hasUserId: !!userId,
+      userId: userId ? userId.substring(0, 8) + '...' : 'N/A',
+      isServiceRole,
+      hasServiceRoleEnv: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+      serviceRoleLength: process.env.SUPABASE_SERVICE_ROLE_KEY?.length || 0
+    });
+    
     if (userId && isServiceRole) {
       // Vérifier que c'est un UUID valide
       const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -67,16 +76,27 @@ export async function getAuthenticatedUser(request: NextRequest): Promise<AuthRe
         const authHeader = request.headers.get('Authorization');
         const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
         
+        console.log('🔍 [AuthUtils] Validation impersonation:', {
+          hasAuthHeader: !!authHeader,
+          hasServiceRoleKey: !!serviceRoleKey,
+          authHeaderStart: authHeader ? authHeader.substring(0, 27) + '...' : 'N/A',
+          serviceRoleStart: serviceRoleKey ? serviceRoleKey.substring(0, 20) + '...' : 'N/A'
+        });
+        
         if (authHeader && authHeader.startsWith('Bearer ') && serviceRoleKey) {
           const token = authHeader.substring(7);
+          
+          console.log('🔍 [AuthUtils] Comparaison tokens:', {
+            tokenLength: token.length,
+            serviceRoleLength: serviceRoleKey.length,
+            areEqual: token === serviceRoleKey,
+            tokenStart: token.substring(0, 20) + '...',
+            serviceStart: serviceRoleKey.substring(0, 20) + '...'
+          });
+          
           if (token === serviceRoleKey) {
             logApi.info(`[AuthUtils] 🤖 IMPERSONATION D'AGENT DÉTECTÉE - userId: ${userId}`);
-            logApi.info(`[AuthUtils] 🔑 Headers reçus:`, {
-              'Authorization': 'Bearer ' + token.substring(0, 20) + '...',
-              'X-User-Id': userId,
-              'X-Service-Role': isServiceRole,
-              'X-Client-Type': request.headers.get('X-Client-Type')
-            });
+            console.log('✅ [AuthUtils] Impersonation validée avec succès');
             return {
               success: true,
               userId: userId,
@@ -84,12 +104,18 @@ export async function getAuthenticatedUser(request: NextRequest): Promise<AuthRe
               authType: 'api_key'
             };
           } else {
+            console.error('❌ [AuthUtils] Token ne correspond pas à SERVICE_ROLE_KEY');
             logApi.warn(`[AuthUtils] ⚠️ Token d'authentification invalide pour l'impersonation`);
           }
         } else {
+          console.error('❌ [AuthUtils] Headers manquants:', {
+            hasAuthHeader: !!authHeader,
+            hasServiceRoleKey: !!serviceRoleKey
+          });
           logApi.warn(`[AuthUtils] ⚠️ Headers d'impersonation présents mais token d'authentification manquant ou invalide`);
         }
       } else {
+        console.error('❌ [AuthUtils] X-User-Id pas un UUID valide:', userId);
         logApi.warn(`[AuthUtils] ⚠️ X-User-Id fourni mais pas un UUID valide: ${userId}`);
       }
     }
