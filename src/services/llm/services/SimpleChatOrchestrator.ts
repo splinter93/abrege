@@ -225,8 +225,29 @@ export class SimpleChatOrchestrator {
       );
     }
 
-    const { getOpenAPIV2Tools } = await import('@/services/openApiToolsGenerator');
-    const tools = await getOpenAPIV2Tools();
+    // ✅ NOUVEAU: Support MCP natif Groq
+    let tools: any[];
+    
+    if (agentConfig?.mcp_config?.enabled) {
+      // Mode MCP : utiliser les serveurs MCP directement
+      const { mcpConfigService } = await import('../mcpConfigService');
+      const { getOpenAPIV2Tools } = await import('@/services/openApiToolsGenerator');
+      const openApiTools = await getOpenAPIV2Tools();
+      
+      // Construire les tools (MCP seul ou hybride MCP + OpenAPI)
+      tools = await mcpConfigService.buildHybridTools(
+        agentConfig.id || 'default',
+        context.userToken, // userId
+        openApiTools
+      );
+      
+      logger.dev(`[Orchestrator] 🔧 ${tools.filter(t => t.type === 'mcp').length} serveurs MCP + ${tools.filter(t => t.type === 'function').length} tools OpenAPI`);
+    } else {
+      // Mode classique : OpenAPI tools seulement
+      const { getOpenAPIV2Tools } = await import('@/services/openApiToolsGenerator');
+      tools = await getOpenAPIV2Tools();
+      logger.dev(`[Orchestrator] 🔧 ${tools.length} tools OpenAPI (mode classique)`);
+    }
 
     // ✅ FIX: Utiliser le provider passé en paramètre (avec la config de l'agent)
     return llmProvider.callWithMessages(messages, tools);

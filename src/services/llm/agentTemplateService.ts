@@ -23,9 +23,20 @@ export interface AgentTemplateConfig {
   stream?: boolean;
   reasoning_effort?: 'low' | 'medium' | 'high';
   stop_sequences?: string[];
+  // Support MCP natif
+  mcp_config?: {
+    enabled: boolean;
+    servers: Array<{
+      server_label: string;
+      server_url: string;
+      headers?: Record<string, string>;
+    }>;
+    hybrid_mode?: boolean; // Si true, combine MCP + OpenAPI tools
+  };
   // Compat héritage
   instructions?: string;
   name?: string; // ✅ FIX: Nom de l'agent pour les logs
+  id?: string; // ID de l'agent
 }
 
 export interface RenderedTemplate {
