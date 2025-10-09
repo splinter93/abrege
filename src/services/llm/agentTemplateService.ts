@@ -14,8 +14,10 @@ export interface AgentTemplateConfig {
   capabilities?: string[];
   api_v2_capabilities?: string[];
   // Nouveaux paramètres LLM configurables
+  model?: string; // ✅ FIX: Nom complet du modèle (ex: meta-llama/llama-4-maverick-17b-128e-instruct)
   model_variant?: '120b' | '20b';
   temperature?: number;
+  max_tokens?: number; // ✅ FIX: Support de max_tokens
   max_completion_tokens?: number;
   top_p?: number;
   stream?: boolean;
@@ -23,6 +25,7 @@ export interface AgentTemplateConfig {
   stop_sequences?: string[];
   // Compat héritage
   instructions?: string;
+  name?: string; // ✅ FIX: Nom de l'agent pour les logs
 }
 
 export interface RenderedTemplate {

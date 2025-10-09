@@ -502,12 +502,14 @@ const ChatFullscreenV2: React.FC = () => {
     }
   }, [sessions.length, currentSession?.thread, scrollToBottom, user, authLoading]);
 
-  // S'assurer que la session la plus récente est sélectionnée
+  // S'assurer qu'une session est sélectionnée SEULEMENT s'il n'y en a aucune
   useEffect(() => {
     if (user && !authLoading && sessions.length > 0 && !currentSession) {
+      // ✅ FIX: Sélectionner la session la plus récente seulement si aucune session n'est active
       setCurrentSession(sessions[0]);
+      logger.dev('[ChatFullscreenV2] 📌 Auto-sélection de la session la plus récente');
     }
-  }, [sessions, currentSession, setCurrentSession, user, authLoading]);
+  }, [sessions.length, currentSession, setCurrentSession, user, authLoading]);
 
   // Scroll automatique pour nouveaux messages (optimisé)
   useEffect(() => {
@@ -548,6 +550,12 @@ const ChatFullscreenV2: React.FC = () => {
         return;
       }
 
+      // 🔧 FIX: Lire l'historique AVANT d'ajouter le message pour éviter la race condition
+      const historyBeforeNewMessage = currentSession.thread || [];
+      
+      // Pour l'API LLM, limiter l'historique selon history_limit
+      const limitedHistoryForLLM = historyBeforeNewMessage.slice(-(currentSession.history_limit || 30));
+      
       // Message utilisateur optimiste
       const userMessage = {
         role: 'user' as const,
@@ -591,16 +599,6 @@ const ChatFullscreenV2: React.FC = () => {
           agentModel: selectedAgent?.model
         });
       }
-
-      // ✅ CORRECTION: Historique SANS le dernier message (qui vient d'être ajouté)
-      // Le dernier message sera envoyé via le paramètre `message`, pas dans l'historique
-      const fullHistory = currentSession.thread;
-      
-      // Enlever le dernier message (celui qu'on vient d'ajouter) pour éviter la duplication
-      const historyWithoutLastMessage = fullHistory.slice(0, -1);
-      
-      // Pour l'API LLM, on peut limiter à history_limit pour la performance
-      const limitedHistoryForLLM = historyWithoutLastMessage.slice(-(currentSession.history_limit || 30));
       
       // Utiliser l'API standard (sans streaming)
       const sendFunction = sendMessage;
@@ -610,7 +608,12 @@ const ChatFullscreenV2: React.FC = () => {
         sessionId: currentSession.id,
         agentId: selectedAgent?.id,
         historyLength: limitedHistoryForLLM.length,
-        lastMessageInHistory: limitedHistoryForLLM[limitedHistoryForLLM.length - 1]?.role
+        lastMessageInHistory: limitedHistoryForLLM[limitedHistoryForLLM.length - 1]?.role,
+        last3Messages: limitedHistoryForLLM.slice(-3).map(m => ({
+          role: m.role,
+          content: m.content?.substring(0, 30) + '...',
+          timestamp: m.timestamp
+        }))
       });
 
       await sendFunction(message, currentSession.id, contextWithSessionId, limitedHistoryForLLM, token);

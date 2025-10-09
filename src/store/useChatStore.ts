@@ -90,8 +90,22 @@ export const useChatStore = create<ChatStore>()(
           const { sessionSyncService } = await import('@/services/sessionSyncService');
           const result = await sessionSyncService.createSessionAndSync(name);
           if (result.success && result.session) {
-            get().setCurrentSession(result.session);
-            get().syncSessions();
+            // ✅ FIX: Ajouter la nouvelle session à la liste SANS re-synchroniser toutes les sessions
+            // Cela évite une race condition qui pourrait charger l'ancienne session
+            const currentSessions = get().sessions;
+            const updatedSessions = [result.session, ...currentSessions];
+            
+            // Mettre à jour la liste ET la session courante en une seule fois
+            set({ 
+              sessions: updatedSessions,
+              currentSession: result.session
+            });
+            
+            logger.dev('[ChatStore] ✅ Nouvelle session créée:', {
+              id: result.session.id,
+              name: result.session.name,
+              threadLength: result.session.thread.length
+            });
           }
         } catch (error) {
           logger.error('[ChatStore] Erreur createSession:', error);

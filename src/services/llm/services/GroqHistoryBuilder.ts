@@ -47,6 +47,17 @@ export class GroqHistoryBuilder {
     });
 
     logger.dev?.(`[GroqHistoryBuilder] 🔧 Historique initial construit: ${messages.length} messages`);
+    logger.dev?.(`[GroqHistoryBuilder] 📊 Détail de l'historique:`, {
+      total: messages.length,
+      system: messages.filter(m => m.role === 'system').length,
+      user: messages.filter(m => m.role === 'user').length,
+      assistant: messages.filter(m => m.role === 'assistant').length,
+      lastUserMessage: userMessage.substring(0, 50) + '...',
+      last3Messages: messages.slice(-3).map(m => ({
+        role: m.role,
+        content: m.content?.substring(0, 30) + '...'
+      }))
+    });
     return messages;
   }
 

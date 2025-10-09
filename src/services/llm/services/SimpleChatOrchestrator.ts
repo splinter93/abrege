@@ -31,14 +31,33 @@ export interface ChatContext {
 }
 
 export class SimpleChatOrchestrator {
-  private llmProvider: GroqProvider;
   private toolExecutor: SimpleToolExecutor;
   private historyBuilder: GroqHistoryBuilder;
 
   constructor() {
-    this.llmProvider = new GroqProvider();
     this.toolExecutor = new SimpleToolExecutor();
     this.historyBuilder = new GroqHistoryBuilder(DEFAULT_GROQ_LIMITS);
+  }
+
+  /**
+   * Créer un provider Groq avec la config de l'agent
+   */
+  private createProviderFromAgent(agentConfig?: AgentTemplateConfig): GroqProvider {
+    const customConfig = agentConfig ? {
+      model: agentConfig.model || 'openai/gpt-oss-20b',
+      temperature: agentConfig.temperature || 0.7,
+      maxTokens: agentConfig.max_completion_tokens || agentConfig.max_tokens || 8000,
+      topP: agentConfig.top_p || 0.9,
+      reasoningEffort: agentConfig.reasoning_effort || 'high'
+    } : {};
+
+    logger.dev(`[Orchestrator] 🎯 Création du provider avec config:`, {
+      model: customConfig.model || 'default',
+      temperature: customConfig.temperature || 'default',
+      maxTokens: customConfig.maxTokens || 'default'
+    });
+
+    return new GroqProvider(customConfig);
   }
 
   async processMessage(
@@ -49,7 +68,13 @@ export class SimpleChatOrchestrator {
     const maxToolCalls = context.maxToolCalls ?? 5;
     let toolCallsCount = 0;
     
-    logger.info(`[Orchestrator] 💬 Processing message for session s=${context.sessionId}`);
+    logger.info(`[Orchestrator] 💬 Processing message for session s=${context.sessionId}`, {
+      agentModel: context.agentConfig?.model || 'default',
+      agentName: context.agentConfig?.name || 'default'
+    });
+
+    // ✅ FIX: Créer le provider avec la config de l'agent
+    const llmProvider = this.createProviderFromAgent(context.agentConfig);
 
     let currentMessage = message;
     let updatedHistory = [...history];
@@ -59,7 +84,7 @@ export class SimpleChatOrchestrator {
 
     try {
       while (toolCallsCount < maxToolCalls) {
-        const response = await this.callLLM(currentMessage, updatedHistory, context, 'auto');
+        const response = await this.callLLM(currentMessage, updatedHistory, context, 'auto', llmProvider);
         const newToolCalls = this.convertToolCalls(response.tool_calls || []);
         
         if (newToolCalls.length === 0) {
@@ -117,7 +142,7 @@ export class SimpleChatOrchestrator {
         isFirstPass = false;
 
         // Appel LLM forcé en mode texte uniquement (tool_choice:none)
-        const secondResponse = await this.callLLM(currentMessage, updatedHistory, context, 'none');
+        const secondResponse = await this.callLLM(currentMessage, updatedHistory, context, 'none', llmProvider);
         if (secondResponse.content && secondResponse.content.trim().length > 0) {
           return {
             success: true,
@@ -131,7 +156,7 @@ export class SimpleChatOrchestrator {
       }
 
       logger.warn(`[Orchestrator] ⚠️ Tool call limit (${maxToolCalls}) reached.`);
-      const finalResponse = await this.callLLM("Summarize tool actions and give a final answer.", updatedHistory, context);
+      const finalResponse = await this.callLLM("Summarize tool actions and give a final answer.", updatedHistory, context, 'auto', llmProvider);
       return { 
         success: true, 
         content: finalResponse.content, 
@@ -155,7 +180,8 @@ export class SimpleChatOrchestrator {
     message: string,
     history: ChatMessage[],
     context: ChatContext,
-    toolChoice: 'auto' | 'none' = 'auto'
+    toolChoice: 'auto' | 'none' = 'auto',
+    llmProvider: GroqProvider
   ): Promise<LLMResponse> {
     const { agentConfig, uiContext } = context;
     let systemMessageContent: string = 'You are a helpful AI assistant.';
@@ -202,7 +228,8 @@ export class SimpleChatOrchestrator {
     const { getOpenAPIV2Tools } = await import('@/services/openApiToolsGenerator');
     const tools = await getOpenAPIV2Tools();
 
-    return this.llmProvider.callWithMessages(messages, tools);
+    // ✅ FIX: Utiliser le provider passé en paramètre (avec la config de l'agent)
+    return llmProvider.callWithMessages(messages, tools);
   }
 
   /**
