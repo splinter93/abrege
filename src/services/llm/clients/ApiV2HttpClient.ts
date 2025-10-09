@@ -94,8 +94,8 @@ export class ApiV2HttpClient {
   ): Promise<T> {
     let url = `${this.baseUrl}/api/v2${endpoint}`;
     
-    // ✅ FIX PROD : Toujours utiliser le JWT dans Authorization (standard HTTP)
-    // Les endpoints API V2 valident le JWT via getAuthenticatedUser()
+    // ✅ FIX PROD : Pour les tool calls backend, toujours utiliser le JWT tel quel
+    // Le problème 401 vient probablement d'un JWT expiré ou invalide
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
       'X-Client-Type': 'agent',
@@ -104,18 +104,18 @@ export class ApiV2HttpClient {
     
     const isServerSide = typeof window === 'undefined';
     
-    // 🚨 CONSOLE.LOG DIRECT - FORCE PROD
-    if (process.env.NODE_ENV !== 'production') {
-      console.log('🔍 [ApiV2HttpClient] REQUEST:', {
-        url,
-        endpoint,
-        method,
-        isServerSide,
-        tokenType: this.detectTokenType(userToken),
-        tokenLength: userToken.length,
-        hasAuthHeader: !!headers['Authorization']
-      });
-    }
+    // 🚨 CONSOLE.LOG DIRECT - TOUJOURS ACTIF (pour debug prod)
+    console.log('🔍 [ApiV2HttpClient] REQUEST:', {
+      url,
+      endpoint,
+      method,
+      isServerSide,
+      env: process.env.NODE_ENV,
+      tokenType: this.detectTokenType(userToken),
+      tokenLength: userToken.length,
+      tokenStart: userToken.substring(0, 20) + '...',
+      hasAuthHeader: !!headers['Authorization']
+    });
 
     const requestOptions: RequestInit = {
       method,
@@ -147,16 +147,22 @@ export class ApiV2HttpClient {
         // 🔍 DIAGNOSTIC DÉTAILLÉ EN CAS D'ERREUR
         const errorData = await response.json().catch(() => ({}));
         
-        // 🚨 CONSOLE.ERROR DIRECT - FORCE PROD
-        if (process.env.NODE_ENV !== 'production') {
-          console.error('❌ [ApiV2HttpClient] ERROR 401:', {
-            url,
-            status: response.status,
-            errorData,
-            tokenLength: userToken.length,
-            tokenType: this.detectTokenType(userToken)
-          });
-        }
+        // 🚨 CONSOLE.ERROR DIRECT - TOUJOURS ACTIF (pour debug prod)
+        console.error('❌ [ApiV2HttpClient] ERROR HTTP:', {
+          url,
+          status: response.status,
+          errorData,
+          tokenLength: userToken.length,
+          tokenType: this.detectTokenType(userToken),
+          tokenStart: userToken.substring(0, 20) + '...',
+          env: process.env.NODE_ENV,
+          headers: {
+            'Authorization': headers['Authorization'] ? 'Bearer ***' : 'MISSING',
+            'X-Client-Type': headers['X-Client-Type'],
+            'X-User-Id': headers['X-User-Id'] || 'N/A',
+            'X-Service-Role': headers['X-Service-Role'] || 'N/A'
+          }
+        });
         
         logger.error(`[ApiV2HttpClient] ❌ ${response.status} ${response.statusText}`, {
           url,

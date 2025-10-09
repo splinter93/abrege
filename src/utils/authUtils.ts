@@ -139,6 +139,16 @@ export async function getAuthenticatedUser(request: NextRequest): Promise<AuthRe
       
       // ✅ ESSAYER LE JWT SUPABASE (fallback)
       try {
+        // 🔍 DIAGNOSTIC PROD
+        console.log('🔍 [AuthUtils] Validation JWT:', {
+          tokenLength: token.length,
+          tokenStart: token.substring(0, 20) + '...',
+          tokenEnd: '...' + token.substring(token.length - 20),
+          supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL?.substring(0, 40) + '...',
+          hasAnonKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+          env: process.env.NODE_ENV
+        });
+        
         const supabaseWithToken = createClient(
           process.env.NEXT_PUBLIC_SUPABASE_URL!,
           process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -153,8 +163,17 @@ export async function getAuthenticatedUser(request: NextRequest): Promise<AuthRe
         
         const { data: { user }, error } = await supabaseWithToken.auth.getUser();
         
+        // 🔍 DIAGNOSTIC RÉSULTAT
+        console.log('🔍 [AuthUtils] Résultat validation JWT:', {
+          hasError: !!error,
+          errorMessage: error?.message || 'N/A',
+          errorCode: (error as any)?.code || 'N/A',
+          hasUser: !!user,
+          userId: user?.id || 'N/A'
+        });
+        
         if (error || !user) {
-          throw new Error('JWT invalide');
+          throw new Error(`JWT invalide: ${error?.message || 'No user returned'}`);
         }
 
         // 🔧 CORRECTION : Pour les agents spécialisés, ajouter des scopes par défaut
