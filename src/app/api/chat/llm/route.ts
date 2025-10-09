@@ -74,7 +74,9 @@ export async function POST(request: NextRequest) {
       tokenEnd: '...' + userToken.substring(userToken.length - 20)
     });
     
-    // ✅ FIX PROD : Valider le token mais le garder tel quel
+    // ✅ FIX PROD : Valider le JWT et EXTRAIRE le userId pour éviter l'expiration
+    let userId: string;
+    
     try {
       // Vérifier si c'est un userId (UUID) ou un JWT
       const isUserId = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userToken);
@@ -82,9 +84,9 @@ export async function POST(request: NextRequest) {
       if (isUserId) {
         // UUID direct : impersonation d'agent (backend uniquement)
         logger.dev(`[LLM Route] 🔑 Impersonation d'agent détectée: userId: ${userToken.substring(0, 8)}...`);
-        // Pas de validation nécessaire pour l'impersonation d'agent
+        userId = userToken;
       } else {
-        // JWT : valider avec Supabase mais GARDER le JWT original
+        // JWT : valider et EXTRAIRE le userId
         const { data: { user }, error: authError } = await supabase.auth.getUser(userToken);
         
         if (authError || !user) {
@@ -95,15 +97,16 @@ export async function POST(request: NextRequest) {
           );
         }
         
-        logger.info(`[LLM Route] ✅ JWT validé pour user: ${user.id}`);
-        logger.info(`[LLM Route] 🔍 DEBUG TOKEN - JWT conservé:`, {
-          userId: user.id,
-          tokenLength: userToken.length,
-          email: user.email
+        // ✅ FIX CRITIQUE: Extraire le userId du JWT
+        // Le userId ne peut pas expirer (contrairement au JWT)
+        userId = user.id;
+        
+        logger.info(`[LLM Route] ✅ JWT validé, userId extrait: ${userId}`);
+        logger.info(`[LLM Route] 🔍 DEBUG TOKEN - userId pour tool calls:`, {
+          userId: userId,
+          email: user.email,
+          note: 'Le userId est utilisé pour les tool calls au lieu du JWT'
         });
-        // ✅ FIX: GARDER le JWT original pour les tool calls
-        // Le JWT sera passé tel quel aux endpoints API V2 qui le valideront
-        // userToken garde sa valeur JWT
       }
     } catch (validationError) {
       logger.error(`[LLM Route] ❌ Erreur validation token:`, validationError);
@@ -269,10 +272,11 @@ export async function POST(request: NextRequest) {
     };
 
     // Appel à la logique Groq OSS 120B avec l'agentConfig récupéré
-    logger.info(`[LLM Route] 🚀 Appel handleGroqGptOss120b avec token:`, {
-      tokenLength: userToken.length,
+    logger.info(`[LLM Route] 🚀 Appel handleGroqGptOss120b avec userId:`, {
+      userId: userId,
       sessionId,
-      agentName: finalAgentConfig.name
+      agentName: finalAgentConfig.name,
+      agentModel: finalAgentConfig.model
     });
     
     const result = await handleGroqGptOss120b({
@@ -283,7 +287,7 @@ export async function POST(request: NextRequest) {
       },
       sessionHistory: history,
       agentConfig: finalAgentConfig, // ✅ Récupéré depuis la base, par ID si fourni
-      userToken,
+      userToken: userId, // ✅ FIX CRITIQUE: Passer userId au lieu du JWT
       sessionId
     });
     

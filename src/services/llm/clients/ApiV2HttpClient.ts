@@ -94,13 +94,36 @@ export class ApiV2HttpClient {
   ): Promise<T> {
     let url = `${this.baseUrl}/api/v2${endpoint}`;
     
-    // ✅ FIX PROD : Pour les tool calls backend, toujours utiliser le JWT tel quel
-    // Le problème 401 vient probablement d'un JWT expiré ou invalide
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-      'X-Client-Type': 'agent',
-      'Authorization': `Bearer ${userToken}`
-    };
+    // ✅ FIX PROD CRITIQUE : Si c'est un UUID, utiliser SERVICE_ROLE + impersonation
+    // Si c'est un JWT, l'utiliser tel quel (mais il peut expirer)
+    let headers: Record<string, string>;
+    
+    if (this.isUUID(userToken)) {
+      // 🔧 C'est un UUID : Utiliser SERVICE_ROLE avec impersonation
+      const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+      if (!serviceRoleKey) {
+        throw new Error('SUPABASE_SERVICE_ROLE_KEY manquante pour l\'impersonation');
+      }
+      
+      headers = {
+        'Content-Type': 'application/json',
+        'X-Client-Type': 'agent',
+        'X-User-Id': userToken,
+        'X-Service-Role': 'true',
+        'Authorization': `Bearer ${serviceRoleKey}`
+      };
+      
+      logger.dev(`[ApiV2HttpClient] 🤖 Impersonation: userId=${userToken.substring(0, 8)}...`);
+    } else {
+      // 🔧 C'est un JWT : L'utiliser tel quel
+      headers = {
+        'Content-Type': 'application/json',
+        'X-Client-Type': 'agent',
+        'Authorization': `Bearer ${userToken}`
+      };
+      
+      logger.dev(`[ApiV2HttpClient] 🔑 JWT utilisé directement`);
+    }
     
     const isServerSide = typeof window === 'undefined';
     
@@ -219,6 +242,13 @@ export class ApiV2HttpClient {
     }
     
     return 'UNKNOWN';
+  }
+
+  /**
+   * Vérifie si une string est un UUID valide
+   */
+  private isUUID(str: string): boolean {
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
   }
 
   // ============================================================================
