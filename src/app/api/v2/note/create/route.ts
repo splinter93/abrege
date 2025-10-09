@@ -6,6 +6,11 @@ import { getAuthenticatedUser } from '@/utils/authUtils';
 import { SlugAndUrlService } from '@/services/slugAndUrlService';
 import { canPerformAction } from '@/utils/scopeValidation';
 
+// ✅ FIX PROD: Force Node.js runtime pour accès aux variables d'env (SUPABASE_SERVICE_ROLE_KEY)
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
+
 export async function POST(request: NextRequest): Promise<NextResponse> {
   const startTime = Date.now();
   const clientType = request.headers.get('X-Client-Type') || 'unknown';

@@ -12,6 +12,11 @@ import { getAuthenticatedUser, createAuthenticatedSupabaseClient } from '@/utils
 import { logApi } from '@/utils/logger';
 import { SpecializedAgentError } from '@/types/specializedAgents';
 
+// ✅ FIX PROD: Force Node.js runtime pour accès aux variables d'env (SUPABASE_SERVICE_ROLE_KEY)
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
+
 // Types pour les routes API
 interface AgentExecutionRequest {
   input: Record<string, unknown>;

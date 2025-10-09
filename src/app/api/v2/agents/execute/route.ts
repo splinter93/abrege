@@ -18,6 +18,11 @@ import { executeAgentV2Schema, validatePayload, createValidationErrorResponse } 
 import { SpecializedAgentManager } from '@/services/specializedAgents/SpecializedAgentManager';
 import { generateUserJWT } from '@/utils/jwtGenerator';
 
+// ✅ FIX PROD: Force Node.js runtime pour accès aux variables d'env (SUPABASE_SERVICE_ROLE_KEY)
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
+
 // ============================================================================
 // TYPES
 // ============================================================================

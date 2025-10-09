@@ -25,6 +25,11 @@ import { ContentApplier, calculateETag, generateDiff } from '@/utils/contentAppl
 import { updateArticleInsight } from '@/utils/insightUpdater';
 import { sanitizeMarkdownContent } from '@/utils/markdownSanitizer.server';
 
+// ✅ FIX PROD: Force Node.js runtime pour accès aux variables d'env (SUPABASE_SERVICE_ROLE_KEY)
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
+
 // ============================================================================
 // ERROR CODES
 // ============================================================================

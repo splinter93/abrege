@@ -5,6 +5,11 @@ import { V2DatabaseUtils } from '@/utils/v2DatabaseUtils';
 import { logApi } from '@/utils/logger';
 import { canPerformAction } from '@/utils/scopeValidation';
 
+// ✅ FIX PROD: Force Node.js runtime pour accès aux variables d'env (SUPABASE_SERVICE_ROLE_KEY)
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
+
 const resourceSchema = z.enum(['classeur', 'note', 'folder', 'file']);
 const deleteResponseSchema = z.object({
   success: z.boolean(),

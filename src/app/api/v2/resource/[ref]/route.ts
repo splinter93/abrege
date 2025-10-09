@@ -9,6 +9,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getAuthenticatedUser } from '@/utils/authUtils';
 import { logApi } from '@/utils/logger';
 
+// ✅ FIX PROD: Force Node.js runtime pour accès aux variables d'env (SUPABASE_SERVICE_ROLE_KEY)
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
+
 export async function DELETE(
   request: NextRequest,
   { params }: { params: { ref: string } }

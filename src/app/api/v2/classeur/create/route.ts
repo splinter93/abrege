@@ -5,6 +5,11 @@ import { createClasseurV2Schema, validatePayload, createValidationErrorResponse 
 import { getAuthenticatedUser, createAuthenticatedSupabaseClient, extractTokenFromRequest } from '@/utils/authUtils';
 import { SlugGenerator } from '@/utils/slugGenerator';
 
+// ✅ FIX PROD: Force Node.js runtime pour accès aux variables d'env (SUPABASE_SERVICE_ROLE_KEY)
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
+
 // 🔧 CORRECTIONS APPLIQUÉES:
 // - Authentification simplifiée via getAuthenticatedUser uniquement
 // - Suppression de la double vérification d'authentification

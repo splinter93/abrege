@@ -19,6 +19,11 @@ import { getAuthenticatedUser, createAuthenticatedSupabaseClient, extractTokenFr
 import { z } from 'zod';
 import { updateArticleInsight } from '@/utils/insightUpdater';
 
+// ✅ FIX PROD: Force Node.js runtime pour accès aux variables d'env (SUPABASE_SERVICE_ROLE_KEY)
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
+
 // 🔒 Schéma de validation basé sur la spec OpenAPI
 const addContentSchema = z.object({
   content: z.string().optional(), // Optionnel pour erase

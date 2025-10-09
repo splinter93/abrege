@@ -14,6 +14,11 @@ import { z } from 'zod';
 import { getAuthenticatedUser, createAuthenticatedSupabaseClient, extractTokenFromRequest } from '@/utils/authUtils';
 import { logApi } from '@/utils/logger';
 
+// ✅ FIX PROD: Force Node.js runtime pour accès aux variables d'env (SUPABASE_SERVICE_ROLE_KEY)
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
+
 // 🔒 Schéma de validation des paramètres de requête
 const searchFilesQuerySchema = z.object({
   // 📊 Pagination

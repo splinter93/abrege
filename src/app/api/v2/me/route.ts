@@ -3,6 +3,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { logApi } from '@/utils/logger';
 import { getAuthenticatedUser, createAuthenticatedSupabaseClient, extractTokenFromRequest } from '@/utils/authUtils';
 
+// ✅ FIX PROD: Force Node.js runtime pour accès aux variables d'env (SUPABASE_SERVICE_ROLE_KEY)
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
+
 export async function GET(request: NextRequest): Promise<NextResponse> {
   const startTime = Date.now();
   const clientType = request.headers.get('X-Client-Type') || 'unknown';

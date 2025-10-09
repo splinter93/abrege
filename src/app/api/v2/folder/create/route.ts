@@ -4,6 +4,11 @@ import { createFolderV2Schema, validatePayload, createValidationErrorResponse } 
 import { getAuthenticatedUser, createAuthenticatedSupabaseClient, extractTokenFromRequest } from '@/utils/authUtils';
 import { V2DatabaseUtils } from '@/utils/v2DatabaseUtils';
 
+// ✅ FIX PROD: Force Node.js runtime pour accès aux variables d'env (SUPABASE_SERVICE_ROLE_KEY)
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
+
 export async function POST(request: NextRequest): Promise<NextResponse> {
   const startTime = Date.now();
   const clientType = request.headers.get('X-Client-Type') || 'unknown';

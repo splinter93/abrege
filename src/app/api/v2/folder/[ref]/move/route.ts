@@ -4,6 +4,11 @@ import { moveFolderV2Schema, validatePayload, createValidationErrorResponse } fr
 import { getAuthenticatedUser } from '@/utils/authUtils';
 import { V2DatabaseUtils } from '@/utils/v2DatabaseUtils';
 
+// ✅ FIX PROD: Force Node.js runtime pour accès aux variables d'env (SUPABASE_SERVICE_ROLE_KEY)
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
+
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ ref: string }> }

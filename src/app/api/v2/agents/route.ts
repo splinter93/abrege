@@ -10,6 +10,11 @@ import { logApi } from '@/utils/logger';
 import { getAuthenticatedUser } from '@/utils/authUtils';
 import { SpecializedAgentManager } from '@/services/specializedAgents/SpecializedAgentManager';
 
+// ✅ FIX PROD: Force Node.js runtime pour accès aux variables d'env (SUPABASE_SERVICE_ROLE_KEY)
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
+
 // Instance globale du manager (singleton)
 const agentManager = new SpecializedAgentManager();
 

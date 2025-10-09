@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getOpenAPIV2Tools } from '@/services/openApiToolsGenerator';
 
+// ✅ FIX PROD: Force Node.js runtime pour accès aux variables d'env (SUPABASE_SERVICE_ROLE_KEY)
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
+
 /**
  * Endpoint pour exposer les tools OpenAPI V2 pour les LLMs
  * GET /api/v2/tools

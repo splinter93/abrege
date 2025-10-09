@@ -5,6 +5,11 @@ import { getAuthenticatedUser, createAuthenticatedSupabaseClient, extractTokenFr
 import { extractTOCWithSlugs } from '@/utils/markdownTOC';
 import { V2ResourceResolver } from '@/utils/v2ResourceResolver';
 
+// ✅ FIX PROD: Force Node.js runtime pour accès aux variables d'env (SUPABASE_SERVICE_ROLE_KEY)
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
+
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
